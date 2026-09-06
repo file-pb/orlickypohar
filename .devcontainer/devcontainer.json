@@ -1,0 +1,26 @@
+{
+  "name": ".NET + Docker",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:1-10.0",
+
+  "features": {
+    // Docker uvnitř kontejneru — kvůli integračním testům přes Testcontainers.
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/node:1": { "version": "lts" }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csdevkit",
+        "ms-azuretools.vscode-docker",
+        "editorconfig.editorconfig"
+      ]
+    }
+  },
+
+  // SSH klíč se bere z Codespaces secretu SSH_PRIVATE_KEY, aby šlo z prohlížeče
+  // sáhnout na server i na GitHub. Nastavuje se na github.com/settings/codespaces.
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+
+  "remoteUser": "vscode"
+}

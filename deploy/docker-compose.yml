@@ -1,0 +1,57 @@
+# Nasazení aplikace na server. Leží v /opt/apps/<projekt>/ vedle secrets/.
+# Sdílené služby (Traefik, PostgreSQL) běží ze stacku v platform repu.
+#
+#   export APP_NAME=rezervace PLATFORM_DOMAIN=tvoje-domena.cz
+#   export IMAGE=ghcr.io/file-pb/rezervace:latest
+#   docker compose up -d
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+networks:
+  edge: { name: edge, external: true }     # k Traefiku
+  data: { name: data, external: true }     # k databázi
+
+services:
+  app:
+    image: ${IMAGE:?Nastav IMAGE na tag z GHCR}
+    restart: unless-stopped
+    logging: *logging
+    networks: [edge, data]
+    environment:
+      # Běžná konfigurace v prostředí, tajemství v secrets níž.
+      Serilog__WriteTo__1__Name: "Seq"
+      Serilog__WriteTo__1__Args__serverUrl: "http://seq"
+    secrets:
+      - ConnectionStrings__Postgres
+    labels:
+      # POZOR: Compose dosazuje proměnné jen do HODNOT, ne do klíčů.
+      # Jméno routeru proto musí být napevno a unikátní napříč všemi
+      # aplikacemi na serveru — přejmenuj ho spolu s projektem.
+      traefik.enable: "true"
+      traefik.docker.network: edge
+      traefik.http.routers.orlickypohar.rule: Host(`${APP_NAME}.${PLATFORM_DOMAIN:?}`)
+      traefik.http.routers.orlickypohar.tls.certresolver: le
+      # Omezení rychlosti a hlavičky ze sdílené konfigurace platformy.
+      # Zapisovací cesty mají přísnější strop — zařízení posílá dávky,
+      # ne jednotlivá měření.
+      traefik.http.routers.orlickypohar.middlewares: "ratelimit-write@file,bezpecne-hlavicky@file"
+      traefik.http.services.orlickypohar.loadbalancer.server.port: "8080"
+      # Traefik posílá provoz až na kontejner, který prošel readiness.
+      traefik.http.services.orlickypohar.loadbalancer.healthcheck.path: /health/ready
+      traefik.http.services.orlickypohar.loadbalancer.healthcheck.interval: 10s
+    deploy:
+      resources:
+        limits: { memory: 512m, cpus: "1.0" }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+
+secrets:
+  # Vyrobí ho scripts/new-project.sh v platform repu; sem se jen zkopíruje.
+  ConnectionStrings__Postgres:
+    file: ./secrets/ConnectionStrings__Postgres

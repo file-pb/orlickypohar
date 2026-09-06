@@ -1,0 +1,8 @@
+{
+  "sourceId": "signalk-orlik",
+  "measurements": [
+    { "metric": "electrical.batteries.house.voltage", "value": 13.42, "validAt": "2026-09-01T10:00:00Z" },
+    { "metric": "electrical.batteries.start.voltage", "value": 12.71, "validAt": "2026-09-01T10:00:00Z" },
+    { "metric": "environment.wind.speedApparent", "value": 6.2, "validAt": "2026-09-01T10:00:00Z" }
+  ]
+}

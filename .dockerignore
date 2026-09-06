@@ -1,0 +1,14 @@
+# Build kontext musí být čistý. Bez tohohle se do image dostane obj/
+# z předchozího lokálního nebo CI buildu a přepíše assets soubor, který
+# si uvnitř vyrobil `dotnet restore -a $TARGETARCH`. Publish pak hledá
+# runtime identifikátor, který v něm není, a build spadne.
+**/bin/
+**/obj/
+.git/
+.github/
+.vs/
+.vscode/
+.idea/
+secrets/
+*.user
+.DS_Store

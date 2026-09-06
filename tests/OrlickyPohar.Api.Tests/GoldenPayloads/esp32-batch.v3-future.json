@@ -1,0 +1,9 @@
+{
+  "sourceId": "esp32-lodni-baterie",
+  "schemaVersion": 3,
+  "measurements": [
+    { "metric": "electrical.batteries.house.voltage", "value": 13.42,
+      "validAt": "2026-08-30T04:12:00Z", "eventId": "esp32-000141",
+      "quality": 0, "sensorSerial": "A7-2291", "calibrationOffset": -0.02 }
+  ]
+}

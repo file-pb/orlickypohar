@@ -1,0 +1,12 @@
+bin/
+obj/
+.vs/
+.vscode/
+.idea/
+*.user
+.DS_Store
+appsettings.*.local.json
+.env
+
+secrets/*
+!secrets/README.md

@@ -1,0 +1,66 @@
+# Lokální vývoj. Na serveru běží ta samá image, jen s jinými proměnnými a secrets.
+# Limity a rotace logů nejsou kosmetika: Docker ve výchozím stavu loguje do
+# json-file bez rotace a kontejner bez limitu umí vyhladovět celý stroj.
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+services:
+  postgres:
+    # Vanilla PostgreSQL. TimescaleDB je volba na úrovni celého clusteru a
+    # připoutala by i databáze, které z něj nikdy nic nepoužijí. Telemetrie má
+    # proto vlastní databázi — až si o Timescale řekne, přestěhuje se do
+    # samostatného kontejneru a je to dump/restore jedné databáze.
+    image: postgres:17-alpine
+    logging: *logging
+    environment:
+      POSTGRES_DB: service
+      POSTGRES_USER: service
+      POSTGRES_PASSWORD: devonly
+    # Globální rozpočet spojení. Musí platit:
+    #   suma limitů rolí + rezerva pro správu <= max_connections
+    #   pool max aplikace <= connection limit její role
+    # Jinak se z přetížení stanou náhodné chyby v aplikaci.
+    command: ["postgres", "-c", "max_connections=100"]
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    deploy:
+      resources:
+        limits: { memory: 1g }
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U service"]
+      interval: 5s
+      retries: 10
+
+  seq:
+    image: datalust/seq:latest
+    logging: *logging
+    environment:
+      ACCEPT_EULA: "Y"
+    ports: ["5341:80"]
+    deploy:
+      resources:
+        limits: { memory: 512m }
+
+  api:
+    build: .
+    logging: *logging
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      Serilog__WriteTo__1__Name: "Seq"
+      Serilog__WriteTo__1__Args__serverUrl: "http://seq"
+    secrets:
+      - ConnectionStrings__Postgres
+    ports: ["8080:8080"]
+    deploy:
+      resources:
+        limits: { memory: 512m, cpus: "1.0" }
+
+secrets:
+  ConnectionStrings__Postgres:
+    file: ./secrets/ConnectionStrings__Postgres
+
+volumes:
+  pgdata:

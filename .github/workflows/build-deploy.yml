@@ -1,0 +1,76 @@
+name: build-deploy
+
+on:
+  push:
+    branches: [main]
+  # Na pull requestu se testuje a zkusmo staví image, ale NIC se nikam
+  # nepushuje ani nenasazuje. Recenzent tak vidí, jestli změna projde,
+  # dřív než se dotkne serveru.
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+# Externí akce jsou připnuté na otisk commitu, ne na značku. Značka se dá
+# přesunout, takže kdo ovládne repozitář akce, spustí si kód v tomhle CI —
+# a to má právo zápisu do registru. Otisky aktualizuje Dependabot.
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # Jen kontraktní testy: běží bez Dockeru, doběhnou za vteřiny a hlídají
+      # datový kontrakt, tedy to nejdražší na pozdější otočení.
+      #
+      # Integrační testy (Testcontainers) tu schválně NEJSOU. Závisí na tom,
+      # jak přesně vypadá Docker kolem nich, a jejich selhání by blokovalo
+      # nasazení funkční aplikace. Pouštějí se lokálně: dotnet test
+      # Vylučujeme integrační testy, ne vybíráme kontraktní — nové testy
+      # se tak do řetězu dostanou samy a nikdo na ně nezapomene.
+      - name: Testy bez Dockeru
+        run: dotnet test -c Release --nologo --filter "FullyQualifiedName!~IngestTests"
+
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        if: github.event_name != 'pull_request'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
+        id: meta
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=sha,format=long
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      # amd64 je výchozí cíl kvůli kompatibilitě s cizími binárkami (SDK ke kamerám,
+      # nástroje výrobců, starší image). arm64 přidej, až budeš mít vedlejší ARM stroj na výpočty.
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          platforms: linux/amd64
+          # Na pull requestu se image jen postaví, aby se ověřil Dockerfile.
+          # Do registru jde teprve po sloučení do main.
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy
+        if: ${{ vars.DEPLOY_WEBHOOK != '' }}
+        run: curl -fsS -X POST "${{ vars.DEPLOY_WEBHOOK }}"

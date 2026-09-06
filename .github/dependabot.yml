@@ -1,0 +1,38 @@
+version: 2
+
+# Jedno PR týdně a nejvýš pár otevřených naráz — při pěti hodinách týdně
+# je zaplavená schránka horší než zastaralá závislost, protože ji přestaneš
+# číst úplně.
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+
+  - package-ecosystem: nuget
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    groups:
+      # Microsoft vydává celý .NET najednou; jedno PR místo deseti.
+      dotnet:
+        patterns:
+          - "Microsoft.*"
+          - "System.*"
+
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "docker"
