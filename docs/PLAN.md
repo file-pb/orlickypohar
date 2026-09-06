@@ -6,8 +6,9 @@ výsledky, administrace a mobilní přístup.
 **Jméno projektu:** `orlickypohar` → `orlickypohar.klihovka.cz`
 (bez pomlčky a podtržítka — jméno slouží zároveň jako databáze, role i subdoména).
 
-**Stav:** repozitář založen 6. 9. 2026. Doménový model usazený, chybí bodovací
-pravidla od rozhodčího (viz *Zbývá doladit*).
+**Stav:** repozitář založen 6. 9. 2026, plán doplněn 7. 9. 2026 o uspořádání
+repozitáře, pojmenování, import dat a rozpis fáze 1. Doménový model usazený,
+chybí bodovací pravidla od rozhodčího (viz *Zbývá doladit*).
 
 ---
 
@@ -314,6 +315,67 @@ Tracker nestojí na bodování, workflow ani administraci. Potřebuje jen
 identitu a kontext závodu. Dá se tedy postavit **vedle** hlavní linky —
 nebo dřív, když bude větší chuť.
 
+## Kde co bydlí
+
+**Monorepo — API, web i appka v tomhle repozitáři.**
+
+```
+src/OrlickyPohar.Api/     API (.NET 10)
+web/                      veřejné stránky a administrace (Next.js)
+app/                      mobilní appka (Expo)
+packages/api-client/      TypeScript klient generovaný z OpenAPI
+```
+
+Rozhoduje o tom generovaný klient. Ve třech repozitářích by se musel
+publikovat jako balíček a každá změna kontraktu by znamenala tři pull requesty
+za sebou. Při pěti hodinách týdně je to celý večer režie na změnu, která je
+jinak patnáctiminutová.
+
+Cena monorepa je, že se buildy musí filtrovat podle cest, aby změna ve `web/`
+nepřestavovala API image. To je jeden `paths:` filtr ve workflow, ne
+architektonický problém.
+
+**Kdy to přestane platit:** až bude mít appka vlastní release cyklus a verze
+v obchodech se rozejdou s verzemi backendu. Tehdy se `app/` odštěpí — je to
+přesun složky a jedno workflow, ne přepis.
+
+## Pojmenování v kódu
+
+**Doménové entity česky bez diakritiky, všechno ostatní anglicky.**
+
+Rozjížďka není *heat* ani *race*, přihláška do ročníku není *entry* ani
+*registration*. Přesný anglický protějšek neexistuje, takže by ho každý
+překládal jinak a pokaždé znovu — a s pořadatelem i rozhodčím se stejně mluví
+česky. Termíny závodních pravidel jsou navíc kódy (`DNF`, `OCS`), které se
+nepřekládají tak jako tak.
+
+Handlery, sufixy DTO, infrastruktura a testy zůstávají anglicky jako v šabloně:
+`CreateZavodHandler`, `ZavodResponse`. Hranice vede u doménového pojmu, ne
+u souboru.
+
+Nezavádí se tím výjimka z pravidla o `Source` — to platí pro telemetrii, která
+tady po první fázi nezůstane.
+
+## Jak se dovnitř dostanou loňská data
+
+**Import ze souboru přes chráněný endpoint** — ne seed v migraci a ne čekání
+na administraci.
+
+`POST /import/serie` přijme jeden JSON s celým ročníkem (závody, lodě,
+přihlášky, výsledky) a je **idempotentní**: druhé odeslání téhož souboru nic
+nezduplikuje. Chrání ho token ze souboru v `/run/secrets`, protože do fáze 4
+neexistuje žádná identita.
+
+Proč ne migrace: migrace je schéma, ne obsah. Překlep v loňském výsledku by se
+opravoval další migrací a jednou spuštěná migrace se nepřehraje.
+
+Proč ne počkat na administraci: fáze 1 existuje právě proto, aby se model
+prověřil o skutečná data dřív, než se na něj něco postaví. Bez dat je to fáze
+bez smyslu.
+
+Vedlejší efekt je, že tentýž endpoint zvládne i každý další ročník a poslouží
+jako záchrana, kdyby administrace ve fázi 5 nestíhala.
+
 ## Fáze
 
 Počítáno na pět hodin týdně.
@@ -338,6 +400,29 @@ v modelu špatně.
 Fáze 3 je schválně brzy: čtecí appka nepotřebuje přihlášení ani
 administraci, takže se dá postavit proti hotovému veřejnému API. Učit se
 Expo současně s řešením OAuth toků na mobilu by byly dva problémy najednou.
+
+### Fáze 1 krok za krokem
+
+Pořadí je zvolené tak, aby se po každém kroku dalo přestat a mít funkční
+repozitář.
+
+| # | Krok | Hotovo, když |
+|---|---|---|
+| 1.1 | Smazat `Features/Measurements`, jeho migraci a testy vázané na katalog | `dotnet test` projde a `/health/ready` drží |
+| 1.2 | Entity a nová `InitialCreate`: `Serie`, `Kategorie`, `Osoba`, `Lod`, `Prihlaska`, `Zavod`, `Ucast`, `Rozjizdka`, `Vysledek` | migrace se pustí při startu proti prázdné databázi |
+| 1.3 | `POST /import/serie` — token, idempotence, celá dávka nebo nic | druhý import téhož souboru nepřidá řádek |
+| 1.4 | Loňský ročník jako soubor v `data/` a nahraný do vývojové databáze | dotazy vracejí skutečná data, ne vymyšlená |
+| 1.5 | Veřejné čtecí endpointy: série, závod, rozjížďka, výsledky | OpenAPI dokument je úplný a klient se z něj vygeneruje |
+| 1.6 | `web/` — stránka série a stránka závodu, renderované serverem | dá se poslat odkaz pořadateli |
+
+**Body se ve fázi 1 nepočítají.** Výsledky se ukazují tak, jak přišly
+z importu. Počítání je fáze 2 a chce vlastní testy — míchat obojí znamená
+ladit model a bodovací pravidla najednou.
+
+Zlaté payloady ze šablony smazáním `Measurements` pozbývají smysl, ale
+mechanismus ne: `ContractTests` se překlopí na tvar importu a veřejného API.
+Producent, ke kterému se nedostaneš, je tady mobilní appka na cizím telefonu —
+a platí pro ni totéž co pro firmware na lodi.
 
 ## Co to spouští v platformě
 
