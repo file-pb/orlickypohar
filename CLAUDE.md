@@ -23,13 +23,6 @@ Nejčastěji se hodí:
 
 V `platform` jsou taky skilly `/stav`, `/novy-projekt`, `/pouceni` a `/audit`.
 
-## Pozor: příkladový řez ze šablony
-
-`Features/Measurements` a jeho migrace **nejsou doména poháru** — jsou to
-zbytky šablony, které tu schválně zůstaly, aby šlo ověřit celý řetěz nasazení
-na známě funkčním kódu. **Smažou se v první fázi**, jakmile vznikne skutečný
-model. Nestav na nich nic.
-
 ## Struktura
 
 **Vertikální řezy, ne vrstvy.** Jedna funkce = jedna složka ve `Features/`.
@@ -40,9 +33,16 @@ uživí druhého vývojáře.
 ```
 src/OrlickyPohar.Api/
   Data/AppDbContext.cs        jediný DbContext
-  Features/<Nazev>/           celá funkce v jedné složce
+  Features/Serial/            série, kategorie, přihlášky — celoroční rovina
+  Features/Lode/              lodě a osoby
+  Features/Zavody/            závod, účast, rozjížďka, výsledek
   Program.cs                  složení aplikace, mapování řezů
 ```
+
+Doménové entity se jmenují **česky bez diakritiky** (`Zavod`, `Rozjizdka`),
+zbytek anglicky (`CreateZavodHandler`, `ZavodResponse`). Důvod je v
+[docs/PLAN.md](docs/PLAN.md) — rozjížďka ani přihláška nemají anglický
+protějšek, který by dva lidi přeložili stejně.
 
 `DbContext` volej z handleru přímo. Repository vrstvu nepřidávej — EF Core už
 jednou abstrakcí nad databází je.

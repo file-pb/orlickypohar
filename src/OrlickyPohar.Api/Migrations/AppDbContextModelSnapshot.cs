@@ -22,57 +22,7 @@ namespace OrlickyPohar.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("OrlickyPohar.Api.Features.Measurements.Measurement", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("EventId")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<DateTimeOffset?>("IssuedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("MetricId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Quality")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTimeOffset>("ReceivedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("SourceId")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<DateTimeOffset>("ValidAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<double>("Value")
-                        .HasColumnType("double precision");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MetricId");
-
-                    b.HasIndex("SourceId", "EventId")
-                        .IsUnique()
-                        .HasFilter("\"EventId\" IS NOT NULL");
-
-                    b.HasIndex("SourceId", "MetricId", "ValidAt");
-
-                    b.HasIndex("SourceId", "MetricId", "ValidAt", "IssuedAt");
-
-                    b.ToTable("Measurements");
-                });
-
-            modelBuilder.Entity("OrlickyPohar.Api.Features.Measurements.MetricDefinition", b =>
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Lode.Lod", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -80,83 +30,430 @@ namespace OrlickyPohar.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Description")
+                    b.Property<string>("CisloPlachty")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("MajitelId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Nazev")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Typ")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MajitelId");
+
+                    b.ToTable("Lode");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Lode.Osoba", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Jmeno")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("Prijmeni")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasFilter("\"UserId\" IS NOT NULL");
+
+                    b.ToTable("Osoby");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Serial.Kategorie", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Nazev")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<int>("Poradi")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SerieId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SerieId", "Nazev")
+                        .IsUnique();
+
+                    b.ToTable("Kategorie");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Serial.Prihlaska", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("KategorieId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("LodId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SerieId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KategorieId");
+
+                    b.HasIndex("LodId");
+
+                    b.HasIndex("SerieId", "LodId")
+                        .IsUnique();
+
+                    b.ToTable("Prihlasky");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Serial.Serie", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Nazev")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<bool>("Publikovano")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Rok")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("Serie");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Rozjizdka", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Cislo")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("StartV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Stav")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ZavodId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ZavodId", "Cislo")
+                        .IsUnique();
+
+                    b.ToTable("Rozjizdky");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Ucast", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("KormidelnikId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Posadka")
                         .HasMaxLength(400)
                         .HasColumnType("character varying(400)");
 
-                    b.Property<string>("Path")
-                        .IsRequired()
-                        .HasMaxLength(160)
-                        .HasColumnType("character varying(160)");
+                    b.Property<int>("PrihlaskaId")
+                        .HasColumnType("integer");
 
-                    b.Property<string>("Unit")
-                        .IsRequired()
-                        .HasMaxLength(24)
-                        .HasColumnType("character varying(24)");
+                    b.Property<int>("ZavodId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Path")
+                    b.HasIndex("KormidelnikId");
+
+                    b.HasIndex("PrihlaskaId");
+
+                    b.HasIndex("ZavodId", "PrihlaskaId")
                         .IsUnique();
 
-                    b.ToTable("Metrics");
+                    b.ToTable("Ucasti");
                 });
 
-            modelBuilder.Entity("OrlickyPohar.Api.Features.Measurements.QuarantinedMeasurement", b =>
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Vysledek", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("EventId")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<DateTimeOffset?>("IssuedAt")
+                    b.Property<DateTimeOffset?>("DojezdV")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("MetricPath")
-                        .IsRequired()
-                        .HasMaxLength(160)
-                        .HasColumnType("character varying(160)");
+                    b.Property<int?>("Kod")
+                        .HasColumnType("integer");
 
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                    b.Property<TimeSpan?>("NamerenyCas")
+                        .HasColumnType("interval");
 
-                    b.Property<DateTimeOffset>("ReceivedAt")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<int?>("PoradiVCili")
+                        .HasColumnType("integer");
 
-                    b.Property<string>("SourceId")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                    b.Property<int>("RozjizdkaId")
+                        .HasColumnType("integer");
 
-                    b.Property<DateTimeOffset>("ValidAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<double>("Value")
-                        .HasColumnType("double precision");
+                    b.Property<int>("UcastId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MetricPath", "ReceivedAt");
+                    b.HasIndex("UcastId");
 
-                    b.ToTable("Quarantine");
+                    b.HasIndex("RozjizdkaId", "UcastId")
+                        .IsUnique();
+
+                    b.ToTable("Vysledky");
                 });
 
-            modelBuilder.Entity("OrlickyPohar.Api.Features.Measurements.Measurement", b =>
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Zavod", b =>
                 {
-                    b.HasOne("OrlickyPohar.Api.Features.Measurements.MetricDefinition", "Metric")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("Datum")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("DatumKonce")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("KoeficientDoSerie")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<string>("Nazev")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<int?>("PocetRozjizdekDoSerie")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PocetSkrtu")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Poradatel")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<int>("Poradi")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Publikovano")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("SerieId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("Typ")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<int>("Vyhodnoceni")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SerieId", "Slug")
+                        .IsUnique();
+
+                    b.ToTable("Zavody");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Lode.Lod", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Lode.Osoba", "Majitel")
                         .WithMany()
-                        .HasForeignKey("MetricId")
+                        .HasForeignKey("MajitelId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Metric");
+                    b.Navigation("Majitel");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Serial.Kategorie", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Serial.Serie", "Serie")
+                        .WithMany("Kategorie")
+                        .HasForeignKey("SerieId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Serie");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Serial.Prihlaska", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Serial.Kategorie", "Kategorie")
+                        .WithMany()
+                        .HasForeignKey("KategorieId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OrlickyPohar.Api.Features.Lode.Lod", "Lod")
+                        .WithMany()
+                        .HasForeignKey("LodId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OrlickyPohar.Api.Features.Serial.Serie", "Serie")
+                        .WithMany()
+                        .HasForeignKey("SerieId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Kategorie");
+
+                    b.Navigation("Lod");
+
+                    b.Navigation("Serie");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Rozjizdka", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Zavody.Zavod", "Zavod")
+                        .WithMany("Rozjizdky")
+                        .HasForeignKey("ZavodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Zavod");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Ucast", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Lode.Osoba", "Kormidelnik")
+                        .WithMany()
+                        .HasForeignKey("KormidelnikId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("OrlickyPohar.Api.Features.Serial.Prihlaska", "Prihlaska")
+                        .WithMany()
+                        .HasForeignKey("PrihlaskaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OrlickyPohar.Api.Features.Zavody.Zavod", "Zavod")
+                        .WithMany()
+                        .HasForeignKey("ZavodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Kormidelnik");
+
+                    b.Navigation("Prihlaska");
+
+                    b.Navigation("Zavod");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Vysledek", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Zavody.Rozjizdka", "Rozjizdka")
+                        .WithMany()
+                        .HasForeignKey("RozjizdkaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OrlickyPohar.Api.Features.Zavody.Ucast", "Ucast")
+                        .WithMany()
+                        .HasForeignKey("UcastId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Rozjizdka");
+
+                    b.Navigation("Ucast");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Zavod", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Serial.Serie", "Serie")
+                        .WithMany()
+                        .HasForeignKey("SerieId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Serie");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Serial.Serie", b =>
+                {
+                    b.Navigation("Kategorie");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Zavod", b =>
+                {
+                    b.Navigation("Rozjizdky");
                 });
 #pragma warning restore 612, 618
         }

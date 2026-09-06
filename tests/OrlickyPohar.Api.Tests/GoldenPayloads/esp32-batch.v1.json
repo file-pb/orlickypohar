@@ -1,9 +1,0 @@
-{
-  "sourceId": "esp32-lodni-baterie",
-  "measurements": [
-    { "metric": "electrical.batteries.house.voltage", "value": 13.42,
-      "validAt": "2026-08-30T04:12:00Z", "eventId": "esp32-000141" },
-    { "metric": "electrical.batteries.house.voltage", "value": 13.38,
-      "validAt": "2026-08-30T04:13:00Z", "eventId": "esp32-000142" }
-  ]
-}
