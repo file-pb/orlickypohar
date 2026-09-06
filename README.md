@@ -1,7 +1,10 @@
-# service-template
+# orlickypohar
 
-Šablona služby pro hračkárnu — .NET 10, Minimal API, PostgreSQL, vertikální řezy.
-Nový projekt založíš přes **Use this template** na GitHubu.
+Seriál závodů plachetnic na Orlíku — web, veřejné výsledky, administrace
+a mobilní přístup. .NET 10, Minimal API, PostgreSQL, vertikální řezy.
+
+Doménový model a fáze jsou v [docs/PLAN.md](docs/PLAN.md), konvence kódu
+v [CLAUDE.md](CLAUDE.md).
 
 ## Rychlý start
 
@@ -17,48 +20,30 @@ Bez Dockeru: spusť si Postgres a pak `dotnet run --project src/OrlickyPohar.Api
 Vývojový connection string je v `appsettings.Development.json` — v kontejneru se
 místo něj načte soubor z `/run/secrets`, viz [secrets/README.md](secrets/README.md).
 
-## Vyzkoušení příkladového řezu
+## Model
 
-Metrika musí být v katalogu, jinak měření skončí v karanténě:
-
-```bash
-docker compose exec postgres psql -U service -c \
-  "insert into \"Metrics\" (\"Path\",\"Unit\") values ('electrical.batteries.house.voltage','V')"
+```
+Serie ─┬─ Kategorie          Race / Nad7m / Pod7m
+       ├─ Prihlaska          loď v ročníku, v jedné kategorii  ← nositel bodů
+       └─ Zavod              jedno z ~12 zastavení
+           ├─ Ucast          která loď přijela a kdo ji vezl
+           └─ Rozjizdka
+               └─ Vysledek   účast × rozjížďka
 ```
 
-```bash
-curl -X POST localhost:8080/measurements -H 'content-type: application/json' -d '{
-  "sourceId": "esp32-lodni-baterie",
-  "measurements": [
-    { "metric": "electrical.batteries.house.voltage",
-      "value": 13.42, "validAt": "2026-09-03T18:00:00Z", "eventId": "a1" }
-  ]
-}'
-
-curl "localhost:8080/measurements?source=esp32-lodni-baterie&metric=electrical.batteries"
-```
-
-Druhé odeslání téže dávky vrátí `duplicates: 1` a nic nepřidá — idempotence
-podle `eventId`. Neznámá metrika vrátí `quarantined: 1`; dávka je **přijatá celá**
-a nic se neztratí. Dotaz hledá prefixově, takže `electrical.batteries` vrátí
-všechny baterie.
+Ve `Vysledek` je jen to, co se stalo — pořadí, časy, kód. **Body se počítají,
+neukládají**, aby šel seriál kdykoliv přepočítat podle změněných pravidel.
 
 ## Testy
 
 ```bash
-dotnet test --filter "FullyQualifiedName~ContractTests"   # bez Dockeru
-dotnet test                                                # včetně Testcontainers
+dotnet test
 ```
 
-`ContractTests` fixují JSON kontrakt zlatými payloady a testují evoluci schématu
-oběma směry. `IngestTests` ověřují idempotenci, karanténu a revize předpovědí
-proti reálnému PostgreSQL — potřebují běžící Docker.
-
-## Co upravit v novém projektu
-
-1. Přejmenuj `OrlickyPohar.Api` na jméno projektu (`.sln`, `.csproj`, namespace).
-2. Smaž `Features/Measurements` a napiš vlastní řez.
-3. Zkontroluj, že platí pravidla v [CLAUDE.md](CLAUDE.md).
+`ModelTests` drží model proti migracím a nepotřebují databázi ani Docker.
+Testy proti reálnému PostgreSQL přes Testcontainers přibudou s importem
+loňských dat — idempotence stojí na unikátních indexech, které by fake
+databáze neověřila.
 
 ## Nasazení
 

@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Serilog;
 using OrlickyPohar.Api.Data;
-using OrlickyPohar.Api.Features.Measurements;
 
 // Dvoufázová inicializace: i pád při startu skončí ve strukturovaném logu.
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
@@ -45,8 +44,6 @@ try
     app.MapOpenApi();
     if (app.Environment.IsDevelopment())
         app.MapScalarApiReference();
-
-    app.MapMeasurements();
 
     // Migrace při startu. U jedné repliky je to v pořádku a máš jistotu,
     // že schéma odpovídá kódu. Až budeš škálovat, přesuň to do kroku v CI.
