@@ -34,9 +34,9 @@ services:
       traefik.http.routers.orlickypohar.rule: Host(`${APP_NAME}.${PLATFORM_DOMAIN:?}`)
       traefik.http.routers.orlickypohar.tls.certresolver: le
       # Omezení rychlosti a hlavičky ze sdílené konfigurace platformy.
-      # Zapisovací cesty mají přísnější strop — zařízení posílá dávky,
-      # ne jednotlivá měření.
-      traefik.http.routers.orlickypohar.middlewares: "ratelimit-write@file,bezpecne-hlavicky@file"
+      # Tohle je veřejný web, kde drtivá většina provozu je čtení výsledků —
+      # proto standardní strop, ne přísný zapisovací jako u telemetrie.
+      traefik.http.routers.orlickypohar.middlewares: "ratelimit-standard@file,bezpecne-hlavicky@file"
       traefik.http.services.orlickypohar.loadbalancer.server.port: "8080"
       # Traefik posílá provoz až na kontejner, který prošel readiness.
       traefik.http.services.orlickypohar.loadbalancer.healthcheck.path: /health/ready
