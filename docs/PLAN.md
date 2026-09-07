@@ -596,8 +596,19 @@ Nic z toho nebrání založit projekt a napsat první migraci.
    počítat třeba osm nejlepších. Je to jedno pole na sérii — ale je to
    rozdíl mezi „přijel jsem na deset z dvanácti a nevadí to" a „kdo vynechá,
    ten nemá šanci". Rozhodneme, až budou v systému loňská data.
-2. **Seznam dvanácti závodů a jejich typy** — potřeba jako data, ne jako model.
-   Vytrvalostní, okruhové, 4,5 h, Izolepa a co dál.
+2. **Seznam závodů a jejich typy** — potřeba jako data, ne jako model.
+
+   **Neověřená stopa z veřejných zdrojů** (článek na Kráse jachtingu, 2026):
+   seriál má prý **deset sobotních závodů**, ne dvanáct, a **čtyři kategorie** —
+   do 7 m, do 9 m, Race I a Race II — místo tří. Zmiňuje Jarní vítr, Radavský
+   pohár, 24hodinový maraton, Izolepa Cup a vánoční regatu.
+
+   Nepřepisuje to model: kategorie jsou řádky v tabulce, ne výčet v kódu, a počet
+   závodů nikde napevno není. Ale je to první věc na ověření u rozhodčího.
+
+   Seriál se na Facebooku jmenuje **ORLÍK CUP** (skupina `148250098639632`),
+   výsledky tam dává Miloš Zvonař z YC Písek. Skupina je zavřená, takže obsah
+   se veřejně přečíst nedá.
 3. **Co když loď kategorii přece jen změní** (nové plachty, přeměření).
    Návrh: správce ji smí přepsat a pořadí se přepočítá. Historie se nevede,
    dokud se neukáže, že je potřeba.
