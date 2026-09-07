@@ -123,6 +123,35 @@ nebo ORC můžou přijít.
 série údaj, jaký systém se používá, a přepočet je jedna funkce na systém.
 Druhá vznikne, až druhý systém skutečně nastane — ne dřív.
 
+## Workflow výsledků
+
+Ze zadání: výsledek se dá **navrhnout, ověřit, schválit, potvrdit, vrátit
+k revizi, publikovat nebo eliminovat**. Stavy tedy nejsou volba, jsou zadané.
+
+| Stav | Kdo do něj dostane | Co znamená |
+|---|---|---|
+| `Navrzeno` | editor | zapsáno, nikdo to ještě nekontroloval |
+| `Overeno` | rozhodčí | čísla sedí s papírem z vody |
+| `Schvaleno` | rozhodčí | protesty vyřízené, pořadí platí |
+| `Potvrzeno` | správce | konečné, dál se needituje |
+| `Publikovano` | správce | vidí veřejnost |
+| `KRevizi` | rozhodčí i správce | vráceno zpátky s důvodem |
+| `Eliminovano` | správce | rozjížďka se nepočítá (zrušená, neplatná) |
+
+Dvě rozhodnutí, která je potřeba udělat dřív, než se to začne psát:
+
+**Stav se vede na rozjížďce, ne na jednotlivém výsledku.** Rozhodčí schvaluje
+sadu výsledků jako celek — pořadí dává smysl jen dohromady. Stav na řádku by
+znamenal, že rozjížďka může být zpola schválená, což neodpovídá ničemu ve
+skutečnosti.
+
+**Publikováno je vlastní příznak, ne poslední stav v řadě.** Potvrzený výsledek
+smí zůstat neveřejný a publikovaný se smí vrátit k revizi, aniž by se
+publikace ztratila. Kdyby to byl jeden sloupec, jedno by přepisovalo druhé.
+
+Přechody hlídá jedna funkce s testy, ne rozeseté podmínky po endpointech.
+Správce smí přeskočit dopředu — to už v plánu bylo a platí dál.
+
 ## Role a oprávnění
 
 Práva jsou **rozsahová**: platí buď pro celou sérii, nebo pro jeden závod.
@@ -176,6 +205,20 @@ To ale platí **jen pro tuhle sadu**. U fotek od pořadatelů a diváků, které
 přibudou později, musí být u snímku vidět autor a souhlas se zveřejněním.
 Je to jedno pole u fotky; doplňovat ho zpětně ke dvěma stům snímků je práce,
 kterou nikdo neudělá.
+
+### Administrace i na mobilu
+
+Zadání chce administraci **na webu i na mobilu**, ne jen na webu. To mění
+tvar mobilní linky: appka z fáze 3 je jen čtecí a nepotřebuje přihlášení,
+ale administrační appka ho potřebuje — tedy **fázi 4**.
+
+Znamená to dvě vydání appky, ne jedno: nejdřív čtecí, později se do ní
+přidá přihlášení a zadávání. Není to zdržení, je to pořadí — učit se Expo
+současně s OAuth tokem na mobilu jsou dva problémy najednou.
+
+Kdy přesně přijde mobilní administrace, se rozhodne až podle toho, jestli
+pořadatelé skutečně zadávají výsledky od vody. Když se ukáže, že je zadávají
+večer u počítače, je to práce navíc bez užitku — a to se pozná až z provozu.
 
 ### Proč nativní a ne PWA
 
@@ -402,6 +445,18 @@ bez smyslu.
 
 Vedlejší efekt je, že tentýž endpoint zvládne i každý další ročník a poslouží
 jako záchrana, kdyby administrace ve fázi 5 nestíhala.
+
+## Zdroje a inspirace
+
+| Co | Kde | K čemu |
+|---|---|---|
+| Fotky | [galerie na Rajčeti](https://rajce.net/jitkaorlik/album/fuck-cancer-regatta-empatie) | první sada, Filipovy vlastní |
+| Existující obsah | Facebook | něco z historie závodů se dá najít tam |
+| Inspirace | [Česká námořní rallye](https://www.ceskanamornirallye.cz/), [Vendée Globe](https://www.vendeeglobe.org/), [Rolex Middle Sea Race](https://www.rolexmiddlesearace.com/), [Barcolana](https://www.barcolana.it/en) | jak vypadají weby závodů |
+
+Inspirace jsou k tomu, jak se výsledky a průběh **podávají**, ne k tomu, kolik
+to stojí. Vendée Globe má rozpočet, který tenhle projekt nemá, a živý tracking
+celé flotily je tam samostatný produkt.
 
 ## Fáze
 
