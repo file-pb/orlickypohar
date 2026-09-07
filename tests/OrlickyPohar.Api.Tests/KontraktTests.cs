@@ -65,7 +65,7 @@ public class KontraktTests
 
         // Fun závod: část rozjížděk se nejede na vodě a do poháru nesmí.
         Assert.True(izolepa.Rozjizdky.Count > 1);
-        Assert.Single(izolepa.Rozjizdky.Where(r => r.DoSerie));
+        Assert.Single(izolepa.Rozjizdky, r => r.DoSerie);
     }
 
     [Fact]

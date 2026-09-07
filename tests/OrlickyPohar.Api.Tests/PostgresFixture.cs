@@ -5,6 +5,19 @@ using Testcontainers.PostgreSql;
 namespace OrlickyPohar.Api.Tests;
 
 /// <summary>
+/// Jeden PostgreSQL pro všechny integrační testy. Kdyby si každá třída
+/// startovala vlastní kontejner, běží starty souběžně a v CI se občas
+/// nestihnou — což se projeví jako záhadné „entry point exited without ever
+/// building an IHost", protože aplikace při nedostupné databázi skončí
+/// při migraci a chybu si odnese do svého logu.
+/// </summary>
+[CollectionDefinition(Name)]
+public class PostgresCollection : ICollectionFixture<PostgresFixture>
+{
+    public const string Name = "postgres";
+}
+
+/// <summary>
 /// Reálný PostgreSQL v kontejneru. Schválně ne in-memory provider — idempotence
 /// importu stojí na unikátních indexech a fake databáze by je neověřila.
 /// Test, který netestuje to, co v produkci selže, je horší než žádný.

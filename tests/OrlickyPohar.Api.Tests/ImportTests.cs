@@ -15,7 +15,8 @@ namespace OrlickyPohar.Api.Tests;
 /// výsledků v pořadí seriálu — tedy pozdě a nápadně.
 /// </summary>
 [Trait("Category", "Integracni")]
-public class ImportTests(PostgresFixture fixture) : IClassFixture<PostgresFixture>
+[Collection(PostgresCollection.Name)]
+public class ImportTests(PostgresFixture fixture)
 {
     private static readonly JsonSerializerOptions Json =
         new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
