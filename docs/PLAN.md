@@ -477,6 +477,46 @@ Inspirace jsou k tomu, jak se výsledky a průběh **podávají**, ne k tomu, ko
 to stojí. Vendée Globe má rozpočet, který tenhle projekt nemá, a živý tracking
 celé flotily je tam samostatný produkt.
 
+## Hranice rozšiřitelnosti
+
+Ne co se postaví, ale **kde by pozdější rozšíření bolelo**. Cílem je dojít
+k funkční verzi, ne stavět dopředu — tahle tabulka jen hlídá, aby cesta
+k cíli nezavřela dveře.
+
+| Rozšíření | Co by stálo | Stav |
+|---|---|---|
+| Další kategorie, přejmenování | řádek v tabulce | otevřené |
+| Změna bodovacích pravidel | přepočet, žádná migrace — body se neukládají | otevřené |
+| Jiný typ závodu | volný text, žádný číselník | otevřené |
+| Handicap (Yardstick, ORC) | pole na přihlášce + jedna funkce na systém | otevřené |
+| Výměna poskytovatele identity | tabulka `(issuer, subject) → UserId` | otevřené |
+| Další ročník | tentýž importní soubor | otevřené |
+| Jiný sport se stejným tvarem | sdílí se všechno kromě `Vysledek` | čistá hranice |
+| **Kategorie na jednotlivý závod** | sloupec na `Ucast`, s výchozí hodnotou z přihlášky | levné, ale je to migrace |
+| **Posádka jako lidé, ne text** | nová vazební tabulka **a ruční přepis historie** | ⚠ viz níž |
+| **Druhý seriál jiného pořadatele** | `Lod` a `Osoba` jsou dnes globální | ⚠ viz níž |
+
+### Dvě místa, která se pozdějším odkladem zdraží
+
+**Posádka.** Dneska je to volný text, protože se jen vypisuje. Jakmile bude
+potřeba posílat upozornění posádce nebo jí dát práva, musí to být odkaz na
+osoby — jenže do té doby vznikne několik set závodů s texty, které nikdo
+automaticky nerozseká. Převod bude ruční práce úměrná tomu, jak dlouho se
+čekalo.
+
+Nedělá se teď, protože pro veřejné čtení a bodování je text dost. Ale je to
+rozhodnutí s rostoucí cenou, ne odložený detail.
+
+**Globální lodě a osoby.** `Serie` je kořen skoro všeho, takže druhý seriál
+by se přidal snadno — kromě `Lod` a `Osoba`, které leží mimo něj. To je
+schválně: jedna loď jezdí víc ročníků a rozdělit ji podle seriálů by
+znamenalo duplikáty.
+
+Problém by nastal až u seriálu **jiného pořadatele**, který nemá vidět cizí
+rejstřík. Tehdy přibude vlastník k lodi a osobě. Odhad: jedna aditivní
+migrace a filtry v dotazech — nepříjemné, ne dramatické. Dřív to řešit nemá
+smysl, protože dneska žádný druhý pořadatel neexistuje.
+
 ## Fáze
 
 Počítáno na pět hodin týdně.
