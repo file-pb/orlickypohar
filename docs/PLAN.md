@@ -102,14 +102,30 @@ někdy přišel závod se **skutečně jiným vzorcem**, přibude jedna funkce �
 až tehdy, ne teď. Tohle je přesně to místo, kde se lidem rodí pravidlové
 enginy, a je to špatně: engine se píše dřív, než je známo, co má počítat.
 
-### Nízkobodový systém
+### Nízkobodový systém — dvě různé stupnice
 
-**Vítěz má nula bodů, ne jeden.** Body se rovnají `pořadí − 1`. Odvozeno
-ze skutečné tabulky Orlické série 2026, ne z předpokladu — v kategorii nad 7 m
-mají lodě v Jarním větru po řadě 0, 1, 2, 3, 4, 5, 6, 7 a zbytek pole 8.
+Ověřeno proti výsledkové listině FxCK Cancer regaty 2026 a proti seriálové
+tabulce téhož ročníku. Sedí na každém řádku obou kategorií.
 
-Kdo nedojel nebo nestartoval, dostává **počet dokončivších + 1** — proto ta
-osmička u všech ostatních.
+**V závodě: vítěz má 1 bod.** Loď dostane v každé rozjížďce **pořadí ve své
+kategorii** a body závodu jsou jejich součet. Sea Mouse III byla v obou
+rozjížďkách první v RACE → 1 + 1 = 2 body a celkové vítězství.
+
+Kdo nedojel, dostává **počet dokončivších + 1**, a to zvlášť za každou
+rozjížďku: Caprice má DNF v první a DNS v druhé, tedy 13 + 12 = 25.
+
+**Do seriálu: vítěz má 0 bodů.** Do ročníkové tabulky nejde součet bodů
+závodu, ale **pořadí v kategorii mínus jedna**. V kategorii nad 7 m skončila
+Mamba první a v seriálu má za tenhle závod 0, Pezi druhá má 1, Depresso
+šesté má 5. Kdo nestartoval, dostává (počet dokončivších + 1) − 1, tedy 13
+při třinácti lodích.
+
+**Proč to takhle je:** obě stupnice vznikly nezávisle a obě jsou nízkobodové,
+jen jedna počítá od jedné a druhá od nuly. Kdo to naprogramuje jako jedno
+pravidlo, dostane všude posun o jedničku — a ten se v seriálu projeví až
+u lodí se stejným součtem.
+
+**Kódy** v praxi: `DNF` a `DNS` jsou vidět přímo ve výsledkové listině.
 
 Kódy, bez kterých se výsledky nedají zadat: `DNF` (nedokončil), `DNS`
 (nestartoval), `DNC` (nezúčastnil se), `OCS` (předčasný start), `DSQ`
@@ -650,6 +666,12 @@ než jeden sešit sám.
 - **Rozjížďky se zapisují po kategoriích.** Ruční zápis z vody má tři
   sloupce (DO 7M, NAD 7M, RACE), každý s vlastním pořadím a víc rozjížďkami.
 
+**Závod se vyhodnocuje dvakrát najednou.** Výsledková listina má sloupce
+*Celkové pořadí* i *Pořadí kategorie*, a to pro každou rozjížďku zvlášť.
+Nejde tedy o volbu mezi celým polem a kategoriemi — počítá se obojí a každé
+slouží k něčemu jinému: celkové pořadí pro vyhlášení závodu, pořadí
+v kategorii pro seriál.
+
 **Škrtá se jeden nejhorší závod.** Tím je zodpovězená první otevřená otázka.
 Sloupec „Body přepočet" odpovídá součtu bez nejhoršího výsledku: PEZI má
 0+12+1 = 13 a přepočet 1, tedy bez dvanáctky; M1 má 44 a přepočet 31, tedy
@@ -657,8 +679,8 @@ bez třináctky.
 
 **Co z dat čistě nevychází a patří se zeptat:**
 
-1. **Vítěz 24hodinovky má −1**, v každé kategorii jeden. Bonus za vítězství
-   v maratonu, nebo jiná stupnice pro tenhle závod?
+1. **Vítěz 24hodinovky má −1**, v každé kategorii jeden. Když do seriálu
+   jde „pořadí − 1", měl by mít vítěz nulu. Bonus navíc za maraton?
 2. **Několik řádků škrtu neodpovídá.** LUNA i MAMBA mají přepočet vyšší,
    než by drhnutí nejhoršího dalo. Je na −1 zvláštní pravidlo, nebo je to
    překlep?
