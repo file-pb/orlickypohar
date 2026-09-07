@@ -37,7 +37,7 @@ neukládají**, aby šel seriál kdykoliv přepočítat podle změněných pravi
 ## Nahrání ročníku
 
 ```bash
-curl -X POST localhost:8080/import/serie \
+curl -X POST https://api.orlickypohar.klihovka.cz/import/serie \
   -H "X-Import-Token: $(cat secrets/Import__Token)" \
   -H 'content-type: application/json' \
   --data-binary @data/2025-mock.json
@@ -55,9 +55,9 @@ se nahradí a struktura zůstane.
 ## Veřejné čtení
 
 ```bash
-curl localhost:8080/serie                                   # publikované ročníky
-curl localhost:8080/serie/2025                              # ročník s kategoriemi a přihláškami
-curl localhost:8080/serie/2025/zavody/zahajeni-sezony       # zastávka s rozjížďkami a výsledky
+curl localhost:8080/serie                              # publikované ročníky
+curl localhost:8080/serie/2025                         # ročník s kategoriemi a přihláškami
+curl localhost:8080/serie/2025/zavody/zahajeni-sezony  # zastávka s rozjížďkami a výsledky
 ```
 
 Nepublikovaný ročník i nepublikovaná zastávka vracejí **404, ne 403** —
@@ -89,6 +89,17 @@ dotnet test
 Testy proti reálnému PostgreSQL přes Testcontainers přibudou s importem
 loňských dat — idempotence stojí na unikátních indexech, které by fake
 databáze neověřila.
+
+## Adresy
+
+| Adresa | Co tam běží |
+|---|---|
+| `orlickypohar.klihovka.cz` | veřejný web |
+| `api.orlickypohar.klihovka.cz` | API a import |
+
+Hezká adresa patří webu, ne rozhraní. Web mluví s API **vnitřní sítí**
+(`http://app:8080`), ne přes internet — jinak by to byla zbytečná cesta ven
+a zpátky přes Traefik.
 
 ## Nasazení
 

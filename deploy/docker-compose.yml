@@ -12,13 +12,16 @@ x-logging: &logging
 networks:
   edge: { name: edge, external: true }     # k Traefiku
   data: { name: data, external: true }     # k databázi
+  # Vlastní síť projektu, aby web mluvil s API jménem služby. Přes `edge` by
+  # to nešlo spolehlivě: je sdílená a jméno `app` na ní má i telemetrie.
+  interni: { internal: true }
 
 services:
   app:
     image: ${IMAGE:?Nastav IMAGE na tag z GHCR}
     restart: unless-stopped
     logging: *logging
-    networks: [edge, data]
+    networks: [edge, data, interni]
     environment:
       # Běžná konfigurace v prostředí, tajemství v secrets níž.
       Serilog__WriteTo__1__Name: "Seq"
@@ -32,7 +35,8 @@ services:
       # aplikacemi na serveru — přejmenuj ho spolu s projektem.
       traefik.enable: "true"
       traefik.docker.network: edge
-      traefik.http.routers.orlickypohar.rule: Host(`${APP_NAME}.${PLATFORM_DOMAIN:?}`)
+      # API má vlastní subdoménu. Hezká adresa patří webu, ne rozhraní.
+      traefik.http.routers.orlickypohar.rule: Host(`api.${APP_NAME}.${PLATFORM_DOMAIN:?}`)
       traefik.http.routers.orlickypohar.tls.certresolver: le
       # Omezení rychlosti a hlavičky ze sdílené konfigurace platformy.
       # Tohle je veřejný web, kde drtivá většina provozu je čtení výsledků —
@@ -42,6 +46,34 @@ services:
       # Traefik posílá provoz až na kontejner, který prošel readiness.
       traefik.http.services.orlickypohar.loadbalancer.healthcheck.path: /health/ready
       traefik.http.services.orlickypohar.loadbalancer.healthcheck.interval: 10s
+    deploy:
+      resources:
+        limits: { memory: 512m, cpus: "1.0" }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+
+  web:
+    image: ${IMAGE_WEB:?Nastav IMAGE_WEB na tag z GHCR}
+    restart: unless-stopped
+    logging: *logging
+    networks: [edge, interni]
+    environment:
+      # Interní adresa, ne veřejná. Přes internet by to byla zbytečná cesta
+      # ven a zpátky přes Traefik.
+      API_URL: "http://app:8080"
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: edge
+      traefik.http.routers.orlickypohar-web.rule: Host(`${APP_NAME}.${PLATFORM_DOMAIN:?}`)
+      traefik.http.routers.orlickypohar-web.tls.certresolver: le
+      traefik.http.routers.orlickypohar-web.middlewares: "ratelimit-standard@file,bezpecne-hlavicky@file"
+      traefik.http.services.orlickypohar-web.loadbalancer.server.port: "8080"
+      traefik.http.services.orlickypohar-web.loadbalancer.healthcheck.path: /health
+      traefik.http.services.orlickypohar-web.loadbalancer.healthcheck.interval: 15s
     deploy:
       resources:
         limits: { memory: 512m, cpus: "1.0" }

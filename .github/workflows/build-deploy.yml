@@ -12,6 +12,7 @@ on:
 
 env:
   IMAGE: ghcr.io/${{ github.repository }}
+  IMAGE_WEB: ghcr.io/${{ github.repository }}-web
 
 # Externí akce jsou připnuté na otisk commitu, ne na značku. Značka se dá
 # přesunout, takže kdo ovládne repozitář akce, spustí si kód v tomhle CI —
@@ -66,6 +67,27 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Web je druhá image, ne druhý repozitář. Staví se vždycky, i když se
+      # měnilo jen API — filtrování podle cest by ušetřilo minutu buildu
+      # a vyměnilo ji za riziko, že se obě image rozejdou.
+      - uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
+        id: meta-web
+        with:
+          images: ${{ env.IMAGE_WEB }}
+          tags: |
+            type=sha,format=long
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: ./web
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-web.outputs.tags }}
+          labels: ${{ steps.meta-web.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
