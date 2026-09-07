@@ -81,7 +81,9 @@ Jsou to dvě oddělené otázky a každá má odpověď v datech, ne v kódu:
 | `KoeficientDoSerie` | váha závodu v seriálu | běžně `1.0` |
 
 **Do seriálu se boduje vždycky po kategoriích**, i když se závod vyhodnocoval
-jako celé pole. U 24hodinovky se tedy zveřejní jedno pořadí přes všechny lodě,
+jako celé pole. Potvrzeno na 24hodinovce ročníku 2026: závod se jede jako
+jeden celek, ale v seriálové tabulce má každá ze tří kategorií vlastní řadu
+začínající u vítěze. U 24hodinovky se tedy zveřejní jedno pořadí přes všechny lodě,
 ale do poháru se z něj vytáhne pořadí uvnitř kategorie: když v `Nad7m` skončily
 lodě celkově třetí, sedmá a devátá, do seriálu jdou jako první, druhá a třetí.
 
@@ -701,11 +703,19 @@ bez třináctky.
 2. **Několik řádků škrtu neodpovídá.** LUNA i MAMBA mají přepočet vyšší,
    než by drhnutí nejhoršího dalo. Je na −1 zvláštní pravidlo, nebo je to
    překlep?
-3. **ČERVENÉ CAFE má ve 24hodinovce 20** proti −1 až 2 u ostatních v RACE.
-   Podle Filipa loď odstoupila těsně před koncem kvůli poruše. To vysvětluje
-   příčinu, ale ne číslo: v kategorii RACE dokončili tři, takže „počet
-   dokončivších + 1" by dalo 3 nebo 4. Vypadá to na ručně přiřazený trest
-   za odstoupení — potvrdit u rozhodčího.
+3. ~~**ČERVENÉ CAFE má ve 24hodinovce 20.**~~ **Nejspíš vysvětleno.**
+   24hodinovka se jede a vyhodnocuje jako **jeden celek přes celé pole**
+   (Filip, s výhradou „tuším"). Odstoupivší loď proto dostala místo za
+   posledním z celé flotily, ne ze své kategorie — odtud dvacítka.
+
+   Do seriálového sloupce se pak to číslo opsalo tak, jak bylo, protože loď
+   s kódem žádné **pořadí v kategorii** nemá a nebylo co přepočítat. Není to
+   trest ani překlep: je to místo, kde ruční přepočet nemá pravidlo.
+
+   **Rozhodnutí, které z toho plyne pro počítání:** i u závodu hodnoceného
+   jako celé pole musí lodě s kódem dostat do seriálu hodnotu odvozenou
+   z **jejich kategorie**, ne z celkového pořadí. Jinak jeden odstup zničí
+   celý ročník — dvacítka v seriálu je víc než součet čtyř běžných závodů.
 
    **A je to nejlepší doklad, proč tabulka nestačí.** V Excelu není kam
    napsat, že loď *odstoupila*; zbylo po ní jen číslo a jeho původ se musí
