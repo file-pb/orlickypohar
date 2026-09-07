@@ -150,6 +150,19 @@ samostatná role, ne úroveň mezi editorem a správcem.
 Klient API je generovaný z OpenAPI v TypeScriptu a **sdílí ho web i appka**.
 To je platformové rozhodnutí, ne volba projektu.
 
+### Fotky — co na nich má být
+
+Filipovo doporučení, ne pravidlo. Když se vybírá fotka na web:
+
+1. **Lodě pod plnými plachtami v náklonu** — ne kotvící, ne u mola.
+2. **Pozadí typické pro Orlík.** Nejlepší jsou záběry se zámkem; obecná voda
+   bez rozpoznatelného břehu může být odkudkoliv.
+3. **Detaily lodí v závodě** hned po nich.
+
+Je to volba obsahu, ne technické rozhodnutí — píše se sem proto, že fotky
+bude vybírat kdokoliv, kdo zrovna staví stránku, a bez tohohle odstavce
+vybere první použitelnou.
+
 ### Proč nativní a ne PWA
 
 Navrhoval jsem PWA a Filip to odmítl. Důvod: chce si obojí zkusit postavit,
