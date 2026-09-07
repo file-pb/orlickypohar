@@ -460,6 +460,19 @@ a dobře ukazuje, co takový web má mít, ale jeho podání je zastaralé.
 Vizuální vzor patří hledat mezi moderními responzivními weby — těch je
 spousta a nemusí to být zrovna weby plachetnic.
 
+**Vzor se hledá v celém sportu, ne u plachtařů.** Nejtěžší kus veřejného webu
+je jediný: dvacet lodí krát osm rozjížděk na displeji telefonu. Weby závodů
+tenhle problém většinou neřeší dobře — líp ho mají vyřešený sportovní
+výsledkové servisy a finanční tabulky, kde se na tabulce vydělává.
+
+Plyne z toho i to, že model **není o plachtění**. Seriál, zastávka, rozjížďka,
+kategorie a průběžné pořadí platí pro cyklistiku i pro šipky. Stránky
+libovolného seriálu z toho tedy jednou být můžou.
+
+**Nestaví se na to teď.** Zobecňovat model podle jednoho seriálu znamená
+trefit špatnou hranici — pravidlo o třetí kopii platí i tady. Až přijde druhý
+seriál, ukáže, co je společné doopravdy; do té doby je to poznámka, ne úkol.
+
 Inspirace jsou k tomu, jak se výsledky a průběh **podávají**, ne k tomu, kolik
 to stojí. Vendée Globe má rozpočet, který tenhle projekt nemá, a živý tracking
 celé flotily je tam samostatný produkt.
