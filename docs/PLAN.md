@@ -104,7 +104,12 @@ enginy, a je to špatně: engine se píše dřív, než je známo, co má počí
 
 ### Nízkobodový systém
 
-1. místo = 1 bod. Nedokončení = počet přihlášených + 1.
+**Vítěz má nula bodů, ne jeden.** Body se rovnají `pořadí − 1`. Odvozeno
+ze skutečné tabulky Orlické série 2026, ne z předpokladu — v kategorii nad 7 m
+mají lodě v Jarním větru po řadě 0, 1, 2, 3, 4, 5, 6, 7 a zbytek pole 8.
+
+Kdo nedojel nebo nestartoval, dostává **počet dokončivších + 1** — proto ta
+osmička u všech ostatních.
 
 Kódy, bez kterých se výsledky nedají zadat: `DNF` (nedokončil), `DNS`
 (nestartoval), `DNC` (nezúčastnil se), `OCS` (předčasný start), `DSQ`
@@ -627,14 +632,53 @@ První doklad z provozu, ne z doslechu.
    Import proto nesmí data tiše dopočítávat ani opravovat; co je v rozporu,
    patří ukázat člověku.
 
+## Co říkají skutečná data
+
+Zdroj: dva sešity *Pořadí Orlická série 2026* od rozhodčího, zachycující
+tutéž sezónu po šesti a po sedmi závodech. Rozdíl mezi nimi prozradí víc
+než jeden sešit sám.
+
+**Potvrzeno:**
+
+- **Tři kategorie**, ne čtyři: `pořadí do 7m`, `pořadí nad 7m`, `RACE`.
+  Neověřená stopa z článku o čtyřech kategoriích tedy neplatí.
+- **Devět zastávek v ročníku 2026:** Jarní vítr, Radavská regata,
+  24hodinovka, Vánoční regata, Izolepa, FxCK Cancer, Radavský pohár,
+  O pohár Vltavy, Pohár Slunce. Ne dvanáct.
+- **Lodě se vedou jménem**, bez čísla plachty. Import páruje stejně —
+  odpovídá to tomu, jak s daty zachází rozhodčí.
+- **Rozjížďky se zapisují po kategoriích.** Ruční zápis z vody má tři
+  sloupce (DO 7M, NAD 7M, RACE), každý s vlastním pořadím a víc rozjížďkami.
+
+**Škrtá se jeden nejhorší závod.** Tím je zodpovězená první otevřená otázka.
+Sloupec „Body přepočet" odpovídá součtu bez nejhoršího výsledku: PEZI má
+0+12+1 = 13 a přepočet 1, tedy bez dvanáctky; M1 má 44 a přepočet 31, tedy
+bez třináctky.
+
+**Co z dat čistě nevychází a patří se zeptat:**
+
+1. **Vítěz 24hodinovky má −1**, v každé kategorii jeden. Bonus za vítězství
+   v maratonu, nebo jiná stupnice pro tenhle závod?
+2. **Několik řádků škrtu neodpovídá.** LUNA i MAMBA mají přepočet vyšší,
+   než by drhnutí nejhoršího dalo. Je na −1 zvláštní pravidlo, nebo je to
+   překlep?
+3. **ČERVENÉ CAFE má ve 24hodinovce 20** proti −1 až 2 u ostatních v RACE.
+   Trest, nebo součet přes celé pole?
+
+**A hlavní důvod, proč tenhle projekt vzniká:** v sešitu má vzorec **jediný
+sloupec** — `Body` jako `SUM(B:J)`. `Pořadí`, `Body přepočet` i `Pořadí
+přepočet` jsou psané rukou. Škrt i seřazení tedy dnes dělá člověk v Excelu
+u každé změny znovu, pro tři kategorie zvlášť. To je přesně ta práce, kterou
+má převzít počítání z fáze 2.
+
 ## Zbývá doladit
 
 Nic z toho nebrání založit projekt a napsat první migraci.
 
-1. **Škrtají se v seriálu celé závody?** Při dvanácti zastaveních je běžné
-   počítat třeba osm nejlepších. Je to jedno pole na sérii — ale je to
-   rozdíl mezi „přijel jsem na deset z dvanácti a nevadí to" a „kdo vynechá,
-   ten nemá šanci". Rozhodneme, až budou v systému loňská data.
+1. ~~**Škrtají se v seriálu celé závody?**~~ **Zodpovězeno daty:** ano,
+   škrtá se jeden nejhorší závod. Zbývá potvrdit, jestli je to vždy jeden,
+   nebo se počet mění s délkou ročníku — a jak se škrt chová k záporným
+   bodům ze 24hodinovky.
 2. **Seznam závodů a jejich typy** — potřeba jako data, ne jako model.
 
    **Neověřená stopa z veřejných zdrojů** (článek na Kráse jachtingu, 2026):
