@@ -34,6 +34,24 @@ Serie ─┬─ Kategorie          Race / Nad7m / Pod7m
 Ve `Vysledek` je jen to, co se stalo — pořadí, časy, kód. **Body se počítají,
 neukládají**, aby šel seriál kdykoliv přepočítat podle změněných pravidel.
 
+## Nahrání ročníku
+
+```bash
+curl -X POST localhost:8080/import/serie \
+  -H "X-Import-Token: $(cat secrets/Import__Token)" \
+  -H 'content-type: application/json' \
+  --data-binary @data/2025-mock.json
+```
+
+Import je **idempotentní**: druhé odeslání téhož souboru vrátí samé nuly
+ve `nove` a nic nepřidá. Opravený výsledek přepíše původní řádek. Buď projde
+celá dávka, nebo se neuloží nic — napůl naimportovaný ročník je horší než
+žádný, protože chybějící výsledky nikdo nepozná.
+
+`data/2025-mock.json` jsou **vymyšlená data**. Existují proto, aby se model dal
+prověřit dřív, než dorazí skutečné výsledky od rozhodčího; až přijdou, soubor
+se nahradí a struktura zůstane.
+
 ## Testy
 
 ```bash
