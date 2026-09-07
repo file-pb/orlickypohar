@@ -152,16 +152,22 @@ To je platformové rozhodnutí, ne volba projektu.
 
 ### Fotky — co na nich má být
 
-Filipovo doporučení, ne pravidlo. Když se vybírá fotka na web:
+Filipovo doporučení, ne pravidlo. Když se vybírá fotka na web, hledá se jedno
+ze tří:
 
-1. **Lodě pod plnými plachtami v náklonu** — ne kotvící, ne u mola.
-2. **Pozadí typické pro Orlík.** Nejlepší jsou záběry se zámkem; obecná voda
-   bez rozpoznatelného břehu může být odkudkoliv.
-3. **Detaily lodí v závodě** hned po nich.
+1. **Detail lodi** — takový, kde jsou na plachetnici vidět podrobnosti.
+2. **Velká skupina lodí na startu.**
+3. **Lodě pod plnými plachtami v náklonu.**
 
-Je to volba obsahu, ne technické rozhodnutí — píše se sem proto, že fotky
-bude vybírat kdokoliv, kdo zrovna staví stránku, a bez tohohle odstavce
-vybere první použitelnou.
+Pozadí typické pro Orlík fotku vylepší, nejlepší jsou záběry se zámkem; obecná
+voda bez rozpoznatelného břehu může být odkudkoliv.
+
+**Co nebrat: drobné cílové fotky**, kde jsou lodě jen tečky na hladině. Na
+webu z nich není nic vidět a stránku ničím neobohatí.
+
+Je to volba obsahu, ne technické rozhodnutí — píše se sem proto, že fotky bude
+vybírat kdokoliv, kdo zrovna staví stránku, a bez tohohle odstavce vybere
+první použitelnou.
 
 ### Proč nativní a ne PWA
 
