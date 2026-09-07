@@ -6,9 +6,19 @@ výsledky, administrace a mobilní přístup.
 **Jméno projektu:** `orlickypohar` → `orlickypohar.klihovka.cz`
 (bez pomlčky a podtržítka — jméno slouží zároveň jako databáze, role i subdoména).
 
-**Stav:** repozitář založen 6. 9. 2026, plán doplněn 7. 9. 2026 o uspořádání
-repozitáře, pojmenování, import dat a rozpis fáze 1. Doménový model usazený,
-chybí bodovací pravidla od rozhodčího (viz *Zbývá doladit*).
+**Stav k 7. 9. 2026: fáze 1 hotová a nasazená.**
+
+| | |
+|---|---|
+| `orlickypohar.klihovka.cz` | veřejný web (Next.js), běží |
+| `orlickypohar-api.klihovka.cz` | API, běží |
+| V databázi | vymyšlený ročník 2025 — 16 lodí, 10 závodů, 334 výsledků |
+| Publikováno | **ne**, proto web hlásí „zatím žádný ročník" |
+| Nasazení | automatické: push do `main` → build → háček → server |
+
+Bodovací pravidla jsou rozluštěná ze skutečných tabulek rozhodčího a ověřená
+proti výsledkové listině závodu (viz *Co říkají skutečná data*). Otevřená
+zůstává jediná otázka — bonus u 24hodinovky.
 
 ---
 
@@ -608,9 +618,9 @@ Počítáno na pět hodin týdně.
 
 | # | Co | Odhad | Proč v tomhle pořadí |
 |---|---|---|---|
-| 0 | Kostra: repozitář, databáze, DNS, nasazení, `/health` | večer | `/novy-projekt` to udělá |
-| 1 | **Veřejné čtení** — model, loňská data, stránky série a závodů | 2–3 týdny | Model se prověří o skutečná data dřív, než se na něj něco postaví |
-| 2 | **Bodování** — nízkobodový systém, kódy, škrty, pořadí po kategoriích | 1–2 týdny | Čisté funkce s testy |
+| 0 | ~~Kostra: repozitář, databáze, DNS, nasazení, `/health`~~ | **hotovo** | |
+| 1 | ~~**Veřejné čtení** — model, import, stránky série a závodů~~ | **hotovo 7. 9. 2026** | Model se o skutečná data prověřil dřív, než se na něj něco postavilo — a našel dvě chyby v bodování |
+| 2 | **Bodování** — nízkobodový systém, kódy, škrty, pořadí po kategoriích | 1–2 týdny | Čisté funkce s testy. Připravené, čeká na potvrzení bonusu u 24hodinovky |
 | 3 | **Mobilní appka, jen čtení** | 2–3 týdny | **Nepotřebuje přihlášení** — dá se postavit dřív než identita a je to nejlepší místo, kde se Expo naučit |
 | 4 | **Identita a role** — Zitadel, mapování `(issuer, subject) → UserId` | 1–2 týdny | Spouští odloženou položku platformy |
 | 5 | **Administrace a workflow** — zadávání, stavy, publikace | 2–3 týdny | Až když je co spravovat |
@@ -627,21 +637,20 @@ Fáze 3 je schválně brzy: čtecí appka nepotřebuje přihlášení ani
 administraci, takže se dá postavit proti hotovému veřejnému API. Učit se
 Expo současně s řešením OAuth toků na mobilu by byly dva problémy najednou.
 
-### Fáze 1 krok za krokem
+### Fáze 1 krok za krokem — hotovo
 
 Pořadí je zvolené tak, aby se po každém kroku dalo přestat a mít funkční
 repozitář.
 
 | # | Krok | Hotovo, když |
 |---|---|---|
-| 1.1 | Smazat `Features/Measurements`, jeho migraci a testy vázané na katalog | `dotnet test` projde a `/health/ready` drží |
-| 1.2 | Entity a nová `InitialCreate`: `Serie`, `Kategorie`, `Osoba`, `Lod`, `Prihlaska`, `Zavod`, `Ucast`, `Rozjizdka`, `Vysledek` | migrace se pustí při startu proti prázdné databázi |
-| 1.3 | `POST /import/serie` — token, idempotence, celá dávka nebo nic | druhý import téhož souboru nepřidá řádek |
-| 1.4 | Loňský ročník jako soubor v `data/` a nahraný do vývojové databáze | dotazy vracejí skutečná data, ne vymyšlená |
-| 1.5 | Veřejné čtecí endpointy: série, závod, rozjížďka, výsledky | OpenAPI dokument je úplný a klient se z něj vygeneruje |
-| 1.6 | `web/` — stránka série a stránka závodu, renderované serverem | dá se poslat odkaz pořadateli |
+| 1.1 + 1.2 | ~~Smazat šablonový řez, entity a migrace~~ | hotovo; `ModelPoharu` tabulky měření zahazuje, `InitialCreate` zůstala |
+| 1.3 | ~~`POST /import/serie`~~ | hotovo; idempotence ověřená **proti produkční databázi**, druhý běh vrátil samé nuly |
+| 1.4 | ~~Ročník jako soubor v `data/`~~ | hotovo, ale **vymyšlený** — skutečná data zatím nejsou |
+| 1.5 | ~~Veřejné čtecí endpointy~~ | hotovo; nepublikované vrací 404, ne 403 |
+| 1.6 | ~~`web/` — stránka ročníku a zastávky~~ | hotovo a nasazené; odkaz poslat jde, ale ukáže prázdno, dokud se nepublikuje ročník |
 
-**Body se ve fázi 1 nepočítají.** Výsledky se ukazují tak, jak přišly
+**Body se ve fázi 1 nepočítaly.** Výsledky se ukazují tak, jak přišly
 z importu. Počítání je fáze 2 a chce vlastní testy — míchat obojí znamená
 ladit model a bodovací pravidla najednou.
 
@@ -783,6 +792,21 @@ přepočet` jsou psané rukou. Škrt i seřazení tedy dnes dělá člověk v Ex
 u každé změny znovu, pro tři kategorie zvlášť. To je přesně ta práce, kterou
 má převzít počítání z fáze 2.
 
+## Kde se pokračuje
+
+Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
+
+1. **Rozjezd** — [JINY-STROJ.md](https://github.com/file-pb/platform/blob/main/docs/JINY-STROJ.md)
+   v platformě. Na pracovním Macu je nedostupný Docker Hub, takže integrační
+   testy běží jen v CI a lokální databáze nejede vůbec.
+2. **Web bez databáze** — `tools/fake-api.py` servíruje mock ročník
+   ve tvarech skutečného API.
+3. **Nasazení** — nic ručního. Push do `main` postaví obě image a háček je
+   vymění na serveru i s `docker-compose.yml`.
+4. **Otázka na rozhodčího** — jediná zbývající, viz níž. Fáze 2 na ní stojí.
+5. **Skutečná data** — až dorazí, nahradí `data/2025-mock.json` a nahrají se
+   importem. Struktura zůstane.
+
 ## Zbývá doladit
 
 Nic z toho nebrání založit projekt a napsat první migraci.
@@ -791,19 +815,16 @@ Nic z toho nebrání založit projekt a napsat první migraci.
    škrtá se jeden nejhorší závod. Zbývá potvrdit, jestli je to vždy jeden,
    nebo se počet mění s délkou ročníku — a jak se škrt chová k záporným
    bodům ze 24hodinovky.
-2. **Seznam závodů a jejich typy** — potřeba jako data, ne jako model.
-
-   **Neověřená stopa z veřejných zdrojů** (článek na Kráse jachtingu, 2026):
-   seriál má prý **deset sobotních závodů**, ne dvanáct, a **čtyři kategorie** —
-   do 7 m, do 9 m, Race I a Race II — místo tří. Zmiňuje Jarní vítr, Radavský
-   pohár, 24hodinový maraton, Izolepa Cup a vánoční regatu.
-
-   Nepřepisuje to model: kategorie jsou řádky v tabulce, ne výčet v kódu, a počet
-   závodů nikde napevno není. Ale je to první věc na ověření u rozhodčího.
+2. ~~**Seznam závodů a jejich typy.**~~ **Zodpovězeno daty:** ročník 2026 má
+   devět zastávek — Jarní vítr, Radavská regata, 24hodinovka, Vánoční regata,
+   Izolepa, FxCK Cancer, Radavský pohár, O pohár Vltavy, Pohár Slunce — a tři
+   kategorie: do 7 m, nad 7 m, RACE. Stopa z článku o čtyřech kategoriích
+   neplatila.
 
    Seriál se na Facebooku jmenuje **ORLÍK CUP** (skupina `148250098639632`),
-   výsledky tam dává Miloš Zvonař z YC Písek. Skupina je zavřená, takže obsah
-   se veřejně přečíst nedá.
+   výsledky tam dává Miloš Zvonař z YC Písek. Skupina je zavřená: obsah se
+   veřejně přečíst nedá a stahování příloh přes `facebook.com/download`
+   vrací přihlašovací stránku. Odkazy přes `lookaside.fbsbx.com` fungují.
 3. **Co když loď kategorii přece jen změní** (nové plachty, přeměření).
    Návrh: správce ji smí přepsat a pořadí se přepočítá. Historie se nevede,
    dokud se neukáže, že je potřeba.

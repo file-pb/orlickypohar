@@ -79,6 +79,27 @@ S pořadatelem i rozhodčím se navíc mluví česky a kódy závodních pravide
 Řez se jmenuje `Serial`, ne `Serie`: třída `Serie` uvnitř jmenného prostoru
 `Serie` se v C# pere sama se sebou.
 
+## Pasti, na které jsme už šlápli
+
+Nejsou to konvence, ale fakta o prostředí. Každá stála čas.
+
+**Časy do databáze patří v UTC.** Npgsql odmítne zapsat `DateTimeOffset`
+s jiným posunem než nula do `timestamp with time zone`. Skutečná data mají
+`+02:00`, takže import bez `ToUniversalTime()` padne až uprostřed zápisu.
+Test s letním posunem to hlídá.
+
+**V kontrolách zdraví piš `127.0.0.1`, ne `localhost`.** V kontejneru se
+`localhost` překládá nejdřív na `::1`, kde aplikace neposlouchá — kontejner
+je pak `unhealthy`, přestože aplikace běží, a Traefik ho vyřadí.
+
+**Subdomény jen jednoúrovňové.** Bezplatný certifikát Cloudflare kryje
+`*.klihovka.cz`, takže `api.orlickypohar.klihovka.cz` selže na TLS dřív, než
+požadavek dojde na server. Proto `orlickypohar-api.klihovka.cz`.
+
+**Integrační testy lokálně nejedou.** Docker Hub je z pracovního stroje
+nedostupný, takže Testcontainers běží jen v GitHub Actions. Před pushem
+pusť aspoň `dotnet test --filter "Category!=Integracni"`.
+
 ## Zdraví a nasazení
 
 - `/health` je liveness — běží proces.
@@ -214,6 +235,17 @@ Dvě věci na to navazují a nesmějí se rozvázat:
 Známé omezení: osoby se párují podle jména a příjmení, lodě podle názvu. Dva
 Jani Novákové v jednom ročníku splynou. Při velikosti startovního pole je to
 únosné; alternativou by bylo vymýšlet lidem identifikátory, které nikde neexistují.
+
+## Nasazení
+
+Nasazuje CI, ne člověk. Push do `main` postaví **dvě image** (API a web),
+zavolá nasazovací háček na serveru a ten je vymění — včetně
+`deploy/docker-compose.yml` ze stejného commitu, takže nová proměnná nebo
+tajemství dojede spolu s kódem.
+
+Když nasazení selže po výměně compose, háček vrátí původní zpátky. Nové
+tajemství ale musí na serveru **existovat předem**, jinak kontejner nenaběhne
+— a musí patřit uživateli, pod kterým aplikace běží (UID 1654), ne `deploy`.
 
 ## Testy
 

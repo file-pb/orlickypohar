@@ -16,6 +16,11 @@ docker compose up --build
 - OpenAPI UI: <http://localhost:8080/scalar/v1>
 - Seq (logy): <http://localhost:5341>
 
+**Na Filipově pracovním Macu tohle nefunguje** — Docker Hub je z firemní sítě
+nedostupný, takže se nestáhne ani PostgreSQL. Web se dá vyvíjet proti
+`tools/fake-api.py`, integrační testy běží v CI. Podrobněji
+[JINY-STROJ.md](https://github.com/file-pb/platform/blob/main/docs/JINY-STROJ.md).
+
 Bez Dockeru: spusť si Postgres a pak `dotnet run --project src/OrlickyPohar.Api`.
 Vývojový connection string je v `appsettings.Development.json` — v kontejneru se
 místo něj načte soubor z `/run/secrets`, viz [secrets/README.md](secrets/README.md).
@@ -82,13 +87,14 @@ něj by se stránky nedaly vidět jinak než nasazením.
 ## Testy
 
 ```bash
-dotnet test
+dotnet test --filter "Category!=Integracni"   # bez Dockeru, běží všude
+dotnet test                                    # včetně Testcontainers
 ```
 
-`ModelTests` drží model proti migracím a nepotřebují databázi ani Docker.
-Testy proti reálnému PostgreSQL přes Testcontainers přibudou s importem
-loňských dat — idempotence stojí na unikátních indexech, které by fake
-databáze neověřila.
+`ModelTests` drží model proti migracím, `KontraktTests` tvar importního
+souboru — obojí bez databáze. `ImportTests` a `CteniTests` mají značku
+`Category=Integracni` a potřebují Docker; na pracovním stroji se pustit
+nedají a běží ve vedlejší úloze CI, která nasazení neblokuje.
 
 ## Adresy
 
