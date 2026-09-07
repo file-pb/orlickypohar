@@ -28,6 +28,11 @@ public class KontraktTests
         Assert.Equal(3, serie.Kategorie.Count);
         Assert.Equal(10, serie.Zavody.Count);
         Assert.NotEmpty(serie.Prihlasky);
+
+        // Vymyšlená data se nesmějí dostat na veřejné stránky. Až bude čtení
+        // respektovat Publikovano, drží tenhle test hranici za nás.
+        Assert.False(serie.Publikovano);
+        Assert.All(serie.Zavody, z => Assert.False(z.Publikovano));
     }
 
     [Fact]

@@ -1,9 +1,9 @@
 {
-  "_poznamka": "VYMYŠLENÁ DATA. Lodě, lidé i výsledky jsou smyšlené a slouží k tomu, aby se model dal prověřit dřív, než dorazí skutečné výsledky od rozhodčího. Až přijdou, tenhle soubor se nahradí — struktura zůstane.",
+  "_poznamka": "VYMYŠLENÁ DATA. Lodě, lidé i výsledky jsou smyšlené a slouží k tomu, aby se model dal prověřit dřív, než dorazí skutečné výsledky od rozhodčího. Ročník i závody jsou proto NEPUBLIKOVANÉ — na veřejné stránky se nesmějí dostat vymyšlené výsledky. Až přijdou skutečné, tenhle soubor se nahradí.",
   "slug": "2025",
   "nazev": "Orlický pohár 2025",
   "rok": 2025,
-  "publikovano": true,
+  "publikovano": false,
   "kategorie": [
     {
       "nazev": "Race",
@@ -303,7 +303,7 @@
       "vyhodnoceni": "PoKategoriich",
       "pocetRozjizdekDoSerie": null,
       "koeficientDoSerie": 1.0,
-      "publikovano": true,
+      "publikovano": false,
       "ucasti": [
         {
           "lod": "anicka",
@@ -747,7 +747,7 @@
       "vyhodnoceni": "PoKategoriich",
       "pocetRozjizdekDoSerie": null,
       "koeficientDoSerie": 1.0,
-      "publikovano": true,
+      "publikovano": false,
       "ucasti": [
         {
           "lod": "anicka",
@@ -1193,7 +1193,7 @@
       "vyhodnoceni": "PoKategoriich",
       "pocetRozjizdekDoSerie": null,
       "koeficientDoSerie": 1.0,
-      "publikovano": true,
+      "publikovano": false,
       "ucasti": [
         {
           "lod": "anicka",
@@ -1355,7 +1355,7 @@
       "vyhodnoceni": "PoKategoriich",
       "pocetRozjizdekDoSerie": null,
       "koeficientDoSerie": 1.0,
-      "publikovano": true,
+      "publikovano": false,
       "ucasti": [
         {
           "lod": "bora",
@@ -1668,7 +1668,7 @@
       "vyhodnoceni": "PoKategoriich",
       "pocetRozjizdekDoSerie": 1,
       "koeficientDoSerie": 1.0,
-      "publikovano": true,
+      "publikovano": false,
       "ucasti": [
         {
           "lod": "anicka",
@@ -2027,7 +2027,7 @@
       "vyhodnoceni": "PoKategoriich",
       "pocetRozjizdekDoSerie": null,
       "koeficientDoSerie": 1.0,
-      "publikovano": true,
+      "publikovano": false,
       "ucasti": [
         {
           "lod": "anicka",
@@ -2202,7 +2202,7 @@
       "vyhodnoceni": "PoKategoriich",
       "pocetRozjizdekDoSerie": null,
       "koeficientDoSerie": 1.0,
-      "publikovano": true,
+      "publikovano": false,
       "ucasti": [
         {
           "lod": "anicka",
@@ -2590,7 +2590,7 @@
       "vyhodnoceni": "CelePole",
       "pocetRozjizdekDoSerie": null,
       "koeficientDoSerie": 1.5,
-      "publikovano": true,
+      "publikovano": false,
       "ucasti": [
         {
           "lod": "anicka",
@@ -2754,7 +2754,7 @@
       "vyhodnoceni": "PoKategoriich",
       "pocetRozjizdekDoSerie": null,
       "koeficientDoSerie": 1.0,
-      "publikovano": true,
+      "publikovano": false,
       "ucasti": [
         {
           "lod": "anicka",
@@ -3105,7 +3105,7 @@
       "vyhodnoceni": "PoKategoriich",
       "pocetRozjizdekDoSerie": null,
       "koeficientDoSerie": 1.0,
-      "publikovano": true,
+      "publikovano": false,
       "ucasti": [
         {
           "lod": "anicka",
