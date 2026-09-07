@@ -452,7 +452,13 @@ jako záchrana, kdyby administrace ve fázi 5 nestíhala.
 |---|---|---|
 | Fotky | [galerie na Rajčeti](https://rajce.net/jitkaorlik/album/fuck-cancer-regatta-empatie) | první sada, Filipovy vlastní |
 | Existující obsah | Facebook | něco z historie závodů se dá najít tam |
-| Inspirace | [Česká námořní rallye](https://www.ceskanamornirallye.cz/), [Vendée Globe](https://www.vendeeglobe.org/), [Rolex Middle Sea Race](https://www.rolexmiddlesearace.com/), [Barcolana](https://www.barcolana.it/en) | jak vypadají weby závodů |
+| Inspirace obsahem | [Česká námořní rallye](https://www.ceskanamornirallye.cz/) | co má český web závodu obsahovat a v jakém jazyce |
+| Inspirace formou | [Vendée Globe](https://www.vendeeglobe.org/), [Rolex Middle Sea Race](https://www.rolexmiddlesearace.com/), [Barcolana](https://www.barcolana.it/en) | moderní responzivní podání výsledků a průběhu |
+
+**ČNR se drž obsahem, ne formou.** Je to nejbližší srovnatelný český web
+a dobře ukazuje, co takový web má mít, ale jeho podání je zastaralé.
+Vizuální vzor patří hledat mezi moderními responzivními weby — těch je
+spousta a nemusí to být zrovna weby plachetnic.
 
 Inspirace jsou k tomu, jak se výsledky a průběh **podávají**, ne k tomu, kolik
 to stojí. Vendée Globe má rozpočet, který tenhle projekt nemá, a živý tracking
