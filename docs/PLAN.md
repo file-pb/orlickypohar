@@ -85,8 +85,20 @@ ji smí přepsat; uloženo zůstává číslo na závodě, protože ono je tou p
 
 | Pole na `Zavod` | Co znamená | Příklad |
 |---|---|---|
-| `PocetRozjizdekDoSerie` | kolik rozjížděk závodu se počítá do poháru; prázdné = všechny | Izolepa: `1` |
+| `Rozjizdka.DoSerie` | počítá se tahle rozjížďka do poháru? | Izolepa: jen některé |
 | `KoeficientDoSerie` | váha závodu v seriálu | běžně `1.0` |
+
+**Příznak je na rozjížďce, ne počet na závodě.** Původně tu stálo
+`PocetRozjizdekDoSerie` a bylo to špatně: rozhoduje se, **které** rozjížďky
+se počítají, a posuzuje se to na vodě podle podmínek. Číslo „jedna" neřekne,
+jestli je to první, poslední, nebo nejlepší.
+
+Izolepa je fun závod, kde je část rozjížděk **mimo vodu** — třeba běh pro
+míčky z kopce. Je to schválně: zamíchá pořadím a vnese do závodu prvek
+nezávislý na výkonnosti lodi. Do závodu se počítá, do poháru nesmí — a to
+počtem vyjádřit nejde vůbec.
+
+Pro model je běh pro míčky pořadí jako každé jiné. Rozjížďka nemusí být plavba.
 
 **Do seriálu se boduje vždycky po kategoriích**, i když se závod vyhodnocoval
 jako celé pole. Potvrzeno na 24hodinovce ročníku 2026: závod se jede jako
