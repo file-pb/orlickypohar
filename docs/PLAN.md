@@ -679,8 +679,17 @@ bez třináctky.
 
 **Co z dat čistě nevychází a patří se zeptat:**
 
-1. **Vítěz 24hodinovky má −1**, v každé kategorii jeden. Když do seriálu
-   jde „pořadí − 1", měl by mít vítěz nulu. Bonus navíc za maraton?
+1. **24hodinovka je bonusová, ne násobená.** Filip slyšel, že „se počítá
+   dvakrát". Data ale ukazují posun celého pole o jedničku dolů, ne násobek:
+   vítěz −1, druhý 0, třetí 1 — a stejně ve všech třech kategoriích.
+
+   Koeficient 2 by dal druhému 2 body a osmému 14; bonus mu dá 0 a 6.
+   V seriálu je to propastný rozdíl, takže **tohle je potřeba potvrdit
+   od rozhodčího dřív, než se to naprogramuje.**
+
+   Pokud platí bonus, není to `KoeficientDoSerie` — to pole násobí. Byl by
+   to samostatný odečet na závodě, nebo se 24hodinovka dá zapsat prostě tak,
+   jak je: hodnotami, které rozhodčí spočítal.
 2. **Několik řádků škrtu neodpovídá.** LUNA i MAMBA mají přepočet vyšší,
    než by drhnutí nejhoršího dalo. Je na −1 zvláštní pravidlo, nebo je to
    překlep?
