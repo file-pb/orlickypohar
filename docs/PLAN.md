@@ -694,7 +694,16 @@ bez třináctky.
    než by drhnutí nejhoršího dalo. Je na −1 zvláštní pravidlo, nebo je to
    překlep?
 3. **ČERVENÉ CAFE má ve 24hodinovce 20** proti −1 až 2 u ostatních v RACE.
-   Trest, nebo součet přes celé pole?
+   Podle Filipa loď odstoupila těsně před koncem kvůli poruše. To vysvětluje
+   příčinu, ale ne číslo: v kategorii RACE dokončili tři, takže „počet
+   dokončivších + 1" by dalo 3 nebo 4. Vypadá to na ručně přiřazený trest
+   za odstoupení — potvrdit u rozhodčího.
+
+   **A je to nejlepší doklad, proč tabulka nestačí.** V Excelu není kam
+   napsat, že loď *odstoupila*; zbylo po ní jen číslo a jeho původ se musí
+   luštit zpětně. Model drží `PoradiVCili` a `Kod` odděleně, takže „RET"
+   zůstane zapsaný jako fakt a body se z něj počítají. Za rok se nikdo
+   nebude ptát, odkud se vzala dvacítka.
 
 **A hlavní důvod, proč tenhle projekt vzniká:** v sešitu má vzorec **jediný
 sloupec** — `Body` jako `SUM(B:J)`. `Pořadí`, `Body přepočet` i `Pořadí
