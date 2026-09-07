@@ -133,6 +133,47 @@ public class ImportTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task Cas_s_letnim_posunem_se_ulozi()
+    {
+        // Skutečná data mají +02:00, ne UTC. PostgreSQL jiný posun než nula
+        // nepřijme, takže se převádí — a chybí-li převod, selže to až při
+        // zápisu do databáze, tedy uprostřed importu.
+        var start = new DateTimeOffset(2025, 4, 26, 10, 0, 0, TimeSpan.FromHours(2));
+        var vstup = Rocnik("letni-cas");
+        var rozjizdka = vstup.Zavody[0].Rozjizdky[0];
+        var sCasem = vstup with
+        {
+            Zavody =
+            [
+                vstup.Zavody[0] with
+                {
+                    Rozjizdky =
+                    [
+                        rozjizdka with
+                        {
+                            StartV = start,
+                            Vysledky =
+                            [
+                                new("anicka", PoradiVCili: 1, DojezdV: start.AddHours(1), CasSekundy: 3600),
+                                rozjizdka.Vysledky[1],
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+
+        await Posli(sCasem);
+
+        using var scope = fixture.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var ulozena = await db.Rozjizdky
+            .SingleAsync(r => r.Zavod!.Serie!.Slug == "letni-cas");
+
+        Assert.Equal(start.ToUniversalTime(), ulozena.StartV);
+    }
+
+    [Fact]
     public async Task Bez_tokenu_se_neimportuje()
     {
         var odpoved = await Klient(token: null).PostAsJsonAsync("/import/serie", Rocnik("bez-tokenu"), Json);

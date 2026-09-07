@@ -309,7 +309,10 @@ internal static class ImportHandler
             }
             else upraveneR++;
 
-            r.StartV = v.StartV;
+            // Do UTC. PostgreSQL v `timestamp with time zone` jiný posun než
+            // nula nepřijme a Npgsql to odmítne až při zápisu — tedy uprostřed
+            // importu, ne při kontrole vstupu.
+            r.StartV = v.StartV?.ToUniversalTime();
             r.Stav = v.Stav;
             r.DoSerie = v.DoSerie;
             await db.SaveChangesAsync(ct);
@@ -349,7 +352,7 @@ internal static class ImportHandler
             else upravene++;
 
             x.PoradiVCili = v.PoradiVCili;
-            x.DojezdV = v.DojezdV;
+            x.DojezdV = v.DojezdV?.ToUniversalTime();
             x.NamerenyCas = v.CasSekundy is null ? null : TimeSpan.FromSeconds(v.CasSekundy.Value);
             x.Kod = v.Kod;
         }
