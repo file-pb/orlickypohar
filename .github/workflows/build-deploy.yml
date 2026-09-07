@@ -69,13 +69,18 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Server si novou image stáhne sám. Tajemství jde hlavičkou, ne v URL —
-      # adresa se objevuje v logu běhu, hlavička ne.
+      # Server si novou image stáhne sám. Posílá se i compose ze STEJNÉHO
+      # commitu, ze kterého je image — jinak by se nasadila nová aplikace
+      # se starým nastavením a chybějící tajemství by se projevilo až za běhu.
+      #
+      # Tajemství jde hlavičkou, ne v URL: adresa se objevuje v logu běhu.
       - name: Deploy
         if: ${{ vars.DEPLOY_WEBHOOK != '' }}
         run: |
-          curl -fsS --max-time 600 -X POST "${{ vars.DEPLOY_WEBHOOK }}" \
-            -H "X-Deploy-Token: ${{ secrets.DEPLOY_TOKEN }}"
+          curl -fsS --max-time 900 -X POST "${{ vars.DEPLOY_WEBHOOK }}" \
+            -H "X-Deploy-Token: ${{ secrets.DEPLOY_TOKEN }}" \
+            -H "Content-Type: application/yaml" \
+            --data-binary @deploy/docker-compose.yml
 
   # Testy proti reálnému PostgreSQL přes Testcontainers. Běží VEDLE buildu,
   # ne před ním: jejich selhání hlásí problém, ale neblokuje nasazení
