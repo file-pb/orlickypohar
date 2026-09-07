@@ -169,6 +169,14 @@ Je to volba obsahu, ne technické rozhodnutí — píše se sem proto, že fotky
 vybírat kdokoliv, kdo zrovna staví stránku, a bez tohohle odstavce vybere
 první použitelnou.
 
+**Odkud vzít první sadu:** Filipova vlastní galerie na Rajčeti. Fotil je sám,
+takže u nich otázka práv odpadá a dají se použít bez ptaní.
+
+To ale platí **jen pro tuhle sadu**. U fotek od pořadatelů a diváků, které
+přibudou později, musí být u snímku vidět autor a souhlas se zveřejněním.
+Je to jedno pole u fotky; doplňovat ho zpětně ke dvěma stům snímků je práce,
+kterou nikdo neudělá.
+
 ### Proč nativní a ne PWA
 
 Navrhoval jsem PWA a Filip to odmítl. Důvod: chce si obojí zkusit postavit,
