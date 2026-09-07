@@ -111,8 +111,16 @@ tabulce téhož ročníku. Sedí na každém řádku obou kategorií.
 kategorii** a body závodu jsou jejich součet. Sea Mouse III byla v obou
 rozjížďkách první v RACE → 1 + 1 = 2 body a celkové vítězství.
 
-Kdo nedojel, dostává **počet dokončivších + 1**, a to zvlášť za každou
-rozjížďku: Caprice má DNF v první a DNS v druhé, tedy 13 + 12 = 25.
+**Kódy mají pořadí mezi sebou.** Za dokončivšími následuje `DNF` — loď, která
+startovala a odstoupila — a teprve za ním `DNS`, která vůbec nevyjela.
+
+V první rozjížďce nad 7 m má Caprice `DNF` a dostává 13, Thea `DNS` a dostává
+14. Ve druhé rozjížďce žádný `DNF` nebyl, takže všechny tři lodě s `DNS`
+spadly shodně na 12. Není to tedy pevné „+1" ani „+2": je to **další místo
+v řadě za posledním, kdo dojel**, a kódy se do té řady staví v pořadí podle
+závažnosti.
+
+Caprice má proto za závod 13 + 12 = 25 bodů — každá rozjížďka se počítá zvlášť.
 
 **Do seriálu: vítěz má 0 bodů.** Do ročníkové tabulky nejde součet bodů
 závodu, ale **pořadí v kategorii mínus jedna**. V kategorii nad 7 m skončila
