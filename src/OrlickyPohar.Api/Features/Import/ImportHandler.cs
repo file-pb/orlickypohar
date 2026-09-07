@@ -244,7 +244,6 @@ internal static class ImportHandler
             zavod.Poradi = v.Poradi;
             zavod.PocetSkrtu = v.PocetSkrtu;
             zavod.Vyhodnoceni = v.Vyhodnoceni;
-            zavod.PocetRozjizdekDoSerie = v.PocetRozjizdekDoSerie;
             zavod.KoeficientDoSerie = v.KoeficientDoSerie;
             zavod.Publikovano = v.Publikovano;
 
@@ -312,6 +311,7 @@ internal static class ImportHandler
 
             r.StartV = v.StartV;
             r.Stav = v.Stav;
+            r.DoSerie = v.DoSerie;
             await db.SaveChangesAsync(ct);
 
             var (nv, uv) = await SlaďVysledky(db, r, v, vstup.Slug, ucasti, ct);

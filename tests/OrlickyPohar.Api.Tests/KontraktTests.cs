@@ -59,6 +59,16 @@ public class KontraktTests
     }
 
     [Fact]
+    public void Izolepa_pousti_do_serie_jen_jednu_rozjizdku()
+    {
+        var izolepa = Mock().Zavody.Single(z => z.Slug == "izolepa");
+
+        // Fun závod: část rozjížděk se nejede na vodě a do poháru nesmí.
+        Assert.True(izolepa.Rozjizdky.Count > 1);
+        Assert.Single(izolepa.Rozjizdky.Where(r => r.DoSerie));
+    }
+
+    [Fact]
     public void Kazdy_vysledek_ma_poradi_nebo_kod()
     {
         var serie = Mock();

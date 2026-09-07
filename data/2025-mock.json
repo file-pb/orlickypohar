@@ -301,7 +301,6 @@
       "poradi": 1,
       "pocetSkrtu": 1,
       "vyhodnoceni": "PoKategoriich",
-      "pocetRozjizdekDoSerie": null,
       "koeficientDoSerie": 1.0,
       "publikovano": false,
       "ucasti": [
@@ -466,7 +465,8 @@
               "dojezdV": "2025-04-26T11:15:38+02:00",
               "casSekundy": 4538
             }
-          ]
+          ],
+          "doSerie": true
         },
         {
           "cislo": 2,
@@ -557,7 +557,8 @@
               "dojezdV": "2025-04-26T13:18:04+02:00",
               "casSekundy": 4684
             }
-          ]
+          ],
+          "doSerie": true
         },
         {
           "cislo": 3,
@@ -644,7 +645,8 @@
               "dojezdV": "2025-04-26T15:12:57+02:00",
               "casSekundy": 4377
             }
-          ]
+          ],
+          "doSerie": true
         },
         {
           "cislo": 4,
@@ -731,7 +733,8 @@
               "dojezdV": "2025-04-26T17:14:11+02:00",
               "casSekundy": 4451
             }
-          ]
+          ],
+          "doSerie": true
         }
       ]
     },
@@ -745,7 +748,6 @@
       "poradi": 2,
       "pocetSkrtu": 1,
       "vyhodnoceni": "PoKategoriich",
-      "pocetRozjizdekDoSerie": null,
       "koeficientDoSerie": 1.0,
       "publikovano": false,
       "ucasti": [
@@ -908,7 +910,8 @@
               "dojezdV": "2025-05-10T11:15:00+02:00",
               "casSekundy": 4500
             }
-          ]
+          ],
+          "doSerie": true
         },
         {
           "cislo": 2,
@@ -999,7 +1002,8 @@
               "dojezdV": "2025-05-10T13:18:06+02:00",
               "casSekundy": 4686
             }
-          ]
+          ],
+          "doSerie": true
         },
         {
           "cislo": 3,
@@ -1088,7 +1092,8 @@
               "lod": "gejzir",
               "kod": "Dns"
             }
-          ]
+          ],
+          "doSerie": true
         },
         {
           "cislo": 4,
@@ -1177,7 +1182,8 @@
               "dojezdV": "2025-05-10T17:16:04+02:00",
               "casSekundy": 4564
             }
-          ]
+          ],
+          "doSerie": true
         }
       ]
     },
@@ -1191,7 +1197,6 @@
       "poradi": 3,
       "pocetSkrtu": 0,
       "vyhodnoceni": "PoKategoriich",
-      "pocetRozjizdekDoSerie": null,
       "koeficientDoSerie": 1.0,
       "publikovano": false,
       "ucasti": [
@@ -1339,7 +1344,8 @@
               "dojezdV": "2025-05-24T11:10:33+02:00",
               "casSekundy": 4233
             }
-          ]
+          ],
+          "doSerie": true
         }
       ]
     },
@@ -1353,7 +1359,6 @@
       "poradi": 4,
       "pocetSkrtu": 1,
       "vyhodnoceni": "PoKategoriich",
-      "pocetRozjizdekDoSerie": null,
       "koeficientDoSerie": 1.0,
       "publikovano": false,
       "ucasti": [
@@ -1496,7 +1501,8 @@
               "dojezdV": "2025-06-07T11:13:09+02:00",
               "casSekundy": 4389
             }
-          ]
+          ],
+          "doSerie": true
         },
         {
           "cislo": 2,
@@ -1575,7 +1581,8 @@
               "dojezdV": "2025-06-07T13:14:38+02:00",
               "casSekundy": 4478
             }
-          ]
+          ],
+          "doSerie": true
         },
         {
           "cislo": 3,
@@ -1652,7 +1659,8 @@
               "dojezdV": "2025-06-07T15:12:46+02:00",
               "casSekundy": 4366
             }
-          ]
+          ],
+          "doSerie": true
         }
       ]
     },
@@ -1666,7 +1674,6 @@
       "poradi": 5,
       "pocetSkrtu": 0,
       "vyhodnoceni": "PoKategoriich",
-      "pocetRozjizdekDoSerie": 1,
       "koeficientDoSerie": 1.0,
       "publikovano": false,
       "ucasti": [
@@ -1831,7 +1838,9 @@
               "dojezdV": "2025-06-21T11:17:48+02:00",
               "casSekundy": 4668
             }
-          ]
+          ],
+          "doSerie": false,
+          "poznamka": "běh pro míčky z kopce — nejede se na vodě"
         },
         {
           "cislo": 2,
@@ -1920,7 +1929,8 @@
               "dojezdV": "2025-06-21T13:16:57+02:00",
               "casSekundy": 4617
             }
-          ]
+          ],
+          "doSerie": true
         },
         {
           "cislo": 3,
@@ -2011,7 +2021,8 @@
               "dojezdV": "2025-06-21T15:17:45+02:00",
               "casSekundy": 4665
             }
-          ]
+          ],
+          "doSerie": false
         }
       ]
     },
@@ -2025,7 +2036,6 @@
       "poradi": 6,
       "pocetSkrtu": 0,
       "vyhodnoceni": "PoKategoriich",
-      "pocetRozjizdekDoSerie": null,
       "koeficientDoSerie": 1.0,
       "publikovano": false,
       "ucasti": [
@@ -2186,7 +2196,8 @@
               "dojezdV": "2025-07-12T11:14:15+02:00",
               "casSekundy": 4455
             }
-          ]
+          ],
+          "doSerie": true
         }
       ]
     },
@@ -2200,7 +2211,6 @@
       "poradi": 7,
       "pocetSkrtu": 1,
       "vyhodnoceni": "PoKategoriich",
-      "pocetRozjizdekDoSerie": null,
       "koeficientDoSerie": 1.0,
       "publikovano": false,
       "ucasti": [
@@ -2341,7 +2351,8 @@
               "dojezdV": "2025-08-16T11:12:54+02:00",
               "casSekundy": 4374
             }
-          ]
+          ],
+          "doSerie": true
         },
         {
           "cislo": 2,
@@ -2420,7 +2431,8 @@
               "dojezdV": "2025-08-16T13:14:38+02:00",
               "casSekundy": 4478
             }
-          ]
+          ],
+          "doSerie": true
         },
         {
           "cislo": 3,
@@ -2499,7 +2511,8 @@
               "dojezdV": "2025-08-16T15:13:41+02:00",
               "casSekundy": 4421
             }
-          ]
+          ],
+          "doSerie": true
         },
         {
           "cislo": 4,
@@ -2574,7 +2587,8 @@
               "dojezdV": "2025-08-16T17:13:11+02:00",
               "casSekundy": 4391
             }
-          ]
+          ],
+          "doSerie": true
         }
       ]
     },
@@ -2588,7 +2602,6 @@
       "poradi": 8,
       "pocetSkrtu": 0,
       "vyhodnoceni": "CelePole",
-      "pocetRozjizdekDoSerie": null,
       "koeficientDoSerie": 1.5,
       "publikovano": false,
       "ucasti": [
@@ -2738,7 +2751,8 @@
               "dojezdV": "2025-08-31T15:08:10+02:00",
               "casSekundy": 104890
             }
-          ]
+          ],
+          "doSerie": true
         }
       ]
     },
@@ -2752,7 +2766,6 @@
       "poradi": 9,
       "pocetSkrtu": 1,
       "vyhodnoceni": "PoKategoriich",
-      "pocetRozjizdekDoSerie": null,
       "koeficientDoSerie": 1.0,
       "publikovano": false,
       "ucasti": [
@@ -2917,7 +2930,8 @@
               "dojezdV": "2025-09-13T11:17:55+02:00",
               "casSekundy": 4675
             }
-          ]
+          ],
+          "doSerie": true
         },
         {
           "cislo": 2,
@@ -3000,7 +3014,8 @@
               "dojezdV": "2025-09-13T13:12:21+02:00",
               "casSekundy": 4341
             }
-          ]
+          ],
+          "doSerie": true
         },
         {
           "cislo": 3,
@@ -3089,7 +3104,8 @@
               "dojezdV": "2025-09-13T15:15:35+02:00",
               "casSekundy": 4535
             }
-          ]
+          ],
+          "doSerie": true
         }
       ]
     },
@@ -3103,7 +3119,6 @@
       "poradi": 10,
       "pocetSkrtu": 0,
       "vyhodnoceni": "PoKategoriich",
-      "pocetRozjizdekDoSerie": null,
       "koeficientDoSerie": 1.0,
       "publikovano": false,
       "ucasti": [
@@ -3266,7 +3281,8 @@
               "dojezdV": "2025-09-27T11:14:27+02:00",
               "casSekundy": 4467
             }
-          ]
+          ],
+          "doSerie": true
         }
       ]
     }

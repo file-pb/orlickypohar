@@ -12,7 +12,7 @@ using OrlickyPohar.Api.Data;
 namespace OrlickyPohar.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260906225047_ModelPoharu")]
+    [Migration("20260907172219_ModelPoharu")]
     partial class ModelPoharu
     {
         /// <inheritdoc />
@@ -185,6 +185,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int>("Cislo")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("DoSerie")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTimeOffset?>("StartV")
                         .HasColumnType("timestamp with time zone");
 
@@ -293,9 +296,6 @@ namespace OrlickyPohar.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
-
-                    b.Property<int?>("PocetRozjizdekDoSerie")
-                        .HasColumnType("integer");
 
                     b.Property<int>("PocetSkrtu")
                         .HasColumnType("integer");

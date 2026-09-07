@@ -8,12 +8,13 @@ public record VysledekDto(
     int? PoradiVCili, int? CasSekundy, KodVysledku? Kod);
 
 public record RozjizdkaDto(
-    int Cislo, DateTimeOffset? StartV, StavRozjizdky Stav, IReadOnlyList<VysledekDto> Vysledky);
+    int Cislo, DateTimeOffset? StartV, StavRozjizdky Stav, bool DoSerie,
+    IReadOnlyList<VysledekDto> Vysledky);
 
 public record ZavodDetailDto(
     string Slug, string Nazev, DateOnly Datum, DateOnly? DatumKonce,
     string? Typ, string? Poradatel,
-    int PocetSkrtu, Vyhodnoceni Vyhodnoceni, int? PocetRozjizdekDoSerie, decimal KoeficientDoSerie,
+    int PocetSkrtu, Vyhodnoceni Vyhodnoceni, decimal KoeficientDoSerie,
     IReadOnlyList<RozjizdkaDto> Rozjizdky);
 
 /// <summary>
@@ -40,7 +41,7 @@ public static class ZavodEndpoints
             .Select(z => new
             {
                 z.Id, z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel,
-                z.PocetSkrtu, z.Vyhodnoceni, z.PocetRozjizdekDoSerie, z.KoeficientDoSerie,
+                z.PocetSkrtu, z.Vyhodnoceni, z.KoeficientDoSerie,
             })
             .FirstOrDefaultAsync(ct);
 
@@ -57,6 +58,7 @@ public static class ZavodEndpoints
                 v.Rozjizdka!.Cislo,
                 v.Rozjizdka.StartV,
                 v.Rozjizdka.Stav,
+                v.Rozjizdka.DoSerie,
                 Lod = v.Ucast!.Prihlaska!.Lod!.Nazev,
                 Kategorie = v.Ucast.Prihlaska.Kategorie!.Nazev,
                 Kormidelnik = v.Ucast.Kormidelnik == null
@@ -71,13 +73,13 @@ public static class ZavodEndpoints
         // Rozjížďky bez jediného výsledku by se seskupením ztratily.
         var prazdne = await db.Rozjizdky
             .Where(r => r.ZavodId == zavod.Id && !db.Vysledky.Any(v => v.RozjizdkaId == r.Id))
-            .Select(r => new RozjizdkaDto(r.Cislo, r.StartV, r.Stav, Array.Empty<VysledekDto>()))
+            .Select(r => new RozjizdkaDto(r.Cislo, r.StartV, r.Stav, r.DoSerie, Array.Empty<VysledekDto>()))
             .ToListAsync(ct);
 
         var rozjizdky = radky
-            .GroupBy(r => new { r.Cislo, r.StartV, r.Stav })
+            .GroupBy(r => new { r.Cislo, r.StartV, r.Stav, r.DoSerie })
             .Select(g => new RozjizdkaDto(
-                g.Key.Cislo, g.Key.StartV, g.Key.Stav,
+                g.Key.Cislo, g.Key.StartV, g.Key.Stav, g.Key.DoSerie,
                 [.. g.Select(v => new VysledekDto(
                     v.Lod, v.Kategorie, v.Kormidelnik, v.PoradiVCili,
                     v.NamerenyCas == null ? null : (int)v.NamerenyCas.Value.TotalSeconds,
@@ -88,7 +90,7 @@ public static class ZavodEndpoints
 
         return Results.Ok(new ZavodDetailDto(
             zavod.Slug, zavod.Nazev, zavod.Datum, zavod.DatumKonce, zavod.Typ, zavod.Poradatel,
-            zavod.PocetSkrtu, zavod.Vyhodnoceni, zavod.PocetRozjizdekDoSerie, zavod.KoeficientDoSerie,
+            zavod.PocetSkrtu, zavod.Vyhodnoceni, zavod.KoeficientDoSerie,
             rozjizdky));
     }
 }

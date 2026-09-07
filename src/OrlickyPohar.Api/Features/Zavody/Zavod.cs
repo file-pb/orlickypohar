@@ -95,12 +95,6 @@ public class Zavod
 
     // --- Výsledek závodu → body do seriálu ---
 
-    /// <summary>
-    /// Kolik rozjížděk se z tohohle závodu počítá do poháru. Prázdné znamená všechny;
-    /// Izolepa má 1.
-    /// </summary>
-    public int? PocetRozjizdekDoSerie { get; set; }
-
     /// <summary>Váha závodu v seriálu, běžně 1.0.</summary>
     public decimal KoeficientDoSerie { get; set; } = 1.0m;
 
@@ -135,7 +129,14 @@ public class Ucast
     public string? Posadka { get; set; }
 }
 
-/// <summary>Jedna rozjížďka závodu. Vytrvalostní závod má jednu, okruhový několik.</summary>
+/// <summary>
+/// Jedna rozjížďka závodu. Vytrvalostní závod má jednu, okruhový několik.
+/// <para>
+/// <b>Nemusí se jet na vodě.</b> Izolepa má mezi rozjížďkami běh pro míčky
+/// z kopce — schválně, aby zamíchal pořadím a vnesl do závodu prvek nezávislý
+/// na výkonnosti lodi. Pro model je to pořadí jako každé jiné.
+/// </para>
+/// </summary>
 public class Rozjizdka
 {
     public int Id { get; set; }
@@ -148,6 +149,17 @@ public class Rozjizdka
     public DateTimeOffset? StartV { get; set; }
 
     public StavRozjizdky Stav { get; set; } = StavRozjizdky.Planovana;
+
+    /// <summary>
+    /// Počítá se tahle rozjížďka do seriálu?
+    /// <para>
+    /// Příznak je na rozjížďce, ne počet na závodě, protože se rozhoduje,
+    /// <b>které</b> se počítají — a posuzuje se to na vodě podle podmínek.
+    /// Číslo „jedna" by neřeklo, jestli je to první, poslední, nebo nejlepší,
+    /// a u zábavných rozjížděk mimo vodu by neřeklo nic.
+    /// </para>
+    /// </summary>
+    public bool DoSerie { get; set; } = true;
 }
 
 /// <summary>

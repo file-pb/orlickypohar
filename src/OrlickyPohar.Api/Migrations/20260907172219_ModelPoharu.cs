@@ -111,7 +111,6 @@ namespace OrlickyPohar.Api.Migrations
                     Poradi = table.Column<int>(type: "integer", nullable: false),
                     PocetSkrtu = table.Column<int>(type: "integer", nullable: false),
                     Vyhodnoceni = table.Column<int>(type: "integer", nullable: false),
-                    PocetRozjizdekDoSerie = table.Column<int>(type: "integer", nullable: true),
                     KoeficientDoSerie = table.Column<decimal>(type: "numeric(5,2)", precision: 5, scale: 2, nullable: false),
                     Publikovano = table.Column<bool>(type: "boolean", nullable: false)
                 },
@@ -168,7 +167,8 @@ namespace OrlickyPohar.Api.Migrations
                     ZavodId = table.Column<int>(type: "integer", nullable: false),
                     Cislo = table.Column<int>(type: "integer", nullable: false),
                     StartV = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    Stav = table.Column<int>(type: "integer", nullable: false)
+                    Stav = table.Column<int>(type: "integer", nullable: false),
+                    DoSerie = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
