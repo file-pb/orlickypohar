@@ -588,6 +588,45 @@ Platí pravidlo platformy č. 5: **vlastní interní `UserId`** a tabulka
 | Různá pravidla závodů | čísla a přepínač na `Zavod`, viz bodování výš |
 | Vyhodnocení 24h | celé pole dohromady, ale **do seriálu po kategoriích** |
 
+## Co ukázala první skutečná směrnice
+
+Zdroj: *Speciální plachetní směrnice — O pohár Vltavy 2026*, Marina Orlík,
+5. 9. 2026. Pořadatel Plachtič z Vltavy, hlavní rozhodčí Miloš Zvonař.
+První doklad z provozu, ne z doslechu.
+
+**Potvrzuje, co plán předpokládal:**
+
+- Nízkobodový systém, výslovně jmenovaný.
+- Zastávku pořádá cizí subjekt a má vlastní ředitele závodu.
+- Vytrvalostní závod je „dálková plavba" — jedna rozjížďka, žádné škrty.
+- Dvě úrovně vyhodnocení. Směrnice říká doslova, že *„pořadí do Orlické série
+  bude dopočteno"* — závod má vlastní výsledek a do poháru se z něj teprve
+  odvozuje. Přesně proto jsou na `Zavod` dvě sady polí.
+
+**Co je nové a plán to nepokrýval:**
+
+1. **Závod má vlastní kategorie, které se sérii nerovnají.** Tenhle má
+   „celkové pořadí" a „dřevěné lodě" — dřevěná loď není kategorie seriálu,
+   je to skupina pro ceny na téhle jedné zastávce. Přesouvá to položku
+   *Kategorie na jednotlivý závod* z hypotézy mezi pozorované potřeby.
+
+   Nedělá se teď: pro veřejné čtení i bodování stačí kategorie ze série
+   a závodní skupiny jsou zatím věc vyhlašování cen, ne dat.
+
+2. **Ředitel závodu není rozhodčí.** Směrnici podepisují oba a je to jiný
+   člověk. Plán má roli `Rozhodčí`, ale pořadatele bere jako text na závodě.
+   Až budou role ostré, jsou to dvě různé funkce v rozsahu jedné zastávky.
+
+3. **Oficiální vývěska je dnes fyzická tabule.** Směrnice odkazuje na
+   „informační tabuli ZK". To je částečná odpověď na otevřenou otázku, jestli
+   má být appka oficiální vývěskou: dnes není a nic na ní nestojí. Změnit to
+   může jedině plachetní směrnice, ne my.
+
+4. **Zdrojové dokumenty jsou lidské a chybují.** Tenhle má v hlavičce termín
+   5. 9. 2026 a v časovém programu „Sobota 6.9.2025" — jiný rok i den.
+   Import proto nesmí data tiše dopočítávat ani opravovat; co je v rozporu,
+   patří ukázat člověku.
+
 ## Zbývá doladit
 
 Nic z toho nebrání založit projekt a napsat první migraci.
