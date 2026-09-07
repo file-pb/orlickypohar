@@ -1,0 +1,105 @@
+:root {
+  --pozadi: #fbfaf8;
+  --papir: #ffffff;
+  --text: #1a1d21;
+  --tlumeny: #5d666f;
+  --linka: #e2e0dc;
+  --voda: #1f6f8b;
+  --zvyrazneni: #f3f0ea;
+  --sirka: 62rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pozadi: #14171a;
+    --papir: #1b1f23;
+    --text: #edeae5;
+    --tlumeny: #9aa3ac;
+    --linka: #2c3238;
+    --voda: #6bb3cc;
+    --zvyrazneni: #232830;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--pozadi);
+  color: var(--text);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+a { color: var(--voda); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.obal { max-width: var(--sirka); margin: 0 auto; padding: 0 1.25rem 4rem; }
+
+header.hlavicka {
+  border-bottom: 1px solid var(--linka);
+  margin-bottom: 2rem;
+  background: var(--papir);
+}
+header.hlavicka .obal { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+header.hlavicka a { color: var(--text); font-weight: 600; letter-spacing: -0.01em; }
+header.hlavicka p { margin: 0.15rem 0 0; color: var(--tlumeny); font-size: 0.875rem; }
+
+h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 0.35rem; letter-spacing: -0.02em; }
+h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
+.podtitulek { color: var(--tlumeny); margin: 0 0 2rem; }
+
+/* Karty ročníků a zastávek */
+.seznam { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.75rem; }
+.karta {
+  display: block; padding: 1rem 1.15rem; background: var(--papir);
+  border: 1px solid var(--linka); border-radius: 10px; color: inherit;
+}
+.karta:hover { border-color: var(--voda); text-decoration: none; }
+.karta .nazev { font-weight: 600; }
+.karta .detail { color: var(--tlumeny); font-size: 0.875rem; margin-top: 0.15rem; }
+.stitek {
+  display: inline-block; font-size: 0.75rem; color: var(--tlumeny);
+  border: 1px solid var(--linka); border-radius: 999px; padding: 0.05rem 0.5rem;
+  margin-left: 0.4rem; vertical-align: 0.1em;
+}
+
+/* Výsledková tabulka. Nejtěžší kus celého webu: dvacet lodí krát osm
+   rozjížděk se na telefon nevejde. Řešení je vodorovný posuv s ukotveným
+   sloupcem lodi — jméno zůstane vidět, čísla se posouvají pod ním. */
+.tabulka-obal { overflow-x: auto; border: 1px solid var(--linka); border-radius: 10px; background: var(--papir); }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { padding: 0.55rem 0.7rem; text-align: right; white-space: nowrap; }
+thead th { font-weight: 600; color: var(--tlumeny); font-size: 0.8rem; border-bottom: 1px solid var(--linka); }
+tbody tr + tr td { border-top: 1px solid var(--linka); }
+th.lod, td.lod {
+  text-align: left; position: sticky; left: 0; background: var(--papir);
+  font-weight: 500; min-width: 9rem;
+}
+/* Body jsou ukotvené hned za jménem lodi — na telefonu se tabulka posouvá
+   a tohle je číslo, kvůli kterému se na ni divák dívá. */
+th.body, td.body {
+  position: sticky; left: 9rem; background: var(--papir);
+  font-variant-numeric: tabular-nums; font-weight: 600;
+  border-right: 1px solid var(--linka); min-width: 3.5rem;
+}
+th.body { font-weight: 600; color: var(--text); }
+
+tbody tr:hover td { background: var(--zvyrazneni); }
+tbody tr:hover td.body { background: var(--zvyrazneni); }
+tbody tr:hover td.lod { background: var(--zvyrazneni); }
+tr.kategorie td {
+  background: var(--zvyrazneni); font-weight: 600; font-size: 0.8rem;
+  text-transform: uppercase; letter-spacing: 0.04em; color: var(--tlumeny);
+  text-align: left; position: sticky; left: 0;
+}
+td.kod { color: var(--tlumeny); font-variant-numeric: tabular-nums; }
+td.cislo { font-variant-numeric: tabular-nums; }
+.mimo-serii { color: var(--tlumeny); font-weight: 400; }
+
+.pravidla { display: grid; gap: 0.4rem 1.5rem; grid-template-columns: auto 1fr; margin: 0; font-size: 0.9rem; }
+.pravidla dt { color: var(--tlumeny); }
+.pravidla dd { margin: 0; }
+
+.poznamka { color: var(--tlumeny); font-size: 0.85rem; margin-top: 0.75rem; }
+.prazdno { color: var(--tlumeny); background: var(--papir); border: 1px dashed var(--linka); border-radius: 10px; padding: 2rem 1.25rem; text-align: center; }

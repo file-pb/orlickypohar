@@ -64,6 +64,21 @@ Nepublikovaný ročník i nepublikovaná zastávka vracejí **404, ne 403** —
 „existuje, ale neukážu" je taky informace. Zastávka se vydává i s pravidly
 závodu (škrty, vyhodnocení, koeficient), bez nichž se pořadí nedá zkontrolovat.
 
+## Web
+
+```bash
+tools/fake-api.py &                 # falešné API z mock dat, port 8099
+npm --prefix web run dev            # http://localhost:3000
+```
+
+Web renderuje serverem, protože blog a výsledky potřebují SEO. Adresu API
+bere z `API_URL` (vývojově z `web/.env.local`).
+
+`tools/fake-api.py` servíruje mock ročník ve stejných tvarech jako skutečné
+API, jen se tváří, že je publikovaný. Existuje proto, že **lokálně se
+databáze rozjet nedá** — Docker Hub je z pracovního stroje nedostupný — a bez
+něj by se stránky nedaly vidět jinak než nasazením.
+
 ## Testy
 
 ```bash

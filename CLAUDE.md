@@ -37,7 +37,17 @@ src/OrlickyPohar.Api/
   Features/Lode/              lodě a osoby
   Features/Zavody/            závod, účast, rozjížďka, výsledek
   Program.cs                  složení aplikace, mapování řezů
+
+web/                          veřejné stránky (Next.js, renderuje server)
+  app/                        stránky podle cest
+  lib/api.ts                  typovaný přístup k API
+tools/fake-api.py             mock ročník jako API, pro vývoj webu bez databáze
 ```
+
+**Převod dat pro zobrazení patří do webu, ne do API.** Výsledky API vydává
+po rozjížďkách, protože tak vznikají; tabulka je potřebuje po lodích.
+Mobilní appka bude chtít jiný tvar a přepisovat kvůli tomu API by znamenalo
+měnit kontrakt kvůli jednomu klientovi.
 
 `DbContext` volej z handleru přímo. Repository vrstvu nepřidávej — EF Core už
 jednou abstrakcí nad databází je.
