@@ -77,12 +77,13 @@ závodu (škrty, vyhodnocení, koeficient), bez nichž se pořadí nedá zkontro
 ## Web
 
 ```bash
-tools/fake-api.py &                 # falešné API z mock dat, port 8099
-npm --prefix web run dev            # http://localhost:3000
+tools/fake-api.py &          # falešné API z mock dat, port 8080
+npm --prefix web run dev     # http://localhost:3000
 ```
 
 Web renderuje serverem, protože blog a výsledky potřebují SEO. Adresu API
-bere z `API_URL` (vývojově z `web/.env.local`).
+bere z `API_URL`; výchozí je `http://localhost:8080`, takže proti falešnému
+i skutečnému lokálnímu API funguje bez nastavování.
 
 `tools/fake-api.py` servíruje mock ročník ve stejných tvarech jako skutečné
 API, jen se tváří, že je publikovaný. Existuje proto, že **lokálně se

@@ -5,7 +5,7 @@ Servíruje mock ročník ve stejných tvarech jako skutečné API, ale tváří 
 že je publikovaný. Nesahá tím na produkci, kde vymyšlená data zveřejněná
 schválně nejsou.
 """
-import json, re
+import json, os, re
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 D = json.load(open("data/2025-mock.json", encoding="utf-8"))
@@ -71,4 +71,9 @@ class H(BaseHTTPRequestHandler):
         pass
 
 
-HTTPServer(("127.0.0.1", 8099), H).serve_forever()
+# Výchozí port je 8080, tedy tentýž, na kterém by běželo skutečné API.
+# Web tak nepotřebuje žádné nastavení navíc a postup z README platí
+# i v čerstvém klonu, kde .env.local neexistuje.
+PORT = int(os.environ.get("PORT", "8080"))
+print(f"Falešné API z data/2025-mock.json na http://127.0.0.1:{PORT}", flush=True)
+HTTPServer(("127.0.0.1", PORT), H).serve_forever()
