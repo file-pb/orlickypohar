@@ -182,6 +182,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int>("Cislo")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("DoSerie")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTimeOffset?>("StartV")
                         .HasColumnType("timestamp with time zone");
 
@@ -290,9 +293,6 @@ namespace OrlickyPohar.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
-
-                    b.Property<int?>("PocetRozjizdekDoSerie")
-                        .HasColumnType("integer");
 
                     b.Property<int>("PocetSkrtu")
                         .HasColumnType("integer");

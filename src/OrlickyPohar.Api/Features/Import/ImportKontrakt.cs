@@ -31,7 +31,8 @@ public record RozjizdkaVstup(
     int Cislo,
     DateTimeOffset? StartV,
     StavRozjizdky Stav,
-    IReadOnlyList<VysledekVstup> Vysledky);
+    IReadOnlyList<VysledekVstup> Vysledky,
+    bool DoSerie = true);
 
 public record ZavodVstup(
     string Slug,
@@ -45,7 +46,6 @@ public record ZavodVstup(
     string? Typ = null,
     int PocetSkrtu = 0,
     Vyhodnoceni Vyhodnoceni = Vyhodnoceni.PoKategoriich,
-    int? PocetRozjizdekDoSerie = null,
     decimal KoeficientDoSerie = 1.0m,
     bool Publikovano = true);
 
