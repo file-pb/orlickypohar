@@ -25,6 +25,7 @@ services:
       Serilog__WriteTo__1__Args__serverUrl: "http://seq"
     secrets:
       - ConnectionStrings__Postgres
+      - Import__Token
     labels:
       # POZOR: Compose dosazuje proměnné jen do HODNOT, ne do klíčů.
       # Jméno routeru proto musí být napevno a unikátní napříč všemi
@@ -55,3 +56,8 @@ secrets:
   # Vyrobí ho scripts/new-project.sh v platform repu; sem se jen zkopíruje.
   ConnectionStrings__Postgres:
     file: ./secrets/ConnectionStrings__Postgres
+  # Sdílené tajemství pro nahrání ročníku. Dokud neexistuje identita (fáze 4),
+  # je to jediná ochrana zápisu. Když soubor chybí, import vrací 503 —
+  # nenakonfigurovaný token neznamená otevřený endpoint.
+  Import__Token:
+    file: ./secrets/Import__Token

@@ -29,4 +29,9 @@
   <ItemGroup>
     <None Update="GoldenPayloads\**\*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Mock ročník je vstup kontraktního testu: soubor a kód se nesmějí rozejít. -->
+    <Content Include="..\..\data\2025-mock.json" Link="Data\2025-mock.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

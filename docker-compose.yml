@@ -53,6 +53,7 @@ services:
       Serilog__WriteTo__1__Args__serverUrl: "http://seq"
     secrets:
       - ConnectionStrings__Postgres
+      - Import__Token
     ports: ["8080:8080"]
     deploy:
       resources:
@@ -61,6 +62,8 @@ services:
 secrets:
   ConnectionStrings__Postgres:
     file: ./secrets/ConnectionStrings__Postgres
+  Import__Token:
+    file: ./secrets/Import__Token
 
 volumes:
   pgdata:

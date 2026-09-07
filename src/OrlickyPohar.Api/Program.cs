@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Serilog;
 using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Import;
 
 // Dvoufázová inicializace: i pád při startu skončí ve strukturovaném logu.
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
@@ -29,6 +30,11 @@ try
     builder.Services.AddSingleton(TimeProvider.System);
     builder.Services.AddOpenApi();
 
+    // Výčty v JSONu jako jména, ne čísla. Importní soubor píší i lidé
+    // a "PoKategoriich" je pro ně čitelné; "1" znamená hledat v kódu.
+    builder.Services.ConfigureHttpJsonOptions(o =>
+        o.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
+
     builder.Services.AddHealthChecks()
         .AddDbContextCheck<AppDbContext>("postgres", tags: ["ready"]);
 
@@ -44,6 +50,8 @@ try
     app.MapOpenApi();
     if (app.Environment.IsDevelopment())
         app.MapScalarApiReference();
+
+    app.MapImport();
 
     // Migrace při startu. U jedné repliky je to v pořádku a máš jistotu,
     // že schéma odpovídá kódu. Až budeš škálovat, přesuň to do kroku v CI.

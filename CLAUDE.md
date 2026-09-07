@@ -39,11 +39,6 @@ src/OrlickyPohar.Api/
   Program.cs                  složení aplikace, mapování řezů
 ```
 
-Doménové entity se jmenují **česky bez diakritiky** (`Zavod`, `Rozjizdka`),
-zbytek anglicky (`CreateZavodHandler`, `ZavodResponse`). Důvod je v
-[docs/PLAN.md](docs/PLAN.md) — rozjížďka ani přihláška nemají anglický
-protějšek, který by dva lidi přeložili stejně.
-
 `DbContext` volej z handleru přímo. Repository vrstvu nepřidávej — EF Core už
 jednou abstrakcí nad databází je.
 
@@ -63,9 +58,16 @@ Jsou tu proto, že se porušují snadno a opravují draho.
 
 ## Pojmenování
 
-Zdroj dat se jmenuje `Source`, ne `Device`. Zdrojem může být zařízení, poller
-externího API (ČHMÚ, Windy) nebo import ze souboru — úložiště ten rozdíl znát
-nemá. Přejmenovat to zpětně stojí migraci, pojmenovat to správně hned nestojí nic.
+Doménové entity **česky bez diakritiky**: `Zavod`, `Rozjizdka`, `Prihlaska`,
+`Vysledek`. Zbytek anglicky: `CreateZavodHandler`, `ZavodResponse`.
+
+Rozjížďka není *heat* ani *race* a přihláška do ročníku není *entry* — přesný
+protějšek neexistuje, takže by ho každý překládal jinak a pokaždé znovu.
+S pořadatelem i rozhodčím se navíc mluví česky a kódy závodních pravidel
+(`DNF`, `OCS`) se nepřekládají tak jako tak.
+
+Řez se jmenuje `Serial`, ne `Serie`: třída `Serie` uvnitř jmenného prostoru
+`Serie` se v C# pere sama se sebou.
 
 ## Zdraví a nasazení
 
@@ -151,24 +153,6 @@ přetížení na náhodné chyby v aplikaci. Musí platit obojí:
 
 Rezervu pro migrace, monitoring a ruční zásahy drž mimo aplikační součet.
 
-## Katalog metrik a karanténa
-
-Neznámá metrika se **nikdy neodmítá**. Katalog by jinak vytvořil synchronní
-vazbu mezi firmwarem zařízení a deploymentem serveru: zařízení nasbírá offline
-týden dat s novou metrikou a server mu celou dávku zamítne.
-
-Neznámé hodnoty jdou do karantény s původním payloadem a důvodem, s omezenou
-retencí, a do katalogu se povyšují ručně. Dávka je vždy přijatá celá.
-
-## Předpovědi
-
-`ValidAt` je čas platnosti, `IssuedAt` je vydání předpovědi. Tahle dvojice stačí
-pro **jednu lokalitu a jeden model**.
-
-Až bude potřeba víc lokalit, hladin nebo variant modelu, stane se z předpovědi
-**vlastní typ záznamu** — nepřidávej další sloupce do tabulky pozorování.
-Je to hranice, ne odklad.
-
 ## Verzování platformních kontraktů
 
 Centrální distribuce bez verzování jen přesouvá drift z kopírovaných souborů do
@@ -200,32 +184,35 @@ backendu se rozbijí.
 Před prvním mobilním vydáním proto plat pravidlo: změny API jsou **jen
 aditivní**, nebo se API verzuje. Nepotřebuješ na to framework, jen rozhodnutí.
 
-## Pravidla identity `event_id`
+## Idempotence importu
 
-Na `event_id` stojí idempotence, a ta je nejdražší věc v celém kontraktu na
-pozdější opravu. Platí čtyři pravidla:
+Ročník se nahrává souborem přes `POST /import/serie`. Druhé odeslání téhož
+souboru **nesmí nic zduplikovat** — opravený výsledek se přepíše, nic nepřibude.
 
-1. **Stabilita.** Totéž pozorování má při každém odeslání týž `event_id`.
-   Přegenerovat ho při retransmisi znamená duplicitu, kterou nikdo nezachytí.
-2. **Rozsah.** Unikátní v rámci zdroje, ne globálně. Dva zdroje smějí použít
-   stejný řetězec.
-3. **U předpovědí musí nést vydání i platnost.** Například
-   `chmu-2026090412-1800`. Kdyby nesl jen platnost, vypadala by novější revize
-   jako duplicita té starší a zahodila by se.
-4. **Když ho zařízení neumí vyrobit stabilně, nesmí ho posílat vůbec.**
-   Typicky když nemá čítač, který přežije restart. Chybějící `event_id` znamená
-   možné duplicity při retransmisi; *špatný* `event_id` znamená tiché ztrácení
-   dat, což je horší.
+Idempotence stojí na **přirozených klíčích**, ne na umělém importním
+identifikátoru: série podle slugu, závod podle slugu v sérii, rozjížďka podle
+čísla v závodě, výsledek podle dvojice rozjížďka × účast. Sloupec „externí id"
+by do schématu propsal tvar zdrojového souboru, a ten se s každým ročníkem mění.
 
-Zlaté payloady v `tests/OrlickyPohar.Api.Tests/GoldenPayloads/` tahle pravidla fixují.
-Když se ty testy rozbijí, rozbijí se i producenti, ke kterým se nedostaneš —
-firmware na lodi nepřeflashuješ na dálku.
+Dvě věci na to navazují a nesmějí se rozvázat:
+
+1. **Unikátní indexy** `(SerieId, LodId)` na přihlášce a `(RozjizdkaId, UcastId)`
+   na výsledku. Bez nich by duplicitu odhalilo až rozdvojené pořadí v seriálu.
+2. **Celá dávka, nebo nic.** Napůl naimportovaný ročník je horší než žádný,
+   protože chybějící výsledky nikdo nepozná.
+
+Známé omezení: osoby se párují podle jména a příjmení, lodě podle názvu. Dva
+Jani Novákové v jednom ročníku splynou. Při velikosti startovního pole je to
+únosné; alternativou by bylo vymýšlet lidem identifikátory, které nikde neexistují.
 
 ## Testy
 
-- **`ContractTests`** — JSON kontrakt, bez databáze a bez Dockeru. V CI běží první.
-  Obsahují evoluční testy oběma směry: starý payload po rozšíření schématu
-  a nová, serveru neznámá pole, která nesmějí shodit ingest.
-- **`IngestTests`** — chování proti reálnému PostgreSQL přes Testcontainers.
+- **`ModelTests`** a **`KontraktTests`** — model proti migracím a tvar importního
+  souboru. Bez databáze a bez Dockeru, v CI běží první.
+- **`ImportTests`** — chování proti reálnému PostgreSQL přes Testcontainers.
   Vyžadují běžící Docker. Schválně ne in-memory provider: idempotence stojí
-  na filtrovaném unikátním indexu, který by fake databáze neověřila.
+  na unikátních indexech, které by fake databáze neověřila.
+
+`data/2025-mock.json` je **vymyšlený ročník**, ne skutečná data. Existuje proto,
+aby se model dal prověřit dřív, než dorazí výsledky od rozhodčího. Až přijdou,
+soubor se nahradí — struktura zůstane.
