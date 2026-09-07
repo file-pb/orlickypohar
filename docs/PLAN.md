@@ -70,8 +70,16 @@ Jsou to dvě oddělené otázky a každá má odpověď v datech, ne v kódu:
 
 | Pole na `Zavod` | Co znamená | Příklad |
 |---|---|---|
-| `PocetSkrtu` | kolik nejhorších rozjížděk se škrtá | okruhový: `1`, vytrvalostní: `0` |
+| `PocetSkrtu` | kolik nejhorších rozjížděk se škrtá | okruhový se čtyřmi a více: `1`, jinak `0` |
 | `Vyhodnoceni` | `CelePole` nebo `PoKategoriich` | 24 h: `CelePole` |
+
+**Pravidlo pro škrt:** okruhový závod, který odjel **čtyři a více rozjížděk**,
+škrtá jeden nejhorší výsledek. Se třemi a méně se neškrtá nic.
+
+Počet rozjížděk se ale rozhoduje **na vodě podle větru**, ne při vypisování
+závodu. Škrt proto nejde nastavit dopředu — hodnota se odvodí, teprve až je
+jasné, kolik se jich odjelo. Aplikace ji předvyplní podle pravidla a rozhodčí
+ji smí přepsat; uloženo zůstává číslo na závodě, protože ono je tou pravdou.
 
 ### 2. Výsledek závodu → body do seriálu
 
