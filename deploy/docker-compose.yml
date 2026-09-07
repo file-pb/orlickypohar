@@ -35,8 +35,11 @@ services:
       # aplikacemi na serveru — přejmenuj ho spolu s projektem.
       traefik.enable: "true"
       traefik.docker.network: edge
-      # API má vlastní subdoménu. Hezká adresa patří webu, ne rozhraní.
-      traefik.http.routers.orlickypohar.rule: Host(`api.${APP_NAME}.${PLATFORM_DOMAIN:?}`)
+      # API má vlastní subdoménu; hezká adresa patří webu, ne rozhraní.
+      # POZOR na tvar jména: bezplatný certifikát Cloudflare pokrývá jen
+      # *.domena.cz, tedy JEDNU úroveň. Na api.projekt.domena.cz by TLS
+      # selhalo dřív, než požadavek dojde na server.
+      traefik.http.routers.orlickypohar.rule: Host(`${APP_NAME}-api.${PLATFORM_DOMAIN:?}`)
       traefik.http.routers.orlickypohar.tls.certresolver: le
       # Omezení rychlosti a hlavičky ze sdílené konfigurace platformy.
       # Tohle je veřejný web, kde drtivá většina provozu je čtení výsledků —

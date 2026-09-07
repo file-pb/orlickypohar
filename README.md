@@ -37,7 +37,7 @@ neukládají**, aby šel seriál kdykoliv přepočítat podle změněných pravi
 ## Nahrání ročníku
 
 ```bash
-curl -X POST https://api.orlickypohar.klihovka.cz/import/serie \
+curl -X POST https://orlickypohar-api.klihovka.cz/import/serie \
   -H "X-Import-Token: $(cat secrets/Import__Token)" \
   -H 'content-type: application/json' \
   --data-binary @data/2025-mock.json
@@ -95,9 +95,12 @@ databáze neověřila.
 | Adresa | Co tam běží |
 |---|---|
 | `orlickypohar.klihovka.cz` | veřejný web |
-| `api.orlickypohar.klihovka.cz` | API a import |
+| `orlickypohar-api.klihovka.cz` | API a import |
 
-Hezká adresa patří webu, ne rozhraní. Web mluví s API **vnitřní sítí**
+Hezká adresa patří webu, ne rozhraní. Jméno API je jednoúrovňové schválně:
+bezplatný certifikát Cloudflare pokrývá jen `*.klihovka.cz`, takže na
+`api.orlickypohar.klihovka.cz` by TLS selhalo dřív, než požadavek dojde
+na server. Web mluví s API **vnitřní sítí**
 (`http://app:8080`), ne přes internet — jinak by to byla zbytečná cesta ven
 a zpátky přes Traefik.
 
