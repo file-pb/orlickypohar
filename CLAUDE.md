@@ -6,6 +6,55 @@ administrace, nativní appka s upozorněními a záznamem trasy.
 **Než začneš cokoliv navrhovat, přečti si [docs/PLAN.md](docs/PLAN.md).** Je
 tam doménový model i důvody, proč vypadá takhle, a rozhodnutí, která už padla.
 
+## Rozjezd na jiném stroji
+
+Tenhle oddíl je psaný pro agenta, který sem přijde bez jakéhokoliv kontextu.
+Nepředpokládá nic kromě `git`, `ssh` a účtu na GitHubu.
+
+**Repozitáře jsou privátní.** Bez přihlášení se nenaklonují a nic dalšího
+nedává smysl zkoušet.
+
+```bash
+gh auth status
+git clone git@github.com:file-pb/orlickypohar.git ~/Developer/GitHub/orlickypohar
+git clone git@github.com:file-pb/platform.git   ~/Developer/GitHub/platform
+scp deploy@178.105.62.172:/opt/platform/.env    ~/Developer/GitHub/platform/.env
+```
+
+Platformu potřebuješ vždycky: žijí v ní pravidla provozu, runbooky
+a poučení z minulých chyb. Tenhle repozitář popisuje **jen konvence kódu**.
+
+**Co musí být na stroji** (ověřeno 7. 9. 2026 v této kombinaci):
+
+| Nástroj | Verze | K čemu |
+|---|---|---|
+| .NET SDK | 10.0 | API a testy |
+| Node | 22+ (běží na 24) | web |
+| `gh` | 2.x, přihlášený | CI, tajemství, sloučení |
+| ssh klíč k `deploy@178.105.62.172` | | server, tajemství, DNS |
+
+Rychlé ověření, že to celé drží:
+
+```bash
+dotnet test --filter "Category!=Integracni"     # musí projít bez Dockeru
+ssh deploy@178.105.62.172 'docker ps'           # musí vypsat kontejnery
+curl -s https://orlickypohar-api.klihovka.cz/health   # musí vrátit Healthy
+```
+
+**Kam se dívat dál**
+
+| Otázka | Kde je odpověď |
+|---|---|
+| Co je hotové a co dál | [docs/PLAN.md](docs/PLAN.md) — oddíly *Stav* a *Kde se pokračuje* |
+| Proč model vypadá takhle | [docs/PLAN.md](docs/PLAN.md) |
+| Čím se liší pracovní Mac | [platform/docs/JINY-STROJ.md](https://github.com/file-pb/platform/blob/main/docs/JINY-STROJ.md) |
+| Kde co běží a co když spadne | [platform/docs/PROVOZ.md](https://github.com/file-pb/platform/blob/main/docs/PROVOZ.md) |
+| Chyby, které už jednou stály čas | [platform/docs/POUCENI.md](https://github.com/file-pb/platform/blob/main/docs/POUCENI.md) |
+
+**Co na novém stroji nepůjde a je to v pořádku:** integrační testy
+(`Category=Integracni`) potřebují Docker Hub, který je z firemní sítě
+nedostupný. Běží v CI. Na stroji s běžnou sítí jdou pustit i lokálně.
+
 ## Kde je zbytek
 
 Tenhle soubor popisuje **jen konvence kódu**. Server, nasazení, zálohy,
