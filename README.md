@@ -52,6 +52,18 @@ celá dávka, nebo se neuloží nic — napůl naimportovaný ročník je horš�
 prověřit dřív, než dorazí skutečné výsledky od rozhodčího; až přijdou, soubor
 se nahradí a struktura zůstane.
 
+## Veřejné čtení
+
+```bash
+curl localhost:8080/serie                                   # publikované ročníky
+curl localhost:8080/serie/2025                              # ročník s kategoriemi a přihláškami
+curl localhost:8080/serie/2025/zavody/zahajeni-sezony       # zastávka s rozjížďkami a výsledky
+```
+
+Nepublikovaný ročník i nepublikovaná zastávka vracejí **404, ne 403** —
+„existuje, ale neukážu" je taky informace. Zastávka se vydává i s pravidly
+závodu (škrty, vyhodnocení, koeficient), bez nichž se pořadí nedá zkontrolovat.
+
 ## Testy
 
 ```bash

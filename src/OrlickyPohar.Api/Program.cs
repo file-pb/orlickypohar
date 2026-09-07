@@ -3,6 +3,8 @@ using Scalar.AspNetCore;
 using Serilog;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Import;
+using OrlickyPohar.Api.Features.Serial;
+using OrlickyPohar.Api.Features.Zavody;
 
 // Dvoufázová inicializace: i pád při startu skončí ve strukturovaném logu.
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
@@ -51,6 +53,8 @@ try
     if (app.Environment.IsDevelopment())
         app.MapScalarApiReference();
 
+    app.MapSerie();
+    app.MapZavody();
     app.MapImport();
 
     // Migrace při startu. U jedné repliky je to v pořádku a máš jistotu,

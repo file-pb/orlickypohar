@@ -14,6 +14,7 @@ namespace OrlickyPohar.Api.Tests;
 /// idempotence: kdyby druhý běh duplikoval, pozná se to až podle rozdvojených
 /// výsledků v pořadí seriálu — tedy pozdě a nápadně.
 /// </summary>
+[Trait("Category", "Integracni")]
 public class ImportTests(PostgresFixture fixture) : IClassFixture<PostgresFixture>
 {
     private static readonly JsonSerializerOptions Json =
