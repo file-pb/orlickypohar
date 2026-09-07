@@ -77,9 +77,14 @@ databáze neověřila.
 
 ## Nasazení
 
-`git push` do `main` → GitHub Actions postaví arm64 image → GHCR → webhook.
-Adresu webhooku dej do proměnné repozitáře `DEPLOY_WEBHOOK`; když chybí,
-krok nasazení se přeskočí a image se jen postaví.
+`git push` do `main` → GitHub Actions postaví image → GHCR → nasazovací háček
+na serveru si ji stáhne.
+
+Potřebuje dvě věci v nastavení repozitáře: proměnnou `DEPLOY_WEBHOOK`
+(adresa háčku) a tajemství `DEPLOY_TOKEN`. Obojí vypíše
+`scripts/install-deploy-hook.sh` v repozitáři platformy. **Když proměnná
+chybí, krok nasazení se tiše přeskočí** a na serveru běží dál stará verze —
+což se pozná jen tím, že se nová funkce neobjeví.
 
 ## Proměnné prostředí
 

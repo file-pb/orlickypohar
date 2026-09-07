@@ -69,9 +69,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # Server si novou image stáhne sám. Tajemství jde hlavičkou, ne v URL —
+      # adresa se objevuje v logu běhu, hlavička ne.
       - name: Deploy
         if: ${{ vars.DEPLOY_WEBHOOK != '' }}
-        run: curl -fsS -X POST "${{ vars.DEPLOY_WEBHOOK }}"
+        run: |
+          curl -fsS --max-time 600 -X POST "${{ vars.DEPLOY_WEBHOOK }}" \
+            -H "X-Deploy-Token: ${{ secrets.DEPLOY_TOKEN }}"
 
   # Testy proti reálnému PostgreSQL přes Testcontainers. Běží VEDLE buildu,
   # ne před ním: jejich selhání hlásí problém, ale neblokuje nasazení
