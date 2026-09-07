@@ -14,7 +14,8 @@ namespace OrlickyPohar.Api.Tests;
 /// protože v databázi leží vymyšlená data.
 /// </summary>
 [Trait("Category", "Integracni")]
-public class CteniTests(PostgresFixture fixture) : IClassFixture<PostgresFixture>
+[Collection(PostgresCollection.Name)]
+public class CteniTests(PostgresFixture fixture)
 {
     private static readonly JsonSerializerOptions Json =
         new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
