@@ -22,7 +22,8 @@ RUN addgroup -g 1001 web && adduser -u 1001 -G web -D web
 
 COPY --from=build --chown=web:web /src/.next/standalone ./
 COPY --from=build --chown=web:web /src/.next/static ./.next/static
-COPY --from=build --chown=web:web /src/public ./public
+# public/ tu schválně není: web žádné statické soubory nemá a git prázdný
+# adresář nesleduje, takže by COPY na prázdné složce padal.
 
 USER web
 EXPOSE 8080
