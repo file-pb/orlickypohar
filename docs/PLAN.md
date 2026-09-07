@@ -313,6 +313,40 @@ chvíli, kdy má appka poprvé fungovat na iPhonu včetně upozornění.
 Protože push je jádro funkce, přijde ta chvíle **dřív**, než jsem odhadoval
 před doplněním o upozornění.
 
+## Stránka zastávky — cílový tvar
+
+Filipův záměr do budoucna, ne úkol na teď. Zapsané, aby se model nevyvíjel
+proti němu.
+
+Každá zastávka má **vlastní prezentační stránku**, protože ji pořádá jiný
+subjekt a má svůj příběh. Obsahuje:
+
+| Část | Co to je | Odhad |
+|---|---|---|
+| Blog závodu | příběh zastávky, aktuality před závodem i po něm | levné, `Clanek` s vazbou na závod |
+| Oficiality | vypsání závodu, plachetní směrnice, pravidla | levné, soubory v R2 s popisem |
+| Výsledky | to, co staví fáze 1 a 2 | hotové |
+| Mapka | trať, místo startu, marina | střední — statická mapa levná, interaktivní ne |
+| Registrace do závodu | přihlášení lodi na konkrétní zastávku | střední, ale viz níž |
+| Chat | diskuse u závodu | **drahé, viz níž** |
+| Napojení na sociální sítě | sdílení ven | levné ven, drahé dovnitř |
+
+### Tři místa, kde je cena jinde, než se čeká
+
+**Chat není technický problém, ale provozní.** Napsat ho je práce na dva
+večery; udržet ho je práce navždy. Potřebuje moderaci, řešení sporů mezi
+závodníky, mazání a někoho, kdo to dělá — na Facebooku to dnes obstarává
+skupina zdarma. Než se bude psát, patří odpovědět: kdo bude moderovat?
+
+**Registrace do závodu má neviditelnou část.** Přihlášení lodi je jedna
+tabulka. Ale ve směrnici stojí startovné 500 Kč a požadavek na průkaz
+způsobilosti — takže jakmile bude registrace ostrá, přijde otázka plateb
+a evidence dokladů. To je jiná velikost úlohy než formulář.
+
+**Sociální sítě jdou snadno ven, ne dovnitř.** Sdílet článek na Facebook je
+odkaz s náhledem. Číst obsah ze skupiny zpátky do webu prakticky nejde —
+skupiny jsou zavřené a Facebook to API nedává. Počítej s jednosměrným tokem.
+
 ## Upozornění (push)
 
 Appka má závodním lodím nosit informace — během závodu (odložený start,
