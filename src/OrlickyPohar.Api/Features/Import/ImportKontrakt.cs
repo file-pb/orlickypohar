@@ -63,8 +63,9 @@ public record SerieVstup(
     bool Publikovano = true);
 
 /// <summary>
-/// Kolik řádků import založil a kolik jich našel. Druhý běh téhož souboru musí
-/// mít všechna `Nove` nulová — to je pozorovatelný důkaz idempotence.
+/// Kolik řádků import založil, kolik jich našel a kolik smazal. Druhý běh
+/// téhož souboru musí mít všechna `Nove` i `Smazane` nulová — to je
+/// pozorovatelný důkaz idempotence.
 /// </summary>
 public record ImportVysledek(
     string Serie,
@@ -72,10 +73,11 @@ public record ImportVysledek(
     ImportPocty Lode,
     ImportPocty Prihlasky,
     ImportPocty Zavody,
+    ImportPocty Ucasti,
     ImportPocty Rozjizdky,
     ImportPocty Vysledky);
 
-public record ImportPocty(int Nove, int Aktualizovane);
+public record ImportPocty(int Nove, int Aktualizovane, int Smazane = 0);
 
 /// <summary>Vstup, který se nedá zpracovat. Vrací 400 a nic se neuloží.</summary>
 public class ImportException(string message) : Exception(message);

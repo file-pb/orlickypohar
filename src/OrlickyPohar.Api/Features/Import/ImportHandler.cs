@@ -16,6 +16,14 @@ namespace OrlickyPohar.Api.Features.Import;
 /// s každým ročníkem mění.
 /// </para>
 /// <para>
+/// <b>Soubor je pravda o tom, co pojmenuje.</b> Když z opraveného ročníku
+/// zmizí výsledek, účast nebo celá rozjížďka, import je smaže — jinak by
+/// oprava jen přidávala a v databázi by zůstala loď, která nikdy nestartovala.
+/// Maže se ale <b>jen uvnitř závodů, které soubor obsahuje</b>: závody,
+/// přihlášky, lodě ani osoby se nemažou, protože částečný soubor by tím
+/// vymazal ročník.
+/// </para>
+/// <para>
 /// <b>Známé omezení:</b> osoby se párují podle jména a příjmení, lodě podle
 /// názvu. Dva Jani Novákové v jednom ročníku splynou. Při velikosti startovního
 /// pole je to únosné a náprava je ruční oprava jednoho řádku; alternativou by
@@ -41,7 +49,7 @@ internal static class ImportHandler
         return new ImportVysledek(
             serie.Slug,
             osoby.Pocty, lode.Pocty, prihlasky.Pocty,
-            zavody.Zavody, zavody.Rozjizdky, zavody.Vysledky);
+            zavody.Zavody, zavody.Ucasti, zavody.Rozjizdky, zavody.Vysledky);
     }
 
     private static void OveřVstup(SerieVstup v)
@@ -213,7 +221,8 @@ internal static class ImportHandler
         return (mapa, new ImportPocty(nove, upravene));
     }
 
-    private static async Task<(ImportPocty Zavody, ImportPocty Rozjizdky, ImportPocty Vysledky)> SlaďZavody(
+    private static async Task<(ImportPocty Zavody, ImportPocty Ucasti,
+        ImportPocty Rozjizdky, ImportPocty Vysledky)> SlaďZavody(
         AppDbContext db, Serie serie, SerieVstup vstup,
         Dictionary<string, Prihlaska> prihlasky, Dictionary<string, Osoba> osoby, CancellationToken ct)
     {
@@ -223,7 +232,8 @@ internal static class ImportHandler
             .ToListAsync(ct);
         var podleSlugu = existujici.ToDictionary(z => z.Slug);
 
-        int noveZ = 0, upraveneZ = 0, noveR = 0, upraveneR = 0, noveV = 0, upraveneV = 0;
+        int noveZ = 0, upraveneZ = 0, noveU = 0, upraveneU = 0, smazaneU = 0;
+        int noveR = 0, upraveneR = 0, smazaneR = 0, noveV = 0, upraveneV = 0, smazaneV = 0;
 
         foreach (var v in vstup.Zavody)
         {
@@ -252,14 +262,19 @@ internal static class ImportHandler
             await db.SaveChangesAsync(ct);
 
             var ucasti = await SlaďUcasti(db, zavod, v, prihlasky, osoby, ct);
-            var (nr, ur, nv, uv) = await SlaďRozjizdky(db, zavod, v, ucasti, ct);
-            noveR += nr; upraveneR += ur; noveV += nv; upraveneV += uv;
+            noveU += ucasti.Pocty.Nove; upraveneU += ucasti.Pocty.Aktualizovane;
+            smazaneU += ucasti.Pocty.Smazane; smazaneV += ucasti.SmazaneVysledky;
+
+            var (nr, ur, sr, nv, uv, sv) = await SlaďRozjizdky(db, zavod, v, ucasti.Mapa, ct);
+            noveR += nr; upraveneR += ur; smazaneR += sr;
+            noveV += nv; upraveneV += uv; smazaneV += sv;
         }
 
-        return (new(noveZ, upraveneZ), new(noveR, upraveneR), new(noveV, upraveneV));
+        return (new(noveZ, upraveneZ), new(noveU, upraveneU, smazaneU),
+                new(noveR, upraveneR, smazaneR), new(noveV, upraveneV, smazaneV));
     }
 
-    private static async Task<Dictionary<string, Ucast>> SlaďUcasti(
+    private static async Task<(Dictionary<string, Ucast> Mapa, ImportPocty Pocty, int SmazaneVysledky)> SlaďUcasti(
         AppDbContext db, Zavod zavod, ZavodVstup vstup,
         Dictionary<string, Prihlaska> prihlasky, Dictionary<string, Osoba> osoby, CancellationToken ct)
     {
@@ -267,6 +282,7 @@ internal static class ImportHandler
         var podlePrihlasky = existujici.ToDictionary(u => u.PrihlaskaId);
 
         var mapa = new Dictionary<string, Ucast>();
+        int nove = 0, upravene = 0;
 
         foreach (var v in vstup.Ucasti)
         {
@@ -281,24 +297,39 @@ internal static class ImportHandler
             {
                 u = new Ucast { ZavodId = zavod.Id, Prihlaska = prihlaska };
                 db.Ucasti.Add(u);
+                nove++;
             }
+            else upravene++;
 
             u.Kormidelnik = kormidelnik;
             u.Posadka = v.Posadka;
             mapa[v.Lod] = u;
         }
 
+        // Loď, kterou opravený soubor u závodu nemá, tam nestartovala —
+        // a odejít musí i s výsledky, jinak by zůstala v pořadí i po opravě.
+        // Výsledky se mažou výslovně, ne kaskádou: kaskáda by je odnesla
+        // taky, ale v hlášení by chyběly a import by tvrdil, že nic nesmazal.
+        var zustavaji = mapa.Values.Select(u => u.PrihlaskaId).ToHashSet();
+        var kSmazani = existujici.Where(u => !zustavaji.Contains(u.PrihlaskaId)).ToList();
+
+        var idsPryc = kSmazani.Select(u => u.Id).ToList();
+        var vysledkyPryc = await db.Vysledky.Where(x => idsPryc.Contains(x.UcastId)).ToListAsync(ct);
+        db.Vysledky.RemoveRange(vysledkyPryc);
+        db.Ucasti.RemoveRange(kSmazani);
+
         await db.SaveChangesAsync(ct);
-        return mapa;
+        return (mapa, new ImportPocty(nove, upravene, kSmazani.Count), vysledkyPryc.Count);
     }
 
-    private static async Task<(int NoveR, int UpraveneR, int NoveV, int UpraveneV)> SlaďRozjizdky(
+    private static async Task<(int NoveR, int UpraveneR, int SmazaneR,
+        int NoveV, int UpraveneV, int SmazaneV)> SlaďRozjizdky(
         AppDbContext db, Zavod zavod, ZavodVstup vstup, Dictionary<string, Ucast> ucasti, CancellationToken ct)
     {
         var existujici = await db.Rozjizdky.Where(r => r.ZavodId == zavod.Id).ToListAsync(ct);
         var podleCisla = existujici.ToDictionary(r => r.Cislo);
 
-        int noveR = 0, upraveneR = 0, noveV = 0, upraveneV = 0;
+        int noveR = 0, upraveneR = 0, noveV = 0, upraveneV = 0, smazaneV = 0;
 
         foreach (var v in vstup.Rozjizdky)
         {
@@ -319,14 +350,25 @@ internal static class ImportHandler
             r.DoSerie = v.DoSerie;
             await db.SaveChangesAsync(ct);
 
-            var (nv, uv) = await SlaďVysledky(db, r, v, vstup.Slug, ucasti, ct);
-            noveV += nv; upraveneV += uv;
+            var (nv, uv, sv) = await SlaďVysledky(db, r, v, vstup.Slug, ucasti, ct);
+            noveV += nv; upraveneV += uv; smazaneV += sv;
         }
 
-        return (noveR, upraveneR, noveV, upraveneV);
+        // Zrušená rozjížďka ze souboru zmizí a musí zmizet i z databáze,
+        // jinak by se pořadí počítalo z něčeho, co se nejelo.
+        var cislaVSouboru = vstup.Rozjizdky.Select(r => r.Cislo).ToHashSet();
+        var kSmazani = existujici.Where(r => !cislaVSouboru.Contains(r.Cislo)).ToList();
+
+        var idsPryc = kSmazani.Select(r => r.Id).ToList();
+        var vysledkyPryc = await db.Vysledky.Where(x => idsPryc.Contains(x.RozjizdkaId)).ToListAsync(ct);
+        db.Vysledky.RemoveRange(vysledkyPryc);
+        db.Rozjizdky.RemoveRange(kSmazani);
+        await db.SaveChangesAsync(ct);
+
+        return (noveR, upraveneR, kSmazani.Count, noveV, upraveneV, smazaneV + vysledkyPryc.Count);
     }
 
-    private static async Task<(int Nove, int Upravene)> SlaďVysledky(
+    private static async Task<(int Nove, int Upravene, int Smazane)> SlaďVysledky(
         AppDbContext db, Rozjizdka rozjizdka, RozjizdkaVstup vstup, string slugZavodu,
         Dictionary<string, Ucast> ucasti, CancellationToken ct)
     {
@@ -334,6 +376,7 @@ internal static class ImportHandler
         var podleUcasti = existujici.ToDictionary(x => x.UcastId);
 
         int nove = 0, upravene = 0;
+        var zustavaji = new HashSet<int>();
 
         foreach (var v in vstup.Vysledky)
         {
@@ -357,9 +400,16 @@ internal static class ImportHandler
             x.DojezdV = v.DojezdV?.ToUniversalTime();
             x.NamerenyCas = v.CasSekundy is null ? null : TimeSpan.FromSeconds(v.CasSekundy.Value);
             x.Kod = v.Kod;
+            zustavaji.Add(ucast.Id);
         }
 
+        // Výsledek, který v opraveném souboru není, se smaže. Bez toho by
+        // oprava uměla jen přidávat a přepisovat — a řádek zapsaný omylem
+        // by se nedal odstranit ničím jiným než ručním zásahem do databáze.
+        var kSmazani = existujici.Where(x => !zustavaji.Contains(x.UcastId)).ToList();
+        db.Vysledky.RemoveRange(kSmazani);
+
         await db.SaveChangesAsync(ct);
-        return (nove, upravene);
+        return (nove, upravene, kSmazani.Count);
     }
 }

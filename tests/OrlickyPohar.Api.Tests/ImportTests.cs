@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Import;
+using OrlickyPohar.Api.Features.Zavody;
 
 namespace OrlickyPohar.Api.Tests;
 
@@ -87,6 +88,77 @@ public class ImportTests(PostgresFixture fixture)
 
         Assert.Equal(1, await db.Zavody.CountAsync(z => z.SerieId == serie.Id));
         Assert.Equal(2, await db.Prihlasky.CountAsync(p => p.SerieId == serie.Id));
+    }
+
+    [Fact]
+    public async Task Oprava_ktera_radek_ubere_ho_smaze()
+    {
+        // Idempotence sama o sobě nestačí. Když z opraveného ročníku výsledek
+        // zmizí, musí zmizet i z databáze — jinak umí oprava jen přidávat
+        // a přepisovat a loď, která nikdy nestartovala, zůstane v pořadí
+        // napořád. Přesně to se stalo na produkci: loď vypadla ze souboru
+        // a v tabulce zůstala.
+        var puvodni = Rocnik("mazani") with
+        {
+            Zavody =
+            [
+                Rocnik("mazani").Zavody[0] with
+                {
+                    Rozjizdky =
+                    [
+                        Rocnik("mazani").Zavody[0].Rozjizdky[0],
+                        new(2, null, StavRozjizdky.Dokoncena,
+                        [
+                            new("anicka", PoradiVCili: 1),
+                            new("bora", PoradiVCili: 2),
+                        ]),
+                    ],
+                },
+            ],
+        };
+
+        var prvni = await Posli(puvodni);
+        Assert.Equal(2, prvni.Rozjizdky.Nove);
+        Assert.Equal(4, prvni.Vysledky.Nove);
+
+        // Opravený ročník: Bóra na závodě vůbec nebyla a druhá rozjížďka
+        // se nejela.
+        var opraveny = puvodni with
+        {
+            Zavody =
+            [
+                puvodni.Zavody[0] with
+                {
+                    Ucasti = [new("anicka", "novak", null)],
+                    Rozjizdky =
+                    [
+                        new(1, null, StavRozjizdky.Dokoncena, [new("anicka", PoradiVCili: 1)]),
+                    ],
+                },
+            ],
+        };
+
+        var druhy = await Posli(opraveny);
+        Assert.Equal(1, druhy.Ucasti.Smazane);
+        Assert.Equal(1, druhy.Rozjizdky.Smazane);
+        // Tři: Bóřin výsledek z první rozjížďky a obě z té zrušené.
+        Assert.Equal(3, druhy.Vysledky.Smazane);
+
+        using var scope = fixture.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var zavod = await db.Zavody.SingleAsync(z => z.Serie!.Slug == "mazani");
+
+        Assert.Equal(1, await db.Ucasti.CountAsync(u => u.ZavodId == zavod.Id));
+        Assert.Equal(1, await db.Rozjizdky.CountAsync(r => r.ZavodId == zavod.Id));
+        Assert.Equal(1, await db.Vysledky.CountAsync(v => v.Rozjizdka!.ZavodId == zavod.Id));
+
+        // A opakovaný běh opraveného souboru už nemaže nic — mazání je
+        // součást idempotence, ne výjimka z ní.
+        var treti = await Posli(opraveny);
+        Assert.Equal(0, treti.Ucasti.Smazane);
+        Assert.Equal(0, treti.Rozjizdky.Smazane);
+        Assert.Equal(0, treti.Vysledky.Smazane);
+        Assert.Equal(0, treti.Vysledky.Nove);
     }
 
     [Fact]
