@@ -992,6 +992,15 @@ lodí. Barvy má appka stejné jako web, protože je to jeden produkt.
 | Ikona a splash | jsou ze šablony |
 | Vydání (APK, TestFlight) | Android zdarma, iOS až s placeným účtem |
 
+**Podoba tabulek čeká na rozhodčího, neladí se dopředu.** Filip, 8. 9. 2026:
+až dorazí, jak se pořadí doopravdy počítá, bude se doplňovat počítání
+i to, co se kde zobrazuje. Ladit rozložení dřív znamená stavět na pěti
+dohadech (bonus u 24hodinovky, pořadí kódů, škrt, neúčast, koeficient) —
+a překreslovat pak obojí, jen podruhé dráž.
+
+Co je hotové, tedy **stačí, že je čitelné a pravdivé**; hezké bude, až bude
+co ukazovat. Otevřené otázky jsou vypsané výš u bodování a u protestů.
+
 **Datum se v appce formátuje ručně.** `toLocaleDateString` závisí na tom,
 co má telefon v sobě, a Hermes nemusí mít plné Intl — je to tatáž past jako
 alpine bez ICU na serveru. Deset názvů měsíců je levnější než závislost na
