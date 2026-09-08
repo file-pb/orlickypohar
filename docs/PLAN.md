@@ -990,7 +990,7 @@ lodí. Barvy má appka stejné jako web, protože je to jeden produkt.
 | ~~Vyzkoušet na skutečném telefonu~~ | hotovo 8. 9. 2026 — `npm run telefon` |
 | ~~Sdílený klient z OpenAPI~~ | hotovo 8. 9. 2026 — `packages/api-client/generuj.sh` |
 | Ikona a splash | jsou ze šablony |
-| Vydání (APK) | Android zdarma; iOS odloženo, viz níž |
+| ~~Vydání (APK)~~ | hotovo 8. 9. 2026 — `npm run apk`; iOS odloženo, viz níž |
 
 **Podoba tabulek čeká na rozhodčího, neladí se dopředu.** Filip, 8. 9. 2026:
 až dorazí, jak se pořadí doopravdy počítá, bude se doplňovat počítání

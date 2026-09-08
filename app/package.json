@@ -28,7 +28,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "telefon": "bash scripts/telefon.sh"
+    "telefon": "bash scripts/telefon.sh",
+    "apk": "bash scripts/apk.sh"
   },
   "private": true
 }
