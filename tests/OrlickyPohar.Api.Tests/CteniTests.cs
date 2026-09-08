@@ -93,6 +93,11 @@ public class CteniTests(PostgresFixture fixture)
 
         // Prázdná rozjížďka tam musí být — seskupení podle výsledků by ji ztratilo.
         Assert.Empty(zavod.Rozjizdky[1].Vysledky);
+
+        // Kdo na zastávku přijel, se vydává zvlášť. U plánované zastávky je to
+        // jediný obsah, který stránka má.
+        Assert.Equal(2, zavod.Lode.Count);
+        Assert.Contains(zavod.Lode, l => l.Lod.StartsWith("Anička") && l.Kormidelnik == "Jan Novák");
     }
 
     [Fact]

@@ -15,6 +15,13 @@ public record RozjizdkaDto(
     int Cislo, DateTimeOffset? StartV, StavRozjizdky Stav, bool DoSerie,
     IReadOnlyList<VysledekDto> Vysledky);
 
+/// <summary>
+/// Loď, která na zastávku přijela — bez ohledu na to, jestli se už jelo.
+/// U plánované zastávky je to jediné, co o ní jde říct: výsledky ještě
+/// nejsou a seznam přihlášených lodí ano.
+/// </summary>
+public record UcastDto(string Lod, string Kategorie, string? Kormidelnik);
+
 /// <summary>Body lodi v jedné rozjížďce, už jako pořadí v její kategorii.</summary>
 public record BodyVRozjizdceDto(int Cislo, int Body, bool Skrtnuto);
 
@@ -31,7 +38,8 @@ public record ZavodDetailDto(
     string? Typ, string? Poradatel, StavZavodu Stav, DateOnly? PuvodniDatum,
     int PocetSkrtu, Vyhodnoceni Vyhodnoceni, decimal KoeficientDoSerie,
     IReadOnlyList<RozjizdkaDto> Rozjizdky,
-    IReadOnlyList<VysledekZavoduDto> Poradi);
+    IReadOnlyList<VysledekZavoduDto> Poradi,
+    IReadOnlyList<UcastDto> Lode);
 
 /// <summary>
 /// Veřejné čtení jedné zastávky. Pravidla závodu (škrty, vyhodnocení,
@@ -90,6 +98,18 @@ public static class ZavodEndpoints
             })
             .ToListAsync(ct);
 
+        // Kdo na zastávku přijel. U plánované zastávky je to jediný obsah,
+        // který stránka má — a u odjeté se z toho pozná loď, která přijela
+        // a nakonec nestartovala v žádné rozjížďce.
+        var lode = await db.Ucasti
+            .Where(u => u.ZavodId == zavod.Id)
+            .OrderBy(u => u.Prihlaska!.Kategorie!.Poradi).ThenBy(u => u.Prihlaska!.Lod!.Nazev)
+            .Select(u => new UcastDto(
+                u.Prihlaska!.Lod!.Nazev,
+                u.Prihlaska.Kategorie!.Nazev,
+                u.Kormidelnik == null ? null : u.Kormidelnik.Jmeno + " " + u.Kormidelnik.Prijmeni))
+            .ToListAsync(ct);
+
         // Rozjížďky bez jediného výsledku by se seskupením ztratily.
         var prazdne = await db.Rozjizdky
             .Where(r => r.ZavodId == zavod.Id && !db.Vysledky.Any(v => v.RozjizdkaId == r.Id))
@@ -122,6 +142,7 @@ public static class ZavodEndpoints
             rozjizdky,
             [.. poradi.Select(v => new VysledekZavoduDto(
                 v.Lod, v.Kategorie, v.Body, v.Poradi,
-                [.. v.Rozjizdky.Select(b => new BodyVRozjizdceDto(b.Cislo, b.Body, b.Skrtnuto))]))]));
+                [.. v.Rozjizdky.Select(b => new BodyVRozjizdceDto(b.Cislo, b.Body, b.Skrtnuto))]))],
+            lode));
     }
 }

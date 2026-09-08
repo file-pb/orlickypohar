@@ -169,7 +169,10 @@ class H(BaseHTTPRequestHandler):
                         } for v in r["vysledky"]],
                     } for r in z["rozjizdky"]],
                     "poradi": [{**v, "lod": nazvy(v["lod"])}
-                               for v in vysledky_zavodu(z["rozjizdky"], z.get("pocetSkrtu", 0))]}
+                               for v in vysledky_zavodu(z["rozjizdky"], z.get("pocetSkrtu", 0))],
+                    "lode": [{"lod": nazvy(u["lod"]), "kategorie": KAT[u["lod"]],
+                              "kormidelnik": jmeno(u["kormidelnik"]) if u.get("kormidelnik") else None}
+                             for u in sorted(z["ucasti"], key=lambda u: nazvy(u["lod"]))]}
         else:
             return self.send_error(404)
 

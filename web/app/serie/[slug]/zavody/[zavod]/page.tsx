@@ -4,6 +4,7 @@ import {
   nactiZavod,
   type BodyVRozjizdce,
   type Rozjizdka,
+  type UcastLodi,
   type Vysledek,
   type ZavodDetail,
 } from "@/lib/api";
@@ -101,7 +102,10 @@ export default async function Zastavka({ params }: Parametry) {
 
       <h2>Výsledky</h2>
       {radky.length === 0 ? (
-        <p className="prazdno">{ProcNejsouVysledky(zavod.stav)}</p>
+        <>
+          <p className="prazdno">{ProcNejsouVysledky(zavod.stav)}</p>
+          <PrihlaseneLode lode={zavod.lode} />
+        </>
       ) : (
         kategorie.map((k) => (
           <Tabulka
@@ -138,7 +142,9 @@ export default async function Zastavka({ params }: Parametry) {
         <dd>{zavod.pocetSkrtu === 0 ? "žádné" : `nejhorších ${zavod.pocetSkrtu}`}</dd>
         <dt>Do poháru</dt>
         <dd>
-          {zavod.rozjizdky.filter((r) => r.doSerie).length} z {zavod.rozjizdky.length} rozjížděk
+          {zavod.rozjizdky.length === 0
+            ? "zatím se nejela žádná rozjížďka"
+            : `${zavod.rozjizdky.filter((r) => r.doSerie).length} z ${zavod.rozjizdky.length} rozjížděk`}
           {zavod.koeficientDoSerie !== 1 && `, koeficient ${zavod.koeficientDoSerie}`}
         </dd>
       </dl>
@@ -147,6 +153,50 @@ export default async function Zastavka({ params }: Parametry) {
         ne tenhle součet —{" "}
         <Link href={`/serie/${slug}/poradi`}>průběžné pořadí je vedle</Link>.
       </p>
+    </>
+  );
+}
+
+/**
+ * Seznam lodí místo výsledků. Zastávka, která se teprve pojede, jinak nemá
+ * co ukázat — a kdo se chystá jet, je to jediné, co je o ní v tu chvíli známo.
+ */
+function PrihlaseneLode({ lode }: { lode: UcastLodi[] }) {
+  if (lode.length === 0) return null;
+
+  const kategorie = [...new Set(lode.map((l) => l.kategorie))];
+
+  return (
+    <>
+      <h2>Přihlášené lodě</h2>
+      <p className="podtitulek" style={{ margin: "0 0 1rem" }}>
+        {lode.length} {lode.length === 1 ? "loď" : lode.length < 5 ? "lodě" : "lodí"}
+      </p>
+      {kategorie.map((k) => (
+        <div key={k} style={{ marginBottom: "1.5rem" }}>
+          <h3 style={{ fontSize: "0.95rem", margin: "1.25rem 0 0.5rem" }}>{k}</h3>
+          <div className="tabulka-obal">
+            <table>
+              <thead>
+                <tr>
+                  <th className="lod">Loď</th>
+                  <th style={{ textAlign: "left" }}>Kormidelník</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lode
+                  .filter((l) => l.kategorie === k)
+                  .map((l) => (
+                    <tr key={l.lod}>
+                      <td className="lod">{l.lod}</td>
+                      <td style={{ textAlign: "left" }}>{l.kormidelnik ?? "—"}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
     </>
   );
 }

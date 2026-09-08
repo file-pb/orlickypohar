@@ -79,6 +79,9 @@ export type VysledekZavodu = {
   rozjizdky: BodyVRozjizdce[];
 };
 
+/** Loď na zastávce. U plánované je to jediné, co se o ní dá ukázat. */
+export type UcastLodi = { lod: string; kategorie: string; kormidelnik: string | null };
+
 export type ZavodDetail = {
   slug: string;
   nazev: string;
@@ -94,6 +97,7 @@ export type ZavodDetail = {
   rozjizdky: Rozjizdka[];
   /** Body a pořadí počítá server. Web je nesčítá — rozešlo by se to. */
   poradi: VysledekZavodu[];
+  lode: UcastLodi[];
 };
 
 export type Zastavka = { slug: string; nazev: string; datum: string; poradi: number };
