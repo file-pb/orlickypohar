@@ -90,8 +90,22 @@ src/OrlickyPohar.Api/
 web/                          veřejné stránky (Next.js, renderuje server)
   app/                        stránky podle cest
   lib/api.ts                  typovaný přístup k API
+  lib/schema.d.ts             generované typy — needituj, viz packages/api-client
+app/                          mobilní appka (Expo, jen čtení)
+  src/app/                    obrazovky, cesty podle souborů
+  scripts/telefon.sh          spuštění pro Expo Go, scripts/apk.sh build APK
+  scripts/ikona.py            ikona a splash se kreslí kódem
+packages/api-client/          generuj.sh — typy pro web i appku z OpenAPI
 tools/fake-api.py             mock ročník jako API, pro vývoj webu bez databáze
+tools/gen-mock.py             vyrábí ten mock; skutečná fakta o ročníku patří sem
 ```
+
+**Typy klientů se negenerují ručně.** `packages/api-client/generuj.sh` stáhne
+OpenAPI dokument z běžícího API, uloží jeho snímek a vyrobí `schema.d.ts` pro
+web i appku. Ruční kopie tvarů se dřív musely držet v hlavě na dvou místech.
+
+**Veřejné čtení pouští prohlížeč z libovolného původu** (CORS, jen GET). Web
+renderuje serverem a nepotřeboval to; appka má webový cíl a běží jako origin.
 
 **Převod dat pro zobrazení patří do webu, ne do API.** Výsledky API vydává
 po rozjížďkách, protože tak vznikají; tabulka je potřebuje po lodích.
@@ -306,12 +320,24 @@ tajemství ale musí na serveru **existovat předem**, jinak kontejner nenaběhn
 
 ## Testy
 
-- **`ModelTests`** a **`KontraktTests`** — model proti migracím a tvar importního
-  souboru. Bez databáze a bez Dockeru, v CI běží první.
-- **`ImportTests`** — chování proti reálnému PostgreSQL přes Testcontainers.
-  Vyžadují běžící Docker. Schválně ne in-memory provider: idempotence stojí
-  na unikátních indexech, které by fake databáze neověřila.
+Bez databáze a bez Dockeru, v CI běží první:
 
-`data/2025-mock.json` je **vymyšlený ročník**, ne skutečná data. Existuje proto,
-aby se model dal prověřit dřív, než dorazí výsledky od rozhodčího. Až přijdou,
-soubor se nahradí — struktura zůstane.
+- **`ModelTests`** — model proti migracím.
+- **`KontraktTests`** — tvar importního souboru a pravidla, která má mock
+  dodržet (třeba že se škrtá až při čtyřech odjetých rozjížďkách).
+- **`BodovaniTests`** — body závodu z rozjížděk, kódy, škrty. Čisté funkce.
+- **`SerieTests`** — průběžné pořadí proti **skutečnému sešitu rozhodčího**
+  (`data/2026-poradi-rozhodci.json`). Nejcennější zkouška, jakou ten kód má.
+
+Značka `Category=Integracni`, potřebují Docker, běží jen v CI:
+
+- **`ImportTests`** — idempotence a mazání proti reálnému PostgreSQL přes
+  Testcontainers. Schválně ne in-memory provider: stojí to na unikátních
+  indexech, které by fake databáze neověřila.
+- **`CteniTests`** a **`PoradiTests`** — veřejné čtení a průběžné pořadí,
+  hlavně hranice publikovanosti.
+
+`data/2026-nanecisto.json` má **skutečná jména lodí a vymyšlené výsledky**;
+vyrábí ho `tools/gen-mock.py` s pevným seedem. Skutečná fakta o ročníku patří
+do generátoru, ne do vygenerovaného souboru — jinak je příští běh přepíše.
+`data/2026-poradi-rozhodci.json` je naproti tomu **skutečný sešit rozhodčího**.
