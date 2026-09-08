@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace OrlickyPohar.Api.Features.Bodovani;
 
 /// <summary>Loď v seriálu a body, které jí z jednotlivých zastávek přišly.</summary>
@@ -105,9 +107,38 @@ public static class SerieBodovani
         return lode
             .OrderBy(klic)
             .ThenBy(p => vysledky[p.Lod].Order().ToList(), Porovnani.PoJednom)
-            .ThenBy(p => p.Lod, StringComparer.CurrentCulture)
+            .ThenBy(p => p.Lod, Jmena.Cesky)
             .Select((p, i) => (p.Lod, Poradi: i + 1))
             .ToDictionary(x => x.Lod, x => x.Poradi);
+    }
+}
+
+/// <summary>
+/// Porovnání jmen lodí. <b>Česky, ne podle prostředí.</b>
+/// <para>
+/// Bylo tu <c>StringComparer.CurrentCulture</c> a to je past: v kontejneru
+/// bez ICU spadne na ordinální porovnání, kde je <c>Č</c> až za <c>Z</c>.
+/// Na vývojovém stroji i v CI ICU je, takže testy řadily jinak než produkce —
+/// a rozdíl je vidět jen u lodí, které mají všechno ostatní stejné, tedy
+/// přesně tam, kde se poslední záchrana používá.
+/// </para>
+/// </summary>
+internal static class Jmena
+{
+    public static readonly StringComparer Cesky = Vyrob();
+
+    private static StringComparer Vyrob()
+    {
+        // Když ICU přece jen chybí, je ordinální řazení pořád lepší než pád
+        // při startu — jen není české. Program.cs to při startu ohlásí.
+        try
+        {
+            return StringComparer.Create(CultureInfo.GetCultureInfo("cs-CZ"), ignoreCase: false);
+        }
+        catch (CultureNotFoundException)
+        {
+            return StringComparer.Ordinal;
+        }
     }
 }
 

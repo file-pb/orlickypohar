@@ -148,7 +148,7 @@ public static class Bodovani
             .SelectMany(skupina => skupina
                 .OrderBy(v => v.Body)
                 .ThenBy(v => v.Rozjizdky.Where(b => !b.Skrtnuto).Min(b => (int?)b.Body) ?? int.MaxValue)
-                .ThenBy(v => v.Lod, StringComparer.CurrentCulture)
+                .ThenBy(v => v.Lod, Jmena.Cesky)
                 .Select((v, i) => v with { Poradi = i + 1 }))
             .ToList();
     }

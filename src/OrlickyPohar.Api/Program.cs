@@ -54,6 +54,12 @@ try
     if (app.Environment.IsDevelopment())
         app.MapScalarApiReference();
 
+    // Bez ICU spadne porovnávání na ordinální a `Č` se řadí až za `Z`. Sama
+    // aplikace kvůli tomu neselže, ale tabulky by se rozešly s tím, co
+    // ukazují testy — a to se pozná jen tak, že se někdo diví pořadí.
+    if (Jmena.Cesky.Compare("Č", "Z") > 0)
+        Log.Warning("Běží se bez ICU (invariantní globalizace). Jména lodí se neřadí česky.");
+
     app.MapSerie();
     app.MapPoradi();
     app.MapZavody();

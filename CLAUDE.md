@@ -141,6 +141,14 @@ Test s letním posunem to hlídá.
 `localhost` překládá nejdřív na `::1`, kde aplikace neposlouchá — kontejner
 je pak `unhealthy`, přestože aplikace běží, a Traefik ho vyřadí.
 
+**Alpine image nemá ICU a `StringComparer.CurrentCulture` v něm lže.**
+Oficiální `dotnet/aspnet:*-alpine` jede s `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=true`,
+takže porovnávání spadne na ordinální a `Č` se řadí až za `Z`. Vývojový stroj
+i runnery CI ICU mají — pořadí lodí se stejnými body proto vycházelo v testech
+jinak než na produkci a nešlo to poznat odnikud než z výsledkové tabulky.
+Proto je v `Dockerfile` `icu-libs` a porovnává se explicitně přes `cs-CZ`;
+Program.cs při startu upozorní, kdyby ICU zase zmizelo.
+
 **Subdomény jen jednoúrovňové.** Bezplatný certifikát Cloudflare kryje
 `*.klihovka.cz`, takže `api.orlickypohar.klihovka.cz` selže na TLS dřív, než
 požadavek dojde na server. Proto `orlickypohar-api.klihovka.cz`.

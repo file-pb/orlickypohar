@@ -2681,11 +2681,6 @@
           "lod": "socka",
           "kormidelnik": "osoba-11",
           "posadka": "Ondřej Němec, Josef Bartoš"
-        },
-        {
-          "lod": "zephyr",
-          "kormidelnik": "osoba-38",
-          "posadka": "Jana Konečný, Roman Šimek"
         }
       ],
       "rozjizdky": [
@@ -2696,184 +2691,178 @@
           "doSerie": true,
           "vysledky": [
             {
-              "lod": "socka",
+              "lod": "rio",
               "poradiVCili": 1,
-              "dojezdV": "2026-05-24T10:21:13+02:00",
-              "casSekundy": 87673
+              "dojezdV": "2026-05-24T10:22:05+02:00",
+              "casSekundy": 87725
             },
             {
-              "lod": "sprunzel",
+              "lod": "hogan",
               "poradiVCili": 2,
-              "dojezdV": "2026-05-24T10:51:38+02:00",
-              "casSekundy": 89498
+              "dojezdV": "2026-05-24T10:50:39+02:00",
+              "casSekundy": 89439
             },
             {
-              "lod": "filozep",
+              "lod": "cassiopeia",
               "poradiVCili": 3,
-              "dojezdV": "2026-05-24T11:18:14+02:00",
-              "casSekundy": 91094
+              "dojezdV": "2026-05-24T11:19:46+02:00",
+              "casSekundy": 91186
+            },
+            {
+              "lod": "m-rtina",
+              "poradiVCili": 4,
+              "dojezdV": "2026-05-24T11:47:13+02:00",
+              "casSekundy": 92833
+            },
+            {
+              "lod": "socka",
+              "poradiVCili": 5,
+              "dojezdV": "2026-05-24T12:17:38+02:00",
+              "casSekundy": 94658
             },
             {
               "lod": "cervene-cafe",
               "kod": "Ret"
             },
             {
-              "lod": "sula",
-              "poradiVCili": 4,
-              "dojezdV": "2026-05-24T11:48:27+02:00",
-              "casSekundy": 92907
-            },
-            {
-              "lod": "sea-mouse-iii",
-              "poradiVCili": 5,
-              "dojezdV": "2026-05-24T12:16:33+02:00",
-              "casSekundy": 94593
-            },
-            {
-              "lod": "charlotte-iii",
-              "poradiVCili": 6,
-              "dojezdV": "2026-05-24T12:44:19+02:00",
-              "casSekundy": 96259
-            },
-            {
-              "lod": "thea",
-              "poradiVCili": 7,
-              "dojezdV": "2026-05-24T13:13:49+02:00",
-              "casSekundy": 98029
-            },
-            {
-              "lod": "rose",
-              "poradiVCili": 8,
-              "dojezdV": "2026-05-24T13:43:46+02:00",
-              "casSekundy": 99826
-            },
-            {
-              "lod": "hogan",
-              "poradiVCili": 9,
-              "dojezdV": "2026-05-24T14:12:44+02:00",
-              "casSekundy": 101564
-            },
-            {
               "lod": "m1",
-              "poradiVCili": 10,
-              "dojezdV": "2026-05-24T14:38:31+02:00",
-              "casSekundy": 103111
-            },
-            {
-              "lod": "m-rtina",
-              "poradiVCili": 11,
-              "dojezdV": "2026-05-24T15:08:19+02:00",
-              "casSekundy": 104899
-            },
-            {
-              "lod": "nablb",
-              "poradiVCili": 12,
-              "dojezdV": "2026-05-24T15:38:06+02:00",
-              "casSekundy": 106686
-            },
-            {
-              "lod": "family-lady",
-              "poradiVCili": 13,
-              "dojezdV": "2026-05-24T16:05:39+02:00",
-              "casSekundy": 108339
-            },
-            {
-              "lod": "varianta",
-              "poradiVCili": 14,
-              "dojezdV": "2026-05-24T16:33:59+02:00",
-              "casSekundy": 110039
-            },
-            {
-              "lod": "avenir",
-              "poradiVCili": 15,
-              "dojezdV": "2026-05-24T17:04:45+02:00",
-              "casSekundy": 111885
-            },
-            {
-              "lod": "luna",
-              "poradiVCili": 16,
-              "dojezdV": "2026-05-24T17:31:23+02:00",
-              "casSekundy": 113483
-            },
-            {
-              "lod": "zephyr",
-              "kod": "Ret"
-            },
-            {
-              "lod": "rio",
-              "kod": "Ocs"
-            },
-            {
-              "lod": "liberte",
-              "poradiVCili": 17,
-              "dojezdV": "2026-05-24T18:00:14+02:00",
-              "casSekundy": 115214
-            },
-            {
-              "lod": "cassiopeia",
-              "poradiVCili": 18,
-              "dojezdV": "2026-05-24T18:29:52+02:00",
-              "casSekundy": 116992
-            },
-            {
-              "lod": "valhalla",
-              "poradiVCili": 19,
-              "dojezdV": "2026-05-24T18:56:54+02:00",
-              "casSekundy": 118614
-            },
-            {
-              "lod": "claudie",
-              "poradiVCili": 20,
-              "dojezdV": "2026-05-24T19:27:52+02:00",
-              "casSekundy": 120472
-            },
-            {
-              "lod": "sandy",
-              "poradiVCili": 21,
-              "dojezdV": "2026-05-24T19:56:39+02:00",
-              "casSekundy": 122199
-            },
-            {
-              "lod": "miciny",
-              "poradiVCili": 22,
-              "dojezdV": "2026-05-24T20:23:41+02:00",
-              "casSekundy": 123821
-            },
-            {
-              "lod": "pezi",
-              "poradiVCili": 23,
-              "dojezdV": "2026-05-24T20:54:06+02:00",
-              "casSekundy": 125646
-            },
-            {
-              "lod": "depresso",
-              "poradiVCili": 24,
-              "dojezdV": "2026-05-24T21:22:18+02:00",
-              "casSekundy": 127338
-            },
-            {
-              "lod": "divna",
-              "poradiVCili": 25,
-              "dojezdV": "2026-05-24T21:49:26+02:00",
-              "casSekundy": 128966
+              "poradiVCili": 6,
+              "dojezdV": "2026-05-24T12:44:56+02:00",
+              "casSekundy": 96296
             },
             {
               "lod": "modre-cafe",
-              "poradiVCili": 26,
-              "dojezdV": "2026-05-24T22:17:42+02:00",
-              "casSekundy": 130662
+              "poradiVCili": 7,
+              "dojezdV": "2026-05-24T13:14:27+02:00",
+              "casSekundy": 98067
             },
             {
-              "lod": "mabye",
-              "poradiVCili": 27,
-              "dojezdV": "2026-05-24T22:46:13+02:00",
-              "casSekundy": 132373
+              "lod": "sula",
+              "poradiVCili": 8,
+              "dojezdV": "2026-05-24T13:42:33+02:00",
+              "casSekundy": 99753
+            },
+            {
+              "lod": "sea-mouse-iii",
+              "poradiVCili": 9,
+              "dojezdV": "2026-05-24T14:10:19+02:00",
+              "casSekundy": 101419
+            },
+            {
+              "lod": "filozep",
+              "poradiVCili": 10,
+              "dojezdV": "2026-05-24T14:39:49+02:00",
+              "casSekundy": 103189
+            },
+            {
+              "lod": "luna",
+              "poradiVCili": 11,
+              "dojezdV": "2026-05-24T15:09:46+02:00",
+              "casSekundy": 104986
+            },
+            {
+              "lod": "valhalla",
+              "poradiVCili": 12,
+              "dojezdV": "2026-05-24T15:38:44+02:00",
+              "casSekundy": 106724
+            },
+            {
+              "lod": "varianta",
+              "poradiVCili": 13,
+              "dojezdV": "2026-05-24T16:04:31+02:00",
+              "casSekundy": 108271
+            },
+            {
+              "lod": "charlotte-iii",
+              "poradiVCili": 14,
+              "dojezdV": "2026-05-24T16:34:19+02:00",
+              "casSekundy": 110059
+            },
+            {
+              "lod": "miciny",
+              "poradiVCili": 15,
+              "dojezdV": "2026-05-24T17:04:06+02:00",
+              "casSekundy": 111846
+            },
+            {
+              "lod": "rose",
+              "poradiVCili": 16,
+              "dojezdV": "2026-05-24T17:31:39+02:00",
+              "casSekundy": 113499
+            },
+            {
+              "lod": "sandy",
+              "poradiVCili": 17,
+              "dojezdV": "2026-05-24T17:59:59+02:00",
+              "casSekundy": 115199
+            },
+            {
+              "lod": "pezi",
+              "poradiVCili": 18,
+              "dojezdV": "2026-05-24T18:30:44+02:00",
+              "casSekundy": 117044
+            },
+            {
+              "lod": "depresso",
+              "poradiVCili": 19,
+              "dojezdV": "2026-05-24T18:57:22+02:00",
+              "casSekundy": 118642
+            },
+            {
+              "lod": "divna",
+              "kod": "Ret"
             },
             {
               "lod": "joy",
-              "poradiVCili": 28,
-              "dojezdV": "2026-05-24T23:16:21+02:00",
-              "casSekundy": 134181
+              "kod": "Ocs"
+            },
+            {
+              "lod": "mabye",
+              "poradiVCili": 20,
+              "dojezdV": "2026-05-24T19:26:13+02:00",
+              "casSekundy": 120373
+            },
+            {
+              "lod": "claudie",
+              "poradiVCili": 21,
+              "dojezdV": "2026-05-24T19:55:53+02:00",
+              "casSekundy": 122153
+            },
+            {
+              "lod": "sprunzel",
+              "poradiVCili": 22,
+              "dojezdV": "2026-05-24T20:22:55+02:00",
+              "casSekundy": 123775
+            },
+            {
+              "lod": "liberte",
+              "poradiVCili": 23,
+              "dojezdV": "2026-05-24T20:53:53+02:00",
+              "casSekundy": 125633
+            },
+            {
+              "lod": "avenir",
+              "poradiVCili": 24,
+              "dojezdV": "2026-05-24T21:22:39+02:00",
+              "casSekundy": 127359
+            },
+            {
+              "lod": "family-lady",
+              "poradiVCili": 25,
+              "dojezdV": "2026-05-24T21:49:41+02:00",
+              "casSekundy": 128981
+            },
+            {
+              "lod": "thea",
+              "poradiVCili": 26,
+              "dojezdV": "2026-05-24T22:20:06+02:00",
+              "casSekundy": 130806
+            },
+            {
+              "lod": "nablb",
+              "poradiVCili": 27,
+              "dojezdV": "2026-05-24T22:48:18+02:00",
+              "casSekundy": 132498
             }
           ]
         }
@@ -2896,187 +2885,157 @@
         {
           "lod": "luna",
           "kormidelnik": "osoba-1",
-          "posadka": "Lukáš Ryba"
+          "posadka": "Radek Sedláček, Jakub Procházka"
         },
         {
           "lod": "sendy",
-          "kormidelnik": "osoba-32",
-          "posadka": "Blanka Havel"
+          "kormidelnik": "osoba-2",
+          "posadka": "Iva Kadlec, Hana Urban, Petr Svoboda"
         },
         {
           "lod": "joy",
           "kormidelnik": "osoba-3",
-          "posadka": "Jana Konečný, Ondřej Němec, Jakub Procházka"
-        },
-        {
-          "lod": "andante",
-          "kormidelnik": "osoba-13",
-          "posadka": "Jiří Král"
+          "posadka": "Markéta Fiala"
         },
         {
           "lod": "varianta",
           "kormidelnik": "osoba-5",
-          "posadka": "David Štěpánek, Aleš Souček"
+          "posadka": "Šárka Doležal"
         },
         {
           "lod": "sandy",
           "kormidelnik": "osoba-6",
-          "posadka": "Ivan Kříž, Alena Vaněk"
-        },
-        {
-          "lod": "charlotte-iii",
-          "kormidelnik": "osoba-7",
-          "posadka": "Šárka Doležal, Blanka Havel"
+          "posadka": "Věra Sýkora, Jana Konečný, Ondřej Němec"
         },
         {
           "lod": "pezi",
-          "kormidelnik": "osoba-19",
-          "posadka": "Eva Veselý, Milan Zeman"
+          "kormidelnik": "osoba-8",
+          "posadka": "Jakub Procházka, Hana Urban, Zdeněk Beneš"
         },
         {
           "lod": "mamba",
-          "kormidelnik": "osoba-9",
-          "posadka": "Petr Svoboda, Eva Veselý, Jan Novák"
+          "kormidelnik": "osoba-12",
+          "posadka": "Ivan Kříž, Roman Šimek"
         },
         {
           "lod": "m1",
           "kormidelnik": "osoba-10",
-          "posadka": "Ivan Kříž, Věra Sýkora"
-        },
-        {
-          "lod": "depresso",
-          "kormidelnik": "osoba-11",
-          "posadka": "Karel Vlček, Dana Jelínek, Lucie Kučera"
+          "posadka": "Aleš Souček, Vojtěch Kolář, Věra Sýkora"
         },
         {
           "lod": "cassiopeia",
-          "kormidelnik": "osoba-14",
-          "posadka": "Jana Konečný, Pavel Marek, Tereza Hájek"
+          "kormidelnik": "osoba-12",
+          "posadka": "Alena Vaněk, Ondřej Němec"
         },
         {
           "lod": "sula",
-          "kormidelnik": "osoba-25",
-          "posadka": "Ivan Kříž, Zdeněk Beneš, Lukáš Ryba"
+          "kormidelnik": "osoba-13",
+          "posadka": "Blanka Havel, Kateřina Pokorný"
         },
         {
           "lod": "nablb",
-          "kormidelnik": "osoba-14",
-          "posadka": "Jana Konečný, Ondřej Němec"
+          "kormidelnik": "osoba-19",
+          "posadka": "Eva Veselý, Milan Zeman"
         },
         {
           "lod": "filozep",
-          "kormidelnik": "osoba-16",
-          "posadka": "Josef Bartoš, Kateřina Pokorný"
+          "kormidelnik": "osoba-15",
+          "posadka": "Petr Svoboda, Eva Veselý, Jan Novák"
         },
         {
           "lod": "sprunzel",
           "kormidelnik": "osoba-16",
-          "posadka": "Ivan Kříž, Aleš Souček, Karel Vlček"
+          "posadka": "Ivan Kříž, Věra Sýkora"
         },
         {
           "lod": "thea",
           "kormidelnik": "osoba-17",
-          "posadka": "Roman Šimek, Michal Horák"
+          "posadka": "Karel Vlček, Dana Jelínek, Lucie Kučera"
         },
         {
           "lod": "michelle",
-          "kormidelnik": "osoba-18",
-          "posadka": "Vít Toman, Radek Sedláček, Roman Šimek"
-        },
-        {
-          "lod": "divna",
-          "kormidelnik": "osoba-19",
-          "posadka": "Michal Horák, Olga Kolman, Jakub Procházka"
+          "kormidelnik": "osoba-14",
+          "posadka": "Jana Konečný, Pavel Marek, Tereza Hájek"
         },
         {
           "lod": "family-lady",
-          "kormidelnik": "osoba-20",
-          "posadka": "Josef Bartoš, Hana Urban"
+          "kormidelnik": "osoba-25",
+          "posadka": "Ivan Kříž, Zdeněk Beneš, Lukáš Ryba"
         },
         {
           "lod": "m-rtina",
-          "kormidelnik": "osoba-16",
-          "posadka": "Radek Sedláček, Michal Horák, Aleš Souček"
+          "kormidelnik": "osoba-21",
+          "posadka": "Jana Konečný, Ondřej Němec"
         },
         {
           "lod": "rose",
-          "kormidelnik": "osoba-22",
-          "posadka": "Jiří Král, Olga Kolman"
+          "kormidelnik": "osoba-16",
+          "posadka": "Josef Bartoš, Kateřina Pokorný"
         },
         {
           "lod": "miciny",
-          "kormidelnik": "osoba-7",
-          "posadka": "Jakub Procházka, Zdeněk Beneš"
+          "kormidelnik": "osoba-23",
+          "posadka": "Ivan Kříž, Aleš Souček, Karel Vlček"
         },
         {
           "lod": "avenir",
-          "kormidelnik": "osoba-23",
-          "posadka": "Blanka Havel, Tomáš Černý"
+          "kormidelnik": "osoba-24",
+          "posadka": "Roman Šimek, Michal Horák"
         },
         {
           "lod": "hogan",
           "kormidelnik": "osoba-25",
-          "posadka": "Milan Zeman, Dana Jelínek, Marek Bláha"
-        },
-        {
-          "lod": "liberte",
-          "kormidelnik": "osoba-26",
-          "posadka": "Hana Urban, Roman Šimek, Marek Bláha"
-        },
-        {
-          "lod": "rio",
-          "kormidelnik": "osoba-27",
-          "posadka": "Marek Bláha"
+          "posadka": "Vít Toman, Radek Sedláček, Roman Šimek"
         },
         {
           "lod": "claudie",
-          "kormidelnik": "osoba-6",
-          "posadka": "Petr Svoboda, Eva Veselý"
+          "kormidelnik": "osoba-28",
+          "posadka": "Michal Horák, Olga Kolman, Jakub Procházka"
         },
         {
           "lod": "mabye",
           "kormidelnik": "osoba-29",
-          "posadka": "Pavel Marek"
+          "posadka": "Josef Bartoš, Hana Urban"
         },
         {
           "lod": "caprice",
-          "kormidelnik": "osoba-30",
-          "posadka": "Ivan Kříž"
+          "kormidelnik": "osoba-16",
+          "posadka": "Radek Sedláček, Michal Horák, Aleš Souček"
         },
         {
           "lod": "valhalla",
           "kormidelnik": "osoba-31",
-          "posadka": "Ondřej Němec, Pavel Marek"
+          "posadka": "Jiří Král, Olga Kolman"
         },
         {
           "lod": "perun",
-          "kormidelnik": "osoba-32",
-          "posadka": "Aleš Souček, Martin Dvořák, Jan Novák"
+          "kormidelnik": "osoba-7",
+          "posadka": "Jakub Procházka, Zdeněk Beneš"
         },
         {
           "lod": "cervene-cafe",
-          "kormidelnik": "osoba-33",
-          "posadka": "Dana Jelínek, Vojtěch Kolář"
+          "kormidelnik": "osoba-23",
+          "posadka": "Blanka Havel, Tomáš Černý"
         },
         {
           "lod": "modre-cafe",
           "kormidelnik": "osoba-34",
-          "posadka": "Radek Sedláček"
+          "posadka": "Milan Zeman, Dana Jelínek, Marek Bláha"
         },
         {
           "lod": "sea-mouse-iii",
-          "kormidelnik": "osoba-3",
-          "posadka": "Roman Šimek, Tereza Hájek, Lukáš Ryba"
+          "kormidelnik": "osoba-35",
+          "posadka": "Hana Urban, Roman Šimek, Marek Bláha"
+        },
+        {
+          "lod": "socka",
+          "kormidelnik": "osoba-36",
+          "posadka": "Marek Bláha"
         },
         {
           "lod": "far-star-iii",
-          "kormidelnik": "osoba-37",
-          "posadka": "Tereza Hájek, Dana Jelínek, Josef Bartoš"
-        },
-        {
-          "lod": "zephyr",
-          "kormidelnik": "osoba-38",
-          "posadka": "Marek Bláha, Tereza Hájek"
+          "kormidelnik": "osoba-6",
+          "posadka": "Petr Svoboda, Eva Veselý"
         }
       ],
       "rozjizdky": [
@@ -3087,224 +3046,186 @@
           "doSerie": false,
           "vysledky": [
             {
-              "lod": "liberte",
+              "lod": "varianta",
               "poradiVCili": 1,
-              "dojezdV": "2026-06-20T11:00:50+02:00",
-              "casSekundy": 3650
+              "dojezdV": "2026-06-20T11:01:04+02:00",
+              "casSekundy": 3664
             },
             {
-              "lod": "mabye",
+              "lod": "mamba",
               "poradiVCili": 2,
-              "dojezdV": "2026-06-20T11:02:27+02:00",
-              "casSekundy": 3747
+              "dojezdV": "2026-06-20T11:02:55+02:00",
+              "casSekundy": 3775
             },
             {
-              "lod": "claudie",
+              "lod": "cervene-cafe",
               "poradiVCili": 3,
-              "dojezdV": "2026-06-20T11:04:15+02:00",
-              "casSekundy": 3855
+              "dojezdV": "2026-06-20T11:03:34+02:00",
+              "casSekundy": 3814
             },
             {
-              "lod": "divna",
+              "lod": "valhalla",
               "poradiVCili": 4,
-              "dojezdV": "2026-06-20T11:03:42+02:00",
-              "casSekundy": 3822
-            },
-            {
-              "lod": "charlotte-iii",
-              "poradiVCili": 5,
-              "dojezdV": "2026-06-20T11:06:36+02:00",
-              "casSekundy": 3996
+              "dojezdV": "2026-06-20T11:04:32+02:00",
+              "casSekundy": 3872
             },
             {
               "lod": "filozep",
-              "poradiVCili": 6,
-              "dojezdV": "2026-06-20T11:06:40+02:00",
-              "casSekundy": 4000
+              "poradiVCili": 5,
+              "dojezdV": "2026-06-20T11:05:47+02:00",
+              "casSekundy": 3947
             },
             {
-              "lod": "sula",
+              "lod": "cassiopeia",
+              "poradiVCili": 6,
+              "dojezdV": "2026-06-20T11:07:02+02:00",
+              "casSekundy": 4022
+            },
+            {
+              "lod": "caprice",
+              "kod": "Dns"
+            },
+            {
+              "lod": "rose",
               "poradiVCili": 7,
               "dojezdV": "2026-06-20T11:07:55+02:00",
               "casSekundy": 4075
             },
             {
-              "lod": "rio",
+              "lod": "avenir",
               "poradiVCili": 8,
-              "dojezdV": "2026-06-20T11:09:47+02:00",
-              "casSekundy": 4187
-            },
-            {
-              "lod": "andante",
-              "poradiVCili": 9,
-              "dojezdV": "2026-06-20T11:09:19+02:00",
-              "casSekundy": 4159
+              "dojezdV": "2026-06-20T11:10:40+02:00",
+              "casSekundy": 4240
             },
             {
               "lod": "pezi",
-              "poradiVCili": 10,
-              "dojezdV": "2026-06-20T11:10:38+02:00",
-              "casSekundy": 4238
-            },
-            {
-              "lod": "modre-cafe",
-              "poradiVCili": 11,
-              "dojezdV": "2026-06-20T11:14:16+02:00",
-              "casSekundy": 4456
-            },
-            {
-              "lod": "avenir",
-              "poradiVCili": 12,
-              "dojezdV": "2026-06-20T11:13:04+02:00",
-              "casSekundy": 4384
-            },
-            {
-              "lod": "zephyr",
-              "poradiVCili": 13,
-              "dojezdV": "2026-06-20T11:15:02+02:00",
-              "casSekundy": 4502
-            },
-            {
-              "lod": "far-star-iii",
-              "poradiVCili": 14,
-              "dojezdV": "2026-06-20T11:16:19+02:00",
-              "casSekundy": 4579
-            },
-            {
-              "lod": "mamba",
-              "poradiVCili": 15,
-              "dojezdV": "2026-06-20T11:17:47+02:00",
-              "casSekundy": 4667
-            },
-            {
-              "lod": "nablb",
-              "poradiVCili": 16,
-              "dojezdV": "2026-06-20T11:19:01+02:00",
-              "casSekundy": 4741
-            },
-            {
-              "lod": "michelle",
-              "poradiVCili": 17,
-              "dojezdV": "2026-06-20T11:21:47+02:00",
-              "casSekundy": 4907
-            },
-            {
-              "lod": "varianta",
-              "poradiVCili": 18,
-              "dojezdV": "2026-06-20T11:21:03+02:00",
-              "casSekundy": 4863
-            },
-            {
-              "lod": "valhalla",
-              "poradiVCili": 19,
-              "dojezdV": "2026-06-20T11:22:26+02:00",
-              "casSekundy": 4946
-            },
-            {
-              "lod": "sea-mouse-iii",
-              "poradiVCili": 20,
-              "dojezdV": "2026-06-20T11:24:13+02:00",
-              "casSekundy": 5053
-            },
-            {
-              "lod": "caprice",
-              "poradiVCili": 21,
-              "dojezdV": "2026-06-20T11:25:40+02:00",
-              "casSekundy": 5140
-            },
-            {
-              "lod": "sandy",
-              "poradiVCili": 22,
-              "dojezdV": "2026-06-20T11:25:23+02:00",
-              "casSekundy": 5123
-            },
-            {
-              "lod": "miciny",
-              "poradiVCili": 23,
-              "dojezdV": "2026-06-20T11:26:12+02:00",
-              "casSekundy": 5172
-            },
-            {
-              "lod": "depresso",
-              "poradiVCili": 24,
-              "dojezdV": "2026-06-20T11:27:32+02:00",
-              "casSekundy": 5252
-            },
-            {
-              "lod": "rose",
-              "poradiVCili": 25,
-              "dojezdV": "2026-06-20T11:30:08+02:00",
-              "casSekundy": 5408
-            },
-            {
-              "lod": "cervene-cafe",
-              "poradiVCili": 26,
-              "dojezdV": "2026-06-20T11:32:04+02:00",
-              "casSekundy": 5524
-            },
-            {
-              "lod": "m-rtina",
-              "poradiVCili": 27,
-              "dojezdV": "2026-06-20T11:32:13+02:00",
-              "casSekundy": 5533
-            },
-            {
-              "lod": "thea",
-              "poradiVCili": 28,
-              "dojezdV": "2026-06-20T11:34:19+02:00",
-              "casSekundy": 5659
-            },
-            {
-              "lod": "m1",
-              "poradiVCili": 29,
-              "dojezdV": "2026-06-20T11:35:57+02:00",
-              "casSekundy": 5757
-            },
-            {
-              "lod": "perun",
-              "poradiVCili": 30,
-              "dojezdV": "2026-06-20T11:36:13+02:00",
-              "casSekundy": 5773
+              "poradiVCili": 9,
+              "dojezdV": "2026-06-20T11:09:27+02:00",
+              "casSekundy": 4167
             },
             {
               "lod": "hogan",
-              "poradiVCili": 31,
-              "dojezdV": "2026-06-20T11:38:12+02:00",
-              "casSekundy": 5892
+              "poradiVCili": 10,
+              "dojezdV": "2026-06-20T11:10:48+02:00",
+              "casSekundy": 4248
             },
             {
-              "lod": "joy",
-              "kod": "Dns"
+              "lod": "mabye",
+              "poradiVCili": 11,
+              "dojezdV": "2026-06-20T11:14:27+02:00",
+              "casSekundy": 4467
+            },
+            {
+              "lod": "michelle",
+              "poradiVCili": 12,
+              "dojezdV": "2026-06-20T11:15:49+02:00",
+              "casSekundy": 4549
+            },
+            {
+              "lod": "sula",
+              "poradiVCili": 13,
+              "dojezdV": "2026-06-20T11:14:47+02:00",
+              "casSekundy": 4487
             },
             {
               "lod": "sprunzel",
-              "poradiVCili": 32,
-              "dojezdV": "2026-06-20T11:38:52+02:00",
-              "casSekundy": 5932
-            },
-            {
-              "lod": "family-lady",
-              "poradiVCili": 33,
-              "dojezdV": "2026-06-20T11:38:27+02:00",
-              "casSekundy": 5907
-            },
-            {
-              "lod": "cassiopeia",
-              "poradiVCili": 34,
-              "dojezdV": "2026-06-20T11:41:38+02:00",
-              "casSekundy": 6098
+              "kod": "Dns"
             },
             {
               "lod": "sendy",
-              "poradiVCili": 35,
-              "dojezdV": "2026-06-20T11:42:35+02:00",
-              "casSekundy": 6155
+              "poradiVCili": 14,
+              "dojezdV": "2026-06-20T11:15:53+02:00",
+              "casSekundy": 4553
+            },
+            {
+              "lod": "joy",
+              "poradiVCili": 15,
+              "dojezdV": "2026-06-20T11:19:22+02:00",
+              "casSekundy": 4762
+            },
+            {
+              "lod": "miciny",
+              "poradiVCili": 16,
+              "dojezdV": "2026-06-20T11:19:51+02:00",
+              "casSekundy": 4791
+            },
+            {
+              "lod": "perun",
+              "poradiVCili": 17,
+              "dojezdV": "2026-06-20T11:19:05+02:00",
+              "casSekundy": 4745
+            },
+            {
+              "lod": "thea",
+              "poradiVCili": 18,
+              "dojezdV": "2026-06-20T11:22:47+02:00",
+              "casSekundy": 4967
+            },
+            {
+              "lod": "far-star-iii",
+              "poradiVCili": 19,
+              "dojezdV": "2026-06-20T11:24:11+02:00",
+              "casSekundy": 5051
+            },
+            {
+              "lod": "nablb",
+              "poradiVCili": 20,
+              "dojezdV": "2026-06-20T11:23:00+02:00",
+              "casSekundy": 4980
             },
             {
               "lod": "luna",
-              "poradiVCili": 36,
-              "dojezdV": "2026-06-20T11:43:55+02:00",
-              "casSekundy": 6235
+              "poradiVCili": 21,
+              "dojezdV": "2026-06-20T11:25:47+02:00",
+              "casSekundy": 5147
+            },
+            {
+              "lod": "m-rtina",
+              "poradiVCili": 22,
+              "dojezdV": "2026-06-20T11:25:10+02:00",
+              "casSekundy": 5110
+            },
+            {
+              "lod": "family-lady",
+              "poradiVCili": 23,
+              "dojezdV": "2026-06-20T11:27:14+02:00",
+              "casSekundy": 5234
+            },
+            {
+              "lod": "sandy",
+              "poradiVCili": 24,
+              "dojezdV": "2026-06-20T11:28:51+02:00",
+              "casSekundy": 5331
+            },
+            {
+              "lod": "m1",
+              "poradiVCili": 25,
+              "dojezdV": "2026-06-20T11:30:39+02:00",
+              "casSekundy": 5439
+            },
+            {
+              "lod": "socka",
+              "poradiVCili": 26,
+              "dojezdV": "2026-06-20T11:30:06+02:00",
+              "casSekundy": 5406
+            },
+            {
+              "lod": "modre-cafe",
+              "poradiVCili": 27,
+              "dojezdV": "2026-06-20T11:33:00+02:00",
+              "casSekundy": 5580
+            },
+            {
+              "lod": "sea-mouse-iii",
+              "poradiVCili": 28,
+              "dojezdV": "2026-06-20T11:33:04+02:00",
+              "casSekundy": 5584
+            },
+            {
+              "lod": "claudie",
+              "poradiVCili": 29,
+              "dojezdV": "2026-06-20T11:34:19+02:00",
+              "casSekundy": 5659
             }
           ],
           "poznamka": "běh pro míčky z kopce — nejede se na vodě"
@@ -3316,222 +3237,186 @@
           "doSerie": true,
           "vysledky": [
             {
-              "lod": "hogan",
+              "lod": "joy",
               "poradiVCili": 1,
-              "dojezdV": "2026-06-20T13:00:48+02:00",
-              "casSekundy": 3648
+              "dojezdV": "2026-06-20T13:01:25+02:00",
+              "casSekundy": 3685
+            },
+            {
+              "lod": "modre-cafe",
+              "poradiVCili": 2,
+              "dojezdV": "2026-06-20T13:02:52+02:00",
+              "casSekundy": 3772
             },
             {
               "lod": "sula",
-              "poradiVCili": 2,
-              "dojezdV": "2026-06-20T13:01:27+02:00",
-              "casSekundy": 3687
-            },
-            {
-              "lod": "m-rtina",
               "poradiVCili": 3,
-              "dojezdV": "2026-06-20T13:02:11+02:00",
-              "casSekundy": 3731
+              "dojezdV": "2026-06-20T13:02:35+02:00",
+              "casSekundy": 3755
             },
             {
-              "lod": "mabye",
+              "lod": "filozep",
               "poradiVCili": 4,
-              "dojezdV": "2026-06-20T13:03:55+02:00",
-              "casSekundy": 3835
-            },
-            {
-              "lod": "michelle",
-              "poradiVCili": 5,
-              "dojezdV": "2026-06-20T13:05:34+02:00",
-              "casSekundy": 3934
-            },
-            {
-              "lod": "valhalla",
-              "poradiVCili": 6,
-              "dojezdV": "2026-06-20T13:06:03+02:00",
-              "casSekundy": 3963
-            },
-            {
-              "lod": "varianta",
-              "poradiVCili": 7,
-              "dojezdV": "2026-06-20T13:09:39+02:00",
-              "casSekundy": 4179
-            },
-            {
-              "lod": "sea-mouse-iii",
-              "poradiVCili": 8,
-              "dojezdV": "2026-06-20T13:08:49+02:00",
-              "casSekundy": 4129
+              "dojezdV": "2026-06-20T13:03:24+02:00",
+              "casSekundy": 3804
             },
             {
               "lod": "far-star-iii",
-              "poradiVCili": 9,
-              "dojezdV": "2026-06-20T13:10:00+02:00",
-              "casSekundy": 4200
+              "poradiVCili": 5,
+              "dojezdV": "2026-06-20T13:04:44+02:00",
+              "casSekundy": 3884
             },
             {
-              "lod": "sprunzel",
-              "poradiVCili": 10,
+              "lod": "socka",
+              "poradiVCili": 6,
+              "dojezdV": "2026-06-20T13:07:20+02:00",
+              "casSekundy": 4040
+            },
+            {
+              "lod": "hogan",
+              "poradiVCili": 7,
+              "dojezdV": "2026-06-20T13:09:16+02:00",
+              "casSekundy": 4156
+            },
+            {
+              "lod": "cervene-cafe",
+              "poradiVCili": 8,
+              "dojezdV": "2026-06-20T13:09:25+02:00",
+              "casSekundy": 4165
+            },
+            {
+              "lod": "sandy",
+              "poradiVCili": 9,
               "dojezdV": "2026-06-20T13:11:31+02:00",
               "casSekundy": 4291
             },
             {
-              "lod": "rio",
+              "lod": "m1",
+              "poradiVCili": 10,
+              "dojezdV": "2026-06-20T13:13:09+02:00",
+              "casSekundy": 4389
+            },
+            {
+              "lod": "thea",
               "poradiVCili": 11,
-              "dojezdV": "2026-06-20T13:12:30+02:00",
-              "casSekundy": 4350
+              "dojezdV": "2026-06-20T13:13:25+02:00",
+              "casSekundy": 4405
             },
             {
-              "lod": "cervene-cafe",
+              "lod": "family-lady",
               "poradiVCili": 12,
-              "dojezdV": "2026-06-20T13:14:37+02:00",
-              "casSekundy": 4477
+              "dojezdV": "2026-06-20T13:15:24+02:00",
+              "casSekundy": 4524
             },
             {
-              "lod": "andante",
+              "lod": "nablb",
+              "kod": "Dns"
+            },
+            {
+              "lod": "varianta",
               "poradiVCili": 13,
+              "dojezdV": "2026-06-20T13:16:04+02:00",
+              "casSekundy": 4564
+            },
+            {
+              "lod": "avenir",
+              "poradiVCili": 14,
               "dojezdV": "2026-06-20T13:15:39+02:00",
               "casSekundy": 4539
             },
             {
-              "lod": "zephyr",
-              "poradiVCili": 14,
-              "dojezdV": "2026-06-20T13:16:20+02:00",
-              "casSekundy": 4580
-            },
-            {
-              "lod": "avenir",
+              "lod": "rose",
               "poradiVCili": 15,
-              "dojezdV": "2026-06-20T13:18:34+02:00",
-              "casSekundy": 4714
+              "dojezdV": "2026-06-20T13:18:50+02:00",
+              "casSekundy": 4730
             },
             {
-              "lod": "caprice",
+              "lod": "m-rtina",
               "poradiVCili": 16,
-              "dojezdV": "2026-06-20T13:18:57+02:00",
-              "casSekundy": 4737
+              "dojezdV": "2026-06-20T13:19:47+02:00",
+              "casSekundy": 4787
+            },
+            {
+              "lod": "claudie",
+              "poradiVCili": 17,
+              "dojezdV": "2026-06-20T13:21:07+02:00",
+              "casSekundy": 4867
+            },
+            {
+              "lod": "mamba",
+              "kod": "Dnf"
             },
             {
               "lod": "perun",
-              "poradiVCili": 17,
-              "dojezdV": "2026-06-20T13:19:58+02:00",
-              "casSekundy": 4798
-            },
-            {
-              "lod": "charlotte-iii",
               "poradiVCili": 18,
-              "dojezdV": "2026-06-20T13:22:44+02:00",
-              "casSekundy": 4964
+              "dojezdV": "2026-06-20T13:21:19+02:00",
+              "casSekundy": 4879
             },
             {
               "lod": "miciny",
               "poradiVCili": 19,
-              "dojezdV": "2026-06-20T13:22:03+02:00",
-              "casSekundy": 4923
+              "dojezdV": "2026-06-20T13:24:08+02:00",
+              "casSekundy": 5048
             },
             {
-              "lod": "claudie",
+              "lod": "sendy",
               "poradiVCili": 20,
-              "dojezdV": "2026-06-20T13:23:03+02:00",
-              "casSekundy": 4983
+              "dojezdV": "2026-06-20T13:22:43+02:00",
+              "casSekundy": 4963
             },
             {
-              "lod": "depresso",
+              "lod": "caprice",
               "poradiVCili": 21,
-              "dojezdV": "2026-06-20T13:26:37+02:00",
-              "casSekundy": 5197
+              "dojezdV": "2026-06-20T13:25:41+02:00",
+              "casSekundy": 5141
             },
             {
-              "lod": "luna",
+              "lod": "michelle",
               "poradiVCili": 22,
-              "dojezdV": "2026-06-20T13:25:55+02:00",
-              "casSekundy": 5155
-            },
-            {
-              "lod": "thea",
-              "kod": "Dns"
-            },
-            {
-              "lod": "filozep",
-              "poradiVCili": 23,
               "dojezdV": "2026-06-20T13:26:21+02:00",
               "casSekundy": 5181
             },
             {
-              "lod": "cassiopeia",
+              "lod": "luna",
+              "poradiVCili": 23,
+              "dojezdV": "2026-06-20T13:27:52+02:00",
+              "casSekundy": 5272
+            },
+            {
+              "lod": "mabye",
               "poradiVCili": 24,
-              "dojezdV": "2026-06-20T13:27:44+02:00",
-              "casSekundy": 5264
+              "dojezdV": "2026-06-20T13:29:08+02:00",
+              "casSekundy": 5348
             },
             {
-              "lod": "liberte",
+              "lod": "cassiopeia",
               "poradiVCili": 25,
-              "dojezdV": "2026-06-20T13:30:32+02:00",
-              "casSekundy": 5432
+              "dojezdV": "2026-06-20T13:29:11+02:00",
+              "casSekundy": 5351
             },
             {
-              "lod": "sendy",
+              "lod": "sea-mouse-iii",
               "poradiVCili": 26,
-              "dojezdV": "2026-06-20T13:32:12+02:00",
-              "casSekundy": 5532
+              "dojezdV": "2026-06-20T13:30:16+02:00",
+              "casSekundy": 5416
             },
             {
-              "lod": "nablb",
+              "lod": "sprunzel",
               "poradiVCili": 27,
-              "dojezdV": "2026-06-20T13:31:32+02:00",
-              "casSekundy": 5492
-            },
-            {
-              "lod": "sandy",
-              "poradiVCili": 28,
-              "dojezdV": "2026-06-20T13:33:19+02:00",
-              "casSekundy": 5599
-            },
-            {
-              "lod": "rose",
-              "poradiVCili": 29,
-              "dojezdV": "2026-06-20T13:34:28+02:00",
-              "casSekundy": 5668
-            },
-            {
-              "lod": "m1",
-              "poradiVCili": 30,
-              "dojezdV": "2026-06-20T13:37:26+02:00",
-              "casSekundy": 5846
-            },
-            {
-              "lod": "family-lady",
-              "poradiVCili": 31,
-              "dojezdV": "2026-06-20T13:36:12+02:00",
-              "casSekundy": 5772
-            },
-            {
-              "lod": "divna",
-              "kod": "Dnf"
-            },
-            {
-              "lod": "modre-cafe",
-              "poradiVCili": 32,
-              "dojezdV": "2026-06-20T13:38:11+02:00",
-              "casSekundy": 5891
+              "dojezdV": "2026-06-20T13:31:03+02:00",
+              "casSekundy": 5463
             },
             {
               "lod": "pezi",
-              "poradiVCili": 33,
-              "dojezdV": "2026-06-20T13:40:41+02:00",
-              "casSekundy": 6041
+              "poradiVCili": 28,
+              "dojezdV": "2026-06-20T13:34:25+02:00",
+              "casSekundy": 5665
             },
             {
-              "lod": "mamba",
-              "poradiVCili": 34,
-              "dojezdV": "2026-06-20T13:40:15+02:00",
-              "casSekundy": 6015
-            },
-            {
-              "lod": "joy",
-              "poradiVCili": 35,
-              "dojezdV": "2026-06-20T13:40:53+02:00",
-              "casSekundy": 6053
+              "lod": "valhalla",
+              "poradiVCili": 29,
+              "dojezdV": "2026-06-20T13:35:44+02:00",
+              "casSekundy": 5744
             }
           ]
         },
@@ -3544,220 +3429,184 @@
             {
               "lod": "perun",
               "poradiVCili": 1,
-              "dojezdV": "2026-06-20T15:02:23+02:00",
-              "casSekundy": 3743
-            },
-            {
-              "lod": "liberte",
-              "poradiVCili": 2,
-              "dojezdV": "2026-06-20T15:03:42+02:00",
-              "casSekundy": 3822
-            },
-            {
-              "lod": "andante",
-              "poradiVCili": 3,
-              "dojezdV": "2026-06-20T15:03:45+02:00",
-              "casSekundy": 3825
-            },
-            {
-              "lod": "cervene-cafe",
-              "poradiVCili": 4,
-              "dojezdV": "2026-06-20T15:05:37+02:00",
-              "casSekundy": 3937
-            },
-            {
-              "lod": "luna",
-              "poradiVCili": 5,
-              "dojezdV": "2026-06-20T15:07:26+02:00",
-              "casSekundy": 4046
-            },
-            {
-              "lod": "family-lady",
-              "poradiVCili": 6,
-              "dojezdV": "2026-06-20T15:07:45+02:00",
-              "casSekundy": 4065
-            },
-            {
-              "lod": "sandy",
-              "poradiVCili": 7,
-              "dojezdV": "2026-06-20T15:08:27+02:00",
-              "casSekundy": 4107
-            },
-            {
-              "lod": "charlotte-iii",
-              "poradiVCili": 8,
-              "dojezdV": "2026-06-20T15:08:30+02:00",
-              "casSekundy": 4110
-            },
-            {
-              "lod": "rose",
-              "poradiVCili": 9,
-              "dojezdV": "2026-06-20T15:11:42+02:00",
-              "casSekundy": 4302
-            },
-            {
-              "lod": "modre-cafe",
-              "kod": "Dnf"
-            },
-            {
-              "lod": "far-star-iii",
-              "poradiVCili": 10,
-              "dojezdV": "2026-06-20T15:11:46+02:00",
-              "casSekundy": 4306
-            },
-            {
-              "lod": "claudie",
-              "poradiVCili": 11,
-              "dojezdV": "2026-06-20T15:12:04+02:00",
-              "casSekundy": 4324
-            },
-            {
-              "lod": "miciny",
-              "poradiVCili": 12,
-              "dojezdV": "2026-06-20T15:13:59+02:00",
-              "casSekundy": 4439
-            },
-            {
-              "lod": "rio",
-              "poradiVCili": 13,
-              "dojezdV": "2026-06-20T15:15:38+02:00",
-              "casSekundy": 4538
-            },
-            {
-              "lod": "pezi",
-              "poradiVCili": 14,
-              "dojezdV": "2026-06-20T15:16:13+02:00",
-              "casSekundy": 4573
-            },
-            {
-              "lod": "joy",
-              "poradiVCili": 15,
-              "dojezdV": "2026-06-20T15:19:25+02:00",
-              "casSekundy": 4765
-            },
-            {
-              "lod": "michelle",
-              "poradiVCili": 16,
-              "dojezdV": "2026-06-20T15:20:05+02:00",
-              "casSekundy": 4805
+              "dojezdV": "2026-06-20T15:01:25+02:00",
+              "casSekundy": 3685
             },
             {
               "lod": "sula",
-              "poradiVCili": 17,
-              "dojezdV": "2026-06-20T15:21:09+02:00",
-              "casSekundy": 4869
-            },
-            {
-              "lod": "filozep",
-              "poradiVCili": 18,
-              "dojezdV": "2026-06-20T15:22:57+02:00",
-              "casSekundy": 4977
-            },
-            {
-              "lod": "sprunzel",
-              "poradiVCili": 19,
-              "dojezdV": "2026-06-20T15:22:44+02:00",
-              "casSekundy": 4964
+              "poradiVCili": 2,
+              "dojezdV": "2026-06-20T15:02:27+02:00",
+              "casSekundy": 3747
             },
             {
               "lod": "caprice",
-              "poradiVCili": 20,
-              "dojezdV": "2026-06-20T15:24:26+02:00",
-              "casSekundy": 5066
+              "poradiVCili": 3,
+              "dojezdV": "2026-06-20T15:03:08+02:00",
+              "casSekundy": 3788
+            },
+            {
+              "lod": "pezi",
+              "poradiVCili": 4,
+              "dojezdV": "2026-06-20T15:05:22+02:00",
+              "casSekundy": 3922
+            },
+            {
+              "lod": "rose",
+              "poradiVCili": 5,
+              "dojezdV": "2026-06-20T15:05:45+02:00",
+              "casSekundy": 3945
+            },
+            {
+              "lod": "filozep",
+              "poradiVCili": 6,
+              "dojezdV": "2026-06-20T15:06:46+02:00",
+              "casSekundy": 4006
             },
             {
               "lod": "mamba",
-              "poradiVCili": 21,
-              "dojezdV": "2026-06-20T15:25:35+02:00",
-              "casSekundy": 5135
+              "poradiVCili": 7,
+              "dojezdV": "2026-06-20T15:09:32+02:00",
+              "casSekundy": 4172
             },
             {
-              "lod": "nablb",
-              "poradiVCili": 22,
-              "dojezdV": "2026-06-20T15:25:19+02:00",
-              "casSekundy": 5119
+              "lod": "modre-cafe",
+              "poradiVCili": 8,
+              "dojezdV": "2026-06-20T15:08:51+02:00",
+              "casSekundy": 4131
+            },
+            {
+              "lod": "varianta",
+              "poradiVCili": 9,
+              "dojezdV": "2026-06-20T15:09:51+02:00",
+              "casSekundy": 4191
+            },
+            {
+              "lod": "m-rtina",
+              "poradiVCili": 10,
+              "dojezdV": "2026-06-20T15:13:25+02:00",
+              "casSekundy": 4405
+            },
+            {
+              "lod": "far-star-iii",
+              "poradiVCili": 11,
+              "dojezdV": "2026-06-20T15:12:43+02:00",
+              "casSekundy": 4363
+            },
+            {
+              "lod": "michelle",
+              "kod": "Dns"
+            },
+            {
+              "lod": "thea",
+              "poradiVCili": 12,
+              "dojezdV": "2026-06-20T15:13:09+02:00",
+              "casSekundy": 4389
+            },
+            {
+              "lod": "mabye",
+              "poradiVCili": 13,
+              "dojezdV": "2026-06-20T15:14:32+02:00",
+              "casSekundy": 4472
+            },
+            {
+              "lod": "socka",
+              "poradiVCili": 14,
+              "dojezdV": "2026-06-20T15:17:20+02:00",
+              "casSekundy": 4640
             },
             {
               "lod": "valhalla",
-              "poradiVCili": 23,
-              "dojezdV": "2026-06-20T15:28:42+02:00",
-              "casSekundy": 5322
+              "poradiVCili": 15,
+              "dojezdV": "2026-06-20T15:19:00+02:00",
+              "casSekundy": 4740
             },
             {
-              "lod": "zephyr",
+              "lod": "cervene-cafe",
+              "poradiVCili": 16,
+              "dojezdV": "2026-06-20T15:18:20+02:00",
+              "casSekundy": 4700
+            },
+            {
+              "lod": "sea-mouse-iii",
+              "poradiVCili": 17,
+              "dojezdV": "2026-06-20T15:20:07+02:00",
+              "casSekundy": 4807
+            },
+            {
+              "lod": "avenir",
+              "poradiVCili": 18,
+              "dojezdV": "2026-06-20T15:21:16+02:00",
+              "casSekundy": 4876
+            },
+            {
+              "lod": "m1",
+              "poradiVCili": 19,
+              "dojezdV": "2026-06-20T15:24:14+02:00",
+              "casSekundy": 5054
+            },
+            {
+              "lod": "sandy",
+              "poradiVCili": 20,
+              "dojezdV": "2026-06-20T15:23:00+02:00",
+              "casSekundy": 4980
+            },
+            {
+              "lod": "hogan",
+              "kod": "Dnf"
+            },
+            {
+              "lod": "family-lady",
+              "poradiVCili": 21,
+              "dojezdV": "2026-06-20T15:24:59+02:00",
+              "casSekundy": 5099
+            },
+            {
+              "lod": "cassiopeia",
+              "poradiVCili": 22,
+              "dojezdV": "2026-06-20T15:27:29+02:00",
+              "casSekundy": 5249
+            },
+            {
+              "lod": "claudie",
+              "poradiVCili": 23,
+              "dojezdV": "2026-06-20T15:27:03+02:00",
+              "casSekundy": 5223
+            },
+            {
+              "lod": "sprunzel",
               "poradiVCili": 24,
+              "dojezdV": "2026-06-20T15:27:41+02:00",
+              "casSekundy": 5261
+            },
+            {
+              "lod": "joy",
+              "poradiVCili": 25,
               "dojezdV": "2026-06-20T15:30:06+02:00",
               "casSekundy": 5406
             },
             {
-              "lod": "m-rtina",
-              "poradiVCili": 25,
-              "dojezdV": "2026-06-20T15:30:58+02:00",
-              "casSekundy": 5458
-            },
-            {
-              "lod": "avenir",
+              "lod": "nablb",
               "poradiVCili": 26,
-              "dojezdV": "2026-06-20T15:31:51+02:00",
-              "casSekundy": 5511
+              "dojezdV": "2026-06-20T15:32:06+02:00",
+              "casSekundy": 5526
             },
             {
-              "lod": "depresso",
+              "lod": "luna",
               "poradiVCili": 27,
-              "dojezdV": "2026-06-20T15:33:26+02:00",
-              "casSekundy": 5606
+              "dojezdV": "2026-06-20T15:31:01+02:00",
+              "casSekundy": 5461
             },
             {
-              "lod": "m1",
+              "lod": "miciny",
               "poradiVCili": 28,
-              "dojezdV": "2026-06-20T15:34:39+02:00",
-              "casSekundy": 5679
-            },
-            {
-              "lod": "sea-mouse-iii",
-              "poradiVCili": 29,
-              "dojezdV": "2026-06-20T15:34:19+02:00",
-              "casSekundy": 5659
-            },
-            {
-              "lod": "cassiopeia",
-              "poradiVCili": 30,
-              "dojezdV": "2026-06-20T15:35:10+02:00",
-              "casSekundy": 5710
+              "dojezdV": "2026-06-20T15:33:23+02:00",
+              "casSekundy": 5603
             },
             {
               "lod": "sendy",
-              "poradiVCili": 31,
-              "dojezdV": "2026-06-20T15:36:34+02:00",
-              "casSekundy": 5794
-            },
-            {
-              "lod": "divna",
-              "poradiVCili": 32,
-              "dojezdV": "2026-06-20T15:37:09+02:00",
-              "casSekundy": 5829
-            },
-            {
-              "lod": "thea",
-              "poradiVCili": 33,
-              "dojezdV": "2026-06-20T15:38:45+02:00",
-              "casSekundy": 5925
-            },
-            {
-              "lod": "mabye",
-              "kod": "Dnf"
-            },
-            {
-              "lod": "hogan",
-              "poradiVCili": 34,
-              "dojezdV": "2026-06-20T15:40:53+02:00",
-              "casSekundy": 6053
-            },
-            {
-              "lod": "varianta",
-              "poradiVCili": 35,
-              "dojezdV": "2026-06-20T15:41:45+02:00",
-              "casSekundy": 6105
+              "poradiVCili": 29,
+              "dojezdV": "2026-06-20T15:35:59+02:00",
+              "casSekundy": 5759
             }
           ]
         }
@@ -3778,149 +3627,169 @@
       "publikovano": false,
       "ucasti": [
         {
+          "lod": "luna",
+          "kormidelnik": "osoba-14",
+          "posadka": "Vít Toman, Karel Vlček"
+        },
+        {
           "lod": "sendy",
           "kormidelnik": "osoba-2",
-          "posadka": "Alena Vaněk, Roman Šimek"
+          "posadka": "Markéta Fiala, Kateřina Pokorný, Vít Toman"
         },
         {
           "lod": "joy",
           "kormidelnik": "osoba-3",
-          "posadka": "Kateřina Pokorný, Blanka Havel, Tereza Hájek"
+          "posadka": "Blanka Havel"
         },
         {
           "lod": "andante",
           "kormidelnik": "osoba-4",
-          "posadka": "Vojtěch Kolář, Alena Vaněk, Ondřej Němec"
+          "posadka": "Ivan Kříž, Josef Bartoš, Hana Urban"
         },
         {
           "lod": "varianta",
           "kormidelnik": "osoba-5",
-          "posadka": "Karel Vlček, Lucie Kučera"
+          "posadka": "Vít Toman, Milan Zeman"
         },
         {
           "lod": "sandy",
           "kormidelnik": "osoba-6",
-          "posadka": "Karel Vlček, Kateřina Pokorný"
+          "posadka": "Jan Novák"
         },
         {
           "lod": "charlotte-iii",
           "kormidelnik": "osoba-7",
-          "posadka": "Radek Sedláček, Lucie Kučera, Blanka Havel"
+          "posadka": "Vojtěch Kolář, Iva Kadlec"
+        },
+        {
+          "lod": "pezi",
+          "kormidelnik": "osoba-33",
+          "posadka": "Lucie Kučera, Tereza Hájek"
         },
         {
           "lod": "mamba",
-          "kormidelnik": "osoba-9",
-          "posadka": "Lukáš Ryba, Jana Konečný"
+          "kormidelnik": "osoba-24",
+          "posadka": "Iva Kadlec"
         },
         {
           "lod": "m1",
-          "kormidelnik": "osoba-10",
-          "posadka": "Aleš Souček, Markéta Fiala"
+          "kormidelnik": "osoba-6",
+          "posadka": "Olga Kolman"
         },
         {
           "lod": "depresso",
-          "kormidelnik": "osoba-37",
-          "posadka": "Tereza Hájek"
+          "kormidelnik": "osoba-11",
+          "posadka": "Vojtěch Kolář"
         },
         {
           "lod": "cassiopeia",
           "kormidelnik": "osoba-12",
-          "posadka": "Jiří Král, Jana Konečný, Hana Urban"
+          "posadka": "Hana Urban"
         },
         {
           "lod": "sula",
-          "kormidelnik": "osoba-37",
-          "posadka": "Iva Kadlec, Petr Svoboda"
+          "kormidelnik": "osoba-13",
+          "posadka": "Vojtěch Kolář, Iva Kadlec"
         },
         {
           "lod": "nablb",
           "kormidelnik": "osoba-14",
-          "posadka": "Lukáš Ryba, Lucie Kučera, Iva Kadlec"
+          "posadka": "Filip Malý, Karel Vlček, Šárka Doležal"
+        },
+        {
+          "lod": "filozep",
+          "kormidelnik": "osoba-21",
+          "posadka": "Marek Bláha"
+        },
+        {
+          "lod": "sprunzel",
+          "kormidelnik": "osoba-16",
+          "posadka": "Lukáš Ryba, Blanka Havel"
         },
         {
           "lod": "thea",
           "kormidelnik": "osoba-17",
-          "posadka": "Karel Vlček, Kateřina Pokorný, Věra Sýkora"
+          "posadka": "Lucie Kučera, Filip Malý"
+        },
+        {
+          "lod": "michelle",
+          "kormidelnik": "osoba-28",
+          "posadka": "Jana Konečný"
+        },
+        {
+          "lod": "divna",
+          "kormidelnik": "osoba-19",
+          "posadka": "Jana Konečný"
         },
         {
           "lod": "family-lady",
-          "kormidelnik": "osoba-20",
-          "posadka": "Roman Šimek"
+          "kormidelnik": "osoba-29",
+          "posadka": "Ondřej Němec"
         },
         {
           "lod": "m-rtina",
-          "kormidelnik": "osoba-21",
-          "posadka": "Milan Zeman, Věra Sýkora, Kateřina Pokorný"
+          "kormidelnik": "osoba-2",
+          "posadka": "Věra Sýkora, Filip Malý, Eva Veselý"
         },
         {
-          "lod": "miciny",
-          "kormidelnik": "osoba-21",
-          "posadka": "Lukáš Ryba"
+          "lod": "rose",
+          "kormidelnik": "osoba-22",
+          "posadka": "Jana Konečný, Marek Bláha"
         },
         {
           "lod": "avenir",
           "kormidelnik": "osoba-24",
-          "posadka": "Ivan Kříž, Filip Malý"
+          "posadka": "Martin Dvořák, Aleš Souček, Vít Toman"
         },
         {
-          "lod": "liberte",
-          "kormidelnik": "osoba-26",
-          "posadka": "Pavel Marek, Hana Urban, Blanka Havel"
-        },
-        {
-          "lod": "rio",
-          "kormidelnik": "osoba-27",
-          "posadka": "Marek Bláha"
-        },
-        {
-          "lod": "claudie",
-          "kormidelnik": "osoba-28",
-          "posadka": "David Štěpánek, Roman Šimek"
+          "lod": "hogan",
+          "kormidelnik": "osoba-4",
+          "posadka": "Olga Kolman, Šárka Doležal, Alena Vaněk"
         },
         {
           "lod": "mabye",
           "kormidelnik": "osoba-29",
-          "posadka": "Ondřej Němec, Petr Svoboda"
+          "posadka": "Kateřina Pokorný, Blanka Havel"
         },
         {
           "lod": "caprice",
           "kormidelnik": "osoba-30",
-          "posadka": "Milan Zeman"
+          "posadka": "Vojtěch Kolář, Alena Vaněk, Ondřej Němec"
         },
         {
           "lod": "valhalla",
           "kormidelnik": "osoba-31",
-          "posadka": "Nikola Bureš, Aleš Souček"
+          "posadka": "Karel Vlček, Lucie Kučera"
         },
         {
           "lod": "perun",
           "kormidelnik": "osoba-32",
-          "posadka": "Karel Vlček, Vít Toman"
+          "posadka": "Karel Vlček, Kateřina Pokorný"
         },
         {
           "lod": "cervene-cafe",
           "kormidelnik": "osoba-33",
-          "posadka": "Hana Urban, Milan Zeman"
+          "posadka": "Radek Sedláček, Lucie Kučera, Blanka Havel"
         },
         {
           "lod": "sea-mouse-iii",
           "kormidelnik": "osoba-35",
-          "posadka": "Tereza Hájek, Filip Malý"
+          "posadka": "Lukáš Ryba, Jana Konečný"
         },
         {
           "lod": "socka",
           "kormidelnik": "osoba-36",
-          "posadka": "Markéta Fiala"
+          "posadka": "Aleš Souček, Markéta Fiala"
         },
         {
           "lod": "far-star-iii",
           "kormidelnik": "osoba-37",
-          "posadka": "Markéta Fiala, Šárka Doležal"
+          "posadka": "Tereza Hájek"
         },
         {
           "lod": "zephyr",
           "kormidelnik": "osoba-38",
-          "posadka": "Roman Šimek, Lucie Kučera, Petr Svoboda"
+          "posadka": "Jiří Král, Jana Konečný, Hana Urban"
         }
       ],
       "rozjizdky": [
@@ -3931,172 +3800,200 @@
           "doSerie": true,
           "vysledky": [
             {
-              "lod": "sandy",
+              "lod": "cervene-cafe",
               "poradiVCili": 1,
-              "dojezdV": "2026-07-11T11:02:38+02:00",
-              "casSekundy": 3758
+              "dojezdV": "2026-07-11T11:02:32+02:00",
+              "casSekundy": 3752
             },
             {
-              "lod": "avenir",
+              "lod": "varianta",
               "poradiVCili": 2,
-              "dojezdV": "2026-07-11T11:01:00+02:00",
-              "casSekundy": 3660
+              "dojezdV": "2026-07-11T11:03:33+02:00",
+              "casSekundy": 3813
             },
             {
-              "lod": "nablb",
+              "lod": "andante",
               "poradiVCili": 3,
-              "dojezdV": "2026-07-11T11:02:46+02:00",
-              "casSekundy": 3766
+              "dojezdV": "2026-07-11T11:02:25+02:00",
+              "casSekundy": 3745
             },
             {
               "lod": "far-star-iii",
               "poradiVCili": 4,
-              "dojezdV": "2026-07-11T11:05:43+02:00",
-              "casSekundy": 3943
-            },
-            {
-              "lod": "m1",
-              "poradiVCili": 5,
-              "dojezdV": "2026-07-11T11:07:14+02:00",
-              "casSekundy": 4034
-            },
-            {
-              "lod": "charlotte-iii",
-              "kod": "Ocs"
-            },
-            {
-              "lod": "mamba",
-              "poradiVCili": 6,
-              "dojezdV": "2026-07-11T11:06:47+02:00",
-              "casSekundy": 4007
-            },
-            {
-              "lod": "zephyr",
-              "poradiVCili": 7,
-              "dojezdV": "2026-07-11T11:08:35+02:00",
-              "casSekundy": 4115
-            },
-            {
-              "lod": "thea",
-              "poradiVCili": 8,
-              "dojezdV": "2026-07-11T11:09:08+02:00",
-              "casSekundy": 4148
-            },
-            {
-              "lod": "claudie",
-              "poradiVCili": 9,
-              "dojezdV": "2026-07-11T11:10:47+02:00",
-              "casSekundy": 4247
-            },
-            {
-              "lod": "miciny",
-              "poradiVCili": 10,
-              "dojezdV": "2026-07-11T11:13:29+02:00",
-              "casSekundy": 4409
-            },
-            {
-              "lod": "joy",
-              "poradiVCili": 11,
-              "dojezdV": "2026-07-11T11:13:20+02:00",
-              "casSekundy": 4400
-            },
-            {
-              "lod": "family-lady",
-              "poradiVCili": 12,
-              "dojezdV": "2026-07-11T11:15:02+02:00",
-              "casSekundy": 4502
-            },
-            {
-              "lod": "valhalla",
-              "kod": "Ret"
-            },
-            {
-              "lod": "cassiopeia",
-              "poradiVCili": 13,
-              "dojezdV": "2026-07-11T11:15:29+02:00",
-              "casSekundy": 4529
-            },
-            {
-              "lod": "m-rtina",
-              "poradiVCili": 14,
-              "dojezdV": "2026-07-11T11:17:09+02:00",
-              "casSekundy": 4629
+              "dojezdV": "2026-07-11T11:05:59+02:00",
+              "casSekundy": 3959
             },
             {
               "lod": "mabye",
-              "poradiVCili": 15,
-              "dojezdV": "2026-07-11T11:18:37+02:00",
-              "casSekundy": 4717
+              "poradiVCili": 5,
+              "dojezdV": "2026-07-11T11:05:30+02:00",
+              "casSekundy": 3930
             },
             {
-              "lod": "andante",
-              "poradiVCili": 16,
-              "dojezdV": "2026-07-11T11:19:40+02:00",
-              "casSekundy": 4780
-            },
-            {
-              "lod": "rio",
-              "kod": "Dns"
-            },
-            {
-              "lod": "depresso",
-              "poradiVCili": 17,
-              "dojezdV": "2026-07-11T11:19:49+02:00",
-              "casSekundy": 4789
-            },
-            {
-              "lod": "caprice",
-              "poradiVCili": 18,
-              "dojezdV": "2026-07-11T11:20:19+02:00",
-              "casSekundy": 4819
-            },
-            {
-              "lod": "perun",
-              "poradiVCili": 19,
-              "dojezdV": "2026-07-11T11:22:29+02:00",
-              "casSekundy": 4949
-            },
-            {
-              "lod": "liberte",
-              "poradiVCili": 20,
-              "dojezdV": "2026-07-11T11:22:33+02:00",
-              "casSekundy": 4953
-            },
-            {
-              "lod": "sula",
-              "poradiVCili": 21,
-              "dojezdV": "2026-07-11T11:26:31+02:00",
-              "casSekundy": 5191
-            },
-            {
-              "lod": "cervene-cafe",
-              "poradiVCili": 22,
-              "dojezdV": "2026-07-11T11:25:25+02:00",
-              "casSekundy": 5125
-            },
-            {
-              "lod": "varianta",
-              "poradiVCili": 23,
-              "dojezdV": "2026-07-11T11:27:14+02:00",
-              "casSekundy": 5234
+              "lod": "family-lady",
+              "poradiVCili": 6,
+              "dojezdV": "2026-07-11T11:07:55+02:00",
+              "casSekundy": 4075
             },
             {
               "lod": "sendy",
-              "poradiVCili": 24,
-              "dojezdV": "2026-07-11T11:28:59+02:00",
-              "casSekundy": 5339
+              "poradiVCili": 7,
+              "dojezdV": "2026-07-11T11:07:50+02:00",
+              "casSekundy": 4070
+            },
+            {
+              "lod": "hogan",
+              "poradiVCili": 8,
+              "dojezdV": "2026-07-11T11:10:03+02:00",
+              "casSekundy": 4203
+            },
+            {
+              "lod": "filozep",
+              "poradiVCili": 9,
+              "dojezdV": "2026-07-11T11:11:27+02:00",
+              "casSekundy": 4287
+            },
+            {
+              "lod": "pezi",
+              "poradiVCili": 10,
+              "dojezdV": "2026-07-11T11:11:52+02:00",
+              "casSekundy": 4312
+            },
+            {
+              "lod": "m-rtina",
+              "poradiVCili": 11,
+              "dojezdV": "2026-07-11T11:12:14+02:00",
+              "casSekundy": 4334
+            },
+            {
+              "lod": "sula",
+              "poradiVCili": 12,
+              "dojezdV": "2026-07-11T11:14:23+02:00",
+              "casSekundy": 4463
+            },
+            {
+              "lod": "depresso",
+              "kod": "Ocs"
+            },
+            {
+              "lod": "m1",
+              "poradiVCili": 13,
+              "dojezdV": "2026-07-11T11:16:00+02:00",
+              "casSekundy": 4560
+            },
+            {
+              "lod": "rose",
+              "poradiVCili": 14,
+              "dojezdV": "2026-07-11T11:15:21+02:00",
+              "casSekundy": 4521
+            },
+            {
+              "lod": "charlotte-iii",
+              "poradiVCili": 15,
+              "dojezdV": "2026-07-11T11:18:15+02:00",
+              "casSekundy": 4695
+            },
+            {
+              "lod": "caprice",
+              "poradiVCili": 16,
+              "dojezdV": "2026-07-11T11:19:36+02:00",
+              "casSekundy": 4776
+            },
+            {
+              "lod": "sandy",
+              "poradiVCili": 17,
+              "dojezdV": "2026-07-11T11:19:54+02:00",
+              "casSekundy": 4794
+            },
+            {
+              "lod": "nablb",
+              "poradiVCili": 18,
+              "dojezdV": "2026-07-11T11:22:01+02:00",
+              "casSekundy": 4921
+            },
+            {
+              "lod": "thea",
+              "poradiVCili": 19,
+              "dojezdV": "2026-07-11T11:23:24+02:00",
+              "casSekundy": 5004
+            },
+            {
+              "lod": "zephyr",
+              "poradiVCili": 20,
+              "dojezdV": "2026-07-11T11:23:52+02:00",
+              "casSekundy": 5032
+            },
+            {
+              "lod": "sprunzel",
+              "poradiVCili": 21,
+              "dojezdV": "2026-07-11T11:24:29+02:00",
+              "casSekundy": 5069
             },
             {
               "lod": "socka",
-              "poradiVCili": 25,
-              "dojezdV": "2026-07-11T11:29:14+02:00",
-              "casSekundy": 5354
+              "poradiVCili": 22,
+              "dojezdV": "2026-07-11T11:26:12+02:00",
+              "casSekundy": 5172
+            },
+            {
+              "lod": "joy",
+              "poradiVCili": 23,
+              "dojezdV": "2026-07-11T11:28:57+02:00",
+              "casSekundy": 5337
+            },
+            {
+              "lod": "valhalla",
+              "poradiVCili": 24,
+              "dojezdV": "2026-07-11T11:28:55+02:00",
+              "casSekundy": 5335
             },
             {
               "lod": "sea-mouse-iii",
+              "poradiVCili": 25,
+              "dojezdV": "2026-07-11T11:28:36+02:00",
+              "casSekundy": 5316
+            },
+            {
+              "lod": "mamba",
               "poradiVCili": 26,
-              "dojezdV": "2026-07-11T11:30:15+02:00",
-              "casSekundy": 5415
+              "dojezdV": "2026-07-11T11:31:05+02:00",
+              "casSekundy": 5465
+            },
+            {
+              "lod": "perun",
+              "poradiVCili": 27,
+              "dojezdV": "2026-07-11T11:32:16+02:00",
+              "casSekundy": 5536
+            },
+            {
+              "lod": "luna",
+              "poradiVCili": 28,
+              "dojezdV": "2026-07-11T11:34:32+02:00",
+              "casSekundy": 5672
+            },
+            {
+              "lod": "avenir",
+              "poradiVCili": 29,
+              "dojezdV": "2026-07-11T11:33:40+02:00",
+              "casSekundy": 5620
+            },
+            {
+              "lod": "divna",
+              "poradiVCili": 30,
+              "dojezdV": "2026-07-11T11:37:21+02:00",
+              "casSekundy": 5841
+            },
+            {
+              "lod": "michelle",
+              "poradiVCili": 31,
+              "dojezdV": "2026-07-11T11:36:26+02:00",
+              "casSekundy": 5786
+            },
+            {
+              "lod": "cassiopeia",
+              "poradiVCili": 32,
+              "dojezdV": "2026-07-11T11:39:27+02:00",
+              "casSekundy": 5967
             }
           ]
         },
@@ -4107,178 +4004,196 @@
           "doSerie": true,
           "vysledky": [
             {
-              "lod": "sea-mouse-iii",
+              "lod": "pezi",
               "poradiVCili": 1,
-              "dojezdV": "2026-07-11T13:01:38+02:00",
-              "casSekundy": 3698
-            },
-            {
-              "lod": "charlotte-iii",
-              "poradiVCili": 2,
-              "dojezdV": "2026-07-11T13:01:05+02:00",
-              "casSekundy": 3665
-            },
-            {
-              "lod": "depresso",
-              "poradiVCili": 3,
-              "dojezdV": "2026-07-11T13:04:26+02:00",
-              "casSekundy": 3866
-            },
-            {
-              "lod": "far-star-iii",
-              "poradiVCili": 4,
-              "dojezdV": "2026-07-11T13:05:33+02:00",
-              "casSekundy": 3933
-            },
-            {
-              "lod": "sandy",
-              "poradiVCili": 5,
-              "dojezdV": "2026-07-11T13:05:46+02:00",
-              "casSekundy": 3946
-            },
-            {
-              "lod": "avenir",
-              "poradiVCili": 6,
-              "dojezdV": "2026-07-11T13:07:54+02:00",
-              "casSekundy": 4074
-            },
-            {
-              "lod": "nablb",
-              "poradiVCili": 7,
-              "dojezdV": "2026-07-11T13:07:48+02:00",
-              "casSekundy": 4068
-            },
-            {
-              "lod": "sendy",
-              "poradiVCili": 8,
-              "dojezdV": "2026-07-11T13:10:49+02:00",
-              "casSekundy": 4249
-            },
-            {
-              "lod": "thea",
-              "poradiVCili": 9,
-              "dojezdV": "2026-07-11T13:10:25+02:00",
-              "casSekundy": 4225
-            },
-            {
-              "lod": "andante",
-              "poradiVCili": 10,
-              "dojezdV": "2026-07-11T13:12:18+02:00",
-              "casSekundy": 4338
-            },
-            {
-              "lod": "claudie",
-              "poradiVCili": 11,
-              "dojezdV": "2026-07-11T13:14:21+02:00",
-              "casSekundy": 4461
-            },
-            {
-              "lod": "rio",
-              "poradiVCili": 12,
-              "dojezdV": "2026-07-11T13:14:21+02:00",
-              "casSekundy": 4461
-            },
-            {
-              "lod": "mamba",
-              "poradiVCili": 13,
-              "dojezdV": "2026-07-11T13:15:10+02:00",
-              "casSekundy": 4510
-            },
-            {
-              "lod": "cassiopeia",
-              "poradiVCili": 14,
-              "dojezdV": "2026-07-11T13:16:37+02:00",
-              "casSekundy": 4597
-            },
-            {
-              "lod": "zephyr",
-              "poradiVCili": 15,
-              "dojezdV": "2026-07-11T13:18:23+02:00",
-              "casSekundy": 4703
-            },
-            {
-              "lod": "perun",
-              "poradiVCili": 16,
-              "dojezdV": "2026-07-11T13:17:52+02:00",
-              "casSekundy": 4672
-            },
-            {
-              "lod": "valhalla",
-              "poradiVCili": 17,
-              "dojezdV": "2026-07-11T13:21:51+02:00",
-              "casSekundy": 4911
-            },
-            {
-              "lod": "caprice",
-              "poradiVCili": 18,
-              "dojezdV": "2026-07-11T13:20:49+02:00",
-              "casSekundy": 4849
-            },
-            {
-              "lod": "liberte",
-              "poradiVCili": 19,
-              "dojezdV": "2026-07-11T13:22:23+02:00",
-              "casSekundy": 4943
-            },
-            {
-              "lod": "joy",
-              "poradiVCili": 20,
-              "dojezdV": "2026-07-11T13:23:45+02:00",
-              "casSekundy": 5025
-            },
-            {
-              "lod": "family-lady",
-              "poradiVCili": 21,
-              "dojezdV": "2026-07-11T13:25:40+02:00",
-              "casSekundy": 5140
-            },
-            {
-              "lod": "miciny",
-              "poradiVCili": 22,
-              "dojezdV": "2026-07-11T13:26:00+02:00",
-              "casSekundy": 5160
-            },
-            {
-              "lod": "m1",
-              "poradiVCili": 23,
-              "dojezdV": "2026-07-11T13:28:54+02:00",
-              "casSekundy": 5334
-            },
-            {
-              "lod": "mabye",
-              "poradiVCili": 24,
-              "dojezdV": "2026-07-11T13:28:41+02:00",
-              "casSekundy": 5321
-            },
-            {
-              "lod": "m-rtina",
-              "poradiVCili": 25,
-              "dojezdV": "2026-07-11T13:28:52+02:00",
-              "casSekundy": 5332
-            },
-            {
-              "lod": "socka",
-              "poradiVCili": 26,
-              "dojezdV": "2026-07-11T13:31:29+02:00",
-              "casSekundy": 5489
-            },
-            {
-              "lod": "varianta",
-              "poradiVCili": 27,
-              "dojezdV": "2026-07-11T13:31:38+02:00",
-              "casSekundy": 5498
-            },
-            {
-              "lod": "cervene-cafe",
-              "poradiVCili": 28,
-              "dojezdV": "2026-07-11T13:33:02+02:00",
-              "casSekundy": 5582
+              "dojezdV": "2026-07-11T13:02:41+02:00",
+              "casSekundy": 3761
             },
             {
               "lod": "sula",
+              "poradiVCili": 2,
+              "dojezdV": "2026-07-11T13:02:32+02:00",
+              "casSekundy": 3752
+            },
+            {
+              "lod": "sprunzel",
+              "poradiVCili": 3,
+              "dojezdV": "2026-07-11T13:04:14+02:00",
+              "casSekundy": 3854
+            },
+            {
+              "lod": "valhalla",
+              "kod": "Ret"
+            },
+            {
+              "lod": "perun",
+              "poradiVCili": 4,
+              "dojezdV": "2026-07-11T13:04:41+02:00",
+              "casSekundy": 3881
+            },
+            {
+              "lod": "zephyr",
+              "poradiVCili": 5,
+              "dojezdV": "2026-07-11T13:06:21+02:00",
+              "casSekundy": 3981
+            },
+            {
+              "lod": "andante",
+              "poradiVCili": 6,
+              "dojezdV": "2026-07-11T13:07:49+02:00",
+              "casSekundy": 4069
+            },
+            {
+              "lod": "rose",
+              "poradiVCili": 7,
+              "dojezdV": "2026-07-11T13:08:52+02:00",
+              "casSekundy": 4132
+            },
+            {
+              "lod": "cervene-cafe",
+              "kod": "Dns"
+            },
+            {
+              "lod": "varianta",
+              "poradiVCili": 8,
+              "dojezdV": "2026-07-11T13:09:01+02:00",
+              "casSekundy": 4141
+            },
+            {
+              "lod": "far-star-iii",
+              "poradiVCili": 9,
+              "dojezdV": "2026-07-11T13:09:31+02:00",
+              "casSekundy": 4171
+            },
+            {
+              "lod": "hogan",
+              "poradiVCili": 10,
+              "dojezdV": "2026-07-11T13:11:41+02:00",
+              "casSekundy": 4301
+            },
+            {
+              "lod": "charlotte-iii",
+              "poradiVCili": 11,
+              "dojezdV": "2026-07-11T13:11:45+02:00",
+              "casSekundy": 4305
+            },
+            {
+              "lod": "m1",
+              "poradiVCili": 12,
+              "dojezdV": "2026-07-11T13:15:43+02:00",
+              "casSekundy": 4543
+            },
+            {
+              "lod": "divna",
+              "poradiVCili": 13,
+              "dojezdV": "2026-07-11T13:14:37+02:00",
+              "casSekundy": 4477
+            },
+            {
+              "lod": "family-lady",
+              "poradiVCili": 14,
+              "dojezdV": "2026-07-11T13:16:26+02:00",
+              "casSekundy": 4586
+            },
+            {
+              "lod": "joy",
+              "poradiVCili": 15,
+              "dojezdV": "2026-07-11T13:18:11+02:00",
+              "casSekundy": 4691
+            },
+            {
+              "lod": "sandy",
+              "poradiVCili": 16,
+              "dojezdV": "2026-07-11T13:18:26+02:00",
+              "casSekundy": 4706
+            },
+            {
+              "lod": "socka",
+              "poradiVCili": 17,
+              "dojezdV": "2026-07-11T13:19:27+02:00",
+              "casSekundy": 4767
+            },
+            {
+              "lod": "luna",
+              "poradiVCili": 18,
+              "dojezdV": "2026-07-11T13:20:34+02:00",
+              "casSekundy": 4834
+            },
+            {
+              "lod": "michelle",
+              "poradiVCili": 19,
+              "dojezdV": "2026-07-11T13:23:16+02:00",
+              "casSekundy": 4996
+            },
+            {
+              "lod": "thea",
+              "poradiVCili": 20,
+              "dojezdV": "2026-07-11T13:24:36+02:00",
+              "casSekundy": 5076
+            },
+            {
+              "lod": "depresso",
+              "poradiVCili": 21,
+              "dojezdV": "2026-07-11T13:26:01+02:00",
+              "casSekundy": 5161
+            },
+            {
+              "lod": "cassiopeia",
+              "poradiVCili": 22,
+              "dojezdV": "2026-07-11T13:27:41+02:00",
+              "casSekundy": 5261
+            },
+            {
+              "lod": "mabye",
+              "poradiVCili": 23,
+              "dojezdV": "2026-07-11T13:28:53+02:00",
+              "casSekundy": 5333
+            },
+            {
+              "lod": "sendy",
+              "poradiVCili": 24,
+              "dojezdV": "2026-07-11T13:29:57+02:00",
+              "casSekundy": 5397
+            },
+            {
+              "lod": "filozep",
+              "poradiVCili": 25,
+              "dojezdV": "2026-07-11T13:30:10+02:00",
+              "casSekundy": 5410
+            },
+            {
+              "lod": "sea-mouse-iii",
+              "kod": "Dnf"
+            },
+            {
+              "lod": "m-rtina",
+              "poradiVCili": 26,
+              "dojezdV": "2026-07-11T13:32:33+02:00",
+              "casSekundy": 5553
+            },
+            {
+              "lod": "avenir",
+              "poradiVCili": 27,
+              "dojezdV": "2026-07-11T13:33:17+02:00",
+              "casSekundy": 5597
+            },
+            {
+              "lod": "caprice",
+              "poradiVCili": 28,
+              "dojezdV": "2026-07-11T13:33:16+02:00",
+              "casSekundy": 5596
+            },
+            {
+              "lod": "nablb",
               "poradiVCili": 29,
-              "dojezdV": "2026-07-11T13:34:12+02:00",
-              "casSekundy": 5652
+              "dojezdV": "2026-07-11T13:33:29+02:00",
+              "casSekundy": 5609
+            },
+            {
+              "lod": "mamba",
+              "poradiVCili": 30,
+              "dojezdV": "2026-07-11T13:36:50+02:00",
+              "casSekundy": 5810
             }
           ]
         }
@@ -4301,102 +4216,102 @@
         {
           "lod": "luna",
           "kormidelnik": "osoba-1",
-          "posadka": "Ivan Kříž, Radek Sedláček, Hana Urban"
+          "posadka": "Jiří Král, Eva Veselý, Lucie Kučera"
         },
         {
           "lod": "sendy",
-          "kormidelnik": "osoba-2",
-          "posadka": "Filip Malý"
+          "kormidelnik": "osoba-21",
+          "posadka": "Nikola Bureš"
         },
         {
           "lod": "joy",
           "kormidelnik": "osoba-3",
-          "posadka": "Petr Svoboda"
+          "posadka": "Markéta Fiala"
         },
         {
           "lod": "andante",
           "kormidelnik": "osoba-4",
-          "posadka": "Markéta Fiala"
+          "posadka": "Marek Bláha"
         },
         {
           "lod": "varianta",
           "kormidelnik": "osoba-5",
-          "posadka": "Tereza Hájek, Tomáš Černý, Roman Šimek"
+          "posadka": "Kateřina Pokorný, Karel Vlček, Michal Horák"
         },
         {
           "lod": "sandy",
           "kormidelnik": "osoba-6",
-          "posadka": "Jan Novák"
+          "posadka": "Alena Vaněk, Ondřej Němec"
         },
         {
           "lod": "charlotte-iii",
           "kormidelnik": "osoba-7",
-          "posadka": "Zdeněk Beneš, Blanka Havel"
+          "posadka": "Alena Vaněk, Pavel Marek, Vojtěch Kolář"
         },
         {
           "lod": "pezi",
-          "kormidelnik": "osoba-8",
-          "posadka": "Markéta Fiala"
+          "kormidelnik": "osoba-34",
+          "posadka": "Iva Kadlec"
         },
         {
           "lod": "mamba",
-          "kormidelnik": "osoba-6",
-          "posadka": "Roman Šimek, Věra Sýkora, Petr Svoboda"
+          "kormidelnik": "osoba-9",
+          "posadka": "Vojtěch Kolář, Kateřina Pokorný"
         },
         {
           "lod": "m1",
           "kormidelnik": "osoba-10",
-          "posadka": "Iva Kadlec, Hana Urban, Lucie Kučera"
+          "posadka": "Věra Sýkora, Jana Konečný"
         },
         {
           "lod": "depresso",
-          "kormidelnik": "osoba-10",
-          "posadka": "Vojtěch Kolář, Blanka Havel, Zdeněk Beneš"
+          "kormidelnik": "osoba-11",
+          "posadka": "Vít Toman, Kateřina Pokorný, Karel Vlček"
         },
         {
           "lod": "cassiopeia",
-          "kormidelnik": "osoba-12",
-          "posadka": "Martin Dvořák"
+          "kormidelnik": "osoba-6",
+          "posadka": "Olga Kolman, Filip Malý"
         },
         {
           "lod": "sula",
           "kormidelnik": "osoba-13",
-          "posadka": "Ondřej Němec"
+          "posadka": "Blanka Havel, Vojtěch Kolář, Jan Novák"
         },
         {
           "lod": "nablb",
-          "kormidelnik": "osoba-14",
-          "posadka": "Marek Bláha, Eva Veselý, Markéta Fiala"
+          "kormidelnik": "osoba-38",
+          "posadka": "Radek Sedláček, Hana Urban"
         },
         {
           "lod": "filozep",
           "kormidelnik": "osoba-15",
-          "posadka": "David Štěpánek"
+          "posadka": "Filip Malý"
         },
         {
           "lod": "thea",
           "kormidelnik": "osoba-17",
-          "posadka": "Aleš Souček"
+          "posadka": "Petr Svoboda"
         },
         {
           "lod": "michelle",
-          "kormidelnik": "osoba-21",
-          "posadka": "Marek Bláha, Nikola Bureš, Michal Horák"
+          "kormidelnik": "osoba-18",
+          "posadka": "Markéta Fiala"
         },
         {
           "lod": "family-lady",
           "kormidelnik": "osoba-20",
-          "posadka": "Eva Veselý, Blanka Havel, Vojtěch Kolář"
+          "posadka": "Tereza Hájek, Tomáš Černý, Roman Šimek"
         },
         {
           "lod": "m-rtina",
-          "kormidelnik": "osoba-14",
-          "posadka": "Jiří Král"
+          "kormidelnik": "osoba-21",
+          "posadka": "Jan Novák"
         },
         {
           "lod": "rose",
           "kormidelnik": "osoba-22",
-          "posadka": "Markéta Fiala, David Štěpánek, Alena Vaněk"
+          "posadka": "Zdeněk Beneš, Blanka Havel"
         },
         {
           "lod": "avenir",
@@ -4405,68 +4320,68 @@
         },
         {
           "lod": "hogan",
-          "kormidelnik": "osoba-25",
-          "posadka": "Petr Svoboda, Radek Sedláček"
+          "kormidelnik": "osoba-6",
+          "posadka": "Roman Šimek, Věra Sýkora, Petr Svoboda"
         },
         {
           "lod": "liberte",
           "kormidelnik": "osoba-26",
-          "posadka": "Ondřej Němec, Milan Zeman, Věra Sýkora"
+          "posadka": "Iva Kadlec, Hana Urban, Lucie Kučera"
         },
         {
           "lod": "rio",
-          "kormidelnik": "osoba-27",
-          "posadka": "Jakub Procházka, Radek Sedláček"
+          "kormidelnik": "osoba-10",
+          "posadka": "Vojtěch Kolář, Blanka Havel, Zdeněk Beneš"
         },
         {
           "lod": "claudie",
           "kormidelnik": "osoba-28",
-          "posadka": "Radek Sedláček"
+          "posadka": "Martin Dvořák"
         },
         {
           "lod": "mabye",
           "kormidelnik": "osoba-29",
-          "posadka": "Milan Zeman, Hana Urban, Jan Novák"
+          "posadka": "Ondřej Němec"
         },
         {
           "lod": "caprice",
           "kormidelnik": "osoba-30",
-          "posadka": "Jana Konečný"
+          "posadka": "Marek Bláha, Eva Veselý, Markéta Fiala"
         },
         {
           "lod": "valhalla",
           "kormidelnik": "osoba-31",
-          "posadka": "Josef Bartoš, Vít Toman, Ondřej Němec"
+          "posadka": "David Štěpánek"
         },
         {
           "lod": "perun",
           "kormidelnik": "osoba-32",
-          "posadka": "Hana Urban"
+          "posadka": "Aleš Souček"
         },
         {
           "lod": "cervene-cafe",
-          "kormidelnik": "osoba-33",
-          "posadka": "Karel Vlček"
+          "kormidelnik": "osoba-21",
+          "posadka": "Marek Bláha, Nikola Bureš, Michal Horák"
         },
         {
-          "lod": "modre-cafe",
+          "lod": "sea-mouse-iii",
           "kormidelnik": "osoba-35",
-          "posadka": "Roman Šimek, Zdeněk Beneš"
+          "posadka": "Eva Veselý, Blanka Havel, Vojtěch Kolář"
         },
         {
           "lod": "socka",
-          "kormidelnik": "osoba-36",
-          "posadka": "Šárka Doležal, Blanka Havel, Lukáš Ryba"
+          "kormidelnik": "osoba-14",
+          "posadka": "Jiří Král"
         },
         {
           "lod": "far-star-iii",
-          "kormidelnik": "osoba-17",
-          "posadka": "Michal Horák, Filip Malý"
+          "kormidelnik": "osoba-37",
+          "posadka": "Markéta Fiala, David Štěpánek, Alena Vaněk"
         },
         {
           "lod": "zephyr",
           "kormidelnik": "osoba-38",
-          "posadka": "Martin Dvořák, Josef Bartoš, Markéta Fiala"
+          "posadka": "Markéta Fiala"
         }
       ],
       "rozjizdky": [
@@ -4477,204 +4392,204 @@
           "doSerie": true,
           "vysledky": [
             {
-              "lod": "avenir",
+              "lod": "mamba",
               "poradiVCili": 1,
-              "dojezdV": "2026-08-15T11:01:15+02:00",
-              "casSekundy": 3675
+              "dojezdV": "2026-08-15T11:00:14+02:00",
+              "casSekundy": 3614
             },
             {
-              "lod": "sandy",
+              "lod": "socka",
               "poradiVCili": 2,
-              "dojezdV": "2026-08-15T11:02:16+02:00",
-              "casSekundy": 3736
-            },
-            {
-              "lod": "hogan",
-              "poradiVCili": 3,
-              "dojezdV": "2026-08-15T11:04:48+02:00",
-              "casSekundy": 3888
-            },
-            {
-              "lod": "sula",
-              "poradiVCili": 4,
-              "dojezdV": "2026-08-15T11:06:11+02:00",
-              "casSekundy": 3971
-            },
-            {
-              "lod": "cervene-cafe",
-              "poradiVCili": 5,
-              "dojezdV": "2026-08-15T11:05:21+02:00",
-              "casSekundy": 3921
-            },
-            {
-              "lod": "michelle",
-              "poradiVCili": 6,
-              "dojezdV": "2026-08-15T11:07:04+02:00",
-              "casSekundy": 4024
-            },
-            {
-              "lod": "claudie",
-              "poradiVCili": 7,
-              "dojezdV": "2026-08-15T11:08:10+02:00",
-              "casSekundy": 4090
-            },
-            {
-              "lod": "rose",
-              "poradiVCili": 8,
-              "dojezdV": "2026-08-15T11:10:30+02:00",
-              "casSekundy": 4230
-            },
-            {
-              "lod": "liberte",
-              "poradiVCili": 9,
-              "dojezdV": "2026-08-15T11:11:29+02:00",
-              "casSekundy": 4289
-            },
-            {
-              "lod": "filozep",
-              "poradiVCili": 10,
-              "dojezdV": "2026-08-15T11:11:47+02:00",
-              "casSekundy": 4307
-            },
-            {
-              "lod": "andante",
-              "poradiVCili": 11,
-              "dojezdV": "2026-08-15T11:13:50+02:00",
-              "casSekundy": 4430
-            },
-            {
-              "lod": "varianta",
-              "poradiVCili": 12,
-              "dojezdV": "2026-08-15T11:14:07+02:00",
-              "casSekundy": 4447
-            },
-            {
-              "lod": "mabye",
-              "poradiVCili": 13,
-              "dojezdV": "2026-08-15T11:15:15+02:00",
-              "casSekundy": 4515
-            },
-            {
-              "lod": "m1",
-              "poradiVCili": 14,
-              "dojezdV": "2026-08-15T11:16:28+02:00",
-              "casSekundy": 4588
-            },
-            {
-              "lod": "cassiopeia",
-              "poradiVCili": 15,
-              "dojezdV": "2026-08-15T11:17:04+02:00",
-              "casSekundy": 4624
-            },
-            {
-              "lod": "far-star-iii",
-              "poradiVCili": 16,
-              "dojezdV": "2026-08-15T11:19:56+02:00",
-              "casSekundy": 4796
+              "dojezdV": "2026-08-15T11:01:33+02:00",
+              "casSekundy": 3693
             },
             {
               "lod": "family-lady",
-              "poradiVCili": 17,
-              "dojezdV": "2026-08-15T11:19:02+02:00",
-              "casSekundy": 4742
+              "poradiVCili": 3,
+              "dojezdV": "2026-08-15T11:04:24+02:00",
+              "casSekundy": 3864
             },
             {
-              "lod": "sendy",
-              "kod": "Dnf"
+              "lod": "caprice",
+              "poradiVCili": 4,
+              "dojezdV": "2026-08-15T11:05:05+02:00",
+              "casSekundy": 3905
+            },
+            {
+              "lod": "sandy",
+              "poradiVCili": 5,
+              "dojezdV": "2026-08-15T11:06:48+02:00",
+              "casSekundy": 4008
+            },
+            {
+              "lod": "depresso",
+              "poradiVCili": 6,
+              "dojezdV": "2026-08-15T11:06:32+02:00",
+              "casSekundy": 3992
+            },
+            {
+              "lod": "mabye",
+              "poradiVCili": 7,
+              "dojezdV": "2026-08-15T11:09:16+02:00",
+              "casSekundy": 4156
+            },
+            {
+              "lod": "rio",
+              "poradiVCili": 8,
+              "dojezdV": "2026-08-15T11:10:10+02:00",
+              "casSekundy": 4210
+            },
+            {
+              "lod": "sula",
+              "poradiVCili": 9,
+              "dojezdV": "2026-08-15T11:09:59+02:00",
+              "casSekundy": 4199
+            },
+            {
+              "lod": "claudie",
+              "poradiVCili": 10,
+              "dojezdV": "2026-08-15T11:11:35+02:00",
+              "casSekundy": 4295
+            },
+            {
+              "lod": "zephyr",
+              "poradiVCili": 11,
+              "dojezdV": "2026-08-15T11:12:11+02:00",
+              "casSekundy": 4331
+            },
+            {
+              "lod": "perun",
+              "poradiVCili": 12,
+              "dojezdV": "2026-08-15T11:15:49+02:00",
+              "casSekundy": 4549
+            },
+            {
+              "lod": "sea-mouse-iii",
+              "poradiVCili": 13,
+              "dojezdV": "2026-08-15T11:17:06+02:00",
+              "casSekundy": 4626
+            },
+            {
+              "lod": "cassiopeia",
+              "kod": "Ocs"
+            },
+            {
+              "lod": "andante",
+              "poradiVCili": 14,
+              "dojezdV": "2026-08-15T11:15:47+02:00",
+              "casSekundy": 4547
             },
             {
               "lod": "valhalla",
+              "poradiVCili": 15,
+              "dojezdV": "2026-08-15T11:19:27+02:00",
+              "casSekundy": 4767
+            },
+            {
+              "lod": "charlotte-iii",
+              "poradiVCili": 16,
+              "dojezdV": "2026-08-15T11:18:50+02:00",
+              "casSekundy": 4730
+            },
+            {
+              "lod": "hogan",
+              "poradiVCili": 17,
+              "dojezdV": "2026-08-15T11:19:53+02:00",
+              "casSekundy": 4793
+            },
+            {
+              "lod": "cervene-cafe",
+              "kod": "Dns"
+            },
+            {
+              "lod": "joy",
               "poradiVCili": 18,
-              "dojezdV": "2026-08-15T11:22:58+02:00",
-              "casSekundy": 4978
+              "dojezdV": "2026-08-15T11:20:22+02:00",
+              "casSekundy": 4822
             },
             {
               "lod": "thea",
               "poradiVCili": 19,
-              "dojezdV": "2026-08-15T11:22:00+02:00",
-              "casSekundy": 4920
+              "dojezdV": "2026-08-15T11:23:24+02:00",
+              "casSekundy": 5004
             },
             {
-              "lod": "m-rtina",
+              "lod": "michelle",
               "poradiVCili": 20,
-              "dojezdV": "2026-08-15T11:25:16+02:00",
-              "casSekundy": 5116
+              "dojezdV": "2026-08-15T11:22:40+02:00",
+              "casSekundy": 4960
             },
             {
-              "lod": "joy",
+              "lod": "far-star-iii",
               "poradiVCili": 21,
-              "dojezdV": "2026-08-15T11:24:56+02:00",
-              "casSekundy": 5096
-            },
-            {
-              "lod": "socka",
-              "poradiVCili": 22,
-              "dojezdV": "2026-08-15T11:25:43+02:00",
-              "casSekundy": 5143
-            },
-            {
-              "lod": "rio",
-              "poradiVCili": 23,
-              "dojezdV": "2026-08-15T11:27:10+02:00",
-              "casSekundy": 5230
-            },
-            {
-              "lod": "modre-cafe",
-              "poradiVCili": 24,
-              "dojezdV": "2026-08-15T11:30:14+02:00",
-              "casSekundy": 5414
-            },
-            {
-              "lod": "luna",
-              "poradiVCili": 25,
-              "dojezdV": "2026-08-15T11:30:14+02:00",
-              "casSekundy": 5414
-            },
-            {
-              "lod": "perun",
-              "kod": "Dns"
-            },
-            {
-              "lod": "depresso",
-              "poradiVCili": 26,
-              "dojezdV": "2026-08-15T11:32:37+02:00",
-              "casSekundy": 5557
-            },
-            {
-              "lod": "zephyr",
-              "poradiVCili": 27,
-              "dojezdV": "2026-08-15T11:32:16+02:00",
-              "casSekundy": 5536
-            },
-            {
-              "lod": "mamba",
-              "poradiVCili": 28,
-              "dojezdV": "2026-08-15T11:33:10+02:00",
-              "casSekundy": 5590
-            },
-            {
-              "lod": "caprice",
-              "poradiVCili": 29,
-              "dojezdV": "2026-08-15T11:35:50+02:00",
-              "casSekundy": 5750
-            },
-            {
-              "lod": "charlotte-iii",
-              "poradiVCili": 30,
-              "dojezdV": "2026-08-15T11:34:37+02:00",
-              "casSekundy": 5677
+              "dojezdV": "2026-08-15T11:23:54+02:00",
+              "casSekundy": 5034
             },
             {
               "lod": "nablb",
-              "poradiVCili": 31,
-              "dojezdV": "2026-08-15T11:38:40+02:00",
-              "casSekundy": 5920
+              "poradiVCili": 22,
+              "dojezdV": "2026-08-15T11:26:45+02:00",
+              "casSekundy": 5205
+            },
+            {
+              "lod": "filozep",
+              "poradiVCili": 23,
+              "dojezdV": "2026-08-15T11:26:21+02:00",
+              "casSekundy": 5181
+            },
+            {
+              "lod": "varianta",
+              "poradiVCili": 24,
+              "dojezdV": "2026-08-15T11:28:29+02:00",
+              "casSekundy": 5309
+            },
+            {
+              "lod": "rose",
+              "poradiVCili": 25,
+              "dojezdV": "2026-08-15T11:30:57+02:00",
+              "casSekundy": 5457
+            },
+            {
+              "lod": "luna",
+              "poradiVCili": 26,
+              "dojezdV": "2026-08-15T11:29:58+02:00",
+              "casSekundy": 5398
+            },
+            {
+              "lod": "m1",
+              "poradiVCili": 27,
+              "dojezdV": "2026-08-15T11:32:46+02:00",
+              "casSekundy": 5566
             },
             {
               "lod": "pezi",
+              "poradiVCili": 28,
+              "dojezdV": "2026-08-15T11:32:20+02:00",
+              "casSekundy": 5540
+            },
+            {
+              "lod": "liberte",
+              "poradiVCili": 29,
+              "dojezdV": "2026-08-15T11:36:18+02:00",
+              "casSekundy": 5778
+            },
+            {
+              "lod": "sendy",
+              "poradiVCili": 30,
+              "dojezdV": "2026-08-15T11:37:19+02:00",
+              "casSekundy": 5839
+            },
+            {
+              "lod": "avenir",
+              "poradiVCili": 31,
+              "dojezdV": "2026-08-15T11:38:31+02:00",
+              "casSekundy": 5911
+            },
+            {
+              "lod": "m-rtina",
               "poradiVCili": 32,
-              "dojezdV": "2026-08-15T11:37:10+02:00",
-              "casSekundy": 5830
+              "dojezdV": "2026-08-15T11:38:16+02:00",
+              "casSekundy": 5896
             }
           ]
         },
@@ -4687,202 +4602,200 @@
             {
               "lod": "valhalla",
               "poradiVCili": 1,
-              "dojezdV": "2026-08-15T13:00:10+02:00",
-              "casSekundy": 3610
-            },
-            {
-              "lod": "filozep",
-              "poradiVCili": 2,
-              "dojezdV": "2026-08-15T13:02:19+02:00",
-              "casSekundy": 3739
-            },
-            {
-              "lod": "modre-cafe",
-              "poradiVCili": 3,
-              "dojezdV": "2026-08-15T13:02:48+02:00",
-              "casSekundy": 3768
-            },
-            {
-              "lod": "cervene-cafe",
-              "poradiVCili": 4,
-              "dojezdV": "2026-08-15T13:05:29+02:00",
-              "casSekundy": 3929
-            },
-            {
-              "lod": "far-star-iii",
-              "poradiVCili": 5,
-              "dojezdV": "2026-08-15T13:04:51+02:00",
-              "casSekundy": 3891
-            },
-            {
-              "lod": "liberte",
-              "poradiVCili": 6,
-              "dojezdV": "2026-08-15T13:08:04+02:00",
-              "casSekundy": 4084
-            },
-            {
-              "lod": "avenir",
-              "poradiVCili": 7,
-              "dojezdV": "2026-08-15T13:09:26+02:00",
-              "casSekundy": 4166
-            },
-            {
-              "lod": "family-lady",
-              "poradiVCili": 8,
-              "dojezdV": "2026-08-15T13:09:04+02:00",
-              "casSekundy": 4144
-            },
-            {
-              "lod": "sandy",
-              "poradiVCili": 9,
-              "dojezdV": "2026-08-15T13:11:41+02:00",
-              "casSekundy": 4301
-            },
-            {
-              "lod": "zephyr",
-              "poradiVCili": 10,
-              "dojezdV": "2026-08-15T13:13:12+02:00",
-              "casSekundy": 4392
-            },
-            {
-              "lod": "rio",
-              "poradiVCili": 11,
-              "dojezdV": "2026-08-15T13:14:11+02:00",
-              "casSekundy": 4451
-            },
-            {
-              "lod": "perun",
-              "poradiVCili": 12,
-              "dojezdV": "2026-08-15T13:12:56+02:00",
-              "casSekundy": 4376
-            },
-            {
-              "lod": "luna",
-              "poradiVCili": 13,
-              "dojezdV": "2026-08-15T13:16:39+02:00",
-              "casSekundy": 4599
+              "dojezdV": "2026-08-15T13:01:42+02:00",
+              "casSekundy": 3702
             },
             {
               "lod": "hogan",
-              "poradiVCili": 14,
-              "dojezdV": "2026-08-15T13:17:43+02:00",
-              "casSekundy": 4663
-            },
-            {
-              "lod": "mabye",
-              "kod": "Ocs"
-            },
-            {
-              "lod": "varianta",
-              "poradiVCili": 15,
-              "dojezdV": "2026-08-15T13:18:26+02:00",
-              "casSekundy": 4706
-            },
-            {
-              "lod": "mamba",
-              "poradiVCili": 16,
-              "dojezdV": "2026-08-15T13:20:29+02:00",
-              "casSekundy": 4829
-            },
-            {
-              "lod": "sendy",
-              "poradiVCili": 17,
-              "dojezdV": "2026-08-15T13:20:32+02:00",
-              "casSekundy": 4832
-            },
-            {
-              "lod": "m-rtina",
-              "poradiVCili": 18,
-              "dojezdV": "2026-08-15T13:20:27+02:00",
-              "casSekundy": 4827
-            },
-            {
-              "lod": "pezi",
-              "poradiVCili": 19,
-              "dojezdV": "2026-08-15T13:22:43+02:00",
-              "casSekundy": 4963
-            },
-            {
-              "lod": "m1",
-              "poradiVCili": 20,
-              "dojezdV": "2026-08-15T13:25:07+02:00",
-              "casSekundy": 5107
-            },
-            {
-              "lod": "caprice",
-              "kod": "Ret"
-            },
-            {
-              "lod": "joy",
-              "poradiVCili": 21,
-              "dojezdV": "2026-08-15T13:24:00+02:00",
-              "casSekundy": 5040
-            },
-            {
-              "lod": "charlotte-iii",
-              "poradiVCili": 22,
-              "dojezdV": "2026-08-15T13:25:53+02:00",
-              "casSekundy": 5153
-            },
-            {
-              "lod": "depresso",
-              "poradiVCili": 23,
-              "dojezdV": "2026-08-15T13:28:01+02:00",
-              "casSekundy": 5281
-            },
-            {
-              "lod": "rose",
-              "poradiVCili": 24,
-              "dojezdV": "2026-08-15T13:27:45+02:00",
-              "casSekundy": 5265
-            },
-            {
-              "lod": "nablb",
-              "poradiVCili": 25,
-              "dojezdV": "2026-08-15T13:30:23+02:00",
-              "casSekundy": 5423
-            },
-            {
-              "lod": "socka",
-              "poradiVCili": 26,
-              "dojezdV": "2026-08-15T13:30:11+02:00",
-              "casSekundy": 5411
-            },
-            {
-              "lod": "andante",
-              "poradiVCili": 27,
-              "dojezdV": "2026-08-15T13:31:49+02:00",
-              "casSekundy": 5509
-            },
-            {
-              "lod": "michelle",
-              "poradiVCili": 28,
-              "dojezdV": "2026-08-15T13:33:45+02:00",
-              "casSekundy": 5625
-            },
-            {
-              "lod": "thea",
-              "poradiVCili": 29,
-              "dojezdV": "2026-08-15T13:34:30+02:00",
-              "casSekundy": 5670
+              "poradiVCili": 2,
+              "dojezdV": "2026-08-15T13:01:54+02:00",
+              "casSekundy": 3714
             },
             {
               "lod": "cassiopeia",
+              "poradiVCili": 3,
+              "dojezdV": "2026-08-15T13:02:55+02:00",
+              "casSekundy": 3775
+            },
+            {
+              "lod": "sendy",
+              "poradiVCili": 4,
+              "dojezdV": "2026-08-15T13:04:22+02:00",
+              "casSekundy": 3862
+            },
+            {
+              "lod": "nablb",
+              "poradiVCili": 5,
+              "dojezdV": "2026-08-15T13:07:26+02:00",
+              "casSekundy": 4046
+            },
+            {
+              "lod": "charlotte-iii",
+              "poradiVCili": 6,
+              "dojezdV": "2026-08-15T13:07:26+02:00",
+              "casSekundy": 4046
+            },
+            {
+              "lod": "sula",
+              "kod": "Dns"
+            },
+            {
+              "lod": "far-star-iii",
+              "poradiVCili": 7,
+              "dojezdV": "2026-08-15T13:09:49+02:00",
+              "casSekundy": 4189
+            },
+            {
+              "lod": "cervene-cafe",
+              "poradiVCili": 8,
+              "dojezdV": "2026-08-15T13:09:28+02:00",
+              "casSekundy": 4168
+            },
+            {
+              "lod": "luna",
+              "poradiVCili": 9,
+              "dojezdV": "2026-08-15T13:10:22+02:00",
+              "casSekundy": 4222
+            },
+            {
+              "lod": "joy",
+              "poradiVCili": 10,
+              "dojezdV": "2026-08-15T13:13:02+02:00",
+              "casSekundy": 4382
+            },
+            {
+              "lod": "depresso",
+              "poradiVCili": 11,
+              "dojezdV": "2026-08-15T13:11:49+02:00",
+              "casSekundy": 4309
+            },
+            {
+              "lod": "liberte",
+              "poradiVCili": 12,
+              "dojezdV": "2026-08-15T13:15:52+02:00",
+              "casSekundy": 4552
+            },
+            {
+              "lod": "filozep",
+              "poradiVCili": 13,
+              "dojezdV": "2026-08-15T13:14:22+02:00",
+              "casSekundy": 4462
+            },
+            {
+              "lod": "andante",
+              "poradiVCili": 14,
+              "dojezdV": "2026-08-15T13:16:56+02:00",
+              "casSekundy": 4616
+            },
+            {
+              "lod": "mabye",
+              "poradiVCili": 15,
+              "dojezdV": "2026-08-15T13:18:42+02:00",
+              "casSekundy": 4722
+            },
+            {
+              "lod": "perun",
+              "poradiVCili": 16,
+              "dojezdV": "2026-08-15T13:18:09+02:00",
+              "casSekundy": 4689
+            },
+            {
+              "lod": "avenir",
+              "poradiVCili": 17,
+              "dojezdV": "2026-08-15T13:21:33+02:00",
+              "casSekundy": 4893
+            },
+            {
+              "lod": "mamba",
+              "poradiVCili": 18,
+              "dojezdV": "2026-08-15T13:21:00+02:00",
+              "casSekundy": 4860
+            },
+            {
+              "lod": "pezi",
+              "kod": "Ret"
+            },
+            {
+              "lod": "rio",
+              "poradiVCili": 19,
+              "dojezdV": "2026-08-15T13:22:16+02:00",
+              "casSekundy": 4936
+            },
+            {
+              "lod": "sandy",
+              "poradiVCili": 20,
+              "dojezdV": "2026-08-15T13:23:39+02:00",
+              "casSekundy": 5019
+            },
+            {
+              "lod": "sea-mouse-iii",
+              "poradiVCili": 21,
+              "dojezdV": "2026-08-15T13:25:35+02:00",
+              "casSekundy": 5135
+            },
+            {
+              "lod": "zephyr",
+              "poradiVCili": 22,
+              "dojezdV": "2026-08-15T13:25:09+02:00",
+              "casSekundy": 5109
+            },
+            {
+              "lod": "m1",
+              "poradiVCili": 23,
+              "dojezdV": "2026-08-15T13:26:08+02:00",
+              "casSekundy": 5168
+            },
+            {
+              "lod": "varianta",
+              "poradiVCili": 24,
+              "dojezdV": "2026-08-15T13:30:09+02:00",
+              "casSekundy": 5409
+            },
+            {
+              "lod": "michelle",
+              "poradiVCili": 25,
+              "dojezdV": "2026-08-15T13:30:04+02:00",
+              "casSekundy": 5404
+            },
+            {
+              "lod": "thea",
+              "poradiVCili": 26,
+              "dojezdV": "2026-08-15T13:30:05+02:00",
+              "casSekundy": 5405
+            },
+            {
+              "lod": "m-rtina",
+              "poradiVCili": 27,
+              "dojezdV": "2026-08-15T13:32:07+02:00",
+              "casSekundy": 5527
+            },
+            {
+              "lod": "family-lady",
+              "kod": "Dnf"
+            },
+            {
+              "lod": "caprice",
+              "poradiVCili": 28,
+              "dojezdV": "2026-08-15T13:32:34+02:00",
+              "casSekundy": 5554
+            },
+            {
+              "lod": "rose",
+              "poradiVCili": 29,
+              "dojezdV": "2026-08-15T13:34:43+02:00",
+              "casSekundy": 5683
+            },
+            {
+              "lod": "socka",
               "poradiVCili": 30,
-              "dojezdV": "2026-08-15T13:36:23+02:00",
-              "casSekundy": 5783
+              "dojezdV": "2026-08-15T13:35:12+02:00",
+              "casSekundy": 5712
             },
             {
               "lod": "claudie",
               "poradiVCili": 31,
-              "dojezdV": "2026-08-15T13:35:48+02:00",
-              "casSekundy": 5748
-            },
-            {
-              "lod": "sula",
-              "poradiVCili": 32,
-              "dojezdV": "2026-08-15T13:38:12+02:00",
-              "casSekundy": 5892
+              "dojezdV": "2026-08-15T13:37:53+02:00",
+              "casSekundy": 5873
             }
           ]
         },
@@ -4893,204 +4806,202 @@
           "doSerie": true,
           "vysledky": [
             {
-              "lod": "socka",
+              "lod": "hogan",
               "poradiVCili": 1,
-              "dojezdV": "2026-08-15T15:01:05+02:00",
-              "casSekundy": 3665
+              "dojezdV": "2026-08-15T15:00:41+02:00",
+              "casSekundy": 3641
             },
             {
-              "lod": "far-star-iii",
+              "lod": "cervene-cafe",
+              "kod": "Ocs"
+            },
+            {
+              "lod": "thea",
               "poradiVCili": 2,
-              "dojezdV": "2026-08-15T15:03:15+02:00",
-              "casSekundy": 3795
+              "dojezdV": "2026-08-15T15:02:33+02:00",
+              "casSekundy": 3753
             },
             {
-              "lod": "sandy",
+              "lod": "depresso",
               "poradiVCili": 3,
-              "dojezdV": "2026-08-15T15:04:30+02:00",
-              "casSekundy": 3870
-            },
-            {
-              "lod": "joy",
-              "poradiVCili": 4,
-              "dojezdV": "2026-08-15T15:03:28+02:00",
-              "casSekundy": 3808
-            },
-            {
-              "lod": "filozep",
-              "poradiVCili": 5,
-              "dojezdV": "2026-08-15T15:06:00+02:00",
-              "casSekundy": 3960
-            },
-            {
-              "lod": "caprice",
-              "poradiVCili": 6,
-              "dojezdV": "2026-08-15T15:07:33+02:00",
-              "casSekundy": 4053
-            },
-            {
-              "lod": "nablb",
-              "poradiVCili": 7,
-              "dojezdV": "2026-08-15T15:07:29+02:00",
-              "casSekundy": 4049
-            },
-            {
-              "lod": "family-lady",
-              "poradiVCili": 8,
-              "dojezdV": "2026-08-15T15:10:45+02:00",
-              "casSekundy": 4245
+              "dojezdV": "2026-08-15T15:04:08+02:00",
+              "casSekundy": 3848
             },
             {
               "lod": "varianta",
-              "poradiVCili": 9,
-              "dojezdV": "2026-08-15T15:11:40+02:00",
-              "casSekundy": 4300
+              "poradiVCili": 4,
+              "dojezdV": "2026-08-15T15:05:11+02:00",
+              "casSekundy": 3911
             },
             {
-              "lod": "andante",
-              "poradiVCili": 10,
-              "dojezdV": "2026-08-15T15:12:41+02:00",
-              "casSekundy": 4361
+              "lod": "rio",
+              "poradiVCili": 5,
+              "dojezdV": "2026-08-15T15:04:59+02:00",
+              "casSekundy": 3899
+            },
+            {
+              "lod": "michelle",
+              "poradiVCili": 6,
+              "dojezdV": "2026-08-15T15:06:37+02:00",
+              "casSekundy": 3997
+            },
+            {
+              "lod": "m1",
+              "poradiVCili": 7,
+              "dojezdV": "2026-08-15T15:08:33+02:00",
+              "casSekundy": 4113
+            },
+            {
+              "lod": "far-star-iii",
+              "poradiVCili": 8,
+              "dojezdV": "2026-08-15T15:09:18+02:00",
+              "casSekundy": 4158
+            },
+            {
+              "lod": "caprice",
+              "poradiVCili": 9,
+              "dojezdV": "2026-08-15T15:11:11+02:00",
+              "casSekundy": 4271
             },
             {
               "lod": "claudie",
+              "poradiVCili": 10,
+              "dojezdV": "2026-08-15T15:10:36+02:00",
+              "casSekundy": 4236
+            },
+            {
+              "lod": "joy",
               "poradiVCili": 11,
-              "dojezdV": "2026-08-15T15:14:23+02:00",
-              "casSekundy": 4463
+              "dojezdV": "2026-08-15T15:13:00+02:00",
+              "casSekundy": 4380
             },
             {
-              "lod": "luna",
+              "lod": "mabye",
               "poradiVCili": 12,
-              "dojezdV": "2026-08-15T15:13:53+02:00",
-              "casSekundy": 4433
+              "dojezdV": "2026-08-15T15:14:53+02:00",
+              "casSekundy": 4493
             },
             {
-              "lod": "rose",
+              "lod": "charlotte-iii",
               "poradiVCili": 13,
-              "dojezdV": "2026-08-15T15:14:57+02:00",
-              "casSekundy": 4497
+              "dojezdV": "2026-08-15T15:14:59+02:00",
+              "casSekundy": 4499
             },
             {
-              "lod": "hogan",
+              "lod": "cassiopeia",
               "poradiVCili": 14,
-              "dojezdV": "2026-08-15T15:17:56+02:00",
-              "casSekundy": 4676
+              "dojezdV": "2026-08-15T15:16:48+02:00",
+              "casSekundy": 4608
             },
             {
-              "lod": "sula",
+              "lod": "sendy",
               "poradiVCili": 15,
-              "dojezdV": "2026-08-15T15:16:30+02:00",
-              "casSekundy": 4590
+              "dojezdV": "2026-08-15T15:17:33+02:00",
+              "casSekundy": 4653
             },
             {
               "lod": "liberte",
               "poradiVCili": 16,
-              "dojezdV": "2026-08-15T15:20:35+02:00",
-              "casSekundy": 4835
+              "dojezdV": "2026-08-15T15:18:31+02:00",
+              "casSekundy": 4711
             },
             {
-              "lod": "modre-cafe",
+              "lod": "luna",
               "poradiVCili": 17,
-              "dojezdV": "2026-08-15T15:21:16+02:00",
-              "casSekundy": 4876
-            },
-            {
-              "lod": "mabye",
-              "poradiVCili": 18,
-              "dojezdV": "2026-08-15T15:21:06+02:00",
-              "casSekundy": 4866
-            },
-            {
-              "lod": "avenir",
-              "poradiVCili": 19,
-              "dojezdV": "2026-08-15T15:24:04+02:00",
-              "casSekundy": 5044
-            },
-            {
-              "lod": "rio",
-              "poradiVCili": 20,
-              "dojezdV": "2026-08-15T15:25:08+02:00",
-              "casSekundy": 5108
-            },
-            {
-              "lod": "depresso",
-              "kod": "Ret"
-            },
-            {
-              "lod": "zephyr",
-              "poradiVCili": 21,
-              "dojezdV": "2026-08-15T15:24:21+02:00",
-              "casSekundy": 5061
-            },
-            {
-              "lod": "valhalla",
-              "poradiVCili": 22,
-              "dojezdV": "2026-08-15T15:26:52+02:00",
-              "casSekundy": 5212
-            },
-            {
-              "lod": "thea",
-              "poradiVCili": 23,
-              "dojezdV": "2026-08-15T15:28:38+02:00",
-              "casSekundy": 5318
-            },
-            {
-              "lod": "pezi",
-              "kod": "Dns"
-            },
-            {
-              "lod": "michelle",
-              "poradiVCili": 24,
-              "dojezdV": "2026-08-15T15:27:26+02:00",
-              "casSekundy": 5246
-            },
-            {
-              "lod": "cassiopeia",
-              "poradiVCili": 25,
-              "dojezdV": "2026-08-15T15:30:12+02:00",
-              "casSekundy": 5412
-            },
-            {
-              "lod": "m1",
-              "poradiVCili": 26,
-              "dojezdV": "2026-08-15T15:32:17+02:00",
-              "casSekundy": 5537
-            },
-            {
-              "lod": "charlotte-iii",
-              "poradiVCili": 27,
-              "dojezdV": "2026-08-15T15:33:44+02:00",
-              "casSekundy": 5624
-            },
-            {
-              "lod": "mamba",
-              "poradiVCili": 28,
-              "dojezdV": "2026-08-15T15:33:38+02:00",
-              "casSekundy": 5618
+              "dojezdV": "2026-08-15T15:20:58+02:00",
+              "casSekundy": 4858
             },
             {
               "lod": "m-rtina",
+              "poradiVCili": 18,
+              "dojezdV": "2026-08-15T15:22:19+02:00",
+              "casSekundy": 4939
+            },
+            {
+              "lod": "filozep",
+              "poradiVCili": 19,
+              "dojezdV": "2026-08-15T15:22:37+02:00",
+              "casSekundy": 4957
+            },
+            {
+              "lod": "avenir",
+              "poradiVCili": 20,
+              "dojezdV": "2026-08-15T15:25:00+02:00",
+              "casSekundy": 5100
+            },
+            {
+              "lod": "andante",
+              "kod": "Ocs"
+            },
+            {
+              "lod": "valhalla",
+              "poradiVCili": 21,
+              "dojezdV": "2026-08-15T15:26:16+02:00",
+              "casSekundy": 5176
+            },
+            {
+              "lod": "mamba",
+              "poradiVCili": 22,
+              "dojezdV": "2026-08-15T15:25:11+02:00",
+              "casSekundy": 5111
+            },
+            {
+              "lod": "pezi",
+              "poradiVCili": 23,
+              "dojezdV": "2026-08-15T15:27:19+02:00",
+              "casSekundy": 5239
+            },
+            {
+              "lod": "socka",
+              "poradiVCili": 24,
+              "dojezdV": "2026-08-15T15:28:42+02:00",
+              "casSekundy": 5322
+            },
+            {
+              "lod": "sea-mouse-iii",
+              "poradiVCili": 25,
+              "dojezdV": "2026-08-15T15:31:00+02:00",
+              "casSekundy": 5460
+            },
+            {
+              "lod": "zephyr",
+              "poradiVCili": 26,
+              "dojezdV": "2026-08-15T15:30:55+02:00",
+              "casSekundy": 5455
+            },
+            {
+              "lod": "family-lady",
+              "poradiVCili": 27,
+              "dojezdV": "2026-08-15T15:32:34+02:00",
+              "casSekundy": 5554
+            },
+            {
+              "lod": "sula",
+              "kod": "Dnf"
+            },
+            {
+              "lod": "rose",
+              "poradiVCili": 28,
+              "dojezdV": "2026-08-15T15:34:11+02:00",
+              "casSekundy": 5651
+            },
+            {
+              "lod": "sandy",
               "poradiVCili": 29,
-              "dojezdV": "2026-08-15T15:34:06+02:00",
-              "casSekundy": 5646
+              "dojezdV": "2026-08-15T15:33:53+02:00",
+              "casSekundy": 5633
             },
             {
-              "lod": "cervene-cafe",
+              "lod": "nablb",
               "poradiVCili": 30,
-              "dojezdV": "2026-08-15T15:34:47+02:00",
-              "casSekundy": 5687
-            },
-            {
-              "lod": "sendy",
-              "poradiVCili": 31,
-              "dojezdV": "2026-08-15T15:38:20+02:00",
-              "casSekundy": 5900
+              "dojezdV": "2026-08-15T15:37:09+02:00",
+              "casSekundy": 5829
             },
             {
               "lod": "perun",
-              "poradiVCili": 32,
-              "dojezdV": "2026-08-15T15:37:00+02:00",
-              "casSekundy": 5820
+              "poradiVCili": 31,
+              "dojezdV": "2026-08-15T15:38:04+02:00",
+              "casSekundy": 5884
             }
           ]
         }
@@ -5113,167 +5024,132 @@
         {
           "lod": "luna",
           "kormidelnik": "osoba-1",
-          "posadka": "Pavel Marek, Blanka Havel"
+          "posadka": "Zdeněk Beneš, Markéta Fiala"
         },
         {
           "lod": "sendy",
           "kormidelnik": "osoba-2",
-          "posadka": "Marek Bláha, Zdeněk Beneš, Roman Šimek"
+          "posadka": "Karel Vlček"
         },
         {
           "lod": "andante",
           "kormidelnik": "osoba-4",
-          "posadka": "David Štěpánek, Vít Toman"
+          "posadka": "Petr Svoboda, Jana Konečný, Aleš Souček"
         },
         {
           "lod": "sandy",
-          "kormidelnik": "osoba-6",
-          "posadka": "Jakub Procházka, David Štěpánek"
-        },
-        {
-          "lod": "charlotte-iii",
-          "kormidelnik": "osoba-7",
-          "posadka": "Michal Horák, Milan Zeman, Dana Jelínek"
+          "kormidelnik": "osoba-29",
+          "posadka": "David Štěpánek, Alena Vaněk"
         },
         {
           "lod": "pezi",
           "kormidelnik": "osoba-8",
-          "posadka": "David Štěpánek, Vojtěch Kolář, Marek Bláha"
+          "posadka": "Vít Toman"
         },
         {
           "lod": "mamba",
           "kormidelnik": "osoba-9",
-          "posadka": "Michal Horák, Lucie Kučera"
+          "posadka": "Jakub Procházka"
         },
         {
           "lod": "m1",
           "kormidelnik": "osoba-10",
-          "posadka": "Dana Jelínek"
+          "posadka": "Ivan Kříž, Pavel Marek, Věra Sýkora"
         },
         {
           "lod": "depresso",
           "kormidelnik": "osoba-11",
-          "posadka": "Karel Vlček, Ivan Kříž"
+          "posadka": "Aleš Souček, Vojtěch Kolář"
         },
         {
           "lod": "cassiopeia",
           "kormidelnik": "osoba-12",
-          "posadka": "Pavel Marek, Lukáš Ryba"
-        },
-        {
-          "lod": "sula",
-          "kormidelnik": "osoba-13",
-          "posadka": "Nikola Bureš, Martin Dvořák"
+          "posadka": "Zdeněk Beneš, Věra Sýkora, Tereza Hájek"
         },
         {
           "lod": "nablb",
           "kormidelnik": "osoba-14",
-          "posadka": "Blanka Havel"
+          "posadka": "Lucie Kučera"
         },
         {
           "lod": "filozep",
-          "kormidelnik": "osoba-15",
-          "posadka": "Jana Konečný"
+          "kormidelnik": "osoba-2",
+          "posadka": "Petr Svoboda"
         },
         {
           "lod": "sprunzel",
           "kormidelnik": "osoba-16",
-          "posadka": "Karel Vlček, Filip Malý, Blanka Havel"
+          "posadka": "Petr Svoboda, Michal Horák"
         },
         {
           "lod": "thea",
           "kormidelnik": "osoba-17",
-          "posadka": "Hana Urban, Filip Malý, Lucie Kučera"
+          "posadka": "Martin Dvořák, Kateřina Pokorný"
         },
         {
           "lod": "michelle",
           "kormidelnik": "osoba-18",
-          "posadka": "Tereza Hájek, Iva Kadlec"
+          "posadka": "Karel Vlček, David Štěpánek"
         },
         {
           "lod": "divna",
-          "kormidelnik": "osoba-19",
-          "posadka": "Karel Vlček"
+          "kormidelnik": "osoba-10",
+          "posadka": "Věra Sýkora, Karel Vlček, Marek Bláha"
         },
         {
-          "lod": "m-rtina",
-          "kormidelnik": "osoba-21",
-          "posadka": "Lucie Kučera, Tomáš Černý"
+          "lod": "family-lady",
+          "kormidelnik": "osoba-30",
+          "posadka": "David Štěpánek, Vít Toman"
         },
         {
           "lod": "rose",
           "kormidelnik": "osoba-22",
-          "posadka": "Michal Horák"
-        },
-        {
-          "lod": "miciny",
-          "kormidelnik": "osoba-23",
-          "posadka": "Josef Bartoš, Vojtěch Kolář, Jana Konečný"
+          "posadka": "Jakub Procházka, David Štěpánek"
         },
         {
           "lod": "avenir",
           "kormidelnik": "osoba-24",
-          "posadka": "Milan Zeman"
+          "posadka": "Michal Horák, Milan Zeman, Dana Jelínek"
         },
         {
           "lod": "hogan",
-          "kormidelnik": "osoba-31",
-          "posadka": "Milan Zeman, Vojtěch Kolář"
+          "kormidelnik": "osoba-25",
+          "posadka": "David Štěpánek, Vojtěch Kolář, Marek Bláha"
+        },
+        {
+          "lod": "liberte",
+          "kormidelnik": "osoba-26",
+          "posadka": "Michal Horák, Lucie Kučera"
         },
         {
           "lod": "rio",
           "kormidelnik": "osoba-27",
-          "posadka": "Kateřina Pokorný, Aleš Souček, Filip Malý"
+          "posadka": "Dana Jelínek"
         },
         {
           "lod": "claudie",
-          "kormidelnik": "osoba-1",
-          "posadka": "Vojtěch Kolář"
+          "kormidelnik": "osoba-28",
+          "posadka": "Karel Vlček, Ivan Kříž"
         },
         {
           "lod": "mabye",
-          "kormidelnik": "osoba-22",
-          "posadka": "Kateřina Pokorný"
-        },
-        {
-          "lod": "caprice",
-          "kormidelnik": "osoba-30",
-          "posadka": "Jana Konečný, Josef Bartoš, Ondřej Němec"
-        },
-        {
-          "lod": "perun",
-          "kormidelnik": "osoba-32",
-          "posadka": "Pavel Marek"
-        },
-        {
-          "lod": "cervene-cafe",
-          "kormidelnik": "osoba-36",
-          "posadka": "Lukáš Ryba"
+          "kormidelnik": "osoba-29",
+          "posadka": "Pavel Marek, Lukáš Ryba"
         },
         {
           "lod": "modre-cafe",
           "kormidelnik": "osoba-34",
-          "posadka": "Lukáš Ryba"
-        },
-        {
-          "lod": "sea-mouse-iii",
-          "kormidelnik": "osoba-35",
-          "posadka": "Jakub Procházka, Vojtěch Kolář"
+          "posadka": "Nikola Bureš, Martin Dvořák"
         },
         {
           "lod": "socka",
           "kormidelnik": "osoba-36",
-          "posadka": "Lukáš Ryba"
+          "posadka": "Blanka Havel"
         },
         {
           "lod": "far-star-iii",
-          "kormidelnik": "osoba-38",
-          "posadka": "Markéta Fiala, Petr Svoboda"
-        },
-        {
-          "lod": "zephyr",
-          "kormidelnik": "osoba-38",
-          "posadka": "David Štěpánek, Jana Konečný"
+          "kormidelnik": "osoba-37",
+          "posadka": "Jana Konečný"
         }
       ],
       "rozjizdky": [
@@ -5284,200 +5160,156 @@
           "doSerie": true,
           "vysledky": [
             {
-              "lod": "rose",
+              "lod": "rio",
               "poradiVCili": 1,
-              "dojezdV": "2026-09-05T10:59:56+02:00",
-              "casSekundy": 3596
+              "dojezdV": "2026-09-05T11:02:33+02:00",
+              "casSekundy": 3753
             },
             {
-              "lod": "luna",
+              "lod": "sendy",
               "poradiVCili": 2,
-              "dojezdV": "2026-09-05T11:01:15+02:00",
-              "casSekundy": 3675
-            },
-            {
-              "lod": "far-star-iii",
-              "poradiVCili": 3,
-              "dojezdV": "2026-09-05T11:02:46+02:00",
-              "casSekundy": 3766
+              "dojezdV": "2026-09-05T11:02:14+02:00",
+              "casSekundy": 3734
             },
             {
               "lod": "sandy",
+              "poradiVCili": 3,
+              "dojezdV": "2026-09-05T11:03:58+02:00",
+              "casSekundy": 3838
+            },
+            {
+              "lod": "thea",
               "poradiVCili": 4,
-              "dojezdV": "2026-09-05T11:04:54+02:00",
-              "casSekundy": 3894
+              "dojezdV": "2026-09-05T11:05:20+02:00",
+              "casSekundy": 3920
             },
             {
-              "lod": "depresso",
+              "lod": "cassiopeia",
               "poradiVCili": 5,
-              "dojezdV": "2026-09-05T11:05:40+02:00",
-              "casSekundy": 3940
+              "dojezdV": "2026-09-05T11:05:37+02:00",
+              "casSekundy": 3937
             },
             {
-              "lod": "divna",
+              "lod": "mabye",
               "poradiVCili": 6,
-              "dojezdV": "2026-09-05T11:06:09+02:00",
-              "casSekundy": 3969
+              "dojezdV": "2026-09-05T11:08:19+02:00",
+              "casSekundy": 4099
             },
             {
               "lod": "filozep",
               "poradiVCili": 7,
-              "dojezdV": "2026-09-05T11:08:17+02:00",
-              "casSekundy": 4097
-            },
-            {
-              "lod": "mamba",
-              "poradiVCili": 8,
-              "dojezdV": "2026-09-05T11:08:44+02:00",
-              "casSekundy": 4124
-            },
-            {
-              "lod": "claudie",
-              "poradiVCili": 9,
-              "dojezdV": "2026-09-05T11:10:30+02:00",
-              "casSekundy": 4230
-            },
-            {
-              "lod": "andante",
-              "poradiVCili": 10,
-              "dojezdV": "2026-09-05T11:12:13+02:00",
-              "casSekundy": 4333
-            },
-            {
-              "lod": "socka",
-              "poradiVCili": 11,
-              "dojezdV": "2026-09-05T11:13:06+02:00",
-              "casSekundy": 4386
-            },
-            {
-              "lod": "charlotte-iii",
-              "poradiVCili": 12,
-              "dojezdV": "2026-09-05T11:13:54+02:00",
-              "casSekundy": 4434
-            },
-            {
-              "lod": "modre-cafe",
-              "poradiVCili": 13,
-              "dojezdV": "2026-09-05T11:15:12+02:00",
-              "casSekundy": 4512
-            },
-            {
-              "lod": "m-rtina",
-              "poradiVCili": 14,
-              "dojezdV": "2026-09-05T11:15:42+02:00",
-              "casSekundy": 4542
-            },
-            {
-              "lod": "cassiopeia",
-              "poradiVCili": 15,
-              "dojezdV": "2026-09-05T11:19:23+02:00",
-              "casSekundy": 4763
-            },
-            {
-              "lod": "cervene-cafe",
-              "poradiVCili": 16,
-              "dojezdV": "2026-09-05T11:19:57+02:00",
-              "casSekundy": 4797
-            },
-            {
-              "lod": "caprice",
-              "poradiVCili": 17,
-              "dojezdV": "2026-09-05T11:20:48+02:00",
-              "casSekundy": 4848
-            },
-            {
-              "lod": "nablb",
-              "poradiVCili": 18,
-              "dojezdV": "2026-09-05T11:22:33+02:00",
-              "casSekundy": 4953
-            },
-            {
-              "lod": "pezi",
-              "poradiVCili": 19,
-              "dojezdV": "2026-09-05T11:22:45+02:00",
-              "casSekundy": 4965
-            },
-            {
-              "lod": "perun",
-              "poradiVCili": 20,
-              "dojezdV": "2026-09-05T11:25:27+02:00",
-              "casSekundy": 5127
-            },
-            {
-              "lod": "sendy",
-              "poradiVCili": 21,
-              "dojezdV": "2026-09-05T11:25:42+02:00",
-              "casSekundy": 5142
-            },
-            {
-              "lod": "miciny",
-              "poradiVCili": 22,
-              "dojezdV": "2026-09-05T11:25:10+02:00",
-              "casSekundy": 5110
-            },
-            {
-              "lod": "sprunzel",
-              "kod": "Dnf"
-            },
-            {
-              "lod": "m1",
-              "poradiVCili": 23,
-              "dojezdV": "2026-09-05T11:27:42+02:00",
-              "casSekundy": 5262
-            },
-            {
-              "lod": "zephyr",
-              "poradiVCili": 24,
-              "dojezdV": "2026-09-05T11:28:48+02:00",
-              "casSekundy": 5328
-            },
-            {
-              "lod": "avenir",
-              "poradiVCili": 25,
-              "dojezdV": "2026-09-05T11:29:05+02:00",
-              "casSekundy": 5345
-            },
-            {
-              "lod": "rio",
-              "poradiVCili": 26,
-              "dojezdV": "2026-09-05T11:30:09+02:00",
-              "casSekundy": 5409
-            },
-            {
-              "lod": "thea",
-              "poradiVCili": 27,
-              "dojezdV": "2026-09-05T11:31:58+02:00",
-              "casSekundy": 5518
-            },
-            {
-              "lod": "sula",
-              "poradiVCili": 28,
-              "dojezdV": "2026-09-05T11:34:38+02:00",
-              "casSekundy": 5678
-            },
-            {
-              "lod": "michelle",
-              "poradiVCili": 29,
-              "dojezdV": "2026-09-05T11:34:06+02:00",
-              "casSekundy": 5646
-            },
-            {
-              "lod": "sea-mouse-iii",
-              "poradiVCili": 30,
-              "dojezdV": "2026-09-05T11:34:59+02:00",
-              "casSekundy": 5699
-            },
-            {
-              "lod": "mabye",
-              "poradiVCili": 31,
-              "dojezdV": "2026-09-05T11:38:20+02:00",
-              "casSekundy": 5900
+              "dojezdV": "2026-09-05T11:09:10+02:00",
+              "casSekundy": 4150
             },
             {
               "lod": "hogan",
-              "poradiVCili": 32,
-              "dojezdV": "2026-09-05T11:38:50+02:00",
-              "casSekundy": 5930
+              "poradiVCili": 8,
+              "dojezdV": "2026-09-05T11:08:27+02:00",
+              "casSekundy": 4107
+            },
+            {
+              "lod": "far-star-iii",
+              "kod": "Ret"
+            },
+            {
+              "lod": "m1",
+              "kod": "Ret"
+            },
+            {
+              "lod": "luna",
+              "poradiVCili": 9,
+              "dojezdV": "2026-09-05T11:11:26+02:00",
+              "casSekundy": 4286
+            },
+            {
+              "lod": "family-lady",
+              "poradiVCili": 10,
+              "dojezdV": "2026-09-05T11:13:10+02:00",
+              "casSekundy": 4390
+            },
+            {
+              "lod": "pezi",
+              "poradiVCili": 11,
+              "dojezdV": "2026-09-05T11:12:17+02:00",
+              "casSekundy": 4337
+            },
+            {
+              "lod": "nablb",
+              "poradiVCili": 12,
+              "dojezdV": "2026-09-05T11:13:29+02:00",
+              "casSekundy": 4409
+            },
+            {
+              "lod": "socka",
+              "poradiVCili": 13,
+              "dojezdV": "2026-09-05T11:14:44+02:00",
+              "casSekundy": 4484
+            },
+            {
+              "lod": "divna",
+              "poradiVCili": 14,
+              "dojezdV": "2026-09-05T11:16:09+02:00",
+              "casSekundy": 4569
+            },
+            {
+              "lod": "andante",
+              "poradiVCili": 15,
+              "dojezdV": "2026-09-05T11:19:13+02:00",
+              "casSekundy": 4753
+            },
+            {
+              "lod": "modre-cafe",
+              "poradiVCili": 16,
+              "dojezdV": "2026-09-05T11:19:59+02:00",
+              "casSekundy": 4799
+            },
+            {
+              "lod": "depresso",
+              "poradiVCili": 17,
+              "dojezdV": "2026-09-05T11:19:10+02:00",
+              "casSekundy": 4750
+            },
+            {
+              "lod": "liberte",
+              "poradiVCili": 18,
+              "dojezdV": "2026-09-05T11:20:51+02:00",
+              "casSekundy": 4851
+            },
+            {
+              "lod": "rose",
+              "poradiVCili": 19,
+              "dojezdV": "2026-09-05T11:21:30+02:00",
+              "casSekundy": 4890
+            },
+            {
+              "lod": "sprunzel",
+              "poradiVCili": 20,
+              "dojezdV": "2026-09-05T11:23:50+02:00",
+              "casSekundy": 5030
+            },
+            {
+              "lod": "michelle",
+              "poradiVCili": 21,
+              "dojezdV": "2026-09-05T11:23:47+02:00",
+              "casSekundy": 5027
+            },
+            {
+              "lod": "claudie",
+              "poradiVCili": 22,
+              "dojezdV": "2026-09-05T11:25:59+02:00",
+              "casSekundy": 5159
+            },
+            {
+              "lod": "mamba",
+              "poradiVCili": 23,
+              "dojezdV": "2026-09-05T11:27:47+02:00",
+              "casSekundy": 5267
+            },
+            {
+              "lod": "avenir",
+              "poradiVCili": 24,
+              "dojezdV": "2026-09-05T11:29:21+02:00",
+              "casSekundy": 5361
             }
           ]
         }
@@ -5499,138 +5331,158 @@
       "ucasti": [
         {
           "lod": "luna",
-          "kormidelnik": "osoba-4",
-          "posadka": "Hana Urban, Nikola Bureš, Karel Vlček"
-        },
-        {
-          "lod": "sendy",
-          "kormidelnik": "osoba-2",
-          "posadka": "Marek Bláha, Michal Horák"
+          "kormidelnik": "osoba-1",
+          "posadka": "Hana Urban, Vojtěch Kolář, Kateřina Pokorný"
         },
         {
           "lod": "joy",
           "kormidelnik": "osoba-3",
-          "posadka": "Alena Vaněk, Kateřina Pokorný"
+          "posadka": "Ondřej Němec, Šárka Doležal"
         },
         {
           "lod": "andante",
-          "kormidelnik": "osoba-4",
-          "posadka": "Michal Horák"
+          "kormidelnik": "osoba-33",
+          "posadka": "Pavel Marek, Vít Toman"
+        },
+        {
+          "lod": "varianta",
+          "kormidelnik": "osoba-5",
+          "posadka": "Blanka Havel, Ondřej Němec"
         },
         {
           "lod": "sandy",
           "kormidelnik": "osoba-6",
-          "posadka": "Nikola Bureš, Filip Malý"
+          "posadka": "Josef Bartoš, Roman Šimek, Jakub Procházka"
+        },
+        {
+          "lod": "charlotte-iii",
+          "kormidelnik": "osoba-33",
+          "posadka": "Markéta Fiala"
         },
         {
           "lod": "pezi",
-          "kormidelnik": "osoba-3",
-          "posadka": "Kateřina Pokorný, Nikola Bureš, Vojtěch Kolář"
-        },
-        {
-          "lod": "mamba",
-          "kormidelnik": "osoba-9",
-          "posadka": "Vít Toman, Dana Jelínek, Tomáš Černý"
+          "kormidelnik": "osoba-8",
+          "posadka": "Roman Šimek, Ondřej Němec"
         },
         {
           "lod": "m1",
           "kormidelnik": "osoba-10",
-          "posadka": "Milan Zeman, Jiří Král"
+          "posadka": "Roman Šimek"
         },
         {
           "lod": "depresso",
           "kormidelnik": "osoba-11",
-          "posadka": "Filip Malý, Hana Urban"
-        },
-        {
-          "lod": "cassiopeia",
-          "kormidelnik": "osoba-12",
-          "posadka": "Aleš Souček, Eva Veselý"
-        },
-        {
-          "lod": "sula",
-          "kormidelnik": "osoba-13",
-          "posadka": "Radek Sedláček"
+          "posadka": "Vít Toman, Markéta Fiala"
         },
         {
           "lod": "nablb",
           "kormidelnik": "osoba-14",
-          "posadka": "Dana Jelínek"
+          "posadka": "Zdeněk Beneš, Ondřej Němec, Martin Dvořák"
         },
         {
           "lod": "filozep",
-          "kormidelnik": "osoba-13",
-          "posadka": "Eva Veselý, Alena Vaněk, Jakub Procházka"
+          "kormidelnik": "osoba-34",
+          "posadka": "Alena Vaněk, Ondřej Němec, Olga Kolman"
         },
         {
           "lod": "thea",
           "kormidelnik": "osoba-17",
-          "posadka": "Josef Bartoš"
+          "posadka": "Michal Horák, Karel Vlček, Věra Sýkora"
+        },
+        {
+          "lod": "michelle",
+          "kormidelnik": "osoba-18",
+          "posadka": "Hana Urban"
         },
         {
           "lod": "divna",
           "kormidelnik": "osoba-19",
-          "posadka": "Ondřej Němec, Blanka Havel"
+          "posadka": "Radek Sedláček"
+        },
+        {
+          "lod": "family-lady",
+          "kormidelnik": "osoba-20",
+          "posadka": "Ivan Kříž"
         },
         {
           "lod": "m-rtina",
-          "kormidelnik": "osoba-16",
-          "posadka": "Radek Sedláček, Jan Novák, Tereza Hájek"
+          "kormidelnik": "osoba-18",
+          "posadka": "David Štěpánek, Jiří Král, Hana Urban"
         },
         {
           "lod": "rose",
           "kormidelnik": "osoba-22",
-          "posadka": "Lucie Kučera, Tereza Hájek"
+          "posadka": "Roman Šimek, Nikola Bureš"
         },
         {
           "lod": "miciny",
-          "kormidelnik": "osoba-27",
-          "posadka": "Michal Horák"
+          "kormidelnik": "osoba-23",
+          "posadka": "Hana Urban, Tereza Hájek, Roman Šimek"
+        },
+        {
+          "lod": "avenir",
+          "kormidelnik": "osoba-24",
+          "posadka": "Zdeněk Beneš"
+        },
+        {
+          "lod": "hogan",
+          "kormidelnik": "osoba-25",
+          "posadka": "Tereza Hájek, Šárka Doležal, Aleš Souček"
+        },
+        {
+          "lod": "liberte",
+          "kormidelnik": "osoba-26",
+          "posadka": "Radek Sedláček, Věra Sýkora"
         },
         {
           "lod": "rio",
           "kormidelnik": "osoba-27",
-          "posadka": "Tomáš Černý, Martin Dvořák"
+          "posadka": "Šárka Doležal, Tomáš Černý, Lucie Kučera"
         },
         {
           "lod": "claudie",
           "kormidelnik": "osoba-28",
-          "posadka": "Alena Vaněk, Dana Jelínek"
+          "posadka": "Josef Bartoš, Radek Sedláček, Petr Svoboda"
+        },
+        {
+          "lod": "mabye",
+          "kormidelnik": "osoba-29",
+          "posadka": "Hana Urban, Nikola Bureš, Karel Vlček"
         },
         {
           "lod": "caprice",
           "kormidelnik": "osoba-30",
-          "posadka": "Blanka Havel"
+          "posadka": "Marek Bláha, Michal Horák"
         },
         {
           "lod": "valhalla",
           "kormidelnik": "osoba-31",
-          "posadka": "Petr Svoboda, Hana Urban"
+          "posadka": "Alena Vaněk, Kateřina Pokorný"
         },
         {
           "lod": "perun",
           "kormidelnik": "osoba-32",
-          "posadka": "Milan Zeman, Blanka Havel"
+          "posadka": "Michal Horák"
         },
         {
           "lod": "cervene-cafe",
           "kormidelnik": "osoba-33",
-          "posadka": "Filip Malý"
+          "posadka": "Nikola Bureš, Filip Malý"
         },
         {
           "lod": "modre-cafe",
-          "kormidelnik": "osoba-34",
-          "posadka": "Lucie Kučera, Tereza Hájek"
+          "kormidelnik": "osoba-3",
+          "posadka": "Kateřina Pokorný, Nikola Bureš, Vojtěch Kolář"
         },
         {
           "lod": "sea-mouse-iii",
           "kormidelnik": "osoba-35",
-          "posadka": "Lucie Kučera, Kateřina Pokorný, Filip Malý"
+          "posadka": "Vít Toman, Dana Jelínek, Tomáš Černý"
         },
         {
           "lod": "far-star-iii",
           "kormidelnik": "osoba-37",
-          "posadka": "Dana Jelínek, Martin Dvořák, Filip Malý"
+          "posadka": "Milan Zeman, Jiří Král"
         }
       ],
       "rozjizdky": [
@@ -5641,160 +5493,186 @@
           "doSerie": true,
           "vysledky": [
             {
-              "lod": "rio",
+              "lod": "michelle",
               "poradiVCili": 1,
-              "dojezdV": "2026-09-19T11:00:51+02:00",
-              "casSekundy": 3651
-            },
-            {
-              "lod": "perun",
-              "kod": "Dnf"
-            },
-            {
-              "lod": "valhalla",
-              "poradiVCili": 2,
-              "dojezdV": "2026-09-19T11:03:12+02:00",
-              "casSekundy": 3792
-            },
-            {
-              "lod": "nablb",
-              "poradiVCili": 3,
-              "dojezdV": "2026-09-19T11:04:31+02:00",
-              "casSekundy": 3871
-            },
-            {
-              "lod": "sandy",
-              "poradiVCili": 4,
-              "dojezdV": "2026-09-19T11:04:47+02:00",
-              "casSekundy": 3887
+              "dojezdV": "2026-09-19T11:00:17+02:00",
+              "casSekundy": 3617
             },
             {
               "lod": "andante",
-              "poradiVCili": 5,
-              "dojezdV": "2026-09-19T11:05:13+02:00",
-              "casSekundy": 3913
+              "poradiVCili": 2,
+              "dojezdV": "2026-09-19T11:01:04+02:00",
+              "casSekundy": 3664
             },
             {
-              "lod": "luna",
-              "poradiVCili": 6,
-              "dojezdV": "2026-09-19T11:07:57+02:00",
-              "casSekundy": 4077
+              "lod": "m-rtina",
+              "poradiVCili": 3,
+              "dojezdV": "2026-09-19T11:04:49+02:00",
+              "casSekundy": 3889
             },
             {
-              "lod": "thea",
-              "poradiVCili": 7,
-              "dojezdV": "2026-09-19T11:09:23+02:00",
-              "casSekundy": 4163
+              "lod": "cervene-cafe",
+              "poradiVCili": 4,
+              "dojezdV": "2026-09-19T11:04:38+02:00",
+              "casSekundy": 3878
             },
             {
               "lod": "pezi",
+              "poradiVCili": 5,
+              "dojezdV": "2026-09-19T11:05:37+02:00",
+              "casSekundy": 3937
+            },
+            {
+              "lod": "avenir",
+              "poradiVCili": 6,
+              "dojezdV": "2026-09-19T11:07:05+02:00",
+              "casSekundy": 4025
+            },
+            {
+              "lod": "mabye",
+              "kod": "Ocs"
+            },
+            {
+              "lod": "rio",
+              "poradiVCili": 7,
+              "dojezdV": "2026-09-19T11:09:34+02:00",
+              "casSekundy": 4174
+            },
+            {
+              "lod": "joy",
               "poradiVCili": 8,
+              "dojezdV": "2026-09-19T11:08:53+02:00",
+              "casSekundy": 4133
+            },
+            {
+              "lod": "nablb",
+              "poradiVCili": 9,
               "dojezdV": "2026-09-19T11:09:26+02:00",
               "casSekundy": 4166
             },
             {
-              "lod": "mamba",
-              "poradiVCili": 9,
-              "dojezdV": "2026-09-19T11:10:02+02:00",
-              "casSekundy": 4202
-            },
-            {
-              "lod": "filozep",
+              "lod": "sea-mouse-iii",
               "poradiVCili": 10,
-              "dojezdV": "2026-09-19T11:11:24+02:00",
-              "casSekundy": 4284
+              "dojezdV": "2026-09-19T11:11:48+02:00",
+              "casSekundy": 4308
             },
             {
-              "lod": "cassiopeia",
-              "kod": "Ret"
-            },
-            {
-              "lod": "m1",
+              "lod": "family-lady",
               "poradiVCili": 11,
-              "dojezdV": "2026-09-19T11:14:32+02:00",
-              "casSekundy": 4472
+              "dojezdV": "2026-09-19T11:12:55+02:00",
+              "casSekundy": 4375
             },
             {
-              "lod": "cervene-cafe",
+              "lod": "charlotte-iii",
               "poradiVCili": 12,
-              "dojezdV": "2026-09-19T11:13:00+02:00",
-              "casSekundy": 4380
+              "dojezdV": "2026-09-19T11:13:12+02:00",
+              "casSekundy": 4392
             },
             {
-              "lod": "sula",
+              "lod": "liberte",
               "poradiVCili": 13,
-              "dojezdV": "2026-09-19T11:15:47+02:00",
-              "casSekundy": 4547
-            },
-            {
-              "lod": "caprice",
-              "poradiVCili": 14,
-              "dojezdV": "2026-09-19T11:16:15+02:00",
-              "casSekundy": 4575
-            },
-            {
-              "lod": "modre-cafe",
-              "poradiVCili": 15,
-              "dojezdV": "2026-09-19T11:18:28+02:00",
-              "casSekundy": 4708
-            },
-            {
-              "lod": "far-star-iii",
-              "poradiVCili": 16,
-              "dojezdV": "2026-09-19T11:20:27+02:00",
-              "casSekundy": 4827
-            },
-            {
-              "lod": "sendy",
-              "poradiVCili": 17,
-              "dojezdV": "2026-09-19T11:19:03+02:00",
-              "casSekundy": 4743
-            },
-            {
-              "lod": "miciny",
-              "poradiVCili": 18,
-              "dojezdV": "2026-09-19T11:21:14+02:00",
-              "casSekundy": 4874
-            },
-            {
-              "lod": "depresso",
-              "poradiVCili": 19,
-              "dojezdV": "2026-09-19T11:23:23+02:00",
-              "casSekundy": 5003
+              "dojezdV": "2026-09-19T11:16:24+02:00",
+              "casSekundy": 4584
             },
             {
               "lod": "divna",
-              "poradiVCili": 20,
-              "dojezdV": "2026-09-19T11:25:30+02:00",
-              "casSekundy": 5130
+              "poradiVCili": 14,
+              "dojezdV": "2026-09-19T11:16:20+02:00",
+              "casSekundy": 4580
             },
             {
-              "lod": "claudie",
-              "poradiVCili": 21,
-              "dojezdV": "2026-09-19T11:26:32+02:00",
-              "casSekundy": 5192
+              "lod": "hogan",
+              "poradiVCili": 15,
+              "dojezdV": "2026-09-19T11:18:33+02:00",
+              "casSekundy": 4713
             },
             {
-              "lod": "m-rtina",
-              "kod": "Ret"
+              "lod": "caprice",
+              "poradiVCili": 16,
+              "dojezdV": "2026-09-19T11:18:56+02:00",
+              "casSekundy": 4736
+            },
+            {
+              "lod": "sandy",
+              "poradiVCili": 17,
+              "dojezdV": "2026-09-19T11:21:36+02:00",
+              "casSekundy": 4896
             },
             {
               "lod": "rose",
+              "poradiVCili": 18,
+              "dojezdV": "2026-09-19T11:21:43+02:00",
+              "casSekundy": 4903
+            },
+            {
+              "lod": "modre-cafe",
+              "poradiVCili": 19,
+              "dojezdV": "2026-09-19T11:22:41+02:00",
+              "casSekundy": 4961
+            },
+            {
+              "lod": "varianta",
+              "poradiVCili": 20,
+              "dojezdV": "2026-09-19T11:25:16+02:00",
+              "casSekundy": 5116
+            },
+            {
+              "lod": "miciny",
+              "poradiVCili": 21,
+              "dojezdV": "2026-09-19T11:24:25+02:00",
+              "casSekundy": 5065
+            },
+            {
+              "lod": "filozep",
               "poradiVCili": 22,
-              "dojezdV": "2026-09-19T11:27:12+02:00",
-              "casSekundy": 5232
+              "dojezdV": "2026-09-19T11:27:09+02:00",
+              "casSekundy": 5229
             },
             {
-              "lod": "joy",
+              "lod": "luna",
               "poradiVCili": 23,
-              "dojezdV": "2026-09-19T11:27:08+02:00",
-              "casSekundy": 5228
+              "dojezdV": "2026-09-19T11:27:37+02:00",
+              "casSekundy": 5257
             },
             {
-              "lod": "sea-mouse-iii",
+              "lod": "m1",
+              "kod": "Dnf"
+            },
+            {
+              "lod": "far-star-iii",
               "poradiVCili": 24,
-              "dojezdV": "2026-09-19T11:28:18+02:00",
-              "casSekundy": 5298
+              "dojezdV": "2026-09-19T11:29:57+02:00",
+              "casSekundy": 5397
+            },
+            {
+              "lod": "thea",
+              "poradiVCili": 25,
+              "dojezdV": "2026-09-19T11:30:49+02:00",
+              "casSekundy": 5449
+            },
+            {
+              "lod": "claudie",
+              "poradiVCili": 26,
+              "dojezdV": "2026-09-19T11:32:35+02:00",
+              "casSekundy": 5555
+            },
+            {
+              "lod": "depresso",
+              "poradiVCili": 27,
+              "dojezdV": "2026-09-19T11:31:16+02:00",
+              "casSekundy": 5476
+            },
+            {
+              "lod": "perun",
+              "poradiVCili": 28,
+              "dojezdV": "2026-09-19T11:33:17+02:00",
+              "casSekundy": 5597
+            },
+            {
+              "lod": "valhalla",
+              "poradiVCili": 29,
+              "dojezdV": "2026-09-19T11:35:26+02:00",
+              "casSekundy": 5726
             }
           ]
         },
@@ -5805,158 +5683,184 @@
           "doSerie": true,
           "vysledky": [
             {
-              "lod": "cervene-cafe",
+              "lod": "modre-cafe",
               "poradiVCili": 1,
-              "dojezdV": "2026-09-19T12:59:53+02:00",
-              "casSekundy": 3593
-            },
-            {
-              "lod": "perun",
-              "poradiVCili": 2,
-              "dojezdV": "2026-09-19T13:03:31+02:00",
-              "casSekundy": 3811
-            },
-            {
-              "lod": "far-star-iii",
-              "poradiVCili": 3,
-              "dojezdV": "2026-09-19T13:04:43+02:00",
-              "casSekundy": 3883
-            },
-            {
-              "lod": "depresso",
-              "poradiVCili": 4,
-              "dojezdV": "2026-09-19T13:05:32+02:00",
-              "casSekundy": 3932
-            },
-            {
-              "lod": "sandy",
-              "poradiVCili": 5,
-              "dojezdV": "2026-09-19T13:05:21+02:00",
-              "casSekundy": 3921
-            },
-            {
-              "lod": "cassiopeia",
-              "poradiVCili": 6,
-              "dojezdV": "2026-09-19T13:05:49+02:00",
-              "casSekundy": 3949
+              "dojezdV": "2026-09-19T13:01:34+02:00",
+              "casSekundy": 3694
             },
             {
               "lod": "sea-mouse-iii",
-              "poradiVCili": 7,
-              "dojezdV": "2026-09-19T13:08:47+02:00",
-              "casSekundy": 4127
+              "poradiVCili": 2,
+              "dojezdV": "2026-09-19T13:03:39+02:00",
+              "casSekundy": 3819
+            },
+            {
+              "lod": "varianta",
+              "poradiVCili": 3,
+              "dojezdV": "2026-09-19T13:02:50+02:00",
+              "casSekundy": 3770
+            },
+            {
+              "lod": "sandy",
+              "poradiVCili": 4,
+              "dojezdV": "2026-09-19T13:04:12+02:00",
+              "casSekundy": 3852
+            },
+            {
+              "lod": "mabye",
+              "kod": "Ret"
             },
             {
               "lod": "nablb",
-              "poradiVCili": 8,
-              "dojezdV": "2026-09-19T13:11:03+02:00",
-              "casSekundy": 4263
-            },
-            {
-              "lod": "sendy",
-              "poradiVCili": 9,
-              "dojezdV": "2026-09-19T13:10:53+02:00",
-              "casSekundy": 4253
-            },
-            {
-              "lod": "andante",
-              "poradiVCili": 10,
-              "dojezdV": "2026-09-19T13:13:19+02:00",
-              "casSekundy": 4399
-            },
-            {
-              "lod": "pezi",
-              "poradiVCili": 11,
-              "dojezdV": "2026-09-19T13:12:04+02:00",
-              "casSekundy": 4324
-            },
-            {
-              "lod": "luna",
-              "poradiVCili": 12,
-              "dojezdV": "2026-09-19T13:14:45+02:00",
-              "casSekundy": 4485
-            },
-            {
-              "lod": "thea",
-              "kod": "Ret"
-            },
-            {
-              "lod": "caprice",
-              "kod": "Ret"
-            },
-            {
-              "lod": "rio",
-              "poradiVCili": 13,
-              "dojezdV": "2026-09-19T13:15:01+02:00",
-              "casSekundy": 4501
-            },
-            {
-              "lod": "claudie",
-              "poradiVCili": 14,
-              "dojezdV": "2026-09-19T13:17:58+02:00",
-              "casSekundy": 4678
-            },
-            {
-              "lod": "sula",
-              "poradiVCili": 15,
-              "dojezdV": "2026-09-19T13:18:57+02:00",
-              "casSekundy": 4737
-            },
-            {
-              "lod": "rose",
-              "poradiVCili": 16,
-              "dojezdV": "2026-09-19T13:20:37+02:00",
-              "casSekundy": 4837
-            },
-            {
-              "lod": "joy",
-              "poradiVCili": 17,
-              "dojezdV": "2026-09-19T13:21:32+02:00",
-              "casSekundy": 4892
-            },
-            {
-              "lod": "filozep",
-              "poradiVCili": 18,
-              "dojezdV": "2026-09-19T13:20:58+02:00",
-              "casSekundy": 4858
-            },
-            {
-              "lod": "divna",
-              "poradiVCili": 19,
-              "dojezdV": "2026-09-19T13:23:54+02:00",
-              "casSekundy": 5034
+              "poradiVCili": 5,
+              "dojezdV": "2026-09-19T13:07:20+02:00",
+              "casSekundy": 4040
             },
             {
               "lod": "m1",
-              "kod": "Dnf"
-            },
-            {
-              "lod": "miciny",
-              "poradiVCili": 20,
-              "dojezdV": "2026-09-19T13:24:06+02:00",
-              "casSekundy": 5046
+              "poradiVCili": 6,
+              "dojezdV": "2026-09-19T13:05:48+02:00",
+              "casSekundy": 3948
             },
             {
               "lod": "valhalla",
-              "poradiVCili": 21,
-              "dojezdV": "2026-09-19T13:23:56+02:00",
-              "casSekundy": 5036
+              "poradiVCili": 7,
+              "dojezdV": "2026-09-19T13:08:35+02:00",
+              "casSekundy": 4115
+            },
+            {
+              "lod": "rose",
+              "poradiVCili": 8,
+              "dojezdV": "2026-09-19T13:09:03+02:00",
+              "casSekundy": 4143
+            },
+            {
+              "lod": "thea",
+              "poradiVCili": 9,
+              "dojezdV": "2026-09-19T13:11:16+02:00",
+              "casSekundy": 4276
             },
             {
               "lod": "m-rtina",
+              "poradiVCili": 10,
+              "dojezdV": "2026-09-19T13:13:15+02:00",
+              "casSekundy": 4395
+            },
+            {
+              "lod": "andante",
+              "poradiVCili": 11,
+              "dojezdV": "2026-09-19T13:11:51+02:00",
+              "casSekundy": 4311
+            },
+            {
+              "lod": "miciny",
+              "poradiVCili": 12,
+              "dojezdV": "2026-09-19T13:14:02+02:00",
+              "casSekundy": 4442
+            },
+            {
+              "lod": "claudie",
+              "poradiVCili": 13,
+              "dojezdV": "2026-09-19T13:16:11+02:00",
+              "casSekundy": 4571
+            },
+            {
+              "lod": "caprice",
+              "poradiVCili": 14,
+              "dojezdV": "2026-09-19T13:18:18+02:00",
+              "casSekundy": 4698
+            },
+            {
+              "lod": "depresso",
+              "poradiVCili": 15,
+              "dojezdV": "2026-09-19T13:19:20+02:00",
+              "casSekundy": 4760
+            },
+            {
+              "lod": "rio",
               "kod": "Ret"
             },
             {
-              "lod": "mamba",
-              "poradiVCili": 22,
-              "dojezdV": "2026-09-19T13:25:58+02:00",
-              "casSekundy": 5158
+              "lod": "cervene-cafe",
+              "poradiVCili": 16,
+              "dojezdV": "2026-09-19T13:20:00+02:00",
+              "casSekundy": 4800
             },
             {
-              "lod": "modre-cafe",
+              "lod": "pezi",
+              "poradiVCili": 17,
+              "dojezdV": "2026-09-19T13:19:56+02:00",
+              "casSekundy": 4796
+            },
+            {
+              "lod": "charlotte-iii",
+              "poradiVCili": 18,
+              "dojezdV": "2026-09-19T13:21:06+02:00",
+              "casSekundy": 4866
+            },
+            {
+              "lod": "joy",
+              "poradiVCili": 19,
+              "dojezdV": "2026-09-19T13:22:13+02:00",
+              "casSekundy": 4933
+            },
+            {
+              "lod": "hogan",
+              "poradiVCili": 20,
+              "dojezdV": "2026-09-19T13:24:51+02:00",
+              "casSekundy": 5091
+            },
+            {
+              "lod": "liberte",
+              "poradiVCili": 21,
+              "dojezdV": "2026-09-19T13:25:38+02:00",
+              "casSekundy": 5138
+            },
+            {
+              "lod": "michelle",
+              "poradiVCili": 22,
+              "dojezdV": "2026-09-19T13:27:02+02:00",
+              "casSekundy": 5222
+            },
+            {
+              "lod": "luna",
               "poradiVCili": 23,
-              "dojezdV": "2026-09-19T13:28:25+02:00",
-              "casSekundy": 5305
+              "dojezdV": "2026-09-19T13:27:46+02:00",
+              "casSekundy": 5266
+            },
+            {
+              "lod": "perun",
+              "poradiVCili": 24,
+              "dojezdV": "2026-09-19T13:27:59+02:00",
+              "casSekundy": 5279
+            },
+            {
+              "lod": "filozep",
+              "kod": "Ret"
+            },
+            {
+              "lod": "divna",
+              "poradiVCili": 25,
+              "dojezdV": "2026-09-19T13:28:40+02:00",
+              "casSekundy": 5320
+            },
+            {
+              "lod": "far-star-iii",
+              "poradiVCili": 26,
+              "dojezdV": "2026-09-19T13:31:43+02:00",
+              "casSekundy": 5503
+            },
+            {
+              "lod": "avenir",
+              "poradiVCili": 27,
+              "dojezdV": "2026-09-19T13:31:47+02:00",
+              "casSekundy": 5507
+            },
+            {
+              "lod": "family-lady",
+              "poradiVCili": 28,
+              "dojezdV": "2026-09-19T13:33:11+02:00",
+              "casSekundy": 5591
             }
           ]
         },
@@ -5967,162 +5871,184 @@
           "doSerie": true,
           "vysledky": [
             {
-              "lod": "depresso",
-              "poradiVCili": 1,
-              "dojezdV": "2026-09-19T15:01:41+02:00",
-              "casSekundy": 3701
-            },
-            {
-              "lod": "nablb",
-              "poradiVCili": 2,
-              "dojezdV": "2026-09-19T15:01:48+02:00",
-              "casSekundy": 3708
-            },
-            {
-              "lod": "m-rtina",
-              "poradiVCili": 3,
-              "dojezdV": "2026-09-19T15:03:07+02:00",
-              "casSekundy": 3787
-            },
-            {
-              "lod": "mamba",
-              "poradiVCili": 4,
-              "dojezdV": "2026-09-19T15:04:08+02:00",
-              "casSekundy": 3848
-            },
-            {
-              "lod": "claudie",
-              "poradiVCili": 5,
-              "dojezdV": "2026-09-19T15:06:28+02:00",
-              "casSekundy": 3988
-            },
-            {
-              "lod": "sendy",
-              "poradiVCili": 6,
-              "dojezdV": "2026-09-19T15:06:39+02:00",
-              "casSekundy": 3999
-            },
-            {
-              "lod": "andante",
-              "poradiVCili": 7,
-              "dojezdV": "2026-09-19T15:08:31+02:00",
-              "casSekundy": 4111
-            },
-            {
-              "lod": "filozep",
-              "poradiVCili": 8,
-              "dojezdV": "2026-09-19T15:10:57+02:00",
-              "casSekundy": 4257
-            },
-            {
-              "lod": "sandy",
-              "poradiVCili": 9,
-              "dojezdV": "2026-09-19T15:09:31+02:00",
-              "casSekundy": 4171
-            },
-            {
-              "lod": "caprice",
-              "poradiVCili": 10,
-              "dojezdV": "2026-09-19T15:11:05+02:00",
-              "casSekundy": 4265
-            },
-            {
-              "lod": "cassiopeia",
-              "poradiVCili": 11,
-              "dojezdV": "2026-09-19T15:13:55+02:00",
-              "casSekundy": 4435
-            },
-            {
-              "lod": "perun",
-              "poradiVCili": 12,
-              "dojezdV": "2026-09-19T15:12:58+02:00",
-              "casSekundy": 4378
-            },
-            {
-              "lod": "sula",
-              "poradiVCili": 13,
-              "dojezdV": "2026-09-19T15:14:49+02:00",
-              "casSekundy": 4489
-            },
-            {
-              "lod": "luna",
-              "poradiVCili": 14,
-              "dojezdV": "2026-09-19T15:17:36+02:00",
-              "casSekundy": 4656
-            },
-            {
               "lod": "sea-mouse-iii",
-              "poradiVCili": 15,
-              "dojezdV": "2026-09-19T15:18:06+02:00",
-              "casSekundy": 4686
-            },
-            {
-              "lod": "miciny",
-              "poradiVCili": 16,
-              "dojezdV": "2026-09-19T15:18:00+02:00",
-              "casSekundy": 4680
-            },
-            {
-              "lod": "valhalla",
-              "poradiVCili": 17,
-              "dojezdV": "2026-09-19T15:20:35+02:00",
-              "casSekundy": 4835
-            },
-            {
-              "lod": "rose",
-              "kod": "Ocs"
+              "kod": "Ret"
             },
             {
               "lod": "modre-cafe",
-              "poradiVCili": 18,
-              "dojezdV": "2026-09-19T15:20:21+02:00",
-              "casSekundy": 4821
+              "poradiVCili": 1,
+              "dojezdV": "2026-09-19T15:00:37+02:00",
+              "casSekundy": 3637
             },
             {
-              "lod": "divna",
-              "poradiVCili": 19,
-              "dojezdV": "2026-09-19T15:23:48+02:00",
-              "casSekundy": 5028
+              "lod": "m-rtina",
+              "poradiVCili": 2,
+              "dojezdV": "2026-09-19T15:03:34+02:00",
+              "casSekundy": 3814
             },
             {
-              "lod": "joy",
-              "poradiVCili": 20,
-              "dojezdV": "2026-09-19T15:25:24+02:00",
-              "casSekundy": 5124
+              "lod": "claudie",
+              "poradiVCili": 3,
+              "dojezdV": "2026-09-19T15:04:33+02:00",
+              "casSekundy": 3873
             },
             {
-              "lod": "cervene-cafe",
+              "lod": "nablb",
+              "poradiVCili": 4,
+              "dojezdV": "2026-09-19T15:06:13+02:00",
+              "casSekundy": 3973
+            },
+            {
+              "lod": "filozep",
+              "poradiVCili": 5,
+              "dojezdV": "2026-09-19T15:07:08+02:00",
+              "casSekundy": 4028
+            },
+            {
+              "lod": "perun",
+              "poradiVCili": 6,
+              "dojezdV": "2026-09-19T15:06:34+02:00",
+              "casSekundy": 3994
+            },
+            {
+              "lod": "varianta",
+              "poradiVCili": 7,
+              "dojezdV": "2026-09-19T15:09:30+02:00",
+              "casSekundy": 4170
+            },
+            {
+              "lod": "liberte",
               "kod": "Dnf"
             },
             {
-              "lod": "rio",
-              "poradiVCili": 21,
-              "dojezdV": "2026-09-19T15:23:48+02:00",
-              "casSekundy": 5028
-            },
-            {
-              "lod": "thea",
-              "poradiVCili": 22,
-              "dojezdV": "2026-09-19T15:25:57+02:00",
-              "casSekundy": 5157
-            },
-            {
-              "lod": "pezi",
-              "poradiVCili": 23,
-              "dojezdV": "2026-09-19T15:27:22+02:00",
-              "casSekundy": 5242
+              "lod": "michelle",
+              "poradiVCili": 8,
+              "dojezdV": "2026-09-19T15:09:42+02:00",
+              "casSekundy": 4182
             },
             {
               "lod": "far-star-iii",
-              "poradiVCili": 24,
-              "dojezdV": "2026-09-19T15:28:09+02:00",
-              "casSekundy": 5289
+              "poradiVCili": 9,
+              "dojezdV": "2026-09-19T15:09:32+02:00",
+              "casSekundy": 4172
             },
             {
               "lod": "m1",
+              "kod": "Ret"
+            },
+            {
+              "lod": "avenir",
+              "poradiVCili": 10,
+              "dojezdV": "2026-09-19T15:11:34+02:00",
+              "casSekundy": 4294
+            },
+            {
+              "lod": "thea",
+              "poradiVCili": 11,
+              "dojezdV": "2026-09-19T15:14:01+02:00",
+              "casSekundy": 4441
+            },
+            {
+              "lod": "luna",
+              "poradiVCili": 12,
+              "dojezdV": "2026-09-19T15:13:39+02:00",
+              "casSekundy": 4419
+            },
+            {
+              "lod": "sandy",
+              "poradiVCili": 13,
+              "dojezdV": "2026-09-19T15:16:30+02:00",
+              "casSekundy": 4590
+            },
+            {
+              "lod": "caprice",
+              "poradiVCili": 14,
+              "dojezdV": "2026-09-19T15:17:12+02:00",
+              "casSekundy": 4632
+            },
+            {
+              "lod": "pezi",
+              "poradiVCili": 15,
+              "dojezdV": "2026-09-19T15:19:07+02:00",
+              "casSekundy": 4747
+            },
+            {
+              "lod": "charlotte-iii",
+              "poradiVCili": 16,
+              "dojezdV": "2026-09-19T15:19:28+02:00",
+              "casSekundy": 4768
+            },
+            {
+              "lod": "divna",
+              "poradiVCili": 17,
+              "dojezdV": "2026-09-19T15:19:02+02:00",
+              "casSekundy": 4742
+            },
+            {
+              "lod": "rose",
+              "poradiVCili": 18,
+              "dojezdV": "2026-09-19T15:22:38+02:00",
+              "casSekundy": 4958
+            },
+            {
+              "lod": "depresso",
+              "poradiVCili": 19,
+              "dojezdV": "2026-09-19T15:21:51+02:00",
+              "casSekundy": 4911
+            },
+            {
+              "lod": "miciny",
+              "poradiVCili": 20,
+              "dojezdV": "2026-09-19T15:23:07+02:00",
+              "casSekundy": 4987
+            },
+            {
+              "lod": "valhalla",
+              "poradiVCili": 21,
+              "dojezdV": "2026-09-19T15:24:56+02:00",
+              "casSekundy": 5096
+            },
+            {
+              "lod": "mabye",
+              "poradiVCili": 22,
+              "dojezdV": "2026-09-19T15:25:27+02:00",
+              "casSekundy": 5127
+            },
+            {
+              "lod": "hogan",
+              "poradiVCili": 23,
+              "dojezdV": "2026-09-19T15:26:24+02:00",
+              "casSekundy": 5184
+            },
+            {
+              "lod": "family-lady",
+              "poradiVCili": 24,
+              "dojezdV": "2026-09-19T15:30:15+02:00",
+              "casSekundy": 5415
+            },
+            {
+              "lod": "rio",
               "poradiVCili": 25,
-              "dojezdV": "2026-09-19T15:29:59+02:00",
-              "casSekundy": 5399
+              "dojezdV": "2026-09-19T15:28:36+02:00",
+              "casSekundy": 5316
+            },
+            {
+              "lod": "joy",
+              "poradiVCili": 26,
+              "dojezdV": "2026-09-19T15:30:03+02:00",
+              "casSekundy": 5403
+            },
+            {
+              "lod": "andante",
+              "poradiVCili": 27,
+              "dojezdV": "2026-09-19T15:31:44+02:00",
+              "casSekundy": 5504
+            },
+            {
+              "lod": "cervene-cafe",
+              "poradiVCili": 28,
+              "dojezdV": "2026-09-19T15:34:04+02:00",
+              "casSekundy": 5644
             }
           ]
         },
@@ -6133,162 +6059,182 @@
           "doSerie": true,
           "vysledky": [
             {
-              "lod": "rio",
+              "lod": "modre-cafe",
               "poradiVCili": 1,
-              "dojezdV": "2026-09-19T16:59:58+02:00",
-              "casSekundy": 3598
+              "dojezdV": "2026-09-19T17:01:41+02:00",
+              "casSekundy": 3701
             },
             {
-              "lod": "depresso",
+              "lod": "charlotte-iii",
               "poradiVCili": 2,
-              "dojezdV": "2026-09-19T17:03:35+02:00",
-              "casSekundy": 3815
+              "dojezdV": "2026-09-19T17:03:17+02:00",
+              "casSekundy": 3797
             },
             {
-              "lod": "sandy",
+              "lod": "hogan",
               "poradiVCili": 3,
-              "dojezdV": "2026-09-19T17:03:55+02:00",
-              "casSekundy": 3835
-            },
-            {
-              "lod": "mamba",
-              "poradiVCili": 4,
-              "dojezdV": "2026-09-19T17:04:59+02:00",
-              "casSekundy": 3899
+              "dojezdV": "2026-09-19T17:04:52+02:00",
+              "casSekundy": 3892
             },
             {
               "lod": "claudie",
-              "poradiVCili": 5,
-              "dojezdV": "2026-09-19T17:06:47+02:00",
-              "casSekundy": 4007
+              "poradiVCili": 4,
+              "dojezdV": "2026-09-19T17:06:04+02:00",
+              "casSekundy": 3964
             },
             {
-              "lod": "sea-mouse-iii",
+              "lod": "m-rtina",
+              "kod": "Dns"
+            },
+            {
+              "lod": "miciny",
+              "poradiVCili": 5,
+              "dojezdV": "2026-09-19T17:04:32+02:00",
+              "casSekundy": 3872
+            },
+            {
+              "lod": "valhalla",
               "poradiVCili": 6,
-              "dojezdV": "2026-09-19T17:07:42+02:00",
-              "casSekundy": 4062
+              "dojezdV": "2026-09-19T17:06:45+02:00",
+              "casSekundy": 4005
             },
             {
               "lod": "pezi",
               "poradiVCili": 7,
-              "dojezdV": "2026-09-19T17:09:10+02:00",
-              "casSekundy": 4150
-            },
-            {
-              "lod": "cervene-cafe",
-              "poradiVCili": 8,
-              "dojezdV": "2026-09-19T17:08:23+02:00",
-              "casSekundy": 4103
-            },
-            {
-              "lod": "andante",
-              "poradiVCili": 9,
-              "dojezdV": "2026-09-19T17:10:09+02:00",
-              "casSekundy": 4209
-            },
-            {
-              "lod": "far-star-iii",
-              "poradiVCili": 10,
-              "dojezdV": "2026-09-19T17:12:05+02:00",
-              "casSekundy": 4325
-            },
-            {
-              "lod": "modre-cafe",
-              "poradiVCili": 11,
-              "dojezdV": "2026-09-19T17:14:34+02:00",
-              "casSekundy": 4474
-            },
-            {
-              "lod": "caprice",
-              "poradiVCili": 12,
-              "dojezdV": "2026-09-19T17:13:20+02:00",
-              "casSekundy": 4400
-            },
-            {
-              "lod": "cassiopeia",
-              "poradiVCili": 13,
-              "dojezdV": "2026-09-19T17:15:46+02:00",
-              "casSekundy": 4546
-            },
-            {
-              "lod": "nablb",
-              "poradiVCili": 14,
-              "dojezdV": "2026-09-19T17:18:00+02:00",
-              "casSekundy": 4680
-            },
-            {
-              "lod": "m-rtina",
-              "poradiVCili": 15,
-              "dojezdV": "2026-09-19T17:19:12+02:00",
-              "casSekundy": 4752
-            },
-            {
-              "lod": "joy",
-              "poradiVCili": 16,
-              "dojezdV": "2026-09-19T17:19:35+02:00",
-              "casSekundy": 4775
-            },
-            {
-              "lod": "sula",
-              "poradiVCili": 17,
-              "dojezdV": "2026-09-19T17:20:57+02:00",
-              "casSekundy": 4857
-            },
-            {
-              "lod": "divna",
-              "poradiVCili": 18,
-              "dojezdV": "2026-09-19T17:21:44+02:00",
-              "casSekundy": 4904
-            },
-            {
-              "lod": "valhalla",
-              "poradiVCili": 19,
-              "dojezdV": "2026-09-19T17:21:43+02:00",
-              "casSekundy": 4903
-            },
-            {
-              "lod": "filozep",
-              "poradiVCili": 20,
-              "dojezdV": "2026-09-19T17:24:22+02:00",
-              "casSekundy": 5062
+              "dojezdV": "2026-09-19T17:07:45+02:00",
+              "casSekundy": 4065
             },
             {
               "lod": "perun",
-              "poradiVCili": 21,
-              "dojezdV": "2026-09-19T17:24:31+02:00",
-              "casSekundy": 5071
+              "poradiVCili": 8,
+              "dojezdV": "2026-09-19T17:09:35+02:00",
+              "casSekundy": 4175
             },
             {
-              "lod": "m1",
-              "poradiVCili": 22,
-              "dojezdV": "2026-09-19T17:25:54+02:00",
-              "casSekundy": 5154
+              "lod": "depresso",
+              "kod": "Dnf"
             },
             {
-              "lod": "thea",
-              "poradiVCili": 23,
-              "dojezdV": "2026-09-19T17:28:06+02:00",
-              "casSekundy": 5286
+              "lod": "far-star-iii",
+              "poradiVCili": 9,
+              "dojezdV": "2026-09-19T17:11:02+02:00",
+              "casSekundy": 4262
+            },
+            {
+              "lod": "avenir",
+              "poradiVCili": 10,
+              "dojezdV": "2026-09-19T17:12:12+02:00",
+              "casSekundy": 4332
+            },
+            {
+              "lod": "sea-mouse-iii",
+              "poradiVCili": 11,
+              "dojezdV": "2026-09-19T17:13:40+02:00",
+              "casSekundy": 4420
+            },
+            {
+              "lod": "nablb",
+              "poradiVCili": 12,
+              "dojezdV": "2026-09-19T17:15:35+02:00",
+              "casSekundy": 4535
+            },
+            {
+              "lod": "varianta",
+              "kod": "Dnf"
+            },
+            {
+              "lod": "mabye",
+              "kod": "Dnf"
+            },
+            {
+              "lod": "family-lady",
+              "poradiVCili": 13,
+              "dojezdV": "2026-09-19T17:14:45+02:00",
+              "casSekundy": 4485
             },
             {
               "lod": "rose",
-              "poradiVCili": 24,
-              "dojezdV": "2026-09-19T17:30:16+02:00",
-              "casSekundy": 5416
+              "poradiVCili": 14,
+              "dojezdV": "2026-09-19T17:16:42+02:00",
+              "casSekundy": 4602
+            },
+            {
+              "lod": "sandy",
+              "poradiVCili": 15,
+              "dojezdV": "2026-09-19T17:16:46+02:00",
+              "casSekundy": 4606
+            },
+            {
+              "lod": "filozep",
+              "poradiVCili": 16,
+              "dojezdV": "2026-09-19T17:20:23+02:00",
+              "casSekundy": 4823
+            },
+            {
+              "lod": "joy",
+              "poradiVCili": 17,
+              "dojezdV": "2026-09-19T17:20:43+02:00",
+              "casSekundy": 4843
             },
             {
               "lod": "luna",
+              "poradiVCili": 18,
+              "dojezdV": "2026-09-19T17:21:47+02:00",
+              "casSekundy": 4907
+            },
+            {
+              "lod": "thea",
+              "poradiVCili": 19,
+              "dojezdV": "2026-09-19T17:23:35+02:00",
+              "casSekundy": 5015
+            },
+            {
+              "lod": "rio",
+              "poradiVCili": 20,
+              "dojezdV": "2026-09-19T17:24:30+02:00",
+              "casSekundy": 5070
+            },
+            {
+              "lod": "liberte",
+              "poradiVCili": 21,
+              "dojezdV": "2026-09-19T17:25:58+02:00",
+              "casSekundy": 5158
+            },
+            {
+              "lod": "michelle",
+              "poradiVCili": 22,
+              "dojezdV": "2026-09-19T17:25:11+02:00",
+              "casSekundy": 5111
+            },
+            {
+              "lod": "caprice",
+              "poradiVCili": 23,
+              "dojezdV": "2026-09-19T17:26:57+02:00",
+              "casSekundy": 5217
+            },
+            {
+              "lod": "m1",
+              "poradiVCili": 24,
+              "dojezdV": "2026-09-19T17:28:53+02:00",
+              "casSekundy": 5333
+            },
+            {
+              "lod": "cervene-cafe",
               "poradiVCili": 25,
-              "dojezdV": "2026-09-19T17:31:10+02:00",
-              "casSekundy": 5470
+              "dojezdV": "2026-09-19T17:31:22+02:00",
+              "casSekundy": 5482
             },
             {
-              "lod": "miciny",
-              "kod": "Ocs"
+              "lod": "andante",
+              "poradiVCili": 26,
+              "dojezdV": "2026-09-19T17:30:08+02:00",
+              "casSekundy": 5408
             },
             {
-              "lod": "sendy",
-              "kod": "Ocs"
+              "lod": "divna",
+              "poradiVCili": 27,
+              "dojezdV": "2026-09-19T17:32:34+02:00",
+              "casSekundy": 5554
             }
           ]
         }
@@ -6309,119 +6255,94 @@
       "publikovano": false,
       "ucasti": [
         {
-          "lod": "sendy",
-          "kormidelnik": "osoba-2",
-          "posadka": "Tereza Hájek, Karel Vlček"
+          "lod": "luna",
+          "kormidelnik": "osoba-1",
+          "posadka": "Zdeněk Beneš"
         },
         {
-          "lod": "joy",
-          "kormidelnik": "osoba-3",
-          "posadka": "Aleš Souček, Vojtěch Kolář, Zdeněk Beneš"
-        },
-        {
-          "lod": "andante",
-          "kormidelnik": "osoba-4",
-          "posadka": "Karel Vlček, Jan Novák, Eva Veselý"
+          "lod": "sandy",
+          "kormidelnik": "osoba-6",
+          "posadka": "Filip Malý, Markéta Fiala"
         },
         {
           "lod": "charlotte-iii",
           "kormidelnik": "osoba-7",
-          "posadka": "Karel Vlček, Roman Šimek"
-        },
-        {
-          "lod": "pezi",
-          "kormidelnik": "osoba-8",
-          "posadka": "Jan Novák, Kateřina Pokorný, Lukáš Ryba"
+          "posadka": "Zdeněk Beneš"
         },
         {
           "lod": "mamba",
           "kormidelnik": "osoba-9",
-          "posadka": "Jiří Král, Ivan Kříž"
+          "posadka": "Markéta Fiala, Věra Sýkora"
         },
         {
           "lod": "m1",
           "kormidelnik": "osoba-10",
-          "posadka": "Blanka Havel, Ivan Kříž"
-        },
-        {
-          "lod": "depresso",
-          "kormidelnik": "osoba-11",
-          "posadka": "Alena Vaněk, Ondřej Němec, Věra Sýkora"
+          "posadka": "Dana Jelínek, Nikola Bureš"
         },
         {
           "lod": "cassiopeia",
           "kormidelnik": "osoba-12",
-          "posadka": "Marek Bláha, Hana Urban, Markéta Fiala"
+          "posadka": "Ondřej Němec"
         },
         {
           "lod": "sula",
           "kormidelnik": "osoba-13",
-          "posadka": "Iva Kadlec, Věra Sýkora, Michal Horák"
+          "posadka": "Alena Vaněk, Zdeněk Beneš, Hana Urban"
         },
         {
-          "lod": "michelle",
-          "kormidelnik": "osoba-18",
-          "posadka": "Zdeněk Beneš"
+          "lod": "filozep",
+          "kormidelnik": "osoba-15",
+          "posadka": "Markéta Fiala"
         },
         {
           "lod": "divna",
           "kormidelnik": "osoba-19",
-          "posadka": "Zdeněk Beneš, Josef Bartoš"
-        },
-        {
-          "lod": "rose",
-          "kormidelnik": "osoba-22",
-          "posadka": "Karel Vlček"
+          "posadka": "Vojtěch Kolář, Tereza Hájek, Karel Vlček"
         },
         {
           "lod": "miciny",
           "kormidelnik": "osoba-23",
-          "posadka": "Filip Malý"
-        },
-        {
-          "lod": "avenir",
-          "kormidelnik": "osoba-24",
-          "posadka": "Josef Bartoš"
+          "posadka": "Aleš Souček, Vojtěch Kolář, Zdeněk Beneš"
         },
         {
           "lod": "hogan",
           "kormidelnik": "osoba-25",
-          "posadka": "Markéta Fiala, Ivan Kříž, Blanka Havel"
+          "posadka": "Karel Vlček, Jan Novák, Eva Veselý"
         },
         {
-          "lod": "liberte",
-          "kormidelnik": "osoba-8",
-          "posadka": "Alena Vaněk, Vojtěch Kolář, Tereza Hájek"
+          "lod": "rio",
+          "kormidelnik": "osoba-27",
+          "posadka": "Karel Vlček, Roman Šimek"
+        },
+        {
+          "lod": "claudie",
+          "kormidelnik": "osoba-28",
+          "posadka": "Jan Novák, Kateřina Pokorný, Lukáš Ryba"
         },
         {
           "lod": "caprice",
           "kormidelnik": "osoba-30",
-          "posadka": "Pavel Marek"
+          "posadka": "Jiří Král, Ivan Kříž"
         },
         {
-          "lod": "cervene-cafe",
-          "kormidelnik": "osoba-33",
-          "posadka": "David Štěpánek, Vít Toman"
+          "lod": "perun",
+          "kormidelnik": "osoba-32",
+          "posadka": "Blanka Havel, Ivan Kříž"
         },
         {
-          "lod": "modre-cafe",
-          "kormidelnik": "osoba-34",
-          "posadka": "Michal Horák, Aleš Souček"
-        },
-        {
-          "lod": "sea-mouse-iii",
-          "kormidelnik": "osoba-35",
-          "posadka": "Zdeněk Beneš, Věra Sýkora"
+          "lod": "socka",
+          "kormidelnik": "osoba-11",
+          "posadka": "Alena Vaněk, Ondřej Němec, Věra Sýkora"
         },
         {
           "lod": "far-star-iii",
           "kormidelnik": "osoba-37",
-          "posadka": "Marek Bláha"
+          "posadka": "Marek Bláha, Hana Urban, Markéta Fiala"
         },
         {
           "lod": "zephyr",
           "kormidelnik": "osoba-38",
-          "posadka": "Martin Dvořák"
+          "posadka": "Iva Kadlec, Věra Sýkora, Michal Horák"
         }
       ],
       "rozjizdky": [
@@ -6432,142 +6353,110 @@
           "doSerie": true,
           "vysledky": [
             {
-              "lod": "miciny",
-              "poradiVCili": 1,
-              "dojezdV": "2026-12-12T11:01:38+02:00",
-              "casSekundy": 3698
-            },
-            {
-              "lod": "pezi",
-              "poradiVCili": 2,
-              "dojezdV": "2026-12-12T11:01:00+02:00",
-              "casSekundy": 3660
-            },
-            {
-              "lod": "zephyr",
-              "poradiVCili": 3,
-              "dojezdV": "2026-12-12T11:03:25+02:00",
-              "casSekundy": 3805
-            },
-            {
-              "lod": "far-star-iii",
-              "poradiVCili": 4,
-              "dojezdV": "2026-12-12T11:05:55+02:00",
-              "casSekundy": 3955
-            },
-            {
-              "lod": "divna",
-              "poradiVCili": 5,
-              "dojezdV": "2026-12-12T11:05:26+02:00",
-              "casSekundy": 3926
-            },
-            {
               "lod": "hogan",
-              "poradiVCili": 6,
-              "dojezdV": "2026-12-12T11:07:24+02:00",
-              "casSekundy": 4044
-            },
-            {
-              "lod": "caprice",
-              "poradiVCili": 7,
-              "dojezdV": "2026-12-12T11:07:48+02:00",
-              "casSekundy": 4068
-            },
-            {
-              "lod": "liberte",
-              "poradiVCili": 8,
-              "dojezdV": "2026-12-12T11:09:27+02:00",
-              "casSekundy": 4167
-            },
-            {
-              "lod": "avenir",
-              "poradiVCili": 9,
-              "dojezdV": "2026-12-12T11:11:59+02:00",
-              "casSekundy": 4319
-            },
-            {
-              "lod": "modre-cafe",
-              "poradiVCili": 10,
-              "dojezdV": "2026-12-12T11:13:19+02:00",
-              "casSekundy": 4399
-            },
-            {
-              "lod": "sea-mouse-iii",
-              "poradiVCili": 11,
-              "dojezdV": "2026-12-12T11:12:08+02:00",
-              "casSekundy": 4328
-            },
-            {
-              "lod": "joy",
-              "poradiVCili": 12,
-              "dojezdV": "2026-12-12T11:15:01+02:00",
-              "casSekundy": 4501
-            },
-            {
-              "lod": "charlotte-iii",
-              "poradiVCili": 13,
-              "dojezdV": "2026-12-12T11:16:17+02:00",
-              "casSekundy": 4577
+              "poradiVCili": 1,
+              "dojezdV": "2026-12-12T11:02:09+02:00",
+              "casSekundy": 3729
             },
             {
               "lod": "cassiopeia",
-              "poradiVCili": 14,
-              "dojezdV": "2026-12-12T11:16:40+02:00",
-              "casSekundy": 4600
+              "poradiVCili": 2,
+              "dojezdV": "2026-12-12T11:02:21+02:00",
+              "casSekundy": 3741
             },
             {
-              "lod": "andante",
-              "poradiVCili": 15,
-              "dojezdV": "2026-12-12T11:17:54+02:00",
-              "casSekundy": 4674
+              "lod": "sandy",
+              "poradiVCili": 3,
+              "dojezdV": "2026-12-12T11:04:43+02:00",
+              "casSekundy": 3883
             },
             {
-              "lod": "cervene-cafe",
-              "poradiVCili": 16,
-              "dojezdV": "2026-12-12T11:19:56+02:00",
-              "casSekundy": 4796
+              "lod": "divna",
+              "poradiVCili": 4,
+              "dojezdV": "2026-12-12T11:05:32+02:00",
+              "casSekundy": 3932
             },
             {
-              "lod": "sendy",
-              "poradiVCili": 17,
-              "dojezdV": "2026-12-12T11:20:13+02:00",
-              "casSekundy": 4813
+              "lod": "luna",
+              "kod": "Dnf"
             },
             {
-              "lod": "michelle",
-              "poradiVCili": 18,
-              "dojezdV": "2026-12-12T11:20:12+02:00",
-              "casSekundy": 4812
-            },
-            {
-              "lod": "rose",
-              "poradiVCili": 19,
-              "dojezdV": "2026-12-12T11:23:06+02:00",
-              "casSekundy": 4986
+              "lod": "miciny",
+              "poradiVCili": 5,
+              "dojezdV": "2026-12-12T11:07:21+02:00",
+              "casSekundy": 4041
             },
             {
               "lod": "m1",
-              "poradiVCili": 20,
-              "dojezdV": "2026-12-12T11:22:42+02:00",
-              "casSekundy": 4962
+              "poradiVCili": 6,
+              "dojezdV": "2026-12-12T11:06:54+02:00",
+              "casSekundy": 4014
             },
             {
-              "lod": "depresso",
-              "poradiVCili": 21,
-              "dojezdV": "2026-12-12T11:26:30+02:00",
-              "casSekundy": 5190
+              "lod": "socka",
+              "poradiVCili": 7,
+              "dojezdV": "2026-12-12T11:09:20+02:00",
+              "casSekundy": 4160
+            },
+            {
+              "lod": "charlotte-iii",
+              "poradiVCili": 8,
+              "dojezdV": "2026-12-12T11:08:44+02:00",
+              "casSekundy": 4124
+            },
+            {
+              "lod": "rio",
+              "poradiVCili": 9,
+              "dojezdV": "2026-12-12T11:10:36+02:00",
+              "casSekundy": 4236
             },
             {
               "lod": "mamba",
-              "poradiVCili": 22,
-              "dojezdV": "2026-12-12T11:26:23+02:00",
-              "casSekundy": 5183
+              "poradiVCili": 10,
+              "dojezdV": "2026-12-12T11:13:18+02:00",
+              "casSekundy": 4398
+            },
+            {
+              "lod": "caprice",
+              "poradiVCili": 11,
+              "dojezdV": "2026-12-12T11:14:07+02:00",
+              "casSekundy": 4447
+            },
+            {
+              "lod": "perun",
+              "poradiVCili": 12,
+              "dojezdV": "2026-12-12T11:14:34+02:00",
+              "casSekundy": 4474
+            },
+            {
+              "lod": "far-star-iii",
+              "poradiVCili": 13,
+              "dojezdV": "2026-12-12T11:16:43+02:00",
+              "casSekundy": 4603
+            },
+            {
+              "lod": "claudie",
+              "poradiVCili": 14,
+              "dojezdV": "2026-12-12T11:16:45+02:00",
+              "casSekundy": 4605
             },
             {
               "lod": "sula",
-              "poradiVCili": 23,
-              "dojezdV": "2026-12-12T11:28:08+02:00",
-              "casSekundy": 5288
+              "poradiVCili": 15,
+              "dojezdV": "2026-12-12T11:18:18+02:00",
+              "casSekundy": 4698
+            },
+            {
+              "lod": "zephyr",
+              "poradiVCili": 16,
+              "dojezdV": "2026-12-12T11:18:03+02:00",
+              "casSekundy": 4683
+            },
+            {
+              "lod": "filozep",
+              "poradiVCili": 17,
+              "dojezdV": "2026-12-12T11:20:13+02:00",
+              "casSekundy": 4813
             }
           ]
         }

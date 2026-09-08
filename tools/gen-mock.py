@@ -54,6 +54,17 @@ PRIJMENI = ["Novák", "Svoboda", "Dvořák", "Černý", "Procházka", "Kučera",
 
 KODY = ["Dnf", "Dns", "Ret", "Ocs"]
 
+# Co o ročníku 2026 skutečně víme. Zbytek výsledků je vylosovaný, ale tohle
+# ne — mock má skutečná jména lodí, takže vymyslet jim účast, kterou nikdo
+# nejel, je zbytečná nepravda. Přibývá sem, co Filip potvrdí.
+#
+# Zdroj: Filip, 8. 9. 2026, ke 24hodinovce.
+ZNAME = {
+    ("24hodinovka", "zephyr"): "nejela",
+    ("24hodinovka", "cervene-cafe"): "odstoupila",
+    ("24hodinovka", "modre-cafe"): "dojela",
+}
+
 
 def klic(s):
     s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
@@ -82,6 +93,11 @@ for poradi, (nazev, poradatel, den, typ, pocet_r, skrty, vyhodnoceni, koef) in e
     if len(startuji) < 6:
         startuji = [l["klic"] for l in lode][:8]
 
+    # Co víme, to se nelosuje.
+    zname = {lod: co for (zavod, lod), co in ZNAME.items() if zavod == klic(nazev)}
+    startuji = [k for k in startuji if zname.get(k) != "nejela"]
+    startuji += [k for k, co in zname.items() if co != "nejela" and k not in startuji]
+
     ucasti = [{"lod": k,
                "kormidelnik": next(l["majitel"] for l in lode if l["klic"] == k)
                if R.random() > 0.25 else R.choice(osoby)["klic"],
@@ -99,7 +115,13 @@ for poradi, (nazev, poradatel, den, typ, pocet_r, skrty, vyhodnoceni, koef) in e
 
         vysledky, misto = [], 0
         for k in poradi_lodi:
-            if R.random() < 0.08:
+            # Los padne vždycky, i když se pak přebije známým faktem —
+            # jinak by se posunul celý zbytek generátoru.
+            los, znamy = R.random(), zname.get(k)
+            if znamy == "odstoupila":
+                vysledky.append({"lod": k, "kod": "Ret"})
+                continue
+            if los < 0.08 and znamy != "dojela":
                 vysledky.append({"lod": k, "kod": R.choice(KODY)})
                 continue
             misto += 1

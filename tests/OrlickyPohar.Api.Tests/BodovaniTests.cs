@@ -270,6 +270,28 @@ public class BodovaniTests
         Assert.Equal("thea", zavod.Single(v => v.Poradi == 14).Lod);
     }
 
+    [Fact]
+    public void Pri_uplne_shode_rozhoduje_ceska_abeceda()
+    {
+        // Dvě lodě se stejným kódem mají všechno stejné — body i nejlepší
+        // výsledek — takže rozhodne až jméno. A `Č` patří hned za `C`, ne
+        // za `Z`: ordinálně by to vyšlo obráceně a přesně to se dělo
+        // v produkčním kontejneru bez ICU.
+        var zavod = Bodovani.VysledkyZavodu(
+        [
+            new RozjizdkaVstup(1,
+            [
+                Dojel("SOCKA", "Race", 1),
+                Kod("Zephyr", "Race", KodVysledku.Ret),
+                Kod("ČERVENÉ CAFE", "Race", KodVysledku.Ret),
+            ]),
+        ]).ToDictionary(v => v.Lod);
+
+        Assert.Equal(zavod["Zephyr"].Body, zavod["ČERVENÉ CAFE"].Body);
+        Assert.Equal(2, zavod["ČERVENÉ CAFE"].Poradi);
+        Assert.Equal(3, zavod["Zephyr"].Poradi);
+    }
+
     /// <summary>Dvanáct lodí, které dojely, v kategorii nad 7 m.</summary>
     private static VysledekVstup[] Dokoncilo(int kolik) =>
         [.. Enumerable.Range(1, kolik).Select(i => Dojel($"l{i:00}", "Nad7m", i))];
