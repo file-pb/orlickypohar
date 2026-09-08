@@ -50,7 +50,7 @@ neukládají**, aby šel seriál kdykoliv přepočítat podle změněných pravi
 curl -X POST https://orlickypohar-api.klihovka.cz/import/serie \
   -H "X-Import-Token: $(cat secrets/Import__Token)" \
   -H 'content-type: application/json' \
-  --data-binary @data/2025-mock.json
+  --data-binary @data/2026-nanecisto.json
 ```
 
 Import je **idempotentní**: druhé odeslání téhož souboru vrátí samé nuly
@@ -58,9 +58,11 @@ ve `nove` a nic nepřidá. Opravený výsledek přepíše původní řádek. Bu�
 celá dávka, nebo se neuloží nic — napůl naimportovaný ročník je horší než
 žádný, protože chybějící výsledky nikdo nepozná.
 
-`data/2025-mock.json` jsou **vymyšlená data**. Existují proto, aby se model dal
-prověřit dřív, než dorazí skutečné výsledky od rozhodčího; až přijdou, soubor
-se nahradí a struktura zůstane.
+`data/2026-nanecisto.json` má **skutečná jména lodí a vymyšlené výsledky**.
+Existuje proto, aby se model dal prověřit dřív, než dorazí výsledky rozjížděk
+od rozhodčího; až přijdou, soubor se nahradí a struktura zůstane.
+`data/2026-poradi-rozhodci.json` je naproti tomu **skutečný sešit rozhodčího** —
+ověřuje proti němu `SerieTests`.
 
 ## Veřejné čtení
 
@@ -68,11 +70,17 @@ se nahradí a struktura zůstane.
 curl localhost:8080/serie                              # publikované ročníky
 curl localhost:8080/serie/2025                         # ročník s kategoriemi a přihláškami
 curl localhost:8080/serie/2025/zavody/zahajeni-sezony  # zastávka s rozjížďkami a výsledky
+curl localhost:8080/serie/2025/poradi                  # průběžné pořadí po kategoriích
 ```
 
 Nepublikovaný ročník i nepublikovaná zastávka vracejí **404, ne 403** —
 „existuje, ale neukážu" je taky informace. Zastávka se vydává i s pravidly
 závodu (škrty, vyhodnocení, koeficient), bez nichž se pořadí nedá zkontrolovat.
+
+**Body počítá server**, ne web: zastávka je vydává vedle syrových výsledků
+a průběžné pořadí vydává obě čísla — součet i součet po škrtu, protože
+rozhodčí vede obojí a rozdíl mezi nimi rozhoduje. Do pořadí jdou jen zastávky
+ve stavu `Odjety`.
 
 ## Web
 
@@ -86,7 +94,9 @@ bere z `API_URL`; výchozí je `http://localhost:8080`, takže proti falešnému
 i skutečnému lokálnímu API funguje bez nastavování.
 
 `tools/fake-api.py` servíruje mock ročník ve stejných tvarech jako skutečné
-API, jen se tváří, že je publikovaný. Existuje proto, že **lokálně se
+API, jen se tváří, že je publikovaný. Bodování má **opsané** z `Bodovani.cs`,
+protože jinak by nešly stránky s body vidět; pravda o pravidlech leží v C#
+a hlídají ji testy. Existuje proto, že **lokálně se
 databáze rozjet nedá** — Docker Hub je z pracovního stroje nedostupný — a bez
 něj by se stránky nedaly vidět jinak než nasazením.
 
@@ -98,7 +108,8 @@ dotnet test                                    # včetně Testcontainers
 ```
 
 `ModelTests` drží model proti migracím, `KontraktTests` tvar importního
-souboru — obojí bez databáze. `ImportTests` a `CteniTests` mají značku
+souboru, `BodovaniTests` a `SerieTests` bodovací pravidla — všechno bez
+databáze. `ImportTests`, `CteniTests` a `PoradiTests` mají značku
 `Category=Integracni` a potřebují Docker; na pracovním stroji se pustit
 nedají a běží ve vedlejší úloze CI, která nasazení neblokuje.
 

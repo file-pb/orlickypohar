@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { nactiZavod, type Rozjizdka, type Vysledek, type ZavodDetail } from "@/lib/api";
+import {
+  nactiZavod,
+  type BodyVRozjizdce,
+  type Rozjizdka,
+  type Vysledek,
+  type ZavodDetail,
+} from "@/lib/api";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -15,52 +21,53 @@ export async function generateMetadata({ params }: Parametry) {
   return { title: z?.nazev ?? "Zastávka" };
 }
 
-/** Jeden řádek tabulky: loď a její výsledek v každé rozjížďce. */
+/** Jeden řádek tabulky: loď, její body a co v které rozjížďce dokázala. */
 type Radek = {
   lod: string;
   kategorie: string;
   kormidelnik: string | null;
-  vysledky: (Vysledek | undefined)[];
-  body: number | null;
+  body: number;
+  poradi: number;
+  bunky: (Bunka | undefined)[];
 };
+
+type Bunka = { vysledek?: Vysledek; body?: BodyVRozjizdce };
 
 /**
  * API vydává výsledky po rozjížďkách, protože tak vznikají. Číst se ale musí
  * po lodích — divák hledá svoji loď, ne třetí rozjížďku. Převod je tady,
  * ne v API: je to věc zobrazení, a mobilní appka bude chtít jiné.
+ *
+ * Body a pořadí se ale <b>nepočítají</b> — ty vydává API. Dokud počítání
+ * neexistovalo, sčítal si je web sám; teď by se ta dvě čísla při první změně
+ * pravidla rozešla a hádalo by se, které je pravda.
  */
 function naRadky(zavod: ZavodDetail): Radek[] {
-  const lode = new Map<string, Radek>();
-
-  zavod.rozjizdky.forEach((r, i) => {
+  const vysledky = new Map<string, Map<number, Vysledek>>();
+  for (const r of zavod.rozjizdky)
     for (const v of r.vysledky) {
-      let radek = lode.get(v.lod);
-      if (!radek) {
-        radek = {
-          lod: v.lod,
-          kategorie: v.kategorie,
-          kormidelnik: v.kormidelnik,
-          vysledky: new Array(zavod.rozjizdky.length).fill(undefined),
-          body: null,
-        };
-        lode.set(v.lod, radek);
-      }
-      radek.vysledky[i] = v;
+      if (!vysledky.has(v.lod)) vysledky.set(v.lod, new Map());
+      vysledky.get(v.lod)!.set(r.cislo, v);
     }
-  });
 
-  // Body závodu jsou součet pořadí v kategorii. Ukazují se jen tam, kde je
-  // pořadí známé u všech rozjížděk — nedopočítáváme za rozhodčího.
-  for (const radek of lode.values()) {
-    const poradi = radek.vysledky.map((v) => v?.poradiVCili);
-    radek.body = poradi.every((p) => typeof p === "number")
-      ? (poradi as number[]).reduce((a, b) => a + b, 0)
-      : null;
-  }
-
-  return [...lode.values()].sort(
-    (a, b) => (a.body ?? Infinity) - (b.body ?? Infinity) || a.lod.localeCompare(b.lod, "cs"),
+  const kormidelnici = new Map(
+    [...vysledky].map(([lod, podleCisla]) => [lod, [...podleCisla.values()][0].kormidelnik]),
   );
+
+  return zavod.poradi
+    .map((v) => ({
+      lod: v.lod,
+      kategorie: v.kategorie,
+      kormidelnik: kormidelnici.get(v.lod) ?? null,
+      body: v.body,
+      poradi: v.poradi,
+      bunky: zavod.rozjizdky.map((r) => {
+        const vysledek = vysledky.get(v.lod)?.get(r.cislo);
+        const body = v.rozjizdky.find((b) => b.cislo === r.cislo);
+        return vysledek || body ? { vysledek, body } : undefined;
+      }),
+    }))
+    .sort((a, b) => a.poradi - b.poradi);
 }
 
 export default async function Zastavka({ params }: Parametry) {
@@ -95,6 +102,13 @@ export default async function Zastavka({ params }: Parametry) {
           />
         ))
       )}
+      {radky.length > 0 && (
+        <p className="poznamka">
+          Čísla v rozjížďkách jsou body — pořadí v této kategorii, ne v celém poli.
+          {zavod.pocetSkrtu > 0 && " Škrtnutá rozjížďka je přeškrtnutá a do součtu se nepočítá."}
+          {zavod.rozjizdky.some((r) => !r.doSerie) && " Rozjížďka s * se nepočítá do poháru."}
+        </p>
+      )}
 
       <h2>Pravidla závodu</h2>
       <dl className="pravidla">
@@ -109,8 +123,9 @@ export default async function Zastavka({ params }: Parametry) {
         </dd>
       </dl>
       <p className="poznamka">
-        Body v tabulce jsou součet pořadí z rozjížděk. Do průběžného pořadí seriálu jde
-        pořadí v kategorii, ne tenhle součet.
+        Vítěz závodu má jeden bod. Do průběžného pořadí seriálu jde pořadí v kategorii,
+        ne tenhle součet —{" "}
+        <Link href={`/serie/${slug}/poradi`}>průběžné pořadí je vedle</Link>.
       </p>
     </>
   );
@@ -148,17 +163,13 @@ function Tabulka({
             {radky.map((radek) => (
               <tr key={radek.lod}>
                 <td className="lod">
-                  {radek.lod}
-                  {radek.kormidelnik && (
-                    <div style={{ fontSize: "0.78rem", color: "var(--tlumeny)" }}>
-                      {radek.kormidelnik}
-                    </div>
-                  )}
+                  <span className="poradi-cislo">{radek.poradi}.</span> {radek.lod}
+                  {radek.kormidelnik && <div className="majitel">{radek.kormidelnik}</div>}
                 </td>
-                <td className="body">{radek.body ?? "—"}</td>
-                {radek.vysledky.map((v, i) => (
-                  <td key={i} className={v?.kod ? "kod" : "cislo"}>
-                    {bunka(v)}
+                <td className="body">{radek.body}</td>
+                {radek.bunky.map((b, i) => (
+                  <td key={i} className={b?.body?.skrtnuto ? "cislo skrtnuto" : "cislo"}>
+                    {bunka(b)}
                   </td>
                 ))}
               </tr>
@@ -166,17 +177,18 @@ function Tabulka({
           </tbody>
         </table>
       </div>
-      {rozjizdky.some((r) => !r.doSerie) && (
-        <p className="poznamka">* rozjížďka se nepočítá do poháru</p>
-      )}
     </div>
   );
 }
 
-function bunka(v?: Vysledek) {
-  if (!v) return "—";
-  if (v.kod) return v.kod.toUpperCase();
-  return v.poradiVCili ?? "—";
+function bunka(b?: Bunka) {
+  if (!b?.body) return "—";
+  return (
+    <>
+      {b.body.body}
+      {b.vysledek?.kod && <span className="znacka">{b.vysledek.kod.toUpperCase()}</span>}
+    </>
+  );
 }
 
 function datum(od: string, do_?: string | null) {

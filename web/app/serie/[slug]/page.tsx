@@ -34,6 +34,10 @@ export default async function Rocnik({ params }: Parametry) {
         {serie.zavody.length} zastávek · {serie.prihlasky.length} přihlášených lodí
       </p>
 
+      <p style={{ margin: "-1.25rem 0 2rem" }}>
+        <Link href={`/serie/${serie.slug}/poradi`}>Průběžné pořadí seriálu →</Link>
+      </p>
+
       <h2>Zastávky</h2>
       {serie.zavody.length === 0 ? (
         <p className="prazdno">Zatím není zveřejněná žádná zastávka.</p>

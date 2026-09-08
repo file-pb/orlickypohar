@@ -62,6 +62,17 @@ export type Rozjizdka = {
   vysledky: Vysledek[];
 };
 
+/** Body lodi v jedné rozjížďce — pořadí v její kategorii, ne v celém poli. */
+export type BodyVRozjizdce = { cislo: number; body: number; skrtnuto: boolean };
+
+export type VysledekZavodu = {
+  lod: string;
+  kategorie: string;
+  body: number;
+  poradi: number;
+  rozjizdky: BodyVRozjizdce[];
+};
+
 export type ZavodDetail = {
   slug: string;
   nazev: string;
@@ -73,6 +84,32 @@ export type ZavodDetail = {
   vyhodnoceni: "CelePole" | "PoKategoriich";
   koeficientDoSerie: number;
   rozjizdky: Rozjizdka[];
+  /** Body a pořadí počítá server. Web je nesčítá — rozešlo by se to. */
+  poradi: VysledekZavodu[];
+};
+
+export type Zastavka = { slug: string; nazev: string; datum: string; poradi: number };
+
+/** Prázdné místo v `zastavky` znamená, že tam loď nestartovala. */
+export type PoradiLodi = {
+  lod: string;
+  majitel: string;
+  zastavky: (number | null)[];
+  body: number;
+  poradi: number;
+  bodyPoSkrtu: number;
+  poradiPoSkrtu: number;
+  skrtnuto: number | null;
+};
+
+export type PoradiKategorie = { kategorie: string; lode: PoradiLodi[] };
+
+export type PoradiSerie = {
+  slug: string;
+  nazev: string;
+  rok: number;
+  zastavky: Zastavka[];
+  kategorie: PoradiKategorie[];
 };
 
 /** Vrací null u 404 — nepublikovaný ročník se chová, jako by neexistoval. */
@@ -93,3 +130,4 @@ export const nactiSerie = () => nacti<SerieShrnuti[]>("/serie");
 export const nactiSerii = (slug: string) => nacti<SerieDetail>(`/serie/${slug}`);
 export const nactiZavod = (serie: string, zavod: string) =>
   nacti<ZavodDetail>(`/serie/${serie}/zavody/${zavod}`);
+export const nactiPoradi = (slug: string) => nacti<PoradiSerie>(`/serie/${slug}/poradi`);

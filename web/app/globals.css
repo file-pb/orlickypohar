@@ -94,6 +94,13 @@ tr.kategorie td {
   text-align: left; position: sticky; left: 0;
 }
 td.kod { color: var(--tlumeny); font-variant-numeric: tabular-nums; }
+/* Pořadí a majitel se vejdou do ukotveného sloupce s lodí, aby si na ně
+   čtenář nemusel odscrollovat. */
+.poradi-cislo { color: var(--tlumeny); font-variant-numeric: tabular-nums; }
+.majitel { font-size: 0.78rem; color: var(--tlumeny); font-weight: 400; }
+/* Kód závodních pravidel u bodů: body platí, kód říká, odkud jsou. */
+.znacka { font-size: 0.7rem; color: var(--tlumeny); margin-left: 0.3rem; letter-spacing: 0.03em; }
+td.skrtnuto { color: var(--tlumeny); text-decoration: line-through; }
 td.cislo { font-variant-numeric: tabular-nums; }
 .mimo-serii { color: var(--tlumeny); font-weight: 400; }
 

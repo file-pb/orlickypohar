@@ -1,5 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Bodovani;
+// Řez i třída se jmenují stejně, takže se prosté `Bodovani` uvnitř sousedního
+// jmenného prostoru rozumí jako název jmenného prostoru. Alias to rozsekne.
+using Vypocet = OrlickyPohar.Api.Features.Bodovani.Bodovani;
 
 namespace OrlickyPohar.Api.Features.Zavody;
 
@@ -11,17 +15,33 @@ public record RozjizdkaDto(
     int Cislo, DateTimeOffset? StartV, StavRozjizdky Stav, bool DoSerie,
     IReadOnlyList<VysledekDto> Vysledky);
 
+/// <summary>Body lodi v jedné rozjížďce, už jako pořadí v její kategorii.</summary>
+public record BodyVRozjizdceDto(int Cislo, int Body, bool Skrtnuto);
+
+/// <summary>
+/// Výsledek lodi v závodě: součet bodů z rozjížděk a pořadí v kategorii.
+/// Vítěz závodu má jeden bod — do seriálu z toho jde pořadí, ne tenhle součet.
+/// </summary>
+public record VysledekZavoduDto(
+    string Lod, string Kategorie, int Body, int Poradi,
+    IReadOnlyList<BodyVRozjizdceDto> Rozjizdky);
+
 public record ZavodDetailDto(
     string Slug, string Nazev, DateOnly Datum, DateOnly? DatumKonce,
     string? Typ, string? Poradatel, StavZavodu Stav, DateOnly? PuvodniDatum,
     int PocetSkrtu, Vyhodnoceni Vyhodnoceni, decimal KoeficientDoSerie,
-    IReadOnlyList<RozjizdkaDto> Rozjizdky);
+    IReadOnlyList<RozjizdkaDto> Rozjizdky,
+    IReadOnlyList<VysledekZavoduDto> Poradi);
 
 /// <summary>
 /// Veřejné čtení jedné zastávky. Pravidla závodu (škrty, vyhodnocení,
 /// koeficient) se vydávají spolu s výsledky schválně: bez nich se pořadí
 /// nedá zkontrolovat a divák nemá jak poznat, proč se která rozjížďka
 /// nepočítá.
+/// <para>
+/// Body počítá <b>server</b>. Vydávají se vedle výsledků, ne místo nich:
+/// syrové pořadí z vody je pravda, body jsou z něj dopočítané.
+/// </para>
 /// </summary>
 public static class ZavodEndpoints
 {
@@ -88,9 +108,20 @@ public static class ZavodEndpoints
             .OrderBy(r => r.Cislo)
             .ToList();
 
+        // Do bodů jde všechno, co se v závodě odjelo — příznak `DoSerie`
+        // rozhoduje o poháru, ne o výsledku závodu.
+        var poradi = Vypocet.VysledkyZavodu(
+        [
+            .. rozjizdky.Select(r => new RozjizdkaVstup(r.Cislo,
+                [.. r.Vysledky.Select(v => new VysledekVstup(v.Lod, v.Kategorie, v.PoradiVCili, v.Kod))])),
+        ], zavod.PocetSkrtu);
+
         return Results.Ok(new ZavodDetailDto(
             zavod.Slug, zavod.Nazev, zavod.Datum, zavod.DatumKonce, zavod.Typ, zavod.Poradatel,
             zavod.Stav, zavod.PuvodniDatum, zavod.PocetSkrtu, zavod.Vyhodnoceni, zavod.KoeficientDoSerie,
-            rozjizdky));
+            rozjizdky,
+            [.. poradi.Select(v => new VysledekZavoduDto(
+                v.Lod, v.Kategorie, v.Body, v.Poradi,
+                [.. v.Rozjizdky.Select(b => new BodyVRozjizdceDto(b.Cislo, b.Body, b.Skrtnuto))]))]));
     }
 }

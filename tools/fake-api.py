@@ -4,6 +4,11 @@
 Servíruje mock ročník ve stejných tvarech jako skutečné API, ale tváří se,
 že je publikovaný. Nesahá tím na produkci, kde vymyšlená data zveřejněná
 schválně nejsou.
+
+Bodování je tu **opsané** z `Features/Bodovani/Bodovani.cs` a `Serie.cs`.
+Pravda o pravidlech leží tam a hlídají ji testy; tenhle přepis existuje jen
+proto, aby šly stránky vidět na stroji, kde se databáze rozjet nedá. Když se
+pravidlo změní, mění se na obou místech — a rozejít se můžou jen tady.
 """
 import json, os, re
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -13,10 +18,112 @@ LODE = {l["klic"]: l for l in D["lode"]}
 OSOBY = {o["klic"]: o for o in D["osoby"]}
 KAT = {p["lod"]: p["kategorie"] for p in D["prihlasky"]}
 
+# Kódy v pořadí podle závažnosti; doložené je jen DNF před DNS.
+ZAVAZNOST = ["Rdg", "Ret", "Dnf", "Ocs", "Dsq", "Dns", "Dnc"]
+
 
 def jmeno(klic):
     o = OSOBY[klic]
     return f'{o["jmeno"]} {o["prijmeni"]}'
+
+
+def body_rozjizdky(vysledky):
+    """Body v jedné rozjížďce uvnitř jedné kategorie. Vítěz má 1."""
+    dokoncily = sorted(
+        (v for v in vysledky if not v.get("kod") and v.get("poradiVCili") is not None),
+        key=lambda v: v["poradiVCili"])
+    body = {v["lod"]: i + 1 for i, v in enumerate(dokoncily)}
+
+    skupiny = {}
+    for v in vysledky:
+        if v.get("kod"):
+            skupiny.setdefault(v["kod"], []).append(v["lod"])
+
+    misto = len(dokoncily) + 1
+    for kod in sorted(skupiny, key=ZAVAZNOST.index):
+        for lod in skupiny[kod]:
+            body[lod] = misto
+        misto += 1
+    return body
+
+
+def vysledky_zavodu(rozjizdky, pocet_skrtu=0):
+    """Výsledek závodu po kategoriích: součet bodů se škrty a pořadí."""
+    lode = {}
+    for r in rozjizdky:
+        for kategorie in {KAT[v["lod"]] for v in r["vysledky"]}:
+            vysledky = [v for v in r["vysledky"] if KAT[v["lod"]] == kategorie]
+            for lod, body in body_rozjizdky(vysledky).items():
+                lode.setdefault(lod, (kategorie, []))[1].append(
+                    {"cislo": r["cislo"], "body": body, "skrtnuto": False})
+
+    spocteno = []
+    for lod, (kategorie, body) in lode.items():
+        skrtnout = min(pocet_skrtu, max(len(body) - 1, 0))
+        for b in sorted(body, key=lambda b: (-b["body"], -b["cislo"]))[:skrtnout]:
+            b["skrtnuto"] = True
+        zbylo = [b["body"] for b in body if not b["skrtnuto"]]
+        spocteno.append({"lod": lod, "kategorie": kategorie, "body": sum(zbylo),
+                         "poradi": 0, "rozjizdky": sorted(body, key=lambda b: b["cislo"]),
+                         "_nej": min(zbylo, default=10 ** 6)})
+
+    vysledek = []
+    for kategorie in {v["kategorie"] for v in spocteno}:
+        v_kategorii = sorted((v for v in spocteno if v["kategorie"] == kategorie),
+                             key=lambda v: (v["body"], v["_nej"], v["lod"]))
+        for i, v in enumerate(v_kategorii):
+            vysledek.append({**{k: v[k] for k in v if k != "_nej"}, "poradi": i + 1})
+    return vysledek
+
+
+def poradi_serie():
+    """Průběžné pořadí po kategoriích, jen z odjetých zastávek."""
+    zastavky = [z for z in D["zavody"] if z.get("stav") == "Odjety"]
+    zastavky.sort(key=lambda z: z["poradi"])
+
+    body = {}
+    for i, z in enumerate(zastavky):
+        do_serie = [r for r in z["rozjizdky"] if r["doSerie"]]
+        for v in vysledky_zavodu(do_serie, z.get("pocetSkrtu", 0)):
+            klic = (v["lod"], v["kategorie"])
+            body.setdefault(klic, [None] * len(zastavky))[i] = round(
+                (v["poradi"] - 1) * z.get("koeficientDoSerie", 1))
+
+    def serad(lode, klic):
+        radek = sorted(lode, key=lambda x: (klic(x), sorted(b for b in x[1] if b is not None), x[0]))
+        return {lod: i + 1 for i, (lod, _) in enumerate(radek)}
+
+    kategorie = []
+    for k in D["kategorie"]:
+        lode = [(lod, b) for (lod, kat), b in body.items() if kat == k["nazev"]]
+        soucty, po_skrtu, skrtnuto = {}, {}, {}
+        for lod, b in lode:
+            cisla = sorted((x for x in b if x is not None), reverse=True)
+            soucty[lod] = sum(cisla)
+            skrtnuto[lod] = cisla[0] if len(cisla) > 1 else None
+            po_skrtu[lod] = soucty[lod] - (skrtnuto[lod] or 0)
+
+        podle_bodu = serad(lode, lambda x: soucty[x[0]])
+        podle_skrtu = serad(lode, lambda x: po_skrtu[x[0]])
+
+        kategorie.append({"kategorie": k["nazev"], "lode": [
+            {"lod": nazvy(lod),
+             "majitel": jmeno(LODE[lod]["majitel"]),
+             "zastavky": b,
+             "body": soucty[lod], "poradi": podle_bodu[lod],
+             "bodyPoSkrtu": po_skrtu[lod], "poradiPoSkrtu": podle_skrtu[lod],
+             "skrtnuto": skrtnuto[lod]}
+            for lod, b in sorted(lode, key=lambda x: podle_skrtu[x[0]])]})
+
+    return {"slug": D["slug"], "nazev": D["nazev"], "rok": D["rok"],
+            "zastavky": [{"slug": z["slug"], "nazev": z["nazev"], "datum": z["datum"],
+                          "poradi": z["poradi"]} for z in zastavky],
+            "kategorie": kategorie}
+
+
+def nazvy(hodnota):
+    """Klíče lodí v odpovědi nahradí jmény, stejně jako to dělá API."""
+    return LODE[hodnota]["nazev"]
 
 
 class H(BaseHTTPRequestHandler):
@@ -37,6 +144,8 @@ class H(BaseHTTPRequestHandler):
                                "majitel": jmeno(LODE[p["lod"]]["majitel"]),
                                "kategorie": p["kategorie"]} for p in D["prihlasky"]],
             }
+        elif self.path == f'/serie/{D["slug"]}/poradi':
+            telo = poradi_serie()
         elif (m := re.match(rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)$', self.path)):
             z = next((z for z in D["zavody"] if z["slug"] == m.group(1)), None)
             if not z:
@@ -49,14 +158,16 @@ class H(BaseHTTPRequestHandler):
                         "cislo": r["cislo"], "startV": r["startV"], "stav": r["stav"],
                         "doSerie": r["doSerie"],
                         "vysledky": [{
-                            "lod": LODE[v["lod"]]["nazev"],
+                            "lod": nazvy(v["lod"]),
                             "kategorie": KAT[v["lod"]],
                             "kormidelnik": jmeno(kormidelnici[v["lod"]]) if kormidelnici.get(v["lod"]) else None,
                             "poradiVCili": v.get("poradiVCili"),
                             "casSekundy": v.get("casSekundy"),
                             "kod": v.get("kod"),
                         } for v in r["vysledky"]],
-                    } for r in z["rozjizdky"]]}
+                    } for r in z["rozjizdky"]],
+                    "poradi": [{**v, "lod": nazvy(v["lod"])}
+                               for v in vysledky_zavodu(z["rozjizdky"], z.get("pocetSkrtu", 0))]}
         else:
             return self.send_error(404)
 

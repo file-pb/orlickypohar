@@ -6,7 +6,7 @@ výsledky, administrace a mobilní přístup.
 **Jméno projektu:** `orlickypohar` → `orlickypohar.klihovka.cz`
 (bez pomlčky a podtržítka — jméno slouží zároveň jako databáze, role i subdoména).
 
-**Stav k 7. 9. 2026: fáze 1 hotová a nasazená.**
+**Stav k 8. 9. 2026: fáze 1 nasazená, fáze 2 hotová.**
 
 | | |
 |---|---|
@@ -673,7 +673,7 @@ Počítáno na pět hodin týdně.
 |---|---|---|---|
 | 0 | ~~Kostra: repozitář, databáze, DNS, nasazení, `/health`~~ | **hotovo** | |
 | 1 | ~~**Veřejné čtení** — model, import, stránky série a závodů~~ | **hotovo 7. 9. 2026** | Model se o skutečná data prověřil dřív, než se na něj něco postavilo — a našel dvě chyby v bodování |
-| 2 | **Bodování** — nízkobodový systém, kódy, škrty, pořadí po kategoriích | rozpracováno | Čisté funkce hotové a **ověřené proti skutečnému sešitu rozhodčího** |
+| 2 | ~~**Bodování** — nízkobodový systém, kódy, škrty, pořadí po kategoriích~~ | **hotovo** | Čisté funkce **ověřené proti skutečnému sešitu rozhodčího**, vydané endpointem a vidět na webu |
 | 3 | **Mobilní appka, jen čtení** | 2–3 týdny | **Nepotřebuje přihlášení** — dá se postavit dřív než identita a je to nejlepší místo, kde se Expo naučit |
 | 4 | **Identita a role** — Zitadel, mapování `(issuer, subject) → UserId` | 1–2 týdny | Spouští odloženou položku platformy |
 | 5 | **Administrace a workflow** — zadávání, stavy, publikace | 2–3 týdny | Až když je co spravovat |
@@ -844,6 +844,22 @@ sloupec** — `Body` jako `SUM(B:J)`. `Pořadí`, `Body přepočet` i `Pořadí
 přepočet` jsou psané rukou. Škrt i seřazení tedy dnes dělá člověk v Excelu
 u každé změny znovu, pro tři kategorie zvlášť. To je přesně ta práce, kterou
 má převzít počítání z fáze 2.
+
+### Fáze 2 krok za krokem — hotovo
+
+| # | Krok | Hotovo, když |
+|---|---|---|
+| 2.1 | ~~Body závodu a pořadí seriálu jako čisté funkce~~ | hotovo; `Bodovani.cs` a `Serie.cs` |
+| 2.2 | ~~Testy proti sešitu rozhodčího~~ | hotovo; součet sedí na 37 lodích z 37, `SerieTests` |
+| 2.3 | ~~Testy pravidla pro kódy a škrtů~~ | hotovo; `BodovaniTests` proti listině FxCK Cancer 2026 |
+| 2.4 | ~~`GET /serie/{slug}/poradi`~~ | hotovo; obě čísla, jen zastávky ve stavu `Odjety` |
+| 2.5 | ~~Body závodu počítá server~~ | hotovo; web je už nesčítá, jen ukazuje |
+| 2.6 | ~~Stránka průběžného pořadí~~ | hotovo; jméno lodi a body ukotvené i na telefonu |
+
+**Co zůstává na rozhodčím**, ne na kódu: bonus u 24hodinovky, pořadí kódů za
+`DNF` a `DNS`, pět řádků škrtu, které sešitu neodpovídají (LUNA, JOY, MAMBA,
+SULA, FILOZEP), a co znamená neúčast na zastávce. Nic z toho se nedopočítává —
+počítá se podle pravidla a rozdíl se drží na očích.
 
 ## Kde se pokračuje
 

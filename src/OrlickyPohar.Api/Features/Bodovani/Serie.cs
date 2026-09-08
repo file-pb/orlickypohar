@@ -19,6 +19,35 @@ public record PoradiVSerii(
 public static class SerieBodovani
 {
     /// <summary>
+    /// Co si loď ze zastávky odnese do seriálu: <b>pořadí v kategorii mínus
+    /// jedna</b>, takže vítěz má nulu.
+    /// <para>
+    /// Jsou to dvě různé stupnice, ne jedna posunutá: v závodě má vítěz jeden
+    /// bod, v seriálu nula. Obě vznikly nezávisle a obě jsou nízkobodové. Kdo
+    /// to napíše jako jedno pravidlo, dostane všude posun o jedničku — a ten
+    /// se projeví až u lodí se stejným součtem, tedy nejpozději.
+    /// </para>
+    /// <para>
+    /// Lodě s kódem mají pořadí ze <b>své kategorie</b>, i když se závod
+    /// vyhodnocoval jako celé pole. Sešit rozhodčího ukazuje, co dělá opak:
+    /// ČERVENÉ CAFE si ze 24hodinovky odneslo dvacítku z celkového pořadí,
+    /// což je v seriálu víc než součet čtyř běžných závodů.
+    /// </para>
+    /// </summary>
+    /// <param name="koeficient">
+    /// Váha závodu v seriálu, běžně 1. Žádná zastávka ročníku 2026 ji nemá
+    /// jinou, takže zaokrouhlení je zatím nedoložené — až první závod
+    /// s koeficientem vznikne, patří se zeptat rozhodčího dřív, než se
+    /// spolehneš na tenhle řádek.
+    /// </param>
+    public static IReadOnlyList<(string Lod, string Kategorie, int Body)> BodyDoSerie(
+        IEnumerable<VysledekZavodu> vysledkyZavodu, decimal koeficient = 1.0m) =>
+        [.. vysledkyZavodu.Select(v => (
+            v.Lod,
+            v.Kategorie,
+            Body: (int)Math.Round((v.Poradi - 1) * koeficient, MidpointRounding.AwayFromZero)))];
+
+    /// <summary>
     /// Průběžné pořadí v jedné kategorii.
     /// <para>
     /// Do seriálu jde z každé zastávky <b>pořadí v kategorii mínus jedna</b>,
