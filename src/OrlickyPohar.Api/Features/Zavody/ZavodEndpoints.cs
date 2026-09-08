@@ -13,7 +13,7 @@ public record RozjizdkaDto(
 
 public record ZavodDetailDto(
     string Slug, string Nazev, DateOnly Datum, DateOnly? DatumKonce,
-    string? Typ, string? Poradatel,
+    string? Typ, string? Poradatel, StavZavodu Stav, DateOnly? PuvodniDatum,
     int PocetSkrtu, Vyhodnoceni Vyhodnoceni, decimal KoeficientDoSerie,
     IReadOnlyList<RozjizdkaDto> Rozjizdky);
 
@@ -41,7 +41,7 @@ public static class ZavodEndpoints
             .Select(z => new
             {
                 z.Id, z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel,
-                z.PocetSkrtu, z.Vyhodnoceni, z.KoeficientDoSerie,
+                z.Stav, z.PuvodniDatum, z.PocetSkrtu, z.Vyhodnoceni, z.KoeficientDoSerie,
             })
             .FirstOrDefaultAsync(ct);
 
@@ -90,7 +90,7 @@ public static class ZavodEndpoints
 
         return Results.Ok(new ZavodDetailDto(
             zavod.Slug, zavod.Nazev, zavod.Datum, zavod.DatumKonce, zavod.Typ, zavod.Poradatel,
-            zavod.PocetSkrtu, zavod.Vyhodnoceni, zavod.KoeficientDoSerie,
+            zavod.Stav, zavod.PuvodniDatum, zavod.PocetSkrtu, zavod.Vyhodnoceni, zavod.KoeficientDoSerie,
             rozjizdky));
     }
 }

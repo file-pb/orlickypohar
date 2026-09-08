@@ -184,6 +184,28 @@ nebo ORC můžou přijít.
 série údaj, jaký systém se používá, a přepočet je jedna funkce na systém.
 Druhá vznikne, až druhý systém skutečně nastane — ne dřív.
 
+## Životní cyklus zastávky
+
+Ročník nezačíná závody, ale **předběžným kalendářem**. Teprve pak pořadatel
+závod vypíše, a nakonec se odjede — nebo zruší, nebo přesune.
+
+| Stav | Co znamená |
+|---|---|
+| `Planovany` | termín v předběžném kalendáři, nic víc |
+| `Vypsany` | pořadatel vydal vypsání závodu a plachetní směrnice |
+| `Odjety` | proběhl; teprve tenhle stav dává výsledkům smysl |
+| `Zruseny` | nekonal se, do poháru se nepočítá vůbec |
+
+**Přesun není stav.** Přesunutá zastávka je pořád plánovaná, jen jindy —
+zůstává po ní jen `PuvodniDatum`, protože termín, na který se lidé chystali,
+nemá smysl zahodit.
+
+Bez těchhle stavů se nedá rozlišit „zastávka, která teprve bude" od
+„zastávky, která se nekonala". V sešitu rozhodčího je ten rozdíl vidět
+a stojí za otázku: nadcházející zastávky (O pohár Vltavy, Pohár Slunce) mají
+sloupec **prázdný**, kdežto Radavská a Vánoční regata mají u všech lodí
+**nuly**. Co ty nuly znamenají, zatím nevíme.
+
 ## Workflow výsledků
 
 Ze zadání: výsledek se dá **navrhnout, ověřit, schválit, potvrdit, vrátit
@@ -620,7 +642,7 @@ Počítáno na pět hodin týdně.
 |---|---|---|---|
 | 0 | ~~Kostra: repozitář, databáze, DNS, nasazení, `/health`~~ | **hotovo** | |
 | 1 | ~~**Veřejné čtení** — model, import, stránky série a závodů~~ | **hotovo 7. 9. 2026** | Model se o skutečná data prověřil dřív, než se na něj něco postavilo — a našel dvě chyby v bodování |
-| 2 | **Bodování** — nízkobodový systém, kódy, škrty, pořadí po kategoriích | 1–2 týdny | Čisté funkce s testy. Připravené, čeká na potvrzení bonusu u 24hodinovky |
+| 2 | **Bodování** — nízkobodový systém, kódy, škrty, pořadí po kategoriích | rozpracováno | Čisté funkce hotové a **ověřené proti skutečnému sešitu rozhodčího** |
 | 3 | **Mobilní appka, jen čtení** | 2–3 týdny | **Nepotřebuje přihlášení** — dá se postavit dřív než identita a je to nejlepší místo, kde se Expo naučit |
 | 4 | **Identita a role** — Zitadel, mapování `(issuer, subject) → UserId` | 1–2 týdny | Spouští odloženou položku platformy |
 | 5 | **Administrace a workflow** — zadávání, stavy, publikace | 2–3 týdny | Až když je co spravovat |

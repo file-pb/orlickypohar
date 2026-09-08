@@ -12,6 +12,31 @@ public enum Vyhodnoceni
     PoKategoriich = 1,
 }
 
+/// <summary>
+/// Životní cyklus zastávky. Ročník začíná předběžným kalendářem, teprve pak
+/// pořadatel závod vypíše, a nakonec se odjede — nebo zruší.
+/// <para>
+/// Bez tohohle by se nedalo rozlišit „zastávka, která teprve bude" od
+/// „zastávky, která se nekonala" — a v tabulce vypadají obě jako prázdný
+/// sloupec. V sešitu rozhodčího je ten rozdíl vidět: nadcházející zastávky
+/// jsou prázdné, kdežto Radavská a Vánoční regata mají u všech lodí nuly.
+/// </para>
+/// </summary>
+public enum StavZavodu
+{
+    /// <summary>Jen termín v předběžném kalendáři ročníku.</summary>
+    Planovany = 0,
+
+    /// <summary>Pořadatel vydal vypsání závodu a plachetní směrnice.</summary>
+    Vypsany = 1,
+
+    /// <summary>Odjeto. Teprve tenhle stav znamená, že výsledky dávají smysl.</summary>
+    Odjety = 2,
+
+    /// <summary>Nekonal se. Do poháru se nepočítá vůbec.</summary>
+    Zruseny = 3,
+}
+
 public enum StavRozjizdky
 {
     Planovana = 0,
@@ -85,6 +110,15 @@ public class Zavod
 
     /// <summary>Pořadí zastávky v ročníku.</summary>
     public int Poradi { get; set; }
+
+    public StavZavodu Stav { get; set; } = StavZavodu.Planovany;
+
+    /// <summary>
+    /// Původní termín, když se závod přesunul. Přesun není vlastní stav —
+    /// přesunutá zastávka je pořád plánovaná, jen jindy — ale datum, na které
+    /// se lidé chystali, je informace, kterou nemá smysl zahodit.
+    /// </summary>
+    public DateOnly? PuvodniDatum { get; set; }
 
     // --- Rozjížďky → výsledek závodu ---
 

@@ -9,7 +9,7 @@ public record KategorieDto(string Nazev, int Poradi);
 
 public record ZavodShrnutiDto(
     string Slug, string Nazev, DateOnly Datum, DateOnly? DatumKonce,
-    string? Typ, string? Poradatel, int Poradi);
+    string? Typ, string? Poradatel, int Poradi, Zavody.StavZavodu Stav);
 
 public record PrihlaskaDto(
     string Lod, string? CisloPlachty, string? TypLodi, string Majitel, string Kategorie);
@@ -66,7 +66,7 @@ public static class SerieEndpoints
             .Where(z => z.SerieId == serie.Id && z.Publikovano)
             .OrderBy(z => z.Poradi)
             .Select(z => new ZavodShrnutiDto(
-                z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel, z.Poradi))
+                z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel, z.Poradi, z.Stav))
             .ToListAsync(ct);
 
         // Ve výsledcích se vedle lodi uvádí jméno majitele — proto se tahá i on.

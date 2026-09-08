@@ -31,7 +31,9 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Mock ročník je vstup kontraktního testu: soubor a kód se nesmějí rozejít. -->
-    <Content Include="..\..\data\2025-mock.json" Link="Data\2025-mock.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\data\2026-nanecisto.json" Link="Data\2026-nanecisto.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Skutečná data od rozhodčího. Ověřuje proti nim SerieTests. -->
+    <Content Include="..\..\data\2026-poradi-rozhodci.json" Link="Data\2026-poradi-rozhodci.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

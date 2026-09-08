@@ -8,6 +8,13 @@ namespace OrlickyPohar.Api.Tests;
 /// Tvar importního souboru, bez databáze a bez Dockeru. V CI běží první.
 /// Soubor s ročníkem píší i lidé ručně — když se rozejde s kontraktem, musí
 /// to spadnout tady, ne až při nahrávání dat.
+/// <para>
+/// Mock má <b>skutečná jména lodí, kategorií i zastávek</b> z tabulek
+/// rozhodčího. Není to kosmetika: skutečná data mají diakritiku, dvojité
+/// mezery (<c>FAR  STAR III</c>) i zavináč (<c>M@rtina</c>), a právě takové
+/// vstupy odhalí chyby, které si na hezkých vymyšlených názvech nikdo
+/// nevšimne.
+/// </para>
 /// </summary>
 public class KontraktTests
 {
@@ -16,7 +23,7 @@ public class KontraktTests
 
     private static SerieVstup Mock() =>
         JsonSerializer.Deserialize<SerieVstup>(
-            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Data", "2025-mock.json")), Json)
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Data", "2026-nanecisto.json")), Json)
         ?? throw new InvalidOperationException("Mock ročník se nepodařilo načíst.");
 
     [Fact]
@@ -24,9 +31,9 @@ public class KontraktTests
     {
         var serie = Mock();
 
-        Assert.Equal(2025, serie.Rok);
+        Assert.Equal(2026, serie.Rok);
         Assert.Equal(3, serie.Kategorie.Count);
-        Assert.Equal(10, serie.Zavody.Count);
+        Assert.Equal(9, serie.Zavody.Count);
         Assert.NotEmpty(serie.Prihlasky);
 
         // Vymyšlená data se nesmějí dostat na veřejné stránky. Až bude čtení

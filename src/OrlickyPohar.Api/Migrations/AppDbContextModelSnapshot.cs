@@ -307,6 +307,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<bool>("Publikovano")
                         .HasColumnType("boolean");
 
+                    b.Property<DateOnly?>("PuvodniDatum")
+                        .HasColumnType("date");
+
                     b.Property<int>("SerieId")
                         .HasColumnType("integer");
 
@@ -314,6 +317,9 @@ namespace OrlickyPohar.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(80)
                         .HasColumnType("character varying(80)");
+
+                    b.Property<int>("Stav")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Typ")
                         .HasMaxLength(60)

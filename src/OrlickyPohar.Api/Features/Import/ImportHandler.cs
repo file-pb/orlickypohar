@@ -246,6 +246,8 @@ internal static class ImportHandler
             zavod.Vyhodnoceni = v.Vyhodnoceni;
             zavod.KoeficientDoSerie = v.KoeficientDoSerie;
             zavod.Publikovano = v.Publikovano;
+            zavod.Stav = v.Stav;
+            zavod.PuvodniDatum = v.PuvodniDatum;
 
             await db.SaveChangesAsync(ct);
 

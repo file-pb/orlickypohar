@@ -47,7 +47,9 @@ public record ZavodVstup(
     int PocetSkrtu = 0,
     Vyhodnoceni Vyhodnoceni = Vyhodnoceni.PoKategoriich,
     decimal KoeficientDoSerie = 1.0m,
-    bool Publikovano = true);
+    bool Publikovano = true,
+    StavZavodu Stav = StavZavodu.Odjety,
+    DateOnly? PuvodniDatum = null);
 
 public record SerieVstup(
     string Slug,
