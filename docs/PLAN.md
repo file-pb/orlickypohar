@@ -206,6 +206,108 @@ a stojí za otázku: nadcházející zastávky (O pohár Vltavy, Pohár Slunce) 
 sloupec **prázdný**, kdežto Radavská a Vánoční regata mají u všech lodí
 **nuly**. Co ty nuly znamenají, zatím nevíme.
 
+## Průběh závodu
+
+Zastávka není jen datum a výsledky — má den, který někde začíná a někam
+spěje. Filip, 8. 9. 2026:
+
+| Krok | Co to je |
+|---|---|
+| **Rozprava** | sraz kormidelníků před závodem; pořadatel řekne, co se pojede |
+| **Startovní procedura rozjížďky** | vyzývací a přípravné znamení, pak start |
+| Rozjížďka | jede se |
+| Cíl | lodě projíždějí cílem, zapisuje se pořadí |
+| Vyhlášení | výsledky a ceny |
+
+**Pro model to skoro nic neznamená, pro upozornění všechno.** Rozjížďka už
+má `StartV`; startovní procedura je čas před ním, ne vlastní záznam — počítá
+se, neukládá. Přibude nanejvýš čas rozpravy na závodě, a to teprve až bude
+co zobrazovat.
+
+Zato je to **první konkrétní obsah pro push z fáze 7**: rozprava za deset
+minut, startovní procedura třetí rozjížďky běží, start odložen. Do té doby,
+než appka existuje, je průběh věc vývěsky na břehu a do webu nepatří —
+zpráva, která dorazí pozdě, je horší než žádná.
+
+## Penalizace a protesty
+
+Filipovo zadání: penalizace se budou evidovat a protesty taky. Pro Orlickou
+sérii je to novinka, takže se hledá vzor.
+
+**Vzor existuje a je světový** — Závodní pravidla jachtingu (World Sailing),
+vydání 2025–2028. Nevymýšlí se tu nic vlastního; čísla pravidel ale ověř
+proti aktuálnímu vydání, mezi vydáními se posouvají.
+
+### Tři různé věci, které se snadno slijí do jedné
+
+| Věc | Kdy vzniká | Co dělá s výsledkem |
+|---|---|---|
+| **Trest odjetý na vodě** | loď se přizná hned a udělá otočky | **nic** — trest je vykonaný, loď dojede normálně |
+| **Trest z rozhodnutí** | protestní komise po projednání | změní výsledek: `DSQ`, nebo bodová penalizace |
+| **Náprava** | komise uzná, že loď poškodil někdo jiný | `RDG` a **náhradní body** místo dojetého pořadí |
+
+Tohle je celé jádro. Kdo to naprogramuje jako jeden „trest", dostane model,
+ve kterém se otočky na vodě evidují (zbytečně) a náprava se nedá zapsat
+(protože nemá pořadí ani prostý kód).
+
+### Co náš model už umí a co ne
+
+**Umí:** tresty, které se projeví jako kód. `Vysledek.Kod` je přesně na to
+a `DSQ`, `OCS`, `RET`, `RDG` v číselníku jsou. Chybí jen další kódy ze
+standardu — `DNE` (diskvalifikace nezahrnutá do škrtů), `UFD` a `BFD`
+(vlajkové starty), `ZFP` (dvacetiprocentní penalizace). Je to řádek do
+výčtu, ne změna modelu.
+
+**Neumí dvě věci:**
+
+1. **Kód bez čísla nestačí.** Bodová penalizace přičítá body a náprava je
+   naopak přiděluje (typicky průměr z ostatních rozjížděk, nebo body podle
+   pořadí, které by loď získala). Obojí potřebuje u výsledku **číslo**, ne
+   jen značku. Dnes není kam ho zapsat.
+
+   `DNE` navíc mění chování škrtu: nesmí se škrtnout. To je příznak
+   u kódu, ne u výsledku.
+
+2. **Protest je vlastní záznam s vlastním životním cyklem**, ne pole
+   u výsledku. Podá ho loď nebo rozhodčí, má svůj čas podání a lhůtu, může
+   být odmítnut jako neplatný dřív, než se vůbec projedná, a jedno
+   rozhodnutí může potrestat i loď, která protest nepodala.
+
+   Tvar, který standardu odpovídá:
+
+   ```
+   Protest
+    ├── rozjížďka (kde se to stalo) a čas incidentu
+    ├── kdo podává: loď, pořadatel, nebo protestní komise
+    ├── proti komu: jedna nebo víc lodí
+    ├── stav: podán → platný/neplatný → projednán → rozhodnuto → stažen
+    ├── popis incidentu a dotčená pravidla
+    └── rozhodnutí: zjištěné skutečnosti, závěr, a trest nebo náprava
+         └── promítne se do Vysledek: kód, nebo body navíc
+   ```
+
+   **Stav se vede na protestu, ne na výsledku** — ze stejného důvodu, proč
+   se workflow vede na rozjížďce a ne na jednotlivém řádku: projednává se
+   incident jako celek.
+
+### Kdy to stavět
+
+**Ne teď.** Protest bez administrace a bez identity nemá kdo zapsat —
+patří do fáze 5, kde vzniká zadávání a schvalování, a rozhodnutí komise je
+přesně ten druh zápisu, u kterého musí být vidět, kdo ho udělal.
+
+Do té doby se penalizace zapíše tak, jak se dnes zapisuje všechno ostatní:
+kódem u výsledku. Rozhodnutí, které se nedá vyjádřit kódem, je ta chvíle,
+kdy je potřeba číslo — a teprve tehdy má smysl migrace.
+
+**Co potřebuje odpověď od rozhodčího dřív, než se to postaví:**
+
+1. Vede se dnes protest vůbec písemně, nebo se řeší domluvou na břehu?
+2. Používá se bodová penalizace (procentní), nebo jen diskvalifikace?
+3. Jak se dnes počítá náprava — průměr, nebo přidělené pořadí?
+4. Má se protest zveřejňovat, nebo je to interní věc komise? Na tom stojí,
+   jestli se to vůbec dostane na veřejné stránky.
+
 ## Workflow výsledků
 
 Ze zadání: výsledek se dá **navrhnout, ověřit, schválit, potvrdit, vrátit
@@ -688,7 +790,7 @@ Počítáno na pět hodin týdně.
 | 2 | ~~**Bodování** — nízkobodový systém, kódy, škrty, pořadí po kategoriích~~ | **hotovo** | Čisté funkce **ověřené proti skutečnému sešitu rozhodčího**, vydané endpointem a vidět na webu |
 | 3 | **Mobilní appka, jen čtení** | 2–3 týdny | **Nepotřebuje přihlášení** — dá se postavit dřív než identita a je to nejlepší místo, kde se Expo naučit |
 | 4 | **Identita a role** — Zitadel, mapování `(issuer, subject) → UserId` | 1–2 týdny | Spouští odloženou položku platformy |
-| 5 | **Administrace a workflow** — zadávání, stavy, publikace | 2–3 týdny | Až když je co spravovat |
+| 5 | **Administrace a workflow** — zadávání, stavy, publikace, protesty a penalizace | 2–3 týdny | Až když je co spravovat. Protest nemá kdo zapsat dřív, než existuje identita |
 | 6 | **Blog a fotky** | 1 týden | |
 | 7 | **Upozornění** — veřejná i účastnická, odesílání, Outbox | 2–3 týdny | Účastnická stojí na identitě z fáze 4 a na napojení osoby k lodi |
 | 8 | **Tracker** — záznam trasy, offline, nahrání, prohlížení | 4–6 týdnů | Samostatná linka; potřebuje jen identitu a kontext závodu |
