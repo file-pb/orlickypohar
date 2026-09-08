@@ -361,6 +361,16 @@ na její vlastní stránku.
 Zastávku pořádá jiný subjekt, takže její stránka je jeho: kromě základních
 informací, stavu a výsledků tam patří i jeho vlastní blog.
 
+**Pořadatel není jméno, ale subjekt.** Zastávky pořádají kluby, mariny
+a provozovatelé služeb na Orlíku, ale taky agentura pro charter na moři nebo
+charitativní organizace. Většina z nich má vlastní web a sociální sítě a bude
+je chtít na své stránce mít — je to pro ně důvod, proč do poháru jít.
+
+Dnes je `Zavod.Poradatel` volný text a pro fázi 1 to stačilo. Až se budou
+přidávat odkazy a logo, stane se z pořadatele vlastní záznam a text zůstane
+jako jeho jméno. Je to hranice, ne odklad: odkaz na Facebook se do textového
+pole vecpat dá, ale pak se z něj nikdy nedostane ven.
+
 **Má to důsledek pro oprávnění, ne jen pro vzhled.** Pořadatel Radavské
 regaty smí psát na stránku Radavské regaty a nikam jinam. Je to přesně ten
 rozsah, který plán popisuje u rolí — článek proto nese vazbu buď na sérii,
