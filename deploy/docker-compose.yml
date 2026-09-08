@@ -71,6 +71,9 @@ services:
       # Ročníky s vymyšlenými výsledky. Web u nich ukáže pruh, že data nejsou
       # skutečná. Až se ukazovat přestanou, stačí smazat tenhle řádek.
       UKAZKOVE_SERIE: "2026-nanecisto"
+      # Poslední build appky. Každý build má jinou adresu, takže se to mění
+      # tady, ne v kódu — `npm run apk` v app/ vypíše novou.
+      APK_URL: "https://expo.dev/artifacts/eas/AUc27sP0kkXRAzZWvgjjPu0GG9_ty9xwPcB6DnGDuXc.apk"
     labels:
       traefik.enable: "true"
       traefik.docker.network: edge

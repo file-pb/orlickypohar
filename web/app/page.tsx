@@ -22,6 +22,9 @@ export default async function Rozcestnik() {
     <>
       <h1>Ročníky</h1>
       <p className="podtitulek">Vyber ročník a podívej se na jeho zastávky a výsledky.</p>
+      <p style={{ margin: "-1.25rem 0 2rem" }}>
+        <Link href="/appka">Appka do telefonu →</Link>
+      </p>
       <ul className="seznam">
         {rocniky.map((r) => (
           <li key={r.slug}>
