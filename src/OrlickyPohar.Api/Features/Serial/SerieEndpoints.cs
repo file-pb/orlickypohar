@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 
@@ -40,7 +41,7 @@ public static class SerieEndpoints
         g.MapGet("/{slug}", DetailAsync).WithSummary("Vrátí ročník s kategoriemi, zastávkami a přihláškami");
     }
 
-    private static async Task<IResult> SeznamAsync(AppDbContext db, CancellationToken ct)
+    private static async Task<Ok<List<SerieShrnutiDto>>> SeznamAsync(AppDbContext db, CancellationToken ct)
     {
         var rocniky = await db.Serie
             .Where(s => s.Publikovano)
@@ -50,17 +51,18 @@ public static class SerieEndpoints
                 db.Zavody.Count(z => z.SerieId == s.Id && z.Publikovano)))
             .ToListAsync(ct);
 
-        return Results.Ok(rocniky);
+        return TypedResults.Ok(rocniky);
     }
 
-    private static async Task<IResult> DetailAsync(string slug, AppDbContext db, CancellationToken ct)
+    private static async Task<Results<Ok<SerieDetailDto>, NotFound>> DetailAsync(
+        string slug, AppDbContext db, CancellationToken ct)
     {
         var serie = await db.Serie
             .Where(s => s.Slug == slug && s.Publikovano)
             .Select(s => new { s.Id, s.Slug, s.Nazev, s.Rok })
             .FirstOrDefaultAsync(ct);
 
-        if (serie is null) return Results.NotFound();
+        if (serie is null) return TypedResults.NotFound();
 
         var kategorie = await db.Kategorie
             .Where(k => k.SerieId == serie.Id)
@@ -86,6 +88,6 @@ public static class SerieEndpoints
                 p.Kategorie!.Nazev))
             .ToListAsync(ct);
 
-        return Results.Ok(new SerieDetailDto(serie.Slug, serie.Nazev, serie.Rok, kategorie, zavody, prihlasky));
+        return TypedResults.Ok(new SerieDetailDto(serie.Slug, serie.Nazev, serie.Rok, kategorie, zavody, prihlasky));
     }
 }

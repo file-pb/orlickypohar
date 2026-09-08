@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Bodovani;
@@ -60,7 +61,7 @@ public static class ZavodEndpoints
             .WithSummary("Vrátí zastávku s rozjížďkami a výsledky");
     }
 
-    private static async Task<IResult> DetailAsync(
+    private static async Task<Results<Ok<ZavodDetailDto>, NotFound>> DetailAsync(
         string serieSlug, string slug, AppDbContext db, CancellationToken ct)
     {
         var zavod = await db.Zavody
@@ -73,7 +74,7 @@ public static class ZavodEndpoints
             })
             .FirstOrDefaultAsync(ct);
 
-        if (zavod is null) return Results.NotFound();
+        if (zavod is null) return TypedResults.NotFound();
 
         // Jeden dotaz na všechny výsledky závodu, ne dotaz na rozjížďku.
         // Rozjížděk bývá osm a lodí dvacet — N+1 by tu bylo osm zbytečných cest.
@@ -147,7 +148,7 @@ public static class ZavodEndpoints
             .OrderBy(v => poradiKategorii.GetValueOrDefault(v.Kategorie, int.MaxValue))
             .ThenBy(v => v.Poradi)];
 
-        return Results.Ok(new ZavodDetailDto(
+        return TypedResults.Ok(new ZavodDetailDto(
             zavod.Slug, zavod.Nazev, zavod.Datum, zavod.DatumKonce, zavod.Typ, zavod.Poradatel,
             zavod.Stav, zavod.PuvodniDatum, zavod.PocetSkrtu, zavod.Vyhodnoceni, zavod.KoeficientDoSerie,
             rozjizdky,

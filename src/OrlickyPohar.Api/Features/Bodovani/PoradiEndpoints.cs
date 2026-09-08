@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Zavody;
@@ -48,7 +49,8 @@ public static class PoradiEndpoints
             .WithSummary("Vrátí průběžné pořadí seriálu po kategoriích");
     }
 
-    private static async Task<IResult> PoradiAsync(string slug, AppDbContext db, CancellationToken ct)
+    private static async Task<Results<Ok<PoradiSerieDto>, NotFound>> PoradiAsync(
+        string slug, AppDbContext db, CancellationToken ct)
     {
         // Nepublikovaný ročník neexistuje — 404, ne 403, stejně jako u ostatního čtení.
         var serie = await db.Serie
@@ -56,7 +58,7 @@ public static class PoradiEndpoints
             .Select(s => new { s.Id, s.Slug, s.Nazev, s.Rok })
             .FirstOrDefaultAsync(ct);
 
-        if (serie is null) return Results.NotFound();
+        if (serie is null) return TypedResults.NotFound();
 
         // Jen odjeté zastávky. Plánovaná nemá výsledky a zrušená se do poháru
         // nepočítá vůbec — v tabulce by obojí vypadalo jako prázdný sloupec,
@@ -156,7 +158,7 @@ public static class PoradiEndpoints
             })
             .ToList();
 
-        return Results.Ok(new PoradiSerieDto(
+        return TypedResults.Ok(new PoradiSerieDto(
             serie.Slug, serie.Nazev, serie.Rok,
             [.. zastavky.Select(z => new ZastavkaDto(z.Slug, z.Nazev, z.Datum, z.Poradi))],
             poradi));
