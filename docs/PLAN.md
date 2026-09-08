@@ -988,9 +988,9 @@ lodí. Barvy má appka stejné jako web, protože je to jeden produkt.
 | Zbývá | Proč to ještě není |
 |---|---|
 | ~~Vyzkoušet na skutečném telefonu~~ | hotovo 8. 9. 2026 — `npm run telefon` |
-| Sdílený klient z OpenAPI | dokument nenese tvary odpovědí — endpointy nemají `Produces<T>` |
+| ~~Sdílený klient z OpenAPI~~ | hotovo 8. 9. 2026 — `packages/api-client/generuj.sh` |
 | Ikona a splash | jsou ze šablony |
-| Vydání (APK, TestFlight) | Android zdarma, iOS až s placeným účtem |
+| Vydání (APK) | Android zdarma; iOS odloženo, viz níž |
 
 **Podoba tabulek čeká na rozhodčího, neladí se dopředu.** Filip, 8. 9. 2026:
 až dorazí, jak se pořadí doopravdy počítá, bude se doplňovat počítání
@@ -1000,6 +1000,17 @@ a překreslovat pak obojí, jen podruhé dráž.
 
 Co je hotové, tedy **stačí, že je čitelné a pravdivé**; hezké bude, až bude
 co ukazovat. Otevřené otázky jsou vypsané výš u bodování a u protestů.
+
+**Účet u Applu se zatím neplatí.** Filip, 8. 9. 2026: 99 $ ročně je moc na
+to, aby si člověk jen hrál. Appka tedy zůstává v Expo Go na vlastním telefonu
+a pro ostatní se počítá s Androidem, kde je instalace APK zdarma. Zaplatí se
+to ve chvíli, kdy o appku bude zájem — tehdy to bude výdaj proti něčemu,
+ne do prázdna.
+
+Co z toho plyne pro pořadí prací: **push upozornění se dají vyvíjet jen na
+Androidu**, protože na iOSu potřebují development build a ten bez placeného
+účtu nevznikne. Fáze 7 se tím nezastaví, jen začne na druhé platformě, než
+bylo v plánu.
 
 **Datum se v appce formátuje ručně.** `toLocaleDateString` závisí na tom,
 co má telefon v sobě, a Hermes nemusí mít plné Intl — je to tatáž past jako

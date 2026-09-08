@@ -100,6 +100,22 @@ a hlídají ji testy. Existuje proto, že **lokálně se
 databáze rozjet nedá** — Docker Hub je z pracovního stroje nedostupný — a bez
 něj by se stránky nedaly vidět jinak než nasazením.
 
+## Klient API
+
+```bash
+packages/api-client/generuj.sh          # z produkce
+API=http://localhost:8080 packages/api-client/generuj.sh
+```
+
+Typy pro web i appku se **generují z OpenAPI dokumentu**, ne píšou ručně:
+skript stáhne dokument, uloží jeho snímek do `packages/api-client/openapi.json`
+a vyrobí `web/lib/schema.d.ts` a `app/src/lib/schema.d.ts`. Snímek se
+commituje schválně — změna kontraktu je pak vidět v diffu, ne až v chybě
+klienta.
+
+Dokument se stahuje z **běžícího API**, protože aplikace při startu pouští
+migrace a bez databáze nenaběhne; na pracovním stroji databáze nejede.
+
 ## Testy
 
 ```bash

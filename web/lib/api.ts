@@ -1,128 +1,33 @@
-// Tenký typovaný přístup k API. Ručně psaný schválně: generovaný klient
-// z OpenAPI je platformové rozhodnutí, ale má smysl teprve tehdy, až ho
-// bude sdílet i mobilní appka. Do té doby by generátor v řetězu jen přidal
-// krok, který nikdo nepotřebuje.
-//
-// Tvary odpovídají DTO v Features/Serial a Features/Zavody.
+// Tenký typovaný přístup k API. Tvary typů se generují z OpenAPI, samotné
+// načítání zůstává ruční: web ho potřebuje s cachí Nextu, appka bez ní,
+// a je to pět řádků.
+
+import type { components } from "./schema";
 
 const API = process.env.API_URL ?? "http://localhost:8080";
 
-export type SerieShrnuti = {
-  slug: string;
-  nazev: string;
-  rok: number;
-  pocetZavodu: number;
-};
+// Typy nejsou psané rukou — generuje je `packages/api-client/generuj.sh`
+// z OpenAPI dokumentu API do `schema.d.ts`. Tady se jen pojmenují, aby se
+// v kódu psalo `SerieDetail` a ne `components["schemas"]["SerieDetailDto"]`.
+type S = components["schemas"];
 
-export type Kategorie = { nazev: string; poradi: number };
-
-/** Ročník nezačíná závody, ale předběžným kalendářem — stav proto patří i do shrnutí. */
-export type StavZavodu = "Planovany" | "Vypsany" | "Odjety" | "Zruseny";
-
-export type ZavodShrnuti = {
-  slug: string;
-  nazev: string;
-  datum: string;
-  datumKonce: string | null;
-  typ: string | null;
-  poradatel: string | null;
-  poradi: number;
-  stav: StavZavodu;
-  /** Termín, na který se lidé chystali, když se zastávka přesunula. */
-  puvodniDatum: string | null;
-};
-
-export type Prihlaska = {
-  lod: string;
-  cisloPlachty: string | null;
-  typLodi: string | null;
-  majitel: string;
-  kategorie: string;
-};
-
-export type SerieDetail = {
-  slug: string;
-  nazev: string;
-  rok: number;
-  kategorie: Kategorie[];
-  zavody: ZavodShrnuti[];
-  prihlasky: Prihlaska[];
-};
-
-export type KodVysledku = "Dnf" | "Dns" | "Dnc" | "Ocs" | "Dsq" | "Ret" | "Rdg";
-
-export type Vysledek = {
-  lod: string;
-  kategorie: string;
-  kormidelnik: string | null;
-  poradiVCili: number | null;
-  casSekundy: number | null;
-  kod: KodVysledku | null;
-};
-
-export type Rozjizdka = {
-  cislo: number;
-  startV: string | null;
-  stav: "Planovana" | "Probiha" | "Dokoncena" | "Zrusena";
-  doSerie: boolean;
-  vysledky: Vysledek[];
-};
-
-/** Body lodi v jedné rozjížďce — pořadí v její kategorii, ne v celém poli. */
-export type BodyVRozjizdce = { cislo: number; body: number; skrtnuto: boolean };
-
-export type VysledekZavodu = {
-  lod: string;
-  kategorie: string;
-  body: number;
-  poradi: number;
-  rozjizdky: BodyVRozjizdce[];
-};
-
-/** Loď na zastávce. U plánované je to jediné, co se o ní dá ukázat. */
-export type UcastLodi = { lod: string; kategorie: string; kormidelnik: string | null };
-
-export type ZavodDetail = {
-  slug: string;
-  nazev: string;
-  datum: string;
-  datumKonce: string | null;
-  typ: string | null;
-  poradatel: string | null;
-  stav: StavZavodu;
-  puvodniDatum: string | null;
-  pocetSkrtu: number;
-  vyhodnoceni: "CelePole" | "PoKategoriich";
-  koeficientDoSerie: number;
-  rozjizdky: Rozjizdka[];
-  /** Body a pořadí počítá server. Web je nesčítá — rozešlo by se to. */
-  poradi: VysledekZavodu[];
-  lode: UcastLodi[];
-};
-
-export type Zastavka = { slug: string; nazev: string; datum: string; poradi: number };
-
-/** Prázdné místo v `zastavky` znamená, že tam loď nestartovala. */
-export type PoradiLodi = {
-  lod: string;
-  majitel: string;
-  zastavky: (number | null)[];
-  body: number;
-  poradi: number;
-  bodyPoSkrtu: number;
-  poradiPoSkrtu: number;
-  skrtnuto: number | null;
-};
-
-export type PoradiKategorie = { kategorie: string; lode: PoradiLodi[] };
-
-export type PoradiSerie = {
-  slug: string;
-  nazev: string;
-  rok: number;
-  zastavky: Zastavka[];
-  kategorie: PoradiKategorie[];
-};
+export type SerieShrnuti = S["SerieShrnutiDto"];
+export type Kategorie = S["KategorieDto"];
+export type StavZavodu = S["StavZavodu"];
+export type ZavodShrnuti = S["ZavodShrnutiDto"];
+export type Prihlaska = S["PrihlaskaDto"];
+export type SerieDetail = S["SerieDetailDto"];
+export type KodVysledku = S["KodVysledku"];
+export type Vysledek = S["VysledekDto"];
+export type Rozjizdka = S["RozjizdkaDto"];
+export type BodyVRozjizdce = S["BodyVRozjizdceDto"];
+export type VysledekZavodu = S["VysledekZavoduDto"];
+export type UcastLodi = S["UcastDto"];
+export type ZavodDetail = S["ZavodDetailDto"];
+export type Zastavka = S["ZastavkaDto"];
+export type PoradiLodi = S["PoradiLodiDto"];
+export type PoradiKategorie = S["PoradiKategorieDto"];
+export type PoradiSerie = S["PoradiSerieDto"];
 
 /** Vrací null u 404 — nepublikovaný ročník se chová, jako by neexistoval. */
 async function nacti<T>(cesta: string): Promise<T | null> {

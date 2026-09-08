@@ -44,14 +44,18 @@ src/lib/          klient API a formátování
 src/hooks/        načítání dat a barvy
 ```
 
+Typy v `src/lib/schema.d.ts` **negeneruj ručně** — vyrábí je
+`packages/api-client/generuj.sh` z OpenAPI dokumentu API, stejný soubor
+dostane i web. `src/lib/api.ts` je jen pojmenuje a přidá načítání.
+
 Barvy jsou stejné jako na webu (`web/app/globals.css`) — je to jeden
 produkt, jen dvěma dveřmi. Datum se formátuje ručně, protože Intl na
 telefonu nemusí být úplné; podrobněji v `src/lib/datum.ts`.
 
 ## Co tady zatím není
 
-- **Klient API je opsaný z webu.** Plán chce generovaný z OpenAPI a sdílený;
-  napřed ale musí dokument nést tvary odpovědí, viz `src/lib/api.ts`.
+- **Vydání pro iPhone.** Účet u Applu stojí 99 $ ročně a platí se, až bude
+  o co stát. Do té doby Expo Go na vlastním telefonu a APK pro ostatní.
 - **Push upozornění** (fáze 7) — potřebují development build, na iOS
   i placený účet u Applu. V Expo Go se vyzkoušet nedají.
 - **Ikona a splash** jsou zatím ze šablony.

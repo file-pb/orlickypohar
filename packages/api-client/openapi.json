@@ -1,0 +1,1099 @@
+{
+    "openapi": "3.1.1",
+    "info": {
+        "title": "OrlickyPohar.Api | v1",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://orlickypohar-api.klihovka.cz/"
+        }
+    ],
+    "paths": {
+        "/serie/{slug}/poradi": {
+            "get": {
+                "tags": [
+                    "S\u00e9rie"
+                ],
+                "summary": "Vr\u00e1t\u00ed pr\u016fb\u011b\u017en\u00e9 po\u0159ad\u00ed seri\u00e1lu po kategori\u00edch",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PoradiSerieDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/serie/{serieSlug}/zavody/{slug}": {
+            "get": {
+                "tags": [
+                    "Z\u00e1vody"
+                ],
+                "summary": "Vr\u00e1t\u00ed zast\u00e1vku s rozj\u00ed\u017e\u010fkami a v\u00fdsledky",
+                "parameters": [
+                    {
+                        "name": "serieSlug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZavodDetailDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/import/serie": {
+            "post": {
+                "tags": [
+                    "Import"
+                ],
+                "summary": "Nahraje cel\u00fd ro\u010dn\u00edk z jednoho souboru",
+                "description": "Idempotentn\u00ed: druh\u00e9 odesl\u00e1n\u00ed t\u00e9ho\u017e souboru nic nezduplikuje. Bu\u010f projde cel\u00e1 d\u00e1vka, nebo se neulo\u017e\u00ed nic.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SerieVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/serie": {
+            "get": {
+                "tags": [
+                    "S\u00e9rie"
+                ],
+                "summary": "Vr\u00e1t\u00ed publikovan\u00e9 ro\u010dn\u00edky",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SerieShrnutiDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/serie/{slug}": {
+            "get": {
+                "tags": [
+                    "S\u00e9rie"
+                ],
+                "summary": "Vr\u00e1t\u00ed ro\u010dn\u00edk s kategoriemi, zast\u00e1vkami a p\u0159ihl\u00e1\u0161kami",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SerieDetailDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "BodyVRozjizdceDto": {
+                "required": [
+                    "cislo",
+                    "body",
+                    "skrtnuto"
+                ],
+                "type": "object",
+                "properties": {
+                    "cislo": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "body": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "skrtnuto": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "KategorieDto": {
+                "required": [
+                    "nazev",
+                    "poradi"
+                ],
+                "type": "object",
+                "properties": {
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "poradi": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "KategorieVstup": {
+                "required": [
+                    "nazev",
+                    "poradi"
+                ],
+                "type": "object",
+                "properties": {
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "poradi": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "KodVysledku": {
+                "enum": [
+                    "Dnf",
+                    "Dns",
+                    "Dnc",
+                    "Ocs",
+                    "Dsq",
+                    "Ret",
+                    "Rdg",
+                    null
+                ]
+            },
+            "LodVstup": {
+                "required": [
+                    "klic",
+                    "nazev",
+                    "cisloPlachty",
+                    "typ",
+                    "majitel"
+                ],
+                "type": "object",
+                "properties": {
+                    "klic": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "cisloPlachty": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "typ": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "majitel": {
+                        "type": "string"
+                    }
+                }
+            },
+            "OsobaVstup": {
+                "required": [
+                    "klic",
+                    "jmeno",
+                    "prijmeni"
+                ],
+                "type": "object",
+                "properties": {
+                    "klic": {
+                        "type": "string"
+                    },
+                    "jmeno": {
+                        "type": "string"
+                    },
+                    "prijmeni": {
+                        "type": "string"
+                    }
+                }
+            },
+            "PoradiKategorieDto": {
+                "required": [
+                    "kategorie",
+                    "lode"
+                ],
+                "type": "object",
+                "properties": {
+                    "kategorie": {
+                        "type": "string"
+                    },
+                    "lode": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PoradiLodiDto"
+                        }
+                    }
+                }
+            },
+            "PoradiLodiDto": {
+                "required": [
+                    "lod",
+                    "majitel",
+                    "zastavky",
+                    "body",
+                    "poradi",
+                    "bodyPoSkrtu",
+                    "poradiPoSkrtu",
+                    "skrtnuto"
+                ],
+                "type": "object",
+                "properties": {
+                    "lod": {
+                        "type": "string"
+                    },
+                    "majitel": {
+                        "type": "string"
+                    },
+                    "zastavky": {
+                        "type": "array",
+                        "items": {
+                            "type": [
+                                "null",
+                                "integer"
+                            ],
+                            "format": "int32"
+                        }
+                    },
+                    "body": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "poradi": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "bodyPoSkrtu": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "poradiPoSkrtu": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "skrtnuto": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    }
+                }
+            },
+            "PoradiSerieDto": {
+                "required": [
+                    "slug",
+                    "nazev",
+                    "rok",
+                    "zastavky",
+                    "kategorie"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "rok": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "zastavky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ZastavkaDto"
+                        }
+                    },
+                    "kategorie": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PoradiKategorieDto"
+                        }
+                    }
+                }
+            },
+            "PrihlaskaDto": {
+                "required": [
+                    "lod",
+                    "cisloPlachty",
+                    "typLodi",
+                    "majitel",
+                    "kategorie"
+                ],
+                "type": "object",
+                "properties": {
+                    "lod": {
+                        "type": "string"
+                    },
+                    "cisloPlachty": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "typLodi": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "majitel": {
+                        "type": "string"
+                    },
+                    "kategorie": {
+                        "type": "string"
+                    }
+                }
+            },
+            "PrihlaskaVstup": {
+                "required": [
+                    "lod",
+                    "kategorie"
+                ],
+                "type": "object",
+                "properties": {
+                    "lod": {
+                        "type": "string"
+                    },
+                    "kategorie": {
+                        "type": "string"
+                    }
+                }
+            },
+            "RozjizdkaDto": {
+                "required": [
+                    "cislo",
+                    "startV",
+                    "stav",
+                    "doSerie",
+                    "vysledky"
+                ],
+                "type": "object",
+                "properties": {
+                    "cislo": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "startV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "stav": {
+                        "$ref": "#/components/schemas/StavRozjizdky"
+                    },
+                    "doSerie": {
+                        "type": "boolean"
+                    },
+                    "vysledky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/VysledekDto"
+                        }
+                    }
+                }
+            },
+            "RozjizdkaVstup": {
+                "required": [
+                    "cislo",
+                    "startV",
+                    "stav",
+                    "vysledky"
+                ],
+                "type": "object",
+                "properties": {
+                    "cislo": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "startV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "stav": {
+                        "$ref": "#/components/schemas/StavRozjizdky"
+                    },
+                    "vysledky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/VysledekVstup"
+                        }
+                    },
+                    "doSerie": {
+                        "type": "boolean",
+                        "default": true
+                    }
+                }
+            },
+            "SerieDetailDto": {
+                "required": [
+                    "slug",
+                    "nazev",
+                    "rok",
+                    "kategorie",
+                    "zavody",
+                    "prihlasky"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "rok": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "kategorie": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/KategorieDto"
+                        }
+                    },
+                    "zavody": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ZavodShrnutiDto"
+                        }
+                    },
+                    "prihlasky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PrihlaskaDto"
+                        }
+                    }
+                }
+            },
+            "SerieShrnutiDto": {
+                "required": [
+                    "slug",
+                    "nazev",
+                    "rok",
+                    "pocetZavodu"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "rok": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "pocetZavodu": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "SerieVstup": {
+                "required": [
+                    "slug",
+                    "nazev",
+                    "rok",
+                    "kategorie",
+                    "osoby",
+                    "lode",
+                    "prihlasky",
+                    "zavody"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "rok": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "kategorie": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/KategorieVstup"
+                        }
+                    },
+                    "osoby": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OsobaVstup"
+                        }
+                    },
+                    "lode": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LodVstup"
+                        }
+                    },
+                    "prihlasky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PrihlaskaVstup"
+                        }
+                    },
+                    "zavody": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ZavodVstup"
+                        }
+                    },
+                    "publikovano": {
+                        "type": "boolean",
+                        "default": true
+                    }
+                }
+            },
+            "StavRozjizdky": {
+                "enum": [
+                    "Planovana",
+                    "Probiha",
+                    "Dokoncena",
+                    "Zrusena"
+                ]
+            },
+            "StavZavodu": {
+                "enum": [
+                    "Planovany",
+                    "Vypsany",
+                    "Odjety",
+                    "Zruseny"
+                ]
+            },
+            "UcastDto": {
+                "required": [
+                    "lod",
+                    "kategorie",
+                    "kormidelnik"
+                ],
+                "type": "object",
+                "properties": {
+                    "lod": {
+                        "type": "string"
+                    },
+                    "kategorie": {
+                        "type": "string"
+                    },
+                    "kormidelnik": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
+            "UcastVstup": {
+                "required": [
+                    "lod",
+                    "kormidelnik",
+                    "posadka"
+                ],
+                "type": "object",
+                "properties": {
+                    "lod": {
+                        "type": "string"
+                    },
+                    "kormidelnik": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "posadka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
+            "Vyhodnoceni": {
+                "enum": [
+                    "CelePole",
+                    "PoKategoriich"
+                ]
+            },
+            "VysledekDto": {
+                "required": [
+                    "lod",
+                    "kategorie",
+                    "kormidelnik",
+                    "poradiVCili",
+                    "casSekundy",
+                    "kod"
+                ],
+                "type": "object",
+                "properties": {
+                    "lod": {
+                        "type": "string"
+                    },
+                    "kategorie": {
+                        "type": "string"
+                    },
+                    "kormidelnik": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "poradiVCili": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "casSekundy": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "kod": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/KodVysledku"
+                            }
+                        ]
+                    }
+                }
+            },
+            "VysledekVstup": {
+                "required": [
+                    "lod"
+                ],
+                "type": "object",
+                "properties": {
+                    "lod": {
+                        "type": "string"
+                    },
+                    "poradiVCili": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "dojezdV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "casSekundy": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "kod": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/KodVysledku"
+                            }
+                        ]
+                    }
+                }
+            },
+            "VysledekZavoduDto": {
+                "required": [
+                    "lod",
+                    "kategorie",
+                    "body",
+                    "poradi",
+                    "rozjizdky"
+                ],
+                "type": "object",
+                "properties": {
+                    "lod": {
+                        "type": "string"
+                    },
+                    "kategorie": {
+                        "type": "string"
+                    },
+                    "body": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "poradi": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "rozjizdky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/BodyVRozjizdceDto"
+                        }
+                    }
+                }
+            },
+            "ZastavkaDto": {
+                "required": [
+                    "slug",
+                    "nazev",
+                    "datum",
+                    "poradi"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "datum": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "poradi": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "ZavodDetailDto": {
+                "required": [
+                    "slug",
+                    "nazev",
+                    "datum",
+                    "datumKonce",
+                    "typ",
+                    "poradatel",
+                    "stav",
+                    "puvodniDatum",
+                    "pocetSkrtu",
+                    "vyhodnoceni",
+                    "koeficientDoSerie",
+                    "rozjizdky",
+                    "poradi",
+                    "lode"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "datum": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "datumKonce": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date"
+                    },
+                    "typ": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "poradatel": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "stav": {
+                        "$ref": "#/components/schemas/StavZavodu"
+                    },
+                    "puvodniDatum": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date"
+                    },
+                    "pocetSkrtu": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "vyhodnoceni": {
+                        "$ref": "#/components/schemas/Vyhodnoceni"
+                    },
+                    "koeficientDoSerie": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "rozjizdky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RozjizdkaDto"
+                        }
+                    },
+                    "poradi": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/VysledekZavoduDto"
+                        }
+                    },
+                    "lode": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/UcastDto"
+                        }
+                    }
+                }
+            },
+            "ZavodShrnutiDto": {
+                "required": [
+                    "slug",
+                    "nazev",
+                    "datum",
+                    "datumKonce",
+                    "typ",
+                    "poradatel",
+                    "poradi",
+                    "stav",
+                    "puvodniDatum"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "datum": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "datumKonce": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date"
+                    },
+                    "typ": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "poradatel": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "poradi": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "stav": {
+                        "$ref": "#/components/schemas/StavZavodu"
+                    },
+                    "puvodniDatum": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date"
+                    }
+                }
+            },
+            "ZavodVstup": {
+                "required": [
+                    "slug",
+                    "nazev",
+                    "datum",
+                    "poradi",
+                    "ucasti",
+                    "rozjizdky"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "datum": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "poradi": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "ucasti": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/UcastVstup"
+                        }
+                    },
+                    "rozjizdky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RozjizdkaVstup"
+                        }
+                    },
+                    "poradatel": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "datumKonce": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date"
+                    },
+                    "typ": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "pocetSkrtu": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 0
+                    },
+                    "vyhodnoceni": {
+                        "$ref": "#/components/schemas/Vyhodnoceni"
+                    },
+                    "koeficientDoSerie": {
+                        "type": "number",
+                        "format": "double",
+                        "default": 1
+                    },
+                    "publikovano": {
+                        "type": "boolean",
+                        "default": true
+                    },
+                    "stav": {
+                        "$ref": "#/components/schemas/StavZavodu"
+                    },
+                    "puvodniDatum": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "S\u00e9rie"
+        },
+        {
+            "name": "Z\u00e1vody"
+        },
+        {
+            "name": "Import"
+        }
+    ]
+}
