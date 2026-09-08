@@ -68,6 +68,9 @@ services:
       # Interní adresa, ne veřejná. Přes internet by to byla zbytečná cesta
       # ven a zpátky přes Traefik.
       API_URL: "http://app:8080"
+      # Ročníky s vymyšlenými výsledky. Web u nich ukáže pruh, že data nejsou
+      # skutečná. Až se ukazovat přestanou, stačí smazat tenhle řádek.
+      UKAZKOVE_SERIE: "2026-nanecisto"
     labels:
       traefik.enable: "true"
       traefik.docker.network: edge

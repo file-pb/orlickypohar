@@ -9,6 +9,7 @@ import {
   type ZavodDetail,
 } from "@/lib/api";
 import { ProcNejsouVysledky, Stav } from "@/app/stav";
+import { PruhUkazky } from "@/app/ukazka";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -85,6 +86,7 @@ export default async function Zastavka({ params }: Parametry) {
       <p style={{ margin: "0 0 0.5rem" }}>
         <Link href={`/serie/${slug}`}>← zpět na ročník</Link>
       </p>
+      <PruhUkazky slug={slug} />
       <h1>
         <span className={zavod.stav === "Zruseny" ? "skrtnute" : undefined}>{zavod.nazev}</span>{" "}
         <Stav stav={zavod.stav} />

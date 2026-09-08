@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { nactiSerii, type Prihlaska, type ZavodShrnuti } from "@/lib/api";
 import { Stav } from "@/app/stav";
+import { PruhUkazky } from "@/app/ukazka";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -32,6 +33,7 @@ export default async function Rocnik({ params }: Parametry) {
 
   return (
     <>
+      <PruhUkazky slug={serie.slug} />
       <h1>{serie.nazev}</h1>
       <p className="podtitulek">
         {serie.zavody.length} zastávek · {odjete.length} odjetých ·{" "}

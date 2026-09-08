@@ -118,5 +118,12 @@ td.cislo { font-variant-numeric: tabular-nums; }
 .pravidla dt { color: var(--tlumeny); }
 .pravidla dd { margin: 0; }
 
+/* Pruh u vymyšlených dat. Nemá být hezký, má být vidět dřív než tabulka. */
+.ukazka {
+  background: var(--zvyrazneni); border: 1px solid var(--linka);
+  border-left: 4px solid var(--voda); border-radius: 8px;
+  padding: 0.7rem 0.9rem; margin: 0 0 1.25rem; font-size: 0.9rem;
+}
+
 .poznamka { color: var(--tlumeny); font-size: 0.85rem; margin-top: 0.75rem; }
 .prazdno { color: var(--tlumeny); background: var(--papir); border: 1px dashed var(--linka); border-radius: 10px; padding: 2rem 1.25rem; text-align: center; }

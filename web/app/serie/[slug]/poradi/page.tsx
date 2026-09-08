@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { nactiPoradi, type PoradiKategorie, type Zastavka } from "@/lib/api";
+import { PruhUkazky } from "@/app/ukazka";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -27,6 +28,7 @@ export default async function Poradi({ params }: Parametry) {
       <p style={{ margin: "0 0 0.5rem" }}>
         <Link href={`/serie/${slug}`}>← zpět na ročník</Link>
       </p>
+      <PruhUkazky slug={slug} />
       <h1>Průběžné pořadí</h1>
       <p className="podtitulek">
         {poradi.nazev} · po {poradi.zastavky.length}{" "}
