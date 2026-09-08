@@ -808,7 +808,7 @@ Počítáno na pět hodin týdně.
 | 0 | ~~Kostra: repozitář, databáze, DNS, nasazení, `/health`~~ | **hotovo** | |
 | 1 | ~~**Veřejné čtení** — model, import, stránky série a závodů~~ | **hotovo 7. 9. 2026** | Model se o skutečná data prověřil dřív, než se na něj něco postavilo — a našel dvě chyby v bodování |
 | 2 | ~~**Bodování** — nízkobodový systém, kódy, škrty, pořadí po kategoriích~~ | **hotovo** | Čisté funkce **ověřené proti skutečnému sešitu rozhodčího**, vydané endpointem a vidět na webu |
-| 3 | **Mobilní appka, jen čtení** | 2–3 týdny | **Nepotřebuje přihlášení** — dá se postavit dřív než identita a je to nejlepší místo, kde se Expo naučit |
+| 3 | **Mobilní appka, jen čtení** | rozpracováno | **Nepotřebuje přihlášení** — dá se postavit dřív než identita a je to nejlepší místo, kde se Expo naučit |
 | 4 | **Identita a role** — Zitadel, mapování `(issuer, subject) → UserId` | 1–2 týdny | Spouští odloženou položku platformy |
 | 5 | **Administrace a workflow** — zadávání, stavy, publikace, protesty a penalizace | 2–3 týdny | Až když je co spravovat. Protest nemá kdo zapsat dřív, než existuje identita |
 | 6 | **Blog a fotky** | 1 týden | |
@@ -978,6 +978,24 @@ sloupec** — `Body` jako `SUM(B:J)`. `Pořadí`, `Body přepočet` i `Pořadí
 přepočet` jsou psané rukou. Škrt i seřazení tedy dnes dělá člověk v Excelu
 u každé změny znovu, pro tři kategorie zvlášť. To je přesně ta práce, kterou
 má převzít počítání z fáze 2.
+
+### Fáze 3 — co stojí a co zbývá
+
+Kostra appky v `app/` (Expo, expo-router) a čtyři obrazovky: ročníky,
+kalendář, průběžné pořadí, zastávka s výsledky nebo se seznamem přihlášených
+lodí. Barvy má appka stejné jako web, protože je to jeden produkt.
+
+| Zbývá | Proč to ještě není |
+|---|---|
+| Vyzkoušet na skutečném telefonu | zatím ověřeno jen ve webovém cíli Expa |
+| Sdílený klient z OpenAPI | dokument nenese tvary odpovědí — endpointy nemají `Produces<T>` |
+| Ikona a splash | jsou ze šablony |
+| Vydání (APK, TestFlight) | Android zdarma, iOS až s placeným účtem |
+
+**Datum se v appce formátuje ručně.** `toLocaleDateString` závisí na tom,
+co má telefon v sobě, a Hermes nemusí mít plné Intl — je to tatáž past jako
+alpine bez ICU na serveru. Deset názvů měsíců je levnější než závislost na
+prostředí.
 
 ### Fáze 2 krok za krokem — hotovo
 
