@@ -14,7 +14,8 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "cz.klihovka.orlickypohar"
     },
     "web": {
       "output": "static",
@@ -35,6 +36,13 @@
       "typedRoutes": true,
       "reactCompiler": true
     },
-    "description": "Výsledky a průběžné pořadí seriálu závodů plachetnic na Orlíku."
+    "description": "Výsledky a průběžné pořadí seriálu závodů plachetnic na Orlíku.",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "247c0516-53e2-4457-bcbd-dc7b1cd6025a"
+      }
+    },
+    "owner": "file75"
   }
 }
