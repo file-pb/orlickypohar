@@ -87,6 +87,24 @@ public class KontraktTests
     }
 
     [Fact]
+    public void Skrta_se_az_pri_ctyrech_rozjizdkach()
+    {
+        // Okruhový závod, který odjel čtyři a víc rozjížděk, škrtá jednu
+        // nejhorší; se třemi a méně se neškrtá nic. Mock to jednou porušoval
+        // — Radavský pohár měl tři rozjížďky a přitom škrt — a nešlo to
+        // poznat jinak než přepočítáním tabulky.
+        //
+        // V API se to schválně nevynucuje: počet rozjížděk se rozhoduje na
+        // vodě, takže hodnota vzniká až po závodě a rozhodčí ji smí přepsat.
+        // Pravidlo tedy hlídá zdroj dat, ne kód, který je přijímá.
+        foreach (var z in Mock().Zavody)
+        {
+            var ocekavane = z.Typ == "okruhový" && z.Rozjizdky.Count >= 4 ? 1 : 0;
+            Assert.Equal(ocekavane, z.PocetSkrtu);
+        }
+    }
+
+    [Fact]
     public void Neznama_pole_neshodi_deserializaci()
     {
         // Soubor nese "_poznamka", kterou server nezná. Kdyby na neznámém poli
