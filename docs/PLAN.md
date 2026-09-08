@@ -808,7 +808,7 @@ Počítáno na pět hodin týdně.
 | 0 | ~~Kostra: repozitář, databáze, DNS, nasazení, `/health`~~ | **hotovo** | |
 | 1 | ~~**Veřejné čtení** — model, import, stránky série a závodů~~ | **hotovo 7. 9. 2026** | Model se o skutečná data prověřil dřív, než se na něj něco postavilo — a našel dvě chyby v bodování |
 | 2 | ~~**Bodování** — nízkobodový systém, kódy, škrty, pořadí po kategoriích~~ | **hotovo** | Čisté funkce **ověřené proti skutečnému sešitu rozhodčího**, vydané endpointem a vidět na webu |
-| 3 | **Mobilní appka, jen čtení** | rozpracováno | **Nepotřebuje přihlášení** — dá se postavit dřív než identita a je to nejlepší místo, kde se Expo naučit |
+| 3 | ~~**Mobilní appka, jen čtení**~~ | **hotovo 8. 9. 2026** | Nepotřebovala přihlášení, takže vznikla dřív než identita. Běží na telefonu, typy si bere z OpenAPI a jde poslat jako APK |
 | 4 | **Identita a role** — Zitadel, mapování `(issuer, subject) → UserId` | 1–2 týdny | Spouští odloženou položku platformy |
 | 5 | **Administrace a workflow** — zadávání, stavy, publikace, protesty a penalizace | 2–3 týdny | Až když je co spravovat. Protest nemá kdo zapsat dřív, než existuje identita |
 | 6 | **Blog a fotky** | 1 týden | |
