@@ -345,6 +345,27 @@ chvíli, kdy má appka poprvé fungovat na iPhonu včetně upozornění.
 Protože push je jádro funkce, přijde ta chvíle **dřív**, než jsem odhadoval
 před doplněním o upozornění.
 
+## Jak se po webu chodí
+
+Ročník má **kalendář** — a ten je zároveň rozcestníkem. Každá zastávka v něm
+ukazuje svůj stav (plánovaná, vypsaná, odjetá, zrušená) a proklikem se jde
+na její vlastní stránku.
+
+**Blog je na dvou úrovních a není to totéž.**
+
+| Úroveň | Kdo píše | Co tam patří |
+|---|---|---|
+| Série | organizátor poháru | pozvánky na sezónu, zajímavosti, souhrny |
+| Zastávka | **pořadatel té zastávky** | pozvánka na svůj závod, jeho příběh, aktuality |
+
+Zastávku pořádá jiný subjekt, takže její stránka je jeho: kromě základních
+informací, stavu a výsledků tam patří i jeho vlastní blog.
+
+**Má to důsledek pro oprávnění, ne jen pro vzhled.** Pořadatel Radavské
+regaty smí psát na stránku Radavské regaty a nikam jinam. Je to přesně ten
+rozsah, který plán popisuje u rolí — článek proto nese vazbu buď na sérii,
+nebo na zastávku, a právo se odvozuje od ní.
+
 ## Stránka zastávky — cílový tvar
 
 Filipův záměr do budoucna, ne úkol na teď. Zapsané, aby se model nevyvíjel
