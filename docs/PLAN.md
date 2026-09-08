@@ -406,6 +406,18 @@ tabulka. Ale ve směrnici stojí startovné 500 Kč a požadavek na průkaz
 způsobilosti — takže jakmile bude registrace ostrá, přijde otázka plateb
 a evidence dokladů. To je jiná velikost úlohy než formulář.
 
+**Stav přihlášek se nemodeluje — nese ho `Vypsany`.** Nabízelo se u zastávky
+ukazovat, jestli jsou přihlášky otevřené. Užitečná je na tom jen jedna
+polovina: závodník chce vědět, **že se už může hlásit**. A to je přesně to,
+co znamená stav `Vypsany` — pořadatel vydal vypsání závodu a plachetní
+směrnice. Není potřeba nový příznak, jen to musí stránka říct nahlas.
+
+Druhá polovina, tedy uzavření seznamu, cenu nemá: kdo přijde pět minut před
+startem, toho dopíšou. Uzavřeno by byl nápis, který neplatí — udržoval by se
+a nic by nevynucoval. Uzávěrka dostane smysl, teprve až bude registrace ostrá
+a poveze s sebou startovné a průkazy způsobilosti, protože tehdy bude něco
+skutečně zakazovat. (Filip, 8. 9. 2026.)
+
 **Sociální sítě jdou snadno ven, ne dovnitř.** Sdílet článek na Facebook je
 odkaz s náhledem. Číst obsah ze skupiny zpátky do webu prakticky nejde —
 skupiny jsou zavřené a Facebook to API nedává. Počítej s jednosměrným tokem.

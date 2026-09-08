@@ -20,15 +20,20 @@ export function Stav({ stav }: { stav: StavZavodu }) {
  * Co na stránce zastávky stojí místo výsledků. Prázdná tabulka znamená
  * u každého stavu něco jiného a „zatím nejsou zveřejněné" je u zrušeného
  * závodu lež — nikdy nebudou.
+ *
+ * U vypsaného závodu je to zároveň jediná informace, kvůli které tam
+ * závodník v tu chvíli chodí: že se už může hlásit. Vypsání znamená přesně
+ * tohle — pořadatel vydal vypsání závodu a plachetní směrnice. Není to
+ * příznak navíc, jen se to musí říct nahlas.
  */
 export function ProcNejsouVysledky(stav: StavZavodu) {
   switch (stav) {
     case "Zruseny":
       return "Zastávka se nekonala. Do poháru se nepočítá.";
     case "Planovany":
-      return "Zastávka se teprve pojede.";
+      return "Zatím je to jen termín v kalendáři. Vypsání závodu teprve přijde.";
     case "Vypsany":
-      return "Zastávka je vypsaná, ale ještě se nejela.";
+      return "Závod je vypsaný — přihlásit se dá u pořadatele.";
     default:
       return "Výsledky zatím nejsou zveřejněné.";
   }
