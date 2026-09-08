@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { nactiSerii, type Prihlaska } from "@/lib/api";
+import { nactiSerii, type Prihlaska, type ZavodShrnuti } from "@/lib/api";
+import { Stav } from "@/app/stav";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -20,6 +21,8 @@ export default async function Rocnik({ params }: Parametry) {
   const serie = await nactiSerii(slug);
   if (!serie) notFound();
 
+  const odjete = serie.zavody.filter((z: ZavodShrnuti) => z.stav === "Odjety");
+
   // Lodě po kategoriích, v pořadí, které si drží série — abecedně by Nad7m
   // předběhlo Race bez důvodu.
   const podleKategorii = serie.kategorie.map((k) => ({
@@ -31,28 +34,39 @@ export default async function Rocnik({ params }: Parametry) {
     <>
       <h1>{serie.nazev}</h1>
       <p className="podtitulek">
-        {serie.zavody.length} zastávek · {serie.prihlasky.length} přihlášených lodí
+        {serie.zavody.length} zastávek · {odjete.length} odjetých ·{" "}
+        {serie.prihlasky.length} přihlášených lodí
       </p>
 
       <p style={{ margin: "-1.25rem 0 2rem" }}>
         <Link href={`/serie/${serie.slug}/poradi`}>Průběžné pořadí seriálu →</Link>
       </p>
 
-      <h2>Zastávky</h2>
+      {/* Kalendář je zároveň rozcestník: každá zastávka nese svůj stav
+          a proklikem se jde na její vlastní stránku. Bez stavu vypadá
+          zastávka, která teprve bude, stejně jako ta, která se nekonala. */}
+      <h2>Kalendář</h2>
       {serie.zavody.length === 0 ? (
         <p className="prazdno">Zatím není zveřejněná žádná zastávka.</p>
       ) : (
         <ul className="seznam">
           {serie.zavody.map((z) => (
             <li key={z.slug}>
-              <Link className="karta" href={`/serie/${serie.slug}/zavody/${z.slug}`}>
+              <Link
+                className={`karta ${z.stav === "Zruseny" ? "zrusena" : ""}`}
+                href={`/serie/${serie.slug}/zavody/${z.slug}`}
+              >
                 <div className="nazev">
-                  {z.nazev}
+                  <span className={z.stav === "Zruseny" ? "skrtnute" : undefined}>{z.nazev}</span>
+                  <Stav stav={z.stav} />
                   {z.typ && <span className="stitek">{z.typ}</span>}
                 </div>
                 <div className="detail">
                   {datum(z.datum, z.datumKonce)}
                   {z.poradatel && ` · ${z.poradatel}`}
+                  {z.puvodniDatum && (
+                    <span className="presun"> · přesunuto z {datum(z.puvodniDatum)}</span>
+                  )}
                 </div>
               </Link>
             </li>
@@ -95,5 +109,12 @@ export default async function Rocnik({ params }: Parametry) {
 function datum(od: string, do_?: string | null) {
   const f = (d: string) =>
     new Date(d).toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" });
-  return do_ ? `${f(od)} – ${f(do_)}` : f(od);
+  if (!do_) return f(od);
+
+  // Vícedenní závod uvnitř jednoho měsíce: „23.–24. května 2026". Dvakrát
+  // vypsaný měsíc a rok se na telefonu zalomí přes dva řádky pro nic.
+  const [a, b] = [new Date(od), new Date(do_)];
+  return a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear()
+    ? `${a.getDate()}.–${f(do_)}`
+    : `${f(od)} – ${f(do_)}`;
 }

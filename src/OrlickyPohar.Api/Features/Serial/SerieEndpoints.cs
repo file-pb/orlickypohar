@@ -7,9 +7,15 @@ public record SerieShrnutiDto(string Slug, string Nazev, int Rok, int PocetZavod
 
 public record KategorieDto(string Nazev, int Poradi);
 
+/// <summary>
+/// Zastávka v kalendáři ročníku. Kalendář je zároveň rozcestník, takže nese
+/// i stav — bez něj vypadá zastávka, která teprve bude, stejně jako ta,
+/// která se nekonala.
+/// </summary>
 public record ZavodShrnutiDto(
     string Slug, string Nazev, DateOnly Datum, DateOnly? DatumKonce,
-    string? Typ, string? Poradatel, int Poradi, Zavody.StavZavodu Stav);
+    string? Typ, string? Poradatel, int Poradi, Zavody.StavZavodu Stav,
+    DateOnly? PuvodniDatum);
 
 public record PrihlaskaDto(
     string Lod, string? CisloPlachty, string? TypLodi, string Majitel, string Kategorie);
@@ -66,7 +72,8 @@ public static class SerieEndpoints
             .Where(z => z.SerieId == serie.Id && z.Publikovano)
             .OrderBy(z => z.Poradi)
             .Select(z => new ZavodShrnutiDto(
-                z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel, z.Poradi, z.Stav))
+                z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel, z.Poradi, z.Stav,
+                z.PuvodniDatum))
             .ToListAsync(ct);
 
         // Ve výsledcích se vedle lodi uvádí jméno majitele — proto se tahá i on.

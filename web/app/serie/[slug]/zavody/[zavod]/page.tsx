@@ -7,6 +7,7 @@ import {
   type Vysledek,
   type ZavodDetail,
 } from "@/lib/api";
+import { ProcNejsouVysledky, Stav } from "@/app/stav";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -83,15 +84,24 @@ export default async function Zastavka({ params }: Parametry) {
       <p style={{ margin: "0 0 0.5rem" }}>
         <Link href={`/serie/${slug}`}>← zpět na ročník</Link>
       </p>
-      <h1>{zavod.nazev}</h1>
+      <h1>
+        <span className={zavod.stav === "Zruseny" ? "skrtnute" : undefined}>{zavod.nazev}</span>{" "}
+        <Stav stav={zavod.stav} />
+      </h1>
       <p className="podtitulek">
         {datum(zavod.datum, zavod.datumKonce)}
         {zavod.poradatel && ` · pořádá ${zavod.poradatel}`}
+        {/* Přesun není vlastní stav — přesunutá zastávka je pořád plánovaná,
+            jen jindy. Termín, na který se lidé chystali, ale nemá smysl
+            zahodit. */}
+        {zavod.puvodniDatum && (
+          <span className="presun"> · přesunuto z {datum(zavod.puvodniDatum)}</span>
+        )}
       </p>
 
       <h2>Výsledky</h2>
       {radky.length === 0 ? (
-        <p className="prazdno">Výsledky zatím nejsou zveřejněné.</p>
+        <p className="prazdno">{ProcNejsouVysledky(zavod.stav)}</p>
       ) : (
         kategorie.map((k) => (
           <Tabulka
@@ -102,6 +112,16 @@ export default async function Zastavka({ params }: Parametry) {
           />
         ))
       )}
+      {/* Výsledky u zastávky, která není vedená jako odjetá, do poháru
+          nejdou — průběžné pořadí počítá jen z odjetých. Bez téhle věty by
+          se čtenář marně sháněl po bodech, které v tabulce seriálu nejsou. */}
+      {radky.length > 0 && zavod.stav !== "Odjety" && (
+        <p className="poznamka">
+          Zastávka není vedená jako odjetá, takže se tyhle výsledky do průběžného
+          pořadí seriálu nepočítají.
+        </p>
+      )}
+
       {radky.length > 0 && (
         <p className="poznamka">
           Čísla v rozjížďkách jsou body — pořadí v této kategorii, ne v celém poli.
@@ -194,5 +214,12 @@ function bunka(b?: Bunka) {
 function datum(od: string, do_?: string | null) {
   const f = (d: string) =>
     new Date(d).toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" });
-  return do_ ? `${f(od)} – ${f(do_)}` : f(od);
+  if (!do_) return f(od);
+
+  // Vícedenní závod uvnitř jednoho měsíce: „23.–24. května 2026". Dvakrát
+  // vypsaný měsíc a rok se na telefonu zalomí přes dva řádky pro nic.
+  const [a, b] = [new Date(od), new Date(do_)];
+  return a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear()
+    ? `${a.getDate()}.–${f(do_)}`
+    : `${f(od)} – ${f(do_)}`;
 }

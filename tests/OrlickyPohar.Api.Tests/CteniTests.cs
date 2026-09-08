@@ -58,7 +58,11 @@ public class CteniTests(PostgresFixture fixture)
                     // Rozjížďka bez jediného výsledku: nesmí ze závodu zmizet.
                     new(2, null, StavRozjizdky.Planovana, []),
                 ],
-                Publikovano: zavodPublikovan),
+                Publikovano: zavodPublikovan,
+                // Přesun není vlastní stav — zastávka je pořád tam, kde byla,
+                // jen jindy. Termín, na který se lidé chystali, musí projít
+                // až do kalendáře ročníku.
+                PuvodniDatum: new DateOnly(2025, 4, 19)),
         ],
         Publikovano: publikovano);
 
@@ -71,7 +75,9 @@ public class CteniTests(PostgresFixture fixture)
         var detail = await klient.GetFromJsonAsync<SerieDetailDto>("/serie/verejny", Json);
         Assert.NotNull(detail);
         Assert.Equal(2, detail.Kategorie.Count);
-        Assert.Single(detail.Zavody);
+        var zastavka = Assert.Single(detail.Zavody);
+        Assert.Equal(StavZavodu.Odjety, zastavka.Stav);
+        Assert.Equal(new DateOnly(2025, 4, 19), zastavka.PuvodniDatum);
         Assert.Equal(2, detail.Prihlasky.Count);
         Assert.Contains(detail.Prihlasky, p => p.Majitel == "Jan Novák");
 

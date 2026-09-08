@@ -58,6 +58,16 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 .karta:hover { border-color: var(--voda); text-decoration: none; }
 .karta .nazev { font-weight: 600; }
 .karta .detail { color: var(--tlumeny); font-size: 0.875rem; margin-top: 0.15rem; }
+/* Stav zastávky. Odjetá má výsledky, proto jediná nese barvu; zrušená se
+   drží v pozadí, ale nemizí — „nekonalo se" je taky informace. */
+.stitek.stav { border-color: currentColor; }
+.stav-odjety { color: var(--voda); }
+.stav-zruseny { color: var(--tlumeny); }
+.karta.zrusena { background: transparent; }
+.karta.zrusena .detail { color: var(--tlumeny); }
+.skrtnute { text-decoration: line-through; text-decoration-color: var(--tlumeny); }
+.presun { color: var(--tlumeny); }
+
 .stitek {
   display: inline-block; font-size: 0.75rem; color: var(--tlumeny);
   border: 1px solid var(--linka); border-radius: 999px; padding: 0.05rem 0.5rem;

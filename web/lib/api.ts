@@ -16,6 +16,9 @@ export type SerieShrnuti = {
 
 export type Kategorie = { nazev: string; poradi: number };
 
+/** Ročník nezačíná závody, ale předběžným kalendářem — stav proto patří i do shrnutí. */
+export type StavZavodu = "Planovany" | "Vypsany" | "Odjety" | "Zruseny";
+
 export type ZavodShrnuti = {
   slug: string;
   nazev: string;
@@ -24,6 +27,9 @@ export type ZavodShrnuti = {
   typ: string | null;
   poradatel: string | null;
   poradi: number;
+  stav: StavZavodu;
+  /** Termín, na který se lidé chystali, když se zastávka přesunula. */
+  puvodniDatum: string | null;
 };
 
 export type Prihlaska = {
@@ -80,6 +86,8 @@ export type ZavodDetail = {
   datumKonce: string | null;
   typ: string | null;
   poradatel: string | null;
+  stav: StavZavodu;
+  puvodniDatum: string | null;
   pocetSkrtu: number;
   vyhodnoceni: "CelePole" | "PoKategoriich";
   koeficientDoSerie: number;

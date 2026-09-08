@@ -136,7 +136,8 @@ class H(BaseHTTPRequestHandler):
                 "slug": D["slug"], "nazev": D["nazev"], "rok": D["rok"],
                 "kategorie": D["kategorie"],
                 "zavody": [{k: z.get(k) for k in
-                            ("slug", "nazev", "datum", "datumKonce", "typ", "poradatel", "poradi")}
+                            ("slug", "nazev", "datum", "datumKonce", "typ", "poradatel",
+                             "poradi", "stav", "puvodniDatum")}
                            for z in D["zavody"]],
                 "prihlasky": [{"lod": LODE[p["lod"]]["nazev"],
                                "cisloPlachty": LODE[p["lod"]]["cisloPlachty"],
@@ -153,7 +154,8 @@ class H(BaseHTTPRequestHandler):
             kormidelnici = {u["lod"]: u.get("kormidelnik") for u in z["ucasti"]}
             telo = {**{k: z.get(k) for k in
                        ("slug", "nazev", "datum", "datumKonce", "typ", "poradatel",
-                        "pocetSkrtu", "vyhodnoceni", "koeficientDoSerie")},
+                        "stav", "puvodniDatum", "pocetSkrtu", "vyhodnoceni",
+                        "koeficientDoSerie")},
                     "rozjizdky": [{
                         "cislo": r["cislo"], "startV": r["startV"], "stav": r["stav"],
                         "doSerie": r["doSerie"],
