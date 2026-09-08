@@ -987,7 +987,7 @@ lodí. Barvy má appka stejné jako web, protože je to jeden produkt.
 
 | Zbývá | Proč to ještě není |
 |---|---|
-| Vyzkoušet na skutečném telefonu | zatím ověřeno jen ve webovém cíli Expa |
+| ~~Vyzkoušet na skutečném telefonu~~ | hotovo 8. 9. 2026 — `npm run telefon` |
 | Sdílený klient z OpenAPI | dokument nenese tvary odpovědí — endpointy nemají `Produces<T>` |
 | Ikona a splash | jsou ze šablony |
 | Vydání (APK, TestFlight) | Android zdarma, iOS až s placeným účtem |

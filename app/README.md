@@ -6,9 +6,26 @@ než identita.
 
 ```bash
 npm install
-npx expo start            # QR kód, appka se otevře v Expo Go
+npm run telefon           # QR pro Expo Go, i s přihlášením a správnou adresou
 npx expo start --web      # totéž v prohlížeči, k rychlé kontrole
 ```
+
+**Proč vlastní skript a ne `npx expo start`.** Dvě věci se pokaždé zvrtnou:
+
+1. **Expo Go na iOSu vyžaduje od SDK 57 přihlášení na obou stranách** —
+   v terminálu i v appce, ke stejnému účtu. Anonymně projekt neotevře ani
+   ručně zadanou adresou. Skript bere token z klíčenky:
+
+   ```bash
+   security add-generic-password -a "$USER" -s expo-token -U -w "$(pbpaste)"
+   ```
+
+   Token se vyrábí na <https://expo.dev/settings/access-tokens>; do repozitáře
+   ani do `.env` nepatří.
+
+2. **Mac má víc síťových rozhraní** a Expo si umí vybrat to, na kterém telefon
+   není — QR pak vede na adresu, kam se telefon nedovolá. Skript vezme adresu
+   z Wi-Fi.
 
 Adresa API se bere z `EXPO_PUBLIC_API_URL`; výchozí je produkce
 (`https://orlickypohar-api.klihovka.cz`). Proti falešnému API z repozitáře:
