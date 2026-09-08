@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Serilog;
 using OrlickyPohar.Api.Data;
@@ -31,7 +32,22 @@ try
 
     builder.Services.AddDbContext<AppDbContext>(o => o.UseNpgsql(connectionString));
     builder.Services.AddSingleton(TimeProvider.System);
-    builder.Services.AddOpenApi();
+    // .NET popisuje čísla jako ["integer","string"], protože je při čtení
+    // přijímá i v uvozovkách. Odpovědi je ale píšou vždycky jako čísla —
+    // a generovaný klient by jinak u každého bodu nutil ověřovat, jestli
+    // není řetězec. Dokument má říkat, co se doopravdy vrací.
+    builder.Services.AddOpenApi(o => o.AddSchemaTransformer((schema, _, _) =>
+    {
+        if (schema.Type is { } typ
+            && (typ & (JsonSchemaType.Integer | JsonSchemaType.Number)) != 0
+            && (typ & JsonSchemaType.String) != 0)
+        {
+            schema.Type = typ & ~JsonSchemaType.String;
+            schema.Pattern = null;
+        }
+
+        return Task.CompletedTask;
+    }));
 
     // Výčty v JSONu jako jména, ne čísla. Importní soubor píší i lidé
     // a "PoKategoriich" je pro ně čitelné; "1" znamená hledat v kódu.
