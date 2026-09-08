@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#103E4E",
+        "backgroundColor": "#FCFCFB",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -25,9 +25,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#103E4E",
+          "backgroundColor": "#FCFCFB",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 140
+          "imageWidth": 150
         }
       ]
     ],

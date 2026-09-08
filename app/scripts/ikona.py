@@ -1,54 +1,78 @@
 #!/usr/bin/env python3
 """Vyrobí ikony a splash appky.
 
-Kreslí se kódem schválně: ikona je pár tvarů a takhle se dá doladit bez
-grafického programu — a hlavně je vidět v diffu, co se změnilo. Barvy jsou
-z palety webu (`web/app/globals.css`), aby appka a web vypadaly jako jedna věc.
+Kreslí se kódem schválně: značka je pár tvarů a takhle se dá doladit bez
+grafického programu — a hlavně je v diffu vidět, co se změnilo.
+
+Tvarosloví je od log závodních tříd (vzorem bylo logo Melges 24 Worlds):
+**zahnutá zadní hrana** místo rovného trojúhelníku, **překryv plachet**
+s tenkými proužky mezi nimi a **oblouk místo trupu**. Není to obrázek
+lodičky, je to značka závodu.
+
+Světlé pozadí je záměr. Domovská obrazovka bývá tmavá nebo fotka, takže
+světlá ikona z ní vystoupí; modrá by splynula s tapetou.
 
     python3 scripts/ikona.py
 """
+import math
+
 from PIL import Image, ImageDraw
 
-VODA_SVETLA = (43, 138, 168)
-VODA_TMAVA = (16, 62, 78)
-PAPIR = (251, 250, 248)
+NAMORNI = (18, 52, 78)
+CERVENA = (196, 30, 58)
+SEDA = (206, 210, 214)
+PAPIR = (252, 252, 251)
+BILA = (255, 255, 255)
 
 S = 1024  # kreslí se ve velkém, zmenšuje se až na konci
 
 
-def pozadi():
-    """Svislý přechod, aby ikona nebyla placka."""
-    obraz = Image.new("RGB", (S, S), VODA_TMAVA)
-    kresli = ImageDraw.Draw(obraz)
-    for y in range(S):
-        t = y / S
-        kresli.line(
-            [(0, y), (S, y)],
-            fill=tuple(round(a + (b - a) * t) for a, b in zip(VODA_SVETLA, VODA_TMAVA)),
-        )
-    return obraz
+def bricho(od, do, vydut, kroku=48):
+    """Body podél prohnuté hrany.
+
+    Mezi dvěma body se natáhne tětiva a odsadí se do strany podle sinu.
+    Kladná hodnota vydouvá ven (plachta pod tlakem), záporná dovnitř —
+    a právě záporná dělá ten ostrý cíp, kvůli kterému značka vypadá rychle.
+    """
+    (x1, y1), (x2, y2) = od, do
+    dx, dy = x2 - x1, y2 - y1
+    delka = math.hypot(dx, dy) or 1
+    nx, ny = -dy / delka, dx / delka
+
+    return [
+        (x1 + dx * (i / kroku) - nx * math.sin(math.pi * i / kroku) * vydut,
+         y1 + dy * (i / kroku) - ny * math.sin(math.pi * i / kroku) * vydut)
+        for i in range(kroku + 1)
+    ]
 
 
-def plachetnice(barva=PAPIR):
-    """Loď v náklonu: velká plachta, kosatka, trup a vlna. Na průhledném."""
+def plachta(k, hlava, rohovnik, pata, barva, lem=-110, spodek=-40):
+    """Plachta: vrchol, cíp a pata; zadní hrana a spodek prohnuté dovnitř."""
+    body = [hlava] + bricho(hlava, rohovnik, lem) + [rohovnik]
+    body += bricho(rohovnik, pata, spodek) + [pata]
+    k.polygon(body, fill=barva)
+
+
+def oblouk(k, od, do, siln, tenky, barva):
+    """Tenký oblouk místo trupu — loď se naznačí, nekreslí."""
+    k.polygon(bricho(od, do, siln) + list(reversed(bricho(od, do, tenky))), fill=barva)
+
+
+def znacka(hlavni=NAMORNI, druha=CERVENA, treti=SEDA):
+    """Tři plachty v překryvu a oblouk pod nimi. Na průhledném podkladu."""
     vrstva = Image.new("RGBA", (S, S), (0, 0, 0, 0))
     k = ImageDraw.Draw(vrstva)
 
-    # Hlavní plachta — od vrcholu stěžně dolů a doprava.
-    k.polygon([(548, 168), (548, 690), (858, 690)], fill=barva)
-    # Kosatka — menší, na druhou stranu stěžně, s mezerou.
-    k.polygon([(508, 236), (508, 690), (250, 690)], fill=barva)
-    # Trup.
-    k.polygon([(196, 726), (906, 726), (806, 838), (306, 838)], fill=barva)
+    # Vzadu šedá, jen jako proužek mezi ostatními.
+    plachta(k, (300, 150), (556, 512), (330, 496), treti, -60, -20)
+    # Hlavní plachta: nejvyšší, ostrý cíp doprava dolů.
+    plachta(k, (600, 96), (920, 516), (462, 466), hlavni, -122, -52)
+    # Přední plachta překrývá hlavní; cíp končí nad obloukem, ne v něm.
+    plachta(k, (232, 200), (742, 544), (368, 556), druha, -108, -44)
 
-    # Vlny pod trupem, aby loď na něčem stála. Krátké a pod ním, ne přes
-    # celou šířku — jinak vypadají jako dvě čáry vedle lodi.
-    k.rounded_rectangle([(268, 892), (652, 934)], radius=21, fill=barva)
-    k.rounded_rectangle([(704, 892), (858, 934)], radius=21, fill=barva)
+    oblouk(k, (398, 624), (904, 586), 50, 18, hlavni)
 
-    # Náklon. Loď, která stojí rovně, vypadá jako v přístavu.
-    vrstva = vrstva.rotate(-7, resample=Image.BICUBIC, center=(S / 2, S / 2))
-    return usad(vrstva)
+    return usad(vrstva, podil=0.82, posun=0.0)
 
 
 def usad(vrstva, podil=0.74, posun=-0.03):
@@ -85,23 +109,29 @@ def uloz(obraz, jmeno, velikost=S):
 
 
 def main():
-    lod = plachetnice()
+    mark = znacka()
 
-    ikona = pozadi()
-    ikona.paste(lod, (0, 0), lod)
+    ikona = Image.new("RGB", (S, S), PAPIR)
+    ikona.paste(mark, (0, 0), mark)
     uloz(ikona, "icon.png")
     uloz(ikona, "favicon.png", 96)
 
-    # Splash: jen loď, pozadí si obarví Expo podle app.json.
-    uloz(lod, "splash-icon.png")
+    # Splash: značka na průhledném, pozadí obarví Expo podle app.json.
+    uloz(mark, "splash-icon.png")
 
-    # Android maskuje ikonu na kruh a ořízne okraje, takže popředí musí být
-    # menší a uprostřed — jinak přijdeš o plachtu.
-    uloz(usad(lod, podil=0.58), "android-icon-foreground.png")
-    uloz(Image.new("RGB", (S, S), VODA_TMAVA), "android-icon-background.png")
+    # Android maskuje ikonu na kruh a ořezává okraje, takže popředí musí být
+    # menší a uprostřed — jinak přijdeš o cípy plachet.
+    uloz(usad(znacka(), podil=0.58, posun=0.0), "android-icon-foreground.png")
+    uloz(Image.new("RGB", (S, S), PAPIR), "android-icon-background.png")
 
-    # Monochromatická verze pro témata Androidu: silueta, žádné pozadí.
-    uloz(usad(plachetnice((255, 255, 255)), podil=0.58), "android-icon-monochrome.png")
+    # Monochromatická vrstva je jednobarevná maska, takže tři plachty přes
+    # sebe by splynuly v jednu skvrnu. Kreslí se proto jen hlavní plachta
+    # a oblouk — tvar zůstane poznat.
+    silueta = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    k = ImageDraw.Draw(silueta)
+    plachta(k, (600, 96), (920, 516), (462, 466), BILA, -122, -52)
+    oblouk(k, (398, 624), (904, 586), 50, 18, BILA)
+    uloz(usad(silueta, podil=0.58, posun=0.0), "android-icon-monochrome.png")
 
 
 if __name__ == "__main__":
