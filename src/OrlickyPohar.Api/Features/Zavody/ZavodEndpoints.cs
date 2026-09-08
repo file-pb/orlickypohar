@@ -68,7 +68,7 @@ public static class ZavodEndpoints
                         && z.Serie!.Slug == serieSlug && z.Serie.Publikovano)
             .Select(z => new
             {
-                z.Id, z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel,
+                z.Id, z.SerieId, z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel,
                 z.Stav, z.PuvodniDatum, z.PocetSkrtu, z.Vyhodnoceni, z.KoeficientDoSerie,
             })
             .FirstOrDefaultAsync(ct);
@@ -135,6 +135,17 @@ public static class ZavodEndpoints
             .. rozjizdky.Select(r => new RozjizdkaVstup(r.Cislo,
                 [.. r.Vysledky.Select(v => new VysledekVstup(v.Lod, v.Kategorie, v.PoradiVCili, v.Kod))])),
         ], zavod.PocetSkrtu);
+
+        // Kategorie se řadí podle série, ne podle toho, v jakém pořadí je
+        // vrátila databáze. Abecedně by Nad7m předběhlo Race bez důvodu
+        // a klienti by to museli dorovnávat každý sám.
+        var poradiKategorii = await db.Kategorie
+            .Where(k => k.SerieId == zavod.SerieId)
+            .ToDictionaryAsync(k => k.Nazev, k => k.Poradi, ct);
+
+        poradi = [.. poradi
+            .OrderBy(v => poradiKategorii.GetValueOrDefault(v.Kategorie, int.MaxValue))
+            .ThenBy(v => v.Poradi)];
 
         return Results.Ok(new ZavodDetailDto(
             zavod.Slug, zavod.Nazev, zavod.Datum, zavod.DatumKonce, zavod.Typ, zavod.Poradatel,

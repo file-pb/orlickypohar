@@ -38,12 +38,22 @@ try
     builder.Services.ConfigureHttpJsonOptions(o =>
         o.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
+    // Veřejné čtení pouští prohlížeč z libovolného původu. Web renderuje
+    // serverem, takže to nikdy nepotřeboval, ale appka má i webový cíl
+    // a běží jako origin. Povoleno je jen GET: import je POST, takže se
+    // přes prohlížeč z cizí stránky zavolat nedá ani s tokenem.
+    builder.Services.AddCors(o => o.AddDefaultPolicy(p => p
+        .AllowAnyOrigin()
+        .WithMethods("GET")
+        .AllowAnyHeader()));
+
     builder.Services.AddHealthChecks()
         .AddDbContextCheck<AppDbContext>("postgres", tags: ["ready"]);
 
     var app = builder.Build();
 
     app.UseSerilogRequestLogging();
+    app.UseCors();
 
     // Liveness: běží proces. Readiness: umí obsloužit provoz (drží i databáze).
     app.MapHealthChecks("/health", new() { Predicate = _ => false });

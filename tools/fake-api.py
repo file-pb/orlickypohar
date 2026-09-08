@@ -17,6 +17,8 @@ D = json.load(open("data/2026-nanecisto.json", encoding="utf-8"))
 LODE = {l["klic"]: l for l in D["lode"]}
 OSOBY = {o["klic"]: o for o in D["osoby"]}
 KAT = {p["lod"]: p["kategorie"] for p in D["prihlasky"]}
+# Kategorie se řadí podle série, ne abecedně — jinak Nad7m předběhne Race.
+KAT_PORADI = {k["nazev"]: k["poradi"] for k in D["kategorie"]}
 
 # Kódy v pořadí podle závažnosti; doložené je jen DNF před DNS.
 ZAVAZNOST = ["Rdg", "Ret", "Dnf", "Ocs", "Dsq", "Dns", "Dnc"]
@@ -68,7 +70,7 @@ def vysledky_zavodu(rozjizdky, pocet_skrtu=0):
                          "_nej": min(zbylo, default=10 ** 6)})
 
     vysledek = []
-    for kategorie in {v["kategorie"] for v in spocteno}:
+    for kategorie in sorted({v["kategorie"] for v in spocteno}, key=KAT_PORADI.get):
         v_kategorii = sorted((v for v in spocteno if v["kategorie"] == kategorie),
                              key=lambda v: (v["body"], v["_nej"], v["lod"]))
         for i, v in enumerate(v_kategorii):
@@ -172,13 +174,17 @@ class H(BaseHTTPRequestHandler):
                                for v in vysledky_zavodu(z["rozjizdky"], z.get("pocetSkrtu", 0))],
                     "lode": [{"lod": nazvy(u["lod"]), "kategorie": KAT[u["lod"]],
                               "kormidelnik": jmeno(u["kormidelnik"]) if u.get("kormidelnik") else None}
-                             for u in sorted(z["ucasti"], key=lambda u: nazvy(u["lod"]))]}
+                             for u in sorted(z["ucasti"],
+                                             key=lambda u: (KAT_PORADI[KAT[u["lod"]]], nazvy(u["lod"])))]}
         else:
             return self.send_error(404)
 
         data = json.dumps(telo, ensure_ascii=False).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
+        # Appka běží ve vývoji i v prohlížeči, takže potřebuje totéž,
+        # co skutečné API — jinak ji CORS zastaví dřív, než se načte.
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         self.wfile.write(data)
