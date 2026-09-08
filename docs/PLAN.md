@@ -290,9 +290,29 @@ výčtu, ne změna modelu.
    se workflow vede na rozjížďce a ne na jednotlivém řádku: projednává se
    incident jako celek.
 
+### Proč to jednou bude stát za to
+
+Filip, 8. 9. 2026: *„mají v tom bordel, ale bylo by fajn to jednou dát
+dokupy, hodně lidí si stěžuje."*
+
+To je jediný důvod, který u téhle funkce rozhoduje. **Cena není v modelu,
+ale v tom, že je vidět, co se rozhodlo a proč** — kdo protestoval, jak to
+komise uzavřela a podle kterého pravidla. Dneska je to ústní domluva na
+břehu, a co si každý odnese, se rozchází; odtud ty stížnosti.
+
+Plyne z toho i to, co se **nesmí** postavit: evidence, do které se zapíše
+jen výsledek trestu. Tím by se z nepřehledného procesu stal nepřehledný
+proces se záznamem. Užitečné je zjištění skutečností, závěr a odkaz na
+pravidlo — tedy přesně to, co po komisi chtějí i závodní pravidla.
+
+Je to zároveň částečná odpověď na otázku, jestli má být protest veřejný:
+když si lidé stěžují na neprůhlednost, je zveřejněné rozhodnutí ta hodnota.
+Potvrdit to ale musí rozhodčí, ne my.
+
 ### Kdy to stavět
 
-**Ne teď.** Protest bez administrace a bez identity nemá kdo zapsat —
+**Ne teď — jen s tím počítat.** Filipovo rozhodnutí z 8. 9. 2026. Protest
+bez administrace a bez identity nemá kdo zapsat —
 patří do fáze 5, kde vzniká zadávání a schvalování, a rozhodnutí komise je
 přesně ten druh zápisu, u kterého musí být vidět, kdo ho udělal.
 
