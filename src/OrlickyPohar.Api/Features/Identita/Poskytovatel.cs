@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using OrlickyPohar.Api.Data;
 
 namespace OrlickyPohar.Api.Features.Identita;
@@ -63,6 +64,35 @@ public static class Poskytovatel
                     // takže pět minut navíc pro token, který měl přestat
                     // platit, je zbytečně dlouhé okno.
                     ClockSkew = TimeSpan.FromSeconds(30),
+                };
+
+                // Důvod odmítnutí do logu, vlastním záznamem.
+                //
+                // JwtBearer ho píše sám, ale na úrovni Information — a
+                // appsettings mají `Microsoft.AspNetCore` stažené na Warning,
+                // takže se do Sequ nedostane. Výsledkem je 401 bez jediné
+                // stopy po tom, co na tokenu nesedělo: podpis, publikum,
+                // vypršení, nebo že to vůbec není JWT. Hledá se pak chyba,
+                // o které log mlčí, a to je nejdražší druh chyby.
+                o.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = kontext =>
+                    {
+                        // Tvar tokenu se hlásí zvlášť. Neprůhledný token od
+                        // poskytovatele, který má u aplikace nastavené
+                        // „Bearer" místo „JWT", spadne na nečitelném formátu
+                        // — a z hlášky o formátu se ta příčina neuhodne.
+                        var token = kontext.Request.Headers.Authorization
+                            .ToString()
+                            .Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase);
+                        var castí = string.IsNullOrEmpty(token) ? 0 : token.Split('.').Length;
+
+                        Log.Warning(
+                            "Token odmítnut: {Duvod}. Částí tokenu: {Casti} (JWT má tři; méně znamená neprůhledný token).",
+                            kontext.Exception.Message, castí);
+
+                        return Task.CompletedTask;
+                    },
                 };
             });
 
