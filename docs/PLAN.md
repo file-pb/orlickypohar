@@ -1183,27 +1183,22 @@ to test: prázdný seznam práv znamenal „nesmí ani číst".
 
 | Zbývá | Proč to ještě není |
 |---|---|
-| Ověřování tokenu (JWT) | balíček `Microsoft.AspNetCore.Authentication.JwtBearer` **nejde z pracovního stroje stáhnout** — viz níž |
+| ~~Ověřování tokenu (JWT)~~ | hotovo 9. 9. 2026, `GET /ja`; bez konfigurace poskytovatele se endpoint nezaregistruje |
 | Zitadel ve stacku platformy | subdoména, databáze, tajemství; patří do `platform` |
 | Udělování rolí | fáze 5, spolu s administrací |
 
-**NuGet je z pracovního Macu nedostupný, stejně jako Docker Hub.** `curl` na
-`api.nuget.org` vrátí 200 na index, na endpoint s podpisy i na samotný
-`.nupkg`, ale `dotnet restore` na téže adrese padá na `NU1301: Socket is not
-connected`. Není to tedy pravidlo firewallu na doméně, ale něco mezi síťovým
-agentem a HTTP stackem .NETu.
+**Balíček JwtBearer šel přidat až po vypnutí VPN.** `dotnet restore` padal
+na `NU1301: Socket is not connected`, zatímco `curl` na tutéž adresu vracel
+200. Vypadalo to jako nedostupný NuGet — po vzoru nedostupného Docker Hubu —
+a chvíli to tak stálo i tady v plánu. **Nebyla to pravda:** za vším byla VPN
+do práce a s vypnutou VPN se stáhne i balíček, který není v cache. Celý
+rozbor je v [POUCENI.md](https://github.com/file-pb/platform/blob/main/docs/POUCENI.md),
+poučení 33.
 
-**Projektu se to netýká, jen pracovního stroje.** Image se staví v CI, kde
-síť funguje, a server si stahuje hotovou image — přidat balíček tedy jde,
-jen se neověří lokálně. Je to táž kategorie jako integrační testy: nejedou
-tady, běží v CI. A selhání je levné — když se balíček nenačte nebo se kód
-nepřeloží, spadne build a nasazení se vůbec nespustí, takže na produkci se
-nic špatného nedostane.
-
-Praktický dopad je proto jediný: **u kódu, který nový balíček používá, chybí
-lokální kontrola překladu.** Proto je ověřování tokenu v samostatném souboru
-a zbytek fáze 4 na balíčku nezávisí — model i oprávnění se dají překládat
-a testovat na místě.
+Zůstává z toho jedna věc, která platí bez ohledu na příčinu: **ověřování
+tokenu je v samostatném souboru** a model ani oprávnění na balíčku nezávisí.
+Vzniklo to jako obcházení domnělé překážky, ale dává to smysl samo o sobě —
+poskytovatel identity má být na jednom místě.
 
 ## Schéma řešení
 
