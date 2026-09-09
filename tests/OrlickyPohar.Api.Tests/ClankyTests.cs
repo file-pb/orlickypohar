@@ -239,7 +239,10 @@ public class ClankyTests(PostgresFixture fixture)
                 Slug = "smazany",
                 Titulek = "Smazaný",
                 Telo = "Text.",
-                PublikovanoV = Kveten,
+                // V UTC, protože tenhle zápis jde do databáze přímo a míjí
+                // převod, který dělá import. Npgsql jiný posun než nula
+                // do `timestamp with time zone` nepřijme.
+                PublikovanoV = Kveten.ToUniversalTime(),
                 Stav = StavClanku.Smazano,
             };
             db.Clanky.Add(smazany);
