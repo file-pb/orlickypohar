@@ -80,7 +80,6 @@ header.hlavicka a.znacka { display: inline-flex; align-items: center; gap: 0.55r
    vidět. Zdroj je 512×512, takže zvětšení nic nestojí. Velikost je v CSS,
    ne jen v atributech, aby se dala na úzkém displeji stáhnout. */
 header.hlavicka a.znacka img { display: block; width: 64px; height: 64px; }
-header.hlavicka a.znacka { font-size: 1.15rem; font-weight: 600; }
 header.hlavicka nav { display: flex; gap: 1rem; flex: none; }
 header.hlavicka nav a { color: var(--tlumeny); font-weight: 500; font-size: 0.9rem; }
 header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
@@ -96,7 +95,7 @@ header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
    by se pilulky slily do jedné plochy, proto až odsud. */
 @media (min-width: 1180px) {
   header.hlavicka .obal { padding-top: 0.9rem; padding-bottom: 0.9rem; }
-  header.hlavicka a.znacka { font-size: 1.25rem; }
+  header.hlavicka a.znacka { font-size: 1.05rem; }
   header.hlavicka a.znacka img { width: 76px; height: 76px; }
   header.hlavicka nav { gap: 0.35rem; align-items: center; }
   header.hlavicka nav > a {
