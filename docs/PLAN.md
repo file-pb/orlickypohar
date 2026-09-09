@@ -881,7 +881,7 @@ Počítáno na pět hodin týdně.
 | 1 | ~~**Veřejné čtení** — model, import, stránky série a závodů~~ | **hotovo 7. 9. 2026** | Model se o skutečná data prověřil dřív, než se na něj něco postavilo — a našel dvě chyby v bodování |
 | 2 | ~~**Bodování** — nízkobodový systém, kódy, škrty, pořadí po kategoriích~~ | **hotovo** | Čisté funkce **ověřené proti skutečnému sešitu rozhodčího**, vydané endpointem a vidět na webu |
 | 3 | ~~**Mobilní appka, jen čtení**~~ | **hotovo 8. 9. 2026** | Nepotřebovala přihlášení, takže vznikla dřív než identita. Běží na telefonu, typy si bere z OpenAPI a jde poslat jako APK |
-| 4 | **Identita a role** — Zitadel, mapování `(issuer, subject) → UserId` | rozdělané | Model, mapování a oprávnění hotové 9. 9. 2026; ověřování tokenu a Zitadel na serveru zbývají |
+| 4 | ~~**Identita a role** — Zitadel, mapování `(issuer, subject) → UserId`~~ | **hotovo 9. 9. 2026** | Zitadel na vlastním stroji, přihlášení na webu, API ověřuje tokeny. Odblokovalo odloženou položku platformy |
 | 5 | **Administrace a workflow** — zadávání, stavy, publikace, protesty a penalizace | 2–3 týdny | Až když je co spravovat. Protest nemá kdo zapsat dřív, než existuje identita |
 | 6 | **Blog a fotky** — model, import, veřejné čtení, novinky na webu | rozdělané | Model, import i stránky hotové 9. 9. 2026; psaní článků čeká na administraci z fáze 5 |
 | 7 | **Upozornění** — veřejná i účastnická, odesílání, Outbox | 2–3 týdny | Účastnická stojí na identitě z fáze 4 a na napojení osoby k lodi |
@@ -1181,11 +1181,29 @@ smysl. Hlídá to `PravaTests`.
 nesmí záviset na obsahu tabulky. Napsané to bylo nejdřív obráceně a našel
 to test: prázdný seznam práv znamenal „nesmí ani číst".
 
+**Dokončeno 9. 9. 2026.** Zitadel běží na `ucty.klihovka.cz` jako součást
+stacku platformy, web má přihlášení a API ověřuje podpisy tokenů.
+
+| Kus | Kde |
+|---|---|
+| Zitadel ve stacku | `platform/stack/docker-compose.yml`, postup v [ZITADEL.md](https://github.com/file-pb/platform/blob/main/runbooks/ZITADEL.md) |
+| Ověřování tokenu | `Features/Identita/Poskytovatel.cs` |
+| `GET /ja` | kdo jsem a co smím; při prvním přihlášení účet založí |
+| Přihlášení na webu | `web/lib/oidc.ts`, cesty `/prihlaseni`, `/prihlaseni/zpet`, `/odhlaseni` |
+| Profil v hlavičce | `web/app/profil.tsx`, na `<details>` — bez javascriptu |
+
+**Dvě věci, které se budou opakovat u každé další aplikace** a stály čtyři
+kola nasazení (rozbor je v [POUCENI.md](https://github.com/file-pb/platform/blob/main/docs/POUCENI.md), poučení 36):
+
+1. **Aplikace musí mít *Auth Token Type* `JWT`.** Výchozí `Bearer Token` je
+   neprůhledný řetězec, který se nedá ověřit podpisem.
+2. **Profil se čte z `userinfo`, ne z tokenu.** Přístupový token jméno ani
+   e-mail nenese; jsou v ID tokenu, a ten patří klientovi, ne API.
+
 | Zbývá | Proč to ještě není |
 |---|---|
-| ~~Ověřování tokenu (JWT)~~ | hotovo 9. 9. 2026, `GET /ja`; bez konfigurace poskytovatele se endpoint nezaregistruje |
-| Zitadel ve stacku platformy | subdoména, databáze, tajemství; patří do `platform` |
-| Udělování rolí | fáze 5, spolu s administrací |
+| Udělování rolí | fáze 5, spolu s administrací — dnes se `Opravneni` zapisuje jen ručně do databáze |
+| Přihlášení v appce | tentýž tok s PKCE, ale s obnovovacím tokenem; na telefonu se sezení nedrží v cookie |
 
 **Balíček JwtBearer šel přidat až po vypnutí VPN.** `dotnet restore` padal
 na `NU1301: Socket is not connected`, zatímco `curl` na tutéž adresu vracel
@@ -1219,6 +1237,9 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
 3. **Nasazení** — nic ručního. Push do `main` postaví obě image a háček je
    vymění na serveru i s `docker-compose.yml`.
 4. **Otázka na rozhodčího** — jediná zbývající, viz níž. Fáze 2 na ní stojí.
+   Přihlášení už funguje, takže další na řadě je **fáze 5**: administrace,
+   udělování rolí a workflow výsledků. Do té doby je `/ja` sice živé, ale
+   nikdo nemá jediné oprávnění a nic za přihlášením není.
 5. **Skutečná data** — až dorazí, nahradí `data/2025-mock.json` a nahrají se
    importem. Struktura zůstane.
 
