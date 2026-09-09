@@ -65,10 +65,15 @@ public static class Prava
         // Čtenáře řeší `Smi` dřív, než se sem dojde.
         Role.Ctenar => true,
 
-        // Rozhodčí není stupeň, takže ho nedá editor ani „vyšší" role obecně.
+        // Rozhodčí není stupeň, takže ho nedá editor, organizátor ani
+        // „vyšší" role obecně.
         Role.Rozhodci => udelena is Role.Rozhodci or Role.Spravce,
 
-        Role.Editor => udelena is Role.Editor or Role.Spravce,
+        // Organizátor píše i na blog, takže obsahuje editora. Obráceně ne:
+        // editor je role pro toho, kdo umí psát o závodě, ale nemá do něj
+        // zasahovat.
+        Role.Editor => udelena is Role.Editor or Role.Organizator or Role.Spravce,
+        Role.Organizator => udelena is Role.Organizator or Role.Spravce,
         Role.Spravce => udelena is Role.Spravce,
 
         _ => false,

@@ -27,6 +27,23 @@ public enum StavZavodu
     /// <summary>Jen termín v předběžném kalendáři ročníku.</summary>
     Planovany = 0,
 
+    /// <summary>
+    /// Termín je jistý, ale pořadatel závod ještě nevypsal.
+    /// <para>
+    /// Číslo je 4, tedy mimo řadu, a musí tak zůstat: stavy jsou v databázi
+    /// u každé zastávky a přečíslování by z odjetých závodů udělalo zrušené.
+    /// Pořadí stavů v čase nese tenhle výčet svým zápisem, ne svými čísly.
+    /// </para>
+    /// <para>
+    /// Je to rozdíl, který závodník potřebuje a kalendář ho dosud neumel
+    /// říct: „počítáme s tímhle termínem, ale ještě si neberte dovolenou"
+    /// versus „termín platí". Bez něj by se muselo čekat s celým kalendářem
+    /// na vypsání prvního závodu, nebo tvrdit o nejistém termínu, že je
+    /// vypsaný.
+    /// </para>
+    /// </summary>
+    Potvrzeny = 4,
+
     /// <summary>Pořadatel vydal vypsání závodu a plachetní směrnice.</summary>
     Vypsany = 1,
 

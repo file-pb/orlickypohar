@@ -472,7 +472,14 @@ internal static class ImportHandler
             // Do UTC, ze stejného důvodu jako start rozjížďky: Npgsql jiný
             // posun do `timestamp with time zone` nezapíše.
             c.PublikovanoV = v.PublikovanoV.ToUniversalTime();
-            c.Publikovano = v.Publikovano;
+            // Soubor umí říct jen „zveřejnit, nebo ne" a je to schválně:
+            // koncept, skrytí a mazání jsou úkony v administraci, ne obsah
+            // ročníku. Nezveřejněný článek ze souboru je tedy koncept.
+            //
+            // Znovunahrání souboru vrátí i článek, který někdo mezitím
+            // smazal. Je to důsledek toho, že soubor je pravdou o tom, co
+            // pojmenuje — stejně jako u výsledků.
+            c.Stav = v.Publikovano ? StavClanku.Publikovano : StavClanku.Draft;
         }
 
         await db.SaveChangesAsync(ct);

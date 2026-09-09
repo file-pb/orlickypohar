@@ -101,4 +101,52 @@ public class PravaTests
         Assert.False(Prava.Smi(obojí, new(Role.Spravce, Serie, Radava)));
         Assert.False(Prava.Smi(obojí, new(Role.Spravce, Serie)));
     }
+
+    [Fact]
+    public void Organizator_obsahuje_editora_ale_ne_naopak()
+    {
+        UdeleneRole[] organizator = [new(Role.Organizator, Serie, Radava)];
+        UdeleneRole[] editor = [new(Role.Editor, Serie, Radava)];
+
+        // Organizátor píše i na blog, takže smí, co smí editor.
+        Assert.True(Prava.Smi(organizator, new(Role.Editor, Serie, Radava)));
+
+        // Editor je role pro toho, kdo umí psát o závodě, ale nemá do něj
+        // zasahovat. Kdyby obsahoval organizátora, nebyla by k čemu.
+        Assert.False(Prava.Smi(editor, new(Role.Organizator, Serie, Radava)));
+    }
+
+    [Fact]
+    public void Organizator_nesmi_schvalovat_a_rozhodci_nesmi_poradat()
+    {
+        UdeleneRole[] organizator = [new(Role.Organizator, Serie)];
+        UdeleneRole[] rozhodci = [new(Role.Rozhodci, Serie)];
+
+        // Zapsat výsledky a schválit je nemá dělat tentýž člověk, jinak je
+        // schválení jen druhé kliknutí téhož.
+        Assert.False(Prava.Smi(organizator, new(Role.Rozhodci, Serie)));
+        Assert.False(Prava.Smi(rozhodci, new(Role.Organizator, Serie)));
+    }
+
+    [Fact]
+    public void Spravce_obsahuje_i_organizatora()
+    {
+        UdeleneRole[] spravce = [new(Role.Spravce, Serie)];
+
+        Assert.True(Prava.Smi(spravce, new(Role.Organizator, Serie, Izolepa)));
+        Assert.True(Prava.Smi(spravce, new(Role.Editor, Serie, Izolepa)));
+    }
+
+    [Fact]
+    public void Organizator_rocniku_smi_na_kteroukoliv_zastavku()
+    {
+        // Organizátor celého ročníku může to samé na kterékoliv jeho
+        // zastávce; organizátor jedné zastávky jen na ní.
+        UdeleneRole[] rocnik = [new(Role.Organizator, Serie)];
+        UdeleneRole[] jedna = [new(Role.Organizator, Serie, Radava)];
+
+        Assert.True(Prava.Smi(rocnik, new(Role.Organizator, Serie, Radava)));
+        Assert.True(Prava.Smi(rocnik, new(Role.Organizator, Serie, Izolepa)));
+        Assert.False(Prava.Smi(jedna, new(Role.Organizator, Serie, Izolepa)));
+    }
 }

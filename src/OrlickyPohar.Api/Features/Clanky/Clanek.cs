@@ -4,6 +4,37 @@ using OrlickyPohar.Api.Features.Zavody;
 namespace OrlickyPohar.Api.Features.Clanky;
 
 /// <summary>
+/// Stav článku. Zadáno Filipem 9. 9. 2026: koncept, publikováno, skryté,
+/// smazané.
+/// <para>
+/// <b>Koncept a skryté nejsou totéž</b>, i když veřejnost nevidí ani jedno.
+/// Koncept nikdy nevyšel a autor s ním pracuje; skrytý článek vyšel a někdo
+/// ho stáhl. Ve výpisu pro autora je to rozdíl mezi „dopiš to" a „rozhodni,
+/// jestli se to vrátí".
+/// </para>
+/// <para>
+/// <b>Smazané je stav, ne smazání řádku.</b> Odkaz na článek už mohl někam
+/// odejít a překlep v mazání je jedno kliknutí; obojí mluví pro to, aby se
+/// dal článek vrátit. Navíc tím zůstává obsazený slug, takže se pod stejnou
+/// adresou nemůže objevit jiný text.
+/// </para>
+/// </summary>
+public enum StavClanku
+{
+    /// <summary>Rozepsané, nikdy nevyšlo.</summary>
+    Draft = 0,
+
+    /// <summary>Vidí veřejnost.</summary>
+    Publikovano = 1,
+
+    /// <summary>Vyšlo a bylo stáhnuté.</summary>
+    Skryty = 2,
+
+    /// <summary>Smazané. Nevidí ho veřejnost ani výpis pro autora.</summary>
+    Smazano = 3,
+}
+
+/// <summary>
 /// Novinka nebo článek. Blog je <b>na dvou úrovních</b>: sérii píše organizátor
 /// poháru (pozvánky na sezónu, souhrny), zastávku její pořadatel (pozvánka na
 /// svůj závod, jeho příběh).
@@ -60,5 +91,13 @@ public class Clanek
     /// </summary>
     public DateTimeOffset PublikovanoV { get; set; }
 
-    public bool Publikovano { get; set; }
+    /// <summary>
+    /// Viditelnost. Veřejné čtení pouští jen <see cref="StavClanku.Publikovano"/>.
+    /// <para>
+    /// Nahradilo příznak <c>Publikovano</c>, protože „nezveřejněno" mělo dva
+    /// různé významy — rozepsané a stáhnuté — a jeden příznak je rozlišit
+    /// neumí.
+    /// </para>
+    /// </summary>
+    public StavClanku Stav { get; set; } = StavClanku.Draft;
 }

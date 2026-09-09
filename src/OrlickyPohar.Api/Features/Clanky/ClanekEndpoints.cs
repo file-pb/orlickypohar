@@ -111,6 +111,6 @@ public static class ClanekEndpoints
     private static IQueryable<Clanek> Publikovane(AppDbContext db, int serieId) =>
         db.Clanky.Where(c =>
             c.SerieId == serieId
-            && c.Publikovano
+            && c.Stav == StavClanku.Publikovano
             && (c.ZavodId == null || c.Zavod!.Publikovano));
 }

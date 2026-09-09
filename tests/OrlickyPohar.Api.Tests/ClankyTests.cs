@@ -2,6 +2,9 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Clanky;
 using OrlickyPohar.Api.Features.Import;
 using OrlickyPohar.Api.Features.Zavody;
@@ -214,5 +217,57 @@ public class ClankyTests(PostgresFixture fixture)
 
         // Překlep ve slugu by jinak vyrobil novinku viset u ničeho.
         Assert.Equal(HttpStatusCode.BadRequest, odpoved.StatusCode);
+    }
+
+    [Fact]
+    public async Task Skryty_ani_smazany_clanek_se_ven_nedostane()
+    {
+        // Do stavu Skryty a Smazano se import nedostane — jsou to úkony
+        // v administraci. Zapisují se proto přímo, aby se ověřilo to
+        // podstatné: že je veřejné čtení nepustí.
+        await Nahraj(Rocnik("stavy", clanky: [Novinka("vydany"), Novinka("stahnuty", denVKvetnu: 10)]));
+
+        await using (var scope = fixture.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var stahnuty = await db.Clanky.FirstAsync(c => c.Slug == "stahnuty");
+            stahnuty.Stav = StavClanku.Skryty;
+
+            var smazany = new Clanek
+            {
+                SerieId = stahnuty.SerieId,
+                Slug = "smazany",
+                Titulek = "Smazaný",
+                Telo = "Text.",
+                PublikovanoV = Kveten,
+                Stav = StavClanku.Smazano,
+            };
+            db.Clanky.Add(smazany);
+            await db.SaveChangesAsync();
+        }
+
+        var klient = fixture.CreateClient();
+
+        var seznam = await klient.GetFromJsonAsync<List<ClanekShrnutiDto>>("/serie/stavy/clanky", Json);
+        Assert.Equal(["vydany"], seznam!.Select(c => c.Slug));
+
+        foreach (var slug in new[] { "stahnuty", "smazany" })
+            Assert.Equal(
+                HttpStatusCode.NotFound,
+                (await klient.GetAsync($"/serie/stavy/clanky/{slug}")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Nezverejneny_clanek_ze_souboru_je_koncept()
+    {
+        await Nahraj(Rocnik("koncepty", clanky: [Novinka("rozepsany", publikovano: false)]));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var clanek = await db.Clanky.FirstAsync(c => c.Slug == "rozepsany");
+
+        // Soubor umí říct jen „zveřejnit, nebo ne". Nezveřejněný článek je
+        // tedy koncept, ne skrytý — skrytí je rozhodnutí, které nikdo neudělal.
+        Assert.Equal(StavClanku.Draft, clanek.Stav);
     }
 }

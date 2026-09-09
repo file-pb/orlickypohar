@@ -38,9 +38,6 @@ namespace OrlickyPohar.Api.Migrations
                         .HasMaxLength(600)
                         .HasColumnType("character varying(600)");
 
-                    b.Property<bool>("Publikovano")
-                        .HasColumnType("boolean");
-
                     b.Property<DateTimeOffset>("PublikovanoV")
                         .HasColumnType("timestamp with time zone");
 
@@ -51,6 +48,9 @@ namespace OrlickyPohar.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
+
+                    b.Property<int>("Stav")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Telo")
                         .IsRequired()

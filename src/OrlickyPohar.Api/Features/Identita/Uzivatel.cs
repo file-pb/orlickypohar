@@ -60,14 +60,33 @@ public class UcetVazba
 /// <summary>
 /// Co kdo smí. <c>Rozhodci</c> není stupeň mezi editorem a správcem, ale
 /// <b>funkce v procesu</b> — proto samostatná role, ne úroveň.
+/// <para>
+/// <b>Čísla nejdou po řadě a nesmí se „srovnat".</b> Hodnoty se ukládají do
+/// databáze, takže přečíslování by tiše přepsalo význam existujících řádků.
+/// Nová role proto dostává další volné číslo, ne své místo v pořadí — a na
+/// ničem to nezávisí, protože se role nikde neporovnávají velikostí, jen
+/// vyjmenovaně v <see cref="Prava"/>.
+/// </para>
 /// </summary>
 public enum Role
 {
     /// <summary>Vidí publikované. Nemusí být přihlášený, proto se neuděluje.</summary>
     Ctenar = 0,
 
-    /// <summary>Zadává přihlášky a výsledky, navrhuje.</summary>
+    /// <summary>Píše na blog svého rozsahu. Nic dalšího.</summary>
     Editor = 1,
+
+    /// <summary>
+    /// Pořadatel závodu. Vypisuje ho, spravuje přihlášené lodě, zakládá
+    /// rozjížďky a zapisuje výsledky — a taky píše na blog, takže obsahuje
+    /// editora.
+    /// <para>
+    /// Přibyla 9. 9. 2026 podle skutečného workflow: kalendář vede rozhodčí,
+    /// ale samotný závod jeho pořadatel. Dřív to obojí spadalo pod editora,
+    /// což slévalo dvě různé odpovědnosti do jedné role.
+    /// </para>
+    /// </summary>
+    Organizator = 4,
 
     /// <summary>Ověřuje a schvaluje výsledky.</summary>
     Rozhodci = 2,

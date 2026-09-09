@@ -189,12 +189,19 @@ Druhá vznikne, až druhý systém skutečně nastane — ne dřív.
 Ročník nezačíná závody, ale **předběžným kalendářem**. Teprve pak pořadatel
 závod vypíše, a nakonec se odjede — nebo zruší, nebo přesune.
 
-| Stav | Co znamená |
-|---|---|
-| `Planovany` | termín v předběžném kalendáři, nic víc |
-| `Vypsany` | pořadatel vydal vypsání závodu a plachetní směrnice |
-| `Odjety` | proběhl; teprve tenhle stav dává výsledkům smysl |
-| `Zruseny` | nekonal se, do poháru se nepočítá vůbec |
+| Stav | Kdo do něj dostane | Co znamená |
+|---|---|---|
+| `Planovany` | rozhodčí | termín v předběžném kalendáři, nic víc |
+| `Potvrzeny` | rozhodčí | **termín je jistý.** Pořadatel ještě závod nevypsal |
+| `Vypsany` | organizátor | vypsání závodu a plachetní směrnice; přihlášky se potvrzují |
+| `Odjety` | organizátor | proběhl; teprve tenhle stav dává výsledkům smysl |
+| `Zruseny` | rozhodčí | nekonal se, do poháru se nepočítá vůbec |
+
+**`Potvrzeny` přibyl podle Filipova zadání 9. 9. 2026.** Je to rozdíl, který
+závodník potřebuje a kalendář ho dosud neumel říct: „počítáme s tímhle
+termínem, ale ještě si neberte dovolenou" versus „termín platí". Bez něj by
+se muselo čekat s celým kalendářem na vypsání prvního závodu, nebo tvrdit
+o nejistém termínu, že je vypsaný.
 
 **Přesun není stav.** Přesunutá zastávka je pořád plánovaná, jen jindy —
 zůstává po ní jen `PuvodniDatum`, protože termín, na který se lidé chystali,
@@ -359,18 +366,82 @@ Správce smí přeskočit dopředu — to už v plánu bylo a platí dál.
 
 ## Role a oprávnění
 
+Upřesněno podle Filipova zadání 9. 9. 2026. Co řekl výslovně je označené,
+zbytek je **odvozený** — a odvození je vidět, aby se dalo opravit.
+
 Práva jsou **rozsahová**: platí buď pro celou sérii, nebo pro jeden závod.
-Pořadatel zastávky spravuje svůj závod, ne cizí.
+Pořadatel zastávky spravuje svůj závod, ne cizí. **Rozsah série pokrývá její
+zastávky, ne naopak.**
 
-| Role | Smí |
-|---|---|
-| Čtenář | vidí publikované |
-| Editor | zadává přihlášky a výsledky, navrhuje |
-| Rozhodčí | ověřuje a schvaluje výsledky |
-| Správce | vše ve svém rozsahu, včetně publikace |
+| Role | Rozsah | Smí |
+|---|---|---|
+| Čtenář | — | vidí publikované; neuděluje se, je to každý |
+| Editor | série i závod | píše na blog svého rozsahu *(zadáno)* |
+| Organizátor | série i závod | vypisuje závod, spravuje přihlášené lodě, rozjížďky a výsledky, píše na blog *(zadáno)* |
+| Rozhodčí | série | kalendář a stavy zastávek, přiřazuje organizátora a editora *(zadáno)*; ověřuje a schvaluje výsledky *(z dřívějšího plánu)* |
+| Správce | série | vše ve svém rozsahu, včetně publikace a udělování rolí |
 
-`Rozhodčí` není stupeň oprávnění, ale **funkce v procesu** — proto je to
-samostatná role, ne úroveň mezi editorem a správcem.
+**Série má tytéž role jako zastávka a vlastní blog** *(zadáno)*. Organizátor
+celého ročníku tedy může to samé na kterékoliv jeho zastávce; organizátor
+jedné zastávky jen na ní.
+
+### Co z toho plyne a co jsem odvodil
+
+**Rozhodčí vládne kalendáři, organizátor závodu.** Rozhodčí zakládá zastávky,
+posouvá je z `Planovany` do `Potvrzeny` a smí je zrušit; teprve pak si závod
+přebírá jeho organizátor, vypíše ho a odjede. Je to rozdělení podle toho, kdo
+o čem skutečně rozhoduje: termín v seriálu je věc rozhodčího, průběh závodu
+věc pořadatele.
+
+**Rozhodčí není stupeň oprávnění, ale funkce v procesu** — proto samostatná
+role, ne úroveň mezi editorem a správcem. Editor nesmí schvalovat a rozhodčí
+sám o sobě nesmí zapisovat výsledky; obojí má jen správce. Hlídá to
+`PravaTests`.
+
+**Editor je podmnožina organizátora, ne jeho předstupeň.** Ze zadání píše
+blog a nic dalšího. Je to role pro toho, kdo umí psát o závodě, ale nemá do
+něj zasahovat — typicky někdo z klubu pořadatele.
+
+**Odvozeno: výsledky zapisuje organizátor, schvaluje rozhodčí.** Ze zadání
+organizátor „zapisuje výsledky"; z dřívějšího plánu rozhodčí „ověřuje
+a schvaluje". Sedí to na sebe: zapsat a schválit nemá dělat tentýž člověk,
+jinak je schválení jen druhé kliknutí téhož.
+
+**Odvozeno: publikuje správce.** Zůstává z dřívějšího plánu. Rozhodčí říká
+„čísla platí", správce „ať to vidí veřejnost" — a to je jiné rozhodnutí,
+zejména u ročníku s vymyšlenými daty.
+
+**Odvozeno: role udělují správci.** Rozhodčí přiřazuje organizátora a editora
+**konkrétní zastávce** *(zadáno)*; udělit někomu právo na celý ročník, nebo
+udělat z někoho rozhodčího, může jen správce. Bez toho by si rozhodčí mohl
+rozšířit vlastní rozsah.
+
+### Příspěvky na blogu se dají psát dopředu
+
+*(zadáno)* Článek se dá skrýt a zobrazit, aby se pozvánka nebo souhrn napsaly
+předem a vyšly, až mají. Model to už umí — `Clanek.Publikovano` je právě
+tenhle příznak a veřejné čtení ho respektuje. Chybí jen obrazovka, která ho
+přepne.
+
+**Nepublikovaná zastávka schová i svůj blog**, takže článek k zastávce, která
+ještě není venku, se nedá přečíst ani odkazem. To platí už dnes.
+
+### Otevřené: přihlášení lodi na jednu zastávku
+
+*(zadáno)* „Na každou akci se může přihlásit do kategorie loď" a organizátor
+ji pak „zapisuje, potvrzuje, nebo ruší ve vyhlášeném závodě". Účast tedy
+přestává být jen záznam o tom, kdo přijel, a dostává stav:
+přihlášená → potvrzená → zrušená.
+
+**Tady se to potkává s rozhodnutím, které už padlo:** kategorii nese
+**celoroční přihláška**, ne účast — protože loď jede celý rok v jedné
+kategorii. Přihlásit se na zastávku „do kategorie" tedy nejspíš znamená
+přihlásit se na zastávku a kategorii si přinést z ročníku.
+
+Zbývá odpovědět jediné: **smí se na zastávku přihlásit loď, která není
+v ročníku?** Pokud ano, potřebuje účast vlastní kategorii a rozhodnutí
+o celoroční kategorii se tím nabourává. Pokud ne, je přihlášení na zastávku
+jen stav nad existující účastí a model se nemění. Do odpovědi se to nestaví.
 
 ## Úvodní stránka
 
