@@ -17,10 +17,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 aby existovala jedna, ne dvě podobné. */}
             <Link className="znacka" href="/">
               <img src="/logo.png" alt="" width={30} height={30} />
-              Orlický pohár
+              <span>Orlický pohár</span>
             </Link>
             {/* Podtitulek tu byl nadbytečný — totéž stojí hned pod fotkou. */}
             <nav>
+              <Link href="/historie">Historie</Link>
               <Link href="/pravidla">Pravidla</Link>
               <Link href="/appka">Appka</Link>
             </nav>

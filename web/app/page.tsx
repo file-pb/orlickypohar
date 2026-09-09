@@ -87,32 +87,21 @@ export default async function Rozcestnik() {
         <p className="kredit">Foto Jiří Tašl</p>
       </section>
 
-      <h2>Ročníky</h2>
+      {/* Bez seznamu ročníků by výpadek ani prázdný stav nebyly nikde vidět —
+          návštěvník by koukal na fotku bez tlačítek a nevěděl proč. */}
       {vypadek ? (
         <p className="prazdno">
-          Ročníky se teď nedaří načíst — je to výpadek na naší straně. Zkus to
-          za chvíli znovu.
+          Data se teď nedaří načíst. Je to výpadek na naší straně, zkus to za
+          chvíli znovu.
         </p>
-      ) : !rocniky?.length ? (
+      ) : !aktualni ? (
         <p className="prazdno">Zatím není zveřejněný žádný ročník.</p>
-      ) : (
-        <ul className="seznam">
-          {rocniky.map((r) => (
-            <li key={r.slug}>
-              <Link className="karta" href={`/serie/${r.slug}`}>
-                <div className="nazev">{r.nazev}</div>
-                <div className="detail">
-                  {r.pocetZavodu} {zavodu(r.pocetZavodu)}
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      ) : null}
 
       <p className="poznamka">
         Nevíš, proč má loď zrovna takové číslo?{" "}
-        <Link href="/pravidla">Podívej se, jak se počítají body</Link>. Výsledky
+        <Link href="/pravidla">Podívej se, jak se počítají body</Link>. Starší
+        ročníky najdeš v <Link href="/historie">historii série</Link> a výsledky
         nosí do telefonu i <Link href="/appka">appka</Link>.
       </p>
     </>
