@@ -203,6 +203,9 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 .stitek.stav-odjety { color: var(--voda); }
 .stitek.stav-vypsany { color: var(--stav-vypsany); }
 .stitek.stav-planovany { color: var(--tlumeny); }
+/* Potvrzený termín je jistota, ale ne pozvánka — proto barva textu, ne
+   zelená vypsaného závodu. */
+.stitek.stav-potvrzeny { color: var(--text); }
 .stitek.stav-zruseny { color: var(--stav-zruseny); }
 .karta.zrusena { background: transparent; }
 .karta.zrusena .detail { color: var(--tlumeny); }
@@ -419,3 +422,55 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
   color: var(--text); font-size: 0.9rem; font-weight: 500;
 }
 .profil .nabidka a:hover { background: var(--zvyrazneni); text-decoration: none; }
+
+/* Správa oprávnění. Formulář i tabulka jsou serverové, takže tu nejsou
+   žádné stavy „ukládám" — po odeslání přijde nová stránka s hláškou. */
+.hlaska {
+  border: 1px solid var(--linka); border-left-width: 4px; border-radius: 8px;
+  padding: 0.7rem 0.9rem; margin: 0 0 1.25rem; background: var(--papir);
+}
+.hlaska.chyba { border-left-color: var(--stav-zruseny); }
+.hlaska.hotovo { border-left-color: var(--stav-vypsany); }
+
+.udeleni {
+  display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end;
+  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+  padding: 1rem; margin-bottom: 1rem;
+}
+.udeleni label { display: grid; gap: 0.25rem; flex: 1 1 12rem; }
+.udeleni label > span { font-size: 0.8rem; color: var(--tlumeny); }
+.udeleni input, .udeleni select {
+  font: inherit; padding: 0.5rem 0.6rem; border-radius: 8px;
+  border: 1px solid var(--linka); background: var(--pozadi); color: var(--text);
+}
+.udeleni input:focus-visible, .udeleni select:focus-visible {
+  outline: 2px solid var(--voda); outline-offset: 1px;
+}
+/* Tlačítko je řádkový prvek vedle polí, ne odkaz — proto se mu musí říct
+   výška, kterou by od <a> zdědilo z textu. */
+.udeleni .tlacitko { border: 0; cursor: pointer; padding: 0.6rem 1.1rem; }
+
+/* Popisy rolí. Hranice mezi editorem a organizátorem se z názvu nepozná
+   a vyzkoušet si ji na lidech je drahé. */
+.role-napoveda { margin: 0 0 2rem; grid-template-columns: 1fr; gap: 0.35rem; }
+.role-napoveda div { display: grid; grid-template-columns: 7rem 1fr; gap: 0.75rem; }
+.role-napoveda dt { font-weight: 600; color: var(--text); }
+.role-napoveda .poznamka { margin: 0; display: inline; }
+
+.skupina-opravneni { margin-top: 2rem; }
+.skupina-opravneni h2 { font-size: 1.05rem; margin: 0 0 0.6rem; }
+.skupina-opravneni .prazdno { padding: 1rem; text-align: left; }
+
+th.vlevo, td.vlevo { text-align: left; }
+
+.odebrat {
+  font: inherit; font-size: 0.85rem; cursor: pointer; color: var(--stav-zruseny);
+  background: none; border: 1px solid var(--linka); border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+}
+.odebrat:hover { border-color: var(--stav-zruseny); }
+
+@media (max-width: 560px) {
+  .role-napoveda div { grid-template-columns: 1fr; gap: 0; }
+  .udeleni .tlacitko { width: 100%; text-align: center; }
+}

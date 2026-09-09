@@ -1372,9 +1372,29 @@ oddílu *Role a oprávnění* smí přiřadit organizátora a editora konkrétn�
 zastávce, ale ten oddíl je psaný z hlavy a čeká na projití — a tohle je
 přesně ta věta, která se při něm může změnit.
 
-**Další krok je obrazovka**, ne další endpoint: výpis oprávnění ročníku,
-pole na e-mail a roli, tlačítko na odebrání. Do té doby se role udělují
-`curl`em s importním tokenem.
+**Obrazovka je hotová** — `/sprava/{serie}/opravneni`, odkaz na ni je
+v profilové nabídce u ročníků, kde je člověk správcem.
+
+Celá je serverová a bez javascriptu: formulář odešle prohlížeč, serverová
+akce zavolá API a stránka se překreslí s hláškou. Administrace se používá
+zřídka a často z telefonu na břehu, takže hydratovat kvůli dvěma polím
+nemá co vrátit. Token přitom zůstává na serveru — v prohlížeči je jen
+cookie, kterou nikdo nečte.
+
+**Oprávnění se vypisují po místech, ne jedním seznamem.** Správce ročníku
+a pořadatel Radavské regaty jsou dvě různé věci a v jednom sloupci by
+splynuly. Prázdná zastávka se schová, prázdný ročník ne: ročník bez
+jediného oprávnění je stav, který se má vidět, kdežto devět prázdných
+tabulek je jen šum.
+
+**Výsledek se předává v adrese, ne hotovou větou.** Serverová akce zná jen
+slugy, jména zastávek a rolí zná stránka — a „na zastávce radavska-regata"
+je věta pro stroj. Přesměrování po zápisu tam musí být tak jako tak: bez
+něj by obnovení stránky udělilo roli podruhé.
+
+Falešné API (`tools/fake-api.py`) umí `/sprava` taky, takže obrazovka jde
+vyvíjet a zkoušet bez databáze — včetně chybových stavů, které se na
+skutečných datech vyrábějí špatně.
 
 **Balíček JwtBearer šel přidat až po vypnutí VPN.** `dotnet restore` padal
 na `NU1301: Socket is not connected`, zatímco `curl` na tutéž adresu vracel

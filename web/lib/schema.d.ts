@@ -353,6 +353,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/opravneni": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše oprávnění ročníku i zastávky, na které jdou udělit
+         * @description Vyžaduje roli správce v tom ročníku.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PrehledOpravneniDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Udělí roli podle e-mailu
+         * @description Vyžaduje roli správce v tom ročníku. Výjimka: udělení prvního správce projde i na hlavičku X-Import-Token, dokud v ročníku žádný správce není. Účet musí existovat — vzniká až prvním přihlášením.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UdeleniVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OpravneniRadek"];
+                    };
+                };
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OpravneniRadek"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/opravneni/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Odebere jedno oprávnění
+         * @description Vyžaduje roli správce. Posledního správce ročníku odebrat nelze.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -428,6 +547,18 @@ export interface components {
             serie: string;
             zavod: null | string;
         };
+        OpravneniRadek: {
+            /** Format: int32 */
+            id: number;
+            /** Format: uuid */
+            uzivatelId: string;
+            zobrazovane: string;
+            email: null | string;
+            role: components["schemas"]["Role"];
+            zavod: null | string;
+            /** Format: date-time */
+            udelenoV: string;
+        };
         OsobaVstup: {
             klic: string;
             jmeno: string;
@@ -460,6 +591,12 @@ export interface components {
             zastavky: components["schemas"]["ZastavkaDto"][];
             kategorie: components["schemas"]["PoradiKategorieDto"][];
         };
+        PrehledOpravneniDto: {
+            serie: string;
+            nazev: string;
+            zastavky: components["schemas"]["ZastavkaVolbaDto"][];
+            opravneni: components["schemas"]["OpravneniRadek"][];
+        };
         PrihlaskaDto: {
             lod: string;
             cisloPlachty: null | string;
@@ -472,7 +609,7 @@ export interface components {
             kategorie: string;
         };
         /** @enum {unknown} */
-        Role: "Ctenar" | "Editor" | "Rozhodci" | "Spravce";
+        Role: "Ctenar" | "Editor" | "Rozhodci" | "Spravce" | "Organizator";
         RozjizdkaDto: {
             /** Format: int32 */
             cislo: number;
@@ -526,7 +663,7 @@ export interface components {
         /** @enum {unknown} */
         StavRozjizdky: "Planovana" | "Probiha" | "Dokoncena" | "Zrusena";
         /** @enum {unknown} */
-        StavZavodu: "Planovany" | "Vypsany" | "Odjety" | "Zruseny";
+        StavZavodu: "Planovany" | "Vypsany" | "Odjety" | "Zruseny" | "Potvrzeny";
         UcastDto: {
             lod: string;
             kategorie: string;
@@ -536,6 +673,11 @@ export interface components {
             lod: string;
             kormidelnik: null | string;
             posadka: null | string;
+        };
+        UdeleniVstup: {
+            email: string;
+            role: components["schemas"]["Role"];
+            zavod?: null | string;
         };
         /** @enum {unknown} */
         Vyhodnoceni: "CelePole" | "PoKategoriich";
@@ -575,6 +717,10 @@ export interface components {
             datum: string;
             /** Format: int32 */
             poradi: number;
+        };
+        ZastavkaVolbaDto: {
+            slug: string;
+            nazev: string;
         };
         ZavodDetailDto: {
             slug: string;

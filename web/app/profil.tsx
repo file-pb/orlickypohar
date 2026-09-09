@@ -18,6 +18,14 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
   // v tu chvíli musí nabídnout odhlášení — jinak se z toho stavu nedá odejít.
   const jmeno = ja?.zobrazovane;
 
+  // Ročníky, kde je správcem. Jen ty: udělovat role smí správce a nabízet
+  // odkaz na obrazovku, ze které se vrátí „nemáš práva", je slib naprázdno.
+  const spravuje = [
+    ...new Set(
+      (ja?.opravneni ?? []).filter((o) => o.role === "Spravce").map((o) => o.serie),
+    ),
+  ];
+
   return (
     <details className="profil">
       <summary aria-label={jmeno ? `Účet ${jmeno}` : "Účet"} title={jmeno ?? "Účet"}>
@@ -48,9 +56,13 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
           )}
         </div>
 
-        {/* Zatím je tu jediná položka. Až přijde administrace, patří sem
-            odkazy na to, co člověk podle svých oprávnění spravuje — proto
-            je to nabídka, ne rovnou odkaz na odhlášení. */}
+        {/* Co člověk podle svých oprávnění spravuje. Proto je to nabídka
+            a ne rovnou odkaz na odhlášení. */}
+        {spravuje.map((serie) => (
+          <Link key={serie} href={`/sprava/${serie}/opravneni`}>
+            Oprávnění {serie}
+          </Link>
+        ))}
         <Link href="/odhlaseni">Odhlásit se</Link>
       </div>
     </details>

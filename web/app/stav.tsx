@@ -1,11 +1,16 @@
 import type { StavZavodu } from "@/lib/api";
 
 // Sdílené schválně, i když jsou kopie zatím jen dvě: nejde o abstrakci, ale
-// o slovník. Čtyři stavy jsou dané modelem a když se „vypsáno" na jedné
-// stránce jmenuje jinak než na druhé, čtenář hádá, jestli je to totéž.
+// o slovník. Stavy jsou dané modelem a když se „vypsáno" na jedné stránce
+// jmenuje jinak než na druhé, čtenář hádá, jestli je to totéž.
+//
+// `Record` je tu naschvál místo volnějšího zápisu: nový stav v modelu tak
+// shodí překlad webu, ne až štítek bez textu na stránce. Přesně to se stalo
+// se stavem `Potvrzeny` — v API přibyl, ve slovníku chyběl.
 
 const POPIS: Record<StavZavodu, string> = {
   Planovany: "plánováno",
+  Potvrzeny: "termín platí",
   Vypsany: "vypsáno",
   Odjety: "odjeto",
   Zruseny: "zrušeno",
@@ -32,6 +37,8 @@ export function ProcNejsouVysledky(stav: StavZavodu) {
       return "Zastávka se nekonala. Do poháru se nepočítá.";
     case "Planovany":
       return "Zatím je to jen termín v kalendáři. Vypsání závodu teprve přijde.";
+    case "Potvrzeny":
+      return "Termín platí. Pořadatel závod ještě nevypsal.";
     case "Vypsany":
       return "Závod je vypsaný — přihlásit se dá u pořadatele.";
     default:

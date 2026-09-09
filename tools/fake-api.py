@@ -142,7 +142,88 @@ def nazvy(hodnota):
 CLANKY = sorted(D.get("clanky", []), key=lambda c: c["publikovanoV"], reverse=True)
 
 
+# Oprávnění žijí v paměti procesu, takže restart je vrátí do výchozího
+# stavu. Je to schválně: falešné API nemá mít stav, který někdo omylem
+# začne považovat za data. Přihlášený vývojář je tu správcem ročníku
+# stejně jako v odpovědi na /ja.
+JA = {
+    "id": "01927f4e-0000-7000-8000-000000000001",
+    "zobrazovane": "Filip Burda",
+    "email": "filip@priklad.cz",
+}
+OPRAVNENI = [{"id": 1, "uzivatelId": JA["id"], "zobrazovane": JA["zobrazovane"],
+              "email": JA["email"], "role": "Spravce", "zavod": None,
+              "udelenoV": "2026-01-01T00:00:00+00:00"}]
+# Účty, kterým jde roli udělit. Skutečné API zná jen ty, kdo se aspoň
+# jednou přihlásili — bez toho by se nedal vyzkoušet stav „účet neexistuje",
+# a ten je na obrazovce vidět nejčastěji.
+UCTY = {JA["email"]: JA["zobrazovane"], "petr@priklad.cz": "Petr Svoboda",
+        "jana@priklad.cz": "Jana Nováková"}
+JEN_ROCNIK = ("Rozhodci", "Spravce")
+
+
 class H(BaseHTTPRequestHandler):
+    def telo_zadosti(self):
+        delka = int(self.headers.get("Content-Length", "0") or 0)
+        return json.loads(self.rfile.read(delka) or b"{}")
+
+    def chyba(self, kod, text):
+        """Chyba ve tvaru, ve kterém ji vydává API: {"error": "..."}."""
+        data = json.dumps({"error": text}, ensure_ascii=False).encode()
+        self.send_response(kod)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def do_POST(self):
+        if urlparse(self.path).path != f'/sprava/serie/{D["slug"]}/opravneni':
+            return self.send_error(404)
+        if not self.headers.get("authorization"):
+            return self.send_error(401)
+
+        vstup = self.telo_zadosti()
+        email = (vstup.get("email") or "").strip().lower()
+        role, zavod = vstup.get("role"), vstup.get("zavod")
+
+        if role == "Ctenar":
+            return self.chyba(400, "Čtenář se neuděluje: je to každý, i nepřihlášený.")
+        if role in JEN_ROCNIK and zavod:
+            return self.chyba(400, f"Role {role} platí pro celý ročník, ne pro jednu zastávku.")
+        if email not in UCTY:
+            return self.chyba(404, f"Na e-mail {email} se zatím nikdo nepřihlásil. "
+                                   "Účet vzniká až prvním přihlášením, rolí se pozvat nedá.")
+
+        stavajici = next((o for o in OPRAVNENI if o["email"] == email
+                          and o["role"] == role and o["zavod"] == zavod), None)
+        if stavajici:
+            return self.odpoved(stavajici)
+
+        novy = {"id": max((o["id"] for o in OPRAVNENI), default=0) + 1,
+                "uzivatelId": JA["id"], "zobrazovane": UCTY[email], "email": email,
+                "role": role, "zavod": zavod, "udelenoV": "2026-01-01T00:00:00+00:00"}
+        OPRAVNENI.append(novy)
+        return self.odpoved(novy, 201)
+
+    def do_DELETE(self):
+        m = re.match(rf'^/sprava/serie/{D["slug"]}/opravneni/(\d+)$', urlparse(self.path).path)
+        if not m:
+            return self.send_error(404)
+        if not self.headers.get("authorization"):
+            return self.send_error(401)
+
+        o = next((o for o in OPRAVNENI if o["id"] == int(m.group(1))), None)
+        if not o:
+            return self.send_error(404)
+        if o["role"] == "Spravce" and sum(1 for x in OPRAVNENI if x["role"] == "Spravce") <= 1:
+            return self.chyba(409, "Poslední správce ročníku se odebrat nedá. "
+                                   "Nejdřív udělte roli někomu jinému.")
+
+        OPRAVNENI.remove(o)
+        self.send_response(204)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
     def do_GET(self):
         rozdelena = urlparse(self.path)
         cesta, dotaz = rozdelena.path, parse_qs(rozdelena.query)
@@ -174,11 +255,22 @@ class H(BaseHTTPRequestHandler):
             if not self.headers.get("authorization"):
                 return self.send_error(401)
             telo = {
-                "id": "01927f4e-0000-7000-8000-000000000001",
-                "zobrazovane": "Filip Burda",
-                "email": "filip@priklad.cz",
-                # Správce ročníku: rozsah na celou sérii, bez zastávky.
-                "opravneni": [{"role": "Spravce", "serie": D["slug"], "zavod": None}],
+                **JA,
+                # Role se berou z téhož seznamu, který spravuje obrazovka
+                # oprávnění — jinak by se odebrání vlastní role neprojevilo
+                # v nabídce a stránka by nabízela odkaz, který skončí na 403.
+                "opravneni": [{"role": o["role"], "serie": D["slug"], "zavod": o["zavod"]}
+                              for o in OPRAVNENI if o["email"] == JA["email"]],
+            }
+        elif cesta == f'/sprava/serie/{D["slug"]}/opravneni':
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            telo = {
+                "serie": D["slug"], "nazev": D["nazev"],
+                # I nepublikované zastávky: pořadatele potřebují dřív, než
+                # jsou venku.
+                "zastavky": [{"slug": z["slug"], "nazev": z["nazev"]} for z in D["zavody"]],
+                "opravneni": OPRAVNENI,
             }
         elif cesta == f'/serie/{D["slug"]}/clanky':
             vybrane = CLANKY
@@ -222,8 +314,11 @@ class H(BaseHTTPRequestHandler):
         else:
             return self.send_error(404)
 
+        return self.odpoved(telo)
+
+    def odpoved(self, telo, kod=200):
         data = json.dumps(telo, ensure_ascii=False).encode()
-        self.send_response(200)
+        self.send_response(kod)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         # Appka běží ve vývoji i v prohlížeči, takže potřebuje totéž,
         # co skutečné API — jinak ji CORS zastaví dřív, než se načte.

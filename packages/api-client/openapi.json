@@ -277,6 +277,120 @@
                     }
                 }
             }
+        },
+        "/sprava/serie/{serie}/opravneni": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vyp\u00ed\u0161e opr\u00e1vn\u011bn\u00ed ro\u010dn\u00edku i zast\u00e1vky, na kter\u00e9 jdou ud\u011blit",
+                "description": "Vy\u017eaduje roli spr\u00e1vce v tom ro\u010dn\u00edku.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PrehledOpravneniDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Ud\u011bl\u00ed roli podle e-mailu",
+                "description": "Vy\u017eaduje roli spr\u00e1vce v tom ro\u010dn\u00edku. V\u00fdjimka: ud\u011blen\u00ed prvn\u00edho spr\u00e1vce projde i na hlavi\u010dku X-Import-Token, dokud v ro\u010dn\u00edku \u017e\u00e1dn\u00fd spr\u00e1vce nen\u00ed. \u00da\u010det mus\u00ed existovat \u2014 vznik\u00e1 a\u017e prvn\u00edm p\u0159ihl\u00e1\u0161en\u00edm.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UdeleniVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OpravneniRadek"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OpravneniRadek"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/opravneni/{id}": {
+            "delete": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Odebere jedno opr\u00e1vn\u011bn\u00ed",
+                "description": "Vy\u017eaduje roli spr\u00e1vce. Posledn\u00edho spr\u00e1vce ro\u010dn\u00edku odebrat nelze.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -577,6 +691,50 @@
                     }
                 }
             },
+            "OpravneniRadek": {
+                "required": [
+                    "id",
+                    "uzivatelId",
+                    "zobrazovane",
+                    "email",
+                    "role",
+                    "zavod",
+                    "udelenoV"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "uzivatelId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "zobrazovane": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/Role"
+                    },
+                    "zavod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "udelenoV": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
             "OsobaVstup": {
                 "required": [
                     "klic",
@@ -702,6 +860,35 @@
                     }
                 }
             },
+            "PrehledOpravneniDto": {
+                "required": [
+                    "serie",
+                    "nazev",
+                    "zastavky",
+                    "opravneni"
+                ],
+                "type": "object",
+                "properties": {
+                    "serie": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "zastavky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ZastavkaVolbaDto"
+                        }
+                    },
+                    "opravneni": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OpravneniRadek"
+                        }
+                    }
+                }
+            },
             "PrihlaskaDto": {
                 "required": [
                     "lod",
@@ -755,7 +942,8 @@
                     "Ctenar",
                     "Editor",
                     "Rozhodci",
-                    "Spravce"
+                    "Spravce",
+                    "Organizator"
                 ]
             },
             "RozjizdkaDto": {
@@ -975,7 +1163,8 @@
                     "Planovany",
                     "Vypsany",
                     "Odjety",
-                    "Zruseny"
+                    "Zruseny",
+                    "Potvrzeny"
                 ]
             },
             "UcastDto": {
@@ -1018,6 +1207,27 @@
                         ]
                     },
                     "posadka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
+            "UdeleniVstup": {
+                "required": [
+                    "email",
+                    "role"
+                ],
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/Role"
+                    },
+                    "zavod": {
                         "type": [
                             "null",
                             "string"
@@ -1176,6 +1386,21 @@
                     "poradi": {
                         "type": "integer",
                         "format": "int32"
+                    }
+                }
+            },
+            "ZastavkaVolbaDto": {
+                "required": [
+                    "slug",
+                    "nazev"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
                     }
                 }
             },
@@ -1429,6 +1654,9 @@
         },
         {
             "name": "\u010cl\u00e1nky"
+        },
+        {
+            "name": "Spr\u00e1va"
         }
     ]
 }
