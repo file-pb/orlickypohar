@@ -263,3 +263,51 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
 .clanek p { line-height: 1.7; margin: 0 0 1.1rem; }
 .clanek .perex { font-size: 1.05rem; color: var(--tlumeny); }
 .drobecky { margin: 0 0 0.5rem; }
+
+/* Zpátky nahoru.
+
+   Kotva, ne javascript — stránky se renderují serverem a kvůli jednomu
+   tlačítku nemá smysl tahat na klienta hydrataci. Ukazuje se až po kus
+   odscrollování, a to taky bez skriptu: přes scroll-driven animaci.
+
+   Kde ta animace není (dnes hlavně Firefox), tlačítko je vidět pořád.
+   Je to malý terč v rohu, takže „vidět zbytečně" je výrazně lepší selhání
+   než „nefunguje" — a nespoléhá to na nic, co by musel doběhnout skript. */
+.nahoru {
+  position: fixed; right: 1rem; bottom: 1rem; z-index: 20;
+  display: grid; place-items: center;
+  width: 2.75rem; height: 2.75rem;
+  border: 1px solid var(--linka); border-radius: 999px;
+  background: color-mix(in srgb, var(--papir) 92%, transparent);
+  color: var(--tlumeny); font-size: 1.1rem; line-height: 1;
+  backdrop-filter: blur(6px);
+}
+.nahoru:hover { color: var(--voda); border-color: var(--voda); text-decoration: none; }
+
+@supports (animation-timeline: scroll()) {
+  /* Schválně dlouhé zápisy, ne zkratka `animation`. Zkratka totiž dosadí
+     `animation-duration: 0s`, a scroll-driven animace potřebuje výchozí
+     `auto` — jinak proběhne celá naráz a tlačítko svítí od začátku.
+     Poznalo se to jen tím, že se opacity změřila při nule scrollu. */
+  .nahoru {
+    animation-name: nahoru-ukaz;
+    animation-fill-mode: both;
+    animation-timing-function: linear;
+    animation-timeline: scroll(root block);
+    /* Objeví se, až když je zpátky nahoru doopravdy daleko — ne hned
+       po prvním otočení kolečkem. */
+    animation-range: 400px 600px;
+  }
+
+  /* Skrývá se i `visibility`, ne jen průhlednost: průhledné tlačítko by
+     dál chytalo klepnutí přes obsah pod sebou. */
+  @keyframes nahoru-ukaz {
+    from { opacity: 0; visibility: hidden; }
+    to   { opacity: 1; visibility: visible; }
+  }
+}
+
+/* Skok na kotvu plynule — ale jen tomu, kdo si o pohyb neřekl opačně. */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
