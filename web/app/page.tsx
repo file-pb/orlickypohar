@@ -10,6 +10,15 @@ import {
 // Stránky stojí na databázi, ne na obsahu známém v době buildu.
 export const dynamic = "force-dynamic";
 
+/** Jak dlouho svítí jedna fotka, než se prolne do další. */
+const DELKA = 7;
+
+const FOTKY = [
+  { src: "/foto/hero.jpg", popis: "Závodní plachetnice v náklonu na Orlické přehradě" },
+  { src: "/foto/hero-2.jpg", popis: "Lodě před zámkem Orlík" },
+  { src: "/foto/hero-3.jpg", popis: "Loď s červeným spinakrem" },
+];
+
 export default async function Rozcestnik() {
   // Fotka a nadpis se vykreslí vždycky, i když API nejede. Úvodní stránka
   // má říct, co to je, dřív než cokoliv načte — a výpadek se pak přizná
@@ -54,8 +63,20 @@ export default async function Rozcestnik() {
 
   return (
     <>
+      {/* Fotky se prolínají čistě v CSS — žádný javascript, žádná hydratace.
+          Kdo má v systému vypnuté animace, uvidí první a nic se nehýbe. */}
       <section className="hero">
-        <img src="/foto/hero.jpg" alt="Závodní plachetnice v náklonu na Orlické přehradě" />
+        <div className="hero-fotky">
+          {FOTKY.map((f, i) => (
+            <img
+              key={f.src}
+              src={f.src}
+              alt={f.popis}
+              style={{ animationDelay: `${i * DELKA}s` }}
+              fetchPriority={i === 0 ? "high" : "low"}
+            />
+          ))}
+        </div>
         <div className="hero-text">
           <h1>Orlický pohár</h1>
           <p>

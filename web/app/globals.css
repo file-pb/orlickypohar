@@ -56,7 +56,7 @@ header.hlavicka .obal {
   gap: 1rem; padding-top: 0.7rem; padding-bottom: 0.7rem;
 }
 header.hlavicka a { color: var(--text); font-weight: 600; letter-spacing: -0.01em; }
-header.hlavicka a.znacka { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 1rem; }
+header.hlavicka a.znacka { display: inline-flex; align-items: center; gap: 0.55rem; font-size: 1rem; }
 header.hlavicka a.znacka img { display: block; }
 header.hlavicka nav { display: flex; gap: 1rem; flex: none; }
 header.hlavicka nav a { color: var(--tlumeny); font-weight: 500; font-size: 0.9rem; }
@@ -78,11 +78,27 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
   position: relative; margin: -2rem calc(50% - 50vw) 2.5rem; overflow: hidden;
   background: var(--zvyrazneni);
 }
-/* Na úzkém displeji ořez posunutý doprava, ať v záběru zůstane loď a ne
-   jen plachta — střed fotky je plachta, ale příběh je posádka na hraně. */
-.hero img {
-  display: block; width: 100vw; height: clamp(260px, 46vh, 460px);
+/* Fotky se prolínají v CSS: leží přes sebe a každá má posunutý začátek
+   animace. Ořez je posunutý doprava, ať na úzkém displeji zůstane v záběru
+   loď a ne jen plachta. */
+.hero-fotky { position: relative; height: clamp(260px, 46vh, 460px); }
+.hero-fotky img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; object-position: 62% center;
+  opacity: 0; animation: prolinani 21s infinite;
+}
+/* Tři fotky, každá svítí sedm vteřin: náběh, klid, odchod. */
+@keyframes prolinani {
+  0% { opacity: 0; }
+  4% { opacity: 1; }
+  29% { opacity: 1; }
+  38% { opacity: 0; }
+  100% { opacity: 0; }
+}
+/* Kdo má v systému vypnuté animace, ať kouká na první fotku a nic se nehýbe. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-fotky img { animation: none; opacity: 0; }
+  .hero-fotky img:first-child { opacity: 1; }
 }
 .hero-text {
   position: absolute; left: 0; right: 0; bottom: 0; padding: 2.5rem 1.25rem 1.5rem;
