@@ -7,6 +7,19 @@ export type Ja = components["schemas"]["JaDto"];
 const API = process.env.API_URL ?? "http://localhost:8080";
 
 /**
+ * Má prohlížeč cookie se sezením?
+ *
+ * Není to totéž co „je přihlášený". Token může být prošlý nebo odmítnutý,
+ * a přesně v tu chvíli je tahle otázka potřeba: bez ní by hlavička nabízela
+ * „Přihlásit" člověku, který cookie má, a odhlásit by se nemohl nikde —
+ * uvízl by mezi dvěma stavy.
+ */
+export async function maSezeni(): Promise<boolean> {
+  if (!prihlasovaniJde) return false;
+  return Boolean((await cookies()).get(COOKIE_TOKEN)?.value);
+}
+
+/**
  * Kdo je přihlášený, podle API — ne podle obsahu tokenu.
  *
  * Web token nerozbaluje a ani nemůže: jméno v něm je jméno u poskytovatele,
