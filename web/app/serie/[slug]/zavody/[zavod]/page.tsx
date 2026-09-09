@@ -18,10 +18,15 @@ export const dynamic = "force-dynamic";
 
 type Parametry = { params: Promise<{ slug: string; zavod: string }> };
 
+// Viz stránka ročníku: titulek nesmí shodit vykreslení.
 export async function generateMetadata({ params }: Parametry) {
   const { slug, zavod } = await params;
-  const z = await nactiZavod(slug, zavod);
-  return { title: z?.nazev ?? "Zastávka" };
+  try {
+    const z = await nactiZavod(slug, zavod);
+    return { title: z?.nazev ?? "Zastávka" };
+  } catch {
+    return { title: "Zastávka" };
+  }
 }
 
 /** Jeden řádek tabulky: loď, její body a co v které rozjížďce dokázala. */

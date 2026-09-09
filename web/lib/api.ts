@@ -29,17 +29,30 @@ export type PoradiLodi = S["PoradiLodiDto"];
 export type PoradiKategorie = S["PoradiKategorieDto"];
 export type PoradiSerie = S["PoradiSerieDto"];
 
+/**
+ * Chyba, která znamená **nedostupné API**, ne chybějící obsah.
+ *
+ * Rozdíl je pro návštěvníka podstatný: „stránka neexistuje" u výpadku je
+ * lež, která ho pošle pryč, místo aby to za chvíli zkusil znovu.
+ */
+export class ApiNedostupne extends Error {}
+
 /** Vrací null u 404 — nepublikovaný ročník se chová, jako by neexistoval. */
 async function nacti<T>(cesta: string): Promise<T | null> {
-  const odpoved = await fetch(`${API}${cesta}`, {
+  let odpoved: Response;
+  try {
     // Výsledky se mění po závodě, ne po vteřinách. Minuta je kompromis mezi
     // čerstvostí a tím, aby stránka nešla na API při každém načtení.
-    next: { revalidate: 60 },
-    headers: { accept: "application/json" },
-  });
+    odpoved = await fetch(`${API}${cesta}`, {
+      next: { revalidate: 60 },
+      headers: { accept: "application/json" },
+    });
+  } catch (e) {
+    throw new ApiNedostupne(`API ${cesta} se nepodařilo zavolat: ${e}`);
+  }
 
   if (odpoved.status === 404) return null;
-  if (!odpoved.ok) throw new Error(`API ${cesta} vrátilo ${odpoved.status}`);
+  if (!odpoved.ok) throw new ApiNedostupne(`API ${cesta} vrátilo ${odpoved.status}`);
   return (await odpoved.json()) as T;
 }
 

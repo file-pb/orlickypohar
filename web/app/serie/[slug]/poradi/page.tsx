@@ -10,10 +10,15 @@ export const dynamic = "force-dynamic";
 
 type Parametry = { params: Promise<{ slug: string }> };
 
+// Viz stránka ročníku: titulek nesmí shodit vykreslení.
 export async function generateMetadata({ params }: Parametry) {
   const { slug } = await params;
-  const poradi = await nactiPoradi(slug);
-  return { title: poradi ? `Průběžné pořadí — ${poradi.nazev}` : "Průběžné pořadí" };
+  try {
+    const poradi = await nactiPoradi(slug);
+    return { title: poradi ? `Průběžné pořadí — ${poradi.nazev}` : "Průběžné pořadí" };
+  } catch {
+    return { title: "Průběžné pořadí" };
+  }
 }
 
 export default async function Poradi({ params }: Parametry) {

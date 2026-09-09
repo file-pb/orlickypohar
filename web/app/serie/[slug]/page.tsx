@@ -11,10 +11,17 @@ export const dynamic = "force-dynamic";
 
 type Parametry = { params: Promise<{ slug: string }> };
 
+// Titulek se nesmí stát důvodem, proč stránka spadne. Chyba z API tady
+// končí, aby ji obsloužila až samotná stránka — ta umí rozlišit „neexistuje"
+// od „nedaří se načíst", kdežto tohle by skončilo hláškou o titulku.
 export async function generateMetadata({ params }: Parametry) {
   const { slug } = await params;
-  const serie = await nactiSerii(slug);
-  return { title: serie?.nazev ?? "Ročník" };
+  try {
+    const serie = await nactiSerii(slug);
+    return { title: serie?.nazev ?? "Ročník" };
+  } catch {
+    return { title: "Ročník" };
+  }
 }
 
 export default async function Rocnik({ params }: Parametry) {
