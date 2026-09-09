@@ -1312,8 +1312,36 @@ kola nasazení (rozbor je v [POUCENI.md](https://github.com/file-pb/platform/blo
 
 | Zbývá | Proč to ještě není |
 |---|---|
-| Udělování rolí | fáze 5, spolu s administrací — dnes se `Opravneni` zapisuje jen ručně do databáze |
+| Udělování rolí | fáze 5, viz níž |
 | Přihlášení v appce | tentýž tok s PKCE, ale s obnovovacím tokenem; na telefonu se sezení nedrží v cookie |
+
+### Čím pokračovat ve fázi 5
+
+**První krok je kuře a vejce a má navržené řešení.** Nikdo nemá jediné
+oprávnění, takže se za přihlášení nikdo nedostane — a obrazovka, která
+oprávnění uděluje, sama roli správce vyžaduje.
+
+Návrh: endpointy `/sprava/serie/{slug}/opravneni` (výpis, udělení, odebrání)
+vyžadují `Spravce` v té sérii, **s jednou výjimkou**. Udělení prvního
+správce projde i na importní token — ale **jen dokud v té sérii žádný
+správce není**. Bootstrap se tím sám zavře: první správce tu cestu zamkne
+za sebou.
+
+Proč importní token a ne nové tajemství: nové by se muselo vyrobit na
+serveru, a tenhle už existuje a chrání zápis srovnatelné váhy (přepsání
+celého ročníku). Je to vědomé rozšíření jeho významu, ne nedopatření —
+proto ta podmínka, která ho po prvním použití vypne.
+
+**Uděluje se podle e-mailu, ne podle identifikátoru.** Účet ale vzniká až
+prvním přihlášením, takže komu se ještě nikdy nepřihlásil, roli dát nejde
+a endpoint to řekne. Zvací tok je vlastní věc a dělat ho teď by znamenalo
+řešit rozesílání pošty dřív než administraci samotnou.
+
+**Hotové jako základ, zatím nezapojené:** `Features/Sprava/Rozsahy.cs`
+překládá slugy na rozsahy a je jediným místem, kde se ptá na právo — včetně
+kontroly, že závod patří té sérii, na kterou se ptáme. `Uzivatele.PodleUctuAsync`
+najde uživatele bez toho, aby ho zakládal: kontrola práv je čtení a čtení
+nemá měnit databázi.
 
 **Balíček JwtBearer šel přidat až po vypnutí VPN.** `dotnet restore` padal
 na `NU1301: Socket is not connected`, zatímco `curl` na tutéž adresu vracel
@@ -1349,7 +1377,8 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
 4. **Otázka na rozhodčího** — jediná zbývající, viz níž. Fáze 2 na ní stojí.
    Přihlášení už funguje, takže další na řadě je **fáze 5**: administrace,
    udělování rolí a workflow výsledků. Do té doby je `/ja` sice živé, ale
-   nikdo nemá jediné oprávnění a nic za přihlášením není.
+   nikdo nemá jediné oprávnění a nic za přihlášením není. Konkrétní první
+   krok i s návrhem řešení stojí v oddílu *Čím pokračovat ve fázi 5* výš.
 5. **Skutečná data** — až dorazí, nahradí `data/2025-mock.json` a nahrají se
    importem. Struktura zůstane.
 

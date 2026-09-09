@@ -189,6 +189,20 @@ public class Uzivatele(AppDbContext db)
         return uzivatel;
     }
 
+    /// <summary>
+    /// Najde uživatele podle přihlášení, ale <b>nezakládá ho</b>.
+    /// <para>
+    /// Oddělené od <see cref="NajdiNeboZalozAsync"/> schválně: zakládat účet
+    /// se má při přihlášení, ne při každé kontrole práv. Kontrola je čtení
+    /// a čtení nemá měnit databázi.
+    /// </para>
+    /// </summary>
+    public Task<Uzivatel?> PodleUctuAsync(string issuer, string subject, CancellationToken ct) =>
+        db.Vazby
+            .Where(v => v.Issuer == issuer && v.Subject == subject)
+            .Select(v => v.Uzivatel)
+            .FirstOrDefaultAsync(ct);
+
     /// <summary>Práva uživatele ve tvaru, na který se ptá <see cref="Prava"/>.</summary>
     public async Task<List<UdeleneRole>> PravaAsync(Guid uzivatelId, CancellationToken ct) =>
         await db.Opravneni
