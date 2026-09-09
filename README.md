@@ -100,6 +100,22 @@ a hlídají ji testy. Existuje proto, že **lokálně se
 databáze rozjet nedá** — Docker Hub je z pracovního stroje nedostupný — a bez
 něj by se stránky nedaly vidět jinak než nasazením.
 
+## Appka
+
+Čtecí appka pro telefon (Expo, React Native) — ročníky, kalendář, průběžné
+pořadí, zastávka. Nepotřebuje přihlášení, protože čte totéž veřejné API
+jako web.
+
+```bash
+npm --prefix app run telefon   # vývojový server pro Expo Go, i s přihlášením
+npm --prefix app run apk       # postaví APK k rozdávání na serverech Expa
+```
+
+Podrobnosti a pasti (Expo Go chce od SDK 57 přihlášení na obou stranách,
+Mac umí nabídnout špatné síťové rozhraní) jsou v [app/README.md](app/README.md).
+APK ke stažení najdou lidé na `/appka`; adresu posledního buildu drží
+proměnná `APK_URL`, viz níž.
+
 ## Klient API
 
 ```bash
@@ -161,3 +177,7 @@ což se pozná jen tím, že se nová funkce neobjeví.
 | `/run/secrets/ConnectionStrings__Postgres` | soubor | Povinné. Tajemství nepatří do proměnných prostředí — `docker inspect` je ukáže každému s přístupem k daemonu. |
 | `Serilog__WriteTo__1__Args__serverUrl` | prostředí | Adresa Seq, volitelné. |
 | `ASPNETCORE_HTTP_PORTS` | prostředí | Port, výchozí 8080. |
+| `API_URL` | web | Adresa API pro server-side rendering. V provozu vnitřní `http://app:8080`. |
+| `UKAZKOVE_SERIE` | web | Slugy ročníků s **vymyšlenými výsledky**, oddělené čárkou. Web u nich ukáže pruh, že data nejsou skutečná. Až dorazí skutečné výsledky, řádek se smaže. |
+| `APK_URL` | web | Adresa posledního buildu appky pro stránku `/appka`. **Každý build má jinou** — po `npm --prefix app run apk` se přepíše v `deploy/docker-compose.yml`. Když se zapomene, stránka tiše nabízí předchozí build. |
+| `EXPO_PUBLIC_API_URL` | appka | Adresa API při vývoji; výchozí je produkce. |

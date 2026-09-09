@@ -65,6 +65,10 @@ z klíčenky jako `npm run telefon`.
 **Na bezplatném tarifu se čeká ve frontě.** Samotný build trvá pár minut,
 fronta večer klidně půl hodiny — čas nejde na kompilaci, ale na volný stroj.
 
+**Po doběhnutí přepiš adresu v `deploy/docker-compose.yml`** u služby `web`
+(`APK_URL`), jinak stránka `/appka` nabízí předchozí build. Nic přitom
+neselže, takže si toho nikdo nevšimne — skript to proto připomíná sám.
+
 Dvě věci, které se zapisují natrvalo a mění se draho:
 
 - `android.package` je `cz.klihovka.orlickypohar`. Jiný balíček je pro
