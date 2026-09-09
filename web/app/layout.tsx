@@ -15,7 +15,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="obal">
             <Link href="/">Orlický pohár</Link>
             <p>
-              Seriál závodů plachetnic na Orlické přehradě · <Link href="/appka">appka</Link>
+              Seriál závodů plachetnic na Orlické přehradě ·{" "}
+              <Link href="/pravidla">pravidla</Link> · <Link href="/appka">appka</Link>
             </p>
           </div>
         </header>

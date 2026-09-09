@@ -48,7 +48,7 @@ export default async function Poradi({ params }: Parametry) {
         nejnižší součet. Škrtá se jeden nejhorší závod; podle sloupce{" "}
         <b>po škrtu</b> se řadí pořadí, celkový součet je vedle, protože rozhodčí
         vede obojí. Prázdné místo znamená, že loď na zastávce nestartovala a nic si
-        z ní neodvezla.
+        z ní neodvezla. <Link href="/pravidla">Jak se body počítají →</Link>
       </p>
     </>
   );
