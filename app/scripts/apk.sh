@@ -16,5 +16,16 @@ if ! token=$(security find-generic-password -a "$USER" -s expo-token -w 2>/dev/n
   exit 1
 fi
 
-EXPO_TOKEN="$token" exec npx -y eas-cli@latest build \
+EXPO_TOKEN="$token" npx -y eas-cli@latest build \
   --platform android --profile preview --non-interactive --no-wait "$@"
+
+cat <<'POTOM'
+
+Až build doběhne, vezmi adresu APK z výpisu výše a přepiš ji v
+deploy/docker-compose.yml u služby `web`:
+
+    APK_URL: "https://expo.dev/artifacts/eas/....apk"
+
+Bez toho ukazuje stránka /appka pořád ten předchozí build — a nikdo si
+toho nevšimne, protože stahovat půjde dál.
+POTOM
