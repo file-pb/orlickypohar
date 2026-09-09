@@ -26,6 +26,15 @@ services:
       # Běžná konfigurace v prostředí, tajemství v secrets níž.
       Serilog__WriteTo__1__Name: "Seq"
       Serilog__WriteTo__1__Args__serverUrl: "http://seq"
+      # Poskytovatel identity. Tohle jsou jediné dvě věci, které o něm
+      # aplikace ví — adresa a vlastní identifikátor u něj. Ani jedno není
+      # tajemství: obojí stojí ve veřejném OIDC dokumentu, respektive
+      # v adrese, kterou prohlížeč stejně uvidí.
+      #
+      # Bez nich se ověřování nezapne a chráněné endpointy se nezaregistrují
+      # vůbec — zapomenutá proměnná není totéž co otevřený endpoint.
+      Identita__Authority: "https://ucty.${PLATFORM_DOMAIN:?}"
+      Identita__Audience: "390035493066113030"
     secrets:
       - ConnectionStrings__Postgres
       - Import__Token
