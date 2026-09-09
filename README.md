@@ -89,6 +89,12 @@ tools/fake-api.py &          # falešné API z mock dat, port 8080
 npm --prefix web run dev     # http://localhost:3000
 ```
 
+Úvodní stránka nese velkou fotku a nad ní **živou větu spočítanou z dat** —
+kolik zastávek je odjeto, kdo vede v kategoriích a která zastávka je další.
+Když se nenačte, prostě tam není; kvůli jedné větě nemá padat landing.
+Fotky leží ve `web/public/foto/` a jsou součástí image, ne obsah v R2:
+je to podklad stránky, ne nahraný soubor.
+
 Web renderuje serverem, protože blog a výsledky potřebují SEO. Adresu API
 bere z `API_URL`; výchozí je `http://localhost:8080`, takže proti falešnému
 i skutečnému lokálnímu API funguje bez nastavování.

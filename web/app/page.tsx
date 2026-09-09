@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { ApiNedostupne, nactiSerie, type SerieShrnuti } from "@/lib/api";
+import {
+  ApiNedostupne,
+  nactiPoradi,
+  nactiSerie,
+  nactiSerii,
+  type SerieShrnuti,
+} from "@/lib/api";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu.
 export const dynamic = "force-dynamic";
@@ -19,6 +25,33 @@ export default async function Rozcestnik() {
 
   const aktualni = rocniky?.[0];
 
+  // Živá věta nad fotkou. Fotka udělá dojem, ale tohle řekne, že se něco
+  // děje — a je to spočítané z dat, ne napsané natvrdo. Když se to nepovede
+  // načíst, prostě tam není; kvůli jedné větě nemá padat úvodní stránka.
+  let stav: { odjeto: number; celkem: number; dalsi?: string; vedou: string[] } | null = null;
+  if (aktualni) {
+    try {
+      const [detail, poradi] = await Promise.all([
+        nactiSerii(aktualni.slug),
+        nactiPoradi(aktualni.slug),
+      ]);
+      if (detail) {
+        const cekaji = detail.zavody.filter((z) => z.stav === "Planovany" || z.stav === "Vypsany");
+        stav = {
+          odjeto: detail.zavody.filter((z) => z.stav === "Odjety").length,
+          celkem: detail.zavody.length,
+          dalsi: cekaji[0] && `${cekaji[0].nazev}, ${denAMesic(cekaji[0].datum)}`,
+          vedou:
+            poradi?.kategorie
+              .map((k) => k.lode[0]?.lod)
+              .filter((l): l is string => Boolean(l)) ?? [],
+        };
+      }
+    } catch {
+      // Výpadek řeší blok níž; tahle věta se prostě neukáže.
+    }
+  }
+
   return (
     <>
       <section className="hero">
@@ -29,6 +62,17 @@ export default async function Rozcestnik() {
             Seriál závodů plachetnic na Orlické přehradě. Devět zastávek, tři
             kategorie, jedno průběžné pořadí.
           </p>
+          {stav && (
+            <p className="hero-zivot">
+              {stav.odjeto > 0 && (
+                <span>
+                  Odjeto {stav.odjeto} z {stav.celkem} zastávek
+                </span>
+              )}
+              {stav.vedou.length > 0 && <span>Vedou {stav.vedou.join(", ")}</span>}
+              {stav.dalsi && <span>Další: {stav.dalsi}</span>}
+            </p>
+          )}
           {aktualni && (
             <p className="hero-odkazy">
               <Link className="tlacitko" href={`/serie/${aktualni.slug}`}>
@@ -73,6 +117,16 @@ export default async function Rozcestnik() {
       </p>
     </>
   );
+}
+
+/** „19. září" — rok v téhle větě nikoho nezajímá. */
+function denAMesic(iso: string) {
+  const mesice = [
+    "ledna", "února", "března", "dubna", "května", "června",
+    "července", "srpna", "září", "října", "listopadu", "prosince",
+  ];
+  const [, m, d] = iso.slice(0, 10).split("-").map(Number);
+  return `${d}. ${mesice[m - 1]}`;
 }
 
 function zavodu(n: number) {

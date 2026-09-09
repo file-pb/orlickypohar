@@ -372,6 +372,36 @@ Pořadatel zastávky spravuje svůj závod, ne cizí.
 `Rozhodčí` není stupeň oprávnění, ale **funkce v procesu** — proto je to
 samostatná role, ne úroveň mezi editorem a správcem.
 
+## Úvodní stránka
+
+Filipův záměr, upřesněný 9. 9. 2026: landing má udělat dojem, kdežto
+výsledkové stránky mají zůstat utilitární. Nejsou to protiklady — slouží
+dvěma různým lidem. Kdo přijde poprvé, potřebuje za dvě vteřiny pochopit,
+že tohle je skutečný seriál; kdo se vrací, chce číslo.
+
+Rozpor mizí jediným pravidlem: **wau se nesmí postavit do cesty.** Velká
+fotka ano, úvodní obrazovka k odkliknutí ne — ta odradí toho, kdo chodí
+každý týden, a rozbije sdílení odkazů.
+
+**Dojem nedělá hezká fotka, ale aktuálnost.** Ukázalo se to na seriálech
+jiných sportů (Diamond League, Ski Classics): hero je vždycky *co se právě
+stalo* nebo *co bude*. Proto je nad fotkou **věta spočítaná z dat** — odjeté
+zastávky, kdo vede, další termín. Statická fotka zestárne za měsíc, tahle
+věta se mění sama.
+
+Obojí má i strukturální oporu: oba ty weby drží **výsledky zastávky
+a průběžné pořadí odděleně**, přesně jak to má náš model, a **pořadí dávají
+na úvodní stránku**, protože je to číslo, kvůli kterému lidé chodí.
+
+Zkoušená a **zamítnutá** varianta: připnutá fotka, po které obsah přejíždí.
+Vypadá dobře jen tehdy, když sedne práce s vrstvami — hlavička přes fotku
+a neprůhledné pozadí obsahu. Když to nesedne, vypadá to jako chyba, ne jako
+efekt. Odloženo, ne zavrženo.
+
+**Samostatná „wau" stránka** je Filipův nápad, jak to mít obojí: landing
+zůstane rychlý a efektní prezentace bude vedle. Až na ni dojde, počítá se
+s karuselem z vybraných fotek.
+
 ## Web a mobil
 
 | Část | Čím | Proč |

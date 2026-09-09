@@ -72,6 +72,14 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 .hero-text > * { max-width: var(--sirka); margin-left: auto; margin-right: auto; }
 .hero-text h1 { font-size: clamp(1.9rem, 6vw, 3rem); margin: 0 0 0.35rem; color: #fff; }
 .hero-text p { margin: 0; color: rgba(255, 255, 255, 0.88); }
+/* Živá věta: co se právě děje. Odděleno tečkami, na telefonu se zalomí. */
+.hero-zivot {
+  display: flex; flex-wrap: wrap; gap: 0.15rem 0.9rem;
+  margin-top: 0.6rem !important; font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+.hero-zivot span + span::before { content: "· "; opacity: 0.6; }
+
 .hero-odkazy { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 1rem !important; }
 .tlacitko.druhotne { background: rgba(255, 255, 255, 0.16); backdrop-filter: blur(2px); }
 .kredit {
