@@ -15,6 +15,7 @@ import { ProcNejsouVysledky, Stav } from "@/app/stav";
 import { PruhUkazky } from "@/app/ukazka";
 import { datum } from "@/app/datum";
 import { VypisNovinek } from "@/app/novinky";
+import { Drobecky } from "@/app/drobecky";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -104,9 +105,13 @@ export default async function Zastavka({ params }: Parametry) {
 
   return (
     <>
-      <p style={{ margin: "0 0 0.5rem" }}>
-        <Link href={`/serie/${slug}`}>← zpět na ročník</Link>
-      </p>
+      <Drobecky
+        cesta={[
+          { text: "Domů", kam: "/" },
+          { text: "Ročník", kam: `/serie/${slug}` },
+          { text: zavod.nazev },
+        ]}
+      />
       <PruhUkazky slug={slug} />
       <h1>
         <span className={zavod.stav === "Zruseny" ? "skrtnute" : undefined}>{zavod.nazev}</span>{" "}

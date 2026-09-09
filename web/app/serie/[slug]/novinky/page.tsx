@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ApiNedostupne, nactiClanky, nactiSerii } from "@/lib/api";
 import { Vypadek } from "@/app/vypadek";
 import { VypisNovinek } from "@/app/novinky";
+import { Drobecky } from "@/app/drobecky";
 import { PruhUkazky } from "@/app/ukazka";
 
 export const dynamic = "force-dynamic";
@@ -35,10 +35,14 @@ export default async function Novinky({ params }: Parametry) {
   return (
     <>
       <PruhUkazky slug={serie.slug} />
+      <Drobecky
+        cesta={[
+          { text: "Domů", kam: "/" },
+          { text: "Ročník", kam: `/serie/${serie.slug}` },
+          { text: "Novinky" },
+        ]}
+      />
       <h1>Novinky</h1>
-      <p className="podtitulek">
-        <Link href={`/serie/${serie.slug}`}>{serie.nazev}</Link>
-      </p>
 
       {/* Blog je na dvou úrovních: sérii píše organizátor poháru, zastávku
           její pořadatel. Ve výpisu jsou pohromadě a odlišuje je štítek —

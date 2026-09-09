@@ -262,7 +262,20 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
 .clanek { max-width: 38rem; }
 .clanek p { line-height: 1.7; margin: 0 0 1.1rem; }
 .clanek .perex { font-size: 1.05rem; color: var(--tlumeny); }
-.drobecky { margin: 0 0 0.5rem; }
+/* Drobečková navigace. Malá, tlumená a proklikatelná až na kořen — smysl je
+   skočit o dvě úrovně naráz, ne o jednu jako u „zpět". */
+.drobecky {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: 0.35rem; margin: 0 0 0.85rem;
+  font-size: 0.85rem; color: var(--tlumeny);
+}
+.drobecky > span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.drobecky a { color: var(--tlumeny); text-decoration: underline; text-underline-offset: 0.15em; }
+.drobecky a:hover { color: var(--voda); }
+/* Kde stojím, není odkaz — a nese to i barvou textu, ne jen chybějícím
+   podtržením. */
+.drobecky [aria-current="page"] { color: var(--text); }
+.drobecky .oddelovac { color: var(--linka); }
 
 /* Zpátky nahoru.
 

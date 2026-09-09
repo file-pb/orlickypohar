@@ -4,6 +4,7 @@ import { ApiNedostupne, nactiClanek } from "@/lib/api";
 import { datumClanku } from "@/app/datum";
 import { Vypadek } from "@/app/vypadek";
 import { Odstavce } from "@/app/novinky";
+import { Drobecky } from "@/app/drobecky";
 import { PruhUkazky } from "@/app/ukazka";
 
 export const dynamic = "force-dynamic";
@@ -38,9 +39,14 @@ export default async function ClanekStranka({ params }: Parametry) {
   return (
     <>
       <PruhUkazky slug={slug} />
-      <p className="drobecky">
-        <Link href={`/serie/${slug}/novinky`}>Novinky</Link>
-      </p>
+      <Drobecky
+        cesta={[
+          { text: "Domů", kam: "/" },
+          { text: "Ročník", kam: `/serie/${slug}` },
+          { text: "Novinky", kam: `/serie/${slug}/novinky` },
+          { text: c.titulek },
+        ]}
+      />
 
       <h1>{c.titulek}</h1>
       <p className="podtitulek">
