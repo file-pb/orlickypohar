@@ -139,6 +139,7 @@ td.cislo { font-variant-numeric: tabular-nums; }
   padding: 0.6rem 1.1rem; border-radius: 10px; font-weight: 600;
 }
 .tlacitko:hover { text-decoration: none; opacity: 0.9; }
+button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
 
 .poznamka { color: var(--tlumeny); font-size: 0.85rem; margin-top: 0.75rem; }
 .prazdno { color: var(--tlumeny); background: var(--papir); border: 1px dashed var(--linka); border-radius: 10px; padding: 2rem 1.25rem; text-align: center; }
