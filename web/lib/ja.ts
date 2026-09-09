@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-import { COOKIE_TOKEN, prihlasovaniJde } from "@/lib/oidc";
+import { prihlasovaniJde, tokenZeSezeni } from "@/lib/oidc";
 import type { components } from "./schema";
 
 export type Ja = components["schemas"]["JaDto"];
@@ -16,7 +15,7 @@ const API = process.env.API_URL ?? "http://localhost:8080";
  */
 export async function maSezeni(): Promise<boolean> {
   if (!prihlasovaniJde) return false;
-  return Boolean((await cookies()).get(COOKIE_TOKEN)?.value);
+  return Boolean(await tokenZeSezeni());
 }
 
 /**
@@ -35,7 +34,7 @@ export type Sezeni = { ja: Ja | null; duvod: string | null };
 export async function nactiJa(): Promise<Sezeni> {
   if (!prihlasovaniJde) return { ja: null, duvod: null };
 
-  const token = (await cookies()).get(COOKIE_TOKEN)?.value;
+  const token = await tokenZeSezeni();
   if (!token) return { ja: null, duvod: null };
 
   try {

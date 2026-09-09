@@ -23,6 +23,80 @@ export const prihlasovaniJde = Boolean(AUTORITA && KLIENT && VEREJNA_ADRESA);
 export const COOKIE_TOKEN = "op_token";
 export const COOKIE_TOK = "op_tok";
 
+/**
+ * Cookie se ukládá po kusech, když se token nevejde do jedné.
+ *
+ * <b>Prohlížeč zahodí cookie nad 4096 bajtů — a mlčky.</b> Server hlavičku
+ * pošle, prohlížeč si ji nenechá a uživatel vidí přihlášení, které „prošlo"
+ * a přesto nikde neplatí. Token od Zitadelu je JWT a jeho velikost roste
+ * s tím, co je v něm za nároky; nechat to na náhodě znamená čekat, až se
+ * jednou přehoupne přes hranici.
+ *
+ * Kusy se jmenují `op_token.0`, `op_token.1`, … a čtou se, dokud řada
+ * nekončí. Jeden kus se ukládá pod původním jménem, aby se běžný případ
+ * nezhoršil o nic.
+ */
+const KUS = 3500;
+const KUSU_NEJVIC = 8;
+
+type Cookies = {
+  set(jmeno: string, hodnota: string, volby: Record<string, unknown>): unknown;
+  delete(co: { name: string; path: string }): unknown;
+};
+
+/** Uloží token do jedné cookie, nebo do několika, když je dlouhý. */
+export function ulozToken(cookies: Cookies, token: string, maxAge: number) {
+  const volby = { httpOnly: true, secure: true, sameSite: "lax" as const, path: "/", maxAge };
+
+  // Zbytky po delším tokenu musí pryč, jinak by se četly spolu s novým.
+  zahodToken(cookies);
+
+  if (token.length <= KUS) {
+    cookies.set(COOKIE_TOKEN, token, volby);
+    return 1;
+  }
+
+  const kusy = Math.ceil(token.length / KUS);
+  for (let i = 0; i < Math.min(kusy, KUSU_NEJVIC); i++)
+    cookies.set(`${COOKIE_TOKEN}.${i}`, token.slice(i * KUS, (i + 1) * KUS), volby);
+
+  return kusy;
+}
+
+/**
+ * Zahodí token i všechny jeho kusy.
+ *
+ * <b>Vždycky s výslovnou cestou.</b> Mazání bez ní míří na cestu, ze které
+ * požadavek přišel — a cookie nastavená na `/` by tak z `/odhlaseni`
+ * přežila, protože by se smazala jiná cookie téhož jména.
+ */
+export function zahodToken(cookies: Cookies) {
+  cookies.delete({ name: COOKIE_TOKEN, path: "/" });
+  for (let i = 0; i < KUSU_NEJVIC; i++)
+    cookies.delete({ name: `${COOKIE_TOKEN}.${i}`, path: "/" });
+}
+
+/**
+ * Token ze sezení, složený zpátky z kusů. Čte se na jednom místě, aby se
+ * hlavička a administrace nemohly rozejít v tom, co považují za přihlášení.
+ */
+export async function tokenZeSezeni(): Promise<string | undefined> {
+  const { cookies } = await import("next/headers");
+  const jar = await cookies();
+
+  const cely = jar.get(COOKIE_TOKEN)?.value;
+  if (cely) return cely;
+
+  let token = "";
+  for (let i = 0; i < KUSU_NEJVIC; i++) {
+    const kus = jar.get(`${COOKIE_TOKEN}.${i}`)?.value;
+    if (!kus) break;
+    token += kus;
+  }
+
+  return token || undefined;
+}
+
 export type Dokument = {
   authorization_endpoint: string;
   token_endpoint: string;

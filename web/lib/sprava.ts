@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-import { COOKIE_TOKEN } from "@/lib/oidc";
+import { tokenZeSezeni } from "@/lib/oidc";
 import type { components } from "./schema";
 
 /**
@@ -57,9 +56,8 @@ export const nazevRole = (role: Role) =>
 /** Stav odpovědi na dotaz, který vyžaduje roli správce. */
 export type Stav = "ok" | "neprihlasen" | "nesmi" | "neni" | "vypadek";
 
-async function token() {
-  return (await cookies()).get(COOKIE_TOKEN)?.value;
-}
+// Jedno místo, kde se čte sezení — včetně tokenu uloženého po kusech.
+const token = () => tokenZeSezeni();
 
 /** Chybová hláška z API, nebo obecná podle stavu. Nikdy prázdná. */
 async function hlaska(odpoved: Response) {
