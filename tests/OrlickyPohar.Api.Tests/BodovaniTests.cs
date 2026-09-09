@@ -292,6 +292,86 @@ public class BodovaniTests
         Assert.Equal(3, zavod["Zephyr"].Poradi);
     }
 
+    // --- Závod → body do seriálu ---
+
+    [Fact]
+    public void Do_serie_ma_vitez_nulu_a_dalsi_o_jedna_vic()
+    {
+        // Dvě různé stupnice, ne jedna posunutá: v závodě má vítěz jeden bod,
+        // v seriálu nulu. Kdo to napíše jako jedno pravidlo, dostane všude
+        // posun o jedničku — a ten se projeví až u lodí se stejným součtem.
+        var zavod = Bodovani.VysledkyZavodu([Rozjizdka(1, "první", "druhá", "třetí")]);
+
+        var doSerie = SerieBodovani.BodyDoSerie(zavod).ToDictionary(v => v.Lod, v => v.Body);
+
+        Assert.Equal(0, doSerie["první"]);
+        Assert.Equal(1, doSerie["druhá"]);
+        Assert.Equal(2, doSerie["třetí"]);
+    }
+
+    [Fact]
+    public void Do_serie_si_kazda_kategorie_zacina_od_nuly()
+    {
+        var zavod = Bodovani.VysledkyZavodu(
+        [
+            new RozjizdkaVstup(1,
+            [
+                Dojel("race1", "Race", 1),
+                Dojel("nad1", "Nad7m", 2),
+                Dojel("race2", "Race", 3),
+                Dojel("nad2", "Nad7m", 4),
+            ]),
+        ]);
+
+        var doSerie = SerieBodovani.BodyDoSerie(zavod).ToDictionary(v => v.Lod);
+
+        Assert.Equal(0, doSerie["race1"].Body);
+        Assert.Equal(0, doSerie["nad1"].Body);
+        Assert.Equal("Nad7m", doSerie["nad1"].Kategorie);
+        Assert.Equal(1, doSerie["nad2"].Body);
+    }
+
+    [Fact]
+    public void Koeficient_nasobi_a_zaokrouhluje_nahoru_od_pulky()
+    {
+        // Žádná zastávka ročníku 2026 koeficient jiný než 1 nemá, takže
+        // zaokrouhlení je nedoložené. Test ho drží aspoň napsaný — až první
+        // takový závod vznikne, je tohle místo, kde se to potvrdí u rozhodčího.
+        var zavod = Bodovani.VysledkyZavodu([Rozjizdka(1, "a", "b", "c", "d")]);
+
+        var pulky = SerieBodovani.BodyDoSerie(zavod, koeficient: 0.5m)
+            .ToDictionary(v => v.Lod, v => v.Body);
+
+        Assert.Equal(0, pulky["a"]);   // 0 × 0,5
+        Assert.Equal(1, pulky["b"]);   // 1 × 0,5 = 0,5 → nahoru
+        Assert.Equal(1, pulky["c"]);   // 2 × 0,5
+        Assert.Equal(2, pulky["d"]);   // 3 × 0,5 = 1,5 → nahoru
+    }
+
+    [Fact]
+    public void Lod_s_kodem_dostane_do_serie_poradi_ze_sve_kategorie()
+    {
+        // Doklad z sešitu rozhodčího: ČERVENÉ CAFE si ze 24hodinovky odneslo
+        // dvacítku z celkového pořadí, protože loď s kódem nemá pořadí
+        // v kategorii a ruční přepočet neměl pravidlo. V seriálu je to víc
+        // než součet čtyř běžných závodů.
+        var zavod = Bodovani.VysledkyZavodu(
+        [
+            new RozjizdkaVstup(1,
+            [
+                Dojel("race1", "Race", 1),
+                Dojel("race2", "Race", 2),
+                Kod("odstoupila", "Race", KodVysledku.Ret),
+                .. Dokoncilo(12),
+            ]),
+        ]);
+
+        var doSerie = SerieBodovani.BodyDoSerie(zavod).ToDictionary(v => v.Lod, v => v.Body);
+
+        // Třetí v RACE, ne patnáctá v poli.
+        Assert.Equal(2, doSerie["odstoupila"]);
+    }
+
     /// <summary>Dvanáct lodí, které dojely, v kategorii nad 7 m.</summary>
     private static VysledekVstup[] Dokoncilo(int kolik) =>
         [.. Enumerable.Range(1, kolik).Select(i => Dojel($"l{i:00}", "Nad7m", i))];
