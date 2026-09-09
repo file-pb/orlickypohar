@@ -46,12 +46,31 @@ neukládají**, aby šel seriál kdykoliv přepočítat podle změněných pravi
 
 ## Nahrání ročníku
 
+Ročník nahrává jeden příkaz. Token se čte **zevnitř běžícího kontejneru**,
+protože tajemství na serveru patří uživateli, pod kterým běží aplikace
+(UID 1654) — ne `deploy`, kterým se přihlašuješ. `cat` na soubor v
+`secrets/` proto skončí na `permission denied`.
+
 ```bash
-curl -X POST https://orlickypohar-api.klihovka.cz/import/serie \
-  -H "X-Import-Token: $(cat secrets/Import__Token)" \
-  -H 'content-type: application/json' \
-  --data-binary @data/2026-nanecisto.json
+python3 tools/gen-mock.py --publikovat > /tmp/rocnik.json
+scp -q /tmp/rocnik.json deploy@178.105.62.172:/tmp/rocnik.json
+ssh deploy@178.105.62.172 'C=$(docker ps --format "{{.Names}}" | grep orlickypohar | grep -m1 -- -app); \
+  TOKEN=$(docker exec "$C" cat /run/secrets/Import__Token); \
+  curl -s -X POST https://orlickypohar-api.klihovka.cz/import/serie \
+    -H "X-Import-Token: $TOKEN" -H "content-type: application/json" \
+    --data-binary @/tmp/rocnik.json; echo; rm -f /tmp/rocnik.json'
 ```
+
+**Přepínač `--publikovat` tam musí být.** Soubor v `data/` je schválně
+nepublikovaný, aby se vymyšlená data nedala omylem vystavit — na produkci
+je ročník naopak publikovaný a web u něj ukazuje pruh, že data nejsou
+skutečná. Import stav publikace **přepisuje**, takže nahrání doslovného
+souboru z `data/` by ročník i všech devět zastávek schovalo a web by hlásil
+„zatím žádný ročník". Není to kosmetika, ale výpadek — proto je to
+přepínač generátoru a ne ruční úprava souboru před odesláním.
+
+Odpověď má u každé skupiny počty; `"clanky":{"nove":11,...}` znamená, že
+se založilo jedenáct článků.
 
 Import je **idempotentní**: druhé odeslání téhož souboru vrátí samé nuly
 ve `nove` a nic nepřidá. Opravený výsledek přepíše původní řádek. Buď projde

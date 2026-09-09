@@ -10,9 +10,28 @@ hezké názvy by tuhle třídu chyb nikdy neodhalily.
 
 Pevný seed, takže opakované spuštění dá tentýž soubor a v gitu se objeví
 jen skutečné změny.
+
+Dva režimy, protože soubor v `data/` a soubor k nahrání na produkci nemají
+stejný stav publikace:
+
+    gen-mock.py                          → data/2026-nanecisto.json, NEPUBLIKOVANÝ
+    gen-mock.py --publikovat > kam.json  → tentýž ročník, ale publikovaný
+
+Verze v repozitáři je schválně nepublikovaná, aby se vymyšlená data nedala
+omylem vystavit; hlídají to `KontraktTests`. Na produkci ročník publikovaný
+**je** — ukazuje se u něj pruh, že data nejsou skutečná — takže nahrání
+doslovného souboru z `data/` by ho i všechny zastávky schovalo. Import stav
+publikace přepisuje, takže tenhle rozdíl není kosmetika, ale výpadek webu.
+Proto je to přepínač, ne ruční úprava souboru před odesláním.
 """
-import json, random, unicodedata
+import argparse, json, random, sys, unicodedata
 from datetime import date, datetime, timedelta, timezone
+
+argumenty = argparse.ArgumentParser(description="Vyrobí vymyšlený ročník.")
+argumenty.add_argument(
+    "--publikovat", action="store_true",
+    help="ročník i zastávky označí jako publikované a výsledek pošle na stdout")
+VOLBY = argumenty.parse_args()
 
 R = random.Random(20260426)
 
@@ -169,7 +188,8 @@ for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerat
                    "vyhodnoceni": vyhodnoceni, "koeficientDoSerie": koef,
                    # Zastávka, která je teprve v kalendáři, nemá výsledky.
                    "stav": "Odjety" if odjety else "Planovany",
-                   "publikovano": False, "ucasti": ucasti, "rozjizdky": rozjizdky})
+                   "publikovano": VOLBY.publikovat,
+                   "ucasti": ucasti, "rozjizdky": rozjizdky})
 
 
 # --- Blog a novinky -------------------------------------------------------
@@ -365,11 +385,14 @@ data = {
     "_poznamka": (
         "JMÉNA JSOU SKUTEČNÁ, VÝSLEDKY VYMYŠLENÉ. Lodě, kategorie a zastávky "
         "pocházejí z tabulek rozhodčího; pořadí, časy i články jsou vygenerované, "
-        "protože skutečné výsledky zatím nemáme. Ročník je NEPUBLIKOVANÝ, "
-        "aby se vymyšlená data nedostala na veřejné stránky. Vyrábí "
-        "tools/gen-mock.py s pevným seedem."),
+        "protože skutečné výsledky zatím nemáme. Ročník je "
+        + ("PUBLIKOVANÝ — patří na produkci, kde u něj web ukazuje pruh, že "
+           "data nejsou skutečná (proměnná UKAZKOVE_SERIE)."
+           if VOLBY.publikovat else
+           "NEPUBLIKOVANÝ, aby se vymyšlená data nedostala na veřejné stránky.")
+        + " Vyrábí tools/gen-mock.py s pevným seedem."),
     "slug": "2026-nanecisto", "nazev": "Orlický pohár 2026 (nanečisto)",
-    "rok": 2026, "publikovano": False,
+    "rok": 2026, "publikovano": VOLBY.publikovat,
     "kategorie": [{"nazev": "Race", "poradi": 1},
                   {"nazev": "Nad7m", "poradi": 2},
                   {"nazev": "Pod7m", "poradi": 3}],
@@ -377,10 +400,20 @@ data = {
     "clanky": clanky,
 }
 
-with open("data/2026-nanecisto.json", "w", encoding="utf-8") as f:
-    json.dump(data, f, ensure_ascii=False, indent=2)
-    f.write("\n")
+# Publikovaná verze jde na stdout a do `data/` se nezapíše nikdy. Kdyby se
+# tam dostala, commitla by se — a od té chvíle by stačil `git pull` a jeden
+# import k tomu, aby se na veřejné stránky dostala vymyšlená data.
+if VOLBY.publikovat:
+    json.dump(data, sys.stdout, ensure_ascii=False, indent=2)
+    sys.stdout.write("\n")
+else:
+    with open("data/2026-nanecisto.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+        f.write("\n")
 
+# Souhrn patří na stderr, aby nezašpinil ročník posílaný rourou dál.
 print(f"lodí: {len(lode)} | zastávek: {len(zavody)} | článků: {len(clanky)} | rozjížděk: "
       f"{sum(len(z['rozjizdky']) for z in zavody)} | výsledků: "
-      f"{sum(len(r['vysledky']) for z in zavody for r in z['rozjizdky'])}")
+      f"{sum(len(r['vysledky']) for z in zavody for r in z['rozjizdky'])}"
+      + (" | PUBLIKOVANÝ, na stdout" if VOLBY.publikovat else ""),
+      file=sys.stderr)
