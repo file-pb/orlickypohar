@@ -411,6 +411,15 @@ přibudou později, musí být u snímku vidět autor a souhlas se zveřejnění
 Je to jedno pole u fotky; doplňovat ho zpětně ke dvěma stům snímků je práce,
 kterou nikdo neudělá.
 
+**Druhá sada: Izolepa 2026, autor Jiří Tašl.** Album *2026.08.01 orlik
+izolepa* na Zoneramě; **autor dal Filipovi svolení** (9. 9. 2026). U snímků
+se uvede jeho jméno. Je to zároveň první doklad, že to pole u fotky musí
+vzniknout hned s prvním nahráním, ne až bude potřeba.
+
+Fotky se **nelinkují z cizí služby**, ale stáhnou a uloží do R2. Sdílené
+album může zmizet nebo změnit adresu a web by měl díry na místech, kde je
+nikdo nehlídá.
+
 ### Administrace i na mobilu
 
 Zadání chce administraci **na webu i na mobilu**, ne jen na webu. To mění
