@@ -68,13 +68,19 @@ export default async function Rozcestnik() {
       <section className="hero">
         <div className="hero-fotky">
           {FOTKY.map((f, i) => (
-            <img
-              key={f.src}
-              src={f.src}
-              alt={f.popis}
-              style={{ animationDelay: `${i * DELKA}s` }}
-              fetchPriority={i === 0 ? "high" : "low"}
-            />
+            <picture key={f.src} style={{ animationDelay: `${i * DELKA}s` }}>
+              {/* Prohlížeč si vezme AVIF ve velikosti podle displeje —
+                  telefon 800px za desetinu toho, co by stáhl v JPEG.
+                  JPEG zůstává jako záloha pro ty, co AVIF neumí. */}
+              <source
+                type="image/avif"
+                sizes="100vw"
+                srcSet={[800, 1200, 1600]
+                  .map((w) => `${f.src.replace(".jpg", "")}-${w}.avif ${w}w`)
+                  .join(", ")}
+              />
+              <img src={f.src} alt={f.popis} fetchPriority={i === 0 ? "high" : "low"} />
+            </picture>
           ))}
         </div>
         <div className="hero-text">
