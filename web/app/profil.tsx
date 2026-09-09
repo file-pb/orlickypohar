@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Ja } from "@/lib/ja";
 
 /**
@@ -58,10 +57,15 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
 
         {/* Co člověk podle svých oprávnění spravuje. Proto je to nabídka
             a ne rovnou odkaz na odhlášení. */}
+        {/* Obyčejný odkaz, ne <Link>: klientský přechod si stránku drží
+            v paměti routeru a administrace pak ukáže starší podobu, dokud
+            se stránka nenačte znovu. Hlavička se při něm navíc nepřekresluje
+            vůbec, takže vedle sebe skončí jméno z jednoho vykreslení
+            a obsah z jiného. Sem se chodí zřídka a celé načtení nic nestojí. */}
         {spravuje.map((serie) => (
-          <Link key={serie} href={`/sprava/${serie}/opravneni`}>
+          <a key={serie} href={`/sprava/${serie}/opravneni`}>
             Oprávnění {serie}
-          </Link>
+          </a>
         ))}
         {/* Formulář, ne odkaz. Odhlášení něco mění, takže se nesmí dát
             vyvolat pouhou návštěvou adresy — přednačtením, náhledem odkazu
