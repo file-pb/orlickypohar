@@ -16,13 +16,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {/* Značka je tatáž jako ikona appky — kreslí ji app/scripts/ikona.py,
                 aby existovala jedna, ne dvě podobné. */}
             <Link className="znacka" href="/">
-              <img src="/logo.png" alt="" width={34} height={34} />
+              <img src="/logo.png" alt="" width={30} height={30} />
               Orlický pohár
             </Link>
-            <p>
-              Seriál závodů plachetnic na Orlické přehradě ·{" "}
-              <Link href="/pravidla">pravidla</Link> · <Link href="/appka">appka</Link>
-            </p>
+            {/* Podtitulek tu byl nadbytečný — totéž stojí hned pod fotkou. */}
+            <nav>
+              <Link href="/pravidla">Pravidla</Link>
+              <Link href="/appka">Appka</Link>
+            </nav>
           </div>
         </header>
         <main className="obal">{children}</main>

@@ -36,16 +36,25 @@ a:hover { text-decoration: underline; }
 
 .obal { max-width: var(--sirka); margin: 0 auto; padding: 0 1.25rem 4rem; }
 
+/* Jeden řádek a drží se nahoře i při scrollování. Na výsledkové stránce
+   se scrolluje hodně a odskakovat nahoru kvůli menu je otrava. */
 header.hlavicka {
+  position: sticky; top: 0; z-index: 20;
   border-bottom: 1px solid var(--linka);
   margin-bottom: 2rem;
-  background: var(--papir);
+  background: color-mix(in srgb, var(--papir) 88%, transparent);
+  backdrop-filter: blur(10px);
 }
-header.hlavicka .obal { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+header.hlavicka .obal {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; padding-top: 0.7rem; padding-bottom: 0.7rem;
+}
 header.hlavicka a { color: var(--text); font-weight: 600; letter-spacing: -0.01em; }
-header.hlavicka a.znacka { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 1.05rem; }
+header.hlavicka a.znacka { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 1rem; }
 header.hlavicka a.znacka img { display: block; }
-header.hlavicka p { margin: 0.15rem 0 0; color: var(--tlumeny); font-size: 0.875rem; }
+header.hlavicka nav { display: flex; gap: 1rem; flex: none; }
+header.hlavicka nav a { color: var(--tlumeny); font-weight: 500; font-size: 0.9rem; }
+header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
 
 h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 0.35rem; letter-spacing: -0.02em; }
 h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
