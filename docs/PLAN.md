@@ -420,6 +420,39 @@ Fotky se **nelinkují z cizí služby**, ale stáhnou a uloží do R2. Sdílené
 album může zmizet nebo změnit adresu a web by měl díry na místech, kde je
 nikdo nehlídá.
 
+### Odkud se dají vzít a jak
+
+Jiřího alba z Izolepy na Zoneramě, uživatel `TaslJiri` — **materiál je
+k dispozici, kdykoliv bude potřeba**:
+
+| album | ročník | fotek |
+|---|---|---|
+| `16038455` | 2026 | 18 |
+| `13692344` | 2025 | 48 |
+| `11853646` | 2024 | 87 |
+| `10158399` | 2023 | 100 |
+| `8732253` | 2022 | 100 |
+
+Plus album *2026.08.01 orlik izolepa* dostupné jen sdíleným odkazem — ten
+má Filip; do repozitáře nepatří.
+
+**Jak z toho vybírat, aniž bys klikal po jedné.** Stránka alba
+(`eu.zonerama.com/TaslJiri/Album/<id>`) obsahuje odkazy `Photo/<album>/<foto>`,
+z nichž se vytáhnou identifikátory. Obrázek se pak složí přímo:
+
+```
+https://eu.zonerama.com/photos/<foto>_<šířka>x<výška>.jpg
+```
+
+Rozměry jdou libovolné, server dopočítá — `_360x360` je náhled, `_1600x1600`
+tisk na obrazovku. Z náhledů se slepí kontaktní list (mřížka s popisky) a
+projde se **tři sta fotek na pár obrázcích** místo tří set kliknutí. Vybrané
+se pak stáhnou ve velkém.
+
+Kritéria výběru jsou výš: detail lodi, velká skupina na startu, náklon pod
+plnými plachtami. **Zámek Orlík v pozadí je nejcennější** — obecná voda může
+být odkudkoliv, zámek fotku usadí na Orlík.
+
 ### Administrace i na mobilu
 
 Zadání chce administraci **na webu i na mobilu**, ne jen na webu. To mění
