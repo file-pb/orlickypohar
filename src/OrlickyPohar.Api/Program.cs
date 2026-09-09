@@ -34,7 +34,7 @@ try
 
     builder.Services.AddDbContext<AppDbContext>(o => o.UseNpgsql(connectionString));
     builder.Services.AddSingleton(TimeProvider.System);
-    builder.Services.PridejIdentitu();
+    var identita = builder.Services.PridejIdentitu(builder.Configuration);
     // .NET popisuje čísla jako ["integer","string"], protože je při čtení
     // přijímá i v uvozovkách. Odpovědi je ale píšou vždycky jako čísla —
     // a generovaný klient by jinak u každého bodu nutil ověřovat, jestli
@@ -74,6 +74,20 @@ try
     app.UseSerilogRequestLogging();
     app.UseCors();
 
+    // Bez nakonfigurovaného poskytovatele se ověřování nezapíná a chráněné
+    // endpointy se nezaregistrují vůbec — zapomenutá proměnná prostředí
+    // nesmí být totéž co „pusť dovnitř kohokoliv".
+    if (identita)
+    {
+        app.UseAuthentication();
+        app.UseAuthorization();
+    }
+    else
+    {
+        Log.Warning("Identita není nakonfigurovaná (Identita__Authority a Identita__Audience). "
+                    + "Chráněné endpointy neběží.");
+    }
+
     // Liveness: běží proces. Readiness: umí obsloužit provoz (drží i databáze).
     app.MapHealthChecks("/health", new() { Predicate = _ => false });
     app.MapHealthChecks("/health/ready", new() { Predicate = c => c.Tags.Contains("ready") });
@@ -94,6 +108,7 @@ try
     app.MapZavody();
     app.MapClanky();
     app.MapImport();
+    if (identita) app.MapJa();
 
     // Migrace při startu. U jedné repliky je to v pořádku a máš jistotu,
     // že schéma odpovídá kódu. Až budeš škálovat, přesuň to do kroku v CI.

@@ -1,5 +1,7 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using OrlickyPohar.Api.Data;
 
 namespace OrlickyPohar.Api.Features.Identita;
@@ -14,12 +16,9 @@ namespace OrlickyPohar.Api.Features.Identita;
 /// důvod, proč se výměna identity odkládá tak dlouho, až je nemožná.
 /// </para>
 /// <para>
-/// <b>Ověřování tokenu tu zatím není</b> a je to dělicí čára, ne opomenutí.
-/// Tenhle soubor umí přeložit už ověřeného přihlášeného na interní účet;
-/// ověření podpisu tokenu potřebuje balíček
-/// <c>Microsoft.AspNetCore.Authentication.JwtBearer</c>, který se z pracovního
-/// stroje nedá stáhnout (NuGet je odsud nedostupný, stejně jako Docker Hub).
-/// Připojí se tady, aby zbytek aplikace zůstal bez znalosti poskytovatele.
+/// Adresa poskytovatele a identifikátor aplikace přicházejí z prostředí:
+/// <c>Identita__Authority</c> a <c>Identita__Audience</c>. Nic jiného o něm
+/// aplikace nepotřebuje vědět a nic jiného se o něm nikde nedozví.
 /// </para>
 /// </summary>
 public static class Poskytovatel
@@ -34,10 +33,41 @@ public static class Poskytovatel
     /// proměnná prostředí nesmí být totéž co „pusť dovnitř kohokoliv".
     /// </para>
     /// </summary>
-    public static IServiceCollection PridejIdentitu(this IServiceCollection sluzby)
+    public static bool PridejIdentitu(this IServiceCollection sluzby, IConfiguration config)
     {
         sluzby.AddScoped<Uzivatele>();
-        return sluzby;
+
+        var autorita = config["Identita:Authority"];
+        var publikum = config["Identita:Audience"];
+        if (string.IsNullOrEmpty(autorita) || string.IsNullOrEmpty(publikum))
+            return false;
+
+        sluzby.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(o =>
+            {
+                o.Authority = autorita;
+                o.Audience = publikum;
+                // Nároky se nechávají tak, jak stojí v tokenu. Výchozí
+                // mapování přejmenuje `sub` na dlouhou adresu ze světa WS-*
+                // a z kódu, který má být čitelný proti specifikaci OIDC,
+                // se stane hádanka.
+                o.MapInboundClaims = false;
+                o.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = autorita,
+                    ValidateAudience = true,
+                    ValidAudience = publikum,
+                    ValidateLifetime = true,
+                    // Výchozí tolerance je pět minut. Server má čas z NTP,
+                    // takže pět minut navíc pro token, který měl přestat
+                    // platit, je zbytečně dlouhé okno.
+                    ClockSkew = TimeSpan.FromSeconds(30),
+                };
+            });
+
+        sluzby.AddAuthorization();
+        return true;
     }
 
     /// <summary>
@@ -47,17 +77,23 @@ public static class Poskytovatel
     /// </summary>
     public static (string Issuer, string Subject)? Ucet(this ClaimsPrincipal? kdo)
     {
-        var subject = kdo?.FindFirst("sub")?.Value
-            ?? kdo?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        // `sub` je jméno podle OIDC; NameIdentifier je jeho podoba po výchozím
+        // mapování .NETu. Bere se obojí, aby funkce nezávisela na tom, jestli
+        // někdo to mapování zapne.
+        var subjekt = kdo?.FindFirst("sub") ?? kdo?.FindFirst(ClaimTypes.NameIdentifier);
+        if (subjekt is null) return null;
 
-        // Vydavatel se bere z nároku, ne z konfigurace: uložená vazba má
+        // Vydavatel se bere z tokenu, ne z konfigurace: uložená vazba má
         // odpovídat tomu, kdo token skutečně vydal. Kdyby se sem dosadila
-        // konfigurace, přenesla by se změna adresy poskytovatele tiše na
-        // všechny staré vazby a přestaly by být tím, čím jsou.
-        var issuer = kdo?.FindFirst("iss")?.Value
-            ?? kdo?.FindFirst(ClaimTypes.NameIdentifier)?.Issuer;
+        // konfigurace, přepsala by změna adresy poskytovatele tiše i všechny
+        // staré vazby a přestaly by být tím, čím jsou.
+        //
+        // Záloha je vydavatel toho samého nároku, ne jiného — v principálu
+        // můžou být nároky z víc zdrojů a spárovat subjekt s cizím
+        // vydavatelem by vyrobilo dvojici, která nikdy neexistovala.
+        var vydavatel = kdo?.FindFirst("iss")?.Value ?? subjekt.Issuer;
 
-        return subject is null || string.IsNullOrEmpty(issuer) ? null : (issuer, subject);
+        return string.IsNullOrEmpty(vydavatel) ? null : (vydavatel, subjekt.Value);
     }
 }
 
@@ -126,5 +162,19 @@ public class Uzivatele(AppDbContext db)
         await db.Opravneni
             .Where(o => o.UzivatelId == uzivatelId)
             .Select(o => new UdeleneRole(o.Role, o.SerieId, o.ZavodId))
+            .ToListAsync(ct);
+
+    /// <summary>
+    /// Táž práva, ale s rozsahy jako slugy — ve tvaru pro klienta, který
+    /// pracuje s adresami a interní čísla by si musel párovat sám.
+    /// </summary>
+    public async Task<List<(Role Role, string Serie, string? Zavod)>> RozsahyAsync(
+        Guid uzivatelId, CancellationToken ct) =>
+        await db.Opravneni
+            .Where(o => o.UzivatelId == uzivatelId)
+            // Zavod je volitelný; u práva na celý ročník vyjde z levého
+            // spojení null, což je přesně to, co má klient dostat.
+            .Select(o => new ValueTuple<Role, string, string?>(
+                o.Role, o.Serie!.Slug, o.Zavod!.Slug))
             .ToListAsync(ct);
 }
