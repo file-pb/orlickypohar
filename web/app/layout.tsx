@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prihlasovaniJde } from "@/lib/oidc";
 import { maSezeni, nactiJa } from "@/lib/ja";
 import { Domu } from "@/app/domu";
+import { Profil } from "@/app/profil";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -45,18 +46,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
               {/* Přihlášení se nabízí, jen když je nastavené. Odkaz na
                   neexistující tok by byl slib, který web nesplní. */}
               {prihlasovaniJde &&
-                (sezeni ? (
-                  <>
-                    <span className="kdo" title={ja?.email ?? undefined}>
-                      {/* Když API token odmítne, jméno neznáme — a mlčet
-                          o tom je horší než to přiznat. */}
-                      {ja?.zobrazovane ?? "přihlášení nefunguje"}
-                    </span>
-                    <Link href="/odhlaseni">Odhlásit</Link>
-                  </>
-                ) : (
-                  <Link href="/prihlaseni">Přihlásit</Link>
-                ))}
+                (sezeni ? <Profil ja={ja} /> : <Link href="/prihlaseni">Přihlásit</Link>)}
             </nav>
           </div>
         </header>

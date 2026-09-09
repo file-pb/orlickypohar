@@ -166,6 +166,20 @@ class H(BaseHTTPRequestHandler):
             }
         elif cesta == f'/serie/{D["slug"]}/poradi':
             telo = poradi_serie()
+        elif cesta == "/ja":
+            # Přihlášený uživatel pro vývoj. Nekontroluje token — na to by
+            # tady musel běžet poskytovatel identity, a celý smysl tohohle
+            # skriptu je, že běžet nemusí nic. Bez hlavičky se ale tváří
+            # jako neznámý, aby šel vyzkoušet i odhlášený stav.
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            telo = {
+                "id": "01927f4e-0000-7000-8000-000000000001",
+                "zobrazovane": "Filip Burda",
+                "email": "filip@priklad.cz",
+                # Správce ročníku: rozsah na celou sérii, bez zastávky.
+                "opravneni": [{"role": "Spravce", "serie": D["slug"], "zavod": None}],
+            }
         elif cesta == f'/serie/{D["slug"]}/clanky':
             vybrane = CLANKY
             if zavod := dotaz.get("zavod", [""])[0]:
