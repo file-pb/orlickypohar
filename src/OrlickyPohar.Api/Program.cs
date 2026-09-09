@@ -5,6 +5,7 @@ using Serilog;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Bodovani;
 using OrlickyPohar.Api.Features.Clanky;
+using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Import;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Zavody;
@@ -33,6 +34,7 @@ try
 
     builder.Services.AddDbContext<AppDbContext>(o => o.UseNpgsql(connectionString));
     builder.Services.AddSingleton(TimeProvider.System);
+    builder.Services.PridejIdentitu();
     // .NET popisuje čísla jako ["integer","string"], protože je při čtení
     // přijímá i v uvozovkách. Odpovědi je ale píšou vždycky jako čísla —
     // a generovaný klient by jinak u každého bodu nutil ověřovat, jestli

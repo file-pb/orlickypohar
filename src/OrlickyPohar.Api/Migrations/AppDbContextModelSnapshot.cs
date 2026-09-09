@@ -76,6 +76,101 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("Clanky");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Identita.Opravneni", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SerieId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UdelenoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UzivatelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("ZavodId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SerieId");
+
+                    b.HasIndex("ZavodId");
+
+                    b.HasIndex("UzivatelId", "Role", "SerieId", "ZavodId")
+                        .IsUnique();
+
+                    b.ToTable("Opravneni");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Identita.UcetVazba", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Issuer")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("UzivatelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("ZalozenV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UzivatelId");
+
+                    b.HasIndex("Issuer", "Subject")
+                        .IsUnique();
+
+                    b.ToTable("Vazby");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Identita.Uzivatel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<DateTimeOffset?>("NaposledyPrihlasenV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ZalozenV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Zobrazovane")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Uzivatele");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Lode.Lod", b =>
                 {
                     b.Property<int>("Id")
@@ -406,6 +501,43 @@ namespace OrlickyPohar.Api.Migrations
                     b.Navigation("Serie");
 
                     b.Navigation("Zavod");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Identita.Opravneni", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Serial.Serie", "Serie")
+                        .WithMany()
+                        .HasForeignKey("SerieId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Uzivatel")
+                        .WithMany()
+                        .HasForeignKey("UzivatelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OrlickyPohar.Api.Features.Zavody.Zavod", "Zavod")
+                        .WithMany()
+                        .HasForeignKey("ZavodId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Serie");
+
+                    b.Navigation("Uzivatel");
+
+                    b.Navigation("Zavod");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Identita.UcetVazba", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Uzivatel")
+                        .WithMany()
+                        .HasForeignKey("UzivatelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Uzivatel");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Lode.Lod", b =>

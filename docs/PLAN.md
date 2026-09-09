@@ -881,7 +881,7 @@ Počítáno na pět hodin týdně.
 | 1 | ~~**Veřejné čtení** — model, import, stránky série a závodů~~ | **hotovo 7. 9. 2026** | Model se o skutečná data prověřil dřív, než se na něj něco postavilo — a našel dvě chyby v bodování |
 | 2 | ~~**Bodování** — nízkobodový systém, kódy, škrty, pořadí po kategoriích~~ | **hotovo** | Čisté funkce **ověřené proti skutečnému sešitu rozhodčího**, vydané endpointem a vidět na webu |
 | 3 | ~~**Mobilní appka, jen čtení**~~ | **hotovo 8. 9. 2026** | Nepotřebovala přihlášení, takže vznikla dřív než identita. Běží na telefonu, typy si bere z OpenAPI a jde poslat jako APK |
-| 4 | **Identita a role** — Zitadel, mapování `(issuer, subject) → UserId` | 1–2 týdny | Spouští odloženou položku platformy |
+| 4 | **Identita a role** — Zitadel, mapování `(issuer, subject) → UserId` | rozdělané | Model, mapování a oprávnění hotové 9. 9. 2026; ověřování tokenu a Zitadel na serveru zbývají |
 | 5 | **Administrace a workflow** — zadávání, stavy, publikace, protesty a penalizace | 2–3 týdny | Až když je co spravovat. Protest nemá kdo zapsat dřív, než existuje identita |
 | 6 | **Blog a fotky** — model, import, veřejné čtení, novinky na webu | rozdělané | Model, import i stránky hotové 9. 9. 2026; psaní článků čeká na administraci z fáze 5 |
 | 7 | **Upozornění** — veřejná i účastnická, odesílání, Outbox | 2–3 týdny | Účastnická stojí na identitě z fáze 4 a na napojení osoby k lodi |
@@ -1145,6 +1145,56 @@ z vygenerovaných výsledků, aby si text s tabulkou neodporoval — rozpor mezi
 článkem a čísly vypadá jako chyba webu, ne jako ukázka. Nejsou v něm žádné
 citace ani jména lidí: jména zastávek a pořadatelů skutečná jsou, takže by
 se text dal číst jako tvrzení o tom, co se doopravdy stalo.
+
+### Fáze 4 — identita a role
+
+**Zitadel poběží na vlastním stroji.** Filip, 9. 9. 2026. Nic neodtéká ven
+a nad rámec CX23 to nic nestojí; cenou je půl až jeden gigabajt paměti na
+stroji, kde už běží Traefik, Postgres, Seq, uptime a dvě aplikace, a to,
+že upgrady Zitadelu jsou naše starost.
+
+Hotové 9. 9. 2026, **všechno nezávislé na poskytovateli**:
+
+| Co | Kde |
+|---|---|
+| `Uzivatel` s vlastním `Guid` | nikdy `sub` z tokenu, pravidlo platformy č. 5 |
+| `UcetVazba` — `(issuer, subject) → UserId` | unikátní index nad **dvojicí**, ne nad subjektem |
+| `Opravneni` — role v rozsahu | tvar shodný s `Clanek`: série vždy, závod volitelně |
+| `Prava.Smi` | čistá funkce, sedm testů bez databáze |
+| `Uzivatele` | překlad přihlášení na interní účet, pět integračních testů |
+
+**Vazeb může být na uživatele víc.** Po přechodu na jiného poskytovatele se
+přidá nová k témuž `UzivatelId` a stará se nechá být — historie oprávnění
+i osob zůstane nedotčená. To je celý smysl té tabulky.
+
+**Účet vzniká při prvním přihlášení.** Pozvat člověka znamená dát mu roli,
+ne vyrobit mu předem účet, o kterém neví. Uživatel bez jediného oprávnění
+nesmí nic nad rámec nepřihlášeného čtenáře, takže samo založení nic neotevírá.
+
+**Rozhodčí není stupeň mezi editorem a správcem.** Editor nesmí schvalovat
+a rozhodčí sám o sobě nesmí zadávat; správce má obojí, protože ve svém
+rozsahu smí všechno. Kdyby rozhodčího pokrývala „vyšší" role, znamenalo by
+schválení výsledku jen to, že ho někdo smí zapsat — a kontrola by ztratila
+smysl. Hlídá to `PravaTests`.
+
+**Čtenář se neuděluje.** Je to každý, i nepřihlášený, takže odpověď na něj
+nesmí záviset na obsahu tabulky. Napsané to bylo nejdřív obráceně a našel
+to test: prázdný seznam práv znamenal „nesmí ani číst".
+
+| Zbývá | Proč to ještě není |
+|---|---|
+| Ověřování tokenu (JWT) | balíček `Microsoft.AspNetCore.Authentication.JwtBearer` **nejde z pracovního stroje stáhnout** — viz níž |
+| Zitadel ve stacku platformy | subdoména, databáze, tajemství; patří do `platform` |
+| Udělování rolí | fáze 5, spolu s administrací |
+
+**NuGet je z pracovního Macu nedostupný, stejně jako Docker Hub.** `curl` na
+`api.nuget.org` vrátí 200 na index, na endpoint s podpisy i na samotný
+`.nupkg`, ale `dotnet restore` na téže adrese padá na `NU1301: Socket is not
+connected`. Není to tedy pravidlo firewallu na doméně, ale něco mezi
+síťovým agentem a HTTP stackem .NETu. Důsledek je praktický: **na tomhle
+stroji nejde přidat žádný nový balíček** a dělicí čára ve fázi 4 vede přesně
+tudy — model a oprávnění balíček nepotřebují, ověření podpisu tokenu ano.
+Adaptér je proto napsaný tak, aby se ověřování připojilo v jediném souboru.
 
 ## Kde se pokračuje
 

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Features.Clanky;
+using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Zavody;
@@ -18,6 +19,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Rozjizdka> Rozjizdky => Set<Rozjizdka>();
     public DbSet<Vysledek> Vysledky => Set<Vysledek>();
     public DbSet<Clanek> Clanky => Set<Clanek>();
+    public DbSet<Uzivatel> Uzivatele => Set<Uzivatel>();
+    public DbSet<UcetVazba> Vazby => Set<UcetVazba>();
+    public DbSet<Opravneni> Opravneni => Set<Opravneni>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -107,5 +111,31 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // Výpis novinek jde vždycky od nejnovějšího; bez indexu by se řadil
         // celý blog ročníku kvůli třem perexům na úvodní stránce.
         clanek.HasIndex(x => new { x.SerieId, x.PublikovanoV });
+
+        var uzivatel = b.Entity<Uzivatel>();
+        uzivatel.Property(x => x.Zobrazovane).HasMaxLength(200).IsRequired();
+        uzivatel.Property(x => x.Email).HasMaxLength(320);
+
+        var vazba = b.Entity<UcetVazba>();
+        vazba.Property(x => x.Issuer).HasMaxLength(400).IsRequired();
+        vazba.Property(x => x.Subject).HasMaxLength(200).IsRequired();
+        vazba.HasOne(x => x.Uzivatel).WithMany().HasForeignKey(x => x.UzivatelId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Unikátní je až dvojice. Sám `Subject` unikátní není — dva
+        // poskytovatelé můžou vydat týž řetězec dvěma různým lidem.
+        vazba.HasIndex(x => new { x.Issuer, x.Subject }).IsUnique();
+
+        var opravneni = b.Entity<Opravneni>();
+        opravneni.HasOne(x => x.Uzivatel).WithMany().HasForeignKey(x => x.UzivatelId)
+            .OnDelete(DeleteBehavior.Cascade);
+        opravneni.HasOne(x => x.Serie).WithMany().HasForeignKey(x => x.SerieId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Smazaná zastávka nesmí zrušit celý řádek práva — pořadatel ho má
+        // od správce ročníku a mazání závodu není jeho odebrání.
+        opravneni.HasOne(x => x.Zavod).WithMany().HasForeignKey(x => x.ZavodId)
+            .OnDelete(DeleteBehavior.SetNull);
+        // Totéž právo dvakrát je tichý nepořádek: odebrání jednoho řádku by
+        // vypadalo jako odebrání práva, a přitom by dál platilo z druhého.
+        opravneni.HasIndex(x => new { x.UzivatelId, x.Role, x.SerieId, x.ZavodId }).IsUnique();
     }
 }
