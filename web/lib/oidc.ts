@@ -126,12 +126,25 @@ export async function vymenKod(kod: string, verifier: string): Promise<Tokeny> {
   return (await odpoved.json()) as Tokeny;
 }
 
-/** Adresa, kam poslat prohlížeč při odhlášení, když ji poskytovatel má. */
+/**
+ * Adresa, kam poslat prohlížeč při odhlášení, když ji poskytovatel má.
+ *
+ * <b>`client_id` je povinné</b>, i když to podle jména vypadá jako údaj pro
+ * přihlášení. Bez něj poskytovatel neví, čí je zaslaná návratová adresa —
+ * a protože ji nesmí použít neověřenou, tiše ji zahodí a nechá uživatele
+ * na své vlastní stránce. Ověřeno na Zitadelu: bez `client_id` dosadí
+ * `/logout/done`, s ním nechá naši. Podle specifikace RP-Initiated Logout
+ * stačí `id_token_hint` nebo `client_id`; my id_token neukládáme, protože
+ * by to byla druhá cookie na každý požadavek kvůli jedinému odhlášení.
+ */
 export async function odhlasovaciAdresa(idToken?: string) {
   const d = await dokument();
   if (!d.end_session_endpoint) return VEREJNA_ADRESA;
 
-  const parametry = new URLSearchParams({ post_logout_redirect_uri: `${VEREJNA_ADRESA}/` });
+  const parametry = new URLSearchParams({
+    post_logout_redirect_uri: `${VEREJNA_ADRESA}/`,
+    client_id: KLIENT,
+  });
   if (idToken) parametry.set("id_token_hint", idToken);
   return `${d.end_session_endpoint}?${parametry}`;
 }
