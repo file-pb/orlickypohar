@@ -39,7 +39,21 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
 
   const { stav, prehled } = await nactiPrehled(serie);
 
-  if (stav === "vypadek") return <Vypadek />;
+  // Výpadek nesmí spolknout výsledek zápisu. Když se nepovede načíst
+  // seznam, ale akce něco vzkázala — třeba že účet na ten e-mail
+  // neexistuje — musí to být vidět nad výpadkem, ne místo něj.
+  if (stav === "vypadek") {
+    return (
+      <>
+        {zpravy.chyba && (
+          <p className="hlaska chyba" role="alert">
+            {zpravy.chyba}
+          </p>
+        )}
+        <Vypadek />
+      </>
+    );
+  }
   if (stav === "neni") notFound();
 
   const hlava = (
