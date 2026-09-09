@@ -53,8 +53,14 @@ export const ROLE: { role: Role; nazev: string; popis: string; jenRocnik?: boole
 export const nazevRole = (role: Role) =>
   ROLE.find((r) => r.role === role)?.nazev ?? role;
 
-/** Stav odpovědi na dotaz, který vyžaduje roli správce. */
-export type Stav = "ok" | "neprihlasen" | "nesmi" | "neni" | "vypadek";
+/**
+ * Stav odpovědi na dotaz, který vyžaduje roli správce.
+ *
+ * <b>„Nemáš sezení" a „API tvůj token odmítlo" jsou dvě různé věci.</b>
+ * Dřív se slévaly do jedné hlášky „musíš se přihlásit" — a právě proto se
+ * nedalo poznat, jestli cookie chybí, nebo jestli je a jen neplatí.
+ */
+export type Stav = "ok" | "neprihlasen" | "odmitnut" | "nesmi" | "neni" | "vypadek";
 
 // Jedno místo, kde se čte sezení — včetně tokenu uloženého po kusech.
 const token = () => tokenZeSezeni();
@@ -90,9 +96,10 @@ export async function nactiPrehled(
     return { stav: "vypadek" };
   }
 
-  // 401 může znamenat i „ten ročník neexistuje": API ho nepřihlášenému
-  // nepotvrzuje, aby se procházením nedaly najít nezveřejněné slugy.
-  if (odpoved.status === 401) return { stav: "neprihlasen" };
+  // Cookie tu je, ale API token nepřijalo: vypršel, nebo ho poskytovatel
+  // zneplatnil. Pro člověka je to „přihlas se znovu", ne „přihlas se" —
+  // a pro hledání chyby je to úplně jiná stopa.
+  if (odpoved.status === 401) return { stav: "odmitnut" };
   if (odpoved.status === 403) return { stav: "nesmi" };
   if (odpoved.status === 404) return { stav: "neni" };
   if (!odpoved.ok) return { stav: "vypadek" };

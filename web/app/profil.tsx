@@ -63,7 +63,12 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
             Oprávnění {serie}
           </Link>
         ))}
-        <Link href="/odhlaseni">Odhlásit se</Link>
+        {/* Formulář, ne odkaz. Odhlášení něco mění, takže se nesmí dát
+            vyvolat pouhou návštěvou adresy — přednačtením, náhledem odkazu
+            nebo firemní kontrolou, která si stránky prochází sama. */}
+        <form action="/odhlaseni" method="post">
+          <button type="submit">Odhlásit se</button>
+        </form>
       </div>
     </details>
   );

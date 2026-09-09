@@ -422,6 +422,14 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
   color: var(--text); font-size: 0.9rem; font-weight: 500;
 }
 .profil .nabidka a:hover { background: var(--zvyrazneni); text-decoration: none; }
+/* Odhlášení je tlačítko ve formuláři, ale v nabídce má vypadat jako
+   ostatní položky. */
+.profil .nabidka form { margin: 0; }
+.profil .nabidka button {
+  font: inherit; width: 100%; text-align: left; cursor: pointer;
+  background: none; border: 0; color: var(--voda); padding: 0.6rem 0.9rem;
+}
+.profil .nabidka button:hover { background: var(--zvyrazneni); }
 
 /* Správa oprávnění. Formulář i tabulka jsou serverové, takže tu nejsou
    žádné stavy „ukládám" — po odeslání přijde nová stránka s hláškou. */

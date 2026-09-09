@@ -69,6 +69,20 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
     );
   }
 
+  // Sezení existuje, ale token neprošel. Kdyby se tohle vypisovalo stejně
+  // jako „přihlas se", vypadalo by vypršené přihlášení jako žádné.
+  if (stav === "odmitnut") {
+    return (
+      <>
+        {hlava}
+        <p className="prazdno">
+          Přihlášení vypršelo — API tvůj token nepřijalo.{" "}
+          <Link href="/prihlaseni">Přihlas se znovu</Link>.
+        </p>
+      </>
+    );
+  }
+
   if (stav === "nesmi" || !prehled) {
     return (
       <>
