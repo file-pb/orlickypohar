@@ -118,4 +118,47 @@ public class KontraktTests
 
         Assert.NotNull(s);
     }
+
+    [Fact]
+    public void Clanky_v_mocku_odkazuji_na_existujici_zastavky()
+    {
+        var serie = Mock();
+        var zavody = serie.Zavody.Select(z => z.Slug).ToHashSet();
+
+        Assert.NotNull(serie.Clanky);
+        Assert.NotEmpty(serie.Clanky);
+
+        // Článek zastávky musí zastávku najít. Překlep ve slugu by jinak
+        // vyrobil novinku, kterou nikdo neuvidí — visela by u závodu, který
+        // v ročníku není.
+        Assert.All(serie.Clanky, c =>
+        {
+            Assert.False(string.IsNullOrWhiteSpace(c.Slug));
+            Assert.False(string.IsNullOrWhiteSpace(c.Titulek));
+            Assert.False(string.IsNullOrWhiteSpace(c.Telo));
+            if (c.Zavod is not null) Assert.Contains(c.Zavod, zavody);
+        });
+
+        // Blog má obě úrovně: pozvánky a zprávy píše pořadatel zastávky,
+        // souhrny organizátor poháru. Kdyby mock uměl jen jednu, nešlo by
+        // na webu vidět, jak vypadá výpis s obojím.
+        Assert.Contains(serie.Clanky, c => c.Zavod is not null);
+        Assert.Contains(serie.Clanky, c => c.Zavod is null);
+    }
+
+    [Fact]
+    public void Rocnik_bez_clanku_je_platny_vstup()
+    {
+        // Ročníky nahrané před fází 6 blog nemají a jejich soubory se kvůli
+        // tomu nepřepisují. Chybějící seznam proto znamená „žádné články".
+        var s = JsonSerializer.Deserialize<SerieVstup>(
+            """
+            {"slug":"x","nazev":"X","rok":2025,
+             "kategorie":[{"nazev":"Race","poradi":1}],
+             "osoby":[],"lode":[],"prihlasky":[],"zavody":[]}
+            """, Json);
+
+        Assert.NotNull(s);
+        Assert.Null(s.Clanky);
+    }
 }

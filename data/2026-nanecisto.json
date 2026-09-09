@@ -1,5 +1,5 @@
 {
-  "_poznamka": "JMÉNA JSOU SKUTEČNÁ, VÝSLEDKY VYMYŠLENÉ. Lodě, kategorie a zastávky pocházejí z tabulek rozhodčího; pořadí a časy jsou vygenerované, protože skutečné výsledky zatím nemáme. Ročník je NEPUBLIKOVANÝ, aby se vymyšlená data nedostala na veřejné stránky. Vyrábí tools/gen-mock.py s pevným seedem.",
+  "_poznamka": "JMÉNA JSOU SKUTEČNÁ, VÝSLEDKY VYMYŠLENÉ. Lodě, kategorie a zastávky pocházejí z tabulek rozhodčího; pořadí, časy i články jsou vygenerované, protože skutečné výsledky zatím nemáme. Ročník je NEPUBLIKOVANÝ, aby se vymyšlená data nedostala na veřejné stránky. Vyrábí tools/gen-mock.py s pevným seedem.",
   "slug": "2026-nanecisto",
   "nazev": "Orlický pohár 2026 (nanečisto)",
   "rok": 2026,
@@ -5623,6 +5623,116 @@
         }
       ],
       "rozjizdky": []
+    }
+  ],
+  "clanky": [
+    {
+      "slug": "vanocni-regata-pozvanka",
+      "titulek": "Pozvánka: Vánoční regata",
+      "perex": "12. prosince 2026. Přihlášky přijímá pořadatel; kdo jede celý seriál, hlásit se znovu nemusí.",
+      "telo": "Pořádá YC Orlík. Jede se 12. prosince 2026.\n\nVypsání závodu a plachetní směrnice vydává pořadatel; přihlášky přijímá on,\nne pohár. Rozpis rozjížděk se rozhoduje na vodě podle větru, takže jejich\npočet dopředu neslibujeme.\n\nKdo jede celý seriál, nemusí nic hlásit navíc — kategorie platí celý rok.",
+      "autor": "YC Orlík",
+      "zavod": "vanocni-regata",
+      "publikovanoV": "2026-11-21T09:00:00+02:00",
+      "publikovano": true
+    },
+    {
+      "slug": "o-pohar-vltavy-vysledky",
+      "titulek": "O pohár Vltavy: SOCKA bere kategorii Race",
+      "perex": "Zastávka je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
+      "telo": "O pohár Vltavy je odjetá. V kategorii Race vyhrála SOCKA.\n\nJela se jedna rozjížďka a jde do poháru.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nzastávky, průběžné pořadí ročníku pak v tabulce seriálu.",
+      "autor": "Plachtič z Vltavy",
+      "zavod": "o-pohar-vltavy",
+      "publikovanoV": "2026-09-05T20:30:00+02:00",
+      "publikovano": true
+    },
+    {
+      "slug": "prubezne-poradi-neni-konecne",
+      "titulek": "Průběžné pořadí ještě není konečné",
+      "perex": "Průběžné pořadí ještě zdaleka není konečné — škrt nejhoršího závodu se projeví až na konci sezóny.",
+      "telo": "Ročník má za sebou 7 z 9 zastávek. Průběžné pořadí se od\nkonečného může ještě výrazně lišit — škrt nejhoršího závodu se projeví\naž na konci a do té doby drží ve hře i lodě, které jednu zastávku\npropásly.\n\nNejbližší zastávkou je Pohár Slunce. Kdo ještě neodjel čtyři závody, má pořád\nšanci se do popředí dostat; kdo odjel všechny, má naopak co ztratit.",
+      "autor": "Orlický pohár",
+      "publikovanoV": "2026-09-05T12:00:00+02:00",
+      "publikovano": true
+    },
+    {
+      "slug": "pohar-slunce-pozvanka",
+      "titulek": "Pozvánka: Pohár Slunce",
+      "perex": "19. září 2026. Přihlášky přijímá pořadatel; kdo jede celý seriál, hlásit se znovu nemusí.",
+      "telo": "Pořádá SK Popovice. Jede se 19. září 2026.\n\nVypsání závodu a plachetní směrnice vydává pořadatel; přihlášky přijímá on,\nne pohár. Rozpis rozjížděk se rozhoduje na vodě podle větru, takže jejich\npočet dopředu neslibujeme.\n\nKdo jede celý seriál, nemusí nic hlásit navíc — kategorie platí celý rok.",
+      "autor": "SK Popovice",
+      "zavod": "pohar-slunce",
+      "publikovanoV": "2026-08-29T09:00:00+02:00",
+      "publikovano": true
+    },
+    {
+      "slug": "radavsky-pohar-vysledky",
+      "titulek": "Radavský pohár: Andante bere kategorii Pod7m",
+      "perex": "Zastávka je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
+      "telo": "Radavský pohár je odjetá. V kategorii Pod7m vyhrála Andante.\n\nJely se 3 rozjížďky, do poháru jdou všechny.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nzastávky, průběžné pořadí ročníku pak v tabulce seriálu.",
+      "autor": "LK Radava",
+      "zavod": "radavsky-pohar",
+      "publikovanoV": "2026-08-15T20:30:00+02:00",
+      "publikovano": true
+    },
+    {
+      "slug": "fxck-cancer-vysledky",
+      "titulek": "FxCK Cancer: PEZI bere kategorii Nad7m",
+      "perex": "Zastávka je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
+      "telo": "FxCK Cancer je odjetá. V kategorii Nad7m vyhrála PEZI.\n\nJely se 2 rozjížďky, do poháru jdou všechny.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nzastávky, průběžné pořadí ročníku pak v tabulce seriálu.",
+      "autor": "Marina Orlík",
+      "zavod": "fxck-cancer",
+      "publikovanoV": "2026-07-11T20:30:00+02:00",
+      "publikovano": true
+    },
+    {
+      "slug": "izolepa-vysledky",
+      "titulek": "Izolepa: MODRÉ CAFE bere kategorii Race",
+      "perex": "Zastávka je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
+      "telo": "Izolepa je odjetá. V kategorii Race vyhrála MODRÉ CAFE.\n\nJely se 3 rozjížďky, do poháru jde jedna.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nzastávky, průběžné pořadí ročníku pak v tabulce seriálu.",
+      "autor": "YC Orlík",
+      "zavod": "izolepa",
+      "publikovanoV": "2026-06-20T20:30:00+02:00",
+      "publikovano": true
+    },
+    {
+      "slug": "24hodinovka-vysledky",
+      "titulek": "24hodinovka: Rio vyhrála celé pole",
+      "perex": "Zastávka je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
+      "telo": "24hodinovka je odjetá. Napříč celým polem vyhrála Rio.\n\nJela se jedna rozjížďka a jde do poháru.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nzastávky, průběžné pořadí ročníku pak v tabulce seriálu.",
+      "autor": "YC Orlík",
+      "zavod": "24hodinovka",
+      "publikovanoV": "2026-05-23T20:30:00+02:00",
+      "publikovano": true
+    },
+    {
+      "slug": "radavska-regata-vysledky",
+      "titulek": "Radavská regata: SPRUNZEL bere kategorii Nad7m",
+      "perex": "Zastávka je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
+      "telo": "Radavská regata je odjetá. V kategorii Nad7m vyhrála SPRUNZEL.\n\nJely se 4 rozjížďky, do poháru jdou všechny. Nejhorší z nich se škrtá.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nzastávky, průběžné pořadí ročníku pak v tabulce seriálu.",
+      "autor": "LK Radava",
+      "zavod": "radavska-regata",
+      "publikovanoV": "2026-05-09T20:30:00+02:00",
+      "publikovano": true
+    },
+    {
+      "slug": "jarni-vitr-vysledky",
+      "titulek": "Jarní vítr: FAR  STAR III bere kategorii Race",
+      "perex": "Zastávka je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
+      "telo": "Jarní vítr je odjetá. V kategorii Race vyhrála FAR  STAR III.\n\nJely se 4 rozjížďky, do poháru jdou všechny. Nejhorší z nich se škrtá.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nzastávky, průběžné pořadí ročníku pak v tabulce seriálu.",
+      "autor": "YC Orlík",
+      "zavod": "jarni-vitr",
+      "publikovanoV": "2026-04-25T20:30:00+02:00",
+      "publikovano": true
+    },
+    {
+      "slug": "rocnik-2026-zacina",
+      "titulek": "Ročník 2026 začíná",
+      "perex": "Devět zastávek od dubna do prosince, tři kategorie a jedno průběžné pořadí. Co je letos v kalendáři a jak se boduje.",
+      "telo": "Devět zastávek, tři kategorie a jedno průběžné pořadí. Ročník začíná na\nkonci dubna Jarním větrem a končí Vánoční regatou; mezi tím se jede\nčtyřiadvacetihodinovka, Izolepa i klasické okruhové závody.\n\nBody sbírá loď, ne posádka — kormidelník se mezi závody mění, loď ne.\nDo celkového pořadí se počítá každá odjetá zastávka a jedna nejhorší se\nna konci škrtá.\n\nPřihlášky přijímá pořadatel každé zastávky zvlášť. Kdo chce jet celý\nseriál, hlásí se do ročníku jednou a kategorii má na celý rok.",
+      "autor": "Orlický pohár",
+      "publikovanoV": "2026-04-12T18:00:00+02:00",
+      "publikovano": true
     }
   ]
 }

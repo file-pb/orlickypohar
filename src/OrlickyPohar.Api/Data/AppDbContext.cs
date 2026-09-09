@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using OrlickyPohar.Api.Features.Clanky;
 using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Zavody;
@@ -16,6 +17,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Ucast> Ucasti => Set<Ucast>();
     public DbSet<Rozjizdka> Rozjizdky => Set<Rozjizdka>();
     public DbSet<Vysledek> Vysledky => Set<Vysledek>();
+    public DbSet<Clanek> Clanky => Set<Clanek>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -87,5 +89,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // Jedna loď má v jedné rozjížďce nejvýš jeden výsledek. Opakovaný import
         // téhož ročníku tak nemá kam vyrobit duplicitu.
         vysledek.HasIndex(x => new { x.RozjizdkaId, x.UcastId }).IsUnique();
+
+        var clanek = b.Entity<Clanek>();
+        clanek.Property(x => x.Slug).HasMaxLength(120).IsRequired();
+        clanek.Property(x => x.Titulek).HasMaxLength(200).IsRequired();
+        clanek.Property(x => x.Perex).HasMaxLength(600);
+        clanek.Property(x => x.Autor).HasMaxLength(120);
+        clanek.HasOne(x => x.Serie).WithMany().HasForeignKey(x => x.SerieId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Smazaná zastávka nesmí odnést svůj blog: text o závodě, který se
+        // nekonal, je pořád část příběhu ročníku. Vazba se jen uvolní.
+        clanek.HasOne(x => x.Zavod).WithMany().HasForeignKey(x => x.ZavodId)
+            .OnDelete(DeleteBehavior.SetNull);
+        // Slug je přirozený klíč článku — opakovaný import téhož souboru
+        // podle něj článek najde místo toho, aby ho založil podruhé.
+        clanek.HasIndex(x => new { x.SerieId, x.Slug }).IsUnique();
+        // Výpis novinek jde vždycky od nejnovějšího; bez indexu by se řadil
+        // celý blog ročníku kvůli třem perexům na úvodní stránce.
+        clanek.HasIndex(x => new { x.SerieId, x.PublikovanoV });
     }
 }

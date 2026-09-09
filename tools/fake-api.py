@@ -12,6 +12,7 @@ pravidlo změní, mění se na obou místech — a rozejít se můžou jen tady.
 """
 import json, os, re
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import urlparse, parse_qs
 
 D = json.load(open("data/2026-nanecisto.json", encoding="utf-8"))
 LODE = {l["klic"]: l for l in D["lode"]}
@@ -123,17 +124,33 @@ def poradi_serie():
             "kategorie": kategorie}
 
 
+def clanek_shrnuti(c):
+    """Výpis nese perex, ne tělo — stejně jako ClanekShrnutiDto."""
+    z = next((z for z in D["zavody"] if z["slug"] == c.get("zavod")), None)
+    return {"slug": c["slug"], "titulek": c["titulek"], "perex": c.get("perex"),
+            "autor": c.get("autor"), "publikovanoV": c["publikovanoV"],
+            "zavod": z["slug"] if z else None,
+            "zavodNazev": z["nazev"] if z else None}
+
+
 def nazvy(hodnota):
     """Klíče lodí v odpovědi nahradí jmény, stejně jako to dělá API."""
     return LODE[hodnota]["nazev"]
 
 
+# Články se řadí od nejnovějšího, stejně jako je vydává API.
+CLANKY = sorted(D.get("clanky", []), key=lambda c: c["publikovanoV"], reverse=True)
+
+
 class H(BaseHTTPRequestHandler):
     def do_GET(self):
-        if self.path == "/serie":
+        rozdelena = urlparse(self.path)
+        cesta, dotaz = rozdelena.path, parse_qs(rozdelena.query)
+
+        if cesta == "/serie":
             telo = [{"slug": D["slug"], "nazev": D["nazev"], "rok": D["rok"],
                      "pocetZavodu": len(D["zavody"])}]
-        elif self.path == f'/serie/{D["slug"]}':
+        elif cesta == f'/serie/{D["slug"]}':
             telo = {
                 "slug": D["slug"], "nazev": D["nazev"], "rok": D["rok"],
                 "kategorie": D["kategorie"],
@@ -147,9 +164,21 @@ class H(BaseHTTPRequestHandler):
                                "majitel": jmeno(LODE[p["lod"]]["majitel"]),
                                "kategorie": p["kategorie"]} for p in D["prihlasky"]],
             }
-        elif self.path == f'/serie/{D["slug"]}/poradi':
+        elif cesta == f'/serie/{D["slug"]}/poradi':
             telo = poradi_serie()
-        elif (m := re.match(rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)$', self.path)):
+        elif cesta == f'/serie/{D["slug"]}/clanky':
+            vybrane = CLANKY
+            if zavod := dotaz.get("zavod", [""])[0]:
+                vybrane = [c for c in vybrane if c.get("zavod") == zavod]
+            if (limit := int(dotaz.get("limit", ["0"])[0] or 0)) > 0:
+                vybrane = vybrane[:limit]
+            telo = [clanek_shrnuti(c) for c in vybrane]
+        elif (m := re.match(rf'^/serie/{D["slug"]}/clanky/([a-z0-9-]+)$', cesta)):
+            c = next((c for c in CLANKY if c["slug"] == m.group(1)), None)
+            if not c:
+                return self.send_error(404)
+            telo = {**clanek_shrnuti(c), "telo": c["telo"]}
+        elif (m := re.match(rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)$', cesta)):
             z = next((z for z in D["zavody"] if z["slug"] == m.group(1)), None)
             if not z:
                 return self.send_error(404)

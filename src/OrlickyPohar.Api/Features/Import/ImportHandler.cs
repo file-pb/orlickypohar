@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Clanky;
 using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Zavody;
@@ -45,11 +46,12 @@ internal static class ImportHandler
         var prihlasky = await SlaďPrihlasky(db, serie, vstup, kategorie.Mapa, lode.Mapa, ct);
 
         var zavody = await SlaďZavody(db, serie, vstup, prihlasky.Mapa, osoby.Mapa, ct);
+        var clanky = await SlaďClanky(db, serie, vstup, ct);
 
         return new ImportVysledek(
             serie.Slug,
             osoby.Pocty, lode.Pocty, prihlasky.Pocty,
-            zavody.Zavody, zavody.Ucasti, zavody.Rozjizdky, zavody.Vysledky);
+            zavody.Zavody, zavody.Ucasti, zavody.Rozjizdky, zavody.Vysledky, clanky);
     }
 
     private static void OveřVstup(SerieVstup v)
@@ -62,6 +64,12 @@ internal static class ImportHandler
         Duplicity(v.Kategorie.Select(k => k.Nazev), "Název kategorie");
         Duplicity(v.Zavody.Select(z => z.Slug), "Slug závodu");
         Duplicity(v.Prihlasky.Select(p => p.Lod), "Přihláška lodi");
+        Duplicity((v.Clanky ?? []).Select(c => c.Slug), "Slug článku");
+
+        var slugyZavodu = v.Zavody.Select(z => z.Slug).ToHashSet();
+        foreach (var c in v.Clanky ?? [])
+            if (c.Zavod is not null && !slugyZavodu.Contains(c.Zavod))
+                throw new ImportException($"Článek {c.Slug} odkazuje na neznámou zastávku {c.Zavod}.");
 
         foreach (var z in v.Zavody)
         {
@@ -411,5 +419,63 @@ internal static class ImportHandler
 
         await db.SaveChangesAsync(ct);
         return (nove, upravene, kSmazani.Count);
+    }
+
+    /// <summary>
+    /// Články ročníku i zastávek. Přirozený klíč je slug v rámci série.
+    /// <para>
+    /// <b>Nemažou se</b>, na rozdíl od výsledků a účastí. Uvnitř závodu je
+    /// soubor úplná pravda — co v něm u zastávky není, se nejelo — kdežto
+    /// blog roste jinde a jindy: až bude psát pořadatel v administraci,
+    /// import ročníku o jeho článcích vědět nebude a smazal by je.
+    /// </para>
+    /// </summary>
+    private static async Task<ImportPocty> SlaďClanky(
+        AppDbContext db, Serie serie, SerieVstup vstup, CancellationToken ct)
+    {
+        var vstupni = vstup.Clanky ?? [];
+        if (vstupni.Count == 0) return new ImportPocty(0, 0);
+
+        var zavody = await db.Zavody
+            .Where(z => z.SerieId == serie.Id)
+            .ToDictionaryAsync(z => z.Slug, z => z.Id, ct);
+
+        var existujici = await db.Clanky.Where(c => c.SerieId == serie.Id).ToListAsync(ct);
+        var podleSlugu = existujici.ToDictionary(c => c.Slug);
+
+        int nove = 0, upravene = 0;
+
+        foreach (var v in vstupni)
+        {
+            int? zavodId = null;
+            if (v.Zavod is not null)
+            {
+                if (!zavody.TryGetValue(v.Zavod, out var id))
+                    throw new ImportException($"Článek {v.Slug} odkazuje na neznámou zastávku {v.Zavod}.");
+                zavodId = id;
+            }
+
+            if (!podleSlugu.TryGetValue(v.Slug, out var c))
+            {
+                c = new Clanek { SerieId = serie.Id, Slug = v.Slug, Titulek = v.Titulek, Telo = v.Telo };
+                db.Clanky.Add(c);
+                podleSlugu[v.Slug] = c;
+                nove++;
+            }
+            else upravene++;
+
+            c.ZavodId = zavodId;
+            c.Titulek = v.Titulek;
+            c.Perex = v.Perex;
+            c.Telo = v.Telo;
+            c.Autor = v.Autor;
+            // Do UTC, ze stejného důvodu jako start rozjížďky: Npgsql jiný
+            // posun do `timestamp with time zone` nezapíše.
+            c.PublikovanoV = v.PublikovanoV.ToUniversalTime();
+            c.Publikovano = v.Publikovano;
+        }
+
+        await db.SaveChangesAsync(ct);
+        return new ImportPocty(nove, upravene);
     }
 }

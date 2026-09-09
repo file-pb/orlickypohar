@@ -51,6 +51,25 @@ public record ZavodVstup(
     StavZavodu Stav = StavZavodu.Odjety,
     DateOnly? PuvodniDatum = null);
 
+/// <summary>
+/// Článek ročníku nebo zastávky. <c>Zavod</c> je slug zastávky ze stejného
+/// souboru; prázdné znamená článek celé série.
+/// <para>
+/// Odkaz jde přes slug, ne přes klíč jako u lodí a osob: závod slug má a je
+/// součástí jeho veřejné adresy, takže vymýšlet mu vedle toho ještě klíč
+/// platný jen uvnitř souboru by byl druhý identifikátor pro tutéž věc.
+/// </para>
+/// </summary>
+public record ClanekVstup(
+    string Slug,
+    string Titulek,
+    string Telo,
+    DateTimeOffset PublikovanoV,
+    string? Perex = null,
+    string? Autor = null,
+    string? Zavod = null,
+    bool Publikovano = true);
+
 public record SerieVstup(
     string Slug,
     string Nazev,
@@ -60,7 +79,10 @@ public record SerieVstup(
     IReadOnlyList<LodVstup> Lode,
     IReadOnlyList<PrihlaskaVstup> Prihlasky,
     IReadOnlyList<ZavodVstup> Zavody,
-    bool Publikovano = true);
+    bool Publikovano = true,
+    // Ročníky nahrané před fází 6 blog nemají a jejich soubory se kvůli tomu
+    // nepřepisují — chybějící seznam proto znamená „žádné články", ne chybu.
+    IReadOnlyList<ClanekVstup>? Clanky = null);
 
 /// <summary>
 /// Kolik řádků import založil, kolik jich našel a kolik smazal. Druhý běh
@@ -75,7 +97,8 @@ public record ImportVysledek(
     ImportPocty Zavody,
     ImportPocty Ucasti,
     ImportPocty Rozjizdky,
-    ImportPocty Vysledky);
+    ImportPocty Vysledky,
+    ImportPocty Clanky);
 
 public record ImportPocty(int Nove, int Aktualizovane, int Smazane = 0);
 
