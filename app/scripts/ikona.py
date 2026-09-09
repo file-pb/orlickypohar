@@ -15,6 +15,7 @@ světlá ikona z ní vystoupí; modrá by splynula s tapetou.
     python3 scripts/ikona.py
 """
 import math
+import os
 
 from PIL import Image, ImageDraw
 
@@ -110,6 +111,19 @@ def uloz(obraz, jmeno, velikost=S):
 
 def main():
     mark = znacka()
+
+    # Web bere tutéž značku: jedna kresba, ne dvě podobné. Průhledné pozadí,
+    # protože v hlavičce stojí na papíru stránky.
+    web = "../web"
+    if os.path.isdir(web):
+        mark.resize((512, 512), Image.LANCZOS).save(f"{web}/public/logo.png")
+        print(f"  {web}/public/logo.png  512×512")
+
+        # Favicon webu — s podkladem, aby byl vidět i na tmavém panelu.
+        ikona_webu = Image.new("RGB", (S, S), PAPIR)
+        ikona_webu.paste(mark, (0, 0), mark)
+        ikona_webu.resize((512, 512), Image.LANCZOS).save(f"{web}/app/icon.png")
+        print(f"  {web}/app/icon.png  512×512")
 
     ikona = Image.new("RGB", (S, S), PAPIR)
     ikona.paste(mark, (0, 0), mark)
