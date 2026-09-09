@@ -30,11 +30,18 @@ public static class OpravneniEndpoints
     {
         var g = app.MapGroup("/sprava/serie/{serie}/opravneni").WithTags("Správa");
 
+        // Tvar odpovědi se musí říct ručně: handlery vracejí `IResult`,
+        // protože se z nich chodí ven šesti různými způsoby, a z toho
+        // dokument nic neodvodí. Bez těchhle řádků nemá generovaný klient
+        // pro administraci jediný typ.
         g.MapGet("/", PrehledAsync)
+            .Produces<PrehledOpravneniDto>()
             .WithSummary("Vypíše oprávnění ročníku i zastávky, na které jdou udělit")
             .WithDescription("Vyžaduje roli správce v tom ročníku.");
 
         g.MapPost("/", UdelAsync)
+            .Produces<OpravneniRadek>(StatusCodes.Status201Created)
+            .Produces<OpravneniRadek>()
             .WithSummary("Udělí roli podle e-mailu")
             .WithDescription(
                 "Vyžaduje roli správce v tom ročníku. Výjimka: udělení prvního " +
@@ -43,6 +50,7 @@ public static class OpravneniEndpoints
                 "vzniká až prvním přihlášením.");
 
         g.MapDelete("/{id:int}", OdeberAsync)
+            .Produces(StatusCodes.Status204NoContent)
             .WithSummary("Odebere jedno oprávnění")
             .WithDescription("Vyžaduje roli správce. Posledního správce ročníku odebrat nelze.");
     }
