@@ -51,7 +51,7 @@ public static class OpravneniEndpoints
         string serie, ClaimsPrincipal kdo, Rozsahy rozsahy, OpravneniSprava sprava, CancellationToken ct)
     {
         var rozsah = await rozsahy.NajdiAsync(serie, null, ct);
-        if (rozsah is null) return Results.NotFound();
+        if (rozsah is null) return Neni(kdo);
 
         if (!await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Spravce, rozsah.SerieId), ct))
             return Nesmi(kdo);
@@ -73,7 +73,13 @@ public static class OpravneniEndpoints
         // Rozsah se překládá dřív než cokoliv jiného — je v něm i kontrola,
         // že závod patří té sérii, na kterou se ptáme.
         var rozsah = await rozsahy.NajdiAsync(serie, telo.Zavod, ct);
-        if (rozsah is null) return Results.NotFound();
+        if (rozsah is null)
+            // Kdo drží importní token, tomu se překlep ve slugu říct může —
+            // je to jediná cesta, kterou se bootstrap dělá, a hledat příčinu
+            // v 401 by znamenalo podezřívat token místo adresy.
+            return ImportniToken.Over(ctx, config) == StavTokenu.Sedi
+                ? Results.NotFound()
+                : Neni(kdo);
 
         var naZavod = rozsah.ZavodId is not null;
 
@@ -129,7 +135,7 @@ public static class OpravneniEndpoints
         Rozsahy rozsahy, OpravneniSprava sprava, CancellationToken ct)
     {
         var rozsah = await rozsahy.NajdiAsync(serie, null, ct);
-        if (rozsah is null) return Results.NotFound();
+        if (rozsah is null) return Neni(kdo);
 
         if (!await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Spravce, rozsah.SerieId), ct))
             return Nesmi(kdo);
@@ -145,6 +151,15 @@ public static class OpravneniEndpoints
             _ => Results.NoContent(),
         };
     }
+
+    /// <summary>
+    /// Neexistující ročník nebo zastávka. Nepřihlášenému se vrací <b>401,
+    /// ne 404</b>: veřejné čtení schová nepublikovaný ročník za 404, ale
+    /// tady by rozdíl mezi 404 a 401 prozradil, které nezveřejněné slugy
+    /// existují — a to je táž informace obráceně.
+    /// </summary>
+    private static IResult Neni(ClaimsPrincipal kdo) =>
+        kdo.Identity?.IsAuthenticated == true ? Results.NotFound() : Results.Unauthorized();
 
     /// <summary>
     /// Nepřihlášenému 401, přihlášenému bez role 403. Je to rozdíl, který
