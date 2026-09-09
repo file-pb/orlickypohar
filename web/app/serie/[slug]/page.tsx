@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { nactiSerii, type Prihlaska, type ZavodShrnuti } from "@/lib/api";
+import { ApiNedostupne, nactiSerii, type Prihlaska, type ZavodShrnuti } from "@/lib/api";
+import { Vypadek } from "@/app/vypadek";
 import { Stav } from "@/app/stav";
 import { PruhUkazky } from "@/app/ukazka";
 
@@ -26,7 +27,15 @@ export async function generateMetadata({ params }: Parametry) {
 
 export default async function Rocnik({ params }: Parametry) {
   const { slug } = await params;
-  const serie = await nactiSerii(slug);
+
+  // Výpadek API se ošetřuje tady, ne přes `error.tsx` — viz app/vypadek.tsx.
+  let serie;
+  try {
+    serie = await nactiSerii(slug);
+  } catch (e) {
+    if (e instanceof ApiNedostupne) return <Vypadek />;
+    throw e;
+  }
   if (!serie) notFound();
 
   const odjete = serie.zavody.filter((z: ZavodShrnuti) => z.stav === "Odjety");

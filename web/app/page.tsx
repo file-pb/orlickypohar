@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { nactiSerie } from "@/lib/api";
+import { ApiNedostupne, nactiSerie } from "@/lib/api";
+import { Vypadek } from "@/app/vypadek";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -7,7 +8,13 @@ import { nactiSerie } from "@/lib/api";
 export const dynamic = "force-dynamic";
 
 export default async function Rozcestnik() {
-  const rocniky = await nactiSerie();
+  let rocniky;
+  try {
+    rocniky = await nactiSerie();
+  } catch (e) {
+    if (e instanceof ApiNedostupne) return <Vypadek />;
+    throw e;
+  }
 
   if (!rocniky?.length) {
     return (

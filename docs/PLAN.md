@@ -1108,12 +1108,12 @@ Nic z toho nebrání založit projekt a napsat první migraci.
    výsledky tam dává Miloš Zvonař z YC Písek. Skupina je zavřená: obsah se
    veřejně přečíst nedá a stahování příloh přes `facebook.com/download`
    vrací přihlašovací stránku. Odkazy přes `lookaside.fbsbx.com` fungují.
-3. **Výpadek API vypadá jako neexistující stránka.** Když API nejede, web
-   ukáže „Tady nic není" se stavem 500 a záchytná `error.tsx` se nespustí —
-   v logu serveru přitom není žádná chyba, takže se selhání někde po cestě
-   promění v `notFound()`. Klient už výpadek od 404 rozlišuje
-   (`ApiNedostupne`) a titulek stránky ho neshodí, ale to nestačí. Další krok:
-   vypsat, co načtení v tom stavu doopravdy vrací, místo odhadování z chování.
+3. ~~**Výpadek API vypadá jako neexistující stránka.**~~ **Opraveno
+   9. 9. 2026.** Výpadek se ošetřuje přímo ve stránce (`ApiNedostupne` →
+   komponenta `Vypadek`), ne přes `error.tsx` — Next u výjimky v serverové
+   komponentě dynamické cesty ukazoval stránku „nenalezeno". Zbývá jediné:
+   stránka výpadku vrací stav 200, správněji by bylo 503 s `Retry-After`,
+   jenže to se ze serverové komponenty nastavit nedá.
 4. **Co když loď kategorii přece jen změní** (nové plachty, přeměření).
    Návrh: správce ji smí přepsat a pořadí se přepočítá. Historie se nevede,
    dokud se neukáže, že je potřeba.

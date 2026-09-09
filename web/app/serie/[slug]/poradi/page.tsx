@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { nactiPoradi, type PoradiKategorie, type Zastavka } from "@/lib/api";
+import { ApiNedostupne, nactiPoradi, type PoradiKategorie, type Zastavka } from "@/lib/api";
+import { Vypadek } from "@/app/vypadek";
 import { PruhUkazky } from "@/app/ukazka";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
@@ -23,7 +24,13 @@ export async function generateMetadata({ params }: Parametry) {
 
 export default async function Poradi({ params }: Parametry) {
   const { slug } = await params;
-  const poradi = await nactiPoradi(slug);
+  let poradi;
+  try {
+    poradi = await nactiPoradi(slug);
+  } catch (e) {
+    if (e instanceof ApiNedostupne) return <Vypadek />;
+    throw e;
+  }
   if (!poradi) notFound();
 
   const nic = poradi.kategorie.every((k) => k.lode.length === 0);

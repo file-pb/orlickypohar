@@ -7,7 +7,9 @@ import {
   type UcastLodi,
   type Vysledek,
   type ZavodDetail,
+  ApiNedostupne,
 } from "@/lib/api";
+import { Vypadek } from "@/app/vypadek";
 import { ProcNejsouVysledky, Stav } from "@/app/stav";
 import { PruhUkazky } from "@/app/ukazka";
 
@@ -80,7 +82,13 @@ function naRadky(zavod: ZavodDetail): Radek[] {
 
 export default async function Zastavka({ params }: Parametry) {
   const { slug, zavod: slugZavodu } = await params;
-  const zavod = await nactiZavod(slug, slugZavodu);
+  let zavod;
+  try {
+    zavod = await nactiZavod(slug, slugZavodu);
+  } catch (e) {
+    if (e instanceof ApiNedostupne) return <Vypadek />;
+    throw e;
+  }
   if (!zavod) notFound();
 
   const radky = naRadky(zavod);
