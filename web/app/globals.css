@@ -311,3 +311,7 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
 }
+
+/* Kdo je přihlášený. Jméno není odkaz — vede odsud jen odhlášení, a dokud
+   není administrace, není kam jinam jít. */
+.kdo { color: var(--tlumeny); font-size: 0.9rem; }

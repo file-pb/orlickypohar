@@ -108,6 +108,27 @@
                 }
             }
         },
+        "/ja": {
+            "get": {
+                "tags": [
+                    "Identita"
+                ],
+                "summary": "Vr\u00e1t\u00ed p\u0159ihl\u00e1\u0161en\u00e9ho u\u017eivatele a jeho opr\u00e1vn\u011bn\u00ed",
+                "description": "P\u0159i prvn\u00edm p\u0159ihl\u00e1\u0161en\u00ed u\u017eivatele zalo\u017e\u00ed. Nov\u011b zalo\u017een\u00fd nem\u00e1 \u017e\u00e1dn\u00e1 opr\u00e1vn\u011bn\u00ed \u2014 pozvat \u010dlov\u011bka znamen\u00e1 d\u00e1t mu roli.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/JaDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/serie": {
             "get": {
                 "tags": [
@@ -427,6 +448,36 @@
                     }
                 }
             },
+            "JaDto": {
+                "required": [
+                    "id",
+                    "zobrazovane",
+                    "email",
+                    "opravneni"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "zobrazovane": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "opravneni": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OpravneniDto"
+                        }
+                    }
+                }
+            },
             "KategorieDto": {
                 "required": [
                     "nazev",
@@ -501,6 +552,28 @@
                     },
                     "majitel": {
                         "type": "string"
+                    }
+                }
+            },
+            "OpravneniDto": {
+                "required": [
+                    "role",
+                    "serie",
+                    "zavod"
+                ],
+                "type": "object",
+                "properties": {
+                    "role": {
+                        "$ref": "#/components/schemas/Role"
+                    },
+                    "serie": {
+                        "type": "string"
+                    },
+                    "zavod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     }
                 }
             },
@@ -676,6 +749,14 @@
                         "type": "string"
                     }
                 }
+            },
+            "Role": {
+                "enum": [
+                    "Ctenar",
+                    "Editor",
+                    "Rozhodci",
+                    "Spravce"
+                ]
             },
             "RozjizdkaDto": {
                 "required": [
@@ -1342,6 +1423,9 @@
         },
         {
             "name": "Import"
+        },
+        {
+            "name": "Identita"
         },
         {
             "name": "\u010cl\u00e1nky"

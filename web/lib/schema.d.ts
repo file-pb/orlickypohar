@@ -136,6 +136,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ja": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vrátí přihlášeného uživatele a jeho oprávnění
+         * @description Při prvním přihlášení uživatele založí. Nově založený nemá žádná oprávnění — pozvat člověka znamená dát mu roli.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["JaDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/serie": {
         parameters: {
             query?: never;
@@ -358,6 +397,13 @@ export interface components {
             /** @default true */
             publikovano: boolean;
         };
+        JaDto: {
+            /** Format: uuid */
+            id: string;
+            zobrazovane: string;
+            email: null | string;
+            opravneni: components["schemas"]["OpravneniDto"][];
+        };
         KategorieDto: {
             nazev: string;
             /** Format: int32 */
@@ -376,6 +422,11 @@ export interface components {
             cisloPlachty: null | string;
             typ: null | string;
             majitel: string;
+        };
+        OpravneniDto: {
+            role: components["schemas"]["Role"];
+            serie: string;
+            zavod: null | string;
         };
         OsobaVstup: {
             klic: string;
@@ -420,6 +471,8 @@ export interface components {
             lod: string;
             kategorie: string;
         };
+        /** @enum {unknown} */
+        Role: "Ctenar" | "Editor" | "Rozhodci" | "Spravce";
         RozjizdkaDto: {
             /** Format: int32 */
             cislo: number;

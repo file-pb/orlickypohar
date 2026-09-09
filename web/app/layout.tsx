@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { prihlasovaniJde } from "@/lib/oidc";
+import { nactiJa } from "@/lib/ja";
+import { Domu } from "@/app/domu";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -7,7 +10,11 @@ export const metadata: Metadata = {
   description: "Seriál závodů plachetnic na Orlické přehradě.",
 };
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default async function Layout({ children }: { children: React.ReactNode }) {
+  // Hlavička se ptá, kdo je přihlášený. Dokud identita neběží, je to null
+  // a nic navíc se nezobrazí — veřejné stránky se tím nemění.
+  const ja = await nactiJa();
+
   return (
     <html lang="cs">
       <body>
@@ -26,11 +33,25 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {/* Podtitulek tu byl nadbytečný — totéž stojí hned pod fotkou. */}
             <nav>
               {/* Značka vede domů taky, ale to není vidět — na telefonu je
-                  z ní jen logo. Vypsaný odkaz stojí jedno slovo. */}
-              <Link href="/">Domů</Link>
+                  z ní jen logo. Vypsaný odkaz stojí jedno slovo. Na samotné
+                  domovské stránce mizí: odkaz sám na sebe je jen šum. */}
+              <Domu />
               <Link href="/historie">Historie</Link>
               <Link href="/pravidla">Pravidla</Link>
               <Link href="/appka">Appka</Link>
+              {/* Přihlášení se nabízí, jen když je nastavené. Odkaz na
+                  neexistující tok by byl slib, který web nesplní. */}
+              {prihlasovaniJde &&
+                (ja ? (
+                  <>
+                    <span className="kdo" title={ja.email ?? undefined}>
+                      {ja.zobrazovane}
+                    </span>
+                    <Link href="/odhlaseni">Odhlásit</Link>
+                  </>
+                ) : (
+                  <Link href="/prihlaseni">Přihlásit</Link>
+                ))}
             </nav>
           </div>
         </header>
