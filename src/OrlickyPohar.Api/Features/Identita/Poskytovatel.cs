@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Text.Json;
 using Serilog;
 using OrlickyPohar.Api.Data;
 
@@ -97,6 +98,7 @@ public static class Poskytovatel
             });
 
         sluzby.AddAuthorization();
+        sluzby.AddHttpClient<Profily>();
         return true;
     }
 
@@ -207,4 +209,99 @@ public class Uzivatele(AppDbContext db)
             .Select(o => new ValueTuple<Role, string, string?>(
                 o.Role, o.Serie!.Slug, o.Zavod!.Slug))
             .ToListAsync(ct);
+}
+
+/// <summary>
+/// Jméno a e-mail přihlášeného, načtené od poskytovatele.
+/// <para>
+/// <b>Přístupový token je nenese</b> a nese je jen ID token, který se
+/// k API nikdy nedostane — ten patří klientovi. Standardní cesta pro
+/// aplikaci na druhé straně je proto endpoint <c>userinfo</c>: pošle se mu
+/// tentýž token a on odpoví tím, co k němu poskytovatel eviduje.
+/// </para>
+/// <para>
+/// Adresa se bere z OIDC dokumentu, ne skládá z autority — tvar cest je věc
+/// poskytovatele a uhodnout ho znamená napsat si ho do kódu.
+/// </para>
+/// </summary>
+public class Profily(HttpClient klient, IConfiguration config, TimeProvider cas)
+{
+    private static (string Adresa, DateTimeOffset Do)? _dokument;
+    private static readonly SemaphoreSlim Zamek = new(1, 1);
+
+    public record Profil(string? Jmeno, string? Email);
+
+    /// <summary>
+    /// Vrátí profil, nebo <c>null</c>, když se ho nepodaří získat. Selhání
+    /// tady <b>nesmí shodit přihlášení</b>: token je platný a uživatel je
+    /// ověřený, jen o něm nevíme jméno.
+    /// </summary>
+    public async Task<Profil?> NactiAsync(string token, CancellationToken ct)
+    {
+        try
+        {
+            var adresa = await AdresaUserinfoAsync(ct);
+            if (adresa is null) return null;
+
+            using var pozadavek = new HttpRequestMessage(HttpMethod.Get, adresa);
+            pozadavek.Headers.Authorization = new("Bearer", token);
+
+            var odpoved = await klient.SendAsync(pozadavek, ct);
+            if (!odpoved.IsSuccessStatusCode)
+            {
+                Log.Warning("Userinfo vrátilo {Stav}.", (int)odpoved.StatusCode);
+                return null;
+            }
+
+            using var json = JsonDocument.Parse(await odpoved.Content.ReadAsStringAsync(ct));
+            var koren = json.RootElement;
+
+            return new Profil(
+                Text(koren, "name") ?? Text(koren, "preferred_username"),
+                Text(koren, "email"));
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Profil od poskytovatele se nepodařilo načíst.");
+            return null;
+        }
+    }
+
+    private static string? Text(JsonElement kde, string jmeno) =>
+        kde.TryGetProperty(jmeno, out var hodnota) && hodnota.ValueKind == JsonValueKind.String
+            ? hodnota.GetString()
+            : null;
+
+    /// <summary>
+    /// Adresa userinfo z OIDC dokumentu, držená hodinu. Dokument se mění
+    /// jednou za dlouho, ale ne nikdy — a stahovat ho při každém přihlášení
+    /// znamená dvě volání ven místo jednoho.
+    /// </summary>
+    private async Task<string?> AdresaUserinfoAsync(CancellationToken ct)
+    {
+        var ted = cas.GetUtcNow();
+        if (_dokument is { } platny && platny.Do > ted) return platny.Adresa;
+
+        await Zamek.WaitAsync(ct);
+        try
+        {
+            if (_dokument is { } znovu && znovu.Do > ted) return znovu.Adresa;
+
+            var autorita = config["Identita:Authority"];
+            if (string.IsNullOrEmpty(autorita)) return null;
+
+            using var json = JsonDocument.Parse(
+                await klient.GetStringAsync($"{autorita}/.well-known/openid-configuration", ct));
+
+            var adresa = Text(json.RootElement, "userinfo_endpoint");
+            if (adresa is null) return null;
+
+            _dokument = (adresa, ted.AddHours(1));
+            return adresa;
+        }
+        finally
+        {
+            Zamek.Release();
+        }
+    }
 }

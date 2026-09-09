@@ -41,7 +41,9 @@ public static class IdentitaEndpoints
 
     private static async Task<Results<Ok<JaDto>, UnauthorizedHttpResult>> JaAsync(
         ClaimsPrincipal kdo,
+        HttpContext ctx,
         Uzivatele uzivatele,
+        Profily profily,
         TimeProvider cas,
         CancellationToken ct)
     {
@@ -50,14 +52,26 @@ public static class IdentitaEndpoints
         // uživatel bez práv — proto 401, ne prázdná odpověď.
         if (kdo.Ucet() is not { } ucet) return TypedResults.Unauthorized();
 
-        var jmeno = kdo.FindFirst("name")?.Value
-            ?? kdo.FindFirst("preferred_username")?.Value
-            // Poslední záchrana je subjekt. Ošklivé, ale pravdivé — lepší
-            // než prázdné jméno v seznamu správců.
-            ?? ucet.Subject;
+        // Přístupový token profil nenese — jméno a e-mail se berou od
+        // poskytovatele z endpointu `userinfo`. Nároky v tokenu se zkusí
+        // první jen proto, že u jiného poskytovatele tam být můžou.
+        var jmeno = kdo.FindFirst("name")?.Value ?? kdo.FindFirst("preferred_username")?.Value;
+        var email = kdo.FindFirst("email")?.Value;
+
+        if (jmeno is null || email is null)
+        {
+            var token = ctx.Request.Headers.Authorization
+                .ToString()
+                .Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase);
+            var profil = await profily.NactiAsync(token, ct);
+            jmeno ??= profil?.Jmeno;
+            email ??= profil?.Email;
+        }
 
         var uzivatel = await uzivatele.NajdiNeboZalozAsync(
-            ucet.Issuer, ucet.Subject, jmeno, kdo.FindFirst("email")?.Value, cas, ct);
+            // Poslední záchrana je subjekt. Ošklivé, ale pravdivé — lepší
+            // než prázdné jméno v seznamu správců.
+            ucet.Issuer, ucet.Subject, jmeno ?? ucet.Subject, email, cas, ct);
 
         var rozsahy = await uzivatele.RozsahyAsync(uzivatel.Id, ct);
 
