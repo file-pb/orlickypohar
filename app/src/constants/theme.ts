@@ -12,6 +12,8 @@ export const Colors = {
     linka: '#e2e0dc',
     voda: '#1f6f8b',
     zvyrazneni: '#f3f0ea',
+    stavVypsany: '#1c7d4d',
+    stavZruseny: '#a8433a',
   },
   dark: {
     pozadi: '#14171a',
@@ -21,6 +23,8 @@ export const Colors = {
     linka: '#2c3238',
     voda: '#6bb3cc',
     zvyrazneni: '#232830',
+    stavVypsany: '#58c98c',
+    stavZruseny: '#e2726a',
   },
 } as const;
 

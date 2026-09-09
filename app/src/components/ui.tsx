@@ -22,7 +22,15 @@ export function Stitek({ text, barva }: { text: string; barva?: string }) {
 
 export function Stav({ stav }: { stav: StavZavodu }) {
   const t = useTheme();
-  return <Stitek text={STAV[stav]} barva={stav === 'Odjety' ? t.voda : undefined} />;
+  // Stejné barvy jako na webu: odjetá modrá (má výsledky), vypsaná zelená
+  // (dá se hlásit), plánovaná tlumená, zrušená červená.
+  const barvy: Record<StavZavodu, string> = {
+    Odjety: t.voda,
+    Vypsany: t.stavVypsany,
+    Planovany: t.tlumeny,
+    Zruseny: t.stavZruseny,
+  };
+  return <Stitek text={STAV[stav]} barva={barvy[stav]} />;
 }
 
 /** Proč nejsou výsledky. U zrušeného závodu nikdy nebudou, u vypsaného se hlásí. */

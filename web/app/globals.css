@@ -6,6 +6,10 @@
   --linka: #e2e0dc;
   --voda: #1f6f8b;
   --zvyrazneni: #f3f0ea;
+  /* Stavy zastávky. Odjetá modrá jako odkazy (má výsledky), vypsaná zelená
+     (dá se hlásit), plánovaná tlumená (jen termín), zrušená červená. */
+  --stav-vypsany: #1c7d4d;
+  --stav-zruseny: #a8433a;
   --sirka: 62rem;
 }
 
@@ -18,6 +22,8 @@
     --linka: #2c3238;
     --voda: #6bb3cc;
     --zvyrazneni: #232830;
+    --stav-vypsany: #58c98c;
+    --stav-zruseny: #e2726a;
   }
 }
 
@@ -119,9 +125,13 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 .karta .detail { color: var(--tlumeny); font-size: 0.875rem; margin-top: 0.15rem; }
 /* Stav zastávky. Odjetá má výsledky, proto jediná nese barvu; zrušená se
    drží v pozadí, ale nemizí — „nekonalo se" je taky informace. */
+/* Barvy stavů musí být specifičtější než obecný `.stitek`, jinak je přebije
+   jen tím, že stojí v souboru níž. */
 .stitek.stav { border-color: currentColor; }
-.stav-odjety { color: var(--voda); }
-.stav-zruseny { color: var(--tlumeny); }
+.stitek.stav-odjety { color: var(--voda); }
+.stitek.stav-vypsany { color: var(--stav-vypsany); }
+.stitek.stav-planovany { color: var(--tlumeny); }
+.stitek.stav-zruseny { color: var(--stav-zruseny); }
 .karta.zrusena { background: transparent; }
 .karta.zrusena .detail { color: var(--tlumeny); }
 .skrtnute { text-decoration: line-through; text-decoration-color: var(--tlumeny); }
