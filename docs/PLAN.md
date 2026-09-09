@@ -942,6 +942,45 @@ rejstřík. Tehdy přibude vlastník k lodi a osobě. Odhad: jedna aditivní
 migrace a filtry v dotazech — nepříjemné, ne dramatické. Dřív to řešit nemá
 smysl, protože dneska žádný druhý pořadatel neexistuje.
 
+**Zastávka ve dvou seriálech.** `Zavod` patří přesně jedné `Serie`. U
+[melges24.com](https://www.melges24.com/Worlds2026) je tentýž závod současně
+světovým šampionátem a zastávkou americké série — a to náš model neumí:
+znamenalo by to vazební tabulku mezi závodem a sérií a počítání pořadí pro
+každý seriál zvlášť, protože koeficient i škrty jsou vlastnost seriálu, ne
+závodu.
+
+Dneska je jeden seriál, takže se to řešit nemá. Patří to ale sem, do téže
+kategorie jako druhý pořadatel: **cena roste s odkladem** a poznat se to dá
+jen tím, že si toho někdo všimne dřív, než to bude potřeba.
+
+### Co ještě ukázaly cizí weby
+
+Prohlédnuté 9. 9. 2026: [Diamond League](https://www.diamondleague.com/) a
+[melges24.com](https://www.melges24.com/Worlds2026). Druhý je tvarem skoro
+totéž co my — seriál a v něm zastávky s vlastní stránkou — takže hlavně
+potvrzuje *Stránku zastávky* výš, položku za položkou. Nové jsou dvě věci:
+
+**Místo a pořadatel jako blok, ne řádek.** Adresa, hostující klub, jmenovaný
+kontakt. Potvrzuje to, co je u `Zavod.Poradatel` napsané jako hranice: pro
+pořadatele je jeho vlastní blok na té stránce důvod, proč do seriálu jít.
+
+**Archiv novinek po letech.** Dnes se vypisují jen novinky aktuálního
+ročníku. Levné doplnění, které se vyplatí ve druhé sezóně — stejně jako
+`/historie` u ročníků.
+
+A z Diamond League **drobečková navigace**, která je od 9. 9. 2026 nasazená,
+a **články s obrázky**. To druhé je odložené vědomě: obrázek u článku
+potřebuje R2, protože fotky dnes leží zabalené v image webu a to na jednu
+fotku ke každému článku nestačí. Až na to dojde, začne se **jedním hlavním
+obrázkem na článek** — z něj náhled do výpisu i velká fotka do detailu.
+Galerie a obrázky uvnitř textu jsou pětkrát víc práce za zlomek užitku.
+
+**A jedna věc, která není o kódu:** u Diamond League ten vzhled funguje
+proto, že mají na každém mítinku fotografa. Devět článků ročně s vlastní
+fotkou je pravidelná práce pro člověka. Karta proto musí vypadat dobře
+i **bez** obrázku, jinak bude blog vypadat rozbitě zrovna u zastávky, ze
+které nikdo nic nevyfotil.
+
 ## Fáze
 
 Počítáno na pět hodin týdně.
