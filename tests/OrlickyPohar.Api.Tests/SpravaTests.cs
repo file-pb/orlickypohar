@@ -124,9 +124,13 @@ public class SpravaTests(PostgresFixture fixture)
 
         // Ve výpisu je vidět, čeho se které týká — jinak by se v obrazovce
         // správce nedalo poznat, které z nich odebrat.
-        var seznam = await SpravaAsync(s => s.SeznamAsync(serieId, default));
-        Assert.Contains(seznam, r => r.Zavod is null);
-        Assert.Contains(seznam, r => r.Zavod == "radava-dva-rozsahy");
+        var prehled = await SpravaAsync(s => s.PrehledAsync(serieId, default));
+        Assert.Contains(prehled!.Opravneni, r => r.Zavod is null);
+        Assert.Contains(prehled.Opravneni, r => r.Zavod == "radava-dva-rozsahy");
+
+        // Obrazovka potřebuje i zastávky, na které jdou role udělit —
+        // včetně těch, které ještě nejsou publikované.
+        Assert.Contains(prehled.Zastavky, z => z.Slug == "radava-dva-rozsahy");
     }
 
     [Fact]

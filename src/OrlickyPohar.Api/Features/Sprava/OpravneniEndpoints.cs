@@ -30,8 +30,8 @@ public static class OpravneniEndpoints
     {
         var g = app.MapGroup("/sprava/serie/{serie}/opravneni").WithTags("Správa");
 
-        g.MapGet("/", SeznamAsync)
-            .WithSummary("Vypíše oprávnění ročníku i jeho zastávek")
+        g.MapGet("/", PrehledAsync)
+            .WithSummary("Vypíše oprávnění ročníku i zastávky, na které jdou udělit")
             .WithDescription("Vyžaduje roli správce v tom ročníku.");
 
         g.MapPost("/", UdelAsync)
@@ -47,7 +47,7 @@ public static class OpravneniEndpoints
             .WithDescription("Vyžaduje roli správce. Posledního správce ročníku odebrat nelze.");
     }
 
-    private static async Task<IResult> SeznamAsync(
+    private static async Task<IResult> PrehledAsync(
         string serie, ClaimsPrincipal kdo, Rozsahy rozsahy, OpravneniSprava sprava, CancellationToken ct)
     {
         var rozsah = await rozsahy.NajdiAsync(serie, null, ct);
@@ -56,7 +56,7 @@ public static class OpravneniEndpoints
         if (!await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Spravce, rozsah.SerieId), ct))
             return Nesmi(kdo);
 
-        return Results.Ok(await sprava.SeznamAsync(rozsah.SerieId, ct));
+        return Results.Ok(await sprava.PrehledAsync(rozsah.SerieId, ct));
     }
 
     private static async Task<IResult> UdelAsync(

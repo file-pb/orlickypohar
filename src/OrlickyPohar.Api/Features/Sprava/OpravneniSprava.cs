@@ -14,6 +14,25 @@ public record OpravneniRadek(
     string? Zavod,
     DateTimeOffset UdelenoV);
 
+/// <summary>Zastávka ročníku jako volba rozsahu, i nepublikovaná.</summary>
+public record ZastavkaVolbaDto(string Slug, string Nazev);
+
+/// <summary>
+/// Všechno, co obrazovka správy potřebuje: udělená oprávnění a seznam
+/// zastávek, na které jdou udělit.
+/// <para>
+/// Zastávky se schválně berou odsud a ne z veřejného čtení ročníku:
+/// <b>nepublikovaná zastávka se veřejně nevydává</b>, ale pořadatele
+/// potřebuje dřív, než se zveřejní — jinak by se role dala udělit až poté,
+/// co je závod venku.
+/// </para>
+/// </summary>
+public record PrehledOpravneniDto(
+    string Serie,
+    string Nazev,
+    IReadOnlyList<ZastavkaVolbaDto> Zastavky,
+    IReadOnlyList<OpravneniRadek> Opravneni);
+
 /// <summary>Jak dopadlo udělení.</summary>
 public enum StavUdeleni
 {
@@ -55,10 +74,33 @@ public enum StavOdebrani
 public class OpravneniSprava(AppDbContext db, TimeProvider cas)
 {
     /// <summary>
-    /// Oprávnění celého ročníku i jeho zastávek. Zastávkové se nevynechávají:
-    /// správce se ptá „kdo na tenhle ročník smí", a pořadatel jedné zastávky
-    /// je taky odpověď.
+    /// Podklad pro obrazovku správy: oprávnění ročníku i jeho zastávek a
+    /// zastávky, na které jdou role udělit.
+    /// <para>
+    /// Zastávková oprávnění se nevynechávají: správce se ptá „kdo na tenhle
+    /// ročník smí", a pořadatel jedné zastávky je taky odpověď.
+    /// </para>
     /// </summary>
+    public async Task<PrehledOpravneniDto?> PrehledAsync(int serieId, CancellationToken ct)
+    {
+        var serie = await db.Serie
+            .Where(s => s.Id == serieId)
+            .Select(s => new { s.Slug, s.Nazev })
+            .FirstOrDefaultAsync(ct);
+
+        if (serie is null) return null;
+
+        var zastavky = await db.Zavody
+            .Where(z => z.SerieId == serieId)
+            .OrderBy(z => z.Poradi).ThenBy(z => z.Datum)
+            .Select(z => new ZastavkaVolbaDto(z.Slug, z.Nazev))
+            .ToListAsync(ct);
+
+        return new PrehledOpravneniDto(
+            serie.Slug, serie.Nazev, zastavky, await SeznamAsync(serieId, ct));
+    }
+
+    /// <summary>Udělená oprávnění ročníku i jeho zastávek.</summary>
     public async Task<List<OpravneniRadek>> SeznamAsync(int serieId, CancellationToken ct) =>
         await db.Opravneni
             .Where(o => o.SerieId == serieId)
