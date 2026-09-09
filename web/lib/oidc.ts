@@ -45,6 +45,16 @@ export async function dokument(): Promise<Dokument> {
 
 export const navratovaAdresa = () => `${VEREJNA_ADRESA}/prihlaseni/zpet`;
 
+/**
+ * Adresa na tomhle webu, poskládaná z veřejné adresy z prostředí.
+ *
+ * <b>Nikdy ne z `request.url`.</b> Ta je uvnitř kontejneru interní — Next
+ * poslouchá na `0.0.0.0:8080`, takže přesměrování složené z ní pošle
+ * prohlížeč na `https://0.0.0.0:8080/`. Projde to všude, kde se web testuje
+ * přímo, a pokazí se to teprve za proxy.
+ */
+export const naWebu = (cesta: string) => new URL(cesta, VEREJNA_ADRESA);
+
 /** Náhodný řetězec pro `state` i pro PKCE. */
 function nahodne(bajtu = 32) {
   return base64url(crypto.getRandomValues(new Uint8Array(bajtu)));

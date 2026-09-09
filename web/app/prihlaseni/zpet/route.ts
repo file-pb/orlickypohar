@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { COOKIE_TOK, COOKIE_TOKEN, prihlasovaniJde, vymenKod } from "@/lib/oidc";
+import { COOKIE_TOK, COOKIE_TOKEN, naWebu, prihlasovaniJde, vymenKod } from "@/lib/oidc";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   // Poskytovatel může místo kódu vrátit chybu — třeba když uživatel
   // přihlášení zruší. Není to výjimka, je to běžný konec toku.
   const chyba = parametry.get("error");
-  if (chyba) return NextResponse.redirect(new URL("/?prihlaseni=zruseno", request.url));
+  if (chyba) return NextResponse.redirect(naWebu("/?prihlaseni=zruseno"));
 
   const kod = parametry.get("code");
   const state = parametry.get("state");
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     ?.slice(COOKIE_TOK.length + 1);
 
   if (!kod || !state || !tokRaw)
-    return NextResponse.redirect(new URL("/?prihlaseni=chyba", request.url));
+    return NextResponse.redirect(naWebu("/?prihlaseni=chyba"));
 
   const tok = JSON.parse(decodeURIComponent(tokRaw)) as {
     verifier: string;
@@ -38,11 +38,11 @@ export async function GET(request: Request) {
   };
 
   if (tok.state !== state)
-    return NextResponse.redirect(new URL("/?prihlaseni=chyba", request.url));
+    return NextResponse.redirect(naWebu("/?prihlaseni=chyba"));
 
   const tokeny = await vymenKod(kod, tok.verifier);
 
-  const odpoved = NextResponse.redirect(new URL(tok.kam, request.url));
+  const odpoved = NextResponse.redirect(naWebu(tok.kam));
   odpoved.cookies.set(COOKIE_TOKEN, tokeny.access_token, {
     httpOnly: true,
     secure: true,
