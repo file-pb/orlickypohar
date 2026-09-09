@@ -328,6 +328,12 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
   letter-spacing: 0.02em;
 }
 .profil > summary:hover .kruh { border-color: var(--voda); color: var(--voda); }
+/* Rámeček od klávesnice musí být kolem kruhu, ne kolem hranatého `summary`
+   — jinak to vypadá jako chyba vykreslení. */
+.profil > summary:focus { outline: none; }
+.profil > summary:focus-visible .kruh {
+  outline: 2px solid var(--voda); outline-offset: 2px;
+}
 
 /* Nabídka visí pod ikonkou a nesmí roztáhnout hlavičku, proto absolutně. */
 .profil .nabidka {

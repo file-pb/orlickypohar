@@ -13,7 +13,7 @@ import type { Ja } from "@/lib/ja";
  * u poskytovatele nemusí být žádná a tahat ji odtud znamená prozradit mu,
  * kterou stránku si člověk zrovna otevřel.
  */
-export function Profil({ ja }: { ja: Ja | null }) {
+export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
   // `null` znamená, že cookie existuje, ale API token odmítlo. Nabídka
   // v tu chvíli musí nabídnout odhlášení — jinak se z toho stavu nedá odejít.
   const jmeno = ja?.zobrazovane;
@@ -41,7 +41,9 @@ export function Profil({ ja }: { ja: Ja | null }) {
           ) : (
             <>
               <b>Přihlášení nefunguje</b>
-              <span>Token odmítlo API. Odhlas se a zkus to znovu.</span>
+              {/* Důvod z hlavičky API. Bez něj je karta jen konstatování,
+                  po kterém se stejně musí hledat v logu. */}
+              <span>{duvod ?? "API token odmítlo. Odhlas se a zkus to znovu."}</span>
             </>
           )}
         </div>

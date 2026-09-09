@@ -30,11 +30,13 @@ export async function maSezeni(): Promise<boolean> {
  * veřejné stránky musí fungovat, i když identita neběží — a dokud není
  * administrace, není přihlášení k ničemu potřeba.
  */
-export async function nactiJa(): Promise<Ja | null> {
-  if (!prihlasovaniJde) return null;
+export type Sezeni = { ja: Ja | null; duvod: string | null };
+
+export async function nactiJa(): Promise<Sezeni> {
+  if (!prihlasovaniJde) return { ja: null, duvod: null };
 
   const token = (await cookies()).get(COOKIE_TOKEN)?.value;
-  if (!token) return null;
+  if (!token) return { ja: null, duvod: null };
 
   try {
     const odpoved = await fetch(`${API}/ja`, {
@@ -43,12 +45,23 @@ export async function nactiJa(): Promise<Ja | null> {
       cache: "no-store",
     });
 
-    // 401 znamená prošlý nebo neplatný token. Pro stránku je to totéž co
-    // nepřihlášený — ukáže se odkaz „přihlásit se" a je to.
-    if (!odpoved.ok) return null;
-    return (await odpoved.json()) as Ja;
+    if (odpoved.ok) return { ja: (await odpoved.json()) as Ja, duvod: null };
+
+    // Proč token neprošel, říká API v hlavičce `WWW-Authenticate` — je to
+    // standardní chování OAuth a nic tajného tam není. Zahodit ji znamená
+    // poslat člověka hledat příčinu do logu serveru, což u „nefunguje mi
+    // přihlášení" nikdo neudělá.
+    return { ja: null, duvod: duvodZHlavicky(odpoved.headers.get("www-authenticate")) };
   } catch {
     // Nedostupné API nesmí shodit hlavičku na veřejné stránce.
-    return null;
+    return { ja: null, duvod: "API se nedaří zavolat." };
   }
+}
+
+/** Z `Bearer error="invalid_token", error_description="..."` vytáhne popis. */
+function duvodZHlavicky(hlavicka: string | null) {
+  if (!hlavicka) return null;
+  const popis = /error_description="([^"]*)"/.exec(hlavicka)?.[1];
+  const kod = /error="([^"]*)"/.exec(hlavicka)?.[1];
+  return popis ?? kod ?? null;
 }

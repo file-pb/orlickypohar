@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default async function Layout({ children }: { children: React.ReactNode }) {
   // Hlavička se ptá, kdo je přihlášený. Dokud identita neběží, je to null
   // a nic navíc se nezobrazí — veřejné stránky se tím nemění.
-  const ja = await nactiJa();
+  const { ja, duvod } = await nactiJa();
   // Cookie bez platného tokenu je vlastní stav, ne „nepřihlášený". Kdyby se
   // slil s ním, nabízel by web přihlášení někomu, kdo se nemůže odhlásit.
   const sezeni = ja ? true : await maSezeni();
@@ -46,7 +46,11 @@ export default async function Layout({ children }: { children: React.ReactNode }
               {/* Přihlášení se nabízí, jen když je nastavené. Odkaz na
                   neexistující tok by byl slib, který web nesplní. */}
               {prihlasovaniJde &&
-                (sezeni ? <Profil ja={ja} /> : <Link href="/prihlaseni">Přihlásit</Link>)}
+                (sezeni ? (
+                  <Profil ja={ja} duvod={duvod} />
+                ) : (
+                  <Link href="/prihlaseni">Přihlásit</Link>
+                ))}
             </nav>
           </div>
         </header>
