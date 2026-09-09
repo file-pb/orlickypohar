@@ -1190,11 +1190,27 @@ to test: prázdný seznam práv znamenal „nesmí ani číst".
 **NuGet je z pracovního Macu nedostupný, stejně jako Docker Hub.** `curl` na
 `api.nuget.org` vrátí 200 na index, na endpoint s podpisy i na samotný
 `.nupkg`, ale `dotnet restore` na téže adrese padá na `NU1301: Socket is not
-connected`. Není to tedy pravidlo firewallu na doméně, ale něco mezi
-síťovým agentem a HTTP stackem .NETu. Důsledek je praktický: **na tomhle
-stroji nejde přidat žádný nový balíček** a dělicí čára ve fázi 4 vede přesně
-tudy — model a oprávnění balíček nepotřebují, ověření podpisu tokenu ano.
-Adaptér je proto napsaný tak, aby se ověřování připojilo v jediném souboru.
+connected`. Není to tedy pravidlo firewallu na doméně, ale něco mezi síťovým
+agentem a HTTP stackem .NETu.
+
+**Projektu se to netýká, jen pracovního stroje.** Image se staví v CI, kde
+síť funguje, a server si stahuje hotovou image — přidat balíček tedy jde,
+jen se neověří lokálně. Je to táž kategorie jako integrační testy: nejedou
+tady, běží v CI. A selhání je levné — když se balíček nenačte nebo se kód
+nepřeloží, spadne build a nasazení se vůbec nespustí, takže na produkci se
+nic špatného nedostane.
+
+Praktický dopad je proto jediný: **u kódu, který nový balíček používá, chybí
+lokální kontrola překladu.** Proto je ověřování tokenu v samostatném souboru
+a zbytek fáze 4 na balíčku nezávisí — model i oprávnění se dají překládat
+a testovat na místě.
+
+## Schéma řešení
+
+Vykreslené schéma celého řešení — nasazení, vnitřek API a datový model —
+leží v [docs/schemata/](schemata/). Je to **snímek k datu, ne živý zdroj
+pravdy**: nic ho nepřegeneruje, když se kód změní. Když se rozejde s kódem,
+platí kód.
 
 ## Kde se pokračuje
 
