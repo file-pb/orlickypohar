@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Lode;
@@ -15,8 +13,6 @@ namespace OrlickyPohar.Api.Features.Import;
 /// </summary>
 public static class ImportEndpoints
 {
-    private const string Hlavicka = "X-Import-Token";
-
     public static void MapImport(this IEndpointRouteBuilder app)
     {
         app.MapPost("/import/serie", ImportujAsync)
@@ -35,16 +31,14 @@ public static class ImportEndpoints
         ILoggerFactory logu,
         CancellationToken ct)
     {
-        var ocekavany = config["Import:Token"];
-
-        // Nenakonfigurovaný token neznamená otevřený endpoint. Bez něj se
-        // neimportuje — jinak by stačilo zapomenout na soubor v /run/secrets.
-        if (string.IsNullOrEmpty(ocekavany))
-            return Results.Problem("Import není nakonfigurovaný.", statusCode: StatusCodes.Status503ServiceUnavailable);
-
-        var poslany = ctx.Request.Headers[Hlavicka].ToString();
-        if (!KonstantniPorovnani(poslany, ocekavany))
-            return Results.Unauthorized();
+        switch (ImportniToken.Over(ctx, config))
+        {
+            case StavTokenu.Nenakonfigurovan:
+                return Results.Problem(
+                    "Import není nakonfigurovaný.", statusCode: StatusCodes.Status503ServiceUnavailable);
+            case StavTokenu.Nesedi:
+                return Results.Unauthorized();
+        }
 
         var log = logu.CreateLogger("Import");
 
@@ -68,12 +62,4 @@ public static class ImportEndpoints
             return Results.BadRequest(new { error = ex.Message });
         }
     }
-
-    /// <summary>
-    /// Porovnání v konstantním čase. Běžné porovnání řetězců končí na prvním
-    /// rozdílu a doba odpovědi tak prozrazuje, kolik znaků tajemství sedí.
-    /// </summary>
-    private static bool KonstantniPorovnani(string a, string b) =>
-        CryptographicOperations.FixedTimeEquals(
-            Encoding.UTF8.GetBytes(a), Encoding.UTF8.GetBytes(b));
 }

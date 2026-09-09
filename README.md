@@ -83,6 +83,40 @@ od rozhodčího; až přijdou, soubor se nahradí a struktura zůstane.
 `data/2026-poradi-rozhodci.json` je naproti tomu **skutečný sešit rozhodčího** —
 ověřuje proti němu `SerieTests`.
 
+## První správce
+
+Kuře a vejce: obrazovka, která uděluje role, sama roli správce vyžaduje —
+a na začátku ji nemá nikdo. Proto udělení **prvního** správce projde i na
+importní token, ale jen dokud v ročníku žádný správce není. Po prvním
+použití se ta cesta sama zavře.
+
+Nejdřív se **musí ten člověk aspoň jednou přihlásit** na webu: účet vzniká
+přihlášením a rolí se pozvat nedá.
+
+```bash
+ssh deploy@178.105.62.172 'C=$(docker ps --format "{{.Names}}" | grep orlickypohar | grep -m1 -- -app); \
+  TOKEN=$(docker exec "$C" cat /run/secrets/Import__Token); \
+  curl -s -X POST https://orlickypohar-api.klihovka.cz/sprava/serie/2026/opravneni \
+    -H "X-Import-Token: $TOKEN" -H "content-type: application/json" \
+    -d "{\"email\":\"filip@priklad.cz\",\"role\":\"Spravce\"}"; echo'
+```
+
+Dál už se role udělují přihlášeným správcem — `$PRISTUP` je jeho přístupový
+token:
+
+```bash
+curl -X POST localhost:8080/sprava/serie/2026/opravneni \
+  -H "authorization: Bearer $PRISTUP" -H "content-type: application/json" \
+  -d '{"email":"poradatel@priklad.cz","role":"Organizator","zavod":"radavska-regata"}'
+
+curl localhost:8080/sprava/serie/2026/opravneni -H "authorization: Bearer $PRISTUP"
+curl -X DELETE localhost:8080/sprava/serie/2026/opravneni/3 -H "authorization: Bearer $PRISTUP"
+```
+
+Bez `zavod` platí role na celý ročník i na všechny jeho zastávky, s ním jen
+na tu jednu. `Rozhodci` a `Spravce` jdou udělit **jen na ročník**. Posledního
+správce ročníku odebrat nelze — jinak by se do administrace nedostal nikdo.
+
 ## Veřejné čtení
 
 ```bash

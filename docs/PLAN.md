@@ -1337,11 +1337,44 @@ prvním přihlášením, takže komu se ještě nikdy nepřihlásil, roli dát n
 a endpoint to řekne. Zvací tok je vlastní věc a dělat ho teď by znamenalo
 řešit rozesílání pošty dřív než administraci samotnou.
 
-**Hotové jako základ, zatím nezapojené:** `Features/Sprava/Rozsahy.cs`
-překládá slugy na rozsahy a je jediným místem, kde se ptá na právo — včetně
-kontroly, že závod patří té sérii, na kterou se ptáme. `Uzivatele.PodleUctuAsync`
-najde uživatele bez toho, aby ho zakládal: kontrola práv je čtení a čtení
-nemá měnit databázi.
+**Hotové a zapojené 9. 9. 2026.** Endpointy `/sprava/serie/{slug}/opravneni`
+běží — výpis, udělení, odebrání — a s nimi i bootstrap na importní token.
+
+| Kus | Kde |
+|---|---|
+| Překlad slugů na rozsah, jediné místo s otázkou na právo | `Features/Sprava/Rozsahy.cs` |
+| Pravidla udělení a bootstrapu, čisté funkce | `Features/Sprava/Udeleni.cs` |
+| Čtení a zápis oprávnění | `Features/Sprava/OpravneniSprava.cs` |
+| Endpointy a rozhodnutí, kdo smí | `Features/Sprava/OpravneniEndpoints.cs` |
+| Ověření importního tokenu pro oba jeho účely | `Features/Import/ImportniToken.cs` |
+
+`Uzivatele.PodleUctuAsync` najde uživatele bez toho, aby ho zakládal: kontrola
+práv je čtení a čtení nemá měnit databázi.
+
+**Čtyři rozhodnutí, která k tomu při psaní přibyla:**
+
+1. **Posledního správce ročníku odebrat nejde.** Jinak se dá ročník zamknout
+   ven jedním kliknutím a zpátky vede jen cesta přes tajemství na serveru.
+2. **Rozhodčí ani správce nejdou udělit na jednu zastávku.** V tabulce rolí
+   mají rozsah série; kdyby to endpoint pustil, vznikl by rozsah, o kterém
+   plán mlčí a `Prava` ho tiše uznají.
+3. **Druhé udělení téže role vrací týž řádek a 200.** Není to chyba, jen se
+   nic nezměnilo — a unikátní index by z toho udělal pád na půl cesty.
+4. **Týž e-mail u dvou účtů odmítne.** Vznikne to po výměně poskytovatele.
+   Hádat, komu roli dát, je horší než odmítnout: špatný tip nikdo nepozná.
+
+**Bez nakonfigurovaného poskytovatele se endpointy neregistrují vůbec**, ani
+pro bootstrap. Role se dává existujícímu účtu a ten vzniká až přihlášením,
+takže administrace bez identity nemá komu co udělit.
+
+**Co nezapojeno zůstává schválně:** rozhodčí zatím role neuděluje. Podle
+oddílu *Role a oprávnění* smí přiřadit organizátora a editora konkrétní
+zastávce, ale ten oddíl je psaný z hlavy a čeká na projití — a tohle je
+přesně ta věta, která se při něm může změnit.
+
+**Další krok je obrazovka**, ne další endpoint: výpis oprávnění ročníku,
+pole na e-mail a roli, tlačítko na odebrání. Do té doby se role udělují
+`curl`em s importním tokenem.
 
 **Balíček JwtBearer šel přidat až po vypnutí VPN.** `dotnet restore` padal
 na `NU1301: Socket is not connected`, zatímco `curl` na tutéž adresu vracel
