@@ -217,6 +217,103 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/serie/{slug}/clanky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vrátí publikované články ročníku, od nejnovějšího
+         * @description Parametrem zavod se výpis zúží na jednu zastávku, parametrem limit na daný počet nejnovějších.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    zavod?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClanekShrnutiDto"][];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/serie/{slug}/clanky/{clanek}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Vrátí jeden článek i s tělem */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                    clanek: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClanekDto"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -227,6 +324,39 @@ export interface components {
             /** Format: int32 */
             body: number;
             skrtnuto: boolean;
+        };
+        ClanekDto: {
+            slug: string;
+            titulek: string;
+            perex: null | string;
+            telo: string;
+            autor: null | string;
+            /** Format: date-time */
+            publikovanoV: string;
+            zavod: null | string;
+            zavodNazev: null | string;
+        };
+        ClanekShrnutiDto: {
+            slug: string;
+            titulek: string;
+            perex: null | string;
+            autor: null | string;
+            /** Format: date-time */
+            publikovanoV: string;
+            zavod: null | string;
+            zavodNazev: null | string;
+        };
+        ClanekVstup: {
+            slug: string;
+            titulek: string;
+            telo: string;
+            /** Format: date-time */
+            publikovanoV: string;
+            perex?: null | string;
+            autor?: null | string;
+            zavod?: null | string;
+            /** @default true */
+            publikovano: boolean;
         };
         KategorieDto: {
             nazev: string;
@@ -338,6 +468,7 @@ export interface components {
             zavody: components["schemas"]["ZavodVstup"][];
             /** @default true */
             publikovano: boolean;
+            clanky?: null | components["schemas"]["ClanekVstup"][];
         };
         /** @enum {unknown} */
         StavRozjizdky: "Planovana" | "Probiha" | "Dokoncena" | "Zrusena";

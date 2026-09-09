@@ -4,6 +4,7 @@ import { ApiNedostupne, nactiSerii, type Prihlaska, type ZavodShrnuti } from "@/
 import { Vypadek } from "@/app/vypadek";
 import { Stav } from "@/app/stav";
 import { PruhUkazky } from "@/app/ukazka";
+import { datum } from "@/app/datum";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -58,6 +59,8 @@ export default async function Rocnik({ params }: Parametry) {
 
       <p style={{ margin: "-1.25rem 0 2rem" }}>
         <Link href={`/serie/${serie.slug}/poradi`}>Průběžné pořadí seriálu →</Link>
+        {" · "}
+        <Link href={`/serie/${serie.slug}/novinky`}>Novinky ročníku →</Link>
       </p>
 
       {/* Kalendář je zároveň rozcestník: každá zastávka nese svůj stav
@@ -122,17 +125,4 @@ export default async function Rocnik({ params }: Parametry) {
       ))}
     </>
   );
-}
-
-function datum(od: string, do_?: string | null) {
-  const f = (d: string) =>
-    new Date(d).toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" });
-  if (!do_) return f(od);
-
-  // Vícedenní závod uvnitř jednoho měsíce: „23.–24. května 2026". Dvakrát
-  // vypsaný měsíc a rok se na telefonu zalomí přes dva řádky pro nic.
-  const [a, b] = [new Date(od), new Date(do_)];
-  return a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear()
-    ? `${a.getDate()}.–${f(do_)}`
-    : `${f(od)} – ${f(do_)}`;
 }

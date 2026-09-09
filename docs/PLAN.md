@@ -883,7 +883,7 @@ Počítáno na pět hodin týdně.
 | 3 | ~~**Mobilní appka, jen čtení**~~ | **hotovo 8. 9. 2026** | Nepotřebovala přihlášení, takže vznikla dřív než identita. Běží na telefonu, typy si bere z OpenAPI a jde poslat jako APK |
 | 4 | **Identita a role** — Zitadel, mapování `(issuer, subject) → UserId` | 1–2 týdny | Spouští odloženou položku platformy |
 | 5 | **Administrace a workflow** — zadávání, stavy, publikace, protesty a penalizace | 2–3 týdny | Až když je co spravovat. Protest nemá kdo zapsat dřív, než existuje identita |
-| 6 | **Blog a fotky** | 1 týden | |
+| 6 | **Blog a fotky** — model, import, veřejné čtení, novinky na webu | rozdělané | Model, import i stránky hotové 9. 9. 2026; psaní článků čeká na administraci z fáze 5 |
 | 7 | **Upozornění** — veřejná i účastnická, odesílání, Outbox | 2–3 týdny | Účastnická stojí na identitě z fáze 4 a na napojení osoby k lodi |
 | 8 | **Tracker** — záznam trasy, offline, nahrání, prohlížení | 4–6 týdnů | Samostatná linka; potřebuje jen identitu a kontext závodu |
 | 9 | Handicap | až bude potřeba | |
@@ -1105,6 +1105,47 @@ prostředí.
 SULA, FILOZEP), a co znamená neúčast na zastávce. Nic z toho se nedopočítává —
 počítá se podle pravidla a rozdíl se drží na očích.
 
+### Fáze 6 — blog a novinky
+
+Hotové 9. 9. 2026: model `Clanek`, rozšíření importu, veřejné čtení a stránky
+na webu. Co zbývá, je **psaní** — na to je potřeba administrace z fáze 5.
+Do té doby se články nahrávají importem stejně jako výsledky a demo obsah
+vyrábí `tools/gen-mock.py`.
+
+**Jedna entita, dvě úrovně.** Článek má vždycky `SerieId` a volitelně
+`ZavodId`. Vypadá to jako duplicita — závod svou sérii zná — ale je to
+jediné místo, odkud se odvodí právo psát: pořadatel Radavské regaty smí psát
+na stránku Radavské regaty a nikam jinam. Novinky ročníku se navíc načtou
+jedním dotazem bez spojení přes závody.
+
+**Adresa je vždycky `/serie/{serie}/novinky/{clanek}`**, i u článku zastávky.
+Slug je unikátní v rámci ročníku, ne závodu, takže odkaz přežije, když se
+článek k zastávce dodatečně připne nebo od ní odpojí.
+
+**Tělo je prostý text**, odstavce oddělené prázdným řádkem. Markdown by
+znamenal renderer na webu i v appce a rozhodnutí, co z něj povolit; HTML
+sanitizaci cizího vstupu. Až bude potřeba víc, je to aditivní sloupec
+s formátem — ne přepis toho, co je uložené.
+
+**Články se importem nemažou**, na rozdíl od výsledků a účastí. Uvnitř
+závodu je soubor úplná pravda, u blogu ne: až bude psát pořadatel
+v administraci, import ročníku o jeho článcích vědět nebude a smazal by je.
+
+**Nepublikovaná zastávka schová i svůj blog.** Bez toho by pozvánka
+prozradila závod, který ročník ještě nezveřejnil.
+
+| Zbývá | Proč to ještě není |
+|---|---|
+| Psaní článků v administraci | čeká na fázi 5 (a ta na identitu z fáze 4) |
+| Fotky v článku | soubory v R2; do té doby je blog jen text |
+| Pořadatel jako záznam, ne text | až se budou přidávat odkazy a logo, viz *Jak se po webu chodí* |
+
+**Demo obsah je vymyšlený, ale nehádá.** Zpráva ze zastávky si bere vítěze
+z vygenerovaných výsledků, aby si text s tabulkou neodporoval — rozpor mezi
+článkem a čísly vypadá jako chyba webu, ne jako ukázka. Nejsou v něm žádné
+citace ani jména lidí: jména zastávek a pořadatelů skutečná jsou, takže by
+se text dal číst jako tvrzení o tom, co se doopravdy stalo.
+
 ## Kde se pokračuje
 
 Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
@@ -1141,9 +1182,20 @@ Nic z toho nebrání založit projekt a napsat první migraci.
 3. ~~**Výpadek API vypadá jako neexistující stránka.**~~ **Opraveno
    9. 9. 2026.** Výpadek se ošetřuje přímo ve stránce (`ApiNedostupne` →
    komponenta `Vypadek`), ne přes `error.tsx` — Next u výjimky v serverové
-   komponentě dynamické cesty ukazoval stránku „nenalezeno". Zbývá jediné:
-   stránka výpadku vrací stav 200, správněji by bylo 503 s `Retry-After`,
-   jenže to se ze serverové komponenty nastavit nedá.
+   komponentě dynamické cesty ukazoval stránku „nenalezeno".
+
+   **Stav 503 zůstává neudělaný, a je to rozhodnutí, ne odklad.** Stránka
+   výpadku vrací 200; správnější by bylo 503 s `Retry-After`. Next 16 na to
+   nemá API — serverová komponenta stav odpovědi nastavit neumí (ověřeno
+   9. 9. 2026 v nainstalované verzi 16.3.4) a jediná cesta je middleware,
+   který si sám ověří zdraví API a při výpadku vrátí vlastní odpověď.
+
+   Ta cena je vyšší než užitek: middleware nemá layout ani CSS stránky,
+   takže výpadková stránka by přestala vypadat jako web, a ke každému
+   načtení by přibyl dotaz na `/health/ready`. Stav 503 přitom čtenář
+   nevidí — je pro roboty a monitoring, a ty na výpadek upozorní z
+   `/health` samy. Zůstává tedy 200 a správná stránka; přehodnotit se to
+   má, až bude web mít middleware z jiného důvodu.
 4. **Co když loď kategorii přece jen změní** (nové plachty, přeměření).
    Návrh: správce ji smí přepsat a pořadí se přepočítá. Historie se nevede,
    dokud se neukáže, že je potřeba.

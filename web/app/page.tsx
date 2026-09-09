@@ -1,11 +1,15 @@
 import Link from "next/link";
 import {
   ApiNedostupne,
+  nactiClanky,
   nactiPoradi,
   nactiSerie,
   nactiSerii,
+  type ClanekShrnuti,
   type SerieShrnuti,
 } from "@/lib/api";
+import { denAMesic } from "@/app/datum";
+import { VypisNovinek } from "@/app/novinky";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu.
 export const dynamic = "force-dynamic";
@@ -38,12 +42,17 @@ export default async function Rozcestnik() {
   // děje — a je to spočítané z dat, ne napsané natvrdo. Když se to nepovede
   // načíst, prostě tam není; kvůli jedné větě nemá padat úvodní stránka.
   let stav: { odjeto: number; celkem: number; dalsi?: string; vedou: string[] } | null = null;
+  // Filip chce novinky na úvodní stránce. Tři poslední: dost na to, aby bylo
+  // vidět, že se něco děje, a málo na to, aby odsunuly tlačítka na výsledky.
+  let clanky: ClanekShrnuti[] | null = null;
   if (aktualni) {
     try {
-      const [detail, poradi] = await Promise.all([
+      const [detail, poradi, novinky] = await Promise.all([
         nactiSerii(aktualni.slug),
         nactiPoradi(aktualni.slug),
+        nactiClanky(aktualni.slug, { limit: 3 }),
       ]);
+      clanky = novinky;
       if (detail) {
         const cekaji = detail.zavody.filter((z) => z.stav === "Planovany" || z.stav === "Vypsany");
         stav = {
@@ -125,6 +134,16 @@ export default async function Rozcestnik() {
         <p className="prazdno">Zatím není zveřejněný žádný ročník.</p>
       ) : null}
 
+      {aktualni && clanky && clanky.length > 0 && (
+        <section className="novinky-blok">
+          <h2>Novinky</h2>
+          <VypisNovinek serie={aktualni.slug} clanky={clanky} />
+          <p className="poznamka">
+            <Link href={`/serie/${aktualni.slug}/novinky`}>Všechny novinky ročníku →</Link>
+          </p>
+        </section>
+      )}
+
       <p className="poznamka">
         Nevíš, proč má loď zrovna takové číslo?{" "}
         <Link href="/pravidla">Podívej se, jak se počítají body</Link>. Starší
@@ -133,16 +152,6 @@ export default async function Rozcestnik() {
       </p>
     </>
   );
-}
-
-/** „19. září" — rok v téhle větě nikoho nezajímá. */
-function denAMesic(iso: string) {
-  const mesice = [
-    "ledna", "února", "března", "dubna", "května", "června",
-    "července", "srpna", "září", "října", "listopadu", "prosince",
-  ];
-  const [, m, d] = iso.slice(0, 10).split("-").map(Number);
-  return `${d}. ${mesice[m - 1]}`;
 }
 
 function zavodu(n: number) {

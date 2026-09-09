@@ -28,6 +28,8 @@ export type Zastavka = S["ZastavkaDto"];
 export type PoradiLodi = S["PoradiLodiDto"];
 export type PoradiKategorie = S["PoradiKategorieDto"];
 export type PoradiSerie = S["PoradiSerieDto"];
+export type ClanekShrnuti = S["ClanekShrnutiDto"];
+export type Clanek = S["ClanekDto"];
 
 /**
  * Chyba, která znamená **nedostupné API**, ne chybějící obsah.
@@ -61,3 +63,22 @@ export const nactiSerii = (slug: string) => nacti<SerieDetail>(`/serie/${slug}`)
 export const nactiZavod = (serie: string, zavod: string) =>
   nacti<ZavodDetail>(`/serie/${serie}/zavody/${zavod}`);
 export const nactiPoradi = (slug: string) => nacti<PoradiSerie>(`/serie/${slug}/poradi`);
+
+/**
+ * Novinky ročníku, od nejnovější. `zavod` zúží výpis na jednu zastávku,
+ * `limit` na daný počet — úvodní stránka chce tři a nemá důvod stahovat
+ * celý blog.
+ */
+export const nactiClanky = (
+  slug: string,
+  kde: { zavod?: string; limit?: number } = {},
+) => {
+  const dotaz = new URLSearchParams();
+  if (kde.zavod) dotaz.set("zavod", kde.zavod);
+  if (kde.limit) dotaz.set("limit", String(kde.limit));
+  const konec = dotaz.size ? `?${dotaz}` : "";
+  return nacti<ClanekShrnuti[]>(`/serie/${slug}/clanky${konec}`);
+};
+
+export const nactiClanek = (slug: string, clanek: string) =>
+  nacti<Clanek>(`/serie/${slug}/clanky/${clanek}`);

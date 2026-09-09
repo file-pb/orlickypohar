@@ -163,6 +163,99 @@
                     }
                 }
             }
+        },
+        "/serie/{slug}/clanky": {
+            "get": {
+                "tags": [
+                    "\u010cl\u00e1nky"
+                ],
+                "summary": "Vr\u00e1t\u00ed publikovan\u00e9 \u010dl\u00e1nky ro\u010dn\u00edku, od nejnov\u011bj\u0161\u00edho",
+                "description": "Parametrem zavod se v\u00fdpis z\u00fa\u017e\u00ed na jednu zast\u00e1vku, parametrem limit na dan\u00fd po\u010det nejnov\u011bj\u0161\u00edch.",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ClanekShrnutiDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/serie/{slug}/clanky/{clanek}": {
+            "get": {
+                "tags": [
+                    "\u010cl\u00e1nky"
+                ],
+                "summary": "Vr\u00e1t\u00ed jeden \u010dl\u00e1nek i s t\u011blem",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "clanek",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ClanekDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -185,6 +278,152 @@
                     },
                     "skrtnuto": {
                         "type": "boolean"
+                    }
+                }
+            },
+            "ClanekDto": {
+                "required": [
+                    "slug",
+                    "titulek",
+                    "perex",
+                    "telo",
+                    "autor",
+                    "publikovanoV",
+                    "zavod",
+                    "zavodNazev"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "titulek": {
+                        "type": "string"
+                    },
+                    "perex": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "telo": {
+                        "type": "string"
+                    },
+                    "autor": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "publikovanoV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "zavod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "zavodNazev": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
+            "ClanekShrnutiDto": {
+                "required": [
+                    "slug",
+                    "titulek",
+                    "perex",
+                    "autor",
+                    "publikovanoV",
+                    "zavod",
+                    "zavodNazev"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "titulek": {
+                        "type": "string"
+                    },
+                    "perex": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "autor": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "publikovanoV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "zavod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "zavodNazev": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
+            "ClanekVstup": {
+                "required": [
+                    "slug",
+                    "titulek",
+                    "telo",
+                    "publikovanoV"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "titulek": {
+                        "type": "string"
+                    },
+                    "telo": {
+                        "type": "string"
+                    },
+                    "publikovanoV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "perex": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "autor": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "zavod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "publikovano": {
+                        "type": "boolean",
+                        "default": true
                     }
                 }
             },
@@ -630,6 +869,15 @@
                     "publikovano": {
                         "type": "boolean",
                         "default": true
+                    },
+                    "clanky": {
+                        "type": [
+                            "null",
+                            "array"
+                        ],
+                        "items": {
+                            "$ref": "#/components/schemas/ClanekVstup"
+                        }
                     }
                 }
             },
@@ -1094,6 +1342,9 @@
         },
         {
             "name": "Import"
+        },
+        {
+            "name": "\u010cl\u00e1nky"
         }
     ]
 }

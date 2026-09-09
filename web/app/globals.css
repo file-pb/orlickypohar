@@ -246,3 +246,20 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
 
 .poznamka { color: var(--tlumeny); font-size: 0.85rem; margin-top: 0.75rem; }
 .prazdno { color: var(--tlumeny); background: var(--papir); border: 1px dashed var(--linka); border-radius: 10px; padding: 2rem 1.25rem; text-align: center; }
+
+/* Novinky a články.
+
+   Karta novinky je záměrně tatáž karta jako u zastávky — jen s perexem
+   navíc. Vlastní vzhled by z blogu udělal druhý web uvnitř webu. */
+.novinky .karta .nazev { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+.novinky .perex {
+  margin: 0.4rem 0 0; color: var(--tlumeny); font-size: 0.925rem; line-height: 1.55;
+}
+.novinky-blok { margin-top: 3rem; }
+
+/* Text článku je užší než tabulky. Řádek přes celou šířku stránky se čte
+   špatně — tabulka výsledků ji potřebuje, souvislý text ne. */
+.clanek { max-width: 38rem; }
+.clanek p { line-height: 1.7; margin: 0 0 1.1rem; }
+.clanek .perex { font-size: 1.05rem; color: var(--tlumeny); }
+.drobecky { margin: 0 0 0.5rem; }

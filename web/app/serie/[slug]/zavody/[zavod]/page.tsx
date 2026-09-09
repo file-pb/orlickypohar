@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  nactiClanky,
   nactiZavod,
   type BodyVRozjizdce,
   type Rozjizdka,
@@ -12,6 +13,8 @@ import {
 import { Vypadek } from "@/app/vypadek";
 import { ProcNejsouVysledky, Stav } from "@/app/stav";
 import { PruhUkazky } from "@/app/ukazka";
+import { datum } from "@/app/datum";
+import { VypisNovinek } from "@/app/novinky";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -82,9 +85,14 @@ function naRadky(zavod: ZavodDetail): Radek[] {
 
 export default async function Zastavka({ params }: Parametry) {
   const { slug, zavod: slugZavodu } = await params;
-  let zavod;
+  let zavod, clanky;
   try {
-    zavod = await nactiZavod(slug, slugZavodu);
+    // Zastávku pořádá jiný subjekt a stránka je jeho — kromě výsledků na ni
+    // patří i jeho vlastní blog, viz PLAN.md „Stránka zastávky".
+    [zavod, clanky] = await Promise.all([
+      nactiZavod(slug, slugZavodu),
+      nactiClanky(slug, { zavod: slugZavodu }),
+    ]);
   } catch (e) {
     if (e instanceof ApiNedostupne) return <Vypadek />;
     throw e;
@@ -147,6 +155,13 @@ export default async function Zastavka({ params }: Parametry) {
           {zavod.pocetSkrtu > 0 && " Škrtnutá rozjížďka je přeškrtnutá a do součtu se nepočítá."}
           {zavod.rozjizdky.some((r) => !r.doSerie) && " Rozjížďka s * se nepočítá do poháru."}
         </p>
+      )}
+
+      {clanky && clanky.length > 0 && (
+        <>
+          <h2>Novinky zastávky</h2>
+          <VypisNovinek serie={slug} clanky={clanky} />
+        </>
       )}
 
       <h2>Pravidla závodu</h2>
@@ -274,17 +289,4 @@ function bunka(b?: Bunka) {
       {b.vysledek?.kod && <span className="znacka">{b.vysledek.kod.toUpperCase()}</span>}
     </>
   );
-}
-
-function datum(od: string, do_?: string | null) {
-  const f = (d: string) =>
-    new Date(d).toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" });
-  if (!do_) return f(od);
-
-  // Vícedenní závod uvnitř jednoho měsíce: „23.–24. května 2026". Dvakrát
-  // vypsaný měsíc a rok se na telefonu zalomí přes dva řádky pro nic.
-  const [a, b] = [new Date(od), new Date(do_)];
-  return a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear()
-    ? `${a.getDate()}.–${f(do_)}`
-    : `${f(od)} – ${f(do_)}`;
 }
