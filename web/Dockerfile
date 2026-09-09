@@ -22,8 +22,11 @@ RUN addgroup -g 1001 web && adduser -u 1001 -G web -D web
 
 COPY --from=build --chown=web:web /src/.next/standalone ./
 COPY --from=build --chown=web:web /src/.next/static ./.next/static
-# public/ tu schválně není: web žádné statické soubory nemá a git prázdný
-# adresář nesleduje, takže by COPY na prázdné složce padal.
+# Statické soubory (fotka na úvodní stránce, značka). Dřív tu tenhle řádek
+# nebyl, protože web žádné neměl — a když přibyly, byly na produkci 404,
+# zatímco lokálně fungovaly. Vývojový server servíruje public/ přímo
+# z disku, kdežto v image je jen to, co se zkopíruje.
+COPY --from=build --chown=web:web /src/public ./public
 
 USER web
 EXPOSE 8080
