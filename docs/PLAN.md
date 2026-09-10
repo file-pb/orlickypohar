@@ -438,10 +438,30 @@ přihlášená → potvrzená → zrušená.
 kategorii. Přihlásit se na zastávku „do kategorie" tedy nejspíš znamená
 přihlásit se na zastávku a kategorii si přinést z ročníku.
 
-Zbývá odpovědět jediné: **smí se na zastávku přihlásit loď, která není
-v ročníku?** Pokud ano, potřebuje účast vlastní kategorii a rozhodnutí
-o celoroční kategorii se tím nabourává. Pokud ne, je přihlášení na zastávku
-jen stav nad existující účastí a model se nemění. Do odpovědi se to nestaví.
+**Zodpovězeno 10. 9. 2026: ano, smí.** *(zadáno)* Filip: „ano, tím pádem se
+doplní její neúčast v uplynulých podnicích."
+
+**Rozhodnutí o celoroční kategorii to nenabourává** — a to je na té odpovědi
+to podstatné. Loď se přihlášením na zastávku **stává účastníkem ročníku**:
+založí se jí celoroční přihláška s kategorií, jako by přijela od začátku,
+a zastávky před tím se jí zapíšou jako neúčast. Účast tedy vlastní kategorii
+nepotřebuje a model zůstává, jak je.
+
+**Neúčast ale musí dostat číslo, a to zatím nemá.** Dnes se do součtu
+nepočítá vůbec ([PoradiEndpoints.cs](../src/OrlickyPohar.Api/Features/Bodovani/PoradiEndpoints.cs)
+to má napsané jako otevřenou otázku). V nízkobodovém systému je chybějící
+zastávka **výhoda**: kdo nejel, nemá co přičíst. Dokud se tohle nedoplní,
+vyhraje ročník loď, která přijede na poslední zastávku — a to platí i bez
+téhle změny, jen se dosud nemělo jak stát.
+
+Obvyklé řešení v plachtění je **DNC = počet přihlášených v kategorii plus
+jedna**, což na téhle stupnici (vítěz nula, tedy pořadí mínus jedna) vychází
+na **počet lodí v kategorii**. Škrt nejhorší zastávky jednu neúčast schová,
+druhou už ne — což je přesně ten účinek, který se od škrtu čeká.
+
+**Tohle je otázka na rozhodčího**, ne odvození: je to jediné číslo, které
+o pořadí rozhodne pokaždé, když někdo vynechá. Do odpovědi se dopočet
+neúčasti nestaví.
 
 ## Úvodní stránka
 
