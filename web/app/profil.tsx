@@ -1,4 +1,5 @@
 import type { Ja } from "@/lib/ja";
+import { ZavriMimo } from "@/app/zavri-mimo";
 
 /**
  * Ikonka přihlášeného člověka s rozbalovací nabídkou.
@@ -27,6 +28,9 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
 
   return (
     <details className="profil">
+      {/* Zavírání při klepnutí jinam a na Escape. Zbytek nabídky je
+          serverový a rozbalování obstará prohlížeč sám. */}
+      <ZavriMimo />
       <summary aria-label={jmeno ? `Účet ${jmeno}` : "Účet"} title={jmeno ?? "Účet"}>
         <span className="kruh" aria-hidden="true">
           {iniciály(jmeno)}
