@@ -42,6 +42,7 @@ try
     // poskytovatele.
     builder.Services.AddScoped<Rozsahy>();
     builder.Services.AddScoped<OpravneniSprava>();
+    builder.Services.AddScoped<ClankySprava>();
     // .NET popisuje čísla jako ["integer","string"], protože je při čtení
     // přijímá i v uvozovkách. Odpovědi je ale píšou vždycky jako čísla —
     // a generovaný klient by jinak u každého bodu nutil ověřovat, jestli
@@ -122,6 +123,7 @@ try
         // vzniká až prvním přihlášením. Nenakonfigurovaný poskytovatel proto
         // administrativní endpointy neregistruje vůbec, ani pro bootstrap.
         app.MapSpravaOpravneni();
+        app.MapSpravaClanku();
     }
 
     // Migrace při startu. U jedné repliky je to v pořádku a máš jistotu,

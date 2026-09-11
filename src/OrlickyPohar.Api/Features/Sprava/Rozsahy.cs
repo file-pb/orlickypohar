@@ -55,4 +55,42 @@ public class Rozsahy(AppDbContext db, Uzivatele uzivatele)
 
         return Prava.Smi(await uzivatele.PravaAsync(uzivatel.Id, ct), co);
     }
+
+    /// <summary>
+    /// Kde všude smí přihlášený tuhle roli v daném ročníku — celý ročník,
+    /// nebo výčet zastávek.
+    /// <para>
+    /// Je to obrácená otázka než <see cref="SmiAsync"/>: ta se ptá „smí
+    /// tohle?", tahle „na co dosáhne?". Potřebuje ji každá obrazovka, která
+    /// nabízí volbu — seznam zastávek, na které jde psát, se nesmí lišit od
+    /// toho, co pak zápis pustí, jinak si člověk vybere a dostane „nemáš
+    /// práva".
+    /// </para>
+    /// </summary>
+    public async Task<(bool CelyRocnik, IReadOnlyList<int> Zavody)> KdeSmiAsync(
+        ClaimsPrincipal kdo, Role role, int serieId, CancellationToken ct)
+    {
+        if (kdo.Ucet() is not { } ucet) return (false, []);
+
+        var uzivatel = await uzivatele.PodleUctuAsync(ucet.Issuer, ucet.Subject, ct);
+        if (uzivatel is null) return (false, []);
+
+        var udelena = await uzivatele.PravaAsync(uzivatel.Id, ct);
+
+        // Ptá se přes `Prava`, ne porovnáním rolí: pokrývání je pravidlo
+        // (organizátor obsahuje editora, správce obsahuje oboje) a existovat
+        // má na jednom místě.
+        var celyRocnik = Prava.Smi(udelena, new Pozadavek(role, serieId));
+
+        var zavody = celyRocnik
+            ? []
+            : udelena
+                .Where(u => u.Serie == serieId && u.Zavod is not null)
+                .Where(u => Prava.Smi(udelena, new Pozadavek(role, serieId, u.Zavod)))
+                .Select(u => u.Zavod!.Value)
+                .Distinct()
+                .ToList();
+
+        return (celyRocnik, zavody);
+    }
 }
