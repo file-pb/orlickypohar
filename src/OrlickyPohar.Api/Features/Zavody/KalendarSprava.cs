@@ -1,0 +1,200 @@
+using Microsoft.EntityFrameworkCore;
+using OrlickyPohar.Api.Data;
+
+namespace OrlickyPohar.Api.Features.Zavody;
+
+/// <summary>
+/// Zastávka v kalendáři tak, jak ji vidí rozhodčí nebo pořadatel. Proti
+/// veřejnému <c>ZavodShrnutiDto</c> nese navíc příznak publikace a
+/// <b>seznam stavů, do kterých ji tenhle člověk může posunout</b>.
+/// <para>
+/// Nabídka se počítá na serveru schválně: pravidla přechodů i oprávnění
+/// jsou tady, a kdyby si je obrazovka odvozovala sama, rozejdou se při
+/// první změně a člověk dostane „nemáš práva“ na tlačítko, které mu web
+/// sám nabídl.
+/// </para>
+/// </summary>
+public record ZastavkaRadek(
+    string Slug,
+    string Nazev,
+    DateOnly Datum,
+    DateOnly? DatumKonce,
+    string? Typ,
+    string? Poradatel,
+    int Poradi,
+    StavZavodu Stav,
+    DateOnly? PuvodniDatum,
+    bool Publikovano,
+    bool SmiUpravit,
+    bool SmiPublikovat,
+    IReadOnlyList<StavZavodu> MozneStavy);
+
+public record PrehledZastavekDto(
+    string Serie,
+    string SerieNazev,
+    bool SmiZalozit,
+    IReadOnlyList<ZastavkaRadek> Zastavky);
+
+/// <summary>
+/// Co se posílá při založení i úpravě zastávky. Adresa se odvodí z názvu.
+/// <para>
+/// Pravidla bodování — počet škrtů, vyhodnocení, koeficient — tu schválně
+/// nejsou. Do kalendáře patří termín a jméno; čísla, podle kterých se
+/// počítá pohár, jsou věc závodu a mění se jinde a jindy.
+/// </para>
+/// </summary>
+public record ZastavkaVstup(
+    string Nazev,
+    DateOnly Datum,
+    DateOnly? DatumKonce = null,
+    string? Typ = null,
+    string? Poradatel = null);
+
+public record StavZastavkyVstup(StavZavodu Stav);
+
+public record PublikaceVstup(bool Publikovano);
+
+/// <summary>
+/// Čtení a zápis kalendáře ročníku.
+/// <para>
+/// Leží to v řezu <c>Zavody</c>, ne ve <c>Features/Sprava</c> — stejně jako
+/// psaní článků leží u článků. Řez je doménový pojem, ne publikum.
+/// </para>
+/// <para>
+/// <b>Zastávka předaná do <c>UpravAsync</c>, <c>PrepniStavAsync</c> a
+/// <c>PublikujAsync</c> musí pocházet z téhož požadavku.</b> Entita z jiného
+/// <c>DbContext</c> není sledovaná a uložení tiše neudělá nic. V endpointech
+/// to platí samo sebou, protože si zastávku načtou přes <c>NajdiAsync</c>
+/// v témže požadavku; u článků to stálo jeden běh CI, tak ať je to napsané
+/// i tady.
+/// </para>
+/// </summary>
+public class KalendarSprava(AppDbContext db)
+{
+    /// <summary>Zastávka i s identifikátorem — ten se ven neposílá, ale rozsah se ptá na něj.</summary>
+    public record Zaznam(int Id, Zavod Zavod);
+
+    /// <summary>
+    /// Všechny zastávky ročníku, seřazené jako kalendář.
+    /// <para>
+    /// <b>Celý ročník, i tomu, kdo smí jen na jednu zastávku.</b> Půlka
+    /// kalendáře není kalendář — pořadatel jedné zastávky potřebuje vidět,
+    /// co je kolem ní, jinak si termín nemá s čím srovnat. Co smí změnit,
+    /// říká každý řádek sám.
+    /// </para>
+    /// </summary>
+    public Task<List<Zaznam>> VypisAsync(int serieId, CancellationToken ct) =>
+        db.Zavody
+            .Where(z => z.SerieId == serieId)
+            .OrderBy(z => z.Poradi).ThenBy(z => z.Datum)
+            .Select(z => new Zaznam(z.Id, z))
+            .ToListAsync(ct);
+
+    public Task<Zavod?> NajdiAsync(int serieId, string slug, CancellationToken ct) =>
+        db.Zavody.FirstOrDefaultAsync(z => z.SerieId == serieId && z.Slug == slug, ct);
+
+    /// <summary>
+    /// Založí zastávku. Vrací hotový záznam, nebo text chyby.
+    /// <para>
+    /// <b>Nová zastávka je vždycky plánovaná a nepublikovaná.</b> Kalendář
+    /// začíná návrhem termínu; potvrdit ho i pustit ven jsou dvě další
+    /// rozhodnutí a každé patří někomu jinému.
+    /// </para>
+    /// </summary>
+    public async Task<(Zavod? Zastavka, string? Chyba)> ZalozAsync(
+        int serieId, ZastavkaVstup vstup, CancellationToken ct)
+    {
+        var slug = Kalendar.Slug(vstup.Nazev ?? "");
+        if (Kalendar.ProcNejdeUlozit(vstup.Nazev, vstup.Datum, vstup.DatumKonce, slug) is { } chyba)
+            return (null, chyba);
+
+        if (await db.Zavody.AnyAsync(z => z.SerieId == serieId && z.Slug == slug, ct))
+            return (null, $"Zastávka s adresou „{slug}“ už v ročníku je. Změň název.");
+
+        var zastavka = new Zavod
+        {
+            SerieId = serieId,
+            Slug = slug,
+            Nazev = vstup.Nazev.Trim(),
+            Datum = vstup.Datum,
+            DatumKonce = vstup.DatumKonce,
+            Typ = Prazdne(vstup.Typ),
+            Poradatel = Prazdne(vstup.Poradatel),
+            Stav = StavZavodu.Planovany,
+            Publikovano = false,
+            // Pořadí se hned přepočítá podle data; tohle je jen než dostane
+            // identifikátor, bez kterého se řadit nedá.
+            Poradi = 0,
+        };
+
+        db.Zavody.Add(zastavka);
+        await db.SaveChangesAsync(ct);
+
+        await PreradAsync(serieId, ct);
+        return (zastavka, null);
+    }
+
+    /// <summary>
+    /// Upraví zastávku. <b>Adresa se nemění</b>, ani když se změní název —
+    /// odkaz na zastávku už mohl někam odejít.
+    /// </summary>
+    public async Task<string?> UpravAsync(Zavod zastavka, ZastavkaVstup vstup, CancellationToken ct)
+    {
+        if (Kalendar.ProcNejdeUlozit(vstup.Nazev, vstup.Datum, vstup.DatumKonce, zastavka.Slug) is { } chyba)
+            return chyba;
+
+        zastavka.PuvodniDatum = Kalendar.PuvodniPoPresunu(
+            zastavka.Stav, zastavka.Datum, vstup.Datum, zastavka.PuvodniDatum);
+
+        zastavka.Nazev = vstup.Nazev.Trim();
+        zastavka.Datum = vstup.Datum;
+        zastavka.DatumKonce = vstup.DatumKonce;
+        zastavka.Typ = Prazdne(vstup.Typ);
+        zastavka.Poradatel = Prazdne(vstup.Poradatel);
+
+        await db.SaveChangesAsync(ct);
+        await PreradAsync(zastavka.SerieId, ct);
+        return null;
+    }
+
+    public async Task<string?> PrepniStavAsync(Zavod zastavka, StavZavodu na, CancellationToken ct)
+    {
+        if (Kalendar.ProcNejde(zastavka.Stav, na) is { } chyba) return chyba;
+
+        zastavka.Stav = na;
+        await db.SaveChangesAsync(ct);
+        return null;
+    }
+
+    /// <summary>
+    /// Pustí zastávku ven, nebo ji stáhne. <b>Publikace není stav</b>, je to
+    /// vlastní příznak — plánovaná zastávka má být v kalendáři vidět dřív,
+    /// než se cokoliv vypíše, a odjetá se smí stáhnout, aniž by se
+    /// odjetou přestala být.
+    /// </summary>
+    public async Task PublikujAsync(Zavod zastavka, bool publikovano, CancellationToken ct)
+    {
+        zastavka.Publikovano = publikovano;
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>Přečíslování celého ročníku podle data. Pravidlo je v <see cref="Kalendar.Preradit"/>.</summary>
+    private async Task PreradAsync(int serieId, CancellationToken ct)
+    {
+        var zastavky = await db.Zavody.Where(z => z.SerieId == serieId).ToListAsync(ct);
+        var poradi = Kalendar.Preradit(zastavky.Select(z => (z.Id, z.Datum, z.Poradi)));
+
+        var zmena = false;
+        foreach (var z in zastavky.Where(z => z.Poradi != poradi[z.Id]))
+        {
+            z.Poradi = poradi[z.Id];
+            zmena = true;
+        }
+
+        if (zmena) await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>Prázdný řetězec z formuláře je „nevyplněno", ne hodnota.</summary>
+    private static string? Prazdne(string? text) =>
+        string.IsNullOrWhiteSpace(text) ? null : text.Trim();
+}

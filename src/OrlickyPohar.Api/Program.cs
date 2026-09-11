@@ -43,6 +43,7 @@ try
     builder.Services.AddScoped<Rozsahy>();
     builder.Services.AddScoped<OpravneniSprava>();
     builder.Services.AddScoped<ClankySprava>();
+    builder.Services.AddScoped<KalendarSprava>();
     // .NET popisuje čísla jako ["integer","string"], protože je při čtení
     // přijímá i v uvozovkách. Odpovědi je ale píšou vždycky jako čísla —
     // a generovaný klient by jinak u každého bodu nutil ověřovat, jestli
@@ -124,6 +125,7 @@ try
         // administrativní endpointy neregistruje vůbec, ani pro bootstrap.
         app.MapSpravaOpravneni();
         app.MapSpravaClanku();
+        app.MapKalendar();
     }
 
     // Migrace při startu. U jedné repliky je to v pořádku a máš jistotu,

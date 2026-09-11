@@ -1443,6 +1443,61 @@ tokenu je v samostatném souboru** a model ani oprávnění na balíčku nezávi
 Vzniklo to jako obcházení domnělé překážky, ale dává to smysl samo o sobě —
 poskytovatel identity má být na jednom místě.
 
+### Správa zastávek — kalendář
+
+**API hotové 11. 9. 2026, obrazovka zbývá.** Endpointy
+`/sprava/serie/{slug}/zastavky` — výpis, založení, úprava termínu, posun
+stavu a publikace.
+
+| Kus | Kde |
+|---|---|
+| Přechody, termíny, adresa, řazení — čisté funkce | `Features/Zavody/Kalendar.cs` |
+| Čtení a zápis kalendáře | `Features/Zavody/KalendarSprava.cs` |
+| Endpointy a rozhodnutí, kdo smí | `Features/Zavody/KalendarEndpoints.cs` |
+
+**Rozhoduje cílový stav, ne směr.** Do potvrzeného a zrušeného se zastávka
+dostane přes rozhodčího, do vypsaného a odjetého přes organizátora — přesně
+podle tabulky životního cyklu. Plyne z toho jedna věc, která není na první
+pohled vidět: **stáhnout vypsaný závod zpátky smí rozhodčí, ne pořadatel.**
+Vypsání už vidělo publikum a vzít ho zpět je zásah do kalendáře.
+
+**Po jednom kroku, oběma směry.** Přeskočit dopředu nejde: vypsat závod na
+termín, který rozhodčí nepotvrdil, by znamenalo, že si organizátor
+odsouhlasil termín sám. Krok zpátky jde, protože překlep se musí dát vzít
+zpět a stav zastávky je o kalendáři, ne o datech v ní. **Odjetý závod se
+zrušit nedá** — jsou v něm výsledky, které se počítají do poháru. Zrušená
+zastávka se vrací jako plánovaná, ne rovnou jako vypsaná.
+
+**Pořadí zastávky se přepočítává podle data.** Kalendář se řadí časem a
+pořadí je jen jeho zápis; bez přepočtu by zastávka doplněná dodatečně
+skončila v ročníku až za Vánoční regatou, protože dostala nejvyšší číslo.
+Shodné datum rozhoduje dosavadní pořadí, aby se dvoudenní víkend
+nepřehazoval při každém uložení.
+
+**Přesun si pamatuje první termín, ne předposlední** — ten, na který se lidé
+chystali. **U plánované zastávky se nepamatuje vůbec:** předběžný kalendář
+je návrh a hlásit u něj „přesunuto z" by znamenalo tvrdit, že něco platilo,
+když nic neplatilo.
+
+**Nabídku stavů posílá server.** Každý řádek nese seznam stavů, do kterých
+ho ten konkrétní člověk může posunout. Kdyby si ho obrazovka počítala sama,
+rozejde se to při první změně pravidla a člověk dostane „nemáš práva" na
+tlačítko, které mu web sám nabídl.
+
+**Kalendář se vypisuje celý, i pořadateli jedné zastávky.** Půlka kalendáře
+není kalendář — pořadatel potřebuje vidět, co je kolem jeho termínu. Co smí
+změnit, říká každý řádek.
+
+**Publikace je vlastní příznak, ne stav, a přepíná ji správce.** Plánovaná
+zastávka má být v kalendáři vidět dřív, než se cokoliv vypíše, a odjetá se
+smí stáhnout, aniž by se odjetou přestala být. Že publikuje správce, je
+*odvozené* — zůstává z dřívějšího plánu; bez toho by ale založená zastávka
+zůstala navždycky neviditelná.
+
+**Přiřazování pořadatele zastávce tu schválně není.** V oddílu *Role a
+oprávnění* je ta věta označená jako odvozená a čeká na projití. Kalendář na
+ní nestojí: `Poradatel` je volný text, ne účet v systému.
+
 ## Schéma řešení
 
 Vykreslené schéma celého řešení — nasazení, vnitřek API a datový model —

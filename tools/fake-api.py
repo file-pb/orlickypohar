@@ -187,6 +187,70 @@ def bez_diakritiky_slug(text):
         z if z.isalnum() else " " for z in prevod.lower()).split())[:120]
 
 
+# --- Kalendář ---------------------------------------------------------------
+# Pravidla přechodů jsou **opsaná** z `Features/Zavody/Kalendar.cs`, ze
+# stejného důvodu jako bodování: aby šla obrazovka zkoušet na stroji, kde
+# databáze nejede. Pravda o nich leží tam a hlídají ji testy.
+RADA = ["Planovany", "Potvrzeny", "Vypsany", "Odjety"]
+# Pořadí, ve kterém stavy vydává API — podle čísel výčtu, ne podle řady v čase.
+VSECHNY_STAVY = ["Planovany", "Vypsany", "Odjety", "Zruseny", "Potvrzeny"]
+NAZVY_STAVU = {"Planovany": "Plánovaný", "Potvrzeny": "Potvrzený", "Vypsany": "Vypsaný",
+               "Odjety": "Odjetý", "Zruseny": "Zrušený"}
+
+
+def proc_nejde(ze, na):
+    """Proč zastávku takhle posunout nejde, nebo None."""
+    if ze == na:
+        return None
+    if na == "Zruseny":
+        return ("Odjetý závod zrušit nejde — jsou v něm výsledky, "
+                "které se počítají do poháru.") if ze == "Odjety" else None
+    if ze == "Zruseny":
+        return None if na == "Planovany" else (
+            "Zrušená zastávka se vrací jako plánovaná. Termín pak znovu potvrď.")
+    if abs(RADA.index(ze) - RADA.index(na)) == 1:
+        return None
+    return (f'Ze stavu \u201e{NAZVY_STAVU[ze]}\u201c se na \u201e{NAZVY_STAVU[na]}\u201c neskáče. '
+            "Jde to jen po jednom kroku: " + " → ".join(NAZVY_STAVU[s] for s in RADA) + ".")
+
+
+def prerad_kalendar():
+    """Kalendář se řadí časem — stejně jako `Kalendar.Preradit`."""
+    for i, z in enumerate(sorted(D["zavody"], key=lambda z: (z["datum"], z["poradi"]))):
+        z["poradi"] = i + 1
+
+
+def zastavka_radek(z):
+    # Falešné API nerozlišuje rozsahy: kdo je přihlášený, smí všechno.
+    # Rozsahy se zkoušejí v testech, tady jde o obrazovku.
+    return {**{k: z.get(k) for k in
+               ("slug", "nazev", "datum", "datumKonce", "typ", "poradatel", "poradi",
+                "stav", "puvodniDatum", "publikovano")},
+            "smiUpravit": True, "smiPublikovat": True,
+            "mozneStavy": [s for s in VSECHNY_STAVY
+                           if s != z["stav"] and not proc_nejde(z["stav"], s)]}
+
+
+def zastavka_ze_vstupu(vstup):
+    """Společná kontrola založení i úpravy. Vrací (hodnoty, chyba)."""
+    nazev = (vstup.get("nazev") or "").strip()
+    datum, konec = vstup.get("datum"), vstup.get("datumKonce") or None
+
+    if not nazev:
+        return None, "Zastávka musí mít název."
+    if not bez_diakritiky_slug(nazev):
+        return None, ("Z názvu nejde udělat adresa. "
+                      "Napiš do něj aspoň jedno písmeno nebo číslici.")
+    if not datum:
+        return None, "Zastávka musí mít termín."
+    if konec and konec < datum:
+        return None, "Konec závodu je dřív než jeho začátek."
+
+    return {"nazev": nazev, "datum": datum, "datumKonce": konec,
+            "typ": (vstup.get("typ") or "").strip() or None,
+            "poradatel": (vstup.get("poradatel") or "").strip() or None}, None
+
+
 def clanek_radek(c):
     z = next((z for z in D["zavody"] if z["slug"] == c.get("zavod")), None)
     return {"slug": c["slug"], "titulek": c["titulek"], "perex": c.get("perex"),
@@ -210,7 +274,12 @@ class H(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_PUT(self):
-        m = re.match(rf'^/sprava/serie/{D["slug"]}/clanky/([a-z0-9-]+)$', urlparse(self.path).path)
+        cesta = urlparse(self.path).path
+
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)$', cesta)):
+            return self.uprav_zastavku(m.group(1))
+
+        m = re.match(rf'^/sprava/serie/{D["slug"]}/clanky/([a-z0-9-]+)$', cesta)
         if not m:
             return self.send_error(404)
         if not self.headers.get("authorization"):
@@ -232,6 +301,13 @@ class H(BaseHTTPRequestHandler):
 
     def do_POST(self):
         cesta = urlparse(self.path).path
+
+        if cesta == f'/sprava/serie/{D["slug"]}/zastavky':
+            return self.zaloz_zastavku()
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/stav$', cesta)):
+            return self.prepni_stav_zastavky(m.group(1))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/publikace$', cesta)):
+            return self.publikuj_zastavku(m.group(1))
 
         if cesta == f'/sprava/serie/{D["slug"]}/clanky':
             return self.zaloz_clanek()
@@ -265,6 +341,78 @@ class H(BaseHTTPRequestHandler):
                 "role": role, "zavod": zavod, "udelenoV": "2026-01-01T00:00:00+00:00"}
         OPRAVNENI.append(novy)
         return self.odpoved(novy, 201)
+
+    def zastavka(self, slug):
+        """Zastávka, nebo None. Hlídá i přihlášení — jako skutečné API."""
+        if not self.headers.get("authorization"):
+            self.send_error(401)
+            return None
+
+        z = next((z for z in D["zavody"] if z["slug"] == slug), None)
+        if not z:
+            self.send_error(404)
+        return z
+
+    def zaloz_zastavku(self):
+        if not self.headers.get("authorization"):
+            return self.send_error(401)
+
+        hodnoty, chyba = zastavka_ze_vstupu(self.telo_zadosti())
+        if chyba:
+            return self.chyba(400, chyba)
+
+        # Sloupec zastávky má 80 znaků, kdežto článek 120.
+        slug = bez_diakritiky_slug(hodnoty["nazev"])[:80].rstrip("-")
+        if any(z["slug"] == slug for z in D["zavody"]):
+            return self.chyba(400, f"Zastávka s adresou \u201e{slug}\u201c už v ročníku je. "
+                                   "Změň název.")
+
+        # Nová zastávka je vždycky plánovaná a nepublikovaná — stejně jako v API.
+        nova = {**hodnoty, "slug": slug, "stav": "Planovany", "publikovano": False,
+                "puvodniDatum": None, "poradi": 0, "pocetSkrtu": 0,
+                "vyhodnoceni": "PoKategoriich", "koeficientDoSerie": 1.0,
+                "ucasti": [], "rozjizdky": []}
+        D["zavody"].append(nova)
+        prerad_kalendar()
+        return self.odpoved(zastavka_radek(nova), 201)
+
+    def uprav_zastavku(self, slug):
+        z = self.zastavka(slug)
+        if not z:
+            return None
+
+        hodnoty, chyba = zastavka_ze_vstupu(self.telo_zadosti())
+        if chyba:
+            return self.chyba(400, chyba)
+
+        # Přesun není stav, zůstává po něm jen původní datum — a u plánované
+        # zastávky se nepamatuje vůbec: předběžný kalendář je návrh.
+        if hodnoty["datum"] != z["datum"] and z["stav"] != "Planovany":
+            z["puvodniDatum"] = z.get("puvodniDatum") or z["datum"]
+
+        z.update(hodnoty)
+        prerad_kalendar()
+        return self.odpoved(zastavka_radek(z))
+
+    def prepni_stav_zastavky(self, slug):
+        z = self.zastavka(slug)
+        if not z:
+            return None
+
+        na = self.telo_zadosti().get("stav")
+        if (chyba := proc_nejde(z["stav"], na)):
+            return self.chyba(400, chyba)
+
+        z["stav"] = na
+        return self.odpoved(zastavka_radek(z))
+
+    def publikuj_zastavku(self, slug):
+        z = self.zastavka(slug)
+        if not z:
+            return None
+
+        z["publikovano"] = bool(self.telo_zadosti().get("publikovano"))
+        return self.odpoved(zastavka_radek(z))
 
     def zaloz_clanek(self):
         if not self.headers.get("authorization"):
@@ -374,6 +522,14 @@ class H(BaseHTTPRequestHandler):
                 # jsou venku.
                 "zastavky": [{"slug": z["slug"], "nazev": z["nazev"]} for z in D["zavody"]],
                 "opravneni": OPRAVNENI,
+            }
+        elif cesta == f'/sprava/serie/{D["slug"]}/zastavky':
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            telo = {
+                "serie": D["slug"], "serieNazev": D["nazev"], "smiZalozit": True,
+                "zastavky": [zastavka_radek(z) for z in
+                             sorted(D["zavody"], key=lambda z: z["poradi"])],
             }
         elif cesta == f'/sprava/serie/{D["slug"]}/clanky':
             if not self.headers.get("authorization"):
