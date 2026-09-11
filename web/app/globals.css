@@ -528,6 +528,24 @@ th.vlevo, td.vlevo { text-align: left; }
 }
 .stavy button:hover { border-color: var(--voda); color: var(--voda); }
 
+/* Stav zápisu výsledků. Potvrzené nese barvu (je hotové), rozepsané
+   stupně jsou tlumené, vrácení a eliminace červené — obojí znamená
+   „tohle teď neplatí", jen z jiného důvodu. */
+.stitek.vysledek-potvrzeno { color: var(--voda); border-color: currentColor; }
+.stitek.vysledek-schvaleno { color: var(--stav-vypsany); }
+.stitek.vysledek-overeno { color: var(--text); }
+.stitek.vysledek-navrzeno { color: var(--tlumeny); border-style: dashed; }
+.stitek.vysledek-krevizi { color: var(--stav-zruseny); border-color: currentColor; }
+.stitek.vysledek-eliminovano { color: var(--stav-zruseny); border-style: dashed; }
+.stitek.venku { color: var(--stav-vypsany); border-color: currentColor; }
+
+/* Důvod vrácení. Čte se pokaždé, když se na rozjížďku někdo podívá,
+   takže stojí v kartě, ne pod rozbalovátkem. */
+.karta .duvod {
+  margin: 0.6rem 0 0; font-size: 0.875rem;
+  border-left: 3px solid var(--stav-zruseny); padding-left: 0.7rem;
+}
+
 /* Nezveřejněná zastávka. Čárkovaně jako koncept článku: obojí znamená
    „existuje, ale venku to není" a mají se poznat jedním pohledem. */
 .stitek.neverejne { color: var(--tlumeny); border-style: dashed; }

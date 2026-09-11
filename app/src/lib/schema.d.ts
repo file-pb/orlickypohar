@@ -865,6 +865,180 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/vysledky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše zastávky ročníku i s tím, kolik výsledků je venku
+         * @description Rozcestník. Vyžaduje roli rozhodčího v ročníku, nebo organizátora aspoň na jedné zastávce.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZastavkaVysledkyDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/vysledky/{zavod}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Vypíše rozjížďky zastávky i s tím, co s nimi přihlášený smí */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PrehledVysledkuDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/stav": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Posune výsledky rozjížďky ve workflow
+         * @description Řadou po jednom kroku; správce smí přeskočit. Zpátky se chodí vrácením k revizi, a to má povinný důvod.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StavVysledkuVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RozjizdkaSpravaRadek"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/publikace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pustí výsledky rozjížďky na veřejný web, nebo je stáhne
+         * @description Správce ročníku. Publikace není stav: potvrzený výsledek smí zůstat neveřejný a publikovaný se smí vrátit k revizi.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PublikaceVysledkuVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RozjizdkaSpravaRadek"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1017,6 +1191,15 @@ export interface components {
             zastavky: components["schemas"]["ZastavkaVolbaDto"][];
             opravneni: components["schemas"]["OpravneniRadek"][];
         };
+        PrehledVysledkuDto: {
+            serie: string;
+            serieNazev: string;
+            zavod: string;
+            zavodNazev: string;
+            stavZavodu: components["schemas"]["StavZavodu"];
+            zavodPublikovan: boolean;
+            rozjizdky: components["schemas"]["RozjizdkaSpravaRadek"][];
+        };
         PrehledZastavekDto: {
             serie: string;
             serieNazev: string;
@@ -1037,6 +1220,9 @@ export interface components {
         PublikaceVstup: {
             publikovano: boolean;
         };
+        PublikaceVysledkuVstup: {
+            publikovano: boolean;
+        };
         /** @enum {unknown} */
         Role: "Ctenar" | "Editor" | "Rozhodci" | "Spravce" | "Organizator";
         RozjizdkaDto: {
@@ -1048,6 +1234,21 @@ export interface components {
             doSerie: boolean;
             vysledky: components["schemas"]["VysledekDto"][];
         };
+        RozjizdkaSpravaRadek: {
+            /** Format: int32 */
+            cislo: number;
+            /** Format: date-time */
+            startV: null | string;
+            stav: components["schemas"]["StavRozjizdky"];
+            doSerie: boolean;
+            stavVysledku: components["schemas"]["StavVysledku"];
+            publikovano: boolean;
+            duvodRevize: null | string;
+            /** Format: int32 */
+            pocetVysledku: number;
+            smiPublikovat: boolean;
+            mozneStavy: components["schemas"]["StavVysledku"][];
+        };
         RozjizdkaVstup: {
             /** Format: int32 */
             cislo: number;
@@ -1057,6 +1258,9 @@ export interface components {
             vysledky: components["schemas"]["VysledekVstup"][];
             /** @default true */
             doSerie: boolean;
+            stavVysledku?: components["schemas"]["StavVysledku"];
+            /** @default true */
+            publikovano: boolean;
         };
         SerieDetailDto: {
             slug: string;
@@ -1095,6 +1299,15 @@ export interface components {
         StavRozjizdky: "Planovana" | "Probiha" | "Dokoncena" | "Zrusena";
         StavVstup: {
             stav: components["schemas"]["StavClanku"];
+        };
+        /**
+         * @default Potvrzeno
+         * @enum {unknown}
+         */
+        StavVysledku: "Navrzeno" | "Overeno" | "Schvaleno" | "Potvrzeno" | "KRevizi" | "Eliminovano";
+        StavVysledkuVstup: {
+            stav: components["schemas"]["StavVysledku"];
+            duvod?: null | string;
         };
         StavZastavkyVstup: {
             stav: components["schemas"]["StavZavodu"];
@@ -1186,6 +1399,19 @@ export interface components {
             datumKonce?: null | string;
             typ?: null | string;
             poradatel?: null | string;
+        };
+        ZastavkaVysledkyDto: {
+            zavod: string;
+            nazev: string;
+            /** Format: date */
+            datum: string;
+            stav: components["schemas"]["StavZavodu"];
+            /** Format: int32 */
+            pocetRozjizdek: number;
+            /** Format: int32 */
+            publikovanych: number;
+            /** Format: int32 */
+            kRevizi: number;
         };
         ZavodDetailDto: {
             slug: string;

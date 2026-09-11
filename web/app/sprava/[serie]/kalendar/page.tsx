@@ -226,6 +226,10 @@ function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek 
         {zastavka.puvodniDatum && (
           <span className="presun"> · přesunuto z {datum(zastavka.puvodniDatum)}</span>
         )}
+        {" · "}
+        {/* Odsud se chodí na výsledky té zastávky. Kalendář je rozcestník
+            ročníku, takže je to jediné místo, kde se ta cesta nabízí sama. */}
+        <Link href={`/sprava/${serie}/vysledky/${zastavka.slug}`}>výsledky →</Link>
       </div>
 
       {/* Posun stavu rovnou ze seznamu: nejčastější úkon je „potvrdit

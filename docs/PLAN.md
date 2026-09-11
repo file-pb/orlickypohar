@@ -1511,9 +1511,11 @@ ní nestojí: `Poradatel` je volný text, ne účet v systému.
 
 ### Workflow výsledků — jak je postavené
 
-**API hotové 11. 9. 2026, obrazovka zbývá.** Endpointy
+**Hotové a zapojené 11. 9. 2026.** Endpointy
 `/sprava/serie/{slug}/vysledky` — rozcestník po zastávkách, rozjížďky jedné
-zastávky, posun stavu a publikace.
+zastávky, posun stavu a publikace — a obrazovky `/sprava/{serie}/vysledky`
+a `.../vysledky/{zavod}`. Odkaz je v profilové nabídce a u každé zastávky
+v kalendáři.
 
 | Kus | Kde |
 |---|---|
@@ -1551,9 +1553,35 @@ Kdyby přicházela jako nezveřejněná, nahrání ročníku by web vyprázdnilo
 a starší soubory, které o workflow nevědí, se kvůli tomu nemusí přepisovat.
 Ze stejného důvodu migrace **dorovná i řádky, které v databázi už jsou**.
 
+**Vrácení k revizi se rozbaluje v kartě, ostatní kroky jsou tlačítka.**
+Důvod je povinný, takže se mezi úkony na jedno kliknutí nevejde — a psát ho
+na vlastní stránce by znamenalo odejít od seznamu kvůli dvěma větám. Důvod
+pak zůstává v kartě i po návratu do návrhu: kdo zápis opravuje, potřebuje
+ho vidět právě tehdy.
+
+**Nepublikovaná zastávka schová i publikovanou rozjížďku**, a obrazovka to
+říká nahlas. Bez té věty by správce pouštěl čísla ven a divil se, že na
+webu nejsou.
+
 **Zápis samotných výsledků tu schválně není.** Dneska je dovnitř dostane
 import. Workflow se ptá na jinou otázku — kdo za ta čísla ručí a smí je
 vidět veřejnost — a obrazovka na zápis pořadí je vlastní kus práce.
+
+### Appka se rozešla s modelem, protože není v CI
+
+Zjištěno 11. 9. 2026. `app/src/components/ui.tsx` měl slovník stavů jako
+`Record<StavZavodu, string>` bez `Potvrzeny` — tedy **chybu překladu, která
+se nikdy nespustila**: CI staví obraz API a webu, ale `app/` se nedotkne.
+Na webu tentýž slovník tutéž chybu chytil, protože `next build` typy
+kontroluje.
+
+Projevit by se to začalo právě teď: `Potvrzeny` na produkci zatím žádná
+zastávka nemá, ale kalendář ho konečně umí nastavit — a appka by u ní
+ukázala prázdný štítek. Doplněno i s barvou a s větou do „proč nejsou
+výsledky".
+
+**Zbývá to zavřít**: krok `npx tsc --noEmit` nad `app/` v CI. Bez něj se to
+rozejde znovu při první další změně modelu a pozná se to až na telefonu.
 
 ## Schéma řešení
 

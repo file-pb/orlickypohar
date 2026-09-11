@@ -117,6 +117,37 @@ Bez `zavod` platí role na celý ročník i na všechny jeho zastávky, s ním j
 na tu jednu. `Rozhodci` a `Spravce` jdou udělit **jen na ročník**. Posledního
 správce ročníku odebrat nelze — jinak by se do administrace nedostal nikdo.
 
+## Administrace
+
+Za přihlášením jsou čtyři obrazovky. Všechny jsou **serverové a bez
+javascriptu** — chodí se tam zřídka a často z telefonu na břehu.
+
+| Kde | Kdo | Co |
+|---|---|---|
+| `/sprava/{serie}/opravneni` | správce | uděluje role |
+| `/sprava/{serie}/clanky` | editor a výš | píše novinky |
+| `/sprava/{serie}/kalendar` | rozhodčí, organizátor | zakládá zastávky, termíny, stavy, zveřejnění |
+| `/sprava/{serie}/vysledky` | rozhodčí, organizátor | workflow výsledků po rozjížďkách |
+
+**Kalendář:** plánovaný → potvrzený (rozhodčí) → vypsaný → odjetý
+(organizátor), nebo zrušený. Po jednom kroku, oběma směry; rozhoduje cílový
+stav, ne směr. Pořadí zastávek se přepočítává podle data a přesun potvrzené
+zastávky si pamatuje původní termín.
+
+**Výsledky:** navrženo → ověřeno → schváleno → potvrzeno, k tomu vrácení
+k revizi s povinným důvodem a eliminace. Zapisuje pořadatel, ověřuje
+a schvaluje rozhodčí, potvrzuje a publikuje správce; správce smí přeskočit
+dopředu, couvnout o stupeň nesmí nikdo. **Publikace je vlastní příznak**,
+takže potvrzený výsledek smí zůstat neveřejný a publikovaný se smí vrátit
+k revizi.
+
+```bash
+curl localhost:8080/sprava/serie/2026/zastavky -H "authorization: Bearer $PRISTUP"
+curl -X POST localhost:8080/sprava/serie/2026/vysledky/radavska-regata/rozjizdky/1/stav \
+  -H "authorization: Bearer $PRISTUP" -H "content-type: application/json" \
+  -d '{"stav":"Overeno"}'
+```
+
 ## Veřejné čtení
 
 ```bash
@@ -134,6 +165,12 @@ závodu (škrty, vyhodnocení, koeficient), bez nichž se pořadí nedá zkontro
 a průběžné pořadí vydává obě čísla — součet i součet po škrtu, protože
 rozhodčí vede obojí a rozdíl mezi nimi rozhoduje. Do pořadí jdou jen zastávky
 ve stavu `Odjety`.
+
+**Výsledky se vydávají jen z publikovaných rozjížděk.** Nepublikovaná
+rozjížďka na stránce zůstane, ale prázdná — „jelo se" je pravda, nepotvrzené
+pořadí pravda být nemusí. Eliminovaná zmizí úplně, protože neplatí nikde.
+Import nahrává rozjížďky jako potvrzené a veřejné: je to zápis ze sešitu
+rozhodčího, ne návrh.
 
 ## Web
 

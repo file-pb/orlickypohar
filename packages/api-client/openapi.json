@@ -812,6 +812,196 @@
                     }
                 }
             }
+        },
+        "/sprava/serie/{serie}/vysledky": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vyp\u00ed\u0161e zast\u00e1vky ro\u010dn\u00edku i s t\u00edm, kolik v\u00fdsledk\u016f je venku",
+                "description": "Rozcestn\u00edk. Vy\u017eaduje roli rozhod\u010d\u00edho v ro\u010dn\u00edku, nebo organiz\u00e1tora aspo\u0148 na jedn\u00e9 zast\u00e1vce.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ZastavkaVysledkyDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/vysledky/{zavod}": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vyp\u00ed\u0161e rozj\u00ed\u017e\u010fky zast\u00e1vky i s t\u00edm, co s nimi p\u0159ihl\u00e1\u0161en\u00fd sm\u00ed",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PrehledVysledkuDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/stav": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Posune v\u00fdsledky rozj\u00ed\u017e\u010fky ve workflow",
+                "description": "\u0158adou po jednom kroku; spr\u00e1vce sm\u00ed p\u0159esko\u010dit. Zp\u00e1tky se chod\u00ed vr\u00e1cen\u00edm k revizi, a to m\u00e1 povinn\u00fd d\u016fvod.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StavVysledkuVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RozjizdkaSpravaRadek"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/publikace": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Pust\u00ed v\u00fdsledky rozj\u00ed\u017e\u010fky na ve\u0159ejn\u00fd web, nebo je st\u00e1hne",
+                "description": "Spr\u00e1vce ro\u010dn\u00edku. Publikace nen\u00ed stav: potvrzen\u00fd v\u00fdsledek sm\u00ed z\u016fstat neve\u0159ejn\u00fd a publikovan\u00fd se sm\u00ed vr\u00e1tit k revizi.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PublikaceVysledkuVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RozjizdkaSpravaRadek"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -1435,6 +1625,44 @@
                     }
                 }
             },
+            "PrehledVysledkuDto": {
+                "required": [
+                    "serie",
+                    "serieNazev",
+                    "zavod",
+                    "zavodNazev",
+                    "stavZavodu",
+                    "zavodPublikovan",
+                    "rozjizdky"
+                ],
+                "type": "object",
+                "properties": {
+                    "serie": {
+                        "type": "string"
+                    },
+                    "serieNazev": {
+                        "type": "string"
+                    },
+                    "zavod": {
+                        "type": "string"
+                    },
+                    "zavodNazev": {
+                        "type": "string"
+                    },
+                    "stavZavodu": {
+                        "$ref": "#/components/schemas/StavZavodu"
+                    },
+                    "zavodPublikovan": {
+                        "type": "boolean"
+                    },
+                    "rozjizdky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RozjizdkaSpravaRadek"
+                        }
+                    }
+                }
+            },
             "PrehledZastavekDto": {
                 "required": [
                     "serie",
@@ -1520,6 +1748,17 @@
                     }
                 }
             },
+            "PublikaceVysledkuVstup": {
+                "required": [
+                    "publikovano"
+                ],
+                "type": "object",
+                "properties": {
+                    "publikovano": {
+                        "type": "boolean"
+                    }
+                }
+            },
             "Role": {
                 "enum": [
                     "Ctenar",
@@ -1564,6 +1803,65 @@
                     }
                 }
             },
+            "RozjizdkaSpravaRadek": {
+                "required": [
+                    "cislo",
+                    "startV",
+                    "stav",
+                    "doSerie",
+                    "stavVysledku",
+                    "publikovano",
+                    "duvodRevize",
+                    "pocetVysledku",
+                    "smiPublikovat",
+                    "mozneStavy"
+                ],
+                "type": "object",
+                "properties": {
+                    "cislo": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "startV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "stav": {
+                        "$ref": "#/components/schemas/StavRozjizdky"
+                    },
+                    "doSerie": {
+                        "type": "boolean"
+                    },
+                    "stavVysledku": {
+                        "$ref": "#/components/schemas/StavVysledku"
+                    },
+                    "publikovano": {
+                        "type": "boolean"
+                    },
+                    "duvodRevize": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "pocetVysledku": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "smiPublikovat": {
+                        "type": "boolean"
+                    },
+                    "mozneStavy": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StavVysledku"
+                        }
+                    }
+                }
+            },
             "RozjizdkaVstup": {
                 "required": [
                     "cislo",
@@ -1594,6 +1892,13 @@
                         }
                     },
                     "doSerie": {
+                        "type": "boolean",
+                        "default": true
+                    },
+                    "stavVysledku": {
+                        "$ref": "#/components/schemas/StavVysledku"
+                    },
+                    "publikovano": {
                         "type": "boolean",
                         "default": true
                     }
@@ -1757,6 +2062,34 @@
                 "properties": {
                     "stav": {
                         "$ref": "#/components/schemas/StavClanku"
+                    }
+                }
+            },
+            "StavVysledku": {
+                "enum": [
+                    "Navrzeno",
+                    "Overeno",
+                    "Schvaleno",
+                    "Potvrzeno",
+                    "KRevizi",
+                    "Eliminovano"
+                ],
+                "default": "Potvrzeno"
+            },
+            "StavVysledkuVstup": {
+                "required": [
+                    "stav"
+                ],
+                "type": "object",
+                "properties": {
+                    "stav": {
+                        "$ref": "#/components/schemas/StavVysledku"
+                    },
+                    "duvod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     }
                 }
             },
@@ -2127,6 +2460,45 @@
                             "null",
                             "string"
                         ]
+                    }
+                }
+            },
+            "ZastavkaVysledkyDto": {
+                "required": [
+                    "zavod",
+                    "nazev",
+                    "datum",
+                    "stav",
+                    "pocetRozjizdek",
+                    "publikovanych",
+                    "kRevizi"
+                ],
+                "type": "object",
+                "properties": {
+                    "zavod": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "datum": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "stav": {
+                        "$ref": "#/components/schemas/StavZavodu"
+                    },
+                    "pocetRozjizdek": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "publikovanych": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "kRevizi": {
+                        "type": "integer",
+                        "format": "int32"
                     }
                 }
             },

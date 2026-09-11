@@ -6,6 +6,7 @@ import type { StavZavodu } from '@/lib/api';
 /** Popisky stavů drží appka stejné jako web — je to slovník, ne vzhled. */
 const STAV: Record<StavZavodu, string> = {
   Planovany: 'plánováno',
+  Potvrzeny: 'termín platí',
   Vypsany: 'vypsáno',
   Odjety: 'odjeto',
   Zruseny: 'zrušeno',
@@ -27,6 +28,9 @@ export function Stav({ stav }: { stav: StavZavodu }) {
   const barvy: Record<StavZavodu, string> = {
     Odjety: t.voda,
     Vypsany: t.stavVypsany,
+    // Potvrzený termín je jistý, ale ještě se nedá hlásit — proto barva
+    // textu, ne zelená vypsaného a ne tlumená plánovaného.
+    Potvrzeny: t.text,
     Planovany: t.tlumeny,
     Zruseny: t.stavZruseny,
   };
@@ -40,6 +44,8 @@ export function procNejsouVysledky(stav: StavZavodu): string {
       return 'Zastávka se nekonala. Do poháru se nepočítá.';
     case 'Planovany':
       return 'Zatím je to jen termín v kalendáři. Vypsání závodu teprve přijde.';
+    case 'Potvrzeny':
+      return 'Termín platí. Pořadatel závod ještě nevypsal.';
     case 'Vypsany':
       return 'Závod je vypsaný — přihlásit se dá u pořadatele.';
     default:

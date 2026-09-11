@@ -37,9 +37,9 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
     ),
   ];
 
-  // Ročníky, kde smí do kalendáře. Rozhodčí zakládá zastávky a hýbe
-  // termíny, organizátor svůj závod vypisuje a uzavírá — odkaz má smysl
-  // pro oba. Editor ne: ten jen píše.
+  // Ročníky, kde smí do kalendáře a k výsledkům. Rozhodčí zakládá
+  // zastávky a hýbe termíny, organizátor svůj závod vypisuje, uzavírá
+  // a zapisuje výsledky — odkaz má smysl pro oba. Editor ne: ten jen píše.
   const kalendar = [
     ...new Set(
       opravneni
@@ -96,6 +96,11 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
         {kalendar.map((serie) => (
           <a key={`kalendar-${serie}`} href={`/sprava/${serie}/kalendar`}>
             Kalendář {serie}
+          </a>
+        ))}
+        {kalendar.map((serie) => (
+          <a key={`vysledky-${serie}`} href={`/sprava/${serie}/vysledky`}>
+            Výsledky {serie}
           </a>
         ))}
         {spravuje.map((serie) => (
