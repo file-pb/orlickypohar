@@ -37,6 +37,17 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
     ),
   ];
 
+  // Ročníky, kde smí do kalendáře. Rozhodčí zakládá zastávky a hýbe
+  // termíny, organizátor svůj závod vypisuje a uzavírá — odkaz má smysl
+  // pro oba. Editor ne: ten jen píše.
+  const kalendar = [
+    ...new Set(
+      opravneni
+        .filter((o) => o.role === "Rozhodci" || o.role === "Organizator" || o.role === "Spravce")
+        .map((o) => o.serie),
+    ),
+  ];
+
   return (
     <details className="profil">
       {/* Zavírání při klepnutí jinam a na Escape. Zbytek nabídky je
@@ -80,6 +91,11 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
         {pise.map((serie) => (
           <a key={`clanky-${serie}`} href={`/sprava/${serie}/clanky`}>
             Novinky {serie}
+          </a>
+        ))}
+        {kalendar.map((serie) => (
+          <a key={`kalendar-${serie}`} href={`/sprava/${serie}/kalendar`}>
+            Kalendář {serie}
           </a>
         ))}
         {spravuje.map((serie) => (

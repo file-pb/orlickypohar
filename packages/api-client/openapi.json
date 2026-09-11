@@ -595,6 +595,223 @@
                     }
                 }
             }
+        },
+        "/sprava/serie/{serie}/zastavky": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vyp\u00ed\u0161e kalend\u00e1\u0159 ro\u010dn\u00edku i s t\u00edm, co s n\u00edm p\u0159ihl\u00e1\u0161en\u00fd sm\u00ed",
+                "description": "Vy\u017eaduje roli rozhod\u010d\u00edho v ro\u010dn\u00edku, nebo organiz\u00e1tora aspo\u0148 na jedn\u00e9 zast\u00e1vce. Vypisuje cel\u00fd ro\u010dn\u00edk; co sm\u00ed kdo zm\u011bnit, nese ka\u017ed\u00fd \u0159\u00e1dek.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PrehledZastavekDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Zalo\u017e\u00ed zast\u00e1vku v p\u0159edb\u011b\u017en\u00e9m kalend\u00e1\u0159i",
+                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku. Adresa se odvod\u00ed z n\u00e1zvu. Nov\u00e1 zast\u00e1vka je v\u017edycky pl\u00e1novan\u00e1 a nepublikovan\u00e1.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ZastavkaVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZastavkaRadek"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}": {
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Ulo\u017e\u00ed term\u00edn a \u00fadaje zast\u00e1vky",
+                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku. Adresa se nem\u011bn\u00ed, ani kdy\u017e se zm\u011bn\u00ed n\u00e1zev. Posun term\u00ednu u potvrzen\u00e9 a d\u00e1l zap\u00ed\u0161e p\u016fvodn\u00ed datum.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ZastavkaVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZastavkaRadek"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/stav": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Posune zast\u00e1vku v jej\u00edm \u017eivotn\u00edm cyklu",
+                "description": "Pl\u00e1novan\u00fd \u2192 potvrzen\u00fd (rozhod\u010d\u00ed) \u2192 vypsan\u00fd \u2192 odjet\u00fd (organiz\u00e1tor), nebo zru\u0161en\u00fd. Po jednom kroku, ob\u011bma sm\u011bry.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StavZastavkyVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZastavkaRadek"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/publikace": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Pust\u00ed zast\u00e1vku na ve\u0159ejn\u00fd web, nebo ji st\u00e1hne",
+                "description": "Spr\u00e1vce ro\u010dn\u00edku. Publikace nen\u00ed stav, je to vlastn\u00ed p\u0159\u00edznak.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PublikaceVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZastavkaRadek"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -1218,6 +1435,32 @@
                     }
                 }
             },
+            "PrehledZastavekDto": {
+                "required": [
+                    "serie",
+                    "serieNazev",
+                    "smiZalozit",
+                    "zastavky"
+                ],
+                "type": "object",
+                "properties": {
+                    "serie": {
+                        "type": "string"
+                    },
+                    "serieNazev": {
+                        "type": "string"
+                    },
+                    "smiZalozit": {
+                        "type": "boolean"
+                    },
+                    "zastavky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ZastavkaRadek"
+                        }
+                    }
+                }
+            },
             "PrihlaskaDto": {
                 "required": [
                     "lod",
@@ -1263,6 +1506,17 @@
                     },
                     "kategorie": {
                         "type": "string"
+                    }
+                }
+            },
+            "PublikaceVstup": {
+                "required": [
+                    "publikovano"
+                ],
+                "type": "object",
+                "properties": {
+                    "publikovano": {
+                        "type": "boolean"
                     }
                 }
             },
@@ -1506,6 +1760,17 @@
                     }
                 }
             },
+            "StavZastavkyVstup": {
+                "required": [
+                    "stav"
+                ],
+                "type": "object",
+                "properties": {
+                    "stav": {
+                        "$ref": "#/components/schemas/StavZavodu"
+                    }
+                }
+            },
             "StavZavodu": {
                 "enum": [
                     "Planovany",
@@ -1737,6 +2002,84 @@
                     }
                 }
             },
+            "ZastavkaRadek": {
+                "required": [
+                    "slug",
+                    "nazev",
+                    "datum",
+                    "datumKonce",
+                    "typ",
+                    "poradatel",
+                    "poradi",
+                    "stav",
+                    "puvodniDatum",
+                    "publikovano",
+                    "smiUpravit",
+                    "smiPublikovat",
+                    "mozneStavy"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "datum": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "datumKonce": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date"
+                    },
+                    "typ": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "poradatel": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "poradi": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "stav": {
+                        "$ref": "#/components/schemas/StavZavodu"
+                    },
+                    "puvodniDatum": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date"
+                    },
+                    "publikovano": {
+                        "type": "boolean"
+                    },
+                    "smiUpravit": {
+                        "type": "boolean"
+                    },
+                    "smiPublikovat": {
+                        "type": "boolean"
+                    },
+                    "mozneStavy": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StavZavodu"
+                        }
+                    }
+                }
+            },
             "ZastavkaVolbaDto": {
                 "required": [
                     "slug",
@@ -1749,6 +2092,41 @@
                     },
                     "nazev": {
                         "type": "string"
+                    }
+                }
+            },
+            "ZastavkaVstup": {
+                "required": [
+                    "nazev",
+                    "datum"
+                ],
+                "type": "object",
+                "properties": {
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "datum": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "datumKonce": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date"
+                    },
+                    "typ": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "poradatel": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     }
                 }
             },

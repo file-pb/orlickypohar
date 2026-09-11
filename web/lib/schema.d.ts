@@ -657,6 +657,214 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše kalendář ročníku i s tím, co s ním přihlášený smí
+         * @description Vyžaduje roli rozhodčího v ročníku, nebo organizátora aspoň na jedné zastávce. Vypisuje celý ročník; co smí kdo změnit, nese každý řádek.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PrehledZastavekDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Založí zastávku v předběžném kalendáři
+         * @description Rozhodčí ročníku. Adresa se odvodí z názvu. Nová zastávka je vždycky plánovaná a nepublikovaná.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ZastavkaVstup"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZastavkaRadek"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Uloží termín a údaje zastávky
+         * @description Rozhodčí ročníku. Adresa se nemění, ani když se změní název. Posun termínu u potvrzené a dál zapíše původní datum.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ZastavkaVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZastavkaRadek"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/stav": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Posune zastávku v jejím životním cyklu
+         * @description Plánovaný → potvrzený (rozhodčí) → vypsaný → odjetý (organizátor), nebo zrušený. Po jednom kroku, oběma směry.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StavZastavkyVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZastavkaRadek"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/publikace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pustí zastávku na veřejný web, nebo ji stáhne
+         * @description Správce ročníku. Publikace není stav, je to vlastní příznak.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PublikaceVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZastavkaRadek"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -809,6 +1017,12 @@ export interface components {
             zastavky: components["schemas"]["ZastavkaVolbaDto"][];
             opravneni: components["schemas"]["OpravneniRadek"][];
         };
+        PrehledZastavekDto: {
+            serie: string;
+            serieNazev: string;
+            smiZalozit: boolean;
+            zastavky: components["schemas"]["ZastavkaRadek"][];
+        };
         PrihlaskaDto: {
             lod: string;
             cisloPlachty: null | string;
@@ -819,6 +1033,9 @@ export interface components {
         PrihlaskaVstup: {
             lod: string;
             kategorie: string;
+        };
+        PublikaceVstup: {
+            publikovano: boolean;
         };
         /** @enum {unknown} */
         Role: "Ctenar" | "Editor" | "Rozhodci" | "Spravce" | "Organizator";
@@ -879,6 +1096,9 @@ export interface components {
         StavVstup: {
             stav: components["schemas"]["StavClanku"];
         };
+        StavZastavkyVstup: {
+            stav: components["schemas"]["StavZavodu"];
+        };
         /** @enum {unknown} */
         StavZavodu: "Planovany" | "Vypsany" | "Odjety" | "Zruseny" | "Potvrzeny";
         UcastDto: {
@@ -935,9 +1155,37 @@ export interface components {
             /** Format: int32 */
             poradi: number;
         };
+        ZastavkaRadek: {
+            slug: string;
+            nazev: string;
+            /** Format: date */
+            datum: string;
+            /** Format: date */
+            datumKonce: null | string;
+            typ: null | string;
+            poradatel: null | string;
+            /** Format: int32 */
+            poradi: number;
+            stav: components["schemas"]["StavZavodu"];
+            /** Format: date */
+            puvodniDatum: null | string;
+            publikovano: boolean;
+            smiUpravit: boolean;
+            smiPublikovat: boolean;
+            mozneStavy: components["schemas"]["StavZavodu"][];
+        };
         ZastavkaVolbaDto: {
             slug: string;
             nazev: string;
+        };
+        ZastavkaVstup: {
+            nazev: string;
+            /** Format: date */
+            datum: string;
+            /** Format: date */
+            datumKonce?: null | string;
+            typ?: null | string;
+            poradatel?: null | string;
         };
         ZavodDetailDto: {
             slug: string;

@@ -1445,9 +1445,10 @@ poskytovatel identity má být na jednom místě.
 
 ### Správa zastávek — kalendář
 
-**API hotové 11. 9. 2026, obrazovka zbývá.** Endpointy
+**Hotové a zapojené 11. 9. 2026.** Endpointy
 `/sprava/serie/{slug}/zastavky` — výpis, založení, úprava termínu, posun
-stavu a publikace.
+stavu a publikace — a obrazovka `/sprava/{serie}/kalendar`, odkaz na ni je
+v profilové nabídce u ročníků, kde je člověk rozhodčí nebo organizátor.
 
 | Kus | Kde |
 |---|---|
@@ -1493,6 +1494,16 @@ zastávka má být v kalendáři vidět dřív, než se cokoliv vypíše, a odje
 smí stáhnout, aniž by se odjetou přestala být. Že publikuje správce, je
 *odvozené* — zůstává z dřívějšího plánu; bez toho by ale založená zastávka
 zůstala navždycky neviditelná.
+
+**Obrazovka je celá serverová a bez javascriptu**, stejně jako oprávnění
+a blog: formulář odešle prohlížeč, serverová akce zavolá API a stránka se
+překreslí s hláškou. Úprava termínu se rozbaluje přímo v kartě zastávky —
+mění se zřídka a kvůli pěti polím není proč odcházet z kalendáře.
+
+**Nápis na tlačítku se mění podle směru.** „Vypsat závod" u odjeté zastávky
+by znamenalo, že se vypisuje znovu, přitom se jen opravuje překlep — proto
+„Vrátit mezi vypsané". Že jde o návrat, ví jen ten, kdo zná dosavadní stav,
+takže se to rozhoduje ve webu, ne v API.
 
 **Přiřazování pořadatele zastávce tu schválně není.** V oddílu *Role a
 oprávnění* je ta věta označená jako odvozená a čeká na projití. Kalendář na
