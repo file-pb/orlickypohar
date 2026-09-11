@@ -63,6 +63,49 @@ public enum StavRozjizdky
 }
 
 /// <summary>
+/// Kam až došel zápis výsledků rozjížďky. <b>Ze zadání</b>: výsledek se dá
+/// navrhnout, ověřit, schválit, potvrdit, vrátit k revizi nebo eliminovat.
+/// <para>
+/// <b>Stav se vede na rozjížďce, ne na jednotlivém výsledku.</b> Rozhodčí
+/// schvaluje sadu výsledků jako celek — pořadí dává smysl jen dohromady.
+/// Stav na řádku by znamenal, že rozjížďka může být zpola schválená, což
+/// neodpovídá ničemu ve skutečnosti.
+/// </para>
+/// <para>
+/// <b>Publikace tu není</b>, je to vlastní příznak. Potvrzený výsledek smí
+/// zůstat neveřejný a publikovaný se smí vrátit k revizi, aniž by se
+/// publikace ztratila; jeden sloupec by jedno přepisoval druhým.
+/// </para>
+/// </summary>
+public enum StavVysledku
+{
+    /// <summary>Zapsáno, nikdo to ještě nekontroloval.</summary>
+    Navrzeno = 0,
+
+    /// <summary>Čísla sedí s papírem z vody.</summary>
+    Overeno = 1,
+
+    /// <summary>Protesty vyřízené, pořadí platí.</summary>
+    Schvaleno = 2,
+
+    /// <summary>Konečné. Dál se needituje.</summary>
+    Potvrzeno = 3,
+
+    /// <summary>Vráceno zpátky s důvodem.</summary>
+    KRevizi = 4,
+
+    /// <summary>
+    /// Rozjížďka se nepočítá vůbec — zrušená nebo neplatná.
+    /// <para>
+    /// Není to totéž co <see cref="Rozjizdka.DoSerie"/>: ta říká, že se
+    /// rozjížďka nepočítá <b>do poháru</b>, ale ve výsledku závodu platí.
+    /// Eliminovaná neplatí nikde.
+    /// </para>
+    /// </summary>
+    Eliminovano = 5,
+}
+
+/// <summary>
 /// Kódy závodních pravidel. Bez nich se výsledky nedají zadat — loď, která
 /// nedokončila, není loď bez výsledku.
 /// </summary>
@@ -211,6 +254,25 @@ public class Rozjizdka
     /// </para>
     /// </summary>
     public bool DoSerie { get; set; } = true;
+
+    /// <summary>Kam došel zápis výsledků. Nová rozjížďka je vždycky návrh.</summary>
+    public StavVysledku StavVysledku { get; set; } = StavVysledku.Navrzeno;
+
+    /// <summary>
+    /// Vidí výsledky téhle rozjížďky veřejnost?
+    /// <para>
+    /// Vlastní příznak vedle stavu, ne poslední stupeň v řadě. Zastávka má
+    /// svůj <c>Publikovano</c> a platí obojí: nepublikovaná zastávka schová
+    /// i publikovanou rozjížďku, protože veřejně neexistuje.
+    /// </para>
+    /// </summary>
+    public bool Publikovano { get; set; }
+
+    /// <summary>
+    /// Proč se výsledky vrátily k revizi. Bez důvodu je vrácení jen
+    /// „něco je špatně" a ten, kdo to má opravit, začíná hledáním.
+    /// </summary>
+    public string? DuvodRevize { get; set; }
 }
 
 /// <summary>

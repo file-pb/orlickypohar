@@ -78,8 +78,12 @@ public static class ZavodEndpoints
 
         // Jeden dotaz na všechny výsledky závodu, ne dotaz na rozjížďku.
         // Rozjížděk bývá osm a lodí dvacet — N+1 by tu bylo osm zbytečných cest.
+        //
+        // Jen publikované: dokud správce výsledky nepustí ven, rozjížďka na
+        // stránce je (jelo se), ale čísla u ní ne. Prázdná rozjížďka je
+        // pravda, nepotvrzené pořadí by pravda být nemuselo.
         var radky = await db.Vysledky
-            .Where(v => v.Rozjizdka!.ZavodId == zavod.Id)
+            .Where(v => v.Rozjizdka!.ZavodId == zavod.Id && v.Rozjizdka.Publikovano)
             .OrderBy(v => v.Rozjizdka!.Cislo)
             .ThenBy(v => v.PoradiVCili ?? int.MaxValue)
             .Select(v => new
@@ -111,26 +115,29 @@ public static class ZavodEndpoints
                 u.Kormidelnik == null ? null : u.Kormidelnik.Jmeno + " " + u.Kormidelnik.Prijmeni))
             .ToListAsync(ct);
 
-        // Rozjížďky bez jediného výsledku by se seskupením ztratily.
-        var prazdne = await db.Rozjizdky
-            .Where(r => r.ZavodId == zavod.Id && !db.Vysledky.Any(v => v.RozjizdkaId == r.Id))
-            .Select(r => new RozjizdkaDto(r.Cislo, r.StartV, r.Stav, r.DoSerie, Array.Empty<VysledekDto>()))
+        // Seznam rozjížděk se bere z rozjížděk, ne z výsledků: rozjížďka bez
+        // jediného zapsaného řádku i ta s nepublikovanými čísly na stránce
+        // být má, jen prázdná. Eliminovaná ne — ta neplatí nikde.
+        var vsechny = await db.Rozjizdky
+            .Where(r => r.ZavodId == zavod.Id && r.StavVysledku != StavVysledku.Eliminovano)
+            .OrderBy(r => r.Cislo)
+            .Select(r => new { r.Cislo, r.StartV, r.Stav, r.DoSerie })
             .ToListAsync(ct);
 
-        var rozjizdky = radky
-            .GroupBy(r => new { r.Cislo, r.StartV, r.Stav, r.DoSerie })
-            .Select(g => new RozjizdkaDto(
-                g.Key.Cislo, g.Key.StartV, g.Key.Stav, g.Key.DoSerie,
-                [.. g.Select(v => new VysledekDto(
+        var podleCisla = radky.GroupBy(r => r.Cislo).ToDictionary(g => g.Key, g => g.ToList());
+
+        var rozjizdky = vsechny
+            .Select(r => new RozjizdkaDto(r.Cislo, r.StartV, r.Stav, r.DoSerie,
+            [
+                .. podleCisla.GetValueOrDefault(r.Cislo, []).Select(v => new VysledekDto(
                     v.Lod, v.Kategorie, v.Kormidelnik, v.PoradiVCili,
                     v.NamerenyCas == null ? null : (int)v.NamerenyCas.Value.TotalSeconds,
-                    v.Kod))]))
-            .Concat(prazdne)
-            .OrderBy(r => r.Cislo)
+                    v.Kod)),
+            ]))
             .ToList();
 
-        // Do bodů jde všechno, co se v závodě odjelo — příznak `DoSerie`
-        // rozhoduje o poháru, ne o výsledku závodu.
+        // Do bodů jde všechno, co se v závodě odjelo a je venku — příznak
+        // `DoSerie` rozhoduje o poháru, ne o výsledku závodu.
         var poradi = Vypocet.VysledkyZavodu(
         [
             .. rozjizdky.Select(r => new RozjizdkaVstup(r.Cislo,

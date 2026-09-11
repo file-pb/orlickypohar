@@ -76,6 +76,11 @@ public static class PoradiEndpoints
         // rozjížděk by jinak bylo sedmdesát dotazů kvůli jedné tabulce.
         var radky = await db.Vysledky
             .Where(v => v.Rozjizdka!.DoSerie
+                        // Do poháru jen to, co je venku a platí. Nepotvrzená
+                        // čísla by pořadí měnila pod rukama a eliminovaná
+                        // rozjížďka se nepočítá vůbec.
+                        && v.Rozjizdka.Publikovano
+                        && v.Rozjizdka.StavVysledku != StavVysledku.Eliminovano
                         && v.Rozjizdka.Zavod!.SerieId == serie.Id
                         && v.Rozjizdka.Zavod.Publikovano
                         && v.Rozjizdka.Zavod.Stav == StavZavodu.Odjety)

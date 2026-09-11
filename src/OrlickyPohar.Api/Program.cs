@@ -44,6 +44,7 @@ try
     builder.Services.AddScoped<OpravneniSprava>();
     builder.Services.AddScoped<ClankySprava>();
     builder.Services.AddScoped<KalendarSprava>();
+    builder.Services.AddScoped<VysledkySprava>();
     // .NET popisuje čísla jako ["integer","string"], protože je při čtení
     // přijímá i v uvozovkách. Odpovědi je ale píšou vždycky jako čísla —
     // a generovaný klient by jinak u každého bodu nutil ověřovat, jestli
@@ -126,6 +127,7 @@ try
         app.MapSpravaOpravneni();
         app.MapSpravaClanku();
         app.MapKalendar();
+        app.MapSpravaVysledku();
     }
 
     // Migrace při startu. U jedné repliky je to v pořádku a máš jistotu,

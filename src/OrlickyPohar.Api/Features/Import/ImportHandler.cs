@@ -356,6 +356,8 @@ internal static class ImportHandler
             r.StartV = v.StartV?.ToUniversalTime();
             r.Stav = v.Stav;
             r.DoSerie = v.DoSerie;
+            r.StavVysledku = v.StavVysledku;
+            r.Publikovano = v.Publikovano;
             await db.SaveChangesAsync(ct);
 
             var (nv, uv, sv) = await SlaďVysledky(db, r, v, vstup.Slug, ucasti, ct);

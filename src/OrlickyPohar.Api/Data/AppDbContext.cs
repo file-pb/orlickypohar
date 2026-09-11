@@ -83,6 +83,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         var rozjizdka = b.Entity<Rozjizdka>();
         rozjizdka.HasOne(x => x.Zavod).WithMany(x => x.Rozjizdky).HasForeignKey(x => x.ZavodId)
             .OnDelete(DeleteBehavior.Cascade);
+        rozjizdka.Property(x => x.DuvodRevize).HasMaxLength(400);
         rozjizdka.HasIndex(x => new { x.ZavodId, x.Cislo }).IsUnique();
 
         var vysledek = b.Entity<Vysledek>();

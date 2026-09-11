@@ -21,6 +21,14 @@ KAT = {p["lod"]: p["kategorie"] for p in D["prihlasky"]}
 # Kategorie se řadí podle série, ne abecedně — jinak Nad7m předběhne Race.
 KAT_PORADI = {k["nazev"]: k["poradi"] for k in D["kategorie"]}
 
+# Mock vznikl před workflow výsledků a o stavu zápisu neví. Doplní se
+# stejně, jako to dělá import: čísla ze sešitu rozhodčího jsou potvrzená
+# a veřejná, ne návrh.
+for _z in D["zavody"]:
+    for _r in _z["rozjizdky"]:
+        _r.setdefault("stavVysledku", "Potvrzeno")
+        _r.setdefault("publikovano", True)
+
 # Kódy v pořadí podle závažnosti; doložené je jen DNF před DNS.
 ZAVAZNOST = ["Rdg", "Ret", "Dnf", "Ocs", "Dsq", "Dns", "Dnc"]
 
@@ -79,6 +87,11 @@ def vysledky_zavodu(rozjizdky, pocet_skrtu=0):
     return vysledek
 
 
+def plati(r):
+    """Počítá se rozjížďka? Jen publikovaná a needliminovaná — jako v API."""
+    return r.get("publikovano", True) and r.get("stavVysledku") != "Eliminovano"
+
+
 def poradi_serie():
     """Průběžné pořadí po kategoriích, jen z odjetých zastávek."""
     zastavky = [z for z in D["zavody"] if z.get("stav") == "Odjety"]
@@ -86,7 +99,7 @@ def poradi_serie():
 
     body = {}
     for i, z in enumerate(zastavky):
-        do_serie = [r for r in z["rozjizdky"] if r["doSerie"]]
+        do_serie = [r for r in z["rozjizdky"] if r["doSerie"] and plati(r)]
         for v in vysledky_zavodu(do_serie, z.get("pocetSkrtu", 0)):
             klic = (v["lod"], v["kategorie"])
             body.setdefault(klic, [None] * len(zastavky))[i] = round(
@@ -185,6 +198,49 @@ def bez_diakritiky_slug(text):
     prevod = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
     return "-".join(x for x in "".join(
         z if z.isalnum() else " " for z in prevod.lower()).split())[:120]
+
+
+# --- Workflow výsledků ------------------------------------------------------
+# Opsané z `Features/Zavody/Workflow.cs`, ze stejného důvodu jako bodování.
+RADA_VYSLEDKU = ["Navrzeno", "Overeno", "Schvaleno", "Potvrzeno"]
+VSECHNY_VYSLEDKY = RADA_VYSLEDKU + ["KRevizi", "Eliminovano"]
+NAZVY_VYSLEDKU = {"Navrzeno": "Navrženo", "Overeno": "Ověřeno", "Schvaleno": "Schváleno",
+                  "Potvrzeno": "Potvrzeno", "KRevizi": "K revizi",
+                  "Eliminovano": "Eliminováno"}
+
+
+def proc_nejde_vysledek(ze, na, spravce):
+    if ze == na or na == "Eliminovano":
+        return None
+    if na == "KRevizi":
+        return ("Návrh se nemá k čemu vracet — nikdo ho ještě nekontroloval."
+                if ze == "Navrzeno" else None)
+    if ze in ("KRevizi", "Eliminovano"):
+        return None if na == "Navrzeno" else (
+            f'Odsud se vrací jako návrh, ne rovnou na \u201e{NAZVY_VYSLEDKU[na]}\u201c. '
+            "Opravený zápis musí projít ověřením znovu.")
+
+    z_i, na_i = RADA_VYSLEDKU.index(ze), RADA_VYSLEDKU.index(na)
+    if na_i < z_i:
+        return (f'Zpátky na \u201e{NAZVY_VYSLEDKU[na]}\u201c se nechodí. '
+                "Vrať výsledky k revizi s důvodem.")
+    if na_i - z_i == 1 or spravce:
+        return None
+    return (f'Ze stavu \u201e{NAZVY_VYSLEDKU[ze]}\u201c na \u201e{NAZVY_VYSLEDKU[na]}\u201c '
+            "se přeskočit nedá. Každý stupeň je něčí podpis: "
+            + " → ".join(NAZVY_VYSLEDKU[s] for s in RADA_VYSLEDKU) + ".")
+
+
+def rozjizdka_radek(r):
+    # Falešné API nerozlišuje rozsahy: přihlášený je správce, tedy smí i
+    # přeskakovat. Rozsahy se zkoušejí v testech, tady jde o obrazovku.
+    return {"cislo": r["cislo"], "startV": r.get("startV"), "stav": r["stav"],
+            "doSerie": r["doSerie"], "stavVysledku": r["stavVysledku"],
+            "publikovano": r["publikovano"], "duvodRevize": r.get("duvodRevize"),
+            "pocetVysledku": len(r.get("vysledky", [])), "smiPublikovat": True,
+            "mozneStavy": [s for s in VSECHNY_VYSLEDKY
+                           if s != r["stavVysledku"]
+                           and not proc_nejde_vysledek(r["stavVysledku"], s, True)]}
 
 
 # --- Kalendář ---------------------------------------------------------------
@@ -302,6 +358,10 @@ class H(BaseHTTPRequestHandler):
     def do_POST(self):
         cesta = urlparse(self.path).path
 
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
+                          r'/rozjizdky/(\d+)/(stav|publikace)$', cesta)):
+            return self.workflow(m.group(1), int(m.group(2)), m.group(3))
+
         if cesta == f'/sprava/serie/{D["slug"]}/zastavky':
             return self.zaloz_zastavku()
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/stav$', cesta)):
@@ -352,6 +412,33 @@ class H(BaseHTTPRequestHandler):
         if not z:
             self.send_error(404)
         return z
+
+    def workflow(self, zavod, cislo, co):
+        if not self.headers.get("authorization"):
+            return self.send_error(401)
+
+        z = next((z for z in D["zavody"] if z["slug"] == zavod), None)
+        r = next((r for r in z["rozjizdky"] if r["cislo"] == cislo), None) if z else None
+        if not r:
+            return self.send_error(404)
+
+        vstup = self.telo_zadosti()
+
+        if co == "publikace":
+            r["publikovano"] = bool(vstup.get("publikovano"))
+            return self.odpoved(rozjizdka_radek(r))
+
+        na, duvod = vstup.get("stav"), (vstup.get("duvod") or "").strip()
+        if (chyba := proc_nejde_vysledek(r["stavVysledku"], na, True)):
+            return self.chyba(400, chyba)
+        if na == "KRevizi" and not duvod:
+            return self.chyba(400, "Napiš, co je špatně. Bez důvodu začne ten, "
+                                   "kdo to má opravit, hledáním.")
+
+        if na == "KRevizi":
+            r["duvodRevize"] = duvod
+        r["stavVysledku"] = na
+        return self.odpoved(rozjizdka_radek(r))
 
     def zaloz_zastavku(self):
         if not self.headers.get("authorization"):
@@ -523,6 +610,25 @@ class H(BaseHTTPRequestHandler):
                 "zastavky": [{"slug": z["slug"], "nazev": z["nazev"]} for z in D["zavody"]],
                 "opravneni": OPRAVNENI,
             }
+        elif cesta == f'/sprava/serie/{D["slug"]}/vysledky':
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            telo = [{"zavod": z["slug"], "nazev": z["nazev"], "datum": z["datum"],
+                     "stav": z["stav"], "pocetRozjizdek": len(z["rozjizdky"]),
+                     "publikovanych": sum(1 for r in z["rozjizdky"] if r["publikovano"]),
+                     "kRevizi": sum(1 for r in z["rozjizdky"]
+                                    if r["stavVysledku"] == "KRevizi")}
+                    for z in sorted(D["zavody"], key=lambda z: z["poradi"])]
+        elif (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            z = next((z for z in D["zavody"] if z["slug"] == m.group(1)), None)
+            if not z:
+                return self.send_error(404)
+            telo = {"serie": D["slug"], "serieNazev": D["nazev"],
+                    "zavod": z["slug"], "zavodNazev": z["nazev"],
+                    "stavZavodu": z["stav"], "zavodPublikovan": True,
+                    "rozjizdky": [rozjizdka_radek(r) for r in z["rozjizdky"]]}
         elif cesta == f'/sprava/serie/{D["slug"]}/zastavky':
             if not self.headers.get("authorization"):
                 return self.send_error(401)
@@ -574,7 +680,9 @@ class H(BaseHTTPRequestHandler):
                     "rozjizdky": [{
                         "cislo": r["cislo"], "startV": r["startV"], "stav": r["stav"],
                         "doSerie": r["doSerie"],
-                        "vysledky": [{
+                        # Nepublikovaná rozjížďka na stránce zůstává, jen
+                        # prázdná; eliminovaná se sem vůbec nedostane.
+                        "vysledky": [] if not r.get("publikovano", True) else [{
                             "lod": nazvy(v["lod"]),
                             "kategorie": KAT[v["lod"]],
                             "kormidelnik": jmeno(kormidelnici[v["lod"]]) if kormidelnici.get(v["lod"]) else None,
@@ -582,9 +690,12 @@ class H(BaseHTTPRequestHandler):
                             "casSekundy": v.get("casSekundy"),
                             "kod": v.get("kod"),
                         } for v in r["vysledky"]],
-                    } for r in z["rozjizdky"]],
+                    } for r in z["rozjizdky"]
+                        if r.get("stavVysledku") != "Eliminovano"],
                     "poradi": [{**v, "lod": nazvy(v["lod"])}
-                               for v in vysledky_zavodu(z["rozjizdky"], z.get("pocetSkrtu", 0))],
+                               for v in vysledky_zavodu(
+                                   [r for r in z["rozjizdky"] if plati(r)],
+                                   z.get("pocetSkrtu", 0))],
                     "lode": [{"lod": nazvy(u["lod"]), "kategorie": KAT[u["lod"]],
                               "kormidelnik": jmeno(u["kormidelnik"]) if u.get("kormidelnik") else None}
                              for u in sorted(z["ucasti"],

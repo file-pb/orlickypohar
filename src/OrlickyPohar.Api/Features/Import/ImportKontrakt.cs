@@ -27,12 +27,24 @@ public record VysledekVstup(
     int? CasSekundy = null,
     KodVysledku? Kod = null);
 
+/// <summary>
+/// Rozjížďka v importním souboru.
+/// <para>
+/// <c>StavVysledku</c> a <c>Publikovano</c> mají výchozí hodnoty schválně:
+/// <b>import je zápis ze sešitu rozhodčího, ne návrh</b>. Čísla v něm už
+/// prošla jeho rukama dřív, než soubor vznikl, takže přijdou jako potvrzená
+/// a veřejná — a starší soubory, které o workflow nevědí, se kvůli němu
+/// nemusí přepisovat.
+/// </para>
+/// </summary>
 public record RozjizdkaVstup(
     int Cislo,
     DateTimeOffset? StartV,
     StavRozjizdky Stav,
     IReadOnlyList<VysledekVstup> Vysledky,
-    bool DoSerie = true);
+    bool DoSerie = true,
+    StavVysledku StavVysledku = StavVysledku.Potvrzeno,
+    bool Publikovano = true);
 
 public record ZavodVstup(
     string Slug,

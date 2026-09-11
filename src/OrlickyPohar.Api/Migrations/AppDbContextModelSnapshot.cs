@@ -334,10 +334,20 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<bool>("DoSerie")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("DuvodRevize")
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
+
+                    b.Property<bool>("Publikovano")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTimeOffset?>("StartV")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Stav")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StavVysledku")
                         .HasColumnType("integer");
 
                     b.Property<int>("ZavodId")

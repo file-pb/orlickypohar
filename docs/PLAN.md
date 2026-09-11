@@ -1509,6 +1509,52 @@ takže se to rozhoduje ve webu, ne v API.
 oprávnění* je ta věta označená jako odvozená a čeká na projití. Kalendář na
 ní nestojí: `Poradatel` je volný text, ne účet v systému.
 
+### Workflow výsledků — jak je postavené
+
+**API hotové 11. 9. 2026, obrazovka zbývá.** Endpointy
+`/sprava/serie/{slug}/vysledky` — rozcestník po zastávkách, rozjížďky jedné
+zastávky, posun stavu a publikace.
+
+| Kus | Kde |
+|---|---|
+| Přechody, kdo smí, povinný důvod — čisté funkce | `Features/Zavody/Workflow.cs` |
+| Čtení a zápis | `Features/Zavody/VysledkySprava.cs` |
+| Endpointy a rozhodnutí, kdo smí | `Features/Zavody/VysledkyEndpoints.cs` |
+
+**Zapisuje pořadatel, ověřuje a schvaluje rozhodčí, potvrzuje správce.**
+Tabulka workflow výš má u `Navrzeno` napsáno „editor" — je to starší zápis
+téhož. Podle novějšího zadání rolí píše editor **jen na blog**, kdežto
+rozjížďky a výsledky spravuje organizátor, takže platí ten. Hlídá to
+`WorkflowTests`.
+
+**Zpátky se chodí přes revizi, ne krokem vedle.** Couvnout o stupeň nejde
+ani správci: vrácení má povinný důvod a ten by se dal potichu obejít.
+Z revize i z eliminace se vrací **jako návrh** — opravený zápis musí projít
+ověřením znovu, jinak je revize jen zdržení.
+
+**Správce smí přeskočit dopředu**, ostatním je každý stupeň něčí podpis.
+Zůstává to z plánu a dává to smysl u ročníku, který si projde jeden člověk.
+
+**Eliminováno není totéž co `DoSerie`.** `DoSerie` říká, že se rozjížďka
+nepočítá do poháru, ale ve výsledku závodu platí — typicky běh pro míčky
+z kopce na Izolepě. Eliminovaná neplatí nikde a na veřejné stránce po ní
+nezůstane ani řádek.
+
+**Veřejné čtení se od téhle změny ptá na publikaci rozjížďky.** Zastávka
+ukáže rozjížďku i bez čísel, protože „jelo se" je pravda; nepotvrzené
+pořadí pravda být nemusí. Do průběžného pořadí jde jen to, co je venku
+a platí.
+
+**Import přináší výsledky jako potvrzené a veřejné.** Je to zápis ze sešitu
+rozhodčího, ne návrh — čísla prošla jeho rukama dřív, než soubor vznikl.
+Kdyby přicházela jako nezveřejněná, nahrání ročníku by web vyprázdnilo;
+a starší soubory, které o workflow nevědí, se kvůli tomu nemusí přepisovat.
+Ze stejného důvodu migrace **dorovná i řádky, které v databázi už jsou**.
+
+**Zápis samotných výsledků tu schválně není.** Dneska je dovnitř dostane
+import. Workflow se ptá na jinou otázku — kdo za ta čísla ručí a smí je
+vidět veřejnost — a obrazovka na zápis pořadí je vlastní kus práce.
+
 ## Schéma řešení
 
 Vykreslené schéma celého řešení — nasazení, vnitřek API a datový model —
