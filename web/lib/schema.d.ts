@@ -472,6 +472,191 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/clanky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše články, na které přihlášený dosáhne
+         * @description Vyžaduje roli editora v ročníku nebo aspoň na jedné zastávce. Smazané se nevypisují.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PrehledClankuDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Založí článek jako koncept
+         * @description Adresa se odvodí z titulku. Nový článek je vždycky koncept — publikuje se zvlášť.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ClanekVstupSprava"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClanekSpravaRadek"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/clanky/{clanek}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Vrátí článek k úpravě, včetně konceptu a skrytého */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    clanek: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClanekDto"];
+                    };
+                };
+            };
+        };
+        /**
+         * Uloží úpravu článku
+         * @description Adresa se nemění, ani když se změní titulek.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    clanek: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ClanekVstupSprava"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClanekSpravaRadek"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/clanky/{clanek}/stav": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Přepne stav článku
+         * @description Koncept, publikováno, skryté, smazané. Smazaný se nedá publikovat rovnou — nejdřív se vrátí jako koncept.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    clanek: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StavVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClanekSpravaRadek"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -504,6 +689,17 @@ export interface components {
             zavod: null | string;
             zavodNazev: null | string;
         };
+        ClanekSpravaRadek: {
+            slug: string;
+            titulek: string;
+            perex: null | string;
+            autor: null | string;
+            /** Format: date-time */
+            publikovanoV: string;
+            stav: components["schemas"]["StavClanku"];
+            zavod: null | string;
+            zavodNazev: null | string;
+        };
         ClanekVstup: {
             slug: string;
             titulek: string;
@@ -515,6 +711,15 @@ export interface components {
             zavod?: null | string;
             /** @default true */
             publikovano: boolean;
+        };
+        ClanekVstupSprava: {
+            titulek: string;
+            telo: string;
+            perex?: null | string;
+            autor?: null | string;
+            zavod?: null | string;
+            /** Format: date-time */
+            publikovanoV?: null | string;
         };
         JaDto: {
             /** Format: uuid */
@@ -591,6 +796,13 @@ export interface components {
             zastavky: components["schemas"]["ZastavkaDto"][];
             kategorie: components["schemas"]["PoradiKategorieDto"][];
         };
+        PrehledClankuDto: {
+            serie: string;
+            serieNazev: string;
+            smiNaRocnik: boolean;
+            zastavky: components["schemas"]["ZavodVolbaDto"][];
+            clanky: components["schemas"]["ClanekSpravaRadek"][];
+        };
         PrehledOpravneniDto: {
             serie: string;
             nazev: string;
@@ -661,7 +873,12 @@ export interface components {
             clanky?: null | components["schemas"]["ClanekVstup"][];
         };
         /** @enum {unknown} */
+        StavClanku: "Draft" | "Publikovano" | "Skryty" | "Smazano";
+        /** @enum {unknown} */
         StavRozjizdky: "Planovana" | "Probiha" | "Dokoncena" | "Zrusena";
+        StavVstup: {
+            stav: components["schemas"]["StavClanku"];
+        };
         /** @enum {unknown} */
         StavZavodu: "Planovany" | "Vypsany" | "Odjety" | "Zruseny" | "Potvrzeny";
         UcastDto: {
@@ -757,6 +974,10 @@ export interface components {
             stav: components["schemas"]["StavZavodu"];
             /** Format: date */
             puvodniDatum: null | string;
+        };
+        ZavodVolbaDto: {
+            slug: string;
+            nazev: string;
         };
         ZavodVstup: {
             slug: string;

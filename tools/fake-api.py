@@ -10,7 +10,7 @@ Pravda o pravidlech leží tam a hlídají ji testy; tenhle přepis existuje jen
 proto, aby šly stránky vidět na stroji, kde se databáze rozjet nedá. Když se
 pravidlo změní, mění se na obou místech — a rozejít se můžou jen tady.
 """
-import json, os, re
+import json, os, re, unicodedata
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 
@@ -139,7 +139,16 @@ def nazvy(hodnota):
 
 
 # Články se řadí od nejnovějšího, stejně jako je vydává API.
-CLANKY = sorted(D.get("clanky", []), key=lambda c: c["publikovanoV"], reverse=True)
+def clanky_verejne():
+    """Co by na webu viděl návštěvník: jen publikované, od nejnovějšího.
+
+    Čte se z téhož seznamu, do kterého zapisuje administrace — jinak by
+    falešné API lhalo právě o tom, co se jím zkouší. Napsaný článek by se
+    ve správě objevil a na veřejných stránkách ne, a vypadalo by to jako
+    chyba v aplikaci.
+    """
+    return sorted((c for c in SPRAVA_CLANKY if c["stav"] == "Publikovano"),
+                  key=lambda c: c["publikovanoV"], reverse=True)
 
 
 # Oprávnění žijí v paměti procesu, takže restart je vrátí do výchozího
@@ -161,6 +170,30 @@ UCTY = {JA["email"]: JA["zobrazovane"], "petr@priklad.cz": "Petr Svoboda",
         "jana@priklad.cz": "Jana Nováková"}
 JEN_ROCNIK = ("Rozhodci", "Spravce")
 
+# Články pro administraci. Berou se z mocku a dál žijí v paměti procesu —
+# restart je vrátí do výchozího stavu, což je při zkoušení obrazovek žádoucí.
+# Mock nezná stavy, takže se dopočítají z příznaku publikace.
+SPRAVA_CLANKY = [
+    {**c, "stav": "Publikovano" if c.get("publikovano") else "Draft"}
+    for c in D.get("clanky", [])
+]
+
+
+def bez_diakritiky_slug(text):
+    """Tentýž převod jako `Psani.Slug` v API. Opsaný schválně — jinak by se
+    obrazovka zkoušela proti jinému pravidlu, než jaké pak platí."""
+    prevod = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
+    return "-".join(x for x in "".join(
+        z if z.isalnum() else " " for z in prevod.lower()).split())[:120]
+
+
+def clanek_radek(c):
+    z = next((z for z in D["zavody"] if z["slug"] == c.get("zavod")), None)
+    return {"slug": c["slug"], "titulek": c["titulek"], "perex": c.get("perex"),
+            "autor": c.get("autor"), "publikovanoV": c["publikovanoV"],
+            "stav": c["stav"],
+            "zavod": z["slug"] if z else None, "zavodNazev": z["nazev"] if z else None}
+
 
 class H(BaseHTTPRequestHandler):
     def telo_zadosti(self):
@@ -176,8 +209,36 @@ class H(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def do_PUT(self):
+        m = re.match(rf'^/sprava/serie/{D["slug"]}/clanky/([a-z0-9-]+)$', urlparse(self.path).path)
+        if not m:
+            return self.send_error(404)
+        if not self.headers.get("authorization"):
+            return self.send_error(401)
+
+        c = next((c for c in SPRAVA_CLANKY if c["slug"] == m.group(1)), None)
+        if not c:
+            return self.send_error(404)
+
+        vstup = self.telo_zadosti()
+        if not (vstup.get("titulek") or "").strip():
+            return self.chyba(400, "Článek musí mít titulek.")
+        if not (vstup.get("telo") or "").strip():
+            return self.chyba(400, "Článek musí mít text.")
+
+        # Slug se schválně nemění — adresa už mohla někam odejít.
+        c.update({k: vstup.get(k) for k in ("titulek", "telo", "perex", "autor", "zavod")})
+        return self.odpoved(clanek_radek(c))
+
     def do_POST(self):
-        if urlparse(self.path).path != f'/sprava/serie/{D["slug"]}/opravneni':
+        cesta = urlparse(self.path).path
+
+        if cesta == f'/sprava/serie/{D["slug"]}/clanky':
+            return self.zaloz_clanek()
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/clanky/([a-z0-9-]+)/stav$', cesta)):
+            return self.prepni_stav(m.group(1))
+
+        if cesta != f'/sprava/serie/{D["slug"]}/opravneni':
             return self.send_error(404)
         if not self.headers.get("authorization"):
             return self.send_error(401)
@@ -204,6 +265,48 @@ class H(BaseHTTPRequestHandler):
                 "role": role, "zavod": zavod, "udelenoV": "2026-01-01T00:00:00+00:00"}
         OPRAVNENI.append(novy)
         return self.odpoved(novy, 201)
+
+    def zaloz_clanek(self):
+        if not self.headers.get("authorization"):
+            return self.send_error(401)
+
+        vstup = self.telo_zadosti()
+        titulek = (vstup.get("titulek") or "").strip()
+        if not titulek:
+            return self.chyba(400, "Článek musí mít titulek.")
+        if not (vstup.get("telo") or "").strip():
+            return self.chyba(400, "Článek musí mít text.")
+
+        slug = bez_diakritiky_slug(titulek)
+        if not slug:
+            return self.chyba(400, "Z titulku nejde udělat adresa. "
+                                   "Napiš do něj aspoň jedno písmeno nebo číslici.")
+        if any(c["slug"] == slug for c in SPRAVA_CLANKY):
+            return self.chyba(400, f"Článek s adresou „{slug}“ už v ročníku je. Změň titulek.")
+
+        # Nový článek je vždycky koncept — stejně jako v API.
+        novy = {"slug": slug, "titulek": titulek, "telo": vstup.get("telo"),
+                "perex": vstup.get("perex"), "autor": vstup.get("autor"),
+                "zavod": vstup.get("zavod"), "stav": "Draft",
+                "publikovanoV": "2026-09-11T12:00:00+00:00"}
+        SPRAVA_CLANKY.insert(0, novy)
+        return self.odpoved(clanek_radek(novy), 201)
+
+    def prepni_stav(self, slug):
+        if not self.headers.get("authorization"):
+            return self.send_error(401)
+
+        c = next((c for c in SPRAVA_CLANKY if c["slug"] == slug), None)
+        if not c:
+            return self.send_error(404)
+
+        na = self.telo_zadosti().get("stav")
+        if c["stav"] == "Smazano" and na == "Publikovano":
+            return self.chyba(400, "Smazaný článek se nejdřív vrátí jako koncept, "
+                                   "teprve pak se publikuje.")
+
+        c["stav"] = na
+        return self.odpoved(clanek_radek(c))
 
     def do_DELETE(self):
         m = re.match(rf'^/sprava/serie/{D["slug"]}/opravneni/(\d+)$', urlparse(self.path).path)
@@ -272,15 +375,34 @@ class H(BaseHTTPRequestHandler):
                 "zastavky": [{"slug": z["slug"], "nazev": z["nazev"]} for z in D["zavody"]],
                 "opravneni": OPRAVNENI,
             }
+        elif cesta == f'/sprava/serie/{D["slug"]}/clanky':
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            telo = {
+                "serie": D["slug"], "serieNazev": D["nazev"],
+                # Falešné API nerozlišuje rozsahy: kdo je přihlášený, smí
+                # všechno. Rozsahy se zkoušejí v testech, tady jde o obrazovku.
+                "smiNaRocnik": True,
+                "zastavky": [{"slug": z["slug"], "nazev": z["nazev"]} for z in D["zavody"]],
+                "clanky": [clanek_radek(c) for c in SPRAVA_CLANKY
+                           if c["stav"] != "Smazano"],
+            }
+        elif (m := re.match(rf'^/sprava/serie/{D["slug"]}/clanky/([a-z0-9-]+)$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            c = next((c for c in SPRAVA_CLANKY if c["slug"] == m.group(1)), None)
+            if not c:
+                return self.send_error(404)
+            telo = {**clanek_radek(c), "telo": c["telo"]}
         elif cesta == f'/serie/{D["slug"]}/clanky':
-            vybrane = CLANKY
+            vybrane = clanky_verejne()
             if zavod := dotaz.get("zavod", [""])[0]:
                 vybrane = [c for c in vybrane if c.get("zavod") == zavod]
             if (limit := int(dotaz.get("limit", ["0"])[0] or 0)) > 0:
                 vybrane = vybrane[:limit]
             telo = [clanek_shrnuti(c) for c in vybrane]
         elif (m := re.match(rf'^/serie/{D["slug"]}/clanky/([a-z0-9-]+)$', cesta)):
-            c = next((c for c in CLANKY if c["slug"] == m.group(1)), None)
+            c = next((c for c in clanky_verejne() if c["slug"] == m.group(1)), None)
             if not c:
                 return self.send_error(404)
             telo = {**clanek_shrnuti(c), "telo": c["telo"]}

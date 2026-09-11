@@ -391,6 +391,210 @@
                     }
                 }
             }
+        },
+        "/sprava/serie/{serie}/clanky": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vyp\u00ed\u0161e \u010dl\u00e1nky, na kter\u00e9 p\u0159ihl\u00e1\u0161en\u00fd dos\u00e1hne",
+                "description": "Vy\u017eaduje roli editora v ro\u010dn\u00edku nebo aspo\u0148 na jedn\u00e9 zast\u00e1vce. Smazan\u00e9 se nevypisuj\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PrehledClankuDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Zalo\u017e\u00ed \u010dl\u00e1nek jako koncept",
+                "description": "Adresa se odvod\u00ed z titulku. Nov\u00fd \u010dl\u00e1nek je v\u017edycky koncept \u2014 publikuje se zvl\u00e1\u0161\u0165.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ClanekVstupSprava"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ClanekSpravaRadek"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/clanky/{clanek}": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vr\u00e1t\u00ed \u010dl\u00e1nek k \u00faprav\u011b, v\u010detn\u011b konceptu a skryt\u00e9ho",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "clanek",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ClanekDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Ulo\u017e\u00ed \u00fapravu \u010dl\u00e1nku",
+                "description": "Adresa se nem\u011bn\u00ed, ani kdy\u017e se zm\u011bn\u00ed titulek.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "clanek",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ClanekVstupSprava"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ClanekSpravaRadek"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/clanky/{clanek}/stav": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "P\u0159epne stav \u010dl\u00e1nku",
+                "description": "Koncept, publikov\u00e1no, skryt\u00e9, smazan\u00e9. Smazan\u00fd se ned\u00e1 publikovat rovnou \u2014 nejd\u0159\u00edv se vr\u00e1t\u00ed jako koncept.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "clanek",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StavVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ClanekSpravaRadek"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -516,6 +720,58 @@
                     }
                 }
             },
+            "ClanekSpravaRadek": {
+                "required": [
+                    "slug",
+                    "titulek",
+                    "perex",
+                    "autor",
+                    "publikovanoV",
+                    "stav",
+                    "zavod",
+                    "zavodNazev"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "titulek": {
+                        "type": "string"
+                    },
+                    "perex": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "autor": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "publikovanoV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "stav": {
+                        "$ref": "#/components/schemas/StavClanku"
+                    },
+                    "zavod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "zavodNazev": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
             "ClanekVstup": {
                 "required": [
                     "slug",
@@ -559,6 +815,46 @@
                     "publikovano": {
                         "type": "boolean",
                         "default": true
+                    }
+                }
+            },
+            "ClanekVstupSprava": {
+                "required": [
+                    "titulek",
+                    "telo"
+                ],
+                "type": "object",
+                "properties": {
+                    "titulek": {
+                        "type": "string"
+                    },
+                    "telo": {
+                        "type": "string"
+                    },
+                    "perex": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "autor": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "zavod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "publikovanoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
                     }
                 }
             },
@@ -860,6 +1156,39 @@
                     }
                 }
             },
+            "PrehledClankuDto": {
+                "required": [
+                    "serie",
+                    "serieNazev",
+                    "smiNaRocnik",
+                    "zastavky",
+                    "clanky"
+                ],
+                "type": "object",
+                "properties": {
+                    "serie": {
+                        "type": "string"
+                    },
+                    "serieNazev": {
+                        "type": "string"
+                    },
+                    "smiNaRocnik": {
+                        "type": "boolean"
+                    },
+                    "zastavky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ZavodVolbaDto"
+                        }
+                    },
+                    "clanky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ClanekSpravaRadek"
+                        }
+                    }
+                }
+            },
             "PrehledOpravneniDto": {
                 "required": [
                     "serie",
@@ -1150,6 +1479,14 @@
                     }
                 }
             },
+            "StavClanku": {
+                "enum": [
+                    "Draft",
+                    "Publikovano",
+                    "Skryty",
+                    "Smazano"
+                ]
+            },
             "StavRozjizdky": {
                 "enum": [
                     "Planovana",
@@ -1157,6 +1494,17 @@
                     "Dokoncena",
                     "Zrusena"
                 ]
+            },
+            "StavVstup": {
+                "required": [
+                    "stav"
+                ],
+                "type": "object",
+                "properties": {
+                    "stav": {
+                        "$ref": "#/components/schemas/StavClanku"
+                    }
+                }
             },
             "StavZavodu": {
                 "enum": [
@@ -1549,6 +1897,21 @@
                             "string"
                         ],
                         "format": "date"
+                    }
+                }
+            },
+            "ZavodVolbaDto": {
+                "required": [
+                    "slug",
+                    "nazev"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
                     }
                 }
             },

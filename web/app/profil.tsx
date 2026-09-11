@@ -18,11 +18,22 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
   // v tu chvíli musí nabídnout odhlášení — jinak se z toho stavu nedá odejít.
   const jmeno = ja?.zobrazovane;
 
+  const opravneni = ja?.opravneni ?? [];
+
   // Ročníky, kde je správcem. Jen ty: udělovat role smí správce a nabízet
   // odkaz na obrazovku, ze které se vrátí „nemáš práva", je slib naprázdno.
   const spravuje = [
+    ...new Set(opravneni.filter((o) => o.role === "Spravce").map((o) => o.serie)),
+  ];
+
+  // Ročníky, kde smí psát. Editor píše na blog, organizátor a správce
+  // obsahují editora — tohle pořadí je v `Prava` a tady se jen opisuje pro
+  // rozhodnutí, jestli odkaz vůbec nabídnout.
+  const pise = [
     ...new Set(
-      (ja?.opravneni ?? []).filter((o) => o.role === "Spravce").map((o) => o.serie),
+      opravneni
+        .filter((o) => o.role === "Editor" || o.role === "Organizator" || o.role === "Spravce")
+        .map((o) => o.serie),
     ),
   ];
 
@@ -66,6 +77,11 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
             se stránka nenačte znovu. Hlavička se při něm navíc nepřekresluje
             vůbec, takže vedle sebe skončí jméno z jednoho vykreslení
             a obsah z jiného. Sem se chodí zřídka a celé načtení nic nestojí. */}
+        {pise.map((serie) => (
+          <a key={`clanky-${serie}`} href={`/sprava/${serie}/clanky`}>
+            Novinky {serie}
+          </a>
+        ))}
         {spravuje.map((serie) => (
           <a key={serie} href={`/sprava/${serie}/opravneni`}>
             Oprávnění {serie}

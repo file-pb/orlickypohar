@@ -489,3 +489,48 @@ th.vlevo, td.vlevo { text-align: left; }
   .role-napoveda div { grid-template-columns: 1fr; gap: 0; }
   .udeleni .tlacitko { width: 100%; text-align: center; }
 }
+
+/* Formulář článku.
+
+   Na výšku, ne do řádku jako udělení role: titulek, perex a text jsou
+   různě dlouhé a vedle sebe by se buď tlačily, nebo plýtvaly místem.
+   Vstupy vypadají stejně jako u oprávnění — je to jedna administrace. */
+.formular {
+  display: grid; gap: 0.9rem;
+  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+  padding: 1rem; margin-bottom: 1.5rem;
+  /* Text se píše, ne čte přes celou zeď — stejná míra jako u článku. */
+  max-width: 46rem;
+}
+.formular label { display: grid; gap: 0.3rem; font-size: 0.9rem; }
+.formular input, .formular select, .formular textarea {
+  font: inherit; padding: 0.55rem 0.65rem; border-radius: 8px;
+  border: 1px solid var(--linka); background: var(--pozadi); color: var(--text);
+  width: 100%;
+}
+.formular textarea { resize: vertical; line-height: 1.6; font-family: inherit; }
+.formular :focus-visible { outline: 2px solid var(--voda); outline-offset: 1px; }
+.formular label > .poznamka { margin: 0; font-size: 0.8rem; }
+.formular > button {
+  justify-self: start; font: inherit; font-weight: 600; cursor: pointer;
+  padding: 0.6rem 1.1rem; border: 0; border-radius: 8px;
+  background: var(--voda); color: var(--papir);
+}
+
+/* Přepínače stavu. Malá tlačítka v řádku — každé je vlastní formulář,
+   protože bez javascriptu se jinak víc akcí do jednoho nevejde. */
+.stavy { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.7rem; }
+.stavy form { margin: 0; }
+.stavy button {
+  font: inherit; font-size: 0.8rem; cursor: pointer;
+  padding: 0.3rem 0.65rem; border-radius: 999px;
+  border: 1px solid var(--linka); background: var(--pozadi); color: var(--tlumeny);
+}
+.stavy button:hover { border-color: var(--voda); color: var(--voda); }
+
+/* Stav článku jako štítek. Publikovaný nese barvu, protože jediný je
+   venku; koncept a skryté jsou tlumené, smazané červené. */
+.stitek.clanek-publikovano { color: var(--voda); border-color: currentColor; }
+.stitek.clanek-draft { color: var(--tlumeny); border-style: dashed; }
+.stitek.clanek-skryty { color: var(--tlumeny); }
+.stitek.clanek-smazano { color: var(--stav-zruseny); border-color: currentColor; }

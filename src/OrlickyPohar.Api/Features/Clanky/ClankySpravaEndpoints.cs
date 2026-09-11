@@ -92,7 +92,7 @@ public static class ClankySpravaEndpoints
             return Odmitnuti(vstup.Zavod);
 
         var (clanek, chyba) = await sprava.ZalozAsync(kde.SerieId, kde.ZavodId, vstup, ct);
-        if (chyba is not null) return Results.BadRequest(new { chyba });
+        if (chyba is not null) return Results.BadRequest(new { error = chyba });
 
         return Results.Created(
             $"/sprava/serie/{serie}/clanky/{clanek!.Slug}", await RadekAsync(sprava, clanek, ct));
@@ -128,7 +128,7 @@ public static class ClankySpravaEndpoints
             return Odmitnuti(vstup.Zavod);
 
         if (await sprava.UpravAsync(nalezeny, vstup, kam.ZavodId, ct) is { } chyba)
-            return Results.BadRequest(new { chyba });
+            return Results.BadRequest(new { error = chyba });
 
         return Results.Ok(await RadekAsync(sprava, nalezeny, ct));
     }
@@ -141,7 +141,7 @@ public static class ClankySpravaEndpoints
             return Results.NotFound();
 
         if (await sprava.PrepniStavAsync(nalezeny, vstup.Stav, ct) is { } chyba)
-            return Results.BadRequest(new { chyba });
+            return Results.BadRequest(new { error = chyba });
 
         return Results.Ok(await RadekAsync(sprava, nalezeny, ct));
     }
