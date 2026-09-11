@@ -110,6 +110,30 @@ jobs:
   #
   # Doma se pustit nedají — Docker Hub je z pracovního stroje nedostupný,
   # takže tohle je jediné místo, kde se import ověří proti databázi.
+  # Appka se do žádného image nebalí, takže by se bez téhle úlohy s modelem
+  # rozešla potichu: chyba překladu se nikde nespustí a pozná se až na
+  # telefonu. Přesně to se stalo se stavem `Potvrzeny` — v API přibyl,
+  # ve slovníku appky chyběl, a web tutéž chybu chytil jen proto, že
+  # `next build` typy kontroluje.
+  appka:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Závislosti appky
+        run: npm ci
+        working-directory: app
+
+      - name: Typy appky proti API
+        run: npx tsc --noEmit
+        working-directory: app
+
   integrace:
     runs-on: ubuntu-latest
     permissions:

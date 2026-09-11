@@ -463,6 +463,45 @@ druhou už ne — což je přesně ten účinek, který se od škrtu čeká.
 o pořadí rozhodne pokaždé, když někdo vynechá. Do odpovědi se dopočet
 neúčasti nestaví.
 
+#### Co k tomu říkají závodní pravidla (ověřeno 11. 9. 2026)
+
+Zdroj: [Závodní pravidla jachtingu 2025–2028](https://rules.sailing.cz/#dodatek-a),
+Dodatek A — český překlad ČSJ.
+
+**A5.2 dává tvar, který jsme odvodili.** „Loď, která neproplula dráhu,
+vzdala nebo byla diskvalifikována, musí být bodována za cílové umístění
+**o jedno vyšší, než je počet lodí přihlášených do závodu**." Na naší
+stupnici, kde do seriálu jde *pořadí mínus jedna*, to vychází přesně na
+**počet lodí v kategorii**. Odvození v plánu tedy pravidla potvrzují.
+
+**A10 potvrzuje i význam zkratky:** `DNC` = „Neodstartovala, nepřiplula do
+startovního prostoru".
+
+**Co pravidla ale neřeší, je seriál.** Dodatek A boduje **závod** z jeho
+rozjížděk (A2.1: součet bodů z rozjížděk s vyškrtnutím nejhoršího) a
+„počet přihlášených" v A5.2 je počet přihlášených **do toho závodu**.
+Pohár z dvanácti samostatných závodů žádné pravidlo WS neupravuje — je to
+věc vypsání seriálu, tedy rozhodčího. **Zbývají na něj tedy dvě otázky, ne
+jedna:**
+
+1. Počítá se DNC z lodí přihlášených **do ročníku**, nebo z těch, co
+   přijely **na tu zastávku**? Odpověď z 10. 9. („loď se smí přihlásit
+   i mimo ročník a neúčast se doplní") mluví pro ročník, ale nevylučuje
+   druhé čtení.
+2. **Zrušená zastávka:** v sešitu mají Radavská a Vánoční regata u všech
+   lodí nuly, kdežto nadcházející zastávky prázdno. Znamenají ty nuly, že
+   se zrušená zastávka boduje nulou všem, nebo je to jen zápis „nic se
+   nejelo"?
+
+**A ještě jedna věc, která vyplavala:** náš výpočet dává kódům různé body
+podle závažnosti — při dvanácti dokončivších `DNF` třináct a `DNS`
+čtrnáct, doloženo výsledkovou listinou FxCK Cancer 2026. **A5.2 by dala
+oběma totéž** (přihlášených + 1). Pravidla to připouštějí — A4 platí, jen
+„pokud vypsání závodu nebo plachetní směrnice nestanoví jiný systém" —
+takže buď má seriál vlastní úpravu, nebo se v sešitu boduje po svém.
+Neměníme nic: kód stojí na skutečné listině. Je to ale **třetí otázka na
+rozhodčího** a teď se dá položit i s odkazem na pravidlo.
+
 ## Úvodní stránka
 
 Filipův záměr, upřesněný 9. 9. 2026: landing má udělat dojem, kdežto
