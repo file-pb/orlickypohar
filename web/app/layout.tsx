@@ -11,6 +11,23 @@ export const metadata: Metadata = {
   description: "Seriál závodů plachetnic na Orlické přehradě.",
 };
 
+/**
+ * <b>Nic se nesmí předrenderovat při buildu.</b> Hlavička nese přihlášeného
+ * a je v layoutu, takže ji dědí každá stránka — a předrenderovaná hlavička
+ * lže dvakrát: jednou o tom, kdo je přihlášený, a jednou o tom, že
+ * přihlašování vůbec existuje. `prihlasovaniJde` se totiž vyhodnotí z
+ * proměnných prostředí, a ty při buildu nejsou; nastavují se až za běhu.
+ *
+ * Projevilo se to jako „po přihlášení chvíli trvá, než naskočí profil":
+ * `/pravidla` a `/appka` se stavěly staticky a vracely se z cache s
+ * `s-maxage=31536000`, tedy s hlavičkou bez profilu i bez odkazu na
+ * přihlášení. Na dynamických stránkách se profil objevil hned.
+ *
+ * Konfigurace v layoutu platí i pro všechny stránky pod ním, takže tohle
+ * je jediné místo, kde to musí stát.
+ */
+export const dynamic = "force-dynamic";
+
 export default async function Layout({ children }: { children: React.ReactNode }) {
   // Hlavička se ptá, kdo je přihlášený. Dokud identita neběží, je to null
   // a nic navíc se nezobrazí — veřejné stránky se tím nemění.
