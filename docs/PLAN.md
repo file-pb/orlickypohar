@@ -899,6 +899,20 @@ jako záchrana, kdyby administrace ve fázi 5 nestíhala.
 | Existující obsah | Facebook | něco z historie závodů se dá najít tam |
 | Inspirace obsahem | [Česká námořní rallye](https://www.ceskanamornirallye.cz/) | co má český web závodu obsahovat a v jakém jazyce |
 | Inspirace formou | [Vendée Globe](https://www.vendeeglobe.org/), [Rolex Middle Sea Race](https://www.rolexmiddlesearace.com/), [Barcolana](https://www.barcolana.it/en) | moderní responzivní podání výsledků a průběhu |
+| **Pravidla jachtingu** | [rules.sailing.cz](https://rules.sailing.cz/) | závodní pravidla česky — kódy výsledků, škrty, protesty |
+| **Český svaz jachtingu** | [sailing.cz](https://www.sailing.cz/) | ukázkové výsledkové listiny, lodní třídy a jejich weby |
+
+**Svaz je nejbližší zdroj pravdy k otevřeným otázkám.** Filip, 11. 9. 2026:
+s Českým svazem jachtingu je pohár úzce spojený a rozhodčí je jeho člen.
+Znamená to, že část otázek, které dosud čekají na rozhodčího, má nejspíš
+**napsanou odpověď v závodních pravidlech** — hodnota za neúčast, pořadí
+kódů za `DNF` a `DNS`, chování škrtu. Než se na ně bude ptát člověk, patří
+se podívat do [rules.sailing.cz](https://rules.sailing.cz/); dotaz na
+rozhodčího má pak cenu jen tam, kde se pohár od pravidel vědomě liší.
+
+Kontakt na rozhodčího je na jeho profilu u svazu. **Do repozitáře se
+nekopíruje** — je to profil konkrétního člověka a osobní údaje nemají
+v gitu co dělat; odkaz stačí a je vždycky aktuální.
 
 **ČNR se drž obsahem, ne formou.** Je to nejbližší srovnatelný český web
 a dobře ukazuje, co takový web má mít, ale jeho podání je zastaralé.
