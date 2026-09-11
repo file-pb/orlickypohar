@@ -217,6 +217,25 @@ Mac umí nabídnout špatné síťové rozhraní) jsou v [app/README.md](app/REA
 APK ke stažení najdou lidé na `/appka`; adresu posledního buildu drží
 proměnná `APK_URL`, viz níž.
 
+## Zátěž
+
+```bash
+tools/zatez.py                                                    # proti falešnému API
+tools/zatez.py --cil https://orlickypohar-api.klihovka.cz --rps 20 --doba 30
+```
+
+Čte, nikdy nezapisuje — zátěž na importu nebo na workflow by měnila skutečná
+data. Měří pět veřejných cest a **průběžné pořadí je z nich zdaleka
+nejdražší**: počítá se z celého ročníku při každém dotazu.
+
+**Strop nad 30 dotazy za vteřinu není náš.** Před API stojí Traefik
+s `ratelimit-standard` (30/s v průměru, špička 100, počítáno podle
+`Cf-Connecting-Ip`, tedy podle jedné adresy). Nad tím se měří limiter, ne
+aplikace, a pozná se to podle 429 ve výpisu. A ještě před ním je Cloudflare:
+co odpoví z cache, do API vůbec nedojde.
+
+Návratový kód je nenulový, jakmile se objeví něco jiného než 200.
+
 ## Klient API
 
 ```bash

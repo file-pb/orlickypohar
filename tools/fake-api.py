@@ -566,7 +566,11 @@ class H(BaseHTTPRequestHandler):
         rozdelena = urlparse(self.path)
         cesta, dotaz = rozdelena.path, parse_qs(rozdelena.query)
 
-        if cesta == "/serie":
+        if cesta in ("/health", "/health/ready"):
+            # Skutečné API je má taky; bez nich by zátěžový test hlásil
+            # červenou na endpointu, který s aplikací nesouvisí.
+            telo = {"status": "Healthy"}
+        elif cesta == "/serie":
             telo = [{"slug": D["slug"], "nazev": D["nazev"], "rok": D["rok"],
                      "pocetZavodu": len(D["zavody"])}]
         elif cesta == f'/serie/{D["slug"]}':
