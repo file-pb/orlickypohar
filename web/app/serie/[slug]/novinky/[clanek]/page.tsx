@@ -4,6 +4,7 @@ import { ApiNedostupne, nactiClanek } from "@/lib/api";
 import { datumClanku } from "@/app/datum";
 import { Vypadek } from "@/app/vypadek";
 import { Odstavce } from "@/app/novinky";
+import { FotkaClanku } from "@/app/fotky";
 import { Drobecky } from "@/app/drobecky";
 import { PruhUkazky } from "@/app/ukazka";
 
@@ -53,6 +54,11 @@ export default async function ClanekStranka({ params }: Parametry) {
         {datumClanku(c.publikovanoV)}
         {c.autor && ` · ${c.autor}`}
       </p>
+
+      {/* Fotka nad textem. Bez ní vypadá článek jako výpis z informačního
+          systému — a zrovna blog má být to místo, kde web nevypadá jako
+          tabulka. */}
+      <FotkaClanku slug={c.slug} />
 
       <article className="clanek">
         {c.perex && <p className="perex">{c.perex}</p>}

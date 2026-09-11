@@ -534,3 +534,36 @@ th.vlevo, td.vlevo { text-align: left; }
 .stitek.clanek-draft { color: var(--tlumeny); border-style: dashed; }
 .stitek.clanek-skryty { color: var(--tlumeny); }
 .stitek.clanek-smazano { color: var(--stav-zruseny); border-color: currentColor; }
+
+/* Náhled v kartě novinky.
+
+   Mřížka místo obalu navíc: fotka je v prvním sloupci přes všechny řádky,
+   text teče ve druhém. Značka tím zůstává beze změny — přidat kolem tří
+   bloků <div> jen kvůli rozložení by znamenalo měnit komponentu kvůli CSS. */
+.karta.s-fotkou { display: flex; gap: 0.9rem; align-items: flex-start; }
+.karta.s-fotkou > .nahled { flex: none; }
+.karta.s-fotkou > .text { min-width: 0; }
+.nahled img {
+  display: block; width: 5.5rem; height: 4.2rem;
+  object-fit: cover; border-radius: 8px;
+  /* Než se fotka načte, ať tam není bílá díra. */
+  background: var(--zvyrazneni);
+}
+
+/* Na úzkém displeji fotka nahoru, přes celou šířku — vedle textu by z ní
+   zbyl proužek, ze kterého se nepozná nic. */
+@media (max-width: 30rem) {
+  .karta.s-fotkou { flex-direction: column; gap: 0.6rem; }
+  .nahled img { width: 100%; height: 8rem; }
+}
+
+/* Velká fotka nad článkem. Drží šířku textu, ne obalu — jinak by článek
+   začínal fotkou přes celou obrazovku a pokračoval úzkým sloupcem. */
+.fotka-clanku { margin: 0 0 1.5rem; max-width: 46rem; }
+.fotka-clanku img {
+  display: block; width: 100%; height: clamp(180px, 30vh, 320px);
+  object-fit: cover; border-radius: 12px; background: var(--zvyrazneni);
+}
+.fotka-clanku figcaption {
+  margin-top: 0.4rem; font-size: 0.75rem; color: var(--tlumeny);
+}

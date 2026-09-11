@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { datumClanku } from "@/app/datum";
+import { Nahled } from "@/app/fotky";
 import type { ClanekShrnuti } from "@/lib/api";
 
 /**
@@ -12,17 +13,25 @@ export function VypisNovinek({ serie, clanky }: { serie: string; clanky: ClanekS
     <ul className="seznam novinky">
       {clanky.map((c) => (
         <li key={c.slug}>
-          <Link className="karta" href={`/serie/${serie}/novinky/${c.slug}`}>
-            <div className="nazev">
-              <span>{c.titulek}</span>
-              {/* Odkud článek je. Blog má dvě úrovně a pozvánka pořadatele
-                  na svůj závod je něco jiného než souhrn od organizátora. */}
-              {c.zavodNazev && <span className="stitek">{c.zavodNazev}</span>}
-            </div>
-            {c.perex && <p className="perex">{c.perex}</p>}
-            <div className="detail">
-              {datumClanku(c.publikovanoV)}
-              {c.autor && ` · ${c.autor}`}
+          <Link className="karta s-fotkou" href={`/serie/${serie}/novinky/${c.slug}`}>
+            {/* Náhled je dekorace, ne informace — proto nenese popisek
+                a nesmí se tvářit, že je z toho závodu. */}
+            <Nahled slug={c.slug} />
+            {/* Text v obalu, aby ležel vedle fotky. Dalo by se to poskládat
+                i mřížkou bez něj, ale fotka by pak musela vědět, kolik je
+                pod ní řádků — a perex je nepovinný, takže se to mění. */}
+            <div className="text">
+              <div className="nazev">
+                <span>{c.titulek}</span>
+                {/* Odkud článek je. Blog má dvě úrovně a pozvánka pořadatele
+                    na svůj závod je něco jiného než souhrn od organizátora. */}
+                {c.zavodNazev && <span className="stitek">{c.zavodNazev}</span>}
+              </div>
+              {c.perex && <p className="perex">{c.perex}</p>}
+              <div className="detail">
+                {datumClanku(c.publikovanoV)}
+                {c.autor && ` · ${c.autor}`}
+              </div>
             </div>
           </Link>
         </li>

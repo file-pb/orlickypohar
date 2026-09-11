@@ -23,7 +23,9 @@ import pathlib
 from PIL import Image
 
 SLOZKA = pathlib.Path(__file__).resolve().parent.parent / "public" / "foto"
-SIRKY = [800, 1200, 1600]
+# 400 je náhled do karty článku, zbytek hero a velká fotka v článku.
+# Náhled na 800 px by byl čtyřikrát větší, než na co se kouká.
+SIRKY = [400, 800, 1200, 1600]
 KVALITA = 56
 
 
