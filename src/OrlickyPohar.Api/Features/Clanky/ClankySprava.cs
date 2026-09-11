@@ -41,6 +41,14 @@ public record ClanekVstupSprava(
 /// veřejné vidí jen publikované a nikoho se neptá, tohle vidí i koncepty
 /// a ptá se na právo u každého řádku.
 /// </para>
+/// <para>
+/// <b>Článek předaný do <c>UpravAsync</c> a <c>PrepniStavAsync</c> musí
+/// pocházet z téhož požadavku.</b> Entita z jiného <c>DbContext</c> není
+/// sledovaná a uložení tiše neudělá nic — chyba se pak neprojeví tady, ale
+/// až o dva kroky dál tím, že se změna „neuložila". V endpointech to platí
+/// samo sebou, protože si článek načtou přes <c>NajdiAsync</c> v témže
+/// požadavku; stálo to jeden běh CI, tak ať je to napsané.
+/// </para>
 /// </summary>
 public class ClankySprava(AppDbContext db, TimeProvider cas)
 {

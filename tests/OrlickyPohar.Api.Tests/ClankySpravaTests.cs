@@ -96,13 +96,14 @@ public class ClankySpravaTests(PostgresFixture fixture)
     {
         var (serieId, radava, _) = await RocnikAsync("adresa");
 
-        var (clanek, _) = await SpravaAsync(s =>
-            s.ZalozAsync(serieId, radava, Vstup("Původní titulek"), default));
-
-        await SpravaAsync(async s =>
+        // Založení i úprava v jednom scope: entita se mění v tom kontextu,
+        // který ji sleduje. V produkci to tak je samo sebou — endpoint si
+        // článek načte a upraví v témže požadavku.
+        await VeSluzbeAsync(async sp =>
         {
-            await s.UpravAsync(clanek!, Vstup("Úplně jiný titulek"), radava, default);
-            return true;
+            var sprava = sp.GetRequiredService<ClankySprava>();
+            var (clanek, _) = await sprava.ZalozAsync(serieId, radava, Vstup("Původní titulek"), default);
+            return await sprava.UpravAsync(clanek!, Vstup("Úplně jiný titulek"), radava, default);
         });
 
         var po = await SpravaAsync(s => s.NajdiAsync(serieId, "puvodni-titulek", default));
@@ -117,9 +118,12 @@ public class ClankySpravaTests(PostgresFixture fixture)
     {
         var (serieId, radava, _) = await RocnikAsync("koes");
 
-        var (clanek, _) = await SpravaAsync(s =>
-            s.ZalozAsync(serieId, radava, Vstup("Omylem napsaný"), default));
-        await SpravaAsync(s => s.PrepniStavAsync(clanek!, StavClanku.Smazano, default));
+        await VeSluzbeAsync(async sp =>
+        {
+            var sprava = sp.GetRequiredService<ClankySprava>();
+            var (clanek, _) = await sprava.ZalozAsync(serieId, radava, Vstup("Omylem napsaný"), default);
+            return await sprava.PrepniStavAsync(clanek!, StavClanku.Smazano, default);
+        });
 
         var vypis = await SpravaAsync(s => s.VypisAsync(serieId, true, [], default));
         Assert.DoesNotContain(vypis, r => r.Slug == "omylem-napsany");
@@ -181,11 +185,15 @@ public class ClankySpravaTests(PostgresFixture fixture)
             return true;
         });
 
-        var (vydany, _) = await SpravaAsync(s => s.ZalozAsync(serieId, radava, Vstup("Vyšlo"), default));
-        var (stazeny, _) = await SpravaAsync(s => s.ZalozAsync(serieId, radava, Vstup("Staženo"), default));
+        await VeSluzbeAsync(async sp =>
+        {
+            var sprava = sp.GetRequiredService<ClankySprava>();
+            var (vydany, _) = await sprava.ZalozAsync(serieId, radava, Vstup("Vyšlo"), default);
+            var (stazeny, _) = await sprava.ZalozAsync(serieId, radava, Vstup("Staženo"), default);
 
-        await SpravaAsync(s => s.PrepniStavAsync(vydany!, StavClanku.Publikovano, default));
-        await SpravaAsync(s => s.PrepniStavAsync(stazeny!, StavClanku.Skryty, default));
+            await sprava.PrepniStavAsync(vydany!, StavClanku.Publikovano, default);
+            return await sprava.PrepniStavAsync(stazeny!, StavClanku.Skryty, default);
+        });
 
         var slug = await VeSluzbeAsync(sp =>
             sp.GetRequiredService<AppDbContext>().Serie
