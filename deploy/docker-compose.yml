@@ -90,6 +90,10 @@ services:
       IDENTITA_AUTHORITY: "https://ucty.${PLATFORM_DOMAIN:?}"
       IDENTITA_CLIENT_ID: "390035493066113030"
       WEB_URL: "https://${APP_NAME}.${PLATFORM_DOMAIN:?}"
+      # Kam vede „Účet a heslo" v profilové nabídce. Samoobsluha
+      # poskytovatele: heslo, e-mail, druhý faktor. Adresa je tady, a ne
+      # v kódu, aby výměna poskytovatele neznamenala změnu webu.
+      IDENTITA_UCET_URL: "https://ucty.${PLATFORM_DOMAIN:?}/ui/console/users/me"
     labels:
       traefik.enable: "true"
       traefik.docker.network: edge

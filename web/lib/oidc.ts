@@ -20,6 +20,23 @@ const VEREJNA_ADRESA = process.env.WEB_URL ?? "";
 /** Bez konfigurace se přihlašování nikde nenabízí. */
 export const prihlasovaniJde = Boolean(AUTORITA && KLIENT && VEREJNA_ADRESA);
 
+/**
+ * Kde si člověk spravuje vlastní účet — heslo, e-mail, druhý faktor.
+ *
+ * <b>Adresa z prostředí, ne z kódu.</b> Aplikace tím pořád neví, kdo je
+ * poskytovatel; ví jen, kde má účet, a to je konfigurace jako autorita nebo
+ * identifikátor klienta. Kdyby tu stála cesta do konzole Zitadelu, byl by
+ * to první řádek, který výměnu poskytovatele stojí změnu kódu.
+ *
+ * <b>Vlastní tvar tu být nemůže.</b> OIDC standardizuje přihlášení, ne
+ * správu účtu — heslo do naší aplikace nepatří a měnit e-mail znamená
+ * ověřit ho poštou. Obojí umí poskytovatel a my ho jen ukážeme.
+ *
+ * Prázdné znamená, že se položka nenabízí — stejně jako se bez autority
+ * nenabízí přihlášení.
+ */
+export const ucetUPoskytovatele = process.env.IDENTITA_UCET_URL ?? "";
+
 export const COOKIE_TOKEN = "op_token";
 export const COOKIE_TOK = "op_tok";
 

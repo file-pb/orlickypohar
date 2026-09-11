@@ -148,6 +148,11 @@ curl -X POST localhost:8080/sprava/serie/2026/vysledky/radavska-regata/rozjizdky
   -d '{"stav":"Overeno"}'
 ```
 
+**Heslo ani e-mail aplikace nespravuje.** OIDC standardizuje přihlášení, ne
+správu účtu: heslo naší aplikací neprojde a změna e-mailu se ověřuje poštou.
+Profilová nabídka proto jen odkazuje na samoobsluhu poskytovatele —
+adresou z `IDENTITA_UCET_URL`, takže web pořád neví, kdo poskytovatel je.
+
 ## Veřejné čtení
 
 ```bash
@@ -276,4 +281,5 @@ což se pozná jen tím, že se nová funkce neobjeví.
 | `API_URL` | web | Adresa API pro server-side rendering. V provozu vnitřní `http://app:8080`. |
 | `UKAZKOVE_SERIE` | web | Slugy ročníků s **vymyšlenými výsledky**, oddělené čárkou. Web u nich ukáže pruh, že data nejsou skutečná. Až dorazí skutečné výsledky, řádek se smaže. |
 | `APK_URL` | web | Adresa posledního buildu appky pro stránku `/appka`. **Každý build má jinou** — po `npm --prefix app run apk` se přepíše v `deploy/docker-compose.yml`. Když se zapomene, stránka tiše nabízí předchozí build. |
+| `IDENTITA_UCET_URL` | web | Samoobsluha poskytovatele identity — heslo, e-mail, druhý faktor. Vede na ni položka „Účet a heslo" v profilové nabídce; bez proměnné se nenabízí. **Adresa je v konfiguraci, ne v kódu**, aby výměna poskytovatele neznamenala změnu webu. |
 | `EXPO_PUBLIC_API_URL` | appka | Adresa API při vývoji; výchozí je produkce. |

@@ -1,4 +1,5 @@
 import type { Ja } from "@/lib/ja";
+import { ucetUPoskytovatele } from "@/lib/oidc";
 import { ZavriMimo } from "@/app/zavri-mimo";
 
 /**
@@ -108,6 +109,14 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
             Oprávnění {serie}
           </a>
         ))}
+        {/* Účet spravuje poskytovatel, ne my: heslo naší aplikací neprojde
+            a změna e-mailu se ověřuje poštou. Odsud se tam jen odchází —
+            do nové karty, aby člověk nepřišel o rozdělanou stránku. */}
+        {ucetUPoskytovatele && (
+          <a href={ucetUPoskytovatele} target="_blank" rel="noopener noreferrer">
+            Účet a heslo ↗
+          </a>
+        )}
         {/* Formulář, ne odkaz. Odhlášení něco mění, takže se nesmí dát
             vyvolat pouhou návštěvou adresy — přednačtením, náhledem odkazu
             nebo firemní kontrolou, která si stránky prochází sama. */}
