@@ -37,14 +37,17 @@ public static class OpravneniEndpoints
         g.MapGet("/", PrehledAsync)
             .Produces<PrehledOpravneniDto>()
             .WithSummary("Vypíše oprávnění ročníku i zastávky, na které jdou udělit")
-            .WithDescription("Vyžaduje roli správce v tom ročníku.");
+            .WithDescription(
+                "Vyžaduje roli správce, nebo rozhodčího v tom ročníku. Co smí udělit, " +
+                "říká SmiNaRocnik.");
 
         g.MapPost("/", UdelAsync)
             .Produces<OpravneniRadek>(StatusCodes.Status201Created)
             .Produces<OpravneniRadek>()
             .WithSummary("Udělí roli podle e-mailu")
             .WithDescription(
-                "Vyžaduje roli správce v tom ročníku. Výjimka: udělení prvního " +
+                "Vyžaduje roli správce v tom ročníku; rozhodčí smí udělit pořadatele " +
+                "a editora jedné zastávce. Výjimka: udělení prvního " +
                 "správce projde i na hlavičku " + ImportniToken.Hlavicka +
                 ", dokud v ročníku žádný správce není. Účet musí existovat — " +
                 "vzniká až prvním přihlášením.");
@@ -52,7 +55,9 @@ public static class OpravneniEndpoints
         g.MapDelete("/{id:int}", OdeberAsync)
             .Produces(StatusCodes.Status204NoContent)
             .WithSummary("Odebere jedno oprávnění")
-            .WithDescription("Vyžaduje roli správce. Posledního správce ročníku odebrat nelze.");
+            .WithDescription(
+                "Vyžaduje roli správce; rozhodčí smí odebrat, co smí udělit. " +
+                "Posledního správce ročníku odebrat nelze.");
     }
 
     private static async Task<IResult> PrehledAsync(
@@ -61,10 +66,15 @@ public static class OpravneniEndpoints
         var rozsah = await rozsahy.NajdiAsync(serie, null, ct);
         if (rozsah is null) return Neni(kdo);
 
-        if (!await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Spravce, rozsah.SerieId), ct))
+        // Rozhodčího pokrývá i správce, takže tahle jedna otázka pustí oba.
+        if (!await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Rozhodci, rozsah.SerieId), ct))
             return Nesmi(kdo);
 
-        return Results.Ok(await sprava.PrehledAsync(rozsah.SerieId, ct));
+        var spravce = await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Spravce, rozsah.SerieId), ct);
+
+        return await sprava.PrehledAsync(rozsah.SerieId, ct) is { } prehled
+            ? Results.Ok(prehled with { SmiNaRocnik = spravce })
+            : Neni(kdo);
     }
 
     private static async Task<IResult> UdelAsync(
@@ -96,7 +106,15 @@ public static class OpravneniEndpoints
 
         var log = logu.CreateLogger("Sprava");
 
-        if (!await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Spravce, rozsah.SerieId), ct))
+        var spravce = await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Spravce, rozsah.SerieId), ct);
+
+        // Rozhodčí přiřazuje pořadatele a editora jedné zastávce. Pravidlo je
+        // v `Udeleni`, sem patří jen otázka, jestli rozhodčím je.
+        var rozhodci = !spravce
+                       && Udeleni.RozhodciSmiUdelit(telo.Role, naZavod)
+                       && await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Rozhodci, rozsah.SerieId), ct);
+
+        if (!spravce && !rozhodci)
         {
             var maSpravce = await sprava.MaSpravceAsync(rozsah.SerieId, ct);
 
@@ -145,8 +163,16 @@ public static class OpravneniEndpoints
         var rozsah = await rozsahy.NajdiAsync(serie, null, ct);
         if (rozsah is null) return Neni(kdo);
 
-        if (!await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Spravce, rozsah.SerieId), ct))
+        if (!await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Rozhodci, rozsah.SerieId), ct))
             return Nesmi(kdo);
+
+        // Rozhodčí smí odebrat jen to, co smí i udělit — jinak by jedním
+        // kliknutím sundal správce nebo sám sebe z celého ročníku.
+        if (!await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Spravce, rozsah.SerieId), ct))
+        {
+            if (await sprava.NajdiAsync(rozsah.SerieId, id, ct) is not { } co) return Results.NotFound();
+            if (!Udeleni.RozhodciSmiUdelit(co.Role, co.NaZavod)) return Nesmi(kdo);
+        }
 
         return await sprava.OdeberAsync(rozsah.SerieId, id, ct) switch
         {

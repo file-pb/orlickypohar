@@ -31,7 +31,11 @@ public record PrehledOpravneniDto(
     string Serie,
     string Nazev,
     IReadOnlyList<ZastavkaVolbaDto> Zastavky,
-    IReadOnlyList<OpravneniRadek> Opravneni);
+    IReadOnlyList<OpravneniRadek> Opravneni,
+    // Správce smí na celý ročník, rozhodčí jen pořadatele a editora
+    // zastávky. Obrazovka podle toho nabídne role i rozsahy — nabízet volbu,
+    // která skončí „nemáš práva", je slib naprázdno.
+    bool SmiNaRocnik = false);
 
 /// <summary>Jak dopadlo udělení.</summary>
 public enum StavUdeleni
@@ -114,6 +118,20 @@ public class OpravneniSprava(AppDbContext db, TimeProvider cas)
                 o.Zavod!.Slug,
                 o.UdelenoV))
             .ToListAsync(ct);
+
+    /// <summary>
+    /// Role a rozsah jednoho oprávnění ročníku, nebo <c>null</c>. Potřebuje ho
+    /// odebrání rozhodčím: smí jen to, co smí i udělit.
+    /// </summary>
+    public async Task<(Role Role, bool NaZavod)?> NajdiAsync(int serieId, int opravneniId, CancellationToken ct)
+    {
+        var o = await db.Opravneni
+            .Where(o => o.Id == opravneniId && o.SerieId == serieId)
+            .Select(o => new { o.Role, o.ZavodId })
+            .FirstOrDefaultAsync(ct);
+
+        return o is null ? null : (o.Role, o.ZavodId is not null);
+    }
 
     /// <summary>Má ročník aspoň jednoho správce? Na tom stojí bootstrap.</summary>
     public Task<bool> MaSpravceAsync(int serieId, CancellationToken ct) =>

@@ -28,6 +28,9 @@ for _z in D["zavody"]:
     for _r in _z["rozjizdky"]:
         _r.setdefault("stavVysledku", "Potvrzeno")
         _r.setdefault("publikovano", True)
+    # Účast z mocku je ze sešitu rozhodčího, tedy potvrzená — jako po migraci.
+    for _u in _z["ucasti"]:
+        _u.setdefault("stav", "Potvrzena")
 
 # Kódy v pořadí podle závažnosti; doložené je jen DNF před DNS.
 ZAVAZNOST = ["Rdg", "Ret", "Dnf", "Ocs", "Dsq", "Dns", "Dnc"]
@@ -291,6 +294,44 @@ def proc_nejde_ulozit(radky):
     return None
 
 
+# --- Přihlášky lodí na zastávku --------------------------------------------
+# Opsané z `Features/Zavody/Prihlasky.cs`, ze stejného důvodu jako bodování.
+STAVY_UCASTI = ["Prihlasena", "Potvrzena", "Zrusena"]
+
+
+def proc_nejde_prihlasit(stav):
+    if stav in ("Vypsany", "Odjety"):
+        return None
+    if stav == "Zruseny":
+        return "Zastávka je zrušená, lodě se na ni nepřihlašují."
+    return "Závod ještě není vypsaný. Lodě se přihlašují od vypsání."
+
+
+def ma_vysledky(z, lod):
+    return any(v["lod"] == lod for r in z["rozjizdky"] for v in r["vysledky"])
+
+
+def lod_na_zastavce(z, lod, smi=True):
+    u = next((u for u in z["ucasti"] if u["lod"] == lod), None)
+    vysledky = ma_vysledky(z, lod)
+    return {"prihlaskaId": PRIHLASKA_ID[lod], "lod": nazvy(lod),
+            "cisloPlachty": LODE[lod].get("cisloPlachty"), "typLodi": LODE[lod].get("typ"),
+            "majitel": jmeno(LODE[lod]["majitel"]), "kategorie": KAT[lod],
+            "stav": u["stav"] if u else None, "maVysledky": vysledky,
+            "mozneStavy": [] if not u or not smi else
+            [s for s in STAVY_UCASTI if s != u["stav"] and not (s == "Zrusena" and vysledky)]}
+
+
+def prihlasky_dto(z):
+    chyba = proc_nejde_prihlasit(z["stav"])
+    lode = sorted(D["prihlasky"], key=lambda p: (KAT_PORADI[p["kategorie"]], nazvy(p["lod"])))
+    return {"serie": D["slug"], "serieNazev": D["nazev"], "zavod": z["slug"],
+            "zavodNazev": z["nazev"], "stavZavodu": z["stav"],
+            "smiSpravovat": chyba is None, "procNelze": chyba,
+            "kategorie": [k["nazev"] for k in sorted(D["kategorie"], key=lambda k: k["poradi"])],
+            "lode": [lod_na_zastavce(z, p["lod"], chyba is None) for p in lode]}
+
+
 def zapis_dto(z, r):
     chyba = proc_nejde_prepsat(z, r)
     podle_lodi = {v["lod"]: v for v in r["vysledky"]}
@@ -432,6 +473,10 @@ class H(BaseHTTPRequestHandler):
             return self.workflow(m.group(1), int(m.group(2)), m.group(3))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)/rozjizdky$', cesta)):
             return self.pridej_rozjizdku(m.group(1))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode$', cesta)):
+            return self.prihlas_lod(m.group(1))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode/(\d+)/stav$', cesta)):
+            return self.prepni_lod(m.group(1), int(m.group(2)))
 
         if cesta == f'/sprava/serie/{D["slug"]}/zastavky':
             return self.zaloz_zastavku()
@@ -548,6 +593,81 @@ class H(BaseHTTPRequestHandler):
             if all(u["lod"] != lod for u in z["ucasti"]):
                 z["ucasti"].append({"lod": lod, "kormidelnik": None, "posadka": None})
         return self.odpoved(zapis_dto(z, r))
+
+    def prihlas_lod(self, zavod):
+        z = self.zastavka(zavod)
+        if not z:
+            return None
+        if (chyba := proc_nejde_prihlasit(z["stav"])):
+            return self.chyba(400, chyba)
+
+        vstup = self.telo_zadosti()
+        if bool(vstup.get("prihlaskaId")) == bool(vstup.get("novaLod")):
+            return self.chyba(400, "Přihlas buď loď z ročníku, nebo novou loď — jedno z toho.")
+
+        if (pid := vstup.get("prihlaskaId")):
+            lod = LOD_PODLE_ID.get(pid)
+            if not lod:
+                return self.chyba(400, f"Přihláška {pid} do ročníku nepatří.")
+        else:
+            n = vstup["novaLod"]
+            nazev = (n.get("nazev") or "").strip()
+            kategorie = (n.get("kategorie") or "").strip()
+            if not nazev:
+                return self.chyba(400, "Loď musí mít název.")
+            if not kategorie:
+                return self.chyba(400, "Vyber kategorii, ve které loď pojede.")
+            if not (n.get("majitelJmeno") or "").strip() or not (n.get("majitelPrijmeni") or "").strip():
+                return self.chyba(400, "Vyplň jméno i příjmení majitele. Ve výsledcích stojí vedle lodi.")
+            if kategorie not in KAT_PORADI:
+                return self.chyba(400, f"Kategorie {kategorie} v ročníku není.")
+
+            lod = next((k for k, l in LODE.items() if l["nazev"] == nazev), None)
+            if lod and lod in KAT and KAT[lod] != kategorie:
+                return self.chyba(400, f"Loď {nazev} už v ročníku je, a to v kategorii {KAT[lod]}. "
+                                       "Přihlas ji ze seznamu lodí ročníku.")
+            if not lod:
+                # Nová loď i s majitelem, jako v API. Klíče jsou jen pro mock.
+                lod = f"nova-{len(LODE) + 1}"
+                osoba = f"osoba-nova-{len(OSOBY) + 1}"
+                OSOBY[osoba] = {"klic": osoba, "jmeno": n["majitelJmeno"].strip(),
+                                "prijmeni": n["majitelPrijmeni"].strip()}
+                LODE[lod] = {"klic": lod, "nazev": nazev, "majitel": osoba,
+                             "cisloPlachty": (n.get("cisloPlachty") or "").strip() or None,
+                             "typ": (n.get("typ") or "").strip() or None}
+            if lod not in KAT:
+                D["prihlasky"].append({"lod": lod, "kategorie": kategorie})
+                KAT[lod] = kategorie
+                PRIHLASKA_ID[lod] = max(PRIHLASKA_ID.values()) + 1
+                LOD_PODLE_ID[PRIHLASKA_ID[lod]] = lod
+
+        u = next((u for u in z["ucasti"] if u["lod"] == lod), None)
+        if u and u["stav"] != "Zrusena":
+            return self.odpoved(lod_na_zastavce(z, lod))
+        if u:
+            u["stav"] = "Prihlasena"
+        else:
+            z["ucasti"].append({"lod": lod, "kormidelnik": None, "posadka": None, "stav": "Prihlasena"})
+        return self.odpoved(lod_na_zastavce(z, lod), 201)
+
+    def prepni_lod(self, zavod, prihlaska):
+        z = self.zastavka(zavod)
+        if not z:
+            return None
+        if (chyba := proc_nejde_prihlasit(z["stav"])):
+            return self.chyba(400, chyba)
+
+        lod = LOD_PODLE_ID.get(prihlaska)
+        u = next((u for u in z["ucasti"] if u["lod"] == lod), None) if lod else None
+        if not u:
+            return self.send_error(404)
+
+        na = self.telo_zadosti().get("stav")
+        if na == "Zrusena" and u["stav"] != "Zrusena" and ma_vysledky(z, lod):
+            return self.chyba(400, "Loď už má na zastávce výsledky. "
+                                   "Zrušit ji jde, až je v zápisu rozjížděk smažeš.")
+        u["stav"] = na
+        return self.odpoved(lod_na_zastavce(z, lod))
 
     def pridej_rozjizdku(self, zavod):
         z = self.zastavka(zavod)
@@ -736,6 +856,8 @@ class H(BaseHTTPRequestHandler):
                 # jsou venku.
                 "zastavky": [{"slug": z["slug"], "nazev": z["nazev"]} for z in D["zavody"]],
                 "opravneni": OPRAVNENI,
+                # Přihlášený vývojář je správce, takže smí i na celý ročník.
+                "smiNaRocnik": True,
             }
         elif cesta == f'/sprava/serie/{D["slug"]}/vysledky':
             if not self.headers.get("authorization"):
@@ -763,6 +885,11 @@ class H(BaseHTTPRequestHandler):
             if not r:
                 return None
             telo = zapis_dto(z, r)
+        elif (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode$', cesta)):
+            z = self.zastavka(m.group(1))
+            if not z:
+                return None
+            telo = prihlasky_dto(z)
         elif cesta == f'/sprava/serie/{D["slug"]}/zastavky':
             if not self.headers.get("authorization"):
                 return self.send_error(401)
@@ -830,9 +957,12 @@ class H(BaseHTTPRequestHandler):
                                for v in vysledky_zavodu(
                                    [r for r in z["rozjizdky"] if plati(r)],
                                    z.get("pocetSkrtu", 0))],
+                    # Zrušená přihláška veřejně neexistuje, nepotvrzená nese
+                    # poznámku — jako v API.
                     "lode": [{"lod": nazvy(u["lod"]), "kategorie": KAT[u["lod"]],
-                              "kormidelnik": jmeno(u["kormidelnik"]) if u.get("kormidelnik") else None}
-                             for u in sorted(z["ucasti"],
+                              "kormidelnik": jmeno(u["kormidelnik"]) if u.get("kormidelnik") else None,
+                              "potvrzena": u["stav"] == "Potvrzena"}
+                             for u in sorted((u for u in z["ucasti"] if u["stav"] != "Zrusena"),
                                              key=lambda u: (KAT_PORADI[KAT[u["lod"]]], nazvy(u["lod"])))]}
         else:
             return self.send_error(404)

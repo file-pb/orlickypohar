@@ -1065,7 +1065,7 @@ Počítáno na pět hodin týdně.
 | 2 | ~~**Bodování** — nízkobodový systém, kódy, škrty, pořadí po kategoriích~~ | **hotovo** | Čisté funkce **ověřené proti skutečnému sešitu rozhodčího**, vydané endpointem a vidět na webu |
 | 3 | ~~**Mobilní appka, jen čtení**~~ | **hotovo 8. 9. 2026** | Nepotřebovala přihlášení, takže vznikla dřív než identita. Běží na telefonu, typy si bere z OpenAPI a jde poslat jako APK |
 | 4 | ~~**Identita a role** — Zitadel, mapování `(issuer, subject) → UserId`~~ | **hotovo 9. 9. 2026** | Zitadel na vlastním stroji, přihlášení na webu, API ověřuje tokeny. Odblokovalo odloženou položku platformy |
-| 5 | **Administrace a workflow** — zadávání, stavy, publikace, protesty a penalizace | rozdělané | Oprávnění, kalendář a workflow výsledků hotové 11. 9. 2026, zápis výsledků 14. 9. Zbývá přihlášení lodi na zastávku, protesty a penalizace |
+| 5 | **Administrace a workflow** — zadávání, stavy, publikace, protesty a penalizace | skoro hotovo | Oprávnění, kalendář a workflow výsledků hotové 11. 9. 2026; zápis výsledků, přihlášky lodí a role od rozhodčího 14. 9. Zbývají protesty a penalizace — čekají na odpovědi rozhodčího |
 | 6 | **Blog a fotky** — model, import, veřejné čtení, novinky na webu | skoro hotovo | Psaní článků i fotky v kartách hotové 11. 9. 2026; nahrávání vlastní fotky pořadatelem čeká na objektové úložiště |
 | 7 | **Upozornění** — veřejná i účastnická, odesílání, Outbox | 2–3 týdny | Účastnická stojí na identitě z fáze 4 a na napojení osoby k lodi |
 | 8 | **Tracker** — záznam trasy, offline, nahrání, prohlížení | 4–6 týdnů | Samostatná linka; potřebuje jen identitu a kontext závodu |
@@ -1440,10 +1440,11 @@ práv je čtení a čtení nemá měnit databázi.
 pro bootstrap. Role se dává existujícímu účtu a ten vzniká až přihlášením,
 takže administrace bez identity nemá komu co udělit.
 
-**Co nezapojeno zůstává schválně:** rozhodčí zatím role neuděluje. Podle
-oddílu *Role a oprávnění* smí přiřadit organizátora a editora konkrétní
-zastávce, ale ten oddíl je psaný z hlavy a čeká na projití — a tohle je
-přesně ta věta, která se při něm může změnit.
+**Rozhodčí přiřazuje pořadatele a editora zastávce.** Filip potvrdil
+14. 9. 2026. Víc ne: právo na celý ročník a roli rozhodčího uděluje jen
+správce, jinak by si rozhodčí mohl rozšířit vlastní rozsah. Odebrat smí
+rozhodčí jen to, co smí udělit. Pravidlo je `Udeleni.RozhodciSmiUdelit`,
+obrazovka oprávnění podle `SmiNaRocnik` nabídne jen zastávkové role.
 
 **Obrazovka je hotová** — `/sprava/{serie}/opravneni`, odkaz na ni je
 v profilové nabídce u ročníků, kde je člověk správcem.
@@ -1632,9 +1633,45 @@ výsledek nemá — tak se dá smazat i řádek zapsaný omylem. Uložení je je
 
 **Formulář nabízí celý ročník, ne jen lodě s účastí.** Účast dnes přináší
 jen import, takže na nové zastávce by nebylo co zapsat. Loď, která dostane
-výsledek, dostane i účast; **smazáním výsledku účast nezmizí**, v jiné
-rozjížďce ho mít může. Je to zatím jediná cesta, jak se loď na zastávku
-dostane mimo import — přihlášení lodi na zastávku je další kus.
+výsledek, dostane i účast — a ta je potvrzená, i když ji pořadatel předtím
+jen přihlásil. **Smazáním výsledku účast nezmizí**, v jiné rozjížďce ho mít
+může.
+
+### Přihlášky lodí na zastávku
+
+**Hotové 14. 9. 2026.** Endpointy `/sprava/serie/{slug}/zastavky/{zavod}/lode`
+a obrazovka `/sprava/{serie}/prihlasky/{zavod}`, odkaz z kalendáře
+i z výsledků zastávky.
+
+| Kus | Kde |
+|---|---|
+| Kdy se přihlašuje, přechody, nová loď — čisté funkce | `Features/Zavody/Prihlasky.cs` |
+| Čtení, přihlášení, přepnutí stavu | `Features/Zavody/PrihlaskySprava.cs` |
+| Endpointy a kdo smí | `Features/Zavody/PrihlaskyEndpoints.cs` |
+
+**Přihlašuje pořadatel, loď sama ne.** Filip, 14. 9. 2026: veřejný formulář
+by znamenal sbírat kontakty, souhlas a ochranu proti spamu dřív, než je
+o co stát. Samoobsluha jde přidat později. Rozhodčí přihlášky vidí, nemění.
+
+**Stav je na účasti:** přihlášená → potvrzená, nebo zrušená, a oběma směry,
+protože překlep se musí dát vzít zpět. Existující účasti migrace označila
+za potvrzené — přišly ze sešitu rozhodčího. **Loď s výsledky zrušit nejde**:
+zmizela by ze seznamu a výsledky by dál platily.
+
+**Přihlašuje se od vypsání**, i po odjetí (kdo přijel, se ví až večer).
+
+**Nová loď se stává účastníkem ročníku** v zadané kategorii, i s majitelem.
+Loď se páruje podle názvu a osoba podle jména jako v importu. Loď, která
+v ročníku je, v jiné kategorii přihlásit nejde — změna kategorie je
+rozhodnutí správce, ne vedlejší účinek přihlášky. **Neúčast na dřívějších
+zastávkách se nedopočítává**, čeká na rozhodčího.
+
+**Import přihlášky pořadatele nemaže.** Soubor je úplná pravda o tom, kdo
+jel, ne o tom, kdo se přihlásil — maže proto jen potvrzené účasti, které
+v něm nejsou. Loď, kterou soubor má, je po importu potvrzená.
+
+**Veřejně:** zrušená loď na stránce zastávky není, přihlášená nese
+„čeká na potvrzení" (`UcastDto.Potvrzena`, aditivně).
 
 **Pořadí, nebo kód, ne obojí.** Bodování by pořadí vedle kódu nevzalo
 a zůstalo by číslo, které vypadá, že platí. **Stejné pořadí se hlídá
@@ -1670,6 +1707,33 @@ výsledky".
 `app/`, takže se další rozchod s modelem pozná na pull requestu, ne na
 telefonu.
 
+## Podněty z 14. 9. 2026
+
+Filip, během dotahování fáze 5. Design přijde **až po funkční části**;
+komunitní akce jsou ale funkce a mění model, takže jdou dřív.
+
+### Komunitní akce v kalendáři (funkce)
+
+*(zadáno)* Do kalendáře se mají dát zadat i akce, které s pohárem nesouvisí
+— komunitní setkání a podobně. Zobrazují se **na druhém tabu kalendáře**
+a dají se k nim psát články a upoutávky.
+
+Co z toho plyne: akce **nikdy nesmí vstoupit do bodování**, ani omylem
+stavem „odjeto". Články dnes visí na zastávce přes `ZavodId`, takže akce,
+která bude zastávkou s jiným druhem, dostane blog zadarmo — ale průběžné
+pořadí se pak musí ptát na druh, ne jen na stav. Rozhodne se při stavbě.
+
+### Design (až po funkcích)
+
+- **Široký monitor využít i po stranách:** na jedné straně celkové
+  výsledky, na druhé kalendář.
+- **Lodní třídy jako taby**, ať se nemusí rolovat přes všechny kategorie,
+  když není třeba. (V modelu jsou to `Kategorie` — Race, Nad7m, Pod7m.)
+- **Vyčistit logo:** vlevo vyčuhuje miniaturní kousek šedé plachty.
+- **Vlastní loga lodních tříd** jako deriváty hlavního loga — Filip poslal
+  jako inspiraci znak s plachtou nad vlnami a nápisem vedle.
+- **Carousel sponzorů a partnerů** — najít mu místo.
+
 ## Schéma řešení
 
 Vykreslené schéma celého řešení — nasazení, vnitřek API a datový model —
@@ -1691,11 +1755,11 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
 4. **Otázky na rozhodčího** — tři, vypsané v oddílu *Co k tomu říkají
    závodní pravidla*: z čeho se počítá DNC, co znamenají nuly u zrušených
    zastávek a proč má DNF jiné body než DNS. Dopočet neúčasti na nich stojí.
-5. **Fáze 5 je rozdělaná** (stav k 14. 9. 2026). Hotové: udělování
-   oprávnění, kalendář zastávek, workflow výsledků, zápis výsledků a psaní
-   novinek. Další na řadě je **přihlášení lodi na zastávku** (oddíl
-   *Otevřené: přihlášení lodi na jednu zastávku*), pak protesty
-   a penalizace.
+5. **Fáze 5 je skoro hotová** (stav k 14. 9. 2026). Hotové: udělování
+   oprávnění (i rozhodčím na zastávku), kalendář zastávek, přihlášky lodí,
+   workflow a zápis výsledků, psaní novinek. Protesty a penalizace čekají
+   na odpovědi rozhodčího. Další na řadě jsou **komunitní akce v kalendáři**
+   (oddíl *Podněty z 14. 9. 2026*), pak design.
 6. **Skutečná data** — až dorazí, nahradí `data/2025-mock.json` a nahrají se
    importem. Struktura zůstane.
 

@@ -65,6 +65,28 @@ public class UdeleniTests
     [Theory]
     [InlineData(Role.Editor)]
     [InlineData(Role.Organizator)]
+    public void Rozhodci_prirazuje_poradatele_a_editora_zastavce(Role role)
+    {
+        // Zadáno: rozhodčí přiřazuje pořadatele a editora konkrétní zastávce.
+        Assert.True(Udeleni.RozhodciSmiUdelit(role, naZavod: true));
+
+        // Na celý ročník ne — to je rozsah, který uděluje správce.
+        Assert.False(Udeleni.RozhodciSmiUdelit(role, naZavod: false));
+    }
+
+    [Theory]
+    [InlineData(Role.Rozhodci)]
+    [InlineData(Role.Spravce)]
+    [InlineData(Role.Ctenar)]
+    public void Rozhodci_si_nerozsiri_vlastni_rozsah(Role role)
+    {
+        Assert.False(Udeleni.RozhodciSmiUdelit(role, naZavod: true));
+        Assert.False(Udeleni.RozhodciSmiUdelit(role, naZavod: false));
+    }
+
+    [Theory]
+    [InlineData(Role.Editor)]
+    [InlineData(Role.Organizator)]
     public void Editor_a_organizator_jdou_na_rocnik_i_na_zastavku(Role role)
     {
         // Organizátor celého ročníku může to samé na kterékoliv jeho

@@ -311,6 +311,9 @@ internal static class ImportHandler
 
             u.Kormidelnik = kormidelnik;
             u.Posadka = v.Posadka;
+            // Soubor je sešit rozhodčího: loď v něm přijela, ať ji pořadatel
+            // předtím přihlásil, nebo ne.
+            u.Stav = StavUcasti.Potvrzena;
             mapa[v.Lod] = u;
         }
 
@@ -318,8 +321,16 @@ internal static class ImportHandler
         // a odejít musí i s výsledky, jinak by zůstala v pořadí i po opravě.
         // Výsledky se mažou výslovně, ne kaskádou: kaskáda by je odnesla
         // taky, ale v hlášení by chyběly a import by tvrdil, že nic nesmazal.
+        //
+        // Jen potvrzené účasti. Přihlášenou a zrušenou zapsal pořadatel
+        // v administraci a sešit rozhodčího o nich neví — soubor je úplná
+        // pravda o tom, kdo jel, ne o tom, kdo se přihlásil. Bez téhle
+        // podmínky by nové nahrání ročníku smazalo přihlášky na zastávky,
+        // které se teprve pojedou.
         var zustavaji = mapa.Values.Select(u => u.PrihlaskaId).ToHashSet();
-        var kSmazani = existujici.Where(u => !zustavaji.Contains(u.PrihlaskaId)).ToList();
+        var kSmazani = existujici
+            .Where(u => !zustavaji.Contains(u.PrihlaskaId) && u.Stav == StavUcasti.Potvrzena)
+            .ToList();
 
         var idsPryc = kSmazani.Select(u => u.Id).ToList();
         var vysledkyPryc = await db.Vysledky.Where(x => idsPryc.Contains(x.UcastId)).ToListAsync(ct);

@@ -35,6 +35,17 @@ public static class Udeleni
     };
 
     /// <summary>
+    /// Smí tuhle roli v tomhle rozsahu udělit (a odebrat) rozhodčí?
+    /// <para>
+    /// <b>Zadáno 9. 9. 2026:</b> rozhodčí přiřazuje pořadatele a editora
+    /// konkrétní zastávce. Víc ne — právo na celý ročník nebo roli rozhodčího
+    /// uděluje jen správce, jinak by si rozhodčí mohl rozšířit vlastní rozsah.
+    /// </para>
+    /// </summary>
+    public static bool RozhodciSmiUdelit(Role role, bool naZavod) =>
+        naZavod && role is Role.Organizator or Role.Editor;
+
+    /// <summary>
     /// Smí tenhle zápis projít na importní token místo na roli správce?
     /// <para>
     /// Bootstrap řeší kuře a vejce: obrazovka, která uděluje oprávnění, sama

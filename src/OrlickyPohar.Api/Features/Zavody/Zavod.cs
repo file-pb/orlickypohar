@@ -63,6 +63,26 @@ public enum StavRozjizdky
 }
 
 /// <summary>
+/// Stav lodi na zastávce. <b>Ze zadání</b>: pořadatel loď na vypsaný závod
+/// zapisuje, potvrzuje, nebo ruší.
+/// <para>
+/// <b>Stav se vede na účasti, ne na celoroční přihlášce.</b> Loď, která na
+/// jednu zastávku nepojede, dál patří do ročníku a do jeho pořadí.
+/// </para>
+/// </summary>
+public enum StavUcasti
+{
+    /// <summary>Pořadatel o lodi ví, účast ještě nepotvrdil.</summary>
+    Prihlasena = 0,
+
+    /// <summary>Loď pojede — nebo už jela.</summary>
+    Potvrzena = 1,
+
+    /// <summary>Nepojede. Veřejně není vidět, ale záznam zůstává.</summary>
+    Zrusena = 2,
+}
+
+/// <summary>
 /// Kam až došel zápis výsledků rozjížďky. <b>Ze zadání</b>: výsledek se dá
 /// navrhnout, ověřit, schválit, potvrdit, vrátit k revizi nebo eliminovat.
 /// <para>
@@ -221,6 +241,17 @@ public class Ucast
     /// potřeba se posádky ptát — dneska se jen vypisuje.
     /// </summary>
     public string? Posadka { get; set; }
+
+    /// <summary>
+    /// Přihlášená, potvrzená, nebo zrušená.
+    /// <para>
+    /// <b>Výchozí je potvrzená</b>, protože účast dřív vznikala jen tak, že
+    /// loď přijela: import ji přináší ze sešitu rozhodčího a zápis výsledků
+    /// ji zakládá lodi, která výsledek dostala. Jen přihláška od pořadatele
+    /// začíná jako přihlášená a říká to výslovně.
+    /// </para>
+    /// </summary>
+    public StavUcasti Stav { get; set; } = StavUcasti.Potvrzena;
 }
 
 /// <summary>
