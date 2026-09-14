@@ -5,9 +5,10 @@ import { Stav } from "@/app/stav";
 import { Vypadek } from "@/app/vypadek";
 import { datum } from "@/app/datum";
 import {
-  PRECHODY,
   nactiKalendar,
   nazevPrechodu,
+  prechod,
+  type DruhZastavky,
   type StavZavodu,
   type ZastavkaRadek,
 } from "@/lib/kalendar";
@@ -20,7 +21,13 @@ export const metadata = { title: "Kalendář — správa" };
 
 type Parametry = {
   params: Promise<{ serie: string }>;
-  searchParams: Promise<{ chyba?: string; stav?: string; co?: string; nastav?: StavZavodu }>;
+  searchParams: Promise<{
+    chyba?: string;
+    stav?: string;
+    co?: string;
+    nastav?: StavZavodu;
+    druh?: string;
+  }>;
 };
 
 /**
@@ -101,10 +108,25 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
       </>
     );
 
+  // Komunitní akce mají vlastní tab. Druh se nosí v adrese, ať se dá na
+  // tab poslat odkaz a přesměrování po zápisu na něm zůstane.
+  const naAkcich = zpravy.druh === "akce";
+  const druh: DruhZastavky = naAkcich ? "Akce" : "Pohar";
+  const zastavky = prehled.zastavky.filter((z) => (z.druh ?? "Pohar") === druh);
+
   return (
     <>
       {hlava}
       <p className="podtitulek">{prehled.serieNazev}</p>
+
+      <nav className="taby" aria-label="Kalendář">
+        <Link href={`/sprava/${serie}/kalendar`} aria-current={naAkcich ? undefined : "page"}>
+          Pohár
+        </Link>
+        <Link href={`/sprava/${serie}/kalendar?druh=akce`} aria-current={naAkcich ? "page" : undefined}>
+          Komunitní akce
+        </Link>
+      </nav>
 
       {zpravy.chyba && (
         <p className="hlaska chyba" role="alert">
@@ -113,33 +135,40 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
       )}
       {zpravy.stav && !zpravy.chyba && (
         <p className="hlaska hotovo" role="status">
-          {hotovo(zpravy.stav, zpravy.co, zpravy.nastav)}
+          {hotovo(zpravy.stav, zpravy.co, zpravy.nastav, druh)}
         </p>
       )}
 
       {prehled.smiZalozit && (
         <>
-          <h2>Nová zastávka</h2>
+          <h2>{naAkcich ? "Nová akce" : "Nová zastávka"}</h2>
           {/* Jen název a termín jsou povinné. Nová zastávka je vždycky
               plánovaná a nezveřejněná — potvrdit termín i pustit ji ven
               jsou dvě další rozhodnutí. */}
           <form action={zalozAkce} className="formular">
             <input type="hidden" name="serie" value={serie} />
-            <Pole />
-            <button type="submit">Založit do předběžného kalendáře</button>
+            <input type="hidden" name="zpet" value={naAkcich ? "akce" : ""} />
+            <Pole akce={naAkcich} />
+            <button type="submit">
+              {naAkcich ? "Založit akci" : "Založit do předběžného kalendáře"}
+            </button>
             <p className="poznamka">
-              Zastávka vznikne jako plánovaná a veřejnost ji zatím neuvidí.
+              {naAkcich
+                ? "Akce vznikne jako plánovaná a veřejnost ji zatím neuvidí. Do poháru se nepočítá a nemá výsledky ani přihlášky lodí; psát se k ní dá jako k zastávce."
+                : "Zastávka vznikne jako plánovaná a veřejnost ji zatím neuvidí."}
             </p>
           </form>
         </>
       )}
 
-      <h2>Zastávky</h2>
-      {prehled.zastavky.length === 0 ? (
-        <p className="prazdno">Ročník zatím nemá jedinou zastávku.</p>
+      <h2>{naAkcich ? "Akce" : "Zastávky"}</h2>
+      {zastavky.length === 0 ? (
+        <p className="prazdno">
+          {naAkcich ? "Ročník zatím nemá jedinou komunitní akci." : "Ročník zatím nemá jedinou zastávku."}
+        </p>
       ) : (
         <ul className="seznam">
-          {prehled.zastavky.map((z) => (
+          {zastavky.map((z) => (
             <li key={z.slug}>
               <Zastavka serie={serie} zastavka={z} />
             </li>
@@ -154,7 +183,7 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
  * Pole zastávky. Tentýž tvar při zakládání i úpravě — jsou to tytéž údaje
  * a dva různé formuláře by se rozešly v tom, co je povinné.
  */
-function Pole({ zastavka }: { zastavka?: ZastavkaRadek }) {
+function Pole({ zastavka, akce }: { zastavka?: ZastavkaRadek; akce?: boolean }) {
   return (
     <>
       <label>
@@ -164,7 +193,7 @@ function Pole({ zastavka }: { zastavka?: ZastavkaRadek }) {
           required
           maxLength={120}
           defaultValue={zastavka?.nazev}
-          placeholder="Radavská regata"
+          placeholder={akce ? "Setkání u Radavy" : "Radavská regata"}
         />
         {zastavka && (
           <span className="poznamka">
@@ -208,12 +237,14 @@ function Pole({ zastavka }: { zastavka?: ZastavkaRadek }) {
 
 function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek }) {
   const zrusena = zastavka.stav === "Zruseny";
+  const akce = zastavka.druh === "Akce";
+  const zpet = akce ? "akce" : "";
 
   return (
     <div className={`karta ${zrusena ? "zrusena" : ""}`}>
       <div className="nazev">
         <span className={zrusena ? "skrtnute" : undefined}>{zastavka.nazev}</span>
-        <Stav stav={zastavka.stav} />
+        <Stav stav={zastavka.stav} akce={akce} />
         {zastavka.typ && <span className="stitek">{zastavka.typ}</span>}
         {/* Nezveřejněná zastávka není chyba, ale musí být vidět na první
             pohled: v kalendáři na webu prostě není. */}
@@ -226,13 +257,17 @@ function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek 
         {zastavka.puvodniDatum && (
           <span className="presun"> · přesunuto z {datum(zastavka.puvodniDatum)}</span>
         )}
-        {" · "}
         {/* Odsud se chodí na přihlášky a výsledky té zastávky. Kalendář je
             rozcestník ročníku, takže je to jediné místo, kde se ty cesty
-            nabízejí samy. */}
-        <Link href={`/sprava/${serie}/prihlasky/${zastavka.slug}`}>přihlášky →</Link>
-        {" · "}
-        <Link href={`/sprava/${serie}/vysledky/${zastavka.slug}`}>výsledky →</Link>
+            nabízejí samy. Komunitní akce nemá ani jedno. */}
+        {!akce && (
+          <>
+            {" · "}
+            <Link href={`/sprava/${serie}/prihlasky/${zastavka.slug}`}>přihlášky →</Link>
+            {" · "}
+            <Link href={`/sprava/${serie}/vysledky/${zastavka.slug}`}>výsledky →</Link>
+          </>
+        )}
       </div>
 
       {/* Posun stavu rovnou ze seznamu: nejčastější úkon je „potvrdit
@@ -244,8 +279,9 @@ function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek 
             <input type="hidden" name="zavod" value={zastavka.slug} />
             <input type="hidden" name="nazev" value={zastavka.nazev} />
             <input type="hidden" name="stav" value={na} />
-            <button type="submit" title={PRECHODY[na].popis}>
-              {nazevPrechodu(zastavka.stav, na)}
+            <input type="hidden" name="zpet" value={zpet} />
+            <button type="submit" title={prechod(na, zastavka.druh).popis}>
+              {nazevPrechodu(zastavka.stav, na, zastavka.druh)}
             </button>
           </form>
         ))}
@@ -256,6 +292,7 @@ function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek 
             <input type="hidden" name="zavod" value={zastavka.slug} />
             <input type="hidden" name="nazev" value={zastavka.nazev} />
             <input type="hidden" name="publikovano" value={zastavka.publikovano ? "ne" : "ano"} />
+            <input type="hidden" name="zpet" value={zpet} />
             <button
               type="submit"
               title={
@@ -276,7 +313,8 @@ function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek 
           <form action={ulozAkce} className="formular">
             <input type="hidden" name="serie" value={serie} />
             <input type="hidden" name="zavod" value={zastavka.slug} />
-            <Pole zastavka={zastavka} />
+            <input type="hidden" name="zpet" value={zpet} />
+            <Pole zastavka={zastavka} akce={akce} />
             <button type="submit">Uložit</button>
             {zastavka.stav !== "Planovany" && (
               <p className="poznamka">
@@ -291,18 +329,21 @@ function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek 
 }
 
 /** Věta po zápisu. Skládá se tady, protože jména zastávek zná stránka, ne akce. */
-function hotovo(stav: string, co?: string, nastav?: StavZavodu) {
-  const jmeno = co ? `„${co}"` : "Zastávka";
+function hotovo(stav: string, co?: string, nastav?: StavZavodu, druh?: DruhZastavky) {
+  const akce = druh === "Akce";
+  const jmeno = co ? `„${co}"` : akce ? "Akce" : "Zastávka";
 
   switch (stav) {
     case "zalozeno":
-      return `${jmeno} je v předběžném kalendáři. Veřejnost ji zatím nevidí.`;
+      return akce
+        ? `${jmeno} je mezi komunitními akcemi. Veřejnost ji zatím nevidí.`
+        : `${jmeno} je v předběžném kalendáři. Veřejnost ji zatím nevidí.`;
     case "ulozeno":
       return `${jmeno} uložena.`;
     case "prepnuto":
-      return nastav === "Zruseny"
+      return nastav === "Zruseny" && !akce
         ? `${jmeno} zrušena. Do poháru se nepočítá.`
-        : `${jmeno} — ${PRECHODY[nastav ?? "Planovany"].popis}`;
+        : `${jmeno} — ${prechod(nastav ?? "Planovany", druh).popis}`;
     case "venku":
       return `${jmeno} je v kalendáři na webu.`;
     case "stazeno":

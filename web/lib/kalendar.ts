@@ -20,6 +20,7 @@ export type PrehledZastavek = S["PrehledZastavekDto"];
 export type ZastavkaRadek = S["ZastavkaRadek"];
 export type ZastavkaVstup = S["ZastavkaVstup"];
 export type StavZavodu = S["StavZavodu"];
+export type DruhZastavky = S["DruhZastavky"];
 
 /**
  * Co tlačítko udělá a co to znamená.
@@ -41,6 +42,22 @@ export const PRECHODY: Record<StavZavodu, { tlacitko: string; popis: string }> =
   Zruseny: { tlacitko: "Zrušit", popis: "Nekonal se. Do poháru se nepočítá vůbec." },
 };
 
+/**
+ * Nápisy u komunitní akce. Stavy jsou tytéž, ale „Vypsat závod" a „Odjeto"
+ * by u setkání lhaly — a „Do poháru se nepočítá" u zrušené akce by
+ * naznačovalo, že se jinak počítala.
+ */
+const PRECHODY_AKCE: Partial<Record<StavZavodu, { tlacitko: string; popis: string }>> = {
+  Potvrzeny: { tlacitko: "Potvrdit termín", popis: "Termín platí. Akce ještě není oznámená." },
+  Vypsany: { tlacitko: "Oznámit akci", popis: "Akce je oznámená, přijít se dá." },
+  Odjety: { tlacitko: "Proběhla", popis: "Akce proběhla." },
+  Zruseny: { tlacitko: "Zrušit", popis: "Akce se nekoná." },
+};
+
+/** Co přechod udělá — u akce jejími slovy, jinak slovy poháru. */
+export const prechod = (na: StavZavodu, druh?: DruhZastavky | null) =>
+  (druh === "Akce" && PRECHODY_AKCE[na]) || PRECHODY[na];
+
 /** Stavy v pořadí, jak jdou v čase. Totéž co `Kalendar.Rada` v API. */
 const RADA: StavZavodu[] = ["Planovany", "Potvrzeny", "Vypsany", "Odjety"];
 
@@ -52,16 +69,16 @@ const RADA: StavZavodu[] = ["Planovany", "Potvrzeny", "Vypsany", "Odjety"];
  * jen opravuje překlep. Že je to návrat, ví jen ten, kdo zná dosavadní
  * stav, takže se to musí rozhodnout tady, ne v tabulce výše.
  */
-export function nazevPrechodu(ze: StavZavodu, na: StavZavodu) {
+export function nazevPrechodu(ze: StavZavodu, na: StavZavodu, druh?: DruhZastavky | null) {
   const zpatky = RADA.includes(na) && RADA.includes(ze) && RADA.indexOf(ze) > RADA.indexOf(na);
-  if (!zpatky) return PRECHODY[na].tlacitko;
+  if (!zpatky) return prechod(na, druh).tlacitko;
 
   // Do plánovaného se vrací i ze zrušeného, takže „Vrátit do plánu" stojí
   // rovnou v tabulce výš; sem patří jen ty dva stavy, jejichž nápis se
   // podle směru mění.
   return na === "Potvrzeny" ? "Vrátit na potvrzený termín"
-    : na === "Vypsany" ? "Vrátit mezi vypsané"
-    : PRECHODY[na].tlacitko;
+    : na === "Vypsany" ? (druh === "Akce" ? "Vrátit mezi oznámené" : "Vrátit mezi vypsané")
+    : prechod(na, druh).tlacitko;
 }
 
 const token = () => tokenZeSezeni();

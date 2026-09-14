@@ -576,6 +576,16 @@ th.vlevo, td.vlevo { text-align: left; }
 td .stavy { margin-top: 0; justify-content: flex-end; }
 th.vlevo, td.vlevo { text-align: left; }
 
+/* Taby — pohár a komunitní akce v kalendáři. Odkazy, ne javascript:
+   stránka se vykreslí na serveru podle adresy a dá se na ni poslat odkaz. */
+.taby { display: flex; flex-wrap: wrap; gap: 0.25rem; margin: 0 0 1.25rem; border-bottom: 1px solid var(--linka); }
+.taby a {
+  padding: 0.45rem 0.9rem; margin-bottom: -1px; color: var(--tlumeny);
+  border-bottom: 2px solid transparent; text-decoration: none;
+}
+.taby a:hover { color: var(--voda); text-decoration: none; }
+.taby a[aria-current="page"] { color: var(--text); border-bottom-color: var(--voda); font-weight: 600; }
+
 /* Rozbalovátko mimo kartu — nová loď na stránce přihlášek. */
 details.uprava-samostatna { margin: 1rem 0 1.5rem; }
 details.uprava-samostatna > summary {

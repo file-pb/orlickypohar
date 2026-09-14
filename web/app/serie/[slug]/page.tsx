@@ -11,7 +11,10 @@ import { datum } from "@/app/datum";
 // API, což je závislost, kterou nikdo nechce.
 export const dynamic = "force-dynamic";
 
-type Parametry = { params: Promise<{ slug: string }> };
+type Parametry = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ kalendar?: string }>;
+};
 
 // Titulek se nesmí stát důvodem, proč stránka spadne. Chyba z API tady
 // končí, aby ji obsloužila až samotná stránka — ta umí rozlišit „neexistuje"
@@ -26,8 +29,9 @@ export async function generateMetadata({ params }: Parametry) {
   }
 }
 
-export default async function Rocnik({ params }: Parametry) {
+export default async function Rocnik({ params, searchParams }: Parametry) {
   const { slug } = await params;
+  const { kalendar } = await searchParams;
 
   // Výpadek API se ošetřuje tady, ne přes `error.tsx` — viz app/vypadek.tsx.
   let serie;
@@ -40,6 +44,9 @@ export default async function Rocnik({ params }: Parametry) {
   if (!serie) notFound();
 
   const odjete = serie.zavody.filter((z: ZavodShrnuti) => z.stav === "Odjety");
+  // Starší API akce nevydává — pak prostě žádné nejsou.
+  const akce = serie.akce ?? [];
+  const naAkcich = kalendar === "akce" && akce.length > 0;
 
   // Lodě po kategoriích, v pořadí, které si drží série — abecedně by Nad7m
   // předběhlo Race bez důvodu.
@@ -67,32 +74,27 @@ export default async function Rocnik({ params }: Parametry) {
           a proklikem se jde na její vlastní stránku. Bez stavu vypadá
           zastávka, která teprve bude, stejně jako ta, která se nekonala. */}
       <h2>Kalendář</h2>
-      {serie.zavody.length === 0 ? (
+
+      {/* Komunitní akce na vlastním tabu, ať se nepletou mezi kola poháru.
+          Tab je odkaz s parametrem v adrese: stránka se vykreslí na serveru
+          a dá se na ni poslat odkaz. Bez akcí se taby neukazují vůbec. */}
+      {akce.length > 0 && (
+        <nav className="taby" aria-label="Kalendář">
+          <Link href={`/serie/${serie.slug}`} aria-current={naAkcich ? undefined : "page"}>
+            Pohár
+          </Link>
+          <Link href={`/serie/${serie.slug}?kalendar=akce`} aria-current={naAkcich ? "page" : undefined}>
+            Komunitní akce
+          </Link>
+        </nav>
+      )}
+
+      {naAkcich ? (
+        <Kalendar slug={serie.slug} zastavky={akce} akce />
+      ) : serie.zavody.length === 0 ? (
         <p className="prazdno">Zatím není zveřejněná žádná zastávka.</p>
       ) : (
-        <ul className="seznam">
-          {serie.zavody.map((z) => (
-            <li key={z.slug}>
-              <Link
-                className={`karta ${z.stav === "Zruseny" ? "zrusena" : ""}`}
-                href={`/serie/${serie.slug}/zavody/${z.slug}`}
-              >
-                <div className="nazev">
-                  <span className={z.stav === "Zruseny" ? "skrtnute" : undefined}>{z.nazev}</span>
-                  <Stav stav={z.stav} />
-                  {z.typ && <span className="stitek">{z.typ}</span>}
-                </div>
-                <div className="detail">
-                  {datum(z.datum, z.datumKonce)}
-                  {z.poradatel && ` · ${z.poradatel}`}
-                  {z.puvodniDatum && (
-                    <span className="presun"> · přesunuto z {datum(z.puvodniDatum)}</span>
-                  )}
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <Kalendar slug={serie.slug} zastavky={serie.zavody} />
       )}
 
       <h2>Přihlášené lodě</h2>
@@ -124,5 +126,42 @@ export default async function Rocnik({ params }: Parametry) {
         </div>
       ))}
     </>
+  );
+}
+
+/** Seznam zastávek nebo akcí. Karta vypadá stejně, liší se jen štítek stavu. */
+function Kalendar({
+  slug,
+  zastavky,
+  akce,
+}: {
+  slug: string;
+  zastavky: ZavodShrnuti[];
+  akce?: boolean;
+}) {
+  return (
+    <ul className="seznam">
+      {zastavky.map((z) => (
+        <li key={z.slug}>
+          <Link
+            className={`karta ${z.stav === "Zruseny" ? "zrusena" : ""}`}
+            href={`/serie/${slug}/zavody/${z.slug}`}
+          >
+            <div className="nazev">
+              <span className={z.stav === "Zruseny" ? "skrtnute" : undefined}>{z.nazev}</span>
+              <Stav stav={z.stav} akce={akce} />
+              {z.typ && <span className="stitek">{z.typ}</span>}
+            </div>
+            <div className="detail">
+              {datum(z.datum, z.datumKonce)}
+              {z.poradatel && ` · ${z.poradatel}`}
+              {z.puvodniDatum && (
+                <span className="presun"> · přesunuto z {datum(z.puvodniDatum)}</span>
+              )}
+            </div>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }

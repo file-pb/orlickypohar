@@ -102,6 +102,7 @@ export default async function Zastavka({ params }: Parametry) {
 
   const radky = naRadky(zavod);
   const kategorie = [...new Set(radky.map((r) => r.kategorie))];
+  const akce = zavod.druh === "Akce";
 
   return (
     <>
@@ -115,9 +116,10 @@ export default async function Zastavka({ params }: Parametry) {
       <PruhUkazky slug={slug} />
       <h1>
         <span className={zavod.stav === "Zruseny" ? "skrtnute" : undefined}>{zavod.nazev}</span>{" "}
-        <Stav stav={zavod.stav} />
+        <Stav stav={zavod.stav} akce={akce} />
       </h1>
       <p className="podtitulek">
+        {akce && "Komunitní akce · "}
         {datum(zavod.datum, zavod.datumKonce)}
         {zavod.poradatel && ` · pořádá ${zavod.poradatel}`}
         {/* Přesun není vlastní stav — přesunutá zastávka je pořád plánovaná,
@@ -128,6 +130,23 @@ export default async function Zastavka({ params }: Parametry) {
         )}
       </p>
 
+      {/* Komunitní akce má stránku kvůli článkům a upoutávkám. Výsledky,
+          přihlášené lodě ani pravidla závodu nemá — a prázdné nadpisy by
+          tvrdily, že je teprve mít bude. */}
+      {akce ? (
+        <>
+          <p className="poznamka">Akce mimo pohár — do průběžného pořadí se nepočítá.</p>
+          {clanky && clanky.length > 0 ? (
+            <>
+              <h2>Novinky k akci</h2>
+              <VypisNovinek serie={slug} clanky={clanky} />
+            </>
+          ) : (
+            <p className="prazdno">K akci zatím nic nevyšlo.</p>
+          )}
+        </>
+      ) : (
+        <>
       <h2>Výsledky</h2>
       {radky.length === 0 ? (
         <>
@@ -188,6 +207,8 @@ export default async function Zastavka({ params }: Parametry) {
         ne tenhle součet —{" "}
         <Link href={`/serie/${slug}/poradi`}>průběžné pořadí je vedle</Link>.
       </p>
+        </>
+      )}
     </>
   );
 }

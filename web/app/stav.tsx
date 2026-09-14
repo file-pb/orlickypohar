@@ -16,9 +16,20 @@ const POPIS: Record<StavZavodu, string> = {
   Zruseny: "zrušeno",
 };
 
+// Komunitní akce má tytéž stavy, ale setkání se nevypisuje a neodjíždí.
+// Ostatní štítky platí beze změny.
+const POPIS_AKCE: Partial<Record<StavZavodu, string>> = {
+  Vypsany: "oznámeno",
+  Odjety: "proběhlo",
+};
+
 /** Stav zastávky jako štítek. Odjetá nese barvu, protože jen za ní jsou výsledky. */
-export function Stav({ stav }: { stav: StavZavodu }) {
-  return <span className={`stitek stav stav-${stav.toLowerCase()}`}>{POPIS[stav]}</span>;
+export function Stav({ stav, akce }: { stav: StavZavodu; akce?: boolean }) {
+  return (
+    <span className={`stitek stav stav-${stav.toLowerCase()}`}>
+      {(akce && POPIS_AKCE[stav]) || POPIS[stav]}
+    </span>
+  );
 }
 
 /**

@@ -1363,6 +1363,11 @@ export interface components {
             /** Format: date-time */
             publikovanoV?: null | string;
         };
+        /**
+         * @default Pohar
+         * @enum {unknown}
+         */
+        DruhZastavky: "Pohar" | "Akce";
         JaDto: {
             /** Format: uuid */
             id: string;
@@ -1572,6 +1577,7 @@ export interface components {
             kategorie: components["schemas"]["KategorieDto"][];
             zavody: components["schemas"]["ZavodShrnutiDto"][];
             prihlasky: components["schemas"]["PrihlaskaDto"][];
+            akce: components["schemas"]["ZavodShrnutiDto"][];
         };
         SerieShrnutiDto: {
             slug: string;
@@ -1731,6 +1737,7 @@ export interface components {
             smiUpravit: boolean;
             smiPublikovat: boolean;
             mozneStavy: components["schemas"]["StavZavodu"][];
+            druh?: components["schemas"]["DruhZastavky"];
         };
         ZastavkaVolbaDto: {
             slug: string;
@@ -1744,6 +1751,7 @@ export interface components {
             datumKonce?: null | string;
             typ?: null | string;
             poradatel?: null | string;
+            druh?: components["schemas"]["DruhZastavky"];
         };
         ZastavkaVysledkyDto: {
             zavod: string;
@@ -1778,6 +1786,7 @@ export interface components {
             rozjizdky: components["schemas"]["RozjizdkaDto"][];
             poradi: components["schemas"]["VysledekZavoduDto"][];
             lode: components["schemas"]["UcastDto"][];
+            druh?: components["schemas"]["DruhZastavky"];
         };
         ZavodShrnutiDto: {
             slug: string;
@@ -1827,6 +1836,7 @@ export interface components {
             stav?: components["schemas"]["StavZavodu"];
             /** Format: date */
             puvodniDatum?: null | string;
+            druh?: components["schemas"]["DruhZastavky"];
         };
     };
     responses: never;

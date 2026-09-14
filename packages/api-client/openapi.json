@@ -1567,6 +1567,13 @@
                     }
                 }
             },
+            "DruhZastavky": {
+                "enum": [
+                    "Pohar",
+                    "Akce"
+                ],
+                "default": "Pohar"
+            },
             "JaDto": {
                 "required": [
                     "id",
@@ -2394,7 +2401,8 @@
                     "rok",
                     "kategorie",
                     "zavody",
-                    "prihlasky"
+                    "prihlasky",
+                    "akce"
                 ],
                 "type": "object",
                 "properties": {
@@ -2424,6 +2432,12 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/PrihlaskaDto"
+                        }
+                    },
+                    "akce": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ZavodShrnutiDto"
                         }
                     }
                 }
@@ -3074,6 +3088,9 @@
                         "items": {
                             "$ref": "#/components/schemas/StavZavodu"
                         }
+                    },
+                    "druh": {
+                        "$ref": "#/components/schemas/DruhZastavky"
                     }
                 }
             },
@@ -3124,6 +3141,9 @@
                             "null",
                             "string"
                         ]
+                    },
+                    "druh": {
+                        "$ref": "#/components/schemas/DruhZastavky"
                     }
                 }
             },
@@ -3252,6 +3272,9 @@
                         "items": {
                             "$ref": "#/components/schemas/UcastDto"
                         }
+                    },
+                    "druh": {
+                        "$ref": "#/components/schemas/DruhZastavky"
                     }
                 }
             },
@@ -3411,6 +3434,9 @@
                             "string"
                         ],
                         "format": "date"
+                    },
+                    "druh": {
+                        "$ref": "#/components/schemas/DruhZastavky"
                     }
                 }
             }
