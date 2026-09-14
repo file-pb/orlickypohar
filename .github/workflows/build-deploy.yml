@@ -96,8 +96,13 @@ jobs:
       # se starým nastavením a chybějící tajemství by se projevilo až za běhu.
       #
       # Tajemství jde hlavičkou, ne v URL: adresa se objevuje v logu běhu.
+      #
+      # Podmínka na událost je tu stejně jako u přihlášení do registru.
+      # Bez ní se nasazovalo i z pull requestu — image z něj sice do registru
+      # nejde, ale compose z neslité větve ano. PR od Dependabotu k tajemství
+      # nedosáhne a padal na 401; PR z vlastní větve by server přepsal.
       - name: Deploy
-        if: ${{ vars.DEPLOY_WEBHOOK != '' }}
+        if: ${{ github.event_name != 'pull_request' && vars.DEPLOY_WEBHOOK != '' }}
         run: |
           curl -fsS --max-time 900 -X POST "${{ vars.DEPLOY_WEBHOOK }}" \
             -H "X-Deploy-Token: ${{ secrets.DEPLOY_TOKEN }}" \
