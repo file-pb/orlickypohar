@@ -182,4 +182,180 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         Assert.All(rozjizdky, r => Assert.Equal(StavVysledku.Potvrzeno, r.StavVysledku));
         Assert.All(rozjizdky, r => Assert.True(r.Publikovano));
     }
+
+    // --- Zápis výsledků -----------------------------------------------------
+
+    /// <summary>Rozjížďka ročníku ve stavu, do kterého se dá zapisovat.</summary>
+    private static async Task<(AppDbContext Db, ZapisSprava Zapis, Rozjizdka Rozjizdka, int[] Prihlasky)>
+        OtevrenaAsync(AsyncServiceScope scope, string slug)
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var zapis = scope.ServiceProvider.GetRequiredService<ZapisSprava>();
+
+        var rozjizdka = await db.Rozjizdky.FirstAsync(r => r.Zavod!.Serie!.Slug == slug && r.Cislo == 2);
+        rozjizdka.StavVysledku = StavVysledku.Navrzeno;
+        await db.SaveChangesAsync();
+
+        // Anička, pak Bóra — v pořadí, v jakém je ročník vypisuje.
+        var prihlasky = await db.Prihlasky
+            .Where(p => p.Serie!.Slug == slug)
+            .OrderBy(p => p.Lod!.Nazev)
+            .Select(p => p.Id)
+            .ToArrayAsync();
+
+        return (db, zapis, rozjizdka, prihlasky);
+    }
+
+    [Fact]
+    public async Task Zapis_prepise_poradi_a_smaze_co_v_sade_neni()
+    {
+        var slug = "zapis-sada";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
+
+        // Bóra vyhrála, Anička v téhle rozjížďce výsledek nemá.
+        Assert.Null(await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0]), new(prihlasky[1], PoradiVCili: 1)], default));
+
+        var vysledky = await db.Vysledky.AsNoTracking()
+            .Where(v => v.RozjizdkaId == rozjizdka.Id)
+            .Select(v => new { v.Ucast!.PrihlaskaId, v.PoradiVCili })
+            .ToListAsync();
+
+        var bora = Assert.Single(vysledky);
+        Assert.Equal(prihlasky[1], bora.PrihlaskaId);
+        Assert.Equal(1, bora.PoradiVCili);
+
+        // Účast Aničce zůstává: v první rozjížďce výsledek má.
+        Assert.Equal(2, await db.Ucasti.CountAsync(u => u.Zavod!.Serie!.Slug == slug));
+    }
+
+    [Fact]
+    public async Task Zapis_nesahne_na_cas_z_importu()
+    {
+        var slug = "zapis-cas";
+        var rocnik = Rocnik(slug);
+        var zavod = rocnik.Zavody[0];
+        await Nahraj(rocnik with
+        {
+            Zavody =
+            [
+                zavod with
+                {
+                    Rozjizdky =
+                    [
+                        zavod.Rozjizdky[0],
+                        zavod.Rozjizdky[1] with
+                        {
+                            Vysledky = [new("anicka", PoradiVCili: 1, CasSekundy: 3600), new("bora", PoradiVCili: 2)],
+                        },
+                    ],
+                },
+            ],
+        });
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
+
+        Assert.Null(await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 2), new(prihlasky[1], PoradiVCili: 1)], default));
+
+        // Formulář čas nemá — prázdná hodnota z obrazovky ho nesmí smazat.
+        var anicka = await db.Vysledky.AsNoTracking()
+            .SingleAsync(v => v.RozjizdkaId == rozjizdka.Id && v.Ucast!.PrihlaskaId == prihlasky[0]);
+
+        Assert.Equal(2, anicka.PoradiVCili);
+        Assert.Equal(TimeSpan.FromSeconds(3600), anicka.NamerenyCas);
+    }
+
+    [Fact]
+    public async Task Vysledek_lodi_bez_ucasti_ji_ucast_zalozi()
+    {
+        var slug = "zapis-ucast";
+        var rocnik = Rocnik(slug);
+        var zavod = rocnik.Zavody[0];
+
+        // Bóra na zastávku podle importu nepřijela.
+        await Nahraj(rocnik with
+        {
+            Zavody =
+            [
+                zavod with
+                {
+                    Ucasti = [zavod.Ucasti[0]],
+                    Rozjizdky = [.. zavod.Rozjizdky.Select(r => r with { Vysledky = [r.Vysledky[0]] })],
+                },
+            ],
+        });
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
+
+        var nacteny = await zapis.NactiAsync(rozjizdka, poradatel: true, default);
+
+        // Nabízí se celý ročník, ne jen lodě s účastí — jinak by na nové
+        // zastávce nebylo co zapsat.
+        Assert.Equal(2, nacteny.Lode.Count);
+
+        Assert.Null(await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 1), new(prihlasky[1], Kod: KodVysledku.Dnf)], default));
+
+        Assert.Equal(2, await db.Ucasti.CountAsync(u => u.Zavod!.Serie!.Slug == slug));
+    }
+
+    [Fact]
+    public async Task Podepsany_zapis_se_neprepise()
+    {
+        var slug = "zapis-zamek";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var zapis = scope.ServiceProvider.GetRequiredService<ZapisSprava>();
+
+        // Import přináší potvrzené výsledky — ty se přepsat nesmějí.
+        var rozjizdka = await db.Rozjizdky.FirstAsync(r => r.Zavod!.Serie!.Slug == slug && r.Cislo == 1);
+        var prihlaska = await db.Prihlasky.Where(p => p.Serie!.Slug == slug).Select(p => p.Id).FirstAsync();
+
+        Assert.NotNull(await zapis.UlozAsync(rozjizdka, [new(prihlaska, PoradiVCili: 5)], default));
+
+        var nacteny = await zapis.NactiAsync(rozjizdka, poradatel: true, default);
+        Assert.False(nacteny.SmiZapisovat);
+        Assert.NotNull(nacteny.ProcNelze);
+    }
+
+    [Fact]
+    public async Task Cizi_prihlaska_se_nezapise()
+    {
+        await Nahraj(Rocnik("zapis-cizi-a"));
+        await Nahraj(Rocnik("zapis-cizi-b"));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (db, zapis, rozjizdka, _) = await OtevrenaAsync(scope, "zapis-cizi-a");
+
+        var cizi = await db.Prihlasky.Where(p => p.Serie!.Slug == "zapis-cizi-b").Select(p => p.Id).FirstAsync();
+
+        Assert.NotNull(await zapis.UlozAsync(rozjizdka, [new(cizi, PoradiVCili: 1)], default));
+    }
+
+    [Fact]
+    public async Task Nova_rozjizdka_je_navrh_a_neni_venku()
+    {
+        var slug = "zapis-nova";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var zapis = scope.ServiceProvider.GetRequiredService<ZapisSprava>();
+
+        var zavodId = await db.Zavody.Where(z => z.Serie!.Slug == slug).Select(z => z.Id).FirstAsync();
+        var (rozjizdka, chyba) = await zapis.PridejRozjizdkuAsync(zavodId, default);
+
+        Assert.Null(chyba);
+        Assert.Equal(3, rozjizdka!.Cislo);
+        Assert.Equal(StavVysledku.Navrzeno, rozjizdka.StavVysledku);
+        Assert.False(rozjizdka.Publikovano);
+    }
 }

@@ -1065,7 +1065,7 @@ Počítáno na pět hodin týdně.
 | 2 | ~~**Bodování** — nízkobodový systém, kódy, škrty, pořadí po kategoriích~~ | **hotovo** | Čisté funkce **ověřené proti skutečnému sešitu rozhodčího**, vydané endpointem a vidět na webu |
 | 3 | ~~**Mobilní appka, jen čtení**~~ | **hotovo 8. 9. 2026** | Nepotřebovala přihlášení, takže vznikla dřív než identita. Běží na telefonu, typy si bere z OpenAPI a jde poslat jako APK |
 | 4 | ~~**Identita a role** — Zitadel, mapování `(issuer, subject) → UserId`~~ | **hotovo 9. 9. 2026** | Zitadel na vlastním stroji, přihlášení na webu, API ověřuje tokeny. Odblokovalo odloženou položku platformy |
-| 5 | **Administrace a workflow** — zadávání, stavy, publikace, protesty a penalizace | rozdělané | Oprávnění, kalendář a workflow výsledků hotové 11. 9. 2026. Zbývá zápis výsledků, přihlášení lodi na zastávku, protesty a penalizace |
+| 5 | **Administrace a workflow** — zadávání, stavy, publikace, protesty a penalizace | rozdělané | Oprávnění, kalendář a workflow výsledků hotové 11. 9. 2026, zápis výsledků 14. 9. Zbývá přihlášení lodi na zastávku, protesty a penalizace |
 | 6 | **Blog a fotky** — model, import, veřejné čtení, novinky na webu | skoro hotovo | Psaní článků i fotky v kartách hotové 11. 9. 2026; nahrávání vlastní fotky pořadatelem čeká na objektové úložiště |
 | 7 | **Upozornění** — veřejná i účastnická, odesílání, Outbox | 2–3 týdny | Účastnická stojí na identitě z fáze 4 a na napojení osoby k lodi |
 | 8 | **Tracker** — záznam trasy, offline, nahrání, prohlížení | 4–6 týdnů | Samostatná linka; potřebuje jen identitu a kontext závodu |
@@ -1602,9 +1602,56 @@ ho vidět právě tehdy.
 říká nahlas. Bez té věty by správce pouštěl čísla ven a divil se, že na
 webu nejsou.
 
-**Zápis samotných výsledků tu schválně není.** Dneska je dovnitř dostane
-import. Workflow se ptá na jinou otázku — kdo za ta čísla ručí a smí je
-vidět veřejnost — a obrazovka na zápis pořadí je vlastní kus práce.
+### Zápis výsledků
+
+**Hotové 14. 9. 2026.** Endpointy `/sprava/serie/{slug}/vysledky/{zavod}/rozjizdky`
+— přidání rozjížďky, čtení zápisu a uložení celé sady — a obrazovka
+`/sprava/{serie}/vysledky/{zavod}/{cislo}`, odkaz na ni je u každé rozjížďky.
+
+| Kus | Kde |
+|---|---|
+| Kdy se smí přepsat, co musí sada splnit — čisté funkce | `Features/Zavody/Zapis.cs` |
+| Čtení, uložení, nová rozjížďka | `Features/Zavody/ZapisSprava.cs` |
+| Endpointy a kdo smí | `Features/Zavody/VysledkyEndpoints.cs` |
+
+**Zapisuje pořadatel zastávky, rozhodčí zápis jen vidí.** Kdyby ho směl
+i měnit, ověřoval by sám sebe. Správce ho pokrývá jako všude.
+
+**Přepsat jde jen návrh a vrácený zápis.** Od ověření čísla někdo podepsal
+a cesta k opravě vede přes revizi s důvodem. Uložení vráceného zápisu ho
+**do návrhu samo nevrací** — je to vědomý krok ve workflow a obrazovka po
+uložení připomene, že ho má pořadatel udělat.
+
+**Zapisuje se od vypsání, ne až po odjetí.** Výsledky se píšou na břehu
+v den závodu a přepnout zastávku na odjetou je krok, na který se v tu
+chvíli snadno zapomene. Do poháru jde tak jako tak jen odjetá zastávka.
+
+**Ukládá se celá sada rozjížďky.** Loď, která v ní nemá pořadí ani kód,
+výsledek nemá — tak se dá smazat i řádek zapsaný omylem. Uložení je jedno
+`SaveChanges`, takže se nestane, že loď přijela a výsledek jí chybí.
+
+**Formulář nabízí celý ročník, ne jen lodě s účastí.** Účast dnes přináší
+jen import, takže na nové zastávce by nebylo co zapsat. Loď, která dostane
+výsledek, dostane i účast; **smazáním výsledku účast nezmizí**, v jiné
+rozjížďce ho mít může. Je to zatím jediná cesta, jak se loď na zastávku
+dostane mimo import — přihlášení lodi na zastávku je další kus.
+
+**Pořadí, nebo kód, ne obojí.** Bodování by pořadí vedle kódu nevzalo
+a zůstalo by číslo, které vypadá, že platí. **Stejné pořadí se hlídá
+uvnitř kategorie**, ne přes celé pole: v cíli se čísluje přes všechny lodě
+(v kategorii pak zbydou mezery), ale pořadatel, který čísluje každou
+kategorii zvlášť, nesmí dostat chybu. Mrtvý dojezd se tím zapsat nedá;
+až se objeví, je to otázka na rozhodčího.
+
+**Čas se v zápisu nemění.** Formulář ho nemá a výsledek z importu ho nést
+může — prázdná hodnota z obrazovky by ho tiše smazala.
+
+**Při chybě se rozepsaná čísla vracejí v adrese.** Vzor „POST, pak
+přesměruj" by formulář vyprázdnil a pořadatel by po jednom překlepu opisoval
+třicet lodí znovu.
+
+**Nová rozjížďka je návrh a na webu není** — stejně jako nový článek je
+koncept. Číslo je o jedno vyšší než nejvyšší, ne počet.
 
 ### Appka se rozešla s modelem, protože není v CI
 
@@ -1645,10 +1692,9 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
    závodní pravidla*: z čeho se počítá DNC, co znamenají nuly u zrušených
    zastávek a proč má DNF jiné body než DNS. Dopočet neúčasti na nich stojí.
 5. **Fáze 5 je rozdělaná** (stav k 14. 9. 2026). Hotové: udělování
-   oprávnění, kalendář zastávek, workflow výsledků a psaní novinek. Další na
-   řadě je **obrazovka pro zápis výsledků** — dnes se pořadí dostane dovnitř
-   jen importem a na otázky rozhodčího nečeká, protože zapisuje pořadí
-   a kódy, ne body. Po ní přihlášení lodi na zastávku, pak protesty
+   oprávnění, kalendář zastávek, workflow výsledků, zápis výsledků a psaní
+   novinek. Další na řadě je **přihlášení lodi na zastávku** (oddíl
+   *Otevřené: přihlášení lodi na jednu zastávku*), pak protesty
    a penalizace.
 6. **Skutečná data** — až dorazí, nahradí `data/2025-mock.json` a nahrají se
    importem. Struktura zůstane.

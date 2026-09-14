@@ -10,15 +10,16 @@ public record PublikaceVysledkuVstup(bool Publikovano);
 
 /// <summary>
 /// Workflow výsledků: navrženo → ověřeno → schváleno → potvrzeno, k tomu
-/// vrácení k revizi, eliminace a publikace.
+/// vrácení k revizi, eliminace a publikace. A zápis samotných čísel.
 /// <para>
 /// <b>Stav se vede na rozjížďce, ne na jednotlivém výsledku.</b> Rozhodčí
 /// schvaluje sadu výsledků jako celek; stav na řádku by znamenal, že
 /// rozjížďka může být zpola schválená.
 /// </para>
 /// <para>
-/// Pravidla přechodů leží ve <see cref="Workflow"/> — jedna funkce s testy,
-/// ne rozeseté podmínky po endpointech.
+/// Pravidla přechodů leží ve <see cref="Workflow"/>, pravidla zápisu
+/// v <see cref="Zapis"/> — jedna funkce s testy, ne rozeseté podmínky po
+/// endpointech.
 /// </para>
 /// </summary>
 public static class VysledkyEndpoints
@@ -37,6 +38,28 @@ public static class VysledkyEndpoints
         g.MapGet("/{zavod}", PrehledAsync)
             .Produces<PrehledVysledkuDto>()
             .WithSummary("Vypíše rozjížďky zastávky i s tím, co s nimi přihlášený smí");
+
+        g.MapPost("/{zavod}/rozjizdky", PridejRozjizdkuAsync)
+            .Produces<RozjizdkaSpravaRadek>(StatusCodes.Status201Created)
+            .WithSummary("Přidá zastávce další rozjížďku")
+            .WithDescription(
+                "Pořadatel zastávky, od vypsání závodu. Nová rozjížďka je návrh " +
+                "a na webu není.");
+
+        g.MapGet("/{zavod}/rozjizdky/{cislo:int}", ZapisAsync)
+            .Produces<ZapisRozjizdkyDto>()
+            .WithSummary("Vypíše zápis rozjížďky: všechny lodě ročníku a jejich výsledky")
+            .WithDescription(
+                "Vidí ho každý, kdo smí na výsledky ročníku. Měnit ho smí jen " +
+                "pořadatel zastávky, a jen v návrhu nebo po vrácení k revizi.");
+
+        g.MapPut("/{zavod}/rozjizdky/{cislo:int}/vysledky", UlozAsync)
+            .Produces<ZapisRozjizdkyDto>()
+            .WithSummary("Uloží celou sadu výsledků rozjížďky")
+            .WithDescription(
+                "Loď, která v sadě nemá pořadí ani kód, výsledek nemá. Pořadí, " +
+                "nebo kód, ne obojí; stejné pořadí v jedné kategorii neprojde. " +
+                "Čas se nemění.");
 
         g.MapPost("/{zavod}/rozjizdky/{cislo:int}/stav", StavAsync)
             .Produces<RozjizdkaSpravaRadek>()
@@ -84,7 +107,60 @@ public static class VysledkyEndpoints
 
         return Results.Ok(new PrehledVysledkuDto(
             serie, hlavicka.SerieNazev, zavod, hlavicka.Nazev, hlavicka.Stav, hlavicka.Publikovano,
-            [.. rozjizdky.Select(r => pohled.Radek(rozsah.ZavodId.Value, r.Rozjizdka, r.PocetVysledku))]));
+            [.. rozjizdky.Select(r => pohled.Radek(rozsah.ZavodId.Value, r.Rozjizdka, r.PocetVysledku))],
+            SmiPridatRozjizdku: pohled.Poradatel(rozsah.ZavodId.Value)
+                                && Zapis.ProcNejdeNaZavod(hlavicka.Stav) is null));
+    }
+
+    private static async Task<IResult> PridejRozjizdkuAsync(
+        string serie, string zavod, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, VysledkySprava sprava, ZapisSprava zapis, CancellationToken ct)
+    {
+        if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
+            return Results.NotFound();
+
+        if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        var (rozjizdka, chyba) = await zapis.PridejRozjizdkuAsync(rozsah.ZavodId.Value, ct);
+        if (chyba is not null) return Results.BadRequest(new { error = chyba });
+
+        return Results.Created(
+            $"/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{rozjizdka!.Cislo}",
+            await RadekAsync(kdo, rozsahy, sprava, rozsah, rozjizdka, ct));
+    }
+
+    private static async Task<IResult> ZapisAsync(
+        string serie, string zavod, int cislo, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, VysledkySprava sprava, ZapisSprava zapis, CancellationToken ct)
+    {
+        if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
+            return Results.NotFound();
+
+        var (rozsah, rozjizdka) = nalezena;
+
+        // Číst smí každý, kdo smí na výsledky ročníku — rozhodčí ověřuje
+        // právě tenhle zápis, takže ho musí vidět, i když ho nemění.
+        if (await PohledAsync(kdo, rozsahy, rozsah.SerieId, ct) is null) return Results.Forbid();
+
+        return Results.Ok(await zapis.NactiAsync(
+            rozjizdka, await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct), ct));
+    }
+
+    private static async Task<IResult> UlozAsync(
+        string serie, string zavod, int cislo, ZapisVstup vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, VysledkySprava sprava, ZapisSprava zapis, CancellationToken ct)
+    {
+        if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
+            return Results.NotFound();
+
+        var (rozsah, rozjizdka) = nalezena;
+
+        if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        if (await zapis.UlozAsync(rozjizdka, vstup.Radky, ct) is { } chyba)
+            return Results.BadRequest(new { error = chyba });
+
+        return Results.Ok(await zapis.NactiAsync(rozjizdka, poradatel: true, ct));
     }
 
     private static async Task<IResult> StavAsync(
@@ -128,6 +204,14 @@ public static class VysledkyEndpoints
         return Results.Ok(await RadekAsync(kdo, rozsahy, sprava, rozsah, rozjizdka, ct));
     }
 
+    /// <summary>
+    /// Zapisuje pořadatel zastávky; správce ho pokrývá. Rozhodčí ne — ten
+    /// zápis ověřuje a kdyby ho smel i měnit, ověřoval by sám sebe.
+    /// </summary>
+    private static Task<bool> SmiZapisovatAsync(
+        ClaimsPrincipal kdo, Rozsahy rozsahy, Rozsahy.Rozsah rozsah, CancellationToken ct) =>
+        rozsahy.SmiAsync(kdo, new Pozadavek(Workflow.KdoSmi(StavVysledku.Navrzeno), rozsah.SerieId, rozsah.ZavodId), ct);
+
     private static async Task<(Rozsahy.Rozsah Rozsah, Rozjizdka Rozjizdka)?> NajdiAsync(
         string serie, string zavod, int cislo,
         Rozsahy rozsahy, VysledkySprava sprava, CancellationToken ct)
@@ -147,9 +231,11 @@ public static class VysledkyEndpoints
     private sealed record Pohled(
         bool Rozhodci, bool Spravce, bool OrganizatorRocniku, IReadOnlyList<int> Zavody)
     {
+        public bool Poradatel(int zavodId) => Spravce || OrganizatorRocniku || Zavody.Contains(zavodId);
+
         public RozjizdkaSpravaRadek Radek(int zavodId, Rozjizdka r, int pocetVysledku)
         {
-            var organizator = Spravce || OrganizatorRocniku || Zavody.Contains(zavodId);
+            var organizator = Poradatel(zavodId);
 
             var mozne = Workflow.MozneZ(r.StavVysledku, Spravce)
                 .Where(na => Workflow.KdoSmi(na) switch
@@ -160,9 +246,12 @@ public static class VysledkyEndpoints
                 })
                 .ToList();
 
+            // Stav zastávky se tu neptá: je stejný pro všechny rozjížďky
+            // a obrazovka zápisu řekne sama, proč je jen ke čtení.
             return new RozjizdkaSpravaRadek(
                 r.Cislo, r.StartV, r.Stav, r.DoSerie, r.StavVysledku, r.Publikovano,
-                r.DuvodRevize, pocetVysledku, Spravce, mozne);
+                r.DuvodRevize, pocetVysledku, Spravce, mozne,
+                SmiZapisovat: organizator && Zapis.Otevreny(r.StavVysledku));
         }
     }
 

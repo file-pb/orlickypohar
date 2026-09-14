@@ -240,7 +240,72 @@ def rozjizdka_radek(r):
             "pocetVysledku": len(r.get("vysledky", [])), "smiPublikovat": True,
             "mozneStavy": [s for s in VSECHNY_VYSLEDKY
                            if s != r["stavVysledku"]
-                           and not proc_nejde_vysledek(r["stavVysledku"], s, True)]}
+                           and not proc_nejde_vysledek(r["stavVysledku"], s, True)],
+            "smiZapisovat": r["stavVysledku"] in OTEVRENY}
+
+
+# --- Zápis výsledků ---------------------------------------------------------
+# Opsané z `Features/Zavody/Zapis.cs`, ze stejného důvodu jako bodování.
+# Přihlášky mock nečísluje, takže dostanou číslo podle pořadí v souboru.
+PRIHLASKA_ID = {p["lod"]: i + 1 for i, p in enumerate(D["prihlasky"])}
+LOD_PODLE_ID = {i: lod for lod, i in PRIHLASKA_ID.items()}
+OTEVRENY = ("Navrzeno", "KRevizi")
+
+
+def proc_nejde_na_zavod(stav):
+    if stav in ("Vypsany", "Odjety"):
+        return None
+    if stav == "Zruseny":
+        return "Zastávka je zrušená, výsledky nemá."
+    return "Závod ještě není vypsaný. Výsledky se zapisují od vypsání."
+
+
+def proc_nejde_prepsat(z, r):
+    if (chyba := proc_nejde_na_zavod(z["stav"])):
+        return chyba
+    if r["stavVysledku"] in OTEVRENY:
+        return None
+    return (f'Výsledky jsou ve stavu „{NAZVY_VYSLEDKU[r["stavVysledku"]]}“ '
+            "a dál se nepřepisují. Když je v nich chyba, musí je rozhodčí vrátit k revizi.")
+
+
+def proc_nejde_ulozit(radky):
+    """radky: [(lod, kategorie, poradi, kod)] — jen pro hlášky, jako v API."""
+    videne = set()
+    for lod, _, poradi, kod in radky:
+        if lod in videne:
+            return f"Loď {nazvy(lod)} je v zápisu dvakrát."
+        videne.add(lod)
+        if poradi is not None and poradi < 1:
+            return f"{nazvy(lod)}: pořadí v cíli začíná jedničkou."
+        if poradi is not None and kod:
+            return f"{nazvy(lod)} má pořadí i kód. Buď dojela, nebo platí kód."
+
+    shody = {}
+    for lod, kategorie, poradi, _ in radky:
+        if poradi is not None:
+            shody.setdefault((kategorie, poradi), []).append(nazvy(lod))
+    for (kategorie, poradi), lode in shody.items():
+        if len(lode) > 1:
+            return f"V kategorii {kategorie} má pořadí {poradi} víc lodí: {', '.join(lode)}."
+    return None
+
+
+def zapis_dto(z, r):
+    chyba = proc_nejde_prepsat(z, r)
+    podle_lodi = {v["lod"]: v for v in r["vysledky"]}
+    lode = sorted(D["prihlasky"], key=lambda p: (KAT_PORADI[p["kategorie"]], nazvy(p["lod"])))
+    return {"serie": D["slug"], "serieNazev": D["nazev"], "zavod": z["slug"],
+            "zavodNazev": z["nazev"], "stavZavodu": z["stav"], "cislo": r["cislo"],
+            "stavVysledku": r["stavVysledku"], "duvodRevize": r.get("duvodRevize"),
+            "smiZapisovat": chyba is None, "procNelze": chyba,
+            "lode": [{"prihlaskaId": PRIHLASKA_ID[p["lod"]], "lod": nazvy(p["lod"]),
+                      "cisloPlachty": LODE[p["lod"]].get("cisloPlachty"),
+                      "kategorie": p["kategorie"],
+                      "poradiVCili": podle_lodi.get(p["lod"], {}).get("poradiVCili"),
+                      "kod": podle_lodi.get(p["lod"], {}).get("kod"),
+                      "casSekundy": podle_lodi.get(p["lod"], {}).get("casSekundy")}
+                     for p in lode]}
 
 
 # --- Kalendář ---------------------------------------------------------------
@@ -332,6 +397,10 @@ class H(BaseHTTPRequestHandler):
     def do_PUT(self):
         cesta = urlparse(self.path).path
 
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
+                          r'/rozjizdky/(\d+)/vysledky$', cesta)):
+            return self.uloz_zapis(m.group(1), int(m.group(2)))
+
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)$', cesta)):
             return self.uprav_zastavku(m.group(1))
 
@@ -361,6 +430,8 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                           r'/rozjizdky/(\d+)/(stav|publikace)$', cesta)):
             return self.workflow(m.group(1), int(m.group(2)), m.group(3))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)/rozjizdky$', cesta)):
+            return self.pridej_rozjizdku(m.group(1))
 
         if cesta == f'/sprava/serie/{D["slug"]}/zastavky':
             return self.zaloz_zastavku()
@@ -439,6 +510,58 @@ class H(BaseHTTPRequestHandler):
             r["duvodRevize"] = duvod
         r["stavVysledku"] = na
         return self.odpoved(rozjizdka_radek(r))
+
+    def rozjizdka(self, zavod, cislo):
+        """(zastávka, rozjížďka), nebo (None, None) s už odeslanou chybou."""
+        if not self.headers.get("authorization"):
+            self.send_error(401)
+            return None, None
+        z = next((z for z in D["zavody"] if z["slug"] == zavod), None)
+        r = next((r for r in z["rozjizdky"] if r["cislo"] == cislo), None) if z else None
+        if not r:
+            self.send_error(404)
+            return None, None
+        return z, r
+
+    def uloz_zapis(self, zavod, cislo):
+        z, r = self.rozjizdka(zavod, cislo)
+        if not r:
+            return None
+        if (chyba := proc_nejde_prepsat(z, r)):
+            return self.chyba(400, chyba)
+
+        radky = []
+        for radek in self.telo_zadosti().get("radky") or []:
+            lod = LOD_PODLE_ID.get(radek.get("prihlaskaId"))
+            if not lod:
+                return self.chyba(400, f'Přihláška {radek.get("prihlaskaId")} do ročníku nepatří.')
+            radky.append((lod, KAT[lod], radek.get("poradiVCili"), radek.get("kod")))
+        if (chyba := proc_nejde_ulozit(radky)):
+            return self.chyba(400, chyba)
+
+        # Celá sada najednou, jako v API: co v zápisu není, výsledek nemá.
+        # Čas u lodi, která výsledek už měla, zůstává — formulář ho nemění.
+        puvodni = {v["lod"]: v for v in r["vysledky"]}
+        r["vysledky"] = [{**puvodni.get(lod, {}), "lod": lod, "poradiVCili": poradi, "kod": kod}
+                         for lod, _, poradi, kod in radky if poradi is not None or kod]
+        for lod in (v["lod"] for v in r["vysledky"]):
+            if all(u["lod"] != lod for u in z["ucasti"]):
+                z["ucasti"].append({"lod": lod, "kormidelnik": None, "posadka": None})
+        return self.odpoved(zapis_dto(z, r))
+
+    def pridej_rozjizdku(self, zavod):
+        z = self.zastavka(zavod)
+        if not z:
+            return None
+        if (chyba := proc_nejde_na_zavod(z["stav"])):
+            return self.chyba(400, chyba)
+
+        # Nová rozjížďka je návrh a venku není — stejně jako v API.
+        nova = {"cislo": max((r["cislo"] for r in z["rozjizdky"]), default=0) + 1,
+                "startV": None, "stav": "Planovana", "doSerie": True,
+                "stavVysledku": "Navrzeno", "publikovano": False, "vysledky": []}
+        z["rozjizdky"].append(nova)
+        return self.odpoved(rozjizdka_radek(nova), 201)
 
     def zaloz_zastavku(self):
         if not self.headers.get("authorization"):
@@ -632,7 +755,14 @@ class H(BaseHTTPRequestHandler):
             telo = {"serie": D["slug"], "serieNazev": D["nazev"],
                     "zavod": z["slug"], "zavodNazev": z["nazev"],
                     "stavZavodu": z["stav"], "zavodPublikovan": True,
-                    "rozjizdky": [rozjizdka_radek(r) for r in z["rozjizdky"]]}
+                    "rozjizdky": [rozjizdka_radek(r) for r in z["rozjizdky"]],
+                    "smiPridatRozjizdku": proc_nejde_na_zavod(z["stav"]) is None}
+        elif (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
+                            r'/rozjizdky/(\d+)$', cesta)):
+            z, r = self.rozjizdka(m.group(1), int(m.group(2)))
+            if not r:
+                return None
+            telo = zapis_dto(z, r)
         elif cesta == f'/sprava/serie/{D["slug"]}/zastavky':
             if not self.headers.get("authorization"):
                 return self.send_error(401)

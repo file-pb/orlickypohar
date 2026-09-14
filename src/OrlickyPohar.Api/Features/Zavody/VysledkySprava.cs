@@ -22,7 +22,10 @@ public record RozjizdkaSpravaRadek(
     string? DuvodRevize,
     int PocetVysledku,
     bool SmiPublikovat,
-    IReadOnlyList<StavVysledku> MozneStavy);
+    IReadOnlyList<StavVysledku> MozneStavy,
+    // Na konci, ne vedle ostatních „smí": změny API jsou jen aditivní
+    // a klient, který pole nezná, ho má jen přeskočit.
+    bool SmiZapisovat = false);
 
 public record PrehledVysledkuDto(
     string Serie,
@@ -31,7 +34,8 @@ public record PrehledVysledkuDto(
     string ZavodNazev,
     StavZavodu StavZavodu,
     bool ZavodPublikovan,
-    IReadOnlyList<RozjizdkaSpravaRadek> Rozjizdky);
+    IReadOnlyList<RozjizdkaSpravaRadek> Rozjizdky,
+    bool SmiPridatRozjizdku = false);
 
 /// <summary>
 /// Zastávka v rozcestníku výsledků. Čísla stačí sečtená: odsud se vybírá,
@@ -51,10 +55,9 @@ public record StavVysledkuVstup(StavVysledku Stav, string? Duvod = null);
 /// <summary>
 /// Čtení a zápis workflow výsledků.
 /// <para>
-/// <b>Zapisování samotných výsledků tu není.</b> Dneska je dovnitř dostane
-/// import ze sešitu rozhodčího; workflow se ptá na jinou otázku — kdo za
-/// ta čísla ručí a smí je vidět veřejnost. Obrazovka na zápis pořadí je
-/// vlastní kus práce a slít ji sem by znamenalo, že ani jedno není hotové.
+/// <b>Zapisování samotných výsledků tu není</b>, leží v <see cref="ZapisSprava"/>.
+/// Workflow se ptá na jinou otázku — kdo za ta čísla ručí a smí je vidět
+/// veřejnost — a zápis se ptá, co se stalo na vodě.
 /// </para>
 /// <para>
 /// <b>Rozjížďka předaná do zápisových metod musí pocházet z téhož

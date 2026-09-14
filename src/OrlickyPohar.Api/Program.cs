@@ -45,6 +45,7 @@ try
     builder.Services.AddScoped<ClankySprava>();
     builder.Services.AddScoped<KalendarSprava>();
     builder.Services.AddScoped<VysledkySprava>();
+    builder.Services.AddScoped<ZapisSprava>();
     // .NET popisuje čísla jako ["integer","string"], protože je při čtení
     // přijímá i v uvozovkách. Odpovědi je ale píšou vždycky jako čísla —
     // a generovaný klient by jinak u každého bodu nutil ověřovat, jestli
