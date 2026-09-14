@@ -1,0 +1,359 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Drobecky } from "@/app/drobecky";
+import { Stav } from "@/app/stav";
+import { Vypadek } from "@/app/vypadek";
+import {
+  STAVY_UCASTI,
+  nactiPrihlasky,
+  type LodNaZastavce,
+  type StavUcasti,
+} from "@/lib/prihlasky";
+import { novaLodAkce, prihlasAkce, stavLodiAkce } from "./akce";
+
+// Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
+export const dynamic = "force-dynamic";
+
+export const metadata = { title: "Přihlášené lodě — správa" };
+
+type Parametry = {
+  params: Promise<{ serie: string; zavod: string }>;
+  searchParams: Promise<{
+    chyba?: string;
+    stav?: string;
+    lod?: string;
+    nastav?: StavUcasti;
+    nova?: string;
+    nazev?: string;
+    kategorie?: string;
+    jmeno?: string;
+    prijmeni?: string;
+    cisloPlachty?: string;
+    typ?: string;
+  }>;
+};
+
+/**
+ * Přihlášky lodí na jednu zastávku: kdo se chystá jet.
+ *
+ * <b>Přihlašuje pořadatel</b>, loď sama ne (Filip, 14. 9. 2026). Celé
+ * serverové a bez javascriptu jako zbytek administrace. Co s lodí jde
+ * udělat, posílá API v každém řádku.
+ */
+export default async function PrihlaskyZastavky({ params, searchParams }: Parametry) {
+  const { serie, zavod } = await params;
+  const zpravy = await searchParams;
+
+  const { stav, data: prehled } = await nactiPrihlasky(serie, zavod);
+
+  // Výpadek nesmí spolknout výsledek zápisu.
+  if (stav === "vypadek")
+    return (
+      <>
+        {zpravy.chyba && (
+          <p className="hlaska chyba" role="alert">
+            {zpravy.chyba}
+          </p>
+        )}
+        <Vypadek />
+      </>
+    );
+
+  if (stav === "neni") notFound();
+
+  const hlava = (
+    <>
+      <Drobecky
+        cesta={[
+          { text: "Domů", kam: "/" },
+          { text: "Ročník", kam: `/serie/${serie}` },
+          { text: "Kalendář", kam: `/sprava/${serie}/kalendar` },
+          { text: "Přihlášky" },
+        ]}
+      />
+      <h1>Přihlášené lodě</h1>
+    </>
+  );
+
+  if (stav === "neprihlasen")
+    return (
+      <>
+        {hlava}
+        <p className="prazdno">
+          Na správu přihlášek se musíš <Link href="/prihlaseni">přihlásit</Link>.
+        </p>
+      </>
+    );
+
+  if (stav === "odmitnut")
+    return (
+      <>
+        {hlava}
+        <p className="prazdno">
+          Přihlášení vypršelo. <Link href="/prihlaseni">Přihlas se znovu</Link>.
+        </p>
+      </>
+    );
+
+  if (stav === "nesmi" || !prehled)
+    return (
+      <>
+        {hlava}
+        <p className="prazdno">
+          K přihláškám téhle zastávky nemáš přístup. Spravuje je její pořadatel.
+        </p>
+      </>
+    );
+
+  const prihlasene = prehled.lode.filter((l) => l.stav && l.stav !== "Zrusena");
+  const zrusene = prehled.lode.filter((l) => l.stav === "Zrusena");
+  const volne = prehled.lode.filter((l) => !l.stav);
+
+  return (
+    <>
+      <Drobecky
+        cesta={[
+          { text: "Domů", kam: "/" },
+          { text: "Ročník", kam: `/serie/${serie}` },
+          { text: "Kalendář", kam: `/sprava/${serie}/kalendar` },
+          { text: prehled.zavodNazev },
+        ]}
+      />
+      <h1>{prehled.zavodNazev}</h1>
+      <p className="podtitulek">
+        Přihlášené lodě <Stav stav={prehled.stavZavodu} />
+      </p>
+
+      {zpravy.chyba && (
+        <p className="hlaska chyba" role="alert">
+          {zpravy.chyba}
+        </p>
+      )}
+      {zpravy.stav && !zpravy.chyba && (
+        <p className="hlaska hotovo" role="status">
+          {hotovo(zpravy.stav, zpravy.lod, zpravy.nastav)}
+        </p>
+      )}
+      {prehled.procNelze && (
+        <p className="hlaska" role="status">
+          {prehled.procNelze}
+        </p>
+      )}
+
+      <p className="poznamka">
+        {pocet(prihlasene.length)}, z toho{" "}
+        {prihlasene.filter((l) => l.stav === "Potvrzena").length} potvrzených.{" "}
+        <Link href={`/sprava/${serie}/vysledky/${zavod}`}>Výsledky zastávky →</Link>
+      </p>
+
+      {prihlasene.length === 0 ? (
+        <p className="prazdno">Na zastávku zatím není přihlášená žádná loď.</p>
+      ) : (
+        <Tabulka serie={serie} zavod={zavod} lode={prihlasene} kategorie={prehled.kategorie} />
+      )}
+
+      {prehled.smiSpravovat && (
+        <>
+          <h2>Přihlásit loď</h2>
+
+          {volne.length > 0 && (
+            <form action={prihlasAkce} className="formular">
+              <input type="hidden" name="serie" value={serie} />
+              <input type="hidden" name="zavod" value={zavod} />
+              <label>
+                Loď z ročníku
+                <select name="prihlaskaId" required defaultValue="">
+                  <option value="" disabled>
+                    Vyber loď
+                  </option>
+                  {prehled.kategorie.map((k) => {
+                    const vKategorii = volne.filter((l) => l.kategorie === k);
+                    return (
+                      vKategorii.length > 0 && (
+                        <optgroup key={k} label={k}>
+                          {vKategorii.map((l) => (
+                            <option key={l.prihlaskaId} value={l.prihlaskaId}>
+                              {l.lod}
+                              {l.cisloPlachty ? ` · ${l.cisloPlachty}` : ""} · {l.majitel}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )
+                    );
+                  })}
+                </select>
+              </label>
+              <button type="submit">Přihlásit</button>
+            </form>
+          )}
+
+          {/* Nová loď se rozbaluje, protože je výjimka: většina lodí v ročníku
+              už je a hledá se v nabídce nad tím. Po chybě zůstává otevřená. */}
+          <details className="uprava-samostatna" open={zpravy.nova === "1"}>
+            <summary>Nová loď, která v ročníku ještě není</summary>
+            <form action={novaLodAkce} className="formular">
+              <input type="hidden" name="serie" value={serie} />
+              <input type="hidden" name="zavod" value={zavod} />
+              <label>
+                Název lodi
+                <input name="nazev" required maxLength={120} defaultValue={zpravy.nazev} />
+              </label>
+              <label>
+                Kategorie
+                <select name="kategorie" required defaultValue={zpravy.kategorie ?? ""}>
+                  <option value="" disabled>
+                    Vyber kategorii
+                  </option>
+                  {prehled.kategorie.map((k) => (
+                    <option key={k} value={k}>
+                      {k}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Číslo plachty
+                <input
+                  name="cisloPlachty"
+                  maxLength={20}
+                  placeholder="CZE 430"
+                  defaultValue={zpravy.cisloPlachty}
+                />
+              </label>
+              <label>
+                Typ lodi
+                <input name="typ" maxLength={80} placeholder="Pirát" defaultValue={zpravy.typ} />
+              </label>
+              <label>
+                Jméno majitele
+                <input name="jmeno" required maxLength={80} defaultValue={zpravy.jmeno} />
+              </label>
+              <label>
+                Příjmení majitele
+                <input name="prijmeni" required maxLength={80} defaultValue={zpravy.prijmeni} />
+              </label>
+              <button type="submit">Založit a přihlásit</button>
+              <p className="poznamka">
+                Loď se tím stává účastníkem celého ročníku v kategorii, kterou
+                vybereš. Kolik bodů patří za zastávky, na kterých nebyla, se zatím
+                nedopočítává — čeká to na rozhodčího.
+              </p>
+            </form>
+          </details>
+        </>
+      )}
+
+      {zrusene.length > 0 && (
+        <>
+          <h2>Zrušené</h2>
+          <p className="poznamka">Na webu nejsou. Obnovit je jde, dokud přihlášky běží.</p>
+          <Tabulka serie={serie} zavod={zavod} lode={zrusene} kategorie={prehled.kategorie} />
+        </>
+      )}
+    </>
+  );
+}
+
+/** Lodě po kategoriích, v pořadí ročníku. Každý řádek nese, co s ním jde. */
+function Tabulka({
+  serie,
+  zavod,
+  lode,
+  kategorie,
+}: {
+  serie: string;
+  zavod: string;
+  lode: LodNaZastavce[];
+  kategorie: string[];
+}) {
+  return (
+    <div className="tabulka-obal">
+      <table>
+        <thead>
+          <tr>
+            <th className="lod">Loď</th>
+            <th className="vlevo">Stav</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          {kategorie.flatMap((k) => {
+            const vKategorii = lode.filter((l) => l.kategorie === k);
+            if (vKategorii.length === 0) return [];
+
+            return [
+              <tr key={`k-${k}`} className="kategorie">
+                <td colSpan={3}>{k}</td>
+              </tr>,
+              ...vKategorii.map((l) => (
+                <tr key={l.prihlaskaId}>
+                  <td className="lod">
+                    {l.lod}
+                    <div className="majitel">
+                      {[l.cisloPlachty, l.typLodi, l.majitel].filter(Boolean).join(" · ")}
+                    </div>
+                  </td>
+                  <td className="vlevo">
+                    {l.stav && (
+                      <span className={`stitek ucast-${l.stav.toLowerCase()}`}>
+                        {STAVY_UCASTI[l.stav].stitek}
+                      </span>
+                    )}
+                    {l.maVysledky && <span className="stitek">má výsledky</span>}
+                  </td>
+                  <td>
+                    <div className="stavy">
+                      {/* Dokument popisuje stav včetně null, protože u lodi
+                          mimo zastávku chybí; v nabídce ale prázdný není. */}
+                      {l.mozneStavy.filter((na): na is StavUcasti => na != null).map((na) => (
+                        <form key={na} action={stavLodiAkce}>
+                          <input type="hidden" name="serie" value={serie} />
+                          <input type="hidden" name="zavod" value={zavod} />
+                          <input type="hidden" name="prihlaskaId" value={l.prihlaskaId} />
+                          <input type="hidden" name="lod" value={l.lod} />
+                          <input type="hidden" name="stav" value={na} />
+                          <button type="submit" title={STAVY_UCASTI[na].popis}>
+                            {tlacitko(l.stav, na)}
+                          </button>
+                        </form>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              )),
+            ];
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/**
+ * Nápis podle směru. „Vrátit mezi nepotvrzené" u zrušené lodi by lhalo —
+ * nepotvrzená nikdy nebyla, obnovuje se.
+ */
+function tlacitko(ze: StavUcasti | null | undefined, na: StavUcasti) {
+  if (ze === "Zrusena" && na === "Prihlasena") return "Obnovit přihlášku";
+  return STAVY_UCASTI[na].tlacitko;
+}
+
+function pocet(n: number) {
+  return `${n} ${n === 1 ? "přihlášená loď" : n >= 2 && n <= 4 ? "přihlášené lodě" : "přihlášených lodí"}`;
+}
+
+/** Věta po zápisu. Skládá se tady, protože akce zná jen jméno a stav. */
+function hotovo(stav: string, lod?: string, nastav?: StavUcasti) {
+  const kdo = lod ?? "Loď";
+
+  switch (stav) {
+    case "prihlasena":
+      return `${kdo} je přihlášená. Až bude jisté, že pojede, potvrď ji.`;
+    case "jiz":
+      return `${kdo} už přihlášená byla. Nic se nezměnilo.`;
+    case "prepnuto":
+      return nastav ? `${kdo}: ${STAVY_UCASTI[nastav].popis}` : "Hotovo.";
+    default:
+      return "Hotovo.";
+  }
+}

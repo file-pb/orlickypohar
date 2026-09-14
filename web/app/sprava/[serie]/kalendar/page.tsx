@@ -227,8 +227,11 @@ function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek 
           <span className="presun"> · přesunuto z {datum(zastavka.puvodniDatum)}</span>
         )}
         {" · "}
-        {/* Odsud se chodí na výsledky té zastávky. Kalendář je rozcestník
-            ročníku, takže je to jediné místo, kde se ta cesta nabízí sama. */}
+        {/* Odsud se chodí na přihlášky a výsledky té zastávky. Kalendář je
+            rozcestník ročníku, takže je to jediné místo, kde se ty cesty
+            nabízejí samy. */}
+        <Link href={`/sprava/${serie}/prihlasky/${zastavka.slug}`}>přihlášky →</Link>
+        {" · "}
         <Link href={`/sprava/${serie}/vysledky/${zastavka.slug}`}>výsledky →</Link>
       </div>
 

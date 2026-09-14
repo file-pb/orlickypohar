@@ -362,7 +362,7 @@ export interface paths {
         };
         /**
          * Vypíše oprávnění ročníku i zastávky, na které jdou udělit
-         * @description Vyžaduje roli správce v tom ročníku.
+         * @description Vyžaduje roli správce, nebo rozhodčího v tom ročníku. Co smí udělit, říká SmiNaRocnik.
          */
         get: {
             parameters: {
@@ -389,7 +389,7 @@ export interface paths {
         put?: never;
         /**
          * Udělí roli podle e-mailu
-         * @description Vyžaduje roli správce v tom ročníku. Výjimka: udělení prvního správce projde i na hlavičku X-Import-Token, dokud v ročníku žádný správce není. Účet musí existovat — vzniká až prvním přihlášením.
+         * @description Vyžaduje roli správce v tom ročníku; rozhodčí smí udělit pořadatele a editora jedné zastávce. Výjimka: udělení prvního správce projde i na hlavičku X-Import-Token, dokud v ročníku žádný správce není. Účet musí existovat — vzniká až prvním přihlášením.
          */
         post: {
             parameters: {
@@ -444,7 +444,7 @@ export interface paths {
         post?: never;
         /**
          * Odebere jedno oprávnění
-         * @description Vyžaduje roli správce. Posledního správce ročníku odebrat nelze.
+         * @description Vyžaduje roli správce; rozhodčí smí odebrat, co smí udělit. Posledního správce ročníku odebrat nelze.
          */
         delete: {
             parameters: {
@@ -1171,6 +1171,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/lode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše lodě ročníku i s tím, jak jsou přihlášené na zastávku
+         * @description Pořadatel zastávky, nebo rozhodčí ročníku. Měnit smí jen pořadatel.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PrihlaskyZastavkyDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Přihlásí loď na zastávku — z ročníku, nebo novou
+         * @description Pořadatel zastávky, od vypsání závodu. Nová loď se stává účastníkem ročníku v zadané kategorii. Druhé přihlášení téže lodi vrací 200.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PrihlaseniVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LodNaZastavceDto"];
+                    };
+                };
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LodNaZastavceDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/lode/{prihlaska}/stav": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Potvrdí, zruší, nebo obnoví přihlášku lodi
+         * @description Loď, která už má na zastávce výsledky, zrušit nejde.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    prihlaska: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StavUcastiVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LodNaZastavceDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1254,12 +1382,32 @@ export interface components {
         };
         /** @enum {unknown} */
         KodVysledku: "Dnf" | "Dns" | "Dnc" | "Ocs" | "Dsq" | "Ret" | "Rdg" | null;
+        LodNaZastavceDto: {
+            /** Format: int32 */
+            prihlaskaId: number;
+            lod: string;
+            cisloPlachty: null | string;
+            typLodi: null | string;
+            majitel: string;
+            kategorie: string;
+            stav: null | components["schemas"]["StavUcasti"];
+            maVysledky: boolean;
+            mozneStavy: components["schemas"]["StavUcasti"][];
+        };
         LodVstup: {
             klic: string;
             nazev: string;
             cisloPlachty: null | string;
             typ: null | string;
             majitel: string;
+        };
+        NovaLodVstup: {
+            nazev: string;
+            kategorie: string;
+            majitelJmeno: string;
+            majitelPrijmeni: string;
+            cisloPlachty?: null | string;
+            typ?: null | string;
         };
         OpravneniDto: {
             role: components["schemas"]["Role"];
@@ -1322,6 +1470,8 @@ export interface components {
             nazev: string;
             zastavky: components["schemas"]["ZastavkaVolbaDto"][];
             opravneni: components["schemas"]["OpravneniRadek"][];
+            /** @default false */
+            smiNaRocnik: boolean;
         };
         PrehledVysledkuDto: {
             serie: string;
@@ -1340,6 +1490,11 @@ export interface components {
             smiZalozit: boolean;
             zastavky: components["schemas"]["ZastavkaRadek"][];
         };
+        PrihlaseniVstup: {
+            /** Format: int32 */
+            prihlaskaId?: null | number;
+            novaLod?: null | components["schemas"]["NovaLodVstup"];
+        };
         PrihlaskaDto: {
             lod: string;
             cisloPlachty: null | string;
@@ -1350,6 +1505,17 @@ export interface components {
         PrihlaskaVstup: {
             lod: string;
             kategorie: string;
+        };
+        PrihlaskyZastavkyDto: {
+            serie: string;
+            serieNazev: string;
+            zavod: string;
+            zavodNazev: string;
+            stavZavodu: components["schemas"]["StavZavodu"];
+            smiSpravovat: boolean;
+            procNelze: null | string;
+            kategorie: string[];
+            lode: components["schemas"]["LodNaZastavceDto"][];
         };
         PublikaceVstup: {
             publikovano: boolean;
@@ -1433,6 +1599,11 @@ export interface components {
         StavClanku: "Draft" | "Publikovano" | "Skryty" | "Smazano";
         /** @enum {unknown} */
         StavRozjizdky: "Planovana" | "Probiha" | "Dokoncena" | "Zrusena";
+        /** @enum {unknown} */
+        StavUcasti: "Prihlasena" | "Potvrzena" | "Zrusena" | null;
+        StavUcastiVstup: {
+            stav: components["schemas"]["StavUcasti"];
+        };
         StavVstup: {
             stav: components["schemas"]["StavClanku"];
         };
@@ -1454,6 +1625,8 @@ export interface components {
             lod: string;
             kategorie: string;
             kormidelnik: null | string;
+            /** @default true */
+            potvrzena: boolean;
         };
         UcastVstup: {
             lod: string;

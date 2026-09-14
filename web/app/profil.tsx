@@ -21,10 +21,15 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
 
   const opravneni = ja?.opravneni ?? [];
 
-  // Ročníky, kde je správcem. Jen ty: udělovat role smí správce a nabízet
-  // odkaz na obrazovku, ze které se vrátí „nemáš práva", je slib naprázdno.
+  // Ročníky, kde smí udělovat role: správce všechny, rozhodčí pořadatele
+  // a editora zastávky. Nabízet odkaz na obrazovku, ze které se vrátí
+  // „nemáš práva", je slib naprázdno.
   const spravuje = [
-    ...new Set(opravneni.filter((o) => o.role === "Spravce").map((o) => o.serie)),
+    ...new Set(
+      opravneni
+        .filter((o) => o.role === "Spravce" || o.role === "Rozhodci")
+        .map((o) => o.serie),
+    ),
   ];
 
   // Ročníky, kde smí psát. Editor píše na blog, organizátor a správce

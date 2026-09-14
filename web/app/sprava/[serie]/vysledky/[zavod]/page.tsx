@@ -114,6 +114,8 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
       <h1>{prehled.zavodNazev}</h1>
       <p className="podtitulek">
         {prehled.serieNazev} <Stav stav={prehled.stavZavodu} />
+        {" · "}
+        <Link href={`/sprava/${serie}/prihlasky/${zavod}`}>přihlášené lodě →</Link>
       </p>
 
       {/* Nepublikovaná zastávka schová i publikovanou rozjížďku — veřejně

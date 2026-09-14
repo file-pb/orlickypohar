@@ -102,8 +102,8 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
       <>
         {hlava}
         <p className="prazdno">
-          Tenhle ročník spravuje někdo jiný. Práva správce ti může dát jeho
-          současný správce.
+          Role v tomhle ročníku uděluje jeho správce; pořadatele a editora
+          zastávky i rozhodčí. Práva ti může dát současný správce.
         </p>
       </>
     );
@@ -112,6 +112,12 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
   const zprava = hotovo(zpravy, prehled);
   const naRocnik = prehled.opravneni.filter((o) => !o.zavod);
   const naZastavku = (slug: string) => prehled.opravneni.filter((o) => o.zavod === slug);
+
+  // Rozhodčí přiřazuje jen pořadatele a editora jedné zastávce. Nabídka
+  // i tlačítka se řídí tím, co API pustí — pravidlo samo žije v `Udeleni`.
+  const role = prehled.smiNaRocnik ? ROLE : ROLE.filter((r) => !r.jenRocnik);
+  const smiOdebrat = (r: Radek) =>
+    prehled.smiNaRocnik || (Boolean(r.zavod) && role.some((x) => x.role === r.role));
 
   return (
     <>
@@ -140,7 +146,7 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
         <label>
           <span>Role</span>
           <select name="role" defaultValue="Organizator">
-            {ROLE.map((r) => (
+            {role.map((r) => (
               <option key={r.role} value={r.role}>
                 {r.nazev}
               </option>
@@ -150,8 +156,14 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
 
         <label>
           <span>Kde</span>
-          <select name="zavod" defaultValue="">
-            <option value="">Celý ročník</option>
+          <select name="zavod" defaultValue="" required={!prehled.smiNaRocnik}>
+            {prehled.smiNaRocnik ? (
+              <option value="">Celý ročník</option>
+            ) : (
+              <option value="" disabled>
+                Vyber zastávku
+              </option>
+            )}
             {prehled.zastavky.map((z) => (
               <option key={z.slug} value={z.slug}>
                 {z.nazev}
@@ -164,6 +176,13 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
           Udělit
         </button>
       </form>
+
+      {!prehled.smiNaRocnik && (
+        <p className="poznamka">
+          Jako rozhodčí přiřazuješ pořadatele a editora jednotlivým zastávkám.
+          Role na celý ročník a rozhodčího uděluje správce.
+        </p>
+      )}
 
       <dl className="pravidla role-napoveda">
         {ROLE.map((r) => (
@@ -183,7 +202,7 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
         odebrat nelze.
       </p>
 
-      <Skupina nadpis="Celý ročník" radky={naRocnik} serie={prehled.serie} />
+      <Skupina nadpis="Celý ročník" radky={naRocnik} serie={prehled.serie} smiOdebrat={smiOdebrat} />
 
       {prehled.zastavky.map((z) => (
         <Skupina
@@ -191,6 +210,7 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
           nadpis={z.nazev}
           radky={naZastavku(z.slug)}
           serie={prehled.serie}
+          smiOdebrat={smiOdebrat}
           skryjPrazdnou
         />
       ))}
@@ -227,11 +247,13 @@ function Skupina({
   nadpis,
   radky,
   serie,
+  smiOdebrat,
   skryjPrazdnou,
 }: {
   nadpis: string;
   radky: Radek[];
   serie: string;
+  smiOdebrat: (r: Radek) => boolean;
   skryjPrazdnou?: boolean;
 }) {
   if (radky.length === 0 && skryjPrazdnou) return null;
@@ -261,14 +283,16 @@ function Skupina({
                   </td>
                   <td className="vlevo">{nazevRole(r.role)}</td>
                   <td>
-                    <form action={odeberAkce}>
-                      <input type="hidden" name="serie" value={serie} />
-                      <input type="hidden" name="id" value={r.id} />
-                      <input type="hidden" name="kdo" value={r.zobrazovane} />
-                      <button type="submit" className="odebrat">
-                        Odebrat
-                      </button>
-                    </form>
+                    {smiOdebrat(r) && (
+                      <form action={odeberAkce}>
+                        <input type="hidden" name="serie" value={serie} />
+                        <input type="hidden" name="id" value={r.id} />
+                        <input type="hidden" name="kdo" value={r.zobrazovane} />
+                        <button type="submit" className="odebrat">
+                          Odebrat
+                        </button>
+                      </form>
+                    )}
                   </td>
                 </tr>
               ))}

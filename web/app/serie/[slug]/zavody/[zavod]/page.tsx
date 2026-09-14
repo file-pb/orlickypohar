@@ -223,7 +223,12 @@ function PrihlaseneLode({ lode }: { lode: UcastLodi[] }) {
                   .filter((l) => l.kategorie === k)
                   .map((l) => (
                     <tr key={l.lod}>
-                      <td className="lod">{l.lod}</td>
+                      <td className="lod">
+                        {l.lod}
+                        {/* Přihlášená, ale nepotvrzená: pořadatel o ní ví,
+                            jistá ještě není. Starší API pole nemá — pak platí. */}
+                        {l.potvrzena === false && <div className="majitel">čeká na potvrzení</div>}
+                      </td>
                       <td style={{ textAlign: "left" }}>{l.kormidelnik ?? "—"}</td>
                     </tr>
                   ))}

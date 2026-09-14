@@ -1,0 +1,86 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { prepniLod, prihlas, type StavUcasti } from "@/lib/prihlasky";
+
+/**
+ * Zápisy z obrazovky přihlášek. Serverové akce, ne javascript v prohlížeči
+ * — stejně jako zbytek administrace.
+ *
+ * <b>Rozepsaná nová loď se při chybě vrací v adrese</b>, stejně jako zápis
+ * výsledků: opisovat šest polí kvůli překlepu v kategorii nikoho nebaví.
+ */
+
+const kam = (serie: string, zavod: string, zprava: Record<string, string | undefined>) => {
+  const dotaz = new URLSearchParams();
+  for (const [klic, hodnota] of Object.entries(zprava)) if (hodnota) dotaz.set(klic, hodnota);
+  const konec = dotaz.size ? `?${dotaz}` : "";
+
+  return `/sprava/${encodeURIComponent(serie)}/prihlasky/${encodeURIComponent(zavod)}${konec}`;
+};
+
+const text = (formular: FormData, pole: string) => String(formular.get(pole) ?? "").trim();
+
+export async function prihlasAkce(formular: FormData) {
+  const serie = text(formular, "serie");
+  const zavod = text(formular, "zavod");
+  const prihlaskaId = Number(text(formular, "prihlaskaId"));
+
+  if (!prihlaskaId) redirect(kam(serie, zavod, { chyba: "Vyber loď, kterou chceš přihlásit." }));
+
+  const vysledek = await prihlas(serie, zavod, { prihlaskaId });
+
+  redirect(
+    kam(
+      serie,
+      zavod,
+      "chyba" in vysledek
+        ? { chyba: vysledek.chyba }
+        : { stav: vysledek.nova ? "prihlasena" : "jiz", lod: vysledek.lod.lod },
+    ),
+  );
+}
+
+export async function novaLodAkce(formular: FormData) {
+  const serie = text(formular, "serie");
+  const zavod = text(formular, "zavod");
+
+  const novaLod = {
+    nazev: text(formular, "nazev"),
+    kategorie: text(formular, "kategorie"),
+    majitelJmeno: text(formular, "jmeno"),
+    majitelPrijmeni: text(formular, "prijmeni"),
+    cisloPlachty: text(formular, "cisloPlachty") || null,
+    typ: text(formular, "typ") || null,
+  };
+
+  const vysledek = await prihlas(serie, zavod, { novaLod });
+
+  if ("chyba" in vysledek)
+    redirect(
+      kam(serie, zavod, {
+        chyba: vysledek.chyba,
+        nova: "1",
+        nazev: novaLod.nazev,
+        kategorie: novaLod.kategorie,
+        jmeno: novaLod.majitelJmeno,
+        prijmeni: novaLod.majitelPrijmeni,
+        cisloPlachty: novaLod.cisloPlachty ?? undefined,
+        typ: novaLod.typ ?? undefined,
+      }),
+    );
+
+  redirect(kam(serie, zavod, { stav: vysledek.nova ? "prihlasena" : "jiz", lod: vysledek.lod.lod }));
+}
+
+export async function stavLodiAkce(formular: FormData) {
+  const serie = text(formular, "serie");
+  const zavod = text(formular, "zavod");
+  const prihlaskaId = Number(text(formular, "prihlaskaId"));
+  const stav = text(formular, "stav") as StavUcasti;
+  const lod = text(formular, "lod");
+
+  const chyba = await prepniLod(serie, zavod, prihlaskaId, stav);
+
+  redirect(kam(serie, zavod, chyba ? { chyba } : { stav: "prepnuto", lod, nastav: stav }));
+}

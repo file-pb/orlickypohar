@@ -568,6 +568,21 @@ th.vlevo, td.vlevo { text-align: left; }
 }
 .pridat { margin-top: 1rem; }
 
+/* Stav lodi na zastávce. Potvrzená nese barvu jako potvrzené výsledky,
+   přihlášená je čárkovaná jako návrh, zrušená červená. */
+.stitek.ucast-potvrzena { color: var(--voda); border-color: currentColor; }
+.stitek.ucast-prihlasena { color: var(--tlumeny); border-style: dashed; }
+.stitek.ucast-zrusena { color: var(--stav-zruseny); border-color: currentColor; }
+td .stavy { margin-top: 0; justify-content: flex-end; }
+th.vlevo, td.vlevo { text-align: left; }
+
+/* Rozbalovátko mimo kartu — nová loď na stránce přihlášek. */
+details.uprava-samostatna { margin: 1rem 0 1.5rem; }
+details.uprava-samostatna > summary {
+  cursor: pointer; font-size: 0.9rem; color: var(--tlumeny); width: fit-content; margin-bottom: 0.75rem;
+}
+details.uprava-samostatna > summary:hover { color: var(--voda); }
+
 /* Nezveřejněná zastávka. Čárkovaně jako koncept článku: obojí znamená
    „existuje, ale venku to není" a mají se poznat jedním pohledem. */
 .stitek.neverejne { color: var(--tlumeny); border-style: dashed; }

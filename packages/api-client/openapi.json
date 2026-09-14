@@ -284,7 +284,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "Vyp\u00ed\u0161e opr\u00e1vn\u011bn\u00ed ro\u010dn\u00edku i zast\u00e1vky, na kter\u00e9 jdou ud\u011blit",
-                "description": "Vy\u017eaduje roli spr\u00e1vce v tom ro\u010dn\u00edku.",
+                "description": "Vy\u017eaduje roli spr\u00e1vce, nebo rozhod\u010d\u00edho v tom ro\u010dn\u00edku. Co sm\u00ed ud\u011blit, \u0159\u00edk\u00e1 SmiNaRocnik.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -313,7 +313,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "Ud\u011bl\u00ed roli podle e-mailu",
-                "description": "Vy\u017eaduje roli spr\u00e1vce v tom ro\u010dn\u00edku. V\u00fdjimka: ud\u011blen\u00ed prvn\u00edho spr\u00e1vce projde i na hlavi\u010dku X-Import-Token, dokud v ro\u010dn\u00edku \u017e\u00e1dn\u00fd spr\u00e1vce nen\u00ed. \u00da\u010det mus\u00ed existovat \u2014 vznik\u00e1 a\u017e prvn\u00edm p\u0159ihl\u00e1\u0161en\u00edm.",
+                "description": "Vy\u017eaduje roli spr\u00e1vce v tom ro\u010dn\u00edku; rozhod\u010d\u00ed sm\u00ed ud\u011blit po\u0159adatele a editora jedn\u00e9 zast\u00e1vce. V\u00fdjimka: ud\u011blen\u00ed prvn\u00edho spr\u00e1vce projde i na hlavi\u010dku X-Import-Token, dokud v ro\u010dn\u00edku \u017e\u00e1dn\u00fd spr\u00e1vce nen\u00ed. \u00da\u010det mus\u00ed existovat \u2014 vznik\u00e1 a\u017e prvn\u00edm p\u0159ihl\u00e1\u0161en\u00edm.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -364,7 +364,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "Odebere jedno opr\u00e1vn\u011bn\u00ed",
-                "description": "Vy\u017eaduje roli spr\u00e1vce. Posledn\u00edho spr\u00e1vce ro\u010dn\u00edku odebrat nelze.",
+                "description": "Vy\u017eaduje roli spr\u00e1vce; rozhod\u010d\u00ed sm\u00ed odebrat, co sm\u00ed ud\u011blit. Posledn\u00edho spr\u00e1vce ro\u010dn\u00edku odebrat nelze.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1149,6 +1149,161 @@
                     }
                 }
             }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/lode": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vyp\u00ed\u0161e lod\u011b ro\u010dn\u00edku i s t\u00edm, jak jsou p\u0159ihl\u00e1\u0161en\u00e9 na zast\u00e1vku",
+                "description": "Po\u0159adatel zast\u00e1vky, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. M\u011bnit sm\u00ed jen po\u0159adatel.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PrihlaskyZastavkyDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "P\u0159ihl\u00e1s\u00ed lo\u010f na zast\u00e1vku \u2014 z ro\u010dn\u00edku, nebo novou",
+                "description": "Po\u0159adatel zast\u00e1vky, od vyps\u00e1n\u00ed z\u00e1vodu. Nov\u00e1 lo\u010f se st\u00e1v\u00e1 \u00fa\u010dastn\u00edkem ro\u010dn\u00edku v zadan\u00e9 kategorii. Druh\u00e9 p\u0159ihl\u00e1\u0161en\u00ed t\u00e9\u017ee lodi vrac\u00ed 200.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PrihlaseniVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LodNaZastavceDto"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LodNaZastavceDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/lode/{prihlaska}/stav": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Potvrd\u00ed, zru\u0161\u00ed, nebo obnov\u00ed p\u0159ihl\u00e1\u0161ku lodi",
+                "description": "Lo\u010f, kter\u00e1 u\u017e m\u00e1 na zast\u00e1vce v\u00fdsledky, zru\u0161it nejde.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "prihlaska",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StavUcastiVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LodNaZastavceDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -1486,6 +1641,66 @@
                     null
                 ]
             },
+            "LodNaZastavceDto": {
+                "required": [
+                    "prihlaskaId",
+                    "lod",
+                    "cisloPlachty",
+                    "typLodi",
+                    "majitel",
+                    "kategorie",
+                    "stav",
+                    "maVysledky",
+                    "mozneStavy"
+                ],
+                "type": "object",
+                "properties": {
+                    "prihlaskaId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "lod": {
+                        "type": "string"
+                    },
+                    "cisloPlachty": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "typLodi": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "majitel": {
+                        "type": "string"
+                    },
+                    "kategorie": {
+                        "type": "string"
+                    },
+                    "stav": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/StavUcasti"
+                            }
+                        ]
+                    },
+                    "maVysledky": {
+                        "type": "boolean"
+                    },
+                    "mozneStavy": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StavUcasti"
+                        }
+                    }
+                }
+            },
             "LodVstup": {
                 "required": [
                     "klic",
@@ -1516,6 +1731,41 @@
                     },
                     "majitel": {
                         "type": "string"
+                    }
+                }
+            },
+            "NovaLodVstup": {
+                "required": [
+                    "nazev",
+                    "kategorie",
+                    "majitelJmeno",
+                    "majitelPrijmeni"
+                ],
+                "type": "object",
+                "properties": {
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "kategorie": {
+                        "type": "string"
+                    },
+                    "majitelJmeno": {
+                        "type": "string"
+                    },
+                    "majitelPrijmeni": {
+                        "type": "string"
+                    },
+                    "cisloPlachty": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "typ": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     }
                 }
             },
@@ -1769,6 +2019,10 @@
                         "items": {
                             "$ref": "#/components/schemas/OpravneniRadek"
                         }
+                    },
+                    "smiNaRocnik": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -1840,6 +2094,28 @@
                     }
                 }
             },
+            "PrihlaseniVstup": {
+                "type": "object",
+                "properties": {
+                    "prihlaskaId": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "novaLod": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/NovaLodVstup"
+                            }
+                        ]
+                    }
+                }
+            },
             "PrihlaskaDto": {
                 "required": [
                     "lod",
@@ -1885,6 +2161,58 @@
                     },
                     "kategorie": {
                         "type": "string"
+                    }
+                }
+            },
+            "PrihlaskyZastavkyDto": {
+                "required": [
+                    "serie",
+                    "serieNazev",
+                    "zavod",
+                    "zavodNazev",
+                    "stavZavodu",
+                    "smiSpravovat",
+                    "procNelze",
+                    "kategorie",
+                    "lode"
+                ],
+                "type": "object",
+                "properties": {
+                    "serie": {
+                        "type": "string"
+                    },
+                    "serieNazev": {
+                        "type": "string"
+                    },
+                    "zavod": {
+                        "type": "string"
+                    },
+                    "zavodNazev": {
+                        "type": "string"
+                    },
+                    "stavZavodu": {
+                        "$ref": "#/components/schemas/StavZavodu"
+                    },
+                    "smiSpravovat": {
+                        "type": "boolean"
+                    },
+                    "procNelze": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "kategorie": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "lode": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LodNaZastavceDto"
+                        }
                     }
                 }
             },
@@ -2209,6 +2537,25 @@
                     "Zrusena"
                 ]
             },
+            "StavUcasti": {
+                "enum": [
+                    "Prihlasena",
+                    "Potvrzena",
+                    "Zrusena",
+                    null
+                ]
+            },
+            "StavUcastiVstup": {
+                "required": [
+                    "stav"
+                ],
+                "type": "object",
+                "properties": {
+                    "stav": {
+                        "$ref": "#/components/schemas/StavUcasti"
+                    }
+                }
+            },
             "StavVstup": {
                 "required": [
                     "stav"
@@ -2287,6 +2634,10 @@
                             "null",
                             "string"
                         ]
+                    },
+                    "potvrzena": {
+                        "type": "boolean",
+                        "default": true
                     }
                 }
             },
