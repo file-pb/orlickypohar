@@ -61,7 +61,9 @@ public record ZavodVstup(
     decimal KoeficientDoSerie = 1.0m,
     bool Publikovano = true,
     StavZavodu Stav = StavZavodu.Odjety,
-    DateOnly? PuvodniDatum = null);
+    DateOnly? PuvodniDatum = null,
+    // Starší soubory druh neznají — všechno v nich jsou kola poháru.
+    DruhZastavky Druh = DruhZastavky.Pohar);
 
 /// <summary>
 /// Článek ročníku nebo zastávky. <c>Zavod</c> je slug zastávky ze stejného

@@ -198,8 +198,13 @@ public class ZapisSprava(AppDbContext db)
     public async Task<(Rozjizdka? Rozjizdka, string? Chyba)> PridejRozjizdkuAsync(
         int zavodId, CancellationToken ct)
     {
-        var stav = await db.Zavody.Where(z => z.Id == zavodId).Select(z => z.Stav).FirstAsync(ct);
-        if (Zapis.ProcNejdeNaZavod(stav) is { } chyba) return (null, chyba);
+        var zavod = await db.Zavody
+            .Where(z => z.Id == zavodId)
+            .Select(z => new { z.Stav, z.Druh })
+            .FirstAsync(ct);
+
+        if ((Kalendar.ProcNejdePoharove(zavod.Druh) ?? Zapis.ProcNejdeNaZavod(zavod.Stav)) is { } chyba)
+            return (null, chyba);
 
         var cislo = (await db.Rozjizdky.Where(r => r.ZavodId == zavodId).MaxAsync(r => (int?)r.Cislo, ct) ?? 0) + 1;
 

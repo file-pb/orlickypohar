@@ -98,6 +98,19 @@ public static class Kalendar
     public static IEnumerable<StavZavodu> MozneZ(StavZavodu ze) =>
         Enum.GetValues<StavZavodu>().Where(na => na != ze && ProcNejde(ze, na) is null);
 
+    /// <summary>
+    /// Proč na zastávce nejde nic z toho, co patří poháru — rozjížďky,
+    /// výsledky, přihlášky lodí — nebo <c>null</c>.
+    /// <para>
+    /// Jedna věta na jednom místě: ptá se na ni zápis výsledků i přihlášky
+    /// a každá by jinak řekla totéž trochu jinak.
+    /// </para>
+    /// </summary>
+    public static string? ProcNejdePoharove(DruhZastavky druh) =>
+        druh == DruhZastavky.Akce
+            ? "Komunitní akce nemá rozjížďky, výsledky ani přihlášky lodí."
+            : null;
+
     /// <summary>České jméno stavu do hlášky. Obrazovka má vlastní, tohle je pro API.</summary>
     public static string Nazev(StavZavodu stav) => stav switch
     {

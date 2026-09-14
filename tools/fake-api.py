@@ -28,6 +28,8 @@ for _z in D["zavody"]:
     for _r in _z["rozjizdky"]:
         _r.setdefault("stavVysledku", "Potvrzeno")
         _r.setdefault("publikovano", True)
+    # Mock zná jen kola poháru; akce se zakládají v kalendáři.
+    _z.setdefault("druh", "Pohar")
     # Účast z mocku je ze sešitu rozhodčího, tedy potvrzená — jako po migraci.
     for _u in _z["ucasti"]:
         _u.setdefault("stav", "Potvrzena")
@@ -97,7 +99,8 @@ def plati(r):
 
 def poradi_serie():
     """Průběžné pořadí po kategoriích, jen z odjetých zastávek."""
-    zastavky = [z for z in D["zavody"] if z.get("stav") == "Odjety"]
+    # Jen kola poháru — odjetá akce by tu jinak stála jako prázdný sloupec.
+    zastavky = [z for z in D["zavody"] if z.get("stav") == "Odjety" and z["druh"] == "Pohar"]
     zastavky.sort(key=lambda z: z["poradi"])
 
     body = {}
@@ -255,7 +258,12 @@ LOD_PODLE_ID = {i: lod for lod, i in PRIHLASKA_ID.items()}
 OTEVRENY = ("Navrzeno", "KRevizi")
 
 
-def proc_nejde_na_zavod(stav):
+AKCE_BEZ_POHARU = "Komunitní akce nemá rozjížďky, výsledky ani přihlášky lodí."
+
+
+def proc_nejde_na_zavod(stav, druh="Pohar"):
+    if druh == "Akce":
+        return AKCE_BEZ_POHARU
     if stav in ("Vypsany", "Odjety"):
         return None
     if stav == "Zruseny":
@@ -264,7 +272,7 @@ def proc_nejde_na_zavod(stav):
 
 
 def proc_nejde_prepsat(z, r):
-    if (chyba := proc_nejde_na_zavod(z["stav"])):
+    if (chyba := proc_nejde_na_zavod(z["stav"], z["druh"])):
         return chyba
     if r["stavVysledku"] in OTEVRENY:
         return None
@@ -299,7 +307,9 @@ def proc_nejde_ulozit(radky):
 STAVY_UCASTI = ["Prihlasena", "Potvrzena", "Zrusena"]
 
 
-def proc_nejde_prihlasit(stav):
+def proc_nejde_prihlasit(stav, druh="Pohar"):
+    if druh == "Akce":
+        return AKCE_BEZ_POHARU
     if stav in ("Vypsany", "Odjety"):
         return None
     if stav == "Zruseny":
@@ -323,7 +333,7 @@ def lod_na_zastavce(z, lod, smi=True):
 
 
 def prihlasky_dto(z):
-    chyba = proc_nejde_prihlasit(z["stav"])
+    chyba = proc_nejde_prihlasit(z["stav"], z["druh"])
     lode = sorted(D["prihlasky"], key=lambda p: (KAT_PORADI[p["kategorie"]], nazvy(p["lod"])))
     return {"serie": D["slug"], "serieNazev": D["nazev"], "zavod": z["slug"],
             "zavodNazev": z["nazev"], "stavZavodu": z["stav"],
@@ -378,8 +388,11 @@ def proc_nejde(ze, na):
 
 def prerad_kalendar():
     """Kalendář se řadí časem — stejně jako `Kalendar.Preradit`."""
-    for i, z in enumerate(sorted(D["zavody"], key=lambda z: (z["datum"], z["poradi"]))):
-        z["poradi"] = i + 1
+    # Každý druh zvlášť, jako v API: akce nesmí posunout číslo kola.
+    for druh in {z["druh"] for z in D["zavody"]}:
+        stejne = [z for z in D["zavody"] if z["druh"] == druh]
+        for i, z in enumerate(sorted(stejne, key=lambda z: (z["datum"], z["poradi"]))):
+            z["poradi"] = i + 1
 
 
 def zastavka_radek(z):
@@ -388,7 +401,7 @@ def zastavka_radek(z):
     return {**{k: z.get(k) for k in
                ("slug", "nazev", "datum", "datumKonce", "typ", "poradatel", "poradi",
                 "stav", "puvodniDatum", "publikovano")},
-            "smiUpravit": True, "smiPublikovat": True,
+            "smiUpravit": True, "smiPublikovat": True, "druh": z["druh"],
             "mozneStavy": [s for s in VSECHNY_STAVY
                            if s != z["stav"] and not proc_nejde(z["stav"], s)]}
 
@@ -598,7 +611,7 @@ class H(BaseHTTPRequestHandler):
         z = self.zastavka(zavod)
         if not z:
             return None
-        if (chyba := proc_nejde_prihlasit(z["stav"])):
+        if (chyba := proc_nejde_prihlasit(z["stav"], z["druh"])):
             return self.chyba(400, chyba)
 
         vstup = self.telo_zadosti()
@@ -654,7 +667,7 @@ class H(BaseHTTPRequestHandler):
         z = self.zastavka(zavod)
         if not z:
             return None
-        if (chyba := proc_nejde_prihlasit(z["stav"])):
+        if (chyba := proc_nejde_prihlasit(z["stav"], z["druh"])):
             return self.chyba(400, chyba)
 
         lod = LOD_PODLE_ID.get(prihlaska)
@@ -673,7 +686,7 @@ class H(BaseHTTPRequestHandler):
         z = self.zastavka(zavod)
         if not z:
             return None
-        if (chyba := proc_nejde_na_zavod(z["stav"])):
+        if (chyba := proc_nejde_na_zavod(z["stav"], z["druh"])):
             return self.chyba(400, chyba)
 
         # Nová rozjížďka je návrh a venku není — stejně jako v API.
@@ -687,7 +700,8 @@ class H(BaseHTTPRequestHandler):
         if not self.headers.get("authorization"):
             return self.send_error(401)
 
-        hodnoty, chyba = zastavka_ze_vstupu(self.telo_zadosti())
+        vstup = self.telo_zadosti()
+        hodnoty, chyba = zastavka_ze_vstupu(vstup)
         if chyba:
             return self.chyba(400, chyba)
 
@@ -701,7 +715,7 @@ class H(BaseHTTPRequestHandler):
         nova = {**hodnoty, "slug": slug, "stav": "Planovany", "publikovano": False,
                 "puvodniDatum": None, "poradi": 0, "pocetSkrtu": 0,
                 "vyhodnoceni": "PoKategoriich", "koeficientDoSerie": 1.0,
-                "ucasti": [], "rozjizdky": []}
+                "ucasti": [], "rozjizdky": [], "druh": vstup.get("druh") or "Pohar"}
         D["zavody"].append(nova)
         prerad_kalendar()
         return self.odpoved(zastavka_radek(nova), 201)
@@ -815,15 +829,22 @@ class H(BaseHTTPRequestHandler):
             telo = {"status": "Healthy"}
         elif cesta == "/serie":
             telo = [{"slug": D["slug"], "nazev": D["nazev"], "rok": D["rok"],
-                     "pocetZavodu": len(D["zavody"])}]
+                     "pocetZavodu": sum(1 for z in D["zavody"] if z["druh"] == "Pohar")}]
         elif cesta == f'/serie/{D["slug"]}':
             telo = {
                 "slug": D["slug"], "nazev": D["nazev"], "rok": D["rok"],
                 "kategorie": D["kategorie"],
+                # Zastávky jen poháru, akce zvlášť — jako v API, kvůli appce.
                 "zavody": [{k: z.get(k) for k in
                             ("slug", "nazev", "datum", "datumKonce", "typ", "poradatel",
                              "poradi", "stav", "puvodniDatum")}
-                           for z in D["zavody"]],
+                           for z in sorted(D["zavody"], key=lambda z: z["poradi"])
+                           if z["druh"] == "Pohar"],
+                "akce": [{k: z.get(k) for k in
+                          ("slug", "nazev", "datum", "datumKonce", "typ", "poradatel",
+                           "poradi", "stav", "puvodniDatum")}
+                         for z in sorted(D["zavody"], key=lambda z: z["poradi"])
+                         if z["druh"] == "Akce"],
                 "prihlasky": [{"lod": LODE[p["lod"]]["nazev"],
                                "cisloPlachty": LODE[p["lod"]]["cisloPlachty"],
                                "typLodi": LODE[p["lod"]]["typ"],
@@ -867,18 +888,20 @@ class H(BaseHTTPRequestHandler):
                      "publikovanych": sum(1 for r in z["rozjizdky"] if r["publikovano"]),
                      "kRevizi": sum(1 for r in z["rozjizdky"]
                                     if r["stavVysledku"] == "KRevizi")}
-                    for z in sorted(D["zavody"], key=lambda z: z["poradi"])]
+                    for z in sorted((z for z in D["zavody"] if z["druh"] == "Pohar"),
+                                    key=lambda z: z["poradi"])]
         elif (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)$', cesta)):
             if not self.headers.get("authorization"):
                 return self.send_error(401)
             z = next((z for z in D["zavody"] if z["slug"] == m.group(1)), None)
-            if not z:
+            # Komunitní akce výsledky nemá, stránka pro ni neexistuje.
+            if not z or z["druh"] == "Akce":
                 return self.send_error(404)
             telo = {"serie": D["slug"], "serieNazev": D["nazev"],
                     "zavod": z["slug"], "zavodNazev": z["nazev"],
                     "stavZavodu": z["stav"], "zavodPublikovan": True,
                     "rozjizdky": [rozjizdka_radek(r) for r in z["rozjizdky"]],
-                    "smiPridatRozjizdku": proc_nejde_na_zavod(z["stav"]) is None}
+                    "smiPridatRozjizdku": proc_nejde_na_zavod(z["stav"], z["druh"]) is None}
         elif (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                             r'/rozjizdky/(\d+)$', cesta)):
             z, r = self.rozjizdka(m.group(1), int(m.group(2)))
@@ -938,6 +961,7 @@ class H(BaseHTTPRequestHandler):
                        ("slug", "nazev", "datum", "datumKonce", "typ", "poradatel",
                         "stav", "puvodniDatum", "pocetSkrtu", "vyhodnoceni",
                         "koeficientDoSerie")},
+                    "druh": z["druh"],
                     "rozjizdky": [{
                         "cislo": r["cislo"], "startV": r["startV"], "stav": r["stav"],
                         "doSerie": r["doSerie"],

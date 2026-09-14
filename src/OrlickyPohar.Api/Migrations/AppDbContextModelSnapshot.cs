@@ -447,6 +447,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<DateOnly?>("DatumKonce")
                         .HasColumnType("date");
 
+                    b.Property<int>("Druh")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("KoeficientDoSerie")
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)");

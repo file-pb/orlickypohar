@@ -100,8 +100,11 @@ public static class VysledkyEndpoints
 
         var hlavicka = await db.Zavody
             .Where(z => z.Id == rozsah.ZavodId)
-            .Select(z => new { z.Nazev, z.Stav, z.Publikovano, SerieNazev = z.Serie!.Nazev })
+            .Select(z => new { z.Nazev, z.Stav, z.Publikovano, z.Druh, SerieNazev = z.Serie!.Nazev })
             .FirstAsync(ct);
+
+        // Komunitní akce výsledky nemá, takže tahle stránka pro ni neexistuje.
+        if (Kalendar.ProcNejdePoharove(hlavicka.Druh) is not null) return Results.NotFound();
 
         var rozjizdky = await sprava.RozjizdkyAsync(rozsah.ZavodId.Value, ct);
 

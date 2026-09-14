@@ -54,6 +54,29 @@ public enum StavZavodu
     Zruseny = 3,
 }
 
+/// <summary>
+/// Co je zastávka zač: kolo poháru, nebo komunitní akce mimo něj.
+/// <para>
+/// <b>Zadáno 14. 9. 2026:</b> do kalendáře se mají dát i komunitní
+/// setkání, s vlastním tabem, články a upoutávkami. Akce je zastávka
+/// jiného druhu, ne vlastní tabulka — kalendář, stavy, publikace
+/// i blog přes <c>Clanek.ZavodId</c> tak platí beze změny.
+/// </para>
+/// <para>
+/// Cenou je, že <b>každé místo, které počítá pohár, se musí ptát na
+/// druh</b>, ne jen na stav: odjetá akce by jinak skončila jako sloupec
+/// v průběžném pořadí.
+/// </para>
+/// </summary>
+public enum DruhZastavky
+{
+    /// <summary>Kolo poháru: rozjížďky, výsledky, body do seriálu.</summary>
+    Pohar = 0,
+
+    /// <summary>Komunitní akce. Kalendář, stav a články — nic, co se boduje.</summary>
+    Akce = 1,
+}
+
 public enum StavRozjizdky
 {
     Planovana = 0,
@@ -188,7 +211,14 @@ public class Zavod
     /// </summary>
     public string? Typ { get; set; }
 
-    /// <summary>Pořadí zastávky v ročníku.</summary>
+    /// <summary>
+    /// Pohár, nebo komunitní akce. <b>Určuje se při založení a v kalendáři
+    /// se nemění</b>: pohárová zastávka může mít výsledky a přehodit ji na
+    /// akci by je tiše vyřadilo z poháru.
+    /// </summary>
+    public DruhZastavky Druh { get; set; } = DruhZastavky.Pohar;
+
+    /// <summary>Pořadí zastávky v ročníku — v rámci svého druhu.</summary>
     public int Poradi { get; set; }
 
     public StavZavodu Stav { get; set; } = StavZavodu.Planovany;

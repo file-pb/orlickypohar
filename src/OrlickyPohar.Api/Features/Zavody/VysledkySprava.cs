@@ -67,10 +67,10 @@ public record StavVysledkuVstup(StavVysledku Stav, string? Duvod = null);
 /// </summary>
 public class VysledkySprava(AppDbContext db)
 {
-    /// <summary>Zastávky ročníku s počty. Řadí se jako kalendář.</summary>
+    /// <summary>Zastávky ročníku s počty. Řadí se jako kalendář. Komunitní akce výsledky nemají.</summary>
     public Task<List<ZastavkaVysledkyDto>> ZastavkyAsync(int serieId, CancellationToken ct) =>
         db.Zavody
-            .Where(z => z.SerieId == serieId)
+            .Where(z => z.SerieId == serieId && z.Druh == DruhZastavky.Pohar)
             .OrderBy(z => z.Poradi).ThenBy(z => z.Datum)
             .Select(z => new ZastavkaVysledkyDto(
                 z.Slug, z.Nazev, z.Datum, z.Stav,

@@ -181,7 +181,7 @@ public static class KalendarEndpoints
             return new ZastavkaRadek(
                 z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel, z.Poradi,
                 z.Stav, z.PuvodniDatum, z.Publikovano,
-                SmiKalendar, SmiPublikovat, mozne);
+                SmiKalendar, SmiPublikovat, mozne, z.Druh);
         }
     }
 

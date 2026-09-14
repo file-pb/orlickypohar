@@ -73,6 +73,11 @@ internal static class ImportHandler
 
         foreach (var z in v.Zavody)
         {
+            // Akce s rozjížďkami by se nahrála, a výsledky by pak nikde
+            // nebyly vidět — průběžné pořadí se na akce neptá.
+            if (z.Druh == DruhZastavky.Akce && (z.Rozjizdky.Count > 0 || z.Ucasti.Count > 0))
+                throw new ImportException($"Komunitní akce {z.Slug} nemá rozjížďky ani účasti lodí.");
+
             Duplicity(z.Rozjizdky.Select(r => r.Cislo.ToString()), $"Číslo rozjížďky v závodě {z.Slug}");
             Duplicity(z.Ucasti.Select(u => u.Lod), $"Účast lodi v závodě {z.Slug}");
 
@@ -266,6 +271,7 @@ internal static class ImportHandler
             zavod.Publikovano = v.Publikovano;
             zavod.Stav = v.Stav;
             zavod.PuvodniDatum = v.PuvodniDatum;
+            zavod.Druh = v.Druh;
 
             await db.SaveChangesAsync(ct);
 

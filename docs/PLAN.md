@@ -1718,10 +1718,31 @@ komunitní akce jsou ale funkce a mění model, takže jdou dřív.
 — komunitní setkání a podobně. Zobrazují se **na druhém tabu kalendáře**
 a dají se k nim psát články a upoutávky.
 
-Co z toho plyne: akce **nikdy nesmí vstoupit do bodování**, ani omylem
-stavem „odjeto". Články dnes visí na zastávce přes `ZavodId`, takže akce,
-která bude zastávkou s jiným druhem, dostane blog zadarmo — ale průběžné
-pořadí se pak musí ptát na druh, ne jen na stav. Rozhodne se při stavbě.
+**Hotové 15. 9. 2026.** Akce je **zastávka jiného druhu** (`Zavod.Druh`:
+`Pohar`, `Akce`), ne vlastní tabulka. Kalendář, stavy, publikace i články
+přes `Clanek.ZavodId` tak platí beze změny; zakládá je rozhodčí a pořadatele
+jim přiřazuje on, stejně jako u zastávek poháru.
+
+Cenou je, že **každé místo, které počítá pohár, se ptá na druh**, ne jen
+na stav — a to je celý seznam, který se musí hlídat:
+
+| Místo | Co dělá s akcí |
+|---|---|
+| `GET /serie/{slug}` | `Zavody` jen kola poháru, akce zvlášť v `Akce` — appka o druhu neví |
+| `GET /serie` | `PocetZavodu` počítá jen kola |
+| průběžné pořadí | akci nebere, ani odjetou |
+| číslování v kalendáři | každý druh zvlášť, akce neposune číslo kola |
+| správa výsledků | akce v rozcestníku není, její stránka vrací 404 |
+| rozjížďky, přihlášky lodí | `Kalendar.ProcNejdePoharove` odmítne |
+| import | akce s rozjížďkami nebo účastmi neprojde |
+
+**Druh se určuje při založení a nemění se.** Pohárová zastávka může mít
+výsledky a přehodit ji na akci by je tiše vyřadilo z poháru.
+
+Na webu mají kalendář ročníku i kalendář ve správě **taby Pohár / Komunitní
+akce** — odkazy s parametrem v adrese, bez javascriptu. Stránka akce nemá
+výsledky ani pravidla, jen novinky; štítky stavu jí říkají „oznámeno"
+a „proběhlo".
 
 ### Design (až po funkcích)
 
@@ -1758,8 +1779,8 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
 5. **Fáze 5 je skoro hotová** (stav k 14. 9. 2026). Hotové: udělování
    oprávnění (i rozhodčím na zastávku), kalendář zastávek, přihlášky lodí,
    workflow a zápis výsledků, psaní novinek. Protesty a penalizace čekají
-   na odpovědi rozhodčího. Další na řadě jsou **komunitní akce v kalendáři**
-   (oddíl *Podněty z 14. 9. 2026*), pak design.
+   na odpovědi rozhodčího. Komunitní akce v kalendáři hotové 15. 9. Další
+   na řadě je **design** (oddíl *Podněty z 14. 9. 2026*).
 6. **Skutečná data** — až dorazí, nahradí `data/2025-mock.json` a nahrají se
    importem. Struktura zůstane.
 

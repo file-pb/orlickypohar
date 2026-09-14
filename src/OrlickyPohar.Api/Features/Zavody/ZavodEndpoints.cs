@@ -47,7 +47,9 @@ public record ZavodDetailDto(
     int PocetSkrtu, Vyhodnoceni Vyhodnoceni, decimal KoeficientDoSerie,
     IReadOnlyList<RozjizdkaDto> Rozjizdky,
     IReadOnlyList<VysledekZavoduDto> Poradi,
-    IReadOnlyList<UcastDto> Lode);
+    IReadOnlyList<UcastDto> Lode,
+    // Komunitní akce má stránku jako zastávka, jen bez výsledků a pravidel.
+    DruhZastavky Druh = DruhZastavky.Pohar);
 
 /// <summary>
 /// Veřejné čtení jedné zastávky. Pravidla závodu (škrty, vyhodnocení,
@@ -78,6 +80,7 @@ public static class ZavodEndpoints
             {
                 z.Id, z.SerieId, z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel,
                 z.Stav, z.PuvodniDatum, z.PocetSkrtu, z.Vyhodnoceni, z.KoeficientDoSerie,
+                z.Druh,
             })
             .FirstOrDefaultAsync(ct);
 
@@ -173,6 +176,7 @@ public static class ZavodEndpoints
             [.. poradi.Select(v => new VysledekZavoduDto(
                 v.Lod, v.Kategorie, v.Body, v.Poradi,
                 [.. v.Rozjizdky.Select(b => new BodyVRozjizdceDto(b.Cislo, b.Body, b.Skrtnuto))]))],
-            lode));
+            lode,
+            zavod.Druh));
     }
 }

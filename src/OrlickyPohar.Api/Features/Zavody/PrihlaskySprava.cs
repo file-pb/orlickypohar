@@ -63,7 +63,11 @@ public class PrihlaskySprava(AppDbContext db)
     {
         var zavod = await db.Zavody
             .Where(z => z.Id == zavodId)
-            .Select(z => new { z.Slug, z.Nazev, z.Stav, z.SerieId, Serie = z.Serie!.Slug, SerieNazev = z.Serie.Nazev })
+            .Select(z => new
+            {
+                z.Slug, z.Nazev, z.Stav, z.Druh, z.SerieId,
+                Serie = z.Serie!.Slug, SerieNazev = z.Serie.Nazev,
+            })
             .FirstAsync(ct);
 
         var kategorie = await db.Kategorie
@@ -72,7 +76,8 @@ public class PrihlaskySprava(AppDbContext db)
             .Select(k => k.Nazev)
             .ToListAsync(ct);
 
-        var procNelze = poradatel ? Prihlasky.ProcNejdeNaZavod(zavod.Stav) : NeniPoradatel;
+        var procNelze = Kalendar.ProcNejdePoharove(zavod.Druh)
+                        ?? (poradatel ? Prihlasky.ProcNejdeNaZavod(zavod.Stav) : NeniPoradatel);
 
         return new PrihlaskyZastavkyDto(
             zavod.Serie, zavod.SerieNazev, zavod.Slug, zavod.Nazev, zavod.Stav,
@@ -90,7 +95,8 @@ public class PrihlaskySprava(AppDbContext db)
     {
         var zavod = await db.Zavody.FirstAsync(z => z.Id == zavodId, ct);
 
-        if (Prihlasky.ProcNejdeNaZavod(zavod.Stav) is { } zamceno) return (null, false, zamceno);
+        if ((Kalendar.ProcNejdePoharove(zavod.Druh) ?? Prihlasky.ProcNejdeNaZavod(zavod.Stav)) is { } zamceno)
+            return (null, false, zamceno);
 
         if ((vstup.PrihlaskaId is null) == (vstup.NovaLod is null))
             return (null, false, "Přihlas buď loď z ročníku, nebo novou loď — jedno z toho.");
@@ -141,7 +147,8 @@ public class PrihlaskySprava(AppDbContext db)
     {
         var zavod = await db.Zavody.FirstAsync(z => z.Id == zavodId, ct);
 
-        if (Prihlasky.ProcNejdeNaZavod(zavod.Stav) is { } zamceno) return (null, zamceno);
+        if ((Kalendar.ProcNejdePoharove(zavod.Druh) ?? Prihlasky.ProcNejdeNaZavod(zavod.Stav)) is { } zamceno)
+            return (null, zamceno);
 
         var ucast = await db.Ucasti.FirstOrDefaultAsync(
             u => u.ZavodId == zavodId && u.PrihlaskaId == prihlaskaId, ct);

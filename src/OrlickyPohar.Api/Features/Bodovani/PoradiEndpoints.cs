@@ -62,9 +62,11 @@ public static class PoradiEndpoints
 
         // Jen odjeté zastávky. Plánovaná nemá výsledky a zrušená se do poháru
         // nepočítá vůbec — v tabulce by obojí vypadalo jako prázdný sloupec,
-        // ale znamená to něco jiného.
+        // ale znamená to něco jiného. A jen kola poháru: odjetá komunitní
+        // akce by tu jinak stála jako prázdný sloupec.
         var zastavky = await db.Zavody
-            .Where(z => z.SerieId == serie.Id && z.Publikovano && z.Stav == StavZavodu.Odjety)
+            .Where(z => z.SerieId == serie.Id && z.Publikovano && z.Stav == StavZavodu.Odjety
+                        && z.Druh == DruhZastavky.Pohar)
             .OrderBy(z => z.Poradi)
             .Select(z => new
             {
@@ -83,7 +85,8 @@ public static class PoradiEndpoints
                         && v.Rozjizdka.StavVysledku != StavVysledku.Eliminovano
                         && v.Rozjizdka.Zavod!.SerieId == serie.Id
                         && v.Rozjizdka.Zavod.Publikovano
-                        && v.Rozjizdka.Zavod.Stav == StavZavodu.Odjety)
+                        && v.Rozjizdka.Zavod.Stav == StavZavodu.Odjety
+                        && v.Rozjizdka.Zavod.Druh == DruhZastavky.Pohar)
             .Select(v => new
             {
                 v.Rozjizdka!.ZavodId,

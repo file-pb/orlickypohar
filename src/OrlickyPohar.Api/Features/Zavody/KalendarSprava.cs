@@ -27,7 +27,8 @@ public record ZastavkaRadek(
     bool Publikovano,
     bool SmiUpravit,
     bool SmiPublikovat,
-    IReadOnlyList<StavZavodu> MozneStavy);
+    IReadOnlyList<StavZavodu> MozneStavy,
+    DruhZastavky Druh = DruhZastavky.Pohar);
 
 public record PrehledZastavekDto(
     string Serie,
@@ -48,7 +49,9 @@ public record ZastavkaVstup(
     DateOnly Datum,
     DateOnly? DatumKonce = null,
     string? Typ = null,
-    string? Poradatel = null);
+    string? Poradatel = null,
+    // Platí jen při založení. Úprava druh nemění — viz `Zavod.Druh`.
+    DruhZastavky Druh = DruhZastavky.Pohar);
 
 public record StavZastavkyVstup(StavZavodu Stav);
 
@@ -120,6 +123,7 @@ public class KalendarSprava(AppDbContext db)
             DatumKonce = vstup.DatumKonce,
             Typ = Prazdne(vstup.Typ),
             Poradatel = Prazdne(vstup.Poradatel),
+            Druh = vstup.Druh,
             Stav = StavZavodu.Planovany,
             Publikovano = false,
             // Pořadí se hned přepočítá podle data; tohle je jen než dostane
@@ -178,11 +182,21 @@ public class KalendarSprava(AppDbContext db)
         await db.SaveChangesAsync(ct);
     }
 
-    /// <summary>Přečíslování celého ročníku podle data. Pravidlo je v <see cref="Kalendar.Preradit"/>.</summary>
+    /// <summary>
+    /// Přečíslování celého ročníku podle data. Pravidlo je v <see cref="Kalendar.Preradit"/>.
+    /// <para>
+    /// <b>Každý druh zvlášť.</b> Pořadí zastávky poháru je „třetí kolo" — akce
+    /// vložená mezi kola by ho posunula a sloupce v průběžném pořadí by
+    /// přestaly sedět s tím, co zná každý závodník.
+    /// </para>
+    /// </summary>
     private async Task PreradAsync(int serieId, CancellationToken ct)
     {
         var zastavky = await db.Zavody.Where(z => z.SerieId == serieId).ToListAsync(ct);
-        var poradi = Kalendar.Preradit(zastavky.Select(z => (z.Id, z.Datum, z.Poradi)));
+        var poradi = zastavky
+            .GroupBy(z => z.Druh)
+            .SelectMany(druh => Kalendar.Preradit(druh.Select(z => (z.Id, z.Datum, z.Poradi))))
+            .ToDictionary(x => x.Key, x => x.Value);
 
         var zmena = false;
         foreach (var z in zastavky.Where(z => z.Poradi != poradi[z.Id]))

@@ -21,11 +21,17 @@ public record ZavodShrnutiDto(
 public record PrihlaskaDto(
     string Lod, string? CisloPlachty, string? TypLodi, string Majitel, string Kategorie);
 
+/// <summary>
+/// Ročník. <c>Zavody</c> jsou <b>jen kola poháru</b>, komunitní akce jdou
+/// zvlášť v <c>Akce</c>: appka na telefonu o druhu neví a akci by jinak
+/// vypsala jako zastávku a započítala mezi „odjeté".
+/// </summary>
 public record SerieDetailDto(
     string Slug, string Nazev, int Rok,
     IReadOnlyList<KategorieDto> Kategorie,
     IReadOnlyList<ZavodShrnutiDto> Zavody,
-    IReadOnlyList<PrihlaskaDto> Prihlasky);
+    IReadOnlyList<PrihlaskaDto> Prihlasky,
+    IReadOnlyList<ZavodShrnutiDto> Akce);
 
 /// <summary>
 /// Veřejné čtení ročníku. <b>Nepublikovaný ročník neexistuje</b> — vrací se 404,
@@ -48,7 +54,8 @@ public static class SerieEndpoints
             .OrderByDescending(s => s.Rok)
             .Select(s => new SerieShrnutiDto(
                 s.Slug, s.Nazev, s.Rok,
-                db.Zavody.Count(z => z.SerieId == s.Id && z.Publikovano)))
+                db.Zavody.Count(z => z.SerieId == s.Id && z.Publikovano
+                                     && z.Druh == Zavody.DruhZastavky.Pohar)))
             .ToListAsync(ct);
 
         return TypedResults.Ok(rocniky);
@@ -70,13 +77,20 @@ public static class SerieEndpoints
             .Select(k => new KategorieDto(k.Nazev, k.Poradi))
             .ToListAsync(ct);
 
-        var zavody = await db.Zavody
+        var zastavky = await db.Zavody
             .Where(z => z.SerieId == serie.Id && z.Publikovano)
             .OrderBy(z => z.Poradi)
-            .Select(z => new ZavodShrnutiDto(
-                z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel, z.Poradi, z.Stav,
-                z.PuvodniDatum))
+            .Select(z => new
+            {
+                z.Druh,
+                Shrnuti = new ZavodShrnutiDto(
+                    z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel, z.Poradi, z.Stav,
+                    z.PuvodniDatum),
+            })
             .ToListAsync(ct);
+
+        var zavody = zastavky.Where(z => z.Druh == Zavody.DruhZastavky.Pohar).Select(z => z.Shrnuti).ToList();
+        var akce = zastavky.Where(z => z.Druh == Zavody.DruhZastavky.Akce).Select(z => z.Shrnuti).ToList();
 
         // Ve výsledcích se vedle lodi uvádí jméno majitele — proto se tahá i on.
         var prihlasky = await db.Prihlasky
@@ -88,6 +102,7 @@ public static class SerieEndpoints
                 p.Kategorie!.Nazev))
             .ToListAsync(ct);
 
-        return TypedResults.Ok(new SerieDetailDto(serie.Slug, serie.Nazev, serie.Rok, kategorie, zavody, prihlasky));
+        return TypedResults.Ok(new SerieDetailDto(
+            serie.Slug, serie.Nazev, serie.Rok, kategorie, zavody, prihlasky, akce));
     }
 }
