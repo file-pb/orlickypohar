@@ -5,6 +5,7 @@ import { Vypadek } from "@/app/vypadek";
 import { Stav } from "@/app/stav";
 import { PruhUkazky } from "@/app/ukazka";
 import { datum } from "@/app/datum";
+import { Boky } from "@/app/boky";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -56,7 +57,8 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
   }));
 
   return (
-    <>
+    // Kalendář je tady ve středu, takže do boků jdou novinky a plakát akce.
+    <Boky serie={serie.slug} vlevo="novinky" vpravo="akce">
       <PruhUkazky slug={serie.slug} />
       <h1>{serie.nazev}</h1>
       <p className="podtitulek">
@@ -125,7 +127,7 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
           </div>
         </div>
       ))}
-    </>
+    </Boky>
   );
 }
 

@@ -10,6 +10,7 @@ import {
 } from "@/lib/api";
 import { denAMesic } from "@/app/datum";
 import { VypisNovinek } from "@/app/novinky";
+import { Boky } from "@/app/boky";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu.
 export const dynamic = "force-dynamic";
@@ -123,6 +124,8 @@ export default async function Rozcestnik() {
         <p className="kredit">Foto Jiří Tašl</p>
       </section>
 
+      {/* Fotka jde přes celou šířku okna, boky až pod ní. */}
+      <Boky serie={aktualni?.slug}>
       {/* Bez seznamu ročníků by výpadek ani prázdný stav nebyly nikde vidět —
           návštěvník by koukal na fotku bez tlačítek a nevěděl proč. */}
       {vypadek ? (
@@ -150,6 +153,7 @@ export default async function Rozcestnik() {
         ročníky najdeš v <Link href="/historie">historii série</Link> a výsledky
         nosí do telefonu i <Link href="/appka">appka</Link>.
       </p>
+      </Boky>
     </>
   );
 }

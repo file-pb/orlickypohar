@@ -4,6 +4,7 @@ import { Vypadek } from "@/app/vypadek";
 import { VypisNovinek } from "@/app/novinky";
 import { Drobecky } from "@/app/drobecky";
 import { PruhUkazky } from "@/app/ukazka";
+import { Boky } from "@/app/boky";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,7 @@ export default async function Novinky({ params }: Parametry) {
   if (!serie) notFound();
 
   return (
-    <>
+    <Boky serie={serie.slug}>
       <PruhUkazky slug={serie.slug} />
       <Drobecky
         cesta={[
@@ -52,6 +53,6 @@ export default async function Novinky({ params }: Parametry) {
       ) : (
         <VypisNovinek serie={serie.slug} clanky={clanky} />
       )}
-    </>
+    </Boky>
   );
 }

@@ -580,11 +580,129 @@ th.vlevo, td.vlevo { text-align: left; }
    stránka se vykreslí na serveru podle adresy a dá se na ni poslat odkaz. */
 .taby { display: flex; flex-wrap: wrap; gap: 0.25rem; margin: 0 0 1.25rem; border-bottom: 1px solid var(--linka); }
 .taby a {
+  display: inline-flex; align-items: center; gap: 0.4rem;
   padding: 0.45rem 0.9rem; margin-bottom: -1px; color: var(--tlumeny);
   border-bottom: 2px solid transparent; text-decoration: none;
 }
 .taby a:hover { color: var(--voda); text-decoration: none; }
 .taby a[aria-current="page"] { color: var(--text); border-bottom-color: var(--voda); font-weight: 600; }
+
+/* Znak lodní třídy. Kreslí ho app/scripts/ikona.py z tvarů hlavního loga.
+   V tmavém režimu dostane světlou podložku — tmavě modrá plachta by na
+   tmavém podkladu zmizela. */
+.znak-tridy { height: 1.2em; width: auto; vertical-align: -0.25em; flex: none; }
+@media (prefers-color-scheme: dark) {
+  .znak-tridy { background: #f4f2ee; border-radius: 5px; padding: 0.1em 0.2em; }
+}
+
+/* Boky širokého monitoru (Filip, 15. 9. 2026): vlevo pořadí, vpravo
+   kalendář, kde by se to zdvojilo, novinky a plakát akce.
+
+   Pod 1500 px boky nejsou vůbec — střed potřebuje místo na tabulky a boky
+   by ho jen zúžily. Nad ní se obal rozšíří o šířku obou boků, takže střed
+   o nic nepřijde. Střed je v HTML první, vlevo ho posadí až mřížka. */
+.s-boky > .bok { display: none; }
+.s-boky-stred > p,
+.s-boky-stred > dl { max-width: 46rem; }
+@media (min-width: 1500px) {
+  main.obal:has(> .s-boky) { max-width: calc(var(--sirka) + 38rem); }
+  .s-boky {
+    display: grid; gap: 2.25rem; align-items: start;
+    grid-template-columns: 16rem minmax(0, 1fr) 16rem;
+    grid-template-areas: "vlevo stred vpravo";
+  }
+  .s-boky-stred { grid-area: stred; min-width: 0; }
+  .s-boky > .bok {
+    display: block; position: sticky; top: 6rem;
+    max-height: calc(100vh - 7rem); overflow-y: auto;
+    font-size: 0.875rem;
+  }
+  .bok-vlevo { grid-area: vlevo; }
+  .bok-vpravo { grid-area: vpravo; }
+}
+.bok section + section { margin-top: 1.75rem; }
+.bok-nadpis {
+  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--tlumeny); margin: 0 0 0.6rem; font-weight: 600;
+}
+.bok-trida {
+  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+  padding: 0.6rem 0.75rem; margin-bottom: 0.6rem;
+}
+.bok-trida-hlava { display: flex; align-items: center; gap: 0.45rem; font-weight: 600; color: var(--text); }
+.bok-poradi { list-style: none; margin: 0.4rem 0 0; padding: 0; display: grid; gap: 0.2rem; }
+.bok-poradi li { display: flex; gap: 0.35rem; align-items: baseline; }
+.bok-lod { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bok-body { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 600; }
+.bok-seznam { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.5rem; }
+.bok-seznam a {
+  display: grid; gap: 0.1rem; padding: 0.55rem 0.7rem; color: inherit;
+  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+}
+.bok-seznam a:hover { border-color: var(--voda); text-decoration: none; }
+.bok-nazev { font-weight: 600; line-height: 1.35; }
+.bok-seznam .detail { color: var(--tlumeny); font-size: 0.8rem; }
+.bok-seznam .stitek { margin-left: 0.2rem; }
+.bok-dal { margin: 0.5rem 0 0; font-size: 0.85rem; }
+.bok-prazdno { color: var(--tlumeny); margin: 0; }
+/* Plakát akce: fotka na výšku a text dole přes přechod, jako úvodní fotka. */
+.bok-plakat {
+  position: relative; display: block; overflow: hidden;
+  aspect-ratio: 3 / 4; border-radius: 12px; color: #fff; background: var(--zvyrazneni);
+}
+.bok-plakat img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 400ms ease; }
+.bok-plakat:hover { text-decoration: none; }
+.bok-plakat:hover img { transform: scale(1.03); }
+.bok-plakat .text {
+  position: absolute; left: 0; right: 0; bottom: 0; display: grid; gap: 0.2rem;
+  padding: 3rem 0.9rem 0.9rem;
+  background: linear-gradient(transparent, rgba(10, 20, 26, 0.9) 55%);
+}
+.bok-plakat .text b { font-size: 1.15rem; line-height: 1.25; }
+.bok-plakat .text > span:last-child { color: rgba(255, 255, 255, 0.85); font-size: 0.85rem; }
+.bok-plakat .stitek { justify-self: start; margin: 0; color: #fff; border-color: rgba(255, 255, 255, 0.6); }
+
+/* Pás partnerů nad koncem stránky. Loga na bílé podložce v obou režimech —
+   cizí logo si barvy pozadí nevybírá. Posun je CSS animace, najetím se
+   zastaví; kdo nechce pohyb, dostane loga v klidu vedle sebe. */
+.partneri {
+  border-top: 1px solid var(--linka); background: var(--papir);
+  padding: 1.25rem 0 4.5rem; overflow: hidden;
+}
+.partneri h2 {
+  max-width: var(--sirka); margin: 0 auto 0.9rem; padding: 0 1.25rem;
+  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--tlumeny); font-weight: 600;
+}
+.partneri h2 .stitek { text-transform: none; letter-spacing: 0; }
+.partneri-okno {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.partneri-pas {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; width: max-content;
+  animation: partneri-posun 40s linear infinite;
+}
+.partneri:hover .partneri-pas, .partneri:focus-within .partneri-pas { animation-play-state: paused; }
+.partneri-pas li { margin-right: 1.25rem; }
+.partneri-pas a, .partneri-pas span {
+  display: grid; place-items: center; height: 4rem; padding: 0.4rem 1rem;
+  background: #fff; border: 1px solid var(--linka); border-radius: 12px;
+}
+.partneri-pas img { height: 2.6rem; width: auto; display: block; }
+@keyframes partneri-posun {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .partneri-okno { mask-image: none; }
+  .partneri-pas {
+    animation: none; width: auto; flex-wrap: wrap; justify-content: center; gap: 0.75rem;
+  }
+  .partneri-pas li { margin: 0; }
+  .partneri-pas li[aria-hidden] { display: none; }
+}
 
 /* Rozbalovátko mimo kartu — nová loď na stránce přihlášek. */
 details.uprava-samostatna { margin: 1rem 0 1.5rem; }

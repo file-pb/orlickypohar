@@ -4,6 +4,7 @@ import { prihlasovaniJde } from "@/lib/oidc";
 import { maSezeni, nactiJa } from "@/lib/ja";
 import { Domu } from "@/app/domu";
 import { Profil } from "@/app/profil";
+import { Partneri } from "@/app/partneri";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -72,6 +73,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
           </div>
         </header>
         <main className="obal">{children}</main>
+        <Partneri />
         {/* Výsledková tabulka bývá dlouhá a hlavička sice drží nahoře, ale
             na začátek stránky se z jejího konce jinak nedostaneš. */}
         <a className="nahoru" href="#nahoru" aria-label="Zpátky nahoru">

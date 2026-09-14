@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Boky } from "@/app/boky";
 
 export const metadata = {
   title: "Jak se počítají body",
@@ -14,7 +15,7 @@ export const metadata = {
  */
 export default function Pravidla() {
   return (
-    <>
+    <Boky>
       <h1>Jak se počítají body</h1>
       <p className="podtitulek">
         Nízkobodový systém ve dvou stupnicích. Vypadá to složitěji, než to je —
@@ -86,6 +87,6 @@ export default function Pravidla() {
         nikde neukládají, takže se dají kdykoliv přepočítat podle upřesněných
         pravidel. <Link href="/">Zpátky na ročníky</Link>.
       </p>
-    </>
+    </Boky>
   );
 }

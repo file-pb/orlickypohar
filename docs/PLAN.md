@@ -1746,14 +1746,28 @@ a „proběhlo".
 
 ### Design (až po funkcích)
 
-- **Široký monitor využít i po stranách:** na jedné straně celkové
-  výsledky, na druhé kalendář.
-- **Lodní třídy jako taby**, ať se nemusí rolovat přes všechny kategorie,
-  když není třeba. (V modelu jsou to `Kategorie` — Race, Nad7m, Pod7m.)
-- **Vyčistit logo:** vlevo vyčuhuje miniaturní kousek šedé plachty.
-- **Vlastní loga lodních tříd** jako deriváty hlavního loga — Filip poslal
-  jako inspiraci znak s plachtou nad vlnami a nápisem vedle.
-- **Carousel sponzorů a partnerů** — najít mu místo.
+**Hotové 15. 9. 2026**, všechno bez javascriptu:
+
+- **Boky širokého monitoru** (`web/app/boky.tsx`), od 1500 px, na všech
+  veřejných stránkách: vlevo vedoucí tři lodě každé třídy, vpravo
+  nadcházející zastávky a akce. Kde by se to se středem zdvojilo (průběžné
+  pořadí, stránka ročníku), jsou v bocích novinky a plakát nejbližší akce
+  — Filipova volba. Obal se o boky rozšíří, takže střed o místo nepřijde.
+- **Taby lodních tříd** v průběžném pořadí i ve výsledcích zastávky,
+  výchozí první třída, třída v adrese (`?trida=Pod7m`).
+- **Logo:** pata šedé plachty je za přední plachtou; šedý klín pod
+  červenou už nevykukuje.
+- **Znaky tříd** kreslí `app/scripts/ikona.py` z tvarů hlavního loga:
+  jedna plachta v barvě třídy a písmeno jako vodoznak přes celý znak.
+  Barvy určil Filip: Race červená, Nad7m tmavě modrá, Pod7m šedomodrá
+  (šedá z loga by na bílém zmizela).
+- **Pás partnerů** nad koncem stránky, posun v CSS, najetím se zastaví.
+  **Loga jsou ukázková** a nakreslená jako zjevné zástupné značky — cizí
+  logo skutečné organizace by na veřejném webu tvrdilo, že nás podporuje.
+  Skutečná se vymění v `web/app/partneri.tsx` a `web/public/partneri/`.
+
+**Otevřené:** v tmavém režimu tmavě modré plachty hlavního loga v hlavičce
+skoro zanikají.
 
 ## Schéma řešení
 

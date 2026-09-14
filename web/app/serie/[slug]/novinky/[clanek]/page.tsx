@@ -7,6 +7,7 @@ import { Odstavce } from "@/app/novinky";
 import { FotkaClanku } from "@/app/fotky";
 import { Drobecky } from "@/app/drobecky";
 import { PruhUkazky } from "@/app/ukazka";
+import { Boky } from "@/app/boky";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,7 @@ export default async function ClanekStranka({ params }: Parametry) {
   if (!c) notFound();
 
   return (
-    <>
+    <Boky serie={slug}>
       <PruhUkazky slug={slug} />
       <Drobecky
         cesta={[
@@ -74,6 +75,6 @@ export default async function ClanekStranka({ params }: Parametry) {
           </Link>
         </p>
       )}
-    </>
+    </Boky>
   );
 }

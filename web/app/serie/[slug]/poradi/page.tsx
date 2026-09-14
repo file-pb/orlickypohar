@@ -3,13 +3,18 @@ import { notFound } from "next/navigation";
 import { ApiNedostupne, nactiPoradi, type PoradiKategorie, type Zastavka } from "@/lib/api";
 import { Vypadek } from "@/app/vypadek";
 import { PruhUkazky } from "@/app/ukazka";
+import { Boky } from "@/app/boky";
+import { TabyTrid, vyberTridu } from "@/app/tridy";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
 // API, což je závislost, kterou nikdo nechce.
 export const dynamic = "force-dynamic";
 
-type Parametry = { params: Promise<{ slug: string }> };
+type Parametry = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ trida?: string }>;
+};
 
 // Viz stránka ročníku: titulek nesmí shodit vykreslení.
 export async function generateMetadata({ params }: Parametry) {
@@ -22,8 +27,9 @@ export async function generateMetadata({ params }: Parametry) {
   }
 }
 
-export default async function Poradi({ params }: Parametry) {
+export default async function Poradi({ params, searchParams }: Parametry) {
   const { slug } = await params;
+  const { trida } = await searchParams;
   let poradi;
   try {
     poradi = await nactiPoradi(slug);
@@ -34,9 +40,13 @@ export default async function Poradi({ params }: Parametry) {
   if (!poradi) notFound();
 
   const nic = poradi.kategorie.every((k) => k.lode.length === 0);
+  // Taby jen pro třídy, které v pořadí něco mají — prázdný tab je slepá ulička.
+  const tridy = poradi.kategorie.filter((k) => k.lode.length > 0);
+  const aktivni = vyberTridu(tridy.map((k) => k.kategorie), trida);
 
   return (
-    <>
+    // Pořadí je tady ve středu, takže do boků jdou novinky a plakát akce.
+    <Boky serie={slug} vlevo="novinky" vpravo="akce">
       <p style={{ margin: "0 0 0.5rem" }}>
         <Link href={`/serie/${slug}`}>← zpět na ročník</Link>
       </p>
@@ -50,9 +60,18 @@ export default async function Poradi({ params }: Parametry) {
       {nic ? (
         <p className="prazdno">Zatím není odjetá žádná zastávka.</p>
       ) : (
-        poradi.kategorie.map((k) => (
-          <Tabulka key={k.kategorie} kategorie={k} zastavky={poradi.zastavky} slug={slug} />
-        ))
+        <>
+          <TabyTrid
+            kategorie={tridy.map((k) => k.kategorie)}
+            aktivni={aktivni}
+            adresa={(k) => `/serie/${slug}/poradi?trida=${encodeURIComponent(k)}`}
+          />
+          <Tabulka
+            kategorie={tridy.find((k) => k.kategorie === aktivni)!}
+            zastavky={poradi.zastavky}
+            slug={slug}
+          />
+        </>
       )}
 
       <p className="poznamka">
@@ -62,7 +81,7 @@ export default async function Poradi({ params }: Parametry) {
         vede obojí. Prázdné místo znamená, že loď na zastávce nestartovala a nic si
         z ní neodvezla. <Link href="/pravidla">Jak se body počítají →</Link>
       </p>
-    </>
+    </Boky>
   );
 }
 
@@ -78,8 +97,8 @@ function Tabulka({
   if (kategorie.lode.length === 0) return null;
 
   return (
+    // Třídu nese tab nad tabulkou, nadpis by ji jen opakoval.
     <div style={{ marginBottom: "1.5rem" }}>
-      <h3 style={{ fontSize: "0.95rem", margin: "1.25rem 0 0.5rem" }}>{kategorie.kategorie}</h3>
       <div className="tabulka-obal">
         <table>
           <thead>

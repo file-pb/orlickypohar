@@ -1,5 +1,6 @@
 import Link from "next/link";
 import QRCode from "qrcode";
+import { Boky } from "@/app/boky";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu.
 export const dynamic = "force-dynamic";
@@ -22,7 +23,7 @@ export default async function Appka() {
     : null;
 
   return (
-    <>
+    <Boky>
       <h1>Appka</h1>
       <p className="podtitulek">
         Výsledky, kalendář a průběžné pořadí v telefonu. Totéž co na webu, jen
@@ -55,6 +56,6 @@ export default async function Appka() {
         <Link href="/">web</Link> na telefonu plnohodnotná náhrada, protože se
         přizpůsobuje displeji.
       </p>
-    </>
+    </Boky>
   );
 }

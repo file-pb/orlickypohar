@@ -16,13 +16,18 @@ import { PruhUkazky } from "@/app/ukazka";
 import { datum } from "@/app/datum";
 import { VypisNovinek } from "@/app/novinky";
 import { Drobecky } from "@/app/drobecky";
+import { Boky } from "@/app/boky";
+import { TabyTrid, vyberTridu } from "@/app/tridy";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
 // API, což je závislost, kterou nikdo nechce.
 export const dynamic = "force-dynamic";
 
-type Parametry = { params: Promise<{ slug: string; zavod: string }> };
+type Parametry = {
+  params: Promise<{ slug: string; zavod: string }>;
+  searchParams: Promise<{ trida?: string }>;
+};
 
 // Viz stránka ročníku: titulek nesmí shodit vykreslení.
 export async function generateMetadata({ params }: Parametry) {
@@ -84,8 +89,9 @@ function naRadky(zavod: ZavodDetail): Radek[] {
     .sort((a, b) => a.poradi - b.poradi);
 }
 
-export default async function Zastavka({ params }: Parametry) {
+export default async function Zastavka({ params, searchParams }: Parametry) {
   const { slug, zavod: slugZavodu } = await params;
+  const { trida } = await searchParams;
   let zavod, clanky;
   try {
     // Zastávku pořádá jiný subjekt a stránka je jeho — kromě výsledků na ni
@@ -103,9 +109,10 @@ export default async function Zastavka({ params }: Parametry) {
   const radky = naRadky(zavod);
   const kategorie = [...new Set(radky.map((r) => r.kategorie))];
   const akce = zavod.druh === "Akce";
+  const aktivni = vyberTridu(kategorie, trida);
 
   return (
-    <>
+    <Boky serie={slug}>
       <Drobecky
         cesta={[
           { text: "Domů", kam: "/" },
@@ -154,14 +161,18 @@ export default async function Zastavka({ params }: Parametry) {
           <PrihlaseneLode lode={zavod.lode} />
         </>
       ) : (
-        kategorie.map((k) => (
+        <>
+          <TabyTrid
+            kategorie={kategorie}
+            aktivni={aktivni}
+            adresa={(k) => `/serie/${slug}/zavody/${slugZavodu}?trida=${encodeURIComponent(k)}`}
+          />
           <Tabulka
-            key={k}
-            kategorie={k}
-            radky={radky.filter((r) => r.kategorie === k)}
+            kategorie={aktivni}
+            radky={radky.filter((r) => r.kategorie === aktivni)}
             rozjizdky={zavod.rozjizdky}
           />
-        ))
+        </>
       )}
       {/* Výsledky u zastávky, která není vedená jako odjetá, do poháru
           nejdou — průběžné pořadí počítá jen z odjetých. Bez téhle věty by
@@ -209,7 +220,7 @@ export default async function Zastavka({ params }: Parametry) {
       </p>
         </>
       )}
-    </>
+    </Boky>
   );
 }
 
@@ -272,8 +283,9 @@ function Tabulka({
   rozjizdky: Rozjizdka[];
 }) {
   return (
+    // Třídu nese tab nad tabulkou. Když je třída jediná a taby nejsou,
+    // nadpis zůstává — jinak by nebylo poznat, čí jsou to výsledky.
     <div style={{ marginBottom: "1.5rem" }}>
-      <h3 style={{ fontSize: "0.95rem", margin: "1.25rem 0 0.5rem" }}>{kategorie}</h3>
       <div className="tabulka-obal">
         <table>
           <thead>

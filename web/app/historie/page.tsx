@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ApiNedostupne, nactiSerie } from "@/lib/api";
+import { Boky } from "@/app/boky";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Historie série" };
@@ -23,7 +24,7 @@ export default async function Historie() {
   }
 
   return (
-    <>
+    <Boky serie={rocniky?.[0]?.slug}>
       <h1>Historie série</h1>
       <p className="podtitulek">
         Každý ročník má svůj kalendář, výsledky zastávek a průběžné pořadí.
@@ -55,7 +56,7 @@ export default async function Historie() {
           nahrávají se tímtéž souborem jako ten letošní.
         </p>
       )}
-    </>
+    </Boky>
   );
 }
 
