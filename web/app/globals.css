@@ -81,7 +81,15 @@ header.hlavicka a.znacka { display: inline-flex; align-items: center; gap: 0.55r
 /* Plachta je to nejhezčí, co web má, a ve čtyřiceti bodech z ní nebylo nic
    vidět. Zdroj je 512×512, takže zvětšení nic nestojí. Velikost je v CSS,
    ne jen v atributech, aby se dala na úzkém displeji stáhnout. */
-header.hlavicka a.znacka img { display: block; width: 52px; height: 52px; }
+/* Filip, 15. 9. 2026: logo o polovinu větší, ale řádek menu se nesmí
+   zvětšit. Obrázek proto dostane záporný spodní okraj přesně o to, o co
+   narostl — v rozvržení zabírá pořád původní výšku a přesahuje dolů přes
+   linku hlavičky. Nahoru přesahovat nemůže: hlavička je přilepená k hornímu
+   okraji okna a všechno nad ní by se ořízlo. */
+header.hlavicka a.znacka img {
+  display: block; width: 78px; height: 78px; margin-bottom: -26px;
+  position: relative; z-index: 1;
+}
 header.hlavicka nav { display: flex; gap: 1rem; flex: none; }
 header.hlavicka nav a { color: var(--tlumeny); font-weight: 500; font-size: 0.9rem; }
 header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
@@ -89,7 +97,7 @@ header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
    nevejdou a menu je důležitější než wordmark. */
 @media (max-width: 26rem) {
   header.hlavicka a.znacka span { display: none; }
-  header.hlavicka a.znacka img { width: 48px; height: 48px; }
+  header.hlavicka a.znacka img { width: 72px; height: 72px; margin-bottom: -24px; }
   header.hlavicka nav { gap: 0.85rem; }
 }
 
@@ -98,7 +106,7 @@ header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
 @media (min-width: 1180px) {
   header.hlavicka .obal { padding-top: 0.2rem; padding-bottom: 0.2rem; }
   header.hlavicka a.znacka { font-size: 1.05rem; }
-  header.hlavicka a.znacka img { width: 64px; height: 64px; }
+  header.hlavicka a.znacka img { width: 96px; height: 96px; margin-bottom: -32px; }
   header.hlavicka nav { gap: 0.35rem; align-items: center; }
   header.hlavicka nav > a {
     padding: 0.4rem 0.7rem; border-radius: 8px; font-size: 0.925rem;
