@@ -945,6 +945,138 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Přidá zastávce další rozjížďku
+         * @description Pořadatel zastávky, od vypsání závodu. Nová rozjížďka je návrh a na webu není.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RozjizdkaSpravaRadek"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše zápis rozjížďky: všechny lodě ročníku a jejich výsledky
+         * @description Vidí ho každý, kdo smí na výsledky ročníku. Měnit ho smí jen pořadatel zastávky, a jen v návrhu nebo po vrácení k revizi.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZapisRozjizdkyDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/vysledky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Uloží celou sadu výsledků rozjížďky
+         * @description Loď, která v sadě nemá pořadí ani kód, výsledek nemá. Pořadí, nebo kód, ne obojí; stejné pořadí v jedné kategorii neprojde. Čas se nemění.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ZapisVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZapisRozjizdkyDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/stav": {
         parameters: {
             query?: never;
@@ -1199,6 +1331,8 @@ export interface components {
             stavZavodu: components["schemas"]["StavZavodu"];
             zavodPublikovan: boolean;
             rozjizdky: components["schemas"]["RozjizdkaSpravaRadek"][];
+            /** @default false */
+            smiPridatRozjizdku: boolean;
         };
         PrehledZastavekDto: {
             serie: string;
@@ -1248,6 +1382,8 @@ export interface components {
             pocetVysledku: number;
             smiPublikovat: boolean;
             mozneStavy: components["schemas"]["StavVysledku"][];
+            /** @default false */
+            smiZapisovat: boolean;
         };
         RozjizdkaVstup: {
             /** Format: int32 */
@@ -1359,6 +1495,42 @@ export interface components {
             /** Format: int32 */
             poradi: number;
             rozjizdky: components["schemas"]["BodyVRozjizdceDto"][];
+        };
+        ZapisLodDto: {
+            /** Format: int32 */
+            prihlaskaId: number;
+            lod: string;
+            cisloPlachty: null | string;
+            kategorie: string;
+            /** Format: int32 */
+            poradiVCili: null | number;
+            kod: null | components["schemas"]["KodVysledku"];
+            /** Format: int32 */
+            casSekundy: null | number;
+        };
+        ZapisRadekVstup: {
+            /** Format: int32 */
+            prihlaskaId: number;
+            /** Format: int32 */
+            poradiVCili?: null | number;
+            kod?: null | components["schemas"]["KodVysledku"];
+        };
+        ZapisRozjizdkyDto: {
+            serie: string;
+            serieNazev: string;
+            zavod: string;
+            zavodNazev: string;
+            stavZavodu: components["schemas"]["StavZavodu"];
+            /** Format: int32 */
+            cislo: number;
+            stavVysledku: components["schemas"]["StavVysledku"];
+            duvodRevize: null | string;
+            smiZapisovat: boolean;
+            procNelze: null | string;
+            lode: components["schemas"]["ZapisLodDto"][];
+        };
+        ZapisVstup: {
+            radky: components["schemas"]["ZapisRadekVstup"][];
         };
         ZastavkaDto: {
             slug: string;

@@ -885,6 +885,153 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "P\u0159id\u00e1 zast\u00e1vce dal\u0161\u00ed rozj\u00ed\u017e\u010fku",
+                "description": "Po\u0159adatel zast\u00e1vky, od vyps\u00e1n\u00ed z\u00e1vodu. Nov\u00e1 rozj\u00ed\u017e\u010fka je n\u00e1vrh a na webu nen\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RozjizdkaSpravaRadek"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vyp\u00ed\u0161e z\u00e1pis rozj\u00ed\u017e\u010fky: v\u0161echny lod\u011b ro\u010dn\u00edku a jejich v\u00fdsledky",
+                "description": "Vid\u00ed ho ka\u017ed\u00fd, kdo sm\u00ed na v\u00fdsledky ro\u010dn\u00edku. M\u011bnit ho sm\u00ed jen po\u0159adatel zast\u00e1vky, a jen v n\u00e1vrhu nebo po vr\u00e1cen\u00ed k revizi.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZapisRozjizdkyDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/vysledky": {
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Ulo\u017e\u00ed celou sadu v\u00fdsledk\u016f rozj\u00ed\u017e\u010fky",
+                "description": "Lo\u010f, kter\u00e1 v sad\u011b nem\u00e1 po\u0159ad\u00ed ani k\u00f3d, v\u00fdsledek nem\u00e1. Po\u0159ad\u00ed, nebo k\u00f3d, ne oboj\u00ed; stejn\u00e9 po\u0159ad\u00ed v jedn\u00e9 kategorii neprojde. \u010cas se nem\u011bn\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ZapisVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZapisRozjizdkyDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/stav": {
             "post": {
                 "tags": [
@@ -1660,6 +1807,10 @@
                         "items": {
                             "$ref": "#/components/schemas/RozjizdkaSpravaRadek"
                         }
+                    },
+                    "smiPridatRozjizdku": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -1859,6 +2010,10 @@
                         "items": {
                             "$ref": "#/components/schemas/StavVysledku"
                         }
+                    },
+                    "smiZapisovat": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -2306,6 +2461,164 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/BodyVRozjizdceDto"
+                        }
+                    }
+                }
+            },
+            "ZapisLodDto": {
+                "required": [
+                    "prihlaskaId",
+                    "lod",
+                    "cisloPlachty",
+                    "kategorie",
+                    "poradiVCili",
+                    "kod",
+                    "casSekundy"
+                ],
+                "type": "object",
+                "properties": {
+                    "prihlaskaId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "lod": {
+                        "type": "string"
+                    },
+                    "cisloPlachty": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "kategorie": {
+                        "type": "string"
+                    },
+                    "poradiVCili": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "kod": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/KodVysledku"
+                            }
+                        ]
+                    },
+                    "casSekundy": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    }
+                }
+            },
+            "ZapisRadekVstup": {
+                "required": [
+                    "prihlaskaId"
+                ],
+                "type": "object",
+                "properties": {
+                    "prihlaskaId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "poradiVCili": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "kod": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/KodVysledku"
+                            }
+                        ]
+                    }
+                }
+            },
+            "ZapisRozjizdkyDto": {
+                "required": [
+                    "serie",
+                    "serieNazev",
+                    "zavod",
+                    "zavodNazev",
+                    "stavZavodu",
+                    "cislo",
+                    "stavVysledku",
+                    "duvodRevize",
+                    "smiZapisovat",
+                    "procNelze",
+                    "lode"
+                ],
+                "type": "object",
+                "properties": {
+                    "serie": {
+                        "type": "string"
+                    },
+                    "serieNazev": {
+                        "type": "string"
+                    },
+                    "zavod": {
+                        "type": "string"
+                    },
+                    "zavodNazev": {
+                        "type": "string"
+                    },
+                    "stavZavodu": {
+                        "$ref": "#/components/schemas/StavZavodu"
+                    },
+                    "cislo": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "stavVysledku": {
+                        "$ref": "#/components/schemas/StavVysledku"
+                    },
+                    "duvodRevize": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "smiZapisovat": {
+                        "type": "boolean"
+                    },
+                    "procNelze": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "lode": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ZapisLodDto"
+                        }
+                    }
+                }
+            },
+            "ZapisVstup": {
+                "required": [
+                    "radky"
+                ],
+                "type": "object",
+                "properties": {
+                    "radky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ZapisRadekVstup"
                         }
                     }
                 }

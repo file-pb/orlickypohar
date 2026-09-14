@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { prepniStav, publikuj, type StavVysledku } from "@/lib/vysledky";
+import { prepniStav, pridejRozjizdku, publikuj, type StavVysledku } from "@/lib/vysledky";
 
 /**
  * Zápisy z obrazovky výsledků. Serverové akce, ne javascript v prohlížeči:
@@ -36,6 +36,20 @@ export async function stavAkce(formular: FormData) {
 
   redirect(
     kam(serie, zavod, chyba ? { chyba } : { stav: "prepnuto", cislo: String(cislo), nastav: stav }),
+  );
+}
+
+/** Nová rozjížďka jde rovnou na svůj zápis — kvůli tomu se přidává. */
+export async function pridejRozjizdkuAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+
+  const vysledek = await pridejRozjizdku(serie, zavod);
+
+  if ("chyba" in vysledek) redirect(kam(serie, zavod, { chyba: vysledek.chyba }));
+
+  redirect(
+    `/sprava/${encodeURIComponent(serie)}/vysledky/${encodeURIComponent(zavod)}/${vysledek.cislo}?stav=nova`,
   );
 }
 

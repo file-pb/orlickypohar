@@ -10,7 +10,7 @@ import {
   type RozjizdkaRadek,
   type StavVysledku,
 } from "@/lib/vysledky";
-import { publikaceAkce, stavAkce } from "../akce";
+import { pridejRozjizdkuAkce, publikaceAkce, stavAkce } from "../akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -140,8 +140,10 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
 
       {prehled.rozjizdky.length === 0 ? (
         <p className="prazdno">
-          Zastávka zatím nemá jedinou rozjížďku. Dneska je dovnitř dostane
-          import ze sešitu rozhodčího.
+          Zastávka zatím nemá jedinou rozjížďku.{" "}
+          {prehled.smiPridatRozjizdku
+            ? "Přidej první a rovnou do ní zapiš výsledky."
+            : "Přidat ji může pořadatel zastávky, jakmile je závod vypsaný."}
         </p>
       ) : (
         <ul className="seznam">
@@ -156,6 +158,14 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
             </li>
           ))}
         </ul>
+      )}
+
+      {prehled.smiPridatRozjizdku && (
+        <form action={pridejRozjizdkuAkce} className="pridat">
+          <input type="hidden" name="serie" value={serie} />
+          <input type="hidden" name="zavod" value={zavod} />
+          <button type="submit">Přidat rozjížďku</button>
+        </form>
       )}
     </>
   );
@@ -195,6 +205,11 @@ function Rozjizdka({
         {rozjizdka.pocetVysledku === 0
           ? "zatím bez zapsaných výsledků"
           : `${rozjizdka.pocetVysledku} zapsaných výsledků`}
+        {" · "}
+        {/* Zápis vidí i ten, kdo ho nemění — rozhodčí ověřuje právě tohle. */}
+        <Link href={`/sprava/${serie}/vysledky/${zavod}/${rozjizdka.cislo}`}>
+          {rozjizdka.smiZapisovat ? "zapsat výsledky" : "zobrazit zápis"}
+        </Link>
       </div>
 
       {/* Důvod revize zůstává u rozjížďky i potom, co se vrátí do návrhu —

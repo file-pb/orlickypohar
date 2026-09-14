@@ -18,6 +18,29 @@ export type PrehledVysledku = S["PrehledVysledkuDto"];
 export type RozjizdkaRadek = S["RozjizdkaSpravaRadek"];
 export type ZastavkaVysledky = S["ZastavkaVysledkyDto"];
 export type StavVysledku = S["StavVysledku"];
+export type ZapisRozjizdky = S["ZapisRozjizdkyDto"];
+export type ZapisLod = S["ZapisLodDto"];
+export type ZapisRadek = S["ZapisRadekVstup"];
+// Dokument popisuje kód včetně `null`, protože u výsledku je nepovinný.
+// Jako klíč slovníku a hodnota v nabídce ale prázdný být nesmí.
+export type KodVysledku = NonNullable<S["KodVysledku"]>;
+
+/**
+ * Kódy závodních pravidel tak, jak je čte pořadatel. Zkratka se nepřekládá
+ * — stojí tak na papíře z cíle — ale co znamená, se hodí mít vedle.
+ *
+ * Pořadí je podle toho, jak často se na vodě stávají, ne podle závažnosti:
+ * v rozbalovátku se hledá `DNF`, ne `RDG`.
+ */
+export const KODY: Record<KodVysledku, string> = {
+  Dnf: "nedokončila",
+  Dns: "nestartovala",
+  Ret: "odstoupila",
+  Ocs: "předčasný start",
+  Dsq: "diskvalifikace",
+  Dnc: "nezúčastnila se",
+  Rdg: "náprava",
+};
 
 /**
  * Stav zápisu: co znamená a co udělá tlačítko, které do něj vede.
@@ -126,6 +149,36 @@ export async function prepniStav(
   });
 }
 
+export const nactiZapis = (serie: string, zavod: string, cislo: number) =>
+  cti<ZapisRozjizdky>(kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}`));
+
+/** Celá sada výsledků rozjížďky. Loď, která v ní nemá pořadí ani kód, výsledek nemá. */
+export async function ulozZapis(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  radky: ZapisRadek[],
+): Promise<string | null> {
+  return zapis(
+    kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}/vysledky`),
+    { radky },
+    "PUT",
+  );
+}
+
+/** Přidá rozjížďku a vrátí její číslo — obrazovka pak jde rovnou na její zápis. */
+export async function pridejRozjizdku(
+  serie: string,
+  zavod: string,
+): Promise<{ chyba: string } | { cislo: number }> {
+  const odpoved = await posli(kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky`), {}, "POST");
+
+  if (typeof odpoved === "string") return { chyba: odpoved };
+  if (!odpoved.ok) return { chyba: await hlaska(odpoved) };
+
+  return { cislo: ((await odpoved.json()) as RozjizdkaRadek).cislo };
+}
+
 export async function publikuj(
   serie: string,
   zavod: string,
@@ -138,13 +191,29 @@ export async function publikuj(
 }
 
 /** Zápisy vracejí jen „povedlo se, nebo proč ne". */
-async function zapis(adresa: string, telo: unknown): Promise<string | null> {
+async function zapis(
+  adresa: string,
+  telo: unknown,
+  metoda: "POST" | "PUT" = "POST",
+): Promise<string | null> {
+  const odpoved = await posli(adresa, telo, metoda);
+  if (typeof odpoved === "string") return odpoved;
+
+  return odpoved.ok ? null : await hlaska(odpoved);
+}
+
+/** Odpověď API, nebo hláška, když se k němu vůbec nedošlo. */
+async function posli(
+  adresa: string,
+  telo: unknown,
+  metoda: "POST" | "PUT",
+): Promise<Response | string> {
   const t = await token();
   if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
 
   try {
-    const odpoved = await fetch(adresa, {
-      method: "POST",
+    return await fetch(adresa, {
+      method: metoda,
       headers: {
         authorization: `Bearer ${t}`,
         "content-type": "application/json",
@@ -153,8 +222,6 @@ async function zapis(adresa: string, telo: unknown): Promise<string | null> {
       body: JSON.stringify(telo),
       cache: "no-store",
     });
-
-    return odpoved.ok ? null : await hlaska(odpoved);
   } catch {
     return "API se nedaří zavolat.";
   }

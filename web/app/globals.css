@@ -546,6 +546,28 @@ th.vlevo, td.vlevo { text-align: left; }
   border-left: 3px solid var(--stav-zruseny); padding-left: 0.7rem;
 }
 
+/* Zápis výsledků. Pole jsou v tabulce, ne pod sebou: opisuje se z papíru
+   z cíle, kde je loď na řádku, a třicet lodí pod sebou by na telefonu
+   znamenalo třicet obrazovek. Jen ke čtení ztratí pole rámeček, aby
+   nevypadala, že do nich jde psát. */
+.zapis td input, .zapis td select {
+  font: inherit; padding: 0.3rem 0.45rem; border-radius: 6px;
+  border: 1px solid var(--linka); background: var(--pozadi); color: var(--text);
+}
+.zapis td input { width: 4.5rem; text-align: right; font-variant-numeric: tabular-nums; }
+.zapis td select { width: 9.5rem; }
+.zapis td :focus-visible { outline: 2px solid var(--voda); outline-offset: 1px; }
+.zapis td input:disabled, .zapis td select:disabled {
+  border-color: transparent; background: transparent; color: var(--text); appearance: none;
+}
+.zapis-akce { margin-top: 1rem; }
+.zapis-akce > button, .pridat > button {
+  font: inherit; font-weight: 600; cursor: pointer;
+  padding: 0.6rem 1.1rem; border: 0; border-radius: 8px;
+  background: var(--voda); color: var(--papir);
+}
+.pridat { margin-top: 1rem; }
+
 /* Nezveřejněná zastávka. Čárkovaně jako koncept článku: obojí znamená
    „existuje, ale venku to není" a mají se poznat jedním pohledem. */
 .stitek.neverejne { color: var(--tlumeny); border-style: dashed; }
