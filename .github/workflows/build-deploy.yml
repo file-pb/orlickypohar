@@ -48,7 +48,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
+      - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         id: meta
         with:
           images: ${{ env.IMAGE }}
@@ -73,7 +73,7 @@ jobs:
       # Web je druhá image, ne druhý repozitář. Staví se vždycky, i když se
       # měnilo jen API — filtrování podle cest by ušetřilo minutu buildu
       # a vyměnilo ji za riziko, že se obě image rozejdou.
-      - uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
+      - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         id: meta-web
         with:
           images: ${{ env.IMAGE_WEB }}
