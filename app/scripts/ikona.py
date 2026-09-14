@@ -224,6 +224,36 @@ def znak_tridy_svg(klic):
     return "".join(casti)
 
 
+def znaky_trid_ts():
+    """Tvary znaků pro web jako data.
+
+    Web znak kreslí přímo do stránky, ne přes <img>: jen tak mu CSS dá
+    barvu podle světlého a tmavého režimu a pozadí zůstane průhledné.
+    Přes <img> by tmavě modrá plachta v tmavém režimu zmizela a jediná
+    záchrana byla světlá podložka — tu Filip 15. 9. 2026 nechtěl.
+    """
+    body_ = lambda body: " ".join(f"{x:.0f},{y:.0f}" for x, y in body)
+    radky = [
+        "// Vygenerováno app/scripts/ikona.py — needituj ručně, spusť skript.",
+        "",
+        "export const ZNAKY_TRID = {",
+    ]
+    for klic in TRIDY:
+        tvary, velikost, (sx, sy), (x0, y0, x1, y1) = ram_tridy(klic)
+        vyska = y1 - y0
+        okraj = vyska * 0.05
+        radky += [
+            f"  {klic}: {{",
+            f'    viewBox: "{x0 - okraj:.0f} {y0 - okraj:.0f} {(x1 - x0) + 2 * okraj:.0f} {vyska + 2 * okraj:.0f}",',
+            f'    plachta: "{body_(tvary[0][0])}",',
+            f'    oblouk: "{body_(tvary[1][0])}",',
+            f'    pismeno: {{ text: "{TRIDY[klic][2]}", x: {sx:.0f}, y: {sy:.0f}, velikost: {velikost:.0f} }},',
+            "  },",
+        ]
+    radky += ["} as const;", ""]
+    return "\n".join(radky)
+
+
 def znak_tridy_png(klic, velikost=512):
     """PNG téhož znaku — pro appku a pro náhled. Kreslí se z týchž bodů."""
     tvary, vel, (sx, sy), (x0, y0, x1, y1) = ram_tridy(klic)
@@ -284,6 +314,11 @@ def main():
             with open(f"{web}/public/tridy/{klic}.svg", "w", encoding="utf-8") as soubor:
                 soubor.write(znak_tridy_svg(klic))
             print(f"  {web}/public/tridy/{klic}.svg")
+
+        # Tytéž tvary jako data, web je kreslí přímo do stránky.
+        with open(f"{web}/app/znaky-trid.ts", "w", encoding="utf-8") as soubor:
+            soubor.write(znaky_trid_ts())
+        print(f"  {web}/app/znaky-trid.ts")
 
     ikona = Image.new("RGB", (S, S), PAPIR)
     ikona.paste(mark, (0, 0), mark)

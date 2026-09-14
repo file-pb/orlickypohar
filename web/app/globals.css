@@ -587,13 +587,45 @@ th.vlevo, td.vlevo { text-align: left; }
 .taby a:hover { color: var(--voda); text-decoration: none; }
 .taby a[aria-current="page"] { color: var(--text); border-bottom-color: var(--voda); font-weight: 600; }
 
-/* Znak lodní třídy. Kreslí ho app/scripts/ikona.py z tvarů hlavního loga.
-   V tmavém režimu dostane světlou podložku — tmavě modrá plachta by na
-   tmavém podkladu zmizela. */
-.znak-tridy { height: 1.2em; width: auto; vertical-align: -0.25em; flex: none; }
-@media (prefers-color-scheme: dark) {
-  .znak-tridy { background: #f4f2ee; border-radius: 5px; padding: 0.1em 0.2em; }
+/* Znak lodní třídy. Tvary kreslí app/scripts/ikona.py z hlavního loga, web
+   je vkládá přímo do stránky. Pozadí je průhledné a barvy jdou z CSS, takže
+   znak sedí i v tmavém režimu bez podložky (Filip, 15. 9. 2026: průhledné
+   pozadí, aspoň dvakrát větší). */
+.znak-tridy {
+  --znak: #12344e; --znak-oblouk: #12344e;
+  height: 2.4em; width: auto; flex: none; vertical-align: middle;
 }
+.znak-race { --znak: #c41e3a; }
+.znak-nad7m { --znak: #12344e; }
+.znak-pod7m { --znak: #708090; }
+.znak-tridy .plachta { fill: var(--znak); }
+.znak-tridy .oblouk { fill: var(--znak-oblouk); }
+.znak-tridy text {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; font-weight: 900;
+}
+.znak-tridy .vodoznak { fill: var(--znak); fill-opacity: 0.16; }
+.znak-tridy .vodoznak-na-plachte { fill: #fff; fill-opacity: 0.38; }
+@media (prefers-color-scheme: dark) {
+  /* Tmavě modrá na tmavém podkladu zmizí, proto světlejší odstíny tříd.
+     Vodoznak na plachtě je naopak tmavý — světlý by na světlé plachtě
+     splynul. */
+  .znak-tridy { --znak-oblouk: #9fb4c6; }
+  .znak-race { --znak: #e25a6d; }
+  .znak-nad7m { --znak: #7fa7c9; }
+  .znak-pod7m { --znak: #a3b1bf; }
+  .znak-tridy .vodoznak { fill-opacity: 0.22; }
+  .znak-tridy .vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
+}
+/* V tabu a v boku je znak hlavní poznávací značka třídy, proto velký. */
+/* Aspoň dvakrát proti původním 1,2 em (asi 19 px): v tabu 2,6 rem. */
+.taby-trid a { padding-top: 0.3rem; padding-bottom: 0.3rem; gap: 0.55rem; }
+.taby-trid .znak-tridy { height: 2.6rem; }
+.bok-trida-hlava .znak-tridy { height: 2.4rem; }
+.nadpis-tridy {
+  display: flex; align-items: center; gap: 0.55rem;
+  font-size: 0.95rem; margin: 1.25rem 0 0.5rem;
+}
+.nadpis-tridy .znak-tridy { height: 2.4rem; }
 
 /* Boky širokého monitoru (Filip, 15. 9. 2026): vlevo pořadí, vpravo
    kalendář, kde by se to zdvojilo, novinky a plakát akce.

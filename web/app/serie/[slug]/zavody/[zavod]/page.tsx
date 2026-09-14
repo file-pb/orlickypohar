@@ -17,7 +17,7 @@ import { datum } from "@/app/datum";
 import { VypisNovinek } from "@/app/novinky";
 import { Drobecky } from "@/app/drobecky";
 import { Boky } from "@/app/boky";
-import { TabyTrid, vyberTridu } from "@/app/tridy";
+import { NadpisTridy, TabyTrid, vyberTridu } from "@/app/tridy";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -158,7 +158,11 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
       {radky.length === 0 ? (
         <>
           <p className="prazdno">{ProcNejsouVysledky(zavod.stav)}</p>
-          <PrihlaseneLode lode={zavod.lode} />
+          <PrihlaseneLode
+            lode={zavod.lode}
+            trida={trida}
+            adresa={(k) => `/serie/${slug}/zavody/${slugZavodu}?trida=${encodeURIComponent(k)}`}
+          />
         </>
       ) : (
         <>
@@ -167,6 +171,7 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
             aktivni={aktivni}
             adresa={(k) => `/serie/${slug}/zavody/${slugZavodu}?trida=${encodeURIComponent(k)}`}
           />
+          <NadpisTridy kategorie={kategorie} aktivni={aktivni} />
           <Tabulka
             kategorie={aktivni}
             radky={radky.filter((r) => r.kategorie === aktivni)}
@@ -228,10 +233,21 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
  * Seznam lodí místo výsledků. Zastávka, která se teprve pojede, jinak nemá
  * co ukázat — a kdo se chystá jet, je to jediné, co je o ní v tu chvíli známo.
  */
-function PrihlaseneLode({ lode }: { lode: UcastLodi[] }) {
+function PrihlaseneLode({
+  lode,
+  trida,
+  adresa,
+}: {
+  lode: UcastLodi[];
+  trida?: string;
+  adresa: (trida: string) => string;
+}) {
   if (lode.length === 0) return null;
 
+  // Třídy v taby jako u výsledků (Filip, 15. 9. 2026) — seznam lodí na
+  // zastávce, která se teprve pojede, je jinak stejně dlouhý svitek.
   const kategorie = [...new Set(lode.map((l) => l.kategorie))];
+  const aktivni = vyberTridu(kategorie, trida);
 
   return (
     <>
@@ -239,9 +255,10 @@ function PrihlaseneLode({ lode }: { lode: UcastLodi[] }) {
       <p className="podtitulek" style={{ margin: "0 0 1rem" }}>
         {lode.length} {lode.length === 1 ? "loď" : lode.length < 5 ? "lodě" : "lodí"}
       </p>
-      {kategorie.map((k) => (
+      <TabyTrid kategorie={kategorie} aktivni={aktivni} adresa={adresa} />
+      <NadpisTridy kategorie={kategorie} aktivni={aktivni} />
+      {[aktivni].map((k) => (
         <div key={k} style={{ marginBottom: "1.5rem" }}>
-          <h3 style={{ fontSize: "0.95rem", margin: "1.25rem 0 0.5rem" }}>{k}</h3>
           <div className="tabulka-obal">
             <table>
               <thead>
@@ -284,7 +301,8 @@ function Tabulka({
 }) {
   return (
     // Třídu nese tab nad tabulkou. Když je třída jediná a taby nejsou,
-    // nadpis zůstává — jinak by nebylo poznat, čí jsou to výsledky.
+    // dá nadpis stránka (`NadpisTridy`) — jinak by nebylo poznat, čí jsou
+    // to výsledky.
     <div style={{ marginBottom: "1.5rem" }}>
       <div className="tabulka-obal">
         <table>

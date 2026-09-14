@@ -1753,14 +1753,19 @@ a „proběhlo".
   nadcházející zastávky a akce. Kde by se to se středem zdvojilo (průběžné
   pořadí, stránka ročníku), jsou v bocích novinky a plakát nejbližší akce
   — Filipova volba. Obal se o boky rozšíří, takže střed o místo nepřijde.
-- **Taby lodních tříd** v průběžném pořadí i ve výsledcích zastávky,
-  výchozí první třída, třída v adrese (`?trida=Pod7m`).
+- **Taby lodních tříd** v průběžném pořadí, ve výsledcích zastávky
+  a u přihlášených lodí — na zastávce, která se teprve pojede, i na stránce
+  ročníku. Výchozí první třída, třída v adrese (`?trida=Pod7m`); jediná
+  třída taby nemá a dostane nadpis.
 - **Logo:** pata šedé plachty je za přední plachtou; šedý klín pod
   červenou už nevykukuje.
 - **Znaky tříd** kreslí `app/scripts/ikona.py` z tvarů hlavního loga:
   jedna plachta v barvě třídy a písmeno jako vodoznak přes celý znak.
   Barvy určil Filip: Race červená, Nad7m tmavě modrá, Pod7m šedomodrá
-  (šedá z loga by na bílém zmizela).
+  (šedá z loga by na bílém zmizela). Web znak **kreslí přímo do stránky**
+  z dat, která skript zapíše do `web/app/znaky-trid.ts` — ne přes `<img>`:
+  jen tak má průhledné pozadí a v tmavém režimu mu CSS dá světlejší
+  odstíny. V tabu je velký 2,6 rem, dvakrát víc než první verze (Filip).
 - **Pás partnerů** nad koncem stránky, posun v CSS, najetím se zastaví.
   **Loga jsou ukázková** a nakreslená jako zjevné zástupné značky — cizí
   logo skutečné organizace by na veřejném webu tvrdilo, že nás podporuje.

@@ -6,6 +6,7 @@ import { Stav } from "@/app/stav";
 import { PruhUkazky } from "@/app/ukazka";
 import { datum } from "@/app/datum";
 import { Boky } from "@/app/boky";
+import { NadpisTridy, TabyTrid, vyberTridu } from "@/app/tridy";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -14,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 type Parametry = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ kalendar?: string }>;
+  searchParams: Promise<{ kalendar?: string; trida?: string }>;
 };
 
 // Titulek se nesmí stát důvodem, proč stránka spadne. Chyba z API tady
@@ -32,7 +33,7 @@ export async function generateMetadata({ params }: Parametry) {
 
 export default async function Rocnik({ params, searchParams }: Parametry) {
   const { slug } = await params;
-  const { kalendar } = await searchParams;
+  const { kalendar, trida } = await searchParams;
 
   // Výpadek API se ošetřuje tady, ne přes `error.tsx` — viz app/vypadek.tsx.
   let serie;
@@ -55,6 +56,19 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
     nazev: k.nazev,
     lode: serie.prihlasky.filter((p) => p.kategorie === k.nazev),
   }));
+  const tridy = podleKategorii.filter((k) => k.lode.length > 0);
+  const aktivniTrida = vyberTridu(tridy.map((k) => k.nazev), trida);
+
+  // Stránka má dvoje taby — kalendář a třídy — a přepnutí jedněch nesmí
+  // shodit ty druhé. Odkaz proto nese oba parametry.
+  const odkaz = (zmena: { kalendar?: string; trida?: string }) => {
+    const dotaz = new URLSearchParams();
+    const k = "kalendar" in zmena ? zmena.kalendar : kalendar;
+    const t = "trida" in zmena ? zmena.trida : trida;
+    if (k) dotaz.set("kalendar", k);
+    if (t) dotaz.set("trida", t);
+    return `/serie/${serie.slug}${dotaz.size ? `?${dotaz}` : ""}`;
+  };
 
   return (
     // Kalendář je tady ve středu, takže do boků jdou novinky a plakát akce.
@@ -82,10 +96,10 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
           a dá se na ni poslat odkaz. Bez akcí se taby neukazují vůbec. */}
       {akce.length > 0 && (
         <nav className="taby" aria-label="Kalendář">
-          <Link href={`/serie/${serie.slug}`} aria-current={naAkcich ? undefined : "page"}>
+          <Link href={odkaz({ kalendar: undefined })} scroll={false} aria-current={naAkcich ? undefined : "page"}>
             Pohár
           </Link>
-          <Link href={`/serie/${serie.slug}?kalendar=akce`} aria-current={naAkcich ? "page" : undefined}>
+          <Link href={odkaz({ kalendar: "akce" })} scroll={false} aria-current={naAkcich ? "page" : undefined}>
             Komunitní akce
           </Link>
         </nav>
@@ -100,9 +114,14 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
       )}
 
       <h2>Přihlášené lodě</h2>
-      {podleKategorii.map((k) => (
+      <TabyTrid
+        kategorie={tridy.map((k) => k.nazev)}
+        aktivni={aktivniTrida}
+        adresa={(k) => odkaz({ trida: k })}
+      />
+      <NadpisTridy kategorie={tridy.map((k) => k.nazev)} aktivni={aktivniTrida} />
+      {tridy.filter((k) => k.nazev === aktivniTrida).map((k) => (
         <div key={k.nazev}>
-          <h3 style={{ fontSize: "0.95rem", margin: "1.25rem 0 0.5rem" }}>{k.nazev}</h3>
           <div className="tabulka-obal">
             <table>
               <thead>

@@ -4,7 +4,7 @@ import { ApiNedostupne, nactiPoradi, type PoradiKategorie, type Zastavka } from 
 import { Vypadek } from "@/app/vypadek";
 import { PruhUkazky } from "@/app/ukazka";
 import { Boky } from "@/app/boky";
-import { TabyTrid, vyberTridu } from "@/app/tridy";
+import { NadpisTridy, TabyTrid, vyberTridu } from "@/app/tridy";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -66,6 +66,7 @@ export default async function Poradi({ params, searchParams }: Parametry) {
             aktivni={aktivni}
             adresa={(k) => `/serie/${slug}/poradi?trida=${encodeURIComponent(k)}`}
           />
+          <NadpisTridy kategorie={tridy.map((k) => k.kategorie)} aktivni={aktivni} />
           <Tabulka
             kategorie={tridy.find((k) => k.kategorie === aktivni)!}
             zastavky={poradi.zastavky}
@@ -97,7 +98,7 @@ function Tabulka({
   if (kategorie.lode.length === 0) return null;
 
   return (
-    // Třídu nese tab nad tabulkou, nadpis by ji jen opakoval.
+    // Třídu nese tab nad tabulkou, nebo `NadpisTridy`, když je jediná.
     <div style={{ marginBottom: "1.5rem" }}>
       <div className="tabulka-obal">
         <table>
