@@ -1065,8 +1065,8 @@ Počítáno na pět hodin týdně.
 | 2 | ~~**Bodování** — nízkobodový systém, kódy, škrty, pořadí po kategoriích~~ | **hotovo** | Čisté funkce **ověřené proti skutečnému sešitu rozhodčího**, vydané endpointem a vidět na webu |
 | 3 | ~~**Mobilní appka, jen čtení**~~ | **hotovo 8. 9. 2026** | Nepotřebovala přihlášení, takže vznikla dřív než identita. Běží na telefonu, typy si bere z OpenAPI a jde poslat jako APK |
 | 4 | ~~**Identita a role** — Zitadel, mapování `(issuer, subject) → UserId`~~ | **hotovo 9. 9. 2026** | Zitadel na vlastním stroji, přihlášení na webu, API ověřuje tokeny. Odblokovalo odloženou položku platformy |
-| 5 | **Administrace a workflow** — zadávání, stavy, publikace, protesty a penalizace | 2–3 týdny | Až když je co spravovat. Protest nemá kdo zapsat dřív, než existuje identita |
-| 6 | **Blog a fotky** — model, import, veřejné čtení, novinky na webu | rozdělané | Model, import i stránky hotové 9. 9. 2026; psaní článků čeká na administraci z fáze 5 |
+| 5 | **Administrace a workflow** — zadávání, stavy, publikace, protesty a penalizace | rozdělané | Oprávnění, kalendář a workflow výsledků hotové 11. 9. 2026. Zbývá zápis výsledků, přihlášení lodi na zastávku, protesty a penalizace |
+| 6 | **Blog a fotky** — model, import, veřejné čtení, novinky na webu | skoro hotovo | Psaní článků i fotky v kartách hotové 11. 9. 2026; nahrávání vlastní fotky pořadatelem čeká na objektové úložiště |
 | 7 | **Upozornění** — veřejná i účastnická, odesílání, Outbox | 2–3 týdny | Účastnická stojí na identitě z fáze 4 a na napojení osoby k lodi |
 | 8 | **Tracker** — záznam trasy, offline, nahrání, prohlížení | 4–6 týdnů | Samostatná linka; potřebuje jen identitu a kontext závodu |
 | 9 | Handicap | až bude potřeba | |
@@ -1319,8 +1319,8 @@ prozradila závod, který ročník ještě nezveřejnil.
 
 | Zbývá | Proč to ještě není |
 |---|---|
-| Psaní článků v administraci | čeká na fázi 5 (a ta na identitu z fáze 4) |
-| Fotky v článku | soubory v R2; do té doby je blog jen text |
+| ~~Psaní článků v administraci~~ | hotovo 11. 9. 2026 — `/sprava/{serie}/clanky` |
+| Fotky v článku | kurátorský set je zabalený ve webu (11. 9. 2026); vlastní fotka od pořadatele chce R2 |
 | Pořadatel jako záznam, ne text | až se budou přidávat odkazy a logo, viz *Jak se po webu chodí* |
 
 **Demo obsah je vymyšlený, ale nehádá.** Zpráva ze zastávky si bere vítěze
@@ -1619,8 +1619,9 @@ zastávka nemá, ale kalendář ho konečně umí nastavit — a appka by u ní
 ukázala prázdný štítek. Doplněno i s barvou a s větou do „proč nejsou
 výsledky".
 
-**Zbývá to zavřít**: krok `npx tsc --noEmit` nad `app/` v CI. Bez něj se to
-rozejde znovu při první další změně modelu a pozná se to až na telefonu.
+**Zavřeno 11. 9. 2026**: úloha `appka` v CI pouští `npx tsc --noEmit` nad
+`app/`, takže se další rozchod s modelem pozná na pull requestu, ne na
+telefonu.
 
 ## Schéma řešení
 
@@ -1640,12 +1641,16 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
    ve tvarech skutečného API.
 3. **Nasazení** — nic ručního. Push do `main` postaví obě image a háček je
    vymění na serveru i s `docker-compose.yml`.
-4. **Otázka na rozhodčího** — jediná zbývající, viz níž. Fáze 2 na ní stojí.
-   Přihlášení už funguje, takže další na řadě je **fáze 5**: administrace,
-   udělování rolí a workflow výsledků. Do té doby je `/ja` sice živé, ale
-   nikdo nemá jediné oprávnění a nic za přihlášením není. Konkrétní první
-   krok i s návrhem řešení stojí v oddílu *Čím pokračovat ve fázi 5* výš.
-5. **Skutečná data** — až dorazí, nahradí `data/2025-mock.json` a nahrají se
+4. **Otázky na rozhodčího** — tři, vypsané v oddílu *Co k tomu říkají
+   závodní pravidla*: z čeho se počítá DNC, co znamenají nuly u zrušených
+   zastávek a proč má DNF jiné body než DNS. Dopočet neúčasti na nich stojí.
+5. **Fáze 5 je rozdělaná** (stav k 14. 9. 2026). Hotové: udělování
+   oprávnění, kalendář zastávek, workflow výsledků a psaní novinek. Další na
+   řadě je **obrazovka pro zápis výsledků** — dnes se pořadí dostane dovnitř
+   jen importem a na otázky rozhodčího nečeká, protože zapisuje pořadí
+   a kódy, ne body. Po ní přihlášení lodi na zastávku, pak protesty
+   a penalizace.
+6. **Skutečná data** — až dorazí, nahradí `data/2025-mock.json` a nahrají se
    importem. Struktura zůstane.
 
 ## Zbývá doladit
