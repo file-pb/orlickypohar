@@ -260,7 +260,10 @@ internal static class ImportHandler
             else upraveneZ++;
 
             zavod.Nazev = v.Nazev;
-            zavod.Poradatel = v.Poradatel;
+            // Jméno z importu přiřadí záznam pořadatele jako v kalendáři.
+            // Medailonek import nenese a nepřepisuje: píše se v administraci
+            // a nahrání ročníku by ho jinak smazalo.
+            await Poradatele.PoradateleSprava.PriradAsync(db, zavod, v.Poradatel, ct);
             zavod.Datum = v.Datum;
             zavod.DatumKonce = v.DatumKonce;
             zavod.Typ = v.Typ;

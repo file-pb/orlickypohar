@@ -232,6 +232,62 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("Osoby");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Poradatele.Poradatel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Adresa")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<double?>("Delka")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<string>("KontaktniOsoba")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Nazev")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Popis")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<double?>("Sirka")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("Telefon")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("Web")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("Poradatele");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Serial.Kategorie", b =>
                 {
                     b.Property<int>("Id")
@@ -466,6 +522,9 @@ namespace OrlickyPohar.Api.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
 
+                    b.Property<int?>("PoradatelId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Poradi")
                         .HasColumnType("integer");
 
@@ -494,6 +553,8 @@ namespace OrlickyPohar.Api.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PoradatelId");
 
                     b.HasIndex("SerieId", "Slug")
                         .IsUnique();
@@ -663,11 +724,18 @@ namespace OrlickyPohar.Api.Migrations
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Zavod", b =>
                 {
+                    b.HasOne("OrlickyPohar.Api.Features.Poradatele.Poradatel", "PoradatelZaznam")
+                        .WithMany()
+                        .HasForeignKey("PoradatelId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("OrlickyPohar.Api.Features.Serial.Serie", "Serie")
                         .WithMany()
                         .HasForeignKey("SerieId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("PoradatelZaznam");
 
                     b.Navigation("Serie");
                 });

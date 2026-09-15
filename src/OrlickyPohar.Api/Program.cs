@@ -7,6 +7,7 @@ using OrlickyPohar.Api.Features.Bodovani;
 using OrlickyPohar.Api.Features.Clanky;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Import;
+using OrlickyPohar.Api.Features.Poradatele;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Sprava;
 using OrlickyPohar.Api.Features.Zavody;
@@ -47,6 +48,7 @@ try
     builder.Services.AddScoped<VysledkySprava>();
     builder.Services.AddScoped<ZapisSprava>();
     builder.Services.AddScoped<PrihlaskySprava>();
+    builder.Services.AddScoped<PoradateleSprava>();
     // .NET popisuje čísla jako ["integer","string"], protože je při čtení
     // přijímá i v uvozovkách. Odpovědi je ale píšou vždycky jako čísla —
     // a generovaný klient by jinak u každého bodu nutil ověřovat, jestli
@@ -131,6 +133,7 @@ try
         app.MapKalendar();
         app.MapSpravaVysledku();
         app.MapPrihlasky();
+        app.MapSpravaPoradatelu();
     }
 
     // Migrace při startu. U jedné repliky je to v pořádku a máš jistotu,

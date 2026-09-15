@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Features.Clanky;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Lode;
+using OrlickyPohar.Api.Features.Poradatele;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Zavody;
 
@@ -15,6 +16,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Osoba> Osoby => Set<Osoba>();
     public DbSet<Lod> Lode => Set<Lod>();
     public DbSet<Zavod> Zavody => Set<Zavod>();
+    public DbSet<Poradatel> Poradatele => Set<Poradatel>();
     public DbSet<Ucast> Ucasti => Set<Ucast>();
     public DbSet<Rozjizdka> Rozjizdky => Set<Rozjizdka>();
     public DbSet<Vysledek> Vysledky => Set<Vysledek>();
@@ -69,6 +71,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         zavod.HasOne(x => x.Serie).WithMany().HasForeignKey(x => x.SerieId)
             .OnDelete(DeleteBehavior.Cascade);
         zavod.HasIndex(x => new { x.SerieId, x.Slug }).IsUnique();
+        // Smazaný pořadatel nesmí odnést zastávku s výsledky. Jméno na ní
+        // zůstane jako text, jen bez medailonku.
+        zavod.HasOne(x => x.PoradatelZaznam).WithMany().HasForeignKey(x => x.PoradatelId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        var poradatel = b.Entity<Poradatel>();
+        poradatel.Property(x => x.Slug).HasMaxLength(Medailonek.SlugNejvic).IsRequired();
+        poradatel.Property(x => x.Nazev).HasMaxLength(Medailonek.NazevNejvic).IsRequired();
+        poradatel.Property(x => x.Web).HasMaxLength(Medailonek.WebNejvic);
+        poradatel.Property(x => x.Popis).HasMaxLength(Medailonek.PopisNejvic);
+        poradatel.Property(x => x.Email).HasMaxLength(Medailonek.EmailNejvic);
+        poradatel.Property(x => x.Telefon).HasMaxLength(Medailonek.TelefonNejvic);
+        poradatel.Property(x => x.KontaktniOsoba).HasMaxLength(Medailonek.OsobaNejvic);
+        poradatel.Property(x => x.Adresa).HasMaxLength(Medailonek.AdresaNejvic);
+        // Slug je přirozený klíč: podle něj kalendář i import najdou klub,
+        // místo aby ho založily podruhé.
+        poradatel.HasIndex(x => x.Slug).IsUnique();
 
         var ucast = b.Entity<Ucast>();
         ucast.Property(x => x.Posadka).HasMaxLength(400);

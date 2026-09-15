@@ -197,8 +197,16 @@ public class Zavod
     /// <summary>Část veřejné adresy, unikátní v rámci série.</summary>
     public required string Slug { get; set; }
 
-    /// <summary>Pořádající klub nebo osoba. Volný text — pořadatel není účet v systému.</summary>
+    /// <summary>
+    /// Jméno pořadatele. Od 15. 9. 2026 je to <b>kopie jména záznamu</b>
+    /// <see cref="PoradatelZaznam"/>, ne samostatný údaj: zůstává kvůli
+    /// appce na telefonech a importu, které znají jen text.
+    /// </summary>
     public string? Poradatel { get; set; }
+
+    /// <summary>Kdo zastávku pořádá — i s webem a medailonkem. Není to účet v systému.</summary>
+    public int? PoradatelId { get; set; }
+    public Poradatele.Poradatel? PoradatelZaznam { get; set; }
 
     public DateOnly Datum { get; set; }
 

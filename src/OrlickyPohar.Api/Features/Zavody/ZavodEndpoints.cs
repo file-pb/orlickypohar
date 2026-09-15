@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Bodovani;
+using OrlickyPohar.Api.Features.Poradatele;
 // Řez i třída se jmenují stejně, takže se prosté `Bodovani` uvnitř sousedního
 // jmenného prostoru rozumí jako název jmenného prostoru. Alias to rozsekne.
 using Vypocet = OrlickyPohar.Api.Features.Bodovani.Bodovani;
@@ -49,7 +50,10 @@ public record ZavodDetailDto(
     IReadOnlyList<VysledekZavoduDto> Poradi,
     IReadOnlyList<UcastDto> Lode,
     // Komunitní akce má stránku jako zastávka, jen bez výsledků a pravidel.
-    DruhZastavky Druh = DruhZastavky.Pohar);
+    DruhZastavky Druh = DruhZastavky.Pohar,
+    // Pořadatel i s webem, kontaktem a souřadnicemi. `Poradatel` výš zůstává
+    // jako jméno pro appku, která o záznamu neví.
+    PoradatelDto? Medailonek = null);
 
 /// <summary>
 /// Veřejné čtení jedné zastávky. Pravidla závodu (škrty, vyhodnocení,
@@ -80,7 +84,7 @@ public static class ZavodEndpoints
             {
                 z.Id, z.SerieId, z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel,
                 z.Stav, z.PuvodniDatum, z.PocetSkrtu, z.Vyhodnoceni, z.KoeficientDoSerie,
-                z.Druh,
+                z.Druh, z.PoradatelZaznam,
             })
             .FirstOrDefaultAsync(ct);
 
@@ -177,6 +181,7 @@ public static class ZavodEndpoints
                 v.Lod, v.Kategorie, v.Body, v.Poradi,
                 [.. v.Rozjizdky.Select(b => new BodyVRozjizdceDto(b.Cislo, b.Body, b.Skrtnuto))]))],
             lode,
-            zavod.Druh));
+            zavod.Druh,
+            zavod.PoradatelZaznam is null ? null : PoradateleSprava.Dto(zavod.PoradatelZaznam)));
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Poradatele;
 
 namespace OrlickyPohar.Api.Features.Zavody;
 
@@ -28,7 +29,12 @@ public record ZastavkaRadek(
     bool SmiUpravit,
     bool SmiPublikovat,
     IReadOnlyList<StavZavodu> MozneStavy,
-    DruhZastavky Druh = DruhZastavky.Pohar);
+    DruhZastavky Druh = DruhZastavky.Pohar,
+    // Klíč záznamu pořadatele, ze kterého se jde na jeho medailonek.
+    // Na konci a s výchozí hodnotou: změny API jsou jen aditivní.
+    string? PoradatelSlug = null,
+    // Medailonek smí upravit rozhodčí, nebo organizátor téhle zastávky.
+    bool SmiMedailonek = false);
 
 public record PrehledZastavekDto(
     string Serie,
@@ -88,13 +94,16 @@ public class KalendarSprava(AppDbContext db)
     /// </summary>
     public Task<List<Zaznam>> VypisAsync(int serieId, CancellationToken ct) =>
         db.Zavody
+            .Include(z => z.PoradatelZaznam)
             .Where(z => z.SerieId == serieId)
             .OrderBy(z => z.Poradi).ThenBy(z => z.Datum)
             .Select(z => new Zaznam(z.Id, z))
             .ToListAsync(ct);
 
     public Task<Zavod?> NajdiAsync(int serieId, string slug, CancellationToken ct) =>
-        db.Zavody.FirstOrDefaultAsync(z => z.SerieId == serieId && z.Slug == slug, ct);
+        db.Zavody
+            .Include(z => z.PoradatelZaznam)
+            .FirstOrDefaultAsync(z => z.SerieId == serieId && z.Slug == slug, ct);
 
     /// <summary>
     /// Založí zastávku. Vrací hotový záznam, nebo text chyby.
@@ -122,7 +131,6 @@ public class KalendarSprava(AppDbContext db)
             Datum = vstup.Datum,
             DatumKonce = vstup.DatumKonce,
             Typ = Prazdne(vstup.Typ),
-            Poradatel = Prazdne(vstup.Poradatel),
             Druh = vstup.Druh,
             Stav = StavZavodu.Planovany,
             Publikovano = false,
@@ -131,6 +139,7 @@ public class KalendarSprava(AppDbContext db)
             Poradi = 0,
         };
 
+        await PoradateleSprava.PriradAsync(db, zastavka, vstup.Poradatel, ct);
         db.Zavody.Add(zastavka);
         await db.SaveChangesAsync(ct);
 
@@ -154,7 +163,10 @@ public class KalendarSprava(AppDbContext db)
         zastavka.Datum = vstup.Datum;
         zastavka.DatumKonce = vstup.DatumKonce;
         zastavka.Typ = Prazdne(vstup.Typ);
-        zastavka.Poradatel = Prazdne(vstup.Poradatel);
+        // Jiné jméno přiřadí jiného pořadatele; přejmenovat klub se dá jen
+        // v jeho medailonku, jinak by jeden překlep v kalendáři přepsal
+        // jméno na všech jeho zastávkách.
+        await PoradateleSprava.PriradAsync(db, zastavka, vstup.Poradatel, ct);
 
         await db.SaveChangesAsync(ct);
         await PreradAsync(zastavka.SerieId, ct);

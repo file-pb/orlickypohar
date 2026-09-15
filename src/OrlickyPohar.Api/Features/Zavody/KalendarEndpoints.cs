@@ -17,9 +17,9 @@ namespace OrlickyPohar.Api.Features.Zavody;
 /// endpointech.
 /// </para>
 /// <para>
-/// <b>Přiřazování pořadatele zastávce tu není.</b> V plánu je ta věta
-/// označená jako odvozená a čeká na projití; kalendář na ní nestojí,
-/// protože <c>Poradatel</c> je volný text, ne účet v systému.
+/// <b>Pořadatel se přiřazuje jménem.</b> Kalendář posílá text jako dřív
+/// a záznam pořadatele se k němu najde, nebo založí — viz
+/// <c>PoradateleSprava.PriradAsync</c>. Medailonek se upravuje jinde.
 /// </para>
 /// </summary>
 public static class KalendarEndpoints
@@ -181,7 +181,11 @@ public static class KalendarEndpoints
             return new ZastavkaRadek(
                 z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel, z.Poradi,
                 z.Stav, z.PuvodniDatum, z.Publikovano,
-                SmiKalendar, SmiPublikovat, mozne, z.Druh);
+                SmiKalendar, SmiPublikovat, mozne, z.Druh,
+                z.PoradatelZaznam?.Slug,
+                // Totéž pravidlo jako `Medailonek.SmiUpravit`, jen pro jednu
+                // zastávku: na ní samotné je organizátor, nebo ne.
+                z.PoradatelZaznam is not null && (SmiKalendar || organizator));
         }
     }
 
