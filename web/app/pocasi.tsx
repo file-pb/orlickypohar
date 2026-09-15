@@ -53,6 +53,9 @@ const ADRESA =
     radarRange: "-1",
   });
 
+/** Tentýž bod na windy.com, pro odkaz pod widgetem. */
+const MAPA_WINDY = `https://www.windy.com/?${BOD.lat},${BOD.lon},11`;
+
 /** Dnešek v pražském pásmu jako YYYY-MM-DD — akce se jedou na Orlíku. */
 const dnesVPraze = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Prague" });
 
@@ -88,7 +91,12 @@ export function PocasiAkce({ datum, nazev }: { datum: string; nazev: string }) {
         ) : (
           <>Aktuální předpověď. Akce {kdy} se v pásu objeví čtyři dny předem.</>
         )}{" "}
-        Radava a Velký vír, Windy.
+        Radava a Velký vír,{" "}
+        {/* Cizí web do nové karty, ať čtenář nepřijde o stránku poháru. */}
+        <a href={MAPA_WINDY} target="_blank" rel="noopener noreferrer">
+          Windy
+        </a>
+        .
       </p>
     </div>
   );
