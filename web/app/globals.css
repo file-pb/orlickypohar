@@ -370,12 +370,15 @@ td.cislo { font-variant-numeric: tabular-nums; }
 .pravidla dt { color: var(--tlumeny); }
 .pravidla dd { margin: 0; }
 
-/* Pruh u vymyšlených dat. Nemá být hezký, má být vidět dřív než tabulka. */
+/* Proužek u vymyšlených dat: jeden, nad hlavičkou, na každé stránce
+   (Filip, 15. 9. 2026). Dřív byl pruh na každé stránce ročníku zvlášť
+   a rozbíjel design. Při rolování odjede nahoru a hlavička zůstane. */
 .ukazka {
-  background: var(--zvyrazneni); border: 1px solid var(--linka);
-  border-left: 4px solid var(--voda); border-radius: 8px;
-  padding: 0.7rem 0.9rem; margin: 0 0 1.25rem; font-size: 0.9rem;
+  margin: 0; padding: 0.3rem 1.25rem; text-align: center;
+  font-size: 0.78rem; line-height: 1.4; color: var(--tlumeny);
+  background: var(--zvyrazneni); border-bottom: 1px solid var(--linka);
 }
+.ukazka b { color: var(--text); font-weight: 600; }
 
 /* Stažení appky: QR vedle tlačítka, na telefonu pod sebou. */
 .stahni { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }

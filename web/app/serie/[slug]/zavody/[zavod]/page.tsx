@@ -12,7 +12,6 @@ import {
 } from "@/lib/api";
 import { Vypadek } from "@/app/vypadek";
 import { ProcNejsouVysledky, Stav } from "@/app/stav";
-import { PruhUkazky } from "@/app/ukazka";
 import { datum } from "@/app/datum";
 import { VypisNovinek } from "@/app/novinky";
 import { Drobecky } from "@/app/drobecky";
@@ -121,7 +120,6 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
           { text: zavod.nazev },
         ]}
       />
-      <PruhUkazky slug={slug} />
       <h1>
         <span className={zavod.stav === "Zruseny" ? "skrtnute" : undefined}>{zavod.nazev}</span>{" "}
         <Stav stav={zavod.stav} akce={akce} />

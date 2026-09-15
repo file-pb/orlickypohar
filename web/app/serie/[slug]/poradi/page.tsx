@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ApiNedostupne, nactiPoradi, type PoradiKategorie, type Zastavka } from "@/lib/api";
 import { Vypadek } from "@/app/vypadek";
-import { PruhUkazky } from "@/app/ukazka";
 import { Boky } from "@/app/boky";
 import { NadpisTridy, TabyTrid, vyberTridu } from "@/app/tridy";
 
@@ -50,7 +49,6 @@ export default async function Poradi({ params, searchParams }: Parametry) {
       <p style={{ margin: "0 0 0.5rem" }}>
         <Link href={`/serie/${slug}`}>← zpět na ročník</Link>
       </p>
-      <PruhUkazky slug={slug} />
       <h1>Průběžné pořadí</h1>
       <p className="podtitulek">
         {poradi.nazev} · po {poradi.zastavky.length}{" "}

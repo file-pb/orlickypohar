@@ -6,6 +6,7 @@ import { maSezeni, nactiJa } from "@/lib/ja";
 import { Domu } from "@/app/domu";
 import { Menu } from "@/app/menu";
 import { Logo, ZnakPozadi } from "@/app/logo";
+import { PruhUkazky } from "@/app/ukazka";
 import { Profil } from "@/app/profil";
 import { Partneri } from "@/app/partneri";
 import "./globals.css";
@@ -53,6 +54,8 @@ export default async function Layout({ children }: { children: React.ReactNode }
             tahat na klienta hydrataci. */}
         <span id="nahoru" />
         <ZnakPozadi />
+        {/* Jediné upozornění na vymyšlená data, nad menu (Filip, 15. 9. 2026). */}
+        <PruhUkazky />
         <header className="hlavicka">
           <div className="obal">
             {/* Značka je tatáž jako ikona appky — kreslí ji app/scripts/ikona.py,
