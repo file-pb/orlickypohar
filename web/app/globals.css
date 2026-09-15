@@ -470,6 +470,34 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
 }
 .profil .nabidka button:hover { background: var(--zvyrazneni); }
 
+/* Kebab v hlavičce: Historie, Pravidla a Appka (Filip, 15. 9. 2026).
+   Nabídka vypadá jako ta profilová, aby hlavička měla jednu řeč. Terč je
+   kruh stejně velký jako profil, jen bez rámečku — není to účet. */
+.menu { position: relative; }
+.menu > summary {
+  list-style: none; cursor: pointer;
+  display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 999px;
+  color: var(--tlumeny); font-size: 1.3rem; line-height: 1; font-weight: 700;
+}
+.menu > summary::-webkit-details-marker { display: none; }
+.menu > summary:hover,
+.menu[open] > summary { background: var(--zvyrazneni); color: var(--text); }
+.menu > summary:focus { outline: none; }
+.menu > summary:focus-visible { outline: 2px solid var(--voda); outline-offset: 2px; }
+.menu .nabidka {
+  position: absolute; right: 0; top: calc(100% + 0.5rem); z-index: 30;
+  min-width: 11rem; padding: 0.35rem;
+  display: grid; gap: 0.15rem;
+  background: var(--papir);
+  border: 1px solid var(--linka); border-radius: 10px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.14);
+}
+.menu .nabidka a {
+  padding: 0.45rem 0.6rem; border-radius: 7px;
+  color: var(--text); font-size: 0.9rem; font-weight: 500;
+}
+.menu .nabidka a:hover { background: var(--zvyrazneni); text-decoration: none; }
+
 /* Správa oprávnění. Formulář i tabulka jsou serverové, takže tu nejsou
    žádné stavy „ukládám" — po odeslání přijde nová stránka s hláškou. */
 .hlaska {
@@ -704,8 +732,8 @@ th.vlevo, td.vlevo { text-align: left; }
    kalendář, kde by se to zdvojilo, novinky a plakát akce.
 
    Pod 1280 px boky nejsou vůbec — střed potřebuje místo na tabulky a boky
-   by ho jen zúžily. Nad ní se obal rozšíří o šířku obou boků. Střed je
-   v HTML první, vlevo ho posadí až mřížka.
+   by ho jen zúžily. Nad ní jde obal přes celé okno, boky sedí v krajích
+   a střed vyplní zbytek. Střed je v HTML první, vlevo ho posadí až mřížka.
 
    Hranice byla původně 1500 px. Filip, 15. 9. 2026: na 13" displeji
    (MacBook 1440–1470 px, iPad Pro na šířku 1376 px) boky mizely a místo
@@ -714,13 +742,20 @@ th.vlevo, td.vlevo { text-align: left; }
 .s-boky > .bok { display: none; }
 .s-boky-stred > p,
 .s-boky-stred > dl { max-width: 46rem; }
-/* Vedle boků je střed do 1600 px užší než bez nich, dva sloupce karet by
-   se v něm tlačily. Od 1600 px roste --sirka a dva sloupce se vejdou. */
-@media (min-width: 1280px) and (max-width: 1599.98px) {
-  .s-boky-stred .seznam { grid-template-columns: minmax(0, 1fr); }
-}
 @media (min-width: 1280px) {
-  main.obal:has(> .s-boky) { max-width: calc(var(--sirka) + 38rem); }
+  /* Boky drží v krajích okna, ne u centrovaného obsahu (Filip, 15. 9. 2026).
+     Obal i hlavička proto jdou přes celou šířku a střed vyplní, co zbyde.
+     `:has(.s-boky)` a ne `> .s-boky`: na úvodu jsou boky zabalené
+     v `.uvod` spolu s fotkou, a přímý potomek je tam nenašel — úvod pak
+     zůstal úzký. */
+  main.obal:has(.s-boky),
+  body:has(main .s-boky) header.hlavicka .obal { max-width: none; }
+  .uvod .hero-text > * { max-width: none; }
+  /* Karty ve středu vyplní celou jeho šířku: sloupců je tolik, kolik se
+     jich vejde po 30 rem. Mezi boky na 13" displeji je to jeden široký
+     sloupec, na 1920 px dva, na 2560 px tři. Pevný počet sloupců nechával
+     buď úzký pruh uprostřed, nebo stísněné karty. */
+  .s-boky-stred .seznam { grid-template-columns: repeat(auto-fill, minmax(min(100%, 30rem), 1fr)); }
   .s-boky {
     display: grid; gap: 2.25rem; align-items: start;
     grid-template-columns: 16rem minmax(0, 1fr) 16rem;

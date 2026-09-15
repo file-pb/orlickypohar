@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prihlasovaniJde } from "@/lib/oidc";
 import { maSezeni, nactiJa } from "@/lib/ja";
 import { Domu } from "@/app/domu";
+import { Menu } from "@/app/menu";
 import { Profil } from "@/app/profil";
 import { Partneri } from "@/app/partneri";
 import "./globals.css";
@@ -58,9 +59,8 @@ export default async function Layout({ children }: { children: React.ReactNode }
                   z ní jen logo. Vypsaný odkaz stojí jedno slovo. Na samotné
                   domovské stránce mizí: odkaz sám na sebe je jen šum. */}
               <Domu />
-              <Link href="/historie">Historie</Link>
-              <Link href="/pravidla">Pravidla</Link>
-              <Link href="/appka">Appka</Link>
+              {/* Historie, Pravidla a Appka jsou v kebabu (Filip, 15. 9. 2026). */}
+              <Menu />
               {/* Přihlášení se nabízí, jen když je nastavené. Odkaz na
                   neexistující tok by byl slib, který web nesplní. */}
               {prihlasovaniJde &&
