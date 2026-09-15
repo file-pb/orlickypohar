@@ -113,11 +113,18 @@ header.hlavicka a.znacka svg.logo-mobil { display: none; width: 72px; height: 72
 /* Znak bez nápisu jako slabý rozostřený vodoznak pod obsahem ostatních
    stránek (Filip, 15. 9. 2026). Fotografická finta s hloubkou ostrosti:
    neostrý tvar vzadu dělá z plochého pozadí prostor pod obsahem. Leží
-   pevně v rohu okna, takže se při rolování nehýbe s textem. Úvod ho nemá,
-   tam hloubku dělá fotka. */
+   pevně v okně, takže se při rolování nehýbe s textem. Úvod ho nemá,
+   tam hloubku dělá fotka.
+
+   Na střed šířky a do horní třetiny okna (Filip, 15. 9. 2026). V pravém
+   dolním rohu byl z velké části schovaný pod okrajem a efekt se ztrácel.
+   Velikost hlídá i výška okna: znak je vysoký asi 0,78 své šířky a začíná
+   v 6 % výšky, takže se střed vejde do první třetiny, jen dokud je široký
+   nejvýš ~70 % výšky okna. Bez toho byl na okně 1280×720 střed ve 39 %. */
 .pozadi-znak {
   position: fixed; z-index: -1; pointer-events: none;
-  right: -6vw; bottom: -8vh; width: min(78vw, 60rem); height: auto;
+  top: 6vh; left: 50%; transform: translateX(-50%);
+  width: min(62vw, 38rem, 68vh); height: auto;
   opacity: 0.07; filter: blur(4px);
 }
 body:has(.uvod) .pozadi-znak { display: none; }
