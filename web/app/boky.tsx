@@ -11,6 +11,7 @@ import { fotkaClanku } from "@/app/fotky";
 import { Stav } from "@/app/stav";
 import { ZnakTridy } from "@/app/tridy";
 import { KaruselTridy } from "@/app/karusel-poradi";
+import { PocasiAkce } from "@/app/pocasi";
 
 /**
  * Boky širokého monitoru.
@@ -136,7 +137,8 @@ async function nadchazejici(slug: string): Promise<Termin[]> {
 }
 
 async function BokKalendar({ slug }: { slug: string }) {
-  const terminy = (await nadchazejici(slug)).slice(0, 5);
+  // Deset, ne pět: bok má výšku, ať ji využije (Filip, 16. 9. 2026).
+  const terminy = (await nadchazejici(slug)).slice(0, 10);
 
   return (
     <section>
@@ -166,7 +168,9 @@ async function BokKalendar({ slug }: { slug: string }) {
 }
 
 async function BokNovinky({ slug }: { slug: string }) {
-  const clanky = await nactiClanky(slug, { limit: 4 });
+  // Pět posledních (Filip, 16. 9. 2026). Pod novinky přijde widget ČHMÚ,
+  // proto ne víc, i když má bok výšku.
+  const clanky = await nactiClanky(slug, { limit: 5 });
   if (!clanky || clanky.length === 0) return null;
 
   return (
@@ -221,6 +225,8 @@ async function BokAkce({ slug }: { slug: string }) {
           </span>
         </span>
       </Link>
+      {/* Počasí na místě pro termín akce (Filip, 16. 9. 2026). */}
+      <PocasiAkce datum={termin.datum} nazev={termin.nazev} />
     </section>
   );
 }

@@ -950,7 +950,18 @@ th.vlevo, td.vlevo { text-align: left; }
 .karusel:focus-within .karusel-pas { animation-play-state: paused; }
 
 /* V boku: okno na tři řádky pevné výšky, pás jede nahoru. */
-.karusel-svisly { --radek: 1.6rem; height: calc(var(--radek) * 3); margin-top: 0.4rem; }
+/* Počasí z Windy pod plakátem akce. Rámeček je vysoký, aby se pod mapu
+   vešel detail předpovědi po hodinách. */
+.bok-pocasi { margin-top: 0.75rem; }
+.bok-pocasi iframe {
+  display: block; width: 100%; height: 28rem; border: 0; border-radius: 10px;
+  background: var(--zvyrazneni);
+}
+.bok-pocasi-zdroj { margin: 0.35rem 0 0; font-size: 0.75rem; color: var(--tlumeny); }
+.bok-pocasi-pozde { margin: 0.75rem 0 0; font-size: 0.8rem; color: var(--tlumeny); }
+
+/* Šest řádků, stejně jako VIDET_V_BOKU v karusel-poradi.tsx. */
+.karusel-svisly { --radek: 1.6rem; height: calc(var(--radek) * 6); margin-top: 0.4rem; }
 .karusel-svisly .karusel-pas { gap: 0; margin: 0; }
 .karusel-svisly li { height: var(--radek); align-items: center; }
 .karusel-svisly.jede { mask-image: linear-gradient(transparent, #000 10%, #000 90%, transparent); }

@@ -18,8 +18,11 @@ import { ZnakTridy } from "@/app/tridy";
 type Trida = PoradiSerie["kategorie"][number];
 type Lod = Trida["lode"][number];
 
-/** V boku jsou vidět tři řádky, stejně jako dřív první trojice. */
-const VIDET_V_BOKU = 3;
+/**
+ * V boku je vidět šest řádků (Filip, 16. 9. 2026: v bocích využít výšku,
+ * aspoň dvakrát víc obsahu). Musí sedět s výškou okna v CSS.
+ */
+const VIDET_V_BOKU = 6;
 
 function Lode({ lode, kopie }: { lode: Lod[]; kopie?: boolean }) {
   return lode.map((l) => (
