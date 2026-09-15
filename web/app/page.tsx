@@ -100,11 +100,11 @@ export default async function Rozcestnik() {
         </div>
       <section className="hero">
         <div className="hero-text">
-          <h1>Orlický pohár</h1>
-          <p>
-            Seriál závodů plachetnic na Orlické přehradě. Devět zastávek, tři
-            kategorie, jedno průběžné pořadí.
-          </p>
+          {/* Nahoře jen dva řádky, vlevo dole (Filip, 15. 9. 2026). Název
+              nese logo v hlavičce; nadpis stránky zůstává pro čtečky
+              a vyhledávače, jen není vidět. */}
+          <h1 className="skryte">Orlický pohár</h1>
+          <p className="hero-kicker">Seriál závodů plachetnic · Orlická přehrada</p>
           {stav && (
             <p className="hero-zivot">
               {stav.odjeto > 0 && (
@@ -116,16 +116,8 @@ export default async function Rozcestnik() {
               {stav.dalsi && <span>Další: {stav.dalsi}</span>}
             </p>
           )}
-          {aktualni && (
-            <p className="hero-odkazy">
-              <Link className="tlacitko" href={`/serie/${aktualni.slug}`}>
-                Ročník {aktualni.rok}
-              </Link>
-              <Link className="tlacitko druhotne" href={`/serie/${aktualni.slug}/poradi`}>
-                Průběžné pořadí
-              </Link>
-            </p>
-          )}
+          {/* Tlačítka Ročník a Průběžné pořadí jsou v hlavičce na každé
+              stránce (Filip, 15. 9. 2026). */}
         </div>
         <p className="kredit">Foto Jiří Tašl</p>
       </section>

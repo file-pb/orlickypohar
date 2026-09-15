@@ -86,9 +86,50 @@ header.hlavicka a.znacka { display: inline-flex; align-items: center; gap: 0.55r
    narostl — v rozvržení zabírá pořád původní výšku a přesahuje dolů přes
    linku hlavičky. Nahoru přesahovat nemůže: hlavička je přilepená k hornímu
    okraji okna a všechno nad ní by se ořízlo. */
-header.hlavicka a.znacka img {
-  display: block; width: 78px; height: 78px; margin-bottom: -26px;
-  position: relative; z-index: 1;
+/* Logo ve dvou verzích (Filip, 15. 9. 2026): na monitoru nápis zpod
+   plachet, na mobilu čtvercová značka s vodoznakem. Vykreslí se obě a CSS
+   jednu schová. Obě dostanou záporný spodní okraj, takže řádek menu
+   nenaroste, i když logo přesahuje přes linku. */
+header.hlavicka a.znacka svg.logo { display: block; position: relative; z-index: 1; }
+header.hlavicka a.znacka svg.logo-monitor { height: 64px; width: auto; margin-bottom: -12px; }
+header.hlavicka a.znacka svg.logo-mobil { display: none; width: 72px; height: 72px; margin-bottom: -24px; }
+@media (max-width: 48rem) {
+  header.hlavicka a.znacka svg.logo-monitor { display: none; }
+  header.hlavicka a.znacka svg.logo-mobil { display: block; }
+}
+.logo {
+  --logo-hlavni: #12344e; --logo-druha: #c41e3a; --logo-seda: #ced2d6;
+  --logo-napis: #12344e;
+}
+.logo-hlavni, .logo-oblouk { fill: var(--logo-hlavni); }
+.logo-druha { fill: var(--logo-druha); }
+.logo-seda { fill: var(--logo-seda); }
+/* Nápis malinko průhledný, aby nepřebil plachty (Filip, 15. 9. 2026).
+   Stejná hodnota je v ikona.py pro SVG soubory. */
+.logo-napis { fill: var(--logo-napis); fill-opacity: 0.82; }
+.logo-vodoznak { fill: var(--logo-hlavni); fill-opacity: 0.18; }
+.logo-vodoznak-na-plachte { fill: #fff; fill-opacity: 0.38; }
+
+/* Znak bez nápisu jako slabý rozostřený vodoznak pod obsahem ostatních
+   stránek (Filip, 15. 9. 2026). Fotografická finta s hloubkou ostrosti:
+   neostrý tvar vzadu dělá z plochého pozadí prostor pod obsahem. Leží
+   pevně v rohu okna, takže se při rolování nehýbe s textem. Úvod ho nemá,
+   tam hloubku dělá fotka. */
+.pozadi-znak {
+  position: fixed; z-index: -1; pointer-events: none;
+  right: -6vw; bottom: -8vh; width: min(78vw, 60rem); height: auto;
+  opacity: 0.07; filter: blur(4px);
+}
+body:has(.uvod) .pozadi-znak { display: none; }
+@media (prefers-color-scheme: dark) {
+  .pozadi-znak { opacity: 0.09; }
+}
+@media (prefers-color-scheme: dark) {
+  /* Tytéž odstíny jako u znaků tříd: tmavě modrá by na tmavém zmizela. */
+  /* Šedá je tu světlejší než u znaku Pod7m, v logu se jinak mezi modrou
+     a červenou ztrácela (Filip, 15. 9. 2026). */
+  .logo { --logo-hlavni: #7fa7c9; --logo-druha: #e25a6d; --logo-seda: #c4ced8; --logo-napis: #edeae5; }
+  .logo-vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
 }
 header.hlavicka nav { display: flex; gap: 1rem; flex: none; }
 header.hlavicka nav a { color: var(--tlumeny); font-weight: 500; font-size: 0.9rem; }
@@ -96,8 +137,6 @@ header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
 /* Na úzkém displeji zůstane jen značka — tři odkazy a název se do řádku
    nevejdou a menu je důležitější než wordmark. */
 @media (max-width: 26rem) {
-  header.hlavicka a.znacka span { display: none; }
-  header.hlavicka a.znacka img { width: 72px; height: 72px; margin-bottom: -24px; }
   header.hlavicka nav { gap: 0.85rem; }
 }
 
@@ -106,7 +145,7 @@ header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
 @media (min-width: 1180px) {
   header.hlavicka .obal { padding-top: 0.2rem; padding-bottom: 0.2rem; }
   header.hlavicka a.znacka { font-size: 1.05rem; }
-  header.hlavicka a.znacka img { width: 96px; height: 96px; margin-bottom: -32px; }
+  header.hlavicka a.znacka svg.logo-monitor { height: 76px; margin-bottom: -24px; }
   header.hlavicka nav { gap: 0.35rem; align-items: center; }
   header.hlavicka nav > a {
     padding: 0.4rem 0.7rem; border-radius: 8px; font-size: 0.925rem;
@@ -128,8 +167,14 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
    postupně. Pod obsahem se ztmavuje barvou pozadí, ne černou: ve světlém
    režimu by tmavý závoj pod tmavým textem čitelnost rozbil. */
 .uvod {
-  --hero: clamp(260px, 46vh, 460px);
+  /* Pás nahoře je na třetinu původní výšky (Filip, 15. 9. 2026): nese jen
+     dva řádky a fotka pokračuje za obsahem. Na telefonu se řádky lámou,
+     proto tam vyšší. */
+  --hero: clamp(150px, 16vh, 165px);
   position: relative; isolation: isolate;
+}
+@media (max-width: 32rem) {
+  .uvod { --hero: 200px; }
 }
 .hero {
   position: relative; margin: -2rem calc(50% - 50vw) 2.5rem;
@@ -147,6 +192,11 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
   content: ""; position: absolute; inset: 0;
   background: linear-gradient(
     to bottom,
+    /* Krátký přechod hned pod hlavičkou, aby logo nezanikalo ve fotce
+       (Filip, 15. 9. 2026). Barvou pozadí: ve tmavém ztmaví, ve světlém
+       zesvětlí — pokaždé proti barvě loga. */
+    color-mix(in srgb, var(--pozadi) 85%, transparent) 0,
+    transparent 3.5rem,
     transparent calc(var(--hero) * 0.45),
     rgba(10, 20, 26, 0.86) calc(var(--hero) + 2rem),
     color-mix(in srgb, var(--pozadi) 86%, transparent) calc(var(--hero) + 2rem + 8rem),
@@ -191,13 +241,26 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
   .hero-fotky picture:first-child { opacity: 1; }
 }
 .hero-text {
-  position: absolute; left: 0; right: 0; bottom: 0; padding: 2.5rem 1.25rem 1.5rem;
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 1rem 1.25rem 1.25rem;
   /* Kontrast textu drží přechod ve vrstvě fotky (`.hero-fotky::after`). */
   color: #fff;
 }
 .hero-text > * { max-width: var(--sirka); margin-left: auto; margin-right: auto; }
-.hero-text h1 { font-size: clamp(1.9rem, 6vw, 3rem); margin: 0 0 0.35rem; color: #fff; }
+/* Úvod nese jen dva řádky, vlevo dole: nadtitulek s červenou linkou
+   z loga a živou větu (Filip, 15. 9. 2026). Název je v logu hlavičky,
+   velký nadpis by ho jen opakoval. */
 .hero-text p { margin: 0; color: rgba(255, 255, 255, 0.88); }
+/* Skryté na oko, ne pro čtečku obrazovky a vyhledávač. */
+.skryte {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.hero-kicker {
+  display: flex; align-items: center; gap: 0.7rem;
+  font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+.hero-kicker::before { content: ""; width: 2.2rem; height: 2px; background: #c41e3a; flex: none; }
 /* Živá věta: co se právě děje. Odděleno tečkami, na telefonu se zalomí. */
 .hero-zivot {
   display: flex; flex-wrap: wrap; gap: 0.15rem 0.9rem;
@@ -211,7 +274,6 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
   .hero-zivot span + span::before { content: none; }
 }
 
-.hero-odkazy { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 1rem !important; }
 .tlacitko.druhotne { background: rgba(255, 255, 255, 0.16); backdrop-filter: blur(2px); }
 .kredit {
   position: absolute; right: 0.6rem; top: 0.5rem; margin: 0;
@@ -336,6 +398,14 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
   margin: 0.4rem 0 0; color: var(--tlumeny); font-size: 0.925rem; line-height: 1.55;
 }
 .novinky-blok { margin-top: 3rem; }
+/* Střed vedle boků začíná v rovině s nimi a nadpis má podobu nadpisů
+   boků. Dřív byl nadpis Novinek o 48 px níž než nadpisy boků a první
+   karty šly cikcak (Filip, 15. 9. 2026: jednotný design). */
+.s-boky-stred > .novinky-blok:first-child { margin-top: 0; }
+.novinky-blok > h2 {
+  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--tlumeny); margin: 0 0 0.6rem; font-weight: 600;
+}
 
 /* Text článku je užší než tabulky. Řádek přes celou šířku stránky se čte
    špatně — tabulka výsledků ji potřebuje, souvislý text ne. */
@@ -497,6 +567,12 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
   color: var(--text); font-size: 0.9rem; font-weight: 500;
 }
 .menu .nabidka a:hover { background: var(--zvyrazneni); text-decoration: none; }
+/* Ročník a pořadí: na širokém v řádku hlavičky, na úzkém v kebabu. */
+header.hlavicka .jen-uzke { display: none; }
+@media (max-width: 48rem) {
+  header.hlavicka .jen-siroke { display: none; }
+  header.hlavicka .jen-uzke { display: block; }
+}
 
 /* Správa oprávnění. Formulář i tabulka jsou serverové, takže tu nejsou
    žádné stavy „ukládám" — po odeslání přijde nová stránka s hláškou. */

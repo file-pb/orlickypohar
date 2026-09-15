@@ -12,7 +12,7 @@ import { ZavriMimo } from "@/app/zavri-mimo";
  * Postavené stejně jako profil: `<details>` rozbalí prohlížeč sám a
  * `ZavriMimo` jen doplní zavření klepnutím jinam a na Escape.
  */
-export function Menu() {
+export function Menu({ rocnik }: { rocnik?: { slug: string; rok: number } }) {
   return (
     <details className="menu">
       <ZavriMimo />
@@ -20,6 +20,18 @@ export function Menu() {
         <span aria-hidden="true">⋮</span>
       </summary>
       <div className="nabidka">
+        {/* Na širokém displeji stojí ročník a pořadí v hlavičce, na úzkém
+            se nevejdou a jsou tady. */}
+        {rocnik && (
+          <>
+            <Link className="jen-uzke" href={`/serie/${rocnik.slug}`}>
+              Ročník {rocnik.rok}
+            </Link>
+            <Link className="jen-uzke" href={`/serie/${rocnik.slug}/poradi`}>
+              Průběžné pořadí
+            </Link>
+          </>
+        )}
         <Link href="/historie">Historie</Link>
         <Link href="/pravidla">Pravidla</Link>
         <Link href="/appka">Appka</Link>

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prihlasovaniJde } from "@/lib/oidc";
+import { nactiSerie } from "@/lib/api";
 import { maSezeni, nactiJa } from "@/lib/ja";
 import { Domu } from "@/app/domu";
 import { Menu } from "@/app/menu";
+import { Logo, ZnakPozadi } from "@/app/logo";
 import { Profil } from "@/app/profil";
 import { Partneri } from "@/app/partneri";
 import "./globals.css";
@@ -37,6 +39,11 @@ export default async function Layout({ children }: { children: React.ReactNode }
   // Cookie bez platného tokenu je vlastní stav, ne „nepřihlášený". Kdyby se
   // slil s ním, nabízel by web přihlášení někomu, kdo se nemůže odhlásit.
   const sezeni = ja ? true : await maSezeni();
+  // Nejnovější ročník pro odkazy v hlavičce. Výpadek API hlavičku shodit
+  // nesmí, odkazy se jen vynechají.
+  const rocnik = await nactiSerie()
+    .then((serie) => serie?.[0])
+    .catch(() => undefined);
 
   return (
     <html lang="cs">
@@ -45,13 +52,13 @@ export default async function Layout({ children }: { children: React.ReactNode }
             stránky se renderují serverem a kvůli jednomu tlačítku nemá smysl
             tahat na klienta hydrataci. */}
         <span id="nahoru" />
+        <ZnakPozadi />
         <header className="hlavicka">
           <div className="obal">
             {/* Značka je tatáž jako ikona appky — kreslí ji app/scripts/ikona.py,
                 aby existovala jedna, ne dvě podobné. */}
-            <Link className="znacka" href="/">
-              <img src="/logo.png" alt="" width={64} height={64} />
-              <span>Orlický pohár</span>
+            <Link className="znacka" href="/" aria-label="Orlický pohár — úvodní stránka">
+              <Logo />
             </Link>
             {/* Podtitulek tu byl nadbytečný — totéž stojí hned pod fotkou. */}
             <nav>
@@ -59,8 +66,20 @@ export default async function Layout({ children }: { children: React.ReactNode }
                   z ní jen logo. Vypsaný odkaz stojí jedno slovo. Na samotné
                   domovské stránce mizí: odkaz sám na sebe je jen šum. */}
               <Domu />
-              {/* Historie, Pravidla a Appka jsou v kebabu (Filip, 15. 9. 2026). */}
-              <Menu />
+              {/* Ročník a pořadí jsou nejčastější cesta dál (Filip, 15. 9. 2026).
+                  Na úzkém displeji se nevejdou a jdou do kebabu, kde jsou
+                  i Historie, Pravidla a Appka. */}
+              {rocnik && (
+                <>
+                  <Link className="jen-siroke" href={`/serie/${rocnik.slug}`}>
+                    Ročník {rocnik.rok}
+                  </Link>
+                  <Link className="jen-siroke" href={`/serie/${rocnik.slug}/poradi`}>
+                    Průběžné pořadí
+                  </Link>
+                </>
+              )}
+              <Menu rocnik={rocnik} />
               {/* Přihlášení se nabízí, jen když je nastavené. Odkaz na
                   neexistující tok by byl slib, který web nesplní. */}
               {prihlasovaniJde &&
