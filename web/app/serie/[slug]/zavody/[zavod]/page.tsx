@@ -18,6 +18,7 @@ import { VypisNovinek } from "@/app/novinky";
 import { Drobecky } from "@/app/drobecky";
 import { Boky } from "@/app/boky";
 import { NadpisTridy, TabyTrid, vyberTridu } from "@/app/tridy";
+import { Medailonek, maObsah } from "@/app/medailonek";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -128,7 +129,16 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
       <p className="podtitulek">
         {akce && "Komunitní akce · "}
         {datum(zavod.datum, zavod.datumKonce)}
-        {zavod.poradatel && ` · pořádá ${zavod.poradatel}`}
+        {zavod.poradatel &&
+          (maObsah(zavod.medailonek) ? (
+            // Jméno vede na medailonek níž na stránce — tam je web i kontakt.
+            <>
+              {" · pořádá "}
+              <a href="#poradatel">{zavod.poradatel}</a>
+            </>
+          ) : (
+            ` · pořádá ${zavod.poradatel}`
+          ))}
         {/* Přesun není vlastní stav — přesunutá zastávka je pořád plánovaná,
             jen jindy. Termín, na který se lidé chystali, ale nemá smysl
             zahodit. */}
@@ -151,6 +161,7 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
           ) : (
             <p className="prazdno">K akci zatím nic nevyšlo.</p>
           )}
+          {maObsah(zavod.medailonek) && <Medailonek poradatel={zavod.medailonek} />}
         </>
       ) : (
         <>
@@ -203,6 +214,10 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
           <VypisNovinek serie={slug} clanky={clanky} />
         </>
       )}
+
+      {/* Pořadatel před pravidly: kdo chce jet, hledá nejdřív, kdo to
+          pořádá a kam se ozvat; škrty a koeficient čte ten, kdo už jel. */}
+      {maObsah(zavod.medailonek) && <Medailonek poradatel={zavod.medailonek} />}
 
       <h2>Pravidla závodu</h2>
       <dl className="pravidla">

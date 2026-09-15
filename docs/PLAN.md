@@ -690,10 +690,10 @@ a provozovatelé služeb na Orlíku, ale taky agentura pro charter na moři nebo
 charitativní organizace. Většina z nich má vlastní web a sociální sítě a bude
 je chtít na své stránce mít — je to pro ně důvod, proč do poháru jít.
 
-Dnes je `Zavod.Poradatel` volný text a pro fázi 1 to stačilo. Až se budou
-přidávat odkazy a logo, stane se z pořadatele vlastní záznam a text zůstane
-jako jeho jméno. Je to hranice, ne odklad: odkaz na Facebook se do textového
-pole vecpat dá, ale pak se z něj nikdy nedostane ven.
+Dřív byl `Zavod.Poradatel` volný text a pro fázi 1 to stačilo. **Od 15. 9.
+2026 je pořadatel vlastní záznam** a text zůstal jako jeho jméno — viz
+*Pořadatel jako záznam* ve fázi 6. Byla to hranice, ne odklad: odkaz na
+Facebook se do textového pole vecpat dá, ale pak se z něj nikdy nedostane ven.
 
 **Má to důsledek pro oprávnění, ne jen pro vzhled.** Pořadatel Radavské
 regaty smí psát na stránku Radavské regaty a nikam jinam. Je to přesně ten
@@ -1321,7 +1321,69 @@ prozradila závod, který ročník ještě nezveřejnil.
 |---|---|
 | ~~Psaní článků v administraci~~ | hotovo 11. 9. 2026 — `/sprava/{serie}/clanky` |
 | Fotky v článku | kurátorský set je zabalený ve webu (11. 9. 2026); vlastní fotka od pořadatele chce R2 |
-| Pořadatel jako záznam, ne text | až se budou přidávat odkazy a logo, viz *Jak se po webu chodí* |
+| ~~Pořadatel jako záznam, ne text~~ | hotovo 15. 9. 2026, viz *Pořadatel jako záznam* níž; vlastní obrázek pořadatele chce R2 |
+
+### Pořadatel jako záznam
+
+**Hotové 15. 9. 2026.** Filip chtěl u zastávky odkaz na web pořadatele
+(v nové kartě) a medailonek: kontakt, mapku, popis a obrázek. Příklad:
+Yacht Club Písek, `https://yachtclubpisek.cz/`.
+
+| Kus | Kde |
+|---|---|
+| Entita, pravidla (web, kontakt, souřadnice, kdo smí) — čisté funkce | `Features/Poradatele/Poradatel.cs` (`Medailonek`) |
+| Přiřazení podle jména, čtení a zápis | `Features/Poradatele/PoradateleSprava.cs` |
+| `GET`/`PUT /sprava/serie/{serie}/poradatele/{poradatel}` | `Features/Poradatele/PoradateleEndpoints.cs` |
+| Medailonek na stránce zastávky i akce | `web/app/medailonek.tsx` |
+| Obrazovka `/sprava/{serie}/poradatele/{poradatel}`, odkaz z kalendáře | `web/app/sprava/[serie]/poradatele/` |
+
+Rozhodnutí (Filip, 15. 9. 2026):
+
+1. **Vlastní záznam, společný všem ročníkům.** YC Orlík pořádá čtyři
+   zastávky a medailonek se píše jednou. `Zavod.PoradatelId` vede na
+   záznam, `Zavod.Poradatel` zůstává jako kopie jména kvůli appce na
+   telefonech a importu.
+2. **Upravuje rozhodčí ročníku, nebo organizátor zastávky, kterou klub
+   pořádá** (správce pokrývá obojí). Záznam je sdílený, takže organizátor
+   Izolepy upraví medailonek YC Orlík i u Jarního větru — vědomá cena;
+   obrazovka vypisuje, kde všude se změna projeví.
+3. **Mapka je odkaz, ne vložená mapa.** Ukládají se souřadnice, web z nich
+   skládá odkaz na Mapy.com a OpenStreetMap. Žádné cizí požadavky, žádný
+   souhlas, žádný javascript.
+4. **Kontakt: jméno, e-mail, telefon, adresa — jen vyplněné.** Jméno
+   a telefon jsou osobní údaje; obrazovka to u polí říká.
+5. **Obrázek zatím bez nahrávání.** U medailonku je kurátorská fotka
+   z Orlíku od Jiřího Tašla, vybraná podle klíče klubu a jen s kreditem
+   (není to fotka klubu). Vlastní obrázek přijde s R2 spolu s fotkami
+   k článkům.
+
+**Pořadatel vzniká ze jména, ne vlastním formulářem.** Kalendář i import
+posílají text jako dřív a `PoradateleSprava.PriradAsync` k němu najde, nebo
+založí záznam. **Páruje se podle slugu**, takže „YC Písek" a „yc pisek" jsou
+týž klub a text na zastávce dostane jméno záznamu. Jiné jméno v kalendáři
+přiřadí jiného pořadatele; **přejmenovat klub jde jen v medailonku** — a to
+přepíše jméno na všech jeho zastávkách a změní slug. Přejmenovat na jméno
+existujícího klubu nejde: sloučení je rozhodnutí o zastávkách, dělá se
+v kalendáři.
+
+**Adresu webu hlídá API, ne web.** Jde do `href`, takže se ukládá jen
+`http`/`https`; `javascript:` a spol. neprojdou, bez schématu se doplní
+`https://`. Web to kontroluje ještě jednou, než odkaz vypíše.
+
+**Import medailonek nenese ani nepřepisuje.** Píše se v administraci
+a nahrání ročníku by ho jinak smazalo — stejný důvod, proč import nemaže
+články.
+
+**Migrace naplnila záznamy ze stávajících jmen.** Slug v SQL (`translate`
+s českými znaky, protože `unaccent` na serveru být nemusí) musí vycházet
+stejně jako `Medailonek.Slug`; ověřeno na produkci, zastávky mají záznam.
+
+**Medailonek se ukáže, jen když má co říct nad rámec jména.** Samotné jméno
+stojí v podtitulku; když medailonek obsah má, jméno vede na něj (`#poradatel`).
+
+**Otevřené:** mock (`tools/gen-mock.py`) i produkční ročník nanečisto mají
+u Radavského poháru „LK Radava", Filip uvedl Yacht Club Písek. Čeká se na
+potvrzení, co platí.
 
 **Demo obsah je vymyšlený, ale nehádá.** Zpráva ze zastávky si bere vítěze
 z vygenerovaných výsledků, aby si text s tabulkou neodporoval — rozpor mezi
@@ -1573,9 +1635,10 @@ by znamenalo, že se vypisuje znovu, přitom se jen opravuje překlep — proto
 „Vrátit mezi vypsané". Že jde o návrat, ví jen ten, kdo zná dosavadní stav,
 takže se to rozhoduje ve webu, ne v API.
 
-**Přiřazování pořadatele zastávce tu schválně není.** V oddílu *Role a
-oprávnění* je ta věta označená jako odvozená a čeká na projití. Kalendář na
-ní nestojí: `Poradatel` je volný text, ne účet v systému.
+**Pořadatel se v kalendáři přiřazuje jménem** (od 15. 9. 2026): text
+najde, nebo založí záznam pořadatele a karta zastávky nabídne odkaz na jeho
+medailonek — viz *Pořadatel jako záznam* ve fázi 6. Roli organizátora
+zastávce dál uděluje obrazovka oprávnění; pořadatel není účet v systému.
 
 ### Workflow výsledků — jak je postavené
 
@@ -1827,7 +1890,9 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
    oprávnění (i rozhodčím na zastávku), kalendář zastávek, přihlášky lodí,
    workflow a zápis výsledků, psaní novinek. Protesty a penalizace čekají
    na odpovědi rozhodčího. Komunitní akce v kalendáři hotové 15. 9. Další
-   na řadě je **design** (oddíl *Podněty z 14. 9. 2026*).
+   na řadě je **design** (oddíl *Podněty z 14. 9. 2026*). Pořadatel jako
+   záznam s medailonkem hotový 15. 9.; vlastní obrázek pořadatele i fotky
+   k článkům čekají na R2.
 6. **Skutečná data** — až dorazí, nahradí `data/2025-mock.json` a nahrají se
    importem. Struktura zůstane.
 

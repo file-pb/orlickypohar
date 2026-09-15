@@ -1299,6 +1299,78 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/poradatele/{poradatel}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Medailonek pořadatele i s tím, jestli ho přihlášený smí upravit
+         * @description Rozhodčí ročníku, nebo organizátor aspoň jedné zastávky v ročníku. Pořadatel musí v ročníku pořádat aspoň jednu zastávku.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    poradatel: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PoradatelSpravaDto"];
+                    };
+                };
+            };
+        };
+        /**
+         * Uloží medailonek pořadatele
+         * @description Rozhodčí ročníku, nebo organizátor zastávky, kterou pořadatel pořádá. Záznam je společný všem ročníkům; přejmenování přepíše jméno na všech jeho zastávkách.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    poradatel: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PoradatelVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PoradatelSpravaDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1435,6 +1507,42 @@ export interface components {
             klic: string;
             jmeno: string;
             prijmeni: string;
+        };
+        PoradatelDto: {
+            slug: string;
+            nazev: string;
+            web: null | string;
+            popis: null | string;
+            email: null | string;
+            telefon: null | string;
+            kontaktniOsoba: null | string;
+            adresa: null | string;
+            /** Format: double */
+            sirka: null | number;
+            /** Format: double */
+            delka: null | number;
+        };
+        PoradatelSpravaDto: {
+            serie: string;
+            serieNazev: string;
+            poradatel: components["schemas"]["PoradatelDto"];
+            smiUpravit: boolean;
+            zastavky: components["schemas"]["ZastavkaPoradateleDto"][];
+            /** Format: int32 */
+            zastavekJinde: number;
+        };
+        PoradatelVstup: {
+            nazev: string;
+            web?: null | string;
+            popis?: null | string;
+            email?: null | string;
+            telefon?: null | string;
+            kontaktniOsoba?: null | string;
+            adresa?: null | string;
+            /** Format: double */
+            sirka?: null | number;
+            /** Format: double */
+            delka?: null | number;
         };
         PoradiKategorieDto: {
             kategorie: string;
@@ -1730,6 +1838,13 @@ export interface components {
             /** Format: int32 */
             poradi: number;
         };
+        ZastavkaPoradateleDto: {
+            slug: string;
+            nazev: string;
+            /** Format: date */
+            datum: string;
+            druh: components["schemas"]["DruhZastavky"];
+        };
         ZastavkaRadek: {
             slug: string;
             nazev: string;
@@ -1749,6 +1864,9 @@ export interface components {
             smiPublikovat: boolean;
             mozneStavy: components["schemas"]["StavZavodu"][];
             druh?: components["schemas"]["DruhZastavky"];
+            poradatelSlug?: null | string;
+            /** @default false */
+            smiMedailonek: boolean;
         };
         ZastavkaVolbaDto: {
             slug: string;
@@ -1798,6 +1916,7 @@ export interface components {
             poradi: components["schemas"]["VysledekZavoduDto"][];
             lode: components["schemas"]["UcastDto"][];
             druh?: components["schemas"]["DruhZastavky"];
+            medailonek?: null | components["schemas"]["PoradatelDto"];
         };
         ZavodShrnutiDto: {
             slug: string;

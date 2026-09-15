@@ -413,8 +413,78 @@ def zastavka_radek(z):
                ("slug", "nazev", "datum", "datumKonce", "typ", "poradatel", "poradi",
                 "stav", "puvodniDatum", "publikovano")},
             "smiUpravit": True, "smiPublikovat": True, "druh": z["druh"],
+            "poradatelSlug": poradatel_zastavky(z)["slug"] if poradatel_zastavky(z) else None,
+            "smiMedailonek": bool(poradatel_zastavky(z)),
             "mozneStavy": [s for s in VSECHNY_STAVY
                            if s != z["stav"] and not proc_nejde(z["stav"], s)]}
+
+
+# Pořadatelé jako záznam — v API `Features/Poradatele`. Páruje se podle
+# slugu jména, stejně jako `PoradateleSprava.PriradAsync`. Medailonek
+# Yacht Clubu Písek je vyplněný ukázkovými kontakty (example.cz, nuly),
+# aby šla vidět celá karta; skutečný je jen web.
+PORADATELE = {}
+
+
+def poradatel_zastavky(z):
+    """Záznam pořadatele zastávky, případně ho založí z textu."""
+    slug = bez_diakritiky_slug(z.get("poradatel") or "")[:80].rstrip("-")
+    if not slug:
+        return None
+    if slug not in PORADATELE:
+        PORADATELE[slug] = {"slug": slug, "nazev": z["poradatel"], "web": None, "popis": None,
+                            "email": None, "telefon": None, "kontaktniOsoba": None,
+                            "adresa": None, "sirka": None, "delka": None}
+    z["poradatel"] = PORADATELE[slug]["nazev"]
+    return PORADATELE[slug]
+
+
+PORADATELE["yacht-club-pisek"] = {
+    "slug": "yacht-club-pisek", "nazev": "Yacht Club Písek",
+    "web": "https://yachtclubpisek.cz/",
+    "popis": "Ukázkový popis pro falešné API.\n\nDruhý odstavec, ať je vidět, jak se text láme.",
+    "email": "info@example.cz", "telefon": "+420 000 000 000",
+    "kontaktniOsoba": "Ukázková Osoba", "adresa": "Ukázková adresa přístavu",
+    "sirka": 49.5086, "delka": 14.1735}
+
+
+def proc_nejde_medailonek(v):
+    """Opis `Medailonek.ProcNejdeUlozit` a `NormalizujWeb`. Vrací (web, chyba)."""
+    nazev = (v.get("nazev") or "").strip()
+    if not nazev:
+        return None, "Pořadatel musí mít název."
+    web = (v.get("web") or "").strip() or None
+    if web:
+        if ":" in web and "://" not in web:
+            return None, "Web musí být adresa stránky, třeba https://yachtclubpisek.cz."
+        if "://" not in web:
+            web = "https://" + web
+        if not re.match(r"^https?://[^\s/]+\.[^\s/]+", web):
+            return None, "Web musí být adresa stránky, třeba https://yachtclubpisek.cz."
+    email = (v.get("email") or "").strip()
+    if email and not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s.]+$", email):
+        return None, "E-mail nevypadá jako e-mailová adresa."
+    telefon = (v.get("telefon") or "").strip()
+    if telefon and (not re.match(r"^[0-9 +()/-]+$", telefon)
+                    or not 9 <= sum(c.isdigit() for c in telefon) <= 15):
+        return None, "Telefon může obsahovat číslice, mezery a „+“ a musí mít aspoň devět číslic."
+    s, d = v.get("sirka"), v.get("delka")
+    if (s is None) != (d is None):
+        return None, "Souřadnice musí mít obě čísla, šířku i délku."
+    if s is not None and not -90 <= s <= 90:
+        return None, "Zeměpisná šířka musí být mezi −90 a 90."
+    if d is not None and not -180 <= d <= 180:
+        return None, "Zeměpisná délka musí být mezi −180 a 180."
+    return web, None
+
+
+def poradatel_sprava(p):
+    return {"serie": D["slug"], "serieNazev": D["nazev"], "poradatel": p, "smiUpravit": True,
+            "zastavky": [{"slug": z["slug"], "nazev": z["nazev"], "datum": z["datum"],
+                          "druh": z["druh"]}
+                         for z in sorted(D["zavody"], key=lambda z: z["datum"])
+                         if poradatel_zastavky(z) is p],
+            "zastavekJinde": 0}
 
 
 def zastavka_ze_vstupu(vstup):
@@ -469,6 +539,8 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)$', cesta)):
             return self.uprav_zastavku(m.group(1))
 
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/poradatele/([a-z0-9-]+)$', cesta)):
+            return self.uloz_poradatele(m.group(1))
         m = re.match(rf'^/sprava/serie/{D["slug"]}/clanky/([a-z0-9-]+)$', cesta)
         if not m:
             return self.send_error(404)
@@ -708,6 +780,37 @@ class H(BaseHTTPRequestHandler):
         z["rozjizdky"].append(nova)
         return self.odpoved(rozjizdka_radek(nova), 201)
 
+    def uloz_poradatele(self, slug):
+        if not self.headers.get("authorization"):
+            return self.send_error(401)
+        p = PORADATELE.get(slug)
+        if not p or not poradatel_sprava(p)["zastavky"]:
+            return self.send_error(404)
+
+        v = self.telo_zadosti()
+        web, chyba = proc_nejde_medailonek(v)
+        if chyba:
+            return self.chyba(400, chyba)
+
+        nazev = v["nazev"].strip()
+        novy = bez_diakritiky_slug(nazev)[:80].rstrip("-")
+        if novy != slug and novy in PORADATELE:
+            return self.chyba(400, f"Pořadatel se jménem „{nazev}“ už existuje. "
+                                   "Zastávku mu přiřaď v kalendáři.")
+
+        # Přejmenování přepíše text na zastávkách a slug jde se jménem — jako v API.
+        zastavky = [z for z in D["zavody"] if poradatel_zastavky(z) is p]
+        text = lambda k: (v.get(k) or "").strip() or None
+        p.update({"slug": novy, "nazev": nazev, "web": web, "popis": text("popis"),
+                  "email": text("email"), "telefon": text("telefon"),
+                  "kontaktniOsoba": text("kontaktniOsoba"), "adresa": text("adresa"),
+                  "sirka": v.get("sirka"), "delka": v.get("delka")})
+        del PORADATELE[slug]
+        PORADATELE[novy] = p
+        for z in zastavky:
+            z["poradatel"] = nazev
+        return self.odpoved(poradatel_sprava(p))
+
     def zaloz_zastavku(self):
         if not self.headers.get("authorization"):
             return self.send_error(401)
@@ -936,6 +1039,14 @@ class H(BaseHTTPRequestHandler):
                 "zastavky": [zastavka_radek(z) for z in
                              sorted(D["zavody"], key=lambda z: z["poradi"])],
             }
+        elif (m := re.match(rf'^/sprava/serie/{D["slug"]}/poradatele/([a-z0-9-]+)$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            p = PORADATELE.get(m.group(1))
+            # Pořadatel, který v ročníku nic nepořádá, v něm neexistuje.
+            if not p or not poradatel_sprava(p)["zastavky"]:
+                return self.send_error(404)
+            telo = poradatel_sprava(p)
         elif cesta == f'/sprava/serie/{D["slug"]}/clanky':
             if not self.headers.get("authorization"):
                 return self.send_error(401)
@@ -977,6 +1088,7 @@ class H(BaseHTTPRequestHandler):
                         "stav", "puvodniDatum", "pocetSkrtu", "vyhodnoceni",
                         "koeficientDoSerie")},
                     "druh": z["druh"],
+                    "medailonek": poradatel_zastavky(z),
                     "rozjizdky": [{
                         "cislo": r["cislo"], "startV": r["startV"], "stav": r["stav"],
                         "doSerie": r["doSerie"],

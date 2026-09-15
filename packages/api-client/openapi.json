@@ -1304,6 +1304,92 @@
                     }
                 }
             }
+        },
+        "/sprava/serie/{serie}/poradatele/{poradatel}": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Medailonek po\u0159adatele i s t\u00edm, jestli ho p\u0159ihl\u00e1\u0161en\u00fd sm\u00ed upravit",
+                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku, nebo organiz\u00e1tor aspo\u0148 jedn\u00e9 zast\u00e1vky v ro\u010dn\u00edku. Po\u0159adatel mus\u00ed v ro\u010dn\u00edku po\u0159\u00e1dat aspo\u0148 jednu zast\u00e1vku.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "poradatel",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PoradatelSpravaDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Ulo\u017e\u00ed medailonek po\u0159adatele",
+                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku, nebo organiz\u00e1tor zast\u00e1vky, kterou po\u0159adatel po\u0159\u00e1d\u00e1. Z\u00e1znam je spole\u010dn\u00fd v\u0161em ro\u010dn\u00edk\u016fm; p\u0159ejmenov\u00e1n\u00ed p\u0159ep\u00ed\u0161e jm\u00e9no na v\u0161ech jeho zast\u00e1vk\u00e1ch.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "poradatel",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PoradatelVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PoradatelSpravaDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -1858,6 +1944,175 @@
                     },
                     "prijmeni": {
                         "type": "string"
+                    }
+                }
+            },
+            "PoradatelDto": {
+                "required": [
+                    "slug",
+                    "nazev",
+                    "web",
+                    "popis",
+                    "email",
+                    "telefon",
+                    "kontaktniOsoba",
+                    "adresa",
+                    "sirka",
+                    "delka"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "web": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "popis": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "email": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "telefon": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "kontaktniOsoba": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "adresa": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "sirka": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "delka": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    }
+                }
+            },
+            "PoradatelSpravaDto": {
+                "required": [
+                    "serie",
+                    "serieNazev",
+                    "poradatel",
+                    "smiUpravit",
+                    "zastavky",
+                    "zastavekJinde"
+                ],
+                "type": "object",
+                "properties": {
+                    "serie": {
+                        "type": "string"
+                    },
+                    "serieNazev": {
+                        "type": "string"
+                    },
+                    "poradatel": {
+                        "$ref": "#/components/schemas/PoradatelDto"
+                    },
+                    "smiUpravit": {
+                        "type": "boolean"
+                    },
+                    "zastavky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ZastavkaPoradateleDto"
+                        }
+                    },
+                    "zastavekJinde": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "PoradatelVstup": {
+                "required": [
+                    "nazev"
+                ],
+                "type": "object",
+                "properties": {
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "web": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "popis": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "email": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "telefon": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "kontaktniOsoba": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "adresa": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "sirka": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "delka": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
                     }
                 }
             },
@@ -3058,6 +3313,30 @@
                     }
                 }
             },
+            "ZastavkaPoradateleDto": {
+                "required": [
+                    "slug",
+                    "nazev",
+                    "datum",
+                    "druh"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "datum": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "druh": {
+                        "$ref": "#/components/schemas/DruhZastavky"
+                    }
+                }
+            },
             "ZastavkaRadek": {
                 "required": [
                     "slug",
@@ -3136,6 +3415,16 @@
                     },
                     "druh": {
                         "$ref": "#/components/schemas/DruhZastavky"
+                    },
+                    "poradatelSlug": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "smiMedailonek": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -3320,6 +3609,16 @@
                     },
                     "druh": {
                         "$ref": "#/components/schemas/DruhZastavky"
+                    },
+                    "medailonek": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PoradatelDto"
+                            }
+                        ]
                     }
                 }
             },

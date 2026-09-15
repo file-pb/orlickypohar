@@ -254,6 +254,14 @@ function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek 
       <div className="detail">
         {datum(zastavka.datum, zastavka.datumKonce)}
         {zastavka.poradatel && ` · ${zastavka.poradatel}`}
+        {/* Medailonek je u klubu, ne u zastávky, ale kalendář je jediné
+            místo, odkud se k pořadateli dá dojít. */}
+        {zastavka.poradatelSlug && zastavka.smiMedailonek && (
+          <>
+            {" · "}
+            <Link href={`/sprava/${serie}/poradatele/${zastavka.poradatelSlug}`}>medailonek →</Link>
+          </>
+        )}
         {zastavka.puvodniDatum && (
           <span className="presun"> · přesunuto z {datum(zastavka.puvodniDatum)}</span>
         )}

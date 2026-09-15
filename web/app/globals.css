@@ -525,6 +525,36 @@ th.vlevo, td.vlevo { text-align: left; }
   background: var(--voda); color: var(--papir);
 }
 
+.formular > h2 { margin: 0.6rem 0 0; font-size: 1.05rem; }
+
+/* Medailonek pořadatele na stránce zastávky.
+
+   Fotka vedle textu, na telefonu nad ním. Fotka je ilustrační (není to
+   fotka klubu), proto je malá a text má přednost — kdo hledá kontakt,
+   nemá ho hledat pod velkým obrázkem. */
+.medailonek {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem;
+  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+  padding: 1rem; margin: 2.5rem 0 1.5rem;
+  scroll-margin-top: 1rem;
+}
+@media (min-width: 40rem) {
+  .medailonek { grid-template-columns: 12rem minmax(0, 1fr); gap: 1.25rem; }
+}
+.medailonek-foto { margin: 0; }
+.medailonek-foto img {
+  display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px;
+}
+.medailonek-foto figcaption { color: var(--tlumeny); font-size: 0.72rem; margin-top: 0.3rem; }
+.medailonek-stitek {
+  margin: 0; color: var(--tlumeny); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em;
+}
+.medailonek h2 { margin: 0.1rem 0 0.6rem; }
+.medailonek-text > p:not(.medailonek-stitek) { line-height: 1.65; margin: 0 0 0.8rem; max-width: 38rem; }
+.medailonek-kontakt { margin-top: 0.9rem; }
+.medailonek-kontakt dd { overflow-wrap: anywhere; }
+.ven { color: var(--tlumeny); font-size: 0.85em; }
+
 /* Přepínače stavu. Malá tlačítka v řádku — každé je vlastní formulář,
    protože bez javascriptu se jinak víc akcí do jednoho nevejde. */
 .stavy { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.7rem; }
