@@ -1,27 +1,32 @@
 /**
- * Počasí u Radavy a Velkého víru pro nadcházející akci, z Windy
+ * Počasí u Radavy a Velkého víru pod nejbližší akcí, z Windy
  * (Filip, 16. 9. 2026).
  *
  * <b>Bod předpovědi je mezi Radavou a Velkým vírem.</b> Obě místa leží
  * naproti sobě přes Orlík asi kilometr od sebe (Radava 49,511 N 14,165 E,
  * Velký vír 49,521 N 14,164 E), takže jedna předpověď platí pro obě.
  *
- * <b>Předpověď je jen na šest dní dopředu.</b> Bezplatné vložení Windy
- * drží 144 hodin, dál je předpověď placená. Vzdálenější akce proto widget
- * nedostane: prázdná mapa bez termínu akce by jen tahala data. Místo něj
- * se řekne, od kdy se předpověď objeví.
+ * <b>Widget je vidět vždycky, liší se popisek.</b> Akce, která je v pásu
+ * předpovědi pod mapou, dostane větu, který den hledat. Vzdálenější akce
+ * dostane aktuální předpověď: předpověď na víc než šest dní nemá validitu
+ * (Filip, 16. 9. 2026).
  *
- * Widget se otevírá na „teď" s detailem předpovědi pro bod po hodinách.
- * Posun rovnou na termín akce by šel parametrem `calendar`, ale jeho
- * hodnoty Windy nikde nepopisuje a spoléhat na odhad nechceme — den akce
- * je v detailu vidět tak jako tak.
+ * <b>Pás má pět dní: dnešek a čtyři další.</b> Změřeno 16. 9. 2026 přímo
+ * ve vloženém Windy — středa 16. až neděle 20., do strany se posouvá, dál
+ * nesahá. Hranice je proto čtyři dny, ne šest: akce za pět nebo šest dní
+ * by v pásu nebyla, i když Windy data na 144 hodin má.
+ *
+ * <b>Mapa se na termín akce posunout nedá.</b> Parametr `calendar` Windy
+ * nepopisuje a zkouška 16. 9. 2026 ukázala, že `calendar=48` ukazuje tentýž
+ * čas jako `calendar=now`. Den akce proto ukazuje pás předpovědi, ne mapa.
  *
  * Rámeček se načítá líně: Windy stahuje stovky kilobajtů skriptů a dlaždic
  * mapy, a kdo k boku nedoroluje, nemá je platit.
  */
 
 const BOD = { lat: 49.516, lon: 14.165 };
-const DNU_PREDPOVEDI = 6;
+/** Kolik dní po dnešku ukazuje pás předpovědi pod mapou. */
+const DNU_V_PASU = 4;
 
 const ADRESA =
   "https://embed.windy.com/embed2.html?" +
@@ -58,28 +63,33 @@ const MESICE = [
   "ledna", "února", "března", "dubna", "května", "června",
   "července", "srpna", "září", "října", "listopadu", "prosince",
 ];
+/** „v sobotu", „ve středu" — den akce ve větě. */
+const VE_DNI = ["v neděli", "v pondělí", "v úterý", "ve středu", "ve čtvrtek", "v pátek", "v sobotu"];
 
 export function PocasiAkce({ datum, nazev }: { datum: string; nazev: string }) {
-  const zbyva = dnuMezi(dnesVPraze(), datum.slice(0, 10));
-
-  if (zbyva > DNU_PREDPOVEDI) {
-    const od = new Date(Date.parse(`${datum.slice(0, 10)}T00:00:00Z`) - DNU_PREDPOVEDI * 86_400_000);
-    return (
-      <p className="bok-pocasi-pozde">
-        Předpověď počasí u Radavy a Velkého víru se tu objeví {od.getUTCDate()}.{" "}
-        {MESICE[od.getUTCMonth()]}, šest dní před akcí.
-      </p>
-    );
-  }
+  const den = datum.slice(0, 10);
+  const zbyva = dnuMezi(dnesVPraze(), den);
+  const d = new Date(`${den}T00:00:00Z`);
+  const kdy = `${d.getUTCDate()}. ${MESICE[d.getUTCMonth()]}`;
+  const vPredpovedi = zbyva >= 0 && zbyva <= DNU_V_PASU;
 
   return (
     <div className="bok-pocasi">
       <iframe
         src={ADRESA}
-        title={`Předpověď počasí u Radavy a Velkého víru pro ${nazev} (Windy)`}
+        title={`Předpověď počasí u Radavy a Velkého víru (Windy)`}
         loading="lazy"
       />
-      <p className="bok-pocasi-zdroj">Radava a Velký vír · předpověď Windy</p>
+      <p className="bok-pocasi-zdroj">
+        {vPredpovedi ? (
+          <>
+            {nazev} {VE_DNI[d.getUTCDay()]} {kdy} najdeš v pásu předpovědi.
+          </>
+        ) : (
+          <>Aktuální předpověď. Akce {kdy} se v pásu objeví čtyři dny předem.</>
+        )}{" "}
+        Radava a Velký vír, Windy.
+      </p>
     </div>
   );
 }

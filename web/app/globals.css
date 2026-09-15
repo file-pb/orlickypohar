@@ -957,8 +957,7 @@ th.vlevo, td.vlevo { text-align: left; }
   display: block; width: 100%; height: 28rem; border: 0; border-radius: 10px;
   background: var(--zvyrazneni);
 }
-.bok-pocasi-zdroj { margin: 0.35rem 0 0; font-size: 0.75rem; color: var(--tlumeny); }
-.bok-pocasi-pozde { margin: 0.75rem 0 0; font-size: 0.8rem; color: var(--tlumeny); }
+.bok-pocasi-zdroj { margin: 0.35rem 0 0; font-size: 0.75rem; line-height: 1.45; color: var(--tlumeny); }
 
 /* Šest řádků, stejně jako VIDET_V_BOKU v karusel-poradi.tsx. */
 .karusel-svisly { --radek: 1.6rem; height: calc(var(--radek) * 6); margin-top: 0.4rem; }
