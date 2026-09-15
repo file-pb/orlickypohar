@@ -39,7 +39,8 @@ public static class OpravneniEndpoints
             .WithSummary("Vypíše oprávnění ročníku i zastávky, na které jdou udělit")
             .WithDescription(
                 "Vyžaduje roli správce, nebo rozhodčího v tom ročníku. Co smí udělit, " +
-                "říká SmiNaRocnik.");
+                "říká SmiNaRocnik. Ucty — účty, které se kdy přihlásily — dostane " +
+                "jen správce; rozhodčímu je null.");
 
         g.MapPost("/", UdelAsync)
             .Produces<OpravneniRadek>(StatusCodes.Status201Created)
@@ -72,9 +73,16 @@ public static class OpravneniEndpoints
 
         var spravce = await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Spravce, rozsah.SerieId), ct);
 
-        return await sprava.PrehledAsync(rozsah.SerieId, ct) is { } prehled
-            ? Results.Ok(prehled with { SmiNaRocnik = spravce })
-            : Neni(kdo);
+        if (await sprava.PrehledAsync(rozsah.SerieId, ct) is not { } prehled) return Neni(kdo);
+
+        // Seznam účtů nese e-maily lidí z celé aplikace, ne jen z tohoto
+        // ročníku. Rozhodčí přiřazuje pořadatele zastávkám a obejde se bez
+        // něj — na neexistující účet ho upozorní udělení.
+        return Results.Ok(prehled with
+        {
+            SmiNaRocnik = spravce,
+            Ucty = spravce ? await sprava.UctyAsync(ct) : null,
+        });
     }
 
     private static async Task<IResult> UdelAsync(

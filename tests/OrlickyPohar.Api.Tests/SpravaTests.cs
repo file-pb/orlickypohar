@@ -134,6 +134,23 @@ public class SpravaTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task Seznam_uctu_ukaze_kdo_se_prihlasil_a_kdy()
+    {
+        await PrihlasAsync("sub-seznam", "seznam@priklad.cz");
+
+        var ucty = await SpravaAsync(s => s.UctyAsync(default));
+
+        // Kvůli tomuhle seznam vznikl: roli jde dát jen tomu, kdo v něm je,
+        // a bez data posledního přihlášení se to dohledávalo v databázi.
+        var ucet = Assert.Single(ucty, u => u.Email == "seznam@priklad.cz");
+        Assert.NotNull(ucet.NaposledyPrihlasenV);
+
+        // Kdo tam není, tomu udělení odpoví „účet neexistuje". Obojí musí
+        // vycházet z téže tabulky, jinak by seznam sliboval, co udělení nesplní.
+        Assert.DoesNotContain(ucty, u => u.Email == "nikdo@priklad.cz");
+    }
+
+    [Fact]
     public async Task Bootstrap_se_zavre_prvnim_spravcem()
     {
         var (serieId, _) = await RocnikAsync("bootstrap");

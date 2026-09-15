@@ -185,8 +185,19 @@ OPRAVNENI = [{"id": 1, "uzivatelId": JA["id"], "zobrazovane": JA["zobrazovane"],
 # Účty, kterým jde roli udělit. Skutečné API zná jen ty, kdo se aspoň
 # jednou přihlásili — bez toho by se nedal vyzkoušet stav „účet neexistuje",
 # a ten je na obrazovce vidět nejčastěji.
-UCTY = {JA["email"]: JA["zobrazovane"], "petr@priklad.cz": "Petr Svoboda",
-        "jana@priklad.cz": "Jana Nováková"}
+#
+# Tvar je týž jako `ucty` v přehledu oprávnění. Jana se přihlásila, ale
+# nemá roli — přesně ten stav, kvůli kterému seznam vznikl.
+UCTY = {u["email"]: u for u in [
+    {**JA, "zalozenV": "2026-01-01T00:00:00+00:00",
+     "naposledyPrihlasenV": "2026-09-15T12:30:00+00:00"},
+    {"id": "01927f4e-0000-7000-8000-000000000002", "zobrazovane": "Petr Svoboda",
+     "email": "petr@priklad.cz", "zalozenV": "2026-03-02T08:00:00+00:00",
+     "naposledyPrihlasenV": "2026-09-10T17:05:00+00:00"},
+    {"id": "01927f4e-0000-7000-8000-000000000003", "zobrazovane": "Jana Nováková",
+     "email": "jana@priklad.cz", "zalozenV": "2026-09-14T19:40:00+00:00",
+     "naposledyPrihlasenV": "2026-09-14T19:40:00+00:00"},
+]}
 JEN_ROCNIK = ("Rozhodci", "Spravce")
 
 # Články pro administraci. Berou se z mocku a dál žijí v paměti procesu —
@@ -526,7 +537,8 @@ class H(BaseHTTPRequestHandler):
             return self.odpoved(stavajici)
 
         novy = {"id": max((o["id"] for o in OPRAVNENI), default=0) + 1,
-                "uzivatelId": JA["id"], "zobrazovane": UCTY[email], "email": email,
+                "uzivatelId": UCTY[email]["id"], "zobrazovane": UCTY[email]["zobrazovane"],
+                "email": email,
                 "role": role, "zavod": zavod, "udelenoV": "2026-01-01T00:00:00+00:00"}
         OPRAVNENI.append(novy)
         return self.odpoved(novy, 201)
@@ -877,8 +889,11 @@ class H(BaseHTTPRequestHandler):
                 # jsou venku.
                 "zastavky": [{"slug": z["slug"], "nazev": z["nazev"]} for z in D["zavody"]],
                 "opravneni": OPRAVNENI,
-                # Přihlášený vývojář je správce, takže smí i na celý ročník.
+                # Přihlášený vývojář je správce, takže smí i na celý ročník
+                # a vidí i seznam účtů. Naposledy přihlášení nahoře.
                 "smiNaRocnik": True,
+                "ucty": sorted(UCTY.values(), key=lambda u: u["naposledyPrihlasenV"],
+                               reverse=True),
             }
         elif cesta == f'/sprava/serie/{D["slug"]}/vysledky':
             if not self.headers.get("authorization"):

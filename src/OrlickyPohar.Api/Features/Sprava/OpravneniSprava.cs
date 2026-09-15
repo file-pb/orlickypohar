@@ -18,6 +18,23 @@ public record OpravneniRadek(
 public record ZastavkaVolbaDto(string Slug, string Nazev);
 
 /// <summary>
+/// Účet, který se aspoň jednou přihlásil — tedy účet, kterému jde roli dát.
+/// <para>
+/// Přibyl 15. 9. 2026: tři udělení skončila na „účet neexistuje", protože
+/// se ten člověk ještě nepřihlásil, a zjistit to šlo jen z databáze. Role
+/// v ročníku tu nejsou — obrazovka je spáruje přes <c>UzivatelId</c>
+/// s oprávněními, která v přehledu už jsou, a role z cizích ročníků se tím
+/// neprozradí.
+/// </para>
+/// </summary>
+public record UcetDto(
+    Guid Id,
+    string Zobrazovane,
+    string? Email,
+    DateTimeOffset ZalozenV,
+    DateTimeOffset? NaposledyPrihlasenV);
+
+/// <summary>
 /// Všechno, co obrazovka správy potřebuje: udělená oprávnění a seznam
 /// zastávek, na které jdou udělit.
 /// <para>
@@ -35,7 +52,11 @@ public record PrehledOpravneniDto(
     // Správce smí na celý ročník, rozhodčí jen pořadatele a editora
     // zastávky. Obrazovka podle toho nabídne role i rozsahy — nabízet volbu,
     // která skončí „nemáš práva", je slib naprázdno.
-    bool SmiNaRocnik = false);
+    bool SmiNaRocnik = false,
+    // Všechny účty, které se kdy přihlásily, i z jiných ročníků — jsou to
+    // e-maily lidí, kteří o tomhle ročníku nemusí vědět. Proto jen správci;
+    // rozhodčímu zůstává `null` a obrazovka seznam neukáže.
+    IReadOnlyList<UcetDto>? Ucty = null);
 
 /// <summary>Jak dopadlo udělení.</summary>
 public enum StavUdeleni
@@ -103,6 +124,18 @@ public class OpravneniSprava(AppDbContext db, TimeProvider cas)
         return new PrehledOpravneniDto(
             serie.Slug, serie.Nazev, zastavky, await SeznamAsync(serieId, ct));
     }
+
+    /// <summary>
+    /// Účty, kterým jde roli dát, naposledy přihlášené nahoře. Kdo se
+    /// přihlásil před chvílí, je nejspíš ten, komu se správce chystá roli
+    /// dát.
+    /// </summary>
+    public async Task<List<UcetDto>> UctyAsync(CancellationToken ct) =>
+        await db.Uzivatele
+            .OrderByDescending(u => u.NaposledyPrihlasenV ?? u.ZalozenV)
+            .ThenBy(u => u.Zobrazovane)
+            .Select(u => new UcetDto(u.Id, u.Zobrazovane, u.Email, u.ZalozenV, u.NaposledyPrihlasenV))
+            .ToListAsync(ct);
 
     /// <summary>Udělená oprávnění ročníku i jeho zastávek.</summary>
     public async Task<List<OpravneniRadek>> SeznamAsync(int serieId, CancellationToken ct) =>
