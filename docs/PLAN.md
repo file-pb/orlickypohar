@@ -1893,7 +1893,8 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
    na odpovědi rozhodčího. Komunitní akce v kalendáři hotové 15. 9. Další
    na řadě je **design** (oddíl *Podněty z 14. 9. 2026*). Pořadatel jako
    záznam s medailonkem hotový 15. 9.; vlastní obrázek pořadatele i fotky
-   k článkům čekají na R2.
+   k článkům čekají na R2. Seznam přihlášených účtů na obrazovce oprávnění
+   hotový 15. 9. (oddíl *Čím pokračovat ve fázi 5*).
 6. **Skutečná data** — až dorazí, nahradí `data/2025-mock.json` a nahrají se
    importem. Struktura zůstane.
 

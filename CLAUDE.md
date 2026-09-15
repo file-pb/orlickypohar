@@ -84,12 +84,23 @@ src/OrlickyPohar.Api/
   Data/AppDbContext.cs        jediný DbContext
   Features/Serial/            série, kategorie, přihlášky — celoroční rovina
   Features/Lode/              lodě a osoby
-  Features/Zavody/            závod, účast, rozjížďka, výsledek
+  Features/Zavody/            závod, účast, rozjížďka, výsledek; kalendář,
+                              přihlášky na zastávku, zápis a workflow výsledků
+  Features/Bodovani/          body závodu z rozjížděk, škrty, pořadí seriálu
+  Features/Import/            nahrání ročníku souborem, importní token
+  Features/Clanky/            novinky a články, jejich psaní a správa
+  Features/Poradatele/        pořadatel jako záznam s medailonkem
+  Features/Identita/          uživatel, vazby (issuer, subject), role, Prava
+  Features/Sprava/            udělování oprávnění, seznam přihlášených účtů
   Program.cs                  složení aplikace, mapování řezů
 
 web/                          veřejné stránky (Next.js, renderuje server)
   app/                        stránky podle cest
-  lib/api.ts                  typovaný přístup k API
+  app/sprava/[serie]/         administrace ročníku, serverová, bez javascriptu
+  lib/api.ts                  typovaný přístup k API, veřejné čtení
+  lib/sprava.ts               volání administrace s tokenem; další lib/*.ts
+                              po obrazovkách (kalendar, prihlasky, vysledky…)
+  lib/oidc.ts                 přihlášení, sezení v cookie
   lib/schema.d.ts             generované typy — needituj, viz packages/api-client
 app/                          mobilní appka (Expo, jen čtení)
   src/app/                    obrazovky, cesty podle souborů
