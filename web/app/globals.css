@@ -26,8 +26,15 @@
   :root { --sirka: 88rem; }
 }
 
+/* Tmavý vzhled platí ve dvou případech (Filip, 16. 9. 2026): systém je
+   tmavý a web není ručně přepnutý na světlý, nebo je tmavý vynucený
+   z přepínače. Proto má každé tmavé pravidlo dvě podoby — v media dotazu
+   s `:not([data-rezim="svetly"])` a pod `[data-rezim="tmavy"]`. Obě musí
+   zůstat stejné; rozejdou se jen tady. */
+:root { color-scheme: light; }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-rezim="svetly"]) {
+    color-scheme: dark;
     --pozadi: #14171a;
     --papir: #1b1f23;
     --text: #edeae5;
@@ -38,6 +45,18 @@
     --stav-vypsany: #58c98c;
     --stav-zruseny: #e2726a;
   }
+}
+:root[data-rezim="tmavy"] {
+  color-scheme: dark;
+  --pozadi: #14171a;
+  --papir: #1b1f23;
+  --text: #edeae5;
+  --tlumeny: #9aa3ac;
+  --linka: #2c3238;
+  --voda: #6bb3cc;
+  --zvyrazneni: #232830;
+  --stav-vypsany: #58c98c;
+  --stav-zruseny: #e2726a;
 }
 
 * { box-sizing: border-box; }
@@ -128,16 +147,18 @@ header.hlavicka a.znacka svg.logo-mobil { display: none; width: 72px; height: 72
   opacity: 0.07; filter: blur(4px);
 }
 body:has(.uvod) .pozadi-znak { display: none; }
+/* Tmavý vzhled loga a vodoznaku — ve dvou podobách, viz začátek souboru.
+   Tytéž odstíny jako u znaků tříd: tmavě modrá by na tmavém zmizela.
+   Šedá je tu světlejší než u znaku Pod7m, v logu se jinak mezi modrou
+   a červenou ztrácela (Filip, 15. 9. 2026). */
 @media (prefers-color-scheme: dark) {
-  .pozadi-znak { opacity: 0.09; }
+  :root:not([data-rezim="svetly"]) .pozadi-znak { opacity: 0.09; }
+  :root:not([data-rezim="svetly"]) .logo { --logo-hlavni: #7fa7c9; --logo-druha: #e25a6d; --logo-seda: #c4ced8; --logo-napis: #edeae5; }
+  :root:not([data-rezim="svetly"]) .logo-vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
 }
-@media (prefers-color-scheme: dark) {
-  /* Tytéž odstíny jako u znaků tříd: tmavě modrá by na tmavém zmizela. */
-  /* Šedá je tu světlejší než u znaku Pod7m, v logu se jinak mezi modrou
-     a červenou ztrácela (Filip, 15. 9. 2026). */
-  .logo { --logo-hlavni: #7fa7c9; --logo-druha: #e25a6d; --logo-seda: #c4ced8; --logo-napis: #edeae5; }
-  .logo-vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
-}
+:root[data-rezim="tmavy"] .pozadi-znak { opacity: 0.09; }
+:root[data-rezim="tmavy"] .logo { --logo-hlavni: #7fa7c9; --logo-druha: #e25a6d; --logo-seda: #c4ced8; --logo-napis: #edeae5; }
+:root[data-rezim="tmavy"] .logo-vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
 header.hlavicka nav { display: flex; gap: 1rem; flex: none; }
 header.hlavicka nav a { color: var(--tlumeny); font-weight: 500; font-size: 0.9rem; }
 header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
@@ -578,6 +599,37 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
   color: var(--text); font-size: 0.9rem; font-weight: 500;
 }
 .menu .nabidka a:hover { background: var(--zvyrazneni); text-decoration: none; }
+/* „Vzhled podle systému" je formulář, ale v nabídce vypadá jako položka. */
+.menu .nabidka form { margin: 0; border-top: 1px solid var(--linka); padding-top: 0.15rem; }
+.menu .nabidka button {
+  font: inherit; font-size: 0.9rem; width: 100%; text-align: left; cursor: pointer;
+  background: none; border: 0; border-radius: 7px; padding: 0.45rem 0.6rem; color: var(--tlumeny);
+}
+.menu .nabidka button:hover { background: var(--zvyrazneni); color: var(--text); }
+
+/* Přepínač vzhledu (Filip, 16. 9. 2026). Vykreslené jsou obě ikony a vidět
+   je ta, která vede k opačnému vzhledu, než je na obrazovce: měsíc ve
+   světlém, slunce v tmavém. Tmavý je buď ze systému (a nevynucený světlý),
+   nebo vynucený cookie — tatáž podmínka jako u barev níž. */
+.rezim { display: flex; }
+.rezim form { margin: 0; }
+.rezim button {
+  display: grid; place-items: center; width: 2rem; height: 2rem; padding: 0;
+  border: 0; border-radius: 999px; background: none; color: var(--tlumeny); cursor: pointer;
+}
+.rezim button:hover { background: var(--zvyrazneni); color: var(--text); }
+.rezim button:focus-visible { outline: 2px solid var(--voda); outline-offset: 2px; }
+.rezim svg { width: 1.1rem; height: 1.1rem; }
+.rezim-na-tmavy svg { fill: currentColor; }
+.rezim-na-svetly svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.rezim-na-svetly svg circle { fill: currentColor; stroke: none; }
+.rezim-na-svetly { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-rezim="svetly"]) .rezim-na-svetly { display: block; }
+  :root:not([data-rezim="svetly"]) .rezim-na-tmavy { display: none; }
+}
+:root[data-rezim="tmavy"] .rezim-na-svetly { display: block; }
+:root[data-rezim="tmavy"] .rezim-na-tmavy { display: none; }
 /* Ročník a pořadí: na širokém v řádku hlavičky, na úzkém v kebabu. */
 header.hlavicka .jen-uzke { display: none; }
 @media (max-width: 48rem) {
@@ -782,17 +834,23 @@ th.vlevo, td.vlevo { text-align: left; }
 }
 .znak-tridy .vodoznak { fill: var(--znak); fill-opacity: 0.16; }
 .znak-tridy .vodoznak-na-plachte { fill: #fff; fill-opacity: 0.38; }
+/* Tmavě modrá na tmavém podkladu zmizí, proto světlejší odstíny tříd.
+   Vodoznak na plachtě je naopak tmavý — světlý by na světlé plachtě
+   splynul. Ve dvou podobách, viz začátek souboru. */
 @media (prefers-color-scheme: dark) {
-  /* Tmavě modrá na tmavém podkladu zmizí, proto světlejší odstíny tříd.
-     Vodoznak na plachtě je naopak tmavý — světlý by na světlé plachtě
-     splynul. */
-  .znak-tridy { --znak-oblouk: #9fb4c6; }
-  .znak-race { --znak: #e25a6d; }
-  .znak-nad7m { --znak: #7fa7c9; }
-  .znak-pod7m { --znak: #a3b1bf; }
-  .znak-tridy .vodoznak { fill-opacity: 0.22; }
-  .znak-tridy .vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
+  :root:not([data-rezim="svetly"]) .znak-tridy { --znak-oblouk: #9fb4c6; }
+  :root:not([data-rezim="svetly"]) .znak-race { --znak: #e25a6d; }
+  :root:not([data-rezim="svetly"]) .znak-nad7m { --znak: #7fa7c9; }
+  :root:not([data-rezim="svetly"]) .znak-pod7m { --znak: #a3b1bf; }
+  :root:not([data-rezim="svetly"]) .znak-tridy .vodoznak { fill-opacity: 0.22; }
+  :root:not([data-rezim="svetly"]) .znak-tridy .vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
 }
+:root[data-rezim="tmavy"] .znak-tridy { --znak-oblouk: #9fb4c6; }
+:root[data-rezim="tmavy"] .znak-race { --znak: #e25a6d; }
+:root[data-rezim="tmavy"] .znak-nad7m { --znak: #7fa7c9; }
+:root[data-rezim="tmavy"] .znak-pod7m { --znak: #a3b1bf; }
+:root[data-rezim="tmavy"] .znak-tridy .vodoznak { fill-opacity: 0.22; }
+:root[data-rezim="tmavy"] .znak-tridy .vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
 /* V tabu a v boku je znak hlavní poznávací značka třídy, proto velký. */
 /* Aspoň dvakrát proti původním 1,2 em (asi 19 px): v tabu 2,6 rem. */
 .taby-trid a { padding-top: 0.3rem; padding-bottom: 0.3rem; gap: 0.55rem; }

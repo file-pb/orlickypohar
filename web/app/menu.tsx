@@ -12,7 +12,14 @@ import { ZavriMimo } from "@/app/zavri-mimo";
  * Postavené stejně jako profil: `<details>` rozbalí prohlížeč sám a
  * `ZavriMimo` jen doplní zavření klepnutím jinam a na Escape.
  */
-export function Menu({ rocnik }: { rocnik?: { slug: string; rok: number } }) {
+export function Menu({
+  rocnik,
+  rucniRezim,
+}: {
+  rocnik?: { slug: string; rok: number };
+  /** Vzhled je přepnutý ručně — nabídne se návrat k systému. */
+  rucniRezim?: boolean;
+}) {
   return (
     <details className="menu">
       <ZavriMimo />
@@ -35,6 +42,14 @@ export function Menu({ rocnik }: { rocnik?: { slug: string; rok: number } }) {
         <Link href="/historie">Historie</Link>
         <Link href="/pravidla">Pravidla</Link>
         <Link href="/appka">Appka</Link>
+        {/* Jen když je vzhled přepnutý ručně: bez toho by se z ruční volby
+            nedalo vrátit k systému jinak než smazáním cookie. */}
+        {rucniRezim && (
+          <form method="post" action="/rezim">
+            <input type="hidden" name="na" value="system" />
+            <button type="submit">Vzhled podle systému</button>
+          </form>
+        )}
       </div>
     </details>
   );

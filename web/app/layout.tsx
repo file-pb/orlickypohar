@@ -7,6 +7,9 @@ import { Domu } from "@/app/domu";
 import { Menu } from "@/app/menu";
 import { Logo, ZnakPozadi } from "@/app/logo";
 import { PruhUkazky } from "@/app/ukazka";
+import { PrepinacRezimu } from "@/app/rezim";
+import { cookies } from "next/headers";
+import { COOKIE_REZIM, jeRezim } from "@/lib/rezim";
 import { Profil } from "@/app/profil";
 import { Partneri } from "@/app/partneri";
 import "./globals.css";
@@ -45,9 +48,12 @@ export default async function Layout({ children }: { children: React.ReactNode }
   const rocnik = await nactiSerie()
     .then((serie) => serie?.[0])
     .catch(() => undefined);
+  // Ručně zvolený vzhled. Bez cookie `undefined` a web se řídí systémem.
+  const ulozeny = (await cookies()).get(COOKIE_REZIM)?.value;
+  const rezim = jeRezim(ulozeny) ? ulozeny : undefined;
 
   return (
-    <html lang="cs">
+    <html lang="cs" data-rezim={rezim}>
       <body>
         {/* Cíl skoku pro tlačítko „nahoru". Kotva místo javascriptu:
             stránky se renderují serverem a kvůli jednomu tlačítku nemá smysl
@@ -82,7 +88,8 @@ export default async function Layout({ children }: { children: React.ReactNode }
                   </Link>
                 </>
               )}
-              <Menu rocnik={rocnik} />
+              <PrepinacRezimu />
+              <Menu rocnik={rocnik} rucniRezim={Boolean(rezim)} />
               {/* Přihlášení se nabízí, jen když je nastavené. Odkaz na
                   neexistující tok by byl slib, který web nesplní. */}
               {prihlasovaniJde &&
