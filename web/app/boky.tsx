@@ -30,7 +30,11 @@ import { BokVodocet } from "@/app/vodocet";
  * čemu člověk na stránku přišel; vlevo ho posadí až mřížka.
  */
 
-export type Bok = "poradi" | "kalendar" | "novinky" | "akce";
+/**
+ * `kalendar-vodocet` je kalendář a pod ním vodočet Orlíku — na úvodu
+ * (Filip, 16. 9. 2026), kde vlevo stojí pořadí a vodočet by jinde nebyl.
+ */
+export type Bok = "poradi" | "kalendar" | "kalendar-vodocet" | "novinky" | "akce";
 
 export async function Boky({
   serie,
@@ -76,6 +80,13 @@ async function obsah(bok: Bok, slug: string) {
         return await BokPoradi({ slug });
       case "kalendar":
         return await BokKalendar({ slug });
+      case "kalendar-vodocet":
+        return (
+          <>
+            {await BokKalendar({ slug })}
+            {await BokVodocet()}
+          </>
+        );
       case "novinky":
         // Pod novinkami vodočet Orlíku (Filip, 16. 9. 2026).
         return (

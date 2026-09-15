@@ -133,7 +133,8 @@ export default async function Rozcestnik() {
       {aktualni && <PoradiRadky slug={aktualni.slug} tridy={tridy} />}
 
       {/* Fotka jde přes celou šířku okna, boky až pod ní. */}
-      <Boky serie={aktualni?.slug}>
+      {/* Vpravo kalendář a pod ním vodočet Orlíku (Filip, 16. 9. 2026). */}
+      <Boky serie={aktualni?.slug} vpravo="kalendar-vodocet">
       {/* Bez seznamu ročníků by výpadek ani prázdný stav nebyly nikde vidět —
           návštěvník by koukal na fotku bez tlačítek a nevěděl proč. */}
       {vypadek ? (
