@@ -276,8 +276,13 @@ Hezká adresa patří webu, ne rozhraní. Jméno API je jednoúrovňové schvál
 bezplatný certifikát Cloudflare pokrývá jen `*.klihovka.cz`, takže na
 `api.orlickypohar.klihovka.cz` by TLS selhalo dřív, než požadavek dojde
 na server. Web mluví s API **vnitřní sítí**
-(`http://app:8080`), ne přes internet — jinak by to byla zbytečná cesta ven
-a zpátky přes Traefik.
+(`http://orlickypohar-api:8080`), ne přes internet — jinak by to byla zbytečná
+cesta ven a zpátky přes Traefik.
+
+**Jméno `app` k tomu nepoužívej.** Web je i ve sdílené síti `edge` a Docker
+jména ze všech sítí kontejneru slučuje; `app` tam má i telemetrie. Web se pak
+ptal střídavě cizí aplikace, dostával 404 a ročník vypadal jako neexistující
+(zjištěno 15. 9. 2026). API má proto ve vnitřní síti alias, který jinde není.
 
 ## Nasazení
 
@@ -297,7 +302,7 @@ což se pozná jen tím, že se nová funkce neobjeví.
 | `/run/secrets/ConnectionStrings__Postgres` | soubor | Povinné. Tajemství nepatří do proměnných prostředí — `docker inspect` je ukáže každému s přístupem k daemonu. |
 | `Serilog__WriteTo__1__Args__serverUrl` | prostředí | Adresa Seq, volitelné. |
 | `ASPNETCORE_HTTP_PORTS` | prostředí | Port, výchozí 8080. |
-| `API_URL` | web | Adresa API pro server-side rendering. V provozu vnitřní `http://app:8080`. |
+| `API_URL` | web | Adresa API pro server-side rendering. V provozu vnitřní `http://orlickypohar-api:8080` — ne `app`, to jméno má na sdílené síti i telemetrie. |
 | `UKAZKOVE_SERIE` | web | Slugy ročníků s **vymyšlenými výsledky**, oddělené čárkou. Web u nich ukáže pruh, že data nejsou skutečná. Až dorazí skutečné výsledky, řádek se smaže. |
 | `APK_URL` | web | Adresa posledního buildu appky pro stránku `/appka`. **Každý build má jinou** — po `npm --prefix app run apk` se přepíše v `deploy/docker-compose.yml`. Když se zapomene, stránka tiše nabízí předchozí build. |
 | `IDENTITA_UCET_URL` | web | Samoobsluha poskytovatele identity — heslo, e-mail, druhý faktor. Vede na ni položka „Účet a heslo" v profilové nabídce; bez proměnné se nenabízí. **Adresa je v konfiguraci, ne v kódu**, aby výměna poskytovatele neznamenala změnu webu. |

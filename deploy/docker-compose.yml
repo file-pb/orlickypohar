@@ -12,8 +12,15 @@ x-logging: &logging
 networks:
   edge: { name: edge, external: true }     # k Traefiku
   data: { name: data, external: true }     # k databázi
-  # Vlastní síť projektu, aby web mluvil s API jménem služby. Přes `edge` by
-  # to nešlo spolehlivě: je sdílená a jméno `app` na ní má i telemetrie.
+  # Vlastní síť projektu, aby web mluvil s API.
+  #
+  # POZOR: vlastní síť sama nestačí. Web je zapojený i v `edge` a Docker
+  # jména ze všech sítí kontejneru slučuje — jméno `app` se tak překládalo
+  # na orlickypohar-app i na telemetrie-app. Ověřeno 15. 9. 2026 na
+  # produkci: z šesti dotazů webu na app:8080 skončilo pět 404 od telemetrie
+  # a web ukazoval ročník jako neexistující, dokud ho někdo nerestartoval.
+  # API proto dostává ve vnitřní síti vlastní jméno (níž), které nikde jinde
+  # neexistuje.
   interni: { internal: true }
 
 services:
@@ -21,7 +28,11 @@ services:
     image: ${IMAGE:?Nastav IMAGE na tag z GHCR}
     restart: unless-stopped
     logging: *logging
-    networks: [edge, data, interni]
+    networks:
+      edge: {}
+      data: {}
+      interni:
+        aliases: [orlickypohar-api]
     environment:
       # Běžná konfigurace v prostředí, tajemství v secrets níž.
       Serilog__WriteTo__1__Name: "Seq"
@@ -75,8 +86,9 @@ services:
     networks: [edge, interni]
     environment:
       # Interní adresa, ne veřejná. Přes internet by to byla zbytečná cesta
-      # ven a zpátky přes Traefik.
-      API_URL: "http://app:8080"
+      # ven a zpátky přes Traefik. Jméno `orlickypohar-api`, ne `app` —
+      # `app` je na sdílené síti `edge` i telemetrie, viz `networks` nahoře.
+      API_URL: "http://orlickypohar-api:8080"
       # Ročníky s vymyšlenými výsledky. Web u nich ukáže pruh, že data nejsou
       # skutečná. Až se ukazovat přestanou, stačí smazat tenhle řádek.
       UKAZKOVE_SERIE: "2026-nanecisto"
