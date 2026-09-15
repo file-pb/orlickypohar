@@ -444,7 +444,8 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
    Je to malý terč v rohu, takže „vidět zbytečně" je výrazně lepší selhání
    než „nefunguje" — a nespoléhá to na nic, co by musel doběhnout skript. */
 .nahoru {
-  position: fixed; right: 1rem; bottom: 1rem; z-index: 20;
+  /* Nad pevným pruhem partnerů, ne přes něj. */
+  position: fixed; right: 1rem; bottom: calc(var(--paticka, 0rem) + 0.75rem); z-index: 20;
   display: grid; place-items: center;
   width: 2.75rem; height: 2.75rem;
   border: 1px solid var(--linka); border-radius: 999px;
@@ -948,22 +949,32 @@ th.vlevo, td.vlevo { text-align: left; }
 .bok-plakat .text > span:last-child { color: rgba(255, 255, 255, 0.85); font-size: 0.85rem; }
 .bok-plakat .stitek { justify-self: start; margin: 0; color: #fff; border-color: rgba(255, 255, 255, 0.6); }
 
-/* Pás partnerů nad koncem stránky. Loga na bílé podložce v obou režimech —
-   cizí logo si barvy pozadí nevybírá. Posun je CSS animace, najetím se
-   zastaví; kdo nechce pohyb, dostane loga v klidu vedle sebe. */
+/* Partneři jako pevný pruh dole (Filip, 15. 9. 2026). Je na očích
+   pořád, a proto je nízký: nadpis zůstává jen pro čtečku obrazovky, loga
+   jsou menší a na telefonu ještě menší. Stránka má dole odsazení
+   o výšku pruhu, aby jí konec obsahu nikdy nezakryl.
+
+   Loga na bílé podložce v obou režimech — cizí logo si barvy pozadí
+   nevybírá. Posun je CSS animace, najetím se zastaví. */
+:root { --paticka: 3.5rem; }
+@media (max-width: 32rem) {
+  :root { --paticka: 3rem; }
+}
+body { padding-bottom: var(--paticka); }
 .partneri {
-  border-top: 1px solid var(--linka); background: var(--papir);
-  padding: 1.25rem 0 4.5rem; overflow: hidden;
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 15;
+  height: var(--paticka); display: flex; align-items: center; overflow: hidden;
+  border-top: 1px solid var(--linka);
+  background: color-mix(in srgb, var(--papir) 90%, transparent);
+  backdrop-filter: blur(10px);
 }
 .partneri h2 {
-  max-width: var(--sirka); margin: 0 auto 0.9rem; padding: 0 1.25rem;
-  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em;
-  color: var(--tlumeny); font-weight: 600;
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
-.partneri h2 .stitek { text-transform: none; letter-spacing: 0; }
 .partneri-okno {
-  overflow: hidden;
-  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  overflow: hidden; width: 100%;
+  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
 }
 .partneri-pas {
   list-style: none; margin: 0; padding: 0;
@@ -971,21 +982,21 @@ th.vlevo, td.vlevo { text-align: left; }
   animation: partneri-posun 40s linear infinite;
 }
 .partneri:hover .partneri-pas, .partneri:focus-within .partneri-pas { animation-play-state: paused; }
-.partneri-pas li { margin-right: 1.25rem; }
+.partneri-pas li { margin-right: 0.9rem; }
 .partneri-pas a, .partneri-pas span {
-  display: grid; place-items: center; height: 4rem; padding: 0.4rem 1rem;
-  background: #fff; border: 1px solid var(--linka); border-radius: 12px;
+  display: grid; place-items: center; height: calc(var(--paticka) - 0.9rem); padding: 0.2rem 0.75rem;
+  background: #fff; border: 1px solid var(--linka); border-radius: 8px;
 }
-.partneri-pas img { height: 2.6rem; width: auto; display: block; }
+.partneri-pas img { height: calc(var(--paticka) - 1.6rem); width: auto; display: block; }
 @keyframes partneri-posun {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
+/* Bez animací jeden řádek, který se posouvá rukou. Zalamování by pevný
+   pruh natáhlo do výšky a zakrylo půl stránky. */
 @media (prefers-reduced-motion: reduce) {
-  .partneri-okno { mask-image: none; }
-  .partneri-pas {
-    animation: none; width: auto; flex-wrap: wrap; justify-content: center; gap: 0.75rem;
-  }
+  .partneri-okno { mask-image: none; overflow-x: auto; }
+  .partneri-pas { animation: none; gap: 0.75rem; padding: 0 1rem; }
   .partneri-pas li { margin: 0; }
   .partneri-pas li[aria-hidden] { display: none; }
 }

@@ -1,5 +1,7 @@
 /**
- * Pás partnerů a sponzorů.
+ * Pás partnerů a sponzorů jako pevný pruh u spodku okna (Filip,
+ * 15. 9. 2026). Je na očích pořád, proto je nízký a nadpis nese jen pro
+ * čtečku obrazovky; výšku a odsazení stránky řídí CSS proměnná `--paticka`.
  *
  * <b>Loga jsou zatím ukázková</b> (Filip, 15. 9. 2026: postavit místo,
  * skutečná loga pošle). Jsou nakreslená jako zjevné zástupné značky, ne
