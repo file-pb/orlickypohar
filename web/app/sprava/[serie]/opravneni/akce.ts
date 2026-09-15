@@ -32,9 +32,13 @@ export async function udelAkce(formular: FormData) {
 
   if (!email) redirect(kam(serie, { chyba: "Vyplň e-mail." }));
 
-  const chyba = await udel(serie, { email, role, zavod });
+  const nepovedlo = await udel(serie, { email, role, zavod });
 
-  redirect(chyba ? kam(serie, { chyba }) : kam(serie, { stav: "udeleno", email, role, zavod }));
+  redirect(
+    nepovedlo
+      ? kam(serie, { chyba: nepovedlo.chyba, ucet: nepovedlo.ucetNeni ? "neni" : undefined })
+      : kam(serie, { stav: "udeleno", email, role, zavod }),
+  );
 }
 
 export async function odeberAkce(formular: FormData) {

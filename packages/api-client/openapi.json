@@ -284,7 +284,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "Vyp\u00ed\u0161e opr\u00e1vn\u011bn\u00ed ro\u010dn\u00edku i zast\u00e1vky, na kter\u00e9 jdou ud\u011blit",
-                "description": "Vy\u017eaduje roli spr\u00e1vce, nebo rozhod\u010d\u00edho v tom ro\u010dn\u00edku. Co sm\u00ed ud\u011blit, \u0159\u00edk\u00e1 SmiNaRocnik.",
+                "description": "Vy\u017eaduje roli spr\u00e1vce, nebo rozhod\u010d\u00edho v tom ro\u010dn\u00edku. Co sm\u00ed ud\u011blit, \u0159\u00edk\u00e1 SmiNaRocnik. Ucty \u2014 \u00fa\u010dty, kter\u00e9 se kdy p\u0159ihl\u00e1sily \u2014 dostane jen spr\u00e1vce; rozhod\u010d\u00edmu je null.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2030,6 +2030,15 @@
                     "smiNaRocnik": {
                         "type": "boolean",
                         "default": false
+                    },
+                    "ucty": {
+                        "type": [
+                            "null",
+                            "array"
+                        ],
+                        "items": {
+                            "$ref": "#/components/schemas/UcetDto"
+                        }
                     }
                 }
             },
@@ -2677,6 +2686,42 @@
                             "null",
                             "string"
                         ]
+                    }
+                }
+            },
+            "UcetDto": {
+                "required": [
+                    "id",
+                    "zobrazovane",
+                    "email",
+                    "zalozenV",
+                    "naposledyPrihlasenV"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "zobrazovane": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "zalozenV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "naposledyPrihlasenV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
                     }
                 }
             },

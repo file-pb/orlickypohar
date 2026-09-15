@@ -2,7 +2,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Drobecky } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
-import { ROLE, nactiPrehled, nazevRole, type Prehled, type Radek, type Role } from "@/lib/sprava";
+import { okamzik } from "@/app/datum";
+import {
+  ROLE,
+  nactiPrehled,
+  nazevRole,
+  type Prehled,
+  type Radek,
+  type Role,
+  type Ucet,
+  type ZastavkaVolba,
+} from "@/lib/sprava";
 import { udelAkce, odeberAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
@@ -19,6 +29,7 @@ type Parametry = {
     role?: Role;
     zavod?: string;
     kdo?: string;
+    ucet?: string;
   }>;
 };
 
@@ -127,6 +138,14 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
       {zpravy.chyba ? (
         <p className="hlaska chyba" role="alert">
           {zpravy.chyba}
+          {/* Kvůli téhle hlášce seznam vznikl: bez něj se „komu se už dá
+              roli dát" dohledávalo v databázi. */}
+          {zpravy.ucet === "neni" && prehled.ucty && (
+            <>
+              {" "}
+              Kdo se už přihlásil, ukazuje <a href="#ucty">seznam účtů</a>.
+            </>
+          )}
         </p>
       ) : (
         zprava && <p className="hlaska hotovo">{zprava}</p>
@@ -140,7 +159,22 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
           {/* Podle e-mailu, ne podle identifikátoru — ten člověk nikde
               nevidí. Účet ale vzniká až prvním přihlášením, o čemž je
               poznámka pod formulářem. */}
-          <input type="email" name="email" required placeholder="jan@priklad.cz" />
+          <input
+            type="email"
+            name="email"
+            required
+            placeholder="jan@priklad.cz"
+            list={prehled.ucty ? "ucty-emaily" : undefined}
+          />
+          {/* Našeptávání bez javascriptu: prohlížeč nabídne e-maily účtů,
+              kterým roli dát jde. Psát se dá i cokoliv jiného. */}
+          {prehled.ucty && (
+            <datalist id="ucty-emaily">
+              {prehled.ucty.map(
+                (u) => u.email && <option key={u.id} value={u.email} label={u.zobrazovane} />,
+              )}
+            </datalist>
+          )}
         </label>
 
         <label>
@@ -200,6 +234,12 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
         Roli lze dát jen tomu, kdo se už aspoň jednou přihlásil — účet vzniká
         přihlášením, pozvat člověka rolí nejde. Posledního správce ročníku
         odebrat nelze.
+        {prehled.ucty && (
+          <>
+            {" "}
+            Kdo se už přihlásil, ukazuje <a href="#ucty">seznam účtů</a>.
+          </>
+        )}
       </p>
 
       <Skupina nadpis="Celý ročník" radky={naRocnik} serie={prehled.serie} smiOdebrat={smiOdebrat} />
@@ -214,6 +254,10 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
           skryjPrazdnou
         />
       ))}
+
+      {prehled.ucty && (
+        <Ucty ucty={prehled.ucty} opravneni={prehled.opravneni} zastavky={prehled.zastavky} />
+      )}
     </>
   );
 }
@@ -296,6 +340,79 @@ function Skupina({
                   </td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/**
+ * Kdo se už přihlásil — tedy komu jde roli dát — a kdy naposledy.
+ *
+ * Vzniklo 15. 9. 2026: role udělená e-mailu, na který se ještě nikdo
+ * nepřihlásil, skončila chybou, a proč, šlo zjistit jen v databázi.
+ *
+ * <b>Role jsou jen z tohoto ročníku.</b> API role z jiných ročníků nevydává;
+ * stránka je páruje s oprávněními o kus výš. „Bez role" je tu vidět
+ * schválně — je to přesně ten člověk, který se přihlásil a čeká.
+ */
+function Ucty({
+  ucty,
+  opravneni,
+  zastavky,
+}: {
+  ucty: Ucet[];
+  opravneni: Radek[];
+  zastavky: ZastavkaVolba[];
+}) {
+  const kde = (slug?: string | null) =>
+    slug ? (zastavky.find((z) => z.slug === slug)?.nazev ?? slug) : "celý ročník";
+
+  return (
+    <section className="skupina-opravneni" id="ucty">
+      <h2>Přihlášené účty</h2>
+      <p className="poznamka">
+        Roli jde dát jen účtu z tohoto seznamu. Naposledy přihlášení jsou nahoře.
+      </p>
+
+      {ucty.length === 0 ? (
+        <p className="prazdno">Zatím se nepřihlásil nikdo.</p>
+      ) : (
+        <div className="tabulka-obal">
+          <table>
+            <thead>
+              <tr>
+                <th className="lod">Kdo</th>
+                <th className="vlevo">Naposledy přihlášen</th>
+                <th className="vlevo">Role v ročníku</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ucty.map((u) => {
+                const role = opravneni.filter((o) => o.uzivatelId === u.id);
+                return (
+                  <tr key={u.id}>
+                    <td className="lod">
+                      {u.zobrazovane}
+                      {u.email && <div className="majitel">{u.email}</div>}
+                    </td>
+                    <td className="vlevo">{okamzik(u.naposledyPrihlasenV ?? u.zalozenV)}</td>
+                    <td className="vlevo">
+                      {role.length === 0 ? (
+                        <span className="majitel">bez role</span>
+                      ) : (
+                        role.map((r) => (
+                          <div key={r.id}>
+                            {nazevRole(r.role)} <span className="majitel">· {kde(r.zavod)}</span>
+                          </div>
+                        ))
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

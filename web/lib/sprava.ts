@@ -16,6 +16,7 @@ type S = components["schemas"];
 export type Prehled = S["PrehledOpravneniDto"];
 export type Radek = S["OpravneniRadek"];
 export type ZastavkaVolba = S["ZastavkaVolbaDto"];
+export type Ucet = S["UcetDto"];
 export type Role = S["Role"];
 
 /**
@@ -107,13 +108,20 @@ export async function nactiPrehled(
   return { stav: "ok", prehled: (await odpoved.json()) as Prehled };
 }
 
-/** Vrací chybu k zobrazení, nebo `null`, když se povedlo. */
+/**
+ * Vrací chybu k zobrazení, nebo `null`, když se povedlo.
+ *
+ * `ucetNeni` říká, že se na ten e-mail ještě nikdo nepřihlásil — stránka
+ * pak k hlášce přidá odkaz na seznam účtů. Pozná se podle 404: ročník
+ * i zastávka tu pocházejí z nabídky, kterou vydalo totéž API, takže jiná
+ * 404 vzniká jen souběhem se smazáním.
+ */
 export async function udel(
   serie: string,
   vstup: { email: string; role: Role; zavod?: string },
-): Promise<string | null> {
+): Promise<{ chyba: string; ucetNeni: boolean } | null> {
   const t = await token();
-  if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+  if (!t) return { chyba: "Přihlášení vypršelo. Přihlas se prosím znovu.", ucetNeni: false };
 
   try {
     const odpoved = await fetch(
@@ -130,9 +138,11 @@ export async function udel(
       },
     );
 
-    return odpoved.ok ? null : await hlaska(odpoved);
+    return odpoved.ok
+      ? null
+      : { chyba: await hlaska(odpoved), ucetNeni: odpoved.status === 404 };
   } catch {
-    return "API se nedaří zavolat.";
+    return { chyba: "API se nedaří zavolat.", ucetNeni: false };
   }
 }
 

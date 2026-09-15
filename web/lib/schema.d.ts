@@ -362,7 +362,7 @@ export interface paths {
         };
         /**
          * Vypíše oprávnění ročníku i zastávky, na které jdou udělit
-         * @description Vyžaduje roli správce, nebo rozhodčího v tom ročníku. Co smí udělit, říká SmiNaRocnik.
+         * @description Vyžaduje roli správce, nebo rozhodčího v tom ročníku. Co smí udělit, říká SmiNaRocnik. Ucty — účty, které se kdy přihlásily — dostane jen správce; rozhodčímu je null.
          */
         get: {
             parameters: {
@@ -1477,6 +1477,7 @@ export interface components {
             opravneni: components["schemas"]["OpravneniRadek"][];
             /** @default false */
             smiNaRocnik: boolean;
+            ucty?: null | components["schemas"]["UcetDto"][];
         };
         PrehledVysledkuDto: {
             serie: string;
@@ -1638,6 +1639,16 @@ export interface components {
             lod: string;
             kormidelnik: null | string;
             posadka: null | string;
+        };
+        UcetDto: {
+            /** Format: uuid */
+            id: string;
+            zobrazovane: string;
+            email: null | string;
+            /** Format: date-time */
+            zalozenV: string;
+            /** Format: date-time */
+            naposledyPrihlasenV: null | string;
         };
         UdeleniVstup: {
             email: string;

@@ -51,3 +51,19 @@ export function datumClanku(iso: string) {
     timeZone: "Europe/Prague",
   });
 }
+
+/**
+ * Okamžik i s časem: „15. září 2026 v 14:30". Pro poslední přihlášení,
+ * kde „dnes ráno" a „dnes večer" je rozdíl. Pražské pásmo ze stejného
+ * důvodu jako u článku.
+ */
+export function okamzik(iso: string) {
+  return new Date(iso).toLocaleString(CESKY, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Prague",
+  });
+}

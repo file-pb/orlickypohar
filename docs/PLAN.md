@@ -1470,6 +1470,34 @@ Falešné API (`tools/fake-api.py`) umí `/sprava` taky, takže obrazovka jde
 vyvíjet a zkoušet bez databáze — včetně chybových stavů, které se na
 skutečných datech vyrábějí špatně.
 
+**Seznam přihlášených účtů přibyl 15. 9. 2026.** Filip dal tři role
+e-mailu, na který se ten člověk ještě nepřihlásil. Všechna tři udělení
+skončila „účet neexistuje“ a účet po přihlášení žádnou roli neměl, takže to
+vypadalo jako „nemám možnost žádné editace“. Dohledávalo se to v databázi.
+
+| Kus | Kde |
+|---|---|
+| `UcetDto`, `OpravneniSprava.UctyAsync` — účty, naposledy přihlášené nahoře | `Features/Sprava/OpravneniSprava.cs` |
+| `PrehledOpravneniDto.Ucty` — volitelné, jen správci | `Features/Sprava/OpravneniEndpoints.cs` |
+| Tabulka „Přihlášené účty“, našeptávání e-mailu, odkaz z hlášky | `web/app/sprava/[serie]/opravneni/page.tsx` |
+
+Tři rozhodnutí (Filip, 15. 9. 2026):
+
+1. **Seznam vidí jen správce.** Jsou v něm e-maily všech, kdo se kdy
+   přihlásili, i lidí z jiných ročníků. Rozhodčí přiřazuje pořadatele
+   zastávkám a obejde se bez něj: `Ucty` je u něj `null` a na neexistující
+   účet ho upozorní udělení.
+2. **Tabulka i našeptávání.** Našeptávání je `<datalist>` u pole e-mail,
+   takže funguje bez javascriptu. Jen na něm by ale poslední přihlášení
+   vidět nebylo, a o to šlo.
+3. **Role jen v tomhle ročníku.** API je u účtu nevydává vůbec. Stránka je
+   páruje přes `uzivatelId` s oprávněními, která v přehledu už jsou, takže
+   role z cizích ročníků nejdou ven ani omylem. „Bez role“ je v tabulce
+   schválně: je to přesně ten, kdo se přihlásil a čeká.
+
+Změna API je aditivní (nové volitelné pole). Hláška „účet neexistuje“ pozná
+web podle 404 z udělení a přidá k ní odkaz na seznam.
+
 **Balíček JwtBearer šel přidat až po vypnutí VPN.** `dotnet restore` padal
 na `NU1301: Socket is not connected`, zatímco `curl` na tutéž adresu vracel
 200. Vypadalo to jako nedostupný NuGet — po vzoru nedostupného Docker Hubu —
