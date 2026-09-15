@@ -123,9 +123,10 @@ header.hlavicka a.znacka svg.logo-mobil { display: none; width: 72px; height: 72
 .logo-hlavni, .logo-oblouk { fill: var(--logo-hlavni); }
 .logo-druha { fill: var(--logo-druha); }
 .logo-seda { fill: var(--logo-seda); }
-/* Nápis malinko průhledný, aby nepřebil plachty (Filip, 15. 9. 2026).
-   Stejná hodnota je v ikona.py pro SVG soubory. */
-.logo-napis { fill: var(--logo-napis); fill-opacity: 0.82; }
+/* Nápis průhledný, aby nepřebil plachty (Filip, 15. 9. 2026; 16. 9. ještě
+   o kus průhlednější, v tmavém i světlém). Stejná hodnota je v ikona.py
+   pro SVG soubory. */
+.logo-napis { fill: var(--logo-napis); fill-opacity: 0.7; }
 .logo-vodoznak { fill: var(--logo-hlavni); fill-opacity: 0.18; }
 .logo-vodoznak-na-plachte { fill: #fff; fill-opacity: 0.38; }
 

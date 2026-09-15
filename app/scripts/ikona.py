@@ -406,7 +406,7 @@ LOGO_BARVY = {
     "tmave": {"seda": (196, 206, 216), "hlavni": (127, 167, 201), "druha": (226, 90, 109),
               "napis": (237, 234, 229), "na_plachte": ((20, 23, 26), 0.35)},
 }
-NAPIS_PRUHLEDNOST = 0.82  # stejná hodnota je v CSS webu u .logo-napis
+NAPIS_PRUHLEDNOST = 0.7  # stejná hodnota je v CSS webu u .logo-napis
 HEX = lambda c: "#%02x%02x%02x" % c
 BODY = lambda body: " ".join(f"{x:.0f},{y:.0f}" for x, y in body)
 
