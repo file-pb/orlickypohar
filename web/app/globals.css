@@ -120,15 +120,40 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 .podtitulek { color: var(--tlumeny); margin: 0 0 2rem; }
 
 /* Úvodní fotka. Vystupuje z obalu na celou šířku okna — proto ty záporné
-   okraje; jinak by seděla v šedesáti rem a nebyla by z ní žádná událost. */
+   okraje; jinak by seděla v šedesáti rem a nebyla by z ní žádná událost.
+
+   Fotka je vrstva pod celým úvodem, nejen pod pruhem s nadpisem (Filip,
+   15. 9. 2026). Pruh drží jen výšku a text. Pod ním fotka pokračuje za
+   obsahem, ztmavená tak jako na svém spodku, a do barvy stránky se slije
+   postupně. Pod obsahem se ztmavuje barvou pozadí, ne černou: ve světlém
+   režimu by tmavý závoj pod tmavým textem čitelnost rozbil. */
+.uvod {
+  --hero: clamp(260px, 46vh, 460px);
+  position: relative; isolation: isolate;
+}
 .hero {
-  position: relative; margin: -2rem calc(50% - 50vw) 2.5rem; overflow: hidden;
-  background: var(--zvyrazneni);
+  position: relative; margin: -2rem calc(50% - 50vw) 2.5rem;
+  height: var(--hero);
 }
 /* Fotky se prolínají v CSS: leží přes sebe a každá má posunutý začátek
    animace. Ořez je posunutý doprava, ať na úzkém displeji zůstane v záběru
    loď a ne jen plachta. */
-.hero-fotky { position: relative; height: clamp(260px, 46vh, 460px); }
+.hero-fotky {
+  position: absolute; z-index: -1; top: -2rem; left: calc(50% - 50vw);
+  width: 100vw; height: calc(var(--hero) + 2rem + 70vh);
+  overflow: hidden; background: var(--zvyrazneni);
+}
+.hero-fotky::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent calc(var(--hero) * 0.45),
+    rgba(10, 20, 26, 0.86) calc(var(--hero) + 2rem),
+    color-mix(in srgb, var(--pozadi) 86%, transparent) calc(var(--hero) + 2rem + 8rem),
+    color-mix(in srgb, var(--pozadi) 92%, transparent) 70%,
+    var(--pozadi) 100%
+  );
+}
 /* Animace jede na <picture>, protože ta je teď tím prvkem v mřížce;
    <img> uvnitř jen vyplní plochu. */
 .hero-fotky picture {
@@ -167,8 +192,7 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 }
 .hero-text {
   position: absolute; left: 0; right: 0; bottom: 0; padding: 2.5rem 1.25rem 1.5rem;
-  /* Přechod dolů, aby text držel kontrast i na světlé fotce. */
-  background: linear-gradient(transparent, rgba(10, 20, 26, 0.86) 55%);
+  /* Kontrast textu drží přechod ve vrstvě fotky (`.hero-fotky::after`). */
   color: #fff;
 }
 .hero-text > * { max-width: var(--sirka); margin-left: auto; margin-right: auto; }
@@ -658,6 +682,17 @@ th.vlevo, td.vlevo { text-align: left; }
 /* Aspoň dvakrát proti původním 1,2 em (asi 19 px): v tabu 2,6 rem. */
 .taby-trid a { padding-top: 0.3rem; padding-bottom: 0.3rem; gap: 0.55rem; }
 .taby-trid .znak-tridy { height: 2.6rem; }
+/* Na telefonu se tři taby do řádku nevešly a třetí spadl pod ostatní
+   (Filip, 15. 9. 2026: „není to hezké"). Proto tu drží jednu řadu, každá
+   třída dostane třetinu šířky a znak i odsazení se zmenší. */
+@media (max-width: 32rem) {
+  .taby-trid { flex-wrap: nowrap; gap: 0; }
+  .taby-trid a {
+    flex: 1 1 0; min-width: 0; justify-content: center;
+    padding-left: 0.25rem; padding-right: 0.25rem; gap: 0.3rem;
+  }
+  .taby-trid .znak-tridy { height: 2rem; }
+}
 .bok-trida-hlava .znak-tridy { height: 2.4rem; }
 .nadpis-tridy {
   display: flex; align-items: center; gap: 0.55rem;
@@ -668,13 +703,23 @@ th.vlevo, td.vlevo { text-align: left; }
 /* Boky širokého monitoru (Filip, 15. 9. 2026): vlevo pořadí, vpravo
    kalendář, kde by se to zdvojilo, novinky a plakát akce.
 
-   Pod 1500 px boky nejsou vůbec — střed potřebuje místo na tabulky a boky
-   by ho jen zúžily. Nad ní se obal rozšíří o šířku obou boků, takže střed
-   o nic nepřijde. Střed je v HTML první, vlevo ho posadí až mřížka. */
+   Pod 1280 px boky nejsou vůbec — střed potřebuje místo na tabulky a boky
+   by ho jen zúžily. Nad ní se obal rozšíří o šířku obou boků. Střed je
+   v HTML první, vlevo ho posadí až mřížka.
+
+   Hranice byla původně 1500 px. Filip, 15. 9. 2026: na 13" displeji
+   (MacBook 1440–1470 px, iPad Pro na šířku 1376 px) boky mizely a místo
+   nich se novinky rozložily do dvou sloupců. Raději boky a jeden sloupec;
+   o boky přijdou až menší displeje. */
 .s-boky > .bok { display: none; }
 .s-boky-stred > p,
 .s-boky-stred > dl { max-width: 46rem; }
-@media (min-width: 1500px) {
+/* Vedle boků je střed do 1600 px užší než bez nich, dva sloupce karet by
+   se v něm tlačily. Od 1600 px roste --sirka a dva sloupce se vejdou. */
+@media (min-width: 1280px) and (max-width: 1599.98px) {
+  .s-boky-stred .seznam { grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 1280px) {
   main.obal:has(> .s-boky) { max-width: calc(var(--sirka) + 38rem); }
   .s-boky {
     display: grid; gap: 2.25rem; align-items: start;

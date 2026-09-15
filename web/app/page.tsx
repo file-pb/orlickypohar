@@ -74,9 +74,14 @@ export default async function Rozcestnik() {
   return (
     <>
       {/* Fotky se prolínají čistě v CSS — žádný javascript, žádná hydratace.
-          Kdo má v systému vypnuté animace, uvidí první a nic se nehýbe. */}
-      <section className="hero">
-        <div className="hero-fotky">
+          Kdo má v systému vypnuté animace, uvidí první a nic se nehýbe.
+
+          Fotka leží ve vrstvě pod celým úvodem, ne jen pod pruhem s nadpisem
+          (Filip, 15. 9. 2026: velký obrázek na pozadí, za obsahem ztmavený
+          jako na svém spodku). Proto je mimo <section> a obal úvodu drží
+          hero i boky pohromadě. */}
+      <div className="uvod">
+        <div className="hero-fotky" aria-hidden="true">
           {FOTKY.map((f, i) => (
             <picture key={f.src} style={{ animationDelay: `${i * DELKA}s` }}>
               {/* Prohlížeč si vezme AVIF ve velikosti podle displeje —
@@ -93,6 +98,7 @@ export default async function Rozcestnik() {
             </picture>
           ))}
         </div>
+      <section className="hero">
         <div className="hero-text">
           <h1>Orlický pohár</h1>
           <p>
@@ -154,6 +160,7 @@ export default async function Rozcestnik() {
         nosí do telefonu i <Link href="/appka">appka</Link>.
       </p>
       </Boky>
+      </div>
     </>
   );
 }
