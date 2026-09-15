@@ -1381,9 +1381,10 @@ stejně jako `Medailonek.Slug`; ověřeno na produkci, zastávky mají záznam.
 **Medailonek se ukáže, jen když má co říct nad rámec jména.** Samotné jméno
 stojí v podtitulku; když medailonek obsah má, jméno vede na něj (`#poradatel`).
 
-**Otevřené:** mock (`tools/gen-mock.py`) i produkční ročník nanečisto mají
-u Radavského poháru „LK Radava", Filip uvedl Yacht Club Písek. Čeká se na
-potvrzení, co platí.
+**Radavský pohár pořádá Yacht Club Písek**, ne LK Radava (Filip, 15. 9.
+2026). Opraveno v `tools/gen-mock.py`; Radavská regata zůstává u LK Radava.
+Na produkci se to projeví přiřazením v kalendáři, nebo dalším importem
+ročníku.
 
 **Demo obsah je vymyšlený, ale nehádá.** Zpráva ze zastávky si bere vítěze
 z vygenerovaných výsledků, aby si text s tabulkou neodporoval — rozpor mezi
