@@ -296,6 +296,17 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
   color: rgba(255, 255, 255, 0.92) !important;
 }
 .hero-zivot span + span::before { content: "· "; opacity: 0.6; }
+/* Odkazy v živé větě: bílé jako věta, bez podtržení. Na najetí se objeví
+   jen tenká linka pod textem — decentně, ať věta nevypadá jako menu
+   (Filip, 16. 9. 2026). */
+.hero-zivot a {
+  color: inherit; text-decoration: underline;
+  text-decoration-color: transparent; text-decoration-thickness: 1px; text-underline-offset: 0.25em;
+  transition: text-decoration-color 150ms ease;
+}
+.hero-zivot a:hover,
+.hero-zivot a:focus-visible { text-decoration-color: rgba(255, 255, 255, 0.75); }
+.hero-zivot a:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6); outline-offset: 2px; border-radius: 3px; }
 /* Na úzkém displeji se věta láme na řádky a tečka by začínala řádek. */
 @media (max-width: 32rem) {
   .hero-zivot { flex-direction: column; gap: 0.1rem; }

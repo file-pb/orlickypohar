@@ -44,7 +44,13 @@ export default async function Rozcestnik() {
   // Živá věta nad fotkou. Fotka udělá dojem, ale tohle řekne, že se něco
   // děje — a je to spočítané z dat, ne napsané natvrdo. Když se to nepovede
   // načíst, prostě tam není; kvůli jedné větě nemá padat úvodní stránka.
-  let stav: { odjeto: number; celkem: number; dalsi?: string; vedou: string[] } | null = null;
+  let stav: {
+    odjeto: number;
+    celkem: number;
+    dalsi?: string;
+    dalsiSlug?: string;
+    vedou: string[];
+  } | null = null;
   // Filip chce novinky na úvodní stránce. Tři poslední: dost na to, aby bylo
   // vidět, že se něco děje, a málo na to, aby odsunuly tlačítka na výsledky.
   let clanky: ClanekShrnuti[] | null = null;
@@ -65,6 +71,7 @@ export default async function Rozcestnik() {
           odjeto: detail.zavody.filter((z) => z.stav === "Odjety").length,
           celkem: detail.zavody.length,
           dalsi: cekaji[0] && `${cekaji[0].nazev}, ${denAMesic(cekaji[0].datum)}`,
+          dalsiSlug: cekaji[0]?.slug,
           vedou:
             poradi?.kategorie
               .map((k) => k.lode[0]?.lod)
@@ -110,15 +117,33 @@ export default async function Rozcestnik() {
               a vyhledávače, jen není vidět. */}
           <h1 className="skryte">Orlický pohár</h1>
           <p className="hero-kicker">Seriál závodů plachetnic · Orlická přehrada</p>
-          {stav && (
+          {/* Věta je rozcestník (Filip, 16. 9. 2026): odjeto vede na kalendář
+              ročníku, vedou na pořadí, další na nadcházející zastávku. Odkazy
+              se nepodtrhávají, dokud na ně nenajede myš — věta má zůstat
+              větou, ne řádkem modrých odkazů. */}
+          {stav && aktualni && (
             <p className="hero-zivot">
               {stav.odjeto > 0 && (
                 <span>
-                  Odjeto {stav.odjeto} z {stav.celkem} zastávek
+                  <Link href={`/serie/${aktualni.slug}`}>
+                    Odjeto {stav.odjeto} z {stav.celkem} zastávek
+                  </Link>
                 </span>
               )}
-              {stav.vedou.length > 0 && <span>Vedou {stav.vedou.join(", ")}</span>}
-              {stav.dalsi && <span>Další: {stav.dalsi}</span>}
+              {stav.vedou.length > 0 && (
+                <span>
+                  <Link href={`/serie/${aktualni.slug}/poradi`}>Vedou {stav.vedou.join(", ")}</Link>
+                </span>
+              )}
+              {stav.dalsi && (
+                <span>
+                  {stav.dalsiSlug ? (
+                    <Link href={`/serie/${aktualni.slug}/zavody/${stav.dalsiSlug}`}>Další: {stav.dalsi}</Link>
+                  ) : (
+                    <>Další: {stav.dalsi}</>
+                  )}
+                </span>
+              )}
             </p>
           )}
           {/* Tlačítka Ročník a Průběžné pořadí jsou v hlavičce na každé
