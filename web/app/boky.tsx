@@ -12,6 +12,7 @@ import { Stav } from "@/app/stav";
 import { ZnakTridy } from "@/app/tridy";
 import { KaruselTridy } from "@/app/karusel-poradi";
 import { PocasiAkce } from "@/app/pocasi";
+import { BokVodocet } from "@/app/vodocet";
 
 /**
  * Boky širokého monitoru.
@@ -76,7 +77,13 @@ async function obsah(bok: Bok, slug: string) {
       case "kalendar":
         return await BokKalendar({ slug });
       case "novinky":
-        return await BokNovinky({ slug });
+        // Pod novinkami vodočet Orlíku (Filip, 16. 9. 2026).
+        return (
+          <>
+            {await BokNovinky({ slug })}
+            {await BokVodocet()}
+          </>
+        );
       case "akce":
         return await BokAkce({ slug });
     }

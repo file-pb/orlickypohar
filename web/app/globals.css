@@ -950,14 +950,44 @@ th.vlevo, td.vlevo { text-align: left; }
 .karusel:focus-within .karusel-pas { animation-play-state: paused; }
 
 /* V boku: okno na tři řádky pevné výšky, pás jede nahoru. */
-/* Počasí z Windy pod plakátem akce. Rámeček je vysoký, aby se pod mapu
-   vešel detail předpovědi po hodinách. */
+/* Počasí z Windy pod plakátem akce. Pás předpovědi pod mapou má ve Windy
+   pevnou výšku a mapa bere zbytek rámečku. Mapa je malá (Filip,
+   16. 9. 2026: mapka je jasná, důležitá je osa), takže rámeček je jen
+   o kus vyšší než pás. */
 .bok-pocasi { margin-top: 0.75rem; }
 .bok-pocasi iframe {
-  display: block; width: 100%; height: 28rem; border: 0; border-radius: 10px;
+  display: block; width: 100%; height: 19rem; border: 0; border-radius: 10px;
   background: var(--zvyrazneni);
 }
 .bok-pocasi-zdroj { margin: 0.35rem 0 0; font-size: 0.75rem; line-height: 1.45; color: var(--tlumeny); }
+
+/* Vodočet Orlíku (Filip, 16. 9. 2026): velké číslo hladiny se šipkou,
+   graf a dvě menší políčka s přítokem a odtokem. Stoupání modře jako
+   voda, klesání červeně — nízká hladina je to, co jachtaře trápí. */
+.vodocet-hlava { display: flex; align-items: baseline; gap: 0.35rem; }
+.vodocet-sipka { align-self: center; font-size: 1.35rem; font-weight: 700; line-height: 1; }
+.vodocet-sipka.stoupa { color: var(--voda); }
+.vodocet-sipka.klesa { color: var(--stav-zruseny); }
+.vodocet-sipka.stoji { color: var(--tlumeny); }
+.vodocet-hladina {
+  font-size: 1.9rem; font-weight: 700; line-height: 1; letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums; color: var(--text);
+}
+.vodocet-jednotka { font-size: 0.75rem; color: var(--tlumeny); }
+.vodocet-zmena { margin: 0.25rem 0 0.5rem; font-size: 0.8rem; color: var(--tlumeny); }
+.vodocet-graf { display: block; width: 100%; height: 3.5rem; }
+.vodocet-graf .plocha { fill: color-mix(in srgb, var(--voda) 16%, transparent); }
+.vodocet-graf .cara {
+  fill: none; stroke: var(--voda); stroke-width: 2;
+  stroke-linejoin: round; vector-effect: non-scaling-stroke;
+}
+.vodocet-toky { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin: 0.6rem 0 0; }
+.vodocet-toky div {
+  background: var(--papir); border: 1px solid var(--linka); border-radius: 8px;
+  padding: 0.35rem 0.55rem;
+}
+.vodocet-toky dt { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--tlumeny); }
+.vodocet-toky dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* Šest řádků, stejně jako VIDET_V_BOKU v karusel-poradi.tsx. */
 .karusel-svisly { --radek: 1.6rem; height: calc(var(--radek) * 6); margin-top: 0.4rem; }
