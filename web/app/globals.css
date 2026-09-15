@@ -1000,6 +1000,37 @@ th.vlevo, td.vlevo { text-align: left; }
 .vodocet-toky dt { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--tlumeny); }
 .vodocet-toky dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 
+/* Výstrahy ČHMÚ (Filip, 16. 9. 2026). Bez výstrahy klidná věta se zelenou
+   tečkou; s výstrahou proužek v barvě stupně, jak je barví ČHMÚ. */
+.vystrahy-klid { display: flex; align-items: center; gap: 0.5rem; margin: 0; font-size: 0.85rem; color: var(--tlumeny); }
+.vystrahy-tecka { width: 0.6rem; height: 0.6rem; border-radius: 999px; flex: none; background: #3aa76d; box-shadow: 0 0 0 3px color-mix(in srgb, #3aa76d 25%, transparent); }
+.vystrahy-seznam { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.vystraha {
+  --stupen: #e5b50b;
+  display: grid; gap: 0.15rem; padding: 0.5rem 0.65rem;
+  background: var(--papir); border: 1px solid var(--linka); border-left: 4px solid var(--stupen);
+  border-radius: 8px; font-size: 0.8rem;
+}
+.vystraha.stupen-3 { --stupen: #f07c12; }
+.vystraha.stupen-4 { --stupen: #d62e2e; }
+.vystraha-hlava { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.1rem 0.45rem; }
+.vystraha-hlava b { color: var(--text); font-size: 0.875rem; }
+.vystraha-stupen { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--stupen); }
+.vystraha-popis { color: var(--text); }
+.vystraha-cas { color: var(--tlumeny); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+
+/* Doplňky pod obsahem tam, kde nejsou boky: vodočet, výstrahy a počasí
+   u nejbližší akce vedle sebe, na telefonu pod sebou. S boky se schovají,
+   tytéž widgety jsou pak v bocích. */
+.doplnky {
+  display: grid; gap: 1.75rem; margin-top: 2.5rem; align-items: start;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+}
+.doplnky:empty { display: none; }
+@media (min-width: 1280px) {
+  .doplnky { display: none; }
+}
+
 /* Šest řádků, stejně jako VIDET_V_BOKU v karusel-poradi.tsx. */
 .karusel-svisly { --radek: 1.6rem; height: calc(var(--radek) * 6); margin-top: 0.4rem; }
 .karusel-svisly .karusel-pas { gap: 0; margin: 0; }

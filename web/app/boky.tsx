@@ -13,6 +13,7 @@ import { ZnakTridy } from "@/app/tridy";
 import { KaruselTridy } from "@/app/karusel-poradi";
 import { PocasiAkce } from "@/app/pocasi";
 import { BokVodocet } from "@/app/vodocet";
+import { BokVystrahy } from "@/app/vystrahy";
 import { dnesVPraze, vyberTerminu } from "@/lib/terminy";
 
 /**
@@ -57,6 +58,10 @@ export async function Boky({
         <>
           <aside className="bok bok-vlevo">{await obsah(vlevo, slug)}</aside>
           <aside className="bok bok-vpravo">{await obsah(vpravo, slug)}</aside>
+          {/* Doplňky pod obsahem pro displej, kde boky nejsou (Filip,
+              16. 9. 2026): tři widgety s cizími daty. S boky je CSS schová,
+              tam jsou tytéž widgety v bocích. */}
+          <div className="doplnky">{await doplnky(slug)}</div>
         </>
       )}
     </div>
@@ -70,6 +75,38 @@ async function aktualniRocnik() {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * Tři widgety s cizími daty jako doplněk pod obsahem: vodočet, výstrahy
+ * a počasí u nejbližší akce. Každý zvlášť v try — výpadek jednoho zdroje
+ * nesmí vzít ostatní.
+ */
+async function doplnky(slug: string) {
+  const bezpecne = async (co: () => Promise<React.ReactNode>) => {
+    try {
+      return await co();
+    } catch {
+      return null;
+    }
+  };
+
+  return (
+    <>
+      {await bezpecne(() => BokVodocet())}
+      {await bezpecne(() => BokVystrahy())}
+      {await bezpecne(async () => {
+        const termin = (await nadchazejici(slug))[0];
+        if (!termin) return null;
+        return (
+          <section>
+            <h2 className="bok-nadpis">Počasí · {termin.nazev}</h2>
+            <PocasiAkce datum={termin.datum} nazev={termin.nazev} />
+          </section>
+        );
+      })}
+    </>
+  );
 }
 
 async function obsah(bok: Bok, slug: string) {
@@ -86,14 +123,16 @@ async function obsah(bok: Bok, slug: string) {
           <>
             {await BokKalendar({ slug })}
             {await BokVodocet()}
+            {await BokVystrahy()}
           </>
         );
       case "novinky":
-        // Pod novinkami vodočet Orlíku (Filip, 16. 9. 2026).
+        // Pod novinkami vodočet Orlíku a výstrahy ČHMÚ (Filip, 16. 9. 2026).
         return (
           <>
             {await BokNovinky({ slug })}
             {await BokVodocet()}
+            {await BokVystrahy()}
           </>
         );
       case "akce":
