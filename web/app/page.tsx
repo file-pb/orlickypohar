@@ -6,11 +6,13 @@ import {
   nactiSerie,
   nactiSerii,
   type ClanekShrnuti,
+  type PoradiSerie,
   type SerieShrnuti,
 } from "@/lib/api";
 import { denAMesic } from "@/app/datum";
 import { VypisNovinek } from "@/app/novinky";
 import { Boky } from "@/app/boky";
+import { PoradiRadky } from "@/app/karusel-poradi";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu.
 export const dynamic = "force-dynamic";
@@ -46,6 +48,8 @@ export default async function Rozcestnik() {
   // Filip chce novinky na úvodní stránce. Tři poslední: dost na to, aby bylo
   // vidět, že se něco děje, a málo na to, aby odsunuly tlačítka na výsledky.
   let clanky: ClanekShrnuti[] | null = null;
+  // Pořadí tříd pro karusel na úvodu, kde nejsou boky.
+  let tridy: PoradiSerie["kategorie"] = [];
   if (aktualni) {
     try {
       const [detail, poradi, novinky] = await Promise.all([
@@ -54,6 +58,7 @@ export default async function Rozcestnik() {
         nactiClanky(aktualni.slug, { limit: 3 }),
       ]);
       clanky = novinky;
+      tridy = poradi?.kategorie.filter((k) => k.lode.length > 0) ?? [];
       if (detail) {
         const cekaji = detail.zavody.filter((z) => z.stav === "Planovany" || z.stav === "Vypsany");
         stav = {
@@ -121,6 +126,11 @@ export default async function Rozcestnik() {
         </div>
         <p className="kredit">Foto Jiří Tašl</p>
       </section>
+
+      {/* Pořadí jako karusel tam, kde boky nejsou (Filip, 15. 9. 2026). Stojí
+          mimo boky schválně: s boky ho CSS schová, a kdyby byl uvnitř středu,
+          přestaly by novinky začínat v rovině s boky. */}
+      {aktualni && <PoradiRadky slug={aktualni.slug} tridy={tridy} />}
 
       {/* Fotka jde přes celou šířku okna, boky až pod ní. */}
       <Boky serie={aktualni?.slug}>

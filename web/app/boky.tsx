@@ -10,6 +10,7 @@ import { datumClanku, denAMesic } from "@/app/datum";
 import { fotkaClanku } from "@/app/fotky";
 import { Stav } from "@/app/stav";
 import { ZnakTridy } from "@/app/tridy";
+import { KaruselTridy } from "@/app/karusel-poradi";
 
 /**
  * Boky širokého monitoru.
@@ -83,7 +84,10 @@ async function obsah(bok: Bok, slug: string) {
   }
 }
 
-/** Vedoucí tři lodě každé třídy. Celé pořadí je o klik dál. */
+/**
+ * Pořadí každé třídy jako karusel: vidět jsou tři lodě a celá třída pomalu
+ * projede dokola (Filip, 15. 9. 2026). Celé pořadí je o klik dál.
+ */
 async function BokPoradi({ slug }: { slug: string }) {
   const poradi = await nactiPoradi(slug);
   const tridy = poradi?.kategorie.filter((k) => k.lode.length > 0) ?? [];
@@ -101,15 +105,7 @@ async function BokPoradi({ slug }: { slug: string }) {
             <ZnakTridy nazev={k.kategorie} />
             {k.kategorie}
           </Link>
-          <ol className="bok-poradi">
-            {k.lode.slice(0, 3).map((l) => (
-              <li key={l.lod}>
-                <span className="poradi-cislo">{l.poradiPoSkrtu}.</span>
-                <span className="bok-lod">{l.lod}</span>
-                <span className="bok-body">{l.bodyPoSkrtu}</span>
-              </li>
-            ))}
-          </ol>
+          <KaruselTridy lode={k.lode} />
         </div>
       ))}
       <p className="bok-dal">
