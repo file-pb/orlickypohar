@@ -13,6 +13,7 @@ import { ZnakTridy } from "@/app/tridy";
 import { KaruselTridy } from "@/app/karusel-poradi";
 import { PocasiAkce } from "@/app/pocasi";
 import { BokVodocet } from "@/app/vodocet";
+import { dnesVPraze, vyberTerminu } from "@/lib/terminy";
 
 /**
  * Boky širokého monitoru.
@@ -154,15 +155,34 @@ async function nadchazejici(slug: string): Promise<Termin[]> {
     .sort((a, b) => a.datum.localeCompare(b.datum));
 }
 
+/**
+ * Tři termíny ročníku (Filip, 16. 9. 2026): nadcházející, a když jich do
+ * konce sezóny zbývá méně, doplněné posledními odjetými — výběr je
+ * v `vyberTerminu`. Ročník, který zatím nemá nic, dostane místo seznamu
+ * kartu o přípravě kalendáře ve stejné výšce, aby bok neposkočil.
+ */
 async function BokKalendar({ slug }: { slug: string }) {
-  // Deset, ne pět: bok má výšku, ať ji využije (Filip, 16. 9. 2026).
-  const terminy = (await nadchazejici(slug)).slice(0, 10);
+  const detail = await nactiSerii(slug);
+  if (!detail) return null;
+
+  const vse: Termin[] = [
+    ...detail.zavody.map((z) => ({ ...z, akce: false })),
+    ...(detail.akce ?? []).map((z) => ({ ...z, akce: true })),
+  ];
+  const terminy = vyberTerminu(vse, dnesVPraze());
 
   return (
     <section>
       <h2 className="bok-nadpis">Kalendář</h2>
       {terminy.length === 0 ? (
-        <p className="bok-prazdno">V ročníku už nic dalšího není.</p>
+        <div className="bok-priprava">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
+            <path d="M3.5 10h17M8 3v4M16 3v4M8 14h2.5M13.5 14H16M8 17.2h2.5" />
+          </svg>
+          <b>Kalendář {detail.rok} se připravuje</b>
+          <span>Zastávky a akce ročníku se tu objeví, jakmile budou vypsané.</span>
+        </div>
       ) : (
         <ul className="bok-seznam">
           {terminy.map((z) => (

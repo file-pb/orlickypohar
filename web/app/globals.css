@@ -1033,6 +1033,22 @@ th.vlevo, td.vlevo { text-align: left; }
   .karusel-vodorovny { overflow-x: auto; mask-image: none; }
 }
 .bok-prazdno { color: var(--tlumeny); margin: 0; }
+/* Ročník bez jediného termínu (Filip, 16. 9. 2026): místo prázdného
+   seznamu karta o přípravě kalendáře, stejně vysoká jako seznam tří
+   termínů — bok pod ní neposkočí, až se termíny objeví. */
+.bok-priprava {
+  display: grid; justify-items: center; align-content: center; gap: 0.35rem;
+  /* 13 rem = změřená výška seznamu tří termínů (207 px). */
+  min-height: 13rem; padding: 1rem; text-align: center;
+  border: 1px dashed var(--linka); border-radius: 10px;
+  background: color-mix(in srgb, var(--papir) 70%, transparent);
+  color: var(--tlumeny); font-size: 0.8rem; line-height: 1.45;
+}
+.bok-priprava svg {
+  width: 2rem; height: 2rem; margin-bottom: 0.2rem;
+  fill: none; stroke: var(--voda); stroke-width: 1.6; stroke-linecap: round;
+}
+.bok-priprava b { color: var(--text); font-size: 0.95rem; }
 /* Plakát akce: fotka na výšku a text dole přes přechod, jako úvodní fotka. */
 .bok-plakat {
   position: relative; display: block; overflow: hidden;
