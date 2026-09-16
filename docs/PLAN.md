@@ -1915,15 +1915,19 @@ Rozhodnutí:
 
 **Co je potřeba, aby to na serveru běželo** (jednou, v Cloudflaru):
 
-1. R2 → bucket `orlickypohar-fotky`, EU jurisdikce, Standard.
+1. R2 → bucket `orlickypohar-fotky`, **EU jurisdikce**, Standard. Token
+   se vydává pro jurisdikci zvlášť — token k bucketu bez EU na EU bucket
+   nesáhne. Se špatným endpointem nebo tokenem vrací R2 `AccessDenied`,
+   ne „bucket neexistuje". Smazáním bucketu se odpojí i vlastní doména.
 2. Bucket → *Custom Domains* → `orlickypohar-foto.klihovka.cz`. Veřejný
    přístup jen přes tuhle doménu, `r2.dev` vypnuté.
 3. Account API token *Object Read & Write* **jen na tenhle bucket**.
 4. Na serveru: endpoint do `/opt/apps/orlickypohar/.env` jako
    `FOTKY_ENDPOINT=https://<účet>.eu.r2.cloudflarestorage.com` a klíče do
    `secrets/Fotky__KlicId` a `secrets/Fotky__Klic` (vlastník UID 1654),
-   pak `docker compose up -d app`. Prázdné soubory tam leží od 16. 9.,
-   aby nasazení neselhalo dřív, než token existuje.
+   pak `docker compose up -d app`. **Hotové 16. 9. 2026**, zápis i čtení
+   přes doménu ověřené. Access Key ID má 32 znaků, Secret 64 — R2 na
+   prohozené hodnoty odpoví „Credential access key has length 64".
 
 ## Kde se pokračuje
 
