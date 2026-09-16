@@ -1001,6 +1001,9 @@ th.vlevo, td.vlevo { text-align: left; }
 }
 .vodocet-toky dt { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--tlumeny); }
 .vodocet-toky dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.vodocet-toky dd.vodocet-den { font-weight: 400; font-size: 0.72rem; color: var(--tlumeny); }
+.vodocet-bilance { margin: 0.55rem 0 0; font-size: 0.8rem; line-height: 1.45; }
+.vodocet-pozn { color: var(--tlumeny); font-size: 0.72rem; }
 
 /* Výstrahy ČHMÚ (Filip, 16. 9. 2026). Bez výstrahy klidná věta se zelenou
    tečkou; s výstrahou proužek v barvě stupně, jak je barví ČHMÚ. */

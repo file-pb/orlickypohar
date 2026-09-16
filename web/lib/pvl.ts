@@ -1,6 +1,6 @@
 /**
  * Stav nádrže Orlík z portálu Povodí Vltavy (Filip, 16. 9. 2026): hladina,
- * přítok, odtok a hodinová řada hladiny pro graf.
+ * objem, přítok, odtok a hodinová řada hladiny a odtoku.
  *
  * <b>Čte se HTML stránka, ne API.</b> Povodí Vltavy data jinak nevydává.
  * Stránka má dvě tabulky, na kterých to stojí: „Aktuální hodnoty" a řadu
@@ -17,13 +17,16 @@ import { unstable_cache } from "next/cache";
 
 export const ZDROJ_VODOCTU ="https://www.pvl.cz/portal/nadrze/cz/pc/Mereni.aspx?id=VLOR&oid=2";
 
-export type Mereni = { cas: string; hladina: number };
+/** Odtok v m³/s; `null`, když ho řádek nemá. */
+export type Mereni = { cas: string; hladina: number; odtok: number | null };
 
 export type StavNadrze = {
   /** Čas aktuálních hodnot, jak ho uvádí zdroj: „16.09.2026 00:10". */
   cas: string;
   /** Hladina v m n. m. */
   hladina: number;
+  /** Objem vody v nádrži, mil. m³. */
+  objem: number | null;
   /** m³/s */
   pritok: number | null;
   /** m³/s */
@@ -90,7 +93,7 @@ export function rozeberStranku(html: string): StavNadrze | null {
   const rada = vse.find((t) => t[0]?.includes("Datum")) ?? [];
   const vsechna = rada
     .slice(1)
-    .map((r) => ({ cas: r[0] ?? "", hladina: cislo(r[1]) }))
+    .map((r) => ({ cas: r[0] ?? "", hladina: cislo(r[1]), odtok: cislo(r[2]) }))
     .filter((m): m is Mereni => CAS.test(m.cas) && m.hladina !== null)
     .reverse();
   const posledni = vsechna.length ? minuty(vsechna[vsechna.length - 1].cas) : 0;
@@ -103,6 +106,7 @@ export function rozeberStranku(html: string): StavNadrze | null {
   return {
     cas: casAktualnich ? `${casAktualnich[1]} ${casAktualnich[2]}` : "",
     hladina,
+    objem: hodnota(/^Objem/),
     // „Přítok" se v HTML může psát entitou, proto ne doslova.
     pritok: hodnota(/^P\S{0,6}tok/),
     odtok: hodnota(/^Odtok/),
@@ -208,7 +212,8 @@ const nactiOrlikDoCache = unstable_cache(
     if (!stav) throw new Error("Stránka PVL nemá očekávaný tvar");
     return stav;
   },
-  ["vodocet-orlik"],
+  // Klíč nese verzi tvaru: po změně polí by cache vydala starý tvar.
+  ["vodocet-orlik-2"],
   { revalidate: 1800 },
 );
 
@@ -234,3 +239,33 @@ export function zmenaCm(historie: Mereni[], hodin = 6) {
   );
   return Math.round((posledni.hladina - drive.hladina) * 100);
 }
+
+/**
+ * Kolik vody z nádrže odteklo za posledních 24 hodin, v m³.
+ *
+ * <b>Sčítá se hodinová řada, ne okamžitý odtok.</b> Orlík je špičková
+ * elektrárna: vodu pouští pár hodin denně ve stovkách m³/s a zbytek dne
+ * stojí. Okamžitá hodnota je tak většinou nula a o dni neříká nic.
+ *
+ * Bere se jen měření v celou hodinu — desetiminutová na konci řady by
+ * poslední hodinu započítala víckrát. Každé stojí za celou hodinu. Když
+ * jich je méně než 20, řada je děravá a výsledek by lhal; vrací se `null`.
+ */
+export function odtokZaDen(historie: Mereni[]) {
+  if (!historie.length) return null;
+  const posledni = minuty(historie[historie.length - 1].cas);
+  const hodinova = historie.filter(
+    (m) => m.cas.endsWith(":00") && posledni - minuty(m.cas) < 24 * 60 && m.odtok != null,
+  );
+  if (hodinova.length < 20) return null;
+
+  // Chybějící hodiny se doplní průměrem, ať 22 měření nevypadá jako méně vody.
+  const soucet = hodinova.reduce((s, m) => s + m.odtok!, 0);
+  return (soucet / hodinova.length) * 24 * 3600;
+}
+
+/** Přítok v m³/s přepočtený na den, v m³. Přítok je řeka a mění se pomalu. */
+export const zaDen = (m3s: number) => m3s * 24 * 3600;
+
+/** Olympijský bazén: 50 × 25 × 2 m. Míra, kterou si člověk představí. */
+export const BAZEN_M3 = 2500;
