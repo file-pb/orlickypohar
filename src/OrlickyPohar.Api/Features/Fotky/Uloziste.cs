@@ -125,6 +125,10 @@ public static class UlozisteRegistrace
     public static bool PridejUloziste(this IServiceCollection services, IConfiguration konfigurace)
     {
         var nastaveni = konfigurace.GetSection("Fotky").Get<FotkyNastaveni>() ?? new FotkyNastaveni();
+        // Soubor s tajemstvím často končí novým řádkem z editoru nebo `echo`.
+        // V klíči by znamenal odmítnutý podpis bez jakéhokoliv vodítka.
+        nastaveni.KlicId = nastaveni.KlicId?.Trim();
+        nastaveni.Klic = nastaveni.Klic?.Trim();
         services.AddSingleton(nastaveni);
 
         if (!nastaveni.Uplne)
