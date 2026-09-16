@@ -392,6 +392,7 @@ def znacka_loga_ts():
     radky += ["  ],", f'  oblouk: "{body_(oblouk_)}",']
     for nazev, (vb, napis) in verze.items():
         radky += [f"  {nazev}: {{", f'    viewBox: "{vb}",', f'    napis: "{napis}",', "  },"]
+    radky += [f"  pruhy: {{ perioda: {PRUHY_PERIODA}, tloustka: {PRUHY_TLOUSTKA} }},"]
     radky += ["} as const;", ""]
     return "\n".join(radky)
 
@@ -406,7 +407,12 @@ LOGO_BARVY = {
     "tmave": {"seda": (196, 206, 216), "hlavni": (127, 167, 201), "druha": (226, 90, 109),
               "napis": (237, 234, 229), "na_plachte": ((20, 23, 26), 0.35)},
 }
-NAPIS_PRUHLEDNOST = 0.7  # stejná hodnota je v CSS webu u .logo-napis
+# Nápis v logu pro monitor je z vodorovných proužků jako námořnické tričko
+# (Filip, 16. 9. 2026, varianta B z náhledu). Perioda a plná část proužku
+# v jednotkách kresby; v hlavičce je jednotka asi 0,13 px. Web bere tatáž
+# čísla z `znacka-loga.ts`.
+PRUHY_PERIODA = 22
+PRUHY_TLOUSTKA = 12
 HEX = lambda c: "#%02x%02x%02x" % c
 BODY = lambda body: " ".join(f"{x:.0f},{y:.0f}" for x, y in body)
 
@@ -420,13 +426,19 @@ def logo_svg(verze, odstin="svetle"):
     orez = f"orez-{verze}"
 
     # Na monitoru je nápis plný a čte se, na mobilu je jen slabý vodoznak.
-    # Plný nápis je malinko průhledný, aby nepřebil plachty (Filip, 15. 9. 2026).
-    pod = (f'<path fill="{HEX(b["napis"])}" fill-opacity="{NAPIS_PRUHLEDNOST}" d="{napis}"/>' if verze == "monitor"
+    # Na monitoru je nápis z proužků, na mobilu slabý vodoznak.
+    pruhy = f"pruhy-{verze}"
+    vzor = (f'<pattern id="{pruhy}" patternUnits="userSpaceOnUse" '
+            f'width="{PRUHY_PERIODA}" height="{PRUHY_PERIODA}">'
+            f'<rect width="{PRUHY_PERIODA}" height="{PRUHY_TLOUSTKA}" fill="{HEX(b["napis"])}"/></pattern>')
+    pod = (f'<path fill="url(#{pruhy})" d="{napis}"/>' if verze == "monitor"
            else f'<path fill="{HEX(b["hlavni"])}" fill-opacity="0.18" d="{napis}"/>')
     barva, pruhlednost = b["na_plachte"]
     return "".join([
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{vb}">',
-        f'<defs><clipPath id="{orez}">',
+        "<defs>",
+        vzor if verze == "monitor" else "",
+        f'<clipPath id="{orez}">',
         *(f'<polygon points="{BODY(body)}"/>' for _, body in plachty),
         f'<polygon points="{BODY(oblouk_)}"/></clipPath></defs>',
         pod,
