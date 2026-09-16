@@ -11,6 +11,7 @@ using OrlickyPohar.Api.Features.Import;
 using OrlickyPohar.Api.Features.Poradatele;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Sprava;
+using OrlickyPohar.Api.Features.Vodocet;
 using OrlickyPohar.Api.Features.Zavody;
 
 // Dvoufázová inicializace: i pád při startu skončí ve strukturovaném logu.
@@ -52,6 +53,16 @@ try
     builder.Services.AddScoped<PrihlaskySprava>();
     builder.Services.AddScoped<PoradateleSprava>();
     builder.Services.AddScoped<FotkySprava>();
+
+    // Vodočet Orlíku: sběr z Povodí Vltavy jen tam, kde je zapnutý.
+    builder.Services.AddHttpClient(SberVodocetu.Klient, c =>
+        {
+            c.Timeout = TimeSpan.FromSeconds(15);
+            c.DefaultRequestHeaders.UserAgent.ParseAdd("OrlickyPohar/1.0 (+https://orlickypohar.klihovka.cz)");
+        })
+        .ConfigurePrimaryHttpMessageHandler(Pvl.Handler);
+    if (builder.Configuration.GetValue<bool>("Vodocet:Sber"))
+        builder.Services.AddHostedService<SberVodocetu>();
     // .NET popisuje čísla jako ["integer","string"], protože je při čtení
     // přijímá i v uvozovkách. Odpovědi je ale píšou vždycky jako čísla —
     // a generovaný klient by jinak u každého bodu nutil ověřovat, jestli
@@ -129,6 +140,7 @@ try
     app.MapZavody();
     app.MapClanky();
     app.MapImport();
+    app.MapVodocet();
     if (identita)
     {
         app.MapJa();

@@ -1016,6 +1016,20 @@ class H(BaseHTTPRequestHandler):
             self.wfile.write(data)
             return
 
+        if cesta == "/vodocet/orlik":
+            # Vymyšlený, ale věrohodný den: hladina klesá, elektrárna pustila
+            # vodu dvakrát. Skutečná čísla sbírá API z Povodí Vltavy.
+            from datetime import datetime, timedelta, timezone
+            konec = datetime.now(timezone.utc).replace(second=0, microsecond=0)
+            konec -= timedelta(minutes=konec.minute % 10)
+            body = [{"cas": (konec - timedelta(minutes=10 * i)).isoformat().replace("+00:00", "Z"),
+                     "hladina": round(334.66 + 0.08 * i / 144, 2)} for i in range(144, -1, -1)]
+            return self.odpoved({
+                "cas": body[-1]["cas"], "hladina": 334.66, "objem": 345.4, "pritok": 14.33,
+                "odtok": 0.0, "pritokZaDen": 1_231_000.0, "odtokZaDen": 3_016_656.0,
+                "zmenaObjemu": -1_780_000.0, "historie": body,
+                "zdroj": "https://www.pvl.cz/portal/nadrze/cz/pc/Mereni.aspx?id=VLOR&oid=2"})
+
         if cesta in ("/health", "/health/ready"):
             # Skutečné API je má taky; bez nich by zátěžový test hlásil
             # červenou na endpointu, který s aplikací nesouvisí.

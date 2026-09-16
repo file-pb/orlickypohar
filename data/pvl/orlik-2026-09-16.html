@@ -1,0 +1,621 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><meta http-equiv="Pragma" content="no-cache" /><meta http-equiv="Expires" content="-1" /><meta http-equiv="cache-control" content="private" /><title>
+	Povodí Vltavy - Stavy nádrží
+</title><link href="../../Styles/Style.css" rel="stylesheet" type="text/css" />
+    
+    <!-- Global site tag (gtag.js) - Google Analytics-->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-15884733-3"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'UA-15884733-3');
+    </script>
+<link href="../../App_Themes/PC/PC.css" type="text/css" rel="stylesheet" /></head>
+<body onload="ZvolTemaAplikaceNaZakladeRozliseniKlienta();">
+    <form name="aspnetForm" method="post" action="./Mereni.aspx?id=VLOR&amp;oid=2" id="aspnetForm">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="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AgIBDw8WAh8AZWRkAggPDxYCHwVoZGQCCw8WAh8FaGQCDQ9kFgQCAQ9kFgQCAQ8PFgQfBwUYfi9JbWFnZXMvbG9nb19tYWxlXzIuZ2lmHwIFEmh0dHBzOi8vd3d3LnB2bC5jemRkAgMPDxYCHwAFDlBvdm9kw60gVmx0YXZ5ZGQCAw9kFgICAw8PFgIfAgUTaHR0cDovL3d3dy5jaG1pLmN6L2RkGAQFHl9fQ29udHJvbHNSZXF1aXJlUG9zdEJhY2tLZXlfXxYHBQpjdGwwMCRDeklCBQpjdGwwMCRTa0lCBQpjdGwwMCRFbklCBQpjdGwwMCRQQ0lCBRJjdGwwMCRTbWFydFBob25lSUIFDGN0bDAwJFRleHRJQgUsY3RsMDAkT2JzYWhDUEgkaGxhdmlja2FGb3JtVmlldyRHZW5lcnVqUERGSUIFIGN0bDAwJE9ic2FoQ1BIJEFrdHVhbG5pSG9kbm90eURWDxQrAAdkZGRkZBYAAgFkBR5jdGwwMCRPYnNhaENQSCRkYXRhTWVyZW5pMjRoR1YPPCsADAEIAgFkBR9jdGwwMCRPYnNhaENQSCRobGF2aWNrYUZvcm1WaWV3DxQrAAdkZGRkZBYAAgFkIPITrCUImd3YlGeALJW6YsRqEfa8a+yiJeiJIFUZAjQ=" />
+
+
+<script src="/portal/Nadrze/ScriptResource.axd?d=iAehb6pz2YfNxLA-u7R6TA9n2R0E1vdJ8wBQKlEXkl8KAjMyz0gSgO7fFIVg4RlmJ1BSc4JdT9n6s7IddLaH5ulFdWhxR0rhC_4BWVSmTAfNA0IMDtoJeNoCUA_9a7mi8O98eQDBjXKmH7Vbf18fLFnriu_87ow2mUMISObgP001&amp;t=2a9d95e3" type="text/javascript"></script>
+<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="87ADFECA" />
+<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEdADT5IrlTuZUB4VGZjd9XNN8gZmUr3LOVL7ax8se9GIqeCQGle2a7fZec8jQf//+LraZhl/WibYyd08dcYzINs6uVOFXS/ivrexIUOHcVhSZeTyLlpSywy9wbEF+mAKPfUt47FL52qE0uAGl3WSNO8A3i9GMkmOIqO1dqErqcxIUgsSqafWBPiqbgxn/LBDQuN1MKaTcHIR0xgdLPM50b7wuP2RrIqJSCaR/Ze7/aKQM6v/L3WmOvC7pMnAoUaQms9amDiF4034O/GEHwkCg/kMZI+yFQ2ptYD7H8eCpNaLuR+27zFoHCMfn0kQSTzz9UcFrSuofXvbw6xsY1tnpcJm8OZrYv4NTQ5A/YQgOiR1nKKGkkIbiTWfRbrxF94ZsSFoAiOv7vxmnUh9yjR3Ylm6jX9+itPHmtGLzSCe/MuEv3U+C3jVrrLilzFAcGu0xGCRBuN/tkaeN/d1m/lM5UgG5yvAzGIw3RAabDDx08woCW5Y008xXjTOJX5AVV9+xpZUEiltdwyhRLm2nq8Di+rkKHzPd9xSxzEIDndjRBsxtLXwd4EiTE9WaJ7z3GAIuaNmkQiSkdE8+Hai53/O3p9TdU6mf3kLtBXz2sKDtqB3pGiUwtqxx3bd0MRz7pZY/OCzUzAHmt1zSXB7FhV0wJj9PtEesW/lk+A9T75FBc6QkJplFS1z0BSOx3LksgtXRVji75Oo9QOIl0X1XyUZYgD1rROJUD3IoJv9pywhw7sSNEppsojymV4tbgxhtdoO0ScYrVXUtYNCpFg6hZKKhj15uQOlmHgGOUhcaTIncmTSNrEF6D45qHEWxh4bp4GS8mp0ha+AqgW8PPqIfM15igduM3e3vGyHypk4RdEqgKrG0oSmMnHQjh1XMdq98ePQDw+5GgzA5hDxT0f2xZ66tvXT+qDRUXo1WDVOnzr8LFshJCyv6Z49KJURNN1WQeIDkV+mv9DUTm5DRG85KbHG2w47lpQp9zTnfBa+awmCxj8rURxF0dspH7QKhryptIq3M2nE734o92ejclXUJrfbFO23wCxtvMyJv1tpucr4vBGEiRxE8Qpw7rnX7eIN5M/LewlC4HNEpSOpYm3gIU+ACLLrfxp0y3HYxhhPrRVvjn7svjrKQIjaYwygF53eCoesrgh6I=" />
+        <script src='/portal/Nadrze/Scripts/MasterUtility.js' type="text/javascript"></script>
+        
+        <div id="horniMenuDiv" style="padding: 0px 5px 0px 5px; height: 20px; filter: progid:DXImageTransform.Microsoft.Gradient(endColorstr='#0000ffff', startColorstr='#FF99CCCC', gradientType='0')">
+            <span style="float: left; text-align: left">
+                <a id="ctl00_StavyAPrutokyHL" class="zahlavi1" href="https://www.pvl.cz/portal/sap/" target="_blank"><b>Stavy a průtoky</b></a>&nbsp;
+                <span class="oddelovac">|</span>&nbsp;
+                <a id="ctl00_NadrzeHL" class="zahlavi1" href="CelkovaMapa.aspx"><b>Nádrže</b></a>&nbsp;
+                <span class="oddelovac">|</span>&nbsp;
+                <a id="ctl00_SrazkyHL" class="zahlavi1" href="https://www.pvl.cz/portal/srazky/" target="_blank"><b>Srážky</b></a>&nbsp;
+                <span class="oddelovac">|</span>&nbsp;
+                <a id="ctl00_JakostHL" class="zahlavi1" href="https://www.pvl.cz/portal/jvn/cz/index.htm" target="_blank"><b>Jakost</b></a>
+            </span>
+            <span style="float: right; text-align: right">
+                <span id="ctl00_PosledniAktualizaceLbl" class="zahlavi1">Poslední aktualizace stránek</span>
+                <span id="ctl00_PosledniAktualizaceDatumLbl" class="zahlavi1">16.09.2026 23:20</span>
+            </span>
+        </div>
+        <div id="ctl00_obsahVseDiv" style="background-repeat: repeat-x; width: 100%; position: relative;">
+            <div id="ctl00_obsahZuzenyCentrovanyDiv" class="obsahZuzenyCentrovany">
+                <div id="ctl00_hlavickaDiv" style="background-repeat:no-repeat;width:100%;height:110px;border-bottom:1px solid #AAAAAA;background-image:url(/portal/Nadrze/Images/zahlavi/zahlavi_cz.jpg);">
+                    <div id="ctl00_linkaDiv" style="width:100%;z-index:1500;height:6px;background-image:url(/portal/Nadrze/Images/zahlavi/bgzahlavi.jpg);"></div>
+                    <a id="ctl00_LogoPovodiHL" href="https://www.pvl.cz" target="_blank" style="display:inline-block;position: absolute; top: 34px; right: 13px; border: 1px solid #AAAAAA; padding: 2px; background-color: white"><img src="../../Images/logo_povodi_2.gif" alt="" border="0" /></a>
+                    <select name="ctl00$MonitorovaciStaniceDDL" id="ctl00_MonitorovaciStaniceDDL" class="text1" style="position: absolute; top: 69px; left: 85px;">
+	<option value="-1">--- N&#225;drž (n&#225;drž - tok) ---</option>
+	<option value="BIBI|1">VD B&#237;lsko - B&#237;lsk&#253; potok</option>
+	<option value="BLHU|1">VD Husinec - Blanice (PI)</option>
+	<option value="CRSO|1">VD Soběnov - Čern&#225;</option>
+	<option value="CPDR|3">VD Dr&#225;ten&#237;k - Červen&#253; potok (BE)</option>
+	<option value="CPZA|3">VD Z&#225;skalsk&#225; - Červen&#253; potok (BE)</option>
+	<option value="KLDP|3">VD Dolejš&#237; Padrťsk&#253; rybn&#237;k - Klabava</option>
+	<option value="KLHP|3">VD Hořejš&#237; Padrťsk&#253; rybn&#237;k - Klabava</option>
+	<option value="KLKL|3">VD Klabava - Klabava</option>
+	<option value="KCKC|3">VD Kl&#237;čava - Kl&#237;čava</option>
+	<option value="LILA|3">VD L&#225;z - Litavka</option>
+	<option value="MARI|1">VD Ř&#237;mov - Malše</option>
+	<option value="MZHR|3">VD Hracholusky - Mže</option>
+	<option value="MZLU|3">VD Lučina - Mže</option>
+	<option value="MZSS|3">VD Plzeň-Štruncovy sady - Mže</option>
+	<option value="OPOB|3">VD Obecnice - Obecnick&#253; potok</option>
+	<option value="PPPI|3">VD Pilsk&#225; (u Př&#237;bramě) - Pilsk&#253; potok</option>
+	<option value="RACU|3">VD Česk&#233; &#218;dol&#237; - Radbuza</option>
+	<option value="SAPI|2">VD Pilsk&#225; u Žď&#225;ru - S&#225;zava</option>
+	<option value="SPNE|2">VD Němčice - Sedlick&#253; potok</option>
+	<option value="SVSV|2">VD Staviště - Staviště</option>
+	<option value="SCHU|1">VD Humenice - Stropnice</option>
+	<option value="STST|2">VD Strž - Stržsk&#253; potok</option>
+	<option value="STZL|3">VD Žlutice - Střela</option>
+	<option value="SPKA|1">VD Karhof - Studensk&#253; potok</option>
+	<option value="SPZH|1">VD Zhejral - Studensk&#253; potok</option>
+	<option value="SMSM|3">VD Suchomasty - Suchomastsk&#253; potok</option>
+	<option value="TRTR|2">VD Trn&#225;vka - Trnava</option>
+	<option value="UHNY|3">VD N&#253;rsko - &#218;hlava</option>
+	<option value="VLHN|1">VD Hněvkovice - Vltava</option>
+	<option value="VLKA|2">VD Kam&#253;k - Vltava</option>
+	<option value="VLKO|1">VD Kořensko - Vltava</option>
+	<option value="VLL1|1">VD Lipno 1 - Vltava</option>
+	<option value="VLL2|1">VD Lipno 2 - Vltava</option>
+	<option selected="selected" value="VLOR|2">VD Orl&#237;k - Vltava</option>
+	<option value="VLSL|2">VD Slapy - Vltava</option>
+	<option value="VLST|2">VD Štěchovice - Vltava</option>
+	<option value="VLVE|2">VD Vran&#233; - Vltava</option>
+	<option value="HESE|2">VD Sedlice - Želivka</option>
+	<option value="ZESV|2">VD Švihov (Želivka) - Želivka</option>
+	<option value="HEVR|2">VD Vřesn&#237;k - Želivka</option>
+
+</select>
+
+                    <div id="pocitadloAJazykyDiv" style="position: absolute; top: 10px; right: 5px;">
+                        <span style="margin: 0px 10px 0px 250px;">
+                            &nbsp;
+                        </span>
+                        <span>
+                            <input type="image" name="ctl00$CzIB" id="ctl00_CzIB" title="Česká verze" src="../../Images/vlajky/vlajky_r1_c1_f2.gif" border="0" />&nbsp;
+                            <input type="image" name="ctl00$SkIB" id="ctl00_SkIB" title="Slovenská verzia" onmouseover="ZvyrazniTlacitkoSVlajkou(this)" onmouseout="ZasedniTlacitkoSVlajkou(this)" src="../../Images/vlajky/vlajky_r1_c3.gif" border="0" />&nbsp;
+                            <input type="image" name="ctl00$EnIB" id="ctl00_EnIB" title="English version" onmouseover="ZvyrazniTlacitkoSVlajkou(this)" onmouseout="ZasedniTlacitkoSVlajkou(this)" src="../../Images/vlajky/vlajky_r1_c7.gif" border="0" />&nbsp;
+                         
+                        </span>
+                    </div>
+                    <div id="spodniMenuDiv" style="position: absolute; top: 88px; width: 100%;">
+                        <span style="float: left; padding-left: 5px;">
+                            <a id="ctl00_CelkovaMapaPovodiHL" class="zahlavi1" href="CelkovaMapa.aspx"><b>Celková mapa povodí</b></a>&nbsp;
+                            <span id="ctl00_Label1" class="oddelovac">|</span>&nbsp;
+                            <a id="ctl00_PrehledMereniHL" class="zahlavi1" href="Prehled.aspx"><b>Přehled měření</b></a>&nbsp;
+                            <span id="ctl00_Label2" class="oddelovac">|</span>&nbsp;
+                            <a id="ctl00_ObjemyVodyHL" class="zahlavi1" href="Objemy.aspx"><b>Objemy vody v nádržích</b></a>&nbsp;
+                         
+                        </span>
+                        
+                        <span style="float: right; padding-right: 5px;">
+                            <span id="ctl00_Label4" class="text1bold">Zobrazení:</span>
+                            <input type="image" name="ctl00$PCIB" id="ctl00_PCIB" class="text1" src="../../Images/temata/pc.png" border="0" />
+                            <input type="image" name="ctl00$SmartPhoneIB" id="ctl00_SmartPhoneIB" class="zahlavi1" onmouseover="ZvyrazniTlacitkoProVolbuVzhledu(this)" onmouseout="ZasedniTlacitkoProVolbuVzhledu(this)" src="../../Images/temata/smartphone_zasedle.png" border="0" />
+                            <input type="image" name="ctl00$TextIB" id="ctl00_TextIB" class="zahlavi1" onmouseover="ZvyrazniTlacitkoProVolbuVzhledu(this)" onmouseout="ZasedniTlacitkoProVolbuVzhledu(this)" src="../../Images/temata/text_zasedle.png" border="0" />
+                        </span>
+                    </div>
+                </div>
+                <div style="padding: 0px 5px 0px 5px;">
+                    <div style="width: 100%; height: 15px; padding-top: 5px;">
+                        <span id="ctl00_SkrytyNazevLbl" class="texthide" style="width: 25%; float: left">Stavy a průtoky</span>
+                        <span id="ctl00_UpozorneniLbl" class="textUpozor" style="float: left; width: 50%; text-align: center;">UPOZORNĚNÍ: Veškerá uváděná data jsou bez záruky</span>
+                        <span id="ctl00_SkryteDatumLbl" class="texthide" style="width: 25%; float: left; text-align: right;">16.09.2026 23:23:34</span>
+                    </div>
+                    <div id="obsahDiv" style="padding: 5px;">
+                        
+    <script src='/portal/Nadrze/Scripts/jquery-1.10.1.min.js' type="text/javascript"></script>
+
+    <script src='/portal/Nadrze/Scripts/Mereni.js' type="text/javascript"></script>
+    
+    
+
+    
+    
+    <input name="ctl00$ObsahCPH$zobrazeneGrafyHiddenField" type="hidden" id="zobrazeneGrafyHiddenField" value="1" />
+
+    
+    
+    
+    
+    
+    <table style="width: 100%;">
+        <tr style="vertical-align: top;">
+            <td style="width: 408px;">
+                <table cellspacing="0" border="0" id="hlavickaFormView">
+	<tr>
+		<td colspan="2">
+                        <table class="tabulkaStaniceMereni" style="width: 400px; margin-left: 9px;">
+                            <thead>
+                                <tr>
+                                    <td colspan="2" class="bunkaFormView" valign="middle">
+                                        <span id="nazevLbl">VD Orlík</span>
+                                        <span style="float: right; text-align: right">
+                                            
+                                            
+                                            <input type="image" name="ctl00$ObsahCPH$hlavickaFormView$GenerujPDFIB" id="GenerujPDFIB" title="Generovat PDF" src="../../Images/generovat_pdf.png" alt="PDF" border="0" style="margin-left: 4px;" />
+                                        </span>
+
+                                    </td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        Tok:</td>
+                                    <td>
+                                        <span id="povodiLbl">Vltava</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        Koruna hráze:</td>
+                                    <td>
+                                        <span id="korunaHrazeLbl">361,10 [m n.m.]</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #ff8040;">
+                                        Kóta přelivu:</td>
+                                    <td>
+                                        <span id="kotaPrelivuLbl">345,60 [m n.m.]</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #ff0000;">
+                                        Maximální retenční hladina:</td>
+                                    <td>
+                                        <span id="maxRetHladinaLbl">353,60 [m n.m.]</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #008000;">
+                                        Hladina zásobního prostoru:</td>
+                                    <td>
+                                        <span id="hladZasProstLbl">349,90 [m n.m.]</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #ff00ff;">
+                                        Hladina stálého nadržení:</td>
+                                    <td>
+                                        <span id="hladStalNadtLbl">329,60 [m n.m.]</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        Výškový systém:</td>
+                                    <td>
+                                        <span id="vyskovySystemLbl">Balt p.v.</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        Poznámka:</td>
+                                    <td>
+                                        <span id="poznamkaLbl"></span></td>
+                                </tr>
+                            </tbody>
+
+                        </table>
+                    </td>
+	</tr>
+</table>
+            </td>
+            
+            <td id="schemaTD" style="padding-left: 10px;" align="left" valign="middle">
+                <div style="width: 332px; font-family: 'MS Sans Serif', sans-serif; font-size: 8pt; font-weight: normal; text-align: left;">
+                    <span style="text-align: left;">
+                        <span id="schemaNadrzeLbl">Schéma:</span></span><br />
+                    <img id="schemaNadrzeImg" src="../../Images/grafy/GrafSchema_2_VLOR_cz.png" border="0" />
+                </div>
+            </td>
+        </tr>
+    </table>
+    
+    <input type="hidden" name="ctl00$ObsahCPH$TextPrechodNaBilancniData" id="TextPrechodNaBilancniData" value="Přejít na bilanční data (měsíc)" />
+    <input type="hidden" name="ctl00$ObsahCPH$TextPrechodNaAktualniData" id="TextPrechodNaAktualniData" value="Přejít na aktuální data (týden)" />
+    <span id="prepinacSpan" class="bilancniAktualniDataOdkaz text1bold" onclick="prepniZobrazeni();">Přej&#237;t na bilančn&#237; data (měs&#237;c)</span>
+    <br />
+    
+    <table id="tabAGrafAktual" style="position:relative;margin-left:-10px;box-sizing:border-box;vertical-align:top;display:block;">
+	<tr>
+		<td id="grafTydenniTD" style="position: relative; overflow: hidden; width: 450px; height: 200px; font-family: &#39;Microsoft Sans Serif&#39;, sans-serif; font-size: 11px; vertical-align: top;">
+                    <div id="grafTydenniDiv" style="height: 200px; width: 450px; margin-top: 0px;">
+                        <img id="GrafTydenniImg" src="../../Images/grafy/GrafTydenni_2_VLOR_cz.png" alt="Graf" height="610" width="450" border="0" />
+                    </div>
+                </td>
+		<td style="vertical-align: top; height: 610px;">
+
+                    
+                    <div>
+			<table cellspacing="0" cellpadding="3" rules="all" bordercolor="#AAAAAA" border="1" id="dataMereni24hGV" style="margin-top:10px; margin-bottom:5px">
+				<tr class="text1 bunkaHlavicky" bgcolor="Silver">
+					<th scope="col" style="border:1px solid #AAAAAA;">Datum</th><th scope="col" style="border:1px solid #AAAAAA;">
+                                    <span id="Label3" class="text1bold">Hladina</span>
+                                    <span id="Label4" class="text1">[m. n. m.]</span>
+                                    </div>
+                                </th><th scope="col" style="border:1px solid #AAAAAA;">
+                                    <span id="Label3" class="text1bold">Odtok</span>
+                                    <span id="Label4" class="text1">[m<sup>3</sup>s<sup>-1</sup>]</span>
+                                    </div>
+                                </th><th scope="col" width="45" style="border:1px solid #AAAAAA;">
+                                    <span class="text1bold">Q</span><span class="index1bold">N</span>
+                                </th>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 23:10</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,69</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 23:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,69</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 22:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,69</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 21:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,69</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 20:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,68</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 19:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,68</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 18:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,67</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 17:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,67</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 16:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,66</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 15:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,66</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 14:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,66</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 13:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,64</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 12:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,66</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 11:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,66</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">194,84</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 10:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,70</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">164,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 09:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,73</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">126,15</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 08:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,73</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 07:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,74</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 06:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,73</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 05:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,73</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 04:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,72</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 03:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,71</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 02:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,72</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 01:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,70</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">16.09.2026 00:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,71</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">15.09.2026 07:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,73</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">14.09.2026 07:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,82</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">13.09.2026 07:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,75</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">12.09.2026 07:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,70</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">11.09.2026 07:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,71</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">10.09.2026 07:00</td><td class="bunkaGriduBold" align="center">
+                                    <span id="hladinaLbl">334,78</span>
+                                </td><td class="bunkaGridu" align="center">
+                                    <span id="odtokLbl">0,00</span>
+                                </td><td class="bunkaGriduBold" align="left" width="45">
+                                    <span></span>
+                                </td>
+				</tr>
+			</table>
+		</div>
+
+                </td>
+	</tr>
+</table>
+
+
+    
+    <table id="tabAGrafBilance" style="position:relative;margin-left:-10px;box-sizing:border-box;display:none;vertical-align:top;">
+	<tr>
+		<td style="width: 450px; height: 1010px; font-family: &#39;Microsoft Sans Serif&#39;, sans-serif; font-size: 11px; vertical-align: top; overflow: hidden;">
+                    <div id="GrafMesicni2Div" style="position: absolute; z-index: 1000; height: 200px; width: 450px; margin-top: 0px; overflow: hidden; display: none;">
+                        <img id="GrafMesicni2Img" src="../../Images/grafy/GrafMesicni_2_VLOR_cz.png" alt="Graf" width="450" border="0" />
+                    </div>
+                    <div id="GrafMesicniDiv" style="position: relative; height: 200px; width: 450px; margin-top: 0px;">
+                        <img id="GrafMesicniImg" src="../../Images/grafy/GrafMesicni_2_VLOR_cz.png" alt="Graf" width="450" border="0" />
+                    </div>
+                </td>
+		<td style="vertical-align: top;">
+
+                    
+                    <div>
+			<table class="text1" cellspacing="0" cellpadding="3" rules="all" bordercolor="#AAAAAA" border="1" id="AktualniHodnotyDV" style="margin-top:10px; margin-bottom:5px">
+				<tr class="text1 bunkaHlavicky noBorderTd" bgcolor="Silver">
+					<td colspan="2">
+                            <span class="text1bold">
+                                <span id="aktHodnotyLbl">Aktuální hodnoty</span>
+                                (<span id="casMereniLbl">16.09.2026 23:10</span>)
+                            </span>
+                        </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">
+                                    <span>Hladina vody v nádrži</span>
+                                    [<span id="jednotkaLbl">m n.m.</span>]
+                                </td><td class="bunkaGriduBold" align="center">
+                                    <span id="hodnotaLbl" class="text1bold">334,69</span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">
+                                    <span>Objem</span>
+                                    <span id="jednotkaLbl">[mil. m<sup>3</sup>]</span>
+                                </td><td class="bunkaGriduBold" align="center">
+                                    <span id="hodnotaLbl" class="text1bold">345,40</span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">
+                                    <span>Přítok</span>
+                                    <span id="jednotkaLbl">[m<sup>3</sup>s<sup>-1</sup>]</span>
+                                </td><td class="bunkaGriduBold" align="center">
+                                    <span id="hodnotaLbl" class="text1bold">14,33</span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">
+                                    <span>Odtok</span>
+                                    <span id="jednotkaLbl">[m<sup>3</sup>s<sup>-1</sup>]</span>
+                                </td><td class="bunkaGriduBold" align="center">
+                                    <span id="hodnotaLbl" class="text1bold">0,00</span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">
+                                    <span>Srážky (24h)</span>
+                                    <span id="jednotkaLbl">[mm]</span>
+                                </td><td class="bunkaGriduBold" align="center">
+                                    <span id="hodnotaLbl" class="text1bold"></span>
+                                </td>
+				</tr><tr bgcolor="#FFFFFF">
+					<td class="bunkaGridu">
+                                    <span>Teplota vzduchu</span>
+                                    <span id="jednotkaLbl">[°C]</span>
+                                </td><td class="bunkaGriduBold" align="center">
+                                    <span id="hodnotaLbl" class="text1bold"></span>
+                                </td>
+				</tr>
+			</table>
+		</div>
+
+                </td>
+	</tr>
+</table>
+
+
+
+                    </div>
+                    
+                    <div id="ctl00_logaDiv" style="width: 100%; border-top: 1px solid #AAAAAA; padding-top: 5px; display: block; height: 40px;">
+                        <span id="ctl00_logoPovodiSpan" style="float: left; text-align: left; width: 20%;">
+                            <a id="ctl00_MaleLogoPovodiHL" href="https://www.pvl.cz" target="_blank" style="display:inline-block;vertical-align: text-bottom"><img src="../../Images/logo_male_2.gif" alt="" border="0" /></a>&nbsp;
+                            <span id="ctl00_PovodiLbl" class="text1">Povodí Vltavy</span><span class="text1">, státní podnik</span>
+                            <span id="ctl00_PovodiCopyLbl" class="text1">©</span>
+                            <span id="ctl00_PovodiRokLbl" class="text1">2026</span>
+                        </span>
+                        <span id="ctl00_logoChmuSpan" style="float: left; text-align: center; width: 45%;">
+                            <span id="ctl00_System1Lbl" class="text1">Systém využívá i data z měřících stanic</span>
+                            <a id="ctl00_ChmuLogoHL" href="http://www.chmi.cz/" target="_blank" style="display:inline-block;vertical-align: text-bottom"><img src="../../Images/chmu_male.gif" alt="" border="0" /></a>&nbsp;
+                            <span id="ctl00_System2Lbl" class="text1">Českého hydrometeorologického ústavu &copy;</span>
+                            <span id="ctl00_SystemRokLbl" class="text1">2026</span>
+                        </span>
+                        <span id="ctl00_logoMgeSpan" style="float: right; text-align: right; width: 30%;">
+                            <span id="ctl00_Vyrobeno1Lbl" class="text1">Aplikace vyrobena firmou</span>
+                            <a id="ctl00_MgeLogoHL" target="_blank" style="display:inline-block;vertical-align: text-bottom"><img src="../../Images/mgedata_male.gif" alt="" border="0" /></a>&nbsp;
+                            <span id="ctl00_Vyrobeno2Lbl" title="Verze 6.00 (sestaveno 3.7.2024); Pavel Staněk : OMDAC a FW4; Jakub Štambachr, Jakub Hýl: design aplikace a programování; Miroslav Hýl : db model a procedury; Jan Řičica : původní aplikace a grafické knihovny; Ali Harmim : mapové podklady;" class="text1" style="cursor: help;">MGE Data s.r.o. &copy; 1996 -</span>
+                            <span id="ctl00_VyrobenoRokLbl" class="text1">2024</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+<script type=text/javascript> rozmistiPrvky(); </script></form>
+</body>
+</html>

@@ -1929,6 +1929,25 @@ Rozhodnutí:
    přes doménu ověřené. Access Key ID má 32 znaků, Secret 64 — R2 na
    prohozené hodnoty odpoví „Credential access key has length 64".
 
+## Vodočet Orlíku
+
+**Přítok a odtok za 24 h z dat, ne okamžitý průtok krát den** (Filip,
+16. 9. 2026). Povodí Vltavy vydává po hodinách jen hladinu a odtok,
+přítok a objem ukazuje jen aktuální. Proto si je API sbírá samo:
+`SberVodocetu` každých 10 minut uloží stránku do `MereniNadrze` a smaže
+měření starší 3 dnů (tabulka nepřeroste ~430 řádků). Zapíná se proměnnou
+`Vodocet__Sber`, jen v nasazení.
+
+- **Odtok** se sčítá z hodinové řady Povodí. Elektrárna pouští vodu
+  nárazově, desetiminutový vzorek by špičku minul.
+- **Přítok** se integruje z vlastních měření (lichoběžníky). Dokud sběr
+  nemá celý den, nebo v něm je díra delší než hodina, API vrací `null`
+  a widget píše, že se sbírá.
+- **Změna objemu** přímo z údaje Povodí slouží jako kontrola bilance.
+- Přirovnání k olympijským bazénům Filip nechce.
+
+Web už stránku Povodí nečte, bere `GET /vodocet/orlik`.
+
 ## Kde se pokračuje
 
 Kdo sem přijde z jiného stroje, potřebuje vědět tohle:

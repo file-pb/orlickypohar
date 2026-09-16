@@ -1,28 +1,17 @@
-import {
-  BAZEN_M3,
-  minuty,
-  nactiOrlik,
-  odtokZaDen,
-  zaDen,
-  zmenaCm,
-  ZDROJ_VODOCTU,
-  type Mereni,
-} from "@/lib/pvl";
+import { casPraha, minuty, nactiOrlik, zmenaCm, type BodHladiny } from "@/lib/vodocet";
 
 /**
  * Vodočet Orlíku do boku (Filip, 16. 9. 2026): velké číslo hladiny se
- * šipkou, jestli stoupá, nebo klesá, jednoduchý graf hladiny za posledních
- * zhruba 30 hodin a dvě menší čísla s přítokem a odtokem.
+ * šipkou, jestli stoupá, nebo klesá, graf hladiny za posledních 24 hodin
+ * a přítok a odtok.
  *
- * <b>Přítok a odtok i za den</b> (Filip, 16. 9. 2026), aby si člověk
- * představil rozdíl a objem. Přítok je řeka a mění se pomalu, takže den je
- * jeho okamžitá hodnota krát 24 h. Odtok se sčítá z hodinové řady —
- * elektrárna pouští vodu nárazově a okamžitá nula by lhala. Rozdíl obou
- * je vedle objemu nádrže a v bazénech, protože „milion kubíků" si nikdo
- * nepředstaví.
+ * <b>Přítok a odtok za posledních 24 h</b>, spočítané z naměřených řad,
+ * ne okamžitá hodnota krát den (Filip, 16. 9. 2026). Tak je vidět, kolik
+ * vody skutečně přiteklo a odteklo. Dokud API nemá nasbíraný celý den,
+ * místo čísla stojí, že se sbírá.
  *
- * Data jsou z Povodí Vltavy, graf je SVG přímo ve stránce — bez knihovny
- * a bez javascriptu. Když se data nepodaří načíst, widget chybí.
+ * Graf je SVG přímo ve stránce — bez knihovny a bez javascriptu. Když se
+ * data nepodaří načíst, widget chybí.
  */
 
 const HODIN_ZMENY = 6;
@@ -34,19 +23,13 @@ const f = (n: number, mist: number) =>
 const objemem = (m3: number) =>
   Math.abs(m3) >= 1_000_000 ? `${f(m3 / 1_000_000, 2)} mil. m³` : `${f(m3 / 1000, 0)} tis. m³`;
 
-const bazenu = (m3: number) => {
-  const n = Math.round(Math.abs(m3) / BAZEN_M3);
-  const slovo = n === 1 ? "olympijský bazén" : n >= 2 && n <= 4 ? "olympijské bazény" : "olympijských bazénů";
-  return `${n.toLocaleString("cs-CZ")} ${slovo}`;
-};
-
 export async function BokVodocet() {
   const stav = await nactiOrlik();
   if (!stav) return null;
 
   const zmena = zmenaCm(stav.historie, HODIN_ZMENY);
-  const pritokDen = stav.pritok == null ? null : zaDen(stav.pritok);
-  const odtokDen = odtokZaDen(stav.historie);
+  const pritokDen = stav.pritokZaDen ?? null;
+  const odtokDen = stav.odtokZaDen ?? null;
   const rozdil = pritokDen !== null && odtokDen !== null ? pritokDen - odtokDen : null;
   const smer = zmena > 0 ? "stoupa" : zmena < 0 ? "klesa" : "stoji";
   const veta =
@@ -71,38 +54,33 @@ export async function BokVodocet() {
       <dl className="vodocet-toky">
         <div>
           <dt>Přítok</dt>
-          <dd>{stav.pritok === null ? "—" : `${f(stav.pritok, 1)} m³/s`}</dd>
-          {pritokDen !== null && <dd className="vodocet-den">≈ {objemem(pritokDen)} za den</dd>}
+          <dd>{stav.pritok == null ? "—" : `${f(stav.pritok, 1)} m³/s`}</dd>
+          <dd className="vodocet-den">
+            {pritokDen !== null ? `${objemem(pritokDen)} za 24 h` : "za 24 h se teprve sbírá"}
+          </dd>
         </div>
         <div>
           <dt>Odtok</dt>
-          <dd>{stav.odtok === null ? "—" : `${f(stav.odtok, 1)} m³/s`}</dd>
+          <dd>{stav.odtok == null ? "—" : `${f(stav.odtok, 1)} m³/s`}</dd>
           {odtokDen !== null && <dd className="vodocet-den">{objemem(odtokDen)} za 24 h</dd>}
         </div>
       </dl>
 
       {rozdil !== null && (
         <p className="vodocet-bilance">
-          Za den {rozdil >= 0 ? "přiteče" : "odteče"}{" "}
-          <b>o {objemem(Math.abs(rozdil))} víc</b>, než {rozdil >= 0 ? "odteče" : "přiteče"} —
-          zhruba {bazenu(rozdil)}.
-          {stav.objem != null && (
-            <>
-              {" "}
-              V nádrži je {f(stav.objem, 0)} mil. m³, tedy{" "}
-              {f((Math.abs(rozdil) / 1_000_000 / stav.objem) * 100, 1)} % objemu.
-            </>
-          )}
+          Za posledních 24 h {rozdil >= 0 ? "přiteklo" : "odteklo"}{" "}
+          <b>o {objemem(Math.abs(rozdil))} víc</b>, než {rozdil >= 0 ? "odteklo" : "přiteklo"}.
+          {stav.objem != null && <> V nádrži je {f(stav.objem, 0)} mil. m³.</>}
           <span className="vodocet-pozn">
             {" "}
-            Elektrárna pouští vodu nárazově, odtok je proto sečtený za 24 h.
+            Elektrárna pouští vodu nárazově, proto se sčítá celý den, ne okamžitý průtok.
           </span>
         </p>
       )}
 
       <p className="bok-dal">
-        <a href={ZDROJ_VODOCTU} target="_blank" rel="noopener noreferrer">
-          Povodí Vltavy{stav.cas && ` · ${stav.cas}`}
+        <a href={stav.zdroj} target="_blank" rel="noopener noreferrer">
+          Povodí Vltavy · {casPraha(stav.cas)}
         </a>
       </p>
     </section>
@@ -113,7 +91,7 @@ export async function BokVodocet() {
  * Průběh hladiny. Osa se roztahuje na rozsah dat, ale nejméně na 5 cm —
  * jinak by centimetrové kolísání vypadalo jako povodeň.
  */
-function Graf({ historie }: { historie: Mereni[] }) {
+function Graf({ historie }: { historie: BodHladiny[] }) {
   if (historie.length < 2) return null;
 
   const W = 240;
@@ -142,7 +120,7 @@ function Graf({ historie }: { historie: Mereni[] }) {
       viewBox={`0 0 ${W} ${H}`}
       preserveAspectRatio="none"
       role="img"
-      aria-label={`Hladina od ${od.cas} (${f(od.hladina, 2)} m) do ${doCas.cas} (${f(doCas.hladina, 2)} m)`}
+      aria-label={`Hladina od ${casPraha(od.cas)} (${f(od.hladina, 2)} m) do ${casPraha(doCas.cas)} (${f(doCas.hladina, 2)} m)`}
     >
       <polygon className="plocha" points={`0,${H} ${body.join(" ")} ${W},${H}`} />
       <polyline className="cara" points={body.join(" ")} />

@@ -18,8 +18,10 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS final
 # Vývojový stroj i CI ICU mají, takže by se pořadí lodí se stejnými body
 # lišilo mezi testy a produkcí — a nikdo by se to nedozvěděl.
 # Cena je ~30 MB v image, což je za české řazení jmen lodí levné.
-RUN apk add --no-cache icu-libs icu-data-full
+RUN apk add --no-cache icu-libs icu-data-full tzdata
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+# Časová pásma: vodočet převádí pražské časy Povodí Vltavy na UTC.
+# Bez tzdata by `Europe/Prague` neexistovalo a sběr by spadl při startu.
 
 WORKDIR /app
 COPY --from=build /app .

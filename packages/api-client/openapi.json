@@ -108,6 +108,30 @@
                 }
             }
         },
+        "/vodocet/orlik": {
+            "get": {
+                "tags": [
+                    "Vodo\u010det"
+                ],
+                "summary": "Stav n\u00e1dr\u017ee Orl\u00edk a p\u0159\u00edtok a odtok za posledn\u00edch 24 h",
+                "description": "Z m\u011b\u0159en\u00ed, kter\u00e1 aplikace ka\u017ed\u00fdch deset minut sb\u00edr\u00e1 z port\u00e1lu Povod\u00ed Vltavy. 404, dokud nen\u00ed ulo\u017een\u00e9 \u017e\u00e1dn\u00e9 m\u011b\u0159en\u00ed.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VodocetDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
         "/ja": {
             "get": {
                 "tags": [
@@ -1560,6 +1584,23 @@
     },
     "components": {
         "schemas": {
+            "BodHladinyDto": {
+                "required": [
+                    "cas",
+                    "hladina"
+                ],
+                "type": "object",
+                "properties": {
+                    "cas": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "hladina": {
+                        "type": "number",
+                        "format": "double"
+                    }
+                }
+            },
             "BodyVRozjizdceDto": {
                 "required": [
                     "cislo",
@@ -3276,6 +3317,82 @@
                     }
                 }
             },
+            "VodocetDto": {
+                "required": [
+                    "cas",
+                    "hladina",
+                    "objem",
+                    "pritok",
+                    "odtok",
+                    "pritokZaDen",
+                    "odtokZaDen",
+                    "zmenaObjemu",
+                    "historie",
+                    "zdroj"
+                ],
+                "type": "object",
+                "properties": {
+                    "cas": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "hladina": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "objem": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "pritok": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "odtok": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "pritokZaDen": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "odtokZaDen": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "zmenaObjemu": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "historie": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/BodHladinyDto"
+                        }
+                    },
+                    "zdroj": {
+                        "type": "string"
+                    }
+                }
+            },
             "Vyhodnoceni": {
                 "enum": [
                     "CelePole",
@@ -4070,6 +4187,9 @@
         },
         {
             "name": "Import"
+        },
+        {
+            "name": "Vodo\u010det"
         },
         {
             "name": "Identita"

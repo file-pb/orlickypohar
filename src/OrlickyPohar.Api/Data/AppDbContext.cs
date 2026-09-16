@@ -4,6 +4,7 @@ using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Fotky;
 using OrlickyPohar.Api.Features.Poradatele;
+using OrlickyPohar.Api.Features.Vodocet;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Zavody;
 
@@ -23,6 +24,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Vysledek> Vysledky => Set<Vysledek>();
     public DbSet<Clanek> Clanky => Set<Clanek>();
     public DbSet<Fotka> Fotky => Set<Fotka>();
+    public DbSet<MereniNadrze> MereniNadrze => Set<MereniNadrze>();
     public DbSet<Uzivatel> Uzivatele => Set<Uzivatel>();
     public DbSet<UcetVazba> Vazby => Set<UcetVazba>();
     public DbSet<Opravneni> Opravneni => Set<Opravneni>();
@@ -94,6 +96,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // ke kurátorské fotce.
         poradatel.HasOne(x => x.Fotka).WithMany().HasForeignKey(x => x.FotkaId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        var nadrz = b.Entity<MereniNadrze>();
+        nadrz.ToTable("MereniNadrze");
+        nadrz.HasKey(x => x.Cas);
+        nadrz.Property(x => x.Hladina).HasPrecision(7, 2);
+        nadrz.Property(x => x.Objem).HasPrecision(9, 3);
+        nadrz.Property(x => x.Pritok).HasPrecision(9, 2);
+        nadrz.Property(x => x.Odtok).HasPrecision(9, 2);
 
         var fotka = b.Entity<Fotka>();
         fotka.Property(x => x.Id).ValueGeneratedNever();

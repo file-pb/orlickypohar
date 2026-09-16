@@ -419,6 +419,32 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("Serie");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Vodocet.MereniNadrze", b =>
+                {
+                    b.Property<DateTimeOffset>("Cas")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("Hladina")
+                        .HasPrecision(7, 2)
+                        .HasColumnType("numeric(7,2)");
+
+                    b.Property<decimal?>("Objem")
+                        .HasPrecision(9, 3)
+                        .HasColumnType("numeric(9,3)");
+
+                    b.Property<decimal?>("Odtok")
+                        .HasPrecision(9, 2)
+                        .HasColumnType("numeric(9,2)");
+
+                    b.Property<decimal?>("Pritok")
+                        .HasPrecision(9, 2)
+                        .HasColumnType("numeric(9,2)");
+
+                    b.HasKey("Cas");
+
+                    b.ToTable("MereniNadrze", (string)null);
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Rozjizdka", b =>
                 {
                     b.Property<int>("Id")
