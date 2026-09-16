@@ -596,6 +596,89 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/clanky/{clanek}/obrazek": {
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Nahraje hlavn\u00ed obr\u00e1zek \u010dl\u00e1nku a nahrad\u00ed p\u0159edchoz\u00ed",
+                "description": "JPEG, PNG nebo WebP do 15 MB. Autor a potvrzen\u00fd souhlas se zve\u0159ejn\u011bn\u00edm jsou povinn\u00e9. Bez nastaven\u00e9ho \u00falo\u017ei\u0161t\u011b vrac\u00ed 503.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "clanek",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FotkaFormular"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FotkaFormular"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ObrazekDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Odebere hlavn\u00ed obr\u00e1zek \u010dl\u00e1nku a sma\u017ee jeho soubory",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "clanek",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/zastavky": {
             "get": {
                 "tags": [
@@ -1390,6 +1473,89 @@
                     }
                 }
             }
+        },
+        "/sprava/serie/{serie}/poradatele/{poradatel}/obrazek": {
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Nahraje vlastn\u00ed obr\u00e1zek po\u0159adatele a nahrad\u00ed p\u0159edchoz\u00ed",
+                "description": "JPEG, PNG nebo WebP do 15 MB. Autor a potvrzen\u00fd souhlas se zve\u0159ejn\u011bn\u00edm jsou povinn\u00e9. Bez nastaven\u00e9ho \u00falo\u017ei\u0161t\u011b vrac\u00ed 503.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "poradatel",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FotkaFormular"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FotkaFormular"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ObrazekDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Odebere vlastn\u00ed obr\u00e1zek po\u0159adatele a sma\u017ee jeho soubory",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "poradatel",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -1464,6 +1630,16 @@
                             "null",
                             "string"
                         ]
+                    },
+                    "obrazek": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/ObrazekDto"
+                            }
+                        ]
                     }
                 }
             },
@@ -1511,6 +1687,16 @@
                         "type": [
                             "null",
                             "string"
+                        ]
+                    },
+                    "obrazek": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/ObrazekDto"
+                            }
                         ]
                     }
                 }
@@ -1659,6 +1845,49 @@
                     "Akce"
                 ],
                 "default": "Pohar"
+            },
+            "FotkaFormular": {
+                "required": [
+                    "soubor",
+                    "autor",
+                    "popis",
+                    "souhlas"
+                ],
+                "type": "object",
+                "properties": {
+                    "soubor": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/IFormFile"
+                            }
+                        ]
+                    },
+                    "autor": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "popis": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "souhlas": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "IFormFile": {
+                "type": [
+                    "null",
+                    "string"
+                ],
+                "format": "binary"
             },
             "JaDto": {
                 "required": [
@@ -1862,6 +2091,42 @@
                     }
                 }
             },
+            "ObrazekDto": {
+                "required": [
+                    "nahled",
+                    "velky",
+                    "sirka",
+                    "vyska",
+                    "autor",
+                    "popis"
+                ],
+                "type": "object",
+                "properties": {
+                    "nahled": {
+                        "type": "string"
+                    },
+                    "velky": {
+                        "type": "string"
+                    },
+                    "sirka": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "vyska": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "autor": {
+                        "type": "string"
+                    },
+                    "popis": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
             "OpravneniDto": {
                 "required": [
                     "role",
@@ -2017,6 +2282,16 @@
                             "number"
                         ],
                         "format": "double"
+                    },
+                    "obrazek": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/ObrazekDto"
+                            }
+                        ]
                     }
                 }
             },

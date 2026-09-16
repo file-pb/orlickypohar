@@ -57,7 +57,7 @@ export default async function ClanekStranka({ params }: Parametry) {
       {/* Fotka nad textem. Bez ní vypadá článek jako výpis z informačního
           systému — a zrovna blog má být to místo, kde web nevypadá jako
           tabulka. */}
-      <FotkaClanku slug={c.slug} />
+      <FotkaClanku slug={c.slug} obrazek={c.obrazek} />
 
       <article className="clanek">
         {c.perex && <p className="perex">{c.perex}</p>}

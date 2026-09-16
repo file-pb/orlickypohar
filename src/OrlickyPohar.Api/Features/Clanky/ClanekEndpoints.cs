@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Fotky;
 
 namespace OrlickyPohar.Api.Features.Clanky;
 
@@ -15,7 +16,8 @@ public record ClanekShrnutiDto(
     string? Autor,
     DateTimeOffset PublikovanoV,
     string? Zavod,
-    string? ZavodNazev);
+    string? ZavodNazev,
+    ObrazekDto? Obrazek = null);
 
 public record ClanekDto(
     string Slug,
@@ -25,7 +27,8 @@ public record ClanekDto(
     string? Autor,
     DateTimeOffset PublikovanoV,
     string? Zavod,
-    string? ZavodNazev);
+    string? ZavodNazev,
+    ObrazekDto? Obrazek = null);
 
 /// <summary>
 /// Veřejné čtení blogu. Platí tu totéž co u ročníku: <b>nepublikovaný článek
@@ -48,7 +51,8 @@ public static class ClanekEndpoints
     }
 
     private static async Task<Results<Ok<List<ClanekShrnutiDto>>, NotFound>> SeznamAsync(
-        string slug, AppDbContext db, CancellationToken ct, string? zavod = null, int? limit = null)
+        string slug, AppDbContext db, IUloziste uloziste, CancellationToken ct,
+        string? zavod = null, int? limit = null)
     {
         var serieId = await SerieIdAsync(db, slug, ct);
         if (serieId is null) return TypedResults.NotFound();
@@ -69,26 +73,29 @@ public static class ClanekEndpoints
         if (limit is > 0)
             dotaz = dotaz.Take(Math.Min(limit.Value, 100));
 
+        // Adresa obrázku se skládá až po načtení; v SQL by z ní nic nebylo.
+        var adresa = uloziste.VerejnaAdresa;
         var clanky = await dotaz
             .Select(c => new ClanekShrnutiDto(
                 c.Slug, c.Titulek, c.Perex, c.Autor, c.PublikovanoV,
-                c.Zavod!.Slug, c.Zavod.Nazev))
+                c.Zavod!.Slug, c.Zavod.Nazev, Nahravani.Dto(c.Fotka, adresa)))
             .ToListAsync(ct);
 
         return TypedResults.Ok(clanky);
     }
 
     private static async Task<Results<Ok<ClanekDto>, NotFound>> DetailAsync(
-        string slug, string clanek, AppDbContext db, CancellationToken ct)
+        string slug, string clanek, AppDbContext db, IUloziste uloziste, CancellationToken ct)
     {
         var serieId = await SerieIdAsync(db, slug, ct);
         if (serieId is null) return TypedResults.NotFound();
 
+        var adresa = uloziste.VerejnaAdresa;
         var nalezeny = await Publikovane(db, serieId.Value)
             .Where(c => c.Slug == clanek)
             .Select(c => new ClanekDto(
                 c.Slug, c.Titulek, c.Perex, c.Telo, c.Autor, c.PublikovanoV,
-                c.Zavod!.Slug, c.Zavod.Nazev))
+                c.Zavod!.Slug, c.Zavod.Nazev, Nahravani.Dto(c.Fotka, adresa)))
             .FirstOrDefaultAsync(ct);
 
         return nalezeny is null ? TypedResults.NotFound() : TypedResults.Ok(nalezeny);

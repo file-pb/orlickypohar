@@ -5,6 +5,7 @@ using Serilog;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Bodovani;
 using OrlickyPohar.Api.Features.Clanky;
+using OrlickyPohar.Api.Features.Fotky;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Import;
 using OrlickyPohar.Api.Features.Poradatele;
@@ -37,6 +38,7 @@ try
     builder.Services.AddDbContext<AppDbContext>(o => o.UseNpgsql(connectionString));
     builder.Services.AddSingleton(TimeProvider.System);
     var identita = builder.Services.PridejIdentitu(builder.Configuration);
+    var uloziste = builder.Services.PridejUloziste(builder.Configuration);
 
     // Správa stojí na identitě, ale registruje se vždycky: integrační testy
     // ji volají přes službu, ne přes HTTP, a nemají nakonfigurovaného
@@ -49,6 +51,7 @@ try
     builder.Services.AddScoped<ZapisSprava>();
     builder.Services.AddScoped<PrihlaskySprava>();
     builder.Services.AddScoped<PoradateleSprava>();
+    builder.Services.AddScoped<FotkySprava>();
     // .NET popisuje čísla jako ["integer","string"], protože je při čtení
     // přijímá i v uvozovkách. Odpovědi je ale píšou vždycky jako čísla —
     // a generovaný klient by jinak u každého bodu nutil ověřovat, jestli
@@ -101,6 +104,10 @@ try
         Log.Warning("Identita není nakonfigurovaná (Identita__Authority a Identita__Audience). "
                     + "Chráněné endpointy neběží.");
     }
+
+    if (!uloziste)
+        Log.Warning("Úložiště fotek není nastavené (Fotky__Endpoint, Fotky__Bucket, "
+                    + "Fotky__VerejnaAdresa a klíče v /run/secrets). Nahrávání fotek neběží.");
 
     // Liveness: běží proces. Readiness: umí obsloužit provoz (drží i databáze).
     app.MapHealthChecks("/health", new() { Predicate = _ => false });

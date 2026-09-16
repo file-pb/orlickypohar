@@ -1,6 +1,8 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Fotky;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Sprava;
 
@@ -61,6 +63,48 @@ public static class ClankySpravaEndpoints
             .WithDescription(
                 "Koncept, publikováno, skryté, smazané. Smazaný se nedá " +
                 "publikovat rovnou — nejdřív se vrátí jako koncept.");
+
+        // Token jde v hlavičce, ne v cookie — ochrana proti podvrženému
+        // formuláři tu nemá co chránit.
+        g.MapPut("/{clanek}/obrazek", NastavObrazekAsync)
+            .DisableAntiforgery()
+            .WithMetadata(new RequestSizeLimitAttribute(Nahravani.NejvicBajtu + 1024 * 1024))
+            .Produces<ObrazekDto>()
+            .WithSummary("Nahraje hlavní obrázek článku a nahradí předchozí")
+            .WithDescription(
+                "JPEG, PNG nebo WebP do 15 MB. Autor a potvrzený souhlas se zveřejněním jsou povinné. " +
+                "Bez nastaveného úložiště vrací 503.");
+
+        g.MapDelete("/{clanek}/obrazek", OdeberObrazekAsync)
+            .WithSummary("Odebere hlavní obrázek článku a smaže jeho soubory");
+    }
+
+    private static async Task<IResult> NastavObrazekAsync(
+        string serie, string clanek, [FromForm] FotkaFormular formular, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, ClankySprava sprava, FotkySprava fotky, CancellationToken ct)
+    {
+        if (await NajdiSPravem(serie, clanek, kdo, rozsahy, sprava, ct) is not { } nalezeny)
+            return Results.NotFound();
+        if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
+
+        if (!fotky.Pripraveno)
+            return Results.Json(new { error = FotkySprava.Vypnuto }, statusCode: StatusCodes.Status503ServiceUnavailable);
+
+        var (obrazek, chyba) = await fotky.NastavAsync(nalezeny, formular, uzivatel, ct);
+        return obrazek is null ? Results.BadRequest(new { error = chyba }) : Results.Ok(obrazek);
+    }
+
+    private static async Task<IResult> OdeberObrazekAsync(
+        string serie, string clanek, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, ClankySprava sprava, FotkySprava fotky, CancellationToken ct)
+    {
+        if (await NajdiSPravem(serie, clanek, kdo, rozsahy, sprava, ct) is not { } nalezeny)
+            return Results.NotFound();
+
+        if (await fotky.OdeberAsync(nalezeny, ct) is { } chyba)
+            return Results.Json(new { error = chyba }, statusCode: StatusCodes.Status503ServiceUnavailable);
+
+        return Results.NoContent();
     }
 
     private static async Task<IResult> PrehledAsync(
@@ -100,7 +144,7 @@ public static class ClankySpravaEndpoints
 
     private static async Task<IResult> DetailAsync(
         string serie, string clanek, ClaimsPrincipal kdo,
-        Rozsahy rozsahy, ClankySprava sprava, AppDbContext db, CancellationToken ct)
+        Rozsahy rozsahy, ClankySprava sprava, AppDbContext db, IUloziste uloziste, CancellationToken ct)
     {
         if (await NajdiSPravem(serie, clanek, kdo, rozsahy, sprava, ct) is not { } nalezeny)
             return Results.NotFound();
@@ -112,7 +156,8 @@ public static class ClankySpravaEndpoints
 
         return Results.Ok(new ClanekDto(
             nalezeny.Slug, nalezeny.Titulek, nalezeny.Perex, nalezeny.Telo, nalezeny.Autor,
-            nalezeny.PublikovanoV, zavod?.Slug, zavod?.Nazev));
+            nalezeny.PublikovanoV, zavod?.Slug, zavod?.Nazev,
+            Nahravani.Dto(nalezeny.Fotka, uloziste.VerejnaAdresa)));
     }
 
     private static async Task<IResult> UpravAsync(

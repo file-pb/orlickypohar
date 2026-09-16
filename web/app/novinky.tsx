@@ -16,7 +16,7 @@ export function VypisNovinek({ serie, clanky }: { serie: string; clanky: ClanekS
           <Link className="karta s-fotkou" href={`/serie/${serie}/novinky/${c.slug}`}>
             {/* Náhled je dekorace, ne informace — proto nenese popisek
                 a nesmí se tvářit, že je z toho závodu. */}
-            <Nahled slug={c.slug} />
+            <Nahled slug={c.slug} obrazek={c.obrazek} />
             {/* Text v obalu, aby ležel vedle fotky. Dalo by se to poskládat
                 i mřížkou bez něj, ale fotka by pak musela vědět, kolik je
                 pod ní řádků — a perex je nepovinný, takže se to mění. */}

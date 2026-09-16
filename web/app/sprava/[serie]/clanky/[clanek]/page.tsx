@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Drobecky } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { STAVY, nactiClanek, nactiPrehled, nazevStavu, type StavClanku } from "@/lib/clanky";
+import { SpravaObrazku } from "@/app/sprava/obrazek";
 import { ulozAkce, stavAkce } from "../akce";
 
 export const dynamic = "force-dynamic";
@@ -102,6 +103,16 @@ export default async function UpravaClanku({ params, searchParams }: Parametry) 
           Uloženo.
         </p>
       )}
+      {zpravy.stav === "obrazek" && (
+        <p className="hlaska hotovo" role="status">
+          Fotka nahraná.
+        </p>
+      )}
+      {zpravy.stav === "obrazek-odebran" && (
+        <p className="hlaska hotovo" role="status">
+          Fotka odebraná.
+        </p>
+      )}
       {zpravy.stav === "prepnuto" && zpravy.nastav && (
         <p className="hlaska hotovo" role="status">
           Stav změněn na „{nazevStavu(zpravy.nastav)}".
@@ -150,6 +161,14 @@ export default async function UpravaClanku({ params, searchParams }: Parametry) 
 
         <button type="submit">Uložit</button>
       </form>
+
+      <SpravaObrazku
+        serie={serie}
+        druh="clanky"
+        klic={clanek.slug}
+        obrazek={clanek.obrazek}
+        bezObrazku="Na webu je u článku ilustrační fotka z Orlíku."
+      />
 
       <h2>Stav</h2>
       <div className="stavy">

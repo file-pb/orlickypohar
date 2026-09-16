@@ -57,6 +57,16 @@ public class Rozsahy(AppDbContext db, Uzivatele uzivatele)
     }
 
     /// <summary>
+    /// Interní účet přihlášeného, nebo <c>null</c>. Stejně jako u práv se
+    /// účet nezakládá — kdo se nikdy nepřihlásil, stejně nic nesmí.
+    /// </summary>
+    public async Task<Guid?> UzivatelIdAsync(ClaimsPrincipal kdo, CancellationToken ct)
+    {
+        if (kdo.Ucet() is not { } ucet) return null;
+        return (await uzivatele.PodleUctuAsync(ucet.Issuer, ucet.Subject, ct))?.Id;
+    }
+
+    /// <summary>
     /// Kde všude smí přihlášený tuhle roli v daném ročníku — celý ročník,
     /// nebo výčet zastávek.
     /// <para>

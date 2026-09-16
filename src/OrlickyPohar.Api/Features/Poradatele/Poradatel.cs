@@ -1,4 +1,5 @@
 using System.Globalization;
+using OrlickyPohar.Api.Features.Fotky;
 
 namespace OrlickyPohar.Api.Features.Poradatele;
 
@@ -21,7 +22,7 @@ namespace OrlickyPohar.Api.Features.Poradatele;
 /// roli organizátora na zastávce.
 /// </para>
 /// </summary>
-public class Poradatel
+public class Poradatel : IMaFotku
 {
     public int Id { get; set; }
 
@@ -56,6 +57,10 @@ public class Poradatel
     /// </summary>
     public double? Sirka { get; set; }
     public double? Delka { get; set; }
+
+    /// <summary>Vlastní obrázek klubu. Bez něj je u medailonku kurátorská fotka z Orlíku.</summary>
+    public Guid? FotkaId { get; set; }
+    public Fotka? Fotka { get; set; }
 }
 
 /// <summary>

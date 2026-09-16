@@ -657,6 +657,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/clanky/{clanek}/obrazek": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Nahraje hlavní obrázek článku a nahradí předchozí
+         * @description JPEG, PNG nebo WebP do 15 MB. Autor a potvrzený souhlas se zveřejněním jsou povinné. Bez nastaveného úložiště vrací 503.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    clanek: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": components["schemas"]["FotkaFormular"];
+                    "application/x-www-form-urlencoded": components["schemas"]["FotkaFormular"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObrazekDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Odebere hlavní obrázek článku a smaže jeho soubory */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    clanek: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/zastavky": {
         parameters: {
             query?: never;
@@ -1371,6 +1439,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/poradatele/{poradatel}/obrazek": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Nahraje vlastní obrázek pořadatele a nahradí předchozí
+         * @description JPEG, PNG nebo WebP do 15 MB. Autor a potvrzený souhlas se zveřejněním jsou povinné. Bez nastaveného úložiště vrací 503.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    poradatel: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": components["schemas"]["FotkaFormular"];
+                    "application/x-www-form-urlencoded": components["schemas"]["FotkaFormular"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObrazekDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Odebere vlastní obrázek pořadatele a smaže jeho soubory */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    poradatel: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1392,6 +1528,7 @@ export interface components {
             publikovanoV: string;
             zavod: null | string;
             zavodNazev: null | string;
+            obrazek?: null | components["schemas"]["ObrazekDto"];
         };
         ClanekShrnutiDto: {
             slug: string;
@@ -1402,6 +1539,7 @@ export interface components {
             publikovanoV: string;
             zavod: null | string;
             zavodNazev: null | string;
+            obrazek?: null | components["schemas"]["ObrazekDto"];
         };
         ClanekSpravaRadek: {
             slug: string;
@@ -1440,6 +1578,14 @@ export interface components {
          * @enum {unknown}
          */
         DruhZastavky: "Pohar" | "Akce";
+        FotkaFormular: {
+            soubor: null | components["schemas"]["IFormFile"];
+            autor: null | string;
+            popis: null | string;
+            souhlas: boolean;
+        };
+        /** Format: binary */
+        IFormFile: null | string;
         JaDto: {
             /** Format: uuid */
             id: string;
@@ -1486,6 +1632,16 @@ export interface components {
             cisloPlachty?: null | string;
             typ?: null | string;
         };
+        ObrazekDto: {
+            nahled: string;
+            velky: string;
+            /** Format: int32 */
+            sirka: number;
+            /** Format: int32 */
+            vyska: number;
+            autor: string;
+            popis: null | string;
+        };
         OpravneniDto: {
             role: components["schemas"]["Role"];
             serie: string;
@@ -1521,6 +1677,7 @@ export interface components {
             sirka: null | number;
             /** Format: double */
             delka: null | number;
+            obrazek?: null | components["schemas"]["ObrazekDto"];
         };
         PoradatelSpravaDto: {
             serie: string;

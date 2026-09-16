@@ -1,3 +1,4 @@
+using OrlickyPohar.Api.Features.Fotky;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Zavody;
 
@@ -54,7 +55,7 @@ public enum StavClanku
 /// odstavce, je to aditivní sloupec s formátem — ne přepis toho, co je uložené.
 /// </para>
 /// </summary>
-public class Clanek
+public class Clanek : IMaFotku
 {
     public int Id { get; set; }
 
@@ -100,4 +101,13 @@ public class Clanek
     /// </para>
     /// </summary>
     public StavClanku Stav { get; set; } = StavClanku.Draft;
+
+    /// <summary>
+    /// Hlavní obrázek. <b>Jeden na článek</b> — z něj náhled do výpisu
+    /// i velká fotka nad textem. Galerie a obrázky v textu jsou pětkrát víc
+    /// práce za zlomek užitku (plán, oddíl <i>Co ještě ukázaly cizí weby</i>).
+    /// Bez obrázku ukazuje web kurátorskou fotku z Orlíku.
+    /// </summary>
+    public Guid? FotkaId { get; set; }
+    public Fotka? Fotka { get; set; }
 }

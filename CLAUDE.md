@@ -90,6 +90,7 @@ src/OrlickyPohar.Api/
   Features/Import/            nahrání ročníku souborem, importní token
   Features/Clanky/            novinky a články, jejich psaní a správa
   Features/Poradatele/        pořadatel jako záznam s medailonkem
+  Features/Fotky/             nahrané obrázky: přepočet do WebP, úložiště R2
   Features/Identita/          uživatel, vazby (issuer, subject), role, Prava
   Features/Sprava/            udělování oprávnění, seznam přihlášených účtů
   Program.cs                  složení aplikace, mapování řezů
@@ -101,6 +102,8 @@ web/                          veřejné stránky (Next.js, renderuje server)
   lib/sprava.ts               volání administrace s tokenem; další lib/*.ts
                               po obrazovkách (kalendar, prihlasky, vysledky…)
   lib/oidc.ts                 přihlášení, sezení v cookie
+  app/sprava/obrazek.tsx      nahrání a odebrání obrázku, společné článku
+                              i pořadateli; lib/fotky.ts volá API
   lib/schema.d.ts             generované typy — needituj, viz packages/api-client
 app/                          mobilní appka (Expo, jen čtení)
   src/app/                    obrazovky, cesty podle souborů

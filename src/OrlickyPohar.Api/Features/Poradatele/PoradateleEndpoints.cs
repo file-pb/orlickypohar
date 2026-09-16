@@ -1,6 +1,8 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Fotky;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Sprava;
 
@@ -33,11 +35,58 @@ public static class PoradateleEndpoints
             .WithDescription(
                 "Rozhodčí ročníku, nebo organizátor zastávky, kterou pořadatel pořádá. " +
                 "Záznam je společný všem ročníkům; přejmenování přepíše jméno na všech jeho zastávkách.");
+
+        // Formulář nese token v hlavičce, ne v cookie, takže ochrana proti
+        // podvrženému formuláři z cizí stránky tu nemá co chránit.
+        g.MapPut("/{poradatel}/obrazek", NastavObrazekAsync)
+            .DisableAntiforgery()
+            .WithMetadata(new RequestSizeLimitAttribute(Nahravani.NejvicBajtu + 1024 * 1024))
+            .Produces<ObrazekDto>()
+            .WithSummary("Nahraje vlastní obrázek pořadatele a nahradí předchozí")
+            .WithDescription(
+                "JPEG, PNG nebo WebP do 15 MB. Autor a potvrzený souhlas se zveřejněním jsou povinné. " +
+                "Bez nastaveného úložiště vrací 503.");
+
+        g.MapDelete("/{poradatel}/obrazek", OdeberObrazekAsync)
+            .WithSummary("Odebere vlastní obrázek pořadatele a smaže jeho soubory");
+    }
+
+    private static async Task<IResult> NastavObrazekAsync(
+        string serie, string poradatel, [FromForm] FotkaFormular formular, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, PoradateleSprava sprava, FotkySprava fotky, CancellationToken ct)
+    {
+        if (await NajdiAsync(serie, poradatel, rozsahy, sprava, ct) is not { } nalez)
+            return Results.NotFound();
+
+        var (_, smi) = await PravaAsync(kdo, rozsahy, nalez, ct);
+        if (!smi || await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
+
+        if (!fotky.Pripraveno)
+            return Results.Json(new { error = FotkySprava.Vypnuto }, statusCode: StatusCodes.Status503ServiceUnavailable);
+
+        var (obrazek, chyba) = await fotky.NastavAsync(nalez.Poradatel, formular, uzivatel, ct);
+        return obrazek is null ? Results.BadRequest(new { error = chyba }) : Results.Ok(obrazek);
+    }
+
+    private static async Task<IResult> OdeberObrazekAsync(
+        string serie, string poradatel, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, PoradateleSprava sprava, FotkySprava fotky, CancellationToken ct)
+    {
+        if (await NajdiAsync(serie, poradatel, rozsahy, sprava, ct) is not { } nalez)
+            return Results.NotFound();
+
+        var (_, smi) = await PravaAsync(kdo, rozsahy, nalez, ct);
+        if (!smi) return Results.Forbid();
+
+        if (await fotky.OdeberAsync(nalez.Poradatel, ct) is { } chyba)
+            return Results.Json(new { error = chyba }, statusCode: StatusCodes.Status503ServiceUnavailable);
+
+        return Results.NoContent();
     }
 
     private static async Task<IResult> DetailAsync(
         string serie, string poradatel, ClaimsPrincipal kdo, AppDbContext db,
-        Rozsahy rozsahy, PoradateleSprava sprava, CancellationToken ct)
+        Rozsahy rozsahy, PoradateleSprava sprava, IUloziste uloziste, CancellationToken ct)
     {
         if (await NajdiAsync(serie, poradatel, rozsahy, sprava, ct) is not { } nalez)
             return Results.NotFound();
@@ -45,12 +94,12 @@ public static class PoradateleEndpoints
         var (vidi, smi) = await PravaAsync(kdo, rozsahy, nalez, ct);
         if (!vidi) return Results.Forbid();
 
-        return Results.Ok(await DtoAsync(db, sprava, nalez, smi, ct));
+        return Results.Ok(await DtoAsync(db, sprava, uloziste, nalez, smi, ct));
     }
 
     private static async Task<IResult> UlozAsync(
         string serie, string poradatel, PoradatelVstup vstup, ClaimsPrincipal kdo, AppDbContext db,
-        Rozsahy rozsahy, PoradateleSprava sprava, CancellationToken ct)
+        Rozsahy rozsahy, PoradateleSprava sprava, IUloziste uloziste, CancellationToken ct)
     {
         if (await NajdiAsync(serie, poradatel, rozsahy, sprava, ct) is not { } nalez)
             return Results.NotFound();
@@ -61,7 +110,7 @@ public static class PoradateleEndpoints
         if (await sprava.UlozAsync(nalez.Poradatel, vstup, ct) is { } chyba)
             return Results.BadRequest(new { error = chyba });
 
-        return Results.Ok(await DtoAsync(db, sprava, nalez, smi, ct));
+        return Results.Ok(await DtoAsync(db, sprava, uloziste, nalez, smi, ct));
     }
 
     private sealed record Nalez(
@@ -95,13 +144,13 @@ public static class PoradateleEndpoints
     }
 
     private static async Task<PoradatelSpravaDto> DtoAsync(
-        AppDbContext db, PoradateleSprava sprava, Nalez nalez, bool smi, CancellationToken ct)
+        AppDbContext db, PoradateleSprava sprava, IUloziste uloziste, Nalez nalez, bool smi, CancellationToken ct)
     {
         var serie = await db.Serie.Where(s => s.Id == nalez.SerieId)
             .Select(s => new { s.Slug, s.Nazev }).FirstAsync(ct);
 
         return new PoradatelSpravaDto(
-            serie.Slug, serie.Nazev, PoradateleSprava.Dto(nalez.Poradatel), smi,
+            serie.Slug, serie.Nazev, PoradateleSprava.Dto(nalez.Poradatel, nalez.Poradatel.Fotka, uloziste.VerejnaAdresa), smi,
             [.. nalez.Zastavky.Select(z => z.Zastavka)],
             await sprava.ZastavekJindeAsync(nalez.Poradatel.Id, nalez.SerieId, ct));
     }

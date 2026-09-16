@@ -46,9 +46,19 @@ services:
       # vůbec — zapomenutá proměnná není totéž co otevřený endpoint.
       Identita__Authority: "https://ucty.${PLATFORM_DOMAIN:?}"
       Identita__Audience: "390035493066113030"
+      # Úložiště fotek (Cloudflare R2 přes S3 protokol). Endpoint obsahuje
+      # číslo účtu u Cloudflaru, proto leží v .env vedle tohohle souboru,
+      # ne tady. Bez něj, nebo s prázdnými klíči, aplikace naběhne a jen
+      # nenabízí nahrávání — fotky nejsou důvod, proč by neměly jít výsledky.
+      Fotky__Endpoint: "${FOTKY_ENDPOINT:-}"
+      Fotky__Bucket: "orlickypohar-fotky"
+      # Vlastní doména na bucketu. Jednoúrovňová, ze stejného důvodu jako API.
+      Fotky__VerejnaAdresa: "https://${APP_NAME}-foto.${PLATFORM_DOMAIN:?}"
     secrets:
       - ConnectionStrings__Postgres
       - Import__Token
+      - Fotky__KlicId
+      - Fotky__Klic
     labels:
       # POZOR: Compose dosazuje proměnné jen do HODNOT, ne do klíčů.
       # Jméno routeru proto musí být napevno a unikátní napříč všemi
@@ -134,3 +144,10 @@ secrets:
   # nenakonfigurovaný token neznamená otevřený endpoint.
   Import__Token:
     file: ./secrets/Import__Token
+  # Klíč k bucketu `orlickypohar-fotky`, jen Object Read & Write a jen na něj.
+  # Soubory musí existovat i prázdné, jinak kontejner nenaběhne; prázdné
+  # znamenají „nahrávání vypnuté".
+  Fotky__KlicId:
+    file: ./secrets/Fotky__KlicId
+  Fotky__Klic:
+    file: ./secrets/Fotky__Klic

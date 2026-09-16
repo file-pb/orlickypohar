@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Fotky;
 using OrlickyPohar.Api.Features.Zavody;
 
 namespace OrlickyPohar.Api.Features.Poradatele;
@@ -15,7 +16,9 @@ public record PoradatelDto(
     string? KontaktniOsoba,
     string? Adresa,
     double? Sirka,
-    double? Delka);
+    double? Delka,
+    // Vlastní obrázek klubu. Bez něj ukazuje web kurátorskou fotku.
+    ObrazekDto? Obrazek = null);
 
 /// <summary>Zastávka téhož pořadatele v ročníku — aby bylo vidět, kde všude se změna projeví.</summary>
 public record ZastavkaPoradateleDto(string Slug, string Nazev, DateOnly Datum, DruhZastavky Druh);
@@ -94,7 +97,7 @@ public class PoradateleSprava(AppDbContext db)
     }
 
     public Task<Poradatel?> NajdiAsync(string slug, CancellationToken ct) =>
-        db.Poradatele.FirstOrDefaultAsync(p => p.Slug == slug, ct);
+        db.Poradatele.Include(p => p.Fotka).FirstOrDefaultAsync(p => p.Slug == slug, ct);
 
     /// <summary>Zastávky pořadatele v ročníku, podle kalendáře.</summary>
     public async Task<List<(int Id, ZastavkaPoradateleDto Zastavka)>> ZastavkyAsync(
@@ -159,8 +162,9 @@ public class PoradateleSprava(AppDbContext db)
         return null;
     }
 
-    public static PoradatelDto Dto(Poradatel p) =>
-        new(p.Slug, p.Nazev, p.Web, p.Popis, p.Email, p.Telefon, p.KontaktniOsoba, p.Adresa, p.Sirka, p.Delka);
+    public static PoradatelDto Dto(Poradatel p, Fotka? fotka, string? verejnaAdresa) =>
+        new(p.Slug, p.Nazev, p.Web, p.Popis, p.Email, p.Telefon, p.KontaktniOsoba, p.Adresa, p.Sirka, p.Delka,
+            Nahravani.Dto(fotka, verejnaAdresa));
 
     /// <summary>Prázdný řetězec z formuláře je „nevyplněno", ne hodnota.</summary>
     private static string? Prazdne(string? text) =>

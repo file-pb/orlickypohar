@@ -1,0 +1,157 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
+using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Fotky;
+using OrlickyPohar.Api.Features.Identita;
+using OrlickyPohar.Api.Features.Poradatele;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.PixelFormats;
+
+namespace OrlickyPohar.Api.Tests;
+
+/// <summary>
+/// Výměna a odebrání fotky proti reálnému PostgreSQL. Úložiště je
+/// podvržené a pamatuje si, co v něm leží — jde o to, aby po výměně
+/// nezůstal viset soubor ani záznam.
+/// </summary>
+[Trait("Category", "Integracni")]
+[Collection(PostgresCollection.Name)]
+public class FotkySpravaTests(PostgresFixture fixture)
+{
+    private sealed class PametoveUloziste : IUloziste
+    {
+        public Dictionary<string, byte[]> Soubory { get; } = [];
+        public bool Pripraveno => true;
+        public string? VerejnaAdresa => "https://foto.example";
+
+        public Task UlozAsync(string klic, byte[] data, string typ, CancellationToken ct)
+        {
+            Soubory[klic] = data;
+            return Task.CompletedTask;
+        }
+
+        public Task SmazAsync(string klic, CancellationToken ct)
+        {
+            Soubory.Remove(klic);
+            return Task.CompletedTask;
+        }
+    }
+
+    private static FotkaFormular Formular(string autor = "Jiří Tašl", bool souhlas = true)
+    {
+        using var obrazek = new Image<Rgba32>(1000, 600);
+        var data = new MemoryStream();
+        obrazek.Save(data, new JpegEncoder());
+        data.Position = 0;
+
+        return new FotkaFormular(new FormFile(data, 0, data.Length, "soubor", "fotka.jpg"), autor, null, souhlas);
+    }
+
+    private async Task<(int PoradatelId, Guid UzivatelId)> PripravAsync(string slug)
+    {
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var uzivatel = await scope.ServiceProvider.GetRequiredService<Uzivatele>().NajdiNeboZalozAsync(
+            "https://ucty.test", $"fotky-{slug}", "Jan Novák", $"{slug}@priklad.cz", TimeProvider.System, default);
+
+        var poradatel = new Poradatel { Slug = slug, Nazev = slug };
+        db.Poradatele.Add(poradatel);
+        await db.SaveChangesAsync();
+
+        return (poradatel.Id, uzivatel.Id);
+    }
+
+    private async Task<T> SeSpravouAsync<T>(PametoveUloziste uloziste, Func<AppDbContext, FotkySprava, Task<T>> co)
+    {
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var sprava = new FotkySprava(db, uloziste, TimeProvider.System, NullLogger<FotkySprava>.Instance);
+        return await co(db, sprava);
+    }
+
+    [Fact]
+    public async Task Vymena_smaze_starou_fotku_i_se_soubory()
+    {
+        var (poradatelId, uzivatelId) = await PripravAsync("fotky-vymena");
+        var uloziste = new PametoveUloziste();
+
+        var prvni = await SeSpravouAsync(uloziste, async (db, s) =>
+        {
+            var p = await db.Poradatele.Include(x => x.Fotka).FirstAsync(x => x.Id == poradatelId);
+            var (obrazek, chyba) = await s.NastavAsync(p, Formular(), uzivatelId, default);
+            Assert.Null(chyba);
+            return p.FotkaId!.Value;
+        });
+
+        Assert.Equal(2, uloziste.Soubory.Count);
+
+        var druha = await SeSpravouAsync(uloziste, async (db, s) =>
+        {
+            var p = await db.Poradatele.Include(x => x.Fotka).FirstAsync(x => x.Id == poradatelId);
+            var (_, chyba) = await s.NastavAsync(p, Formular("Filip Burda"), uzivatelId, default);
+            Assert.Null(chyba);
+            return p.FotkaId!.Value;
+        });
+
+        Assert.NotEqual(prvni, druha);
+        Assert.Equal(Nahravani.Klice(druha).Order(), uloziste.Soubory.Keys.Order());
+
+        await SeSpravouAsync(uloziste, async (db, _) =>
+        {
+            Assert.False(await db.Fotky.AnyAsync(f => f.Id == prvni));
+            var ulozena = await db.Poradatele.Include(x => x.Fotka).FirstAsync(x => x.Id == poradatelId);
+            Assert.Equal("Filip Burda", ulozena.Fotka!.Autor);
+            Assert.Equal(uzivatelId, ulozena.Fotka.NahralId);
+            return 0;
+        });
+    }
+
+    [Fact]
+    public async Task Odebrani_smaze_zaznam_i_soubory()
+    {
+        var (poradatelId, uzivatelId) = await PripravAsync("fotky-odebrani");
+        var uloziste = new PametoveUloziste();
+
+        var id = await SeSpravouAsync(uloziste, async (db, s) =>
+        {
+            var p = await db.Poradatele.FirstAsync(x => x.Id == poradatelId);
+            await s.NastavAsync(p, Formular(), uzivatelId, default);
+            return p.FotkaId!.Value;
+        });
+
+        await SeSpravouAsync(uloziste, async (db, s) =>
+        {
+            var p = await db.Poradatele.Include(x => x.Fotka).FirstAsync(x => x.Id == poradatelId);
+            Assert.Null(await s.OdeberAsync(p, default));
+            return 0;
+        });
+
+        Assert.Empty(uloziste.Soubory);
+        await SeSpravouAsync(uloziste, async (db, _) =>
+        {
+            Assert.False(await db.Fotky.AnyAsync(f => f.Id == id));
+            Assert.Null((await db.Poradatele.FirstAsync(x => x.Id == poradatelId)).FotkaId);
+            return 0;
+        });
+    }
+
+    [Fact]
+    public async Task Bez_souhlasu_se_do_uloziste_nic_nedostane()
+    {
+        var (poradatelId, uzivatelId) = await PripravAsync("fotky-souhlas");
+        var uloziste = new PametoveUloziste();
+
+        var chyba = await SeSpravouAsync(uloziste, async (db, s) =>
+        {
+            var p = await db.Poradatele.FirstAsync(x => x.Id == poradatelId);
+            return (await s.NastavAsync(p, Formular(souhlas: false), uzivatelId, default)).Chyba;
+        });
+
+        Assert.NotNull(chyba);
+        Assert.Empty(uloziste.Soubory);
+    }
+}

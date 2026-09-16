@@ -82,7 +82,7 @@ public class ClankySprava(AppDbContext db, TimeProvider cas)
     }
 
     public Task<Clanek?> NajdiAsync(int serieId, string slug, CancellationToken ct) =>
-        db.Clanky.FirstOrDefaultAsync(c => c.SerieId == serieId && c.Slug == slug, ct);
+        db.Clanky.Include(c => c.Fotka).FirstOrDefaultAsync(c => c.SerieId == serieId && c.Slug == slug, ct);
 
     /// <summary>Zastávky ročníku jako volby do formuláře.</summary>
     public async Task<List<ZavodVolbaDto>> ZastavkyAsync(

@@ -5,12 +5,13 @@ type Poradatel = NonNullable<ZavodDetail["medailonek"]>;
 
 /**
  * Má medailonek co říct nad rámec jména? Samotné jméno už stojí
- * v podtitulku zastávky — karta jen s ním a s fotkou by byla prázdná
- * krabice, která tvrdí, že o klubu něco víme.
+ * v podtitulku zastávky — karta jen s ním a s ilustrační fotkou by byla
+ * prázdná krabice, která tvrdí, že o klubu něco víme. Vlastní fotka klubu
+ * naproti tomu obsah je.
  */
 export const maObsah = (p?: Poradatel | null): p is Poradatel =>
   !!p && !!(p.web || p.popis || p.email || p.telefon || p.kontaktniOsoba || p.adresa ||
-    (p.sirka != null && p.delka != null));
+    (p.sirka != null && p.delka != null) || p.obrazek);
 
 /**
  * API adresu webu hlídá a jiné než http(s) neuloží. Kontroluje se to i tady,
@@ -55,10 +56,10 @@ function Ven({ href, children }: { href: string; children: React.ReactNode }) {
  * <b>Ukazuje se jen to, co je vyplněné.</b> Jméno a telefon jsou osobní
  * údaje; nevyplněné pole je odpověď „tohle ven nechceme".
  *
- * <b>Fotka není fotka klubu.</b> Vlastní obrázek pořadatele chce objektové
- * úložiště, do té doby je tu kurátorská fotka z Orlíku od Jiřího Tašla —
- * vybraná podle klíče, ať je u téhož klubu vždycky táž, a bez popisku, jen
- * s kreditem, stejně jako u článků.
+ * <b>Fotka.</b> Nahraný obrázek klubu, pokud ho má. Jinak kurátorská fotka
+ * z Orlíku od Jiřího Tašla — vybraná podle klíče, ať je u téhož klubu
+ * vždycky táž, a bez popisku, jen s kreditem, stejně jako u článků. Ta
+ * není fotka klubu a nesmí tak vypadat.
  */
 export function Medailonek({ poradatel }: { poradatel: Poradatel }) {
   const web = bezpecnyWeb(poradatel.web);
@@ -68,13 +69,25 @@ export function Medailonek({ poradatel }: { poradatel: Poradatel }) {
 
   return (
     <section className="medailonek" id="poradatel" aria-labelledby="poradatel-nadpis">
-      <figure className="medailonek-foto">
-        <picture>
-          <source type="image/avif" srcSet={`/foto/${foto.soubor}-400.avif`} />
-          <img src={`/foto/${foto.soubor}.jpg`} alt="" loading="lazy" decoding="async" />
-        </picture>
-        <figcaption>Foto {AUTOR_FOTEK}</figcaption>
-      </figure>
+      {poradatel.obrazek ? (
+        <figure className="medailonek-foto">
+          <img
+            src={poradatel.obrazek.nahled}
+            alt={poradatel.obrazek.popis ?? ""}
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>Foto {poradatel.obrazek.autor}</figcaption>
+        </figure>
+      ) : (
+        <figure className="medailonek-foto">
+          <picture>
+            <source type="image/avif" srcSet={`/foto/${foto.soubor}-400.avif`} />
+            <img src={`/foto/${foto.soubor}.jpg`} alt="" loading="lazy" decoding="async" />
+          </picture>
+          <figcaption>Foto {AUTOR_FOTEK}</figcaption>
+        </figure>
+      )}
 
       <div className="medailonek-text">
         <p className="medailonek-stitek">Pořádá</p>

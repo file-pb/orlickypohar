@@ -1066,7 +1066,7 @@ Počítáno na pět hodin týdně.
 | 3 | ~~**Mobilní appka, jen čtení**~~ | **hotovo 8. 9. 2026** | Nepotřebovala přihlášení, takže vznikla dřív než identita. Běží na telefonu, typy si bere z OpenAPI a jde poslat jako APK |
 | 4 | ~~**Identita a role** — Zitadel, mapování `(issuer, subject) → UserId`~~ | **hotovo 9. 9. 2026** | Zitadel na vlastním stroji, přihlášení na webu, API ověřuje tokeny. Odblokovalo odloženou položku platformy |
 | 5 | **Administrace a workflow** — zadávání, stavy, publikace, protesty a penalizace | skoro hotovo | Oprávnění, kalendář a workflow výsledků hotové 11. 9. 2026; zápis výsledků, přihlášky lodí a role od rozhodčího 14. 9. Zbývají protesty a penalizace — čekají na odpovědi rozhodčího |
-| 6 | **Blog a fotky** — model, import, veřejné čtení, novinky na webu | skoro hotovo | Psaní článků i fotky v kartách hotové 11. 9. 2026; nahrávání vlastní fotky pořadatelem čeká na objektové úložiště |
+| 6 | **Blog a fotky** — model, import, veřejné čtení, novinky na webu | skoro hotovo | Psaní článků i fotky v kartách hotové 11. 9. 2026; nahrávání vlastní fotky do R2 v kódu 16. 9. 2026, zapne se založením bucketu (viz *Fotky v R2*) |
 | 7 | **Upozornění** — veřejná i účastnická, odesílání, Outbox | 2–3 týdny | Účastnická stojí na identitě z fáze 4 a na napojení osoby k lodi |
 | 8 | **Tracker** — záznam trasy, offline, nahrání, prohlížení | 4–6 týdnů | Samostatná linka; potřebuje jen identitu a kontext závodu |
 | 9 | Handicap | až bude potřeba | |
@@ -1320,8 +1320,8 @@ prozradila závod, který ročník ještě nezveřejnil.
 | Zbývá | Proč to ještě není |
 |---|---|
 | ~~Psaní článků v administraci~~ | hotovo 11. 9. 2026 — `/sprava/{serie}/clanky` |
-| Fotky v článku | kurátorský set je zabalený ve webu (11. 9. 2026); vlastní fotka od pořadatele chce R2 |
-| ~~Pořadatel jako záznam, ne text~~ | hotovo 15. 9. 2026, viz *Pořadatel jako záznam* níž; vlastní obrázek pořadatele chce R2 |
+| ~~Fotky v článku~~ | hotovo 16. 9. 2026 — jeden hlavní obrázek na článek, viz *Fotky v R2* |
+| ~~Pořadatel jako záznam, ne text~~ | hotovo 15. 9. 2026, viz *Pořadatel jako záznam* níž; vlastní obrázek 16. 9. 2026 |
 
 ### Pořadatel jako záznam
 
@@ -1352,10 +1352,10 @@ Rozhodnutí (Filip, 15. 9. 2026):
    souhlas, žádný javascript.
 4. **Kontakt: jméno, e-mail, telefon, adresa — jen vyplněné.** Jméno
    a telefon jsou osobní údaje; obrazovka to u polí říká.
-5. **Obrázek zatím bez nahrávání.** U medailonku je kurátorská fotka
-   z Orlíku od Jiřího Tašla, vybraná podle klíče klubu a jen s kreditem
-   (není to fotka klubu). Vlastní obrázek přijde s R2 spolu s fotkami
-   k článkům.
+5. **Obrázek.** Bez vlastního je u medailonku kurátorská fotka z Orlíku
+   od Jiřího Tašla, vybraná podle klíče klubu a jen s kreditem (není to
+   fotka klubu). Vlastní obrázek se nahrává od 16. 9. 2026, viz *Fotky
+   v R2*; medailonek jen s ním už se na webu ukáže.
 
 **Pořadatel vzniká ze jména, ne vlastním formulářem.** Kalendář i import
 posílají text jako dřív a `PoradateleSprava.PriradAsync` k němu najde, nebo
@@ -1873,6 +1873,58 @@ leží v [docs/schemata/](schemata/). Je to **snímek k datu, ne živý zdroj
 pravdy**: nic ho nepřegeneruje, když se kód změní. Když se rozejde s kódem,
 platí kód.
 
+## Fotky v R2
+
+**Hotové v kódu 16. 9. 2026.** Jeden hlavní obrázek na článek a jeden na
+medailonek pořadatele. Filip k ceně: R2 má 10 GB zdarma, zálohy z nich
+berou 3,3 MB; pro pohár to vychází na nulu.
+
+| Kus | Kde |
+|---|---|
+| Záznam o fotce, pravidla, adresy | `Features/Fotky/Fotka.cs` (`Nahravani`) |
+| Přepočet do WebP, zahození EXIF | `Features/Fotky/Zpracovani.cs` |
+| S3 klient a náhrada, když není nastavený | `Features/Fotky/Uloziste.cs` |
+| Výměna a odebrání, úklid souborů | `Features/Fotky/FotkySprava.cs` |
+| `PUT`/`DELETE …/clanky/{clanek}/obrazek` a `…/poradatele/{poradatel}/obrazek` | endpointy obou řezů |
+| Formulář v administraci | `web/app/sprava/obrazek.tsx`, akce vedle |
+
+Rozhodnutí:
+
+1. **Soubor jde přes server webu a API, ne z prohlížeče rovnou do R2.**
+   Přímé nahrání by chtělo podepsané adresy a javascript; takhle stačí
+   obyčejný formulář a API soubor přepočítá dřív, než se cokoliv uloží.
+2. **Každá fotka se přepočítá** na dvě varianty ve WebP (480 a 1600 px,
+   nikdy se nezvětšuje). Tím zmizí EXIF s polohou a zároveň se ověří, že
+   soubor je obrázek. Bere se JPEG, PNG a WebP do 15 MB a 60 Mpx;
+   formulář HEIC nenabízí, takže iPhone fotku sám převede na JPEG.
+3. **Autor a souhlas jsou povinné při každém nahrání.** Souhlas se ukládá
+   jako to, kdo fotku nahrál a kdy (`Fotka.NahralId`).
+4. **Nová fotka = nový klíč** (`fotky/{id}-{šířka}.webp`), takže soubor se
+   pod jednou adresou nikdy nemění a má `immutable` cache.
+5. **Odebraná nebo nahrazená fotka se maže i z R2.** Kdo fotku stahuje
+   kvůli odvolanému souhlasu, čeká, že zmizí. Cena: obnova databáze ze
+   starší zálohy může ukazovat na smazaný soubor — web pak ukáže prázdné
+   místo, ne chybu.
+6. **Bez nastavení aplikace naběhne** a jen nahrávání vrací 503. Web bez
+   fotek je pořád web.
+7. **Přepočet vždy jen jeden naráz** — rozbalená fotka zabere až 240 MB
+   a API má limit 512 MB.
+8. **ImageSharp 3.1**, ne 4: čtyřka chce při buildu licenční klíč.
+   Licence je pro jednotlivce s obratem pod milion dolarů Apache 2.0;
+   Dependabot má major verzi vypnutou.
+
+**Co je potřeba, aby to na serveru běželo** (jednou, v Cloudflaru):
+
+1. R2 → bucket `orlickypohar-fotky`, EU jurisdikce, Standard.
+2. Bucket → *Custom Domains* → `orlickypohar-foto.klihovka.cz`. Veřejný
+   přístup jen přes tuhle doménu, `r2.dev` vypnuté.
+3. Account API token *Object Read & Write* **jen na tenhle bucket**.
+4. Na serveru: endpoint do `/opt/apps/orlickypohar/.env` jako
+   `FOTKY_ENDPOINT=https://<účet>.eu.r2.cloudflarestorage.com` a klíče do
+   `secrets/Fotky__KlicId` a `secrets/Fotky__Klic` (vlastník UID 1654),
+   pak `docker compose up -d app`. Prázdné soubory tam leží od 16. 9.,
+   aby nasazení neselhalo dřív, než token existuje.
+
 ## Kde se pokračuje
 
 Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
@@ -1893,7 +1945,7 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
    na odpovědi rozhodčího. Komunitní akce v kalendáři hotové 15. 9. Další
    na řadě je **design** (oddíl *Podněty z 14. 9. 2026*). Pořadatel jako
    záznam s medailonkem hotový 15. 9.; vlastní obrázek pořadatele i fotky
-   k článkům čekají na R2. Seznam přihlášených účtů na obrazovce oprávnění
+   k článkům jsou v kódu od 16. 9. a čekají na bucket (*Fotky v R2*). Seznam přihlášených účtů na obrazovce oprávnění
    hotový 15. 9. (oddíl *Čím pokračovat ve fázi 5*).
 6. **Skutečná data** — až dorazí, nahradí `data/2025-mock.json` a nahrají se
    importem. Struktura zůstane.

@@ -4,6 +4,7 @@ import { Drobecky } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { datum } from "@/app/datum";
 import { nactiPoradatele, souradniceTextem } from "@/lib/poradatele";
+import { SpravaObrazku } from "@/app/sprava/obrazek";
 import { ulozAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
@@ -103,6 +104,19 @@ export default async function SpravaPoradatele({ params, searchParams }: Paramet
       {zpravy.chyba && (
         <p className="hlaska chyba" role="alert">
           {zpravy.chyba}
+        </p>
+      )}
+      {zpravy.stav === "obrazek" && (
+        <p className="hlaska hotovo" role="status">
+          Fotka nahraná.{" "}
+          {prvni && (
+            <Link href={`/serie/${serie}/zavody/${prvni.slug}#poradatel`}>Jak vypadá na webu →</Link>
+          )}
+        </p>
+      )}
+      {zpravy.stav === "obrazek-odebran" && (
+        <p className="hlaska hotovo" role="status">
+          Fotka odebraná.
         </p>
       )}
       {zpravy.stav === "ulozeno" && !zpravy.chyba && (
@@ -232,14 +246,21 @@ export default async function SpravaPoradatele({ params, searchParams }: Paramet
           </label>
 
           <button type="submit">Uložit medailonek</button>
-          <p className="poznamka">
-            Obrázek zatím nahrát nejde. Na webu je u medailonku ilustrační fotka z Orlíku.
-          </p>
         </form>
       ) : (
         <p className="prazdno">
           Medailonek tohohle klubu upravuje rozhodčí, nebo organizátor jeho zastávky.
         </p>
+      )}
+
+      {detail.smiUpravit && (
+        <SpravaObrazku
+          serie={serie}
+          druh="poradatele"
+          klic={p.slug}
+          obrazek={p.obrazek}
+          bezObrazku="Na webu je u medailonku ilustrační fotka z Orlíku."
+        />
       )}
     </>
   );

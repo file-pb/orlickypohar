@@ -27,6 +27,11 @@ updates:
         patterns:
           - "Microsoft.*"
           - "System.*"
+    ignore:
+      # ImageSharp 4 chce při buildu licenční klíč, i zdarma. Řada 3.1 má
+      # tutéž licenci bez klíče; přechod je rozhodnutí, ne týdenní PR.
+      - dependency-name: "SixLabors.ImageSharp"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: docker
     directory: "/"

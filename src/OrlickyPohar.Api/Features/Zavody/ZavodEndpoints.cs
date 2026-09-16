@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Bodovani;
+using OrlickyPohar.Api.Features.Fotky;
 using OrlickyPohar.Api.Features.Poradatele;
 // Řez i třída se jmenují stejně, takže se prosté `Bodovani` uvnitř sousedního
 // jmenného prostoru rozumí jako název jmenného prostoru. Alias to rozsekne.
@@ -75,7 +76,7 @@ public static class ZavodEndpoints
     }
 
     private static async Task<Results<Ok<ZavodDetailDto>, NotFound>> DetailAsync(
-        string serieSlug, string slug, AppDbContext db, CancellationToken ct)
+        string serieSlug, string slug, AppDbContext db, IUloziste uloziste, CancellationToken ct)
     {
         var zavod = await db.Zavody
             .Where(z => z.Slug == slug && z.Publikovano
@@ -84,7 +85,7 @@ public static class ZavodEndpoints
             {
                 z.Id, z.SerieId, z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel,
                 z.Stav, z.PuvodniDatum, z.PocetSkrtu, z.Vyhodnoceni, z.KoeficientDoSerie,
-                z.Druh, z.PoradatelZaznam,
+                z.Druh, z.PoradatelZaznam, FotkaPoradatele = z.PoradatelZaznam!.Fotka,
             })
             .FirstOrDefaultAsync(ct);
 
@@ -182,6 +183,8 @@ public static class ZavodEndpoints
                 [.. v.Rozjizdky.Select(b => new BodyVRozjizdceDto(b.Cislo, b.Body, b.Skrtnuto))]))],
             lode,
             zavod.Druh,
-            zavod.PoradatelZaznam is null ? null : PoradateleSprava.Dto(zavod.PoradatelZaznam)));
+            zavod.PoradatelZaznam is null
+                ? null
+                : PoradateleSprava.Dto(zavod.PoradatelZaznam, zavod.FotkaPoradatele, uloziste.VerejnaAdresa)));
     }
 }

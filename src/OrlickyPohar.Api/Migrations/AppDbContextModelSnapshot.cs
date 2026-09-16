@@ -34,6 +34,9 @@ namespace OrlickyPohar.Api.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
 
+                    b.Property<Guid?>("FotkaId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Perex")
                         .HasMaxLength(600)
                         .HasColumnType("character varying(600)");
@@ -66,6 +69,8 @@ namespace OrlickyPohar.Api.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("FotkaId");
+
                     b.HasIndex("ZavodId");
 
                     b.HasIndex("SerieId", "PublikovanoV");
@@ -74,6 +79,39 @@ namespace OrlickyPohar.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("Clanky");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Fotky.Fotka", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Autor")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<Guid>("NahralId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("NahranoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Popis")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int>("Sirka")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Vyska")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NahralId");
+
+                    b.ToTable("Fotky");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Identita.Opravneni", b =>
@@ -251,6 +289,9 @@ namespace OrlickyPohar.Api.Migrations
                         .HasMaxLength(320)
                         .HasColumnType("character varying(320)");
 
+                    b.Property<Guid?>("FotkaId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("KontaktniOsoba")
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
@@ -281,6 +322,8 @@ namespace OrlickyPohar.Api.Migrations
                         .HasColumnType("character varying(300)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FotkaId");
 
                     b.HasIndex("Slug")
                         .IsUnique();
@@ -564,6 +607,11 @@ namespace OrlickyPohar.Api.Migrations
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Clanky.Clanek", b =>
                 {
+                    b.HasOne("OrlickyPohar.Api.Features.Fotky.Fotka", "Fotka")
+                        .WithMany()
+                        .HasForeignKey("FotkaId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("OrlickyPohar.Api.Features.Serial.Serie", "Serie")
                         .WithMany()
                         .HasForeignKey("SerieId")
@@ -575,9 +623,22 @@ namespace OrlickyPohar.Api.Migrations
                         .HasForeignKey("ZavodId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.Navigation("Fotka");
+
                     b.Navigation("Serie");
 
                     b.Navigation("Zavod");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Fotky.Fotka", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Nahral")
+                        .WithMany()
+                        .HasForeignKey("NahralId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Nahral");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Identita.Opravneni", b =>
@@ -626,6 +687,16 @@ namespace OrlickyPohar.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Majitel");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Poradatele.Poradatel", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Fotky.Fotka", "Fotka")
+                        .WithMany()
+                        .HasForeignKey("FotkaId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Fotka");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Serial.Kategorie", b =>

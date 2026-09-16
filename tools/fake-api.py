@@ -10,7 +10,9 @@ Pravda o pravidlech leží tam a hlídají ji testy; tenhle přepis existuje jen
 proto, aby šly stránky vidět na stroji, kde se databáze rozjet nedá. Když se
 pravidlo změní, mění se na obou místech — a rozejít se můžou jen tady.
 """
-import json, os, re, unicodedata
+import json, os, re, unicodedata, uuid
+from email.parser import BytesParser
+from email.policy import HTTP
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 
@@ -149,7 +151,8 @@ def clanek_shrnuti(c):
     return {"slug": c["slug"], "titulek": c["titulek"], "perex": c.get("perex"),
             "autor": c.get("autor"), "publikovanoV": c["publikovanoV"],
             "zavod": z["slug"] if z else None,
-            "zavodNazev": z["nazev"] if z else None}
+            "zavodNazev": z["nazev"] if z else None,
+            "obrazek": c.get("obrazek")}
 
 
 def nazvy(hodnota):
@@ -425,6 +428,10 @@ def zastavka_radek(z):
 # aby šla vidět celá karta; skutečný je jen web.
 PORADATELE = {}
 
+# Nahrané fotky v paměti. Skutečné API je přepočítá do WebP a uloží do R2;
+# tady se vrací, jak přišly — jde o obrazovky, ne o zpracování obrázku.
+FOTKY = {}
+
 
 def poradatel_zastavky(z):
     """Záznam pořadatele zastávky, případně ho založí z textu."""
@@ -434,7 +441,7 @@ def poradatel_zastavky(z):
     if slug not in PORADATELE:
         PORADATELE[slug] = {"slug": slug, "nazev": z["poradatel"], "web": None, "popis": None,
                             "email": None, "telefon": None, "kontaktniOsoba": None,
-                            "adresa": None, "sirka": None, "delka": None}
+                            "adresa": None, "sirka": None, "delka": None, "obrazek": None}
     z["poradatel"] = PORADATELE[slug]["nazev"]
     return PORADATELE[slug]
 
@@ -512,7 +519,8 @@ def clanek_radek(c):
     return {"slug": c["slug"], "titulek": c["titulek"], "perex": c.get("perex"),
             "autor": c.get("autor"), "publikovanoV": c["publikovanoV"],
             "stav": c["stav"],
-            "zavod": z["slug"] if z else None, "zavodNazev": z["nazev"] if z else None}
+            "zavod": z["slug"] if z else None, "zavodNazev": z["nazev"] if z else None,
+            "obrazek": c.get("obrazek")}
 
 
 class H(BaseHTTPRequestHandler):
@@ -539,6 +547,8 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)$', cesta)):
             return self.uprav_zastavku(m.group(1))
 
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/(clanky|poradatele)/([a-z0-9-]+)/obrazek$', cesta)):
+            return self.nahraj_obrazek(m.group(1), m.group(2))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/poradatele/([a-z0-9-]+)$', cesta)):
             return self.uloz_poradatele(m.group(1))
         m = re.match(rf'^/sprava/serie/{D["slug"]}/clanky/([a-z0-9-]+)$', cesta)
@@ -780,6 +790,50 @@ class H(BaseHTTPRequestHandler):
         z["rozjizdky"].append(nova)
         return self.odpoved(rozjizdka_radek(nova), 201)
 
+    def vlastnik_obrazku(self, druh, klic):
+        if druh == "clanky":
+            return next((c for c in SPRAVA_CLANKY if c["slug"] == klic), None)
+        return PORADATELE.get(klic)
+
+    def nahraj_obrazek(self, druh, klic):
+        """Stejné kontroly jako `Nahravani.ProcNejde` v API."""
+        if not self.headers.get("authorization"):
+            return self.send_error(401)
+        vlastnik = self.vlastnik_obrazku(druh, klic)
+        if not vlastnik:
+            return self.send_error(404)
+
+        delka = int(self.headers.get("Content-Length", "0") or 0)
+        zprava = BytesParser(policy=HTTP).parsebytes(
+            b"Content-Type: " + self.headers["Content-Type"].encode() + b"\r\n\r\n"
+            + self.rfile.read(delka))
+        pole = {c.get_param("name", header="content-disposition"): c for c in zprava.iter_parts()}
+        # Části bez charsetu by e-mailový parser četl jako ASCII; formulář je UTF-8.
+        text = lambda k: (pole[k].get_payload(decode=True).decode("utf-8").strip() if k in pole else "")
+
+        soubor = pole.get("soubor")
+        data = soubor.get_payload(decode=True) if soubor else b""
+        if not data:
+            return self.chyba(400, "Vyber soubor s fotkou.")
+        if len(data) > 15 * 1024 * 1024:
+            return self.chyba(400, "Fotka může mít nejvýš 15 MB.")
+        if soubor.get_content_type() not in ("image/jpeg", "image/png", "image/webp"):
+            return self.chyba(400, "Soubor se nedá přečíst jako fotka. Nahraj JPEG, PNG nebo WebP.")
+        if not text("autor"):
+            return self.chyba(400, "Napiš, kdo fotku fotil. Na webu se pod ní ukáže.")
+        if text("souhlas") != "true":
+            return self.chyba(400, "Potvrď, že autor souhlasí se zveřejněním fotky na webu.")
+
+        if vlastnik.get("obrazek"):
+            FOTKY.pop(vlastnik["obrazek"]["id"], None)
+        id = uuid.uuid4().hex
+        FOTKY[id] = (data, soubor.get_content_type())
+        adresa = f"http://127.0.0.1:{PORT}/fake-foto/{id}"
+        vlastnik["obrazek"] = {"id": id, "nahled": adresa, "velky": adresa, "sirka": 1600,
+                               "vyska": 1067, "autor": text("autor"),
+                               "popis": text("popis") or None}
+        return self.odpoved({k: v for k, v in vlastnik["obrazek"].items() if k != "id"})
+
     def uloz_poradatele(self, slug):
         if not self.headers.get("authorization"):
             return self.send_error(401)
@@ -916,6 +970,21 @@ class H(BaseHTTPRequestHandler):
         return self.odpoved(clanek_radek(c))
 
     def do_DELETE(self):
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/(clanky|poradatele)/([a-z0-9-]+)/obrazek$',
+                          urlparse(self.path).path)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            vlastnik = self.vlastnik_obrazku(m.group(1), m.group(2))
+            if not vlastnik:
+                return self.send_error(404)
+            if vlastnik.get("obrazek"):
+                FOTKY.pop(vlastnik.pop("obrazek")["id"], None)
+                vlastnik["obrazek"] = None
+            self.send_response(204)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+
         m = re.match(rf'^/sprava/serie/{D["slug"]}/opravneni/(\d+)$', urlparse(self.path).path)
         if not m:
             return self.send_error(404)
@@ -937,6 +1006,15 @@ class H(BaseHTTPRequestHandler):
     def do_GET(self):
         rozdelena = urlparse(self.path)
         cesta, dotaz = rozdelena.path, parse_qs(rozdelena.query)
+
+        if (m := re.match(r'^/fake-foto/([0-9a-f]+)$', cesta)) and m.group(1) in FOTKY:
+            data, typ = FOTKY[m.group(1)]
+            self.send_response(200)
+            self.send_header("Content-Type", typ)
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
 
         if cesta in ("/health", "/health/ready"):
             # Skutečné API je má taky; bez nich by zátěžový test hlásil

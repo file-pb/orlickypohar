@@ -1,10 +1,10 @@
 /**
  * Fotky k článkům.
  *
- * <b>Zatím jen náhradní set</b> — kurátorské fotky, které jsou součástí
- * návrhu, ne obsahu. Proto smějí být zabalené ve webu vedle loga a
- * nepotřebují objektové úložiště; to bude potřeba teprve tehdy, až fotku
- * ke svému článku nahraje pořadatel.
+ * <b>Nahraná fotka má přednost.</b> Leží v objektovém úložišti a API ji
+ * vydává s adresami. Když žádná není, nastupuje <b>náhradní set</b> —
+ * kurátorské fotky, které jsou součástí návrhu, ne obsahu, a proto smějí
+ * být zabalené ve webu vedle loga.
  *
  * <b>Výběr je odvozený ze slugu, ne náhodný.</b> Server renderuje stránku
  * při každém požadavku, takže náhoda by znamenala, že se fotka u téhož
@@ -25,6 +25,9 @@ const NAHRADNI = [
 
 export const AUTOR_FOTEK = "Jiří Tašl";
 
+/** Nahraný obrázek, jak ho vydává API. Když není, nastupuje náhradní set. */
+export type Obrazek = { nahled: string; velky: string; autor: string; popis?: string | null };
+
 /**
  * Součet znaků slugu. Stačí to: nejde o rozptyl, ale o to, aby dvě sousední
  * karty nevyšly stejně a aby výsledek byl při každém vykreslení týž.
@@ -41,7 +44,14 @@ export const fotkaClanku = (slug: string) => NAHRADNI[index(slug)];
  * Náhled do karty. Malý, proto stačí varianta 400 px — na 800 by se
  * stahovalo čtyřikrát víc, než na co se kouká.
  */
-export function Nahled({ slug }: { slug: string }) {
+export function Nahled({ slug, obrazek }: { slug: string; obrazek?: Obrazek | null }) {
+  if (obrazek)
+    return (
+      <picture className="nahled">
+        <img src={obrazek.nahled} alt="" loading="lazy" decoding="async" />
+      </picture>
+    );
+
   const f = fotkaClanku(slug);
 
   return (
@@ -58,7 +68,23 @@ export function Nahled({ slug }: { slug: string }) {
  * Velká fotka nad článkem. <c>alt</c> je prázdný schválně: obrázek je
  * dekorace, ne informace, a čtečce obrazovky nemá co říct navíc.
  */
-export function FotkaClanku({ slug }: { slug: string }) {
+export function FotkaClanku({ slug, obrazek }: { slug: string; obrazek?: Obrazek | null }) {
+  // Vlastní fotka k článku popisek mít smí — je opravdu z toho, o čem se píše.
+  if (obrazek)
+    return (
+      <figure className="fotka-clanku">
+        <img
+          src={obrazek.velky}
+          srcSet={`${obrazek.nahled} 480w, ${obrazek.velky} 1600w`}
+          sizes="(min-width: 48rem) 46rem, 100vw"
+          alt={obrazek.popis ?? ""}
+        />
+        <figcaption>
+          {obrazek.popis && `${obrazek.popis} · `}Foto {obrazek.autor}
+        </figcaption>
+      </figure>
+    );
+
   const f = fotkaClanku(slug);
 
   return (

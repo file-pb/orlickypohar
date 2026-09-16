@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Features.Clanky;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Lode;
+using OrlickyPohar.Api.Features.Fotky;
 using OrlickyPohar.Api.Features.Poradatele;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Zavody;
@@ -21,6 +22,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Rozjizdka> Rozjizdky => Set<Rozjizdka>();
     public DbSet<Vysledek> Vysledky => Set<Vysledek>();
     public DbSet<Clanek> Clanky => Set<Clanek>();
+    public DbSet<Fotka> Fotky => Set<Fotka>();
     public DbSet<Uzivatel> Uzivatele => Set<Uzivatel>();
     public DbSet<UcetVazba> Vazby => Set<UcetVazba>();
     public DbSet<Opravneni> Opravneni => Set<Opravneni>();
@@ -88,6 +90,19 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // Slug je přirozený klíč: podle něj kalendář i import najdou klub,
         // místo aby ho založily podruhé.
         poradatel.HasIndex(x => x.Slug).IsUnique();
+        // Smazaná fotka nesmí vzít s sebou klub. Medailonek se vrátí
+        // ke kurátorské fotce.
+        poradatel.HasOne(x => x.Fotka).WithMany().HasForeignKey(x => x.FotkaId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        var fotka = b.Entity<Fotka>();
+        fotka.Property(x => x.Id).ValueGeneratedNever();
+        fotka.Property(x => x.Autor).HasMaxLength(Nahravani.AutorNejvic).IsRequired();
+        fotka.Property(x => x.Popis).HasMaxLength(Nahravani.PopisNejvic);
+        // Účty se nemažou. Kdyby se někdy mazat začaly, záznam o tom, kdo
+        // potvrdil souhlas, nesmí zmizet potichu s nimi.
+        fotka.HasOne(x => x.Nahral).WithMany().HasForeignKey(x => x.NahralId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         var ucast = b.Entity<Ucast>();
         ucast.Property(x => x.Posadka).HasMaxLength(400);
@@ -131,6 +146,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // Výpis novinek jde vždycky od nejnovějšího; bez indexu by se řadil
         // celý blog ročníku kvůli třem perexům na úvodní stránce.
         clanek.HasIndex(x => new { x.SerieId, x.PublikovanoV });
+        clanek.HasOne(x => x.Fotka).WithMany().HasForeignKey(x => x.FotkaId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         var uzivatel = b.Entity<Uzivatel>();
         uzivatel.Property(x => x.Zobrazovane).HasMaxLength(200).IsRequired();
