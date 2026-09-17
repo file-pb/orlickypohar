@@ -61,7 +61,8 @@ export default async function Rozcestnik() {
       const [detail, poradi, novinky] = await Promise.all([
         nactiSerii(aktualni.slug),
         nactiPoradi(aktualni.slug),
-        nactiClanky(aktualni.slug, { limit: 3 }),
+        // Čtyři: velký a tři vedle něj nebo pod ním (Filip, 17. 9. 2026).
+        nactiClanky(aktualni.slug, { limit: 4 }),
       ]);
       clanky = novinky;
       tridy = poradi?.kategorie.filter((k) => k.lode.length > 0) ?? [];
@@ -174,7 +175,7 @@ export default async function Rozcestnik() {
       {aktualni && clanky && clanky.length > 0 && (
         <section className="novinky-blok">
           <h2>Novinky</h2>
-          <VypisNovinek serie={aktualni.slug} clanky={clanky} />
+          <VypisNovinek serie={aktualni.slug} clanky={clanky} hlavni />
           <p className="poznamka">
             <Link href={`/serie/${aktualni.slug}/novinky`}>Všechny novinky ročníku →</Link>
           </p>

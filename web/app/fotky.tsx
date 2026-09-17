@@ -65,6 +65,33 @@ export function Nahled({ slug, obrazek }: { slug: string; obrazek?: Obrazek | nu
 }
 
 /**
+ * Velký náhled pro hlavní novinku na úvodu. Šířka karty, ne článku —
+ * stačí varianta 800 px, nahraná fotka dává svou velkou.
+ */
+export function NahledVelky({ slug, obrazek }: { slug: string; obrazek?: Obrazek | null }) {
+  if (obrazek)
+    return (
+      <picture className="nahled nahled-velky">
+        <img
+          src={obrazek.velky}
+          srcSet={`${obrazek.nahled} 480w, ${obrazek.velky} 1600w`}
+          sizes="(min-width: 48rem) 40rem, 100vw"
+          alt=""
+          decoding="async"
+        />
+      </picture>
+    );
+
+  const f = fotkaClanku(slug);
+  return (
+    <picture className="nahled nahled-velky">
+      <source type="image/avif" srcSet={`/foto/${f.soubor}-800.avif`} />
+      <img src={`/foto/${f.soubor}.jpg`} alt="" decoding="async" />
+    </picture>
+  );
+}
+
+/**
  * Velká fotka nad článkem. <c>alt</c> je prázdný schválně: obrázek je
  * dekorace, ne informace, a čtečce obrazovky nemá co říct navíc.
  */

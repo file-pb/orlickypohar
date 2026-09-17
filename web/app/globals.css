@@ -1217,6 +1217,31 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
   .nahled img { width: 100%; height: 8rem; }
 }
 
+/* Novinky na úvodu: jeden velký článek a tři menší.
+
+   Podle šířky bloku, ne okna — vedle boků je střed na 13" displeji úzký
+   a na 1920 px široký, a media query by to netrefilo. V jednom sloupci
+   je velký nahoře a tři pod ním; od dvou sloupců velký vlevo přes všechny
+   tři řádky a menší pod sebou vpravo. Nikde tak nezůstane prázdná buňka. */
+.novinky-blok { container-type: inline-size; }
+.s-boky-stred .seznam.novinky-uvod,
+.seznam.novinky-uvod { grid-template-columns: minmax(0, 1fr); }
+.novinky-uvod .hlavni .karta.s-fotkou { flex-direction: column; gap: 0.75rem; height: 100%; }
+.novinky-uvod .hlavni .nahled-velky img {
+  width: 100%; height: clamp(10rem, 22vw, 16rem);
+}
+.novinky-uvod .hlavni .nazev { font-size: 1.15rem; }
+@container (min-width: 52rem) {
+  .s-boky-stred .seznam.novinky-uvod,
+  .seznam.novinky-uvod {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    grid-auto-flow: row dense;
+  }
+  .novinky-uvod .hlavni { grid-column: 1; grid-row: 1 / span 3; }
+  .novinky-uvod > li:not(.hlavni) { grid-column: 2; }
+  .novinky-uvod .hlavni .nahled-velky img { height: auto; aspect-ratio: 16 / 9; }
+}
+
 /* Velká fotka nad článkem. Drží šířku textu, ne obalu — jinak by článek
    začínal fotkou přes celou obrazovku a pokračoval úzkým sloupcem. */
 .fotka-clanku { margin: 0 0 1.5rem; max-width: 46rem; }

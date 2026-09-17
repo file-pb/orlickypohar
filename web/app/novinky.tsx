@@ -1,22 +1,39 @@
 import Link from "next/link";
 import { datumClanku } from "@/app/datum";
-import { Nahled } from "@/app/fotky";
+import { Nahled, NahledVelky } from "@/app/fotky";
 import type { ClanekShrnuti } from "@/lib/api";
 
 /**
  * Výpis novinek. Používá ho úvodní stránka, seznam novinek ročníku
  * i stránka zastávky — je to slovník, ne abstrakce: kdyby novinka vypadala
  * na každé stránce jinak, čtenář by hádal, jestli je to totéž.
+ *
+ * <b>`hlavni` je úvodní stránka</b> (Filip, 17. 9. 2026): první článek je
+ * velký s fotkou nahoře a tři další menší — ve dvou sloupcích vpravo vedle
+ * něj, v jednom pod ním. Rozložení řeší CSS podle šířky bloku, ne okna,
+ * protože vedle boků je střed různě široký.
  */
-export function VypisNovinek({ serie, clanky }: { serie: string; clanky: ClanekShrnuti[] }) {
+export function VypisNovinek({
+  serie,
+  clanky,
+  hlavni = false,
+}: {
+  serie: string;
+  clanky: ClanekShrnuti[];
+  hlavni?: boolean;
+}) {
   return (
-    <ul className="seznam novinky">
-      {clanky.map((c) => (
-        <li key={c.slug}>
+    <ul className={`seznam novinky${hlavni ? " novinky-uvod" : ""}`}>
+      {clanky.map((c, i) => (
+        <li key={c.slug} className={hlavni && i === 0 ? "hlavni" : undefined}>
           <Link className="karta s-fotkou" href={`/serie/${serie}/novinky/${c.slug}`}>
             {/* Náhled je dekorace, ne informace — proto nenese popisek
                 a nesmí se tvářit, že je z toho závodu. */}
-            <Nahled slug={c.slug} obrazek={c.obrazek} />
+            {hlavni && i === 0 ? (
+              <NahledVelky slug={c.slug} obrazek={c.obrazek} />
+            ) : (
+              <Nahled slug={c.slug} obrazek={c.obrazek} />
+            )}
             {/* Text v obalu, aby ležel vedle fotky. Dalo by se to poskládat
                 i mřížkou bez něj, ale fotka by pak musela vědět, kolik je
                 pod ní řádků — a perex je nepovinný, takže se to mění. */}
