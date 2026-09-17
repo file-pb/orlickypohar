@@ -1948,6 +1948,80 @@ měření starší 3 dnů (tabulka nepřeroste ~430 řádků). Zapíná se prom�
 
 Web už stránku Povodí nečte, bere `GET /vodocet/orlik`.
 
+## Veřejné přihlášky lodí (plán 17. 9. 2026)
+
+Filip chce, aby loď na zastávku přihlásil kdokoliv z veřejnosti, s našeptávačem
+podle lodí z dřívějších zastávek a ročníků, s workflow stavů a s kontakty
+kapitánů. Navazuje na *Přihlášky lodí na zastávku* (dnes přihlašuje jen
+pořadatel). Inspirace: Manage2Sail (profil lodi, přihláška oddělená od
+prezence), vypsání závodů ČSJ (přihlášku podepisuje kapitán, souhlas
+s pravidly).
+
+### Rozhodnutí (Filip, 17. 9. 2026)
+
+1. **Bez účtu a bez hesla.** Lidi se nemají otravovat. Přihláška je na
+   důvěře, pořadatel nebo rozhodčí ji před zapsáním zkontroluje a nesmysl
+   smaže. Proti robotům Cloudflare Turnstile a omezení počtu požadavků.
+   Dobrovolné přihlášení přes Google/Facebook (Zitadel) může přijít
+   později kvůli přehledu „moje přihlášky".
+2. **Kapitán a kormidelník je jedna role.** Přihlásit smí kapitán
+   i majitel; kontakt se vede u toho, kdo je uvedený.
+3. **Kontakty jen e-mail a telefon.**
+4. **Žádná uzávěrka ani kapacita.** Loď se běžně domluví po telefonu na
+   startu 24hodinovky a pořadatel ji zapíše dodatečně — přihlašuje se
+   od vypsání až po odjetí, jako dnes.
+5. **Startovné je součást přihlášky, ale nic neblokuje** — jen příznak
+   zaplaceno a poznámka.
+6. **Číslo člena ČSJ volitelně.**
+7. **Kontakty se drží do konce následující sezóny** (pozvánky na další
+   ročník), pak se smažou.
+
+### Stavy přihlášky
+
+Stav říká, *jestli loď na závodě je*. Kódy výsledků (DNS, DSQ…) zůstávají
+na rozjížďkách.
+
+| Stav | Kdo | Význam |
+|---|---|---|
+| Požadavek | veřejnost | přišla, pořadatel ji neviděl |
+| K doplnění | pořadatel | vráceno, něco chybí nebo nesedí |
+| Zapsaná | pořadatel | přijato (dnešní `Prihlasena`) |
+| Potvrzená | pořadatel | prezence, loď startuje (dnešní `Potvrzena`) |
+| Odmítnutá | pořadatel | nepřijato, s důvodem; nesmysl se místo toho smaže |
+| Odhlášená | kapitán přes pořadatele | předem odřekla (dnešní `Zrusena`) |
+| Nedostavila se | pořadatel | byla zapsaná, nepřijela |
+| Vyloučená | rozhodčí | diskvalifikace z celého závodu |
+
+Každá změna jde do historie (kdo, kdy, důvod; důvod povinný u vrácení,
+odmítnutí a vyloučení). **Propsání „nedostavila se" a „vyloučená" do
+výsledků (DNC, DNE) čeká na rozhodčího** — stejné otázky jako dopočet
+neúčasti.
+
+### Našeptávač
+
+Veřejné hledání podle názvu nebo čísla plachty přes lodě všech ročníků.
+Předvyplní jen to, co je už veřejné: název, plachta, typ, poslední
+kategorie, majitel, poslední kormidelník. **Kontakty nikdy** — jinak by
+kdokoliv vylovil cizí e-mail napsáním názvu lodi.
+
+### Kontakty
+
+U osoby s historií: nový e-mail nebo telefon z přihlášky přibude jako nový
+záznam s datem, starý se nepřepíše. Přihláška si drží kopii toho, co kapitán
+zadal. Vidí je jen pořadatel zastávky, rozhodčí a správce ročníku.
+
+### Kroky
+
+1. Model: stavy, historie, kontakty s historií, kopie kontaktu, startovné,
+   ČSJ; migrace dnešních stavů.
+2. Veřejné hledání lodí (našeptávač).
+3. Veřejný formulář na stránce vypsané zastávky, Turnstile, omezení.
+4. Obrazovka pořadatele: fronta požadavků, zapsání, vrácení, odmítnutí,
+   smazání, prezence, startovné, kontakty.
+5. Úklid kontaktů po sezóně (plánovaná úloha).
+6. Propsání do výsledků — po odpovědi rozhodčího.
+7. E-maily kapitánovi při změně stavu — s Outboxem z fáze 7.
+
 ## Kde se pokračuje
 
 Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
