@@ -1027,9 +1027,12 @@ th.vlevo, td.vlevo { text-align: left; }
 /* Doplňky pod obsahem tam, kde nejsou boky: vodočet, výstrahy a počasí
    u nejbližší akce vedle sebe, na telefonu pod sebou. S boky se schovají,
    tytéž widgety jsou pak v bocích. */
+/* `auto-fit`, ne `auto-fill`: widgety jsou tři, a kde by se vešly čtyři
+   sloupce, `auto-fill` nechal čtvrtý prázdný a vpravo zela díra. Takhle
+   se prázdné sloupce složí a tři widgety si rozdělí celou šířku. */
 .doplnky {
   display: grid; gap: 1.75rem; margin-top: 2.5rem; align-items: start;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
 }
 .doplnky:empty { display: none; }
 @media (min-width: 1280px) {
