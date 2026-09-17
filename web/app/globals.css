@@ -814,7 +814,12 @@ th.vlevo, td.vlevo { text-align: left; }
    přihlášená je čárkovaná jako návrh, zrušená červená. */
 .stitek.ucast-potvrzena { color: var(--voda); border-color: currentColor; }
 .stitek.ucast-prihlasena { color: var(--tlumeny); border-style: dashed; }
-.stitek.ucast-zrusena { color: var(--stav-zruseny); border-color: currentColor; }
+.stitek.ucast-zrusena,
+.stitek.ucast-odmitnuta,
+.stitek.ucast-nedostavila { color: var(--stav-zruseny); border-color: currentColor; }
+.stitek.ucast-pozadavek,
+.stitek.ucast-kdoplneni { color: var(--akcent, var(--voda)); border-style: dashed; border-color: currentColor; }
+.stitek.ucast-vyloucena { color: var(--stav-zruseny); border-color: currentColor; font-weight: 600; }
 td .stavy { margin-top: 0; justify-content: flex-end; }
 th.vlevo, td.vlevo { text-align: left; }
 

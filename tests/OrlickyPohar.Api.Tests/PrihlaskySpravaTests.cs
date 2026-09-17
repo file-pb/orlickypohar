@@ -218,4 +218,46 @@ public class PrihlaskySpravaTests(PostgresFixture fixture)
             .SingleAsync(u => u.ZavodId == k.ZavodId && u.PrihlaskaId == k.Bora);
         Assert.Equal(StavUcasti.Potvrzena, bora.Stav);
     }
+
+    [Fact]
+    public async Task Zmeny_stavu_se_zapisuji_i_s_duvodem_a_nepotvrzeny_pozadavek_neni_videt()
+    {
+        var slug = "prihlasky-historie";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var k = await KontextAsync(scope, slug);
+
+        await k.Sprava.PrihlasAsync(k.ZavodId, new(PrihlaskaId: k.Bora), default);
+
+        // Vrácení k doplnění bez důvodu neprojde, s důvodem ano.
+        Assert.NotNull((await k.Sprava.PrepniAsync(k.ZavodId, k.Bora, StavUcasti.KDoplneni, default)).Chyba);
+        var (lod, chyba) = await k.Sprava.PrepniAsync(
+            k.ZavodId, k.Bora, StavUcasti.KDoplneni, default, duvod: "Chybí telefon.");
+        Assert.Null(chyba);
+        Assert.Equal("Chybí telefon.", lod!.Duvod);
+
+        Assert.DoesNotContain((await VerejneAsync(slug)).Lode, l => l.Lod.StartsWith("Bóra"));
+
+        // Pořadatel nevylučuje.
+        Assert.NotNull((await k.Sprava.PrepniAsync(
+            k.ZavodId, k.Anicka, StavUcasti.Vyloucena, default, duvod: "Zkratka.")).Chyba);
+        Assert.Null((await k.Sprava.PrepniAsync(
+            k.ZavodId, k.Anicka, StavUcasti.Vyloucena, default, duvod: "Zkratka.",
+            role: Prihlasky.Kdo.Rozhodci)).Chyba);
+
+        var anicka = (await VerejneAsync(slug)).Lode.Single(l => l.Lod.StartsWith("Anička"));
+        Assert.True(anicka.Vyloucena);
+
+        var zmeny = await k.Db.Set<ZmenaUcasti>()
+            .Where(z => z.Ucast!.ZavodId == k.ZavodId)
+            .OrderBy(z => z.Id)
+            .Select(z => new { z.Ze, z.Na, z.Duvod })
+            .ToListAsync();
+
+        Assert.Equal(
+            [(null, StavUcasti.Prihlasena, null), (StavUcasti.Prihlasena, StavUcasti.KDoplneni, "Chybí telefon."),
+             (StavUcasti.Potvrzena, StavUcasti.Vyloucena, "Zkratka.")],
+            zmeny.Select(z => ((StavUcasti?)z.Ze, z.Na, z.Duvod)));
+    }
 }

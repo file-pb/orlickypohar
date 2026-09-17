@@ -164,8 +164,9 @@ public class ZapisSprava(AppDbContext db)
             }
 
             // Loď s výsledkem přijela — i když ji pořadatel předtím jen
-            // přihlásil, nebo omylem zrušil.
-            ucast.Stav = StavUcasti.Potvrzena;
+            // přihlásil, nebo omylem zrušil. Vyloučená zůstává vyloučená:
+            // výsledky má, ale o jejím stavu rozhodl rozhodčí.
+            if (ucast.Stav != StavUcasti.Vyloucena) ucast.Stav = StavUcasti.Potvrzena;
 
             if (!existujici.TryGetValue(r.Vstup.PrihlaskaId, out var vysledek))
             {

@@ -30,7 +30,9 @@ public record UcastDto(
     // Přihlášená loď, kterou pořadatel ještě nepotvrdil. Zrušené se sem
     // nedostanou vůbec. Na konci a s výchozí hodnotou: změny API jsou jen
     // aditivní a appka na telefonu o poli neví.
-    bool Potvrzena = true);
+    bool Potvrzena = true,
+    // Vyloučená rozhodčím. Na stránce zůstává, protože má výsledky.
+    bool Vyloucena = false);
 
 /// <summary>Body lodi v jedné rozjížďce, už jako pořadí v její kategorii.</summary>
 public record BodyVRozjizdceDto(int Cislo, int Body, bool Skrtnuto);
@@ -122,16 +124,20 @@ public static class ZavodEndpoints
         // který stránka má — a u odjeté se z toho pozná loď, která přijela
         // a nakonec nestartovala v žádné rozjížďce.
         //
-        // Zrušená přihláška veřejně neexistuje: loď nepojede a seznam je
-        // o tom, kdo se chystá. Záznam zůstává jen pro pořadatele.
+        // Veřejně jen lodě, které jedou nebo jely (Prihlasky.VerejneViditelna,
+        // tady rozepsané, aby se dotaz přeložil do SQL). Požadavky, odhlášené
+        // a nepřijaté zůstávají jen pro pořadatele.
         var lode = await db.Ucasti
-            .Where(u => u.ZavodId == zavod.Id && u.Stav != StavUcasti.Zrusena)
+            .Where(u => u.ZavodId == zavod.Id
+                        && (u.Stav == StavUcasti.Prihlasena || u.Stav == StavUcasti.Potvrzena
+                            || u.Stav == StavUcasti.Vyloucena))
             .OrderBy(u => u.Prihlaska!.Kategorie!.Poradi).ThenBy(u => u.Prihlaska!.Lod!.Nazev)
             .Select(u => new UcastDto(
                 u.Prihlaska!.Lod!.Nazev,
                 u.Prihlaska.Kategorie!.Nazev,
                 u.Kormidelnik == null ? null : u.Kormidelnik.Jmeno + " " + u.Kormidelnik.Prijmeni,
-                u.Stav == StavUcasti.Potvrzena))
+                u.Stav != StavUcasti.Prihlasena,
+                u.Stav == StavUcasti.Vyloucena))
             .ToListAsync(ct);
 
         // Seznam rozjížděk se bere z rozjížděk, ne z výsledků: rozjížďka bez

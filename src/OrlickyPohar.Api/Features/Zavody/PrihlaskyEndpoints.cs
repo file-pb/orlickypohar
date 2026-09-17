@@ -34,8 +34,11 @@ public static class PrihlaskyEndpoints
 
         g.MapPost("/{prihlaska:int}/stav", StavAsync)
             .Produces<LodNaZastavceDto>()
-            .WithSummary("Potvrdí, zruší, nebo obnoví přihlášku lodi")
-            .WithDescription("Loď, která už má na zastávce výsledky, zrušit nejde.");
+            .WithSummary("Přepne stav přihlášky lodi")
+            .WithDescription(
+                "Pořadatel zapisuje, potvrzuje, vrací k doplnění, odmítá, odhlašuje a značí nedostavení; " +
+                "rozhodčí vylučuje. Vrácení, odmítnutí a vyloučení chtějí důvod. " +
+                "Loď s výsledky odhlásit ani odmítnout nejde.");
     }
 
     private static async Task<IResult> PrehledAsync(
@@ -46,11 +49,11 @@ public static class PrihlaskyEndpoints
             return Results.NotFound();
 
         var poradatel = await PoradatelAsync(kdo, rozsahy, rozsah, ct);
+        var rozhodci = await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Rozhodci, rozsah.SerieId), ct);
 
-        if (!poradatel && !await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Rozhodci, rozsah.SerieId), ct))
-            return Results.Forbid();
+        if (!poradatel && !rozhodci) return Results.Forbid();
 
-        return Results.Ok(await sprava.PrehledAsync(rozsah.ZavodId.Value, poradatel, ct));
+        return Results.Ok(await sprava.PrehledAsync(rozsah.ZavodId.Value, poradatel, ct, rozhodci));
     }
 
     private static async Task<IResult> PrihlasAsync(
@@ -62,7 +65,8 @@ public static class PrihlaskyEndpoints
 
         if (!await PoradatelAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
 
-        var (lod, nova, chyba) = await sprava.PrihlasAsync(rozsah.ZavodId.Value, vstup, ct);
+        var (lod, nova, chyba) = await sprava.PrihlasAsync(
+            rozsah.ZavodId.Value, vstup, ct, await rozsahy.UzivatelIdAsync(kdo, ct));
         if (chyba is not null) return Results.BadRequest(new { error = chyba });
 
         return nova
@@ -77,9 +81,19 @@ public static class PrihlaskyEndpoints
         if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
             return Results.NotFound();
 
-        if (!await PoradatelAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+        // Pořadatel vede přihlášky, rozhodčí vylučuje. Kdo je obojí (správce),
+        // přepíná jako pořadatel — a vyloučení jako rozhodčí.
+        var poradatel = await PoradatelAsync(kdo, rozsahy, rozsah, ct);
+        var rozhodci = await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Rozhodci, rozsah.SerieId), ct);
+        if (!poradatel && !rozhodci) return Results.Forbid();
 
-        var (lod, chyba) = await sprava.PrepniAsync(rozsah.ZavodId.Value, prihlaska, vstup.Stav, ct);
+        var role = rozhodci && (!poradatel || vstup.Stav == StavUcasti.Vyloucena || await sprava.JeVyloucenaAsync(
+                       rozsah.ZavodId.Value, prihlaska, ct))
+            ? Prihlasky.Kdo.Rozhodci
+            : Prihlasky.Kdo.Poradatel;
+
+        var (lod, chyba) = await sprava.PrepniAsync(
+            rozsah.ZavodId.Value, prihlaska, vstup.Stav, ct, vstup.Duvod, role, await rozsahy.UzivatelIdAsync(kdo, ct));
         if (chyba is not null) return Results.BadRequest(new { error = chyba });
 
         return lod is null ? Results.NotFound() : Results.Ok(lod);

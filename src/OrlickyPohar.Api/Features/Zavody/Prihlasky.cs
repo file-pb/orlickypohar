@@ -41,20 +41,77 @@ public static class Prihlasky
     /// <summary>
     /// Proč loď do tohohle stavu přepnout nejde — nebo <c>null</c>.
     /// <para>
-    /// Jde to oběma směry, protože překlep se musí dát vzít zpět. Jediná
-    /// výjimka: <b>loď s výsledky zrušit nejde</b>. Zmizela by ze seznamu
-    /// přihlášených, a výsledky by přitom dál platily — veřejná stránka by
-    /// ukazovala pořadí lodi, která podle ní nejela.
+    /// <b>Většina přechodů jde oběma směry</b>, protože překlep se musí dát
+    /// vzít zpět. Výjimky:
     /// </para>
+    /// <list type="bullet">
+    /// <item><b>Požadavek</b> vzniká jen přihláškou z webu, ručně se do něj nevrací.</item>
+    /// <item><b>Vyloučení</b> je rozhodnutí rozhodčího; rozhodčí zase nic
+    /// jiného nemění (přihlášky vede pořadatel).</item>
+    /// <item><b>Loď s výsledky</b> přijela. Odhlásit, odmítnout, vrátit
+    /// k doplnění ani zapsat jako nedostavenou ji nejde — zmizela by ze
+    /// seznamu a výsledky by přitom dál platily.</item>
+    /// </list>
     /// </summary>
-    public static string? ProcNejdePrepnout(StavUcasti ze, StavUcasti na, bool maVysledky) =>
-        ze != na && na == StavUcasti.Zrusena && maVysledky
-            ? "Loď už má na zastávce výsledky. Zrušit ji jde, až je v zápisu rozjížděk smažeš."
-            : null;
+    public static string? ProcNejdePrepnout(StavUcasti ze, StavUcasti na, bool maVysledky, Kdo kdo = Kdo.Poradatel)
+    {
+        if (ze == na) return null;
+
+        if (na == StavUcasti.Pozadavek)
+            return "Požadavek vzniká jen přihláškou z webu. Loď zapiš, nebo vrať k doplnění.";
+
+        var vylouceni = ze == StavUcasti.Vyloucena || na == StavUcasti.Vyloucena;
+        if (vylouceni && kdo != Kdo.Rozhodci) return "O vyloučení ze závodu rozhoduje rozhodčí.";
+        if (!vylouceni && kdo == Kdo.Rozhodci) return "Přihlášky vede pořadatel. Rozhodčí jen vylučuje.";
+
+        if (maVysledky && na is StavUcasti.Zrusena or StavUcasti.Odmitnuta
+                or StavUcasti.KDoplneni or StavUcasti.Nedostavila)
+            return "Loď už má na zastávce výsledky, takže přijela. "
+                   + "Tenhle stav jde nastavit, až výsledky v zápisu rozjížděk smažeš.";
+
+        return null;
+    }
+
+    /// <summary>Kdo přihlášku přepíná. Pravidla se liší, viz <see cref="ProcNejdePrepnout"/>.</summary>
+    public enum Kdo
+    {
+        Poradatel,
+        Rozhodci,
+    }
+
+    /// <summary>
+    /// Přechody, u kterých musí být napsané proč. Kapitán se jinak nedozví,
+    /// co má doplnit, a vyloučení bez důvodu by nešlo obhájit.
+    /// </summary>
+    public static bool PotrebujeDuvod(StavUcasti na) =>
+        na is StavUcasti.KDoplneni or StavUcasti.Odmitnuta or StavUcasti.Vyloucena;
+
+    public const int DuvodNejvic = 500;
+
+    public static string? ProcNejdeDuvod(StavUcasti na, string? duvod)
+    {
+        if (PotrebujeDuvod(na) && string.IsNullOrWhiteSpace(duvod))
+            return na switch
+            {
+                StavUcasti.KDoplneni => "Napiš, co má kapitán doplnit nebo opravit.",
+                StavUcasti.Vyloucena => "Napiš důvod vyloučení.",
+                _ => "Napiš, proč přihlášku nepřijímáš.",
+            };
+
+        return duvod?.Trim().Length > DuvodNejvic ? $"Důvod může mít nejvýš {DuvodNejvic} znaků." : null;
+    }
 
     /// <summary>Stavy, do kterých jde loď přepnout. Posílá se na obrazovku.</summary>
-    public static IEnumerable<StavUcasti> MozneZ(StavUcasti ze, bool maVysledky) =>
-        Enum.GetValues<StavUcasti>().Where(na => na != ze && ProcNejdePrepnout(ze, na, maVysledky) is null);
+    public static IEnumerable<StavUcasti> MozneZ(StavUcasti ze, bool maVysledky, Kdo kdo = Kdo.Poradatel) =>
+        Enum.GetValues<StavUcasti>().Where(na => na != ze && ProcNejdePrepnout(ze, na, maVysledky, kdo) is null);
+
+    /// <summary>
+    /// Je loď v tomhle stavu na veřejné stránce zastávky? Seznam je o tom,
+    /// kdo jede nebo jel. Nepřijaté, odhlášené a nedostavené tam nejsou;
+    /// vyloučená ano — její výsledky se na stránce ukazují taky.
+    /// </summary>
+    public static bool VerejneViditelna(StavUcasti stav) =>
+        stav is StavUcasti.Prihlasena or StavUcasti.Potvrzena or StavUcasti.Vyloucena;
 
     /// <summary>
     /// Proč novou loď nejde založit — nebo <c>null</c>. Délky jsou ty ze

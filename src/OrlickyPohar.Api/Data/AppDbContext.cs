@@ -123,6 +123,32 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         ucast.HasOne(x => x.Kormidelnik).WithMany().HasForeignKey(x => x.KormidelnikId)
             .OnDelete(DeleteBehavior.Restrict);
         ucast.HasIndex(x => new { x.ZavodId, x.PrihlaskaId }).IsUnique();
+        ucast.Property(x => x.KontaktEmail).HasMaxLength(Kontakty.EmailNejvic);
+        ucast.Property(x => x.KontaktTelefon).HasMaxLength(Kontakty.TelefonNejvic);
+        ucast.Property(x => x.Poznamka).HasMaxLength(1000);
+        ucast.Property(x => x.StartovnePoznamka).HasMaxLength(200);
+
+        var zmena = b.Entity<ZmenaUcasti>();
+        zmena.ToTable("ZmenyUcasti");
+        zmena.HasOne(x => x.Ucast).WithMany(x => x.Zmeny).HasForeignKey(x => x.UcastId)
+            .OnDelete(DeleteBehavior.Cascade);
+        zmena.Property(x => x.Duvod).HasMaxLength(Features.Zavody.Prihlasky.DuvodNejvic);
+        // Účty se nemažou; kdyby začaly, historie nesmí zmizet s nimi.
+        zmena.HasOne<Uzivatel>().WithMany().HasForeignKey(x => x.UzivatelId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        b.Entity<Osoba>().Property(x => x.CisloCsj).HasMaxLength(20);
+
+        var kontakt = b.Entity<KontaktOsoby>();
+        kontakt.ToTable("KontaktyOsob");
+        kontakt.HasOne(x => x.Osoba).WithMany(x => x.Kontakty).HasForeignKey(x => x.OsobaId)
+            .OnDelete(DeleteBehavior.Cascade);
+        kontakt.Property(x => x.Email).HasMaxLength(Kontakty.EmailNejvic);
+        kontakt.Property(x => x.Telefon).HasMaxLength(Kontakty.TelefonNejvic);
+        // Smazaná přihláška kontakt nebere — ten patří osobě.
+        kontakt.HasOne<Ucast>().WithMany().HasForeignKey(x => x.UcastId)
+            .OnDelete(DeleteBehavior.SetNull);
+        kontakt.HasIndex(x => new { x.OsobaId, x.ZadanoV });
 
         var rozjizdka = b.Entity<Rozjizdka>();
         rozjizdka.HasOne(x => x.Zavod).WithMany(x => x.Rozjizdky).HasForeignKey(x => x.ZavodId)

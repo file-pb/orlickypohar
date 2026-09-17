@@ -36,6 +36,17 @@ for _z in D["zavody"]:
     for _u in _z["ucasti"]:
         _u.setdefault("stav", "Potvrzena")
 
+# Jeden požadavek z webu, ať je ve správě vidět fronta: na vypsanou
+# zastávku, a když žádná není, na poslední odjetou.
+_otevrene = [z for z in D["zavody"] if z.get("stav") in ("Vypsany", "Odjety")]
+_otevrene.sort(key=lambda z: (z.get("stav") != "Vypsany", -z["poradi"]))
+if _otevrene:
+    _z = _otevrene[0]
+    _volna = next((p["lod"] for p in D["prihlasky"]
+                   if all(u["lod"] != p["lod"] for u in _z["ucasti"])), None)
+    if _volna:
+        _z["ucasti"].append({"lod": _volna, "kormidelnik": None, "posadka": None, "stav": "Pozadavek"})
+
 # Kódy v pořadí podle závažnosti; doložené je jen DNF před DNS.
 ZAVAZNOST = ["Rdg", "Ret", "Dnf", "Ocs", "Dsq", "Dns", "Dnc"]
 
@@ -318,7 +329,24 @@ def proc_nejde_ulozit(radky):
 
 # --- Přihlášky lodí na zastávku --------------------------------------------
 # Opsané z `Features/Zavody/Prihlasky.cs`, ze stejného důvodu jako bodování.
-STAVY_UCASTI = ["Prihlasena", "Potvrzena", "Zrusena"]
+STAVY_UCASTI = ["Prihlasena", "Potvrzena", "Zrusena", "Pozadavek", "KDoplneni",
+                "Odmitnuta", "Nedostavila", "Vyloucena"]
+VEREJNE_UCASTI = ("Prihlasena", "Potvrzena", "Vyloucena")
+S_DUVODEM = ("KDoplneni", "Odmitnuta", "Vyloucena")
+
+
+def proc_nejde_prepnout(ze, na, vysledky):
+    """Pravidla pro pořadatele — falešné API přihlášeného bere jako pořadatele."""
+    if ze == na:
+        return None
+    if na == "Pozadavek":
+        return "Požadavek vzniká jen přihláškou z webu. Loď zapiš, nebo vrať k doplnění."
+    if "Vyloucena" in (ze, na):
+        return "O vyloučení ze závodu rozhoduje rozhodčí."
+    if vysledky and na in ("Zrusena", "Odmitnuta", "KDoplneni", "Nedostavila"):
+        return ("Loď už má na zastávce výsledky, takže přijela. "
+                "Tenhle stav jde nastavit, až výsledky v zápisu rozjížděk smažeš.")
+    return None
 
 
 def proc_nejde_prihlasit(stav, druh="Pohar"):
@@ -342,8 +370,9 @@ def lod_na_zastavce(z, lod, smi=True):
             "cisloPlachty": LODE[lod].get("cisloPlachty"), "typLodi": LODE[lod].get("typ"),
             "majitel": jmeno(LODE[lod]["majitel"]), "kategorie": KAT[lod],
             "stav": u["stav"] if u else None, "maVysledky": vysledky,
+            "duvod": u.get("duvod") if u else None,
             "mozneStavy": [] if not u or not smi else
-            [s for s in STAVY_UCASTI if s != u["stav"] and not (s == "Zrusena" and vysledky)]}
+            [s for s in STAVY_UCASTI if s != u["stav"] and not proc_nejde_prepnout(u["stav"], s, vysledky)]}
 
 
 def prihlasky_dto(z):
@@ -749,10 +778,10 @@ class H(BaseHTTPRequestHandler):
                 LOD_PODLE_ID[PRIHLASKA_ID[lod]] = lod
 
         u = next((u for u in z["ucasti"] if u["lod"] == lod), None)
-        if u and u["stav"] != "Zrusena":
+        if u and u["stav"] in VEREJNE_UCASTI:
             return self.odpoved(lod_na_zastavce(z, lod))
         if u:
-            u["stav"] = "Prihlasena"
+            u["stav"], u["duvod"] = "Prihlasena", None
         else:
             z["ucasti"].append({"lod": lod, "kormidelnik": None, "posadka": None, "stav": "Prihlasena"})
         return self.odpoved(lod_na_zastavce(z, lod), 201)
@@ -769,11 +798,13 @@ class H(BaseHTTPRequestHandler):
         if not u:
             return self.send_error(404)
 
-        na = self.telo_zadosti().get("stav")
-        if na == "Zrusena" and u["stav"] != "Zrusena" and ma_vysledky(z, lod):
-            return self.chyba(400, "Loď už má na zastávce výsledky. "
-                                   "Zrušit ji jde, až je v zápisu rozjížděk smažeš.")
-        u["stav"] = na
+        telo = self.telo_zadosti()
+        na, duvod = telo.get("stav"), (telo.get("duvod") or "").strip()
+        if (chyba := proc_nejde_prepnout(u["stav"], na, ma_vysledky(z, lod))):
+            return self.chyba(400, chyba)
+        if na in S_DUVODEM and not duvod:
+            return self.chyba(400, "Napiš důvod.")
+        u["stav"], u["duvod"] = na, duvod or None
         return self.odpoved(lod_na_zastavce(z, lod))
 
     def pridej_rozjizdku(self, zavod):
@@ -1204,8 +1235,9 @@ class H(BaseHTTPRequestHandler):
                     # poznámku — jako v API.
                     "lode": [{"lod": nazvy(u["lod"]), "kategorie": KAT[u["lod"]],
                               "kormidelnik": jmeno(u["kormidelnik"]) if u.get("kormidelnik") else None,
-                              "potvrzena": u["stav"] == "Potvrzena"}
-                             for u in sorted((u for u in z["ucasti"] if u["stav"] != "Zrusena"),
+                              "potvrzena": u["stav"] != "Prihlasena",
+                              "vyloucena": u["stav"] == "Vyloucena"}
+                             for u in sorted((u for u in z["ucasti"] if u["stav"] in VEREJNE_UCASTI),
                                              key=lambda u: (KAT_PORADI[KAT[u["lod"]]], nazvy(u["lod"])))]}
         else:
             return self.send_error(404)

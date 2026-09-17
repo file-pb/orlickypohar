@@ -72,8 +72,8 @@ public static class Medailonek
     public const int SlugNejvic = 80;
     public const int WebNejvic = 300;
     public const int PopisNejvic = 2000;
-    public const int EmailNejvic = 320;
-    public const int TelefonNejvic = 40;
+    public const int EmailNejvic = Lode.Kontakty.EmailNejvic;
+    public const int TelefonNejvic = Lode.Kontakty.TelefonNejvic;
     public const int OsobaNejvic = 120;
     public const int AdresaNejvic = 300;
 
@@ -141,10 +141,10 @@ public static class Medailonek
         if (osoba?.Trim().Length > OsobaNejvic) return $"Jméno může mít nejvýš {OsobaNejvic} znaků.";
         if (adresa?.Trim().Length > AdresaNejvic) return $"Adresa může mít nejvýš {AdresaNejvic} znaků.";
 
-        if (!string.IsNullOrWhiteSpace(email) && !JeEmail(email.Trim()))
+        if (!string.IsNullOrWhiteSpace(email) && !Lode.Kontakty.JeEmail(email.Trim()))
             return "E-mail nevypadá jako e-mailová adresa.";
 
-        if (!string.IsNullOrWhiteSpace(telefon) && !JeTelefon(telefon.Trim()))
+        if (!string.IsNullOrWhiteSpace(telefon) && !Lode.Kontakty.JeTelefon(telefon.Trim()))
             return "Telefon může obsahovat číslice, mezery a „+“ a musí mít aspoň devět číslic.";
 
         // Jedna souřadnice bez druhé je bod na celém poledníku. Odkaz na
@@ -172,26 +172,6 @@ public static class Medailonek
     {
         if (zastavkyPoradatele.Count == 0) return false;
         return rozhodci || organizatorRocniku || mojeZastavky.Intersect(zastavkyPoradatele).Any();
-    }
-
-    private static bool JeEmail(string email)
-    {
-        if (email.Length > EmailNejvic || email.Any(char.IsWhiteSpace)) return false;
-
-        var zavinac = email.IndexOf('@');
-        if (zavinac <= 0 || zavinac != email.LastIndexOf('@')) return false;
-
-        var domena = email[(zavinac + 1)..];
-        return domena.Contains('.') && !domena.StartsWith('.') && !domena.EndsWith('.');
-    }
-
-    private static bool JeTelefon(string telefon)
-    {
-        if (telefon.Length > TelefonNejvic) return false;
-        if (!telefon.All(z => char.IsAsciiDigit(z) || z is ' ' or '+' or '-' or '(' or ')' or '/'))
-            return false;
-
-        return telefon.Count(char.IsAsciiDigit) is >= 9 and <= 15;
     }
 
     /// <summary>Souřadnice jako text do odkazu — s tečkou, ať je jazyk serveru jakýkoliv.</summary>

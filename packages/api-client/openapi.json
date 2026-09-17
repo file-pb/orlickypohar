@@ -1358,8 +1358,8 @@
                 "tags": [
                     "Spr\u00e1va"
                 ],
-                "summary": "Potvrd\u00ed, zru\u0161\u00ed, nebo obnov\u00ed p\u0159ihl\u00e1\u0161ku lodi",
-                "description": "Lo\u010f, kter\u00e1 u\u017e m\u00e1 na zast\u00e1vce v\u00fdsledky, zru\u0161it nejde.",
+                "summary": "P\u0159epne stav p\u0159ihl\u00e1\u0161ky lodi",
+                "description": "Po\u0159adatel zapisuje, potvrzuje, vrac\u00ed k dopln\u011bn\u00ed, odm\u00edt\u00e1, odhla\u0161uje a zna\u010d\u00ed nedostaven\u00ed; rozhod\u010d\u00ed vylu\u010duje. Vr\u00e1cen\u00ed, odm\u00edtnut\u00ed a vylou\u010den\u00ed cht\u011bj\u00ed d\u016fvod. Lo\u010f s v\u00fdsledky odhl\u00e1sit ani odm\u00edtnout nejde.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2061,6 +2061,12 @@
                         "items": {
                             "$ref": "#/components/schemas/StavUcasti"
                         }
+                    },
+                    "duvod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     }
                 }
             },
@@ -3136,6 +3142,11 @@
                     "Prihlasena",
                     "Potvrzena",
                     "Zrusena",
+                    "Pozadavek",
+                    "KDoplneni",
+                    "Odmitnuta",
+                    "Nedostavila",
+                    "Vyloucena",
                     null
                 ]
             },
@@ -3147,6 +3158,12 @@
                 "properties": {
                     "stav": {
                         "$ref": "#/components/schemas/StavUcasti"
+                    },
+                    "duvod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     }
                 }
             },
@@ -3232,6 +3249,10 @@
                     "potvrzena": {
                         "type": "boolean",
                         "default": true
+                    },
+                    "vyloucena": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },

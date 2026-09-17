@@ -79,8 +79,9 @@ export async function stavLodiAkce(formular: FormData) {
   const prihlaskaId = Number(text(formular, "prihlaskaId"));
   const stav = text(formular, "stav") as StavUcasti;
   const lod = text(formular, "lod");
+  const duvod = text(formular, "duvod") || undefined;
 
-  const chyba = await prepniLod(serie, zavod, prihlaskaId, stav);
+  const chyba = await prepniLod(serie, zavod, prihlaskaId, stav, duvod);
 
   redirect(kam(serie, zavod, chyba ? { chyba } : { stav: "prepnuto", lod, nastav: stav }));
 }

@@ -289,7 +289,11 @@ function PrihlaseneLode({
                         {l.lod}
                         {/* Přihlášená, ale nepotvrzená: pořadatel o ní ví,
                             jistá ještě není. Starší API pole nemá — pak platí. */}
-                        {l.potvrzena === false && <div className="majitel">čeká na potvrzení</div>}
+                        {l.vyloucena ? (
+                          <div className="majitel">vyloučená ze závodu</div>
+                        ) : (
+                          l.potvrzena === false && <div className="majitel">čeká na potvrzení</div>
+                        )}
                       </td>
                       <td style={{ textAlign: "left" }}>{l.kormidelnik ?? "—"}</td>
                     </tr>

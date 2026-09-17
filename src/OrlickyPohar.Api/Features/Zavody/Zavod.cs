@@ -92,17 +92,39 @@ public enum StavRozjizdky
 /// <b>Stav se vede na účasti, ne na celoroční přihlášce.</b> Loď, která na
 /// jednu zastávku nepojede, dál patří do ročníku a do jeho pořadí.
 /// </para>
+/// <para>
+/// <b>Veřejné přihlášky (Filip, 17. 9. 2026)</b> přidaly stavy od
+/// požadavku po vyloučení. Původní tři hodnoty zůstaly pod svými jmény —
+/// appka na telefonech je zná a změna API smí být jen aditivní. Na webu se
+/// jmenují „zapsaná", „potvrzená" a „odhlášená". Stav říká, jestli loď na
+/// závodě je; kódy výsledků (DNS, DSQ…) zůstávají na rozjížďkách.
+/// </para>
 /// </summary>
 public enum StavUcasti
 {
-    /// <summary>Pořadatel o lodi ví, účast ještě nepotvrdil.</summary>
+    /// <summary>Zapsaná: pořadatel přihlášku přijal, prezence ještě nebyla.</summary>
     Prihlasena = 0,
 
-    /// <summary>Loď pojede — nebo už jela.</summary>
+    /// <summary>Potvrzená: loď na místě, startuje — nebo už jela.</summary>
     Potvrzena = 1,
 
-    /// <summary>Nepojede. Veřejně není vidět, ale záznam zůstává.</summary>
+    /// <summary>Odhlášená: loď předem odřekla. Veřejně není vidět, záznam zůstává.</summary>
     Zrusena = 2,
+
+    /// <summary>Přihláška od veřejnosti, pořadatel ji ještě neviděl.</summary>
+    Pozadavek = 3,
+
+    /// <summary>Vrácená kapitánovi k doplnění nebo opravě.</summary>
+    KDoplneni = 4,
+
+    /// <summary>Pořadatel přihlášku nepřijal. Nesmysl se místo toho smaže.</summary>
+    Odmitnuta = 5,
+
+    /// <summary>Byla zapsaná, ale na start nepřijela.</summary>
+    Nedostavila = 6,
+
+    /// <summary>Vyloučená z celého závodu. Rozhoduje rozhodčí.</summary>
+    Vyloucena = 7,
 }
 
 /// <summary>
@@ -290,6 +312,53 @@ public class Ucast
     /// </para>
     /// </summary>
     public StavUcasti Stav { get; set; } = StavUcasti.Potvrzena;
+
+    /// <summary>Kdy přišla přihláška. Prázdné u účastí z importu a zápisu výsledků.</summary>
+    public DateTimeOffset? PodanoV { get; set; }
+
+    /// <summary>
+    /// Kontakt, jak ho kapitán zadal do této přihlášky. <b>Kopie</b>, ne
+    /// odkaz: pořadatel má vidět, na co se loď přihlásila, i když kapitán
+    /// kontakt později změní. Platný kontakt osoby je v <see cref="Lode.KontaktOsoby"/>.
+    /// </summary>
+    public string? KontaktEmail { get; set; }
+    public string? KontaktTelefon { get; set; }
+
+    /// <summary>Poznámka od přihlašujícího.</summary>
+    public string? Poznamka { get; set; }
+
+    /// <summary>
+    /// Startovné. Součást přihlášky, ale <b>nic neblokuje</b> — kdo přijede
+    /// na poslední chvíli, zaplatí později (Filip, 17. 9. 2026).
+    /// </summary>
+    public bool Zaplaceno { get; set; }
+    public string? StartovnePoznamka { get; set; }
+
+    public List<ZmenaUcasti> Zmeny { get; set; } = [];
+}
+
+/// <summary>
+/// Jedna změna stavu přihlášky: kdo, kdy, odkud kam a proč. Historie se
+/// nemaže ani nepřepisuje — je to jediné místo, kde se dá dohledat, proč
+/// loď na startu chybí.
+/// </summary>
+public class ZmenaUcasti
+{
+    public int Id { get; set; }
+
+    public int UcastId { get; set; }
+    public Ucast? Ucast { get; set; }
+
+    /// <summary>Prázdné u vzniku přihlášky.</summary>
+    public StavUcasti? Ze { get; set; }
+    public StavUcasti Na { get; set; }
+
+    public DateTimeOffset Kdy { get; set; }
+
+    /// <summary>Kdo změnu udělal. Prázdné znamená veřejnost — přihlášku bez účtu.</summary>
+    public Guid? UzivatelId { get; set; }
+
+    public string? Duvod { get; set; }
 }
 
 /// <summary>

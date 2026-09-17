@@ -19,7 +19,9 @@ public record LodNaZastavceDto(
     string Kategorie,
     StavUcasti? Stav,
     bool MaVysledky,
-    IReadOnlyList<StavUcasti> MozneStavy);
+    IReadOnlyList<StavUcasti> MozneStavy,
+    // Důvod poslední změny, třeba co má kapitán doplnit. Aditivně.
+    string? Duvod = null);
 
 /// <summary>
 /// Přihlášky jedné zastávky. Vypisují se všechny lodě ročníku: z nich se
@@ -39,7 +41,7 @@ public record PrihlaskyZastavkyDto(
 /// <summary>Přihlásit loď z ročníku (<c>PrihlaskaId</c>), nebo novou loď. Jedno z toho.</summary>
 public record PrihlaseniVstup(int? PrihlaskaId = null, NovaLodVstup? NovaLod = null);
 
-public record StavUcastiVstup(StavUcasti Stav);
+public record StavUcastiVstup(StavUcasti Stav, string? Duvod = null);
 
 /// <summary>
 /// Čtení a zápis přihlášek lodí na zastávku.
@@ -55,11 +57,12 @@ public record StavUcastiVstup(StavUcasti Stav);
 /// závodní pravidla</i>). Do odpovědi se nic nezapisuje.
 /// </para>
 /// </summary>
-public class PrihlaskySprava(AppDbContext db)
+public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
 {
     private const string NeniPoradatel = "Lodě na zastávku přihlašuje její pořadatel.";
 
-    public async Task<PrihlaskyZastavkyDto> PrehledAsync(int zavodId, bool poradatel, CancellationToken ct)
+    public async Task<PrihlaskyZastavkyDto> PrehledAsync(
+        int zavodId, bool poradatel, CancellationToken ct, bool rozhodci = false)
     {
         var zavod = await db.Zavody
             .Where(z => z.Id == zavodId)
@@ -76,13 +79,14 @@ public class PrihlaskySprava(AppDbContext db)
             .Select(k => k.Nazev)
             .ToListAsync(ct);
 
-        var procNelze = Kalendar.ProcNejdePoharove(zavod.Druh)
-                        ?? (poradatel ? Prihlasky.ProcNejdeNaZavod(zavod.Stav) : NeniPoradatel);
+        var zamek = Kalendar.ProcNejdePoharove(zavod.Druh) ?? Prihlasky.ProcNejdeNaZavod(zavod.Stav);
+        var procNelze = zamek ?? (poradatel ? null : NeniPoradatel);
 
         return new PrihlaskyZastavkyDto(
             zavod.Serie, zavod.SerieNazev, zavod.Slug, zavod.Nazev, zavod.Stav,
             procNelze is null, procNelze, kategorie,
-            await LodeAsync(zavod.SerieId, zavodId, smi: procNelze is null, jenPrihlaska: null, ct));
+            await LodeAsync(zavod.SerieId, zavodId, Kdo(poradatel, rozhodci, zamek is not null),
+                jenPrihlaska: null, ct));
     }
 
     /// <summary>
@@ -91,7 +95,7 @@ public class PrihlaskySprava(AppDbContext db)
     /// jen se nic nezmění.
     /// </summary>
     public async Task<(LodNaZastavceDto? Lod, bool Nova, string? Chyba)> PrihlasAsync(
-        int zavodId, PrihlaseniVstup vstup, CancellationToken ct)
+        int zavodId, PrihlaseniVstup vstup, CancellationToken ct, Guid? kdo = null)
     {
         var zavod = await db.Zavody.FirstAsync(z => z.Id == zavodId, ct);
 
@@ -124,17 +128,26 @@ public class PrihlaskySprava(AppDbContext db)
 
         var nova = true;
         if (ucast is null)
-            db.Ucasti.Add(new Ucast { ZavodId = zavodId, Prihlaska = prihlaska, Stav = StavUcasti.Prihlasena });
-        else if (ucast.Stav == StavUcasti.Zrusena)
-            // Zrušená loď, která se znovu přihlásí, začíná znovu — pořadatel
-            // ji má potvrdit, ne rovnou vrátit mezi jisté.
+        {
+            ucast = new Ucast { ZavodId = zavodId, Prihlaska = prihlaska, Stav = StavUcasti.Prihlasena };
+            db.Ucasti.Add(ucast);
+            Zaznamenej(ucast, null, StavUcasti.Prihlasena, kdo, null);
+        }
+        else if (ucast.Stav is StavUcasti.Zrusena or StavUcasti.Pozadavek or StavUcasti.KDoplneni
+                 or StavUcasti.Odmitnuta or StavUcasti.Nedostavila)
+        {
+            // Loď, která na zastávce nebyla zapsaná, začíná znovu — pořadatel
+            // ji má potvrdit, ne rovnou vrátit mezi jisté. Požadavek z webu
+            // se přihlášením od pořadatele zapíše.
+            Zaznamenej(ucast, ucast.Stav, StavUcasti.Prihlasena, kdo, null);
             ucast.Stav = StavUcasti.Prihlasena;
+        }
         else
             nova = false;
 
         await db.SaveChangesAsync(ct);
 
-        var lod = (await LodeAsync(zavod.SerieId, zavodId, smi: true, jenPrihlaska: prihlaska.Id, ct)).Single();
+        var lod = (await LodeAsync(zavod.SerieId, zavodId, Prihlasky.Kdo.Poradatel, jenPrihlaska: prihlaska.Id, ct)).Single();
         return (lod, nova, null);
     }
 
@@ -143,7 +156,8 @@ public class PrihlaskySprava(AppDbContext db)
     /// zastávku přihlášená není.
     /// </summary>
     public async Task<(LodNaZastavceDto? Lod, string? Chyba)> PrepniAsync(
-        int zavodId, int prihlaskaId, StavUcasti na, CancellationToken ct)
+        int zavodId, int prihlaskaId, StavUcasti na, CancellationToken ct,
+        string? duvod = null, Prihlasky.Kdo role = Prihlasky.Kdo.Poradatel, Guid? kdo = null)
     {
         var zavod = await db.Zavody.FirstAsync(z => z.Id == zavodId, ct);
 
@@ -155,13 +169,20 @@ public class PrihlaskySprava(AppDbContext db)
         if (ucast is null) return (null, null);
 
         var maVysledky = await db.Vysledky.AnyAsync(v => v.UcastId == ucast.Id, ct);
-        if (Prihlasky.ProcNejdePrepnout(ucast.Stav, na, maVysledky) is { } chyba) return (null, chyba);
+        if (Prihlasky.ProcNejdePrepnout(ucast.Stav, na, maVysledky, role) is { } chyba) return (null, chyba);
+        if (ucast.Stav == na) return ((await LodeAsync(zavod.SerieId, zavodId, role, prihlaskaId, ct)).Single(), null);
+        if (Prihlasky.ProcNejdeDuvod(na, duvod) is { } chybaDuvodu) return (null, chybaDuvodu);
 
+        Zaznamenej(ucast, ucast.Stav, na, kdo, duvod);
         ucast.Stav = na;
         await db.SaveChangesAsync(ct);
 
-        return ((await LodeAsync(zavod.SerieId, zavodId, smi: true, jenPrihlaska: prihlaskaId, ct)).Single(), null);
+        return ((await LodeAsync(zavod.SerieId, zavodId, role, jenPrihlaska: prihlaskaId, ct)).Single(), null);
     }
+
+    public Task<bool> JeVyloucenaAsync(int zavodId, int prihlaskaId, CancellationToken ct) =>
+        db.Ucasti.AnyAsync(u => u.ZavodId == zavodId && u.PrihlaskaId == prihlaskaId
+                                && u.Stav == StavUcasti.Vyloucena, ct);
 
     /// <summary>
     /// Přihláška nové lodi do ročníku — založená, nebo nalezená.
@@ -225,8 +246,25 @@ public class PrihlaskySprava(AppDbContext db)
         return (prihlaska, null);
     }
 
+    /// <summary>
+    /// Kdo na obrazovce co přepíná. <c>null</c> znamená nic: zastávka je
+    /// zamčená, nebo přihlášený nemá roli.
+    /// </summary>
+    private static Prihlasky.Kdo? Kdo(bool poradatel, bool rozhodci, bool zamceno) =>
+        zamceno ? null : poradatel ? Prihlasky.Kdo.Poradatel : rozhodci ? Prihlasky.Kdo.Rozhodci : null;
+
+    private void Zaznamenej(Ucast ucast, StavUcasti? ze, StavUcasti na, Guid? kdo, string? duvod) =>
+        ucast.Zmeny.Add(new ZmenaUcasti
+        {
+            Ze = ze,
+            Na = na,
+            Kdy = cas.GetUtcNow(),
+            UzivatelId = kdo,
+            Duvod = string.IsNullOrWhiteSpace(duvod) ? null : duvod.Trim(),
+        });
+
     private async Task<List<LodNaZastavceDto>> LodeAsync(
-        int serieId, int zavodId, bool smi, int? jenPrihlaska, CancellationToken ct)
+        int serieId, int zavodId, Prihlasky.Kdo? kdo, int? jenPrihlaska, CancellationToken ct)
     {
         var prihlasky = await db.Prihlasky
             .Where(p => p.SerieId == serieId && (jenPrihlaska == null || p.Id == jenPrihlaska))
@@ -240,7 +278,11 @@ public class PrihlaskySprava(AppDbContext db)
 
         var ucasti = await db.Ucasti
             .Where(u => u.ZavodId == zavodId && (jenPrihlaska == null || u.PrihlaskaId == jenPrihlaska))
-            .Select(u => new { u.PrihlaskaId, u.Stav, MaVysledky = db.Vysledky.Any(v => v.UcastId == u.Id) })
+            .Select(u => new
+            {
+                u.PrihlaskaId, u.Stav, MaVysledky = db.Vysledky.Any(v => v.UcastId == u.Id),
+                Duvod = u.Zmeny.OrderByDescending(z => z.Id).Select(z => z.Duvod).FirstOrDefault(),
+            })
             .ToDictionaryAsync(u => u.PrihlaskaId, ct);
 
         // Po kategoriích, uvnitř podle jména — jako všude, kde se loď hledá očima.
@@ -251,13 +293,13 @@ public class PrihlaskySprava(AppDbContext db)
             {
                 var u = ucasti.GetValueOrDefault(p.Id);
 
-                IReadOnlyList<StavUcasti> mozne = u is null || !smi
+                IReadOnlyList<StavUcasti> mozne = u is null || kdo is null
                     ? []
-                    : [.. Prihlasky.MozneZ(u.Stav, u.MaVysledky)];
+                    : [.. Prihlasky.MozneZ(u.Stav, u.MaVysledky, kdo.Value)];
 
                 return new LodNaZastavceDto(
                     p.Id, p.Nazev, p.CisloPlachty, p.Typ, p.Majitel, p.Kategorie,
-                    u?.Stav, u?.MaVysledky ?? false, mozne);
+                    u?.Stav, u?.MaVysledky ?? false, mozne, u?.Duvod);
             })
             .ToList();
     }

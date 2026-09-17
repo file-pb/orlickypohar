@@ -29,22 +29,61 @@ export type StavUcasti = NonNullable<S["StavUcasti"]>;
  * prázdné tlačítko na stránce.
  */
 export const STAVY_UCASTI: Record<StavUcasti, { stitek: string; tlacitko: string; popis: string }> = {
+  // Původní tři hodnoty API mají stará jména; na obrazovce platí nová
+  // (plán, oddíl Veřejné přihlášky lodí).
   Prihlasena: {
-    stitek: "přihlášená",
-    tlacitko: "Vrátit mezi nepotvrzené",
-    popis: "Pořadatel o lodi ví, účast ještě nepotvrdil. Na webu je s poznámkou.",
+    stitek: "zapsaná",
+    tlacitko: "Zapsat",
+    popis: "Přihláška přijata, prezence ještě nebyla. Na webu je s poznámkou.",
   },
   Potvrzena: {
     stitek: "potvrzená",
-    tlacitko: "Potvrdit",
-    popis: "Loď pojede. Na webu je bez poznámky.",
+    tlacitko: "Potvrdit prezenci",
+    popis: "Loď je na místě a startuje. Na webu je bez poznámky.",
   },
   Zrusena: {
-    stitek: "zrušená",
-    tlacitko: "Zrušit",
-    popis: "Loď nepojede. Na webu ji nikdo neuvidí.",
+    stitek: "odhlášená",
+    tlacitko: "Odhlásit",
+    popis: "Loď předem odřekla. Na webu ji nikdo neuvidí.",
+  },
+  Pozadavek: {
+    stitek: "požadavek",
+    tlacitko: "Požadavek",
+    popis: "Přihláška z webu, kterou ještě nikdo neviděl. Na webu není.",
+  },
+  KDoplneni: {
+    stitek: "k doplnění",
+    tlacitko: "Vrátit k doplnění",
+    popis: "Něco chybí nebo nesedí; kapitán to má doplnit. Na webu není.",
+  },
+  Odmitnuta: {
+    stitek: "odmítnutá",
+    tlacitko: "Odmítnout",
+    popis: "Přihláška nepřijata. Na webu není. Nesmysl raději smaž.",
+  },
+  Nedostavila: {
+    stitek: "nedostavila se",
+    tlacitko: "Nedostavila se",
+    popis: "Byla zapsaná, ale nepřijela. Na webu není.",
+  },
+  Vyloucena: {
+    stitek: "vyloučená",
+    tlacitko: "Vyloučit",
+    popis: "Vyloučená ze závodu rozhodčím. Na webu je s poznámkou.",
   },
 };
+
+/** Stejné pravidlo jako `Prihlasky.PotrebujeDuvod` v API: tyhle přechody chtějí napsat proč. */
+export const potrebujeDuvod = (na: StavUcasti) =>
+  na === "KDoplneni" || na === "Odmitnuta" || na === "Vyloucena";
+
+/** Kde loď na obrazovce stojí: čeká na pořadatele, jede, nebo je mimo závod. */
+export const skupinaStavu = (stav: StavUcasti): "ceka" | "jede" | "mimo" =>
+  stav === "Pozadavek" || stav === "KDoplneni"
+    ? "ceka"
+    : stav === "Prihlasena" || stav === "Potvrzena" || stav === "Vyloucena"
+      ? "jede"
+      : "mimo";
 
 const token = () => tokenZeSezeni();
 
@@ -110,8 +149,9 @@ export async function prepniLod(
   zavod: string,
   prihlaskaId: number,
   stav: StavUcasti,
+  duvod?: string,
 ): Promise<string | null> {
-  const odpoved = await posli(kam(serie, zavod, `/${prihlaskaId}/stav`), { stav });
+  const odpoved = await posli(kam(serie, zavod, `/${prihlaskaId}/stav`), { stav, duvod });
   if (typeof odpoved === "string") return odpoved;
 
   return odpoved.ok ? null : await hlaska(odpoved);

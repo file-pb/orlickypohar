@@ -2022,6 +2022,25 @@ zadal. Vidí je jen pořadatel zastávky, rozhodčí a správce ročníku.
 6. Propsání do výsledků — po odpovědi rozhodčího.
 7. E-maily kapitánovi při změně stavu — s Outboxem z fáze 7.
 
+**Krok 1 hotový 17. 9. 2026.** Stavy jsou aditivní: původní `Prihlasena`,
+`Potvrzena`, `Zrusena` zůstaly pod svými jmény (appka je zná) a web je
+jmenuje „zapsaná", „potvrzená", „odhlášená". Nové: `Pozadavek`,
+`KDoplneni`, `Odmitnuta`, `Nedostavila`, `Vyloucena`. Historie v
+`ZmenyUcasti`, kontakty v `KontaktyOsob`, kopie kontaktu, poznámka
+a startovné na `Ucast`, číslo ČSJ na `Osoba`. Rozhodčí smí přepínat jen
+vyloučení, pořadatel všechno ostatní. Zápis výsledků vyloučenou loď
+nepřepne zpět na potvrzenou.
+
+### Dál: účty a role vůči lodi, akcím a poháru
+
+Filip, 17. 9. 2026 — výhled, ne teď. Přihlášený uživatel bude mít kromě
+dnešních rolí (editor, organizátor, rozhodčí, správce) i role **vůči
+lodi** — posádka, kapitán, majitel, fanoušek — a **vůči akcím a poháru**.
+Dnešní model tomu nestojí v cestě: `Osoba.UserId` už existuje, historie
+změn ukládá účet a kontakty visí na osobě. Přibude vazba účet × loď
+s rolí (a obdobně pro akci a ročník); z ní pak „moje přihlášky",
+odhlášení bez pořadatele a upozornění fanouškům.
+
 ## Kde se pokračuje
 
 Kdo sem přijde z jiného stroje, potřebuje vědět tohle:

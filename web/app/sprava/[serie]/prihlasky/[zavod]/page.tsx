@@ -5,6 +5,8 @@ import { Stav } from "@/app/stav";
 import { Vypadek } from "@/app/vypadek";
 import {
   STAVY_UCASTI,
+  potrebujeDuvod,
+  skupinaStavu,
   nactiPrihlasky,
   type LodNaZastavce,
   type StavUcasti,
@@ -105,8 +107,11 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
       </>
     );
 
-  const prihlasene = prehled.lode.filter((l) => l.stav && l.stav !== "Zrusena");
-  const zrusene = prehled.lode.filter((l) => l.stav === "Zrusena");
+  // Požadavky z webu nahoře: čekají na pořadatele a nemají se ztratit
+  // mezi zapsanými.
+  const cekaji = prehled.lode.filter((l) => l.stav && skupinaStavu(l.stav) === "ceka");
+  const prihlasene = prehled.lode.filter((l) => l.stav && skupinaStavu(l.stav) === "jede");
+  const zrusene = prehled.lode.filter((l) => l.stav && skupinaStavu(l.stav) === "mimo");
   const volne = prehled.lode.filter((l) => !l.stav);
 
   return (
@@ -145,6 +150,16 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
         {prihlasene.filter((l) => l.stav === "Potvrzena").length} potvrzených.{" "}
         <Link href={`/sprava/${serie}/vysledky/${zavod}`}>Výsledky zastávky →</Link>
       </p>
+
+      {cekaji.length > 0 && (
+        <>
+          <h2>Čekají na vyřízení</h2>
+          <p className="poznamka" style={{ marginTop: 0 }}>
+            Přihlášky z webu a vrácené k doplnění. Na webu nejsou, dokud je nezapíšeš.
+          </p>
+          <Tabulka serie={serie} zavod={zavod} lode={cekaji} kategorie={prehled.kategorie} />
+        </>
+      )}
 
       {prihlasene.length === 0 ? (
         <p className="prazdno">Na zastávku zatím není přihlášená žádná loď.</p>
@@ -245,8 +260,10 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
 
       {zrusene.length > 0 && (
         <>
-          <h2>Zrušené</h2>
-          <p className="poznamka">Na webu nejsou. Obnovit je jde, dokud přihlášky běží.</p>
+          <h2>Mimo závod</h2>
+          <p className="poznamka">
+            Odhlášené, odmítnuté a nedostavené. Na webu nejsou. Vrátit je jde, dokud přihlášky běží.
+          </p>
           <Tabulka serie={serie} zavod={zavod} lode={zrusene} kategorie={prehled.kategorie} />
         </>
       )}
@@ -300,6 +317,7 @@ function Tabulka({
                       </span>
                     )}
                     {l.maVysledky && <span className="stitek">má výsledky</span>}
+                    {l.duvod && <div className="poznamka" style={{ margin: "0.25rem 0 0" }}>{l.duvod}</div>}
                   </td>
                   <td>
                     <div className="stavy">
@@ -312,6 +330,17 @@ function Tabulka({
                           <input type="hidden" name="prihlaskaId" value={l.prihlaskaId} />
                           <input type="hidden" name="lod" value={l.lod} />
                           <input type="hidden" name="stav" value={na} />
+                          {/* Vrácení, odmítnutí a vyloučení chtějí důvod —
+                              kapitán se jinak nedozví, co má doplnit. */}
+                          {potrebujeDuvod(na) && (
+                            <input
+                              name="duvod"
+                              required
+                              maxLength={500}
+                              placeholder="Proč"
+                              aria-label={`Důvod: ${STAVY_UCASTI[na].tlacitko}`}
+                            />
+                          )}
                           <button type="submit" title={STAVY_UCASTI[na].popis}>
                             {tlacitko(l.stav, na)}
                           </button>
@@ -334,7 +363,8 @@ function Tabulka({
  * nepotvrzená nikdy nebyla, obnovuje se.
  */
 function tlacitko(ze: StavUcasti | null | undefined, na: StavUcasti) {
-  if (ze === "Zrusena" && na === "Prihlasena") return "Obnovit přihlášku";
+  if (ze && skupinaStavu(ze) === "mimo" && na === "Prihlasena") return "Vrátit mezi zapsané";
+  if (ze === "Potvrzena" && na === "Prihlasena") return "Zrušit prezenci";
   return STAVY_UCASTI[na].tlacitko;
 }
 

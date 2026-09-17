@@ -1376,8 +1376,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Potvrdí, zruší, nebo obnoví přihlášku lodi
-         * @description Loď, která už má na zastávce výsledky, zrušit nejde.
+         * Přepne stav přihlášky lodi
+         * @description Pořadatel zapisuje, potvrzuje, vrací k doplnění, odmítá, odhlašuje a značí nedostavení; rozhodčí vylučuje. Vrácení, odmítnutí a vyloučení chtějí důvod. Loď s výsledky odhlásit ani odmítnout nejde.
          */
         post: {
             parameters: {
@@ -1668,6 +1668,7 @@ export interface components {
             stav: null | components["schemas"]["StavUcasti"];
             maVysledky: boolean;
             mozneStavy: components["schemas"]["StavUcasti"][];
+            duvod?: null | string;
         };
         LodVstup: {
             klic: string;
@@ -1924,9 +1925,10 @@ export interface components {
         /** @enum {unknown} */
         StavRozjizdky: "Planovana" | "Probiha" | "Dokoncena" | "Zrusena";
         /** @enum {unknown} */
-        StavUcasti: "Prihlasena" | "Potvrzena" | "Zrusena" | null;
+        StavUcasti: "Prihlasena" | "Potvrzena" | "Zrusena" | "Pozadavek" | "KDoplneni" | "Odmitnuta" | "Nedostavila" | "Vyloucena" | null;
         StavUcastiVstup: {
             stav: components["schemas"]["StavUcasti"];
+            duvod?: null | string;
         };
         StavVstup: {
             stav: components["schemas"]["StavClanku"];
@@ -1951,6 +1953,8 @@ export interface components {
             kormidelnik: null | string;
             /** @default true */
             potvrzena: boolean;
+            /** @default false */
+            vyloucena: boolean;
         };
         UcastVstup: {
             lod: string;
