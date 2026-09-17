@@ -1227,6 +1227,10 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 .s-boky-stred .seznam.novinky-uvod,
 .seznam.novinky-uvod { grid-template-columns: minmax(0, 1fr); }
 .novinky-uvod .hlavni .karta.s-fotkou { flex-direction: column; gap: 0.75rem; height: 100%; }
+/* Karta zarovnává obsah doleva (`align-items: flex-start`), takže obal
+   fotky by zůstal na přirozené šířce obrázku a vedle něj zela díra
+   (Filip, 17. 9. 2026). Velký náhled se proto natáhne přes celou kartu. */
+.novinky-uvod .hlavni .nahled-velky { display: block; align-self: stretch; }
 .novinky-uvod .hlavni .nahled-velky img {
   width: 100%; height: clamp(10rem, 22vw, 16rem);
 }
