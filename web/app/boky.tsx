@@ -44,7 +44,8 @@ export type Bok = "poradi" | "kalendar" | "novinky" | "akce";
 export type Doplnek = "vodocet" | "vystrahy" | "teplota" | "koupani" | "pocasi";
 
 /** Pod obsahem na displeji bez boků, pokud stránka neřekne jinak. */
-const DOLE: Doplnek[] = ["vodocet", "vystrahy", "teplota", "koupani", "pocasi"];
+// Výstrahy hned před počasím: patří k sobě (Filip, 18. 9. 2026).
+const DOLE: Doplnek[] = ["vodocet", "teplota", "koupani", "vystrahy", "pocasi"];
 
 /**
  * Rozložení boků (Filip, 18. 9. 2026: stránka má být v každém rozměru
@@ -56,7 +57,8 @@ const DOLE: Doplnek[] = ["vodocet", "vystrahy", "teplota", "koupani", "pocasi"];
  * - od 1600 px jdou pod obsah i widgety z levého boku, každý ve vlastním
  *   úzkém sloupci; pravý bok si své nechává, jinak by pod krátkým
  *   kalendářem zel prázdný (Filip, 18. 9. 2026);
- * - od 1280 px jsou pod obsahem jen dva (`stredDoplnky`), zbytek v bocích;
+ * - od 1280 px jsou pod obsahem jen dva sloupce (`stredDoplnky`; výstrahy
+ *   stojí nad počasím ve stejném sloupci), zbytek v bocích;
  * - bez boků jsou pod obsahem ve sloupcích, na telefonu pod sebou.
  *
  * Bok s widgety není ukotvený (`sticky`): může být delší než okno a ukotvený
@@ -66,9 +68,9 @@ export async function Boky({
   serie,
   vlevo = "poradi",
   vpravo = "kalendar",
-  vlevoDoplnky = ["vystrahy"],
+  vlevoDoplnky = [],
   vpravoDoplnky = ["vodocet", "koupani"],
-  stredDoplnky = ["teplota", "pocasi"],
+  stredDoplnky = ["teplota", "vystrahy", "pocasi"],
   dole = DOLE,
   children,
 }: {

@@ -1117,6 +1117,14 @@ th.vlevo, td.vlevo { text-align: left; }
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .doplnky-siroke > :not(.doplnek-stred) { display: none; }
+  /* Výstrahy nad počasím v jednom sloupci, teplota vedle přes oba řádky. */
+  .doplnky-siroke:has(.doplnek-vystrahy.doplnek-stred):has(.doplnek-pocasi.doplnek-stred) {
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "teplota vystrahy" "teplota pocasi";
+  }
+  .doplnky-siroke > .doplnek-teplota { grid-area: teplota; }
+  .doplnky-siroke > .doplnek-vystrahy { grid-area: vystrahy; }
+  .doplnky-siroke > .doplnek-pocasi { grid-area: pocasi; }
 }
 /* Od 1600 px jdou pod obsah i widgety z levého boku, každý ve svém úzkém
    sloupci (Filip, 18. 9. 2026: přes celou šířku středu z nich byly
@@ -1139,6 +1147,11 @@ th.vlevo, td.vlevo { text-align: left; }
     font-size: 0.875rem;
     grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
   }
+  /* V řadě zase každý ve svém sloupci, v pořadí z HTML. */
+  .doplnky-siroke:has(.doplnek-vystrahy.doplnek-stred):has(.doplnek-pocasi.doplnek-stred) {
+    grid-template-rows: none; grid-template-areas: none;
+  }
+  .doplnky-siroke > .doplnek { grid-area: auto; }
   .doplnky-siroke > :not(.doplnek-stred) { display: block; }
 }
 
