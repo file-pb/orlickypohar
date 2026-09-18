@@ -996,6 +996,14 @@ th.vlevo, td.vlevo { text-align: left; }
   display: block; width: 100%; height: 19rem; border: 0; border-radius: 10px;
   background: var(--zvyrazneni);
 }
+/* Windy tmavý režim nemá a do cizího iframe styl nesáhne. Bílá tabulka
+   předpovědi by na tmavém webu oslňovala, proto jen ztlumený jas — barvy
+   větru a srážek zůstanou, jak odpovídají stupnici (Filip, 18. 9. 2026).
+   Ve dvou podobách, viz začátek souboru. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-rezim="svetly"]) .bok-pocasi iframe { filter: brightness(0.82); }
+}
+:root[data-rezim="tmavy"] .bok-pocasi iframe { filter: brightness(0.82); }
 .bok-pocasi-zdroj { margin: 0.35rem 0 0; font-size: 0.75rem; line-height: 1.45; color: var(--tlumeny); }
 
 /* Vodočet Orlíku (Filip, 16. 9. 2026): velké číslo hladiny se šipkou,
