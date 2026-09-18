@@ -47,7 +47,8 @@ const DOLE: Doplnek[] = ["vodocet", "vystrahy", "teplota", "pocasi"];
 
 /**
  * Rozložení boků (Filip, 18. 9. 2026: stránka má být v každém rozměru
- * kompaktní). Widgety se rozdělují tak, aby oba boky vyšly zhruba stejně
+ * kompaktní). Widgety mají všechny stránky s boky, nejen úvod; výchozí
+ * rozdělení je to z úvodu. Widgety se rozdělují tak, aby oba boky vyšly zhruba stejně
  * vysoké: na úvodu vlevo pořadí a počasí, vpravo kalendář a voda. Změřeno
  * na 1440 × 900: pořadí 740 px, Windy 370, výstrahy 100, kalendář 265,
  * vodočet 380, teplota vody 450 — tedy kolem 1 200 px na každé straně.
@@ -63,8 +64,8 @@ export async function Boky({
   serie,
   vlevo = "poradi",
   vpravo = "kalendar",
-  vlevoDoplnky = [],
-  vpravoDoplnky = [],
+  vlevoDoplnky = ["pocasi", "vystrahy"],
+  vpravoDoplnky = ["vodocet", "teplota"],
   dole = DOLE,
   children,
 }: {
