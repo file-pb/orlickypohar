@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "web", "run", "dev"],
       "port": 3000
+    },
+    {
+      "name": "fake-api",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["tools/fake-api.py"],
+      "port": 8080
     }
   ]
 }

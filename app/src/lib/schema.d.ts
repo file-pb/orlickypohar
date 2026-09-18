@@ -182,6 +182,72 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/vodocet/teplota-hladiny": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Povrchová teplota Orlíku ze satelitu Landsat
+         * @description Snímky za `dni` dní před tím nejnovějším (výchozí 14), od nejnovějšího. Odhad horní vrstvy kolem poledne, zatím neověřený teploměrem.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    dni?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TeplotaHladinyDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Zápis teplot z plánované úlohy
+         * @description Chráněno tokenem v hlavičce X-Landsat-Token. Idempotentní podle snímku a místa: opakované odeslání hodnotu přepíše, nic nepřibude.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ZapisTeplotyVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/lode/napoveda": {
         parameters: {
             query?: never;
@@ -2133,6 +2199,12 @@ export interface components {
             publikovano: boolean;
             clanky?: null | components["schemas"]["ClanekVstup"][];
         };
+        SnimekHladinyDto: {
+            snimek: string;
+            /** Format: date-time */
+            cas: string;
+            mista: components["schemas"]["TeplotaMistaDto"][];
+        };
         StartovneVstup: {
             zaplaceno: boolean;
             poznamka?: null | string;
@@ -2164,6 +2236,17 @@ export interface components {
         };
         /** @enum {unknown} */
         StavZavodu: "Planovany" | "Vypsany" | "Odjety" | "Zruseny" | "Potvrzeny";
+        TeplotaHladinyDto: {
+            snimky: components["schemas"]["SnimekHladinyDto"][];
+            zdroj: string;
+        };
+        TeplotaMistaDto: {
+            misto: string;
+            /** Format: double */
+            teplota: number;
+            /** Format: int32 */
+            pixelu: number;
+        };
         UcastDto: {
             lod: string;
             kategorie: string;
@@ -2292,6 +2375,19 @@ export interface components {
             smiZapisovat: boolean;
             procNelze: null | string;
             lode: components["schemas"]["ZapisLodDto"][];
+        };
+        ZapisTeplotyRadek: {
+            snimek: string;
+            /** Format: date-time */
+            cas: string;
+            misto: string;
+            /** Format: double */
+            teplota: number;
+            /** Format: int32 */
+            pixelu: number;
+        };
+        ZapisTeplotyVstup: {
+            mereni: components["schemas"]["ZapisTeplotyRadek"][];
         };
         ZapisVstup: {
             radky: components["schemas"]["ZapisRadekVstup"][];
