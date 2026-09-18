@@ -1107,6 +1107,22 @@ th.vlevo, td.vlevo { text-align: left; }
   .doplnky { display: none; }
 }
 .doplnky-siroke { display: none; }
+/* S boky: pod obsahem jen dva widgety vedle sebe, ostatní jsou v bocích. */
+@media (min-width: 1280px) {
+  .s-boky:has(.doplnek-stred) {
+    grid-template-areas: "vlevo stred vpravo" "vlevo siroke vpravo";
+    grid-template-rows: auto 1fr;
+  }
+  .doplnky-siroke:has(.doplnek-stred) {
+    display: grid; grid-area: siroke; min-width: 0; gap: 1.75rem; align-items: start;
+    font-size: 0.875rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .doplnky-siroke > :not(.doplnek-stred) { display: none; }
+}
+/* Od 1600 px všechny widgety pod obsahem, každý ve svém úzkém sloupci —
+   na 1920 px čtyři vedle sebe. Sloupec je široký zhruba jako bok: přes
+   celou šířku středu z widgetů byly špalky (Filip, 18. 9. 2026). */
 @media (min-width: 1600px) {
   .s-boky {
     grid-template-areas: "vlevo stred vpravo" "vlevo siroke vpravo";
@@ -1117,26 +1133,15 @@ th.vlevo, td.vlevo { text-align: left; }
     position: sticky; top: 6rem;
     max-height: calc(100vh - 7rem); overflow-y: auto;
   }
-  /* Pevná mřížka, ne sloupce: sloupce na 1920 px naskládaly čtyři widgety
-     do tří a čtvrtý sloupec zel prázdný. Výstrahy jsou nízké, jdou pod
-     vodočet; teplota a počasí mají vlastní sloupec. */
-  .doplnky-siroke {
+  .doplnky-siroke,
+  .doplnky-siroke:has(.doplnek-stred) {
     display: grid; grid-area: siroke; min-width: 0; gap: 1.75rem; align-items: start;
     font-size: 0.875rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    /* Výška teploty přes oba řádky jde do druhého; jinak by se rozdělila
-       napůl a mezi vodočtem a výstrahami vznikla mezera. */
-    grid-template-rows: auto 1fr;
-    grid-template-areas: "vodocet teplota" "vystrahy teplota";
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    /* Strop: čtyři sloupce po ~20 rem. Na 2560 px by jinak zase narostly. */
+    width: 100%; max-width: 85rem; justify-self: center;
   }
-  .doplnky-siroke:has(.doplnek-pocasi) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-areas: "vodocet teplota pocasi" "vystrahy teplota pocasi";
-  }
-  .doplnky-siroke > .doplnek-vodocet { grid-area: vodocet; }
-  .doplnky-siroke > .doplnek-vystrahy { grid-area: vystrahy; }
-  .doplnky-siroke > .doplnek-teplota { grid-area: teplota; }
-  .doplnky-siroke > .doplnek-pocasi { grid-area: pocasi; }
+  .doplnky-siroke > :not(.doplnek-stred) { display: block; }
 }
 
 /* Šest řádků, stejně jako VIDET_V_BOKU v karusel-poradi.tsx. */

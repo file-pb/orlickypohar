@@ -48,24 +48,25 @@ const DOLE: Doplnek[] = ["vodocet", "vystrahy", "teplota", "pocasi"];
 /**
  * Rozložení boků (Filip, 18. 9. 2026: stránka má být v každém rozměru
  * kompaktní). Widgety mají všechny stránky s boky, nejen úvod; výchozí
- * rozdělení je to z úvodu. Widgety se rozdělují tak, aby oba boky vyšly zhruba stejně
- * vysoké: na úvodu vlevo pořadí a počasí, vpravo kalendář a voda. Změřeno
- * na 1440 × 900: pořadí 740 px, Windy 370, výstrahy 100, kalendář 265,
- * vodočet 380, teplota vody 450 — tedy kolem 1 200 px na každé straně.
+ * rozdělení je to z úvodu.
  *
- * Bok s widgety není ukotvený (`sticky`): je delší než okno a ukotvený by
- * se posouval uvnitř sebe. Ukotvený zůstává jen samotné pořadí nebo kalendář.
+ * Widgety nikdy nerostou do šířky středu — velké vypadaly jako špalky
+ * (Filip, 18. 9. 2026). Místo toho se se šířkou okna přesouvají:
+ * - od 1600 px jsou všechny pod obsahem, každý ve vlastním úzkém sloupci
+ *   (na 1920 px čtyři vedle sebe), boky drží jen pořadí a kalendář;
+ * - od 1280 px jsou pod obsahem jen dva (`stredDoplnky`), zbytek v bocích;
+ * - bez boků jsou pod obsahem ve sloupcích, na telefonu pod sebou.
  *
- * Od 1600 px je střed tak široký, že novinky vyjdou nízké a pod nimi by
- * zelo prázdno. Widgety se proto přesunou pod obsah do středu, do tří až
- * čtyř sloupců, a boky drží jen pořadí a kalendář, ukotvené.
+ * Bok s widgety není ukotvený (`sticky`): může být delší než okno a ukotvený
+ * by se posouval uvnitř sebe. Ukotvený zůstává jen samotné pořadí nebo kalendář.
  */
 export async function Boky({
   serie,
   vlevo = "poradi",
   vpravo = "kalendar",
-  vlevoDoplnky = ["pocasi", "vystrahy"],
-  vpravoDoplnky = ["vodocet", "teplota"],
+  vlevoDoplnky = ["vystrahy"],
+  vpravoDoplnky = ["vodocet"],
+  stredDoplnky = ["teplota", "pocasi"],
   dole = DOLE,
   children,
 }: {
@@ -74,13 +75,15 @@ export async function Boky({
   vpravo?: Bok;
   vlevoDoplnky?: Doplnek[];
   vpravoDoplnky?: Doplnek[];
+  /** Pod obsahem už od 1280 px; ostatní tam přijdou až od 1600 px. */
+  stredDoplnky?: Doplnek[];
   dole?: Doplnek[];
   children: React.ReactNode;
 }) {
   const slug = serie ?? (await aktualniRocnik());
-  // Na velmi širokém displeji jdou widgety z boků pod obsah do středu,
-  // v pořadí, ve kterém se sloupce nejlépe vyrovnají.
-  const siroke = DOLE.filter((d) => vlevoDoplnky.includes(d) || vpravoDoplnky.includes(d));
+  // Pod obsahem s boky: všechny widgety stránky, střední označené, aby je
+  // CSS ukázalo už od 1280 px.
+  const siroke = DOLE.filter((d) => [...vlevoDoplnky, ...vpravoDoplnky, ...stredDoplnky].includes(d));
 
   return (
     <div className="s-boky">
@@ -95,7 +98,9 @@ export async function Boky({
             {await obsah(vpravo, slug)}
             {vpravoDoplnky.length > 0 && <div className="bok-doplnky">{await doplnky(vpravoDoplnky, slug)}</div>}
           </aside>
-          {siroke.length > 0 && <div className="doplnky-siroke">{await doplnky(siroke, slug)}</div>}
+          {siroke.length > 0 && (
+            <div className="doplnky-siroke">{await doplnky(siroke, slug, stredDoplnky)}</div>
+          )}
           {/* Doplňky pod obsahem pro displej, kde boky nejsou (Filip,
               16. 9. 2026). S boky je CSS schová, tam jsou v bocích. */}
           <div className="doplnky">{await doplnky(dole, slug)}</div>
@@ -118,13 +123,14 @@ async function aktualniRocnik() {
  * Widgety v daném pořadí. Každý zvlášť v try — výpadek jednoho zdroje
  * nesmí vzít ostatní.
  */
-async function doplnky(ktere: Doplnek[], slug: string) {
+async function doplnky(ktere: Doplnek[], slug: string, stredni: Doplnek[] = []) {
   const vysledek: React.ReactNode[] = [];
   for (const d of ktere) {
     try {
       const obsah = await doplnek(d, slug);
       // Obal s názvem widgetu: podle něj ho široké rozložení posadí do mřížky.
-      if (obsah) vysledek.push(<div key={d} className={`doplnek doplnek-${d}`}>{obsah}</div>);
+      const trida = `doplnek doplnek-${d}${stredni.includes(d) ? " doplnek-stred" : ""}`;
+      if (obsah) vysledek.push(<div key={d} className={trida}>{obsah}</div>);
     } catch {
       // Chybějící widget je v pořádku; stránka stojí na hlavním obsahu.
     }
