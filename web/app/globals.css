@@ -996,6 +996,14 @@ th.vlevo, td.vlevo { text-align: left; }
   display: block; width: 100%; height: 19rem; border: 0; border-radius: 10px;
   background: var(--zvyrazneni);
 }
+/* Windy tmavý režim nemá a do cizího iframe styl nesáhne. Bílá tabulka
+   předpovědi by na tmavém webu oslňovala, proto jen ztlumený jas — barvy
+   větru a srážek zůstanou, jak odpovídají stupnici (Filip, 18. 9. 2026).
+   Ve dvou podobách, viz začátek souboru. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-rezim="svetly"]) .bok-pocasi iframe { filter: brightness(0.82); }
+}
+:root[data-rezim="tmavy"] .bok-pocasi iframe { filter: brightness(0.82); }
 .bok-pocasi-zdroj { margin: 0.35rem 0 0; font-size: 0.75rem; line-height: 1.45; color: var(--tlumeny); }
 
 /* Vodočet Orlíku (Filip, 16. 9. 2026): velké číslo hladiny se šipkou,
@@ -1027,6 +1035,45 @@ th.vlevo, td.vlevo { text-align: left; }
 .vodocet-toky dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 .vodocet-toky dd.vodocet-den { font-weight: 400; font-size: 0.72rem; color: var(--tlumeny); }
 .vodocet-bilance { margin: 0.55rem 0 0; font-size: 0.8rem; line-height: 1.45; }
+/* Vítr ze stanic ČHMÚ: šipka, kam fouká, rychlost, nárazy v barvě síly,
+   průběh za 24 h a ostatní stanice po řádcích. */
+.vitr-hlava { display: flex; align-items: center; gap: 0.45rem; }
+.vitr-rychlost { font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.vitr-jednotka { font-size: 0.75rem; color: var(--tlumeny); }
+.vitr-rukav { width: 2.1rem; height: 2.1rem; flex: none; }
+.vitr-rukav.velky { width: 4rem; height: 4rem; }
+.vitr-rukav .kompas { fill: color-mix(in srgb, var(--voda) 7%, transparent); stroke: var(--linka); stroke-width: 0.8; }
+.vitr-rukav .ryska { stroke: var(--tlumeny); stroke-width: 0.9; stroke-linecap: round; }
+.vitr-rukav .sever { font-size: 4.2px; font-weight: 700; fill: var(--tlumeny); }
+.vitr-rukav .pruh { stroke: #c9500f; stroke-width: 0.4; stroke-linejoin: round; }
+.vitr-rukav .pruh.oranzovy { fill: #f06a1d; }
+.vitr-rukav .pruh.bily { fill: #fdfbf7; }
+.vitr-rukav .pruh.prazdny { fill: none; stroke: var(--tlumeny); stroke-dasharray: 0.8 0.6; opacity: 0.6; }
+.vitr-rukav .stozar { fill: var(--text); }
+.vitr-naraz { margin: 0.2rem 0 0.5rem; font-size: 0.8rem; font-weight: 600; }
+.sila-klid { color: var(--tlumeny); }
+.sila-cerstvy { color: var(--voda); }
+.sila-silny { color: #e07a12; }
+.sila-prudky { color: #d62e2e; }
+.vitr-stoceni {
+  margin: 0 0 0.5rem; padding: 0.35rem 0.55rem; font-size: 0.8rem; line-height: 1.4;
+  border-left: 3px solid #e07a12; background: color-mix(in srgb, #e07a12 10%, transparent); border-radius: 4px;
+}
+.vitr-graf-obal { margin: 0; }
+.vitr-graf { display: block; width: 100%; height: 3.5rem; }
+.vitr-graf .narazy { fill: color-mix(in srgb, var(--voda) 16%, transparent); }
+.vitr-graf .cara {
+  fill: none; stroke: var(--voda); stroke-width: 2;
+  stroke-linejoin: round; vector-effect: non-scaling-stroke;
+}
+.vitr-graf-obal figcaption { margin-top: 0.2rem; font-size: 0.72rem; color: var(--tlumeny); }
+.vitr-stanice { list-style: none; margin: 0.6rem 0 0; padding: 0; display: grid; gap: 0.3rem; }
+.vitr-stanice li { display: flex; align-items: center; gap: 0.45rem; font-size: 0.8rem; }
+.vitr-stanice-nazev { flex: 1; min-width: 0; }
+.vitr-km { color: var(--tlumeny); font-size: 0.72rem; }
+.vitr-strana { color: var(--tlumeny); font-size: 0.75rem; min-width: 2.2rem; }
+.vitr-stanice-hodnota { font-variant-numeric: tabular-nums; font-weight: 600; }
+
 /* Teplota vody: nádrž ze satelitu a kvalita ke koupání. */
 .teplota-vody ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
 .teplota-reka { font-size: 0.85rem; font-weight: 600; }
@@ -1051,9 +1098,7 @@ th.vlevo, td.vlevo { text-align: left; }
 .nadrz-legenda { display: flex; align-items: center; gap: 0.3rem; margin-top: 0.2rem; font-size: 0.7rem; color: var(--tlumeny); }
 .nadrz-legenda .znacka { display: inline-block; width: 0.9rem; height: 0; border-top: 2px solid var(--voda); }
 .nadrz-legenda .znacka.trhovky { border-top: 1.5px dashed var(--tlumeny); margin-left: 0.4rem; }
-.koupani { margin-top: 0.9rem; padding-top: 0.7rem; border-top: 1px solid var(--linka); }
-.koupani-nadpis { margin: 0 0 0.4rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--tlumeny); font-weight: 600; }
-.koupani ul { gap: 0.25rem; }
+.koupani ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; }
 .koupani li { display: flex; align-items: baseline; gap: 0.45rem; font-size: 0.8rem; line-height: 1.4; }
 .koupani-stupen { display: block; color: var(--tlumeny); font-size: 0.72rem; }
 .koupani-misto { font-weight: 600; }
@@ -1107,36 +1152,67 @@ th.vlevo, td.vlevo { text-align: left; }
   .doplnky { display: none; }
 }
 .doplnky-siroke { display: none; }
+/* S boky: pod obsahem jen dva widgety vedle sebe, ostatní jsou v bocích. */
+@media (min-width: 1280px) {
+  .s-boky:has(.doplnek-stred) {
+    grid-template-areas: "vlevo stred vpravo" "vlevo siroke vpravo";
+    grid-template-rows: auto 1fr;
+  }
+  .doplnky-siroke:has(.doplnek-stred) {
+    display: grid; grid-area: siroke; min-width: 0; gap: 1.75rem; align-items: start;
+    font-size: 0.875rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .doplnky-siroke > :not(.doplnek-stred) { display: none; }
+  /* Výstrahy nad počasím v jednom sloupci, teplota vedle přes oba řádky. */
+  .doplnky-siroke:has(.doplnek-vystrahy.doplnek-stred):has(.doplnek-pocasi.doplnek-stred) {
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "teplota vystrahy" "teplota pocasi";
+  }
+  /* S větrem: vlevo teplota nad větrem, vpravo výstrahy nad počasím. */
+  .doplnky-siroke:has(.doplnek-vystrahy.doplnek-stred):has(.doplnek-pocasi.doplnek-stred):has(.doplnek-vitr.doplnek-stred) {
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas: "teplota vystrahy" "teplota pocasi" "vitr pocasi";
+  }
+  .doplnky-siroke > .doplnek-teplota { grid-area: teplota; }
+  .doplnky-siroke > .doplnek-vitr { grid-area: vitr; }
+  .doplnky-siroke > .doplnek-vystrahy { grid-area: vystrahy; }
+  .doplnky-siroke > .doplnek-pocasi { grid-area: pocasi; }
+}
+/* Od 1600 px jdou pod obsah i widgety z levého boku, každý ve svém úzkém
+   sloupci (Filip, 18. 9. 2026: přes celou šířku středu z nich byly
+   špalky). Sloupců je tolik, kolik se jich vejde po 18 rem, i prázdných,
+   takže widget zůstane zhruba široký jako bok. Pravý bok si své widgety
+   nechává, jinak by pod krátkým kalendářem zel prázdný. */
 @media (min-width: 1600px) {
   .s-boky {
     grid-template-areas: "vlevo stred vpravo" "vlevo siroke vpravo";
     grid-template-rows: auto 1fr;
   }
-  .bok-doplnky { display: none; }
-  .s-boky > .bok {
+  .bok-vlevo .bok-doplnky { display: none; }
+  .s-boky > .bok-vlevo {
     position: sticky; top: 6rem;
     max-height: calc(100vh - 7rem); overflow-y: auto;
   }
-  /* Pevná mřížka, ne sloupce: sloupce na 1920 px naskládaly čtyři widgety
-     do tří a čtvrtý sloupec zel prázdný. Výstrahy jsou nízké, jdou pod
-     vodočet; teplota a počasí mají vlastní sloupec. */
-  .doplnky-siroke {
+  .doplnky-siroke,
+  .doplnky-siroke:has(.doplnek-stred) {
     display: grid; grid-area: siroke; min-width: 0; gap: 1.75rem; align-items: start;
     font-size: 0.875rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    /* Výška teploty přes oba řádky jde do druhého; jinak by se rozdělila
-       napůl a mezi vodočtem a výstrahami vznikla mezera. */
-    grid-template-rows: auto 1fr;
-    grid-template-areas: "vodocet teplota" "vystrahy teplota";
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
   }
-  .doplnky-siroke:has(.doplnek-pocasi) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-areas: "vodocet teplota pocasi" "vystrahy teplota pocasi";
+  /* V řadě zase každý ve svém sloupci, v pořadí z HTML. */
+  .doplnky-siroke:has(.doplnek-vystrahy.doplnek-stred):has(.doplnek-pocasi.doplnek-stred),
+  .doplnky-siroke:has(.doplnek-vystrahy.doplnek-stred):has(.doplnek-pocasi.doplnek-stred):has(.doplnek-vitr.doplnek-stred) {
+    grid-template-rows: none; grid-template-areas: none;
   }
-  .doplnky-siroke > .doplnek-vodocet { grid-area: vodocet; }
-  .doplnky-siroke > .doplnek-vystrahy { grid-area: vystrahy; }
-  .doplnky-siroke > .doplnek-teplota { grid-area: teplota; }
-  .doplnky-siroke > .doplnek-pocasi { grid-area: pocasi; }
+  .doplnky-siroke > .doplnek { grid-area: auto; }
+  .doplnky-siroke > :not(.doplnek-stred) { display: block; }
+}
+
+/* Na nejširším displeji pět sloupců (Filip, 18. 9. 2026). */
+@media (min-width: 1920px) {
+  .doplnky-siroke,
+  .doplnky-siroke:has(.doplnek-stred) { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
 
 /* Šest řádků, stejně jako VIDET_V_BOKU v karusel-poradi.tsx. */

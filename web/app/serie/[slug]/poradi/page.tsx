@@ -49,8 +49,9 @@ export default async function Poradi({ params, searchParams }: Parametry) {
       serie={slug}
       vlevo="novinky"
       vpravo="akce"
-      vlevoDoplnky={["vodocet", "vystrahy"]}
-      vpravoDoplnky={["teplota"]}
+      vlevoDoplnky={["vitr", "vystrahy"]}
+      vpravoDoplnky={["koupani"]}
+      stredDoplnky={["vodocet", "teplota"]}
     >
       <p style={{ margin: "0 0 0.5rem" }}>
         <Link href={`/serie/${slug}`}>← zpět na ročník</Link>

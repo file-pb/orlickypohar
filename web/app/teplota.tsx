@@ -1,4 +1,3 @@
-import { nactiKoupani, STRANKA_KOUPANI, STUPNE } from "@/lib/koupani";
 import {
   centra,
   GRAF_DNI,
@@ -10,8 +9,8 @@ import {
 } from "@/lib/satelit";
 
 /**
- * Teplota vody v nádrži ze satelitu (`lib/satelit.ts`) a pod ní kvalita ke
- * koupání. Přítoky z ČHMÚ tu byly do 18. 9. 2026; Filip je vypnul, řeka
+ * Teplota vody v nádrži ze satelitu (`lib/satelit.ts`). Kvalita ke koupání
+ * byla pod ní, od 18. 9. 2026 je samostatný widget (`koupani.tsx`). Přítoky z ČHMÚ tu byly do 18. 9. 2026; Filip je vypnul, řeka
  * o šest stupňů studenější než nádrž jachtaři nic neřekne.
  *
  * SVG přímo ve stránce, bez knihovny a bez javascriptu. Když se data
@@ -20,25 +19,21 @@ import {
 
 const f = (n: number) => n.toLocaleString("cs-CZ", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
-const datumKratce = (iso: string) =>
-  new Date(iso + "T12:00:00Z").toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric", timeZone: "Europe/Prague" });
-
 const pred = (iso: string, ted: Date) => {
   const dni = Math.round((ted.getTime() - Date.parse(iso)) / 86_400_000);
   return dni <= 0 ? "dnes" : dni === 1 ? "včera" : `před ${dni} dny`;
 };
 
 export async function BokTeplotaVody() {
-  const [koupani, hladina] = await Promise.all([nactiKoupani(), nactiTeplotuHladiny()]);
+  const hladina = await nactiTeplotuHladiny();
   const ted = new Date();
   const nadrz = hladina ? centra(hladina.snimky, ted) : [];
-  if (nadrz.length === 0 && koupani.length === 0) return null;
+  if (!hladina || nadrz.length === 0) return null;
 
   return (
     <section className="teplota-vody">
       <h2 className="bok-nadpis">Teplota vody</h2>
-      {nadrz.length > 0 && hladina && <Nadrz centra={nadrz} hladina={hladina} ted={ted} />}
-      <Koupani koupani={koupani} />
+      <Nadrz centra={nadrz} hladina={hladina} ted={ted} />
     </section>
   );
 }
@@ -100,45 +95,6 @@ function Zmena({ c, kratce }: { c: Centrum; kratce?: boolean }) {
 
 const datumIso = (iso: string) =>
   new Date(iso).toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric", timeZone: "Europe/Prague" });
-
-function Koupani({ koupani }: { koupani: Awaited<ReturnType<typeof nactiKoupani>> }) {
-  return (
-    <>
-      {/* Kvalita ke koupání od hygieniků (Filip, 18. 9. 2026): jen v sezóně,
-          jinak se schová. Místa po stupních, nejhorší první — to má zajímat.
-          Po stupních, ne po místech: šest řádků „vhodná ke koupání" bylo
-          nejvyšší kus boku a neříkalo nic navíc. */}
-      {koupani.length > 0 && (
-        <div className="koupani">
-          <h3 className="koupani-nadpis">Kvalita ke koupání</h3>
-          <ul>
-            {[...new Set(koupani.map((k) => k.stupen))]
-              .sort((a, b) => b - a)
-              .map((stupen) => (
-                <li key={stupen}>
-                  <span className={`koupani-tecka stupen-${stupen}`} aria-hidden="true" />
-                  <span>
-                    <span className="koupani-stupen">{STUPNE[stupen]}</span>
-                    <span className="koupani-misto">
-                      {koupani
-                        .filter((k) => k.stupen === stupen)
-                        .map((k) => k.misto)
-                        .join(", ")}
-                    </span>
-                  </span>
-                </li>
-              ))}
-          </ul>
-          <p className="bok-dal">
-            <a href={STRANKA_KOUPANI} target="_blank" rel="noopener noreferrer">
-              Hygiena · odběr {datumKratce(koupani.map((k) => k.datum).sort().at(-1)!)}
-            </a>
-          </p>
-        </div>
-      )}
-    </>
-  );
-}
 
 function Graf({ radava, trhovky, ted }: { radava: Bod[]; trhovky: Bod[]; ted: Date }) {
   const W = 256;

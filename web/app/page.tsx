@@ -166,11 +166,7 @@ export default async function Rozcestnik() {
       {/* Fotka jde přes celou šířku okna, boky až pod ní. */}
       {/* Vlevo pořadí a pod ním počasí, vpravo kalendář a pod ním voda
           (Filip, 18. 9. 2026). */}
-      <Boky
-        serie={aktualni?.slug}
-        vlevoDoplnky={["pocasi", "vystrahy"]}
-        vpravoDoplnky={["vodocet", "teplota"]}
-      >
+      <Boky serie={aktualni?.slug}>
       {/* Bez seznamu ročníků by výpadek ani prázdný stav nebyly nikde vidět —
           návštěvník by koukal na fotku bez tlačítek a nevěděl proč. */}
       {vypadek ? (
