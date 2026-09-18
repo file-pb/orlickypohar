@@ -53,7 +53,7 @@ export async function BokVitr() {
         <span className="vitr-rychlost">{f(ted.rychlost)}</span>
         <span className="vitr-jednotka">
           m/s · {uzly(ted.rychlost)} kt
-          {ted.smer !== null && <> · {strana(ted.smer)}</>}
+          {ted.smer !== null && <> · z {strana(ted.smer)}</>}
         </span>
       </div>
       {ted.naraz !== null && (
@@ -95,6 +95,7 @@ function Radek({ s }: { s: VitrStanice }) {
       <span className="vitr-stanice-nazev">
         {s.nazev} <span className="vitr-km">{s.km} km</span>
       </span>
+      {m.smer !== null && <span className="vitr-strana">z {strana(m.smer)}</span>}
       <span className="vitr-stanice-hodnota">
         {f(m.rychlost)}
         {m.naraz !== null && <span className={`sila-${sila(m.naraz)}`}> / {f(m.naraz)}</span>}
@@ -115,10 +116,10 @@ function Rukav({ smer, rychlost, velky }: { smer: number | null; rychlost: numbe
 
   const kt = rychlost * 1.943844;
   const plnych = Math.min(5, Math.max(kt >= 1 ? 1 : 0, Math.round(kt / 3)));
-  // Rukáv se od stožáru zužuje: 9 → 4 jednotky na délce 14.
+  // Rukáv se od stožáru zužuje: 9 → 4 jednotky na délce 12, uvnitř kompasu.
   const pruhy = Array.from({ length: 5 }, (_, i) => {
-    const x0 = 17.5 + i * 2.8;
-    const x1 = x0 + 2.8;
+    const x0 = 17.5 + i * 2.4;
+    const x1 = x0 + 2.4;
     const v0 = 4.5 - i * 0.5;
     const v1 = v0 - 0.5;
     return { body: `${x0},${16 - v0} ${x1},${16 - v1} ${x1},${16 + v1} ${x0},${16 + v0}`, plny: i < plnych, lichy: i % 2 === 0 };
@@ -131,6 +132,17 @@ function Rukav({ smer, rychlost, velky }: { smer: number | null; rychlost: numbe
       role="img"
       aria-label={`fouká od ${strana(smer)} (${Math.round(smer)}°), ${Math.round(kt)} kt`}
     >
+      {/* Kompas: kroužek, rysky světových stran a sever nahoře, aby bylo
+          vidět, kam rukáv míří (Filip, 18. 9. 2026). */}
+      <circle className="kompas" cx="16" cy="16" r="15" />
+      {[0, 90, 180, 270].map((u) => (
+        <line key={u} className="ryska" x1="16" y1="1" x2="16" y2={u === 0 ? 4.5 : 3.2} transform={`rotate(${u} 16 16)`} />
+      ))}
+      {velky && (
+        <text className="sever" x="16" y="7.6" textAnchor="middle">
+          S
+        </text>
+      )}
       <g transform={`rotate(${(smer + 180 - 90 + 360) % 360} 16 16)`}>
         {pruhy.map((p, i) => (
           <polygon
