@@ -1429,7 +1429,9 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
      řádky se natáhnou a karta s nimi, místo aby mezi nimi zely díry. */
   .novinky-uvod > li { display: flex; }
   .novinky-uvod > li > .karta { flex: 1; }
-  .novinky-uvod > li:not(.hlavni) > .karta { align-items: center; }
+  /* Náhled nahoře v rovině s nadpisem, ne na středu natažené karty
+     (Filip, 18. 9. 2026). */
+  .novinky-uvod > li:not(.hlavni) > .karta { align-items: flex-start; }
   /* Fotka má strop: na širokém monitoru by 16 : 9 přes půl stránky byla
      vyšší než okno a menší karty by se kvůli ní roztahovaly do prázdna. */
   .novinky-uvod .hlavni .nahled-velky img {
