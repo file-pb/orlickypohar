@@ -1,30 +1,24 @@
-import { DNI, nactiTeplotyVody, STRANKA_HYDRO, type Bod } from "@/lib/teplota";
 import { nactiKoupani, STRANKA_KOUPANI, STUPNE } from "@/lib/koupani";
-import { centra, nactiTeplotuHladiny, type Centrum } from "@/lib/satelit";
+import {
+  centra,
+  GRAF_DNI,
+  nactiTeplotuHladiny,
+  rada,
+  type Bod,
+  type Centrum,
+  type TeplotaHladiny,
+} from "@/lib/satelit";
 
 /**
- * Teplota vody: nahoře nádrž ze satelitu (`lib/satelit.ts`), pod ní přítoky
- * Orlíku za posledních 14 dní z otevřených dat ČHMÚ (`lib/teplota.ts`).
- * Filip, 18. 9. 2026: jachtaře zajímá trend týden až dva, ne sezóna.
- *
- * U každé řeky aktuální teplota, změna za den a malý graf týdne. Grafy mají
- * <b>společnou osu</b>, aby šlo řeky porovnat pohledem — Skalice o dva
- * stupně studenější než Lužnice má vypadat níž, ne stejně.
+ * Teplota vody v nádrži ze satelitu (`lib/satelit.ts`) a pod ní kvalita ke
+ * koupání. Přítoky z ČHMÚ tu byly do 18. 9. 2026; Filip je vypnul, řeka
+ * o šest stupňů studenější než nádrž jachtaři nic neřekne.
  *
  * SVG přímo ve stránce, bez knihovny a bez javascriptu. Když se data
  * nepodaří načíst, widget chybí.
  */
 
 const f = (n: number) => n.toLocaleString("cs-CZ", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-
-const kratce = (iso: string) =>
-  new Date(iso).toLocaleString("cs-CZ", {
-    day: "numeric",
-    month: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: "Europe/Prague",
-  });
 
 const datumKratce = (iso: string) =>
   new Date(iso + "T12:00:00Z").toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric", timeZone: "Europe/Prague" });
@@ -35,20 +29,15 @@ const pred = (iso: string, ted: Date) => {
 };
 
 export async function BokTeplotaVody() {
-  const [stanice, koupani, hladina] = await Promise.all([
-    nactiTeplotyVody(),
-    nactiKoupani(),
-    nactiTeplotuHladiny(),
-  ]);
+  const [koupani, hladina] = await Promise.all([nactiKoupani(), nactiTeplotuHladiny()]);
   const ted = new Date();
   const nadrz = hladina ? centra(hladina.snimky, ted) : [];
-  if (!stanice && nadrz.length === 0) return null;
+  if (nadrz.length === 0 && koupani.length === 0) return null;
 
   return (
     <section className="teplota-vody">
       <h2 className="bok-nadpis">Teplota vody</h2>
-      {nadrz.length > 0 && hladina && <Nadrz centra={nadrz} zdroj={hladina.zdroj} ted={ted} />}
-      {stanice && <Pritoky stanice={stanice} />}
+      {nadrz.length > 0 && hladina && <Nadrz centra={nadrz} hladina={hladina} ted={ted} />}
       <Koupani koupani={koupani} />
     </section>
   );
@@ -59,7 +48,7 @@ export async function BokTeplotaVody() {
  * změna proti předchozímu snímku v okně 14 dní. Dokud nejsou ruční měření,
  * je to odhad — a tak to taky stojí pod čísly.
  */
-function Nadrz({ centra, zdroj, ted }: { centra: Centrum[]; zdroj: string; ted: Date }) {
+function Nadrz({ centra, hladina, ted }: { centra: Centrum[]; hladina: TeplotaHladiny; ted: Date }) {
   const [hlavni, ...dalsi] = centra;
   const snimek = centra.map((c) => c.cas).sort().at(-1)!;
 
@@ -83,12 +72,13 @@ function Nadrz({ centra, zdroj, ted }: { centra: Centrum[]; zdroj: string; ted: 
           ))}
         </ul>
       )}
+      <Graf radava={rada(hladina.snimky, "radava")} trhovky={rada(hladina.snimky, "trhovky")} ted={ted} />
       <p className="vodocet-pozn nadrz-pozn">
         Odhad ze satelitu Landsat: horní vrstva vody v poledne, zatím neověřeno teploměrem. Snímek{" "}
         {datumIso(snimek)}, {pred(snimek, ted)}.
       </p>
       <p className="bok-dal">
-        <a href={zdroj} target="_blank" rel="noopener noreferrer">
+        <a href={hladina.zdroj} target="_blank" rel="noopener noreferrer">
           Landsat · Planetary Computer
         </a>
       </p>
@@ -110,52 +100,6 @@ function Zmena({ c, kratce }: { c: Centrum; kratce?: boolean }) {
 
 const datumIso = (iso: string) =>
   new Date(iso).toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric", timeZone: "Europe/Prague" });
-
-function Pritoky({ stanice }: { stanice: NonNullable<Awaited<ReturnType<typeof nactiTeplotyVody>>> }) {
-  // Společná osa pro všechny grafy, nejméně 2 °C, ať se denní kolísání
-  // o pár desetin netváří jako skok.
-  const vse = stanice.flatMap((s) => s.rada.map((b) => b.hodnota));
-  const stred = (Math.max(...vse) + Math.min(...vse)) / 2;
-  const rozsah = Math.max(Math.max(...vse) - Math.min(...vse), 2);
-  const osa = { spodek: stred - rozsah / 2, rozsah };
-
-  const posledni = stanice.map((s) => s.aktualni.cas).sort().at(-1);
-
-  return (
-    <div className="pritoky">
-      <h3 className="koupani-nadpis">Přítoky · ČHMÚ</h3>
-      <ul>
-        {stanice.map((s) => (
-          <li key={s.tok}>
-            <div className="teplota-hlava">
-              <span className="teplota-reka">
-                {s.tok}
-                <span className="teplota-misto"> · {s.misto}</span>
-              </span>
-              <b className="teplota-hodnota">{f(s.aktualni.hodnota)} °C</b>
-            </div>
-            <Graf rada={s.rada} osa={osa} popis={`${s.tok}, ${s.misto}`} />
-            {s.zaDen !== null && (
-              <span className={`teplota-zmena ${s.zaDen > 0 ? "stoupa" : s.zaDen < 0 ? "klesa" : ""}`}>
-                {s.zaDen === 0
-                  ? "za den beze změny"
-                  : `${s.zaDen > 0 ? "↑" : "↓"} ${f(Math.abs(s.zaDen))} °C za den`}
-              </span>
-            )}
-          </li>
-        ))}
-      </ul>
-      <p className="vodocet-pozn" style={{ margin: "0.4rem 0 0" }}>
-        Graf za {DNI} dní. Měří se v řekách; nádrž bývá v létě teplejší, na podzim chladnější.
-      </p>
-      <p className="bok-dal">
-        <a href={STRANKA_HYDRO} target="_blank" rel="noopener noreferrer">
-          ČHMÚ{posledni && ` · ${kratce(posledni)}`}
-        </a>
-      </p>
-    </div>
-  );
-}
 
 function Koupani({ koupani }: { koupani: Awaited<ReturnType<typeof nactiKoupani>> }) {
   return (
@@ -185,31 +129,70 @@ function Koupani({ koupani }: { koupani: Awaited<ReturnType<typeof nactiKoupani>
   );
 }
 
-function Graf({ rada, osa, popis }: { rada: Bod[]; osa: { spodek: number; rozsah: number }; popis: string }) {
-  if (rada.length < 2) return null;
+/**
+ * Radava a Trhovky za posledních 60 dní. Tečka je snímek, mezi snímky jen
+ * spojnice — teplota mezi přelety nikdo nezměřil. Osa nejméně 4 °C, ať se
+ * rozdíl o pár desetin netváří jako skok. viewBox v poměru boku, takže se
+ * tečky při škálování nedeformují.
+ */
+function Graf({ radava, trhovky, ted }: { radava: Bod[]; trhovky: Bod[]; ted: Date }) {
+  const W = 256;
+  const H = 90;
+  const OKRAJ = { vlevo: 22, vpravo: 4, nahore: 6, dole: 14 };
+  const t1 = ted.getTime();
+  const t0 = t1 - GRAF_DNI * 86_400_000;
+  const vGrafu = (r: Bod[]) => r.filter((b) => Date.parse(b.cas) >= t0);
+  const r = vGrafu(radava);
+  const t = vGrafu(trhovky);
+  if (r.length < 2) return null;
 
-  const W = 240;
-  const H = 30;
-  const t0 = Date.parse(rada[0].cas);
-  const t1 = Date.parse(rada[rada.length - 1].cas);
-  const body = rada.map((b) => {
-    const x = ((Date.parse(b.cas) - t0) / Math.max(t1 - t0, 1)) * W;
-    const y = H - 3 - ((b.hodnota - osa.spodek) / osa.rozsah) * (H - 6);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  });
+  const vse = [...r, ...t].map((b) => b.t);
+  const stred = (Math.max(...vse) + Math.min(...vse)) / 2;
+  const rozsah = Math.max(Math.max(...vse) - Math.min(...vse), 4) + 1;
+  const spodek = stred - rozsah / 2;
 
-  const min = Math.min(...rada.map((b) => b.hodnota));
-  const max = Math.max(...rada.map((b) => b.hodnota));
+  const x = (cas: string) => OKRAJ.vlevo + ((Date.parse(cas) - t0) / (t1 - t0)) * (W - OKRAJ.vlevo - OKRAJ.vpravo);
+  const y = (v: number) => OKRAJ.nahore + (1 - (v - spodek) / rozsah) * (H - OKRAJ.nahore - OKRAJ.dole);
+  const cara = (body: Bod[]) => body.map((b) => `${x(b.cas).toFixed(1)},${y(b.t).toFixed(1)}`).join(" ");
+
+  // Popisky osy: celé stupně na okrajích rozsahu a data na začátku a konci.
+  const dole = Math.ceil(spodek);
+  const nahore = Math.floor(spodek + rozsah);
+  const datum = (ms: number) =>
+    new Date(ms).toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric", timeZone: "Europe/Prague" });
 
   return (
-    <svg
-      className="teplota-graf"
-      viewBox={`0 0 ${W} ${H}`}
-      preserveAspectRatio="none"
-      role="img"
-      aria-label={`${popis}: za ${DNI} dní od ${f(min)} do ${f(max)} °C`}
-    >
-      <polyline className="cara" points={body.join(" ")} />
-    </svg>
+    <figure className="nadrz-graf">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        role="img"
+        aria-label={`Radava za ${GRAF_DNI} dní: ${r.length} snímků, od ${f(Math.min(...r.map((b) => b.t)))} do ${f(Math.max(...r.map((b) => b.t)))} °C`}
+      >
+        {[dole, nahore].map((v) => (
+          <g key={v}>
+            <line className="mrizka" x1={OKRAJ.vlevo} x2={W - OKRAJ.vpravo} y1={y(v)} y2={y(v)} />
+            <text className="osa" x={OKRAJ.vlevo - 3} y={y(v) + 3} textAnchor="end">
+              {v}°
+            </text>
+          </g>
+        ))}
+        <text className="osa" x={OKRAJ.vlevo} y={H - 2}>
+          {datum(t0)}
+        </text>
+        <text className="osa" x={W - OKRAJ.vpravo} y={H - 2} textAnchor="end">
+          {datum(t1)}
+        </text>
+        {t.length >= 2 && <polyline className="cara-druha" points={cara(t)} />}
+        <polyline className="cara" points={cara(r)} />
+        {r.map((b) => (
+          <circle key={b.cas} className="tecka" cx={x(b.cas)} cy={y(b.t)} r={2.6}>
+            <title>{`${datum(Date.parse(b.cas))}: ${f(b.t)} °C`}</title>
+          </circle>
+        ))}
+      </svg>
+      <figcaption className="nadrz-legenda">
+        <span className="znacka radava" /> Radava <span className="znacka trhovky" /> Trhovky · {GRAF_DNI} dní
+      </figcaption>
+    </figure>
   );
 }

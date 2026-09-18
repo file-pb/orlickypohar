@@ -1189,8 +1189,8 @@ class H(BaseHTTPRequestHandler):
                 "zdroj": "https://www.pvl.cz/portal/nadrze/cz/pc/Mereni.aspx?id=VLOR&oid=2"})
 
         if cesta == "/vodocet/teplota-hladiny":
-            # Dva snímky Landsatu týden po sobě, voda se ochladila. Skutečná
-            # čísla počítá úloha jobs/landsat; tvar je stejný.
+            # Snímky Landsatu zhruba po týdnu za dva měsíce, jak je letos
+            # dával skutečný Orlík. Čísla počítá úloha jobs/landsat; tvar je stejný.
             from datetime import datetime, timedelta, timezone
             posledni = (datetime.now(timezone.utc) - timedelta(days=3)).replace(
                 hour=9, minute=57, second=0, microsecond=0)
@@ -1202,9 +1202,11 @@ class H(BaseHTTPRequestHandler):
                         "cas": kdy.isoformat().replace("+00:00", "Z"),
                         "mista": [{"misto": m, "teplota": round(zaklad + d, 1), "pixelu": 40}
                                   for m, d in mista.items() if m not in chybi]}
+            leto = [(0, 19.8, ("husarna",)), (8, 21.6, ("trhovky", "spalenka")), (16, 22.4, ()),
+                    (24, 27.2, ()), (32, 26.2, ("zdakov",)), (40, 28.8, ()), (48, 23.5, ()),
+                    (56, 25.0, ("marina-orlik",))]
             return self.odpoved({
-                "snimky": [snimek(posledni, 19.8, chybi=("husarna",)),
-                           snimek(posledni - timedelta(days=8), 21.6, chybi=("trhovky", "spalenka"))],
+                "snimky": [snimek(posledni - timedelta(days=d), t, chybi=ch) for d, t, ch in leto],
                 "zdroj": "https://planetarycomputer.microsoft.com/dataset/landsat-c2-l2"})
 
         if cesta in ("/health", "/health/ready"):

@@ -28,6 +28,12 @@ export const CENTRA = [
 /** Změna se počítá jen proti snímku z posledních 14 dní — delší trend jachtaře nezajímá. */
 export const OKNO_DNI = 14;
 
+/**
+ * Graf je za 60 dní (Filip, 18. 9. 2026). Snímek s hodnotou bývá jednou
+ * za týden, za 14 dní by v grafu byly jeden nebo dva body.
+ */
+export const GRAF_DNI = 60;
+
 /** Starší poslední snímek už o dnešní vodě nic neříká; widget se schová. */
 export const NEJSTARSI_DNI = 30;
 
@@ -44,6 +50,18 @@ export type Centrum = {
 };
 
 const zaokrouhli = (n: number) => Math.round(n * 10) / 10;
+
+export type Bod = { cas: string; t: number };
+
+/** Řada centra od nejstaršího snímku; snímky, kde centrum nemá hodnotu, vynechá. */
+export function rada(snimky: Snimek[], klic: string): Bod[] {
+  const c = CENTRA.find((x) => x.klic === klic);
+  if (!c) return [];
+  return [...snimky]
+    .sort((a, b) => Date.parse(a.cas) - Date.parse(b.cas))
+    .map((s) => ({ cas: s.cas, t: hodnota(s, c.mista) }))
+    .filter((b): b is Bod => b.t !== null);
+}
 
 export function median(cisla: number[]): number | null {
   if (cisla.length === 0) return null;
@@ -90,7 +108,7 @@ export function centra(snimky: Snimek[], ted: Date): Centrum[] {
 /** Úloha počítá jednou denně; častěji se nemá smysl ptát. */
 export async function nactiTeplotuHladiny(): Promise<TeplotaHladiny | null> {
   try {
-    const odpoved = await fetch(`${API}/vodocet/teplota-hladiny`, {
+    const odpoved = await fetch(`${API}/vodocet/teplota-hladiny?dni=${GRAF_DNI}`, {
       next: { revalidate: 3600 },
       headers: { accept: "application/json" },
     });
