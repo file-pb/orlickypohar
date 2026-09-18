@@ -1,4 +1,5 @@
 import { DNI, nactiTeplotyVody, STRANKA_HYDRO, type Bod } from "@/lib/teplota";
+import { nactiKoupani, STRANKA_KOUPANI, STUPNE } from "@/lib/koupani";
 
 /**
  * Teplota vody na přítocích Orlíku za posledních sedm dní (Filip,
@@ -23,8 +24,11 @@ const kratce = (iso: string) =>
     timeZone: "Europe/Prague",
   });
 
+const datumKratce = (iso: string) =>
+  new Date(iso + "T12:00:00Z").toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric", timeZone: "Europe/Prague" });
+
 export async function BokTeplotaVody() {
-  const stanice = await nactiTeplotyVody();
+  const [stanice, koupani] = await Promise.all([nactiTeplotyVody(), nactiKoupani()]);
   if (!stanice) return null;
 
   // Společná osa pro všechny grafy, nejméně 2 °C, ať se denní kolísání
@@ -68,6 +72,28 @@ export async function BokTeplotaVody() {
           ČHMÚ{posledni && ` · ${kratce(posledni)}`}
         </a>
       </p>
+
+      {/* Kvalita ke koupání od hygieniků (Filip, 18. 9. 2026): jen v sezóně,
+          jinak se schová. Nejhorší místo první — to je to, co má zajímat. */}
+      {koupani.length > 0 && (
+        <div className="koupani">
+          <h3 className="koupani-nadpis">Kvalita ke koupání</h3>
+          <ul>
+            {koupani.map((k) => (
+              <li key={k.misto} title={`Odběr ${datumKratce(k.datum)}`}>
+                <span className={`koupani-tecka stupen-${k.stupen}`} aria-hidden="true" />
+                <span className="koupani-misto">{k.misto}</span>
+                <span className="koupani-stupen">{STUPNE[k.stupen]}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="bok-dal">
+            <a href={STRANKA_KOUPANI} target="_blank" rel="noopener noreferrer">
+              Hygiena · odběr {datumKratce(koupani.map((k) => k.datum).sort().at(-1)!)}
+            </a>
+          </p>
+        </div>
+      )}
     </section>
   );
 }

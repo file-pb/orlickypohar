@@ -1017,6 +1017,19 @@ th.vlevo, td.vlevo { text-align: left; }
 .teplota-graf { display: block; width: 100%; height: 1.9rem; margin-top: 0.15rem; }
 .teplota-graf .cara { fill: none; stroke: var(--voda); stroke-width: 1.6; vector-effect: non-scaling-stroke; }
 .teplota-zmena { font-size: 0.72rem; color: var(--tlumeny); }
+.koupani { margin-top: 0.9rem; padding-top: 0.7rem; border-top: 1px solid var(--linka); }
+.koupani-nadpis { margin: 0 0 0.4rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--tlumeny); font-weight: 600; }
+.koupani ul { gap: 0.25rem; }
+.koupani li { display: flex; align-items: center; gap: 0.45rem; font-size: 0.8rem; }
+.koupani-misto { font-weight: 600; }
+.koupani-stupen { margin-left: auto; color: var(--tlumeny); font-size: 0.74rem; text-align: right; }
+.koupani-tecka { width: 0.55rem; height: 0.55rem; border-radius: 999px; flex: none; }
+/* Barvy podle legendy hygieniků: zelená, žlutá, oranžová, červená, tmavě červená. */
+.koupani-tecka.stupen-1 { background: #3aa76d; }
+.koupani-tecka.stupen-2 { background: #d4b20f; }
+.koupani-tecka.stupen-3 { background: #e38b21; }
+.koupani-tecka.stupen-4 { background: #d9483b; }
+.koupani-tecka.stupen-5 { background: #8f1d15; }
 .teplota-zmena.stoupa { color: var(--voda); }
 .teplota-zmena.klesa { color: var(--stav-zruseny); }
 .vodocet-rozdil { white-space: nowrap; }

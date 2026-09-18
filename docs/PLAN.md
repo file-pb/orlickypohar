@@ -1937,6 +1937,14 @@ a graf za 7 dní se společnou osou. Web stahuje `hydrology/now` a denní
 `hydrology/recent` z opendata.chmi.cz (řada `TH`), cache hodina
 (`web/lib/teplota.ts`). Otava v Písku teplotu nemá.
 
+**Kvalita ke koupání** je ve stejném widgetu pod teplotou: poslední
+hodnocení hygieniků (1–5) pro koupací místa na Orlíku z mapové služby
+Ministerstva zdravotnictví (`geoportal.mzcr.cz`, `KoupaciVody_View`, vrstva
+`bathingPlace`, `web/lib/koupani.ts`). Odběry jsou jen v sezóně, starší
+než 45 dní se neukazují. **Teplotu tahle služba nemá** — hygienici ji měří,
+ale nezveřejňují. teplotavody.cz je model, ne měření, a podmínky zakazují
+stahování; proto ne.
+
 Přímo v nádrži měří Povodí Vltavy jen od dubna do října, po týdnech,
 a vydává to jen jako graf na mapě — na týdenní trend to nestačí. Widget
 proto říká, že jde o řeky a nádrž bývá v létě teplejší.
