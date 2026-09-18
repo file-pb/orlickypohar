@@ -1073,6 +1073,12 @@ th.vlevo, td.vlevo { text-align: left; }
 .vitr-km { color: var(--tlumeny); font-size: 0.72rem; }
 .vitr-strana { color: var(--tlumeny); font-size: 0.75rem; min-width: 2.2rem; }
 .vitr-stanice-hodnota { font-variant-numeric: tabular-nums; font-weight: 600; }
+/* Tlak pod stanicemi: hodnota na řádku s názvem, trend pod ní. */
+.vitr-tlak {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.1rem 0.45rem;
+  margin: 0.6rem 0 0.4rem; padding-top: 0.5rem; border-top: 1px solid var(--linka); font-size: 0.8rem;
+}
+.vitr-tlak-zmena { flex-basis: 100%; font-size: 0.72rem; color: var(--tlumeny); font-variant-numeric: tabular-nums; }
 
 /* Teplota vody: nádrž ze satelitu a kvalita ke koupání. */
 .teplota-vody ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }

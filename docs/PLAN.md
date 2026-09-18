@@ -2013,6 +2013,13 @@ po 3 uzlech jako skutečný. Barva nárazů: do 5 m/s klid, do 8 čerstvý, do
 11 silný, nad to prudký. Upozornění na stočení o víc než 90° za 30 minut,
 jen při větru aspoň 2 m/s.
 
+**Tlak z Kocelovic** (PR #26) — jediná synoptická stanice v okolí. ČHMÚ dává tlak
+na stanici (519 m), widget ho přepočítá na hladinu moře, aby seděl
+s barometrem na lodi. Trend je změna za 3 hodiny, počítaná z tlaku na
+stanici (přepočet kolísá s teplotou), a slovy podle stupnice Met Office
+z námořní předpovědi. Od poklesu 3,6 hPa za 3 h („rychle klesá") widget
+varuje stejně jako u stočení.
+
 **Windy v tmavém režimu** je ztlumené na `brightness(0.82)`. Windy tmavý
 režim nemá (skript vloženého okna žádný parametr vzhledu nečte) a do
 cizího iframe styl nesáhne; invertovat barvy nejde, přestaly by odpovídat
@@ -2205,10 +2212,8 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
 6. **Skutečná data** — až dorazí, nahradí `data/2025-mock.json` a nahrají se
    importem. Struktura zůstane.
 7. **Widgety** (stav k 18. 9. 2026, oddíl *Widgety s cizími daty*).
-   Rozpracované v PR #26 (tlakový trend z Kocelovic ve větru) a #27 (radar
-   srážek ČHMÚ na hodinu, `radar/composite/fct_maxz`, PNG v EPSG:3857,
-   11,267–19,624° v. d., 48,047–51,458° s. š.). Pak push „déšť do hodiny"
-   v appce. Blesky nemají volný zdroj (ČHMÚ je
+   Tlakový trend (#26) a radar na hodinu (#27, oddíl *Radar na příští
+   hodinu*) hotové 18. 9. Dál push „déšť do hodiny" v appce. Blesky nemají volný zdroj (ČHMÚ je
    nedává, Blitzortung zakazuje komerční použití).
 
 ## Zbývá doladit
