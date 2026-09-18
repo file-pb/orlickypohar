@@ -1,8 +1,13 @@
 import {
   nactiVitr,
+  popisTrendu,
   stoceni,
   STOCENI_MINUT,
   STRANKA_VETRU,
+  TLAK_HODIN,
+  TLAK_VAROVANI,
+  tlakovyTrend,
+  type TlakTrend,
   type Mereni,
   type VitrStanice,
 } from "@/lib/vitr";
@@ -78,6 +83,8 @@ export async function BokVitr() {
         </ul>
       )}
 
+      <Tlak trend={tlakovyTrend(stanice)} />
+
       <p className="bok-dal">
         <a href={STRANKA_VETRU} target="_blank" rel="noopener noreferrer">
           ČHMÚ · měřeno {casPraha(ted.cas)}
@@ -101,6 +108,36 @@ function Radek({ s }: { s: VitrStanice }) {
         {m.naraz !== null && <span className={`sila-${sila(m.naraz)}`}> / {f(m.naraz)}</span>}
       </span>
     </li>
+  );
+}
+
+/**
+ * Tlak a jeho změna za 3 hodiny (Filip, 18. 9. 2026). Rychlý pokles
+ * předchází zesílení větru dřív, než ho ukáže kterákoliv stanice, proto
+ * od „rychle klesá" výrazné upozornění jako u stočení.
+ */
+function Tlak({ trend }: { trend: TlakTrend | null }) {
+  if (!trend) return null;
+  const zmena = `${trend.zmena > 0 ? "+" : trend.zmena < 0 ? "−" : "±"}${f(Math.abs(trend.zmena))}`;
+  const sipka = trend.zmena >= 0.1 ? "↗" : trend.zmena <= -0.1 ? "↘" : "→";
+  return (
+    <>
+      <p className="vitr-tlak">
+        <span className="vitr-stanice-nazev">
+          Tlak · {trend.nazev}
+        </span>
+        <span className="vitr-stanice-hodnota">{Math.round(trend.tlak)} hPa</span>
+        <span className="vitr-tlak-zmena">
+          {sipka} {zmena} za {TLAK_HODIN} h · {popisTrendu(trend.zmena)}
+        </span>
+      </p>
+      {trend.zmena <= TLAK_VAROVANI && (
+        <p className="vitr-stoceni">
+          Tlak za {TLAK_HODIN} hodiny klesl o {f(-trend.zmena)} hPa. Takový pokles obvykle předchází zesílení
+          větru.
+        </p>
+      )}
+    </>
   );
 }
 

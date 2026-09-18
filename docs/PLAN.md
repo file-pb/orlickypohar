@@ -1968,6 +1968,19 @@ měření starší 3 dnů (tabulka nepřeroste ~430 řádků). Zapíná se prom�
 
 Web už stránku Povodí nečte, bere `GET /vodocet/orlik`.
 
+## Vítr a tlak
+
+**Desetiminutová data ČHMÚ** (`web/lib/vitr.ts`, 18. 9. 2026): Vráž jako
+hlavní stanice, pod ní Nadějkov, Příbram, Kocelovice a Temelín pro
+srovnání. Upozornění, když se vítr za 30 minut stočí o víc než 90°.
+
+**Tlak z Kocelovic** — jediná synoptická stanice v okolí. ČHMÚ dává tlak
+na stanici (519 m), widget ho přepočítá na hladinu moře, aby seděl
+s barometrem na lodi. Trend je změna za 3 hodiny, počítaná z tlaku na
+stanici (přepočet kolísá s teplotou), a slovy podle stupnice Met Office
+z námořní předpovědi. Od poklesu 3,6 hPa za 3 h („rychle klesá") widget
+varuje stejně jako u stočení.
+
 ## Veřejné přihlášky lodí (plán 17. 9. 2026)
 
 Filip chce, aby loď na zastávku přihlásil kdokoliv z veřejnosti, s našeptávačem
