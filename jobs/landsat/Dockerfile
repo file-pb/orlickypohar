@@ -2,6 +2,11 @@
 # jen jednou denně počítá a posílá čísla do API (README.md).
 FROM python:3.13-slim
 
+# Kola rasterio nesou GDAL, ale libexpat berou ze systému a slim image
+# ji nemá (import padal na libexpat.so.1, zachytil to build v CI).
+RUN apt-get update && apt-get install -y --no-install-recommends libexpat1 \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /uloha
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

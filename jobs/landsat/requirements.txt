@@ -1,3 +1,3 @@
-# Kola rasterio nesou vlastní GDAL, takže image nepotřebuje nic ze systému.
+# Kola rasterio nesou vlastní GDAL; ze systému chtějí jen libexpat (Dockerfile).
 rasterio==1.5.1
 numpy==2.5.3
