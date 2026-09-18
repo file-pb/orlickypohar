@@ -1293,7 +1293,16 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
   }
   .novinky-uvod .hlavni { grid-column: 1; grid-row: 1 / span 3; }
   .novinky-uvod > li:not(.hlavni) { grid-column: 2; }
-  .novinky-uvod .hlavni .nahled-velky img { height: auto; aspect-ratio: 16 / 9; }
+  /* Tři menší karty vyplní výšku velké beze zbytku (Filip, 18. 9. 2026):
+     řádky se natáhnou a karta s nimi, místo aby mezi nimi zely díry. */
+  .novinky-uvod > li { display: flex; }
+  .novinky-uvod > li > .karta { flex: 1; }
+  .novinky-uvod > li:not(.hlavni) > .karta { align-items: center; }
+  /* Fotka má strop: na širokém monitoru by 16 : 9 přes půl stránky byla
+     vyšší než okno a menší karty by se kvůli ní roztahovaly do prázdna. */
+  .novinky-uvod .hlavni .nahled-velky img {
+    height: clamp(12rem, 24vw, 22rem); aspect-ratio: auto;
+  }
 }
 
 /* Velká fotka nad článkem. Drží šířku textu, ne obalu — jinak by článek
