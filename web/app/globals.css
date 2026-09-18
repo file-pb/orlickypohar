@@ -1138,6 +1138,27 @@ th.vlevo, td.vlevo { text-align: left; }
 .vystraha-stupen { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--stupen); }
 .vystraha-popis { color: var(--text); }
 .vystraha-cas { color: var(--tlumeny); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+/* Radar na příští hodinu pod výstrahami: věta, pás sedmi políček, poznámka. */
+.radar { margin-top: 0.75rem; padding-top: 0.6rem; border-top: 1px solid var(--linka); }
+.radar-nadpis { margin: 0 0 0.35rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--tlumeny); }
+.radar-zprava { margin: 0 0 0.5rem; font-size: 0.85rem; }
+.radar-klid { color: var(--tlumeny); }
+.radar-dest { font-weight: 600; color: var(--voda); }
+.radar-silny, .radar-bourka {
+  font-weight: 600; padding: 0.35rem 0.55rem; border-radius: 4px;
+  border-left: 3px solid var(--stupen); background: color-mix(in srgb, var(--stupen) 12%, transparent);
+}
+.radar-silny { --stupen: #f07c12; }
+.radar-bourka { --stupen: #d62e2e; }
+.radar-pas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.25rem; }
+.radar-pas li { display: grid; gap: 0.15rem; justify-items: center; }
+.radar-policko {
+  width: 100%; height: 0.9rem; border-radius: 3px;
+  border: 1px solid var(--linka); background: var(--papir); opacity: 0.45;
+}
+.radar-policko.prsi { opacity: 1; }
+.radar-cas { font-size: 0.68rem; color: var(--tlumeny); font-variant-numeric: tabular-nums; }
+.radar-pozn { margin: 0.45rem 0 0; font-size: 0.72rem; color: var(--tlumeny); line-height: 1.4; }
 
 /* Doplňky pod obsahem tam, kde nejsou boky: vodočet, výstrahy a počasí
    u nejbližší akce vedle sebe, na telefonu pod sebou. S boky se schovají,
