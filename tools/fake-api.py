@@ -1188,6 +1188,25 @@ class H(BaseHTTPRequestHandler):
                 "zmenaObjemu": -1_780_000.0, "historie": body,
                 "zdroj": "https://www.pvl.cz/portal/nadrze/cz/pc/Mereni.aspx?id=VLOR&oid=2"})
 
+        if cesta == "/vodocet/teplota-hladiny":
+            # Dva snímky Landsatu týden po sobě, voda se ochladila. Skutečná
+            # čísla počítá úloha jobs/landsat; tvar je stejný.
+            from datetime import datetime, timedelta, timezone
+            posledni = (datetime.now(timezone.utc) - timedelta(days=3)).replace(
+                hour=9, minute=57, second=0, microsecond=0)
+            def snimek(kdy, zaklad, chybi=()):
+                mista = {"spalenka": -0.2, "trhovky": -0.4, "bukovanska": -0.5, "vystrkov": -0.2,
+                         "podskali": -0.1, "radava": 0.0, "velky-vir": 0.0, "marina-orlik": 0.1,
+                         "zdakov": 0.0, "husarna": 0.1}
+                return {"snimek": f"LC09_L2SP_192026_{kdy:%Y%m%d}_02_T1",
+                        "cas": kdy.isoformat().replace("+00:00", "Z"),
+                        "mista": [{"misto": m, "teplota": round(zaklad + d, 1), "pixelu": 40}
+                                  for m, d in mista.items() if m not in chybi]}
+            return self.odpoved({
+                "snimky": [snimek(posledni, 19.8, chybi=("husarna",)),
+                           snimek(posledni - timedelta(days=8), 21.6, chybi=("trhovky", "spalenka"))],
+                "zdroj": "https://planetarycomputer.microsoft.com/dataset/landsat-c2-l2"})
+
         if cesta in ("/health", "/health/ready"):
             # Skutečné API je má taky; bez nich by zátěžový test hlásil
             # červenou na endpointu, který s aplikací nesouvisí.

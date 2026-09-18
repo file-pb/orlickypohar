@@ -22,6 +22,9 @@ networks:
   # API proto dostává ve vnitřní síti vlastní jméno (níž), které nikde jinde
   # neexistuje.
   interni: { internal: true }
+  # Cesta ven pro plánovanou úlohu (katalog Landsatu). `interni` ven nepustí
+  # a `edge` patří Traefiku — úloha nemá být vidět zvenku ani přes něj.
+  ven: {}
 
 services:
   app:
@@ -62,6 +65,7 @@ services:
     secrets:
       - ConnectionStrings__Postgres
       - Import__Token
+      - Landsat__Token
       - Fotky__KlicId
       - Fotky__Klic
     labels:
@@ -140,6 +144,26 @@ services:
       retries: 3
       start_period: 20s
 
+
+  # Plánovaná úloha (typ `scheduled-job` na platformě): jednou denně spočítá
+  # teplotu hladiny z Landsatu a pošle ji do API. Žádný port, žádný Traefik.
+  # Smyčka je uvnitř, ne v cronu hostitele, aby se celá úloha popsala tady
+  # a přestěhovala se s compose. Po restartu počítá hned — zápis je
+  # idempotentní, takže nasazení nic nezdvojí.
+  landsat:
+    image: ${IMAGE_LANDSAT:-ghcr.io/file-pb/orlickypohar-landsat:latest}
+    restart: unless-stopped
+    logging: *logging
+    networks: [interni, ven]
+    environment:
+      API_URL: "http://orlickypohar-api:8080"
+      HODINA_UTC: "13"
+    secrets:
+      - Landsat__Token
+    deploy:
+      resources:
+        limits: { memory: 384m, cpus: "0.5" }
+
 secrets:
   # Vyrobí ho scripts/new-project.sh v platform repu; sem se jen zkopíruje.
   ConnectionStrings__Postgres:
@@ -152,6 +176,10 @@ secrets:
   # Klíč k bucketu `orlickypohar-fotky`, jen Object Read & Write a jen na něj.
   # Soubory musí existovat i prázdné, jinak kontejner nenaběhne; prázdné
   # znamenají „nahrávání vypnuté".
+  # Zápis teploty ze satelitu. Zvlášť od importního tokenu: úloha smí
+  # zapsat teploty, ne přepsat ročník. Sdílí ho API a úloha `landsat`.
+  Landsat__Token:
+    file: ./secrets/Landsat__Token
   Fotky__KlicId:
     file: ./secrets/Fotky__KlicId
   Fotky__Klic:

@@ -112,6 +112,8 @@ app/                          mobilní appka (Expo, jen čtení)
   scripts/telefon.sh          spuštění pro Expo Go, scripts/apk.sh build APK
   scripts/ikona.py            ikona a splash se kreslí kódem
 packages/api-client/          generuj.sh — typy pro web i appku z OpenAPI
+jobs/landsat/                 plánovaná úloha (Python): teplota hladiny
+                              z Landsatu jednou denně do API
 tools/fake-api.py             mock ročník jako API, pro vývoj webu bez databáze
 tools/gen-mock.py             vyrábí ten mock; skutečná fakta o ročníku patří sem
 ```
