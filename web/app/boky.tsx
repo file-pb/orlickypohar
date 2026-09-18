@@ -14,6 +14,7 @@ import { KaruselTridy } from "@/app/karusel-poradi";
 import { PocasiAkce } from "@/app/pocasi";
 import { BokVodocet } from "@/app/vodocet";
 import { BokTeplotaVody } from "@/app/teplota";
+import { BokKoupani } from "@/app/koupani";
 import { BokVystrahy } from "@/app/vystrahy";
 import { dnesVPraze, vyberTerminu } from "@/lib/terminy";
 
@@ -40,10 +41,10 @@ export type Bok = "poradi" | "kalendar" | "novinky" | "akce";
  * Widgety s cizími daty. Jen doplňují — v boku stojí vždycky pod hlavním
  * obsahem, nikdy nad ním (Filip, 18. 9. 2026).
  */
-export type Doplnek = "vodocet" | "vystrahy" | "teplota" | "pocasi";
+export type Doplnek = "vodocet" | "vystrahy" | "teplota" | "koupani" | "pocasi";
 
 /** Pod obsahem na displeji bez boků, pokud stránka neřekne jinak. */
-const DOLE: Doplnek[] = ["vodocet", "vystrahy", "teplota", "pocasi"];
+const DOLE: Doplnek[] = ["vodocet", "vystrahy", "teplota", "koupani", "pocasi"];
 
 /**
  * Rozložení boků (Filip, 18. 9. 2026: stránka má být v každém rozměru
@@ -66,7 +67,7 @@ export async function Boky({
   vlevo = "poradi",
   vpravo = "kalendar",
   vlevoDoplnky = ["vystrahy"],
-  vpravoDoplnky = ["vodocet"],
+  vpravoDoplnky = ["vodocet", "koupani"],
   stredDoplnky = ["teplota", "pocasi"],
   dole = DOLE,
   children,
@@ -147,6 +148,8 @@ async function doplnek(d: Doplnek, slug: string) {
       return await BokVystrahy();
     case "teplota":
       return await BokTeplotaVody();
+    case "koupani":
+      return await BokKoupani();
     case "pocasi": {
       const termin = (await nadchazejici(slug))[0];
       if (!termin) return null;

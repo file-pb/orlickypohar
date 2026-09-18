@@ -49,7 +49,7 @@ export default async function Poradi({ params, searchParams }: Parametry) {
       serie={slug}
       vlevo="novinky"
       vpravo="akce"
-      vlevoDoplnky={["vystrahy"]}
+      vlevoDoplnky={["vystrahy", "koupani"]}
       vpravoDoplnky={[]}
       stredDoplnky={["vodocet", "teplota"]}
     >

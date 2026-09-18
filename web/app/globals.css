@@ -1051,9 +1051,7 @@ th.vlevo, td.vlevo { text-align: left; }
 .nadrz-legenda { display: flex; align-items: center; gap: 0.3rem; margin-top: 0.2rem; font-size: 0.7rem; color: var(--tlumeny); }
 .nadrz-legenda .znacka { display: inline-block; width: 0.9rem; height: 0; border-top: 2px solid var(--voda); }
 .nadrz-legenda .znacka.trhovky { border-top: 1.5px dashed var(--tlumeny); margin-left: 0.4rem; }
-.koupani { margin-top: 0.9rem; padding-top: 0.7rem; border-top: 1px solid var(--linka); }
-.koupani-nadpis { margin: 0 0 0.4rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--tlumeny); font-weight: 600; }
-.koupani ul { gap: 0.25rem; }
+.koupani ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; }
 .koupani li { display: flex; align-items: baseline; gap: 0.45rem; font-size: 0.8rem; line-height: 1.4; }
 .koupani-stupen { display: block; color: var(--tlumeny); font-size: 0.72rem; }
 .koupani-misto { font-weight: 600; }
@@ -1142,6 +1140,12 @@ th.vlevo, td.vlevo { text-align: left; }
     grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
   }
   .doplnky-siroke > :not(.doplnek-stred) { display: block; }
+}
+
+/* Na nejširším displeji pět sloupců (Filip, 18. 9. 2026). */
+@media (min-width: 1920px) {
+  .doplnky-siroke,
+  .doplnky-siroke:has(.doplnek-stred) { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
 
 /* Šest řádků, stejně jako VIDET_V_BOKU v karusel-poradi.tsx. */
