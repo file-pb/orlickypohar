@@ -1174,10 +1174,19 @@ th.vlevo, td.vlevo { text-align: left; }
     grid-template-rows: auto auto 1fr;
     grid-template-areas: "teplota vystrahy" "teplota pocasi" "vitr pocasi";
   }
-  .doplnky-siroke > .doplnek-teplota { grid-area: teplota; }
-  .doplnky-siroke > .doplnek-vitr { grid-area: vitr; }
-  .doplnky-siroke > .doplnek-vystrahy { grid-area: vystrahy; }
-  .doplnky-siroke > .doplnek-pocasi { grid-area: pocasi; }
+  /* Oblasti jen tam, kde je mřížka definuje. Bez toho dostala stránka
+     pořadí a ročníku (vodočet a teplota, bez počasí) nedefinované oblasti
+     a prohlížeč pro ně přidal skryté sloupce — vodočet byl úzký pruh
+     a teplota pod ním vedle (Filip, 18. 9. 2026). Jen do 1600 px: výš
+     má řada vlastní sloupce a oblasti by ji rozbily. */
+  @media (max-width: 1599.98px) {
+    .doplnky-siroke:has(.doplnek-vystrahy.doplnek-stred):has(.doplnek-pocasi.doplnek-stred) {
+      > .doplnek-teplota { grid-area: teplota; }
+      > .doplnek-vitr { grid-area: vitr; }
+      > .doplnek-vystrahy { grid-area: vystrahy; }
+      > .doplnek-pocasi { grid-area: pocasi; }
+    }
+  }
 }
 /* Od 1600 px jdou pod obsah i widgety z levého boku, každý ve svém úzkém
    sloupci (Filip, 18. 9. 2026: přes celou šířku středu z nich byly
