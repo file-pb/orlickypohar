@@ -1032,8 +1032,13 @@ th.vlevo, td.vlevo { text-align: left; }
 .vitr-hlava { display: flex; align-items: center; gap: 0.45rem; }
 .vitr-rychlost { font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
 .vitr-jednotka { font-size: 0.75rem; color: var(--tlumeny); }
-.vitr-sipka { width: 1rem; height: 1rem; flex: none; fill: var(--voda); }
-.vitr-sipka.velka { width: 1.9rem; height: 1.9rem; }
+.vitr-rukav { width: 1.5rem; height: 1.5rem; flex: none; }
+.vitr-rukav.velky { width: 2.6rem; height: 2.6rem; }
+.vitr-rukav .pruh { stroke: #c9500f; stroke-width: 0.4; stroke-linejoin: round; }
+.vitr-rukav .pruh.oranzovy { fill: #f06a1d; }
+.vitr-rukav .pruh.bily { fill: #fdfbf7; }
+.vitr-rukav .pruh.prazdny { fill: none; stroke: var(--tlumeny); stroke-dasharray: 0.8 0.6; opacity: 0.6; }
+.vitr-rukav .stozar { fill: var(--text); }
 .vitr-naraz { margin: 0.2rem 0 0.5rem; font-size: 0.8rem; font-weight: 600; }
 .sila-klid { color: var(--tlumeny); }
 .sila-cerstvy { color: var(--voda); }

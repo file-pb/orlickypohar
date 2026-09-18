@@ -9,7 +9,7 @@ import {
 
 /**
  * Vítr ze stanic ČHMÚ (Filip, 18. 9. 2026). Nahoře nejbližší stanice Vráž:
- * šipka, kam fouká, rychlost, nárazy v barvě podle síly a průběh za 24 h.
+ * rukáv, kam fouká a jak silně, rychlost, nárazy v barvě podle síly a průběh za 24 h.
  * Pod ní ostatní stanice na jeden řádek, aby bylo vidět, jestli fouká
  * v celém kraji. Upozornění, když se vítr za půl hodiny stočil o víc než
  * 90° — to na lodi poznáš.
@@ -49,7 +49,7 @@ export async function BokVitr() {
       <h2 className="bok-nadpis">Vítr · {hlavni.nazev}</h2>
 
       <div className="vitr-hlava">
-        <Sipka smer={ted.smer} velka />
+        <Rukav smer={ted.smer} rychlost={ted.rychlost} velky />
         <span className="vitr-rychlost">{f(ted.rychlost)}</span>
         <span className="vitr-jednotka">
           m/s · {uzly(ted.rychlost)} kt
@@ -91,7 +91,7 @@ function Radek({ s }: { s: VitrStanice }) {
   const m = s.historie.at(-1)!;
   return (
     <li>
-      <Sipka smer={m.smer} />
+      <Rukav smer={m.smer} rychlost={m.rychlost} />
       <span className="vitr-stanice-nazev">
         {s.nazev} <span className="vitr-km">{s.km} km</span>
       </span>
@@ -104,21 +104,43 @@ function Radek({ s }: { s: VitrStanice }) {
 }
 
 /**
- * Šipka ukazuje, kam vítr fouká — jako na mapě předpovědi. ČHMÚ hlásí,
- * odkud fouká, proto otočení o 180°.
+ * Rukáv jako na letišti, při pohledu shora (Filip, 18. 9. 2026). Ukazuje,
+ * kam vítr fouká; ČHMÚ hlásí, odkud fouká, proto otočení o 180°.
+ * Pět pruhů, každý jako u skutečného rukávu za 3 uzly: při 15 kt je
+ * nafouknutý celý, při bezvětří visí prázdný.
  */
-function Sipka({ smer, velka }: { smer: number | null; velka?: boolean }) {
-  if (smer === null) return <span className={velka ? "vitr-sipka velka" : "vitr-sipka"} />;
+function Rukav({ smer, rychlost, velky }: { smer: number | null; rychlost: number; velky?: boolean }) {
+  const trida = velky ? "vitr-rukav velky" : "vitr-rukav";
+  if (smer === null) return <span className={trida} />;
+
+  const kt = rychlost * 1.943844;
+  const plnych = Math.min(5, Math.max(kt >= 1 ? 1 : 0, Math.round(kt / 3)));
+  // Rukáv se od stožáru zužuje: 9 → 4 jednotky na délce 14.
+  const pruhy = Array.from({ length: 5 }, (_, i) => {
+    const x0 = 17.5 + i * 2.8;
+    const x1 = x0 + 2.8;
+    const v0 = 4.5 - i * 0.5;
+    const v1 = v0 - 0.5;
+    return { body: `${x0},${16 - v0} ${x1},${16 - v1} ${x1},${16 + v1} ${x0},${16 + v0}`, plny: i < plnych, lichy: i % 2 === 0 };
+  });
+
   return (
     <svg
-      className={velka ? "vitr-sipka velka" : "vitr-sipka"}
-      viewBox="0 0 24 24"
+      className={trida}
+      viewBox="0 0 32 32"
       role="img"
-      aria-label={`fouká od ${strana(smer)} (${Math.round(smer)}°)`}
+      aria-label={`fouká od ${strana(smer)} (${Math.round(smer)}°), ${Math.round(kt)} kt`}
     >
-      <g transform={`rotate(${(smer + 180) % 360} 12 12)`}>
-        <path d="M12 3 L18 19 L12 15.5 L6 19 Z" />
+      <g transform={`rotate(${(smer + 180 - 90 + 360) % 360} 16 16)`}>
+        {pruhy.map((p, i) => (
+          <polygon
+            key={i}
+            points={p.body}
+            className={p.plny ? (p.lichy ? "pruh oranzovy" : "pruh bily") : "pruh prazdny"}
+          />
+        ))}
       </g>
+      <circle className="stozar" cx="16" cy="16" r="1.8" />
     </svg>
   );
 }
