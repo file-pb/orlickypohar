@@ -1022,14 +1022,11 @@ th.vlevo, td.vlevo { text-align: left; }
 .vodocet-toky dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 .vodocet-toky dd.vodocet-den { font-weight: 400; font-size: 0.72rem; color: var(--tlumeny); }
 .vodocet-bilance { margin: 0.55rem 0 0; font-size: 0.8rem; line-height: 1.45; }
-/* Teplota vody na přítocích: tři řádky, každý s hodnotou a grafem týdne. */
+/* Teplota vody: nádrž ze satelitu a kvalita ke koupání. */
 .teplota-vody ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
-.teplota-hlava { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
 .teplota-reka { font-size: 0.85rem; font-weight: 600; }
 .teplota-misto { font-weight: 400; color: var(--tlumeny); font-size: 0.78rem; }
 .teplota-hodnota { font-size: 1.05rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.teplota-graf { display: block; width: 100%; height: 1.9rem; margin-top: 0.15rem; }
-.teplota-graf .cara { fill: none; stroke: var(--voda); stroke-width: 1.6; vector-effect: non-scaling-stroke; }
 .teplota-zmena { font-size: 0.72rem; color: var(--tlumeny); }
 /* Nádrž ze satelitu nad přítoky: jedno velké číslo, pod ním dvě menší. */
 .nadrz-hlavni { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
@@ -1039,7 +1036,16 @@ th.vlevo, td.vlevo { text-align: left; }
 .nadrz-dalsi .teplota-zmena { margin-left: auto; }
 .nadrz-dalsi .teplota-hodnota { font-size: 0.95rem; min-width: 4.2em; text-align: right; }
 .nadrz-pozn { margin: 0.45rem 0 0; line-height: 1.4; }
-.nadrz + .pritoky { margin-top: 0.9rem; padding-top: 0.7rem; border-top: 1px solid var(--linka); }
+.nadrz-graf { margin: 0.55rem 0 0; }
+.nadrz-graf svg { display: block; width: 100%; height: auto; overflow: visible; }
+.nadrz-graf .cara { fill: none; stroke: var(--voda); stroke-width: 1.8; stroke-linejoin: round; }
+.nadrz-graf .cara-druha { fill: none; stroke: var(--tlumeny); stroke-width: 1.2; stroke-dasharray: 3 2; stroke-linejoin: round; }
+.nadrz-graf .tecka { fill: var(--voda); stroke: var(--papir); stroke-width: 1; }
+.nadrz-graf .mrizka { stroke: var(--linka); stroke-width: 1; }
+.nadrz-graf .osa { fill: var(--tlumeny); font-size: 9px; font-variant-numeric: tabular-nums; }
+.nadrz-legenda { display: flex; align-items: center; gap: 0.3rem; margin-top: 0.2rem; font-size: 0.7rem; color: var(--tlumeny); }
+.nadrz-legenda .znacka { display: inline-block; width: 0.9rem; height: 0; border-top: 2px solid var(--voda); }
+.nadrz-legenda .znacka.trhovky { border-top: 1.5px dashed var(--tlumeny); margin-left: 0.4rem; }
 .koupani { margin-top: 0.9rem; padding-top: 0.7rem; border-top: 1px solid var(--linka); }
 .koupani-nadpis { margin: 0 0 0.4rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--tlumeny); font-weight: 600; }
 .koupani ul { gap: 0.25rem; }
