@@ -483,6 +483,44 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("MereniNadrze", (string)null);
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Vodocet.TeplotaHladiny", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("Cas")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Misto")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<int>("Pixelu")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Snimek")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<decimal>("Teplota")
+                        .HasPrecision(4, 1)
+                        .HasColumnType("numeric(4,1)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Cas");
+
+                    b.HasIndex("Snimek", "Misto")
+                        .IsUnique();
+
+                    b.ToTable("TeplotyHladiny", (string)null);
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Rozjizdka", b =>
                 {
                     b.Property<int>("Id")

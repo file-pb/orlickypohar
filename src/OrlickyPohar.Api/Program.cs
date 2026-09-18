@@ -145,6 +145,7 @@ try
     app.MapClanky();
     app.MapImport();
     app.MapVodocet();
+    app.MapTeplotaHladiny();
     app.MapNapovedu();
     app.MapVerejnePrihlasky();
     if (identita)

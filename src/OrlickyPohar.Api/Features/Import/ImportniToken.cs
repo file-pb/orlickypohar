@@ -26,15 +26,20 @@ public static class ImportniToken
 {
     public const string Hlavicka = "X-Import-Token";
 
-    public static StavTokenu Over(HttpContext ctx, IConfiguration config)
-    {
-        var ocekavany = config["Import:Token"];
+    public static StavTokenu Over(HttpContext ctx, IConfiguration config) =>
+        Over(ctx, config["Import:Token"], Hlavicka);
 
+    /// <summary>
+    /// Totéž pro jiné sdílené tajemství — třeba zápis teploty ze satelitu,
+    /// který nemá dostat právo přepsat celý ročník.
+    /// </summary>
+    public static StavTokenu Over(HttpContext ctx, string? ocekavany, string hlavicka)
+    {
         // Nenakonfigurovaný token neznamená otevřený endpoint. Bez něj se
-        // neimportuje — jinak by stačilo zapomenout na soubor v /run/secrets.
+        // nezapisuje — jinak by stačilo zapomenout na soubor v /run/secrets.
         if (string.IsNullOrEmpty(ocekavany)) return StavTokenu.Nenakonfigurovan;
 
-        var poslany = ctx.Request.Headers[Hlavicka].ToString();
+        var poslany = ctx.Request.Headers[hlavicka].ToString();
 
         return KonstantniPorovnani(poslany, ocekavany) ? StavTokenu.Sedi : StavTokenu.Nesedi;
     }

@@ -26,6 +26,7 @@ public class PostgresCollection : ICollectionFixture<PostgresFixture>
 public sealed class PostgresFixture : WebApplicationFactory<Program>, IAsyncLifetime
 {
     public const string Token = "testovaci-token";
+    public const string LandsatToken = "testovaci-landsat";
 
     private readonly PostgreSqlContainer _db =
         new PostgreSqlBuilder("postgres:17-alpine").Build();
@@ -42,6 +43,7 @@ public sealed class PostgresFixture : WebApplicationFactory<Program>, IAsyncLife
     {
         builder.UseSetting("ConnectionStrings:Postgres", _db.GetConnectionString());
         builder.UseSetting("Import:Token", Token);
+        builder.UseSetting("Landsat:Token", LandsatToken);
     }
 
     async Task IAsyncLifetime.DisposeAsync()

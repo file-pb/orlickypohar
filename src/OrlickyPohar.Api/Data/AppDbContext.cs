@@ -25,6 +25,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Clanek> Clanky => Set<Clanek>();
     public DbSet<Fotka> Fotky => Set<Fotka>();
     public DbSet<MereniNadrze> MereniNadrze => Set<MereniNadrze>();
+    public DbSet<TeplotaHladiny> TeplotyHladiny => Set<TeplotaHladiny>();
     public DbSet<Uzivatel> Uzivatele => Set<Uzivatel>();
     public DbSet<UcetVazba> Vazby => Set<UcetVazba>();
     public DbSet<Opravneni> Opravneni => Set<Opravneni>();
@@ -104,6 +105,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         nadrz.Property(x => x.Objem).HasPrecision(9, 3);
         nadrz.Property(x => x.Pritok).HasPrecision(9, 2);
         nadrz.Property(x => x.Odtok).HasPrecision(9, 2);
+
+        var satelit = b.Entity<TeplotaHladiny>();
+        satelit.ToTable("TeplotyHladiny");
+        satelit.Property(x => x.Snimek).HasMaxLength(TeplotaHladiny.SnimekNejvic);
+        satelit.Property(x => x.Misto).HasMaxLength(TeplotaHladiny.MistoNejvic);
+        satelit.Property(x => x.Teplota).HasPrecision(4, 1);
+        // Přirozený klíč: úloha posílá snímky opakovaně a nic se nesmí zdvojit.
+        satelit.HasIndex(x => new { x.Snimek, x.Misto }).IsUnique();
+        // Widget čte okno od nejnovějšího snímku.
+        satelit.HasIndex(x => x.Cas);
 
         var fotka = b.Entity<Fotka>();
         fotka.Property(x => x.Id).ValueGeneratedNever();
