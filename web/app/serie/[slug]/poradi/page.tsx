@@ -45,7 +45,13 @@ export default async function Poradi({ params, searchParams }: Parametry) {
 
   return (
     // Pořadí je tady ve středu, takže do boků jdou novinky a plakát akce.
-    <Boky serie={slug} vlevo="novinky" vpravo="akce">
+    <Boky
+      serie={slug}
+      vlevo="novinky"
+      vpravo="akce"
+      vlevoDoplnky={["vodocet", "vystrahy"]}
+      vpravoDoplnky={["teplota"]}
+    >
       <p style={{ margin: "0 0 0.5rem" }}>
         <Link href={`/serie/${slug}`}>← zpět na ročník</Link>
       </p>

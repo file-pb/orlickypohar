@@ -71,7 +71,13 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
 
   return (
     // Kalendář je tady ve středu, takže do boků jdou novinky a plakát akce.
-    <Boky serie={serie.slug} vlevo="novinky" vpravo="akce">
+    <Boky
+      serie={serie.slug}
+      vlevo="novinky"
+      vpravo="akce"
+      vlevoDoplnky={["vodocet", "vystrahy"]}
+      vpravoDoplnky={["teplota"]}
+    >
       <h1>{serie.nazev}</h1>
       <p className="podtitulek">
         {serie.zavody.length} zastávek · {odjete.length} odjetých ·{" "}
