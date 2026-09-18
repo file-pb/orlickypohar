@@ -69,7 +69,14 @@ export async function BokVodocet() {
       {rozdil !== null && (
         <p className="vodocet-bilance">
           Za posledních 24 h {rozdil >= 0 ? "přiteklo" : "odteklo"}{" "}
-          <b>o {objemem(Math.abs(rozdil))} víc</b>, než {rozdil >= 0 ? "odteklo" : "přiteklo"}.
+          {/* Barva a piktogram nesou trend na první pohled (Filip, 18. 9. 2026):
+              modrá a stoupající čára, když se nádrž plní, červená a klesající,
+              když se vypouští. Stejné barvy jako šipka u hladiny. */}
+          <b className={`vodocet-rozdil ${rozdil >= 0 ? "stoupa" : "klesa"}`}>
+            o {objemem(Math.abs(rozdil))} víc
+            <Trend nahoru={rozdil >= 0} />
+          </b>
+          , než {rozdil >= 0 ? "odteklo" : "přiteklo"}.
           {stav.objem != null && <> V nádrži je {f(stav.objem, 0)} mil. m³.</>}
           <span className="vodocet-pozn">
             {" "}
@@ -84,6 +91,28 @@ export async function BokVodocet() {
         </a>
       </p>
     </section>
+  );
+}
+
+/**
+ * Piktogram trendu: lomená čára se šipkou. Čtečka obrazovky ho přeskočí —
+ * směr už říká věta („přiteklo" / „odteklo").
+ */
+function Trend({ nahoru }: { nahoru: boolean }) {
+  return (
+    <svg className="vodocet-trend" viewBox="0 0 16 12" aria-hidden="true">
+      {nahoru ? (
+        <>
+          <polyline points="1,10 6,5 9,8 15,2" />
+          <polyline points="11,2 15,2 15,6" />
+        </>
+      ) : (
+        <>
+          <polyline points="1,2 6,7 9,4 15,10" />
+          <polyline points="11,10 15,10 15,6" />
+        </>
+      )}
+    </svg>
   );
 }
 
