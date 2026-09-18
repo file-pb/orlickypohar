@@ -26,7 +26,7 @@ export const STANICE = [
 ] as const;
 
 /** Kolik dní zpátky ukazuje graf. */
-export const DNI = 7;
+export const DNI = 14;
 
 export type Bod = { cas: string; hodnota: number };
 
@@ -37,7 +37,7 @@ export type TeplotaStanice = {
   aktualni: Bod;
   /** Změna proti měření zhruba před 24 hodinami, °C. */
   zaDen: number | null;
-  /** Hodinové průměry za posledních sedm dní, od nejstaršího. */
+  /** Hodinové průměry za posledních DNI dní, od nejstaršího. */
   rada: Bod[];
 };
 
@@ -81,7 +81,7 @@ export function zmenaZaDen(body: Bod[]): number | null {
   return Math.round((posledni.hodnota - drive.hodnota) * 10) / 10;
 }
 
-/** Dny archivu, které graf potřebuje: včerejšek a šest dní před ním, jako RRRRMMDD v UTC. */
+/** Dny archivu, které graf potřebuje: včerejšek a DNI − 1 dní před ním, jako RRRRMMDD v UTC. */
 export function dnyArchivu(ted: Date, dni = DNI): string[] {
   return Array.from({ length: dni }, (_, i) => {
     const d = new Date(Date.UTC(ted.getUTCFullYear(), ted.getUTCMonth(), ted.getUTCDate() - (dni - i)));
@@ -136,7 +136,7 @@ const nactiDoCache = unstable_cache(
     if (vysledek.length === 0) throw new Error("ČHMÚ nevrátilo teplotu vody");
     return vysledek;
   },
-  ["teplota-vody-1"],
+  ["teplota-vody-2"],
   { revalidate: 3600 },
 );
 

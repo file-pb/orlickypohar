@@ -155,6 +155,11 @@ services:
     restart: unless-stopped
     logging: *logging
     networks: [interni, ven]
+    # Úloha se hned po startu ptá API na poslední snímek. Bez čekání na
+    # zdravé API dostala při nasazení „Connection refused" (18. 9. 2026)
+    # a další pokus by byl až za hodinu.
+    depends_on:
+      app: { condition: service_healthy }
     environment:
       API_URL: "http://orlickypohar-api:8080"
       HODINA_UTC: "13"

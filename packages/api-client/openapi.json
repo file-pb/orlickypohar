@@ -132,6 +132,59 @@
                 }
             }
         },
+        "/vodocet/teplota-hladiny": {
+            "get": {
+                "tags": [
+                    "Vodo\u010det"
+                ],
+                "summary": "Povrchov\u00e1 teplota Orl\u00edku ze satelitu Landsat",
+                "description": "Sn\u00edmky za `dni` dn\u00ed p\u0159ed t\u00edm nejnov\u011bj\u0161\u00edm (v\u00fdchoz\u00ed 14), od nejnov\u011bj\u0161\u00edho. Odhad horn\u00ed vrstvy kolem poledne, zat\u00edm neov\u011b\u0159en\u00fd teplom\u011brem.",
+                "parameters": [
+                    {
+                        "name": "dni",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TeplotaHladinyDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Vodo\u010det"
+                ],
+                "summary": "Z\u00e1pis teplot z pl\u00e1novan\u00e9 \u00falohy",
+                "description": "Chr\u00e1n\u011bno tokenem v hlavi\u010dce X-Landsat-Token. Idempotentn\u00ed podle sn\u00edmku a m\u00edsta: opakovan\u00e9 odesl\u00e1n\u00ed hodnotu p\u0159ep\u00ed\u0161e, nic nep\u0159ibude.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ZapisTeplotyVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/lode/napoveda": {
             "get": {
                 "tags": [
@@ -3486,6 +3539,29 @@
                     }
                 }
             },
+            "SnimekHladinyDto": {
+                "required": [
+                    "snimek",
+                    "cas",
+                    "mista"
+                ],
+                "type": "object",
+                "properties": {
+                    "snimek": {
+                        "type": "string"
+                    },
+                    "cas": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "mista": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TeplotaMistaDto"
+                        }
+                    }
+                }
+            },
             "StartovneVstup": {
                 "required": [
                     "zaplaceno"
@@ -3606,6 +3682,45 @@
                     "Zruseny",
                     "Potvrzeny"
                 ]
+            },
+            "TeplotaHladinyDto": {
+                "required": [
+                    "snimky",
+                    "zdroj"
+                ],
+                "type": "object",
+                "properties": {
+                    "snimky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SnimekHladinyDto"
+                        }
+                    },
+                    "zdroj": {
+                        "type": "string"
+                    }
+                }
+            },
+            "TeplotaMistaDto": {
+                "required": [
+                    "misto",
+                    "teplota",
+                    "pixelu"
+                ],
+                "type": "object",
+                "properties": {
+                    "misto": {
+                        "type": "string"
+                    },
+                    "teplota": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "pixelu": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
             },
             "UcastDto": {
                 "required": [
@@ -4138,6 +4253,50 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/ZapisLodDto"
+                        }
+                    }
+                }
+            },
+            "ZapisTeplotyRadek": {
+                "required": [
+                    "snimek",
+                    "cas",
+                    "misto",
+                    "teplota",
+                    "pixelu"
+                ],
+                "type": "object",
+                "properties": {
+                    "snimek": {
+                        "type": "string"
+                    },
+                    "cas": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "misto": {
+                        "type": "string"
+                    },
+                    "teplota": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "pixelu": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "ZapisTeplotyVstup": {
+                "required": [
+                    "mereni"
+                ],
+                "type": "object",
+                "properties": {
+                    "mereni": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ZapisTeplotyRadek"
                         }
                     }
                 }

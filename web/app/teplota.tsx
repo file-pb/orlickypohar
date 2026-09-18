@@ -1,9 +1,11 @@
 import { DNI, nactiTeplotyVody, STRANKA_HYDRO, type Bod } from "@/lib/teplota";
 import { nactiKoupani, STRANKA_KOUPANI, STUPNE } from "@/lib/koupani";
+import { centra, nactiTeplotuHladiny, type Centrum } from "@/lib/satelit";
 
 /**
- * Teplota vody na přítocích Orlíku za posledních sedm dní (Filip,
- * 18. 9. 2026). Z otevřených dat ČHMÚ, viz `lib/teplota.ts`.
+ * Teplota vody: nahoře nádrž ze satelitu (`lib/satelit.ts`), pod ní přítoky
+ * Orlíku za posledních 14 dní z otevřených dat ČHMÚ (`lib/teplota.ts`).
+ * Filip, 18. 9. 2026: jachtaře zajímá trend týden až dva, ne sezóna.
  *
  * U každé řeky aktuální teplota, změna za den a malý graf týdne. Grafy mají
  * <b>společnou osu</b>, aby šlo řeky porovnat pohledem — Skalice o dva
@@ -27,10 +29,89 @@ const kratce = (iso: string) =>
 const datumKratce = (iso: string) =>
   new Date(iso + "T12:00:00Z").toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric", timeZone: "Europe/Prague" });
 
-export async function BokTeplotaVody() {
-  const [stanice, koupani] = await Promise.all([nactiTeplotyVody(), nactiKoupani()]);
-  if (!stanice) return null;
+const pred = (iso: string, ted: Date) => {
+  const dni = Math.round((ted.getTime() - Date.parse(iso)) / 86_400_000);
+  return dni <= 0 ? "dnes" : dni === 1 ? "včera" : `před ${dni} dny`;
+};
 
+export async function BokTeplotaVody() {
+  const [stanice, koupani, hladina] = await Promise.all([
+    nactiTeplotyVody(),
+    nactiKoupani(),
+    nactiTeplotuHladiny(),
+  ]);
+  const ted = new Date();
+  const nadrz = hladina ? centra(hladina.snimky, ted) : [];
+  if (!stanice && nadrz.length === 0) return null;
+
+  return (
+    <section className="teplota-vody">
+      <h2 className="bok-nadpis">Teplota vody</h2>
+      {nadrz.length > 0 && hladina && <Nadrz centra={nadrz} zdroj={hladina.zdroj} ted={ted} />}
+      {stanice && <Pritoky stanice={stanice} />}
+      <Koupani koupani={koupani} />
+    </section>
+  );
+}
+
+/**
+ * Nádrž ze satelitu: velká Radava, pod ní menší Trhovky a Žďákov. U každého
+ * změna proti předchozímu snímku v okně 14 dní. Dokud nejsou ruční měření,
+ * je to odhad — a tak to taky stojí pod čísly.
+ */
+function Nadrz({ centra, zdroj, ted }: { centra: Centrum[]; zdroj: string; ted: Date }) {
+  const [hlavni, ...dalsi] = centra;
+  const snimek = centra.map((c) => c.cas).sort().at(-1)!;
+
+  return (
+    <div className="nadrz">
+      <div className="nadrz-hlavni">
+        <span className="teplota-reka">
+          Orlík<span className="teplota-misto"> · {hlavni.nazev}</span>
+        </span>
+        <b className="nadrz-hodnota">{f(hlavni.teplota)} °C</b>
+      </div>
+      <Zmena c={hlavni} />
+      {dalsi.length > 0 && (
+        <ul className="nadrz-dalsi">
+          {dalsi.map((c) => (
+            <li key={c.klic}>
+              <span className="teplota-reka">{c.nazev}</span>
+              <Zmena c={c} kratce />
+              <b className="teplota-hodnota">{f(c.teplota)} °C</b>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="vodocet-pozn nadrz-pozn">
+        Odhad ze satelitu Landsat: horní vrstva vody v poledne, zatím neověřeno teploměrem. Snímek{" "}
+        {datumIso(snimek)}, {pred(snimek, ted)}.
+      </p>
+      <p className="bok-dal">
+        <a href={zdroj} target="_blank" rel="noopener noreferrer">
+          Landsat · Planetary Computer
+        </a>
+      </p>
+    </div>
+  );
+}
+
+function Zmena({ c, kratce }: { c: Centrum; kratce?: boolean }) {
+  if (c.zmena === null || c.predchozi === null) return kratce ? <span className="teplota-zmena" /> : null;
+  const smer = c.zmena > 0 ? "stoupa" : c.zmena < 0 ? "klesa" : "";
+  const text =
+    c.zmena === 0 ? "beze změny" : `${c.zmena > 0 ? "↑" : "↓"} ${f(Math.abs(c.zmena))} °C`;
+  return (
+    <span className={`teplota-zmena ${smer}`} title={`Proti snímku ${datumIso(c.predchozi)}`}>
+      {kratce ? text : `${text} proti ${datumIso(c.predchozi)}`}
+    </span>
+  );
+}
+
+const datumIso = (iso: string) =>
+  new Date(iso).toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric", timeZone: "Europe/Prague" });
+
+function Pritoky({ stanice }: { stanice: NonNullable<Awaited<ReturnType<typeof nactiTeplotyVody>>> }) {
   // Společná osa pro všechny grafy, nejméně 2 °C, ať se denní kolísání
   // o pár desetin netváří jako skok.
   const vse = stanice.flatMap((s) => s.rada.map((b) => b.hodnota));
@@ -41,8 +122,8 @@ export async function BokTeplotaVody() {
   const posledni = stanice.map((s) => s.aktualni.cas).sort().at(-1);
 
   return (
-    <section className="teplota-vody">
-      <h2 className="bok-nadpis">Teplota vody · přítoky</h2>
+    <div className="pritoky">
+      <h3 className="koupani-nadpis">Přítoky · ČHMÚ</h3>
       <ul>
         {stanice.map((s) => (
           <li key={s.tok}>
@@ -72,7 +153,13 @@ export async function BokTeplotaVody() {
           ČHMÚ{posledni && ` · ${kratce(posledni)}`}
         </a>
       </p>
+    </div>
+  );
+}
 
+function Koupani({ koupani }: { koupani: Awaited<ReturnType<typeof nactiKoupani>> }) {
+  return (
+    <>
       {/* Kvalita ke koupání od hygieniků (Filip, 18. 9. 2026): jen v sezóně,
           jinak se schová. Nejhorší místo první — to je to, co má zajímat. */}
       {koupani.length > 0 && (
@@ -94,7 +181,7 @@ export async function BokTeplotaVody() {
           </p>
         </div>
       )}
-    </section>
+    </>
   );
 }
 

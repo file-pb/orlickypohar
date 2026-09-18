@@ -1031,6 +1031,15 @@ th.vlevo, td.vlevo { text-align: left; }
 .teplota-graf { display: block; width: 100%; height: 1.9rem; margin-top: 0.15rem; }
 .teplota-graf .cara { fill: none; stroke: var(--voda); stroke-width: 1.6; vector-effect: non-scaling-stroke; }
 .teplota-zmena { font-size: 0.72rem; color: var(--tlumeny); }
+/* Nádrž ze satelitu nad přítoky: jedno velké číslo, pod ním dvě menší. */
+.nadrz-hlavni { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+.nadrz-hodnota { font-size: 1.6rem; line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.teplota-vody ul.nadrz-dalsi { margin-top: 0.45rem; gap: 0.2rem; }
+.nadrz-dalsi li { display: flex; align-items: baseline; gap: 0.5rem; }
+.nadrz-dalsi .teplota-zmena { margin-left: auto; }
+.nadrz-dalsi .teplota-hodnota { font-size: 0.95rem; min-width: 4.2em; text-align: right; }
+.nadrz-pozn { margin: 0.45rem 0 0; line-height: 1.4; }
+.nadrz + .pritoky { margin-top: 0.9rem; padding-top: 0.7rem; border-top: 1px solid var(--linka); }
 .koupani { margin-top: 0.9rem; padding-top: 0.7rem; border-top: 1px solid var(--linka); }
 .koupani-nadpis { margin: 0 0 0.4rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--tlumeny); font-weight: 600; }
 .koupani ul { gap: 0.25rem; }
