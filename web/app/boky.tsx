@@ -33,36 +33,71 @@ import { dnesVPraze, vyberTerminu } from "@/lib/terminy";
  * čemu člověk na stránku přišel; vlevo ho posadí až mřížka.
  */
 
-/**
- * `kalendar-vodocet` je kalendář a pod ním vodočet Orlíku — na úvodu
- * (Filip, 16. 9. 2026), kde vlevo stojí pořadí a vodočet by jinde nebyl.
- */
-export type Bok = "poradi" | "kalendar" | "kalendar-vodocet" | "novinky" | "akce";
+/** Hlavní obsah boku. Pořadí a kalendář jsou hlavní informace stránky. */
+export type Bok = "poradi" | "kalendar" | "novinky" | "akce";
 
+/**
+ * Widgety s cizími daty. Jen doplňují — v boku stojí vždycky pod hlavním
+ * obsahem, nikdy nad ním (Filip, 18. 9. 2026).
+ */
+export type Doplnek = "vodocet" | "vystrahy" | "teplota" | "pocasi";
+
+/** Pod obsahem na displeji bez boků, pokud stránka neřekne jinak. */
+const DOLE: Doplnek[] = ["vodocet", "vystrahy", "teplota", "pocasi"];
+
+/**
+ * Rozložení boků (Filip, 18. 9. 2026: stránka má být v každém rozměru
+ * kompaktní). Widgety se rozdělují tak, aby oba boky vyšly zhruba stejně
+ * vysoké: na úvodu vlevo pořadí a počasí, vpravo kalendář a voda. Změřeno
+ * na 1440 × 900: pořadí 740 px, Windy 370, výstrahy 100, kalendář 265,
+ * vodočet 380, teplota vody 450 — tedy kolem 1 200 px na každé straně.
+ *
+ * Bok s widgety není ukotvený (`sticky`): je delší než okno a ukotvený by
+ * se posouval uvnitř sebe. Ukotvený zůstává jen samotné pořadí nebo kalendář.
+ *
+ * Od 1600 px je střed tak široký, že novinky vyjdou nízké a pod nimi by
+ * zelo prázdno. Widgety se proto přesunou pod obsah do středu, do tří až
+ * čtyř sloupců, a boky drží jen pořadí a kalendář, ukotvené.
+ */
 export async function Boky({
   serie,
   vlevo = "poradi",
   vpravo = "kalendar",
+  vlevoDoplnky = [],
+  vpravoDoplnky = [],
+  dole = DOLE,
   children,
 }: {
   serie?: string;
   vlevo?: Bok;
   vpravo?: Bok;
+  vlevoDoplnky?: Doplnek[];
+  vpravoDoplnky?: Doplnek[];
+  dole?: Doplnek[];
   children: React.ReactNode;
 }) {
   const slug = serie ?? (await aktualniRocnik());
+  // Na velmi širokém displeji jdou widgety z boků pod obsah do středu,
+  // v pořadí, ve kterém se sloupce nejlépe vyrovnají.
+  const siroke = DOLE.filter((d) => vlevoDoplnky.includes(d) || vpravoDoplnky.includes(d));
 
   return (
     <div className="s-boky">
       <div className="s-boky-stred">{children}</div>
       {slug && (
         <>
-          <aside className="bok bok-vlevo">{await obsah(vlevo, slug)}</aside>
-          <aside className="bok bok-vpravo">{await obsah(vpravo, slug)}</aside>
+          <aside className={`bok bok-vlevo${vlevoDoplnky.length ? "" : " bok-pevny"}`}>
+            {await obsah(vlevo, slug)}
+            {vlevoDoplnky.length > 0 && <div className="bok-doplnky">{await doplnky(vlevoDoplnky, slug)}</div>}
+          </aside>
+          <aside className={`bok bok-vpravo${vpravoDoplnky.length ? "" : " bok-pevny"}`}>
+            {await obsah(vpravo, slug)}
+            {vpravoDoplnky.length > 0 && <div className="bok-doplnky">{await doplnky(vpravoDoplnky, slug)}</div>}
+          </aside>
+          {siroke.length > 0 && <div className="doplnky-siroke">{await doplnky(siroke, slug)}</div>}
           {/* Doplňky pod obsahem pro displej, kde boky nejsou (Filip,
-              16. 9. 2026): widgety s cizími daty. S boky je CSS schová,
-              tam jsou tytéž widgety v bocích. */}
-          <div className="doplnky">{await doplnky(slug)}</div>
+              16. 9. 2026). S boky je CSS schová, tam jsou v bocích. */}
+          <div className="doplnky">{await doplnky(dole, slug)}</div>
         </>
       )}
     </div>
@@ -79,36 +114,42 @@ async function aktualniRocnik() {
 }
 
 /**
- * Widgety s cizími daty jako doplněk pod obsahem: vodočet, výstrahy, teplota vody
- * a počasí u nejbližší akce. Každý zvlášť v try — výpadek jednoho zdroje
+ * Widgety v daném pořadí. Každý zvlášť v try — výpadek jednoho zdroje
  * nesmí vzít ostatní.
  */
-async function doplnky(slug: string) {
-  const bezpecne = async (co: () => Promise<React.ReactNode>) => {
+async function doplnky(ktere: Doplnek[], slug: string) {
+  const vysledek: React.ReactNode[] = [];
+  for (const d of ktere) {
     try {
-      return await co();
+      const obsah = await doplnek(d, slug);
+      // Obal s názvem widgetu: podle něj ho široké rozložení posadí do mřížky.
+      if (obsah) vysledek.push(<div key={d} className={`doplnek doplnek-${d}`}>{obsah}</div>);
     } catch {
-      return null;
+      // Chybějící widget je v pořádku; stránka stojí na hlavním obsahu.
     }
-  };
+  }
+  return vysledek;
+}
 
-  return (
-    <>
-      {await bezpecne(() => BokVodocet())}
-      {await bezpecne(() => BokVystrahy())}
-      {await bezpecne(() => BokTeplotaVody())}
-      {await bezpecne(async () => {
-        const termin = (await nadchazejici(slug))[0];
-        if (!termin) return null;
-        return (
-          <section>
-            <h2 className="bok-nadpis">Počasí · {termin.nazev}</h2>
-            <PocasiAkce datum={termin.datum} nazev={termin.nazev} />
-          </section>
-        );
-      })}
-    </>
-  );
+async function doplnek(d: Doplnek, slug: string) {
+  switch (d) {
+    case "vodocet":
+      return await BokVodocet();
+    case "vystrahy":
+      return await BokVystrahy();
+    case "teplota":
+      return await BokTeplotaVody();
+    case "pocasi": {
+      const termin = (await nadchazejici(slug))[0];
+      if (!termin) return null;
+      return (
+        <section>
+          <h2 className="bok-nadpis">Počasí · {termin.nazev}</h2>
+          <PocasiAkce datum={termin.datum} nazev={termin.nazev} />
+        </section>
+      );
+    }
+  }
 }
 
 async function obsah(bok: Bok, slug: string) {
@@ -120,25 +161,8 @@ async function obsah(bok: Bok, slug: string) {
         return await BokPoradi({ slug });
       case "kalendar":
         return await BokKalendar({ slug });
-      case "kalendar-vodocet":
-        return (
-          <>
-            {await BokKalendar({ slug })}
-            {await BokVodocet()}
-            {await BokVystrahy()}
-            {await BokTeplotaVody()}
-          </>
-        );
       case "novinky":
-        // Pod novinkami vodočet Orlíku a výstrahy ČHMÚ (Filip, 16. 9. 2026).
-        return (
-          <>
-            {await BokNovinky({ slug })}
-            {await BokVodocet()}
-            {await BokVystrahy()}
-            {await BokTeplotaVody()}
-          </>
-        );
+        return await BokNovinky({ slug });
       case "akce":
         return await BokAkce({ slug });
     }
@@ -204,7 +228,7 @@ async function nadchazejici(slug: string): Promise<Termin[]> {
  * v `vyberTerminu`. Ročník, který zatím nemá nic, dostane místo seznamu
  * kartu o přípravě kalendáře ve stejné výšce, aby bok neposkočil.
  */
-async function BokKalendar({ slug }: { slug: string }) {
+export async function BokKalendar({ slug }: { slug: string }) {
   const detail = await nactiSerii(slug);
   if (!detail) return null;
 
@@ -249,7 +273,7 @@ async function BokKalendar({ slug }: { slug: string }) {
 }
 
 async function BokNovinky({ slug }: { slug: string }) {
-  // Pět posledních (Filip, 16. 9. 2026). Pod novinky přijde widget ČHMÚ,
+  // Pět posledních (Filip, 16. 9. 2026). Pod novinky přijdou widgety,
   // proto ne víc, i když má bok výšku.
   const clanky = await nactiClanky(slug, { limit: 5 });
   if (!clanky || clanky.length === 0) return null;

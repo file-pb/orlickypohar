@@ -105,18 +105,29 @@ function Koupani({ koupani }: { koupani: Awaited<ReturnType<typeof nactiKoupani>
   return (
     <>
       {/* Kvalita ke koupání od hygieniků (Filip, 18. 9. 2026): jen v sezóně,
-          jinak se schová. Nejhorší místo první — to je to, co má zajímat. */}
+          jinak se schová. Místa po stupních, nejhorší první — to má zajímat.
+          Po stupních, ne po místech: šest řádků „vhodná ke koupání" bylo
+          nejvyšší kus boku a neříkalo nic navíc. */}
       {koupani.length > 0 && (
         <div className="koupani">
           <h3 className="koupani-nadpis">Kvalita ke koupání</h3>
           <ul>
-            {koupani.map((k) => (
-              <li key={k.misto} title={`Odběr ${datumKratce(k.datum)}`}>
-                <span className={`koupani-tecka stupen-${k.stupen}`} aria-hidden="true" />
-                <span className="koupani-misto">{k.misto}</span>
-                <span className="koupani-stupen">{STUPNE[k.stupen]}</span>
-              </li>
-            ))}
+            {[...new Set(koupani.map((k) => k.stupen))]
+              .sort((a, b) => b - a)
+              .map((stupen) => (
+                <li key={stupen}>
+                  <span className={`koupani-tecka stupen-${stupen}`} aria-hidden="true" />
+                  <span>
+                    <span className="koupani-stupen">{STUPNE[stupen]}</span>
+                    <span className="koupani-misto">
+                      {koupani
+                        .filter((k) => k.stupen === stupen)
+                        .map((k) => k.misto)
+                        .join(", ")}
+                    </span>
+                  </span>
+                </li>
+              ))}
           </ul>
           <p className="bok-dal">
             <a href={STRANKA_KOUPANI} target="_blank" rel="noopener noreferrer">
@@ -129,12 +140,6 @@ function Koupani({ koupani }: { koupani: Awaited<ReturnType<typeof nactiKoupani>
   );
 }
 
-/**
- * Radava a Trhovky za posledních 60 dní. Tečka je snímek, mezi snímky jen
- * spojnice — teplota mezi přelety nikdo nezměřil. Osa nejméně 4 °C, ať se
- * rozdíl o pár desetin netváří jako skok. viewBox v poměru boku, takže se
- * tečky při škálování nedeformují.
- */
 function Graf({ radava, trhovky, ted }: { radava: Bod[]; trhovky: Bod[]; ted: Date }) {
   const W = 256;
   const H = 90;

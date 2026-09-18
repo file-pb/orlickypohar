@@ -11,7 +11,7 @@ import {
 } from "@/lib/api";
 import { denAMesic } from "@/app/datum";
 import { VypisNovinek } from "@/app/novinky";
-import { Boky } from "@/app/boky";
+import { Boky, BokKalendar } from "@/app/boky";
 import { PoradiRadky } from "@/app/karusel-poradi";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu.
@@ -158,9 +158,19 @@ export default async function Rozcestnik() {
           přestaly by novinky začínat v rovině s boky. */}
       {aktualni && <PoradiRadky slug={aktualni.slug} tridy={tridy} />}
 
+      {/* Kalendář hned pod pořadím tam, kde boky nejsou (Filip, 18. 9. 2026):
+          obojí je hlavní informace, widgety pod novinkami ji jen doplňují.
+          S boky ho CSS schová, kalendář je v pravém boku. */}
+      {aktualni && <div className="kalendar-uvod">{await BokKalendar({ slug: aktualni.slug })}</div>}
+
       {/* Fotka jde přes celou šířku okna, boky až pod ní. */}
-      {/* Vpravo kalendář a pod ním vodočet Orlíku (Filip, 16. 9. 2026). */}
-      <Boky serie={aktualni?.slug} vpravo="kalendar-vodocet">
+      {/* Vlevo pořadí a pod ním počasí, vpravo kalendář a pod ním voda
+          (Filip, 18. 9. 2026). */}
+      <Boky
+        serie={aktualni?.slug}
+        vlevoDoplnky={["pocasi", "vystrahy"]}
+        vpravoDoplnky={["vodocet", "teplota"]}
+      >
       {/* Bez seznamu ročníků by výpadek ani prázdný stav nebyly nikde vidět —
           návštěvník by koukal na fotku bez tlačítek a nevěděl proč. */}
       {vypadek ? (

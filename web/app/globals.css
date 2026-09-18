@@ -939,15 +939,20 @@ th.vlevo, td.vlevo { text-align: left; }
     grid-template-areas: "vlevo stred vpravo";
   }
   .s-boky-stred { grid-area: stred; min-width: 0; }
-  .s-boky > .bok {
-    display: block; position: sticky; top: 6rem;
+  .s-boky > .bok { display: block; font-size: 0.875rem; }
+  /* Ukotvený jen bok bez widgetů — samotné pořadí nebo kalendář. Bok
+     s widgety je delší než okno a ukotvený by se posouval uvnitř sebe
+     (Filip, 18. 9. 2026: pravý bok byl delší než obrazovka). */
+  .s-boky > .bok-pevny {
+    position: sticky; top: 6rem;
     max-height: calc(100vh - 7rem); overflow-y: auto;
-    font-size: 0.875rem;
   }
   .bok-vlevo { grid-area: vlevo; }
   .bok-vpravo { grid-area: vpravo; }
 }
-.bok section + section { margin-top: 1.75rem; }
+.bok section + section,
+.bok section + .bok-doplnky,
+.bok-doplnky > .doplnek + .doplnek { margin-top: 1.75rem; }
 .bok-nadpis {
   font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em;
   color: var(--tlumeny); margin: 0 0 0.6rem; font-weight: 600;
@@ -1049,10 +1054,10 @@ th.vlevo, td.vlevo { text-align: left; }
 .koupani { margin-top: 0.9rem; padding-top: 0.7rem; border-top: 1px solid var(--linka); }
 .koupani-nadpis { margin: 0 0 0.4rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--tlumeny); font-weight: 600; }
 .koupani ul { gap: 0.25rem; }
-.koupani li { display: flex; align-items: center; gap: 0.45rem; font-size: 0.8rem; }
+.koupani li { display: flex; align-items: baseline; gap: 0.45rem; font-size: 0.8rem; line-height: 1.4; }
+.koupani-stupen { display: block; color: var(--tlumeny); font-size: 0.72rem; }
 .koupani-misto { font-weight: 600; }
-.koupani-stupen { margin-left: auto; color: var(--tlumeny); font-size: 0.74rem; text-align: right; }
-.koupani-tecka { width: 0.55rem; height: 0.55rem; border-radius: 999px; flex: none; }
+.koupani-tecka { width: 0.55rem; height: 0.55rem; border-radius: 999px; flex: none; transform: translateY(0.05rem); }
 /* Barvy podle legendy hygieniků: zelená, žlutá, oranžová, červená, tmavě červená. */
 .koupani-tecka.stupen-1 { background: #3aa76d; }
 .koupani-tecka.stupen-2 { background: #d4b20f; }
@@ -1092,16 +1097,46 @@ th.vlevo, td.vlevo { text-align: left; }
 /* Doplňky pod obsahem tam, kde nejsou boky: vodočet, výstrahy a počasí
    u nejbližší akce vedle sebe, na telefonu pod sebou. S boky se schovají,
    tytéž widgety jsou pak v bocích. */
-/* `auto-fit`, ne `auto-fill`: widgety jsou tři, a kde by se vešly čtyři
-   sloupce, `auto-fill` nechal čtvrtý prázdný a vpravo zela díra. Takhle
-   se prázdné sloupce složí a tři widgety si rozdělí celou šířku. */
-.doplnky {
-  display: grid; gap: 1.75rem; margin-top: 2.5rem; align-items: start;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
-}
+/* Sloupce jako v novinách, ne mřížka: widgety jsou různě vysoké a mřížka
+   je rovnala do řádků, takže pod nižšími zely díry. Sloupce je skládají
+   pod sebe bez mezer (Filip, 18. 9. 2026: kompaktně v každém rozměru). */
+.doplnky { columns: 17rem; column-gap: 1.75rem; margin-top: 2.5rem; }
+.doplnky > * { break-inside: avoid; margin: 0 0 1.75rem; }
 .doplnky:empty { display: none; }
 @media (min-width: 1280px) {
   .doplnky { display: none; }
+}
+.doplnky-siroke { display: none; }
+@media (min-width: 1600px) {
+  .s-boky {
+    grid-template-areas: "vlevo stred vpravo" "vlevo siroke vpravo";
+    grid-template-rows: auto 1fr;
+  }
+  .bok-doplnky { display: none; }
+  .s-boky > .bok {
+    position: sticky; top: 6rem;
+    max-height: calc(100vh - 7rem); overflow-y: auto;
+  }
+  /* Pevná mřížka, ne sloupce: sloupce na 1920 px naskládaly čtyři widgety
+     do tří a čtvrtý sloupec zel prázdný. Výstrahy jsou nízké, jdou pod
+     vodočet; teplota a počasí mají vlastní sloupec. */
+  .doplnky-siroke {
+    display: grid; grid-area: siroke; min-width: 0; gap: 1.75rem; align-items: start;
+    font-size: 0.875rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* Výška teploty přes oba řádky jde do druhého; jinak by se rozdělila
+       napůl a mezi vodočtem a výstrahami vznikla mezera. */
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "vodocet teplota" "vystrahy teplota";
+  }
+  .doplnky-siroke:has(.doplnek-pocasi) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas: "vodocet teplota pocasi" "vystrahy teplota pocasi";
+  }
+  .doplnky-siroke > .doplnek-vodocet { grid-area: vodocet; }
+  .doplnky-siroke > .doplnek-vystrahy { grid-area: vystrahy; }
+  .doplnky-siroke > .doplnek-teplota { grid-area: teplota; }
+  .doplnky-siroke > .doplnek-pocasi { grid-area: pocasi; }
 }
 
 /* Šest řádků, stejně jako VIDET_V_BOKU v karusel-poradi.tsx. */
@@ -1135,6 +1170,12 @@ th.vlevo, td.vlevo { text-align: left; }
 @keyframes karusel-doleva { to { transform: translateX(-50%); } }
 @media (min-width: 1280px) {
   .poradi-radky { display: none; }
+}
+/* Kalendář na úvodu bez boků: tři termíny vedle sebe, na telefonu pod sebou. */
+.kalendar-uvod { margin: 0 0 2rem; }
+.kalendar-uvod .bok-seznam { grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); }
+@media (min-width: 1280px) {
+  .kalendar-uvod { display: none; }
 }
 @media (max-width: 32rem) {
   .poradi-radek { grid-template-columns: 5.75rem minmax(0, 1fr); gap: 0.5rem; padding: 0.4rem 0.7rem; }
