@@ -314,4 +314,77 @@ public class PrihlaskySpravaTests(PostgresFixture fixture)
         var odmitnuto = await klient.PostAsJsonAsync($"/serie/{slug}/zavody/zahajeni/prihlasky", vstup, Json);
         Assert.Equal(HttpStatusCode.BadRequest, odmitnuto.StatusCode);
     }
+
+    [Fact]
+    public async Task Poradatel_vidi_kontakt_a_historii_zapise_startovne_a_smaze_spam_i_s_lodi()
+    {
+        var slug = "prihlasky-sprava-kontakty";
+        await Nahraj(Rocnik(slug));
+
+        var klient = fixture.CreateClient();
+        var vstup = new VerejnaPrihlaskaVstup(
+            "Spamova lod", new KapitanVstup("Spam", "Robot", "spam@example.com"),
+            Kategorie: "Race", Poznamka: "Kupte si hodinky.", Souhlas: true);
+        Assert.Equal(HttpStatusCode.Created,
+            (await klient.PostAsJsonAsync($"/serie/{slug}/zavody/zahajeni/prihlasky", vstup, Json)).StatusCode);
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var k = await KontextAsync(scope, slug);
+
+        var prehled = await k.Sprava.PrehledAsync(k.ZavodId, poradatel: true, default);
+        var spam = prehled.Lode.Single(l => l.Lod == "Spamova lod");
+
+        Assert.Equal(("Spam Robot", "spam@example.com", "Kupte si hodinky."), (spam.Kapitan, spam.Email, spam.Poznamka));
+        Assert.NotNull(spam.PodanoV);
+        Assert.True(spam.SmiSmazat);
+        var zmena = Assert.Single(spam.Historie!);
+        Assert.Null(zmena.Kdo); // z webu
+
+        // Startovné u zapsané lodi.
+        var (anicka, chyba) = await k.Sprava.StartovneAsync(k.ZavodId, k.Anicka, new(true, "hotově"), default);
+        Assert.Null(chyba);
+        Assert.Equal((true, "hotově"), (anicka!.Zaplaceno, anicka.StartovnePoznamka));
+
+        // Zapsanou loď smazat nejde, spam ano — i s lodí a kapitánem.
+        Assert.NotNull((await k.Sprava.SmazAsync(k.ZavodId, k.Anicka, default)).Chyba);
+        Assert.Null((await k.Sprava.SmazAsync(k.ZavodId, spam.PrihlaskaId, default)).Chyba);
+
+        k.Db.ChangeTracker.Clear();
+        Assert.False(await k.Db.Lode.AnyAsync(l => l.Nazev == "Spamova lod"));
+        Assert.False(await k.Db.Osoby.AnyAsync(o => o.Jmeno == "Spam" && o.Prijmeni == "Robot"));
+        Assert.False(await k.Db.Set<OrlickyPohar.Api.Features.Lode.KontaktOsoby>()
+            .AnyAsync(x => x.Email == "spam@example.com"));
+    }
+
+    [Fact]
+    public async Task Uklid_smaze_kontakty_po_konci_nasledujici_sezony()
+    {
+        var slug = "prihlasky-uklid-kontaktu";
+        await Nahraj(Rocnik(slug));
+
+        var vstup = new VerejnaPrihlaskaVstup(
+            "Stara lod", new KapitanVstup("Stary", "Kapitan", "stary@example.cz"),
+            Kategorie: "Race", Souhlas: true);
+        Assert.Equal(HttpStatusCode.Created, (await fixture.CreateClient()
+            .PostAsJsonAsync($"/serie/{slug}/zavody/zahajeni/prihlasky", vstup, Json)).StatusCode);
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        // Během následující sezóny (2027) kontakt ze zastávky 2026 zůstává.
+        await OrlickyPohar.Api.Features.Lode.UklidKontaktu.UklidAsync(
+            db, new DateTimeOffset(2027, 11, 1, 0, 0, 0, TimeSpan.Zero), default);
+        Assert.True(await db.Ucasti.AnyAsync(u => u.KontaktEmail == "stary@example.cz"));
+
+        // Po jejím konci zmizí z přihlášky i z historie osoby.
+        await OrlickyPohar.Api.Features.Lode.UklidKontaktu.UklidAsync(
+            db, new DateTimeOffset(2028, 1, 2, 0, 0, 0, TimeSpan.Zero), default);
+
+        Assert.False(await db.Ucasti.AnyAsync(u => u.KontaktEmail == "stary@example.cz"));
+        Assert.False(await db.Set<OrlickyPohar.Api.Features.Lode.KontaktOsoby>()
+            .AnyAsync(k => k.Email == "stary@example.cz"));
+
+        // Přihláška sama zůstává — maže se kontakt, ne historie závodu.
+        Assert.True(await db.Ucasti.AnyAsync(u => u.Prihlaska!.Lod!.Nazev == "Stara lod"));
+    }
 }

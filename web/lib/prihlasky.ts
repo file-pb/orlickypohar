@@ -157,20 +157,39 @@ export async function prepniLod(
   return odpoved.ok ? null : await hlaska(odpoved);
 }
 
+export async function zapisStartovne(
+  serie: string,
+  zavod: string,
+  prihlaskaId: number,
+  zaplaceno: boolean,
+  poznamka?: string,
+): Promise<string | null> {
+  const odpoved = await posli(kam(serie, zavod, `/${prihlaskaId}/startovne`), { zaplaceno, poznamka });
+  if (typeof odpoved === "string") return odpoved;
+  return odpoved.ok ? null : await hlaska(odpoved);
+}
+
+/** Smaže nesmyslnou přihlášku z webu, i s lodí a osobou, které vznikly jen kvůli ní. */
+export async function smazPrihlasku(serie: string, zavod: string, prihlaskaId: number): Promise<string | null> {
+  const odpoved = await posli(kam(serie, zavod, `/${prihlaskaId}`), undefined, "DELETE");
+  if (typeof odpoved === "string") return odpoved;
+  return odpoved.ok ? null : await hlaska(odpoved);
+}
+
 /** Odpověď API, nebo hláška, když se k němu vůbec nedošlo. */
-async function posli(adresa: string, telo: unknown): Promise<Response | string> {
+async function posli(adresa: string, telo: unknown, metoda = "POST"): Promise<Response | string> {
   const t = await token();
   if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
 
   try {
     return await fetch(adresa, {
-      method: "POST",
+      method: metoda,
       headers: {
         authorization: `Bearer ${t}`,
         "content-type": "application/json",
         accept: "application/json",
       },
-      body: JSON.stringify(telo),
+      body: telo === undefined ? undefined : JSON.stringify(telo),
       cache: "no-store",
     });
   } catch {

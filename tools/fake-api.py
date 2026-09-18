@@ -376,6 +376,14 @@ def lod_na_zastavce(z, lod, smi=True):
             "majitel": jmeno(LODE[lod]["majitel"]), "kategorie": KAT[lod],
             "stav": u["stav"] if u else None, "maVysledky": vysledky,
             "duvod": u.get("duvod") if u else None,
+            "kapitan": (u or {}).get("kapitan"), "email": (u or {}).get("email"),
+            "telefon": (u or {}).get("telefon"), "posadka": (u or {}).get("posadka"),
+            "poznamka": (u or {}).get("poznamka"), "podanoV": (u or {}).get("podanoV"),
+            "zaplaceno": (u or {}).get("zaplaceno", False),
+            "startovnePoznamka": (u or {}).get("startovnePoznamka"),
+            "historie": (u or {}).get("historie", []),
+            "smiSmazat": bool(u) and smi and not vysledky
+                         and u["stav"] in ("Pozadavek", "KDoplneni", "Odmitnuta"),
             "mozneStavy": [] if not u or not smi else
             [s for s in STAVY_UCASTI if s != u["stav"] and not proc_nejde_prepnout(u["stav"], s, vysledky)]}
 
@@ -644,11 +652,17 @@ class H(BaseHTTPRequestHandler):
         if u and u["stav"] in VEREJNE_UCASTI:
             return self.chyba(400, f"Loď {nazev} už je na zastávku přihlášená. "
                                    "Se změnou se ozvi pořadateli.")
-        if u:
-            u["stav"], u["duvod"] = "Pozadavek", None
-        else:
-            z["ucasti"].append({"lod": klic, "kormidelnik": None, "posadka": v.get("posadka"),
-                                "stav": "Pozadavek"})
+        from datetime import datetime, timezone
+        ted = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        if not u:
+            u = {"lod": klic, "kormidelnik": None}
+            z["ucasti"].append(u)
+        u.update({"stav": "Pozadavek", "duvod": None, "posadka": v.get("posadka"),
+                  "kapitan": f'{kapitan["jmeno"].strip()} {kapitan["prijmeni"].strip()}',
+                  "email": kapitan.get("email"), "telefon": kapitan.get("telefon"),
+                  "poznamka": v.get("poznamka"), "podanoV": ted})
+        u.setdefault("historie", []).append(
+            {"ze": None, "na": "Pozadavek", "kdy": ted, "kdo": None, "duvod": None})
 
         return self.odpoved({"zavod": z["nazev"], "lod": nazev, "stav": "Pozadavek"}, 201)
 
@@ -664,6 +678,17 @@ class H(BaseHTTPRequestHandler):
             return self.prihlas_lod(m.group(1))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode/(\d+)/stav$', cesta)):
             return self.prepni_lod(m.group(1), int(m.group(2)))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode/(\d+)/startovne$', cesta)):
+            z = self.zastavka(m.group(1))
+            if not z:
+                return None
+            lod = LOD_PODLE_ID.get(int(m.group(2)))
+            u = next((u for u in z["ucasti"] if u["lod"] == lod), None)
+            if not u:
+                return self.send_error(404)
+            v = self.telo_zadosti()
+            u["zaplaceno"], u["startovnePoznamka"] = bool(v.get("zaplaceno")), v.get("poznamka")
+            return self.odpoved(lod_na_zastavce(z, lod))
 
         if cesta == f'/sprava/serie/{D["slug"]}/zastavky':
             return self.zaloz_zastavku()
@@ -859,6 +884,10 @@ class H(BaseHTTPRequestHandler):
             return self.chyba(400, chyba)
         if na in S_DUVODEM and not duvod:
             return self.chyba(400, "Napiš důvod.")
+        from datetime import datetime, timezone
+        u.setdefault("historie", []).append(
+            {"ze": u["stav"], "na": na, "kdo": JA["zobrazovane"], "duvod": duvod or None,
+             "kdy": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")})
         u["stav"], u["duvod"] = na, duvod or None
         return self.odpoved(lod_na_zastavce(z, lod))
 
@@ -1056,6 +1085,24 @@ class H(BaseHTTPRequestHandler):
         return self.odpoved(clanek_radek(c))
 
     def do_DELETE(self):
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode/(\d+)$',
+                          urlparse(self.path).path)):
+            z = self.zastavka(m.group(1))
+            if not z:
+                return None
+            lod = LOD_PODLE_ID.get(int(m.group(2)))
+            u = next((u for u in z["ucasti"] if u["lod"] == lod), None)
+            if not u:
+                return self.send_error(404)
+            if u["stav"] not in ("Pozadavek", "KDoplneni", "Odmitnuta") or ma_vysledky(z, lod):
+                return self.chyba(400, "Smazat jde jen požadavek, vrácenou nebo odmítnutou "
+                                       "přihlášku bez výsledků. Zapsanou loď odhlas.")
+            z["ucasti"].remove(u)
+            self.send_response(204)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/(clanky|poradatele)/([a-z0-9-]+)/obrazek$',
                           urlparse(self.path).path)):
             if not self.headers.get("authorization"):

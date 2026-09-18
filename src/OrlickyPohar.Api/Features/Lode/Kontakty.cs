@@ -72,4 +72,12 @@ public static class Kontakty
 
         return new KontaktOsoby { Email = e, Telefon = t, ZadanoV = kdy, UcastId = ucastId };
     }
+
+    /// <summary>
+    /// Odkdy jsou kontakty staré a mažou se. <b>Drží se do konce následující
+    /// sezóny</b> (Filip, 17. 9. 2026) — kvůli pozvánkám na další ročník.
+    /// Kontakt z roku 2026 tedy vydrží celý rok 2027 a 1. 1. 2028 zmizí.
+    /// </summary>
+    public static DateTimeOffset SmazatStarsiNez(DateTimeOffset ted) =>
+        new(ted.Year - 1, 1, 1, 0, 0, 0, TimeSpan.Zero);
 }

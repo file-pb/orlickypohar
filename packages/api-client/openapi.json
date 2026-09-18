@@ -1450,6 +1450,107 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/zastavky/{zavod}/lode/{prihlaska}/startovne": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Zap\u00ed\u0161e startovn\u00e9 lodi na zast\u00e1vce",
+                "description": "Po\u0159adatel zast\u00e1vky. Nic neblokuje \u2014 kdo p\u0159ijede pozd\u011b, zaplat\u00ed pozd\u011bji.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "prihlaska",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StartovneVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LodNaZastavceDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/lode/{prihlaska}": {
+            "delete": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Sma\u017ee nesmyslnou p\u0159ihl\u00e1\u0161ku z webu",
+                "description": "Jen po\u017eadavek, vr\u00e1cenou nebo odm\u00edtnutou p\u0159ihl\u00e1\u0161ku bez v\u00fdsledk\u016f. Uklid\u00ed i lo\u010f a osoby, kter\u00e9 vznikly jen kv\u016fli n\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "prihlaska",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/zastavky/{zavod}/lode/{prihlaska}/stav": {
             "post": {
                 "tags": [
@@ -2197,6 +2298,66 @@
                             "null",
                             "string"
                         ]
+                    },
+                    "kapitan": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "email": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "telefon": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "posadka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "poznamka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "podanoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "zaplaceno": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "startovnePoznamka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "historie": {
+                        "type": [
+                            "null",
+                            "array"
+                        ],
+                        "items": {
+                            "$ref": "#/components/schemas/ZmenaUcastiDto"
+                        }
+                    },
+                    "smiSmazat": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -3322,6 +3483,23 @@
                         "items": {
                             "$ref": "#/components/schemas/ClanekVstup"
                         }
+                    }
+                }
+            },
+            "StartovneVstup": {
+                "required": [
+                    "zaplaceno"
+                ],
+                "type": "object",
+                "properties": {
+                    "zaplaceno": {
+                        "type": "boolean"
+                    },
+                    "poznamka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     }
                 }
             },
@@ -4471,6 +4649,47 @@
                     },
                     "druh": {
                         "$ref": "#/components/schemas/DruhZastavky"
+                    }
+                }
+            },
+            "ZmenaUcastiDto": {
+                "required": [
+                    "ze",
+                    "na",
+                    "kdy",
+                    "kdo",
+                    "duvod"
+                ],
+                "type": "object",
+                "properties": {
+                    "ze": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/StavUcasti"
+                            }
+                        ]
+                    },
+                    "na": {
+                        "$ref": "#/components/schemas/StavUcasti"
+                    },
+                    "kdy": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "kdo": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "duvod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     }
                 }
             }

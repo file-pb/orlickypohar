@@ -1455,6 +1455,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/lode/{prihlaska}/startovne": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Zapíše startovné lodi na zastávce
+         * @description Pořadatel zastávky. Nic neblokuje — kdo přijede pozdě, zaplatí později.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    prihlaska: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StartovneVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LodNaZastavceDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/lode/{prihlaska}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Smaže nesmyslnou přihlášku z webu
+         * @description Jen požadavek, vrácenou nebo odmítnutou přihlášku bez výsledků. Uklidí i loď a osoby, které vznikly jen kvůli ní.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    prihlaska: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/zastavky/{zavod}/lode/{prihlaska}/stav": {
         parameters: {
             query?: never;
@@ -1765,6 +1853,19 @@ export interface components {
             maVysledky: boolean;
             mozneStavy: components["schemas"]["StavUcasti"][];
             duvod?: null | string;
+            kapitan?: null | string;
+            email?: null | string;
+            telefon?: null | string;
+            posadka?: null | string;
+            poznamka?: null | string;
+            /** Format: date-time */
+            podanoV?: null | string;
+            /** @default false */
+            zaplaceno: boolean;
+            startovnePoznamka?: null | string;
+            historie?: null | components["schemas"]["ZmenaUcastiDto"][];
+            /** @default false */
+            smiSmazat: boolean;
         };
         LodVstup: {
             klic: string;
@@ -2031,6 +2132,10 @@ export interface components {
             /** @default true */
             publikovano: boolean;
             clanky?: null | components["schemas"]["ClanekVstup"][];
+        };
+        StartovneVstup: {
+            zaplaceno: boolean;
+            poznamka?: null | string;
         };
         /** @enum {unknown} */
         StavClanku: "Draft" | "Publikovano" | "Skryty" | "Smazano";
@@ -2328,6 +2433,14 @@ export interface components {
             /** Format: date */
             puvodniDatum?: null | string;
             druh?: components["schemas"]["DruhZastavky"];
+        };
+        ZmenaUcastiDto: {
+            ze: null | components["schemas"]["StavUcasti"];
+            na: components["schemas"]["StavUcasti"];
+            /** Format: date-time */
+            kdy: string;
+            kdo: null | string;
+            duvod: null | string;
         };
     };
     responses: never;

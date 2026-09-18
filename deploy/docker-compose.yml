@@ -55,6 +55,8 @@ services:
       # Sběr vodočtu Orlíku z Povodí Vltavy každých deset minut. Jen tady —
       # testy a vývoj na cizí server nesahají.
       Vodocet__Sber: "true"
+      # Kontakty kapitánů se jednou denně mažou po konci následující sezóny.
+      Kontakty__Uklid: "true"
       # Vlastní doména na bucketu. Jednoúrovňová, ze stejného důvodu jako API.
       Fotky__VerejnaAdresa: "https://${APP_NAME}-foto.${PLATFORM_DOMAIN:?}"
     secrets:

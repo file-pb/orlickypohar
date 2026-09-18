@@ -102,4 +102,17 @@ public class PrihlaskyStavyTests
         // Nepřečtený požadavek z webu nesmí veřejně vypadat jako přihlášená loď.
         Assert.Equal(videt, Prihlasky.VerejneViditelna(stav));
     }
+
+    [Theory]
+    [InlineData(StavUcasti.Pozadavek, false, true)]
+    [InlineData(StavUcasti.KDoplneni, false, true)]
+    [InlineData(StavUcasti.Odmitnuta, false, true)]
+    [InlineData(StavUcasti.Prihlasena, false, false)]
+    [InlineData(StavUcasti.Zrusena, false, false)]
+    [InlineData(StavUcasti.Pozadavek, true, false)]
+    public void Smazat_jde_jen_nesmysl_z_webu(StavUcasti stav, bool maVysledky, bool smi)
+    {
+        // Zapsaná loď se odhlašuje, ne maže — její historie má zůstat.
+        Assert.Equal(smi, Prihlasky.SmiSmazat(stav, maVysledky));
+    }
 }

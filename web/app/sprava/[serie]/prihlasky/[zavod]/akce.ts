@@ -1,7 +1,13 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { prepniLod, prihlas, type StavUcasti } from "@/lib/prihlasky";
+import {
+  prepniLod,
+  prihlas,
+  smazPrihlasku,
+  zapisStartovne,
+  type StavUcasti,
+} from "@/lib/prihlasky";
 
 /**
  * Zápisy z obrazovky přihlášek. Serverové akce, ne javascript v prohlížeči
@@ -84,4 +90,30 @@ export async function stavLodiAkce(formular: FormData) {
   const chyba = await prepniLod(serie, zavod, prihlaskaId, stav, duvod);
 
   redirect(kam(serie, zavod, chyba ? { chyba } : { stav: "prepnuto", lod, nastav: stav }));
+}
+
+export async function startovneAkce(formular: FormData) {
+  const serie = text(formular, "serie");
+  const zavod = text(formular, "zavod");
+  const lod = text(formular, "lod");
+
+  const chyba = await zapisStartovne(
+    serie,
+    zavod,
+    Number(text(formular, "prihlaskaId")),
+    formular.get("zaplaceno") === "on",
+    text(formular, "poznamka") || undefined,
+  );
+
+  redirect(kam(serie, zavod, chyba ? { chyba } : { stav: "startovne", lod }));
+}
+
+export async function smazAkce(formular: FormData) {
+  const serie = text(formular, "serie");
+  const zavod = text(formular, "zavod");
+  const lod = text(formular, "lod");
+
+  const chyba = await smazPrihlasku(serie, zavod, Number(text(formular, "prihlaskaId")));
+
+  redirect(kam(serie, zavod, chyba ? { chyba } : { stav: "smazano", lod }));
 }

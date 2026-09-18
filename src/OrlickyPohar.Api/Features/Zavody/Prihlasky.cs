@@ -101,6 +101,14 @@ public static class Prihlasky
         return duvod?.Trim().Length > DuvodNejvic ? $"Důvod může mít nejvýš {DuvodNejvic} znaků." : null;
     }
 
+    /// <summary>
+    /// Smí pořadatel přihlášku smazat? Jen nesmysl z webu: požadavek,
+    /// vrácenou nebo odmítnutou, a bez výsledků. Zapsaná loď se odhlašuje — její historie
+    /// má zůstat.
+    /// </summary>
+    public static bool SmiSmazat(StavUcasti stav, bool maVysledky) =>
+        !maVysledky && stav is StavUcasti.Pozadavek or StavUcasti.Odmitnuta or StavUcasti.KDoplneni;
+
     /// <summary>Stavy, do kterých jde loď přepnout. Posílá se na obrazovku.</summary>
     public static IEnumerable<StavUcasti> MozneZ(StavUcasti ze, bool maVysledky, Kdo kdo = Kdo.Poradatel) =>
         Enum.GetValues<StavUcasti>().Where(na => na != ze && ProcNejdePrepnout(ze, na, maVysledky, kdo) is null);

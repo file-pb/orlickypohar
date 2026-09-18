@@ -11,7 +11,7 @@ import {
   type LodNaZastavce,
   type StavUcasti,
 } from "@/lib/prihlasky";
-import { novaLodAkce, prihlasAkce, stavLodiAkce } from "./akce";
+import { novaLodAkce, prihlasAkce, smazAkce, startovneAkce, stavLodiAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -309,6 +309,7 @@ function Tabulka({
                     <div className="majitel">
                       {[l.cisloPlachty, l.typLodi, l.majitel].filter(Boolean).join(" · ")}
                     </div>
+                    {l.stav && <Podrobnosti serie={serie} zavod={zavod} lod={l} />}
                   </td>
                   <td className="vlevo">
                     {l.stav && (
@@ -323,29 +324,52 @@ function Tabulka({
                     <div className="stavy">
                       {/* Dokument popisuje stav včetně null, protože u lodi
                           mimo zastávku chybí; v nabídce ale prázdný není. */}
-                      {l.mozneStavy.filter((na): na is StavUcasti => na != null).map((na) => (
-                        <form key={na} action={stavLodiAkce}>
-                          <input type="hidden" name="serie" value={serie} />
-                          <input type="hidden" name="zavod" value={zavod} />
-                          <input type="hidden" name="prihlaskaId" value={l.prihlaskaId} />
-                          <input type="hidden" name="lod" value={l.lod} />
-                          <input type="hidden" name="stav" value={na} />
-                          {/* Vrácení, odmítnutí a vyloučení chtějí důvod —
-                              kapitán se jinak nedozví, co má doplnit. */}
-                          {potrebujeDuvod(na) && (
-                            <input
-                              name="duvod"
-                              required
-                              maxLength={500}
-                              placeholder="Proč"
-                              aria-label={`Důvod: ${STAVY_UCASTI[na].tlacitko}`}
-                            />
-                          )}
-                          <button type="submit" title={STAVY_UCASTI[na].popis}>
-                            {tlacitko(l.stav, na)}
+                      {l.mozneStavy
+                        .filter((na): na is StavUcasti => na != null && !potrebujeDuvod(na))
+                        .map((na) => (
+                          <form key={na} action={stavLodiAkce}>
+                            <Skryte serie={serie} zavod={zavod} lod={l} />
+                            <input type="hidden" name="stav" value={na} />
+                            <button type="submit" title={STAVY_UCASTI[na].popis}>
+                              {tlacitko(l.stav, na)}
+                            </button>
+                          </form>
+                        ))}
+                      {/* Vrácení, odmítnutí a vyloučení chtějí důvod — kapitán
+                          se jinak nedozví, co má doplnit. Pole se rozbalí až
+                          na kliknutí, aby tabulka nebyla plná prázdných políček. */}
+                      {l.mozneStavy
+                        .filter((na): na is StavUcasti => na != null && potrebujeDuvod(na))
+                        .map((na) => (
+                          <details key={na} className="s-duvodem">
+                            <summary title={STAVY_UCASTI[na].popis}>{tlacitko(l.stav, na)}…</summary>
+                            <form action={stavLodiAkce}>
+                              <Skryte serie={serie} zavod={zavod} lod={l} />
+                              <input type="hidden" name="stav" value={na} />
+                              <textarea
+                                name="duvod"
+                                required
+                                rows={2}
+                                maxLength={500}
+                                placeholder={na === "KDoplneni" ? "Co má kapitán doplnit" : "Proč"}
+                                aria-label={`Důvod: ${STAVY_UCASTI[na].tlacitko}`}
+                              />
+                              <button type="submit">{tlacitko(l.stav, na)}</button>
+                            </form>
+                          </details>
+                        ))}
+                      {l.smiSmazat && (
+                        <form action={smazAkce}>
+                          <Skryte serie={serie} zavod={zavod} lod={l} />
+                          <button
+                            type="submit"
+                            className="nebezpecne"
+                            title="Smaže přihlášku i loď a osobu, pokud vznikly jen kvůli ní."
+                          >
+                            Smazat
                           </button>
                         </form>
-                      ))}
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -355,6 +379,117 @@ function Tabulka({
         </tbody>
       </table>
     </div>
+  );
+}
+
+/** Pole, která nese každý formulář u lodi. */
+function Skryte({ serie, zavod, lod }: { serie: string; zavod: string; lod: LodNaZastavce }) {
+  return (
+    <>
+      <input type="hidden" name="serie" value={serie} />
+      <input type="hidden" name="zavod" value={zavod} />
+      <input type="hidden" name="prihlaskaId" value={lod.prihlaskaId} />
+      <input type="hidden" name="lod" value={lod.lod} />
+    </>
+  );
+}
+
+const cas = (kdy: string) =>
+  new Date(kdy).toLocaleString("cs-CZ", {
+    timeZone: "Europe/Prague",
+    day: "numeric",
+    month: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+/**
+ * Co přišlo s přihláškou: kapitán, kontakt, posádka, poznámka, startovné
+ * a historie. Sbalené, aby tabulka zůstala přehledná — rozbalí se jedním
+ * kliknutím, bez javascriptu.
+ *
+ * <b>Kontakt vidí jen pořadatel a rozhodčí</b>; tahle stránka je pro ně.
+ */
+function Podrobnosti({ serie, zavod, lod }: { serie: string; zavod: string; lod: LodNaZastavce }) {
+  const kontakt = lod.email || lod.telefon;
+
+  return (
+    <details className="podrobnosti-lodi">
+      <summary>
+        {lod.kapitan ?? "Podrobnosti"}
+        {kontakt && " · kontakt"}
+        {lod.zaplaceno ? " · zaplaceno" : ""}
+      </summary>
+      <dl className="pravidla">
+        {lod.kapitan && (
+          <>
+            <dt>Kapitán</dt>
+            <dd>{lod.kapitan}</dd>
+          </>
+        )}
+        {lod.email && (
+          <>
+            <dt>E-mail</dt>
+            <dd>
+              <a href={`mailto:${lod.email}`}>{lod.email}</a>
+            </dd>
+          </>
+        )}
+        {lod.telefon && (
+          <>
+            <dt>Telefon</dt>
+            <dd>
+              <a href={`tel:${lod.telefon.replace(/[^\d+]/g, "")}`}>{lod.telefon}</a>
+            </dd>
+          </>
+        )}
+        {lod.posadka && (
+          <>
+            <dt>Posádka</dt>
+            <dd>{lod.posadka}</dd>
+          </>
+        )}
+        {lod.poznamka && (
+          <>
+            <dt>Poznámka</dt>
+            <dd>{lod.poznamka}</dd>
+          </>
+        )}
+        {lod.podanoV && (
+          <>
+            <dt>Přihláška</dt>
+            <dd>z webu {cas(lod.podanoV)}</dd>
+          </>
+        )}
+      </dl>
+
+      <form action={startovneAkce} className="startovne">
+        <Skryte serie={serie} zavod={zavod} lod={lod} />
+        <label>
+          <input type="checkbox" name="zaplaceno" defaultChecked={lod.zaplaceno} /> Startovné zaplaceno
+        </label>
+        <input
+          name="poznamka"
+          maxLength={200}
+          defaultValue={lod.startovnePoznamka ?? ""}
+          placeholder="Poznámka (hotově, převodem…)"
+          aria-label="Poznámka ke startovnému"
+        />
+        <button type="submit">Uložit</button>
+      </form>
+
+      {lod.historie && lod.historie.length > 0 && (
+        <ol className="historie">
+          {lod.historie.map((z, i) => (
+            <li key={i}>
+              {cas(z.kdy)} · {z.kdo ?? "z webu"}: {z.ze ? `${STAVY_UCASTI[z.ze].stitek} → ` : ""}
+              {STAVY_UCASTI[z.na].stitek}
+              {z.duvod && ` — ${z.duvod}`}
+            </li>
+          ))}
+        </ol>
+      )}
+    </details>
   );
 }
 
@@ -383,6 +518,10 @@ function hotovo(stav: string, lod?: string, nastav?: StavUcasti) {
       return `${kdo} už přihlášená byla. Nic se nezměnilo.`;
     case "prepnuto":
       return nastav ? `${kdo}: ${STAVY_UCASTI[nastav].popis}` : "Hotovo.";
+    case "startovne":
+      return `${kdo}: startovné uloženo.`;
+    case "smazano":
+      return `${kdo}: přihláška smazaná.`;
     default:
       return "Hotovo.";
   }

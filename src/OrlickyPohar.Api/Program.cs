@@ -64,6 +64,9 @@ try
         .ConfigurePrimaryHttpMessageHandler(Pvl.Handler);
     if (builder.Configuration.GetValue<bool>("Vodocet:Sber"))
         builder.Services.AddHostedService<SberVodocetu>();
+    // Kontakty kapitánů se drží do konce následující sezóny, pak se mažou.
+    if (builder.Configuration.GetValue<bool>("Kontakty:Uklid"))
+        builder.Services.AddHostedService<UklidKontaktu>();
     // .NET popisuje čísla jako ["integer","string"], protože je při čtení
     // přijímá i v uvozovkách. Odpovědi je ale píšou vždycky jako čísla —
     // a generovaný klient by jinak u každého bodu nutil ověřovat, jestli

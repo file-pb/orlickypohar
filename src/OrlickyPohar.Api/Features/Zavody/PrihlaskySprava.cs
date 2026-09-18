@@ -4,6 +4,7 @@ using OrlickyPohar.Api.Features.Bodovani;
 using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Serial;
 using Kontakty = OrlickyPohar.Api.Features.Lode.Kontakty;
+using KontaktOsoby = OrlickyPohar.Api.Features.Lode.KontaktOsoby;
 
 namespace OrlickyPohar.Api.Features.Zavody;
 
@@ -22,7 +23,26 @@ public record LodNaZastavceDto(
     bool MaVysledky,
     IReadOnlyList<StavUcasti> MozneStavy,
     // Důvod poslední změny, třeba co má kapitán doplnit. Aditivně.
-    string? Duvod = null);
+    string? Duvod = null,
+    // Co přišlo s přihláškou. Kontakty vidí jen pořadatel a rozhodčí —
+    // tahle odpověď je jen pro ně (plán, Veřejné přihlášky lodí).
+    string? Kapitan = null,
+    string? Email = null,
+    string? Telefon = null,
+    string? Posadka = null,
+    string? Poznamka = null,
+    DateTimeOffset? PodanoV = null,
+    bool Zaplaceno = false,
+    string? StartovnePoznamka = null,
+    IReadOnlyList<ZmenaUcastiDto>? Historie = null,
+    // Požadavek nebo odmítnutou přihlášku bez výsledků jde smazat — nesmysl
+    // z webu se nemá válet ve frontě ani jako odmítnutý.
+    bool SmiSmazat = false);
+
+/// <summary>Jedna změna stavu pro obrazovku. <c>Kdo</c> prázdný znamená „z webu".</summary>
+public record ZmenaUcastiDto(StavUcasti? Ze, StavUcasti Na, DateTimeOffset Kdy, string? Kdo, string? Duvod);
+
+public record StartovneVstup(bool Zaplaceno, string? Poznamka = null);
 
 /// <summary>
 /// Přihlášky jedné zastávky. Vypisují se všechny lodě ročníku: z nich se
@@ -289,6 +309,80 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
         return osoba;
     }
 
+    /// <summary>Zapíše startovné. Nic neblokuje — kdo přijede pozdě, zaplatí později.</summary>
+    public async Task<(LodNaZastavceDto? Lod, string? Chyba)> StartovneAsync(
+        int zavodId, int prihlaskaId, StartovneVstup vstup, CancellationToken ct)
+    {
+        var ucast = await db.Ucasti.FirstOrDefaultAsync(
+            u => u.ZavodId == zavodId && u.PrihlaskaId == prihlaskaId, ct);
+        if (ucast is null) return (null, null);
+
+        if (vstup.Poznamka?.Trim().Length > 200) return (null, "Poznámka ke startovnému má nejvýš 200 znaků.");
+
+        ucast.Zaplaceno = vstup.Zaplaceno;
+        ucast.StartovnePoznamka = Prazdne(vstup.Poznamka);
+        await db.SaveChangesAsync(ct);
+
+        var serieId = await db.Zavody.Where(z => z.Id == zavodId).Select(z => z.SerieId).FirstAsync(ct);
+        return ((await LodeAsync(serieId, zavodId, Prihlasky.Kdo.Poradatel, prihlaskaId, ct)).Single(), null);
+    }
+
+    /// <summary>
+    /// Smaže nesmyslnou přihlášku z webu. Vrací chybu, nebo <c>null</c>;
+    /// <c>Nenalezeno</c> říká, že přihláška na zastávce není.
+    /// <para>
+    /// <b>Uklidí i to, co vzniklo jen kvůli ní</b>: přihlášku lodi do
+    /// ročníku, loď a kapitána, pokud je nic jiného nepoužívá, a kontakty,
+    /// které přišly s ní. Spam se jinak usadí v našeptávači a v osobách.
+    /// </para>
+    /// </summary>
+    public async Task<(bool Nenalezeno, string? Chyba)> SmazAsync(int zavodId, int prihlaskaId, CancellationToken ct)
+    {
+        var ucast = await db.Ucasti
+            .Include(u => u.Prihlaska)
+            .FirstOrDefaultAsync(u => u.ZavodId == zavodId && u.PrihlaskaId == prihlaskaId, ct);
+        if (ucast is null) return (true, null);
+
+        var maVysledky = await db.Vysledky.AnyAsync(v => v.UcastId == ucast.Id, ct);
+        if (!Prihlasky.SmiSmazat(ucast.Stav, maVysledky))
+            return (false, "Smazat jde jen požadavek, vrácenou nebo odmítnutou přihlášku bez výsledků. "
+                           + "Zapsanou loď odhlas.");
+
+        var kapitanId = ucast.KormidelnikId;
+        var prihlaska = ucast.Prihlaska!;
+        var lodId = prihlaska.LodId;
+
+        await db.Set<KontaktOsoby>().Where(k => k.UcastId == ucast.Id).ExecuteDeleteAsync(ct);
+        db.Ucasti.Remove(ucast);
+        await db.SaveChangesAsync(ct);
+
+        if (!await db.Ucasti.AnyAsync(u => u.PrihlaskaId == prihlaska.Id, ct))
+        {
+            db.Prihlasky.Remove(prihlaska);
+            await db.SaveChangesAsync(ct);
+        }
+
+        if (!await db.Prihlasky.AnyAsync(p => p.LodId == lodId, ct))
+        {
+            var majitelId = await db.Lode.Where(l => l.Id == lodId).Select(l => l.MajitelId).FirstAsync(ct);
+            await db.Lode.Where(l => l.Id == lodId).ExecuteDeleteAsync(ct);
+            await SmazOsobuBezVazebAsync(majitelId, ct);
+        }
+
+        if (kapitanId is { } k) await SmazOsobuBezVazebAsync(k, ct);
+        return (false, null);
+    }
+
+    /// <summary>Osobu, na kterou nic neukazuje, smaže. Kontakty jdou s ní (cascade).</summary>
+    private async Task SmazOsobuBezVazebAsync(int osobaId, CancellationToken ct)
+    {
+        var pouzita = await db.Lode.AnyAsync(l => l.MajitelId == osobaId, ct)
+                      || await db.Ucasti.AnyAsync(u => u.KormidelnikId == osobaId, ct)
+                      || await db.Osoby.AnyAsync(o => o.Id == osobaId && o.UserId != null, ct);
+
+        if (!pouzita) await db.Osoby.Where(o => o.Id == osobaId).ExecuteDeleteAsync(ct);
+    }
+
     public Task<bool> JeVyloucenaAsync(int zavodId, int prihlaskaId, CancellationToken ct) =>
         db.Ucasti.AnyAsync(u => u.ZavodId == zavodId && u.PrihlaskaId == prihlaskaId
                                 && u.Stav == StavUcasti.Vyloucena, ct);
@@ -391,6 +485,21 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
             {
                 u.PrihlaskaId, u.Stav, MaVysledky = db.Vysledky.Any(v => v.UcastId == u.Id),
                 Duvod = u.Zmeny.OrderByDescending(z => z.Id).Select(z => z.Duvod).FirstOrDefault(),
+                Kapitan = u.Kormidelnik == null ? null : u.Kormidelnik.Jmeno + " " + u.Kormidelnik.Prijmeni,
+                // Kopie z přihlášky; když chybí (loď zapsal pořadatel), poslední
+                // známý kontakt kapitána.
+                Email = u.KontaktEmail ?? db.Set<KontaktOsoby>()
+                    .Where(k => k.OsobaId == u.KormidelnikId)
+                    .OrderByDescending(k => k.ZadanoV).Select(k => k.Email).FirstOrDefault(),
+                Telefon = u.KontaktTelefon ?? db.Set<KontaktOsoby>()
+                    .Where(k => k.OsobaId == u.KormidelnikId)
+                    .OrderByDescending(k => k.ZadanoV).Select(k => k.Telefon).FirstOrDefault(),
+                u.Posadka, u.Poznamka, u.PodanoV, u.Zaplaceno, u.StartovnePoznamka,
+                Historie = u.Zmeny.OrderBy(z => z.Id).Select(z => new
+                {
+                    z.Ze, z.Na, z.Kdy, z.Duvod,
+                    Kdo = db.Uzivatele.Where(x => x.Id == z.UzivatelId).Select(x => x.Zobrazovane).FirstOrDefault(),
+                }).ToList(),
             })
             .ToDictionaryAsync(u => u.PrihlaskaId, ct);
 
@@ -408,7 +517,11 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
 
                 return new LodNaZastavceDto(
                     p.Id, p.Nazev, p.CisloPlachty, p.Typ, p.Majitel, p.Kategorie,
-                    u?.Stav, u?.MaVysledky ?? false, mozne, u?.Duvod);
+                    u?.Stav, u?.MaVysledky ?? false, mozne, u?.Duvod,
+                    u?.Kapitan, u?.Email, u?.Telefon, u?.Posadka, u?.Poznamka, u?.PodanoV,
+                    u?.Zaplaceno ?? false, u?.StartovnePoznamka,
+                    u is null ? null : [.. u.Historie.Select(z => new ZmenaUcastiDto(z.Ze, z.Na, z.Kdy, z.Kdo, z.Duvod))],
+                    u is not null && kdo == Prihlasky.Kdo.Poradatel && Prihlasky.SmiSmazat(u.Stav, u.MaVysledky));
             })
             .ToList();
     }

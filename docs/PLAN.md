@@ -2022,7 +2022,23 @@ zadal. Vidí je jen pořadatel zastávky, rozhodčí a správce ročníku.
 6. Propsání do výsledků — po odpovědi rozhodčího.
 7. E-maily kapitánovi při změně stavu — s Outboxem z fáze 7.
 
-**Kroky 1–3 hotové 18. 9. 2026** (model, našeptávač, veřejný formulář).
+**Kroky 1–5 hotové 18. 9. 2026** (model, našeptávač, veřejný formulář,
+obrazovka pořadatele, úklid kontaktů). Zbývá propsání do výsledků
+(čeká na rozhodčího) a e-maily (s Outboxem).
+
+**Obrazovka pořadatele** ukazuje u každé přihlášky sbalené podrobnosti:
+kapitána, kontakt (kopie z přihlášky, jinak poslední známý), posádku,
+poznámku, kdy přišla, historii změn a startovné (zaplaceno + poznámka).
+Přechody s důvodem se rozbalí až na kliknutí. **Smazat** jde jen požadavek,
+vrácenou nebo odmítnutou přihlášku bez výsledků — a smaže se i loď,
+přihláška do ročníku a osoby, které vznikly jen kvůli ní, aby se spam
+neusadil v našeptávači. Zapsaná loď se odhlašuje, ne maže.
+
+**Úklid kontaktů** (`UklidKontaktu`, zapíná `Kontakty__Uklid`) běží denně:
+kontakt zadaný v roce R a kopie na přihláškách ze zastávek roku R zmizí
+1. 1. roku R+2. Přihláška sama zůstává.
+
+**Kroky 1–3:** (model, našeptávač, veřejný formulář).
 
 **Našeptávač** je `GET /lode/napoveda` (`Features/Lode/Napoveda.cs`):
 hledá přes všechny ročníky podle jména i čísla plachty, bez ohledu na

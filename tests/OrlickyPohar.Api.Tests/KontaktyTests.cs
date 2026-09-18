@@ -52,4 +52,14 @@ public class KontaktyTests
         Assert.NotNull(novy);
         Assert.Equal(("stary@example.cz", "608 000 111"), (novy.Email, novy.Telefon));
     }
+
+    [Theory]
+    [InlineData("2027-06-01", "2026-01-01")]
+    [InlineData("2028-01-01", "2027-01-01")]
+    public void Kontakty_se_drzi_do_konce_nasledujici_sezony(string dnes, string hranice)
+    {
+        // Kontakt z roku 2026 vydrží celý rok 2027; 1. 1. 2028 už je starý.
+        Assert.Equal(DateTimeOffset.Parse(hranice + "T00:00:00Z"),
+            Kontakty.SmazatStarsiNez(DateTimeOffset.Parse(dnes + "T12:00:00Z")));
+    }
 }
