@@ -1840,7 +1840,8 @@ a „proběhlo".
 
 **Hotové 15. 9. 2026**, všechno bez javascriptu:
 
-- **Boky širokého monitoru** (`web/app/boky.tsx`), od 1500 px, na všech
+- **Boky širokého monitoru** (`web/app/boky.tsx`), od 1500 px (dnes od
+  1280 px a s widgety, viz *Widgety s cizími daty*), na všech
   veřejných stránkách: vlevo vedoucí tři lodě každé třídy, vpravo
   nadcházející zastávky a akce. Kde by se to se středem zdvojilo (průběžné
   pořadí, stránka ročníku), jsou v bocích novinky a plakát nejbližší akce
@@ -1931,23 +1932,27 @@ Rozhodnutí:
 
 ## Teplota vody
 
-**Z ČHMÚ, na přítocích** (Filip, 18. 9. 2026). Lužnice v Bechyni, Lomnice
-v Dolním Ostrovci a Skalice ve Varvažově: aktuální teplota, změna za den
-a graf za 7 dní se společnou osou. Web stahuje `hydrology/now` a denní
-`hydrology/recent` z opendata.chmi.cz (řada `TH`), cache hodina
-(`web/lib/teplota.ts`). Otava v Písku teplotu nemá.
+**Ze satelitu Landsat, v nádrži** (od 18. 9. 2026). Úloha `jobs/landsat`
+počítá povrchovou teplotu v deseti oblastech, kde se plachtí, a posílá ji
+do API (`POST /vodocet/teplota-hladiny`, tabulka `TeplotyHladiny`). Metoda,
+místa a pasti jsou v [jobs/landsat/README.md](../jobs/landsat/README.md).
+Web (`web/lib/satelit.ts`, `web/app/teplota.tsx`) ukazuje tři centra —
+Radavu velkým číslem, Trhovky a Žďákov menším, každé jako medián se
+sousedy — změnu proti předchozímu snímku v okně 14 dní a graf Radavy
+a Trhovek za 60 dní. Starší snímek než 30 dní widget schová.
 
-**Kvalita ke koupání** je ve stejném widgetu pod teplotou: poslední
-hodnocení hygieniků (1–5) pro koupací místa na Orlíku z mapové služby
-Ministerstva zdravotnictví (`geoportal.mzcr.cz`, `KoupaciVody_View`, vrstva
-`bathingPlace`, `web/lib/koupani.ts`). Odběry jsou jen v sezóně, starší
-než 45 dní se neukazují. **Teplotu tahle služba nemá** — hygienici ji měří,
-ale nezveřejňují. teplotavody.cz je model, ne měření, a podmínky zakazují
-stahování; proto ne.
+**Je to odhad, ne měření:** horní vrstva kolem poledne, neověřená
+teploměrem, a widget to tak píše. Kalibraci udělá Filip ručním měřením
+z konce mola (hráz, Radava, zámek, marina Orlík, Salaš) v termínech
+přeletů Landsatu.
 
-Přímo v nádrži měří Povodí Vltavy jen od dubna do října, po týdnech,
-a vydává to jen jako graf na mapě — na týdenní trend to nestačí. Widget
-proto říká, že jde o řeky a nádrž bývá v létě teplejší.
+**Přítoky z ČHMÚ byly do 18. 9. 2026** (Lužnice, Lomnice, Skalice) a Filip
+je vypnul: řeka o šest stupňů studenější než nádrž jachtaři nic neřekne.
+`web/lib/teplota.ts` je smazaný.
+
+**Nedělat:** teplotavody.cz je model, ne měření, a podmínky zakazují
+stahování. Povodí Vltavy měří v nádrži jen po týdnech a vydává to jen jako
+graf na mapě.
 
 ## Vodočet Orlíku
 
@@ -1967,6 +1972,64 @@ měření starší 3 dnů (tabulka nepřeroste ~430 řádků). Zapíná se prom�
 - Přirovnání k olympijským bazénům Filip nechce.
 
 Web už stránku Povodí nečte, bere `GET /vodocet/orlik`.
+
+## Widgety s cizími daty
+
+Doplňky stránky s daty odjinud (Filip, 16.–18. 9. 2026). Každý se načítá
+na serveru s vlastní cache, **výpadek zdroje widget jen schová** —
+stránka kvůli němu nespadne a ostatní widgety zůstanou (`doplnky()`
+v `web/app/boky.tsx`, každý zvlášť v `try`).
+
+| Widget | Soubor | Zdroj | Cache | Past |
+|---|---|---|---|---|
+| Vodočet | `app/vodocet.tsx` | vlastní API `GET /vodocet/orlik` (sběr z Povodí Vltavy, oddíl *Vodočet Orlíku*) | 5 min | Povodí posílá neúplný řetězec certifikátů, mezilehlý přibaluje API (`Features/Vodocet/Pvl.cs`) |
+| Teplota vody | `app/teplota.tsx` | vlastní API, Landsat (oddíl *Teplota vody*) | 1 h | odhad, ne měření |
+| Kvalita ke koupání | `app/koupani.tsx` | `geoportal.mzcr.cz`, `KoupaciVody_View` | 6 h | jen v sezóně, odběry starší 45 dní se nezobrazí; teplotu služba nemá |
+| Vítr | `app/vitr.tsx`, `lib/vitr.ts` | opendata.chmi.cz `meteorology/climate/now/data`, 10min data | 10 min | zpoždění ~45 min; stanice Orlík a Kamýk měří jen srážky |
+| Výstrahy ČHMÚ | `app/vystrahy.tsx`, `lib/chmi.ts` | CAP na opendata.chmi.cz, obvody Milevsko a Písek | 15 min | kódy ORP ověřené, některé přehledy je mají posunuté o jedna |
+| Počasí | `app/pocasi.tsx` | vložená mapa Windy, bod mezi Radavou a Velkým vírem | — | pás předpovědi jen 5 dní, `calendar` mapu neposune, tmavý režim nemá |
+
+**Vítr** (18. 9. 2026): nahoře Vráž (16 km, nejbližší stanice s větrem),
+pod ní Nadějkov, Příbram, Kocelovice a Temelín. Stahují se jen prvky
+`F` (rychlost), `Fmax` (náraz) a `D` (odkud fouká) z dnešního
+a včerejšího souboru stanice. Rukáv v kompasu míří po větru, pět pruhů
+po 3 uzlech jako skutečný. Barva nárazů: do 5 m/s klid, do 8 čerstvý, do
+11 silný, nad to prudký. Upozornění na stočení o víc než 90° za 30 minut,
+jen při větru aspoň 2 m/s.
+
+**Windy v tmavém režimu** je ztlumené na `brightness(0.82)`. Windy tmavý
+režim nemá (skript vloženého okna žádný parametr vzhledu nečte) a do
+cizího iframe styl nesáhne; invertovat barvy nejde, přestaly by odpovídat
+stupnici.
+
+**Windy API ne** (18. 9. 2026): upozornění z Windy jsou jen v appce pro
+jednoho uživatele, API na ně není. Point Forecast API zdarma vrací
+„randomly shuffled" data jen pro vývoj, ostrý tarif stojí 990 € ročně.
+
+### Rozložení
+
+Widgety nikdy nerostou přes celou šířku středu — velké byly „špalky"
+(Filip, 18. 9. 2026). Místo toho se se šířkou okna přesouvají
+(`web/app/boky.tsx`, `globals.css`):
+
+| Šířka | Boky | Pod obsahem |
+|---|---|---|
+| od 1920 px | pořadí a kalendář; pravý bok drží své widgety | 5 sloupců |
+| 1600–1920 px | totéž | sloupce po 18 rem |
+| 1280–1600 px | pořadí a kalendář s widgety | dva sloupce (`stredDoplnky`) |
+| pod 1280 px | nejsou | všechny widgety ve sloupcích, na telefonu pod sebou |
+
+Stránka si rozdělení určí parametry `vlevoDoplnky`, `vpravoDoplnky`
+a `stredDoplnky`. Pravidla: **boky mají vyjít zhruba stejně vysoké**
+(měří se na 1440 a 2000 px), pravý bok pod krátkým kalendářem nesmí zet
+prázdný, a **meteo stojí pohromadě** — teplota, vítr, výstrahy a počasí
+za sebou, výstrahy vždy vedle počasí.
+
+**Pojmenované oblasti mřížky jen tam, kde je mřížka definuje** (PR #25,
+18. 9. 2026). Přiřazení `grid-area` platilo na všech stránkách, oblasti
+ale definuje jen úvod; stránka pořadí a ročníku dostala nedefinovanou
+oblast, prohlížeč přidal skryté sloupce a widgety se rozstřelily. Oblasti
+platí jen do 1600 px — výš by vyšší specificita přebila reset řady.
 
 ## Veřejné přihlášky lodí (plán 17. 9. 2026)
 
@@ -2125,6 +2188,12 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
    hotový 15. 9. (oddíl *Čím pokračovat ve fázi 5*).
 6. **Skutečná data** — až dorazí, nahradí `data/2025-mock.json` a nahrají se
    importem. Struktura zůstane.
+7. **Widgety** (stav k 18. 9. 2026, oddíl *Widgety s cizími daty*).
+   Rozpracované v PR #26 (tlakový trend z Kocelovic ve větru) a #27 (radar
+   srážek ČHMÚ na hodinu, `radar/composite/fct_maxz`, PNG v EPSG:3857,
+   11,267–19,624° v. d., 48,047–51,458° s. š.). Pak push „déšť do hodiny"
+   v appce. Blesky nemají volný zdroj (ČHMÚ je
+   nedává, Blitzortung zakazuje komerční použití).
 
 ## Zbývá doladit
 
