@@ -15,6 +15,7 @@ import { PocasiAkce } from "@/app/pocasi";
 import { BokVodocet } from "@/app/vodocet";
 import { BokTeplotaVody } from "@/app/teplota";
 import { BokKoupani } from "@/app/koupani";
+import { BokVitr } from "@/app/vitr";
 import { BokVystrahy } from "@/app/vystrahy";
 import { dnesVPraze, vyberTerminu } from "@/lib/terminy";
 
@@ -41,11 +42,11 @@ export type Bok = "poradi" | "kalendar" | "novinky" | "akce";
  * Widgety s cizími daty. Jen doplňují — v boku stojí vždycky pod hlavním
  * obsahem, nikdy nad ním (Filip, 18. 9. 2026).
  */
-export type Doplnek = "vodocet" | "vystrahy" | "teplota" | "koupani" | "pocasi";
+export type Doplnek = "vodocet" | "vystrahy" | "teplota" | "koupani" | "vitr" | "pocasi";
 
 /** Pod obsahem na displeji bez boků, pokud stránka neřekne jinak. */
-// Výstrahy hned před počasím: patří k sobě (Filip, 18. 9. 2026).
-const DOLE: Doplnek[] = ["vodocet", "teplota", "koupani", "vystrahy", "pocasi"];
+// Meteo pohromadě: vítr, výstrahy a počasí za sebou (Filip, 18. 9. 2026).
+const DOLE: Doplnek[] = ["vodocet", "teplota", "koupani", "vitr", "vystrahy", "pocasi"];
 
 /**
  * Rozložení boků (Filip, 18. 9. 2026: stránka má být v každém rozměru
@@ -57,8 +58,8 @@ const DOLE: Doplnek[] = ["vodocet", "teplota", "koupani", "vystrahy", "pocasi"];
  * - od 1600 px jdou pod obsah i widgety z levého boku, každý ve vlastním
  *   úzkém sloupci; pravý bok si své nechává, jinak by pod krátkým
  *   kalendářem zel prázdný (Filip, 18. 9. 2026);
- * - od 1280 px jsou pod obsahem jen dva sloupce (`stredDoplnky`; výstrahy
- *   stojí nad počasím ve stejném sloupci), zbytek v bocích;
+ * - od 1280 px jsou pod obsahem jen dva sloupce (`stredDoplnky`; vlevo
+ *   teplota a vítr, vpravo výstrahy nad počasím), zbytek v bocích;
  * - bez boků jsou pod obsahem ve sloupcích, na telefonu pod sebou.
  *
  * Bok s widgety není ukotvený (`sticky`): může být delší než okno a ukotvený
@@ -70,7 +71,7 @@ export async function Boky({
   vpravo = "kalendar",
   vlevoDoplnky = [],
   vpravoDoplnky = ["vodocet", "koupani"],
-  stredDoplnky = ["teplota", "vystrahy", "pocasi"],
+  stredDoplnky = ["teplota", "vitr", "vystrahy", "pocasi"],
   dole = DOLE,
   children,
 }: {
@@ -152,6 +153,8 @@ async function doplnek(d: Doplnek, slug: string) {
       return await BokTeplotaVody();
     case "koupani":
       return await BokKoupani();
+    case "vitr":
+      return await BokVitr();
     case "pocasi": {
       const termin = (await nadchazejici(slug))[0];
       if (!termin) return null;
