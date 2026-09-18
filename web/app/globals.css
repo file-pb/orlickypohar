@@ -1120,16 +1120,18 @@ th.vlevo, td.vlevo { text-align: left; }
   }
   .doplnky-siroke > :not(.doplnek-stred) { display: none; }
 }
-/* Od 1600 px všechny widgety pod obsahem, každý ve svém úzkém sloupci —
-   na 1920 px čtyři vedle sebe. Sloupec je široký zhruba jako bok: přes
-   celou šířku středu z widgetů byly špalky (Filip, 18. 9. 2026). */
+/* Od 1600 px jdou pod obsah i widgety z levého boku, každý ve svém úzkém
+   sloupci (Filip, 18. 9. 2026: přes celou šířku středu z nich byly
+   špalky). Sloupců je tolik, kolik se jich vejde po 18 rem, i prázdných,
+   takže widget zůstane zhruba široký jako bok. Pravý bok si své widgety
+   nechává, jinak by pod krátkým kalendářem zel prázdný. */
 @media (min-width: 1600px) {
   .s-boky {
     grid-template-areas: "vlevo stred vpravo" "vlevo siroke vpravo";
     grid-template-rows: auto 1fr;
   }
-  .bok-doplnky { display: none; }
-  .s-boky > .bok {
+  .bok-vlevo .bok-doplnky { display: none; }
+  .s-boky > .bok-vlevo {
     position: sticky; top: 6rem;
     max-height: calc(100vh - 7rem); overflow-y: auto;
   }
@@ -1137,9 +1139,7 @@ th.vlevo, td.vlevo { text-align: left; }
   .doplnky-siroke:has(.doplnek-stred) {
     display: grid; grid-area: siroke; min-width: 0; gap: 1.75rem; align-items: start;
     font-size: 0.875rem;
-    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-    /* Strop: čtyři sloupce po ~20 rem. Na 2560 px by jinak zase narostly. */
-    width: 100%; max-width: 85rem; justify-self: center;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
   }
   .doplnky-siroke > :not(.doplnek-stred) { display: block; }
 }

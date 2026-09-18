@@ -52,8 +52,9 @@ const DOLE: Doplnek[] = ["vodocet", "vystrahy", "teplota", "pocasi"];
  *
  * Widgety nikdy nerostou do šířky středu — velké vypadaly jako špalky
  * (Filip, 18. 9. 2026). Místo toho se se šířkou okna přesouvají:
- * - od 1600 px jsou všechny pod obsahem, každý ve vlastním úzkém sloupci
- *   (na 1920 px čtyři vedle sebe), boky drží jen pořadí a kalendář;
+ * - od 1600 px jdou pod obsah i widgety z levého boku, každý ve vlastním
+ *   úzkém sloupci; pravý bok si své nechává, jinak by pod krátkým
+ *   kalendářem zel prázdný (Filip, 18. 9. 2026);
  * - od 1280 px jsou pod obsahem jen dva (`stredDoplnky`), zbytek v bocích;
  * - bez boků jsou pod obsahem ve sloupcích, na telefonu pod sebou.
  *
@@ -81,9 +82,9 @@ export async function Boky({
   children: React.ReactNode;
 }) {
   const slug = serie ?? (await aktualniRocnik());
-  // Pod obsahem s boky: všechny widgety stránky, střední označené, aby je
-  // CSS ukázalo už od 1280 px.
-  const siroke = DOLE.filter((d) => [...vlevoDoplnky, ...vpravoDoplnky, ...stredDoplnky].includes(d));
+  // Pod obsahem s boky: střední widgety a od 1600 px i ty z levého boku.
+  // Pravé zůstávají v boku ve všech šířkách.
+  const siroke = DOLE.filter((d) => [...vlevoDoplnky, ...stredDoplnky].includes(d));
 
   return (
     <div className="s-boky">
