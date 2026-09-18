@@ -13,6 +13,7 @@ import { ZnakTridy } from "@/app/tridy";
 import { KaruselTridy } from "@/app/karusel-poradi";
 import { PocasiAkce } from "@/app/pocasi";
 import { BokVodocet } from "@/app/vodocet";
+import { BokTeplotaVody } from "@/app/teplota";
 import { BokVystrahy } from "@/app/vystrahy";
 import { dnesVPraze, vyberTerminu } from "@/lib/terminy";
 
@@ -59,7 +60,7 @@ export async function Boky({
           <aside className="bok bok-vlevo">{await obsah(vlevo, slug)}</aside>
           <aside className="bok bok-vpravo">{await obsah(vpravo, slug)}</aside>
           {/* Doplňky pod obsahem pro displej, kde boky nejsou (Filip,
-              16. 9. 2026): tři widgety s cizími daty. S boky je CSS schová,
+              16. 9. 2026): widgety s cizími daty. S boky je CSS schová,
               tam jsou tytéž widgety v bocích. */}
           <div className="doplnky">{await doplnky(slug)}</div>
         </>
@@ -78,7 +79,7 @@ async function aktualniRocnik() {
 }
 
 /**
- * Tři widgety s cizími daty jako doplněk pod obsahem: vodočet, výstrahy
+ * Widgety s cizími daty jako doplněk pod obsahem: vodočet, výstrahy, teplota vody
  * a počasí u nejbližší akce. Každý zvlášť v try — výpadek jednoho zdroje
  * nesmí vzít ostatní.
  */
@@ -95,6 +96,7 @@ async function doplnky(slug: string) {
     <>
       {await bezpecne(() => BokVodocet())}
       {await bezpecne(() => BokVystrahy())}
+      {await bezpecne(() => BokTeplotaVody())}
       {await bezpecne(async () => {
         const termin = (await nadchazejici(slug))[0];
         if (!termin) return null;
@@ -124,6 +126,7 @@ async function obsah(bok: Bok, slug: string) {
             {await BokKalendar({ slug })}
             {await BokVodocet()}
             {await BokVystrahy()}
+            {await BokTeplotaVody()}
           </>
         );
       case "novinky":
@@ -133,6 +136,7 @@ async function obsah(bok: Bok, slug: string) {
             {await BokNovinky({ slug })}
             {await BokVodocet()}
             {await BokVystrahy()}
+            {await BokTeplotaVody()}
           </>
         );
       case "akce":
