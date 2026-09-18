@@ -3,6 +3,7 @@ using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Bodovani;
 using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Serial;
+using Kontakty = OrlickyPohar.Api.Features.Lode.Kontakty;
 
 namespace OrlickyPohar.Api.Features.Zavody;
 
@@ -178,6 +179,114 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
         await db.SaveChangesAsync(ct);
 
         return ((await LodeAsync(zavod.SerieId, zavodId, role, jenPrihlaska: prihlaskaId, ct)).Single(), null);
+    }
+
+    /// <summary>
+    /// Přihláška z veřejného formuláře. Vzniká jako <b>požadavek</b>: loď
+    /// je v systému, ale na webu není a do pole nepatří, dokud ji pořadatel
+    /// nezapíše.
+    /// <para>
+    /// <b>Kategorii u lodi, která v ročníku už jede, formulář nemění.</b>
+    /// Loď jede celý rok v jedné a změna je rozhodnutí správce.
+    /// </para>
+    /// <para>
+    /// Kapitán je osoba jako každá jiná (páruje se podle jména) a jeho
+    /// kontakt jde do historie kontaktů. Na přihlášce zůstává kopie.
+    /// </para>
+    /// </summary>
+    public async Task<(int? UcastId, string? Chyba)> VerejnaAsync(
+        int zavodId, VerejnaPrihlaskaVstup vstup, CancellationToken ct)
+    {
+        var ted = cas.GetUtcNow();
+        if (VerejnaPrihlaska.ProcNejde(vstup, ted) is { } chybaVstupu) return (null, chybaVstupu);
+
+        var zavod = await db.Zavody.FirstAsync(z => z.Id == zavodId, ct);
+        if ((Kalendar.ProcNejdePoharove(zavod.Druh) ?? Prihlasky.ProcNejdeNaZavod(zavod.Stav)) is { } zamceno)
+            return (null, zamceno);
+
+        // Strop na zastávku. Jedna hodina stačí: pořadatel mezitím frontu
+        // uvidí a spam se dá smazat.
+        var zaHodinu = await db.Ucasti.CountAsync(
+            u => u.ZavodId == zavodId && u.PodanoV != null && u.PodanoV > ted.AddHours(-1), ct);
+        if (zaHodinu >= VerejnaPrihlaska.NejvicZaHodinu)
+            return (null, "Přihlášek na tuhle zastávku teď přišlo moc. Zkus to prosím za chvíli.");
+
+        var kategorie = string.IsNullOrWhiteSpace(vstup.Kategorie)
+            ? await db.Kategorie.Where(k => k.SerieId == zavod.SerieId)
+                .OrderBy(k => k.Poradi).Select(k => k.Nazev).FirstAsync(ct)
+            : vstup.Kategorie.Trim();
+
+        var (prihlaska, chyba) = await PrihlaskaNoveLodiAsync(
+            zavod.SerieId,
+            new NovaLodVstup(
+                vstup.Lod, kategorie,
+                Prazdne(vstup.MajitelJmeno) ?? vstup.Kapitan.Jmeno,
+                Prazdne(vstup.MajitelPrijmeni) ?? vstup.Kapitan.Prijmeni,
+                vstup.CisloPlachty, vstup.Typ),
+            ct);
+
+        if (chyba is not null) return (null, chyba);
+
+        var kapitan = await OsobaAsync(vstup.Kapitan, ct);
+
+        var ucast = prihlaska!.Id == 0
+            ? null
+            : await db.Ucasti.FirstOrDefaultAsync(u => u.ZavodId == zavodId && u.PrihlaskaId == prihlaska.Id, ct);
+
+        if (ucast is not null && Prihlasky.VerejneViditelna(ucast.Stav))
+            return (null, $"Loď {prihlaska.Lod?.Nazev ?? vstup.Lod.Trim()} už je na zastávku přihlášená. "
+                          + "Se změnou se ozvi pořadateli.");
+
+        if (ucast is null)
+        {
+            ucast = new Ucast { ZavodId = zavodId, Prihlaska = prihlaska, Stav = StavUcasti.Pozadavek };
+            db.Ucasti.Add(ucast);
+            Zaznamenej(ucast, null, StavUcasti.Pozadavek, null, null);
+        }
+        else
+        {
+            // Vrácená k doplnění, odmítnutá i odhlášená se odesláním
+            // formuláře vrací do fronty — pořadatel ji uvidí znovu.
+            Zaznamenej(ucast, ucast.Stav, StavUcasti.Pozadavek, null, null);
+            ucast.Stav = StavUcasti.Pozadavek;
+        }
+
+        ucast.Kormidelnik = kapitan;
+        ucast.Posadka = Prazdne(vstup.Posadka);
+        ucast.Poznamka = Prazdne(vstup.Poznamka);
+        ucast.KontaktEmail = Prazdne(vstup.Kapitan.Email);
+        ucast.KontaktTelefon = Prazdne(vstup.Kapitan.Telefon);
+        ucast.PodanoV = ted;
+
+        await db.SaveChangesAsync(ct);
+
+        // Kontakt do historie osoby až po uložení — potřebuje id účasti.
+        var posledni = await db.Set<KontaktOsoby>()
+            .Where(k => k.OsobaId == kapitan.Id)
+            .OrderByDescending(k => k.ZadanoV).ThenByDescending(k => k.Id)
+            .FirstOrDefaultAsync(ct);
+
+        if (Kontakty.Novy(posledni, vstup.Kapitan.Email, vstup.Kapitan.Telefon, ted, ucast.Id) is { } novy)
+        {
+            novy.OsobaId = kapitan.Id;
+            db.Add(novy);
+            await db.SaveChangesAsync(ct);
+        }
+
+        return (ucast.Id, null);
+    }
+
+    /// <summary>Kapitán podle jména a příjmení, jako v importu. Číslo ČSJ se doplní, když chybí.</summary>
+    private async Task<Osoba> OsobaAsync(KapitanVstup vstup, CancellationToken ct)
+    {
+        var jmeno = vstup.Jmeno.Trim();
+        var prijmeni = vstup.Prijmeni.Trim();
+
+        var osoba = await db.Osoby.FirstOrDefaultAsync(o => o.Jmeno == jmeno && o.Prijmeni == prijmeni, ct)
+                    ?? db.Osoby.Add(new Osoba { Jmeno = jmeno, Prijmeni = prijmeni }).Entity;
+
+        osoba.CisloCsj ??= Prazdne(vstup.CisloCsj);
+        return osoba;
     }
 
     public Task<bool> JeVyloucenaAsync(int zavodId, int prihlaskaId, CancellationToken ct) =>

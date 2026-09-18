@@ -166,6 +166,11 @@ def clanek_shrnuti(c):
             "obrazek": c.get("obrazek")}
 
 
+def nazvy_klic(nazev):
+    """Řazení jako `Jmena.Cesky` v API — pro falešné API stačí bez diakritiky."""
+    return bez_diakritiky_slug(nazev)
+
+
 def nazvy(hodnota):
     """Klíče lodí v odpovědi nahradí jmény, stejně jako to dělá API."""
     return LODE[hodnota]["nazev"]
@@ -600,6 +605,53 @@ class H(BaseHTTPRequestHandler):
         c.update({k: vstup.get(k) for k in ("titulek", "telo", "perex", "autor", "zavod")})
         return self.odpoved(clanek_radek(c))
 
+    def verejna_prihlaska(self, zavod):
+        """Veřejný formulář: vzniká požadavek, na webu loď zatím není.
+
+        Bez přihlášení — `self.zastavka` by ho vyžadovala."""
+        z = next((z for z in D["zavody"] if z["slug"] == zavod), None)
+        if not z:
+            return self.send_error(404)
+        if (chyba := proc_nejde_prihlasit(z["stav"], z["druh"])):
+            return self.chyba(400, chyba)
+
+        v = self.telo_zadosti()
+        kapitan = v.get("kapitan") or {}
+        if (v.get("past") or "").strip():
+            return self.chyba(400, "Přihlášku se nepodařilo přijmout. Zkus to prosím znovu.")
+        if not (v.get("lod") or "").strip():
+            return self.chyba(400, "Napiš jméno lodi.")
+        if not (kapitan.get("jmeno") or "").strip() or not (kapitan.get("prijmeni") or "").strip():
+            return self.chyba(400, "Vyplň jméno i příjmení kapitána.")
+        if not (kapitan.get("email") or "").strip() and not (kapitan.get("telefon") or "").strip():
+            return self.chyba(400, "Vyplň e-mail nebo telefon, ať se ti pořadatel může ozvat.")
+        if not v.get("souhlas"):
+            return self.chyba(400, "Potvrď, že loď smí být ve startovní listině "
+                                   "a že se pořadatel může ozvat.")
+
+        nazev = v["lod"].strip()
+        klic = bez_diakritiky_slug(nazev)
+        if klic not in LODE:
+            LODE[klic] = {"klic": klic, "nazev": nazev, "cisloPlachty": v.get("cisloPlachty"),
+                          "typ": v.get("typ"), "majitel": next(iter(OSOBY))}
+            KAT[klic] = (v.get("kategorie") or D["kategorie"][0]["nazev"])
+            KAT_PORADI.setdefault(KAT[klic], 99)
+            D["prihlasky"].append({"lod": klic, "kategorie": KAT[klic]})
+            PRIHLASKA_ID[klic] = max(PRIHLASKA_ID.values()) + 1
+            LOD_PODLE_ID[PRIHLASKA_ID[klic]] = klic
+
+        u = next((u for u in z["ucasti"] if u["lod"] == klic), None)
+        if u and u["stav"] in VEREJNE_UCASTI:
+            return self.chyba(400, f"Loď {nazev} už je na zastávku přihlášená. "
+                                   "Se změnou se ozvi pořadateli.")
+        if u:
+            u["stav"], u["duvod"] = "Pozadavek", None
+        else:
+            z["ucasti"].append({"lod": klic, "kormidelnik": None, "posadka": v.get("posadka"),
+                                "stav": "Pozadavek"})
+
+        return self.odpoved({"zavod": z["nazev"], "lod": nazev, "stav": "Pozadavek"}, 201)
+
     def do_POST(self):
         cesta = urlparse(self.path).path
 
@@ -624,6 +676,9 @@ class H(BaseHTTPRequestHandler):
             return self.zaloz_clanek()
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/clanky/([a-z0-9-]+)/stav$', cesta)):
             return self.prepni_stav(m.group(1))
+
+        if (m := re.match(rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)/prihlasky$', cesta)):
+            return self.verejna_prihlaska(m.group(1))
 
         if cesta != f'/sprava/serie/{D["slug"]}/opravneni':
             return self.send_error(404)
@@ -1046,6 +1101,31 @@ class H(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(data)
             return
+
+        if cesta == "/lode/napoveda":
+            # Našeptávač lodí: bez diakritiky, od dvou znaků; vse=true vydá
+            # celý seznam pro nabídku prohlížeče. Opsané z Features/Lode.
+            q = bez_diakritiky_slug(dotaz.get("q", [""])[0]).replace("-", "")
+            vse = dotaz.get("vse", [""])[0] == "true"
+            if not vse and len(q) < 2:
+                return self.odpoved([])
+
+            polozky = []
+            for lod in LODE.values():
+                nazev = bez_diakritiky_slug(lod["nazev"]).replace("-", "")
+                plachta = bez_diakritiky_slug(lod.get("cisloPlachty") or "").replace("-", "")
+                vaha = (0 if nazev.startswith(q) else 1 if q in nazev
+                        else 2 if q and q in plachta else None)
+                if not vse and vaha is None:
+                    continue
+                polozky.append((vaha if vaha is not None else 9, lod))
+
+            polozky.sort(key=lambda p: (p[0], nazvy_klic(p[1]["nazev"])))
+            return self.odpoved([
+                {"lod": lod["nazev"], "cisloPlachty": lod.get("cisloPlachty"), "typ": lod.get("typ"),
+                 "majitel": jmeno(lod["majitel"]), "kategorie": KAT.get(lod["klic"]),
+                 "kormidelnik": None, "vRocniku": lod["klic"] in KAT, "posledniRok": D["rok"]}
+                for _, lod in polozky[:500 if vse else 8]])
 
         if cesta == "/vodocet/orlik":
             # Vymyšlený, ale věrohodný den: hladina klesá, elektrárna pustila

@@ -2022,6 +2022,30 @@ zadal. Vidí je jen pořadatel zastávky, rozhodčí a správce ročníku.
 6. Propsání do výsledků — po odpovědi rozhodčího.
 7. E-maily kapitánovi při změně stavu — s Outboxem z fáze 7.
 
+**Kroky 1–3 hotové 18. 9. 2026** (model, našeptávač, veřejný formulář).
+
+**Našeptávač** je `GET /lode/napoveda` (`Features/Lode/Napoveda.cs`):
+hledá přes všechny ročníky podle jména i čísla plachty, bez ohledu na
+diakritiku a velikost písmen. Filtruje se **v paměti**, ne v SQL —
+databáze nemusí mít `unaccent` (tatáž past jako u slugu pořadatelů)
+a lodí jsou nižší stovky. Vydává jen veřejné údaje; kontakty nikdy,
+což hlídá i test nad tvarem DTO.
+
+**Veřejný formulář** je `/serie/{serie}/zavody/{zavod}/prihlaska`
+a `POST /serie/{serie}/zavody/{zavod}/prihlasky`.
+
+- **Dva kroky, protože web nemá javascript.** Nejdřív se vybere loď
+  z nabídky prohlížeče (`datalist` se všemi loděmi poháru), pak se
+  formulář zobrazí předvyplněný. Novou loď stačí napsat.
+- **Kontakt se nikdy nepředvyplňuje** a je povinný (e-mail nebo telefon),
+  jinak nemá pořadatel jak přihlášku doplnit. Povinný je i souhlas.
+- **Vzniká požadavek**, ne zapsaná loď: na webu není, dokud ho pořadatel
+  nezapíše. Loď, která na zastávce už jede, formulář podruhé nepřijme.
+- **Proti robotům zatím jen past ve formuláři** (skryté pole a odeslání
+  do tří vteřin) a strop 30 přihlášek na zastávku za hodinu. Turnstile se
+  přidá, až spam skutečně přijde — nezakládá se kvůli němu nic dopředu.
+- Kategorii lodi, která v ročníku jede, formulář nenabízí: mění ji správce.
+
 **Krok 1 hotový 17. 9. 2026.** Stavy jsou aditivní: původní `Prihlasena`,
 `Potvrzena`, `Zrusena` zůstaly pod svými jmény (appka je zná) a web je
 jmenuje „zapsaná", „potvrzená", „odhlášená". Nové: `Pozadavek`,

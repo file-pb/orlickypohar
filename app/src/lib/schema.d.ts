@@ -182,6 +182,95 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/lode/napoveda": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Napoví lodě podle jména nebo čísla plachty
+         * @description Pro formulář přihlášky. Parametr serie říká, ke kterému ročníku se vztahuje příznak vRocniku a kategorie. Kratší dotaz než dva znaky vrací prázdno; vse=true vydá celý seznam pro nabídku prohlížeče.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    q?: string;
+                    serie?: string;
+                    vse?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NapovedaLodiDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/serie/{serie}/zavody/{zavod}/prihlasky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Přihlásí loď na zastávku z veřejného formuláře
+         * @description Bez přihlášení. Vzniká požadavek, který pořadatel zapíše, vrátí k doplnění, nebo odmítne; na webu loď do té doby není. Vyžaduje kontakt a souhlas.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["VerejnaPrihlaskaVstup"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PrijataPrihlaskaDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ja": {
         parameters: {
             query?: never;
@@ -1645,6 +1734,13 @@ export interface components {
             email: null | string;
             opravneni: components["schemas"]["OpravneniDto"][];
         };
+        KapitanVstup: {
+            jmeno: string;
+            prijmeni: string;
+            email?: null | string;
+            telefon?: null | string;
+            cisloCsj?: null | string;
+        };
         KategorieDto: {
             nazev: string;
             /** Format: int32 */
@@ -1676,6 +1772,17 @@ export interface components {
             cisloPlachty: null | string;
             typ: null | string;
             majitel: string;
+        };
+        NapovedaLodiDto: {
+            lod: string;
+            cisloPlachty: null | string;
+            typ: null | string;
+            majitel: string;
+            kategorie: null | string;
+            kormidelnik: null | string;
+            vRocniku: boolean;
+            /** Format: int32 */
+            posledniRok: null | number;
         };
         NovaLodVstup: {
             nazev: string;
@@ -1841,6 +1948,11 @@ export interface components {
             kategorie: string[];
             lode: components["schemas"]["LodNaZastavceDto"][];
         };
+        PrijataPrihlaskaDto: {
+            zavod: string;
+            lod: string;
+            stav: components["schemas"]["StavUcasti"];
+        };
         PublikaceVstup: {
             publikovano: boolean;
         };
@@ -1925,7 +2037,7 @@ export interface components {
         /** @enum {unknown} */
         StavRozjizdky: "Planovana" | "Probiha" | "Dokoncena" | "Zrusena";
         /** @enum {unknown} */
-        StavUcasti: "Prihlasena" | "Potvrzena" | "Zrusena" | "Pozadavek" | "KDoplneni" | "Odmitnuta" | "Nedostavila" | "Vyloucena" | null;
+        StavUcasti: "Prihlasena" | "Potvrzena" | "Zrusena" | "Pozadavek" | "KDoplneni" | "Odmitnuta" | "Nedostavila" | "Vyloucena";
         StavUcastiVstup: {
             stav: components["schemas"]["StavUcasti"];
             duvod?: null | string;
@@ -1975,6 +2087,22 @@ export interface components {
             email: string;
             role: components["schemas"]["Role"];
             zavod?: null | string;
+        };
+        VerejnaPrihlaskaVstup: {
+            lod: string;
+            kapitan: components["schemas"]["KapitanVstup"];
+            cisloPlachty?: null | string;
+            typ?: null | string;
+            kategorie?: null | string;
+            majitelJmeno?: null | string;
+            majitelPrijmeni?: null | string;
+            posadka?: null | string;
+            poznamka?: null | string;
+            /** @default false */
+            souhlas: boolean;
+            past?: null | string;
+            /** Format: date-time */
+            zobrazenoV?: null | string;
         };
         VodocetDto: {
             /** Format: date-time */

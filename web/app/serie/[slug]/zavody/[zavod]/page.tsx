@@ -171,6 +171,11 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
             lode={zavod.lode}
             trida={trida}
             adresa={(k) => `/serie/${slug}/zavody/${slugZavodu}?trida=${encodeURIComponent(k)}`}
+            prihlaska={
+              zavod.stav === "Vypsany" || zavod.stav === "Odjety"
+                ? `/serie/${slug}/zavody/${slugZavodu}/prihlaska`
+                : undefined
+            }
           />
         </>
       ) : (
@@ -188,6 +193,14 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
           />
         </>
       )}
+      {/* Přihlásit se dá i k zastávce s výsledky: loď se často domluví
+          telefonem na startu a zapíše se dodatečně (Filip, 17. 9. 2026). */}
+      {radky.length > 0 && (zavod.stav === "Vypsany" || zavod.stav === "Odjety") && (
+        <p className="poznamka">
+          <Link href={`/serie/${slug}/zavody/${slugZavodu}/prihlaska`}>Přihlásit loď →</Link>
+        </p>
+      )}
+
       {/* Výsledky u zastávky, která není vedená jako odjetá, do poháru
           nejdou — průběžné pořadí počítá jen z odjetých. Bez téhle věty by
           se čtenář marně sháněl po bodech, které v tabulce seriálu nejsou. */}
@@ -250,12 +263,21 @@ function PrihlaseneLode({
   lode,
   trida,
   adresa,
+  prihlaska,
 }: {
   lode: UcastLodi[];
   trida?: string;
   adresa: (trida: string) => string;
+  /** Odkaz na veřejnou přihlášku, když se na zastávku přihlašuje. */
+  prihlaska?: string;
 }) {
-  if (lode.length === 0) return null;
+  // Vypsaná zastávka bez jediné lodi má aspoň pozvat k přihlášce.
+  if (lode.length === 0)
+    return prihlaska ? (
+      <p className="poznamka">
+        <Link href={prihlaska}>Přihlásit loď →</Link>
+      </p>
+    ) : null;
 
   // Třídy v taby jako u výsledků (Filip, 15. 9. 2026) — seznam lodí na
   // zastávce, která se teprve pojede, je jinak stejně dlouhý svitek.
@@ -267,6 +289,12 @@ function PrihlaseneLode({
       <h2>Přihlášené lodě</h2>
       <p className="podtitulek" style={{ margin: "0 0 1rem" }}>
         {lode.length} {lode.length === 1 ? "loď" : lode.length < 5 ? "lodě" : "lodí"}
+        {prihlaska && (
+          <>
+            {" · "}
+            <Link href={prihlaska}>Přihlásit loď →</Link>
+          </>
+        )}
       </p>
       <TabyTrid kategorie={kategorie} aktivni={aktivni} adresa={adresa} />
       <NadpisTridy kategorie={kategorie} aktivni={aktivni} />

@@ -132,6 +132,103 @@
                 }
             }
         },
+        "/lode/napoveda": {
+            "get": {
+                "tags": [
+                    "Lod\u011b"
+                ],
+                "summary": "Napov\u00ed lod\u011b podle jm\u00e9na nebo \u010d\u00edsla plachty",
+                "description": "Pro formul\u00e1\u0159 p\u0159ihl\u00e1\u0161ky. Parametr serie \u0159\u00edk\u00e1, ke kter\u00e9mu ro\u010dn\u00edku se vztahuje p\u0159\u00edznak vRocniku a kategorie. Krat\u0161\u00ed dotaz ne\u017e dva znaky vrac\u00ed pr\u00e1zdno; vse=true vyd\u00e1 cel\u00fd seznam pro nab\u00eddku prohl\u00ed\u017ee\u010de.",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "serie",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "vse",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/NapovedaLodiDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/serie/{serie}/zavody/{zavod}/prihlasky": {
+            "post": {
+                "tags": [
+                    "P\u0159ihl\u00e1\u0161ky"
+                ],
+                "summary": "P\u0159ihl\u00e1s\u00ed lo\u010f na zast\u00e1vku z ve\u0159ejn\u00e9ho formul\u00e1\u0159e",
+                "description": "Bez p\u0159ihl\u00e1\u0161en\u00ed. Vznik\u00e1 po\u017eadavek, kter\u00fd po\u0159adatel zap\u00ed\u0161e, vr\u00e1t\u00ed k dopln\u011bn\u00ed, nebo odm\u00edtne; na webu lo\u010f do t\u00e9 doby nen\u00ed. Vy\u017eaduje kontakt a souhlas.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VerejnaPrihlaskaVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PrijataPrihlaskaDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/ja": {
             "get": {
                 "tags": [
@@ -1960,6 +2057,39 @@
                     }
                 }
             },
+            "KapitanVstup": {
+                "required": [
+                    "jmeno",
+                    "prijmeni"
+                ],
+                "type": "object",
+                "properties": {
+                    "jmeno": {
+                        "type": "string"
+                    },
+                    "prijmeni": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "telefon": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "cisloCsj": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
             "KategorieDto": {
                 "required": [
                     "nazev",
@@ -2100,6 +2230,61 @@
                     },
                     "majitel": {
                         "type": "string"
+                    }
+                }
+            },
+            "NapovedaLodiDto": {
+                "required": [
+                    "lod",
+                    "cisloPlachty",
+                    "typ",
+                    "majitel",
+                    "kategorie",
+                    "kormidelnik",
+                    "vRocniku",
+                    "posledniRok"
+                ],
+                "type": "object",
+                "properties": {
+                    "lod": {
+                        "type": "string"
+                    },
+                    "cisloPlachty": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "typ": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "majitel": {
+                        "type": "string"
+                    },
+                    "kategorie": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "kormidelnik": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "vRocniku": {
+                        "type": "boolean"
+                    },
+                    "posledniRok": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
                     }
                 }
             },
@@ -2809,6 +2994,25 @@
                     }
                 }
             },
+            "PrijataPrihlaskaDto": {
+                "required": [
+                    "zavod",
+                    "lod",
+                    "stav"
+                ],
+                "type": "object",
+                "properties": {
+                    "zavod": {
+                        "type": "string"
+                    },
+                    "lod": {
+                        "type": "string"
+                    },
+                    "stav": {
+                        "$ref": "#/components/schemas/StavUcasti"
+                    }
+                }
+            },
             "PublikaceVstup": {
                 "required": [
                     "publikovano"
@@ -3146,8 +3350,7 @@
                     "KDoplneni",
                     "Odmitnuta",
                     "Nedostavila",
-                    "Vyloucena",
-                    null
+                    "Vyloucena"
                 ]
             },
             "StavUcastiVstup": {
@@ -3335,6 +3538,80 @@
                             "null",
                             "string"
                         ]
+                    }
+                }
+            },
+            "VerejnaPrihlaskaVstup": {
+                "required": [
+                    "lod",
+                    "kapitan"
+                ],
+                "type": "object",
+                "properties": {
+                    "lod": {
+                        "type": "string"
+                    },
+                    "kapitan": {
+                        "$ref": "#/components/schemas/KapitanVstup"
+                    },
+                    "cisloPlachty": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "typ": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "kategorie": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "majitelJmeno": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "majitelPrijmeni": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "posadka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "poznamka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "souhlas": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "past": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "zobrazenoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
                     }
                 }
             },
@@ -4211,6 +4488,12 @@
         },
         {
             "name": "Vodo\u010det"
+        },
+        {
+            "name": "Lod\u011b"
+        },
+        {
+            "name": "P\u0159ihl\u00e1\u0161ky"
         },
         {
             "name": "Identita"

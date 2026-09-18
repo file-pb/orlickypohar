@@ -260,4 +260,58 @@ public class PrihlaskySpravaTests(PostgresFixture fixture)
              (StavUcasti.Potvrzena, StavUcasti.Vyloucena, "Zkratka.")],
             zmeny.Select(z => ((StavUcasti?)z.Ze, z.Na, z.Duvod)));
     }
+
+    [Fact]
+    public async Task Verejna_prihlaska_je_pozadavek_a_ulozi_kontakt_kapitana()
+    {
+        var slug = "prihlasky-verejny-formular";
+        await Nahraj(Rocnik(slug));
+
+        var klient = fixture.CreateClient();
+        var vstup = new VerejnaPrihlaskaVstup(
+            "Kachna",
+            new KapitanVstup("Eva", "Malá", "eva@priklad.cz", "777 123 456"),
+            CisloPlachty: "CZE 99",
+            Kategorie: "Pod7m",
+            Posadka: "Eva a Petr",
+            Poznamka: "Přijedeme v pátek večer.",
+            Souhlas: true,
+            ZobrazenoV: DateTimeOffset.UtcNow.AddMinutes(-1));
+
+        var odpoved = await klient.PostAsJsonAsync($"/serie/{slug}/zavody/zahajeni/prihlasky", vstup, Json);
+        Assert.Equal(HttpStatusCode.Created, odpoved.StatusCode);
+
+        // Na webu požadavek není — tam patří, až ho pořadatel zapíše.
+        Assert.DoesNotContain((await VerejneAsync(slug)).Lode, l => l.Lod == "Kachna");
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var ucast = await db.Ucasti
+            .Include(u => u.Kormidelnik)
+            .Include(u => u.Prihlaska!).ThenInclude(p => p.Lod)
+            .Include(u => u.Zmeny)
+            .SingleAsync(u => u.Prihlaska!.Lod!.Nazev == "Kachna");
+
+        Assert.Equal(StavUcasti.Pozadavek, ucast.Stav);
+        Assert.Equal(("eva@priklad.cz", "777 123 456"), (ucast.KontaktEmail, ucast.KontaktTelefon));
+        Assert.Equal("Eva Malá", $"{ucast.Kormidelnik!.Jmeno} {ucast.Kormidelnik.Prijmeni}");
+        Assert.NotNull(ucast.PodanoV);
+        Assert.Equal(StavUcasti.Pozadavek, Assert.Single(ucast.Zmeny).Na);
+
+        var kontakt = await db.Set<OrlickyPohar.Api.Features.Lode.KontaktOsoby>()
+            .SingleAsync(k => k.OsobaId == ucast.KormidelnikId);
+        Assert.Equal(("eva@priklad.cz", "777 123 456", ucast.Id), (kontakt.Email, kontakt.Telefon, kontakt.UcastId));
+
+        // Druhá přihláška téže lodi, dokud čeká, projde znovu; po zapsání ne.
+        Assert.Equal(HttpStatusCode.Created,
+            (await klient.PostAsJsonAsync($"/serie/{slug}/zavody/zahajeni/prihlasky", vstup, Json)).StatusCode);
+
+        var k = await KontextAsync(scope, slug);
+        var kachna = await db.Prihlasky.Where(p => p.Lod!.Nazev == "Kachna").Select(p => p.Id).SingleAsync();
+        Assert.Null((await k.Sprava.PrepniAsync(k.ZavodId, kachna, StavUcasti.Prihlasena, default)).Chyba);
+
+        var odmitnuto = await klient.PostAsJsonAsync($"/serie/{slug}/zavody/zahajeni/prihlasky", vstup, Json);
+        Assert.Equal(HttpStatusCode.BadRequest, odmitnuto.StatusCode);
+    }
 }

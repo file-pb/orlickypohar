@@ -8,6 +8,7 @@ using OrlickyPohar.Api.Features.Clanky;
 using OrlickyPohar.Api.Features.Fotky;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Import;
+using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Poradatele;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Sprava;
@@ -141,6 +142,8 @@ try
     app.MapClanky();
     app.MapImport();
     app.MapVodocet();
+    app.MapNapovedu();
+    app.MapVerejnePrihlasky();
     if (identita)
     {
         app.MapJa();
