@@ -1954,6 +1954,22 @@ je vypnul: řeka o šest stupňů studenější než nádrž jachtaři nic neře
 stahování. Povodí Vltavy měří v nádrži jen po týdnech a vydává to jen jako
 graf na mapě.
 
+## Radar na příští hodinu
+
+**Pod výstrahami ČHMÚ** (`web/lib/radar.ts`, 18. 9. 2026): jestli nad
+Orlíkem prší, nebo kdy začne, a pás sedmi políček (teď, +10 … +60 min).
+Zdroj je radarová extrapolace ČHMÚ na opendata (`composite/fct_maxz/png`,
+po 5 minutách, venku zhruba do minuty) a měření `composite/maxz/png`.
+Z PNG se čtou indexy palety v okruhu 8 km kolem bodu mezi Radavou
+a Velkým vírem, žádný obrázek se neukládá ani nevykresluje.
+
+- **Prahy podle stupnice ČHMÚ:** od 24 dBZ déšť (~1 mm/h), od 40 silný
+  (~10 mm/h), od 52 přívalový, zpravidla bouřka.
+- **Co radar neumí:** předpověď jen posouvá srážky, které už padají.
+  Bouřku, která teprve vznikne, neukáže — widget to říká přímo.
+- **Dál:** push v appce „déšť do hodiny", až bude Outbox (krok 7
+  přihlášek).
+
 ## Vodočet Orlíku
 
 **Přítok a odtok za 24 h z dat, ne okamžitý průtok krát den** (Filip,
