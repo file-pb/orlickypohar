@@ -66,7 +66,7 @@ jobs:
 
       # amd64 je výchozí cíl kvůli kompatibilitě s cizími binárkami (SDK ke kamerám,
       # nástroje výrobců, starší image). arm64 přidej, až budeš mít vedlejší ARM stroj na výpočty.
-      - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           platforms: linux/amd64
@@ -89,7 +89,7 @@ jobs:
             type=sha,format=long
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ./web
           platforms: linux/amd64
@@ -109,7 +109,7 @@ jobs:
             type=sha,format=long
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ./jobs/landsat
           platforms: linux/amd64
@@ -128,7 +128,7 @@ jobs:
             type=sha,format=long
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ./deploy/cache
           platforms: linux/amd64
