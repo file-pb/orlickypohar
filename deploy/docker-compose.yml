@@ -85,17 +85,30 @@ services:
       # proto standardní strop, ne přísný zapisovací jako u telemetrie.
       traefik.http.routers.orlickypohar.middlewares: "ratelimit-standard@file,bezpecne-hlavicky@file"
       traefik.http.services.orlickypohar.loadbalancer.server.port: "8080"
-      # Traefik posílá provoz až na kontejner, který prošel readiness.
+      # Traefik posílá provoz jen na kontejner, který prošel readiness —
+      # když spadne databáze, vrací čisté 503 místo rozbitých odpovědí.
+      #
+      # Timeout ale MUSÍ být delší než výchozích 5 s. Traefik vyřadí server
+      # po JEDINÉM neúspěšném pokusu a replika je jedna — přetížená aplikace,
+      # která jen pomalu odpovídá, by se změnila v úplný výpadek. Webu se to
+      # stalo při zátěžovém testu 21. 9. 2026 (platform/docs/POUCENI.md, 44).
+      # unhealthyInterval: po vyřazení to zkusí hned znovu, ať planý poplach
+      # trvá vteřiny, ne celý interval.
       traefik.http.services.orlickypohar.loadbalancer.healthcheck.path: /health/ready
       traefik.http.services.orlickypohar.loadbalancer.healthcheck.interval: 10s
+      traefik.http.services.orlickypohar.loadbalancer.healthcheck.timeout: 10s
+      traefik.http.services.orlickypohar.loadbalancer.healthcheck.unhealthyInterval: 3s
     deploy:
       resources:
         limits: { memory: 512m, cpus: "1.0" }
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
       interval: 15s
-      timeout: 3s
-      retries: 3
+      # Velkoryse, ze stejného důvodu jako u Traefiku: nezdravý kontejner
+      # Traefik vyřadí i podle téhle kontroly. Zaseklá aplikace se pozná
+      # do dvou minut, přetížená nemá vypadnout. Poučení 44.
+      timeout: 10s
+      retries: 5
       start_period: 20s
 
   web:
@@ -132,16 +145,24 @@ services:
       traefik.http.routers.orlickypohar-web.tls.certresolver: le
       traefik.http.routers.orlickypohar-web.middlewares: "ratelimit-standard@file,bezpecne-hlavicky@file"
       traefik.http.services.orlickypohar-web.loadbalancer.server.port: "8080"
+      # Timeouty ze stejného důvodu jako u API výš — tady to při zátěžovém
+      # testu 21. 9. 2026 skutečně spadlo: web odpovídal za 6–9 s a Traefik
+      # ho třikrát vyřadil, 503 pro všechny.
       traefik.http.services.orlickypohar-web.loadbalancer.healthcheck.path: /health
       traefik.http.services.orlickypohar-web.loadbalancer.healthcheck.interval: 15s
+      traefik.http.services.orlickypohar-web.loadbalancer.healthcheck.timeout: 10s
+      traefik.http.services.orlickypohar-web.loadbalancer.healthcheck.unhealthyInterval: 3s
     deploy:
       resources:
         limits: { memory: 512m, cpus: "1.0" }
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
       interval: 15s
-      timeout: 3s
-      retries: 3
+      # Velkoryse, ze stejného důvodu jako u Traefiku: nezdravý kontejner
+      # Traefik vyřadí i podle téhle kontroly. Zaseklá aplikace se pozná
+      # do dvou minut, přetížená nemá vypadnout. Poučení 44.
+      timeout: 10s
+      retries: 5
       start_period: 20s
 
 
