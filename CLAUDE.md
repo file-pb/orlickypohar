@@ -114,6 +114,9 @@ app/                          mobilní appka (Expo, jen čtení)
 packages/api-client/          generuj.sh — typy pro web i appku z OpenAPI
 jobs/landsat/                 plánovaná úloha (Python): teplota hladiny
                               z Landsatu jednou denně do API
+deploy/docker-compose.yml     celé nasazení; háček ho přenáší s každým pushem
+deploy/cache/                 nginx s mikrocache před webem (image);
+                              test/test.sh ověřuje pravidla v CI před nasazením
 tools/fake-api.py             mock ročník jako API, pro vývoj webu bez databáze
 tools/gen-mock.py             vyrábí ten mock; skutečná fakta o ročníku patří sem
 ```
