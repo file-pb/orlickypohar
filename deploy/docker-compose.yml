@@ -22,8 +22,9 @@ networks:
   # API proto dostává ve vnitřní síti vlastní jméno (níž), které nikde jinde
   # neexistuje.
   interni: { internal: true }
-  # Cesta ven pro plánovanou úlohu (katalog Landsatu). `interni` ven nepustí
-  # a `edge` patří Traefiku — úloha nemá být vidět zvenku ani přes něj.
+  # Cesta ven pro web (data ČHMÚ, Povodí…) a plánovanou úlohu (katalog
+  # Landsatu). `interni` ven nepustí a `edge` patří Traefiku — ani jeden
+  # z nich nemá být vidět zvenku ani přes něj.
   ven: {}
 
 services:
@@ -115,7 +116,12 @@ services:
     image: ${IMAGE_WEB:?Nastav IMAGE_WEB na tag z GHCR}
     restart: unless-stopped
     logging: *logging
-    networks: [edge, interni]
+    # Zvenku se na web chodí jen přes `cache` (níž), proto už není v `edge`.
+    # Alias jako u API: jméno, které nikde jinde neexistuje.
+    networks:
+      interni:
+        aliases: [orlickypohar-web]
+      ven: {}
     environment:
       # Interní adresa, ne veřejná. Přes internet by to byla zbytečná cesta
       # ven a zpátky přes Traefik. Jméno `orlickypohar-api`, ne `app` —
@@ -138,32 +144,51 @@ services:
       # poskytovatele: heslo, e-mail, druhý faktor. Adresa je tady, a ne
       # v kódu, aby výměna poskytovatele neznamenala změnu webu.
       IDENTITA_UCET_URL: "https://ucty.${PLATFORM_DOMAIN:?}/ui/console/users/me"
-    labels:
-      traefik.enable: "true"
-      traefik.docker.network: edge
-      traefik.http.routers.orlickypohar-web.rule: Host(`${APP_NAME}.${PLATFORM_DOMAIN:?}`)
-      traefik.http.routers.orlickypohar-web.tls.certresolver: le
-      traefik.http.routers.orlickypohar-web.middlewares: "ratelimit-standard@file,bezpecne-hlavicky@file"
-      traefik.http.services.orlickypohar-web.loadbalancer.server.port: "8080"
-      # Timeouty ze stejného důvodu jako u API výš — tady to při zátěžovém
-      # testu 21. 9. 2026 skutečně spadlo: web odpovídal za 6–9 s a Traefik
-      # ho třikrát vyřadil, 503 pro všechny.
-      traefik.http.services.orlickypohar-web.loadbalancer.healthcheck.path: /health
-      traefik.http.services.orlickypohar-web.loadbalancer.healthcheck.interval: 15s
-      traefik.http.services.orlickypohar-web.loadbalancer.healthcheck.timeout: 10s
-      traefik.http.services.orlickypohar-web.loadbalancer.healthcheck.unhealthyInterval: 3s
     deploy:
       resources:
         limits: { memory: 512m, cpus: "1.0" }
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
       interval: 15s
-      # Velkoryse, ze stejného důvodu jako u Traefiku: nezdravý kontejner
-      # Traefik vyřadí i podle téhle kontroly. Zaseklá aplikace se pozná
-      # do dvou minut, přetížená nemá vypadnout. Poučení 44.
+      # Velkoryse: zaseklá aplikace se pozná do dvou minut, přetížená nemá
+      # vypadnout. Poučení 44.
       timeout: 10s
       retries: 5
       start_period: 20s
+
+  # Mikrocache před webem (deploy/cache/, důvody v default.conf): stránku
+  # pro nepřihlášené vykreslí web nejvýš jednou za 10 s. Veřejná adresa
+  # webu vede sem; přihlášení a správa projdou k webu beze změny.
+  # Pravidla hlídá deploy/cache/test/test.sh v CI před nasazením.
+  cache:
+    image: ${IMAGE_CACHE:-ghcr.io/file-pb/orlickypohar-cache:latest}
+    restart: unless-stopped
+    logging: *logging
+    networks: [edge, interni]
+    labels:
+      # Jména routeru a služby zůstala po webu — adresa se nemění.
+      traefik.enable: "true"
+      traefik.docker.network: edge
+      traefik.http.routers.orlickypohar-web.rule: Host(`${APP_NAME}.${PLATFORM_DOMAIN:?}`)
+      traefik.http.routers.orlickypohar-web.tls.certresolver: le
+      traefik.http.routers.orlickypohar-web.middlewares: "ratelimit-standard@file,bezpecne-hlavicky@file"
+      traefik.http.services.orlickypohar-web.loadbalancer.server.port: "8080"
+      # Zdraví nginxu samotného, ne webu: pomalý web nesmí vyřadit
+      # ze směrování i cache, která by mezitím dál rozdávala stránky.
+      # Timeouty jako všude jinde (poučení 44).
+      traefik.http.services.orlickypohar-web.loadbalancer.healthcheck.path: /cache-zdravi
+      traefik.http.services.orlickypohar-web.loadbalancer.healthcheck.interval: 15s
+      traefik.http.services.orlickypohar-web.loadbalancer.healthcheck.timeout: 10s
+      traefik.http.services.orlickypohar-web.loadbalancer.healthcheck.unhealthyInterval: 3s
+    deploy:
+      resources:
+        limits: { memory: 128m, cpus: "0.5" }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/cache-zdravi"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 5s
 
 
   # Plánovaná úloha (typ `scheduled-job` na platformě): jednou denně spočítá
