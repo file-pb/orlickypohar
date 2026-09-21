@@ -1976,6 +1976,12 @@ aplikace se nemění a dá se vyřadit vrácením labelů Traefiku na web.
   s Keepalived ne — web, API i databáze běží v jedné kopii na jednom
   stroji, druhý nginx by neměl kam posílat.
 
+**Zátěžový test** jde teď na nginx, ne na web: `http://orlickypohar-cache-1:8080/`
+v síti `edge`. Web sám už v `edge` není; kdo chce měřit web bez cache,
+pustí `hey` v síti `orlickypohar_interni` na `http://orlickypohar-web:8080/`.
+Hlavička `X-Cache` (`HIT`, `MISS`, `BYPASS`, `STALE`, `UPDATING`) ukáže,
+co se stalo, a log nginxu ji má v poli `cache`.
+
 **Co cache neřeší:** vymyšlená cookie sezení nebo náhodný parametr
 v adrese ji obejdou a vynutí vykreslení. To je případ „hodně požadavků od
 jednoho klienta" a patří k limitu rychlosti (S11 v platformě).
@@ -2029,6 +2035,7 @@ v `web/app/boky.tsx`, každý zvlášť v `try`).
 | Kvalita ke koupání | `app/koupani.tsx` | `geoportal.mzcr.cz`, `KoupaciVody_View` | 6 h | jen v sezóně, odběry starší 45 dní se nezobrazí; teplotu služba nemá |
 | Vítr | `app/vitr.tsx`, `lib/vitr.ts` | opendata.chmi.cz `meteorology/climate/now/data`, 10min data | 10 min | zpoždění ~45 min; stanice Orlík a Kamýk měří jen srážky |
 | Výstrahy ČHMÚ | `app/vystrahy.tsx`, `lib/chmi.ts` | CAP na opendata.chmi.cz, obvody Milevsko a Písek | 15 min | kódy ORP ověřené, některé přehledy je mají posunuté o jedna |
+| Radar na hodinu | `app/vystrahy.tsx`, `lib/radar.ts` | opendata.chmi.cz `radar/composite`, extrapolace `fct_maxz` a měření `maxz` (PNG) | 5 min | předpověď jen posouvá, co už prší — novou bouřku neukáže; paleta a georeference z `radar_popis_cz.pdf` (oddíl *Radar na příští hodinu*) |
 | Počasí | `app/pocasi.tsx` | vložená mapa Windy, bod mezi Radavou a Velkým vírem | — | pás předpovědi jen 5 dní, `calendar` mapu neposune, tmavý režim nemá |
 
 **Vítr** (18. 9. 2026): nahoře Vráž (16 km, nejbližší stanice s větrem),
@@ -2222,8 +2229,11 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
    testy běží jen v CI a lokální databáze nejede vůbec.
 2. **Web bez databáze** — `tools/fake-api.py` servíruje mock ročník
    ve tvarech skutečného API.
-3. **Nasazení** — nic ručního. Push do `main` postaví obě image a háček je
-   vymění na serveru i s `docker-compose.yml`.
+3. **Nasazení** — nic ručního. Push do `main` postaví čtyři image (API,
+   web, úloha `landsat`, nginx `cache`) a háček je vymění na serveru
+   i s `docker-compose.yml`. Háček přenáší **jen compose** — cokoliv
+   dalšího, co služba potřebuje (třeba konfigurace nginxu), musí jet
+   v image.
 4. **Otázky na rozhodčího** — tři, vypsané v oddílu *Co k tomu říkají
    závodní pravidla*: z čeho se počítá DNC, co znamenají nuly u zrušených
    zastávek a proč má DNF jiné body než DNS. Dopočet neúčasti na nich stojí.
@@ -2233,14 +2243,22 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
    na odpovědi rozhodčího. Komunitní akce v kalendáři hotové 15. 9. Další
    na řadě je **design** (oddíl *Podněty z 14. 9. 2026*). Pořadatel jako
    záznam s medailonkem hotový 15. 9.; vlastní obrázek pořadatele i fotky
-   k článkům jsou v kódu od 16. 9. a čekají na bucket (*Fotky v R2*). Seznam přihlášených účtů na obrazovce oprávnění
-   hotový 15. 9. (oddíl *Čím pokračovat ve fázi 5*).
+   k článkům běží na R2 od 18. 9. (*Fotky v R2*). Seznam přihlášených účtů
+   na obrazovce oprávnění hotový 15. 9. (oddíl *Čím pokračovat ve fázi 5*).
+   Veřejné přihlášky lodí kroky 1–5 hotové 18. 9.; krok 6 čeká na
+   rozhodčího, krok 7 je Outbox.
 6. **Skutečná data** — až dorazí, nahradí `data/2025-mock.json` a nahrají se
    importem. Struktura zůstane.
 7. **Widgety** (stav k 18. 9. 2026, oddíl *Widgety s cizími daty*).
    Tlakový trend (#26) a radar na hodinu (#27, oddíl *Radar na příští
    hodinu*) hotové 18. 9. Dál push „déšť do hodiny" v appce. Blesky nemají volný zdroj (ČHMÚ je
    nedává, Blitzortung zakazuje komerční použití).
+8. **Zátěž** (stav k 22. 9. 2026, oddíl *Mikrocache před webem*).
+   Timeouty kontrol zdraví (#32) a nginx cache (#34) nasazené 22. 9.
+   Na produkci ověřeno hlavičkou `X-Cache`: druhý požadavek HIT, tmavý
+   vzhled vlastní položka, s cookie sezení BYPASS. **Zbývá zátěžový test
+   na serveru** podle platform/docs/PROVOZ.md na tempu 40 — termín před
+   prvním závodem se skutečnými daty.
 
 ## Zbývá doladit
 
