@@ -22,6 +22,15 @@ export default function Pravidla() {
         rozdíl mezi nimi je jedna jednička.
       </p>
 
+      <p>
+        Základem jsou{" "}
+        <a href="https://rules.sailing.cz/#dodatek-a" target="_blank" rel="noopener noreferrer">
+          Závodní pravidla jachtingu 2025–2028
+        </a>{" "}
+        v překladu ČSJ, bodování je v jejich Dodatku A. Pravidla boduje jednotlivý závod; seriál
+        z několika závodů neupravují, to je věc vypsání poháru. Níž je, jak se počítá u nás.
+      </p>
+
       <h2>V závodě: vítěz má 1 bod</h2>
       <p>
         Loď dostane v každé rozjížďce <b>pořadí ve své kategorii</b> a body závodu

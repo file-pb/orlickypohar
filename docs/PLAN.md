@@ -466,7 +466,9 @@ neúčasti nestaví.
 #### Co k tomu říkají závodní pravidla (ověřeno 11. 9. 2026)
 
 Zdroj: [Závodní pravidla jachtingu 2025–2028](https://rules.sailing.cz/#dodatek-a),
-Dodatek A — český překlad ČSJ.
+Dodatek A — český překlad ČSJ. **Filip, 22. 9. 2026: tohle je základní
+set pravidel;** od rozhodčího mohou přijít upřesnění pro seriál. Odkaz je
+i na veřejné stránce `/pravidla`.
 
 **A5.2 dává tvar, který jsme odvodili.** „Loď, která neproplula dráhu,
 vzdala nebo byla diskvalifikována, musí být bodována za cílové umístění
