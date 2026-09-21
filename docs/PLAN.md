@@ -1954,6 +1954,30 @@ je vypnul: řeka o šest stupňů studenější než nádrž jachtaři nic neře
 stahování. Povodí Vltavy měří v nádrži jen po týdnech a vydává to jen jako
 graf na mapě.
 
+## Mikrocache před webem (22. 9. 2026)
+
+Web unese ~4 stránky za vteřinu (zátěžový test 21. 9., platform
+ARCHITEKTURA.md *Cache a očekávaná zátěž*), špička po rozjížďce je ~160
+lidí. **Filip zvolil nginx před webem**, ne přestavbu na `"use cache"`:
+aplikace se nemění a dá se vyřadit vrácením labelů Traefiku na web.
+
+- Služba `cache` v compose, image z `deploy/cache/`. Veřejná adresa vede
+  na ni; web už není v síti `edge`.
+- Nepřihlášený dostane stránku nejvýš 10 s starou; klíč je adresa
+  a platná hodnota cookie vzhledu `op_rezim`.
+- Mimo cache: cookie sezení (`op_token`, `op_token.N`, `op_tok`), hlavička
+  `RSC`, jiné metody než GET/HEAD, `/health`, přihlašování, správa,
+  odpovědi se `Set-Cookie` a chyby.
+- `deploy/cache/test/test.sh` to v CI ověřuje proti falešnému webu
+  a **při selhání blokuje nasazení**.
+- Zvažovaný systemd restart řeší `restart: unless-stopped`; zdvojení
+  s Keepalived ne — web, API i databáze běží v jedné kopii na jednom
+  stroji, druhý nginx by neměl kam posílat.
+
+**Co cache neřeší:** vymyšlená cookie sezení nebo náhodný parametr
+v adrese ji obejdou a vynutí vykreslení. To je případ „hodně požadavků od
+jednoho klienta" a patří k limitu rychlosti (S11 v platformě).
+
 ## Radar na příští hodinu
 
 **Pod výstrahami ČHMÚ** (`web/lib/radar.ts`, 18. 9. 2026): jestli nad
