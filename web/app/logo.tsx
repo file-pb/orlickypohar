@@ -1,4 +1,5 @@
 import { LOGO } from "@/app/znacka-loga";
+import { NAPIS_SERIE } from "@/app/znacka-napis";
 import { ORLIK_YACHT_SERIES } from "@/app/znacka-orlik-yacht-series";
 
 /**
@@ -23,17 +24,18 @@ function Kresba({ className }: { className: string }) {
 }
 
 /**
- * Nápis Orlický pohár vedle kulatého loga (Filip, 22. 9. 2026): „jak jsme
+ * Nápis vedle kulatého loga. Od 22. 9. 2026 odpoledne „Orlická série"
+ * (rozhodčí: „nápis změň na Orlická série"), křivky vyrábí
+ * `web/scripts/napis.py` stejným písmem a proužky jako dřív.
+ *
+ * Původně Orlický pohár vedle kulatého loga (Filip, 22. 9. 2026): „jak jsme
  * měli u předchozího loga, ale aby nepřekrýval nové logo a měl trochu
  * odstup“. Křivky i proužky jsou tytéž jako v původním logu
  * (`znacka-loga.ts` z `app/scripts/ikona.py`), jen bez plachet: na monitoru
  * v jednom řádku, na mobilu ve dvou, jako byl vodoznak čtvercové značky.
  * Výřezy pohledu jsou ořezané na samotný nápis.
  */
-const NAPIS = {
-  monitor: { viewBox: "688 320 2170 258", d: LOGO.monitor.napis },
-  mobil: { viewBox: "245 199 665 292", d: LOGO.mobil.napis },
-} as const;
+const NAPIS = NAPIS_SERIE;
 
 // Vzor proužků potřebuje id unikátní na stránce, stejně jako původní logo.
 let citac = 0;

@@ -117,24 +117,39 @@ header.hlavicka a.znacka svg.logo { display: block; position: relative; z-index:
    Nahoře má 5 px odstup od okraje okna (Filip, 22. 9. 2026: „skoro se
    dotýká“). Horní okraj je vyrovnaný o tolik větším záporným spodním,
    takže řádek menu zůstává stejně vysoký a logo jen sjede níž. */
-header.hlavicka a.znacka svg.logo-oys { width: 68px; height: 68px; margin-top: 5px; margin-bottom: -21px; }
+/* Rozhodčí 22. 9. 2026: „logo prosím větší a klidně dej jinou barvu, ať je
+   to výraznější". Větší kruh víc přesahuje dolů přes linku, řádek menu
+   zůstává stejně vysoký. Barva je sytější námořní modrá (v tmavém vzhledu
+   světle modrá) a nápis ji sdílí, aby logo a nápis působily jako jedno. */
+header.hlavicka a.znacka svg.logo-oys { width: 80px; height: 80px; margin-top: 5px; margin-bottom: -33px; }
 @media (max-width: 48rem) {
-  header.hlavicka a.znacka svg.logo-oys { width: 64px; height: 64px; margin-top: 5px; margin-bottom: -21px; }
+  header.hlavicka a.znacka svg.logo-oys { width: 72px; height: 72px; margin-top: 5px; margin-bottom: -29px; }
 }
-.logo-oys { --logo-oys: #113b59; fill: var(--logo-oys); }
+.logo-oys { --logo-oys: #0b5cad; fill: var(--logo-oys); }
 /* Nápis Orlický pohár vedle loga (Filip, 22. 9. 2026), proužkovaný jako
    v původním logu a v jeho barvách (.logo-pruhy níž). Stojí vedle kruhu
    s odstupem, nikdy přes něj. Stejný záporný spodní okraj jako logo ho
    posune na střed kruhu, ne na střed řádku menu. Na mobilu je ve dvou
    řádcích, v jednom by se vedle loga a menu nevešel. */
-header.hlavicka a.znacka:has(svg.logo-oys) { gap: 0.9rem; }
-header.hlavicka a.znacka svg.logo-napis-monitor { height: 28px; width: auto; margin-top: 5px; margin-bottom: -21px; }
-header.hlavicka a.znacka svg.logo-napis-mobil { display: none; height: 32px; width: auto; margin-top: 5px; margin-bottom: -21px; }
+/* Odstup od kruhu větší (Filip, 22. 9. 2026). Na dva řádky se nápis láme
+   až na úzkém telefonu: dřív od 48rem, a tak byl zalomený i tam, kde se
+   do řádku pohodlně vešel. */
+header.hlavicka a.znacka:has(svg.logo-oys) { gap: 1.25rem; }
+header.hlavicka a.znacka svg.logo-napis-monitor { height: 28px; width: auto; margin-top: 5px; margin-bottom: -27px; }
+header.hlavicka a.znacka svg.logo-napis-mobil { display: none; height: 34px; width: auto; margin-top: 5px; margin-bottom: -25px; }
 @media (max-width: 48rem) {
-  header.hlavicka a.znacka:has(svg.logo-oys) { gap: 0.7rem; }
-  header.hlavicka a.znacka svg.logo-napis-monitor { display: none; }
-  header.hlavicka a.znacka svg.logo-napis-mobil { display: block; margin-bottom: -16px; }
+  header.hlavicka a.znacka:has(svg.logo-oys) { gap: 1rem; }
+  header.hlavicka a.znacka svg.logo-napis-monitor { height: 24px; margin-bottom: -23px; }
 }
+@media (max-width: 30rem) {
+  header.hlavicka a.znacka:has(svg.logo-oys) { gap: 0.85rem; }
+  header.hlavicka a.znacka svg.logo-napis-monitor { display: none; }
+  header.hlavicka a.znacka svg.logo-napis-mobil { display: block; }
+}
+/* Kruh i nápis v hlavičce mají jednu barvu, v tmavém vzhledu světlejší. */
+header.hlavicka { --barva-znacky: #0b5cad; }
+header.hlavicka a.znacka svg.logo-oys { --logo-oys: var(--barva-znacky); }
+header.hlavicka a.znacka svg.logo-napis-oys { --logo-napis: var(--barva-znacky); }
 /* Původní logo (app/logo-puvodni.tsx) — dnes se nevykresluje, styly
    zůstávají, aby šlo vrátit jedním importem. */
 header.hlavicka a.znacka svg.logo-monitor { height: 64px; width: auto; margin-bottom: -12px; }
@@ -191,13 +206,13 @@ body:has(.uvod) .pozadi-znak { display: none; }
   :root:not([data-rezim="svetly"]) .logo-oys { --logo-oys: #7fa7c9; }
   /* V hlavičce nad fotkou byla #7fa7c9 málo vidět (Filip, 22. 9. 2026);
      vodoznak na pozadí zůstává tlumený. */
-  :root:not([data-rezim="svetly"]) header.hlavicka .logo-oys { --logo-oys: #d3e3f0; }
+  :root:not([data-rezim="svetly"]) header.hlavicka { --barva-znacky: #7cc4ff; }
 }
 :root[data-rezim="tmavy"] .pozadi-znak { opacity: 0.09; }
 :root[data-rezim="tmavy"] .logo { --logo-hlavni: #7fa7c9; --logo-druha: #e25a6d; --logo-seda: #c4ced8; --logo-napis: #edeae5; }
 :root[data-rezim="tmavy"] .logo-vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
 :root[data-rezim="tmavy"] .logo-oys { --logo-oys: #7fa7c9; }
-:root[data-rezim="tmavy"] header.hlavicka .logo-oys { --logo-oys: #d3e3f0; }
+:root[data-rezim="tmavy"] header.hlavicka { --barva-znacky: #7cc4ff; }
 header.hlavicka nav { display: flex; gap: 1rem; flex: none; }
 header.hlavicka nav a { color: var(--tlumeny); font-weight: 500; font-size: 0.9rem; }
 header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
@@ -213,8 +228,8 @@ header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
   header.hlavicka .obal { padding-top: 0.2rem; padding-bottom: 0.2rem; }
   header.hlavicka a.znacka { font-size: 1.05rem; }
   header.hlavicka a.znacka svg.logo-monitor { height: 76px; margin-bottom: -24px; }
-  header.hlavicka a.znacka svg.logo-oys { width: 84px; height: 84px; margin-bottom: -37px; }
-  header.hlavicka a.znacka svg.logo-napis-monitor { height: 33px; margin-bottom: -18px; }
+  header.hlavicka a.znacka svg.logo-oys { width: 96px; height: 96px; margin-bottom: -49px; }
+  header.hlavicka a.znacka svg.logo-napis-monitor { height: 33px; margin-bottom: -30px; }
   header.hlavicka nav { gap: 0.35rem; align-items: center; }
   header.hlavicka nav > a {
     padding: 0.4rem 0.7rem; border-radius: 8px; font-size: 0.925rem;
