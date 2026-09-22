@@ -1,0 +1,189 @@
+{
+ "_zdroj": "SKUTEČNÁ VÝSLEDKOVÁ LISTINA FxCK Cancer regaty 2026 (PDF od pořadatele, ~/Downloads/'FxC Cancer regata výsledky.pdf', převedeno 22. 9. 2026). Dvě rozjížďky, u každé celkové pořadí v cíli nebo kód. Názvy lodí jsou sjednocené se sešitem rozhodčího: listina píše 'Modrý kafe' (MODRÉ CAFE), 'Filozef' (FILOZEP), 'Maybe' (Mabye), 'Sea Mouse III.' (SEA MOUSE III).",
+ "zavod": "FxCK Cancer",
+ "rozjizdky": [
+  {
+   "cislo": 1,
+   "vysledky": [
+    {
+     "lod": "SEA MOUSE III",
+     "poradiVCili": 1
+    },
+    {
+     "lod": "MODRÉ CAFE",
+     "poradiVCili": 6
+    },
+    {
+     "lod": "SOCKA",
+     "poradiVCili": 15
+    },
+    {
+     "lod": "FAR  STAR III",
+     "poradiVCili": 10
+    },
+    {
+     "lod": "Varianta",
+     "poradiVCili": 16
+    },
+    {
+     "lod": "LUNA",
+     "poradiVCili": 5
+    },
+    {
+     "lod": "MAMBA",
+     "poradiVCili": 4
+    },
+    {
+     "lod": "PEZI",
+     "poradiVCili": 2
+    },
+    {
+     "lod": "M@rtina",
+     "poradiVCili": 8
+    },
+    {
+     "lod": "AVENIR",
+     "poradiVCili": 7
+    },
+    {
+     "lod": "FILOZEP",
+     "poradiVCili": 3
+    },
+    {
+     "lod": "DEPRESSO",
+     "poradiVCili": 9
+    },
+    {
+     "lod": "Rio",
+     "poradiVCili": 11
+    },
+    {
+     "lod": "MICHELLE",
+     "poradiVCili": 12
+    },
+    {
+     "lod": "Claudie",
+     "poradiVCili": 13
+    },
+    {
+     "lod": "SPRUNZEL",
+     "poradiVCili": 17
+    },
+    {
+     "lod": "Mabye",
+     "poradiVCili": 14
+    },
+    {
+     "lod": "Caprice",
+     "kod": "Dnf"
+    },
+    {
+     "lod": "THEA",
+     "kod": "Dns"
+    }
+   ]
+  },
+  {
+   "cislo": 2,
+   "vysledky": [
+    {
+     "lod": "SEA MOUSE III",
+     "poradiVCili": 1
+    },
+    {
+     "lod": "MODRÉ CAFE",
+     "poradiVCili": 5
+    },
+    {
+     "lod": "SOCKA",
+     "poradiVCili": 8
+    },
+    {
+     "lod": "FAR  STAR III",
+     "poradiVCili": 11
+    },
+    {
+     "lod": "Varianta",
+     "poradiVCili": 15
+    },
+    {
+     "lod": "LUNA",
+     "poradiVCili": 2
+    },
+    {
+     "lod": "MAMBA",
+     "poradiVCili": 3
+    },
+    {
+     "lod": "PEZI",
+     "poradiVCili": 6
+    },
+    {
+     "lod": "M@rtina",
+     "poradiVCili": 4
+    },
+    {
+     "lod": "AVENIR",
+     "poradiVCili": 9
+    },
+    {
+     "lod": "FILOZEP",
+     "poradiVCili": 13
+    },
+    {
+     "lod": "DEPRESSO",
+     "poradiVCili": 7
+    },
+    {
+     "lod": "Rio",
+     "poradiVCili": 10
+    },
+    {
+     "lod": "MICHELLE",
+     "poradiVCili": 12
+    },
+    {
+     "lod": "Claudie",
+     "poradiVCili": 14
+    },
+    {
+     "lod": "SPRUNZEL",
+     "poradiVCili": 16
+    },
+    {
+     "lod": "Mabye",
+     "kod": "Dns"
+    },
+    {
+     "lod": "Caprice",
+     "kod": "Dns"
+    },
+    {
+     "lod": "THEA",
+     "kod": "Dns"
+    }
+   ]
+  }
+ ],
+ "kategorie": {
+  "SEA MOUSE III": "Race",
+  "MODRÉ CAFE": "Race",
+  "SOCKA": "Race",
+  "FAR  STAR III": "Race",
+  "Varianta": "Pod7m",
+  "LUNA": "Pod7m",
+  "MAMBA": "Nad7m",
+  "PEZI": "Nad7m",
+  "M@rtina": "Nad7m",
+  "AVENIR": "Nad7m",
+  "FILOZEP": "Nad7m",
+  "DEPRESSO": "Nad7m",
+  "Rio": "Nad7m",
+  "MICHELLE": "Nad7m",
+  "Claudie": "Nad7m",
+  "SPRUNZEL": "Nad7m",
+  "Mabye": "Nad7m",
+  "Caprice": "Nad7m",
+  "THEA": "Nad7m"
+ }
+}

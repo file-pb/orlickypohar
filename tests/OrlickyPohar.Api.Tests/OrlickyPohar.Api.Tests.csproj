@@ -35,6 +35,7 @@
     <!-- Skutečná data od rozhodčího. Ověřuje proti nim SerieTests. -->
     <Content Include="..\..\data\pvl\orlik-2026-09-16.html" Link="Data\pvl-orlik.html" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\data\2026-poradi-rozhodci.json" Link="Data\2026-poradi-rozhodci.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\data\2026-fxck-cancer.json" Link="Data\2026-fxck-cancer.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

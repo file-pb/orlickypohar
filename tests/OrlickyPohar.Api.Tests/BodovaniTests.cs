@@ -238,6 +238,23 @@ public class BodovaniTests
     }
 
     [Fact]
+    public void Pri_uplne_shode_umisteni_rozhoduje_posledni_rozjizdka()
+    {
+        // ZPJ A8.2, doloženo listinou FxCK Cancer 2026 v Race: SOCKA 3 + 4,
+        // FAR STAR III 4 + 3 (pořadí v kategorii). Stejné body i stejná
+        // umístění; ve druhé rozjížďce byla SOCKA lepší, takže je třetí.
+        // Abecedně by vyhrála FAR STAR — tak to počítal kód do 22. 9. 2026.
+        var zavod = Bodovani.VysledkyZavodu(
+        [
+            Rozjizdka(1, "sea mouse", "modre", "far star", "socka"),
+            Rozjizdka(2, "sea mouse", "modre", "socka", "far star"),
+        ]).ToDictionary(v => v.Lod);
+
+        Assert.Equal(3, zavod["socka"].Poradi);
+        Assert.Equal(4, zavod["far star"].Poradi);
+    }
+
+    [Fact]
     public void Poradi_je_uvnitr_kategorie_a_serazene_podle_bodu()
     {
         var zavod = FxckCancerNad7m();

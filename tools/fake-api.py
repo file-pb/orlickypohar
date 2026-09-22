@@ -114,8 +114,13 @@ def vysledky_zavodu(rozjizdky, pocet_skrtu=0, prihlaseno_zvenku=None):
 
     vysledek = []
     for kategorie in sorted({v["kategorie"] for v in spocteno}, key=KAT_PORADI.get):
-        v_kategorii = sorted((v for v in spocteno if v["kategorie"] == kategorie),
-                             key=lambda v: (v["body"], v["_nej"], v["lod"]))
+        # Shoda podle ZPJ A8 jako v API: seřazené body bez škrtů, pak
+        # poslední rozjížďka (i škrtnutá), pak jméno.
+        def a8(v):
+            serazene = sorted(b["body"] for b in v["rozjizdky"] if not b["skrtnuto"])
+            od_konce = [b["body"] for b in sorted(v["rozjizdky"], key=lambda b: -b["cislo"])]
+            return (v["body"], serazene, od_konce, v["lod"])
+        v_kategorii = sorted((v for v in spocteno if v["kategorie"] == kategorie), key=a8)
         for i, v in enumerate(v_kategorii):
             vysledek.append({**{k: v[k] for k in v if k != "_nej"}, "poradi": i + 1})
     return vysledek

@@ -163,16 +163,48 @@ public static class Bodovani
                 diskvalifikovane.Contains(lod)));
         }
 
-        // Pořadí uvnitř kategorie. Při shodě bodů rozhoduje lepší jednotlivý
-        // výsledek — obvyklé pravidlo a hlavně stabilní, takže dvě lodě se
-        // stejným součtem nikdy neprohodí pořadí mezi dvěma výpočty.
+        // Pořadí uvnitř kategorie. Shodu bodů rozhoduje ZPJ A8, jméno až
+        // úplně nakonec, aby se dvě lodě mezi dvěma výpočty neprohodily.
         return vysledky
             .GroupBy(v => v.Kategorie)
             .SelectMany(skupina => skupina
                 .OrderBy(v => v.Body)
-                .ThenBy(v => v.Rozjizdky.Where(b => !b.Skrtnuto).Min(b => (int?)b.Body) ?? int.MaxValue)
+                .ThenBy(v => v, ShodaVZavode.Instance)
                 .ThenBy(v => v.Lod, Jmena.Cesky)
                 .Select((v, i) => v with { Poradi = i + 1 }))
             .ToList();
+    }
+
+    /// <summary>
+    /// Shoda v závodě podle ZPJ A8.
+    /// <list type="number">
+    /// <item>A8.1: body z rozjížděk seřazené od nejlepšího, bez škrtnutých;
+    /// na prvním rozdílu vyhrává lepší.</item>
+    /// <item>A8.2: body v poslední rozjížďce, pak v předposlední a dál —
+    /// <b>i škrtnuté</b>.</item>
+    /// </list>
+    /// Doloženo listinou FxCK Cancer 2026: SOCKA a FAR STAR III mají v Race
+    /// obě 3 + 4; SOCKA byla ve druhé rozjížďce lepší a je třetí.
+    /// </summary>
+    private sealed class ShodaVZavode : IComparer<VysledekZavodu>
+    {
+        public static readonly ShodaVZavode Instance = new();
+
+        public int Compare(VysledekZavodu? a, VysledekZavodu? b)
+        {
+            if (a is null || b is null) return 0;
+
+            var ba = a.Rozjizdky.Where(r => !r.Skrtnuto).Select(r => r.Body).Order().ToList();
+            var bb = b.Rozjizdky.Where(r => !r.Skrtnuto).Select(r => r.Body).Order().ToList();
+            for (var i = 0; i < Math.Min(ba.Count, bb.Count); i++)
+                if (ba[i] != bb[i]) return ba[i].CompareTo(bb[i]);
+
+            var ra = a.Rozjizdky.ToDictionary(r => r.Cislo, r => r.Body);
+            var rb = b.Rozjizdky.ToDictionary(r => r.Cislo, r => r.Body);
+            foreach (var cislo in ra.Keys.Intersect(rb.Keys).OrderDescending())
+                if (ra[cislo] != rb[cislo]) return ra[cislo].CompareTo(rb[cislo]);
+
+            return 0;
+        }
     }
 }

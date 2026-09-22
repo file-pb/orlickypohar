@@ -1203,6 +1203,16 @@ Opravy dat od rozhodčího: JOY na FxCK Cancer má 2 (v sešitu prázdná buňka
 je to neúčast). Pohár Slunce nad 7 m má u neúčasti 15, správně 13 — „dvě
 lodě přijely jen teď, už jsem je nechtěl ručně propisovat". Náš výpočet dává 13.
 
+**Listina FxCK Cancer převedená do dat (22. 9. 2026).** Jediná zastávka,
+kde máme obě strany skutečné: výsledkovou listinu rozjížděk
+(`data/2026-fxck-cancer.json`) i sloupec v sešitu. `SerieTests` ji prožene
+celým výpočtem a všech 19 lodí dá do seriálu přesně čísla ze sešitu.
+Vyplavala přitom chyba: shodu v závodě rozhodoval nejlepší jednotlivý
+výsledek a pak abeceda. SOCKA a FAR STAR III mají v Race obě 3 + 4, listina
+i sešit dávají přednost SOCKA (lepší v poslední rozjížďce). Rozstřel
+v závodě je teď podle ZPJ A8.1 a A8.2. Generátor bere u FxCK Cancer
+rozjížďky z listiny, ostatní zastávky zůstávají vymyšlené.
+
 **Ročník nanečisto** (`tools/gen-mock.py`) od 22. 9. skládá rozjížďky tak,
 aby pořadí v kategorii na každé odjeté zastávce bylo **skutečné ze sešitu**
 — rozhodčí na webu vidí svá čísla. Rozjížďky, časy a posádky zůstávají
