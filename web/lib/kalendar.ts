@@ -21,6 +21,26 @@ export type ZastavkaRadek = S["ZastavkaRadek"];
 export type ZastavkaVstup = S["ZastavkaVstup"];
 export type StavZavodu = S["StavZavodu"];
 export type DruhZastavky = S["DruhZastavky"];
+export type Vyhodnoceni = NonNullable<S["Vyhodnoceni"]>;
+
+/**
+ * Jak se regata vyhodnocuje. Netýká se bodů do poháru — ty jdou vždycky
+ * po kategoriích — jen toho, jaké tabulky regata vyhlásí.
+ */
+export const VYHODNOCENI: Record<Vyhodnoceni, { stitek: string; popis: string }> = {
+  PoKategoriich: {
+    stitek: "po kategoriích",
+    popis: "Pořadí uvnitř tříd, jako většina regat.",
+  },
+  CelePole: {
+    stitek: "celé pole dohromady",
+    popis: "Jedno pořadí přes všechny lodě, třeba 24hodinovka.",
+  },
+  Oboje: {
+    stitek: "celé pole i kategorie",
+    popis: "Celkový vítěz i pořadí v kategoriích, obojí vedle sebe.",
+  },
+};
 
 /**
  * Co tlačítko udělá a co to znamená.
