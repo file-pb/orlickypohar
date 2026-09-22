@@ -26,8 +26,8 @@ const PARTNERI: Partner[] = [
   { nazev: "Marina Orlík", logo: "/partneri/marina-orlik.svg", odkaz: "https://www.marinaorlik.cz/" },
   { nazev: "Stingray", logo: "/partneri/stingray.png", odkaz: "https://www.stingray.cz/" },
   { nazev: "Hacjacht", logo: "/partneri/hacjacht.png", odkaz: "https://www.hacjacht.cz/" },
-  // YC Písek logo nemá, na webu jen nápis — dlaždice je jeho název písmem.
-  { nazev: "Yacht Club Písek", logo: "/partneri/yc-pisek.svg", odkaz: "https://yachtclubpisek.cz/" },
+  // Znak YCPk od Filipa (PDF z CorelDRAW), modrá varianta.
+  { nazev: "Yacht Club Písek", logo: "/partneri/yc-pisek.png", odkaz: "https://yachtclubpisek.cz/" },
   { nazev: "Colins Yacht Club", logo: "/partneri/cyc.png", odkaz: "https://cyc.cz/" },
   { nazev: "FUCK CANCER", logo: "/partneri/fuck-cancer.svg", odkaz: "https://www.fuckcancer.cz/" },
   {
