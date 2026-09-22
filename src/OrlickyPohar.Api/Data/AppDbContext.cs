@@ -140,6 +140,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         ucast.Property(x => x.PoznavaciZnak).HasMaxLength(Zapis.ZnakNejvic);
         ucast.Property(x => x.StartovnePoznamka).HasMaxLength(200);
 
+        // Smazaná fotka papíru nesmí odnést rozjížďku i s výsledky.
+        b.Entity<Rozjizdka>().HasOne(x => x.Fotka).WithMany().HasForeignKey(x => x.FotkaId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         var zmena = b.Entity<ZmenaUcasti>();
         zmena.ToTable("ZmenyUcasti");
         zmena.HasOne(x => x.Ucast).WithMany(x => x.Zmeny).HasForeignKey(x => x.UcastId)

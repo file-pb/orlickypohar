@@ -547,6 +547,9 @@ namespace OrlickyPohar.Api.Migrations
                         .HasMaxLength(400)
                         .HasColumnType("character varying(400)");
 
+                    b.Property<Guid?>("FotkaId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("Publikovano")
                         .HasColumnType("boolean");
 
@@ -563,6 +566,8 @@ namespace OrlickyPohar.Api.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FotkaId");
 
                     b.HasIndex("ZavodId", "Cislo")
                         .IsUnique();
@@ -928,11 +933,18 @@ namespace OrlickyPohar.Api.Migrations
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Rozjizdka", b =>
                 {
+                    b.HasOne("OrlickyPohar.Api.Features.Fotky.Fotka", "Fotka")
+                        .WithMany()
+                        .HasForeignKey("FotkaId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("OrlickyPohar.Api.Features.Zavody.Zavod", "Zavod")
                         .WithMany("Rozjizdky")
                         .HasForeignKey("ZavodId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Fotka");
 
                     b.Navigation("Zavod");
                 });

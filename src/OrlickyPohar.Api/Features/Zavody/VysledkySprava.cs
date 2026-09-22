@@ -28,7 +28,9 @@ public record RozjizdkaSpravaRadek(
     bool SmiZapisovat = false,
     // Smí ten, kdo se dívá, rozjížďku zařadit do poháru nebo ji z něj
     // vyndat? Závisí na roli i na tom, jestli jsou čísla podepsaná.
-    bool SmiDoPoharu = false);
+    bool SmiDoPoharu = false,
+    // Má rozjížďka fotku papírového zápisu? Samotná fotka je až v zápisu.
+    bool MaPapir = false);
 
 public record PrehledVysledkuDto(
     string Serie,

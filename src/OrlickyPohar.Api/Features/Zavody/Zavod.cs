@@ -391,7 +391,7 @@ public class ZmenaUcasti
 /// na výkonnosti lodi. Pro model je to pořadí jako každé jiné.
 /// </para>
 /// </summary>
-public class Rozjizdka
+public class Rozjizdka : Fotky.IMaFotku
 {
     public int Id { get; set; }
 
@@ -414,6 +414,17 @@ public class Rozjizdka
     /// </para>
     /// </summary>
     public bool DoSerie { get; set; } = true;
+
+    /// <summary>
+    /// Fotka papírového zápisu z cíle — doklad k číslům (PLAN.md, Zápis
+    /// z vody, krok 3).
+    /// <para>
+    /// <b>Veřejně se nevydává.</b> Je to pracovní papír se škrty, ne fotka
+    /// na web: vidí ji pořadatel regaty a rozhodčí, který čísla ověřuje.
+    /// </para>
+    /// </summary>
+    public Guid? FotkaId { get; set; }
+    public Fotky.Fotka? Fotka { get; set; }
 
     /// <summary>Kam došel zápis výsledků. Nová rozjížďka je vždycky návrh.</summary>
     public StavVysledku StavVysledku { get; set; } = StavVysledku.Navrzeno;
