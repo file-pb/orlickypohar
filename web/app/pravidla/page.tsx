@@ -3,7 +3,7 @@ import { Boky } from "@/app/boky";
 
 export const metadata = {
   title: "Jak se počítají body",
-  description: "Nízkobodový systém, kódy, škrty a průběžné pořadí Orlického poháru.",
+  description: "Nízkobodový systém, kódy, neúčast, 24hodinovka, škrty a rozstřel shody v Orlickém poháru.",
 };
 
 /**
@@ -27,7 +27,7 @@ export default function Pravidla() {
         <a href="https://rules.sailing.cz/#dodatek-a" target="_blank" rel="noopener noreferrer">
           Závodní pravidla jachtingu 2025–2028
         </a>{" "}
-        v překladu ČSJ, bodování je v jejich Dodatku A. Pravidla boduje jednotlivý závod; seriál
+        v překladu ČSJ, bodování je v jejich Dodatku A. Pravidla bodují jednotlivý závod; seriál
         z několika závodů neupravují, to je věc vypsání poháru. Níž je, jak se počítá u nás.
       </p>
 
@@ -41,53 +41,80 @@ export default function Pravidla() {
 
       <h2>Kdo nedojel</h2>
       <p>
-        Loď s kódem dostane <b>místo za posledním, kdo dojel</b> — a kódy se do té
-        řady staví podle závažnosti. Lodě se stejným kódem mají stejné body.
-      </p>
-      <p>
-        Při dvanácti dokončivších má <code>DNF</code> třináct bodů a <code>DNS</code>{" "}
-        čtrnáct. Když ale <code>DNF</code> nikdo nemá, spadnou všechny <code>DNS</code>{" "}
-        na třináct. Není to tedy pevné „+1“ nebo „+2“, ale další volné místo v pořadí.
+        Loď, která nestartovala, nedokončila, odstoupila nebo byla diskvalifikovaná
+        (<code>DNS</code>, <code>DNF</code>, <code>RET</code>, <code>DSQ</code> a další), dostane
+        podle pravidla A5.2 <b>počet lodí své kategorie přihlášených do závodu plus jedna</b>.
+        Všechny kódy stejně: při čtrnácti přihlášených má <code>DNF</code> i <code>DNS</code>{" "}
+        patnáct bodů.
       </p>
 
-      <h2>Škrty</h2>
+      <h2>Škrty v závodě</h2>
       <p>
         Okruhový závod, který odjel <b>čtyři a více rozjížděk</b>, škrtá jeden
-        nejhorší výsledek. Se třemi a méně se neškrtá nic. Kolik rozjížděk se odjede,
+        nejhorší výsledek (potvrdil rozhodčí). Se třemi a méně se neškrtá nic. Kolik rozjížděk se odjede,
         se rozhoduje na vodě podle větru, takže se škrt odvodí až po závodě —
         a rozhodčí ho smí přepsat.
       </p>
 
       <h2>Do seriálu: vítěz má 0 bodů</h2>
       <p>
-        Do ročníkové tabulky nejde součet bodů závodu, ale <b>pořadí v kategorii
-        mínus jedna</b>. Vítěz zastávky má nulu, druhý jedničku. Vyhrává tedy
-        nejnižší součet.
+        Jednotlivé regaty se bodují podle svých pravidel a do seriálu se z nich dopočítá
+        pořadí v kategorii. Do ročníkové tabulky nejde součet bodů závodu, ale{" "}
+        <b>pořadí v kategorii mínus jedna</b>. Vítěz zastávky má nulu, druhý jedničku.
+        Vyhrává nejnižší součet.
       </p>
       <p>
         Jsou to dvě stupnice, ne jedna posunutá: v závodě se počítá od jedné,
-        v seriálu od nuly. V průběžném pořadí se pak <b>škrtá jeden nejhorší
-        závod</b> — proto jsou v tabulce dvě čísla, součet a součet po škrtu.
-      </p>
-
-      <h2>Co ještě není potvrzené</h2>
-      <p className="poznamka">
-        Pravidla jsou rozluštěná ze skutečných výsledkových listin a ověřená proti
-        sešitu rozhodčího — součet sedí u všech lodí. Tři věci ale z dat čistě
-        nevycházejí a čekají na potvrzení:
+        v seriálu od nuly.
       </p>
       <ul>
         <li>
-          <b>24hodinovka</b> vypadá jako bonus, ne jako dvojnásobek: celé pole se
-          posune o jedničku dolů, takže vítěz má −1.
+          <b>Neúčast</b> (<code>DNC</code>): loď dostane tolik bodů, kolik lodí její kategorie
+          bylo do toho závodu přihlášených — o místo víc než poslední, jako v A5.2.
         </li>
         <li>
-          <b>Pořadí kódů</b> je doložené jen mezi <code>DNF</code> a <code>DNS</code>.
-          Zbytek řadíme podle logiky „kdo víc odjel, je na tom líp“.
+          <b>24hodinovka</b> je bonus: vítěz má −1, druhý 0, třetí 1. Kdo nejel, bonus nemá.
         </li>
         <li>
-          <b>Pět řádků škrtu</b> v sešitu neodpovídá výpočtu. Držíme to na očích
-          místo dopočítávání zpětně — je to otázka na rozhodčího, ne chyba v tabulce.
+          <b>Diskvalifikace v regatě</b> (<code>DSQ</code>) je 20 bodů — při závažném porušení
+          pravidel nebo nesplnění alternativního trestu.
+        </li>
+      </ul>
+
+      <h2>Škrty a shoda bodů</h2>
+      <p>
+        Nejhorší výsledky ročníku se škrtají: od devíti zastávek <b>dva</b>. Škrtnout se dá
+        i dvacítka za diskvalifikaci; při stejně špatných výsledcích se škrtá ten dřívější.
+        V tabulce jsou proto dvě čísla, součet a součet po škrtu,
+        a škrtnutá zastávka je přeškrtnutá.
+      </p>
+      <p>Když mají dvě lodě po škrtech stejně bodů, rozhoduje:</p>
+      <ol>
+        <li>
+          <b>počet lepších umístění</b> — kdo má víc prvních míst, pak druhých a tak dál.
+          Škrtnuté výsledky se nepočítají;
+        </li>
+        <li>
+          <b>poslední regata sezóny, kterou obě lodě dokončily</b> a žádná z nich ji nemá
+          škrtnutou.
+        </li>
+      </ol>
+
+      <h2>Odkud to víme</h2>
+      <p className="poznamka">
+        Pravidla seriálu sepsal rozhodčí Miloš Zvonař (YC Písek) a jeho sešit s pořadím 2026
+        je naše zkouška: výpočet s ním sedí u všech lodí kromě několika řádků, kde se
+        sešit sám přepsal nebo spletl — rozhodčí ty řádky prošel a potvrdil výpočet. Pořád
+        otevřené zůstává:
+      </p>
+      <ul>
+        <li>
+          <b>20 bodů za diskvalifikaci</b> platí pro ročník 2026; na příští rok se hodnocení
+          trestů upraví.
+        </li>
+        <li>
+          <b>Náprava</b> (<code>RDG</code>) je zatím hned za posledním, kdo dojel. Skutečné body
+          jí určuje protestní komise.
         </li>
       </ul>
 

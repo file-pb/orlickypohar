@@ -1,615 +1,1395 @@
 {
-  "_zdroj": "SKUTEČNÁ DATA od rozhodčího Miloše Zvonaře, stav po Radavském poháru (závod z 3. 9. 2026). Slouží jako ověřovací sada pro počítání seriálu: naše výsledky se proti nim porovnávají v SerieTests. NEJSOU to výsledky rozjížděk — jen body, které z každé zastávky šly do poháru.",
-  "serie": "Orlická série 2026",
-  "zavody": [
-    "Jarní vítr",
-    "Radavská regata",
-    "24hodinovka",
-    "Vánoční regata",
-    "Izolepa",
-    "FxCK Cancer",
-    "Radavský pohár",
-    "O pohár Vltavy",
-    "Pohár Slunce"
+ "_zdroj": "SKUTEČNÁ DATA od rozhodčího Miloše Zvonaře: sešit 'Pořadí Orlická série 2026-2.xlsx', doručený 22. 9. 2026, stav po Poháru Slunce (19. 9. 2026). Ověřovací sada pro SerieTests. Jsou to jen body, které z každé zastávky šly do poháru, ne výsledky rozjížděk. 'body' jsou čísla ze sešitu; 'misto' a 'kod' jsou z nich odvozené: DSQ = 20 bodů, DNC = počet lodí kategorie na zastávce (nebo prázdná buňka), jinak místo = body + 1, u 24hodinovky body + 2. Opraveno podle rozhodčího (22. 9. 2026): JOY na FxCK Cancer 2 body (v sešitu prázdná buňka; sesitBody o 2 vyšší). Neopraveno, ale potvrzeno jako chyba: Pohár Slunce nad 7 m má u neúčasti 15, správně podle rozhodčího 13. Zrušené zastávky (Radavská a Vánoční regata, v sešitu nuly) tu nejsou.",
+ "serie": "Orlická série 2026",
+ "zavody": [
+  "Jarní vítr",
+  "24hodinovka",
+  "Izolepa",
+  "FxCK Cancer",
+  "Radavský pohár",
+  "O pohár Vltavy",
+  "Pohár Slunce"
+ ],
+ "zruseneVSesitu": [
+  "Radavská regata",
+  "Vánoční regata"
+ ],
+ "pocetSkrtu": 2,
+ "kategorie": {
+  "Pod7m": [
+   {
+    "lod": "LUNA",
+    "zastavky": [
+     {
+      "body": 0,
+      "misto": 1
+     },
+     {
+      "body": -1,
+      "misto": 1
+     },
+     {
+      "body": 0,
+      "misto": 1
+     },
+     {
+      "body": 0,
+      "misto": 1
+     },
+     {
+      "body": 1,
+      "misto": 2
+     },
+     {
+      "body": 0,
+      "misto": 1
+     },
+     {
+      "body": 0,
+      "misto": 1
+     }
+    ],
+    "sesitBody": 0,
+    "sesitPoradi": 1,
+    "sesitPrepocet": 0,
+    "sesitPoradiPrepocet": 1
+   },
+   {
+    "lod": "SENDY",
+    "zastavky": [
+     {
+      "body": 1,
+      "kod": "DNC"
+     },
+     {
+      "body": 0,
+      "misto": 2
+     },
+     {
+      "body": 2,
+      "misto": 3
+     },
+     {
+      "body": 2,
+      "kod": "DNC"
+     },
+     {
+      "body": 2,
+      "misto": 3
+     },
+     {
+      "body": 1,
+      "misto": 2
+     },
+     {
+      "body": 1,
+      "misto": 2
+     }
+    ],
+    "sesitBody": 9,
+    "sesitPoradi": 2,
+    "sesitPrepocet": 5,
+    "sesitPoradiPrepocet": 2
+   },
+   {
+    "lod": "JOY",
+    "zastavky": [
+     {
+      "body": 1,
+      "kod": "DNC"
+     },
+     {
+      "body": 1,
+      "misto": 3
+     },
+     {
+      "body": 1,
+      "misto": 2
+     },
+     {
+      "body": 2,
+      "kod": "DNC"
+     },
+     {
+      "body": 3,
+      "kod": "DNC"
+     },
+     {
+      "body": 2,
+      "kod": "DNC"
+     },
+     {
+      "body": 2,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 12,
+    "sesitPoradi": 3,
+    "sesitPrepocet": 7,
+    "sesitPoradiPrepocet": 3
+   },
+   {
+    "lod": "Charlotte III",
+    "zastavky": [
+     {
+      "body": 1,
+      "kod": "DNC"
+     },
+     {
+      "body": 3,
+      "kod": "DNC"
+     },
+     {
+      "body": 4,
+      "kod": "DNC"
+     },
+     {
+      "body": 2,
+      "kod": "DNC"
+     },
+     {
+      "body": 0,
+      "misto": 1
+     },
+     {
+      "body": 2,
+      "kod": "DNC"
+     },
+     {
+      "body": 2,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 14,
+    "sesitPoradi": 4,
+    "sesitPrepocet": 7,
+    "sesitPoradiPrepocet": 4
+   },
+   {
+    "lod": "Varianta",
+    "zastavky": [
+     {
+      "body": 1,
+      "kod": "DNC"
+     },
+     {
+      "body": 3,
+      "kod": "DNC"
+     },
+     {
+      "body": 4,
+      "kod": "DNC"
+     },
+     {
+      "body": 1,
+      "misto": 2
+     },
+     {
+      "body": 3,
+      "kod": "DNC"
+     },
+     {
+      "body": 2,
+      "kod": "DNC"
+     },
+     {
+      "body": 2,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 16,
+    "sesitPoradi": 5,
+    "sesitPrepocet": 9,
+    "sesitPoradiPrepocet": 5
+   },
+   {
+    "lod": "Andante",
+    "zastavky": [
+     {
+      "body": 1,
+      "kod": "DNC"
+     },
+     {
+      "body": 3,
+      "kod": "DNC"
+     },
+     {
+      "body": 3,
+      "misto": 4
+     },
+     {
+      "body": 2,
+      "kod": "DNC"
+     },
+     {
+      "body": 3,
+      "kod": "DNC"
+     },
+     {
+      "body": 2,
+      "kod": "DNC"
+     },
+     {
+      "body": 2,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 16,
+    "sesitPoradi": 6,
+    "sesitPrepocet": 10,
+    "sesitPoradiPrepocet": 6
+   }
   ],
-  "kategorie": {
-    "Pod7m": [
-      {
-        "lod": "LUNA",
-        "body": [
-          0,
-          0,
-          -1,
-          0,
-          0,
-          0,
-          1
-        ],
-        "sesitBody": 0,
-        "sesitPoradi": 1,
-        "sesitPrepocet": 1,
-        "sesitPoradiPrepocet": 1
-      },
-      {
-        "lod": "SENDY",
-        "body": [
-          1,
-          0,
-          0,
-          0,
-          2,
-          2,
-          2
-        ],
-        "sesitBody": 7,
-        "sesitPoradi": 2,
-        "sesitPrepocet": 5,
-        "sesitPoradiPrepocet": 2
-      },
-      {
-        "lod": "JOY",
-        "body": [
-          1,
-          0,
-          1,
-          0,
-          1,
-          2,
-          3
-        ],
-        "sesitBody": 8,
-        "sesitPoradi": 3,
-        "sesitPrepocet": 6,
-        "sesitPoradiPrepocet": 4
-      },
-      {
-        "lod": "Andante",
-        "body": [
-          1,
-          0,
-          3,
-          0,
-          3,
-          2,
-          3
-        ],
-        "sesitBody": 12,
-        "sesitPoradi": 6,
-        "sesitPrepocet": 9,
-        "sesitPoradiPrepocet": 6
-      },
-      {
-        "lod": "Varianta",
-        "body": [
-          1,
-          0,
-          3,
-          0,
-          4,
-          1,
-          3
-        ],
-        "sesitBody": 12,
-        "sesitPoradi": 5,
-        "sesitPrepocet": 8,
-        "sesitPoradiPrepocet": 5
-      },
-      {
-        "lod": "Charlotte III",
-        "body": [
-          1,
-          0,
-          3,
-          0,
-          4,
-          2,
-          0
-        ],
-        "sesitBody": 10,
-        "sesitPoradi": 4,
-        "sesitPrepocet": 6,
-        "sesitPoradiPrepocet": 3
-      }
+  "Nad7m": [
+   {
+    "lod": "PEZI",
+    "zastavky": [
+     {
+      "body": 0,
+      "misto": 1
+     },
+     {
+      "body": 0,
+      "misto": 2
+     },
+     {
+      "body": 12,
+      "kod": "DNC"
+     },
+     {
+      "body": 1,
+      "misto": 2
+     },
+     {
+      "body": 0,
+      "misto": 1
+     },
+     {
+      "body": 4,
+      "misto": 5
+     },
+     {
+      "body": 0,
+      "misto": 1
+     }
     ],
-    "Nad7m": [
-      {
-        "lod": "PEZI",
-        "body": [
-          0,
-          0,
-          0,
-          0,
-          12,
-          1,
-          0
-        ],
-        "sesitBody": 13,
-        "sesitPoradi": 2,
-        "sesitPrepocet": 1,
-        "sesitPoradiPrepocet": 1
-      },
-      {
-        "lod": "MAMBA",
-        "body": [
-          1,
-          0,
-          -1,
-          0,
-          2,
-          0,
-          3
-        ],
-        "sesitBody": 5,
-        "sesitPoradi": 1,
-        "sesitPrepocet": 3,
-        "sesitPoradiPrepocet": 2
-      },
-      {
-        "lod": "M1",
-        "body": [
-          2,
-          0,
-          8,
-          0,
-          12,
-          13,
-          9
-        ],
-        "sesitBody": 44,
-        "sesitPoradi": 15,
-        "sesitPrepocet": 31,
-        "sesitPoradiPrepocet": 13
-      },
-      {
-        "lod": "DEPRESSO",
-        "body": [
-          3,
-          0,
-          8,
-          0,
-          1,
-          5,
-          1
-        ],
-        "sesitBody": 18,
-        "sesitPoradi": 3,
-        "sesitPrepocet": 10,
-        "sesitPoradiPrepocet": 3
-      },
-      {
-        "lod": "CASSIOPEIA",
-        "body": [
-          4,
-          0,
-          1,
-          0,
-          12,
-          13,
-          9
-        ],
-        "sesitBody": 39,
-        "sesitPoradi": 9,
-        "sesitPrepocet": 26,
-        "sesitPoradiPrepocet": 8
-      },
-      {
-        "lod": "SULA",
-        "body": [
-          5,
-          0,
-          8,
-          0,
-          12,
-          13,
-          9
-        ],
-        "sesitBody": 47,
-        "sesitPoradi": 20,
-        "sesitPrepocet": 36,
-        "sesitPoradiPrepocet": 23
-      },
-      {
-        "lod": "NABLB",
-        "body": [
-          6,
-          0,
-          3,
-          0,
-          12,
-          13,
-          9
-        ],
-        "sesitBody": 43,
-        "sesitPoradi": 11,
-        "sesitPrepocet": 30,
-        "sesitPoradiPrepocet": 11
-      },
-      {
-        "lod": "FILOZEP",
-        "body": [
-          7,
-          0,
-          8,
-          0,
-          4,
-          4,
-          9
-        ],
-        "sesitBody": 32,
-        "sesitPoradi": 6,
-        "sesitPrepocet": 28,
-        "sesitPoradiPrepocet": 10
-      },
-      {
-        "lod": "SPRUNZEL",
-        "body": [
-          8,
-          0,
-          2,
-          0,
-          12,
-          9,
-          8
-        ],
-        "sesitBody": 39,
-        "sesitPoradi": 10,
-        "sesitPrepocet": 27,
-        "sesitPoradiPrepocet": 9
-      },
-      {
-        "lod": "THEA",
-        "body": [
-          8,
-          0,
-          4,
-          0,
-          10,
-          12,
-          9
-        ],
-        "sesitBody": 43,
-        "sesitPoradi": 12,
-        "sesitPrepocet": 31,
-        "sesitPoradiPrepocet": 14
-      },
-      {
-        "lod": "MICHELLE",
-        "body": [
-          8,
-          0,
-          5,
-          0,
-          6,
-          7,
-          7
-        ],
-        "sesitBody": 33,
-        "sesitPoradi": 7,
-        "sesitPrepocet": 25,
-        "sesitPoradiPrepocet": 7
-      },
-      {
-        "lod": "DIVNA",
-        "body": [
-          8,
-          0,
-          6,
-          0,
-          12,
-          13,
-          9
-        ],
-        "sesitBody": 48,
-        "sesitPoradi": 24,
-        "sesitPrepocet": 35,
-        "sesitPoradiPrepocet": 21
-      },
-      {
-        "lod": "FAMILY LADY",
-        "body": [
-          8,
-          0,
-          8,
-          0,
-          0,
-          13,
-          9
-        ],
-        "sesitBody": 38,
-        "sesitPoradi": 8,
-        "sesitPrepocet": 25,
-        "sesitPoradiPrepocet": 6
-      },
-      {
-        "lod": "M@rtina",
-        "body": [
-          8,
-          0,
-          8,
-          0,
-          3,
-          2,
-          2
-        ],
-        "sesitBody": 23,
-        "sesitPoradi": 4,
-        "sesitPrepocet": 15,
-        "sesitPoradiPrepocet": 4
-      },
-      {
-        "lod": "ROSE",
-        "body": [
-          8,
-          0,
-          8,
-          0,
-          5,
-          13,
-          9
-        ],
-        "sesitBody": 43,
-        "sesitPoradi": 14,
-        "sesitPrepocet": 30,
-        "sesitPoradiPrepocet": 12
-      },
-      {
-        "lod": "MICINY",
-        "body": [
-          8,
-          0,
-          8,
-          0,
-          7,
-          13,
-          9
-        ],
-        "sesitBody": 45,
-        "sesitPoradi": 17,
-        "sesitPrepocet": 32,
-        "sesitPoradiPrepocet": 17
-      },
-      {
-        "lod": "AVENIR",
-        "body": [
-          8,
-          0,
-          8,
-          0,
-          8,
-          3,
-          5
-        ],
-        "sesitBody": 32,
-        "sesitPoradi": 5,
-        "sesitPrepocet": 24,
-        "sesitPoradiPrepocet": 5
-      },
-      {
-        "lod": "HOGAN",
-        "body": [
-          8,
-          0,
-          8,
-          0,
-          9,
-          13,
-          9
-        ],
-        "sesitBody": 47,
-        "sesitPoradi": 22,
-        "sesitPrepocet": 34,
-        "sesitPoradiPrepocet": 19
-      },
-      {
-        "lod": "LIBERTÉ",
-        "body": [
-          8,
-          0,
-          8,
-          0,
-          11,
-          13,
-          9
-        ],
-        "sesitBody": 49,
-        "sesitPoradi": 25,
-        "sesitPrepocet": 36,
-        "sesitPoradiPrepocet": 25
-      },
-      {
-        "lod": "Rio",
-        "body": [
-          8,
-          0,
-          8,
-          0,
-          12,
-          6,
-          9
-        ],
-        "sesitBody": 43,
-        "sesitPoradi": 13,
-        "sesitPrepocet": 31,
-        "sesitPoradiPrepocet": 15
-      },
-      {
-        "lod": "Claudie",
-        "body": [
-          8,
-          0,
-          8,
-          0,
-          12,
-          8,
-          9
-        ],
-        "sesitBody": 45,
-        "sesitPoradi": 18,
-        "sesitPrepocet": 33,
-        "sesitPoradiPrepocet": 17
-      },
-      {
-        "lod": "Mabye",
-        "body": [
-          8,
-          0,
-          8,
-          0,
-          12,
-          10,
-          9
-        ],
-        "sesitBody": 47,
-        "sesitPoradi": 22,
-        "sesitPrepocet": 35,
-        "sesitPoradiPrepocet": 20
-      },
-      {
-        "lod": "Caprice",
-        "body": [
-          8,
-          0,
-          8,
-          0,
-          12,
-          11,
-          9
-        ],
-        "sesitBody": 48,
-        "sesitPoradi": 23,
-        "sesitPrepocet": 36,
-        "sesitPoradiPrepocet": 24
-      },
-      {
-        "lod": "Valhalla",
-        "body": [
-          8,
-          0,
-          8,
-          0,
-          12,
-          13,
-          4
-        ],
-        "sesitBody": 45,
-        "sesitPoradi": 16,
-        "sesitPrepocet": 32,
-        "sesitPoradiPrepocet": 16
-      },
-      {
-        "lod": "Perun",
-        "body": [
-          8,
-          0,
-          8,
-          0,
-          12,
-          13,
-          6
-        ],
-        "sesitBody": 47,
-        "sesitPoradi": 19,
-        "sesitPrepocet": 34,
-        "sesitPoradiPrepocet": 18
-      }
+    "sesitBody": 17,
+    "sesitPoradi": 2,
+    "sesitPrepocet": 1,
+    "sesitPoradiPrepocet": 1
+   },
+   {
+    "lod": "MAMBA",
+    "zastavky": [
+     {
+      "body": 1,
+      "misto": 2
+     },
+     {
+      "body": -1,
+      "misto": 1
+     },
+     {
+      "body": 2,
+      "misto": 3
+     },
+     {
+      "body": 0,
+      "misto": 1
+     },
+     {
+      "body": 3,
+      "misto": 4
+     },
+     {
+      "body": 0,
+      "misto": 1
+     },
+     {
+      "body": 1,
+      "misto": 2
+     }
     ],
-    "Race": [
-      {
-        "lod": "ČERVENÉ CAFE",
-        "body": [
-          0,
-          0,
-          20,
-          0,
-          0,
-          4,
-          4
-        ],
-        "sesitBody": 28,
-        "sesitPoradi": 6,
-        "sesitPrepocet": 8,
-        "sesitPoradiPrepocet": 3
-      },
-      {
-        "lod": "MODRÉ CAFE",
-        "body": [
-          1,
-          0,
-          2,
-          0,
-          3,
-          1,
-          2
-        ],
-        "sesitBody": 9,
-        "sesitPoradi": 2,
-        "sesitPrepocet": 6,
-        "sesitPoradiPrepocet": 2
-      },
-      {
-        "lod": "SEA MOUSE III",
-        "body": [
-          2,
-          0,
-          -1,
-          0,
-          1,
-          0,
-          1
-        ],
-        "sesitBody": 3,
-        "sesitPoradi": 1,
-        "sesitPrepocet": 1,
-        "sesitPoradiPrepocet": 1
-      },
-      {
-        "lod": "SOCKA",
-        "body": [
-          2,
-          0,
-          0,
-          0,
-          4,
-          2,
-          4
-        ],
-        "sesitBody": 12,
-        "sesitPoradi": 4,
-        "sesitPrepocet": 8,
-        "sesitPoradiPrepocet": 5
-      },
-      {
-        "lod": "FAR  STAR III",
-        "body": [
-          2,
-          0,
-          1,
-          0,
-          2,
-          3,
-          3
-        ],
-        "sesitBody": 11,
-        "sesitPoradi": 3,
-        "sesitPrepocet": 8,
-        "sesitPoradiPrepocet": 6
-      },
-      {
-        "lod": "Zephyr",
-        "body": [
-          2,
-          0,
-          2,
-          0,
-          5,
-          4,
-          0
-        ],
-        "sesitBody": 13,
-        "sesitPoradi": 5,
-        "sesitPrepocet": 8,
-        "sesitPoradiPrepocet": 4
-      }
-    ]
-  }
+    "sesitBody": 6,
+    "sesitPoradi": 1,
+    "sesitPrepocet": 1,
+    "sesitPoradiPrepocet": 2
+   },
+   {
+    "lod": "DEPRESSO",
+    "zastavky": [
+     {
+      "body": 3,
+      "misto": 4
+     },
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 1,
+      "misto": 2
+     },
+     {
+      "body": 5,
+      "misto": 6
+     },
+     {
+      "body": 1,
+      "misto": 2
+     },
+     {
+      "body": 1,
+      "misto": 2
+     },
+     {
+      "body": 4,
+      "misto": 5
+     }
+    ],
+    "sesitBody": 23,
+    "sesitPoradi": 3,
+    "sesitPrepocet": 13,
+    "sesitPoradiPrepocet": 3
+   },
+   {
+    "lod": "M@rtina",
+    "zastavky": [
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 3,
+      "misto": 4
+     },
+     {
+      "body": 2,
+      "misto": 3
+     },
+     {
+      "body": 2,
+      "misto": 3
+     },
+     {
+      "body": 3,
+      "misto": 4
+     },
+     {
+      "body": 3,
+      "misto": 4
+     }
+    ],
+    "sesitBody": 29,
+    "sesitPoradi": 4,
+    "sesitPrepocet": 13,
+    "sesitPoradiPrepocet": 4
+   },
+   {
+    "lod": "FAMILY LADY",
+    "zastavky": [
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 0,
+      "misto": 1
+     },
+     {
+      "body": 13,
+      "kod": "DNC"
+     },
+     {
+      "body": 9,
+      "kod": "DNC"
+     },
+     {
+      "body": 7,
+      "kod": "DNC"
+     },
+     {
+      "body": 2,
+      "misto": 3
+     }
+    ],
+    "sesitBody": 47,
+    "sesitPoradi": 6,
+    "sesitPrepocet": 25,
+    "sesitPoradiPrepocet": 5
+   },
+   {
+    "lod": "Valhalla",
+    "zastavky": [
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 12,
+      "kod": "DNC"
+     },
+     {
+      "body": 13,
+      "kod": "DNC"
+     },
+     {
+      "body": 4,
+      "misto": 5
+     },
+     {
+      "body": 2,
+      "misto": 3
+     },
+     {
+      "body": 6,
+      "misto": 7
+     }
+    ],
+    "sesitBody": 53,
+    "sesitPoradi": 8,
+    "sesitPrepocet": 28,
+    "sesitPoradiPrepocet": 6
+   },
+   {
+    "lod": "FILOZEP",
+    "zastavky": [
+     {
+      "body": 7,
+      "misto": 8
+     },
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 4,
+      "misto": 5
+     },
+     {
+      "body": 4,
+      "misto": 5
+     },
+     {
+      "body": 9,
+      "kod": "DNC"
+     },
+     {
+      "body": 6,
+      "misto": 7
+     },
+     {
+      "body": 8,
+      "misto": 9
+     }
+    ],
+    "sesitBody": 46,
+    "sesitPoradi": 5,
+    "sesitPrepocet": 29,
+    "sesitPoradiPrepocet": 7
+   },
+   {
+    "lod": "NABLB",
+    "zastavky": [
+     {
+      "body": 6,
+      "misto": 7
+     },
+     {
+      "body": 3,
+      "misto": 5
+     },
+     {
+      "body": 12,
+      "kod": "DNC"
+     },
+     {
+      "body": 13,
+      "kod": "DNC"
+     },
+     {
+      "body": 9,
+      "kod": "DNC"
+     },
+     {
+      "body": 7,
+      "kod": "DNC"
+     },
+     {
+      "body": 5,
+      "misto": 6
+     }
+    ],
+    "sesitBody": 55,
+    "sesitPoradi": 10,
+    "sesitPrepocet": 30,
+    "sesitPoradiPrepocet": 8
+   },
+   {
+    "lod": "AVENIR",
+    "zastavky": [
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 8,
+      "misto": 9
+     },
+     {
+      "body": 3,
+      "misto": 4
+     },
+     {
+      "body": 5,
+      "misto": 6
+     },
+     {
+      "body": 7,
+      "kod": "DNC"
+     },
+     {
+      "body": 15,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 54,
+    "sesitPoradi": 9,
+    "sesitPrepocet": 31,
+    "sesitPoradiPrepocet": 9
+   },
+   {
+    "lod": "CASSIOPEIA",
+    "zastavky": [
+     {
+      "body": 4,
+      "misto": 5
+     },
+     {
+      "body": 1,
+      "misto": 3
+     },
+     {
+      "body": 12,
+      "kod": "DNC"
+     },
+     {
+      "body": 13,
+      "kod": "DNC"
+     },
+     {
+      "body": 9,
+      "kod": "DNC"
+     },
+     {
+      "body": 7,
+      "kod": "DNC"
+     },
+     {
+      "body": 15,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 61,
+    "sesitPoradi": 11,
+    "sesitPrepocet": 33,
+    "sesitPoradiPrepocet": 10
+   },
+   {
+    "lod": "SPRUNZEL",
+    "zastavky": [
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 2,
+      "misto": 4
+     },
+     {
+      "body": 12,
+      "kod": "DNC"
+     },
+     {
+      "body": 9,
+      "misto": 10
+     },
+     {
+      "body": 8,
+      "misto": 9
+     },
+     {
+      "body": 7,
+      "kod": "DNC"
+     },
+     {
+      "body": 20,
+      "kod": "DSQ"
+     }
+    ],
+    "sesitBody": 66,
+    "sesitPoradi": 18,
+    "sesitPrepocet": 34,
+    "sesitPoradiPrepocet": 11
+   },
+   {
+    "lod": "MICHELLE",
+    "zastavky": [
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 5,
+      "misto": 7
+     },
+     {
+      "body": 6,
+      "misto": 7
+     },
+     {
+      "body": 7,
+      "misto": 8
+     },
+     {
+      "body": 7,
+      "misto": 8
+     },
+     {
+      "body": 7,
+      "kod": "DNC"
+     },
+     {
+      "body": 11,
+      "misto": 12
+     }
+    ],
+    "sesitBody": 51,
+    "sesitPoradi": 7,
+    "sesitPrepocet": 36,
+    "sesitPoradiPrepocet": 12
+   },
+   {
+    "lod": "Perun",
+    "zastavky": [
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 12,
+      "kod": "DNC"
+     },
+     {
+      "body": 13,
+      "kod": "DNC"
+     },
+     {
+      "body": 6,
+      "misto": 7
+     },
+     {
+      "body": 7,
+      "kod": "DNC"
+     },
+     {
+      "body": 7,
+      "misto": 8
+     }
+    ],
+    "sesitBody": 61,
+    "sesitPoradi": 12,
+    "sesitPrepocet": 36,
+    "sesitPoradiPrepocet": 13
+   },
+   {
+    "lod": "DIVNA",
+    "zastavky": [
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 6,
+      "misto": 8
+     },
+     {
+      "body": 12,
+      "kod": "DNC"
+     },
+     {
+      "body": 13,
+      "kod": "DNC"
+     },
+     {
+      "body": 9,
+      "kod": "DNC"
+     },
+     {
+      "body": 5,
+      "misto": 6
+     },
+     {
+      "body": 9,
+      "misto": 10
+     }
+    ],
+    "sesitBody": 62,
+    "sesitPoradi": 13,
+    "sesitPrepocet": 37,
+    "sesitPoradiPrepocet": 14
+   },
+   {
+    "lod": "ROSE",
+    "zastavky": [
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 5,
+      "misto": 6
+     },
+     {
+      "body": 13,
+      "kod": "DNC"
+     },
+     {
+      "body": 9,
+      "kod": "DNC"
+     },
+     {
+      "body": 7,
+      "kod": "DNC"
+     },
+     {
+      "body": 15,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 65,
+    "sesitPoradi": 15,
+    "sesitPrepocet": 37,
+    "sesitPoradiPrepocet": 15
+   },
+   {
+    "lod": "M1",
+    "zastavky": [
+     {
+      "body": 2,
+      "misto": 3
+     },
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 12,
+      "kod": "DNC"
+     },
+     {
+      "body": 13,
+      "kod": "DNC"
+     },
+     {
+      "body": 9,
+      "kod": "DNC"
+     },
+     {
+      "body": 7,
+      "kod": "DNC"
+     },
+     {
+      "body": 15,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 66,
+    "sesitPoradi": 19,
+    "sesitPrepocet": 38,
+    "sesitPoradiPrepocet": 16
+   },
+   {
+    "lod": "THEA",
+    "zastavky": [
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 4,
+      "misto": 6
+     },
+     {
+      "body": 10,
+      "misto": 11
+     },
+     {
+      "body": 12,
+      "misto": 13
+     },
+     {
+      "body": 9,
+      "kod": "DNC"
+     },
+     {
+      "body": 7,
+      "kod": "DNC"
+     },
+     {
+      "body": 15,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 65,
+    "sesitPoradi": 14,
+    "sesitPrepocet": 38,
+    "sesitPoradiPrepocet": 17
+   },
+   {
+    "lod": "Rio",
+    "zastavky": [
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 12,
+      "kod": "DNC"
+     },
+     {
+      "body": 6,
+      "misto": 7
+     },
+     {
+      "body": 9,
+      "kod": "DNC"
+     },
+     {
+      "body": 7,
+      "kod": "DNC"
+     },
+     {
+      "body": 15,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 65,
+    "sesitPoradi": 16,
+    "sesitPrepocet": 38,
+    "sesitPoradiPrepocet": 18
+   },
+   {
+    "lod": "MICINY",
+    "zastavky": [
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 7,
+      "misto": 8
+     },
+     {
+      "body": 13,
+      "kod": "DNC"
+     },
+     {
+      "body": 9,
+      "kod": "DNC"
+     },
+     {
+      "body": 7,
+      "kod": "DNC"
+     },
+     {
+      "body": 15,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 67,
+    "sesitPoradi": 20,
+    "sesitPrepocet": 39,
+    "sesitPoradiPrepocet": 19
+   },
+   {
+    "lod": "Claudie",
+    "zastavky": [
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 12,
+      "kod": "DNC"
+     },
+     {
+      "body": 8,
+      "misto": 9
+     },
+     {
+      "body": 9,
+      "kod": "DNC"
+     },
+     {
+      "body": 7,
+      "kod": "DNC"
+     },
+     {
+      "body": 15,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 67,
+    "sesitPoradi": 21,
+    "sesitPrepocet": 40,
+    "sesitPoradiPrepocet": 20
+   },
+   {
+    "lod": "SULA",
+    "zastavky": [
+     {
+      "body": 5,
+      "misto": 6
+     },
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 12,
+      "kod": "DNC"
+     },
+     {
+      "body": 13,
+      "kod": "DNC"
+     },
+     {
+      "body": 9,
+      "kod": "DNC"
+     },
+     {
+      "body": 7,
+      "kod": "DNC"
+     },
+     {
+      "body": 15,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 69,
+    "sesitPoradi": 22,
+    "sesitPrepocet": 41,
+    "sesitPoradiPrepocet": 21
+   },
+   {
+    "lod": "HOGAN",
+    "zastavky": [
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 9,
+      "misto": 10
+     },
+     {
+      "body": 13,
+      "kod": "DNC"
+     },
+     {
+      "body": 9,
+      "kod": "DNC"
+     },
+     {
+      "body": 7,
+      "kod": "DNC"
+     },
+     {
+      "body": 15,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 69,
+    "sesitPoradi": 23,
+    "sesitPrepocet": 41,
+    "sesitPoradiPrepocet": 22
+   },
+   {
+    "lod": "Caprice",
+    "zastavky": [
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 12,
+      "kod": "DNC"
+     },
+     {
+      "body": 11,
+      "misto": 12
+     },
+     {
+      "body": 9,
+      "kod": "DNC"
+     },
+     {
+      "body": 7,
+      "kod": "DNC"
+     },
+     {
+      "body": 10,
+      "misto": 11
+     }
+    ],
+    "sesitBody": 65,
+    "sesitPoradi": 17,
+    "sesitPrepocet": 42,
+    "sesitPoradiPrepocet": 23
+   },
+   {
+    "lod": "Mabye",
+    "zastavky": [
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 12,
+      "kod": "DNC"
+     },
+     {
+      "body": 10,
+      "misto": 11
+     },
+     {
+      "body": 9,
+      "kod": "DNC"
+     },
+     {
+      "body": 7,
+      "kod": "DNC"
+     },
+     {
+      "body": 15,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 69,
+    "sesitPoradi": 24,
+    "sesitPrepocet": 42,
+    "sesitPoradiPrepocet": 24
+   },
+   {
+    "lod": "LIBERTÉ",
+    "zastavky": [
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 8,
+      "kod": "DNC"
+     },
+     {
+      "body": 11,
+      "misto": 12
+     },
+     {
+      "body": 13,
+      "kod": "DNC"
+     },
+     {
+      "body": 9,
+      "kod": "DNC"
+     },
+     {
+      "body": 7,
+      "kod": "DNC"
+     },
+     {
+      "body": 15,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 71,
+    "sesitPoradi": 25,
+    "sesitPrepocet": 43,
+    "sesitPoradiPrepocet": 25
+   }
+  ],
+  "Race": [
+   {
+    "lod": "SEA MOUSE III",
+    "zastavky": [
+     {
+      "body": 2,
+      "kod": "DNC"
+     },
+     {
+      "body": -1,
+      "misto": 1
+     },
+     {
+      "body": 1,
+      "misto": 2
+     },
+     {
+      "body": 0,
+      "misto": 1
+     },
+     {
+      "body": 1,
+      "misto": 2
+     },
+     {
+      "body": 0,
+      "misto": 1
+     },
+     {
+      "body": 3,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 6,
+    "sesitPoradi": 1,
+    "sesitPrepocet": 1,
+    "sesitPoradiPrepocet": 1
+   },
+   {
+    "lod": "MODRÉ CAFE",
+    "zastavky": [
+     {
+      "body": 1,
+      "misto": 2
+     },
+     {
+      "body": 2,
+      "misto": 4
+     },
+     {
+      "body": 3,
+      "misto": 4
+     },
+     {
+      "body": 1,
+      "misto": 2
+     },
+     {
+      "body": 2,
+      "misto": 3
+     },
+     {
+      "body": 1,
+      "misto": 2
+     },
+     {
+      "body": 0,
+      "misto": 1
+     }
+    ],
+    "sesitBody": 10,
+    "sesitPoradi": 2,
+    "sesitPrepocet": 5,
+    "sesitPoradiPrepocet": 2
+   },
+   {
+    "lod": "Zephyr",
+    "zastavky": [
+     {
+      "body": 2,
+      "kod": "DNC"
+     },
+     {
+      "body": 2,
+      "kod": "DNC"
+     },
+     {
+      "body": 5,
+      "misto": 6
+     },
+     {
+      "body": 4,
+      "kod": "DNC"
+     },
+     {
+      "body": 0,
+      "misto": 1
+     },
+     {
+      "body": 4,
+      "kod": "DNC"
+     },
+     {
+      "body": 1,
+      "misto": 2
+     }
+    ],
+    "sesitBody": 18,
+    "sesitPoradi": 4,
+    "sesitPrepocet": 9,
+    "sesitPoradiPrepocet": 3
+   },
+   {
+    "lod": "FAR  STAR III",
+    "zastavky": [
+     {
+      "body": 2,
+      "kod": "DNC"
+     },
+     {
+      "body": 1,
+      "misto": 3
+     },
+     {
+      "body": 2,
+      "misto": 3
+     },
+     {
+      "body": 3,
+      "misto": 4
+     },
+     {
+      "body": 3,
+      "misto": 4
+     },
+     {
+      "body": 2,
+      "misto": 3
+     },
+     {
+      "body": 2,
+      "misto": 3
+     }
+    ],
+    "sesitBody": 15,
+    "sesitPoradi": 3,
+    "sesitPrepocet": 9,
+    "sesitPoradiPrepocet": 4
+   },
+   {
+    "lod": "SOCKA",
+    "zastavky": [
+     {
+      "body": 2,
+      "kod": "DNC"
+     },
+     {
+      "body": 0,
+      "misto": 2
+     },
+     {
+      "body": 4,
+      "misto": 5
+     },
+     {
+      "body": 2,
+      "misto": 3
+     },
+     {
+      "body": 4,
+      "kod": "DNC"
+     },
+     {
+      "body": 3,
+      "misto": 4
+     },
+     {
+      "body": 3,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 18,
+    "sesitPoradi": 5,
+    "sesitPrepocet": 10,
+    "sesitPoradiPrepocet": 5
+   },
+   {
+    "lod": "ČERVENÉ CAFE",
+    "zastavky": [
+     {
+      "body": 0,
+      "misto": 1
+     },
+     {
+      "body": 20,
+      "kod": "DSQ"
+     },
+     {
+      "body": 0,
+      "misto": 1
+     },
+     {
+      "body": 4,
+      "kod": "DNC"
+     },
+     {
+      "body": 4,
+      "kod": "DNC"
+     },
+     {
+      "body": 4,
+      "kod": "DNC"
+     },
+     {
+      "body": 3,
+      "kod": "DNC"
+     }
+    ],
+    "sesitBody": 35,
+    "sesitPoradi": 6,
+    "sesitPrepocet": 11,
+    "sesitPoradiPrepocet": 6
+   }
+  ]
+ }
 }

@@ -15,49 +15,56 @@ public record RozjizdkaVstup(int Cislo, IReadOnlyList<VysledekVstup> Vysledky);
 /// <summary>Body lodi v jedné rozjížďce, už v rámci její kategorie.</summary>
 public record BodyVRozjizdce(string Lod, int Cislo, int Body, bool Skrtnuto);
 
-/// <summary>Výsledek lodi v závodě: součet bodů a pořadí v kategorii.</summary>
+/// <summary>
+/// Výsledek lodi v závodě: součet bodů a pořadí v kategorii.
+/// <para>
+/// <c>Diskvalifikovana</c> znamená diskvalifikaci <b>v celém závodě</b>, tedy
+/// <c>DSQ</c> ve všech rozjížďkách, které vstoupily do výpočtu. Do seriálu
+/// z toho jde pevných 20 bodů, ne pořadí. Diskvalifikace v jedné rozjížďce
+/// z několika je běžný kód a boduje se uvnitř závodu.
+/// </para>
+/// </summary>
 public record VysledekZavodu(
     string Lod,
     string Kategorie,
     int Body,
     int Poradi,
-    IReadOnlyList<BodyVRozjizdce> Rozjizdky);
+    IReadOnlyList<BodyVRozjizdce> Rozjizdky,
+    bool Diskvalifikovana = false);
 
 public static class Bodovani
 {
     /// <summary>
-    /// Pořadí kódů mezi sebou. Lodě se stejným kódem dostanou stejné body,
-    /// různé kódy jdou za sebou podle závažnosti.
-    /// <para>
-    /// <b>Doloženo je jen `Dnf` před `Dns`</b> — z výsledkové listiny FxCK Cancer
-    /// 2026, kde při dvanácti dokončivších měla loď s `Dnf` třináct bodů
-    /// a loď s `Dns` čtrnáct. Zbytek pořadí je náš odhad podle logiky
-    /// „kdo víc odjel, je na tom líp"; až to rozhodčí potvrdí, mění se
-    /// jediné pole.
-    /// </para>
+    /// Stavy účasti, se kterými je loď <b>přihlášená do závodu</b>: zapsaná,
+    /// potvrzená, nedostavila se, vyloučená. Odhlášená předem, odmítnutá
+    /// a nevyřízená přihláška ne. Z počtu přihlášených se počítají body za
+    /// kódy (A5.2) i za neúčast v seriálu — rozhodčí 22. 9. 2026: „musí to
+    /// být podle přihlášených lodí do závodu".
     /// </summary>
-    private static readonly KodVysledku[] PodleZavaznosti =
-    [
-        KodVysledku.Rdg,   // náprava — loď se vrací do hry
-        KodVysledku.Ret,   // odstoupila, ale odjela část
-        KodVysledku.Dnf,   // nedokončila
-        KodVysledku.Ocs,   // předčasný start
-        KodVysledku.Dsq,   // diskvalifikace
-        KodVysledku.Dns,   // nestartovala
-        KodVysledku.Dnc,   // nezúčastnila se
-    ];
+    public static readonly StavUcasti[] PrihlasenaDoZavodu =
+        [StavUcasti.Prihlasena, StavUcasti.Potvrzena, StavUcasti.Nedostavila, StavUcasti.Vyloucena];
 
     /// <summary>
     /// Body v jedné rozjížďce, počítané <b>uvnitř kategorie</b>. Vítěz má 1.
     /// <para>
-    /// Kdo nedojel, dostává místo za posledním dokončivším. Lodě se stejným
-    /// kódem mají stejné body, různé kódy jdou po sobě: při dvanácti
-    /// dokončivších má `Dnf` třináct a `Dns` čtrnáct, ale když `Dnf` nikdo
-    /// nemá, spadnou všechny `Dns` na třináct.
+    /// Kódy podle ZPJ 2025–2028, A5.2: loď, která nestartovala, nedokončila,
+    /// odstoupila nebo byla diskvalifikovaná, má <b>počet lodí přihlášených
+    /// do závodu + 1</b> — všechny kódy stejně. Rozhodčí 22. 9. 2026: „počet
+    /// přihlášených lodí ve třídě plus 1". Dřív se tu kódy řadily za sebe
+    /// podle výsledkové listiny FxCK Cancer (DNF 13, DNS 14); ta se podle
+    /// pravidel nebodovala.
+    /// </para>
+    /// <para>
+    /// <c>RDG</c> (náprava) není trest a jeho body určuje protestní komise.
+    /// Než to umí fáze 5, dostává místo hned za posledním dokončivším.
     /// </para>
     /// </summary>
+    /// <param name="prihlaseno">
+    /// Kolik lodí kategorie je přihlášených do závodu. Bez něj se bere počet
+    /// lodí v téhle rozjížďce.
+    /// </param>
     public static IReadOnlyList<(string Lod, int Body)> BodyRozjizdky(
-        IEnumerable<VysledekVstup> vysledkyKategorie)
+        IEnumerable<VysledekVstup> vysledkyKategorie, int? prihlaseno = null)
     {
         var vsechny = vysledkyKategorie.ToList();
 
@@ -68,19 +75,10 @@ public static class Bodovani
             .ToList();
 
         var body = new List<(string Lod, int Body)>(dokoncily);
+        var zaTrest = (prihlaseno ?? vsechny.Count) + 1;
 
-        // Skupiny kódů za dokončivšími, každá skupina o místo dál.
-        var skupiny = vsechny
-            .Where(v => v.Kod is not null)
-            .GroupBy(v => v.Kod!.Value)
-            .OrderBy(g => Array.IndexOf(PodleZavaznosti, g.Key));
-
-        var misto = dokoncily.Count + 1;
-        foreach (var skupina in skupiny)
-        {
-            foreach (var v in skupina) body.Add((v.Lod, misto));
-            misto++;
-        }
+        foreach (var v in vsechny.Where(v => v.Kod is not null))
+            body.Add((v.Lod, v.Kod == KodVysledku.Rdg ? dokoncily.Count + 1 : zaTrest));
 
         return body;
     }
@@ -95,17 +93,40 @@ public static class Bodovani
     /// konvence zpětně přepsala loňské výsledky.
     /// </para>
     /// </summary>
+    /// <param name="prihlaseno">
+    /// Počet lodí přihlášených do závodu po kategoriích. Loď s výsledkem se
+    /// počítá vždycky, takže bez něj je to počet lodí, které v závodě něco mají.
+    /// </param>
     public static IReadOnlyList<VysledekZavodu> VysledkyZavodu(
-        IReadOnlyList<RozjizdkaVstup> rozjizdky, int pocetSkrtu = 0)
+        IReadOnlyList<RozjizdkaVstup> rozjizdky, int pocetSkrtu = 0,
+        IReadOnlyDictionary<string, int>? prihlaseno = null)
     {
         // Body po lodích: (loď → rozjížďka → body)
         var podleLodi = new Dictionary<string, (string Kategorie, List<BodyVRozjizdce> Body)>();
+
+        // Přihlášené do závodu po kategoriích. Loď, která má v některé
+        // rozjížďce výsledek nebo kód, přihlášená je, i kdyby o tom účast
+        // nevěděla.
+        var pocty = rozjizdky
+            .SelectMany(r => r.Vysledky)
+            .GroupBy(v => v.Kategorie)
+            .ToDictionary(g => g.Key,
+                g => Math.Max(g.Select(v => v.Lod).Distinct().Count(), prihlaseno?.GetValueOrDefault(g.Key) ?? 0));
+
+        // Loď, která nemá v žádné rozjížďce nic jiného než DSQ. Příznak na
+        // účasti by byl přesnější; doplní se, až ho rozhodčí potvrdí.
+        var diskvalifikovane = rozjizdky
+            .SelectMany(r => r.Vysledky)
+            .GroupBy(v => v.Lod)
+            .Where(g => g.All(v => v.Kod == KodVysledku.Dsq))
+            .Select(g => g.Key)
+            .ToHashSet();
 
         foreach (var rozjizdka in rozjizdky)
         {
             foreach (var kategorie in rozjizdka.Vysledky.GroupBy(v => v.Kategorie))
             {
-                foreach (var (lod, body) in BodyRozjizdky(kategorie))
+                foreach (var (lod, body) in BodyRozjizdky(kategorie, pocty[kategorie.Key]))
                 {
                     if (!podleLodi.TryGetValue(lod, out var zaznam))
                         podleLodi[lod] = zaznam = (kategorie.Key, []);
@@ -123,7 +144,8 @@ public static class Bodovani
             var skrtnout = Math.Min(pocetSkrtu, Math.Max(body.Count - 1, 0));
             var kSkrtnuti = body
                 .OrderByDescending(b => b.Body)
-                .ThenByDescending(b => b.Cislo)
+                // Při shodě se škrtá dřívější rozjížďka (ZPJ A2.1).
+                .ThenBy(b => b.Cislo)
                 .Take(skrtnout)
                 .Select(b => b.Cislo)
                 .ToHashSet();
@@ -137,7 +159,8 @@ public static class Bodovani
                 lod, kategorie,
                 oznacene.Where(b => !b.Skrtnuto).Sum(b => b.Body),
                 Poradi: 0,
-                oznacene));
+                oznacene,
+                diskvalifikovane.Contains(lod)));
         }
 
         // Pořadí uvnitř kategorie. Při shodě bodů rozhoduje lepší jednotlivý

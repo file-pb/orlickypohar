@@ -438,6 +438,9 @@ namespace OrlickyPohar.Api.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
 
+                    b.Property<int>("PocetSkrtu")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("Publikovano")
                         .HasColumnType("boolean");
 
@@ -693,6 +696,9 @@ namespace OrlickyPohar.Api.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("Poradi")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PosunDoSerie")
                         .HasColumnType("integer");
 
                     b.Property<bool>("Publikovano")

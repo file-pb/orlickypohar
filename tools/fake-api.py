@@ -10,6 +10,7 @@ Pravda o pravidlech leží tam a hlídají ji testy; tenhle přepis existuje jen
 proto, aby šly stránky vidět na stroji, kde se databáze rozjet nedá. Když se
 pravidlo změní, mění se na obou místech — a rozejít se můžou jen tady.
 """
+import functools
 import json, os, re, unicodedata, uuid
 from email.parser import BytesParser
 from email.policy import HTTP
@@ -47,8 +48,6 @@ if _otevrene:
     if _volna:
         _z["ucasti"].append({"lod": _volna, "kormidelnik": None, "posadka": None, "stav": "Pozadavek"})
 
-# Kódy v pořadí podle závažnosti; doložené je jen DNF před DNS.
-ZAVAZNOST = ["Rdg", "Ret", "Dnf", "Ocs", "Dsq", "Dns", "Dnc"]
 
 
 def jmeno(klic):
@@ -56,40 +55,57 @@ def jmeno(klic):
     return f'{o["jmeno"]} {o["prijmeni"]}'
 
 
-def body_rozjizdky(vysledky):
-    """Body v jedné rozjížďce uvnitř jedné kategorie. Vítěz má 1."""
+def body_rozjizdky(vysledky, prihlaseno=None):
+    """Body v jedné rozjížďce uvnitř jedné kategorie. Vítěz má 1.
+
+    Kódy podle ZPJ A5.2 jako v API: přihlášených do závodu + 1, všechny
+    stejně; RDG hned za posledním dokončivším.
+    """
     dokoncily = sorted(
         (v for v in vysledky if not v.get("kod") and v.get("poradiVCili") is not None),
         key=lambda v: v["poradiVCili"])
     body = {v["lod"]: i + 1 for i, v in enumerate(dokoncily)}
-
-    skupiny = {}
+    za_trest = (prihlaseno if prihlaseno is not None else len(vysledky)) + 1
     for v in vysledky:
         if v.get("kod"):
-            skupiny.setdefault(v["kod"], []).append(v["lod"])
-
-    misto = len(dokoncily) + 1
-    for kod in sorted(skupiny, key=ZAVAZNOST.index):
-        for lod in skupiny[kod]:
-            body[lod] = misto
-        misto += 1
+            body[v["lod"]] = len(dokoncily) + 1 if v["kod"] == "Rdg" else za_trest
     return body
 
 
-def vysledky_zavodu(rozjizdky, pocet_skrtu=0):
+# Stavy účasti, se kterými je loď přihlášená do závodu — jako v API.
+PRIHLASENA = {"Prihlasena", "Potvrzena", "Nedostavila", "Vyloucena"}
+
+
+def prihlaseno_do_zavodu(z, rozjizdky):
+    """Počet lodí přihlášených do závodu po kategoriích (účasti ∪ výsledky)."""
+    lode = {(KAT[u["lod"]], u["lod"]) for u in z.get("ucasti", [])
+            if u.get("stav", "Potvrzena") in PRIHLASENA}
+    lode |= {(KAT[v["lod"]], v["lod"]) for r in rozjizdky for v in r["vysledky"]}
+    pocty = {}
+    for kategorie, _ in lode:
+        pocty[kategorie] = pocty.get(kategorie, 0) + 1
+    return pocty
+
+
+def vysledky_zavodu(rozjizdky, pocet_skrtu=0, prihlaseno_zvenku=None):
     """Výsledek závodu po kategoriích: součet bodů se škrty a pořadí."""
     lode = {}
+    prihlaseno = {}
+    for kategorie, lod in {(KAT[v["lod"]], v["lod"]) for r in rozjizdky for v in r["vysledky"]}:
+        prihlaseno[kategorie] = prihlaseno.get(kategorie, 0) + 1
+    for kategorie, pocet in (prihlaseno_zvenku or {}).items():
+        prihlaseno[kategorie] = max(pocet, prihlaseno.get(kategorie, 0))
     for r in rozjizdky:
         for kategorie in {KAT[v["lod"]] for v in r["vysledky"]}:
             vysledky = [v for v in r["vysledky"] if KAT[v["lod"]] == kategorie]
-            for lod, body in body_rozjizdky(vysledky).items():
+            for lod, body in body_rozjizdky(vysledky, prihlaseno[kategorie]).items():
                 lode.setdefault(lod, (kategorie, []))[1].append(
                     {"cislo": r["cislo"], "body": body, "skrtnuto": False})
 
     spocteno = []
     for lod, (kategorie, body) in lode.items():
         skrtnout = min(pocet_skrtu, max(len(body) - 1, 0))
-        for b in sorted(body, key=lambda b: (-b["body"], -b["cislo"]))[:skrtnout]:
+        for b in sorted(body, key=lambda b: (-b["body"], b["cislo"]))[:skrtnout]:
             b["skrtnuto"] = True
         zbylo = [b["body"] for b in body if not b["skrtnuto"]]
         spocteno.append({"lod": lod, "kategorie": kategorie, "body": sum(zbylo),
@@ -111,44 +127,99 @@ def plati(r):
 
 
 def poradi_serie():
-    """Průběžné pořadí po kategoriích, jen z odjetých zastávek."""
+    """Průběžné pořadí po kategoriích, jen z odjetých zastávek.
+
+    Pravidla rozhodčího z 22. 9. 2026, stejně jako SerieBodovani v API:
+    pořadí v kategorii mínus jedna (plus posun, u 24hodinovky −1), 20 za
+    diskvalifikaci v regatě, neúčast = počet lodí kategorie na zastávce,
+    škrty podle série a rozstřel počtem lepších umístění, pak poslední
+    společně dokončenou regatou.
+    """
     # Jen kola poháru — odjetá akce by tu jinak stála jako prázdný sloupec.
     zastavky = [z for z in D["zavody"] if z.get("stav") == "Odjety" and z["druh"] == "Pohar"]
     zastavky.sort(key=lambda z: z["poradi"])
+    pocet_skrtu = D.get("pocetSkrtu", 1)
 
-    body = {}
+    body = {}   # (lod, kat) -> [ (body, misto, kod) | None ]
     for i, z in enumerate(zastavky):
         do_serie = [r for r in z["rozjizdky"] if r["doSerie"] and plati(r)]
-        for v in vysledky_zavodu(do_serie, z.get("pocetSkrtu", 0)):
-            klic = (v["lod"], v["kategorie"])
-            body.setdefault(klic, [None] * len(zastavky))[i] = round(
-                (v["poradi"] - 1) * z.get("koeficientDoSerie", 1))
+        kody = {}
+        for r in do_serie:
+            for v in r["vysledky"]:
+                kody.setdefault(v["lod"], set()).add(v.get("kod"))
+        pocet = prihlaseno_do_zavodu(z, do_serie)
+        vysledky = vysledky_zavodu(do_serie, z.get("pocetSkrtu", 0), pocet)
+        for v in vysledky:
+            if kody.get(v["lod"]) == {"Dsq"}:
+                zaznam = (20, None, "DSQ")
+            else:
+                zaznam = (round((v["poradi"] - 1) * z.get("koeficientDoSerie", 1))
+                          + z.get("posunDoSerie", 0), v["poradi"], None)
+            body.setdefault((v["lod"], v["kategorie"]), [None] * len(zastavky))[i] = zaznam
+        byly = {v["lod"] for v in vysledky}
+        for p in D["prihlasky"]:
+            if p["lod"] not in byly:
+                body.setdefault((p["lod"], p["kategorie"]), [None] * len(zastavky))[i] = \
+                    (pocet.get(p["kategorie"], 0), None, "DNC")
 
-    def serad(lode, klic):
-        radek = sorted(lode, key=lambda x: (klic(x), sorted(b for b in x[1] if b is not None), x[0]))
-        return {lod: i + 1 for i, (lod, _) in enumerate(radek)}
+    def skrtnute(rada):
+        obsazene = [(i, x) for i, x in enumerate(rada) if x is not None]
+        kolik = min(pocet_skrtu, max(len(obsazene) - 1, 0))
+        # Při shodě se škrtá dřívější zastávka (ZPJ A2.1).
+        poradi = sorted(obsazene, key=lambda t: (-t[1][0], t[0]))
+        return {i for i, _ in poradi[:kolik]}
+
+    def rozstrel(a, b, skrty):
+        (ra, sa), (rb, sb) = a, b
+        def mista(r, s):
+            return sorted(x[1] for i, x in enumerate(r)
+                          if x is not None and x[1] is not None and not (skrty and i in s))
+        ma, mb = mista(ra, sa), mista(rb, sb)
+        for x, y in zip(ma, mb):
+            if x != y:
+                return -1 if x < y else 1
+        if len(ma) != len(mb):
+            return -1 if len(ma) > len(mb) else 1
+        for i in range(len(ra) - 1, -1, -1):
+            if skrty and (i in sa or i in sb):
+                continue
+            x, y = ra[i], rb[i]
+            if x is None or y is None or x[1] is None or y[1] is None:
+                continue
+            if x[1] != y[1]:
+                return -1 if x[1] < y[1] else 1
+        return 0
 
     kategorie = []
     for k in D["kategorie"]:
-        lode = [(lod, b) for (lod, kat), b in body.items() if kat == k["nazev"]]
-        soucty, po_skrtu, skrtnuto = {}, {}, {}
-        for lod, b in lode:
-            cisla = sorted((x for x in b if x is not None), reverse=True)
-            soucty[lod] = sum(cisla)
-            skrtnuto[lod] = cisla[0] if len(cisla) > 1 else None
-            po_skrtu[lod] = soucty[lod] - (skrtnuto[lod] or 0)
+        lode = {lod: b for (lod, kat), b in body.items() if kat == k["nazev"]}
+        skrty = {lod: skrtnute(b) for lod, b in lode.items()}
+        soucty = {lod: sum(x[0] for x in b if x) for lod, b in lode.items()}
+        po_skrtu = {lod: sum(x[0] for i, x in enumerate(b) if x and i not in skrty[lod])
+                    for lod, b in lode.items()}
 
-        podle_bodu = serad(lode, lambda x: soucty[x[0]])
-        podle_skrtu = serad(lode, lambda x: po_skrtu[x[0]])
+        def serad(soucet, se_skrty):
+            def porovnej(a, b):
+                if soucet[a] != soucet[b]:
+                    return soucet[a] - soucet[b]
+                r = rozstrel((lode[a], skrty[a]), (lode[b], skrty[b]), se_skrty)
+                return r if r else (-1 if a < b else 1 if a > b else 0)
+            return {lod: i + 1 for i, lod in enumerate(
+                sorted(lode, key=functools.cmp_to_key(porovnej)))}
+
+        podle_bodu = serad(soucty, False)
+        podle_skrtu = serad(po_skrtu, True)
 
         kategorie.append({"kategorie": k["nazev"], "lode": [
             {"lod": nazvy(lod),
              "majitel": jmeno(LODE[lod]["majitel"]),
-             "zastavky": b,
+             "zastavky": [x[0] if x else None for x in b],
              "body": soucty[lod], "poradi": podle_bodu[lod],
              "bodyPoSkrtu": po_skrtu[lod], "poradiPoSkrtu": podle_skrtu[lod],
-             "skrtnuto": skrtnuto[lod]}
-            for lod, b in sorted(lode, key=lambda x: podle_skrtu[x[0]])]})
+             "skrtnuto": (soucty[lod] - po_skrtu[lod]) if skrty[lod] else None,
+             "kody": [x[2] if x else None for x in b],
+             "skrtnute": sorted(skrty[lod])}
+            for lod, b in sorted(lode.items(), key=lambda x: podle_skrtu[x[0]])]})
 
     return {"slug": D["slug"], "nazev": D["nazev"], "rok": D["rok"],
             "zastavky": [{"slug": z["slug"], "nazev": z["nazev"], "datum": z["datum"],

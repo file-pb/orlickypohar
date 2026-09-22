@@ -2864,7 +2864,9 @@
                     "poradi",
                     "bodyPoSkrtu",
                     "poradiPoSkrtu",
-                    "skrtnuto"
+                    "skrtnuto",
+                    "kody",
+                    "skrtnute"
                 ],
                 "type": "object",
                 "properties": {
@@ -2906,6 +2908,22 @@
                             "integer"
                         ],
                         "format": "int32"
+                    },
+                    "kody": {
+                        "type": "array",
+                        "items": {
+                            "type": [
+                                "null",
+                                "string"
+                            ]
+                        }
+                    },
+                    "skrtnute": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
                     }
                 }
             },

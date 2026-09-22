@@ -10,8 +10,15 @@ public record ZastavkaDto(string Slug, string Nazev, DateOnly Datum, int Poradi)
 
 /// <summary>
 /// Jedna loď v průběžném pořadí. <c>Zastavky</c> drží body po zastávkách ve
-/// stejném pořadí, v jakém je vydává <c>Zastavky</c> na celé sérii — prázdné
-/// místo znamená, že tam loď nestartovala.
+/// stejném pořadí, v jakém je vydává <c>Zastavky</c> na celé sérii.
+/// <para>
+/// <c>Kody</c> jdou souběžně se <c>Zastavky</c> a říkají, odkud se číslo
+/// vzalo, když to není umístění: <c>DNC</c> (loď na zastávce nebyla) nebo
+/// <c>DSQ</c> (diskvalifikace v regatě). <c>Skrtnute</c> jsou indexy
+/// škrtnutých zastávek, <c>Skrtnuto</c> jejich součet. Obojí přibylo
+/// 22. 9. 2026 jako aditivní změna; prázdné místo v <c>Zastavky</c> od té
+/// doby nenastává, ale klienti s ním dál počítat smějí.
+/// </para>
 /// </summary>
 public record PoradiLodiDto(
     string Lod,
@@ -21,7 +28,9 @@ public record PoradiLodiDto(
     int Poradi,
     int BodyPoSkrtu,
     int PoradiPoSkrtu,
-    int? Skrtnuto);
+    int? Skrtnuto,
+    IReadOnlyList<string?> Kody,
+    IReadOnlyList<int> Skrtnute);
 
 public record PoradiKategorieDto(string Kategorie, IReadOnlyList<PoradiLodiDto> Lode);
 
@@ -55,7 +64,7 @@ public static class PoradiEndpoints
         // Nepublikovaný ročník neexistuje — 404, ne 403, stejně jako u ostatního čtení.
         var serie = await db.Serie
             .Where(s => s.Slug == slug && s.Publikovano)
-            .Select(s => new { s.Id, s.Slug, s.Nazev, s.Rok })
+            .Select(s => new { s.Id, s.Slug, s.Nazev, s.Rok, s.PocetSkrtu })
             .FirstOrDefaultAsync(ct);
 
         if (serie is null) return TypedResults.NotFound();
@@ -70,7 +79,7 @@ public static class PoradiEndpoints
             .OrderBy(z => z.Poradi)
             .Select(z => new
             {
-                z.Id, z.Slug, z.Nazev, z.Datum, z.Poradi, z.PocetSkrtu, z.KoeficientDoSerie,
+                z.Id, z.Slug, z.Nazev, z.Datum, z.Poradi, z.PocetSkrtu, z.KoeficientDoSerie, z.PosunDoSerie,
             })
             .ToListAsync(ct);
 
@@ -107,21 +116,32 @@ public static class PoradiEndpoints
         // Projekce až v databázi, ne v klíči slovníku: `ToDictionaryAsync`
         // materializuje přihlášky bez navigací, takže `p.Lod` by tam bylo
         // prázdné a klíč by spadl.
-        var majitele = await db.Prihlasky
+        var prihlasky = await db.Prihlasky
             .Where(p => p.SerieId == serie.Id)
             .Select(p => new
             {
                 Lod = p.Lod!.Nazev,
+                Kategorie = p.Kategorie!.Nazev,
                 Majitel = p.Lod.Majitel!.Jmeno + " " + p.Lod.Majitel.Prijmeni,
             })
-            .ToDictionaryAsync(x => x.Lod, x => x.Majitel, ct);
+            .ToListAsync(ct);
 
-        // Body ze zastávek, v pořadí zastávek. Prázdné místo znamená, že tam
-        // loď nestartovala — a nestartovaná zastávka se do součtu nepočítá.
-        // Co s neúčastí dělá rozhodčí, ze sešitu čistě nevychází (nadcházející
-        // zastávky mají prázdno, ale zrušené nuly), takže tady se nic
-        // nedopočítává; je to otázka na něj.
-        var body = new Dictionary<(string Lod, string Kategorie), int?[]>();
+        var majitele = prihlasky.ToDictionary(p => p.Lod, p => p.Majitel);
+
+        // Přihlášené do závodu po zastávkách a kategoriích. Z nich se počítá
+        // neúčast i kódy (A5.2), ne z lodí, které dojely.
+        var zastavkyId = zastavky.Select(z => z.Id).ToList();
+        var ucasti = await db.Ucasti
+            .Where(u => zastavkyId.Contains(u.ZavodId) && Bodovani.PrihlasenaDoZavodu.Contains(u.Stav))
+            .Select(u => new { u.ZavodId, Lod = u.Prihlaska!.Lod!.Nazev, Kategorie = u.Prihlaska.Kategorie!.Nazev })
+            .ToListAsync(ct);
+
+        // Loď přihlášená do ročníku, která na zastávku nepřijela, dostane
+        // tolik bodů, kolik lodí její kategorie na zastávce bylo. Proto se
+        // počítá z přihlášek, ne jen z výsledků.
+        var lodeRocniku = prihlasky.Select(p => (p.Lod, p.Kategorie)).ToList();
+
+        var body = new Dictionary<(string Lod, string Kategorie), BodyZeZastavky?[]>();
 
         for (var i = 0; i < zastavky.Count; i++)
         {
@@ -135,15 +155,23 @@ public static class PoradiEndpoints
                     [.. g.Select(r => new VysledekVstup(r.Lod, r.Kategorie, r.PoradiVCili, r.Kod))]))
                 .ToList();
 
-            var vysledky = Bodovani.VysledkyZavodu(rozjizdky, zastavka.PocetSkrtu);
+            var prihlaseno = ucasti
+                .Where(u => u.ZavodId == zastavka.Id)
+                .Select(u => (u.Lod, u.Kategorie))
+                .Concat(radky.Where(r => r.ZavodId == zastavka.Id).Select(r => (r.Lod, r.Kategorie)))
+                .Distinct()
+                .GroupBy(x => x.Kategorie)
+                .ToDictionary(g => g.Key, g => g.Count());
 
-            foreach (var (lod, kat, bodyZeZastavky) in
-                     SerieBodovani.BodyDoSerie(vysledky, zastavka.KoeficientDoSerie))
+            var vysledky = Bodovani.VysledkyZavodu(rozjizdky, zastavka.PocetSkrtu, prihlaseno);
+
+            foreach (var radek in SerieBodovani.BodyDoSerie(
+                         vysledky, lodeRocniku, zastavka.KoeficientDoSerie, zastavka.PosunDoSerie, prihlaseno))
             {
-                if (!body.TryGetValue((lod, kat), out var rada))
-                    body[(lod, kat)] = rada = new int?[zastavky.Count];
+                if (!body.TryGetValue((radek.Lod, radek.Kategorie), out var rada))
+                    body[(radek.Lod, radek.Kategorie)] = rada = new BodyZeZastavky?[zastavky.Count];
 
-                rada[i] = bodyZeZastavky;
+                rada[i] = radek.DoSerie;
             }
         }
 
@@ -152,16 +180,30 @@ public static class PoradiEndpoints
             {
                 var lode = body.Where(x => x.Key.Kategorie == kat).ToList();
 
-                var spocteno = SerieBodovani.Poradi(lode.Select(x =>
-                    new LodVSerii(x.Key.Lod, [.. x.Value.Where(b => b is not null).Select(b => b!.Value)])));
+                // Prázdné místo zbyde jen lodi, která v ročníku nemá přihlášku
+                // a přesto jela — neúčast jí není z čeho spočítat.
+                var spocteno = SerieBodovani.Poradi(
+                    lode.Select(x => new LodVSerii(x.Key.Lod, [.. x.Value.Where(b => b is not null).Select(b => b!)])),
+                    serie.PocetSkrtu);
 
                 return new PoradiKategorieDto(kat,
                 [
-                    .. spocteno.Select(p => new PoradiLodiDto(
-                        p.Lod,
-                        majitele.GetValueOrDefault(p.Lod, string.Empty),
-                        body[(p.Lod, kat)],
-                        p.Body, p.Poradi, p.BodyPoSkrtu, p.PoradiPoSkrtu, p.Skrtnuto)),
+                    .. spocteno.Select(p =>
+                    {
+                        var rada = body[(p.Lod, kat)];
+
+                        // Škrty jsou indexy v řadě bez prázdných míst; tady se
+                        // převedou zpátky na indexy zastávek.
+                        var obsazene = rada.Select((b, i) => (b, i)).Where(x => x.b is not null).Select(x => x.i).ToList();
+
+                        return new PoradiLodiDto(
+                            p.Lod,
+                            majitele.GetValueOrDefault(p.Lod, string.Empty),
+                            [.. rada.Select(b => b?.Body)],
+                            p.Body, p.Poradi, p.BodyPoSkrtu, p.PoradiPoSkrtu, p.Skrtnuto,
+                            [.. rada.Select(b => b?.Kod)],
+                            [.. p.Skrtnute.Select(i => obsazene[i])]);
+                    }),
                 ]);
             })
             .ToList();

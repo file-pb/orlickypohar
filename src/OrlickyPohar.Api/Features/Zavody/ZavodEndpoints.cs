@@ -161,13 +161,21 @@ public static class ZavodEndpoints
             ]))
             .ToList();
 
+        // Kódy mají přihlášených do závodu + 1 (A5.2), takže je potřeba
+        // vědět, kolik lodí přihlášených je — i těch, co nepřijely.
+        var prihlaseno = await db.Ucasti
+            .Where(u => u.ZavodId == zavod.Id && Vypocet.PrihlasenaDoZavodu.Contains(u.Stav))
+            .GroupBy(u => u.Prihlaska!.Kategorie!.Nazev)
+            .Select(g => new { Kategorie = g.Key, Pocet = g.Count() })
+            .ToDictionaryAsync(x => x.Kategorie, x => x.Pocet, ct);
+
         // Do bodů jde všechno, co se v závodě odjelo a je venku — příznak
         // `DoSerie` rozhoduje o poháru, ne o výsledku závodu.
         var poradi = Vypocet.VysledkyZavodu(
         [
             .. rozjizdky.Select(r => new RozjizdkaVstup(r.Cislo,
                 [.. r.Vysledky.Select(v => new VysledekVstup(v.Lod, v.Kategorie, v.PoradiVCili, v.Kod))])),
-        ], zavod.PocetSkrtu);
+        ], zavod.PocetSkrtu, prihlaseno);
 
         // Kategorie se řadí podle série, ne podle toho, v jakém pořadí je
         // vrátila databáze. Abecedně by Nad7m předběhlo Race bez důvodu

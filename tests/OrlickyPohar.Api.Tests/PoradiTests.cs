@@ -153,7 +153,7 @@ public class PoradiTests(PostgresFixture fixture)
     }
 
     [Fact]
-    public async Task Lod_ktera_nestartovala_nema_ze_zastavky_nic()
+    public async Task Lod_ktera_nestartovala_dostane_pocet_lodi_kategorie()
     {
         await Nahraj(Rocnik("poradi-neucast"));
         var poradi = await NactiPoradi("poradi-neucast");
@@ -161,13 +161,16 @@ public class PoradiTests(PostgresFixture fixture)
         var ce = poradi.Kategorie.Single(k => k.Kategorie == "Race").Lode
             .Single(l => l.Lod.StartsWith("Cé"));
 
-        // Prázdné místo, ne nula: neúčast není vítězství.
-        Assert.Equal([2, null], ce.Zastavky);
-        Assert.Equal(2, ce.Body);
+        // Na druhou zastávku Cé nepřijela a v RACE tam byly dvě lodě.
+        // Pravidla rozhodčího (22. 9. 2026): neúčast = počet lodí ve třídě.
+        Assert.Equal([2, 2], ce.Zastavky);
+        Assert.Equal([null, "DNC"], ce.Kody);
+        Assert.Equal(4, ce.Body);
 
-        // Jediný výsledek se neškrtá — jinak by loď s jedním startem vedla.
+        // Při stejných bodech se škrtá dřívější zastávka (ZPJ A2.1).
+        Assert.Equal([0], ce.Skrtnute);
         Assert.Equal(2, ce.BodyPoSkrtu);
-        Assert.Null(ce.Skrtnuto);
+        Assert.Equal(2, ce.Skrtnuto);
         Assert.Equal(3, ce.PoradiPoSkrtu);
     }
 
@@ -215,15 +218,14 @@ public class PoradiTests(PostgresFixture fixture)
         Assert.Equal(4, alfa.Body);
         Assert.Equal(1, alfa.Poradi);
 
-        // Cé nedokončila první rozjížďku, takže má místo za oběma, které
-        // dojely — tři body, ne prázdno.
-        Assert.Equal(3, ce.Rozjizdky.Single(r => r.Cislo == 1).Body);
-        Assert.Equal(7, ce.Body);
+        // Cé nedokončila první rozjížďku: v RACE jsou přihlášené tři lodě,
+        // takže má podle ZPJ A5.2 čtyři body, ne prázdno.
+        Assert.Equal(4, ce.Rozjizdky.Single(r => r.Cislo == 1).Body);
 
-        // A protože třetí rozjížďku vyhrála, je v závodě před Betou —
-        // v seriálu ne, tam se ta rozjížďka nepočítá.
-        Assert.Equal(2, ce.Poradi);
-        Assert.Equal(3, race.Single(v => v.Lod.StartsWith("Beta")).Poradi);
+        // Třetí rozjížďka mimo pohár se do závodu počítá: 4 + 3 + 1.
+        Assert.Equal(8, ce.Body);
+        Assert.Equal(3, ce.Poradi);
+        Assert.Equal(2, race.Single(v => v.Lod.StartsWith("Beta")).Poradi);
 
         var poradi = await NactiPoradi("poradi-zavod");
         var vSerii = poradi.Kategorie.Single(k => k.Kategorie == "Race").Lode;

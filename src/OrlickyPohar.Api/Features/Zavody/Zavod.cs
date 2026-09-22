@@ -272,6 +272,13 @@ public class Zavod
     /// <summary>Váha závodu v seriálu, běžně 1.0.</summary>
     public decimal KoeficientDoSerie { get; set; } = 1.0m;
 
+    /// <summary>
+    /// Kolik se přičte lodím s umístěním, typicky bonus −1 u 24hodinovky:
+    /// vítěz má −1, druhý 0, třetí 1. Není to koeficient — bonus posouvá,
+    /// nenásobí. Neúčasti se netýká.
+    /// </summary>
+    public int PosunDoSerie { get; set; }
+
     public bool Publikovano { get; set; }
 
     public List<Rozjizdka> Rozjizdky { get; set; } = [];

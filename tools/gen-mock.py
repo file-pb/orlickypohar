@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-"""Vyrobí vymyšlený ročník pro vývoj a testy.
+"""Vyrobí ročník nanečisto pro vývoj, testy a produkční ukázku.
 
 **Jména lodí, kategorií a zastávek jsou skutečná** — vytažená z tabulek
-rozhodčího. Výsledky jsou vymyšlené: skutečné zatím nemáme.
+rozhodčího. **Pořadí v kategoriích na odjetých zastávkách je skutečné taky**
+(od 22. 9. 2026): bere se ze sešitu rozhodčího v
+`data/2026-poradi-rozhodci.json`, aby rozhodčí na webu viděl svá čísla
+a mohl je porovnat se sešitem. Vymyšlené zůstávají rozjížďky, časy,
+posádky a články — sešit vede jen body do seriálu, ne výsledky rozjížděk.
 
 Proč skutečná jména: mock je zároveň zkouškou importu, a skutečná data mají
 diakritiku, dvojité mezery (`FAR  STAR III`) i zavináč (`M@rtina`). Vymyšlené
@@ -35,8 +39,18 @@ VOLBY = argumenty.parse_args()
 
 R = random.Random(20260426)
 
+# Skutečný sešit rozhodčího: body do seriálu po zastávkách, s odvozeným
+# umístěním v kategorii a kódem (DNC, DSQ). Z něj se skládají rozjížďky.
+with open("data/2026-poradi-rozhodci.json", encoding="utf-8") as f:
+    SESIT = json.load(f)
+
+# Zastávky, které se podle sešitu nejely (u všech lodí nuly).
+ZRUSENE = set(SESIT["zruseneVSesitu"])
+
 LODE = {
-    "Pod7m": ["LUNA", "SENDY", "JOY", "Andante", "Varianta", "SANDY", "Charlotte III"],
+    # SANDY tu bývala z prvního sešitu; v obou pozdějších není (nejspíš
+    # překlep SENDY), a loď bez jediného startu by v tabulce jen mátla.
+    "Pod7m": ["LUNA", "SENDY", "JOY", "Andante", "Varianta", "Charlotte III"],
     "Nad7m": ["PEZI", "MAMBA", "M1", "DEPRESSO", "CASSIOPEIA", "SULA", "NABLB",
               "FILOZEP", "SPRUNZEL", "THEA", "MICHELLE", "DIVNA", "FAMILY LADY",
               "M@rtina", "ROSE", "MICINY", "AVENIR", "HOGAN", "LIBERTÉ", "Rio",
@@ -90,12 +104,32 @@ KODY = ["Dnf", "Dns", "Ret", "Ocs"]
 # ne — mock má skutečná jména lodí, takže vymyslet jim účast, kterou nikdo
 # nejel, je zbytečná nepravda. Přibývá sem, co Filip potvrdí.
 #
-# Zdroj: Filip, 8. 9. 2026, ke 24hodinovce.
+# Zdroj: Filip, 8. 9. 2026, ke 24hodinovce. ČERVENÉ CAFE tehdy „odstoupila";
+# sešit jí ale dává 20 bodů, což je podle pravidel rozhodčího diskvalifikace
+# v regatě — mock se drží sešitu a rozpor je otázka na rozhodčího.
 ZNAME = {
     ("24hodinovka", "zephyr"): "nejela",
-    ("24hodinovka", "cervene-cafe"): "odstoupila",
-    ("24hodinovka", "modre-cafe"): "dojela",
 }
+
+
+def umisteni_ze_sesitu(nazev_zastavky):
+    """Kdo na zastávce byl a na kolikátém místě v kategorii, podle sešitu.
+
+    Vrací {klic lodi: misto} pro lodě s umístěním a množinu diskvalifikovaných.
+    Neúčast (DNC) se nevrací — loď na zastávce nebyla.
+    """
+    if nazev_zastavky not in SESIT["zavody"]:
+        return None, set()
+    i = SESIT["zavody"].index(nazev_zastavky)
+    mista, dsq = {}, set()
+    for radky in SESIT["kategorie"].values():
+        for r in radky:
+            z = r["zastavky"][i]
+            if z.get("misto") is not None:
+                mista[klic(r["lod"])] = z["misto"]
+            elif z.get("kod") == "DSQ":
+                dsq.add(klic(r["lod"]))
+    return mista, dsq
 
 
 def klic(s):
@@ -117,64 +151,72 @@ for i, (kategorie, jmena) in enumerate(LODE.items()):
                      "majitel": o["klic"]})
         prihlasky.append({"lod": klic(nazev), "kategorie": kategorie})
 
+KATEGORIE_LODI_PRED = {p["lod"]: p["kategorie"] for p in prihlasky}
+
 zavody = []
 for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerate(ZAVODY, 1):
-    # Loď nejede všechny zastávky; u vánoční regaty jich jede výrazně míň.
-    pravdepodobnost = 0.45 if typ == "fun" else 0.82
-    startuji = [l["klic"] for l in lode if R.random() < pravdepodobnost]
-    if len(startuji) < 6:
-        startuji = [l["klic"] for l in lode][:8]
+    mista, diskvalifikovane = umisteni_ze_sesitu(nazev)
+    # Radavská i Vánoční regata se v roce 2026 nejely (rozhodčí, 22. 9. 2026);
+    # datum Vánoční regaty v tabulce výš je vymyšlené.
+    zrusena = nazev in ZRUSENE
 
-    # Co víme, to se nelosuje.
-    zname = {lod: co for (zavod, lod), co in ZNAME.items() if zavod == klic(nazev)}
-    startuji = [k for k in startuji if zname.get(k) != "nejela"]
-    startuji += [k for k, co in zname.items() if co != "nejela" and k not in startuji]
+    # Plánovaná zastávka se ještě nejela, takže po ní nemůžou být výsledky.
+    # Nanejvýš je známo, kdo se chystá jet — účasti tedy zůstávají, rozjížďky
+    # vzniknou až na vodě.
+    odjety = mista is not None and not zrusena
+
+    if odjety:
+        # Kdo jel, říká sešit: lodě s umístěním a diskvalifikované.
+        startuji = [l["klic"] for l in lode if l["klic"] in mista or l["klic"] in diskvalifikovane]
+    else:
+        # Loď nejede všechny zastávky; u vánoční regaty jich jede výrazně míň.
+        pravdepodobnost = 0.45 if typ == "fun" else 0.82
+        startuji = [l["klic"] for l in lode if R.random() < pravdepodobnost]
+        if len(startuji) < 6:
+            startuji = [l["klic"] for l in lode][:8]
+        startuji = [k for k in startuji
+                    if ZNAME.get((klic(nazev), k)) != "nejela"]
 
     ucasti = [{"lod": k,
                "kormidelnik": next(l["majitel"] for l in lode if l["klic"] == k)
                if R.random() > 0.25 else R.choice(osoby)["klic"],
                "posadka": ", ".join(f'{o["jmeno"]} {o["prijmeni"]}'
                                     for o in R.sample(osoby, R.randint(1, 3)))}
-              for k in startuji]
+              for k in ([] if zrusena else startuji)]
 
-    # Plánovaná zastávka se ještě nejela, takže po ní nemůžou být výsledky.
-    # Nanejvýš je známo, kdo se chystá jet — účasti tedy zůstávají, rozjížďky
-    # vzniknou až na vodě. Počet rozjížděk v tabulce výš je tedy záměr, ne
-    # fakt, a škrt se z něj proto počítat nesmí.
-    odjety = den <= date(2026, 9, 8)
     odjeto_rozjizdek = pocet_r if odjety else 0
 
     dvoudenni = typ == "24 hodin"
+    kat_poradi = {k: i for i, k in enumerate(LODE)}
     rozjizdky = []
     for cislo in range(1, odjeto_rozjizdek + 1):
         start = datetime(den.year, den.month, den.day, 10, 0,
                          tzinfo=timezone(timedelta(hours=2))) + timedelta(hours=2 * (cislo - 1))
-        poradi_lodi = startuji[:]
-        R.shuffle(poradi_lodi)
 
-        vysledky, misto = [], 0
-        for k in poradi_lodi:
-            # Los padne vždycky, i když se pak přebije známým faktem —
-            # jinak by se posunul celý zbytek generátoru.
-            los, znamy = R.random(), zname.get(k)
-            if znamy == "odstoupila":
-                vysledky.append({"lod": k, "kod": "Ret"})
-                continue
-            if los < 0.08 and znamy != "dojela":
-                vysledky.append({"lod": k, "kod": R.choice(KODY)})
-                continue
-            misto += 1
+        # Izolepa: první rozjížďka je běh pro míčky z kopce, do poháru jde
+        # jedna z těch na vodě.
+        do_serie = cislo == 2 if typ == "Izolepa" else True
+
+        # Rozjížďky, které jdou do poháru, jedou lodě v pořadí ze sešitu —
+        # jinak by body v seriálu nevyšly jako u rozhodčího. Ostatní
+        # (běh pro míčky) se losují.
+        dojeli = [k for k in startuji if k not in diskvalifikovane]
+        if do_serie:
+            dojeli.sort(key=lambda k: (mista[k], kat_poradi[KATEGORIE_LODI_PRED[k]]))
+        else:
+            R.shuffle(dojeli)
+
+        vysledky = []
+        for misto, k in enumerate(dojeli, 1):
             zaklad = 86000 if dvoudenni else 3600
             cas = int(zaklad * (1 + 0.02 * misto) + R.randint(-90, 90))
             vysledky.append({"lod": k, "poradiVCili": misto,
                              "dojezdV": (start + timedelta(seconds=cas)).isoformat(),
                              "casSekundy": cas})
+        for k in startuji:
+            if k in diskvalifikovane:
+                vysledky.append({"lod": k, "kod": "Dsq"})
 
-        # Izolepa: první rozjížďka je běh pro míčky z kopce, do poháru jde
-        # jedna z těch na vodě.
-        do_serie = True
-        if typ == "Izolepa":
-            do_serie = cislo == 2
         rozjizdky.append({"cislo": cislo, "startV": start.isoformat(),
                           "stav": "Dokoncena", "doSerie": do_serie,
                           "vysledky": vysledky})
@@ -187,8 +229,10 @@ for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerat
                    "typ": typ, "poradi": poradi,
                    "pocetSkrtu": skrty(typ, odjeto_rozjizdek),
                    "vyhodnoceni": vyhodnoceni, "koeficientDoSerie": koef,
+                   # „Za účast ve 24hodinovce bodové zvýhodnění: 1. místo −1."
+                   "posunDoSerie": -1 if dvoudenni else 0,
                    # Zastávka, která je teprve v kalendáři, nemá výsledky.
-                   "stav": "Odjety" if odjety else "Planovany",
+                   "stav": "Zruseny" if zrusena else "Odjety" if odjety else "Planovany",
                    "publikovano": VOLBY.publikovat,
                    "ucasti": ucasti, "rozjizdky": rozjizdky})
 
@@ -210,8 +254,8 @@ konci dubna Jarním větrem a končí Vánoční regatou; mezi tím se jede
 čtyřiadvacetihodinovka, Izolepa i klasické okruhové závody.
 
 Body sbírá loď, ne posádka — kormidelník se mezi závody mění, loď ne.
-Do celkového pořadí se počítá každá odjetá zastávka a jedna nejhorší se
-na konci škrtá.
+Do celkového pořadí se počítá každá odjetá zastávka a nejhorší výsledky
+se škrtají.
 
 Přihlášky přijímá pořadatel každé zastávky zvlášť. Kdo chce jet celý
 seriál, hlásí se do ročníku jednou a kategorii má na celý rok."""
@@ -235,7 +279,7 @@ zastávky, průběžné pořadí ročníku pak v tabulce seriálu."""
 
 POLOCAS = """\
 Ročník má za sebou {odjeto} z {celkem} zastávek. Průběžné pořadí se od
-konečného může ještě výrazně lišit — škrt nejhoršího závodu se projeví
+konečného může ještě výrazně lišit — škrty nejhorších závodů se projeví
 až na konci a do té doby drží ve hře i lodě, které jednu zastávku
 propásly.
 
@@ -370,8 +414,8 @@ if odjete and cekajici:
     clanky.append({
         "slug": "prubezne-poradi-neni-konecne",
         "titulek": "Průběžné pořadí ještě není konečné",
-        "perex": "Průběžné pořadí ještě zdaleka není konečné — škrt "
-                 "nejhoršího závodu se projeví až na konci sezóny.",
+        "perex": "Průběžné pořadí ještě zdaleka není konečné — škrty "
+                 "nejhorších závodů se projeví až na konci sezóny.",
         "telo": POLOCAS.format(odjeto=len(odjete), celkem=len(zavody),
                                dalsi=cekajici[0]["nazev"]),
         "autor": "Orlický pohár",
@@ -384,9 +428,11 @@ clanky.sort(key=lambda c: c["publikovanoV"], reverse=True)
 
 data = {
     "_poznamka": (
-        "JMÉNA JSOU SKUTEČNÁ, VÝSLEDKY VYMYŠLENÉ. Lodě, kategorie a zastávky "
-        "pocházejí z tabulek rozhodčího; pořadí, časy i články jsou vygenerované, "
-        "protože skutečné výsledky zatím nemáme. Ročník je "
+        "JMÉNA I POŘADÍ V KATEGORIÍCH JSOU SKUTEČNÁ, ROZJÍŽĎKY VYMYŠLENÉ. Lodě, "
+        "kategorie, zastávky a pořadí v kategorii na každé odjeté zastávce pocházejí "
+        "ze sešitu rozhodčího (data/2026-poradi-rozhodci.json, stav po Poháru Slunce); "
+        "jednotlivé rozjížďky, časy, posádky a články jsou vygenerované, protože "
+        "výsledkové listiny rozjížděk nemáme. Ročník je "
         + ("PUBLIKOVANÝ — patří na produkci, kde u něj web ukazuje pruh, že "
            "data nejsou skutečná (proměnná UKAZKOVE_SERIE)."
            if VOLBY.publikovat else
@@ -394,6 +440,7 @@ data = {
         + " Vyrábí tools/gen-mock.py s pevným seedem."),
     "slug": "2026-nanecisto", "nazev": "Orlický pohár 2026 (nanečisto)",
     "rok": 2026, "publikovano": VOLBY.publikovat,
+    "pocetSkrtu": SESIT["pocetSkrtu"],
     "kategorie": [{"nazev": "Race", "poradi": 1},
                   {"nazev": "Nad7m", "poradi": 2},
                   {"nazev": "Pod7m", "poradi": 3}],
