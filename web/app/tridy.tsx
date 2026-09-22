@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ZnackaPuvodni } from "@/app/logo-puvodni";
 import { ZNAKY_TRID } from "@/app/znaky-trid";
 
 /**
@@ -27,8 +28,18 @@ export function slugTridy(nazev: string) {
 // počítadlo nemusí sedět s ničím v prohlížeči.
 let citac = 0;
 
+/**
+ * Pseudo-třída: pořadí celého pole napříč kategoriemi. Chová se v tabech
+ * jako třída, ale žádná není — proto nosí značku poháru, ne znak třídy.
+ */
+export const CELKEM = "Celkem";
+
 /** Znak třídy. Dekorace vedle názvu, proto skrytý před čtečkou obrazovky. */
 export function ZnakTridy({ nazev }: { nazev: string }) {
+  // Celé pole není třída. Má starou značku Orlického poháru — je to
+  // pořadí celého poháru, ne jedné třídy (Filip, 22. 9. 2026).
+  if (nazev === CELKEM) return <ZnackaPuvodni />;
+
   const slug = slugTridy(nazev);
   if (!(slug in ZNAKY_TRID)) return null;
 

@@ -994,6 +994,13 @@ th.vlevo, td.vlevo { text-align: left; }
    je vkládá přímo do stránky. Pozadí je průhledné a barvy jdou z CSS, takže
    znak sedí i v tmavém režimu bez podložky (Filip, 15. 9. 2026: průhledné
    pozadí, aspoň dvakrát větší). */
+
+/* Značka celkového pořadí: staré logo Orlického poháru ve velikosti znaku
+   třídy (Filip, 22. 9. 2026). Pořadí celého pole není třída, tak nemá znak
+   třídy — a stará značka se hodí právě sem. */
+.znak-celkem .logo-oblouk { fill: var(--znak-oblouk); }
+.stitek.kategorie-lodi { margin-left: 0.4rem; font-size: 0.7rem; }
+
 .znak-tridy {
   --znak: #12344e; --znak-oblouk: #12344e;
   height: 2.4em; width: auto; flex: none; vertical-align: middle;

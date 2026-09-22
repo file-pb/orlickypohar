@@ -87,6 +87,27 @@ export function ZnakPozadiPuvodni() {
   );
 }
 
+/**
+ * Značka původního loga v velikosti znaku třídy. Používá ji celkové pořadí
+ * regaty napříč kategoriemi (Filip, 22. 9. 2026): je to pořadí celého
+ * pole Orlického poháru, ne jedné třídy, takže má starý znak poháru.
+ */
+export function ZnackaPuvodni() {
+  return (
+    <svg
+      className="znak-tridy znak-celkem logo"
+      viewBox={LOGO.mobil.viewBox}
+      aria-hidden="true"
+      focusable="false"
+    >
+      {LOGO.plachty.map((p) => (
+        <polygon key={p.trida} className={`logo-${p.trida}`} points={p.body} />
+      ))}
+      <polygon className="logo-oblouk" points={LOGO.oblouk} />
+    </svg>
+  );
+}
+
 export function LogoPuvodni() {
   return (
     <>

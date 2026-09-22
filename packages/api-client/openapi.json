@@ -1857,6 +1857,65 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/pohar": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Za\u0159ad\u00ed rozj\u00ed\u017e\u010fku do poh\u00e1ru, nebo ji z n\u011bj vynd\u00e1",
+                "description": "Dokud je z\u00e1pis rozepsan\u00fd, sm\u00ed po\u0159adatel regaty; u podepsan\u00fdch \u010d\u00edsel rozhod\u010d\u00ed ro\u010dn\u00edku. V\u00fdsledek regaty se nem\u011bn\u00ed \u2014 ten se po\u010d\u00edt\u00e1 ze v\u0161ech odjet\u00fdch rozj\u00ed\u017ed\u011bk.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DoSerieVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RozjizdkaSpravaRadek"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/publikace": {
             "post": {
                 "tags": [
@@ -2637,6 +2696,17 @@
                             "string"
                         ],
                         "format": "date-time"
+                    }
+                }
+            },
+            "DoSerieVstup": {
+                "required": [
+                    "doSerie"
+                ],
+                "type": "object",
+                "properties": {
+                    "doSerie": {
+                        "type": "boolean"
                     }
                 }
             },
@@ -3930,6 +4000,10 @@
                     "smiZapisovat": {
                         "type": "boolean",
                         "default": false
+                    },
+                    "smiDoPoharu": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -4581,7 +4655,8 @@
             "Vyhodnoceni": {
                 "enum": [
                     "CelePole",
-                    "PoKategoriich"
+                    "PoKategoriich",
+                    "Oboje"
                 ]
             },
             "VysledekDto": {
@@ -5261,6 +5336,15 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/UcastDto"
+                        }
+                    },
+                    "poradiCelkem": {
+                        "type": [
+                            "null",
+                            "array"
+                        ],
+                        "items": {
+                            "$ref": "#/components/schemas/VysledekZavoduDto"
                         }
                     },
                     "druh": {

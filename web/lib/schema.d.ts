@@ -1921,6 +1921,53 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/pohar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Zařadí rozjížďku do poháru, nebo ji z něj vyndá
+         * @description Dokud je zápis rozepsaný, smí pořadatel regaty; u podepsaných čísel rozhodčí ročníku. Výsledek regaty se nemění — ten se počítá ze všech odjetých rozjížděk.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DoSerieVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RozjizdkaSpravaRadek"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/publikace": {
         parameters: {
             query?: never;
@@ -2396,6 +2443,9 @@ export interface components {
             /** Format: date-time */
             publikovanoV?: null | string;
         };
+        DoSerieVstup: {
+            doSerie: boolean;
+        };
         /**
          * @default Pohar
          * @enum {unknown}
@@ -2695,6 +2745,8 @@ export interface components {
             mozneStavy: components["schemas"]["StavVysledku"][];
             /** @default false */
             smiZapisovat: boolean;
+            /** @default false */
+            smiDoPoharu: boolean;
         };
         RozjizdkaVstup: {
             /** Format: int32 */
@@ -2864,7 +2916,7 @@ export interface components {
             zdroj: string;
         };
         /** @enum {unknown} */
-        Vyhodnoceni: "CelePole" | "PoKategoriich";
+        Vyhodnoceni: "CelePole" | "PoKategoriich" | "Oboje";
         VysledekDto: {
             lod: string;
             kategorie: string;
@@ -3039,6 +3091,7 @@ export interface components {
             rozjizdky: components["schemas"]["RozjizdkaDto"][];
             poradi: components["schemas"]["VysledekZavoduDto"][];
             lode: components["schemas"]["UcastDto"][];
+            poradiCelkem?: null | components["schemas"]["VysledekZavoduDto"][];
             druh?: components["schemas"]["DruhZastavky"];
             medailonek?: null | components["schemas"]["PoradatelDto"];
         };
