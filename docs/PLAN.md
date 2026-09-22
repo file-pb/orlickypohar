@@ -2431,6 +2431,68 @@ stavět až potom. Počítat se musí stejnými funkcemi jako průběžné pořa
 aby stránka zastávky a seriál nemohly ukazovat něco jiného. Číslo zastávky
 v průběžném pořadí má vést rovnou na pohled „Do poháru".
 
+## Zápis z vody (plán 22. 9. 2026)
+
+Dnešní zápis (`/sprava/{rocnik}/vysledky/{regata}/{cislo}`) je přepis
+papíru po závodě: u každé lodi se vepíše pořadí nebo kód. Na vodě, když
+lodě projíždějí cílem, se tak zapisovat nedá. Plán je **cílová obrazovka
+na telefonu**.
+
+**Jak to na vodě chodí (Filip, 22. 9. 2026):**
+
+- Většinou **jeden hlídá a druhý zapisuje**. Někdy stojí dva na obou
+  koncích cílové čáry, píšou na papír a pak se musí shodnout.
+- **Startuje se najednou**, všechny kategorie jednou startovní procedurou.
+- Lodě se poznávají **podle jména** a pak podle znaků, na kterých se domluví
+  při zápisu (poznámka k lodi).
+- Kolik rozjížděk se jede, rozhoduje počasí. **Loď se smí zapsat i po
+  startu**, když přijede pozdě.
+- U cíle je **mobilní signál**. Zápis jde rovnou na server; bez připojení
+  si telefon klepnutí jen podrží, dokud se neuloží.
+
+**Cílová obrazovka:**
+
+1. **Nová rozjížďka.** Číslo se doplní samo, „do poháru" je zaškrtnuté,
+   odškrtne se třeba u běhu pro míčky na Izolepě.
+2. **Start.** Jedno tlačítko pro všechny kategorie uloží čas startu.
+3. **Cíl.** Hlídač volá jméno, zapisovatel klepne na tlačítko lodi. Loď
+   dostane další pořadí a čas. Na tlačítku je jméno a domluvený
+   poznávací znak. Kdo dojel, přesune se do seznamu pod tlačítky.
+4. **Opravy.** Vrátit poslední klepnutí, prohodit dvě lodě, přetáhnout
+   loď na jiné místo.
+5. **Po dojezdu.** Zbylým lodím jedním klepnutím kód (DNF, RET, DNS, OCS,
+   DSQ). Pořadí v kategoriích se spočítá samo. Zápis odejde jako
+   **návrh** a dál běží dnešní workflow (ověřit, schválit, potvrdit,
+   publikovat).
+
+**Pozdní loď:** „Přidat loď" přímo na cílové obrazovce — výběr z lodí
+ročníku, nebo založení nové (jméno, kategorie). Tím se zároveň přihlásí
+na regatu.
+
+**Dva zapisovatelé:** každý zapisuje do téže rozjížďky na svém telefonu.
+Aplikace zápisy porovná a zvýrazní rozdíly (prohozené lodě, loď, kterou
+jeden nemá); zapisovatelé vyberou správné pořadí. S jedním zapisovatelem
+se krok přeskočí.
+
+**Papír zůstává:** k rozjížďce jde přiložit fotku papírového zápisu jako
+doklad. Kdo telefon na vodě nepoužije, přepíše papír doma do dnešního
+formuláře; ten se zjednoduší (lodě po kategoriích).
+
+**Časy se ukládají vždycky**, i když se podle nich zatím nepočítá: až
+přijde přepočet na handicap, budou data, a pomůžou i u protestů.
+
+**Technicky:** cílová obrazovka je jediné místo správy s javascriptem —
+klepání v reálném čase bez něj nejde. Zbytek správy zůstává bez něj.
+
+**Pořadí stavby:**
+
+1. Cílová obrazovka: start, klepání s časem, opravy, kódy, odeslání jako
+   návrh.
+2. Poznávací znak na účasti a pozdní přihláška z cílové obrazovky.
+3. Fotka papíru u rozjížďky (R2, jako fotky článků).
+4. Dva zapisovatelé a porovnání.
+5. Podržení klepnutí bez připojení (jen pojistka, signál je).
+
 ## Kde se pokračuje
 
 Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
