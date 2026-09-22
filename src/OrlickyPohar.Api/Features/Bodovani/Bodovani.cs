@@ -127,7 +127,8 @@ public static class Bodovani
             var skrtnout = Math.Min(pocetSkrtu, Math.Max(body.Count - 1, 0));
             var kSkrtnuti = body
                 .OrderByDescending(b => b.Body)
-                .ThenByDescending(b => b.Cislo)
+                // Při shodě se škrtá dřívější rozjížďka (ZPJ A2.1).
+                .ThenBy(b => b.Cislo)
                 .Take(skrtnout)
                 .Select(b => b.Cislo)
                 .ToHashSet();

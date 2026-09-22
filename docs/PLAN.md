@@ -1129,7 +1129,8 @@ Platí pravidlo platformy č. 5: **vlastní interní `UserId`** a tabulka
 
 | Otázka | Odpověď |
 |---|---|
-| Z čeho se počítá DNC | **ze zastávky:** počet lodí kategorie, které na ní byly (rozhodčí, 22. 9. 2026) |
+| Z čeho se počítá DNC | **ze zastávky:** počet lodí kategorie, které na ní byly (rozhodčí, 22. 9. 2026). Doslovné čtení ZPJ A5.2 (počet přihlášených do ročníku) rozhodčí odmítl |
+| Shodně špatné výsledky při škrtu | škrtá se **dřívější** — ZPJ A2.1, potvrdil rozhodčí 22. 9. 2026 |
 | Nuly u zrušených zastávek | jen zápis „nejelo se", do bodů ani rozstřelu nevstupují |
 | Proč má DNF jiné body než DNS | nemá mít: **ZPJ A5.2**, všechny kódy = přihlášených do závodu + 1 (rozhodčí, 22. 9. 2026); `RDG` zatím za posledním |
 | 24hodinovka | **bonus**: 1. místo −1, 2. místo 0, 3. místo 1; neúčast bez bonusu |
@@ -1207,6 +1208,15 @@ aby pořadí v kategorii na každé odjeté zastávce bylo **skutečné ze seši
 — rozhodčí na webu vidí svá čísla. Rozjížďky, časy a posádky zůstávají
 vymyšlené. Radavská regata je zrušená, Pohár Slunce odjetý, loď SANDY
 (v pozdějších sešitech není) vypadla.
+
+**Dotaz na soulad se ZPJ (22. 9. 2026, odpoledne).** Miloš se ptal, kolik
+dát za neúčast, aby to bylo v souladu s pravidly ČSJ. Navrhl jsem číst ročník
+jako jeden závod a zastávky jako rozjížďky; pak by neúčast (DNC, ne DNS —
+A10) měla podle A5.2 počet lodí přihlášených do ročníku, nad 7 m tedy 25.
+Odpověď: **„přihlášených lodí ve třídě ne"** — zůstává počet lodí na
+zastávce. **„Škrtání ano"** — při shodně špatných výsledcích se škrtá
+dřívější (A2.1), v závodě i v seriálu. Rozstřel zůstává podle jeho znění,
+ne podle A8.2 (to by bralo i škrtnutou poslední rozjížďku).
 
 **Zbývá na rozhodčího:**
 

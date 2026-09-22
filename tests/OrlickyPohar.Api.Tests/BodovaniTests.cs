@@ -457,6 +457,16 @@ public class BodovaniTests
     }
 
     [Fact]
+    public void Pri_stejne_spatnych_vysledcich_se_skrta_drivejsi()
+    {
+        // ZPJ A2.1, rozhodčí potvrdil pro seriál 22. 9. 2026.
+        var poradi = SerieBodovani.Poradi(
+            [new LodVSerii("a", [Z(0), Z(3), Z(1), Z(3)])], pocetSkrtu: 1).Single();
+
+        Assert.Equal([1], poradi.Skrtnute);
+    }
+
+    [Fact]
     public void Shodu_rozhoduje_pocet_lepsich_umisteni()
     {
         // Obě po 2 bodech. „a" má dvě první místa, „b" jen jedno.

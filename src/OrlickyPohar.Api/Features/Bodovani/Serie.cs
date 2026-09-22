@@ -112,13 +112,12 @@ public static class SerieBodovani
         {
             var skrtnout = Math.Min(pocetSkrtu, Math.Max(l.Zastavky.Count - 1, 0));
 
-            // Při stejných bodech se škrtá dřív výsledek bez umístění (ten
-            // v rozstřelu nic neváží), pak ten pozdější.
+            // Při stejných bodech se škrtá dřívější zastávka — ZPJ A2.1,
+            // potvrdil rozhodčí 22. 9. 2026.
             var skrtnute = l.Zastavky
                 .Select((z, i) => (z, i))
                 .OrderByDescending(x => x.z.Body)
-                .ThenBy(x => x.z.Misto is null ? 0 : 1)
-                .ThenByDescending(x => x.i)
+                .ThenBy(x => x.i)
                 .Take(skrtnout)
                 .Select(x => x.i)
                 .Order()

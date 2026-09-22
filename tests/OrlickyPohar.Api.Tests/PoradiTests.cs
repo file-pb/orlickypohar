@@ -167,8 +167,8 @@ public class PoradiTests(PostgresFixture fixture)
         Assert.Equal([null, "DNC"], ce.Kody);
         Assert.Equal(4, ce.Body);
 
-        // Při stejných bodech se škrtá neúčast, ne umístění.
-        Assert.Equal([1], ce.Skrtnute);
+        // Při stejných bodech se škrtá dřívější zastávka (ZPJ A2.1).
+        Assert.Equal([0], ce.Skrtnute);
         Assert.Equal(2, ce.BodyPoSkrtu);
         Assert.Equal(2, ce.Skrtnuto);
         Assert.Equal(3, ce.PoradiPoSkrtu);

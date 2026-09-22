@@ -84,7 +84,8 @@ export default function Pravidla() {
       <h2>Škrty a shoda bodů</h2>
       <p>
         Nejhorší výsledky ročníku se škrtají: při devíti zastávkách <b>dva</b>. Škrtnout se dá
-        i dvacítka za diskvalifikaci. V tabulce jsou proto dvě čísla, součet a součet po škrtu,
+        i dvacítka za diskvalifikaci; při stejně špatných výsledcích se škrtá ten dřívější.
+        V tabulce jsou proto dvě čísla, součet a součet po škrtu,
         a škrtnutá zastávka je přeškrtnutá.
       </p>
       <p>Když mají dvě lodě po škrtech stejně bodů, rozhoduje:</p>

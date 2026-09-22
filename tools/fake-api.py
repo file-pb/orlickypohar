@@ -88,7 +88,7 @@ def vysledky_zavodu(rozjizdky, pocet_skrtu=0):
     spocteno = []
     for lod, (kategorie, body) in lode.items():
         skrtnout = min(pocet_skrtu, max(len(body) - 1, 0))
-        for b in sorted(body, key=lambda b: (-b["body"], -b["cislo"]))[:skrtnout]:
+        for b in sorted(body, key=lambda b: (-b["body"], b["cislo"]))[:skrtnout]:
             b["skrtnuto"] = True
         zbylo = [b["body"] for b in body if not b["skrtnuto"]]
         spocteno.append({"lod": lod, "kategorie": kategorie, "body": sum(zbylo),
@@ -149,7 +149,8 @@ def poradi_serie():
     def skrtnute(rada):
         obsazene = [(i, x) for i, x in enumerate(rada) if x is not None]
         kolik = min(pocet_skrtu, max(len(obsazene) - 1, 0))
-        poradi = sorted(obsazene, key=lambda t: (-t[1][0], 0 if t[1][1] is None else 1, -t[0]))
+        # Při shodě se škrtá dřívější zastávka (ZPJ A2.1).
+        poradi = sorted(obsazene, key=lambda t: (-t[1][0], t[0]))
         return {i for i, _ in poradi[:kolik]}
 
     def rozstrel(a, b, skrty):
