@@ -499,8 +499,21 @@ def zapis_dto(z, r):
                       "kategorie": p["kategorie"],
                       "poradiVCili": podle_lodi.get(p["lod"], {}).get("poradiVCili"),
                       "kod": podle_lodi.get(p["lod"], {}).get("kod"),
-                      "casSekundy": podle_lodi.get(p["lod"], {}).get("casSekundy")}
-                     for p in lode]}
+                      "casSekundy": podle_lodi.get(p["lod"], {}).get("casSekundy"),
+                      "dojezdV": podle_lodi.get(p["lod"], {}).get("dojezdV")}
+                     for p in lode],
+            "startV": r.get("startV"), "doSerie": r.get("doSerie", True)}
+
+
+def cas_od_startu(start, dojezd):
+    """Naměřený čas v sekundách jako `Zapis.NamerenyCas`: bez startu nebo
+    se záporným rozdílem žádný."""
+    if not start or not dojezd:
+        return None
+    from datetime import datetime
+    rozdil = (datetime.fromisoformat(dojezd.replace("Z", "+00:00"))
+              - datetime.fromisoformat(start.replace("Z", "+00:00"))).total_seconds()
+    return int(rozdil) if rozdil >= 0 else None
 
 
 # --- Kalendář ---------------------------------------------------------------
@@ -762,6 +775,9 @@ class H(BaseHTTPRequestHandler):
             return self.workflow(m.group(1), int(m.group(2)), m.group(3))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)/rozjizdky$', cesta)):
             return self.pridej_rozjizdku(m.group(1))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
+                          r'/rozjizdky/(\d+)/start$', cesta)):
+            return self.odstartuj(m.group(1), int(m.group(2)))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode$', cesta)):
             return self.prihlas_lod(m.group(1))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode/(\d+)/stav$', cesta)):
@@ -884,15 +900,18 @@ class H(BaseHTTPRequestHandler):
             lod = LOD_PODLE_ID.get(radek.get("prihlaskaId"))
             if not lod:
                 return self.chyba(400, f'Přihláška {radek.get("prihlaskaId")} do ročníku nepatří.')
-            radky.append((lod, KAT[lod], radek.get("poradiVCili"), radek.get("kod")))
-        if (chyba := proc_nejde_ulozit(radky)):
+            radky.append((lod, KAT[lod], radek.get("poradiVCili"), radek.get("kod"), radek.get("dojezdV")))
+        if (chyba := proc_nejde_ulozit([r[:4] for r in radky])):
             return self.chyba(400, chyba)
 
         # Celá sada najednou, jako v API: co v zápisu není, výsledek nemá.
         # Čas u lodi, která výsledek už měla, zůstává — formulář ho nemění.
+        # Cílová obrazovka posílá dojezd a ten se uloží i s časem od startu.
         puvodni = {v["lod"]: v for v in r["vysledky"]}
-        r["vysledky"] = [{**puvodni.get(lod, {}), "lod": lod, "poradiVCili": poradi, "kod": kod}
-                         for lod, _, poradi, kod in radky if poradi is not None or kod]
+        r["vysledky"] = [{**puvodni.get(lod, {}), "lod": lod, "poradiVCili": poradi, "kod": kod,
+                          **({"dojezdV": dojezd, "casSekundy": cas_od_startu(r.get("startV"), dojezd)}
+                             if dojezd else {})}
+                         for lod, _, poradi, kod, dojezd in radky if poradi is not None or kod]
         for lod in (v["lod"] for v in r["vysledky"]):
             if all(u["lod"] != lod for u in z["ucasti"]):
                 z["ucasti"].append({"lod": lod, "kormidelnik": None, "posadka": None})
@@ -979,6 +998,24 @@ class H(BaseHTTPRequestHandler):
         u["stav"], u["duvod"] = na, duvod or None
         return self.odpoved(lod_na_zastavce(z, lod))
 
+    def odstartuj(self, zavod, cislo):
+        z, r = self.rozjizdka(zavod, cislo)
+        if not r:
+            return None
+        if (chyba := proc_nejde_prepsat(z, r)):
+            return self.chyba(400, chyba)
+
+        from datetime import datetime, timezone
+        r["startV"] = self.telo_zadosti().get("startV") or \
+            datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        if r.get("stav") == "Planovana":
+            r["stav"] = "Probiha"
+        # Časy dojetých se přepočítají k novému startu, jako v API.
+        for v in r["vysledky"]:
+            if v.get("dojezdV"):
+                v["casSekundy"] = cas_od_startu(r["startV"], v["dojezdV"])
+        return self.odpoved(zapis_dto(z, r))
+
     def pridej_rozjizdku(self, zavod):
         z = self.zastavka(zavod)
         if not z:
@@ -988,7 +1025,8 @@ class H(BaseHTTPRequestHandler):
 
         # Nová rozjížďka je návrh a venku není — stejně jako v API.
         nova = {"cislo": max((r["cislo"] for r in z["rozjizdky"]), default=0) + 1,
-                "startV": None, "stav": "Planovana", "doSerie": True,
+                "startV": None, "stav": "Planovana",
+                "doSerie": self.telo_zadosti().get("doSerie", True) is not False,
                 "stavVysledku": "Navrzeno", "publikovano": False, "vysledky": []}
         z["rozjizdky"].append(nova)
         return self.odpoved(rozjizdka_radek(nova), 201)

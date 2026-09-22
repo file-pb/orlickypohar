@@ -170,13 +170,57 @@ export async function ulozZapis(
 export async function pridejRozjizdku(
   serie: string,
   zavod: string,
+  doSerie = true,
 ): Promise<{ chyba: string } | { cislo: number }> {
-  const odpoved = await posli(kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky`), {}, "POST");
+  const odpoved = await posli(kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky`), { doSerie }, "POST");
 
   if (typeof odpoved === "string") return { chyba: odpoved };
   if (!odpoved.ok) return { chyba: await hlaska(odpoved) };
 
   return { cislo: ((await odpoved.json()) as RozjizdkaRadek).cislo };
+}
+
+/**
+ * Cílová obrazovka (22. 9. 2026): uloží celou sadu a vrátí zápis tak, jak
+ * ho teď vidí API, nebo hlášku. Na rozdíl od formuláře tu odpověď potřeba
+ * je — obrazovka podle ní ukazuje „uloženo".
+ */
+export async function ulozCil(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  radky: ZapisRadek[],
+): Promise<{ chyba: string } | { zapis: ZapisRozjizdky }> {
+  const odpoved = await posli(
+    kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}/vysledky`),
+    { radky },
+    "PUT",
+  );
+  if (typeof odpoved === "string") return { chyba: odpoved };
+  if (!odpoved.ok) return { chyba: await hlaska(odpoved) };
+  return { zapis: (await odpoved.json()) as ZapisRozjizdky };
+}
+
+/**
+ * Start rozjížďky. Cílová obrazovka posílá čas z telefonu: dojezdy měří
+ * týmiž hodinami, takže naměřený čas nezávisí na tom, jak se hodiny
+ * telefonu rozcházejí se serverem. Bez času platí okamžik, kdy požadavek
+ * dojde na server.
+ */
+export async function odstartuj(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  startV?: string,
+): Promise<{ chyba: string } | { zapis: ZapisRozjizdky }> {
+  const odpoved = await posli(
+    kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}/start`),
+    startV ? { startV } : {},
+    "POST",
+  );
+  if (typeof odpoved === "string") return { chyba: odpoved };
+  if (!odpoved.ok) return { chyba: await hlaska(odpoved) };
+  return { zapis: (await odpoved.json()) as ZapisRozjizdky };
 }
 
 export async function publikuj(

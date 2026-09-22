@@ -43,14 +43,17 @@ export async function stavAkce(formular: FormData) {
 export async function pridejRozjizdkuAkce(formular: FormData) {
   const serie = String(formular.get("serie") ?? "");
   const zavod = String(formular.get("zavod") ?? "");
+  // Zaškrtávátko neodeslané = odškrtnuté. Výchozí je zaškrtnuté.
+  const doSerie = formular.get("doSerie") === "ano";
+  // Na vodě se jde rovnou do cílové obrazovky, doma na formulář z papíru.
+  const cil = formular.get("kam") === "cil";
 
-  const vysledek = await pridejRozjizdku(serie, zavod);
+  const vysledek = await pridejRozjizdku(serie, zavod, doSerie);
 
   if ("chyba" in vysledek) redirect(kam(serie, zavod, { chyba: vysledek.chyba }));
 
-  redirect(
-    `/sprava/${encodeURIComponent(serie)}/vysledky/${encodeURIComponent(zavod)}/${vysledek.cislo}?stav=nova`,
-  );
+  const zaklad = `/sprava/${encodeURIComponent(serie)}/vysledky/${encodeURIComponent(zavod)}/${vysledek.cislo}`;
+  redirect(cil ? `${zaklad}/cil` : `${zaklad}?stav=nova`);
 }
 
 export async function publikaceAkce(formular: FormData) {

@@ -56,7 +56,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Vrátí zastávku s rozjížďkami a výsledky */
+        /** Vrátí regatu s rozjížďkami a výsledky */
         get: {
             parameters: {
                 query?: never;
@@ -301,7 +301,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Přihlásí loď na zastávku z veřejného formuláře
+         * Přihlásí loď na regatu z veřejného formuláře
          * @description Bez přihlášení. Vzniká požadavek, který pořadatel zapíše, vrátí k doplnění, nebo odmítne; na webu loď do té doby není. Vyžaduje kontakt a souhlas.
          */
         post: {
@@ -419,7 +419,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Vrátí ročník s kategoriemi, zastávkami a přihláškami */
+        /** Vrátí ročník s kategoriemi, regatami a přihláškami */
         get: {
             parameters: {
                 query?: never;
@@ -466,7 +466,7 @@ export interface paths {
         };
         /**
          * Vrátí publikované články ročníku, od nejnovějšího
-         * @description Parametrem zavod se výpis zúží na jednu zastávku, parametrem limit na daný počet nejnovějších.
+         * @description Parametrem zavod se výpis zúží na jednu regatu, parametrem limit na daný počet nejnovějších.
          */
         get: {
             parameters: {
@@ -648,7 +648,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Vypíše oprávnění ročníku i zastávky, na které jdou udělit
+         * Vypíše oprávnění ročníku i regaty, na které jdou udělit
          * @description Vyžaduje roli správce, nebo rozhodčího v tom ročníku. Co smí udělit, říká SmiNaRocnik. Ucty — účty, které se kdy přihlásily — dostane jen správce; rozhodčímu je null.
          */
         get: {
@@ -1393,8 +1393,8 @@ export interface paths {
         };
         put?: never;
         /**
-         * Založí zastávku v předběžném kalendáři
-         * @description Rozhodčí ročníku. Adresa se odvodí z názvu. Nová zastávka je vždycky plánovaná a nepublikovaná.
+         * Založí regatu v předběžném kalendáři
+         * @description Rozhodčí ročníku. Adresa se odvodí z názvu. Nová regata je vždycky plánovaná a nepublikovaná.
          */
         post: {
             parameters: {
@@ -1437,7 +1437,7 @@ export interface paths {
         };
         get?: never;
         /**
-         * Uloží termín a údaje zastávky
+         * Uloží termín a údaje regaty
          * @description Rozhodčí ročníku. Adresa se nemění, ani když se změní název. Posun termínu u potvrzené a dál zapíše původní datum.
          */
         put: {
@@ -1484,7 +1484,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Posune zastávku v jejím životním cyklu
+         * Posune regatu v jejím životním cyklu
          * @description Plánovaný → potvrzený (rozhodčí) → vypsaný → odjetý (organizátor), nebo zrušený. Po jednom kroku, oběma směry.
          */
         post: {
@@ -1530,7 +1530,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Pustí zastávku na veřejný web, nebo ji stáhne
+         * Pustí regatu na veřejný web, nebo ji stáhne
          * @description Správce ročníku. Publikace není stav, je to vlastní příznak.
          */
         post: {
@@ -1574,7 +1574,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Vypíše zastávky ročníku i s tím, kolik výsledků je venku
+         * Vypíše regaty ročníku i s tím, kolik výsledků je venku
          * @description Rozcestník. Vyžaduje roli rozhodčího v ročníku, nebo organizátora aspoň na jedné zastávce.
          */
         get: {
@@ -1614,7 +1614,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Vypíše rozjížďky zastávky i s tím, co s nimi přihlášený smí */
+        /** Vypíše rozjížďky regaty i s tím, co s nimi přihlášený smí */
         get: {
             parameters: {
                 query?: never;
@@ -1657,7 +1657,7 @@ export interface paths {
         put?: never;
         /**
          * Přidá zastávce další rozjížďku
-         * @description Pořadatel zastávky, od vypsání závodu. Nová rozjížďka je návrh a na webu není.
+         * @description Pořadatel regaty, od vypsání závodu. Nová rozjížďka je návrh a na webu není.
          */
         post: {
             parameters: {
@@ -1669,7 +1669,11 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["NovaRozjizdkaVstup"];
+                };
+            };
             responses: {
                 /** @description Created */
                 201: {
@@ -1678,6 +1682,53 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["RozjizdkaSpravaRadek"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Zapíše start rozjížďky
+         * @description Cílová obrazovka. Bez času v těle se vezme okamžik požadavku. Jde přepsat, dokud je zápis otevřený; časy dojetých lodí se přepočítají.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["StartVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZapisRozjizdkyDto"];
                     };
                 };
             };
@@ -1697,7 +1748,7 @@ export interface paths {
         };
         /**
          * Vypíše zápis rozjížďky: všechny lodě ročníku a jejich výsledky
-         * @description Vidí ho každý, kdo smí na výsledky ročníku. Měnit ho smí jen pořadatel zastávky, a jen v návrhu nebo po vrácení k revizi.
+         * @description Vidí ho každý, kdo smí na výsledky ročníku. Měnit ho smí jen pořadatel regaty, a jen v návrhu nebo po vrácení k revizi.
          */
         get: {
             parameters: {
@@ -1880,8 +1931,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Vypíše lodě ročníku i s tím, jak jsou přihlášené na zastávku
-         * @description Pořadatel zastávky, nebo rozhodčí ročníku. Měnit smí jen pořadatel.
+         * Vypíše lodě ročníku i s tím, jak jsou přihlášené na regatu
+         * @description Pořadatel regaty, nebo rozhodčí ročníku. Měnit smí jen pořadatel.
          */
         get: {
             parameters: {
@@ -1908,8 +1959,8 @@ export interface paths {
         };
         put?: never;
         /**
-         * Přihlásí loď na zastávku — z ročníku, nebo novou
-         * @description Pořadatel zastávky, od vypsání závodu. Nová loď se stává účastníkem ročníku v zadané kategorii. Druhé přihlášení téže lodi vrací 200.
+         * Přihlásí loď na regatu — z ročníku, nebo novou
+         * @description Pořadatel regaty, od vypsání závodu. Nová loď se stává účastníkem ročníku v zadané kategorii. Druhé přihlášení téže lodi vrací 200.
          */
         post: {
             parameters: {
@@ -1964,7 +2015,7 @@ export interface paths {
         put?: never;
         /**
          * Zapíše startovné lodi na zastávce
-         * @description Pořadatel zastávky. Nic neblokuje — kdo přijede pozdě, zaplatí později.
+         * @description Pořadatel regaty. Nic neblokuje — kdo přijede pozdě, zaplatí později.
          */
         post: {
             parameters: {
@@ -2097,7 +2148,7 @@ export interface paths {
         };
         /**
          * Medailonek pořadatele i s tím, jestli ho přihlášený smí upravit
-         * @description Rozhodčí ročníku, nebo organizátor aspoň jedné zastávky v ročníku. Pořadatel musí v ročníku pořádat aspoň jednu zastávku.
+         * @description Rozhodčí ročníku, nebo organizátor aspoň jedné regaty v ročníku. Pořadatel musí v ročníku pořádat aspoň jednu regatu.
          */
         get: {
             parameters: {
@@ -2124,7 +2175,7 @@ export interface paths {
         };
         /**
          * Uloží medailonek pořadatele
-         * @description Rozhodčí ročníku, nebo organizátor zastávky, kterou pořadatel pořádá. Záznam je společný všem ročníkům; přejmenování přepíše jméno na všech jeho zastávkách.
+         * @description Rozhodčí ročníku, nebo organizátor regaty, kterou pořadatel pořádá. Záznam je společný všem ročníkům; přejmenování přepíše jméno na všech jeho regatách.
          */
         put: {
             parameters: {
@@ -2392,6 +2443,10 @@ export interface components {
             cisloPlachty?: null | string;
             typ?: null | string;
         };
+        NovaRozjizdkaVstup: {
+            /** @default true */
+            doSerie: boolean;
+        };
         ObrazekDto: {
             nahled: string;
             velky: string;
@@ -2656,6 +2711,10 @@ export interface components {
             zaplaceno: boolean;
             poznamka?: null | string;
         };
+        StartVstup: {
+            /** Format: date-time */
+            startV?: null | string;
+        };
         /** @enum {unknown} */
         StavClanku: "Draft" | "Publikovano" | "Skryty" | "Smazano";
         /** @enum {unknown} */
@@ -2801,6 +2860,8 @@ export interface components {
             kod: null | components["schemas"]["KodVysledku"];
             /** Format: int32 */
             casSekundy: null | number;
+            /** Format: date-time */
+            dojezdV?: null | string;
         };
         ZapisRadekVstup: {
             /** Format: int32 */
@@ -2808,6 +2869,8 @@ export interface components {
             /** Format: int32 */
             poradiVCili?: null | number;
             kod?: null | components["schemas"]["KodVysledku"];
+            /** Format: date-time */
+            dojezdV?: null | string;
         };
         ZapisRozjizdkyDto: {
             serie: string;
@@ -2822,6 +2885,10 @@ export interface components {
             smiZapisovat: boolean;
             procNelze: null | string;
             lode: components["schemas"]["ZapisLodDto"][];
+            /** Format: date-time */
+            startV?: null | string;
+            /** @default true */
+            doSerie: boolean;
         };
         ZapisTeplotyRadek: {
             snimek: string;

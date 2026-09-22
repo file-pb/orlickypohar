@@ -166,7 +166,16 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
         <form action={pridejRozjizdkuAkce} className="pridat">
           <input type="hidden" name="serie" value={serie} />
           <input type="hidden" name="zavod" value={zavod} />
-          <button type="submit">Přidat rozjížďku</button>
+          <label className="zaskrtnuti">
+            <input type="checkbox" name="doSerie" value="ano" defaultChecked /> do poháru
+          </label>
+          {/* Na vodě rovnou cílová obrazovka, doma formulář z papíru. */}
+          <button type="submit" name="kam" value="cil">
+            Nová rozjížďka — cílová obrazovka
+          </button>
+          <button type="submit" name="kam" value="formular">
+            Nová rozjížďka — přepis z papíru
+          </button>
         </form>
       )}
     </>
@@ -212,6 +221,12 @@ function Rozjizdka({
         <Link href={`/sprava/${serie}/vysledky/${zavod}/${rozjizdka.cislo}`}>
           {rozjizdka.smiZapisovat ? "zapsat výsledky" : "zobrazit zápis"}
         </Link>
+        {rozjizdka.smiZapisovat && (
+          <>
+            {" · "}
+            <Link href={`/sprava/${serie}/vysledky/${zavod}/${rozjizdka.cislo}/cil`}>cílová obrazovka</Link>
+          </>
+        )}
       </div>
 
       {/* Důvod revize zůstává u rozjížďky i potom, co se vrátí do návrhu —

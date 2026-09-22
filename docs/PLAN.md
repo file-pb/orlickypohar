@@ -2491,8 +2491,11 @@ klepání v reálném čase bez něj nejde. Zbytek správy zůstává bez něj.
 
 **Pořadí stavby:**
 
-1. Cílová obrazovka: start, klepání s časem, opravy, kódy, odeslání jako
-   návrh.
+1. ~~Cílová obrazovka: start, klepání s časem, opravy, kódy, odeslání jako
+   návrh.~~ **Hotové 22. 9. 2026** (`/sprava/{rocnik}/vysledky/{regata}/{cislo}/cil`).
+   Ukládá se po každém klepnutí celá sada, takže „odeslání" není zvláštní
+   krok — rozjížďka je od založení v návrhu. Přetahování je zatím šipkami
+   o místo; čas zůstává u místa v pořadí, ne u lodi.
 2. Poznávací znak na účasti a pozdní přihláška z cílové obrazovky.
 3. Fotka papíru u rozjížďky (R2, jako fotky článků).
 4. Dva zapisovatelé a porovnání.
