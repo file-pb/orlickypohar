@@ -375,7 +375,8 @@ def rozjizdka_radek(r):
                            and not proc_nejde_vysledek(r["stavVysledku"], s, True)],
             "smiZapisovat": r["stavVysledku"] in OTEVRENY,
             # Práva mock nerozlišuje: přihlášený je tu pořadatel i rozhodčí.
-            "smiDoPoharu": True}
+            "smiDoPoharu": True,
+            "maPapir": bool(r.get("papir"))}
 
 
 # --- Zápis výsledků ---------------------------------------------------------
@@ -515,7 +516,9 @@ def zapis_dto(z, r):
                       "naRegate": ucasti.get(p["lod"], {}).get("stav") in VEREJNE_UCASTI,
                       "poznavaciZnak": ucasti.get(p["lod"], {}).get("poznavaciZnak")}
                      for p in lode],
-            "startV": r.get("startV"), "doSerie": r.get("doSerie", True)}
+            "startV": r.get("startV"), "doSerie": r.get("doSerie", True),
+            "papir": {k: v for k, v in r["papir"].items() if k != "id"} if r.get("papir") else None,
+            "smiPapir": True}
 
 
 def cas_od_startu(start, dojezd):
@@ -705,6 +708,9 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                           r'/lode/(\d+)/znak$', cesta)):
             return self.znak(m.group(1), int(m.group(2)))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
+                          r'/rozjizdky/(\d+)/papir$', cesta)):
+            return self.nahraj_papir(m.group(1), int(m.group(2)))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                           r'/rozjizdky/(\d+)/vysledky$', cesta)):
             return self.uloz_zapis(m.group(1), int(m.group(2)))
@@ -1084,6 +1090,55 @@ class H(BaseHTTPRequestHandler):
             return next((c for c in SPRAVA_CLANKY if c["slug"] == klic), None)
         return PORADATELE.get(klic)
 
+    def nahrana_fotka(self):
+        """Pole formuláře a data souboru, nebo (None, None) s odeslanou chybou.
+
+        Společné pro obrázek článku i pro fotku papírového zápisu; kontroly
+        souboru jsou tytéž jako `Nahravani.ProcNejde` v API."""
+        delka = int(self.headers.get("Content-Length", "0") or 0)
+        zprava = BytesParser(policy=HTTP).parsebytes(
+            b"Content-Type: " + self.headers["Content-Type"].encode() + b"\r\n\r\n"
+            + self.rfile.read(delka))
+        pole = {c.get_param("name", header="content-disposition"): c for c in zprava.iter_parts()}
+
+        soubor = pole.get("soubor")
+        data = soubor.get_payload(decode=True) if soubor else b""
+        if not data:
+            self.chyba(400, "Vyber soubor s fotkou.")
+            return None, None
+        if len(data) > 15 * 1024 * 1024:
+            self.chyba(400, "Fotka může mít nejvýš 15 MB.")
+            return None, None
+        if soubor.get_content_type() not in ("image/jpeg", "image/png", "image/webp"):
+            self.chyba(400, "Soubor se nedá přečíst jako fotka. Nahraj JPEG, PNG nebo WebP.")
+            return None, None
+
+        return pole, (data, soubor.get_content_type())
+
+    def uloz_fotku(self, vlastnik, klic, data, typ, autor, popis):
+        """Uloží fotku vlastníkovi a starou zahodí i ze „soubory"."""
+        if vlastnik.get(klic):
+            FOTKY.pop(vlastnik[klic]["id"], None)
+        id = uuid.uuid4().hex
+        FOTKY[id] = (data, typ)
+        adresa = f"http://127.0.0.1:{PORT}/fake-foto/{id}"
+        vlastnik[klic] = {"id": id, "nahled": adresa, "velky": adresa, "sirka": 1600,
+                          "vyska": 1067, "autor": autor, "popis": popis}
+        return {k: v for k, v in vlastnik[klic].items() if k != "id"}
+
+    def nahraj_papir(self, zavod, cislo):
+        """Fotka papírového zápisu. Autora doplní API, souhlas se neptá."""
+        z, r = self.rozjizdka(zavod, cislo)
+        if not r:
+            return None
+
+        pole, fotka = self.nahrana_fotka()
+        if not fotka:
+            return None
+
+        return self.odpoved(self.uloz_fotku(
+            r, "papir", *fotka, JA["zobrazovane"], f"Papírový zápis {cislo}. rozjížďky"))
+
     def nahraj_obrazek(self, druh, klic):
         """Stejné kontroly jako `Nahravani.ProcNejde` v API."""
         if not self.headers.get("authorization"):
@@ -1092,22 +1147,12 @@ class H(BaseHTTPRequestHandler):
         if not vlastnik:
             return self.send_error(404)
 
-        delka = int(self.headers.get("Content-Length", "0") or 0)
-        zprava = BytesParser(policy=HTTP).parsebytes(
-            b"Content-Type: " + self.headers["Content-Type"].encode() + b"\r\n\r\n"
-            + self.rfile.read(delka))
-        pole = {c.get_param("name", header="content-disposition"): c for c in zprava.iter_parts()}
+        pole, fotka = self.nahrana_fotka()
+        if not fotka:
+            return None
+
         # Části bez charsetu by e-mailový parser četl jako ASCII; formulář je UTF-8.
         text = lambda k: (pole[k].get_payload(decode=True).decode("utf-8").strip() if k in pole else "")
-
-        soubor = pole.get("soubor")
-        data = soubor.get_payload(decode=True) if soubor else b""
-        if not data:
-            return self.chyba(400, "Vyber soubor s fotkou.")
-        if len(data) > 15 * 1024 * 1024:
-            return self.chyba(400, "Fotka může mít nejvýš 15 MB.")
-        if soubor.get_content_type() not in ("image/jpeg", "image/png", "image/webp"):
-            return self.chyba(400, "Soubor se nedá přečíst jako fotka. Nahraj JPEG, PNG nebo WebP.")
         if not text("autor"):
             return self.chyba(400, "Napiš, kdo fotku fotil. Na webu se pod ní ukáže.")
         if text("souhlas") != "true":
@@ -1272,6 +1317,18 @@ class H(BaseHTTPRequestHandler):
                 return self.chyba(400, "Smazat jde jen požadavek, vrácenou nebo odmítnutou "
                                        "přihlášku bez výsledků. Zapsanou loď odhlas.")
             z["ucasti"].remove(u)
+            self.send_response(204)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
+                          r'/rozjizdky/(\d+)/papir$', urlparse(self.path).path)):
+            z, r = self.rozjizdka(m.group(1), int(m.group(2)))
+            if not r:
+                return
+            if r.get("papir"):
+                FOTKY.pop(r.pop("papir")["id"], None)
             self.send_response(204)
             self.send_header("Content-Length", "0")
             self.end_headers()

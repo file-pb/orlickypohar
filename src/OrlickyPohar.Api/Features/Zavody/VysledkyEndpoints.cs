@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using OrlickyPohar.Api.Features.Fotky;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Identita;
@@ -17,6 +18,12 @@ public record NovaRozjizdkaVstup(bool DoSerie = true);
 
 /// <summary>Zařazení rozjížďky do poháru.</summary>
 public record DoSerieVstup(bool DoSerie);
+
+/// <summary>
+/// Fotka papírového zápisu. Autor ani souhlas se neposílají — doklad
+/// z cíle se nikde nezveřejňuje a nahrál ho ten, kdo je přihlášený.
+/// </summary>
+public record PapirFormular(IFormFile? Soubor);
 
 /// <summary>Poznávací znak lodi na regatě. Prázdný znak smaže.</summary>
 public record ZnakVstup(string? Znak);
@@ -65,6 +72,20 @@ public static class VysledkyEndpoints
             .WithDescription(
                 "Cílová obrazovka. Bez času v těle se vezme okamžik požadavku. Jde přepsat, " +
                 "dokud je zápis otevřený; časy dojetých lodí se přepočítají.");
+
+        // Token jde v hlavičce, ne v cookie — proti podvrženému formuláři
+        // tu není co chránit (stejně jako u obrázku článku).
+        g.MapPut("/{zavod}/rozjizdky/{cislo:int}/papir", PapirAsync)
+            .DisableAntiforgery()
+            .WithMetadata(new RequestSizeLimitAttribute(Nahravani.NejvicBajtu + 1024 * 1024))
+            .Produces<ObrazekDto>()
+            .WithSummary("Nahraje fotku papírového zápisu rozjížďky")
+            .WithDescription(
+                "Pořadatel regaty, i u podepsaných čísel — je to doklad k zápisu, ne zásah do něj. " +
+                "JPEG, PNG nebo WebP do 15 MB. Veřejně se nevydává. Bez nastaveného úložiště vrací 503.");
+
+        g.MapDelete("/{zavod}/rozjizdky/{cislo:int}/papir", OdeberPapirAsync)
+            .WithSummary("Odebere fotku papírového zápisu a smaže její soubory");
 
         g.MapPut("/{zavod}/lode/{prihlaska:int}/znak", ZnakAsync)
             .WithSummary("Nastaví poznávací znak lodi na regatě")
@@ -162,6 +183,47 @@ public static class VysledkyEndpoints
             return Results.BadRequest(new { error = chyba });
 
         return Results.Ok(await zapis.NactiAsync(rozjizdka, poradatel: true, ct));
+    }
+
+    private static async Task<IResult> PapirAsync(
+        string serie, string zavod, int cislo, [FromForm] PapirFormular formular, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, VysledkySprava sprava, FotkySprava fotky, IUloziste uloziste, CancellationToken ct)
+    {
+        if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
+            return Results.NotFound();
+
+        var (rozsah, rozjizdka) = nalezena;
+        if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+        if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
+
+        if (!fotky.Pripraveno)
+            return Results.Json(
+                new { error = FotkySprava.Vypnuto }, statusCode: StatusCodes.Status503ServiceUnavailable);
+
+        // Autor je ten, kdo fotku nahrál, a souhlas se neptá: papír z cíle
+        // není fotka na web, jde jen o doklad k číslům. Kdo ho vyfotil, je
+        // stejně zapsaný v `Fotka.Nahral`.
+        var jmeno = kdo.FindFirst("name")?.Value ?? kdo.FindFirst("preferred_username")?.Value ?? "zapisovatel";
+        var vstup = new FotkaFormular(
+            formular.Soubor, jmeno, $"Papírový zápis {cislo}. rozjížďky", Souhlas: true);
+
+        var (obrazek, chyba) = await fotky.NastavAsync(rozjizdka, vstup, uzivatel, ct);
+        return obrazek is null ? Results.BadRequest(new { error = chyba }) : Results.Ok(obrazek);
+    }
+
+    private static async Task<IResult> OdeberPapirAsync(
+        string serie, string zavod, int cislo, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, VysledkySprava sprava, FotkySprava fotky, CancellationToken ct)
+    {
+        if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
+            return Results.NotFound();
+
+        var (rozsah, rozjizdka) = nalezena;
+        if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        return await fotky.OdeberAsync(rozjizdka, ct) is { } chyba
+            ? Results.Json(new { error = chyba }, statusCode: StatusCodes.Status503ServiceUnavailable)
+            : Results.NoContent();
     }
 
     private static async Task<IResult> ZnakAsync(
@@ -341,7 +403,8 @@ public static class VysledkyEndpoints
                 {
                     Role.Organizator => organizator,
                     _ => Rozhodci,
-                });
+                },
+                MaPapir: r.FotkaId is not null);
         }
     }
 

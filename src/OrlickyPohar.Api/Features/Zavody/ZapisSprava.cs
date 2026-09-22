@@ -45,7 +45,12 @@ public record ZapisRozjizdkyDto(
     // Od 22. 9. 2026 pro cílovou obrazovku: kdy se odstartovalo a jestli
     // rozjížďka jde do poháru. Aditivně, starší klienti je nečtou.
     DateTimeOffset? StartV = null,
-    bool DoSerie = true);
+    bool DoSerie = true,
+    // Fotka papírového zápisu (krok 3, 22. 9. 2026). Doklad k číslům,
+    // veřejné čtení ji nevydává. `SmiPapir` je jen o roli: pořadatel ji
+    // smí přiložit i k podepsanému zápisu, protože do čísel nesahá.
+    Fotky.ObrazekDto? Papir = null,
+    bool SmiPapir = false);
 
 /// <summary>Celá sada výsledků rozjížďky. Loď, která v ní není, výsledek nemá.</summary>
 public record ZapisVstup(IReadOnlyList<ZapisRadekVstup> Radky);
@@ -62,7 +67,7 @@ public record ZapisVstup(IReadOnlyList<ZapisRadekVstup> Radky);
 /// požadavku</b> — stejně jako u <see cref="VysledkySprava"/>.
 /// </para>
 /// </summary>
-public class ZapisSprava(AppDbContext db)
+public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste)
 {
     private const string NeniPoradatel =
         "Výsledky zapisuje pořadatel regaty. Rozhodčí je ověřuje, ale nemění.";
@@ -94,6 +99,10 @@ public class ZapisSprava(AppDbContext db)
             .Select(u => new { u.PrihlaskaId, u.Stav, u.PoznavaciZnak })
             .ToDictionaryAsync(u => u.PrihlaskaId, ct);
 
+        var papir = rozjizdka.FotkaId is { } fotkaId
+            ? await db.Fotky.FirstOrDefaultAsync(f => f.Id == fotkaId, ct)
+            : null;
+
         var procNelze = poradatel ? Zapis.ProcNejdePrepsat(zavod.Stav, rozjizdka.StavVysledku) : NeniPoradatel;
 
         // Po kategoriích jako výsledková tabulka, uvnitř podle jména: zápis
@@ -118,7 +127,8 @@ public class ZapisSprava(AppDbContext db)
         return new ZapisRozjizdkyDto(
             zavod.Serie, zavod.SerieNazev, zavod.Slug, zavod.Nazev, zavod.Stav,
             rozjizdka.Cislo, rozjizdka.StavVysledku, rozjizdka.DuvodRevize,
-            procNelze is null, procNelze, lode, rozjizdka.StartV, rozjizdka.DoSerie);
+            procNelze is null, procNelze, lode, rozjizdka.StartV, rozjizdka.DoSerie,
+            Fotky.Nahravani.Dto(papir, uloziste.VerejnaAdresa), poradatel);
     }
 
     /// <summary>
