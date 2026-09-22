@@ -18,6 +18,8 @@ import { BokKoupani } from "@/app/koupani";
 import { BokVitr } from "@/app/vitr";
 import { BokVystrahy } from "@/app/vystrahy";
 import { dnesVPraze, vyberTerminu } from "@/lib/terminy";
+import { PrepinacKalendare } from "@/app/kalendar-volba";
+import { volbaKalendare, zastavkyKalendare } from "@/lib/kalendar-volba";
 
 /**
  * Boky širokého monitoru.
@@ -73,6 +75,7 @@ export async function Boky({
   vpravoDoplnky = ["vodocet", "koupani"],
   stredDoplnky = ["teplota", "vitr", "vystrahy", "pocasi"],
   dole = DOLE,
+  kalendar,
   children,
 }: {
   serie?: string;
@@ -83,6 +86,8 @@ export async function Boky({
   /** Pod obsahem už od 1280 px; ostatní tam přijdou až od 1600 px. */
   stredDoplnky?: Doplnek[];
   dole?: Doplnek[];
+  /** Parametr `?kalendar=` stránky, ať bok ukáže totéž co zbytek stránky. */
+  kalendar?: string;
   children: React.ReactNode;
 }) {
   const slug = serie ?? (await aktualniRocnik());
@@ -96,11 +101,11 @@ export async function Boky({
       {slug && (
         <>
           <aside className={`bok bok-vlevo${vlevoDoplnky.length ? "" : " bok-pevny"}`}>
-            {await obsah(vlevo, slug)}
+            {await obsah(vlevo, slug, kalendar)}
             {vlevoDoplnky.length > 0 && <div className="bok-doplnky">{await doplnky(vlevoDoplnky, slug)}</div>}
           </aside>
           <aside className={`bok bok-vpravo${vpravoDoplnky.length ? "" : " bok-pevny"}`}>
-            {await obsah(vpravo, slug)}
+            {await obsah(vpravo, slug, kalendar)}
             {vpravoDoplnky.length > 0 && <div className="bok-doplnky">{await doplnky(vpravoDoplnky, slug)}</div>}
           </aside>
           {siroke.length > 0 && (
@@ -168,7 +173,7 @@ async function doplnek(d: Doplnek, slug: string) {
   }
 }
 
-async function obsah(bok: Bok, slug: string) {
+async function obsah(bok: Bok, slug: string, kalendar?: string) {
   // Bok je doplněk. Když se nepovede načíst, prostě chybí — kvůli němu
   // nesmí spadnout stránka, která sama o sobě funguje.
   try {
@@ -176,7 +181,7 @@ async function obsah(bok: Bok, slug: string) {
       case "poradi":
         return await BokPoradi({ slug });
       case "kalendar":
-        return await BokKalendar({ slug });
+        return await BokKalendar({ slug, kalendar });
       case "novinky":
         return await BokNovinky({ slug });
       case "akce":
@@ -243,20 +248,33 @@ async function nadchazejici(slug: string): Promise<Termin[]> {
  * konce sezóny zbývá méně, doplněné posledními odjetými — výběr je
  * v `vyberTerminu`. Ročník, který zatím nemá nic, dostane místo seznamu
  * kartu o přípravě kalendáře ve stejné výšce, aby bok neposkočil.
+ *
+ * Které termíny, řídí volba kalendáře (pohár / vše / mimo pohár) — táž
+ * jako na stránce ročníku, ať bok neukazuje něco jiného než celý kalendář
+ * o klik dál. Přepínač je i tady: na úvodu je tohle jediný kalendář.
  */
-export async function BokKalendar({ slug }: { slug: string }) {
+export async function BokKalendar({
+  slug,
+  kalendar,
+  kotva,
+}: {
+  slug: string;
+  /** Parametr `?kalendar=` z adresy; bez něj rozhodne cookie. */
+  kalendar?: string;
+  /** Id sekce, na kterou se po přepnutí vrátit. Jen jedna kopie na stránce. */
+  kotva?: string;
+}) {
   const detail = await nactiSerii(slug);
   if (!detail) return null;
 
-  const vse: Termin[] = [
-    ...detail.zavody.map((z) => ({ ...z, akce: false })),
-    ...(detail.akce ?? []).map((z) => ({ ...z, akce: true })),
-  ];
-  const terminy = vyberTerminu(vse, dnesVPraze());
+  const akce = detail.akce ?? [];
+  const volba = await volbaKalendare(kalendar);
+  const terminy = vyberTerminu(zastavkyKalendare(detail.zavody, akce, volba), dnesVPraze());
 
   return (
-    <section>
+    <section id={kotva}>
       <h2 className="bok-nadpis">Kalendář</h2>
+      {akce.length > 0 && <PrepinacKalendare volba={volba} kotva={kotva} />}
       {terminy.length === 0 ? (
         <div className="bok-priprava">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -274,7 +292,8 @@ export async function BokKalendar({ slug }: { slug: string }) {
                 <span className="bok-nazev">{z.nazev}</span>
                 <span className="detail">
                   {denAMesic(z.datum)}
-                  {z.akce && " · komunitní akce"} <Stav stav={z.stav} akce={z.akce} />
+                  {/* Jen ve „Vše": v „Mimo pohár" je akcí všechno. */}
+                  {z.akce && volba === "vse" && " · komunitní akce"} <Stav stav={z.stav} akce={z.akce} />
                 </span>
               </Link>
             </li>

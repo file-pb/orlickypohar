@@ -6,6 +6,8 @@ import { Stav } from "@/app/stav";
 import { datum } from "@/app/datum";
 import { Boky } from "@/app/boky";
 import { NadpisTridy, TabyTrid, vyberTridu } from "@/app/tridy";
+import { PrepinacKalendare } from "@/app/kalendar-volba";
+import { volbaKalendare, zastavkyKalendare, type SAkci, type VolbaKalendare } from "@/lib/kalendar-volba";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -47,7 +49,8 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
   const odjete = serie.zavody.filter((z: ZavodShrnuti) => z.stav === "Odjety");
   // Starší API akce nevydává — pak prostě žádné nejsou.
   const akce = serie.akce ?? [];
-  const naAkcich = kalendar === "akce" && akce.length > 0;
+  const volba = await volbaKalendare(kalendar);
+  const zastavky = zastavkyKalendare(serie.zavody, akce, volba);
 
   // Lodě po kategoriích, v pořadí, které si drží série — abecedně by Nad7m
   // předběhlo Race bez důvodu.
@@ -58,15 +61,13 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
   const tridy = podleKategorii.filter((k) => k.lode.length > 0);
   const aktivniTrida = vyberTridu(tridy.map((k) => k.nazev), trida);
 
-  // Stránka má dvoje taby — kalendář a třídy — a přepnutí jedněch nesmí
-  // shodit ty druhé. Odkaz proto nese oba parametry.
-  const odkaz = (zmena: { kalendar?: string; trida?: string }) => {
+  // Přepnutí třídy nesmí shodit kalendář z odkazu (`?kalendar=`), kvůli
+  // kterému sem čtenář přišel. Odkaz proto nese oba parametry.
+  const odkaz = (t: string) => {
     const dotaz = new URLSearchParams();
-    const k = "kalendar" in zmena ? zmena.kalendar : kalendar;
-    const t = "trida" in zmena ? zmena.trida : trida;
-    if (k) dotaz.set("kalendar", k);
-    if (t) dotaz.set("trida", t);
-    return `/serie/${serie.slug}${dotaz.size ? `?${dotaz}` : ""}`;
+    if (kalendar) dotaz.set("kalendar", kalendar);
+    dotaz.set("trida", t);
+    return `/serie/${serie.slug}?${dotaz}`;
   };
 
   return (
@@ -94,35 +95,25 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
       {/* Kalendář je zároveň rozcestník: každá zastávka nese svůj stav
           a proklikem se jde na její vlastní stránku. Bez stavu vypadá
           zastávka, která teprve bude, stejně jako ta, která se nekonala. */}
-      <h2>Kalendář</h2>
+      {/* Přepínač vedle nadpisu: pohár, vše, nebo akce mimo pohár. Volba
+          je v cookie (app/kalendar-volba.tsx), takže platí i v boku a na
+          úvodu. Bez akcí nemá co přepínat, a proto chybí. */}
+      <div className="kalendar-hlava">
+        <h2 id="kalendar">Kalendář</h2>
+        {akce.length > 0 && <PrepinacKalendare volba={volba} kotva="kalendar" />}
+      </div>
 
-      {/* Komunitní akce na vlastním tabu, ať se nepletou mezi kola poháru.
-          Tab je odkaz s parametrem v adrese: stránka se vykreslí na serveru
-          a dá se na ni poslat odkaz. Bez akcí se taby neukazují vůbec. */}
-      {akce.length > 0 && (
-        <nav className="taby" aria-label="Kalendář">
-          <Link href={odkaz({ kalendar: undefined })} scroll={false} aria-current={naAkcich ? undefined : "page"}>
-            Pohár
-          </Link>
-          <Link href={odkaz({ kalendar: "akce" })} scroll={false} aria-current={naAkcich ? "page" : undefined}>
-            Komunitní akce
-          </Link>
-        </nav>
-      )}
-
-      {naAkcich ? (
-        <Kalendar slug={serie.slug} zastavky={akce} akce />
-      ) : serie.zavody.length === 0 ? (
+      {zastavky.length === 0 ? (
         <p className="prazdno">Zatím není zveřejněná žádná zastávka.</p>
       ) : (
-        <Kalendar slug={serie.slug} zastavky={serie.zavody} />
+        <Kalendar slug={serie.slug} zastavky={zastavky} volba={volba} />
       )}
 
       <h2>Přihlášené lodě</h2>
       <TabyTrid
         kategorie={tridy.map((k) => k.nazev)}
         aktivni={aktivniTrida}
-        adresa={(k) => odkaz({ trida: k })}
+        adresa={odkaz}
       />
       <NadpisTridy kategorie={tridy.map((k) => k.nazev)} aktivni={aktivniTrida} />
       {tridy.filter((k) => k.nazev === aktivniTrida).map((k) => (
@@ -155,15 +146,18 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
   );
 }
 
-/** Seznam zastávek nebo akcí. Karta vypadá stejně, liší se jen štítek stavu. */
+/**
+ * Seznam zastávek a akcí. Karta vypadá stejně, liší se štítek stavu —
+ * a ve „Vše" navíc štítek akce, protože tam se akce míchají mezi kola.
+ */
 function Kalendar({
   slug,
   zastavky,
-  akce,
+  volba,
 }: {
   slug: string;
-  zastavky: ZavodShrnuti[];
-  akce?: boolean;
+  zastavky: SAkci<ZavodShrnuti>[];
+  volba: VolbaKalendare;
 }) {
   return (
     <ul className="seznam">
@@ -175,7 +169,8 @@ function Kalendar({
           >
             <div className="nazev">
               <span className={z.stav === "Zruseny" ? "skrtnute" : undefined}>{z.nazev}</span>
-              <Stav stav={z.stav} akce={akce} />
+              {z.akce && volba === "vse" && <span className="stitek stitek-akce">komunitní akce</span>}
+              <Stav stav={z.stav} akce={z.akce} />
               {z.typ && <span className="stitek">{z.typ}</span>}
             </div>
             <div className="detail">
