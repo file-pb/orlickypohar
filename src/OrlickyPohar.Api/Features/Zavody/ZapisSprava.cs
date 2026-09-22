@@ -20,7 +20,11 @@ public record ZapisLodDto(
     int? PoradiVCili,
     KodVysledku? Kod,
     int? CasSekundy,
-    DateTimeOffset? DojezdV = null);
+    DateTimeOffset? DojezdV = null,
+    // Cílová obrazovka, krok 2 (22. 9. 2026): lodě na regatě jsou tlačítka,
+    // zbytek ročníku stranou; na tlačítku stojí domluvený poznávací znak.
+    bool NaRegate = false,
+    string? PoznavaciZnak = null);
 
 /// <summary>
 /// Zápis jedné rozjížďky. <c>ProcNelze</c> říká, proč je jen ke čtení —
@@ -85,6 +89,11 @@ public class ZapisSprava(AppDbContext db)
             .Select(v => new { v.Ucast!.PrihlaskaId, v.PoradiVCili, v.Kod, v.NamerenyCas, v.DojezdV })
             .ToDictionaryAsync(v => v.PrihlaskaId, ct);
 
+        var ucasti = await db.Ucasti
+            .Where(u => u.ZavodId == rozjizdka.ZavodId)
+            .Select(u => new { u.PrihlaskaId, u.Stav, u.PoznavaciZnak })
+            .ToDictionaryAsync(u => u.PrihlaskaId, ct);
+
         var procNelze = poradatel ? Zapis.ProcNejdePrepsat(zavod.Stav, rozjizdka.StavVysledku) : NeniPoradatel;
 
         // Po kategoriích jako výsledková tabulka, uvnitř podle jména: zápis
@@ -95,11 +104,14 @@ public class ZapisSprava(AppDbContext db)
             .Select(p =>
             {
                 var v = vysledky.GetValueOrDefault(p.Id);
+                var u = ucasti.GetValueOrDefault(p.Id);
                 return new ZapisLodDto(
                     p.Id, p.Nazev, p.CisloPlachty, p.Kategorie,
                     v?.PoradiVCili, v?.Kod,
                     v?.NamerenyCas is { } cas ? (int)cas.TotalSeconds : null,
-                    v?.DojezdV);
+                    v?.DojezdV,
+                    u is not null && Zapis.NaRegate(u.Stav),
+                    u?.PoznavaciZnak);
             })
             .ToList();
 
@@ -199,6 +211,32 @@ public class ZapisSprava(AppDbContext db)
         var sVysledkem = zapis.Where(r => r.MaVysledek).Select(r => r.Vstup.PrihlaskaId).ToHashSet();
         db.Vysledky.RemoveRange(existujici.Where(x => !sVysledkem.Contains(x.Key)).Select(x => x.Value));
 
+        await db.SaveChangesAsync(ct);
+        return null;
+    }
+
+    /// <summary>
+    /// Poznávací znak lodi na regatě (cílová obrazovka). Vrací text chyby,
+    /// nebo <c>null</c>.
+    /// <para>
+    /// <b>Jen loď, která na regatě je.</b> Účast se kvůli znaku nezakládá:
+    /// vznikla by loď „na startu" jen proto, že si ji někdo popsal. Pozdní
+    /// loď se přihlásí, nebo jí rovnou zapíše dojezd.
+    /// </para>
+    /// </summary>
+    public async Task<string?> ZnakAsync(int zavodId, int prihlaskaId, string? znak, CancellationToken ct)
+    {
+        var stav = await db.Zavody.Where(z => z.Id == zavodId).Select(z => z.Stav).FirstAsync(ct);
+        if (Zapis.ProcNejdeNaZavod(stav) is { } zamceno) return zamceno;
+
+        var (upraveny, chyba) = Zapis.UpravZnak(znak);
+        if (chyba is not null) return chyba;
+
+        var ucast = await db.Ucasti.FirstOrDefaultAsync(u => u.ZavodId == zavodId && u.PrihlaskaId == prihlaskaId, ct);
+        if (ucast is null || !Zapis.NaRegate(ucast.Stav))
+            return "Loď na regatu přihlášená není. Přihlas ji, nebo jí rovnou zapiš dojezd.";
+
+        ucast.PoznavaciZnak = upraveny;
         await db.SaveChangesAsync(ct);
         return null;
     }

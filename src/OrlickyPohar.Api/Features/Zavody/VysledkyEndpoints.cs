@@ -9,6 +9,15 @@ namespace OrlickyPohar.Api.Features.Zavody;
 
 public record PublikaceVysledkuVstup(bool Publikovano);
 
+/// <summary>Start rozjížďky. Bez času platí okamžik požadavku.</summary>
+public record StartVstup(DateTimeOffset? StartV = null);
+
+/// <summary>Nová rozjížďka. Bez těla jde do poháru, jako dřív.</summary>
+public record NovaRozjizdkaVstup(bool DoSerie = true);
+
+/// <summary>Poznávací znak lodi na regatě. Prázdný znak smaže.</summary>
+public record ZnakVstup(string? Znak);
+
 /// <summary>
 /// Workflow výsledků: navrženo → ověřeno → schváleno → potvrzeno, k tomu
 /// vrácení k revizi, eliminace a publikace. A zápis samotných čísel.
@@ -23,12 +32,6 @@ public record PublikaceVysledkuVstup(bool Publikovano);
 /// endpointech.
 /// </para>
 /// </summary>
-/// <summary>Start rozjížďky. Bez času platí okamžik požadavku.</summary>
-public record StartVstup(DateTimeOffset? StartV = null);
-
-/// <summary>Nová rozjížďka. Bez těla jde do poháru, jako dřív.</summary>
-public record NovaRozjizdkaVstup(bool DoSerie = true);
-
 public static class VysledkyEndpoints
 {
     public static void MapSpravaVysledku(this IEndpointRouteBuilder app)
@@ -59,6 +62,12 @@ public static class VysledkyEndpoints
             .WithDescription(
                 "Cílová obrazovka. Bez času v těle se vezme okamžik požadavku. Jde přepsat, " +
                 "dokud je zápis otevřený; časy dojetých lodí se přepočítají.");
+
+        g.MapPut("/{zavod}/lode/{prihlaska:int}/znak", ZnakAsync)
+            .WithSummary("Nastaví poznávací znak lodi na regatě")
+            .WithDescription(
+                "Cílová obrazovka. Pořadatel regaty, od vypsání. Jen loď, která na regatě je " +
+                "(přihlášená, potvrzená nebo vyloučená). Prázdný znak ho smaže.");
 
         g.MapGet("/{zavod}/rozjizdky/{cislo:int}", ZapisAsync)
             .Produces<ZapisRozjizdkyDto>()
@@ -143,6 +152,20 @@ public static class VysledkyEndpoints
             return Results.BadRequest(new { error = chyba });
 
         return Results.Ok(await zapis.NactiAsync(rozjizdka, poradatel: true, ct));
+    }
+
+    private static async Task<IResult> ZnakAsync(
+        string serie, string zavod, int prihlaska, ZnakVstup vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, ZapisSprava zapis, CancellationToken ct)
+    {
+        if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
+            return Results.NotFound();
+
+        if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        return await zapis.ZnakAsync(rozsah.ZavodId.Value, prihlaska, vstup.Znak, ct) is { } chyba
+            ? Results.BadRequest(new { error = chyba })
+            : Results.NoContent();
     }
 
     private static async Task<IResult> PridejRozjizdkuAsync(
