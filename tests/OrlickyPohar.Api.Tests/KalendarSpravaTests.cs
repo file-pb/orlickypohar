@@ -54,7 +54,10 @@ public class KalendarSpravaTests(PostgresFixture fixture)
                 .OrderBy(z => z.Poradi)
                 .Select(z => new ZastavkaRadek(
                     z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel, z.Poradi,
-                    z.Stav, z.PuvodniDatum, z.Publikovano, false, false, Array.Empty<StavZavodu>()))
+                    z.Stav, z.PuvodniDatum, z.Publikovano, false, false, Array.Empty<StavZavodu>(),
+                    // Vyhodnocení se čte z databáze, ne z výchozí hodnoty
+                    // záznamu — jinak by test zkoušel tuhle projekci.
+                    z.Druh, null, false, z.Vyhodnoceni))
                 .ToListAsync();
         });
 
