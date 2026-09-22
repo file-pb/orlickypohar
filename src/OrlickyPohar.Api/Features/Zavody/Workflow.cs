@@ -33,6 +33,18 @@ public static class Workflow
     /// <b>jen na blog</b> a výsledky spravuje organizátor, takže platí ten.
     /// </para>
     /// </summary>
+    /// <summary>
+    /// Kdo smí rozjížďku zařadit do poháru, nebo ji z něj vyndat.
+    /// <para>
+    /// <b>Dokud jsou čísla rozepsaná, rozhoduje pořadatel</b> — na vodě se
+    /// podle podmínek pozná, jestli se rozjížďka počítá, a zakládá ji taky
+    /// on. Jakmile je někdo podepsal, je to zásah do poháru a patří
+    /// rozhodčímu; ten do zápisu nesahá, ale o seriálu rozhoduje.
+    /// </para>
+    /// </summary>
+    public static Role KdoSmiDoSerie(StavVysledku stav) =>
+        Zapis.Otevreny(stav) ? Role.Organizator : Role.Rozhodci;
+
     public static Role KdoSmi(StavVysledku na) => na switch
     {
         StavVysledku.Navrzeno => Role.Organizator,

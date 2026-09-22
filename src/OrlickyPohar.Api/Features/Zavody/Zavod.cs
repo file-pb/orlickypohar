@@ -10,6 +10,13 @@ public enum Vyhodnoceni
 
     /// <summary>Samostatné pořadí uvnitř každé kategorie.</summary>
     PoKategoriich = 1,
+
+    /// <summary>
+    /// Obojí: celé pole i kategorie. Některé dlouhé regaty vyhlašují
+    /// celkového vítěze napříč kategoriemi a k tomu pořadí v kategoriích
+    /// (Filip, 22. 9. 2026).
+    /// </summary>
+    Oboje = 2,
 }
 
 /// <summary>

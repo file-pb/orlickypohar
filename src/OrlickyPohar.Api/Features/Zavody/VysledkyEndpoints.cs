@@ -15,6 +15,9 @@ public record StartVstup(DateTimeOffset? StartV = null);
 /// <summary>Nová rozjížďka. Bez těla jde do poháru, jako dřív.</summary>
 public record NovaRozjizdkaVstup(bool DoSerie = true);
 
+/// <summary>Zařazení rozjížďky do poháru.</summary>
+public record DoSerieVstup(bool DoSerie);
+
 /// <summary>Poznávací znak lodi na regatě. Prázdný znak smaže.</summary>
 public record ZnakVstup(string? Znak);
 
@@ -90,6 +93,13 @@ public static class VysledkyEndpoints
             .WithDescription(
                 "Řadou po jednom kroku; správce smí přeskočit. Zpátky se chodí " +
                 "vrácením k revizi, a to má povinný důvod.");
+
+        g.MapPost("/{zavod}/rozjizdky/{cislo:int}/pohar", DoSerieAsync)
+            .Produces<RozjizdkaSpravaRadek>()
+            .WithSummary("Zařadí rozjížďku do poháru, nebo ji z něj vyndá")
+            .WithDescription(
+                "Dokud je zápis rozepsaný, smí pořadatel regaty; u podepsaných čísel rozhodčí " +
+                "ročníku. Výsledek regaty se nemění — ten se počítá ze všech odjetých rozjížděk.");
 
         g.MapPost("/{zavod}/rozjizdky/{cislo:int}/publikace", PublikaceAsync)
             .Produces<RozjizdkaSpravaRadek>()
@@ -244,6 +254,24 @@ public static class VysledkyEndpoints
         return Results.Ok(await RadekAsync(kdo, rozsahy, sprava, rozsah, rozjizdka, ct));
     }
 
+    private static async Task<IResult> DoSerieAsync(
+        string serie, string zavod, int cislo, DoSerieVstup vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, VysledkySprava sprava, CancellationToken ct)
+    {
+        if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
+            return Results.NotFound();
+
+        var (rozsah, rozjizdka) = nalezena;
+
+        var pozadavek = new Pozadavek(
+            Workflow.KdoSmiDoSerie(rozjizdka.StavVysledku), rozsah.SerieId, rozsah.ZavodId);
+
+        if (!await rozsahy.SmiAsync(kdo, pozadavek, ct)) return Results.Forbid();
+
+        await sprava.DoSerieAsync(rozjizdka, vstup.DoSerie, ct);
+        return Results.Ok(await RadekAsync(kdo, rozsahy, sprava, rozsah, rozjizdka, ct));
+    }
+
     private static async Task<IResult> PublikaceAsync(
         string serie, string zavod, int cislo, PublikaceVysledkuVstup vstup, ClaimsPrincipal kdo,
         Rozsahy rozsahy, VysledkySprava sprava, CancellationToken ct)
@@ -308,7 +336,12 @@ public static class VysledkyEndpoints
             return new RozjizdkaSpravaRadek(
                 r.Cislo, r.StartV, r.Stav, r.DoSerie, r.StavVysledku, r.Publikovano,
                 r.DuvodRevize, pocetVysledku, Spravce, mozne,
-                SmiZapisovat: organizator && Zapis.Otevreny(r.StavVysledku));
+                SmiZapisovat: organizator && Zapis.Otevreny(r.StavVysledku),
+                SmiDoPoharu: Workflow.KdoSmiDoSerie(r.StavVysledku) switch
+                {
+                    Role.Organizator => organizator,
+                    _ => Rozhodci,
+                });
         }
     }
 

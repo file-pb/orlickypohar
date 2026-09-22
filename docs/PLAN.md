@@ -119,6 +119,20 @@ lodě celkově třetí, sedmá a devátá, do seriálu jdou jako první, druhá 
 
 Proto má seriál **tři průběžná pořadí, ne jedno** — jedno na kategorii.
 
+**Hotové 22. 9. 2026.** API vydává u regaty vedle pořadí po kategoriích
+i `PoradiCelkem` — celé pole spočítané tímtéž výpočtem, jen s jednou
+kategorií pro všechny. Je to **jen k zobrazení**: do poháru jde dál pořadí
+v kategorii, jak stojí výš. Co se ukáže, řídí `Vyhodnoceni` na regatě:
+*celé pole* jen celkovou tabulku, *po kategoriích* jen kategorie, *obojí*
+obě jako záložky (celkové první, se starou značkou Orlického poháru).
+Nastavuje se zatím **jen importem ročníku** — kalendář pravidla bodování
+schválně nemá.
+
+**Rozjížďka jde do poháru zařadit i vyndat** po jejím založení
+(`POST .../rozjizdky/{cislo}/pohar`, tlačítko na stránce regaty). Dokud
+jsou čísla rozepsaná, smí to pořadatel; u podepsaných je to zásah do
+poháru a patří rozhodčímu. Výsledek regaty se tím nemění.
+
 ### Co je pravda a co se dopočítává
 
 V `Vysledek` se ukládá jen to, co se skutečně stalo: **pořadí v cíli, časy

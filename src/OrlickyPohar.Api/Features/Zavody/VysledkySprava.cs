@@ -25,7 +25,10 @@ public record RozjizdkaSpravaRadek(
     IReadOnlyList<StavVysledku> MozneStavy,
     // Na konci, ne vedle ostatních „smí": změny API jsou jen aditivní
     // a klient, který pole nezná, ho má jen přeskočit.
-    bool SmiZapisovat = false);
+    bool SmiZapisovat = false,
+    // Smí ten, kdo se dívá, rozjížďku zařadit do poháru nebo ji z něj
+    // vyndat? Závisí na roli i na tom, jestli jsou čísla podepsaná.
+    bool SmiDoPoharu = false);
 
 public record PrehledVysledkuDto(
     string Serie,
@@ -129,6 +132,16 @@ public class VysledkySprava(AppDbContext db)
     public async Task PublikujAsync(Rozjizdka rozjizdka, bool publikovano, CancellationToken ct)
     {
         rozjizdka.Publikovano = publikovano;
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// Zařadí rozjížďku do poháru, nebo ji z něj vyndá. Výsledku závodu se
+    /// to netýká — ten se počítá ze všech odjetých rozjížděk.
+    /// </summary>
+    public async Task DoSerieAsync(Rozjizdka rozjizdka, bool doSerie, CancellationToken ct)
+    {
+        rozjizdka.DoSerie = doSerie;
         await db.SaveChangesAsync(ct);
     }
 }
