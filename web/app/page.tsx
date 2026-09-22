@@ -26,7 +26,14 @@ const FOTKY = [
   { src: "/foto/hero-3.jpg", popis: "Loď s červeným spinakrem" },
 ];
 
-export default async function Rozcestnik() {
+export default async function Rozcestnik({
+  searchParams,
+}: {
+  searchParams: Promise<{ kalendar?: string }>;
+}) {
+  // Odkaz na úvod s `?kalendar=` ukáže daný pohled v kalendáři pod pořadím
+  // i v pravém boku; bez parametru rozhodne uložená volba.
+  const { kalendar } = await searchParams;
   // Fotka a nadpis se vykreslí vždycky, i když API nejede. Úvodní stránka
   // má říct, co to je, dřív než cokoliv načte — a výpadek se pak přizná
   // jen na místě, kde měly být ročníky.
@@ -161,12 +168,12 @@ export default async function Rozcestnik() {
       {/* Kalendář hned pod pořadím tam, kde boky nejsou (Filip, 18. 9. 2026):
           obojí je hlavní informace, widgety pod novinkami ji jen doplňují.
           S boky ho CSS schová, kalendář je v pravém boku. */}
-      {aktualni && <div className="kalendar-uvod">{await BokKalendar({ slug: aktualni.slug })}</div>}
+      {aktualni && <div className="kalendar-uvod">{await BokKalendar({ slug: aktualni.slug, kalendar, kotva: "kalendar" })}</div>}
 
       {/* Fotka jde přes celou šířku okna, boky až pod ní. */}
       {/* Vlevo pořadí a pod ním počasí, vpravo kalendář a pod ním voda
           (Filip, 18. 9. 2026). */}
-      <Boky serie={aktualni?.slug}>
+      <Boky serie={aktualni?.slug} kalendar={kalendar}>
       {/* Bez seznamu ročníků by výpadek ani prázdný stav nebyly nikde vidět —
           návštěvník by koukal na fotku bez tlačítek a nevěděl proč. */}
       {vypadek ? (
