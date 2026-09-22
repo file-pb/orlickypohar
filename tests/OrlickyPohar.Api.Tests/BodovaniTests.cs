@@ -6,12 +6,9 @@ namespace OrlickyPohar.Api.Tests;
 /// <summary>
 /// Body závodu z rozjížděk. Čisté funkce, žádná databáze.
 /// <para>
-/// Doložené případy jsou z výsledkové listiny <b>FxCK Cancer 2026</b>,
-/// kategorie nad 7 m: dvě rozjížďky, čtrnáct lodí. V první má Caprice
-/// <c>DNF</c> a třináct bodů, Thea <c>DNS</c> a čtrnáct. Ve druhé žádný
-/// <c>DNF</c> nebyl, takže všechny lodě s <c>DNS</c> spadly na dvanáct.
-/// Zbytek testů hlídá pravidla, která z listiny plynou, ale samy o sobě
-/// v ní vidět nejsou.
+/// Vzorový závod je <b>FxCK Cancer 2026</b>, kategorie nad 7 m: dvě
+/// rozjížďky, čtrnáct lodí. Kódy se od 22. 9. 2026 bodují podle ZPJ A5.2
+/// (přihlášených + 1), ne podle tehdejší listiny.
 /// </para>
 /// </summary>
 public class BodovaniTests
@@ -61,52 +58,22 @@ public class BodovaniTests
     }
 
     [Fact]
-    public void Dnf_je_prvni_misto_za_dokoncivsimi_a_Dns_hned_za_nim()
+    public void Dnf_i_Dns_maji_pocet_prihlasenych_plus_jedna()
     {
-        // Doloženo: FxCK Cancer 2026, první rozjížďka nad 7 m.
+        // ZPJ A5.2 a rozhodčí (22. 9. 2026). FxCK Cancer 2026, první rozjížďka
+        // nad 7 m: čtrnáct lodí, dvanáct dojelo. Listina tehdy dala DNF 13
+        // a DNS 14; podle pravidel mají obě 15.
         var body = Body([.. Dokoncilo(12), Kod("caprice", "Nad7m", KodVysledku.Dnf), Kod("thea", "Nad7m", KodVysledku.Dns)]);
 
-        Assert.Equal(13, body["caprice"]);
-        Assert.Equal(14, body["thea"]);
+        Assert.Equal(15, body["caprice"]);
+        Assert.Equal(15, body["thea"]);
     }
 
     [Fact]
-    public void Bez_Dnf_spadne_Dns_na_prvni_volne_misto()
+    public void Vsechny_tresty_maji_stejne_body_rdg_ne()
     {
-        // Doloženo: FxCK Cancer 2026, druhá rozjížďka nad 7 m. Není to pevné
-        // „+2" za DNS — je to další místo v řadě za posledním, kdo dojel.
-        var body = Body([.. Dokoncilo(11),
-            Kod("caprice", "Nad7m", KodVysledku.Dns),
-            Kod("thea", "Nad7m", KodVysledku.Dns),
-            Kod("luna", "Nad7m", KodVysledku.Dns)]);
-
-        Assert.Equal(12, body["caprice"]);
-        Assert.Equal(12, body["thea"]);
-        Assert.Equal(12, body["luna"]);
-    }
-
-    [Fact]
-    public void Stejny_kod_znamena_stejne_body_i_kdyz_je_kodu_vic_druhu()
-    {
-        var body = Body([.. Dokoncilo(3),
-            Kod("a", "Nad7m", KodVysledku.Dnf),
-            Kod("b", "Nad7m", KodVysledku.Dnf),
-            Kod("c", "Nad7m", KodVysledku.Dns),
-            Kod("d", "Nad7m", KodVysledku.Dns)]);
-
-        Assert.Equal(4, body["a"]);
-        Assert.Equal(4, body["b"]);
-        Assert.Equal(5, body["c"]);
-        Assert.Equal(5, body["d"]);
-    }
-
-    [Fact]
-    public void Kody_jdou_za_sebou_podle_zavaznosti()
-    {
-        // Doložené je jen pořadí DNF před DNS. Zbytek je náš odhad podle
-        // logiky „kdo víc odjel, je na tom líp" — tenhle test ho drží
-        // napsaný, aby se dal ukázat rozhodčímu a případně změnit na
-        // jediném místě.
+        // Jeden dojel, sedm kódů: přihlášených osm, trest devět. Náprava
+        // není trest — dokud ji neumí fáze 5, je hned za posledním.
         var body = Body([.. Dokoncilo(1),
             Kod("rdg", "Race", KodVysledku.Rdg),
             Kod("ret", "Race", KodVysledku.Ret),
@@ -116,19 +83,32 @@ public class BodovaniTests
             Kod("dns", "Race", KodVysledku.Dns),
             Kod("dnc", "Race", KodVysledku.Dnc)]);
 
-        Assert.Equal([2, 3, 4, 5, 6, 7, 8],
-            new[] { "rdg", "ret", "dnf", "ocs", "dsq", "dns", "dnc" }.Select(l => body[l]));
+        Assert.Equal(2, body["rdg"]);
+        Assert.All(new[] { "ret", "dnf", "ocs", "dsq", "dns", "dnc" }, l => Assert.Equal(9, body[l]));
     }
 
     [Fact]
-    public void Kdyz_nikdo_nedojel_zacinaji_kody_od_jednicky()
+    public void Prihlaseni_se_pocitaji_z_celeho_zavodu_ne_z_rozjizdky()
+    {
+        // Ve druhé rozjížďce chybí loď „c" úplně, přihlášené jsou ale tři.
+        var zavod = Bodovani.VysledkyZavodu(
+        [
+            new RozjizdkaVstup(1, [Dojel("a", "Race", 1), Dojel("b", "Race", 2), Dojel("c", "Race", 3)]),
+            new RozjizdkaVstup(2, [Dojel("a", "Race", 1), Kod("b", "Race", KodVysledku.Dnf)]),
+        ]).ToDictionary(v => v.Lod);
+
+        Assert.Equal(4, zavod["b"].Rozjizdky.Single(r => r.Cislo == 2).Body);
+    }
+
+    [Fact]
+    public void Kdyz_nikdo_nedojel_maji_vsichni_prihlasenych_plus_jedna()
     {
         var body = Body(
             Kod("a", "Race", KodVysledku.Dnf),
             Kod("b", "Race", KodVysledku.Dns));
 
-        Assert.Equal(1, body["a"]);
-        Assert.Equal(2, body["b"]);
+        Assert.Equal(3, body["a"]);
+        Assert.Equal(3, body["b"]);
     }
 
     [Fact]
@@ -157,13 +137,13 @@ public class BodovaniTests
     [Fact]
     public void Body_zavodu_jsou_souctem_rozjizdek_vcetne_kodu()
     {
-        // Caprice: DNF ve dvanáctičlenném poli (13) a DNS v jedenáctičlenném
-        // (12) — za závod 25. Každá rozjížďka se počítá zvlášť.
+        // Caprice: DNF a DNS, čtrnáct přihlášených — 15 + 15. Každá
+        // rozjížďka se počítá zvlášť a pak se sečtou.
         var zavod = FxckCancerNad7m();
         var caprice = zavod.Single(v => v.Lod == "caprice");
 
-        Assert.Equal(25, caprice.Body);
-        Assert.Equal([13, 12], caprice.Rozjizdky.Select(r => r.Body));
+        Assert.Equal(30, caprice.Body);
+        Assert.Equal([15, 15], caprice.Rozjizdky.Select(r => r.Body));
     }
 
     [Fact]

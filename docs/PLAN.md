@@ -143,6 +143,12 @@ tabulce téhož ročníku. Sedí na každém řádku obou kategorií.
 kategorii** a body závodu jsou jejich součet. Sea Mouse III byla v obou
 rozjížďkách první v RACE → 1 + 1 = 2 body a celkové vítězství.
 
+> **Od 22. 9. 2026 neplatí.** Kódy se bodují podle ZPJ A5.2: přihlášených do
+> závodu + 1, všechny stejně (rozhodčí: „zadej si závodní pravidla… počet
+> přihlášených lodí ve třídě plus 1"). Odstupňování níž je vyčtené
+> z tehdejší listiny FxCK Cancer a nechávám ho tu jako doklad, proč se kód
+> kdysi choval jinak.
+
 **Kódy mají pořadí mezi sebou.** Za dokončivšími následuje `DNF` — loď, která
 startovala a odstoupila — a teprve za ním `DNS`, která vůbec nevyjela.
 
@@ -506,8 +512,8 @@ Neměníme nic: kód stojí na skutečné listině. Je to ale **třetí otázka 
 rozhodčího** a teď se dá položit i s odkazem na pravidlo.
 
 **Odpovědi dorazily 22. 9. 2026**, viz *Pravidla seriálu od rozhodčího*:
-DNC se počítá ze zastávky, zrušené zastávky jsou jen zápis a DNF proti DNS
-je věc pravidel každé regaty.
+DNC se počítá ze zastávky, zrušené zastávky jsou jen zápis a kódy v závodě
+se bodují podle A5.2 — DNF i DNS stejně, přihlášených + 1.
 
 ## Úvodní stránka
 
@@ -1125,7 +1131,7 @@ Platí pravidlo platformy č. 5: **vlastní interní `UserId`** a tabulka
 |---|---|
 | Z čeho se počítá DNC | **ze zastávky:** počet lodí kategorie, které na ní byly (rozhodčí, 22. 9. 2026) |
 | Nuly u zrušených zastávek | jen zápis „nejelo se", do bodů ani rozstřelu nevstupují |
-| Proč má DNF jiné body než DNS | regata se boduje **podle svých pravidel**; seriál přebírá jen pořadí v kategorii |
+| Proč má DNF jiné body než DNS | nemá mít: **ZPJ A5.2**, všechny kódy = přihlášených do závodu + 1 (rozhodčí, 22. 9. 2026); `RDG` zatím za posledním |
 | 24hodinovka | **bonus**: 1. místo −1, 2. místo 0, 3. místo 1; neúčast bez bonusu |
 | Diskvalifikace | **20 bodů** do seriálu, dá se škrtnout; hodnota je zatím pracovní |
 | Škrty v závodě | 4 odjeté rozjížďky = 1 škrtačka (potvrzeno) |
@@ -1178,6 +1184,7 @@ výpočet z nich nic neplyne.
 | bonus 24hodinovky | `Zavod.PosunDoSerie` (−1), nový sloupec; nastavuje se importem |
 | DSQ = 20 | `DSQ` ve **všech** rozjížďkách zastávky; příznak na účasti doplníme s rozhodčím (Filip, 22. 9.) |
 | počet škrtů | `Serie.PocetSkrtu`, nový sloupec, výchozí 1, ročník 2026 má 2 |
+| kódy v rozjížďce = přihlášených do závodu v kategorii + 1 (A5.2) | `Bodovani.BodyRozjizdky`; přihlášená je loď s jakýmkoliv výsledkem v závodě |
 | rozstřel | `SerieBodovani.Rozstrel`: porovnává **umístění, ne body** — −1 ze 24hodinovky je první místo stejně jako 0 jinde |
 
 API pořadí vydává navíc `kody` (DNC, DSQ) a `skrtnute` (indexy zastávek),

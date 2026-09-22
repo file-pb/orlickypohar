@@ -218,15 +218,14 @@ public class PoradiTests(PostgresFixture fixture)
         Assert.Equal(4, alfa.Body);
         Assert.Equal(1, alfa.Poradi);
 
-        // Cé nedokončila první rozjížďku, takže má místo za oběma, které
-        // dojely — tři body, ne prázdno.
-        Assert.Equal(3, ce.Rozjizdky.Single(r => r.Cislo == 1).Body);
-        Assert.Equal(7, ce.Body);
+        // Cé nedokončila první rozjížďku: v RACE jsou přihlášené tři lodě,
+        // takže má podle ZPJ A5.2 čtyři body, ne prázdno.
+        Assert.Equal(4, ce.Rozjizdky.Single(r => r.Cislo == 1).Body);
 
-        // A protože třetí rozjížďku vyhrála, je v závodě před Betou —
-        // v seriálu ne, tam se ta rozjížďka nepočítá.
-        Assert.Equal(2, ce.Poradi);
-        Assert.Equal(3, race.Single(v => v.Lod.StartsWith("Beta")).Poradi);
+        // Třetí rozjížďka mimo pohár se do závodu počítá: 4 + 3 + 1.
+        Assert.Equal(8, ce.Body);
+        Assert.Equal(3, ce.Poradi);
+        Assert.Equal(2, race.Single(v => v.Lod.StartsWith("Beta")).Poradi);
 
         var poradi = await NactiPoradi("poradi-zavod");
         var vSerii = poradi.Kategorie.Single(k => k.Kategorie == "Race").Lode;

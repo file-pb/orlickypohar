@@ -35,38 +35,26 @@ public record VysledekZavodu(
 public static class Bodovani
 {
     /// <summary>
-    /// Pořadí kódů mezi sebou. Lodě se stejným kódem dostanou stejné body,
-    /// různé kódy jdou za sebou podle závažnosti.
-    /// <para>
-    /// <b>Doloženo je jen `Dnf` před `Dns`</b> — z výsledkové listiny FxCK Cancer
-    /// 2026, kde při dvanácti dokončivších měla loď s `Dnf` třináct bodů
-    /// a loď s `Dns` čtrnáct. Zbytek pořadí je náš odhad podle logiky
-    /// „kdo víc odjel, je na tom líp"; až to rozhodčí potvrdí, mění se
-    /// jediné pole.
-    /// </para>
-    /// </summary>
-    private static readonly KodVysledku[] PodleZavaznosti =
-    [
-        KodVysledku.Rdg,   // náprava — loď se vrací do hry
-        KodVysledku.Ret,   // odstoupila, ale odjela část
-        KodVysledku.Dnf,   // nedokončila
-        KodVysledku.Ocs,   // předčasný start
-        KodVysledku.Dsq,   // diskvalifikace
-        KodVysledku.Dns,   // nestartovala
-        KodVysledku.Dnc,   // nezúčastnila se
-    ];
-
-    /// <summary>
     /// Body v jedné rozjížďce, počítané <b>uvnitř kategorie</b>. Vítěz má 1.
     /// <para>
-    /// Kdo nedojel, dostává místo za posledním dokončivším. Lodě se stejným
-    /// kódem mají stejné body, různé kódy jdou po sobě: při dvanácti
-    /// dokončivších má `Dnf` třináct a `Dns` čtrnáct, ale když `Dnf` nikdo
-    /// nemá, spadnou všechny `Dns` na třináct.
+    /// Kódy podle ZPJ 2025–2028, A5.2: loď, která nestartovala, nedokončila,
+    /// odstoupila nebo byla diskvalifikovaná, má <b>počet lodí přihlášených
+    /// do závodu + 1</b> — všechny kódy stejně. Rozhodčí 22. 9. 2026: „počet
+    /// přihlášených lodí ve třídě plus 1". Dřív se tu kódy řadily za sebe
+    /// podle výsledkové listiny FxCK Cancer (DNF 13, DNS 14); ta se podle
+    /// pravidel nebodovala.
+    /// </para>
+    /// <para>
+    /// <c>RDG</c> (náprava) není trest a jeho body určuje protestní komise.
+    /// Než to umí fáze 5, dostává místo hned za posledním dokončivším.
     /// </para>
     /// </summary>
+    /// <param name="prihlaseno">
+    /// Kolik lodí kategorie je přihlášených do závodu. Bez něj se bere počet
+    /// lodí v téhle rozjížďce.
+    /// </param>
     public static IReadOnlyList<(string Lod, int Body)> BodyRozjizdky(
-        IEnumerable<VysledekVstup> vysledkyKategorie)
+        IEnumerable<VysledekVstup> vysledkyKategorie, int? prihlaseno = null)
     {
         var vsechny = vysledkyKategorie.ToList();
 
@@ -77,19 +65,10 @@ public static class Bodovani
             .ToList();
 
         var body = new List<(string Lod, int Body)>(dokoncily);
+        var zaTrest = (prihlaseno ?? vsechny.Count) + 1;
 
-        // Skupiny kódů za dokončivšími, každá skupina o místo dál.
-        var skupiny = vsechny
-            .Where(v => v.Kod is not null)
-            .GroupBy(v => v.Kod!.Value)
-            .OrderBy(g => Array.IndexOf(PodleZavaznosti, g.Key));
-
-        var misto = dokoncily.Count + 1;
-        foreach (var skupina in skupiny)
-        {
-            foreach (var v in skupina) body.Add((v.Lod, misto));
-            misto++;
-        }
+        foreach (var v in vsechny.Where(v => v.Kod is not null))
+            body.Add((v.Lod, v.Kod == KodVysledku.Rdg ? dokoncily.Count + 1 : zaTrest));
 
         return body;
     }
@@ -110,6 +89,13 @@ public static class Bodovani
         // Body po lodích: (loď → rozjížďka → body)
         var podleLodi = new Dictionary<string, (string Kategorie, List<BodyVRozjizdce> Body)>();
 
+        // Přihlášené do závodu po kategoriích: každá loď, která má v některé
+        // rozjížďce výsledek nebo kód.
+        var prihlaseno = rozjizdky
+            .SelectMany(r => r.Vysledky)
+            .GroupBy(v => v.Kategorie)
+            .ToDictionary(g => g.Key, g => g.Select(v => v.Lod).Distinct().Count());
+
         // Loď, která nemá v žádné rozjížďce nic jiného než DSQ. Příznak na
         // účasti by byl přesnější; doplní se, až ho rozhodčí potvrdí.
         var diskvalifikovane = rozjizdky
@@ -123,7 +109,7 @@ public static class Bodovani
         {
             foreach (var kategorie in rozjizdka.Vysledky.GroupBy(v => v.Kategorie))
             {
-                foreach (var (lod, body) in BodyRozjizdky(kategorie))
+                foreach (var (lod, body) in BodyRozjizdky(kategorie, prihlaseno[kategorie.Key]))
                 {
                     if (!podleLodi.TryGetValue(lod, out var zaznam))
                         podleLodi[lod] = zaznam = (kategorie.Key, []);

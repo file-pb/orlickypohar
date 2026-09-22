@@ -48,8 +48,6 @@ if _otevrene:
     if _volna:
         _z["ucasti"].append({"lod": _volna, "kormidelnik": None, "posadka": None, "stav": "Pozadavek"})
 
-# Kódy v pořadí podle závažnosti; doložené je jen DNF před DNS.
-ZAVAZNOST = ["Rdg", "Ret", "Dnf", "Ocs", "Dsq", "Dns", "Dnc"]
 
 
 def jmeno(klic):
@@ -57,33 +55,33 @@ def jmeno(klic):
     return f'{o["jmeno"]} {o["prijmeni"]}'
 
 
-def body_rozjizdky(vysledky):
-    """Body v jedné rozjížďce uvnitř jedné kategorie. Vítěz má 1."""
+def body_rozjizdky(vysledky, prihlaseno=None):
+    """Body v jedné rozjížďce uvnitř jedné kategorie. Vítěz má 1.
+
+    Kódy podle ZPJ A5.2 jako v API: přihlášených do závodu + 1, všechny
+    stejně; RDG hned za posledním dokončivším.
+    """
     dokoncily = sorted(
         (v for v in vysledky if not v.get("kod") and v.get("poradiVCili") is not None),
         key=lambda v: v["poradiVCili"])
     body = {v["lod"]: i + 1 for i, v in enumerate(dokoncily)}
-
-    skupiny = {}
+    za_trest = (prihlaseno if prihlaseno is not None else len(vysledky)) + 1
     for v in vysledky:
         if v.get("kod"):
-            skupiny.setdefault(v["kod"], []).append(v["lod"])
-
-    misto = len(dokoncily) + 1
-    for kod in sorted(skupiny, key=ZAVAZNOST.index):
-        for lod in skupiny[kod]:
-            body[lod] = misto
-        misto += 1
+            body[v["lod"]] = len(dokoncily) + 1 if v["kod"] == "Rdg" else za_trest
     return body
 
 
 def vysledky_zavodu(rozjizdky, pocet_skrtu=0):
     """Výsledek závodu po kategoriích: součet bodů se škrty a pořadí."""
     lode = {}
+    prihlaseno = {}
+    for kategorie, lod in {(KAT[v["lod"]], v["lod"]) for r in rozjizdky for v in r["vysledky"]}:
+        prihlaseno[kategorie] = prihlaseno.get(kategorie, 0) + 1
     for r in rozjizdky:
         for kategorie in {KAT[v["lod"]] for v in r["vysledky"]}:
             vysledky = [v for v in r["vysledky"] if KAT[v["lod"]] == kategorie]
-            for lod, body in body_rozjizdky(vysledky).items():
+            for lod, body in body_rozjizdky(vysledky, prihlaseno[kategorie]).items():
                 lode.setdefault(lod, (kategorie, []))[1].append(
                     {"cislo": r["cislo"], "body": body, "skrtnuto": False})
 

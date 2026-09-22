@@ -41,13 +41,11 @@ export default function Pravidla() {
 
       <h2>Kdo nedojel</h2>
       <p>
-        Loď s kódem dostane <b>místo za posledním, kdo dojel</b> — a kódy se do té
-        řady staví podle závažnosti. Lodě se stejným kódem mají stejné body.
-      </p>
-      <p>
-        Při dvanácti dokončivších má <code>DNF</code> třináct bodů a <code>DNS</code>{" "}
-        čtrnáct. Když ale <code>DNF</code> nikdo nemá, spadnou všechny <code>DNS</code>{" "}
-        na třináct. Není to tedy pevné „+1“ nebo „+2“, ale další volné místo v pořadí.
+        Loď, která nestartovala, nedokončila, odstoupila nebo byla diskvalifikovaná
+        (<code>DNS</code>, <code>DNF</code>, <code>RET</code>, <code>DSQ</code> a další), dostane
+        podle pravidla A5.2 <b>počet lodí své kategorie přihlášených do závodu plus jedna</b>.
+        Všechny kódy stejně: při čtrnácti přihlášených má <code>DNF</code> i <code>DNS</code>{" "}
+        patnáct bodů.
       </p>
 
       <h2>Škrty v závodě</h2>
@@ -116,8 +114,8 @@ export default function Pravidla() {
           sešit škrtal jeden.
         </li>
         <li>
-          <b>Pořadí kódů uvnitř závodu</b> (<code>DNF</code> před <code>DNS</code> a dál) určují
-          pravidla každé regaty zvlášť.
+          <b>Náprava</b> (<code>RDG</code>) je zatím hned za posledním, kdo dojel. Skutečné body
+          jí určuje protestní komise.
         </li>
       </ul>
 
