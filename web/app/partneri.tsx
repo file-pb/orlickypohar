@@ -4,7 +4,8 @@
  * čtečku obrazovky; výšku a odsazení stránky řídí CSS proměnná `--paticka`.
  *
  * <b>Skuteční partneři od 22. 9. 2026</b> (Filip): ČSJ, Marina Orlík,
- * Stingray, Hacjacht a Yacht Club Písek. Loga jsou převzatá z jejich webů, odkazy vedou
+ * Stingray, Hacjacht, Yacht Club Písek, Colins Yacht Club, FUCK CANCER
+ * a Milan Koláček Racing. Loga jsou převzatá z jejich webů, odkazy vedou
  * do nové karty. Ukázková loga z 15. 9. jsou pryč; najdeš je v historii
  * gitu, kdyby bylo potřeba znovu zkoušet rozložení.
  *
@@ -14,7 +15,11 @@
  * vypnuté animace, dostane loga v klidu vedle sebe.
  */
 
-type Partner = { nazev: string; logo: string; odkaz?: string };
+/**
+ * `tmave`: logo je světlé (bílé) a na bílé dlaždici by zmizelo. Logo se
+ * nepřebarvuje — je to cizí značka — dostane tmavou dlaždici.
+ */
+type Partner = { nazev: string; logo: string; odkaz?: string; tmave?: boolean };
 
 const PARTNERI: Partner[] = [
   { nazev: "Český svaz jachtingu", logo: "/partneri/csj.png", odkaz: "https://www.sailing.cz/" },
@@ -23,6 +28,14 @@ const PARTNERI: Partner[] = [
   { nazev: "Hacjacht", logo: "/partneri/hacjacht.png", odkaz: "https://www.hacjacht.cz/" },
   // YC Písek logo nemá, na webu jen nápis — dlaždice je jeho název písmem.
   { nazev: "Yacht Club Písek", logo: "/partneri/yc-pisek.svg", odkaz: "https://yachtclubpisek.cz/" },
+  { nazev: "Colins Yacht Club", logo: "/partneri/cyc.png", odkaz: "https://cyc.cz/" },
+  { nazev: "FUCK CANCER", logo: "/partneri/fuck-cancer.svg", odkaz: "https://www.fuckcancer.cz/" },
+  {
+    nazev: "Milan Koláček Racing",
+    logo: "/partneri/milan-kolacek.svg",
+    odkaz: "https://milankolacek.eu/CZ/index.html",
+    tmave: true,
+  },
 ]
 
 /** Dokud jsou v seznamu jen ukázková loga, pás to říká nahlas. */
@@ -56,11 +69,19 @@ function Logo({ partner, skryte }: { partner: Partner; skryte: boolean }) {
   const obrazek = <img src={partner.logo} alt={skryte ? "" : partner.nazev} width={200} height={50} />;
 
   // Bez odkazu jen obrázek: odkaz, který nikam nevede, je slib naprázdno.
+  const trida = partner.tmave ? "tmave" : undefined;
+
   return partner.odkaz ? (
-    <a href={partner.odkaz} target="_blank" rel="noopener noreferrer" tabIndex={skryte ? -1 : undefined}>
+    <a
+      href={partner.odkaz}
+      target="_blank"
+      rel="noopener noreferrer"
+      tabIndex={skryte ? -1 : undefined}
+      className={trida}
+    >
       {obrazek}
     </a>
   ) : (
-    <span>{obrazek}</span>
+    <span className={trida}>{obrazek}</span>
   );
 }

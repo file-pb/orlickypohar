@@ -1417,6 +1417,7 @@ body { padding-bottom: var(--paticka); }
   padding: 0.3rem 0.6rem; box-sizing: border-box;
   background: #fff; border: 1px solid var(--linka); border-radius: 8px;
 }
+.partneri-pas a.tmave, .partneri-pas span.tmave { background: #14171a; border-color: #14171a; }
 /* Rozměry výslovně, ne v procentech: v mřížce se procenta výšky vztahují
    k řádku s automatickou výškou a čtvercové logo by dlaždici přerostlo. */
 .partneri-pas img {
