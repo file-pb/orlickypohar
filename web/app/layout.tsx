@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prihlasovaniJde } from "@/lib/oidc";
 import { nactiSerie } from "@/lib/api";
 import { maSezeni, nactiJa } from "@/lib/ja";
+import { OdkazJinam } from "@/app/odkaz-jinam";
 import { Domu } from "@/app/domu";
 import { Menu } from "@/app/menu";
 import { Logo, ZnakPozadi } from "@/app/logo";
@@ -81,12 +82,12 @@ export default async function Layout({ children }: { children: React.ReactNode }
                   i Historie, Pravidla a Appka. */}
               {rocnik && (
                 <>
-                  <Link className="jen-siroke" href={`/serie/${rocnik.slug}`}>
+                  <OdkazJinam className="jen-siroke" href={`/serie/${rocnik.slug}`}>
                     Ročník {rocnik.rok}
-                  </Link>
-                  <Link className="jen-siroke" href={`/serie/${rocnik.slug}/poradi`}>
+                  </OdkazJinam>
+                  <OdkazJinam className="jen-siroke" href={`/serie/${rocnik.slug}/poradi`}>
                     Průběžné pořadí
-                  </Link>
+                  </OdkazJinam>
                 </>
               )}
               <PrepinacRezimu />
