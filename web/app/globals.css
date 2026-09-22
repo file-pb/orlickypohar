@@ -1380,9 +1380,9 @@ th.vlevo, td.vlevo { text-align: left; }
 
    Loga na bílé podložce v obou režimech — cizí logo si barvy pozadí
    nevybírá. Posun je CSS animace, najetím se zastaví. */
-:root { --paticka: 3.5rem; }
+:root { --paticka: 4.75rem; }
 @media (max-width: 32rem) {
-  :root { --paticka: 3rem; }
+  :root { --paticka: 4rem; }
 }
 body { padding-bottom: var(--paticka); }
 .partneri {
@@ -1407,11 +1407,24 @@ body { padding-bottom: var(--paticka); }
 }
 .partneri:hover .partneri-pas, .partneri:focus-within .partneri-pas { animation-play-state: paused; }
 .partneri-pas li { margin-right: 0.9rem; }
+/* Každé logo má stejnou dlaždici a vejde se do ní celé (Filip, 22. 9. 2026).
+   Dřív se loga srovnávala na výšku, takže čtvercové nebo kulaté logo vedle
+   širokého nápisu vyšlo jako drobná ikonka. Takhle široké logo narazí na
+   šířku dlaždice a čtvercové využije celou výšku. */
 .partneri-pas a, .partneri-pas span {
-  display: grid; place-items: center; height: calc(var(--paticka) - 0.9rem); padding: 0.2rem 0.75rem;
+  display: grid; place-items: center;
+  height: calc(var(--paticka) - 0.9rem); width: calc((var(--paticka) - 0.9rem) * 2.6);
+  padding: 0.3rem 0.6rem; box-sizing: border-box;
   background: #fff; border: 1px solid var(--linka); border-radius: 8px;
 }
-.partneri-pas img { height: calc(var(--paticka) - 1.6rem); width: auto; display: block; }
+.partneri-pas a.tmave, .partneri-pas span.tmave { background: #14171a; border-color: #14171a; }
+/* Rozměry výslovně, ne v procentech: v mřížce se procenta výšky vztahují
+   k řádku s automatickou výškou a čtvercové logo by dlaždici přerostlo. */
+.partneri-pas img {
+  max-height: calc(var(--paticka) - 0.9rem - 0.6rem - 2px);
+  max-width: calc((var(--paticka) - 0.9rem) * 2.6 - 1.2rem - 2px);
+  width: auto; height: auto; object-fit: contain; display: block;
+}
 @keyframes partneri-posun {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }

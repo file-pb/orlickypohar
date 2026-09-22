@@ -3,11 +3,11 @@
  * 15. 9. 2026). Je na očích pořád, proto je nízký a nadpis nese jen pro
  * čtečku obrazovky; výšku a odsazení stránky řídí CSS proměnná `--paticka`.
  *
- * <b>Loga jsou zatím ukázková</b> (Filip, 15. 9. 2026: postavit místo,
- * skutečná loga pošle). Jsou nakreslená jako zjevné zástupné značky, ne
- * převzatá od skutečných organizací — na veřejném webu by cizí logo
- * tvrdilo, že nás ta organizace podporuje. Až dorazí skutečná, vymění se
- * seznam níž a soubory v `public/partneri/`.
+ * <b>Skuteční partneři od 22. 9. 2026</b> (Filip): ČSJ, Marina Orlík,
+ * Stingray, Hacjacht, Yacht Club Písek, Colins Yacht Club, FUCK CANCER
+ * a Milan Koláček Racing. Loga jsou převzatá z jejich webů, odkazy vedou
+ * do nové karty. Ukázková loga z 15. 9. jsou pryč; najdeš je v historii
+ * gitu, kdyby bylo potřeba znovu zkoušet rozložení.
  *
  * <b>Posouvá se v CSS</b>, bez javascriptu. Seznam je v pásu dvakrát za
  * sebou, aby posun šel dokola bez skoku; druhá kopie je pro čtečky
@@ -15,18 +15,31 @@
  * vypnuté animace, dostane loga v klidu vedle sebe.
  */
 
-type Partner = { nazev: string; logo: string; odkaz?: string };
+/**
+ * `tmave`: logo je světlé (bílé) a na bílé dlaždici by zmizelo. Logo se
+ * nepřebarvuje — je to cizí značka — dostane tmavou dlaždici.
+ */
+type Partner = { nazev: string; logo: string; odkaz?: string; tmave?: boolean };
 
 const PARTNERI: Partner[] = [
-  { nazev: "Loděnice Příklad", logo: "/partneri/lodenice.svg" },
-  { nazev: "Plachty Vzor", logo: "/partneri/plachty.svg" },
-  { nazev: "Marina Ukázka", logo: "/partneri/marina.svg" },
-  { nazev: "Jachtklub Model", logo: "/partneri/jachtklub.svg" },
-  { nazev: "Pivovar Maketa", logo: "/partneri/pivovar.svg" },
-];
+  { nazev: "Český svaz jachtingu", logo: "/partneri/csj.png", odkaz: "https://www.sailing.cz/" },
+  { nazev: "Marina Orlík", logo: "/partneri/marina-orlik.svg", odkaz: "https://www.marinaorlik.cz/" },
+  { nazev: "Stingray", logo: "/partneri/stingray.png", odkaz: "https://www.stingray.cz/" },
+  { nazev: "Hacjacht", logo: "/partneri/hacjacht.png", odkaz: "https://www.hacjacht.cz/" },
+  // YC Písek logo nemá, na webu jen nápis — dlaždice je jeho název písmem.
+  { nazev: "Yacht Club Písek", logo: "/partneri/yc-pisek.svg", odkaz: "https://yachtclubpisek.cz/" },
+  { nazev: "Colins Yacht Club", logo: "/partneri/cyc.png", odkaz: "https://cyc.cz/" },
+  { nazev: "FUCK CANCER", logo: "/partneri/fuck-cancer.svg", odkaz: "https://www.fuckcancer.cz/" },
+  {
+    nazev: "Milan Koláček Racing",
+    logo: "/partneri/milan-kolacek.svg",
+    odkaz: "https://milankolacek.eu/CZ/index.html",
+    tmave: true,
+  },
+]
 
 /** Dokud jsou v seznamu jen ukázková loga, pás to říká nahlas. */
-const UKAZKA = true;
+const UKAZKA = false;
 
 export function Partneri() {
   if (PARTNERI.length === 0) return null;
@@ -56,11 +69,19 @@ function Logo({ partner, skryte }: { partner: Partner; skryte: boolean }) {
   const obrazek = <img src={partner.logo} alt={skryte ? "" : partner.nazev} width={200} height={50} />;
 
   // Bez odkazu jen obrázek: odkaz, který nikam nevede, je slib naprázdno.
+  const trida = partner.tmave ? "tmave" : undefined;
+
   return partner.odkaz ? (
-    <a href={partner.odkaz} target="_blank" rel="noopener noreferrer" tabIndex={skryte ? -1 : undefined}>
+    <a
+      href={partner.odkaz}
+      target="_blank"
+      rel="noopener noreferrer"
+      tabIndex={skryte ? -1 : undefined}
+      className={trida}
+    >
       {obrazek}
     </a>
   ) : (
-    <span>{obrazek}</span>
+    <span className={trida}>{obrazek}</span>
   );
 }
