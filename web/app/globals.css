@@ -872,7 +872,75 @@ th.vlevo, td.vlevo { text-align: left; }
   padding: 0.6rem 1.1rem; border: 0; border-radius: 8px;
   background: var(--voda); color: var(--papir);
 }
-.pridat { margin-top: 1rem; }
+.pridat { margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+.zaskrtnuti { display: inline-flex; gap: 0.4rem; align-items: center; font-size: 0.9rem; }
+
+/* Cílová obrazovka (22. 9. 2026). Dělaná na telefon v ruce na lodi:
+   tlačítka lodí velká, aby se trefila i v rukavici a na houpající se
+   palubě; lišta se startem a stavem uložení drží nahoře, protože se na ni
+   kouká mezi každými dvěma dojezdy. */
+.cil button { font: inherit; cursor: pointer; color: var(--text); }
+.cil button.maly {
+  font-size: 0.85rem; padding: 0.35rem 0.7rem; border-radius: 999px;
+  border: 1px solid var(--linka); background: var(--pozadi);
+}
+/* Lišta se lepí pod hlavičku, která je taky lepivá. Výška hlavičky je
+   74 / 86 / 98 px podle šířky (logo, 22. 9. 2026); když se změní, lišta
+   pod ní zajede a tady se musí posunout s ní. */
+.cil-lista {
+  position: sticky; top: 5.5rem; z-index: 5;
+  display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; justify-content: space-between;
+  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+  padding: 0.6rem 0.8rem; margin-bottom: 1rem;
+}
+@media (max-width: 48rem) { .cil-lista { top: 4.75rem; } }
+@media (min-width: 1180px) { .cil-lista { top: 6.25rem; } }
+.cil-start { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+.cil-cas { font-variant-numeric: tabular-nums; }
+.cil-startuj {
+  font-weight: 700; font-size: 1.15rem; padding: 0.7rem 2.2rem; border: 0; border-radius: 10px;
+  background: var(--stav-vypsany); color: var(--papir) !important;
+}
+.cil-ulozeno { font-size: 0.8rem; color: var(--tlumeny); }
+.cil-ulozeno.ukladam { color: var(--voda); }
+.cil-ulozeno.chyba { color: var(--stav-zruseny); font-weight: 600; }
+.cil h2 { font-size: 1.05rem; margin: 1.4rem 0 0.6rem; }
+.cil h3 {
+  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--tlumeny); margin: 0.9rem 0 0.4rem;
+}
+.cil-lode { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: 0.5rem; }
+.cil-lod {
+  display: grid; gap: 0.15rem; text-align: left; min-height: 3.6rem;
+  padding: 0.6rem 0.75rem; border-radius: 10px; font-weight: 600;
+  border: 1px solid var(--linka); background: var(--papir);
+  touch-action: manipulation;
+}
+.cil-lod small { font-weight: 400; color: var(--tlumeny); font-size: 0.8rem; }
+.cil-lod:active { background: var(--zvyrazneni); border-color: var(--voda); }
+.cil-lod:focus-visible, .cil button:focus-visible { outline: 2px solid var(--voda); outline-offset: 2px; }
+.cil-nadpis { display: flex; gap: 0.75rem; align-items: baseline; justify-content: space-between; }
+.cil-poradi, .cil-kody ul { list-style: none; margin: 0; padding: 0; }
+.cil-poradi li, .cil-kody li {
+  display: flex; gap: 0.6rem; align-items: center;
+  padding: 0.45rem 0; border-bottom: 1px solid var(--linka);
+}
+.cil-misto { min-width: 2rem; font-variant-numeric: tabular-nums; color: var(--tlumeny); }
+.cil-jmeno { flex: 1; min-width: 0; font-weight: 600; }
+.cil-jmeno small { display: block; font-weight: 400; color: var(--tlumeny); font-size: 0.8rem; }
+.cil-poradi .cil-cas { color: var(--tlumeny); font-size: 0.9rem; }
+.cil-opravy { display: flex; gap: 0.25rem; }
+.cil-opravy button, .cil-volby button {
+  min-width: 2.4rem; min-height: 2.4rem; border-radius: 8px;
+  border: 1px solid var(--linka); background: var(--pozadi);
+}
+.cil-opravy button:disabled { opacity: 0.35; cursor: default; }
+.cil-kody { margin-top: 1.6rem; }
+.cil-kody summary { cursor: pointer; font-weight: 600; padding: 0.4rem 0; }
+.cil-kody li { flex-wrap: wrap; }
+.cil-volby { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; }
+.cil-volby button { font-size: 0.8rem; padding: 0 0.5rem; }
+.cil-kody li.ma-kod b { color: var(--stav-zruseny); margin-right: 0.3rem; }
 
 /* Stav lodi na zastávce. Potvrzená nese barvu jako potvrzené výsledky,
    přihlášená je čárkovaná jako návrh, zrušená červená. */

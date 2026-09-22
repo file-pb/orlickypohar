@@ -48,7 +48,7 @@
                 "tags": [
                     "Z\u00e1vody"
                 ],
-                "summary": "Vr\u00e1t\u00ed zast\u00e1vku s rozj\u00ed\u017e\u010fkami a v\u00fdsledky",
+                "summary": "Vr\u00e1t\u00ed regatu s rozj\u00ed\u017e\u010fkami a v\u00fdsledky",
                 "parameters": [
                     {
                         "name": "serieSlug",
@@ -238,7 +238,7 @@
                 "tags": [
                     "P\u0159ihl\u00e1\u0161ky"
                 ],
-                "summary": "P\u0159ihl\u00e1s\u00ed lo\u010f na zast\u00e1vku z ve\u0159ejn\u00e9ho formul\u00e1\u0159e",
+                "summary": "P\u0159ihl\u00e1s\u00ed lo\u010f na regatu z ve\u0159ejn\u00e9ho formul\u00e1\u0159e",
                 "description": "Bez p\u0159ihl\u00e1\u0161en\u00ed. Vznik\u00e1 po\u017eadavek, kter\u00fd po\u0159adatel zap\u00ed\u0161e, vr\u00e1t\u00ed k dopln\u011bn\u00ed, nebo odm\u00edtne; na webu lo\u010f do t\u00e9 doby nen\u00ed. Vy\u017eaduje kontakt a souhlas.",
                 "parameters": [
                     {
@@ -331,7 +331,7 @@
                 "tags": [
                     "S\u00e9rie"
                 ],
-                "summary": "Vr\u00e1t\u00ed ro\u010dn\u00edk s kategoriemi, zast\u00e1vkami a p\u0159ihl\u00e1\u0161kami",
+                "summary": "Vr\u00e1t\u00ed ro\u010dn\u00edk s kategoriemi, regatami a p\u0159ihl\u00e1\u0161kami",
                 "parameters": [
                     {
                         "name": "slug",
@@ -365,7 +365,7 @@
                     "\u010cl\u00e1nky"
                 ],
                 "summary": "Vr\u00e1t\u00ed publikovan\u00e9 \u010dl\u00e1nky ro\u010dn\u00edku, od nejnov\u011bj\u0161\u00edho",
-                "description": "Parametrem zavod se v\u00fdpis z\u00fa\u017e\u00ed na jednu zast\u00e1vku, parametrem limit na dan\u00fd po\u010det nejnov\u011bj\u0161\u00edch.",
+                "description": "Parametrem zavod se v\u00fdpis z\u00fa\u017e\u00ed na jednu regatu, parametrem limit na dan\u00fd po\u010det nejnov\u011bj\u0161\u00edch.",
                 "parameters": [
                     {
                         "name": "slug",
@@ -524,7 +524,7 @@
                 "tags": [
                     "Spr\u00e1va"
                 ],
-                "summary": "Vyp\u00ed\u0161e opr\u00e1vn\u011bn\u00ed ro\u010dn\u00edku i zast\u00e1vky, na kter\u00e9 jdou ud\u011blit",
+                "summary": "Vyp\u00ed\u0161e opr\u00e1vn\u011bn\u00ed ro\u010dn\u00edku i regaty, na kter\u00e9 jdou ud\u011blit",
                 "description": "Vy\u017eaduje roli spr\u00e1vce, nebo rozhod\u010d\u00edho v tom ro\u010dn\u00edku. Co sm\u00ed ud\u011blit, \u0159\u00edk\u00e1 SmiNaRocnik. Ucty \u2014 \u00fa\u010dty, kter\u00e9 se kdy p\u0159ihl\u00e1sily \u2014 dostane jen spr\u00e1vce; rozhod\u010d\u00edmu je null.",
                 "parameters": [
                     {
@@ -1263,8 +1263,8 @@
                 "tags": [
                     "Spr\u00e1va"
                 ],
-                "summary": "Zalo\u017e\u00ed zast\u00e1vku v p\u0159edb\u011b\u017en\u00e9m kalend\u00e1\u0159i",
-                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku. Adresa se odvod\u00ed z n\u00e1zvu. Nov\u00e1 zast\u00e1vka je v\u017edycky pl\u00e1novan\u00e1 a nepublikovan\u00e1.",
+                "summary": "Zalo\u017e\u00ed regatu v p\u0159edb\u011b\u017en\u00e9m kalend\u00e1\u0159i",
+                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku. Adresa se odvod\u00ed z n\u00e1zvu. Nov\u00e1 regata je v\u017edycky pl\u00e1novan\u00e1 a nepublikovan\u00e1.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1304,7 +1304,7 @@
                 "tags": [
                     "Spr\u00e1va"
                 ],
-                "summary": "Ulo\u017e\u00ed term\u00edn a \u00fadaje zast\u00e1vky",
+                "summary": "Ulo\u017e\u00ed term\u00edn a \u00fadaje regaty",
                 "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku. Adresa se nem\u011bn\u00ed, ani kdy\u017e se zm\u011bn\u00ed n\u00e1zev. Posun term\u00ednu u potvrzen\u00e9 a d\u00e1l zap\u00ed\u0161e p\u016fvodn\u00ed datum.",
                 "parameters": [
                     {
@@ -1353,7 +1353,7 @@
                 "tags": [
                     "Spr\u00e1va"
                 ],
-                "summary": "Posune zast\u00e1vku v jej\u00edm \u017eivotn\u00edm cyklu",
+                "summary": "Posune regatu v jej\u00edm \u017eivotn\u00edm cyklu",
                 "description": "Pl\u00e1novan\u00fd \u2192 potvrzen\u00fd (rozhod\u010d\u00ed) \u2192 vypsan\u00fd \u2192 odjet\u00fd (organiz\u00e1tor), nebo zru\u0161en\u00fd. Po jednom kroku, ob\u011bma sm\u011bry.",
                 "parameters": [
                     {
@@ -1402,7 +1402,7 @@
                 "tags": [
                     "Spr\u00e1va"
                 ],
-                "summary": "Pust\u00ed zast\u00e1vku na ve\u0159ejn\u00fd web, nebo ji st\u00e1hne",
+                "summary": "Pust\u00ed regatu na ve\u0159ejn\u00fd web, nebo ji st\u00e1hne",
                 "description": "Spr\u00e1vce ro\u010dn\u00edku. Publikace nen\u00ed stav, je to vlastn\u00ed p\u0159\u00edznak.",
                 "parameters": [
                     {
@@ -1451,7 +1451,7 @@
                 "tags": [
                     "Spr\u00e1va"
                 ],
-                "summary": "Vyp\u00ed\u0161e zast\u00e1vky ro\u010dn\u00edku i s t\u00edm, kolik v\u00fdsledk\u016f je venku",
+                "summary": "Vyp\u00ed\u0161e regaty ro\u010dn\u00edku i s t\u00edm, kolik v\u00fdsledk\u016f je venku",
                 "description": "Rozcestn\u00edk. Vy\u017eaduje roli rozhod\u010d\u00edho v ro\u010dn\u00edku, nebo organiz\u00e1tora aspo\u0148 na jedn\u00e9 zast\u00e1vce.",
                 "parameters": [
                     {
@@ -1485,7 +1485,7 @@
                 "tags": [
                     "Spr\u00e1va"
                 ],
-                "summary": "Vyp\u00ed\u0161e rozj\u00ed\u017e\u010fky zast\u00e1vky i s t\u00edm, co s nimi p\u0159ihl\u00e1\u0161en\u00fd sm\u00ed",
+                "summary": "Vyp\u00ed\u0161e rozj\u00ed\u017e\u010fky regaty i s t\u00edm, co s nimi p\u0159ihl\u00e1\u0161en\u00fd sm\u00ed",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1524,7 +1524,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "P\u0159id\u00e1 zast\u00e1vce dal\u0161\u00ed rozj\u00ed\u017e\u010fku",
-                "description": "Po\u0159adatel zast\u00e1vky, od vyps\u00e1n\u00ed z\u00e1vodu. Nov\u00e1 rozj\u00ed\u017e\u010fka je n\u00e1vrh a na webu nen\u00ed.",
+                "description": "Po\u0159adatel regaty, od vyps\u00e1n\u00ed z\u00e1vodu. Nov\u00e1 rozj\u00ed\u017e\u010fka je n\u00e1vrh a na webu nen\u00ed.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1543,6 +1543,22 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "null"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/NovaRozjizdkaVstup"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "201": {
                         "description": "Created",
@@ -1557,13 +1573,78 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/start": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Zap\u00ed\u0161e start rozj\u00ed\u017e\u010fky",
+                "description": "C\u00edlov\u00e1 obrazovka. Bez \u010dasu v t\u011ble se vezme okam\u017eik po\u017eadavku. Jde p\u0159epsat, dokud je z\u00e1pis otev\u0159en\u00fd; \u010dasy dojet\u00fdch lod\u00ed se p\u0159epo\u010d\u00edtaj\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "null"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/StartVstup"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZapisRozjizdkyDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}": {
             "get": {
                 "tags": [
                     "Spr\u00e1va"
                 ],
                 "summary": "Vyp\u00ed\u0161e z\u00e1pis rozj\u00ed\u017e\u010fky: v\u0161echny lod\u011b ro\u010dn\u00edku a jejich v\u00fdsledky",
-                "description": "Vid\u00ed ho ka\u017ed\u00fd, kdo sm\u00ed na v\u00fdsledky ro\u010dn\u00edku. M\u011bnit ho sm\u00ed jen po\u0159adatel zast\u00e1vky, a jen v n\u00e1vrhu nebo po vr\u00e1cen\u00ed k revizi.",
+                "description": "Vid\u00ed ho ka\u017ed\u00fd, kdo sm\u00ed na v\u00fdsledky ro\u010dn\u00edku. M\u011bnit ho sm\u00ed jen po\u0159adatel regaty, a jen v n\u00e1vrhu nebo po vr\u00e1cen\u00ed k revizi.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1788,8 +1869,8 @@
                 "tags": [
                     "Spr\u00e1va"
                 ],
-                "summary": "Vyp\u00ed\u0161e lod\u011b ro\u010dn\u00edku i s t\u00edm, jak jsou p\u0159ihl\u00e1\u0161en\u00e9 na zast\u00e1vku",
-                "description": "Po\u0159adatel zast\u00e1vky, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. M\u011bnit sm\u00ed jen po\u0159adatel.",
+                "summary": "Vyp\u00ed\u0161e lod\u011b ro\u010dn\u00edku i s t\u00edm, jak jsou p\u0159ihl\u00e1\u0161en\u00e9 na regatu",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. M\u011bnit sm\u00ed jen po\u0159adatel.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1825,8 +1906,8 @@
                 "tags": [
                     "Spr\u00e1va"
                 ],
-                "summary": "P\u0159ihl\u00e1s\u00ed lo\u010f na zast\u00e1vku \u2014 z ro\u010dn\u00edku, nebo novou",
-                "description": "Po\u0159adatel zast\u00e1vky, od vyps\u00e1n\u00ed z\u00e1vodu. Nov\u00e1 lo\u010f se st\u00e1v\u00e1 \u00fa\u010dastn\u00edkem ro\u010dn\u00edku v zadan\u00e9 kategorii. Druh\u00e9 p\u0159ihl\u00e1\u0161en\u00ed t\u00e9\u017ee lodi vrac\u00ed 200.",
+                "summary": "P\u0159ihl\u00e1s\u00ed lo\u010f na regatu \u2014 z ro\u010dn\u00edku, nebo novou",
+                "description": "Po\u0159adatel regaty, od vyps\u00e1n\u00ed z\u00e1vodu. Nov\u00e1 lo\u010f se st\u00e1v\u00e1 \u00fa\u010dastn\u00edkem ro\u010dn\u00edku v zadan\u00e9 kategorii. Druh\u00e9 p\u0159ihl\u00e1\u0161en\u00ed t\u00e9\u017ee lodi vrac\u00ed 200.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1885,7 +1966,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "Zap\u00ed\u0161e startovn\u00e9 lodi na zast\u00e1vce",
-                "description": "Po\u0159adatel zast\u00e1vky. Nic neblokuje \u2014 kdo p\u0159ijede pozd\u011b, zaplat\u00ed pozd\u011bji.",
+                "description": "Po\u0159adatel regaty. Nic neblokuje \u2014 kdo p\u0159ijede pozd\u011b, zaplat\u00ed pozd\u011bji.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2045,7 +2126,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "Medailonek po\u0159adatele i s t\u00edm, jestli ho p\u0159ihl\u00e1\u0161en\u00fd sm\u00ed upravit",
-                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku, nebo organiz\u00e1tor aspo\u0148 jedn\u00e9 zast\u00e1vky v ro\u010dn\u00edku. Po\u0159adatel mus\u00ed v ro\u010dn\u00edku po\u0159\u00e1dat aspo\u0148 jednu zast\u00e1vku.",
+                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku, nebo organiz\u00e1tor aspo\u0148 jedn\u00e9 regaty v ro\u010dn\u00edku. Po\u0159adatel mus\u00ed v ro\u010dn\u00edku po\u0159\u00e1dat aspo\u0148 jednu regatu.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2082,7 +2163,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "Ulo\u017e\u00ed medailonek po\u0159adatele",
-                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku, nebo organiz\u00e1tor zast\u00e1vky, kterou po\u0159adatel po\u0159\u00e1d\u00e1. Z\u00e1znam je spole\u010dn\u00fd v\u0161em ro\u010dn\u00edk\u016fm; p\u0159ejmenov\u00e1n\u00ed p\u0159ep\u00ed\u0161e jm\u00e9no na v\u0161ech jeho zast\u00e1vk\u00e1ch.",
+                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku, nebo organiz\u00e1tor regaty, kterou po\u0159adatel po\u0159\u00e1d\u00e1. Z\u00e1znam je spole\u010dn\u00fd v\u0161em ro\u010dn\u00edk\u016fm; p\u0159ejmenov\u00e1n\u00ed p\u0159ep\u00ed\u0161e jm\u00e9no na v\u0161ech jeho regat\u00e1ch.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2919,6 +3000,15 @@
                             "null",
                             "string"
                         ]
+                    }
+                }
+            },
+            "NovaRozjizdkaVstup": {
+                "type": "object",
+                "properties": {
+                    "doSerie": {
+                        "type": "boolean",
+                        "default": true
                     }
                 }
             },
@@ -4019,6 +4109,18 @@
                     }
                 }
             },
+            "StartVstup": {
+                "type": "object",
+                "properties": {
+                    "startV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    }
+                }
+            },
             "StavClanku": {
                 "enum": [
                     "Draft",
@@ -4604,6 +4706,13 @@
                             "integer"
                         ],
                         "format": "int32"
+                    },
+                    "dojezdV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
                     }
                 }
             },
@@ -4633,6 +4742,13 @@
                                 "$ref": "#/components/schemas/KodVysledku"
                             }
                         ]
+                    },
+                    "dojezdV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
                     }
                 }
             },
@@ -4694,6 +4810,17 @@
                         "items": {
                             "$ref": "#/components/schemas/ZapisLodDto"
                         }
+                    },
+                    "startV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "doSerie": {
+                        "type": "boolean",
+                        "default": true
                     }
                 }
             },
