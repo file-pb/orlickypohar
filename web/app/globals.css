@@ -189,11 +189,15 @@ body:has(.uvod) .pozadi-znak { display: none; }
   :root:not([data-rezim="svetly"]) .logo { --logo-hlavni: #7fa7c9; --logo-druha: #e25a6d; --logo-seda: #c4ced8; --logo-napis: #edeae5; }
   :root:not([data-rezim="svetly"]) .logo-vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
   :root:not([data-rezim="svetly"]) .logo-oys { --logo-oys: #7fa7c9; }
+  /* V hlavičce nad fotkou byla #7fa7c9 málo vidět (Filip, 22. 9. 2026);
+     vodoznak na pozadí zůstává tlumený. */
+  :root:not([data-rezim="svetly"]) header.hlavicka .logo-oys { --logo-oys: #d3e3f0; }
 }
 :root[data-rezim="tmavy"] .pozadi-znak { opacity: 0.09; }
 :root[data-rezim="tmavy"] .logo { --logo-hlavni: #7fa7c9; --logo-druha: #e25a6d; --logo-seda: #c4ced8; --logo-napis: #edeae5; }
 :root[data-rezim="tmavy"] .logo-vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
 :root[data-rezim="tmavy"] .logo-oys { --logo-oys: #7fa7c9; }
+:root[data-rezim="tmavy"] header.hlavicka .logo-oys { --logo-oys: #d3e3f0; }
 header.hlavicka nav { display: flex; gap: 1rem; flex: none; }
 header.hlavicka nav a { color: var(--tlumeny); font-weight: 500; font-size: 0.9rem; }
 header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
