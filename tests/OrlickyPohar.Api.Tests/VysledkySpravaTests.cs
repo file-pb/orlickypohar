@@ -306,6 +306,33 @@ public class VysledkySpravaTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task Cilova_obrazovka_ulozi_dojezd_i_s_casem_od_startu()
+    {
+        var slug = "zapis-cil";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
+
+        var start = new DateTimeOffset(2026, 6, 20, 11, 0, 0, TimeSpan.FromHours(2));
+        Assert.Null(await zapis.StartAsync(rozjizdka, start, default));
+
+        Assert.Null(await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 1, DojezdV: start.AddMinutes(42))], default));
+
+        var v = await db.Vysledky.SingleAsync(x => x.RozjizdkaId == rozjizdka.Id && x.PoradiVCili == 1);
+        Assert.Equal(TimeSpan.FromMinutes(42), v.NamerenyCas);
+
+        // Posunutý start přepočítá i dojetou loď.
+        Assert.Null(await zapis.StartAsync(rozjizdka, start.AddMinutes(2), default));
+        await db.Entry(v).ReloadAsync();
+        Assert.Equal(TimeSpan.FromMinutes(40), v.NamerenyCas);
+
+        var nacteny = await zapis.NactiAsync(rozjizdka, poradatel: true, default);
+        Assert.Equal(start.AddMinutes(2), nacteny.StartV);
+    }
+
+    [Fact]
     public async Task Podepsany_zapis_se_neprepise()
     {
         var slug = "zapis-zamek";

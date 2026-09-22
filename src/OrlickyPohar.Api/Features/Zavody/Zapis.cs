@@ -1,7 +1,12 @@
 namespace OrlickyPohar.Api.Features.Zavody;
 
-/// <summary>Jeden řádek zápisu: loď přes přihlášku, pořadí v cíli, nebo kód.</summary>
-public record ZapisRadekVstup(int PrihlaskaId, int? PoradiVCili = null, KodVysledku? Kod = null);
+/// <summary>
+/// Jeden řádek zápisu: loď přes přihlášku, pořadí v cíli, nebo kód.
+/// <c>DojezdV</c> posílá cílová obrazovka (od 22. 9. 2026) — okamžik, kdy
+/// zapisovatel klepl na loď. Formulář z papíru ho nemá a nepošle.
+/// </summary>
+public record ZapisRadekVstup(
+    int PrihlaskaId, int? PoradiVCili = null, KodVysledku? Kod = null, DateTimeOffset? DojezdV = null);
 
 /// <summary>
 /// Řádek zápisu i s tím, co o lodi ví databáze. Pravidla potřebují jméno
@@ -49,6 +54,14 @@ public static class Zapis
         StavZavodu.Zruseny => "Regata je zrušená, výsledky nemá.",
         _ => "Závod ještě není vypsaný. Výsledky se zapisují od vypsání.",
     };
+
+    /// <summary>
+    /// Naměřený čas: od startu rozjížďky do dojezdu. <c>null</c>, když start
+    /// zapsaný není, nebo když by vyšel záporný — to je špatně nastavený
+    /// start, ne loď, která dojela dřív, než vyjela.
+    /// </summary>
+    public static TimeSpan? NamerenyCas(DateTimeOffset? start, DateTimeOffset dojezd) =>
+        start is { } s && dojezd >= s ? dojezd - s : null;
 
     /// <summary>Proč rozjížďku nejde přepsat — nebo <c>null</c>.</summary>
     public static string? ProcNejdePrepsat(StavZavodu zavod, StavVysledku vysledky)
