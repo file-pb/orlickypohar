@@ -64,8 +64,9 @@ export default async function Layout({ children }: { children: React.ReactNode }
         <PruhUkazky />
         <header className="hlavicka">
           <div className="obal">
-            {/* Značka je tatáž jako ikona appky — kreslí ji app/scripts/ikona.py,
-                aby existovala jedna, ne dvě podobné. */}
+            {/* Logo Orlik Yacht Series od rozhodčího (22. 9. 2026). Appka má
+                zatím původní značku z app/scripts/ikona.py, ta je v
+                app/logo-puvodni.tsx. */}
             <Link className="znacka" href="/" aria-label="Orlický pohár — úvodní stránka">
               <Logo />
             </Link>
