@@ -150,10 +150,12 @@ header.hlavicka a.znacka svg.logo-napis-mobil { display: none; height: 34px; wid
   header.hlavicka a.znacka svg.logo-napis-monitor { display: none; }
   header.hlavicka a.znacka svg.logo-napis-mobil { display: block; }
 }
-/* Kruh i nápis v hlavičce mají jednu barvu, v tmavém vzhledu světlejší. */
-header.hlavicka { --barva-znacky: #0b5cad; }
+/* Barevné je jen logo, nápis má barvu textu a proužky (Filip, 22. 9. 2026:
+   varianta L ze srovnání, logo „mírně ztmavit do námořnické, ne moc").
+   Logo tak působí samostatně a nápis se k němu jen přidává. */
+header.hlavicka { --barva-znacky: #0c4a8c; }
 header.hlavicka a.znacka svg.logo-oys { --logo-oys: var(--barva-znacky); }
-header.hlavicka a.znacka svg.logo-napis-oys { --logo-napis: var(--barva-znacky); }
+header.hlavicka a.znacka svg.logo-napis-oys { --logo-napis: var(--text); }
 /* Původní logo (app/logo-puvodni.tsx) — dnes se nevykresluje, styly
    zůstávají, aby šlo vrátit jedním importem. */
 header.hlavicka a.znacka svg.logo-monitor { height: 64px; width: auto; margin-bottom: -12px; }
