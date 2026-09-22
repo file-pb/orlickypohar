@@ -69,7 +69,7 @@ internal static class ImportHandler
         var slugyZavodu = v.Zavody.Select(z => z.Slug).ToHashSet();
         foreach (var c in v.Clanky ?? [])
             if (c.Zavod is not null && !slugyZavodu.Contains(c.Zavod))
-                throw new ImportException($"Článek {c.Slug} odkazuje na neznámou zastávku {c.Zavod}.");
+                throw new ImportException($"Článek {c.Slug} odkazuje na neznámou regatu {c.Zavod}.");
 
         foreach (var z in v.Zavody)
         {
@@ -475,7 +475,7 @@ internal static class ImportHandler
             if (v.Zavod is not null)
             {
                 if (!zavody.TryGetValue(v.Zavod, out var id))
-                    throw new ImportException($"Článek {v.Slug} odkazuje na neznámou zastávku {v.Zavod}.");
+                    throw new ImportException($"Článek {v.Slug} odkazuje na neznámou regatu {v.Zavod}.");
                 zavodId = id;
             }
 

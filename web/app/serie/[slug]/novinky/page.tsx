@@ -44,7 +44,7 @@ export default async function Novinky({ params }: Parametry) {
       />
       <h1>Novinky</h1>
 
-      {/* Blog je na dvou úrovních: sérii píše organizátor poháru, zastávku
+      {/* Blog je na dvou úrovních: sérii píše organizátor poháru, regatu
           její pořadatel. Ve výpisu jsou pohromadě a odlišuje je štítek —
           čtenáře zajímá, co je nového, ne kdo to spravuje. */}
       {!clanky || clanky.length === 0 ? (

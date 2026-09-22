@@ -36,7 +36,7 @@ type Parametry = {
 /**
  * Kdo co smí v ročníku — a v kterém jeho místě.
  *
- * <b>Rozsah je celý ročník, nebo jedna zastávka.</b> Proto se oprávnění
+ * <b>Rozsah je celý ročník, nebo jedna regata.</b> Proto se oprávnění
  * nevypisují jedním seznamem: pořadatel Radavské regaty a správce celého
  * poháru jsou dvě různé věci a v jednom sloupci by splynuly.
  *
@@ -114,7 +114,7 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
         {hlava}
         <p className="prazdno">
           Role v tomhle ročníku uděluje jeho správce; pořadatele a editora
-          zastávky i rozhodčí. Práva ti může dát současný správce.
+          regaty i rozhodčí. Práva ti může dát současný správce.
         </p>
       </>
     );
@@ -124,7 +124,7 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
   const naRocnik = prehled.opravneni.filter((o) => !o.zavod);
   const naZastavku = (slug: string) => prehled.opravneni.filter((o) => o.zavod === slug);
 
-  // Rozhodčí přiřazuje jen pořadatele a editora jedné zastávce. Nabídka
+  // Rozhodčí přiřazuje jen pořadatele a editora jedné regatě. Nabídka
   // i tlačítka se řídí tím, co API pustí — pravidlo samo žije v `Udeleni`.
   const role = prehled.smiNaRocnik ? ROLE : ROLE.filter((r) => !r.jenRocnik);
   const smiOdebrat = (r: Radek) =>
@@ -195,7 +195,7 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
               <option value="">Celý ročník</option>
             ) : (
               <option value="" disabled>
-                Vyber zastávku
+                Vyber regatu
               </option>
             )}
             {prehled.zastavky.map((z) => (
@@ -213,7 +213,7 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
 
       {!prehled.smiNaRocnik && (
         <p className="poznamka">
-          Jako rozhodčí přiřazuješ pořadatele a editora jednotlivým zastávkám.
+          Jako rozhodčí přiřazuješ pořadatele a editora jednotlivým regatám.
           Role na celý ročník a rozhodčího uděluje správce.
         </p>
       )}
@@ -263,7 +263,7 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
 }
 
 /**
- * Věta o tom, co se právě povedlo — složená tady, protože jména zastávek
+ * Věta o tom, co se právě povedlo — složená tady, protože jména regat
  * a rolí zná stránka, kdežto akce jen jejich slugy.
  */
 function hotovo(
@@ -278,14 +278,14 @@ function hotovo(
     : null;
 
   return kde
-    ? `${z.email} má roli ${nazevRole(z.role)} na zastávce ${kde}.`
+    ? `${z.email} má roli ${nazevRole(z.role)} na regatě ${kde}.`
     : `${z.email} má roli ${nazevRole(z.role)} na celý ročník.`;
 }
 
 /**
- * Jedno místo se svými lidmi. Prázdná zastávka se schová, prázdný ročník ne:
+ * Jedno místo se svými lidmi. Prázdná regata se schová, prázdný ročník ne:
  * ročník bez jediného oprávnění je stav, který se má vidět, kdežto devět
- * prázdných zastávek je jen devět prázdných tabulek.
+ * prázdných regat je jen devět prázdných tabulek.
  */
 function Skupina({
   nadpis,

@@ -29,7 +29,7 @@ public static class Udeleni
         // Ani jedno nedává smysl omezit na jednu zastávku — a kdyby to šlo,
         // vznikl by rozsah, o kterém plán mlčí a `Prava` ho tiše uznají.
         Role.Rozhodci or Role.Spravce when naZavod =>
-            $"Role {role} platí pro celý ročník, ne pro jednu zastávku.",
+            $"Role {role} platí pro celý ročník, ne pro jednu regatu.",
 
         _ => null,
     };

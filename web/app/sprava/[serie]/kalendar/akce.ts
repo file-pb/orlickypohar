@@ -8,7 +8,7 @@ import { prepniStav, publikuj, uloz, zaloz, type StavZavodu } from "@/lib/kalend
  * formulář odešle prohlížeč sám a token přitom nikam neputuje.
  *
  * Po zápisu se přesměrovává — vzor „POST, pak přesměruj". Bez něj by
- * obnovení stránky poslalo tentýž formulář znovu a zastávka by se založila
+ * obnovení stránky poslalo tentýž formulář znovu a regata by se založila
  * podruhé.
  *
  * <b>Přesměrování drží tab.</b> Kdo spravuje komunitní akce, nemá se po

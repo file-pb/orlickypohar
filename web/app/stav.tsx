@@ -23,7 +23,7 @@ const POPIS_AKCE: Partial<Record<StavZavodu, string>> = {
   Odjety: "proběhlo",
 };
 
-/** Stav zastávky jako štítek. Odjetá nese barvu, protože jen za ní jsou výsledky. */
+/** Stav regaty jako štítek. Odjetá nese barvu, protože jen za ní jsou výsledky. */
 export function Stav({ stav, akce }: { stav: StavZavodu; akce?: boolean }) {
   return (
     <span className={`stitek stav stav-${stav.toLowerCase()}`}>
@@ -33,7 +33,7 @@ export function Stav({ stav, akce }: { stav: StavZavodu; akce?: boolean }) {
 }
 
 /**
- * Co na stránce zastávky stojí místo výsledků. Prázdná tabulka znamená
+ * Co na stránce regaty stojí místo výsledků. Prázdná tabulka znamená
  * u každého stavu něco jiného a „zatím nejsou zveřejněné" je u zrušeného
  * závodu lež — nikdy nebudou.
  *
@@ -45,7 +45,7 @@ export function Stav({ stav, akce }: { stav: StavZavodu; akce?: boolean }) {
 export function ProcNejsouVysledky(stav: StavZavodu) {
   switch (stav) {
     case "Zruseny":
-      return "Zastávka se nekonala. Do poháru se nepočítá.";
+      return "Regata se nekonala. Do poháru se nepočítá.";
     case "Planovany":
       return "Zatím je to jen termín v kalendáři. Vypsání závodu teprve přijde.";
     case "Potvrzeny":

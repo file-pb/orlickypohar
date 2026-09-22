@@ -5,7 +5,7 @@ import type { Stav } from "@/lib/sprava";
 /**
  * Volání správy kalendáře. Vedle `lib/clanky.ts` a `lib/sprava.ts` ze
  * stejného důvodu, z jakého jsou oddělené ty dvě: tahle je o termínech
- * a stavech zastávek. Sdílejí jen typ <c>Stav</c>, protože odpověď
+ * a stavech regat. Sdílejí jen typ <c>Stav</c>, protože odpověď
  * „nepřihlášen / odmítnut / nesmí" je u všech tatáž otázka.
  *
  * <b>Token zůstává na serveru.</b> Leží v cookie, kterou prohlížeč jen vozí
@@ -28,7 +28,7 @@ export type DruhZastavky = S["DruhZastavky"];
  * <b>Nápisy jsou slovesa, ne názvy stavů.</b> Na štítku stojí „vypsáno",
  * protože popisuje, jak to je; na tlačítku „Vypsat závod", protože se
  * klikáním něco dělá. Tentýž text na obojím by znamenal, že se nedá poznat,
- * jestli je zastávka vypsaná, nebo se vypsat teprve má.
+ * jestli je regata vypsaná, nebo se vypsat teprve má.
  *
  * <c>Record</c> je tu naschvál: nový stav v modelu tak shodí překlad webu,
  * ne až prázdné tlačítko na stránce — přesně to se stalo se stavem
@@ -65,7 +65,7 @@ const RADA: StavZavodu[] = ["Planovany", "Potvrzeny", "Vypsany", "Odjety"];
  * Nápis na tlačítku podle toho, kam se jde.
  *
  * <b>Krok zpátky se musí jmenovat jinak než krok dopředu.</b> „Vypsat
- * závod" u odjeté zastávky by znamenalo, že se vypisuje znovu — přitom se
+ * závod" u odjeté regaty by znamenalo, že se vypisuje znovu — přitom se
  * jen opravuje překlep. Že je to návrat, ví jen ten, kdo zná dosavadní
  * stav, takže se to musí rozhodnout tady, ne v tabulce výše.
  */
@@ -94,7 +94,7 @@ async function hlaska(odpoved: Response) {
 
   if (odpoved.status === 401) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
   if (odpoved.status === 403) return "Na tuhle změnu v kalendáři nemáš práva.";
-  if (odpoved.status === 404) return "Zastávka nebo ročník neexistuje.";
+  if (odpoved.status === 404) return "Regata nebo ročník neexistuje.";
   return `API odpovědělo ${odpoved.status}.`;
 }
 

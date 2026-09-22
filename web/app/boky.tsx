@@ -226,7 +226,7 @@ async function BokPoradi({ slug }: { slug: string }) {
 type Termin = ZavodShrnuti & { akce: boolean };
 
 /**
- * Co teprve bude: zastávky poháru i komunitní akce dohromady, podle data.
+ * Co teprve bude: regaty poháru i komunitní akce dohromady, podle data.
  * Odjeté a zrušené se nevypisují — kalendář v boku je o tom, kam se chystat.
  */
 async function nadchazejici(slug: string): Promise<Termin[]> {
@@ -282,7 +282,7 @@ export async function BokKalendar({
             <path d="M3.5 10h17M8 3v4M16 3v4M8 14h2.5M13.5 14H16M8 17.2h2.5" />
           </svg>
           <b>Kalendář {detail.rok} se připravuje</b>
-          <span>Zastávky a akce ročníku se tu objeví, jakmile budou vypsané.</span>
+          <span>Regaty a akce ročníku se tu objeví, jakmile budou vypsané.</span>
         </div>
       ) : (
         <ul className="bok-seznam">
@@ -336,7 +336,7 @@ async function BokNovinky({ slug }: { slug: string }) {
 /**
  * Plakát nejbližší akce — Filipova „grafika k akci". Přednost má komunitní
  * akce, protože kola poháru má čtenář v kalendáři vedle; když žádná není,
- * ukáže se nejbližší zastávka.
+ * ukáže se nejbližší regata.
  *
  * Fotka je z náhradního setu podle slugu, stejně jako u novinek: není
  * z té akce, a proto u ní nestojí popisek, jen kredit v patičce stránky.
@@ -350,7 +350,7 @@ async function BokAkce({ slug }: { slug: string }) {
 
   return (
     <section>
-      <h2 className="bok-nadpis">{termin.akce ? "Nejbližší akce" : "Nejbližší zastávka"}</h2>
+      <h2 className="bok-nadpis">{termin.akce ? "Nejbližší akce" : "Nejbližší regata"}</h2>
       <Link className="bok-plakat" href={`/serie/${slug}/zavody/${termin.slug}`}>
         <picture>
           <source type="image/avif" srcSet={`/foto/${fotka.soubor}-800.avif`} />

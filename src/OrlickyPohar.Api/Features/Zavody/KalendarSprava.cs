@@ -121,7 +121,7 @@ public class KalendarSprava(AppDbContext db)
             return (null, chyba);
 
         if (await db.Zavody.AnyAsync(z => z.SerieId == serieId && z.Slug == slug, ct))
-            return (null, $"Zastávka s adresou „{slug}“ už v ročníku je. Změň název.");
+            return (null, $"Regata s adresou „{slug}“ už v ročníku je. Změň název.");
 
         var zastavka = new Zavod
         {

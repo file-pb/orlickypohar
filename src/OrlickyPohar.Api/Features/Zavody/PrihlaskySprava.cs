@@ -80,7 +80,7 @@ public record StavUcastiVstup(StavUcasti Stav, string? Duvod = null);
 /// </summary>
 public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
 {
-    private const string NeniPoradatel = "Lodě na zastávku přihlašuje její pořadatel.";
+    private const string NeniPoradatel = "Lodě na regatu přihlašuje její pořadatel.";
 
     public async Task<PrihlaskyZastavkyDto> PrehledAsync(
         int zavodId, bool poradatel, CancellationToken ct, bool rozhodci = false)
@@ -229,7 +229,7 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
         var zaHodinu = await db.Ucasti.CountAsync(
             u => u.ZavodId == zavodId && u.PodanoV != null && u.PodanoV > ted.AddHours(-1), ct);
         if (zaHodinu >= VerejnaPrihlaska.NejvicZaHodinu)
-            return (null, "Přihlášek na tuhle zastávku teď přišlo moc. Zkus to prosím za chvíli.");
+            return (null, "Přihlášek na tuhle regatu teď přišlo moc. Zkus to prosím za chvíli.");
 
         var kategorie = string.IsNullOrWhiteSpace(vstup.Kategorie)
             ? await db.Kategorie.Where(k => k.SerieId == zavod.SerieId)
@@ -254,7 +254,7 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
             : await db.Ucasti.FirstOrDefaultAsync(u => u.ZavodId == zavodId && u.PrihlaskaId == prihlaska.Id, ct);
 
         if (ucast is not null && Prihlasky.VerejneViditelna(ucast.Stav))
-            return (null, $"Loď {prihlaska.Lod?.Nazev ?? vstup.Lod.Trim()} už je na zastávku přihlášená. "
+            return (null, $"Loď {prihlaska.Lod?.Nazev ?? vstup.Lod.Trim()} už je na regatu přihlášená. "
                           + "Se změnou se ozvi pořadateli.");
 
         if (ucast is null)

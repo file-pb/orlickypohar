@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Vyrobí ročník nanečisto pro vývoj, testy a produkční ukázku.
 
-**Jména lodí, kategorií a zastávek jsou skutečná** — vytažená z tabulek
-rozhodčího. **Pořadí v kategoriích na odjetých zastávkách je skutečné taky**
+**Jména lodí, kategorií a regat jsou skutečná** — vytažená z tabulek
+rozhodčího. **Pořadí v kategoriích na odjetých regatách je skutečné taky**
 (od 22. 9. 2026): bere se ze sešitu rozhodčího v
 `data/2026-poradi-rozhodci.json`, aby rozhodčí na webu viděl svá čísla
 a mohl je porovnat se sešitem. Vymyšlené zůstávají rozjížďky, časy,
@@ -24,7 +24,7 @@ stejný stav publikace:
 Verze v repozitáři je schválně nepublikovaná, aby se vymyšlená data nedala
 omylem vystavit; hlídají to `KontraktTests`. Na produkci ročník publikovaný
 **je** — ukazuje se u něj pruh, že data nejsou skutečná — takže nahrání
-doslovného souboru z `data/` by ho i všechny zastávky schovalo. Import stav
+doslovného souboru z `data/` by ho i všechny regaty schovalo. Import stav
 publikace přepisuje, takže tenhle rozdíl není kosmetika, ale výpadek webu.
 Proto je to přepínač, ne ruční úprava souboru před odesláním.
 """
@@ -34,12 +34,12 @@ from datetime import date, datetime, timedelta, timezone
 argumenty = argparse.ArgumentParser(description="Vyrobí vymyšlený ročník.")
 argumenty.add_argument(
     "--publikovat", action="store_true",
-    help="ročník i zastávky označí jako publikované a výsledek pošle na stdout")
+    help="ročník i regaty označí jako publikované a výsledek pošle na stdout")
 VOLBY = argumenty.parse_args()
 
 R = random.Random(20260426)
 
-# Skutečný sešit rozhodčího: body do seriálu po zastávkách, s odvozeným
+# Skutečný sešit rozhodčího: body do seriálu po regatách, s odvozeným
 # umístěním v kategorii a kódem (DNC, DSQ). Z něj se skládají rozjížďky.
 with open("data/2026-poradi-rozhodci.json", encoding="utf-8") as f:
     SESIT = json.load(f)
@@ -51,7 +51,7 @@ for soubor in ["data/2026-fxck-cancer.json"]:
         listina = json.load(f)
     LISTINY[listina["zavod"]] = listina
 
-# Zastávky, které se podle sešitu nejely (u všech lodí nuly).
+# Regaty, které se podle sešitu nejely (u všech lodí nuly).
 ZRUSENE = set(SESIT["zruseneVSesitu"])
 
 LODE = {
@@ -66,7 +66,7 @@ LODE = {
              "FAR  STAR III", "Zephyr"],
 }
 
-# Zastávky ročníku 2026 tak, jak je vede rozhodčí. Počet rozjížděk a typ
+# Regaty ročníku 2026 tak, jak je vede rozhodčí. Počet rozjížděk a typ
 # odpovídají tomu, co o nich víme z plánu; škrt se dopočítá pravidlem, ne
 # ručně — vypsaný sloupec se od pravidla jednou odchýlil a nikdo si toho
 # nevšiml (Radavský pohár měl tři rozjížďky a přitom škrt).
@@ -120,10 +120,10 @@ ZNAME = {
 
 
 def umisteni_ze_sesitu(nazev_zastavky):
-    """Kdo na zastávce byl a na kolikátém místě v kategorii, podle sešitu.
+    """Kdo na regatě byl a na kolikátém místě v kategorii, podle sešitu.
 
     Vrací {klic lodi: misto} pro lodě s umístěním a množinu diskvalifikovaných.
-    Neúčast (DNC) se nevrací — loď na zastávce nebyla.
+    Neúčast (DNC) se nevrací — loď na regatě nebyla.
     """
     if nazev_zastavky not in SESIT["zavody"]:
         return None, set()
@@ -167,7 +167,7 @@ for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerat
     # datum Vánoční regaty v tabulce výš je vymyšlené.
     zrusena = nazev in ZRUSENE
 
-    # Plánovaná zastávka se ještě nejela, takže po ní nemůžou být výsledky.
+    # Plánovaná regata se ještě nejela, takže po ní nemůžou být výsledky.
     # Nanejvýš je známo, kdo se chystá jet — účasti tedy zůstávají, rozjížďky
     # vzniknou až na vodě.
     odjety = mista is not None and not zrusena
@@ -179,7 +179,7 @@ for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerat
         # Kdo jel, říká sešit: lodě s umístěním a diskvalifikované.
         startuji = [l["klic"] for l in lode if l["klic"] in mista or l["klic"] in diskvalifikovane]
     else:
-        # Loď nejede všechny zastávky; u vánoční regaty jich jede výrazně míň.
+        # Loď nejede všechny regaty; u vánoční regaty jich jede výrazně míň.
         pravdepodobnost = 0.45 if typ == "fun" else 0.82
         startuji = [l["klic"] for l in lode if R.random() < pravdepodobnost]
         if len(startuji) < 6:
@@ -247,7 +247,7 @@ for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerat
                    "vyhodnoceni": vyhodnoceni, "koeficientDoSerie": koef,
                    # „Za účast ve 24hodinovce bodové zvýhodnění: 1. místo −1."
                    "posunDoSerie": -1 if dvoudenni else 0,
-                   # Zastávka, která je teprve v kalendáři, nemá výsledky.
+                   # Regata, která je teprve v kalendáři, nemá výsledky.
                    "stav": "Zruseny" if zrusena else "Odjety" if odjety else "Planovany",
                    "publikovano": VOLBY.publikovat,
                    "ucasti": ucasti, "rozjizdky": rozjizdky})
@@ -255,7 +255,7 @@ for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerat
 
 # --- Blog a novinky -------------------------------------------------------
 #
-# Články jsou VYMYŠLENÉ, stejně jako výsledky. Jména zastávek a pořadatelů
+# Články jsou VYMYŠLENÉ, stejně jako výsledky. Jména regat a pořadatelů
 # skutečná jsou, takže se tu nepíše nic, co by šlo číst jako tvrzení o tom,
 # co se doopravdy stalo — žádné citace, žádná jména lidí. Vítěze si text
 # bere z vygenerovaných výsledků, aby si novinka s tabulkou neodporovala:
@@ -265,15 +265,15 @@ for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerat
 # Do té doby slouží tyhle k tomu, aby se dalo vidět, jak blog vypadá plný.
 
 UVOD_SERIE = """\
-Devět zastávek, tři kategorie a jedno průběžné pořadí. Ročník začíná na
+Devět regat, tři kategorie a jedno průběžné pořadí. Ročník začíná na
 konci dubna Jarním větrem a končí Vánoční regatou; mezi tím se jede
 čtyřiadvacetihodinovka, Izolepa i klasické okruhové závody.
 
 Body sbírá loď, ne posádka — kormidelník se mezi závody mění, loď ne.
-Do celkového pořadí se počítá každá odjetá zastávka a nejhorší výsledky
+Do celkového pořadí se počítá každá odjetá regata a nejhorší výsledky
 se škrtají.
 
-Přihlášky přijímá pořadatel každé zastávky zvlášť. Kdo chce jet celý
+Přihlášky přijímá pořadatel každé regaty zvlášť. Kdo chce jet celý
 seriál, hlásí se do ročníku jednou a kategorii má na celý rok."""
 
 POZVANKA = """\
@@ -291,15 +291,15 @@ ZPRAVA = """\
 {rozjizdky}
 
 Kompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce
-zastávky, průběžné pořadí ročníku pak v tabulce seriálu."""
+regaty, průběžné pořadí ročníku pak v tabulce seriálu."""
 
 POLOCAS = """\
-Ročník má za sebou {odjeto} z {celkem} zastávek. Průběžné pořadí se od
+Ročník má za sebou {odjeto} z {celkem} regat. Průběžné pořadí se od
 konečného může ještě výrazně lišit — škrty nejhorších závodů se projeví
-až na konci a do té doby drží ve hře i lodě, které jednu zastávku
+až na konci a do té doby drží ve hře i lodě, které jednu regatu
 propásly.
 
-Nejbližší zastávkou je {dalsi}. Kdo ještě neodjel čtyři závody, má pořád
+Nejbližší regatou je {dalsi}. Kdo ještě neodjel čtyři závody, má pořád
 šanci se do popředí dostat; kdo odjel všechny, má naopak co ztratit."""
 
 
@@ -367,7 +367,7 @@ cekajici = [z for z in zavody if z["stav"] == "Planovany"]
 clanky.append({
     "slug": "rocnik-2026-zacina",
     "titulek": "Ročník 2026 začíná",
-    "perex": "Devět zastávek od dubna do prosince, tři kategorie a jedno "
+    "perex": "Devět regat od dubna do prosince, tři kategorie a jedno "
              "průběžné pořadí. Co je letos v kalendáři a jak se boduje.",
     "telo": UVOD_SERIE,
     "autor": "Orlický pohár",
@@ -380,7 +380,7 @@ for z in zavody:
     poradatel = z["poradatel"]
 
     if z["stav"] == "Odjety":
-        # Kategorie do titulku se střídá podle pořadí zastávky. Brát pořád
+        # Kategorie do titulku se střídá podle pořadí regaty. Brát pořád
         # tu první by dalo devět stejných nadpisů a blog by vypadal jako
         # jeden článek zkopírovaný devětkrát — což o rozložení stránky
         # neřekne nic.
@@ -395,7 +395,7 @@ for z in zavody:
             "slug": f'{z["slug"]}-vysledky',
             "titulek": f'{z["nazev"]}: {jmeno_lodi} '
                        + ("vyhrála celé pole" if cele_pole else f"bere kategorii {kategorie}"),
-            "perex": f'Zastávka je odjetá. Výsledky, body do poháru a co to '
+            "perex": f'Regata je odjetá. Výsledky, body do poháru a co to '
                      f'udělalo s průběžným pořadím.',
             "telo": ZPRAVA.format(
                 nazev=z["nazev"], vitez=jmeno_lodi,
@@ -445,11 +445,11 @@ clanky.sort(key=lambda c: c["publikovanoV"], reverse=True)
 data = {
     "_poznamka": (
         "JMÉNA I POŘADÍ V KATEGORIÍCH JSOU SKUTEČNÁ, ROZJÍŽĎKY VYMYŠLENÉ. Lodě, "
-        "kategorie, zastávky a pořadí v kategorii na každé odjeté zastávce pocházejí "
+        "kategorie, regaty a pořadí v kategorii na každé odjeté regatě pocházejí "
         "ze sešitu rozhodčího (data/2026-poradi-rozhodci.json, stav po Poháru Slunce); "
         "u FxCK Cancer jsou i rozjížďky skutečné (data/2026-fxck-cancer.json). Ostatní "
         "rozjížďky, časy, posádky a články jsou vygenerované, protože výsledkové "
-        "listiny zbylých zastávek nemáme. Ročník je "
+        "listiny zbylých regat nemáme. Ročník je "
         + ("PUBLIKOVANÝ — patří na produkci, kde u něj web ukazuje pruh, že "
            "data nejsou skutečná (proměnná UKAZKOVE_SERIE)."
            if VOLBY.publikovat else
@@ -477,7 +477,7 @@ else:
         f.write("\n")
 
 # Souhrn patří na stderr, aby nezašpinil ročník posílaný rourou dál.
-print(f"lodí: {len(lode)} | zastávek: {len(zavody)} | článků: {len(clanky)} | rozjížděk: "
+print(f"lodí: {len(lode)} | regat: {len(zavody)} | článků: {len(clanky)} | rozjížděk: "
       f"{sum(len(z['rozjizdky']) for z in zavody)} | výsledků: "
       f"{sum(len(r['vysledky']) for z in zavody for r in z['rozjizdky'])}"
       + (" | PUBLIKOVANÝ, na stdout" if VOLBY.publikovat else ""),

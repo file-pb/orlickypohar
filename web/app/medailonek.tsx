@@ -5,7 +5,7 @@ type Poradatel = NonNullable<ZavodDetail["medailonek"]>;
 
 /**
  * Má medailonek co říct nad rámec jména? Samotné jméno už stojí
- * v podtitulku zastávky — karta jen s ním a s ilustrační fotkou by byla
+ * v podtitulku regaty — karta jen s ním a s ilustrační fotkou by byla
  * prázdná krabice, která tvrdí, že o klubu něco víme. Vlastní fotka klubu
  * naproti tomu obsah je.
  */
@@ -50,7 +50,7 @@ function Ven({ href, children }: { href: string; children: React.ReactNode }) {
 }
 
 /**
- * Medailonek pořadatele na stránce zastávky (Filip, 15. 9. 2026): odkaz na
+ * Medailonek pořadatele na stránce regaty (Filip, 15. 9. 2026): odkaz na
  * web, popis, kontakt, mapa a obrázek.
  *
  * <b>Ukazuje se jen to, co je vyplněné.</b> Jméno a telefon jsou osobní

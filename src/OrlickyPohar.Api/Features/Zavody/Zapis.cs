@@ -46,7 +46,7 @@ public static class Zapis
     public static string? ProcNejdeNaZavod(StavZavodu stav) => stav switch
     {
         StavZavodu.Vypsany or StavZavodu.Odjety => null,
-        StavZavodu.Zruseny => "Zastávka je zrušená, výsledky nemá.",
+        StavZavodu.Zruseny => "Regata je zrušená, výsledky nemá.",
         _ => "Závod ještě není vypsaný. Výsledky se zapisují od vypsání.",
     };
 

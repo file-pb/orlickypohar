@@ -28,7 +28,7 @@ export default function Rocnik() {
       {data ? (
         <>
           <Nadpis
-            tlumene={`${data.zavody.length} zastávek · ${odjete} odjetých · ${data.prihlasky.length} lodí`}>
+            tlumene={`${data.zavody.length} regat · ${odjete} odjetých · ${data.prihlasky.length} lodí`}>
             {data.nazev}
           </Nadpis>
 

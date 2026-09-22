@@ -21,21 +21,21 @@ public static class PrihlaskyEndpoints
 
         g.MapGet("/", PrehledAsync)
             .Produces<PrihlaskyZastavkyDto>()
-            .WithSummary("Vypíše lodě ročníku i s tím, jak jsou přihlášené na zastávku")
-            .WithDescription("Pořadatel zastávky, nebo rozhodčí ročníku. Měnit smí jen pořadatel.");
+            .WithSummary("Vypíše lodě ročníku i s tím, jak jsou přihlášené na regatu")
+            .WithDescription("Pořadatel regaty, nebo rozhodčí ročníku. Měnit smí jen pořadatel.");
 
         g.MapPost("/", PrihlasAsync)
             .Produces<LodNaZastavceDto>(StatusCodes.Status201Created)
             .Produces<LodNaZastavceDto>()
-            .WithSummary("Přihlásí loď na zastávku — z ročníku, nebo novou")
+            .WithSummary("Přihlásí loď na regatu — z ročníku, nebo novou")
             .WithDescription(
-                "Pořadatel zastávky, od vypsání závodu. Nová loď se stává účastníkem " +
+                "Pořadatel regaty, od vypsání závodu. Nová loď se stává účastníkem " +
                 "ročníku v zadané kategorii. Druhé přihlášení téže lodi vrací 200.");
 
         g.MapPost("/{prihlaska:int}/startovne", StartovneAsync)
             .Produces<LodNaZastavceDto>()
             .WithSummary("Zapíše startovné lodi na zastávce")
-            .WithDescription("Pořadatel zastávky. Nic neblokuje — kdo přijede pozdě, zaplatí později.");
+            .WithDescription("Pořadatel regaty. Nic neblokuje — kdo přijede pozdě, zaplatí později.");
 
         g.MapDelete("/{prihlaska:int}", SmazAsync)
             .WithSummary("Smaže nesmyslnou přihlášku z webu")

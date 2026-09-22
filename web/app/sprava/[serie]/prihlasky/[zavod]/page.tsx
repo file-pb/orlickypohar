@@ -36,7 +36,7 @@ type Parametry = {
 };
 
 /**
- * Přihlášky lodí na jednu zastávku: kdo se chystá jet.
+ * Přihlášky lodí na jednu regatu: kdo se chystá jet.
  *
  * <b>Přihlašuje pořadatel</b>, loď sama ne (Filip, 14. 9. 2026). Celé
  * serverové a bez javascriptu jako zbytek administrace. Co s lodí jde
@@ -102,7 +102,7 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
       <>
         {hlava}
         <p className="prazdno">
-          K přihláškám téhle zastávky nemáš přístup. Spravuje je její pořadatel.
+          K přihláškám téhle regaty nemáš přístup. Spravuje je její pořadatel.
         </p>
       </>
     );
@@ -148,7 +148,7 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
       <p className="poznamka">
         {pocet(prihlasene.length)}, z toho{" "}
         {prihlasene.filter((l) => l.stav === "Potvrzena").length} potvrzených.{" "}
-        <Link href={`/sprava/${serie}/vysledky/${zavod}`}>Výsledky zastávky →</Link>
+        <Link href={`/sprava/${serie}/vysledky/${zavod}`}>Výsledky regaty →</Link>
       </p>
 
       {cekaji.length > 0 && (
@@ -162,7 +162,7 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
       )}
 
       {prihlasene.length === 0 ? (
-        <p className="prazdno">Na zastávku zatím není přihlášená žádná loď.</p>
+        <p className="prazdno">Na regatu zatím není přihlášená žádná loď.</p>
       ) : (
         <Tabulka serie={serie} zavod={zavod} lode={prihlasene} kategorie={prehled.kategorie} />
       )}
@@ -250,7 +250,7 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
               <button type="submit">Založit a přihlásit</button>
               <p className="poznamka">
                 Loď se tím stává účastníkem celého ročníku v kategorii, kterou
-                vybereš. Kolik bodů patří za zastávky, na kterých nebyla, se zatím
+                vybereš. Kolik bodů patří za regaty, na kterých nebyla, se zatím
                 nedopočítává — čeká to na rozhodčího.
               </p>
             </form>
@@ -323,7 +323,7 @@ function Tabulka({
                   <td>
                     <div className="stavy">
                       {/* Dokument popisuje stav včetně null, protože u lodi
-                          mimo zastávku chybí; v nabídce ale prázdný není. */}
+                          mimo regatu chybí; v nabídce ale prázdný není. */}
                       {l.mozneStavy
                         .filter((na): na is StavUcasti => na != null && !potrebujeDuvod(na))
                         .map((na) => (

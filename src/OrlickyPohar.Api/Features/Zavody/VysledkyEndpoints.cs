@@ -30,20 +30,20 @@ public static class VysledkyEndpoints
 
         g.MapGet("/", ZastavkyAsync)
             .Produces<List<ZastavkaVysledkyDto>>()
-            .WithSummary("Vypíše zastávky ročníku i s tím, kolik výsledků je venku")
+            .WithSummary("Vypíše regaty ročníku i s tím, kolik výsledků je venku")
             .WithDescription(
                 "Rozcestník. Vyžaduje roli rozhodčího v ročníku, nebo organizátora " +
                 "aspoň na jedné zastávce.");
 
         g.MapGet("/{zavod}", PrehledAsync)
             .Produces<PrehledVysledkuDto>()
-            .WithSummary("Vypíše rozjížďky zastávky i s tím, co s nimi přihlášený smí");
+            .WithSummary("Vypíše rozjížďky regaty i s tím, co s nimi přihlášený smí");
 
         g.MapPost("/{zavod}/rozjizdky", PridejRozjizdkuAsync)
             .Produces<RozjizdkaSpravaRadek>(StatusCodes.Status201Created)
             .WithSummary("Přidá zastávce další rozjížďku")
             .WithDescription(
-                "Pořadatel zastávky, od vypsání závodu. Nová rozjížďka je návrh " +
+                "Pořadatel regaty, od vypsání závodu. Nová rozjížďka je návrh " +
                 "a na webu není.");
 
         g.MapGet("/{zavod}/rozjizdky/{cislo:int}", ZapisAsync)
@@ -51,7 +51,7 @@ public static class VysledkyEndpoints
             .WithSummary("Vypíše zápis rozjížďky: všechny lodě ročníku a jejich výsledky")
             .WithDescription(
                 "Vidí ho každý, kdo smí na výsledky ročníku. Měnit ho smí jen " +
-                "pořadatel zastávky, a jen v návrhu nebo po vrácení k revizi.");
+                "pořadatel regaty, a jen v návrhu nebo po vrácení k revizi.");
 
         g.MapPut("/{zavod}/rozjizdky/{cislo:int}/vysledky", UlozAsync)
             .Produces<ZapisRozjizdkyDto>()

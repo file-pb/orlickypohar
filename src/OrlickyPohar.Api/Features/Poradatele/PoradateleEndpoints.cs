@@ -26,15 +26,15 @@ public static class PoradateleEndpoints
             .Produces<PoradatelSpravaDto>()
             .WithSummary("Medailonek pořadatele i s tím, jestli ho přihlášený smí upravit")
             .WithDescription(
-                "Rozhodčí ročníku, nebo organizátor aspoň jedné zastávky v ročníku. " +
-                "Pořadatel musí v ročníku pořádat aspoň jednu zastávku.");
+                "Rozhodčí ročníku, nebo organizátor aspoň jedné regaty v ročníku. " +
+                "Pořadatel musí v ročníku pořádat aspoň jednu regatu.");
 
         g.MapPut("/{poradatel}", UlozAsync)
             .Produces<PoradatelSpravaDto>()
             .WithSummary("Uloží medailonek pořadatele")
             .WithDescription(
-                "Rozhodčí ročníku, nebo organizátor zastávky, kterou pořadatel pořádá. " +
-                "Záznam je společný všem ročníkům; přejmenování přepíše jméno na všech jeho zastávkách.");
+                "Rozhodčí ročníku, nebo organizátor regaty, kterou pořadatel pořádá. " +
+                "Záznam je společný všem ročníkům; přejmenování přepíše jméno na všech jeho regatách.");
 
         // Formulář nese token v hlavičce, ne v cookie, takže ochrana proti
         // podvrženému formuláři z cizí stránky tu nemá co chránit.

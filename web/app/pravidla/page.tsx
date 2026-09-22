@@ -60,7 +60,7 @@ export default function Pravidla() {
       <p>
         Jednotlivé regaty se bodují podle svých pravidel a do seriálu se z nich dopočítá
         pořadí v kategorii. Do ročníkové tabulky nejde součet bodů závodu, ale{" "}
-        <b>pořadí v kategorii mínus jedna</b>. Vítěz zastávky má nulu, druhý jedničku.
+        <b>pořadí v kategorii mínus jedna</b>. Vítěz regaty má nulu, druhý jedničku.
         Vyhrává nejnižší součet.
       </p>
       <p>
@@ -83,10 +83,10 @@ export default function Pravidla() {
 
       <h2>Škrty a shoda bodů</h2>
       <p>
-        Nejhorší výsledky ročníku se škrtají: od devíti zastávek <b>dva</b>. Škrtnout se dá
+        Nejhorší výsledky ročníku se škrtají: od devíti regat <b>dva</b>. Škrtnout se dá
         i dvacítka za diskvalifikaci; při stejně špatných výsledcích se škrtá ten dřívější.
         V tabulce jsou proto dvě čísla, součet a součet po škrtu,
-        a škrtnutá zastávka je přeškrtnutá.
+        a škrtnutá regata je přeškrtnutá.
       </p>
       <p>Když mají dvě lodě po škrtech stejně bodů, rozhoduje:</p>
       <ol>

@@ -12,11 +12,11 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Výsledky — správa" };
 
 /**
- * Rozcestník výsledků: která zastávka čeká na co.
+ * Rozcestník výsledků: která regata čeká na co.
  *
- * Vlastní stránka, ne seznam rozjížděk všech zastávek pod sebou — rozjížděk
+ * Vlastní stránka, ne seznam rozjížděk všech regat pod sebou — rozjížděk
  * je v ročníku přes třicet a odsud se vybírá, kam jít, ne co udělat. Čísla
- * u zastávky stačí sečtená; jsou to jediné dvě věci, kvůli kterým se sem
+ * u regaty stačí sečtená; jsou to jediné dvě věci, kvůli kterým se sem
  * chodí: <b>co ještě není venku</b> a <b>co se vrátilo k revizi</b>.
  */
 export default async function SpravaVysledku({
@@ -77,10 +77,10 @@ export default async function SpravaVysledku({
   return (
     <>
       {hlava}
-      <p className="podtitulek">Vyber zastávku, jejíž rozjížďky chceš posunout.</p>
+      <p className="podtitulek">Vyber regatu, jejíž rozjížďky chceš posunout.</p>
 
       {zastavky.length === 0 ? (
-        <p className="prazdno">Ročník zatím nemá jedinou zastávku.</p>
+        <p className="prazdno">Ročník zatím nemá jedinou regatu.</p>
       ) : (
         <ul className="seznam">
           {zastavky.map((z) => (

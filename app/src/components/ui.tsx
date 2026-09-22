@@ -41,7 +41,7 @@ export function Stav({ stav }: { stav: StavZavodu }) {
 export function procNejsouVysledky(stav: StavZavodu): string {
   switch (stav) {
     case 'Zruseny':
-      return 'Zastávka se nekonala. Do poháru se nepočítá.';
+      return 'Regata se nekonala. Do poháru se nepočítá.';
     case 'Planovany':
       return 'Zatím je to jen termín v kalendáři. Vypsání závodu teprve přijde.';
     case 'Potvrzeny':

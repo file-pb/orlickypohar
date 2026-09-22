@@ -6,7 +6,7 @@ export const metadata = { title: "Stránka neexistuje" };
  * Vlastní 404. Bez ní ukazuje Next svoji anglickou hlášku, což je na
  * českém veřejném webu vidět hned.
  *
- * Nepublikovaný ročník a nepublikovaná zastávka **taky končí tady** —
+ * Nepublikovaný ročník a nepublikovaná regata **taky končí tady** —
  * schválně: „existuje, ale neukážu" je taky informace a nemá se prozrazovat.
  */
 export default function Nenalezeno() {

@@ -31,7 +31,7 @@ type Parametry = {
 };
 
 /**
- * Kalendář ročníku: zakládání zastávek, termíny a stavy.
+ * Kalendář ročníku: zakládání regat, termíny a stavy.
  *
  * <b>Celé serverové a bez javascriptu</b> — formulář odešle prohlížeč,
  * odpověď je nová stránka. Chodí se sem zřídka a často z telefonu na břehu;
@@ -141,8 +141,8 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
 
       {prehled.smiZalozit && (
         <>
-          <h2>{naAkcich ? "Nová akce" : "Nová zastávka"}</h2>
-          {/* Jen název a termín jsou povinné. Nová zastávka je vždycky
+          <h2>{naAkcich ? "Nová akce" : "Nová regata"}</h2>
+          {/* Jen název a termín jsou povinné. Nová regata je vždycky
               plánovaná a nezveřejněná — potvrdit termín i pustit ji ven
               jsou dvě další rozhodnutí. */}
           <form action={zalozAkce} className="formular">
@@ -154,17 +154,17 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
             </button>
             <p className="poznamka">
               {naAkcich
-                ? "Akce vznikne jako plánovaná a veřejnost ji zatím neuvidí. Do poháru se nepočítá a nemá výsledky ani přihlášky lodí; psát se k ní dá jako k zastávce."
-                : "Zastávka vznikne jako plánovaná a veřejnost ji zatím neuvidí."}
+                ? "Akce vznikne jako plánovaná a veřejnost ji zatím neuvidí. Do poháru se nepočítá a nemá výsledky ani přihlášky lodí; psát se k ní dá jako k regatě."
+                : "Regata vznikne jako plánovaná a veřejnost ji zatím neuvidí."}
             </p>
           </form>
         </>
       )}
 
-      <h2>{naAkcich ? "Akce" : "Zastávky"}</h2>
+      <h2>{naAkcich ? "Akce" : "Regaty"}</h2>
       {zastavky.length === 0 ? (
         <p className="prazdno">
-          {naAkcich ? "Ročník zatím nemá jedinou komunitní akci." : "Ročník zatím nemá jedinou zastávku."}
+          {naAkcich ? "Ročník zatím nemá jedinou komunitní akci." : "Ročník zatím nemá jedinou regatu."}
         </p>
       ) : (
         <ul className="seznam">
@@ -180,7 +180,7 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
 }
 
 /**
- * Pole zastávky. Tentýž tvar při zakládání i úpravě — jsou to tytéž údaje
+ * Pole regaty. Tentýž tvar při zakládání i úpravě — jsou to tytéž údaje
  * a dva různé formuláře by se rozešly v tom, co je povinné.
  */
 function Pole({ zastavka, akce }: { zastavka?: ZastavkaRadek; akce?: boolean }) {
@@ -246,7 +246,7 @@ function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek 
         <span className={zrusena ? "skrtnute" : undefined}>{zastavka.nazev}</span>
         <Stav stav={zastavka.stav} akce={akce} />
         {zastavka.typ && <span className="stitek">{zastavka.typ}</span>}
-        {/* Nezveřejněná zastávka není chyba, ale musí být vidět na první
+        {/* Nezveřejněná regata není chyba, ale musí být vidět na první
             pohled: v kalendáři na webu prostě není. */}
         {!zastavka.publikovano && <span className="stitek neverejne">nezveřejněno</span>}
       </div>
@@ -254,7 +254,7 @@ function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek 
       <div className="detail">
         {datum(zastavka.datum, zastavka.datumKonce)}
         {zastavka.poradatel && ` · ${zastavka.poradatel}`}
-        {/* Medailonek je u klubu, ne u zastávky, ale kalendář je jediné
+        {/* Medailonek je u klubu, ne u regaty, ale kalendář je jediné
             místo, odkud se k pořadateli dá dojít. */}
         {zastavka.poradatelSlug && zastavka.smiMedailonek && (
           <>
@@ -265,7 +265,7 @@ function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek 
         {zastavka.puvodniDatum && (
           <span className="presun"> · přesunuto z {datum(zastavka.puvodniDatum)}</span>
         )}
-        {/* Odsud se chodí na přihlášky a výsledky té zastávky. Kalendář je
+        {/* Odsud se chodí na přihlášky a výsledky té regaty. Kalendář je
             rozcestník ročníku, takže je to jediné místo, kde se ty cesty
             nabízejí samy. Komunitní akce nemá ani jedno. */}
         {!akce && (
@@ -279,7 +279,7 @@ function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek 
       </div>
 
       {/* Posun stavu rovnou ze seznamu: nejčastější úkon je „potvrdit
-          termín" nebo „odjeto", a ten nemá stát otevírání zastávky. */}
+          termín" nebo „odjeto", a ten nemá stát otevírání regaty. */}
       <div className="stavy">
         {zastavka.mozneStavy.map((na) => (
           <form key={na} action={stavAkce}>
@@ -305,7 +305,7 @@ function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek 
               type="submit"
               title={
                 zastavka.publikovano
-                  ? "Zmizí z webu. Stav zastávky se tím nemění."
+                  ? "Zmizí z webu. Stav regaty se tím nemění."
                   : "Objeví se v kalendáři na webu i s tím, v jakém je stavu."
               }
             >
@@ -336,10 +336,10 @@ function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek 
   );
 }
 
-/** Věta po zápisu. Skládá se tady, protože jména zastávek zná stránka, ne akce. */
+/** Věta po zápisu. Skládá se tady, protože jména regat zná stránka, ne akce. */
 function hotovo(stav: string, co?: string, nastav?: StavZavodu, druh?: DruhZastavky) {
   const akce = druh === "Akce";
-  const jmeno = co ? `„${co}"` : akce ? "Akce" : "Zastávka";
+  const jmeno = co ? `„${co}"` : akce ? "Akce" : "Regata";
 
   switch (stav) {
     case "zalozeno":
@@ -355,7 +355,7 @@ function hotovo(stav: string, co?: string, nastav?: StavZavodu, druh?: DruhZasta
     case "venku":
       return `${jmeno} je v kalendáři na webu.`;
     case "stazeno":
-      return `${jmeno} z webu zmizela. Stav zastávky se tím nezměnil.`;
+      return `${jmeno} z webu zmizela. Stav regaty se tím nezměnil.`;
     default:
       return "Hotovo.";
   }

@@ -56,7 +56,7 @@ public record ZapisVstup(IReadOnlyList<ZapisRadekVstup> Radky);
 public class ZapisSprava(AppDbContext db)
 {
     private const string NeniPoradatel =
-        "Výsledky zapisuje pořadatel zastávky. Rozhodčí je ověřuje, ale nemění.";
+        "Výsledky zapisuje pořadatel regaty. Rozhodčí je ověřuje, ale nemění.";
 
     public async Task<ZapisRozjizdkyDto> NactiAsync(
         Rozjizdka rozjizdka, bool poradatel, CancellationToken ct)

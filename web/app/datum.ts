@@ -2,7 +2,7 @@
  * Data česky na jednom místě.
  *
  * Vzniklo to podle pravidla z CLAUDE.md: sdílet se začíná až u **třetí**
- * kopie. `datum` byl doslova týž ve stránce ročníku i zastávky a novinky
+ * kopie. `datum` byl doslova týž ve stránce ročníku i regaty a novinky
  * by ho okopírovaly potřetí — teď je to jeden slovník, ne abstrakce.
  * Obě funkce se sem přestěhovaly beze změny chování; sjednocovat je do
  * jedné je práce navíc, která by při stěhování mohla něco tiše posunout.
@@ -41,7 +41,7 @@ export function denAMesic(iso: string) {
  * Datum se schválně počítá v pražském pásmu, ne v UTC ani v pásmu čtenáře.
  * API vydává okamžik v UTC, takže večerní novinka z 20:30 letního času leží
  * v 18:30 UTC — a u té z půl jedné po půlnoci by prostý řez řetězce ukázal
- * včerejšek. Zastávky se jedou na Orlíku, takže pražský den je ten správný.
+ * včerejšek. Regaty se jedou na Orlíku, takže pražský den je ten správný.
  */
 export function datumClanku(iso: string) {
   return new Date(iso).toLocaleDateString(CESKY, {

@@ -26,7 +26,7 @@ export default function Rocniky() {
         <Karta key={s.slug} onPress={() => router.push(`/serie/${s.slug}`)}>
           <Text style={{ color: t.text, fontWeight: '600', fontSize: 16 }}>{s.nazev}</Text>
           <Text style={{ color: t.tlumeny, marginTop: 2 }}>
-            {s.rok} · {s.pocetZavodu} zastávek
+            {s.rok} · {s.pocetZavodu} regat
           </Text>
         </Karta>
       ))}

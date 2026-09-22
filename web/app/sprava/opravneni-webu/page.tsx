@@ -15,7 +15,7 @@ const nazev = (role: string) => ROLE_WEBU.find((r) => r.role === role)?.nazev ??
 
 /**
  * Role na celém webu (od 22. 9. 2026). Menší bratr obrazovky oprávnění
- * ročníku: bez zastávek a jen dvě role, editor a správce webu. Serverová
+ * ročníku: bez regat a jen dvě role, editor a správce webu. Serverová
  * a bez javascriptu jako zbytek správy.
  */
 export default async function OpravneniWebu({ searchParams }: Parametry) {

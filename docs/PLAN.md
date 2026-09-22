@@ -908,6 +908,11 @@ přesun složky a jedno workflow, ne přepis.
 
 ## Pojmenování v kódu
 
+**Na webu a v appce „regata", ne „zastávka"** (Filip, 22. 9. 2026: „jako
+je v jachtingu obvyklé"). Týká se textů pro lidi — v kódu zůstává `Zavod`
+a v adresách `/zavody/…`, přejmenovat je by rozbilo odkazy i API. Plán
+a starší komentáře slovo „zastávka" místy drží; znamená totéž.
+
 **Doménové entity česky bez diakritiky, všechno ostatní anglicky.**
 
 Rozjížďka není *heat* ani *race*, přihláška do ročníku není *entry* ani

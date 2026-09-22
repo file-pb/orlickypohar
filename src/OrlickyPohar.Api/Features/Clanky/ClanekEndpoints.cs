@@ -44,7 +44,7 @@ public static class ClanekEndpoints
         g.MapGet("/", SeznamAsync)
             .WithSummary("Vrátí publikované články ročníku, od nejnovějšího")
             .WithDescription(
-                "Parametrem zavod se výpis zúží na jednu zastávku, parametrem " +
+                "Parametrem zavod se výpis zúží na jednu regatu, parametrem " +
                 "limit na daný počet nejnovějších.");
 
         g.MapGet("/{clanek}", DetailAsync).WithSummary("Vrátí jeden článek i s tělem");

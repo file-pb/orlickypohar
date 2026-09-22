@@ -17,7 +17,7 @@ export type TerminKalendare = {
 
 export const TERMINU_V_BOKU = 3;
 
-/** Dnešek v pražském pásmu jako YYYY-MM-DD — zastávky se jedou na Orlíku. */
+/** Dnešek v pražském pásmu jako YYYY-MM-DD — regaty se jedou na Orlíku. */
 export const dnesVPraze = () =>
   new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Prague" });
 

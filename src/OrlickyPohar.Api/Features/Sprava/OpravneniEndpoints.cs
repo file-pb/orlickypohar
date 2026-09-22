@@ -36,7 +36,7 @@ public static class OpravneniEndpoints
         // pro administraci jediný typ.
         g.MapGet("/", PrehledAsync)
             .Produces<PrehledOpravneniDto>()
-            .WithSummary("Vypíše oprávnění ročníku i zastávky, na které jdou udělit")
+            .WithSummary("Vypíše oprávnění ročníku i regaty, na které jdou udělit")
             .WithDescription(
                 "Vyžaduje roli správce, nebo rozhodčího v tom ročníku. Co smí udělit, " +
                 "říká SmiNaRocnik. Ucty — účty, které se kdy přihlásily — dostane " +
@@ -110,7 +110,7 @@ public static class OpravneniEndpoints
         CancellationToken ct)
     {
         if (telo.Zavod is not null)
-            return Results.BadRequest(new { error = "Právo na celý web se nedá omezit na zastávku." });
+            return Results.BadRequest(new { error = "Právo na celý web se nedá omezit na regatu." });
 
         if (Udeleni.ProcNejdeNaWebu(telo.Role) is { } duvod)
             return Results.BadRequest(new { error = duvod });

@@ -34,7 +34,7 @@ public static class Prihlasky
     public static string? ProcNejdeNaZavod(StavZavodu stav) => stav switch
     {
         StavZavodu.Vypsany or StavZavodu.Odjety => null,
-        StavZavodu.Zruseny => "Zastávka je zrušená, lodě se na ni nepřihlašují.",
+        StavZavodu.Zruseny => "Regata je zrušená, lodě se na ni nepřihlašují.",
         _ => "Závod ještě není vypsaný. Lodě se přihlašují od vypsání.",
     };
 
