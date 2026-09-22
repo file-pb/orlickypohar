@@ -107,6 +107,7 @@ internal static class ImportHandler
         serie.Nazev = v.Nazev;
         serie.Rok = v.Rok;
         serie.Publikovano = v.Publikovano;
+        serie.PocetSkrtu = v.PocetSkrtu;
         await db.SaveChangesAsync(ct);
         return serie;
     }
@@ -271,6 +272,7 @@ internal static class ImportHandler
             zavod.PocetSkrtu = v.PocetSkrtu;
             zavod.Vyhodnoceni = v.Vyhodnoceni;
             zavod.KoeficientDoSerie = v.KoeficientDoSerie;
+            zavod.PosunDoSerie = v.PosunDoSerie;
             zavod.Publikovano = v.Publikovano;
             zavod.Stav = v.Stav;
             zavod.PuvodniDatum = v.PuvodniDatum;

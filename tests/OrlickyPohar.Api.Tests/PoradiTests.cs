@@ -153,7 +153,7 @@ public class PoradiTests(PostgresFixture fixture)
     }
 
     [Fact]
-    public async Task Lod_ktera_nestartovala_nema_ze_zastavky_nic()
+    public async Task Lod_ktera_nestartovala_dostane_pocet_lodi_kategorie()
     {
         await Nahraj(Rocnik("poradi-neucast"));
         var poradi = await NactiPoradi("poradi-neucast");
@@ -161,13 +161,16 @@ public class PoradiTests(PostgresFixture fixture)
         var ce = poradi.Kategorie.Single(k => k.Kategorie == "Race").Lode
             .Single(l => l.Lod.StartsWith("Cé"));
 
-        // Prázdné místo, ne nula: neúčast není vítězství.
-        Assert.Equal([2, null], ce.Zastavky);
-        Assert.Equal(2, ce.Body);
+        // Na druhou zastávku Cé nepřijela a v RACE tam byly dvě lodě.
+        // Pravidla rozhodčího (22. 9. 2026): neúčast = počet lodí ve třídě.
+        Assert.Equal([2, 2], ce.Zastavky);
+        Assert.Equal([null, "DNC"], ce.Kody);
+        Assert.Equal(4, ce.Body);
 
-        // Jediný výsledek se neškrtá — jinak by loď s jedním startem vedla.
+        // Při stejných bodech se škrtá neúčast, ne umístění.
+        Assert.Equal([1], ce.Skrtnute);
         Assert.Equal(2, ce.BodyPoSkrtu);
-        Assert.Null(ce.Skrtnuto);
+        Assert.Equal(2, ce.Skrtnuto);
         Assert.Equal(3, ce.PoradiPoSkrtu);
     }
 

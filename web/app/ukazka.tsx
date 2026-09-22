@@ -1,7 +1,8 @@
 /**
  * Proužek nad hlavičkou, který nahlas říká, že data nejsou skutečná.
  *
- * Ročník nanečisto má **skutečná jména lodí a vymyšlené výsledky**. Jediné,
+ * Ročník nanečisto má **skutečná jména lodí a pořadí v kategoriích ze sešitu
+ * rozhodčího** (od 22. 9. 2026), ale vymyšlené rozjížďky. Jediné,
  * co to jinak prozrazuje, je „(nanečisto)" v názvu — a to je málo ve chvíli,
  * kdy se odkaz pošle pořadatelům. První vlna připomínek by jinak byla o tom,
  * že něčí loď má blbé pořadí, což je zpětná vazba, kterou nikdo nechce.
@@ -24,7 +25,8 @@ export function PruhUkazky() {
 
   return (
     <p className="ukazka">
-      <b>Data nejsou skutečná.</b> Jména lodí a zastávek sedí, ale výsledky jsou vygenerované
+      <b>Ukázková data.</b> Pořadí v seriálu je podle sešitu rozhodčího, jednotlivé rozjížďky
+      jsou vygenerované
     </p>
   );
 }

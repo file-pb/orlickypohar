@@ -82,10 +82,11 @@ export default async function Poradi({ params, searchParams }: Parametry) {
 
       <p className="poznamka">
         Vítěz zastávky má v seriálu nula bodů, druhý jeden a tak dál — vyhrává tedy
-        nejnižší součet. Škrtá se jeden nejhorší závod; podle sloupce{" "}
+        nejnižší součet. Nejhorší závody se škrtají (přeškrtnuté číslo); podle sloupce{" "}
         <b>po škrtu</b> se řadí pořadí, celkový součet je vedle, protože rozhodčí
-        vede obojí. Prázdné místo znamená, že loď na zastávce nestartovala a nic si
-        z ní neodvezla. <Link href="/pravidla">Jak se body počítají →</Link>
+        vede obojí. <code>DNC</code> znamená, že loď na zastávce nebyla a dostala tolik
+        bodů, kolik lodí její kategorie jelo; <code>DSQ</code> je diskvalifikace
+        v regatě za 20 bodů. <Link href="/pravidla">Jak se body počítají →</Link>
       </p>
     </Boky>
   );
@@ -131,11 +132,25 @@ function Tabulka({
                 </td>
                 <td className="body">{l.bodyPoSkrtu}</td>
                 <td className="cislo">{l.body}</td>
-                {l.zastavky.map((b, i) => (
-                  <td key={i} className="cislo">
-                    {b ?? "—"}
-                  </td>
-                ))}
+                {l.zastavky.map((b, i) => {
+                  // Kód říká, odkud číslo je, když to není umístění. Starší
+                  // API pole `kody` a `skrtnute` nevydávalo, proto `?.`.
+                  const kod = l.kody?.[i];
+                  const skrtnuto = l.skrtnute?.includes(i);
+                  return (
+                    <td
+                      key={i}
+                      className={skrtnuto ? "cislo skrtnuto" : "cislo"}
+                      title={
+                        [kod && POPIS_KODU[kod], skrtnuto && "škrtnuto"].filter(Boolean).join(", ") ||
+                        undefined
+                      }
+                    >
+                      {b ?? "—"}
+                      {kod && <sup className="kod-serie">{kod}</sup>}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
@@ -144,6 +159,11 @@ function Tabulka({
     </div>
   );
 }
+
+const POPIS_KODU: Record<string, string> = {
+  DNC: "na zastávce nebyla: tolik bodů, kolik lodí kategorie jelo",
+  DSQ: "diskvalifikace v regatě: 20 bodů",
+};
 
 /** Hlavička sloupce musí být úzká — celý název zastávky by tabulku roztáhl. */
 function zkratka(nazev: string) {

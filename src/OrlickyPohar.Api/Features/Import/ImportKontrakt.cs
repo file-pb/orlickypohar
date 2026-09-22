@@ -63,7 +63,8 @@ public record ZavodVstup(
     StavZavodu Stav = StavZavodu.Odjety,
     DateOnly? PuvodniDatum = null,
     // Starší soubory druh neznají — všechno v nich jsou kola poháru.
-    DruhZastavky Druh = DruhZastavky.Pohar);
+    DruhZastavky Druh = DruhZastavky.Pohar,
+    int PosunDoSerie = 0);
 
 /// <summary>
 /// Článek ročníku nebo zastávky. <c>Zavod</c> je slug zastávky ze stejného
@@ -96,7 +97,9 @@ public record SerieVstup(
     bool Publikovano = true,
     // Ročníky nahrané před fází 6 blog nemají a jejich soubory se kvůli tomu
     // nepřepisují — chybějící seznam proto znamená „žádné články", ne chybu.
-    IReadOnlyList<ClanekVstup>? Clanky = null);
+    IReadOnlyList<ClanekVstup>? Clanky = null,
+    // Starší soubory počet škrtů neznají; jeden platil do 22. 9. 2026.
+    int PocetSkrtu = 1);
 
 /// <summary>
 /// Kolik řádků import založil, kolik jich našel a kolik smazal. Druhý běh

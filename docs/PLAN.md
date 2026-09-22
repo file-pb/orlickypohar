@@ -157,8 +157,9 @@ Caprice má proto za závod 13 + 12 = 25 bodů — každá rozjížďka se poč�
 **Do seriálu: vítěz má 0 bodů.** Do ročníkové tabulky nejde součet bodů
 závodu, ale **pořadí v kategorii mínus jedna**. V kategorii nad 7 m skončila
 Mamba první a v seriálu má za tenhle závod 0, Pezi druhá má 1, Depresso
-šesté má 5. Kdo nestartoval, dostává (počet dokončivších + 1) − 1, tedy 13
-při třinácti lodích.
+šesté má 5. Kdo na zastávce nebyl, dostává **počet lodí své kategorie, které
+na zastávce byly**, tedy 13 při třinácti lodích. Od 22. 9. 2026 to potvrzují
+pravidla rozhodčího, viz *Pravidla seriálu od rozhodčího*.
 
 **Proč to takhle je:** obě stupnice vznikly nezávisle a obě jsou nízkobodové,
 jen jedna počítá od jedné a druhá od nuly. Kdo to naprogramuje jako jedno
@@ -503,6 +504,10 @@ oběma totéž** (přihlášených + 1). Pravidla to připouštějí — A4 plat
 takže buď má seriál vlastní úpravu, nebo se v sešitu boduje po svém.
 Neměníme nic: kód stojí na skutečné listině. Je to ale **třetí otázka na
 rozhodčího** a teď se dá položit i s odkazem na pravidlo.
+
+**Odpovědi dorazily 22. 9. 2026**, viz *Pravidla seriálu od rozhodčího*:
+DNC se počítá ze zastávky, zrušené zastávky jsou jen zápis a DNF proti DNS
+je věc pravidel každé regaty.
 
 ## Úvodní stránka
 
@@ -1118,6 +1123,14 @@ Platí pravidlo platformy č. 5: **vlastní interní `UserId`** a tabulka
 
 | Otázka | Odpověď |
 |---|---|
+| Z čeho se počítá DNC | **ze zastávky:** počet lodí kategorie, které na ní byly (rozhodčí, 22. 9. 2026) |
+| Nuly u zrušených zastávek | jen zápis „nejelo se", do bodů ani rozstřelu nevstupují |
+| Proč má DNF jiné body než DNS | regata se boduje **podle svých pravidel**; seriál přebírá jen pořadí v kategorii |
+| 24hodinovka | **bonus**: 1. místo −1, 2. místo 0, 3. místo 1; neúčast bez bonusu |
+| Diskvalifikace | **20 bodů** do seriálu, dá se škrtnout; hodnota je zatím pracovní |
+| Škrty v závodě | 4 odjeté rozjížďky = 1 škrtačka (potvrzeno) |
+| Škrty v seriálu | při 9 zastávkách **2** (číslo na ročníku) |
+| Shoda bodů | počet 1., 2., … míst po škrtech, pak poslední společně dokončená regata |
 | Nositel bodů v seriálu | **loď**, ve výsledcích se uvádí jméno majitele |
 | Kategorie | **loď jede celý rok v jedné** → kategorie patří celoroční přihlášce |
 | Škrty | liší se závod od závodu → pole na `Zavod`, ne na sérii |
@@ -1125,6 +1138,76 @@ Platí pravidlo platformy č. 5: **vlastní interní `UserId`** a tabulka
 | Workflow | všechny stavy, správce smí přeskočit dopředu |
 | Různá pravidla závodů | čísla a přepínač na `Zavod`, viz bodování výš |
 | Vyhodnocení 24h | celé pole dohromady, ale **do seriálu po kategoriích** |
+
+## Pravidla seriálu od rozhodčího (22. 9. 2026)
+
+Zdroj: Miloš Zvonař (YC Písek), *Pravidla pro výpočet pořadí po kategoriích
+v Orlické sérii* (PDF), sešit *Pořadí Orlická série 2026-2.xlsx* po Poháru
+Slunce a jeho zprávy Filipovi z 22. 9. 2026. V PDF jsou navíc dvě fotky
+ručních listin Race Champagne 2024 (Colins YC) jako ukázka škrtání — pro
+výpočet z nich nic neplyne.
+
+**Co pravidla říkají:**
+
+- Tři kategorie: do 7 m, nad 7 m, Race. **Regaty se bodují podle svých
+  vlastních pravidel** (po kategoriích, celkově, dřevěné lodě…), do série se
+  vždy dopočte pořadí v kategorii.
+- Nízkobodový systém: 1. místo 0, 2. místo 1, …
+- **Neúčast: tolik bodů, kolik je lodí ve třídě** — v sešitu to znamená lodí
+  kategorie, které na zastávce byly. Sedí na všech zastávkách.
+- **Diskvalifikace v regatě 20 bodů** (závažné porušení pravidel, nesplnění
+  alternativního trestu nebo splnění bez svědka, dál podle ZPJ). Miloš k tomu:
+  tresty dávají ZPJ, **body si „nějak vymyslel" a může to být špatně**.
+  Filip: varianty si necháme navrhnout později. Do té doby platí 20.
+- **24hodinovka: bonus** −1 / 0 / 1 / … Neúčast na ní bonus nemá (sešit:
+  nad 7 m jelo osm lodí, nepřítomní mají 8).
+- **Shoda po škrtech:** 1. počet prvních, druhých, … míst; 2. lepší umístění
+  v poslední regatě, kterou obě lodě dokončily na bodovaném místě a žádné
+  z nich se neškrtá.
+- **Škrty** (zprávy): „4 odjeté rozjížďky – 1 škrtačka" potvrzuje pravidlo
+  pro závod; „9 odjetých – 2 škrtačky" platí pro ročník.
+
+**Jak je to v kódu:**
+
+| Pravidlo | Kde |
+|---|---|
+| neúčast = lodí kategorie na zastávce | `SerieBodovani.BodyDoSerie`, lodě z přihlášek do ročníku |
+| bonus 24hodinovky | `Zavod.PosunDoSerie` (−1), nový sloupec; nastavuje se importem |
+| DSQ = 20 | `DSQ` ve **všech** rozjížďkách zastávky; příznak na účasti doplníme s rozhodčím (Filip, 22. 9.) |
+| počet škrtů | `Serie.PocetSkrtu`, nový sloupec, výchozí 1, ročník 2026 má 2 |
+| rozstřel | `SerieBodovani.Rozstrel`: porovnává **umístění, ne body** — −1 ze 24hodinovky je první místo stejně jako 0 jinde |
+
+API pořadí vydává navíc `kody` (DNC, DSQ) a `skrtnute` (indexy zastávek),
+aditivně. Web škrtnuté zastávky přeškrtne a kód ukáže u čísla.
+
+**Ověření:** `SerieTests` proti sešitu po Poháru Slunce. Součet sedí u všech
+37 lodí, dva škrty u 34, pořadí po škrtu všude kromě pěti řádků:
+
+- LUNA (−1, sešit 0), DEPRESSO (10, sešit 13), MICHELLE (32, sešit 36) —
+  aritmetika v sešitu; CASSIOPEIA a SPRUNZEL se posunou za MICHELLE.
+- **JOY a Charlotte III** mají po škrtech obě 7. Charlotte má jedno první
+  místo, JOY žádné, takže podle pravidla vede Charlotte; sešit má JOY před ní.
+
+Opravy dat od rozhodčího: JOY na FxCK Cancer má 2 (v sešitu prázdná buňka,
+je to neúčast). Pohár Slunce nad 7 m má u neúčasti 15, správně 13 — „dvě
+lodě přijely jen teď, už jsem je nechtěl ručně propisovat". Náš výpočet dává 13.
+
+**Ročník nanečisto** (`tools/gen-mock.py`) od 22. 9. skládá rozjížďky tak,
+aby pořadí v kategorii na každé odjeté zastávce bylo **skutečné ze sešitu**
+— rozhodčí na webu vidí svá čísla. Rozjížďky, časy a posádky zůstávají
+vymyšlené. Radavská regata je zrušená, Pohár Slunce odjetý, loď SANDY
+(v pozdějších sešitech není) vypadla.
+
+**Zbývá na rozhodčího:**
+
+1. JOY před Charlotte III — jiné kritérium, nebo přehlédnutí?
+2. Zephyr na 24hodinovce: Filip 8. 9. „nejela", sešit jí dává 2. Podle
+   pravidla by neúčast byla 5 (pět lodí RACE).
+3. ČERVENÉ CAFE: odstoupila, nebo diskvalifikace? Sešit má 20.
+4. Od kolika zastávek se škrtá dvakrát (po pěti odjetých byl v sešitu jeden
+   škrt).
+5. Vánoční regata má v sešitu nuly jako zrušená, v kalendáři je 12. 12.
+6. Body za diskvalifikaci a tresty — varianty později.
 
 ## Co ukázala první skutečná směrnice
 
@@ -1189,15 +1272,15 @@ Nejde tedy o volbu mezi celým polem a kategoriemi — počítá se obojí a ka�
 slouží k něčemu jinému: celkové pořadí pro vyhlášení závodu, pořadí
 v kategorii pro seriál.
 
-**Škrtá se jeden nejhorší závod.** Tím je zodpovězená první otevřená otázka.
+**Škrtá se jeden nejhorší závod** (stav sešitu po pěti odjetých; od 22. 9. 2026 jsou škrty dva). Tím je zodpovězená první otevřená otázka.
 Sloupec „Body přepočet" odpovídá součtu bez nejhoršího výsledku: PEZI má
 0+12+1 = 13 a přepočet 1, tedy bez dvanáctky; M1 má 44 a přepočet 31, tedy
 bez třináctky.
 
 **Co z dat čistě nevychází a patří se zeptat:**
 
-1. **24hodinovka je bonusová, ne násobená.** Filip slyšel, že „se počítá
-   dvakrát". Data ale ukazují posun celého pole o jedničku dolů, ne násobek:
+1. **24hodinovka je bonusová, ne násobená.** *Potvrzeno 22. 9. 2026
+   pravidly rozhodčího.* Filip slyšel, že „se počítá dvakrát". Data ale ukazují posun celého pole o jedničku dolů, ne násobek:
    vítěz −1, druhý 0, třetí 1 — a stejně ve všech třech kategoriích.
 
    Koeficient 2 by dal druhému 2 body a osmému 14; bonus mu dá 0 a 6.
@@ -1209,8 +1292,18 @@ bez třináctky.
    jak je: hodnotami, které rozhodčí spočítal.
 2. **Několik řádků škrtu neodpovídá.** LUNA i MAMBA mají přepočet vyšší,
    než by drhnutí nejhoršího dalo. Je na −1 zvláštní pravidlo, nebo je to
-   překlep?
-3. ~~**ČERVENÉ CAFE má ve 24hodinovce 20.**~~ **Nejspíš vysvětleno.**
+   překlep? *Vysvětleno 22. 9. 2026:* ročník škrtá **dva** závody, ne jeden.
+   S dvěma škrty sedí MAMBA, SULA i FILOZEP; zbylé neshody jsou překlepy
+   v sešitu (viz *Pravidla seriálu od rozhodčího*).
+3. ~~**ČERVENÉ CAFE má ve 24hodinovce 20.**~~ **Vysvětleno 22. 9. 2026,
+   a jinak, než stojí níž:** podle pravidel rozhodčího je to **diskvalifikace
+   v regatě za pevných 20 bodů**. SPRUNZEL má stejnou dvacítku z Poháru
+   Slunce. Úvaha níž (místo za posledním z celého pole) je tím vyvrácená;
+   nechávám ji tu jako doklad, jak snadno se ze samotného čísla vyčte špatný
+   původ. **Pořád otevřené:** Filip 8. 9. slyšel, že ČERVENÉ CAFE
+   „odstoupila", sešit ji ale vede jako diskvalifikovanou.
+
+   Původní úvaha:
    24hodinovka se jede a vyhodnocuje jako **jeden celek přes celé pole**
    (Filip, s výhradou „tuším"). Odstoupivší loď proto dostala místo za
    posledním z celé flotily, ne ze své kategorie — odtud dvacítka.
@@ -2234,9 +2327,11 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
    i s `docker-compose.yml`. Háček přenáší **jen compose** — cokoliv
    dalšího, co služba potřebuje (třeba konfigurace nginxu), musí jet
    v image.
-4. **Otázky na rozhodčího** — tři, vypsané v oddílu *Co k tomu říkají
-   závodní pravidla*: z čeho se počítá DNC, co znamenají nuly u zrušených
-   zastávek a proč má DNF jiné body než DNS. Dopočet neúčasti na nich stojí.
+4. **Pravidla seriálu jsou od 22. 9. 2026 v kódu** (oddíl *Pravidla
+   seriálu od rozhodčího*): neúčast, bonus 24hodinovky, dvacítka za
+   diskvalifikaci, dva škrty, rozstřel. Zbývají drobné otázky vypsané
+   tamtéž; na dvacítce a hodnocení trestů visí fáze 5 (protesty
+   a penalizace) — Filip, 22. 9.: varianty si necháme navrhnout později.
 5. **Fáze 5 je skoro hotová** (stav k 14. 9. 2026). Hotové: udělování
    oprávnění (i rozhodčím na zastávku), kalendář zastávek, přihlášky lodí,
    workflow a zápis výsledků, psaní novinek. Protesty a penalizace čekají
@@ -2264,10 +2359,10 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
 
 Nic z toho nebrání založit projekt a napsat první migraci.
 
-1. ~~**Škrtají se v seriálu celé závody?**~~ **Zodpovězeno daty:** ano,
-   škrtá se jeden nejhorší závod. Zbývá potvrdit, jestli je to vždy jeden,
-   nebo se počet mění s délkou ročníku — a jak se škrt chová k záporným
-   bodům ze 24hodinovky.
+1. ~~**Škrtají se v seriálu celé závody?**~~ **Zodpovězeno:** ano. Při
+   devíti zastávkách dva (rozhodčí, 22. 9. 2026); počet je číslo na ročníku
+   (`Serie.PocetSkrtu`). Škrtnout se dá i −1 ze 24hodinovky a dvacítka za
+   diskvalifikaci.
 2. ~~**Seznam závodů a jejich typy.**~~ **Zodpovězeno daty:** ročník 2026 má
    devět zastávek — Jarní vítr, Radavská regata, 24hodinovka, Vánoční regata,
    Izolepa, FxCK Cancer, Radavský pohár, O pohár Vltavy, Pohár Slunce — a tři

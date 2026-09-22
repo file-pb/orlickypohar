@@ -2046,6 +2046,8 @@ export interface components {
             poradiPoSkrtu: number;
             /** Format: int32 */
             skrtnuto: null | number;
+            kody: (null | string)[];
+            skrtnute: number[];
         };
         PoradiSerieDto: {
             slug: string;

@@ -397,6 +397,8 @@ td.kod { color: var(--tlumeny); font-variant-numeric: tabular-nums; }
 /* Kód závodních pravidel u bodů: body platí, kód říká, odkud jsou. */
 .znacka { font-size: 0.7rem; color: var(--tlumeny); margin-left: 0.3rem; letter-spacing: 0.03em; }
 td.skrtnuto { color: var(--tlumeny); text-decoration: line-through; }
+/* Kód u bodů v seriálu (DNC, DSQ): malý, aby nepřebil číslo. */
+.kod-serie { font-size: 0.6em; margin-left: 0.15em; color: var(--tlumeny); letter-spacing: 0.02em; }
 td.cislo { font-variant-numeric: tabular-nums; }
 .mimo-serii { color: var(--tlumeny); font-weight: 400; }
 

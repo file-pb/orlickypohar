@@ -15,13 +15,22 @@ public record RozjizdkaVstup(int Cislo, IReadOnlyList<VysledekVstup> Vysledky);
 /// <summary>Body lodi v jedné rozjížďce, už v rámci její kategorie.</summary>
 public record BodyVRozjizdce(string Lod, int Cislo, int Body, bool Skrtnuto);
 
-/// <summary>Výsledek lodi v závodě: součet bodů a pořadí v kategorii.</summary>
+/// <summary>
+/// Výsledek lodi v závodě: součet bodů a pořadí v kategorii.
+/// <para>
+/// <c>Diskvalifikovana</c> znamená diskvalifikaci <b>v celém závodě</b>, tedy
+/// <c>DSQ</c> ve všech rozjížďkách, které vstoupily do výpočtu. Do seriálu
+/// z toho jde pevných 20 bodů, ne pořadí. Diskvalifikace v jedné rozjížďce
+/// z několika je běžný kód a boduje se uvnitř závodu.
+/// </para>
+/// </summary>
 public record VysledekZavodu(
     string Lod,
     string Kategorie,
     int Body,
     int Poradi,
-    IReadOnlyList<BodyVRozjizdce> Rozjizdky);
+    IReadOnlyList<BodyVRozjizdce> Rozjizdky,
+    bool Diskvalifikovana = false);
 
 public static class Bodovani
 {
@@ -101,6 +110,15 @@ public static class Bodovani
         // Body po lodích: (loď → rozjížďka → body)
         var podleLodi = new Dictionary<string, (string Kategorie, List<BodyVRozjizdce> Body)>();
 
+        // Loď, která nemá v žádné rozjížďce nic jiného než DSQ. Příznak na
+        // účasti by byl přesnější; doplní se, až ho rozhodčí potvrdí.
+        var diskvalifikovane = rozjizdky
+            .SelectMany(r => r.Vysledky)
+            .GroupBy(v => v.Lod)
+            .Where(g => g.All(v => v.Kod == KodVysledku.Dsq))
+            .Select(g => g.Key)
+            .ToHashSet();
+
         foreach (var rozjizdka in rozjizdky)
         {
             foreach (var kategorie in rozjizdka.Vysledky.GroupBy(v => v.Kategorie))
@@ -137,7 +155,8 @@ public static class Bodovani
                 lod, kategorie,
                 oznacene.Where(b => !b.Skrtnuto).Sum(b => b.Body),
                 Poradi: 0,
-                oznacene));
+                oznacene,
+                diskvalifikovane.Contains(lod)));
         }
 
         // Pořadí uvnitř kategorie. Při shodě bodů rozhoduje lepší jednotlivý

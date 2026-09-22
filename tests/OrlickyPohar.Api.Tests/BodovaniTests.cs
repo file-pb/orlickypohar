@@ -351,10 +351,9 @@ public class BodovaniTests
     [Fact]
     public void Lod_s_kodem_dostane_do_serie_poradi_ze_sve_kategorie()
     {
-        // Doklad z sešitu rozhodčího: ČERVENÉ CAFE si ze 24hodinovky odneslo
-        // dvacítku z celkového pořadí, protože loď s kódem nemá pořadí
-        // v kategorii a ruční přepočet neměl pravidlo. V seriálu je to víc
-        // než součet čtyř běžných závodů.
+        // I u závodu na celé pole jde do seriálu pořadí z kategorie. Dvacítka
+        // ČERVENÉHO CAFE ze 24hodinovky s tím nesouvisí — je to diskvalifikace,
+        // viz Diskvalifikace_v_zavode_je_dvacet_bodu.
         var zavod = Bodovani.VysledkyZavodu(
         [
             new RozjizdkaVstup(1,
@@ -371,6 +370,170 @@ public class BodovaniTests
         // Třetí v RACE, ne patnáctá v poli.
         Assert.Equal(2, doSerie["odstoupila"]);
     }
+
+    // --- Pravidla seriálu podle rozhodčího (22. 9. 2026) ---
+
+    [Fact]
+    public void Na_24hodinovce_ma_vitez_minus_jedna()
+    {
+        // „Za účast ve 24hodinovce bodové zvýhodnění: 1. místo −1 bod,
+        // 2. místo 0 bodů, 3. místo 1." Posun, ne násobek.
+        var zavod = Bodovani.VysledkyZavodu([Rozjizdka(1, "první", "druhá", "třetí")]);
+
+        var doSerie = SerieBodovani.BodyDoSerie(zavod, posun: -1).ToDictionary(v => v.Lod);
+
+        Assert.Equal(-1, doSerie["první"].Body);
+        Assert.Equal(0, doSerie["druhá"].Body);
+        Assert.Equal(1, doSerie["třetí"].Body);
+        Assert.Equal(1, doSerie["první"].Misto);
+    }
+
+    [Fact]
+    public void Neucast_dostane_pocet_lodi_kategorie_na_zastavce()
+    {
+        // „Loď se neúčastnila regaty: stejný počet bodů, jako je lodí ve
+        // třídě." Sešit to dokládá u všech zastávek: nad 7 m na Jarním větru
+        // jelo osm lodí a kdo nejel, má osm. Počítá se kategorie, ne celé pole.
+        var zavod = Bodovani.VysledkyZavodu(
+        [
+            new RozjizdkaVstup(1,
+            [
+                Dojel("race1", "Race", 1),
+                Dojel("nad1", "Nad7m", 2),
+                Dojel("nad2", "Nad7m", 3),
+                Kod("nad3", "Nad7m", KodVysledku.Dnf),
+            ]),
+        ]);
+
+        var doSerie = SerieBodovani.BodyDoSerie(zavod,
+            [("race1", "Race"), ("race2", "Race"), ("nad1", "Nad7m"), ("doma", "Nad7m")])
+            .ToDictionary(v => v.Lod);
+
+        Assert.Equal(3, doSerie["doma"].Body);
+        Assert.Equal("DNC", doSerie["doma"].Kod);
+        Assert.Null(doSerie["doma"].Misto);
+        Assert.Equal(1, doSerie["race2"].Body);
+        Assert.Equal(6, doSerie.Count);   // čtyři na vodě a dvě neúčasti
+    }
+
+    [Fact]
+    public void Neucast_na_24hodinovce_bonus_nema()
+    {
+        // Sešit: nad 7 m jelo osm lodí (−1 až 6) a kdo nejel, má 8, ne 7.
+        var zavod = Bodovani.VysledkyZavodu([Rozjizdka(1, "a", "b")]);
+
+        var doSerie = SerieBodovani.BodyDoSerie(zavod, [("doma", "Race")], posun: -1)
+            .ToDictionary(v => v.Lod);
+
+        Assert.Equal(2, doSerie["doma"].Body);
+    }
+
+    [Fact]
+    public void Diskvalifikace_v_zavode_je_dvacet_bodu()
+    {
+        // „Diskvalifikace v regatě 20 bodů." Doloženo dvakrát: ČERVENÉ CAFE
+        // na 24hodinovce, SPRUNZEL na Poháru Slunce. Platí i s bonusem.
+        var zavod = Bodovani.VysledkyZavodu(
+        [
+            new RozjizdkaVstup(1,
+            [
+                Dojel("a", "Race", 1),
+                Kod("dsq", "Race", KodVysledku.Dsq),
+            ]),
+        ]);
+
+        var doSerie = SerieBodovani.BodyDoSerie(zavod, posun: -1).ToDictionary(v => v.Lod);
+
+        Assert.Equal(20, doSerie["dsq"].Body);
+        Assert.Equal("DSQ", doSerie["dsq"].Kod);
+        Assert.Null(doSerie["dsq"].Misto);
+    }
+
+    [Fact]
+    public void Diskvalifikace_v_jedne_rozjizdce_z_vice_je_bezny_kod()
+    {
+        var zavod = Bodovani.VysledkyZavodu(
+        [
+            new RozjizdkaVstup(1, [Dojel("a", "Race", 1), Kod("b", "Race", KodVysledku.Dsq)]),
+            new RozjizdkaVstup(2, [Dojel("b", "Race", 1), Dojel("a", "Race", 2)]),
+        ]);
+
+        var doSerie = SerieBodovani.BodyDoSerie(zavod).ToDictionary(v => v.Lod);
+
+        Assert.False(zavod.Single(v => v.Lod == "b").Diskvalifikovana);
+        Assert.Equal(1, doSerie["b"].Body);
+    }
+
+    [Fact]
+    public void Skrta_se_zadany_pocet_nejhorsich_zastavek()
+    {
+        var poradi = SerieBodovani.Poradi(
+            [new LodVSerii("a", [Z(0), Z(5), Z(3), Z(1)])], pocetSkrtu: 2).Single();
+
+        Assert.Equal(9, poradi.Body);
+        Assert.Equal(1, poradi.BodyPoSkrtu);
+        Assert.Equal(8, poradi.Skrtnuto);
+        Assert.Equal([1, 2], poradi.Skrtnute);
+    }
+
+    [Fact]
+    public void Shodu_rozhoduje_pocet_lepsich_umisteni()
+    {
+        // Obě po 2 bodech. „a" má dvě první místa, „b" jen jedno.
+        var poradi = SerieBodovani.Poradi(
+        [
+            new LodVSerii("b", [Z(0), Z(1), Z(1)]),
+            new LodVSerii("a", [Z(0), Z(0), Z(2)]),
+        ], pocetSkrtu: 0).ToDictionary(p => p.Lod);
+
+        Assert.Equal(1, poradi["a"].PoradiPoSkrtu);
+        Assert.Equal(2, poradi["b"].PoradiPoSkrtu);
+    }
+
+    [Fact]
+    public void Pri_stejnych_umistenich_rozhoduje_posledni_spolecne_dokoncena_regata()
+    {
+        // Stejná umístění v jiném pořadí. Poslední zastávku „a" nejela (DNC),
+        // takže rozhoduje předposlední, kde byla „b" lepší.
+        var poradi = SerieBodovani.Poradi(
+        [
+            new LodVSerii("a", [Z(0), Z(1), Z(2, misto: null)]),
+            new LodVSerii("b", [Z(1), Z(0), Z(2)]),
+        ], pocetSkrtu: 0).ToDictionary(p => p.Lod);
+
+        // „b" má o jedno umístění víc (třetí místo na poslední), a to
+        // rozhodne už v prvním kritériu. Bez něj rozhoduje druhá zastávka.
+        Assert.Equal(1, poradi["b"].PoradiPoSkrtu);
+
+        var bezTretiho = SerieBodovani.Poradi(
+        [
+            new LodVSerii("a", [Z(0), Z(1)]),
+            new LodVSerii("b", [Z(1), Z(0)]),
+        ], pocetSkrtu: 0).ToDictionary(p => p.Lod);
+
+        Assert.Equal(1, bezTretiho["b"].PoradiPoSkrtu);
+        Assert.Equal(2, bezTretiho["a"].PoradiPoSkrtu);
+    }
+
+    [Fact]
+    public void Skrtnuta_regata_v_rozstrelu_nerozhoduje()
+    {
+        // Poslední zastávku má „b" škrtnutou, takže rozhoduje předposlední,
+        // kde byla lepší „a".
+        var poradi = SerieBodovani.Poradi(
+        [
+            new LodVSerii("a", [Z(1), Z(0), Z(9), Z(0)]),
+            new LodVSerii("b", [Z(0), Z(1), Z(0), Z(9)]),
+        ], pocetSkrtu: 1).ToDictionary(p => p.Lod);
+
+        Assert.Equal(1, poradi["a"].BodyPoSkrtu);
+        Assert.Equal(1, poradi["b"].BodyPoSkrtu);
+        Assert.Equal(1, poradi["a"].PoradiPoSkrtu);
+    }
+
+    /// <summary>Body ze zastávky; místo se odvodí jako body + 1, pokud není dané.</summary>
+    private static BodyZeZastavky Z(int body, int? misto = -1) =>
+        new(body, misto == -1 ? body + 1 : misto);
 
     /// <summary>Dvanáct lodí, které dojely, v kategorii nad 7 m.</summary>
     private static VysledekVstup[] Dokoncilo(int kolik) =>

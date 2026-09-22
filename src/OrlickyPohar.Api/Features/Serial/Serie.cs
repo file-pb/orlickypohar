@@ -19,6 +19,16 @@ public class Serie
     /// <summary>Publikované ročníky vidí čtenář, nepublikované jen správce.</summary>
     public bool Publikovano { get; set; }
 
+    /// <summary>
+    /// Kolik nejhorších zastávek se v průběžném pořadí škrtá.
+    /// <para>
+    /// Je to číslo na ročníku, ne pravidlo v kódu: sešit rozhodčího škrtal
+    /// po pěti odjetých zastávkách jednu a po sedmi dvě, a jak počet
+    /// s délkou ročníku roste, zatím nikdo nenapsal (stav 22. 9. 2026).
+    /// </para>
+    /// </summary>
+    public int PocetSkrtu { get; set; } = 1;
+
     public List<Kategorie> Kategorie { get; set; } = [];
 }
 
