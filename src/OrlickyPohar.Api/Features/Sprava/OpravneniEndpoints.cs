@@ -61,6 +61,106 @@ public static class OpravneniEndpoints
                 "Posledního správce ročníku odebrat nelze.");
     }
 
+    /// <summary>
+    /// Role na celém webu (od 22. 9. 2026): editor webu píše obecné články,
+    /// správce webu smí všechno ve všech ročnících. Uděluje a odebírá jen
+    /// správce webu. Prvního správce webu pustí importní token, dokud žádný
+    /// není — stejný bootstrap jako u ročníku.
+    /// </summary>
+    public static void MapSpravaOpravneniWebu(this IEndpointRouteBuilder app)
+    {
+        var g = app.MapGroup("/sprava/web/opravneni").WithTags("Správa");
+
+        g.MapGet("/", WebPrehledAsync)
+            .Produces<PrehledWebuDto>()
+            .WithSummary("Vypíše oprávnění na celý web a účty, kterým jde roli dát")
+            .WithDescription("Vyžaduje roli správce celého webu.");
+
+        g.MapPost("/", WebUdelAsync)
+            .Produces<OpravneniRadek>(StatusCodes.Status201Created)
+            .Produces<OpravneniRadek>()
+            .WithSummary("Udělí roli na celý web podle e-mailu")
+            .WithDescription(
+                "Jen editor nebo správce. Vyžaduje roli správce webu; prvního " +
+                "správce webu pustí i hlavička " + ImportniToken.Hlavicka + ", dokud žádný není.");
+
+        g.MapDelete("/{id:int}", WebOdeberAsync)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Odebere jedno oprávnění na celý web")
+            .WithDescription("Vyžaduje roli správce webu. Posledního správce webu odebrat nelze.");
+    }
+
+    private static readonly Pozadavek SpravceWebu = new(Role.Spravce, null);
+
+    private static async Task<IResult> WebPrehledAsync(
+        ClaimsPrincipal kdo, Rozsahy rozsahy, OpravneniSprava sprava, CancellationToken ct)
+    {
+        if (!await rozsahy.SmiAsync(kdo, SpravceWebu, ct)) return Nesmi(kdo);
+        return Results.Ok(new PrehledWebuDto(await sprava.SeznamAsync(null, ct), await sprava.UctyAsync(ct)));
+    }
+
+    private static async Task<IResult> WebUdelAsync(
+        UdeleniVstup telo,
+        ClaimsPrincipal kdo,
+        HttpContext ctx,
+        Rozsahy rozsahy,
+        OpravneniSprava sprava,
+        IConfiguration config,
+        ILoggerFactory logu,
+        CancellationToken ct)
+    {
+        if (telo.Zavod is not null)
+            return Results.BadRequest(new { error = "Právo na celý web se nedá omezit na zastávku." });
+
+        if (Udeleni.ProcNejdeNaWebu(telo.Role) is { } duvod)
+            return Results.BadRequest(new { error = duvod });
+
+        if (!await rozsahy.SmiAsync(kdo, SpravceWebu, ct))
+        {
+            var maSpravce = await sprava.MaSpravceAsync(null, ct);
+
+            if (!Udeleni.BootstrapProjde(maSpravce, telo.Role, false)
+                || ImportniToken.Over(ctx, config) != StavTokenu.Sedi)
+                return Nesmi(kdo);
+
+            logu.CreateLogger("Sprava").LogWarning(
+                "Bootstrap: první správce celého webu se uděluje na importní token.");
+        }
+
+        var (stav, radek) = await sprava.UdelAsync(null, null, telo.Email, telo.Role, ct);
+
+        return stav switch
+        {
+            StavUdeleni.UcetNeni => Results.NotFound(new
+            {
+                error = $"Na e-mail {telo.Email} se zatím nikdo nepřihlásil. "
+                        + "Účet vzniká až prvním přihlášením, rolí se pozvat nedá.",
+            }),
+            StavUdeleni.VicUctu => Results.Conflict(new
+            {
+                error = $"E-mail {telo.Email} patří víc účtům. Roli je potřeba udělit ručně.",
+            }),
+            StavUdeleni.JizMel => Results.Ok(radek),
+            _ => Results.Created($"/sprava/web/opravneni/{radek!.Id}", radek),
+        };
+    }
+
+    private static async Task<IResult> WebOdeberAsync(
+        int id, ClaimsPrincipal kdo, Rozsahy rozsahy, OpravneniSprava sprava, CancellationToken ct)
+    {
+        if (!await rozsahy.SmiAsync(kdo, SpravceWebu, ct)) return Nesmi(kdo);
+
+        return await sprava.OdeberAsync(null, id, ct) switch
+        {
+            StavOdebrani.Neni => Results.NotFound(),
+            StavOdebrani.PosledniSpravce => Results.Conflict(new
+            {
+                error = "Poslední správce webu se odebrat nedá. Nejdřív udělte roli někomu jinému.",
+            }),
+            _ => Results.NoContent(),
+        };
+    }
+
     private static async Task<IResult> PrehledAsync(
         string serie, ClaimsPrincipal kdo, Rozsahy rozsahy, OpravneniSprava sprava, CancellationToken ct)
     {

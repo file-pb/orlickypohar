@@ -79,6 +79,147 @@ public static class ClankySpravaEndpoints
             .WithSummary("Odebere hlavní obrázek článku a smaže jeho soubory");
     }
 
+    /// <summary>
+    /// Obecné články mimo ročník (od 22. 9. 2026). Stejné chování jako
+    /// články ročníku, jen rozsah je celý web: psát smí editor webu nebo
+    /// správce webu, nikdo s právem jen na ročník.
+    /// </summary>
+    public static void MapSpravaObecnychClanku(this IEndpointRouteBuilder app)
+    {
+        var g = app.MapGroup("/sprava/web/clanky").WithTags("Správa");
+
+        g.MapGet("/", WebPrehledAsync)
+            .Produces<PrehledObecnychClankuDto>()
+            .WithSummary("Vypíše obecné články mimo ročník")
+            .WithDescription("Vyžaduje roli editora celého webu. Smazané se nevypisují.");
+
+        g.MapPost("/", WebZalozAsync)
+            .Produces<ClanekSpravaRadek>(StatusCodes.Status201Created)
+            .WithSummary("Založí obecný článek jako koncept");
+
+        g.MapGet("/{clanek}", WebDetailAsync)
+            .Produces<ClanekDto>()
+            .WithSummary("Vrátí obecný článek k úpravě, včetně konceptu a skrytého");
+
+        g.MapPut("/{clanek}", WebUpravAsync)
+            .Produces<ClanekSpravaRadek>()
+            .WithSummary("Uloží úpravu obecného článku");
+
+        g.MapPost("/{clanek}/stav", WebStavAsync)
+            .Produces<ClanekSpravaRadek>()
+            .WithSummary("Přepne stav obecného článku");
+
+        g.MapPut("/{clanek}/obrazek", WebNastavObrazekAsync)
+            .DisableAntiforgery()
+            .WithMetadata(new RequestSizeLimitAttribute(Nahravani.NejvicBajtu + 1024 * 1024))
+            .Produces<ObrazekDto>()
+            .WithSummary("Nahraje hlavní obrázek obecného článku a nahradí předchozí");
+
+        g.MapDelete("/{clanek}/obrazek", WebOdeberObrazekAsync)
+            .WithSummary("Odebere hlavní obrázek obecného článku a smaže jeho soubory");
+    }
+
+    private static readonly Pozadavek EditorWebu = new(Role.Editor, null);
+
+    private static async Task<IResult> WebPrehledAsync(
+        ClaimsPrincipal kdo, Rozsahy rozsahy, ClankySprava sprava, CancellationToken ct)
+    {
+        if (!await rozsahy.SmiAsync(kdo, EditorWebu, ct)) return Nesmi(kdo);
+        return Results.Ok(new PrehledObecnychClankuDto(await sprava.VypisAsync(null, true, [], ct)));
+    }
+
+    private static async Task<IResult> WebZalozAsync(
+        ClanekVstupSprava vstup, ClaimsPrincipal kdo, Rozsahy rozsahy, ClankySprava sprava, CancellationToken ct)
+    {
+        if (!await rozsahy.SmiAsync(kdo, EditorWebu, ct)) return Nesmi(kdo);
+
+        // Zastávka u obecného článku nedává smysl — žádná k němu nepatří.
+        var (clanek, chyba) = await sprava.ZalozAsync(null, null, vstup with { Zavod = null }, ct);
+        if (chyba is not null) return Results.BadRequest(new { error = chyba });
+
+        return Results.Created($"/sprava/web/clanky/{clanek!.Slug}", await RadekAsync(sprava, clanek, ct));
+    }
+
+    private static async Task<IResult> WebDetailAsync(
+        string clanek, ClaimsPrincipal kdo, Rozsahy rozsahy, ClankySprava sprava, IUloziste uloziste, CancellationToken ct)
+    {
+        if (await ObecnySPravem(clanek, kdo, rozsahy, sprava, ct) is not { } nalezeny)
+            return Results.NotFound();
+
+        return Results.Ok(new ClanekDto(
+            nalezeny.Slug, nalezeny.Titulek, nalezeny.Perex, nalezeny.Telo, nalezeny.Autor,
+            nalezeny.PublikovanoV, null, null, Nahravani.Dto(nalezeny.Fotka, uloziste.VerejnaAdresa)));
+    }
+
+    private static async Task<IResult> WebUpravAsync(
+        string clanek, ClanekVstupSprava vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, ClankySprava sprava, CancellationToken ct)
+    {
+        if (await ObecnySPravem(clanek, kdo, rozsahy, sprava, ct) is not { } nalezeny)
+            return Results.NotFound();
+
+        if (await sprava.UpravAsync(nalezeny, vstup with { Zavod = null }, null, ct) is { } chyba)
+            return Results.BadRequest(new { error = chyba });
+
+        return Results.Ok(await RadekAsync(sprava, nalezeny, ct));
+    }
+
+    private static async Task<IResult> WebStavAsync(
+        string clanek, StavVstup vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, ClankySprava sprava, CancellationToken ct)
+    {
+        if (await ObecnySPravem(clanek, kdo, rozsahy, sprava, ct) is not { } nalezeny)
+            return Results.NotFound();
+
+        if (await sprava.PrepniStavAsync(nalezeny, vstup.Stav, ct) is { } chyba)
+            return Results.BadRequest(new { error = chyba });
+
+        return Results.Ok(await RadekAsync(sprava, nalezeny, ct));
+    }
+
+    private static async Task<IResult> WebNastavObrazekAsync(
+        string clanek, [FromForm] FotkaFormular formular, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, ClankySprava sprava, FotkySprava fotky, CancellationToken ct)
+    {
+        if (await ObecnySPravem(clanek, kdo, rozsahy, sprava, ct) is not { } nalezeny)
+            return Results.NotFound();
+        if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
+
+        if (!fotky.Pripraveno)
+            return Results.Json(new { error = FotkySprava.Vypnuto }, statusCode: StatusCodes.Status503ServiceUnavailable);
+
+        var (obrazek, chyba) = await fotky.NastavAsync(nalezeny, formular, uzivatel, ct);
+        return obrazek is null ? Results.BadRequest(new { error = chyba }) : Results.Ok(obrazek);
+    }
+
+    private static async Task<IResult> WebOdeberObrazekAsync(
+        string clanek, ClaimsPrincipal kdo, Rozsahy rozsahy, ClankySprava sprava, FotkySprava fotky, CancellationToken ct)
+    {
+        if (await ObecnySPravem(clanek, kdo, rozsahy, sprava, ct) is not { } nalezeny)
+            return Results.NotFound();
+
+        if (await fotky.OdeberAsync(nalezeny, ct) is { } chyba)
+            return Results.Json(new { error = chyba }, statusCode: StatusCodes.Status503ServiceUnavailable);
+
+        return Results.NoContent();
+    }
+
+    /// <summary>
+    /// Obecný článek, pokud přihlášený smí na celý web. Kdo nesmí, dostane
+    /// 404 stejně jako u neexistujícího — koncepty se nemají dát uhodnout.
+    /// </summary>
+    private static async Task<Clanek?> ObecnySPravem(
+        string slug, ClaimsPrincipal kdo, Rozsahy rozsahy, ClankySprava sprava, CancellationToken ct)
+    {
+        if (!await rozsahy.SmiAsync(kdo, EditorWebu, ct)) return null;
+        return await sprava.NajdiAsync(null, slug, ct);
+    }
+
+    /// <summary>Nepřihlášenému 401, přihlášenému bez role 403.</summary>
+    private static IResult Nesmi(ClaimsPrincipal kdo) =>
+        kdo.Identity?.IsAuthenticated == true ? Results.Forbid() : Results.Unauthorized();
+
+
     private static async Task<IResult> NastavObrazekAsync(
         string serie, string clanek, [FromForm] FotkaFormular formular, ClaimsPrincipal kdo,
         Rozsahy rozsahy, ClankySprava sprava, FotkySprava fotky, CancellationToken ct)

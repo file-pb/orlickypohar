@@ -217,11 +217,20 @@ public class Uzivatele(AppDbContext db)
     public async Task<List<(Role Role, string Serie, string? Zavod)>> RozsahyAsync(
         Guid uzivatelId, CancellationToken ct) =>
         await db.Opravneni
-            .Where(o => o.UzivatelId == uzivatelId)
+            // Práva na celý web ročník nemají a jdou klientovi zvlášť, viz
+            // WebRoleAsync — slug ročníku u nich není co vydat.
+            .Where(o => o.UzivatelId == uzivatelId && o.SerieId != null)
             // Zavod je volitelný; u práva na celý ročník vyjde z levého
             // spojení null, což je přesně to, co má klient dostat.
             .Select(o => new ValueTuple<Role, string, string?>(
                 o.Role, o.Serie!.Slug, o.Zavod!.Slug))
+            .ToListAsync(ct);
+
+    /// <summary>Role na celém webu.</summary>
+    public async Task<List<Role>> WebRoleAsync(Guid uzivatelId, CancellationToken ct) =>
+        await db.Opravneni
+            .Where(o => o.UzivatelId == uzivatelId && o.SerieId == null)
+            .Select(o => o.Role)
             .ToListAsync(ct);
 }
 

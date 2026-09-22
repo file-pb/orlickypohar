@@ -2,15 +2,15 @@ namespace OrlickyPohar.Api.Features.Identita;
 
 /// <summary>
 /// Na co se ptáme: role v rozsahu. <c>Zavod</c> prázdný znamená otázku na
-/// celý ročník.
+/// celý ročník, <c>Serie</c> prázdná otázku na celý web.
 /// </summary>
-public readonly record struct Pozadavek(Role Role, int Serie, int? Zavod = null);
+public readonly record struct Pozadavek(Role Role, int? Serie, int? Zavod = null);
 
 /// <summary>
 /// Jedno udělené právo, odtržené od databáze. Vyhodnocení oprávnění je čistá
 /// funkce nad seznamem těchhle záznamů — stejně jako bodování.
 /// </summary>
-public readonly record struct UdeleneRole(Role Role, int Serie, int? Zavod = null);
+public readonly record struct UdeleneRole(Role Role, int? Serie, int? Zavod = null);
 
 /// <summary>
 /// Vyhodnocení oprávnění. <b>Čistá funkce</b>, schválně: právo se ptá při
@@ -25,9 +25,11 @@ public static class Prava
     /// </para>
     /// <list type="number">
     /// <item>
-    /// <b>Rozsah série pokrývá její zastávky, ne naopak.</b> Správce ročníku
-    /// smí na každou jeho zastávku; pořadatel jedné zastávky nesmí na ročník
-    /// ani na cizí zastávku. To je celý smysl rozsahů.
+    /// <b>Širší rozsah pokrývá užší, ne naopak.</b> Web pokrývá každý ročník,
+    /// ročník své zastávky. Správce ročníku smí na každou jeho zastávku;
+    /// pořadatel jedné zastávky nesmí na ročník ani na cizí zastávku, a na
+    /// celý web smí jen ten, kdo má právo na celý web. To je celý smysl
+    /// rozsahů.
     /// </item>
     /// <item>
     /// <b>Vyšší role obsahuje nižší, kromě rozhodčího.</b> Správce smí, co smí
@@ -47,6 +49,16 @@ public static class Prava
 
         foreach (var u in udelena)
         {
+            // Právo na celý web platí všude, včetně otázky na web samotný.
+            if (u.Serie is null)
+            {
+                if (Pokryva(u.Role, co.Role)) return true;
+                continue;
+            }
+
+            // Na celý web nestačí žádné právo na ročník.
+            if (co.Serie is null) continue;
+
             if (u.Serie != co.Serie) continue;
 
             // Právo na jednu zastávku platí jen na ni. Právo na celý ročník

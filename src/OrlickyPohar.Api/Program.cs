@@ -155,7 +155,9 @@ try
         // vzniká až prvním přihlášením. Nenakonfigurovaný poskytovatel proto
         // administrativní endpointy neregistruje vůbec, ani pro bootstrap.
         app.MapSpravaOpravneni();
+        app.MapSpravaOpravneniWebu();
         app.MapSpravaClanku();
+        app.MapSpravaObecnychClanku();
         app.MapKalendar();
         app.MapSpravaVysledku();
         app.MapPrihlasky();

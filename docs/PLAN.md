@@ -2351,6 +2351,26 @@ změn ukládá účet a kontakty visí na osobě. Přibude vazba účet × loď
 s rolí (a obdobně pro akci a ročník); z ní pak „moje přihlášky",
 odhlášení bez pořadatele a upozornění fanouškům.
 
+## Obecné články a rozsah „celý web“ (22. 9. 2026)
+
+Filip: články, které se nevztahují k poháru ani k žádné akci — a psát je
+smí i **editor webu**. Dosud každý článek i každé právo patřily ročníku.
+
+- **Obecný článek** má `Clanek.SerieId` prázdné. Veřejně `/clanky`
+  a `/clanky/{slug}`, ve správě `/sprava/web/clanky`. Adresa je unikátní
+  mezi obecnými (vlastní filtrovaný index — Postgres bere NULL jako pokaždé
+  jiné).
+- **Rozsah celý web**: `Opravneni.SerieId` prázdné. Pokrývá všechno pod
+  sebou, stejně jako ročník své zastávky; na web samotný naopak nestačí
+  žádné právo na ročník. Na web jde udělit jen **editor** a **správce** —
+  rozhodčí a pořadatel jsou funkce v ročníku. Uděluje správce webu,
+  prvního pustí importní token (týž bootstrap jako u ročníku).
+- `/ja` vydává role na webu v novém poli `Web` — aditivně, `Opravneni`
+  zůstává, jak bylo (appka ho má povinné).
+
+Web (správa obecných článků, udělování rolí na web, veřejná stránka) jde
+až po nasazení API, protože typy klienta se generují z běžícího API.
+
 ## Výsledek akce a pořadí do poháru (22. 9. 2026)
 
 U zastávky jsou dvě různá pořadí a dnes je vidět jen jedno. Liší se ve

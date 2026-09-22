@@ -190,6 +190,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // Slug je přirozený klíč článku — opakovaný import téhož souboru
         // podle něj článek najde místo toho, aby ho založil podruhé.
         clanek.HasIndex(x => new { x.SerieId, x.Slug }).IsUnique();
+        // Obecné články ročník nemají a Postgres bere NULL jako pokaždé jiné
+        // — index výš by jim duplicitní adresu nezakázal. Proto vlastní.
+        clanek.HasIndex(x => x.Slug).IsUnique()
+            .HasFilter("\"SerieId\" IS NULL")
+            .HasDatabaseName("IX_Clanky_Slug_Obecne");
         // Výpis novinek jde vždycky od nejnovějšího; bez indexu by se řadil
         // celý blog ročníku kvůli třem perexům na úvodní stránce.
         clanek.HasIndex(x => new { x.SerieId, x.PublikovanoV });

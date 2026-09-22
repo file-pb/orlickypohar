@@ -73,6 +73,42 @@ public class ClankyTests(PostgresFixture fixture)
             Publikovano: publikovano);
 
     [Fact]
+    public async Task Obecny_clanek_se_cte_mimo_rocnik_a_do_rocniku_neprosakuje()
+    {
+        await Nahraj(Rocnik("obecne-rocnik"));
+
+        await using (var scope = fixture.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Clanky.AddRange(
+                new Clanek
+                {
+                    Slug = "obecny-verejny", Titulek = "Obecný", Telo = "Text.",
+                    PublikovanoV = Kveten.ToUniversalTime(), Stav = StavClanku.Publikovano,
+                },
+                new Clanek
+                {
+                    Slug = "obecny-koncept", Titulek = "Koncept", Telo = "Text.",
+                    PublikovanoV = Kveten.ToUniversalTime(), Stav = StavClanku.Draft,
+                });
+            await db.SaveChangesAsync();
+        }
+
+        var klient = fixture.CreateClient();
+
+        var obecne = await klient.GetFromJsonAsync<List<ClanekShrnutiDto>>("/clanky", Json);
+        Assert.Contains(obecne!, c => c.Slug == "obecny-verejny");
+        Assert.DoesNotContain(obecne!, c => c.Slug == "obecny-koncept");
+
+        Assert.Equal(HttpStatusCode.OK, (await klient.GetAsync("/clanky/obecny-verejny")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await klient.GetAsync("/clanky/obecny-koncept")).StatusCode);
+
+        // Do novinek ročníku obecný článek nepatří.
+        var rocnik = await klient.GetFromJsonAsync<List<ClanekShrnutiDto>>("/serie/obecne-rocnik/clanky", Json);
+        Assert.DoesNotContain(rocnik!, c => c.Slug == "obecny-verejny");
+    }
+
+    [Fact]
     public async Task Clanky_se_ctou_od_nejnovejsiho_i_s_telem()
     {
         await Nahraj(Rocnik("blog", clanky:
