@@ -1,5 +1,6 @@
 using System.Text.Json;
 using OrlickyPohar.Api.Features.Bodovani;
+using OrlickyPohar.Api.Features.Zavody;
 
 namespace OrlickyPohar.Api.Tests;
 
@@ -159,6 +160,55 @@ public class SerieTests
 
         Assert.Equal(11, cervene.BodyPoSkrtu);   // 35 − 20 − 4
         Assert.Equal(34, sprunzel.BodyPoSkrtu);  // 66 − 20 − 12
+    }
+
+    [Fact]
+    public void Listina_FxCK_Cancer_da_do_serie_presne_sloupec_sesitu()
+    {
+        // Skutečná výsledková listina závodu → náš výpočet celého řetězu
+        // (rozjížďky, kódy podle A5.2, pořadí v kategorii se shodou podle
+        // A8, body do seriálu) → porovnání se sloupcem FxCK Cancer v sešitu.
+        // Je to jediná zastávka, kde máme obě strany skutečné.
+        using var soubor = File.OpenRead(
+            Path.Combine(AppContext.BaseDirectory, "Data", "2026-fxck-cancer.json"));
+        var listina = JsonDocument.Parse(soubor).RootElement;
+        var kategorie = listina.GetProperty("kategorie").EnumerateObject()
+            .ToDictionary(k => k.Name, k => k.Value.GetString()!);
+
+        var rozjizdky = listina.GetProperty("rozjizdky").EnumerateArray()
+            .Select(r => new RozjizdkaVstup(r.GetProperty("cislo").GetInt32(),
+            [
+                .. r.GetProperty("vysledky").EnumerateArray().Select(v =>
+                {
+                    var lod = v.GetProperty("lod").GetString()!;
+                    return v.TryGetProperty("kod", out var kod)
+                        ? new VysledekVstup(lod, kategorie[lod], null, Enum.Parse<KodVysledku>(kod.GetString()!))
+                        : new VysledekVstup(lod, kategorie[lod], v.GetProperty("poradiVCili").GetInt32(), null);
+                }),
+            ]))
+            .ToList();
+
+        var doSerie = SerieBodovani.BodyDoSerie(Bodovani.VysledkyZavodu(rozjizdky))
+            .ToDictionary(v => v.Lod, v => v.Body);
+
+        using var sesitSoubor = File.OpenRead(
+            Path.Combine(AppContext.BaseDirectory, "Data", "2026-poradi-rozhodci.json"));
+        var sesit = JsonDocument.Parse(sesitSoubor).RootElement;
+        var sloupec = sesit.GetProperty("zavody").EnumerateArray()
+            .Select(z => z.GetString()).ToList().IndexOf("FxCK Cancer");
+
+        var porovnano = 0;
+        foreach (var kat in sesit.GetProperty("kategorie").EnumerateObject())
+            foreach (var radek in kat.Value.EnumerateArray())
+            {
+                var lod = radek.GetProperty("lod").GetString()!;
+                if (!doSerie.TryGetValue(lod, out var body)) continue;
+
+                Assert.Equal(radek.GetProperty("zastavky")[sloupec].GetProperty("body").GetInt32(), body);
+                porovnano++;
+            }
+
+        Assert.Equal(19, porovnano);
     }
 
     [Fact]

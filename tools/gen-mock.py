@@ -44,6 +44,13 @@ R = random.Random(20260426)
 with open("data/2026-poradi-rozhodci.json", encoding="utf-8") as f:
     SESIT = json.load(f)
 
+# Skutečné výsledkové listiny závodů. U nich se rozjížďky nevymýšlejí.
+LISTINY = {}
+for soubor in ["data/2026-fxck-cancer.json"]:
+    with open(soubor, encoding="utf-8") as f:
+        listina = json.load(f)
+    LISTINY[listina["zavod"]] = listina
+
 # Zastávky, které se podle sešitu nejely (u všech lodí nuly).
 ZRUSENE = set(SESIT["zruseneVSesitu"])
 
@@ -165,7 +172,10 @@ for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerat
     # vzniknou až na vodě.
     odjety = mista is not None and not zrusena
 
-    if odjety:
+    listina = LISTINY.get(nazev) if odjety else None
+    if listina:
+        startuji = [klic(v["lod"]) for v in listina["rozjizdky"][0]["vysledky"]]
+    elif odjety:
         # Kdo jel, říká sešit: lodě s umístěním a diskvalifikované.
         startuji = [l["klic"] for l in lode if l["klic"] in mista or l["klic"] in diskvalifikovane]
     else:
@@ -184,7 +194,7 @@ for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerat
                                     for o in R.sample(osoby, R.randint(1, 3)))}
               for k in ([] if zrusena else startuji)]
 
-    odjeto_rozjizdek = pocet_r if odjety else 0
+    odjeto_rozjizdek = (len(listina["rozjizdky"]) if listina else pocet_r) if odjety else 0
 
     dvoudenni = typ == "24 hodin"
     kat_poradi = {k: i for i, k in enumerate(LODE)}
@@ -216,6 +226,12 @@ for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerat
         for k in startuji:
             if k in diskvalifikovane:
                 vysledky.append({"lod": k, "kod": "Dsq"})
+
+        if listina:
+            # Skutečná listina: pořadí v cíli a kódy tak, jak jsou. Časy
+            # na listině nejsou, takže tu nejsou ani vymyšlené.
+            vysledky = [{"lod": klic(v["lod"]), **{k: v[k] for k in v if k != "lod"}}
+                        for v in listina["rozjizdky"][cislo - 1]["vysledky"]]
 
         rozjizdky.append({"cislo": cislo, "startV": start.isoformat(),
                           "stav": "Dokoncena", "doSerie": do_serie,
@@ -431,8 +447,9 @@ data = {
         "JMÉNA I POŘADÍ V KATEGORIÍCH JSOU SKUTEČNÁ, ROZJÍŽĎKY VYMYŠLENÉ. Lodě, "
         "kategorie, zastávky a pořadí v kategorii na každé odjeté zastávce pocházejí "
         "ze sešitu rozhodčího (data/2026-poradi-rozhodci.json, stav po Poháru Slunce); "
-        "jednotlivé rozjížďky, časy, posádky a články jsou vygenerované, protože "
-        "výsledkové listiny rozjížděk nemáme. Ročník je "
+        "u FxCK Cancer jsou i rozjížďky skutečné (data/2026-fxck-cancer.json). Ostatní "
+        "rozjížďky, časy, posádky a články jsou vygenerované, protože výsledkové "
+        "listiny zbylých zastávek nemáme. Ročník je "
         + ("PUBLIKOVANÝ — patří na produkci, kde u něj web ukazuje pruh, že "
            "data nejsou skutečná (proměnná UKAZKOVE_SERIE)."
            if VOLBY.publikovat else

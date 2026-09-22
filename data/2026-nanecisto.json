@@ -1772,98 +1772,98 @@
       "publikovano": false,
       "ucasti": [
         {
-          "lod": "luna",
-          "kormidelnik": "osoba-1",
+          "lod": "sea-mouse-iii",
+          "kormidelnik": "osoba-34",
           "posadka": "Lukáš Ryba, Karel Vlček, Josef Bartoš"
         },
         {
-          "lod": "varianta",
-          "kormidelnik": "osoba-5",
-          "posadka": "Lukáš Ryba"
-        },
-        {
-          "lod": "pezi",
-          "kormidelnik": "osoba-7",
-          "posadka": "Karel Vlček, Radek Sedláček"
-        },
-        {
-          "lod": "mamba",
-          "kormidelnik": "osoba-8",
-          "posadka": "Tomáš Černý"
-        },
-        {
-          "lod": "depresso",
-          "kormidelnik": "osoba-10",
-          "posadka": "Ivan Kříž, Petr Svoboda, Alena Vaněk"
-        },
-        {
-          "lod": "filozep",
-          "kormidelnik": "osoba-14",
-          "posadka": "Radek Sedláček"
-        },
-        {
-          "lod": "sprunzel",
-          "kormidelnik": "osoba-15",
-          "posadka": "Lucie Kučera, Alena Vaněk, Vojtěch Kolář"
-        },
-        {
-          "lod": "thea",
-          "kormidelnik": "osoba-16",
-          "posadka": "Aleš Souček, Alena Vaněk"
-        },
-        {
-          "lod": "michelle",
-          "kormidelnik": "osoba-17",
-          "posadka": "Lukáš Ryba, Aleš Souček"
-        },
-        {
-          "lod": "m-rtina",
-          "kormidelnik": "osoba-15",
-          "posadka": "Petr Svoboda"
-        },
-        {
-          "lod": "avenir",
-          "kormidelnik": "osoba-23",
-          "posadka": "Ondřej Němec, Lucie Kučera"
-        },
-        {
-          "lod": "rio",
-          "kormidelnik": "osoba-32",
-          "posadka": "Nikola Bureš"
-        },
-        {
-          "lod": "claudie",
-          "kormidelnik": "osoba-7",
-          "posadka": "Karel Vlček"
-        },
-        {
-          "lod": "mabye",
-          "kormidelnik": "osoba-15",
-          "posadka": "Dana Jelínek"
-        },
-        {
-          "lod": "caprice",
-          "kormidelnik": "osoba-29",
-          "posadka": "Ivan Kříž"
-        },
-        {
           "lod": "modre-cafe",
-          "kormidelnik": "osoba-3",
-          "posadka": "Marek Bláha, Michal Horák, Jakub Procházka"
-        },
-        {
-          "lod": "sea-mouse-iii",
-          "kormidelnik": "osoba-34",
-          "posadka": "Jiří Král"
+          "kormidelnik": "osoba-33",
+          "posadka": "Lukáš Ryba"
         },
         {
           "lod": "socka",
           "kormidelnik": "osoba-35",
-          "posadka": "Lucie Kučera"
+          "posadka": "Karel Vlček, Radek Sedláček"
         },
         {
           "lod": "far-star-iii",
           "kormidelnik": "osoba-36",
+          "posadka": "Tomáš Černý"
+        },
+        {
+          "lod": "varianta",
+          "kormidelnik": "osoba-5",
+          "posadka": "Ivan Kříž, Petr Svoboda, Alena Vaněk"
+        },
+        {
+          "lod": "luna",
+          "kormidelnik": "osoba-1",
+          "posadka": "Radek Sedláček"
+        },
+        {
+          "lod": "mamba",
+          "kormidelnik": "osoba-8",
+          "posadka": "Lucie Kučera, Alena Vaněk, Vojtěch Kolář"
+        },
+        {
+          "lod": "pezi",
+          "kormidelnik": "osoba-7",
+          "posadka": "Aleš Souček, Alena Vaněk"
+        },
+        {
+          "lod": "m-rtina",
+          "kormidelnik": "osoba-20",
+          "posadka": "Lukáš Ryba, Aleš Souček"
+        },
+        {
+          "lod": "avenir",
+          "kormidelnik": "osoba-15",
+          "posadka": "Petr Svoboda"
+        },
+        {
+          "lod": "filozep",
+          "kormidelnik": "osoba-14",
+          "posadka": "Ondřej Němec, Lucie Kučera"
+        },
+        {
+          "lod": "depresso",
+          "kormidelnik": "osoba-32",
+          "posadka": "Nikola Bureš"
+        },
+        {
+          "lod": "rio",
+          "kormidelnik": "osoba-7",
+          "posadka": "Karel Vlček"
+        },
+        {
+          "lod": "michelle",
+          "kormidelnik": "osoba-15",
+          "posadka": "Dana Jelínek"
+        },
+        {
+          "lod": "claudie",
+          "kormidelnik": "osoba-27",
+          "posadka": "Ivan Kříž"
+        },
+        {
+          "lod": "sprunzel",
+          "kormidelnik": "osoba-3",
+          "posadka": "Marek Bláha, Michal Horák, Jakub Procházka"
+        },
+        {
+          "lod": "mabye",
+          "kormidelnik": "osoba-28",
+          "posadka": "Jiří Král"
+        },
+        {
+          "lod": "caprice",
+          "kormidelnik": "osoba-29",
+          "posadka": "Lucie Kučera"
+        },
+        {
+          "lod": "thea",
+          "kormidelnik": "osoba-16",
           "posadka": "Jiří Král"
         }
       ],
@@ -1875,118 +1875,80 @@
           "doSerie": true,
           "vysledky": [
             {
-              "lod": "luna",
-              "poradiVCili": 1,
-              "dojezdV": "2026-07-11T11:00:06+02:00",
-              "casSekundy": 3606
-            },
-            {
-              "lod": "mamba",
-              "poradiVCili": 2,
-              "dojezdV": "2026-07-11T11:02:13+02:00",
-              "casSekundy": 3733
-            },
-            {
               "lod": "sea-mouse-iii",
-              "poradiVCili": 3,
-              "dojezdV": "2026-07-11T11:04:37+02:00",
-              "casSekundy": 3877
-            },
-            {
-              "lod": "varianta",
-              "poradiVCili": 4,
-              "dojezdV": "2026-07-11T11:04:17+02:00",
-              "casSekundy": 3857
-            },
-            {
-              "lod": "pezi",
-              "poradiVCili": 5,
-              "dojezdV": "2026-07-11T11:05:55+02:00",
-              "casSekundy": 3955
+              "poradiVCili": 1
             },
             {
               "lod": "modre-cafe",
-              "poradiVCili": 6,
-              "dojezdV": "2026-07-11T11:07:26+02:00",
-              "casSekundy": 4046
-            },
-            {
-              "lod": "m-rtina",
-              "poradiVCili": 7,
-              "dojezdV": "2026-07-11T11:08:07+02:00",
-              "casSekundy": 4087
+              "poradiVCili": 6
             },
             {
               "lod": "socka",
-              "poradiVCili": 8,
-              "dojezdV": "2026-07-11T11:08:27+02:00",
-              "casSekundy": 4107
-            },
-            {
-              "lod": "avenir",
-              "poradiVCili": 9,
-              "dojezdV": "2026-07-11T11:11:35+02:00",
-              "casSekundy": 4295
+              "poradiVCili": 15
             },
             {
               "lod": "far-star-iii",
-              "poradiVCili": 10,
-              "dojezdV": "2026-07-11T11:12:23+02:00",
-              "casSekundy": 4343
+              "poradiVCili": 10
+            },
+            {
+              "lod": "varianta",
+              "poradiVCili": 16
+            },
+            {
+              "lod": "luna",
+              "poradiVCili": 5
+            },
+            {
+              "lod": "mamba",
+              "poradiVCili": 4
+            },
+            {
+              "lod": "pezi",
+              "poradiVCili": 2
+            },
+            {
+              "lod": "m-rtina",
+              "poradiVCili": 8
+            },
+            {
+              "lod": "avenir",
+              "poradiVCili": 7
             },
             {
               "lod": "filozep",
-              "poradiVCili": 11,
-              "dojezdV": "2026-07-11T11:13:50+02:00",
-              "casSekundy": 4430
+              "poradiVCili": 3
             },
             {
               "lod": "depresso",
-              "poradiVCili": 12,
-              "dojezdV": "2026-07-11T11:15:07+02:00",
-              "casSekundy": 4507
+              "poradiVCili": 9
             },
             {
               "lod": "rio",
-              "poradiVCili": 13,
-              "dojezdV": "2026-07-11T11:15:39+02:00",
-              "casSekundy": 4539
+              "poradiVCili": 11
             },
             {
               "lod": "michelle",
-              "poradiVCili": 14,
-              "dojezdV": "2026-07-11T11:17:26+02:00",
-              "casSekundy": 4646
+              "poradiVCili": 12
             },
             {
               "lod": "claudie",
-              "poradiVCili": 15,
-              "dojezdV": "2026-07-11T11:18:15+02:00",
-              "casSekundy": 4695
+              "poradiVCili": 13
             },
             {
               "lod": "sprunzel",
-              "poradiVCili": 16,
-              "dojezdV": "2026-07-11T11:18:58+02:00",
-              "casSekundy": 4738
+              "poradiVCili": 17
             },
             {
               "lod": "mabye",
-              "poradiVCili": 17,
-              "dojezdV": "2026-07-11T11:20:22+02:00",
-              "casSekundy": 4822
+              "poradiVCili": 14
             },
             {
               "lod": "caprice",
-              "poradiVCili": 18,
-              "dojezdV": "2026-07-11T11:20:20+02:00",
-              "casSekundy": 4820
+              "kod": "Dnf"
             },
             {
               "lod": "thea",
-              "poradiVCili": 19,
-              "dojezdV": "2026-07-11T11:22:11+02:00",
-              "casSekundy": 4931
+              "kod": "Dns"
             }
           ]
         },
@@ -1997,118 +1959,80 @@
           "doSerie": true,
           "vysledky": [
             {
-              "lod": "luna",
-              "poradiVCili": 1,
-              "dojezdV": "2026-07-11T13:01:58+02:00",
-              "casSekundy": 3718
-            },
-            {
-              "lod": "mamba",
-              "poradiVCili": 2,
-              "dojezdV": "2026-07-11T13:02:32+02:00",
-              "casSekundy": 3752
-            },
-            {
               "lod": "sea-mouse-iii",
-              "poradiVCili": 3,
-              "dojezdV": "2026-07-11T13:04:22+02:00",
-              "casSekundy": 3862
-            },
-            {
-              "lod": "varianta",
-              "poradiVCili": 4,
-              "dojezdV": "2026-07-11T13:04:03+02:00",
-              "casSekundy": 3843
-            },
-            {
-              "lod": "pezi",
-              "poradiVCili": 5,
-              "dojezdV": "2026-07-11T13:06:21+02:00",
-              "casSekundy": 3981
+              "poradiVCili": 1
             },
             {
               "lod": "modre-cafe",
-              "poradiVCili": 6,
-              "dojezdV": "2026-07-11T13:08:41+02:00",
-              "casSekundy": 4121
-            },
-            {
-              "lod": "m-rtina",
-              "poradiVCili": 7,
-              "dojezdV": "2026-07-11T13:08:06+02:00",
-              "casSekundy": 4086
+              "poradiVCili": 5
             },
             {
               "lod": "socka",
-              "poradiVCili": 8,
-              "dojezdV": "2026-07-11T13:09:17+02:00",
-              "casSekundy": 4157
-            },
-            {
-              "lod": "avenir",
-              "poradiVCili": 9,
-              "dojezdV": "2026-07-11T13:11:07+02:00",
-              "casSekundy": 4267
+              "poradiVCili": 8
             },
             {
               "lod": "far-star-iii",
-              "poradiVCili": 10,
-              "dojezdV": "2026-07-11T13:10:45+02:00",
-              "casSekundy": 4245
+              "poradiVCili": 11
+            },
+            {
+              "lod": "varianta",
+              "poradiVCili": 15
+            },
+            {
+              "lod": "luna",
+              "poradiVCili": 2
+            },
+            {
+              "lod": "mamba",
+              "poradiVCili": 3
+            },
+            {
+              "lod": "pezi",
+              "poradiVCili": 6
+            },
+            {
+              "lod": "m-rtina",
+              "poradiVCili": 4
+            },
+            {
+              "lod": "avenir",
+              "poradiVCili": 9
             },
             {
               "lod": "filozep",
-              "poradiVCili": 11,
-              "dojezdV": "2026-07-11T13:12:56+02:00",
-              "casSekundy": 4376
+              "poradiVCili": 13
             },
             {
               "lod": "depresso",
-              "poradiVCili": 12,
-              "dojezdV": "2026-07-11T13:15:39+02:00",
-              "casSekundy": 4539
+              "poradiVCili": 7
             },
             {
               "lod": "rio",
-              "poradiVCili": 13,
-              "dojezdV": "2026-07-11T13:14:14+02:00",
-              "casSekundy": 4454
+              "poradiVCili": 10
             },
             {
               "lod": "michelle",
-              "poradiVCili": 14,
-              "dojezdV": "2026-07-11T13:17:06+02:00",
-              "casSekundy": 4626
+              "poradiVCili": 12
             },
             {
               "lod": "claudie",
-              "poradiVCili": 15,
-              "dojezdV": "2026-07-11T13:17:00+02:00",
-              "casSekundy": 4620
+              "poradiVCili": 14
             },
             {
               "lod": "sprunzel",
-              "poradiVCili": 16,
-              "dojezdV": "2026-07-11T13:19:11+02:00",
-              "casSekundy": 4751
+              "poradiVCili": 16
             },
             {
               "lod": "mabye",
-              "poradiVCili": 17,
-              "dojezdV": "2026-07-11T13:18:59+02:00",
-              "casSekundy": 4739
+              "kod": "Dns"
             },
             {
               "lod": "caprice",
-              "poradiVCili": 18,
-              "dojezdV": "2026-07-11T13:21:51+02:00",
-              "casSekundy": 4911
+              "kod": "Dns"
             },
             {
               "lod": "thea",
-              "poradiVCili": 19,
-              "dojezdV": "2026-07-11T13:23:36+02:00",
-              "casSekundy": 5016
+              "kod": "Dns"
             }
           ]
         }
