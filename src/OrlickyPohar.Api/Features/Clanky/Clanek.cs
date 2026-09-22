@@ -59,7 +59,12 @@ public class Clanek : IMaFotku
 {
     public int Id { get; set; }
 
-    public int SerieId { get; set; }
+    /// <summary>
+    /// Prázdné znamená <b>obecný článek</b> mimo ročník (od 22. 9. 2026):
+    /// zpráva, která s žádnou sezónou nesouvisí a nemá s ní zestárnout.
+    /// Píše ho editor celého webu.
+    /// </summary>
+    public int? SerieId { get; set; }
     public Serie? Serie { get; set; }
 
     /// <summary>Prázdné znamená článek celé série, vyplněné článek zastávky.</summary>

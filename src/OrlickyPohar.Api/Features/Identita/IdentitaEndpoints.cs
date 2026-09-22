@@ -10,12 +10,18 @@ public record OpravneniDto(Role Role, string Serie, string? Zavod);
 /// Kdo jsem a co smím. Rozsahy se vydávají jako slugy, ne jako čísla —
 /// klient stejně pracuje s adresami a interní identifikátory by si musel
 /// párovat sám.
+/// <para>
+/// <c>Web</c> jsou role na celém webu (od 22. 9. 2026). Jdou zvlášť, ne jako
+/// řádek v <c>Opravneni</c> s prázdnou sérií: to pole je v appce povinné
+/// a změna API smí být jen aditivní.
+/// </para>
 /// </summary>
 public record JaDto(
     Guid Id,
     string Zobrazovane,
     string? Email,
-    IReadOnlyList<OpravneniDto> Opravneni);
+    IReadOnlyList<OpravneniDto> Opravneni,
+    IReadOnlyList<Role>? Web = null);
 
 /// <summary>
 /// Přihlášený uživatel sám o sobě.
@@ -79,6 +85,7 @@ public static class IdentitaEndpoints
             uzivatel.Id,
             uzivatel.Zobrazovane,
             uzivatel.Email,
-            [.. rozsahy.Select(r => new OpravneniDto(r.Role, r.Serie, r.Zavod))]));
+            [.. rozsahy.Select(r => new OpravneniDto(r.Role, r.Serie, r.Zavod))],
+            await uzivatele.WebRoleAsync(uzivatel.Id, ct)));
     }
 }

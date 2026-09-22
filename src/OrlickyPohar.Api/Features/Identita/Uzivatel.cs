@@ -96,10 +96,16 @@ public enum Role
 }
 
 /// <summary>
-/// Role v rozsahu. Rozsah je <b>buď celá série, nebo jedna zastávka</b>:
-/// pořadatel Radavské regaty spravuje svůj závod, ne cizí.
+/// Role v rozsahu. Rozsah je <b>celý web, celá série, nebo jedna
+/// zastávka</b>: pořadatel Radavské regaty spravuje svůj závod, ne cizí.
 /// <para>
-/// Tvar je schválně týž jako u <c>Clanek</c> — <c>SerieId</c> vždycky,
+/// <b>Celý web</b> (<c>SerieId</c> prázdné) přibyl 22. 9. 2026 kvůli
+/// obecným článkům mimo ročník, které píše „editor webu". Pokrývá všechno
+/// pod sebou — každý ročník i každou zastávku — stejně jako ročník pokrývá
+/// své zastávky.
+/// </para>
+/// <para>
+/// Tvar je schválně týž jako u <c>Clanek</c> — <c>SerieId</c> a
 /// <c>ZavodId</c> volitelně. Právo psát na stránku zastávky se tak odvozuje
 /// z téže dvojice, ze které se odvozuje sama stránka, a nemůžou se rozejít.
 /// </para>
@@ -113,7 +119,8 @@ public class Opravneni
 
     public Role Role { get; set; }
 
-    public int SerieId { get; set; }
+    /// <summary>Prázdné znamená celý web.</summary>
+    public int? SerieId { get; set; }
     public Serie? Serie { get; set; }
 
     /// <summary>Prázdné znamená celý ročník, vyplněné jednu zastávku v něm.</summary>

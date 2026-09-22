@@ -48,6 +48,49 @@ public static class ClanekEndpoints
                 "limit na daný počet nejnovějších.");
 
         g.MapGet("/{clanek}", DetailAsync).WithSummary("Vrátí jeden článek i s tělem");
+
+        // Obecné články mimo ročník (od 22. 9. 2026). Vlastní adresa, ne
+        // parametr u ročníku: nepatří žádnému a nemají zestárnout s ním.
+        var obecne = app.MapGroup("/clanky").WithTags("Články");
+
+        obecne.MapGet("/", ObecneSeznamAsync)
+            .WithSummary("Vrátí publikované obecné články mimo ročník, od nejnovějšího")
+            .WithDescription("Parametrem limit se výpis zúží na daný počet nejnovějších.");
+
+        obecne.MapGet("/{clanek}", ObecnyDetailAsync)
+            .WithSummary("Vrátí jeden obecný článek i s tělem");
+    }
+
+    private static async Task<Ok<List<ClanekShrnutiDto>>> ObecneSeznamAsync(
+        AppDbContext db, IUloziste uloziste, CancellationToken ct, int? limit = null)
+    {
+        var dotaz = db.Clanky
+            .Where(c => c.SerieId == null && c.Stav == StavClanku.Publikovano)
+            .OrderByDescending(c => c.PublikovanoV).ThenByDescending(c => c.Id)
+            .AsQueryable();
+
+        if (limit is > 0) dotaz = dotaz.Take(Math.Min(limit.Value, 100));
+
+        var adresa = uloziste.VerejnaAdresa;
+        return TypedResults.Ok(await dotaz
+            .Select(c => new ClanekShrnutiDto(
+                c.Slug, c.Titulek, c.Perex, c.Autor, c.PublikovanoV,
+                null, null, Nahravani.Dto(c.Fotka, adresa)))
+            .ToListAsync(ct));
+    }
+
+    private static async Task<Results<Ok<ClanekDto>, NotFound>> ObecnyDetailAsync(
+        string clanek, AppDbContext db, IUloziste uloziste, CancellationToken ct)
+    {
+        var adresa = uloziste.VerejnaAdresa;
+        var nalezeny = await db.Clanky
+            .Where(c => c.SerieId == null && c.Stav == StavClanku.Publikovano && c.Slug == clanek)
+            .Select(c => new ClanekDto(
+                c.Slug, c.Titulek, c.Perex, c.Telo, c.Autor, c.PublikovanoV,
+                null, null, Nahravani.Dto(c.Fotka, adresa)))
+            .FirstOrDefaultAsync(ct);
+
+        return nalezeny is null ? TypedResults.NotFound() : TypedResults.Ok(nalezeny);
     }
 
     private static async Task<Results<Ok<List<ClanekShrnutiDto>>, NotFound>> SeznamAsync(

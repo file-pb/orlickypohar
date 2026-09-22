@@ -44,7 +44,7 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<DateTimeOffset>("PublikovanoV")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("SerieId")
+                    b.Property<int?>("SerieId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Slug")
@@ -70,6 +70,11 @@ namespace OrlickyPohar.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("FotkaId");
+
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Clanky_Slug_Obecne")
+                        .HasFilter("\"SerieId\" IS NULL");
 
                     b.HasIndex("ZavodId");
 
@@ -125,7 +130,7 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int>("Role")
                         .HasColumnType("integer");
 
-                    b.Property<int>("SerieId")
+                    b.Property<int?>("SerieId")
                         .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("UdelenoV")
@@ -781,8 +786,7 @@ namespace OrlickyPohar.Api.Migrations
                     b.HasOne("OrlickyPohar.Api.Features.Serial.Serie", "Serie")
                         .WithMany()
                         .HasForeignKey("SerieId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("OrlickyPohar.Api.Features.Zavody.Zavod", "Zavod")
                         .WithMany()
@@ -812,8 +816,7 @@ namespace OrlickyPohar.Api.Migrations
                     b.HasOne("OrlickyPohar.Api.Features.Serial.Serie", "Serie")
                         .WithMany()
                         .HasForeignKey("SerieId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Uzivatel")
                         .WithMany()

@@ -58,6 +58,11 @@ public record PrehledOpravneniDto(
     // rozhodčímu zůstává `null` a obrazovka seznam neukáže.
     IReadOnlyList<UcetDto>? Ucty = null);
 
+/// <summary>
+/// Oprávnění na celý web a účty, kterým jde roli dát. Jen pro správce webu.
+/// </summary>
+public record PrehledWebuDto(IReadOnlyList<OpravneniRadek> Opravneni, IReadOnlyList<UcetDto> Ucty);
+
 /// <summary>Jak dopadlo udělení.</summary>
 public enum StavUdeleni
 {
@@ -138,7 +143,7 @@ public class OpravneniSprava(AppDbContext db, TimeProvider cas)
             .ToListAsync(ct);
 
     /// <summary>Udělená oprávnění ročníku i jeho zastávek.</summary>
-    public async Task<List<OpravneniRadek>> SeznamAsync(int serieId, CancellationToken ct) =>
+    public async Task<List<OpravneniRadek>> SeznamAsync(int? serieId, CancellationToken ct) =>
         await db.Opravneni
             .Where(o => o.SerieId == serieId)
             .OrderBy(o => o.Uzivatel!.Zobrazovane).ThenBy(o => o.Id)
@@ -156,7 +161,7 @@ public class OpravneniSprava(AppDbContext db, TimeProvider cas)
     /// Role a rozsah jednoho oprávnění ročníku, nebo <c>null</c>. Potřebuje ho
     /// odebrání rozhodčím: smí jen to, co smí i udělit.
     /// </summary>
-    public async Task<(Role Role, bool NaZavod)?> NajdiAsync(int serieId, int opravneniId, CancellationToken ct)
+    public async Task<(Role Role, bool NaZavod)?> NajdiAsync(int? serieId, int opravneniId, CancellationToken ct)
     {
         var o = await db.Opravneni
             .Where(o => o.Id == opravneniId && o.SerieId == serieId)
@@ -166,8 +171,11 @@ public class OpravneniSprava(AppDbContext db, TimeProvider cas)
         return o is null ? null : (o.Role, o.ZavodId is not null);
     }
 
-    /// <summary>Má ročník aspoň jednoho správce? Na tom stojí bootstrap.</summary>
-    public Task<bool> MaSpravceAsync(int serieId, CancellationToken ct) =>
+    /// <summary>
+    /// Má ročník aspoň jednoho správce? Na tom stojí bootstrap. <c>null</c>
+    /// se ptá na správce celého webu.
+    /// </summary>
+    public Task<bool> MaSpravceAsync(int? serieId, CancellationToken ct) =>
         db.Opravneni.AnyAsync(o => o.SerieId == serieId && o.Role == Role.Spravce, ct);
 
     /// <summary>
@@ -181,7 +189,7 @@ public class OpravneniSprava(AppDbContext db, TimeProvider cas)
     /// </para>
     /// </summary>
     public async Task<(StavUdeleni Stav, OpravneniRadek? Radek)> UdelAsync(
-        int serieId, int? zavodId, string email, Role role, CancellationToken ct)
+        int? serieId, int? zavodId, string email, Role role, CancellationToken ct)
     {
         // Poskytovatelé si s velikostí písmen v e-mailu dělají, co chtějí,
         // a správce ho opisuje z papíru. Porovnávat doslova by znamenalo
@@ -232,7 +240,7 @@ public class OpravneniSprava(AppDbContext db, TimeProvider cas)
     /// všichni zamkli ven a zpátky by vedla jen cesta přes importní token,
     /// tedy přes tajemství na serveru.
     /// </summary>
-    public async Task<StavOdebrani> OdeberAsync(int serieId, int opravneniId, CancellationToken ct)
+    public async Task<StavOdebrani> OdeberAsync(int? serieId, int opravneniId, CancellationToken ct)
     {
         var opravneni = await db.Opravneni
             .FirstOrDefaultAsync(o => o.Id == opravneniId && o.SerieId == serieId, ct);

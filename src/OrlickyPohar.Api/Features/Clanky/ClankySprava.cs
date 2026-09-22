@@ -18,6 +18,9 @@ public record ClanekSpravaRadek(
 /// <summary>Zastávka, na kterou smí přihlášený psát. Prázdná volba je celý ročník.</summary>
 public record ZavodVolbaDto(string Slug, string Nazev);
 
+/// <summary>Obecné články mimo ročník pro obrazovku editora webu.</summary>
+public record PrehledObecnychClankuDto(IReadOnlyList<ClanekSpravaRadek> Clanky);
+
 public record PrehledClankuDto(
     string Serie,
     string SerieNazev,
@@ -62,8 +65,9 @@ public class ClankySprava(AppDbContext db, TimeProvider cas)
     /// psaní. Kdo ví, že tam je, najde ho podle adresy.
     /// </para>
     /// </summary>
+    /// <param name="serieId">Ročník, nebo <c>null</c> pro obecné články.</param>
     public async Task<List<ClanekSpravaRadek>> VypisAsync(
-        int serieId, bool celyRocnik, IReadOnlyCollection<int> zavody, CancellationToken ct)
+        int? serieId, bool celyRocnik, IReadOnlyCollection<int> zavody, CancellationToken ct)
     {
         var dotaz = db.Clanky.Where(c => c.SerieId == serieId && c.Stav != StavClanku.Smazano);
 
@@ -81,7 +85,7 @@ public class ClankySprava(AppDbContext db, TimeProvider cas)
             .ToListAsync(ct);
     }
 
-    public Task<Clanek?> NajdiAsync(int serieId, string slug, CancellationToken ct) =>
+    public Task<Clanek?> NajdiAsync(int? serieId, string slug, CancellationToken ct) =>
         db.Clanky.Include(c => c.Fotka).FirstOrDefaultAsync(c => c.SerieId == serieId && c.Slug == slug, ct);
 
     /// <summary>Zastávky ročníku jako volby do formuláře.</summary>
@@ -106,14 +110,16 @@ public class ClankySprava(AppDbContext db, TimeProvider cas)
     /// </para>
     /// </summary>
     public async Task<(Clanek? Clanek, string? Chyba)> ZalozAsync(
-        int serieId, int? zavodId, ClanekVstupSprava vstup, CancellationToken ct)
+        int? serieId, int? zavodId, ClanekVstupSprava vstup, CancellationToken ct)
     {
         var slug = Psani.Slug(vstup.Titulek ?? "");
         if (Psani.ProcNejdeUlozit(vstup.Titulek, vstup.Telo, slug) is { } chyba)
             return (null, chyba);
 
         if (await db.Clanky.AnyAsync(c => c.SerieId == serieId && c.Slug == slug, ct))
-            return (null, $"Článek s adresou „{slug}“ už v ročníku je. Změň titulek.");
+            return (null, serieId is null
+                ? $"Obecný článek s adresou „{slug}“ už je. Změň titulek."
+                : $"Článek s adresou „{slug}“ už v ročníku je. Změň titulek.");
 
         var clanek = new Clanek
         {

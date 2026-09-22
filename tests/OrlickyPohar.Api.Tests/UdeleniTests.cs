@@ -14,6 +14,19 @@ namespace OrlickyPohar.Api.Tests;
 /// </summary>
 public class UdeleniTests
 {
+    [Theory]
+    [InlineData(Role.Editor)]
+    [InlineData(Role.Spravce)]
+    public void Na_web_jde_udelit_editor_a_spravce(Role role) =>
+        Assert.Null(Udeleni.ProcNejdeNaWebu(role));
+
+    [Theory]
+    [InlineData(Role.Ctenar)]
+    [InlineData(Role.Rozhodci)]
+    [InlineData(Role.Organizator)]
+    public void Na_web_nejde_udelit_role_rocniku(Role role) =>
+        Assert.NotNull(Udeleni.ProcNejdeNaWebu(role));
+
     [Fact]
     public void Bootstrap_se_po_prvnim_spravci_zavre()
     {

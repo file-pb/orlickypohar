@@ -56,4 +56,20 @@ public static class Udeleni
     /// </summary>
     public static bool BootstrapProjde(bool maSerieSpravce, Role role, bool naZavod) =>
         !maSerieSpravce && role == Role.Spravce && !naZavod;
+
+    /// <summary>
+    /// Proč tuhle roli na celém webu udělit nejde — nebo <c>null</c>.
+    /// <para>
+    /// Na celý web jdou jen <b>editor</b> (obecné články, Filip 22. 9. 2026)
+    /// a <b>správce</b>. Rozhodčí a pořadatel jsou funkce v konkrétním
+    /// ročníku nebo závodě; udělit je na celý web by z jednoho člověka
+    /// udělalo rozhodčího všech sezón najednou.
+    /// </para>
+    /// </summary>
+    public static string? ProcNejdeNaWebu(Role role) => role switch
+    {
+        Role.Editor or Role.Spravce => null,
+        Role.Ctenar => "Čtenář se neuděluje: je to každý, i nepřihlášený.",
+        _ => $"Role {role} patří k ročníku nebo zastávce, ne k celému webu.",
+    };
 }

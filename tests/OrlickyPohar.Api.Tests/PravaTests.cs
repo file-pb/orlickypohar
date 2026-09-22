@@ -18,6 +18,43 @@ public class PravaTests
     private const int Radava = 10;
     private const int Izolepa = 11;
 
+    // --- Celý web (od 22. 9. 2026) ---
+
+    [Fact]
+    public void Pravo_na_web_plati_na_web_kazdy_rocnik_i_zastavku()
+    {
+        UdeleneRole[] editorWebu = [new(Role.Editor, null)];
+
+        Assert.True(Prava.Smi(editorWebu, new(Role.Editor, null)));
+        Assert.True(Prava.Smi(editorWebu, new(Role.Editor, Serie)));
+        Assert.True(Prava.Smi(editorWebu, new(Role.Editor, JinaSerie, Radava)));
+    }
+
+    [Fact]
+    public void Na_web_nestaci_zadne_pravo_na_rocnik()
+    {
+        // Správce ročníku smí v ročníku všechno, ale obecné články mimo
+        // ročník mu nepatří.
+        UdeleneRole[] spravceRocniku = [new(Role.Spravce, Serie)];
+        UdeleneRole[] poradatel = [new(Role.Spravce, Serie, Radava)];
+
+        Assert.False(Prava.Smi(spravceRocniku, new(Role.Editor, null)));
+        Assert.False(Prava.Smi(poradatel, new(Role.Editor, null)));
+    }
+
+    [Fact]
+    public void Na_webu_plati_stejne_pokryvani_roli()
+    {
+        // Editor webu píše, ale nespravuje. Správce webu smí všechno.
+        UdeleneRole[] editorWebu = [new(Role.Editor, null)];
+        UdeleneRole[] spravceWebu = [new(Role.Spravce, null)];
+
+        Assert.False(Prava.Smi(editorWebu, new(Role.Spravce, null)));
+        Assert.False(Prava.Smi(editorWebu, new(Role.Rozhodci, Serie)));
+        Assert.True(Prava.Smi(spravceWebu, new(Role.Rozhodci, Serie)));
+        Assert.True(Prava.Smi(spravceWebu, new(Role.Editor, null)));
+    }
+
     [Fact]
     public void Pravo_na_rocnik_plati_i_na_jeho_zastavky()
     {
