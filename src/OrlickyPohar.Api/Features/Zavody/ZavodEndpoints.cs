@@ -52,6 +52,10 @@ public record ZavodDetailDto(
     IReadOnlyList<RozjizdkaDto> Rozjizdky,
     IReadOnlyList<VysledekZavoduDto> Poradi,
     IReadOnlyList<UcastDto> Lode,
+    // Celé pole dohromady, bez ohledu na kategorie. Vydává se vždycky,
+    // ukázat ho je věc `Vyhodnoceni` — do poháru jdou dál body
+    // z kategorií (Filip, 22. 9. 2026). Aditivně, na konci.
+    IReadOnlyList<VysledekZavoduDto>? PoradiCelkem = null,
     // Komunitní akce má stránku jako zastávka, jen bez výsledků a pravidel.
     DruhZastavky Druh = DruhZastavky.Pohar,
     // Pořadatel i s webem, kontaktem a souřadnicemi. `Poradatel` výš zůstává
@@ -70,6 +74,12 @@ public record ZavodDetailDto(
 /// </summary>
 public static class ZavodEndpoints
 {
+    /// <summary>
+    /// Náhradní kategorie pro výpočet celého pole. Prázdná schválně: je to
+    /// klíč výpočtu, ne název, který by se někde ukázal.
+    /// </summary>
+    private const string CelePole = "";
+
     public static void MapZavody(this IEndpointRouteBuilder app)
     {
         app.MapGet("/serie/{serieSlug}/zavody/{slug}", DetailAsync)
@@ -188,6 +198,21 @@ public static class ZavodEndpoints
             .OrderBy(v => poradiKategorii.GetValueOrDefault(v.Kategorie, int.MaxValue))
             .ThenBy(v => v.Poradi)];
 
+        // Celé pole dohromady: tentýž výpočet, jen kategorie je jedna pro
+        // všechny. Nejde o jiné pravidlo, jen o jiné seskupení — vítěz
+        // dlouhé regaty se vyhlašuje napříč kategoriemi.
+        var celePole = Vypocet.VysledkyZavodu(
+        [
+            .. rozjizdky.Select(r => new RozjizdkaVstup(r.Cislo,
+                [.. r.Vysledky.Select(v => new VysledekVstup(v.Lod, CelePole, v.PoradiVCili, v.Kod))])),
+        ], zavod.PocetSkrtu, new Dictionary<string, int> { [CelePole] = prihlaseno.Values.Sum() });
+
+        // Kategorie lodi zůstává k zobrazení, i když se pořadí počítá bez ní.
+        var kategorieLodi = rozjizdky
+            .SelectMany(r => r.Vysledky)
+            .GroupBy(v => v.Lod)
+            .ToDictionary(g => g.Key, g => g.First().Kategorie);
+
         return TypedResults.Ok(new ZavodDetailDto(
             zavod.Slug, zavod.Nazev, zavod.Datum, zavod.DatumKonce, zavod.Typ, zavod.Poradatel,
             zavod.Stav, zavod.PuvodniDatum, zavod.PocetSkrtu, zavod.Vyhodnoceni, zavod.KoeficientDoSerie,
@@ -196,6 +221,9 @@ public static class ZavodEndpoints
                 v.Lod, v.Kategorie, v.Body, v.Poradi,
                 [.. v.Rozjizdky.Select(b => new BodyVRozjizdceDto(b.Cislo, b.Body, b.Skrtnuto))]))],
             lode,
+            [.. celePole.OrderBy(v => v.Poradi).Select(v => new VysledekZavoduDto(
+                v.Lod, kategorieLodi.GetValueOrDefault(v.Lod, ""), v.Body, v.Poradi,
+                [.. v.Rozjizdky.Select(b => new BodyVRozjizdceDto(b.Cislo, b.Body, b.Skrtnuto))]))],
             zavod.Druh,
             zavod.PoradatelZaznam is null
                 ? null

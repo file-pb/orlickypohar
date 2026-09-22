@@ -419,4 +419,54 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         nacteny = await zapis.NactiAsync(rozjizdka, poradatel: true, default);
         Assert.Null(nacteny.Lode.Single(l => l.PrihlaskaId == prihlasky[0]).PoznavaciZnak);
     }
+
+    [Fact]
+    public async Task Celkove_poradi_jde_napric_kategoriemi()
+    {
+        var slug = "zavod-celkem";
+
+        // Dvě kategorie, dvě rozjížďky. Cyril je v obou před Aničkou, ale
+        // každý jede v jiné kategorii, takže po kategoriích jsou oba první.
+        await Nahraj(new SerieVstup(
+            Slug: slug,
+            Nazev: "Pohár celkem",
+            Rok: 2026,
+            Kategorie: [new("Race", 1), new("Nad7m", 2)],
+            Osoby: [new("novak", "Jan", "Novák")],
+            Lode:
+            [
+                new("anicka", "Anička celkem", "CZE 1", "Fireball", "novak"),
+                new("cyril", "Cyril celkem", "CZE 3", "Micro", "novak"),
+            ],
+            Prihlasky: [new("anicka", "Race"), new("cyril", "Nad7m")],
+            Zavody:
+            [
+                new(
+                    Slug: "zahajeni",
+                    Nazev: "Zahájení sezóny",
+                    Datum: new DateOnly(2026, 4, 25),
+                    Poradi: 1,
+                    Ucasti: [new("anicka", "novak", null), new("cyril", "novak", null)],
+                    Rozjizdky:
+                    [
+                        new(1, null, StavRozjizdky.Dokoncena,
+                            [new("cyril", PoradiVCili: 1), new("anicka", PoradiVCili: 2)]),
+                        new(2, null, StavRozjizdky.Dokoncena,
+                            [new("cyril", PoradiVCili: 1), new("anicka", PoradiVCili: 2)]),
+                    ]),
+            ]));
+
+        var zavod = await ZavodAsync(slug);
+
+        // Po kategoriích je každý první ve své.
+        Assert.All(zavod.Poradi, v => Assert.Equal(1, v.Poradi));
+
+        // Celé pole dohromady rozhodne, kdo byl dřív v cíli.
+        Assert.NotNull(zavod.PoradiCelkem);
+        Assert.Equal(["Cyril celkem", "Anička celkem"], zavod.PoradiCelkem!.Select(v => v.Lod));
+        Assert.Equal([1, 2], zavod.PoradiCelkem.Select(v => v.Poradi));
+
+        // Kategorie u lodi zůstává, i když se pořadí počítá bez ní.
+        Assert.Equal("Nad7m", zavod.PoradiCelkem[0].Kategorie);
+    }
 }

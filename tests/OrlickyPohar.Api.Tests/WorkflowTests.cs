@@ -120,6 +120,21 @@ public class WorkflowTests
         Assert.Equal(kdo, Workflow.KdoSmi(na));
     }
 
+    [Theory]
+    [InlineData(StavVysledku.Navrzeno, Role.Organizator)]
+    [InlineData(StavVysledku.KRevizi, Role.Organizator)]
+    [InlineData(StavVysledku.Overeno, Role.Rozhodci)]
+    [InlineData(StavVysledku.Schvaleno, Role.Rozhodci)]
+    [InlineData(StavVysledku.Potvrzeno, Role.Rozhodci)]
+    [InlineData(StavVysledku.Eliminovano, Role.Rozhodci)]
+    public void Do_poharu_zaradi_poradatel_dokud_jsou_cisla_rozepsana(StavVysledku stav, Role kdo)
+    {
+        // Na vodě se podle podmínek pozná, jestli se rozjížďka počítá —
+        // a zakládá ji pořadatel. U podepsaných čísel je to zásah do poháru
+        // a patří rozhodčímu.
+        Assert.Equal(kdo, Workflow.KdoSmiDoSerie(stav));
+    }
+
     [Fact]
     public void Zapsat_a_schvalit_nesmi_tentyz_clovek()
     {

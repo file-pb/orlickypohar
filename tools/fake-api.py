@@ -87,17 +87,21 @@ def prihlaseno_do_zavodu(z, rozjizdky):
     return pocty
 
 
-def vysledky_zavodu(rozjizdky, pocet_skrtu=0, prihlaseno_zvenku=None):
-    """Výsledek závodu po kategoriích: součet bodů se škrty a pořadí."""
+def vysledky_zavodu(rozjizdky, pocet_skrtu=0, prihlaseno_zvenku=None, napric=False):
+    """Výsledek závodu po kategoriích: součet bodů se škrty a pořadí.
+
+    S `napric` je celé pole jedna kategorie — celkové pořadí regaty, jako
+    v `ZavodEndpoints`. Kategorie lodi se do výstupu vrací k zobrazení."""
+    kat = (lambda lod: "") if napric else (lambda lod: KAT[lod])
     lode = {}
     prihlaseno = {}
-    for kategorie, lod in {(KAT[v["lod"]], v["lod"]) for r in rozjizdky for v in r["vysledky"]}:
+    for kategorie, lod in {(kat(v["lod"]), v["lod"]) for r in rozjizdky for v in r["vysledky"]}:
         prihlaseno[kategorie] = prihlaseno.get(kategorie, 0) + 1
     for kategorie, pocet in (prihlaseno_zvenku or {}).items():
         prihlaseno[kategorie] = max(pocet, prihlaseno.get(kategorie, 0))
     for r in rozjizdky:
-        for kategorie in {KAT[v["lod"]] for v in r["vysledky"]}:
-            vysledky = [v for v in r["vysledky"] if KAT[v["lod"]] == kategorie]
+        for kategorie in {kat(v["lod"]) for v in r["vysledky"]}:
+            vysledky = [v for v in r["vysledky"] if kat(v["lod"]) == kategorie]
             for lod, body in body_rozjizdky(vysledky, prihlaseno[kategorie]).items():
                 lode.setdefault(lod, (kategorie, []))[1].append(
                     {"cislo": r["cislo"], "body": body, "skrtnuto": False})
@@ -113,7 +117,8 @@ def vysledky_zavodu(rozjizdky, pocet_skrtu=0, prihlaseno_zvenku=None):
                          "_nej": min(zbylo, default=10 ** 6)})
 
     vysledek = []
-    for kategorie in sorted({v["kategorie"] for v in spocteno}, key=KAT_PORADI.get):
+    for kategorie in sorted({v["kategorie"] for v in spocteno},
+                            key=(lambda k: 0) if napric else KAT_PORADI.get):
         # Shoda podle ZPJ A8 jako v API: seřazené body bez škrtů, pak
         # poslední rozjížďka (i škrtnutá), pak jméno.
         def a8(v):
@@ -122,7 +127,10 @@ def vysledky_zavodu(rozjizdky, pocet_skrtu=0, prihlaseno_zvenku=None):
             return (v["body"], serazene, od_konce, v["lod"])
         v_kategorii = sorted((v for v in spocteno if v["kategorie"] == kategorie), key=a8)
         for i, v in enumerate(v_kategorii):
-            vysledek.append({**{k: v[k] for k in v if k != "_nej"}, "poradi": i + 1})
+            radek = {**{k: v[k] for k in v if k != "_nej"}, "poradi": i + 1}
+            if napric:
+                radek["kategorie"] = KAT[v["lod"]]
+            vysledek.append(radek)
     return vysledek
 
 
@@ -365,7 +373,9 @@ def rozjizdka_radek(r):
             "mozneStavy": [s for s in VSECHNY_VYSLEDKY
                            if s != r["stavVysledku"]
                            and not proc_nejde_vysledek(r["stavVysledku"], s, True)],
-            "smiZapisovat": r["stavVysledku"] in OTEVRENY}
+            "smiZapisovat": r["stavVysledku"] in OTEVRENY,
+            # Práva mock nerozlišuje: přihlášený je tu pořadatel i rozhodčí.
+            "smiDoPoharu": True}
 
 
 # --- Zápis výsledků ---------------------------------------------------------
@@ -777,7 +787,7 @@ class H(BaseHTTPRequestHandler):
         cesta = urlparse(self.path).path
 
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
-                          r'/rozjizdky/(\d+)/(stav|publikace)$', cesta)):
+                          r'/rozjizdky/(\d+)/(stav|publikace|pohar)$', cesta)):
             return self.workflow(m.group(1), int(m.group(2)), m.group(3))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)/rozjizdky$', cesta)):
             return self.pridej_rozjizdku(m.group(1))
@@ -868,6 +878,11 @@ class H(BaseHTTPRequestHandler):
 
         if co == "publikace":
             r["publikovano"] = bool(vstup.get("publikovano"))
+            return self.odpoved(rozjizdka_radek(r))
+
+        if co == "pohar":
+            # Práva mock nerozlišuje; hranici „kdo smí" hlídají testy API.
+            r["doSerie"] = bool(vstup.get("doSerie"))
             return self.odpoved(rozjizdka_radek(r))
 
         na, duvod = vstup.get("stav"), (vstup.get("duvod") or "").strip()
@@ -1543,6 +1558,10 @@ class H(BaseHTTPRequestHandler):
                                for v in vysledky_zavodu(
                                    [r for r in z["rozjizdky"] if plati(r)],
                                    z.get("pocetSkrtu", 0))],
+                    "poradiCelkem": [{**v, "lod": nazvy(v["lod"])}
+                                     for v in vysledky_zavodu(
+                                         [r for r in z["rozjizdky"] if plati(r)],
+                                         z.get("pocetSkrtu", 0), napric=True)],
                     # Zrušená přihláška veřejně neexistuje, nepotvrzená nese
                     # poznámku — jako v API.
                     "lode": [{"lod": nazvy(u["lod"]), "kategorie": KAT[u["lod"]],
