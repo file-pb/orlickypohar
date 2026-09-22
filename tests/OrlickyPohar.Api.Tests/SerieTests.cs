@@ -55,8 +55,8 @@ public class SerieTests
 
     /// <summary>
     /// Řádky, kde se sešit od pravidla odchyluje. Nedopočítáváme je podle
-    /// sešitu — počítáme podle pravidla a rozdíl držíme na očích. LUNA
-    /// a DEPRESSO rozhodčí 22. 9. 2026 potvrdil jako chybu sešitu.
+    /// sešitu — počítáme podle pravidla a rozdíl držíme na očích. Všechny tři
+    /// rozhodčí 22. 9. 2026 potvrdil jako chybu sešitu.
     /// <list type="bullet">
     /// <item>LUNA: po dvou škrtech (1 a 0) vychází −1, sešit má 0.</item>
     /// <item>DEPRESSO: 23 − 8 − 5 = 10, sešit 13.</item>

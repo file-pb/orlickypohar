@@ -1231,12 +1231,11 @@ ne podle A8.2 (to by bralo i škrtnutou poslední rozjížďku).
 | ČERVENÉ CAFE, 20 bodů | „je podle platných pravidel, na příští rok upravíme" — diskvalifikace 20 platí pro 2026 |
 | Od kolika zastávek dva škrty | „od devíti, co bylo dřív, neřešit" — `Serie.PocetSkrtu` = 2 |
 | Vánoční regata | zrušená; datum 12. 12. v ukázkových datech je vymyšlené (Filip) |
-| LUNA −1, DEPRESSO 10 | platí výpočet, v sešitu chyba |
+| LUNA −1, DEPRESSO 10, MICHELLE 32 | platí výpočet, v sešitu chyba |
 
 **Zbývá:** seznam lodí přihlášených na zastávky, které nepřijely, a dvě nové
 lodě z Poháru Slunce (které, jaká kategorie). Miloš na to teď nemá čas;
-Filip: „až budeš vědět, napiš a necháme to dojet". MICHELLE (32 proti 36
-v sešitu) bez odpovědi. Body za tresty se upraví na ročník 2027.
+Filip: „až budeš vědět, napiš a necháme to dojet". Body za tresty se upraví na ročník 2027.
 
 ## Co ukázala první skutečná směrnice
 
