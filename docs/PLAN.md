@@ -1155,6 +1155,9 @@ výpočet z nich nic neplyne.
 - Nízkobodový systém: 1. místo 0, 2. místo 1, …
 - **Neúčast: tolik bodů, kolik je lodí ve třídě** — v sešitu to znamená lodí
   kategorie, které na zastávce byly. Sedí na všech zastávkách.
+  Miloš to později upřesnil: „počet přihlášených lodí ve třídě plus 1". Je to
+  **místo** za posledním jako v A5.2. Na seriálové stupnici, kde se od místa
+  odečítá jedna, vychází přesně počet lodí, takže výpočet zůstává.
 - **Diskvalifikace v regatě 20 bodů** (závažné porušení pravidel, nesplnění
   alternativního trestu nebo splnění bez svědka, dál podle ZPJ). Miloš k tomu:
   tresty dávají ZPJ, **body si „nějak vymyslel" a může to být špatně**.
