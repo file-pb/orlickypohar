@@ -122,4 +122,78 @@ public class IdentitaTests(PostgresFixture fixture)
         // Právo na zastávku není právo na ročník.
         Assert.False(Prava.Smi(prava, new(Role.Spravce, serieId)));
     }
+
+    /// <summary>
+    /// Založí ročník se zastávkou a pořadatele jen té zastávky.
+    /// </summary>
+    private async Task<(Guid Uzivatel, int Serie, int Zavod)> PoradatelZastavkyAsync(string subject, string slug)
+    {
+        var uzivatel = await VeSluzbeAsync((u, _) => Prihlas(u, subject));
+
+        return await VeSluzbeAsync(async (_, db) =>
+        {
+            var serie = new Api.Features.Serial.Serie { Nazev = "Pohár mazání", Slug = slug, Rok = 2025 };
+            db.Serie.Add(serie);
+            await db.SaveChangesAsync();
+
+            var zavod = new Api.Features.Zavody.Zavod
+            {
+                SerieId = serie.Id, Nazev = "Mazaná zastávka", Slug = "mazana",
+                Datum = new DateOnly(2025, 6, 1),
+            };
+            db.Zavody.Add(zavod);
+            await db.SaveChangesAsync();
+
+            db.Opravneni.Add(new Opravneni
+            {
+                UzivatelId = uzivatel.Id, Role = Role.Organizator,
+                SerieId = serie.Id, ZavodId = zavod.Id,
+                UdelenoV = DateTimeOffset.UtcNow,
+            });
+            await db.SaveChangesAsync();
+            return (uzivatel.Id, serie.Id, zavod.Id);
+        });
+    }
+
+    private async Task PravoNaRocnikNevzniklo(Guid uzivatelId, int serieId)
+    {
+        var prava = await VeSluzbeAsync((u, _) => u.PravaAsync(uzivatelId, default));
+
+        // Prázdné ZavodId znamená celý ročník. Vynulováním by se z pořadatele
+        // jedné zastávky potichu stal pořadatel všech.
+        Assert.False(Prava.Smi(prava, new(Role.Organizator, serieId)));
+        Assert.False(Prava.Smi(prava, new(Role.Editor, serieId)));
+
+        var radku = await VeSluzbeAsync((_, db) =>
+            db.Opravneni.CountAsync(o => o.UzivatelId == uzivatelId));
+        Assert.Equal(0, radku);
+    }
+
+    [Fact]
+    public async Task Smazana_zastavka_nedava_pravo_na_rocnik_ani_v_databazi()
+    {
+        var (uzivatel, serie, zavod) = await PoradatelZastavkyAsync("sub-mazani-sql", "mazani-sql");
+
+        // Mimo EF, jako ruční DELETE: rozhoduje pravidlo cizího klíče.
+        await VeSluzbeAsync((_, db) => db.Zavody.Where(z => z.Id == zavod).ExecuteDeleteAsync());
+
+        await PravoNaRocnikNevzniklo(uzivatel, serie);
+    }
+
+    [Fact]
+    public async Task Smazana_zastavka_nedava_pravo_na_rocnik_ani_pres_ef()
+    {
+        var (uzivatel, serie, zavod) = await PoradatelZastavkyAsync("sub-mazani-ef", "mazani-ef");
+
+        // S načteným právem v kontextu rozhoduje EF, ne databáze — při
+        // SetNull by řádek sám přepsal na ZavodId = null.
+        await VeSluzbeAsync(async (_, db) =>
+        {
+            await db.Opravneni.Where(o => o.ZavodId == zavod).LoadAsync();
+            db.Zavody.Remove(await db.Zavody.SingleAsync(z => z.Id == zavod));
+            return await db.SaveChangesAsync();
+        });
+
+        await PravoNaRocnikNevzniklo(uzivatel, serie);
+    }
 }

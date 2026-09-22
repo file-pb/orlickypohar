@@ -219,10 +219,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .OnDelete(DeleteBehavior.Cascade);
         opravneni.HasOne(x => x.Serie).WithMany().HasForeignKey(x => x.SerieId)
             .OnDelete(DeleteBehavior.Cascade);
-        // Smazaná zastávka nesmí zrušit celý řádek práva — pořadatel ho má
-        // od správce ročníku a mazání závodu není jeho odebrání.
+        // Právo na zastávku zaniká se zastávkou. Prázdné ZavodId znamená
+        // celý ročník, takže SetNull by ze smazání zastávky udělal tiché
+        // rozšíření: z pořadatele jedné zastávky pořadatele všech. Právo na
+        // něco, co neexistuje, nemá co chránit — a kdo má dostat ročník,
+        // musí ho dostat udělením, ne úklidem.
         opravneni.HasOne(x => x.Zavod).WithMany().HasForeignKey(x => x.ZavodId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Cascade);
         // Totéž právo dvakrát je tichý nepořádek: odebrání jednoho řádku by
         // vypadalo jako odebrání práva, a přitom by dál platilo z druhého.
         opravneni.HasIndex(x => new { x.UzivatelId, x.Role, x.SerieId, x.ZavodId }).IsUnique();
