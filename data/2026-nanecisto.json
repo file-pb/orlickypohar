@@ -3272,94 +3272,13 @@
       "vyhodnoceni": "PoKategoriich",
       "koeficientDoSerie": 1.0,
       "posunDoSerie": 0,
-      "stav": "Planovany",
+      "stav": "Zruseny",
       "publikovano": false,
-      "ucasti": [
-        {
-          "lod": "sendy",
-          "kormidelnik": "osoba-2",
-          "posadka": "Josef Bartoš"
-        },
-        {
-          "lod": "andante",
-          "kormidelnik": "osoba-7",
-          "posadka": "Pavel Marek, Vít Toman, Jakub Procházka"
-        },
-        {
-          "lod": "depresso",
-          "kormidelnik": "osoba-11",
-          "posadka": "Milan Zeman, Blanka Havel"
-        },
-        {
-          "lod": "sula",
-          "kormidelnik": "osoba-12",
-          "posadka": "Lucie Kučera, Radek Sedláček"
-        },
-        {
-          "lod": "thea",
-          "kormidelnik": "osoba-16",
-          "posadka": "Karel Vlček, Blanka Havel"
-        },
-        {
-          "lod": "family-lady",
-          "kormidelnik": "osoba-19",
-          "posadka": "Pavel Marek, Jiří Král"
-        },
-        {
-          "lod": "avenir",
-          "kormidelnik": "osoba-11",
-          "posadka": "Jiří Král"
-        },
-        {
-          "lod": "hogan",
-          "kormidelnik": "osoba-17",
-          "posadka": "Jan Novák, Lukáš Ryba, Martin Dvořák"
-        },
-        {
-          "lod": "liberte",
-          "kormidelnik": "osoba-33",
-          "posadka": "Josef Bartoš, Hana Urban"
-        },
-        {
-          "lod": "caprice",
-          "kormidelnik": "osoba-6",
-          "posadka": "Josef Bartoš"
-        },
-        {
-          "lod": "valhalla",
-          "kormidelnik": "osoba-30",
-          "posadka": "Ivan Kříž, Šárka Doležal, Lucie Kučera"
-        },
-        {
-          "lod": "perun",
-          "kormidelnik": "osoba-13",
-          "posadka": "Petr Svoboda"
-        },
-        {
-          "lod": "socka",
-          "kormidelnik": "osoba-35",
-          "posadka": "Jan Novák"
-        },
-        {
-          "lod": "zephyr",
-          "kormidelnik": "osoba-37",
-          "posadka": "Šárka Doležal, Josef Bartoš, Nikola Bureš"
-        }
-      ],
+      "ucasti": [],
       "rozjizdky": []
     }
   ],
   "clanky": [
-    {
-      "slug": "vanocni-regata-pozvanka",
-      "titulek": "Pozvánka: Vánoční regata",
-      "perex": "12. prosince 2026. Přihlášky přijímá pořadatel; kdo jede celý seriál, hlásit se znovu nemusí.",
-      "telo": "Pořádá YC Orlík. Jede se 12. prosince 2026.\n\nVypsání závodu a plachetní směrnice vydává pořadatel; přihlášky přijímá on,\nne pohár. Rozpis rozjížděk se rozhoduje na vodě podle větru, takže jejich\npočet dopředu neslibujeme.\n\nKdo jede celý seriál, nemusí nic hlásit navíc — kategorie platí celý rok.",
-      "autor": "YC Orlík",
-      "zavod": "vanocni-regata",
-      "publikovanoV": "2026-11-21T09:00:00+02:00",
-      "publikovano": true
-    },
     {
       "slug": "pohar-slunce-vysledky",
       "titulek": "Pohár Slunce: PEZI bere kategorii Nad7m",
@@ -3368,15 +3287,6 @@
       "autor": "SK Popovice",
       "zavod": "pohar-slunce",
       "publikovanoV": "2026-09-19T20:30:00+02:00",
-      "publikovano": true
-    },
-    {
-      "slug": "prubezne-poradi-neni-konecne",
-      "titulek": "Průběžné pořadí ještě není konečné",
-      "perex": "Průběžné pořadí ještě zdaleka není konečné — škrty nejhorších závodů se projeví až na konci sezóny.",
-      "telo": "Ročník má za sebou 7 z 9 zastávek. Průběžné pořadí se od\nkonečného může ještě výrazně lišit — škrty nejhorších závodů se projeví\naž na konci a do té doby drží ve hře i lodě, které jednu zastávku\npropásly.\n\nNejbližší zastávkou je Vánoční regata. Kdo ještě neodjel čtyři závody, má pořád\nšanci se do popředí dostat; kdo odjel všechny, má naopak co ztratit.",
-      "autor": "Orlický pohár",
-      "publikovanoV": "2026-09-19T12:00:00+02:00",
       "publikovano": true
     },
     {

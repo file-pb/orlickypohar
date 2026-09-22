@@ -156,7 +156,9 @@ KATEGORIE_LODI_PRED = {p["lod"]: p["kategorie"] for p in prihlasky}
 zavody = []
 for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerate(ZAVODY, 1):
     mista, diskvalifikovane = umisteni_ze_sesitu(nazev)
-    zrusena = nazev in ZRUSENE and den <= date(2026, 9, 22)
+    # Radavská i Vánoční regata se v roce 2026 nejely (rozhodčí, 22. 9. 2026);
+    # datum Vánoční regaty v tabulce výš je vymyšlené.
+    zrusena = nazev in ZRUSENE
 
     # Plánovaná zastávka se ještě nejela, takže po ní nemůžou být výsledky.
     # Nanejvýš je známo, kdo se chystá jet — účasti tedy zůstávají, rozjížďky

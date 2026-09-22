@@ -83,7 +83,7 @@ export default function Pravidla() {
 
       <h2>Škrty a shoda bodů</h2>
       <p>
-        Nejhorší výsledky ročníku se škrtají: při devíti zastávkách <b>dva</b>. Škrtnout se dá
+        Nejhorší výsledky ročníku se škrtají: od devíti zastávek <b>dva</b>. Škrtnout se dá
         i dvacítka za diskvalifikaci; při stejně špatných výsledcích se škrtá ten dřívější.
         V tabulce jsou proto dvě čísla, součet a součet po škrtu,
         a škrtnutá zastávka je přeškrtnutá.
@@ -104,15 +104,13 @@ export default function Pravidla() {
       <p className="poznamka">
         Pravidla seriálu sepsal rozhodčí Miloš Zvonař (YC Písek) a jeho sešit s pořadím 2026
         je naše zkouška: výpočet s ním sedí u všech lodí kromě několika řádků, kde se
-        sešit sám přepsal nebo spletl. Pořád otevřené zůstává:
+        sešit sám přepsal nebo spletl — rozhodčí ty řádky prošel a potvrdil výpočet. Pořád
+        otevřené zůstává:
       </p>
       <ul>
         <li>
-          <b>20 bodů za diskvalifikaci</b> je zatím pracovní hodnota a může se ještě změnit.
-        </li>
-        <li>
-          <b>Od kolika zastávek se škrtá dvakrát.</b> Při devíti dva škrty, dřív v sezóně
-          sešit škrtal jeden.
+          <b>20 bodů za diskvalifikaci</b> platí pro ročník 2026; na příští rok se hodnocení
+          trestů upraví.
         </li>
         <li>
           <b>Náprava</b> (<code>RDG</code>) je zatím hned za posledním, kdo dojel. Skutečné body

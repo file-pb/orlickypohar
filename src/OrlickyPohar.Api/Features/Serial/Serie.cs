@@ -22,9 +22,8 @@ public class Serie
     /// <summary>
     /// Kolik nejhorších zastávek se v průběžném pořadí škrtá.
     /// <para>
-    /// Je to číslo na ročníku, ne pravidlo v kódu: sešit rozhodčího škrtal
-    /// po pěti odjetých zastávkách jednu a po sedmi dvě, a jak počet
-    /// s délkou ročníku roste, zatím nikdo nenapsal (stav 22. 9. 2026).
+    /// Je to číslo na ročníku, ne pravidlo v kódu. Rozhodčí 22. 9. 2026:
+    /// od devíti zastávek dva škrty; co bylo dřív, neřešit.
     /// </para>
     /// </summary>
     public int PocetSkrtu { get; set; } = 1;

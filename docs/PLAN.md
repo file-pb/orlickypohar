@@ -1222,16 +1222,21 @@ na zastávce byly; bez přihlášek na zastávku to jinak nešlo. **„Škrtán�
 dřívější (A2.1), v závodě i v seriálu. Rozstřel zůstává podle jeho znění,
 ne podle A8.2 (to by bralo i škrtnutou poslední rozjížďku).
 
-**Zbývá na rozhodčího:**
+**Odpovědi rozhodčího na doplňující otázky (22. 9. 2026, WhatsApp):**
 
-1. JOY před Charlotte III — jiné kritérium, nebo přehlédnutí?
-2. Zephyr na 24hodinovce: Filip 8. 9. „nejela", sešit jí dává 2. Podle
-   pravidla by neúčast byla 5 (pět lodí RACE).
-3. ČERVENÉ CAFE: odstoupila, nebo diskvalifikace? Sešit má 20.
-4. Od kolika zastávek se škrtá dvakrát (po pěti odjetých byl v sešitu jeden
-   škrt).
-5. Vánoční regata má v sešitu nuly jako zrušená, v kalendáři je 12. 12.
-6. Body za diskvalifikaci a tresty — varianty později.
+| Otázka | Odpověď |
+|---|---|
+| JOY před Charlotte III | „asi moje chyba" — platí výpočet, Charlotte je třetí |
+| Zephyr na 24hodinovce | „asi nejel, moje chyba" — neúčast podle pravidla |
+| ČERVENÉ CAFE, 20 bodů | „je podle platných pravidel, na příští rok upravíme" — diskvalifikace 20 platí pro 2026 |
+| Od kolika zastávek dva škrty | „od devíti, co bylo dřív, neřešit" — `Serie.PocetSkrtu` = 2 |
+| Vánoční regata | zrušená; datum 12. 12. v ukázkových datech je vymyšlené (Filip) |
+| LUNA −1, DEPRESSO 10 | platí výpočet, v sešitu chyba |
+
+**Zbývá:** seznam lodí přihlášených na zastávky, které nepřijely, a dvě nové
+lodě z Poháru Slunce (které, jaká kategorie). Miloš na to teď nemá čas;
+Filip: „až budeš vědět, napiš a necháme to dojet". MICHELLE (32 proti 36
+v sešitu) bez odpovědi. Body za tresty se upraví na ročník 2027.
 
 ## Co ukázala první skutečná směrnice
 
