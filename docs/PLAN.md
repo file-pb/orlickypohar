@@ -2351,6 +2351,42 @@ změn ukládá účet a kontakty visí na osobě. Přibude vazba účet × loď
 s rolí (a obdobně pro akci a ročník); z ní pak „moje přihlášky",
 odhlášení bez pořadatele a upozornění fanouškům.
 
+## Výsledek akce a pořadí do poháru (22. 9. 2026)
+
+U zastávky jsou dvě různá pořadí a dnes je vidět jen jedno. Liší se ve
+třech věcech:
+
+| | Výsledek akce | Do poháru |
+|---|---|---|
+| rozjížďky | všechny | jen s `DoSerie` |
+| seskupení | podle akce: celé pole, po kategoriích, vlastní skupiny | vždy tři kategorie série |
+| stupnice | body závodu, vítěz 1 | body do seriálu, vítěz 0, 24hodinovka −1 |
+
+Izolepa se liší v rozjížďkách (běh pro míčky do poháru nejde), Pohár
+Slunce a 24hodinovka v seskupení (vyhodnocují se jako celé pole).
+`Zavod.Vyhodnoceni = CelePole` je dnes jen popisek — nic podle něj
+nepočítá, tabulka je vždycky po kategoriích.
+
+**Rozhodnuto (Filip, 22. 9. 2026):**
+
+1. **Ukázat obojí.** Ne jako další záložky — ty už na stránce přepínají
+   kategorie. Přepínač pohledu musí být jinde a „elegantně", třeba
+   dvoupolohový přepínač „Výsledek akce / Do poháru" nad tabulkou, nebo
+   nabídka pod ⋮. Pohled „Do poháru" se nabízí jen tam, kde se od
+   výsledku akce liší.
+2. **Celé pole bez přepočtu.** Handicap ani časy se zatím nejedou; celé
+   pole je pořadí v cíli přes všechny lodě, kódy podle A5.2 z počtu lodí
+   přihlášených do celého závodu.
+3. **Vlastní skupiny akce na webu** (celkové pořadí, dřevěné lodě…) by
+   bylo fajn vidět taky — jako další volba ve výsledku akce. Znamená to
+   skupiny na závodě, které se nerovnají kategoriím série (viz *Co ukázala
+   první skutečná směrnice*, bod 1).
+
+**Ještě s Milošem:** jak přesně to zobrazovat — Filip to s ním doladí,
+stavět až potom. Počítat se musí stejnými funkcemi jako průběžné pořadí,
+aby stránka zastávky a seriál nemohly ukazovat něco jiného. Číslo zastávky
+v průběžném pořadí má vést rovnou na pohled „Do poháru".
+
 ## Kde se pokračuje
 
 Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
