@@ -49,4 +49,20 @@ public class ModelTests
 
         Assert.Null(vysledek.FindProperty("Body"));
     }
+
+    [Fact]
+    public void Pravo_na_zastavku_zanika_se_zastavkou()
+    {
+        using var db = Context();
+
+        // Prázdné ZavodId znamená právo na celý ročník. Kdyby smazání
+        // zastávky sloupec jen vynulovalo, stal by se z pořadatele jedné
+        // zastávky pořadatel celého ročníku. Chování nad databází ověřuje
+        // IdentitaTests; tohle hlídá model i bez Dockeru.
+        var opravneni = db.Model.FindEntityType(typeof(OrlickyPohar.Api.Features.Identita.Opravneni))!;
+        var naZavod = opravneni.GetForeignKeys()
+            .Single(fk => fk.Properties.Single().Name == "ZavodId");
+
+        Assert.Equal(DeleteBehavior.Cascade, naZavod.DeleteBehavior);
+    }
 }

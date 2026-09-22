@@ -827,7 +827,7 @@ namespace OrlickyPohar.Api.Migrations
                     b.HasOne("OrlickyPohar.Api.Features.Zavody.Zavod", "Zavod")
                         .WithMany()
                         .HasForeignKey("ZavodId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Serie");
 
