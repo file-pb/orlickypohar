@@ -600,6 +600,10 @@ namespace OrlickyPohar.Api.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
+                    b.Property<string>("PoznavaciZnak")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
                     b.Property<int>("PrihlaskaId")
                         .HasColumnType("integer");
 

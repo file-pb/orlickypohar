@@ -335,6 +335,14 @@ public class Ucast
     public string? Poznamka { get; set; }
 
     /// <summary>
+    /// Poznávací znak lodi na vodě — „modrý spinakr", „bez čísla na plachtě".
+    /// Domluví se na něm zapisovatelé u cíle a stojí na tlačítku lodi
+    /// v cílové obrazovce (22. 9. 2026). Platí pro celou regatu, ne pro
+    /// jednu rozjížďku. Veřejně se nevydává.
+    /// </summary>
+    public string? PoznavaciZnak { get; set; }
+
+    /// <summary>
     /// Startovné. Součást přihlášky, ale <b>nic neblokuje</b> — kdo přijede
     /// na poslední chvíli, zaplatí později (Filip, 17. 9. 2026).
     /// </summary>

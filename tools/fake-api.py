@@ -489,6 +489,7 @@ def prihlasky_dto(z):
 def zapis_dto(z, r):
     chyba = proc_nejde_prepsat(z, r)
     podle_lodi = {v["lod"]: v for v in r["vysledky"]}
+    ucasti = {u["lod"]: u for u in z["ucasti"]}
     lode = sorted(D["prihlasky"], key=lambda p: (KAT_PORADI[p["kategorie"]], nazvy(p["lod"])))
     return {"serie": D["slug"], "serieNazev": D["nazev"], "zavod": z["slug"],
             "zavodNazev": z["nazev"], "stavZavodu": z["stav"], "cislo": r["cislo"],
@@ -500,7 +501,9 @@ def zapis_dto(z, r):
                       "poradiVCili": podle_lodi.get(p["lod"], {}).get("poradiVCili"),
                       "kod": podle_lodi.get(p["lod"], {}).get("kod"),
                       "casSekundy": podle_lodi.get(p["lod"], {}).get("casSekundy"),
-                      "dojezdV": podle_lodi.get(p["lod"], {}).get("dojezdV")}
+                      "dojezdV": podle_lodi.get(p["lod"], {}).get("dojezdV"),
+                      "naRegate": ucasti.get(p["lod"], {}).get("stav") in VEREJNE_UCASTI,
+                      "poznavaciZnak": ucasti.get(p["lod"], {}).get("poznavaciZnak")}
                      for p in lode],
             "startV": r.get("startV"), "doSerie": r.get("doSerie", True)}
 
@@ -683,6 +686,9 @@ class H(BaseHTTPRequestHandler):
     def do_PUT(self):
         cesta = urlparse(self.path).path
 
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
+                          r'/lode/(\d+)/znak$', cesta)):
+            return self.znak(m.group(1), int(m.group(2)))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                           r'/rozjizdky/(\d+)/vysledky$', cesta)):
             return self.uloz_zapis(m.group(1), int(m.group(2)))
@@ -912,9 +918,13 @@ class H(BaseHTTPRequestHandler):
                           **({"dojezdV": dojezd, "casSekundy": cas_od_startu(r.get("startV"), dojezd)}
                              if dojezd else {})}
                          for lod, _, poradi, kod, dojezd in radky if poradi is not None or kod]
+        # Loď s výsledkem přijela, jako v API; vyloučená zůstává vyloučená.
         for lod in (v["lod"] for v in r["vysledky"]):
-            if all(u["lod"] != lod for u in z["ucasti"]):
-                z["ucasti"].append({"lod": lod, "kormidelnik": None, "posadka": None})
+            u = next((u for u in z["ucasti"] if u["lod"] == lod), None)
+            if not u:
+                z["ucasti"].append({"lod": lod, "kormidelnik": None, "posadka": None, "stav": "Potvrzena"})
+            elif u["stav"] != "Vyloucena":
+                u["stav"] = "Potvrzena"
         return self.odpoved(zapis_dto(z, r))
 
     def prihlas_lod(self, zavod):
@@ -997,6 +1007,23 @@ class H(BaseHTTPRequestHandler):
              "kdy": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")})
         u["stav"], u["duvod"] = na, duvod or None
         return self.odpoved(lod_na_zastavce(z, lod))
+
+    def znak(self, zavod, prihlaska):
+        """Poznávací znak lodi na regatě, jako `ZapisSprava.ZnakAsync`."""
+        z = self.zastavka(zavod)
+        if not z:
+            return None
+        lod = LOD_PODLE_ID.get(prihlaska)
+        u = next((u for u in z["ucasti"] if u["lod"] == lod), None) if lod else None
+        if not u or u["stav"] not in VEREJNE_UCASTI:
+            return self.chyba(400, "Loď na regatu přihlášená není. Přihlas ji, nebo jí rovnou zapiš dojezd.")
+        znak = (self.telo_zadosti().get("znak") or "").strip()
+        if len(znak) > 60:
+            return self.chyba(400, "Poznávací znak má nejvýš 60 znaků, ať se vejde na tlačítko.")
+        u["poznavaciZnak"] = znak or None
+        self.send_response(204)
+        self.end_headers()
+        return None
 
     def odstartuj(self, zavod, cislo):
         z, r = self.rozjizdka(zavod, cislo)

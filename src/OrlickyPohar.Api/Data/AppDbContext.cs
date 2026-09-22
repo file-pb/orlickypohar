@@ -137,6 +137,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         ucast.Property(x => x.KontaktEmail).HasMaxLength(Kontakty.EmailNejvic);
         ucast.Property(x => x.KontaktTelefon).HasMaxLength(Kontakty.TelefonNejvic);
         ucast.Property(x => x.Poznamka).HasMaxLength(1000);
+        ucast.Property(x => x.PoznavaciZnak).HasMaxLength(Zapis.ZnakNejvic);
         ucast.Property(x => x.StartovnePoznamka).HasMaxLength(200);
 
         var zmena = b.Entity<ZmenaUcasti>();

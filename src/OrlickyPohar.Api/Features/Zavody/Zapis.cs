@@ -55,6 +55,30 @@ public static class Zapis
         _ => "Závod ještě není vypsaný. Výsledky se zapisují od vypsání.",
     };
 
+    /// <summary>Nejdelší poznávací znak. Stojí na tlačítku lodi, víc se tam nevejde.</summary>
+    public const int ZnakNejvic = 60;
+
+    /// <summary>
+    /// Poznávací znak k uložení: oříznutý, prázdný jako <c>null</c> — nebo
+    /// chyba, když je moc dlouhý.
+    /// </summary>
+    public static (string? Znak, string? Chyba) UpravZnak(string? znak)
+    {
+        var oriznuty = znak?.Trim();
+        if (string.IsNullOrEmpty(oriznuty)) return (null, null);
+        return oriznuty.Length > ZnakNejvic
+            ? (null, $"Poznávací znak má nejvýš {ZnakNejvic} znaků, ať se vejde na tlačítko.")
+            : (oriznuty, null);
+    }
+
+    /// <summary>
+    /// Je loď na regatě? Přihlášená, potvrzená i vyloučená ano — tyhle na
+    /// startu jsou nebo byly. Požadavek z webu, vrácená, odmítnutá, zrušená
+    /// a nedostavená ne. Stejné rozdělení jako na obrazovce přihlášek.
+    /// </summary>
+    public static bool NaRegate(StavUcasti stav) =>
+        stav is StavUcasti.Prihlasena or StavUcasti.Potvrzena or StavUcasti.Vyloucena;
+
     /// <summary>
     /// Naměřený čas: od startu rozjížďky do dojezdu. <c>null</c>, když start
     /// zapsaný není, nebo když by vyšel záporný — to je špatně nastavený

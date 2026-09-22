@@ -153,4 +153,39 @@ public class ZapisTests
         Assert.Null(Zapis.NamerenyCas(null, start));
         Assert.Null(Zapis.NamerenyCas(start, start.AddMinutes(-1)));
     }
+
+    [Fact]
+    public void Znak_se_orizne_a_prazdny_je_zadny()
+    {
+        Assert.Equal(("modrý spinakr", null), Zapis.UpravZnak("  modrý spinakr "));
+
+        // Prázdné pole na obrazovce znak maže, neukládá mezeru.
+        Assert.Equal((null, null), Zapis.UpravZnak("   "));
+        Assert.Equal((null, null), Zapis.UpravZnak(null));
+    }
+
+    [Fact]
+    public void Dlouhy_znak_neprojde()
+    {
+        var (znak, chyba) = Zapis.UpravZnak(new string('x', Zapis.ZnakNejvic + 1));
+
+        Assert.Null(znak);
+        Assert.NotNull(chyba);
+    }
+
+    [Theory]
+    [InlineData(StavUcasti.Prihlasena, true)]
+    [InlineData(StavUcasti.Potvrzena, true)]
+    [InlineData(StavUcasti.Vyloucena, true)]
+    [InlineData(StavUcasti.Pozadavek, false)]
+    [InlineData(StavUcasti.KDoplneni, false)]
+    [InlineData(StavUcasti.Odmitnuta, false)]
+    [InlineData(StavUcasti.Zrusena, false)]
+    [InlineData(StavUcasti.Nedostavila, false)]
+    public void Na_regate_je_lod_na_startu(StavUcasti stav, bool naRegate)
+    {
+        // Vyloučená na startu byla — výsledky má, jen neplatí. Požadavek
+        // z webu pořadatel ještě nepřijal, takže tlačítko v cíli nedostane.
+        Assert.Equal(naRegate, Zapis.NaRegate(stav));
+    }
 }

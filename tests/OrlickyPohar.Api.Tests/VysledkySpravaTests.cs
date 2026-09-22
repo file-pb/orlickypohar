@@ -385,4 +385,38 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         Assert.Equal(StavVysledku.Navrzeno, rozjizdka.StavVysledku);
         Assert.False(rozjizdka.Publikovano);
     }
+
+    [Fact]
+    public async Task Poznavaci_znak_jen_lodi_na_regate()
+    {
+        var slug = "zapis-znak";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
+
+        // Bóra se odhlásila.
+        var bora = await db.Ucasti.SingleAsync(u => u.PrihlaskaId == prihlasky[1]);
+        bora.Stav = StavUcasti.Zrusena;
+        await db.SaveChangesAsync();
+
+        Assert.Null(await zapis.ZnakAsync(rozjizdka.ZavodId, prihlasky[0], " modrý spinakr ", default));
+
+        // Odhlášené lodi se znak nedává — kdo ji na vodě uvidí, přihlásí ji.
+        Assert.NotNull(await zapis.ZnakAsync(rozjizdka.ZavodId, prihlasky[1], "bez čísla", default));
+
+        var nacteny = await zapis.NactiAsync(rozjizdka, poradatel: true, default);
+        var anicka = nacteny.Lode.Single(l => l.PrihlaskaId == prihlasky[0]);
+        var odhlasena = nacteny.Lode.Single(l => l.PrihlaskaId == prihlasky[1]);
+
+        Assert.True(anicka.NaRegate);
+        Assert.Equal("modrý spinakr", anicka.PoznavaciZnak);
+        Assert.False(odhlasena.NaRegate);
+        Assert.Null(odhlasena.PoznavaciZnak);
+
+        // Prázdný znak smaže.
+        Assert.Null(await zapis.ZnakAsync(rozjizdka.ZavodId, prihlasky[0], "", default));
+        nacteny = await zapis.NactiAsync(rozjizdka, poradatel: true, default);
+        Assert.Null(nacteny.Lode.Single(l => l.PrihlaskaId == prihlasky[0]).PoznavaciZnak);
+    }
 }
