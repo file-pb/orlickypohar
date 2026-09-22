@@ -34,7 +34,10 @@ public record ZastavkaRadek(
     // Na konci a s výchozí hodnotou: změny API jsou jen aditivní.
     string? PoradatelSlug = null,
     // Medailonek smí upravit rozhodčí, nebo organizátor téhle zastávky.
-    bool SmiMedailonek = false);
+    bool SmiMedailonek = false,
+    // Jak se regata vyhodnocuje. Aditivně, na konci: formulář kalendáře
+    // to předvyplňuje (Filip, 22. 9. 2026).
+    Vyhodnoceni Vyhodnoceni = Vyhodnoceni.PoKategoriich);
 
 public record PrehledZastavekDto(
     string Serie,
@@ -45,9 +48,15 @@ public record PrehledZastavekDto(
 /// <summary>
 /// Co se posílá při založení i úpravě zastávky. Adresa se odvodí z názvu.
 /// <para>
-/// Pravidla bodování — počet škrtů, vyhodnocení, koeficient — tu schválně
-/// nejsou. Do kalendáře patří termín a jméno; čísla, podle kterých se
-/// počítá pohár, jsou věc závodu a mění se jinde a jindy.
+/// Počet škrtů a koeficient do poháru tu schválně nejsou: to jsou čísla,
+/// podle kterých se pohár počítá, a mění se jinde a jindy.
+/// <para>
+/// <b>Vyhodnocení tu ale je</b> (Filip, 22. 9. 2026). Neříká, kolik kdo
+/// dostane bodů — ty jdou do poháru vždycky po kategoriích — jen jestli
+/// regata vyhlašuje i celkové pořadí napříč kategoriemi. To je rozhodnutí
+/// o regatě, které padá při jejím vypsání, a rozhodčí ho má mít po ruce
+/// v kalendáři.
+/// </para>
 /// </para>
 /// </summary>
 public record ZastavkaVstup(
@@ -57,7 +66,9 @@ public record ZastavkaVstup(
     string? Typ = null,
     string? Poradatel = null,
     // Platí jen při založení. Úprava druh nemění — viz `Zavod.Druh`.
-    DruhZastavky Druh = DruhZastavky.Pohar);
+    DruhZastavky Druh = DruhZastavky.Pohar,
+    // Bez hodnoty zůstává „po kategoriích", jak se regaty vyhodnocují běžně.
+    Vyhodnoceni Vyhodnoceni = Vyhodnoceni.PoKategoriich);
 
 public record StavZastavkyVstup(StavZavodu Stav);
 
@@ -132,6 +143,7 @@ public class KalendarSprava(AppDbContext db)
             DatumKonce = vstup.DatumKonce,
             Typ = Prazdne(vstup.Typ),
             Druh = vstup.Druh,
+            Vyhodnoceni = vstup.Vyhodnoceni,
             Stav = StavZavodu.Planovany,
             Publikovano = false,
             // Pořadí se hned přepočítá podle data; tohle je jen než dostane
@@ -163,6 +175,7 @@ public class KalendarSprava(AppDbContext db)
         zastavka.Datum = vstup.Datum;
         zastavka.DatumKonce = vstup.DatumKonce;
         zastavka.Typ = Prazdne(vstup.Typ);
+        zastavka.Vyhodnoceni = vstup.Vyhodnoceni;
         // Jiné jméno přiřadí jiného pořadatele; přejmenovat klub se dá jen
         // v jeho medailonku, jinak by jeden překlep v kalendáři přepsal
         // jméno na všech jeho zastávkách.

@@ -574,6 +574,7 @@ def zastavka_radek(z):
             "smiUpravit": True, "smiPublikovat": True, "druh": z["druh"],
             "poradatelSlug": poradatel_zastavky(z)["slug"] if poradatel_zastavky(z) else None,
             "smiMedailonek": bool(poradatel_zastavky(z)),
+            "vyhodnoceni": z.get("vyhodnoceni", "PoKategoriich"),
             "mozneStavy": [s for s in VSECHNY_STAVY
                            if s != z["stav"] and not proc_nejde(z["stav"], s)]}
 
@@ -665,8 +666,13 @@ def zastavka_ze_vstupu(vstup):
     if konec and konec < datum:
         return None, "Konec závodu je dřív než jeho začátek."
 
+    vyhodnoceni = vstup.get("vyhodnoceni") or "PoKategoriich"
+    if vyhodnoceni not in ("PoKategoriich", "CelePole", "Oboje"):
+        return None, f"Neznámé vyhodnocení {vyhodnoceni}."
+
     return {"nazev": nazev, "datum": datum, "datumKonce": konec,
             "typ": (vstup.get("typ") or "").strip() or None,
+            "vyhodnoceni": vyhodnoceni,
             "poradatel": (vstup.get("poradatel") or "").strip() or None}, None
 
 
@@ -1166,7 +1172,7 @@ class H(BaseHTTPRequestHandler):
         # Nová zastávka je vždycky plánovaná a nepublikovaná — stejně jako v API.
         nova = {**hodnoty, "slug": slug, "stav": "Planovany", "publikovano": False,
                 "puvodniDatum": None, "poradi": 0, "pocetSkrtu": 0,
-                "vyhodnoceni": "PoKategoriich", "koeficientDoSerie": 1.0,
+                "koeficientDoSerie": 1.0,
                 "ucasti": [], "rozjizdky": [], "druh": vstup.get("druh") or "Pohar"}
         D["zavody"].append(nova)
         prerad_kalendar()
