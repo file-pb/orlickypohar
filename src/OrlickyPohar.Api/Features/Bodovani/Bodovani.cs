@@ -35,6 +35,16 @@ public record VysledekZavodu(
 public static class Bodovani
 {
     /// <summary>
+    /// Stavy účasti, se kterými je loď <b>přihlášená do závodu</b>: zapsaná,
+    /// potvrzená, nedostavila se, vyloučená. Odhlášená předem, odmítnutá
+    /// a nevyřízená přihláška ne. Z počtu přihlášených se počítají body za
+    /// kódy (A5.2) i za neúčast v seriálu — rozhodčí 22. 9. 2026: „musí to
+    /// být podle přihlášených lodí do závodu".
+    /// </summary>
+    public static readonly StavUcasti[] PrihlasenaDoZavodu =
+        [StavUcasti.Prihlasena, StavUcasti.Potvrzena, StavUcasti.Nedostavila, StavUcasti.Vyloucena];
+
+    /// <summary>
     /// Body v jedné rozjížďce, počítané <b>uvnitř kategorie</b>. Vítěz má 1.
     /// <para>
     /// Kódy podle ZPJ 2025–2028, A5.2: loď, která nestartovala, nedokončila,
@@ -83,18 +93,25 @@ public static class Bodovani
     /// konvence zpětně přepsala loňské výsledky.
     /// </para>
     /// </summary>
+    /// <param name="prihlaseno">
+    /// Počet lodí přihlášených do závodu po kategoriích. Loď s výsledkem se
+    /// počítá vždycky, takže bez něj je to počet lodí, které v závodě něco mají.
+    /// </param>
     public static IReadOnlyList<VysledekZavodu> VysledkyZavodu(
-        IReadOnlyList<RozjizdkaVstup> rozjizdky, int pocetSkrtu = 0)
+        IReadOnlyList<RozjizdkaVstup> rozjizdky, int pocetSkrtu = 0,
+        IReadOnlyDictionary<string, int>? prihlaseno = null)
     {
         // Body po lodích: (loď → rozjížďka → body)
         var podleLodi = new Dictionary<string, (string Kategorie, List<BodyVRozjizdce> Body)>();
 
-        // Přihlášené do závodu po kategoriích: každá loď, která má v některé
-        // rozjížďce výsledek nebo kód.
-        var prihlaseno = rozjizdky
+        // Přihlášené do závodu po kategoriích. Loď, která má v některé
+        // rozjížďce výsledek nebo kód, přihlášená je, i kdyby o tom účast
+        // nevěděla.
+        var pocty = rozjizdky
             .SelectMany(r => r.Vysledky)
             .GroupBy(v => v.Kategorie)
-            .ToDictionary(g => g.Key, g => g.Select(v => v.Lod).Distinct().Count());
+            .ToDictionary(g => g.Key,
+                g => Math.Max(g.Select(v => v.Lod).Distinct().Count(), prihlaseno?.GetValueOrDefault(g.Key) ?? 0));
 
         // Loď, která nemá v žádné rozjížďce nic jiného než DSQ. Příznak na
         // účasti by byl přesnější; doplní se, až ho rozhodčí potvrdí.
@@ -109,7 +126,7 @@ public static class Bodovani
         {
             foreach (var kategorie in rozjizdka.Vysledky.GroupBy(v => v.Kategorie))
             {
-                foreach (var (lod, body) in BodyRozjizdky(kategorie, prihlaseno[kategorie.Key]))
+                foreach (var (lod, body) in BodyRozjizdky(kategorie, pocty[kategorie.Key]))
                 {
                     if (!podleLodi.TryGetValue(lod, out var zaznam))
                         podleLodi[lod] = zaznam = (kategorie.Key, []);

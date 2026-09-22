@@ -55,7 +55,8 @@ public static class SerieBodovani
     /// −1, takže vítěz má −1, druhý 0.</item>
     /// <item>Diskvalifikace v regatě: 20 bodů.</item>
     /// <item>Loď z <paramref name="lodeRocniku"/>, která na zastávce nebyla:
-    /// <b>tolik bodů, kolik lodí její kategorie na zastávce bylo</b>. Bez
+    /// <b>tolik bodů, kolik lodí její kategorie bylo přihlášených do
+    /// závodu</b> — místo o jedno horší než poslední, jako v A5.2. Bez
     /// bonusu i bez koeficientu — sešit to tak u 24hodinovky dělá.</item>
     /// </list>
     /// <para>
@@ -72,7 +73,8 @@ public static class SerieBodovani
         IEnumerable<VysledekZavodu> vysledkyZavodu,
         IEnumerable<(string Lod, string Kategorie)>? lodeRocniku = null,
         decimal koeficient = 1.0m,
-        int posun = 0)
+        int posun = 0,
+        IReadOnlyDictionary<string, int>? prihlasenoDoZavodu = null)
     {
         var vysledky = vysledkyZavodu.ToList();
 
@@ -84,7 +86,10 @@ public static class SerieBodovani
             .ToList();
 
         var byly = vysledky.Select(v => v.Lod).ToHashSet();
+        // Přihlášené do závodu; loď s výsledkem mezi nimi je vždycky.
         var pocetVKategorii = vysledky.GroupBy(v => v.Kategorie).ToDictionary(g => g.Key, g => g.Count());
+        foreach (var (kategorie, pocet) in prihlasenoDoZavodu ?? new Dictionary<string, int>())
+            pocetVKategorii[kategorie] = Math.Max(pocet, pocetVKategorii.GetValueOrDefault(kategorie));
 
         foreach (var (lod, kategorie) in lodeRocniku ?? [])
             if (!byly.Contains(lod))

@@ -128,6 +128,14 @@ public static class PoradiEndpoints
 
         var majitele = prihlasky.ToDictionary(p => p.Lod, p => p.Majitel);
 
+        // Přihlášené do závodu po zastávkách a kategoriích. Z nich se počítá
+        // neúčast i kódy (A5.2), ne z lodí, které dojely.
+        var zastavkyId = zastavky.Select(z => z.Id).ToList();
+        var ucasti = await db.Ucasti
+            .Where(u => zastavkyId.Contains(u.ZavodId) && Bodovani.PrihlasenaDoZavodu.Contains(u.Stav))
+            .Select(u => new { u.ZavodId, Lod = u.Prihlaska!.Lod!.Nazev, Kategorie = u.Prihlaska.Kategorie!.Nazev })
+            .ToListAsync(ct);
+
         // Loď přihlášená do ročníku, která na zastávku nepřijela, dostane
         // tolik bodů, kolik lodí její kategorie na zastávce bylo. Proto se
         // počítá z přihlášek, ne jen z výsledků.
@@ -147,10 +155,18 @@ public static class PoradiEndpoints
                     [.. g.Select(r => new VysledekVstup(r.Lod, r.Kategorie, r.PoradiVCili, r.Kod))]))
                 .ToList();
 
-            var vysledky = Bodovani.VysledkyZavodu(rozjizdky, zastavka.PocetSkrtu);
+            var prihlaseno = ucasti
+                .Where(u => u.ZavodId == zastavka.Id)
+                .Select(u => (u.Lod, u.Kategorie))
+                .Concat(radky.Where(r => r.ZavodId == zastavka.Id).Select(r => (r.Lod, r.Kategorie)))
+                .Distinct()
+                .GroupBy(x => x.Kategorie)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var vysledky = Bodovani.VysledkyZavodu(rozjizdky, zastavka.PocetSkrtu, prihlaseno);
 
             foreach (var radek in SerieBodovani.BodyDoSerie(
-                         vysledky, lodeRocniku, zastavka.KoeficientDoSerie, zastavka.PosunDoSerie))
+                         vysledky, lodeRocniku, zastavka.KoeficientDoSerie, zastavka.PosunDoSerie, prihlaseno))
             {
                 if (!body.TryGetValue((radek.Lod, radek.Kategorie), out var rada))
                     body[(radek.Lod, radek.Kategorie)] = rada = new BodyZeZastavky?[zastavky.Count];

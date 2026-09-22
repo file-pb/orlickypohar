@@ -85,7 +85,7 @@ export default async function Poradi({ params, searchParams }: Parametry) {
         nejnižší součet. Nejhorší závody se škrtají (přeškrtnuté číslo); podle sloupce{" "}
         <b>po škrtu</b> se řadí pořadí, celkový součet je vedle, protože rozhodčí
         vede obojí. <code>DNC</code> znamená, že loď na zastávce nebyla a dostala tolik
-        bodů, kolik lodí její kategorie jelo; <code>DSQ</code> je diskvalifikace
+        bodů, kolik lodí její kategorie bylo přihlášených do závodu; <code>DSQ</code> je diskvalifikace
         v regatě za 20 bodů. <Link href="/pravidla">Jak se body počítají →</Link>
       </p>
     </Boky>
@@ -161,7 +161,7 @@ function Tabulka({
 }
 
 const POPIS_KODU: Record<string, string> = {
-  DNC: "na zastávce nebyla: tolik bodů, kolik lodí kategorie jelo",
+  DNC: "na zastávce nebyla: tolik bodů, kolik lodí kategorie bylo přihlášených do závodu",
   DSQ: "diskvalifikace v regatě: 20 bodů",
 };
 

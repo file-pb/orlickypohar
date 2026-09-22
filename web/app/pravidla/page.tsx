@@ -70,7 +70,7 @@ export default function Pravidla() {
       <ul>
         <li>
           <b>Neúčast</b> (<code>DNC</code>): loď dostane tolik bodů, kolik lodí její kategorie
-          na zastávce jelo.
+          bylo do toho závodu přihlášených — o místo víc než poslední, jako v A5.2.
         </li>
         <li>
           <b>24hodinovka</b> je bonus: vítěz má −1, druhý 0, třetí 1. Kdo nejel, bonus nemá.

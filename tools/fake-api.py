@@ -72,12 +72,29 @@ def body_rozjizdky(vysledky, prihlaseno=None):
     return body
 
 
-def vysledky_zavodu(rozjizdky, pocet_skrtu=0):
+# Stavy účasti, se kterými je loď přihlášená do závodu — jako v API.
+PRIHLASENA = {"Prihlasena", "Potvrzena", "Nedostavila", "Vyloucena"}
+
+
+def prihlaseno_do_zavodu(z, rozjizdky):
+    """Počet lodí přihlášených do závodu po kategoriích (účasti ∪ výsledky)."""
+    lode = {(KAT[u["lod"]], u["lod"]) for u in z.get("ucasti", [])
+            if u.get("stav", "Potvrzena") in PRIHLASENA}
+    lode |= {(KAT[v["lod"]], v["lod"]) for r in rozjizdky for v in r["vysledky"]}
+    pocty = {}
+    for kategorie, _ in lode:
+        pocty[kategorie] = pocty.get(kategorie, 0) + 1
+    return pocty
+
+
+def vysledky_zavodu(rozjizdky, pocet_skrtu=0, prihlaseno_zvenku=None):
     """Výsledek závodu po kategoriích: součet bodů se škrty a pořadí."""
     lode = {}
     prihlaseno = {}
     for kategorie, lod in {(KAT[v["lod"]], v["lod"]) for r in rozjizdky for v in r["vysledky"]}:
         prihlaseno[kategorie] = prihlaseno.get(kategorie, 0) + 1
+    for kategorie, pocet in (prihlaseno_zvenku or {}).items():
+        prihlaseno[kategorie] = max(pocet, prihlaseno.get(kategorie, 0))
     for r in rozjizdky:
         for kategorie in {KAT[v["lod"]] for v in r["vysledky"]}:
             vysledky = [v for v in r["vysledky"] if KAT[v["lod"]] == kategorie]
@@ -130,10 +147,9 @@ def poradi_serie():
         for r in do_serie:
             for v in r["vysledky"]:
                 kody.setdefault(v["lod"], set()).add(v.get("kod"))
-        vysledky = vysledky_zavodu(do_serie, z.get("pocetSkrtu", 0))
-        pocet = {}
+        pocet = prihlaseno_do_zavodu(z, do_serie)
+        vysledky = vysledky_zavodu(do_serie, z.get("pocetSkrtu", 0), pocet)
         for v in vysledky:
-            pocet[v["kategorie"]] = pocet.get(v["kategorie"], 0) + 1
             if kody.get(v["lod"]) == {"Dsq"}:
                 zaznam = (20, None, "DSQ")
             else:

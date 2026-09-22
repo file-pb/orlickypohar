@@ -397,6 +397,31 @@ public class BodovaniTests
     }
 
     [Fact]
+    public void Neucast_pocita_i_prihlasene_lode_ktere_neprijely()
+    {
+        // „Musí to být podle přihlášených lodí do závodu" (rozhodčí,
+        // 22. 9. 2026). Dojely dvě, přihlášené byly čtyři → neúčast 4.
+        var prihlaseno = new Dictionary<string, int> { ["Race"] = 4 };
+        var zavod = Bodovani.VysledkyZavodu([Rozjizdka(1, "a", "b")], prihlaseno: prihlaseno);
+
+        var doSerie = SerieBodovani.BodyDoSerie(zavod, [("doma", "Race")], prihlasenoDoZavodu: prihlaseno)
+            .ToDictionary(v => v.Lod);
+
+        Assert.Equal(4, doSerie["doma"].Body);
+    }
+
+    [Fact]
+    public void Kod_v_rozjizdce_pocita_s_prihlasenymi_do_zavodu()
+    {
+        // Pět přihlášených, v rozjížďce jen dvě lodě: DNF má 6, ne 3.
+        var zavod = Bodovani.VysledkyZavodu(
+            [new RozjizdkaVstup(1, [Dojel("a", "Race", 1), Kod("b", "Race", KodVysledku.Dnf)])],
+            prihlaseno: new Dictionary<string, int> { ["Race"] = 5 });
+
+        Assert.Equal(6, zavod.Single(v => v.Lod == "b").Body);
+    }
+
+    [Fact]
     public void Neucast_na_24hodinovce_bonus_nema()
     {
         // Sešit: nad 7 m jelo osm lodí (−1 až 6) a kdo nejel, má 8, ne 7.

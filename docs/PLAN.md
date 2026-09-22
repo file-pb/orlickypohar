@@ -1129,7 +1129,7 @@ Platí pravidlo platformy č. 5: **vlastní interní `UserId`** a tabulka
 
 | Otázka | Odpověď |
 |---|---|
-| Z čeho se počítá DNC | **ze zastávky:** počet lodí kategorie, které na ní byly (rozhodčí, 22. 9. 2026). Doslovné čtení ZPJ A5.2 (počet přihlášených do ročníku) rozhodčí odmítl |
+| Z čeho se počítá DNC | **z lodí přihlášených do závodu** (na tu zastávku) v kategorii, rozhodčí 22. 9. 2026. Ne z přihlášených do ročníku |
 | Shodně špatné výsledky při škrtu | škrtá se **dřívější** — ZPJ A2.1, potvrdil rozhodčí 22. 9. 2026 |
 | Nuly u zrušených zastávek | jen zápis „nejelo se", do bodů ani rozstřelu nevstupují |
 | Proč má DNF jiné body než DNS | nemá mít: **ZPJ A5.2**, všechny kódy = přihlášených do závodu + 1 (rozhodčí, 22. 9. 2026); `RDG` zatím za posledním |
@@ -1181,7 +1181,7 @@ výpočet z nich nic neplyne.
 
 | Pravidlo | Kde |
 |---|---|
-| neúčast = lodí kategorie na zastávce | `SerieBodovani.BodyDoSerie`, lodě z přihlášek do ročníku |
+| neúčast = lodí kategorie přihlášených do závodu | `SerieBodovani.BodyDoSerie`; kdo neúčast dostane, určují přihlášky do ročníku, počet účasti na zastávce |
 | bonus 24hodinovky | `Zavod.PosunDoSerie` (−1), nový sloupec; nastavuje se importem |
 | DSQ = 20 | `DSQ` ve **všech** rozjížďkách zastávky; příznak na účasti doplníme s rozhodčím (Filip, 22. 9.) |
 | počet škrtů | `Serie.PocetSkrtu`, nový sloupec, výchozí 1, ročník 2026 má 2 |
@@ -1213,8 +1213,12 @@ vymyšlené. Radavská regata je zrušená, Pohár Slunce odjetý, loď SANDY
 dát za neúčast, aby to bylo v souladu s pravidly ČSJ. Navrhl jsem číst ročník
 jako jeden závod a zastávky jako rozjížďky; pak by neúčast (DNC, ne DNS —
 A10) měla podle A5.2 počet lodí přihlášených do ročníku, nad 7 m tedy 25.
-Odpověď: **„přihlášených lodí ve třídě ne"** — zůstává počet lodí na
-zastávce. **„Škrtání ano"** — při shodně špatných výsledcích se škrtá
+Odpověď: **„přihlášených lodí ve třídě ne"** — ne do ročníku. Upřesněno
+hned potom: **„musí to být podle přihlášených lodí do závodu"** — tedy počet
+lodí kategorie přihlášených na tu zastávku, včetně těch, které nepřijely
+(stavy zapsaná, potvrzená, nedostavila se, vyloučená; `Bodovani.PrihlasenaDoZavodu`).
+Stejné číslo platí pro kódy v rozjížďce (A5.2). Sešit bral lodě, které
+na zastávce byly; bez přihlášek na zastávku to jinak nešlo. **„Škrtání ano"** — při shodně špatných výsledcích se škrtá
 dřívější (A2.1), v závodě i v seriálu. Rozstřel zůstává podle jeho znění,
 ne podle A8.2 (to by bralo i škrtnutou poslední rozjížďku).
 
