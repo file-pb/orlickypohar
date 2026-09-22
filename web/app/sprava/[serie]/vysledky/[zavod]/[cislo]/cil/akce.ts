@@ -1,6 +1,7 @@
 "use server";
 
-import { odstartuj, ulozCil, type ZapisRadek } from "@/lib/vysledky";
+import { prihlas } from "@/lib/prihlasky";
+import { nastavZnak, odstartuj, ulozCil, type ZapisLod, type ZapisRadek } from "@/lib/vysledky";
 
 /**
  * Serverové akce cílové obrazovky. Na rozdíl od zbytku správy je volá
@@ -36,4 +37,52 @@ export async function odstartujAkce(
 
   const vysledek = await odstartuj(serie, zavod, cislo, startV);
   return { chyba: "chyba" in vysledek ? vysledek.chyba : null };
+}
+
+export async function znakAkce(
+  serie: string,
+  zavod: string,
+  prihlaskaId: number,
+  znak: string,
+): Promise<{ chyba: string | null }> {
+  if (!Number.isInteger(prihlaskaId)) return { chyba: "Neplatná loď." };
+  return { chyba: await nastavZnak(serie, zavod, prihlaskaId, znak) };
+}
+
+/**
+ * Pozdní loď, která v ročníku ještě není. Přihlásí ji stávající přihláška
+ * od pořadatele, takže vznikne i s majitelem jako z obrazovky přihlášek.
+ * Vrací ji ve tvaru řádku zápisu, ať ji obrazovka přidá bez načtení.
+ */
+export async function pridejLodAkce(
+  serie: string,
+  zavod: string,
+  lod: {
+    nazev: string;
+    kategorie: string;
+    majitelJmeno: string;
+    majitelPrijmeni: string;
+    cisloPlachty: string | null;
+  },
+): Promise<{ chyba: string } | { lod: ZapisLod }> {
+  if (!lod.nazev || !lod.kategorie) return { chyba: "Vyplň název lodi a kategorii." };
+
+  const vysledek = await prihlas(serie, zavod, { novaLod: lod });
+  if ("chyba" in vysledek) return vysledek;
+
+  const l = vysledek.lod;
+  return {
+    lod: {
+      prihlaskaId: l.prihlaskaId,
+      lod: l.lod,
+      cisloPlachty: l.cisloPlachty,
+      kategorie: l.kategorie,
+      poradiVCili: null,
+      kod: null,
+      casSekundy: null,
+      dojezdV: null,
+      naRegate: true,
+      poznavaciZnak: null,
+    },
+  };
 }

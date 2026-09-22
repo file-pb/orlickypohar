@@ -1638,6 +1638,58 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/vysledky/{zavod}/lode/{prihlaska}/znak": {
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Nastav\u00ed pozn\u00e1vac\u00ed znak lodi na regat\u011b",
+                "description": "C\u00edlov\u00e1 obrazovka. Po\u0159adatel regaty, od vyps\u00e1n\u00ed. Jen lo\u010f, kter\u00e1 na regat\u011b je (p\u0159ihl\u00e1\u0161en\u00e1, potvrzen\u00e1 nebo vylou\u010den\u00e1). Pr\u00e1zdn\u00fd znak ho sma\u017ee.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "prihlaska",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ZnakVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}": {
             "get": {
                 "tags": [
@@ -4713,6 +4765,16 @@
                             "string"
                         ],
                         "format": "date-time"
+                    },
+                    "naRegate": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "poznavaciZnak": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     }
                 }
             },
@@ -5417,6 +5479,20 @@
                         ]
                     },
                     "duvod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
+            "ZnakVstup": {
+                "required": [
+                    "znak"
+                ],
+                "type": "object",
+                "properties": {
+                    "znak": {
                         "type": [
                             "null",
                             "string"

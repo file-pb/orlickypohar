@@ -2496,7 +2496,12 @@ klepání v reálném čase bez něj nejde. Zbytek správy zůstává bez něj.
    Ukládá se po každém klepnutí celá sada, takže „odeslání" není zvláštní
    krok — rozjížďka je od založení v návrhu. Přetahování je zatím šipkami
    o místo; čas zůstává u místa v pořadí, ne u lodi.
-2. Poznávací znak na účasti a pozdní přihláška z cílové obrazovky.
+2. ~~Poznávací znak na účasti a pozdní přihláška z cílové obrazovky.~~
+   **Hotové 22. 9. 2026.** Znak je na účasti (platí pro celou regatu) a
+   stojí na tlačítku lodi. Tlačítka mají lodě na regatě, zbytek ročníku je
+   v „Dalších lodích" — klepnutí je zapíše a přihlásí. Nová loď jde přidat
+   přímo z obrazovky; **majitele vyžaduje**, protože loď ho v modelu mít
+   musí a stojí ve výsledcích vedle ní.
 3. Fotka papíru u rozjížďky (R2, jako fotky článků).
 4. Dva zapisovatelé a porovnání.
 5. Podržení klepnutí bez připojení (jen pojistka, signál je).

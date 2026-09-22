@@ -1739,6 +1739,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/vysledky/{zavod}/lode/{prihlaska}/znak": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Nastaví poznávací znak lodi na regatě
+         * @description Cílová obrazovka. Pořadatel regaty, od vypsání. Jen loď, která na regatě je (přihlášená, potvrzená nebo vyloučená). Prázdný znak ho smaže.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    prihlaska: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ZnakVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}": {
         parameters: {
             query?: never;
@@ -2862,6 +2907,9 @@ export interface components {
             casSekundy: null | number;
             /** Format: date-time */
             dojezdV?: null | string;
+            /** @default false */
+            naRegate: boolean;
+            poznavaciZnak?: null | string;
         };
         ZapisRadekVstup: {
             /** Format: int32 */
@@ -3056,6 +3104,9 @@ export interface components {
             kdy: string;
             kdo: null | string;
             duvod: null | string;
+        };
+        ZnakVstup: {
+            znak: null | string;
         };
     };
     responses: never;
