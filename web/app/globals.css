@@ -113,12 +113,28 @@ header.hlavicka a.znacka svg.logo { display: block; position: relative; z-index:
 /* Logo Orlik Yacht Series (Filip, 22. 9. 2026) je kulaté a má jen jednu
    verzi. Platí pro něj totéž co výš: záporný spodní okraj drží řádek menu
    v původní výšce, logo přesahuje dolů přes linku. Nápis běží po obvodu,
-   takže potřebuje víc místa než plachty samotné. */
-header.hlavicka a.znacka svg.logo-oys { width: 68px; height: 68px; margin-bottom: -16px; }
+   takže potřebuje víc místa než plachty samotné.
+   Nahoře má 5 px odstup od okraje okna (Filip, 22. 9. 2026: „skoro se
+   dotýká“). Horní okraj je vyrovnaný o tolik větším záporným spodním,
+   takže řádek menu zůstává stejně vysoký a logo jen sjede níž. */
+header.hlavicka a.znacka svg.logo-oys { width: 68px; height: 68px; margin-top: 5px; margin-bottom: -21px; }
 @media (max-width: 48rem) {
-  header.hlavicka a.znacka svg.logo-oys { width: 64px; height: 64px; margin-bottom: -16px; }
+  header.hlavicka a.znacka svg.logo-oys { width: 64px; height: 64px; margin-top: 5px; margin-bottom: -21px; }
 }
 .logo-oys { --logo-oys: #113b59; fill: var(--logo-oys); }
+/* Nápis Orlický pohár vedle loga (Filip, 22. 9. 2026), proužkovaný jako
+   v původním logu a v jeho barvách (.logo-pruhy níž). Stojí vedle kruhu
+   s odstupem, nikdy přes něj. Stejný záporný spodní okraj jako logo ho
+   posune na střed kruhu, ne na střed řádku menu. Na mobilu je ve dvou
+   řádcích, v jednom by se vedle loga a menu nevešel. */
+header.hlavicka a.znacka:has(svg.logo-oys) { gap: 0.9rem; }
+header.hlavicka a.znacka svg.logo-napis-monitor { height: 28px; width: auto; margin-top: 5px; margin-bottom: -21px; }
+header.hlavicka a.znacka svg.logo-napis-mobil { display: none; height: 32px; width: auto; margin-top: 5px; margin-bottom: -21px; }
+@media (max-width: 48rem) {
+  header.hlavicka a.znacka:has(svg.logo-oys) { gap: 0.7rem; }
+  header.hlavicka a.znacka svg.logo-napis-monitor { display: none; }
+  header.hlavicka a.znacka svg.logo-napis-mobil { display: block; margin-bottom: -16px; }
+}
 /* Původní logo (app/logo-puvodni.tsx) — dnes se nevykresluje, styly
    zůstávají, aby šlo vrátit jedním importem. */
 header.hlavicka a.znacka svg.logo-monitor { height: 64px; width: auto; margin-bottom: -12px; }
@@ -193,7 +209,8 @@ header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
   header.hlavicka .obal { padding-top: 0.2rem; padding-bottom: 0.2rem; }
   header.hlavicka a.znacka { font-size: 1.05rem; }
   header.hlavicka a.znacka svg.logo-monitor { height: 76px; margin-bottom: -24px; }
-  header.hlavicka a.znacka svg.logo-oys { width: 84px; height: 84px; margin-bottom: -32px; }
+  header.hlavicka a.znacka svg.logo-oys { width: 84px; height: 84px; margin-bottom: -37px; }
+  header.hlavicka a.znacka svg.logo-napis-monitor { height: 33px; margin-bottom: -18px; }
   header.hlavicka nav { gap: 0.35rem; align-items: center; }
   header.hlavicka nav > a {
     padding: 0.4rem 0.7rem; border-radius: 8px; font-size: 0.925rem;
