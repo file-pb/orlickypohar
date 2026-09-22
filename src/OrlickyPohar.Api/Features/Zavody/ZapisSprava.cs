@@ -19,7 +19,8 @@ public record ZapisLodDto(
     string Kategorie,
     int? PoradiVCili,
     KodVysledku? Kod,
-    int? CasSekundy);
+    int? CasSekundy,
+    DateTimeOffset? DojezdV = null);
 
 /// <summary>
 /// Zápis jedné rozjížďky. <c>ProcNelze</c> říká, proč je jen ke čtení —
@@ -36,7 +37,11 @@ public record ZapisRozjizdkyDto(
     string? DuvodRevize,
     bool SmiZapisovat,
     string? ProcNelze,
-    IReadOnlyList<ZapisLodDto> Lode);
+    IReadOnlyList<ZapisLodDto> Lode,
+    // Od 22. 9. 2026 pro cílovou obrazovku: kdy se odstartovalo a jestli
+    // rozjížďka jde do poháru. Aditivně, starší klienti je nečtou.
+    DateTimeOffset? StartV = null,
+    bool DoSerie = true);
 
 /// <summary>Celá sada výsledků rozjížďky. Loď, která v ní není, výsledek nemá.</summary>
 public record ZapisVstup(IReadOnlyList<ZapisRadekVstup> Radky);
@@ -77,7 +82,7 @@ public class ZapisSprava(AppDbContext db)
 
         var vysledky = await db.Vysledky
             .Where(v => v.RozjizdkaId == rozjizdka.Id)
-            .Select(v => new { v.Ucast!.PrihlaskaId, v.PoradiVCili, v.Kod, v.NamerenyCas })
+            .Select(v => new { v.Ucast!.PrihlaskaId, v.PoradiVCili, v.Kod, v.NamerenyCas, v.DojezdV })
             .ToDictionaryAsync(v => v.PrihlaskaId, ct);
 
         var procNelze = poradatel ? Zapis.ProcNejdePrepsat(zavod.Stav, rozjizdka.StavVysledku) : NeniPoradatel;
@@ -93,14 +98,15 @@ public class ZapisSprava(AppDbContext db)
                 return new ZapisLodDto(
                     p.Id, p.Nazev, p.CisloPlachty, p.Kategorie,
                     v?.PoradiVCili, v?.Kod,
-                    v?.NamerenyCas is { } cas ? (int)cas.TotalSeconds : null);
+                    v?.NamerenyCas is { } cas ? (int)cas.TotalSeconds : null,
+                    v?.DojezdV);
             })
             .ToList();
 
         return new ZapisRozjizdkyDto(
             zavod.Serie, zavod.SerieNazev, zavod.Slug, zavod.Nazev, zavod.Stav,
             rozjizdka.Cislo, rozjizdka.StavVysledku, rozjizdka.DuvodRevize,
-            procNelze is null, procNelze, lode);
+            procNelze is null, procNelze, lode, rozjizdka.StartV, rozjizdka.DoSerie);
     }
 
     /// <summary>
@@ -111,8 +117,10 @@ public class ZapisSprava(AppDbContext db)
     /// jí chybí.
     /// </para>
     /// <para>
-    /// <b>Čas se nepřepisuje.</b> Formulář ho nemá a výsledek z importu ho
-    /// nést může — prázdná hodnota z obrazovky by ho tiše smazala.
+    /// <b>Čas se nepřepisuje, když ho zápis nenese.</b> Formulář z papíru ho
+    /// nemá a výsledek z importu ho nést může — prázdná hodnota z obrazovky
+    /// by ho tiše smazala. Cílová obrazovka ho posílá (<c>DojezdV</c>) a ten
+    /// se uloží i s naměřeným časem od startu.
     /// </para>
     /// <para>
     /// <b>Účast se nemaže</b>, ani když loď v téhle rozjížďce výsledek
@@ -176,12 +184,41 @@ public class ZapisSprava(AppDbContext db)
 
             vysledek.PoradiVCili = r.Vstup.PoradiVCili;
             vysledek.Kod = r.Vstup.Kod;
+
+            if (r.Vstup.DojezdV is { } dojezd)
+            {
+                // Do UTC: Npgsql jiný posun do `timestamp with time zone`
+                // nepřijme a padlo by to až při zápisu.
+                vysledek.DojezdV = dojezd.ToUniversalTime();
+                vysledek.NamerenyCas = Zapis.NamerenyCas(rozjizdka.StartV, dojezd);
+            }
         }
 
         // Co v zápisu s výsledkem není, výsledek nemá. Bez toho by se omylem
         // zapsaný řádek nedal odstranit jinak než ručně v databázi.
         var sVysledkem = zapis.Where(r => r.MaVysledek).Select(r => r.Vstup.PrihlaskaId).ToHashSet();
         db.Vysledky.RemoveRange(existujici.Where(x => !sVysledkem.Contains(x.Key)).Select(x => x.Value));
+
+        await db.SaveChangesAsync(ct);
+        return null;
+    }
+
+    /// <summary>
+    /// Zapíše start rozjížďky (cílová obrazovka). Vrací text chyby, nebo
+    /// <c>null</c>. Start jde přepsat, dokud je zápis otevřený — tlačítko
+    /// se na vodě snadno zmáčkne o znamení dřív.
+    /// </summary>
+    public async Task<string?> StartAsync(Rozjizdka rozjizdka, DateTimeOffset kdy, CancellationToken ct)
+    {
+        var zavod = await db.Zavody.FirstAsync(z => z.Id == rozjizdka.ZavodId, ct);
+        if (Zapis.ProcNejdePrepsat(zavod.Stav, rozjizdka.StavVysledku) is { } zamceno) return zamceno;
+
+        rozjizdka.StartV = kdy.ToUniversalTime();
+        if (rozjizdka.Stav == StavRozjizdky.Planovana) rozjizdka.Stav = StavRozjizdky.Probiha;
+
+        // Časy už dojetých lodí se přepočítají k novému startu.
+        var vysledky = await db.Vysledky.Where(v => v.RozjizdkaId == rozjizdka.Id && v.DojezdV != null).ToListAsync(ct);
+        foreach (var v in vysledky) v.NamerenyCas = Zapis.NamerenyCas(rozjizdka.StartV, v.DojezdV!.Value);
 
         await db.SaveChangesAsync(ct);
         return null;
@@ -197,7 +234,7 @@ public class ZapisSprava(AppDbContext db)
     /// </para>
     /// </summary>
     public async Task<(Rozjizdka? Rozjizdka, string? Chyba)> PridejRozjizdkuAsync(
-        int zavodId, CancellationToken ct)
+        int zavodId, CancellationToken ct, bool doSerie = true)
     {
         var zavod = await db.Zavody
             .Where(z => z.Id == zavodId)
@@ -215,6 +252,9 @@ public class ZapisSprava(AppDbContext db)
             Cislo = cislo,
             StavVysledku = StavVysledku.Navrzeno,
             Publikovano = false,
+            // Na vodě se rozhoduje, jestli rozjížďka jde do poháru — typicky
+            // běh pro míčky na Izolepě ne (cílová obrazovka, 22. 9. 2026).
+            DoSerie = doSerie,
         };
 
         db.Rozjizdky.Add(rozjizdka);

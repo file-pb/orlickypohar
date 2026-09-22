@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
@@ -22,6 +23,12 @@ public record PublikaceVysledkuVstup(bool Publikovano);
 /// endpointech.
 /// </para>
 /// </summary>
+/// <summary>Start rozjížďky. Bez času platí okamžik požadavku.</summary>
+public record StartVstup(DateTimeOffset? StartV = null);
+
+/// <summary>Nová rozjížďka. Bez těla jde do poháru, jako dřív.</summary>
+public record NovaRozjizdkaVstup(bool DoSerie = true);
+
 public static class VysledkyEndpoints
 {
     public static void MapSpravaVysledku(this IEndpointRouteBuilder app)
@@ -45,6 +52,13 @@ public static class VysledkyEndpoints
             .WithDescription(
                 "Pořadatel regaty, od vypsání závodu. Nová rozjížďka je návrh " +
                 "a na webu není.");
+
+        g.MapPost("/{zavod}/rozjizdky/{cislo:int}/start", StartAsync)
+            .Produces<ZapisRozjizdkyDto>()
+            .WithSummary("Zapíše start rozjížďky")
+            .WithDescription(
+                "Cílová obrazovka. Bez času v těle se vezme okamžik požadavku. Jde přepsat, " +
+                "dokud je zápis otevřený; časy dojetých lodí se přepočítají.");
 
         g.MapGet("/{zavod}/rozjizdky/{cislo:int}", ZapisAsync)
             .Produces<ZapisRozjizdkyDto>()
@@ -115,8 +129,24 @@ public static class VysledkyEndpoints
                                 && Zapis.ProcNejdeNaZavod(hlavicka.Stav) is null));
     }
 
+    private static async Task<IResult> StartAsync(
+        string serie, string zavod, int cislo, [FromBody] StartVstup? vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, VysledkySprava sprava, ZapisSprava zapis, TimeProvider cas, CancellationToken ct)
+    {
+        if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
+            return Results.NotFound();
+
+        var (rozsah, rozjizdka) = nalezena;
+        if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        if (await zapis.StartAsync(rozjizdka, vstup?.StartV ?? cas.GetUtcNow(), ct) is { } chyba)
+            return Results.BadRequest(new { error = chyba });
+
+        return Results.Ok(await zapis.NactiAsync(rozjizdka, poradatel: true, ct));
+    }
+
     private static async Task<IResult> PridejRozjizdkuAsync(
-        string serie, string zavod, ClaimsPrincipal kdo,
+        string serie, string zavod, [FromBody] NovaRozjizdkaVstup? vstup, ClaimsPrincipal kdo,
         Rozsahy rozsahy, VysledkySprava sprava, ZapisSprava zapis, CancellationToken ct)
     {
         if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
@@ -124,7 +154,8 @@ public static class VysledkyEndpoints
 
         if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
 
-        var (rozjizdka, chyba) = await zapis.PridejRozjizdkuAsync(rozsah.ZavodId.Value, ct);
+        var (rozjizdka, chyba) = await zapis.PridejRozjizdkuAsync(
+            rozsah.ZavodId.Value, ct, vstup?.DoSerie ?? true);
         if (chyba is not null) return Results.BadRequest(new { error = chyba });
 
         return Results.Created(

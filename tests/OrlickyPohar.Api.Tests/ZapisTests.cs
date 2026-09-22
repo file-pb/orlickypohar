@@ -140,4 +140,17 @@ public class ZapisTests
 
         Assert.Contains("dvakrát", chyba);
     }
+
+    [Fact]
+    public void Nameny_cas_je_od_startu_do_dojezdu()
+    {
+        var start = new DateTimeOffset(2026, 6, 20, 11, 0, 0, TimeSpan.FromHours(2));
+
+        Assert.Equal(TimeSpan.FromMinutes(42), Zapis.NamerenyCas(start, start.AddMinutes(42)));
+
+        // Bez startu čas není, a dojezd před startem je špatně zmáčknutý
+        // start, ne rekord.
+        Assert.Null(Zapis.NamerenyCas(null, start));
+        Assert.Null(Zapis.NamerenyCas(start, start.AddMinutes(-1)));
+    }
 }
