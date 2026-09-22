@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { ZavriMimo } from "@/app/zavri-mimo";
+import { OdkazJinam } from "@/app/odkaz-jinam";
 
 /**
  * Kebab (⋮) v hlavičce. Na očích zůstává jen Domů a profil, zbytek webu je
@@ -31,17 +31,17 @@ export function Menu({
             se nevejdou a jsou tady. */}
         {rocnik && (
           <>
-            <Link className="jen-uzke" href={`/serie/${rocnik.slug}`}>
+            <OdkazJinam className="jen-uzke" href={`/serie/${rocnik.slug}`}>
               Ročník {rocnik.rok}
-            </Link>
-            <Link className="jen-uzke" href={`/serie/${rocnik.slug}/poradi`}>
+            </OdkazJinam>
+            <OdkazJinam className="jen-uzke" href={`/serie/${rocnik.slug}/poradi`}>
               Průběžné pořadí
-            </Link>
+            </OdkazJinam>
           </>
         )}
-        <Link href="/historie">Historie</Link>
-        <Link href="/pravidla">Pravidla</Link>
-        <Link href="/appka">Appka</Link>
+        <OdkazJinam href="/historie">Historie</OdkazJinam>
+        <OdkazJinam href="/pravidla">Pravidla</OdkazJinam>
+        <OdkazJinam href="/appka">Appka</OdkazJinam>
         {/* Jen když je vzhled přepnutý ručně: bez toho by se z ruční volby
             nedalo vrátit k systému jinak než smazáním cookie. */}
         {rucniRezim && (

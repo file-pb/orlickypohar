@@ -1,6 +1,7 @@
 import type { Ja } from "@/lib/ja";
 import { ucetUPoskytovatele } from "@/lib/oidc";
 import { ZavriMimo } from "@/app/zavri-mimo";
+import { OdkazJinam } from "@/app/odkaz-jinam";
 
 /**
  * Ikonka přihlášeného člověka s rozbalovací nabídkou.
@@ -99,27 +100,35 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
             se stránka nenačte znovu. Hlavička se při něm navíc nepřekresluje
             vůbec, takže vedle sebe skončí jméno z jednoho vykreslení
             a obsah z jiného. Sem se chodí zřídka a celé načtení nic nestojí. */}
-        {piseNaWeb && <a href="/sprava/web/clanky">Obecné články</a>}
-        {spravujeWeb && <a href="/sprava/opravneni-webu">Oprávnění na celý web</a>}
+        {piseNaWeb && (
+          <OdkazJinam obycejny href="/sprava/web/clanky">
+            Obecné články
+          </OdkazJinam>
+        )}
+        {spravujeWeb && (
+          <OdkazJinam obycejny href="/sprava/opravneni-webu">
+            Oprávnění na celý web
+          </OdkazJinam>
+        )}
         {pise.map((serie) => (
-          <a key={`clanky-${serie}`} href={`/sprava/${serie}/clanky`}>
+          <OdkazJinam obycejny key={`clanky-${serie}`} href={`/sprava/${serie}/clanky`}>
             Novinky {serie}
-          </a>
+          </OdkazJinam>
         ))}
         {kalendar.map((serie) => (
-          <a key={`kalendar-${serie}`} href={`/sprava/${serie}/kalendar`}>
+          <OdkazJinam obycejny key={`kalendar-${serie}`} href={`/sprava/${serie}/kalendar`}>
             Kalendář {serie}
-          </a>
+          </OdkazJinam>
         ))}
         {kalendar.map((serie) => (
-          <a key={`vysledky-${serie}`} href={`/sprava/${serie}/vysledky`}>
+          <OdkazJinam obycejny key={`vysledky-${serie}`} href={`/sprava/${serie}/vysledky`}>
             Výsledky {serie}
-          </a>
+          </OdkazJinam>
         ))}
         {spravuje.map((serie) => (
-          <a key={serie} href={`/sprava/${serie}/opravneni`}>
+          <OdkazJinam obycejny key={serie} href={`/sprava/${serie}/opravneni`}>
             Oprávnění {serie}
-          </a>
+          </OdkazJinam>
         ))}
         {/* Účet spravuje poskytovatel, ne my: heslo naší aplikací neprojde
             a změna e-mailu se ověřuje poštou. Odsud se tam jen odchází —
