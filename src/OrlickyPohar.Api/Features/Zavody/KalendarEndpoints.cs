@@ -185,7 +185,8 @@ public static class KalendarEndpoints
                 z.PoradatelZaznam?.Slug,
                 // Totéž pravidlo jako `Medailonek.SmiUpravit`, jen pro jednu
                 // zastávku: na ní samotné je organizátor, nebo ne.
-                z.PoradatelZaznam is not null && (SmiKalendar || organizator));
+                z.PoradatelZaznam is not null && (SmiKalendar || organizator),
+                z.Vyhodnoceni);
         }
     }
 

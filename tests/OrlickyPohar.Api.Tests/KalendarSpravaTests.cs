@@ -164,4 +164,35 @@ public class KalendarSpravaTests(PostgresFixture fixture)
         Assert.True(zastavka.Publikovano);
         Assert.Equal(StavZavodu.Potvrzeny, zastavka.Stav);
     }
+
+    [Fact]
+    public async Task Vyhodnoceni_se_zaklada_i_upravuje_v_kalendari()
+    {
+        var serieId = await RocnikAsync("kalendar-vyhodnoceni");
+
+        // Bez hodnoty je regata po kategoriích, jako většina.
+        await SpravaAsync(s => s.ZalozAsync(serieId, Vstup("Jarní vítr", 4, 25), default));
+        await SpravaAsync(s => s.ZalozAsync(
+            serieId,
+            Vstup("24hodinovka", 5, 23) with { Vyhodnoceni = Vyhodnoceni.CelePole },
+            default));
+
+        var zalozene = await VypisAsync(serieId);
+        Assert.Equal(Vyhodnoceni.PoKategoriich, zalozene.Single(z => z.Slug == "jarni-vitr").Vyhodnoceni);
+        Assert.Equal(Vyhodnoceni.CelePole, zalozene.Single(z => z.Slug == "24hodinovka").Vyhodnoceni);
+
+        // Rozhodčí ho může změnit, třeba když se regata rozhodne vyhlásit
+        // celkového vítěze i pořadí v kategoriích.
+        await VeSluzbeAsync(async sp =>
+        {
+            var sprava = sp.GetRequiredService<KalendarSprava>();
+            var jarni = await sprava.NajdiAsync(serieId, "jarni-vitr", default);
+
+            return await sprava.UpravAsync(
+                jarni!, Vstup("Jarní vítr", 4, 25) with { Vyhodnoceni = Vyhodnoceni.Oboje }, default);
+        });
+
+        var upravene = await VypisAsync(serieId);
+        Assert.Equal(Vyhodnoceni.Oboje, upravene.Single(z => z.Slug == "jarni-vitr").Vyhodnoceni);
+    }
 }
