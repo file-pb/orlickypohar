@@ -3,11 +3,10 @@
  * 15. 9. 2026). Je na očích pořád, proto je nízký a nadpis nese jen pro
  * čtečku obrazovky; výšku a odsazení stránky řídí CSS proměnná `--paticka`.
  *
- * <b>Loga jsou zatím ukázková</b> (Filip, 15. 9. 2026: postavit místo,
- * skutečná loga pošle). Jsou nakreslená jako zjevné zástupné značky, ne
- * převzatá od skutečných organizací — na veřejném webu by cizí logo
- * tvrdilo, že nás ta organizace podporuje. Až dorazí skutečná, vymění se
- * seznam níž a soubory v `public/partneri/`.
+ * <b>Skuteční partneři od 22. 9. 2026</b> (Filip): ČSJ, Marina Orlík,
+ * Stingray, Hacjacht a Yacht Club Písek. Loga jsou převzatá z jejich webů, odkazy vedou
+ * do nové karty. Ukázková loga z 15. 9. jsou pryč; najdeš je v historii
+ * gitu, kdyby bylo potřeba znovu zkoušet rozložení.
  *
  * <b>Posouvá se v CSS</b>, bez javascriptu. Seznam je v pásu dvakrát za
  * sebou, aby posun šel dokola bez skoku; druhá kopie je pro čtečky
@@ -18,18 +17,16 @@
 type Partner = { nazev: string; logo: string; odkaz?: string };
 
 const PARTNERI: Partner[] = [
-  { nazev: "Loděnice Příklad", logo: "/partneri/lodenice.svg" },
-  { nazev: "Plachty Vzor", logo: "/partneri/plachty.svg" },
-  { nazev: "Marina Ukázka", logo: "/partneri/marina.svg" },
-  { nazev: "Jachtklub Model", logo: "/partneri/jachtklub.svg" },
-  { nazev: "Pivovar Maketa", logo: "/partneri/pivovar.svg" },
-  // Kulaté a čtvercové, aby bylo vidět, jak dlaždice snese jiný tvar než nápis.
-  { nazev: "Kotviště Ukázka", logo: "/partneri/kotva.svg" },
-  { nazev: "Plachtárna Čtverec", logo: "/partneri/ctverec.svg" },
-];
+  { nazev: "Český svaz jachtingu", logo: "/partneri/csj.png", odkaz: "https://www.sailing.cz/" },
+  { nazev: "Marina Orlík", logo: "/partneri/marina-orlik.svg", odkaz: "https://www.marinaorlik.cz/" },
+  { nazev: "Stingray", logo: "/partneri/stingray.png", odkaz: "https://www.stingray.cz/" },
+  { nazev: "Hacjacht", logo: "/partneri/hacjacht.png", odkaz: "https://www.hacjacht.cz/" },
+  // YC Písek logo nemá, na webu jen nápis — dlaždice je jeho název písmem.
+  { nazev: "Yacht Club Písek", logo: "/partneri/yc-pisek.svg", odkaz: "https://yachtclubpisek.cz/" },
+]
 
 /** Dokud jsou v seznamu jen ukázková loga, pás to říká nahlas. */
-const UKAZKA = true;
+const UKAZKA = false;
 
 export function Partneri() {
   if (PARTNERI.length === 0) return null;
