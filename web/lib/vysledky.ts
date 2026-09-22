@@ -237,6 +237,16 @@ export async function nastavZnak(
   );
 }
 
+/** Zařadí rozjížďku do poháru, nebo ji z něj vyndá. */
+export async function zaradDoPoharu(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  doSerie: boolean,
+): Promise<string | null> {
+  return zapis(kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}/pohar`), { doSerie });
+}
+
 export async function publikuj(
   serie: string,
   zavod: string,

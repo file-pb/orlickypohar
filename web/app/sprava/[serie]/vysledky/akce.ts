@@ -1,7 +1,13 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { prepniStav, pridejRozjizdku, publikuj, type StavVysledku } from "@/lib/vysledky";
+import {
+  prepniStav,
+  pridejRozjizdku,
+  publikuj,
+  zaradDoPoharu,
+  type StavVysledku,
+} from "@/lib/vysledky";
 
 /**
  * Zápisy z obrazovky výsledků. Serverové akce, ne javascript v prohlížeči:
@@ -69,6 +75,23 @@ export async function publikaceAkce(formular: FormData) {
       serie,
       zavod,
       chyba ? { chyba } : { stav: publikovano ? "venku" : "stazeno", cislo: String(cislo) },
+    ),
+  );
+}
+
+export async function poharAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const cislo = Number(formular.get("cislo") ?? 0);
+  const doSerie = String(formular.get("doSerie") ?? "") === "ano";
+
+  const chyba = await zaradDoPoharu(serie, zavod, cislo, doSerie);
+
+  redirect(
+    kam(
+      serie,
+      zavod,
+      chyba ? { chyba } : { stav: doSerie ? "vPoharu" : "mimoPohar", cislo: String(cislo) },
     ),
   );
 }

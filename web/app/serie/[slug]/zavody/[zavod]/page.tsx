@@ -16,7 +16,7 @@ import { datum } from "@/app/datum";
 import { VypisNovinek } from "@/app/novinky";
 import { Drobecky } from "@/app/drobecky";
 import { Boky } from "@/app/boky";
-import { NadpisTridy, TabyTrid, vyberTridu } from "@/app/tridy";
+import { CELKEM, NadpisTridy, TabyTrid, vyberTridu } from "@/app/tridy";
 import { Medailonek, maObsah } from "@/app/medailonek";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
@@ -61,7 +61,7 @@ type Bunka = { vysledek?: Vysledek; body?: BodyVRozjizdce };
  * neexistovalo, sčítal si je web sám; teď by se ta dvě čísla při první změně
  * pravidla rozešla a hádalo by se, které je pravda.
  */
-function naRadky(zavod: ZavodDetail): Radek[] {
+function naRadky(zavod: ZavodDetail, poradi = zavod.poradi): Radek[] {
   const vysledky = new Map<string, Map<number, Vysledek>>();
   for (const r of zavod.rozjizdky)
     for (const v of r.vysledky) {
@@ -73,7 +73,7 @@ function naRadky(zavod: ZavodDetail): Radek[] {
     [...vysledky].map(([lod, podleCisla]) => [lod, [...podleCisla.values()][0].kormidelnik]),
   );
 
-  return zavod.poradi
+  return poradi
     .map((v) => ({
       lod: v.lod,
       kategorie: v.kategorie,
@@ -107,9 +107,17 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
   if (!zavod) notFound();
 
   const radky = naRadky(zavod);
-  const kategorie = [...new Set(radky.map((r) => r.kategorie))];
+  // Celé pole napříč kategoriemi je pseudo-třída v tabech, ne druhá
+  // tabulka pod tou první: na telefonu by druhá tabulka znamenala
+  // rolovat přes celou první (Filip, 22. 9. 2026).
+  const radkyCelkem = naRadky(zavod, zavod.poradiCelkem ?? []);
+  const kategorie = [
+    ...(radkyCelkem.length > 0 && zavod.vyhodnoceni !== "PoKategoriich" ? [CELKEM] : []),
+    ...(zavod.vyhodnoceni === "CelePole" ? [] : [...new Set(radky.map((r) => r.kategorie))]),
+  ];
   const akce = zavod.druh === "Akce";
   const aktivni = vyberTridu(kategorie, trida);
+  const videt = aktivni === CELKEM ? radkyCelkem : radky.filter((r) => r.kategorie === aktivni);
 
   return (
     <Boky serie={slug}>
@@ -186,11 +194,7 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
             adresa={(k) => `/serie/${slug}/zavody/${slugZavodu}?trida=${encodeURIComponent(k)}`}
           />
           <NadpisTridy kategorie={kategorie} aktivni={aktivni} />
-          <Tabulka
-            kategorie={aktivni}
-            radky={radky.filter((r) => r.kategorie === aktivni)}
-            rozjizdky={zavod.rozjizdky}
-          />
+          <Tabulka kategorie={aktivni} radky={videt} rozjizdky={zavod.rozjizdky} />
         </>
       )}
       {/* Přihlásit se dá i k regatě s výsledky: loď se často domluví
@@ -213,7 +217,9 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
 
       {radky.length > 0 && (
         <p className="poznamka">
-          Čísla v rozjížďkách jsou body — pořadí v této kategorii, ne v celém poli.
+          {aktivni === CELKEM
+            ? "Čísla v rozjížďkách jsou body — pořadí v celém poli, bez ohledu na kategorii."
+            : "Čísla v rozjížďkách jsou body — pořadí v této kategorii, ne v celém poli."}
           {zavod.pocetSkrtu > 0 && " Škrtnutá rozjížďka je přeškrtnutá a do součtu se nepočítá."}
           {zavod.rozjizdky.some((r) => !r.doSerie) && " Rozjížďka s * se nepočítá do poháru."}
         </p>
@@ -233,7 +239,13 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
       <h2>Pravidla závodu</h2>
       <dl className="pravidla">
         <dt>Vyhodnocení</dt>
-        <dd>{zavod.vyhodnoceni === "CelePole" ? "celé pole dohromady" : "po kategoriích"}</dd>
+        <dd>
+          {zavod.vyhodnoceni === "CelePole"
+            ? "celé pole dohromady"
+            : zavod.vyhodnoceni === "Oboje"
+              ? "celé pole i kategorie"
+              : "po kategoriích"}
+        </dd>
         <dt>Škrty</dt>
         <dd>{zavod.pocetSkrtu === 0 ? "žádné" : `nejhorších ${zavod.pocetSkrtu}`}</dd>
         <dt>Do poháru</dt>
@@ -370,7 +382,16 @@ function Tabulka({
               <tr key={radek.lod}>
                 <td className="lod">
                   <span className="poradi-cislo">{radek.poradi}.</span> {radek.lod}
-                  {radek.kormidelnik && <div className="majitel">{radek.kormidelnik}</div>}
+                  {/* V celém poli je vidět, ze které kategorie loď je —
+                      jinde ji nese tab nad tabulkou. */}
+                  {(radek.kormidelnik || kategorie === CELKEM) && (
+                    <div className="majitel">
+                      {radek.kormidelnik}
+                      {kategorie === CELKEM && (
+                        <span className="stitek kategorie-lodi">{radek.kategorie}</span>
+                      )}
+                    </div>
+                  )}
                 </td>
                 <td className="body">{radek.body}</td>
                 {radek.bunky.map((b, i) => (

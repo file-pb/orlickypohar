@@ -10,7 +10,7 @@ import {
   type RozjizdkaRadek,
   type StavVysledku,
 } from "@/lib/vysledky";
-import { pridejRozjizdkuAkce, publikaceAkce, stavAkce } from "../akce";
+import { poharAkce, pridejRozjizdkuAkce, publikaceAkce, stavAkce } from "../akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -252,6 +252,27 @@ function Rozjizdka({
             </form>
           ))}
 
+        {/* Do poháru, nebo mimo něj. Výsledku regaty se to netýká —
+            ten se počítá ze všech odjetých rozjížděk. */}
+        {rozjizdka.smiDoPoharu && (
+          <form action={poharAkce}>
+            <input type="hidden" name="serie" value={serie} />
+            <input type="hidden" name="zavod" value={zavod} />
+            <input type="hidden" name="cislo" value={rozjizdka.cislo} />
+            <input type="hidden" name="doSerie" value={rozjizdka.doSerie ? "ne" : "ano"} />
+            <button
+              type="submit"
+              title={
+                rozjizdka.doSerie
+                  ? "Body z téhle rozjížďky přestanou platit v poháru. Výsledek regaty zůstává."
+                  : "Body z téhle rozjížďky se zase budou počítat do poháru."
+              }
+            >
+              {rozjizdka.doSerie ? "Vyndat z poháru" : "Vrátit do poháru"}
+            </button>
+          </form>
+        )}
+
         {rozjizdka.smiPublikovat && (
           <form action={publikaceAkce}>
             <input type="hidden" name="serie" value={serie} />
@@ -323,6 +344,10 @@ function hotovo(stav: string, cislo?: string, nastav?: StavVysledku) {
       return `${kdo}: čísla jsou venku.`;
     case "stazeno":
       return `${kdo}: čísla z webu zmizela. Stav zápisu se nezměnil.`;
+    case "vPoharu":
+      return `${kdo} se počítá do poháru.`;
+    case "mimoPohar":
+      return `${kdo} je mimo pohár. Do výsledku regaty se počítá dál.`;
     default:
       return "Hotovo.";
   }
