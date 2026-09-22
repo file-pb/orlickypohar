@@ -153,9 +153,9 @@ header.hlavicka a.znacka svg.logo-napis-mobil { display: none; height: 34px; wid
 /* Barevné je jen logo, nápis má barvu textu a proužky (Filip, 22. 9. 2026:
    varianta L ze srovnání, logo „mírně ztmavit do námořnické, ne moc").
    Logo tak působí samostatně a nápis se k němu jen přidává. */
-header.hlavicka { --barva-znacky: #0c4a8c; }
+header.hlavicka { --barva-znacky: #0c4a8c; --napis-znacky: var(--text); }
 header.hlavicka a.znacka svg.logo-oys { --logo-oys: var(--barva-znacky); }
-header.hlavicka a.znacka svg.logo-napis-oys { --logo-napis: var(--text); }
+header.hlavicka a.znacka svg.logo-napis-oys { --logo-napis: var(--napis-znacky); }
 /* Původní logo (app/logo-puvodni.tsx) — dnes se nevykresluje, styly
    zůstávají, aby šlo vrátit jedním importem. */
 header.hlavicka a.znacka svg.logo-monitor { height: 64px; width: auto; margin-bottom: -12px; }
@@ -210,15 +210,15 @@ body:has(.uvod) .pozadi-znak { display: none; }
   :root:not([data-rezim="svetly"]) .logo { --logo-hlavni: #7fa7c9; --logo-druha: #e25a6d; --logo-seda: #c4ced8; --logo-napis: #edeae5; }
   :root:not([data-rezim="svetly"]) .logo-vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
   :root:not([data-rezim="svetly"]) .logo-oys { --logo-oys: #7fa7c9; }
-  /* V hlavičce nad fotkou byla #7fa7c9 málo vidět (Filip, 22. 9. 2026);
-     vodoznak na pozadí zůstává tlumený. */
-  :root:not([data-rezim="svetly"]) header.hlavicka { --barva-znacky: #7cc4ff; }
+  /* Tmavý vzhled (Filip, 22. 9. 2026, varianta 5c): logo ledové, nápis
+     středně šedý, aby logo stálo samo. Vodoznak na pozadí zůstává tlumený. */
+  :root:not([data-rezim="svetly"]) header.hlavicka { --barva-znacky: #d6e6f5; --napis-znacky: #7d848c; }
 }
 :root[data-rezim="tmavy"] .pozadi-znak { opacity: 0.09; }
 :root[data-rezim="tmavy"] .logo { --logo-hlavni: #7fa7c9; --logo-druha: #e25a6d; --logo-seda: #c4ced8; --logo-napis: #edeae5; }
 :root[data-rezim="tmavy"] .logo-vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
 :root[data-rezim="tmavy"] .logo-oys { --logo-oys: #7fa7c9; }
-:root[data-rezim="tmavy"] header.hlavicka { --barva-znacky: #7cc4ff; }
+:root[data-rezim="tmavy"] header.hlavicka { --barva-znacky: #d6e6f5; --napis-znacky: #7d848c; }
 header.hlavicka nav { display: flex; gap: 1rem; flex: none; }
 header.hlavicka nav a { color: var(--tlumeny); font-weight: 500; font-size: 0.9rem; }
 header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
