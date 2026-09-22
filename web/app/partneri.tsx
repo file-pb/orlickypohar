@@ -23,6 +23,9 @@ const PARTNERI: Partner[] = [
   { nazev: "Marina Ukázka", logo: "/partneri/marina.svg" },
   { nazev: "Jachtklub Model", logo: "/partneri/jachtklub.svg" },
   { nazev: "Pivovar Maketa", logo: "/partneri/pivovar.svg" },
+  // Kulaté a čtvercové, aby bylo vidět, jak dlaždice snese jiný tvar než nápis.
+  { nazev: "Kotviště Ukázka", logo: "/partneri/kotva.svg" },
+  { nazev: "Plachtárna Čtverec", logo: "/partneri/ctverec.svg" },
 ];
 
 /** Dokud jsou v seznamu jen ukázková loga, pás to říká nahlas. */
