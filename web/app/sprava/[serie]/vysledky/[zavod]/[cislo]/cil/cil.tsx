@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 // Jen typy: hodnoty z lib/vysledky by do prohlížeče zatáhly i čtení tokenu.
 import type { KodVysledku, ZapisLod, ZapisRadek, ZapisRozjizdky } from "@/lib/vysledky";
-import { odstartujAkce, ulozCilAkce } from "./akce";
+import { odstartujAkce, pridejLodAkce, ulozCilAkce, znakAkce } from "./akce";
 
 /**
  * Klepací část cílové obrazovky.
@@ -16,6 +16,12 @@ import { odstartujAkce, ulozCilAkce } from "./akce";
  * <b>Čas patří místu v pořadí, ne lodi.</b> Klepnutí zachytí okamžik, kdy
  * něco projelo cílem. Když se dvě lodě prohodí, prohodí se jména, ale časy
  * zůstanou u míst — tak to bylo na vodě.
+ *
+ * <b>Tlačítka mají lodě na regatě</b> (krok 2, 22. 9. 2026): přihlášené
+ * a potvrzené. Zbytek ročníku je stranou v „Dalších lodích" — pozdní loď
+ * se klepnutím zapíše a zápis ji na regatu přihlásí sám. Když na regatu
+ * přihlášený není nikdo (pořadatel přihlášky nevede), tlačítka má celý
+ * ročník jako dřív.
  *
  * <b>Ukládá se po každé změně celá sada</b>, stejně jako ve formuláři:
  * co v zápisu není, výsledek nemá. Klepnutí během ukládání se nezahodí —
@@ -40,7 +46,25 @@ export function Cil({
   /** `KODY` z lib/vysledky; posílá je serverová stránka. */
   popisyKodu: Record<KodVysledku, string>;
 }) {
-  const lode = new Map(zapis.lode.map((l) => [l.prihlaskaId, l]));
+  // Lodě přidané na vodě. Mají přednost před tím, co přišlo ze serveru:
+  // loď ročníku, kterou pořadatel přihlásil tady, je už na regatě.
+  const [pridane, setPridane] = useState<ZapisLod[]>([]);
+  // Chyba formuláře nové lodi stojí u něj: hláška nahoře by byla o dvě
+  // obrazovky výš, než kam se zrovna kouká.
+  const [chybaLodi, setChybaLodi] = useState<string | null>(null);
+  const vsechny = [
+    ...zapis.lode.map((l) => pridane.find((p) => p.prihlaskaId === l.prihlaskaId) ?? l),
+    ...pridane.filter((p) => !zapis.lode.some((l) => l.prihlaskaId === p.prihlaskaId)),
+  ];
+  const lode = new Map(vsechny.map((l) => [l.prihlaskaId, l]));
+  const nekdoNaRegate = vsechny.some((l) => l.naRegate);
+  const naVode = (l: ZapisLod) => !nekdoNaRegate || l.naRegate;
+
+  const [znaky, setZnaky] = useState<Record<number, string>>(() =>
+    Object.fromEntries(
+      zapis.lode.filter((l) => l.poznavaciZnak).map((l) => [l.prihlaskaId, l.poznavaciZnak!]),
+    ),
+  );
 
   const [start, setStart] = useState<string | null>(zapis.startV ?? null);
   const [dojeti, setDojeti] = useState<Dojezd[]>(() =>
@@ -112,7 +136,9 @@ export function Cil({
   const ted = useTed(start != null);
 
   const dojela = new Set(dojeti.map((d) => d.id));
-  const cekaji = zapis.lode.filter((l) => !dojela.has(l.prihlaskaId) && !kody[l.prihlaskaId]);
+  const zbyvaji = vsechny.filter((l) => !dojela.has(l.prihlaskaId) && !kody[l.prihlaskaId]);
+  const cekaji = zbyvaji.filter(naVode);
+  const dalsi = zbyvaji.filter((l) => !naVode(l));
 
   const dojede = (id: number) => {
     // Čas se bere hned, ne až po uložení: rozhoduje okamžik klepnutí.
@@ -146,6 +172,43 @@ export function Cil({
     } catch {
       setStart(puvodni);
       setChyba("Start se nepodařilo uložit. Zkus to znovu.");
+    }
+  };
+
+  const ulozZnak = async (id: number, text: string) => {
+    const znak = text.trim();
+    if (znak === (znaky[id] ?? "")) return;
+    try {
+      const { chyba } = await znakAkce(serie, zavod, id, znak);
+      if (chyba) return setChyba(chyba);
+      setZnaky((z) => {
+        const nove = { ...z };
+        if (znak) nove[id] = znak;
+        else delete nove[id];
+        return nove;
+      });
+    } catch {
+      setChyba("Znak se nepodařilo uložit. Zkus to znovu.");
+    }
+  };
+
+  const pridejLod = async (formular: HTMLFormElement) => {
+    const pole = new FormData(formular);
+    const text = (klic: string) => String(pole.get(klic) ?? "").trim();
+    try {
+      const vysledek = await pridejLodAkce(serie, zavod, {
+        nazev: text("nazev"),
+        kategorie: text("kategorie"),
+        majitelJmeno: text("jmeno"),
+        majitelPrijmeni: text("prijmeni"),
+        cisloPlachty: text("plachta") || null,
+      });
+      if ("chyba" in vysledek) return setChybaLodi(vysledek.chyba);
+      setChybaLodi(null);
+      setPridane((p) => [...p.filter((l) => l.prihlaskaId !== vysledek.lod.prihlaskaId), vysledek.lod]);
+      formular.reset();
+    } catch {
+      setChybaLodi("Loď se nepodařilo přidat. Zkus to znovu.");
     }
   };
 
@@ -209,21 +272,28 @@ export function Cil({
               <h3>{kategorie}</h3>
               <div className="cil-lode">
                 {lode.map((l) => (
-                  <button
-                    type="button"
-                    key={l.prihlaskaId}
-                    className="cil-lod"
-                    onClick={() => dojede(l.prihlaskaId)}
-                  >
-                    {l.lod}
-                    {l.cisloPlachty && <small>{l.cisloPlachty}</small>}
-                  </button>
+                  <TlacitkoLodi key={l.prihlaskaId} lod={l} znak={znaky[l.prihlaskaId]} onClick={dojede} />
                 ))}
               </div>
             </div>
           ))
         )}
       </section>
+
+      {dalsi.length > 0 && (
+        <details className="cil-dalsi">
+          <summary>Další lodě ročníku ({dalsi.length})</summary>
+          <p className="poznamka">
+            Na regatu nepřihlášené. Klepnutím dostane loď dojezd a zápis ji na
+            regatu přihlásí.
+          </p>
+          <div className="cil-lode">
+            {dalsi.map((l) => (
+              <TlacitkoLodi key={l.prihlaskaId} lod={l} onClick={dojede} />
+            ))}
+          </div>
+        </details>
+      )}
 
       <section aria-labelledby="cil-dojete">
         <div className="cil-nadpis">
@@ -282,6 +352,90 @@ export function Cil({
         )}
       </section>
 
+      <details className="cil-znaky">
+        <summary>Poznávací znaky</summary>
+        <p className="poznamka">
+          Na čem se u cíle domluvíte — barva spinakru, bez čísla na plachtě.
+          Znak stojí na tlačítku lodi a platí pro celou regatu. Ukládá se po
+          opuštění pole.
+        </p>
+        {vsechny.some((l) => l.naRegate) ? (
+          <ul>
+            {vsechny
+              .filter((l) => l.naRegate)
+              .map((l) => (
+                <li key={l.prihlaskaId}>
+                  <label htmlFor={`znak-${l.prihlaskaId}`} className="cil-jmeno">
+                    {l.lod}
+                    {l.cisloPlachty && <small>{l.cisloPlachty}</small>}
+                  </label>
+                  <input
+                    id={`znak-${l.prihlaskaId}`}
+                    type="text"
+                    maxLength={60}
+                    defaultValue={znaky[l.prihlaskaId] ?? ""}
+                    onBlur={(e) => void ulozZnak(l.prihlaskaId, e.currentTarget.value)}
+                  />
+                </li>
+              ))}
+          </ul>
+        ) : (
+          <p className="prazdno">
+            Znak jde dát lodím přihlášeným na regatu. Zatím tu žádná není.
+          </p>
+        )}
+      </details>
+
+      <details className="cil-nova">
+        <summary>Nová loď</summary>
+        <p className="poznamka">
+          Loď, která v ročníku ještě není. Přidáním se přihlásí na regatu
+          a dostane tlačítko. Majitel je povinný, protože stojí ve výsledcích
+          vedle lodi.
+        </p>
+        <form
+          className="formular"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void pridejLod(e.currentTarget);
+          }}
+        >
+          <label>
+            Název lodi
+            <input name="nazev" required maxLength={120} />
+          </label>
+          <label>
+            Kategorie
+            <select name="kategorie" required defaultValue="">
+              <option value="" disabled>
+                vyber
+              </option>
+              {[...new Set(vsechny.map((l) => l.kategorie))].map((k) => (
+                <option key={k}>{k}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Jméno majitele
+            <input name="jmeno" required maxLength={80} autoComplete="off" />
+          </label>
+          <label>
+            Příjmení majitele
+            <input name="prijmeni" required maxLength={80} autoComplete="off" />
+          </label>
+          <label>
+            Číslo plachty <span className="poznamka">nepovinné</span>
+            <input name="plachta" maxLength={20} autoComplete="off" />
+          </label>
+          {chybaLodi && (
+            <p className="hlaska chyba" role="alert">
+              {chybaLodi}
+            </p>
+          )}
+          <button type="submit">Přidat loď</button>
+        </form>
+      </details>
+
       {/* Zavřené, dokud se jezdí: kódy přicházejí na řadu až po dojezdu
           a mezi tlačítky lodí by jen překážely. */}
       <details className="cil-kody">
@@ -308,7 +462,7 @@ export function Cil({
                 </span>
               </li>
             ))}
-            {zapis.lode
+            {vsechny
               .filter((l) => kody[l.prihlaskaId])
               .map((l) => (
                 <li key={l.prihlaskaId} className="ma-kod">
@@ -329,6 +483,28 @@ export function Cil({
         )}
       </details>
     </div>
+  );
+}
+
+/**
+ * Tlačítko lodi v cíli. Pod jménem domluvený znak, když je, jinak číslo
+ * plachty — hlídač volá jméno, ale zapisovatel hledá očima i podle znaku.
+ */
+function TlacitkoLodi({
+  lod,
+  znak,
+  onClick,
+}: {
+  lod: ZapisLod;
+  znak?: string;
+  onClick: (id: number) => void;
+}) {
+  const pod = [znak, lod.cisloPlachty].filter(Boolean).join(" · ");
+  return (
+    <button type="button" className="cil-lod" onClick={() => onClick(lod.prihlaskaId)}>
+      {lod.lod}
+      {pod && <small>{pod}</small>}
+    </button>
   );
 }
 

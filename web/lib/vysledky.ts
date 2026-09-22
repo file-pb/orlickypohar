@@ -223,6 +223,20 @@ export async function odstartuj(
   return { zapis: (await odpoved.json()) as ZapisRozjizdky };
 }
 
+/** Poznávací znak lodi na regatě. Prázdný ho smaže. */
+export async function nastavZnak(
+  serie: string,
+  zavod: string,
+  prihlaskaId: number,
+  znak: string,
+): Promise<string | null> {
+  return zapis(
+    kam(serie, `/${encodeURIComponent(zavod)}/lode/${prihlaskaId}/znak`),
+    { znak },
+    "PUT",
+  );
+}
+
 export async function publikuj(
   serie: string,
   zavod: string,
