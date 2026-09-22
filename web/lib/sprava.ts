@@ -113,7 +113,7 @@ export async function nactiPrehled(
  *
  * `ucetNeni` říká, že se na ten e-mail ještě nikdo nepřihlásil — stránka
  * pak k hlášce přidá odkaz na seznam účtů. Pozná se podle 404: ročník
- * i zastávka tu pocházejí z nabídky, kterou vydalo totéž API, takže jiná
+ * i regata tu pocházejí z nabídky, kterou vydalo totéž API, takže jiná
  * 404 vzniká jen souběhem se smazáním.
  */
 export async function udel(

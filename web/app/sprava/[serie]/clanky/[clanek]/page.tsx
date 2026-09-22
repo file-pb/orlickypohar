@@ -29,7 +29,7 @@ export default async function UpravaClanku({ params, searchParams }: Parametry) 
   const { serie, clanek: slug } = await params;
   const zpravy = await searchParams;
 
-  // Přehled kvůli výběru zastávek: nabídnout se smí jen to, kam člověk
+  // Přehled kvůli výběru regat: nabídnout se smí jen to, kam člověk
   // doopravdy smí psát, jinak si vybere a dostane „nemáš práva".
   const [{ stav, clanek }, prehled] = await Promise.all([
     nactiClanek(serie, slug),
@@ -49,7 +49,7 @@ export default async function UpravaClanku({ params, searchParams }: Parametry) 
     );
   }
 
-  // Obecný článek mimo ročník: bez ročníku v cestě a bez volby zastávky.
+  // Obecný článek mimo ročník: bez ročníku v cestě a bez volby regaty.
   const web = jeWeb(serie);
 
   const hlava = (

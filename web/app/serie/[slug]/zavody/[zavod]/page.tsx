@@ -34,9 +34,9 @@ export async function generateMetadata({ params }: Parametry) {
   const { slug, zavod } = await params;
   try {
     const z = await nactiZavod(slug, zavod);
-    return { title: z?.nazev ?? "Zastávka" };
+    return { title: z?.nazev ?? "Regata" };
   } catch {
-    return { title: "Zastávka" };
+    return { title: "Regata" };
   }
 }
 
@@ -94,8 +94,8 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
   const { trida } = await searchParams;
   let zavod, clanky;
   try {
-    // Zastávku pořádá jiný subjekt a stránka je jeho — kromě výsledků na ni
-    // patří i jeho vlastní blog, viz PLAN.md „Stránka zastávky".
+    // Regatu pořádá jiný subjekt a stránka je jeho — kromě výsledků na ni
+    // patří i jeho vlastní blog, viz PLAN.md „Stránka regaty".
     [zavod, clanky] = await Promise.all([
       nactiZavod(slug, slugZavodu),
       nactiClanky(slug, { zavod: slugZavodu }),
@@ -137,7 +137,7 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
           ) : (
             ` · pořádá ${zavod.poradatel}`
           ))}
-        {/* Přesun není vlastní stav — přesunutá zastávka je pořád plánovaná,
+        {/* Přesun není vlastní stav — přesunutá regata je pořád plánovaná,
             jen jindy. Termín, na který se lidé chystali, ale nemá smysl
             zahodit. */}
         {zavod.puvodniDatum && (
@@ -193,7 +193,7 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
           />
         </>
       )}
-      {/* Přihlásit se dá i k zastávce s výsledky: loď se často domluví
+      {/* Přihlásit se dá i k regatě s výsledky: loď se často domluví
           telefonem na startu a zapíše se dodatečně (Filip, 17. 9. 2026). */}
       {radky.length > 0 && (zavod.stav === "Vypsany" || zavod.stav === "Odjety") && (
         <p className="poznamka">
@@ -201,12 +201,12 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
         </p>
       )}
 
-      {/* Výsledky u zastávky, která není vedená jako odjetá, do poháru
+      {/* Výsledky u regaty, která není vedená jako odjetá, do poháru
           nejdou — průběžné pořadí počítá jen z odjetých. Bez téhle věty by
           se čtenář marně sháněl po bodech, které v tabulce seriálu nejsou. */}
       {radky.length > 0 && zavod.stav !== "Odjety" && (
         <p className="poznamka">
-          Zastávka není vedená jako odjetá, takže se tyhle výsledky do průběžného
+          Regata není vedená jako odjetá, takže se tyhle výsledky do průběžného
           pořadí seriálu nepočítají.
         </p>
       )}
@@ -221,7 +221,7 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
 
       {clanky && clanky.length > 0 && (
         <>
-          <h2>Novinky zastávky</h2>
+          <h2>Novinky regaty</h2>
           <VypisNovinek serie={slug} clanky={clanky} />
         </>
       )}
@@ -256,7 +256,7 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
 }
 
 /**
- * Seznam lodí místo výsledků. Zastávka, která se teprve pojede, jinak nemá
+ * Seznam lodí místo výsledků. Regata, která se teprve pojede, jinak nemá
  * co ukázat — a kdo se chystá jet, je to jediné, co je o ní v tu chvíli známo.
  */
 function PrihlaseneLode({
@@ -268,10 +268,10 @@ function PrihlaseneLode({
   lode: UcastLodi[];
   trida?: string;
   adresa: (trida: string) => string;
-  /** Odkaz na veřejnou přihlášku, když se na zastávku přihlašuje. */
+  /** Odkaz na veřejnou přihlášku, když se na regatu přihlašuje. */
   prihlaska?: string;
 }) {
-  // Vypsaná zastávka bez jediné lodi má aspoň pozvat k přihlášce.
+  // Vypsaná regata bez jediné lodi má aspoň pozvat k přihlášce.
   if (lode.length === 0)
     return prihlaska ? (
       <p className="poznamka">
@@ -280,7 +280,7 @@ function PrihlaseneLode({
     ) : null;
 
   // Třídy v taby jako u výsledků (Filip, 15. 9. 2026) — seznam lodí na
-  // zastávce, která se teprve pojede, je jinak stejně dlouhý svitek.
+  // regatě, která se teprve pojede, je jinak stejně dlouhý svitek.
   const kategorie = [...new Set(lode.map((l) => l.kategorie))];
   const aktivni = vyberTridu(kategorie, trida);
 

@@ -39,28 +39,28 @@ public static class KalendarEndpoints
 
         g.MapPost("/", ZalozAsync)
             .Produces<ZastavkaRadek>(StatusCodes.Status201Created)
-            .WithSummary("Založí zastávku v předběžném kalendáři")
+            .WithSummary("Založí regatu v předběžném kalendáři")
             .WithDescription(
-                "Rozhodčí ročníku. Adresa se odvodí z názvu. Nová zastávka je vždycky " +
+                "Rozhodčí ročníku. Adresa se odvodí z názvu. Nová regata je vždycky " +
                 "plánovaná a nepublikovaná.");
 
         g.MapPut("/{zavod}", UpravAsync)
             .Produces<ZastavkaRadek>()
-            .WithSummary("Uloží termín a údaje zastávky")
+            .WithSummary("Uloží termín a údaje regaty")
             .WithDescription(
                 "Rozhodčí ročníku. Adresa se nemění, ani když se změní název. Posun " +
                 "termínu u potvrzené a dál zapíše původní datum.");
 
         g.MapPost("/{zavod}/stav", StavAsync)
             .Produces<ZastavkaRadek>()
-            .WithSummary("Posune zastávku v jejím životním cyklu")
+            .WithSummary("Posune regatu v jejím životním cyklu")
             .WithDescription(
                 "Plánovaný → potvrzený (rozhodčí) → vypsaný → odjetý (organizátor), " +
                 "nebo zrušený. Po jednom kroku, oběma směry.");
 
         g.MapPost("/{zavod}/publikace", PublikaceAsync)
             .Produces<ZastavkaRadek>()
-            .WithSummary("Pustí zastávku na veřejný web, nebo ji stáhne")
+            .WithSummary("Pustí regatu na veřejný web, nebo ji stáhne")
             .WithDescription("Správce ročníku. Publikace není stav, je to vlastní příznak.");
     }
 

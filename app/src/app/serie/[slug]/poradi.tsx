@@ -8,7 +8,7 @@ import { nactiPoradi, type PoradiLodi } from '@/lib/api';
 
 /**
  * Průběžné pořadí. Na telefonu se tabulka devíti sloupců nevejde, a hlavně
- * je nepotřeba: čtenáře zajímá jméno lodi a body. Zastávky jsou proto pod
+ * je nepotřeba: čtenáře zajímá jméno lodi a body. Regaty jsou proto pod
  * řádkem jako řada čísel, ne jako sloupce.
  */
 export default function Poradi() {
@@ -31,12 +31,12 @@ export default function Poradi() {
         <>
           <Nadpis
             tlumene={`${data.nazev} · po ${data.zastavky.length} ${
-              data.zastavky.length === 1 ? 'odjeté zastávce' : 'odjetých zastávkách'
+              data.zastavky.length === 1 ? 'odjeté regatě' : 'odjetých regatách'
             }`}>
             Průběžné pořadí
           </Nadpis>
 
-          {prazdno ? <Prazdno text="Zatím není odjetá žádná zastávka." /> : null}
+          {prazdno ? <Prazdno text="Zatím není odjetá žádná regata." /> : null}
 
           {data.kategorie.map((k) =>
             k.lode.length === 0 ? null : (
@@ -50,7 +50,7 @@ export default function Poradi() {
           )}
 
           <Text style={{ color: t.tlumeny, fontSize: 13, marginTop: 16 }}>
-            Vítěz zastávky má nula bodů, takže vyhrává nejnižší součet. Velké číslo je součet
+            Vítěz regaty má nula bodů, takže vyhrává nejnižší součet. Velké číslo je součet
             po škrtu nejhoršího závodu, malé je součet všeho — rozhodčí vede obojí.
           </Text>
         </>
@@ -83,7 +83,7 @@ function Radek({ lod }: { lod: PoradiLodi }) {
         </View>
       </View>
 
-      {/* Zastávky jako řada čísel. Prázdné místo znamená, že tam loď nestartovala. */}
+      {/* Regaty jako řada čísel. Prázdné místo znamená, že tam loď nestartovala. */}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 8, gap: 6 }}>
         {lod.zastavky.map((b, i) => (
           <Text

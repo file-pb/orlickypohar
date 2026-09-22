@@ -43,7 +43,7 @@ export async function volbaKalendare(parametr?: string | null): Promise<VolbaKal
 export type SAkci<T> = T & { akce: boolean };
 
 /**
- * Zastávky podle volby. Ročník bez akcí ukáže vždycky pohár — přepínač
+ * Regaty podle volby. Ročník bez akcí ukáže vždycky pohár — přepínač
  * se tam neukazuje a „Mimo pohár" by jinak z cookie nechalo prázdný
  * kalendář, který nejde přepnout zpátky.
  *

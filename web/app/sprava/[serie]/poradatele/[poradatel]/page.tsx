@@ -23,8 +23,8 @@ type Parametry = {
  * <b>Celé serverové a bez javascriptu</b>, jako kalendář. Chodí se sem
  * jednou za sezónu, typicky z kalendáře.
  *
- * <b>Záznam je společný všem zastávkám klubu</b>, i v jiných ročnících.
- * Stránka to říká nahlas, protože organizátor jedné zastávky jinak nemá
+ * <b>Záznam je společný všem regatám klubu</b>, i v jiných ročnících.
+ * Stránka to říká nahlas, protože organizátor jedné regaty jinak nemá
  * jak poznat, že přepisuje i cizí.
  */
 export default async function SpravaPoradatele({ params, searchParams }: Parametry) {
@@ -86,7 +86,7 @@ export default async function SpravaPoradatele({ params, searchParams }: Paramet
         {hlava}
         <p className="prazdno">
           V tomhle ročníku k pořadatelům přístup nemáš. Medailonek upravuje rozhodčí, nebo
-          organizátor zastávky, kterou klub pořádá.
+          organizátor regaty, kterou klub pořádá.
         </p>
       </>
     );
@@ -142,7 +142,7 @@ export default async function SpravaPoradatele({ params, searchParams }: Paramet
       {detail.zastavekJinde > 0 && (
         <p className="poznamka">
           Klub pořádá i {detail.zastavekJinde}{" "}
-          {detail.zastavekJinde === 1 ? "zastávku" : detail.zastavekJinde < 5 ? "zastávky" : "zastávek"}{" "}
+          {detail.zastavekJinde === 1 ? "regatu" : detail.zastavekJinde < 5 ? "regaty" : "regat"}{" "}
           v jiném ročníku. Změna se projeví i tam.
         </p>
       )}
@@ -156,7 +156,7 @@ export default async function SpravaPoradatele({ params, searchParams }: Paramet
             Název
             <input name="nazev" required maxLength={120} defaultValue={p.nazev} />
             <span className="poznamka">
-              Přejmenování přepíše jméno na všech zastávkách klubu. Jiného pořadatele zastávce
+              Přejmenování přepíše jméno na všech regatách klubu. Jiného pořadatele regatě
               přiřadíš v kalendáři.
             </span>
           </label>
@@ -249,7 +249,7 @@ export default async function SpravaPoradatele({ params, searchParams }: Paramet
         </form>
       ) : (
         <p className="prazdno">
-          Medailonek tohohle klubu upravuje rozhodčí, nebo organizátor jeho zastávky.
+          Medailonek tohohle klubu upravuje rozhodčí, nebo organizátor jeho regaty.
         </p>
       )}
 

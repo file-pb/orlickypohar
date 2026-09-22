@@ -15,7 +15,7 @@ import { pridejRozjizdkuAkce, publikaceAkce, stavAkce } from "../akce";
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Výsledky zastávky — správa" };
+export const metadata = { title: "Výsledky regaty — správa" };
 
 type Parametry = {
   params: Promise<{ serie: string; zavod: string }>;
@@ -29,7 +29,7 @@ type Parametry = {
 };
 
 /**
- * Workflow výsledků jedné zastávky.
+ * Workflow výsledků jedné regaty.
  *
  * <b>Celé serverové a bez javascriptu</b>, stejně jako zbytek administrace.
  * Nabídku kroků posílá API v každém řádku — pravidla přechodů i oprávnění
@@ -63,10 +63,10 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
           { text: "Domů", kam: "/" },
           { text: "Ročník", kam: `/serie/${serie}` },
           { text: "Výsledky", kam: `/sprava/${serie}/vysledky` },
-          { text: "Zastávka" },
+          { text: "Regata" },
         ]}
       />
-      <h1>Výsledky zastávky</h1>
+      <h1>Výsledky regaty</h1>
     </>
   );
 
@@ -95,7 +95,7 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
       <>
         {hlava}
         <p className="prazdno">
-          K výsledkům téhle zastávky nemáš přístup. Zapisuje je její pořadatel,
+          K výsledkům téhle regaty nemáš přístup. Zapisuje je její pořadatel,
           ověřuje a schvaluje rozhodčí ročníku.
         </p>
       </>
@@ -118,12 +118,12 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
         <Link href={`/sprava/${serie}/prihlasky/${zavod}`}>přihlášené lodě →</Link>
       </p>
 
-      {/* Nepublikovaná zastávka schová i publikovanou rozjížďku — veřejně
+      {/* Nepublikovaná regata schová i publikovanou rozjížďku — veřejně
           neexistuje. Bez téhle věty by správce pouštěl čísla ven a divil se,
           že na webu nejsou. */}
       {!prehled.zavodPublikovan && (
         <p className="hlaska" role="status">
-          Zastávka sama není zveřejněná, takže veřejnost neuvidí ani výsledky,
+          Regata sama není zveřejněná, takže veřejnost neuvidí ani výsledky,
           které pustíš ven. Zveřejnit ji jde{" "}
           <Link href={`/sprava/${serie}/kalendar`}>v kalendáři</Link>.
         </p>
@@ -142,10 +142,10 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
 
       {prehled.rozjizdky.length === 0 ? (
         <p className="prazdno">
-          Zastávka zatím nemá jedinou rozjížďku.{" "}
+          Regata zatím nemá jedinou rozjížďku.{" "}
           {prehled.smiPridatRozjizdku
             ? "Přidej první a rovnou do ní zapiš výsledky."
-            : "Přidat ji může pořadatel zastávky, jakmile je závod vypsaný."}
+            : "Přidat ji může pořadatel regaty, jakmile je závod vypsaný."}
         </p>
       ) : (
         <ul className="seznam">

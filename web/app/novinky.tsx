@@ -5,7 +5,7 @@ import type { ClanekShrnuti, Novinka } from "@/lib/api";
 
 /**
  * Výpis novinek. Používá ho úvodní stránka, seznam novinek ročníku
- * i stránka zastávky — je to slovník, ne abstrakce: kdyby novinka vypadala
+ * i stránka regaty — je to slovník, ne abstrakce: kdyby novinka vypadala
  * na každé stránce jinak, čtenář by hádal, jestli je to totéž.
  *
  * <b>`hlavni` je úvodní stránka</b> (Filip, 17. 9. 2026): první článek je

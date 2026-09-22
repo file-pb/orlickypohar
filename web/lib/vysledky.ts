@@ -100,7 +100,7 @@ async function hlaska(odpoved: Response) {
 
   if (odpoved.status === 401) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
   if (odpoved.status === 403) return "Na tenhle krok ve workflow nemáš práva.";
-  if (odpoved.status === 404) return "Rozjížďka, zastávka nebo ročník neexistuje.";
+  if (odpoved.status === 404) return "Rozjížďka, regata nebo ročník neexistuje.";
   return `API odpovědělo ${odpoved.status}.`;
 }
 

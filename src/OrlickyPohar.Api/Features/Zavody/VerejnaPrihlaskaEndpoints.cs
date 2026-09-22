@@ -23,7 +23,7 @@ public static class VerejnaPrihlaskaEndpoints
         app.MapPost("/serie/{serie}/zavody/{zavod}/prihlasky", PrihlasAsync)
             .WithTags("Přihlášky")
             .Produces<PrijataPrihlaskaDto>(StatusCodes.Status201Created)
-            .WithSummary("Přihlásí loď na zastávku z veřejného formuláře")
+            .WithSummary("Přihlásí loď na regatu z veřejného formuláře")
             .WithDescription(
                 "Bez přihlášení. Vzniká požadavek, který pořadatel zapíše, vrátí k doplnění, " +
                 "nebo odmítne; na webu loď do té doby není. Vyžaduje kontakt a souhlas.");

@@ -59,11 +59,11 @@ export default async function Poradi({ params, searchParams }: Parametry) {
       <h1>Průběžné pořadí</h1>
       <p className="podtitulek">
         {poradi.nazev} · po {poradi.zastavky.length}{" "}
-        {poradi.zastavky.length === 1 ? "odjeté zastávce" : "odjetých zastávkách"}
+        {poradi.zastavky.length === 1 ? "odjeté regatě" : "odjetých regatách"}
       </p>
 
       {nic ? (
-        <p className="prazdno">Zatím není odjetá žádná zastávka.</p>
+        <p className="prazdno">Zatím není odjetá žádná regata.</p>
       ) : (
         <>
           <TabyTrid
@@ -81,10 +81,10 @@ export default async function Poradi({ params, searchParams }: Parametry) {
       )}
 
       <p className="poznamka">
-        Vítěz zastávky má v seriálu nula bodů, druhý jeden a tak dál — vyhrává tedy
+        Vítěz regaty má v seriálu nula bodů, druhý jeden a tak dál — vyhrává tedy
         nejnižší součet. Nejhorší závody se škrtají (přeškrtnuté číslo); podle sloupce{" "}
         <b>po škrtu</b> se řadí pořadí, celkový součet je vedle, protože rozhodčí
-        vede obojí. <code>DNC</code> znamená, že loď na zastávce nebyla a dostala tolik
+        vede obojí. <code>DNC</code> znamená, že loď na regatě nebyla a dostala tolik
         bodů, kolik lodí její kategorie bylo přihlášených do závodu; <code>DSQ</code> je diskvalifikace
         v regatě za 20 bodů. <Link href="/pravidla">Jak se body počítají →</Link>
       </p>
@@ -161,11 +161,11 @@ function Tabulka({
 }
 
 const POPIS_KODU: Record<string, string> = {
-  DNC: "na zastávce nebyla: tolik bodů, kolik lodí kategorie bylo přihlášených do závodu",
+  DNC: "na regatě nebyla: tolik bodů, kolik lodí kategorie bylo přihlášených do závodu",
   DSQ: "diskvalifikace v regatě: 20 bodů",
 };
 
-/** Hlavička sloupce musí být úzká — celý název zastávky by tabulku roztáhl. */
+/** Hlavička sloupce musí být úzká — celý název regaty by tabulku roztáhl. */
 function zkratka(nazev: string) {
   const slova = nazev.split(" ").filter((s) => s.length > 2);
   return (slova.length > 1 ? slova.map((s) => s[0]).join("") : nazev.slice(0, 4)).toUpperCase();

@@ -49,7 +49,7 @@ export default async function SpravaClanku({ params, searchParams }: Parametry) 
   if (stav === "neni") notFound();
 
   // Obecné články mimo ročník mají tutéž obrazovku, jen bez ročníku
-  // a bez volby zastávky (viz WEB v lib/clanky.ts).
+  // a bez volby regaty (viz WEB v lib/clanky.ts).
   const web = jeWeb(serie);
 
   const hlava = (
@@ -135,7 +135,7 @@ export default async function SpravaClanku({ params, searchParams }: Parametry) 
             Kam patří
             <select name="zavod" defaultValue="">
               {/* Článek ročníku smí psát jen ten, kdo má právo na celý ročník.
-                  Komu patří jen zastávka, tuhle volbu nedostane. */}
+                  Komu patří jen regata, tuhle volbu nedostane. */}
               {prehled.smiNaRocnik && <option value="">Celý ročník</option>}
               {prehled.zastavky.map((z) => (
                 <option key={z.slug} value={z.slug}>

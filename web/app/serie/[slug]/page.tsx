@@ -82,7 +82,7 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
     >
       <h1>{serie.nazev}</h1>
       <p className="podtitulek">
-        {serie.zavody.length} zastávek · {odjete.length} odjetých ·{" "}
+        {serie.zavody.length} regat · {odjete.length} odjetých ·{" "}
         {serie.prihlasky.length} přihlášených lodí
       </p>
 
@@ -92,9 +92,9 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
         <Link href={`/serie/${serie.slug}/novinky`}>Novinky ročníku →</Link>
       </p>
 
-      {/* Kalendář je zároveň rozcestník: každá zastávka nese svůj stav
+      {/* Kalendář je zároveň rozcestník: každá regata nese svůj stav
           a proklikem se jde na její vlastní stránku. Bez stavu vypadá
-          zastávka, která teprve bude, stejně jako ta, která se nekonala. */}
+          regata, která teprve bude, stejně jako ta, která se nekonala. */}
       {/* Přepínač vedle nadpisu: pohár, vše, nebo akce mimo pohár. Volba
           je v cookie (app/kalendar-volba.tsx), takže platí i v boku a na
           úvodu. Bez akcí nemá co přepínat, a proto chybí. */}
@@ -104,7 +104,7 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
       </div>
 
       {zastavky.length === 0 ? (
-        <p className="prazdno">Zatím není zveřejněná žádná zastávka.</p>
+        <p className="prazdno">Zatím není zveřejněná žádná regata.</p>
       ) : (
         <Kalendar slug={serie.slug} zastavky={zastavky} volba={volba} />
       )}
@@ -147,7 +147,7 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
 }
 
 /**
- * Seznam zastávek a akcí. Karta vypadá stejně, liší se štítek stavu —
+ * Seznam regat a akcí. Karta vypadá stejně, liší se štítek stavu —
  * a ve „Vše" navíc štítek akce, protože tam se akce míchají mezi kola.
  */
 function Kalendar({

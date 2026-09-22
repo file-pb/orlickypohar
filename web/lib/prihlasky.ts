@@ -3,7 +3,7 @@ import type { components } from "./schema";
 import type { Stav } from "@/lib/sprava";
 
 /**
- * Volání přihlášek lodí na zastávku. Vedle `lib/vysledky.ts`: ta je o tom,
+ * Volání přihlášek lodí na regatu. Vedle `lib/vysledky.ts`: ta je o tom,
  * co se stalo na vodě, tahle o tom, kdo se chystá jet.
  *
  * <b>Token zůstává na serveru.</b> Leží v cookie, kterou prohlížeč jen vozí
@@ -17,12 +17,12 @@ type S = components["schemas"];
 export type PrihlaskyZastavky = S["PrihlaskyZastavkyDto"];
 export type LodNaZastavce = S["LodNaZastavceDto"];
 export type NovaLod = S["NovaLodVstup"];
-// Stav lodi je v dokumentu nepovinný — loď ročníku na zastávce být nemusí.
+// Stav lodi je v dokumentu nepovinný — loď ročníku na regatě být nemusí.
 // Jako klíč slovníku ale prázdný být nesmí.
 export type StavUcasti = NonNullable<S["StavUcasti"]>;
 
 /**
- * Stav lodi na zastávce: co znamená a co udělá tlačítko, které do něj vede.
+ * Stav lodi na regatě: co znamená a co udělá tlačítko, které do něj vede.
  * Štítek popisuje, jak to je; tlačítko, co se stane.
  *
  * <c>Record</c> je naschvál: nový stav v modelu shodí překlad webu, ne až
@@ -97,8 +97,8 @@ async function hlaska(odpoved: Response) {
   }
 
   if (odpoved.status === 401) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
-  if (odpoved.status === 403) return "Přihlášky na tuhle zastávku spravuje její pořadatel.";
-  if (odpoved.status === 404) return "Loď, zastávka nebo ročník neexistuje.";
+  if (odpoved.status === 403) return "Přihlášky na tuhle regatu spravuje její pořadatel.";
+  if (odpoved.status === 404) return "Loď, regata nebo ročník neexistuje.";
   return `API odpovědělo ${odpoved.status}.`;
 }
 

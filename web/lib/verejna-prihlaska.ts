@@ -1,7 +1,7 @@
 import type { components } from "./schema";
 
 /**
- * Veřejná přihláška lodi na zastávku a našeptávač k ní.
+ * Veřejná přihláška lodi na regatu a našeptávač k ní.
  *
  * <b>Bez přihlášení</b> (Filip, 17. 9. 2026). Formulář odesílá server
  * webu, ne prohlížeč návštěvníka: API pouští přes CORS jen GET, takže
@@ -79,6 +79,6 @@ export async function prihlas(
     // Tělo nemusí být JSON.
   }
 
-  if (odpoved.status === 404) return "Tahle zastávka neexistuje, nebo ještě není zveřejněná.";
+  if (odpoved.status === 404) return "Tahle regata neexistuje, nebo ještě není zveřejněná.";
   return `Přihlášku se nepodařilo odeslat (${odpoved.status}).`;
 }

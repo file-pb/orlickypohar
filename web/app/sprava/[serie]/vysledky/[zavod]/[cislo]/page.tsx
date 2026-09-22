@@ -63,7 +63,7 @@ export default async function ZapisRozjizdky({ params, searchParams }: Parametry
           { text: "Domů", kam: "/" },
           { text: "Ročník", kam: `/serie/${serie}` },
           { text: "Výsledky", kam: `/sprava/${serie}/vysledky` },
-          { text: "Zastávka", kam: `/sprava/${serie}/vysledky/${zavod}` },
+          { text: "Regata", kam: `/sprava/${serie}/vysledky/${zavod}` },
           { text: `${cisloRozjizdky}. rozjížďka` },
         ]}
       />
@@ -96,7 +96,7 @@ export default async function ZapisRozjizdky({ params, searchParams }: Parametry
       <>
         {hlava}
         <p className="prazdno">
-          K výsledkům téhle zastávky nemáš přístup. Zapisuje je její pořadatel,
+          K výsledkům téhle regaty nemáš přístup. Zapisuje je její pořadatel,
           ověřuje a schvaluje rozhodčí ročníku.
         </p>
       </>
@@ -233,7 +233,7 @@ export default async function ZapisRozjizdky({ params, searchParams }: Parametry
       )}
 
       <p className="poznamka">
-        <Link href={`/sprava/${serie}/vysledky/${zavod}`}>Zpátky na rozjížďky zastávky</Link>
+        <Link href={`/sprava/${serie}/vysledky/${zavod}`}>Zpátky na rozjížďky regaty</Link>
       </p>
     </>
   );
@@ -279,7 +279,7 @@ function hotovo(stav: string, kRevizi: boolean) {
       // Uložení samo zápis z revize nevrací — to je vědomý krok ve workflow,
       // a bez téhle věty by oprava zůstala ležet a rozhodčí by o ní nevěděl.
       return kRevizi
-        ? "Zápis uložen. Až bude opravený celý, vrať ho na stránce zastávky do návrhu, ať ho rozhodčí ověří znovu."
+        ? "Zápis uložen. Až bude opravený celý, vrať ho na stránce regaty do návrhu, ať ho rozhodčí ověří znovu."
         : "Zápis uložen.";
     case "nova":
       return "Rozjížďka přidaná. Je v návrhu a na webu ji nikdo neuvidí, dokud ji správce nepustí ven.";

@@ -22,7 +22,7 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
   const opravneni = ja?.opravneni ?? [];
 
   // Ročníky, kde smí udělovat role: správce všechny, rozhodčí pořadatele
-  // a editora zastávky. Nabízet odkaz na obrazovku, ze které se vrátí
+  // a editora regaty. Nabízet odkaz na obrazovku, ze které se vrátí
   // „nemáš práva", je slib naprázdno.
   const spravuje = [
     ...new Set(
@@ -44,7 +44,7 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
   ];
 
   // Ročníky, kde smí do kalendáře a k výsledkům. Rozhodčí zakládá
-  // zastávky a hýbe termíny, organizátor svůj závod vypisuje, uzavírá
+  // regaty a hýbe termíny, organizátor svůj závod vypisuje, uzavírá
   // a zapisuje výsledky — odkaz má smysl pro oba. Editor ne: ten jen píše.
   const kalendar = [
     ...new Set(

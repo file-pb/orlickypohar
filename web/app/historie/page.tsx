@@ -27,7 +27,7 @@ export default async function Historie() {
     <Boky serie={rocniky?.[0]?.slug}>
       <h1>Historie série</h1>
       <p className="podtitulek">
-        Každý ročník má svůj kalendář, výsledky zastávek a průběžné pořadí.
+        Každý ročník má svůj kalendář, výsledky regat a průběžné pořadí.
       </p>
 
       {!rocniky?.length ? (
@@ -61,7 +61,7 @@ export default async function Historie() {
 }
 
 function zavodu(n: number) {
-  if (n === 1) return "zastávka";
-  if (n >= 2 && n <= 4) return "zastávky";
-  return "zastávek";
+  if (n === 1) return "regata";
+  if (n >= 2 && n <= 4) return "regaty";
+  return "regat";
 }

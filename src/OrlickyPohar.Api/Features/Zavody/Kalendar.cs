@@ -79,7 +79,7 @@ public static class Kalendar
         if (ze == StavZavodu.Zruseny)
             return na == StavZavodu.Planovany
                 ? null
-                : "Zrušená zastávka se vrací jako plánovaná. Termín pak znovu potvrď.";
+                : "Zrušená regata se vrací jako plánovaná. Termín pak znovu potvrď.";
 
         var zIndex = Array.IndexOf(Rada, ze);
         var naIndex = Array.IndexOf(Rada, na);
@@ -140,7 +140,7 @@ public static class Kalendar
     /// </summary>
     public static string? ProcNejdeUlozit(string? nazev, DateOnly datum, DateOnly? konec, string? slug)
     {
-        if (string.IsNullOrWhiteSpace(nazev)) return "Zastávka musí mít název.";
+        if (string.IsNullOrWhiteSpace(nazev)) return "Regata musí mít název.";
 
         if (string.IsNullOrEmpty(slug))
             return "Z názvu nejde udělat adresa. Napiš do něj aspoň jedno písmeno nebo číslici.";

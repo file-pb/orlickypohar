@@ -138,7 +138,7 @@ public class PoradateleSprava(AppDbContext db)
 
         if (slug != poradatel.Slug
             && await db.Poradatele.AnyAsync(p => p.Slug == slug && p.Id != poradatel.Id, ct))
-            return $"Pořadatel se jménem „{nazev}“ už existuje. Zastávku mu přiřaď v kalendáři.";
+            return $"Pořadatel se jménem „{nazev}“ už existuje. Regatu mu přiřaď v kalendáři.";
 
         if (nazev != poradatel.Nazev)
         {

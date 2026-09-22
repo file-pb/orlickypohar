@@ -65,7 +65,7 @@ export const nactiZavod = (serie: string, zavod: string) =>
 export const nactiPoradi = (slug: string) => nacti<PoradiSerie>(`/serie/${slug}/poradi`);
 
 /**
- * Novinky ročníku, od nejnovější. `zavod` zúží výpis na jednu zastávku,
+ * Novinky ročníku, od nejnovější. `zavod` zúží výpis na jednu regatu,
  * `limit` na daný počet — úvodní stránka chce tři a nemá důvod stahovat
  * celý blog.
  */

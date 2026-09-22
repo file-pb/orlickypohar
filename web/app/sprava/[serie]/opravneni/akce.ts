@@ -12,7 +12,7 @@ import { odeber, udel, type Role } from "@/lib/sprava";
  * formulář znovu a role by se udělovala podruhé.
  *
  * <b>Předává se, co se stalo, ne hotová věta.</b> Stránka zná jména
- * zastávek i rolí, akce jen jejich slugy — a „na zastávce radavska-regata"
+ * regat i rolí, akce jen jejich slugy — a „na regatě radavska-regata"
  * je věta pro stroj.
  */
 
@@ -27,7 +27,7 @@ export async function udelAkce(formular: FormData) {
   const email = String(formular.get("email") ?? "").trim();
   const role = String(formular.get("role") ?? "") as Role;
   // Prázdná volba znamená celý ročník. `undefined`, ne prázdný řetězec —
-  // ten by API přeložilo na zastávku se jménem "" a nenašlo ji.
+  // ten by API přeložilo na regatu se jménem "" a nenašlo ji.
   const zavod = String(formular.get("zavod") ?? "") || undefined;
 
   if (!email) redirect(kam(serie, { chyba: "Vyplň e-mail." }));

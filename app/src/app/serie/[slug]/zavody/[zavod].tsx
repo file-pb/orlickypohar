@@ -27,11 +27,11 @@ export default function Zastavka() {
     <ScrollView
       contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
       refreshControl={<RefreshControl refreshing={false} onRefresh={obnov} tintColor={t.voda} />}>
-      <Stack.Screen options={{ title: data?.nazev ?? 'Zastávka' }} />
+      <Stack.Screen options={{ title: data?.nazev ?? 'Regata' }} />
 
       {nacita ? <Nacitani /> : null}
       {chyba ? <Chyba text={chyba} onZkusZnovu={obnov} /> : null}
-      {!nacita && !chyba && !data ? <Prazdno text="Zastávka není zveřejněná." /> : null}
+      {!nacita && !chyba && !data ? <Prazdno text="Regata není zveřejněná." /> : null}
 
       {data ? (
         <>
@@ -121,7 +121,7 @@ function Lod({ vysledek, zavod }: { vysledek: VysledekZavodu; zavod: ZavodDetail
   );
 }
 
-/** U zastávky, která se teprve pojede, je seznam lodí jediné, co je známo. */
+/** U regaty, která se teprve pojede, je seznam lodí jediné, co je známo. */
 function PrihlaseneLode({ lode }: { lode: UcastLodi[] }) {
   const t = useTheme();
   if (lode.length === 0) return null;

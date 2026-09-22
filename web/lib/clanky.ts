@@ -92,7 +92,7 @@ export async function nactiPrehled(
   if (!odpoved.ok) return { stav: "vypadek" };
 
   if (jeWeb(serie)) {
-    // Obecné články nemají ročník ani zastávky; obrazovka dostane tentýž
+    // Obecné články nemají ročník ani regaty; obrazovka dostane tentýž
     // tvar jako u ročníku, aby se nemusela větvit na každém řádku.
     const { clanky } = (await odpoved.json()) as S["PrehledObecnychClankuDto"];
     return {

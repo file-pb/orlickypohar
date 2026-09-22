@@ -64,12 +64,12 @@ export default async function ClanekStranka({ params }: Parametry) {
         <Odstavce text={c.telo} />
       </article>
 
-      {/* Článek zastávky vede na její stránku. Pozvánka bez odkazu na závod,
+      {/* Článek regaty vede na její stránku. Pozvánka bez odkazu na závod,
           o kterém je, nutí čtenáře hledat ho v kalendáři. */}
       {c.zavod && (
         <p className="poznamka">
           <Link href={`/serie/${slug}/zavody/${c.zavod}`}>
-            {c.zavodNazev ?? "Zastávka"} — informace a výsledky →
+            {c.zavodNazev ?? "Regata"} — informace a výsledky →
           </Link>
         </p>
       )}

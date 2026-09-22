@@ -127,7 +127,7 @@ export default async function Rozcestnik({
           <h1 className="skryte">Orlický pohár</h1>
           <p className="hero-kicker">Seriál závodů plachetnic · Orlická přehrada</p>
           {/* Věta je rozcestník (Filip, 16. 9. 2026): odjeto vede na kalendář
-              ročníku, vedou na pořadí, další na nadcházející zastávku. Odkazy
+              ročníku, vedou na pořadí, další na nadcházející regatu. Odkazy
               se nepodtrhávají, dokud na ně nenajede myš — věta má zůstat
               větou, ne řádkem modrých odkazů. */}
           {stav && aktualni && (
@@ -135,7 +135,7 @@ export default async function Rozcestnik({
               {stav.odjeto > 0 && (
                 <span>
                   <Link href={`/serie/${aktualni.slug}`}>
-                    Odjeto {stav.odjeto} z {stav.celkem} zastávek
+                    Odjeto {stav.odjeto} z {stav.celkem} regat
                   </Link>
                 </span>
               )}
@@ -209,7 +209,7 @@ export default async function Rozcestnik({
 }
 
 function zavodu(n: number) {
-  if (n === 1) return "zastávka";
-  if (n >= 2 && n <= 4) return "zastávky";
-  return "zastávek";
+  if (n === 1) return "regata";
+  if (n >= 2 && n <= 4) return "regaty";
+  return "regat";
 }

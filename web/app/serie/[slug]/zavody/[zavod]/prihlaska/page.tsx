@@ -17,7 +17,7 @@ type Parametry = {
 export const metadata = { title: "Přihláška lodi" };
 
 /**
- * Veřejná přihláška lodi na zastávku (Filip, 17. 9. 2026).
+ * Veřejná přihláška lodi na regatu (Filip, 17. 9. 2026).
  *
  * <b>Ve dvou krocích, protože web nemá javascript.</b> Nejdřív se vybere
  * loď z nabídky prohlížeče (`datalist` se všemi loděmi poháru), stránka se
@@ -63,7 +63,7 @@ export default async function Prihlaska({ params, searchParams }: Parametry) {
       <>
         {hlava}
         <p className="prazdno">
-          Zastávka zatím není vypsaná, takže se na ni nepřihlašuje. Termín je v{" "}
+          Regata zatím není vypsaná, takže se na ni nepřihlašuje. Termín je v{" "}
           <Link href={`/serie/${slug}`}>kalendáři ročníku</Link>.
         </p>
       </>
@@ -79,7 +79,7 @@ export default async function Prihlaska({ params, searchParams }: Parametry) {
         </p>
         <p className="poznamka">
           Ve startovní listině se loď objeví, až ji pořadatel zapíše.{" "}
-          <Link href={`/serie/${slug}/zavody/${zavodSlug}`}>Zpátky na zastávku →</Link>
+          <Link href={`/serie/${slug}/zavody/${zavodSlug}`}>Zpátky na regatu →</Link>
         </p>
       </>
     );
@@ -271,7 +271,7 @@ function Formular({
 
       <button type="submit">Odeslat přihlášku</button>
       <p className="poznamka">
-        Přihlášku uvidí pořadatel zastávky. Ve startovní listině bude loď, až ji zapíše.
+        Přihlášku uvidí pořadatel regaty. Ve startovní listině bude loď, až ji zapíše.
       </p>
     </form>
   );

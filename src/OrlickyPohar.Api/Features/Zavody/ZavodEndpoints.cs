@@ -74,7 +74,7 @@ public static class ZavodEndpoints
     {
         app.MapGet("/serie/{serieSlug}/zavody/{slug}", DetailAsync)
             .WithTags("Závody")
-            .WithSummary("Vrátí zastávku s rozjížďkami a výsledky");
+            .WithSummary("Vrátí regatu s rozjížďkami a výsledky");
     }
 
     private static async Task<Results<Ok<ZavodDetailDto>, NotFound>> DetailAsync(

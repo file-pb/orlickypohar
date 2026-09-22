@@ -29,7 +29,7 @@ function vstupZFormulare(formular: FormData) {
     perex: text("perex"),
     autor: text("autor"),
     // Prázdná volba znamená celý ročník. `undefined`, ne prázdný řetězec —
-    // ten by API přeložilo na zastávku se jménem "" a nenašlo ji.
+    // ten by API přeložilo na regatu se jménem "" a nenašlo ji.
     zavod: text("zavod"),
   };
 }

@@ -1,5 +1,5 @@
 {
-  "_poznamka": "JMÉNA I POŘADÍ V KATEGORIÍCH JSOU SKUTEČNÁ, ROZJÍŽĎKY VYMYŠLENÉ. Lodě, kategorie, zastávky a pořadí v kategorii na každé odjeté zastávce pocházejí ze sešitu rozhodčího (data/2026-poradi-rozhodci.json, stav po Poháru Slunce); jednotlivé rozjížďky, časy, posádky a články jsou vygenerované, protože výsledkové listiny rozjížděk nemáme. Ročník je NEPUBLIKOVANÝ, aby se vymyšlená data nedostala na veřejné stránky. Vyrábí tools/gen-mock.py s pevným seedem.",
+  "_poznamka": "JMÉNA I POŘADÍ V KATEGORIÍCH JSOU SKUTEČNÁ, ROZJÍŽĎKY VYMYŠLENÉ. Lodě, kategorie, regaty a pořadí v kategorii na každé odjeté regatě pocházejí ze sešitu rozhodčího (data/2026-poradi-rozhodci.json, stav po Poháru Slunce); u FxCK Cancer jsou i rozjížďky skutečné (data/2026-fxck-cancer.json). Ostatní rozjížďky, časy, posádky a články jsou vygenerované, protože výsledkové listiny zbylých regat nemáme. Ročník je NEPUBLIKOVANÝ, aby se vymyšlená data nedostala na veřejné stránky. Vyrábí tools/gen-mock.py s pevným seedem.",
   "slug": "2026-nanecisto",
   "nazev": "Orlický pohár 2026 (nanečisto)",
   "rok": 2026,
@@ -3206,8 +3206,8 @@
     {
       "slug": "pohar-slunce-vysledky",
       "titulek": "Pohár Slunce: PEZI bere kategorii Nad7m",
-      "perex": "Zastávka je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
-      "telo": "Pohár Slunce je odjetá. V kategorii Nad7m vyhrála PEZI.\n\nJely se 4 rozjížďky, do poháru jdou všechny. Nejhorší z nich se škrtá.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nzastávky, průběžné pořadí ročníku pak v tabulce seriálu.",
+      "perex": "Regata je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
+      "telo": "Pohár Slunce je odjetá. V kategorii Nad7m vyhrála PEZI.\n\nJely se 4 rozjížďky, do poháru jdou všechny. Nejhorší z nich se škrtá.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nregaty, průběžné pořadí ročníku pak v tabulce seriálu.",
       "autor": "SK Popovice",
       "zavod": "pohar-slunce",
       "publikovanoV": "2026-09-19T20:30:00+02:00",
@@ -3216,8 +3216,8 @@
     {
       "slug": "o-pohar-vltavy-vysledky",
       "titulek": "O pohár Vltavy: SEA MOUSE III bere kategorii Race",
-      "perex": "Zastávka je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
-      "telo": "O pohár Vltavy je odjetá. V kategorii Race vyhrála SEA MOUSE III.\n\nJela se jedna rozjížďka a jde do poháru.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nzastávky, průběžné pořadí ročníku pak v tabulce seriálu.",
+      "perex": "Regata je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
+      "telo": "O pohár Vltavy je odjetá. V kategorii Race vyhrála SEA MOUSE III.\n\nJela se jedna rozjížďka a jde do poháru.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nregaty, průběžné pořadí ročníku pak v tabulce seriálu.",
       "autor": "Plachtič z Vltavy",
       "zavod": "o-pohar-vltavy",
       "publikovanoV": "2026-09-05T20:30:00+02:00",
@@ -3226,8 +3226,8 @@
     {
       "slug": "radavsky-pohar-vysledky",
       "titulek": "Radavský pohár: Charlotte III bere kategorii Pod7m",
-      "perex": "Zastávka je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
-      "telo": "Radavský pohár je odjetá. V kategorii Pod7m vyhrála Charlotte III.\n\nJely se 3 rozjížďky, do poháru jdou všechny.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nzastávky, průběžné pořadí ročníku pak v tabulce seriálu.",
+      "perex": "Regata je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
+      "telo": "Radavský pohár je odjetá. V kategorii Pod7m vyhrála Charlotte III.\n\nJely se 3 rozjížďky, do poháru jdou všechny.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nregaty, průběžné pořadí ročníku pak v tabulce seriálu.",
       "autor": "Yacht Club Písek",
       "zavod": "radavsky-pohar",
       "publikovanoV": "2026-08-15T20:30:00+02:00",
@@ -3236,8 +3236,8 @@
     {
       "slug": "fxck-cancer-vysledky",
       "titulek": "FxCK Cancer: MAMBA bere kategorii Nad7m",
-      "perex": "Zastávka je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
-      "telo": "FxCK Cancer je odjetá. V kategorii Nad7m vyhrála MAMBA.\n\nJely se 2 rozjížďky, do poháru jdou všechny.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nzastávky, průběžné pořadí ročníku pak v tabulce seriálu.",
+      "perex": "Regata je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
+      "telo": "FxCK Cancer je odjetá. V kategorii Nad7m vyhrála MAMBA.\n\nJely se 2 rozjížďky, do poháru jdou všechny.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nregaty, průběžné pořadí ročníku pak v tabulce seriálu.",
       "autor": "Marina Orlík",
       "zavod": "fxck-cancer",
       "publikovanoV": "2026-07-11T20:30:00+02:00",
@@ -3246,8 +3246,8 @@
     {
       "slug": "izolepa-vysledky",
       "titulek": "Izolepa: ČERVENÉ CAFE bere kategorii Race",
-      "perex": "Zastávka je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
-      "telo": "Izolepa je odjetá. V kategorii Race vyhrála ČERVENÉ CAFE.\n\nJely se 3 rozjížďky, do poháru jde jedna.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nzastávky, průběžné pořadí ročníku pak v tabulce seriálu.",
+      "perex": "Regata je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
+      "telo": "Izolepa je odjetá. V kategorii Race vyhrála ČERVENÉ CAFE.\n\nJely se 3 rozjížďky, do poháru jde jedna.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nregaty, průběžné pořadí ročníku pak v tabulce seriálu.",
       "autor": "YC Orlík",
       "zavod": "izolepa",
       "publikovanoV": "2026-06-20T20:30:00+02:00",
@@ -3256,8 +3256,8 @@
     {
       "slug": "24hodinovka-vysledky",
       "titulek": "24hodinovka: LUNA vyhrála celé pole",
-      "perex": "Zastávka je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
-      "telo": "24hodinovka je odjetá. Napříč celým polem vyhrála LUNA.\n\nJela se jedna rozjížďka a jde do poháru.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nzastávky, průběžné pořadí ročníku pak v tabulce seriálu.",
+      "perex": "Regata je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
+      "telo": "24hodinovka je odjetá. Napříč celým polem vyhrála LUNA.\n\nJela se jedna rozjížďka a jde do poháru.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nregaty, průběžné pořadí ročníku pak v tabulce seriálu.",
       "autor": "YC Orlík",
       "zavod": "24hodinovka",
       "publikovanoV": "2026-05-23T20:30:00+02:00",
@@ -3266,8 +3266,8 @@
     {
       "slug": "jarni-vitr-vysledky",
       "titulek": "Jarní vítr: ČERVENÉ CAFE bere kategorii Race",
-      "perex": "Zastávka je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
-      "telo": "Jarní vítr je odjetá. V kategorii Race vyhrála ČERVENÉ CAFE.\n\nJely se 4 rozjížďky, do poháru jdou všechny. Nejhorší z nich se škrtá.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nzastávky, průběžné pořadí ročníku pak v tabulce seriálu.",
+      "perex": "Regata je odjetá. Výsledky, body do poháru a co to udělalo s průběžným pořadím.",
+      "telo": "Jarní vítr je odjetá. V kategorii Race vyhrála ČERVENÉ CAFE.\n\nJely se 4 rozjížďky, do poháru jdou všechny. Nejhorší z nich se škrtá.\n\nKompletní výsledky včetně bodů z jednotlivých rozjížděk najdeš na stránce\nregaty, průběžné pořadí ročníku pak v tabulce seriálu.",
       "autor": "YC Orlík",
       "zavod": "jarni-vitr",
       "publikovanoV": "2026-04-25T20:30:00+02:00",
@@ -3276,8 +3276,8 @@
     {
       "slug": "rocnik-2026-zacina",
       "titulek": "Ročník 2026 začíná",
-      "perex": "Devět zastávek od dubna do prosince, tři kategorie a jedno průběžné pořadí. Co je letos v kalendáři a jak se boduje.",
-      "telo": "Devět zastávek, tři kategorie a jedno průběžné pořadí. Ročník začíná na\nkonci dubna Jarním větrem a končí Vánoční regatou; mezi tím se jede\nčtyřiadvacetihodinovka, Izolepa i klasické okruhové závody.\n\nBody sbírá loď, ne posádka — kormidelník se mezi závody mění, loď ne.\nDo celkového pořadí se počítá každá odjetá zastávka a nejhorší výsledky\nse škrtají.\n\nPřihlášky přijímá pořadatel každé zastávky zvlášť. Kdo chce jet celý\nseriál, hlásí se do ročníku jednou a kategorii má na celý rok.",
+      "perex": "Devět regat od dubna do prosince, tři kategorie a jedno průběžné pořadí. Co je letos v kalendáři a jak se boduje.",
+      "telo": "Devět regat, tři kategorie a jedno průběžné pořadí. Ročník začíná na\nkonci dubna Jarním větrem a končí Vánoční regatou; mezi tím se jede\nčtyřiadvacetihodinovka, Izolepa i klasické okruhové závody.\n\nBody sbírá loď, ne posádka — kormidelník se mezi závody mění, loď ne.\nDo celkového pořadí se počítá každá odjetá regata a nejhorší výsledky\nse škrtají.\n\nPřihlášky přijímá pořadatel každé regaty zvlášť. Kdo chce jet celý\nseriál, hlásí se do ročníku jednou a kategorii má na celý rok.",
       "autor": "Orlický pohár",
       "publikovanoV": "2026-04-12T18:00:00+02:00",
       "publikovano": true

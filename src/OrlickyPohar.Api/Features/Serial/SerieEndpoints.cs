@@ -44,7 +44,7 @@ public static class SerieEndpoints
         var g = app.MapGroup("/serie").WithTags("Série");
 
         g.MapGet("/", SeznamAsync).WithSummary("Vrátí publikované ročníky");
-        g.MapGet("/{slug}", DetailAsync).WithSummary("Vrátí ročník s kategoriemi, zastávkami a přihláškami");
+        g.MapGet("/{slug}", DetailAsync).WithSummary("Vrátí ročník s kategoriemi, regatami a přihláškami");
     }
 
     private static async Task<Ok<List<SerieShrnutiDto>>> SeznamAsync(AppDbContext db, CancellationToken ct)
