@@ -124,10 +124,12 @@ header.hlavicka a.znacka svg.logo { display: block; position: relative; z-index:
 /* Přesah pod linku je jen ~14 px (Filip, 22. 9. 2026): se 45 px lezl kruh
    přes „zpět na ročník" a nadpisy postranních sloupců, protože hlavička
    má pod sebou jen 2rem. Za větší logo se platí vyšší hlavičkou. Kruh
-   i nápis mají stejné okraje, takže nápis zůstane na středu kruhu. */
-header.hlavicka a.znacka svg.logo-oys { width: 84px; height: 84px; margin-top: 5px; margin-bottom: -18px; }
+   i nápis mají stejné okraje, takže nápis zůstane na středu kruhu.
+   Rozhodčí znovu 22. 9.: kruh ještě o kousek větší, 92 / 80 / 104 px.
+   Přesah zůstává, pod kruhem je dál ~18 px volna. */
+header.hlavicka a.znacka svg.logo-oys { width: 92px; height: 92px; margin-top: 5px; margin-bottom: -18px; }
 @media (max-width: 48rem) {
-  header.hlavicka a.znacka svg.logo-oys { width: 74px; height: 74px; }
+  header.hlavicka a.znacka svg.logo-oys { width: 80px; height: 80px; }
 }
 .logo-oys { --logo-oys: #0b5cad; fill: var(--logo-oys); }
 /* Nápis Orlický pohár vedle loga (Filip, 22. 9. 2026), proužkovaný jako
@@ -234,7 +236,7 @@ header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
   header.hlavicka .obal { padding-top: 0.2rem; padding-bottom: 0.2rem; }
   header.hlavicka a.znacka { font-size: 1.05rem; }
   header.hlavicka a.znacka svg.logo-monitor { height: 76px; margin-bottom: -24px; }
-  header.hlavicka a.znacka svg.logo-oys { width: 96px; height: 96px; }
+  header.hlavicka a.znacka svg.logo-oys { width: 104px; height: 104px; }
   header.hlavicka a.znacka svg.logo-napis-monitor { height: 36px; }
   header.hlavicka nav { gap: 0.35rem; align-items: center; }
   header.hlavicka nav > a {
