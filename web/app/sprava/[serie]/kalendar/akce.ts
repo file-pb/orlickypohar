@@ -1,7 +1,14 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { prepniStav, publikuj, uloz, zaloz, type StavZavodu } from "@/lib/kalendar";
+import {
+  prepniStav,
+  publikuj,
+  uloz,
+  zaloz,
+  type StavZavodu,
+  type Vyhodnoceni,
+} from "@/lib/kalendar";
 import { publikujRocnik } from "@/lib/rocnik";
 
 /**
@@ -40,6 +47,9 @@ function vstupZFormulare(formular: FormData) {
     datumKonce: text("datumKonce"),
     typ: text("typ"),
     poradatel: text("poradatel"),
+    // Jak se regata vyhodnocuje. Body do poháru to nemění — rozhoduje to
+    // jen o tom, jestli se vyhlašuje i celkové pořadí napříč kategoriemi.
+    vyhodnoceni: (text("vyhodnoceni") ?? "PoKategoriich") as Vyhodnoceni,
     // Druh platí jen při založení; úprava ho v API nemění.
     druh: tab(formular) === "akce" ? ("Akce" as const) : ("Pohar" as const),
   };

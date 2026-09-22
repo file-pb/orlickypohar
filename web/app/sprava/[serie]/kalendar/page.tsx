@@ -8,8 +8,10 @@ import {
   nactiKalendar,
   nazevPrechodu,
   prechod,
+  VYHODNOCENI,
   type DruhZastavky,
   type StavZavodu,
+  type Vyhodnoceni,
   type ZastavkaRadek,
 } from "@/lib/kalendar";
 import { nactiRocnik } from "@/lib/rocnik";
@@ -247,6 +249,25 @@ function Pole({ zastavka, akce }: { zastavka?: ZastavkaRadek; akce?: boolean }) 
           placeholder="okruhový, vytrvalostní, Izolepa"
         />
       </label>
+
+      {/* Akce se nevyhodnocuje, nemá výsledky — volba by u ní nic
+          neznamenala. */}
+      {!akce && (
+        <label>
+          Vyhodnocení
+          <select name="vyhodnoceni" defaultValue={zastavka?.vyhodnoceni ?? "PoKategoriich"}>
+            {(Object.keys(VYHODNOCENI) as Vyhodnoceni[]).map((v) => (
+              <option key={v} value={v} title={VYHODNOCENI[v].popis}>
+                {VYHODNOCENI[v].stitek}
+              </option>
+            ))}
+          </select>
+          <span className="poznamka">
+            Do poháru jdou body vždycky po kategoriích. Tohle rozhoduje jen o tom,
+            jaké tabulky regata vyhlásí.
+          </span>
+        </label>
+      )}
 
       <label>
         Pořadatel
