@@ -82,3 +82,35 @@ export const nactiClanky = (
 
 export const nactiClanek = (slug: string, clanek: string) =>
   nacti<Clanek>(`/serie/${slug}/clanky/${clanek}`);
+
+/** Obecné články mimo ročník (od 22. 9. 2026), od nejnovějšího. */
+export const nactiObecneClanky = (limit?: number) =>
+  nacti<ClanekShrnuti[]>(`/clanky${limit ? `?limit=${limit}` : ""}`);
+
+export const nactiObecnyClanek = (clanek: string) => nacti<Clanek>(`/clanky/${clanek}`);
+
+/** Novinka ve výpisu i s adresou, kam vede — ročníková, nebo obecná. */
+export type Novinka = ClanekShrnuti & { adresa: string };
+
+/**
+ * Novinky ročníku a obecné články dohromady, od nejnovější. Obecné se
+ * vmíchávají všude, kde je výpis novinek — mají být vidět, ne schované
+ * na vlastní stránce, kterou nikdo nenajde. `slug` prázdný vrátí jen obecné
+ * (úvodní stránka bez ročníku).
+ */
+export async function nactiNovinky(slug: string | null, limit?: number): Promise<Novinka[] | null> {
+  const [rocnik, obecne] = await Promise.all([
+    slug ? nactiClanky(slug, { limit }) : Promise.resolve([] as ClanekShrnuti[]),
+    nactiObecneClanky(limit),
+  ]);
+  if (rocnik === null && obecne === null) return null;
+
+  const vsechny: Novinka[] = [
+    ...(rocnik ?? []).map((c) => ({ ...c, adresa: `/serie/${slug}/novinky/${c.slug}` })),
+    ...(obecne ?? []).map((c) => ({ ...c, adresa: `/novinky/${c.slug}` })),
+  // Podle času, ne podle textu: API vydává čas s posunem a „+02:00"
+  // proti „Z" by se textově řadilo špatně.
+  ].sort((a, b) => Date.parse(b.publikovanoV) - Date.parse(a.publikovanoV));
+
+  return limit ? vsechny.slice(0, limit) : vsechny;
+}

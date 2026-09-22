@@ -2368,8 +2368,32 @@ smí i **editor webu**. Dosud každý článek i každé právo patřily roční
 - `/ja` vydává role na webu v novém poli `Web` — aditivně, `Opravneni`
   zůstává, jak bylo (appka ho má povinné).
 
-Web (správa obecných článků, udělování rolí na web, veřejná stránka) jde
-až po nasazení API, protože typy klienta se generují z běžícího API.
+**Web (22. 9. 2026, hotovo):**
+
+- Správa obecných článků je tatáž obrazovka jako u ročníku, jen se slovem
+  `web` místo slugu ročníku (`/sprava/web/clanky`, konstanta `WEB`
+  v `lib/clanky.ts`) — bez volby zastávky a bez ročníku v drobečkové navigaci.
+- Role na celý web uděluje `/sprava/opravneni-webu` (jen editor a správce).
+- Veřejně `/novinky/{slug}`. Obecné články se **vmíchávají** mezi novinky
+  ročníku na úvodu, v boku i na stránce novinek (`nactiNovinky`
+  v `lib/api.ts`) — samostatná stránka jen pro ně by se nenašla.
+- V profilovém menu přibyly odkazy „Obecné články" a „Oprávnění na celý
+  web" podle pole `Web` z `/ja`.
+- První správce webu (Filip) udělen 22. 9. 2026 přes importní token;
+  bootstrap je tím zavřený.
+
+## Kalendář: přepínač Pohár / Vše / Mimo pohár (22. 9. 2026)
+
+Filip: „malý přepínač, který si nastavuji". Nahradil taby „Pohár /
+Komunitní akce" — taby na stránce už přepínají třídy lodí.
+
+- Tři polohy, volba se pamatuje v cookie `op_kalendar` na rok (stejný vzor
+  jako tmavý vzhled: formulář na `/kalendar-volba`, server přesměruje zpět).
+  Parametr `?kalendar=pohar|vse|mimo` ji přebije, aby šlo poslat odkaz;
+  staré `?kalendar=akce` vede na „Mimo pohár".
+- Platí všude, kde je kalendář: stránka ročníku, bok i úvod. Výchozí je
+  „Pohár" — bok proto bez nastavení komunitní akce neukazuje, dřív ano.
+- Ročník bez akcí přepínač nemá a ukazuje pohár i s uloženým „Mimo pohár".
 
 ## Výsledek akce a pořadí do poháru (22. 9. 2026)
 

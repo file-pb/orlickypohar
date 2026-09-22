@@ -38,6 +38,15 @@ export const STAVY: { stav: StavClanku; nazev: string; popis: string }[] = [
 export const nazevStavu = (stav: StavClanku) =>
   STAVY.find((s) => s.stav === stav)?.nazev ?? stav;
 
+/**
+ * Rozsah obecných článků mimo ročník (od 22. 9. 2026). Obrazovky správy
+ * jsou tytéž jako u ročníku, jen místo slugu ročníku mají tohle slovo:
+ * adresa `/sprava/web/clanky` tak vede na tutéž stránku a API se volá
+ * na `/sprava/web/clanky`.
+ */
+export const WEB = "web";
+export const jeWeb = (serie: string) => serie === WEB;
+
 const token = () => tokenZeSezeni();
 
 /** Chybová hláška z API, nebo obecná podle stavu. Nikdy prázdná. */
@@ -50,13 +59,15 @@ async function hlaska(odpoved: Response) {
   }
 
   if (odpoved.status === 401) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
-  if (odpoved.status === 403) return "Na psaní v tomhle ročníku nemáš práva.";
+  if (odpoved.status === 403) return "Na psaní tady nemáš práva.";
   if (odpoved.status === 404) return "Článek nebo ročník neexistuje.";
   return `API odpovědělo ${odpoved.status}.`;
 }
 
 const kam = (serie: string, cesta = "") =>
-  `${API}/sprava/serie/${encodeURIComponent(serie)}/clanky${cesta}`;
+  jeWeb(serie)
+    ? `${API}/sprava/web/clanky${cesta}`
+    : `${API}/sprava/serie/${encodeURIComponent(serie)}/clanky${cesta}`;
 
 export async function nactiPrehled(
   serie: string,
@@ -79,6 +90,16 @@ export async function nactiPrehled(
   if (odpoved.status === 403) return { stav: "nesmi" };
   if (odpoved.status === 404) return { stav: "neni" };
   if (!odpoved.ok) return { stav: "vypadek" };
+
+  if (jeWeb(serie)) {
+    // Obecné články nemají ročník ani zastávky; obrazovka dostane tentýž
+    // tvar jako u ročníku, aby se nemusela větvit na každém řádku.
+    const { clanky } = (await odpoved.json()) as S["PrehledObecnychClankuDto"];
+    return {
+      stav: "ok",
+      prehled: { serie: WEB, serieNazev: "Obecné články", smiNaRocnik: true, zastavky: [], clanky },
+    };
+  }
 
   return { stav: "ok", prehled: (await odpoved.json()) as PrehledClanku };
 }

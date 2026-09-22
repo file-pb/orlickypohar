@@ -554,6 +554,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/clanky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vrátí publikované obecné články mimo ročník, od nejnovějšího
+         * @description Parametrem limit se výpis zúží na daný počet nejnovějších.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClanekShrnutiDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/clanky/{clanek}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Vrátí jeden obecný článek i s tělem */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    clanek: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClanekDto"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/opravneni": {
         parameters: {
             query?: never;
@@ -653,6 +739,120 @@ export interface paths {
                 header?: never;
                 path: {
                     serie: string;
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/web/opravneni": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše oprávnění na celý web a účty, kterým jde roli dát
+         * @description Vyžaduje roli správce celého webu.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PrehledWebuDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Udělí roli na celý web podle e-mailu
+         * @description Jen editor nebo správce. Vyžaduje roli správce webu; prvního správce webu pustí i hlavička X-Import-Token, dokud žádný není.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UdeleniVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OpravneniRadek"];
+                    };
+                };
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OpravneniRadek"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/web/opravneni/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Odebere jedno oprávnění na celý web
+         * @description Vyžaduje roli správce webu. Posledního správce webu odebrat nelze.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
                     id: number;
                 };
                 cookie?: never;
@@ -906,6 +1106,238 @@ export interface paths {
                 header?: never;
                 path: {
                     serie: string;
+                    clanek: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/web/clanky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše obecné články mimo ročník
+         * @description Vyžaduje roli editora celého webu. Smazané se nevypisují.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PrehledObecnychClankuDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Založí obecný článek jako koncept */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ClanekVstupSprava"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClanekSpravaRadek"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/web/clanky/{clanek}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Vrátí obecný článek k úpravě, včetně konceptu a skrytého */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    clanek: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClanekDto"];
+                    };
+                };
+            };
+        };
+        /** Uloží úpravu obecného článku */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    clanek: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ClanekVstupSprava"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClanekSpravaRadek"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/web/clanky/{clanek}/stav": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Přepne stav obecného článku */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    clanek: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StavVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClanekSpravaRadek"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/web/clanky/{clanek}/obrazek": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Nahraje hlavní obrázek obecného článku a nahradí předchozí */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    clanek: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": components["schemas"]["FotkaFormular"];
+                    "application/x-www-form-urlencoded": components["schemas"]["FotkaFormular"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObrazekDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Odebere hlavní obrázek obecného článku a smaže jeho soubory */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
                     clanek: string;
                 };
                 cookie?: never;
@@ -1887,6 +2319,7 @@ export interface components {
             zobrazovane: string;
             email: null | string;
             opravneni: components["schemas"]["OpravneniDto"][];
+            web?: null | components["schemas"]["Role"][];
         };
         KapitanVstup: {
             jmeno: string;
@@ -2046,7 +2479,7 @@ export interface components {
             poradiPoSkrtu: number;
             /** Format: int32 */
             skrtnuto: null | number;
-            kody: (null | string)[];
+            kody: string[];
             skrtnute: number[];
         };
         PoradiSerieDto: {
@@ -2062,6 +2495,9 @@ export interface components {
             serieNazev: string;
             smiNaRocnik: boolean;
             zastavky: components["schemas"]["ZavodVolbaDto"][];
+            clanky: components["schemas"]["ClanekSpravaRadek"][];
+        };
+        PrehledObecnychClankuDto: {
             clanky: components["schemas"]["ClanekSpravaRadek"][];
         };
         PrehledOpravneniDto: {
@@ -2083,6 +2519,10 @@ export interface components {
             rozjizdky: components["schemas"]["RozjizdkaSpravaRadek"][];
             /** @default false */
             smiPridatRozjizdku: boolean;
+        };
+        PrehledWebuDto: {
+            opravneni: components["schemas"]["OpravneniRadek"][];
+            ucty: components["schemas"]["UcetDto"][];
         };
         PrehledZastavekDto: {
             serie: string;
@@ -2200,6 +2640,11 @@ export interface components {
             /** @default true */
             publikovano: boolean;
             clanky?: null | components["schemas"]["ClanekVstup"][];
+            /**
+             * Format: int32
+             * @default 1
+             */
+            pocetSkrtu: number;
         };
         SnimekHladinyDto: {
             snimek: string;
@@ -2531,6 +2976,11 @@ export interface components {
             /** Format: date */
             puvodniDatum?: null | string;
             druh?: components["schemas"]["DruhZastavky"];
+            /**
+             * Format: int32
+             * @default 0
+             */
+            posunDoSerie: number;
         };
         ZmenaUcastiDto: {
             ze: null | components["schemas"]["StavUcasti"];

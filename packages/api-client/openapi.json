@@ -452,6 +452,73 @@
                 }
             }
         },
+        "/clanky": {
+            "get": {
+                "tags": [
+                    "\u010cl\u00e1nky"
+                ],
+                "summary": "Vr\u00e1t\u00ed publikovan\u00e9 obecn\u00e9 \u010dl\u00e1nky mimo ro\u010dn\u00edk, od nejnov\u011bj\u0161\u00edho",
+                "description": "Parametrem limit se v\u00fdpis z\u00fa\u017e\u00ed na dan\u00fd po\u010det nejnov\u011bj\u0161\u00edch.",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ClanekShrnutiDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/clanky/{clanek}": {
+            "get": {
+                "tags": [
+                    "\u010cl\u00e1nky"
+                ],
+                "summary": "Vr\u00e1t\u00ed jeden obecn\u00fd \u010dl\u00e1nek i s t\u011blem",
+                "parameters": [
+                    {
+                        "name": "clanek",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ClanekDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/opravneni": {
             "get": {
                 "tags": [
@@ -548,6 +615,92 @@
                             "type": "string"
                         }
                     },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
+        "/sprava/web/opravneni": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vyp\u00ed\u0161e opr\u00e1vn\u011bn\u00ed na cel\u00fd web a \u00fa\u010dty, kter\u00fdm jde roli d\u00e1t",
+                "description": "Vy\u017eaduje roli spr\u00e1vce cel\u00e9ho webu.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PrehledWebuDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Ud\u011bl\u00ed roli na cel\u00fd web podle e-mailu",
+                "description": "Jen editor nebo spr\u00e1vce. Vy\u017eaduje roli spr\u00e1vce webu; prvn\u00edho spr\u00e1vce webu pust\u00ed i hlavi\u010dka X-Import-Token, dokud \u017e\u00e1dn\u00fd nen\u00ed.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UdeleniVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OpravneniRadek"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OpravneniRadek"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/web/opravneni/{id}": {
+            "delete": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Odebere jedno opr\u00e1vn\u011bn\u00ed na cel\u00fd web",
+                "description": "Vy\u017eaduje roli spr\u00e1vce webu. Posledn\u00edho spr\u00e1vce webu odebrat nelze.",
+                "parameters": [
                     {
                         "name": "id",
                         "in": "path",
@@ -837,6 +990,229 @@
                             "type": "string"
                         }
                     },
+                    {
+                        "name": "clanek",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/sprava/web/clanky": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vyp\u00ed\u0161e obecn\u00e9 \u010dl\u00e1nky mimo ro\u010dn\u00edk",
+                "description": "Vy\u017eaduje roli editora cel\u00e9ho webu. Smazan\u00e9 se nevypisuj\u00ed.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PrehledObecnychClankuDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Zalo\u017e\u00ed obecn\u00fd \u010dl\u00e1nek jako koncept",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ClanekVstupSprava"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ClanekSpravaRadek"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/web/clanky/{clanek}": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vr\u00e1t\u00ed obecn\u00fd \u010dl\u00e1nek k \u00faprav\u011b, v\u010detn\u011b konceptu a skryt\u00e9ho",
+                "parameters": [
+                    {
+                        "name": "clanek",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ClanekDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Ulo\u017e\u00ed \u00fapravu obecn\u00e9ho \u010dl\u00e1nku",
+                "parameters": [
+                    {
+                        "name": "clanek",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ClanekVstupSprava"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ClanekSpravaRadek"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/web/clanky/{clanek}/stav": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "P\u0159epne stav obecn\u00e9ho \u010dl\u00e1nku",
+                "parameters": [
+                    {
+                        "name": "clanek",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StavVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ClanekSpravaRadek"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/web/clanky/{clanek}/obrazek": {
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Nahraje hlavn\u00ed obr\u00e1zek obecn\u00e9ho \u010dl\u00e1nku a nahrad\u00ed p\u0159edchoz\u00ed",
+                "parameters": [
+                    {
+                        "name": "clanek",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FotkaFormular"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FotkaFormular"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ObrazekDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Odebere hlavn\u00ed obr\u00e1zek obecn\u00e9ho \u010dl\u00e1nku a sma\u017ee jeho soubory",
+                "parameters": [
                     {
                         "name": "clanek",
                         "in": "path",
@@ -2208,6 +2584,15 @@
                         "items": {
                             "$ref": "#/components/schemas/OpravneniDto"
                         }
+                    },
+                    "web": {
+                        "type": [
+                            "null",
+                            "array"
+                        ],
+                        "items": {
+                            "$ref": "#/components/schemas/Role"
+                        }
                     }
                 }
             },
@@ -2912,10 +3297,7 @@
                     "kody": {
                         "type": "array",
                         "items": {
-                            "type": [
-                                "null",
-                                "string"
-                            ]
+                            "type": "string"
                         }
                     },
                     "skrtnute": {
@@ -2986,6 +3368,20 @@
                             "$ref": "#/components/schemas/ZavodVolbaDto"
                         }
                     },
+                    "clanky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ClanekSpravaRadek"
+                        }
+                    }
+                }
+            },
+            "PrehledObecnychClankuDto": {
+                "required": [
+                    "clanky"
+                ],
+                "type": "object",
+                "properties": {
                     "clanky": {
                         "type": "array",
                         "items": {
@@ -3075,6 +3471,27 @@
                     "smiPridatRozjizdku": {
                         "type": "boolean",
                         "default": false
+                    }
+                }
+            },
+            "PrehledWebuDto": {
+                "required": [
+                    "opravneni",
+                    "ucty"
+                ],
+                "type": "object",
+                "properties": {
+                    "opravneni": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OpravneniRadek"
+                        }
+                    },
+                    "ucty": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/UcetDto"
+                        }
                     }
                 }
             },
@@ -3554,6 +3971,11 @@
                         "items": {
                             "$ref": "#/components/schemas/ClanekVstup"
                         }
+                    },
+                    "pocetSkrtu": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 1
                     }
                 }
             },
@@ -4826,6 +5248,11 @@
                     },
                     "druh": {
                         "$ref": "#/components/schemas/DruhZastavky"
+                    },
+                    "posunDoSerie": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 0
                     }
                 }
             },

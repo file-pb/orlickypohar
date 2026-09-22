@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ApiNedostupne, nactiClanky, nactiSerii } from "@/lib/api";
+import { ApiNedostupne, nactiNovinky, nactiSerii } from "@/lib/api";
 import { Vypadek } from "@/app/vypadek";
 import { VypisNovinek } from "@/app/novinky";
 import { Drobecky } from "@/app/drobecky";
@@ -25,7 +25,8 @@ export default async function Novinky({ params }: Parametry) {
   // Výpadek API se ošetřuje tady, ne přes `error.tsx` — viz app/vypadek.tsx.
   let serie, clanky;
   try {
-    [serie, clanky] = await Promise.all([nactiSerii(slug), nactiClanky(slug)]);
+    // Obecné články mimo ročník patří i sem — čtenář hledá novinky tady.
+    [serie, clanky] = await Promise.all([nactiSerii(slug), nactiNovinky(slug)]);
   } catch (e) {
     if (e instanceof ApiNedostupne) return <Vypadek />;
     throw e;

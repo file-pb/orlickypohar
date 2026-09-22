@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { datumClanku } from "@/app/datum";
 import { Nahled, NahledVelky } from "@/app/fotky";
-import type { ClanekShrnuti } from "@/lib/api";
+import type { ClanekShrnuti, Novinka } from "@/lib/api";
 
 /**
  * Výpis novinek. Používá ho úvodní stránka, seznam novinek ročníku
@@ -19,14 +19,17 @@ export function VypisNovinek({
   hlavni = false,
 }: {
   serie: string;
-  clanky: ClanekShrnuti[];
+  clanky: (ClanekShrnuti | Novinka)[];
   hlavni?: boolean;
 }) {
   return (
     <ul className={`seznam novinky${hlavni ? " novinky-uvod" : ""}`}>
       {clanky.map((c, i) => (
         <li key={c.slug} className={hlavni && i === 0 ? "hlavni" : undefined}>
-          <Link className="karta s-fotkou" href={`/serie/${serie}/novinky/${c.slug}`}>
+          <Link
+            className="karta s-fotkou"
+            href={"adresa" in c ? c.adresa : `/serie/${serie}/novinky/${c.slug}`}
+          >
             {/* Náhled je dekorace, ne informace — proto nenese popisek
                 a nesmí se tvářit, že je z toho závodu. */}
             {hlavni && i === 0 ? (

@@ -54,6 +54,11 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
     ),
   ];
 
+  // Role na celém webu (od 22. 9. 2026). Starší API pole nevydává.
+  const web = ja?.web ?? [];
+  const piseNaWeb = web.includes("Editor") || web.includes("Spravce");
+  const spravujeWeb = web.includes("Spravce");
+
   return (
     <details className="profil">
       {/* Zavírání při klepnutí jinam a na Escape. Zbytek nabídky je
@@ -94,6 +99,8 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
             se stránka nenačte znovu. Hlavička se při něm navíc nepřekresluje
             vůbec, takže vedle sebe skončí jméno z jednoho vykreslení
             a obsah z jiného. Sem se chodí zřídka a celé načtení nic nestojí. */}
+        {piseNaWeb && <a href="/sprava/web/clanky">Obecné články</a>}
+        {spravujeWeb && <a href="/sprava/opravneni-webu">Oprávnění na celý web</a>}
         {pise.map((serie) => (
           <a key={`clanky-${serie}`} href={`/sprava/${serie}/clanky`}>
             Novinky {serie}

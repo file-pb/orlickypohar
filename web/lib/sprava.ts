@@ -165,3 +165,77 @@ export async function odeber(serie: string, id: number): Promise<string | null> 
     return "API se nedaří zavolat.";
   }
 }
+
+// --- Celý web (od 22. 9. 2026) ---------------------------------------------
+//
+// Role na celém webu: editor webu píše obecné články, správce webu smí
+// všechno. Uděluje je jen správce webu. Tvar volání je týž jako u ročníku,
+// liší se jen adresa.
+
+export type PrehledWebu = S["PrehledWebuDto"];
+
+/** Role, které jdou udělit na celý web. Rozhodčí a pořadatel patří k ročníku. */
+export const ROLE_WEBU: { role: Role; nazev: string; popis: string }[] = [
+  { role: "Editor", nazev: "Editor webu", popis: "Píše obecné články mimo ročník i novinky všech ročníků." },
+  { role: "Spravce", nazev: "Správce webu", popis: "Všechno ve všech ročnících, včetně udělování rolí na web." },
+];
+
+const WEB = `${API}/sprava/web/opravneni`;
+
+export async function nactiPrehledWebu(): Promise<{ stav: Stav; prehled?: PrehledWebu }> {
+  const t = await token();
+  if (!t) return { stav: "neprihlasen" };
+
+  let odpoved: Response;
+  try {
+    odpoved = await fetch(WEB, {
+      headers: { authorization: `Bearer ${t}`, accept: "application/json" },
+      cache: "no-store",
+    });
+  } catch {
+    return { stav: "vypadek" };
+  }
+
+  if (odpoved.status === 401) return { stav: "odmitnut" };
+  if (odpoved.status === 403) return { stav: "nesmi" };
+  if (!odpoved.ok) return { stav: "vypadek" };
+
+  return { stav: "ok", prehled: (await odpoved.json()) as PrehledWebu };
+}
+
+export async function udelNaWebu(vstup: { email: string; role: Role }): Promise<string | null> {
+  const t = await token();
+  if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+
+  try {
+    const odpoved = await fetch(WEB, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${t}`,
+        "content-type": "application/json",
+        accept: "application/json",
+      },
+      body: JSON.stringify(vstup),
+      cache: "no-store",
+    });
+    return odpoved.ok ? null : await hlaska(odpoved);
+  } catch {
+    return "API se nedaří zavolat.";
+  }
+}
+
+export async function odeberZWebu(id: number): Promise<string | null> {
+  const t = await token();
+  if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+
+  try {
+    const odpoved = await fetch(`${WEB}/${id}`, {
+      method: "DELETE",
+      headers: { authorization: `Bearer ${t}`, accept: "application/json" },
+      cache: "no-store",
+    });
+    return odpoved.ok ? null : await hlaska(odpoved);
+  } catch {
+    return "API se nedaří zavolat.";
+  }
+}

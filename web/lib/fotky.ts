@@ -19,8 +19,11 @@ export type DruhObrazku = "clanky" | "poradatele";
 /** Stejná hranice jako v API. Hlídá se i tady, ať se 20 MB neposílá dál zbytečně. */
 export const NEJVIC_MB = 15;
 
+// Obecné články mimo ročník mají správu pod `/sprava/web` (viz lib/clanky.ts).
 const cesta = (serie: string, druh: DruhObrazku, klic: string) =>
-  `${API}/sprava/serie/${encodeURIComponent(serie)}/${druh}/${encodeURIComponent(klic)}/obrazek`;
+  serie === "web" && druh === "clanky"
+    ? `${API}/sprava/web/clanky/${encodeURIComponent(klic)}/obrazek`
+    : `${API}/sprava/serie/${encodeURIComponent(serie)}/${druh}/${encodeURIComponent(klic)}/obrazek`;
 
 async function hlaska(odpoved: Response) {
   try {
