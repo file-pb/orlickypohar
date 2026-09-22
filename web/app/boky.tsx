@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  nactiClanky,
+  nactiNovinky,
   nactiPoradi,
   nactiSerie,
   nactiSerii,
@@ -310,7 +310,7 @@ export async function BokKalendar({
 async function BokNovinky({ slug }: { slug: string }) {
   // Pět posledních (Filip, 16. 9. 2026). Pod novinky přijdou widgety,
   // proto ne víc, i když má bok výšku.
-  const clanky = await nactiClanky(slug, { limit: 5 });
+  const clanky = await nactiNovinky(slug, 5);
   if (!clanky || clanky.length === 0) return null;
 
   return (
@@ -319,7 +319,7 @@ async function BokNovinky({ slug }: { slug: string }) {
       <ul className="bok-seznam">
         {clanky.map((c) => (
           <li key={c.slug}>
-            <Link href={`/serie/${slug}/novinky/${c.slug}`}>
+            <Link href={c.adresa}>
               <span className="bok-nazev">{c.titulek}</span>
               <span className="detail">{datumClanku(c.publikovanoV)}</span>
             </Link>

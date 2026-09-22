@@ -1,11 +1,11 @@
 import Link from "next/link";
 import {
   ApiNedostupne,
-  nactiClanky,
+  nactiNovinky,
   nactiPoradi,
   nactiSerie,
   nactiSerii,
-  type ClanekShrnuti,
+  type Novinka,
   type PoradiSerie,
   type SerieShrnuti,
 } from "@/lib/api";
@@ -60,7 +60,7 @@ export default async function Rozcestnik({
   } | null = null;
   // Filip chce novinky na úvodní stránce. Tři poslední: dost na to, aby bylo
   // vidět, že se něco děje, a málo na to, aby odsunuly tlačítka na výsledky.
-  let clanky: ClanekShrnuti[] | null = null;
+  let clanky: Novinka[] | null = null;
   // Pořadí tříd pro karusel na úvodu, kde nejsou boky.
   let tridy: PoradiSerie["kategorie"] = [];
   if (aktualni) {
@@ -69,7 +69,8 @@ export default async function Rozcestnik({
         nactiSerii(aktualni.slug),
         nactiPoradi(aktualni.slug),
         // Čtyři: velký a tři vedle něj nebo pod ním (Filip, 17. 9. 2026).
-        nactiClanky(aktualni.slug, { limit: 4 }),
+        // Obecné články mimo ročník se vmíchají mezi novinky ročníku.
+        nactiNovinky(aktualni.slug, 4),
       ]);
       clanky = novinky;
       tridy = poradi?.kategorie.filter((k) => k.lode.length > 0) ?? [];

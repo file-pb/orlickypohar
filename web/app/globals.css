@@ -198,7 +198,8 @@ header.hlavicka a.znacka svg.logo-mobil { display: none; width: 72px; height: 72
   position: fixed; z-index: -1; pointer-events: none;
   top: 6vh; left: 50%; transform: translateX(-50%);
   width: min(62vw, 38rem, 54vh); height: auto;
-  opacity: 0.07; filter: blur(4px);
+  /* Ostřejší a o kousek výraznější (Filip, 22. 9. 2026: „ne o moc"). */
+  opacity: 0.09; filter: blur(1.5px);
 }
 body:has(.uvod) .pozadi-znak { display: none; }
 /* Tmavý vzhled loga a vodoznaku — ve dvou podobách, viz začátek souboru.
@@ -206,7 +207,7 @@ body:has(.uvod) .pozadi-znak { display: none; }
    Šedá je tu světlejší než u znaku Pod7m, v logu se jinak mezi modrou
    a červenou ztrácela (Filip, 15. 9. 2026). */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-rezim="svetly"]) .pozadi-znak { opacity: 0.09; }
+  :root:not([data-rezim="svetly"]) .pozadi-znak { opacity: 0.11; }
   :root:not([data-rezim="svetly"]) .logo { --logo-hlavni: #7fa7c9; --logo-druha: #e25a6d; --logo-seda: #c4ced8; --logo-napis: #edeae5; }
   :root:not([data-rezim="svetly"]) .logo-vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
   :root:not([data-rezim="svetly"]) .logo-oys { --logo-oys: #7fa7c9; }
@@ -214,7 +215,7 @@ body:has(.uvod) .pozadi-znak { display: none; }
      středně šedý, aby logo stálo samo. Vodoznak na pozadí zůstává tlumený. */
   :root:not([data-rezim="svetly"]) header.hlavicka { --barva-znacky: #d6e6f5; --napis-znacky: #7d848c; }
 }
-:root[data-rezim="tmavy"] .pozadi-znak { opacity: 0.09; }
+:root[data-rezim="tmavy"] .pozadi-znak { opacity: 0.11; }
 :root[data-rezim="tmavy"] .logo { --logo-hlavni: #7fa7c9; --logo-druha: #e25a6d; --logo-seda: #c4ced8; --logo-napis: #edeae5; }
 :root[data-rezim="tmavy"] .logo-vodoznak-na-plachte { fill: #14171a; fill-opacity: 0.35; }
 :root[data-rezim="tmavy"] .logo-oys { --logo-oys: #7fa7c9; }

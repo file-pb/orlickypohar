@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Drobecky } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { datumClanku } from "@/app/datum";
-import { STAVY, nactiPrehled, nazevStavu, type ClanekRadek, type StavClanku } from "@/lib/clanky";
+import { STAVY, jeWeb, nactiPrehled, nazevStavu, type ClanekRadek, type StavClanku } from "@/lib/clanky";
 import { zalozAkce, stavAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
@@ -48,16 +48,24 @@ export default async function SpravaClanku({ params, searchParams }: Parametry) 
   }
   if (stav === "neni") notFound();
 
+  // Obecné články mimo ročník mají tutéž obrazovku, jen bez ročníku
+  // a bez volby zastávky (viz WEB v lib/clanky.ts).
+  const web = jeWeb(serie);
+
   const hlava = (
     <>
       <Drobecky
-        cesta={[
-          { text: "Domů", kam: "/" },
-          { text: "Ročník", kam: `/serie/${serie}` },
-          { text: "Novinky" },
-        ]}
+        cesta={
+          web
+            ? [{ text: "Domů", kam: "/" }, { text: "Obecné články" }]
+            : [
+                { text: "Domů", kam: "/" },
+                { text: "Ročník", kam: `/serie/${serie}` },
+                { text: "Novinky" },
+              ]
+        }
       />
-      <h1>Novinky — správa</h1>
+      <h1>{web ? "Obecné články — správa" : "Novinky — správa"}</h1>
     </>
   );
 
@@ -86,8 +94,9 @@ export default async function SpravaClanku({ params, searchParams }: Parametry) 
       <>
         {hlava}
         <p className="prazdno">
-          V tomhle ročníku nemáš právo psát. O roli editora požádej správce
-          ročníku.
+          {web
+            ? "Obecné články smí psát editor webu. O roli požádej správce webu."
+            : "V tomhle ročníku nemáš právo psát. O roli editora požádej správce ročníku."}
         </p>
       </>
     );
@@ -119,19 +128,23 @@ export default async function SpravaClanku({ params, searchParams }: Parametry) 
           <input name="titulek" required maxLength={200} placeholder="Pozvánka na Radavskou regatu" />
         </label>
 
-        <label>
-          Kam patří
-          <select name="zavod" defaultValue="">
-            {/* Článek ročníku smí psát jen ten, kdo má právo na celý ročník.
-                Komu patří jen zastávka, tuhle volbu nedostane. */}
-            {prehled.smiNaRocnik && <option value="">Celý ročník</option>}
-            {prehled.zastavky.map((z) => (
-              <option key={z.slug} value={z.slug}>
-                {z.nazev}
-              </option>
-            ))}
-          </select>
-        </label>
+        {web ? (
+          <input type="hidden" name="zavod" value="" />
+        ) : (
+          <label>
+            Kam patří
+            <select name="zavod" defaultValue="">
+              {/* Článek ročníku smí psát jen ten, kdo má právo na celý ročník.
+                  Komu patří jen zastávka, tuhle volbu nedostane. */}
+              {prehled.smiNaRocnik && <option value="">Celý ročník</option>}
+              {prehled.zastavky.map((z) => (
+                <option key={z.slug} value={z.slug}>
+                  {z.nazev}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <label>
           Text

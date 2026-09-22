@@ -253,6 +253,18 @@ def nazvy(hodnota):
 
 
 # Články se řadí od nejnovějšího, stejně jako je vydává API.
+# Obecné články mimo ročník — jen pro náhled webu, správa je nezná.
+OBECNE_CLANKY = [{
+    "slug": "vitejte-na-webu",
+    "titulek": "Vítejte na novém webu Orlické série",
+    "perex": "Obecný článek mimo ročník: nepatří žádné sezóně ani zastávce.",
+    "telo": "Tohle je ukázka obecného článku.\n\nPíše ho editor webu a na webu zůstane i po skončení ročníku.",
+    "autor": "Orlický pohár",
+    "publikovanoV": "2026-09-22T10:00:00+02:00",
+    "zavod": None, "zavodNazev": None, "obrazek": None,
+}]
+
+
 def clanky_verejne():
     """Co by na webu viděl návštěvník: jen publikované, od nejnovějšího.
 
@@ -1413,6 +1425,17 @@ class H(BaseHTTPRequestHandler):
             if not c:
                 return self.send_error(404)
             telo = {**clanek_radek(c), "telo": c["telo"]}
+        elif cesta == "/clanky":
+            # Obecné články mimo ročník (od 22. 9. 2026). Jeden ukázkový,
+            # ať je vidět, jak se vmíchávají mezi novinky ročníku.
+            limit = int(dotaz.get("limit", ["0"])[0] or 0)
+            telo = OBECNE_CLANKY[:limit] if limit > 0 else OBECNE_CLANKY
+            telo = [{k: v for k, v in c.items() if k != "telo"} for c in telo]
+        elif (m := re.match(r'^/clanky/([a-z0-9-]+)$', cesta)):
+            c = next((c for c in OBECNE_CLANKY if c["slug"] == m.group(1)), None)
+            if not c:
+                return self.send_error(404)
+            telo = c
         elif cesta == f'/serie/{D["slug"]}/clanky':
             vybrane = clanky_verejne()
             if zavod := dotaz.get("zavod", [""])[0]:

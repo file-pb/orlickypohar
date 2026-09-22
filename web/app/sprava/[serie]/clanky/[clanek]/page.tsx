@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Drobecky } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
-import { STAVY, nactiClanek, nactiPrehled, nazevStavu, type StavClanku } from "@/lib/clanky";
+import { STAVY, jeWeb, nactiClanek, nactiPrehled, nazevStavu, type StavClanku } from "@/lib/clanky";
 import { SpravaObrazku } from "@/app/sprava/obrazek";
 import { ulozAkce, stavAkce } from "../akce";
 
@@ -49,14 +49,25 @@ export default async function UpravaClanku({ params, searchParams }: Parametry) 
     );
   }
 
+  // Obecný článek mimo ročník: bez ročníku v cestě a bez volby zastávky.
+  const web = jeWeb(serie);
+
   const hlava = (
     <Drobecky
-      cesta={[
-        { text: "Domů", kam: "/" },
-        { text: "Ročník", kam: `/serie/${serie}` },
-        { text: "Novinky", kam: `/sprava/${serie}/clanky` },
-        { text: clanek?.titulek ?? "Článek" },
-      ]}
+      cesta={
+        web
+          ? [
+              { text: "Domů", kam: "/" },
+              { text: "Obecné články", kam: `/sprava/${serie}/clanky` },
+              { text: clanek?.titulek ?? "Článek" },
+            ]
+          : [
+              { text: "Domů", kam: "/" },
+              { text: "Ročník", kam: `/serie/${serie}` },
+              { text: "Novinky", kam: `/sprava/${serie}/clanky` },
+              { text: clanek?.titulek ?? "Článek" },
+            ]
+      }
     />
   );
 
@@ -128,17 +139,21 @@ export default async function UpravaClanku({ params, searchParams }: Parametry) 
           <input name="titulek" required maxLength={200} defaultValue={clanek.titulek} />
         </label>
 
-        <label>
-          Kam patří
-          <select name="zavod" defaultValue={clanek.zavod ?? ""}>
-            {prehled.prehled?.smiNaRocnik && <option value="">Celý ročník</option>}
-            {prehled.prehled?.zastavky.map((z) => (
-              <option key={z.slug} value={z.slug}>
-                {z.nazev}
-              </option>
-            ))}
-          </select>
-        </label>
+        {web ? (
+          <input type="hidden" name="zavod" value="" />
+        ) : (
+          <label>
+            Kam patří
+            <select name="zavod" defaultValue={clanek.zavod ?? ""}>
+              {prehled.prehled?.smiNaRocnik && <option value="">Celý ročník</option>}
+              {prehled.prehled?.zastavky.map((z) => (
+                <option key={z.slug} value={z.slug}>
+                  {z.nazev}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <label>
           Perex
