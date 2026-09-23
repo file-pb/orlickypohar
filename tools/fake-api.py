@@ -314,6 +314,10 @@ def clanky_verejne():
 # stavu. Je to schválně: falešné API nemá mít stav, který někdo omylem
 # začne považovat za data. Přihlášený vývojář je tu správcem ročníku
 # stejně jako v odpovědi na /ja.
+# Publikace ročníku (23. 9. 2026). Soubor je schválně nepublikovaný, mock
+# se ale tváří, že ročník venku je — jinak by neměl co servírovat.
+ROCNIK_VENKU = [True]
+
 JA = {
     "id": "01927f4e-0000-7000-8000-000000000001",
     "zobrazovane": "Filip Burda",
@@ -832,6 +836,12 @@ class H(BaseHTTPRequestHandler):
     def do_POST(self):
         cesta = urlparse(self.path).path
 
+        if cesta == f'/sprava/serie/{D["slug"]}/publikace':
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            ROCNIK_VENKU[0] = bool(self.telo_zadosti().get("publikovano"))
+            return self.odpoved({"slug": D["slug"], "nazev": D["nazev"], "rok": D["rok"],
+                                 "publikovano": ROCNIK_VENKU[0], "smiPublikovat": True})
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                           r'/rozjizdky/(\d+)/(stav|publikace|pohar)$', cesta)):
             return self.workflow(m.group(1), int(m.group(2)), m.group(3))
@@ -1586,6 +1596,11 @@ class H(BaseHTTPRequestHandler):
                 "ucty": sorted(UCTY.values(), key=lambda u: u["naposledyPrihlasenV"],
                                reverse=True),
             }
+        elif cesta == f'/sprava/serie/{D["slug"]}':
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            telo = {"slug": D["slug"], "nazev": D["nazev"], "rok": D["rok"],
+                    "publikovano": ROCNIK_VENKU[0], "smiPublikovat": True}
         elif cesta == f'/sprava/serie/{D["slug"]}/vysledky':
             if not self.headers.get("authorization"):
                 return self.send_error(401)

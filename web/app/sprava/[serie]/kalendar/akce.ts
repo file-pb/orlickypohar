@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { prepniStav, publikuj, uloz, zaloz, type StavZavodu } from "@/lib/kalendar";
+import { publikujRocnik } from "@/lib/rocnik";
 
 /**
  * Zápisy z obrazovky kalendáře. Serverové akce, ne javascript v prohlížeči:
@@ -90,5 +91,21 @@ export async function publikaceAkce(formular: FormData) {
 
   redirect(
     kam(serie, chyba ? { chyba, druh } : { stav: publikovano ? "venku" : "stazeno", co: nazev, druh }),
+  );
+}
+
+/**
+ * Publikace celého ročníku. Nepublikovaný ročník veřejné čtení nevydává
+ * vůbec — ani jeho regaty a výsledky — takže je to jedno tlačítko
+ * s velkým dosahem a stránka u něj říká, co udělá.
+ */
+export async function publikaceRocnikuAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const publikovano = String(formular.get("publikovano") ?? "") === "ano";
+
+  const chyba = await publikujRocnik(serie, publikovano);
+
+  redirect(
+    kam(serie, chyba ? { chyba } : { stav: publikovano ? "rocnikVenku" : "rocnikSkryty" }),
   );
 }

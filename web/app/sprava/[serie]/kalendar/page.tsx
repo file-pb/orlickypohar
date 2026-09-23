@@ -12,7 +12,8 @@ import {
   type StavZavodu,
   type ZastavkaRadek,
 } from "@/lib/kalendar";
-import { publikaceAkce, stavAkce, ulozAkce, zalozAkce } from "./akce";
+import { nactiRocnik } from "@/lib/rocnik";
+import { publikaceAkce, publikaceRocnikuAkce, stavAkce, ulozAkce, zalozAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -46,7 +47,10 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
   const { serie } = await params;
   const zpravy = await searchParams;
 
-  const { stav, prehled } = await nactiKalendar(serie);
+  const [{ stav, prehled }, { rocnik }] = await Promise.all([
+    nactiKalendar(serie),
+    nactiRocnik(serie),
+  ]);
 
   // Výpadek nesmí spolknout výsledek zápisu: když se nepovede načíst
   // kalendář, ale akce něco vzkázala, musí to být vidět nad výpadkem.
@@ -136,6 +140,28 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
       {zpravy.stav && !zpravy.chyba && (
         <p className="hlaska hotovo" role="status">
           {hotovo(zpravy.stav, zpravy.co, zpravy.nastav, druh)}
+        </p>
+      )}
+
+      {/* Publikace celého ročníku. Stojí tady, protože kalendář je jediná
+          celoroční obrazovka — a hlavně proto, že nepublikovaný ročník
+          schová i regaty, které jsou samy publikované. Bez tohohle řádku
+          by se hledalo, proč je web prázdný (Filip, 23. 9. 2026). */}
+      {rocnik && (
+        <p className={`hlaska ${rocnik.publikovano ? "" : "chyba"}`} role="status">
+          <b>Ročník je {rocnik.publikovano ? "venku" : "skrytý"}.</b>{" "}
+          {rocnik.publikovano
+            ? "Veřejné stránky ho ukazují i s publikovanými regatami."
+            : "Veřejné stránky ho neukazují vůbec — ani regaty a výsledky, které jsou samy publikované."}{" "}
+          {rocnik.smiPublikovat && (
+            <form action={publikaceRocnikuAkce} className="radkove">
+              <input type="hidden" name="serie" value={serie} />
+              <input type="hidden" name="publikovano" value={rocnik.publikovano ? "ne" : "ano"} />
+              <button type="submit" className="maly">
+                {rocnik.publikovano ? "Stáhnout ročník z webu" : "Pustit ročník ven"}
+              </button>
+            </form>
+          )}
         </p>
       )}
 
@@ -356,6 +382,10 @@ function hotovo(stav: string, co?: string, nastav?: StavZavodu, druh?: DruhZasta
       return `${jmeno} je v kalendáři na webu.`;
     case "stazeno":
       return `${jmeno} z webu zmizela. Stav regaty se tím nezměnil.`;
+    case "rocnikVenku":
+      return "Ročník je venku. Veřejné stránky ho zase ukazují.";
+    case "rocnikSkryty":
+      return "Ročník je skrytý. Veřejné stránky neukazují ani jeho regaty a výsledky.";
     default:
       return "Hotovo.";
   }
