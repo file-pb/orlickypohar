@@ -2517,7 +2517,12 @@ klepání v reálném čase bez něj nejde. Zbytek správy zůstává bez něj.
    přímo z obrazovky; **majitele vyžaduje**, protože loď ho v modelu mít
    musí a stojí ve výsledcích vedle ní.
 3. Fotka papíru u rozjížďky (R2, jako fotky článků).
-4. Dva zapisovatelé a porovnání.
+4. ~~Dva zapisovatelé a porovnání.~~ **Hotové 22. 9. 2026.** Každé uložení
+   zápisu zakládá **snímek toho, kdo ukládal** (`ZapisyNavrhu`). Výsledky
+   zůstávají jedny — drží se v nich poslední uložená verze — ale starší
+   nezmizí a obrazovka *Porovnání zápisů* je postaví vedle sebe po místech
+   v cíli, zvýrazní rozdíly a nechá vybrat platnou. S jedním zapisovatelem
+   je snímek jeden a porovnávat se nemá s čím.
 5. Podržení klepnutí bez připojení (jen pojistka, signál je).
 
 ## Kde se pokračuje

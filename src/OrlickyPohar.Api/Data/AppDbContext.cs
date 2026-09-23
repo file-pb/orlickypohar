@@ -22,6 +22,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Ucast> Ucasti => Set<Ucast>();
     public DbSet<Rozjizdka> Rozjizdky => Set<Rozjizdka>();
     public DbSet<Vysledek> Vysledky => Set<Vysledek>();
+    public DbSet<ZapisNavrh> ZapisyNavrhu => Set<ZapisNavrh>();
     public DbSet<Clanek> Clanky => Set<Clanek>();
     public DbSet<Fotka> Fotky => Set<Fotka>();
     public DbSet<MereniNadrze> MereniNadrze => Set<MereniNadrze>();
@@ -139,6 +140,17 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         ucast.Property(x => x.Poznamka).HasMaxLength(1000);
         ucast.Property(x => x.PoznavaciZnak).HasMaxLength(Zapis.ZnakNejvic);
         ucast.Property(x => x.StartovnePoznamka).HasMaxLength(200);
+
+        var navrh = b.Entity<ZapisNavrh>();
+        navrh.ToTable("ZapisyNavrhu");
+        // Snímky patří rozjížďce; se smazanou rozjížďkou nemají co dokládat.
+        navrh.HasOne(x => x.Rozjizdka).WithMany().HasForeignKey(x => x.RozjizdkaId)
+            .OnDelete(DeleteBehavior.Cascade);
+        navrh.HasOne(x => x.Uzivatel).WithMany().HasForeignKey(x => x.UzivatelId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Jeden zapisovatel má u rozjížďky jeden snímek — ten poslední.
+        navrh.HasIndex(x => new { x.RozjizdkaId, x.UzivatelId }).IsUnique();
+        navrh.OwnsMany(x => x.Radky, r => r.ToJson());
 
         // Smazaná fotka papíru nesmí odnést rozjížďku i s výsledky.
         b.Entity<Rozjizdka>().HasOne(x => x.Fotka).WithMany().HasForeignKey(x => x.FotkaId)

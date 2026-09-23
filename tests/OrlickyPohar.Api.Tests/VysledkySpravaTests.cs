@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Bodovani;
+using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Import;
 using OrlickyPohar.Api.Features.Zavody;
 
@@ -468,5 +469,67 @@ public class VysledkySpravaTests(PostgresFixture fixture)
 
         // Kategorie u lodi zůstává, i když se pořadí počítá bez ní.
         Assert.Equal("Nad7m", zavod.PoradiCelkem[0].Kategorie);
+    }
+
+    [Fact]
+    public async Task Dva_zapisovatele_maji_kazdy_svuj_snimek()
+    {
+        var slug = "zapis-dva";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
+
+        var anna = new Uzivatel { Id = Guid.NewGuid(), Zobrazovane = "Anna Zapisovatelka" };
+        var bob = new Uzivatel { Id = Guid.NewGuid(), Zobrazovane = "Bob Zapisovatel" };
+        db.Uzivatele.AddRange(anna, bob);
+        await db.SaveChangesAsync();
+
+        // Anna viděla Aničku první, Bob obráceně. Druhé uložení to první
+        // přepíše — ale snímek Anny musí zůstat.
+        Assert.Null(await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 1), new(prihlasky[1], PoradiVCili: 2)], default, anna.Id));
+        Assert.Null(await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 2), new(prihlasky[1], PoradiVCili: 1)], default, bob.Id));
+
+        var navrhy = await zapis.NavrhyAsync(rozjizdka, anna.Id, default);
+        Assert.Equal(2, navrhy.Navrhy.Count);
+
+        var mujNavrh = navrhy.Navrhy.Single(n => n.Muj);
+        Assert.Equal("Anna Zapisovatelka", mujNavrh.Kdo);
+        Assert.Equal(prihlasky[0], mujNavrh.Radky[0].PrihlaskaId);
+
+        // Ve výsledcích je zatím Bobova verze, protože ukládal poslední.
+        var nacteny = await zapis.NactiAsync(rozjizdka, poradatel: true, default);
+        Assert.Equal(2, nacteny.PocetNavrhu);
+        Assert.Equal(prihlasky[1], nacteny.Lode.Single(l => l.PoradiVCili == 1).PrihlaskaId);
+
+        // Zapisovatelé se shodnou na Annině verzi.
+        var (nenalezen, chyba) = await zapis.PouzijNavrhAsync(rozjizdka, anna.Id, bob.Id, default);
+        Assert.False(nenalezen);
+        Assert.Null(chyba);
+
+        nacteny = await zapis.NactiAsync(rozjizdka, poradatel: true, default);
+        Assert.Equal(prihlasky[0], nacteny.Lode.Single(l => l.PoradiVCili == 1).PrihlaskaId);
+
+        // Snímek Anny zůstal; Bobův se přepsal na to, co použil.
+        navrhy = await zapis.NavrhyAsync(rozjizdka, anna.Id, default);
+        Assert.Equal(2, navrhy.Navrhy.Count);
+        Assert.All(navrhy.Navrhy, n => Assert.Equal(prihlasky[0], n.Radky[0].PrihlaskaId));
+    }
+
+    [Fact]
+    public async Task Bez_zapisovatele_snimek_nevznika()
+    {
+        var slug = "zapis-bez-snimku";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
+
+        // Import ani úloha na pozadí nikoho přihlášeného nemají.
+        Assert.Null(await zapis.UlozAsync(rozjizdka, [new(prihlasky[0], PoradiVCili: 1)], default));
+
+        Assert.Empty(await db.ZapisyNavrhu.Where(n => n.RozjizdkaId == rozjizdka.Id).ToListAsync());
     }
 }
