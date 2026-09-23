@@ -1358,6 +1358,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vrátí ročník i s tím, jestli je venku
+         * @description Vyžaduje roli rozhodčího v ročníku, nebo organizátora aspoň na jedné regatě. Přepnout publikaci smí správce ročníku.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SerieSpravaDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/publikace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pustí ročník ven, nebo ho stáhne
+         * @description Správce ročníku. Nepublikovaný ročník veřejné čtení nevydává vůbec — ani jeho regaty a výsledky.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PublikaceSerieVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SerieSpravaDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/zastavky": {
         parameters: {
             query?: never;
@@ -2897,6 +2983,9 @@ export interface components {
             lod: string;
             stav: components["schemas"]["StavUcasti"];
         };
+        PublikaceSerieVstup: {
+            publikovano: boolean;
+        };
         PublikaceVstup: {
             publikovano: boolean;
         };
@@ -2965,6 +3054,14 @@ export interface components {
             rok: number;
             /** Format: int32 */
             pocetZavodu: number;
+        };
+        SerieSpravaDto: {
+            slug: string;
+            nazev: string;
+            /** Format: int32 */
+            rok: number;
+            publikovano: boolean;
+            smiPublikovat: boolean;
         };
         SerieVstup: {
             slug: string;

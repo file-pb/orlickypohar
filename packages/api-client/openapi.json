@@ -1229,6 +1229,78 @@
                 }
             }
         },
+        "/sprava/serie/{serie}": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vr\u00e1t\u00ed ro\u010dn\u00edk i s t\u00edm, jestli je venku",
+                "description": "Vy\u017eaduje roli rozhod\u010d\u00edho v ro\u010dn\u00edku, nebo organiz\u00e1tora aspo\u0148 na jedn\u00e9 regat\u011b. P\u0159epnout publikaci sm\u00ed spr\u00e1vce ro\u010dn\u00edku.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SerieSpravaDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/publikace": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Pust\u00ed ro\u010dn\u00edk ven, nebo ho st\u00e1hne",
+                "description": "Spr\u00e1vce ro\u010dn\u00edku. Nepublikovan\u00fd ro\u010dn\u00edk ve\u0159ejn\u00e9 \u010dten\u00ed nevyd\u00e1v\u00e1 v\u016fbec \u2014 ani jeho regaty a v\u00fdsledky.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PublikaceSerieVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SerieSpravaDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/zastavky": {
             "get": {
                 "tags": [
@@ -4200,6 +4272,17 @@
                     }
                 }
             },
+            "PublikaceSerieVstup": {
+                "required": [
+                    "publikovano"
+                ],
+                "type": "object",
+                "properties": {
+                    "publikovano": {
+                        "type": "boolean"
+                    }
+                }
+            },
             "PublikaceVstup": {
                 "required": [
                     "publikovano"
@@ -4449,6 +4532,34 @@
                     "pocetZavodu": {
                         "type": "integer",
                         "format": "int32"
+                    }
+                }
+            },
+            "SerieSpravaDto": {
+                "required": [
+                    "slug",
+                    "nazev",
+                    "rok",
+                    "publikovano",
+                    "smiPublikovat"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "rok": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "publikovano": {
+                        "type": "boolean"
+                    },
+                    "smiPublikovat": {
+                        "type": "boolean"
                     }
                 }
             },

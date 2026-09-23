@@ -721,6 +721,14 @@ header.hlavicka .jen-uzke { display: none; }
   padding: 0.7rem 0.9rem; margin: 0 0 1.25rem; background: var(--papir);
 }
 .hlaska.chyba { border-left-color: var(--stav-zruseny); }
+/* Tlačítko v hlášce (publikace ročníku): formulář nesmí zalomit větu. */
+.hlaska form.radkove { display: inline; }
+.hlaska button.maly {
+  font: inherit; font-size: 0.85rem; cursor: pointer; margin-left: 0.2rem;
+  padding: 0.25rem 0.7rem; border-radius: 999px;
+  border: 1px solid var(--linka); background: var(--pozadi); color: var(--text);
+}
+.hlaska button.maly:hover { border-color: var(--voda); color: var(--voda); }
 .hlaska.hotovo { border-left-color: var(--stav-vypsany); }
 
 .udeleni {
