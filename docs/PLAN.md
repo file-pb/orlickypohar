@@ -556,6 +556,12 @@ a vrací větu — autor má vědět, že se text nevejde, ne dostat tiše oří
 článek. `ZHtml` je dodrží i sám, jako pojistka pro import, kde by chyba
 shodila celou dávku kvůli jednomu článku.
 
+**Falešné API umí od 23. 9. 2026 i správu obecných článků** — přehled,
+detail, založení, úpravu, stav a obrázky v těle. Do té doby je neznalo
+a obrazovka `/sprava/web/clanky` se nedala otevřít, takže se ta polovina
+administrace zkoušela jedině proti nasazenému API. Zakládání i úprava
+článku jsou teď parametrizované seznamem, ne napsané dvakrát.
+
 **Platí to i pro obecné články mimo ročník** (`/sprava/web/clanky/{clanek}/obrazky`).
 Nejdřív to byly jen články ročníku — vzniklo to kvůli pořadatelům — ale mít
 dvě různá pravidla podle toho, kde článek leží, by si musel pamatovat každý,

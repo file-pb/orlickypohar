@@ -206,7 +206,7 @@ export default async function UpravaClanku({ params, searchParams }: Parametry) 
           <h2>Obrázky v textu</h2>
           {/* `encType` se neuvádí — u serverové akce ho React nastaví sám
               a ruční by přepsal. */}
-          <form action={nahrajDoTelaAkce}>
+          <form action={nahrajDoTelaAkce} className="formular">
             <input type="hidden" name="serie" value={serie} />
             <input type="hidden" name="slug" value={slug} />
             <label>
@@ -239,14 +239,19 @@ export default async function UpravaClanku({ params, searchParams }: Parametry) 
               </p>
               <ul className="seznam">
                 {obrazkyTela.map((o) => (
-                  <li key={o.velky}>
-                    <img
-                      src={o.nahled}
-                      alt=""
-                      width={80}
-                      style={{ float: "left", marginRight: "0.75rem", borderRadius: 6 }}
+                  <li
+                    key={o.velky}
+                    style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}
+                  >
+                    <img src={o.nahled} alt="" width={64} height={64}
+                         style={{ objectFit: "cover", borderRadius: 6, flex: "none" }} />
+                    {/* Jen ke zkopírování — pole je na výběr myší lepší než
+                        prostý text a bez javascriptu jinak nic nejde. */}
+                    <input
+                      readOnly
+                      value={`<img src="${o.velky}" alt="${o.popis ?? ""}">`}
+                      style={{ flex: 1, minWidth: 0 }}
                     />
-                    <input readOnly value={`<img src="${o.velky}" alt="${o.popis ?? ""}">`} />
                   </li>
                 ))}
               </ul>
