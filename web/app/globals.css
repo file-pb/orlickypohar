@@ -803,6 +803,20 @@ th.vlevo, td.vlevo { text-align: left; }
 
 .formular > h2 { margin: 0.6rem 0 0; font-size: 1.05rem; }
 
+/* Kalendář: krátké údaje vedle sebe.
+
+   Šest polí pod sebou znamenalo scrollovat u každé z devíti regat, i když
+   termín, konec, typ a vyhodnocení se každý vejde do půlky řádku. Zalomení
+   řeší `auto-fit`, ne dotaz na šířku — formulář úpravy je uvnitř karty
+   a ta je na telefonu užší než stránka, takže by hranice stejně neseděla.
+
+   Název a pořadatel zůstávají přes celou šířku: jsou to jména, ne údaje,
+   a zkrácené na půlku by se ořezávala. */
+.formular.dvojice { grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); align-items: start; }
+.formular.dvojice > .siroke,
+.formular.dvojice > button,
+.formular.dvojice > p { grid-column: 1 / -1; }
+
 /* Medailonek pořadatele na stránce zastávky.
 
    Fotka vedle textu, na telefonu nad ním. Fotka je ilustrační (není to
@@ -1574,7 +1588,7 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 .stitek.neverejne { color: var(--tlumeny); border-style: dashed; }
 
 /* Úprava zastávky se rozbaluje v kartě, ne na vlastní stránce. Termín se
-   mění zřídka a kvůli pěti polím není proč odcházet z kalendáře. */
+   mění zřídka a kvůli pár údajům není proč odcházet z kalendáře. */
 .karta > details.uprava { margin-top: 0.7rem; }
 .karta > details.uprava > summary {
   cursor: pointer; font-size: 0.85rem; color: var(--tlumeny); width: fit-content;
