@@ -94,16 +94,21 @@ ZAVODY = [
     # Čtyři rozjížďky, ne tři (tatáž listina, potvrzeno rozhodčím 23. 9.).
     ("Radavský pohár",  "Yacht Club Písek", date(2026, 8, 29), "okruhový", 4, "PoKategoriich", 1.0),
     ("O pohár Vltavy",  "Plachtič z Vltavy", date(2026, 9, 5), "vytrvalostní", 1, "PoKategoriich", 1.0),
-    ("Pohár Slunce",    "SK Popovice",  date(2026, 9, 19), "okruhový",     4, "PoKategoriich", 1.0),
+    # Maraton, ne okruhový závod: termínová listina 2027 ho vede jako
+    # „maraton 8 h" a maraton má jednu rozjížďku (Filip, 23. 9. 2026).
+    # Mock mu dřív dával čtyři rozjížďky a škrt, tedy škrtal v závodě,
+    # kde není z čeho. Pořadatel zůstává nepotvrzený — listina 2027 má
+    # Jacht servis Novák s podporou YC Corona.
+    ("Pohár Slunce",    "SK Popovice",  date(2026, 9, 19), "maraton 8 h",  1, "PoKategoriich", 1.0),
 ]
 
 # Termínová listina 2027 (od rozhodčího 23. 9. 2026) má tutéž devítku regat
 # ve stejném pořadí, ale u sedmi z nich jiného pořadatele a u tří jiný typ:
 # Jarní vítr a Vánoční regata jsou dálkové plavby, Pohár Slunce maraton 8 h.
-# Kdyby to tak bylo i v roce 2026, měly by tyhle zastávky jednu rozjížďku
-# a žádný škrt — jenže sešit vede jen body do poháru, ne rozjížďky, takže
-# doklad o roce 2026 z toho není. Počty rozjížděk výš proto zůstávají a je
-# to otázka na rozhodčího; podrobně v docs/PLAN.md, oddíl o listině 2027.
+# Maratony jedou jednu rozjížďku (Filip, 23. 9. 2026) — to je u Poháru
+# Slunce zapsané výš. **Jarní vítr jako dálková plavba zatím potvrzený
+# není**, takže mu čtyři rozjížďky zůstávají; podrobně v docs/PLAN.md,
+# oddíl o listině 2027.
 
 
 def skrty(typ, pocet_rozjizdek):
@@ -232,9 +237,9 @@ for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerat
 
         # Izolepa: první rozjížďka je běh pro míčky z kopce, do poháru jde
         # jedna z těch na vodě. Termínová listina 2027 u ní píše „počítá se
-        # první rozjížďka" — buď se tím myslí první na vodě, a pak je to
-        # totéž co tady, nebo se pravidlo mezi ročníky mění. Otázka na
-        # rozhodčího; do odpovědi zůstává druhá v pořadí.
+        # první rozjížďka" a rozhodčí tím myslí první na vodě, ne první
+        # v pořadí (Filip, 23. 9. 2026) — pravidlo je tedy totéž, jen
+        # zapsané kratčeji, a běh se do počtu nebere.
         do_serie = cislo == 2 if typ == "Izolepa" else True
 
         # Rozjížďky, které jdou do poháru, jedou lodě v pořadí ze sešitu —

@@ -71,7 +71,9 @@ public class KontraktTests
     {
         var izolepa = Mock().Zavody.Single(z => z.Slug == "izolepa");
 
-        // Fun závod: část rozjížděk se nejede na vodě a do poháru nesmí.
+        // První je běh pro míčky z kopce, ne rozjížďka na vodě, a do poháru
+        // nesmí. Rozhodčí to zkracuje na „počítá se první rozjížďka" a myslí
+        // tím první na vodě (Filip, 23. 9. 2026) — tedy tuhle.
         Assert.True(izolepa.Rozjizdky.Count > 1);
         Assert.Single(izolepa.Rozjizdky, r => r.DoSerie);
     }

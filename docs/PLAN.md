@@ -1368,26 +1368,30 @@ Surf & Ski Trhovky). V mocku je regata nově čtvrtá, 6. 6. 2026 a typu
 `vytrvalostní`. **Datum je pořád vymyšlené** — regata se nejela a nikde není
 zapsané; jen teď sedí do pořadí ze sešitu místo toho, aby mu odporovalo.
 
-**Zbytek se nepřepisuje, protože doklad o roce 2026 to není.** Typ zastávky
-řídí počet rozjížděk a ten jde do škrtů: kdyby byl Jarní vítr dálková plavba
-a Pohár Slunce maraton 8 h i v roce 2026, měly by po jedné rozjížďce a žádný
-škrt místo čtyř a jednoho škrtu. Body v sešitu se tím nezmění — sešit vede
-jen výsledek zastávky, ne rozjížďky — takže se to z dat nedá ověřit a
-hádáním by se nepravda jen zpevnila.
+**Opraven i Pohár Slunce (23. 9. 2026).** Filip potvrdil, že **maraton jede
+jednu rozjížďku**. Mock mu dával čtyři a k tomu škrt, tedy škrtal v závodě,
+kde není z čeho. Nově je typu `maraton 8 h` s jednou rozjížďkou a bez škrtu;
+pořadí v kategorii ze sešitu tím zůstává nedotčené, protože s jednou
+rozjížďkou se pořadí v cíli rovná pořadí v kategorii. Pořadatel se nemění —
+`SK Popovice` je pořád nepotvrzený, listina má Jacht servis Novák.
 
-**Otázky na rozhodčího:**
+**Zbytek se nepřepisuje, protože doklad o roce 2026 to není.** Hlavně
+**Jarní vítr**: kdyby byl dálková plavba i v roce 2026, měl by jednu
+rozjížďku místo čtyř a žádný škrt. Body v sešitu se tím nezmění — sešit vede
+jen výsledek zastávky, ne rozjížďky — takže se to z dat ověřit nedá.
 
-1. **Platily typy a pořadatelé z listiny 2027 i v roce 2026?** Hlavně Jarní
-   vítr (dálková plavba?) a Pohár Slunce (maraton 8 h?) — u nich má mock
-   čtyři rozjížďky a škrt.
-2. **Izolepa: první, nebo druhá rozjížďka do poháru?** Doteď platilo, že
-   první je běh pro míčky z kopce a do poháru jde jedna z těch na vodě.
-   Listina 2027 píše „počítá se první rozjížďka" — je to totéž řečeno jinak
-   (první na vodě), nebo změna?
-3. **Kdy se v roce 2026 měla jet Vánoční regata?** Jen kvůli kalendáři
-   v ukázkových datech; zrušená je tak jako tak.
-4. **Je listina 2027 konečná?** Kalendář je hotový (níž), ale termíny se
-   ještě můžou hnout.
+**Odpovědi (Filip, 23. 9. 2026):**
+
+| Otázka | Odpověď | Co z toho v kódu |
+|---|---|---|
+| Typy a pořadatelé z listiny i v roce 2026? | **Maratony jedou jednu rozjížďku.** | Pohár Slunce přepsaný na `maraton 8 h`, jedna rozjížďka, škrt 0 |
+| Izolepa: první, nebo druhá rozjížďka? | **„První" znamená první na vodě**, běh pro míčky jde napřed a nepočítá se | beze změny — `doSerie` na druhé v pořadí je totéž pravidlo |
+| Kdy se v roce 2026 jela Vánoční regata? | „někdy v létě, ale jestli v plánu není, tak ji tam nedávej" | **otevřené**, viz níž |
+
+**Zbývá:** jestli byl **Jarní vítr** dálková plavba i v roce 2026 (mock mu
+drží čtyři rozjížďky a škrt), a co s **Vánoční regatou** — červnové datum je
+vymyšlené a Filip nechce vymýšlet, jenže sešit ji mezi devíti zastávkami
+ročníku 2026 vede.
 
 ### Ročník 2027 jako kalendář
 
