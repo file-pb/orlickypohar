@@ -91,6 +91,23 @@ public class ImportTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task Prvni_import_nastavi_pravidla_rocniku()
+    {
+        // Pravidla ročníku (škrty, mlčení o výsledcích regat) musí platit už
+        // po prvním importu. Zakládací cesta je dřív neznala, takže první
+        // běh dal jiný ročník než druhý a mlčení se zapnulo až opravou.
+        var vstup = Rocnik("pravidla-hned") with { PocetSkrtu = 2, VysledkyZavoduVerejne = false };
+        await Posli(vstup);
+
+        using var scope = fixture.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var serie = await db.Serie.SingleAsync(s => s.Slug == "pravidla-hned");
+
+        Assert.Equal(2, serie.PocetSkrtu);
+        Assert.False(serie.VysledkyZavoduVerejne);
+    }
+
+    [Fact]
     public async Task Oprava_ktera_radek_ubere_ho_smaze()
     {
         // Idempotence sama o sobě nestačí. Když z opraveného ročníku výsledek

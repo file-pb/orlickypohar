@@ -172,7 +172,24 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
       ) : (
         <>
       <h2>Výsledky</h2>
-      {radky.length === 0 ? (
+      {zavod.vysledkySkryte ? (
+        <>
+          {/* Ročník, u kterého se výsledky jednotlivých regat veřejně
+              neukazují. Bez téhle věty vypadá odjetá regata jako ta, co se
+              nejela — a to je horší než mlčet nahlas. Pořadí seriálu veřejné
+              zůstává, proto na něj odkaz. */}
+          <p className="prazdno">
+            Výsledky jednotlivých regat tohohle ročníku nejsou zveřejněné —
+            vznikaly ručně a jsou v nich nesrovnalosti. Platí{" "}
+            <Link href={`/serie/${slug}/poradi`}>konečné pořadí seriálu</Link>.
+          </p>
+          <PrihlaseneLode
+            lode={zavod.lode}
+            trida={trida}
+            adresa={(k) => `/serie/${slug}/zavody/${slugZavodu}?trida=${encodeURIComponent(k)}`}
+          />
+        </>
+      ) : radky.length === 0 ? (
         <>
           <p className="prazdno">{ProcNejsouVysledky(zavod.stav)}</p>
           <PrihlaseneLode
@@ -236,6 +253,11 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
           pořádá a kam se ozvat; škrty a koeficient čte ten, kdo už jel. */}
       {maObsah(zavod.medailonek) && <Medailonek poradatel={zavod.medailonek} />}
 
+      {/* Pravidla se vydávají kvůli tomu, aby šlo výsledky zkontrolovat.
+          Bez výsledků nemají co doprovázet — a „Do poháru" by muselo buď
+          prozradit počet rozjížděk, nebo tvrdit, že se žádná nejela. */}
+      {!zavod.vysledkySkryte && (
+        <>
       <h2>Pravidla závodu</h2>
       <dl className="pravidla">
         <dt>Vyhodnocení</dt>
@@ -261,6 +283,8 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
         ne tenhle součet —{" "}
         <Link href={`/serie/${slug}/poradi`}>průběžné pořadí je vedle</Link>.
       </p>
+        </>
+      )}
         </>
       )}
     </Boky>

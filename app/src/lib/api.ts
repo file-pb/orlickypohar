@@ -23,7 +23,11 @@ export type Rozjizdka = S["RozjizdkaDto"];
 export type BodyVRozjizdce = S["BodyVRozjizdceDto"];
 export type VysledekZavodu = S["VysledekZavoduDto"];
 export type UcastLodi = S["UcastDto"];
-export type ZavodDetail = S["ZavodDetailDto"];
+// `vysledkySkryte` je dopsané ručně: `schema.d.ts` se generuje z běžícího API
+// (packages/api-client/generuj.sh) a nová vlastnost je zatím jen v repozitáři,
+// ne na produkci, odkud se dokument stahuje. **Po nasazení a přegenerování
+// schématu tenhle průnik zmizí.**
+export type ZavodDetail = S["ZavodDetailDto"] & { vysledkySkryte?: boolean };
 export type Zastavka = S["ZastavkaDto"];
 export type PoradiLodi = S["PoradiLodiDto"];
 export type PoradiKategorie = S["PoradiKategorieDto"];

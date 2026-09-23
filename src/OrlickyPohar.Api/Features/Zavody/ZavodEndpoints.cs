@@ -60,7 +60,13 @@ public record ZavodDetailDto(
     DruhZastavky Druh = DruhZastavky.Pohar,
     // Pořadatel i s webem, kontaktem a souřadnicemi. `Poradatel` výš zůstává
     // jako jméno pro appku, která o záznamu neví.
-    PoradatelDto? Medailonek = null);
+    PoradatelDto? Medailonek = null,
+    // Ročník, který výsledky regat veřejně nevydává (Serie.VysledkyZavoduVerejne).
+    // Bez tohohle příznaku vypadá odjetá regata jako plánovaná: prázdné
+    // rozjížďky a prázdné pořadí, a čtenář nemá jak poznat rozdíl mezi
+    // „nejelo se" a „neukazujeme to". Aditivně, výchozí false — starší
+    // klienti o něm nevědí a nic se jim nemění.
+    bool VysledkySkryte = false);
 
 /// <summary>
 /// Veřejné čtení jedné zastávky. Pravidla závodu (škrty, vyhodnocení,
@@ -87,6 +93,31 @@ public static class ZavodEndpoints
             .WithSummary("Vrátí regatu s rozjížďkami a výsledky");
     }
 
+    /// <summary>
+    /// Kdo na zastávku přijel. U plánované zastávky je to jediný obsah, který
+    /// stránka má — a u odjeté se z toho pozná loď, která přijela a nakonec
+    /// nestartovala v žádné rozjížďce. U ročníku se skrytými výsledky je to
+    /// zase jediné, co ze zastávky zbude.
+    /// <para>
+    /// Veřejně jen lodě, které jedou nebo jely (<c>Prihlasky.VerejneViditelna</c>,
+    /// tady rozepsané, aby se dotaz přeložil do SQL). Požadavky, odhlášené
+    /// a nepřijaté zůstávají jen pro pořadatele.
+    /// </para>
+    /// </summary>
+    private static Task<List<UcastDto>> LodeAsync(AppDbContext db, int zavodId, CancellationToken ct) =>
+        db.Ucasti
+            .Where(u => u.ZavodId == zavodId
+                        && (u.Stav == StavUcasti.Prihlasena || u.Stav == StavUcasti.Potvrzena
+                            || u.Stav == StavUcasti.Vyloucena))
+            .OrderBy(u => u.Prihlaska!.Kategorie!.Poradi).ThenBy(u => u.Prihlaska!.Lod!.Nazev)
+            .Select(u => new UcastDto(
+                u.Prihlaska!.Lod!.Nazev,
+                u.Prihlaska.Kategorie!.Nazev,
+                u.Kormidelnik == null ? null : u.Kormidelnik.Jmeno + " " + u.Kormidelnik.Prijmeni,
+                u.Stav != StavUcasti.Prihlasena,
+                u.Stav == StavUcasti.Vyloucena))
+            .ToListAsync(ct);
+
     private static async Task<Results<Ok<ZavodDetailDto>, NotFound>> DetailAsync(
         string serieSlug, string slug, AppDbContext db, IUloziste uloziste, CancellationToken ct)
     {
@@ -98,10 +129,29 @@ public static class ZavodEndpoints
                 z.Id, z.SerieId, z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel,
                 z.Stav, z.PuvodniDatum, z.PocetSkrtu, z.Vyhodnoceni, z.KoeficientDoSerie,
                 z.Druh, z.PoradatelZaznam, FotkaPoradatele = z.PoradatelZaznam!.Fotka,
+                VysledkyVerejne = z.Serie!.VysledkyZavoduVerejne,
             })
             .FirstOrDefaultAsync(ct);
 
         if (zavod is null) return TypedResults.NotFound();
+
+        // Ročník, který výsledky regat veřejně nevydává: stránka zastávky
+        // zůstane — termín, pořadatel, kdo přijel — ale rozjížďky a pořadí
+        // se nevydají. Zkratka je tu schválně nahoře, ne filtr v dotazech
+        // níž: kdyby se čísla načetla a teprve pak zahodila, stačilo by
+        // jedno nedopatření v projekci a byla by venku.
+        if (!zavod.VysledkyVerejne)
+        {
+            var kdoPrijel = await LodeAsync(db, zavod.Id, ct);
+            return TypedResults.Ok(new ZavodDetailDto(
+                zavod.Slug, zavod.Nazev, zavod.Datum, zavod.DatumKonce, zavod.Typ, zavod.Poradatel,
+                zavod.Stav, zavod.PuvodniDatum, zavod.PocetSkrtu, zavod.Vyhodnoceni,
+                zavod.KoeficientDoSerie, [], [], kdoPrijel, [], zavod.Druh,
+                zavod.PoradatelZaznam is null
+                    ? null
+                    : PoradateleSprava.Dto(zavod.PoradatelZaznam, zavod.FotkaPoradatele, uloziste.VerejnaAdresa),
+                VysledkySkryte: true));
+        }
 
         // Jeden dotaz na všechny výsledky závodu, ne dotaz na rozjížďku.
         // Rozjížděk bývá osm a lodí dvacet — N+1 by tu bylo osm zbytečných cest.
@@ -130,25 +180,7 @@ public static class ZavodEndpoints
             })
             .ToListAsync(ct);
 
-        // Kdo na zastávku přijel. U plánované zastávky je to jediný obsah,
-        // který stránka má — a u odjeté se z toho pozná loď, která přijela
-        // a nakonec nestartovala v žádné rozjížďce.
-        //
-        // Veřejně jen lodě, které jedou nebo jely (Prihlasky.VerejneViditelna,
-        // tady rozepsané, aby se dotaz přeložil do SQL). Požadavky, odhlášené
-        // a nepřijaté zůstávají jen pro pořadatele.
-        var lode = await db.Ucasti
-            .Where(u => u.ZavodId == zavod.Id
-                        && (u.Stav == StavUcasti.Prihlasena || u.Stav == StavUcasti.Potvrzena
-                            || u.Stav == StavUcasti.Vyloucena))
-            .OrderBy(u => u.Prihlaska!.Kategorie!.Poradi).ThenBy(u => u.Prihlaska!.Lod!.Nazev)
-            .Select(u => new UcastDto(
-                u.Prihlaska!.Lod!.Nazev,
-                u.Prihlaska.Kategorie!.Nazev,
-                u.Kormidelnik == null ? null : u.Kormidelnik.Jmeno + " " + u.Kormidelnik.Prijmeni,
-                u.Stav != StavUcasti.Prihlasena,
-                u.Stav == StavUcasti.Vyloucena))
-            .ToListAsync(ct);
+        var lode = await LodeAsync(db, zavod.Id, ct);
 
         // Seznam rozjížděk se bere z rozjížděk, ne z výsledků: rozjížďka bez
         // jediného zapsaného řádku i ta s nepublikovanými čísly na stránce

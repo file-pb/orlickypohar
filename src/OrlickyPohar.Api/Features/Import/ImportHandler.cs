@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Clanky;
 using OrlickyPohar.Api.Features.Lode;
@@ -98,16 +98,19 @@ internal static class ImportHandler
         var serie = await db.Serie.FirstOrDefaultAsync(x => x.Slug == v.Slug, ct);
         if (serie is null)
         {
-            serie = new Serie { Slug = v.Slug, Nazev = v.Nazev, Rok = v.Rok, Publikovano = v.Publikovano };
+            serie = new Serie { Slug = v.Slug, Nazev = v.Nazev };
             db.Serie.Add(serie);
-            await db.SaveChangesAsync(ct);
-            return serie;
         }
 
+        // Vlastnosti se nastavují na jednom místě pro nově zakládaný i už
+        // existující ročník. Dvě kopie se rozešly: zakládací cesta neznala
+        // PocetSkrtu ani VysledkyZavoduVerejne, takže první import souboru
+        // dal jiný ročník než druhý — a mlčení o výsledcích se nezapnulo.
         serie.Nazev = v.Nazev;
         serie.Rok = v.Rok;
         serie.Publikovano = v.Publikovano;
         serie.PocetSkrtu = v.PocetSkrtu;
+        serie.VysledkyZavoduVerejne = v.VysledkyZavoduVerejne;
         await db.SaveChangesAsync(ct);
         return serie;
     }
