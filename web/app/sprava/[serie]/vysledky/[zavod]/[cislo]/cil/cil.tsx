@@ -26,6 +26,11 @@ import { odstartujAkce, pridejLodAkce, ulozCilAkce, znakAkce } from "./akce";
  * <b>Ukládá se po každé změně celá sada</b>, stejně jako ve formuláři:
  * co v zápisu není, výsledek nemá. Klepnutí během ukládání se nezahodí —
  * po doběhnutí se pošle nejnovější stav.
+ *
+ * <b>Bez signálu si klepnutí telefon podrží</b> (krok 5, 23. 9. 2026).
+ * Neuložený stav leží v úložišti prohlížeče, takže přežije i zhasnutou
+ * kartu nebo vybitý telefon, a odešle se sám, jakmile je spojení zpátky.
+ * Je to pojistka: u cíle signál bývá.
  */
 
 /** Kódy, které se dávají po dojezdu (PLAN.md). DNC a RDG patří k papíru. */
@@ -39,12 +44,15 @@ export function Cil({
   zavod,
   zapis,
   popisyKodu,
+  otisk,
 }: {
   serie: string;
   zavod: string;
   zapis: ZapisRozjizdky;
   /** `KODY` z lib/vysledky; posílá je serverová stránka. */
   popisyKodu: Record<KodVysledku, string>;
+  /** Otisk uloženého zápisu — podle něj se pozná zastaralá záloha. */
+  otisk: string;
 }) {
   // Lodě přidané na vodě. Mají přednost před tím, co přišlo ze serveru:
   // loď ročníku, kterou pořadatel přihlásil tady, je už na regatě.
@@ -78,6 +86,10 @@ export function Cil({
   );
   const [ukladani, setUkladani] = useState<Ukladani>("ulozeno");
   const [chyba, setChyba] = useState<string | null>(null);
+  // Záloha z telefonu, která se k tomuhle zápisu nehodí — viz `Zaloha`.
+  const [cizi, setCizi] = useState<Zaloha | null>(null);
+
+  const klic = `cil:${serie}:${zavod}:${zapis.cislo}`;
 
   // Nejnovější stav pro ukládání. Stav Reactu by ve smyčce níž byl ten
   // z doby, kdy ukládání začalo.
@@ -107,14 +119,56 @@ export function Cil({
     bezi.current = false;
     setChyba(hlaska);
     setUkladani(hlaska ? "chyba" : "ulozeno");
-  }, [serie, zavod, zapis.cislo]);
+    // Uložené je na serveru; záloha v telefonu už nemá co chránit.
+    if (!hlaska) zahod(klic);
+  }, [serie, zavod, zapis.cislo, klic]);
 
   const zmen = (noveDojeti: Dojezd[], noveKody: Record<number, KodVysledku>) => {
     posledni.current = { dojeti: noveDojeti, kody: noveKody };
     setDojeti(noveDojeti);
     setKody(noveKody);
+    // Nejdřív do telefonu, pak na server: klepnutí nesmí zmizet ani při
+    // vybité baterce, natož při výpadku signálu.
+    zapamatuj(klic, { otisk, kdy: Date.now(), dojeti: noveDojeti, kody: noveKody });
     void uloz();
   };
+
+  // Neodeslaná klepnutí z minula. Ke stejnému zápisu se vrátí sama
+  // a rovnou se zkusí odeslat; k jinému se nabídnou, ale nepřepíšou nic
+  // potichu — mezitím mohl uložit ten druhý telefon.
+  useEffect(() => {
+    const zaloha = precti(klic);
+    if (!zaloha) return;
+
+    if (zaloha.otisk !== otisk) {
+      setCizi(zaloha);
+      return;
+    }
+
+    posledni.current = { dojeti: zaloha.dojeti, kody: zaloha.kody };
+    setDojeti(zaloha.dojeti);
+    setKody(zaloha.kody);
+    void uloz();
+    // Jen při připojení: běží to proti stavu, se kterým se obrazovka
+    // otevřela, a `key` stránky se při změně zápisu stejně vymění.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Neuložený stav se zkusí odeslat sám: hned, jak se telefon chytí sítě,
+  // a jinak co půl minuty. Bez toho by čekal na další klepnutí — a to
+  // po dojezdu poslední lodi nemusí přijít.
+  useEffect(() => {
+    if (ukladani !== "chyba") return;
+
+    const zkus = () => void uloz();
+    window.addEventListener("online", zkus);
+    const casovac = window.setInterval(zkus, 30_000);
+
+    return () => {
+      window.removeEventListener("online", zkus);
+      window.clearInterval(casovac);
+    };
+  }, [ukladani, uloz]);
 
   // Neuložené klepnutí nesmí zmizet s omylem zavřenou kartou.
   useEffect(() => {
@@ -243,10 +297,37 @@ export function Cil({
         </span>
       </div>
 
+      {cizi && (
+        <p className="hlaska chyba" role="alert">
+          V telefonu leží neodeslaný zápis z {hodiny(new Date(cizi.kdy).toISOString())} ({cizi.dojeti.length}{" "}
+          dojetých). Zápis se mezitím změnil — mohl ho uložit druhý telefon.{" "}
+          <button
+            type="button"
+            className="maly"
+            onClick={() => {
+              zmen(cizi.dojeti, cizi.kody);
+              setCizi(null);
+            }}
+          >
+            Přesto odeslat
+          </button>{" "}
+          <button
+            type="button"
+            className="maly"
+            onClick={() => {
+              zahod(klic);
+              setCizi(null);
+            }}
+          >
+            Zahodit
+          </button>
+        </p>
+      )}
+
       {chyba && (
         <p className="hlaska chyba" role="alert">
           {chyba}{" "}
-          {ukladani === "chyba" && "Klepnutí zůstávají v telefonu. "}
+          {ukladani === "chyba" && "Klepnutí zůstávají v telefonu a zkusí odejít samy. "}
           {ukladani === "chyba" && (
             <button type="button" className="maly" onClick={() => void uloz()}>
               Uložit znovu
@@ -506,6 +587,46 @@ function TlacitkoLodi({
       {pod && <small>{pod}</small>}
     </button>
   );
+}
+
+/**
+ * Neodeslaný stav obrazovky v úložišti prohlížeče. `otisk` je podoba
+ * zápisu na serveru v době, kdy záloha vznikla: když se liší, uložil
+ * mezitím někdo jiný a záloha se nesmí použít sama od sebe.
+ */
+type Zaloha = { otisk: string; kdy: number; dojeti: Dojezd[]; kody: Record<number, KodVysledku> };
+
+/**
+ * Úložiště prohlížeče může být zakázané (soukromé okno, zablokovaná data)
+ * a zápis do něj umí vyhodit výjimku. Obrazovka proto musí fungovat i bez
+ * něj — je to pojistka navíc, ne podmínka.
+ */
+function zapamatuj(klic: string, zaloha: Zaloha) {
+  try {
+    window.localStorage.setItem(klic, JSON.stringify(zaloha));
+  } catch {
+    // Bez zálohy se zapisuje dál, jen bez pojistky.
+  }
+}
+
+function precti(klic: string): Zaloha | null {
+  try {
+    const ulozene = window.localStorage.getItem(klic);
+    if (!ulozene) return null;
+
+    const zaloha = JSON.parse(ulozene) as Zaloha;
+    return Array.isArray(zaloha?.dojeti) ? zaloha : null;
+  } catch {
+    return null;
+  }
+}
+
+function zahod(klic: string) {
+  try {
+    window.localStorage.removeItem(klic);
+  } catch {
+    // Nevadí: co se nedá smazat, se stejně použije jen při shodném otisku.
+  }
 }
 
 /** Celá sada pro API: dojeté s pořadím a časem, zbylé s kódem. */

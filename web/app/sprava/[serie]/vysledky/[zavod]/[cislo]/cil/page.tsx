@@ -96,7 +96,14 @@ export default async function CilovaObrazovka({ params }: Parametry) {
           zapsat.
         </p>
       ) : (
-        <Cil key={otisk(zapis)} serie={serie} zavod={zavod} zapis={zapis} popisyKodu={KODY} />
+        <Cil
+          key={otisk(zapis)}
+          serie={serie}
+          zavod={zavod}
+          zapis={zapis}
+          popisyKodu={KODY}
+          otisk={otisk(zapis)}
+        />
       )}
 
       <p className="poznamka">
