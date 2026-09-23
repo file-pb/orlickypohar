@@ -131,6 +131,16 @@ public static class ClankySpravaEndpoints
 
         g.MapDelete("/{clanek}/obrazek", WebOdeberObrazekAsync)
             .WithSummary("Odebere hlavní obrázek obecného článku a smaže jeho soubory");
+
+        g.MapPost("/{clanek}/obrazky", WebNahrajDoTelaAsync)
+            .DisableAntiforgery()
+            .WithMetadata(new RequestSizeLimitAttribute(Nahravani.NejvicBajtu + 1024 * 1024))
+            .Produces<ObrazekDto>()
+            .WithSummary("Nahraje obrázek do těla obecného článku a vrátí jeho adresu");
+
+        g.MapGet("/{clanek}/obrazky", WebSeznamVTeleAsync)
+            .Produces<List<ObrazekDto>>()
+            .WithSummary("Vrátí obrázky nahrané do těla obecného článku");
     }
 
     private static readonly Pozadavek EditorWebu = new(Role.Editor, null);
@@ -205,6 +215,31 @@ public static class ClankySpravaEndpoints
 
         var (obrazek, chyba) = await fotky.NastavAsync(nalezeny, formular, uzivatel, ct);
         return obrazek is null ? Results.BadRequest(new { error = chyba }) : Results.Ok(obrazek);
+    }
+
+    private static async Task<IResult> WebNahrajDoTelaAsync(
+        string clanek, [FromForm] FotkaFormular formular, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, ClankySprava sprava, FotkySprava fotky, CancellationToken ct)
+    {
+        if (await ObecnySPravem(clanek, kdo, rozsahy, sprava, ct) is not { } nalezeny)
+            return Results.NotFound();
+        if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
+
+        if (!fotky.Pripraveno)
+            return Results.Json(new { error = FotkySprava.Vypnuto }, statusCode: StatusCodes.Status503ServiceUnavailable);
+
+        var (obrazek, chyba) = await fotky.NahrajDoTelaAsync(nalezeny.Id, formular, uzivatel, ct);
+        return obrazek is null ? Results.BadRequest(new { error = chyba }) : Results.Ok(obrazek);
+    }
+
+    private static async Task<IResult> WebSeznamVTeleAsync(
+        string clanek, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, ClankySprava sprava, FotkySprava fotky, CancellationToken ct)
+    {
+        if (await ObecnySPravem(clanek, kdo, rozsahy, sprava, ct) is not { } nalezeny)
+            return Results.NotFound();
+
+        return Results.Ok(await fotky.VTeleAsync(nalezeny.Id, ct));
     }
 
     private static async Task<IResult> WebOdeberObrazekAsync(

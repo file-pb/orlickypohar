@@ -556,9 +556,10 @@ a vrací větu — autor má vědět, že se text nevejde, ne dostat tiše oří
 článek. `ZHtml` je dodrží i sám, jako pojistka pro import, kde by chyba
 shodila celou dávku kvůli jednomu článku.
 
-**Obecné články mimo ročník obrázky v těle zatím nemají.** Píše je editor
-webu, kdežto tohle vzniklo kvůli pořadatelům a jejich pozvánkám k regatám;
-až bude potřeba, je to tatáž dvojice endpointů ve skupině `/sprava/web`.
+**Platí to i pro obecné články mimo ročník** (`/sprava/web/clanky/{clanek}/obrazky`).
+Nejdřív to byly jen články ročníku — vzniklo to kvůli pořadatelům — ale mít
+dvě různá pravidla podle toho, kde článek leží, by si musel pamatovat každý,
+kdo se toho příště dotkne.
 
 ### Otevřené: přihlášení lodi na jednu zastávku
 

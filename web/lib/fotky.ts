@@ -86,13 +86,12 @@ export async function odeberObrazek(serie: string, druh: DruhObrazku, klic: stri
   }
 }
 
-/**
- * Obrázky v těle článku leží pod ročníkem. Obecné články (`/sprava/web`)
- * je zatím nemají — píše je editor webu, kdežto tohle vzniklo kvůli
- * pořadatelům a jejich pozvánkám k regatám.
- */
+// Obecné články mimo ročník mají správu pod `/sprava/web`, stejně jako
+// u hlavního obrázku výš.
 const cestaDoTela = (serie: string, clanek: string) =>
-  `${API}/sprava/serie/${encodeURIComponent(serie)}/clanky/${encodeURIComponent(clanek)}/obrazky`;
+  serie === "web"
+    ? `${API}/sprava/web/clanky/${encodeURIComponent(clanek)}/obrazky`
+    : `${API}/sprava/serie/${encodeURIComponent(serie)}/clanky/${encodeURIComponent(clanek)}/obrazky`;
 
 /**
  * Nahraje obrázek **do těla článku** a vrátí jeho adresu.
