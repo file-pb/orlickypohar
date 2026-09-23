@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using OrlickyPohar.Api.Features.Import;
+using OrlickyPohar.Api.Features.Zavody;
 
 namespace OrlickyPohar.Api.Tests;
 
@@ -33,7 +34,11 @@ public class KontraktTests
 
         Assert.Equal(2026, serie.Rok);
         Assert.Equal(3, serie.Kategorie.Count);
-        Assert.Equal(9, serie.Zavody.Count);
+
+        // Ročník 2026 měl podle sešitu devět zastávek, mock jich má osm:
+        // Vánoční regata se nejela a její termín není nikde zapsaný, takže
+        // by se musel vymyslet (Filip, 23. 9. 2026).
+        Assert.Equal(8, serie.Zavody.Count);
         Assert.NotEmpty(serie.Prihlasky);
 
         // Vymyšlená data se nesmějí dostat na veřejné stránky. Až bude čtení
@@ -70,7 +75,9 @@ public class KontraktTests
     {
         var izolepa = Mock().Zavody.Single(z => z.Slug == "izolepa");
 
-        // Fun závod: část rozjížděk se nejede na vodě a do poháru nesmí.
+        // První je běh pro míčky z kopce, ne rozjížďka na vodě, a do poháru
+        // nesmí. Rozhodčí to zkracuje na „počítá se první rozjížďka" a myslí
+        // tím první na vodě (Filip, 23. 9. 2026) — tedy tuhle.
         Assert.True(izolepa.Rozjizdky.Count > 1);
         Assert.Single(izolepa.Rozjizdky, r => r.DoSerie);
     }
@@ -191,5 +198,64 @@ public class KontraktTests
 
         Assert.NotNull(vypnuto);
         Assert.False(vypnuto.VysledkyZavoduVerejne);
+    }
+
+    private static SerieVstup Kalendar2027() =>
+        JsonSerializer.Deserialize<SerieVstup>(
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Data", "2027-kalendar.json")), Json)
+        ?? throw new InvalidOperationException("Kalendář 2027 se nepodařilo načíst.");
+
+    [Fact]
+    public void Kalendar_2027_je_platny_importni_vstup()
+    {
+        var serie = Kalendar2027();
+
+        // Termínová listina od rozhodčího, doručená 23. 9. 2026. Jsou to
+        // skutečná data, takže na rozdíl od mocku je ročník publikovaný —
+        // kalendář má být vidět dřív, než sezóna začne.
+        Assert.Equal(2027, serie.Rok);
+        Assert.Equal(3, serie.Kategorie.Count);
+        Assert.Equal(9, serie.Zavody.Count);
+        Assert.True(serie.Publikovano);
+
+        // Devět zastávek znamená dva škrty (rozhodčí, 22. 9. 2026).
+        Assert.Equal(2, serie.PocetSkrtu);
+    }
+
+    [Fact]
+    public void Kalendar_2027_nema_nic_krome_terminu()
+    {
+        var serie = Kalendar2027();
+
+        // Lodě se do ročníku přihlásí až se sezónou a rozjížďky vzniknou na
+        // vodě. Kdyby se sem cokoliv z toho doplnilo dřív, bylo by to
+        // vymyšlené — a tenhle soubor je tu právě proto, že vymyšlený není.
+        Assert.Empty(serie.Osoby);
+        Assert.Empty(serie.Lode);
+        Assert.Empty(serie.Prihlasky);
+        Assert.All(serie.Zavody, z =>
+        {
+            Assert.Equal(StavZavodu.Planovany, z.Stav);
+            Assert.Empty(z.Ucasti);
+            Assert.Empty(z.Rozjizdky);
+
+            // Škrt se dopočítá z odjetých rozjížděk, takže u plánované
+            // zastávky nemá být z čeho.
+            Assert.Equal(0, z.PocetSkrtu);
+        });
+    }
+
+    [Fact]
+    public void Kalendar_2027_je_serazeny_a_v_jedne_sezone()
+    {
+        var zavody = Kalendar2027().Zavody;
+
+        // Pořadí je zápis kalendáře, ne samostatný údaj: musí jít s daty.
+        Assert.Equal(Enumerable.Range(1, zavody.Count), zavody.Select(z => z.Poradi));
+        Assert.Equal(zavody.OrderBy(z => z.Datum).Select(z => z.Slug), zavody.Select(z => z.Slug));
+        Assert.All(zavody, z => Assert.Equal(2027, z.Datum.Year));
+
+        // Dvoudenní zastávka končí po svém začátku, jednodenní konec nemá.
+        Assert.All(zavody, z => Assert.True(z.DatumKonce is null || z.DatumKonce > z.Datum));
     }
 }

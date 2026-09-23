@@ -110,38 +110,48 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
       )}
 
       <h2>Přihlášené lodě</h2>
-      <TabyTrid
-        kategorie={tridy.map((k) => k.nazev)}
-        aktivni={aktivniTrida}
-        adresa={odkaz}
-      />
-      <NadpisTridy kategorie={tridy.map((k) => k.nazev)} aktivni={aktivniTrida} />
-      {tridy.filter((k) => k.nazev === aktivniTrida).map((k) => (
-        <div key={k.nazev}>
-          <div className="tabulka-obal">
-            <table>
-              <thead>
-                <tr>
-                  <th className="lod">Loď</th>
-                  <th style={{ textAlign: "left" }}>Typ</th>
-                  <th style={{ textAlign: "left" }}>Číslo plachty</th>
-                  <th style={{ textAlign: "left" }}>Majitel</th>
-                </tr>
-              </thead>
-              <tbody>
-                {k.lode.map((p: Prihlaska) => (
-                  <tr key={p.lod}>
-                    <td className="lod">{p.lod}</td>
-                    <td style={{ textAlign: "left" }}>{p.typLodi ?? "—"}</td>
-                    <td style={{ textAlign: "left" }}>{p.cisloPlachty ?? "—"}</td>
-                    <td style={{ textAlign: "left" }}>{p.majitel}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ))}
+
+      {/* Ročník se zveřejňuje jako kalendář dřív, než sezóna začne, takže
+          nula přihlášených lodí je běžný stav, ne chyba dat. Bez tohohle
+          zůstal na stránce samotný nadpis a pod ním nic. */}
+      {tridy.length === 0 ? (
+        <p className="prazdno">Do ročníku se zatím nepřihlásila žádná loď.</p>
+      ) : (
+        <>
+          <TabyTrid
+            kategorie={tridy.map((k) => k.nazev)}
+            aktivni={aktivniTrida}
+            adresa={odkaz}
+          />
+          <NadpisTridy kategorie={tridy.map((k) => k.nazev)} aktivni={aktivniTrida} />
+          {tridy.filter((k) => k.nazev === aktivniTrida).map((k) => (
+            <div key={k.nazev}>
+              <div className="tabulka-obal">
+                <table>
+                  <thead>
+                    <tr>
+                      <th className="lod">Loď</th>
+                      <th style={{ textAlign: "left" }}>Typ</th>
+                      <th style={{ textAlign: "left" }}>Číslo plachty</th>
+                      <th style={{ textAlign: "left" }}>Majitel</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {k.lode.map((p: Prihlaska) => (
+                      <tr key={p.lod}>
+                        <td className="lod">{p.lod}</td>
+                        <td style={{ textAlign: "left" }}>{p.typLodi ?? "—"}</td>
+                        <td style={{ textAlign: "left" }}>{p.cisloPlachty ?? "—"}</td>
+                        <td style={{ textAlign: "left" }}>{p.majitel}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
     </Boky>
   );
 }

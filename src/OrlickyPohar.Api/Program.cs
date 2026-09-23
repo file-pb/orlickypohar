@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Serilog;
@@ -10,6 +10,7 @@ using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Import;
 using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Poradatele;
+using OrlickyPohar.Api.Features.Prevzate;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Sprava;
 using OrlickyPohar.Api.Features.Vodocet;
@@ -64,6 +65,16 @@ try
         .ConfigurePrimaryHttpMessageHandler(Pvl.Handler);
     if (builder.Configuration.GetValue<bool>("Vodocet:Sber"))
         builder.Services.AddHostedService<SberVodocetu>();
+    // Novinky ze svazu: RSS sailing.cz, jen tam, kde je sběr zapnutý.
+    // Povolení přebírat má pohár od svazu s podmínkou, že uvede zdroj
+    // s odkazem (Filip, 23. 9. 2026) — proto se drží jen perex a odkaz.
+    builder.Services.AddHttpClient(SberPrevzatych.Klient, c =>
+    {
+        c.Timeout = TimeSpan.FromSeconds(15);
+        c.DefaultRequestHeaders.UserAgent.ParseAdd("OrlickyPohar/1.0 (+https://orlickypohar.klihovka.cz)");
+    });
+    if (builder.Configuration.GetValue<bool>("Prevzate:Sber"))
+        builder.Services.AddHostedService<SberPrevzatych>();
     // Kontakty kapitánů se drží do konce následující sezóny, pak se mažou.
     if (builder.Configuration.GetValue<bool>("Kontakty:Uklid"))
         builder.Services.AddHostedService<UklidKontaktu>();
@@ -145,6 +156,7 @@ try
     app.MapClanky();
     app.MapImport();
     app.MapVodocet();
+    app.MapPrevzate();
     app.MapTeplotaHladiny();
     app.MapNapovedu();
     app.MapVerejnePrihlasky();

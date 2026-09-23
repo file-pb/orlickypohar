@@ -11,13 +11,17 @@ proto, aby šly stránky vidět na stroji, kde se databáze rozjet nedá. Když 
 pravidlo změní, mění se na obou místech — a rozejít se můžou jen tady.
 """
 import functools
-import json, os, re, unicodedata, uuid
+import json, os, re, sys, unicodedata, uuid
 from email.parser import BytesParser
 from email.policy import HTTP
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 
-D = json.load(open("data/2026-nanecisto.json", encoding="utf-8"))
+# Který ročník servírovat. Výchozí je mock; jiný se dá dát argumentem —
+# kalendář ročníku bez lodí (data/2027-kalendar.json) se jinak nedá na
+# webu vidět, dokud ho někdo nenahraje do databáze.
+D = json.load(open(sys.argv[1] if len(sys.argv) > 1 else "data/2026-nanecisto.json",
+                  encoding="utf-8"))
 LODE = {l["klic"]: l for l in D["lode"]}
 OSOBY = {o["klic"]: o for o in D["osoby"]}
 KAT = {p["lod"]: p["kategorie"] for p in D["prihlasky"]}
@@ -364,6 +368,30 @@ SPRAVA_CLANKY = [
     {**c, "stav": "Publikovano" if c.get("publikovano") else "Draft"}
     for c in D.get("clanky", [])
 ]
+
+
+# Vzorek novinek ze svazu. Skutečné se stahují z RSS sailing.cz úlohou
+# v API; tady jsou napevno, aby vývoj webu nesahal na cizí server a aby
+# výpis vypadal pokaždé stejně.
+PREVZATE = [
+    {"titulek": "Jachtař Koláček se připravuje na Route du Rhum",
+     "perex": "Milan Koláček se jako jediný Čech postaví na start letošního "
+              "ročníku legendárního transatlantického závodu sólových jachtařů.",
+     "publikovanoV": "2026-09-23T10:16:47+02:00",
+     "odkaz": "https://www.sailing.cz/clanky/kolacek-route-du-rhum"},
+    {"titulek": "Filip Otta se stal vicemistrem Polska!",
+     "perex": "K medailovým pozicím připsala ještě Tereza Ottová 5. místo v dívkách.",
+     "publikovanoV": "2026-09-22T13:10:47+02:00",
+     "odkaz": "https://www.sailing.cz/clanky/otta-vicemistr-polska"},
+    {"titulek": "Mistrovství světa iQFoil, Weymouth",
+     "perex": "Na start se postavili závodníci z 39 zemí a nechyběla ani česká "
+              "reprezentace, kterou tvořilo celkem sedm závodníků.",
+     "publikovanoV": "2026-09-18T09:00:00+02:00",
+     "odkaz": "https://www.sailing.cz/clanky/ms-iqfoil-weymouth"},
+]
+for _p in PREVZATE:
+    _p["zdroj"] = "Český svaz jachtingu"
+    _p["zdrojOdkaz"] = "https://www.sailing.cz/clanky"
 
 
 def bez_diakritiky_slug(text):
@@ -1679,6 +1707,11 @@ class H(BaseHTTPRequestHandler):
             if not c:
                 return self.send_error(404)
             telo = {**clanek_radek(c), "telo": c["telo"]}
+        elif cesta == "/prevzate-clanky":
+            # Novinky ze svazu. Falešné API je nestahuje — vydává vzorek,
+            # aby šlo na webu vidět, jak karta s cizím zdrojem vypadá.
+            telo = PREVZATE[:8]
+
         elif cesta == "/clanky":
             # Obecné články mimo ročník (od 22. 9. 2026). Jeden ukázkový,
             # ať je vidět, jak se vmíchávají mezi novinky ročníku.

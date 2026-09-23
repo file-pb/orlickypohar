@@ -37,6 +37,24 @@ export type ClanekShrnuti = S["ClanekShrnutiDto"];
 export type Clanek = S["ClanekDto"];
 
 /**
+ * Novinka přejatá z cizího kanálu (dnes Český svaz jachtingu). Nemá slug ani
+ * tělo — u nás nemá vlastní stránku a vede rovnou ke zdroji.
+ *
+ * Tvar je psaný ručně, protože `schema.d.ts` se generuje z běžícího API
+ * (packages/api-client/generuj.sh) a endpoint je zatím jen v repozitáři, ne
+ * na produkci, odkud se dokument stahuje. **Po nasazení a přegenerování
+ * schématu tenhle typ nahradí `S["PrevzatyClanekDto"]`.**
+ */
+export type PrevzatyClanek = {
+  titulek: string;
+  perex: string | null;
+  publikovanoV: string;
+  odkaz: string;
+  zdroj: string;
+  zdrojOdkaz: string;
+};
+
+/**
  * Chyba, která znamená **nedostupné API**, ne chybějící obsah.
  *
  * Rozdíl je pro návštěvníka podstatný: „stránka neexistuje" u výpadku je
@@ -94,8 +112,24 @@ export const nactiObecneClanky = (limit?: number) =>
 
 export const nactiObecnyClanek = (clanek: string) => nacti<Clanek>(`/clanky/${clanek}`);
 
-/** Novinka ve výpisu i s adresou, kam vede — ročníková, nebo obecná. */
-export type Novinka = ClanekShrnuti & { adresa: string };
+/** Novinky ze svazu, od nejnovější. Drží se jich nejvýš osm. */
+export const nactiPrevzateClanky = (limit?: number) =>
+  nacti<PrevzatyClanek[]>(`/prevzate-clanky${limit ? `?limit=${limit}` : ""}`);
+
+/**
+ * Novinka ve výpisu i s adresou, kam vede — ročníková, obecná, nebo přejatá.
+ *
+ * `zdroj` a `vnejsi` má jen přejatá: `vnejsi` říká kartě, že odkaz vede pryč
+ * z webu (otevře se v nové kartě), `zdroj` je štítek, kterým se přiznává,
+ * odkud text je. Bez obojího bychom podmínku, za které se smí přebírat,
+ * nesplnili.
+ */
+export type Novinka = Omit<ClanekShrnuti, "slug"> & {
+  slug: string;
+  adresa: string;
+  vnejsi?: boolean;
+  zdroj?: string;
+};
 
 /**
  * Novinky ročníku a obecné články dohromady, od nejnovější. Obecné se
@@ -103,16 +137,56 @@ export type Novinka = ClanekShrnuti & { adresa: string };
  * na vlastní stránce, kterou nikdo nenajde. `slug` prázdný vrátí jen obecné
  * (úvodní stránka bez ročníku).
  */
-export async function nactiNovinky(slug: string | null, limit?: number): Promise<Novinka[] | null> {
+/**
+ * **Jen náš vlastní obsah** — články ročníku a obecné, nic přejatého.
+ *
+ * Je to pojmenovaná hranice, ne jen mezikrok: náš RSS kanál smí vydávat
+ * právě tohle. Přeposílat cizí články dál nám nikdo nedovolil, povolení
+ * od svazu je na zobrazení s odkazem (Filip, 23. 9. 2026).
+ */
+export async function nactiVlastniNovinky(
+  slug: string | null,
+  limit?: number,
+): Promise<Novinka[] | null> {
   const [rocnik, obecne] = await Promise.all([
     slug ? nactiClanky(slug, { limit }) : Promise.resolve([] as ClanekShrnuti[]),
     nactiObecneClanky(limit),
   ]);
   if (rocnik === null && obecne === null) return null;
 
-  const vsechny: Novinka[] = [
+  return [
     ...(rocnik ?? []).map((c) => ({ ...c, adresa: `/serie/${slug}/novinky/${c.slug}` })),
     ...(obecne ?? []).map((c) => ({ ...c, adresa: `/novinky/${c.slug}` })),
+  ].sort((a, b) => Date.parse(b.publikovanoV) - Date.parse(a.publikovanoV));
+}
+
+export async function nactiNovinky(slug: string | null, limit?: number): Promise<Novinka[] | null> {
+  const [nase, prevzate] = await Promise.all([
+    nactiVlastniNovinky(slug, limit),
+    // Výpadek novinek ze svazu nesmí shodit výpis našich — jsou to doplněk,
+    // ne obsah, kvůli kterému sem čtenář přišel.
+    nactiPrevzateClanky(limit).catch(() => [] as PrevzatyClanek[]),
+  ]);
+  if (nase === null) return null;
+
+  const vsechny: Novinka[] = [
+    ...nase,
+    // Přejaté se mezi naše míchají, ne řadí pod ně: jde o to, aby výpis byl
+    // plný i v zimě, kdy se nic nejede (Filip, 23. 9. 2026). Slug slouží jen
+    // jako klíč seznamu a jako zdroj dekorační fotky — stránku u nás nemají.
+    ...(prevzate ?? []).map((c) => ({
+      slug: c.odkaz,
+      titulek: c.titulek,
+      perex: c.perex,
+      publikovanoV: c.publikovanoV,
+      autor: null,
+      obrazek: null,
+      zavod: null,
+      zavodNazev: null,
+      adresa: c.odkaz,
+      vnejsi: true,
+      zdroj: c.zdroj,
+    })),
   // Podle času, ne podle textu: API vydává čas s posunem a „+02:00"
   // proti „Z" by se textově řadilo špatně.
   ].sort((a, b) => Date.parse(b.publikovanoV) - Date.parse(a.publikovanoV));
