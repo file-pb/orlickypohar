@@ -250,8 +250,8 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
               <button type="submit">Založit a přihlásit</button>
               <p className="poznamka">
                 Loď se tím stává účastníkem celého ročníku v kategorii, kterou
-                vybereš. Kolik bodů patří za regaty, na kterých nebyla, se zatím
-                nedopočítává — čeká to na rozhodčího.
+                vybereš. Za regaty, na kterých nebyla, dostane v průběžném
+                pořadí tolik bodů, kolik lodí její kategorie na zastávce bylo.
               </p>
             </form>
           </details>
