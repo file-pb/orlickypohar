@@ -1854,6 +1854,93 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/navrhy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše snímky zápisu od jednotlivých zapisovatelů
+         * @description Pořadatel regaty. Na vodě zapisují dva a každý na svém telefonu; tohle jsou jejich verze k porovnání. S jedním zapisovatelem je snímek jeden.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NavrhyDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/navrhy/{autor}/pouzit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Přepíše výsledky rozjížďky snímkem jednoho zapisovatele
+         * @description Pořadatel regaty, dokud je zápis otevřený. Ostatní snímky zůstávají.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                    autor: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZapisRozjizdkyDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}": {
         parameters: {
             query?: never;
@@ -2600,6 +2687,31 @@ export interface components {
             /** Format: int32 */
             posledniRok: null | number;
         };
+        NavrhDto: {
+            /** Format: uuid */
+            uzivatelId: string;
+            kdo: string;
+            /** Format: date-time */
+            zapsanoV: string;
+            muj: boolean;
+            radky: components["schemas"]["NavrhRadekDto"][];
+        };
+        NavrhRadekDto: {
+            /** Format: int32 */
+            prihlaskaId: number;
+            lod: string;
+            kategorie: string;
+            /** Format: int32 */
+            poradiVCili: null | number;
+            kod: null | components["schemas"]["KodVysledku"];
+        };
+        NavrhyDto: {
+            zavod: string;
+            zavodNazev: string;
+            /** Format: int32 */
+            cislo: number;
+            navrhy: components["schemas"]["NavrhDto"][];
+        };
         NovaLodVstup: {
             nazev: string;
             kategorie: string;
@@ -3067,6 +3179,11 @@ export interface components {
             papir?: null | components["schemas"]["ObrazekDto"];
             /** @default false */
             smiPapir: boolean;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            pocetNavrhu: number;
         };
         ZapisTeplotyRadek: {
             snimek: string;

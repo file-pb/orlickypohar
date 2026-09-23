@@ -22,6 +22,9 @@ export type StavVysledku = S["StavVysledku"];
 export type ZapisRozjizdky = S["ZapisRozjizdkyDto"];
 export type ZapisLod = S["ZapisLodDto"];
 export type ZapisRadek = S["ZapisRadekVstup"];
+export type Navrhy = S["NavrhyDto"];
+export type Navrh = S["NavrhDto"];
+export type NavrhRadek = S["NavrhRadekDto"];
 // Dokument popisuje kód včetně `null`, protože u výsledku je nepovinný.
 // Jako klíč slovníku a hodnota v nabídce ale prázdný být nesmí.
 export type KodVysledku = NonNullable<S["KodVysledku"]>;
@@ -222,6 +225,23 @@ export async function odstartuj(
   if (typeof odpoved === "string") return { chyba: odpoved };
   if (!odpoved.ok) return { chyba: await hlaska(odpoved) };
   return { zapis: (await odpoved.json()) as ZapisRozjizdky };
+}
+
+/** Snímky zápisu od jednotlivých zapisovatelů (krok 4). */
+export const nactiNavrhy = (serie: string, zavod: string, cislo: number) =>
+  cti<Navrhy>(kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}/navrhy`));
+
+/** Přepíše výsledky rozjížďky snímkem jednoho zapisovatele. */
+export async function pouzijNavrh(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  autor: string,
+): Promise<string | null> {
+  return zapis(
+    kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}/navrhy/${autor}/pouzit`),
+    {},
+  );
 }
 
 /** Poznávací znak lodi na regatě. Prázdný ho smaže. */

@@ -1793,6 +1793,113 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/navrhy": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vyp\u00ed\u0161e sn\u00edmky z\u00e1pisu od jednotliv\u00fdch zapisovatel\u016f",
+                "description": "Po\u0159adatel regaty. Na vod\u011b zapisuj\u00ed dva a ka\u017ed\u00fd na sv\u00e9m telefonu; tohle jsou jejich verze k porovn\u00e1n\u00ed. S jedn\u00edm zapisovatelem je sn\u00edmek jeden.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NavrhyDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/navrhy/{autor}/pouzit": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "P\u0159ep\u00ed\u0161e v\u00fdsledky rozj\u00ed\u017e\u010fky sn\u00edmkem jednoho zapisovatele",
+                "description": "Po\u0159adatel regaty, dokud je z\u00e1pis otev\u0159en\u00fd. Ostatn\u00ed sn\u00edmky z\u016fst\u00e1vaj\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "autor",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZapisRozjizdkyDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}": {
             "get": {
                 "tags": [
@@ -3190,6 +3297,104 @@
                             "integer"
                         ],
                         "format": "int32"
+                    }
+                }
+            },
+            "NavrhDto": {
+                "required": [
+                    "uzivatelId",
+                    "kdo",
+                    "zapsanoV",
+                    "muj",
+                    "radky"
+                ],
+                "type": "object",
+                "properties": {
+                    "uzivatelId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "kdo": {
+                        "type": "string"
+                    },
+                    "zapsanoV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "muj": {
+                        "type": "boolean"
+                    },
+                    "radky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/NavrhRadekDto"
+                        }
+                    }
+                }
+            },
+            "NavrhRadekDto": {
+                "required": [
+                    "prihlaskaId",
+                    "lod",
+                    "kategorie",
+                    "poradiVCili",
+                    "kod"
+                ],
+                "type": "object",
+                "properties": {
+                    "prihlaskaId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "lod": {
+                        "type": "string"
+                    },
+                    "kategorie": {
+                        "type": "string"
+                    },
+                    "poradiVCili": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "kod": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/KodVysledku"
+                            }
+                        ]
+                    }
+                }
+            },
+            "NavrhyDto": {
+                "required": [
+                    "zavod",
+                    "zavodNazev",
+                    "cislo",
+                    "navrhy"
+                ],
+                "type": "object",
+                "properties": {
+                    "zavod": {
+                        "type": "string"
+                    },
+                    "zavodNazev": {
+                        "type": "string"
+                    },
+                    "cislo": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "navrhy": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/NavrhDto"
+                        }
                     }
                 }
             },
@@ -5097,6 +5302,11 @@
                     "smiPapir": {
                         "type": "boolean",
                         "default": false
+                    },
+                    "pocetNavrhu": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 0
                     }
                 }
             },
