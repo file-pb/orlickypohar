@@ -73,9 +73,12 @@ public record StavUcastiVstup(StavUcasti Stav, string? Duvod = null);
 /// protože kategorii nese přihláška, ne účast.
 /// </para>
 /// <para>
-/// <b>Neúčast na dřívějších zastávkách se nedopočítává.</b> Kolik bodů za
-/// ni patří, je otázka na rozhodčího (plán, oddíl <i>Co k tomu říkají
-/// závodní pravidla</i>). Do odpovědi se nic nezapisuje.
+/// <b>Neúčast na dřívějších zastávkách se dopočítává v průběžném pořadí.</b>
+/// Rozhodčí odpověděl 22. 9. 2026: je to tolik bodů, kolik lodí kategorie
+/// na zastávce bylo (plán, oddíl <i>Pravidla seriálu od rozhodčího</i>).
+/// Kdo neúčast dostane, plyne z přihlášky do ročníku, a ta žádné datum nemá
+/// — loď přihlášená uprostřed ročníku má DNC i na dřívějších zastávkách.
+/// Do odpovědi se schválně nic nezapisuje: pořadí je odvozené, ne uložené.
 /// </para>
 /// </summary>
 public class PrihlaskySprava(AppDbContext db, TimeProvider cas)

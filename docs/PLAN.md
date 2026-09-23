@@ -588,21 +588,25 @@ založí se jí celoroční přihláška s kategorií, jako by přijela od zač�
 a zastávky před tím se jí zapíšou jako neúčast. Účast tedy vlastní kategorii
 nepotřebuje a model zůstává, jak je.
 
-**Neúčast ale musí dostat číslo, a to zatím nemá.** Dnes se do součtu
-nepočítá vůbec ([PoradiEndpoints.cs](../src/OrlickyPohar.Api/Features/Bodovani/PoradiEndpoints.cs)
-to má napsané jako otevřenou otázku). V nízkobodovém systému je chybějící
-zastávka **výhoda**: kdo nejel, nemá co přičíst. Dokud se tohle nedoplní,
-vyhraje ročník loď, která přijede na poslední zastávku — a to platí i bez
-téhle změny, jen se dosud nemělo jak stát.
+**Neúčast ale musela dostat číslo, a v době psaní ho neměla.** Do součtu
+se nepočítala vůbec. V nízkobodovém systému je chybějící zastávka **výhoda**:
+kdo nejel, nemá co přičíst. Dokud se to nedoplnilo, vyhrála by ročník loď,
+která přijede na poslední zastávku — a platilo to i bez téhle změny, jen se
+dosud nemělo jak stát.
 
 Obvyklé řešení v plachtění je **DNC = počet přihlášených v kategorii plus
 jedna**, což na téhle stupnici (vítěz nula, tedy pořadí mínus jedna) vychází
 na **počet lodí v kategorii**. Škrt nejhorší zastávky jednu neúčast schová,
 druhou už ne — což je přesně ten účinek, který se od škrtu čeká.
 
-**Tohle je otázka na rozhodčího**, ne odvození: je to jediné číslo, které
-o pořadí rozhodne pokaždé, když někdo vynechá. Do odpovědi se dopočet
-neúčasti nestaví.
+**Vyřešeno 22. 9. 2026** — platná verze je v oddílu *Pravidla seriálu od
+rozhodčího*. Rozhodčí odvození potvrdil: neúčast je tolik bodů, kolik lodí
+kategorie na zastávce bylo. Dopočet je v
+[PoradiEndpoints.cs](../src/OrlickyPohar.Api/Features/Bodovani/PoradiEndpoints.cs)
+hotový a jede přes všechny zastávky ročníku; kdo neúčast dostane, určují
+přihlášky do ročníku, a ty žádné datum nemají — loď přihlášená uprostřed
+ročníku má DNC i na zastávkách před svým přihlášením. Nikam se nezapisuje,
+protože pořadí je odvozené, ne uložené.
 
 #### Co k tomu říkají závodní pravidla (ověřeno 11. 9. 2026)
 
@@ -2316,7 +2320,9 @@ zmizela by ze seznamu a výsledky by dál platily.
 Loď se páruje podle názvu a osoba podle jména jako v importu. Loď, která
 v ročníku je, v jiné kategorii přihlásit nejde — změna kategorie je
 rozhodnutí správce, ne vedlejší účinek přihlášky. **Neúčast na dřívějších
-zastávkách se nedopočítává**, čeká na rozhodčího.
+zastávkách se dopočítává** v průběžném pořadí z přihlášky do ročníku (viz
+*Pravidla seriálu od rozhodčího*); sama přihláška na zastávku nic takového
+nezapisuje, protože pořadí je odvozené.
 
 **Import přihlášky pořadatele nemaže.** Soubor je úplná pravda o tom, kdo
 jel, ne o tom, kdo se přihlásil — maže proto jen potvrzené účasti, které
