@@ -77,7 +77,9 @@ ZAVODY = [
     ("Izolepa",         "YC Orlík",     date(2026, 6, 20), "Izolepa",      3, "PoKategoriich", 1.0),
     ("FxCK Cancer",     "Marina Orlík", date(2026, 7, 11), "okruhový",     2, "PoKategoriich", 1.0),
     # Pořadatel: Filip, 15. 9. 2026 — Yacht Club Písek, ne LK Radava.
-    ("Radavský pohár",  "Yacht Club Písek", date(2026, 8, 15), "okruhový", 3, "PoKategoriich", 1.0),
+    # Termín podle ruční startovní listiny od rozhodčího (CTL 260001,
+    # ředitel Štěpán Záruba): 29. 8. 2026, ne 15. 8. — Filip, 23. 9. 2026.
+    ("Radavský pohár",  "Yacht Club Písek", date(2026, 8, 29), "okruhový", 3, "PoKategoriich", 1.0),
     ("O pohár Vltavy",  "Plachtič z Vltavy", date(2026, 9, 5), "vytrvalostní", 1, "PoKategoriich", 1.0),
     ("Pohár Slunce",    "SK Popovice",  date(2026, 9, 19), "okruhový",     4, "PoKategoriich", 1.0),
     ("Vánoční regata",  "YC Orlík",     date(2026, 12, 12), "fun",         1, "PoKategoriich", 1.0),
