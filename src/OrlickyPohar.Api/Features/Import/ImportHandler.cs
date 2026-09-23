@@ -235,7 +235,32 @@ internal static class ImportHandler
         }
 
         await db.SaveChangesAsync(ct);
-        return (mapa, new ImportPocty(nove, upravene));
+
+        // Loď, kterou opravený soubor v ročníku nemá, do ročníku nepatří.
+        // Bez tohohle zůstane v průběžném pořadí s neúčastí na každé regatě
+        // napořád — přesně to se stalo lodi SANDY, kterou rozhodčí v sešitu
+        // přejmenoval na SENDY: výsledky a účasti import smazal, přihlášku
+        // do ročníku nechal, a ona dál sbírala DNC.
+        //
+        // Jen přihlášky bez jediné účasti. Loď, kterou pořadatel zapsal na
+        // regatu v administraci, soubor rozhodčího nezná a smazat ji nesmí;
+        // účast na zastávce má vlastní pravidla v SlaďUcasti.
+        var zustavaji = mapa.Values.Select(p => p.Id).ToHashSet();
+        var osirele = existujici.Where(p => !zustavaji.Contains(p.Id)).Select(p => p.Id).ToList();
+
+        var smazane = 0;
+        if (osirele.Count > 0)
+        {
+            var bezUcasti = await db.Prihlasky
+                .Where(p => osirele.Contains(p.Id) && !db.Ucasti.Any(u => u.PrihlaskaId == p.Id))
+                .ToListAsync(ct);
+
+            db.Prihlasky.RemoveRange(bezUcasti);
+            smazane = bezUcasti.Count;
+            await db.SaveChangesAsync(ct);
+        }
+
+        return (mapa, new ImportPocty(nove, upravene, smazane));
     }
 
     private static async Task<(ImportPocty Zavody, ImportPocty Ucasti,
