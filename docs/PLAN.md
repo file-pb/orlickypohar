@@ -2516,14 +2516,23 @@ klepání v reálném čase bez něj nejde. Zbytek správy zůstává bez něj.
    v „Dalších lodích" — klepnutí je zapíše a přihlásí. Nová loď jde přidat
    přímo z obrazovky; **majitele vyžaduje**, protože loď ho v modelu mít
    musí a stojí ve výsledcích vedle ní.
-3. Fotka papíru u rozjížďky (R2, jako fotky článků).
+3. ~~Fotka papíru u rozjížďky (R2, jako fotky článků).~~ **Hotové
+   22. 9. 2026.** Přikládá se u zápisu rozjížďky, nahrát ji smí pořadatel
+   i u podepsaných čísel — doklad není zásah do zápisu. Veřejně nikde není,
+   autora doplní API z přihlášeného a na souhlas se neptá.
 4. ~~Dva zapisovatelé a porovnání.~~ **Hotové 22. 9. 2026.** Každé uložení
    zápisu zakládá **snímek toho, kdo ukládal** (`ZapisyNavrhu`). Výsledky
    zůstávají jedny — drží se v nich poslední uložená verze — ale starší
    nezmizí a obrazovka *Porovnání zápisů* je postaví vedle sebe po místech
    v cíli, zvýrazní rozdíly a nechá vybrat platnou. S jedním zapisovatelem
    je snímek jeden a porovnávat se nemá s čím.
-5. Podržení klepnutí bez připojení (jen pojistka, signál je).
+5. ~~Podržení klepnutí bez připojení (jen pojistka, signál je).~~
+   **Hotové 23. 9. 2026.** Neuložený stav leží v úložišti prohlížeče, takže
+   přežije zhasnutou kartu i vybitý telefon, a odešle se sám — hned po
+   návratu signálu, jinak co půl minuty. Záloha se pozná podle **otisku
+   zápisu**, ze kterého vznikla: když se zápis mezitím změnil (uložil druhý
+   telefon), nic se nepřepíše potichu a obrazovka nabídne odeslat, nebo
+   zahodit.
 
 ## Kde se pokračuje
 
