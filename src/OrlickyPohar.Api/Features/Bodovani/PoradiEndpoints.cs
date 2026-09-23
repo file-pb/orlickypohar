@@ -137,8 +137,9 @@ public static class PoradiEndpoints
             .ToListAsync(ct);
 
         // Loď přihlášená do ročníku, která na zastávku nepřijela, dostane
-        // tolik bodů, kolik lodí její kategorie na zastávce bylo. Proto se
-        // počítá z přihlášek, ne jen z výsledků.
+        // tolik bodů, kolik lodí její kategorie bylo do závodu přihlášeno —
+        // i těch, které se nedostavily. Proto se počítá z přihlášek, ne jen
+        // z výsledků: kdo se přihlásil a nepřijel, číslo zvedá.
         var lodeRocniku = prihlasky.Select(p => (p.Lod, p.Kategorie)).ToList();
 
         var body = new Dictionary<(string Lod, string Kategorie), BodyZeZastavky?[]>();
