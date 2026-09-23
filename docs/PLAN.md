@@ -2539,7 +2539,13 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
    diskvalifikaci, dva škrty, rozstřel. Zbývají drobné otázky vypsané
    tamtéž; na dvacítce a hodnocení trestů visí fáze 5 (protesty
    a penalizace) — Filip, 22. 9.: varianty si necháme navrhnout později.
-5. **Fáze 5 je skoro hotová** (stav k 14. 9. 2026). Hotové: udělování
+5. **Zápis z vody je hotový po krok 4** (22.–23. 9. 2026). Cílová
+   obrazovka i s pozdní lodí, poznávacími znaky, fotkou papíru
+   a porovnáním dvou zapisovatelů; k tomu přepínání rozjížďky do poháru
+   a celkové pořadí regaty napříč kategoriemi (volí se v kalendáři).
+   **Zbývá krok 5**: podržení klepnutí bez připojení. Je to pojistka —
+   u cíle je signál — takže leží nakonec.
+6. **Fáze 5 je skoro hotová** (stav k 14. 9. 2026). Hotové: udělování
    oprávnění (i rozhodčím na zastávku), kalendář zastávek, přihlášky lodí,
    workflow a zápis výsledků, psaní novinek. Protesty a penalizace čekají
    na odpovědi rozhodčího. Komunitní akce v kalendáři hotové 15. 9. Další
@@ -2549,13 +2555,13 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
    na obrazovce oprávnění hotový 15. 9. (oddíl *Čím pokračovat ve fázi 5*).
    Veřejné přihlášky lodí kroky 1–5 hotové 18. 9.; krok 6 čeká na
    rozhodčího, krok 7 je Outbox.
-6. **Skutečná data** — až dorazí, nahradí `data/2025-mock.json` a nahrají se
+7. **Skutečná data** — až dorazí, nahradí `data/2025-mock.json` a nahrají se
    importem. Struktura zůstane.
-7. **Widgety** (stav k 18. 9. 2026, oddíl *Widgety s cizími daty*).
+8. **Widgety** (stav k 18. 9. 2026, oddíl *Widgety s cizími daty*).
    Tlakový trend (#26) a radar na hodinu (#27, oddíl *Radar na příští
    hodinu*) hotové 18. 9. Dál push „déšť do hodiny" v appce. Blesky nemají volný zdroj (ČHMÚ je
    nedává, Blitzortung zakazuje komerční použití).
-8. **Zátěž** (stav k 22. 9. 2026, oddíl *Mikrocache před webem*).
+9. **Zátěž** (stav k 22. 9. 2026, oddíl *Mikrocache před webem*).
    Timeouty kontrol zdraví (#32) a nginx cache (#34) nasazené 22. 9.
    Na produkci ověřeno hlavičkou `X-Cache`: druhý požadavek HIT, tmavý
    vzhled vlastní položka, s cookie sezení BYPASS. **Zbývá zátěžový test
