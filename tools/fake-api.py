@@ -11,13 +11,17 @@ proto, aby šly stránky vidět na stroji, kde se databáze rozjet nedá. Když 
 pravidlo změní, mění se na obou místech — a rozejít se můžou jen tady.
 """
 import functools
-import json, os, re, unicodedata, uuid
+import json, os, re, sys, unicodedata, uuid
 from email.parser import BytesParser
 from email.policy import HTTP
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 
-D = json.load(open("data/2026-nanecisto.json", encoding="utf-8"))
+# Který ročník servírovat. Výchozí je mock; jiný se dá dát argumentem —
+# kalendář ročníku bez lodí (data/2027-kalendar.json) se jinak nedá na
+# webu vidět, dokud ho někdo nenahraje do databáze.
+D = json.load(open(sys.argv[1] if len(sys.argv) > 1 else "data/2026-nanecisto.json",
+                  encoding="utf-8"))
 LODE = {l["klic"]: l for l in D["lode"]}
 OSOBY = {o["klic"]: o for o in D["osoby"]}
 KAT = {p["lod"]: p["kategorie"] for p in D["prihlasky"]}

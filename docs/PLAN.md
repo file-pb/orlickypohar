@@ -1259,7 +1259,7 @@ ne podle A8.2 (to by bralo i škrtnutou poslední rozjížďku).
 | Zephyr na 24hodinovce | „asi nejel, moje chyba" — neúčast podle pravidla |
 | ČERVENÉ CAFE, 20 bodů | „je podle platných pravidel, na příští rok upravíme" — diskvalifikace 20 platí pro 2026 |
 | Od kolika zastávek dva škrty | „od devíti, co bylo dřív, neřešit" — `Serie.PocetSkrtu` = 2 |
-| Vánoční regata | zrušená; datum 12. 12. v ukázkových datech je vymyšlené (Filip) |
+| Vánoční regata | zrušená a od 23. 9. 2026 **v ukázkových datech vůbec není**: termín nikde zapsaný není a vymýšlet ho nebudeme — viz *Termínová listina 2027* |
 | LUNA −1, DEPRESSO 10, MICHELLE 32 | platí výpočet, v sešitu chyba |
 
 **Zbývá:** seznam lodí přihlášených na zastávky, které nepřijely, a dvě nové
@@ -1304,6 +1304,134 @@ První doklad z provozu, ne z doslechu.
    5. 9. 2026 a v časovém programu „Sobota 6.9.2025" — jiný rok i den.
    Import proto nesmí data tiše dopočítávat ani opravovat; co je v rozporu,
    patří ukázat člověku.
+
+## Termínová listina 2027 (23. 9. 2026)
+
+Zdroj: *Orlická série 2027 — Termínová listina* (PDF od rozhodčího, jedna
+strana). Spolu s ní dorazila znovu *Pravidla pro výpočet pořadí po
+kategoriích v Orlické sérii* — **tentýž dokument, který plán zaznamenal
+22. 9. 2026**, beze změny. Nové je jen to, že obě fotky ručních listen Race
+Champagne 2024 (Colins YC, 26. 9. 2024) jsou vedené **po třídách lodí**
+(BAVARIA 41S, ELAN E4) a mají sloupce `1.R`–`8.R`, `body celkem`, `body
+úprava`, `Pořadí`. Je to nezávislý doklad, že i cizí pořadatel vede listinu
+jako rozjížďky, součet, úpravu o škrt a teprve pak pořadí — tedy přesně
+tvar, který drží `Zavod`.
+
+**Kalendář 2027:**
+
+| # | Regata | Termín | Start | Typ | Pořadatel |
+|---|---|---|---|---|---|
+| 1 | Jarní vítr | 15. 5. | Marina Orlík | dálková plavba | Marina Orlík |
+| 2 | Radavská regata | 26. 6. | YCPK Radava | okruhový | Yacht club Písek YCPK |
+| 3 | Dvacetičtyřhodinovka | 9. 7., 19:00 | Marina Orlík | maraton 24 h | Jacht servis Novák s podporou YC Corona |
+| 4 | Vánoční regata | 24. 7. | Surf & Ski Trhovky | dálková plavba | Jacht servis & Wake-surf.cz |
+| 5 | Izolepa cup | 31. 7. | Marina Orlík | okruhový, „počítá se první rozjížďka" | Colins yacht club CYC |
+| 6 | FxCK CANCER regata | 14.–15. 8. | Marina Orlík | okruhový | Sport Eli & Cancer team |
+| 7 | Radavský pohár | 28. 8. | YCPK Radava | okruhový | Yacht club Písek YCPK |
+| 8 | O pohár Vltavy | 4. 9. | Marina Orlík | dálková plavba | Roman Vagenknecht & plachtiči z Vltavy |
+| 9 | Pohár Slunce | 18. 9., 10:00 | Marina Orlík | maraton 8 h | Jacht servis Novák s podporou YC Corona |
+
+**Co potvrzuje:**
+
+- **Devět zastávek a tatáž sestava jako 2026**, ve **stejném pořadí**.
+  Seriál má stabilní kostru, ročník se nepřeskládává.
+- **Sezóna je jedno léto**, tady 15. 5. – 18. 9. Termíny 2027 jsou proti
+  2026 posunuté o tři až osm týdnů později, takže datum zastávky je vlastnost
+  ročníku, ne seriálu — kalendář se musí zadávat po ročnících, což model
+  dělá.
+- **Pořadatel je cizí subjekt a mění se.** Tři různí pořadatelé jedné
+  zastávky napříč dvěma roky nejsou výjimka, jsou pravidlo. Potvrzuje to
+  `Poradatele` jako samostatný řez a ne text v závodě.
+- **Závod má jednu ze čtyř podob** — okruhový, dálková plavba, maraton 24 h,
+  maraton 8 h. Typ řídí počet rozjížděk a tím i škrt.
+
+**V čem se rozešla s tím, co o ročníku 2026 tvrdil `tools/gen-mock.py`**
+(stav před 23. 9. 2026; co se z toho opravilo, je hned pod tabulkou):
+
+| Regata | Mock 2026 tehdy | Listina 2027 |
+|---|---|---|
+| Jarní vítr | YC Orlík, okruhový, 4 rozjížďky | Marina Orlík, **dálková plavba** |
+| Radavská regata | LK Radava | **Yacht club Písek YCPK** |
+| 24hodinovka | YC Orlík | **Jacht servis Novák + YC Corona**, start v 19 h |
+| Vánoční regata | YC Orlík, **12. 12.**, fun, devátá | **24. 7.**, dálková plavba, **čtvrtá** |
+| Izolepa | YC Orlík, do poháru jde **druhá** rozjížďka | Colins YC, „počítá se **první** rozjížďka" |
+| FxCK Cancer | Marina Orlík, jednodenní | **Sport Eli & Cancer team**, **dvoudenní** |
+| Radavský pohár | Yacht Club Písek ✓ | Yacht club Písek YCPK ✓ |
+| O pohár Vltavy | Plachtič z Vltavy ✓ | Roman Vagenknecht & plachtiči z Vltavy ✓ |
+| Pohár Slunce | SK Popovice, okruhový, 4 rozjížďky | **Jacht servis Novák + YC Corona**, **maraton 8 h** |
+
+**Ukázkový ročník 2026 se tím přepsal na třech místech.** Listina sama
+o roce 2026 nevypovídá, ale Filip k ní doplnil, co platí:
+
+| Zastávka | Bylo | Je | Proč |
+|---|---|---|---|
+| Jarní vítr | okruhový, 4 rozjížďky, škrt 1 | `dálková plavba`, 1 rozjížďka, škrt 0 | Filip potvrdil typ z listiny |
+| Pohár Slunce | okruhový, 4 rozjížďky, škrt 1 | `maraton 8 h`, 1 rozjížďka, škrt 0 | maraton jede jednu rozjížďku |
+| Vánoční regata | 12. 12., `fun`, devátá | **v mocku není** | termín nikde zapsaný není |
+
+Obě opravy ruší škrt v závodě, kde není z čeho škrtat — dálková plavba
+i maraton jedou jednu rozjížďku. Pořadí v kategorii ze sešitu tím zůstává
+nedotčené: s jednou rozjížďkou se pořadí v cíli rovná pořadí v kategorii.
+
+**Vánoční regata z ukázkových dat vypadla.** Sešit ji mezi devíti zastávkami
+ročníku 2026 vede, ale její termín neexistuje nikde: prosinec byl odhad podle
+názvu (listina 2027 ji má 24. 7., takže vánoční není) a červen zase odhad
+podle pořadí v sešitu. „Někdy v létě, ale jestli v plánu není, tak ji tam
+nedávej" — Filip, 23. 9. 2026. **Ukázkový ročník má proto osm zastávek, ne
+devět**, a `KontraktTests` to říkají i s důvodem. Devět zastávek dál platí
+o ročníku 2026 jako takovém; rozdíl je v tom, co si smíme dovolit zobrazit.
+
+**Dálková plavba má jedno jméno.** Mock jí u O poháru Vltavy říkal
+`vytrvalostní`, jenže jeho vlastní směrnice i listina 2027 píšou „dálková
+plavba". Se třemi zastávkami téhož typu by web ukazoval dva různé štítky
+pro tutéž věc, tak je sjednocený.
+
+**Úvodní článek si počet regat bere z kalendáře.** Tvrdil „devět regat od
+dubna do prosince" a že ročník „končí Vánoční regatou" — po jejím vyřazení
+by to byla nepravda v textu vedle správné tabulky. Teď se počet i krajní
+zastávky dopočítají; věty jsou přestavěné na první pád, protože „končí
+Vánoční regatou" se u každého názvu skloňuje jinak.
+
+**Odpovědi (Filip, 23. 9. 2026):**
+
+| Otázka | Odpověď | Co z toho v kódu |
+|---|---|---|
+| Platily typy z listiny i v roce 2026? | **Jarní vítr je dálková plavba**; **maratony jedou jednu rozjížďku** | Jarní vítr a Pohár Slunce přepsané, obojí jedna rozjížďka a škrt 0 |
+| Izolepa: první, nebo druhá rozjížďka? | **„První" znamená první na vodě**, běh pro míčky jde napřed a nepočítá se | beze změny — `doSerie` na druhé v pořadí je totéž pravidlo |
+| Kdy se v roce 2026 jela Vánoční regata? | „někdy v létě, ale jestli v plánu není, tak ji tam nedávej" | zastávka z mocku vyřazená |
+
+**Zbývá:** pořadatelé. Sedm z devíti se mezi mockem a listinou liší a žádný
+z nich potvrzený není — u ročníku 2026 zůstávají tak, jak byli.
+
+### Ročník 2027 jako kalendář
+
+`data/2027-kalendar.json` je listina přepsaná do importního tvaru: devět
+zastávek ve stavu `Planovany`, tři kategorie, dva škrty a **prázdné seznamy
+lodí, osob a přihlášek**. Nahrává se přes `POST /import/serie` jako každý
+jiný ročník; `2027` je jiný slug než `2026-nanecisto`, takže si ročníky
+nesahají. Ročník je v souboru **publikovaný** — na rozdíl od mocku jsou to
+skutečná data a kalendář má být vidět dřív, než sezóna začne. Hlídají ho
+`KontraktTests`: platný vstup, nic než termíny, chronologie a pořadí.
+
+**Co se do modelu nevešlo** — tři údaje z listiny nemají kam:
+
+| Údaj | Proč ne |
+|---|---|
+| místo startu (Marina Orlík, YCPK Radava, Surf & Ski Trhovky) | `Zavod` pole pro místo nemá |
+| čas startu (24hodinovka v 19:00, Pohár Slunce v 10:00) | čas je na rozjížďce a ta vzniká až na vodě |
+| „u Izolepy se počítá první rozjížďka" | je to `DoSerie` na rozjížďce, tedy taky až po závodě |
+
+Místo startu je z nich jediné, co je vlastnost zastávky a ne jejího průběhu.
+Zatím to nestaví za sloupec navíc: pořadatel bývá tentýž subjekt a jinde než
+na Orlíku se nejede. Až přibude druhá marina u téhož pořadatele, je to
+jednořádková migrace.
+
+**Kalendář bez lodí byl pro web nový stav.** Stránka ročníku ukazovala
+samotný nadpis *Přihlášené lodě* a pod ním nic, protože každý dosavadní
+ročník lodě měl. Doplněný prázdný stav je stejný jako u kalendáře.
+`tools/fake-api.py` proto bere ročník argumentem — jinak se soubor, který
+ještě není v databázi, nedá na webu vidět (`.claude/launch.json`, cíl
+`fake-api-2027`).
 
 ## Co říkají skutečná data
 
