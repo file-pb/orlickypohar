@@ -375,11 +375,12 @@ public class ClankyTests(PostgresFixture fixture)
         var prosty = await klient.GetFromJsonAsync<ClanekDto>("/serie/format/clanky/prosty", Json);
         Assert.Equal(FormatClanku.Text, prosty!.Format);
 
+        // `Html` je jen vstupní hodnota: server text vyčistí a uloží `Bloky`.
         var bohaty = await klient.GetFromJsonAsync<ClanekDto>("/serie/format/clanky/bohaty", Json);
-        Assert.Equal(FormatClanku.Html, bohaty!.Format);
-        // Tělo se při importu nijak neupravuje — čistička je samostatný krok
-        // a tenhle sloupec jen říká, co v těle je.
-        Assert.Equal("<p>Pozvánka pořadatele.</p>", bohaty.Telo);
+        Assert.Equal(FormatClanku.Bloky, bohaty!.Format);
+        Assert.Equal(
+            "Pozvánka pořadatele.",
+            string.Concat(Bloky.Nacti(bohaty.Telo).Single().Useky!.Select(u => u.Text)));
     }
 
     [Fact]
@@ -397,7 +398,8 @@ public class ClankyTests(PostgresFixture fixture)
         var clanek = await klient.GetFromJsonAsync<ClanekDto>(
             "/serie/format-znovu/clanky/bohaty", Json);
 
-        Assert.Equal(FormatClanku.Html, clanek!.Format);
+        Assert.Equal(FormatClanku.Bloky, clanek!.Format);
+        Assert.Single(Bloky.Nacti(clanek.Telo));
     }
 
     [Fact]
