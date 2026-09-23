@@ -1,4 +1,5 @@
 import { tokenZeSezeni } from "@/lib/oidc";
+import { NEJVIC_MB } from "@/lib/fotky";
 import type { components } from "./schema";
 import type { Stav } from "@/lib/sprava";
 
@@ -256,6 +257,62 @@ export async function publikuj(
   return zapis(kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}/publikace`), {
     publikovano,
   });
+}
+
+/**
+ * Fotka papírového zápisu. Autora doplní API z přihlášeného a souhlas se
+ * neptá — doklad z cíle se nikde nezveřejňuje.
+ */
+export async function nahrajPapir(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  soubor: File,
+): Promise<string | null> {
+  const t = await token();
+  if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+
+  const telo = new FormData();
+  telo.set("soubor", soubor, soubor.name);
+
+  try {
+    const odpoved = await fetch(
+      kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}/papir`),
+      {
+        method: "PUT",
+        headers: { authorization: `Bearer ${t}`, accept: "application/json" },
+        body: telo,
+        cache: "no-store",
+      },
+    );
+    if (odpoved.ok) return null;
+    return odpoved.status === 413 ? `Fotka může mít nejvýš ${NEJVIC_MB} MB.` : await hlaska(odpoved);
+  } catch {
+    return "API se nedaří zavolat.";
+  }
+}
+
+export async function odeberPapir(
+  serie: string,
+  zavod: string,
+  cislo: number,
+): Promise<string | null> {
+  const t = await token();
+  if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+
+  try {
+    const odpoved = await fetch(
+      kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}/papir`),
+      {
+        method: "DELETE",
+        headers: { authorization: `Bearer ${t}`, accept: "application/json" },
+        cache: "no-store",
+      },
+    );
+    return odpoved.ok ? null : await hlaska(odpoved);
+  } catch {
+    return "API se nedaří zavolat.";
+  }
 }
 
 /** Zápisy vracejí jen „povedlo se, nebo proč ne". */

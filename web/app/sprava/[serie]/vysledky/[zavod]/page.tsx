@@ -210,6 +210,13 @@ function Rozjizdka({
         {/* Že se rozjížďka nepočítá do poháru, je něco jiného než že
             neplatí — u Izolepy je to běh pro míčky z kopce. */}
         {!rozjizdka.doSerie && <span className="stitek">mimo pohár</span>}
+        {/* Papír z cíle je doklad k číslům. Rozhodčí, který zápis ověřuje,
+            potřebuje vidět, jestli u něj je, ještě než ho otevře. */}
+        {rozjizdka.maPapir && (
+          <span className="stitek" title="U zápisu je fotka papíru z cíle">
+            papír
+          </span>
+        )}
       </div>
 
       <div className="detail">

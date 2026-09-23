@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Drobecky } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
+import { NEJVIC_MB } from "@/lib/fotky";
 import {
   KODY,
   nactiZapis,
@@ -9,7 +10,7 @@ import {
   type KodVysledku,
   type ZapisLod,
 } from "@/lib/vysledky";
-import { zapisAkce } from "./akce";
+import { odeberPapirAkce, papirAkce, zapisAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -232,6 +233,62 @@ export default async function ZapisRozjizdky({ params, searchParams }: Parametry
         </form>
       )}
 
+      {/* Papír z cíle zůstává dokladem k číslům (PLAN.md, Zápis z vody).
+          Nahrává ho pořadatel a vidí ho i rozhodčí, který zápis ověřuje —
+          veřejně nikde není. */}
+      <section id="papir">
+        <h2>Papírový zápis</h2>
+        {zapis.papir ? (
+          <figure className="fotka-clanku" style={{ maxWidth: "30rem" }}>
+            <a href={zapis.papir.velky} target="_blank" rel="noopener noreferrer">
+              <img src={zapis.papir.nahled} alt="Fotka papírového zápisu rozjížďky" />
+            </a>
+            <figcaption>Nahrál {zapis.papir.autor}. Veřejně není nikde.</figcaption>
+          </figure>
+        ) : (
+          <p className="poznamka" style={{ marginTop: 0 }}>
+            Fotka papíru z cíle tu zatím není. Slouží jako doklad k číslům, na web se nedostane.
+          </p>
+        )}
+
+        {zapis.smiPapir && (
+          <>
+            <form action={papirAkce} className="formular">
+              <input type="hidden" name="serie" value={serie} />
+              <input type="hidden" name="zavod" value={zavod} />
+              <input type="hidden" name="cislo" value={zapis.cislo} />
+              <label>
+                {zapis.papir ? "Nahradit jinou fotkou" : "Fotka papíru"}
+                <input
+                  name="soubor"
+                  type="file"
+                  required
+                  accept="image/jpeg,image/png,image/webp"
+                  capture="environment"
+                />
+                <span className="poznamka">
+                  JPEG, PNG nebo WebP do {NEJVIC_MB} MB. Autor se doplní z tvého účtu, souhlas se
+                  neptá — fotka se nikde nezveřejňuje.
+                </span>
+              </label>
+              <button type="submit">{zapis.papir ? "Nahradit fotku" : "Nahrát fotku"}</button>
+            </form>
+
+            {zapis.papir && (
+              <form action={odeberPapirAkce} className="formular">
+                <input type="hidden" name="serie" value={serie} />
+                <input type="hidden" name="zavod" value={zavod} />
+                <input type="hidden" name="cislo" value={zapis.cislo} />
+                <p className="poznamka" style={{ margin: 0 }}>
+                  Odebraná fotka se smaže i z úložiště.
+                </p>
+                <button type="submit">Odebrat fotku</button>
+              </form>
+            )}
+          </>
+        )}
+      </section>
+
       <p className="poznamka">
         <Link href={`/sprava/${serie}/vysledky/${zavod}`}>Zpátky na rozjížďky regaty</Link>
       </p>
@@ -281,6 +338,10 @@ function hotovo(stav: string, kRevizi: boolean) {
       return kRevizi
         ? "Zápis uložen. Až bude opravený celý, vrať ho na stránce regaty do návrhu, ať ho rozhodčí ověří znovu."
         : "Zápis uložen.";
+    case "papir":
+      return "Fotka papírového zápisu nahraná. Veřejně nikde není.";
+    case "papir-odebran":
+      return "Fotka papírového zápisu odebraná a smazaná z úložiště.";
     case "nova":
       return "Rozjížďka přidaná. Je v návrhu a na webu ji nikdo neuvidí, dokud ji správce nepustí ven.";
     default:

@@ -103,6 +103,8 @@ export default async function CilovaObrazovka({ params }: Parametry) {
         Zápis se ukládá po každém klepnutí a zůstává v návrhu. Ověří ho a
         schválí rozhodčí na <Link href={regataAdresa}>stránce regaty</Link>.
         Opravit ho jde i doma ve <Link href={zapisAdresa}>formuláři z papíru</Link>.
+        Fotka papírového zápisu se přikládá{" "}
+        <Link href={`${zapisAdresa}#papir`}>tamtéž</Link>.
       </p>
     </>
   );
