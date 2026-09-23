@@ -92,7 +92,9 @@ public class KontraktTests
         // Okruhový závod, který odjel čtyři a víc rozjížděk, škrtá jednu
         // nejhorší; se třemi a méně se neškrtá nic. Mock to jednou porušoval
         // — Radavský pohár měl tři rozjížďky a přitom škrt — a nešlo to
-        // poznat jinak než přepočítáním tabulky.
+        // poznat jinak než přepočítáním tabulky. Ruční listina z 29. 8. 2026
+        // pak ukázala, že rozjížďky byly čtyři; rozhodčí to potvrdil
+        // 23. 9. 2026, takže škrt v sešitu byl správně a chyběla rozjížďka.
         //
         // V API se to schválně nevynucuje: počet rozjížděk se rozhoduje na
         // vodě, takže hodnota vzniká až po závodě a rozhodčí ji smí přepsat.

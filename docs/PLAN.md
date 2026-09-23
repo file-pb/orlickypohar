@@ -1538,6 +1538,21 @@ stojí v podtitulku; když medailonek obsah má, jméno vede na něj (`#poradate
 Na produkci se to projeví přiřazením v kalendáři, nebo dalším importem
 ročníku.
 
+**Radavský pohár se jel 29. 8. 2026 a měl čtyři rozjížďky** (ruční startovní
+listina od rozhodčího, CTL 260001, ředitel Štěpán Záruba; potvrzeno
+23. 9. 2026). V datech byl 15. 8. a tři rozjížďky — a právě ty tři byly
+důvod, proč sešit vypadal, že škrtá v rozporu s pravidlem „škrtá se od
+čtyř". Škrt byl správně, chyběla rozjížďka. Pořadí z listiny se se sešitem
+shoduje ve všech třech třídách, včetně ručně dopsané Sendy; u kajutových
+lodí sedí i body 0 / 2 / 6, které dávají smysl jen se čtyřmi rozjížďkami
+a jedním škrtem.
+
+Zbytek listiny (čísla plachet, jména kormidelníků) do mocku nejde: ročník
+„nanečisto" je veřejný a jsou to skutečná jména lidí. Pořadí v jednotlivých
+rozjížďkách u tříd Race a nad 7 m je na fotce přepisované a nečitelné;
+kdyby se přečetlo, patří do `data/` jako výsledková listina vedle
+`2026-fxck-cancer.json`, ne do generátoru.
+
 **Demo obsah je vymyšlený, ale nehádá.** Zpráva ze zastávky si bere vítěze
 z vygenerovaných výsledků, aby si text s tabulkou neodporoval — rozpor mezi
 článkem a čísly vypadá jako chyba webu, ne jako ukázka. Nejsou v něm žádné
