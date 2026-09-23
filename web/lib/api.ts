@@ -101,6 +101,7 @@ export type PrevzatyClanek = {
   odkaz: string;
   zdroj: string;
   zdrojOdkaz: string;
+  obrazek: string | null;
 };
 
 /**
@@ -178,6 +179,8 @@ export type Novinka = Omit<ClanekShrnuti, "slug"> & {
   adresa: string;
   vnejsi?: boolean;
   zdroj?: string;
+  /** Adresa fotky u zdroje. Rozměry k ní neznáme, proto není `obrazek`. */
+  fotkaZdroje?: string;
 };
 
 /**
@@ -230,6 +233,10 @@ export async function nactiNovinky(slug: string | null, limit?: number): Promise
       publikovanoV: c.publikovanoV,
       autor: null,
       obrazek: null,
+      // Fotka od zdroje jde vlastním polem, ne jako `obrazek`: ten popisuje
+      // naši nahranou fotku včetně rozměrů, a ty u cizí adresy neznáme.
+      // Vymyslet si je jen kvůli typu by byla lež v datech.
+      fotkaZdroje: c.obrazek ?? undefined,
       zavod: null,
       zavodNazev: null,
       adresa: c.odkaz,

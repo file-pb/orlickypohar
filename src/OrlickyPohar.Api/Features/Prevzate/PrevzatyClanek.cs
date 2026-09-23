@@ -42,6 +42,20 @@ public class PrevzatyClanek
     /// <summary>Krátký úryvek z kanálu, bez HTML. Může chybět.</summary>
     public string? Perex { get; set; }
 
+    /// <summary>
+    /// Adresa fotky, kterou k článku dal zdroj (<c>og:image</c> na jeho
+    /// stránce). <b>Ukládá se odkaz, ne kopie</b> — obrázek zůstává jejich
+    /// a načítá se z jejich serveru. Jsou to náhledy kolem 500 px a 20 kB,
+    /// takže na kartu ve výpisu stačí, a kopírovat cizí fotografie je něco
+    /// jiného než je ukázat s odkazem na článek.
+    /// <para>
+    /// Když ji zdroj nemá, zůstane prázdná a web sáhne po náhradní fotce
+    /// jako u vlastního článku bez obrázku — karta bez fotky být nemá
+    /// (Filip, 23. 9. 2026).
+    /// </para>
+    /// </summary>
+    public string? Obrazek { get; set; }
+
     /// <summary>Kdy vyšel u zdroje. Podle toho se řadí a podle toho se rotuje.</summary>
     public DateTimeOffset PublikovanoV { get; set; }
 

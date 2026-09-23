@@ -44,7 +44,30 @@ export const fotkaClanku = (slug: string) => NAHRADNI[index(slug)];
  * Náhled do karty. Malý, proto stačí varianta 400 px — na 800 by se
  * stahovalo čtyřikrát víc, než na co se kouká.
  */
-export function Nahled({ slug, obrazek }: { slug: string; obrazek?: Obrazek | null }) {
+export function Nahled({
+  slug,
+  obrazek,
+  adresa,
+}: {
+  slug: string;
+  obrazek?: Obrazek | null;
+  /**
+   * Hotová adresa obrázku bez rozměrů — fotka, kterou k přejatému článku
+   * dal zdroj. Nekopírujeme ji, načítá se z jeho serveru; jsou to náhledy
+   * kolem 500 px, takže na kartu stačí.
+   */
+  adresa?: string;
+}) {
+  if (adresa)
+    return (
+      <picture className="nahled">
+        {/* `referrerPolicy` schválně ne: zdroj má právo vidět, že se jeho
+            obrázek načítá z našeho webu. Hotlink bez uvedení odkud by byl
+            horší, ne lepší. */}
+        <img src={adresa} alt="" loading="lazy" decoding="async" />
+      </picture>
+    );
+
   if (obrazek)
     return (
       <picture className="nahled">

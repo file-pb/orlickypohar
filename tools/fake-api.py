@@ -386,18 +386,22 @@ PREVZATE = [
      "perex": "Milan Koláček se jako jediný Čech postaví na start letošního "
               "ročníku legendárního transatlantického závodu sólových jachtařů.",
      "publikovanoV": "2026-09-23T10:16:47+02:00",
-     "odkaz": "https://www.sailing.cz/clanky/kolacek-route-du-rhum"},
+     "odkaz": "https://www.sailing.cz/clanky/kolacek-route-du-rhum",
+     "obrazek": "https://www.sailing.cz/uploads_thumbs/ikony-loga/kolacek_4.jpg"},
     {"titulek": "Filip Otta se stal vicemistrem Polska!",
      "perex": "K medailovým pozicím připsala ještě Tereza Ottová 5. místo v dívkách.",
      "publikovanoV": "2026-09-22T13:10:47+02:00",
-     "odkaz": "https://www.sailing.cz/clanky/otta-vicemistr-polska"},
+     "odkaz": "https://www.sailing.cz/clanky/otta-vicemistr-polska",
+     "obrazek": "https://www.sailing.cz/uploads_thumbs/clanky/6ab25e38b9df47139/cely_fleet.jpg"},
     {"titulek": "Mistrovství světa iQFoil, Weymouth",
      "perex": "Na start se postavili závodníci z 39 zemí a nechyběla ani česká "
               "reprezentace, kterou tvořilo celkem sedm závodníků.",
      "publikovanoV": "2026-09-18T09:00:00+02:00",
-     "odkaz": "https://www.sailing.cz/clanky/ms-iqfoil-weymouth"},
+     # Bez fotky schválně: web na ni musí sáhnout do náhradní sady.
+     "odkaz": "https://www.sailing.cz/clanky/ms-iqfoil-weymouth", "obrazek": None},
 ]
 for _p in PREVZATE:
+    _p.setdefault("obrazek", None)
     _p["zdroj"] = "Český svaz jachtingu"
     _p["zdrojOdkaz"] = "https://www.sailing.cz/clanky"
 

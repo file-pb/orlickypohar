@@ -50,7 +50,11 @@ export function VypisNovinek({
             {hlavni && i === 0 ? (
               <NahledVelky slug={c.slug} obrazek={c.obrazek} />
             ) : (
-              <Nahled slug={c.slug} obrazek={c.obrazek} />
+              <Nahled
+                slug={c.slug}
+                obrazek={c.obrazek}
+                adresa={"fotkaZdroje" in c ? c.fotkaZdroje : undefined}
+              />
             )}
             {/* Text v obalu, aby ležel vedle fotky. Dalo by se to poskládat
                 i mřížkou bez něj, ale fotka by pak musela vědět, kolik je

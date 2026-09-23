@@ -10,7 +10,10 @@ namespace OrlickyPohar.Api.Features.Prevzate;
 /// </summary>
 public record PrevzatyClanekDto(
     string Titulek, string? Perex, DateTimeOffset PublikovanoV,
-    string Odkaz, string Zdroj, string ZdrojOdkaz);
+    string Odkaz, string Zdroj, string ZdrojOdkaz,
+    // Adresa fotky u zdroje. Prázdná znamená, že ji nemá — web pak sáhne
+    // po náhradní, karta bez fotky být nemá.
+    string? Obrazek = null);
 
 /// <summary>
 /// Veřejné čtení přejatých novinek. Vlastní endpoint, ne součást
@@ -42,7 +45,7 @@ public static class PrevzateEndpoints
 
         return TypedResults.Ok(await dotaz
             .Select(c => new PrevzatyClanekDto(
-                c.Titulek, c.Perex, c.PublikovanoV, c.Odkaz, c.Zdroj, c.ZdrojOdkaz))
+                c.Titulek, c.Perex, c.PublikovanoV, c.Odkaz, c.Zdroj, c.ZdrojOdkaz, c.Obrazek))
             .ToListAsync(ct));
     }
 }

@@ -186,4 +186,60 @@ public class KanalTests
             polozky.OrderByDescending(p => p.PublikovanoV).Select(p => p.Odkaz),
             polozky.Select(p => p.Odkaz));
     }
+
+    [Fact]
+    public void Fotka_se_vezme_z_og_image()
+    {
+        // RSS obrázky nevydává, takže jediné místo je stránka článku.
+        // Tvar je opsaný ze sailing.cz včetně twitter:image, který tam stojí
+        // hned vedle a nesmí se splést s tím pravým.
+        var obrazek = Kanal.Obrazek("""
+            <html><head>
+              <meta property="og:url" content="https://www.sailing.cz/clanky/kolacek">
+              <meta property="og:image" content="https://www.sailing.cz/uploads_thumbs/kolacek_4.jpg">
+              <meta name="twitter:image" content="https://www.sailing.cz/layout/logo.png">
+            </head><body></body></html>
+            """);
+
+        Assert.Equal("https://www.sailing.cz/uploads_thumbs/kolacek_4.jpg", obrazek);
+    }
+
+    [Fact]
+    public void Fotka_se_najde_i_kdyz_je_content_pred_property()
+    {
+        // Pořadí atributů v meta značce nic nepředepisuje.
+        Assert.Equal(
+            "https://www.sailing.cz/foto.jpg",
+            Kanal.Obrazek("""<meta content="https://www.sailing.cz/foto.jpg" property="og:image">"""));
+    }
+
+    [Fact]
+    public void Adresa_fotky_musi_byt_absolutni_http()
+    {
+        // Relativní by se musela skládat vůči stránce; `javascript:` a `data:`
+        // z cizího HTML nemají co dělat v atributu, který nám poteče do `src`.
+        Assert.Null(Kanal.Obrazek("""<meta property="og:image" content="/uploads/foto.jpg">"""));
+        Assert.Null(Kanal.Obrazek("""<meta property="og:image" content="javascript:alert(1)">"""));
+        Assert.Null(Kanal.Obrazek("""<meta property="og:image" content="data:image/png;base64,AAA">"""));
+    }
+
+    [Fact]
+    public void Stranka_bez_og_image_fotku_nema()
+    {
+        // Zdroj ji mít nemusí. Web pak sáhne po náhradní — karta bez fotky
+        // být nemá, ale vymýšlet si adresu taky ne.
+        Assert.Null(Kanal.Obrazek("<html><head><title>Bez fotky</title></head></html>"));
+        Assert.Null(Kanal.Obrazek(""));
+        Assert.Null(Kanal.Obrazek(null));
+    }
+
+    [Fact]
+    public void Entity_v_adrese_fotky_se_rozkoduji()
+    {
+        // `&amp;` v HTML atributu je jeden ampersand. Bez převodu by adresa
+        // s parametry vedla na 404.
+        Assert.Equal(
+            "https://www.sailing.cz/foto.jpg?w=500&h=300",
+            Kanal.Obrazek("""<meta property="og:image" content="https://www.sailing.cz/foto.jpg?w=500&amp;h=300">"""));
+    }
 }

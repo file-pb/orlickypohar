@@ -79,7 +79,14 @@ public class SberPrevzatych(
 
         await using var scope = sluzby.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var (nove, smazane) = await UlozAsync(db, polozky, cas.GetUtcNow(), ct);
+
+        // Dál se pracuje jen s osmi nejnovějšími: víc se stejně neudrží
+        // a ke každému nováčkovi se musí stáhnout jeho stránka kvůli fotce.
+        // Padesát zbytečných dotazů na cizí server by bylo nezdvořilé.
+        var vybrane = polozky.Take(Kolik).ToList();
+        var sObrazky = await DoplnObrazkyAsync(db, klient, vybrane, ct);
+
+        var (nove, smazane) = await UlozAsync(db, sObrazky, cas.GetUtcNow(), ct);
 
         log.LogInformation(
             "Články ze svazu: {Nove} nových, {Smazane} vytlačených, drží se {Kolik}",
@@ -87,11 +94,62 @@ public class SberPrevzatych(
     }
 
     /// <summary>
+    /// Ke každému <b>novému</b> článku dohledá fotku, kterou k němu dal
+    /// zdroj. RSS obrázky nevydává, takže se musí stáhnout jeho stránka
+    /// a vzít <c>og:image</c>.
+    /// <para>
+    /// <b>Jen k novým.</b> U článku, který už v databázi leží, se fotka
+    /// nemění a ptát se na ni znovu by znamenalo osm dotazů každých šest
+    /// hodin místo zhruba jednoho denně.
+    /// </para>
+    /// <para>
+    /// Nepovedené stažení článek nezahodí — zůstane bez fotky a web sáhne
+    /// po náhradní. Cizí server, který zrovna neodpovídá, nemá být důvod,
+    /// proč se novinka neukáže.
+    /// </para>
+    /// </summary>
+    private async Task<IReadOnlyList<PolozkaKanalu>> DoplnObrazkyAsync(
+        AppDbContext db, HttpClient klient, IReadOnlyList<PolozkaKanalu> polozky,
+        CancellationToken ct)
+    {
+        var odkazy = polozky.Select(p => p.Odkaz).ToList();
+        var uz = await db.PrevzateClanky
+            .Where(c => odkazy.Contains(c.Odkaz))
+            .Select(c => c.Odkaz)
+            .ToListAsync(ct);
+
+        var doplnene = new List<PolozkaKanalu>(polozky.Count);
+        foreach (var p in polozky)
+        {
+            if (uz.Contains(p.Odkaz))
+            {
+                doplnene.Add(p);
+                continue;
+            }
+
+            try
+            {
+                var html = await klient.GetStringAsync(p.Odkaz, ct);
+                doplnene.Add(p with { Obrazek = Kanal.Obrazek(html) });
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                log.LogInformation(e, "Fotku k článku {Odkaz} se nepovedlo zjistit", p.Odkaz);
+                doplnene.Add(p);
+            }
+        }
+
+        return doplnene;
+    }
+
+    /// <summary>
     /// Zapíše, co přišlo, a nechá jen <see cref="Kolik"/> nejnovějších.
     /// <para>
-    /// Ukládá se celý kanál a teprve pak se ořezává, ne prvních osm z něj:
-    /// kdyby zdroj poslal položky v jiném pořadí, než tvrdí, vybralo by
-    /// „prvních osm" špatné. Rozhoduje datum vydání, ne pozice v souboru.
+    /// Ořezává se <b>až po zápisu a podle data vydání</b>, ne tak, že by se
+    /// vzalo prvních osm ze vstupu: v databázi můžou ležet články, které
+    /// v tomhle kanálu už nejsou, a rozhodnout se musí mezi všemi dohromady.
+    /// Pořadí ve vstupu k tomu neříká nic — <see cref="Kanal.Rozeber"/> ho
+    /// sice srovná podle data, ale tahle metoda na to nespoléhá.
     /// </para>
     /// <para>
     /// Existující se přepíše — zdroj smí článek opravit a přepsaný titulek
@@ -125,6 +183,9 @@ public class SberPrevzatych(
 
             clanek.Titulek = p.Titulek;
             clanek.Perex = p.Perex;
+            // Fotka se dohledává jen u nových, takže u známého článku
+            // přijde prázdná — a tou se nesmí přepsat ta, kterou už má.
+            clanek.Obrazek = p.Obrazek ?? clanek.Obrazek;
             // Časy do databáze patří v UTC — Npgsql jiný posun do
             // `timestamp with time zone` nezapíše a kanál posílá +02:00.
             clanek.PublikovanoV = p.PublikovanoV.ToUniversalTime();

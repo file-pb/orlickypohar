@@ -112,6 +112,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         prevzaty.Property(x => x.Odkaz).HasMaxLength(500).IsRequired();
         prevzaty.Property(x => x.Titulek).HasMaxLength(300).IsRequired();
         prevzaty.Property(x => x.Perex).HasMaxLength(Kanal.DelkaPerexu + 1);
+        prevzaty.Property(x => x.Obrazek).HasMaxLength(500);
         // Odkaz je přirozený klíč: druhé stažení téhož článku ho přepíše,
         // nezdvojí. Bez indexu by se duplicita poznala až podle dvou
         // stejných karet ve výpisu.

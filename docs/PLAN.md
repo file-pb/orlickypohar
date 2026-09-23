@@ -670,10 +670,34 @@ zkrátí.
 
 | Kus | Kde |
 |---|---|
-| rozbor RSS — čistá funkce, žádná síť | `Features/Prevzate/Kanal.cs` |
+| rozbor RSS a `og:image` — čisté funkce, žádná síť | `Features/Prevzate/Kanal.cs` |
 | stahování, rotace na osm | `Features/Prevzate/SberPrevzatych.cs` |
 | veřejné čtení | `GET /prevzate-clanky` |
 | snímek kanálu k testům | `data/csj/clanky-2026-09-23.xml` |
+
+**Fotka je ta od zdroje, ne naše náhradní.** Karta bez fotky být nemá
+(Filip, 23. 9. 2026), a naše fotka lodi u článku o windsurfingu na Weymouthu
+souvisí s textem jen tím, že je to voda. RSS obrázky nevydává, takže se bere
+`og:image` ze stránky článku — u svazu ho má každý článek, a kde nemají
+fotku, dají tam svoje logo. Když chybí i to, nastoupí náhradní sada jako
+u našeho článku bez obrázku.
+
+**Ukládá se odkaz, ne kopie.** Obrázek zůstává na jejich serveru a načítá
+se odtamtud; jsou to náhledy kolem 500 px a 20 kB, takže na kartu stačí
+a na velký formát se přejatá novinka nedostane. Kopírovat cizí fotografie
+k sobě je něco jiného než ukázat je s odkazem na článek — povolení mluví
+o článcích a fotograf má svá vlastní práva. `referrerPolicy` se schválně
+neomezuje: zdroj má právo vidět, že se jeho obrázek načítá od nás.
+
+Adresa fotky jde ve vlastním poli, ne jako `Obrazek` naší nahrané fotky —
+ten nese i rozměry a ty u cizí adresy neznáme. Vymyslet si je jen kvůli
+typu by byla lež v datech.
+
+**Stránka článku se stahuje jen u nováčků.** U článku, který už v databázi
+leží, se fotka nemění; ptát se znovu by znamenalo osm dotazů každých šest
+hodin místo zhruba jednoho denně. Proto se z kanálu rovnou bere jen osm
+nejnovějších — padesát stažených stránek, z nichž se 42 hned smaže, by bylo
+nezdvořilé.
 
 **Vlastní tabulka, ne druh `Clanek`.** Přejatý článek má jiný životní
 cyklus — rotuje se, kdežto naše zůstávají — a nemá koncept, sérii, zastávku,
