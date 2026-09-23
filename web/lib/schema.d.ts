@@ -1739,6 +1739,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/papir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Nahraje fotku papírového zápisu rozjížďky
+         * @description Pořadatel regaty, i u podepsaných čísel — je to doklad k zápisu, ne zásah do něj. JPEG, PNG nebo WebP do 15 MB. Veřejně se nevydává. Bez nastaveného úložiště vrací 503.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": components["schemas"]["PapirFormular"];
+                    "application/x-www-form-urlencoded": components["schemas"]["PapirFormular"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObrazekDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Odebere fotku papírového zápisu a smaže její soubory */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/vysledky/{zavod}/lode/{prihlaska}/znak": {
         parameters: {
             query?: never;
@@ -2574,6 +2644,9 @@ export interface components {
             jmeno: string;
             prijmeni: string;
         };
+        PapirFormular: {
+            soubor: null | components["schemas"]["IFormFile"];
+        };
         PoradatelDto: {
             slug: string;
             nazev: string;
@@ -2747,6 +2820,8 @@ export interface components {
             smiZapisovat: boolean;
             /** @default false */
             smiDoPoharu: boolean;
+            /** @default false */
+            maPapir: boolean;
         };
         RozjizdkaVstup: {
             /** Format: int32 */
@@ -2989,6 +3064,9 @@ export interface components {
             startV?: null | string;
             /** @default true */
             doSerie: boolean;
+            papir?: null | components["schemas"]["ObrazekDto"];
+            /** @default false */
+            smiPapir: boolean;
         };
         ZapisTeplotyRadek: {
             snimek: string;
@@ -3043,6 +3121,7 @@ export interface components {
             poradatelSlug?: null | string;
             /** @default false */
             smiMedailonek: boolean;
+            vyhodnoceni?: components["schemas"]["Vyhodnoceni"];
         };
         ZastavkaVolbaDto: {
             slug: string;
@@ -3057,6 +3136,7 @@ export interface components {
             typ?: null | string;
             poradatel?: null | string;
             druh?: components["schemas"]["DruhZastavky"];
+            vyhodnoceni?: components["schemas"]["Vyhodnoceni"];
         };
         ZastavkaVysledkyDto: {
             zavod: string;

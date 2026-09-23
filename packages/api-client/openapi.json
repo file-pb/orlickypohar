@@ -1638,6 +1638,109 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/papir": {
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Nahraje fotku pap\u00edrov\u00e9ho z\u00e1pisu rozj\u00ed\u017e\u010fky",
+                "description": "Po\u0159adatel regaty, i u podepsan\u00fdch \u010d\u00edsel \u2014 je to doklad k z\u00e1pisu, ne z\u00e1sah do n\u011bj. JPEG, PNG nebo WebP do 15 MB. Ve\u0159ejn\u011b se nevyd\u00e1v\u00e1. Bez nastaven\u00e9ho \u00falo\u017ei\u0161t\u011b vrac\u00ed 503.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PapirFormular"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PapirFormular"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ObrazekDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Odebere fotku pap\u00edrov\u00e9ho z\u00e1pisu a sma\u017ee jej\u00ed soubory",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/vysledky/{zavod}/lode/{prihlaska}/znak": {
             "put": {
                 "tags": [
@@ -3255,6 +3358,24 @@
                     }
                 }
             },
+            "PapirFormular": {
+                "required": [
+                    "soubor"
+                ],
+                "type": "object",
+                "properties": {
+                    "soubor": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/IFormFile"
+                            }
+                        ]
+                    }
+                }
+            },
             "PoradatelDto": {
                 "required": [
                     "slug",
@@ -4002,6 +4123,10 @@
                         "default": false
                     },
                     "smiDoPoharu": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "maPapir": {
                         "type": "boolean",
                         "default": false
                     }
@@ -4958,6 +5083,20 @@
                     "doSerie": {
                         "type": "boolean",
                         "default": true
+                    },
+                    "papir": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/ObrazekDto"
+                            }
+                        ]
+                    },
+                    "smiPapir": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -5156,6 +5295,9 @@
                     "smiMedailonek": {
                         "type": "boolean",
                         "default": false
+                    },
+                    "vyhodnoceni": {
+                        "$ref": "#/components/schemas/Vyhodnoceni"
                     }
                 }
             },
@@ -5209,6 +5351,9 @@
                     },
                     "druh": {
                         "$ref": "#/components/schemas/DruhZastavky"
+                    },
+                    "vyhodnoceni": {
+                        "$ref": "#/components/schemas/Vyhodnoceni"
                     }
                 }
             },

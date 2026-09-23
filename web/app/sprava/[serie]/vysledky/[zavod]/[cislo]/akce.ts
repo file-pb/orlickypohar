@@ -1,7 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { ulozZapis, type KodVysledku, type ZapisRadek } from "@/lib/vysledky";
+import { NEJVIC_MB } from "@/lib/fotky";
+import { nahrajPapir, odeberPapir, ulozZapis, type KodVysledku, type ZapisRadek } from "@/lib/vysledky";
 
 /**
  * Uložení zápisu rozjížďky. Serverová akce, ne javascript v prohlížeči —
@@ -72,4 +73,32 @@ export async function zapisAkce(formular: FormData) {
   redirect(
     kam(serie, zavod, cislo, chyba ? { chyba, navrh: zakoduj(radky) } : { stav: "ulozeno" }),
   );
+}
+
+/**
+ * Fotka papírového zápisu. Autor ani souhlas se neposílají — je to doklad
+ * k číslům, ne fotka na web; API je doplní z přihlášeného.
+ */
+export async function papirAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const cislo = Number(formular.get("cislo") ?? 0);
+  const soubor = formular.get("soubor");
+
+  if (!(soubor instanceof File) || soubor.size === 0)
+    redirect(kam(serie, zavod, cislo, { chyba: "Vyber fotku papírového zápisu." }));
+  if (soubor.size > NEJVIC_MB * 1024 * 1024)
+    redirect(kam(serie, zavod, cislo, { chyba: `Fotka může mít nejvýš ${NEJVIC_MB} MB.` }));
+
+  const chyba = await nahrajPapir(serie, zavod, cislo, soubor);
+  redirect(kam(serie, zavod, cislo, chyba ? { chyba } : { stav: "papir" }));
+}
+
+export async function odeberPapirAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const cislo = Number(formular.get("cislo") ?? 0);
+
+  const chyba = await odeberPapir(serie, zavod, cislo);
+  redirect(kam(serie, zavod, cislo, chyba ? { chyba } : { stav: "papir-odebran" }));
 }
