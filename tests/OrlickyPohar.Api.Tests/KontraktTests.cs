@@ -172,6 +172,35 @@ public class KontraktTests
         Assert.Null(s.Clanky);
     }
 
+    [Fact]
+    public void Vysledky_zavodu_jsou_verejne_dokud_soubor_nerekne_jinak()
+    {
+        // Ročník 2026 vznikal z ručního sešitu a jeho výsledky se veřejně
+        // neukazují (Filip, 23. 9. 2026). Je to ale vlastnost jednoho ročníku,
+        // ne nový výchozí stav: soubor, který o příznaku neví, musí dál
+        // znamenat „výsledky ukazuj". Opačná výchozí hodnota by při prvním
+        // importu potichu schovala regaty všem ročníkům najednou.
+        var s = JsonSerializer.Deserialize<SerieVstup>(
+            """
+            {"slug":"x","nazev":"X","rok":2025,
+             "kategorie":[{"nazev":"Race","poradi":1}],
+             "osoby":[],"lode":[],"prihlasky":[],"zavody":[]}
+            """, Json);
+
+        Assert.NotNull(s);
+        Assert.True(s.VysledkyZavoduVerejne);
+
+        var vypnuto = JsonSerializer.Deserialize<SerieVstup>(
+            """
+            {"slug":"x","nazev":"X","rok":2025,"vysledkyZavoduVerejne":false,
+             "kategorie":[{"nazev":"Race","poradi":1}],
+             "osoby":[],"lode":[],"prihlasky":[],"zavody":[]}
+            """, Json);
+
+        Assert.NotNull(vypnuto);
+        Assert.False(vypnuto.VysledkyZavoduVerejne);
+    }
+
     private static SerieVstup Kalendar2027() =>
         JsonSerializer.Deserialize<SerieVstup>(
             File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Data", "2027-kalendar.json")), Json)

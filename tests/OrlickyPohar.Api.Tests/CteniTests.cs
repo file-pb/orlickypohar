@@ -1,7 +1,8 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using OrlickyPohar.Api.Features.Bodovani;
 using OrlickyPohar.Api.Features.Import;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Zavody;
@@ -28,7 +29,9 @@ public class CteniTests(PostgresFixture fixture)
         Assert.Equal(HttpStatusCode.OK, odpoved.StatusCode);
     }
 
-    private static SerieVstup Rocnik(string slug, bool publikovano, bool zavodPublikovan = true) => new(
+    private static SerieVstup Rocnik(
+        string slug, bool publikovano, bool zavodPublikovan = true,
+        bool vysledkyVerejne = true) => new(
         Slug: slug,
         Nazev: $"Pohár {slug}",
         Rok: 2025,
@@ -64,7 +67,8 @@ public class CteniTests(PostgresFixture fixture)
                 // až do kalendáře ročníku.
                 PuvodniDatum: new DateOnly(2025, 4, 19)),
         ],
-        Publikovano: publikovano);
+        Publikovano: publikovano,
+        VysledkyZavoduVerejne: vysledkyVerejne);
 
     [Fact]
     public async Task Publikovany_rocnik_je_videt_i_s_vysledky()
@@ -126,5 +130,69 @@ public class CteniTests(PostgresFixture fixture)
         Assert.Equal(
             HttpStatusCode.NotFound,
             (await klient.GetAsync("/serie/skryta-zastavka/zavody/zahajeni")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Rocnik_bez_verejnych_vysledku_vyda_zastavku_bez_cisel()
+    {
+        await Nahraj(Rocnik("bez-vysledku", publikovano: true, vysledkyVerejne: false));
+        var klient = fixture.CreateClient();
+
+        // Ročník i kalendář zůstávají venku — schovávají se výsledky regat,
+        // ne ročník. Kdyby zmizel celý, byla by to publikace, ne tohle.
+        var detail = await klient.GetFromJsonAsync<SerieDetailDto>("/serie/bez-vysledku", Json);
+        Assert.NotNull(detail);
+        Assert.Single(detail.Zavody);
+
+        var zavod = await klient.GetFromJsonAsync<ZavodDetailDto>(
+            "/serie/bez-vysledku/zavody/zahajeni", Json);
+        Assert.NotNull(zavod);
+
+        // Žádná rozjížďka, žádné pořadí — ani to celkové, které se počítá
+        // z týchž čísel jen jinak seskupených.
+        Assert.Empty(zavod.Rozjizdky);
+        Assert.Empty(zavod.Poradi);
+        Assert.Empty(zavod.PoradiCelkem ?? []);
+
+        // Příznak musí jít ven, jinak odjetá regata vypadá jako ta, co se
+        // nejela, a klient nemá jak rozdíl poznat.
+        Assert.True(zavod.VysledkySkryte);
+
+        // Termín, pořadatel a kdo přijel zůstávají: nejsou to výsledky.
+        Assert.Equal(new DateOnly(2025, 4, 26), zavod.Datum);
+        Assert.Equal(2, zavod.Lode.Count);
+    }
+
+    [Fact]
+    public async Task Bez_verejnych_vysledku_zustava_poradi_serialu()
+    {
+        await Nahraj(Rocnik("poradi-zustava", publikovano: true, vysledkyVerejne: false));
+        var klient = fixture.CreateClient();
+
+        // Tohle je celý smysl příznaku: konečné pořadí platí a je venku,
+        // jen se k němu nedá dojít přes jednotlivé rozjížďky. Kdyby se
+        // pořadí počítalo ze skrytých zastávek jako z nepublikovaných,
+        // vyšlo by prázdné a ročník by vypadal jako neodjetý.
+        var odpoved = await klient.GetAsync("/serie/poradi-zustava/poradi");
+        Assert.Equal(HttpStatusCode.OK, odpoved.StatusCode);
+
+        var poradi = await odpoved.Content.ReadFromJsonAsync<PoradiSerieDto>(Json);
+        Assert.NotNull(poradi);
+        Assert.Contains(poradi.Kategorie, k => k.Lode.Count > 0);
+    }
+
+    [Fact]
+    public async Task Vysledky_jsou_verejne_dokud_je_nekdo_nevypne()
+    {
+        // Výchozí hodnota je „ukazovat". Mlčení se zapíná vědomě: soubor,
+        // který o příznaku neví, nesmí ročníku výsledky schovat.
+        await Nahraj(Rocnik("vychozi", publikovano: true));
+        var klient = fixture.CreateClient();
+
+        var zavod = await klient.GetFromJsonAsync<ZavodDetailDto>(
+            "/serie/vychozi/zavody/zahajeni", Json);
+        Assert.NotNull(zavod);
+        Assert.False(zavod.VysledkySkryte);
+        Assert.NotEmpty(zavod.Rozjizdky);
     }
 }

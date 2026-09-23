@@ -31,10 +31,12 @@ function xml(text: string) {
 }
 
 export async function GET(request: Request) {
-  // Adresa webu se bere z požadavku, ne z konstanty: lokálně je to
-  // localhost:3000 a na produkci vlastní doména, a odkazy v kanálu musí
-  // vést tam, odkud si ho čtečka stáhla.
-  const web = new URL(request.url).origin;
+  // Adresa webu z prostředí, ne z požadavku. Za proxy (Traefik + nginx
+  // s mikrocache) nese `request.url` vnitřní adresu kontejneru, takže
+  // kanál nasazený 23. 9. 2026 rozdával odkazy na `https://0.0.0.0:8080`.
+  // `WEB_URL` je tatáž proměnná, ze které se skládá přesměrování po
+  // přihlášení (lib/oidc.ts); lokálně bez ní platí adresa požadavku.
+  const web = (process.env.WEB_URL || new URL(request.url).origin).replace(/\/+$/, "");
 
   let novinky;
   try {

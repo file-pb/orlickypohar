@@ -1,4 +1,4 @@
-﻿using OrlickyPohar.Api.Features.Clanky;
+﻿﻿using OrlickyPohar.Api.Features.Clanky;
 using OrlickyPohar.Api.Features.Zavody;
 
 namespace OrlickyPohar.Api.Features.Import;
@@ -102,7 +102,10 @@ public record SerieVstup(
     // nepřepisují — chybějící seznam proto znamená „žádné články", ne chybu.
     IReadOnlyList<ClanekVstup>? Clanky = null,
     // Starší soubory počet škrtů neznají; jeden platil do 22. 9. 2026.
-    int PocetSkrtu = 1);
+    int PocetSkrtu = 1,
+    // Smí čtenář vidět výsledky jednotlivých regat? Výchozí ano, aby se
+    // mlčení zapínalo vědomě a starší soubory se nemusely přepisovat.
+    bool VysledkyZavoduVerejne = true);
 
 /// <summary>
 /// Kolik řádků import založil, kolik jich našel a kolik smazal. Druhý běh

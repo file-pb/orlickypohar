@@ -310,8 +310,15 @@ def clanky_verejne():
     ve správě objevil a na veřejných stránkách ne, a vypadalo by to jako
     chyba v aplikaci.
     """
-    return sorted((c for c in SPRAVA_CLANKY if c["stav"] == "Publikovano"),
-                  key=lambda c: c["publikovanoV"], reverse=True)
+    venku = [c for c in SPRAVA_CLANKY if c["stav"] == "Publikovano"]
+
+    # Ročník, který výsledky regat veřejně nevydává, mlčí i o nich psaným
+    # slovem — zpráva ze závodu je výsledek napsaný větou. Článek celého
+    # ročníku zůstává. Jako v API (ClanekEndpoints.Publikovane).
+    if not D.get("vysledkyZavoduVerejne", True):
+        venku = [c for c in venku if not c.get("zavod")]
+
+    return sorted(venku, key=lambda c: c["publikovanoV"], reverse=True)
 
 
 # Oprávnění žijí v paměti procesu, takže restart je vrátí do výchozího
@@ -1854,6 +1861,14 @@ class H(BaseHTTPRequestHandler):
                               "vyloucena": u["stav"] == "Vyloucena"}
                              for u in sorted((u for u in z["ucasti"] if u["stav"] in VEREJNE_UCASTI),
                                              key=lambda u: (KAT_PORADI[KAT[u["lod"]]], nazvy(u["lod"])))]}
+
+            # Ročník, který výsledky jednotlivých regat veřejně nevydává.
+            # Jako v API: zastávka zůstane i se seznamem lodí, rozjížďky
+            # a pořadí odejdou prázdné a klient dostane příznak, aby
+            # nemlčel bez vysvětlení.
+            if not D.get("vysledkyZavoduVerejne", True):
+                telo = {**telo, "rozjizdky": [], "poradi": [], "poradiCelkem": [],
+                        "vysledkySkryte": True}
         else:
             return self.send_error(404)
 

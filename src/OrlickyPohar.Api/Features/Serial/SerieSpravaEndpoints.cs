@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Identita;
@@ -8,9 +8,14 @@ namespace OrlickyPohar.Api.Features.Serial;
 
 /// <summary>Ročník ve správě: jestli je venku a jestli s tím přihlášený smí hnout.</summary>
 public record SerieSpravaDto(
-    string Slug, string Nazev, int Rok, bool Publikovano, bool SmiPublikovat);
+    string Slug, string Nazev, int Rok, bool Publikovano, bool SmiPublikovat,
+    // Aditivně na konci: starší klienti o výsledcích regat nevědí.
+    bool VysledkyZavoduVerejne = true);
 
 public record PublikaceSerieVstup(bool Publikovano);
+
+/// <summary>Smí čtenář vidět výsledky jednotlivých regat ročníku?</summary>
+public record VysledkySerieVstup(bool Verejne);
 
 /// <summary>
 /// Publikace celého ročníku.
@@ -44,6 +49,14 @@ public static class SerieSpravaEndpoints
             .WithDescription(
                 "Správce ročníku. Nepublikovaný ročník veřejné čtení nevydává vůbec — " +
                 "ani jeho regaty a výsledky.");
+
+        g.MapPost("/vysledky-zavodu", VysledkyAsync)
+            .Produces<SerieSpravaDto>()
+            .WithSummary("Zapne nebo vypne veřejné výsledky jednotlivých regat")
+            .WithDescription(
+                "Správce ročníku. Vypnuté znamená, že kalendář i pořadí seriálu " +
+                "zůstávají venku, ale stránka regaty nevydá rozjížďky ani výsledky. " +
+                "Správci je vidí dál.");
     }
 
     private static async Task<IResult> StavAsync(
@@ -73,6 +86,20 @@ public static class SerieSpravaEndpoints
         return Results.Ok(await DtoAsync(db, rozsah.SerieId, true, ct));
     }
 
+    private static async Task<IResult> VysledkyAsync(
+        string serie, VysledkySerieVstup vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, AppDbContext db, CancellationToken ct)
+    {
+        if (await rozsahy.NajdiAsync(serie, null, ct) is not { } rozsah) return Results.NotFound();
+        if (!await SpravceAsync(kdo, rozsahy, rozsah.SerieId, ct)) return Results.Forbid();
+
+        var rocnik = await db.Serie.FirstAsync(s => s.Id == rozsah.SerieId, ct);
+        rocnik.VysledkyZavoduVerejne = vstup.Verejne;
+        await db.SaveChangesAsync(ct);
+
+        return Results.Ok(await DtoAsync(db, rozsah.SerieId, true, ct));
+    }
+
     private static Task<bool> SpravceAsync(
         ClaimsPrincipal kdo, Rozsahy rozsahy, int serieId, CancellationToken ct) =>
         rozsahy.SmiAsync(kdo, new Pozadavek(Role.Spravce, serieId), ct);
@@ -81,6 +108,7 @@ public static class SerieSpravaEndpoints
         AppDbContext db, int serieId, bool smiPublikovat, CancellationToken ct) =>
         await db.Serie
             .Where(s => s.Id == serieId)
-            .Select(s => new SerieSpravaDto(s.Slug, s.Nazev, s.Rok, s.Publikovano, smiPublikovat))
+            .Select(s => new SerieSpravaDto(
+                s.Slug, s.Nazev, s.Rok, s.Publikovano, smiPublikovat, s.VysledkyZavoduVerejne))
             .FirstAsync(ct);
 }

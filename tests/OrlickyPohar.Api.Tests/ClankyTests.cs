@@ -38,7 +38,7 @@ public class ClankyTests(PostgresFixture fixture)
 
     private static SerieVstup Rocnik(
         string slug, bool publikovano = true, bool zavodPublikovan = true,
-        IReadOnlyList<ClanekVstup>? clanky = null) => new(
+        IReadOnlyList<ClanekVstup>? clanky = null, bool vysledkyVerejne = true) => new(
         Slug: slug,
         Nazev: $"Pohár {slug}",
         Rok: 2025,
@@ -58,7 +58,8 @@ public class ClankyTests(PostgresFixture fixture)
                 Publikovano: zavodPublikovan),
         ],
         Publikovano: publikovano,
-        Clanky: clanky);
+        Clanky: clanky,
+        VysledkyZavoduVerejne: vysledkyVerejne);
 
     private static ClanekVstup Novinka(
         string slug, string? zavod = null, bool publikovano = true, int denVKvetnu = 9) =>
@@ -308,6 +309,53 @@ public class ClankyTests(PostgresFixture fixture)
         // Soubor umí říct jen „zveřejnit, nebo ne". Nezveřejněný článek je
         // tedy koncept, ne skrytý — skrytí je rozhodnutí, které nikdo neudělal.
         Assert.Equal(StavClanku.Draft, clanek.Stav);
+    }
+
+    [Fact]
+    public async Task Rocnik_bez_verejnych_vysledku_mlci_i_clanky_regat()
+    {
+        // Zpráva ze závodu je výsledek napsaný větou: „Anička bere kategorii
+        // Race" říká totéž co tabulka, kterou ročník schovává. Článek celého
+        // ročníku zůstává — není o jedné regatě a konečné pořadí seriálu je
+        // veřejné tak jako tak. (Filip, 23. 9. 2026)
+        await Nahraj(Rocnik("mlcici", vysledkyVerejne: false, clanky:
+        [
+            Novinka("zprava-ze-zavodu", zavod: "zahajeni"),
+            Novinka("o-rocniku"),
+        ]));
+
+        var klient = fixture.CreateClient();
+
+        var verejne = await klient.GetFromJsonAsync<List<ClanekShrnutiDto>>(
+            "/serie/mlcici/clanky", Json);
+        Assert.Equal(["o-rocniku"], verejne!.Select(c => c.Slug));
+
+        // Přímý odkaz taky ne — jinak by stačilo znát slug.
+        Assert.Equal(HttpStatusCode.NotFound,
+            (await klient.GetAsync("/serie/mlcici/clanky/zprava-ze-zavodu")).StatusCode);
+
+        // Ani filtrem na zastávku, kterým si je načítá stránka regaty.
+        var uZastavky = await klient.GetFromJsonAsync<List<ClanekShrnutiDto>>(
+            "/serie/mlcici/clanky?zavod=zahajeni", Json);
+        Assert.Empty(uZastavky!);
+    }
+
+    [Fact]
+    public async Task Clanky_regat_jsou_videt_dokud_rocnik_vysledky_vydava()
+    {
+        // Výchozí stav se tím nesmí změnit: mlčení je vlastnost jednoho
+        // ročníku, ne nové pravidlo pro blog.
+        await Nahraj(Rocnik("mluvici", clanky:
+        [
+            Novinka("zprava-ze-zavodu", zavod: "zahajeni"),
+            Novinka("o-rocniku"),
+        ]));
+
+        var klient = fixture.CreateClient();
+
+        var verejne = await klient.GetFromJsonAsync<List<ClanekShrnutiDto>>(
+            "/serie/mluvici/clanky", Json);
+        Assert.Contains(verejne!, c => c.Slug == "zprava-ze-zavodu");
     }
 
     [Fact]

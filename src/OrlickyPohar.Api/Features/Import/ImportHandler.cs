@@ -48,9 +48,13 @@ internal static class ImportHandler
         var zavody = await SlaďZavody(db, serie, vstup, prihlasky.Mapa, osoby.Mapa, ct);
         var clanky = await SlaďClanky(db, serie, vstup, ct, naseUloziste);
 
+        // Až po závodech: teprve tam se ruší účasti lodí, které v souboru
+        // nezůstaly, a bez toho by každá odcházející loď ještě jednu měla.
+        var odesle = await SmažOdešléPrihlasky(db, serie, prihlasky.Mapa, ct);
+
         return new ImportVysledek(
             serie.Slug,
-            osoby.Pocty, lode.Pocty, prihlasky.Pocty,
+            osoby.Pocty, lode.Pocty, prihlasky.Pocty with { Smazane = odesle },
             zavody.Zavody, zavody.Ucasti, zavody.Rozjizdky, zavody.Vysledky, clanky);
     }
 
@@ -98,16 +102,19 @@ internal static class ImportHandler
         var serie = await db.Serie.FirstOrDefaultAsync(x => x.Slug == v.Slug, ct);
         if (serie is null)
         {
-            serie = new Serie { Slug = v.Slug, Nazev = v.Nazev, Rok = v.Rok, Publikovano = v.Publikovano };
+            serie = new Serie { Slug = v.Slug, Nazev = v.Nazev };
             db.Serie.Add(serie);
-            await db.SaveChangesAsync(ct);
-            return serie;
         }
 
+        // Vlastnosti se nastavují na jednom místě pro nově zakládaný i už
+        // existující ročník. Dvě kopie se rozešly: zakládací cesta neznala
+        // PocetSkrtu ani VysledkyZavoduVerejne, takže první import souboru
+        // dal jiný ročník než druhý — a mlčení o výsledcích se nezapnulo.
         serie.Nazev = v.Nazev;
         serie.Rok = v.Rok;
         serie.Publikovano = v.Publikovano;
         serie.PocetSkrtu = v.PocetSkrtu;
+        serie.VysledkyZavoduVerejne = v.VysledkyZavoduVerejne;
         await db.SaveChangesAsync(ct);
         return serie;
     }
@@ -233,6 +240,36 @@ internal static class ImportHandler
 
         await db.SaveChangesAsync(ct);
         return (mapa, new ImportPocty(nove, upravene));
+    }
+
+    /// <summary>
+    /// Loď, kterou opravený soubor v ročníku nemá, do ročníku nepatří.
+    /// Bez tohohle zůstane v průběžném pořadí s neúčastí na každé regatě
+    /// napořád — přesně to dělala loď SANDY, kterou rozhodčí v sešitu
+    /// přejmenoval na SENDY: výsledky a účasti import smazal, přihlášku
+    /// do ročníku nechal, a ona dál sbírala DNC.
+    /// <para>
+    /// Maže se jen přihláška <b>bez jediné účasti</b>. Loď, kterou pořadatel
+    /// zapsal na regatu v administraci, soubor rozhodčího nezná a odnést ji
+    /// nesmí; účast na zastávce má vlastní pravidla v <c>SlaďUcasti</c>.
+    /// </para>
+    /// </summary>
+    private static async Task<int> SmažOdešléPrihlasky(
+        AppDbContext db, Serie serie, Dictionary<string, Prihlaska> zustavaji, CancellationToken ct)
+    {
+        var zustavajiId = zustavaji.Values.Select(p => p.Id).ToHashSet();
+
+        var odesle = await db.Prihlasky
+            .Where(p => p.SerieId == serie.Id
+                        && !zustavajiId.Contains(p.Id)
+                        && !db.Ucasti.Any(u => u.PrihlaskaId == p.Id))
+            .ToListAsync(ct);
+
+        if (odesle.Count == 0) return 0;
+
+        db.Prihlasky.RemoveRange(odesle);
+        await db.SaveChangesAsync(ct);
+        return odesle.Count;
     }
 
     private static async Task<(ImportPocty Zavody, ImportPocty Ucasti,
