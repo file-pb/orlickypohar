@@ -150,7 +150,11 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
           schová i regaty, které jsou samy publikované. Bez tohohle řádku
           by se hledalo, proč je web prázdný (Filip, 23. 9. 2026). */}
       {rocnik && (
-        <p className={`hlaska ${rocnik.publikovano ? "" : "chyba"}`} role="status">
+        /* `div`, ne `p`: uvnitř odstavce nesmí být formulář a prohlížeč
+           ho z něj vytáhne ven. React pak při hydrataci našel jiný strom,
+           než odeslal server, a obrazovku překreslil od začátku — klik do
+           rozbaleného řádku uskočil, protože se detail zavřel. */
+        <div className={`hlaska ${rocnik.publikovano ? "" : "chyba"}`} role="status">
           <b>Ročník je {rocnik.publikovano ? "venku" : "skrytý"}.</b>{" "}
           {rocnik.publikovano
             ? "Veřejné stránky ho ukazují i s publikovanými regatami."
@@ -164,7 +168,7 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
               </button>
             </form>
           )}
-        </p>
+        </div>
       )}
 
       {prehled.smiZalozit && (

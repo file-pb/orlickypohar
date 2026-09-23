@@ -2835,8 +2835,11 @@ třech věcech:
 
 Izolepa se liší v rozjížďkách (běh pro míčky do poháru nejde), Pohár
 Slunce a 24hodinovka v seskupení (vyhodnocují se jako celé pole).
-`Zavod.Vyhodnoceni = CelePole` je dnes jen popisek — nic podle něj
-nepočítá, tabulka je vždycky po kategoriích.
+
+**Hotovo od 23. 9. 2026:** `Zavod.Vyhodnoceni` už není jen popisek —
+regata s `CelePole` nebo `Oboje` vydává i pořadí celého pole (záložka
+*Celkem*) a **nastavuje se ve formuláři kalendáře** ve správě. Body do
+poháru to nemění; rozhoduje jen o tom, jaké tabulky regata vyhlásí.
 
 **Rozhodnuto (Filip, 22. 9. 2026):**
 
