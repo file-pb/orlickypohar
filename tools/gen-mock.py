@@ -77,6 +77,15 @@ ZAVODY = [
     ("Jarní vítr",      "YC Orlík",     date(2026, 4, 25), "okruhový",     4, "PoKategoriich", 1.0),
     ("Radavská regata", "LK Radava",    date(2026, 5,  9), "okruhový",     4, "PoKategoriich", 1.0),
     ("24hodinovka",     "YC Orlík",     date(2026, 5, 23), "24 hodin",     1, "CelePole",      1.0),
+    # Vánoční regata není vánoční. Sešit rozhodčího ji v ročníku 2026 vede
+    # jako čtvrtou zastávku, mezi 24hodinovkou a Izolepou, a termínová
+    # listina 2027 ji má 24. 7. jako dálkovou plavbu — obojí dohromady říká,
+    # že prosincový termín byl jen odhad podle názvu. Regata se v roce 2026
+    # nejela, přesné datum tedy nikdo neví; 6. 6. je vymyšlené tak, aby
+    # sedělo do pořadí ze sešitu. Pořadatel je pořád nepotvrzený: listina
+    # 2027 má Jacht servis & Wake-surf.cz, což je otázka na rozhodčího.
+    # (Filip, 23. 9. 2026)
+    ("Vánoční regata",  "YC Orlík",     date(2026, 6,  6), "vytrvalostní", 1, "PoKategoriich", 1.0),
     ("Izolepa",         "YC Orlík",     date(2026, 6, 20), "Izolepa",      3, "PoKategoriich", 1.0),
     ("FxCK Cancer",     "Marina Orlík", date(2026, 7, 11), "okruhový",     2, "PoKategoriich", 1.0),
     # Pořadatel: Filip, 15. 9. 2026 — Yacht Club Písek, ne LK Radava.
@@ -86,8 +95,15 @@ ZAVODY = [
     ("Radavský pohár",  "Yacht Club Písek", date(2026, 8, 29), "okruhový", 4, "PoKategoriich", 1.0),
     ("O pohár Vltavy",  "Plachtič z Vltavy", date(2026, 9, 5), "vytrvalostní", 1, "PoKategoriich", 1.0),
     ("Pohár Slunce",    "SK Popovice",  date(2026, 9, 19), "okruhový",     4, "PoKategoriich", 1.0),
-    ("Vánoční regata",  "YC Orlík",     date(2026, 12, 12), "fun",         1, "PoKategoriich", 1.0),
 ]
+
+# Termínová listina 2027 (od rozhodčího 23. 9. 2026) má tutéž devítku regat
+# ve stejném pořadí, ale u sedmi z nich jiného pořadatele a u tří jiný typ:
+# Jarní vítr a Vánoční regata jsou dálkové plavby, Pohár Slunce maraton 8 h.
+# Kdyby to tak bylo i v roce 2026, měly by tyhle zastávky jednu rozjížďku
+# a žádný škrt — jenže sešit vede jen body do poháru, ne rozjížďky, takže
+# doklad o roce 2026 z toho není. Počty rozjížděk výš proto zůstávají a je
+# to otázka na rozhodčího; podrobně v docs/PLAN.md, oddíl o listině 2027.
 
 
 def skrty(typ, pocet_rozjizdek):
@@ -184,10 +200,15 @@ for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerat
     elif odjety:
         # Kdo jel, říká sešit: lodě s umístěním a diskvalifikované.
         startuji = [l["klic"] for l in lode if l["klic"] in mista or l["klic"] in diskvalifikovane]
+    elif zrusena:
+        # Zrušená zastávka nemá účasti, takže jí startovní pole nelosuj —
+        # zahodilo by se a jen posunulo generátor pro zbytek ročníku.
+        startuji = []
     else:
-        # Loď nejede všechny regaty; u vánoční regaty jich jede výrazně míň.
-        pravdepodobnost = 0.45 if typ == "fun" else 0.82
-        startuji = [l["klic"] for l in lode if R.random() < pravdepodobnost]
+        # Loď nejede všechny regaty. Míň lodí u „fun" závodu tu bývalo kvůli
+        # Vánoční regatě; ta je zrušená a typ „fun" v ročníku od 23. 9. 2026
+        # není, takže zbyla jedna pravděpodobnost.
+        startuji = [l["klic"] for l in lode if R.random() < 0.82]
         if len(startuji) < 6:
             startuji = [l["klic"] for l in lode][:8]
         startuji = [k for k in startuji
@@ -198,7 +219,7 @@ for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerat
                if R.random() > 0.25 else R.choice(osoby)["klic"],
                "posadka": ", ".join(f'{o["jmeno"]} {o["prijmeni"]}'
                                     for o in R.sample(osoby, R.randint(1, 3)))}
-              for k in ([] if zrusena else startuji)]
+              for k in startuji]
 
     odjeto_rozjizdek = (len(listina["rozjizdky"]) if listina else pocet_r) if odjety else 0
 
@@ -210,7 +231,10 @@ for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerat
                          tzinfo=timezone(timedelta(hours=2))) + timedelta(hours=2 * (cislo - 1))
 
         # Izolepa: první rozjížďka je běh pro míčky z kopce, do poháru jde
-        # jedna z těch na vodě.
+        # jedna z těch na vodě. Termínová listina 2027 u ní píše „počítá se
+        # první rozjížďka" — buď se tím myslí první na vodě, a pak je to
+        # totéž co tady, nebo se pravidlo mezi ročníky mění. Otázka na
+        # rozhodčího; do odpovědi zůstává druhá v pořadí.
         do_serie = cislo == 2 if typ == "Izolepa" else True
 
         # Rozjížďky, které jdou do poháru, jedou lodě v pořadí ze sešitu —
