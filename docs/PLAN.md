@@ -177,9 +177,9 @@ Caprice má proto za závod 13 + 12 = 25 bodů — každá rozjížďka se poč�
 **Do seriálu: vítěz má 0 bodů.** Do ročníkové tabulky nejde součet bodů
 závodu, ale **pořadí v kategorii mínus jedna**. V kategorii nad 7 m skončila
 Mamba první a v seriálu má za tenhle závod 0, Pezi druhá má 1, Depresso
-šesté má 5. Kdo na zastávce nebyl, dostává **počet lodí své kategorie, které
-na zastávce byly**, tedy 13 při třinácti lodích. Od 22. 9. 2026 to potvrzují
-pravidla rozhodčího, viz *Pravidla seriálu od rozhodčího*.
+šesté má 5. Kdo na zastávce nebyl, dostává **počet lodí své kategorie
+přihlášených do toho závodu** — i těch, které se nakonec nedostavily. Od
+22. 9. 2026 to takhle upřesnil rozhodčí, viz *Pravidla seriálu od rozhodčího*.
 
 **Proč to takhle je:** obě stupnice vznikly nezávisle a obě jsou nízkobodové,
 jen jedna počítá od jedné a druhá od nuly. Kdo to naprogramuje jako jedno
@@ -600,8 +600,9 @@ na **počet lodí v kategorii**. Škrt nejhorší zastávky jednu neúčast scho
 druhou už ne — což je přesně ten účinek, který se od škrtu čeká.
 
 **Vyřešeno 22. 9. 2026** — platná verze je v oddílu *Pravidla seriálu od
-rozhodčího*. Rozhodčí odvození potvrdil: neúčast je tolik bodů, kolik lodí
-kategorie na zastávce bylo. Dopočet je v
+rozhodčího*. Rozhodčí odvození upřesnil: neúčast je tolik bodů, kolik lodí
+kategorie bylo do toho závodu přihlášeno — ne kolik jich jelo. Loď, která se
+přihlásila a nepřijela, číslo zvedá. Dopočet je v
 [PoradiEndpoints.cs](../src/OrlickyPohar.Api/Features/Bodovani/PoradiEndpoints.cs)
 hotový a jede přes všechny zastávky ročníku; kdo neúčast dostane, určují
 přihlášky do ročníku, a ty žádné datum nemají — loď přihlášená uprostřed

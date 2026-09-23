@@ -251,7 +251,8 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
               <p className="poznamka">
                 Loď se tím stává účastníkem celého ročníku v kategorii, kterou
                 vybereš. Za regaty, na kterých nebyla, dostane v průběžném
-                pořadí tolik bodů, kolik lodí její kategorie na zastávce bylo.
+                pořadí tolik bodů, kolik lodí její kategorie bylo na tu regatu
+                přihlášeno — i těch, které se nakonec nedostavily.
               </p>
             </form>
           </details>

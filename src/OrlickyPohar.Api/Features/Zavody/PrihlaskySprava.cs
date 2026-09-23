@@ -75,7 +75,9 @@ public record StavUcastiVstup(StavUcasti Stav, string? Duvod = null);
 /// <para>
 /// <b>Neúčast na dřívějších zastávkách se dopočítává v průběžném pořadí.</b>
 /// Rozhodčí odpověděl 22. 9. 2026: je to tolik bodů, kolik lodí kategorie
-/// na zastávce bylo (plán, oddíl <i>Pravidla seriálu od rozhodčího</i>).
+/// bylo do závodu <b>přihlášeno</b> — i těch, které se nedostavily
+/// (<c>Bodovani.PrihlasenaDoZavodu</c>), ne kolik jich jelo. Plán, oddíl
+/// <i>Pravidla seriálu od rozhodčího</i>.
 /// Kdo neúčast dostane, plyne z přihlášky do ročníku, a ta žádné datum nemá
 /// — loď přihlášená uprostřed ročníku má DNC i na dřívějších zastávkách.
 /// Do odpovědi se schválně nic nezapisuje: pořadí je odvozené, ne uložené.
