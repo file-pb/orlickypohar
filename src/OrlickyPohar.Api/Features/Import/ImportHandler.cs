@@ -48,9 +48,13 @@ internal static class ImportHandler
         var zavody = await SlaďZavody(db, serie, vstup, prihlasky.Mapa, osoby.Mapa, ct);
         var clanky = await SlaďClanky(db, serie, vstup, ct);
 
+        // Až po závodech: teprve tam se ruší účasti lodí, které v souboru
+        // nezůstaly, a bez toho by každá odcházející loď ještě jednu měla.
+        var odesle = await SmažOdešléPrihlasky(db, serie, prihlasky.Mapa, ct);
+
         return new ImportVysledek(
             serie.Slug,
-            osoby.Pocty, lode.Pocty, prihlasky.Pocty,
+            osoby.Pocty, lode.Pocty, prihlasky.Pocty with { Smazane = odesle },
             zavody.Zavody, zavody.Ucasti, zavody.Rozjizdky, zavody.Vysledky, clanky);
     }
 
@@ -235,32 +239,37 @@ internal static class ImportHandler
         }
 
         await db.SaveChangesAsync(ct);
+        return (mapa, new ImportPocty(nove, upravene));
+    }
 
-        // Loď, kterou opravený soubor v ročníku nemá, do ročníku nepatří.
-        // Bez tohohle zůstane v průběžném pořadí s neúčastí na každé regatě
-        // napořád — přesně to se stalo lodi SANDY, kterou rozhodčí v sešitu
-        // přejmenoval na SENDY: výsledky a účasti import smazal, přihlášku
-        // do ročníku nechal, a ona dál sbírala DNC.
-        //
-        // Jen přihlášky bez jediné účasti. Loď, kterou pořadatel zapsal na
-        // regatu v administraci, soubor rozhodčího nezná a smazat ji nesmí;
-        // účast na zastávce má vlastní pravidla v SlaďUcasti.
-        var zustavaji = mapa.Values.Select(p => p.Id).ToHashSet();
-        var osirele = existujici.Where(p => !zustavaji.Contains(p.Id)).Select(p => p.Id).ToList();
+    /// <summary>
+    /// Loď, kterou opravený soubor v ročníku nemá, do ročníku nepatří.
+    /// Bez tohohle zůstane v průběžném pořadí s neúčastí na každé regatě
+    /// napořád — přesně to dělala loď SANDY, kterou rozhodčí v sešitu
+    /// přejmenoval na SENDY: výsledky a účasti import smazal, přihlášku
+    /// do ročníku nechal, a ona dál sbírala DNC.
+    /// <para>
+    /// Maže se jen přihláška <b>bez jediné účasti</b>. Loď, kterou pořadatel
+    /// zapsal na regatu v administraci, soubor rozhodčího nezná a odnést ji
+    /// nesmí; účast na zastávce má vlastní pravidla v <c>SlaďUcasti</c>.
+    /// </para>
+    /// </summary>
+    private static async Task<int> SmažOdešléPrihlasky(
+        AppDbContext db, Serie serie, Dictionary<string, Prihlaska> zustavaji, CancellationToken ct)
+    {
+        var zustavajiId = zustavaji.Values.Select(p => p.Id).ToHashSet();
 
-        var smazane = 0;
-        if (osirele.Count > 0)
-        {
-            var bezUcasti = await db.Prihlasky
-                .Where(p => osirele.Contains(p.Id) && !db.Ucasti.Any(u => u.PrihlaskaId == p.Id))
-                .ToListAsync(ct);
+        var odesle = await db.Prihlasky
+            .Where(p => p.SerieId == serie.Id
+                        && !zustavajiId.Contains(p.Id)
+                        && !db.Ucasti.Any(u => u.PrihlaskaId == p.Id))
+            .ToListAsync(ct);
 
-            db.Prihlasky.RemoveRange(bezUcasti);
-            smazane = bezUcasti.Count;
-            await db.SaveChangesAsync(ct);
-        }
+        if (odesle.Count == 0) return 0;
 
-        return (mapa, new ImportPocty(nove, upravene, smazane));
+        db.Prihlasky.RemoveRange(odesle);
+        await db.SaveChangesAsync(ct);
+        return odesle.Count;
     }
 
     private static async Task<(ImportPocty Zavody, ImportPocty Ucasti,
