@@ -374,6 +374,52 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("Poradatele");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Prevzate.PrevzatyClanek", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Odkaz")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Perex")
+                        .HasMaxLength(401)
+                        .HasColumnType("character varying(401)");
+
+                    b.Property<DateTimeOffset>("PublikovanoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("StazenoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Titulek")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("Zdroj")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("ZdrojOdkaz")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Odkaz")
+                        .IsUnique();
+
+                    b.ToTable("PrevzateClanky", (string)null);
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Serial.Kategorie", b =>
                 {
                     b.Property<int>("Id")

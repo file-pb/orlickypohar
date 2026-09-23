@@ -24,12 +24,27 @@ export function VypisNovinek({
 }) {
   return (
     <ul className={`seznam novinky${hlavni ? " novinky-uvod" : ""}`}>
-      {clanky.map((c, i) => (
+      {clanky.map((c, i) => {
+        // Přejatá novinka vede ke zdroji, tedy pryč z webu. Odkaz ven se
+        // otevírá v nové kartě; vnitřní ne (konvence webu). `Link` je na to
+        // špatný nástroj — předběžně by načítal cizí stránku.
+        const vnejsi = "vnejsi" in c && c.vnejsi;
+        const kam = "adresa" in c ? c.adresa : `/serie/${serie}/novinky/${c.slug}`;
+        const Karta = vnejsi
+          ? ({ children }: { children: React.ReactNode }) => (
+              <a className="karta s-fotkou" href={kam} target="_blank" rel="noopener noreferrer">
+                {children}
+              </a>
+            )
+          : ({ children }: { children: React.ReactNode }) => (
+              <Link className="karta s-fotkou" href={kam}>
+                {children}
+              </Link>
+            );
+
+        return (
         <li key={c.slug} className={hlavni && i === 0 ? "hlavni" : undefined}>
-          <Link
-            className="karta s-fotkou"
-            href={"adresa" in c ? c.adresa : `/serie/${serie}/novinky/${c.slug}`}
-          >
+          <Karta>
             {/* Náhled je dekorace, ne informace — proto nenese popisek
                 a nesmí se tvářit, že je z toho závodu. */}
             {hlavni && i === 0 ? (
@@ -46,16 +61,22 @@ export function VypisNovinek({
                 {/* Odkud článek je. Blog má dvě úrovně a pozvánka pořadatele
                     na svůj závod je něco jiného než souhrn od organizátora. */}
                 {c.zavodNazev && <span className="stitek">{c.zavodNazev}</span>}
+                {/* Odkud text je. Přebírat ho smíme právě pod podmínkou, že
+                    uvedeme zdroj s odkazem — štítek je ta první půlka,
+                    odkaz karty ta druhá. */}
+                {"zdroj" in c && c.zdroj && <span className="stitek">{c.zdroj}</span>}
               </div>
               {c.perex && <p className="perex">{c.perex}</p>}
               <div className="detail">
                 {datumClanku(c.publikovanoV)}
                 {c.autor && ` · ${c.autor}`}
+                {vnejsi && " · celý článek u zdroje ↗"}
               </div>
             </div>
-          </Link>
+          </Karta>
         </li>
-      ))}
+        );
+      })}
     </ul>
   );
 }

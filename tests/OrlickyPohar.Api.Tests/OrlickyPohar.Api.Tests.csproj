@@ -36,6 +36,8 @@
     <Content Include="..\..\data\pvl\orlik-2026-09-16.html" Link="Data\pvl-orlik.html" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\data\2026-poradi-rozhodci.json" Link="Data\2026-poradi-rozhodci.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\data\2026-fxck-cancer.json" Link="Data\2026-fxck-cancer.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Snímek RSS Českého svazu jachtingu: ověřuje rozbor proti skutečnému tvaru. -->
+    <Content Include="..\..\data\csj\clanky-2026-09-23.xml" Link="Data\csj-clanky.xml" CopyToOutputDirectory="PreserveNewest" />
     <!-- Termínová listina 2027 od rozhodčího: kalendář k nahrání, hlídá ho KontraktTests. -->
     <Content Include="..\..\data\2027-kalendar.json" Link="Data\2027-kalendar.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

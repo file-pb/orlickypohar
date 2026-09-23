@@ -529,6 +529,58 @@ rozhodčího** a teď se dá položit i s odkazem na pravidlo.
 DNC se počítá ze zastávky, zrušené zastávky jsou jen zápis a kódy v závodě
 se bodují podle A5.2 — DNF i DNS stejně, přihlášených + 1.
 
+## Novinky ze svazu a náš vlastní kanál (23. 9. 2026)
+
+**Zadání (Filip).** Pohár má od Českého svazu jachtingu povolení čerpat
+z jeho článků — **s podmínkou, že uvedeme zdroj s odkazem**. Když nám nic
+nevyjde, mají výpis novinek plnit svazové: drží se **osm nejnovějších**
+a novější vytlačují starší. **Naše články se nemažou nikdy.** Smyslem je
+rozmanitost a plnost obsahu, ne archiv. Vedeme je jako kategorii
+*Novinky ze svazu* a míchají se mezi naše podle data — v zimě, kdy se nic
+nejede, je právě tam ta díra, kterou mají zaplnit.
+
+**Zdroj je RSS, ne stránka.** `https://www.sailing.cz/rss/clanky`, na který
+odkazuje hlavička jejich webu. Kanál dává titulek, odkaz, datum a perex
+v HTML; **plný text ne**, takže se ani nepřebírá — karta u nás vede rovnou
+na originál (`target="_blank" rel="noopener noreferrer"`). Vlastní stránku
+u nás přejatý článek nemá, protože by neměla co zobrazit. Perex se čistí od
+značek a entit a zkracuje na 400 znaků na hranici slova: do výpisu patří
+upoutávka, ne cizí článek. Kanál sám dává až 575 znaků, takže nejdelší se
+zkrátí.
+
+| Kus | Kde |
+|---|---|
+| rozbor RSS — čistá funkce, žádná síť | `Features/Prevzate/Kanal.cs` |
+| stahování, rotace na osm | `Features/Prevzate/SberPrevzatych.cs` |
+| veřejné čtení | `GET /prevzate-clanky` |
+| snímek kanálu k testům | `data/csj/clanky-2026-09-23.xml` |
+
+**Vlastní tabulka, ne druh `Clanek`.** Přejatý článek má jiný životní
+cyklus — rotuje se, kdežto naše zůstávají — a nemá koncept, sérii, zastávku,
+tělo ani fotku v našem úložišti. Ve sdílené tabulce by zbyla řada sloupců,
+které u něj nic neznamenají. Oddělení má ještě jeden důsledek, a ten je
+záměr: **náš RSS kanál se skládá jen z našich článků**. Přeposílat cizí
+obsah dál nám nikdo nedovolil a s oddělenou tabulkou to není otázka filtru,
+na který se dá zapomenout, ale jiného zdroje dat (`nactiVlastniNovinky`).
+
+**Náš kanál je na `/rss.xml` a vydává ho web, ne API.** Odkazy musejí mířit
+na stránky, které si čtenář otevře, a čtečky feed hledají na doméně webu;
+odkaz na něj je v hlavičce každé stránky. API vydává data, web z nich dělá
+stránky — a kanál je stránka jako každá jiná.
+
+**Sběr se zapíná proměnnou `Prevzate__Sber=true`**, jako u vodočtu, takže
+testy ani vývojový stroj na cizí server nesahají. Interval je šest hodin:
+svaz vydá článek zhruba obden, takže novinka je u nás do půl dne a jsou to
+čtyři dotazy denně. Platí tu totéž co u vodočtu — **je to úloha pro jednu
+repliku**; druhá by nic nerozbila (klíčem je odkaz, zápis je upsert), jen by
+se svazu ptala dvakrát.
+
+**Cizí server se nesmí stát naší poruchou.** Nečitelná odpověď vrátí prázdný
+seznam místo výjimky (chybová stránka s kódem 200 se stává), výpadek
+stahování jen zaloguje a zkusí to příští takt, a výpadek `/prevzate-clanky`
+při vykreslování nesmí shodit výpis našich novinek — jsou to doplněk, ne
+obsah, kvůli kterému čtenář přišel.
+
 ## Úvodní stránka
 
 Filipův záměr, upřesněný 9. 9. 2026: landing má udělat dojem, kdežto
