@@ -1,3 +1,4 @@
+using OrlickyPohar.Api.Features.Fotky;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Zavody;
@@ -35,7 +36,11 @@ public record ClanekVstupSprava(
     string? Perex = null,
     string? Autor = null,
     string? Zavod = null,
-    DateTimeOffset? PublikovanoV = null);
+    DateTimeOffset? PublikovanoV = null,
+    // V jakém tvaru autor tělo poslal. `Html` znamená „vloženo odjinud" —
+    // server ho vyčistí a uloží jako bloky. Výchozí `Text` drží dosavadní
+    // chování pro každého, kdo pole neposílá.
+    FormatClanku Format = FormatClanku.Text);
 
 /// <summary>
 /// Čtení a zápis článků pro autora.
@@ -53,7 +58,7 @@ public record ClanekVstupSprava(
 /// požadavku; stálo to jeden běh CI, tak ať je to napsané.
 /// </para>
 /// </summary>
-public class ClankySprava(AppDbContext db, TimeProvider cas)
+public class ClankySprava(AppDbContext db, TimeProvider cas, IUloziste uloziste)
 {
     /// <summary>
     /// Články, na které přihlášený dosáhne. <paramref name="zavody"/> je
@@ -115,6 +120,7 @@ public class ClankySprava(AppDbContext db, TimeProvider cas)
         var slug = Psani.Slug(vstup.Titulek ?? "");
         if (Psani.ProcNejdeUlozit(vstup.Titulek, vstup.Telo, slug) is { } chyba)
             return (null, chyba);
+        if (ProcNejdeTelo(vstup) is { } chybaTela) return (null, chybaTela);
 
         if (await db.Clanky.AnyAsync(c => c.SerieId == serieId && c.Slug == slug, ct))
             return (null, serieId is null
@@ -128,7 +134,8 @@ public class ClankySprava(AppDbContext db, TimeProvider cas)
             Slug = slug,
             Titulek = vstup.Titulek.Trim(),
             Perex = Prazdne(vstup.Perex),
-            Telo = vstup.Telo.Trim(),
+            Telo = TeloDoDatabaze(vstup),
+            Format = vstup.Format == FormatClanku.Html ? FormatClanku.Bloky : vstup.Format,
             Autor = Prazdne(vstup.Autor),
             // Do UTC: Npgsql jiný posun do `timestamp with time zone`
             // nepřijme a padlo by to až při zápisu.
@@ -149,10 +156,12 @@ public class ClankySprava(AppDbContext db, TimeProvider cas)
     {
         if (Psani.ProcNejdeUlozit(vstup.Titulek, vstup.Telo, clanek.Slug) is { } chyba)
             return chyba;
+        if (ProcNejdeTelo(vstup) is { } chybaTela) return chybaTela;
 
         clanek.Titulek = vstup.Titulek.Trim();
         clanek.Perex = Prazdne(vstup.Perex);
-        clanek.Telo = vstup.Telo.Trim();
+        clanek.Telo = TeloDoDatabaze(vstup);
+        clanek.Format = vstup.Format == FormatClanku.Html ? FormatClanku.Bloky : vstup.Format;
         clanek.Autor = Prazdne(vstup.Autor);
         clanek.ZavodId = zavodId;
         if (vstup.PublikovanoV is { } kdy) clanek.PublikovanoV = kdy.ToUniversalTime();
@@ -160,6 +169,25 @@ public class ClankySprava(AppDbContext db, TimeProvider cas)
         await db.SaveChangesAsync(ct);
         return null;
     }
+
+    /// <summary>
+    /// Co se doopravdy uloží. Vložené HTML se čistí <b>tady, při zápisu</b>,
+    /// ne až při zobrazení: kdyby se ukládalo syrové, stačilo by jedno místo,
+    /// které si ho vezme bez očisty, a je z toho XSS.
+    /// </summary>
+    private string TeloDoDatabaze(ClanekVstupSprava vstup) =>
+        vstup.Format == FormatClanku.Html
+            ? Bloky.Uloz(Bloky.ZHtml(vstup.Telo, uloziste.VerejnaAdresa))
+            : vstup.Telo.Trim();
+
+    /// <summary>
+    /// Proč vložený text nejde uložit. Autor dostane větu, ne tiše oříznutý
+    /// článek — a provoz nedostane stránku, kterou nikdo neunese.
+    /// </summary>
+    private string? ProcNejdeTelo(ClanekVstupSprava vstup) =>
+        vstup.Format == FormatClanku.Html
+            ? Bloky.ProcNejde(vstup.Telo, uloziste.VerejnaAdresa)
+            : null;
 
     public async Task<string?> PrepniStavAsync(Clanek clanek, StavClanku na, CancellationToken ct)
     {

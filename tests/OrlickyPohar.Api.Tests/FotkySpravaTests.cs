@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -153,5 +153,93 @@ public class FotkySpravaTests(PostgresFixture fixture)
 
         Assert.NotNull(chyba);
         Assert.Empty(uloziste.Soubory);
+    }
+
+    /// <summary>Článek, do jehož těla se bude nahrávat.</summary>
+    private async Task<int> ClanekAsync(string slug)
+    {
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var clanek = new Features.Clanky.Clanek
+        {
+            Slug = slug,
+            Titulek = "Pozvánka",
+            Telo = "[]",
+            Format = Features.Clanky.FormatClanku.Bloky,
+            PublikovanoV = DateTimeOffset.UtcNow,
+        };
+        db.Clanky.Add(clanek);
+        await db.SaveChangesAsync();
+        return clanek.Id;
+    }
+
+    [Fact]
+    public async Task Obrazek_do_tela_nic_nenahrazuje()
+    {
+        // Na rozdíl od hlavního obrázku jich v textu může být víc — a to je
+        // celý rozdíl proti `NastavAsync`, kterou by bylo snadné použít
+        // omylem a druhou fotkou přepsat první.
+        var (_, uzivatelId) = await PripravAsync("telo-vic");
+        var clanekId = await ClanekAsync("telo-vic");
+        var uloziste = new PametoveUloziste();
+
+        var adresy = await SeSpravouAsync(uloziste, async (_, s) =>
+        {
+            var (prvni, chyba1) = await s.NahrajDoTelaAsync(clanekId, Formular(), uzivatelId, default);
+            var (druhy, chyba2) = await s.NahrajDoTelaAsync(clanekId, Formular("Filip Burda"), uzivatelId, default);
+            Assert.Null(chyba1);
+            Assert.Null(chyba2);
+            return (prvni!.Velky, druhy!.Velky);
+        });
+
+        Assert.NotEqual(adresy.Item1, adresy.Item2);
+        // Dvě fotky po dvou variantách. Kdyby druhá nahradila první, byly by
+        // tu dva soubory a jeden by visel v úložišti bez záznamu.
+        Assert.Equal(4, uloziste.Soubory.Count);
+
+        var vTele = await SeSpravouAsync(uloziste, (_, s) => s.VTeleAsync(clanekId, default));
+        Assert.Equal(2, vTele.Count);
+    }
+
+    [Fact]
+    public async Task Obrazky_v_tele_patri_svemu_clanku()
+    {
+        // Seznam se ukazuje autorovi u konkrétního článku; kdyby vracel cizí
+        // fotky, vkládal by je do textu, kam nepatří.
+        var (_, uzivatelId) = await PripravAsync("telo-cizi");
+        var muj = await ClanekAsync("telo-muj");
+        var cizi = await ClanekAsync("telo-cizi-clanek");
+        var uloziste = new PametoveUloziste();
+
+        await SeSpravouAsync(uloziste, async (_, s) =>
+        {
+            await s.NahrajDoTelaAsync(muj, Formular(), uzivatelId, default);
+            await s.NahrajDoTelaAsync(cizi, Formular(), uzivatelId, default);
+            return true;
+        });
+
+        var vTele = await SeSpravouAsync(uloziste, (_, s) => s.VTeleAsync(muj, default));
+        Assert.Single(vTele);
+    }
+
+    [Fact]
+    public async Task Fotka_v_tele_neni_hlavnim_obrazkem_clanku()
+    {
+        // Vazba vede opačně než u hlavního obrázku: fotka ukazuje na článek,
+        // ne článek na fotku. Kdyby se přitom nastavil i `FotkaId`, přepsal
+        // by první vložený obrázek tu fotku nad článkem.
+        var (_, uzivatelId) = await PripravAsync("telo-hlavni");
+        var clanekId = await ClanekAsync("telo-hlavni-clanek");
+        var uloziste = new PametoveUloziste();
+
+        await SeSpravouAsync(uloziste, (_, s) =>
+            s.NahrajDoTelaAsync(clanekId, Formular(), uzivatelId, default));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var clanek = await db.Clanky.FirstAsync(c => c.Id == clanekId);
+
+        Assert.Null(clanek.FotkaId);
     }
 }

@@ -357,4 +357,78 @@ public class ClankyTests(PostgresFixture fixture)
             "/serie/mluvici/clanky", Json);
         Assert.Contains(verejne!, c => c.Slug == "zprava-ze-zavodu");
     }
+
+    [Fact]
+    public async Task Format_projde_importem_az_do_verejneho_cteni()
+    {
+        // Celá kolej z konce na konec: soubor → databáze → veřejné čtení.
+        // Sloupec, který se cestou někde ztratí, je horší než žádný —
+        // klient by pak četl HTML jako odstavce.
+        await Nahraj(Rocnik("format", clanky:
+        [
+            Novinka("prosty"),
+            Novinka("bohaty") with { Telo = "<p>Pozvánka pořadatele.</p>", Format = FormatClanku.Html },
+        ]));
+
+        var klient = fixture.CreateClient();
+
+        var prosty = await klient.GetFromJsonAsync<ClanekDto>("/serie/format/clanky/prosty", Json);
+        Assert.Equal(FormatClanku.Text, prosty!.Format);
+
+        // `Html` je jen vstupní hodnota: server text vyčistí a uloží `Bloky`.
+        var bohaty = await klient.GetFromJsonAsync<ClanekDto>("/serie/format/clanky/bohaty", Json);
+        Assert.Equal(FormatClanku.Bloky, bohaty!.Format);
+        Assert.Equal(
+            "Pozvánka pořadatele.",
+            string.Concat(Bloky.Nacti(bohaty.Telo).Single().Useky!.Select(u => u.Text)));
+    }
+
+    [Fact]
+    public async Task Druhy_import_formatu_nic_nezmeni()
+    {
+        // Idempotence platí i pro nový sloupec.
+        var rocnik = Rocnik("format-znovu", clanky:
+        [
+            Novinka("bohaty") with { Telo = "<p>A</p>", Format = FormatClanku.Html },
+        ]);
+        await Nahraj(rocnik);
+        await Nahraj(rocnik);
+
+        var klient = fixture.CreateClient();
+        var clanek = await klient.GetFromJsonAsync<ClanekDto>(
+            "/serie/format-znovu/clanky/bohaty", Json);
+
+        Assert.Equal(FormatClanku.Bloky, clanek!.Format);
+        Assert.Single(Bloky.Nacti(clanek.Telo));
+    }
+
+    [Fact]
+    public async Task Vlozene_html_se_ulozi_jako_bloky_a_skript_zmizi()
+    {
+        // Čistí se **při zápisu**: v databázi nesmí zůstat HTML, na které by
+        // si někdo mohl sáhnout bez očisty. Import je zatím jediná cesta,
+        // kterou se `Html` dostane dovnitř.
+        await Nahraj(Rocnik("vlozene", clanky:
+        [
+            Novinka("pozvanka") with
+            {
+                Telo = """<h2>Pozvánka</h2><p>Jede se <b>v sobotu</b>.</p><script>alert("xss")</script>""",
+                Format = FormatClanku.Html,
+            },
+        ]));
+
+        var klient = fixture.CreateClient();
+        var clanek = await klient.GetFromJsonAsync<ClanekDto>("/serie/vlozene/clanky/pozvanka", Json);
+
+        // Uložený formát je `Bloky`, ne `Html` — ta hodnota je jen vstupní.
+        Assert.Equal(FormatClanku.Bloky, clanek!.Format);
+        Assert.DoesNotContain("<script", clanek.Telo, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("alert", clanek.Telo);
+
+        var bloky = Bloky.Nacti(clanek.Telo);
+        Assert.Equal(
+            [DruhBloku.Nadpis, DruhBloku.Odstavec],
+            bloky.Select(b => b.Druh));
+        Assert.Contains(bloky[1].Useky!, u => u.Text == "v sobotu" && u.Tucne);
+    }
 }

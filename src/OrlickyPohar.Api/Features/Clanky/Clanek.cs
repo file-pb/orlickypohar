@@ -36,6 +36,48 @@ public enum StavClanku
 }
 
 /// <summary>
+/// V jakém tvaru je uložené tělo článku.
+/// <para>
+/// <b>Rozšiřuje se, nepřepisuje se.</b> Dokud existoval jediný tvar, nebylo
+/// co rozlišovat; teď se do těla dostane i obsah, který si pořadatel přinese
+/// odjinud, a starý článek se kvůli tomu nesmí muset přepsat. Proto je
+/// <see cref="Text"/> nula a výchozí hodnota: ročníky nahrané dřív i soubory,
+/// které o formátu nevědí, znamenají dál totéž co doteď.
+/// </para>
+/// </summary>
+public enum FormatClanku
+{
+    /// <summary>
+    /// Prostý text, odstavce oddělené prázdným řádkem. Tak vypadá všechno,
+    /// co vzniklo do 23. 9. 2026.
+    /// </summary>
+    Text = 0,
+
+    /// <summary>
+    /// <b>Jen na vstupu:</b> vložené HTML od pořadatele, jak ho vzal z Wordu
+    /// nebo ze své stránky (Filip, 23. 9. 2026).
+    /// <para>
+    /// <b>V databázi tahle hodnota nezůstane.</b> Server ji při uložení
+    /// převede na <see cref="Bloky"/> — viz <see cref="Clanky.Bloky.ZHtml"/>.
+    /// Kdyby se přesto někde vyskytla (starý záznam, ruční zásah), web ji
+    /// vypíše jako text, ne jako značky: nevyčištěné HTML z databáze je XSS.
+    /// </para>
+    /// </summary>
+    Html = 1,
+
+    /// <summary>
+    /// Vyčištěná struktura těla: odstavce, nadpisy, seznamy, odkazy, obrázky.
+    /// V <c>Telo</c> je uložená jako JSON.
+    /// <para>
+    /// <b>Není to HTML a schválně.</b> Web ji vykresluje vlastními
+    /// komponentami, takže se surové značky do stránky nedostanou nikdy.
+    /// Bezpečnost tím stojí na konstrukci, ne na tom, že whitelist nemá díru.
+    /// </para>
+    /// </summary>
+    Bloky = 2,
+}
+
+/// <summary>
 /// Novinka nebo článek. Blog je <b>na dvou úrovních</b>: sérii píše organizátor
 /// poháru (pozvánky na sezónu, souhrny), zastávku její pořadatel (pozvánka na
 /// svůj závod, jeho příběh).
@@ -49,10 +91,10 @@ public enum StavClanku
 /// oprávnění přesně těchhle dvou sloupců.
 /// </para>
 /// <para>
-/// <b>Tělo je prostý text</b>, odstavce oddělené prázdným řádkem. Markdown ani
-/// HTML schválně ne: první by znamenal renderer na webu i v appce (a rozhodnutí,
-/// co z něj povolit), druhý sanitizaci cizího vstupu. Až bude potřeba víc než
-/// odstavce, je to aditivní sloupec s formátem — ne přepis toho, co je uložené.
+/// <b>Tělo je prostý text</b>, odstavce oddělené prázdným řádkem — a od
+/// 23. 9. 2026 to říká <see cref="Format"/>, ne předpoklad. Sloupec přibyl
+/// aditivně, přesně jak tu dřív stálo, že se to jednou udělá: nic se
+/// nepřepsalo a všechno uložené je dál <see cref="FormatClanku.Text"/>.
 /// </para>
 /// </summary>
 public class Clanek : IMaFotku
@@ -84,8 +126,14 @@ public class Clanek : IMaFotku
     /// <summary>Pár vět do výpisu a na úvodní stránku. Není to začátek těla — píše se zvlášť.</summary>
     public string? Perex { get; set; }
 
-    /// <summary>Odstavce oddělené prázdným řádkem.</summary>
+    /// <summary>Obsah článku. Jak se čte, říká <see cref="Format"/>.</summary>
     public required string Telo { get; set; }
+
+    /// <summary>
+    /// V jakém tvaru je <see cref="Telo"/>. Výchozí <see cref="FormatClanku.Text"/>,
+    /// takže článek, o kterém to nikdo neřekl, se čte jako doteď.
+    /// </summary>
+    public FormatClanku Format { get; set; } = FormatClanku.Text;
 
     /// <summary>Kdo to napsal. Volný text — autor není účet v systému, stejně jako pořadatel.</summary>
     public string? Autor { get; set; }

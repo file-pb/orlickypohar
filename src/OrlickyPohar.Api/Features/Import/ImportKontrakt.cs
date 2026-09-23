@@ -1,4 +1,5 @@
-﻿using OrlickyPohar.Api.Features.Zavody;
+﻿﻿using OrlickyPohar.Api.Features.Clanky;
+using OrlickyPohar.Api.Features.Zavody;
 
 namespace OrlickyPohar.Api.Features.Import;
 
@@ -83,7 +84,9 @@ public record ClanekVstup(
     string? Perex = null,
     string? Autor = null,
     string? Zavod = null,
-    bool Publikovano = true);
+    bool Publikovano = true,
+    // Starší soubory formát neznají a jejich těla jsou prostý text.
+    FormatClanku Format = FormatClanku.Text);
 
 public record SerieVstup(
     string Slug,

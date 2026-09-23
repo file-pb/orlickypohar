@@ -151,6 +151,14 @@ export default async function SpravaClanku({ params, searchParams }: Parametry) 
           <textarea name="telo" required rows={6} placeholder={"Odstavce odděl prázdným řádkem."} />
         </label>
 
+        {/* Bez javascriptu, jako zbytek správy: políčko říká serveru, jak
+            text číst. Vložený obsah se čistí při uložení — projdou odstavce,
+            nadpisy, seznamy, tučné, kurzíva, odkazy a obrázky, zbytek se
+            zahodí i s formátováním z Wordu. */}
+        <label>
+          <input type="checkbox" name="vlozene" value="1" /> Text je vložený z Wordu nebo z webu
+        </label>
+
         <button type="submit">Založit jako koncept</button>
         <p className="poznamka">
           Nový článek je vždycky koncept — veřejnost ho uvidí, až ho publikuješ.

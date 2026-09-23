@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Fotky;
 using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Zavody;
@@ -29,6 +30,7 @@ public static class ImportEndpoints
         AppDbContext db,
         IConfiguration config,
         ILoggerFactory logu,
+        IUloziste uloziste,
         CancellationToken ct)
     {
         switch (ImportniToken.Over(ctx, config))
@@ -47,7 +49,9 @@ public static class ImportEndpoints
         await using var tx = await db.Database.BeginTransactionAsync(ct);
         try
         {
-            var vysledek = await ImportHandler.ZpracujAsync(db, vstup, ct);
+            // Adresa úložiště kvůli obrázkům v tělech článků: v textu projde jen
+            // obrázek nahraný k nám, cizí se zahodí.
+            var vysledek = await ImportHandler.ZpracujAsync(db, vstup, ct, uloziste.VerejnaAdresa);
             await tx.CommitAsync(ct);
 
             log.LogInformation(

@@ -61,7 +61,7 @@ export default async function ClanekStranka({ params }: Parametry) {
 
       <article className="clanek">
         {c.perex && <p className="perex">{c.perex}</p>}
-        <Odstavce text={c.telo} />
+        <Odstavce text={c.telo} format={c.format} />
       </article>
 
       {/* Článek regaty vede na její stránku. Pozvánka bez odkazu na závod,

@@ -447,6 +447,126 @@ přepne.
 **Nepublikovaná zastávka schová i svůj blog**, takže článek k zastávce, která
 ještě není venku, se nedá přečíst ani odkazem. To platí už dnes.
 
+### Tělo článku: formát je od 23. 9. 2026 zapsaný, ne předpokládaný
+
+**Zadání (Filip).** Pořadatelé budou tělo regaty stavět jako svou propagaci
+a podle všeho vezmou Word nebo HTML a vloží ho. Náležitosti článku jim
+předepíšeme formulářem — titulek, perex, datum, fotka, autor — ale do těla
+si mají dát svůj obsah.
+
+**Krok 1 z pěti, hotový:** sloupec `Clanek.Format` (`FormatClanku`).
+Přesně to, co tu dřív stálo jako záměr — *„až bude potřeba víc než odstavce,
+je to aditivní sloupec s formátem, ne přepis toho, co je uložené"*. Nic se
+nepřepsalo: `Text` je nula i výchozí hodnota, takže stará těla, starší
+importní soubory i klienti, kteří o sloupci nevědí, znamenají dál totéž co
+doteď. Kolej vede z konce na konec — soubor → import → databáze → veřejné
+čtení → web — a ověřuje to `ClankyTests`.
+
+**`Html` je zatím připravená kolej bez čističky.** Nikdo ho nevytváří a web
+tělo v tomhle formátu **vypisuje jako text, ne jako značky**. Není to
+nedodělek, ale pořadí prací:
+
+- Schránka z Wordu nenese text, nese balast — `mso-*` styly, vlastní fonty,
+  pevné velikosti v bodech, tabulky místo rozvržení. Uložené tak, jak přišlo,
+  rozbije stránku a na mobilu přeteče.
+- **Nevyčištěné HTML z databáze je XSS.** Pořadatel není útočník, ale jeho
+  schránka může nést cokoliv a jeho účet se dá ukrást. Obrana je whitelist
+  značek a atributů **při ukládání**, ne až při zobrazení.
+
+Dokud čistička není, je vypsat zdrojový text bezpečnější než ho pustit do
+stránky. Ověřeno: tělo `<p>…</p><script>alert("xss")</script>` se vykreslí
+jako text a žádný `<script>` na stránce nevznikne.
+
+**Kroky 2 a 3 hotové (23. 9. 2026): čistička a vykreslování.** Přišly
+spolu schválně — čistička, jejíž výsledek web neumí zobrazit, by dodala
+horší stav než žádná.
+
+**Čistička nevrací HTML, ale strukturu.** Obvyklá cesta je whitelist značek
+a pak `dangerouslySetInnerHTML`; bezpečnost pak stojí na tom, že whitelist
+nemá díru. Tady se vrací bloky (`Features/Clanky/Bloky.cs`), které web
+vykresluje vlastními komponentami — **surové HTML se do stránky nedostane
+nikdy**. Chyba v rozboru pak znamená špatně zobrazený text, ne XSS. Je to
+bezpečné konstrukcí, ne úplností seznamu.
+
+Do bloků se vejde: odstavec, nadpis (H2 a H3), seznam (číslovaný i ne),
+odkaz, obrázek, tučné a kurzíva. H1 se srovná na H2, protože H1 je titulek
+článku. Co se nevejde, zmizí; u `script`, `style`, `iframe` a spol. i s
+textem uvnitř, aby se do článku nevysypal javascript jako text.
+
+**Čistí se při zápisu, ne při zobrazení.** V databázi tak nezůstane HTML,
+na které by si někdo mohl sáhnout bez očisty. `FormatClanku.Html` je proto
+**jen vstupní hodnota** — import ji převede a uloží `Bloky`.
+
+**Vlastní rozbor, ne knihovna.** Pracovní stroj se na nuget.org nedostane
+(`Socket is not connected`), takže `HtmlSanitizer` ani `AngleSharp` přidat
+nešlo. Pro tenhle účel to nevadí: nepotřebujeme plnou specifikaci HTML5, ale
+rozpoznat hrstku značek a zbytek zahodit — a protože se výstupem nevrací
+HTML, chyba v rozboru není bezpečnostní. Kdyby se knihovna jednou přidala,
+nahradí jen ten jeden soubor; tvar bloků zůstane.
+
+**Krok 4 hotový (23. 9. 2026): vkládací pole v administraci.** U nového
+i upravovaného článku je políčko *„Text je vložený z Wordu nebo z webu"* —
+zaškrtnuté znamená `Html`, server text vyčistí a uloží jako bloky. Bez
+javascriptu, jako zbytek správy: je to `<input type="checkbox">`, o zbytek
+se stará server.
+
+**Autor vidí, co se doopravdy uložilo.** Uložené bloky se do pole vracejí
+jako HTML (`Bloky.DoHtml`), ne jako původní vložený text — co čistička
+zahodila, je pryč, a autor to má vidět hned, ne až na webu. Druhé uložení
+proto nic nemění: `ZHtml(DoHtml(bloky))` dá tytéž bloky a hlídá to test.
+Políčko u takového článku zůstává zaškrtnuté; odškrtnutím by se z HTML
+staly odstavce plné značek.
+
+**Adresy nesmějí nést uvozovky, špičky ani bílé znaky.** Vyplavalo to
+z testu zápisu do HTML: `Uri.TryCreate` takovou adresu překvapivě přijme,
+a i když ji zápis escapuje, nemá smysl ji vůbec ukládat — do `src` se pak
+nedostane nic, co by se muselo hlídat až na výstupu.
+
+**`tools/fake-api.py` vložený text nečistí**, jen si formát pamatuje.
+Opisovat parser HTML do Pythonu by znamenalo mít dvě různá pravidla; jak
+bude článek vypadat, se pozná proti skutečnému API. Falešné API tedy vrací
+`Html`, a to web vypisuje jako text, takže se při zkoušení nic nerozbije.
+
+**Krok 5 hotový (23. 9. 2026): obrázky v těle — a hlavně jejich meze.**
+
+Zadání (Filip): *„pokusme se je upravit tak, aby nám nezbouraly web… nenecháme
+si to sestřelit obsahem, nejsem Onassis."* Rozpadá se to na tři různé věci
+a každá se řeší jinde:
+
+| Čeho se bát | Čím je to ošetřené |
+|---|---|
+| obrázek rozhodí rozvržení | CSS `object-fit: cover` s pevnou výškou — platí už dřív, ať má obrázek jakékoli rozměry |
+| nahraná fotka je obrovská | přepočet na WebP nejvýš 1600 px, vstup do 15 MB a 60 Mpx (`Nahravani`, `Zpracovani`) |
+| **odkaz na cizí obrázek** | **nově: v těle projde jen obrázek z našeho úložiště** |
+
+Třetí řádek je ten podstatný a předtím chyběl. U fotky nahrané k nám velikost
+srazí přepočet; **u cizí adresy ji neřídíme nijak** a zaplatí ji každý, kdo
+článek otevře. `Bloky.ZHtml` proto bere adresu našeho úložiště a obrázek
+odjinud zahodí. Kdo chce mít v textu fotku, nahraje ji.
+
+**Nahrání do těla** je `POST /sprava/serie/{serie}/clanky/{clanek}/obrazky`
+a ve správě vlastní sekce *Obrázky v textu* — bez javascriptu, jako zbytek
+správy. Nic nenahrazuje, na rozdíl od hlavního obrázku jich může být víc;
+autor dostane hotovou značku `<img …>` k vložení do textu. Fotky nesou
+`Fotka.VTeleClankuId`, takže jdou autorovi vypsat a jednou i uklidit.
+
+**Limity na tělo** (`Bloky.NejvicBloku`, `NejvicZnaku`, `NejvicObrazku`):
+300 bloků, 40 000 znaků, 20 obrázků. Správa je hlídá **před** uložením
+a vrací větu — autor má vědět, že se text nevejde, ne dostat tiše oříznutý
+článek. `ZHtml` je dodrží i sám, jako pojistka pro import, kde by chyba
+shodila celou dávku kvůli jednomu článku.
+
+**Falešné API umí od 23. 9. 2026 i správu obecných článků** — přehled,
+detail, založení, úpravu, stav a obrázky v těle. Do té doby je neznalo
+a obrazovka `/sprava/web/clanky` se nedala otevřít, takže se ta polovina
+administrace zkoušela jedině proti nasazenému API. Zakládání i úprava
+článku jsou teď parametrizované seznamem, ne napsané dvakrát.
+
+**Platí to i pro obecné články mimo ročník** (`/sprava/web/clanky/{clanek}/obrazky`).
+Nejdřív to byly jen články ročníku — vzniklo to kvůli pořadatelům — ale mít
+dvě různá pravidla podle toho, kde článek leží, by si musel pamatovat každý,
+kdo se toho příště dotkne.
+
 ### Otevřené: přihlášení lodi na jednu zastávku
 
 *(zadáno)* „Na každou akci se může přihlásit do kategorie loď" a organizátor

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { datumClanku } from "@/app/datum";
 import { Nahled, NahledVelky } from "@/app/fotky";
-import type { ClanekShrnuti, Novinka } from "@/lib/api";
+import { bloky, type Blok, type ClanekShrnuti, type FormatClanku, type Novinka, type Usek } from "@/lib/api";
 
 /**
  * Výpis novinek. Používá ho úvodní stránka, seznam novinek ročníku
@@ -82,11 +82,25 @@ export function VypisNovinek({
 }
 
 /**
- * Tělo článku. Odstavce jsou oddělené prázdným řádkem — žádný markdown,
- * žádné HTML z databáze. Až bude potřeba víc než odstavce, je to aditivní
- * sloupec s formátem, ne přepis toho, co je uložené.
+ * Tělo článku.
+ *
+ * `format` říká, v jakém tvaru text je. **Vykresluje se zatím jen `Text`** —
+ * odstavce oddělené prázdným řádkem, jako doteď.
+ *
+ * `Html` se schválně vypisuje **taky jako text**, ne jako značky. Není to
+ * nedodělek, ale pořadí prací: vložené HTML se musí nejdřív převést na úzkou
+ * množinu značek, které web umí vykreslit. Bez toho by schránka z Wordu
+ * přinesla vlastní fonty a pevné velikosti, které rozvržení rozbijí, a
+ * nevyčištěné HTML z databáze je XSS. Dokud čistička není, je bezpečnější
+ * ukázat zdrojový text než ho pustit do stránky — a nic v tomhle formátu
+ * zatím stejně nevzniká.
  */
-export function Odstavce({ text }: { text: string }) {
+export function Odstavce({ text, format }: { text: string; format?: FormatClanku }) {
+  if (format === "Bloky") return <Telo bloky={bloky(text)} />;
+
+  // `Text` i `Html`. Html by v databázi být nemělo — server ho při uložení
+  // převádí na bloky — ale kdyby se tam přesto vyskytlo, je vypsat zdroj
+  // bezpečnější než ho pustit do stránky.
   return (
     <>
       {text
@@ -98,6 +112,87 @@ export function Odstavce({ text }: { text: string }) {
           // který dává smysl — a seznam se stejně nepřerovnává.
           <p key={i}>{o}</p>
         ))}
+    </>
+  );
+}
+
+/**
+ * Tělo poskládané z bloků, které server vyrobil z vloženého HTML.
+ *
+ * **Nikde tu není `dangerouslySetInnerHTML`** a to je celý smysl: server
+ * nevrací vyčištěné značky, ale strukturu, a tahle komponenta z ní staví
+ * vlastní prvky. Ani chyba v serverovém rozboru proto nemůže skončit cizím
+ * skriptem ve stránce — nanejvýš divně zalomeným textem.
+ */
+function Telo({ bloky }: { bloky: Blok[] }) {
+  return (
+    <>
+      {bloky.map((b, i) => {
+        // Bloky nemají vlastní identitu; pořadí se nemění, takže index stačí.
+        switch (b.druh) {
+          case "Nadpis":
+            return b.uroven === 3 ? (
+              <h3 key={i}>
+                <Radka useky={b.useky} />
+              </h3>
+            ) : (
+              <h2 key={i}>
+                <Radka useky={b.useky} />
+              </h2>
+            );
+
+          case "Seznam": {
+            const polozky = (b.polozky ?? []).map((p, j) => (
+              <li key={j}>
+                <Radka useky={p} />
+              </li>
+            ));
+            return b.cislovany ? <ol key={i}>{polozky}</ol> : <ul key={i}>{polozky}</ul>;
+          }
+
+          case "Obrazek":
+            return b.adresa ? (
+              // `fotka-clanku` je táž šířka jako fotka nad článkem, ne
+              // náhled do karty. Obrázek zůstává u zdroje, nekopírujeme ho;
+              // popis je od autora, a když chybí, je to dekorace a prázdný
+              // `alt` je správně.
+              <figure key={i} className="fotka-clanku">
+                <img src={b.adresa} alt={b.popis ?? ""} loading="lazy" decoding="async" />
+                {b.popis && <figcaption>{b.popis}</figcaption>}
+              </figure>
+            ) : null;
+
+          default:
+            return (
+              <p key={i}>
+                <Radka useky={b.useky} />
+              </p>
+            );
+        }
+      })}
+    </>
+  );
+}
+
+/** Úseky jedné řádky — tučné, kurzíva, odkaz. */
+function Radka({ useky }: { useky?: Usek[] }) {
+  return (
+    <>
+      {(useky ?? []).map((u, i) => {
+        let obsah = <>{u.text}</>;
+        if (u.tucne) obsah = <strong>{obsah}</strong>;
+        if (u.kurziva) obsah = <em>{obsah}</em>;
+
+        // Odkaz v těle vede jinam než na náš web, takže do nové karty
+        // (konvence webu). Server pouští jen absolutní http(s) a mailto.
+        return u.odkaz ? (
+          <a key={i} href={u.odkaz} target="_blank" rel="noopener noreferrer">
+            {obsah}
+          </a>
+        ) : (
+          <span key={i}>{obsah}</span>
+        );
+      })}
     </>
   );
 }

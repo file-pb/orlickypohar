@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Clanky;
@@ -204,5 +204,76 @@ public class ClankySpravaTests(PostgresFixture fixture)
 
         Assert.Contains("vyslo", verejne);
         Assert.DoesNotContain("stazeno", verejne);
+    }
+
+    [Fact]
+    public async Task Vlozeny_text_se_ulozi_vycisteny_jako_bloky()
+    {
+        // Cesta, kterou půjde pořadatel: vloží do formuláře, co má ve Wordu,
+        // a zaškrtne políčko. Čistí se **při zápisu**, takže v databázi
+        // nesmí zůstat ani značka.
+        var (serieId, radava, _) = await RocnikAsync("vlozeni");
+
+        var (clanek, chyba) = await SpravaAsync(s => s.ZalozAsync(serieId, radava, new(
+            "Pozvánka na Radavský pohár",
+            """
+            <h2>Radavský pohár 2027</h2>
+            <p class="MsoNormal" style="font-size:11pt">Zveme vás na <b>osmý ročník</b>.</p>
+            <script>alert("xss")</script>
+            <p>Víc na <a href="https://www.ycpk.cz/rp">našem webu</a>.</p>
+            """,
+            Format: FormatClanku.Html), default));
+
+        Assert.Null(chyba);
+        Assert.Equal(FormatClanku.Bloky, clanek!.Format);
+        Assert.DoesNotContain("<script", clanek.Telo, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("alert", clanek.Telo);
+        Assert.DoesNotContain("MsoNormal", clanek.Telo);
+
+        var bloky = Bloky.Nacti(clanek.Telo);
+        Assert.Equal(
+            [DruhBloku.Nadpis, DruhBloku.Odstavec, DruhBloku.Odstavec],
+            bloky.Select(b => b.Druh));
+        Assert.Contains(bloky[1].Useky!, u => u.Text == "osmý ročník" && u.Tucne);
+        Assert.Contains(bloky[2].Useky!, u => u.Odkaz == "https://www.ycpk.cz/rp");
+    }
+
+    [Fact]
+    public async Task Prosty_text_zustava_prostym_textem()
+    {
+        // Výchozí chování se vložením nesmí změnit: kdo políčko nezaškrtne,
+        // píše odstavce jako doteď a žádné značky se mu nevyrábějí.
+        var (serieId, radava, _) = await RocnikAsync("prosty");
+
+        var (clanek, _) = await SpravaAsync(s =>
+            s.ZalozAsync(serieId, radava, Vstup("Obyčejná zpráva"), default));
+
+        Assert.Equal(FormatClanku.Text, clanek!.Format);
+        Assert.Equal("První odstavec.\n\nDruhý odstavec.", clanek.Telo);
+    }
+
+    [Fact]
+    public async Task Druhe_ulozeni_vycisteneho_clanku_nic_nezmeni()
+    {
+        // Autor si článek otevře, nic nezmění a uloží. Server mu do pole dal
+        // vyčištěné HTML, takže druhý průchod musí dát tytéž bloky — jinak
+        // by se obsah měnil při každém otevření.
+        var (serieId, radava, _) = await RocnikAsync("znovu-ulozeni");
+
+        var (clanek, _) = await SpravaAsync(s => s.ZalozAsync(serieId, radava, new(
+            "Pozvánka",
+            """<h2>Nadpis</h2><p>Text s <b>tučným</b>.</p><script>alert(1)</script>""",
+            Format: FormatClanku.Html), default));
+
+        var poPrvni = clanek!.Telo;
+        var kUprave = Bloky.DoHtml(Bloky.Nacti(poPrvni));
+
+        await SpravaAsync(async s =>
+        {
+            await s.UpravAsync(clanek, new("Pozvánka", kUprave, Format: FormatClanku.Html), radava, default);
+            return true;
+        });
+
+        Assert.Equal(poPrvni, clanek.Telo);
     }
 }

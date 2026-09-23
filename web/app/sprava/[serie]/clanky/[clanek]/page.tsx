@@ -4,7 +4,8 @@ import { Drobecky } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { STAVY, jeWeb, nactiClanek, nactiPrehled, nazevStavu, type StavClanku } from "@/lib/clanky";
 import { SpravaObrazku } from "@/app/sprava/obrazek";
-import { ulozAkce, stavAkce } from "../akce";
+import { ulozAkce, stavAkce, nahrajDoTelaAkce } from "../akce";
+import { NEJVIC_MB, obrazkyVTele } from "@/lib/fotky";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +52,12 @@ export default async function UpravaClanku({ params, searchParams }: Parametry) 
 
   // Obecný článek mimo ročník: bez ročníku v cestě a bez volby regaty.
   const web = jeWeb(serie);
+  // Server vrací u uloženého vloženého článku formát `Html` — je to tentýž
+  // obsah jako uložené bloky, jen tvar, ve kterém se dá psát.
+  const vlozeny = clanek?.format === "Html";
+  // Seznam se načítá jen tam, kde má smysl — u článku psaného jako odstavce
+  // se obrázek do textu vložit nedá.
+  const obrazkyTela = vlozeny ? await obrazkyVTele(serie, slug) : [];
 
   const hlava = (
     <Drobecky
@@ -171,11 +178,87 @@ export default async function UpravaClanku({ params, searchParams }: Parametry) 
         <label>
           Text
           <textarea name="telo" required rows={16} defaultValue={clanek.telo} />
-          <span className="poznamka">Odstavce odděl prázdným řádkem.</span>
+          <span className="poznamka">
+            {vlozeny
+              ? "Vyčištěné HTML — to, co se doopravdy uloží. Co čistička zahodila, už tu není."
+              : "Odstavce odděl prázdným řádkem."}
+          </span>
+        </label>
+
+        {/* Zaškrtnuté zůstane u článku, který už jako vložený uložený je:
+            jeho tělo je HTML a odškrtnutím by se z něj staly odstavce
+            plné značek. */}
+        <label>
+          <input type="checkbox" name="vlozene" value="1" defaultChecked={vlozeny} /> Text je
+          vložený z Wordu nebo z webu
         </label>
 
         <button type="submit">Uložit</button>
       </form>
+
+      {/* Obrázky do textu. Vlastní sekce, protože se chovají jinak než
+          hlavní obrázek: nenahrazují se, je jich víc a autor si adresu vloží
+          do textu sám. Bez javascriptu se to jinak udělat nedá — a je to
+          zároveň jediná cesta, jak obrázek do těla dostat: cizí adresu
+          čistička zahodí, protože její velikost neřídíme. */}
+      {vlozeny && (
+        <section id="obrazky-v-textu">
+          <h2>Obrázky v textu</h2>
+          {/* `encType` se neuvádí — u serverové akce ho React nastaví sám
+              a ruční by přepsal. */}
+          <form action={nahrajDoTelaAkce} className="formular">
+            <input type="hidden" name="serie" value={serie} />
+            <input type="hidden" name="slug" value={slug} />
+            <label>
+              Soubor
+              <input type="file" name="soubor" accept="image/jpeg,image/png,image/webp" required />
+              <span className="poznamka">
+                JPEG, PNG nebo WebP do {NEJVIC_MB} MB. Zmenší se na šířku 1600 px a převede
+                do WebP, takže i fotka z mobilu stránku nezpomalí.
+              </span>
+            </label>
+            <label>
+              Autor fotky
+              <input name="autor" maxLength={120} required />
+            </label>
+            <label>
+              Popis
+              <input name="popis" maxLength={300} />
+              <span className="poznamka">Stojí pod obrázkem a čte ho hlasová čtečka.</span>
+            </label>
+            <label>
+              <input name="souhlas" type="checkbox" required /> Autor souhlasí se zveřejněním
+            </label>
+            <button type="submit">Nahrát obrázek</button>
+          </form>
+
+          {obrazkyTela.length > 0 && (
+            <>
+              <p className="poznamka">
+                Adresu vlož do textu jako <code>&lt;img src=&quot;…&quot; alt=&quot;popis&quot;&gt;</code>.
+              </p>
+              <ul className="seznam">
+                {obrazkyTela.map((o) => (
+                  <li
+                    key={o.velky}
+                    style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}
+                  >
+                    <img src={o.nahled} alt="" width={64} height={64}
+                         style={{ objectFit: "cover", borderRadius: 6, flex: "none" }} />
+                    {/* Jen ke zkopírování — pole je na výběr myší lepší než
+                        prostý text a bez javascriptu jinak nic nejde. */}
+                    <input
+                      readOnly
+                      value={`<img src="${o.velky}" alt="${o.popis ?? ""}">`}
+                      style={{ flex: 1, minWidth: 0 }}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
+      )}
 
       <SpravaObrazku
         serie={serie}

@@ -143,6 +143,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // potvrdil souhlas, nesmí zmizet potichu s nimi.
         fotka.HasOne(x => x.Nahral).WithMany().HasForeignKey(x => x.NahralId)
             .OnDelete(DeleteBehavior.Restrict);
+        // Fotka v těle článku. Mazání článku ji odpojí, ne smaže — soubor
+        // v úložišti musí uklidit kód, který k úložišti má přístup, ne
+        // kaskáda v databázi.
+        fotka.HasIndex(x => x.VTeleClankuId);
 
         var ucast = b.Entity<Ucast>();
         ucast.Property(x => x.Posadka).HasMaxLength(400);
@@ -216,6 +220,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         clanek.Property(x => x.Titulek).HasMaxLength(200).IsRequired();
         clanek.Property(x => x.Perex).HasMaxLength(600);
         clanek.Property(x => x.Autor).HasMaxLength(120);
+        // Nula je `Text`, takže stávající články zůstanou tím, čím jsou.
+        // Kdyby se výchozí hodnota v databázi neuvedla, migrace by je
+        // sice taky nastavila na nulu, ale jen shodou okolností — tohle
+        // to říká nahlas.
+        clanek.Property(x => x.Format).HasDefaultValue(FormatClanku.Text);
         clanek.HasOne(x => x.Serie).WithMany().HasForeignKey(x => x.SerieId)
             .OnDelete(DeleteBehavior.Cascade);
         // Smazaná zastávka nesmí odnést svůj blog: text o závodě, který se

@@ -369,6 +369,14 @@ SPRAVA_CLANKY = [
     for c in D.get("clanky", [])
 ]
 
+# Totéž pro obecné články mimo ročník. Správa je pod `/sprava/web` a chová
+# se stejně; jediný rozdíl je, že článek nepatří do ročníku a nemá zastávku.
+SPRAVA_OBECNE = [{**c, "stav": "Publikovano"} for c in OBECNE_CLANKY]
+
+# Obrázky nahrané do těl článků, podle slugu. Falešné API je neukládá —
+# vrací hotovou adresu, aby šlo vyzkoušet, jak se sekce chová.
+OBRAZKY_V_TELE = {}
+
 
 # Vzorek novinek ze svazu. Skutečné se stahují z RSS sailing.cz úlohou
 # v API; tady jsou napevno, aby vývoj webu nesahal na cizí server a aby
@@ -795,13 +803,19 @@ class H(BaseHTTPRequestHandler):
             return self.nahraj_obrazek(m.group(1), m.group(2))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/poradatele/([a-z0-9-]+)$', cesta)):
             return self.uloz_poradatele(m.group(1))
+        if (m := re.match(r'^/sprava/web/clanky/([a-z0-9-]+)$', cesta)):
+            return self.uloz_clanek(m.group(1), SPRAVA_OBECNE)
+
         m = re.match(rf'^/sprava/serie/{D["slug"]}/clanky/([a-z0-9-]+)$', cesta)
         if not m:
             return self.send_error(404)
+        return self.uloz_clanek(m.group(1), SPRAVA_CLANKY)
+
+    def uloz_clanek(self, slug, seznam):
         if not self.headers.get("authorization"):
             return self.send_error(401)
 
-        c = next((c for c in SPRAVA_CLANKY if c["slug"] == m.group(1)), None)
+        c = next((c for c in seznam if c["slug"] == slug), None)
         if not c:
             return self.send_error(404)
 
@@ -813,6 +827,13 @@ class H(BaseHTTPRequestHandler):
 
         # Slug se schválně nemění — adresa už mohla někam odejít.
         c.update({k: vstup.get(k) for k in ("titulek", "telo", "perex", "autor", "zavod")})
+        # **Falešné API vložený text nečistí**, jen si formát pamatuje —
+        # čistička je v `Features/Clanky/Bloky.cs` a opisovat parser HTML do
+        # Pythonu by znamenalo mít dvě různá pravidla. Formulář se tu tedy
+        # dá vyzkoušet, ale jak bude článek nakonec vypadat, se pozná až
+        # proti skutečnému API. Web tělo ve formátu `Html` vypíše jako text,
+        # takže se tu nic nerozbije.
+        c["format"] = vstup.get("format") or "Text"
         return self.odpoved(clanek_radek(c))
 
     def verejna_prihlaska(self, zavod):
@@ -915,6 +936,17 @@ class H(BaseHTTPRequestHandler):
             return self.zaloz_clanek()
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/clanky/([a-z0-9-]+)/stav$', cesta)):
             return self.prepni_stav(m.group(1))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/clanky/([a-z0-9-]+)/obrazky$', cesta)):
+            return self.nahraj_do_tela(m.group(1))
+
+        # Obecné články mimo ročník. Chovají se stejně, jen nepatří do
+        # ročníku a nemají zastávku.
+        if cesta == '/sprava/web/clanky':
+            return self.zaloz_clanek(SPRAVA_OBECNE)
+        if (m := re.match(r'^/sprava/web/clanky/([a-z0-9-]+)/stav$', cesta)):
+            return self.prepni_stav(m.group(1), SPRAVA_OBECNE)
+        if (m := re.match(r'^/sprava/web/clanky/([a-z0-9-]+)/obrazky$', cesta)):
+            return self.nahraj_do_tela(m.group(1))
 
         if (m := re.match(rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)/prihlasky$', cesta)):
             return self.verejna_prihlaska(m.group(1))
@@ -1299,6 +1331,31 @@ class H(BaseHTTPRequestHandler):
                                "popis": text("popis") or None}
         return self.odpoved({k: v for k, v in vlastnik["obrazek"].items() if k != "id"})
 
+    def nahraj_do_tela(self, slug):
+        """Obrázek do těla článku. Na rozdíl od hlavního nic nenahrazuje —
+        v textu jich může být víc, takže se jen přidá do seznamu."""
+        if not self.headers.get("authorization"):
+            return self.send_error(401)
+
+        pole, fotka = self.nahrana_fotka()
+        if not fotka:
+            return None
+
+        text = lambda k: (pole[k].get_payload(decode=True).decode("utf-8").strip() if k in pole else "")
+        if not text("autor"):
+            return self.chyba(400, "Napiš, kdo fotku fotil. Na webu se pod ní ukáže.")
+        if text("souhlas") != "true":
+            return self.chyba(400, "Potvrď, že autor souhlasí se zveřejněním fotky na webu.")
+
+        data, typ = fotka
+        id = uuid.uuid4().hex
+        FOTKY[id] = (data, typ)
+        adresa = f"http://127.0.0.1:{PORT}/fake-foto/{id}"
+        obrazek = {"nahled": adresa, "velky": adresa, "sirka": 1600, "vyska": 1067,
+                   "autor": text("autor"), "popis": text("popis") or None}
+        OBRAZKY_V_TELE.setdefault(slug, []).insert(0, obrazek)
+        return self.odpoved(obrazek)
+
     def uloz_poradatele(self, slug):
         if not self.headers.get("authorization"):
             return self.send_error(401)
@@ -1392,7 +1449,8 @@ class H(BaseHTTPRequestHandler):
         z["publikovano"] = bool(self.telo_zadosti().get("publikovano"))
         return self.odpoved(zastavka_radek(z))
 
-    def zaloz_clanek(self):
+    def zaloz_clanek(self, seznam=None):
+        seznam = SPRAVA_CLANKY if seznam is None else seznam
         if not self.headers.get("authorization"):
             return self.send_error(401)
 
@@ -1407,22 +1465,24 @@ class H(BaseHTTPRequestHandler):
         if not slug:
             return self.chyba(400, "Z titulku nejde udělat adresa. "
                                    "Napiš do něj aspoň jedno písmeno nebo číslici.")
-        if any(c["slug"] == slug for c in SPRAVA_CLANKY):
-            return self.chyba(400, f"Článek s adresou „{slug}“ už v ročníku je. Změň titulek.")
+        if any(c["slug"] == slug for c in seznam):
+            return self.chyba(400, f"Článek s adresou „{slug}“ už je. Změň titulek.")
 
         # Nový článek je vždycky koncept — stejně jako v API.
         novy = {"slug": slug, "titulek": titulek, "telo": vstup.get("telo"),
+                "format": vstup.get("format") or "Text",
                 "perex": vstup.get("perex"), "autor": vstup.get("autor"),
                 "zavod": vstup.get("zavod"), "stav": "Draft",
                 "publikovanoV": "2026-09-11T12:00:00+00:00"}
-        SPRAVA_CLANKY.insert(0, novy)
+        seznam.insert(0, novy)
         return self.odpoved(clanek_radek(novy), 201)
 
-    def prepni_stav(self, slug):
+    def prepni_stav(self, slug, seznam=None):
+        seznam = SPRAVA_CLANKY if seznam is None else seznam
         if not self.headers.get("authorization"):
             return self.send_error(401)
 
-        c = next((c for c in SPRAVA_CLANKY if c["slug"] == slug), None)
+        c = next((c for c in seznam if c["slug"] == slug), None)
         if not c:
             return self.send_error(404)
 
@@ -1706,7 +1766,30 @@ class H(BaseHTTPRequestHandler):
             c = next((c for c in SPRAVA_CLANKY if c["slug"] == m.group(1)), None)
             if not c:
                 return self.send_error(404)
-            telo = {**clanek_radek(c), "telo": c["telo"]}
+            telo = {**clanek_radek(c), "telo": c["telo"],
+                    "format": c.get("format", "Text")}
+        elif cesta == '/sprava/web/clanky':
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            # Obecný článek do ročníku nepatří, takže ani do zastávky:
+            # `smiNaRocnik` je False a seznam zastávek prázdný.
+            telo = {"serie": "web", "serieNazev": "Web", "smiNaRocnik": False,
+                    "zastavky": [],
+                    "clanky": [clanek_radek(c) for c in SPRAVA_OBECNE
+                               if c["stav"] != "Smazano"]}
+        elif (m := re.match(r'^/sprava/web/clanky/([a-z0-9-]+)$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            c = next((c for c in SPRAVA_OBECNE if c["slug"] == m.group(1)), None)
+            if not c:
+                return self.send_error(404)
+            telo = {**clanek_radek(c), "telo": c["telo"],
+                    "format": c.get("format", "Text")}
+        elif (m := re.match(
+                rf'^(?:/sprava/web|/sprava/serie/{D["slug"]})/clanky/([a-z0-9-]+)/obrazky$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            telo = OBRAZKY_V_TELE.get(m.group(1), [])
         elif cesta == "/prevzate-clanky":
             # Novinky ze svazu. Falešné API je nestahuje — vydává vzorek,
             # aby šlo na webu vidět, jak karta s cizím zdrojem vypadá.
@@ -1734,7 +1817,8 @@ class H(BaseHTTPRequestHandler):
             c = next((c for c in clanky_verejne() if c["slug"] == m.group(1)), None)
             if not c:
                 return self.send_error(404)
-            telo = {**clanek_shrnuti(c), "telo": c["telo"]}
+            telo = {**clanek_shrnuti(c), "telo": c["telo"],
+                    "format": c.get("format", "Text")}
         elif (m := re.match(rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)$', cesta)):
             z = next((z for z in D["zavody"] if z["slug"] == m.group(1)), None)
             if not z:

@@ -34,7 +34,7 @@ namespace OrlickyPohar.Api.Features.Import;
 internal static class ImportHandler
 {
     public static async Task<ImportVysledek> ZpracujAsync(
-        AppDbContext db, SerieVstup vstup, CancellationToken ct)
+        AppDbContext db, SerieVstup vstup, CancellationToken ct, string? naseUloziste = null)
     {
         OveřVstup(vstup);
 
@@ -46,7 +46,7 @@ internal static class ImportHandler
         var prihlasky = await SlaďPrihlasky(db, serie, vstup, kategorie.Mapa, lode.Mapa, ct);
 
         var zavody = await SlaďZavody(db, serie, vstup, prihlasky.Mapa, osoby.Mapa, ct);
-        var clanky = await SlaďClanky(db, serie, vstup, ct);
+        var clanky = await SlaďClanky(db, serie, vstup, ct, naseUloziste);
 
         // Až po závodech: teprve tam se ruší účasti lodí, které v souboru
         // nezůstaly, a bez toho by každá odcházející loď ještě jednu měla.
@@ -492,7 +492,7 @@ internal static class ImportHandler
     /// </para>
     /// </summary>
     private static async Task<ImportPocty> SlaďClanky(
-        AppDbContext db, Serie serie, SerieVstup vstup, CancellationToken ct)
+        AppDbContext db, Serie serie, SerieVstup vstup, CancellationToken ct, string? naseUloziste)
     {
         var vstupni = vstup.Clanky ?? [];
         if (vstupni.Count == 0) return new ImportPocty(0, 0);
@@ -528,7 +528,22 @@ internal static class ImportHandler
             c.ZavodId = zavodId;
             c.Titulek = v.Titulek;
             c.Perex = v.Perex;
-            c.Telo = v.Telo;
+            // Vložené HTML se do databáze nedostane — převede se na bloky.
+            // Čistí se **při zápisu**, ne při zobrazení: kdyby se ukládalo
+            // syrové, stačilo by jedno místo, které si ho vezme bez očisty.
+            if (v.Format == FormatClanku.Html)
+            {
+                // Import je dávka, ne formulář — chyba by shodila celý ročník
+                // kvůli jednomu dlouhému článku. `ZHtml` proto limity dodrží
+                // sám a co je nad ně, se zahodí.
+                c.Telo = Clanky.Bloky.Uloz(Clanky.Bloky.ZHtml(v.Telo, naseUloziste));
+                c.Format = FormatClanku.Bloky;
+            }
+            else
+            {
+                c.Telo = v.Telo;
+                c.Format = v.Format;
+            }
             c.Autor = v.Autor;
             // Do UTC, ze stejného důvodu jako start rozjížďky: Npgsql jiný
             // posun do `timestamp with time zone` nezapíše.

@@ -36,6 +36,17 @@ public class Fotka
     /// <summary>Co je na fotce. Slouží jako popisek i jako text pro čtečku obrazovky.</summary>
     public string? Popis { get; set; }
 
+    /// <summary>
+    /// Článek, do jehož <b>těla</b> se fotka nahrála. Prázdné znamená, že je
+    /// to hlavní obrázek článku nebo medailonku — tam vazba vede opačně,
+    /// z vlastníka na fotku.
+    /// <para>
+    /// Vazba je tu kvůli dvěma věcem: aby šel autorovi ukázat seznam obrázků,
+    /// které do článku nahrál, a aby se daly uklidit, až článek zmizí.
+    /// </para>
+    /// </summary>
+    public int? VTeleClankuId { get; set; }
+
     /// <summary>Kdo fotku nahrál a tím potvrdil souhlas autora se zveřejněním.</summary>
     public Guid NahralId { get; set; }
     public Uzivatel? Nahral { get; set; }
