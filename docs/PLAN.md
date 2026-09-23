@@ -2937,12 +2937,13 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
    diskvalifikaci, dva škrty, rozstřel. Zbývají drobné otázky vypsané
    tamtéž; na dvacítce a hodnocení trestů visí fáze 5 (protesty
    a penalizace) — Filip, 22. 9.: varianty si necháme navrhnout později.
-5. **Zápis z vody je hotový po krok 4** (22.–23. 9. 2026). Cílová
-   obrazovka i s pozdní lodí, poznávacími znaky, fotkou papíru
-   a porovnáním dvou zapisovatelů; k tomu přepínání rozjížďky do poháru
-   a celkové pořadí regaty napříč kategoriemi (volí se v kalendáři).
-   **Zbývá krok 5**: podržení klepnutí bez připojení. Je to pojistka —
-   u cíle je signál — takže leží nakonec.
+5. **Zápis z vody je hotový celý** (22.–23. 9. 2026), kroky 1 až 5:
+   cílová obrazovka s pozdní lodí a poznávacími znaky, fotka papíru,
+   porovnání dvou zapisovatelů a podržení klepnutí bez signálu. K tomu
+   přepínání rozjížďky do poháru a celkové pořadí regaty napříč
+   kategoriemi (volí se v kalendáři; „obojí" mají maratony). Co zbývá,
+   je zkusit to **na vodě se skutečným telefonem** — nic z toho zatím
+   neproběhlo jinde než v prohlížeči proti mocku.
 6. **Fáze 5 je skoro hotová** (stav k 14. 9. 2026). Hotové: udělování
    oprávnění (i rozhodčím na zastávku), kalendář zastávek, přihlášky lodí,
    workflow a zápis výsledků, psaní novinek. Protesty a penalizace čekají
