@@ -91,6 +91,82 @@ public class ImportTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task Lod_ktera_ze_souboru_zmizi_odejde_z_rocniku()
+    {
+        // Rozhodčí loď přejmenuje a ta stará ze sešitu zmizí. Když zůstane
+        // přihlášená do ročníku, sbírá dál neúčast na každé regatě a stojí
+        // v průběžném pořadí — přesně to dělala SANDY přejmenovaná na SENDY.
+        var puvodni = Rocnik("odchod");
+        await Posli(puvodni);
+
+        var zavod = puvodni.Zavody[0];
+        var opraveny = puvodni with
+        {
+            Lode = [puvodni.Lode[0]],
+            Prihlasky = [puvodni.Prihlasky[0]],
+            Zavody =
+            [
+                zavod with
+                {
+                    Ucasti = [zavod.Ucasti[0]],
+                    Rozjizdky = [zavod.Rozjizdky[0] with { Vysledky = [zavod.Rozjizdky[0].Vysledky[0]] }],
+                },
+            ],
+        };
+
+        var druhy = await Posli(opraveny);
+        Assert.Equal(1, druhy.Prihlasky.Smazane);
+
+        using var scope = fixture.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var lode = await db.Prihlasky
+            .Where(p => p.Serie!.Slug == "odchod")
+            .Select(p => p.Lod!.Nazev)
+            .ToListAsync();
+
+        Assert.Equal(["Anička odchod"], lode);
+    }
+
+    [Fact]
+    public async Task Lod_prihlasenou_v_administraci_import_nesmaze()
+    {
+        // Pořadatel zapíše na příští regatu loď, o které sešit rozhodčího
+        // neví. Nahrání ročníku ji nesmí odnést — soubor je pravda o tom,
+        // co se odjelo, ne o tom, kdo se teprve chystá.
+        var vstup = Rocnik("prihlaska-navic");
+        await Posli(vstup);
+
+        using (var scope = fixture.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var serie = await db.Serie.SingleAsync(s => s.Slug == "prihlaska-navic");
+            var kategorie = await db.Kategorie.FirstAsync(k => k.SerieId == serie.Id);
+            var zavod = await db.Zavody.FirstAsync(z => z.SerieId == serie.Id);
+            var majitel = await db.Osoby.FirstAsync();
+            var lod = new OrlickyPohar.Api.Features.Lode.Lod
+            {
+                Nazev = "Pozdní host",
+                MajitelId = majitel.Id,
+            };
+
+            var prihlaska = new OrlickyPohar.Api.Features.Serial.Prihlaska
+            {
+                Serie = serie,
+                Lod = lod,
+                Kategorie = kategorie,
+            };
+            db.Ucasti.Add(new Ucast { Zavod = zavod, Prihlaska = prihlaska, Stav = StavUcasti.Prihlasena });
+            await db.SaveChangesAsync();
+        }
+
+        await Posli(vstup);
+
+        using var overeni = fixture.Services.CreateScope();
+        var db2 = overeni.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.True(await db2.Prihlasky.AnyAsync(p => p.Lod!.Nazev == "Pozdní host"));
+    }
+
+    [Fact]
     public async Task Prvni_import_nastavi_pravidla_rocniku()
     {
         // Pravidla ročníku (škrty, mlčení o výsledcích regat) musí platit už
