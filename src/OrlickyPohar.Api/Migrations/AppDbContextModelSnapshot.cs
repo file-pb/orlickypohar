@@ -673,6 +673,33 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("Vysledky");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.ZapisNavrh", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("RozjizdkaId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UzivatelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("ZapsanoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UzivatelId");
+
+                    b.HasIndex("RozjizdkaId", "UzivatelId")
+                        .IsUnique();
+
+                    b.ToTable("ZapisyNavrhu", (string)null);
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Zavod", b =>
                 {
                     b.Property<int>("Id")
@@ -992,6 +1019,54 @@ namespace OrlickyPohar.Api.Migrations
                     b.Navigation("Rozjizdka");
 
                     b.Navigation("Ucast");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.ZapisNavrh", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Zavody.Rozjizdka", "Rozjizdka")
+                        .WithMany()
+                        .HasForeignKey("RozjizdkaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Uzivatel")
+                        .WithMany()
+                        .HasForeignKey("UzivatelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsMany("OrlickyPohar.Api.Features.Zavody.NavrhRadek", "Radky", b1 =>
+                        {
+                            b1.Property<int>("ZapisNavrhId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<DateTimeOffset?>("DojezdV");
+
+                            b1.Property<int?>("Kod");
+
+                            b1.Property<int?>("PoradiVCili");
+
+                            b1.Property<int>("PrihlaskaId");
+
+                            b1.HasKey("ZapisNavrhId", "__synthesizedOrdinal");
+
+                            b1.ToTable("ZapisyNavrhu");
+
+                            b1
+                                .ToJson("Radky")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ZapisNavrhId");
+                        });
+
+                    b.Navigation("Radky");
+
+                    b.Navigation("Rozjizdka");
+
+                    b.Navigation("Uzivatel");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Zavod", b =>

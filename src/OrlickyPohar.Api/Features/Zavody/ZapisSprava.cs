@@ -50,7 +50,27 @@ public record ZapisRozjizdkyDto(
     // veřejné čtení ji nevydává. `SmiPapir` je jen o roli: pořadatel ji
     // smí přiložit i k podepsanému zápisu, protože do čísel nesahá.
     Fotky.ObrazekDto? Papir = null,
-    bool SmiPapir = false);
+    bool SmiPapir = false,
+    // Kolik zapisovatelů už rozjížďku uložilo (krok 4). Víc než jeden
+    // znamená, že je co porovnávat.
+    int PocetNavrhu = 0);
+
+/// <summary>Jeden řádek snímku i s tím, co o lodi ví ročník.</summary>
+public record NavrhRadekDto(
+    int PrihlaskaId, string Lod, string Kategorie, int? PoradiVCili, KodVysledku? Kod);
+
+/// <summary>
+/// Snímek zápisu jednoho zapisovatele k porovnání. <c>Muj</c> říká, jestli
+/// je ten, kdo se dívá, jeho autorem — na vodě jsou telefony dva a první
+/// otázka je „který je můj".
+/// </summary>
+public record NavrhDto(
+    Guid UzivatelId, string Kdo, DateTimeOffset ZapsanoV, bool Muj,
+    IReadOnlyList<NavrhRadekDto> Radky);
+
+/// <summary>Snímky rozjížďky, od nejnovějšího.</summary>
+public record NavrhyDto(
+    string Zavod, string ZavodNazev, int Cislo, IReadOnlyList<NavrhDto> Navrhy);
 
 /// <summary>Celá sada výsledků rozjížďky. Loď, která v ní není, výsledek nemá.</summary>
 public record ZapisVstup(IReadOnlyList<ZapisRadekVstup> Radky);
@@ -67,7 +87,7 @@ public record ZapisVstup(IReadOnlyList<ZapisRadekVstup> Radky);
 /// požadavku</b> — stejně jako u <see cref="VysledkySprava"/>.
 /// </para>
 /// </summary>
-public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste)
+public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider cas)
 {
     private const string NeniPoradatel =
         "Výsledky zapisuje pořadatel regaty. Rozhodčí je ověřuje, ale nemění.";
@@ -99,6 +119,8 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste)
             .Select(u => new { u.PrihlaskaId, u.Stav, u.PoznavaciZnak })
             .ToDictionaryAsync(u => u.PrihlaskaId, ct);
 
+        var pocetNavrhu = await db.ZapisyNavrhu.CountAsync(n => n.RozjizdkaId == rozjizdka.Id, ct);
+
         var papir = rozjizdka.FotkaId is { } fotkaId
             ? await db.Fotky.FirstOrDefaultAsync(f => f.Id == fotkaId, ct)
             : null;
@@ -128,7 +150,7 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste)
             zavod.Serie, zavod.SerieNazev, zavod.Slug, zavod.Nazev, zavod.Stav,
             rozjizdka.Cislo, rozjizdka.StavVysledku, rozjizdka.DuvodRevize,
             procNelze is null, procNelze, lode, rozjizdka.StartV, rozjizdka.DoSerie,
-            Fotky.Nahravani.Dto(papir, uloziste.VerejnaAdresa), poradatel);
+            Fotky.Nahravani.Dto(papir, uloziste.VerejnaAdresa), poradatel, pocetNavrhu);
     }
 
     /// <summary>
@@ -151,7 +173,8 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste)
     /// </para>
     /// </summary>
     public async Task<string?> UlozAsync(
-        Rozjizdka rozjizdka, IReadOnlyList<ZapisRadekVstup> radky, CancellationToken ct)
+        Rozjizdka rozjizdka, IReadOnlyList<ZapisRadekVstup> radky, CancellationToken ct,
+        Guid? kdo = null)
     {
         var zavod = await db.Zavody.FirstAsync(z => z.Id == rozjizdka.ZavodId, ct);
 
@@ -221,8 +244,102 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste)
         var sVysledkem = zapis.Where(r => r.MaVysledek).Select(r => r.Vstup.PrihlaskaId).ToHashSet();
         db.Vysledky.RemoveRange(existujici.Where(x => !sVysledkem.Contains(x.Key)).Select(x => x.Value));
 
+        if (kdo is { } zapisovatel) await SnimekAsync(rozjizdka.Id, zapisovatel, radky, ct);
+
         await db.SaveChangesAsync(ct);
         return null;
+    }
+
+    /// <summary>
+    /// Snímky zápisu k porovnání. Prázdné, dokud nikdo neuložil.
+    /// </summary>
+    public async Task<NavrhyDto> NavrhyAsync(Rozjizdka rozjizdka, Guid? kdo, CancellationToken ct)
+    {
+        var zavod = await db.Zavody
+            .Where(z => z.Id == rozjizdka.ZavodId)
+            .Select(z => new { z.Slug, z.Nazev, z.SerieId })
+            .FirstAsync(ct);
+
+        var lode = await db.Prihlasky
+            .Where(p => p.SerieId == zavod.SerieId)
+            .Select(p => new { p.Id, p.Lod!.Nazev, Kategorie = p.Kategorie!.Nazev })
+            .ToDictionaryAsync(p => p.Id, ct);
+
+        // Bez sledování: projekce bere řádky snímku (vlastněná kolekce)
+        // bez jejich vlastníka a sledovaný dotaz to nedovolí.
+        var navrhy = await db.ZapisyNavrhu
+            .AsNoTracking()
+            .Where(n => n.RozjizdkaId == rozjizdka.Id)
+            .OrderByDescending(n => n.ZapsanoV)
+            .Select(n => new { n.UzivatelId, Kdo = n.Uzivatel!.Zobrazovane, n.ZapsanoV, n.Radky })
+            .ToListAsync(ct);
+
+        return new NavrhyDto(zavod.Slug, zavod.Nazev, rozjizdka.Cislo,
+        [
+            .. navrhy.Select(n => new NavrhDto(
+                n.UzivatelId, n.Kdo, n.ZapsanoV, n.UzivatelId == kdo,
+                [
+                    .. n.Radky
+                        .OrderBy(r => r.PoradiVCili ?? int.MaxValue)
+                        .Select(r => new NavrhRadekDto(
+                            r.PrihlaskaId,
+                            lode.GetValueOrDefault(r.PrihlaskaId)?.Nazev ?? "neznámá loď",
+                            lode.GetValueOrDefault(r.PrihlaskaId)?.Kategorie ?? "",
+                            r.PoradiVCili, r.Kod)),
+                ])),
+        ]);
+    }
+
+    /// <summary>
+    /// Přepíše výsledky rozjížďky snímkem jednoho zapisovatele. Vrací text
+    /// chyby, <c>null</c> když se povedlo, a <c>NenalezenNavrh</c>, když
+    /// takový snímek není.
+    /// </summary>
+    public async Task<(bool Nenalezen, string? Chyba)> PouzijNavrhAsync(
+        Rozjizdka rozjizdka, Guid autor, Guid? kdo, CancellationToken ct)
+    {
+        var navrh = await db.ZapisyNavrhu
+            .FirstOrDefaultAsync(n => n.RozjizdkaId == rozjizdka.Id && n.UzivatelId == autor, ct);
+
+        if (navrh is null) return (true, null);
+
+        var radky = navrh.Radky
+            .Select(r => new ZapisRadekVstup(r.PrihlaskaId, r.PoradiVCili, r.Kod, r.DojezdV))
+            .ToList();
+
+        return (false, await UlozAsync(rozjizdka, radky, ct, kdo));
+    }
+
+    /// <summary>
+    /// Snímek zápisu toho, kdo právě uložil (krok 4). Na vodě zapisují dva
+    /// a druhé uložení přepíše první — bez snímku by starší verze zmizela
+    /// dřív, než by si jí kdo všiml.
+    /// </summary>
+    private async Task SnimekAsync(
+        int rozjizdkaId, Guid kdo, IReadOnlyList<ZapisRadekVstup> radky, CancellationToken ct)
+    {
+        var navrh = await db.ZapisyNavrhu
+            .FirstOrDefaultAsync(n => n.RozjizdkaId == rozjizdkaId && n.UzivatelId == kdo, ct);
+
+        if (navrh is null)
+        {
+            navrh = new ZapisNavrh { RozjizdkaId = rozjizdkaId, UzivatelId = kdo };
+            db.ZapisyNavrhu.Add(navrh);
+        }
+
+        navrh.ZapsanoV = cas.GetUtcNow();
+        navrh.Radky =
+        [
+            .. radky
+                .Where(r => r.PoradiVCili is not null || r.Kod is not null)
+                .Select(r => new NavrhRadek
+                {
+                    PrihlaskaId = r.PrihlaskaId,
+                    PoradiVCili = r.PoradiVCili,
+                    Kod = r.Kod,
+                    DojezdV = r.DojezdV?.ToUniversalTime(),
+                }),
+        ];
     }
 
     /// <summary>

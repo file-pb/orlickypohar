@@ -37,6 +37,31 @@ for _z in D["zavody"]:
     for _u in _z["ucasti"]:
         _u.setdefault("stav", "Potvrzena")
 
+# Snímek druhého zapisovatele u poslední odjeté regaty: dvě lodě prohozené
+# a jedna, kterou jeden z nich nemá. Přesně ty dva případy, které plán
+# u porovnání jmenuje.
+def _nasad_druhy_snimek():
+    z = next((z for z in D["zavody"] if z["stav"] == "Odjety" and z["rozjizdky"]), None)
+    if not z:
+        return
+    r = z["rozjizdky"][0]
+    poradi = sorted((v for v in r["vysledky"] if v.get("poradiVCili")),
+                    key=lambda v: v["poradiVCili"])
+    if len(poradi) < 4:
+        return
+
+    jina = [v["lod"] for v in poradi]
+    jina[1], jina[2] = jina[2], jina[1]
+    jina.pop()
+
+    r["navrhy"] = [{
+        "uzivatelId": DRUHY_ZAPISOVATEL["id"], "kdo": DRUHY_ZAPISOVATEL["zobrazovane"],
+        "zapsanoV": "2026-09-19T14:32:00Z",
+        "radky": [{"prihlaskaId": PRIHLASKA_ID[lod], "poradiVCili": i + 1, "kod": None}
+                  for i, lod in enumerate(jina)],
+    }]
+
+
 # Jeden požadavek z webu, ať je ve správě vidět fronta: na vypsanou
 # zastávku, a když žádná není, na poslední odjetou.
 _otevrene = [z for z in D["zavody"] if z.get("stav") in ("Vypsany", "Odjety")]
@@ -294,6 +319,12 @@ JA = {
     "zobrazovane": "Filip Burda",
     "email": "filip@priklad.cz",
 }
+# Druhý zapisovatel u cíle. Mock zná jen jedno přihlášení, takže snímek
+# „toho druhého" se nasadí do dat — bez něj by nebylo co porovnávat.
+DRUHY_ZAPISOVATEL = {
+    "id": "01927f4e-0000-7000-8000-000000000002",
+    "zobrazovane": "Miloš Zvonař",
+}
 OPRAVNENI = [{"id": 1, "uzivatelId": JA["id"], "zobrazovane": JA["zobrazovane"],
               "email": JA["email"], "role": "Spravce", "zavod": None,
               "udelenoV": "2026-01-01T00:00:00+00:00"}]
@@ -384,6 +415,9 @@ def rozjizdka_radek(r):
 # Přihlášky mock nečísluje, takže dostanou číslo podle pořadí v souboru.
 PRIHLASKA_ID = {p["lod"]: i + 1 for i, p in enumerate(D["prihlasky"])}
 LOD_PODLE_ID = {i: lod for lod, i in PRIHLASKA_ID.items()}
+
+# Až tady, protože snímek potřebuje čísla přihlášek.
+_nasad_druhy_snimek()
 OTEVRENY = ("Navrzeno", "KRevizi")
 
 
@@ -518,7 +552,7 @@ def zapis_dto(z, r):
                      for p in lode],
             "startV": r.get("startV"), "doSerie": r.get("doSerie", True),
             "papir": {k: v for k, v in r["papir"].items() if k != "id"} if r.get("papir") else None,
-            "smiPapir": True}
+            "smiPapir": True, "pocetNavrhu": len(r.get("navrhy", []))}
 
 
 def cas_od_startu(start, dojezd):
@@ -806,6 +840,9 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                           r'/rozjizdky/(\d+)/start$', cesta)):
             return self.odstartuj(m.group(1), int(m.group(2)))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
+                          r'/rozjizdky/(\d+)/navrhy/([0-9a-f-]+)/pouzit$', cesta)):
+            return self.pouzij_navrh(m.group(1), int(m.group(2)), m.group(3))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode$', cesta)):
             return self.prihlas_lod(m.group(1))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode/(\d+)/stav$', cesta)):
@@ -946,6 +983,10 @@ class H(BaseHTTPRequestHandler):
                              if dojezd else {})}
                          for lod, _, poradi, kod, dojezd in radky if poradi is not None or kod]
         # Loď s výsledkem přijela, jako v API; vyloučená zůstává vyloučená.
+        self.uloz_snimek(r, JA, [
+            {"prihlaskaId": PRIHLASKA_ID[lod], "poradiVCili": poradi, "kod": kod}
+            for lod, _, poradi, kod, _ in radky if poradi is not None or kod])
+
         for lod in (v["lod"] for v in r["vysledky"]):
             u = next((u for u in z["ucasti"] if u["lod"] == lod), None)
             if not u:
@@ -1051,6 +1092,51 @@ class H(BaseHTTPRequestHandler):
         self.send_response(204)
         self.end_headers()
         return None
+
+    def uloz_snimek(self, r, kdo, radky):
+        """Snímek zápisu jednoho zapisovatele, jako `ZapisSprava.SnimekAsync`."""
+        from datetime import datetime, timezone
+        navrhy = r.setdefault("navrhy", [])
+        navrh = next((n for n in navrhy if n["uzivatelId"] == kdo["id"]), None)
+        if not navrh:
+            navrh = {"uzivatelId": kdo["id"], "kdo": kdo["zobrazovane"]}
+            navrhy.append(navrh)
+        navrh["zapsanoV"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        navrh["radky"] = radky
+
+    def navrhy(self, zavod, cislo):
+        z, r = self.rozjizdka(zavod, cislo)
+        if not r:
+            return None
+        return self.odpoved({
+            "zavod": z["slug"], "zavodNazev": z["nazev"], "cislo": r["cislo"],
+            "navrhy": [{
+                "uzivatelId": n["uzivatelId"], "kdo": n["kdo"], "zapsanoV": n["zapsanoV"],
+                "muj": n["uzivatelId"] == JA["id"],
+                "radky": [{**radek,
+                           "lod": nazvy(LOD_PODLE_ID[radek["prihlaskaId"]]),
+                           "kategorie": KAT[LOD_PODLE_ID[radek["prihlaskaId"]]]}
+                          for radek in sorted(n["radky"],
+                                              key=lambda x: x.get("poradiVCili") or 10 ** 6)],
+            } for n in sorted(r.get("navrhy", []), key=lambda n: n["zapsanoV"], reverse=True)]})
+
+    def pouzij_navrh(self, zavod, cislo, autor):
+        z, r = self.rozjizdka(zavod, cislo)
+        if not r:
+            return None
+        navrh = next((n for n in r.get("navrhy", []) if n["uzivatelId"] == autor), None)
+        if not navrh:
+            return self.send_error(404)
+        if (chyba := proc_nejde_prepsat(z, r)):
+            return self.chyba(400, chyba)
+
+        puvodni = {v["lod"]: v for v in r["vysledky"]}
+        r["vysledky"] = [{**puvodni.get(LOD_PODLE_ID[x["prihlaskaId"]], {}),
+                          "lod": LOD_PODLE_ID[x["prihlaskaId"]],
+                          "poradiVCili": x.get("poradiVCili"), "kod": x.get("kod")}
+                         for x in navrh["radky"]]
+        self.uloz_snimek(r, JA, navrh["radky"])
+        return self.odpoved(zapis_dto(z, r))
 
     def odstartuj(self, zavod, cislo):
         z, r = self.rozjizdka(zavod, cislo)
@@ -1522,6 +1608,9 @@ class H(BaseHTTPRequestHandler):
                     "stavZavodu": z["stav"], "zavodPublikovan": True,
                     "rozjizdky": [rozjizdka_radek(r) for r in z["rozjizdky"]],
                     "smiPridatRozjizdku": proc_nejde_na_zavod(z["stav"], z["druh"]) is None}
+        elif (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
+                            r'/rozjizdky/(\d+)/navrhy$', cesta)):
+            return self.navrhy(m.group(1), int(m.group(2)))
         elif (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                             r'/rozjizdky/(\d+)$', cesta)):
             z, r = self.rozjizdka(m.group(1), int(m.group(2)))

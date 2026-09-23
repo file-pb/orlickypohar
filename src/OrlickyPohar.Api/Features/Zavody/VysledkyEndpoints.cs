@@ -93,6 +93,18 @@ public static class VysledkyEndpoints
                 "Cílová obrazovka. Pořadatel regaty, od vypsání. Jen loď, která na regatě je " +
                 "(přihlášená, potvrzená nebo vyloučená). Prázdný znak ho smaže.");
 
+        g.MapGet("/{zavod}/rozjizdky/{cislo:int}/navrhy", NavrhyAsync)
+            .Produces<NavrhyDto>()
+            .WithSummary("Vypíše snímky zápisu od jednotlivých zapisovatelů")
+            .WithDescription(
+                "Pořadatel regaty. Na vodě zapisují dva a každý na svém telefonu; tohle jsou " +
+                "jejich verze k porovnání. S jedním zapisovatelem je snímek jeden.");
+
+        g.MapPost("/{zavod}/rozjizdky/{cislo:int}/navrhy/{autor:guid}/pouzit", PouzijNavrhAsync)
+            .Produces<ZapisRozjizdkyDto>()
+            .WithSummary("Přepíše výsledky rozjížďky snímkem jednoho zapisovatele")
+            .WithDescription("Pořadatel regaty, dokud je zápis otevřený. Ostatní snímky zůstávají.");
+
         g.MapGet("/{zavod}/rozjizdky/{cislo:int}", ZapisAsync)
             .Produces<ZapisRozjizdkyDto>()
             .WithSummary("Vypíše zápis rozjížďky: všechny lodě ročníku a jejich výsledky")
@@ -286,8 +298,41 @@ public static class VysledkyEndpoints
 
         if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
 
-        if (await zapis.UlozAsync(rozjizdka, vstup.Radky, ct) is { } chyba)
+        if (await zapis.UlozAsync(
+                rozjizdka, vstup.Radky, ct, await rozsahy.UzivatelIdAsync(kdo, ct)) is { } chyba)
             return Results.BadRequest(new { error = chyba });
+
+        return Results.Ok(await zapis.NactiAsync(rozjizdka, poradatel: true, ct));
+    }
+
+    private static async Task<IResult> NavrhyAsync(
+        string serie, string zavod, int cislo, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, VysledkySprava sprava, ZapisSprava zapis, CancellationToken ct)
+    {
+        if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
+            return Results.NotFound();
+
+        var (rozsah, rozjizdka) = nalezena;
+        if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        return Results.Ok(await zapis.NavrhyAsync(rozjizdka, await rozsahy.UzivatelIdAsync(kdo, ct), ct));
+    }
+
+    private static async Task<IResult> PouzijNavrhAsync(
+        string serie, string zavod, int cislo, Guid autor, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, VysledkySprava sprava, ZapisSprava zapis, CancellationToken ct)
+    {
+        if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
+            return Results.NotFound();
+
+        var (rozsah, rozjizdka) = nalezena;
+        if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        var (nenalezen, chyba) = await zapis.PouzijNavrhAsync(
+            rozjizdka, autor, await rozsahy.UzivatelIdAsync(kdo, ct), ct);
+
+        if (nenalezen) return Results.NotFound();
+        if (chyba is not null) return Results.BadRequest(new { error = chyba });
 
         return Results.Ok(await zapis.NactiAsync(rozjizdka, poradatel: true, ct));
     }
