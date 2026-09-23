@@ -85,7 +85,9 @@ src/OrlickyPohar.Api/
   Features/Serial/            série, kategorie, přihlášky — celoroční rovina
   Features/Lode/              lodě a osoby
   Features/Zavody/            závod, účast, rozjížďka, výsledek; kalendář,
-                              přihlášky na zastávku, zápis a workflow výsledků
+                              přihlášky na zastávku, zápis a workflow výsledků,
+                              zápis z vody: start, dojezdy s časem, poznávací
+                              znak, fotka papíru a snímky obou zapisovatelů
   Features/Bodovani/          body závodu z rozjížděk, škrty, pořadí seriálu
   Features/Import/            nahrání ročníku souborem, importní token
   Features/Clanky/            novinky a články, jejich psaní a správa
@@ -100,6 +102,9 @@ src/OrlickyPohar.Api/
 web/                          veřejné stránky (Next.js, renderuje server)
   app/                        stránky podle cest
   app/sprava/[serie]/         administrace ročníku, serverová, bez javascriptu
+  …/vysledky/[zavod]/[cislo]/cil   cílová obrazovka — jediné místo správy
+                              s javascriptem, klepání v cíli bez něj nejde
+  …/[cislo]/porovnani         zápisy dvou zapisovatelů vedle sebe
   lib/api.ts                  typovaný přístup k API, veřejné čtení
   lib/sprava.ts               volání administrace s tokenem; další lib/*.ts
                               po obrazovkách (kalendar, prihlasky, vysledky…)
@@ -357,6 +362,9 @@ Značka `Category=Integracni`, potřebují Docker, běží jen v CI:
   indexech, které by fake databáze neověřila.
 - **`CteniTests`** a **`PoradiTests`** — veřejné čtení a průběžné pořadí,
   hlavně hranice publikovanosti.
+- **`VysledkySpravaTests`** — workflow výsledků a zápis z vody: dojezd
+  s časem od startu, poznávací znak, celkové pořadí napříč kategoriemi
+  a snímky dvou zapisovatelů.
 
 `data/2026-nanecisto.json` má **skutečná jména lodí a vymyšlené výsledky**;
 vyrábí ho `tools/gen-mock.py` s pevným seedem. Skutečná fakta o ročníku patří
