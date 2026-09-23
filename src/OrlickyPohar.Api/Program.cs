@@ -9,6 +9,7 @@ using OrlickyPohar.Api.Features.Fotky;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Import;
 using OrlickyPohar.Api.Features.Lode;
+using OrlickyPohar.Api.Features.Naklady;
 using OrlickyPohar.Api.Features.Poradatele;
 using OrlickyPohar.Api.Features.Prevzate;
 using OrlickyPohar.Api.Features.Serial;
@@ -55,6 +56,9 @@ try
     builder.Services.AddScoped<PrihlaskySprava>();
     builder.Services.AddScoped<PoradateleSprava>();
     builder.Services.AddScoped<FotkySprava>();
+    // Náklady na provoz a servis: čte je ze souboru, který zapisuje přehled
+    // platformy. Bez nastavené cesty jen řekne, že čísla nejsou.
+    builder.Services.AddScoped<NakladyCteni>();
 
     // Vodočet Orlíku: sběr z Povodí Vltavy jen tam, kde je zapnutý.
     builder.Services.AddHttpClient(SberVodocetu.Klient, c =>
@@ -175,6 +179,7 @@ try
         app.MapSpravaVysledku();
         app.MapPrihlasky();
         app.MapSpravaPoradatelu();
+        app.MapNaklady();
     }
 
     // Migrace při startu. U jedné repliky je to v pořádku a máš jistotu,

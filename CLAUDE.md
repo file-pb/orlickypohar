@@ -97,11 +97,15 @@ src/OrlickyPohar.Api/
                               přítok a odtok za 24 h
   Features/Identita/          uživatel, vazby (issuer, subject), role, Prava
   Features/Sprava/            udělování oprávnění, seznam přihlášených účtů
+  Features/Naklady/           co provoz a servis stojí; čte stav/naklady.json
+                              z přehledu platformy, přidává přirážku
   Program.cs                  složení aplikace, mapování řezů
 
 web/                          veřejné stránky (Next.js, renderuje server)
   app/                        stránky podle cest
   app/sprava/[serie]/         administrace ročníku, serverová, bez javascriptu
+  app/sprava/naklady/         co web stojí — jen pro správce celého webu;
+                              graf.tsx kreslí vývoj provozu po dnech, bez js
   …/vysledky/[zavod]/[cislo]/cil   cílová obrazovka — jediné místo správy
                               s javascriptem, klepání v cíli bez něj nejde
   …/[cislo]/porovnani         zápisy dvou zapisovatelů vedle sebe
