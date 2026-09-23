@@ -52,7 +52,7 @@ export default async function ObecnyClanek({ params }: Parametry) {
 
       <article className="clanek">
         {c.perex && <p className="perex">{c.perex}</p>}
-        <Odstavce text={c.telo} />
+        <Odstavce text={c.telo} format={c.format} />
       </article>
     </>
   );

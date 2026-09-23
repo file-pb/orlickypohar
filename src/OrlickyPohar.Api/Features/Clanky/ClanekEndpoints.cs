@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Fotky;
@@ -28,7 +28,10 @@ public record ClanekDto(
     DateTimeOffset PublikovanoV,
     string? Zavod,
     string? ZavodNazev,
-    ObrazekDto? Obrazek = null);
+    ObrazekDto? Obrazek = null,
+    // Jak číst `Telo`. Aditivně a s výchozí hodnotou: klient, který o formátu
+    // neví, dostane `Text` a chová se jako doteď.
+    FormatClanku Format = FormatClanku.Text);
 
 /// <summary>
 /// Veřejné čtení blogu. Platí tu totéž co u ročníku: <b>nepublikovaný článek
@@ -87,7 +90,7 @@ public static class ClanekEndpoints
             .Where(c => c.SerieId == null && c.Stav == StavClanku.Publikovano && c.Slug == clanek)
             .Select(c => new ClanekDto(
                 c.Slug, c.Titulek, c.Perex, c.Telo, c.Autor, c.PublikovanoV,
-                null, null, Nahravani.Dto(c.Fotka, adresa)))
+                null, null, Nahravani.Dto(c.Fotka, adresa), c.Format))
             .FirstOrDefaultAsync(ct);
 
         return nalezeny is null ? TypedResults.NotFound() : TypedResults.Ok(nalezeny);
@@ -138,7 +141,7 @@ public static class ClanekEndpoints
             .Where(c => c.Slug == clanek)
             .Select(c => new ClanekDto(
                 c.Slug, c.Titulek, c.Perex, c.Telo, c.Autor, c.PublikovanoV,
-                c.Zavod!.Slug, c.Zavod.Nazev, Nahravani.Dto(c.Fotka, adresa)))
+                c.Zavod!.Slug, c.Zavod.Nazev, Nahravani.Dto(c.Fotka, adresa), c.Format))
             .FirstOrDefaultAsync(ct);
 
         return nalezeny is null ? TypedResults.NotFound() : TypedResults.Ok(nalezeny);

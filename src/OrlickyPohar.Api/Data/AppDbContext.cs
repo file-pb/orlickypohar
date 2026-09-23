@@ -212,6 +212,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         clanek.Property(x => x.Titulek).HasMaxLength(200).IsRequired();
         clanek.Property(x => x.Perex).HasMaxLength(600);
         clanek.Property(x => x.Autor).HasMaxLength(120);
+        // Nula je `Text`, takže stávající články zůstanou tím, čím jsou.
+        // Kdyby se výchozí hodnota v databázi neuvedla, migrace by je
+        // sice taky nastavila na nulu, ale jen shodou okolností — tohle
+        // to říká nahlas.
+        clanek.Property(x => x.Format).HasDefaultValue(FormatClanku.Text);
         clanek.HasOne(x => x.Serie).WithMany().HasForeignKey(x => x.SerieId)
             .OnDelete(DeleteBehavior.Cascade);
         // Smazaná zastávka nesmí odnést svůj blog: text o závodě, který se

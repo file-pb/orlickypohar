@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -308,5 +308,47 @@ public class ClankyTests(PostgresFixture fixture)
         // Soubor umí říct jen „zveřejnit, nebo ne". Nezveřejněný článek je
         // tedy koncept, ne skrytý — skrytí je rozhodnutí, které nikdo neudělal.
         Assert.Equal(StavClanku.Draft, clanek.Stav);
+    }
+
+    [Fact]
+    public async Task Format_projde_importem_az_do_verejneho_cteni()
+    {
+        // Celá kolej z konce na konec: soubor → databáze → veřejné čtení.
+        // Sloupec, který se cestou někde ztratí, je horší než žádný —
+        // klient by pak četl HTML jako odstavce.
+        await Nahraj(Rocnik("format", clanky:
+        [
+            Novinka("prosty"),
+            Novinka("bohaty") with { Telo = "<p>Pozvánka pořadatele.</p>", Format = FormatClanku.Html },
+        ]));
+
+        var klient = fixture.CreateClient();
+
+        var prosty = await klient.GetFromJsonAsync<ClanekDto>("/serie/format/clanky/prosty", Json);
+        Assert.Equal(FormatClanku.Text, prosty!.Format);
+
+        var bohaty = await klient.GetFromJsonAsync<ClanekDto>("/serie/format/clanky/bohaty", Json);
+        Assert.Equal(FormatClanku.Html, bohaty!.Format);
+        // Tělo se při importu nijak neupravuje — čistička je samostatný krok
+        // a tenhle sloupec jen říká, co v těle je.
+        Assert.Equal("<p>Pozvánka pořadatele.</p>", bohaty.Telo);
+    }
+
+    [Fact]
+    public async Task Druhy_import_formatu_nic_nezmeni()
+    {
+        // Idempotence platí i pro nový sloupec.
+        var rocnik = Rocnik("format-znovu", clanky:
+        [
+            Novinka("bohaty") with { Telo = "<p>A</p>", Format = FormatClanku.Html },
+        ]);
+        await Nahraj(rocnik);
+        await Nahraj(rocnik);
+
+        var klient = fixture.CreateClient();
+        var clanek = await klient.GetFromJsonAsync<ClanekDto>(
+            "/serie/format-znovu/clanky/bohaty", Json);
+
+        Assert.Equal(FormatClanku.Html, clanek!.Format);
     }
 }

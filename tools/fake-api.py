@@ -1699,7 +1699,8 @@ class H(BaseHTTPRequestHandler):
             c = next((c for c in SPRAVA_CLANKY if c["slug"] == m.group(1)), None)
             if not c:
                 return self.send_error(404)
-            telo = {**clanek_radek(c), "telo": c["telo"]}
+            telo = {**clanek_radek(c), "telo": c["telo"],
+                    "format": c.get("format", "Text")}
         elif cesta == "/prevzate-clanky":
             # Novinky ze svazu. Falešné API je nestahuje — vydává vzorek,
             # aby šlo na webu vidět, jak karta s cizím zdrojem vypadá.
@@ -1727,7 +1728,8 @@ class H(BaseHTTPRequestHandler):
             c = next((c for c in clanky_verejne() if c["slug"] == m.group(1)), None)
             if not c:
                 return self.send_error(404)
-            telo = {**clanek_shrnuti(c), "telo": c["telo"]}
+            telo = {**clanek_shrnuti(c), "telo": c["telo"],
+                    "format": c.get("format", "Text")}
         elif (m := re.match(rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)$', cesta)):
             z = next((z for z in D["zavody"] if z["slug"] == m.group(1)), None)
             if not z:

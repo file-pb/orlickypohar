@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Clanky;
 using OrlickyPohar.Api.Features.Lode;
@@ -492,6 +492,7 @@ internal static class ImportHandler
             c.Titulek = v.Titulek;
             c.Perex = v.Perex;
             c.Telo = v.Telo;
+            c.Format = v.Format;
             c.Autor = v.Autor;
             // Do UTC, ze stejného důvodu jako start rozjížďky: Npgsql jiný
             // posun do `timestamp with time zone` nezapíše.

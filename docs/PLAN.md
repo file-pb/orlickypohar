@@ -447,6 +447,40 @@ přepne.
 **Nepublikovaná zastávka schová i svůj blog**, takže článek k zastávce, která
 ještě není venku, se nedá přečíst ani odkazem. To platí už dnes.
 
+### Tělo článku: formát je od 23. 9. 2026 zapsaný, ne předpokládaný
+
+**Zadání (Filip).** Pořadatelé budou tělo regaty stavět jako svou propagaci
+a podle všeho vezmou Word nebo HTML a vloží ho. Náležitosti článku jim
+předepíšeme formulářem — titulek, perex, datum, fotka, autor — ale do těla
+si mají dát svůj obsah.
+
+**Krok 1 z pěti, hotový:** sloupec `Clanek.Format` (`FormatClanku`).
+Přesně to, co tu dřív stálo jako záměr — *„až bude potřeba víc než odstavce,
+je to aditivní sloupec s formátem, ne přepis toho, co je uložené"*. Nic se
+nepřepsalo: `Text` je nula i výchozí hodnota, takže stará těla, starší
+importní soubory i klienti, kteří o sloupci nevědí, znamenají dál totéž co
+doteď. Kolej vede z konce na konec — soubor → import → databáze → veřejné
+čtení → web — a ověřuje to `ClankyTests`.
+
+**`Html` je zatím připravená kolej bez čističky.** Nikdo ho nevytváří a web
+tělo v tomhle formátu **vypisuje jako text, ne jako značky**. Není to
+nedodělek, ale pořadí prací:
+
+- Schránka z Wordu nenese text, nese balast — `mso-*` styly, vlastní fonty,
+  pevné velikosti v bodech, tabulky místo rozvržení. Uložené tak, jak přišlo,
+  rozbije stránku a na mobilu přeteče.
+- **Nevyčištěné HTML z databáze je XSS.** Pořadatel není útočník, ale jeho
+  schránka může nést cokoliv a jeho účet se dá ukrást. Obrana je whitelist
+  značek a atributů **při ukládání**, ne až při zobrazení.
+
+Dokud čistička není, je vypsat zdrojový text bezpečnější než ho pustit do
+stránky. Ověřeno: tělo `<p>…</p><script>alert("xss")</script>` se vykreslí
+jako text a žádný `<script>` na stránce nevznikne.
+
+**Zbývající kroky**, každý nasaditelný zvlášť: čistička HTML na úzkou
+množinu (odstavce, H2/H3, tučné, kurzíva, seznamy, odkazy, obrázek) →
+vykreslování na webu → vkládací pole v administraci → obrázky v těle.
+
 ### Otevřené: přihlášení lodi na jednu zastávku
 
 *(zadáno)* „Na každou akci se může přihlásit do kategorie loď" a organizátor

@@ -29,7 +29,17 @@ export type PoradiLodi = S["PoradiLodiDto"];
 export type PoradiKategorie = S["PoradiKategorieDto"];
 export type PoradiSerie = S["PoradiSerieDto"];
 export type ClanekShrnuti = S["ClanekShrnutiDto"];
-export type Clanek = S["ClanekDto"];
+// `format` je dopsaný ručně ze stejného důvodu jako typ níž — schéma se
+// generuje z produkce, kde sloupec zatím není.
+export type Clanek = S["ClanekDto"] & { format?: FormatClanku };
+
+/**
+ * V jakém tvaru je tělo článku. Psané ručně, protože `schema.d.ts` se
+ * generuje z běžícího API a sloupec je zatím jen v repozitáři, ne na
+ * produkci, odkud se dokument stahuje. **Po nasazení a přegenerování
+ * schématu tenhle typ nahradí `S["FormatClanku"]`.**
+ */
+export type FormatClanku = "Text" | "Html";
 
 /**
  * Novinka přejatá z cizího kanálu (dnes Český svaz jachtingu). Nemá slug ani

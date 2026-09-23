@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { datumClanku } from "@/app/datum";
 import { Nahled, NahledVelky } from "@/app/fotky";
-import type { ClanekShrnuti, Novinka } from "@/lib/api";
+import type { ClanekShrnuti, FormatClanku, Novinka } from "@/lib/api";
 
 /**
  * Výpis novinek. Používá ho úvodní stránka, seznam novinek ročníku
@@ -82,11 +82,20 @@ export function VypisNovinek({
 }
 
 /**
- * Tělo článku. Odstavce jsou oddělené prázdným řádkem — žádný markdown,
- * žádné HTML z databáze. Až bude potřeba víc než odstavce, je to aditivní
- * sloupec s formátem, ne přepis toho, co je uložené.
+ * Tělo článku.
+ *
+ * `format` říká, v jakém tvaru text je. **Vykresluje se zatím jen `Text`** —
+ * odstavce oddělené prázdným řádkem, jako doteď.
+ *
+ * `Html` se schválně vypisuje **taky jako text**, ne jako značky. Není to
+ * nedodělek, ale pořadí prací: vložené HTML se musí nejdřív převést na úzkou
+ * množinu značek, které web umí vykreslit. Bez toho by schránka z Wordu
+ * přinesla vlastní fonty a pevné velikosti, které rozvržení rozbijí, a
+ * nevyčištěné HTML z databáze je XSS. Dokud čistička není, je bezpečnější
+ * ukázat zdrojový text než ho pustit do stránky — a nic v tomhle formátu
+ * zatím stejně nevzniká.
  */
-export function Odstavce({ text }: { text: string }) {
+export function Odstavce({ text }: { text: string; format?: FormatClanku }) {
   return (
     <>
       {text

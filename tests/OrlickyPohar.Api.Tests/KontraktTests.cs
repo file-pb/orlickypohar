@@ -1,5 +1,6 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using OrlickyPohar.Api.Features.Clanky;
 using OrlickyPohar.Api.Features.Import;
 using OrlickyPohar.Api.Features.Zavody;
 
@@ -228,5 +229,48 @@ public class KontraktTests
 
         // Dvoudenní zastávka končí po svém začátku, jednodenní konec nemá.
         Assert.All(zavody, z => Assert.True(z.DatumKonce is null || z.DatumKonce > z.Datum));
+    }
+
+    [Fact]
+    public void Clanek_bez_formatu_je_prosty_text()
+    {
+        // Sloupec přibyl aditivně (23. 9. 2026). Soubor, který o formátu
+        // neví, musí dál znamenat „odstavce oddělené prázdným řádkem" —
+        // opačná výchozí hodnota by při prvním importu prohlásila všechna
+        // stará těla za HTML a web by je začal vypisovat jinak.
+        var s = JsonSerializer.Deserialize<SerieVstup>(
+            """
+            {"slug":"x","nazev":"X","rok":2025,
+             "kategorie":[{"nazev":"Race","poradi":1}],
+             "osoby":[],"lode":[],"prihlasky":[],"zavody":[],
+             "clanky":[{"slug":"a","titulek":"A","telo":"Text.","publikovanoV":"2025-05-09T20:30:00+02:00"}]}
+            """, Json);
+
+        var clanek = Assert.Single(s!.Clanky!);
+        Assert.Equal(FormatClanku.Text, clanek.Format);
+    }
+
+    [Fact]
+    public void Format_se_da_ze_souboru_nastavit()
+    {
+        var s = JsonSerializer.Deserialize<SerieVstup>(
+            """
+            {"slug":"x","nazev":"X","rok":2025,
+             "kategorie":[{"nazev":"Race","poradi":1}],
+             "osoby":[],"lode":[],"prihlasky":[],"zavody":[],
+             "clanky":[{"slug":"a","titulek":"A","telo":"<p>A</p>","format":"Html",
+                        "publikovanoV":"2025-05-09T20:30:00+02:00"}]}
+            """, Json);
+
+        Assert.Equal(FormatClanku.Html, Assert.Single(s!.Clanky!).Format);
+    }
+
+    [Fact]
+    public void Mock_ma_vsechny_clanky_jako_text()
+    {
+        // Mock píše těla jako odstavce a nic jiného zatím vzniknout nemá:
+        // formát Html je připravená kolej bez čističky, takže by ho generátor
+        // neměl začít používat omylem.
+        Assert.All(Mock().Clanky!, c => Assert.Equal(FormatClanku.Text, c.Format));
     }
 }
