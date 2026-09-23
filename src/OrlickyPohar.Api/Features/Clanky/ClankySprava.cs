@@ -35,7 +35,11 @@ public record ClanekVstupSprava(
     string? Perex = null,
     string? Autor = null,
     string? Zavod = null,
-    DateTimeOffset? PublikovanoV = null);
+    DateTimeOffset? PublikovanoV = null,
+    // V jakém tvaru autor tělo poslal. `Html` znamená „vloženo odjinud" —
+    // server ho vyčistí a uloží jako bloky. Výchozí `Text` drží dosavadní
+    // chování pro každého, kdo pole neposílá.
+    FormatClanku Format = FormatClanku.Text);
 
 /// <summary>
 /// Čtení a zápis článků pro autora.
@@ -128,7 +132,8 @@ public class ClankySprava(AppDbContext db, TimeProvider cas)
             Slug = slug,
             Titulek = vstup.Titulek.Trim(),
             Perex = Prazdne(vstup.Perex),
-            Telo = vstup.Telo.Trim(),
+            Telo = TeloDoDatabaze(vstup),
+            Format = vstup.Format == FormatClanku.Html ? FormatClanku.Bloky : vstup.Format,
             Autor = Prazdne(vstup.Autor),
             // Do UTC: Npgsql jiný posun do `timestamp with time zone`
             // nepřijme a padlo by to až při zápisu.
@@ -152,7 +157,8 @@ public class ClankySprava(AppDbContext db, TimeProvider cas)
 
         clanek.Titulek = vstup.Titulek.Trim();
         clanek.Perex = Prazdne(vstup.Perex);
-        clanek.Telo = vstup.Telo.Trim();
+        clanek.Telo = TeloDoDatabaze(vstup);
+        clanek.Format = vstup.Format == FormatClanku.Html ? FormatClanku.Bloky : vstup.Format;
         clanek.Autor = Prazdne(vstup.Autor);
         clanek.ZavodId = zavodId;
         if (vstup.PublikovanoV is { } kdy) clanek.PublikovanoV = kdy.ToUniversalTime();
@@ -160,6 +166,16 @@ public class ClankySprava(AppDbContext db, TimeProvider cas)
         await db.SaveChangesAsync(ct);
         return null;
     }
+
+    /// <summary>
+    /// Co se doopravdy uloží. Vložené HTML se čistí <b>tady, při zápisu</b>,
+    /// ne až při zobrazení: kdyby se ukládalo syrové, stačilo by jedno místo,
+    /// které si ho vezme bez očisty, a je z toho XSS.
+    /// </summary>
+    private static string TeloDoDatabaze(ClanekVstupSprava vstup) =>
+        vstup.Format == FormatClanku.Html
+            ? Bloky.Uloz(Bloky.ZHtml(vstup.Telo))
+            : vstup.Telo.Trim();
 
     public async Task<string?> PrepniStavAsync(Clanek clanek, StavClanku na, CancellationToken ct)
     {

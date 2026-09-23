@@ -31,6 +31,9 @@ function vstupZFormulare(formular: FormData) {
     // Prázdná volba znamená celý ročník. `undefined`, ne prázdný řetězec —
     // ten by API přeložilo na regatu se jménem "" a nenašlo ji.
     zavod: text("zavod"),
+    // Zaškrtnuté políčko znamená „vložil jsem to odjinud" — server text
+    // vyčistí a uloží jako bloky. Nezaškrtnuté je prostý text jako doteď.
+    format: formular.get("vlozene") ? ("Html" as const) : ("Text" as const),
   };
 }
 

@@ -104,6 +104,69 @@ public static class Bloky
         }
     }
 
+    /// <summary>
+    /// Zpátky do HTML, aby šel článek znovu upravit. Vrací <b>jen to, co
+    /// bloky unesou</b> — je to tedy už vyčištěný tvar, ne původní vložený
+    /// text; z něj se do bloků nic nového nedostane a druhý průchod dá totéž.
+    /// <para>
+    /// Není to obnova originálu a nemá být: co čistička zahodila, je pryč
+    /// právem. Autor uvidí, co se doopravdy uložilo.
+    /// </para>
+    /// </summary>
+    public static string DoHtml(IReadOnlyList<Blok> bloky)
+    {
+        var text = new System.Text.StringBuilder();
+        foreach (var b in bloky)
+        {
+            switch (b.Druh)
+            {
+                case DruhBloku.Nadpis:
+                    var uroven = b.Uroven == 3 ? "h3" : "h2";
+                    text.Append($"<{uroven}>").Append(Radka(b.Useky)).Append($"</{uroven}>\n");
+                    break;
+
+                case DruhBloku.Seznam:
+                    var znacka = b.Cislovany ? "ol" : "ul";
+                    text.Append($"<{znacka}>");
+                    foreach (var p in b.Polozky ?? []) text.Append("<li>").Append(Radka(p)).Append("</li>");
+                    text.Append($"</{znacka}>\n");
+                    break;
+
+                case DruhBloku.Obrazek:
+                    text.Append($"""<img src="{Uvozovky(b.Adresa)}" alt="{Uvozovky(b.Popis)}">""").Append('\n');
+                    break;
+
+                default:
+                    text.Append("<p>").Append(Radka(b.Useky)).Append("</p>\n");
+                    break;
+            }
+        }
+
+        return text.ToString().TrimEnd();
+    }
+
+    private static string Radka(IReadOnlyList<Usek>? useky)
+    {
+        var text = new System.Text.StringBuilder();
+        foreach (var u in useky ?? [])
+        {
+            var obsah = Escapuj(u.Text);
+            if (u.Tucne) obsah = $"<b>{obsah}</b>";
+            if (u.Kurziva) obsah = $"<i>{obsah}</i>";
+            if (u.Odkaz is { } kam) obsah = $"""<a href="{Uvozovky(kam)}">{obsah}</a>""";
+            text.Append(obsah);
+        }
+
+        return text.ToString();
+    }
+
+    /// <summary>Text do HTML. Bez tohohle by `&lt;` z článku vyrobilo značku.</summary>
+    private static string Escapuj(string text) =>
+        text.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
+
+    private static string Uvozovky(string? hodnota) =>
+        Escapuj(hodnota ?? "").Replace("\"", "&quot;");
+
     /// <summary>Převede vložené HTML na bloky.</summary>
     public static IReadOnlyList<Blok> ZHtml(string? html)
     {
@@ -220,6 +283,13 @@ public static class Bloky
     private static string? Adresa(string? hodnota, bool mailtoTaky)
     {
         if (string.IsNullOrWhiteSpace(hodnota)) return null;
+
+        // Uvozovky, špičky a bílé znaky do adresy nepatří. `Uri.TryCreate` je
+        // překvapivě spolkne, a i když je zápis do atributu escapuje, nemá
+        // smysl takovou adresu vůbec uložit — do `src` se nedostane nic, co
+        // by se muselo hlídat až na výstupu.
+        if (hodnota.AsSpan().IndexOfAny("\"'<> \t\r\n".AsSpan()) >= 0) return null;
+
         if (!Uri.TryCreate(hodnota, UriKind.Absolute, out var uri)) return null;
 
         return uri.Scheme == Uri.UriSchemeHttps

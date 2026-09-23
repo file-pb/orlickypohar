@@ -51,6 +51,9 @@ export default async function UpravaClanku({ params, searchParams }: Parametry) 
 
   // Obecný článek mimo ročník: bez ročníku v cestě a bez volby regaty.
   const web = jeWeb(serie);
+  // Server vrací u uloženého vloženého článku formát `Html` — je to tentýž
+  // obsah jako uložené bloky, jen tvar, ve kterém se dá psát.
+  const vlozeny = clanek?.format === "Html";
 
   const hlava = (
     <Drobecky
@@ -171,7 +174,19 @@ export default async function UpravaClanku({ params, searchParams }: Parametry) 
         <label>
           Text
           <textarea name="telo" required rows={16} defaultValue={clanek.telo} />
-          <span className="poznamka">Odstavce odděl prázdným řádkem.</span>
+          <span className="poznamka">
+            {vlozeny
+              ? "Vyčištěné HTML — to, co se doopravdy uloží. Co čistička zahodila, už tu není."
+              : "Odstavce odděl prázdným řádkem."}
+          </span>
+        </label>
+
+        {/* Zaškrtnuté zůstane u článku, který už jako vložený uložený je:
+            jeho tělo je HTML a odškrtnutím by se z něj staly odstavce
+            plné značek. */}
+        <label>
+          <input type="checkbox" name="vlozene" value="1" defaultChecked={vlozeny} /> Text je
+          vložený z Wordu nebo z webu
         </label>
 
         <button type="submit">Uložit</button>

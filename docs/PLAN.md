@@ -504,8 +504,30 @@ rozpoznat hrstku značek a zbytek zahodit — a protože se výstupem nevrací
 HTML, chyba v rozboru není bezpečnostní. Kdyby se knihovna jednou přidala,
 nahradí jen ten jeden soubor; tvar bloků zůstane.
 
-**Zbývá:** vkládací pole v administraci (dnes se `Html` dostane dovnitř jen
-importem) a obrázky v těle nahrané k nám, ne odkazem.
+**Krok 4 hotový (23. 9. 2026): vkládací pole v administraci.** U nového
+i upravovaného článku je políčko *„Text je vložený z Wordu nebo z webu"* —
+zaškrtnuté znamená `Html`, server text vyčistí a uloží jako bloky. Bez
+javascriptu, jako zbytek správy: je to `<input type="checkbox">`, o zbytek
+se stará server.
+
+**Autor vidí, co se doopravdy uložilo.** Uložené bloky se do pole vracejí
+jako HTML (`Bloky.DoHtml`), ne jako původní vložený text — co čistička
+zahodila, je pryč, a autor to má vidět hned, ne až na webu. Druhé uložení
+proto nic nemění: `ZHtml(DoHtml(bloky))` dá tytéž bloky a hlídá to test.
+Políčko u takového článku zůstává zaškrtnuté; odškrtnutím by se z HTML
+staly odstavce plné značek.
+
+**Adresy nesmějí nést uvozovky, špičky ani bílé znaky.** Vyplavalo to
+z testu zápisu do HTML: `Uri.TryCreate` takovou adresu překvapivě přijme,
+a i když ji zápis escapuje, nemá smysl ji vůbec ukládat — do `src` se pak
+nedostane nic, co by se muselo hlídat až na výstupu.
+
+**`tools/fake-api.py` vložený text nečistí**, jen si formát pamatuje.
+Opisovat parser HTML do Pythonu by znamenalo mít dvě různá pravidla; jak
+bude článek vypadat, se pozná proti skutečnému API. Falešné API tedy vrací
+`Html`, a to web vypisuje jako text, takže se při zkoušení nic nerozbije.
+
+**Zbývá:** obrázky v těle nahrané k nám, ne odkazem.
 
 ### Otevřené: přihlášení lodi na jednu zastávku
 

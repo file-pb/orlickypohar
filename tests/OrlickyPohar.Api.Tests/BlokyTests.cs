@@ -275,4 +275,57 @@ public class BlokyTests
         }));
         Assert.DoesNotContain(bloky, b => b.Druh == DruhBloku.Obrazek);
     }
+
+    [Fact]
+    public void Do_html_a_zpatky_da_totez()
+    {
+        // Autor si článek otevře k úpravě, nic nezmění a uloží. Kdyby se
+        // obsah druhým průchodem měnil, znamenalo by to, že uložené HTML
+        // nese něco, co čistička sama nepustí.
+        var puvodni = Bloky.ZHtml("""
+            <h2>Nadpis</h2>
+            <p>Text s <b>tučným</b>, <i>kurzívou</i> a <a href="https://example.com">odkazem</a>.</p>
+            <ol><li>První</li><li>Druhá</li></ol>
+            <img src="https://example.com/f.jpg" alt="Popis">
+            """);
+
+        var podruhe = Bloky.ZHtml(Bloky.DoHtml(puvodni));
+
+        Assert.Equal(Bloky.Uloz(puvodni), Bloky.Uloz(podruhe));
+    }
+
+    [Fact]
+    public void Do_html_escapuje_text()
+    {
+        // Text článku může obsahovat špičaté závorky — třeba když někdo píše
+        // o značkách. Bez escapování by z nich při dalším otevření vznikly
+        // značky, a to je cesta, jak čističku obejít zevnitř.
+        var bloky = Bloky.ZHtml("<p>&lt;script&gt;alert(1)&lt;/script&gt; a &amp; k tomu</p>");
+        var html = Bloky.DoHtml(bloky);
+
+        Assert.Contains("&lt;script&gt;", html);
+        Assert.DoesNotContain("<script>", html);
+
+        // A po dalším průchodu je to pořád text, ne značka.
+        var podruhe = Assert.Single(Bloky.ZHtml(html));
+        Assert.Equal("<script>alert(1)</script> a & k tomu", Text(podruhe));
+    }
+
+    [Fact]
+    public void Do_html_hlida_uvozovky_v_adrese()
+    {
+        // Uvozovka v adrese by jinak zavřela atribut a zbytek by se stal
+        // dalším atributem — třeba `onerror`.
+        var html = Bloky.DoHtml([new Blok(
+            DruhBloku.Obrazek,
+            Adresa: """https://example.com/f.jpg" onerror="alert(1)""",
+            Popis: """zlo" onload="alert(2)""")]);
+
+        Assert.DoesNotContain("onerror=\"alert", html);
+        Assert.DoesNotContain("onload=\"alert", html);
+
+        // A zpátky z toho nevznikne ani obrázek — adresa s uvozovkou není
+        // platná absolutní adresa.
+        Assert.DoesNotContain(Bloky.ZHtml(html), b => b.Druh == DruhBloku.Obrazek);
+    }
 }

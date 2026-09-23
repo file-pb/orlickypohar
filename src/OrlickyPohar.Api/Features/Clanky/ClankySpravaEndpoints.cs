@@ -147,8 +147,9 @@ public static class ClankySpravaEndpoints
             return Results.NotFound();
 
         return Results.Ok(new ClanekDto(
-            nalezeny.Slug, nalezeny.Titulek, nalezeny.Perex, nalezeny.Telo, nalezeny.Autor,
-            nalezeny.PublikovanoV, null, null, Nahravani.Dto(nalezeny.Fotka, uloziste.VerejnaAdresa)));
+            nalezeny.Slug, nalezeny.Titulek, nalezeny.Perex, TeloKUprave(nalezeny), nalezeny.Autor,
+            nalezeny.PublikovanoV, null, null, Nahravani.Dto(nalezeny.Fotka, uloziste.VerejnaAdresa),
+            FormatKUprave(nalezeny)));
     }
 
     private static async Task<IResult> WebUpravAsync(
@@ -296,10 +297,27 @@ public static class ClankySpravaEndpoints
                 .Select(z => new { z.Slug, z.Nazev }).FirstAsync(ct);
 
         return Results.Ok(new ClanekDto(
-            nalezeny.Slug, nalezeny.Titulek, nalezeny.Perex, nalezeny.Telo, nalezeny.Autor,
+            nalezeny.Slug, nalezeny.Titulek, nalezeny.Perex, TeloKUprave(nalezeny), nalezeny.Autor,
             nalezeny.PublikovanoV, zavod?.Slug, zavod?.Nazev,
-            Nahravani.Dto(nalezeny.Fotka, uloziste.VerejnaAdresa)));
+            Nahravani.Dto(nalezeny.Fotka, uloziste.VerejnaAdresa),
+            FormatKUprave(nalezeny)));
     }
+
+    /// <summary>
+    /// Tělo, jak ho autor uvidí v poli. Bloky se převedou zpátky do HTML —
+    /// ne do původního vloženého textu, ale do toho vyčištěného, který se
+    /// doopravdy uložil. Autor tak vidí, co z jeho vložení zbylo, a další
+    /// uložení už nic nemění.
+    /// </summary>
+    private static string TeloKUprave(Clanek clanek) =>
+        clanek.Format == FormatClanku.Bloky ? Bloky.DoHtml(Bloky.Nacti(clanek.Telo)) : clanek.Telo;
+
+    /// <summary>
+    /// Formát, jak ho pochopí formulář. Uložené `Bloky` se ukazují a posílají
+    /// zpátky jako `Html` — je to tentýž obsah, jen tvar, ve kterém se dá psát.
+    /// </summary>
+    private static FormatClanku FormatKUprave(Clanek clanek) =>
+        clanek.Format == FormatClanku.Bloky ? FormatClanku.Html : clanek.Format;
 
     private static async Task<IResult> UpravAsync(
         string serie, string clanek, ClanekVstupSprava vstup, ClaimsPrincipal kdo,

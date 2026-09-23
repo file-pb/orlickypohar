@@ -806,6 +806,13 @@ class H(BaseHTTPRequestHandler):
 
         # Slug se schválně nemění — adresa už mohla někam odejít.
         c.update({k: vstup.get(k) for k in ("titulek", "telo", "perex", "autor", "zavod")})
+        # **Falešné API vložený text nečistí**, jen si formát pamatuje —
+        # čistička je v `Features/Clanky/Bloky.cs` a opisovat parser HTML do
+        # Pythonu by znamenalo mít dvě různá pravidla. Formulář se tu tedy
+        # dá vyzkoušet, ale jak bude článek nakonec vypadat, se pozná až
+        # proti skutečnému API. Web tělo ve formátu `Html` vypíše jako text,
+        # takže se tu nic nerozbije.
+        c["format"] = vstup.get("format") or "Text"
         return self.odpoved(clanek_radek(c))
 
     def verejna_prihlaska(self, zavod):
@@ -1405,6 +1412,7 @@ class H(BaseHTTPRequestHandler):
 
         # Nový článek je vždycky koncept — stejně jako v API.
         novy = {"slug": slug, "titulek": titulek, "telo": vstup.get("telo"),
+                "format": vstup.get("format") or "Text",
                 "perex": vstup.get("perex"), "autor": vstup.get("autor"),
                 "zavod": vstup.get("zavod"), "stav": "Draft",
                 "publikovanoV": "2026-09-11T12:00:00+00:00"}
