@@ -34,7 +34,11 @@ public class KontraktTests
 
         Assert.Equal(2026, serie.Rok);
         Assert.Equal(3, serie.Kategorie.Count);
-        Assert.Equal(9, serie.Zavody.Count);
+
+        // Ročník 2026 měl podle sešitu devět zastávek, mock jich má osm:
+        // Vánoční regata se nejela a její termín není nikde zapsaný, takže
+        // by se musel vymyslet (Filip, 23. 9. 2026).
+        Assert.Equal(8, serie.Zavody.Count);
         Assert.NotEmpty(serie.Prihlasky);
 
         // Vymyšlená data se nesmějí dostat na veřejné stránky. Až bude čtení

@@ -1259,7 +1259,7 @@ ne podle A8.2 (to by bralo i škrtnutou poslední rozjížďku).
 | Zephyr na 24hodinovce | „asi nejel, moje chyba" — neúčast podle pravidla |
 | ČERVENÉ CAFE, 20 bodů | „je podle platných pravidel, na příští rok upravíme" — diskvalifikace 20 platí pro 2026 |
 | Od kolika zastávek dva škrty | „od devíti, co bylo dřív, neřešit" — `Serie.PocetSkrtu` = 2 |
-| Vánoční regata | zrušená; datum v ukázkových datech je vymyšlené (Filip). Od 23. 9. 2026 je to 6. 6. a čtvrtá zastávka, ne 12. 12. a poslední — viz *Termínová listina 2027* |
+| Vánoční regata | zrušená a od 23. 9. 2026 **v ukázkových datech vůbec není**: termín nikde zapsaný není a vymýšlet ho nebudeme — viz *Termínová listina 2027* |
 | LUNA −1, DEPRESSO 10, MICHELLE 32 | platí výpočet, v sešitu chyba |
 
 **Zbývá:** seznam lodí přihlášených na zastávky, které nepřijely, a dvě nové
@@ -1345,9 +1345,10 @@ tvar, který drží `Zavod`.
 - **Závod má jednu ze čtyř podob** — okruhový, dálková plavba, maraton 24 h,
   maraton 8 h. Typ řídí počet rozjížděk a tím i škrt.
 
-**Co je v rozporu s tím, co o ročníku 2026 tvrdí `tools/gen-mock.py`:**
+**V čem se rozešla s tím, co o ročníku 2026 tvrdil `tools/gen-mock.py`**
+(stav před 23. 9. 2026; co se z toho opravilo, je hned pod tabulkou):
 
-| Regata | Mock 2026 | Listina 2027 |
+| Regata | Mock 2026 tehdy | Listina 2027 |
 |---|---|---|
 | Jarní vítr | YC Orlík, okruhový, 4 rozjížďky | Marina Orlík, **dálková plavba** |
 | Radavská regata | LK Radava | **Yacht club Písek YCPK** |
@@ -1359,39 +1360,48 @@ tvar, který drží `Zavod`.
 | O pohár Vltavy | Plachtič z Vltavy ✓ | Roman Vagenknecht & plachtiči z Vltavy ✓ |
 | Pohár Slunce | SK Popovice, okruhový, 4 rozjížďky | **Jacht servis Novák + YC Corona**, **maraton 8 h** |
 
-**Opraveno hned jen jedno: Vánoční regata.** Ne proto, že to říká listina
-2027, ale protože to potvrzuje **sešit rozhodčího za rok 2026** — ten ji vede
-jako čtvrtou zastávku, mezi 24hodinovkou a Izolepou. Prosincový termín
-v mocku byl odhad podle názvu a odporoval sešitu, aniž si toho kdokoliv
-všiml; listina 2027 to jen dovysvětlila (24. 7., dálková plavba ze základny
-Surf & Ski Trhovky). V mocku je regata nově čtvrtá, 6. 6. 2026 a typu
-`vytrvalostní`. **Datum je pořád vymyšlené** — regata se nejela a nikde není
-zapsané; jen teď sedí do pořadí ze sešitu místo toho, aby mu odporovalo.
+**Ukázkový ročník 2026 se tím přepsal na třech místech.** Listina sama
+o roce 2026 nevypovídá, ale Filip k ní doplnil, co platí:
 
-**Opraven i Pohár Slunce (23. 9. 2026).** Filip potvrdil, že **maraton jede
-jednu rozjížďku**. Mock mu dával čtyři a k tomu škrt, tedy škrtal v závodě,
-kde není z čeho. Nově je typu `maraton 8 h` s jednou rozjížďkou a bez škrtu;
-pořadí v kategorii ze sešitu tím zůstává nedotčené, protože s jednou
-rozjížďkou se pořadí v cíli rovná pořadí v kategorii. Pořadatel se nemění —
-`SK Popovice` je pořád nepotvrzený, listina má Jacht servis Novák.
+| Zastávka | Bylo | Je | Proč |
+|---|---|---|---|
+| Jarní vítr | okruhový, 4 rozjížďky, škrt 1 | `dálková plavba`, 1 rozjížďka, škrt 0 | Filip potvrdil typ z listiny |
+| Pohár Slunce | okruhový, 4 rozjížďky, škrt 1 | `maraton 8 h`, 1 rozjížďka, škrt 0 | maraton jede jednu rozjížďku |
+| Vánoční regata | 12. 12., `fun`, devátá | **v mocku není** | termín nikde zapsaný není |
 
-**Zbytek se nepřepisuje, protože doklad o roce 2026 to není.** Hlavně
-**Jarní vítr**: kdyby byl dálková plavba i v roce 2026, měl by jednu
-rozjížďku místo čtyř a žádný škrt. Body v sešitu se tím nezmění — sešit vede
-jen výsledek zastávky, ne rozjížďky — takže se to z dat ověřit nedá.
+Obě opravy ruší škrt v závodě, kde není z čeho škrtat — dálková plavba
+i maraton jedou jednu rozjížďku. Pořadí v kategorii ze sešitu tím zůstává
+nedotčené: s jednou rozjížďkou se pořadí v cíli rovná pořadí v kategorii.
+
+**Vánoční regata z ukázkových dat vypadla.** Sešit ji mezi devíti zastávkami
+ročníku 2026 vede, ale její termín neexistuje nikde: prosinec byl odhad podle
+názvu (listina 2027 ji má 24. 7., takže vánoční není) a červen zase odhad
+podle pořadí v sešitu. „Někdy v létě, ale jestli v plánu není, tak ji tam
+nedávej" — Filip, 23. 9. 2026. **Ukázkový ročník má proto osm zastávek, ne
+devět**, a `KontraktTests` to říkají i s důvodem. Devět zastávek dál platí
+o ročníku 2026 jako takovém; rozdíl je v tom, co si smíme dovolit zobrazit.
+
+**Dálková plavba má jedno jméno.** Mock jí u O poháru Vltavy říkal
+`vytrvalostní`, jenže jeho vlastní směrnice i listina 2027 píšou „dálková
+plavba". Se třemi zastávkami téhož typu by web ukazoval dva různé štítky
+pro tutéž věc, tak je sjednocený.
+
+**Úvodní článek si počet regat bere z kalendáře.** Tvrdil „devět regat od
+dubna do prosince" a že ročník „končí Vánoční regatou" — po jejím vyřazení
+by to byla nepravda v textu vedle správné tabulky. Teď se počet i krajní
+zastávky dopočítají; věty jsou přestavěné na první pád, protože „končí
+Vánoční regatou" se u každého názvu skloňuje jinak.
 
 **Odpovědi (Filip, 23. 9. 2026):**
 
 | Otázka | Odpověď | Co z toho v kódu |
 |---|---|---|
-| Typy a pořadatelé z listiny i v roce 2026? | **Maratony jedou jednu rozjížďku.** | Pohár Slunce přepsaný na `maraton 8 h`, jedna rozjížďka, škrt 0 |
+| Platily typy z listiny i v roce 2026? | **Jarní vítr je dálková plavba**; **maratony jedou jednu rozjížďku** | Jarní vítr a Pohár Slunce přepsané, obojí jedna rozjížďka a škrt 0 |
 | Izolepa: první, nebo druhá rozjížďka? | **„První" znamená první na vodě**, běh pro míčky jde napřed a nepočítá se | beze změny — `doSerie` na druhé v pořadí je totéž pravidlo |
-| Kdy se v roce 2026 jela Vánoční regata? | „někdy v létě, ale jestli v plánu není, tak ji tam nedávej" | **otevřené**, viz níž |
+| Kdy se v roce 2026 jela Vánoční regata? | „někdy v létě, ale jestli v plánu není, tak ji tam nedávej" | zastávka z mocku vyřazená |
 
-**Zbývá:** jestli byl **Jarní vítr** dálková plavba i v roce 2026 (mock mu
-drží čtyři rozjížďky a škrt), a co s **Vánoční regatou** — červnové datum je
-vymyšlené a Filip nechce vymýšlet, jenže sešit ji mezi devíti zastávkami
-ročníku 2026 vede.
+**Zbývá:** pořadatelé. Sedm z devíti se mezi mockem a listinou liší a žádný
+z nich potvrzený není — u ročníku 2026 zůstávají tak, jak byli.
 
 ### Ročník 2027 jako kalendář
 

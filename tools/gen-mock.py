@@ -74,18 +74,18 @@ LODE = {
 # mají na papíře 0 / 2 / 6 bodů, což sedí jen se škrtem ze čtyř);
 # rozhodčí to 23. 9. 2026 potvrdil. Pravidlo tedy platí a sešit taky.
 ZAVODY = [
-    ("Jarní vítr",      "YC Orlík",     date(2026, 4, 25), "okruhový",     4, "PoKategoriich", 1.0),
+    # Dálková plavba, ne okruhový závod (Filip, 23. 9. 2026) — jedna
+    # rozjížďka a žádný škrt, jako O pohár Vltavy. Mock mu dřív dával
+    # čtyři rozjížďky a škrt.
+    ("Jarní vítr",      "YC Orlík",     date(2026, 4, 25), "dálková plavba", 1, "PoKategoriich", 1.0),
     ("Radavská regata", "LK Radava",    date(2026, 5,  9), "okruhový",     4, "PoKategoriich", 1.0),
     ("24hodinovka",     "YC Orlík",     date(2026, 5, 23), "24 hodin",     1, "CelePole",      1.0),
-    # Vánoční regata není vánoční. Sešit rozhodčího ji v ročníku 2026 vede
-    # jako čtvrtou zastávku, mezi 24hodinovkou a Izolepou, a termínová
-    # listina 2027 ji má 24. 7. jako dálkovou plavbu — obojí dohromady říká,
-    # že prosincový termín byl jen odhad podle názvu. Regata se v roce 2026
-    # nejela, přesné datum tedy nikdo neví; 6. 6. je vymyšlené tak, aby
-    # sedělo do pořadí ze sešitu. Pořadatel je pořád nepotvrzený: listina
-    # 2027 má Jacht servis & Wake-surf.cz, což je otázka na rozhodčího.
-    # (Filip, 23. 9. 2026)
-    ("Vánoční regata",  "YC Orlík",     date(2026, 6,  6), "vytrvalostní", 1, "PoKategoriich", 1.0),
+    # Vánoční regata tu schválně není, i když ji sešit mezi devíti
+    # zastávkami ročníku 2026 vede. Nejela se a její termín nikde zapsaný
+    # není: prosinec byl odhad podle názvu (listina 2027 ji má 24. 7. jako
+    # dálkovou plavbu, takže vánoční není) a červen zase odhad podle pořadí
+    # v sešitu. „Někdy v létě, ale jestli v plánu není, tak ji tam nedávej"
+    # — Filip, 23. 9. 2026. Ukázkový ročník má proto osm zastávek.
     ("Izolepa",         "YC Orlík",     date(2026, 6, 20), "Izolepa",      3, "PoKategoriich", 1.0),
     ("FxCK Cancer",     "Marina Orlík", date(2026, 7, 11), "okruhový",     2, "PoKategoriich", 1.0),
     # Pořadatel: Filip, 15. 9. 2026 — Yacht Club Písek, ne LK Radava.
@@ -93,7 +93,7 @@ ZAVODY = [
     # ředitel Štěpán Záruba): 29. 8. 2026, ne 15. 8. — Filip, 23. 9. 2026.
     # Čtyři rozjížďky, ne tři (tatáž listina, potvrzeno rozhodčím 23. 9.).
     ("Radavský pohár",  "Yacht Club Písek", date(2026, 8, 29), "okruhový", 4, "PoKategoriich", 1.0),
-    ("O pohár Vltavy",  "Plachtič z Vltavy", date(2026, 9, 5), "vytrvalostní", 1, "PoKategoriich", 1.0),
+    ("O pohár Vltavy",  "Plachtič z Vltavy", date(2026, 9, 5), "dálková plavba", 1, "PoKategoriich", 1.0),
     # Maraton, ne okruhový závod: termínová listina 2027 ho vede jako
     # „maraton 8 h" a maraton má jednu rozjížďku (Filip, 23. 9. 2026).
     # Mock mu dřív dával čtyři rozjížďky a škrt, tedy škrtal v závodě,
@@ -103,11 +103,10 @@ ZAVODY = [
 ]
 
 # Termínová listina 2027 (od rozhodčího 23. 9. 2026) má tutéž devítku regat
-# ve stejném pořadí, ale u sedmi z nich jiného pořadatele a u tří jiný typ:
-# Jarní vítr a Vánoční regata jsou dálkové plavby, Pohár Slunce maraton 8 h.
-# Maratony jedou jednu rozjížďku (Filip, 23. 9. 2026) — to je u Poháru
-# Slunce zapsané výš. **Jarní vítr jako dálková plavba zatím potvrzený
-# není**, takže mu čtyři rozjížďky zůstávají; podrobně v docs/PLAN.md,
+# ve stejném pořadí, ale u sedmi z nich jiného pořadatele. Typy z ní Filip
+# potvrdil i pro rok 2026: Jarní vítr je dálková plavba, Pohár Slunce
+# maraton. Dálková plavba i maraton jedou jednu rozjížďku, takže v nich
+# není co škrtat. Nepotvrzení zůstávají pořadatelé; podrobně v docs/PLAN.md,
 # oddíl o listině 2027.
 
 
@@ -190,8 +189,9 @@ KATEGORIE_LODI_PRED = {p["lod"]: p["kategorie"] for p in prihlasky}
 zavody = []
 for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerate(ZAVODY, 1):
     mista, diskvalifikovane = umisteni_ze_sesitu(nazev)
-    # Radavská i Vánoční regata se v roce 2026 nejely (rozhodčí, 22. 9. 2026);
-    # datum Vánoční regaty v tabulce výš je vymyšlené.
+    # Radavská regata se v roce 2026 nejela (rozhodčí, 22. 9. 2026).
+    # Vánoční regata je zrušená taky, ale v tabulce výš vůbec není — nemá
+    # doložený termín, viz komentář u ní.
     zrusena = nazev in ZRUSENE
 
     # Plánovaná regata se ještě nejela, takže po ní nemůžou být výsledky.
@@ -211,8 +211,8 @@ for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerat
         startuji = []
     else:
         # Loď nejede všechny regaty. Míň lodí u „fun" závodu tu bývalo kvůli
-        # Vánoční regatě; ta je zrušená a typ „fun" v ročníku od 23. 9. 2026
-        # není, takže zbyla jedna pravděpodobnost.
+        # Vánoční regatě; ta v ročníku od 23. 9. 2026 není, stejně jako
+        # typ „fun", takže zbyla jedna pravděpodobnost.
         startuji = [l["klic"] for l in lode if R.random() < 0.82]
         if len(startuji) < 6:
             startuji = [l["klic"] for l in lode][:8]
@@ -299,10 +299,15 @@ for poradi, (nazev, poradatel, den, typ, pocet_r, vyhodnoceni, koef) in enumerat
 # Skutečné články napíše organizátor a pořadatelé v administraci (fáze 5).
 # Do té doby slouží tyhle k tomu, aby se dalo vidět, jak blog vypadá plný.
 
+# Počet regat i krajní zastávky si text bere z kalendáře, ne z ruky —
+# jinak by po vyřazení jedné zastávky tvrdil něco, co v tabulce není.
+# Věty jsou proto stavěné na první pád: „končí Vánoční regatou" by se
+# u každého názvu skloňovalo jinak.
 UVOD_SERIE = """\
-Devět regat, tři kategorie a jedno průběžné pořadí. Ročník začíná na
-konci dubna Jarním větrem a končí Vánoční regatou; mezi tím se jede
-čtyřiadvacetihodinovka, Izolepa i klasické okruhové závody.
+{pocet} regat, tři kategorie a jedno průběžné pořadí. Ročník otevírá
+{prvni} {prvni_den}, poslední zastávkou je {posledni} {posledni_den};
+mezi tím se jede čtyřiadvacetihodinovka, Izolepa i klasické okruhové
+závody.
 
 Body sbírá loď, ne posádka — kormidelník se mezi závody mění, loď ne.
 Do celkového pořadí se počítá každá odjetá regata a nejhorší výsledky
@@ -338,10 +343,17 @@ Nejbližší regatou je {dalsi}. Kdo ještě neodjel čtyři závody, má pořá
 šanci se do popředí dostat; kdo odjel všechny, má naopak co ztratit."""
 
 
+MESICE = ["ledna", "února", "března", "dubna", "května", "června",
+          "července", "srpna", "září", "října", "listopadu", "prosince"]
+
+# Číslovka slovy: „8 regat" uprostřed věty vypadá jako rozbitá šablona.
+SLOVY = {1: "Jedna", 2: "Dvě", 3: "Tři", 4: "Čtyři", 5: "Pět", 6: "Šest",
+         7: "Sedm", 8: "Osm", 9: "Devět", 10: "Deset", 11: "Jedenáct",
+         12: "Dvanáct"}
+
+
 def cesky_datum(d):
-    mesice = ["ledna", "února", "března", "dubna", "května", "června",
-              "července", "srpna", "září", "října", "listopadu", "prosince"]
-    return f"{d.day}. {mesice[d.month - 1]} {d.year}"
+    return f"{d.day}. {MESICE[d.month - 1]} {d.year}"
 
 
 def veta_o_rozjizdkach(celkem, do_serie, skrtu):
@@ -399,12 +411,20 @@ clanky = []
 odjete = [z for z in zavody if z["stav"] == "Odjety"]
 cekajici = [z for z in zavody if z["stav"] == "Planovany"]
 
+_prvni, _posledni = zavody[0], zavody[-1]
+_od = date.fromisoformat(_prvni["datum"])
+_do = date.fromisoformat(_posledni["datum"])
+
 clanky.append({
     "slug": "rocnik-2026-zacina",
     "titulek": "Ročník 2026 začíná",
-    "perex": "Devět regat od dubna do prosince, tři kategorie a jedno "
-             "průběžné pořadí. Co je letos v kalendáři a jak se boduje.",
-    "telo": UVOD_SERIE,
+    "perex": f'{SLOVY[len(zavody)]} regat od {MESICE[_od.month - 1]} '
+             f'do {MESICE[_do.month - 1]}, tři kategorie a jedno '
+             f'průběžné pořadí. Co je letos v kalendáři a jak se boduje.',
+    "telo": UVOD_SERIE.format(
+        pocet=SLOVY[len(zavody)], prvni=_prvni["nazev"],
+        prvni_den=cesky_datum(_od), posledni=_posledni["nazev"],
+        posledni_den=cesky_datum(_do)),
     "autor": "Orlický pohár",
     "publikovanoV": datetime(2026, 4, 12, 18, 0, tzinfo=timezone(timedelta(hours=2))).isoformat(),
     "publikovano": True,
