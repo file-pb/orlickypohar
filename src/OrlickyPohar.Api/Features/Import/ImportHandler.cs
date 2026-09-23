@@ -34,7 +34,7 @@ namespace OrlickyPohar.Api.Features.Import;
 internal static class ImportHandler
 {
     public static async Task<ImportVysledek> ZpracujAsync(
-        AppDbContext db, SerieVstup vstup, CancellationToken ct)
+        AppDbContext db, SerieVstup vstup, CancellationToken ct, string? naseUloziste = null)
     {
         OveřVstup(vstup);
 
@@ -46,7 +46,7 @@ internal static class ImportHandler
         var prihlasky = await SlaďPrihlasky(db, serie, vstup, kategorie.Mapa, lode.Mapa, ct);
 
         var zavody = await SlaďZavody(db, serie, vstup, prihlasky.Mapa, osoby.Mapa, ct);
-        var clanky = await SlaďClanky(db, serie, vstup, ct);
+        var clanky = await SlaďClanky(db, serie, vstup, ct, naseUloziste);
 
         return new ImportVysledek(
             serie.Slug,
@@ -455,7 +455,7 @@ internal static class ImportHandler
     /// </para>
     /// </summary>
     private static async Task<ImportPocty> SlaďClanky(
-        AppDbContext db, Serie serie, SerieVstup vstup, CancellationToken ct)
+        AppDbContext db, Serie serie, SerieVstup vstup, CancellationToken ct, string? naseUloziste)
     {
         var vstupni = vstup.Clanky ?? [];
         if (vstupni.Count == 0) return new ImportPocty(0, 0);
@@ -496,7 +496,10 @@ internal static class ImportHandler
             // syrové, stačilo by jedno místo, které si ho vezme bez očisty.
             if (v.Format == FormatClanku.Html)
             {
-                c.Telo = Clanky.Bloky.Uloz(Clanky.Bloky.ZHtml(v.Telo));
+                // Import je dávka, ne formulář — chyba by shodila celý ročník
+                // kvůli jednomu dlouhému článku. `ZHtml` proto limity dodrží
+                // sám a co je nad ně, se zahodí.
+                c.Telo = Clanky.Bloky.Uloz(Clanky.Bloky.ZHtml(v.Telo, naseUloziste));
                 c.Format = FormatClanku.Bloky;
             }
             else

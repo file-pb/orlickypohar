@@ -114,12 +114,17 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int>("Sirka")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("VTeleClankuId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Vyska")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("NahralId");
+
+                    b.HasIndex("VTeleClankuId");
 
                     b.ToTable("Fotky");
                 });

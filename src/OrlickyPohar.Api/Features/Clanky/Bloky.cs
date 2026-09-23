@@ -68,6 +68,55 @@ public record Blok(
 public static class Bloky
 {
     /// <summary>
+    /// Kolik bloků se z jednoho vložení vezme. Dlouhý článek má desítky
+    /// odstavců; dva tisíce znamená, že někdo vložil celý web.
+    /// </summary>
+    public const int NejvicBloku = 300;
+
+    /// <summary>
+    /// Kolik textu se vezme celkem. Zhruba dvacet normostran — víc už není
+    /// novinka, ale kniha, a stránku by to nafouklo pro každého čtenáře.
+    /// </summary>
+    public const int NejvicZnaku = 40_000;
+
+    /// <summary>
+    /// Kolik obrázků smí být v jednom těle. Každý je jeden požadavek navíc
+    /// pro každého, kdo článek otevře.
+    /// </summary>
+    public const int NejvicObrazku = 20;
+
+    /// <summary>
+    /// Proč vložený text nejde uložit, nebo <c>null</c>. Volá se <b>před</b>
+    /// převodem, aby autor dostal větu místo tiše oříznutého článku.
+    /// <para>
+    /// Samotný <see cref="ZHtml"/> limity taky dodržuje — je to pojistka pro
+    /// cesty, které tuhle kontrolu nezavolají, ne druhá pravda.
+    /// </para>
+    /// </summary>
+    public static string? ProcNejde(string? html, string? naseUloziste = null)
+    {
+        var bloky = ZHtml(html, naseUloziste, omezit: false);
+
+        if (bloky.Count > NejvicBloku)
+            return $"Text má {bloky.Count} odstavců a dalších prvků, nejvýš jich může být {NejvicBloku}. Zkus ho rozdělit na víc článků.";
+
+        var znaku = Znaku(bloky);
+        if (znaku > NejvicZnaku)
+            return $"Text má {znaku} znaků, nejvýš jich může být {NejvicZnaku}. Zkus ho rozdělit na víc článků.";
+
+        var obrazku = bloky.Count(b => b.Druh == DruhBloku.Obrazek);
+        if (obrazku > NejvicObrazku)
+            return $"V textu je {obrazku} obrázků, nejvýš jich může být {NejvicObrazku}.";
+
+        return null;
+    }
+
+    private static int Znaku(IReadOnlyList<Blok> bloky) =>
+        bloky.Sum(b =>
+            (b.Useky?.Sum(u => u.Text.Length) ?? 0)
+            + (b.Polozky?.Sum(p => p.Sum(u => u.Text.Length)) ?? 0));
+
+    /// <summary>
     /// Značky, jejichž <b>obsah</b> se zahazuje i s textem. U ostatních
     /// neznámých se značka ignoruje, ale text uvnitř zůstane — u těchhle by
     /// to znamenalo vysypat do článku javascript nebo styly jako text.
@@ -167,14 +216,51 @@ public static class Bloky
     private static string Uvozovky(string? hodnota) =>
         Escapuj(hodnota ?? "").Replace("\"", "&quot;");
 
-    /// <summary>Převede vložené HTML na bloky.</summary>
-    public static IReadOnlyList<Blok> ZHtml(string? html)
+    /// <summary>
+    /// Převede vložené HTML na bloky.
+    /// </summary>
+    /// <param name="naseUloziste">
+    /// Veřejná adresa našeho úložiště fotek. Je-li zadaná, <b>obrázek projde
+    /// jen z ní</b> — cizí se zahodí.
+    /// <para>
+    /// Je to jediná obrana proti tomu, aby pořadatel vložil odkaz na desetimegový
+    /// obrázek na cizím serveru: u nahraného k nám se velikost srazí přepočtem
+    /// (Nahravani/Zpracovani), u cizího ji neřídíme nijak a zaplatí ji každý,
+    /// kdo článek otevře. Kdo chce mít v textu fotku, nahraje ji.
+    /// </para>
+    /// </param>
+    /// <param name="omezit">
+    /// Dodržet limity počtu a délky. Vypíná se jen tehdy, když se má zjistit
+    /// skutečná velikost vstupu pro chybovou hlášku (<see cref="ProcNejde"/>).
+    /// </param>
+    public static IReadOnlyList<Blok> ZHtml(string? html, string? naseUloziste = null, bool omezit = true)
     {
         if (string.IsNullOrWhiteSpace(html)) return [];
 
-        var stavitel = new Stavitel();
+        var stavitel = new Stavitel(naseUloziste);
         foreach (var token in Tokeny(html)) stavitel.Vezmi(token);
-        return stavitel.Hotovo();
+        var bloky = stavitel.Hotovo();
+
+        if (!omezit) return bloky;
+
+        // Pojistka, ne druhá pravda: `ProcNejde` už měl autorovi říct větu.
+        // Sem se dostane jen to, co tou kontrolou neprošlo — starší import
+        // nebo cesta, která ji zapomene zavolat.
+        var obrazku = 0;
+        var znaku = 0;
+        var vysledek = new List<Blok>(Math.Min(bloky.Count, NejvicBloku));
+        foreach (var b in bloky)
+        {
+            if (vysledek.Count >= NejvicBloku) break;
+            if (b.Druh == DruhBloku.Obrazek && ++obrazku > NejvicObrazku) continue;
+
+            znaku += Znaku([b]);
+            if (znaku > NejvicZnaku) break;
+
+            vysledek.Add(b);
+        }
+
+        return vysledek;
     }
 
     // --- Tokenizér ---------------------------------------------------------
@@ -301,7 +387,7 @@ public static class Bloky
 
     // --- Skládání bloků ----------------------------------------------------
 
-    private sealed class Stavitel
+    private sealed class Stavitel(string? naseUloziste)
     {
         private readonly List<Blok> _bloky = [];
         private readonly List<Usek> _useky = [];
@@ -390,7 +476,7 @@ public static class Bloky
                     break;
 
                 case "img":
-                    if (Adresa(token.Odkaz, mailtoTaky: false) is { } adresa)
+                    if (Nase(Adresa(token.Odkaz, mailtoTaky: false)) is { } adresa)
                     {
                         UzavriOdstavec();
                         _bloky.Add(new Blok(DruhBloku.Obrazek, Adresa: adresa,
@@ -446,6 +532,15 @@ public static class Bloky
                     break;
             }
         }
+
+        /// <summary>
+        /// Obrázek jen z našeho úložiště, pokud je zadané. Cizí adresu
+        /// zahodíme — její velikost neřídíme a zaplatí ji náš provoz.
+        /// </summary>
+        private string? Nase(string? adresa) =>
+            adresa is null || naseUloziste is null
+                ? (naseUloziste is null ? adresa : null)
+                : adresa.StartsWith(naseUloziste, StringComparison.OrdinalIgnoreCase) ? adresa : null;
 
         private void PridejText(string syrovy)
         {

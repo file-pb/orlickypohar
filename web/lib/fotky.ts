@@ -85,3 +85,65 @@ export async function odeberObrazek(serie: string, druh: DruhObrazku, klic: stri
     return "API se nedaří zavolat.";
   }
 }
+
+/**
+ * Obrázky v těle článku leží pod ročníkem. Obecné články (`/sprava/web`)
+ * je zatím nemají — píše je editor webu, kdežto tohle vzniklo kvůli
+ * pořadatelům a jejich pozvánkám k regatám.
+ */
+const cestaDoTela = (serie: string, clanek: string) =>
+  `${API}/sprava/serie/${encodeURIComponent(serie)}/clanky/${encodeURIComponent(clanek)}/obrazky`;
+
+/**
+ * Nahraje obrázek **do těla článku** a vrátí jeho adresu.
+ *
+ * Na rozdíl od hlavního obrázku nic nenahrazuje — v textu jich může být víc.
+ * Prochází stejným přepočtem, takže i fotka z mobilu skončí jako WebP nejvýš
+ * 1600 px. Právě proto smí být v těle jen obrázek nahraný takhle: u cizí
+ * adresy velikost neřídíme a zaplatí ji každý, kdo článek otevře.
+ */
+export async function nahrajObrazekDoTela(
+  serie: string,
+  clanek: string,
+  vstup: { soubor: File; autor: string; popis?: string; souhlas: boolean },
+): Promise<{ chyba?: string; adresa?: string }> {
+  const t = await tokenZeSezeni();
+  if (!t) return { chyba: "Přihlášení vypršelo. Přihlas se prosím znovu." };
+
+  const telo = new FormData();
+  telo.set("soubor", vstup.soubor, vstup.soubor.name);
+  telo.set("autor", vstup.autor);
+  if (vstup.popis) telo.set("popis", vstup.popis);
+  telo.set("souhlas", String(vstup.souhlas));
+
+  try {
+    const odpoved = await fetch(cestaDoTela(serie, clanek), {
+      method: "POST",
+      headers: { authorization: `Bearer ${t}`, accept: "application/json" },
+      body: telo,
+      cache: "no-store",
+    });
+    if (!odpoved.ok) return { chyba: await hlaska(odpoved) };
+
+    const obrazek = (await odpoved.json()) as Obrazek;
+    return { adresa: obrazek.velky };
+  } catch {
+    return { chyba: "API se nedaří zavolat." };
+  }
+}
+
+/** Obrázky nahrané do těla článku, od nejnovějšího. */
+export async function obrazkyVTele(serie: string, clanek: string): Promise<Obrazek[]> {
+  const t = await tokenZeSezeni();
+  if (!t) return [];
+
+  try {
+    const odpoved = await fetch(cestaDoTela(serie, clanek), {
+      headers: { authorization: `Bearer ${t}`, accept: "application/json" },
+      cache: "no-store",
+    });
+    return odpoved.ok ? ((await odpoved.json()) as Obrazek[]) : [];
+  } catch {
+    return [];
+  }
+}

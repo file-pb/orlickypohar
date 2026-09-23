@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { NEJVIC_MB, nahrajObrazekDoTela } from "@/lib/fotky";
 import { prepniStav, uloz, zaloz, type StavClanku } from "@/lib/clanky";
 
 /**
@@ -71,4 +72,33 @@ export async function stavAkce(formular: FormData) {
   redirect(
     kam(serie, zpet ? `/${slug}` : "", chyba ? { chyba } : { stav: "prepnuto", nastav: stav }),
   );
+}
+
+/**
+ * Nahraje obrázek do těla článku. Nic nenahrazuje — v textu jich může být
+ * víc; adresu si autor vloží do textu sám.
+ *
+ * Bez javascriptu, jako zbytek správy: soubor odešle prohlížeč obyčejným
+ * formulářem a server webu ho předá API, kde projde přepočtem na WebP.
+ */
+export async function nahrajDoTelaAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const slug = String(formular.get("slug") ?? "");
+  const kamZpet = (zprava: Record<string, string>) => kam(serie, `/${slug}`, zprava);
+
+  const soubor = formular.get("soubor");
+  const autor = String(formular.get("autor") ?? "").trim();
+  const popis = String(formular.get("popis") ?? "").trim() || undefined;
+  // Zaškrtávátko posílá prohlížeč jen zaškrtnuté, s hodnotou „on".
+  const souhlas = formular.get("souhlas") === "on";
+
+  if (!(soubor instanceof File) || soubor.size === 0)
+    redirect(kamZpet({ chyba: "Vyber soubor s fotkou." }));
+  if (soubor.size > NEJVIC_MB * 1024 * 1024)
+    redirect(kamZpet({ chyba: `Fotka může mít nejvýš ${NEJVIC_MB} MB.` }));
+  if (!autor) redirect(kamZpet({ chyba: "Vyplň autora fotky." }));
+  if (!souhlas) redirect(kamZpet({ chyba: "Bez potvrzeného souhlasu fotku nahrát nejde." }));
+
+  const { chyba } = await nahrajObrazekDoTela(serie, slug, { soubor, autor, popis, souhlas });
+  redirect(kamZpet(chyba ? { chyba } : { stav: "obrazek-nahran" }));
 }

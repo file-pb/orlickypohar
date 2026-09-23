@@ -110,6 +110,80 @@ public class FotkySprava(AppDbContext db, IUloziste uloziste, TimeProvider cas, 
         return (Nahravani.Dto(fotka, uloziste.VerejnaAdresa), null);
     }
 
+    /// <summary>
+    /// Nahraje obrázek <b>do těla článku</b>. Na rozdíl od
+    /// <see cref="NastavAsync"/> nic nenahrazuje — v textu jich může být víc.
+    /// <para>
+    /// Prochází týmž zpracováním, takže i fotka z mobilu skončí jako WebP
+    /// nejvýš 1600 px. Právě proto smí být v těle jen obrázek nahraný k nám:
+    /// u cizí adresy velikost neřídíme a zaplatí ji každý čtenář.
+    /// </para>
+    /// </summary>
+    public async Task<(ObrazekDto? Obrazek, string? Chyba)> NahrajDoTelaAsync(
+        int clanekId, FotkaFormular formular, Guid kdo, CancellationToken ct)
+    {
+        if (!uloziste.Pripraveno) return (null, Vypnuto);
+
+        if (Nahravani.ProcNejde(formular.Soubor?.Length ?? 0, formular.Autor, formular.Popis,
+                formular.Souhlas) is { } chyba)
+            return (null, chyba);
+
+        using var obsah = new MemoryStream();
+        await formular.Soubor!.CopyToAsync(obsah, ct);
+        obsah.Position = 0;
+
+        Varianty? varianty;
+        string? chybaObrazku;
+        await JedenNaraz.WaitAsync(ct);
+        try
+        {
+            (varianty, chybaObrazku) = await Zpracovani.ZpracujAsync(obsah, ct);
+        }
+        finally
+        {
+            JedenNaraz.Release();
+        }
+
+        if (varianty is null) return (null, chybaObrazku);
+
+        var fotka = new Fotka
+        {
+            Id = Guid.NewGuid(),
+            Sirka = varianty.Sirka,
+            Vyska = varianty.Vyska,
+            Autor = formular.Autor!.Trim(),
+            Popis = string.IsNullOrWhiteSpace(formular.Popis) ? null : formular.Popis.Trim(),
+            NahralId = kdo,
+            NahranoV = cas.GetUtcNow(),
+            VTeleClankuId = clanekId,
+        };
+
+        await uloziste.UlozAsync(Nahravani.Klic(fotka.Id, Nahravani.SirkaNahledu), varianty.Nahled, "image/webp", ct);
+        await uloziste.UlozAsync(Nahravani.Klic(fotka.Id, Nahravani.SirkaVelke), varianty.Velky, "image/webp", ct);
+
+        db.Fotky.Add(fotka);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch
+        {
+            await UklidAsync(fotka.Id);
+            throw;
+        }
+
+        return (Nahravani.Dto(fotka, uloziste.VerejnaAdresa), null);
+    }
+
+    /// <summary>Obrázky nahrané do těla článku, od nejnovějšího.</summary>
+    public async Task<IReadOnlyList<ObrazekDto>> VTeleAsync(int clanekId, CancellationToken ct) =>
+        [.. (await db.Fotky
+                .Where(f => f.VTeleClankuId == clanekId)
+                .OrderByDescending(f => f.NahranoV)
+                .ToListAsync(ct))
+            .Select(f => Nahravani.Dto(f, uloziste.VerejnaAdresa))
+            .OfType<ObrazekDto>()];
+
     /// <summary>Odebere obrázek. Bez obrázku je to úspěch, ne chyba.</summary>
     public async Task<string?> OdeberAsync(IMaFotku vlastnik, CancellationToken ct)
     {

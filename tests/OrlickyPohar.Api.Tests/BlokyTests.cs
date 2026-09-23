@@ -328,4 +328,79 @@ public class BlokyTests
         // platná absolutní adresa.
         Assert.DoesNotContain(Bloky.ZHtml(html), b => b.Druh == DruhBloku.Obrazek);
     }
+
+    private const string Uloziste = "https://fotky.klihovka.cz/";
+
+    [Fact]
+    public void V_tele_projde_jen_obrazek_nahrany_k_nam()
+    {
+        // Cizí obrázek si velikostí řídí cizí server a zaplatí ho každý, kdo
+        // článek otevře. U nahraného k nám ji srazí přepočet na WebP.
+        var bloky = Bloky.ZHtml($"""
+            <img src="{Uloziste}abc-1600.webp" alt="Naše">
+            <img src="https://cizi.example/desetimegovy.png" alt="Cizí">
+            """, Uloziste);
+
+        var obrazek = Assert.Single(bloky, b => b.Druh == DruhBloku.Obrazek);
+        Assert.Equal($"{Uloziste}abc-1600.webp", obrazek.Adresa);
+    }
+
+    [Fact]
+    public void Bez_zadaneho_uloziste_projde_obrazek_odkudkoliv()
+    {
+        // Volání bez adresy úložiště znamená „nevím, kde je naše" — pak se
+        // nedá rozhodnout a platí jen pravidlo o absolutní http(s) adrese.
+        // Chodí tudy starší importy a testy rozboru.
+        var bloky = Bloky.ZHtml("""<img src="https://cizi.example/f.jpg">""");
+
+        Assert.Single(bloky, b => b.Druh == DruhBloku.Obrazek);
+    }
+
+    [Fact]
+    public void Prilis_dlouhy_text_se_neulozi()
+    {
+        var dlouhy = string.Concat(Enumerable.Repeat("<p>" + new string('a', 1000) + "</p>", 60));
+
+        var chyba = Bloky.ProcNejde(dlouhy);
+
+        Assert.NotNull(chyba);
+        Assert.Contains("znaků", chyba);
+    }
+
+    [Fact]
+    public void Prilis_mnoho_bloku_se_neulozi()
+    {
+        var hodne = string.Concat(Enumerable.Repeat("<p>a</p>", Bloky.NejvicBloku + 5));
+
+        Assert.Contains("odstavců", Bloky.ProcNejde(hodne));
+    }
+
+    [Fact]
+    public void Prilis_mnoho_obrazku_se_neulozi()
+    {
+        var hodne = string.Concat(Enumerable.Range(0, Bloky.NejvicObrazku + 3)
+            .Select(i => $"""<img src="{Uloziste}f{i}.webp">"""));
+
+        Assert.Contains("obrázků", Bloky.ProcNejde(hodne, Uloziste));
+    }
+
+    [Fact]
+    public void Bezny_clanek_limity_nedosahne()
+    {
+        // Limity nesmějí překážet tomu, kdo píše normální novinku.
+        var bezny = string.Concat(Enumerable.Repeat(
+            "<h2>Nadpis</h2><p>Odstavec o jedné regatě a tom, jak dopadla.</p>", 20));
+
+        Assert.Null(Bloky.ProcNejde(bezny));
+    }
+
+    [Fact]
+    public void Prevod_limity_dodrzi_i_kdyz_kontrola_nebezela()
+    {
+        // Pojistka pro cesty, které `ProcNejde` nezavolají — třeba import,
+        // kde by chyba shodila celou dávku kvůli jednomu článku.
+        var hodne = string.Concat(Enumerable.Repeat("<p>a</p>", Bloky.NejvicBloku + 50));
+
+        Assert.Equal(Bloky.NejvicBloku, Bloky.ZHtml(hodne).Count);
+    }
 }

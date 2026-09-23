@@ -139,6 +139,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // potvrdil souhlas, nesmí zmizet potichu s nimi.
         fotka.HasOne(x => x.Nahral).WithMany().HasForeignKey(x => x.NahralId)
             .OnDelete(DeleteBehavior.Restrict);
+        // Fotka v těle článku. Mazání článku ji odpojí, ne smaže — soubor
+        // v úložišti musí uklidit kód, který k úložišti má přístup, ne
+        // kaskáda v databázi.
+        fotka.HasIndex(x => x.VTeleClankuId);
 
         var ucast = b.Entity<Ucast>();
         ucast.Property(x => x.Posadka).HasMaxLength(400);

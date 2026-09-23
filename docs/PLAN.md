@@ -527,7 +527,38 @@ Opisovat parser HTML do Pythonu by znamenalo mít dvě různá pravidla; jak
 bude článek vypadat, se pozná proti skutečnému API. Falešné API tedy vrací
 `Html`, a to web vypisuje jako text, takže se při zkoušení nic nerozbije.
 
-**Zbývá:** obrázky v těle nahrané k nám, ne odkazem.
+**Krok 5 hotový (23. 9. 2026): obrázky v těle — a hlavně jejich meze.**
+
+Zadání (Filip): *„pokusme se je upravit tak, aby nám nezbouraly web… nenecháme
+si to sestřelit obsahem, nejsem Onassis."* Rozpadá se to na tři různé věci
+a každá se řeší jinde:
+
+| Čeho se bát | Čím je to ošetřené |
+|---|---|
+| obrázek rozhodí rozvržení | CSS `object-fit: cover` s pevnou výškou — platí už dřív, ať má obrázek jakékoli rozměry |
+| nahraná fotka je obrovská | přepočet na WebP nejvýš 1600 px, vstup do 15 MB a 60 Mpx (`Nahravani`, `Zpracovani`) |
+| **odkaz na cizí obrázek** | **nově: v těle projde jen obrázek z našeho úložiště** |
+
+Třetí řádek je ten podstatný a předtím chyběl. U fotky nahrané k nám velikost
+srazí přepočet; **u cizí adresy ji neřídíme nijak** a zaplatí ji každý, kdo
+článek otevře. `Bloky.ZHtml` proto bere adresu našeho úložiště a obrázek
+odjinud zahodí. Kdo chce mít v textu fotku, nahraje ji.
+
+**Nahrání do těla** je `POST /sprava/serie/{serie}/clanky/{clanek}/obrazky`
+a ve správě vlastní sekce *Obrázky v textu* — bez javascriptu, jako zbytek
+správy. Nic nenahrazuje, na rozdíl od hlavního obrázku jich může být víc;
+autor dostane hotovou značku `<img …>` k vložení do textu. Fotky nesou
+`Fotka.VTeleClankuId`, takže jdou autorovi vypsat a jednou i uklidit.
+
+**Limity na tělo** (`Bloky.NejvicBloku`, `NejvicZnaku`, `NejvicObrazku`):
+300 bloků, 40 000 znaků, 20 obrázků. Správa je hlídá **před** uložením
+a vrací větu — autor má vědět, že se text nevejde, ne dostat tiše oříznutý
+článek. `ZHtml` je dodrží i sám, jako pojistka pro import, kde by chyba
+shodila celou dávku kvůli jednomu článku.
+
+**Obecné články mimo ročník obrázky v těle zatím nemají.** Píše je editor
+webu, kdežto tohle vzniklo kvůli pořadatelům a jejich pozvánkám k regatám;
+až bude potřeba, je to tatáž dvojice endpointů ve skupině `/sprava/web`.
 
 ### Otevřené: přihlášení lodi na jednu zastávku
 

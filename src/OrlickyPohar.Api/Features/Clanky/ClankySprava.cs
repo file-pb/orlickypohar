@@ -1,3 +1,4 @@
+using OrlickyPohar.Api.Features.Fotky;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Zavody;
@@ -57,7 +58,7 @@ public record ClanekVstupSprava(
 /// požadavku; stálo to jeden běh CI, tak ať je to napsané.
 /// </para>
 /// </summary>
-public class ClankySprava(AppDbContext db, TimeProvider cas)
+public class ClankySprava(AppDbContext db, TimeProvider cas, IUloziste uloziste)
 {
     /// <summary>
     /// Články, na které přihlášený dosáhne. <paramref name="zavody"/> je
@@ -119,6 +120,7 @@ public class ClankySprava(AppDbContext db, TimeProvider cas)
         var slug = Psani.Slug(vstup.Titulek ?? "");
         if (Psani.ProcNejdeUlozit(vstup.Titulek, vstup.Telo, slug) is { } chyba)
             return (null, chyba);
+        if (ProcNejdeTelo(vstup) is { } chybaTela) return (null, chybaTela);
 
         if (await db.Clanky.AnyAsync(c => c.SerieId == serieId && c.Slug == slug, ct))
             return (null, serieId is null
@@ -154,6 +156,7 @@ public class ClankySprava(AppDbContext db, TimeProvider cas)
     {
         if (Psani.ProcNejdeUlozit(vstup.Titulek, vstup.Telo, clanek.Slug) is { } chyba)
             return chyba;
+        if (ProcNejdeTelo(vstup) is { } chybaTela) return chybaTela;
 
         clanek.Titulek = vstup.Titulek.Trim();
         clanek.Perex = Prazdne(vstup.Perex);
@@ -172,10 +175,19 @@ public class ClankySprava(AppDbContext db, TimeProvider cas)
     /// ne až při zobrazení: kdyby se ukládalo syrové, stačilo by jedno místo,
     /// které si ho vezme bez očisty, a je z toho XSS.
     /// </summary>
-    private static string TeloDoDatabaze(ClanekVstupSprava vstup) =>
+    private string TeloDoDatabaze(ClanekVstupSprava vstup) =>
         vstup.Format == FormatClanku.Html
-            ? Bloky.Uloz(Bloky.ZHtml(vstup.Telo))
+            ? Bloky.Uloz(Bloky.ZHtml(vstup.Telo, uloziste.VerejnaAdresa))
             : vstup.Telo.Trim();
+
+    /// <summary>
+    /// Proč vložený text nejde uložit. Autor dostane větu, ne tiše oříznutý
+    /// článek — a provoz nedostane stránku, kterou nikdo neunese.
+    /// </summary>
+    private string? ProcNejdeTelo(ClanekVstupSprava vstup) =>
+        vstup.Format == FormatClanku.Html
+            ? Bloky.ProcNejde(vstup.Telo, uloziste.VerejnaAdresa)
+            : null;
 
     public async Task<string?> PrepniStavAsync(Clanek clanek, StavClanku na, CancellationToken ct)
     {

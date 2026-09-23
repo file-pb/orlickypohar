@@ -77,6 +77,20 @@ public static class ClankySpravaEndpoints
 
         g.MapDelete("/{clanek}/obrazek", OdeberObrazekAsync)
             .WithSummary("Odebere hlavní obrázek článku a smaže jeho soubory");
+
+        g.MapPost("/{clanek}/obrazky", NahrajDoTelaAsync)
+            .DisableAntiforgery()
+            .WithMetadata(new RequestSizeLimitAttribute(Nahravani.NejvicBajtu + 1024 * 1024))
+            .Produces<ObrazekDto>()
+            .WithSummary("Nahraje obrázek do těla článku a vrátí jeho adresu")
+            .WithDescription(
+                "Prochází stejným přepočtem jako hlavní obrázek, takže skončí jako WebP " +
+                "nejvýš 1600 px. V těle článku smí být jen obrázek nahraný takhle — " +
+                "cizí adresa se při uložení textu zahodí.");
+
+        g.MapGet("/{clanek}/obrazky", SeznamVTeleAsync)
+            .Produces<List<ObrazekDto>>()
+            .WithSummary("Vrátí obrázky nahrané do těla článku");
     }
 
     /// <summary>
@@ -234,6 +248,31 @@ public static class ClankySpravaEndpoints
 
         var (obrazek, chyba) = await fotky.NastavAsync(nalezeny, formular, uzivatel, ct);
         return obrazek is null ? Results.BadRequest(new { error = chyba }) : Results.Ok(obrazek);
+    }
+
+    private static async Task<IResult> NahrajDoTelaAsync(
+        string serie, string clanek, [FromForm] FotkaFormular formular, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, ClankySprava sprava, FotkySprava fotky, CancellationToken ct)
+    {
+        if (await NajdiSPravem(serie, clanek, kdo, rozsahy, sprava, ct) is not { } nalezeny)
+            return Results.NotFound();
+        if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
+
+        if (!fotky.Pripraveno)
+            return Results.Json(new { error = FotkySprava.Vypnuto }, statusCode: StatusCodes.Status503ServiceUnavailable);
+
+        var (obrazek, chyba) = await fotky.NahrajDoTelaAsync(nalezeny.Id, formular, uzivatel, ct);
+        return obrazek is null ? Results.BadRequest(new { error = chyba }) : Results.Ok(obrazek);
+    }
+
+    private static async Task<IResult> SeznamVTeleAsync(
+        string serie, string clanek, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, ClankySprava sprava, FotkySprava fotky, CancellationToken ct)
+    {
+        if (await NajdiSPravem(serie, clanek, kdo, rozsahy, sprava, ct) is not { } nalezeny)
+            return Results.NotFound();
+
+        return Results.Ok(await fotky.VTeleAsync(nalezeny.Id, ct));
     }
 
     private static async Task<IResult> OdeberObrazekAsync(
