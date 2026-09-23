@@ -177,7 +177,7 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
           {/* Jen název a termín jsou povinné. Nová regata je vždycky
               plánovaná a nezveřejněná — potvrdit termín i pustit ji ven
               jsou dvě další rozhodnutí. */}
-          <form action={zalozAkce} className="formular">
+          <form action={zalozAkce} className="formular dvojice">
             <input type="hidden" name="serie" value={serie} />
             <input type="hidden" name="zpet" value={naAkcich ? "akce" : ""} />
             <Pole akce={naAkcich} />
@@ -218,7 +218,7 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
 function Pole({ zastavka, akce }: { zastavka?: ZastavkaRadek; akce?: boolean }) {
   return (
     <>
-      <label>
+      <label className="siroke">
         Název
         <input
           name="nazev"
@@ -273,7 +273,7 @@ function Pole({ zastavka, akce }: { zastavka?: ZastavkaRadek; akce?: boolean }) 
         </label>
       )}
 
-      <label>
+      <label className="siroke">
         Pořadatel
         <input
           name="poradatel"
@@ -369,7 +369,7 @@ function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek 
       {zastavka.smiUpravit && (
         <details className="uprava">
           <summary>Upravit termín a údaje</summary>
-          <form action={ulozAkce} className="formular">
+          <form action={ulozAkce} className="formular dvojice">
             <input type="hidden" name="serie" value={serie} />
             <input type="hidden" name="zavod" value={zastavka.slug} />
             <input type="hidden" name="zpet" value={zpet} />
