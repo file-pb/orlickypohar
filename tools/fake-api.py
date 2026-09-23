@@ -1737,6 +1737,14 @@ class H(BaseHTTPRequestHandler):
                               "vyloucena": u["stav"] == "Vyloucena"}
                              for u in sorted((u for u in z["ucasti"] if u["stav"] in VEREJNE_UCASTI),
                                              key=lambda u: (KAT_PORADI[KAT[u["lod"]]], nazvy(u["lod"])))]}
+
+            # Ročník, který výsledky jednotlivých regat veřejně nevydává.
+            # Jako v API: zastávka zůstane i se seznamem lodí, rozjížďky
+            # a pořadí odejdou prázdné a klient dostane příznak, aby
+            # nemlčel bez vysvětlení.
+            if not D.get("vysledkyZavoduVerejne", True):
+                telo = {**telo, "rozjizdky": [], "poradi": [], "poradiCelkem": [],
+                        "vysledkySkryte": True}
         else:
             return self.send_error(404)
 

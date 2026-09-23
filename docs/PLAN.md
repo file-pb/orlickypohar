@@ -1873,6 +1873,53 @@ vypadají nevinně** — ne jen na data, kvůli kterým ho nahráváš.
 říká nahlas. Bez té věty by správce pouštěl čísla ven a divil se, že na
 webu nejsou.
 
+### Ročník bez veřejných výsledků regat (23. 9. 2026)
+
+**Zadání (Filip).** Ročník 2026 je dojetý a slouží jako trenažér, ale jsou
+v něm doložené nesrovnalosti — zveřejnit výsledky jednotlivých regat by
+otevřelo zpětné spory o odjeté závody, a to je nežádoucí. Správci ho vidí
+celý, protože právě na kontrolu a trénink je dobrý. Běžný návštěvník má
+vidět kalendář a **konečné pořadí seriálu**, ne výsledky v jednotlivých
+regatách. **Není to obecný koncept:** ročníky vedené od začátku v aplikaci
+zůstanou otevřené tak jako dnes.
+
+**Je to vlastnost ročníku, ne režim aplikace.** `Serie.VysledkyZavoduVerejne`
+s výchozí hodnotou `true` — v entitě i v databázi (`HasDefaultValue(true)`).
+Výchozí hodnota patří do obou: bez ní by migrace doplnila stávajícím ročníkům
+`false` a schovala jim výsledky, aniž o to kdo požádal. **Mlčení se zapíná
+vědomě.**
+
+| Co | Kde |
+|---|---|
+| příznak a jeho výchozí hodnota | `Serie.VysledkyZavoduVerejne`, `AppDbContext` |
+| veřejné čtení zastávky vrátí prázdno a příznak | `ZavodEndpoints.DetailAsync` |
+| přepínač pro správce | `POST /sprava/serie/{serie}/vysledky-zavodu` |
+| nastavení souborem | `SerieVstup.VysledkyZavoduVerejne` |
+
+**Co se skrývá a co ne:**
+
+- **Skryté:** rozjížďky, výsledky v nich, pořadí závodu i pořadí celého pole.
+  Web navíc schová „Pravidla závodu" — vydávají se proto, aby šlo výsledky
+  zkontrolovat, a „Do poháru" by muselo buď prozradit počet rozjížděk, nebo
+  tvrdit, že se žádná nejela.
+- **Zůstává:** ročník, kalendář, termín, pořadatel, kdo na zastávku přijel,
+  novinky a **pořadí seriálu i se sloupci po zastávkách** (Filip, 23. 9. 2026).
+
+**Zkratka je nahoře v endpointu, ne filtr v dotazech.** Kdyby se čísla
+načetla a teprve pak zahodila, stačilo by jedno nedopatření v projekci
+a byla by venku.
+
+**Klient dostane `vysledkySkryte`, ne jen prázdný seznam.** Bez příznaku
+vypadá odjetá regata stejně jako ta, co se nejela — a čtenář nemá jak
+rozdíl poznat. Web i appka na něm říkají, proč čísla nejsou, a odkazují na
+pořadí seriálu. Pole je aditivní, výchozí `false`; starší klienti o něm
+nevědí a nic se jim nemění.
+
+**Proč to není `Zavod.Publikovano = false` u všech zastávek:** pořadí
+seriálu se počítá jen z publikovaných zastávek, takže by vyšlo prázdné
+a ročník by vypadal jako neodjetý. Právě tohle hlídá
+`CteniTests.Bez_verejnych_vysledku_zustava_poradi_serialu`.
+
 ### Zápis výsledků
 
 **Hotové 14. 9. 2026.** Endpointy `/sprava/serie/{slug}/vysledky/{zavod}/rozjizdky`

@@ -20,6 +20,24 @@ public class Serie
     public bool Publikovano { get; set; }
 
     /// <summary>
+    /// Smí čtenář vidět výsledky jednotlivých regat tohohle ročníku?
+    /// <para>
+    /// Publikace je o celém ročníku, tohle o jeho vnitřku: kalendář i pořadí
+    /// seriálu zůstávají veřejné, ale stránka regaty nevydá rozjížďky ani
+    /// výsledky. Správce je vidí dál — ročník slouží ke kontrole a tréninku.
+    /// </para>
+    /// <para>
+    /// <b>Není to obecný koncept, ale vlastnost jednoho ročníku.</b> Ročník
+    /// 2026 vznikal z ručního sešitu a jsou v něm doložené nesrovnalosti
+    /// (Filip, 23. 9. 2026); zveřejnit je po zásluze by otevřelo zpětné spory
+    /// o odjeté regaty. Ročníky vedené od začátku v aplikaci tenhle problém
+    /// nemají, a proto je výchozí hodnota <c>true</c>: mlčení se zapíná
+    /// vědomě, ne omylem.
+    /// </para>
+    /// </summary>
+    public bool VysledkyZavoduVerejne { get; set; } = true;
+
+    /// <summary>
     /// Kolik nejhorších zastávek se v průběžném pořadí škrtá.
     /// <para>
     /// Je to číslo na ročníku, ne pravidlo v kódu. Rozhodčí 22. 9. 2026:

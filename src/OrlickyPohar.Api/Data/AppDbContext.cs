@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Features.Clanky;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Lode;
@@ -37,6 +37,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         serie.Property(x => x.Nazev).HasMaxLength(120).IsRequired();
         serie.Property(x => x.Slug).HasMaxLength(80).IsRequired();
         serie.HasIndex(x => x.Slug).IsUnique();
+        // Výchozí hodnota patří do databáze, ne jen do konstruktoru entity:
+        // bez ní by migrace doplnila stávajícím ročníkům `false` a schovala
+        // jim výsledky regat, aniž o to kdokoliv požádal.
+        serie.Property(x => x.VysledkyZavoduVerejne).HasDefaultValue(true);
 
         var kategorie = b.Entity<Kategorie>();
         kategorie.Property(x => x.Nazev).HasMaxLength(60).IsRequired();

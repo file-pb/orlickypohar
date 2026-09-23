@@ -46,7 +46,18 @@ export default function Zastavka() {
             {data.poradatel ? ` · pořádá ${data.poradatel}` : ''}
           </Text>
 
-          {data.poradi.length === 0 ? (
+          {data.vysledkySkryte ? (
+            // Ročník, u kterého se výsledky jednotlivých regat veřejně
+            // neukazují. Bez téhle věty vypadá odjetá regata jako ta, co se
+            // nejela. Pořadí seriálu veřejné zůstává, odkaz na něj je
+            // o obrazovku výš.
+            <>
+              <Prazdno text={
+                'Výsledky jednotlivých regat tohohle ročníku nejsou zveřejněné — ' +
+                'vznikaly ručně a jsou v nich nesrovnalosti. Platí konečné pořadí seriálu.'} />
+              <PrihlaseneLode lode={data.lode} />
+            </>
+          ) : data.poradi.length === 0 ? (
             <>
               <Prazdno text={procNejsouVysledky(data.stav)} />
               <PrihlaseneLode lode={data.lode} />

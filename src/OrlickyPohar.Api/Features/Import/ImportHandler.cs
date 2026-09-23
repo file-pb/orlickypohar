@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Clanky;
 using OrlickyPohar.Api.Features.Lode;
@@ -108,6 +108,7 @@ internal static class ImportHandler
         serie.Rok = v.Rok;
         serie.Publikovano = v.Publikovano;
         serie.PocetSkrtu = v.PocetSkrtu;
+        serie.VysledkyZavoduVerejne = v.VysledkyZavoduVerejne;
         await db.SaveChangesAsync(ct);
         return serie;
     }
