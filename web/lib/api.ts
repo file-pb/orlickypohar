@@ -23,28 +23,16 @@ export type Rozjizdka = S["RozjizdkaDto"];
 export type BodyVRozjizdce = S["BodyVRozjizdceDto"];
 export type VysledekZavodu = S["VysledekZavoduDto"];
 export type UcastLodi = S["UcastDto"];
-// `vysledkySkryte` je dopsané ručně, protože `schema.d.ts` se generuje
-// z běžícího API (packages/api-client/generuj.sh) a nová vlastnost je zatím
-// jen v tomhle repozitáři, ne na produkci, odkud se dokument stahuje.
-// **Po prvním nasazení a přegenerování schématu tenhle průnik zmizí** —
-// vlastnost přijde ze schématu jako všechny ostatní.
-export type ZavodDetail = S["ZavodDetailDto"] & { vysledkySkryte?: boolean };
+export type ZavodDetail = S["ZavodDetailDto"];
 export type Zastavka = S["ZastavkaDto"];
 export type PoradiLodi = S["PoradiLodiDto"];
 export type PoradiKategorie = S["PoradiKategorieDto"];
 export type PoradiSerie = S["PoradiSerieDto"];
 export type ClanekShrnuti = S["ClanekShrnutiDto"];
-// `format` je dopsaný ručně ze stejného důvodu jako typ níž — schéma se
-// generuje z produkce, kde sloupec zatím není.
-export type Clanek = S["ClanekDto"] & { format?: FormatClanku };
+export type Clanek = S["ClanekDto"];
 
-/**
- * V jakém tvaru je tělo článku. Psané ručně, protože `schema.d.ts` se
- * generuje z běžícího API a sloupec je zatím jen v repozitáři, ne na
- * produkci, odkud se dokument stahuje. **Po nasazení a přegenerování
- * schématu tenhle typ nahradí `S["FormatClanku"]`.**
- */
-export type FormatClanku = "Text" | "Html" | "Bloky";
+/** V jakém tvaru je tělo článku. */
+export type FormatClanku = S["FormatClanku"];
 
 /** Kus textu v jednom stylu. Odkaz je absolutní http(s) nebo mailto. */
 export type Usek = {
@@ -89,20 +77,8 @@ export function bloky(telo: string): Blok[] {
  * Novinka přejatá z cizího kanálu (dnes Český svaz jachtingu). Nemá slug ani
  * tělo — u nás nemá vlastní stránku a vede rovnou ke zdroji.
  *
- * Tvar je psaný ručně, protože `schema.d.ts` se generuje z běžícího API
- * (packages/api-client/generuj.sh) a endpoint je zatím jen v repozitáři, ne
- * na produkci, odkud se dokument stahuje. **Po nasazení a přegenerování
- * schématu tenhle typ nahradí `S["PrevzatyClanekDto"]`.**
  */
-export type PrevzatyClanek = {
-  titulek: string;
-  perex: string | null;
-  publikovanoV: string;
-  odkaz: string;
-  zdroj: string;
-  zdrojOdkaz: string;
-  obrazek: string | null;
-};
+export type PrevzatyClanek = S["PrevzatyClanekDto"];
 
 /**
  * Chyba, která znamená **nedostupné API**, ne chybějící obsah.

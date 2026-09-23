@@ -182,6 +182,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/prevzate-clanky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vrátí novinky přejaté z cizích kanálů, od nejnovější
+         * @description Titulek, perex a odkaz na originál — plný text se nepřebírá. Drží se nejvýš osm; novější vytlačují starší.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PrevzatyClanekDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/vodocet/teplota-hladiny": {
         parameters: {
             query?: never;
@@ -1126,6 +1167,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/clanky/{clanek}/obrazky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Vrátí obrázky nahrané do těla článku */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    clanek: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObrazekDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Nahraje obrázek do těla článku a vrátí jeho adresu
+         * @description Prochází stejným přepočtem jako hlavní obrázek, takže skončí jako WebP nejvýš 1600 px. V těle článku smí být jen obrázek nahraný takhle — cizí adresa se při uložení textu zahodí.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    clanek: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": components["schemas"]["FotkaFormular"];
+                    "application/x-www-form-urlencoded": components["schemas"]["FotkaFormular"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObrazekDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/web/clanky": {
         parameters: {
             query?: never;
@@ -1358,6 +1469,71 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/web/clanky/{clanek}/obrazky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Vrátí obrázky nahrané do těla obecného článku */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    clanek: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObrazekDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Nahraje obrázek do těla obecného článku a vrátí jeho adresu */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    clanek: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": components["schemas"]["FotkaFormular"];
+                    "application/x-www-form-urlencoded": components["schemas"]["FotkaFormular"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObrazekDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}": {
         parameters: {
             query?: never;
@@ -1424,6 +1600,51 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": components["schemas"]["PublikaceSerieVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SerieSpravaDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/vysledky-zavodu": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Zapne nebo vypne veřejné výsledky jednotlivých regat
+         * @description Správce ročníku. Vypnuté znamená, že kalendář i pořadí seriálu zůstávají venku, ale stránka regaty nevydá rozjížďky ani výsledky. Správci je vidí dál.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["VysledkySerieVstup"];
                 };
             };
             responses: {
@@ -2642,6 +2863,7 @@ export interface components {
             zavod: null | string;
             zavodNazev: null | string;
             obrazek?: null | components["schemas"]["ObrazekDto"];
+            format?: components["schemas"]["FormatClanku"];
         };
         ClanekShrnutiDto: {
             slug: string;
@@ -2676,6 +2898,7 @@ export interface components {
             zavod?: null | string;
             /** @default true */
             publikovano: boolean;
+            format?: components["schemas"]["FormatClanku"];
         };
         ClanekVstupSprava: {
             titulek: string;
@@ -2685,6 +2908,7 @@ export interface components {
             zavod?: null | string;
             /** Format: date-time */
             publikovanoV?: null | string;
+            format?: components["schemas"]["FormatClanku"];
         };
         DoSerieVstup: {
             doSerie: boolean;
@@ -2694,6 +2918,11 @@ export interface components {
          * @enum {unknown}
          */
         DruhZastavky: "Pohar" | "Akce";
+        /**
+         * @default Text
+         * @enum {unknown}
+         */
+        FormatClanku: "Text" | "Html" | "Bloky";
         FotkaFormular: {
             soubor: null | components["schemas"]["IFormFile"];
             autor: null | string;
@@ -2951,6 +3180,16 @@ export interface components {
             smiZalozit: boolean;
             zastavky: components["schemas"]["ZastavkaRadek"][];
         };
+        PrevzatyClanekDto: {
+            titulek: string;
+            perex: null | string;
+            /** Format: date-time */
+            publikovanoV: string;
+            odkaz: string;
+            zdroj: string;
+            zdrojOdkaz: string;
+            obrazek?: null | string;
+        };
         PrihlaseniVstup: {
             /** Format: int32 */
             prihlaskaId?: null | number;
@@ -3062,6 +3301,8 @@ export interface components {
             rok: number;
             publikovano: boolean;
             smiPublikovat: boolean;
+            /** @default true */
+            vysledkyZavoduVerejne: boolean;
         };
         SerieVstup: {
             slug: string;
@@ -3081,6 +3322,8 @@ export interface components {
              * @default 1
              */
             pocetSkrtu: number;
+            /** @default true */
+            vysledkyZavoduVerejne: boolean;
         };
         SnimekHladinyDto: {
             snimek: string;
@@ -3229,6 +3472,9 @@ export interface components {
             /** Format: int32 */
             poradi: number;
             rozjizdky: components["schemas"]["BodyVRozjizdceDto"][];
+        };
+        VysledkySerieVstup: {
+            verejne: boolean;
         };
         ZapisLodDto: {
             /** Format: int32 */
@@ -3388,6 +3634,8 @@ export interface components {
             poradiCelkem?: null | components["schemas"]["VysledekZavoduDto"][];
             druh?: components["schemas"]["DruhZastavky"];
             medailonek?: null | components["schemas"]["PoradatelDto"];
+            /** @default false */
+            vysledkySkryte: boolean;
         };
         ZavodShrnutiDto: {
             slug: string;
