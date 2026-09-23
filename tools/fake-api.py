@@ -306,8 +306,15 @@ def clanky_verejne():
     ve správě objevil a na veřejných stránkách ne, a vypadalo by to jako
     chyba v aplikaci.
     """
-    return sorted((c for c in SPRAVA_CLANKY if c["stav"] == "Publikovano"),
-                  key=lambda c: c["publikovanoV"], reverse=True)
+    venku = [c for c in SPRAVA_CLANKY if c["stav"] == "Publikovano"]
+
+    # Ročník, který výsledky regat veřejně nevydává, mlčí i o nich psaným
+    # slovem — zpráva ze závodu je výsledek napsaný větou. Článek celého
+    # ročníku zůstává. Jako v API (ClanekEndpoints.Publikovane).
+    if not D.get("vysledkyZavoduVerejne", True):
+        venku = [c for c in venku if not c.get("zavod")]
+
+    return sorted(venku, key=lambda c: c["publikovanoV"], reverse=True)
 
 
 # Oprávnění žijí v paměti procesu, takže restart je vrátí do výchozího

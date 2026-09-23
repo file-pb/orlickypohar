@@ -1901,9 +1901,20 @@ vědomě.**
 - **Skryté:** rozjížďky, výsledky v nich, pořadí závodu i pořadí celého pole.
   Web navíc schová „Pravidla závodu" — vydávají se proto, aby šlo výsledky
   zkontrolovat, a „Do poháru" by muselo buď prozradit počet rozjížděk, nebo
-  tvrdit, že se žádná nejela.
+  tvrdit, že se žádná nejela. A **články navázané na zastávku**
+  (Filip, 23. 9. 2026: „články ať taky mlčí"): zpráva ze závodu je výsledek
+  napsaný větou — „PEZI bere kategorii nad 7 m" říká totéž co tabulka,
+  kterou jsme právě schovali.
 - **Zůstává:** ročník, kalendář, termín, pořadatel, kdo na zastávku přijel,
-  novinky a **pořadí seriálu i se sloupci po zastávkách** (Filip, 23. 9. 2026).
+  **články celého ročníku** a **pořadí seriálu i se sloupci po zastávkách**
+  (Filip, 23. 9. 2026). Článek ročníku není o jedné regatě a konečné pořadí
+  je veřejné tak jako tak.
+
+**Články mlčí na jednom místě, ne na každé obrazovce zvlášť.** Pravidlo je
+v `ClanekEndpoints.Publikovane` vedle staršího „článek zastávky je vidět, jen
+když je vidět zastávka", takže platí najednou pro stránku regaty, výpis
+novinek ročníku, bok s novinkami i úvodní stránku — a pro appku stejně jako
+pro web.
 
 **Zkratka je nahoře v endpointu, ne filtr v dotazech.** Kdyby se čísla
 načetla a teprve pak zahodila, stačilo by jedno nedopatření v projekci

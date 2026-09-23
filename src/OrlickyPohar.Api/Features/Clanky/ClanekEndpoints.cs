@@ -157,10 +157,21 @@ public static class ClanekEndpoints
     /// <summary>
     /// Článek zastávky je vidět, jen když je vidět i ta zastávka. Bez toho by
     /// pozvánka prozradila závod, který ročník ještě nezveřejnil.
+    /// <para>
+    /// A jen když ročník vydává výsledky regat (<c>Serie.VysledkyZavoduVerejne</c>).
+    /// Zpráva ze závodu je výsledek napsaný větou — „PEZI bere kategorii nad
+    /// 7 m" říká totéž co tabulka, kterou jsme právě schovali. Filip,
+    /// 23. 9. 2026: „články ať taky mlčí".
+    /// </para>
+    /// <para>
+    /// Článek celého ročníku zůstává: není o jedné regatě a konečné pořadí
+    /// seriálu je veřejné tak jako tak.
+    /// </para>
     /// </summary>
     private static IQueryable<Clanek> Publikovane(AppDbContext db, int serieId) =>
         db.Clanky.Where(c =>
             c.SerieId == serieId
             && c.Stav == StavClanku.Publikovano
-            && (c.ZavodId == null || c.Zavod!.Publikovano));
+            && (c.ZavodId == null
+                || (c.Zavod!.Publikovano && c.Zavod.Serie!.VysledkyZavoduVerejne)));
 }
