@@ -77,7 +77,7 @@ ZAVODY = [
     # Dálková plavba, ne okruhový závod (Filip, 23. 9. 2026) — jedna
     # rozjížďka a žádný škrt, jako O pohár Vltavy. Mock mu dřív dával
     # čtyři rozjížďky a škrt.
-    ("Jarní vítr",      "YC Orlík",     date(2026, 4, 25), "dálková plavba", 1, "PoKategoriich", 1.0),
+    ("Jarní vítr",      "YC Orlík",     date(2026, 4, 25), "dálková plavba", 1, "Oboje",       1.0),
     ("Radavská regata", "LK Radava",    date(2026, 5,  9), "okruhový",     4, "PoKategoriich", 1.0),
     # Maratony vyhlašují celkového vítěze napříč kategoriemi (Filip,
     # 23. 9. 2026) — a k tomu pořadí v kategoriích, protože do poháru jde
