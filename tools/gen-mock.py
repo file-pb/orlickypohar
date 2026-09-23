@@ -77,9 +77,13 @@ ZAVODY = [
     # Dálková plavba, ne okruhový závod (Filip, 23. 9. 2026) — jedna
     # rozjížďka a žádný škrt, jako O pohár Vltavy. Mock mu dřív dával
     # čtyři rozjížďky a škrt.
-    ("Jarní vítr",      "YC Orlík",     date(2026, 4, 25), "dálková plavba", 1, "PoKategoriich", 1.0),
+    ("Jarní vítr",      "YC Orlík",     date(2026, 4, 25), "dálková plavba", 1, "Oboje",       1.0),
     ("Radavská regata", "LK Radava",    date(2026, 5,  9), "okruhový",     4, "PoKategoriich", 1.0),
-    ("24hodinovka",     "YC Orlík",     date(2026, 5, 23), "24 hodin",     1, "CelePole",      1.0),
+    # Maratony vyhlašují celkového vítěze napříč kategoriemi (Filip,
+    # 23. 9. 2026) — a k tomu pořadí v kategoriích, protože do poháru jde
+    # vždycky to. Proto „Oboje", ne „CelePole": tabulka po kategoriích
+    # se z regaty nesmí ztratit.
+    ("24hodinovka",     "YC Orlík",     date(2026, 5, 23), "24 hodin",     1, "Oboje",         1.0),
     # Vánoční regata tu schválně není, i když ji sešit mezi devíti
     # zastávkami ročníku 2026 vede. Nejela se a její termín nikde zapsaný
     # není: prosinec byl odhad podle názvu (listina 2027 ji má 24. 7. jako
@@ -93,13 +97,13 @@ ZAVODY = [
     # ředitel Štěpán Záruba): 29. 8. 2026, ne 15. 8. — Filip, 23. 9. 2026.
     # Čtyři rozjížďky, ne tři (tatáž listina, potvrzeno rozhodčím 23. 9.).
     ("Radavský pohár",  "Yacht Club Písek", date(2026, 8, 29), "okruhový", 4, "PoKategoriich", 1.0),
-    ("O pohár Vltavy",  "Plachtič z Vltavy", date(2026, 9, 5), "dálková plavba", 1, "PoKategoriich", 1.0),
+    ("O pohár Vltavy",  "Plachtič z Vltavy", date(2026, 9, 5), "dálková plavba", 1, "Oboje",   1.0),
     # Maraton, ne okruhový závod: termínová listina 2027 ho vede jako
     # „maraton 8 h" a maraton má jednu rozjížďku (Filip, 23. 9. 2026).
     # Mock mu dřív dával čtyři rozjížďky a škrt, tedy škrtal v závodě,
     # kde není z čeho. Pořadatel zůstává nepotvrzený — listina 2027 má
     # Jacht servis Novák s podporou YC Corona.
-    ("Pohár Slunce",    "SK Popovice",  date(2026, 9, 19), "maraton 8 h",  1, "PoKategoriich", 1.0),
+    ("Pohár Slunce",    "SK Popovice",  date(2026, 9, 19), "maraton 8 h",  1, "Oboje",         1.0),
 ]
 
 # Termínová listina 2027 (od rozhodčího 23. 9. 2026) má tutéž devítku regat
