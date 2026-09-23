@@ -158,6 +158,7 @@ try
         app.MapSpravaOpravneniWebu();
         app.MapSpravaClanku();
         app.MapSpravaObecnychClanku();
+        app.MapSpravaSerie();
         app.MapKalendar();
         app.MapSpravaVysledku();
         app.MapPrihlasky();

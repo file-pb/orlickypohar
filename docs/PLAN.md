@@ -1858,6 +1858,17 @@ na vlastní stránce by znamenalo odejít od seznamu kvůli dvěma větám. Dův
 pak zůstává v kartě i po návratu do návrhu: kdo zápis opravuje, potřebuje
 ho vidět právě tehdy.
 
+**Import přepíše i publikaci ročníku, a to bolí** (23. 9. 2026). Soubor
+`data/2026-nanecisto.json` je schválně nepublikovaný, aby se vymyšlená data
+nedostala ven; na produkci byl ročník publikovaný ručně. Nahrání souboru ho
+tedy potichu schovalo — veřejné čtení přestalo vydávat ročník, regaty
+i výsledky naráz. Import je autoritativní a tohle je jeho smysl, chybí ale
+druhá půlka: publikaci ročníku nešlo zapnout jinak než dalším importem,
+protože ve správě byla jen publikace zastávky a rozjížďky. Doplněno
+(`POST /sprava/serie/{serie}/publikace`, smí správce). Poučení nad rámec
+toho endpointu: **před importem se dívej i na příznaky, které v souboru
+vypadají nevinně** — ne jen na data, kvůli kterým ho nahráváš.
+
 **Nepublikovaná zastávka schová i publikovanou rozjížďku**, a obrazovka to
 říká nahlas. Bez té věty by správce pouštěl čísla ven a divil se, že na
 webu nejsou.
