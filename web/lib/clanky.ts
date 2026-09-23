@@ -17,14 +17,9 @@ type S = components["schemas"];
 
 export type PrehledClanku = S["PrehledClankuDto"];
 export type ClanekRadek = S["ClanekSpravaRadek"];
-// `format` ze stejného důvodu jako u vstupu níž — schéma se generuje
-// z produkce, kde pole zatím není.
-export type ClanekDetail = S["ClanekDto"] & { format?: "Text" | "Html" | "Bloky" };
+export type ClanekDetail = S["ClanekDto"];
 export type StavClanku = S["StavClanku"];
-// `format` je dopsaný ručně: `schema.d.ts` se generuje z běžícího API
-// a pole je zatím jen v repozitáři, ne na produkci, odkud se dokument
-// stahuje. **Po nasazení a přegenerování schématu tenhle průnik zmizí.**
-export type ClanekVstup = S["ClanekVstupSprava"] & { format?: "Text" | "Html" };
+export type ClanekVstup = S["ClanekVstupSprava"];
 
 /**
  * Stavy článku a co znamenají.

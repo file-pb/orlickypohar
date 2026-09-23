@@ -132,6 +132,40 @@
                 }
             }
         },
+        "/prevzate-clanky": {
+            "get": {
+                "tags": [
+                    "\u010cl\u00e1nky"
+                ],
+                "summary": "Vr\u00e1t\u00ed novinky p\u0159ejat\u00e9 z ciz\u00edch kan\u00e1l\u016f, od nejnov\u011bj\u0161\u00ed",
+                "description": "Titulek, perex a odkaz na origin\u00e1l \u2014 pln\u00fd text se nep\u0159eb\u00edr\u00e1. Dr\u017e\u00ed se nejv\u00fd\u0161 osm; nov\u011bj\u0161\u00ed vytla\u010duj\u00ed star\u0161\u00ed.",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PrevzatyClanekDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/vodocet/teplota-hladiny": {
             "get": {
                 "tags": [
@@ -1006,6 +1040,99 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/clanky/{clanek}/obrazky": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Nahraje obr\u00e1zek do t\u011bla \u010dl\u00e1nku a vr\u00e1t\u00ed jeho adresu",
+                "description": "Proch\u00e1z\u00ed stejn\u00fdm p\u0159epo\u010dtem jako hlavn\u00ed obr\u00e1zek, tak\u017ee skon\u010d\u00ed jako WebP nejv\u00fd\u0161 1600 px. V t\u011ble \u010dl\u00e1nku sm\u00ed b\u00fdt jen obr\u00e1zek nahran\u00fd takhle \u2014 ciz\u00ed adresa se p\u0159i ulo\u017een\u00ed textu zahod\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "clanek",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FotkaFormular"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FotkaFormular"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ObrazekDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vr\u00e1t\u00ed obr\u00e1zky nahran\u00e9 do t\u011bla \u010dl\u00e1nku",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "clanek",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ObrazekDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sprava/web/clanky": {
             "get": {
                 "tags": [
@@ -1229,6 +1356,82 @@
                 }
             }
         },
+        "/sprava/web/clanky/{clanek}/obrazky": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Nahraje obr\u00e1zek do t\u011bla obecn\u00e9ho \u010dl\u00e1nku a vr\u00e1t\u00ed jeho adresu",
+                "parameters": [
+                    {
+                        "name": "clanek",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FotkaFormular"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FotkaFormular"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ObrazekDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vr\u00e1t\u00ed obr\u00e1zky nahran\u00e9 do t\u011bla obecn\u00e9ho \u010dl\u00e1nku",
+                "parameters": [
+                    {
+                        "name": "clanek",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ObrazekDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}": {
             "get": {
                 "tags": [
@@ -1282,6 +1485,47 @@
                         "application/json": {
                             "schema": {
                                 "$ref": "#/components/schemas/PublikaceSerieVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SerieSpravaDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/vysledky-zavodu": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Zapne nebo vypne ve\u0159ejn\u00e9 v\u00fdsledky jednotliv\u00fdch regat",
+                "description": "Spr\u00e1vce ro\u010dn\u00edku. Vypnut\u00e9 znamen\u00e1, \u017ee kalend\u00e1\u0159 i po\u0159ad\u00ed seri\u00e1lu z\u016fst\u00e1vaj\u00ed venku, ale str\u00e1nka regaty nevyd\u00e1 rozj\u00ed\u017e\u010fky ani v\u00fdsledky. Spr\u00e1vci je vid\u00ed d\u00e1l.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VysledkySerieVstup"
                             }
                         }
                     },
@@ -2782,6 +3026,9 @@
                                 "$ref": "#/components/schemas/ObrazekDto"
                             }
                         ]
+                    },
+                    "format": {
+                        "$ref": "#/components/schemas/FormatClanku"
                     }
                 }
             },
@@ -2938,6 +3185,9 @@
                     "publikovano": {
                         "type": "boolean",
                         "default": true
+                    },
+                    "format": {
+                        "$ref": "#/components/schemas/FormatClanku"
                     }
                 }
             },
@@ -2978,6 +3228,9 @@
                             "string"
                         ],
                         "format": "date-time"
+                    },
+                    "format": {
+                        "$ref": "#/components/schemas/FormatClanku"
                     }
                 }
             },
@@ -2998,6 +3251,14 @@
                     "Akce"
                 ],
                 "default": "Pohar"
+            },
+            "FormatClanku": {
+                "enum": [
+                    "Text",
+                    "Html",
+                    "Bloky"
+                ],
+                "default": "Text"
             },
             "FotkaFormular": {
                 "required": [
@@ -4131,6 +4392,47 @@
                     }
                 }
             },
+            "PrevzatyClanekDto": {
+                "required": [
+                    "titulek",
+                    "perex",
+                    "publikovanoV",
+                    "odkaz",
+                    "zdroj",
+                    "zdrojOdkaz"
+                ],
+                "type": "object",
+                "properties": {
+                    "titulek": {
+                        "type": "string"
+                    },
+                    "perex": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "publikovanoV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "odkaz": {
+                        "type": "string"
+                    },
+                    "zdroj": {
+                        "type": "string"
+                    },
+                    "zdrojOdkaz": {
+                        "type": "string"
+                    },
+                    "obrazek": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
             "PrihlaseniVstup": {
                 "type": "object",
                 "properties": {
@@ -4560,6 +4862,10 @@
                     },
                     "smiPublikovat": {
                         "type": "boolean"
+                    },
+                    "vysledkyZavoduVerejne": {
+                        "type": "boolean",
+                        "default": true
                     }
                 }
             },
@@ -4633,6 +4939,10 @@
                         "type": "integer",
                         "format": "int32",
                         "default": 1
+                    },
+                    "vysledkyZavoduVerejne": {
+                        "type": "boolean",
+                        "default": true
                     }
                 }
             },
@@ -5220,6 +5530,17 @@
                         "items": {
                             "$ref": "#/components/schemas/BodyVRozjizdceDto"
                         }
+                    }
+                }
+            },
+            "VysledkySerieVstup": {
+                "required": [
+                    "verejne"
+                ],
+                "type": "object",
+                "properties": {
+                    "verejne": {
+                        "type": "boolean"
                     }
                 }
             },
@@ -5825,6 +6146,10 @@
                                 "$ref": "#/components/schemas/PoradatelDto"
                             }
                         ]
+                    },
+                    "vysledkySkryte": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -6066,6 +6391,9 @@
             "name": "Vodo\u010det"
         },
         {
+            "name": "\u010cl\u00e1nky"
+        },
+        {
             "name": "Lod\u011b"
         },
         {
@@ -6073,9 +6401,6 @@
         },
         {
             "name": "Identita"
-        },
-        {
-            "name": "\u010cl\u00e1nky"
         },
         {
             "name": "Spr\u00e1va"
