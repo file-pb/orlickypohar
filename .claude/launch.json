@@ -4,13 +4,29 @@
     {
       "name": "web",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "web", "run", "dev"],
+      "runtimeArgs": [
+        "--prefix",
+        "web",
+        "run",
+        "dev"
+      ],
       "port": 3000
     },
     {
       "name": "fake-api",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["tools/fake-api.py"],
+      "runtimeArgs": [
+        "tools/fake-api.py"
+      ],
+      "port": 8080
+    },
+    {
+      "name": "fake-api-2027",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "tools/fake-api.py",
+        "data/2027-kalendar.json"
+      ],
       "port": 8080
     }
   ]

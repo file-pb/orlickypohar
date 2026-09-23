@@ -1386,9 +1386,38 @@ hádáním by se nepravda jen zpevnila.
    (první na vodě), nebo změna?
 3. **Kdy se v roce 2026 měla jet Vánoční regata?** Jen kvůli kalendáři
    v ukázkových datech; zrušená je tak jako tak.
-4. **Je listina 2027 konečná?** Jestli ano, dá se z ní udělat ročník 2027
-   jako kalendář bez výsledků (`stav: Planovany`) a nasadit dřív, než sezóna
-   začne — první ostrá věc, kterou web ukáže.
+4. **Je listina 2027 konečná?** Kalendář je hotový (níž), ale termíny se
+   ještě můžou hnout.
+
+### Ročník 2027 jako kalendář
+
+`data/2027-kalendar.json` je listina přepsaná do importního tvaru: devět
+zastávek ve stavu `Planovany`, tři kategorie, dva škrty a **prázdné seznamy
+lodí, osob a přihlášek**. Nahrává se přes `POST /import/serie` jako každý
+jiný ročník; `2027` je jiný slug než `2026-nanecisto`, takže si ročníky
+nesahají. Ročník je v souboru **publikovaný** — na rozdíl od mocku jsou to
+skutečná data a kalendář má být vidět dřív, než sezóna začne. Hlídají ho
+`KontraktTests`: platný vstup, nic než termíny, chronologie a pořadí.
+
+**Co se do modelu nevešlo** — tři údaje z listiny nemají kam:
+
+| Údaj | Proč ne |
+|---|---|
+| místo startu (Marina Orlík, YCPK Radava, Surf & Ski Trhovky) | `Zavod` pole pro místo nemá |
+| čas startu (24hodinovka v 19:00, Pohár Slunce v 10:00) | čas je na rozjížďce a ta vzniká až na vodě |
+| „u Izolepy se počítá první rozjížďka" | je to `DoSerie` na rozjížďce, tedy taky až po závodě |
+
+Místo startu je z nich jediné, co je vlastnost zastávky a ne jejího průběhu.
+Zatím to nestaví za sloupec navíc: pořadatel bývá tentýž subjekt a jinde než
+na Orlíku se nejede. Až přibude druhá marina u téhož pořadatele, je to
+jednořádková migrace.
+
+**Kalendář bez lodí byl pro web nový stav.** Stránka ročníku ukazovala
+samotný nadpis *Přihlášené lodě* a pod ním nic, protože každý dosavadní
+ročník lodě měl. Doplněný prázdný stav je stejný jako u kalendáře.
+`tools/fake-api.py` proto bere ročník argumentem — jinak se soubor, který
+ještě není v databázi, nedá na webu vidět (`.claude/launch.json`, cíl
+`fake-api-2027`).
 
 ## Co říkají skutečná data
 
