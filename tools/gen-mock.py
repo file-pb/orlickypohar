@@ -68,8 +68,11 @@ LODE = {
 
 # Regaty ročníku 2026 tak, jak je vede rozhodčí. Počet rozjížděk a typ
 # odpovídají tomu, co o nich víme z plánu; škrt se dopočítá pravidlem, ne
-# ručně — vypsaný sloupec se od pravidla jednou odchýlil a nikdo si toho
-# nevšiml (Radavský pohár měl tři rozjížďky a přitom škrt).
+# ručně. Kdysi to vypadalo na rozpor — sešit měl u Radavského poháru škrt
+# při třech rozjížďkách, což pravidlu „škrtá se od čtyř" odporuje. Ruční
+# listina z 29. 8. 2026 ukázala, že rozjížďky byly čtyři (kajutové lodě
+# mají na papíře 0 / 2 / 6 bodů, což sedí jen se škrtem ze čtyř);
+# rozhodčí to 23. 9. 2026 potvrdil. Pravidlo tedy platí a sešit taky.
 ZAVODY = [
     ("Jarní vítr",      "YC Orlík",     date(2026, 4, 25), "okruhový",     4, "PoKategoriich", 1.0),
     ("Radavská regata", "LK Radava",    date(2026, 5,  9), "okruhový",     4, "PoKategoriich", 1.0),
@@ -79,7 +82,8 @@ ZAVODY = [
     # Pořadatel: Filip, 15. 9. 2026 — Yacht Club Písek, ne LK Radava.
     # Termín podle ruční startovní listiny od rozhodčího (CTL 260001,
     # ředitel Štěpán Záruba): 29. 8. 2026, ne 15. 8. — Filip, 23. 9. 2026.
-    ("Radavský pohár",  "Yacht Club Písek", date(2026, 8, 29), "okruhový", 3, "PoKategoriich", 1.0),
+    # Čtyři rozjížďky, ne tři (tatáž listina, potvrzeno rozhodčím 23. 9.).
+    ("Radavský pohár",  "Yacht Club Písek", date(2026, 8, 29), "okruhový", 4, "PoKategoriich", 1.0),
     ("O pohár Vltavy",  "Plachtič z Vltavy", date(2026, 9, 5), "vytrvalostní", 1, "PoKategoriich", 1.0),
     ("Pohár Slunce",    "SK Popovice",  date(2026, 9, 19), "okruhový",     4, "PoKategoriich", 1.0),
     ("Vánoční regata",  "YC Orlík",     date(2026, 12, 12), "fun",         1, "PoKategoriich", 1.0),
