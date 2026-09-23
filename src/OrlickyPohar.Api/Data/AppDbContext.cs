@@ -1,9 +1,10 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Features.Clanky;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Fotky;
 using OrlickyPohar.Api.Features.Poradatele;
+using OrlickyPohar.Api.Features.Prevzate;
 using OrlickyPohar.Api.Features.Vodocet;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Zavody;
@@ -26,6 +27,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Clanek> Clanky => Set<Clanek>();
     public DbSet<Fotka> Fotky => Set<Fotka>();
     public DbSet<MereniNadrze> MereniNadrze => Set<MereniNadrze>();
+    public DbSet<PrevzatyClanek> PrevzateClanky => Set<PrevzatyClanek>();
     public DbSet<TeplotaHladiny> TeplotyHladiny => Set<TeplotaHladiny>();
     public DbSet<Uzivatel> Uzivatele => Set<Uzivatel>();
     public DbSet<UcetVazba> Vazby => Set<UcetVazba>();
@@ -98,6 +100,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // ke kurátorské fotce.
         poradatel.HasOne(x => x.Fotka).WithMany().HasForeignKey(x => x.FotkaId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        var prevzaty = b.Entity<PrevzatyClanek>();
+        prevzaty.ToTable("PrevzateClanky");
+        prevzaty.Property(x => x.Zdroj).HasMaxLength(120).IsRequired();
+        prevzaty.Property(x => x.ZdrojOdkaz).HasMaxLength(500).IsRequired();
+        prevzaty.Property(x => x.Odkaz).HasMaxLength(500).IsRequired();
+        prevzaty.Property(x => x.Titulek).HasMaxLength(300).IsRequired();
+        prevzaty.Property(x => x.Perex).HasMaxLength(Kanal.DelkaPerexu + 1);
+        // Odkaz je přirozený klíč: druhé stažení téhož článku ho přepíše,
+        // nezdvojí. Bez indexu by se duplicita poznala až podle dvou
+        // stejných karet ve výpisu.
+        prevzaty.HasIndex(x => x.Odkaz).IsUnique();
 
         var nadrz = b.Entity<MereniNadrze>();
         nadrz.ToTable("MereniNadrze");

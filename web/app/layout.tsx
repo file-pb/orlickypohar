@@ -18,6 +18,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: { default: "Orlický pohár", template: "%s — Orlický pohár" },
   description: "Seriál závodů plachetnic na Orlické přehradě.",
+  // Bez tohohle odkazu čtečka kanál nenajde jinak než tím, že ho někdo
+  // pošle adresou. Vydává jen náš vlastní obsah, viz app/rss.xml/route.ts.
+  alternates: { types: { "application/rss+xml": [{ url: "/rss.xml", title: "Orlický pohár" }] } },
 };
 
 /**

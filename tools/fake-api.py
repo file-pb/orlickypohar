@@ -363,6 +363,30 @@ SPRAVA_CLANKY = [
 ]
 
 
+# Vzorek novinek ze svazu. Skutečné se stahují z RSS sailing.cz úlohou
+# v API; tady jsou napevno, aby vývoj webu nesahal na cizí server a aby
+# výpis vypadal pokaždé stejně.
+PREVZATE = [
+    {"titulek": "Jachtař Koláček se připravuje na Route du Rhum",
+     "perex": "Milan Koláček se jako jediný Čech postaví na start letošního "
+              "ročníku legendárního transatlantického závodu sólových jachtařů.",
+     "publikovanoV": "2026-09-23T10:16:47+02:00",
+     "odkaz": "https://www.sailing.cz/clanky/kolacek-route-du-rhum"},
+    {"titulek": "Filip Otta se stal vicemistrem Polska!",
+     "perex": "K medailovým pozicím připsala ještě Tereza Ottová 5. místo v dívkách.",
+     "publikovanoV": "2026-09-22T13:10:47+02:00",
+     "odkaz": "https://www.sailing.cz/clanky/otta-vicemistr-polska"},
+    {"titulek": "Mistrovství světa iQFoil, Weymouth",
+     "perex": "Na start se postavili závodníci z 39 zemí a nechyběla ani česká "
+              "reprezentace, kterou tvořilo celkem sedm závodníků.",
+     "publikovanoV": "2026-09-18T09:00:00+02:00",
+     "odkaz": "https://www.sailing.cz/clanky/ms-iqfoil-weymouth"},
+]
+for _p in PREVZATE:
+    _p["zdroj"] = "Český svaz jachtingu"
+    _p["zdrojOdkaz"] = "https://www.sailing.cz/clanky"
+
+
 def bez_diakritiky_slug(text):
     """Tentýž převod jako `Psani.Slug` v API. Opsaný schválně — jinak by se
     obrazovka zkoušela proti jinému pravidlu, než jaké pak platí."""
@@ -1676,6 +1700,11 @@ class H(BaseHTTPRequestHandler):
             if not c:
                 return self.send_error(404)
             telo = {**clanek_radek(c), "telo": c["telo"]}
+        elif cesta == "/prevzate-clanky":
+            # Novinky ze svazu. Falešné API je nestahuje — vydává vzorek,
+            # aby šlo na webu vidět, jak karta s cizím zdrojem vypadá.
+            telo = PREVZATE[:8]
+
         elif cesta == "/clanky":
             # Obecné články mimo ročník (od 22. 9. 2026). Jeden ukázkový,
             # ať je vidět, jak se vmíchávají mezi novinky ročníku.
