@@ -7,7 +7,9 @@ namespace OrlickyPohar.Api.Features.Prevzate;
 
 /// <summary>Jedna položka cizího RSS kanálu, už očištěná.</summary>
 public record PolozkaKanalu(
-    string Odkaz, string Titulek, string? Perex, DateTimeOffset PublikovanoV);
+    string Odkaz, string Titulek, string? Perex, DateTimeOffset PublikovanoV,
+    // Doplňuje se až ze stránky článku — RSS obrázky nevydává.
+    string? Obrazek = null);
 
 /// <summary>
 /// Rozbor RSS 2.0. Čistá funkce nad textem, žádná síť — proto se dá ověřit
@@ -27,6 +29,41 @@ public static partial class Kanal
 
     [GeneratedRegex(@"\s+")]
     private static partial Regex Mezery();
+
+    [GeneratedRegex(
+        """<meta[^>]+property=["']og:image["'][^>]*content=["']([^"']+)["']""",
+        RegexOptions.IgnoreCase)]
+    private static partial Regex OgObrazek();
+
+    [GeneratedRegex(
+        """<meta[^>]+content=["']([^"']+)["'][^>]*property=["']og:image["']""",
+        RegexOptions.IgnoreCase)]
+    private static partial Regex OgObrazekObracene();
+
+    /// <summary>
+    /// Fotka, kterou zdroj dal ke článku — <c>og:image</c> z jeho stránky.
+    /// RSS obrázky nevydává, takže je to jediné místo, kde se dá vzít.
+    /// <para>
+    /// Bere se jen absolutní adresa přes http(s). Relativní by se musela
+    /// skládat vůči adrese stránky a `javascript:` nebo `data:` v cizím
+    /// HTML nemá co dělat v atributu, který nám poteče do <c>src</c>.
+    /// </para>
+    /// </summary>
+    public static string? Obrazek(string? html)
+    {
+        if (string.IsNullOrWhiteSpace(html)) return null;
+
+        // Pořadí atributů v meta značce není dané, takže se zkouší obojí.
+        var nalez = OgObrazek().Match(html);
+        if (!nalez.Success) nalez = OgObrazekObracene().Match(html);
+        if (!nalez.Success) return null;
+
+        var adresa = WebUtility.HtmlDecode(nalez.Groups[1].Value).Trim();
+        return Uri.TryCreate(adresa, UriKind.Absolute, out var uri)
+               && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp)
+            ? adresa
+            : null;
+    }
 
     /// <summary>
     /// Vytáhne položky z RSS. Přeskočí ty, které nemají odkaz nebo titulek —

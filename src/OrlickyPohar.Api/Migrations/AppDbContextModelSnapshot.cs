@@ -392,6 +392,10 @@ namespace OrlickyPohar.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Obrazek")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("Odkaz")
                         .IsRequired()
                         .HasMaxLength(500)
