@@ -351,4 +351,34 @@ public class ClankyTests(PostgresFixture fixture)
 
         Assert.Equal(FormatClanku.Html, clanek!.Format);
     }
+
+    [Fact]
+    public async Task Vlozene_html_se_ulozi_jako_bloky_a_skript_zmizi()
+    {
+        // Čistí se **při zápisu**: v databázi nesmí zůstat HTML, na které by
+        // si někdo mohl sáhnout bez očisty. Import je zatím jediná cesta,
+        // kterou se `Html` dostane dovnitř.
+        await Nahraj(Rocnik("vlozene", clanky:
+        [
+            Novinka("pozvanka") with
+            {
+                Telo = """<h2>Pozvánka</h2><p>Jede se <b>v sobotu</b>.</p><script>alert("xss")</script>""",
+                Format = FormatClanku.Html,
+            },
+        ]));
+
+        var klient = fixture.CreateClient();
+        var clanek = await klient.GetFromJsonAsync<ClanekDto>("/serie/vlozene/clanky/pozvanka", Json);
+
+        // Uložený formát je `Bloky`, ne `Html` — ta hodnota je jen vstupní.
+        Assert.Equal(FormatClanku.Bloky, clanek!.Format);
+        Assert.DoesNotContain("<script", clanek.Telo, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("alert", clanek.Telo);
+
+        var bloky = Bloky.Nacti(clanek.Telo);
+        Assert.Equal(
+            [DruhBloku.Nadpis, DruhBloku.Odstavec],
+            bloky.Select(b => b.Druh));
+        Assert.Contains(bloky[1].Useky!, u => u.Text == "v sobotu" && u.Tucne);
+    }
 }

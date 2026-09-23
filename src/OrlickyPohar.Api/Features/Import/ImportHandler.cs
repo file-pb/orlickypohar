@@ -491,8 +491,19 @@ internal static class ImportHandler
             c.ZavodId = zavodId;
             c.Titulek = v.Titulek;
             c.Perex = v.Perex;
-            c.Telo = v.Telo;
-            c.Format = v.Format;
+            // Vložené HTML se do databáze nedostane — převede se na bloky.
+            // Čistí se **při zápisu**, ne při zobrazení: kdyby se ukládalo
+            // syrové, stačilo by jedno místo, které si ho vezme bez očisty.
+            if (v.Format == FormatClanku.Html)
+            {
+                c.Telo = Clanky.Bloky.Uloz(Clanky.Bloky.ZHtml(v.Telo));
+                c.Format = FormatClanku.Bloky;
+            }
+            else
+            {
+                c.Telo = v.Telo;
+                c.Format = v.Format;
+            }
             c.Autor = v.Autor;
             // Do UTC, ze stejného důvodu jako start rozjížďky: Npgsql jiný
             // posun do `timestamp with time zone` nezapíše.

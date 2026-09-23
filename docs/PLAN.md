@@ -477,9 +477,35 @@ Dokud čistička není, je vypsat zdrojový text bezpečnější než ho pustit 
 stránky. Ověřeno: tělo `<p>…</p><script>alert("xss")</script>` se vykreslí
 jako text a žádný `<script>` na stránce nevznikne.
 
-**Zbývající kroky**, každý nasaditelný zvlášť: čistička HTML na úzkou
-množinu (odstavce, H2/H3, tučné, kurzíva, seznamy, odkazy, obrázek) →
-vykreslování na webu → vkládací pole v administraci → obrázky v těle.
+**Kroky 2 a 3 hotové (23. 9. 2026): čistička a vykreslování.** Přišly
+spolu schválně — čistička, jejíž výsledek web neumí zobrazit, by dodala
+horší stav než žádná.
+
+**Čistička nevrací HTML, ale strukturu.** Obvyklá cesta je whitelist značek
+a pak `dangerouslySetInnerHTML`; bezpečnost pak stojí na tom, že whitelist
+nemá díru. Tady se vrací bloky (`Features/Clanky/Bloky.cs`), které web
+vykresluje vlastními komponentami — **surové HTML se do stránky nedostane
+nikdy**. Chyba v rozboru pak znamená špatně zobrazený text, ne XSS. Je to
+bezpečné konstrukcí, ne úplností seznamu.
+
+Do bloků se vejde: odstavec, nadpis (H2 a H3), seznam (číslovaný i ne),
+odkaz, obrázek, tučné a kurzíva. H1 se srovná na H2, protože H1 je titulek
+článku. Co se nevejde, zmizí; u `script`, `style`, `iframe` a spol. i s
+textem uvnitř, aby se do článku nevysypal javascript jako text.
+
+**Čistí se při zápisu, ne při zobrazení.** V databázi tak nezůstane HTML,
+na které by si někdo mohl sáhnout bez očisty. `FormatClanku.Html` je proto
+**jen vstupní hodnota** — import ji převede a uloží `Bloky`.
+
+**Vlastní rozbor, ne knihovna.** Pracovní stroj se na nuget.org nedostane
+(`Socket is not connected`), takže `HtmlSanitizer` ani `AngleSharp` přidat
+nešlo. Pro tenhle účel to nevadí: nepotřebujeme plnou specifikaci HTML5, ale
+rozpoznat hrstku značek a zbytek zahodit — a protože se výstupem nevrací
+HTML, chyba v rozboru není bezpečnostní. Kdyby se knihovna jednou přidala,
+nahradí jen ten jeden soubor; tvar bloků zůstane.
+
+**Zbývá:** vkládací pole v administraci (dnes se `Html` dostane dovnitř jen
+importem) a obrázky v těle nahrané k nám, ne odkazem.
 
 ### Otevřené: přihlášení lodi na jednu zastávku
 

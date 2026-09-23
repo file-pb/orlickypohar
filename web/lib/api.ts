@@ -39,7 +39,46 @@ export type Clanek = S["ClanekDto"] & { format?: FormatClanku };
  * produkci, odkud se dokument stahuje. **Po nasazení a přegenerování
  * schématu tenhle typ nahradí `S["FormatClanku"]`.**
  */
-export type FormatClanku = "Text" | "Html";
+export type FormatClanku = "Text" | "Html" | "Bloky";
+
+/** Kus textu v jednom stylu. Odkaz je absolutní http(s) nebo mailto. */
+export type Usek = {
+  text: string;
+  tucne?: boolean;
+  kurziva?: boolean;
+  odkaz?: string | null;
+};
+
+/**
+ * Blok těla článku. Vzniká na serveru z vloženého HTML
+ * (`Features/Clanky/Bloky.cs`) a je to **úzká množina** — co se do ní
+ * nevejde, server zahodil.
+ *
+ * Web ho vykresluje vlastními komponentami, nikdy `dangerouslySetInnerHTML`:
+ * proto se do stránky nemůže dostat cizí značka, ani kdyby se server spletl.
+ */
+export type Blok = {
+  druh: "Odstavec" | "Nadpis" | "Seznam" | "Obrazek";
+  useky?: Usek[];
+  uroven?: number;
+  polozky?: Usek[][];
+  cislovany?: boolean;
+  adresa?: string;
+  popis?: string;
+};
+
+/**
+ * Přečte tělo uložené jako bloky. Nečitelné vrátí prázdné — článek
+ * s rozbitým tělem se má ukázat bez něj, ne shodit stránku.
+ */
+export function bloky(telo: string): Blok[] {
+  try {
+    const rozebrane: unknown = JSON.parse(telo);
+    return Array.isArray(rozebrane) ? (rozebrane as Blok[]) : [];
+  } catch {
+    return [];
+  }
+}
 
 /**
  * Novinka přejatá z cizího kanálu (dnes Český svaz jachtingu). Nemá slug ani

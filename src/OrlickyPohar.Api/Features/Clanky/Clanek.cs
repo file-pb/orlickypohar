@@ -54,18 +54,27 @@ public enum FormatClanku
     Text = 0,
 
     /// <summary>
-    /// Formátovaný obsah pořadatele — vloží ho z Wordu nebo ze své stránky
-    /// (Filip, 23. 9. 2026).
+    /// <b>Jen na vstupu:</b> vložené HTML od pořadatele, jak ho vzal z Wordu
+    /// nebo ze své stránky (Filip, 23. 9. 2026).
     /// <para>
-    /// <b>Zatím ho nikdo nevytváří a nemá.</b> Vložené HTML se musí nejdřív
-    /// převést na úzkou množinu značek, které web umí vykreslit: schránka
-    /// z Wordu nese vlastní fonty a pevné velikosti, které rozvržení rozbijí,
-    /// a nevyčištěné HTML z databáze je XSS. Čistička je další krok; do té
-    /// doby je tahle hodnota jen připravená kolej a <b>web tělo v tomhle
-    /// formátu vypisuje jako text</b>, ne jako HTML.
+    /// <b>V databázi tahle hodnota nezůstane.</b> Server ji při uložení
+    /// převede na <see cref="Bloky"/> — viz <see cref="Clanky.Bloky.ZHtml"/>.
+    /// Kdyby se přesto někde vyskytla (starý záznam, ruční zásah), web ji
+    /// vypíše jako text, ne jako značky: nevyčištěné HTML z databáze je XSS.
     /// </para>
     /// </summary>
     Html = 1,
+
+    /// <summary>
+    /// Vyčištěná struktura těla: odstavce, nadpisy, seznamy, odkazy, obrázky.
+    /// V <c>Telo</c> je uložená jako JSON.
+    /// <para>
+    /// <b>Není to HTML a schválně.</b> Web ji vykresluje vlastními
+    /// komponentami, takže se surové značky do stránky nedostanou nikdy.
+    /// Bezpečnost tím stojí na konstrukci, ne na tom, že whitelist nemá díru.
+    /// </para>
+    /// </summary>
+    Bloky = 2,
 }
 
 /// <summary>
