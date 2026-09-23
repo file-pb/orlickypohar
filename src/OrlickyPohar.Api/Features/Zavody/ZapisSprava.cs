@@ -265,7 +265,10 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
             .Select(p => new { p.Id, p.Lod!.Nazev, Kategorie = p.Kategorie!.Nazev })
             .ToDictionaryAsync(p => p.Id, ct);
 
+        // Bez sledování: projekce bere řádky snímku (vlastněná kolekce)
+        // bez jejich vlastníka a sledovaný dotaz to nedovolí.
         var navrhy = await db.ZapisyNavrhu
+            .AsNoTracking()
             .Where(n => n.RozjizdkaId == rozjizdka.Id)
             .OrderByDescending(n => n.ZapsanoV)
             .Select(n => new { n.UzivatelId, Kdo = n.Uzivatel!.Zobrazovane, n.ZapsanoV, n.Radky })
