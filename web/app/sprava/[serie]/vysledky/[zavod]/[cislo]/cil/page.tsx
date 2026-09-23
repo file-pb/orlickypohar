@@ -81,6 +81,17 @@ export default async function CilovaObrazovka({ params }: Parametry) {
         {!zapis.doSerie && <span className="stitek">mimo pohár</span>}
       </p>
 
+      {/* Dva zapisovatelé (krok 4): výsledky jsou jedny, takže se v nich
+          drží ta verze, co se uložila naposled. Snímky obou zůstávají
+          a porovnávají se po dojezdu. */}
+      {zapis.pocetNavrhu > 1 && (
+        <p className="hlaska" role="status">
+          <b>Zapisuje i někdo další.</b> Každý má svoji verzi; ve výsledcích je ta naposledy
+          uložená. Po dojezdu je{" "}
+          <Link href={`${zapisAdresa}/porovnani`}>porovnejte a vyberte platnou</Link>.
+        </p>
+      )}
+
       {zapis.procNelze ? (
         <>
           <p className="hlaska" role="status">

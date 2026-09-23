@@ -233,6 +233,16 @@ export default async function ZapisRozjizdky({ params, searchParams }: Parametry
         </form>
       )}
 
+      {zapis.pocetNavrhu > 1 && (
+        <p className="hlaska" role="status">
+          Rozjížďku ukládalo víc zapisovatelů. Ve výsledcích je poslední uložená verze —{" "}
+          <Link href={`/sprava/${serie}/vysledky/${zavod}/${zapis.cislo}/porovnani`}>
+            porovnat zápisy
+          </Link>
+          .
+        </p>
+      )}
+
       {/* Papír z cíle zůstává dokladem k číslům (PLAN.md, Zápis z vody).
           Nahrává ho pořadatel a vidí ho i rozhodčí, který zápis ověřuje —
           veřejně nikde není. */}
