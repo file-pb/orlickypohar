@@ -337,6 +337,27 @@
                 }
             }
         },
+        "/sprava/naklady": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vr\u00e1t\u00ed n\u00e1klady na provoz a servis poh\u00e1ru, m\u011bs\u00ed\u010dn\u011b i ro\u010dn\u011b",
+                "description": "Vy\u017eaduje roli spr\u00e1vce cel\u00e9ho webu. \u010c\u00edsla po\u010d\u00edt\u00e1 p\u0159ehled stavu platformy a aplikace k nim p\u0159id\u00e1v\u00e1 p\u0159ir\u00e1\u017eku (v\u00fdchoz\u00edch 5 %), kterou vrac\u00ed v poli prirazkaProcent. Kdy\u017e zdroj chyb\u00ed nebo nen\u00ed nastaven\u00fd, vrac\u00ed 503 s vysv\u011btlen\u00edm.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NakladyDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/serie": {
             "get": {
                 "tags": [
@@ -3234,6 +3255,22 @@
                     }
                 }
             },
+            "DenNakladu": {
+                "required": [
+                    "den",
+                    "provozKcMesicne"
+                ],
+                "type": "object",
+                "properties": {
+                    "den": {
+                        "type": "string"
+                    },
+                    "provozKcMesicne": {
+                        "type": "number",
+                        "format": "double"
+                    }
+                }
+            },
             "DoSerieVstup": {
                 "required": [
                     "doSerie"
@@ -3575,6 +3612,122 @@
                     },
                     "majitel": {
                         "type": "string"
+                    }
+                }
+            },
+            "NakladovaPolozka": {
+                "required": [
+                    "polozka",
+                    "kcMesicne",
+                    "kcRocne",
+                    "poznamka"
+                ],
+                "type": "object",
+                "properties": {
+                    "polozka": {
+                        "type": "string"
+                    },
+                    "kcMesicne": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "kcRocne": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "poznamka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "slozky": {
+                        "type": [
+                            "null",
+                            "array"
+                        ],
+                        "items": {
+                            "$ref": "#/components/schemas/NakladovaPolozka"
+                        }
+                    }
+                }
+            },
+            "NakladyDto": {
+                "required": [
+                    "kdy",
+                    "prirazkaProcent",
+                    "provoz",
+                    "servis",
+                    "provozKcMesicne",
+                    "provozKcRocne",
+                    "servisKcMesicne",
+                    "servisKcRocne",
+                    "celkemKcMesicne",
+                    "celkemKcRocne",
+                    "prace",
+                    "historie"
+                ],
+                "type": "object",
+                "properties": {
+                    "kdy": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "prirazkaProcent": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "provoz": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/NakladovaPolozka"
+                        }
+                    },
+                    "servis": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/NakladovaPolozka"
+                        }
+                    },
+                    "provozKcMesicne": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "provozKcRocne": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "servisKcMesicne": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "servisKcRocne": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "celkemKcMesicne": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "celkemKcRocne": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "prace": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PraceDto"
+                            }
+                        ]
+                    },
+                    "historie": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DenNakladu"
+                        }
                     }
                 }
             },
@@ -4211,6 +4364,28 @@
                         "items": {
                             "$ref": "#/components/schemas/PoradiKategorieDto"
                         }
+                    }
+                }
+            },
+            "PraceDto": {
+                "required": [
+                    "stavbaH",
+                    "udrzba30H",
+                    "ciMinut"
+                ],
+                "type": "object",
+                "properties": {
+                    "stavbaH": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "udrzba30H": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "ciMinut": {
+                        "type": "integer",
+                        "format": "int32"
                     }
                 }
             },

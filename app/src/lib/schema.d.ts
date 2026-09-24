@@ -417,6 +417,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/naklady": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vrátí náklady na provoz a servis poháru, měsíčně i ročně
+         * @description Vyžaduje roli správce celého webu. Čísla počítá přehled stavu platformy a aplikace k nim přidává přirážku (výchozích 5 %), kterou vrací v poli prirazkaProcent. Když zdroj chybí nebo není nastavený, vrací 503 s vysvětlením.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NakladyDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/serie": {
         parameters: {
             query?: never;
@@ -2910,6 +2949,11 @@ export interface components {
             publikovanoV?: null | string;
             format?: components["schemas"]["FormatClanku"];
         };
+        DenNakladu: {
+            den: string;
+            /** Format: double */
+            provozKcMesicne: number;
+        };
         DoSerieVstup: {
             doSerie: boolean;
         };
@@ -2990,6 +3034,37 @@ export interface components {
             cisloPlachty: null | string;
             typ: null | string;
             majitel: string;
+        };
+        NakladovaPolozka: {
+            polozka: string;
+            /** Format: double */
+            kcMesicne: number;
+            /** Format: double */
+            kcRocne: number;
+            poznamka: null | string;
+            slozky?: null | components["schemas"]["NakladovaPolozka"][];
+        };
+        NakladyDto: {
+            /** Format: date-time */
+            kdy: string;
+            /** Format: double */
+            prirazkaProcent: number;
+            provoz: components["schemas"]["NakladovaPolozka"][];
+            servis: components["schemas"]["NakladovaPolozka"][];
+            /** Format: double */
+            provozKcMesicne: number;
+            /** Format: double */
+            provozKcRocne: number;
+            /** Format: double */
+            servisKcMesicne: number;
+            /** Format: double */
+            servisKcRocne: number;
+            /** Format: double */
+            celkemKcMesicne: number;
+            /** Format: double */
+            celkemKcRocne: number;
+            prace: null | components["schemas"]["PraceDto"];
+            historie: components["schemas"]["DenNakladu"][];
         };
         NapovedaLodiDto: {
             lod: string;
@@ -3139,6 +3214,14 @@ export interface components {
             rok: number;
             zastavky: components["schemas"]["ZastavkaDto"][];
             kategorie: components["schemas"]["PoradiKategorieDto"][];
+        };
+        PraceDto: {
+            /** Format: double */
+            stavbaH: number;
+            /** Format: double */
+            udrzba30H: number;
+            /** Format: int32 */
+            ciMinut: number;
         };
         PrehledClankuDto: {
             serie: string;
