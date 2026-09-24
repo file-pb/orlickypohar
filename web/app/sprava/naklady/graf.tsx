@@ -38,7 +38,10 @@ export function GrafDnu({ dny }: { dny: DenNakladu[] }) {
   const strop = max + rozpeti * 0.1;
   const S = 100;
   const V = 40;
-  const y = (x: number) => V - ((x - dno) / (strop - dno)) * V;
+  // Jedna stupnice pro SVG i pro HTML vrstvy nad ním — dva výpočty téhož by
+  // se rozešly přesně tak, jak se to stalo u odsazení.
+  const vyska = (x: number) => ((x - dno) / (strop - dno)) * 100;
+  const y = (x: number) => V - (vyska(x) / 100) * V;
   const body = dny.map((d, i) => `${(i / (dny.length - 1)) * S},${y(d.provozKcMesicne).toFixed(2)}`);
 
   return (
@@ -48,26 +51,23 @@ export function GrafDnu({ dny }: { dny: DenNakladu[] }) {
         role="img"
         aria-label={`Provoz po dnech, ${popisDne(dny[0].den)} až ${popisDne(posledni.den)}. Nejmíň ${kc(min)}, nejvíc ${kc(max)}, průměr ${kc(prumer)}, naposledy ${kc(posledni.provozKcMesicne)}.`}
       >
-        {/* Vodítko průměru. Tlumené a přerušované, aby s čarou nesoupeřilo. */}
-        <div
-          className="prumer"
-          style={{ bottom: `${((prumer - dno) / (strop - dno)) * 100}%` }}
-        >
-          <span>průměr {kc(prumer)}</span>
+        {/* Vrstvy musí sedět ve stejném rámci jako SVG, jinak je procentní
+            pozice posune o odsazení obalu — u zúžené osy je to několik
+            procent stupnice, tedy viditelná lež. */}
+        <div className="plocha-grafu">
+          {/* Vodítko průměru. Tlumené a přerušované, aby s čarou nesoupeřilo. */}
+          <div className="prumer" style={{ bottom: `${vyska(prumer)}%` }}>
+            <span>průměr {kc(prumer)}</span>
+          </div>
+          <svg viewBox={`0 0 ${S} ${V}`} preserveAspectRatio="none" aria-hidden="true">
+            {/* Plocha pod čarou jen jako náznak objemu — proto průhledná. */}
+            <polygon className="plocha" points={`0,${V} ${body.join(" ")} ${S},${V}`} />
+            <polyline className="cara" points={body.join(" ")} />
+          </svg>
+          {/* Poslední den je ten, na který se člověk dívá. Tečka je HTML, aby
+              ji roztažený viewBox nezdeformoval na elipsu. */}
+          <i className="posledni-bod" style={{ bottom: `${vyska(posledni.provozKcMesicne)}%` }} />
         </div>
-        <svg viewBox={`0 0 ${S} ${V}`} preserveAspectRatio="none" aria-hidden="true">
-          {/* Plocha pod čarou jen jako náznak objemu — proto průhledná. */}
-          <polygon className="plocha" points={`0,${V} ${body.join(" ")} ${S},${V}`} />
-          <polyline className="cara" points={body.join(" ")} />
-        </svg>
-        {/* Poslední den je ten, na který se člověk dívá. Tečka je HTML, aby
-            ji roztažený viewBox nezdeformoval na elipsu. */}
-        <i
-          className="posledni-bod"
-          style={{
-            bottom: `${((posledni.provozKcMesicne - dno) / (strop - dno)) * 100}%`,
-          }}
-        />
       </div>
 
       <div className="graf-popisky">

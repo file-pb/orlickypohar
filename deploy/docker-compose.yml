@@ -71,11 +71,19 @@ services:
       # obrazovka nevypne, jen řekne, že čísla nejsou.
       Naklady__Soubor: "/data/platforma/naklady.json"
     volumes:
-      # Jen ke čtení a schválně **celý adresář, ne ten jeden soubor**:
-      # přehled ho přepisuje přes dočasný a `mv`, takže vzniká nový inode.
-      # Bind mount jediného souboru drží ten původní a kontejner by do
-      # konce svého života viděl čísla z okamžiku, kdy nastartoval.
-      - /opt/platform/stav:/data/platforma:ro
+      # Náklady, které do adresáře projektu kopíruje přehled platformy
+      # (platform/scripts/prehled-stav.sh, KOPIE_NAKLADU).
+      #
+      # **Cesta musí ležet pod /opt/apps/<projekt>.** Nasazovací háček odmítne
+      # compose, který připojuje cokoliv jiného — a odmítne ho dřív, než něco
+      # nasadí, takže by neprošel ani zbytek pushe. Přímý mount /opt/platform
+      # proto nejde a je to tak správně.
+      #
+      # Jen ke čtení a schválně **adresář, ne ten jeden soubor**: soubor se
+      # přepisuje přes dočasný a `mv`, tedy nový inode. Bind mount souboru by
+      # držel ten původní a kontejner by do konce života viděl čísla z chvíle,
+      # kdy nastartoval.
+      - /opt/apps/${APP_NAME}/stav:/data/platforma:ro
     secrets:
       - ConnectionStrings__Postgres
       - Import__Token

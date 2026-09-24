@@ -1759,27 +1759,32 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 /* Vývoj provozu po dnech. Jedna série, takže barva série je jen jedna
    (--voda má vlastní tmavou obdobu) a popisky nosí textové tokeny. */
 .graf-dnu {
-  position: relative; height: 8rem; margin-top: 0.5rem; padding: 0.6rem 0.6rem 0;
+  height: 8rem; margin-top: 0.5rem; padding: 0.6rem 0.6rem 0;
   background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
   box-sizing: border-box;
 }
-.graf-dnu > svg { display: block; width: 100%; height: 100%; overflow: visible; }
+/* Kreslicí plocha. Vrstvy nad ní (vodítko průměru, tečka posledního dne) se
+   pozicují procenty, a procento se počítá z VÝPLŇOVÉHO rámce — kdyby byly
+   ukotvené k obalu s odsazením, seděly by o to odsazení výš než čára v SVG,
+   které vyplňuje jen obsahový rámec. Proto vlastní obal bez odsazení. */
+.graf-dnu > .plocha-grafu { position: relative; height: 100%; }
+.graf-dnu svg { display: block; width: 100%; height: 100%; overflow: visible; }
 /* Tloušťka čáry se nesmí roztáhnout s viewBoxem. */
 .graf-dnu .cara {
   fill: none; stroke: var(--voda); stroke-width: 2;
   stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke;
 }
 .graf-dnu .plocha { fill: var(--voda); opacity: 0.12; stroke: none; }
-.graf-dnu > .posledni-bod {
-  position: absolute; right: 0.6rem; width: 8px; height: 8px; margin: 0 -4px -4px 0;
+.graf-dnu .posledni-bod {
+  position: absolute; right: 0; width: 8px; height: 8px; margin: 0 -4px -4px 0;
   border-radius: 50%; background: var(--voda); box-shadow: 0 0 0 2px var(--papir);
 }
 /* Vodítko průměru. Tlumené a přerušované, aby soupeřilo se sloupci co nejmíň. */
-.graf-dnu > .prumer {
-  position: absolute; left: 0.6rem; right: 0.6rem; border-top: 1px dashed var(--tlumeny);
+.graf-dnu .prumer {
+  position: absolute; left: 0; right: 0; border-top: 1px dashed var(--tlumeny);
   opacity: 0.65; pointer-events: none;
 }
-.graf-dnu > .prumer > span {
+.graf-dnu .prumer > span {
   position: absolute; right: 0; top: -1.15rem; font-size: 0.7rem; color: var(--tlumeny);
   background: var(--papir); padding: 0 0.25rem;
 }
