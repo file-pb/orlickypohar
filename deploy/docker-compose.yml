@@ -66,6 +66,24 @@ services:
       Kontakty__Uklid: "true"
       # Vlastní doména na bucketu. Jednoúrovňová, ze stejného důvodu jako API.
       Fotky__VerejnaAdresa: "https://${APP_NAME}-foto.${PLATFORM_DOMAIN:?}"
+      # Co provoz a servis stojí — obrazovka pro správce webu. Čísla počítá
+      # přehled stavu platformy, aplikace je jen čte. Bez téhle proměnné se
+      # obrazovka nevypne, jen řekne, že čísla nejsou.
+      Naklady__Soubor: "/data/platforma/naklady.json"
+    volumes:
+      # Náklady, které do adresáře projektu kopíruje přehled platformy
+      # (platform/scripts/prehled-stav.sh, KOPIE_NAKLADU).
+      #
+      # **Cesta musí ležet pod /opt/apps/<projekt>.** Nasazovací háček odmítne
+      # compose, který připojuje cokoliv jiného — a odmítne ho dřív, než něco
+      # nasadí, takže by neprošel ani zbytek pushe. Přímý mount /opt/platform
+      # proto nejde a je to tak správně.
+      #
+      # Jen ke čtení a schválně **adresář, ne ten jeden soubor**: soubor se
+      # přepisuje přes dočasný a `mv`, tedy nový inode. Bind mount souboru by
+      # držel ten původní a kontejner by do konce života viděl čísla z chvíle,
+      # kdy nastartoval.
+      - /opt/apps/${APP_NAME}/stav:/data/platforma:ro
     secrets:
       - ConnectionStrings__Postgres
       - Import__Token

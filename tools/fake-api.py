@@ -334,6 +334,93 @@ JA = {
     "zobrazovane": "Filip Burda",
     "email": "filip@priklad.cz",
 }
+
+# Náklady: snímek souboru `stav/naklady.json`, který na serveru zapisuje
+# přehled platformy. Čísla jsou skutečná (24. 9. 2026), jen zamrzlá —
+# stejně jako zbytek mocku. Přirážka je opsaná z Features/Naklady; pravda
+# o ní je tam a hlídají ji testy.
+NAKLADY_ZDROJ = {
+    "kdy": "2026-09-24T06:45:03Z",
+    "kurz": {"eur_kc": 24.380},
+    "projekty": [{
+        "projekt": "orlickypohar",
+        # Doména tu schválně není: platí se za celou hračkárnu a pohár sedí
+        # na subdoméně, takže ji platforma projektům nerozpočítává.
+        "provoz": [
+            {"polozka": "Podíl na serveru", "eur_mesicne": 1.26, "kc_mesicne": 30.72,
+             "poznamka": "17,1 % stroje Hetzner CX23 za 7,25 € měsíčně",
+             # Rozbor té jedné platby, ne další položky.
+             "slozky": [
+                 {"polozka": "Paměť", "kc_mesicne": 25.95,
+                  "poznamka": "222 MB z 3814 MB stroje, váha 50 %"},
+                 {"polozka": "Procesor", "kc_mesicne": 0.53,
+                  "poznamka": "31 s za 24 h, váha 40 %"},
+                 {"polozka": "Disk", "kc_mesicne": 4.24, "poznamka": "1,0 GB, váha 10 %"},
+             ]},
+        ],
+        "servis": [
+            {"polozka": "Předplatné Claude Code", "kc_mesicne": 2030.0, "eur_mesicne": 83.27,
+             "poznamka": "95 % z 100 $ měsíčně podle podílu odvedené práce"},
+            {"polozka": "GitHub Actions", "kc_mesicne": 0,
+             "poznamka": "1345 z 2000 minut měsíčně zdarma"},
+            {"polozka": "Cloudflare — DNS, proxy, R2", "kc_mesicne": 0,
+             "poznamka": "bezplatná hladina"},
+            {"polozka": "Expo EAS — build appky", "kc_mesicne": 0, "poznamka": "bezplatná hladina"},
+            {"polozka": "Gmail — odesílání alertů", "kc_mesicne": 0,
+             "poznamka": "heslo aplikace, bez tarifu"},
+        ],
+        "prace": {"stavba_h": 119, "udrzba30_h": 119, "ci_minut": 1345, "podil_procent": 95},
+        # Vývoj po dnech. Na serveru ho počítá přehled z naklady.csv; tady je
+        # vymyšlený, aby šel graf vidět dřív, než se historie nasbírá.
+        "historie": [
+            {"den": d, "provoz_kc_mesicne": v}
+            for d, v in zip(
+                [f"2026-09-{den:02d}" for den in range(4, 24)],
+                [27.9, 28.4, 28.1, 29.6, 31.2, 30.8, 29.9, 30.4, 33.1, 34.7,
+                 32.2, 31.5, 30.9, 30.1, 29.4, 30.6, 31.8, 32.4, 31.1, 30.7],
+            )
+        ],
+    }],
+}
+NAKLADY_PRIRAZKA = 7.0
+
+
+def naklady_dto():
+    p = NAKLADY_ZDROJ["projekty"][0]
+    nasobek = 1 + NAKLADY_PRIRAZKA / 100
+
+    def radek(x):
+        r = {"polozka": x["polozka"],
+             "kcMesicne": x["kc_mesicne"] * nasobek,
+             "kcRocne": x["kc_mesicne"] * nasobek * 12,
+             "poznamka": x.get("poznamka")}
+        if x.get("slozky"):
+            r["slozky"] = [radek(s) for s in x["slozky"]]
+        return r
+
+    def radky(kde):
+        return [radek(x) for x in p[kde]]
+
+    provoz, servis = radky("provoz"), radky("servis")
+    soucet = lambda r, k: sum(x[k] for x in r)
+    return {
+        "kdy": NAKLADY_ZDROJ["kdy"],
+        "prirazkaProcent": NAKLADY_PRIRAZKA,
+        "provoz": provoz, "servis": servis,
+        "provozKcMesicne": soucet(provoz, "kcMesicne"),
+        "provozKcRocne": soucet(provoz, "kcRocne"),
+        "servisKcMesicne": soucet(servis, "kcMesicne"),
+        "servisKcRocne": soucet(servis, "kcRocne"),
+        "celkemKcMesicne": soucet(provoz, "kcMesicne") + soucet(servis, "kcMesicne"),
+        "celkemKcRocne": soucet(provoz, "kcRocne") + soucet(servis, "kcRocne"),
+        "prace": {"stavbaH": p["prace"]["stavba_h"],
+                  "udrzba30H": p["prace"]["udrzba30_h"],
+                  "ciMinut": p["prace"]["ci_minut"]},
+        # Přirážka platí i pro historii — jinak by graf ukazoval jiná čísla
+        # než tabulka nad ním a vypadalo by to jako pokles.
+        "historie": [{"den": d["den"], "provozKcMesicne": d["provoz_kc_mesicne"] * nasobek}
+                     for d in p["historie"]],
+    }
 # Druhý zapisovatel u cíle. Mock zná jen jedno přihlášení, takže snímek
 # „toho druhého" se nasadí do dat — bez něj by nebylo co porovnávat.
 DRUHY_ZAPISOVATEL = {
@@ -1700,6 +1787,12 @@ class H(BaseHTTPRequestHandler):
                 return self.send_error(401)
             telo = {"slug": D["slug"], "nazev": D["nazev"], "rok": D["rok"],
                     "publikovano": ROCNIK_VENKU[0], "smiPublikovat": True}
+        elif cesta == "/sprava/naklady":
+            # Co web stojí. Skutečné API to čte ze souboru platformy, který
+            # na vývojovém stroji není — tady je snímek.
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            telo = naklady_dto()
         elif cesta == f'/sprava/serie/{D["slug"]}/vysledky':
             if not self.headers.get("authorization"):
                 return self.send_error(401)

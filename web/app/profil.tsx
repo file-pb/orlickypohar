@@ -110,6 +110,13 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
             Oprávnění na celý web
           </OdkazJinam>
         )}
+        {/* Co provoz a servis stojí. Jen správci webu: je v tom cena stroje
+            i předplatné nástrojů, což není věc pro každého přihlášeného. */}
+        {spravujeWeb && (
+          <OdkazJinam obycejny href="/sprava/naklady">
+            Co web stojí
+          </OdkazJinam>
+        )}
         {pise.map((serie) => (
           <OdkazJinam obycejny key={`clanky-${serie}`} href={`/sprava/${serie}/clanky`}>
             Novinky {serie}

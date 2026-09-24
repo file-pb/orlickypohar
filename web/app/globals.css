@@ -1711,3 +1711,90 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 #kalendar { scroll-margin-top: 6rem; }
 /* Akce mezi koly ve „Vše". Čárkovaně, ať se nesplete se štítkem stavu. */
 .stitek.stitek-akce { border-style: dashed; }
+
+/* Obrazovka „Co web stojí". Dvě čísla nahoře, rozpad pod nimi — kdo se ptá,
+   co to stojí, chce nejdřív odpověď a teprve pak, z čeho se skládá. */
+.naklady-souhrn {
+  display: flex; gap: 0.75rem; flex-wrap: wrap; margin: 0 0 2rem;
+}
+.naklady-souhrn > div {
+  flex: 1 1 12rem; display: grid; gap: 0.2rem; padding: 1rem 1.1rem;
+  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+}
+.naklady-souhrn .popis { font-size: 0.8rem; color: var(--tlumeny); }
+.naklady-souhrn b { font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+/* Čísla pod sebou se čtou jen tehdy, když mají stejně široké číslice. */
+.naklady-souhrn + .skupina-opravneni table td:not(.vlevo),
+.naklady-souhrn ~ .skupina-opravneni table td:not(.vlevo) { font-variant-numeric: tabular-nums; }
+/* Čím je částka podložená. Na telefonu pod jménem položky, ne v title —
+   bublina se prstem nevyvolá. */
+.poznamka-radku {
+  display: block; margin-top: 0.15rem; white-space: normal;
+  font-size: 0.78rem; color: var(--tlumeny); max-width: 24rem;
+}
+.skupina-opravneni tfoot td {
+  border-top: 1px solid var(--linka); font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+/* Na telefonu přetékala tabulka servisu o pár desítek pixelů — kvůli
+   poznámce, ne kvůli číslům. Užší odsazení a menší poznámka ji vejdou
+   do šířky; posuv zůstává pro případ delších položek. */
+@media (max-width: 32rem) {
+  .skupina-opravneni th,
+  .skupina-opravneni td { padding: 0.5rem 0.4rem; }
+  .skupina-opravneni table { font-size: 0.82rem; }
+  .poznamka-radku { font-size: 0.72rem; }
+  /* Dlouhé názvy položek se na telefonu smějí zalomit. Nowrap patří
+     číslům, ne textu — kvůli němu tabulka přetékala. */
+  .skupina-opravneni td.vlevo { white-space: normal; }
+}
+/* Poslední řádek stránky nákladů: suma, kvůli které se sem chodí. */
+.skupina-opravneni tfoot tr.celkem td { font-size: 1.05rem; }
+/* Rozbor jedné platby uvnitř tabulky. Odsazený a tlumený, aby bylo poznat,
+   že se nepřičítá — sčítá se do řádku nad sebou. */
+.skupina-opravneni tr.slozka td { color: var(--tlumeny); border-top: 0; padding-top: 0.15rem; }
+.skupina-opravneni tr.slozka td.vlevo { padding-left: 1.5rem; }
+.skupina-opravneni tr.slozka + tr:not(.slozka) td { border-top: 1px solid var(--linka); }
+
+/* Vývoj provozu po dnech. Jedna série, takže barva série je jen jedna
+   (--voda má vlastní tmavou obdobu) a popisky nosí textové tokeny. */
+.graf-dnu {
+  height: 8rem; margin-top: 0.5rem; padding: 0.6rem 0.6rem 0;
+  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+  box-sizing: border-box;
+}
+/* Kreslicí plocha. Vrstvy nad ní (vodítko průměru, tečka posledního dne) se
+   pozicují procenty, a procento se počítá z VÝPLŇOVÉHO rámce — kdyby byly
+   ukotvené k obalu s odsazením, seděly by o to odsazení výš než čára v SVG,
+   které vyplňuje jen obsahový rámec. Proto vlastní obal bez odsazení. */
+.graf-dnu > .plocha-grafu { position: relative; height: 100%; }
+.graf-dnu svg { display: block; width: 100%; height: 100%; overflow: visible; }
+/* Tloušťka čáry se nesmí roztáhnout s viewBoxem. */
+.graf-dnu .cara {
+  fill: none; stroke: var(--voda); stroke-width: 2;
+  stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke;
+}
+.graf-dnu .plocha { fill: var(--voda); opacity: 0.12; stroke: none; }
+.graf-dnu .posledni-bod {
+  position: absolute; right: 0; width: 8px; height: 8px; margin: 0 -4px -4px 0;
+  border-radius: 50%; background: var(--voda); box-shadow: 0 0 0 2px var(--papir);
+}
+/* Vodítko průměru. Tlumené a přerušované, aby soupeřilo se sloupci co nejmíň. */
+.graf-dnu .prumer {
+  position: absolute; left: 0; right: 0; border-top: 1px dashed var(--tlumeny);
+  opacity: 0.65; pointer-events: none;
+}
+.graf-dnu .prumer > span {
+  position: absolute; right: 0; top: -1.15rem; font-size: 0.7rem; color: var(--tlumeny);
+  background: var(--papir); padding: 0 0.25rem;
+}
+.graf-popisky {
+  display: flex; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;
+  font-size: 0.78rem; color: var(--tlumeny); margin-top: 0.35rem;
+}
+.graf-popisky .vrchol { margin-inline: auto; }
+.graf-cisla { margin-top: 0.75rem; }
+.graf-cisla > summary { font-size: 0.85rem; color: var(--tlumeny); cursor: pointer; }
+.graf-cisla > summary:hover { color: var(--voda); }
+.graf-cisla .tabulka-obal { margin-top: 0.5rem; }
+.poznamka.bez-odsazeni { margin-top: 0; }
