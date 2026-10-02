@@ -1,10 +1,10 @@
 import Link from "next/link";
 import {
   ApiNedostupne,
-  nactiNovinky,
-  nactiPoradi,
   nactiSerie,
   nactiSerii,
+  novinkySNahradou,
+  poradiSNahradou,
   type Novinka,
   type PoradiSerie,
   type SerieShrnuti,
@@ -63,17 +63,23 @@ export default async function Rozcestnik({
   let clanky: Novinka[] | null = null;
   // Pořadí tříd pro karusel na úvodu, kde nejsou boky.
   let tridy: PoradiSerie["kategorie"] = [];
+  // Odkud obsah je, když ho nový ročník ještě nemá. Musí být vidět u něj —
+  // loňské pořadí bez popisku by tvrdilo, že se letos jezdilo.
+  let poradiZ: SerieShrnuti | undefined;
+  let novinkyZ: SerieShrnuti | undefined;
   if (aktualni) {
     try {
       const [detail, poradi, novinky] = await Promise.all([
         nactiSerii(aktualni.slug),
-        nactiPoradi(aktualni.slug),
+        poradiSNahradou(aktualni.slug),
         // Čtyři: velký a tři vedle něj nebo pod ním (Filip, 17. 9. 2026).
         // Obecné články mimo ročník se vmíchají mezi novinky ročníku.
-        nactiNovinky(aktualni.slug, 4),
+        novinkySNahradou(aktualni.slug, 4),
       ]);
-      clanky = novinky;
-      tridy = poradi?.kategorie.filter((k) => k.lode.length > 0) ?? [];
+      clanky = novinky.data;
+      novinkyZ = novinky.nahrada;
+      poradiZ = poradi.nahrada;
+      tridy = poradi.data?.kategorie.filter((k) => k.lode.length > 0) ?? [];
       if (detail) {
         const cekaji = detail.zavody.filter((z) => z.stav === "Planovany" || z.stav === "Vypsany");
         stav = {
@@ -81,10 +87,12 @@ export default async function Rozcestnik({
           celkem: detail.zavody.length,
           dalsi: cekaji[0] && `${cekaji[0].nazev}, ${denAMesic(cekaji[0].datum)}`,
           dalsiSlug: cekaji[0]?.slug,
-          vedou:
-            poradi?.kategorie
-              .map((k) => k.lode[0]?.lod)
-              .filter((l): l is string => Boolean(l)) ?? [],
+          // Jen z letošního pořadí: „Vedou" o loňských vítězích by lhalo.
+          vedou: poradi.nahrada
+            ? []
+            : poradi.data?.kategorie
+                .map((k) => k.lode[0]?.lod)
+                .filter((l): l is string => Boolean(l)) ?? [],
         };
       }
     } catch {
@@ -164,7 +172,9 @@ export default async function Rozcestnik({
       {/* Pořadí jako karusel tam, kde boky nejsou (Filip, 15. 9. 2026). Stojí
           mimo boky schválně: s boky ho CSS schová, a kdyby byl uvnitř středu,
           přestaly by novinky začínat v rovině s boky. */}
-      {aktualni && <PoradiRadky slug={aktualni.slug} tridy={tridy} />}
+      {aktualni && (
+        <PoradiRadky slug={(poradiZ ?? aktualni).slug} tridy={tridy} zRocniku={poradiZ?.rok} />
+      )}
 
       {/* Kalendář hned pod pořadím tam, kde boky nejsou (Filip, 18. 9. 2026):
           obojí je hlavní informace, widgety pod novinkami ji jen doplňují.
@@ -189,9 +199,18 @@ export default async function Rozcestnik({
       {aktualni && clanky && clanky.length > 0 && (
         <section className="novinky-blok">
           <h2>Novinky</h2>
-          <VypisNovinek serie={aktualni.slug} clanky={clanky} hlavni />
+          {/* Když jsou novinky z loňska, musí to být vidět nad nimi —
+              jinak by se stará pozvánka tvářila jako letošní. */}
+          {novinkyZ && (
+            <p className="poznamka">
+              Z ročníku {novinkyZ.rok}; letos ještě žádná novinka nevyšla.
+            </p>
+          )}
+          <VypisNovinek serie={(novinkyZ ?? aktualni).slug} clanky={clanky} hlavni />
           <p className="poznamka">
-            <Link href={`/serie/${aktualni.slug}/novinky`}>Všechny novinky ročníku →</Link>
+            <Link href={`/serie/${(novinkyZ ?? aktualni).slug}/novinky`}>
+              Všechny novinky ročníku {novinkyZ ? novinkyZ.rok : ""} →
+            </Link>
           </p>
         </section>
       )}

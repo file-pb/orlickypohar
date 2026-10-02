@@ -58,12 +58,24 @@ export function KaruselTridy({ lode }: { lode: Lod[] }) {
  * stojí vlevo pevně a lodě plynou doleva. Jakmile jsou boky vidět, CSS tenhle
  * blok schová — pořadí je pak v levém boku.
  */
-export function PoradiRadky({ slug, tridy }: { slug: string; tridy: Trida[] }) {
+export function PoradiRadky({
+  slug,
+  tridy,
+  zRocniku,
+}: {
+  slug: string;
+  tridy: Trida[];
+  /**
+   * Rok, ze kterého pořadí je, když letos ještě nikdo nejel. Nadpis to pak
+   * řekne rovnou — „průběžné" o loňské sezóně by byla nepravda.
+   */
+  zRocniku?: number;
+}) {
   if (tridy.length === 0) return null;
 
   return (
     <section className="poradi-radky">
-      <h2>Průběžné pořadí</h2>
+      <h2>{zRocniku ? `Konečné pořadí ${zRocniku}` : "Průběžné pořadí"}</h2>
       {tridy.map((k) => (
         <div key={k.kategorie} className="poradi-radek">
           <Link
@@ -82,6 +94,7 @@ export function PoradiRadky({ slug, tridy }: { slug: string; tridy: Trida[] }) {
         </div>
       ))}
       <p className="poznamka">
+        {zRocniku && "Letos se zatím nejelo. "}
         <Link href={`/serie/${slug}/poradi`}>Celé pořadí →</Link>
       </p>
     </section>

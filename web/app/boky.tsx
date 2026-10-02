@@ -1,9 +1,9 @@
 import Link from "next/link";
 import {
-  nactiNovinky,
-  nactiPoradi,
   nactiSerie,
   nactiSerii,
+  novinkySNahradou,
+  poradiSNahradou,
   type ZavodShrnuti,
 } from "@/lib/api";
 import { datumClanku, denAMesic } from "@/app/datum";
@@ -197,18 +197,25 @@ async function obsah(bok: Bok, slug: string, kalendar?: string) {
  * projede dokola (Filip, 15. 9. 2026). Celé pořadí je o klik dál.
  */
 async function BokPoradi({ slug }: { slug: string }) {
-  const poradi = await nactiPoradi(slug);
+  // Dokud se v novém ročníku nejelo, ukáže se loňské konečné pořadí
+  // (Filip, 2. 10. 2026) — prázdný bok mezi sezónami vypadá rozbitě.
+  const { data: poradi, nahrada } = await poradiSNahradou(slug);
   const tridy = poradi?.kategorie.filter((k) => k.lode.length > 0) ?? [];
   if (!poradi || tridy.length === 0) return null;
 
+  // Odkazy musí vést do ročníku, ze kterého pořadí doopravdy je.
+  const rocnik = nahrada?.slug ?? slug;
+
   return (
     <section>
-      <h2 className="bok-nadpis">Průběžné pořadí</h2>
+      <h2 className="bok-nadpis">
+        {nahrada ? `Konečné pořadí ${nahrada.rok}` : "Průběžné pořadí"}
+      </h2>
       {tridy.map((k) => (
         <div key={k.kategorie} className="bok-trida">
           <Link
             className="bok-trida-hlava"
-            href={`/serie/${slug}/poradi?trida=${encodeURIComponent(k.kategorie)}`}
+            href={`/serie/${rocnik}/poradi?trida=${encodeURIComponent(k.kategorie)}`}
           >
             <ZnakTridy nazev={k.kategorie} />
             {k.kategorie}
@@ -217,7 +224,7 @@ async function BokPoradi({ slug }: { slug: string }) {
         </div>
       ))}
       <p className="bok-dal">
-        <Link href={`/serie/${slug}/poradi`}>Celé pořadí →</Link>
+        <Link href={`/serie/${rocnik}/poradi`}>Celé pořadí →</Link>
       </p>
     </section>
   );
@@ -310,12 +317,16 @@ export async function BokKalendar({
 async function BokNovinky({ slug }: { slug: string }) {
   // Pět posledních (Filip, 16. 9. 2026). Pod novinky přijdou widgety,
   // proto ne víc, i když má bok výšku.
-  const clanky = await nactiNovinky(slug, 5);
+  const { data: clanky, nahrada } = await novinkySNahradou(slug, 5);
   if (!clanky || clanky.length === 0) return null;
+
+  const rocnik = nahrada?.slug ?? slug;
 
   return (
     <section>
-      <h2 className="bok-nadpis">Novinky</h2>
+      <h2 className="bok-nadpis">
+        {nahrada ? `Novinky ${nahrada.rok}` : "Novinky"}
+      </h2>
       <ul className="bok-seznam">
         {clanky.map((c) => (
           <li key={c.slug}>
@@ -327,7 +338,7 @@ async function BokNovinky({ slug }: { slug: string }) {
         ))}
       </ul>
       <p className="bok-dal">
-        <Link href={`/serie/${slug}/novinky`}>Všechny novinky →</Link>
+        <Link href={`/serie/${rocnik}/novinky`}>Všechny novinky →</Link>
       </p>
     </section>
   );
