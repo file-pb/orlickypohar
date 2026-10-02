@@ -48,7 +48,11 @@ export function VypisNovinek({
             {/* Náhled je dekorace, ne informace — proto nenese popisek
                 a nesmí se tvářit, že je z toho závodu. */}
             {hlavni && i === 0 ? (
-              <NahledVelky slug={c.slug} obrazek={c.obrazek} />
+              <NahledVelky
+                slug={c.slug}
+                obrazek={c.obrazek}
+                adresa={"fotkaZdroje" in c ? c.fotkaZdroje : undefined}
+              />
             ) : (
               <Nahled
                 slug={c.slug}
@@ -68,7 +72,18 @@ export function VypisNovinek({
                 {/* Odkud text je. Přebírat ho smíme právě pod podmínkou, že
                     uvedeme zdroj s odkazem — štítek je ta první půlka,
                     odkaz karty ta druhá. */}
-                {"zdroj" in c && c.zdroj && <span className="stitek">{c.zdroj}</span>}
+                {"zdroj" in c && c.zdroj && (
+                  <span className="stitek stitek-zdroj">
+                    {/* Logo zdroje k jeho jménu (Filip, 2. 10. 2026): s víc
+                        zdroji je na první pohled vidět, odkud článek je.
+                        Jméno zůstává textem — logo samo by čtečce obrazovky
+                        ani v tmavém režimu nestačilo. */}
+                    {"zdrojLogo" in c && c.zdrojLogo && (
+                      <img className="stitek-logo" src={c.zdrojLogo} alt="" loading="lazy" />
+                    )}
+                    {c.zdroj}
+                  </span>
+                )}
               </div>
               {c.perex && <p className="perex">{c.perex}</p>}
               <div className="detail">

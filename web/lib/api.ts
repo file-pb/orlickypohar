@@ -155,8 +155,13 @@ export type Novinka = Omit<ClanekShrnuti, "slug"> & {
   adresa: string;
   vnejsi?: boolean;
   zdroj?: string;
-  /** Adresa fotky u zdroje. Rozměry k ní neznáme, proto není `obrazek`. */
+  /**
+   * Adresa fotky u zdroje. Rozměry k ní neznáme, proto není `obrazek`.
+   * Používá se, jen když nemáme vlastní kopii (API ji vydává v `fotka`).
+   */
   fotkaZdroje?: string;
+  /** Malé logo zdroje ke štítku. Soubor ve webu, `web/public/zdroje/`. */
+  zdrojLogo?: string;
 };
 
 /**
@@ -208,11 +213,15 @@ export async function nactiNovinky(slug: string | null, limit?: number): Promise
       perex: c.perex,
       publikovanoV: c.publikovanoV,
       autor: null,
-      obrazek: null,
-      // Fotka od zdroje jde vlastním polem, ne jako `obrazek`: ten popisuje
-      // naši nahranou fotku včetně rozměrů, a ty u cizí adresy neznáme.
-      // Vymyslet si je jen kvůli typu by byla lež v datech.
-      fotkaZdroje: c.obrazek ?? undefined,
+      // Naše kopie fotky od zdroje (od 2. 10. 2026). Je to `obrazek` se vším
+      // všudy — leží u nás a rozměry známe —, takže s ní karta zachází stejně
+      // jako s naší nahranou fotkou, včetně velké varianty na úvodu.
+      obrazek: c.fotka ?? null,
+      // Záloha, dokud kopii nemáme: adresa u zdroje. Rozměry k ní neznáme,
+      // proto nemůže být `obrazek` — vymyslet si je jen kvůli typu by byla
+      // lež v datech.
+      fotkaZdroje: c.fotka ? undefined : (c.obrazek ?? undefined),
+      zdrojLogo: c.zdrojLogo ?? undefined,
       zavod: null,
       zavodNazev: null,
       adresa: c.odkaz,

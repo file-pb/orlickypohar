@@ -3272,6 +3272,8 @@ export interface components {
             zdroj: string;
             zdrojOdkaz: string;
             obrazek?: null | string;
+            fotka?: null | components["schemas"]["ObrazekDto"];
+            zdrojLogo?: null | string;
         };
         PrihlaseniVstup: {
             /** Format: int32 */
