@@ -63,6 +63,20 @@ public static class PrevzateFotky
 public record UlozenaFotka(Guid Id, int Sirka, int Vyska);
 
 /// <summary>
+/// Jak dopadl pokus o fotku. <b>Rozlišuje „nepovedlo se" a „nestojí za to"</b>:
+/// když cizí server neodpoví, adresa u zdroje platí dál a web ji použije;
+/// když zdroj místo fotky dal logo nebo ikonku, zahodí se i ta adresa a karta
+/// dostane naši náhradní fotku. Logo s nápisem přes celou kartu vypadá hůř
+/// než fotka lodi (Filip, 2. 10. 2026).
+/// </summary>
+/// <param name="Fotka">Naše kopie, když se povedla.</param>
+/// <param name="Nepouzitelna">
+/// Obrázek se podařilo stáhnout, ale na kartu se nehodí — je menší než
+/// <see cref="PrevzateFotky.NejmensiSirka"/>, nebo to není obrázek.
+/// </param>
+public record VysledekFotky(UlozenaFotka? Fotka, bool Nepouzitelna);
+
+/// <summary>
 /// Stáhne fotku od zdroje, přepočítá ji na naše varianty a uloží.
 /// <para>
 /// <b>Nic z toho není důvod, proč by článek neměl vyjít.</b> Když se fotka
@@ -72,15 +86,23 @@ public record UlozenaFotka(Guid Id, int Sirka, int Vyska);
 /// </summary>
 public class StahovacFotek(IUloziste uloziste, ILogger<StahovacFotek> log)
 {
-    public async Task<UlozenaFotka?> UlozAsync(
+    public async Task<VysledekFotky> UlozAsync(
         HttpClient klient, ZdrojKanalu zdroj, string ogImage, CancellationToken ct)
     {
-        if (!uloziste.Pripraveno) return null;
+        if (!uloziste.Pripraveno) return new VysledekFotky(null, false);
 
+        // Malá nebo nečitelná byla aspoň jedna varianta — rozhoduje poslední
+        // zkoušená, tedy původní `og:image`, protože ta je ta, kterou by web
+        // jinak ukázal.
+        var nepouzitelna = false;
         foreach (var adresa in PrevzateFotky.Kandidati(zdroj, ogImage))
         {
             var varianty = await ZkusAsync(klient, adresa, ct);
-            if (varianty is null) continue;
+            if (varianty is null)
+            {
+                nepouzitelna = false;
+                continue;
+            }
 
             // Zpracování nezvětšuje, takže šířka velké varianty je šířka
             // originálu, dokud nepřesáhne naši. Malé obrázky — loga, ikony —
@@ -89,6 +111,7 @@ public class StahovacFotek(IUloziste uloziste, ILogger<StahovacFotek> log)
             {
                 log.LogInformation(
                     "Fotka {Adresa} má jen {Sirka} px, nechávám ji být", adresa, varianty.Sirka);
+                nepouzitelna = true;
                 continue;
             }
 
@@ -98,10 +121,10 @@ public class StahovacFotek(IUloziste uloziste, ILogger<StahovacFotek> log)
             await uloziste.UlozAsync(
                 PrevzateFotky.Klic(id, Nahravani.SirkaVelke), varianty.Velky, "image/webp", ct);
 
-            return new UlozenaFotka(id, varianty.Sirka, varianty.Vyska);
+            return new VysledekFotky(new UlozenaFotka(id, varianty.Sirka, varianty.Vyska), false);
         }
 
-        return null;
+        return new VysledekFotky(null, nepouzitelna);
     }
 
     /// <summary>Stáhne jednu adresu a přepočítá ji, nebo vrátí <c>null</c>.</summary>

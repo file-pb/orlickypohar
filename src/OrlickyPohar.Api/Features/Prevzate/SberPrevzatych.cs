@@ -159,11 +159,20 @@ public class SberPrevzatych(
                 log.LogInformation(e, "Fotku k článku {Odkaz} se nepovedlo zjistit", p.Odkaz);
             }
 
-            var ulozena = ogImage is null || stahovac is null
-                ? null
+            var vysledek = ogImage is null || stahovac is null
+                ? new VysledekFotky(null, false)
                 : await stahovac.UlozAsync(klient, zdroj, ogImage, ct);
 
-            doplnene.Add(p with { Obrazek = ogImage, Fotka = ulozena });
+            // Když zdroj místo fotky dal logo, zahodí se i jeho adresa —
+            // jinak by ho web ukázal přes celou kartu (Filip, 2. 10. 2026).
+            if (vysledek.Nepouzitelna)
+            {
+                log.LogInformation(
+                    "Obrázek u článku {Odkaz} je na kartu moc malý, použije se náhradní", p.Odkaz);
+                ogImage = null;
+            }
+
+            doplnene.Add(p with { Obrazek = ogImage, Fotka = vysledek.Fotka });
         }
 
         return doplnene;

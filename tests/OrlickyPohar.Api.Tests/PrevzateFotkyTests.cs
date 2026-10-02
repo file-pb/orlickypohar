@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Logging.Abstractions;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using OrlickyPohar.Api.Features.Fotky;
 using OrlickyPohar.Api.Features.Prevzate;
 
@@ -73,8 +75,98 @@ public class PrevzateFotkyTests
         var stahovac = new StahovacFotek(
             new NenastaveneUloziste(new FotkyNastaveni()), NullLogger<StahovacFotek>.Instance);
 
-        Assert.Null(await stahovac.UlozAsync(
-            new HttpClient(new PadajiciHandler()), Svaz, "https://www.sailing.cz/foto.jpg", default));
+        var vysledek = await stahovac.UlozAsync(
+            new HttpClient(new PadajiciHandler()), Svaz, "https://www.sailing.cz/foto.jpg", default);
+
+        Assert.Null(vysledek.Fotka);
+        Assert.False(vysledek.Nepouzitelna);
+    }
+
+    [Fact]
+    public async Task Logo_misto_fotky_se_neulozi_a_rekne_si_o_nahradni()
+    {
+        // Svaz dává do og:image svoje logo, když k článku fotku nemá —
+        // 177 × 200 px. Přes celou kartu vypadá hůř než naše náhradní fotka.
+        var uloziste = new PametoveUloziste();
+        var stahovac = new StahovacFotek(uloziste, NullLogger<StahovacFotek>.Instance);
+
+        var vysledek = await stahovac.UlozAsync(
+            new HttpClient(new ObrazkovyHandler(177, 200)), Svaz,
+            "https://www.sailing.cz/uploads_thumbs/ikony-loga/logo.jpg", default);
+
+        Assert.Null(vysledek.Fotka);
+        Assert.True(vysledek.Nepouzitelna);
+        Assert.Empty(uloziste.Soubory);
+    }
+
+    [Fact]
+    public async Task Fotka_dost_velka_se_ulozi_ve_dvou_velikostech()
+    {
+        var uloziste = new PametoveUloziste();
+        var stahovac = new StahovacFotek(uloziste, NullLogger<StahovacFotek>.Instance);
+
+        var vysledek = await stahovac.UlozAsync(
+            new HttpClient(new ObrazkovyHandler(1920, 1280)), Svaz,
+            "https://www.sailing.cz/uploads_thumbs/clanky/foto.jpg", default);
+
+        Assert.NotNull(vysledek.Fotka);
+        var fotka = vysledek.Fotka;
+        Assert.False(vysledek.Nepouzitelna);
+        // Přepočet nezvětšuje a strop je 1600 px.
+        Assert.Equal(Nahravani.SirkaVelke, fotka.Sirka);
+        Assert.Equal([.. PrevzateFotky.Klice(fotka.Id).Order()], [.. uloziste.Soubory.Keys.Order()]);
+        Assert.All(uloziste.Soubory.Values, d => Assert.NotEmpty(d));
+    }
+
+    [Fact]
+    public async Task Nedostupny_server_adresu_u_zdroje_neshazuje()
+    {
+        var stahovac = new StahovacFotek(new PametoveUloziste(), NullLogger<StahovacFotek>.Instance);
+
+        var vysledek = await stahovac.UlozAsync(
+            new HttpClient(new PadajiciHandler()), Svaz,
+            "https://www.sailing.cz/uploads_thumbs/clanky/foto.jpg", default);
+
+        // Nic neukládáme, ale adresa u zdroje platí dál — výpadek není důvod
+        // sahat po náhradní fotce napořád.
+        Assert.Null(vysledek.Fotka);
+        Assert.False(vysledek.Nepouzitelna);
+    }
+
+    /// <summary>Úložiště v paměti: test se dívá na to, co by v bucketu leželo.</summary>
+    private sealed class PametoveUloziste : IUloziste
+    {
+        public Dictionary<string, byte[]> Soubory { get; } = [];
+        public bool Pripraveno => true;
+        public string? VerejnaAdresa => "https://fotky.test";
+
+        public Task UlozAsync(string klic, byte[] data, string typ, CancellationToken ct)
+        {
+            Soubory[klic] = data;
+            return Task.CompletedTask;
+        }
+
+        public Task SmazAsync(string klic, CancellationToken ct)
+        {
+            Soubory.Remove(klic);
+            return Task.CompletedTask;
+        }
+    }
+
+    /// <summary>Vrátí PNG zadaných rozměrů, ať se zkusí kterákoliv adresa.</summary>
+    private sealed class ObrazkovyHandler(int sirka, int vyska) : HttpMessageHandler
+    {
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            using var obrazek = new Image<Rgba32>(sirka, vyska);
+            using var pamet = new MemoryStream();
+            await obrazek.SaveAsPngAsync(pamet, cancellationToken);
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent(pamet.ToArray()),
+            };
+        }
     }
 
     /// <summary>Handler, který by test prozradil: jakýkoliv dotaz je chyba.</summary>
