@@ -59,9 +59,15 @@ services:
       # Sběr vodočtu Orlíku z Povodí Vltavy každých deset minut. Jen tady —
       # testy a vývoj na cizí server nesahají.
       Vodocet__Sber: "true"
-      # Přebírání novinek ze svazového RSS, osm nejnovějších. Jen tady,
-      # ze stejného důvodu jako vodočet — na cizí server sahá jen nasazení.
+      # Přebírání novinek z cizích kanálů (dnes svaz), nejnovější od každého
+      # zdroje. Jen tady, ze stejného důvodu jako vodočet — na cizí server
+      # sahá jen nasazení.
       Prevzate__Sber: "true"
+      # Fotku k přejatému článku si uložíme k sobě a přepočítáme na naše
+      # velikosti. Vypnutím se uložené fotky při dalším běhu samy smažou
+      # a web se vrátí k adrese u zdroje — tak se vypíná i dohoda, která
+      # by přestala platit.
+      Prevzate__Fotky: "true"
       # Kontakty kapitánů se jednou denně mažou po konci následující sezóny.
       Kontakty__Uklid: "true"
       # Vlastní doména na bucketu. Jednoúrovňová, ze stejného důvodu jako API.

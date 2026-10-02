@@ -56,6 +56,28 @@ public class PrevzatyClanek
     /// </summary>
     public string? Obrazek { get; set; }
 
+    /// <summary>
+    /// Naše kopie té fotky, přepočítaná na naše velikosti (Filip, 2. 10. 2026).
+    /// Soubory leží v úložišti pod <see cref="PrevzateFotky.Klic"/>, v databázi
+    /// je jen tohle id a rozměry velké varianty.
+    /// <para>
+    /// <b>Proč kopie, když stačil odkaz:</b> jejich server nemá rozbít náš web
+    /// a náhled kolem 500 px je na velkou kartu úvodní stránky málo. Přebírat
+    /// smíme podle domluvy u zdroje (<see cref="ZdrojKanalu.Souhlas"/>).
+    /// </para>
+    /// <para>
+    /// Prázdné znamená, že kopii nemáme — ukládání je vypnuté, fotka byla moc
+    /// malá, nebo se nestáhla. Pak se použije <see cref="Obrazek"/> u zdroje
+    /// a po něm náhradní fotka. <b>Při vytlačení článku z rotace soubory mizí</b>
+    /// (fronta <see cref="Fotky.SouborKeSmazani"/>).
+    /// </para>
+    /// </summary>
+    public Guid? FotkaId { get; set; }
+
+    /// <summary>Rozměry velké varianty naší kopie, v pixelech.</summary>
+    public int? Sirka { get; set; }
+    public int? Vyska { get; set; }
+
     /// <summary>Kdy vyšel u zdroje. Podle toho se řadí a podle toho se rotuje.</summary>
     public DateTimeOffset PublikovanoV { get; set; }
 

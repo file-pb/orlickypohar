@@ -679,6 +679,16 @@ zkrátí.
 | stahování, rotace na osm | `Features/Prevzate/SberPrevzatych.cs` |
 | veřejné čtení | `GET /prevzate-clanky` |
 | snímek kanálu k testům | `data/csj/clanky-2026-09-23.xml` |
+| zdroje jako data | `Features/Prevzate/Zdroje.cs` |
+| fotky u nás | `Features/Prevzate/PrevzateFotky.cs`, fronta `Features/Fotky/SouborKeSmazani.cs` |
+
+**Zdroj je záznam, ne konstanta v kódu** (Filip, 2. 10. 2026): *„tohle je
+model, který budeme používat i u jiných zdrojů, časem pokud se dohodne Miloš
+i s jinými organizacemi, nebo jednotlivci."* Přidat další zdroj znamená
+přidat řádek do `Zdroje.Vsechny` — jméno, odkaz, RSS, kolik článků se drží,
+**s kým a kdy je to domluvené**, logo do štítku a případná zvyklost zdroje
+na větší variantu obrázku. Rotace je **na zdroj**, ne dohromady: se společným
+stropem by jeden hodně píšící zdroj vytlačil všechny ostatní.
 
 **Fotka je ta od zdroje, ne naše náhradní.** Karta bez fotky být nemá
 (Filip, 23. 9. 2026), a naše fotka lodi u článku o windsurfingu na Weymouthu
@@ -687,16 +697,32 @@ souvisí s textem jen tím, že je to voda. RSS obrázky nevydává, takže se b
 fotku, dají tam svoje logo. Když chybí i to, nastoupí náhradní sada jako
 u našeho článku bez obrázku.
 
-**Ukládá se odkaz, ne kopie.** Obrázek zůstává na jejich serveru a načítá
-se odtamtud; jsou to náhledy kolem 500 px a 20 kB, takže na kartu stačí
-a na velký formát se přejatá novinka nedostane. Kopírovat cizí fotografie
-k sobě je něco jiného než ukázat je s odkazem na článek — povolení mluví
-o článcích a fotograf má svá vlastní práva. `referrerPolicy` se schválně
-neomezuje: zdroj má právo vidět, že se jeho obrázek načítá od nás.
+**Od 2. 10. 2026 si fotku ukládáme k sobě** (Filip): *„Raději bych to měl
+u nás, aby nám to nebouralo web, když oni nepojedou."* Souhlas s tím svaz
+dal; kdyby přestal platit, vypne se to proměnnou `Prevzate__Fotky` a uložené
+fotky se při dalším běhu samy smažou. Předtím se držel jen odkaz na jejich
+server — to zápis níž popisuje jako stav do 2. 10.
 
-Adresa fotky jde ve vlastním poli, ne jako `Obrazek` naší nahrané fotky —
-ten nese i rozměry a ty u cizí adresy neznáme. Vymyslet si je jen kvůli
-typu by byla lež v datech.
+| Krok | Co se děje |
+|---|---|
+| výběr adresy | `og:image`, a je-li u zdroje zvyklost na větší variantu, zkusí se napřed (u sailing.cz `uploads_thumbs` → `uploads`, 1920 px místo 500) |
+| strop | 8 MB na soubor, hlídá se i bez `Content-Length` |
+| přepočet | tentýž jako u nahraných fotek: WebP 480 a 1600 px, pryč s metadaty včetně polohy |
+| dolní mez | pod 600 px se fotka nebere — bývá to logo, a to vypadá hůř než naše náhradní fotka |
+| selhání | článek vyjde bez fotky; cizí server, který neodpovídá, není důvod novinku neukázat |
+| mazání | při vytlačení z rotace jdou klíče do fronty `SouboryKeSmazani` **v téže transakci**, ve které mizí řádek |
+
+**Fronta, ne okamžité mazání.** Řádek v databázi a soubor v R2 se nedají
+smazat jednou transakcí; kdyby se mazalo rovnou, stačí jedno zaškobrtnutí
+úložiště a v bucketu zůstane soubor, ke kterému už nevede žádný záznam.
+Fronta je obecná a smí ji použít i cokoliv dalšího, co maže soubory.
+
+**Kredit u naší kopie je jméno zdroje.** Fotografa od nich neznáme a vymýšlet
+si ho nebudeme. Štítek zdroje a odkaz na originál zůstávají — to je podmínka,
+za které se smí přebírat.
+
+Adresa fotky u zdroje (`Obrazek`) v datech zůstává jako záloha pro případ,
+že kopii nemáme.
 
 **Stránka článku se stahuje jen u nováčků.** U článku, který už v databázi
 leží, se fotka nemění; ptát se znovu by znamenalo osm dotazů každých šest

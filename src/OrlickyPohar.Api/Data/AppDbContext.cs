@@ -26,6 +26,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ZapisNavrh> ZapisyNavrhu => Set<ZapisNavrh>();
     public DbSet<Clanek> Clanky => Set<Clanek>();
     public DbSet<Fotka> Fotky => Set<Fotka>();
+    public DbSet<SouborKeSmazani> SouboryKeSmazani => Set<SouborKeSmazani>();
     public DbSet<MereniNadrze> MereniNadrze => Set<MereniNadrze>();
     public DbSet<PrevzatyClanek> PrevzateClanky => Set<PrevzatyClanek>();
     public DbSet<TeplotaHladiny> TeplotyHladiny => Set<TeplotaHladiny>();

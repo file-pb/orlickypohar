@@ -69,14 +69,17 @@ try
         .ConfigurePrimaryHttpMessageHandler(Pvl.Handler);
     if (builder.Configuration.GetValue<bool>("Vodocet:Sber"))
         builder.Services.AddHostedService<SberVodocetu>();
-    // Novinky ze svazu: RSS sailing.cz, jen tam, kde je sběr zapnutý.
-    // Povolení přebírat má pohár od svazu s podmínkou, že uvede zdroj
-    // s odkazem (Filip, 23. 9. 2026) — proto se drží jen perex a odkaz.
+    // Přejaté novinky: RSS zdrojů ze `Zdroje.Vsechny`, jen tam, kde je sběr
+    // zapnutý. Povolení přebírat je u každého zdroje zapsané v jeho záznamu
+    // a podmínkou je uvedení zdroje s odkazem — proto se drží jen perex
+    // a odkaz. Fotku si se souhlasem ukládáme k sobě (`Prevzate__Fotky`),
+    // aby nám výpadek cizího serveru nerozbil web.
     builder.Services.AddHttpClient(SberPrevzatych.Klient, c =>
     {
         c.Timeout = TimeSpan.FromSeconds(15);
         c.DefaultRequestHeaders.UserAgent.ParseAdd("OrlickyPohar/1.0 (+https://orlickypohar.klihovka.cz)");
     });
+    builder.Services.AddScoped<StahovacFotek>();
     if (builder.Configuration.GetValue<bool>("Prevzate:Sber"))
         builder.Services.AddHostedService<SberPrevzatych>();
     // Kontakty kapitánů se drží do konce následující sezóny, pak se mažou.
