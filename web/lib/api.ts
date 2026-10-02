@@ -225,3 +225,71 @@ export async function nactiNovinky(slug: string | null, limit?: number): Promise
 
   return limit ? vsechny.slice(0, limit) : vsechny;
 }
+
+/**
+ * Obsah předchozího ročníku, dokud ten nový žádný nemá (Filip, 2. 10. 2026).
+ *
+ * <b>Proč:</b> ročník 2027 se publikoval s kalendářem od rozhodčího a tím
+ * z úvodní stránky zmizely novinky i průběžné pořadí — web vypisuje jen
+ * aktuální ročník a v tom se ještě nejelo. Mezi sezónami má úvod vypadat
+ * živě, ne prázdně.
+ *
+ * <b>Nikdy to nevydává za letošek.</b> Volající dostane i ročník, ze kterého
+ * obsah je, a musí ho napsat k němu — konečné pořadí loňska bez popisku by
+ * tvrdilo, že se letos jezdilo.
+ */
+export type SNahradou<T> = {
+  data: T;
+  /** Ročník, ze kterého data jsou, když to není ten, na který se ptáme. */
+  nahrada?: SerieShrnuti;
+};
+
+/** Ročník vydaný hned po tomhle, tedy o rok starší. API je řadí od nejnovějšího. */
+async function predchoziRocnik(slug: string): Promise<SerieShrnuti | undefined> {
+  const rocniky = await nactiSerie().catch(() => null);
+  const kde = rocniky?.findIndex((r) => r.slug === slug) ?? -1;
+  return kde >= 0 ? rocniky?.[kde + 1] : undefined;
+}
+
+/** Pořadí ročníku, a když v něm ještě nikdo nejel, pořadí toho předchozího. */
+export async function poradiSNahradou(slug: string): Promise<SNahradou<PoradiSerie | null>> {
+  const poradi = await nactiPoradi(slug);
+  if (poradi?.kategorie.some((k) => k.lode.length > 0)) return { data: poradi };
+
+  const predchozi = await predchoziRocnik(slug);
+  if (!predchozi) return { data: poradi };
+
+  const starsi = await nactiPoradi(predchozi.slug).catch(() => null);
+  return starsi?.kategorie.some((k) => k.lode.length > 0)
+    ? { data: starsi, nahrada: predchozi }
+    : { data: poradi };
+}
+
+/**
+ * Novinky ročníku, a když v něm ještě žádná nevyšla, novinky té minulé sezóny.
+ *
+ * <b>Rozhodují jen naše články.</b> Přejaté ze svazu chodí každý druhý den,
+ * takže by výpis vypadal plný i v ročníku, ve kterém jsme nenapsali řádku —
+ * a loňská sezóna by zmizela. Ověřeno 2. 10. 2026 na produkci: po publikaci
+ * 2027 zbyly na úvodu čtyři přejaté a žádná naše novinka.
+ *
+ * Při náhradě jdou naše články první a přejaté doplní zbytek místa. Řadit
+ * všechno podle data by je zase odsunulo, protože svaz píše častěji.
+ */
+export async function novinkySNahradou(
+  slug: string,
+  limit?: number,
+): Promise<SNahradou<Novinka[] | null>> {
+  const novinky = await nactiNovinky(slug, limit);
+  if (novinky?.some((n) => !n.vnejsi)) return { data: novinky };
+
+  const predchozi = await predchoziRocnik(slug);
+  if (!predchozi) return { data: novinky };
+
+  const nase = await nactiVlastniNovinky(predchozi.slug, limit).catch(() => null);
+  if (!nase?.length) return { data: novinky };
+
+  const prevzate = (novinky ?? []).filter((n) => n.vnejsi);
+  const vsechny = [...nase, ...prevzate];
+  return { data: limit ? vsechny.slice(0, limit) : vsechny, nahrada: predchozi };
+}
