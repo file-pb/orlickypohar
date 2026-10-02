@@ -26,6 +26,12 @@ namespace OrlickyPohar.Api.Features.Prevzate;
 /// přečte jméno — a s víc zdroji to bude potřeba (Filip, 2. 10. 2026).
 /// Prázdné znamená, že se ukáže jen jméno.
 /// </param>
+/// <param name="NeniFotka">
+/// Pozná podle adresy, že obrázek není fotka k článku, ale logo nebo ikonka.
+/// Zdroj je dává do <c>og:image</c>, když k článku fotku nemá, a na kartě
+/// vypadají hůř než naše náhradní fotka (Filip, 2. 10. 2026). Pouhá velikost
+/// nestačí: logo svazu má v originále 711 × 800 px.
+/// </param>
 /// <param name="VetsiObrazek">
 /// Z adresy náhledu udělá adresu větší varianty téhož obrázku, nebo
 /// <c>null</c>, když to u zdroje nejde. Je to <b>zvyklost konkrétního webu</b>,
@@ -39,7 +45,8 @@ public record ZdrojKanalu(
     int Kolik,
     string Souhlas,
     string? Logo = null,
-    Func<string, string?>? VetsiObrazek = null);
+    Func<string, string?>? VetsiObrazek = null,
+    Func<string, bool>? NeniFotka = null);
 
 public static partial class Zdroje
 {
@@ -59,6 +66,13 @@ public static partial class Zdroje
         return vetsi == adresa ? null : vetsi;
     }
 
+    /// <summary>
+    /// sailing.cz má fotky k článkům pod <c>/uploads/clanky/</c>, zatímco
+    /// loga a ikonky pod <c>/uploads/ikony-loga/</c> — ověřeno 2. 10. 2026 na
+    /// všech osmi článcích v kanálu. Rozhoduje tedy cesta, ne velikost.
+    /// </summary>
+    public static bool SailingCzNeniFotka(string adresa) => adresa.Contains("/ikony-loga/");
+
     /// <summary>Zdroje, ze kterých se přebírá. Dnes jeden.</summary>
     public static readonly IReadOnlyList<ZdrojKanalu> Vsechny =
     [
@@ -70,6 +84,7 @@ public static partial class Zdroje
             Souhlas: "Domluveno se svazem (Filip, 23. 9. 2026); podmínkou je uvedení "
                      + "zdroje s odkazem. Rozšířeno 2. 10. 2026 o uložení fotky u nás.",
             Logo: "/zdroje/csj.webp",
-            VetsiObrazek: SailingCzVetsi),
+            VetsiObrazek: SailingCzVetsi,
+            NeniFotka: SailingCzNeniFotka),
     ];
 }

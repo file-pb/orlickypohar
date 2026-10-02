@@ -133,6 +133,27 @@ public class SberPrevzatych(
     {
         if (!FotkyKSobe) return 0;
 
+        // Nejdřív ven s tím, co se mezitím ukázalo jako logo: pravidlo zdroje
+        // se smí upřesnit a uložené kopie se tím mají uklidit samy.
+        var sLogem = await db.PrevzateClanky
+            .Where(c => c.Zdroj == zdroj.Nazev && c.Obrazek != null)
+            .ToListAsync(ct);
+        foreach (var clanek in sLogem.Where(c => zdroj.NeniFotka?.Invoke(c.Obrazek!) == true))
+        {
+            if (clanek.FotkaId is { } stara)
+            {
+                Uklid.Zarad(db, PrevzateFotky.Klice(stara), cas.GetUtcNow());
+                clanek.FotkaId = null;
+                clanek.Sirka = null;
+                clanek.Vyska = null;
+            }
+
+            clanek.Obrazek = null;
+            log.LogInformation("Obrázek u článku {Odkaz} je logo zdroje, jde pryč", clanek.Odkaz);
+        }
+
+        await db.SaveChangesAsync(ct);
+
         var bezFotky = await db.PrevzateClanky
             .Where(c => c.Zdroj == zdroj.Nazev && c.FotkaId == null && c.Obrazek != null)
             .ToListAsync(ct);
