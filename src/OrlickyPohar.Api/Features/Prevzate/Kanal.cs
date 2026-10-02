@@ -9,7 +9,10 @@ namespace OrlickyPohar.Api.Features.Prevzate;
 public record PolozkaKanalu(
     string Odkaz, string Titulek, string? Perex, DateTimeOffset PublikovanoV,
     // Doplňuje se až ze stránky článku — RSS obrázky nevydává.
-    string? Obrazek = null);
+    string? Obrazek = null,
+    // Naše kopie té fotky, když se povedla. Doplňuje ji sběr, ne rozbor
+    // kanálu: rozbor je čistá funkce nad textem a na síť nesahá.
+    UlozenaFotka? Fotka = null);
 
 /// <summary>
 /// Rozbor RSS 2.0. Čistá funkce nad textem, žádná síť — proto se dá ověřit

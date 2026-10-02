@@ -129,6 +129,29 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("Fotky");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Fotky.SouborKeSmazani", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Klic")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Pokusu")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("PridanoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SouboryKeSmazani");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Identita.Opravneni", b =>
                 {
                     b.Property<int>("Id")
@@ -392,6 +415,9 @@ namespace OrlickyPohar.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<Guid?>("FotkaId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Obrazek")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -408,6 +434,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<DateTimeOffset>("PublikovanoV")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("Sirka")
+                        .HasColumnType("integer");
+
                     b.Property<DateTimeOffset>("StazenoV")
                         .HasColumnType("timestamp with time zone");
 
@@ -415,6 +444,9 @@ namespace OrlickyPohar.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
+
+                    b.Property<int?>("Vyska")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Zdroj")
                         .IsRequired()
