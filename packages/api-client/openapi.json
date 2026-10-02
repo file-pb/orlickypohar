@@ -4605,6 +4605,22 @@
                             "null",
                             "string"
                         ]
+                    },
+                    "fotka": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/ObrazekDto"
+                            }
+                        ]
+                    },
+                    "zdrojLogo": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     }
                 }
             },

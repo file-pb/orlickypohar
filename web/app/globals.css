@@ -421,6 +421,20 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
   border: 1px solid var(--linka); border-radius: 999px; padding: 0.05rem 0.5rem;
   margin-left: 0.4rem; vertical-align: 0.1em;
 }
+/* Štítek zdroje u přejatého článku nese i malé logo. Logo je dekorace vedle
+   jména, ne náhrada za něj — proto `alt=""` a jméno zůstává textem. */
+.stitek-zdroj { display: inline-flex; align-items: center; gap: 0.3rem; }
+.stitek-logo { width: 0.95rem; height: 0.95rem; object-fit: contain; flex: none; }
+/* V tmavém režimu by tmavě modrá značka splynula s pozadím. Světlý kroužek
+   pod ní je totéž, co dělá tištěná verze loga na tmavém podkladu. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-rezim="svetly"]) .stitek-logo {
+    background: #fdfbf7; border-radius: 50%; padding: 0.05rem;
+  }
+}
+:root[data-rezim="tmavy"] .stitek-logo {
+  background: #fdfbf7; border-radius: 50%; padding: 0.05rem;
+}
 
 /* Výsledková tabulka. Nejtěžší kus celého webu: dvacet lodí krát osm
    rozjížděk se na telefon nevejde. Řešení je vodorovný posuv s ukotveným

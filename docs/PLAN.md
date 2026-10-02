@@ -717,6 +717,22 @@ smazat jednou transakcí; kdyby se mazalo rovnou, stačí jedno zaškobrtnutí
 úložiště a v bucketu zůstane soubor, ke kterému už nevede žádný záznam.
 Fronta je obecná a smí ji použít i cokoliv dalšího, co maže soubory.
 
+**Velká karta na úvodu bere naši kopii** (od 2. 10. 2026). Dřív uměla jen
+naši nahranou fotku, takže u přejatého článku spadla na náhradní sadu —
+Filip to viděl na produkci jako „naše fotky u cizích článků". Když kopii
+nemáme, použije se adresa u zdroje; měkčí obrázek je pořád lepší než fotka
+lodi u článku o windsurfingu.
+
+**Fotky se dobírají i zpětně.** Při každém běhu se zkusí stáhnout obrázek
+k článkům, které kopii nemají a adresu u zdroje ano — jinak by po zapnutí
+vypínače zůstaly staré články navždy na cizím serveru.
+
+**Štítek zdroje nese jeho malé logo** (`ZdrojKanalu.Logo`, soubory ve
+`web/public/zdroje/`). S víc zdroji je na první pohled vidět, odkud článek
+je; jméno zůstává textem kvůli čtečkám. Logo ČSJ je oříznuté na samotnou
+značku bez nápisu — v 15 px by byl nečitelný — a v tmavém režimu dostane
+světlý kroužek, protože tmavě modrá značka by jinak splynula s pozadím.
+
 **Kredit u naší kopie je jméno zdroje.** Fotografa od nich neznáme a vymýšlet
 si ho nebudeme. Štítek zdroje a odkaz na originál zůstávají — to je podmínka,
 za které se smí přebírat.

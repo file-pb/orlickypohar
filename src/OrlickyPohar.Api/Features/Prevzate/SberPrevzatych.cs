@@ -105,10 +105,59 @@ public class SberPrevzatych(
         var sObrazky = await DoplnObrazkyAsync(db, scope, klient, zdroj, vybrane, ct);
 
         var (nove, smazane) = await UlozAsync(db, zdroj, sObrazky, cas.GetUtcNow(), ct);
+        var dobrane = await DoberFotkyAsync(db, scope, klient, zdroj, ct);
 
         log.LogInformation(
-            "Články ze zdroje {Zdroj}: {Nove} nových, {Smazane} vytlačených, drží se {Kolik}",
-            zdroj.Nazev, nove, smazane, zdroj.Kolik);
+            "Články ze zdroje {Zdroj}: {Nove} nových, {Dobrane} dobraných fotek, "
+            + "{Smazane} vytlačených, drží se {Kolik}",
+            zdroj.Nazev, nove, dobrane, smazane, zdroj.Kolik);
+    }
+
+    /// <summary>
+    /// Dobere fotky k článkům, které už v databázi leží bez naší kopie.
+    /// <para>
+    /// <b>Proč to není jen u nových:</b> když se ukládání zapne, nebo když
+    /// stažení poprvé nevyšlo, zbyly by staré články napořád na adrese
+    /// u zdroje — a právě kvůli jejich výpadkům se fotky ukládají
+    /// (Filip, 2. 10. 2026). Adresu z <c>og:image</c> už máme, takže je to
+    /// nejvýš osm stažení obrázku, žádné dotazy na stránky článků.
+    /// </para>
+    /// <para>
+    /// Článek, jehož obrázek je na kartu moc malý, přijde o adresu i tady —
+    /// podruhé se tím pádem nezkouší.
+    /// </para>
+    /// </summary>
+    private async Task<int> DoberFotkyAsync(
+        AppDbContext db, IServiceScope scope, HttpClient klient, ZdrojKanalu zdroj,
+        CancellationToken ct)
+    {
+        if (!FotkyKSobe) return 0;
+
+        var bezFotky = await db.PrevzateClanky
+            .Where(c => c.Zdroj == zdroj.Nazev && c.FotkaId == null && c.Obrazek != null)
+            .ToListAsync(ct);
+        if (bezFotky.Count == 0) return 0;
+
+        var stahovac = scope.ServiceProvider.GetRequiredService<StahovacFotek>();
+        var dobrane = 0;
+        foreach (var clanek in bezFotky)
+        {
+            var vysledek = await stahovac.UlozAsync(klient, zdroj, clanek.Obrazek!, ct);
+            if (vysledek.Fotka is { } f)
+            {
+                clanek.FotkaId = f.Id;
+                clanek.Sirka = f.Sirka;
+                clanek.Vyska = f.Vyska;
+                dobrane++;
+            }
+            else if (vysledek.Nepouzitelna)
+            {
+                clanek.Obrazek = null;
+            }
+        }
+
+        await db.SaveChangesAsync(ct);
+        return dobrane;
     }
 
     /// <summary>

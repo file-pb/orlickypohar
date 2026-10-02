@@ -91,7 +91,27 @@ export function Nahled({
  * Velký náhled pro hlavní novinku na úvodu. Šířka karty, ne článku —
  * stačí varianta 800 px, nahraná fotka dává svou velkou.
  */
-export function NahledVelky({ slug, obrazek }: { slug: string; obrazek?: Obrazek | null }) {
+export function NahledVelky({
+  slug,
+  obrazek,
+  adresa,
+}: {
+  slug: string;
+  obrazek?: Obrazek | null;
+  /**
+   * Fotka u zdroje, když od něj nemáme vlastní kopii. Bývá to náhled kolem
+   * 500 px, takže na velké kartě je měkká — pořád je to ale lepší než naše
+   * fotka lodi u cizího článku (Filip, 2. 10. 2026).
+   */
+  adresa?: string;
+}) {
+  if (adresa && !obrazek)
+    return (
+      <picture className="nahled nahled-velky">
+        <img src={adresa} alt="" decoding="async" />
+      </picture>
+    );
+
   if (obrazek)
     return (
       <picture className="nahled nahled-velky">
