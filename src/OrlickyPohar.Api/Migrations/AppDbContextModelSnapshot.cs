@@ -562,6 +562,43 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("Serie");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Smernice.PlachetniSmernice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Nazev")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Poznamka")
+                        .HasColumnType("text");
+
+                    b.Property<long>("Velikost")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Verze")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("VyveseneV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("VyvesilId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ZavodId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VyvesilId");
+
+                    b.HasIndex("ZavodId");
+
+                    b.ToTable("Smernice");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Vodocet.MereniNadrze", b =>
                 {
                     b.Property<DateTimeOffset>("Cas")
@@ -1053,6 +1090,25 @@ namespace OrlickyPohar.Api.Migrations
                     b.Navigation("Lod");
 
                     b.Navigation("Serie");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Smernice.PlachetniSmernice", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Vyvesil")
+                        .WithMany()
+                        .HasForeignKey("VyvesilId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OrlickyPohar.Api.Features.Zavody.Zavod", "Zavod")
+                        .WithMany()
+                        .HasForeignKey("ZavodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Vyvesil");
+
+                    b.Navigation("Zavod");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Rozjizdka", b =>

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Bodovani;
 using OrlickyPohar.Api.Features.Fotky;
+using OrlickyPohar.Api.Features.Smernice;
 using OrlickyPohar.Api.Features.Poradatele;
 // Řez i třída se jmenují stejně, takže se prosté `Bodovani` uvnitř sousedního
 // jmenného prostoru rozumí jako název jmenného prostoru. Alias to rozsekne.
@@ -66,7 +67,11 @@ public record ZavodDetailDto(
     // rozjížďky a prázdné pořadí, a čtenář nemá jak poznat rozdíl mezi
     // „nejelo se" a „neukazujeme to". Aditivně, výchozí false — starší
     // klienti o něm nevědí a nic se jim nemění.
-    bool VysledkySkryte = false);
+    bool VysledkySkryte = false,
+    // Plachetní směrnice vyvěšené u zastávky, od nejnovější verze. U regaty
+    // je to povinný dokument a appka je oficiální vývěska, takže se vydává
+    // veřejně a se všemi verzemi — co bylo vyvěšené, musí jít doložit.
+    IReadOnlyList<SmerniceDto>? Smernice = null);
 
 /// <summary>
 /// Veřejné čtení jedné zastávky. Pravidla závodu (škrty, vyhodnocení,
@@ -118,6 +123,19 @@ public static class ZavodEndpoints
                 u.Stav == StavUcasti.Vyloucena))
             .ToListAsync(ct);
 
+    /// <summary>Vyvěšené směrnice zastávky, od nejnovější. Bez úložiště prázdné.</summary>
+    private static async Task<List<SmerniceDto>> SmerniceAsync(
+        AppDbContext db, IUloziste uloziste, int zavodId, CancellationToken ct)
+    {
+        var smernice = await db.Smernice
+            .Include(s => s.Vyvesil)
+            .Where(s => s.ZavodId == zavodId)
+            .OrderByDescending(s => s.Verze)
+            .ToListAsync(ct);
+
+        return [.. smernice.Select(s => Vyveseni.Dto(s, uloziste.VerejnaAdresa)).OfType<SmerniceDto>()];
+    }
+
     private static async Task<Results<Ok<ZavodDetailDto>, NotFound>> DetailAsync(
         string serieSlug, string slug, AppDbContext db, IUloziste uloziste, CancellationToken ct)
     {
@@ -143,6 +161,7 @@ public static class ZavodEndpoints
         if (!zavod.VysledkyVerejne)
         {
             var kdoPrijel = await LodeAsync(db, zavod.Id, ct);
+            var smerniceSkryte = await SmerniceAsync(db, uloziste, zavod.Id, ct);
             return TypedResults.Ok(new ZavodDetailDto(
                 zavod.Slug, zavod.Nazev, zavod.Datum, zavod.DatumKonce, zavod.Typ, zavod.Poradatel,
                 zavod.Stav, zavod.PuvodniDatum, zavod.PocetSkrtu, zavod.Vyhodnoceni,
@@ -150,7 +169,8 @@ public static class ZavodEndpoints
                 zavod.PoradatelZaznam is null
                     ? null
                     : PoradateleSprava.Dto(zavod.PoradatelZaznam, zavod.FotkaPoradatele, uloziste.VerejnaAdresa),
-                VysledkySkryte: true));
+                VysledkySkryte: true,
+                Smernice: smerniceSkryte));
         }
 
         // Jeden dotaz na všechny výsledky závodu, ne dotaz na rozjížďku.
@@ -259,6 +279,7 @@ public static class ZavodEndpoints
             zavod.Druh,
             zavod.PoradatelZaznam is null
                 ? null
-                : PoradateleSprava.Dto(zavod.PoradatelZaznam, zavod.FotkaPoradatele, uloziste.VerejnaAdresa)));
+                : PoradateleSprava.Dto(zavod.PoradatelZaznam, zavod.FotkaPoradatele, uloziste.VerejnaAdresa),
+            Smernice: await SmerniceAsync(db, uloziste, zavod.Id, ct)));
     }
 }
