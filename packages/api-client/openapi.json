@@ -2778,6 +2778,100 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/zastavky/{zavod}/smernice": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vyp\u00ed\u0161e vyv\u011b\u0161en\u00e9 sm\u011brnice zast\u00e1vky, od nejnov\u011bj\u0161\u00ed",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SmerniceDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vyv\u011bs\u00ed novou verzi plachetn\u00ed sm\u011brnice",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Jen PDF do 20 MB. Vyv\u011b\u0161en\u00e9 verze z\u016fst\u00e1vaj\u00ed \u2014 oprava je nov\u00e1 verze, ne p\u0159epis.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SmerniceFormular"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SmerniceFormular"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SmerniceDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/poradatele/{poradatel}": {
             "get": {
                 "tags": [
@@ -5137,6 +5231,70 @@
                     }
                 }
             },
+            "SmerniceDto": {
+                "required": [
+                    "verze",
+                    "nazev",
+                    "adresa",
+                    "vyveseneV",
+                    "poznamka",
+                    "vyvesil"
+                ],
+                "type": "object",
+                "properties": {
+                    "verze": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "adresa": {
+                        "type": "string"
+                    },
+                    "vyveseneV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "poznamka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "vyvesil": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
+            "SmerniceFormular": {
+                "required": [
+                    "soubor",
+                    "poznamka"
+                ],
+                "type": "object",
+                "properties": {
+                    "soubor": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/IFormFile"
+                            }
+                        ]
+                    },
+                    "poznamka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
             "SnimekHladinyDto": {
                 "required": [
                     "snimek",
@@ -6341,6 +6499,15 @@
                     "vysledkySkryte": {
                         "type": "boolean",
                         "default": false
+                    },
+                    "smernice": {
+                        "type": [
+                            "null",
+                            "array"
+                        ],
+                        "items": {
+                            "$ref": "#/components/schemas/SmerniceDto"
+                        }
                     }
                 }
             },
