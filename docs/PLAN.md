@@ -1076,6 +1076,22 @@ a **kapitánem dělá jen prvního**; další jsou posádka.
 jen kapitán nebo posádka, a jen za loď, se kterou jsou na té zastávce
 přihlášení.
 
+**Hotová první cesta (4. 10. 2026):** vazba `VazbaKLodi` (účet × loď × role
+× původ) a párování podle e-mailu při každém přihlášení
+(`Features/Lode/Parovani.cs`). Lodě účtu vydává `GET /ja/lode`.
+
+| Pravidlo | Proč |
+|---|---|
+| páruje se jen e-mail, který vede k **právě jedné** osobě | sdílená klubová adresa by jinak připojila kdokoliv z klubu |
+| osoba, která už patří jinému účtu, se nepřebírá | není to spor o kontakt, ale o to, kdo je ten člověk |
+| majitel lodi → role majitel, kormidelník účasti → kapitán | silnější role vyhrává |
+| role se **nesnižuje** | druhé přihlášení nesmí sebrat práva, která někdo vědomě udělil |
+| unikátní index `(LodId, UzivatelId)` | bez něj by párování e-mailem i kódem vyrobilo dvě vazby |
+| selhání párování neshodí přihlášení | `/ja` je od identity, ne od lodí |
+
+**Zbývá:** kód a QR (druhá cesta), nárok s potvrzením kapitána (třetí),
+seznam připojených u lodi a jejich odebrání.
+
 Platí pravidlo platformy č. 5: `Osoba` má **volitelné** napojení na interní
 `UserId`. Většina osob v systému žádný účet mít nebude — figurují jen jako
 majitelé a členové posádek.

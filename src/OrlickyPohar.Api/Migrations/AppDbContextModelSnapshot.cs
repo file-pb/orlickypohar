@@ -346,6 +346,44 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("Osoby");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Lode.VazbaKLodi", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("LodId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("PotvrdilId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Puvod")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UzivatelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("VzniklaV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PotvrdilId");
+
+                    b.HasIndex("UzivatelId");
+
+                    b.HasIndex("LodId", "UzivatelId")
+                        .IsUnique();
+
+                    b.ToTable("VazbyKLodim");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Poradatele.Poradatel", b =>
                 {
                     b.Property<int>("Id")
@@ -1042,6 +1080,32 @@ namespace OrlickyPohar.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Majitel");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Lode.VazbaKLodi", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Lode.Lod", "Lod")
+                        .WithMany()
+                        .HasForeignKey("LodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Potvrdil")
+                        .WithMany()
+                        .HasForeignKey("PotvrdilId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Uzivatel")
+                        .WithMany()
+                        .HasForeignKey("UzivatelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Lod");
+
+                    b.Navigation("Potvrdil");
+
+                    b.Navigation("Uzivatel");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Poradatele.Poradatel", b =>

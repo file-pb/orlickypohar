@@ -29,6 +29,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Fotka> Fotky => Set<Fotka>();
     public DbSet<SouborKeSmazani> SouboryKeSmazani => Set<SouborKeSmazani>();
     public DbSet<PlachetniSmernice> Smernice => Set<PlachetniSmernice>();
+    public DbSet<VazbaKLodi> VazbyKLodim => Set<VazbaKLodi>();
     public DbSet<MereniNadrze> MereniNadrze => Set<MereniNadrze>();
     public DbSet<PrevzatyClanek> PrevzateClanky => Set<PrevzatyClanek>();
     public DbSet<TeplotaHladiny> TeplotyHladiny => Set<TeplotaHladiny>();
@@ -120,6 +121,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // nezdvojí. Bez indexu by se duplicita poznala až podle dvou
         // stejných karet ve výpisu.
         prevzaty.HasIndex(x => x.Odkaz).IsUnique();
+
+        var kLodi = b.Entity<VazbaKLodi>();
+        // Jeden účet má u jedné lodi jednu roli. Bez indexu by druhé
+        // párování — třeba e-mailem i kódem — vyrobilo dvě vazby a loď by
+        // se v „mých lodích" ukázala dvakrát.
+        kLodi.HasIndex(x => new { x.LodId, x.UzivatelId }).IsUnique();
+        // Smazaná loď bere vazby s sebou; smazaný účet taky. Historie
+        // vazby nemá cenu bez obojího.
+        kLodi.HasOne(x => x.Lod).WithMany().HasForeignKey(x => x.LodId)
+            .OnDelete(DeleteBehavior.Cascade);
+        kLodi.HasOne(x => x.Uzivatel).WithMany().HasForeignKey(x => x.UzivatelId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Kdo potvrdil, je jen stopa — jeho smazání vazbu neruší.
+        kLodi.HasOne(x => x.Potvrdil).WithMany().HasForeignKey(x => x.PotvrdilId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         var nadrz = b.Entity<MereniNadrze>();
         nadrz.ToTable("MereniNadrze");
