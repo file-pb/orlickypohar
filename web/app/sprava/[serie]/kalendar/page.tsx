@@ -325,6 +325,8 @@ function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek 
             <Link href={`/sprava/${serie}/prihlasky/${zastavka.slug}`}>přihlášky →</Link>
             {" · "}
             <Link href={`/sprava/${serie}/vysledky/${zastavka.slug}`}>výsledky →</Link>
+            {" · "}
+            <Link href={`/sprava/${serie}/smernice/${zastavka.slug}`}>směrnice →</Link>
           </>
         )}
       </div>

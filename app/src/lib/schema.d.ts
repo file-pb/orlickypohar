@@ -2734,6 +2734,79 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/smernice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše vyvěšené směrnice zastávky, od nejnovější
+         * @description Pořadatel regaty, nebo rozhodčí ročníku.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SmerniceDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Vyvěsí novou verzi plachetní směrnice
+         * @description Pořadatel regaty, nebo rozhodčí ročníku. Jen PDF do 20 MB. Vyvěšené verze zůstávají — oprava je nová verze, ne přepis.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": components["schemas"]["SmerniceFormular"];
+                    "application/x-www-form-urlencoded": components["schemas"]["SmerniceFormular"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SmerniceDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/poradatele/{poradatel}": {
         parameters: {
             query?: never;
@@ -3410,6 +3483,20 @@ export interface components {
             /** @default true */
             vysledkyZavoduVerejne: boolean;
         };
+        SmerniceDto: {
+            /** Format: int32 */
+            verze: number;
+            nazev: string;
+            adresa: string;
+            /** Format: date-time */
+            vyveseneV: string;
+            poznamka: null | string;
+            vyvesil: null | string;
+        };
+        SmerniceFormular: {
+            soubor: null | components["schemas"]["IFormFile"];
+            poznamka: null | string;
+        };
         SnimekHladinyDto: {
             snimek: string;
             /** Format: date-time */
@@ -3721,6 +3808,7 @@ export interface components {
             medailonek?: null | components["schemas"]["PoradatelDto"];
             /** @default false */
             vysledkySkryte: boolean;
+            smernice?: null | components["schemas"]["SmerniceDto"][];
         };
         ZavodShrnutiDto: {
             slug: string;

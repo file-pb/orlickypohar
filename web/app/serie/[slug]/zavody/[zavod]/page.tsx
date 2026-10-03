@@ -12,7 +12,7 @@ import {
 } from "@/lib/api";
 import { Vypadek } from "@/app/vypadek";
 import { ProcNejsouVysledky, Stav } from "@/app/stav";
-import { datum } from "@/app/datum";
+import { datum, datumClanku } from "@/app/datum";
 import { VypisNovinek } from "@/app/novinky";
 import { Drobecky } from "@/app/drobecky";
 import { Boky } from "@/app/boky";
@@ -152,6 +152,46 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
           <span className="presun"> · přesunuto z {datum(zavod.puvodniDatum)}</span>
         )}
       </p>
+
+      {/* Plachetní směrnice hned pod hlavičkou: je to dokument, podle kterého
+          se jede, a appka i web jsou oficiální vývěska (plán, oddíl *Appka je
+          oficiální vývěska*). Starší verze zůstávají k nahlédnutí — co bylo
+          vyvěšené, musí jít doložit. */}
+      {zavod.smernice && zavod.smernice.length > 0 && (
+        <section className="smernice">
+          <h2>Plachetní směrnice</h2>
+          <p>
+            <a href={zavod.smernice[0].adresa} target="_blank" rel="noopener noreferrer">
+              {zavod.smernice[0].nazev}
+            </a>{" "}
+            <span className="stitek">verze {zavod.smernice[0].verze}</span>
+            <span className="detail">
+              {" vyvěšeno "}
+              {datumClanku(zavod.smernice[0].vyveseneV)}
+              {zavod.smernice[0].poznamka && ` · ${zavod.smernice[0].poznamka}`}
+            </span>
+          </p>
+          {zavod.smernice.length > 1 && (
+            <details>
+              <summary>Starší verze ({zavod.smernice.length - 1})</summary>
+              <ul className="seznam">
+                {zavod.smernice.slice(1).map((s) => (
+                  <li key={s.verze}>
+                    <a href={s.adresa} target="_blank" rel="noopener noreferrer">
+                      {s.nazev}
+                    </a>{" "}
+                    <span className="stitek">verze {s.verze}</span>
+                    <span className="detail">
+                      {datumClanku(s.vyveseneV)}
+                      {s.poznamka && ` · ${s.poznamka}`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </section>
+      )}
 
       {/* Komunitní akce má stránku kvůli článkům a upoutávkám. Výsledky,
           přihlášené lodě ani pravidla závodu nemá — a prázdné nadpisy by
