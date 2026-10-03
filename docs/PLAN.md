@@ -1056,11 +1056,25 @@ identity nejde.
 Tohle je vlastní návrhový problém, ne detail. Uživatel se přihlásí přes
 Zitadel a tím je to celé — systém pořád neví, ke které lodi patří.
 
-Možnosti, mezi kterými se bude vybírat:
+**Rozhodnuto (Filip, 3. 10. 2026): tři cesty za sebou, od té, která nikoho
+nestojí práci.**
 
-- **Přiřadí pořadatel.** Nejjednodušší, nejbezpečnější, ale někdo to musí dělat.
-- **Kód z přihlášky.** Loď dostane při registraci kód, kdo ho zadá, připojí se k lodi.
-- **Nárok a potvrzení.** Uživatel si řekne o loď, majitel nebo pořadatel potvrdí.
+| Pořadí | Cesta | Jak to chodí |
+|---|---|---|
+| 1 | **Shoda s kontaktem na přihlášce** | Účet s ověřeným e-mailem, který sedí s kontaktem lodi, dostane roli kapitána sám |
+| 2 | **Kód z přihlášky** | Když e-mail nesedí: krátký kód, který pořadatel dává u registrace na papíře |
+| 3 | **Nárok a potvrzení** | Zbytek posádky si řekne o loď, kapitán potvrdí — pořadatele to nezatíží |
+
+**Ruční přiřazení správcem zůstává jako nouzová páka**, ne jako hlavní cesta.
+
+Na co si dát pozor u každé: sdílená klubová adresa by cestou 1 spárovala
+cizího člověka, proto se páruje jen **ověřený** e-mail a jen na kontakt té
+jedné lodi. Kód z cesty 2 se dá přeposlat, proto má platnost do konce sezóny
+a **kapitánem dělá jen prvního**; další jsou posádka.
+
+**Role vůči lodi: majitel, kapitán, posádka, fanoušek.** Trasu smí odeslat
+jen kapitán nebo posádka, a jen za loď, se kterou jsou na té zastávce
+přihlášení.
 
 Platí pravidlo platformy č. 5: `Osoba` má **volitelné** napojení na interní
 `UserId`. Většina osob v systému žádný účet mít nebude — figurují jen jako
@@ -1081,13 +1095,20 @@ ona: když se uloží „start odložen" a odeslání selže, nikdo se to nedozv
 
 Řeší se to ve fázi, kdy vzniká odesílání — ne dřív.
 
-### Otevřená otázka: je appka oficiální vývěska?
+### Appka je oficiální vývěska (Filip, 3. 10. 2026)
 
-Jestli má být appka **oficiální vývěskou závodu**, musí to říkat plachetní
-směrnice a mění to nároky na spolehlivost i na to, co se smí publikovat.
-Jestli je to **pohodlí navíc** vedle oficiálních signálů, je to volnější.
+Rozhodnuto: **appka je oficiální vývěskou závodu.** Tři důsledky, bez
+kterých to neplatí:
 
-Není to technické rozhodnutí — patří rozhodčímu.
+1. **Musí to říct plachetní směrnice** té zastávky. Bez věty ve směrnici je
+   appka jen pohodlí navíc, ať v ní stojí cokoliv.
+2. **Vyvěšení má čas, autora a historii.** Co bylo vyvěšeno, kdy a kým —
+   a nesmí to jít tiše přepsat. Oprava je nové vyvěšení, ne přepis.
+3. **Push není doručení.** Vývěska je místo, kam se chodí dívat; upozornění
+   je služba navíc. Jinak by neúspěšné doručení zpochybnilo start.
+
+Web a appka ukazují totéž a ze stejného zdroje — dvě vývěsky, které se
+rozcházejí, jsou horší než jedna.
 
 ## Tracker
 
@@ -1122,16 +1143,69 @@ Co to **neznamená**: nesaháme po PostGIS ani po telemetrické službě.
   Poloha je dvojice, ne skalár. Ohýbat kvůli tomu její model by bylo horší
   než soubor v R2.
 
-### Rozhodnutí, které patří rozhodčímu
+### Kdo trasy vidí (Filip, 3. 10. 2026)
 
-**Vidí se trasy živě během závodu, nebo až po dojezdu?**
+| Kdo | Co vidí |
+|---|---|
+| organizátor, správce, rozhodčí | **živě vždycky**, bez ohledu na nastavení |
+| závodník | svou trasu vždycky |
+| veřejnost | živou mapu, **když to organizátor zapne a rozhodčí to nezamítne** |
 
-Živé pozice soupeřů jsou v závodě informace, která může být proti pravidlům.
-Není to technická otázka — a technicky je post-race jednodušší, protože
-nepotřebuje spojení z vody.
+Je to tedy **dvojí zámek, ne přepínač**: organizátor o zveřejnění požádá,
+rozhodčí má právo veta. V datech to musí být uložené jako dvě věci — co chce
+organizátor a jestli rozhodčí zamítl —, ne jako jeden sloupec: po zamítnutí
+a odvolání zamítnutí se má vrátit to, co organizátor nastavil.
 
-Návrh: **až po dojezdu**, dokud rozhodčí neřekne jinak. Vlastní trasu vidí
-závodník vždycky, cizí až po zveřejnění výsledků závodu.
+**Totéž platí pro pořadí na vodě.** Ukazovat se smí za stejných podmínek.
+Pozor ale na to, co se ukazuje: pořadí v závodě rozhoduje cíl, ne vzdálenost
+k bóji. Dokud není zadaná trať, je každé „pořadí na vodě" dohad a nesmí se
+tak tvářit.
+
+**Živé neznamená spolehlivé.** Na Orlíku signál padá, takže u každé lodi musí
+být vidět **stáří polohy** („před 8 s", červeně „před 6 minutami"). Mapa,
+která ukazuje starou polohu jako aktuální, je horší než žádná.
+
+### Plachetní směrnice u zastávky (Filip, 3. 10. 2026)
+
+*„To je nutnost u regaty."* A s rozhodnutím, že **appka je oficiální
+vývěska**, to platí dvakrát: právě ve směrnici musí stát, že se vyvěšuje
+v appce.
+
+| Věc | Jak |
+|---|---|
+| Co to je | Soubor u zastávky, zpravidla PDF od pořadatele |
+| Kam | Objektové úložiště pod předponou `smernice/`, v databázi záznam |
+| Verze | **Nová směrnice je nový záznam, ne přepis.** Oprava se vyvěšuje, nepřepisuje se — vývěska musí jít doložit zpětně |
+| Kdo vyvěšuje | Organizátor zastávky nebo rozhodčí; u záznamu je kdo a kdy |
+| Kde je vidět | Stránka zastávky na webu, táž obrazovka v appce, odkaz v kalendáři |
+| Kontrola | Zastávka ve stavu *vypsaná* bez směrnice je ve správě vidět jako nedodělek — regata bez směrnice se nejede |
+
+**Formát je soubor, ne text v databázi.** Směrnice je dokument, který
+pořadatel píše ve Wordu a vydává jako PDF; převádět ho na bloky by znamenalo
+přepisovat cizí úřední text a riskovat, že se naše verze rozejde s tou,
+podle které se jede. Z téhož důvodu se soubor po vyvěšení nemění.
+
+**Nahrávání není fotka.** Dnešní cesta (`Features/Fotky`) obrázek dekóduje
+a překóduje, což u PDF nedává smysl. Potřebuje vlastní kus: strop velikosti,
+kontrola, že soubor opravdu začíná `%PDF`, a uložení beze změny obsahu.
+
+### Mapa na webu i v appce
+
+Web má vlastní stránku s polohami (Filip, 3. 10. 2026), ne jen appka —
+na břehu se lidi dívají na telefon i na notebook.
+
+**Návrhy k dořešení** (Filip je otevřel 3. 10. 2026, nejsou rozhodnuté):
+
+- **Po kliknutí na loď** karta zespodu: jméno a kategorie, stáří polohy,
+  rychlost a kurz, tlačítka *Sledovat* a *Jen tuhle stopu*.
+- **Ostatní stopy ustupují ve třech úrovních**: vybraná plně, ostatní v téže
+  kategorii tence a průhledně, jiné kategorie jen jako tečka polohy. Stopa
+  navíc slábne do minulosti.
+- **Řazení lodí**: dokud není trať, podle kategorie a průběžného pořadí
+  v seriálu, s popiskem, že je to pořadí seriálu; po dojezdu podle výsledku.
+- **Historie plavby**: stopa s přehráváním (1×, 10×, 60×), graf rychlosti
+  propojený s mapou a barva stopy podle rychlosti. Porovnání dvou lodí
+  a stažení GPX až na skutečných datech.
 
 ### Nezávislost
 
