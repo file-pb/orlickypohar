@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
+using OrlickyPohar.Api.Features.Lode;
+using OrlickyPohar.Api.Features.Sprava;
 
 namespace OrlickyPohar.Api.Features.Identita;
 
@@ -42,7 +44,27 @@ public static class IdentitaEndpoints
             .WithSummary("Vrátí přihlášeného uživatele a jeho oprávnění")
             .WithDescription(
                 "Při prvním přihlášení uživatele založí. Nově založený nemá " +
-                "žádná oprávnění — pozvat člověka znamená dát mu roli.");
+                "žádná oprávnění — pozvat člověka znamená dát mu roli. " +
+                "Zároveň účet spáruje s loděmi, kde jeho e-mail sedí s kontaktem.");
+
+        app.MapGet("/ja/lode", MojeLodeAsync)
+            .RequireAuthorization()
+            .Produces<List<MojeLodDto>>()
+            .WithTags("Identita")
+            .WithSummary("Vrátí lodě, ke kterým přihlášený patří, i s rolí")
+            .WithDescription(
+                "Majitel, kapitán, posádka, fanoušek. Vazba vzniká shodou e-mailu " +
+                "s kontaktem na přihlášce, kódem od pořadatele, nebo nárokem, " +
+                "který potvrdí kapitán.");
+    }
+
+    private static async Task<Results<Ok<List<MojeLodDto>>, UnauthorizedHttpResult>> MojeLodeAsync(
+        ClaimsPrincipal kdo, Rozsahy rozsahy, Parovani parovani, CancellationToken ct)
+    {
+        if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel)
+            return TypedResults.Unauthorized();
+
+        return TypedResults.Ok(await parovani.MojeLodeAsync(uzivatel, ct));
     }
 
     private static async Task<Results<Ok<JaDto>, UnauthorizedHttpResult>> JaAsync(
@@ -50,7 +72,9 @@ public static class IdentitaEndpoints
         HttpContext ctx,
         Uzivatele uzivatele,
         Profily profily,
+        Parovani parovani,
         TimeProvider cas,
+        ILogger<JaDto> log,
         CancellationToken ct)
     {
         // Sem se dostane jen ověřený token, ale bez dvojice (vydavatel,
@@ -78,6 +102,20 @@ public static class IdentitaEndpoints
             // Poslední záchrana je subjekt. Ošklivé, ale pravdivé — lepší
             // než prázdné jméno v seznamu správců.
             ucet.Issuer, ucet.Subject, jmeno ?? ucet.Subject, email, cas, ct);
+
+        // Spárování s loděmi podle e-mailu. Tiché a při každém přihlášení:
+        // kontakt na přihlášce může přibýt kdykoliv a člověk nemá mít důvod
+        // někam klikat (plán, *Jak se z přihlášení stane kormidelník*).
+        // Selhání párování nesmí shodit přihlášení — od toho je tenhle
+        // endpoint, ne od vazeb k lodím.
+        try
+        {
+            await parovani.PodleEmailuAsync(uzivatel.Id, uzivatel.Email, ct);
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            log.LogWarning(e, "Párování účtu {Uzivatel} s loděmi se nepovedlo", uzivatel.Id);
+        }
 
         var rozsahy = await uzivatele.RozsahyAsync(uzivatel.Id, ct);
 

@@ -83,6 +83,8 @@ try
     builder.Services.AddScoped<StahovacFotek>();
     // Plachetní směrnice u zastávky: vyvěšení a seznam verzí.
     builder.Services.AddScoped<SmerniceSprava>();
+    // Vazba účtu k lodi: párování podle e-mailu při přihlášení.
+    builder.Services.AddScoped<Parovani>();
     if (builder.Configuration.GetValue<bool>("Prevzate:Sber"))
         builder.Services.AddHostedService<SberPrevzatych>();
     // Kontakty kapitánů se drží do konce následující sezóny, pak se mažou.
