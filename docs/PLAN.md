@@ -1127,6 +1127,37 @@ snadná část, těžké je všechno kolem ní.
 | **Offline** | Na vodě signál není. Appka musí zapisovat lokálně a nahrát trasu po návratu do dosahu — není to volitelné |
 | **Schvalování v obchodě** | Apple se u polohy na pozadí ptá, k čemu to je. Musí to být v popisu appky obhájené |
 
+### Několik telefonů na jedné lodi (Filip, 4. 10. 2026)
+
+*„Na lodi bude několik mobilů, jestli nemá smysl je připojit všechny s tím,
+že je seřadíme podle priority. A když se například vybije baterka
+skipperovi, automaticky převezmeme polohu od dalšího."*
+
+**Ano — ale slučováním, ne předáváním.** Každý přihlášený telefon je zdroj
+polohy; loď má u zastávky **pořadí zdrojů** a server z nich skládá jednu
+trasu: v každém okamžiku bere bod od nejvýš postaveného zdroje, který data
+má. Vybitá baterka je pak jen díra, kterou vyplní další v pořadí.
+
+**Proč ne volba aktivního telefonu:** ta by potřebovala, aby se telefony se
+serverem domluvily přes signál, který na vodě padá. Fungovala by nejhůř
+přesně ve chvíli, kdy je potřeba nejvíc.
+
+| Věc | Jak |
+|---|---|
+| živě | hlavní zdroj po 5–10 s, ostatní po minutě — záložní poloha stačí hrubá |
+| lokálně | **všechny** telefony zapisují na plné frekvenci a po dojezdu nahrají, co mají; výsledná trasa je celá, i když živě byly díry |
+| povýšení | když hlavní mlčí déle než minutu, server bere další v pořadí; jeho appka zrychlí, až chytí signál |
+| pořadí | určuje kapitán; výchozí je pořadí, v jakém se telefony přihlásily |
+
+**Dvě pasti:**
+
+1. **Telefon, který zůstal v autě.** Posílá se jen z telefonu, kde posádka
+   závod ručně spustí, a slučování ignoruje zdroj vzdálený od ostatních víc
+   než pár set metrů.
+2. **Stáří polohy patří k tomu bodu, který je vidět**, ne k poslednímu
+   čemukoliv. Jinak by mapa tvrdila, že je čerstvá, protože se ozval záložní
+   telefon.
+
 ### Kam trasy ukládat
 
 **Návrh: body trasy jako komprimovaný soubor v R2, metadata v Postgresu.**
