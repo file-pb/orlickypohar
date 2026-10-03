@@ -12,6 +12,7 @@ using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Naklady;
 using OrlickyPohar.Api.Features.Poradatele;
 using OrlickyPohar.Api.Features.Prevzate;
+using OrlickyPohar.Api.Features.Smernice;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Sprava;
 using OrlickyPohar.Api.Features.Vodocet;
@@ -80,6 +81,8 @@ try
         c.DefaultRequestHeaders.UserAgent.ParseAdd("OrlickyPohar/1.0 (+https://orlickypohar.klihovka.cz)");
     });
     builder.Services.AddScoped<StahovacFotek>();
+    // Plachetní směrnice u zastávky: vyvěšení a seznam verzí.
+    builder.Services.AddScoped<SmerniceSprava>();
     if (builder.Configuration.GetValue<bool>("Prevzate:Sber"))
         builder.Services.AddHostedService<SberPrevzatych>();
     // Kontakty kapitánů se drží do konce následující sezóny, pak se mažou.
@@ -181,6 +184,7 @@ try
         app.MapKalendar();
         app.MapSpravaVysledku();
         app.MapPrihlasky();
+        app.MapSmernice();
         app.MapSpravaPoradatelu();
         app.MapNaklady();
     }

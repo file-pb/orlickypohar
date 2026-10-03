@@ -5,6 +5,7 @@ using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Fotky;
 using OrlickyPohar.Api.Features.Poradatele;
 using OrlickyPohar.Api.Features.Prevzate;
+using OrlickyPohar.Api.Features.Smernice;
 using OrlickyPohar.Api.Features.Vodocet;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Zavody;
@@ -27,6 +28,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Clanek> Clanky => Set<Clanek>();
     public DbSet<Fotka> Fotky => Set<Fotka>();
     public DbSet<SouborKeSmazani> SouboryKeSmazani => Set<SouborKeSmazani>();
+    public DbSet<PlachetniSmernice> Smernice => Set<PlachetniSmernice>();
     public DbSet<MereniNadrze> MereniNadrze => Set<MereniNadrze>();
     public DbSet<PrevzatyClanek> PrevzateClanky => Set<PrevzatyClanek>();
     public DbSet<TeplotaHladiny> TeplotyHladiny => Set<TeplotaHladiny>();
