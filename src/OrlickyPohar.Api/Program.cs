@@ -85,6 +85,8 @@ try
     builder.Services.AddScoped<SmerniceSprava>();
     // Vazba účtu k lodi: párování podle e-mailu při přihlášení.
     builder.Services.AddScoped<Parovani>();
+    // Připojení k lodi kódem nebo QR.
+    builder.Services.AddScoped<KodySprava>();
     if (builder.Configuration.GetValue<bool>("Prevzate:Sber"))
         builder.Services.AddHostedService<SberPrevzatych>();
     // Kontakty kapitánů se drží do konce následující sezóny, pak se mažou.
@@ -187,6 +189,7 @@ try
         app.MapSpravaVysledku();
         app.MapPrihlasky();
         app.MapSmernice();
+        app.MapKody();
         app.MapSpravaPoradatelu();
         app.MapNaklady();
     }

@@ -30,6 +30,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<SouborKeSmazani> SouboryKeSmazani => Set<SouborKeSmazani>();
     public DbSet<PlachetniSmernice> Smernice => Set<PlachetniSmernice>();
     public DbSet<VazbaKLodi> VazbyKLodim => Set<VazbaKLodi>();
+    public DbSet<PripojovaciKod> PripojovaciKody => Set<PripojovaciKod>();
     public DbSet<MereniNadrze> MereniNadrze => Set<MereniNadrze>();
     public DbSet<PrevzatyClanek> PrevzateClanky => Set<PrevzatyClanek>();
     public DbSet<TeplotaHladiny> TeplotyHladiny => Set<TeplotaHladiny>();
@@ -136,6 +137,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // Kdo potvrdil, je jen stopa — jeho smazání vazbu neruší.
         kLodi.HasOne(x => x.Potvrdil).WithMany().HasForeignKey(x => x.PotvrdilId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        var kod = b.Entity<PripojovaciKod>();
+        kod.Property(x => x.Kod).HasMaxLength(Kody.Delka);
+        // Kód se hledá právě podle kódu a musí být jedinečný: dva stejné
+        // u dvou lodí by připojily člověka k cizí.
+        kod.HasIndex(x => x.Kod).IsUnique();
+        kod.HasOne(x => x.Lod).WithMany().HasForeignKey(x => x.LodId)
+            .OnDelete(DeleteBehavior.Cascade);
+        kod.HasOne(x => x.Vystavil).WithMany().HasForeignKey(x => x.VystavilId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         var nadrz = b.Entity<MereniNadrze>();
         nadrz.ToTable("MereniNadrze");
