@@ -1186,8 +1186,24 @@ přepisovat cizí úřední text a riskovat, že se naše verze rozejde s tou,
 podle které se jede. Z téhož důvodu se soubor po vyvěšení nemění.
 
 **Nahrávání není fotka.** Dnešní cesta (`Features/Fotky`) obrázek dekóduje
-a překóduje, což u PDF nedává smysl. Potřebuje vlastní kus: strop velikosti,
+a překóduje, což u PDF nedává smysl. Má proto vlastní kus: strop velikosti,
 kontrola, že soubor opravdu začíná `%PDF`, a uložení beze změny obsahu.
+
+**Hotové a nasazené 4. 10. 2026** (PR #103 API, #104 web).
+
+| Kde | Co |
+|---|---|
+| model a pravidla | `Features/Smernice/PlachetniSmernice.cs` — klíč `smernice/{id}.pdf`, strop 20 MB, `JePdf` podle obsahu |
+| vyvěšení | `Features/Smernice/SmerniceSprava.cs` — nejdřív soubor, pak záznam; při chybě zápisu se soubor uklidí |
+| endpointy | `POST`/`GET` `/sprava/serie/{serie}/zastavky/{zavod}/smernice`; veřejně v detailu zastávky jako pole `smernice` |
+| web, čtenář | sekce na stránce regaty: platná verze, starší v rozbalení |
+| web, správa | `/sprava/{serie}/smernice/{zavod}`, odkaz z kalendáře |
+
+**Verze se čísluje v rámci zastávky** (1, 2, 3…) a platná je ta nejvyšší.
+Mazací endpoint schválně neexistuje — ani pro správce.
+
+**Co zbývá:** upozornění ve správě u vypsané regaty bez směrnice a zobrazení
+v appce. Appka dnes směrnici nenese, i když ji API vydává.
 
 ### Mapa na webu i v appce
 
