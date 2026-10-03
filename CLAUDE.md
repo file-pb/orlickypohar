@@ -96,6 +96,8 @@ src/OrlickyPohar.Api/
   Features/Vodocet/           sběr stavu Orlíku z Povodí Vltavy po 10 min,
                               přítok a odtok za 24 h
   Features/Identita/          uživatel, vazby (issuer, subject), role, Prava
+  Features/Smernice/          plachetní směrnice u regaty: vyvěšení PDF,
+                              verze se nepřepisují (appka je vývěska)
   Features/Sprava/            udělování oprávnění, seznam přihlášených účtů
   Features/Naklady/           co provoz a servis stojí; čte stav/naklady.json
                               z přehledu platformy, přidává přirážku

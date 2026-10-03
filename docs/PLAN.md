@@ -1127,6 +1127,37 @@ snadná část, těžké je všechno kolem ní.
 | **Offline** | Na vodě signál není. Appka musí zapisovat lokálně a nahrát trasu po návratu do dosahu — není to volitelné |
 | **Schvalování v obchodě** | Apple se u polohy na pozadí ptá, k čemu to je. Musí to být v popisu appky obhájené |
 
+### Několik telefonů na jedné lodi (Filip, 4. 10. 2026)
+
+*„Na lodi bude několik mobilů, jestli nemá smysl je připojit všechny s tím,
+že je seřadíme podle priority. A když se například vybije baterka
+skipperovi, automaticky převezmeme polohu od dalšího."*
+
+**Ano — ale slučováním, ne předáváním.** Každý přihlášený telefon je zdroj
+polohy; loď má u zastávky **pořadí zdrojů** a server z nich skládá jednu
+trasu: v každém okamžiku bere bod od nejvýš postaveného zdroje, který data
+má. Vybitá baterka je pak jen díra, kterou vyplní další v pořadí.
+
+**Proč ne volba aktivního telefonu:** ta by potřebovala, aby se telefony se
+serverem domluvily přes signál, který na vodě padá. Fungovala by nejhůř
+přesně ve chvíli, kdy je potřeba nejvíc.
+
+| Věc | Jak |
+|---|---|
+| živě | hlavní zdroj po 5–10 s, ostatní po minutě — záložní poloha stačí hrubá |
+| lokálně | **všechny** telefony zapisují na plné frekvenci a po dojezdu nahrají, co mají; výsledná trasa je celá, i když živě byly díry |
+| povýšení | když hlavní mlčí déle než minutu, server bere další v pořadí; jeho appka zrychlí, až chytí signál |
+| pořadí | určuje kapitán; výchozí je pořadí, v jakém se telefony přihlásily |
+
+**Dvě pasti:**
+
+1. **Telefon, který zůstal v autě.** Posílá se jen z telefonu, kde posádka
+   závod ručně spustí, a slučování ignoruje zdroj vzdálený od ostatních víc
+   než pár set metrů.
+2. **Stáří polohy patří k tomu bodu, který je vidět**, ne k poslednímu
+   čemukoliv. Jinak by mapa tvrdila, že je čerstvá, protože se ozval záložní
+   telefon.
+
 ### Kam trasy ukládat
 
 **Návrh: body trasy jako komprimovaný soubor v R2, metadata v Postgresu.**
@@ -1186,8 +1217,24 @@ přepisovat cizí úřední text a riskovat, že se naše verze rozejde s tou,
 podle které se jede. Z téhož důvodu se soubor po vyvěšení nemění.
 
 **Nahrávání není fotka.** Dnešní cesta (`Features/Fotky`) obrázek dekóduje
-a překóduje, což u PDF nedává smysl. Potřebuje vlastní kus: strop velikosti,
+a překóduje, což u PDF nedává smysl. Má proto vlastní kus: strop velikosti,
 kontrola, že soubor opravdu začíná `%PDF`, a uložení beze změny obsahu.
+
+**Hotové a nasazené 4. 10. 2026** (PR #103 API, #104 web).
+
+| Kde | Co |
+|---|---|
+| model a pravidla | `Features/Smernice/PlachetniSmernice.cs` — klíč `smernice/{id}.pdf`, strop 20 MB, `JePdf` podle obsahu |
+| vyvěšení | `Features/Smernice/SmerniceSprava.cs` — nejdřív soubor, pak záznam; při chybě zápisu se soubor uklidí |
+| endpointy | `POST`/`GET` `/sprava/serie/{serie}/zastavky/{zavod}/smernice`; veřejně v detailu zastávky jako pole `smernice` |
+| web, čtenář | sekce na stránce regaty: platná verze, starší v rozbalení |
+| web, správa | `/sprava/{serie}/smernice/{zavod}`, odkaz z kalendáře |
+
+**Verze se čísluje v rámci zastávky** (1, 2, 3…) a platná je ta nejvyšší.
+Mazací endpoint schválně neexistuje — ani pro správce.
+
+**Co zbývá:** upozornění ve správě u vypsané regaty bez směrnice a zobrazení
+v appce. Appka dnes směrnici nenese, i když ji API vydává.
 
 ### Mapa na webu i v appce
 
