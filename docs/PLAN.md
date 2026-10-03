@@ -1158,6 +1158,79 @@ přesně ve chvíli, kdy je potřeba nejvíc.
    čemukoliv. Jinak by mapa tvrdila, že je čerstvá, protože se ozval záložní
    telefon.
 
+### Jak často se zapisuje a odesílá (Filip, 4. 10. 2026)
+
+Filip: *„Pokud je komunikace s telefony oboustranná, tak bych jim sdělil:
+ty mi dávej polohu po pěti minutách, ty po deseti… a u startu a dojezdu by
+se dal nastavit kratší interval."* A k tomu okno u bóje, ve kterém se
+provoz zhustí.
+
+**Ano, ale jako plán, ne jako povel.** Telefon si před startem stáhne plán
+závodu — svůj interval podle priority, časová okna u startu a dojezdu
+a souřadnice bójí s poloměrem — a dál se rozhoduje sám. Povel „zhusti"
+odeslaný ve chvíli startu je k ničemu, když zrovna není signál; plán stažený
+dopředu funguje i bez něj. Změna plánu se projeví, až telefon chytí signál.
+
+**Zápis a odesílání jsou dva různé knoflíky** a pletou se:
+
+| | Jak často | Proč |
+|---|---|---|
+| **zápis do telefonu** | vteřiny, u všech zdrojů | GPS stejně běží, místo je zadarmo a po dojezdu se nahraje celý záznam |
+| **odesílání živě** | hlavní zdroj 5–10 s, záložní minuty | tohle žere baterku a data |
+
+**Minutový interval neukáže obrátku.** Pro živou mapu je u hlavního zdroje
+potřeba 5–10 s, jinak loď skáče a z manévru na bóji není vidět nic.
+
+**Zhuštění bez trati:** kromě oken u bójí se zapisuje hustěji při změně
+kurzu o víc než ~15° nebo při větší změně rychlosti. Chytí to každou
+obrátku, i mimo bóji, a na rovině se naopak posílá málo.
+
+### Trať staví pořadatel, pípnutím u bóje (Filip, 4. 10. 2026)
+
+*„Musíme udělat verzi v appce pro pořadatele, který staví bójky, aby pípnul
+GPS, když postaví bójku, nebo přenastaví."*
+
+Nikdo nemá přesnější polohu než ten, kdo bóji staví. Trať je zároveň
+podmínka pro tři věci, které už v plánu jsou: okna pro zhuštění záznamu,
+pořadí na vodě a čitelnou mapu.
+
+- **Pípnutí je záznam s časem a přesností z GPS.** Přenastavení je nový
+  záznam, ne přepis — během dne se trať mění a trasa musí jít porovnat se
+  stavem, který zrovna platil. Je to totéž pravidlo jako u směrnice.
+- **Bóje patří k zastávce a mají pořadí**, aby z nich šla složit trať a kola.
+- **Jde to i bez signálu:** appka pípnutí podrží a odešle později.
+- **Smí organizátor té regaty nebo rozhodčí**, stejně jako u směrnice.
+
+**Na webu to jde taky** (Filip se ptal 4. 10.): prohlížeč na telefonu umí
+přes HTTPS sáhnout na GPS se stejnou přesností, dokud je stránka v popředí.
+Dvě ceny: byl by to **první kousek administrace s javascriptem** a bez
+signálu se pípnutí odešle, jen dokud je stránka otevřená. Appka obojí řeší
+líp, ale web je rychlejší cesta, jak to mít.
+
+**Co na webu nepůjde nikdy:** samotné sledování trasy. Hodiny běžící GPS na
+pozadí prohlížeč neumí, na iPhonu obzvlášť. To je důvod, proč appka existuje.
+
+### Připojení k lodi přes QR (Filip, 4. 10. 2026)
+
+*„Co to přihlašování zjednodušit tím, že po rozkliknutí lodi se zobrazí
+stránka s QR, které se appkou načte."*
+
+**Je to druhá podoba kódu z přihlášky, ne další mechanismus.** Jeden
+krátkodobý token, dvě podoby: šestiznakový kód k opsání a QR k načtení.
+
+- **Kde se ukáže:** po rozkliknutí lodi ve správě (pořadatel při registraci)
+  a kapitánovi v appce, aby si posádku připojil sám.
+- **Platnost pár minut.** QR na displeji si kdokoliv vyfotí přes rameno;
+  krátká platnost to riziko skoro maže.
+- **První připojený je kapitán, další posádka.** Kdo je na lodi připojený,
+  musí být vidět a kapitán i pořadatel to musí umět zrušit.
+- **Bez signálu zůstává opsání kódu** — načtení QR potřebuje zavolat server.
+
+Zobrazení QR na webu je hotová věc (knihovnu už web používá u odkazu na
+appku). **Načítání QR kamerou v prohlížeči je naopak nespolehlivé** napříč
+telefony, proto čtečka patří do appky a na webu musí vedle QR vždycky stát
+i kód k opsání.
+
 ### Kam trasy ukládat
 
 **Návrh: body trasy jako komprimovaný soubor v R2, metadata v Postgresu.**
