@@ -91,6 +91,15 @@ public class StahovacFotek(IUloziste uloziste, ILogger<StahovacFotek> log)
     {
         if (!uloziste.Pripraveno) return new VysledekFotky(null, false);
 
+        // Logo nebo ikonka místo fotky: pozná se podle adresy, ne podle
+        // velikosti — logo svazu má v originále 711 × 800 px a prahem by
+        // prošlo. Zahodí se i adresa u zdroje, karta dostane náhradní fotku.
+        if (zdroj.NeniFotka?.Invoke(ogImage) == true)
+        {
+            log.LogInformation("Obrázek {Adresa} je u zdroje logo, fotku nehledám", ogImage);
+            return new VysledekFotky(null, true);
+        }
+
         // Malá nebo nečitelná byla aspoň jedna varianta — rozhoduje poslední
         // zkoušená, tedy původní `og:image`, protože ta je ta, kterou by web
         // jinak ukázal.

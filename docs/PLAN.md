@@ -709,6 +709,7 @@ server — to zápis níž popisuje jako stav do 2. 10.
 | strop | 8 MB na soubor, hlídá se i bez `Content-Length` |
 | přepočet | tentýž jako u nahraných fotek: WebP 480 a 1600 px, pryč s metadaty včetně polohy |
 | dolní mez | pod 600 px se fotka nebere — bývá to logo, a to vypadá hůř než naše náhradní fotka |
+| loga | pozná je zvyklost zdroje (`NeniFotka`), ne velikost: logo ČSJ má v originále 711 × 800 px a prahem projde. U sailing.cz leží loga pod `/uploads/ikony-loga/`, fotky pod `/uploads/clanky/` |
 | selhání | článek vyjde bez fotky; cizí server, který neodpovídá, není důvod novinku neukázat |
 | mazání | při vytlačení z rotace jdou klíče do fronty `SouboryKeSmazani` **v téže transakci**, ve které mizí řádek |
 

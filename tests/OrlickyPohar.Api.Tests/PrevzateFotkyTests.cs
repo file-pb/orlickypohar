@@ -33,6 +33,33 @@ public class PrevzateFotkyTests
     }
 
     [Fact]
+    public void Logo_zdroje_se_pozna_podle_cesty_ne_podle_velikosti()
+    {
+        // Logo svazu má v originále 711 × 800 px, takže prahem na nejmenší
+        // šířku projde. Rozhoduje proto cesta: fotky k článkům leží
+        // pod /uploads/clanky/, loga pod /uploads/ikony-loga/.
+        Assert.True(Zdroje.SailingCzNeniFotka(
+            "https://www.sailing.cz/uploads/ikony-loga/loga_csj/logo.jpg"));
+        Assert.False(Zdroje.SailingCzNeniFotka(
+            "https://www.sailing.cz/uploads/clanky/6abe/mcr.jpg"));
+    }
+
+    [Fact]
+    public async Task Na_logo_se_zdroje_ani_neptame()
+    {
+        // PadajiciHandler hodí výjimku při jakémkoliv dotazu: test tak ověří,
+        // že se logo pozná dřív, než se na cizí server sáhne.
+        var stahovac = new StahovacFotek(new PametoveUloziste(), NullLogger<StahovacFotek>.Instance);
+
+        var vysledek = await stahovac.UlozAsync(
+            new HttpClient(new PadajiciHandler()), Svaz,
+            "https://www.sailing.cz/uploads_thumbs/ikony-loga/loga_csj/logo.jpg", default);
+
+        Assert.Null(vysledek.Fotka);
+        Assert.True(vysledek.Nepouzitelna);
+    }
+
+    [Fact]
     public void Kandidati_zkousi_nejdriv_vetsi_pak_puvodni()
     {
         var kandidati = PrevzateFotky.Kandidati(
