@@ -1107,6 +1107,12 @@ Stránky webu: `/pripojeni` (cíl QR, funguje i bez appky) a `/moje-lode`
 (lodě účtu, posádka, vystavení kódu s QR). Odkaz je v profilové nabídce
 každého přihlášeného — vazba k lodi není role ve správě.
 
+**Kód i v přihláškách** (4. 10. 2026): v obrazovce pořadatele má každá loď
+tlačítko *Vystavit kód k připojení* a kód se ukáže rovnou u ní, velkým
+písmem i jako QR. Je to místo, kde pořadatel loď u registrace před sebou
+skutečně má. Kvůli tomu vydává `LodNaZastavceDto` i `LodId` — kód se
+vystavuje lodi, která žije napříč ročníky, ne přihlášce.
+
 **Hotová třetí cesta (4. 10. 2026):** nárok na loď
 (`Features/Lode/NarokNaLod.cs`) pro toho, na koho nesedl e-mail a kdo nemá
 kód. Uživatel si o loď řekne, kapitán nebo majitel potvrdí.
@@ -1122,7 +1128,7 @@ kód. Uživatel si o loď řekne, kapitán nebo majitel potvrdí.
 Endpointy: `POST /ja/naroky`, `GET /ja/naroky`, `GET /ja/lode/{lod}/naroky`
 a `POST /ja/lode/{lod}/naroky/{narok}`.
 
-**Zbývá:** web k nárokům (podat a potvrdit) a čtečka QR v appce.
+**Zbývá:** web k nárokům (podat žádost a potvrdit ji) a čtečka QR v appce.
 
 Platí pravidlo platformy č. 5: `Osoba` má **volitelné** napojení na interní
 `UserId`. Většina osob v systému žádný účet mít nebude — figurují jen jako

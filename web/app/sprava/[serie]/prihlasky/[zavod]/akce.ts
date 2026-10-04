@@ -8,6 +8,7 @@ import {
   zapisStartovne,
   type StavUcasti,
 } from "@/lib/prihlasky";
+import { vystavKodPoradatel } from "@/lib/pripojeni";
 
 /**
  * Zápisy z obrazovky přihlášek. Serverové akce, ne javascript v prohlížeči
@@ -116,4 +117,27 @@ export async function smazAkce(formular: FormData) {
   const chyba = await smazPrihlasku(serie, zavod, Number(text(formular, "prihlaskaId")));
 
   redirect(kam(serie, zavod, chyba ? { chyba } : { stav: "smazano", lod }));
+}
+
+/**
+ * Vystaví připojovací kód k lodi rovnou od stolu registrace.
+ *
+ * Kód se vrací v adrese, ne v session: stránka ho pak ukáže velkým písmem
+ * i jako QR, dokud pořadatel neklikne jinam. Je to jednorázový údaj, který
+ * stejně za čtvrt hodiny propadne.
+ */
+export async function vystavKodAkce(formular: FormData) {
+  const serie = text(formular, "serie");
+  const zavod = text(formular, "zavod");
+  const lod = Number(formular.get("lod") ?? 0);
+
+  const { stav, data } = await vystavKodPoradatel(serie, lod);
+  if (stav !== "ok" || !data)
+    redirect(kam(serie, zavod, {
+      chyba: stav === "nesmi"
+        ? "Kód smí vystavit pořadatel regaty nebo rozhodčí ročníku."
+        : "Kód se nepovedlo vystavit.",
+    }));
+
+  redirect(kam(serie, zavod, { kod: data.kod, kodLod: String(lod), doKdy: data.platiDo }));
 }
