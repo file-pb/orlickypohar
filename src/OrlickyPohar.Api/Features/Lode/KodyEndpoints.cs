@@ -9,6 +9,9 @@ namespace OrlickyPohar.Api.Features.Lode;
 /// <summary>Kód zadaný při připojení k lodi.</summary>
 public record PripojeniVstup(string? Kod);
 
+/// <summary>Rozhodnutí kapitána o nároku.</summary>
+public record RozhodnutiVstup(bool Prijmout);
+
 /// <summary>
 /// Připojení k lodi kódem nebo QR.
 /// <para>
@@ -59,6 +62,35 @@ public static class KodyEndpoints
                 "První připojený je kapitán, další posádka. Kdo už u lodi roli má, " +
                 "o ni zadáním kódu nepřijde.");
 
+        app.MapPost("/ja/naroky", PodejNarokAsync)
+            .RequireAuthorization()
+            .WithTags("Identita")
+            .WithSummary("Požádá o připojení k lodi, kterou potvrdí kapitán")
+            .WithDescription(
+                "Třetí cesta, když e-mail nesedl a kód nikdo nedal. Nárok sám o sobě " +
+                "nedává nic — dokud ho kapitán nepotvrdí, je to jen žádost.");
+
+        app.MapGet("/ja/naroky", MojeNarokyAsync)
+            .RequireAuthorization()
+            .Produces<List<MujNarokDto>>()
+            .WithTags("Identita")
+            .WithSummary("Vypíše moje žádosti o lodě a jak dopadly");
+
+        app.MapGet("/ja/lode/{lod:int}/naroky", NarokyLodiAsync)
+            .RequireAuthorization()
+            .Produces<List<NarokDto>>()
+            .WithTags("Identita")
+            .WithSummary("Vypíše žádosti čekající u mé lodi")
+            .WithDescription("Kapitán nebo majitel lodi.");
+
+        app.MapPost("/ja/lode/{lod:int}/naroky/{narok:int}", RozhodniNarokAsync)
+            .RequireAuthorization()
+            .WithTags("Identita")
+            .WithSummary("Přijme nebo zamítne žádost o připojení k mé lodi")
+            .WithDescription(
+                "Kapitán nebo majitel. Přijetí dělá z žadatele posádku; kapitánem " +
+                "se stává ten, kdo loď převzal jako první, ne ten, koho někdo potvrdí.");
+
         app.MapPost("/sprava/serie/{serie}/lode/{lod:int}/kod", PoradatelKodAsync)
             .Produces<KodDto>()
             .WithTags("Správa")
@@ -105,6 +137,46 @@ public static class KodyEndpoints
 
         var (pripojeni, chyba) = await kody.PripojAsync(vstup.Kod, uzivatel, ct);
         return chyba is null ? Results.Ok(pripojeni) : Results.BadRequest(new { error = chyba });
+    }
+
+    private static async Task<IResult> PodejNarokAsync(
+        NarokVstup vstup, ClaimsPrincipal kdo, Rozsahy rozsahy, NarokySprava naroky, CancellationToken ct)
+    {
+        if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Unauthorized();
+
+        var chyba = await naroky.PodejAsync(uzivatel, vstup, ct);
+        return chyba is null ? Results.NoContent() : Results.BadRequest(new { error = chyba });
+    }
+
+    private static async Task<IResult> MojeNarokyAsync(
+        ClaimsPrincipal kdo, Rozsahy rozsahy, NarokySprava naroky, CancellationToken ct)
+    {
+        if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Unauthorized();
+
+        return Results.Ok(await naroky.MojeAsync(uzivatel, ct));
+    }
+
+    private static async Task<IResult> NarokyLodiAsync(
+        int lod, ClaimsPrincipal kdo, Rozsahy rozsahy, KodySprava kody, NarokySprava naroky,
+        CancellationToken ct)
+    {
+        if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Unauthorized();
+        // Totéž právo jako na vystavení kódu: kdo smí někoho přivést, smí
+        // i rozhodnout, kdo se hlásí sám.
+        if (!await kody.SmiVystavitAsync(lod, uzivatel, ct)) return Results.Forbid();
+
+        return Results.Ok(await naroky.CekajiciAsync(lod, ct));
+    }
+
+    private static async Task<IResult> RozhodniNarokAsync(
+        int lod, int narok, RozhodnutiVstup vstup, ClaimsPrincipal kdo, Rozsahy rozsahy,
+        KodySprava kody, NarokySprava naroky, CancellationToken ct)
+    {
+        if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Unauthorized();
+        if (!await kody.SmiVystavitAsync(lod, uzivatel, ct)) return Results.Forbid();
+
+        var chyba = await naroky.RozhodniAsync(lod, narok, vstup.Prijmout, uzivatel, ct);
+        return chyba is null ? Results.NoContent() : Results.BadRequest(new { error = chyba });
     }
 
     private static async Task<IResult> PoradatelKodAsync(

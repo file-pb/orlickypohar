@@ -31,6 +31,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<PlachetniSmernice> Smernice => Set<PlachetniSmernice>();
     public DbSet<VazbaKLodi> VazbyKLodim => Set<VazbaKLodi>();
     public DbSet<PripojovaciKod> PripojovaciKody => Set<PripojovaciKod>();
+    public DbSet<NarokNaLod> Naroky => Set<NarokNaLod>();
     public DbSet<MereniNadrze> MereniNadrze => Set<MereniNadrze>();
     public DbSet<PrevzatyClanek> PrevzateClanky => Set<PrevzatyClanek>();
     public DbSet<TeplotaHladiny> TeplotyHladiny => Set<TeplotaHladiny>();
@@ -147,6 +148,19 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .OnDelete(DeleteBehavior.Cascade);
         kod.HasOne(x => x.Vystavil).WithMany().HasForeignKey(x => x.VystavilId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        var narok = b.Entity<NarokNaLod>();
+        narok.Property(x => x.Poznamka).HasMaxLength(NarokySprava.PoznamkaNejvic);
+        // Čekající nárok se hledá u lodi, moje nároky u uživatele.
+        narok.HasIndex(x => new { x.LodId, x.RozhodnutoV });
+        narok.HasIndex(x => x.UzivatelId);
+        narok.HasOne(x => x.Lod).WithMany().HasForeignKey(x => x.LodId)
+            .OnDelete(DeleteBehavior.Cascade);
+        narok.HasOne(x => x.Uzivatel).WithMany().HasForeignKey(x => x.UzivatelId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Kdo rozhodl, je jen stopa — jeho smazání nárok neruší.
+        narok.HasOne(x => x.Rozhodl).WithMany().HasForeignKey(x => x.RozhodlId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         var nadrz = b.Entity<MereniNadrze>();
         nadrz.ToTable("MereniNadrze");
