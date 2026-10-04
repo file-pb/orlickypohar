@@ -37,6 +37,9 @@ public record SerieDetailDto(
 /// Veřejné čtení ročníku. <b>Nepublikovaný ročník neexistuje</b> — vrací se 404,
 /// ne 403: prozradit, že něco existuje a jen se to neukazuje, je taky informace.
 /// </summary>
+/// <summary>Loď ročníku pro výběr — jméno, číslo plachty a kategorie.</summary>
+public record LodVRocnikuDto(int LodId, string Nazev, string? CisloPlachty, string Kategorie);
+
 public static class SerieEndpoints
 {
     public static void MapSerie(this IEndpointRouteBuilder app)
@@ -45,7 +48,27 @@ public static class SerieEndpoints
 
         g.MapGet("/", SeznamAsync).WithSummary("Vrátí publikované ročníky");
         g.MapGet("/{slug}", DetailAsync).WithSummary("Vrátí ročník s kategoriemi, regatami a přihláškami");
+
+        g.MapGet("/{slug}/lode", LodeAsync)
+            .Produces<List<LodVRocnikuDto>>()
+            .WithSummary("Vrátí lodě přihlášené do ročníku, i s jejich id")
+            .WithDescription(
+                "Pro výběr lodi, ke které se někdo hlásí (žádost o připojení). " +
+                "Jména lodí jsou veřejná i dnes — ve výpisu účastníků regaty.");
     }
+
+    /// <summary>
+    /// Loď ročníku pro výběr. <b>Id je tu schválně</b>: bez něj se nedá
+    /// podat žádost o připojení, a jméno lodi samo o sobě jednoznačné není.
+    /// </summary>
+    private static Task<List<LodVRocnikuDto>> LodeAsync(
+        string slug, AppDbContext db, CancellationToken ct) =>
+        db.Prihlasky
+            .Where(p => p.Serie!.Slug == slug && p.Serie.Publikovano)
+            .OrderBy(p => p.Kategorie!.Poradi).ThenBy(p => p.Lod!.Nazev)
+            .Select(p => new LodVRocnikuDto(
+                p.LodId, p.Lod!.Nazev, p.Lod.CisloPlachty, p.Kategorie!.Nazev))
+            .ToListAsync(ct);
 
     private static async Task<Ok<List<SerieShrnutiDto>>> SeznamAsync(AppDbContext db, CancellationToken ct)
     {
