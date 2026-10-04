@@ -22,13 +22,13 @@
 type Partner = { nazev: string; logo: string; odkaz?: string; tmave?: boolean };
 
 const PARTNERI: Partner[] = [
-  { nazev: "Český svaz jachtingu", logo: "/partneri/csj.png", odkaz: "https://www.sailing.cz/" },
+  { nazev: "Český svaz jachtingu", logo: "/partneri/csj.webp", odkaz: "https://www.sailing.cz/" },
   { nazev: "Marina Orlík", logo: "/partneri/marina-orlik.svg", odkaz: "https://www.marinaorlik.cz/" },
-  { nazev: "Stingray", logo: "/partneri/stingray.png", odkaz: "https://www.stingray.cz/" },
-  { nazev: "Hacjacht", logo: "/partneri/hacjacht.png", odkaz: "https://www.hacjacht.cz/" },
+  { nazev: "Stingray", logo: "/partneri/stingray.webp", odkaz: "https://www.stingray.cz/" },
+  { nazev: "Hacjacht", logo: "/partneri/hacjacht.webp", odkaz: "https://www.hacjacht.cz/" },
   // Znak YCPk od Filipa (PDF z CorelDRAW), modrá varianta.
-  { nazev: "Yacht Club Písek", logo: "/partneri/yc-pisek.png", odkaz: "https://yachtclubpisek.cz/" },
-  { nazev: "Colins Yacht Club", logo: "/partneri/cyc.png", odkaz: "https://cyc.cz/" },
+  { nazev: "Yacht Club Písek", logo: "/partneri/yc-pisek.webp", odkaz: "https://yachtclubpisek.cz/" },
+  { nazev: "Colins Yacht Club", logo: "/partneri/cyc.webp", odkaz: "https://cyc.cz/" },
   { nazev: "FUCK CANCER", logo: "/partneri/fuck-cancer.svg", odkaz: "https://www.fuckcancer.cz/" },
   {
     nazev: "Milan Koláček Racing",
@@ -66,7 +66,20 @@ export function Partneri() {
 }
 
 function Logo({ partner, skryte }: { partner: Partner; skryte: boolean }) {
-  const obrazek = <img src={partner.logo} alt={skryte ? "" : partner.nazev} width={200} height={50} />;
+  // Pás stojí na konci stránky, takže se loga načtou, až se k nim doroluje.
+  // Dřív se stahovala hned a dvakrát (pás je v HTML dvakrát kvůli plynulé
+  // smyčce) — na mobilním připojení to bylo 135 kB navíc, než se ukázalo
+  // cokoliv (změřeno 4. 10. 2026).
+  const obrazek = (
+    <img
+      src={partner.logo}
+      alt={skryte ? "" : partner.nazev}
+      width={200}
+      height={50}
+      loading="lazy"
+      decoding="async"
+    />
+  );
 
   // Bez odkazu jen obrázek: odkaz, který nikam nevede, je slib naprázdno.
   const trida = partner.tmave ? "tmave" : undefined;
