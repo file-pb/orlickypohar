@@ -312,6 +312,47 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("Lode");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Lode.NarokNaLod", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("LodId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("PodanV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Poznamka")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("Prijat")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("RozhodlId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("RozhodnutoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UzivatelId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RozhodlId");
+
+                    b.HasIndex("UzivatelId");
+
+                    b.HasIndex("LodId", "RozhodnutoV");
+
+                    b.ToTable("Naroky");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Lode.Osoba", b =>
                 {
                     b.Property<int>("Id")
@@ -1120,6 +1161,32 @@ namespace OrlickyPohar.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Majitel");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Lode.NarokNaLod", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Lode.Lod", "Lod")
+                        .WithMany()
+                        .HasForeignKey("LodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Rozhodl")
+                        .WithMany()
+                        .HasForeignKey("RozhodlId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Uzivatel")
+                        .WithMany()
+                        .HasForeignKey("UzivatelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Lod");
+
+                    b.Navigation("Rozhodl");
+
+                    b.Navigation("Uzivatel");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Lode.PripojovaciKod", b =>

@@ -87,6 +87,8 @@ try
     builder.Services.AddScoped<Parovani>();
     // Připojení k lodi kódem nebo QR.
     builder.Services.AddScoped<KodySprava>();
+    // Nárok na loď, který potvrzuje kapitán.
+    builder.Services.AddScoped<NarokySprava>();
     if (builder.Configuration.GetValue<bool>("Prevzate:Sber"))
         builder.Services.AddHostedService<SberPrevzatych>();
     // Kontakty kapitánů se drží do konce následující sezóny, pak se mažou.

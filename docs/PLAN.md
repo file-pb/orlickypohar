@@ -1113,7 +1113,22 @@ písmem i jako QR. Je to místo, kde pořadatel loď u registrace před sebou
 skutečně má. Kvůli tomu vydává `LodNaZastavceDto` i `LodId` — kód se
 vystavuje lodi, která žije napříč ročníky, ne přihlášce.
 
-**Zbývá:** nárok s potvrzením kapitána (třetí cesta) a čtečka QR v appce.
+**Hotová třetí cesta (4. 10. 2026):** nárok na loď
+(`Features/Lode/NarokNaLod.cs`) pro toho, na koho nesedl e-mail a kdo nemá
+kód. Uživatel si o loď řekne, kapitán nebo majitel potvrdí.
+
+| Pravidlo | Proč |
+|---|---|
+| nárok sám o sobě nedává **nic** | dokud ho někdo nepotvrdí, je to žádost, ne role |
+| přijetí dělá **posádku**, ne kapitána | kapitánem je ten, kdo loď převzal jako první |
+| zamítnutí platí a nejde o loď žádat znovu | druhá žádost by byla obcházení kapitánova „ne" |
+| o rozhodnutém nároku se podruhé nerozhoduje | jinak by šlo zamítnutí po čase tiše otočit |
+| rozhodovat smí ten, kdo smí vystavit kód | kdo může někoho přivést, může i rozhodnout o tom, kdo se hlásí sám |
+
+Endpointy: `POST /ja/naroky`, `GET /ja/naroky`, `GET /ja/lode/{lod}/naroky`
+a `POST /ja/lode/{lod}/naroky/{narok}`.
+
+**Zbývá:** web k nárokům (podat žádost a potvrdit ji) a čtečka QR v appce.
 
 Platí pravidlo platformy č. 5: `Osoba` má **volitelné** napojení na interní
 `UserId`. Většina osob v systému žádný účet mít nebude — figurují jen jako
