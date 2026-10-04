@@ -322,7 +322,7 @@
                     "Identita"
                 ],
                 "summary": "Vr\u00e1t\u00ed p\u0159ihl\u00e1\u0161en\u00e9ho u\u017eivatele a jeho opr\u00e1vn\u011bn\u00ed",
-                "description": "P\u0159i prvn\u00edm p\u0159ihl\u00e1\u0161en\u00ed u\u017eivatele zalo\u017e\u00ed. Nov\u011b zalo\u017een\u00fd nem\u00e1 \u017e\u00e1dn\u00e1 opr\u00e1vn\u011bn\u00ed \u2014 pozvat \u010dlov\u011bka znamen\u00e1 d\u00e1t mu roli.",
+                "description": "P\u0159i prvn\u00edm p\u0159ihl\u00e1\u0161en\u00ed u\u017eivatele zalo\u017e\u00ed. Nov\u011b zalo\u017een\u00fd nem\u00e1 \u017e\u00e1dn\u00e1 opr\u00e1vn\u011bn\u00ed \u2014 pozvat \u010dlov\u011bka znamen\u00e1 d\u00e1t mu roli. Z\u00e1rove\u0148 \u00fa\u010det sp\u00e1ruje s lod\u011bmi, kde jeho e-mail sed\u00ed s kontaktem.",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -330,6 +330,207 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/JaDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ja/lode": {
+            "get": {
+                "tags": [
+                    "Identita"
+                ],
+                "summary": "Vr\u00e1t\u00ed lod\u011b, ke kter\u00fdm p\u0159ihl\u00e1\u0161en\u00fd pat\u0159\u00ed, i s rol\u00ed",
+                "description": "Majitel, kapit\u00e1n, pos\u00e1dka, fanou\u0161ek. Vazba vznik\u00e1 shodou e-mailu s kontaktem na p\u0159ihl\u00e1\u0161ce, k\u00f3dem od po\u0159adatele, nebo n\u00e1rokem, kter\u00fd potvrd\u00ed kapit\u00e1n.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/MojeLodDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ja/lode/{lod}/kod": {
+            "post": {
+                "tags": [
+                    "Identita"
+                ],
+                "summary": "Vystav\u00ed p\u0159ipojovac\u00ed k\u00f3d k lodi, kde jsem kapit\u00e1n nebo majitel",
+                "description": "K\u00f3d plat\u00ed \u010dtvrt hodiny a sm\u00ed ho pou\u017e\u00edt v\u00edc lid\u00ed \u2014 pos\u00e1dka se p\u0159ipojuje po jednom z jednoho pap\u00edru. QR si z k\u00f3du poskl\u00e1d\u00e1 klient.",
+                "parameters": [
+                    {
+                        "name": "lod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/KodDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ja/lode/{lod}/pripojeni": {
+            "get": {
+                "tags": [
+                    "Identita"
+                ],
+                "summary": "Vyp\u00ed\u0161e, kdo je k m\u00e9 lodi p\u0159ipojen\u00fd",
+                "description": "Kapit\u00e1n nebo majitel lodi.",
+                "parameters": [
+                    {
+                        "name": "lod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PripojenyDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ja/lode/{lod}/pripojeni/{vazba}": {
+            "delete": {
+                "tags": [
+                    "Identita"
+                ],
+                "summary": "Odebere p\u0159ipojen\u00ed k m\u00e9 lodi",
+                "description": "Kapit\u00e1n nebo majitel lodi. Posledn\u00ed kapit\u00e1n se odebrat ned\u00e1 \u2014 lo\u010f by z\u016fstala bez n\u011bkoho odpov\u011bdn\u00e9ho.",
+                "parameters": [
+                    {
+                        "name": "lod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "vazba",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/ja/pripojeni": {
+            "post": {
+                "tags": [
+                    "Identita"
+                ],
+                "summary": "P\u0159ipoj\u00ed p\u0159ihl\u00e1\u0161en\u00fd \u00fa\u010det k lodi podle k\u00f3du",
+                "description": "Prvn\u00ed p\u0159ipojen\u00fd je kapit\u00e1n, dal\u0161\u00ed pos\u00e1dka. Kdo u\u017e u lodi roli m\u00e1, o ni zad\u00e1n\u00edm k\u00f3du nep\u0159ijde.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PripojeniVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PripojeniDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/lode/{lod}/kod": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vystav\u00ed p\u0159ipojovac\u00ed k\u00f3d k lodi ro\u010dn\u00edku",
+                "description": "Organiz\u00e1tor nebo rozhod\u010d\u00ed ro\u010dn\u00edku \u2014 u registrace, kdy lo\u010f je\u0161t\u011b \u017e\u00e1dn\u00e9ho kapit\u00e1na nem\u00e1.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "lod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/KodDto"
                                 }
                             }
                         }
@@ -3538,6 +3739,22 @@
                     }
                 }
             },
+            "KodDto": {
+                "required": [
+                    "kod",
+                    "platiDo"
+                ],
+                "type": "object",
+                "properties": {
+                    "kod": {
+                        "type": "string"
+                    },
+                    "platiDo": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
             "KodVysledku": {
                 "enum": [
                     "Dnf",
@@ -3706,6 +3923,33 @@
                     },
                     "majitel": {
                         "type": "string"
+                    }
+                }
+            },
+            "MojeLodDto": {
+                "required": [
+                    "lodId",
+                    "nazev",
+                    "cisloPlachty",
+                    "role"
+                ],
+                "type": "object",
+                "properties": {
+                    "lodId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "cisloPlachty": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/RoleKLodi"
                     }
                 }
             },
@@ -4859,6 +5103,73 @@
                     }
                 }
             },
+            "PripojeniDto": {
+                "required": [
+                    "lodId",
+                    "nazev",
+                    "role",
+                    "jizBylo"
+                ],
+                "type": "object",
+                "properties": {
+                    "lodId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/RoleKLodi"
+                    },
+                    "jizBylo": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "PripojeniVstup": {
+                "required": [
+                    "kod"
+                ],
+                "type": "object",
+                "properties": {
+                    "kod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
+            "PripojenyDto": {
+                "required": [
+                    "id",
+                    "kdo",
+                    "role",
+                    "puvod",
+                    "vzniklaV"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "kdo": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/RoleKLodi"
+                    },
+                    "puvod": {
+                        "$ref": "#/components/schemas/PuvodVazby"
+                    },
+                    "vzniklaV": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
             "PublikaceSerieVstup": {
                 "required": [
                     "publikovano"
@@ -4892,6 +5203,14 @@
                     }
                 }
             },
+            "PuvodVazby": {
+                "enum": [
+                    "Email",
+                    "Kod",
+                    "Narok",
+                    "Rucne"
+                ]
+            },
             "Role": {
                 "enum": [
                     "Ctenar",
@@ -4899,6 +5218,14 @@
                     "Rozhodci",
                     "Spravce",
                     "Organizator"
+                ]
+            },
+            "RoleKLodi": {
+                "enum": [
+                    "Majitel",
+                    "Kapitan",
+                    "Posadka",
+                    "Fanousek"
                 ]
             },
             "RozjizdkaDto": {

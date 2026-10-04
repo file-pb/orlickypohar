@@ -1089,8 +1089,24 @@ přihlášení.
 | unikátní index `(LodId, UzivatelId)` | bez něj by párování e-mailem i kódem vyrobilo dvě vazby |
 | selhání párování neshodí přihlášení | `/ja` je od identity, ne od lodí |
 
-**Zbývá:** kód a QR (druhá cesta), nárok s potvrzením kapitána (třetí),
-seznam připojených u lodi a jejich odebrání.
+**Hotová druhá cesta (4. 10. 2026):** připojovací kód (`PripojovaciKod`,
+`Features/Lode/KodySprava.cs`) a web k němu.
+
+| Věc | Jak |
+|---|---|
+| vystaví | pořadatel ročníku, rozhodčí, nebo kapitán či majitel lodi |
+| platnost | 15 minut, použít smí víc lidí — posádka se připojuje z jednoho papíru |
+| podoby | šest znaků k opsání a QR nad adresou `/pripojeni?kod=…`; QR kreslí **web** do SVG, API svou adresu vědět nemusí |
+| abeceda | bez `0`, `1`, `I` a `O` — opisuje se z papíru u vody |
+| role | první připojený kapitán, další posádka; kdo roli má, o ni nepřijde |
+| neplatný kód | propadlý i vymyšlený dávají **tutéž** odpověď — ať z ní nejde vyčíst, že loď existuje |
+| odebrání | kapitán nebo majitel; **posledního kapitána odebrat nejde** |
+
+Stránky webu: `/pripojeni` (cíl QR, funguje i bez appky) a `/moje-lode`
+(lodě účtu, posádka, vystavení kódu s QR). Odkaz je v profilové nabídce
+každého přihlášeného — vazba k lodi není role ve správě.
+
+**Zbývá:** nárok s potvrzením kapitána (třetí cesta) a čtečka QR v appce.
 
 Platí pravidlo platformy č. 5: `Osoba` má **volitelné** napojení na interní
 `UserId`. Většina osob v systému žádný účet mít nebude — figurují jen jako
