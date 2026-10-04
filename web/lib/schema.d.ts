@@ -387,7 +387,7 @@ export interface paths {
         };
         /**
          * Vrátí přihlášeného uživatele a jeho oprávnění
-         * @description Při prvním přihlášení uživatele založí. Nově založený nemá žádná oprávnění — pozvat člověka znamená dát mu roli.
+         * @description Při prvním přihlášení uživatele založí. Nově založený nemá žádná oprávnění — pozvat člověka znamená dát mu roli. Zároveň účet spáruje s loděmi, kde jeho e-mail sedí s kontaktem.
          */
         get: {
             parameters: {
@@ -411,6 +411,252 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ja/lode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vrátí lodě, ke kterým přihlášený patří, i s rolí
+         * @description Majitel, kapitán, posádka, fanoušek. Vazba vzniká shodou e-mailu s kontaktem na přihlášce, kódem od pořadatele, nebo nárokem, který potvrdí kapitán.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MojeLodDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ja/lode/{lod}/kod": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Vystaví připojovací kód k lodi, kde jsem kapitán nebo majitel
+         * @description Kód platí čtvrt hodiny a smí ho použít víc lidí — posádka se připojuje po jednom z jednoho papíru. QR si z kódu poskládá klient.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    lod: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KodDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ja/lode/{lod}/pripojeni": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše, kdo je k mé lodi připojený
+         * @description Kapitán nebo majitel lodi.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    lod: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PripojenyDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ja/lode/{lod}/pripojeni/{vazba}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Odebere připojení k mé lodi
+         * @description Kapitán nebo majitel lodi. Poslední kapitán se odebrat nedá — loď by zůstala bez někoho odpovědného.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    lod: number;
+                    vazba: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ja/pripojeni": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Připojí přihlášený účet k lodi podle kódu
+         * @description První připojený je kapitán, další posádka. Kdo už u lodi roli má, o ni zadáním kódu nepřijde.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PripojeniVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PripojeniDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/lode/{lod}/kod": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Vystaví připojovací kód k lodi ročníku
+         * @description Organizátor nebo rozhodčí ročníku — u registrace, kdy loď ještě žádného kapitána nemá.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    lod: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KodDto"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -3073,6 +3319,11 @@ export interface components {
             /** Format: int32 */
             poradi: number;
         };
+        KodDto: {
+            kod: string;
+            /** Format: date-time */
+            platiDo: string;
+        };
         /** @enum {unknown} */
         KodVysledku: "Dnf" | "Dns" | "Dnc" | "Ocs" | "Dsq" | "Ret" | "Rdg" | null;
         LodNaZastavceDto: {
@@ -3107,6 +3358,13 @@ export interface components {
             cisloPlachty: null | string;
             typ: null | string;
             majitel: string;
+        };
+        MojeLodDto: {
+            /** Format: int32 */
+            lodId: number;
+            nazev: string;
+            cisloPlachty: null | string;
+            role: components["schemas"]["RoleKLodi"];
         };
         NakladovaPolozka: {
             polozka: string;
@@ -3380,6 +3638,25 @@ export interface components {
             lod: string;
             stav: components["schemas"]["StavUcasti"];
         };
+        PripojeniDto: {
+            /** Format: int32 */
+            lodId: number;
+            nazev: string;
+            role: components["schemas"]["RoleKLodi"];
+            jizBylo: boolean;
+        };
+        PripojeniVstup: {
+            kod: null | string;
+        };
+        PripojenyDto: {
+            /** Format: int32 */
+            id: number;
+            kdo: string;
+            role: components["schemas"]["RoleKLodi"];
+            puvod: components["schemas"]["PuvodVazby"];
+            /** Format: date-time */
+            vzniklaV: string;
+        };
         PublikaceSerieVstup: {
             publikovano: boolean;
         };
@@ -3390,7 +3667,11 @@ export interface components {
             publikovano: boolean;
         };
         /** @enum {unknown} */
+        PuvodVazby: "Email" | "Kod" | "Narok" | "Rucne";
+        /** @enum {unknown} */
         Role: "Ctenar" | "Editor" | "Rozhodci" | "Spravce" | "Organizator";
+        /** @enum {unknown} */
+        RoleKLodi: "Majitel" | "Kapitan" | "Posadka" | "Fanousek";
         RozjizdkaDto: {
             /** Format: int32 */
             cislo: number;

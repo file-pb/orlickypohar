@@ -100,6 +100,12 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
             se stránka nenačte znovu. Hlavička se při něm navíc nepřekresluje
             vůbec, takže vedle sebe skončí jméno z jednoho vykreslení
             a obsah z jiného. Sem se chodí zřídka a celé načtení nic nestojí. */}
+        {/* Moje lodě má každý přihlášený, i bez jediného oprávnění: vazba
+            k lodi vzniká e-mailem nebo kódem, ne rolí ve správě
+            (Filip, 4. 10. 2026). */}
+        <OdkazJinam obycejny href="/moje-lode">
+          Moje lodě
+        </OdkazJinam>
         {piseNaWeb && (
           <OdkazJinam obycejny href="/sprava/web/clanky">
             Obecné články
