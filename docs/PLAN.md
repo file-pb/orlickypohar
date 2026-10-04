@@ -1107,6 +1107,12 @@ Stránky webu: `/pripojeni` (cíl QR, funguje i bez appky) a `/moje-lode`
 (lodě účtu, posádka, vystavení kódu s QR). Odkaz je v profilové nabídce
 každého přihlášeného — vazba k lodi není role ve správě.
 
+**Kód i v přihláškách** (4. 10. 2026): v obrazovce pořadatele má každá loď
+tlačítko *Vystavit kód k připojení* a kód se ukáže rovnou u ní, velkým
+písmem i jako QR. Je to místo, kde pořadatel loď u registrace před sebou
+skutečně má. Kvůli tomu vydává `LodNaZastavceDto` i `LodId` — kód se
+vystavuje lodi, která žije napříč ročníky, ne přihlášce.
+
 **Zbývá:** nárok s potvrzením kapitána (třetí cesta) a čtečka QR v appce.
 
 Platí pravidlo platformy č. 5: `Osoba` má **volitelné** napojení na interní

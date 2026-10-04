@@ -3890,6 +3890,11 @@
                     "smiSmazat": {
                         "type": "boolean",
                         "default": false
+                    },
+                    "lodId": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 0
                     }
                 }
             },

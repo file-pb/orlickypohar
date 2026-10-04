@@ -3351,6 +3351,11 @@ export interface components {
             historie?: null | components["schemas"]["ZmenaUcastiDto"][];
             /** @default false */
             smiSmazat: boolean;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            lodId: number;
         };
         LodVstup: {
             klic: string;

@@ -11,7 +11,16 @@ import {
   type LodNaZastavce,
   type StavUcasti,
 } from "@/lib/prihlasky";
-import { novaLodAkce, prihlasAkce, smazAkce, startovneAkce, stavLodiAkce } from "./akce";
+import QRCode from "qrcode";
+import { adresaKodu } from "@/lib/pripojeni";
+import {
+  novaLodAkce,
+  prihlasAkce,
+  smazAkce,
+  startovneAkce,
+  stavLodiAkce,
+  vystavKodAkce,
+} from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -32,6 +41,9 @@ type Parametry = {
     prijmeni?: string;
     cisloPlachty?: string;
     typ?: string;
+    kod?: string;
+    kodLod?: string;
+    doKdy?: string;
   }>;
 };
 
@@ -47,6 +59,17 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
   const zpravy = await searchParams;
 
   const { stav, data: prehled } = await nactiPrihlasky(serie, zavod);
+
+  // QR se kreslí na serveru do SVG — administrace zůstává bez javascriptu.
+  const vystaveny = zpravy.kod
+    ? {
+        kod: zpravy.kod,
+        lod: zpravy.kodLod,
+        doKdy: zpravy.doKdy,
+        // QR se kreslí na serveru do SVG — administrace zůstává bez javascriptu.
+        qr: await QRCode.toString(adresaKodu(zpravy.kod), { type: "svg", margin: 1 }),
+      }
+    : undefined;
 
   // Výpadek nesmí spolknout výsledek zápisu.
   if (stav === "vypadek")
@@ -157,14 +180,20 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
           <p className="poznamka" style={{ marginTop: 0 }}>
             Přihlášky z webu a vrácené k doplnění. Na webu nejsou, dokud je nezapíšeš.
           </p>
-          <Tabulka serie={serie} zavod={zavod} lode={cekaji} kategorie={prehled.kategorie} />
+          <Tabulka serie={serie} zavod={zavod} lode={cekaji} kategorie={prehled.kategorie} kod={vystaveny} />
         </>
       )}
 
       {prihlasene.length === 0 ? (
         <p className="prazdno">Na regatu zatím není přihlášená žádná loď.</p>
       ) : (
-        <Tabulka serie={serie} zavod={zavod} lode={prihlasene} kategorie={prehled.kategorie} />
+        <Tabulka
+          serie={serie}
+          zavod={zavod}
+          lode={prihlasene}
+          kategorie={prehled.kategorie}
+          kod={vystaveny}
+        />
       )}
 
       {prehled.smiSpravovat && (
@@ -265,7 +294,7 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
           <p className="poznamka">
             Odhlášené, odmítnuté a nedostavené. Na webu nejsou. Vrátit je jde, dokud přihlášky běží.
           </p>
-          <Tabulka serie={serie} zavod={zavod} lode={zrusene} kategorie={prehled.kategorie} />
+          <Tabulka serie={serie} zavod={zavod} lode={zrusene} kategorie={prehled.kategorie} kod={vystaveny} />
         </>
       )}
     </>
@@ -278,11 +307,14 @@ function Tabulka({
   zavod,
   lode,
   kategorie,
+  kod,
 }: {
   serie: string;
   zavod: string;
   lode: LodNaZastavce[];
   kategorie: string[];
+  /** Zrovna vystavený kód: u které lodi, dokdy platí a jeho QR. */
+  kod?: { kod: string; lod?: string; doKdy?: string; qr: string | null };
 }) {
   return (
     <div className="tabulka-obal">
@@ -311,6 +343,21 @@ function Tabulka({
                       {[l.cisloPlachty, l.typLodi, l.majitel].filter(Boolean).join(" · ")}
                     </div>
                     {l.stav && <Podrobnosti serie={serie} zavod={zavod} lod={l} />}
+                    {/* Připojovací kód rovnou od stolu registrace: kapitán
+                        ho opíše nebo načte QR a loď má v appce (Filip,
+                        4. 10. 2026). */}
+                    {kod && kod.lod === String(l.lodId) ? (
+                      <Kod kod={kod.kod} doKdy={kod.doKdy} qr={kod.qr} />
+                    ) : (
+                      <form action={vystavKodAkce} className="radkove">
+                        <input type="hidden" name="serie" value={serie} />
+                        <input type="hidden" name="zavod" value={zavod} />
+                        <input type="hidden" name="lod" value={l.lodId} />
+                        <button type="submit" className="jemne">
+                          Vystavit kód k připojení
+                        </button>
+                      </form>
+                    )}
                   </td>
                   <td className="vlevo">
                     {l.stav && (
@@ -526,4 +573,26 @@ function hotovo(stav: string, lod?: string, nastav?: StavUcasti) {
     default:
       return "Hotovo.";
   }
+}
+
+/**
+ * Vystavený kód u lodi: velkým písmem k opsání a QR k načtení. Je to jeden
+ * řetězec ve dvou podobách (Filip, 4. 10. 2026) — posádka u stolu si vybere,
+ * co jí vyhovuje, a bez signálu funguje opsání.
+ */
+function Kod({ kod, doKdy, qr }: { kod: string; doKdy?: string; qr: string | null }) {
+  return (
+    <div className="kod-u-lodi">
+      <p className="kod-velky">{kod}</p>
+      {qr && <div className="qr" dangerouslySetInnerHTML={{ __html: qr }} />}
+      <p className="poznamka">
+        {doKdy ? `Platí do ${new Date(doKdy).toLocaleTimeString("cs-CZ", {
+          hour: "numeric",
+          minute: "2-digit",
+          timeZone: "Europe/Prague",
+        })}.` : "Platí čtvrt hodiny."}{" "}
+        První připojený je kapitán, další posádka.
+      </p>
+    </div>
+  );
 }
