@@ -78,6 +78,13 @@ export const mojeLode = () =>
 export const vystavKod = (lod: number) =>
   zavolej<Kod>(`/ja/lode/${lod}/kod`, { method: "POST" });
 
+/**
+ * Vystaví kód jako pořadatel ročníku. Jiná cesta než u kapitána schválně:
+ * u registrace loď kapitána ještě nemá, a pořadatel ho nemá kde vzít.
+ */
+export const vystavKodPoradatel = (serie: string, lod: number) =>
+  zavolej<Kod>(`/sprava/serie/${encodeURIComponent(serie)}/lode/${lod}/kod`, { method: "POST" });
+
 /** Kdo je k lodi připojený. */
 export const pripojeniLodi = (lod: number) =>
   zavolej<Pripojeny[]>(`/ja/lode/${lod}/pripojeni`);
