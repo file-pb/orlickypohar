@@ -1128,7 +1128,15 @@ kód. Uživatel si o loď řekne, kapitán nebo majitel potvrdí.
 Endpointy: `POST /ja/naroky`, `GET /ja/naroky`, `GET /ja/lode/{lod}/naroky`
 a `POST /ja/lode/{lod}/naroky/{narok}`.
 
-**Zbývá:** web k nárokům (podat žádost a potvrdit ji) a čtečka QR v appce.
+**Web k nárokům** (4. 10. 2026): na `/pripojeni` je pod kódem blok *Kód
+nemáš?* s výběrem lodi a poznámkou pro kapitána; na `/moje-lode` vidí
+kapitán frontu žádostí u své lodi a vedle každé tlačítka *Přijmout jako
+posádku* a *Zamítnout*, žadatel pak svoje žádosti i s tím, jak dopadly.
+Výběr lodí bere `GET /serie/{slug}/lode`, a když aktuální ročník ještě
+nikoho přihlášeného nemá, nabídne lodě z předchozího — ročník se publikuje
+s kalendářem dřív, než se kdokoliv přihlásí.
+
+**Zbývá:** čtečka QR v appce.
 
 Platí pravidlo platformy č. 5: `Osoba` má **volitelné** napojení na interní
 `UserId`. Většina osob v systému žádný účet mít nebude — figurují jen jako

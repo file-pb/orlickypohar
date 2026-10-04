@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Boky } from "@/app/boky";
 import { Drobecky } from "@/app/drobecky";
-import { pripojAkce } from "./akce";
+import { nactiSerie } from "@/lib/api";
+import { lodeKVyberu } from "@/lib/pripojeni";
+import { pozadejAkce, pripojAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -9,7 +11,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Připojení k lodi" };
 
 type Parametry = {
-  searchParams: Promise<{ kod?: string; chyba?: string }>;
+  searchParams: Promise<{ kod?: string; chyba?: string; zadost?: string }>;
 };
 
 /**
@@ -23,7 +25,12 @@ type Parametry = {
  * je krok, který má člověk potvrdit, ne něco, co se stane otevřením odkazu.
  */
 export default async function Pripojeni({ searchParams }: Parametry) {
-  const { kod, chyba } = await searchParams;
+  const { kod, chyba, zadost } = await searchParams;
+
+  // Lodě pro ty, kdo kód nemají. Výpadek API tenhle blok jen schová —
+  // opsání kódu na něm nezávisí.
+  const rocniky = (await nactiSerie().catch(() => null)) ?? [];
+  const { lode } = await lodeKVyberu(rocniky);
 
   return (
     <Boky>
@@ -36,6 +43,12 @@ export default async function Pripojeni({ searchParams }: Parametry) {
       {chyba && (
         <p className="hlaska chyba" role="alert">
           {chyba}
+        </p>
+      )}
+      {zadost === "podana" && (
+        <p className="hlaska" role="status">
+          Žádost je podaná. Teď ji musí potvrdit kapitán lodi — do té doby
+          k lodi nepatříš.
         </p>
       )}
 
@@ -64,6 +77,48 @@ export default async function Pripojeni({ searchParams }: Parametry) {
         První, kdo se k lodi připojí, je její kapitán. Další jsou posádka
         a kapitán jim může roli změnit.
       </p>
+
+      {/* Třetí cesta: kdo kód nemá, požádá a kapitán potvrdí. Nestojí to
+          nic předem — pořadatel nemusí nic rozdávat (plán, *Jak se
+          z přihlášení stane kormidelník*). */}
+      {lode.length > 0 && (
+        <>
+          <h2>Kód nemáš?</h2>
+          <p>
+            Vyber loď, se kterou jedeš. Žádost uvidí její kapitán a potvrdí ji;
+            do té doby k lodi nepatříš.
+          </p>
+          <form action={pozadejAkce} className="formular">
+            <label>
+              Loď
+              <select name="lod" required defaultValue="">
+                <option value="" disabled>
+                  Vyber loď
+                </option>
+                {lode.map((l) => (
+                  <option key={l.lodId} value={l.lodId}>
+                    {[l.nazev, l.cisloPlachty, l.kategorie].filter(Boolean).join(" · ")}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Co o sobě říct kapitánovi <span>(nepovinné)</span>
+              <input
+                type="text"
+                name="poznamka"
+                maxLength={200}
+                placeholder="Např. jedu s vámi jako posádka"
+              />
+            </label>
+            <button type="submit">Požádat o připojení</button>
+          </form>
+          <p className="poznamka">
+            Když kapitán žádost zamítne, znovu o tuhle loď požádat nejde —
+            domluv se s ním napřímo.
+          </p>
+        </>
+      )}
     </Boky>
   );
 }

@@ -131,3 +131,98 @@ export async function pripoj(
     return { chyba: "API se nedaří zavolat." };
   }
 }
+
+export type Narok = components["schemas"]["NarokDto"];
+export type MujNarok = components["schemas"]["MujNarokDto"];
+
+/** Žádosti čekající u mé lodi. Kapitán a majitel. */
+export const narokyLodi = (lod: number) => zavolej<Narok[]>(`/ja/lode/${lod}/naroky`);
+
+/** Moje žádosti o lodě a jak dopadly. */
+export const mojeNaroky = () => zavolej<MujNarok[]>("/ja/naroky");
+
+/** Požádá o připojení k lodi. Vrací chybu k zobrazení, nebo `null`. */
+export async function pozadejOLod(lodId: number, poznamka?: string): Promise<string | null> {
+  const t = await tokenZeSezeni();
+  if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+
+  try {
+    const odpoved = await fetch(`${API}/ja/naroky`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${t}`,
+        accept: "application/json",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ lodId, poznamka }),
+      cache: "no-store",
+    });
+    return odpoved.ok ? null : await hlaska(odpoved);
+  } catch {
+    return "API se nedaří zavolat.";
+  }
+}
+
+/** Kapitán přijme nebo zamítne žádost. Vrací chybu, nebo `null`. */
+export async function rozhodniNarok(
+  lod: number,
+  narok: number,
+  prijmout: boolean,
+): Promise<string | null> {
+  const t = await tokenZeSezeni();
+  if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+
+  try {
+    const odpoved = await fetch(`${API}/ja/lode/${lod}/naroky/${narok}`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${t}`,
+        accept: "application/json",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ prijmout }),
+      cache: "no-store",
+    });
+    return odpoved.ok ? null : await hlaska(odpoved);
+  } catch {
+    return "API se nedaří zavolat.";
+  }
+}
+
+export type LodVRocniku = components["schemas"]["LodVRocnikuDto"];
+
+/**
+ * Lodě k výběru v žádosti: z aktuálního ročníku, a když v něm ještě nikdo
+ * přihlášený není, z toho předchozího.
+ *
+ * <b>Proč náhrada:</b> ročník se publikuje s kalendářem dřív, než se kdokoliv
+ * přihlásí — v 2027 to tak bylo celou zimu. Prázdný výběr by znamenal, že se
+ * k lodi nepřipojí nikdo, kdo nemá kód (Filip, 4. 10. 2026).
+ */
+export async function lodeKVyberu(
+  rocniky: { slug: string }[],
+): Promise<{ lode: LodVRocniku[]; serie?: string }> {
+  for (const r of rocniky.slice(0, 2)) {
+    const lode = await lodeRocniku(r.slug);
+    if (lode.length > 0) return { lode, serie: r.slug };
+  }
+
+  return { lode: [] };
+}
+
+/**
+ * Lodě ročníku pro výběr v žádosti. Veřejné čtení, takže bez tokenu —
+ * žádá se před tím, než člověk k jakékoliv lodi patří.
+ */
+export async function lodeRocniku(serie: string): Promise<LodVRocniku[]> {
+  try {
+    const odpoved = await fetch(`${API}/serie/${encodeURIComponent(serie)}/lode`, {
+      headers: { accept: "application/json" },
+      // Seznam lodí se přes den nemění; minuta stačí a ušetří dotaz na API.
+      next: { revalidate: 60 },
+    });
+    return odpoved.ok ? ((await odpoved.json()) as LodVRocniku[]) : [];
+  } catch {
+    return [];
+  }
+}
