@@ -8,10 +8,13 @@ import {
   NAZEV_ROLE,
   adresaKodu,
   mojeLode,
+  mojeNaroky,
+  narokyLodi,
   pripojeniLodi,
+  type Narok,
   type Pripojeny,
 } from "@/lib/pripojeni";
-import { odeberAkce, vystavKodAkce } from "./akce";
+import { odeberAkce, rozhodniNarokAkce, vystavKodAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -64,6 +67,9 @@ export default async function MojeLode({ searchParams }: Parametry) {
   const pripojeni: Pripojeny[] = vybrana
     ? ((await pripojeniLodi(vybrana.lodId)).data ?? [])
     : [];
+  // Žádosti čekající u téhle lodi a moje vlastní žádosti jinam.
+  const zadosti: Narok[] = vybrana ? ((await narokyLodi(vybrana.lodId)).data ?? []) : [];
+  const moje = (await mojeNaroky()).data ?? [];
 
   // QR se kreslí jako SVG přímo do stránky: žádný javascript, žádný další
   // požadavek na obrázek a funguje i v tmavém režimu.
@@ -94,6 +100,16 @@ export default async function MojeLode({ searchParams }: Parametry) {
           Připojení je odebrané.
         </p>
       )}
+      {stav === "prijato" && (
+        <p className="hlaska" role="status">
+          Žádost je přijatá, člověk je teď posádka.
+        </p>
+      )}
+      {stav === "zamitnuto" && (
+        <p className="hlaska" role="status">
+          Žádost je zamítnutá. Znovu o tuhle loď žádat nemůže.
+        </p>
+      )}
 
       {lode.length === 0 ? (
         <p className="prazdno">
@@ -118,6 +134,26 @@ export default async function MojeLode({ searchParams }: Parametry) {
         </ul>
       )}
 
+      {/* Co jsem si zažádal jinde. Bez tohohle výpisu člověk neví, jestli
+          se o jeho žádosti ví, nebo zapadla. */}
+      {moje.length > 0 && (
+        <>
+          <h2>Moje žádosti</h2>
+          <ul className="seznam">
+            {moje.map((n) => (
+              <li key={n.id}>
+                <b>{n.lod}</b>{" "}
+                <span className="stitek">
+                  {n.ceka ? "čeká na kapitána" : n.prijat ? "přijato" : "zamítnuto"}
+                </span>
+                {n.poznamka && <span className="detail"> {n.poznamka}</span>}
+                <span className="detail"> podáno {datumClanku(n.podanV)}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
       {vybrana && (
         <>
           <h2>{vybrana.nazev}: posádka</h2>
@@ -137,6 +173,37 @@ export default async function MojeLode({ searchParams }: Parametry) {
                 </li>
               ))}
             </ul>
+          )}
+
+          {/* Žádosti o loď. Potvrzuje je kapitán, protože jen on ví, kdo
+              s ním doopravdy jede (plán, třetí cesta párování). */}
+          {zadosti.length > 0 && (
+            <>
+              <h2>Žádosti o připojení</h2>
+              <ul className="seznam">
+                {zadosti.map((z) => (
+                  <li key={z.id}>
+                    <b>{z.kdo}</b>
+                    {z.poznamka && <span className="detail"> {z.poznamka}</span>}
+                    <span className="detail"> podáno {datumClanku(z.podanV)}</span>
+                    <span className="radkove">
+                      <form action={rozhodniNarokAkce} className="radkove">
+                        <input type="hidden" name="lod" value={vybrana.lodId} />
+                        <input type="hidden" name="narok" value={z.id} />
+                        <input type="hidden" name="prijmout" value="ano" />
+                        <button type="submit">Přijmout jako posádku</button>
+                      </form>
+                      <form action={rozhodniNarokAkce} className="radkove">
+                        <input type="hidden" name="lod" value={vybrana.lodId} />
+                        <input type="hidden" name="narok" value={z.id} />
+                        <input type="hidden" name="prijmout" value="ne" />
+                        <button type="submit">Zamítnout</button>
+                      </form>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
 
           <h2>Připojit dalšího</h2>

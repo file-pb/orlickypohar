@@ -621,6 +621,152 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ja/naroky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Vypíše moje žádosti o lodě a jak dopadly */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MujNarokDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Požádá o připojení k lodi, kterou potvrdí kapitán
+         * @description Třetí cesta, když e-mail nesedl a kód nikdo nedal. Nárok sám o sobě nedává nic — dokud ho kapitán nepotvrdí, je to jen žádost.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["NarokVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ja/lode/{lod}/naroky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše žádosti čekající u mé lodi
+         * @description Kapitán nebo majitel lodi.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    lod: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NarokDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ja/lode/{lod}/naroky/{narok}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Přijme nebo zamítne žádost o připojení k mé lodi
+         * @description Kapitán nebo majitel. Přijetí dělá z žadatele posádku; kapitánem se stává ten, kdo loď převzal jako první, ne ten, koho někdo potvrdí.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    lod: number;
+                    narok: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RozhodnutiVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/lode/{lod}/kod": {
         parameters: {
             query?: never;
@@ -772,6 +918,47 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/serie/{slug}/lode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vrátí lodě přihlášené do ročníku, i s jejich id
+         * @description Pro výběr lodi, ke které se někdo hlásí (žádost o připojení). Jména lodí jsou veřejná i dnes — ve výpisu účastníků regaty.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LodVRocnikuDto"][];
+                    };
                 };
             };
         };
@@ -3357,6 +3544,13 @@ export interface components {
              */
             lodId: number;
         };
+        LodVRocnikuDto: {
+            /** Format: int32 */
+            lodId: number;
+            nazev: string;
+            cisloPlachty: null | string;
+            kategorie: string;
+        };
         LodVstup: {
             klic: string;
             nazev: string;
@@ -3370,6 +3564,18 @@ export interface components {
             nazev: string;
             cisloPlachty: null | string;
             role: components["schemas"]["RoleKLodi"];
+        };
+        MujNarokDto: {
+            /** Format: int32 */
+            id: number;
+            /** Format: int32 */
+            lodId: number;
+            lod: string;
+            poznamka: null | string;
+            /** Format: date-time */
+            podanV: string;
+            ceka: boolean;
+            prijat: boolean;
         };
         NakladovaPolozka: {
             polozka: string;
@@ -3412,6 +3618,19 @@ export interface components {
             vRocniku: boolean;
             /** Format: int32 */
             posledniRok: null | number;
+        };
+        NarokDto: {
+            /** Format: int32 */
+            id: number;
+            kdo: string;
+            poznamka: null | string;
+            /** Format: date-time */
+            podanV: string;
+        };
+        NarokVstup: {
+            /** Format: int32 */
+            lodId: number;
+            poznamka: null | string;
         };
         NavrhDto: {
             /** Format: uuid */
@@ -3677,6 +3896,9 @@ export interface components {
         Role: "Ctenar" | "Editor" | "Rozhodci" | "Spravce" | "Organizator";
         /** @enum {unknown} */
         RoleKLodi: "Majitel" | "Kapitan" | "Posadka" | "Fanousek";
+        RozhodnutiVstup: {
+            prijmout: boolean;
+        };
         RozjizdkaDto: {
             /** Format: int32 */
             cislo: number;

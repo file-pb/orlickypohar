@@ -497,6 +497,133 @@
                 }
             }
         },
+        "/ja/naroky": {
+            "post": {
+                "tags": [
+                    "Identita"
+                ],
+                "summary": "Po\u017e\u00e1d\u00e1 o p\u0159ipojen\u00ed k lodi, kterou potvrd\u00ed kapit\u00e1n",
+                "description": "T\u0159et\u00ed cesta, kdy\u017e e-mail nesedl a k\u00f3d nikdo nedal. N\u00e1rok s\u00e1m o sob\u011b ned\u00e1v\u00e1 nic \u2014 dokud ho kapit\u00e1n nepotvrd\u00ed, je to jen \u017e\u00e1dost.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NarokVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Identita"
+                ],
+                "summary": "Vyp\u00ed\u0161e moje \u017e\u00e1dosti o lod\u011b a jak dopadly",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/MujNarokDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ja/lode/{lod}/naroky": {
+            "get": {
+                "tags": [
+                    "Identita"
+                ],
+                "summary": "Vyp\u00ed\u0161e \u017e\u00e1dosti \u010dekaj\u00edc\u00ed u m\u00e9 lodi",
+                "description": "Kapit\u00e1n nebo majitel lodi.",
+                "parameters": [
+                    {
+                        "name": "lod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/NarokDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ja/lode/{lod}/naroky/{narok}": {
+            "post": {
+                "tags": [
+                    "Identita"
+                ],
+                "summary": "P\u0159ijme nebo zam\u00edtne \u017e\u00e1dost o p\u0159ipojen\u00ed k m\u00e9 lodi",
+                "description": "Kapit\u00e1n nebo majitel. P\u0159ijet\u00ed d\u011bl\u00e1 z \u017eadatele pos\u00e1dku; kapit\u00e1nem se st\u00e1v\u00e1 ten, kdo lo\u010f p\u0159evzal jako prvn\u00ed, ne ten, koho n\u011bkdo potvrd\u00ed.",
+                "parameters": [
+                    {
+                        "name": "lod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "narok",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RozhodnutiVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/lode/{lod}/kod": {
             "post": {
                 "tags": [
@@ -611,6 +738,40 @@
                     },
                     "404": {
                         "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/serie/{slug}/lode": {
+            "get": {
+                "tags": [
+                    "S\u00e9rie"
+                ],
+                "summary": "Vr\u00e1t\u00ed lod\u011b p\u0159ihl\u00e1\u0161en\u00e9 do ro\u010dn\u00edku, i s jejich id",
+                "description": "Pro v\u00fdb\u011br lodi, ke kter\u00e9 se n\u011bkdo hl\u00e1s\u00ed (\u017e\u00e1dost o p\u0159ipojen\u00ed). Jm\u00e9na lod\u00ed jsou ve\u0159ejn\u00e1 i dnes \u2014 ve v\u00fdpisu \u00fa\u010dastn\u00edk\u016f regaty.",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LodVRocnikuDto"
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3898,6 +4059,33 @@
                     }
                 }
             },
+            "LodVRocnikuDto": {
+                "required": [
+                    "lodId",
+                    "nazev",
+                    "cisloPlachty",
+                    "kategorie"
+                ],
+                "type": "object",
+                "properties": {
+                    "lodId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "cisloPlachty": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "kategorie": {
+                        "type": "string"
+                    }
+                }
+            },
             "LodVstup": {
                 "required": [
                     "klic",
@@ -3955,6 +4143,47 @@
                     },
                     "role": {
                         "$ref": "#/components/schemas/RoleKLodi"
+                    }
+                }
+            },
+            "MujNarokDto": {
+                "required": [
+                    "id",
+                    "lodId",
+                    "lod",
+                    "poznamka",
+                    "podanV",
+                    "ceka",
+                    "prijat"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "lodId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "lod": {
+                        "type": "string"
+                    },
+                    "poznamka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "podanV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "ceka": {
+                        "type": "boolean"
+                    },
+                    "prijat": {
+                        "type": "boolean"
                     }
                 }
             },
@@ -4126,6 +4355,53 @@
                             "integer"
                         ],
                         "format": "int32"
+                    }
+                }
+            },
+            "NarokDto": {
+                "required": [
+                    "id",
+                    "kdo",
+                    "poznamka",
+                    "podanV"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "kdo": {
+                        "type": "string"
+                    },
+                    "poznamka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "podanV": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "NarokVstup": {
+                "required": [
+                    "lodId",
+                    "poznamka"
+                ],
+                "type": "object",
+                "properties": {
+                    "lodId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "poznamka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     }
                 }
             },
@@ -5232,6 +5508,17 @@
                     "Posadka",
                     "Fanousek"
                 ]
+            },
+            "RozhodnutiVstup": {
+                "required": [
+                    "prijmout"
+                ],
+                "type": "object",
+                "properties": {
+                    "prijmout": {
+                        "type": "boolean"
+                    }
+                }
             },
             "RozjizdkaDto": {
                 "required": [
