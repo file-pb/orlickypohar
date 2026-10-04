@@ -37,7 +37,11 @@ public record LodNaZastavceDto(
     IReadOnlyList<ZmenaUcastiDto>? Historie = null,
     // Požadavek nebo odmítnutou přihlášku bez výsledků jde smazat — nesmysl
     // z webu se nemá válet ve frontě ani jako odmítnutý.
-    bool SmiSmazat = false);
+    bool SmiSmazat = false,
+    // Id lodi, ne přihlášky: připojovací kód se vystavuje lodi, která žije
+    // napříč ročníky. Obrazovka přihlášek je jediné místo, kde má pořadatel
+    // loď před sebou (Filip, 4. 10. 2026). Aditivně, na konci.
+    int LodId = 0);
 
 /// <summary>Jedna změna stavu pro obrazovku. <c>Kdo</c> prázdný znamená „z webu".</summary>
 public record ZmenaUcastiDto(StavUcasti? Ze, StavUcasti Na, DateTimeOffset Kdy, string? Kdo, string? Duvod);
@@ -478,7 +482,7 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
             .Where(p => p.SerieId == serieId && (jenPrihlaska == null || p.Id == jenPrihlaska))
             .Select(p => new
             {
-                p.Id, p.Lod!.Nazev, p.Lod.CisloPlachty, p.Lod.Typ,
+                p.Id, p.LodId, p.Lod!.Nazev, p.Lod.CisloPlachty, p.Lod.Typ,
                 Majitel = p.Lod.Majitel!.Jmeno + " " + p.Lod.Majitel.Prijmeni,
                 Kategorie = p.Kategorie!.Nazev, KategoriePoradi = p.Kategorie.Poradi,
             })
@@ -526,7 +530,8 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
                     u?.Kapitan, u?.Email, u?.Telefon, u?.Posadka, u?.Poznamka, u?.PodanoV,
                     u?.Zaplaceno ?? false, u?.StartovnePoznamka,
                     u is null ? null : [.. u.Historie.Select(z => new ZmenaUcastiDto(z.Ze, z.Na, z.Kdy, z.Kdo, z.Duvod))],
-                    u is not null && kdo == Prihlasky.Kdo.Poradatel && Prihlasky.SmiSmazat(u.Stav, u.MaVysledky));
+                    u is not null && kdo == Prihlasky.Kdo.Poradatel && Prihlasky.SmiSmazat(u.Stav, u.MaVysledky),
+                    p.LodId);
             })
             .ToList();
     }
