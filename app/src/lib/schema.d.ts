@@ -589,7 +589,7 @@ export interface paths {
         put?: never;
         /**
          * Připojí přihlášený účet k lodi podle kódu
-         * @description První připojený je kapitán, další posádka. Kdo už u lodi roli má, o ni zadáním kódu nepřijde.
+         * @description Připojený je vždycky posádka — kapitánem dělá jen správce ročníku. Kdo už u lodi roli má, o ni zadáním kódu nepřijde.
          */
         post: {
             parameters: {
@@ -3240,6 +3240,219 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/lode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše lodě ročníku i s tím, kdo k nim patří
+         * @description Správce ročníku. Lodě bez kapitána jsou první, pak ty s kapitánem od připojovacího kódu — to je práce, která na správce čeká.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LodSpravaDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/lode/{lod}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše vazby jedné lodi i historii změn rolí
+         * @description Správce ročníku.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    lod: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LodDetailSpravaDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/lode/{lod}/kapitan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Určí kapitána lodi
+         * @description Správce ročníku. Povýšení nového a snížení dosavadního kapitána je jeden úkon v jedné transakci. Majitel zůstává majitelem. Opakované určení téhož člověka jen potvrdí roli, kterou už má.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    lod: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UrceniKapitanaVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/lode/{lod}/vazby/{vazba}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Změní roli jedné vazby k lodi
+         * @description Správce ročníku. Posledního kapitána snížit nejde — nejdřív urči jiného. Majitele tudy nastavit nejde, ten patří k vlastnictví lodi.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    lod: number;
+                    vazba: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ZmenaRoleVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/lode/{lod}/vazby/{vazba}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Odebere vazbu k lodi
+         * @description Správce ročníku. Posledního kapitána odebrat nejde. Odebranou vazbu párování podle e-mailu nevrací.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    lod: number;
+                    vazba: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/poradatele/{poradatel}": {
         parameters: {
             query?: never;
@@ -3513,6 +3726,10 @@ export interface components {
         };
         /** @enum {unknown} */
         KodVysledku: "Dnf" | "Dns" | "Dnc" | "Ocs" | "Dsq" | "Ret" | "Rdg" | null;
+        LodDetailSpravaDto: {
+            lod: components["schemas"]["LodSpravaDto"];
+            zmeny: components["schemas"]["ZmenaRoleDto"][];
+        };
         LodNaZastavceDto: {
             /** Format: int32 */
             prihlaskaId: number;
@@ -3543,6 +3760,16 @@ export interface components {
              * @default 0
              */
             lodId: number;
+        };
+        LodSpravaDto: {
+            /** Format: int32 */
+            lodId: number;
+            nazev: string;
+            cisloPlachty: null | string;
+            kategorie: string;
+            maKapitana: boolean;
+            keKontrole: boolean;
+            vazby: components["schemas"]["VazbaSpravaDto"][];
         };
         LodVRocnikuDto: {
             /** Format: int32 */
@@ -4086,6 +4313,27 @@ export interface components {
             role: components["schemas"]["Role"];
             zavod?: null | string;
         };
+        UrceniKapitanaVstup: {
+            /** Format: uuid */
+            uzivatelId: string;
+        };
+        VazbaSpravaDto: {
+            /** Format: int32 */
+            id: number;
+            /** Format: uuid */
+            uzivatelId: string;
+            kdo: string;
+            email: null | string;
+            role: components["schemas"]["RoleKLodi"];
+            puvod: components["schemas"]["PuvodVazby"];
+            /** Format: date-time */
+            vzniklaV: string;
+            roleUrcenaRucne: boolean;
+            roleUrcil: null | string;
+            /** Format: date-time */
+            roleUrcenaV: null | string;
+            keKontrole: boolean;
+        };
         VerejnaPrihlaskaVstup: {
             lod: string;
             kapitan: components["schemas"]["KapitanVstup"];
@@ -4372,6 +4620,17 @@ export interface components {
              * @default 0
              */
             posunDoSerie: number;
+        };
+        ZmenaRoleDto: {
+            kdo: string;
+            predchozi: null | components["schemas"]["RoleKLodi"];
+            nova: null | components["schemas"]["RoleKLodi"];
+            zmenil: null | string;
+            /** Format: date-time */
+            zmenenoV: string;
+        };
+        ZmenaRoleVstup: {
+            role: components["schemas"]["RoleKLodi"];
         };
         ZmenaUcastiDto: {
             ze: null | components["schemas"]["StavUcasti"];

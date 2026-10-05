@@ -33,6 +33,13 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
     ),
   ];
 
+  // Ročníky, kde je správce. Lodě a kapitánství schválně jen jemu: vazba
+  // k lodi platí celý rok a napříč zastávkami, takže pověření k jedné
+  // regatě na ni nemá dosáhnout (oponentura, 5. 10. 2026).
+  const lode = [
+    ...new Set(opravneni.filter((o) => o.role === "Spravce").map((o) => o.serie)),
+  ];
+
   // Ročníky, kde smí psát. Editor píše na blog, organizátor a správce
   // obsahují editora — tohle pořadí je v `Prava` a tady se jen opisuje pro
   // rozhodnutí, jestli odkaz vůbec nabídnout.
@@ -136,6 +143,11 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
         {kalendar.map((serie) => (
           <OdkazJinam obycejny key={`vysledky-${serie}`} href={`/sprava/${serie}/vysledky`}>
             Výsledky {serie}
+          </OdkazJinam>
+        ))}
+        {lode.map((serie) => (
+          <OdkazJinam obycejny key={`lode-${serie}`} href={`/sprava/${serie}/lode`}>
+            Lodě {serie}
           </OdkazJinam>
         ))}
         {spravuje.map((serie) => (

@@ -448,6 +448,88 @@ UCTY = {u["email"]: u for u in [
 ]}
 JEN_ROCNIK = ("Rozhodci", "Spravce")
 
+# --- Vazby k lodím ----------------------------------------------------------
+# Kdo patří ke které lodi. Lodě mock nečísluje, takže se bere totéž číslo
+# jako u přihlášky (`PRIHLASKA_ID`) — v ročníku je to jedna loď na jednu
+# přihlášku.
+#
+# Výchozí stav je schválně nehezký, protože právě ten obrazovka řeší:
+# první loď má kapitána od připojovacího kódu (ke kontrole), druhá jen
+# posádku a žádného kapitána, třetí majitele z párování podle e-mailu.
+# Žije v paměti procesu — restart ho vrátí zpátky.
+VAZBY = []
+ZMENY_ROLI = []
+
+
+def _nasad_vazby():
+    poradi = list(PRIHLASKA_ID.items())
+    ucty = list(UCTY.values())
+    vzor = [("Kapitan", "Kod", False), ("Posadka", "Kod", False), ("Majitel", "Email", False)]
+
+    for i, ((_lod, lod_id), (role, puvod, rucne)) in enumerate(zip(poradi, vzor)):
+        VAZBY.append({
+            "id": i + 1, "lodId": lod_id, "uzivatelId": ucty[i % len(ucty)]["id"],
+            "role": role, "puvod": puvod,
+            "vzniklaV": "2026-09-20T09:00:00+00:00",
+            "roleUrcilId": JA["id"] if rucne else None,
+            "roleUrcenaV": "2026-09-20T09:00:00+00:00" if rucne else None,
+        })
+
+
+def ke_kontrole(v):
+    """Opsané z `Features/Lode/Kapitanstvi.cs` — kapitán od kódu bez potvrzení."""
+    return v["role"] in ("Majitel", "Kapitan") and v["puvod"] == "Kod" and not v["roleUrcilId"]
+
+
+def ucet_podle_id(id_uctu):
+    return next((u for u in UCTY.values() if u["id"] == id_uctu), None)
+
+
+def vazba_dto(v):
+    u = ucet_podle_id(v["uzivatelId"]) or {}
+    urcil = ucet_podle_id(v["roleUrcilId"]) if v["roleUrcilId"] else None
+    return {
+        "id": v["id"], "uzivatelId": v["uzivatelId"],
+        "kdo": u.get("zobrazovane", "neznámý účet"), "email": u.get("email"),
+        "role": v["role"], "puvod": v["puvod"], "vzniklaV": v["vzniklaV"],
+        "roleUrcenaRucne": bool(v["roleUrcilId"]),
+        "roleUrcil": (urcil or {}).get("zobrazovane"),
+        "roleUrcenaV": v["roleUrcenaV"],
+        "keKontrole": ke_kontrole(v),
+    }
+
+
+def lod_sprava_dto(klic):
+    lod_id = PRIHLASKA_ID[klic]
+    vazby = [vazba_dto(v) for v in VAZBY if v["lodId"] == lod_id]
+    vazby.sort(key=lambda v: (("Majitel", "Kapitan", "Posadka", "Fanousek").index(v["role"]),
+                              v["vzniklaV"]))
+    return {
+        "lodId": lod_id, "nazev": LODE[klic]["nazev"],
+        "cisloPlachty": LODE[klic].get("cisloPlachty"), "kategorie": KAT[klic],
+        "maKapitana": any(v["role"] in ("Majitel", "Kapitan") for v in vazby),
+        "keKontrole": any(v["keKontrole"] for v in vazby),
+        "vazby": vazby,
+    }
+
+
+def ted_iso():
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).isoformat()
+
+
+def zaznamenej_zmenu(lod_id, komu, predchozi, nova):
+    ZMENY_ROLI.append({"lodId": lod_id, "uzivatelId": komu, "predchozi": predchozi,
+                       "nova": nova, "zmenilId": JA["id"], "zmenenoV": ted_iso()})
+
+
+def zmena_dto(z):
+    return {"kdo": (ucet_podle_id(z["uzivatelId"]) or {}).get("zobrazovane", "neznámý účet"),
+            "predchozi": z["predchozi"], "nova": z["nova"],
+            "zmenil": (ucet_podle_id(z["zmenilId"]) or {}).get("zobrazovane"),
+            "zmenenoV": z["zmenenoV"]}
+
+
 # Články pro administraci. Berou se z mocku a dál žijí v paměti procesu —
 # restart je vrátí do výchozího stavu, což je při zkoušení obrazovek žádoucí.
 # Mock nezná stavy, takže se dopočítají z příznaku publikace.
@@ -554,8 +636,9 @@ def rozjizdka_radek(r):
 PRIHLASKA_ID = {p["lod"]: i + 1 for i, p in enumerate(D["prihlasky"])}
 LOD_PODLE_ID = {i: lod for lod, i in PRIHLASKA_ID.items()}
 
-# Až tady, protože snímek potřebuje čísla přihlášek.
+# Až tady, protože snímek i vazby k lodím potřebují čísla přihlášek.
 _nasad_druhy_snimek()
+_nasad_vazby()
 OTEVRENY = ("Navrzeno", "KRevizi")
 
 
@@ -887,6 +970,11 @@ class H(BaseHTTPRequestHandler):
                           r'/rozjizdky/(\d+)/vysledky$', cesta)):
             return self.uloz_zapis(m.group(1), int(m.group(2)))
 
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/lode/(\d+)/kapitan$', cesta)):
+            return self.urci_kapitana(int(m.group(1)))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/lode/(\d+)/vazby/(\d+)/role$', cesta)):
+            return self.zmen_roli(int(m.group(1)), int(m.group(2)))
+
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)$', cesta)):
             return self.uprav_zastavku(m.group(1))
 
@@ -979,6 +1067,108 @@ class H(BaseHTTPRequestHandler):
             {"ze": None, "na": "Pozadavek", "kdy": ted, "kdo": None, "duvod": None})
 
         return self.odpoved({"zavod": z["nazev"], "lod": nazev, "stav": "Pozadavek"}, 201)
+
+    # --- Kapitánství -------------------------------------------------------
+    # Pravidla opsaná z `Features/Lode/Kapitanstvi.cs`, ze stejného důvodu
+    # jako bodování: pravda leží tam a hlídají ji testy, tohle je jen proto,
+    # aby šla obrazovka vidět na stroji bez databáze.
+
+    POSLEDNI_ODPOVEDNY = ("Tohle je poslední kapitán lodi. Nejdřív urči jiného, "
+                          "pak tohohle odeber.")
+
+    def _lod_nebo_404(self, lod_id):
+        if not self.headers.get("authorization"):
+            self.send_error(401)
+            return None
+        klic = LOD_PODLE_ID.get(lod_id)
+        if not klic:
+            self.send_error(404)
+            return None
+        return klic
+
+    def _prazdna_odpoved(self):
+        self.send_response(204)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
+    def urci_kapitana(self, lod_id):
+        if not self._lod_nebo_404(lod_id):
+            return None
+
+        kdo = (self.telo_zadosti() or {}).get("uzivatelId")
+        if not ucet_podle_id(kdo):
+            return self.chyba(400, "Takový účet tu není. Kapitánem jde určit jen "
+                                   "někoho, kdo se už přihlásil.")
+
+        ted = ted_iso()
+        vazby = [v for v in VAZBY if v["lodId"] == lod_id]
+        novy = next((v for v in vazby if v["uzivatelId"] == kdo), None)
+
+        if novy is None:
+            novy = {"id": max([v["id"] for v in VAZBY], default=0) + 1, "lodId": lod_id,
+                    "uzivatelId": kdo, "role": "Kapitan", "puvod": "Rucne", "vzniklaV": ted,
+                    "roleUrcilId": JA["id"], "roleUrcenaV": ted}
+            VAZBY.append(novy)
+            zaznamenej_zmenu(lod_id, kdo, None, "Kapitan")
+        else:
+            if novy["role"] not in ("Kapitan", "Majitel"):
+                zaznamenej_zmenu(lod_id, kdo, novy["role"], "Kapitan")
+                novy["role"] = "Kapitan"
+            novy["roleUrcilId"], novy["roleUrcenaV"] = JA["id"], ted
+
+        # Dosavadní kapitán spadne na posádku, majitel zůstává majitelem.
+        for stara in vazby:
+            if stara["uzivatelId"] == kdo or stara["role"] != "Kapitan":
+                continue
+            zaznamenej_zmenu(lod_id, stara["uzivatelId"], "Kapitan", "Posadka")
+            stara["role"] = "Posadka"
+            stara["roleUrcilId"], stara["roleUrcenaV"] = JA["id"], ted
+
+        return self._prazdna_odpoved()
+
+    def zmen_roli(self, lod_id, vazba_id):
+        if not self._lod_nebo_404(lod_id):
+            return None
+
+        vazba = next((v for v in VAZBY if v["id"] == vazba_id and v["lodId"] == lod_id), None)
+        if not vazba:
+            return self.chyba(400, "Takové připojení u lodi není.")
+
+        nova = (self.telo_zadosti() or {}).get("role")
+        if nova == "Majitel":
+            return self.chyba(400, "Majitele určuje vlastnictví lodi v ročníku, ne tahle "
+                                   "obrazovka. Komu má loď patřit, oprav v přihláškách ročníku.")
+        if nova not in ("Kapitan", "Posadka", "Fanousek"):
+            return self.chyba(400, "Takovou roli loď nezná.")
+
+        jinych = sum(1 for v in VAZBY if v["lodId"] == lod_id and v["id"] != vazba_id
+                     and v["role"] in ("Majitel", "Kapitan"))
+        if vazba["role"] in ("Majitel", "Kapitan") and nova not in ("Majitel", "Kapitan") \
+                and jinych == 0:
+            return self.chyba(400, self.POSLEDNI_ODPOVEDNY)
+
+        if vazba["role"] != nova:
+            zaznamenej_zmenu(lod_id, vazba["uzivatelId"], vazba["role"], nova)
+        vazba["role"] = nova
+        vazba["roleUrcilId"], vazba["roleUrcenaV"] = JA["id"], ted_iso()
+        return self._prazdna_odpoved()
+
+    def odeber_vazbu(self, lod_id, vazba_id):
+        if not self._lod_nebo_404(lod_id):
+            return None
+
+        vazba = next((v for v in VAZBY if v["id"] == vazba_id and v["lodId"] == lod_id), None)
+        if not vazba:
+            return self.chyba(400, "Takové připojení u lodi není.")
+
+        jinych = sum(1 for v in VAZBY if v["lodId"] == lod_id and v["id"] != vazba_id
+                     and v["role"] in ("Majitel", "Kapitan"))
+        if vazba["role"] in ("Majitel", "Kapitan") and jinych == 0:
+            return self.chyba(400, self.POSLEDNI_ODPOVEDNY)
+
+        zaznamenej_zmenu(lod_id, vazba["uzivatelId"], vazba["role"], None)
+        VAZBY.remove(vazba)
+        return self._prazdna_odpoved()
 
     def do_POST(self):
         cesta = urlparse(self.path).path
@@ -1586,6 +1776,10 @@ class H(BaseHTTPRequestHandler):
         return self.odpoved(clanek_radek(c))
 
     def do_DELETE(self):
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/lode/(\d+)/vazby/(\d+)$',
+                          urlparse(self.path).path)):
+            return self.odeber_vazbu(int(m.group(1)), int(m.group(2)))
+
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode/(\d+)$',
                           urlparse(self.path).path)):
             z = self.zastavka(m.group(1))
@@ -1781,6 +1975,25 @@ class H(BaseHTTPRequestHandler):
                 "smiNaRocnik": True,
                 "ucty": sorted(UCTY.values(), key=lambda u: u["naposledyPrihlasenV"],
                                reverse=True),
+            }
+        elif cesta == f'/sprava/serie/{D["slug"]}/lode':
+            # Lodě ročníku i s vazbami. Ty, které čekají na správce — bez
+            # kapitána nebo s kapitánem od kódu — jsou první.
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            telo = sorted(
+                (lod_sprava_dto(p["lod"]) for p in D["prihlasky"]),
+                key=lambda l: (l["maKapitana"], not l["keKontrole"], l["nazev"]))
+        elif (m := re.match(rf'^/sprava/serie/{D["slug"]}/lode/(\d+)$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            klic = LOD_PODLE_ID.get(int(m.group(1)))
+            if not klic:
+                return self.send_error(404)
+            telo = {
+                "lod": lod_sprava_dto(klic),
+                "zmeny": [zmena_dto(z) for z in reversed(ZMENY_ROLI)
+                          if z["lodId"] == PRIHLASKA_ID[klic]],
             }
         elif cesta == f'/sprava/serie/{D["slug"]}':
             if not self.headers.get("authorization"):

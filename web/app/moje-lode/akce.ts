@@ -29,8 +29,8 @@ export async function odeberAkce(formular: FormData) {
 }
 
 /**
- * Kapitán rozhodne o žádosti. Přijetí dělá z žadatele posádku — kapitánem
- * je ten, kdo loď převzal jako první, ne ten, koho někdo potvrdí.
+ * Kapitán rozhodne o žádosti. Přijetí dělá z žadatele posádku — kapitána
+ * uděluje správce ročníku, žádná z cest párování.
  */
 export async function rozhodniNarokAkce(formular: FormData) {
   const lod = Number(formular.get("lod") ?? 0);
