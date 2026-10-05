@@ -123,13 +123,22 @@ public static class ZavodEndpoints
                 u.Stav == StavUcasti.Vyloucena))
             .ToListAsync(ct);
 
-    /// <summary>Vyvěšené směrnice zastávky, od nejnovější. Bez úložiště prázdné.</summary>
+    /// <summary>
+    /// Vyvěšené směrnice zastávky, od nejnovější. Bez úložiště prázdné.
+    /// <para>
+    /// <b>Stažené verze se nevydávají vůbec</b>, ne jen bez adresy: appka
+    /// zůstává lidem na telefonech a starší verze klienta by o stažení
+    /// nevěděla. Odkaz na odvolaný dokument je to jediné, co se tu stát
+    /// nesmí; že verze zmizela z vývěsky, je vidět ve správě i v historii
+    /// (oponentura, 5. 10. 2026).
+    /// </para>
+    /// </summary>
     private static async Task<List<SmerniceDto>> SmerniceAsync(
         AppDbContext db, IUloziste uloziste, int zavodId, CancellationToken ct)
     {
         var smernice = await db.Smernice
             .Include(s => s.Vyvesil)
-            .Where(s => s.ZavodId == zavodId)
+            .Where(s => s.ZavodId == zavodId && s.StazenoV == null)
             .OrderByDescending(s => s.Verze)
             .ToListAsync(ct);
 

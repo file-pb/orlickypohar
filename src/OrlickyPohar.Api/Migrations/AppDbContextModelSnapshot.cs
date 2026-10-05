@@ -732,12 +732,22 @@ namespace OrlickyPohar.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("DuvodStazeni")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
                     b.Property<string>("Nazev")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Poznamka")
                         .HasColumnType("text");
+
+                    b.Property<Guid?>("StahlId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("StazenoV")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<long>("Velikost")
                         .HasColumnType("bigint");
@@ -755,6 +765,8 @@ namespace OrlickyPohar.Api.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("StahlId");
 
                     b.HasIndex("VyvesilId");
 
@@ -1362,6 +1374,11 @@ namespace OrlickyPohar.Api.Migrations
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Smernice.PlachetniSmernice", b =>
                 {
+                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Stahl")
+                        .WithMany()
+                        .HasForeignKey("StahlId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Vyvesil")
                         .WithMany()
                         .HasForeignKey("VyvesilId")
@@ -1373,6 +1390,8 @@ namespace OrlickyPohar.Api.Migrations
                         .HasForeignKey("ZavodId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Stahl");
 
                     b.Navigation("Vyvesil");
 

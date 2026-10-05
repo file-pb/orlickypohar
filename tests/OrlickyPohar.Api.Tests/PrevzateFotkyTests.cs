@@ -167,7 +167,8 @@ public class PrevzateFotkyTests
         public bool Pripraveno => true;
         public string? VerejnaAdresa => "https://fotky.test";
 
-        public Task UlozAsync(string klic, byte[] data, string typ, CancellationToken ct)
+        public Task UlozAsync(
+            string klic, byte[] data, string typ, CancellationToken ct, string? cache = null)
         {
             Soubory[klic] = data;
             return Task.CompletedTask;

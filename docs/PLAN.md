@@ -1377,6 +1377,7 @@ v appce.
 | Kam | Objektové úložiště pod předponou `smernice/`, v databázi záznam |
 | Verze | **Nová směrnice je nový záznam, ne přepis.** Oprava se vyvěšuje, nepřepisuje se — vývěska musí jít doložit zpětně |
 | Kdo vyvěšuje | Organizátor zastávky nebo rozhodčí; u záznamu je kdo a kdy |
+| Odvolání | **Záznam se nemaže, obsah se dá stáhnout.** Stažená verze zmizí z úložiště i z veřejného čtení, řádek i důvod zůstanou |
 | Kde je vidět | Stránka zastávky na webu, táž obrazovka v appce, odkaz v kalendáři |
 | Kontrola | Zastávka ve stavu *vypsaná* bez směrnice je ve správě vidět jako nedodělek — regata bez směrnice se nejede |
 
@@ -1400,7 +1401,31 @@ kontrola, že soubor opravdu začíná `%PDF`, a uložení beze změny obsahu.
 | web, správa | `/sprava/{serie}/smernice/{zavod}`, odkaz z kalendáře |
 
 **Verze se čísluje v rámci zastávky** (1, 2, 3…) a platná je ta nejvyšší.
-Mazací endpoint schválně neexistuje — ani pro správce.
+Mazací endpoint na *záznam* schválně neexistuje — ani pro správce.
+
+#### Stažení z vývěsky (oponentura, 5. 10. 2026)
+
+Do 6. 10. 2026 platilo „vyvěšené zůstává" na záznam **i na obsah** — a to
+byla díra. Pořadatel, který nahrál nesprávné PDF s telefony a adresami
+posádky, to neměl jak vzít zpět: kontrola formátu soubor pustí, nová verze
+chybnou neodvolá a **všechny verze se vydávaly veřejně**, i u ročníku se
+skrytými výsledky. Oponent k tomu dodal to podstatné: *příznak v databázi
+veřejnou R2 adresu nezastaví.*
+
+| Věc | Jak | Proč |
+|---|---|---|
+| Co stažení dělá | Zapíše `StazenoV`, kdo a **povinný důvod**; soubor smaže z úložiště | Oddělit záznam o dokumentu od dostupnosti jeho obsahu |
+| Pořadí kroků | Nejdřív záznam, pak soubor — **obráceně než u vyvěšení** | Tady je cílem zbavit se obsahu; řádek tvrdící „visí" nad smazaným souborem by na vývěsce ukazoval mrtvý odkaz |
+| Když R2 zaškobrtne | Klíč jde v téže transakci do fronty úklidu a mazání se opakuje | Záznam a cizí službu nejde smazat jednou transakcí |
+| Veřejné čtení | Staženou verzi **nevydá vůbec**, ne jen bez adresy | Appka zůstává lidem na telefonech; starší klient by o stažení nevěděl a odkaz na odvolaný dokument je to jediné, co se stát nesmí |
+| Cache | Směrnice se ukládá s `no-store`, ne s roční `immutable` jako fotky | S roční cache by Cloudflare vydával kopii smazaného souboru ještě rok po odvolání |
+| Co vzít zpět nejde | Kopie, které si už někdo stáhl | Platí vždycky a je to tak napsané i v hlášce |
+
+**Zbytek po starých verzích.** Směrnice vyvěšené před 6. 10. 2026 mají
+v hlavičce roční `immutable`, takže po stažení může Cloudflare ještě chvíli
+vydávat kopii z edge cache. Jistotu u nich dá jen ruční *Purge by URL*
+v Cloudflare; obrazovka proto po stažení ukáže přesnou adresu souboru.
+Nové verze tím netrpí.
 
 **Co zbývá:** upozornění ve správě u vypsané regaty bez směrnice a zobrazení
 v appce. Appka dnes směrnici nenese, i když ji API vydává.

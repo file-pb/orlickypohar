@@ -125,6 +125,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // stejných karet ve výpisu.
         prevzaty.HasIndex(x => x.Odkaz).IsUnique();
 
+        var smernice = b.Entity<PlachetniSmernice>();
+        smernice.Property(x => x.DuvodStazeni).HasMaxLength(Vyveseni.DuvodNejvic);
+        // Kdo stáhl, je jen stopa — jeho smazání záznam o vyvěšení neruší.
+        smernice.HasOne(x => x.Stahl).WithMany().HasForeignKey(x => x.StahlId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         var kLodi = b.Entity<VazbaKLodi>();
         // Jeden účet má u jedné lodi jednu roli. Bez indexu by druhé
         // párování — třeba e-mailem i kódem — vyrobilo dvě vazby a loď by

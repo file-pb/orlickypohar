@@ -14,6 +14,14 @@ namespace OrlickyPohar.Api.Features.Smernice;
 /// je podle <see cref="Id"/>, takže se nikdy nezmění pod rukama.
 /// </para>
 /// <para>
+/// <b>Záznam se nemaže, obsah se dá odvolat</b> (oponentura, 5. 10. 2026).
+/// Do té doby platilo „vyvěšené zůstává" na obojí — a pořadatel, který
+/// omylem nahrál PDF s telefony a adresami posádky, to neměl jak vzít zpět:
+/// nová verze chybnou neodvolá a všechny verze se vydávaly veřejně. Stažení
+/// (<see cref="StazenoV"/>) proto nechává řádek i historii, ale soubor
+/// z úložiště zmizí a veřejné čtení verzi nevydá.
+/// </para>
+/// <para>
 /// <b>Soubor, ne text v databázi.</b> Směrnici píše pořadatel ve Wordu
 /// a vydává jako PDF. Převádět ji na bloky by znamenalo přepisovat cizí
 /// úřední text a riskovat, že se naše verze rozejde s tou, podle které se
@@ -44,19 +52,53 @@ public class PlachetniSmernice
     public Uzivatel? Vyvesil { get; set; }
 
     public DateTimeOffset VyveseneV { get; set; }
+
+    /// <summary>
+    /// Kdy byla stažena z vývěsky. Prázdné znamená, že visí.
+    /// <para>
+    /// Stažení <b>není smazání záznamu</b>: řádek zůstane i s tím, kdo ji
+    /// vyvěsil, kdo stáhl a proč. Zmizí jen soubor z úložiště a adresa
+    /// z veřejného čtení.
+    /// </para>
+    /// </summary>
+    public DateTimeOffset? StazenoV { get; set; }
+
+    public Guid? StahlId { get; set; }
+    public Uzivatel? Stahl { get; set; }
+
+    /// <summary>
+    /// Proč se stahuje. <b>Povinné při stažení:</b> u dokumentu, podle
+    /// kterého se jede, nesmí být odvolání bez vysvětlení — jinak se po
+    /// sezóně nedá říct, jestli šlo o překlep nebo o chybný obsah.
+    /// </summary>
+    public string? DuvodStazeni { get; set; }
 }
 
-/// <summary>Směrnice, jak ji vidí čtenář webu i appky.</summary>
+/// <summary>
+/// Směrnice, jak ji vidí čtenář webu i appky.
+/// <para>
+/// Pole o stažení jsou <b>aditivní</b> a vyplněná jen pro správu. Veřejné
+/// čtení stažené verze nevydává vůbec: appka zůstává lidem na telefonech
+/// a starší verze klienta by o stažení nevěděla — odkaz na odvolaný
+/// dokument je přesně ta jedna věc, která se stát nesmí.
+/// </para>
+/// </summary>
 public record SmerniceDto(
     int Verze,
     string Nazev,
     string Adresa,
     DateTimeOffset VyveseneV,
     string? Poznamka,
-    string? Vyvesil);
+    string? Vyvesil,
+    DateTimeOffset? StazenoV = null,
+    string? Stahl = null,
+    string? DuvodStazeni = null);
 
 /// <summary>Formulář vyvěšení. Skládá ho server webu, ne prohlížeč.</summary>
 public record SmerniceFormular(IFormFile? Soubor, string? Poznamka);
+
+/// <summary>Proč se směrnice stahuje z vývěsky.</summary>
+public record StazeniVstup(string? Duvod);
 
 /// <summary>
 /// Pravidla vyvěšení. Čisté funkce, bez databáze a bez úložiště.
@@ -71,8 +113,29 @@ public static class Vyveseni
 
     public const int NazevNejvic = 200;
     public const int PoznamkaNejvic = 300;
+    public const int DuvodNejvic = 300;
+
+    /// <summary>
+    /// Hlavička, se kterou se směrnice ukládá. <b>Necachovat</b> — na rozdíl
+    /// od fotek, které se kladou pod nový klíč a nikdy se nemění.
+    /// <para>
+    /// Fotky dostávají roční <c>immutable</c>, protože nová fotka je nový
+    /// soubor. U směrnice je ale potřeba opak: stažení musí zabrat hned.
+    /// S roční cache by Cloudflare vydával kopii smazaného souboru ještě
+    /// rok po odvolání — příznak v databázi veřejnou adresu nezastaví
+    /// (oponentura, 5. 10. 2026). Směrnice je malé PDF a stahuje si ji pár
+    /// lidí před regatou, takže cache nemá co ušetřit.
+    /// </para>
+    /// </summary>
+    public const string Cache = "no-store";
 
     public const string Vypnuto = "Úložiště souborů zatím není nastavené.";
+
+    public const string JeStazena = "Tahle verze je už stažená.";
+
+    public const string DuvodChybi =
+        "Napiš, proč se směrnice stahuje. U dokumentu, podle kterého se jede, "
+        + "musí jít po sezóně dohledat, co se odvolalo a proč.";
 
     public const string NeniPdf =
         "Směrnice musí být PDF. Word nebo sken ulož jako PDF a nahraj znovu.";
@@ -102,11 +165,29 @@ public static class Vyveseni
         return null;
     }
 
+    /// <summary>
+    /// Proč stáhnout nejde — nebo <c>null</c>. Důvod se ořezává, prázdný
+    /// neprojde.
+    /// </summary>
+    public static string? ProcNejdeStahnout(bool uzStazena, string? duvod)
+    {
+        if (uzStazena) return JeStazena;
+        var oriznuty = duvod?.Trim();
+        if (string.IsNullOrEmpty(oriznuty)) return DuvodChybi;
+        return oriznuty.Length > DuvodNejvic
+            ? $"Důvod stažení má nejvýš {DuvodNejvic} znaků."
+            : null;
+    }
+
+    /// <summary>Visí tahle směrnice na vývěsce?</summary>
+    public static bool Visi(PlachetniSmernice s) => s.StazenoV is null;
+
     /// <summary>Směrnice pro klienta, nebo <c>null</c>, když neznáme veřejnou adresu.</summary>
     public static SmerniceDto? Dto(PlachetniSmernice s, string? verejnaAdresa) =>
         string.IsNullOrWhiteSpace(verejnaAdresa)
             ? null
             : new SmerniceDto(
                 s.Verze, s.Nazev, Nahravani.Adresa(verejnaAdresa, Klic(s.Id)),
-                s.VyveseneV, s.Poznamka, s.Vyvesil?.Zobrazovane);
+                s.VyveseneV, s.Poznamka, s.Vyvesil?.Zobrazovane,
+                s.StazenoV, s.Stahl?.Zobrazovane, s.DuvodStazeni);
 }
