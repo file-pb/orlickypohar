@@ -86,6 +86,9 @@ export function Cil({
   );
   const [ukladani, setUkladani] = useState<Ukladani>("ulozeno");
   const [chyba, setChyba] = useState<string | null>(null);
+  // Rozjížďku uložil mezitím někdo jiný. Opakovat tutéž sadu nemá smysl,
+  // dokud to člověk nerozhodne — a svoje klepnutí si obrazovka nechává.
+  const [konflikt, setKonflikt] = useState(false);
   // Záloha z telefonu, která se k tomuhle zápisu nehodí — viz `Zaloha`.
   const [cizi, setCizi] = useState<Zaloha | null>(null);
 
@@ -96,6 +99,9 @@ export function Cil({
   const posledni = useRef({ dojeti, kody });
   const bezi = useRef(false);
   const znovu = useRef(false);
+  // Podoba sady, ze které obrazovka vychází. Po každém uložení ji server
+  // posune; dokud sedí, ví se, že mezitím nikdo jiný neuložil.
+  const revize = useRef(zapis.revize);
 
   const uloz = useCallback(async () => {
     if (bezi.current) {
@@ -106,20 +112,29 @@ export function Cil({
     setUkladani("ukladam");
 
     let hlaska: string | null = null;
+    let kolize = false;
     do {
       znovu.current = false;
       const { dojeti, kody } = posledni.current;
       try {
-        hlaska = (await ulozCilAkce(serie, zavod, zapis.cislo, radky(dojeti, kody))).chyba;
+        const vysledek = await ulozCilAkce(
+          serie, zavod, zapis.cislo, radky(dojeti, kody), revize.current);
+        hlaska = vysledek.chyba;
+        kolize = vysledek.konflikt === true;
+        if (vysledek.revize !== undefined) revize.current = vysledek.revize;
       } catch {
         hlaska = "Spojení se nepodařilo.";
       }
-    } while (znovu.current);
+      // Při konfliktu se neopakuje ani rozepsané klepnutí: poslalo by
+      // tutéž starou revizi a skončilo by zase konfliktem.
+    } while (znovu.current && !kolize);
 
     bezi.current = false;
     setChyba(hlaska);
+    setKonflikt(kolize);
     setUkladani(hlaska ? "chyba" : "ulozeno");
-    // Uložené je na serveru; záloha v telefonu už nemá co chránit.
+    // Uložené je na serveru; záloha v telefonu už nemá co chránit. Při
+    // konfliktu zůstává — je to jediná kopie těch klepnutí.
     if (!hlaska) zahod(klic);
   }, [serie, zavod, zapis.cislo, klic]);
 
@@ -157,8 +172,11 @@ export function Cil({
   // Neuložený stav se zkusí odeslat sám: hned, jak se telefon chytí sítě,
   // a jinak co půl minuty. Bez toho by čekal na další klepnutí — a to
   // po dojezdu poslední lodi nemusí přijít.
+  //
+  // Konflikt se neopakuje: sada vychází ze starší podoby a každý další
+  // pokus skončí stejně. Čeká na člověka, ne na síť.
   useEffect(() => {
-    if (ukladani !== "chyba") return;
+    if (ukladani !== "chyba" || konflikt) return;
 
     const zkus = () => void uloz();
     window.addEventListener("online", zkus);
@@ -327,11 +345,25 @@ export function Cil({
       {chyba && (
         <p className="hlaska chyba" role="alert">
           {chyba}{" "}
-          {ukladani === "chyba" && "Klepnutí zůstávají v telefonu a zkusí odejít samy. "}
-          {ukladani === "chyba" && (
-            <button type="button" className="maly" onClick={() => void uloz()}>
-              Uložit znovu
-            </button>
+          {/* Konflikt je jiná situace než výpadek: opakovat tutéž sadu
+              nepomůže, protože vychází ze starší podoby. Klepnutí zůstávají
+              v telefonu a člověk rozhodne podle porovnání zápisů. */}
+          {konflikt ? (
+            <>
+              Tvoje klepnutí zůstávají v telefonu.{" "}
+              <a href={`/sprava/${serie}/vysledky/${zavod}/${zapis.cislo}/porovnani`}>
+                Porovnat zápisy
+              </a>
+            </>
+          ) : (
+            ukladani === "chyba" && (
+              <>
+                Klepnutí zůstávají v telefonu a zkusí odejít samy.{" "}
+                <button type="button" className="maly" onClick={() => void uloz()}>
+                  Uložit znovu
+                </button>
+              </>
+            )
           )}
         </p>
       )}

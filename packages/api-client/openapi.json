@@ -90,7 +90,24 @@
                     "Import"
                 ],
                 "summary": "Nahraje cel\u00fd ro\u010dn\u00edk z jednoho souboru",
-                "description": "Idempotentn\u00ed: druh\u00e9 odesl\u00e1n\u00ed t\u00e9ho\u017e souboru nic nezduplikuje. Bu\u010f projde cel\u00e1 d\u00e1vka, nebo se neulo\u017e\u00ed nic.",
+                "description": "Idempotentn\u00ed: druh\u00e9 odesl\u00e1n\u00ed t\u00e9ho\u017e souboru nic nezduplikuje. Bu\u010f projde cel\u00e1 d\u00e1vka, nebo se neulo\u017e\u00ed nic.\n\n`rezim=nahled` nic neulo\u017e\u00ed a vr\u00e1t\u00ed, co by se stalo, i s otiskem ro\u010dn\u00edku. `rezim=bezpecny` (v\u00fdchoz\u00ed) ulo\u017e\u00ed, ale odm\u00edtne d\u00e1vku, kter\u00e1 by p\u0159epsala v\u00fdsledky zapsan\u00e9 v aplikaci nebo st\u00e1hla publikaci. `rezim=oprava` p\u0159ep\u00ed\u0161e i je a vy\u017eaduje `otisk` z n\u00e1hledu \u2014 idempotence chr\u00e1n\u00ed p\u0159ed opakov\u00e1n\u00edm souboru, ne p\u0159ed jeho zastaralost\u00ed.",
+                "parameters": [
+                    {
+                        "name": "rezim",
+                        "in": "query",
+                        "schema": {
+                            "default": "Bezpecny",
+                            "$ref": "#/components/schemas/RezimImportu"
+                        }
+                    },
+                    {
+                        "name": "otisk",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -2654,7 +2671,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "Ulo\u017e\u00ed celou sadu v\u00fdsledk\u016f rozj\u00ed\u017e\u010fky",
-                "description": "Lo\u010f, kter\u00e1 v sad\u011b nem\u00e1 po\u0159ad\u00ed ani k\u00f3d, v\u00fdsledek nem\u00e1. Po\u0159ad\u00ed, nebo k\u00f3d, ne oboj\u00ed; stejn\u00e9 po\u0159ad\u00ed v jedn\u00e9 kategorii neprojde. \u010cas se nem\u011bn\u00ed.",
+                "description": "Lo\u010f, kter\u00e1 v sad\u011b nem\u00e1 po\u0159ad\u00ed ani k\u00f3d, v\u00fdsledek nem\u00e1. Po\u0159ad\u00ed, nebo k\u00f3d, ne oboj\u00ed; stejn\u00e9 po\u0159ad\u00ed v jedn\u00e9 kategorii neprojde. \u010cas se nem\u011bn\u00ed. Povinn\u00e9 `revize` je podoba sady, ze kter\u00e9 klient vych\u00e1zel \u2014 p\u0159i nesouladu vrac\u00ed 409 a svou sadu si klient nech\u00e1v\u00e1.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5312,6 +5329,11 @@
                         "items": {
                             "$ref": "#/components/schemas/PoradiKategorieDto"
                         }
+                    },
+                    "verzePravidel": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 1
                     }
                 }
             },
@@ -5821,6 +5843,13 @@
                     "Rucne"
                 ]
             },
+            "RezimImportu": {
+                "enum": [
+                    "Nahled",
+                    "Bezpecny",
+                    "Oprava"
+                ]
+            },
             "Role": {
                 "enum": [
                     "Ctenar",
@@ -6176,6 +6205,11 @@
                     "vysledkyZavoduVerejne": {
                         "type": "boolean",
                         "default": true
+                    },
+                    "verzePravidel": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 1
                     }
                 }
             },
@@ -7145,6 +7179,11 @@
                         "type": "integer",
                         "format": "int32",
                         "default": 0
+                    },
+                    "revize": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 0
                     }
                 }
             },
@@ -7203,6 +7242,13 @@
                         "items": {
                             "$ref": "#/components/schemas/ZapisRadekVstup"
                         }
+                    },
+                    "revize": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
                     }
                 }
             },
@@ -7565,6 +7611,11 @@
                         "items": {
                             "$ref": "#/components/schemas/SmerniceDto"
                         }
+                    },
+                    "verzePravidel": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 1
                     }
                 }
             },

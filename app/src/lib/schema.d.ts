@@ -107,10 +107,15 @@ export interface paths {
         /**
          * Nahraje celý ročník z jednoho souboru
          * @description Idempotentní: druhé odeslání téhož souboru nic nezduplikuje. Buď projde celá dávka, nebo se neuloží nic.
+         *
+         *     `rezim=nahled` nic neuloží a vrátí, co by se stalo, i s otiskem ročníku. `rezim=bezpecny` (výchozí) uloží, ale odmítne dávku, která by přepsala výsledky zapsané v aplikaci nebo stáhla publikaci. `rezim=oprava` přepíše i je a vyžaduje `otisk` z náhledu — idempotence chrání před opakováním souboru, ne před jeho zastaralostí.
          */
         post: {
             parameters: {
-                query?: never;
+                query?: {
+                    rezim?: components["schemas"]["RezimImportu"];
+                    otisk?: string;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -2773,7 +2778,7 @@ export interface paths {
         get?: never;
         /**
          * Uloží celou sadu výsledků rozjížďky
-         * @description Loď, která v sadě nemá pořadí ani kód, výsledek nemá. Pořadí, nebo kód, ne obojí; stejné pořadí v jedné kategorii neprojde. Čas se nemění.
+         * @description Loď, která v sadě nemá pořadí ani kód, výsledek nemá. Pořadí, nebo kód, ne obojí; stejné pořadí v jedné kategorii neprojde. Čas se nemění. Povinné `revize` je podoba sady, ze které klient vycházel — při nesouladu vrací 409 a svou sadu si klient nechává.
          */
         put: {
             parameters: {
@@ -4041,6 +4046,11 @@ export interface components {
             rok: number;
             zastavky: components["schemas"]["ZastavkaDto"][];
             kategorie: components["schemas"]["PoradiKategorieDto"][];
+            /**
+             * Format: int32
+             * @default 1
+             */
+            verzePravidel: number;
         };
         PraceDto: {
             /** Format: double */
@@ -4165,6 +4175,8 @@ export interface components {
         /** @enum {unknown} */
         PuvodVazby: "Email" | "Kod" | "Narok" | "Rucne";
         /** @enum {unknown} */
+        RezimImportu: "Nahled" | "Bezpecny" | "Oprava";
+        /** @enum {unknown} */
         Role: "Ctenar" | "Editor" | "Rozhodci" | "Spravce" | "Organizator";
         /** @enum {unknown} */
         RoleKLodi: "Majitel" | "Kapitan" | "Posadka" | "Fanousek";
@@ -4262,6 +4274,11 @@ export interface components {
             pocetSkrtu: number;
             /** @default true */
             vysledkyZavoduVerejne: boolean;
+            /**
+             * Format: int32
+             * @default 1
+             */
+            verzePravidel: number;
         };
         SmerniceDto: {
             /** Format: int32 */
@@ -4507,6 +4524,11 @@ export interface components {
              * @default 0
              */
             pocetNavrhu: number;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            revize: number;
         };
         ZapisTeplotyRadek: {
             snimek: string;
@@ -4523,6 +4545,8 @@ export interface components {
         };
         ZapisVstup: {
             radky: components["schemas"]["ZapisRadekVstup"][];
+            /** Format: int32 */
+            revize?: null | number;
         };
         ZastavkaDto: {
             slug: string;
@@ -4617,6 +4641,11 @@ export interface components {
             /** @default false */
             vysledkySkryte: boolean;
             smernice?: null | components["schemas"]["SmerniceDto"][];
+            /**
+             * Format: int32
+             * @default 1
+             */
+            verzePravidel: number;
         };
         ZavodShrnutiDto: {
             slug: string;

@@ -156,16 +156,24 @@ export async function prepniStav(
 export const nactiZapis = (serie: string, zavod: string, cislo: number) =>
   cti<ZapisRozjizdky>(kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}`));
 
-/** Celá sada výsledků rozjížďky. Loď, která v ní nemá pořadí ani kód, výsledek nemá. */
+/**
+ * Celá sada výsledků rozjížďky. Loď, která v ní nemá pořadí ani kód,
+ * výsledek nemá.
+ *
+ * <b>`revize` je podoba sady, ze které formulář vyšel.</b> Uložení maže
+ * lodě, které v sadě nejsou, takže sada ze starší podoby umí smazat
+ * opravu, o které tenhle formulář nevěděl — API ji proto odmítne.
+ */
 export async function ulozZapis(
   serie: string,
   zavod: string,
   cislo: number,
   radky: ZapisRadek[],
+  revize: number,
 ): Promise<string | null> {
   return zapis(
     kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}/vysledky`),
-    { radky },
+    { radky, revize },
     "PUT",
   );
 }
@@ -194,13 +202,20 @@ export async function ulozCil(
   zavod: string,
   cislo: number,
   radky: ZapisRadek[],
-): Promise<{ chyba: string } | { zapis: ZapisRozjizdky }> {
+  revize: number,
+): Promise<{ chyba: string; konflikt?: boolean } | { zapis: ZapisRozjizdky }> {
   const odpoved = await posli(
     kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}/vysledky`),
-    { radky },
+    { radky, revize },
     "PUT",
   );
   if (typeof odpoved === "string") return { chyba: odpoved };
+
+  // Konflikt není chyba v datech a nemá se opakovat: rozjížďku mezitím
+  // uložil někdo jiný a dokud to člověk nerozhodne, posílat tutéž sadu
+  // dokola nemá smysl. Obrazovka si svou sadu nechává.
+  if (odpoved.status === 409) return { chyba: await hlaska(odpoved), konflikt: true };
+
   if (!odpoved.ok) return { chyba: await hlaska(odpoved) };
   return { zapis: (await odpoved.json()) as ZapisRozjizdky };
 }

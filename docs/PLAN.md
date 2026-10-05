@@ -1455,8 +1455,10 @@ zastavilo zápis z vody:
 
 1. API revizi vydává a hlídá ji **tomu, kdo ji pošle**; sada bez revize
    projde a zaloguje se. *(hotovo)*
-2. Cílová obrazovka a formulář z papíru revizi posílají a na `409` nabídnou
-   porovnání.
+2. Cílová obrazovka i formulář z papíru revizi posílají. Na `409` cílová
+   obrazovka **přestane opakovat** — sada vychází ze starší podoby a každý
+   další pokus skončí stejně — klepnutí nechá v telefonu a odkáže na
+   porovnání zápisů. *(hotovo)*
 3. Sada bez revize se odmítne.
 
 ### Mapa na webu i v appce

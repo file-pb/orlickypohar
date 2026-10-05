@@ -793,7 +793,10 @@ def zapis_dto(z, r):
                      for p in lode],
             "startV": r.get("startV"), "doSerie": r.get("doSerie", True),
             "papir": {k: v for k, v in r["papir"].items() if k != "id"} if r.get("papir") else None,
-            "smiPapir": True, "pocetNavrhu": len(r.get("navrhy", []))}
+            "smiPapir": True, "pocetNavrhu": len(r.get("navrhy", [])),
+            # Podoba sady, ze které klient vychází. Posílá ji zpátky při
+            # uložení a server tím pozná starší data (nález B).
+            "revize": r.get("revize", 0)}
 
 
 def cas_od_startu(start, dojezd):
@@ -967,6 +970,12 @@ class H(BaseHTTPRequestHandler):
     def telo_zadosti(self):
         delka = int(self.headers.get("Content-Length", "0") or 0)
         return json.loads(self.rfile.read(delka) or b"{}")
+
+    def telo_zadosti_pamet(self):
+        """Tělo, které se dá přečíst víckrát. Ze socketu jde jen jednou."""
+        if not hasattr(self, "_telo"):
+            self._telo = self.telo_zadosti()
+        return self._telo
 
     def chyba(self, kod, text):
         """Chyba ve tvaru, ve kterém ji vydává API: {"error": "..."}."""
@@ -1372,8 +1381,18 @@ class H(BaseHTTPRequestHandler):
         if (chyba := proc_nejde_prepsat(z, r)):
             return self.chyba(400, chyba)
 
+        # Kontrola revize jako v `Zapis.ProcNejdeUlozitRevizi`: kdo pošle
+        # starší podobu sady, neprojde — uložení maže, co v sadě není.
+        poslana = self.telo_zadosti_pamet().get("revize")
+        if poslana is not None and poslana != r.get("revize", 0):
+            return self.chyba(
+                409,
+                "Rozjížďku mezitím uložil někdo jiný, takže tvoje sada vychází ze "
+                "starších čísel. Tvůj zápis se nikam neztratil: otevři porovnání "
+                "zápisů, podívej se, co se liší, a ulož znovu.")
+
         radky = []
-        for radek in self.telo_zadosti().get("radky") or []:
+        for radek in self.telo_zadosti_pamet().get("radky") or []:
             lod = LOD_PODLE_ID.get(radek.get("prihlaskaId"))
             if not lod:
                 return self.chyba(400, f'Přihláška {radek.get("prihlaskaId")} do ročníku nepatří.')
@@ -1393,6 +1412,9 @@ class H(BaseHTTPRequestHandler):
         self.uloz_snimek(r, JA, [
             {"prihlaskaId": PRIHLASKA_ID[lod], "poradiVCili": poradi, "kod": kod}
             for lod, _, poradi, kod, _ in radky if poradi is not None or kod])
+
+        # Nová podoba sady — klient, který vyšel ze staré, už neprojde.
+        r["revize"] = r.get("revize", 0) + 1
 
         for lod in (v["lod"] for v in r["vysledky"]):
             u = next((u for u in z["ucasti"] if u["lod"] == lod), None)

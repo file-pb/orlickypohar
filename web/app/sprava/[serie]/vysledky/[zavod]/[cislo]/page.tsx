@@ -160,6 +160,9 @@ export default async function ZapisRozjizdky({ params, searchParams }: Parametry
           <input type="hidden" name="zavod" value={zavod} />
           <input type="hidden" name="cislo" value={zapis.cislo} />
           <input type="hidden" name="lode" value={zapis.lode.map((l) => l.prihlaskaId).join(",")} />
+          {/* Podoba sady, ze které tenhle formulář vyšel. Když mezitím uloží
+              někdo jiný, API uložení odmítne a rozepsaný zápis zůstane. */}
+          <input type="hidden" name="revize" value={zapis.revize} />
 
           <div className="tabulka-obal zapis">
             <table>
