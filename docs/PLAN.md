@@ -1430,6 +1430,35 @@ Nové verze tím netrpí.
 **Co zbývá:** upozornění ve správě u vypsané regaty bez směrnice a zobrazení
 v appce. Appka dnes směrnici nenese, i když ji API vydává.
 
+### Revize sady výsledků (oponentura, 5. 10. 2026)
+
+Uložení zápisu přichází jako **celá sada** a maže, co v ní není — bez toho
+by se omylem zapsaný řádek nedal odstranit. Druhá strana téže mince je díra:
+telefon bez signálu, který drží sadu A–B, po připojení smaže C doplněné
+mezitím na webu. **Server ten konflikt sám nepozná**, obě sady jsou platná
+data.
+
+| Věc | Jak | Proč |
+|---|---|---|
+| Co klient posílá | `revize` — podobu sady, ze které vycházel | Číslo stačí: nejde o to vědět, co se změnilo, ale že se změnilo |
+| Bez revize | Nakonec **neprojde** | Není to „tak tedy bez kontroly" — sada naslepo umí smazat opravu, o které klient nevěděl |
+| Při nesouladu | `409 Conflict` i se současným stavem; klient si **svou sadu nechává** | Zahodit rozepsaný zápis z cíle je horší než konflikt |
+| Souběh | Uložení drží `FOR UPDATE` na řádku rozjížďky | Bez zámku si dvě uložení přečtou tutéž revizi, obě projdou a druhé přepíše první |
+| Po uložení | `Revize` se zvýší | Starší klient už neprojde |
+| Použití cizího snímku | Posílá právě platnou revizi | Snímek se bere z databáze, takže kontrola by tu neměla co hlídat |
+
+**Další idempotence se nepřidává.** Opakované odeslání téže sady je bez
+následku samo: je to úplná podoba výsledků, ne přírůstek.
+
+**Zavádí se po krocích** („rozšiř a stáhni"), protože jinak by nasazení API
+zastavilo zápis z vody:
+
+1. API revizi vydává a hlídá ji **tomu, kdo ji pošle**; sada bez revize
+   projde a zaloguje se. *(hotovo)*
+2. Cílová obrazovka a formulář z papíru revizi posílají a na `409` nabídnou
+   porovnání.
+3. Sada bez revize se odmítne.
+
 ### Mapa na webu i v appce
 
 Web má vlastní stránku s polohami (Filip, 3. 10. 2026), ne jen appka —

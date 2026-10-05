@@ -863,6 +863,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<bool>("Publikovano")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("Revize")
+                        .HasColumnType("integer");
+
                     b.Property<DateTimeOffset?>("StartV")
                         .HasColumnType("timestamp with time zone");
 

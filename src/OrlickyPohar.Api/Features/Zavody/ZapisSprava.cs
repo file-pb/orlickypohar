@@ -53,7 +53,10 @@ public record ZapisRozjizdkyDto(
     bool SmiPapir = false,
     // Kolik zapisovatelů už rozjížďku uložilo (krok 4). Víc než jeden
     // znamená, že je co porovnávat.
-    int PocetNavrhu = 0);
+    int PocetNavrhu = 0,
+    // Podoba sady, ze které klient vychází. Posílá ji zpátky při uložení
+    // a server tím pozná, že mezitím někdo jiný uložil něco novějšího.
+    int Revize = 0);
 
 /// <summary>Jeden řádek snímku i s tím, co o lodi ví ročník.</summary>
 public record NavrhRadekDto(
@@ -72,8 +75,25 @@ public record NavrhDto(
 public record NavrhyDto(
     string Zavod, string ZavodNazev, int Cislo, IReadOnlyList<NavrhDto> Navrhy);
 
-/// <summary>Celá sada výsledků rozjížďky. Loď, která v ní není, výsledek nemá.</summary>
-public record ZapisVstup(IReadOnlyList<ZapisRadekVstup> Radky);
+/// <summary>
+/// Celá sada výsledků rozjížďky. Loď, která v ní není, výsledek nemá.
+/// <para>
+/// <c>Revize</c> je podoba sady, ze které klient vycházel. <b>Bez ní se
+/// neukládá</b>: uložení maže, co v sadě není, takže sada odeslaná naslepo
+/// umí smazat opravu, o které klient nevěděl.
+/// </para>
+/// </summary>
+public record ZapisVstup(IReadOnlyList<ZapisRadekVstup> Radky, int? Revize = null);
+
+/// <summary>
+/// Jak dopadlo uložení sady. <c>Konflikt</c> znamená, že mezitím uložil
+/// někdo jiný — klient si svou sadu musí nechat a nabídnout porovnání,
+/// ne ji zahodit.
+/// </summary>
+public record VysledekUlozeni(string? Chyba, bool Konflikt = false)
+{
+    public static readonly VysledekUlozeni Ulozeno = new(null);
+}
 
 /// <summary>
 /// Čtení a uložení výsledků rozjížďky a přidání další rozjížďky.
@@ -87,7 +107,8 @@ public record ZapisVstup(IReadOnlyList<ZapisRadekVstup> Radky);
 /// požadavku</b> — stejně jako u <see cref="VysledkySprava"/>.
 /// </para>
 /// </summary>
-public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider cas)
+public class ZapisSprava(
+    AppDbContext db, Fotky.IUloziste uloziste, TimeProvider cas, ILogger<ZapisSprava> log)
 {
     private const string NeniPoradatel =
         "Výsledky zapisuje pořadatel regaty. Rozhodčí je ověřuje, ale nemění.";
@@ -150,7 +171,8 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
             zavod.Serie, zavod.SerieNazev, zavod.Slug, zavod.Nazev, zavod.Stav,
             rozjizdka.Cislo, rozjizdka.StavVysledku, rozjizdka.DuvodRevize,
             procNelze is null, procNelze, lode, rozjizdka.StartV, rozjizdka.DoSerie,
-            Fotky.Nahravani.Dto(papir, uloziste.VerejnaAdresa), poradatel, pocetNavrhu);
+            Fotky.Nahravani.Dto(papir, uloziste.VerejnaAdresa), poradatel, pocetNavrhu,
+            rozjizdka.Revize);
     }
 
     /// <summary>
@@ -172,13 +194,36 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
     /// z importu by se ztratila s ní.
     /// </para>
     /// </summary>
-    public async Task<string?> UlozAsync(
+    public async Task<VysledekUlozeni> UlozAsync(
         Rozjizdka rozjizdka, IReadOnlyList<ZapisRadekVstup> radky, CancellationToken ct,
-        Guid? kdo = null)
+        Guid? kdo = null, int? revize = null)
     {
+        await using var transakce = await db.Database.BeginTransactionAsync(ct);
+
+        // Zámek řádku rozjížďky, ne jen porovnání čísla: dvě uložení ve
+        // stejnou chvíli by si obě přečetla tutéž revizi, obě by prošla
+        // a druhé by přepsalo první, aniž by to kdo poznal.
+        await db.Database.ExecuteSqlAsync(
+            $"SELECT 1 FROM \"Rozjizdky\" WHERE \"Id\" = {rozjizdka.Id} FOR UPDATE", ct);
+        await db.Entry(rozjizdka).ReloadAsync(ct);
+
         var zavod = await db.Zavody.FirstAsync(z => z.Id == rozjizdka.ZavodId, ct);
 
-        if (Zapis.ProcNejdePrepsat(zavod.Stav, rozjizdka.StavVysledku) is { } zamceno) return zamceno;
+        if (Zapis.ProcNejdePrepsat(zavod.Stav, rozjizdka.StavVysledku) is { } zamceno)
+            return new VysledekUlozeni(zamceno);
+
+        // Krok 1 z „rozšiř a stáhni": kdo revizi pošle, je chráněný hned.
+        // Odmítat sadu bez revize se smí teprve tehdy, až ji posílá i cílová
+        // obrazovka — jinak by nasazení API zastavilo zápis z vody.
+        if (revize is not null
+            && Zapis.ProcNejdeUlozitRevizi(revize, rozjizdka.Revize) is { } stara)
+            return new VysledekUlozeni(stara, Konflikt: true);
+
+        if (revize is null)
+            log.LogWarning(
+                "Sada výsledků rozjížďky {Rozjizdka} přišla bez revize. "
+                + "Starý klient; až je bude posílat každý, začne se to odmítat.",
+                rozjizdka.Id);
 
         var prihlasky = await db.Prihlasky
             .Where(p => p.SerieId == zavod.SerieId)
@@ -191,12 +236,12 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
             // Přihláška z cizího ročníku by se jinak zapsala do téhle
             // zastávky — a rozsah by tím přestal cokoliv znamenat.
             if (!prihlasky.TryGetValue(r.PrihlaskaId, out var p))
-                return $"Přihláška {r.PrihlaskaId} do ročníku nepatří.";
+                return new VysledekUlozeni($"Přihláška {r.PrihlaskaId} do ročníku nepatří.");
 
             zapis.Add(new ZapisRadek(r, p.Nazev, p.Kategorie));
         }
 
-        if (Zapis.ProcNejdeUlozit(zapis) is { } chyba) return chyba;
+        if (Zapis.ProcNejdeUlozit(zapis) is { } chyba) return new VysledekUlozeni(chyba);
 
         var ucasti = await db.Ucasti
             .Where(u => u.ZavodId == zavod.Id)
@@ -246,8 +291,12 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
 
         if (kdo is { } zapisovatel) await SnimekAsync(rozjizdka.Id, zapisovatel, radky, ct);
 
+        // Nová podoba sady. Klient, který vyšel ze staré, už neprojde.
+        rozjizdka.Revize++;
+
         await db.SaveChangesAsync(ct);
-        return null;
+        await transakce.CommitAsync(ct);
+        return VysledekUlozeni.Ulozeno;
     }
 
     /// <summary>
@@ -298,6 +347,8 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
     public async Task<(bool Nenalezen, string? Chyba)> PouzijNavrhAsync(
         Rozjizdka rozjizdka, Guid autor, Guid? kdo, CancellationToken ct)
     {
+        // Snímek se bere z databáze, takže vychází z právě platné revize —
+        // kontrola by tu neměla co hlídat a jen by úkon rozbila.
         var navrh = await db.ZapisyNavrhu
             .FirstOrDefaultAsync(n => n.RozjizdkaId == rozjizdka.Id && n.UzivatelId == autor, ct);
 
@@ -307,7 +358,7 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
             .Select(r => new ZapisRadekVstup(r.PrihlaskaId, r.PoradiVCili, r.Kod, r.DojezdV))
             .ToList();
 
-        return (false, await UlozAsync(rozjizdka, radky, ct, kdo));
+        return (false, (await UlozAsync(rozjizdka, radky, ct, kdo, rozjizdka.Revize)).Chyba);
     }
 
     /// <summary>

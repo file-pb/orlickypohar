@@ -118,7 +118,8 @@ public static class VysledkyEndpoints
             .WithDescription(
                 "Loď, která v sadě nemá pořadí ani kód, výsledek nemá. Pořadí, " +
                 "nebo kód, ne obojí; stejné pořadí v jedné kategorii neprojde. " +
-                "Čas se nemění.");
+                "Čas se nemění. Povinné `revize` je podoba sady, ze které klient " +
+                "vycházel — při nesouladu vrací 409 a svou sadu si klient nechává.");
 
         g.MapPost("/{zavod}/rozjizdky/{cislo:int}/stav", StavAsync)
             .Produces<RozjizdkaSpravaRadek>()
@@ -298,9 +299,22 @@ public static class VysledkyEndpoints
 
         if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
 
-        if (await zapis.UlozAsync(
-                rozjizdka, vstup.Radky, ct, await rozsahy.UzivatelIdAsync(kdo, ct)) is { } chyba)
-            return Results.BadRequest(new { error = chyba });
+        var vysledek = await zapis.UlozAsync(
+            rozjizdka, vstup.Radky, ct, await rozsahy.UzivatelIdAsync(kdo, ct), vstup.Revize);
+
+        // Konflikt má vlastní kód, ne 400: klient na něj musí reagovat jinak
+        // než na chybu v datech — svou sadu si nechat a nabídnout porovnání.
+        // Vydává se k němu i současný stav, aby ji bylo s čím srovnat.
+        if (vysledek.Konflikt)
+            return Results.Json(
+                new
+                {
+                    error = vysledek.Chyba,
+                    zapis = await zapis.NactiAsync(rozjizdka, poradatel: true, ct),
+                },
+                statusCode: StatusCodes.Status409Conflict);
+
+        if (vysledek.Chyba is { } chyba) return Results.BadRequest(new { error = chyba });
 
         return Results.Ok(await zapis.NactiAsync(rozjizdka, poradatel: true, ct));
     }
