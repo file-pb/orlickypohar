@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using OrlickyPohar.Api.Features.Boje;
 using OrlickyPohar.Api.Features.Clanky;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Lode;
@@ -32,6 +33,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<VazbaKLodi> VazbyKLodim => Set<VazbaKLodi>();
     public DbSet<PripojovaciKod> PripojovaciKody => Set<PripojovaciKod>();
     public DbSet<NarokNaLod> Naroky => Set<NarokNaLod>();
+    public DbSet<Features.Boje.Boje> Boje => Set<Features.Boje.Boje>();
     public DbSet<MereniNadrze> MereniNadrze => Set<MereniNadrze>();
     public DbSet<PrevzatyClanek> PrevzateClanky => Set<PrevzatyClanek>();
     public DbSet<TeplotaHladiny> TeplotyHladiny => Set<TeplotaHladiny>();
@@ -161,6 +163,19 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // Kdo rozhodl, je jen stopa — jeho smazání nárok neruší.
         narok.HasOne(x => x.Rozhodl).WithMany().HasForeignKey(x => x.RozhodlId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        var boje = b.Entity<Features.Boje.Boje>();
+        boje.Property(x => x.Nazev).HasMaxLength(Pipnuti.NazevNejvic);
+        // Platné bóje regaty se čtou při každém zobrazení trati.
+        boje.HasIndex(x => new { x.ZavodId, x.NahrazenaV, x.SebranaV });
+        boje.HasOne(x => x.Zavod).WithMany().HasForeignKey(x => x.ZavodId)
+            .OnDelete(DeleteBehavior.Cascade);
+        boje.HasOne(x => x.Postavil).WithMany().HasForeignKey(x => x.PostavilId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Řetěz přenastavení: nová bóje ukazuje na tu, kterou nahradila.
+        boje.HasOne(x => x.Nahrazuje).WithMany().HasForeignKey(x => x.NahrazujeId)
+            .OnDelete(DeleteBehavior.SetNull);
+        boje.Ignore(x => x.Platna);
 
         var nadrz = b.Entity<MereniNadrze>();
         nadrz.ToTable("MereniNadrze");

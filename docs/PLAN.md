@@ -1263,11 +1263,35 @@ pořadí na vodě a čitelnou mapu.
 - **Jde to i bez signálu:** appka pípnutí podrží a odešle později.
 - **Smí organizátor té regaty nebo rozhodčí**, stejně jako u směrnice.
 
+**Hotové API (5. 10. 2026):** `Features/Boje/` — pípnutí, seznam, sebrání.
+Smí organizátor regaty nebo rozhodčí, stejně jako u směrnice; veřejné čtení
+zatím není, protože kdy se trať smí ukázat divákům, patří rozhodčímu.
+
+| Pravidlo | Proč |
+|---|---|
+| přenastavení je **nový záznam**, starý se označí za nahrazený | trasa se k trati vztahuje tak, jak stála tehdy |
+| sebrání je razítko, ne smazání | bez bóje se trasa z té doby nedá přečíst |
+| přesnost z telefonu se ukládá | iPhone s vypnutou přesnou polohou hlásí i 65 m a bez čísla by to vypadalo stejně jako 5 m |
+| nad 100 m se pípnutí odmítne | to už není poloha z družic, ale ze sítě |
+| poloha mimo Orlík se odmítne | prohozená šířka a délka je nejčastější překlep a postavila by bóji v Africe |
+
 **Na webu to jde taky** (Filip se ptal 4. 10.): prohlížeč na telefonu umí
 přes HTTPS sáhnout na GPS se stejnou přesností, dokud je stránka v popředí.
 Dvě ceny: byl by to **první kousek administrace s javascriptem** a bez
 signálu se pípnutí odešle, jen dokud je stránka otevřená. Appka obojí řeší
 líp, ale web je rychlejší cesta, jak to mít.
+
+**Appka bude nástroj pořadatele** (Filip, 5. 10. 2026): bóje i cílová
+obrazovka. Předpokladem je **přihlášení v appce**, které dnes nemá vůbec —
+a které stejně potřebujeme pro upozornění posádce i pro tracker.
+
+> **Pozor na dvě kopie cílové obrazovky.** Je to nejchoulostivější kus webu
+> (pořadí dojezdů, kódy, časy u míst, fronta bez signálu) a v appce vznikne
+> podruhé. Sdílený balíček tu schválně nemáme — Next a Metro by si se
+> symlinky v workspace neporadily, proto se i typy generují jako kopie.
+> Drží to tedy jediné pravidlo: **rozhodování zůstává na serveru a klient
+> posílá celou sadu**, jak to web dělá dnes. Co se do klienta přesune,
+> rozejde se.
 
 **Co na webu nepůjde nikdy:** samotné sledování trasy. Hodiny běžící GPS na
 pozadí prohlížeč neumí, na iPhonu obzvlášť. To je důvod, proč appka existuje.
