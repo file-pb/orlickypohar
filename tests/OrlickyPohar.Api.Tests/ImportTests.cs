@@ -488,9 +488,9 @@ public class ImportTests(PostgresFixture fixture)
     [Fact]
     public async Task Rezim_opravy_se_spravnym_otiskem_prepise()
     {
-        var vstup = Rocnik("oprava");
+        var vstup = Rocnik("rezim-oprava");
         await Posli(vstup);
-        await ZapisAplikaciAsync("oprava");
+        await ZapisAplikaciAsync("rezim-oprava");
 
         var (_, nahled) = await PosliSurove(vstup, "?rezim=nahled");
         var otisk = nahled.RootElement.GetProperty("otisk").GetString()!;
@@ -504,7 +504,7 @@ public class ImportTests(PostgresFixture fixture)
         using var scope = fixture.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var vysledky = await db.Vysledky.AsNoTracking()
-            .Where(v => v.Rozjizdka!.Zavod!.Serie!.Slug == "oprava")
+            .Where(v => v.Rozjizdka!.Zavod!.Serie!.Slug == "rezim-oprava")
             .ToListAsync();
         Assert.Equal(2, vysledky.Count);
     }
