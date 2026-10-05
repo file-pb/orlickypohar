@@ -3338,6 +3338,60 @@ klepání v reálném čase bez něj nejde. Zbytek správy zůstává bez něj.
    telefon), nic se nepřepíše potichu a obrazovka nabídne odeslat, nebo
    zahodit.
 
+## Zastaralý soubor ročníku (oponentura, 5. 10. 2026)
+
+**Idempotence chrání před opakováním téhož souboru, ne před jeho
+zastaralostí.** Soubor ročníku se připraví jednou, během sezóny vzniknou
+nové výsledky a publikace — a pozdější nahrání toho původního souboru je
+přepíše. Obojí jsou platná data, takže to import sám nepozná. Přepsání
+provozních výsledků proto nesmí být vedlejší účinek nahrání kalendáře.
+
+Import má tři režimy (`rezim`):
+
+| Režim | Co dělá |
+|---|---|
+| `nahled` | **Nic neuloží.** Projde celým importem a vrátí ho zpátky, takže v odpovědi stojí přesně to, co by se stalo, i s kolizemi a otiskem ročníku |
+| `bezpecny` (výchozí) | Uloží, ale **odmítne celou dávku**, kdyby přepsala výsledky zapsané v aplikaci, stáhla publikaci nebo vrátila stav zápisu |
+| `oprava` | Přepíše i je. **Vyžaduje otisk** z náhledu, takže se nedá pustit naslepo |
+
+**Rozdíl se nepočítá zvlášť, počítá se skutečným průchodem.** Náhled jede
+týmž kódem jako import a pak se vrátí; odhad vedle kódu by se s ním dřív
+nebo později rozešel.
+
+**Otisk** je kontrolní součet toho, co import umí přepsat: revize sad
+výsledků, stav zápisu a publikace. Náhled ho vydá, oprava ho musí poslat
+zpátky — mezi náhledem a potvrzením mohl někdo zapsat výsledky a rozdíl,
+který člověk viděl, už neplatí. Jméno lodi v otisku není: to se měnit může
+a náhled kvůli němu zneplatňovat nemá smysl.
+
+Co se jako kolize hlásí (`Features/Import/Prepis.cs`):
+
+- přepsalo by výsledky zapsané v aplikaci (`Rozjizdka.Revize > 0`),
+- smazalo by takovou rozjížďku, protože v souboru není,
+- stáhlo by publikaci regaty nebo výsledků,
+- vrátilo by stav zápisu zpátky v řadě,
+- **založilo by nový závod na termín, kde už jeden je** a soubor ho
+  nepojmenoval.
+
+### Rozdvojení přejmenováním (nález D)
+
+Slug je přirozený klíč importu **a zároveň adresa**, a to je past: rozhodčí
+přejmenuje regatu v sešitu, generátor z nového názvu vyrobí jiný slug,
+import ho vezme jako nový závod a ten původní zůstane — závody se nemažou.
+Jedné události pak patří dvě řady výsledků, příloh a odběrů. V administraci
+se slug nemění (`KalendarSprava.UpravAsync`), takže jediná cesta vede
+souborem.
+
+Pozná se to podle termínu a hlásí jako kolize k potvrzení, ne jako tvrdá
+chyba — dvě regaty v jeden den být mohou.
+
+**Neměnný importní identifikátor je zatím otevřená otázka.** Oponent ho
+doporučuje a vyřešil by to přesněji než vodítko podle termínu. Jde ale
+proti rozhodnutí, které je v `CLAUDE.md` i v `ImportHandler` napsané
+dvakrát: *sloupec „externí id" propsal do schématu tvar zdrojového souboru,
+a ten se s každým ročníkem mění.* Měnit to je rozhodnutí pro Filipa, ne
+vedlejší efekt opravy — do té doby chrání detekce výš.
+
 ## Kde se pokračuje
 
 Kdo sem přijde z jiného stroje, potřebuje vědět tohle:

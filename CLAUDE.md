@@ -339,6 +339,13 @@ Známé omezení: osoby se párují podle jména a příjmení, lodě podle náz
 Jani Novákové v jednom ročníku splynou. Při velikosti startovního pole je to
 únosné; alternativou by bylo vymýšlet lidem identifikátory, které nikde neexistují.
 
+**Idempotence ale nechrání před zastaralým souborem.** Soubor připravený
+jednou přepíše výsledky a publikaci, které vznikly během sezóny — obojí jsou
+platná data a import to sám nepozná. Proto má tři režimy: `nahled` nic
+neuloží a vrátí, co by se stalo, `bezpecny` (výchozí) odmítne dávku, která
+by přepsala provozní výsledky, a `oprava` to udělá vědomě a jen s otiskem
+z náhledu. Podrobně v `docs/PLAN.md`, oddíl *Zastaralý soubor ročníku*.
+
 ## Nasazení
 
 Nasazuje CI, ne člověk. Push do `main` postaví **dvě image** (API a web),

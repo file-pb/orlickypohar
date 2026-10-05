@@ -385,4 +385,186 @@ public class ImportTests(PostgresFixture fixture)
 
         Assert.Equal(HttpStatusCode.BadRequest, odpoved.StatusCode);
     }
+
+    // --- Zastaralý soubor (oponentura, 5. 10. 2026) -------------------------
+    // Idempotence chrání před opakováním téhož souboru, ne před jeho
+    // zastaralostí. Co tu padá, je přepsání provozních výsledků souborem,
+    // který vznikl dřív.
+
+    private async Task<(HttpStatusCode Stav, JsonDocument Telo)> PosliSurove(
+        SerieVstup vstup, string dotaz = "")
+    {
+        var odpoved = await Klient().PostAsJsonAsync($"/import/serie{dotaz}", vstup, Json);
+        return (odpoved.StatusCode,
+            JsonDocument.Parse(await odpoved.Content.ReadAsStringAsync()));
+    }
+
+    /// <summary>Zapíše sadu výsledků aplikací, tedy mimo import — `Revize` povyroste.</summary>
+    private async Task ZapisAplikaciAsync(string slug)
+    {
+        using var scope = fixture.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var zapis = scope.ServiceProvider.GetRequiredService<ZapisSprava>();
+
+        var rozjizdka = await db.Rozjizdky.FirstAsync(r => r.Zavod!.Serie!.Slug == slug);
+        var prihlaska = await db.Prihlasky.Where(p => p.Serie!.Slug == slug)
+            .Select(p => p.Id).FirstAsync();
+
+        Assert.Null((await zapis.UlozAsync(
+            rozjizdka, [new(prihlaska, PoradiVCili: 1)], default,
+            revize: rozjizdka.Revize)).Chyba);
+    }
+
+    [Fact]
+    public async Task Nahled_nic_neulozi_ale_rekne_co_by_se_stalo()
+    {
+        var vstup = Rocnik("nahled");
+
+        var (stav, telo) = await PosliSurove(vstup, "?rezim=nahled");
+
+        Assert.Equal(HttpStatusCode.OK, stav);
+        Assert.True(telo.RootElement.GetProperty("nahled").GetBoolean());
+        Assert.Equal(2, telo.RootElement.GetProperty("vysledek")
+            .GetProperty("lode").GetProperty("nove").GetInt32());
+        Assert.NotEmpty(telo.RootElement.GetProperty("otisk").GetString()!);
+
+        using var scope = fixture.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.Empty(await db.Serie.Where(x => x.Slug == "nahled").ToListAsync());
+    }
+
+    [Fact]
+    public async Task Soubor_neprepise_vysledky_zapsane_aplikaci()
+    {
+        var vstup = Rocnik("zastaraly");
+        await Posli(vstup);
+        await ZapisAplikaciAsync("zastaraly");
+
+        // Tentýž soubor, který předtím prošel, teď vrací závod do minulosti.
+        var (stav, telo) = await PosliSurove(vstup);
+
+        Assert.Equal(HttpStatusCode.Conflict, stav);
+        Assert.Equal(Prepis.PotrebaOprava, telo.RootElement.GetProperty("error").GetString());
+        var kolize = telo.RootElement.GetProperty("kolize");
+        Assert.True(kolize.GetArrayLength() >= 1);
+        Assert.Contains("aplikaci", kolize[0].GetProperty("co").GetString());
+    }
+
+    [Fact]
+    public async Task Rezim_opravy_bez_otisku_neprojde()
+    {
+        var vstup = Rocnik("oprava-naslepo");
+        await Posli(vstup);
+
+        var (stav, telo) = await PosliSurove(vstup, "?rezim=oprava");
+
+        Assert.Equal(HttpStatusCode.BadRequest, stav);
+        Assert.Equal(Prepis.OtiskChybi, telo.RootElement.GetProperty("error").GetString());
+    }
+
+    [Fact]
+    public async Task Otisk_z_nahledu_prestane_platit_po_zapisu()
+    {
+        var vstup = Rocnik("otisk");
+        await Posli(vstup);
+
+        var (_, nahled) = await PosliSurove(vstup, "?rezim=nahled");
+        var otisk = nahled.RootElement.GetProperty("otisk").GetString()!;
+
+        // Mezi náhledem a potvrzením někdo zapsal výsledky.
+        await ZapisAplikaciAsync("otisk");
+
+        var (stav, telo) = await PosliSurove(vstup, $"?rezim=oprava&otisk={otisk}");
+
+        Assert.Equal(HttpStatusCode.Conflict, stav);
+        Assert.Equal(Prepis.OtiskNesedi, telo.RootElement.GetProperty("error").GetString());
+    }
+
+    [Fact]
+    public async Task Rezim_opravy_se_spravnym_otiskem_prepise()
+    {
+        var vstup = Rocnik("oprava");
+        await Posli(vstup);
+        await ZapisAplikaciAsync("oprava");
+
+        var (_, nahled) = await PosliSurove(vstup, "?rezim=nahled");
+        var otisk = nahled.RootElement.GetProperty("otisk").GetString()!;
+        Assert.True(nahled.RootElement.GetProperty("kolize").GetArrayLength() >= 1);
+
+        var (stav, _) = await PosliSurove(vstup, $"?rezim=oprava&otisk={otisk}");
+
+        Assert.Equal(HttpStatusCode.OK, stav);
+
+        // Soubor je pravda o tom, co pojmenuje — tady vědomě.
+        using var scope = fixture.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var vysledky = await db.Vysledky.AsNoTracking()
+            .Where(v => v.Rozjizdka!.Zavod!.Serie!.Slug == "oprava")
+            .ToListAsync();
+        Assert.Equal(2, vysledky.Count);
+    }
+
+    [Fact]
+    public async Task Prvni_import_do_prazdna_bezpecny_rezim_nezastavi()
+    {
+        // Prázdný ročník nemá co přepsat, takže výchozí režim musí projít
+        // bez jakéhokoliv dotazu — jinak by se nový ročník nedal nahrát.
+        var (stav, _) = await PosliSurove(Rocnik("do-prazdna"));
+        Assert.Equal(HttpStatusCode.OK, stav);
+    }
+
+    [Fact]
+    public async Task Prejmenovany_zavod_se_nerozdvoji_potichu()
+    {
+        // Nález D: rozhodčí přejmenuje regatu, generátor vyrobí jiný slug
+        // a import ho vezme jako nový závod. Ten původní zůstane, protože
+        // závody se nemažou — a jedné události pak patří dvě řady výsledků.
+        var puvodni = Rocnik("prejmenovani");
+        await Posli(puvodni);
+
+        var prejmenovany = puvodni with
+        {
+            Zavody = [puvodni.Zavody[0] with { Slug = "zahajeni-sezony", Nazev = "Zahájení sezóny 2025" }],
+        };
+
+        var (stav, telo) = await PosliSurove(prejmenovany);
+
+        Assert.Equal(HttpStatusCode.Conflict, stav);
+        var kolize = telo.RootElement.GetProperty("kolize");
+        Assert.Contains("nepřejmenoval",
+            string.Join(" ", kolize.EnumerateArray().Select(k => k.GetProperty("co").GetString())));
+
+        // A dokud se to nepotvrdí, žádný druhý závod nevznikl.
+        using var scope = fixture.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.Equal(1, await db.Zavody.CountAsync(z => z.Serie!.Slug == "prejmenovani"));
+    }
+
+    [Fact]
+    public async Task Dve_regaty_v_jeden_den_jdou_potvrdit()
+    {
+        // Vodítko, ne důkaz: dvě regaty v jeden den být mohou, takže to
+        // musí jít projít režimem opravy.
+        var puvodni = Rocnik("jeden-den");
+        await Posli(puvodni);
+
+        var druha = puvodni with
+        {
+            Zavody =
+            [
+                puvodni.Zavody[0] with { Slug = "odpoledni", Nazev = "Odpolední rozjížďky" },
+            ],
+        };
+
+        var (_, nahled) = await PosliSurove(druha, "?rezim=nahled");
+        var otisk = nahled.RootElement.GetProperty("otisk").GetString()!;
+
+        var (stav, _) = await PosliSurove(druha, $"?rezim=oprava&otisk={otisk}");
+
+        Assert.Equal(HttpStatusCode.OK, stav);
+
+        using var scope = fixture.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.Equal(2, await db.Zavody.CountAsync(z => z.Serie!.Slug == "jeden-den"));
+    }
 }
