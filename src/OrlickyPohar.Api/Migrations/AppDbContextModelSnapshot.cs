@@ -447,6 +447,12 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int>("Role")
                         .HasColumnType("integer");
 
+                    b.Property<DateTimeOffset?>("RoleUrcenaV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("RoleUrcilId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("UzivatelId")
                         .HasColumnType("uuid");
 
@@ -457,12 +463,51 @@ namespace OrlickyPohar.Api.Migrations
 
                     b.HasIndex("PotvrdilId");
 
+                    b.HasIndex("RoleUrcilId");
+
                     b.HasIndex("UzivatelId");
 
                     b.HasIndex("LodId", "UzivatelId")
                         .IsUnique();
 
                     b.ToTable("VazbyKLodim");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Lode.ZmenaRoleKLodi", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("LodId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Nova")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Predchozi")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UzivatelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("ZmenenoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ZmenilId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LodId");
+
+                    b.HasIndex("ZmenilId");
+
+                    b.HasIndex("UzivatelId", "LodId");
+
+                    b.ToTable("ZmenyRoli");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Poradatele.Poradatel", b =>
@@ -1221,6 +1266,11 @@ namespace OrlickyPohar.Api.Migrations
                         .HasForeignKey("PotvrdilId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "RoleUrcil")
+                        .WithMany()
+                        .HasForeignKey("RoleUrcilId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Uzivatel")
                         .WithMany()
                         .HasForeignKey("UzivatelId")
@@ -1231,7 +1281,35 @@ namespace OrlickyPohar.Api.Migrations
 
                     b.Navigation("Potvrdil");
 
+                    b.Navigation("RoleUrcil");
+
                     b.Navigation("Uzivatel");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Lode.ZmenaRoleKLodi", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Lode.Lod", "Lod")
+                        .WithMany()
+                        .HasForeignKey("LodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Uzivatel")
+                        .WithMany()
+                        .HasForeignKey("UzivatelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Zmenil")
+                        .WithMany()
+                        .HasForeignKey("ZmenilId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Lod");
+
+                    b.Navigation("Uzivatel");
+
+                    b.Navigation("Zmenil");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Poradatele.Poradatel", b =>

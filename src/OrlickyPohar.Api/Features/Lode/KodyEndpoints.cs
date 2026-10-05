@@ -16,8 +16,9 @@ public record RozhodnutiVstup(bool Prijmout);
 /// Připojení k lodi kódem nebo QR.
 /// <para>
 /// <b>Kód vystavuje dvojí ruka:</b> pořadatel u registrace a kapitán lodi
-/// v appce. Pořadatel proto, že u prvního připojení ještě žádný kapitán
-/// není; kapitán proto, aby si posádku připojil bez něj.
+/// v appce. Pořadatel proto, že loď kapitána mít ještě nemusí — kód ho
+/// neudělá, uděluje ho správce ročníku; kapitán proto, aby si posádku
+/// připojil bez pořadatele.
 /// </para>
 /// <para>
 /// <b>Uplatnit kód smí každý přihlášený.</b> Kdo má kód, patří k lodi — to
@@ -59,8 +60,8 @@ public static class KodyEndpoints
             .WithTags("Identita")
             .WithSummary("Připojí přihlášený účet k lodi podle kódu")
             .WithDescription(
-                "První připojený je kapitán, další posádka. Kdo už u lodi roli má, " +
-                "o ni zadáním kódu nepřijde.");
+                "Připojený je vždycky posádka — kapitánem dělá jen správce ročníku. " +
+                "Kdo už u lodi roli má, o ni zadáním kódu nepřijde.");
 
         app.MapPost("/ja/naroky", PodejNarokAsync)
             .RequireAuthorization()

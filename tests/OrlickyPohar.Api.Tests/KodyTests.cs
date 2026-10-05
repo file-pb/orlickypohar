@@ -58,10 +58,11 @@ public class KodyTests
     }
 
     [Fact]
-    public void Prvni_pripojeny_je_kapitan_dalsi_posadka()
+    public void Kazdy_pripojeny_kodem_je_posadka()
     {
-        Assert.Equal(RoleKLodi.Kapitan, Kody.RoleProNoveho(uzMaKapitana: false));
-        Assert.Equal(RoleKLodi.Posadka, Kody.RoleProNoveho(uzMaKapitana: true));
+        // Do 5. 10. 2026 byl první kapitán. Pořadí u stolu ale o pravomoci
+        // rozhodovat nemá — podrobněji v `KapitanstviTests`.
+        Assert.Equal(RoleKLodi.Posadka, Kody.RoleProNoveho);
     }
 
     [Fact]

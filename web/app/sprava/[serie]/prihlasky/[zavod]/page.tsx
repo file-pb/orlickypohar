@@ -591,7 +591,7 @@ function Kod({ kod, doKdy, qr }: { kod: string; doKdy?: string; qr: string | nul
           minute: "2-digit",
           timeZone: "Europe/Prague",
         })}.` : "Platí čtvrt hodiny."}{" "}
-        První připojený je kapitán, další posádka.
+        Kdo kód zadá, je posádka. Kapitána lodi určuje správce ročníku.
       </p>
     </div>
   );

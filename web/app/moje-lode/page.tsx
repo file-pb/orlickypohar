@@ -218,8 +218,8 @@ export default async function MojeLode({ searchParams }: Parametry) {
                   serveru a nikam se neposílá. */}
               <div className="qr" dangerouslySetInnerHTML={{ __html: qr }} />
               <p className="poznamka">
-                Kód platí čtvrt hodiny a může ho použít víc lidí. První připojený
-                je kapitán, další posádka.
+                Kód platí čtvrt hodiny a může ho použít víc lidí. Kdo ho zadá,
+                je posádka — kapitána lodi určuje správce ročníku.
               </p>
             </>
           ) : (

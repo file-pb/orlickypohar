@@ -41,9 +41,9 @@ public class KodySprava(AppDbContext db, TimeProvider cas, ILogger<KodySprava> l
     /// Připojí účet k lodi podle kódu. Vrací, co se stalo, nebo chybu
     /// k zobrazení.
     /// <para>
-    /// <b>První připojený je kapitán, další posádka.</b> Kdo loď převezme
-    /// jako první, za ni odpovídá. Kdo už u lodi roli má, o ni zadáním kódu
-    /// nepřijde — role se nikdy nesnižuje, stejně jako u párování e-mailem.
+    /// <b>Kód přidává posádku, nikdy kapitána</b> (viz
+    /// <see cref="Kody.RoleProNoveho"/>). Kdo už u lodi roli má, o ni
+    /// zadáním kódu nepřijde — ani tu, kterou mu určil správce.
     /// </para>
     /// </summary>
     public async Task<(PripojeniDto? Pripojeni, string? Chyba)> PripojAsync(
@@ -67,11 +67,7 @@ public class KodySprava(AppDbContext db, TimeProvider cas, ILogger<KodySprava> l
         if (vazba is not null)
             return (new PripojeniDto(lod.Id, lod.Nazev, vazba.Role, JizBylo: true), null);
 
-        var maKapitana = await db.VazbyKLodim.AnyAsync(
-            v => v.LodId == kod.LodId
-                 && (v.Role == RoleKLodi.Kapitan || v.Role == RoleKLodi.Majitel), ct);
-
-        var role = Kody.RoleProNoveho(maKapitana);
+        const RoleKLodi role = Kody.RoleProNoveho;
         db.VazbyKLodim.Add(new VazbaKLodi
         {
             LodId = kod.LodId,
@@ -108,24 +104,37 @@ public class KodySprava(AppDbContext db, TimeProvider cas, ILogger<KodySprava> l
     /// Odebere připojení. <b>Poslední kapitán nebo majitel se odebrat
     /// nedá</b> — loď bez někoho odpovědného by zůstala bez správce a nikdo
     /// by k ní nevystavil kód.
+    /// <para>
+    /// <b>Pod zámkem lodi</b>, jinak je to pravidlo jen zdání: dva souběžné
+    /// požadavky si každý přečte, že ten druhý odpovědný ještě je, a projdou
+    /// oba (oponentura, 5. 10. 2026).
+    /// </para>
+    /// <para>
+    /// Odebrání jde do historie rolí. Čte ji i párování podle e-mailu: koho
+    /// správce od lodi odebral, tomu ji příští přihlášení nevrátí.
+    /// </para>
     /// </summary>
-    public async Task<string?> OdeberAsync(int lodId, int vazbaId, CancellationToken ct)
+    public async Task<string?> OdeberAsync(
+        int lodId, int vazbaId, CancellationToken ct, Guid? kdo = null)
     {
+        await using var transakce = await db.Database.BeginTransactionAsync(ct);
+        await VazbyLodi.ZamkniLodAsync(db, lodId, ct);
+
         var vazba = await db.VazbyKLodim
             .FirstOrDefaultAsync(v => v.Id == vazbaId && v.LodId == lodId, ct);
         if (vazba is null) return "Takové připojení u lodi není.";
 
-        if (vazba.Role is RoleKLodi.Majitel or RoleKLodi.Kapitan)
-        {
-            var dalsi = await db.VazbyKLodim.CountAsync(
-                v => v.LodId == lodId && v.Id != vazbaId
-                     && (v.Role == RoleKLodi.Majitel || v.Role == RoleKLodi.Kapitan), ct);
-            if (dalsi == 0)
-                return "Tohle je poslední kapitán lodi. Nejdřív přidej jiného, pak odeber tohohle.";
-        }
+        var jinych = await db.VazbyKLodim.CountAsync(
+            v => v.LodId == lodId && v.Id != vazbaId
+                 && (v.Role == RoleKLodi.Majitel || v.Role == RoleKLodi.Kapitan), ct);
 
+        if (Kapitanstvi.ProcNejdeOdebrat(vazba.Role, jinych) is { } chyba) return chyba;
+
+        VazbyLodi.Zaznamenej(db, lodId, vazba.UzivatelId, vazba.Role, null, kdo, cas.GetUtcNow());
         db.VazbyKLodim.Remove(vazba);
+
         await db.SaveChangesAsync(ct);
+        await transakce.CommitAsync(ct);
         return null;
     }
 }

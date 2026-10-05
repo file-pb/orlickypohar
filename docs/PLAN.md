@@ -1062,7 +1062,7 @@ nestojí práci.**
 
 | Pořadí | Cesta | Jak to chodí |
 |---|---|---|
-| 1 | **Shoda s kontaktem na přihlášce** | Účet s ověřeným e-mailem, který sedí s kontaktem lodi, dostane roli kapitána sám |
+| 1 | **Shoda s kontaktem na přihlášce** | Účet s ověřeným e-mailem, který sedí s kontaktem lodi, dostane roli podle dat ročníku sám |
 | 2 | **Kód z přihlášky** | Když e-mail nesedí: krátký kód, který pořadatel dává u registrace na papíře |
 | 3 | **Nárok a potvrzení** | Zbytek posádky si řekne o loď, kapitán potvrdí — pořadatele to nezatíží |
 
@@ -1070,8 +1070,8 @@ nestojí práci.**
 
 Na co si dát pozor u každé: sdílená klubová adresa by cestou 1 spárovala
 cizího člověka, proto se páruje jen **ověřený** e-mail a jen na kontakt té
-jedné lodi. Kód z cesty 2 se dá přeposlat, proto má platnost do konce sezóny
-a **kapitánem dělá jen prvního**; další jsou posádka.
+jedné lodi. Kód z cesty 2 se dá přeposlat, proto má krátkou platnost —
+a **kapitánem nedělá nikoho** (viz *Kapitána určuje správce* níž).
 
 **Role vůči lodi: majitel, kapitán, posádka, fanoušek.** Trasu smí odeslat
 jen kapitán nebo posádka, a jen za loď, se kterou jsou na té zastávce
@@ -1099,9 +1099,9 @@ přihlášení.
 | platnost | 15 minut, použít smí víc lidí — posádka se připojuje z jednoho papíru |
 | podoby | šest znaků k opsání a QR nad adresou `/pripojeni?kod=…`; QR kreslí **web** do SVG, API svou adresu vědět nemusí |
 | abeceda | bez `0`, `1`, `I` a `O` — opisuje se z papíru u vody |
-| role | první připojený kapitán, další posádka; kdo roli má, o ni nepřijde |
+| role | **vždy posádka**; kdo roli má, o ni nepřijde (od 5. 10. 2026, dřív byl první kapitán) |
 | neplatný kód | propadlý i vymyšlený dávají **tutéž** odpověď — ať z ní nejde vyčíst, že loď existuje |
-| odebrání | kapitán nebo majitel; **posledního kapitána odebrat nejde** |
+| odebrání | kapitán, majitel, nebo správce ročníku; **posledního kapitána odebrat nejde** — pod zámkem lodi |
 
 Stránky webu: `/pripojeni` (cíl QR, funguje i bez appky) a `/moje-lode`
 (lodě účtu, posádka, vystavení kódu s QR). Odkaz je v profilové nabídce
@@ -1120,7 +1120,7 @@ kód. Uživatel si o loď řekne, kapitán nebo majitel potvrdí.
 | Pravidlo | Proč |
 |---|---|
 | nárok sám o sobě nedává **nic** | dokud ho někdo nepotvrdí, je to žádost, ne role |
-| přijetí dělá **posádku**, ne kapitána | kapitánem je ten, kdo loď převzal jako první |
+| přijetí dělá **posádku**, ne kapitána | kapitána uděluje správce ročníku, žádná z cest párování |
 | zamítnutí platí a nejde o loď žádat znovu | druhá žádost by byla obcházení kapitánova „ne" |
 | o rozhodnutém nároku se podruhé nerozhoduje | jinak by šlo zamítnutí po čase tiše otočit |
 | rozhodovat smí ten, kdo smí vystavit kód | kdo může někoho přivést, může i rozhodnout o tom, kdo se hlásí sám |
@@ -1137,6 +1137,39 @@ nikoho přihlášeného nemá, nabídne lodě z předchozího — ročník se pu
 s kalendářem dřív, než se kdokoliv přihlásí.
 
 **Zbývá:** čtečka QR v appce.
+
+### Kapitána určuje správce
+
+**Oprava nálezu A z oponentury (5. 10. 2026).** Do té doby dával kapitánství
+připojovací kód prvnímu, kdo ho zadal, a žádná cesta pak roli existující
+vazby neměnila. Scénář, který to rozbil, je běžný: pořadatel vystaví kód
+u registrace, posádka má jeden papír, kapitánem se stane ten, kdo byl
+nejrychlejší na telefonu. Opravit to nešlo — posledního kapitána nejde
+odebrat, jiného nebylo jak přidat, takže loď zůstala se špatným kapitánem
+a jedinou cestou zpět byl zápis do databáze. `PuvodVazby.Rucne` sice popisoval
+nouzovou páku, ale nikde v kódu nebyl.
+
+| Věc | Jak |
+|---|---|
+| kód, nárok ani párování kapitána **neudělují** | pořadí u stolu nemá rozhodovat o pravomoci |
+| kapitána určuje **správce ročníku** | vazba platí celý rok a napříč zastávkami, pověření k jedné regatě na ni nemá dosáhnout |
+| loď bez kapitána je **normální stav** | čeká na určení, není to chyba |
+| převod je **jeden úkon v jedné transakci** | mezi dvěma požadavky by loď měla dva kapitány, nebo žádného |
+| dosavadní kapitán → posádka, **majitel zůstává** | vlastnictví je fakt o ročníku, ne pravomoc k předání |
+| majitele tudy nastavit nejde | patří k vlastnictví lodi, oprava je v přihláškách |
+| každá změna běží **pod `FOR UPDATE` na řádku lodi** | bez zámku si dva souběžné požadavky přečtou tentýž stav a pravidlo o posledním kapitánovi je jen zdání |
+| každá změna nechá **záznam** (`ZmenaRoleKLodi`) | kdo, komu, odkud kam a kdy; pravomoc, kterou nejde dohledat, není pravomoc |
+| ručně určenou roli **párování nepřepíše** | jinak by příští přihlášení opravu zrušilo; rozhoduje `RoleUrcenaRucne`, ne jen původ vazby |
+| odebranou vazbu **párování nevrací** | jinak by stačilo se přihlásit a člověk je u lodi zpátky |
+| kapitáni z doby před opravou se **nepřepisují** | migrace by jim roli buď nechala bez prověření, nebo sebrala i tam, kde je správná — správce je dostane na obrazovku po jedné jako *ke kontrole* |
+
+Endpointy (správce ročníku, loď musí být v jeho ročníku):
+`GET /sprava/serie/{serie}/lode`, `GET …/lode/{lod}`,
+`PUT …/lode/{lod}/kapitan`, `PUT …/lode/{lod}/vazby/{vazba}/role`
+a `DELETE …/lode/{lod}/vazby/{vazba}`.
+
+**Zbývá:** obrazovka správce ve webu — čeká na přegenerovaný klient, ten
+potřebuje nasazené API.
 
 Platí pravidlo platformy č. 5: `Osoba` má **volitelné** napojení na interní
 `UserId`. Většina osob v systému žádný účet mít nebude — figurují jen jako
@@ -1284,8 +1317,9 @@ krátkodobý token, dvě podoby: šestiznakový kód k opsání a QR k načtení
   a kapitánovi v appce, aby si posádku připojil sám.
 - **Platnost pár minut.** QR na displeji si kdokoliv vyfotí přes rameno;
   krátká platnost to riziko skoro maže.
-- **První připojený je kapitán, další posádka.** Kdo je na lodi připojený,
-  musí být vidět a kapitán i pořadatel to musí umět zrušit.
+- **Kód připojuje posádku, kapitána určuje správce ročníku** (oprava
+  z 5. 10. 2026). Kdo je na lodi připojený, musí být vidět a kapitán,
+  pořadatel i správce to musí umět zrušit.
 - **Bez signálu zůstává opsání kódu** — načtení QR potřebuje zavolat server.
 
 Zobrazení QR na webu je hotová věc (knihovnu už web používá u odkazu na

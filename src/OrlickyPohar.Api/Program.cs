@@ -89,6 +89,7 @@ try
     builder.Services.AddScoped<KodySprava>();
     // Nárok na loď, který potvrzuje kapitán.
     builder.Services.AddScoped<NarokySprava>();
+    builder.Services.AddScoped<KapitanstviSprava>();
     if (builder.Configuration.GetValue<bool>("Prevzate:Sber"))
         builder.Services.AddHostedService<SberPrevzatych>();
     // Kontakty kapitánů se drží do konce následující sezóny, pak se mažou.
@@ -192,6 +193,7 @@ try
         app.MapPrihlasky();
         app.MapSmernice();
         app.MapKody();
+        app.MapKapitanstvi();
         app.MapSpravaPoradatelu();
         app.MapNaklady();
     }

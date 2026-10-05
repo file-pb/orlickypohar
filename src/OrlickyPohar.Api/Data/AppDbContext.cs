@@ -30,6 +30,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<SouborKeSmazani> SouboryKeSmazani => Set<SouborKeSmazani>();
     public DbSet<PlachetniSmernice> Smernice => Set<PlachetniSmernice>();
     public DbSet<VazbaKLodi> VazbyKLodim => Set<VazbaKLodi>();
+    public DbSet<ZmenaRoleKLodi> ZmenyRoli => Set<ZmenaRoleKLodi>();
     public DbSet<PripojovaciKod> PripojovaciKody => Set<PripojovaciKod>();
     public DbSet<NarokNaLod> Naroky => Set<NarokNaLod>();
     public DbSet<MereniNadrze> MereniNadrze => Set<MereniNadrze>();
@@ -137,6 +138,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .OnDelete(DeleteBehavior.Cascade);
         // Kdo potvrdil, je jen stopa — jeho smazání vazbu neruší.
         kLodi.HasOne(x => x.Potvrdil).WithMany().HasForeignKey(x => x.PotvrdilId)
+            .OnDelete(DeleteBehavior.SetNull);
+        // Kdo určil roli, je taky jen stopa. Značka „určil člověk" ale zmizet
+        // nesmí, jinak by párování roli zase přepsalo — proto se při smazání
+        // účtu správce maže jen jméno, ne `RoleUrcenaV`.
+        kLodi.HasOne(x => x.RoleUrcil).WithMany().HasForeignKey(x => x.RoleUrcilId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        var zmenaRole = b.Entity<ZmenaRoleKLodi>();
+        // Historie se čte po lodi (obrazovka správce) a po účtu s lodí
+        // (párování se ptá, jestli vazba nebyla odebraná).
+        zmenaRole.HasIndex(x => x.LodId);
+        zmenaRole.HasIndex(x => new { x.UzivatelId, x.LodId });
+        zmenaRole.HasOne(x => x.Lod).WithMany().HasForeignKey(x => x.LodId)
+            .OnDelete(DeleteBehavior.Cascade);
+        zmenaRole.HasOne(x => x.Uzivatel).WithMany().HasForeignKey(x => x.UzivatelId)
+            .OnDelete(DeleteBehavior.Cascade);
+        zmenaRole.HasOne(x => x.Zmenil).WithMany().HasForeignKey(x => x.ZmenilId)
             .OnDelete(DeleteBehavior.SetNull);
 
         var kod = b.Entity<PripojovaciKod>();

@@ -84,10 +84,19 @@ public static class Kody
         new([.. (kod ?? "").ToUpperInvariant().Where(Abeceda.Contains)]);
 
     /// <summary>
-    /// Role, kterou nově připojený dostane. <b>První je kapitán, další
-    /// posádka</b> (Filip, 4. 10. 2026) — kdo loď převezme jako první, za ni
-    /// odpovídá; ostatní jsou posádka, dokud jim kapitán nedá víc.
+    /// Role, kterou nově připojený dostane. <b>Vždycky posádka.</b>
+    /// <para>
+    /// Do 5. 10. 2026 tu bylo „první je kapitán, další posádka". Pořadí
+    /// u stolu ale o pravomocích rozhodovat nemá: kód je jeden papír pro
+    /// celou posádku, takže kapitánem se stal ten, kdo byl první na
+    /// telefonu. Napravit to nešlo — roli existující vazby neměnilo nic
+    /// a posledního kapitána nejde odebrat, takže loď zůstala se špatným
+    /// kapitánem a bez cesty zpátky (oponentura, 5. 10. 2026).
+    /// </para>
+    /// <para>
+    /// Kapitána proto určuje správce ročníku: <see cref="Kapitanstvi"/>.
+    /// Loď bez kapitána je normální stav, ne chyba — čeká na jeho určení.
+    /// </para>
     /// </summary>
-    public static RoleKLodi RoleProNoveho(bool uzMaKapitana) =>
-        uzMaKapitana ? RoleKLodi.Posadka : RoleKLodi.Kapitan;
+    public const RoleKLodi RoleProNoveho = RoleKLodi.Posadka;
 }
