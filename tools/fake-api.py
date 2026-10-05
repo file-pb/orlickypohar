@@ -481,6 +481,25 @@ def ke_kontrole(v):
     return v["role"] in ("Majitel", "Kapitan") and v["puvod"] == "Kod" and not v["roleUrcilId"]
 
 
+# --- Plachetní směrnice -----------------------------------------------------
+# Vyvěšené verze u zastávek. Mock je nemá v datech, takže se jedna nasadí
+# k první zastávce — jinak není co stahovat a obrazovka je prázdná.
+# Žije v paměti procesu, restart ji vrátí.
+SMERNICE = {}
+
+
+def _nasad_smernice():
+    if not D["zavody"]:
+        return
+    SMERNICE[D["zavody"][0]["slug"]] = [{
+        "verze": 1, "nazev": "plachetni-smernice-v1.pdf",
+        "adresa": "http://127.0.0.1:8080/fake-soubor/smernice-v1.pdf",
+        "vyveseneV": "2026-09-21T17:00:00+00:00",
+        "poznamka": None, "vyvesil": JA["zobrazovane"],
+        "stazenoV": None, "stahl": None, "duvodStazeni": None,
+    }]
+
+
 def ucet_podle_id(id_uctu):
     return next((u for u in UCTY.values() if u["id"] == id_uctu), None)
 
@@ -639,6 +658,7 @@ LOD_PODLE_ID = {i: lod for lod, i in PRIHLASKA_ID.items()}
 # Až tady, protože snímek i vazby k lodím potřebují čísla přihlášek.
 _nasad_druhy_snimek()
 _nasad_vazby()
+_nasad_smernice()
 OTEVRENY = ("Navrzeno", "KRevizi")
 
 
@@ -1170,6 +1190,31 @@ class H(BaseHTTPRequestHandler):
         VAZBY.remove(vazba)
         return self._prazdna_odpoved()
 
+    def stahni_smernici(self, slug, verze):
+        """Opsané z `Features/Smernice/SmerniceSprava.cs`: záznam zůstává,
+        soubor mizí. Důvod je povinný."""
+        if not self.headers.get("authorization"):
+            return self.send_error(401)
+        if not self.zastavka(slug):
+            return None
+
+        s = next((x for x in SMERNICE.get(slug, []) if x["verze"] == verze), None)
+        if not s:
+            return self.chyba(400, "Takovou verzi tahle regata nemá.")
+        if s["stazenoV"]:
+            return self.chyba(400, "Tahle verze je už stažená.")
+
+        duvod = (self.telo_zadosti() or {}).get("duvod") or ""
+        if not duvod.strip():
+            return self.chyba(400,
+                              "Napiš, proč se směrnice stahuje. U dokumentu, podle kterého "
+                              "se jede, musí jít po sezóně dohledat, co se odvolalo a proč.")
+
+        s["stazenoV"] = ted_iso()
+        s["stahl"] = JA["zobrazovane"]
+        s["duvodStazeni"] = duvod.strip()
+        return self._prazdna_odpoved()
+
     def do_POST(self):
         cesta = urlparse(self.path).path
 
@@ -1190,6 +1235,10 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                           r'/rozjizdky/(\d+)/navrhy/([0-9a-f-]+)/pouzit$', cesta)):
             return self.pouzij_navrh(m.group(1), int(m.group(2)), m.group(3))
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/smernice/(\d+)/stazeni$',
+                cesta)):
+            return self.stahni_smernici(m.group(1), int(m.group(2)))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode$', cesta)):
             return self.prihlas_lod(m.group(1))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode/(\d+)/stav$', cesta)):
@@ -1976,6 +2025,15 @@ class H(BaseHTTPRequestHandler):
                 "ucty": sorted(UCTY.values(), key=lambda u: u["naposledyPrihlasenV"],
                                reverse=True),
             }
+        elif (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/smernice$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            if not self.zastavka(m.group(1)):
+                return None
+            # Správa vidí i stažené — musí být vidět, co se odvolalo a proč.
+            telo = sorted(SMERNICE.get(m.group(1), []),
+                          key=lambda x: x["verze"], reverse=True)
         elif cesta == f'/sprava/serie/{D["slug"]}/lode':
             # Lodě ročníku i s vazbami. Ty, které čekají na správce — bez
             # kapitána nebo s kapitánem od kódu — jsou první.

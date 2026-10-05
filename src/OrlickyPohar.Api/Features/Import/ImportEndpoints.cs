@@ -37,9 +37,7 @@ public static class ImportEndpoints
         IConfiguration config,
         ILoggerFactory logu,
         IUloziste uloziste,
-        CancellationToken ct,
-        RezimImportu rezim = RezimImportu.Bezpecny,
-        string? otisk = null)
+        CancellationToken ct)
     {
         switch (ImportniToken.Over(ctx, config))
         {
@@ -51,6 +49,14 @@ public static class ImportEndpoints
         }
 
         var log = logu.CreateLogger("Import");
+
+        // Z dotazu výslovně, ne přes vazbu parametrů: endpoint má tělo
+        // i hlavičku s tokenem a nechat výčet na odhadu binderu je přesně
+        // ten druh kouzla, které se pozná až chybou v provozu.
+        var (rezim, chybaRezimu) = Prepis.Rezim(ctx.Request.Query["rezim"].FirstOrDefault());
+        if (chybaRezimu is not null) return Results.BadRequest(new { error = chybaRezimu });
+
+        var otisk = ctx.Request.Query["otisk"].FirstOrDefault();
 
         // Otisk se čte před zápisem, aby šel vrátit i v odpovědi náhledu.
         var otiskPred = await Prepis.OtiskAsync(db, vstup.Slug, ct);
@@ -88,10 +94,7 @@ public static class ImportEndpoints
                 await tx.RollbackAsync(ct);
                 log.LogInformation("Náhled importu série {Serie}: {Kolize} kolizí",
                     vstup.Slug, kolize.Count);
-                return Results.Ok(new
-                {
-                    nahled = true, otisk = otiskPred, kolize, vysledek,
-                });
+                return Results.Ok(new NahledImportu(otiskPred, kolize, vysledek));
             }
 
             await tx.CommitAsync(ct);

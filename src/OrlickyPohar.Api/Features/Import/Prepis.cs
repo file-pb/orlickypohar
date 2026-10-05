@@ -42,6 +42,16 @@ public enum RezimImportu
 public record Kolize(string Zavod, int? Rozjizdka, string Co);
 
 /// <summary>
+/// Odpověď náhledu: co by se stalo, co by to přepsalo a podle jakého stavu
+/// ročníku to platí. <c>Otisk</c> se posílá zpátky při opravě.
+/// </summary>
+public record NahledImportu(
+    string Otisk,
+    IReadOnlyList<Kolize> Kolize,
+    ImportVysledek Vysledek,
+    bool Nahled = true);
+
+/// <summary>
 /// Kontrola, jestli soubor nevrací ročník do minulosti, a otisk jeho
 /// provozního stavu.
 /// </summary>
@@ -55,6 +65,31 @@ public static class Prepis
     public const string OtiskNesedi =
         "Ročník se od náhledu změnil, takže otisk nesedí — mezitím někdo zapsal "
         + "výsledky nebo pustil publikaci. Udělej náhled znovu.";
+
+    public const string NeznamyRezim =
+        "Neznámý režim importu. Platné jsou nahled, bezpecny a oprava.";
+
+    /// <summary>
+    /// Režim z dotazu. Prázdný znamená <see cref="RezimImportu.Bezpecny"/>;
+    /// neznámý je chyba, ne tichý návrat k výchozímu — kdo píše `rezim=oprva`,
+    /// čeká opravu, a dostat místo ní bezpečný režim je horší než chyba.
+    /// </summary>
+    public static (RezimImportu Rezim, string? Chyba) Rezim(string? zDotazu)
+    {
+        if (string.IsNullOrWhiteSpace(zDotazu)) return (RezimImportu.Bezpecny, null);
+
+        var zadany = zDotazu.Trim();
+
+        // Čísla se odmítají: `Enum.TryParse` je bere jako hodnotu výčtu,
+        // takže `rezim=1` by prošlo jako „bezpecny" a `rezim=2` jako oprava.
+        // Kontrakt jsou jména a číslo v dotazu je známka zmateného klienta.
+        if (!char.IsLetter(zadany[0])) return (RezimImportu.Bezpecny, NeznamyRezim);
+
+        return Enum.TryParse<RezimImportu>(zadany, ignoreCase: true, out var rezim)
+               && Enum.IsDefined(rezim)
+            ? (rezim, null)
+            : (RezimImportu.Bezpecny, NeznamyRezim);
+    }
 
     public const string OtiskChybi =
         "Režim opravy přepisuje provozní výsledky, takže se nepouští naslepo: "

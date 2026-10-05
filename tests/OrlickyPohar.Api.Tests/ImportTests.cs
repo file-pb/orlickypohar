@@ -410,6 +410,11 @@ public class ImportTests(PostgresFixture fixture)
         var prihlaska = await db.Prihlasky.Where(p => p.Serie!.Slug == slug)
             .Select(p => p.Id).FirstAsync();
 
+        // Import nese potvrzené výsledky a do těch se nezapisuje. Rozhodčí
+        // je v takovém případě vrátí k revizi — tohle je ta situace.
+        rozjizdka.StavVysledku = StavVysledku.KRevizi;
+        await db.SaveChangesAsync();
+
         Assert.Null((await zapis.UlozAsync(
             rozjizdka, [new(prihlaska, PoradiVCili: 1)], default,
             revize: rozjizdka.Revize)).Chyba);
