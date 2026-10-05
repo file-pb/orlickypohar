@@ -92,7 +92,11 @@ public record ZapisVstup(IReadOnlyList<ZapisRadekVstup> Radky, int? Revize = nul
 /// </summary>
 public record VysledekUlozeni(string? Chyba, bool Konflikt = false)
 {
-    public static readonly VysledekUlozeni Ulozeno = new(null);
+    // Pojmenovaný argument schválně: `new(null)` se u recordu rozhodne pro
+    // kopírovací konstruktor `VysledekUlozeni(VysledekUlozeni)` a spadne na
+    // NullReferenceException při inicializaci typu. Překladač to nehlásí
+    // a projeví se to až za běhu.
+    public static readonly VysledekUlozeni Ulozeno = new(Chyba: null);
 }
 
 /// <summary>

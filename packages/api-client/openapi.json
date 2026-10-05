@@ -3234,6 +3234,58 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/zastavky/{zavod}/smernice/{verze}/stazeni": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "St\u00e1hne verzi sm\u011brnice z v\u00fdv\u011bsky",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Z\u00e1znam o vyv\u011b\u0161en\u00ed z\u016fst\u00e1v\u00e1, ale soubor se sma\u017ee z \u00falo\u017ei\u0161t\u011b a ve\u0159ejn\u00e9 \u010dten\u00ed verzi nevyd\u00e1. D\u016fvod je povinn\u00fd. Kopie, kter\u00e9 si u\u017e n\u011bkdo st\u00e1hl, vz\u00edt zp\u011bt nejde.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "verze",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StazeniVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/lode": {
             "get": {
                 "tags": [
@@ -6163,6 +6215,25 @@
                             "null",
                             "string"
                         ]
+                    },
+                    "stazenoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "stahl": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "duvodStazeni": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     }
                 }
             },
@@ -6346,6 +6417,20 @@
                     "Zruseny",
                     "Potvrzeny"
                 ]
+            },
+            "StazeniVstup": {
+                "required": [
+                    "duvod"
+                ],
+                "type": "object",
+                "properties": {
+                    "duvod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
             },
             "TeplotaHladinyDto": {
                 "required": [

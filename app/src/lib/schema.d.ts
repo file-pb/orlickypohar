@@ -3240,6 +3240,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/smernice/{verze}/stazeni": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stáhne verzi směrnice z vývěsky
+         * @description Pořadatel regaty, nebo rozhodčí ročníku. Záznam o vyvěšení zůstává, ale soubor se smaže z úložiště a veřejné čtení verzi nevydá. Důvod je povinný. Kopie, které si už někdo stáhl, vzít zpět nejde.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    verze: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StazeniVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/lode": {
         parameters: {
             query?: never;
@@ -4227,6 +4272,10 @@ export interface components {
             vyveseneV: string;
             poznamka: null | string;
             vyvesil: null | string;
+            /** Format: date-time */
+            stazenoV?: null | string;
+            stahl?: null | string;
+            duvodStazeni?: null | string;
         };
         SmerniceFormular: {
             soubor: null | components["schemas"]["IFormFile"];
@@ -4273,6 +4322,9 @@ export interface components {
         };
         /** @enum {unknown} */
         StavZavodu: "Planovany" | "Vypsany" | "Odjety" | "Zruseny" | "Potvrzeny";
+        StazeniVstup: {
+            duvod: null | string;
+        };
         TeplotaHladinyDto: {
             snimky: components["schemas"]["SnimekHladinyDto"][];
             zdroj: string;

@@ -217,4 +217,14 @@ public class ZapisTests
     [Fact]
     public void Prvni_zapis_vychazi_z_nulove_revize()
         => Assert.Null(Zapis.ProcNejdeUlozitRevizi(0, 0));
+
+    [Fact]
+    public void Ulozeno_je_bez_chyby_a_bez_konfliktu()
+    {
+        // `new(null)` se u recordu rozhodne pro kopírovací konstruktor
+        // a spadne při inicializaci typu — překladač to nehlásí a pozná se
+        // to až za běhu, v integračním testu. Tenhle test to drží.
+        Assert.Null(VysledekUlozeni.Ulozeno.Chyba);
+        Assert.False(VysledekUlozeni.Ulozeno.Konflikt);
+    }
 }
