@@ -3338,6 +3338,45 @@ klepání v reálném čase bez něj nejde. Zbytek správy zůstává bez něj.
    telefon), nic se nepřepíše potichu a obrazovka nabídne odeslat, nebo
    zahodit.
 
+## Verze bodovacích pravidel (oponentura, 5. 10. 2026)
+
+**Body se neukládají, počítají se při čtení** — a to je správně, protože
+přepočet celého seriálu musí jít kdykoliv spustit znovu. Má to ale druhou
+stranu: dokud byla pravidla konstanty v kódu, změnila oprava výpočtu body
+i u ročníku, který se vyhlásil loni. Z uložených pořadí a kódů se pak nedá
+zjistit, podle čeho se vyhlašovalo.
+
+Co už v datech bylo, tam zůstává: **počet škrtů** na ročníku a závodě,
+**koeficient** a **bonus** 24hodinovky. Tyhle hodnoty jsou věc ročníku, ne
+pravidlo v kódu, a komentář u nich to říkal od začátku.
+
+Co bylo v kódu a přitom to rozhodčí může upřesnit, drží teď
+`Features/Bodovani/PravidlaBodovani.cs`:
+
+| Pravidlo | V1 | Odkud |
+|---|---|---|
+| Diskvalifikace v regatě do seriálu | 20 bodů | podklady rozhodčího, 22. 9. 2026 |
+| Přirážka za kód k počtu přihlášených | +1 | ZPJ 2025–2028, A5.2 |
+| Náprava (`RDG`) za posledním dokončivším | +1 | provizorium, než to umí fáze 5 |
+
+**Ročník nese číslo verze** (`Serie.VerzePravidel`, výchozí 1) a výpočet si
+podle něj pravidla vyzvedne. Neznámá verze je **chyba, ne tichý návrat
+k poslední**: ročník se nesmí spočítat podle něčeho jiného, než podle čeho
+se vyhlašoval.
+
+**Nová verze nikdy nemění starší.** Až rozhodčí něco upřesní, přidá se `V2`
+a ročníky s jedničkou dál počítají podle jedničky. Že refaktoring nic
+nepohnul, drží `SerieTests` — pořadí proti skutečnému sešitu rozhodčího.
+
+Verzi vydávají i veřejné odpovědi (detail zastávky, průběžné pořadí), ze
+stejného důvodu jako počet škrtů: bez ní se tabulka nedá zkontrolovat.
+
+**Hranice, které oponent připomněl, už pokryté jsou:** shoda bodů proti
+sešitu (`SerieTests`), neúčast jako počet lodí kategorie
+(`PoradiTests.Lod_ktera_nestartovala_dostane_pocet_lodi_kategorie`)
+a zrušený či neodjetý závod
+(`PoradiTests.Poradi_se_pocita_jen_z_odjetych_a_publikovanych_zastavek`).
+
 ## Zastaralý soubor ročníku (oponentura, 5. 10. 2026)
 
 **Idempotence chrání před opakováním téhož souboru, ne před jeho

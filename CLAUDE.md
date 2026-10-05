@@ -364,7 +364,8 @@ Bez databáze a bez Dockeru, v CI běží první:
 - **`ModelTests`** — model proti migracím.
 - **`KontraktTests`** — tvar importního souboru a pravidla, která má mock
   dodržet (třeba že se škrtá až při čtyřech odjetých rozjížďkách).
-- **`BodovaniTests`** — body závodu z rozjížděk, kódy, škrty. Čisté funkce.
+- **`BodovaniTests`** — body závodu z rozjížděk, kódy, škrty, verze
+  bodovacích pravidel. Čisté funkce.
 - **`SerieTests`** — průběžné pořadí proti **skutečnému sešitu rozhodčího**
   (`data/2026-poradi-rozhodci.json`). Nejcennější zkouška, jakou ten kód má.
 

@@ -114,6 +114,7 @@ internal static class ImportHandler
         serie.Rok = v.Rok;
         serie.Publikovano = v.Publikovano;
         serie.PocetSkrtu = v.PocetSkrtu;
+        serie.VerzePravidel = v.VerzePravidel;
         serie.VysledkyZavoduVerejne = v.VysledkyZavoduVerejne;
         await db.SaveChangesAsync(ct);
         return serie;

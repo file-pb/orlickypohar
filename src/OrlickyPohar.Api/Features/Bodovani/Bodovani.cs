@@ -64,8 +64,11 @@ public static class Bodovani
     /// lodí v téhle rozjížďce.
     /// </param>
     public static IReadOnlyList<(string Lod, int Body)> BodyRozjizdky(
-        IEnumerable<VysledekVstup> vysledkyKategorie, int? prihlaseno = null)
+        IEnumerable<VysledekVstup> vysledkyKategorie, int? prihlaseno = null,
+        PravidlaBodovani? pravidla = null)
     {
+        pravidla ??= PravidlaBodovani.Posledni;
+
         var vsechny = vysledkyKategorie.ToList();
 
         var dokoncily = vsechny
@@ -75,10 +78,12 @@ public static class Bodovani
             .ToList();
 
         var body = new List<(string Lod, int Body)>(dokoncily);
-        var zaTrest = (prihlaseno ?? vsechny.Count) + 1;
+        var zaTrest = (prihlaseno ?? vsechny.Count) + pravidla.PrirazkaZaKod;
 
         foreach (var v in vsechny.Where(v => v.Kod is not null))
-            body.Add((v.Lod, v.Kod == KodVysledku.Rdg ? dokoncily.Count + 1 : zaTrest));
+            body.Add((v.Lod, v.Kod == KodVysledku.Rdg
+                ? dokoncily.Count + pravidla.PrirazkaZaNapravu
+                : zaTrest));
 
         return body;
     }
@@ -99,8 +104,11 @@ public static class Bodovani
     /// </param>
     public static IReadOnlyList<VysledekZavodu> VysledkyZavodu(
         IReadOnlyList<RozjizdkaVstup> rozjizdky, int pocetSkrtu = 0,
-        IReadOnlyDictionary<string, int>? prihlaseno = null)
+        IReadOnlyDictionary<string, int>? prihlaseno = null,
+        PravidlaBodovani? pravidla = null)
     {
+        pravidla ??= PravidlaBodovani.Posledni;
+
         // Body po lodích: (loď → rozjížďka → body)
         var podleLodi = new Dictionary<string, (string Kategorie, List<BodyVRozjizdce> Body)>();
 
@@ -126,7 +134,7 @@ public static class Bodovani
         {
             foreach (var kategorie in rozjizdka.Vysledky.GroupBy(v => v.Kategorie))
             {
-                foreach (var (lod, body) in BodyRozjizdky(kategorie, pocty[kategorie.Key]))
+                foreach (var (lod, body) in BodyRozjizdky(kategorie, pocty[kategorie.Key], pravidla))
                 {
                     if (!podleLodi.TryGetValue(lod, out var zaznam))
                         podleLodi[lod] = zaznam = (kategorie.Key, []);

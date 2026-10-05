@@ -713,6 +713,11 @@ namespace OrlickyPohar.Api.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("character varying(80)");
 
+                    b.Property<int>("VerzePravidel")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<bool>("VysledkyZavoduVerejne")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")

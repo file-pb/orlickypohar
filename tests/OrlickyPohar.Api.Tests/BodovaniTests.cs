@@ -593,4 +593,51 @@ public class BodovaniTests
                 Kod("thea", "Nad7m", KodVysledku.Dns),
             ]),
         ]);
+
+    // --- Verze pravidel (oponentura, 5. 10. 2026) ---------------------------
+    // Body se počítají při čtení, takže dokud byla pravidla konstanty
+    // v kódu, změnila jejich oprava body i u ročníku vyhlášeného loni.
+
+    [Fact]
+    public void Verze_jedna_drzi_cisla_podle_kterych_se_vyhlasovalo()
+    {
+        // Tyhle tři hodnoty se nesmějí změnit nikdy. Až rozhodčí něco
+        // upřesní, přidá se V2 — jednička zůstane, jaká byla.
+        Assert.Equal(1, PravidlaBodovani.V1.Verze);
+        Assert.Equal(20, PravidlaBodovani.V1.BodyZaDiskvalifikaci);
+        Assert.Equal(1, PravidlaBodovani.V1.PrirazkaZaKod);
+        Assert.Equal(1, PravidlaBodovani.V1.PrirazkaZaNapravu);
+    }
+
+    [Fact]
+    public void Pravidla_se_berou_podle_cisla_z_rocniku()
+        => Assert.Same(PravidlaBodovani.V1, PravidlaBodovani.Podle(1));
+
+    [Fact]
+    public void Neznama_verze_je_chyba_ne_tichy_navrat_k_posledni()
+    {
+        // Ročník s verzí, kterou tenhle kód nezná, se nesmí spočítat podle
+        // něčeho jiného, než podle čeho se vyhlašoval.
+        Assert.Throws<ArgumentOutOfRangeException>(() => PravidlaBodovani.Podle(2));
+        Assert.Throws<ArgumentOutOfRangeException>(() => PravidlaBodovani.Podle(0));
+    }
+
+    [Fact]
+    public void Vypocet_bez_pravidel_bere_posledni_verzi()
+    {
+        // Volání bez pravidel musí dát totéž jako s poslední verzí — jinak
+        // by se refaktoring projevil na číslech.
+        VysledekVstup[] vysledky =
+        [
+            new("Anička", "Race", 1, null),
+            new("Bóra", "Race", null, KodVysledku.Dnf),
+        ];
+
+        var bez = Bodovani.BodyRozjizdky(vysledky, prihlaseno: 5);
+        var s = Bodovani.BodyRozjizdky(vysledky, prihlaseno: 5, PravidlaBodovani.Posledni);
+
+        Assert.Equal(bez, s);
+        // A5.2: kód má přihlášených + 1.
+        Assert.Equal(6, bez.Single(x => x.Lod == "Bóra").Body);
+    }
 }

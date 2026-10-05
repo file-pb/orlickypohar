@@ -105,7 +105,10 @@ public record SerieVstup(
     int PocetSkrtu = 1,
     // Smí čtenář vidět výsledky jednotlivých regat? Výchozí ano, aby se
     // mlčení zapínalo vědomě a starší soubory se nemusely přepisovat.
-    bool VysledkyZavoduVerejne = true);
+    bool VysledkyZavoduVerejne = true,
+    // Verze bodovacích pravidel. Starší soubory ji neznají a jednička je
+    // ta, podle které se vyhlašoval ročník 2026 i 2027.
+    int VerzePravidel = 1);
 
 /// <summary>
 /// Kolik řádků import založil, kolik jich našel a kolik smazal. Druhý běh

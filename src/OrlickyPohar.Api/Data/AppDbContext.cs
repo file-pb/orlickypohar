@@ -50,6 +50,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // bez ní by migrace doplnila stávajícím ročníkům `false` a schovala
         // jim výsledky regat, aniž o to kdokoliv požádal.
         serie.Property(x => x.VysledkyZavoduVerejne).HasDefaultValue(true);
+        // Totéž u verze bodovacích pravidel: nula by znamenala „neznámá
+        // pravidla" a výpočet by na stávajících ročnících spadl. Jednička je
+        // ta, podle které se vyhlašoval ročník 2026 i 2027.
+        serie.Property(x => x.VerzePravidel).HasDefaultValue(1);
 
         var kategorie = b.Entity<Kategorie>();
         kategorie.Property(x => x.Nazev).HasMaxLength(60).IsRequired();

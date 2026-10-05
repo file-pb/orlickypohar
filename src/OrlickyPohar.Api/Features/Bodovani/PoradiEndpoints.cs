@@ -37,7 +37,11 @@ public record PoradiKategorieDto(string Kategorie, IReadOnlyList<PoradiLodiDto> 
 public record PoradiSerieDto(
     string Slug, string Nazev, int Rok,
     IReadOnlyList<ZastavkaDto> Zastavky,
-    IReadOnlyList<PoradiKategorieDto> Kategorie);
+    IReadOnlyList<PoradiKategorieDto> Kategorie,
+    // Verze bodovacích pravidel, podle které je tabulka spočítaná. Aditivně:
+    // bez ní se pořadí nedá zkontrolovat a po opravě pravidel by nešlo
+    // poznat, podle čeho se vyhlašovalo.
+    int VerzePravidel = 1);
 
 /// <summary>
 /// Průběžné pořadí seriálu, po kategoriích. Do poháru se boduje vždy uvnitř
@@ -64,10 +68,14 @@ public static class PoradiEndpoints
         // Nepublikovaný ročník neexistuje — 404, ne 403, stejně jako u ostatního čtení.
         var serie = await db.Serie
             .Where(s => s.Slug == slug && s.Publikovano)
-            .Select(s => new { s.Id, s.Slug, s.Nazev, s.Rok, s.PocetSkrtu })
+            .Select(s => new { s.Id, s.Slug, s.Nazev, s.Rok, s.PocetSkrtu, s.VerzePravidel })
             .FirstOrDefaultAsync(ct);
 
         if (serie is null) return TypedResults.NotFound();
+
+        // Pravidla podle verze ročníku, ne poslední podoba kódu: jinak by
+        // oprava výpočtu přepsala body i u ročníku vyhlášeného loni.
+        var pravidla = PravidlaBodovani.Podle(serie.VerzePravidel);
 
         // Jen odjeté zastávky. Plánovaná nemá výsledky a zrušená se do poháru
         // nepočítá vůbec — v tabulce by obojí vypadalo jako prázdný sloupec,
@@ -164,10 +172,12 @@ public static class PoradiEndpoints
                 .GroupBy(x => x.Kategorie)
                 .ToDictionary(g => g.Key, g => g.Count());
 
-            var vysledky = Bodovani.VysledkyZavodu(rozjizdky, zastavka.PocetSkrtu, prihlaseno);
+            var vysledky = Bodovani.VysledkyZavodu(
+                rozjizdky, zastavka.PocetSkrtu, prihlaseno, pravidla);
 
             foreach (var radek in SerieBodovani.BodyDoSerie(
-                         vysledky, lodeRocniku, zastavka.KoeficientDoSerie, zastavka.PosunDoSerie, prihlaseno))
+                         vysledky, lodeRocniku, zastavka.KoeficientDoSerie, zastavka.PosunDoSerie,
+                         prihlaseno, pravidla))
             {
                 if (!body.TryGetValue((radek.Lod, radek.Kategorie), out var rada))
                     body[(radek.Lod, radek.Kategorie)] = rada = new BodyZeZastavky?[zastavky.Count];
@@ -212,6 +222,6 @@ public static class PoradiEndpoints
         return TypedResults.Ok(new PoradiSerieDto(
             serie.Slug, serie.Nazev, serie.Rok,
             [.. zastavky.Select(z => new ZastavkaDto(z.Slug, z.Nazev, z.Datum, z.Poradi))],
-            poradi));
+            poradi, serie.VerzePravidel));
     }
 }
