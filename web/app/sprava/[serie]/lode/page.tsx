@@ -240,7 +240,9 @@ function Detail({
       {detail.lod.vazby.length === 0 ? (
         <p className="prazdno">
           K lodi nepatří nikdo. Urči kapitána níž, nebo nech posádku připojit
-          se kódem z <Link href={`/sprava/${serie}/prihlasky`}>přihlášek</Link>.
+          se kódem, který vystavíš u lodi v{" "}
+          <Link href={`/sprava/${serie}/kalendar`}>přihláškách zastávky</Link>.
+          Přihlášky jsou u každé regaty v kalendáři — vlastní adresu nemají.
         </p>
       ) : (
         <ul className="seznam">
