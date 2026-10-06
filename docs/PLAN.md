@@ -3465,6 +3465,9 @@ založil druhou.
 | Co se mění | **Jméno. Adresa zůstává** | Odkaz na zastávku už mohl někam odejít — totéž pravidlo drží administrace (`KalendarSprava.UpravAsync`) |
 | Opakované nahrání | Páruje se zas přes `puvodniSlug` | Slug v databázi se nezměnil, takže nový slug ze souboru nesedí — a zůstává to idempotentní |
 | Sám na sebe | Odmítne se | Přejmenování se vyplňuje jen tehdy, když se adresa liší |
+| Na adresu, která v ročníku není | **Odmítne se** | Mlčky založit nový závod je přesně to rozdvojení, kterému má bránit; překlep by se poznal až podle dvou řad výsledků |
+| Řetěz A → B → C | `puvodniSlug` ukazuje pořád na **A** | Slug se při přejmenování nemění, takže adresa B u nás nikdy nevznikla |
+| První import do prázdna | Projde i s `puvodniSlug` na nic | Do prázdna se nedá nic rozdvojit a soubor musí zůstat nahratelný při obnově ze zálohy |
 | Na adresu jiné regaty ze souboru | Odmítne se | Dvě regaty jednu adresu sdílet nemůžou, jinak si soubor sám určí, která tu druhou přepíše |
 | Kolize podle termínu | U přiznaného přejmenování mlčí | Kdo řekne, že přejmenovává, rozdvojení nedělá |
 

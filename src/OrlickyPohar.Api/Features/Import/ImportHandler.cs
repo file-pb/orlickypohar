@@ -325,17 +325,36 @@ internal static class ImportHandler
             // říká, pod kterou adresou ta regata v ročníku už je. Bez toho
             // by z přejmenování vznikl druhý závod a tomu původnímu by
             // zůstaly výsledky, přílohy i odběry — závody se nemažou.
-            if (!podleSlugu.TryGetValue(v.Slug, out var zavod)
-                && v.PuvodniSlug is { } puvodni
-                && podleSlugu.TryGetValue(puvodni, out var prejmenovany))
+            if (!podleSlugu.TryGetValue(v.Slug, out var zavod) && v.PuvodniSlug is { } puvodni)
             {
-                // **Adresa zůstává.** Odkaz na zastávku už mohl někam odejít
-                // a je to totéž pravidlo, jaké drží administrace
-                // (`KalendarSprava.UpravAsync`). Mění se jméno, ne adresa —
-                // a protože se slug nemění, páruje se příští import zas
-                // podle `PuvodniSlug`, takže to zůstává idempotentní.
-                zavod = prejmenovany;
-                podleSlugu[v.Slug] = zavod;
+                if (podleSlugu.TryGetValue(puvodni, out var prejmenovany))
+                {
+                    // **Adresa zůstává.** Odkaz na zastávku už mohl někam
+                    // odejít a je to totéž pravidlo, jaké drží administrace
+                    // (`KalendarSprava.UpravAsync`). Mění se jméno, ne adresa.
+                    //
+                    // Protože se slug nemění, musí na tuhle **uloženou**
+                    // adresu ukazovat i všechny další soubory. Při
+                    // přejmenování A → B → C zůstává `PuvodniSlug` = A;
+                    // adresa B u nás nikdy nevznikla.
+                    zavod = prejmenovany;
+                    podleSlugu[v.Slug] = zavod;
+                }
+                else if (existujici.Count > 0)
+                {
+                    // Soubor tvrdí přejmenování, ale ta adresa v ročníku
+                    // není. Mlčky založit nový závod je přesně to rozdvojení,
+                    // kterému má `PuvodniSlug` bránit — překlep by se poznal
+                    // až podle dvou řad výsledků u jedné regaty.
+                    //
+                    // Jen u ročníku, který už závody má: do prázdna se nedá
+                    // nic rozdvojit a soubor musí zůstat nahratelný i při
+                    // obnově ze zálohy.
+                    throw new ImportException(
+                        $"Závod {v.Slug} se hlásí k adrese {puvodni}, která v ročníku "
+                        + $"{serie.Slug} není. Při dalším přejmenování musí `puvodniSlug` "
+                        + "ukazovat pořád na tu uloženou adresu, ne na jméno z minula.");
+                }
             }
 
             if (zavod is null)

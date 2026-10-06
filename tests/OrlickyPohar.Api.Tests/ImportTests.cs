@@ -708,4 +708,120 @@ public class ImportTests(PostgresFixture fixture)
         Assert.Equal(HttpStatusCode.BadRequest, stav);
         Assert.Contains("Slug závodu", telo.RootElement.GetProperty("error").GetString());
     }
+
+    // Tři případy, na které se ptala třetí oponentura (6. 10. 2026).
+
+    [Fact]
+    public async Task Druhe_prejmenovani_i_se_zmenou_data_miri_na_ulozenou_adresu()
+    {
+        // A → B → C. `puvodniSlug` musí pořád ukazovat na A, protože adresa
+        // B u nás nikdy nevznikla — slug se při přejmenování nemění.
+        var puvodni = Rocnik("prejmenovani-retez");
+        await Posli(puvodni);
+
+        var naB = puvodni with
+        {
+            Zavody = [puvodni.Zavody[0] with { Slug = "b", Nazev = "Béčko", PuvodniSlug = "zahajeni" }],
+        };
+        await Posli(naB);
+
+        // Druhé přejmenování, a k tomu se posunul termín — na to vodítko
+        // podle data nestačí, tohle je ten případ, kvůli kterému `puvodniSlug`
+        // existuje.
+        var naC = puvodni with
+        {
+            Zavody =
+            [
+                puvodni.Zavody[0] with
+                {
+                    Slug = "c",
+                    Nazev = "Céčko",
+                    Datum = new DateOnly(2025, 6, 7),
+                    PuvodniSlug = "zahajeni",
+                },
+            ],
+        };
+        var treti = await Posli(naC);
+
+        Assert.Equal(0, treti.Zavody.Nove);
+
+        using var scope = fixture.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var zavod = Assert.Single(
+            await db.Zavody.AsNoTracking().Where(z => z.Serie!.Slug == "prejmenovani-retez").ToListAsync());
+
+        Assert.Equal("zahajeni", zavod.Slug);
+        Assert.Equal("Céčko", zavod.Nazev);
+        Assert.Equal(new DateOnly(2025, 6, 7), zavod.Datum);
+        Assert.Equal(2, await db.Vysledky.CountAsync(v => v.Rozjizdka!.ZavodId == zavod.Id));
+    }
+
+    [Fact]
+    public async Task Prejmenovani_na_neznamou_adresu_neprojde()
+    {
+        // Překlep v `puvodniSlug` by jinak tiše založil druhý závod —
+        // přesně to rozdvojení, kterému má bránit.
+        var puvodni = Rocnik("prejmenovani-preklep");
+        await Posli(puvodni);
+
+        var spatny = puvodni with
+        {
+            Zavody = [puvodni.Zavody[0] with { Slug = "nove", PuvodniSlug = "zahajeniii" }],
+        };
+
+        var (stav, telo) = await PosliSurove(spatny);
+
+        Assert.Equal(HttpStatusCode.BadRequest, stav);
+        Assert.Contains("zahajeniii", telo.RootElement.GetProperty("error").GetString());
+
+        using var scope = fixture.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.Equal(1, await db.Zavody.CountAsync(z => z.Serie!.Slug == "prejmenovani-preklep"));
+    }
+
+    [Fact]
+    public async Task Dva_radky_na_jednu_ulozenou_regatu_se_odmitnou_pred_zapisem()
+    {
+        var puvodni = Rocnik("prejmenovani-dva-radky");
+        await Posli(puvodni);
+
+        var zavod = puvodni.Zavody[0];
+        var spatny = puvodni with
+        {
+            Zavody =
+            [
+                zavod with { Slug = "prvni", Nazev = "První", PuvodniSlug = "zahajeni" },
+                zavod with { Slug = "druhy", Nazev = "Druhý", PuvodniSlug = "zahajeni", Ucasti = [], Rozjizdky = [] },
+            ],
+        };
+
+        var (stav, telo) = await PosliSurove(spatny);
+
+        Assert.Equal(HttpStatusCode.BadRequest, stav);
+        Assert.Contains("Původní adresa závodu", telo.RootElement.GetProperty("error").GetString());
+
+        // Před zápisem: v ročníku zůstala jedna regata pod původní adresou.
+        using var scope = fixture.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var zustal = Assert.Single(
+            await db.Zavody.AsNoTracking().Where(z => z.Serie!.Slug == "prejmenovani-dva-radky").ToListAsync());
+        Assert.Equal("zahajeni", zustal.Slug);
+    }
+
+    [Fact]
+    public async Task Prvni_import_do_prazdna_puvodni_slug_nebrzdi()
+    {
+        // Do prázdného ročníku se nedá nic rozdvojit a soubor musí zůstat
+        // nahratelný i při obnově ze zálohy, kdy v něm `puvodniSlug` zůstal.
+        var vstup = Rocnik("prejmenovani-do-prazdna");
+        var sPrejmenovanim = vstup with
+        {
+            Zavody = [vstup.Zavody[0] with { Slug = "nove", PuvodniSlug = "nikdy-neexistovalo" }],
+        };
+
+        var (stav, _) = await PosliSurove(sPrejmenovanim);
+
+        Assert.Equal(HttpStatusCode.OK, stav);
+    }
 }
