@@ -579,13 +579,27 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         await using var scope = fixture.Services.CreateAsyncScope();
         var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
 
+        // Rozjížďka z ročníku výsledky má — a právě proto na tom záleží:
+        // sada bez revize by je přepsala a co v ní není, smazala.
+        var pred = await db.Vysledky.AsNoTracking()
+            .Where(v => v.RozjizdkaId == rozjizdka.Id)
+            .Select(v => new { v.Ucast!.PrihlaskaId, v.PoradiVCili, v.Kod })
+            .ToListAsync();
+
         var vysledek = await zapis.UlozAsync(
             rozjizdka, [new(prihlasky[0], PoradiVCili: 1)], default);
 
         Assert.Equal(Zapis.RevizeChybi, vysledek.Chyba);
         // Konflikt to není: klient neposlal nic, s čím by se dalo porovnávat.
         Assert.False(vysledek.Konflikt);
-        Assert.Empty(await db.Vysledky.Where(v => v.RozjizdkaId == rozjizdka.Id).ToListAsync());
+
+        var po = await db.Vysledky.AsNoTracking()
+            .Where(v => v.RozjizdkaId == rozjizdka.Id)
+            .Select(v => new { v.Ucast!.PrihlaskaId, v.PoradiVCili, v.Kod })
+            .ToListAsync();
+
+        Assert.Equal(pred, po);
+        Assert.Equal(0, rozjizdka.Revize);
     }
 
     [Fact]
