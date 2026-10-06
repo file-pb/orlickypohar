@@ -4,6 +4,7 @@ using Scalar.AspNetCore;
 using Serilog;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Bodovani;
+using OrlickyPohar.Api.Features.Boje;
 using OrlickyPohar.Api.Features.Clanky;
 using OrlickyPohar.Api.Features.Fotky;
 using OrlickyPohar.Api.Features.Identita;
@@ -90,6 +91,8 @@ try
     // Nárok na loď, který potvrzuje kapitán.
     builder.Services.AddScoped<NarokySprava>();
     builder.Services.AddScoped<KapitanstviSprava>();
+    // Bóje na trati: pípnutí polohy pořadatelem z webu i z appky.
+    builder.Services.AddScoped<BojeSprava>();
     if (builder.Configuration.GetValue<bool>("Prevzate:Sber"))
         builder.Services.AddHostedService<SberPrevzatych>();
     // Kontakty kapitánů se drží do konce následující sezóny, pak se mažou.
@@ -205,6 +208,7 @@ try
         app.MapSmernice();
         app.MapKody();
         app.MapKapitanstvi();
+        app.MapBoje();
         app.MapSpravaPoradatelu();
         app.MapNaklady();
     }
