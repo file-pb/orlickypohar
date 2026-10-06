@@ -9,8 +9,10 @@ import type { components } from "./schema";
  * Stejně jako u fotek: obyčejný formulář bez javascriptu a API si obsah
  * zkontroluje dřív, než se cokoliv uloží.
  *
- * <b>Vyvěšené se nemaže.</b> Appka je oficiální vývěska, takže oprava je
- * nová verze — proto tu není žádná funkce na mazání a ani nebude.
+ * <b>Záznam se nemaže, obsah se dá odvolat.</b> Appka je oficiální vývěska,
+ * takže oprava je nová verze a funkce na mazání záznamu tu není ani nebude.
+ * Stažení (`stahniSmernici`) je jiná věc: řádek i historie zůstanou, ale
+ * soubor zmizí z úložiště a veřejné čtení verzi nevydá.
  */
 
 const API = process.env.API_URL ?? "http://localhost:8080";
@@ -65,6 +67,42 @@ export async function nactiSmernice(
   if (!odpoved.ok) return { stav: "vypadek" };
 
   return { stav: "ok", data: (await odpoved.json()) as Smernice[] };
+}
+
+/** Visí tahle verze na vývěsce? Stažená má vyplněné `stazenoV`. */
+export const visi = (s: Smernice) => !s.stazenoV;
+
+/**
+ * Stáhne verzi z vývěsky. Vrací chybu k zobrazení, nebo `null`.
+ *
+ * <b>Důvod je povinný</b> — API ho bez něj nepustí a je to tak schválně:
+ * u dokumentu, podle kterého se jede, musí jít po sezóně dohledat, co se
+ * odvolalo a proč.
+ */
+export async function stahniSmernici(
+  serie: string,
+  zavod: string,
+  verze: number,
+  duvod: string,
+): Promise<string | null> {
+  const t = await tokenZeSezeni();
+  if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+
+  try {
+    const odpoved = await fetch(`${cesta(serie, zavod)}/${verze}/stazeni`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${t}`,
+        accept: "application/json",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ duvod }),
+      cache: "no-store",
+    });
+    return odpoved.ok ? null : await hlaska(odpoved);
+  } catch {
+    return "API se nedaří zavolat.";
+  }
 }
 
 /** Vrací chybu k zobrazení, nebo `null`, když se povedlo. */

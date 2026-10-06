@@ -164,4 +164,91 @@ public class ParovaniTests(PostgresFixture fixture)
         Assert.Equal(lod.Nazev, moje.Nazev);
         Assert.Equal(RoleKLodi.Majitel, moje.Role);
     }
+
+    [Fact]
+    public async Task Rucne_urcenou_roli_parovani_neprepise()
+    {
+        // Jinak by příští přihlášení zrušilo opravu, kterou správce právě
+        // udělal — a opravovat by se to muselo pořád dokola (oponentura,
+        // 5. 10. 2026). Značka `PuvodVazby.Rucne` by na to sama nestačila,
+        // rozhoduje `RoleUrcenaRucne`.
+        var (db, parovani) = Sluzby();
+        var email = Email();
+        var (_, lod) = await OsobaSLodiAsync(db, email);
+        var ucet = await UcetAsync(db, email);
+        var spravce = await UcetAsync(db, Email());
+
+        // Majitel lodi, kterého správce vědomě snížil na fanouška.
+        db.VazbyKLodim.Add(new VazbaKLodi
+        {
+            LodId = lod.Id,
+            UzivatelId = ucet.Id,
+            Role = RoleKLodi.Fanousek,
+            Puvod = PuvodVazby.Rucne,
+            VzniklaV = Ted,
+            RoleUrcilId = spravce.Id,
+            RoleUrcenaV = Ted,
+        });
+        await db.SaveChangesAsync();
+
+        Assert.Equal(0, await parovani.PodleEmailuAsync(ucet.Id, email, default));
+
+        var vazba = await db.VazbyKLodim.SingleAsync(v => v.UzivatelId == ucet.Id);
+        Assert.Equal(RoleKLodi.Fanousek, vazba.Role);
+    }
+
+    [Fact]
+    public async Task Odebranou_vazbu_parovani_nevraci()
+    {
+        // Druhá polovina téhož: kdyby párování vazbu obnovilo, stačilo by se
+        // přihlásit a člověk je u lodi zpátky i po odebrání.
+        var (db, parovani) = Sluzby();
+        var email = Email();
+        var (_, lod) = await OsobaSLodiAsync(db, email);
+        var ucet = await UcetAsync(db, email);
+        var spravce = await UcetAsync(db, Email());
+
+        db.ZmenyRoli.Add(new ZmenaRoleKLodi
+        {
+            LodId = lod.Id,
+            UzivatelId = ucet.Id,
+            Predchozi = RoleKLodi.Majitel,
+            Nova = null,
+            ZmenilId = spravce.Id,
+            ZmenenoV = Ted,
+        });
+        await db.SaveChangesAsync();
+
+        Assert.Equal(0, await parovani.PodleEmailuAsync(ucet.Id, email, default));
+        Assert.Empty(await db.VazbyKLodim.Where(v => v.UzivatelId == ucet.Id).ToListAsync());
+    }
+
+    [Fact]
+    public async Task Vracenou_vazbu_parovani_zase_doplni()
+    {
+        // Rozhoduje poslední změna, ne to, že někdy nějaká byla: správce,
+        // který odebral a pak vrátil, nesmí párování zablokovat navždy.
+        var (db, parovani) = Sluzby();
+        var email = Email();
+        var (_, lod) = await OsobaSLodiAsync(db, email);
+        var ucet = await UcetAsync(db, email);
+        var spravce = await UcetAsync(db, Email());
+
+        db.ZmenyRoli.AddRange(
+            new ZmenaRoleKLodi
+            {
+                LodId = lod.Id, UzivatelId = ucet.Id,
+                Predchozi = RoleKLodi.Majitel, Nova = null,
+                ZmenilId = spravce.Id, ZmenenoV = Ted,
+            },
+            new ZmenaRoleKLodi
+            {
+                LodId = lod.Id, UzivatelId = ucet.Id,
+                Predchozi = null, Nova = RoleKLodi.Posadka,
+                ZmenilId = spravce.Id, ZmenenoV = Ted.AddHours(1),
+            });
+        await db.SaveChangesAsync();
+
+        Assert.Equal(1, await parovani.PodleEmailuAsync(ucet.Id, email, default));
+    }
 }

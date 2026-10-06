@@ -9,8 +9,21 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      obnova:
+        description: >-
+          Nasadit, i když se nedá přečíst, co na produkci běží. Výslovný režim
+          obnovy — bez něj se při nečitelné verzi nasazení zastaví, protože
+          výpadek /verze by jinak obešel ochranu proti návratu do minulosti.
+        type: boolean
+        default: false
 
 env:
+  # Veřejné adresy obou služeb. Proměnná repozitáře je přebije, kdyby se
+  # někdy přestěhovaly; výchozí hodnota je tu proto, aby ověření po nasazení
+  # fungovalo i bez další konfigurace.
+  API_URL: ${{ vars.API_URL || 'https://orlickypohar-api.klihovka.cz' }}
+  WEB_URL: ${{ vars.WEB_URL || 'https://orlickypohar.klihovka.cz' }}
   IMAGE: ghcr.io/${{ github.repository }}
   IMAGE_WEB: ghcr.io/${{ github.repository }}-web
   IMAGE_LANDSAT: ghcr.io/${{ github.repository }}-landsat
@@ -75,6 +88,9 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # Commit do image, ať po nasazení jde ověřit, co doopravdy běží.
+          build-args: |
+            VERZE=${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -96,6 +112,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-web.outputs.tags }}
           labels: ${{ steps.meta-web.outputs.labels }}
+          build-args: |
+            VERZE=${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -138,27 +156,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Server si novou image stáhne sám. Posílá se i compose ze STEJNÉHO
-      # commitu, ze kterého je image — jinak by se nasadila nová aplikace
-      # se starým nastavením a chybějící tajemství by se projevilo až za běhu.
-      #
-      # Tajemství jde hlavičkou, ne v URL: adresa se objevuje v logu běhu.
-      #
-      # Podmínka na událost je tu stejně jako u přihlášení do registru.
-      # Bez ní se nasazovalo i z pull requestu — image z něj sice do registru
-      # nejde, ale compose z neslité větve ano. PR od Dependabotu k tajemství
-      # nedosáhne a padal na 401; PR z vlastní větve by server přepsal.
-      - name: Deploy
-        if: ${{ github.event_name != 'pull_request' && vars.DEPLOY_WEBHOOK != '' }}
-        run: |
-          curl -fsS --max-time 900 -X POST "${{ vars.DEPLOY_WEBHOOK }}" \
-            -H "X-Deploy-Token: ${{ secrets.DEPLOY_TOKEN }}" \
-            -H "Content-Type: application/yaml" \
-            --data-binary @deploy/docker-compose.yml
 
   # Testy proti reálnému PostgreSQL přes Testcontainers. Běží VEDLE buildu,
-  # ne před ním: jejich selhání hlásí problém, ale neblokuje nasazení
-  # aplikace, která je jinak funkční.
+  # ale nasazení na ně od 6. 10. 2026 ČEKÁ (oponentura): když se produkce
+  # změní dřív, než je výsledek, znamená červená integrace už nasazenou
+  # vadnou verzi — a přesně to se tu jednou stalo.
   #
   # Doma se pustit nedají — Docker Hub je z pracovního stroje nedostupný,
   # takže tohle je jediné místo, kde se import ověří proti databázi.
@@ -199,3 +201,133 @@ jobs:
 
       - name: Integrační testy
         run: dotnet test -c Release --nologo --filter "Category=Integracni"
+
+  # Nasazení. Vlastní úloha, ne poslední krok buildu, a to ze tří důvodů:
+  #
+  # 1. **Čeká na testy.** Dokud byl deploy krokem buildu, běžel vedle
+  #    integrace — červená integrace tak mohla znamenat už nasazenou vadnou
+  #    verzi, protože produkce se změnila dřív, než byl výsledek.
+  # 2. **Jedno nasazení naráz.** Skupina souběhu platí pro všechny cesty do
+  #    produkce, tedy i pro ruční spuštění. `cancel-in-progress: false`
+  #    schválně: rozdělaný deploy se nepřeruší, další počká.
+  # 3. **Nevrací produkci do minulosti.** Fronta sama nestačí — GitHub řadí
+  #    podle okamžiku vstupu do skupiny, ne podle stáří commitu, takže
+  #    pozdě doběhlý starý build se zařadí za novější. Proto se před
+  #    odesláním čte, co na produkci běží, a starší commit se neposílá.
+  nasazeni:
+    needs: [build, appka, integrace]
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    concurrency:
+      group: nasazeni-produkce
+      cancel-in-progress: false
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Celá historie: bez ní nejde říct, jestli je běžící commit
+          # potomkem toho nasazovaného, tedy novější.
+          fetch-depth: 0
+
+      # Co na produkci běží teď. Neznámá nebo nedostupná verze nasazení
+      # nezastaví — první nasazení s `/verze` ji ještě vrátit nemůže.
+      - name: Co běží na produkci
+        id: bezi
+        run: |
+          api=$(curl -fsS --max-time 20 "$API_URL/verze" 2>/dev/null \
+            | python3 -c "import json,sys; print(json.load(sys.stdin).get('verze',''))" 2>/dev/null || true)
+          echo "sha=$api" >> "$GITHUB_OUTPUT"
+          echo "Na produkci běží API: ${api:-neznámá}"
+
+      # Jádro ochrany: nasazovaný commit nesmí být předkem toho běžícího.
+      # Když je, je běžící verze novější a tenhle build dorazil pozdě.
+      - name: Nevracet produkci do minulosti
+        id: kontrola
+        run: |
+          bezi='${{ steps.bezi.outputs.sha }}'
+          obnova='${{ inputs.obnova }}'
+
+          # Nečitelná verze ochranu neobchází. Výpadek `/verze` by jinak
+          # stačil k tomu, aby starý build přepsal produkci — a vypadalo by
+          # to jako obyčejné nasazení (oponentura, 6. 10. 2026).
+          #
+          # Cesta ven je výslovná: spustit znovu ručně s `obnova = true`.
+          # Je to i cesta pro případ, kdy produkce neodpovídá právě proto,
+          # že je rozbitá a nasadit se musí.
+          if [ -z "$bezi" ] || ! git cat-file -e "$bezi^{commit}" 2>/dev/null; then
+            duvod="Nedá se přečíst, co na produkci běží"
+            [ -n "$bezi" ] && duvod="Produkce hlásí verzi $bezi, která v historii není"
+            if [ "$obnova" = "true" ]; then
+              echo "::warning::$duvod. Běží režim obnovy, nasazuje se."
+              echo "nasadit=ano" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "::error::$duvod, takže nejde ověřit, že tenhle build není starší."
+            echo "Spusť build-deploy ručně nad main s volbou obnova, pokud to tak má být."
+            exit 1
+          fi
+          if [ "$bezi" = "${{ github.sha }}" ]; then
+            echo "Na produkci už běží tenhle commit, nasazuje se znovu."
+            echo "nasadit=ano" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git merge-base --is-ancestor "${{ github.sha }}" "$bezi"; then
+            echo "::warning::Na produkci běží novější commit ($bezi)." \
+              "Tenhle build (${{ github.sha }}) je jeho předek a nasazením by" \
+              "produkci vrátil do minulosti. Přeskakuje se."
+            echo "nasadit=ne" >> "$GITHUB_OUTPUT"
+          else
+            echo "nasadit=ano" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Server si novou image stáhne sám. Posílá se i compose ze STEJNÉHO
+      # commitu, ze kterého je image — jinak by se nasadila nová aplikace
+      # se starým nastavením a chybějící tajemství by se projevilo až za běhu.
+      #
+      # Tajemství jde hlavičkou, ne v URL: adresa se objevuje v logu běhu.
+      # `X-Deploy-Sha` je pro server, aby tutéž kontrolu mohl udělat pod svým
+      # zámkem — tahle tu běží mimo něj a zavírá jen naše vlastní cesty.
+      - name: Deploy
+        if: ${{ steps.kontrola.outputs.nasadit == 'ano' && vars.DEPLOY_WEBHOOK != '' }}
+        run: |
+          curl -fsS --max-time 900 -X POST "${{ vars.DEPLOY_WEBHOOK }}" \
+            -H "X-Deploy-Token: ${{ secrets.DEPLOY_TOKEN }}" \
+            -H "X-Deploy-Sha: ${{ github.sha }}" \
+            -H "Content-Type: application/yaml" \
+            --data-binary @deploy/docker-compose.yml
+
+      # `Healthy` a HTTP 200 vrací i verze, která tam visí z minula, takže
+      # samy o sobě nedokazují nic. Porovnává se skutečná verze obou služeb.
+      #
+      # Čeká se omezeně (20 × 15 s) a pak se **musí** vědět. Neověřený
+      # výsledek končí chybou, i po obnově: zelená nad službou, o které
+      # nevíme, co na ní běží, je falešná jistota.
+      - name: Ověřit, co doopravdy běží
+        if: ${{ steps.kontrola.outputs.nasadit == 'ano' && vars.DEPLOY_WEBHOOK != '' }}
+        run: |
+          ocekavano='${{ github.sha }}'
+          chyba=0
+          for i in $(seq 1 20); do
+            api=$(curl -fsS --max-time 20 "$API_URL/verze" 2>/dev/null \
+              | python3 -c "import json,sys; print(json.load(sys.stdin).get('verze',''))" 2>/dev/null || true)
+            web=$(curl -fsS --max-time 20 "$WEB_URL/verze" 2>/dev/null \
+              | python3 -c "import json,sys; print(json.load(sys.stdin).get('verze',''))" 2>/dev/null || true)
+            [ "$api" = "$ocekavano" ] && [ "$web" = "$ocekavano" ] && break
+            sleep 15
+          done
+          echo "čekáno: $ocekavano"
+          echo "API:    ${api:-neodpovědělo}"
+          echo "web:    ${web:-neodpovědělo}"
+
+          # Neověřený výsledek je chyba, ne varování. Zelená úloha nad
+          # službou, o které nevíme, co na ní běží, je falešná jistota —
+          # a platí to dvojnásob po obnově, kde se nasazovalo právě proto,
+          # že se verze přečíst nedala (oponentura, 6. 10. 2026).
+          [ -n "$api" ] || { echo "::error::API po nasazení verzi nevydalo."; chyba=1; }
+          [ -n "$web" ] || { echo "::error::Web po nasazení verzi nevydal."; chyba=1; }
+          [ -z "$api" ] || [ "$api" = "$ocekavano" ] \
+            || { echo "::error::API běží na jiné verzi."; chyba=1; }
+          [ -z "$web" ] || [ "$web" = "$ocekavano" ] \
+            || { echo "::error::Web běží na jiné verzi."; chyba=1; }
+          exit $chyba

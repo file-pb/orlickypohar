@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Drobecky } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
-import { nactiNavrhy, type Navrh, type NavrhRadek } from "@/lib/vysledky";
+import { nactiNavrhy, nactiZapis, type Navrh, type NavrhRadek } from "@/lib/vysledky";
+import { KonceptVPorovnani } from "../koncept-ukazka";
 import { pouzijNavrhAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
@@ -35,6 +36,9 @@ export default async function PorovnaniZapisu({ params, searchParams }: Parametr
   if (!Number.isInteger(cisloRozjizdky) || cisloRozjizdky < 1) notFound();
 
   const { stav, data } = await nactiNavrhy(serie, zavod, cisloRozjizdky);
+  // Uložený zápis je tu kvůli konceptu z telefonu: bez něj nejde říct, co
+  // v něm je navíc proti serveru.
+  const { data: zapis } = await nactiZapis(serie, zavod, cisloRozjizdky);
 
   if (stav === "vypadek") return <Vypadek />;
   if (stav === "neni") notFound();
@@ -95,6 +99,21 @@ export default async function PorovnaniZapisu({ params, searchParams }: Parametr
           zůstávají, kdyby se ukázalo, že platí jiná.
         </p>
       )}
+
+      {/* Neodeslaný zápis z telefonu. Snímky výš jsou ze serveru, tenhle se
+          tam nedostal — a právě on bývá to, co při ruční opravě vypadne. */}
+      <KonceptVPorovnani
+        serie={serie}
+        zavod={zavod}
+        cislo={data.cislo}
+        jmena={Object.fromEntries((zapis?.lode ?? []).map((l) => [l.prihlaskaId, l.lod]))}
+        ulozene={(zapis?.lode ?? []).map((l) => ({
+          id: l.prihlaskaId,
+          poradi: l.poradiVCili ?? null,
+          kod: l.kod ?? null,
+        }))}
+        zapisAdresa={zapisAdresa}
+      />
 
       {navrhy.length === 0 ? (
         <p className="prazdno">

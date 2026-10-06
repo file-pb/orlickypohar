@@ -1062,7 +1062,7 @@ nestojí práci.**
 
 | Pořadí | Cesta | Jak to chodí |
 |---|---|---|
-| 1 | **Shoda s kontaktem na přihlášce** | Účet s ověřeným e-mailem, který sedí s kontaktem lodi, dostane roli kapitána sám |
+| 1 | **Shoda s kontaktem na přihlášce** | Účet s ověřeným e-mailem, který sedí s kontaktem lodi, dostane roli podle dat ročníku sám |
 | 2 | **Kód z přihlášky** | Když e-mail nesedí: krátký kód, který pořadatel dává u registrace na papíře |
 | 3 | **Nárok a potvrzení** | Zbytek posádky si řekne o loď, kapitán potvrdí — pořadatele to nezatíží |
 
@@ -1070,8 +1070,8 @@ nestojí práci.**
 
 Na co si dát pozor u každé: sdílená klubová adresa by cestou 1 spárovala
 cizího člověka, proto se páruje jen **ověřený** e-mail a jen na kontakt té
-jedné lodi. Kód z cesty 2 se dá přeposlat, proto má platnost do konce sezóny
-a **kapitánem dělá jen prvního**; další jsou posádka.
+jedné lodi. Kód z cesty 2 se dá přeposlat, proto má krátkou platnost —
+a **kapitánem nedělá nikoho** (viz *Kapitána určuje správce* níž).
 
 **Role vůči lodi: majitel, kapitán, posádka, fanoušek.** Trasu smí odeslat
 jen kapitán nebo posádka, a jen za loď, se kterou jsou na té zastávce
@@ -1099,9 +1099,9 @@ přihlášení.
 | platnost | 15 minut, použít smí víc lidí — posádka se připojuje z jednoho papíru |
 | podoby | šest znaků k opsání a QR nad adresou `/pripojeni?kod=…`; QR kreslí **web** do SVG, API svou adresu vědět nemusí |
 | abeceda | bez `0`, `1`, `I` a `O` — opisuje se z papíru u vody |
-| role | první připojený kapitán, další posádka; kdo roli má, o ni nepřijde |
+| role | **vždy posádka**; kdo roli má, o ni nepřijde (od 5. 10. 2026, dřív byl první kapitán) |
 | neplatný kód | propadlý i vymyšlený dávají **tutéž** odpověď — ať z ní nejde vyčíst, že loď existuje |
-| odebrání | kapitán nebo majitel; **posledního kapitána odebrat nejde** |
+| odebrání | kapitán, majitel, nebo správce ročníku; **posledního kapitána odebrat nejde** — pod zámkem lodi |
 
 Stránky webu: `/pripojeni` (cíl QR, funguje i bez appky) a `/moje-lode`
 (lodě účtu, posádka, vystavení kódu s QR). Odkaz je v profilové nabídce
@@ -1120,7 +1120,7 @@ kód. Uživatel si o loď řekne, kapitán nebo majitel potvrdí.
 | Pravidlo | Proč |
 |---|---|
 | nárok sám o sobě nedává **nic** | dokud ho někdo nepotvrdí, je to žádost, ne role |
-| přijetí dělá **posádku**, ne kapitána | kapitánem je ten, kdo loď převzal jako první |
+| přijetí dělá **posádku**, ne kapitána | kapitána uděluje správce ročníku, žádná z cest párování |
 | zamítnutí platí a nejde o loď žádat znovu | druhá žádost by byla obcházení kapitánova „ne" |
 | o rozhodnutém nároku se podruhé nerozhoduje | jinak by šlo zamítnutí po čase tiše otočit |
 | rozhodovat smí ten, kdo smí vystavit kód | kdo může někoho přivést, může i rozhodnout o tom, kdo se hlásí sám |
@@ -1137,6 +1137,46 @@ nikoho přihlášeného nemá, nabídne lodě z předchozího — ročník se pu
 s kalendářem dřív, než se kdokoliv přihlásí.
 
 **Zbývá:** čtečka QR v appce.
+
+### Kapitána určuje správce
+
+**Oprava nálezu A z oponentury (5. 10. 2026).** Do té doby dával kapitánství
+připojovací kód prvnímu, kdo ho zadal, a žádná cesta pak roli existující
+vazby neměnila. Scénář, který to rozbil, je běžný: pořadatel vystaví kód
+u registrace, posádka má jeden papír, kapitánem se stane ten, kdo byl
+nejrychlejší na telefonu. Opravit to nešlo — posledního kapitána nejde
+odebrat, jiného nebylo jak přidat, takže loď zůstala se špatným kapitánem
+a jedinou cestou zpět byl zápis do databáze. `PuvodVazby.Rucne` sice popisoval
+nouzovou páku, ale nikde v kódu nebyl.
+
+| Věc | Jak |
+|---|---|
+| kód, nárok ani párování kapitána **neudělují** | pořadí u stolu nemá rozhodovat o pravomoci |
+| kapitána určuje **správce ročníku** | vazba platí celý rok a napříč zastávkami, pověření k jedné regatě na ni nemá dosáhnout |
+| loď bez kapitána je **normální stav** | čeká na určení, není to chyba |
+| převod je **jeden úkon v jedné transakci** | mezi dvěma požadavky by loď měla dva kapitány, nebo žádného |
+| dosavadní kapitán → posádka, **majitel zůstává** | vlastnictví je fakt o ročníku, ne pravomoc k předání |
+| majitele tudy nastavit nejde | patří k vlastnictví lodi, oprava je v přihláškách |
+| každá změna běží **pod `FOR UPDATE` na řádku lodi** | bez zámku si dva souběžné požadavky přečtou tentýž stav a pravidlo o posledním kapitánovi je jen zdání |
+| každá změna nechá **záznam** (`ZmenaRoleKLodi`) | kdo, komu, odkud kam a kdy; pravomoc, kterou nejde dohledat, není pravomoc |
+| ručně určenou roli **párování nepřepíše** | jinak by příští přihlášení opravu zrušilo; rozhoduje `RoleUrcenaRucne`, ne jen původ vazby |
+| odebranou vazbu **párování nevrací** | jinak by stačilo se přihlásit a člověk je u lodi zpátky |
+| kapitáni z doby před opravou se **nepřepisují** | migrace by jim roli buď nechala bez prověření, nebo sebrala i tam, kde je správná — správce je dostane na obrazovku po jedné jako *ke kontrole* |
+
+Endpointy (správce ročníku, loď musí být v jeho ročníku):
+`GET /sprava/serie/{serie}/lode`, `GET …/lode/{lod}`,
+`PUT …/lode/{lod}/kapitan`, `PUT …/lode/{lod}/vazby/{vazba}/role`
+a `DELETE …/lode/{lod}/vazby/{vazba}`.
+
+**Obrazovka správce** je na `/sprava/{serie}/lode`: lodě ročníku, nahoře ty
+bez kapitána a s kapitánem od kódu *ke kontrole*, u vybrané lodi posádka
+i s tím, odkud se tam vzala a kdo jí roli určil, k tomu určení kapitána,
+potvrzení role, změna role, odebrání a historie změn. Odkaz v nabídce
+profilu má jen správce ročníku, ne rozhodčí.
+
+**Zbývá:** projít ji v prohlížeči. Testy i tvary odpovědí proti produkci
+sedí, ale obrazovku samotnou nikdo neviděl — `tools/fake-api.py` k ní
+endpointy má, takže jde rozjet bez databáze.
 
 Platí pravidlo platformy č. 5: `Osoba` má **volitelné** napojení na interní
 `UserId`. Většina osob v systému žádný účet mít nebude — figurují jen jako
@@ -1308,8 +1348,9 @@ krátkodobý token, dvě podoby: šestiznakový kód k opsání a QR k načtení
   a kapitánovi v appce, aby si posádku připojil sám.
 - **Platnost pár minut.** QR na displeji si kdokoliv vyfotí přes rameno;
   krátká platnost to riziko skoro maže.
-- **První připojený je kapitán, další posádka.** Kdo je na lodi připojený,
-  musí být vidět a kapitán i pořadatel to musí umět zrušit.
+- **Kód připojuje posádku, kapitána určuje správce ročníku** (oprava
+  z 5. 10. 2026). Kdo je na lodi připojený, musí být vidět a kapitán,
+  pořadatel i správce to musí umět zrušit.
 - **Bez signálu zůstává opsání kódu** — načtení QR potřebuje zavolat server.
 
 Zobrazení QR na webu je hotová věc (knihovnu už web používá u odkazu na
@@ -1367,6 +1408,7 @@ v appce.
 | Kam | Objektové úložiště pod předponou `smernice/`, v databázi záznam |
 | Verze | **Nová směrnice je nový záznam, ne přepis.** Oprava se vyvěšuje, nepřepisuje se — vývěska musí jít doložit zpětně |
 | Kdo vyvěšuje | Organizátor zastávky nebo rozhodčí; u záznamu je kdo a kdy |
+| Odvolání | **Záznam se nemaže, obsah se dá stáhnout.** Stažená verze zmizí z úložiště i z veřejného čtení, řádek i důvod zůstanou |
 | Kde je vidět | Stránka zastávky na webu, táž obrazovka v appce, odkaz v kalendáři |
 | Kontrola | Zastávka ve stavu *vypsaná* bez směrnice je ve správě vidět jako nedodělek — regata bez směrnice se nejede |
 
@@ -1390,10 +1432,75 @@ kontrola, že soubor opravdu začíná `%PDF`, a uložení beze změny obsahu.
 | web, správa | `/sprava/{serie}/smernice/{zavod}`, odkaz z kalendáře |
 
 **Verze se čísluje v rámci zastávky** (1, 2, 3…) a platná je ta nejvyšší.
-Mazací endpoint schválně neexistuje — ani pro správce.
+Mazací endpoint na *záznam* schválně neexistuje — ani pro správce.
+
+#### Stažení z vývěsky (oponentura, 5. 10. 2026)
+
+Do 6. 10. 2026 platilo „vyvěšené zůstává" na záznam **i na obsah** — a to
+byla díra. Pořadatel, který nahrál nesprávné PDF s telefony a adresami
+posádky, to neměl jak vzít zpět: kontrola formátu soubor pustí, nová verze
+chybnou neodvolá a **všechny verze se vydávaly veřejně**, i u ročníku se
+skrytými výsledky. Oponent k tomu dodal to podstatné: *příznak v databázi
+veřejnou R2 adresu nezastaví.*
+
+| Věc | Jak | Proč |
+|---|---|---|
+| Co stažení dělá | Zapíše `StazenoV`, kdo a **povinný důvod**; soubor smaže z úložiště | Oddělit záznam o dokumentu od dostupnosti jeho obsahu |
+| Pořadí kroků | Nejdřív záznam, pak soubor — **obráceně než u vyvěšení** | Tady je cílem zbavit se obsahu; řádek tvrdící „visí" nad smazaným souborem by na vývěsce ukazoval mrtvý odkaz |
+| Když R2 zaškobrtne | Klíč jde v téže transakci do fronty úklidu a mazání se opakuje | Záznam a cizí službu nejde smazat jednou transakcí |
+| Veřejné čtení | Staženou verzi **nevydá vůbec**, ne jen bez adresy | Appka zůstává lidem na telefonech; starší klient by o stažení nevěděl a odkaz na odvolaný dokument je to jediné, co se stát nesmí |
+| Cache | Směrnice se ukládá s `no-store`, ne s roční `immutable` jako fotky | S roční cache by Cloudflare vydával kopii smazaného souboru ještě rok po odvolání |
+| Co vzít zpět nejde | Kopie, které si už někdo stáhl | Platí vždycky a je to tak napsané i v hlášce |
+
+**Zbytek po starých verzích.** Směrnice vyvěšené před 6. 10. 2026 v 00:57
+(nasazení `6e1d2d0`) mají v hlavičce roční `immutable`, takže po stažení
+může Cloudflare ještě chvíli vydávat kopii z edge cache. Jistotu u nich dá
+jen ruční *Purge by URL*; obrazovka proto u takové verze ukáže přesnou
+adresu souboru.
+
+**Platí to jen pro ně.** `Vyveseni.MohlaUvaznoutVCache` porovná okamžik
+vyvěšení s `CacheVypnutaOd` a novějším souborům se purge nepřipomíná —
+u nich je stažení účinné hned a připomínka by byla jen šum. Konstanta je
+o hodinu po nasazení, aby hraniční soubor spadl na bezpečnou stranu.
+
+**Ke 6. 10. 2026 není na produkci vyvěšená ani jedna směrnice** (ověřeno
+přes veřejné čtení všech zastávek obou ročníků), takže starou cache nemá
+co držet a pročišťovat není co. Mechanismus je tu pro případ, že se nějaká
+najde na nepublikované zastávce.
 
 **Co zbývá:** upozornění ve správě u vypsané regaty bez směrnice a zobrazení
 v appce. Appka dnes směrnici nenese, i když ji API vydává.
+
+### Revize sady výsledků (oponentura, 5. 10. 2026)
+
+Uložení zápisu přichází jako **celá sada** a maže, co v ní není — bez toho
+by se omylem zapsaný řádek nedal odstranit. Druhá strana téže mince je díra:
+telefon bez signálu, který drží sadu A–B, po připojení smaže C doplněné
+mezitím na webu. **Server ten konflikt sám nepozná**, obě sady jsou platná
+data.
+
+| Věc | Jak | Proč |
+|---|---|---|
+| Co klient posílá | `revize` — podobu sady, ze které vycházel | Číslo stačí: nejde o to vědět, co se změnilo, ale že se změnilo |
+| Bez revize | **Neprojde** | Není to „tak tedy bez kontroly" — sada naslepo umí smazat opravu, o které klient nevěděl |
+| Při nesouladu | `409 Conflict` i se současným stavem; klient si **svou sadu nechává** | Zahodit rozepsaný zápis z cíle je horší než konflikt |
+| Souběh | Uložení drží `FOR UPDATE` na řádku rozjížďky | Bez zámku si dvě uložení přečtou tutéž revizi, obě projdou a druhé přepíše první |
+| Po uložení | `Revize` se zvýší | Starší klient už neprojde |
+| Použití cizího snímku | Posílá právě platnou revizi | Snímek se bere z databáze, takže kontrola by tu neměla co hlídat |
+
+**Další idempotence se nepřidává.** Opakované odeslání téže sady je bez
+následku samo: je to úplná podoba výsledků, ne přírůstek.
+
+**Zavádí se po krocích** („rozšiř a stáhni"), protože jinak by nasazení API
+zastavilo zápis z vody:
+
+1. API revizi vydává a hlídá ji **tomu, kdo ji pošle**; sada bez revize
+   projde a zaloguje se. *(hotovo)*
+2. Cílová obrazovka i formulář z papíru revizi posílají. Na `409` cílová
+   obrazovka **přestane opakovat** — sada vychází ze starší podoby a každý
+   další pokus skončí stejně — klepnutí nechá v telefonu a odkáže na
+   porovnání zápisů. *(hotovo)*
+3. Sada bez revize se odmítne. *(hotovo)*
 
 ### Mapa na webu i v appce
 
@@ -3273,6 +3380,189 @@ klepání v reálném čase bez něj nejde. Zbytek správy zůstává bez něj.
    zápisu**, ze kterého vznikla: když se zápis mezitím změnil (uložil druhý
    telefon), nic se nepřepíše potichu a obrazovka nabídne odeslat, nebo
    zahodit.
+
+## Výpadek zdroje není klid (oponentura, 5. 10. 2026)
+
+**U výstrahy je ticho samo o sobě tvrzení.** Widget ČHMÚ při výpadku zdroje
+zmizel a čtenář si z prázdného místa odvodil, že nic neplatí — „žádná
+výstraha" a „zdroj se nepodařilo ověřit" se od sebe nedaly poznat.
+
+Blok proto zůstává vždycky a místo klidné věty se zelenou tečkou ukáže
+dutou šedou a větu, že se výstrahy nedaří načíst a že to neznamená, že
+žádná neplatí. Odkaz na ČHMÚ platí i tehdy — při výpadku dvojnásob, je to
+jediná cesta, jak se k výstrahám dostat.
+
+**Ostatní widgety mizet smějí.** Teplota vody ani vodočet nic netvrdí tím,
+že tam nejsou; výstraha ano. Teplota navíc stáří měření ukazuje sama
+(„Snímek 3. 10., před 2 dny“), takže denní běh úlohy se nedá splést
+s dnešním snímkem.
+
+## Verze bodovacích pravidel (oponentura, 5. 10. 2026)
+
+**Body se neukládají, počítají se při čtení** — a to je správně, protože
+přepočet celého seriálu musí jít kdykoliv spustit znovu. Má to ale druhou
+stranu: dokud byla pravidla konstanty v kódu, změnila oprava výpočtu body
+i u ročníku, který se vyhlásil loni. Z uložených pořadí a kódů se pak nedá
+zjistit, podle čeho se vyhlašovalo.
+
+Co už v datech bylo, tam zůstává: **počet škrtů** na ročníku a závodě,
+**koeficient** a **bonus** 24hodinovky. Tyhle hodnoty jsou věc ročníku, ne
+pravidlo v kódu, a komentář u nich to říkal od začátku.
+
+Co bylo v kódu a přitom to rozhodčí může upřesnit, drží teď
+`Features/Bodovani/PravidlaBodovani.cs`:
+
+| Pravidlo | V1 | Odkud |
+|---|---|---|
+| Diskvalifikace v regatě do seriálu | 20 bodů | podklady rozhodčího, 22. 9. 2026 |
+| Přirážka za kód k počtu přihlášených | +1 | ZPJ 2025–2028, A5.2 |
+| Náprava (`RDG`) za posledním dokončivším | +1 | provizorium, než to umí fáze 5 |
+
+**Ročník nese číslo verze** (`Serie.VerzePravidel`, výchozí 1) a výpočet si
+podle něj pravidla vyzvedne. Neznámá verze je **chyba, ne tichý návrat
+k poslední**: ročník se nesmí spočítat podle něčeho jiného, než podle čeho
+se vyhlašoval.
+
+**Nová verze nikdy nemění starší.** Až rozhodčí něco upřesní, přidá se `V2`
+a ročníky s jedničkou dál počítají podle jedničky. Že refaktoring nic
+nepohnul, drží `SerieTests` — pořadí proti skutečnému sešitu rozhodčího.
+
+Verzi vydávají i veřejné odpovědi (detail zastávky, průběžné pořadí), ze
+stejného důvodu jako počet škrtů: bez ní se tabulka nedá zkontrolovat.
+
+**Hranice, které oponent připomněl, už pokryté jsou:** shoda bodů proti
+sešitu (`SerieTests`), neúčast jako počet lodí kategorie
+(`PoradiTests.Lod_ktera_nestartovala_dostane_pocet_lodi_kategorie`)
+a zrušený či neodjetý závod
+(`PoradiTests.Poradi_se_pocita_jen_z_odjetych_a_publikovanych_zastavek`).
+
+## Zastaralý soubor ročníku (oponentura, 5. 10. 2026)
+
+**Idempotence chrání před opakováním téhož souboru, ne před jeho
+zastaralostí.** Soubor ročníku se připraví jednou, během sezóny vzniknou
+nové výsledky a publikace — a pozdější nahrání toho původního souboru je
+přepíše. Obojí jsou platná data, takže to import sám nepozná. Přepsání
+provozních výsledků proto nesmí být vedlejší účinek nahrání kalendáře.
+
+Import má tři režimy (`rezim`):
+
+| Režim | Co dělá |
+|---|---|
+| `nahled` | **Nic neuloží.** Projde celým importem a vrátí ho zpátky, takže v odpovědi stojí přesně to, co by se stalo, i s kolizemi a otiskem ročníku |
+| `bezpecny` (výchozí) | Uloží, ale **odmítne celou dávku**, kdyby přepsala výsledky zapsané v aplikaci, stáhla publikaci nebo vrátila stav zápisu |
+| `oprava` | Přepíše i je. **Vyžaduje otisk** z náhledu, takže se nedá pustit naslepo |
+
+**Rozdíl se nepočítá zvlášť, počítá se skutečným průchodem.** Náhled jede
+týmž kódem jako import a pak se vrátí; odhad vedle kódu by se s ním dřív
+nebo později rozešel.
+
+**Otisk** je kontrolní součet toho, co import umí přepsat: revize sad
+výsledků, stav zápisu a publikace. Náhled ho vydá, oprava ho musí poslat
+zpátky — mezi náhledem a potvrzením mohl někdo zapsat výsledky a rozdíl,
+který člověk viděl, už neplatí. Jméno lodi v otisku není: to se měnit může
+a náhled kvůli němu zneplatňovat nemá smysl.
+
+Co se jako kolize hlásí (`Features/Import/Prepis.cs`):
+
+- přepsalo by výsledky zapsané v aplikaci (`Rozjizdka.Revize > 0`),
+- smazalo by takovou rozjížďku, protože v souboru není,
+- stáhlo by publikaci regaty nebo výsledků,
+- vrátilo by stav zápisu zpátky v řadě,
+- **založilo by nový závod na termín, kde už jeden je** a soubor ho
+  nepojmenoval.
+
+### Rozdvojení přejmenováním (nález D)
+
+Slug je přirozený klíč importu **a zároveň adresa**, a to je past: rozhodčí
+přejmenuje regatu v sešitu, generátor z nového názvu vyrobí jiný slug,
+import ho vezme jako nový závod a ten původní zůstane — závody se nemažou.
+Jedné události pak patří dvě řady výsledků, příloh a odběrů. V administraci
+se slug nemění (`KalendarSprava.UpravAsync`), takže jediná cesta vede
+souborem.
+
+Řeší to **`puvodniSlug` v souboru** (6. 10. 2026): regata smí říct „tahle
+je ta, co u vás leží pod adresou X", a import ji přejmenuje místo toho, aby
+založil druhou.
+
+| Věc | Jak | Proč |
+|---|---|---|
+| Co se mění | **Jméno. Adresa zůstává** | Odkaz na zastávku už mohl někam odejít — totéž pravidlo drží administrace (`KalendarSprava.UpravAsync`) |
+| Opakované nahrání | Páruje se zas přes `puvodniSlug` | Slug v databázi se nezměnil, takže nový slug ze souboru nesedí — a zůstává to idempotentní |
+| Sám na sebe | Odmítne se | Přejmenování se vyplňuje jen tehdy, když se adresa liší |
+| Na adresu, která v ročníku není | **Odmítne se** | Mlčky založit nový závod je přesně to rozdvojení, kterému má bránit; překlep by se poznal až podle dvou řad výsledků |
+| Řetěz A → B → C | `puvodniSlug` ukazuje pořád na **A** | Slug se při přejmenování nemění, takže adresa B u nás nikdy nevznikla |
+| První import do prázdna | Projde i s `puvodniSlug` na nic | Do prázdna se nedá nic rozdvojit a soubor musí zůstat nahratelný při obnově ze zálohy |
+| Na adresu jiné regaty ze souboru | Odmítne se | Dvě regaty jednu adresu sdílet nemůžou, jinak si soubor sám určí, která tu druhou přepíše |
+| Kolize podle termínu | U přiznaného přejmenování mlčí | Kdo řekne, že přejmenovává, rozdvojení nedělá |
+
+**Není to umělý importní identifikátor**, který oponent doporučoval a který
+jde proti rozhodnutí zapsanému v `CLAUDE.md` i v `ImportHandler` (*sloupec
+„externí id" by do schématu propsal tvar zdrojového souboru*). Klíčem
+zůstává slug; soubor k němu umí jen přidat větu o přejmenování. Řeší to
+navíc i případ, na který vodítko podle termínu nestačí — přejmenování
+**spolu se změnou data**.
+
+## Rozcestník správy (6. 10. 2026)
+
+**Zadání od Filipa:** *„potřebuji zpřehlednit menu tak, aby bylo na první
+pohled jasné, co mám za možnosti pod jakou rolí"* a *„po přihlášení chci, aby
+mě systém intuitivně navedl k zadání podle toho, kdo jsem"*.
+
+**Co bylo špatně.** Jedinou cestou do správy byla rozbalovací nabídka pod
+ikonkou účtu: deset odkazů pojmenovaných slugem ročníku („Kalendář
+2026-nanecisto"). Kdo přišel zapsat dojezdy, musel vědět, že se na to jde přes
+Výsledky. Přihlášky, směrnice a medailonek pořadatele v nabídce nebyly vůbec
+a chodilo se na ně oklikou z kalendáře. Rozcestník neexistoval — ani `/sprava`,
+ani `/sprava/{ročník}`.
+
+**Co s tím.** `/sprava` a `/sprava/{ročník}` jsou rozcestníky:
+
+1. **Co teď** — spočítané z dat, ne seznam obrazovek. Vrácené výsledky („1×
+   k revizi, rozhodčí napsal, co je špatně"), nejbližší vypsaná regata (v den
+   závodu rovnou „Zapsat dojezdy"), hotové rozjížďky, které nejsou venku.
+2. **Regaty** — u každé výsledky, přihlášky i směrnice pohromadě. Pořadatel
+   jedné zastávky vidí jen tu svoji.
+3. **Celý ročník** a **mimo ročník** — u každé položky stojí **role, ze které
+   plyne**: Kalendář *rozhodčí*, Lodě a kapitáni *správce*, Novinky *editor*.
+
+Nabídka vede na rozcestník jedinou položkou **Správa** a zbytek pouští; kdo má
+roli ve víc ročnících, dostane zkratky přímo na ně. Kdo má jediný ročník a nic
+nad ním, je z `/sprava` přesměrovaný rovnou do něj.
+
+**Oprávnění počítá jedno místo** — `web/lib/co-smim.ts`, **doslovný přepis
+`Prava.Smi`** ze serveru včetně toho, že rozhodčí není stupeň. Nabídka si je
+dřív odvozovala sama a **jen z rolí na ročník**, takže kdo měl roli na celý web
+a žádnou v ročníku, neviděl ročníkové položky, ačkoliv na ty obrazovky smí
+a po zadání adresy ho pustily. Dvě místa s vlastní pravdou o právech se
+rozejdou; proto je jedno. Ze stejného důvodu zrušená zastávka nenabízí odkazy,
+které API odmítne — slib naprázdno je horší než chybějící odkaz.
+
+## Koncept z telefonu u zápisu z vody (6. 10. 2026)
+
+Z vlastního průchodu scénáře C7 (`docs/SCENARE-OVLADANI.md`) vyšla dvě místa,
+kde se **ztrácel dojezd**. Obě jsou opravená.
+
+**Porovnání neukazovalo, co leží v telefonu.** Staví vedle sebe snímky ze
+serveru — jenže klepnutí, které kvůli konfliktu neprošlo, žádný snímek nemá.
+Kdo sestavoval společný výsledek podle porovnání, o ně přišel a nic ho na to
+neupozornilo. Porovnání teď koncept ukáže a vyjmenuje, co má navíc proti
+uloženému zápisu.
+
+**Po ruční opravě koncept zůstával ležet.** Při návratu na cíl se nabídl
+k odeslání, čímž by právě dokončenou opravu přepsal. Ve formuláři zápisu jde
+teď z konceptu **doplnit jedním klepnutím** a uložení ho **vyřeší**: co uložené
+pokrývá, se zahodí, o zbytku se rozhoduje vědomě. Hláška na cíli navíc
+vyjmenuje, které lodě by odeslání přepsalo — „Přesto odeslat" samo o sobě
+neříkalo, že přepíše uložený zápis.
+
+Klíč a tvar konceptu žijí v jednom modulu
+(`web/app/sprava/[serie]/vysledky/[zavod]/[cislo]/koncept.ts`). Sahají na něj
+tři obrazovky — cíl ho vyrábí, porovnání ho ukazuje, formulář ho řeší —
+a rozdíl mezi třemi kopiemi by se poznal až ztraceným dojezdem.
+
+**Ověřeno celým průchodem se dvěma účty:** konflikt → porovnání s konceptem →
+doplnění do formuláře → uložení → návrat na cíl → přenačtení stránky. Pořadí
+zůstalo správné a nic se nenabídlo k přepsání.
 
 ## Kde se pokračuje
 

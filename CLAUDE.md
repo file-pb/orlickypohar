@@ -46,6 +46,7 @@ curl -s https://orlickypohar-api.klihovka.cz/health   # musí vrátit Healthy
 | Otázka | Kde je odpověď |
 |---|---|
 | Co je hotové a co dál | [docs/PLAN.md](docs/PLAN.md) — oddíly *Stav* a *Kde se pokračuje* |
+| Jestli se k funkci vůbec někdo doklikne | [docs/SCENARE-OVLADANI.md](docs/SCENARE-OVLADANI.md) — scénáře po rolích a co o navigaci víme z auditu |
 | Proč model vypadá takhle | [docs/PLAN.md](docs/PLAN.md) |
 | Čím se liší pracovní Mac | [platform/docs/JINY-STROJ.md](https://github.com/file-pb/platform/blob/main/docs/JINY-STROJ.md) |
 | Kde co běží a co když spadne | [platform/docs/PROVOZ.md](https://github.com/file-pb/platform/blob/main/docs/PROVOZ.md) |
@@ -83,13 +84,19 @@ uživí druhého vývojáře.
 src/OrlickyPohar.Api/
   Data/AppDbContext.cs        jediný DbContext
   Features/Serial/            série, kategorie, přihlášky — celoroční rovina
-  Features/Lode/              lodě a osoby
+  Features/Lode/              lodě a osoby; vazba účtu k lodi třemi cestami
+                              (e-mail, kód, nárok) a kapitánství, které
+                              uděluje správce ročníku — ne pořadí u kódu
   Features/Zavody/            závod, účast, rozjížďka, výsledek; kalendář,
                               přihlášky na zastávku, zápis a workflow výsledků,
                               zápis z vody: start, dojezdy s časem, poznávací
                               znak, fotka papíru a snímky obou zapisovatelů
-  Features/Bodovani/          body závodu z rozjížděk, škrty, pořadí seriálu
-  Features/Import/            nahrání ročníku souborem, importní token
+  Features/Bodovani/          body závodu z rozjížděk, škrty, pořadí seriálu;
+                              PravidlaBodovani drží verzi, aby oprava výpočtu
+                              nepřepsala vyhlášený ročník
+  Features/Import/            nahrání ročníku souborem, importní token;
+                              Prepis.cs režimy nahled/bezpecny/oprava, otisk
+                              ročníku a kolize se zastaralým souborem
   Features/Clanky/            novinky a články, jejich psaní a správa
   Features/Poradatele/        pořadatel jako záznam s medailonkem
   Features/Fotky/             nahrané obrázky: přepočet do WebP, úložiště R2
@@ -97,7 +104,8 @@ src/OrlickyPohar.Api/
                               přítok a odtok za 24 h
   Features/Identita/          uživatel, vazby (issuer, subject), role, Prava
   Features/Smernice/          plachetní směrnice u regaty: vyvěšení PDF,
-                              verze se nepřepisují (appka je vývěska)
+                              verze se nepřepisují (appka je vývěska); stažení
+                              nechá záznam a smaže soubor z úložiště
   Features/Sprava/            udělování oprávnění, seznam přihlášených účtů
   Features/Naklady/           co provoz a servis stojí; čte stav/naklady.json
                               z přehledu platformy, přidává přirážku
@@ -111,6 +119,7 @@ web/                          veřejné stránky (Next.js, renderuje server)
   …/vysledky/[zavod]/[cislo]/cil   cílová obrazovka — jediné místo správy
                               s javascriptem, klepání v cíli bez něj nejde
   …/[cislo]/porovnani         zápisy dvou zapisovatelů vedle sebe
+  app/sprava/[serie]/lode/    kdo patří k lodím ročníku a kdo je kapitán
   lib/api.ts                  typovaný přístup k API, veřejné čtení
   lib/sprava.ts               volání administrace s tokenem; další lib/*.ts
                               po obrazovkách (kalendar, prihlasky, vysledky…)
@@ -128,7 +137,8 @@ jobs/landsat/                 plánovaná úloha (Python): teplota hladiny
 deploy/docker-compose.yml     celé nasazení; háček ho přenáší s každým pushem
 deploy/cache/                 nginx s mikrocache před webem (image);
                               test/test.sh ověřuje pravidla v CI před nasazením
-tools/fake-api.py             mock ročník jako API, pro vývoj webu bez databáze
+tools/fake-api.py             mock ročník jako API, pro vývoj webu bez databáze;
+                              zná čtyři identity podle tokenu (README, Web)
 tools/gen-mock.py             vyrábí ten mock; skutečná fakta o ročníku patří sem
 ```
 
@@ -328,6 +338,11 @@ identifikátoru: série podle slugu, závod podle slugu v sérii, rozjížďka p
 čísla v závodě, výsledek podle dvojice rozjížďka × účast. Sloupec „externí id"
 by do schématu propsal tvar zdrojového souboru, a ten se s každým ročníkem mění.
 
+Přejmenovaná regata se proto neřeší novým identifikátorem, ale větou v souboru:
+`puvodniSlug` říká, pod kterou adresou ta regata v ročníku už leží. Import ji
+přejmenuje, **adresu nechá** a zůstane idempotentní. Bez toho by z přejmenování
+vznikl druhý závod a tomu původnímu by zůstaly výsledky.
+
 Dvě věci na to navazují a nesmějí se rozvázat:
 
 1. **Unikátní indexy** `(SerieId, LodId)` na přihlášce a `(RozjizdkaId, UcastId)`
@@ -338,6 +353,13 @@ Dvě věci na to navazují a nesmějí se rozvázat:
 Známé omezení: osoby se párují podle jména a příjmení, lodě podle názvu. Dva
 Jani Novákové v jednom ročníku splynou. Při velikosti startovního pole je to
 únosné; alternativou by bylo vymýšlet lidem identifikátory, které nikde neexistují.
+
+**Idempotence ale nechrání před zastaralým souborem.** Soubor připravený
+jednou přepíše výsledky a publikaci, které vznikly během sezóny — obojí jsou
+platná data a import to sám nepozná. Proto má tři režimy: `nahled` nic
+neuloží a vrátí, co by se stalo, `bezpecny` (výchozí) odmítne dávku, která
+by přepsala provozní výsledky, a `oprava` to udělá vědomě a jen s otiskem
+z náhledu. Podrobně v `docs/PLAN.md`, oddíl *Zastaralý soubor ročníku*.
 
 ## Nasazení
 
@@ -350,6 +372,44 @@ Když nasazení selže po výměně compose, háček vrátí původní zpátky. 
 tajemství ale musí na serveru **existovat předem**, jinak kontejner nenaběhne
 — a musí patřit uživateli, pod kterým aplikace běží (UID 1654), ne `deploy`.
 
+**Nasazení je vlastní úloha `nasazeni`, ne poslední krok buildu** (6. 10.
+2026, po oponentuře). Má tři vlastnosti, které každá řeší jednu skutečnou
+nehodu:
+
+1. **Čeká na testy** (`needs: [build, appka, integrace]`). Dokud byl deploy
+   krokem buildu, běžel vedle integrace — červená integrace tak mohla
+   znamenat **už nasazenou** vadnou verzi.
+2. **Jedno nasazení naráz** (`concurrency: nasazeni-produkce`,
+   `cancel-in-progress: false`). Platí pro všechny cesty do produkce včetně
+   ručního spuštění.
+3. **Brání návratu produkce do minulosti.** Fronta sama nestačí: GitHub řadí
+   podle okamžiku vstupu do skupiny, ne podle stáří commitu, takže pozdě
+   doběhlý starý build se zařadí za novější. Před odesláním se proto čte
+   `/verze` běžícího API a commit, který je jeho **předkem**, se neposílá.
+   Když se verze přečíst nedá, nasazení se **zastaví** — výpadek `/verze` by
+   jinak ochranu obešel a vypadalo by to jako obyčejné nasazení. Cesta ven
+   je výslovná: ruční spuštění s volbou `obnova`.
+
+**Není to záruka, jen zúžení.** Mezi přečtením verze a odesláním je okno,
+ve kterém se stav může změnit; skupina souběhu ho zavírá jen pro naše vlastní
+cesty. **Záruku dá až háček**, který pod svým zámkem přečte běžící SHA,
+porovná ho s `X-Deploy-Sha` a teprve pak sáhne na produkci — zámek musí držet
+přes kontrolu i změnu. Dokud to tam není, neříkej, že starší build produkci
+přepsat nemůže.
+
+**Obě služby vydávají `/verze`** s commitem, ze kterého je image (build arg
+`VERZE`). Nasazení si tím po sobě ověří, co doopravdy běží — `Healthy` a HTTP
+200 vrací i verze, která tam visí z minula, takže samy o sobě nedokazují nic.
+Čeká se omezeně a pak se **musí vědět**: neověřený výsledek je chyba, ne
+varování, i po obnově. Zelená nad službou, o které nevíme, co na ní běží, je
+falešná jistota.
+
+**Co zbývá na straně serveru:** háček pod společným zámkem přečte běžící SHA,
+porovná ho s hlavičkou `X-Deploy-Sha` a teprve pak nasadí. Vede se jako
+[platform#7](https://github.com/file-pb/platform/issues/7), včetně toho, že
+se to má ověřit soubojem starého a nového požadavku přímo proti háčku —
+v obou pořadích.
+
 ## Testy
 
 Bez databáze a bez Dockeru, v CI běží první:
@@ -357,7 +417,8 @@ Bez databáze a bez Dockeru, v CI běží první:
 - **`ModelTests`** — model proti migracím.
 - **`KontraktTests`** — tvar importního souboru a pravidla, která má mock
   dodržet (třeba že se škrtá až při čtyřech odjetých rozjížďkách).
-- **`BodovaniTests`** — body závodu z rozjížděk, kódy, škrty. Čisté funkce.
+- **`BodovaniTests`** — body závodu z rozjížděk, kódy, škrty, verze
+  bodovacích pravidel. Čisté funkce.
 - **`SerieTests`** — průběžné pořadí proti **skutečnému sešitu rozhodčího**
   (`data/2026-poradi-rozhodci.json`). Nejcennější zkouška, jakou ten kód má.
 
@@ -365,12 +426,19 @@ Značka `Category=Integracni`, potřebují Docker, běží jen v CI:
 
 - **`ImportTests`** — idempotence a mazání proti reálnému PostgreSQL přes
   Testcontainers. Schválně ne in-memory provider: stojí to na unikátních
-  indexech, které by fake databáze neověřila.
+  indexech, které by fake databáze neověřila. Od 6. 10. 2026 i režimy
+  importu a kolize se zastaralým souborem. **Databázi sdílí celá kolekce
+  a nic se neuklízí**, takže každý test si musí vyrobit ročník s vlastním
+  slugem; sdílený slug znamená, že si testy přepíšou data pod rukama.
 - **`CteniTests`** a **`PoradiTests`** — veřejné čtení a průběžné pořadí,
   hlavně hranice publikovanosti.
 - **`VysledkySpravaTests`** — workflow výsledků a zápis z vody: dojezd
-  s časem od startu, poznávací znak, celkové pořadí napříč kategoriemi
-  a snímky dvou zapisovatelů.
+  s časem od startu, poznávací znak, celkové pořadí napříč kategoriemi,
+  snímky dvou zapisovatelů a revize sady, která brání přepsání novější
+  opravy starými daty.
+- **`KapitanstviSpravaTests`** a **`SmerniceSpravaTests`** — určení kapitána
+  a stažení směrnice z vývěsky. Obojí patří k databázi, ne k čistým testům:
+  drží to transakce a zámek řádku, a bez nich je pravidlo jen zdání.
 
 `data/2026-nanecisto.json` má **skutečná jména lodí a vymyšlené výsledky**;
 vyrábí ho `tools/gen-mock.py` s pevným seedem. Skutečná fakta o ročníku patří

@@ -444,6 +444,23 @@ public class Rozjizdka : Fotky.IMaFotku
     /// „něco je špatně" a ten, kdo to má opravit, začíná hledáním.
     /// </summary>
     public string? DuvodRevize { get; set; }
+
+    /// <summary>
+    /// Kolikátá podoba sady výsledků to je. Roste s každým uložením.
+    /// <para>
+    /// <b>Je to ochrana proti přepsání novější opravy starými daty</b>
+    /// (oponentura, 5. 10. 2026). Uložení přijde jako celá sada a maže, co
+    /// v ní není — takže telefon bez signálu, který drží sadu A–B, po
+    /// připojení odstraní C doplněné mezitím na webu. Server ten konflikt
+    /// sám nepozná: obě sady jsou platná data.
+    /// </para>
+    /// <para>
+    /// Klient proto posílá revizi, ze které vycházel, a při nesouladu
+    /// uložení neprojde. Číslo stačí: nejde o to vědět, co se změnilo, ale
+    /// že se změnilo.
+    /// </para>
+    /// </summary>
+    public int Revize { get; set; }
 }
 
 /// <summary>

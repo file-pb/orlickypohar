@@ -16,6 +16,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=8080
 ENV HOSTNAME=0.0.0.0
+# Z jakého commitu je tahle image — viz Dockerfile API.
+ARG VERZE=neznama
+ENV VERZE=$VERZE
 
 # Ne jako root. Kontrakt platformy to nevyžaduje, ale je to zadarmo.
 RUN addgroup -g 1001 web && adduser -u 1001 -G web -D web

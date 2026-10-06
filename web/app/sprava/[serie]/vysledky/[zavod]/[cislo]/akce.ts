@@ -68,7 +68,11 @@ export async function zapisAkce(formular: FormData) {
       }),
     );
 
-  const chyba = await ulozZapis(serie, zavod, cislo, radky);
+  // Revize z formuláře: obrazovka ji dostala s načteným zápisem. Bez ní
+  // by sada ze starší podoby mohla smazat opravu, o které nevěděla.
+  const revize = Number(formular.get("revize") ?? 0);
+
+  const chyba = await ulozZapis(serie, zavod, cislo, radky, revize);
 
   redirect(
     kam(serie, zavod, cislo, chyba ? { chyba, navrh: zakoduj(radky) } : { stav: "ulozeno" }),

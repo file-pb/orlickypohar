@@ -44,9 +44,46 @@ public class SmerniceTests
         var id = Guid.CreateVersion7();
 
         // Tři předpony, tři různé životnosti: fotky zůstávají, přejaté mizí
-        // s článkem, směrnice se nemaže nikdy.
+        // s článkem, směrnice mizí až stažením z vývěsky.
         Assert.StartsWith("smernice/", Vyveseni.Klic(id));
         Assert.EndsWith(".pdf", Vyveseni.Klic(id));
+    }
+
+    [Fact]
+    public void Smernice_se_necachuje()
+    {
+        // S roční cache jako u fotek by Cloudflare vydával kopii smazaného
+        // souboru ještě rok po stažení — a odvolání by bylo jen příznak
+        // v databázi (oponentura, 5. 10. 2026).
+        Assert.Equal("no-store", Vyveseni.Cache);
+        Assert.DoesNotContain("max-age", Vyveseni.Cache);
+    }
+
+    [Fact]
+    public void Stazeni_bez_duvodu_neprojde()
+    {
+        Assert.Equal(Vyveseni.DuvodChybi, Vyveseni.ProcNejdeStahnout(false, null));
+        Assert.Equal(Vyveseni.DuvodChybi, Vyveseni.ProcNejdeStahnout(false, "   "));
+        Assert.NotNull(Vyveseni.ProcNejdeStahnout(false, new string('a', Vyveseni.DuvodNejvic + 1)));
+        Assert.Null(Vyveseni.ProcNejdeStahnout(false, "Omylem nahraný soubor s kontakty posádky."));
+    }
+
+    [Fact]
+    public void Stazenou_verzi_stahnout_podruhe_nejde()
+        => Assert.Equal(Vyveseni.JeStazena, Vyveseni.ProcNejdeStahnout(true, "cokoliv"));
+
+    [Fact]
+    public void Visi_jen_nestazena()
+    {
+        var s = new PlachetniSmernice
+        {
+            Id = Guid.CreateVersion7(), ZavodId = 1, Verze = 1,
+            Nazev = "s.pdf", VyveseneV = DateTimeOffset.UnixEpoch,
+        };
+
+        Assert.True(Vyveseni.Visi(s));
+        s.StazenoV = DateTimeOffset.UnixEpoch;
+        Assert.False(Vyveseni.Visi(s));
     }
 
     [Fact]
@@ -69,5 +106,36 @@ public class SmerniceTests
         Assert.NotNull(dto);
         Assert.Equal(2, dto.Verze);
         Assert.Equal($"https://fotky.test/{Vyveseni.Klic(smernice.Id)}", dto.Adresa);
+        Assert.Null(dto.StazenoV);
+
+        // Stažení nese i důvod a jméno — správa musí vědět, co se odvolalo.
+        smernice.StazenoV = DateTimeOffset.UnixEpoch.AddDays(1);
+        smernice.DuvodStazeni = "Špatný soubor.";
+        var stazena = Vyveseni.Dto(smernice, "https://fotky.test/");
+        Assert.NotNull(stazena!.StazenoV);
+        Assert.Equal("Špatný soubor.", stazena.DuvodStazeni);
+    }
+
+    [Fact]
+    public void Purge_se_pripomina_jen_u_starsich_souboru()
+    {
+        // Co se nahrálo před vypnutím cache, nese roční `immutable`, takže
+        // po stažení může Cloudflare ještě chvíli vydávat kopii. U novějších
+        // je stažení účinné hned a připomínat purge by byl jen šum.
+        var stara = new PlachetniSmernice
+        {
+            Id = Guid.CreateVersion7(), ZavodId = 1, Verze = 1, Nazev = "s.pdf",
+            VyveseneV = Vyveseni.CacheVypnutaOd.AddMinutes(-1),
+        };
+        var nova = new PlachetniSmernice
+        {
+            Id = Guid.CreateVersion7(), ZavodId = 1, Verze = 2, Nazev = "s.pdf",
+            VyveseneV = Vyveseni.CacheVypnutaOd,
+        };
+
+        Assert.True(Vyveseni.MohlaUvaznoutVCache(stara));
+        Assert.False(Vyveseni.MohlaUvaznoutVCache(nova));
+
+        Assert.True(Vyveseni.Dto(stara, "https://fotky.test/")!.MohlaUvaznoutVCache);
     }
 }

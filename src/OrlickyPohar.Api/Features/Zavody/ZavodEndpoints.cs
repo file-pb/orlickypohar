@@ -71,7 +71,11 @@ public record ZavodDetailDto(
     // Plachetní směrnice vyvěšené u zastávky, od nejnovější verze. U regaty
     // je to povinný dokument a appka je oficiální vývěska, takže se vydává
     // veřejně a se všemi verzemi — co bylo vyvěšené, musí jít doložit.
-    IReadOnlyList<SmerniceDto>? Smernice = null);
+    IReadOnlyList<SmerniceDto>? Smernice = null,
+    // Verze bodovacích pravidel ročníku. Vydává se ze stejného důvodu jako
+    // počet škrtů a koeficient: bez ní se pořadí nedá zkontrolovat a čtenář
+    // nemá jak poznat, podle čeho se počítalo.
+    int VerzePravidel = 1);
 
 /// <summary>
 /// Veřejné čtení jedné zastávky. Pravidla závodu (škrty, vyhodnocení,
@@ -123,13 +127,22 @@ public static class ZavodEndpoints
                 u.Stav == StavUcasti.Vyloucena))
             .ToListAsync(ct);
 
-    /// <summary>Vyvěšené směrnice zastávky, od nejnovější. Bez úložiště prázdné.</summary>
+    /// <summary>
+    /// Vyvěšené směrnice zastávky, od nejnovější. Bez úložiště prázdné.
+    /// <para>
+    /// <b>Stažené verze se nevydávají vůbec</b>, ne jen bez adresy: appka
+    /// zůstává lidem na telefonech a starší verze klienta by o stažení
+    /// nevěděla. Odkaz na odvolaný dokument je to jediné, co se tu stát
+    /// nesmí; že verze zmizela z vývěsky, je vidět ve správě i v historii
+    /// (oponentura, 5. 10. 2026).
+    /// </para>
+    /// </summary>
     private static async Task<List<SmerniceDto>> SmerniceAsync(
         AppDbContext db, IUloziste uloziste, int zavodId, CancellationToken ct)
     {
         var smernice = await db.Smernice
             .Include(s => s.Vyvesil)
-            .Where(s => s.ZavodId == zavodId)
+            .Where(s => s.ZavodId == zavodId && s.StazenoV == null)
             .OrderByDescending(s => s.Verze)
             .ToListAsync(ct);
 
@@ -148,6 +161,7 @@ public static class ZavodEndpoints
                 z.Stav, z.PuvodniDatum, z.PocetSkrtu, z.Vyhodnoceni, z.KoeficientDoSerie,
                 z.Druh, z.PoradatelZaznam, FotkaPoradatele = z.PoradatelZaznam!.Fotka,
                 VysledkyVerejne = z.Serie!.VysledkyZavoduVerejne,
+                z.Serie.VerzePravidel,
             })
             .FirstOrDefaultAsync(ct);
 
@@ -170,7 +184,8 @@ public static class ZavodEndpoints
                     ? null
                     : PoradateleSprava.Dto(zavod.PoradatelZaznam, zavod.FotkaPoradatele, uloziste.VerejnaAdresa),
                 VysledkySkryte: true,
-                Smernice: smerniceSkryte));
+                Smernice: smerniceSkryte,
+                VerzePravidel: zavod.VerzePravidel));
         }
 
         // Jeden dotaz na všechny výsledky závodu, ne dotaz na rozjížďku.
@@ -231,13 +246,17 @@ public static class ZavodEndpoints
             .Select(g => new { Kategorie = g.Key, Pocet = g.Count() })
             .ToDictionaryAsync(x => x.Kategorie, x => x.Pocet, ct);
 
+        // Pravidla podle verze ročníku, ne poslední podoba kódu: uzavřený
+        // ročník se nehýbe (viz PravidlaBodovani).
+        var pravidla = PravidlaBodovani.Podle(zavod.VerzePravidel);
+
         // Do bodů jde všechno, co se v závodě odjelo a je venku — příznak
         // `DoSerie` rozhoduje o poháru, ne o výsledku závodu.
         var poradi = Vypocet.VysledkyZavodu(
         [
             .. rozjizdky.Select(r => new RozjizdkaVstup(r.Cislo,
                 [.. r.Vysledky.Select(v => new VysledekVstup(v.Lod, v.Kategorie, v.PoradiVCili, v.Kod))])),
-        ], zavod.PocetSkrtu, prihlaseno);
+        ], zavod.PocetSkrtu, prihlaseno, pravidla);
 
         // Kategorie se řadí podle série, ne podle toho, v jakém pořadí je
         // vrátila databáze. Abecedně by Nad7m předběhlo Race bez důvodu
@@ -257,7 +276,8 @@ public static class ZavodEndpoints
         [
             .. rozjizdky.Select(r => new RozjizdkaVstup(r.Cislo,
                 [.. r.Vysledky.Select(v => new VysledekVstup(v.Lod, CelePole, v.PoradiVCili, v.Kod))])),
-        ], zavod.PocetSkrtu, new Dictionary<string, int> { [CelePole] = prihlaseno.Values.Sum() });
+        ], zavod.PocetSkrtu, new Dictionary<string, int> { [CelePole] = prihlaseno.Values.Sum() },
+            pravidla);
 
         // Kategorie lodi zůstává k zobrazení, i když se pořadí počítá bez ní.
         var kategorieLodi = rozjizdky
@@ -280,6 +300,7 @@ public static class ZavodEndpoints
             zavod.PoradatelZaznam is null
                 ? null
                 : PoradateleSprava.Dto(zavod.PoradatelZaznam, zavod.FotkaPoradatele, uloziste.VerejnaAdresa),
-            Smernice: await SmerniceAsync(db, uloziste, zavod.Id, ct)));
+            Smernice: await SmerniceAsync(db, uloziste, zavod.Id, ct),
+            VerzePravidel: zavod.VerzePravidel));
     }
 }

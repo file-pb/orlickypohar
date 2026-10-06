@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { NEJVIC_MB, vyvesSmernici } from "@/lib/smernice";
+import { NEJVIC_MB, stahniSmernici, vyvesSmernici } from "@/lib/smernice";
 
 /**
  * Vyvěšení plachetní směrnice.
@@ -9,7 +9,8 @@ import { NEJVIC_MB, vyvesSmernici } from "@/lib/smernice";
  * <b>Kam se vrací, skládá akce sama</b> ze série a zastávky, ne z pole
  * formuláře — adresa z formuláře by šla podvrhnout.
  *
- * Mazání tu není schválně: appka je oficiální vývěska, oprava je nová verze.
+ * Mazání záznamu tu není schválně: appka je oficiální vývěska, oprava je
+ * nová verze. Stažení obsahu je vedle, v `stahniAkce`.
  */
 export async function vyvesAkce(formular: FormData) {
   const serie = String(formular.get("serie") ?? "");
@@ -27,4 +28,26 @@ export async function vyvesAkce(formular: FormData) {
 
   const chyba = await vyvesSmernici(serie, zavod, { soubor, poznamka });
   redirect(kam(chyba ? { chyba } : { stav: "vyveseno" }));
+}
+
+/**
+ * Stáhne verzi z vývěsky. Soubor zmizí z úložiště, záznam i důvod zůstanou.
+ *
+ * Verze se bere z formuláře, ale je to číslo v rámci zastávky, kterou si
+ * akce skládá sama — podvržené číslo tedy nedosáhne na cizí regatu.
+ */
+export async function stahniAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const kam = (zprava: Record<string, string>) =>
+    `/sprava/${encodeURIComponent(serie)}/smernice/${encodeURIComponent(zavod)}?${new URLSearchParams(zprava)}`;
+
+  const verze = Number(formular.get("verze") ?? 0);
+  const duvod = String(formular.get("duvod") ?? "").trim();
+
+  if (!duvod)
+    redirect(kam({ chyba: "Napiš, proč se směrnice stahuje. Bez důvodu to API nepustí." }));
+
+  const chyba = await stahniSmernici(serie, zavod, verze, duvod);
+  redirect(kam(chyba ? { chyba } : { stav: "stazeno" }));
 }

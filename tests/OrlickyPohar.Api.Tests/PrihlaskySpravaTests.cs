@@ -210,8 +210,8 @@ public class PrihlaskySpravaTests(PostgresFixture fixture)
         Assert.Null((await k.Sprava.PrihlasAsync(k.ZavodId, new(PrihlaskaId: k.Bora), default)).Chyba);
 
         var rozjizdka = await k.Db.Rozjizdky.FirstAsync(r => r.ZavodId == k.ZavodId && r.Cislo == 1);
-        Assert.Null(await zapis.UlozAsync(rozjizdka,
-            [new(k.Anicka, PoradiVCili: 1), new(k.Bora, PoradiVCili: 2)], default));
+        Assert.Null((await zapis.UlozAsync(rozjizdka,
+            [new(k.Anicka, PoradiVCili: 1), new(k.Bora, PoradiVCili: 2)], default, revize: rozjizdka.Revize)).Chyba);
 
         // Loď s výsledkem přijela, ať byla jen přihlášená, nebo ne.
         var bora = await k.Db.Ucasti.AsNoTracking()

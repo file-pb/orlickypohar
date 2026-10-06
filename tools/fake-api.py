@@ -335,6 +335,41 @@ JA = {
     "email": "filip@priklad.cz",
 }
 
+# Druhý zapisovatel, který se umí přihlásit. Existuje kvůli zápisu z vody:
+# snímek k porovnání je jeden na člověka (`ZapisSprava.SnimekAsync`), takže
+# bez druhé identity nejde vyrobit porovnání dvou zápisů a scénář C7 se dá
+# zkusit jen do hlášky o konfliktu.
+MILOS = {
+    "id": "01927f4e-0000-7000-8000-000000000004",
+    "zobrazovane": "Miloš Zvonař",
+    "email": "milos@priklad.cz",
+}
+
+# Správkyně celého webu bez jediné role v ročníku. Existuje kvůli nálezu
+# auditu: nabídka se počítala jen z ročníkových rolí, takže tenhle člověk
+# neviděl ročníkové položky, ačkoliv na ty obrazovky smí. Bez takového účtu
+# se ta oprava nedá vyzkoušet — a scénář E5 taky ne.
+WEBOVA = {
+    "id": "01927f4e-0000-7000-8000-000000000005",
+    "zobrazovane": "Dana Hlavní",
+    "email": "dana@priklad.cz",
+    # Pole `web` vydává API od 22. 9. 2026; kdo ho nemá, nemá roli na web.
+    "web": ["Spravce"],
+}
+
+# Mock token nerozbaluje — nemá čím a nemá proč. Bere ho jako jméno účtu:
+# `Bearer milos` je Miloš. Dva různé tokeny jsou tedy dva lidé a stejný token
+# ve dvou kartách je jeden člověk; **obojí je potřeba**, protože jeden účet na
+# dvou telefonech je vlastní případ s vlastní mezerou (porovnání nemá co
+# ukázat) a mock ji nesmí zamaskovat.
+#
+# <b>Neznámé jméno se odmítá.</b> Dřív padalo na Filipa, jenže při zkoušce
+# ovládání je to past: překlep v `milos` by tiše udělal správce ročníku
+# a měřilo by se něco jiného, než co se zadalo (oponentura, 6. 10. 2026).
+# Kompatibilní výchozí token má proto vlastní jméno — `vyvoj` je Filip, takže
+# kdo chce starý postup „přihlásit se čímkoliv", napíše ho výslovně.
+TOKENY = {"filip": JA, "vyvoj": JA, "milos": MILOS, "dana": WEBOVA}
+
 # Náklady: snímek souboru `stav/naklady.json`, který na serveru zapisuje
 # přehled platformy. Čísla jsou skutečná (24. 9. 2026), jen zamrzlá —
 # stejně jako zbytek mocku. Přirážka je opsaná z Features/Naklady; pravda
@@ -423,13 +458,21 @@ def naklady_dto():
     }
 # Druhý zapisovatel u cíle. Mock zná jen jedno přihlášení, takže snímek
 # „toho druhého" se nasadí do dat — bez něj by nebylo co porovnávat.
-DRUHY_ZAPISOVATEL = {
-    "id": "01927f4e-0000-7000-8000-000000000002",
-    "zobrazovane": "Miloš Zvonař",
-}
+DRUHY_ZAPISOVATEL = MILOS
+
+# Zastávka, u které leží nasazený snímek druhého zapisovatele. Je to tatáž,
+# na které se zkouší C7, takže Miloš na ní musí mít roli — jinak by v přehledu
+# oprávnění stál zápis od člověka, který tam nemá co dělat.
+ZAVOD_DVOU_ZAPISOVATELU = next(
+    (z["slug"] for z in D["zavody"] if z["stav"] == "Odjety" and z["rozjizdky"]), None)
+
 OPRAVNENI = [{"id": 1, "uzivatelId": JA["id"], "zobrazovane": JA["zobrazovane"],
               "email": JA["email"], "role": "Spravce", "zavod": None,
-              "udelenoV": "2026-01-01T00:00:00+00:00"}]
+              "udelenoV": "2026-01-01T00:00:00+00:00"},
+             {"id": 2, "uzivatelId": MILOS["id"], "zobrazovane": MILOS["zobrazovane"],
+              "email": MILOS["email"], "role": "Organizator",
+              "zavod": ZAVOD_DVOU_ZAPISOVATELU,
+              "udelenoV": "2026-04-01T00:00:00+00:00"}]
 # Účty, kterým jde roli udělit. Skutečné API zná jen ty, kdo se aspoň
 # jednou přihlásili — bez toho by se nedal vyzkoušet stav „účet neexistuje",
 # a ten je na obrazovce vidět nejčastěji.
@@ -445,8 +488,131 @@ UCTY = {u["email"]: u for u in [
     {"id": "01927f4e-0000-7000-8000-000000000003", "zobrazovane": "Jana Nováková",
      "email": "jana@priklad.cz", "zalozenV": "2026-09-14T19:40:00+00:00",
      "naposledyPrihlasenV": "2026-09-14T19:40:00+00:00"},
+    {**MILOS, "zalozenV": "2026-04-01T00:00:00+00:00",
+     "naposledyPrihlasenV": "2026-09-19T14:30:00+00:00"},
+    # Bez `web`: v přehledu účtů se vedou role v ročníku, ne na webu.
+    {**{k: v for k, v in WEBOVA.items() if k != "web"},
+     "zalozenV": "2026-01-15T00:00:00+00:00",
+     "naposledyPrihlasenV": "2026-10-01T09:12:00+00:00"},
 ]}
 JEN_ROCNIK = ("Rozhodci", "Spravce")
+
+# --- Vazby k lodím ----------------------------------------------------------
+# Kdo patří ke které lodi. Lodě mock nečísluje, takže se bere totéž číslo
+# jako u přihlášky (`PRIHLASKA_ID`) — v ročníku je to jedna loď na jednu
+# přihlášku.
+#
+# Výchozí stav je schválně nehezký, protože právě ten obrazovka řeší:
+# první loď má kapitána od připojovacího kódu (ke kontrole), druhá jen
+# posádku a žádného kapitána, třetí majitele z párování podle e-mailu.
+# Žije v paměti procesu — restart ho vrátí zpátky.
+VAZBY = []
+ZMENY_ROLI = []
+
+
+def _nasad_vazby():
+    poradi = list(PRIHLASKA_ID.items())
+    ucty = list(UCTY.values())
+    vzor = [("Kapitan", "Kod", False), ("Posadka", "Kod", False), ("Majitel", "Email", False)]
+
+    for i, ((_lod, lod_id), (role, puvod, rucne)) in enumerate(zip(poradi, vzor)):
+        VAZBY.append({
+            "id": i + 1, "lodId": lod_id, "uzivatelId": ucty[i % len(ucty)]["id"],
+            "role": role, "puvod": puvod,
+            "vzniklaV": "2026-09-20T09:00:00+00:00",
+            "roleUrcilId": JA["id"] if rucne else None,
+            "roleUrcenaV": "2026-09-20T09:00:00+00:00" if rucne else None,
+        })
+
+
+def ke_kontrole(v):
+    """Opsané z `Features/Lode/Kapitanstvi.cs` — kapitán od kódu bez potvrzení."""
+    return v["role"] in ("Majitel", "Kapitan") and v["puvod"] == "Kod" and not v["roleUrcilId"]
+
+
+# --- Plachetní směrnice -----------------------------------------------------
+# Vyvěšené verze u zastávek. Mock je nemá v datech, takže se jedna nasadí
+# k první zastávce — jinak není co stahovat a obrazovka je prázdná.
+# Žije v paměti procesu, restart ji vrátí.
+SMERNICE = {}
+
+
+# Odkdy se směrnice ukládají bez cache — opsané z `Vyveseni.CacheVypnutaOd`.
+# Co je starší, může po stažení ještě vydávat Cloudflare z edge cache.
+CACHE_VYPNUTA_OD = "2026-10-06T02:00:00+00:00"
+
+
+def _nasad_smernice():
+    if not D["zavody"]:
+        return
+
+    def smernice(verze, vyveseno):
+        return {
+            "verze": verze, "nazev": f"plachetni-smernice-v{verze}.pdf",
+            "adresa": f"http://127.0.0.1:8080/fake-soubor/smernice-v{verze}.pdf",
+            "vyveseneV": vyveseno,
+            "poznamka": None, "vyvesil": JA["zobrazovane"],
+            "stazenoV": None, "stahl": None, "duvodStazeni": None,
+            "mohlaUvaznoutVCache": vyveseno < CACHE_VYPNUTA_OD,
+        }
+
+    # Dvě verze schválně: jedna z doby s roční cache, druhá z doby bez ní.
+    # Po stažení se purge připomíná jen u té první.
+    SMERNICE[D["zavody"][0]["slug"]] = [
+        smernice(1, "2026-09-21T17:00:00+00:00"),
+        smernice(2, "2026-10-06T09:00:00+00:00"),
+    ]
+
+
+def ucet_podle_id(id_uctu):
+    return next((u for u in UCTY.values() if u["id"] == id_uctu), None)
+
+
+def vazba_dto(v):
+    u = ucet_podle_id(v["uzivatelId"]) or {}
+    urcil = ucet_podle_id(v["roleUrcilId"]) if v["roleUrcilId"] else None
+    return {
+        "id": v["id"], "uzivatelId": v["uzivatelId"],
+        "kdo": u.get("zobrazovane", "neznámý účet"), "email": u.get("email"),
+        "role": v["role"], "puvod": v["puvod"], "vzniklaV": v["vzniklaV"],
+        "roleUrcenaRucne": bool(v["roleUrcilId"]),
+        "roleUrcil": (urcil or {}).get("zobrazovane"),
+        "roleUrcenaV": v["roleUrcenaV"],
+        "keKontrole": ke_kontrole(v),
+    }
+
+
+def lod_sprava_dto(klic):
+    lod_id = PRIHLASKA_ID[klic]
+    vazby = [vazba_dto(v) for v in VAZBY if v["lodId"] == lod_id]
+    vazby.sort(key=lambda v: (("Majitel", "Kapitan", "Posadka", "Fanousek").index(v["role"]),
+                              v["vzniklaV"]))
+    return {
+        "lodId": lod_id, "nazev": LODE[klic]["nazev"],
+        "cisloPlachty": LODE[klic].get("cisloPlachty"), "kategorie": KAT[klic],
+        "maKapitana": any(v["role"] in ("Majitel", "Kapitan") for v in vazby),
+        "keKontrole": any(v["keKontrole"] for v in vazby),
+        "vazby": vazby,
+    }
+
+
+def ted_iso():
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).isoformat()
+
+
+def zaznamenej_zmenu(lod_id, komu, predchozi, nova, zmenil=None):
+    ZMENY_ROLI.append({"lodId": lod_id, "uzivatelId": komu, "predchozi": predchozi,
+                       "nova": nova, "zmenilId": zmenil or JA["id"],
+                       "zmenenoV": ted_iso()})
+
+
+def zmena_dto(z):
+    return {"kdo": (ucet_podle_id(z["uzivatelId"]) or {}).get("zobrazovane", "neznámý účet"),
+            "predchozi": z["predchozi"], "nova": z["nova"],
+            "zmenil": (ucet_podle_id(z["zmenilId"]) or {}).get("zobrazovane"),
+            "zmenenoV": z["zmenenoV"]}
+
 
 # Články pro administraci. Berou se z mocku a dál žijí v paměti procesu —
 # restart je vrátí do výchozího stavu, což je při zkoušení obrazovek žádoucí.
@@ -554,8 +720,10 @@ def rozjizdka_radek(r):
 PRIHLASKA_ID = {p["lod"]: i + 1 for i, p in enumerate(D["prihlasky"])}
 LOD_PODLE_ID = {i: lod for lod, i in PRIHLASKA_ID.items()}
 
-# Až tady, protože snímek potřebuje čísla přihlášek.
+# Až tady, protože snímek i vazby k lodím potřebují čísla přihlášek.
 _nasad_druhy_snimek()
+_nasad_vazby()
+_nasad_smernice()
 OTEVRENY = ("Navrzeno", "KRevizi")
 
 
@@ -690,7 +858,10 @@ def zapis_dto(z, r):
                      for p in lode],
             "startV": r.get("startV"), "doSerie": r.get("doSerie", True),
             "papir": {k: v for k, v in r["papir"].items() if k != "id"} if r.get("papir") else None,
-            "smiPapir": True, "pocetNavrhu": len(r.get("navrhy", []))}
+            "smiPapir": True, "pocetNavrhu": len(r.get("navrhy", [])),
+            # Podoba sady, ze které klient vychází. Posílá ji zpátky při
+            # uložení a server tím pozná starší data (nález B).
+            "revize": r.get("revize", 0)}
 
 
 def cas_od_startu(start, dojezd):
@@ -861,9 +1032,49 @@ def clanek_radek(c):
 
 
 class H(BaseHTTPRequestHandler):
+    def token_nesedi(self):
+        """
+        Je v hlavičce jméno, které neznáme? Odmítne se hned, na jednom místě.
+
+        Bez hlavičky se nic neodmítá: veřejné stránky mock servíruje i
+        nepřihlášenému a na chráněné odpovídají endpointy čtyřistajedničkou
+        samy.
+        """
+        hlavicka = self.headers.get("authorization")
+        if not hlavicka:
+            return False
+        if self.prihlaseny():
+            return False
+
+        # Důvod jde jen do těla. Do `WWW-Authenticate` nepatří: hlavičky se
+        # kódují latin-1, takže by na první háčkované souhlásce spadl server
+        # a z odpovědi by nezbylo nic — ani ta čtyřistajednička.
+        self.chyba(401, "Takový účet mock nezná. Jména jsou: "
+                        + ", ".join(sorted(TOKENY)) + ".")
+        return True
+
+    def prihlaseny(self):
+        """
+        Kdo volá, nebo `None` u neznámého jména — viz TOKENY.
+
+        Prázdná hlavička se sem nedostane: na ni odpovídají endpointy
+        čtyřistajedničkou dřív. Neznámé jméno vrací `None` a volající ho
+        odmítne; tiše dosadit správce by při zkoušce ovládání znamenalo měřit
+        něco jiného, než co se zadalo.
+        """
+        hlavicka = self.headers.get("authorization") or ""
+        token = hlavicka.split(" ", 1)[-1].strip().lower()
+        return TOKENY.get(token)
+
     def telo_zadosti(self):
         delka = int(self.headers.get("Content-Length", "0") or 0)
         return json.loads(self.rfile.read(delka) or b"{}")
+
+    def telo_zadosti_pamet(self):
+        """Tělo, které se dá přečíst víckrát. Ze socketu jde jen jednou."""
+        if not hasattr(self, "_telo"):
+            self._telo = self.telo_zadosti()
+        return self._telo
 
     def chyba(self, kod, text):
         """Chyba ve tvaru, ve kterém ji vydává API: {"error": "..."}."""
@@ -875,6 +1086,8 @@ class H(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_PUT(self):
+        if self.token_nesedi():
+            return None
         cesta = urlparse(self.path).path
 
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
@@ -886,6 +1099,11 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                           r'/rozjizdky/(\d+)/vysledky$', cesta)):
             return self.uloz_zapis(m.group(1), int(m.group(2)))
+
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/lode/(\d+)/kapitan$', cesta)):
+            return self.urci_kapitana(int(m.group(1)))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/lode/(\d+)/vazby/(\d+)/role$', cesta)):
+            return self.zmen_roli(int(m.group(1)), int(m.group(2)))
 
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)$', cesta)):
             return self.uprav_zastavku(m.group(1))
@@ -980,7 +1198,139 @@ class H(BaseHTTPRequestHandler):
 
         return self.odpoved({"zavod": z["nazev"], "lod": nazev, "stav": "Pozadavek"}, 201)
 
+    # --- Kapitánství -------------------------------------------------------
+    # Pravidla opsaná z `Features/Lode/Kapitanstvi.cs`, ze stejného důvodu
+    # jako bodování: pravda leží tam a hlídají ji testy, tohle je jen proto,
+    # aby šla obrazovka vidět na stroji bez databáze.
+
+    POSLEDNI_ODPOVEDNY = ("Tohle je poslední kapitán lodi. Nejdřív urči jiného, "
+                          "pak tohohle odeber.")
+
+    def _lod_nebo_404(self, lod_id):
+        if not self.headers.get("authorization"):
+            self.send_error(401)
+            return None
+        klic = LOD_PODLE_ID.get(lod_id)
+        if not klic:
+            self.send_error(404)
+            return None
+        return klic
+
+    def _prazdna_odpoved(self):
+        self.send_response(204)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
+    def urci_kapitana(self, lod_id):
+        if not self._lod_nebo_404(lod_id):
+            return None
+
+        kdo = (self.telo_zadosti() or {}).get("uzivatelId")
+        if not ucet_podle_id(kdo):
+            return self.chyba(400, "Takový účet tu není. Kapitánem jde určit jen "
+                                   "někoho, kdo se už přihlásil.")
+
+        ted = ted_iso()
+        urcil = self.prihlaseny()["id"]
+        vazby = [v for v in VAZBY if v["lodId"] == lod_id]
+        novy = next((v for v in vazby if v["uzivatelId"] == kdo), None)
+
+        if novy is None:
+            novy = {"id": max([v["id"] for v in VAZBY], default=0) + 1, "lodId": lod_id,
+                    "uzivatelId": kdo, "role": "Kapitan", "puvod": "Rucne", "vzniklaV": ted,
+                    "roleUrcilId": urcil, "roleUrcenaV": ted}
+            VAZBY.append(novy)
+            zaznamenej_zmenu(lod_id, kdo, None, "Kapitan", urcil)
+        else:
+            if novy["role"] not in ("Kapitan", "Majitel"):
+                zaznamenej_zmenu(lod_id, kdo, novy["role"], "Kapitan", urcil)
+                novy["role"] = "Kapitan"
+            novy["roleUrcilId"], novy["roleUrcenaV"] = urcil, ted
+
+        # Dosavadní kapitán spadne na posádku, majitel zůstává majitelem.
+        for stara in vazby:
+            if stara["uzivatelId"] == kdo or stara["role"] != "Kapitan":
+                continue
+            zaznamenej_zmenu(lod_id, stara["uzivatelId"], "Kapitan", "Posadka", urcil)
+            stara["role"] = "Posadka"
+            stara["roleUrcilId"], stara["roleUrcenaV"] = urcil, ted
+
+        return self._prazdna_odpoved()
+
+    def zmen_roli(self, lod_id, vazba_id):
+        if not self._lod_nebo_404(lod_id):
+            return None
+
+        vazba = next((v for v in VAZBY if v["id"] == vazba_id and v["lodId"] == lod_id), None)
+        if not vazba:
+            return self.chyba(400, "Takové připojení u lodi není.")
+
+        nova = (self.telo_zadosti() or {}).get("role")
+        if nova == "Majitel":
+            return self.chyba(400, "Majitele určuje vlastnictví lodi v ročníku, ne tahle "
+                                   "obrazovka. Komu má loď patřit, oprav v přihláškách ročníku.")
+        if nova not in ("Kapitan", "Posadka", "Fanousek"):
+            return self.chyba(400, "Takovou roli loď nezná.")
+
+        jinych = sum(1 for v in VAZBY if v["lodId"] == lod_id and v["id"] != vazba_id
+                     and v["role"] in ("Majitel", "Kapitan"))
+        if vazba["role"] in ("Majitel", "Kapitan") and nova not in ("Majitel", "Kapitan") \
+                and jinych == 0:
+            return self.chyba(400, self.POSLEDNI_ODPOVEDNY)
+
+        if vazba["role"] != nova:
+            zaznamenej_zmenu(lod_id, vazba["uzivatelId"], vazba["role"], nova,
+                             self.prihlaseny()["id"])
+        vazba["role"] = nova
+        vazba["roleUrcilId"], vazba["roleUrcenaV"] = self.prihlaseny()["id"], ted_iso()
+        return self._prazdna_odpoved()
+
+    def odeber_vazbu(self, lod_id, vazba_id):
+        if not self._lod_nebo_404(lod_id):
+            return None
+
+        vazba = next((v for v in VAZBY if v["id"] == vazba_id and v["lodId"] == lod_id), None)
+        if not vazba:
+            return self.chyba(400, "Takové připojení u lodi není.")
+
+        jinych = sum(1 for v in VAZBY if v["lodId"] == lod_id and v["id"] != vazba_id
+                     and v["role"] in ("Majitel", "Kapitan"))
+        if vazba["role"] in ("Majitel", "Kapitan") and jinych == 0:
+            return self.chyba(400, self.POSLEDNI_ODPOVEDNY)
+
+        zaznamenej_zmenu(lod_id, vazba["uzivatelId"], vazba["role"], None,
+                         self.prihlaseny()["id"])
+        VAZBY.remove(vazba)
+        return self._prazdna_odpoved()
+
+    def stahni_smernici(self, slug, verze):
+        """Opsané z `Features/Smernice/SmerniceSprava.cs`: záznam zůstává,
+        soubor mizí. Důvod je povinný."""
+        if not self.headers.get("authorization"):
+            return self.send_error(401)
+        if not self.zastavka(slug):
+            return None
+
+        s = next((x for x in SMERNICE.get(slug, []) if x["verze"] == verze), None)
+        if not s:
+            return self.chyba(400, "Takovou verzi tahle regata nemá.")
+        if s["stazenoV"]:
+            return self.chyba(400, "Tahle verze je už stažená.")
+
+        duvod = (self.telo_zadosti() or {}).get("duvod") or ""
+        if not duvod.strip():
+            return self.chyba(400,
+                              "Napiš, proč se směrnice stahuje. U dokumentu, podle kterého "
+                              "se jede, musí jít po sezóně dohledat, co se odvolalo a proč.")
+
+        s["stazenoV"] = ted_iso()
+        s["stahl"] = self.prihlaseny()["zobrazovane"]
+        s["duvodStazeni"] = duvod.strip()
+        return self._prazdna_odpoved()
+
     def do_POST(self):
+        if self.token_nesedi():
+            return None
         cesta = urlparse(self.path).path
 
         if cesta == f'/sprava/serie/{D["slug"]}/publikace':
@@ -1000,6 +1350,10 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                           r'/rozjizdky/(\d+)/navrhy/([0-9a-f-]+)/pouzit$', cesta)):
             return self.pouzij_navrh(m.group(1), int(m.group(2)), m.group(3))
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/smernice/(\d+)/stazeni$',
+                cesta)):
+            return self.stahni_smernici(m.group(1), int(m.group(2)))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode$', cesta)):
             return self.prihlas_lod(m.group(1))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode/(\d+)/stav$', cesta)):
@@ -1133,8 +1487,26 @@ class H(BaseHTTPRequestHandler):
         if (chyba := proc_nejde_prepsat(z, r)):
             return self.chyba(400, chyba)
 
+        # Kontrola revize jako v `Zapis.ProcNejdeUlozitRevizi`: kdo pošle
+        # starší podobu sady, neprojde — uložení maže, co v sadě není.
+        # Sada bez revize neprojde vůbec: není to „tak tedy bez kontroly",
+        # protože sada odeslaná naslepo umí smazat opravu, o které klient
+        # nevěděl.
+        poslana = self.telo_zadosti_pamet().get("revize")
+        if poslana is None:
+            return self.chyba(
+                400,
+                "Zápis přišel bez revize, ze které vycházel, a tím se ukládat nedá — "
+                "uložení maže lodě, které v sadě nejsou. Obnov stránku a ulož znovu.")
+        if poslana != r.get("revize", 0):
+            return self.chyba(
+                409,
+                "Rozjížďku mezitím uložil někdo jiný, takže tvoje sada vychází ze "
+                "starších čísel. Tvůj zápis se nikam neztratil: otevři porovnání "
+                "zápisů, podívej se, co se liší, a ulož znovu.")
+
         radky = []
-        for radek in self.telo_zadosti().get("radky") or []:
+        for radek in self.telo_zadosti_pamet().get("radky") or []:
             lod = LOD_PODLE_ID.get(radek.get("prihlaskaId"))
             if not lod:
                 return self.chyba(400, f'Přihláška {radek.get("prihlaskaId")} do ročníku nepatří.')
@@ -1151,9 +1523,12 @@ class H(BaseHTTPRequestHandler):
                              if dojezd else {})}
                          for lod, _, poradi, kod, dojezd in radky if poradi is not None or kod]
         # Loď s výsledkem přijela, jako v API; vyloučená zůstává vyloučená.
-        self.uloz_snimek(r, JA, [
+        self.uloz_snimek(r, self.prihlaseny(), [
             {"prihlaskaId": PRIHLASKA_ID[lod], "poradiVCili": poradi, "kod": kod}
             for lod, _, poradi, kod, _ in radky if poradi is not None or kod])
+
+        # Nová podoba sady — klient, který vyšel ze staré, už neprojde.
+        r["revize"] = r.get("revize", 0) + 1
 
         for lod in (v["lod"] for v in r["vysledky"]):
             u = next((u for u in z["ucasti"] if u["lod"] == lod), None)
@@ -1239,7 +1614,8 @@ class H(BaseHTTPRequestHandler):
             return self.chyba(400, "Napiš důvod.")
         from datetime import datetime, timezone
         u.setdefault("historie", []).append(
-            {"ze": u["stav"], "na": na, "kdo": JA["zobrazovane"], "duvod": duvod or None,
+            {"ze": u["stav"], "na": na, "kdo": self.prihlaseny()["zobrazovane"],
+             "duvod": duvod or None,
              "kdy": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")})
         u["stav"], u["duvod"] = na, duvod or None
         return self.odpoved(lod_na_zastavce(z, lod))
@@ -1280,7 +1656,7 @@ class H(BaseHTTPRequestHandler):
             "zavod": z["slug"], "zavodNazev": z["nazev"], "cislo": r["cislo"],
             "navrhy": [{
                 "uzivatelId": n["uzivatelId"], "kdo": n["kdo"], "zapsanoV": n["zapsanoV"],
-                "muj": n["uzivatelId"] == JA["id"],
+                "muj": n["uzivatelId"] == self.prihlaseny()["id"],
                 "radky": [{**radek,
                            "lod": nazvy(LOD_PODLE_ID[radek["prihlaskaId"]]),
                            "kategorie": KAT[LOD_PODLE_ID[radek["prihlaskaId"]]]}
@@ -1303,7 +1679,7 @@ class H(BaseHTTPRequestHandler):
                           "lod": LOD_PODLE_ID[x["prihlaskaId"]],
                           "poradiVCili": x.get("poradiVCili"), "kod": x.get("kod")}
                          for x in navrh["radky"]]
-        self.uloz_snimek(r, JA, navrh["radky"])
+        self.uloz_snimek(r, self.prihlaseny(), navrh["radky"])
         return self.odpoved(zapis_dto(z, r))
 
     def odstartuj(self, zavod, cislo):
@@ -1391,7 +1767,8 @@ class H(BaseHTTPRequestHandler):
             return None
 
         return self.odpoved(self.uloz_fotku(
-            r, "papir", *fotka, JA["zobrazovane"], f"Papírový zápis {cislo}. rozjížďky"))
+            r, "papir", *fotka, self.prihlaseny()["zobrazovane"],
+            f"Papírový zápis {cislo}. rozjížďky"))
 
     def nahraj_obrazek(self, druh, klic):
         """Stejné kontroly jako `Nahravani.ProcNejde` v API."""
@@ -1586,6 +1963,12 @@ class H(BaseHTTPRequestHandler):
         return self.odpoved(clanek_radek(c))
 
     def do_DELETE(self):
+        if self.token_nesedi():
+            return None
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/lode/(\d+)/vazby/(\d+)$',
+                          urlparse(self.path).path)):
+            return self.odeber_vazbu(int(m.group(1)), int(m.group(2)))
+
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode/(\d+)$',
                           urlparse(self.path).path)):
             z = self.zastavka(m.group(1))
@@ -1650,6 +2033,8 @@ class H(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        if self.token_nesedi():
+            return None
         rozdelena = urlparse(self.path)
         cesta, dotaz = rozdelena.path, parse_qs(rozdelena.query)
 
@@ -1759,13 +2144,14 @@ class H(BaseHTTPRequestHandler):
             # jako neznámý, aby šel vyzkoušet i odhlášený stav.
             if not self.headers.get("authorization"):
                 return self.send_error(401)
+            kdo = self.prihlaseny()
             telo = {
-                **JA,
+                **kdo,
                 # Role se berou z téhož seznamu, který spravuje obrazovka
                 # oprávnění — jinak by se odebrání vlastní role neprojevilo
                 # v nabídce a stránka by nabízela odkaz, který skončí na 403.
                 "opravneni": [{"role": o["role"], "serie": D["slug"], "zavod": o["zavod"]}
-                              for o in OPRAVNENI if o["email"] == JA["email"]],
+                              for o in OPRAVNENI if o["email"] == kdo["email"]],
             }
         elif cesta == f'/sprava/serie/{D["slug"]}/opravneni':
             if not self.headers.get("authorization"):
@@ -1781,6 +2167,34 @@ class H(BaseHTTPRequestHandler):
                 "smiNaRocnik": True,
                 "ucty": sorted(UCTY.values(), key=lambda u: u["naposledyPrihlasenV"],
                                reverse=True),
+            }
+        elif (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/smernice$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            if not self.zastavka(m.group(1)):
+                return None
+            # Správa vidí i stažené — musí být vidět, co se odvolalo a proč.
+            telo = sorted(SMERNICE.get(m.group(1), []),
+                          key=lambda x: x["verze"], reverse=True)
+        elif cesta == f'/sprava/serie/{D["slug"]}/lode':
+            # Lodě ročníku i s vazbami. Ty, které čekají na správce — bez
+            # kapitána nebo s kapitánem od kódu — jsou první.
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            telo = sorted(
+                (lod_sprava_dto(p["lod"]) for p in D["prihlasky"]),
+                key=lambda l: (l["maKapitana"], not l["keKontrole"], l["nazev"]))
+        elif (m := re.match(rf'^/sprava/serie/{D["slug"]}/lode/(\d+)$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            klic = LOD_PODLE_ID.get(int(m.group(1)))
+            if not klic:
+                return self.send_error(404)
+            telo = {
+                "lod": lod_sprava_dto(klic),
+                "zmeny": [zmena_dto(z) for z in reversed(ZMENY_ROLI)
+                          if z["lodId"] == PRIHLASKA_ID[klic]],
             }
         elif cesta == f'/sprava/serie/{D["slug"]}':
             if not self.headers.get("authorization"):
@@ -1957,7 +2371,14 @@ class H(BaseHTTPRequestHandler):
                               "potvrzena": u["stav"] != "Prihlasena",
                               "vyloucena": u["stav"] == "Vyloucena"}
                              for u in sorted((u for u in z["ucasti"] if u["stav"] in VEREJNE_UCASTI),
-                                             key=lambda u: (KAT_PORADI[KAT[u["lod"]]], nazvy(u["lod"])))]}
+                                             key=lambda u: (KAT_PORADI[KAT[u["lod"]]], nazvy(u["lod"])))],
+                    # Vyvěšené směrnice, od nejnovější. Stažené se veřejně
+                    # nevydávají vůbec, ne jen bez adresy — jako v API:
+                    # starší appka na telefonu o stažení neví a odkaz na
+                    # odvolaný dokument je to jediné, co se stát nesmí.
+                    "smernice": sorted(
+                        (x for x in SMERNICE.get(z["slug"], []) if not x["stazenoV"]),
+                        key=lambda x: x["verze"], reverse=True)}
 
             # Ročník, který výsledky jednotlivých regat veřejně nevydává.
             # Jako v API: zastávka zůstane i se seznamem lodí, rozjížďky

@@ -13,9 +13,12 @@ namespace OrlickyPohar.Api.Features.Smernice;
 /// a musí ji umět vyvěsit i za něj.
 /// </para>
 /// <para>
-/// <b>Mazání tu není a nebude.</b> Appka je oficiální vývěska, takže
-/// vyvěšené zůstává; oprava je nová verze. Kdyby šlo smazat, nešlo by
-/// doložit, podle čeho se jelo.
+/// <b>Mazání záznamu tu není a nebude.</b> Appka je oficiální vývěska,
+/// takže co bylo vyvěšené, zůstává v historii — jinak by nešlo doložit,
+/// podle čeho se jelo. Co jde, je <b>stáhnout verzi z vývěsky</b>: záznam
+/// zůstane, soubor zmizí z úložiště a veřejné čtení ho nevydá. Bez toho se
+/// omylem nahrané PDF s neveřejnými údaji nedalo odvolat ničím
+/// (oponentura, 5. 10. 2026).
 /// </para>
 /// </summary>
 public static class SmerniceEndpoints
@@ -36,6 +39,13 @@ public static class SmerniceEndpoints
             .WithDescription(
                 "Pořadatel regaty, nebo rozhodčí ročníku. Jen PDF do 20 MB. " +
                 "Vyvěšené verze zůstávají — oprava je nová verze, ne přepis.");
+
+        g.MapPost("/{verze:int}/stazeni", StahniAsync)
+            .WithSummary("Stáhne verzi směrnice z vývěsky")
+            .WithDescription(
+                "Pořadatel regaty, nebo rozhodčí ročníku. Záznam o vyvěšení zůstává, " +
+                "ale soubor se smaže z úložiště a veřejné čtení verzi nevydá. " +
+                "Důvod je povinný. Kopie, které si už někdo stáhl, vzít zpět nejde.");
     }
 
     private static async Task<IResult> SeznamAsync(
@@ -67,6 +77,20 @@ public static class SmerniceEndpoints
         if (chyba is not null) return Results.BadRequest(new { error = chyba });
 
         return Results.Created((string?)null, smernice);
+    }
+
+    private static async Task<IResult> StahniAsync(
+        string serie, string zavod, int verze, StazeniVstup vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, SmerniceSprava sprava, CancellationToken ct)
+    {
+        if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
+            return Results.NotFound();
+        if (!await SmiAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
+
+        var chyba = await sprava.StahniAsync(rozsah.ZavodId.Value, verze, vstup.Duvod, uzivatel, ct);
+        return chyba is null ? Results.NoContent() : Results.BadRequest(new { error = chyba });
     }
 
     private static async Task<bool> SmiAsync(

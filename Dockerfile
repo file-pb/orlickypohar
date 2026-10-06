@@ -29,5 +29,10 @@ COPY --from=build /app .
 # a nastavuje APP_UID. Zakládat ho znovu skončí chybou adduser.
 USER $APP_UID
 ENV ASPNETCORE_HTTP_PORTS=8080
+# Z jakého commitu je tahle image. Nasazení si tím po sobě ověří, že na
+# serveru doopravdy běží to, co posílalo — `Healthy` a HTTP 200 vrací
+# i verze, která tam visí z minula.
+ARG VERZE=neznama
+ENV VERZE=$VERZE
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "OrlickyPohar.Api.dll"]

@@ -90,7 +90,23 @@
                     "Import"
                 ],
                 "summary": "Nahraje cel\u00fd ro\u010dn\u00edk z jednoho souboru",
-                "description": "Idempotentn\u00ed: druh\u00e9 odesl\u00e1n\u00ed t\u00e9ho\u017e souboru nic nezduplikuje. Bu\u010f projde cel\u00e1 d\u00e1vka, nebo se neulo\u017e\u00ed nic.",
+                "description": "Idempotentn\u00ed: druh\u00e9 odesl\u00e1n\u00ed t\u00e9ho\u017e souboru nic nezduplikuje. Bu\u010f projde cel\u00e1 d\u00e1vka, nebo se neulo\u017e\u00ed nic.\n\n`rezim=nahled` nic neulo\u017e\u00ed a vr\u00e1t\u00ed, co by se stalo, i s otiskem ro\u010dn\u00edku. `rezim=bezpecny` (v\u00fdchoz\u00ed) ulo\u017e\u00ed, ale odm\u00edtne d\u00e1vku, kter\u00e1 by p\u0159epsala v\u00fdsledky zapsan\u00e9 v aplikaci nebo st\u00e1hla publikaci. `rezim=oprava` p\u0159ep\u00ed\u0161e i je a vy\u017eaduje `otisk` z n\u00e1hledu \u2014 idempotence chr\u00e1n\u00ed p\u0159ed opakov\u00e1n\u00edm souboru, ne p\u0159ed jeho zastaralost\u00ed.",
+                "parameters": [
+                    {
+                        "name": "rezim",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "otisk",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -472,7 +488,7 @@
                     "Identita"
                 ],
                 "summary": "P\u0159ipoj\u00ed p\u0159ihl\u00e1\u0161en\u00fd \u00fa\u010det k lodi podle k\u00f3du",
-                "description": "Prvn\u00ed p\u0159ipojen\u00fd je kapit\u00e1n, dal\u0161\u00ed pos\u00e1dka. Kdo u\u017e u lodi roli m\u00e1, o ni zad\u00e1n\u00edm k\u00f3du nep\u0159ijde.",
+                "description": "P\u0159ipojen\u00fd je v\u017edycky pos\u00e1dka \u2014 kapit\u00e1nem d\u011bl\u00e1 jen spr\u00e1vce ro\u010dn\u00edku. Kdo u\u017e u lodi roli m\u00e1, o ni zad\u00e1n\u00edm k\u00f3du nep\u0159ijde.",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -2654,7 +2670,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "Ulo\u017e\u00ed celou sadu v\u00fdsledk\u016f rozj\u00ed\u017e\u010fky",
-                "description": "Lo\u010f, kter\u00e1 v sad\u011b nem\u00e1 po\u0159ad\u00ed ani k\u00f3d, v\u00fdsledek nem\u00e1. Po\u0159ad\u00ed, nebo k\u00f3d, ne oboj\u00ed; stejn\u00e9 po\u0159ad\u00ed v jedn\u00e9 kategorii neprojde. \u010cas se nem\u011bn\u00ed.",
+                "description": "Lo\u010f, kter\u00e1 v sad\u011b nem\u00e1 po\u0159ad\u00ed ani k\u00f3d, v\u00fdsledek nem\u00e1. Po\u0159ad\u00ed, nebo k\u00f3d, ne oboj\u00ed; stejn\u00e9 po\u0159ad\u00ed v jedn\u00e9 kategorii neprojde. \u010cas se nem\u011bn\u00ed. Povinn\u00e9 `revize` je podoba sady, ze kter\u00e9 klient vych\u00e1zel \u2014 p\u0159i nesouladu vrac\u00ed 409 a svou sadu si klient nech\u00e1v\u00e1.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3230,6 +3246,275 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/smernice/{verze}/stazeni": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "St\u00e1hne verzi sm\u011brnice z v\u00fdv\u011bsky",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Z\u00e1znam o vyv\u011b\u0161en\u00ed z\u016fst\u00e1v\u00e1, ale soubor se sma\u017ee z \u00falo\u017ei\u0161t\u011b a ve\u0159ejn\u00e9 \u010dten\u00ed verzi nevyd\u00e1. D\u016fvod je povinn\u00fd. Kopie, kter\u00e9 si u\u017e n\u011bkdo st\u00e1hl, vz\u00edt zp\u011bt nejde.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "verze",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StazeniVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/lode": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vyp\u00ed\u0161e lod\u011b ro\u010dn\u00edku i s t\u00edm, kdo k nim pat\u0159\u00ed",
+                "description": "Spr\u00e1vce ro\u010dn\u00edku. Lod\u011b bez kapit\u00e1na jsou prvn\u00ed, pak ty s kapit\u00e1nem od p\u0159ipojovac\u00edho k\u00f3du \u2014 to je pr\u00e1ce, kter\u00e1 na spr\u00e1vce \u010dek\u00e1.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LodSpravaDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/lode/{lod}": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vyp\u00ed\u0161e vazby jedn\u00e9 lodi i historii zm\u011bn rol\u00ed",
+                "description": "Spr\u00e1vce ro\u010dn\u00edku.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "lod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LodDetailSpravaDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/lode/{lod}/kapitan": {
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Ur\u010d\u00ed kapit\u00e1na lodi",
+                "description": "Spr\u00e1vce ro\u010dn\u00edku. Pov\u00fd\u0161en\u00ed nov\u00e9ho a sn\u00ed\u017een\u00ed dosavadn\u00edho kapit\u00e1na je jeden \u00fakon v jedn\u00e9 transakci. Majitel z\u016fst\u00e1v\u00e1 majitelem. Opakovan\u00e9 ur\u010den\u00ed t\u00e9ho\u017e \u010dlov\u011bka jen potvrd\u00ed roli, kterou u\u017e m\u00e1.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "lod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UrceniKapitanaVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/lode/{lod}/vazby/{vazba}/role": {
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Zm\u011bn\u00ed roli jedn\u00e9 vazby k lodi",
+                "description": "Spr\u00e1vce ro\u010dn\u00edku. Posledn\u00edho kapit\u00e1na sn\u00ed\u017eit nejde \u2014 nejd\u0159\u00edv ur\u010di jin\u00e9ho. Majitele tudy nastavit nejde, ten pat\u0159\u00ed k vlastnictv\u00ed lodi.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "lod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "vazba",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ZmenaRoleVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/lode/{lod}/vazby/{vazba}": {
+            "delete": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Odebere vazbu k lodi",
+                "description": "Spr\u00e1vce ro\u010dn\u00edku. Posledn\u00edho kapit\u00e1na odebrat nejde. Odebranou vazbu p\u00e1rov\u00e1n\u00ed podle e-mailu nevrac\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "lod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "vazba",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
                     }
                 }
             }
@@ -3928,6 +4213,24 @@
                     null
                 ]
             },
+            "LodDetailSpravaDto": {
+                "required": [
+                    "lod",
+                    "zmeny"
+                ],
+                "type": "object",
+                "properties": {
+                    "lod": {
+                        "$ref": "#/components/schemas/LodSpravaDto"
+                    },
+                    "zmeny": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ZmenaRoleDto"
+                        }
+                    }
+                }
+            },
             "LodNaZastavceDto": {
                 "required": [
                     "prihlaskaId",
@@ -4056,6 +4359,48 @@
                         "type": "integer",
                         "format": "int32",
                         "default": 0
+                    }
+                }
+            },
+            "LodSpravaDto": {
+                "required": [
+                    "lodId",
+                    "nazev",
+                    "cisloPlachty",
+                    "kategorie",
+                    "maKapitana",
+                    "keKontrole",
+                    "vazby"
+                ],
+                "type": "object",
+                "properties": {
+                    "lodId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "cisloPlachty": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "kategorie": {
+                        "type": "string"
+                    },
+                    "maKapitana": {
+                        "type": "boolean"
+                    },
+                    "keKontrole": {
+                        "type": "boolean"
+                    },
+                    "vazby": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/VazbaSpravaDto"
+                        }
                     }
                 }
             },
@@ -4983,6 +5328,11 @@
                         "items": {
                             "$ref": "#/components/schemas/PoradiKategorieDto"
                         }
+                    },
+                    "verzePravidel": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 1
                     }
                 }
             },
@@ -5847,6 +6197,11 @@
                     "vysledkyZavoduVerejne": {
                         "type": "boolean",
                         "default": true
+                    },
+                    "verzePravidel": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 1
                     }
                 }
             },
@@ -5886,6 +6241,29 @@
                             "null",
                             "string"
                         ]
+                    },
+                    "stazenoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "stahl": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "duvodStazeni": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "mohlaUvaznoutVCache": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -6070,6 +6448,20 @@
                     "Potvrzeny"
                 ]
             },
+            "StazeniVstup": {
+                "required": [
+                    "duvod"
+                ],
+                "type": "object",
+                "properties": {
+                    "duvod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
             "TeplotaHladinyDto": {
                 "required": [
                     "snimky",
@@ -6218,6 +6610,82 @@
                             "null",
                             "string"
                         ]
+                    }
+                }
+            },
+            "UrceniKapitanaVstup": {
+                "required": [
+                    "uzivatelId"
+                ],
+                "type": "object",
+                "properties": {
+                    "uzivatelId": {
+                        "type": "string",
+                        "format": "uuid"
+                    }
+                }
+            },
+            "VazbaSpravaDto": {
+                "required": [
+                    "id",
+                    "uzivatelId",
+                    "kdo",
+                    "email",
+                    "role",
+                    "puvod",
+                    "vzniklaV",
+                    "roleUrcenaRucne",
+                    "roleUrcil",
+                    "roleUrcenaV",
+                    "keKontrole"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "uzivatelId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "kdo": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/RoleKLodi"
+                    },
+                    "puvod": {
+                        "$ref": "#/components/schemas/PuvodVazby"
+                    },
+                    "vzniklaV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "roleUrcenaRucne": {
+                        "type": "boolean"
+                    },
+                    "roleUrcil": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "roleUrcenaV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "keKontrole": {
+                        "type": "boolean"
                     }
                 }
             },
@@ -6707,6 +7175,11 @@
                         "type": "integer",
                         "format": "int32",
                         "default": 0
+                    },
+                    "revize": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 0
                     }
                 }
             },
@@ -6765,6 +7238,13 @@
                         "items": {
                             "$ref": "#/components/schemas/ZapisRadekVstup"
                         }
+                    },
+                    "revize": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
                     }
                 }
             },
@@ -7127,6 +7607,11 @@
                         "items": {
                             "$ref": "#/components/schemas/SmerniceDto"
                         }
+                    },
+                    "verzePravidel": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 1
                     }
                 }
             },
@@ -7294,6 +7779,62 @@
                         "type": "integer",
                         "format": "int32",
                         "default": 0
+                    }
+                }
+            },
+            "ZmenaRoleDto": {
+                "required": [
+                    "kdo",
+                    "predchozi",
+                    "nova",
+                    "zmenil",
+                    "zmenenoV"
+                ],
+                "type": "object",
+                "properties": {
+                    "kdo": {
+                        "type": "string"
+                    },
+                    "predchozi": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/RoleKLodi"
+                            }
+                        ]
+                    },
+                    "nova": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/RoleKLodi"
+                            }
+                        ]
+                    },
+                    "zmenil": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "zmenenoV": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "ZmenaRoleVstup": {
+                "required": [
+                    "role"
+                ],
+                "type": "object",
+                "properties": {
+                    "role": {
+                        "$ref": "#/components/schemas/RoleKLodi"
                     }
                 }
             },

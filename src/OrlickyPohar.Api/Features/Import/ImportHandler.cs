@@ -25,6 +25,15 @@ namespace OrlickyPohar.Api.Features.Import;
 /// vymazal ročník.
 /// </para>
 /// <para>
+/// <b>Přejmenovaná regata se pozná podle <c>PuvodniSlug</c></b> (oponentura,
+/// 5. 10. 2026). Slug je přirozený klíč a zároveň adresa, takže rozhodčí,
+/// který regatu v sešitu přejmenuje, vyrobí jiný slug — a import by z toho
+/// udělal nový závod, zatímco původní by zůstal i s výsledky. Soubor proto
+/// smí říct „tahle regata je ta, co u vás leží pod adresou X"; <b>adresa se
+/// přitom nemění</b>, mění se jméno. Není to umělý importní identifikátor:
+/// klíčem zůstává slug, jen k němu soubor umí přidat větu o přejmenování.
+/// </para>
+/// <para>
 /// <b>Známé omezení:</b> osoby se párují podle jména a příjmení, lodě podle
 /// názvu. Dva Jani Novákové v jednom ročníku splynou. Při velikosti startovního
 /// pole je to únosné a náprava je ruční oprava jednoho řádku; alternativou by
@@ -58,7 +67,13 @@ internal static class ImportHandler
             zavody.Zavody, zavody.Ucasti, zavody.Rozjizdky, zavody.Vysledky, clanky);
     }
 
-    private static void OveřVstup(SerieVstup v)
+    /// <summary>
+    /// Kontrola tvaru souboru. <b>Volá se dřív než cokoliv, co ze vstupu
+    /// staví slovník</b> — dvě regaty pod jednou adresou by jinak shodily
+    /// výpočet kolizí dřív, než se k téhle kontrole vůbec dojde, a vrátila
+    /// by se pětistovka místo věty o tom, co je v souboru špatně.
+    /// </summary>
+    internal static void OveřVstup(SerieVstup v)
     {
         if (v.Kategorie.Count == 0)
             throw new ImportException("Ročník musí mít aspoň jednu kategorii.");
@@ -71,6 +86,23 @@ internal static class ImportHandler
         Duplicity((v.Clanky ?? []).Select(c => c.Slug), "Slug článku");
 
         var slugyZavodu = v.Zavody.Select(z => z.Slug).ToHashSet();
+
+        foreach (var z in v.Zavody.Where(z => z.PuvodniSlug is not null))
+        {
+            if (z.PuvodniSlug == z.Slug)
+                throw new ImportException(
+                    $"Závod {z.Slug} má původní adresu stejnou jako novou. "
+                    + "Přejmenování se vyplňuje jen tehdy, když se adresa liší.");
+
+            if (slugyZavodu.Contains(z.PuvodniSlug!))
+                throw new ImportException(
+                    $"Závod {z.Slug} se hlásí k adrese {z.PuvodniSlug}, kterou v témže "
+                    + "souboru má jiná regata. Dvě regaty jednu adresu sdílet nemůžou.");
+        }
+
+        Duplicity(
+            v.Zavody.Where(z => z.PuvodniSlug is not null).Select(z => z.PuvodniSlug!),
+            "Původní adresa závodu");
         foreach (var c in v.Clanky ?? [])
             if (c.Zavod is not null && !slugyZavodu.Contains(c.Zavod))
                 throw new ImportException($"Článek {c.Slug} odkazuje na neznámou regatu {c.Zavod}.");
@@ -114,6 +146,7 @@ internal static class ImportHandler
         serie.Rok = v.Rok;
         serie.Publikovano = v.Publikovano;
         serie.PocetSkrtu = v.PocetSkrtu;
+        serie.VerzePravidel = v.VerzePravidel;
         serie.VysledkyZavoduVerejne = v.VysledkyZavoduVerejne;
         await db.SaveChangesAsync(ct);
         return serie;
@@ -288,7 +321,43 @@ internal static class ImportHandler
 
         foreach (var v in vstup.Zavody)
         {
-            if (!podleSlugu.TryGetValue(v.Slug, out var zavod))
+            // Přejmenovaná regata: soubor má nový slug, ale `PuvodniSlug`
+            // říká, pod kterou adresou ta regata v ročníku už je. Bez toho
+            // by z přejmenování vznikl druhý závod a tomu původnímu by
+            // zůstaly výsledky, přílohy i odběry — závody se nemažou.
+            if (!podleSlugu.TryGetValue(v.Slug, out var zavod) && v.PuvodniSlug is { } puvodni)
+            {
+                if (podleSlugu.TryGetValue(puvodni, out var prejmenovany))
+                {
+                    // **Adresa zůstává.** Odkaz na zastávku už mohl někam
+                    // odejít a je to totéž pravidlo, jaké drží administrace
+                    // (`KalendarSprava.UpravAsync`). Mění se jméno, ne adresa.
+                    //
+                    // Protože se slug nemění, musí na tuhle **uloženou**
+                    // adresu ukazovat i všechny další soubory. Při
+                    // přejmenování A → B → C zůstává `PuvodniSlug` = A;
+                    // adresa B u nás nikdy nevznikla.
+                    zavod = prejmenovany;
+                    podleSlugu[v.Slug] = zavod;
+                }
+                else if (existujici.Count > 0)
+                {
+                    // Soubor tvrdí přejmenování, ale ta adresa v ročníku
+                    // není. Mlčky založit nový závod je přesně to rozdvojení,
+                    // kterému má `PuvodniSlug` bránit — překlep by se poznal
+                    // až podle dvou řad výsledků u jedné regaty.
+                    //
+                    // Jen u ročníku, který už závody má: do prázdna se nedá
+                    // nic rozdvojit a soubor musí zůstat nahratelný i při
+                    // obnově ze zálohy.
+                    throw new ImportException(
+                        $"Závod {v.Slug} se hlásí k adrese {puvodni}, která v ročníku "
+                        + $"{serie.Slug} není. Při dalším přejmenování musí `puvodniSlug` "
+                        + "ukazovat pořád na tu uloženou adresu, ne na jméno z minula.");
+                }
+            }
+
+            if (zavod is null)
             {
                 zavod = new Zavod { SerieId = serie.Id, Slug = v.Slug, Nazev = v.Nazev };
                 db.Zavody.Add(zavod);

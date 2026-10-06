@@ -49,6 +49,12 @@ public enum PuvodVazby
 /// Ruční přiřazení správcem je nouzová páka. <see cref="Puvod"/> drží, kudy
 /// to přišlo — kvůli dohledání, ne kvůli právům.
 /// </para>
+/// <para>
+/// <b>Kdo je kapitán, neurčuje žádná z těch cest</b> (oponentura, 5. 10.
+/// 2026). Kód přidává posádku, nárok posádku, párování e-mailem jen to, co
+/// stojí v datech ročníku (majitel lodi, kormidelník účasti). Kapitánství
+/// uděluje správce ročníku — a <see cref="RoleUrcilId"/> je jeho rozhodnutí.
+/// </para>
 /// </summary>
 public class VazbaKLodi
 {
@@ -73,6 +79,56 @@ public class VazbaKLodi
     /// </summary>
     public Guid? PotvrdilId { get; set; }
     public Uzivatel? Potvrdil { get; set; }
+
+    /// <summary>
+    /// Kdo roli naposledy určil ručně. <b>Není to jen stopa, je to zámek:</b>
+    /// párování podle e-mailu ručně určenou roli nepřepíše. Bez toho by
+    /// příští přihlášení vrátilo roli, kterou správce právě opravil —
+    /// a opravovat by se to dalo donekonečna (oponentura, 5. 10. 2026).
+    /// </summary>
+    public Guid? RoleUrcilId { get; set; }
+    public Uzivatel? RoleUrcil { get; set; }
+
+    public DateTimeOffset? RoleUrcenaV { get; set; }
+
+    /// <summary>Určil roli člověk? Pak do ní automatické párování nesahá.</summary>
+    public bool RoleUrcenaRucne => RoleUrcilId is not null;
+}
+
+/// <summary>
+/// Změna role u lodi: kdo, komu, odkud kam a kdy. <b>Vlastní záznam, ne
+/// jen poslední stav na vazbě</b> — kapitánství je pravomoc a u pravomocí
+/// musí jít zpětně doložit, kdo je udělil. Odebraná vazba navíc po sobě na
+/// sobě samé nemá co nechat.
+/// <para>
+/// <c>Predchozi</c> prázdné znamená, že vazba teprve vznikla, <c>Nova</c>
+/// prázdné, že zmizela. <b>Zrušení přitom čte i párování</b>: koho správce
+/// od lodi odebral, tomu ji příští přihlášení nevrátí.
+/// </para>
+/// </summary>
+public class ZmenaRoleKLodi
+{
+    public int Id { get; set; }
+
+    public int LodId { get; set; }
+    public Lod? Lod { get; set; }
+
+    /// <summary>Komu se role změnila.</summary>
+    public Guid UzivatelId { get; set; }
+    public Uzivatel? Uzivatel { get; set; }
+
+    public RoleKLodi? Predchozi { get; set; }
+
+    public RoleKLodi? Nova { get; set; }
+
+    /// <summary>
+    /// Kdo změnu provedl. Jen stopa — smazání jeho účtu záznam neruší,
+    /// stejně jako u rozhodnutí o nároku.
+    /// </summary>
+    public Guid? ZmenilId { get; set; }
+    public Uzivatel? Zmenil { get; set; }
+
+    public DateTimeOffset ZmenenoV { get; set; }
 }
 
 /// <summary>Loď, ke které účet patří, i s rolí. Pro appku a pro „moje lodě".</summary>

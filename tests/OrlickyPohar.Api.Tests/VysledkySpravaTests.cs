@@ -217,8 +217,8 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
 
         // Bóra vyhrála, Anička v téhle rozjížďce výsledek nemá.
-        Assert.Null(await zapis.UlozAsync(rozjizdka,
-            [new(prihlasky[0]), new(prihlasky[1], PoradiVCili: 1)], default));
+        Assert.Null((await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0]), new(prihlasky[1], PoradiVCili: 1)], default, revize: rozjizdka.Revize)).Chyba);
 
         var vysledky = await db.Vysledky.AsNoTracking()
             .Where(v => v.RozjizdkaId == rozjizdka.Id)
@@ -260,8 +260,8 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         await using var scope = fixture.Services.CreateAsyncScope();
         var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
 
-        Assert.Null(await zapis.UlozAsync(rozjizdka,
-            [new(prihlasky[0], PoradiVCili: 2), new(prihlasky[1], PoradiVCili: 1)], default));
+        Assert.Null((await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 2), new(prihlasky[1], PoradiVCili: 1)], default, revize: rozjizdka.Revize)).Chyba);
 
         // Formulář čas nemá — prázdná hodnota z obrazovky ho nesmí smazat.
         var anicka = await db.Vysledky.AsNoTracking()
@@ -300,8 +300,8 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         // zastávce nebylo co zapsat.
         Assert.Equal(2, nacteny.Lode.Count);
 
-        Assert.Null(await zapis.UlozAsync(rozjizdka,
-            [new(prihlasky[0], PoradiVCili: 1), new(prihlasky[1], Kod: KodVysledku.Dnf)], default));
+        Assert.Null((await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 1), new(prihlasky[1], Kod: KodVysledku.Dnf)], default, revize: rozjizdka.Revize)).Chyba);
 
         Assert.Equal(2, await db.Ucasti.CountAsync(u => u.Zavod!.Serie!.Slug == slug));
     }
@@ -318,8 +318,8 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         var start = new DateTimeOffset(2026, 6, 20, 11, 0, 0, TimeSpan.FromHours(2));
         Assert.Null(await zapis.StartAsync(rozjizdka, start, default));
 
-        Assert.Null(await zapis.UlozAsync(rozjizdka,
-            [new(prihlasky[0], PoradiVCili: 1, DojezdV: start.AddMinutes(42))], default));
+        Assert.Null((await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 1, DojezdV: start.AddMinutes(42))], default, revize: rozjizdka.Revize)).Chyba);
 
         var v = await db.Vysledky.SingleAsync(x => x.RozjizdkaId == rozjizdka.Id && x.PoradiVCili == 1);
         Assert.Equal(TimeSpan.FromMinutes(42), v.NamerenyCas);
@@ -347,7 +347,8 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         var rozjizdka = await db.Rozjizdky.FirstAsync(r => r.Zavod!.Serie!.Slug == slug && r.Cislo == 1);
         var prihlaska = await db.Prihlasky.Where(p => p.Serie!.Slug == slug).Select(p => p.Id).FirstAsync();
 
-        Assert.NotNull(await zapis.UlozAsync(rozjizdka, [new(prihlaska, PoradiVCili: 5)], default));
+        Assert.NotNull((await zapis.UlozAsync(
+            rozjizdka, [new(prihlaska, PoradiVCili: 5)], default, revize: rozjizdka.Revize)).Chyba);
 
         var nacteny = await zapis.NactiAsync(rozjizdka, poradatel: true, default);
         Assert.False(nacteny.SmiZapisovat);
@@ -365,7 +366,8 @@ public class VysledkySpravaTests(PostgresFixture fixture)
 
         var cizi = await db.Prihlasky.Where(p => p.Serie!.Slug == "zapis-cizi-b").Select(p => p.Id).FirstAsync();
 
-        Assert.NotNull(await zapis.UlozAsync(rozjizdka, [new(cizi, PoradiVCili: 1)], default));
+        Assert.NotNull((await zapis.UlozAsync(
+            rozjizdka, [new(cizi, PoradiVCili: 1)], default, revize: rozjizdka.Revize)).Chyba);
     }
 
     [Fact]
@@ -487,10 +489,10 @@ public class VysledkySpravaTests(PostgresFixture fixture)
 
         // Anna viděla Aničku první, Bob obráceně. Druhé uložení to první
         // přepíše — ale snímek Anny musí zůstat.
-        Assert.Null(await zapis.UlozAsync(rozjizdka,
-            [new(prihlasky[0], PoradiVCili: 1), new(prihlasky[1], PoradiVCili: 2)], default, anna.Id));
-        Assert.Null(await zapis.UlozAsync(rozjizdka,
-            [new(prihlasky[0], PoradiVCili: 2), new(prihlasky[1], PoradiVCili: 1)], default, bob.Id));
+        Assert.Null((await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 1), new(prihlasky[1], PoradiVCili: 2)], default, anna.Id, rozjizdka.Revize)).Chyba);
+        Assert.Null((await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 2), new(prihlasky[1], PoradiVCili: 1)], default, bob.Id, rozjizdka.Revize)).Chyba);
 
         var navrhy = await zapis.NavrhyAsync(rozjizdka, anna.Id, default);
         Assert.Equal(2, navrhy.Navrhy.Count);
@@ -528,8 +530,94 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
 
         // Import ani úloha na pozadí nikoho přihlášeného nemají.
-        Assert.Null(await zapis.UlozAsync(rozjizdka, [new(prihlasky[0], PoradiVCili: 1)], default));
+        Assert.Null((await zapis.UlozAsync(
+            rozjizdka, [new(prihlasky[0], PoradiVCili: 1)], default, revize: rozjizdka.Revize)).Chyba);
 
         Assert.Empty(await db.ZapisyNavrhu.Where(n => n.RozjizdkaId == rozjizdka.Id).ToListAsync());
+    }
+
+    [Fact]
+    public async Task Stara_sada_neprepise_novejsi_opravu()
+    {
+        // Přesně nález B: telefon bez signálu drží sadu s jednou lodí,
+        // na webu se mezitím doplní druhá. Po připojení by stará sada
+        // novější doplnění smazala, protože uložení maže, co v sadě není.
+        var slug = "zapis-revize";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
+
+        var vychozi = rozjizdka.Revize;
+
+        // Web doplní obě lodě.
+        Assert.Null((await zapis.UlozAsync(
+            rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 1), new(prihlasky[1], PoradiVCili: 2)],
+            default, revize: vychozi)).Chyba);
+
+        // Telefon posílá sadu, ze které vycházel — jen první loď.
+        var pozde = await zapis.UlozAsync(
+            rozjizdka, [new(prihlasky[0], PoradiVCili: 1)], default, revize: vychozi);
+
+        Assert.True(pozde.Konflikt);
+        Assert.Equal(Zapis.RevizeNesedi, pozde.Chyba);
+
+        // Druhá loď v databázi zůstala.
+        Assert.Equal(2, await db.Vysledky.CountAsync(v => v.RozjizdkaId == rozjizdka.Id));
+    }
+
+    [Fact]
+    public async Task Zapis_bez_revize_se_neuklada()
+    {
+        // Krok 3: sada bez revize už neprojde. Uložení maže lodě, které
+        // v sadě nejsou, takže sada odeslaná naslepo umí smazat opravu,
+        // o které klient nevěděl.
+        var slug = "zapis-bez-revize";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
+
+        // Rozjížďka z ročníku výsledky má — a právě proto na tom záleží:
+        // sada bez revize by je přepsala a co v ní není, smazala.
+        var pred = await db.Vysledky.AsNoTracking()
+            .Where(v => v.RozjizdkaId == rozjizdka.Id)
+            .Select(v => new { v.Ucast!.PrihlaskaId, v.PoradiVCili, v.Kod })
+            .ToListAsync();
+
+        var vysledek = await zapis.UlozAsync(
+            rozjizdka, [new(prihlasky[0], PoradiVCili: 1)], default);
+
+        Assert.Equal(Zapis.RevizeChybi, vysledek.Chyba);
+        // Konflikt to není: klient neposlal nic, s čím by se dalo porovnávat.
+        Assert.False(vysledek.Konflikt);
+
+        var po = await db.Vysledky.AsNoTracking()
+            .Where(v => v.RozjizdkaId == rozjizdka.Id)
+            .Select(v => new { v.Ucast!.PrihlaskaId, v.PoradiVCili, v.Kod })
+            .ToListAsync();
+
+        Assert.Equal(pred, po);
+        Assert.Equal(0, rozjizdka.Revize);
+    }
+
+    [Fact]
+    public async Task Revize_roste_s_kazdym_ulozenim()
+    {
+        var slug = "zapis-revize-roste";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (_, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
+
+        var pred = rozjizdka.Revize;
+        Assert.Null((await zapis.UlozAsync(
+            rozjizdka, [new(prihlasky[0], PoradiVCili: 1)], default, revize: pred)).Chyba);
+        Assert.Equal(pred + 1, rozjizdka.Revize);
+
+        // A obrazovka ji vydává, aby ji klient měl co poslat zpátky.
+        var nacteny = await zapis.NactiAsync(rozjizdka, poradatel: true, default);
+        Assert.Equal(rozjizdka.Revize, nacteny.Revize);
     }
 }

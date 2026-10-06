@@ -11,6 +11,7 @@ import {
   type ZapisLod,
 } from "@/lib/vysledky";
 import { odeberPapirAkce, papirAkce, zapisAkce } from "./akce";
+import { KonceptVZapisu } from "./koncept-v-zapisu";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -143,6 +144,21 @@ export default async function ZapisRozjizdky({ params, searchParams }: Parametry
         </p>
       )}
 
+      {/* Koncept z telefonu: dá se z něj doplnit a tady se taky vyřeší, aby
+          po opravě nezůstal ležet a nepřepsal ji při návratu na cíl. */}
+      <KonceptVZapisu
+        serie={serie}
+        zavod={zavod}
+        cislo={zapis.cislo}
+        jmena={Object.fromEntries(zapis.lode.map((l) => [l.prihlaskaId, l.lod]))}
+        ulozene={zapis.lode.map((l) => ({
+          id: l.prihlaskaId,
+          poradi: l.poradiVCili ?? null,
+          kod: l.kod ?? null,
+        }))}
+        ulozeno={Boolean(zpravy.stav && !zpravy.chyba)}
+      />
+
       {zapis.procNelze && (
         <p className="hlaska" role="status">
           {zapis.procNelze}
@@ -160,6 +176,9 @@ export default async function ZapisRozjizdky({ params, searchParams }: Parametry
           <input type="hidden" name="zavod" value={zavod} />
           <input type="hidden" name="cislo" value={zapis.cislo} />
           <input type="hidden" name="lode" value={zapis.lode.map((l) => l.prihlaskaId).join(",")} />
+          {/* Podoba sady, ze které tenhle formulář vyšel. Když mezitím uloží
+              někdo jiný, API uložení odmítne a rozepsaný zápis zůstane. */}
+          <input type="hidden" name="revize" value={zapis.revize} />
 
           <div className="tabulka-obal zapis">
             <table>

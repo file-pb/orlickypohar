@@ -4,6 +4,14 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 // Jen typy: hodnoty z lib/vysledky by do prohlížeče zatáhly i čtení tokenu.
 import type { KodVysledku, ZapisLod, ZapisRadek, ZapisRozjizdky } from "@/lib/vysledky";
+import {
+  klicKonceptu,
+  precti,
+  rozdily,
+  zahod,
+  zapamatuj,
+  type Koncept,
+} from "../koncept";
 import { odstartujAkce, pridejLodAkce, ulozCilAkce, znakAkce } from "./akce";
 
 /**
@@ -86,16 +94,22 @@ export function Cil({
   );
   const [ukladani, setUkladani] = useState<Ukladani>("ulozeno");
   const [chyba, setChyba] = useState<string | null>(null);
-  // Záloha z telefonu, která se k tomuhle zápisu nehodí — viz `Zaloha`.
-  const [cizi, setCizi] = useState<Zaloha | null>(null);
+  // Rozjížďku uložil mezitím někdo jiný. Opakovat tutéž sadu nemá smysl,
+  // dokud to člověk nerozhodne — a svoje klepnutí si obrazovka nechává.
+  const [konflikt, setKonflikt] = useState(false);
+  // Koncept z telefonu, který se k tomuhle zápisu nehodí — viz `../koncept`.
+  const [cizi, setCizi] = useState<Koncept | null>(null);
 
-  const klic = `cil:${serie}:${zavod}:${zapis.cislo}`;
+  const klic = klicKonceptu(serie, zavod, zapis.cislo);
 
   // Nejnovější stav pro ukládání. Stav Reactu by ve smyčce níž byl ten
   // z doby, kdy ukládání začalo.
   const posledni = useRef({ dojeti, kody });
   const bezi = useRef(false);
   const znovu = useRef(false);
+  // Podoba sady, ze které obrazovka vychází. Po každém uložení ji server
+  // posune; dokud sedí, ví se, že mezitím nikdo jiný neuložil.
+  const revize = useRef(zapis.revize);
 
   const uloz = useCallback(async () => {
     if (bezi.current) {
@@ -106,20 +120,29 @@ export function Cil({
     setUkladani("ukladam");
 
     let hlaska: string | null = null;
+    let kolize = false;
     do {
       znovu.current = false;
       const { dojeti, kody } = posledni.current;
       try {
-        hlaska = (await ulozCilAkce(serie, zavod, zapis.cislo, radky(dojeti, kody))).chyba;
+        const vysledek = await ulozCilAkce(
+          serie, zavod, zapis.cislo, radky(dojeti, kody), revize.current);
+        hlaska = vysledek.chyba;
+        kolize = vysledek.konflikt === true;
+        if (vysledek.revize !== undefined) revize.current = vysledek.revize;
       } catch {
         hlaska = "Spojení se nepodařilo.";
       }
-    } while (znovu.current);
+      // Při konfliktu se neopakuje ani rozepsané klepnutí: poslalo by
+      // tutéž starou revizi a skončilo by zase konfliktem.
+    } while (znovu.current && !kolize);
 
     bezi.current = false;
     setChyba(hlaska);
+    setKonflikt(kolize);
     setUkladani(hlaska ? "chyba" : "ulozeno");
-    // Uložené je na serveru; záloha v telefonu už nemá co chránit.
+    // Uložené je na serveru; záloha v telefonu už nemá co chránit. Při
+    // konfliktu zůstává — je to jediná kopie těch klepnutí.
     if (!hlaska) zahod(klic);
   }, [serie, zavod, zapis.cislo, klic]);
 
@@ -145,9 +168,10 @@ export function Cil({
       return;
     }
 
-    posledni.current = { dojeti: zaloha.dojeti, kody: zaloha.kody };
+    const kodyKonceptu = zaloha.kody as Record<number, KodVysledku>;
+    posledni.current = { dojeti: zaloha.dojeti, kody: kodyKonceptu };
     setDojeti(zaloha.dojeti);
-    setKody(zaloha.kody);
+    setKody(kodyKonceptu);
     void uloz();
     // Jen při připojení: běží to proti stavu, se kterým se obrazovka
     // otevřela, a `key` stránky se při změně zápisu stejně vymění.
@@ -157,8 +181,11 @@ export function Cil({
   // Neuložený stav se zkusí odeslat sám: hned, jak se telefon chytí sítě,
   // a jinak co půl minuty. Bez toho by čekal na další klepnutí — a to
   // po dojezdu poslední lodi nemusí přijít.
+  //
+  // Konflikt se neopakuje: sada vychází ze starší podoby a každý další
+  // pokus skončí stejně. Čeká na člověka, ne na síť.
   useEffect(() => {
-    if (ukladani !== "chyba") return;
+    if (ukladani !== "chyba" || konflikt) return;
 
     const zkus = () => void uloz();
     window.addEventListener("online", zkus);
@@ -188,6 +215,20 @@ export function Cil({
 
   useDisplejSviti();
   const ted = useTed(start != null);
+
+  // Čím se koncept z telefonu liší od toho, co leží na serveru. Počítá se
+  // z podoby, se kterou se stránka otevřela — `key` stránky se při změně
+  // zápisu vymění, takže čerstvější už nebude.
+  const rozdilyKonceptu = cizi
+    ? rozdily(
+        cizi,
+        zapis.lode.map((l) => ({
+          id: l.prihlaskaId,
+          poradi: l.poradiVCili ?? null,
+          kod: l.kod ?? null,
+        })),
+      )
+    : [];
 
   const dojela = new Set(dojeti.map((d) => d.id));
   const zbyvaji = vsechny.filter((l) => !dojela.has(l.prihlaskaId) && !kody[l.prihlaskaId]);
@@ -297,41 +338,85 @@ export function Cil({
         </span>
       </div>
 
+      {/* Co by odeslání konceptu udělalo, se musí dát přečíst předtím, než
+          se na to klepne. „Přesto odeslat" samo o sobě neříká, že přepíše
+          uložený zápis — a při zápisu z vody je to rozdíl mezi opravou
+          a ztraceným dojezdem (oponentura, 6. 10. 2026). */}
       {cizi && (
-        <p className="hlaska chyba" role="alert">
-          V telefonu leží neodeslaný zápis z {hodiny(new Date(cizi.kdy).toISOString())} ({cizi.dojeti.length}{" "}
-          dojetých). Zápis se mezitím změnil — mohl ho uložit druhý telefon.{" "}
-          <button
-            type="button"
-            className="maly"
-            onClick={() => {
-              zmen(cizi.dojeti, cizi.kody);
-              setCizi(null);
-            }}
-          >
-            Přesto odeslat
-          </button>{" "}
-          <button
-            type="button"
-            className="maly"
-            onClick={() => {
-              zahod(klic);
-              setCizi(null);
-            }}
-          >
-            Zahodit
-          </button>
-        </p>
+        <div className="hlaska chyba" role="alert">
+          <p>
+            V telefonu leží neodeslaný zápis z {hodiny(new Date(cizi.kdy).toISOString())} (
+            {cizi.dojeti.length} dojetých). Zápis se mezitím změnil — mohl ho uložit druhý
+            telefon.
+          </p>
+          {rozdilyKonceptu.length > 0 ? (
+            <>
+              <p>Odeslat ho znamená přepsat uložený zápis takhle:</p>
+              <ul>
+                {rozdilyKonceptu.map((r) => (
+                  <li key={r.id}>
+                    {lode.get(r.id)?.lod ?? `loď ${r.id}`} —{" "}
+                    {r.proc === "chybi"
+                      ? r.kod
+                        ? `přibude s kódem ${r.kod.toUpperCase()}`
+                        : `přibude na ${r.poradi}. místo`
+                      : r.kod
+                        ? `dostane kód ${r.kod.toUpperCase()}`
+                        : `přejde na ${r.poradi}. místo`}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p>Uložený zápis ho už obsahuje, takže odesílat není co.</p>
+          )}
+          <p>
+            <button
+              type="button"
+              className="maly"
+              onClick={() => {
+                zmen(cizi.dojeti, cizi.kody as Record<number, KodVysledku>);
+                setCizi(null);
+              }}
+            >
+              Odeslat z telefonu a přepsat uložené
+            </button>{" "}
+            <button
+              type="button"
+              className="maly"
+              onClick={() => {
+                zahod(klic);
+                setCizi(null);
+              }}
+            >
+              Zahodit zápis z telefonu
+            </button>
+          </p>
+        </div>
       )}
 
       {chyba && (
         <p className="hlaska chyba" role="alert">
           {chyba}{" "}
-          {ukladani === "chyba" && "Klepnutí zůstávají v telefonu a zkusí odejít samy. "}
-          {ukladani === "chyba" && (
-            <button type="button" className="maly" onClick={() => void uloz()}>
-              Uložit znovu
-            </button>
+          {/* Konflikt je jiná situace než výpadek: opakovat tutéž sadu
+              nepomůže, protože vychází ze starší podoby. Klepnutí zůstávají
+              v telefonu a člověk rozhodne podle porovnání zápisů. */}
+          {konflikt ? (
+            <>
+              Tvoje klepnutí zůstávají v telefonu.{" "}
+              <a href={`/sprava/${serie}/vysledky/${zavod}/${zapis.cislo}/porovnani`}>
+                Porovnat zápisy
+              </a>
+            </>
+          ) : (
+            ukladani === "chyba" && (
+              <>
+                Klepnutí zůstávají v telefonu a zkusí odejít samy.{" "}
+                <button type="button" className="maly" onClick={() => void uloz()}>
+                  Uložit znovu
+                </button>
+              </>
+            )
           )}
         </p>
       )}
@@ -587,46 +672,6 @@ function TlacitkoLodi({
       {pod && <small>{pod}</small>}
     </button>
   );
-}
-
-/**
- * Neodeslaný stav obrazovky v úložišti prohlížeče. `otisk` je podoba
- * zápisu na serveru v době, kdy záloha vznikla: když se liší, uložil
- * mezitím někdo jiný a záloha se nesmí použít sama od sebe.
- */
-type Zaloha = { otisk: string; kdy: number; dojeti: Dojezd[]; kody: Record<number, KodVysledku> };
-
-/**
- * Úložiště prohlížeče může být zakázané (soukromé okno, zablokovaná data)
- * a zápis do něj umí vyhodit výjimku. Obrazovka proto musí fungovat i bez
- * něj — je to pojistka navíc, ne podmínka.
- */
-function zapamatuj(klic: string, zaloha: Zaloha) {
-  try {
-    window.localStorage.setItem(klic, JSON.stringify(zaloha));
-  } catch {
-    // Bez zálohy se zapisuje dál, jen bez pojistky.
-  }
-}
-
-function precti(klic: string): Zaloha | null {
-  try {
-    const ulozene = window.localStorage.getItem(klic);
-    if (!ulozene) return null;
-
-    const zaloha = JSON.parse(ulozene) as Zaloha;
-    return Array.isArray(zaloha?.dojeti) ? zaloha : null;
-  } catch {
-    return null;
-  }
-}
-
-function zahod(klic: string) {
-  try {
-    window.localStorage.removeItem(klic);
-  } catch {
-    // Nevadí: co se nedá smazat, se stejně použije jen při shodném otisku.
-  }
 }
 
 /** Celá sada pro API: dojeté s pořadím a časem, zbylé s kódem. */

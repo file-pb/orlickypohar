@@ -46,6 +46,19 @@ public class Serie
     /// </summary>
     public int PocetSkrtu { get; set; } = 1;
 
+    /// <summary>
+    /// Verze bodovacích pravidel, podle které se tenhle ročník počítá.
+    /// <para>
+    /// <b>Je to číslo na ročníku, ne poslední podoba kódu</b> (oponentura,
+    /// 5. 10. 2026). Body se počítají při čtení, takže dokud byla pravidla
+    /// konstanty v kódu, změnila jejich oprava body i u ročníku, který se
+    /// vyhlásil loni — a z uložených pořadí se nedalo zjistit, podle čeho
+    /// se vyhlašovalo. Co která verze znamená, je v
+    /// <c>Features/Bodovani/PravidlaBodovani.cs</c>.
+    /// </para>
+    /// </summary>
+    public int VerzePravidel { get; set; } = 1;
+
     public List<Kategorie> Kategorie { get; set; } = [];
 }
 

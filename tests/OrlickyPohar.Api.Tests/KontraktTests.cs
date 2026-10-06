@@ -302,4 +302,40 @@ public class KontraktTests
         // neměl začít používat omylem.
         Assert.All(Mock().Clanky!, c => Assert.Equal(FormatClanku.Text, c.Format));
     }
+
+    // --- Režim importu (oponentura, 5. 10. 2026) ----------------------------
+
+    [Fact]
+    public void Prazdny_rezim_je_bezpecny()
+    {
+        // Výchozí režim musí být ten, který nepřepíše provozní výsledky —
+        // kdo nic nenapíše, nemá dostat tu nebezpečnou variantu.
+        Assert.Equal((RezimImportu.Bezpecny, null), Prepis.Rezim(null));
+        Assert.Equal((RezimImportu.Bezpecny, null), Prepis.Rezim("  "));
+    }
+
+    [Theory]
+    [InlineData("nahled", RezimImportu.Nahled)]
+    [InlineData("NAHLED", RezimImportu.Nahled)]
+    [InlineData("bezpecny", RezimImportu.Bezpecny)]
+    [InlineData("oprava", RezimImportu.Oprava)]
+    [InlineData(" Oprava ", RezimImportu.Oprava)]
+    public void Rezim_se_cte_bez_ohledu_na_velikost_pismen(string zDotazu, RezimImportu ceka)
+    {
+        var (rezim, chyba) = Prepis.Rezim(zDotazu);
+        Assert.Null(chyba);
+        Assert.Equal(ceka, rezim);
+    }
+
+    [Theory]
+    [InlineData("oprva")]
+    [InlineData("1")]
+    [InlineData("99")]
+    public void Neznamy_rezim_je_chyba_ne_tichy_navrat_k_bezpecnemu(string zDotazu)
+    {
+        // Kdo píše `rezim=oprva`, čeká opravu. Dostat místo ní bezpečný
+        // režim je horší než chyba, protože import tiše neudělá, co měl.
+        var (_, chyba) = Prepis.Rezim(zDotazu);
+        Assert.Equal(Prepis.NeznamyRezim, chyba);
+    }
 }

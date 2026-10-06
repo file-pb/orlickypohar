@@ -14,16 +14,27 @@ import { nastavZnak, odstartuj, ulozCil, type ZapisLod, type ZapisRadek } from "
 
 const platne = (cislo: number) => Number.isInteger(cislo) && cislo > 0;
 
+/**
+ * Uloží sadu i s revizí, ze které obrazovka vyšla, a vrátí novou revizi.
+ *
+ * <b>Konflikt se vrací zvlášť.</b> Znamená, že rozjížďku mezitím uložil
+ * někdo jiný; opakovat tutéž sadu nemá smysl, dokud to člověk nerozhodne.
+ */
 export async function ulozCilAkce(
   serie: string,
   zavod: string,
   cislo: number,
   radky: ZapisRadek[],
-): Promise<{ chyba: string | null }> {
+  revize: number,
+): Promise<{ chyba: string | null; konflikt?: boolean; revize?: number }> {
   if (!platne(cislo)) return { chyba: "Neplatné číslo rozjížďky." };
 
-  const vysledek = await ulozCil(serie, zavod, cislo, radky);
-  return { chyba: "chyba" in vysledek ? vysledek.chyba : null };
+  const vysledek = await ulozCil(serie, zavod, cislo, radky, revize);
+
+  if ("chyba" in vysledek)
+    return { chyba: vysledek.chyba, konflikt: vysledek.konflikt };
+
+  return { chyba: null, revize: vysledek.zapis.revize };
 }
 
 export async function odstartujAkce(

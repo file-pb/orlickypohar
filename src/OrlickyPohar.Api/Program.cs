@@ -90,6 +90,7 @@ try
     builder.Services.AddScoped<KodySprava>();
     // Nárok na loď, který potvrzuje kapitán.
     builder.Services.AddScoped<NarokySprava>();
+    builder.Services.AddScoped<KapitanstviSprava>();
     // Bóje na trati: pípnutí polohy pořadatelem z webu i z appky.
     builder.Services.AddScoped<BojeSprava>();
     if (builder.Configuration.GetValue<bool>("Prevzate:Sber"))
@@ -155,6 +156,17 @@ try
                     + "Fotky__VerejnaAdresa a klíče v /run/secrets). Nahrávání fotek neběží.");
 
     // Liveness: běží proces. Readiness: umí obsloužit provoz (drží i databáze).
+    // Z jakého commitu tenhle proces běží. Nasazení si tím po sobě ověří,
+    // že na serveru opravdu visí to, co posílalo: `Healthy` a HTTP 200 vrací
+    // i stará verze, takže samy o sobě nic o verzi nedokazují.
+    app.MapGet("/verze", () => Results.Ok(new
+        {
+            verze = Environment.GetEnvironmentVariable("VERZE") ?? "neznama",
+        }))
+        .WithTags("Provoz")
+        .WithSummary("Commit, ze kterého je běžící image")
+        .ExcludeFromDescription();
+
     app.MapHealthChecks("/health", new() { Predicate = _ => false });
     app.MapHealthChecks("/health/ready", new() { Predicate = c => c.Tags.Contains("ready") });
 
@@ -195,6 +207,7 @@ try
         app.MapPrihlasky();
         app.MapSmernice();
         app.MapKody();
+        app.MapKapitanstvi();
         app.MapBoje();
         app.MapSpravaPoradatelu();
         app.MapNaklady();

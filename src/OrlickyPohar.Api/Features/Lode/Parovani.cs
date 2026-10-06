@@ -22,6 +22,15 @@ namespace OrlickyPohar.Api.Features.Lode;
 /// i kdyby párování podruhé nabídlo posádku. Jinak by druhé přihlášení
 /// sebralo práva, která někdo vědomě udělil.
 /// </para>
+/// <para>
+/// <b>Ruční rozhodnutí má přednost.</b> Co u lodi určil správce, párování
+/// nepřepíše — ani roli, kterou snížil, ani vazbu, kterou odebral. Bez toho
+/// by příští přihlášení opravu zrušilo a oprava by se musela dělat pořád
+/// dokola (oponentura, 5. 10. 2026). Samotná značka
+/// <see cref="PuvodVazby.Rucne"/> na to nestačí: rozhoduje
+/// <see cref="VazbaKLodi.RoleUrcenaRucne"/> a u odebraných vazeb historie
+/// v <see cref="ZmenaRoleKLodi"/>.
+/// </para>
 /// </summary>
 public class Parovani(AppDbContext db, TimeProvider cas, ILogger<Parovani> log)
 {
@@ -80,9 +89,25 @@ public class Parovani(AppDbContext db, TimeProvider cas, ILogger<Parovani> log)
         foreach (var lod in jakoMajitel) role[lod] = RoleKLodi.Majitel;
         if (role.Count == 0) return 0;
 
+        var lodeKParovani = role.Keys.ToList();
+
         var uz = await db.VazbyKLodim
-            .Where(v => v.UzivatelId == uzivatelId && role.Keys.Contains(v.LodId))
+            .Where(v => v.UzivatelId == uzivatelId && lodeKParovani.Contains(v.LodId))
             .ToDictionaryAsync(v => v.LodId, ct);
+
+        // Lodě, od kterých tenhle účet někdo odebral. Rozhoduje poslední
+        // změna: odebral-a-vrátil skončí u vrácení, takže se jako odebrané
+        // pamatuje jen to, co odebráním končí. Řádků je pár a poslední ze
+        // skupiny se do SQL stejně nepřeloží, takže se to sečte tady.
+        var odebrane = (await db.ZmenyRoli
+                .Where(z => z.UzivatelId == uzivatelId && lodeKParovani.Contains(z.LodId))
+                .Select(z => new { z.LodId, z.Nova, z.ZmenenoV, z.Id })
+                .ToListAsync(ct))
+            .GroupBy(z => z.LodId)
+            .Where(g => g.OrderByDescending(z => z.ZmenenoV).ThenByDescending(z => z.Id)
+                .First().Nova is null)
+            .Select(g => g.Key)
+            .ToHashSet();
 
         var ted = cas.GetUtcNow();
         var pribylo = 0;
@@ -90,8 +115,21 @@ public class Parovani(AppDbContext db, TimeProvider cas, ILogger<Parovani> log)
         {
             if (uz.TryGetValue(lodId, out var stara))
             {
+                // Co určil člověk, automat nepřepíše — ani povýšením.
+                if (stara.RoleUrcenaRucne) continue;
+
                 // Nižší číslo role znamená víc práv. Povyšuje se, nesnižuje.
                 if (nova < stara.Role) stara.Role = nova;
+                continue;
+            }
+
+            // Odebranou vazbu párování nevrací. Jinak by stačilo se přihlásit
+            // a člověk by byl u lodi zpátky, i když ho od ní správce odebral.
+            if (odebrane.Contains(lodId))
+            {
+                log.LogInformation(
+                    "Vazba účtu {Uzivatel} k lodi {Lod} byla odebraná, párování ji nevrací",
+                    uzivatelId, lodId);
                 continue;
             }
 

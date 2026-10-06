@@ -31,6 +31,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<SouborKeSmazani> SouboryKeSmazani => Set<SouborKeSmazani>();
     public DbSet<PlachetniSmernice> Smernice => Set<PlachetniSmernice>();
     public DbSet<VazbaKLodi> VazbyKLodim => Set<VazbaKLodi>();
+    public DbSet<ZmenaRoleKLodi> ZmenyRoli => Set<ZmenaRoleKLodi>();
     public DbSet<PripojovaciKod> PripojovaciKody => Set<PripojovaciKod>();
     public DbSet<NarokNaLod> Naroky => Set<NarokNaLod>();
     public DbSet<Features.Boje.Boje> Boje => Set<Features.Boje.Boje>();
@@ -51,6 +52,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // bez ní by migrace doplnila stávajícím ročníkům `false` a schovala
         // jim výsledky regat, aniž o to kdokoliv požádal.
         serie.Property(x => x.VysledkyZavoduVerejne).HasDefaultValue(true);
+        // Totéž u verze bodovacích pravidel: nula by znamenala „neznámá
+        // pravidla" a výpočet by na stávajících ročnících spadl. Jednička je
+        // ta, podle které se vyhlašoval ročník 2026 i 2027.
+        serie.Property(x => x.VerzePravidel).HasDefaultValue(1);
 
         var kategorie = b.Entity<Kategorie>();
         kategorie.Property(x => x.Nazev).HasMaxLength(60).IsRequired();
@@ -126,6 +131,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // stejných karet ve výpisu.
         prevzaty.HasIndex(x => x.Odkaz).IsUnique();
 
+        var smernice = b.Entity<PlachetniSmernice>();
+        smernice.Property(x => x.DuvodStazeni).HasMaxLength(Vyveseni.DuvodNejvic);
+        // Kdo stáhl, je jen stopa — jeho smazání záznam o vyvěšení neruší.
+        smernice.HasOne(x => x.Stahl).WithMany().HasForeignKey(x => x.StahlId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         var kLodi = b.Entity<VazbaKLodi>();
         // Jeden účet má u jedné lodi jednu roli. Bez indexu by druhé
         // párování — třeba e-mailem i kódem — vyrobilo dvě vazby a loď by
@@ -139,6 +150,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .OnDelete(DeleteBehavior.Cascade);
         // Kdo potvrdil, je jen stopa — jeho smazání vazbu neruší.
         kLodi.HasOne(x => x.Potvrdil).WithMany().HasForeignKey(x => x.PotvrdilId)
+            .OnDelete(DeleteBehavior.SetNull);
+        // Kdo určil roli, je taky jen stopa. Značka „určil člověk" ale zmizet
+        // nesmí, jinak by párování roli zase přepsalo — proto se při smazání
+        // účtu správce maže jen jméno, ne `RoleUrcenaV`.
+        kLodi.HasOne(x => x.RoleUrcil).WithMany().HasForeignKey(x => x.RoleUrcilId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        var zmenaRole = b.Entity<ZmenaRoleKLodi>();
+        // Historie se čte po lodi (obrazovka správce) a po účtu s lodí
+        // (párování se ptá, jestli vazba nebyla odebraná).
+        zmenaRole.HasIndex(x => x.LodId);
+        zmenaRole.HasIndex(x => new { x.UzivatelId, x.LodId });
+        zmenaRole.HasOne(x => x.Lod).WithMany().HasForeignKey(x => x.LodId)
+            .OnDelete(DeleteBehavior.Cascade);
+        zmenaRole.HasOne(x => x.Uzivatel).WithMany().HasForeignKey(x => x.UzivatelId)
+            .OnDelete(DeleteBehavior.Cascade);
+        zmenaRole.HasOne(x => x.Zmenil).WithMany().HasForeignKey(x => x.ZmenilId)
             .OnDelete(DeleteBehavior.SetNull);
 
         var kod = b.Entity<PripojovaciKod>();

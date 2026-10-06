@@ -10,7 +10,7 @@ namespace OrlickyPohar.Api.Tests;
 /// <summary>
 /// Připojení k lodi kódem proti reálnému PostgreSQL. Co se tu ověřuje, je
 /// přesně to, co by jinak pustilo cizího člověka k cizí lodi: platnost
-/// kódu, role prvního a dalších, a že se poslední kapitán nedá odebrat.
+/// kódu, role připojených, a že se poslední kapitán nedá odebrat.
 /// <para>
 /// Stejně jako u párování se nic nemaže — databázi sdílí celá kolekce.
 /// Každý test si vyrobí vlastní loď a účty.
@@ -22,11 +22,14 @@ public class KodyPripojeniTests(PostgresFixture fixture)
 {
     private static readonly DateTimeOffset Ted = new(2026, 10, 4, 12, 0, 0, TimeSpan.Zero);
 
-    private (AppDbContext Db, KodySprava Kody) Sluzby()
+    private (AppDbContext Db, KodySprava Kody, KapitanstviSprava Kapitanstvi) Sluzby()
     {
         var scope = fixture.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        return (db, new KodySprava(db, TimeProvider.System, NullLogger<KodySprava>.Instance));
+        return (
+            db,
+            new KodySprava(db, TimeProvider.System, NullLogger<KodySprava>.Instance),
+            new KapitanstviSprava(db, TimeProvider.System, NullLogger<KapitanstviSprava>.Instance));
     }
 
     private static async Task<Lod> LodAsync(AppDbContext db)
@@ -56,9 +59,9 @@ public class KodyPripojeniTests(PostgresFixture fixture)
     }
 
     [Fact]
-    public async Task Prvni_kodem_je_kapitan_druhy_posadka()
+    public async Task Kodem_se_pripoji_posadka_a_prvni_neni_vyjimka()
     {
-        var (db, kody) = Sluzby();
+        var (db, kody, _) = Sluzby();
         var lod = await LodAsync(db);
         var vystavil = await UcetAsync(db);
         var kod = await kody.VystavAsync(lod.Id, vystavil.Id, default);
@@ -71,16 +74,21 @@ public class KodyPripojeniTests(PostgresFixture fixture)
 
         Assert.Null(chybaA);
         Assert.Null(chybaB);
-        Assert.Equal(RoleKLodi.Kapitan, a!.Role);
+        // Nález A: pořadí u stolu o pravomoci nerozhoduje. Loď zůstane bez
+        // kapitána, dokud ho neurčí správce — a to je v pořádku.
+        Assert.Equal(RoleKLodi.Posadka, a!.Role);
         Assert.Equal(RoleKLodi.Posadka, b!.Role);
         Assert.Equal(lod.Nazev, a.Nazev);
         Assert.False(a.JizBylo);
+        Assert.Empty(await db.VazbyKLodim
+            .Where(v => v.LodId == lod.Id && v.Role == RoleKLodi.Kapitan)
+            .ToListAsync());
     }
 
     [Fact]
     public async Task Opsany_kod_s_mezerami_a_malymi_pismeny_projde()
     {
-        var (db, kody) = Sluzby();
+        var (db, kody, _) = Sluzby();
         var lod = await LodAsync(db);
         var kod = await kody.VystavAsync(lod.Id, (await UcetAsync(db)).Id, default);
         var ucet = await UcetAsync(db);
@@ -95,7 +103,7 @@ public class KodyPripojeniTests(PostgresFixture fixture)
     [Fact]
     public async Task Druhe_zadani_tehoz_kodu_roli_nemeni()
     {
-        var (db, kody) = Sluzby();
+        var (db, kody, _) = Sluzby();
         var lod = await LodAsync(db);
         var kod = await kody.VystavAsync(lod.Id, (await UcetAsync(db)).Id, default);
         var ucet = await UcetAsync(db);
@@ -105,14 +113,14 @@ public class KodyPripojeniTests(PostgresFixture fixture)
 
         Assert.Null(chyba);
         Assert.True(znovu!.JizBylo);
-        Assert.Equal(RoleKLodi.Kapitan, znovu.Role);
+        Assert.Equal(RoleKLodi.Posadka, znovu.Role);
         Assert.Single(await db.VazbyKLodim.Where(v => v.UzivatelId == ucet.Id).ToListAsync());
     }
 
     [Fact]
     public async Task Propadly_kod_neprojde()
     {
-        var (db, kody) = Sluzby();
+        var (db, kody, _) = Sluzby();
         var lod = await LodAsync(db);
         var kod = await kody.VystavAsync(lod.Id, (await UcetAsync(db)).Id, default);
 
@@ -130,7 +138,7 @@ public class KodyPripojeniTests(PostgresFixture fixture)
     [Fact]
     public async Task Vymysleny_kod_dava_tutez_odpoved_jako_propadly()
     {
-        var (db, kody) = Sluzby();
+        var (db, kody, _) = Sluzby();
 
         // Z odpovědi nesmí jít vyčíst, že loď s takovým kódem existuje.
         var (pripojeni, chyba) = await kody.PripojAsync("ZZZZZZ", (await UcetAsync(db)).Id, default);
@@ -142,13 +150,16 @@ public class KodyPripojeniTests(PostgresFixture fixture)
     [Fact]
     public async Task Posledni_kapitan_se_odebrat_neda()
     {
-        var (db, kody) = Sluzby();
+        var (db, kody, kapitanstvi) = Sluzby();
         var lod = await LodAsync(db);
         var kod = await kody.VystavAsync(lod.Id, (await UcetAsync(db)).Id, default);
         var kapitan = await UcetAsync(db);
         var posadka = await UcetAsync(db);
+        var spravce = await UcetAsync(db);
         await kody.PripojAsync(kod.Kod, kapitan.Id, default);
         await kody.PripojAsync(kod.Kod, posadka.Id, default);
+        // Kapitána dělá správce, ne kód — od 5. 10. 2026 je to jediná cesta.
+        Assert.Null(await kapitanstvi.UrciKapitanaAsync(lod.Id, kapitan.Id, spravce.Id, default));
 
         var vazby = await kody.PripojeniAsync(lod.Id, default);
         var vazbaKapitana = vazby.Single(v => v.Role == RoleKLodi.Kapitan);
@@ -164,13 +175,15 @@ public class KodyPripojeniTests(PostgresFixture fixture)
     [Fact]
     public async Task Kod_smi_vystavit_kapitan_ne_posadka()
     {
-        var (db, kody) = Sluzby();
+        var (db, kody, kapitanstvi) = Sluzby();
         var lod = await LodAsync(db);
         var kod = await kody.VystavAsync(lod.Id, (await UcetAsync(db)).Id, default);
         var kapitan = await UcetAsync(db);
         var posadka = await UcetAsync(db);
+        var spravce = await UcetAsync(db);
         await kody.PripojAsync(kod.Kod, kapitan.Id, default);
         await kody.PripojAsync(kod.Kod, posadka.Id, default);
+        await kapitanstvi.UrciKapitanaAsync(lod.Id, kapitan.Id, spravce.Id, default);
 
         Assert.True(await kody.SmiVystavitAsync(lod.Id, kapitan.Id, default));
         Assert.False(await kody.SmiVystavitAsync(lod.Id, posadka.Id, default));

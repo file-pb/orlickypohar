@@ -65,7 +65,10 @@ public record ZavodVstup(
     DateOnly? PuvodniDatum = null,
     // Starší soubory druh neznají — všechno v nich jsou kola poháru.
     DruhZastavky Druh = DruhZastavky.Pohar,
-    int PosunDoSerie = 0);
+    int PosunDoSerie = 0,
+    // Pod kterou adresou tahle regata v ročníku už je. Vyplňuje se jen při
+    // přejmenování — viz `ImportHandler`, oddíl o přejmenování.
+    string? PuvodniSlug = null);
 
 /// <summary>
 /// Článek ročníku nebo zastávky. <c>Zavod</c> je slug zastávky ze stejného
@@ -105,7 +108,10 @@ public record SerieVstup(
     int PocetSkrtu = 1,
     // Smí čtenář vidět výsledky jednotlivých regat? Výchozí ano, aby se
     // mlčení zapínalo vědomě a starší soubory se nemusely přepisovat.
-    bool VysledkyZavoduVerejne = true);
+    bool VysledkyZavoduVerejne = true,
+    // Verze bodovacích pravidel. Starší soubory ji neznají a jednička je
+    // ta, podle které se vyhlašoval ročník 2026 i 2027.
+    int VerzePravidel = 1);
 
 /// <summary>
 /// Kolik řádků import založil, kolik jich našel a kolik smazal. Druhý běh

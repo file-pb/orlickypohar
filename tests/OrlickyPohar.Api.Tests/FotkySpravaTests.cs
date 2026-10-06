@@ -27,7 +27,8 @@ public class FotkySpravaTests(PostgresFixture fixture)
         public bool Pripraveno => true;
         public string? VerejnaAdresa => "https://foto.example";
 
-        public Task UlozAsync(string klic, byte[] data, string typ, CancellationToken ct)
+        public Task UlozAsync(
+            string klic, byte[] data, string typ, CancellationToken ct, string? cache = null)
         {
             Soubory[klic] = data;
             return Task.CompletedTask;

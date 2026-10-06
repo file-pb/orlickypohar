@@ -188,4 +188,43 @@ public class ZapisTests
         // z webu pořadatel ještě nepřijal, takže tlačítko v cíli nedostane.
         Assert.Equal(naRegate, Zapis.NaRegate(stav));
     }
+
+    [Fact]
+    public void Zapis_bez_revize_neprojde()
+    {
+        // Není to „tak tedy bez kontroly": uložení maže lodě, které v sadě
+        // nejsou, takže sada odeslaná naslepo umí smazat opravu, o které
+        // klient nevěděl (oponentura, 5. 10. 2026).
+        Assert.Equal(Zapis.RevizeChybi, Zapis.ProcNejdeUlozitRevizi(null, 3));
+    }
+
+    [Fact]
+    public void Starsi_revize_neprepise_novejsi()
+    {
+        // Telefon bez signálu drží sadu z revize 2, zatímco na webu už někdo
+        // uložil revizi 3. Jeho uložení by novější opravu smazalo.
+        Assert.Equal(Zapis.RevizeNesedi, Zapis.ProcNejdeUlozitRevizi(2, 3));
+
+        // I novější číslo, než jaké server zná, je nesoulad — klient vychází
+        // z něčeho, co tady nevzniklo.
+        Assert.Equal(Zapis.RevizeNesedi, Zapis.ProcNejdeUlozitRevizi(4, 3));
+    }
+
+    [Fact]
+    public void Shodna_revize_projde()
+        => Assert.Null(Zapis.ProcNejdeUlozitRevizi(3, 3));
+
+    [Fact]
+    public void Prvni_zapis_vychazi_z_nulove_revize()
+        => Assert.Null(Zapis.ProcNejdeUlozitRevizi(0, 0));
+
+    [Fact]
+    public void Ulozeno_je_bez_chyby_a_bez_konfliktu()
+    {
+        // `new(null)` se u recordu rozhodne pro kopírovací konstruktor
+        // a spadne při inicializaci typu — překladač to nehlásí a pozná se
+        // to až za běhu, v integračním testu. Tenhle test to drží.
+        Assert.Null(VysledekUlozeni.Ulozeno.Chyba);
+        Assert.False(VysledekUlozeni.Ulozeno.Konflikt);
+    }
 }

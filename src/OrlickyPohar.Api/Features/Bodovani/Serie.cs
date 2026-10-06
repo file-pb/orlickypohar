@@ -44,7 +44,14 @@ public record PoradiVSerii(
 /// </summary>
 public static class SerieBodovani
 {
-    /// <summary>Diskvalifikace v regatě. Pevné číslo, nezávislé na počtu lodí.</summary>
+    /// <summary>
+    /// Diskvalifikace v regatě. Pevné číslo, nezávislé na počtu lodí.
+    /// <para>
+    /// Zůstává jako zkratka k verzi 1; výpočet si hodnotu bere
+    /// z <see cref="PravidlaBodovani"/> ročníku, aby změna pravidla
+    /// nepřepsala uzavřený ročník.
+    /// </para>
+    /// </summary>
     public const int BodyZaDiskvalifikaci = 20;
 
     /// <summary>
@@ -74,12 +81,14 @@ public static class SerieBodovani
         IEnumerable<(string Lod, string Kategorie)>? lodeRocniku = null,
         decimal koeficient = 1.0m,
         int posun = 0,
-        IReadOnlyDictionary<string, int>? prihlasenoDoZavodu = null)
+        IReadOnlyDictionary<string, int>? prihlasenoDoZavodu = null,
+        PravidlaBodovani? pravidla = null)
     {
+        pravidla ??= PravidlaBodovani.Posledni;
         var vysledky = vysledkyZavodu.ToList();
 
         var body = vysledky.Select(v => v.Diskvalifikovana
-            ? new BodyDoSerieLodi(v.Lod, v.Kategorie, BodyZaDiskvalifikaci, null, "DSQ")
+            ? new BodyDoSerieLodi(v.Lod, v.Kategorie, pravidla.BodyZaDiskvalifikaci, null, "DSQ")
             : new BodyDoSerieLodi(v.Lod, v.Kategorie,
                 (int)Math.Round((v.Poradi - 1) * koeficient, MidpointRounding.AwayFromZero) + posun,
                 v.Poradi, null))

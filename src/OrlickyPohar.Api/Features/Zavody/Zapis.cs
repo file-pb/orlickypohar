@@ -55,6 +55,29 @@ public static class Zapis
         _ => "Závod ještě není vypsaný. Výsledky se zapisují od vypsání.",
     };
 
+    public const string RevizeChybi =
+        "Zápis přišel bez revize, ze které vycházel, a tím se ukládat nedá — "
+        + "uložení maže lodě, které v sadě nejsou. Obnov stránku a ulož znovu.";
+
+    public const string RevizeNesedi =
+        "Rozjížďku mezitím uložil někdo jiný, takže tvoje sada vychází ze starších "
+        + "čísel. Tvůj zápis se nikam neztratil: otevři porovnání zápisů, podívej se, "
+        + "co se liší, a ulož znovu.";
+
+    /// <summary>
+    /// Proč sadu uložit nejde kvůli revizi — nebo <c>null</c>.
+    /// <para>
+    /// <b>Chybějící revize je taky chyba</b>, ne „tak tedy bez kontroly".
+    /// Uložení maže, co v sadě není; pustit sadu, u které nevíme, z čeho
+    /// vznikla, znamená pustit i mazání naslepo (oponentura, 5. 10. 2026).
+    /// </para>
+    /// </summary>
+    public static string? ProcNejdeUlozitRevizi(int? poslanaKlientem, int soucasna)
+    {
+        if (poslanaKlientem is not { } poslana) return RevizeChybi;
+        return poslana == soucasna ? null : RevizeNesedi;
+    }
+
     /// <summary>Nejdelší poznávací znak. Stojí na tlačítku lodi, víc se tam nevejde.</summary>
     public const int ZnakNejvic = 60;
 

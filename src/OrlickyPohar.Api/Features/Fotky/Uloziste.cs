@@ -17,7 +17,12 @@ public interface IUloziste
     /// <summary>Veřejná adresa, pod kterou jsou soubory vidět, nebo <c>null</c>.</summary>
     string? VerejnaAdresa { get; }
 
-    Task UlozAsync(string klic, byte[] data, string typ, CancellationToken ct);
+    /// <summary>
+    /// Uloží soubor. <paramref name="cache"/> přepíše hlavičku
+    /// <c>Cache-Control</c>; bez něj se soubor tváří jako nemněnný na rok,
+    /// což platí pro fotky, ale ne pro dokumenty, které se dají odvolat.
+    /// </summary>
+    Task UlozAsync(string klic, byte[] data, string typ, CancellationToken ct, string? cache = null);
 
     /// <summary>Smaže soubor. Chybějící soubor není chyba.</summary>
     Task SmazAsync(string klic, CancellationToken ct);
@@ -70,7 +75,8 @@ public sealed class S3Uloziste(IAmazonS3 s3, FotkyNastaveni nastaveni) : IUlozis
                 AuthenticationRegion = "auto",
             });
 
-    public async Task UlozAsync(string klic, byte[] data, string typ, CancellationToken ct)
+    public async Task UlozAsync(
+        string klic, byte[] data, string typ, CancellationToken ct, string? cache = null)
     {
         using var obsah = new MemoryStream(data);
         var pozadavek = new PutObjectRequest
@@ -87,8 +93,10 @@ public sealed class S3Uloziste(IAmazonS3 s3, FotkyNastaveni nastaveni) : IUlozis
         };
 
         // Soubor pod jedním klíčem se nikdy nemění — nová fotka je nový klíč.
-        // Prohlížeč i Cloudflare ho proto smějí držet napořád.
-        pozadavek.Headers.CacheControl = "public, max-age=31536000, immutable";
+        // Prohlížeč i Cloudflare ho proto smějí držet napořád. Dokument,
+        // který se dá stáhnout z vývěsky, si řekne o svou hlavičku sám:
+        // s roční cache by Cloudflare vydával kopii ještě rok po smazání.
+        pozadavek.Headers.CacheControl = cache ?? "public, max-age=31536000, immutable";
 
         await s3.PutObjectAsync(pozadavek, ct);
     }
@@ -108,7 +116,8 @@ public sealed class NenastaveneUloziste(FotkyNastaveni nastaveni) : IUloziste
     public string? VerejnaAdresa =>
         string.IsNullOrWhiteSpace(nastaveni.VerejnaAdresa) ? null : nastaveni.VerejnaAdresa;
 
-    public Task UlozAsync(string klic, byte[] data, string typ, CancellationToken ct) =>
+    public Task UlozAsync(
+        string klic, byte[] data, string typ, CancellationToken ct, string? cache = null) =>
         throw new InvalidOperationException("Úložiště fotek není nastavené.");
 
     public Task SmazAsync(string klic, CancellationToken ct) =>
