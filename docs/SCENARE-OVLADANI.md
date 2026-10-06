@@ -87,11 +87,11 @@ mock jen `/ja` (`tools/fake-api.py:2043`); `/ja/lode`, `/ja/lode/{id}/kod`,
 ty čtyři cesty do mocku nedopíšu — F1 obzvlášť: spotřeboval by čerstvého
 účastníka na chybu zkušebního prostředí.
 
-**Porovnání zápisů v C7 na mocku nejde celé.** Mock hodnotu tokenu nečte,
-jen jeho přítomnost, takže zná **jedinou identitu** (`tools/fake-api.py:2043`).
-Konflikt se vyvolat dá (dvě karty, starší revize), **druhý zapisovatel ne** —
-a tím ani dva sloupce v porovnání. Chce to v mocku druhou identitu odvozenou
-z tokenu; do té doby se C7 zkouší jen do hlášky o konfliktu.
+**Druhý zapisovatel na mocku je.** Mock bere token jako jméno účtu
+(`TOKENY` v `tools/fake-api.py`): `filip` je správce ročníku, `milos`
+organizátor jedné zastávky, neznámý token zůstává Filipem. **C7 je tím celé
+proveditelné** — ověřeno průchodem od konfliktu přes porovnání dvou sloupců
+až po ruční společný výsledek.
 
 **Výpadek nevyrábí mock, ale zařízení:** letový režim na telefonu nebo
 *Offline* v nástrojích prohlížeče.
@@ -148,6 +148,20 @@ telefon.
   **Druhý zapisovatel musí mít vlastní účet** (viz C7). Nejspolehlivější je
   mít jeho uložení připravené jako hotový příkaz, který se odpálí v daný
   okamžik — ne druhý člověk klikající podle sluchu.
+
+  **Postup, kterým se konflikt vyvolá** (ověřený, `izolepa`, 1. rozjížďka):
+  1. `web/.env.local` musí mít `IDENTITA_AUTHORITY`, `IDENTITA_CLIENT_ID`
+     a `WEB_URL` — bez nich se přihlášení vůbec nenabízí a nikdo není
+     přihlášený. Hodnoty můžou být nesmyslné, mock token nerozbaluje.
+  2. Kdo je kdo, se řídí cookie `op_token`: `filip`, nebo `milos`. Druhý
+     telefon je tedy jiný profil prohlížeče s `op_token=milos` — anebo
+     připravený příkaz s hlavičkou `Authorization: Bearer milos`.
+  3. Rozjížďka musí být `Navrzeno` nebo `KRevizi`. Odjetá regata má výsledky
+     `Potvrzeno` a zapisovat do nich nejde — nejdřív je **vrátit k revizi**.
+  4. Telefon A zapíše dojezd (uloží se, revize se posune).
+  5. Telefon B vyjde ze **starší** revize → konflikt. Pak načte čerstvý zápis
+     a uloží svou verzi.
+  6. Telefon A klepne znovu → konflikt, a v porovnání jsou dva sloupce.
 
 ---
 
@@ -273,7 +287,18 @@ nabídne buď „Použít verzi: {kdo}", nebo odkaz na formulář zápisu se vě
 Automatické sloučení aplikace neumí a nemusí.
 Hlídej dvě pasti: *Přesto odeslat* přepíše práci druhého, *Zahodit* zahodí
 svoji (`cil.tsx:330,340`) — a po ručním sepsání ve formuláři zůstává
-v telefonu starý neodeslaný zápis, který se při návratu na cíl nabídne znovu.
+v telefonu starý neodeslaný zápis, který se při návratu na cíl nabídne znovu
+(ověřeno: *„V telefonu leží neodeslaný zápis z 13:52 (7 dojetých)"* a pod tím
+obě tlačítka). Odeslat ho znamená ruční opravu zahodit.
+
+**Porovnání ukazuje server, ne telefon.** Klepnutí, které kvůli konfliktu
+neprošlo, ve vlastním sloupci **není** — v průchodu chyběla poslední zapsaná
+loď, ačkoliv ji obrazovka cíle celou dobu držela. Kdo sepisuje společný
+výsledek jen z porovnání, o ni přijde. Zapiš, jestli si toho všiml.
+
+Po druhém zapisovateli se nad zápisem objeví *„Zapisuje i někdo další. Každý
+má svoji verzi; ve výsledcích je ta naposledy uložená."* — všiml si jí dřív,
+než přišel konflikt?
 
 **Musí to být dva různé účty.** Snímek k porovnání je jeden na zapisovatele
 (`ZapisSprava.cs:369`, test `Dva_zapisovatele_maji_kazdy_svuj_snimek`), takže
@@ -284,6 +309,11 @@ jeden člověk, takže se porovnávat nemá s čím" (`porovnani/page.tsx:103`).
 Varianta s jedním účtem je proto **samostatné pozorování s předem známým
 koncem**, ne cesta k společnému výsledku — a eviduje se jako funkční mezera
 k rozhodnutí, protože sdílený účet na dvou telefonech je u vody pravděpodobný.
+Hláška u konfliktu navíc v tom případě tvrdí *„uložila ho někdo jiný"*,
+ačkoliv to byl tentýž účet, a porovnání pak řekne, že není s čím porovnávat —
+přitom dva různé stavy existují. K opravě by nejspíš stačilo porovnat
+serverový zápis s místním konceptem; to je ale návrh, ne nález z této
+zkoušky.
 
 **C8 — Papír.**
 *Zadání:* Dopiš zápis doma z fotky papíru a přilož ji.
