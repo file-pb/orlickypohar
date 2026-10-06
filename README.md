@@ -77,6 +77,39 @@ ve `nove` a nic nepřidá. Opravený výsledek přepíše původní řádek. Bu�
 celá dávka, nebo se neuloží nic — napůl naimportovaný ročník je horší než
 žádný, protože chybějící výsledky nikdo nepozná.
 
+**Idempotence ale nechrání před zastaralým souborem.** Soubor připravený
+jednou přepíše výsledky a publikaci, které vznikly během sezóny — obojí jsou
+platná data a import to sám nepozná. Proto má tři režimy (`?rezim=`):
+
+| Režim | Co dělá |
+|---|---|
+| `nahled` | **Nic neuloží** a vrátí, co by se stalo, i s kolizemi a otiskem ročníku |
+| `bezpecny` | Výchozí. Uloží, ale **odmítne celou dávku** (`409`), kdyby přepsala výsledky zapsané v aplikaci, stáhla publikaci nebo vrátila stav zápisu |
+| `oprava` | Přepíše i je. **Vyžaduje `otisk`** z náhledu |
+
+Dokud se do ročníku zapisovalo jen souborem, projde příkaz výš bez dalšího.
+Jakmile někdo uloží výsledky v aplikaci, skončí na `409` — a tahle dvojice
+příkazů je cesta dál: nejdřív se podívat, co by se změnilo, a pak to
+potvrdit otiskem z náhledu.
+
+```bash
+# 1) co by se stalo (nic se neuloží)
+curl -s -X POST "$API/import/serie?rezim=nahled" \
+  -H "X-Import-Token: $TOKEN" -H "content-type: application/json" \
+  --data-binary @/tmp/rocnik.json | python3 -m json.tool
+
+# 2) potvrzení s otiskem z náhledu
+curl -s -X POST "$API/import/serie?rezim=oprava&otisk=$OTISK" \
+  -H "X-Import-Token: $TOKEN" -H "content-type: application/json" \
+  --data-binary @/tmp/rocnik.json
+```
+
+**Otisk platí jen do další změny.** Pokrývá revize sad výsledků, stav zápisu
+a publikaci; když mezi náhledem a potvrzením někdo zapíše výsledky, vrátí
+import `409` a náhled se musí udělat znovu. Bez něj by se potvrzovalo něco
+jiného, než co člověk viděl. Podrobně v [docs/PLAN.md](docs/PLAN.md), oddíl
+*Zastaralý soubor ročníku*.
+
 `data/2026-nanecisto.json` má **skutečná jména lodí a vymyšlené výsledky**.
 Existuje proto, aby se model dal prověřit dřív, než dorazí výsledky rozjížděk
 od rozhodčího; až přijdou, soubor se nahradí a struktura zůstane.

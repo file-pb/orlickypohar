@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Fotky;
@@ -37,7 +38,14 @@ public static class ImportEndpoints
         IConfiguration config,
         ILoggerFactory logu,
         IUloziste uloziste,
-        CancellationToken ct)
+        CancellationToken ct,
+        // Řetězec a výslovné `[FromQuery]`, ne výčet: výčet jako nepovinný
+        // parametr se binderem nesvázal a každý požadavek s `rezim=` skončil
+        // chybou požadavku. Řetězec se nemá na čem splést a oproti čtení
+        // z `Request.Query` oba parametry stojí v OpenAPI dokumentu —
+        // kontrakt se tím dokumentuje sám. Hodnotu přebírá `Prepis.Rezim`.
+        [FromQuery] string? rezim = null,
+        [FromQuery] string? otisk = null)
     {
         switch (ImportniToken.Over(ctx, config))
         {
@@ -50,13 +58,8 @@ public static class ImportEndpoints
 
         var log = logu.CreateLogger("Import");
 
-        // Z dotazu výslovně, ne přes vazbu parametrů: endpoint má tělo
-        // i hlavičku s tokenem a nechat výčet na odhadu binderu je přesně
-        // ten druh kouzla, které se pozná až chybou v provozu.
-        var (rezim, chybaRezimu) = Prepis.Rezim(ctx.Request.Query["rezim"].FirstOrDefault());
+        var (rezimImportu, chybaRezimu) = Prepis.Rezim(rezim);
         if (chybaRezimu is not null) return Results.BadRequest(new { error = chybaRezimu });
-
-        var otisk = ctx.Request.Query["otisk"].FirstOrDefault();
 
         // Otisk se čte před zápisem, aby šel vrátit i v odpovědi náhledu.
         var otiskPred = await Prepis.OtiskAsync(db, vstup.Slug, ct);
@@ -68,12 +71,12 @@ public static class ImportEndpoints
             return Results.Json(new { error = Prepis.OtiskNesedi, otisk = otiskPred },
                 statusCode: StatusCodes.Status409Conflict);
 
-        if (rezim == RezimImportu.Oprava && otisk is null)
+        if (rezimImportu == RezimImportu.Oprava && otisk is null)
             return Results.BadRequest(new { error = Prepis.OtiskChybi, otisk = otiskPred });
 
         var kolize = await Prepis.KolizeAsync(db, vstup, ct);
 
-        if (rezim == RezimImportu.Bezpecny && kolize.Count > 0)
+        if (rezimImportu == RezimImportu.Bezpecny && kolize.Count > 0)
             return Results.Json(
                 new { error = Prepis.PotrebaOprava, otisk = otiskPred, kolize },
                 statusCode: StatusCodes.Status409Conflict);
@@ -89,7 +92,7 @@ public static class ImportEndpoints
 
             // Náhled projde týmž kódem a pak se vrátí zpátky. Rozdíl se tím
             // nepočítá podruhé a nemá jak se s importem rozejít.
-            if (rezim == RezimImportu.Nahled)
+            if (rezimImportu == RezimImportu.Nahled)
             {
                 await tx.RollbackAsync(ct);
                 log.LogInformation("Náhled importu série {Serie}: {Kolize} kolizí",
@@ -102,7 +105,7 @@ public static class ImportEndpoints
             log.LogInformation(
                 "Import série {Serie} ({Rezim}): {NoveZavody} nových závodů, "
                 + "{NoveVysledky} nových výsledků, {Kolize} přepsaných míst.",
-                vysledek.Serie, rezim, vysledek.Zavody.Nove, vysledek.Vysledky.Nove,
+                vysledek.Serie, rezimImportu, vysledek.Zavody.Nove, vysledek.Vysledky.Nove,
                 kolize.Count);
 
             return Results.Ok(vysledek);

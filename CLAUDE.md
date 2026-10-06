@@ -83,13 +83,19 @@ uživí druhého vývojáře.
 src/OrlickyPohar.Api/
   Data/AppDbContext.cs        jediný DbContext
   Features/Serial/            série, kategorie, přihlášky — celoroční rovina
-  Features/Lode/              lodě a osoby
+  Features/Lode/              lodě a osoby; vazba účtu k lodi třemi cestami
+                              (e-mail, kód, nárok) a kapitánství, které
+                              uděluje správce ročníku — ne pořadí u kódu
   Features/Zavody/            závod, účast, rozjížďka, výsledek; kalendář,
                               přihlášky na zastávku, zápis a workflow výsledků,
                               zápis z vody: start, dojezdy s časem, poznávací
                               znak, fotka papíru a snímky obou zapisovatelů
-  Features/Bodovani/          body závodu z rozjížděk, škrty, pořadí seriálu
-  Features/Import/            nahrání ročníku souborem, importní token
+  Features/Bodovani/          body závodu z rozjížděk, škrty, pořadí seriálu;
+                              PravidlaBodovani drží verzi, aby oprava výpočtu
+                              nepřepsala vyhlášený ročník
+  Features/Import/            nahrání ročníku souborem, importní token;
+                              Prepis.cs režimy nahled/bezpecny/oprava, otisk
+                              ročníku a kolize se zastaralým souborem
   Features/Clanky/            novinky a články, jejich psaní a správa
   Features/Poradatele/        pořadatel jako záznam s medailonkem
   Features/Fotky/             nahrané obrázky: přepočet do WebP, úložiště R2
@@ -97,7 +103,8 @@ src/OrlickyPohar.Api/
                               přítok a odtok za 24 h
   Features/Identita/          uživatel, vazby (issuer, subject), role, Prava
   Features/Smernice/          plachetní směrnice u regaty: vyvěšení PDF,
-                              verze se nepřepisují (appka je vývěska)
+                              verze se nepřepisují (appka je vývěska); stažení
+                              nechá záznam a smaže soubor z úložiště
   Features/Sprava/            udělování oprávnění, seznam přihlášených účtů
   Features/Naklady/           co provoz a servis stojí; čte stav/naklady.json
                               z přehledu platformy, přidává přirážku
@@ -111,6 +118,7 @@ web/                          veřejné stránky (Next.js, renderuje server)
   …/vysledky/[zavod]/[cislo]/cil   cílová obrazovka — jediné místo správy
                               s javascriptem, klepání v cíli bez něj nejde
   …/[cislo]/porovnani         zápisy dvou zapisovatelů vedle sebe
+  app/sprava/[serie]/lode/    kdo patří k lodím ročníku a kdo je kapitán
   lib/api.ts                  typovaný přístup k API, veřejné čtení
   lib/sprava.ts               volání administrace s tokenem; další lib/*.ts
                               po obrazovkách (kalendar, prihlasky, vysledky…)
@@ -373,12 +381,19 @@ Značka `Category=Integracni`, potřebují Docker, běží jen v CI:
 
 - **`ImportTests`** — idempotence a mazání proti reálnému PostgreSQL přes
   Testcontainers. Schválně ne in-memory provider: stojí to na unikátních
-  indexech, které by fake databáze neověřila.
+  indexech, které by fake databáze neověřila. Od 6. 10. 2026 i režimy
+  importu a kolize se zastaralým souborem. **Databázi sdílí celá kolekce
+  a nic se neuklízí**, takže každý test si musí vyrobit ročník s vlastním
+  slugem; sdílený slug znamená, že si testy přepíšou data pod rukama.
 - **`CteniTests`** a **`PoradiTests`** — veřejné čtení a průběžné pořadí,
   hlavně hranice publikovanosti.
 - **`VysledkySpravaTests`** — workflow výsledků a zápis z vody: dojezd
-  s časem od startu, poznávací znak, celkové pořadí napříč kategoriemi
-  a snímky dvou zapisovatelů.
+  s časem od startu, poznávací znak, celkové pořadí napříč kategoriemi,
+  snímky dvou zapisovatelů a revize sady, která brání přepsání novější
+  opravy starými daty.
+- **`KapitanstviSpravaTests`** a **`SmerniceSpravaTests`** — určení kapitána
+  a stažení směrnice z vývěsky. Obojí patří k databázi, ne k čistým testům:
+  drží to transakce a zámek řádku, a bez nich je pravidlo jen zdání.
 
 `data/2026-nanecisto.json` má **skutečná jména lodí a vymyšlené výsledky**;
 vyrábí ho `tools/gen-mock.py` s pevným seedem. Skutečná fakta o ročníku patří
