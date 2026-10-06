@@ -335,6 +335,26 @@ JA = {
     "email": "filip@priklad.cz",
 }
 
+# Druhý zapisovatel, který se umí přihlásit. Existuje kvůli zápisu z vody:
+# snímek k porovnání je jeden na člověka (`ZapisSprava.SnimekAsync`), takže
+# bez druhé identity nejde vyrobit porovnání dvou zápisů a scénář C7 se dá
+# zkusit jen do hlášky o konfliktu.
+MILOS = {
+    "id": "01927f4e-0000-7000-8000-000000000004",
+    "zobrazovane": "Miloš Zvonař",
+    "email": "milos@priklad.cz",
+}
+
+# Mock token nerozbaluje — nemá čím a nemá proč. Bere ho jako jméno účtu:
+# `Bearer milos` je Miloš. Dva různé tokeny jsou tedy dva lidé a stejný token
+# ve dvou kartách je jeden člověk; **obojí je potřeba**, protože jeden účet na
+# dvou telefonech je vlastní případ s vlastní mezerou (porovnání nemá co
+# ukázat) a mock ji nesmí zamaskovat.
+#
+# Neznámý token zůstává Filipem, aby dosavadní postup — přihlásit se čímkoliv
+# a dělat správce — fungoval dál.
+TOKENY = {"filip": JA, "milos": MILOS}
+
 # Náklady: snímek souboru `stav/naklady.json`, který na serveru zapisuje
 # přehled platformy. Čísla jsou skutečná (24. 9. 2026), jen zamrzlá —
 # stejně jako zbytek mocku. Přirážka je opsaná z Features/Naklady; pravda
@@ -423,13 +443,21 @@ def naklady_dto():
     }
 # Druhý zapisovatel u cíle. Mock zná jen jedno přihlášení, takže snímek
 # „toho druhého" se nasadí do dat — bez něj by nebylo co porovnávat.
-DRUHY_ZAPISOVATEL = {
-    "id": "01927f4e-0000-7000-8000-000000000002",
-    "zobrazovane": "Miloš Zvonař",
-}
+DRUHY_ZAPISOVATEL = MILOS
+
+# Zastávka, u které leží nasazený snímek druhého zapisovatele. Je to tatáž,
+# na které se zkouší C7, takže Miloš na ní musí mít roli — jinak by v přehledu
+# oprávnění stál zápis od člověka, který tam nemá co dělat.
+ZAVOD_DVOU_ZAPISOVATELU = next(
+    (z["slug"] for z in D["zavody"] if z["stav"] == "Odjety" and z["rozjizdky"]), None)
+
 OPRAVNENI = [{"id": 1, "uzivatelId": JA["id"], "zobrazovane": JA["zobrazovane"],
               "email": JA["email"], "role": "Spravce", "zavod": None,
-              "udelenoV": "2026-01-01T00:00:00+00:00"}]
+              "udelenoV": "2026-01-01T00:00:00+00:00"},
+             {"id": 2, "uzivatelId": MILOS["id"], "zobrazovane": MILOS["zobrazovane"],
+              "email": MILOS["email"], "role": "Organizator",
+              "zavod": ZAVOD_DVOU_ZAPISOVATELU,
+              "udelenoV": "2026-04-01T00:00:00+00:00"}]
 # Účty, kterým jde roli udělit. Skutečné API zná jen ty, kdo se aspoň
 # jednou přihlásili — bez toho by se nedal vyzkoušet stav „účet neexistuje",
 # a ten je na obrazovce vidět nejčastěji.
@@ -445,6 +473,8 @@ UCTY = {u["email"]: u for u in [
     {"id": "01927f4e-0000-7000-8000-000000000003", "zobrazovane": "Jana Nováková",
      "email": "jana@priklad.cz", "zalozenV": "2026-09-14T19:40:00+00:00",
      "naposledyPrihlasenV": "2026-09-14T19:40:00+00:00"},
+    {**MILOS, "zalozenV": "2026-04-01T00:00:00+00:00",
+     "naposledyPrihlasenV": "2026-09-19T14:30:00+00:00"},
 ]}
 JEN_ROCNIK = ("Rozhodci", "Spravce")
 
@@ -552,9 +582,10 @@ def ted_iso():
     return datetime.now(timezone.utc).isoformat()
 
 
-def zaznamenej_zmenu(lod_id, komu, predchozi, nova):
+def zaznamenej_zmenu(lod_id, komu, predchozi, nova, zmenil=None):
     ZMENY_ROLI.append({"lodId": lod_id, "uzivatelId": komu, "predchozi": predchozi,
-                       "nova": nova, "zmenilId": JA["id"], "zmenenoV": ted_iso()})
+                       "nova": nova, "zmenilId": zmenil or JA["id"],
+                       "zmenenoV": ted_iso()})
 
 
 def zmena_dto(z):
@@ -982,6 +1013,18 @@ def clanek_radek(c):
 
 
 class H(BaseHTTPRequestHandler):
+    def prihlaseny(self):
+        """
+        Kdo volá. Token se nerozbaluje, bere se jako jméno účtu — viz TOKENY.
+
+        Neznámý token je Filip, takže kdo o druhou identitu nestojí, nepozná
+        změnu. Prázdná hlavička se sem nedostane: na ni odpovídají endpointy
+        čtyřistajedničkou dřív.
+        """
+        hlavicka = self.headers.get("authorization") or ""
+        token = hlavicka.split(" ", 1)[-1].strip().lower()
+        return TOKENY.get(token, JA)
+
     def telo_zadosti(self):
         delka = int(self.headers.get("Content-Length", "0") or 0)
         return json.loads(self.rfile.read(delka) or b"{}")
@@ -1145,28 +1188,29 @@ class H(BaseHTTPRequestHandler):
                                    "někoho, kdo se už přihlásil.")
 
         ted = ted_iso()
+        urcil = self.prihlaseny()["id"]
         vazby = [v for v in VAZBY if v["lodId"] == lod_id]
         novy = next((v for v in vazby if v["uzivatelId"] == kdo), None)
 
         if novy is None:
             novy = {"id": max([v["id"] for v in VAZBY], default=0) + 1, "lodId": lod_id,
                     "uzivatelId": kdo, "role": "Kapitan", "puvod": "Rucne", "vzniklaV": ted,
-                    "roleUrcilId": JA["id"], "roleUrcenaV": ted}
+                    "roleUrcilId": urcil, "roleUrcenaV": ted}
             VAZBY.append(novy)
-            zaznamenej_zmenu(lod_id, kdo, None, "Kapitan")
+            zaznamenej_zmenu(lod_id, kdo, None, "Kapitan", urcil)
         else:
             if novy["role"] not in ("Kapitan", "Majitel"):
-                zaznamenej_zmenu(lod_id, kdo, novy["role"], "Kapitan")
+                zaznamenej_zmenu(lod_id, kdo, novy["role"], "Kapitan", urcil)
                 novy["role"] = "Kapitan"
-            novy["roleUrcilId"], novy["roleUrcenaV"] = JA["id"], ted
+            novy["roleUrcilId"], novy["roleUrcenaV"] = urcil, ted
 
         # Dosavadní kapitán spadne na posádku, majitel zůstává majitelem.
         for stara in vazby:
             if stara["uzivatelId"] == kdo or stara["role"] != "Kapitan":
                 continue
-            zaznamenej_zmenu(lod_id, stara["uzivatelId"], "Kapitan", "Posadka")
+            zaznamenej_zmenu(lod_id, stara["uzivatelId"], "Kapitan", "Posadka", urcil)
             stara["role"] = "Posadka"
-            stara["roleUrcilId"], stara["roleUrcenaV"] = JA["id"], ted
+            stara["roleUrcilId"], stara["roleUrcenaV"] = urcil, ted
 
         return self._prazdna_odpoved()
 
@@ -1192,9 +1236,10 @@ class H(BaseHTTPRequestHandler):
             return self.chyba(400, self.POSLEDNI_ODPOVEDNY)
 
         if vazba["role"] != nova:
-            zaznamenej_zmenu(lod_id, vazba["uzivatelId"], vazba["role"], nova)
+            zaznamenej_zmenu(lod_id, vazba["uzivatelId"], vazba["role"], nova,
+                             self.prihlaseny()["id"])
         vazba["role"] = nova
-        vazba["roleUrcilId"], vazba["roleUrcenaV"] = JA["id"], ted_iso()
+        vazba["roleUrcilId"], vazba["roleUrcenaV"] = self.prihlaseny()["id"], ted_iso()
         return self._prazdna_odpoved()
 
     def odeber_vazbu(self, lod_id, vazba_id):
@@ -1210,7 +1255,8 @@ class H(BaseHTTPRequestHandler):
         if vazba["role"] in ("Majitel", "Kapitan") and jinych == 0:
             return self.chyba(400, self.POSLEDNI_ODPOVEDNY)
 
-        zaznamenej_zmenu(lod_id, vazba["uzivatelId"], vazba["role"], None)
+        zaznamenej_zmenu(lod_id, vazba["uzivatelId"], vazba["role"], None,
+                         self.prihlaseny()["id"])
         VAZBY.remove(vazba)
         return self._prazdna_odpoved()
 
@@ -1235,7 +1281,7 @@ class H(BaseHTTPRequestHandler):
                               "se jede, musí jít po sezóně dohledat, co se odvolalo a proč.")
 
         s["stazenoV"] = ted_iso()
-        s["stahl"] = JA["zobrazovane"]
+        s["stahl"] = self.prihlaseny()["zobrazovane"]
         s["duvodStazeni"] = duvod.strip()
         return self._prazdna_odpoved()
 
@@ -1432,7 +1478,7 @@ class H(BaseHTTPRequestHandler):
                              if dojezd else {})}
                          for lod, _, poradi, kod, dojezd in radky if poradi is not None or kod]
         # Loď s výsledkem přijela, jako v API; vyloučená zůstává vyloučená.
-        self.uloz_snimek(r, JA, [
+        self.uloz_snimek(r, self.prihlaseny(), [
             {"prihlaskaId": PRIHLASKA_ID[lod], "poradiVCili": poradi, "kod": kod}
             for lod, _, poradi, kod, _ in radky if poradi is not None or kod])
 
@@ -1523,7 +1569,8 @@ class H(BaseHTTPRequestHandler):
             return self.chyba(400, "Napiš důvod.")
         from datetime import datetime, timezone
         u.setdefault("historie", []).append(
-            {"ze": u["stav"], "na": na, "kdo": JA["zobrazovane"], "duvod": duvod or None,
+            {"ze": u["stav"], "na": na, "kdo": self.prihlaseny()["zobrazovane"],
+             "duvod": duvod or None,
              "kdy": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")})
         u["stav"], u["duvod"] = na, duvod or None
         return self.odpoved(lod_na_zastavce(z, lod))
@@ -1564,7 +1611,7 @@ class H(BaseHTTPRequestHandler):
             "zavod": z["slug"], "zavodNazev": z["nazev"], "cislo": r["cislo"],
             "navrhy": [{
                 "uzivatelId": n["uzivatelId"], "kdo": n["kdo"], "zapsanoV": n["zapsanoV"],
-                "muj": n["uzivatelId"] == JA["id"],
+                "muj": n["uzivatelId"] == self.prihlaseny()["id"],
                 "radky": [{**radek,
                            "lod": nazvy(LOD_PODLE_ID[radek["prihlaskaId"]]),
                            "kategorie": KAT[LOD_PODLE_ID[radek["prihlaskaId"]]]}
@@ -1587,7 +1634,7 @@ class H(BaseHTTPRequestHandler):
                           "lod": LOD_PODLE_ID[x["prihlaskaId"]],
                           "poradiVCili": x.get("poradiVCili"), "kod": x.get("kod")}
                          for x in navrh["radky"]]
-        self.uloz_snimek(r, JA, navrh["radky"])
+        self.uloz_snimek(r, self.prihlaseny(), navrh["radky"])
         return self.odpoved(zapis_dto(z, r))
 
     def odstartuj(self, zavod, cislo):
@@ -1675,7 +1722,8 @@ class H(BaseHTTPRequestHandler):
             return None
 
         return self.odpoved(self.uloz_fotku(
-            r, "papir", *fotka, JA["zobrazovane"], f"Papírový zápis {cislo}. rozjížďky"))
+            r, "papir", *fotka, self.prihlaseny()["zobrazovane"],
+            f"Papírový zápis {cislo}. rozjížďky"))
 
     def nahraj_obrazek(self, druh, klic):
         """Stejné kontroly jako `Nahravani.ProcNejde` v API."""
@@ -2047,13 +2095,14 @@ class H(BaseHTTPRequestHandler):
             # jako neznámý, aby šel vyzkoušet i odhlášený stav.
             if not self.headers.get("authorization"):
                 return self.send_error(401)
+            kdo = self.prihlaseny()
             telo = {
-                **JA,
+                **kdo,
                 # Role se berou z téhož seznamu, který spravuje obrazovka
                 # oprávnění — jinak by se odebrání vlastní role neprojevilo
                 # v nabídce a stránka by nabízela odkaz, který skončí na 403.
                 "opravneni": [{"role": o["role"], "serie": D["slug"], "zavod": o["zavod"]}
-                              for o in OPRAVNENI if o["email"] == JA["email"]],
+                              for o in OPRAVNENI if o["email"] == kdo["email"]],
             }
         elif cesta == f'/sprava/serie/{D["slug"]}/opravneni':
             if not self.headers.get("authorization"):
