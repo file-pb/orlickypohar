@@ -3347,6 +3347,22 @@ klepání v reálném čase bez něj nejde. Zbytek správy zůstává bez něj.
    telefon), nic se nepřepíše potichu a obrazovka nabídne odeslat, nebo
    zahodit.
 
+## Výpadek zdroje není klid (oponentura, 5. 10. 2026)
+
+**U výstrahy je ticho samo o sobě tvrzení.** Widget ČHMÚ při výpadku zdroje
+zmizel a čtenář si z prázdného místa odvodil, že nic neplatí — „žádná
+výstraha" a „zdroj se nepodařilo ověřit" se od sebe nedaly poznat.
+
+Blok proto zůstává vždycky a místo klidné věty se zelenou tečkou ukáže
+dutou šedou a větu, že se výstrahy nedaří načíst a že to neznamená, že
+žádná neplatí. Odkaz na ČHMÚ platí i tehdy — při výpadku dvojnásob, je to
+jediná cesta, jak se k výstrahám dostat.
+
+**Ostatní widgety mizet smějí.** Teplota vody ani vodočet nic netvrdí tím,
+že tam nejsou; výstraha ano. Teplota navíc stáří měření ukazuje sama
+(„Snímek 3. 10., před 2 dny“), takže denní běh úlohy se nedá splést
+s dnešním snímkem.
+
 ## Verze bodovacích pravidel (oponentura, 5. 10. 2026)
 
 **Body se neukládají, počítají se při čtení** — a to je správně, protože

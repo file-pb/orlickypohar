@@ -1334,6 +1334,9 @@ th.vlevo, td.vlevo { text-align: left; }
    tečkou; s výstrahou proužek v barvě stupně, jak je barví ČHMÚ. */
 .vystrahy-klid { display: flex; align-items: center; gap: 0.5rem; margin: 0; font-size: 0.85rem; color: var(--tlumeny); }
 .vystrahy-tecka { width: 0.6rem; height: 0.6rem; border-radius: 999px; flex: none; background: #3aa76d; box-shadow: 0 0 0 3px color-mix(in srgb, #3aa76d 25%, transparent); }
+/* Výpadek zdroje, ne klid: dutá tečka, aby se zelená „nic neplatí"
+   a šedá „nevíme" nedaly splést ani koutkem oka. */
+.vystrahy-tecka.nezname { background: transparent; border: 2px solid var(--tlumeny); box-shadow: none; }
 .vystrahy-seznam { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
 .vystraha {
   --stupen: #e5b50b;

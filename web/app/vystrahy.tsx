@@ -17,7 +17,14 @@ import {
  *
  * Bez výstrahy je to jedna klidná věta se zelenou tečkou — widget nemá
  * strašit, když se nic neděje. S výstrahou nese barvu stupně, jev, popis
- * a platnost. Když se data nepodaří načíst, widget chybí.
+ * a platnost.
+ *
+ * <b>Když se výstrahy nepodaří načíst, řekne to nahlas</b> (oponentura,
+ * 5. 10. 2026). U výstrahy je ticho samo o sobě tvrzení: do té doby widget
+ * při výpadku ČHMÚ zmizel a čtenář si z jeho nepřítomnosti odvodil, že nic
+ * neplatí. „Žádná výstraha" a „zdroj se nepodařilo ověřit" se musí poznat
+ * od sebe — u ostatních widgetů (teplota, vodočet) chybějící blok nic
+ * netvrdí a mizet proto smějí.
  *
  * Pod výstrahami radar na příští hodinu (Filip, 18. 9. 2026): jedna věta,
  * jestli nad Orlíkem prší nebo kdy začne, a pás sedmi políček po deseti
@@ -49,13 +56,20 @@ function platnost(v: Vystraha) {
 
 export async function BokVystrahy() {
   const [stav, radar] = await Promise.all([nactiVystrahy(), nactiRadar()]);
-  if (!stav && !radar) return null;
 
   return (
     <section className="vystrahy">
       <h2 className="bok-nadpis">Výstrahy ČHMÚ</h2>
 
-      {!stav ? null : stav.vystrahy.length === 0 ? (
+      {!stav ? (
+        // Nezmlčet. Prázdné místo po widgetu čte člověk jako „nic neplatí",
+        // a to je tvrzení, které v tuhle chvíli nikdo neověřil.
+        <p className="vystrahy-klid">
+          <span className="vystrahy-tecka nezname" aria-hidden="true" />
+          Výstrahy se teď nedaří načíst z ČHMÚ. Neznamená to, že žádná
+          neplatí — podívej se přímo k nim.
+        </p>
+      ) : stav.vystrahy.length === 0 ? (
         <p className="vystrahy-klid">
           <span className="vystrahy-tecka" aria-hidden="true" />
           Pro Milevsko a Písek teď neplatí žádná výstraha.
@@ -78,13 +92,13 @@ export async function BokVystrahy() {
         </ul>
       )}
 
-      {stav && (
-        <p className="bok-dal">
-          <a href={STRANKA_VYSTRAH} target="_blank" rel="noopener noreferrer">
-            ČHMÚ · Milevsko a Písek
-          </a>
-        </p>
-      )}
+      {/* Odkaz platí vždycky, a při výpadku dvojnásob: je to jediná cesta,
+          jak se k výstrahám dostat, když je sem nedokážeme dotáhnout. */}
+      <p className="bok-dal">
+        <a href={STRANKA_VYSTRAH} target="_blank" rel="noopener noreferrer">
+          ČHMÚ · Milevsko a Písek
+        </a>
+      </p>
 
       {radar && <RadarHodina radar={radar} />}
     </section>
