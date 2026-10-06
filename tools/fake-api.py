@@ -550,6 +550,8 @@ NAROK_DVAKRAT = "O tuhle loď už žádáš, kapitán to uvidí."
 NAROK_UZ_PATRIS = "K téhle lodi už patříš."
 NAROK_ZAMITNUTO = ("O tuhle loď jsi už žádal a kapitán žádost zamítl. "
                    "Domluv se s ním napřímo.")
+# `NarokySprava.PoznamkaNejvic` — delší poznámka se tvrdě uřízne, nevrací chybu.
+POZNAMKA_NEJVIC = 200
 
 KODY = []
 NAROKY = []
@@ -564,16 +566,24 @@ def _iso(kdy):
     return kdy.isoformat().replace("+00:00", "Z")
 
 
+# Abeceda bez nul, jedniček, I a O: kód se opisuje z papíru u vody, kde se
+# „0" a „O" plete každému. Opsané z `Kody.Abeceda`.
+KOD_ABECEDA = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
+
+
 def novy_kod():
-    """Šest znaků bez snadno zaměnitelných. Mock nepotřebuje kryptografii."""
+    """Šest znaků z téhle abecedy. Mock nepotřebuje kryptografii."""
     import random
-    abeceda = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-    return "".join(random.choice(abeceda) for _ in range(KOD_DELKA))
+    return "".join(random.choice(KOD_ABECEDA) for _ in range(KOD_DELKA))
 
 
 def uprav_kod(zadany):
-    """Mezery pryč, na velká písmena — jako `Kody.Uprav`."""
-    return "".join((zadany or "").split()).upper()
+    """
+    Srovná zadaný kód, jako `Kody.Uprav`: velká písmena a **pryč s každým
+    znakem mimo abecedu** — ne jen s mezerami. Pomlčka z opisu tedy zmizí
+    a kód projde; nula nebo písmeno O se taky zahodí, nepřeloží.
+    """
+    return "".join(z for z in (zadany or "").upper() if z in KOD_ABECEDA)
 
 
 def _nasad_kody():
@@ -1215,7 +1225,7 @@ class H(BaseHTTPRequestHandler):
         return self.odpoved([pripojeny_dto(v) for v in vazby])
 
     def odeber_pripojeni(self, lod_id, vazba_id):
-        if not (kdo := self._kdo_a_lod(lod_id)):
+        if not self._kdo_a_lod(lod_id):
             return None
 
         vazba = next((v for v in VAZBY if v["id"] == vazba_id and v["lodId"] == lod_id), None)
@@ -1227,7 +1237,10 @@ class H(BaseHTTPRequestHandler):
         if (chyba := proc_nejde_odebrat(vazba["role"], jinych)):
             return self.chyba(400, chyba)
 
-        zaznamenej_zmenu(lod_id, vazba["uzivatelId"], vazba["role"], None, kdo["id"])
+        # Kdo odebral, se tu **nezapisuje**: kapitánská cesta volá odebrání
+        # bez autora, takže `ZmenilId` zůstane prázdné (KodyEndpoints.cs:129).
+        # Mock to nemá vylepšovat — zkouška má vidět totéž co provoz.
+        zaznamenej_zmenu(lod_id, vazba["uzivatelId"], vazba["role"], None)
         VAZBY.remove(vazba)
         return self._prazdna_odpoved()
 
@@ -1278,7 +1291,9 @@ class H(BaseHTTPRequestHandler):
         if drivejsi and drivejsi["rozhodnutoV"] and not drivejsi["prijat"]:
             return self.chyba(400, NAROK_ZAMITNUTO)
 
-        poznamka = (vstup.get("poznamka") or "").strip() or None
+        poznamka = ((vstup.get("poznamka") or "").strip() or None)
+        if poznamka:
+            poznamka = poznamka[:POZNAMKA_NEJVIC]
         NAROKY.append({"id": max([n["id"] for n in NAROKY], default=0) + 1,
                        "lodId": lod_id, "uzivatelId": kdo["id"], "poznamka": poznamka,
                        "podanV": _iso(_ted()), "rozhodnutoV": None, "rozhodlId": None,
@@ -1320,7 +1335,9 @@ class H(BaseHTTPRequestHandler):
                           "lodId": lod_id, "uzivatelId": narok["uzivatelId"],
                           "role": "Posadka", "puvod": "Narok", "vzniklaV": ted,
                           "roleUrcilId": None, "roleUrcenaV": None})
-            zaznamenej_zmenu(lod_id, narok["uzivatelId"], None, "Posadka", kdo["id"])
+            # Do historie rolí se přijatý nárok **nezapisuje** — na rozdíl od
+            # všech ostatních cest, které roli dávají nebo berou. Posádka
+            # vzniklá z nároku tak v historii nemá řádek (NarokNaLod.cs:141).
         return self._prazdna_odpoved()
 
     def token_nesedi(self):
