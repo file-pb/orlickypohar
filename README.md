@@ -217,6 +217,33 @@ tools/fake-api.py &          # falešné API z mock dat, port 8080
 npm --prefix web run dev     # http://localhost:3000
 ```
 
+**Přihlášený vývoj.** Bez proměnných identity se přihlášení vůbec nenabízí,
+takže celá správa zůstane neviditelná. Pro lokální zkoušení stačí `.env.local`
+s nesmyslnými hodnotami — na poskytovatele se nikdo neptá a mock token
+nerozbaluje:
+
+```bash
+cat > web/.env.local <<'KONEC'
+IDENTITA_AUTHORITY=http://localhost:9/neexistuje
+IDENTITA_CLIENT_ID=vyvoj
+WEB_URL=http://localhost:3000
+KONEC
+```
+
+**Kdo je přihlášený, řídí cookie `op_token`** (nebo hlavička
+`Authorization: Bearer <jméno>` při volání API přímo). Mock zná čtyři jména
+a jiné **odmítne** — překlep by jinak tiše udělal správce:
+
+| Jméno | Kdo to je |
+|---|---|
+| `filip`, `vyvoj` | správce ročníku |
+| `milos` | pořadatel jedné zastávky |
+| `dana` | správkyně celého webu **bez role v ročníku** |
+
+Víc identit není rozmar: snímek zápisu k porovnání je jeden na zapisovatele,
+takže **dva zapisovatele u cíle nejde vyzkoušet pod jedním účtem**. A role na
+celý web bez role v ročníku je stav, kvůli kterému vznikl rozcestník správy.
+
 Úvodní stránka nese velkou fotku a nad ní **živou větu spočítanou z dat** —
 kolik zastávek je odjeto, kdo vede v kategoriích a která zastávka je další.
 Když se nenačte, prostě tam není; kvůli jedné větě nemá padat landing.

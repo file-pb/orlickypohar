@@ -3478,6 +3478,68 @@ zůstává slug; soubor k němu umí jen přidat větu o přejmenování. Řeš�
 navíc i případ, na který vodítko podle termínu nestačí — přejmenování
 **spolu se změnou data**.
 
+## Rozcestník správy (6. 10. 2026)
+
+**Zadání od Filipa:** *„potřebuji zpřehlednit menu tak, aby bylo na první
+pohled jasné, co mám za možnosti pod jakou rolí"* a *„po přihlášení chci, aby
+mě systém intuitivně navedl k zadání podle toho, kdo jsem"*.
+
+**Co bylo špatně.** Jedinou cestou do správy byla rozbalovací nabídka pod
+ikonkou účtu: deset odkazů pojmenovaných slugem ročníku („Kalendář
+2026-nanecisto"). Kdo přišel zapsat dojezdy, musel vědět, že se na to jde přes
+Výsledky. Přihlášky, směrnice a medailonek pořadatele v nabídce nebyly vůbec
+a chodilo se na ně oklikou z kalendáře. Rozcestník neexistoval — ani `/sprava`,
+ani `/sprava/{ročník}`.
+
+**Co s tím.** `/sprava` a `/sprava/{ročník}` jsou rozcestníky:
+
+1. **Co teď** — spočítané z dat, ne seznam obrazovek. Vrácené výsledky („1×
+   k revizi, rozhodčí napsal, co je špatně"), nejbližší vypsaná regata (v den
+   závodu rovnou „Zapsat dojezdy"), hotové rozjížďky, které nejsou venku.
+2. **Regaty** — u každé výsledky, přihlášky i směrnice pohromadě. Pořadatel
+   jedné zastávky vidí jen tu svoji.
+3. **Celý ročník** a **mimo ročník** — u každé položky stojí **role, ze které
+   plyne**: Kalendář *rozhodčí*, Lodě a kapitáni *správce*, Novinky *editor*.
+
+Nabídka vede na rozcestník jedinou položkou **Správa** a zbytek pouští; kdo má
+roli ve víc ročnících, dostane zkratky přímo na ně. Kdo má jediný ročník a nic
+nad ním, je z `/sprava` přesměrovaný rovnou do něj.
+
+**Oprávnění počítá jedno místo** — `web/lib/co-smim.ts`, **doslovný přepis
+`Prava.Smi`** ze serveru včetně toho, že rozhodčí není stupeň. Nabídka si je
+dřív odvozovala sama a **jen z rolí na ročník**, takže kdo měl roli na celý web
+a žádnou v ročníku, neviděl ročníkové položky, ačkoliv na ty obrazovky smí
+a po zadání adresy ho pustily. Dvě místa s vlastní pravdou o právech se
+rozejdou; proto je jedno. Ze stejného důvodu zrušená zastávka nenabízí odkazy,
+které API odmítne — slib naprázdno je horší než chybějící odkaz.
+
+## Koncept z telefonu u zápisu z vody (6. 10. 2026)
+
+Z vlastního průchodu scénáře C7 (`docs/SCENARE-OVLADANI.md`) vyšla dvě místa,
+kde se **ztrácel dojezd**. Obě jsou opravená.
+
+**Porovnání neukazovalo, co leží v telefonu.** Staví vedle sebe snímky ze
+serveru — jenže klepnutí, které kvůli konfliktu neprošlo, žádný snímek nemá.
+Kdo sestavoval společný výsledek podle porovnání, o ně přišel a nic ho na to
+neupozornilo. Porovnání teď koncept ukáže a vyjmenuje, co má navíc proti
+uloženému zápisu.
+
+**Po ruční opravě koncept zůstával ležet.** Při návratu na cíl se nabídl
+k odeslání, čímž by právě dokončenou opravu přepsal. Ve formuláři zápisu jde
+teď z konceptu **doplnit jedním klepnutím** a uložení ho **vyřeší**: co uložené
+pokrývá, se zahodí, o zbytku se rozhoduje vědomě. Hláška na cíli navíc
+vyjmenuje, které lodě by odeslání přepsalo — „Přesto odeslat" samo o sobě
+neříkalo, že přepíše uložený zápis.
+
+Klíč a tvar konceptu žijí v jednom modulu
+(`web/app/sprava/[serie]/vysledky/[zavod]/[cislo]/koncept.ts`). Sahají na něj
+tři obrazovky — cíl ho vyrábí, porovnání ho ukazuje, formulář ho řeší —
+a rozdíl mezi třemi kopiemi by se poznal až ztraceným dojezdem.
+
+**Ověřeno celým průchodem se dvěma účty:** konflikt → porovnání s konceptem →
+doplnění do formuláře → uložení → návrat na cíl → přenačtení stránky. Pořadí
+zůstalo správné a nic se nenabídlo k přepsání.
+
 ## Kde se pokračuje
 
 Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
