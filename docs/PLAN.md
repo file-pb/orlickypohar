@@ -1428,11 +1428,21 @@ veřejnou R2 adresu nezastaví.*
 | Cache | Směrnice se ukládá s `no-store`, ne s roční `immutable` jako fotky | S roční cache by Cloudflare vydával kopii smazaného souboru ještě rok po odvolání |
 | Co vzít zpět nejde | Kopie, které si už někdo stáhl | Platí vždycky a je to tak napsané i v hlášce |
 
-**Zbytek po starých verzích.** Směrnice vyvěšené před 6. 10. 2026 mají
-v hlavičce roční `immutable`, takže po stažení může Cloudflare ještě chvíli
-vydávat kopii z edge cache. Jistotu u nich dá jen ruční *Purge by URL*
-v Cloudflare; obrazovka proto po stažení ukáže přesnou adresu souboru.
-Nové verze tím netrpí.
+**Zbytek po starých verzích.** Směrnice vyvěšené před 6. 10. 2026 v 00:57
+(nasazení `6e1d2d0`) mají v hlavičce roční `immutable`, takže po stažení
+může Cloudflare ještě chvíli vydávat kopii z edge cache. Jistotu u nich dá
+jen ruční *Purge by URL*; obrazovka proto u takové verze ukáže přesnou
+adresu souboru.
+
+**Platí to jen pro ně.** `Vyveseni.MohlaUvaznoutVCache` porovná okamžik
+vyvěšení s `CacheVypnutaOd` a novějším souborům se purge nepřipomíná —
+u nich je stažení účinné hned a připomínka by byla jen šum. Konstanta je
+o hodinu po nasazení, aby hraniční soubor spadl na bezpečnou stranu.
+
+**Ke 6. 10. 2026 není na produkci vyvěšená ani jedna směrnice** (ověřeno
+přes veřejné čtení všech zastávek obou ročníků), takže starou cache nemá
+co držet a pročišťovat není co. Mechanismus je tu pro případ, že se nějaká
+najde na nepublikované zastávce.
 
 **Co zbývá:** upozornění ve správě u vypsané regaty bez směrnice a zobrazení
 v appce. Appka dnes směrnici nenese, i když ji API vydává.

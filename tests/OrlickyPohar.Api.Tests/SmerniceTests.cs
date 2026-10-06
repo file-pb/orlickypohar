@@ -115,4 +115,27 @@ public class SmerniceTests
         Assert.NotNull(stazena!.StazenoV);
         Assert.Equal("Špatný soubor.", stazena.DuvodStazeni);
     }
+
+    [Fact]
+    public void Purge_se_pripomina_jen_u_starsich_souboru()
+    {
+        // Co se nahrálo před vypnutím cache, nese roční `immutable`, takže
+        // po stažení může Cloudflare ještě chvíli vydávat kopii. U novějších
+        // je stažení účinné hned a připomínat purge by byl jen šum.
+        var stara = new PlachetniSmernice
+        {
+            Id = Guid.CreateVersion7(), ZavodId = 1, Verze = 1, Nazev = "s.pdf",
+            VyveseneV = Vyveseni.CacheVypnutaOd.AddMinutes(-1),
+        };
+        var nova = new PlachetniSmernice
+        {
+            Id = Guid.CreateVersion7(), ZavodId = 1, Verze = 2, Nazev = "s.pdf",
+            VyveseneV = Vyveseni.CacheVypnutaOd,
+        };
+
+        Assert.True(Vyveseni.MohlaUvaznoutVCache(stara));
+        Assert.False(Vyveseni.MohlaUvaznoutVCache(nova));
+
+        Assert.True(Vyveseni.Dto(stara, "https://fotky.test/")!.MohlaUvaznoutVCache);
+    }
 }

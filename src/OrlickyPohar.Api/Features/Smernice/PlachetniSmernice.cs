@@ -92,7 +92,10 @@ public record SmerniceDto(
     string? Vyvesil,
     DateTimeOffset? StazenoV = null,
     string? Stahl = null,
-    string? DuvodStazeni = null);
+    string? DuvodStazeni = null,
+    // Mohla uvíznout v edge cache? Platí jen pro verze vyvěšené dřív, než
+    // se přestalo cachovat — u nich dá po stažení jistotu až ruční purge.
+    bool MohlaUvaznoutVCache = false);
 
 /// <summary>Formulář vyvěšení. Skládá ho server webu, ne prohlížeč.</summary>
 public record SmerniceFormular(IFormFile? Soubor, string? Poznamka);
@@ -128,6 +131,28 @@ public static class Vyveseni
     /// </para>
     /// </summary>
     public const string Cache = "no-store";
+
+    /// <summary>
+    /// Odkdy se směrnice ukládají bez cache. Nasazeno 6. 10. 2026 v 00:57
+    /// (běh CI commitu <c>6e1d2d0</c>); konstanta je o hodinu později, aby
+    /// hraniční soubor spadl na bezpečnou stranu.
+    /// <para>
+    /// <b>K čemu to je:</b> co se nahrálo dřív, nese v hlavičce roční
+    /// <c>immutable</c>, takže po stažení z vývěsky může Cloudflare ještě
+    /// chvíli vydávat kopii z edge cache a jistotu dá jen ruční
+    /// <i>Purge by URL</i>. U novějších souborů je stažení účinné hned
+    /// a připomínat purge by byl jen šum.
+    /// </para>
+    /// </summary>
+    public static readonly DateTimeOffset CacheVypnutaOd =
+        new(2026, 10, 6, 2, 0, 0, TimeSpan.Zero);
+
+    /// <summary>
+    /// Mohla tahle verze uvíznout v edge cache? Rozhoduje okamžik vyvěšení,
+    /// ne stažení — hlavička se souboru dává při nahrání.
+    /// </summary>
+    public static bool MohlaUvaznoutVCache(PlachetniSmernice s) =>
+        s.VyveseneV < CacheVypnutaOd;
 
     public const string Vypnuto = "Úložiště souborů zatím není nastavené.";
 
@@ -189,5 +214,6 @@ public static class Vyveseni
             : new SmerniceDto(
                 s.Verze, s.Nazev, Nahravani.Adresa(verejnaAdresa, Klic(s.Id)),
                 s.VyveseneV, s.Poznamka, s.Vyvesil?.Zobrazovane,
-                s.StazenoV, s.Stahl?.Zobrazovane, s.DuvodStazeni);
+                s.StazenoV, s.Stahl?.Zobrazovane, s.DuvodStazeni,
+                MohlaUvaznoutVCache(s));
 }
