@@ -336,6 +336,11 @@ identifikátoru: série podle slugu, závod podle slugu v sérii, rozjížďka p
 čísla v závodě, výsledek podle dvojice rozjížďka × účast. Sloupec „externí id"
 by do schématu propsal tvar zdrojového souboru, a ten se s každým ročníkem mění.
 
+Přejmenovaná regata se proto neřeší novým identifikátorem, ale větou v souboru:
+`puvodniSlug` říká, pod kterou adresou ta regata v ročníku už leží. Import ji
+přejmenuje, **adresu nechá** a zůstane idempotentní. Bez toho by z přejmenování
+vznikl druhý závod a tomu původnímu by zůstaly výsledky.
+
 Dvě věci na to navazují a nesmějí se rozvázat:
 
 1. **Unikátní indexy** `(SerieId, LodId)` na přihlášce a `(RozjizdkaId, UcastId)`

@@ -572,4 +572,124 @@ public class ImportTests(PostgresFixture fixture)
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         Assert.Equal(2, await db.Zavody.CountAsync(z => z.Serie!.Slug == "jeden-den"));
     }
+
+    [Fact]
+    public async Task Prejmenovana_regata_si_nechava_adresu_i_vysledky()
+    {
+        // Řešení nálezu D: soubor řekne, pod kterou adresou ta regata leží,
+        // a import ji přejmenuje místo toho, aby založil druhou.
+        var puvodni = Rocnik("prejmenovani-slugem");
+        await Posli(puvodni);
+
+        var prejmenovany = puvodni with
+        {
+            Zavody =
+            [
+                puvodni.Zavody[0] with
+                {
+                    Slug = "zahajeni-sezony-2025",
+                    Nazev = "Zahájení sezóny 2025",
+                    PuvodniSlug = "zahajeni",
+                },
+            ],
+        };
+
+        var druhy = await Posli(prejmenovany);
+
+        Assert.Equal(0, druhy.Zavody.Nove);
+        Assert.Equal(1, druhy.Zavody.Aktualizovane);
+
+        using var scope = fixture.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var zavody = await db.Zavody.AsNoTracking()
+            .Where(z => z.Serie!.Slug == "prejmenovani-slugem")
+            .ToListAsync();
+
+        var zavod = Assert.Single(zavody);
+        // Jméno nové, adresa stará: odkaz na zastávku už mohl někam odejít.
+        Assert.Equal("Zahájení sezóny 2025", zavod.Nazev);
+        Assert.Equal("zahajeni", zavod.Slug);
+        // A výsledky zůstaly u ní, ne u osiřelého dvojníka.
+        Assert.Equal(2, await db.Vysledky.CountAsync(v => v.Rozjizdka!.ZavodId == zavod.Id));
+    }
+
+    [Fact]
+    public async Task Prejmenovani_je_idempotentni()
+    {
+        // Druhé nahrání téhož souboru se musí spárovat zas přes `puvodniSlug`
+        // — slug v databázi se nezměnil, takže nový slug ze souboru nesedí.
+        var puvodni = Rocnik("prejmenovani-dvakrat");
+        await Posli(puvodni);
+
+        var prejmenovany = puvodni with
+        {
+            Zavody = [puvodni.Zavody[0] with { Slug = "jine-jmeno", PuvodniSlug = "zahajeni" }],
+        };
+
+        await Posli(prejmenovany);
+        var treti = await Posli(prejmenovany);
+
+        Assert.Equal(0, treti.Zavody.Nove);
+        Assert.Equal(0, treti.Vysledky.Nove);
+
+        using var scope = fixture.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.Equal(1, await db.Zavody.CountAsync(z => z.Serie!.Slug == "prejmenovani-dvakrat"));
+    }
+
+    [Fact]
+    public async Task Prejmenovani_na_sebe_sama_neprojde()
+    {
+        var vstup = Rocnik("prejmenovani-nesmysl");
+        var spatny = vstup with
+        {
+            Zavody = [vstup.Zavody[0] with { PuvodniSlug = vstup.Zavody[0].Slug }],
+        };
+
+        var (stav, telo) = await PosliSurove(spatny);
+
+        Assert.Equal(HttpStatusCode.BadRequest, stav);
+        Assert.Contains("stejnou jako novou", telo.RootElement.GetProperty("error").GetString());
+    }
+
+    [Fact]
+    public async Task Prejmenovani_na_adresu_jine_regaty_ze_souboru_neprojde()
+    {
+        // Dvě regaty jednu adresu sdílet nemůžou — jinak by si soubor sám
+        // určil, která z nich tu druhou přepíše.
+        var vstup = Rocnik("prejmenovani-kolize");
+        var zavod = vstup.Zavody[0];
+        var spatny = vstup with
+        {
+            Zavody =
+            [
+                zavod,
+                zavod with { Slug = "druha", Nazev = "Druhá", PuvodniSlug = zavod.Slug },
+            ],
+        };
+
+        var (stav, telo) = await PosliSurove(spatny);
+
+        Assert.Equal(HttpStatusCode.BadRequest, stav);
+        Assert.Contains("má jiná regata", telo.RootElement.GetProperty("error").GetString());
+    }
+
+    [Fact]
+    public async Task Prejmenovani_se_nehlasi_jako_rozdvojeni()
+    {
+        // Vodítko podle termínu má mlčet, když soubor přejmenování přizná.
+        var puvodni = Rocnik("prejmenovani-bez-kolize");
+        await Posli(puvodni);
+
+        var prejmenovany = puvodni with
+        {
+            Zavody = [puvodni.Zavody[0] with { Slug = "nova-adresa", PuvodniSlug = "zahajeni" }],
+        };
+
+        var (stav, telo) = await PosliSurove(prejmenovany, "?rezim=nahled");
+
+        Assert.Equal(HttpStatusCode.OK, stav);
+        Assert.Equal(0, telo.RootElement.GetProperty("kolize").GetArrayLength());
+    }
 }

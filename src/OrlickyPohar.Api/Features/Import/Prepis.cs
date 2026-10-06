@@ -152,7 +152,12 @@ public static class Prepis
             .ToListAsync(ct);
 
         var kolize = new List<Kolize>();
-        var vSouboru = vstup.Zavody.ToDictionary(z => z.Slug);
+
+        // Klíčem je adresa, pod kterou závod leží u nás — u přejmenované
+        // regaty tedy `PuvodniSlug`, ne nový slug ze souboru. Jinak by se
+        // přejmenování tvářilo jako závod, který soubor nepojmenoval, a jeho
+        // výsledky by se přestaly hlídat.
+        var vSouboru = vstup.Zavody.ToDictionary(z => z.PuvodniSlug ?? z.Slug);
 
         kolize.AddRange(await RozdvojeniAsync(db, vstup, ct));
 
@@ -219,7 +224,11 @@ public static class Prepis
     private static async Task<List<Kolize>> RozdvojeniAsync(
         AppDbContext db, SerieVstup vstup, CancellationToken ct)
     {
-        var slugyVSouboru = vstup.Zavody.Select(z => z.Slug).ToHashSet();
+        // Adresy, ke kterým se soubor hlásí — včetně těch přes `PuvodniSlug`.
+        // Kdo řekne, že přejmenovává, rozdvojení nedělá a hlásit ho nemá co.
+        var slugyVSouboru = vstup.Zavody
+            .SelectMany(z => z.PuvodniSlug is null ? [z.Slug] : new[] { z.Slug, z.PuvodniSlug })
+            .ToHashSet();
 
         var existujici = await db.Zavody
             .Where(z => z.Serie!.Slug == vstup.Slug)
@@ -235,12 +244,14 @@ public static class Prepis
         return
         [
             .. vstup.Zavody
-                .Where(z => !existujici.Any(e => e.Slug == z.Slug))
+                .Where(z => z.PuvodniSlug is null && !existujici.Any(e => e.Slug == z.Slug))
                 .SelectMany(novy => osirele[novy.Datum].Select(stary => new Kolize(
                     novy.Slug, null,
                     $"založilo by nový závod na {novy.Datum:d. M. yyyy}, kde už je "
-                    + $"„{stary.Nazev}“ ({stary.Slug}), který soubor nepojmenoval — "
-                    + "nepřejmenoval se jen název, a tím adresa?"))),
+                    + $"„{stary.Nazev}“ ({stary.Slug}), který soubor nepojmenoval. "
+                    + "Je to přejmenování? Pak do souboru k té regatě patří "
+                    + $"puvodniSlug = {stary.Slug} — import ji pak nezaloží znovu "
+                    + "a adresa zůstane."))),
         ];
     }
 }

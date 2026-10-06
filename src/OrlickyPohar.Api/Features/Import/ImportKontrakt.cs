@@ -65,7 +65,10 @@ public record ZavodVstup(
     DateOnly? PuvodniDatum = null,
     // Starší soubory druh neznají — všechno v nich jsou kola poháru.
     DruhZastavky Druh = DruhZastavky.Pohar,
-    int PosunDoSerie = 0);
+    int PosunDoSerie = 0,
+    // Pod kterou adresou tahle regata v ročníku už je. Vyplňuje se jen při
+    // přejmenování — viz `ImportHandler`, oddíl o přejmenování.
+    string? PuvodniSlug = null);
 
 /// <summary>
 /// Článek ročníku nebo zastávky. <c>Zavod</c> je slug zastávky ze stejného

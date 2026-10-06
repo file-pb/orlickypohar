@@ -3456,15 +3456,24 @@ Jedné události pak patří dvě řady výsledků, příloh a odběrů. V admin
 se slug nemění (`KalendarSprava.UpravAsync`), takže jediná cesta vede
 souborem.
 
-Pozná se to podle termínu a hlásí jako kolize k potvrzení, ne jako tvrdá
-chyba — dvě regaty v jeden den být mohou.
+Řeší to **`puvodniSlug` v souboru** (6. 10. 2026): regata smí říct „tahle
+je ta, co u vás leží pod adresou X", a import ji přejmenuje místo toho, aby
+založil druhou.
 
-**Neměnný importní identifikátor je zatím otevřená otázka.** Oponent ho
-doporučuje a vyřešil by to přesněji než vodítko podle termínu. Jde ale
-proti rozhodnutí, které je v `CLAUDE.md` i v `ImportHandler` napsané
-dvakrát: *sloupec „externí id" propsal do schématu tvar zdrojového souboru,
-a ten se s každým ročníkem mění.* Měnit to je rozhodnutí pro Filipa, ne
-vedlejší efekt opravy — do té doby chrání detekce výš.
+| Věc | Jak | Proč |
+|---|---|---|
+| Co se mění | **Jméno. Adresa zůstává** | Odkaz na zastávku už mohl někam odejít — totéž pravidlo drží administrace (`KalendarSprava.UpravAsync`) |
+| Opakované nahrání | Páruje se zas přes `puvodniSlug` | Slug v databázi se nezměnil, takže nový slug ze souboru nesedí — a zůstává to idempotentní |
+| Sám na sebe | Odmítne se | Přejmenování se vyplňuje jen tehdy, když se adresa liší |
+| Na adresu jiné regaty ze souboru | Odmítne se | Dvě regaty jednu adresu sdílet nemůžou, jinak si soubor sám určí, která tu druhou přepíše |
+| Kolize podle termínu | U přiznaného přejmenování mlčí | Kdo řekne, že přejmenovává, rozdvojení nedělá |
+
+**Není to umělý importní identifikátor**, který oponent doporučoval a který
+jde proti rozhodnutí zapsanému v `CLAUDE.md` i v `ImportHandler` (*sloupec
+„externí id" by do schématu propsal tvar zdrojového souboru*). Klíčem
+zůstává slug; soubor k němu umí jen přidat větu o přejmenování. Řeší to
+navíc i případ, na který vodítko podle termínu nestačí — přejmenování
+**spolu se změnou data**.
 
 ## Kde se pokračuje
 
