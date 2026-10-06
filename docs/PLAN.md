@@ -3579,6 +3579,14 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
    i s `docker-compose.yml`. Háček přenáší **jen compose** — cokoliv
    dalšího, co služba potřebuje (třeba konfigurace nginxu), musí jet
    v image.
+
+   **Červená úloha `nasazeni` u staršího běhu není porucha.** Když jdou
+   commity rychle za sebou, běhy se potkají: ten starší po odeslání přečte
+   `/verze` a najde novější SHA, než posílal — a skončí chybou, místo aby
+   tvrdil úspěch. Je to ta kontrola, co mluví (6. 10. 2026 se to stalo
+   dvakrát). **Soudit se má podle `/verze` obou služeb**, ne podle barvy
+   běhu; dokud sedí s `main`, je produkce v pořádku. Záruku místo zúžení
+   okna dá až zámek na straně serveru — vede se jako `platform#7`.
 4. **Pravidla seriálu jsou od 22. 9. 2026 v kódu** (oddíl *Pravidla
    seriálu od rozhodčího*): neúčast, bonus 24hodinovky, dvacítka za
    diskvalifikaci, dva škrty, rozstřel. Zbývají drobné otázky vypsané
