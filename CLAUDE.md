@@ -370,6 +370,30 @@ Když nasazení selže po výměně compose, háček vrátí původní zpátky. 
 tajemství ale musí na serveru **existovat předem**, jinak kontejner nenaběhne
 — a musí patřit uživateli, pod kterým aplikace běží (UID 1654), ne `deploy`.
 
+**Nasazení je vlastní úloha `nasazeni`, ne poslední krok buildu** (6. 10.
+2026, po oponentuře). Má tři vlastnosti, které každá řeší jednu skutečnou
+nehodu:
+
+1. **Čeká na testy** (`needs: [build, appka, integrace]`). Dokud byl deploy
+   krokem buildu, běžel vedle integrace — červená integrace tak mohla
+   znamenat **už nasazenou** vadnou verzi.
+2. **Jedno nasazení naráz** (`concurrency: nasazeni-produkce`,
+   `cancel-in-progress: false`). Platí pro všechny cesty do produkce včetně
+   ručního spuštění.
+3. **Nevrací produkci do minulosti.** Fronta sama nestačí: GitHub řadí podle
+   okamžiku vstupu do skupiny, ne podle stáří commitu, takže pozdě doběhlý
+   starý build se zařadí za novější. Před odesláním se proto čte `/verze`
+   běžícího API a commit, který je jeho **předkem**, se neposílá.
+
+**Obě služby vydávají `/verze`** s commitem, ze kterého je image (build arg
+`VERZE`). Nasazení si tím po sobě ověří, co doopravdy běží — `Healthy` a HTTP
+200 vrací i verze, která tam visí z minula, takže samy o sobě nedokazují nic.
+
+**Co zbývá na straně serveru:** tatáž kontrola stáří pod zámkem háčku. Ta
+v CI běží mimo něj, takže zavírá jen naše vlastní cesty; hlavička
+`X-Deploy-Sha` nese commit, aby ji háček mohl udělat taky. Patří do
+repozitáře `platform`.
+
 ## Testy
 
 Bez databáze a bez Dockeru, v CI běží první:

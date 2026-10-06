@@ -153,6 +153,17 @@ try
                     + "Fotky__VerejnaAdresa a klíče v /run/secrets). Nahrávání fotek neběží.");
 
     // Liveness: běží proces. Readiness: umí obsloužit provoz (drží i databáze).
+    // Z jakého commitu tenhle proces běží. Nasazení si tím po sobě ověří,
+    // že na serveru opravdu visí to, co posílalo: `Healthy` a HTTP 200 vrací
+    // i stará verze, takže samy o sobě nic o verzi nedokazují.
+    app.MapGet("/verze", () => Results.Ok(new
+        {
+            verze = Environment.GetEnvironmentVariable("VERZE") ?? "neznama",
+        }))
+        .WithTags("Provoz")
+        .WithSummary("Commit, ze kterého je běžící image")
+        .ExcludeFromDescription();
+
     app.MapHealthChecks("/health", new() { Predicate = _ => false });
     app.MapHealthChecks("/health/ready", new() { Predicate = c => c.Tags.Contains("ready") });
 
