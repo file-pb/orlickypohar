@@ -113,7 +113,7 @@ export interface paths {
         post: {
             parameters: {
                 query?: {
-                    rezim?: components["schemas"]["RezimImportu"];
+                    rezim?: string;
                     otisk?: string;
                 };
                 header?: never;
@@ -4175,8 +4175,6 @@ export interface components {
         /** @enum {unknown} */
         PuvodVazby: "Email" | "Kod" | "Narok" | "Rucne";
         /** @enum {unknown} */
-        RezimImportu: "Nahled" | "Bezpecny" | "Oprava";
-        /** @enum {unknown} */
         Role: "Ctenar" | "Editor" | "Rozhodci" | "Spravce" | "Organizator";
         /** @enum {unknown} */
         RoleKLodi: "Majitel" | "Kapitan" | "Posadka" | "Fanousek";
@@ -4293,6 +4291,8 @@ export interface components {
             stazenoV?: null | string;
             stahl?: null | string;
             duvodStazeni?: null | string;
+            /** @default false */
+            mohlaUvaznoutVCache: boolean;
         };
         SmerniceFormular: {
             soubor: null | components["schemas"]["IFormFile"];

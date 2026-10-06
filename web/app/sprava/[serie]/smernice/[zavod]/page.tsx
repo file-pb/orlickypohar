@@ -143,9 +143,13 @@ export default async function SmerniceZastavky({ params, searchParams }: Paramet
  * Jedna verze: odkaz na soubor, dokud visí, a stažení z vývěsky.
  *
  * <b>Stažená verze odkaz nemá</b>, protože soubor už v úložišti není.
- * Adresa je u ní vypsaná jako text — směrnice vyvěšené před 6. 10. 2026
- * mají v hlavičce roční cache, takže u nich dá jistotu až ruční
- * *Purge by URL* v Cloudflare.
+ *
+ * <b>Purge se připomíná jen tam, kde má smysl.</b> Směrnice vyvěšené dřív,
+ * než se přestalo cachovat, nesou roční hlavičku, takže u nich dá jistotu
+ * až ruční *Purge by URL* v Cloudflare — a jen u nich se vypisuje adresa.
+ * U novějších je stažení účinné hned a připomínka by byla šum, který člověk
+ * časem začne přehlížet. Rozhoduje o tom API (`mohlaUvaznoutVCache`), ne
+ * datum opsané sem.
  */
 function Verze({
   smernice,
@@ -170,9 +174,16 @@ function Verze({
           {smernice.stahl && ` · stáhl ${smernice.stahl}`}
           {smernice.duvodStazeni && ` · ${smernice.duvodStazeni}`}
         </span>
+        {" "}
         <span className="detail">
-          Soubor je smazaný. Pokud si ho někdo mohl stáhnout, pročisti ještě
-          adresu v Cloudflare (Purge by URL): {smernice.adresa}
+          Soubor je smazaný.
+          {smernice.mohlaUvaznoutVCache && (
+            <>
+              {" "}Tahle verze je starší než vypnutí cache, takže ji ještě
+              může vydávat Cloudflare — pročisti adresu (Purge by URL):{" "}
+              {smernice.adresa}
+            </>
+          )}
         </span>
       </>
     );

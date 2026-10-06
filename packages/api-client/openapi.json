@@ -96,8 +96,7 @@
                         "name": "rezim",
                         "in": "query",
                         "schema": {
-                            "default": "Bezpecny",
-                            "$ref": "#/components/schemas/RezimImportu"
+                            "type": "string"
                         }
                     },
                     {
@@ -5843,13 +5842,6 @@
                     "Rucne"
                 ]
             },
-            "RezimImportu": {
-                "enum": [
-                    "Nahled",
-                    "Bezpecny",
-                    "Oprava"
-                ]
-            },
             "Role": {
                 "enum": [
                     "Ctenar",
@@ -6268,6 +6260,10 @@
                             "null",
                             "string"
                         ]
+                    },
+                    "mohlaUvaznoutVCache": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },

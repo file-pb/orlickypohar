@@ -488,16 +488,31 @@ def ke_kontrole(v):
 SMERNICE = {}
 
 
+# Odkdy se směrnice ukládají bez cache — opsané z `Vyveseni.CacheVypnutaOd`.
+# Co je starší, může po stažení ještě vydávat Cloudflare z edge cache.
+CACHE_VYPNUTA_OD = "2026-10-06T02:00:00+00:00"
+
+
 def _nasad_smernice():
     if not D["zavody"]:
         return
-    SMERNICE[D["zavody"][0]["slug"]] = [{
-        "verze": 1, "nazev": "plachetni-smernice-v1.pdf",
-        "adresa": "http://127.0.0.1:8080/fake-soubor/smernice-v1.pdf",
-        "vyveseneV": "2026-09-21T17:00:00+00:00",
-        "poznamka": None, "vyvesil": JA["zobrazovane"],
-        "stazenoV": None, "stahl": None, "duvodStazeni": None,
-    }]
+
+    def smernice(verze, vyveseno):
+        return {
+            "verze": verze, "nazev": f"plachetni-smernice-v{verze}.pdf",
+            "adresa": f"http://127.0.0.1:8080/fake-soubor/smernice-v{verze}.pdf",
+            "vyveseneV": vyveseno,
+            "poznamka": None, "vyvesil": JA["zobrazovane"],
+            "stazenoV": None, "stahl": None, "duvodStazeni": None,
+            "mohlaUvaznoutVCache": vyveseno < CACHE_VYPNUTA_OD,
+        }
+
+    # Dvě verze schválně: jedna z doby s roční cache, druhá z doby bez ní.
+    # Po stažení se purge připomíná jen u té první.
+    SMERNICE[D["zavody"][0]["slug"]] = [
+        smernice(1, "2026-09-21T17:00:00+00:00"),
+        smernice(2, "2026-10-06T09:00:00+00:00"),
+    ]
 
 
 def ucet_podle_id(id_uctu):
