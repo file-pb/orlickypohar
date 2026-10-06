@@ -1168,8 +1168,15 @@ Endpointy (správce ročníku, loď musí být v jeho ročníku):
 `PUT …/lode/{lod}/kapitan`, `PUT …/lode/{lod}/vazby/{vazba}/role`
 a `DELETE …/lode/{lod}/vazby/{vazba}`.
 
-**Zbývá:** obrazovka správce ve webu — čeká na přegenerovaný klient, ten
-potřebuje nasazené API.
+**Obrazovka správce** je na `/sprava/{serie}/lode`: lodě ročníku, nahoře ty
+bez kapitána a s kapitánem od kódu *ke kontrole*, u vybrané lodi posádka
+i s tím, odkud se tam vzala a kdo jí roli určil, k tomu určení kapitána,
+potvrzení role, změna role, odebrání a historie změn. Odkaz v nabídce
+profilu má jen správce ročníku, ne rozhodčí.
+
+**Zbývá:** projít ji v prohlížeči. Testy i tvary odpovědí proti produkci
+sedí, ale obrazovku samotnou nikdo neviděl — `tools/fake-api.py` k ní
+endpointy má, takže jde rozjet bez databáze.
 
 Platí pravidlo platformy č. 5: `Osoba` má **volitelné** napojení na interní
 `UserId`. Většina osob v systému žádný účet mít nebude — figurují jen jako
