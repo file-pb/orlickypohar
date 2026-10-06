@@ -2250,7 +2250,14 @@ class H(BaseHTTPRequestHandler):
                               "potvrzena": u["stav"] != "Prihlasena",
                               "vyloucena": u["stav"] == "Vyloucena"}
                              for u in sorted((u for u in z["ucasti"] if u["stav"] in VEREJNE_UCASTI),
-                                             key=lambda u: (KAT_PORADI[KAT[u["lod"]]], nazvy(u["lod"])))]}
+                                             key=lambda u: (KAT_PORADI[KAT[u["lod"]]], nazvy(u["lod"])))],
+                    # Vyvěšené směrnice, od nejnovější. Stažené se veřejně
+                    # nevydávají vůbec, ne jen bez adresy — jako v API:
+                    # starší appka na telefonu o stažení neví a odkaz na
+                    # odvolaný dokument je to jediné, co se stát nesmí.
+                    "smernice": sorted(
+                        (x for x in SMERNICE.get(z["slug"], []) if not x["stazenoV"]),
+                        key=lambda x: x["verze"], reverse=True)}
 
             # Ročník, který výsledky jednotlivých regat veřejně nevydává.
             # Jako v API: zastávka zůstane i se seznamem lodí, rozjížďky
