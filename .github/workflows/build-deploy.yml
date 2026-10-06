@@ -299,6 +299,10 @@ jobs:
 
       # `Healthy` a HTTP 200 vrací i verze, která tam visí z minula, takže
       # samy o sobě nedokazují nic. Porovnává se skutečná verze obou služeb.
+      #
+      # Čeká se omezeně (20 × 15 s) a pak se **musí** vědět. Neověřený
+      # výsledek končí chybou, i po obnově: zelená nad službou, o které
+      # nevíme, co na ní běží, je falešná jistota.
       - name: Ověřit, co doopravdy běží
         if: ${{ steps.kontrola.outputs.nasadit == 'ano' && vars.DEPLOY_WEBHOOK != '' }}
         run: |
@@ -313,14 +317,17 @@ jobs:
             sleep 15
           done
           echo "čekáno: $ocekavano"
-          echo "API:    ${api:-nic}"
-          echo "web:    ${web:-nic}"
-          # Dokud na produkci neběží verze s `/verze`, nedá se co porovnat —
-          # první nasazení po téhle změně proto jen zahlásí a neshodí běh.
-          if [ -z "$api" ] || [ -z "$web" ]; then
-            echo "::warning::Jedna ze služeb verzi nevydává. Po prvním nasazení s /verze už bude."
-            exit 0
-          fi
-          [ "$api" = "$ocekavano" ] || { echo "::error::API běží na jiné verzi."; chyba=1; }
-          [ "$web" = "$ocekavano" ] || { echo "::error::Web běží na jiné verzi."; chyba=1; }
+          echo "API:    ${api:-neodpovědělo}"
+          echo "web:    ${web:-neodpovědělo}"
+
+          # Neověřený výsledek je chyba, ne varování. Zelená úloha nad
+          # službou, o které nevíme, co na ní běží, je falešná jistota —
+          # a platí to dvojnásob po obnově, kde se nasazovalo právě proto,
+          # že se verze přečíst nedala (oponentura, 6. 10. 2026).
+          [ -n "$api" ] || { echo "::error::API po nasazení verzi nevydalo."; chyba=1; }
+          [ -n "$web" ] || { echo "::error::Web po nasazení verzi nevydal."; chyba=1; }
+          [ -z "$api" ] || [ "$api" = "$ocekavano" ] \
+            || { echo "::error::API běží na jiné verzi."; chyba=1; }
+          [ -z "$web" ] || [ "$web" = "$ocekavano" ] \
+            || { echo "::error::Web běží na jiné verzi."; chyba=1; }
           exit $chyba

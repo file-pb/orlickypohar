@@ -398,6 +398,9 @@ přepsat nemůže.
 **Obě služby vydávají `/verze`** s commitem, ze kterého je image (build arg
 `VERZE`). Nasazení si tím po sobě ověří, co doopravdy běží — `Healthy` a HTTP
 200 vrací i verze, která tam visí z minula, takže samy o sobě nedokazují nic.
+Čeká se omezeně a pak se **musí vědět**: neověřený výsledek je chyba, ne
+varování, i po obnově. Zelená nad službou, o které nevíme, co na ní běží, je
+falešná jistota.
 
 **Co zbývá na straně serveru** (repozitář `platform`): háček pod společným
 zámkem přečte běžící SHA, porovná ho s hlavičkou `X-Deploy-Sha` a teprve pak
