@@ -231,7 +231,7 @@ KONEC
 ```
 
 **Kdo je přihlášený, řídí cookie `op_token`** (nebo hlavička
-`Authorization: Bearer <jméno>` při volání API přímo). Mock zná čtyři jména
+`Authorization: Bearer <jméno>` při volání API přímo). Mock zná tahle jména
 a jiné **odmítne** — překlep by jinak tiše udělal správce:
 
 | Jméno | Kdo to je |
@@ -239,10 +239,20 @@ a jiné **odmítne** — překlep by jinak tiše udělal správce:
 | `filip`, `vyvoj` | správce ročníku |
 | `milos` | pořadatel jedné zastávky |
 | `dana` | správkyně celého webu **bez role v ročníku** |
+| `jana` | majitelka lodi, žádná role ve správě |
+| `petr` | posádka lodi, **která nemá kapitána** |
 
-Víc identit není rozmar: snímek zápisu k porovnání je jeden na zapisovatele,
-takže **dva zapisovatele u cíle nejde vyzkoušet pod jedním účtem**. A role na
+Víc identit není rozmar. Snímek zápisu k porovnání je jeden na zapisovatele,
+takže **dva zapisovatele u cíle nejde vyzkoušet pod jedním účtem**. Role na
 celý web bez role v ročníku je stav, kvůli kterému vznikl rozcestník správy.
+A kapitánské obrazovky se nedají zkusit z účtu, který loď nemá.
+
+**Osobní cesty mock umí celé** — `/ja/lode`, vystavení a uplatnění kódu,
+připojení k lodi i nároky. Nejsou to jen tvary odpovědí: platnost kódu je
+patnáct minut, propadlý kód dává tutéž hlášku jako vymyšlený, kód i přijatý
+nárok zakládají **posádku, nikdy kapitána**, a odmítnutí sedí na API včetně
+hlášek. Jeden kód (`PROSLY`) je nasazený už propadlý, aby se při zkoušení
+nečekalo čtvrt hodiny.
 
 Úvodní stránka nese velkou fotku a nad ní **živou větu spočítanou z dat** —
 kolik zastávek je odjeto, kdo vede v kategoriích a která zastávka je další.

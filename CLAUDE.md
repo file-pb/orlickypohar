@@ -138,7 +138,8 @@ deploy/docker-compose.yml     celé nasazení; háček ho přenáší s každým
 deploy/cache/                 nginx s mikrocache před webem (image);
                               test/test.sh ověřuje pravidla v CI před nasazením
 tools/fake-api.py             mock ročník jako API, pro vývoj webu bez databáze;
-                              zná čtyři identity podle tokenu (README, Web)
+                              identita podle tokenu a osobní cesty /ja/*
+                              (jména a pravidla v README, oddíl Web)
 tools/gen-mock.py             vyrábí ten mock; skutečná fakta o ročníku patří sem
 ```
 

@@ -3572,7 +3572,8 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
    v platformě. Na pracovním Macu je nedostupný Docker Hub, takže integrační
    testy běží jen v CI a lokální databáze nejede vůbec.
 2. **Web bez databáze** — `tools/fake-api.py` servíruje mock ročník
-   ve tvarech skutečného API.
+   ve tvarech skutečného API, včetně přihlášení (identita podle tokenu)
+   a osobních cest `/ja/*`. Jména účtů a pravidla jsou v README, oddíl Web.
 3. **Nasazení** — nic ručního. Push do `main` postaví čtyři image (API,
    web, úloha `landsat`, nginx `cache`) a háček je vymění na serveru
    i s `docker-compose.yml`. Háček přenáší **jen compose** — cokoliv
