@@ -80,12 +80,21 @@ Rozlišují se tři stavy, ne dva: **místní zápis v telefonu**, **čeká na
 odeslání**, **potvrzeno serverem.** Obrazovka to umí
 (`uloženo / ukládám… / neuloženo`), zápis to musí rozlišovat taky.
 
-**Skupina B, posádka v A3 a F1 zatím nejsou proveditelné.** Z osobních cest má
-mock jen `/ja` (`tools/fake-api.py:2043`); `/ja/lode`, `/ja/lode/{id}/kod`,
-`/ja/lode/{id}/pripojeni` a `/ja/naroky`, které web volá
-(`web/lib/pripojeni.ts:75,79,90,142`), chybí. **Do sezení se nezvou**, dokud
-ty čtyři cesty do mocku nedopíšu — F1 obzvlášť: spotřeboval by čerstvého
-účastníka na chybu zkušebního prostředí.
+### Co se na mocku zatím ověřit nedá
+
+Tyhle scénáře se **do sezení nezvou** a závěry o nich se nedělají — ne že by
+prošly nebo neprošly, prostě na ně prostředí nestačí:
+
+| Co | Proč | Co by to spravilo |
+|---|---|---|
+| **Skupina B** a posádka v **A3** | Z osobních cest má mock jen `/ja` (`tools/fake-api.py`); `/ja/lode`, `/ja/lode/{id}/kod`, `/ja/lode/{id}/pripojeni` a `/ja/naroky`, které web volá (`web/lib/pripojeni.ts:75,79,90,142`), chybí | Dopsat je — a s nimi **změny stavů, platnost kódu a odmítnutí operací**, jinak scénáře projdou naprázdno |
+| **F1** | Potřebuje tytéž osobní cesty | Totéž. Spotřebovat na chybu prostředí **čerstvého** účastníka je nejdražší možná chyba |
+| **E4 v plném rozsahu** | Mock u zápisu **práva nerozlišuje** — přihlášeného bere jako pořadatele. Udělení role proto přístup druhého účtu doopravdy nezmění; jiný podpis autora to nedokládá | Vymáhat v mocku rozsah role, ne jen podepisovat |
+| Scénáře stojící na **odmítnutí oprávnění** (část C2, B4, B5, D4, D5) | Totéž: odmítnutí přijde z pravidel stavu, ne z oprávnění | Totéž |
+
+Co naopak **jde**: role se liší v tom, co člověk **vidí** — nabídka, rozcestník
+a jeho položky se počítají z týchž pravidel jako na serveru. Scénáře o tom,
+kam se kdo dostane, tedy platí; scénáře o tom, co mu server zakáže, zatím ne.
 
 **Druhý zapisovatel na mocku je.** Mock bere token jako jméno účtu
 (`TOKENY` v `tools/fake-api.py`): `filip` je správce ročníku, `milos`
@@ -150,12 +159,23 @@ telefon.
   okamžik — ne druhý člověk klikající podle sluchu.
 
   **Postup, kterým se konflikt vyvolá** (ověřený, `izolepa`, 1. rozjížďka):
-  1. `web/.env.local` musí mít `IDENTITA_AUTHORITY`, `IDENTITA_CLIENT_ID`
-     a `WEB_URL` — bez nich se přihlášení vůbec nenabízí a nikdo není
-     přihlášený. Hodnoty můžou být nesmyslné, mock token nerozbaluje.
-  2. Kdo je kdo, se řídí cookie `op_token`: `filip`, nebo `milos`. Druhý
-     telefon je tedy jiný profil prohlížeče s `op_token=milos` — anebo
-     připravený příkaz s hlavičkou `Authorization: Bearer milos`.
+  1. Založ `web/.env.local` — negitovaný soubor, bez něj se přihlášení vůbec
+     nenabízí a nikdo není přihlášený. Hodnoty jsou nesmyslné schválně, na
+     poskytovatele se nikdo neptá:
+
+     ```
+     IDENTITA_AUTHORITY=http://localhost:9/neexistuje
+     IDENTITA_CLIENT_ID=zkouska-ovladani
+     WEB_URL=http://localhost:3000
+     ```
+
+  2. Kdo je kdo, se řídí cookie `op_token`. Jména zná mock: **`filip`**
+     (správce ročníku), **`milos`** (pořadatel jedné zastávky), **`dana`**
+     (správkyně celého webu bez role v ročníku) a `vyvoj` jako Filip.
+     **Jiné jméno mock odmítne** — překlep by jinak tiše udělal správce
+     a měřilo by se něco jiného, než co se zadalo. Druhý telefon je tedy
+     jiný profil prohlížeče s `op_token=milos`, anebo připravený příkaz
+     s hlavičkou `Authorization: Bearer milos`.
   3. Rozjížďka musí být `Navrzeno` nebo `KRevizi`. Odjetá regata má výsledky
      `Potvrzeno` a zapisovat do nich nejde — nejdřív je **vrátit k revizi**.
   4. Telefon A zapíše dojezd (uloží se, revize se posune).
@@ -285,16 +305,22 @@ nabídne buď „Použít verzi: {kdo}", nebo odkaz na formulář zápisu se vě
 (`porovnani/page.tsx:127,132`); formulář si nese čerstvou revizi
 (`[cislo]/page.tsx:165`), takže ruční pořadí se se starou verzí neutká.
 Automatické sloučení aplikace neumí a nemusí.
-Hlídej dvě pasti: *Přesto odeslat* přepíše práci druhého, *Zahodit* zahodí
-svoji (`cil.tsx:330,340`) — a po ručním sepsání ve formuláři zůstává
-v telefonu starý neodeslaný zápis, který se při návratu na cíl nabídne znovu
-(ověřeno: *„V telefonu leží neodeslaný zápis z 13:52 (7 dojetých)"* a pod tím
-obě tlačítka). Odeslat ho znamená ruční opravu zahodit.
+**Dvě místa, kde se dřív ztrácel dojezd, jsou opravená** (6. 10. 2026) —
+zkouška je teď kontroluje, místo aby na ně doplácela:
 
-**Porovnání ukazuje server, ne telefon.** Klepnutí, které kvůli konfliktu
-neprošlo, ve vlastním sloupci **není** — v průchodu chyběla poslední zapsaná
-loď, ačkoliv ji obrazovka cíle celou dobu držela. Kdo sepisuje společný
-výsledek jen z porovnání, o ni přijde. Zapiš, jestli si toho všiml.
+- **Porovnání ukazuje i neodeslaný zápis z telefonu** a vyjmenuje, co má
+  navíc proti serveru. Dřív stavělo vedle sebe jen snímky ze serveru, takže
+  klepnutí, které kvůli konfliktu neprošlo, v něm nebylo vůbec — kdo
+  sepisoval společný výsledek podle porovnání, o ně přišel.
+- **Oprava ve formuláři koncept vyřeší.** Dá se z něj doplnit jedním
+  klepnutím a po uložení zmizí, takže už se na cíli nenabídne k odeslání.
+  Dřív tam zůstal ležet a odeslat ho znamenalo přepsat právě dokončenou
+  opravu.
+
+*Sleduj tedy:* všimne si účastník té věty o telefonu v porovnání? Použije
+**Doplnit do formuláře**, nebo pořadí přepíše ručně? A dojde mu u *Odeslat
+z telefonu a přepsat uložené*, co to udělá — hláška mu teď vyjmenuje, které
+lodě by se přepsaly.
 
 Po druhém zapisovateli se nad zápisem objeví *„Zapisuje i někdo další. Každý
 má svoji verzi; ve výsledcích je ta naposledy uložená."* — všiml si jí dřív,

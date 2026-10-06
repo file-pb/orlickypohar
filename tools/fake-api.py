@@ -363,9 +363,12 @@ WEBOVA = {
 # dvou telefonech je vlastní případ s vlastní mezerou (porovnání nemá co
 # ukázat) a mock ji nesmí zamaskovat.
 #
-# Neznámý token zůstává Filipem, aby dosavadní postup — přihlásit se čímkoliv
-# a dělat správce — fungoval dál.
-TOKENY = {"filip": JA, "milos": MILOS, "dana": WEBOVA}
+# <b>Neznámé jméno se odmítá.</b> Dřív padalo na Filipa, jenže při zkoušce
+# ovládání je to past: překlep v `milos` by tiše udělal správce ročníku
+# a měřilo by se něco jiného, než co se zadalo (oponentura, 6. 10. 2026).
+# Kompatibilní výchozí token má proto vlastní jméno — `vyvoj` je Filip, takže
+# kdo chce starý postup „přihlásit se čímkoliv", napíše ho výslovně.
+TOKENY = {"filip": JA, "vyvoj": JA, "milos": MILOS, "dana": WEBOVA}
 
 # Náklady: snímek souboru `stav/naklady.json`, který na serveru zapisuje
 # přehled platformy. Čísla jsou skutečná (24. 9. 2026), jen zamrzlá —
@@ -1029,17 +1032,39 @@ def clanek_radek(c):
 
 
 class H(BaseHTTPRequestHandler):
+    def token_nesedi(self):
+        """
+        Je v hlavičce jméno, které neznáme? Odmítne se hned, na jednom místě.
+
+        Bez hlavičky se nic neodmítá: veřejné stránky mock servíruje i
+        nepřihlášenému a na chráněné odpovídají endpointy čtyřistajedničkou
+        samy.
+        """
+        hlavicka = self.headers.get("authorization")
+        if not hlavicka:
+            return False
+        if self.prihlaseny():
+            return False
+
+        # Důvod jde jen do těla. Do `WWW-Authenticate` nepatří: hlavičky se
+        # kódují latin-1, takže by na první háčkované souhlásce spadl server
+        # a z odpovědi by nezbylo nic — ani ta čtyřistajednička.
+        self.chyba(401, "Takový účet mock nezná. Jména jsou: "
+                        + ", ".join(sorted(TOKENY)) + ".")
+        return True
+
     def prihlaseny(self):
         """
-        Kdo volá. Token se nerozbaluje, bere se jako jméno účtu — viz TOKENY.
+        Kdo volá, nebo `None` u neznámého jména — viz TOKENY.
 
-        Neznámý token je Filip, takže kdo o druhou identitu nestojí, nepozná
-        změnu. Prázdná hlavička se sem nedostane: na ni odpovídají endpointy
-        čtyřistajedničkou dřív.
+        Prázdná hlavička se sem nedostane: na ni odpovídají endpointy
+        čtyřistajedničkou dřív. Neznámé jméno vrací `None` a volající ho
+        odmítne; tiše dosadit správce by při zkoušce ovládání znamenalo měřit
+        něco jiného, než co se zadalo.
         """
         hlavicka = self.headers.get("authorization") or ""
         token = hlavicka.split(" ", 1)[-1].strip().lower()
-        return TOKENY.get(token, JA)
+        return TOKENY.get(token)
 
     def telo_zadosti(self):
         delka = int(self.headers.get("Content-Length", "0") or 0)
@@ -1061,6 +1086,8 @@ class H(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_PUT(self):
+        if self.token_nesedi():
+            return None
         cesta = urlparse(self.path).path
 
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
@@ -1302,6 +1329,8 @@ class H(BaseHTTPRequestHandler):
         return self._prazdna_odpoved()
 
     def do_POST(self):
+        if self.token_nesedi():
+            return None
         cesta = urlparse(self.path).path
 
         if cesta == f'/sprava/serie/{D["slug"]}/publikace':
@@ -1934,6 +1963,8 @@ class H(BaseHTTPRequestHandler):
         return self.odpoved(clanek_radek(c))
 
     def do_DELETE(self):
+        if self.token_nesedi():
+            return None
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/lode/(\d+)/vazby/(\d+)$',
                           urlparse(self.path).path)):
             return self.odeber_vazbu(int(m.group(1)), int(m.group(2)))
@@ -2002,6 +2033,8 @@ class H(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        if self.token_nesedi():
+            return None
         rozdelena = urlparse(self.path)
         cesta, dotaz = rozdelena.path, parse_qs(rozdelena.query)
 
