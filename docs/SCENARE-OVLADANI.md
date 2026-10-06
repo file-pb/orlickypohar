@@ -82,15 +82,20 @@ odeslání**, **potvrzeno serverem.** Obrazovka to umí
 
 ### Co se na mocku zatím ověřit nedá
 
-Tyhle scénáře se **do sezení nezvou** a závěry o nich se nedělají — ne že by
-prošly nebo neprošly, prostě na ně prostředí nestačí:
+**Skupina B, posádka v A3 a F1 už jdou** (6. 10. 2026): mock umí `/ja/lode`,
+`/ja/lode/{id}/kod`, `/ja/lode/{id}/pripojeni`, `/ja/pripojeni` a nároky,
+včetně **platnosti kódu, přechodů rolí a odmítnutí**. Projeto scénáři B1–B5.
+Účty pro ně: **`jana`** (majitelka lodi JOY, žádná role ve správě) a
+**`petr`** (posádka lodi SENDY, která **nemá kapitána** — na tom stojí B5).
+Jeden kód je nasazený **už prošlý** (`PROSLY`), aby se u B2 nečekalo
+patnáct minut.
+
+Zbývá dvojí, kde se závěry **nedělají**:
 
 | Co | Proč | Co by to spravilo |
 |---|---|---|
-| **Skupina B** a posádka v **A3** | Z osobních cest má mock jen `/ja` (`tools/fake-api.py`); `/ja/lode`, `/ja/lode/{id}/kod`, `/ja/lode/{id}/pripojeni` a `/ja/naroky`, které web volá (`web/lib/pripojeni.ts:75,79,90,142`), chybí | Dopsat je — a s nimi **změny stavů, platnost kódu a odmítnutí operací**, jinak scénáře projdou naprázdno |
-| **F1** | Potřebuje tytéž osobní cesty | Totéž. Spotřebovat na chybu prostředí **čerstvého** účastníka je nejdražší možná chyba |
 | **E4 v plném rozsahu** | Mock u zápisu **práva nerozlišuje** — přihlášeného bere jako pořadatele. Udělení role proto přístup druhého účtu doopravdy nezmění; jiný podpis autora to nedokládá | Vymáhat v mocku rozsah role, ne jen podepisovat |
-| Scénáře stojící na **odmítnutí oprávnění** (část C2, B4, B5, D4, D5) | Totéž: odmítnutí přijde z pravidel stavu, ne z oprávnění | Totéž |
+| Odmítnutí ve správě ročníku (C2, D4, D5) | Mock je odvozuje z **pravidel stavu**, ne z role, takže se měří hláška, ne oprávnění. U lodí to neplatí: **B4 a B5 odmítá mock doopravdy podle vztahu k lodi** (403, jen majitel nebo kapitán) | Vymáhat rozsah role i ve správě ročníku |
 
 Co naopak **jde**: role se liší v tom, co člověk **vidí** — nabídka, rozcestník
 a jeho položky se počítají z týchž pravidel jako na serveru. Scénáře o tom,
@@ -171,7 +176,9 @@ telefon.
 
   2. Kdo je kdo, se řídí cookie `op_token`. Jména zná mock: **`filip`**
      (správce ročníku), **`milos`** (pořadatel jedné zastávky), **`dana`**
-     (správkyně celého webu bez role v ročníku) a `vyvoj` jako Filip.
+     (správkyně celého webu bez role v ročníku), **`jana`** (majitelka lodi
+     bez role ve správě), **`petr`** (posádka lodi bez kapitána) a `vyvoj`
+     jako Filip.
      **Jiné jméno mock odmítne** — překlep by jinak tiše udělal správce
      a měřilo by se něco jiného, než co se zadalo. Druhý telefon je tedy
      jiný profil prohlížeče s `op_token=milos`, anebo připravený příkaz
@@ -195,7 +202,7 @@ telefon.
 *Pro moderátora:* hledá ji u regaty, nebo v menu? Je na stránce vidět, že je
 to závazný dokument?
 
-**A3 — Přihlásit loď.** Posádka zatím na mocku nejde (viz výš).
+**A3 — Přihlásit loď.**
 *Zadání:* Přihlas svou loď na regatu, včetně posádky.
 *Pro moderátora:* **urči, čí loď to je a co na ni má za oprávnění** — jinak
 se problém identity zapíše jako špatná navigace. Najde formulář? Čeká, že se
@@ -224,8 +231,8 @@ si nebyl jistý, že se dívá na ten starý ročník.
 
 ## B. Kapitán lodi (bez role ve správě)
 
-**Zatím neproveditelné** — mock neumí osobní cesty, viz „Kde se to zkouší".
-Do sezení se tyhle scénáře nezvou.
+Účty: **`jana`** je majitelka lodi JOY, **`petr`** posádka lodi SENDY bez
+kapitána. Prošlý kód k uplatnění je `PROSLY`.
 
 **B1 — Dostat se ke své lodi.**
 *Zadání:* Přihlas se a najdi svoji loď.
@@ -407,8 +414,7 @@ nejpravděpodobnější místo, kde člověk usoudí, že funkce neexistuje.
 
 ## F. Napříč rolemi
 
-**F1 — Od začátku do konce.** **Zatím neproveditelné** (potřebuje osobní cesty
-skupiny B). Až pak, a jen pro **čerstvého účastníka** — po A a B už tentýž
+**F1 — Od začátku do konce.** Jen pro **čerstvého účastníka** — po A a B už tentýž
 člověk první orientaci neměří.
 *Zadání:* Přihlas se, připoj se k lodi, podívej se na směrnici a po regatě si
 najdi výsledek.
