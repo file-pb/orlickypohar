@@ -1383,8 +1383,16 @@ class H(BaseHTTPRequestHandler):
 
         # Kontrola revize jako v `Zapis.ProcNejdeUlozitRevizi`: kdo pošle
         # starší podobu sady, neprojde — uložení maže, co v sadě není.
+        # Sada bez revize neprojde vůbec: není to „tak tedy bez kontroly",
+        # protože sada odeslaná naslepo umí smazat opravu, o které klient
+        # nevěděl.
         poslana = self.telo_zadosti_pamet().get("revize")
-        if poslana is not None and poslana != r.get("revize", 0):
+        if poslana is None:
+            return self.chyba(
+                400,
+                "Zápis přišel bez revize, ze které vycházel, a tím se ukládat nedá — "
+                "uložení maže lodě, které v sadě nejsou. Obnov stránku a ulož znovu.")
+        if poslana != r.get("revize", 0):
             return self.chyba(
                 409,
                 "Rozjížďku mezitím uložil někdo jiný, takže tvoje sada vychází ze "

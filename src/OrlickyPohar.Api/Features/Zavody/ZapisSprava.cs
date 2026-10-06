@@ -111,8 +111,7 @@ public record VysledekUlozeni(string? Chyba, bool Konflikt = false)
 /// požadavku</b> — stejně jako u <see cref="VysledkySprava"/>.
 /// </para>
 /// </summary>
-public class ZapisSprava(
-    AppDbContext db, Fotky.IUloziste uloziste, TimeProvider cas, ILogger<ZapisSprava> log)
+public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider cas)
 {
     private const string NeniPoradatel =
         "Výsledky zapisuje pořadatel regaty. Rozhodčí je ověřuje, ale nemění.";
@@ -216,18 +215,12 @@ public class ZapisSprava(
         if (Zapis.ProcNejdePrepsat(zavod.Stav, rozjizdka.StavVysledku) is { } zamceno)
             return new VysledekUlozeni(zamceno);
 
-        // Krok 1 z „rozšiř a stáhni": kdo revizi pošle, je chráněný hned.
-        // Odmítat sadu bez revize se smí teprve tehdy, až ji posílá i cílová
-        // obrazovka — jinak by nasazení API zastavilo zápis z vody.
-        if (revize is not null
-            && Zapis.ProcNejdeUlozitRevizi(revize, rozjizdka.Revize) is { } stara)
-            return new VysledekUlozeni(stara, Konflikt: true);
-
-        if (revize is null)
-            log.LogWarning(
-                "Sada výsledků rozjížďky {Rozjizdka} přišla bez revize. "
-                + "Starý klient; až je bude posílat každý, začne se to odmítat.",
-                rozjizdka.Id);
+        // Sada bez revize se neukládá. Není to „tak tedy bez kontroly":
+        // uložení maže lodě, které v sadě nejsou, takže sada odeslaná
+        // naslepo umí smazat opravu, o které klient nevěděl. Konfliktem je
+        // jen nesoulad — chybějící revize je starý klient, ne souběh.
+        if (Zapis.ProcNejdeUlozitRevizi(revize, rozjizdka.Revize) is { } stara)
+            return new VysledekUlozeni(stara, Konflikt: revize is not null);
 
         var prihlasky = await db.Prihlasky
             .Where(p => p.SerieId == zavod.SerieId)

@@ -568,11 +568,11 @@ public class VysledkySpravaTests(PostgresFixture fixture)
     }
 
     [Fact]
-    public async Task Zapis_bez_revize_zatim_projde()
+    public async Task Zapis_bez_revize_se_neuklada()
     {
-        // Krok 1 z „rozšiř a stáhni": dokud revizi neposílá i cílová
-        // obrazovka, sada bez ní projít musí — jinak by nasazení API
-        // zastavilo zápis z vody. Odmítání přijde krokem 3.
+        // Krok 3: sada bez revize už neprojde. Uložení maže lodě, které
+        // v sadě nejsou, takže sada odeslaná naslepo umí smazat opravu,
+        // o které klient nevěděl.
         var slug = "zapis-bez-revize";
         await Nahraj(Rocnik(slug));
 
@@ -582,8 +582,10 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         var vysledek = await zapis.UlozAsync(
             rozjizdka, [new(prihlasky[0], PoradiVCili: 1)], default);
 
-        Assert.Null(vysledek.Chyba);
-        Assert.Single(await db.Vysledky.Where(v => v.RozjizdkaId == rozjizdka.Id).ToListAsync());
+        Assert.Equal(Zapis.RevizeChybi, vysledek.Chyba);
+        // Konflikt to není: klient neposlal nic, s čím by se dalo porovnávat.
+        Assert.False(vysledek.Konflikt);
+        Assert.Empty(await db.Vysledky.Where(v => v.RozjizdkaId == rozjizdka.Id).ToListAsync());
     }
 
     [Fact]

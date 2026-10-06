@@ -1448,7 +1448,7 @@ data.
 | Věc | Jak | Proč |
 |---|---|---|
 | Co klient posílá | `revize` — podobu sady, ze které vycházel | Číslo stačí: nejde o to vědět, co se změnilo, ale že se změnilo |
-| Bez revize | Nakonec **neprojde** | Není to „tak tedy bez kontroly" — sada naslepo umí smazat opravu, o které klient nevěděl |
+| Bez revize | **Neprojde** | Není to „tak tedy bez kontroly" — sada naslepo umí smazat opravu, o které klient nevěděl |
 | Při nesouladu | `409 Conflict` i se současným stavem; klient si **svou sadu nechává** | Zahodit rozepsaný zápis z cíle je horší než konflikt |
 | Souběh | Uložení drží `FOR UPDATE` na řádku rozjížďky | Bez zámku si dvě uložení přečtou tutéž revizi, obě projdou a druhé přepíše první |
 | Po uložení | `Revize` se zvýší | Starší klient už neprojde |
@@ -1466,7 +1466,7 @@ zastavilo zápis z vody:
    obrazovka **přestane opakovat** — sada vychází ze starší podoby a každý
    další pokus skončí stejně — klepnutí nechá v telefonu a odkáže na
    porovnání zápisů. *(hotovo)*
-3. Sada bez revize se odmítne.
+3. Sada bez revize se odmítne. *(hotovo)*
 
 ### Mapa na webu i v appce
 
