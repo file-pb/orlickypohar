@@ -1,4 +1,5 @@
 import type { Ja } from "@/lib/ja";
+import { polozkyWebu, prava } from "@/lib/co-smim";
 import { ucetUPoskytovatele } from "@/lib/oidc";
 import { ZavriMimo } from "@/app/zavri-mimo";
 import { OdkazJinam } from "@/app/odkaz-jinam";
@@ -20,52 +21,24 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
   // v tu chvíli musí nabídnout odhlášení — jinak se z toho stavu nedá odejít.
   const jmeno = ja?.zobrazovane;
 
-  const opravneni = ja?.opravneni ?? [];
+  // Oprávnění vyhodnocuje `lib/co-smim`, opsané z `Prava` na serveru. Nabídka
+  // si je dřív počítala sama a **jen z rolí na ročník**: kdo měl roli na celý
+  // web a žádnou v ročníku, neviděl ročníkové položky, ačkoliv na ty obrazovky
+  // smí (audit, 6. 10. 2026).
+  const udelena = prava(ja);
 
-  // Ročníky, kde smí udělovat role: správce všechny, rozhodčí pořadatele
-  // a editora regaty. Nabízet odkaz na obrazovku, ze které se vrátí
-  // „nemáš práva", je slib naprázdno.
-  const spravuje = [
+  // Ročníky, kde má člověk roli přímo. Role na celý web se tu nedopočítává —
+  // seznam ročníků hlavička nezná a kvůli nabídce se pro něj nebude volat API.
+  // Právě proto je první položkou Správa: rozcestník ročníky zná.
+  const mojeRocniky = [
     ...new Set(
-      opravneni
-        .filter((o) => o.role === "Spravce" || o.role === "Rozhodci")
-        .map((o) => o.serie),
+      (ja?.opravneni ?? []).filter((o) => o.role !== "Ctenar").map((o) => o.serie),
     ),
   ];
 
-  // Ročníky, kde je správce. Lodě a kapitánství schválně jen jemu: vazba
-  // k lodi platí celý rok a napříč zastávkami, takže pověření k jedné
-  // regatě na ni nemá dosáhnout (oponentura, 5. 10. 2026).
-  const lode = [
-    ...new Set(opravneni.filter((o) => o.role === "Spravce").map((o) => o.serie)),
-  ];
-
-  // Ročníky, kde smí psát. Editor píše na blog, organizátor a správce
-  // obsahují editora — tohle pořadí je v `Prava` a tady se jen opisuje pro
-  // rozhodnutí, jestli odkaz vůbec nabídnout.
-  const pise = [
-    ...new Set(
-      opravneni
-        .filter((o) => o.role === "Editor" || o.role === "Organizator" || o.role === "Spravce")
-        .map((o) => o.serie),
-    ),
-  ];
-
-  // Ročníky, kde smí do kalendáře a k výsledkům. Rozhodčí zakládá
-  // regaty a hýbe termíny, organizátor svůj závod vypisuje, uzavírá
-  // a zapisuje výsledky — odkaz má smysl pro oba. Editor ne: ten jen píše.
-  const kalendar = [
-    ...new Set(
-      opravneni
-        .filter((o) => o.role === "Rozhodci" || o.role === "Organizator" || o.role === "Spravce")
-        .map((o) => o.serie),
-    ),
-  ];
-
-  // Role na celém webu (od 22. 9. 2026). Starší API pole nevydává.
-  const web = ja?.web ?? [];
-  const piseNaWeb = web.includes("Editor") || web.includes("Spravce");
-  const spravujeWeb = web.includes("Spravce");
+  const web = polozkyWebu(udelena);
+  // Má vůbec co spravovat? Stačí jedna role kdekoliv, i na celý web.
+  const maSpravu = mojeRocniky.length > 0 || web.length > 0;
 
   return (
     <details className="profil">
@@ -110,49 +83,33 @@ export function Profil({ ja, duvod }: { ja: Ja | null; duvod: string | null }) {
         {/* Moje lodě má každý přihlášený, i bez jediného oprávnění: vazba
             k lodi vzniká e-mailem nebo kódem, ne rolí ve správě
             (Filip, 4. 10. 2026). */}
+        {/* Správa je první a jediná cesta dovnitř. Dřív tu stál seznam deseti
+            odkazů pojmenovaných slugem ročníku („Kalendář 2026-nanecisto") a kdo
+            přišel zapsat dojezdy, musel vědět, že se na to jde přes Výsledky.
+            Rozpis i navedení na rozdělanou práci patří na rozcestník, kde je na
+            to místo — nabídka má dovést k němu (Filip, 6. 10. 2026). */}
+        {maSpravu && (
+          <OdkazJinam obycejny href="/sprava">
+            <b>Správa</b>
+          </OdkazJinam>
+        )}
+        {/* Zkratka pro toho, kdo má roli ve víc ročnících: jinak by musel
+            na rozcestník jen proto, aby si vybral ten svůj. */}
+        {mojeRocniky.length > 1 &&
+          mojeRocniky.map((serie) => (
+            <OdkazJinam obycejny key={serie} href={`/sprava/${serie}`}>
+              Ročník {serie}
+            </OdkazJinam>
+          ))}
         <OdkazJinam obycejny href="/moje-lode">
           Moje lodě
         </OdkazJinam>
-        {piseNaWeb && (
-          <OdkazJinam obycejny href="/sprava/web/clanky">
-            Obecné články
-          </OdkazJinam>
-        )}
-        {spravujeWeb && (
-          <OdkazJinam obycejny href="/sprava/opravneni-webu">
-            Oprávnění na celý web
-          </OdkazJinam>
-        )}
-        {/* Co provoz a servis stojí. Jen správci webu: je v tom cena stroje
-            i předplatné nástrojů, což není věc pro každého přihlášeného. */}
-        {spravujeWeb && (
-          <OdkazJinam obycejny href="/sprava/naklady">
-            Co web stojí
-          </OdkazJinam>
-        )}
-        {pise.map((serie) => (
-          <OdkazJinam obycejny key={`clanky-${serie}`} href={`/sprava/${serie}/clanky`}>
-            Novinky {serie}
-          </OdkazJinam>
-        ))}
-        {kalendar.map((serie) => (
-          <OdkazJinam obycejny key={`kalendar-${serie}`} href={`/sprava/${serie}/kalendar`}>
-            Kalendář {serie}
-          </OdkazJinam>
-        ))}
-        {kalendar.map((serie) => (
-          <OdkazJinam obycejny key={`vysledky-${serie}`} href={`/sprava/${serie}/vysledky`}>
-            Výsledky {serie}
-          </OdkazJinam>
-        ))}
-        {lode.map((serie) => (
-          <OdkazJinam obycejny key={`lode-${serie}`} href={`/sprava/${serie}/lode`}>
-            Lodě {serie}
-          </OdkazJinam>
-        ))}
-        {spravuje.map((serie) => (
-          <OdkazJinam obycejny key={serie} href={`/sprava/${serie}/opravneni`}>
-            Oprávnění {serie}
+        {/* Věci mimo ročníky. Zůstávají v nabídce, protože rozcestník ročníku
+            je o ročníku a tyhle do něj nepatří. Jmenuje je `co-smim`, ať se
+            nabídka a rozcestník nemůžou rozejít. */}
+        {web.map((p) => (
+          <OdkazJinam obycejny key={p.kam} href={p.kam}>
+            {p.nazev}
           </OdkazJinam>
         ))}
         {/* Účet spravuje poskytovatel, ne my: heslo naší aplikací neprojde

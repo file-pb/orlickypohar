@@ -345,6 +345,18 @@ MILOS = {
     "email": "milos@priklad.cz",
 }
 
+# Správkyně celého webu bez jediné role v ročníku. Existuje kvůli nálezu
+# auditu: nabídka se počítala jen z ročníkových rolí, takže tenhle člověk
+# neviděl ročníkové položky, ačkoliv na ty obrazovky smí. Bez takového účtu
+# se ta oprava nedá vyzkoušet — a scénář E5 taky ne.
+WEBOVA = {
+    "id": "01927f4e-0000-7000-8000-000000000005",
+    "zobrazovane": "Dana Hlavní",
+    "email": "dana@priklad.cz",
+    # Pole `web` vydává API od 22. 9. 2026; kdo ho nemá, nemá roli na web.
+    "web": ["Spravce"],
+}
+
 # Mock token nerozbaluje — nemá čím a nemá proč. Bere ho jako jméno účtu:
 # `Bearer milos` je Miloš. Dva různé tokeny jsou tedy dva lidé a stejný token
 # ve dvou kartách je jeden člověk; **obojí je potřeba**, protože jeden účet na
@@ -353,7 +365,7 @@ MILOS = {
 #
 # Neznámý token zůstává Filipem, aby dosavadní postup — přihlásit se čímkoliv
 # a dělat správce — fungoval dál.
-TOKENY = {"filip": JA, "milos": MILOS}
+TOKENY = {"filip": JA, "milos": MILOS, "dana": WEBOVA}
 
 # Náklady: snímek souboru `stav/naklady.json`, který na serveru zapisuje
 # přehled platformy. Čísla jsou skutečná (24. 9. 2026), jen zamrzlá —
@@ -475,6 +487,10 @@ UCTY = {u["email"]: u for u in [
      "naposledyPrihlasenV": "2026-09-14T19:40:00+00:00"},
     {**MILOS, "zalozenV": "2026-04-01T00:00:00+00:00",
      "naposledyPrihlasenV": "2026-09-19T14:30:00+00:00"},
+    # Bez `web`: v přehledu účtů se vedou role v ročníku, ne na webu.
+    {**{k: v for k, v in WEBOVA.items() if k != "web"},
+     "zalozenV": "2026-01-15T00:00:00+00:00",
+     "naposledyPrihlasenV": "2026-10-01T09:12:00+00:00"},
 ]}
 JEN_ROCNIK = ("Rozhodci", "Spravce")
 
