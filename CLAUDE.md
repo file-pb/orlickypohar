@@ -380,19 +380,29 @@ nehodu:
 2. **Jedno nasazení naráz** (`concurrency: nasazeni-produkce`,
    `cancel-in-progress: false`). Platí pro všechny cesty do produkce včetně
    ručního spuštění.
-3. **Nevrací produkci do minulosti.** Fronta sama nestačí: GitHub řadí podle
-   okamžiku vstupu do skupiny, ne podle stáří commitu, takže pozdě doběhlý
-   starý build se zařadí za novější. Před odesláním se proto čte `/verze`
-   běžícího API a commit, který je jeho **předkem**, se neposílá.
+3. **Brání návratu produkce do minulosti.** Fronta sama nestačí: GitHub řadí
+   podle okamžiku vstupu do skupiny, ne podle stáří commitu, takže pozdě
+   doběhlý starý build se zařadí za novější. Před odesláním se proto čte
+   `/verze` běžícího API a commit, který je jeho **předkem**, se neposílá.
+   Když se verze přečíst nedá, nasazení se **zastaví** — výpadek `/verze` by
+   jinak ochranu obešel a vypadalo by to jako obyčejné nasazení. Cesta ven
+   je výslovná: ruční spuštění s volbou `obnova`.
+
+**Není to záruka, jen zúžení.** Mezi přečtením verze a odesláním je okno,
+ve kterém se stav může změnit; skupina souběhu ho zavírá jen pro naše vlastní
+cesty. **Záruku dá až háček**, který pod svým zámkem přečte běžící SHA,
+porovná ho s `X-Deploy-Sha` a teprve pak sáhne na produkci — zámek musí držet
+přes kontrolu i změnu. Dokud to tam není, neříkej, že starší build produkci
+přepsat nemůže.
 
 **Obě služby vydávají `/verze`** s commitem, ze kterého je image (build arg
 `VERZE`). Nasazení si tím po sobě ověří, co doopravdy běží — `Healthy` a HTTP
 200 vrací i verze, která tam visí z minula, takže samy o sobě nedokazují nic.
 
-**Co zbývá na straně serveru:** tatáž kontrola stáří pod zámkem háčku. Ta
-v CI běží mimo něj, takže zavírá jen naše vlastní cesty; hlavička
-`X-Deploy-Sha` nese commit, aby ji háček mohl udělat taky. Patří do
-repozitáře `platform`.
+**Co zbývá na straně serveru** (repozitář `platform`): háček pod společným
+zámkem přečte běžící SHA, porovná ho s hlavičkou `X-Deploy-Sha` a teprve pak
+nasadí. Ověřit se to má soubojem starého a nového nasazení přímo proti háčku,
+ne jen v CI.
 
 ## Testy
 

@@ -9,6 +9,14 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      obnova:
+        description: >-
+          Nasadit, i když se nedá přečíst, co na produkci běží. Výslovný režim
+          obnovy — bez něj se při nečitelné verzi nasazení zastaví, protože
+          výpadek /verze by jinak obešel ochranu proti návratu do minulosti.
+        type: boolean
+        default: false
 
 env:
   # Veřejné adresy obou služeb. Proměnná repozitáře je přebije, kdyby se
@@ -238,10 +246,26 @@ jobs:
         id: kontrola
         run: |
           bezi='${{ steps.bezi.outputs.sha }}'
+          obnova='${{ inputs.obnova }}'
+
+          # Nečitelná verze ochranu neobchází. Výpadek `/verze` by jinak
+          # stačil k tomu, aby starý build přepsal produkci — a vypadalo by
+          # to jako obyčejné nasazení (oponentura, 6. 10. 2026).
+          #
+          # Cesta ven je výslovná: spustit znovu ručně s `obnova = true`.
+          # Je to i cesta pro případ, kdy produkce neodpovídá právě proto,
+          # že je rozbitá a nasadit se musí.
           if [ -z "$bezi" ] || ! git cat-file -e "$bezi^{commit}" 2>/dev/null; then
-            echo "Běžící verze neznámá nebo mimo historii, nasazuje se."
-            echo "nasadit=ano" >> "$GITHUB_OUTPUT"
-            exit 0
+            duvod="Nedá se přečíst, co na produkci běží"
+            [ -n "$bezi" ] && duvod="Produkce hlásí verzi $bezi, která v historii není"
+            if [ "$obnova" = "true" ]; then
+              echo "::warning::$duvod. Běží režim obnovy, nasazuje se."
+              echo "nasadit=ano" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "::error::$duvod, takže nejde ověřit, že tenhle build není starší."
+            echo "Spusť build-deploy ručně nad main s volbou obnova, pokud to tak má být."
+            exit 1
           fi
           if [ "$bezi" = "${{ github.sha }}" ]; then
             echo "Na produkci už běží tenhle commit, nasazuje se znovu."
