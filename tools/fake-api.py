@@ -1184,10 +1184,27 @@ class H(BaseHTTPRequestHandler):
         return {"kod": kod["kod"], "platiDo": kod["platiDo"]}
 
     def poradatel_kod(self, lod_id):
-        """Pořadatel u registrace, kdy loď ještě kapitána nemá."""
+        """
+        Pořadatel u registrace, kdy loď ještě kapitána nemá.
+
+        <b>Tahle jediná cesta ve správě roli doopravdy kontroluje.</b> Jinde
+        mock přihlášeného bere jako pořadatele, jenže tady je odmítnutí celý
+        smysl scénáře: kdo na ročník roli nemá, nesmí k cizí lodi vystavit
+        kód. Vyžaduje se **organizátor nebo rozhodčí celého ročníku** —
+        pověření k jedné zastávce nestačí, stejně jako v `Prava`.
+        """
+        kdo = self.prihlaseny()
+        smi = any(
+            o["email"] == kdo["email"] and o["zavod"] is None
+            and o["role"] in ("Organizator", "Rozhodci", "Spravce")
+            for o in OPRAVNENI
+        ) or "Spravce" in (kdo.get("web") or [])
+        if not smi:
+            return self.send_error(403)
+
         if lod_id not in PRIHLASKA_ID.values():
             return self.send_error(404)
-        return self.odpoved(self._vystav(lod_id, self.prihlaseny()["id"]))
+        return self.odpoved(self._vystav(lod_id, kdo["id"]))
 
     def pripojeni_lodi(self, lod_id):
         if not self._kdo_a_lod(lod_id):
