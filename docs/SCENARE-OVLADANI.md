@@ -87,6 +87,12 @@ mock jen `/ja` (`tools/fake-api.py:2043`); `/ja/lode`, `/ja/lode/{id}/kod`,
 ty čtyři cesty do mocku nedopíšu — F1 obzvlášť: spotřeboval by čerstvého
 účastníka na chybu zkušebního prostředí.
 
+**Porovnání zápisů v C7 na mocku nejde celé.** Mock hodnotu tokenu nečte,
+jen jeho přítomnost, takže zná **jedinou identitu** (`tools/fake-api.py:2043`).
+Konflikt se vyvolat dá (dvě karty, starší revize), **druhý zapisovatel ne** —
+a tím ani dva sloupce v porovnání. Chce to v mocku druhou identitu odvozenou
+z tokenu; do té doby se C7 zkouší jen do hlášky o konfliktu.
+
 **Výpadek nevyrábí mock, ale zařízení:** letový režim na telefonu nebo
 *Offline* v nástrojích prohlížeče.
 
@@ -139,6 +145,9 @@ telefon.
 - **Konflikt (C7).** Nejdřív si ho **sám projdu a zreprodukuju**, včetně
   přesného pořadí načtení a uložení, a sepíšu správný společný výsledek. Bez
   toho spotřebuje čas na zkoušku příprava a rozbor se odbyde.
+  **Druhý zapisovatel musí mít vlastní účet** (viz C7). Nejspolehlivější je
+  mít jeho uložení připravené jako hotový příkaz, který se odpálí v daný
+  okamžik — ne druhý člověk klikající podle sluchu.
 
 ---
 
@@ -265,8 +274,16 @@ Automatické sloučení aplikace neumí a nemusí.
 Hlídej dvě pasti: *Přesto odeslat* přepíše práci druhého, *Zahodit* zahodí
 svoji (`cil.tsx:330,340`) — a po ručním sepsání ve formuláři zůstává
 v telefonu starý neodeslaný zápis, který se při návratu na cíl nabídne znovu.
-Pro první sezení **jen varianta „stejný účet na dvou telefonech"**, druhá
-později.
+
+**Musí to být dva různé účty.** Snímek k porovnání je jeden na zapisovatele
+(`ZapisSprava.cs:369`, test `Dva_zapisovatele_maji_kazdy_svuj_snimek`), takže
+při **jednom účtu na dvou telefonech** druhé uložení ten první snímek přepíše:
+konflikt (409) nastane, ale porovnání ukáže jediný sloupec a větu „Zapisoval
+jeden člověk, takže se porovnávat nemá s čím" (`porovnani/page.tsx:103`).
+Účastník by skončil ve slepé uličce a jeho neúspěch by neznamenal nic.
+Varianta s jedním účtem je proto **samostatné pozorování s předem známým
+koncem**, ne cesta k společnému výsledku — a eviduje se jako funkční mezera
+k rozhodnutí, protože sdílený účet na dvou telefonech je u vody pravděpodobný.
 
 **C8 — Papír.**
 *Zadání:* Dopiš zápis doma z fotky papíru a přilož ji.
@@ -371,8 +388,8 @@ bod 4, ne rozbor.
 1. Zapsat dávku dojezdů venku na telefonu — **C5**
 2. Opravit záměnu a vynechaný dojezd, pokračovat bez signálu, obnovit zápis
    po přerušení a po novém načtení — **C6, F3, C9**
-3. Vyřešit připravený konflikt a dojít ke společnému výsledku (stejný účet na
-   dvou telefonech) — **C7**
+3. Vyřešit připravený konflikt a dojít ke společnému výsledku (dva různé
+   účty, jinak není co porovnávat) — **C7**
 4. Vyvěsit a stáhnout PDF, ověřit veřejný stav — **C3, C4, A6**
 
 **Rezerva**, když zbude čas: **C1** (pozdě příchozí loď). Do prvního sezení
