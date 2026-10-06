@@ -118,8 +118,10 @@ export default async function RozcestnikRocniku({
       <h2>Co teď</h2>
       {ukoly.length === 0 ? (
         <p className="prazdno">
-          Nic nečeká. Až se pojede, objeví se tu zápis z cíle; do té doby se
-          chystá {rocnikove.length > 0 ? "v rozpisu níž" : "jinde"}.
+          Nic nečeká. V den regaty tu bude zápis z cíle; do té doby se chystá{" "}
+          {mojeZastavky.length > 0
+            ? "u regaty níž — přihlášky a směrnice."
+            : "v rozpisu níž."}
         </p>
       ) : (
         <ul className="seznam">
