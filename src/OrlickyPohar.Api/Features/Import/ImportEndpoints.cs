@@ -61,6 +61,17 @@ public static class ImportEndpoints
         var (rezimImportu, chybaRezimu) = Prepis.Rezim(rezim);
         if (chybaRezimu is not null) return Results.BadRequest(new { error = chybaRezimu });
 
+        // Tvar souboru napřed. Kolize i otisk ze vstupu staví slovníky, takže
+        // vadný soubor musí spadnout tady — s větou, co je v něm špatně.
+        try
+        {
+            ImportHandler.OveřVstup(vstup);
+        }
+        catch (ImportException ex)
+        {
+            return Results.BadRequest(new { error = ex.Message });
+        }
+
         // Otisk se čte před zápisem, aby šel vrátit i v odpovědi náhledu.
         var otiskPred = await Prepis.OtiskAsync(db, vstup.Slug, ct);
 

@@ -67,7 +67,13 @@ internal static class ImportHandler
             zavody.Zavody, zavody.Ucasti, zavody.Rozjizdky, zavody.Vysledky, clanky);
     }
 
-    private static void OveřVstup(SerieVstup v)
+    /// <summary>
+    /// Kontrola tvaru souboru. <b>Volá se dřív než cokoliv, co ze vstupu
+    /// staví slovník</b> — dvě regaty pod jednou adresou by jinak shodily
+    /// výpočet kolizí dřív, než se k téhle kontrole vůbec dojde, a vrátila
+    /// by se pětistovka místo věty o tom, co je v souboru špatně.
+    /// </summary>
+    internal static void OveřVstup(SerieVstup v)
     {
         if (v.Kategorie.Count == 0)
             throw new ImportException("Ročník musí mít aspoň jednu kategorii.");

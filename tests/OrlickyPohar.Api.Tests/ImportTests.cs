@@ -536,7 +536,7 @@ public class ImportTests(PostgresFixture fixture)
 
         Assert.Equal(HttpStatusCode.Conflict, stav);
         var kolize = telo.RootElement.GetProperty("kolize");
-        Assert.Contains("nepřejmenoval",
+        Assert.Contains("puvodniSlug",
             string.Join(" ", kolize.EnumerateArray().Select(k => k.GetProperty("co").GetString())));
 
         // A dokud se to nepotvrdí, žádný druhý závod nevznikl.
@@ -691,5 +691,21 @@ public class ImportTests(PostgresFixture fixture)
 
         Assert.Equal(HttpStatusCode.OK, stav);
         Assert.Equal(0, telo.RootElement.GetProperty("kolize").GetArrayLength());
+    }
+
+    [Fact]
+    public async Task Dva_zavody_pod_jednou_adresou_daji_vetu_ne_petistovku()
+    {
+        // Kolize i otisk staví ze vstupu slovníky, takže vadný soubor je
+        // shodil dřív, než se došlo ke kontrole tvaru — a vracela se
+        // pětistovka místo věty o tom, co je v souboru špatně.
+        var vstup = Rocnik("dve-adresy");
+        var zavod = vstup.Zavody[0];
+        var spatny = vstup with { Zavody = [zavod, zavod with { Nazev = "Dvojník" }] };
+
+        var (stav, telo) = await PosliSurove(spatny);
+
+        Assert.Equal(HttpStatusCode.BadRequest, stav);
+        Assert.Contains("Slug závodu", telo.RootElement.GetProperty("error").GetString());
     }
 }
