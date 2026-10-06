@@ -402,10 +402,11 @@ přepsat nemůže.
 varování, i po obnově. Zelená nad službou, o které nevíme, co na ní běží, je
 falešná jistota.
 
-**Co zbývá na straně serveru** (repozitář `platform`): háček pod společným
-zámkem přečte běžící SHA, porovná ho s hlavičkou `X-Deploy-Sha` a teprve pak
-nasadí. Ověřit se to má soubojem starého a nového nasazení přímo proti háčku,
-ne jen v CI.
+**Co zbývá na straně serveru:** háček pod společným zámkem přečte běžící SHA,
+porovná ho s hlavičkou `X-Deploy-Sha` a teprve pak nasadí. Vede se jako
+[platform#7](https://github.com/file-pb/platform/issues/7), včetně toho, že
+se to má ověřit soubojem starého a nového požadavku přímo proti háčku —
+v obou pořadích.
 
 ## Testy
 
