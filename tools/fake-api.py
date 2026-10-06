@@ -495,6 +495,13 @@ UCTY = {u["email"]: u for u in [
      "zalozenV": "2026-01-15T00:00:00+00:00",
      "naposledyPrihlasenV": "2026-10-01T09:12:00+00:00"},
 ]}
+# Petr a Jana jsou v seznamu účtů odjakživa a `_nasad_vazby` je věší k lodím:
+# Petr je posádka lodi, která **nemá kapitána**, Jana je **majitelka** jiné.
+# Bez tokenu se za ně nedalo přihlásit, takže se skupina B zkoušky ovládání
+# (kapitán lodi bez role ve správě) neměla kým zkoušet.
+TOKENY["petr"] = UCTY["petr@priklad.cz"]
+TOKENY["jana"] = UCTY["jana@priklad.cz"]
+
 JEN_ROCNIK = ("Rozhodci", "Spravce")
 
 # --- Vazby k lodím ----------------------------------------------------------
@@ -523,6 +530,119 @@ def _nasad_vazby():
             "roleUrcilId": JA["id"] if rucne else None,
             "roleUrcenaV": "2026-09-20T09:00:00+00:00" if rucne else None,
         })
+
+
+# --- Připojovací kódy a nároky ---------------------------------------------
+# Obojí žije v paměti procesu, stejně jako vazby. Pravidla jsou opsaná
+# z `Features/Lode/` — `PripojovaciKod.cs`, `KodySprava.cs` a `NarokNaLod.cs`;
+# pravda o nich leží tam a hlídají ji testy API.
+
+KOD_DELKA = 6
+KOD_PLATNOST_MINUT = 15
+# Propadlý i vymyšlený kód dávají tutéž odpověď: ať z ní nejde vyčíst, že loď
+# s takovým kódem existuje.
+KOD_NEPLATNY = "Kód neplatí. Nech si vystavit nový."
+# Kód přidává posádku, nikdy kapitána.
+ROLE_PRO_NOVEHO = "Posadka"
+POSLEDNI_ODPOVEDNY = ("Tohle je poslední kapitán lodi. Nejdřív urči jiného, "
+                      "pak tohohle odeber.")
+NAROK_DVAKRAT = "O tuhle loď už žádáš, kapitán to uvidí."
+NAROK_UZ_PATRIS = "K téhle lodi už patříš."
+NAROK_ZAMITNUTO = ("O tuhle loď jsi už žádal a kapitán žádost zamítl. "
+                   "Domluv se s ním napřímo.")
+
+KODY = []
+NAROKY = []
+
+
+def _ted():
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc)
+
+
+def _iso(kdy):
+    return kdy.isoformat().replace("+00:00", "Z")
+
+
+def novy_kod():
+    """Šest znaků bez snadno zaměnitelných. Mock nepotřebuje kryptografii."""
+    import random
+    abeceda = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    return "".join(random.choice(abeceda) for _ in range(KOD_DELKA))
+
+
+def uprav_kod(zadany):
+    """Mezery pryč, na velká písmena — jako `Kody.Uprav`."""
+    return "".join((zadany or "").split()).upper()
+
+
+def _nasad_kody():
+    """
+    Jeden **už prošlý** kód k lodi, kterou má v ruce Filip.
+
+    Čekat při zkoušce ovládání patnáct minut na vypršení rozbije sezení
+    (scénář B2), a vyrobit si prošlý kód jinak nejde.
+    """
+    from datetime import timedelta
+    lod_id = next(iter(PRIHLASKA_ID.values()))
+    ted = _ted()
+    KODY.append({"kod": "PROSLY", "lodId": lod_id, "vystavilId": JA["id"],
+                 "vystavenV": _iso(ted - timedelta(minutes=30)),
+                 "platiDo": _iso(ted - timedelta(minutes=15)), "pouzit": 0})
+
+
+def vazba_uzivatele(lod_id, uzivatel_id):
+    return next((v for v in VAZBY if v["lodId"] == lod_id and v["uzivatelId"] == uzivatel_id), None)
+
+
+def smi_vystavit(lod_id, uzivatel_id):
+    """Kdo smí přivést dalšího: jen majitel nebo kapitán té lodi."""
+    v = vazba_uzivatele(lod_id, uzivatel_id)
+    return bool(v and v["role"] in ("Majitel", "Kapitan"))
+
+
+def lod_podle_id(lod_id):
+    klic = next((k for k, v in PRIHLASKA_ID.items() if v == lod_id), None)
+    return (klic, LODE[klic]) if klic else (None, None)
+
+
+def moje_lode_dto(uzivatel_id):
+    lode = []
+    for v in VAZBY:
+        if v["uzivatelId"] != uzivatel_id:
+            continue
+        klic, lod = lod_podle_id(v["lodId"])
+        if not lod:
+            continue
+        lode.append({"lodId": v["lodId"], "nazev": lod["nazev"],
+                     "cisloPlachty": lod.get("cisloPlachty"), "role": v["role"]})
+    return lode
+
+
+def pripojeny_dto(v):
+    u = ucet_podle_id(v["uzivatelId"]) or {}
+    return {"id": v["id"], "kdo": u.get("zobrazovane", "neznámý účet"),
+            "role": v["role"], "puvod": v["puvod"], "vzniklaV": v["vzniklaV"]}
+
+
+def proc_nejde_odebrat(role, jinych_odpovednych):
+    """Opsané z `Kapitanstvi.ProcNejdeOdebrat`."""
+    if role in ("Majitel", "Kapitan") and jinych_odpovednych == 0:
+        return POSLEDNI_ODPOVEDNY
+    return None
+
+
+def narok_dto(n):
+    u = ucet_podle_id(n["uzivatelId"]) or {}
+    return {"id": n["id"], "kdo": u.get("zobrazovane", "neznámý účet"),
+            "poznamka": n["poznamka"], "podanV": n["podanV"]}
+
+
+def muj_narok_dto(n):
+    _klic, lod = lod_podle_id(n["lodId"])
+    return {"id": n["id"], "lodId": n["lodId"], "lod": (lod or {}).get("nazev", "neznámá loď"),
+            "poznamka": n["poznamka"], "podanV": n["podanV"],
+            "ceka": n["rozhodnutoV"] is None, "prijat": bool(n["prijat"])}
 
 
 def ke_kontrole(v):
@@ -724,6 +844,7 @@ LOD_PODLE_ID = {i: lod for lod, i in PRIHLASKA_ID.items()}
 _nasad_druhy_snimek()
 _nasad_vazby()
 _nasad_smernice()
+_nasad_kody()
 OTEVRENY = ("Navrzeno", "KRevizi")
 
 
@@ -1032,6 +1153,159 @@ def clanek_radek(c):
 
 
 class H(BaseHTTPRequestHandler):
+    # --- Osobní cesty: moje lodě, kódy, připojení, nároky ------------------
+    # Opsané z `Features/Lode/KodyEndpoints.cs` a `Features/Identita`. Mock
+    # je potřebuje proto, že bez nich se skupina B zkoušky ovládání (kapitán
+    # lodi) nedá vyzkoušet vůbec — web volá cesty, které tu nebyly.
+
+    def _kdo_a_lod(self, lod_id, musi_smet=True):
+        """(uživatel, chyba už odeslaná?) — 403 jako skutečné API."""
+        kdo = self.prihlaseny()
+        if musi_smet and not smi_vystavit(lod_id, kdo["id"]):
+            self.send_error(403)
+            return None
+        return kdo
+
+    def moje_lode(self):
+        return self.odpoved(moje_lode_dto(self.prihlaseny()["id"]))
+
+    def vystav_kod(self, lod_id):
+        if not (kdo := self._kdo_a_lod(lod_id)):
+            return None
+        return self.odpoved(self._vystav(lod_id, kdo["id"]))
+
+    def _vystav(self, lod_id, kym):
+        from datetime import timedelta
+        ted = _ted()
+        kod = {"kod": novy_kod(), "lodId": lod_id, "vystavilId": kym,
+               "vystavenV": _iso(ted),
+               "platiDo": _iso(ted + timedelta(minutes=KOD_PLATNOST_MINUT)), "pouzit": 0}
+        KODY.append(kod)
+        return {"kod": kod["kod"], "platiDo": kod["platiDo"]}
+
+    def poradatel_kod(self, lod_id):
+        """Pořadatel u registrace, kdy loď ještě kapitána nemá."""
+        if lod_id not in PRIHLASKA_ID.values():
+            return self.send_error(404)
+        return self.odpoved(self._vystav(lod_id, self.prihlaseny()["id"]))
+
+    def pripojeni_lodi(self, lod_id):
+        if not self._kdo_a_lod(lod_id):
+            return None
+        vazby = [v for v in VAZBY if v["lodId"] == lod_id]
+        vazby.sort(key=lambda v: (("Majitel", "Kapitan", "Posadka", "Fanousek").index(v["role"]),
+                                  v["vzniklaV"]))
+        return self.odpoved([pripojeny_dto(v) for v in vazby])
+
+    def odeber_pripojeni(self, lod_id, vazba_id):
+        if not (kdo := self._kdo_a_lod(lod_id)):
+            return None
+
+        vazba = next((v for v in VAZBY if v["id"] == vazba_id and v["lodId"] == lod_id), None)
+        if not vazba:
+            return self.chyba(400, "Takové připojení u lodi není.")
+
+        jinych = sum(1 for v in VAZBY if v["lodId"] == lod_id and v["id"] != vazba_id
+                     and v["role"] in ("Majitel", "Kapitan"))
+        if (chyba := proc_nejde_odebrat(vazba["role"], jinych)):
+            return self.chyba(400, chyba)
+
+        zaznamenej_zmenu(lod_id, vazba["uzivatelId"], vazba["role"], None, kdo["id"])
+        VAZBY.remove(vazba)
+        return self._prazdna_odpoved()
+
+    def pripoj_se(self):
+        """Uplatnění kódu. Propadlý a vymyšlený musí dát tutéž odpověď."""
+        kdo = self.prihlaseny()
+        hledany = uprav_kod((self.telo_zadosti() or {}).get("kod"))
+        if len(hledany) != KOD_DELKA:
+            return self.chyba(400, KOD_NEPLATNY)
+
+        ted = _iso(_ted())
+        kod = next((k for k in KODY if k["kod"] == hledany and k["platiDo"] > ted), None)
+        if not kod:
+            return self.chyba(400, KOD_NEPLATNY)
+
+        _klic, lod = lod_podle_id(kod["lodId"])
+        if not lod:
+            return self.chyba(400, KOD_NEPLATNY)
+
+        # Kdo už u lodi roli má, o ni zadáním kódu nepřijde.
+        if (vazba := vazba_uzivatele(kod["lodId"], kdo["id"])):
+            return self.odpoved({"lodId": kod["lodId"], "nazev": lod["nazev"],
+                                 "role": vazba["role"], "jizBylo": True})
+
+        VAZBY.append({"id": max([v["id"] for v in VAZBY], default=0) + 1,
+                      "lodId": kod["lodId"], "uzivatelId": kdo["id"],
+                      "role": ROLE_PRO_NOVEHO, "puvod": "Kod", "vzniklaV": ted,
+                      "roleUrcilId": None, "roleUrcenaV": None})
+        kod["pouzit"] += 1
+        return self.odpoved({"lodId": kod["lodId"], "nazev": lod["nazev"],
+                             "role": ROLE_PRO_NOVEHO, "jizBylo": False})
+
+    def podej_narok(self):
+        kdo = self.prihlaseny()
+        vstup = self.telo_zadosti() or {}
+        lod_id = vstup.get("lodId")
+
+        if lod_id not in PRIHLASKA_ID.values():
+            return self.chyba(400, "Taková loď tu není.")
+        if vazba_uzivatele(lod_id, kdo["id"]):
+            return self.chyba(400, NAROK_UZ_PATRIS)
+
+        drivejsi = next((n for n in reversed(NAROKY)
+                         if n["lodId"] == lod_id and n["uzivatelId"] == kdo["id"]), None)
+        if drivejsi and drivejsi["rozhodnutoV"] is None:
+            return self.chyba(400, NAROK_DVAKRAT)
+        # Zamítnutí platí: další žádost by byla obcházení kapitánova ne.
+        if drivejsi and drivejsi["rozhodnutoV"] and not drivejsi["prijat"]:
+            return self.chyba(400, NAROK_ZAMITNUTO)
+
+        poznamka = (vstup.get("poznamka") or "").strip() or None
+        NAROKY.append({"id": max([n["id"] for n in NAROKY], default=0) + 1,
+                       "lodId": lod_id, "uzivatelId": kdo["id"], "poznamka": poznamka,
+                       "podanV": _iso(_ted()), "rozhodnutoV": None, "rozhodlId": None,
+                       "prijat": False})
+        return self._prazdna_odpoved()
+
+    def moje_naroky(self):
+        kdo = self.prihlaseny()
+        moje = [n for n in NAROKY if n["uzivatelId"] == kdo["id"]]
+        moje.sort(key=lambda n: n["podanV"], reverse=True)
+        return self.odpoved([muj_narok_dto(n) for n in moje])
+
+    def naroky_lodi(self, lod_id):
+        # Totéž právo jako na vystavení kódu: kdo smí někoho přivést, smí
+        # i rozhodnout, kdo se hlásí sám.
+        if not self._kdo_a_lod(lod_id):
+            return None
+        cekaji = [n for n in NAROKY if n["lodId"] == lod_id and n["rozhodnutoV"] is None]
+        cekaji.sort(key=lambda n: n["podanV"])
+        return self.odpoved([narok_dto(n) for n in cekaji])
+
+    def rozhodni_narok(self, lod_id, narok_id):
+        if not (kdo := self._kdo_a_lod(lod_id)):
+            return None
+
+        narok = next((n for n in NAROKY if n["id"] == narok_id and n["lodId"] == lod_id), None)
+        if not narok:
+            return self.chyba(400, "Takový nárok u lodi není.")
+        if narok["rozhodnutoV"]:
+            return self.chyba(400, "O tomhle nároku už je rozhodnuto.")
+
+        prijmout = bool((self.telo_zadosti() or {}).get("prijmout"))
+        ted = _iso(_ted())
+        narok["rozhodnutoV"], narok["rozhodlId"], narok["prijat"] = ted, kdo["id"], prijmout
+
+        # Přijetí dělá z žadatele **posádku** — kapitána z nikoho nedělá nárok.
+        if prijmout and not vazba_uzivatele(lod_id, narok["uzivatelId"]):
+            VAZBY.append({"id": max([v["id"] for v in VAZBY], default=0) + 1,
+                          "lodId": lod_id, "uzivatelId": narok["uzivatelId"],
+                          "role": "Posadka", "puvod": "Narok", "vzniklaV": ted,
+                          "roleUrcilId": None, "roleUrcenaV": None})
+            zaznamenej_zmenu(lod_id, narok["uzivatelId"], None, "Posadka", kdo["id"])
+        return self._prazdna_odpoved()
+
     def token_nesedi(self):
         """
         Je v hlavičce jméno, které neznáme? Odmítne se hned, na jednom místě.
@@ -1332,6 +1606,20 @@ class H(BaseHTTPRequestHandler):
         if self.token_nesedi():
             return None
         cesta = urlparse(self.path).path
+
+        # Osobní cesty. Stojí první, protože nepatří pod ročník.
+        if not self.headers.get("authorization") and cesta.startswith("/ja"):
+            return self.send_error(401)
+        if cesta == "/ja/pripojeni":
+            return self.pripoj_se()
+        if cesta == "/ja/naroky":
+            return self.podej_narok()
+        if (m := re.match(r'^/ja/lode/(\d+)/kod$', cesta)):
+            return self.vystav_kod(int(m.group(1)))
+        if (m := re.match(r'^/ja/lode/(\d+)/naroky/(\d+)$', cesta)):
+            return self.rozhodni_narok(int(m.group(1)), int(m.group(2)))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/lode/(\d+)/kod$', cesta)):
+            return self.poradatel_kod(int(m.group(1)))
 
         if cesta == f'/sprava/serie/{D["slug"]}/publikace':
             if not self.headers.get("authorization"):
@@ -1965,6 +2253,10 @@ class H(BaseHTTPRequestHandler):
     def do_DELETE(self):
         if self.token_nesedi():
             return None
+        if (m := re.match(r'^/ja/lode/(\d+)/pripojeni/(\d+)$', urlparse(self.path).path)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            return self.odeber_pripojeni(int(m.group(1)), int(m.group(2)))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/lode/(\d+)/vazby/(\d+)$',
                           urlparse(self.path).path)):
             return self.odeber_vazbu(int(m.group(1)), int(m.group(2)))
@@ -2137,6 +2429,22 @@ class H(BaseHTTPRequestHandler):
             }
         elif cesta == f'/serie/{D["slug"]}/poradi':
             telo = poradi_serie()
+        elif cesta == "/ja/lode":
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            return self.moje_lode()
+        elif cesta == "/ja/naroky":
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            return self.moje_naroky()
+        elif (m := re.match(r'^/ja/lode/(\d+)/pripojeni$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            return self.pripojeni_lodi(int(m.group(1)))
+        elif (m := re.match(r'^/ja/lode/(\d+)/naroky$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            return self.naroky_lodi(int(m.group(1)))
         elif cesta == "/ja":
             # Přihlášený uživatel pro vývoj. Nekontroluje token — na to by
             # tady musel běžet poskytovatel identity, a celý smysl tohohle
