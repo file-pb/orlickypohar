@@ -31,7 +31,12 @@ public class OchranaZapisuTests(PostgresFixture fx)
     /// Zapisovací endpointy, které SMÍ být bez přihlášení. Každý s důvodem.
     /// Veřejný zápis je vědomé rozhodnutí, ne vedlejší produkt nové obrazovky.
     /// </summary>
-    private static readonly Dictionary<string, string> VedomeVerejne = new();
+    private static readonly Dictionary<string, string> VedomeVerejne = new()
+    {
+        ["POST /serie/{serie}/zavody/{zavod}/prihlasky/"] =
+            "veřejná přihláška lodi na zastávku — posádka se hlásí bez účtu "
+            + "(Features/Zavody/VerejnaPrihlaskaEndpoints.cs)",
+    };
 
     private static readonly string[] Zapisovaci = ["POST", "PUT", "PATCH", "DELETE"];
 
@@ -57,7 +62,9 @@ public class OchranaZapisuTests(PostgresFixture fx)
                 {
                     // Prázdné tělo schválně: autorizace musí zasáhnout dřív
                     // než validace. 400 tady znamená „prošlo až k datům".
-                    Content = JsonContent.Create(new { }),
+                    // Typ obsahu ale musí sedět, jinak endpoint odmítne 415
+                    // při výběru routy a k autorizaci se vůbec nedojde.
+                    Content = CestaZeVzoru.Telo(ep),
                 };
                 var cesta = CestaZeVzoru.Vypln(ep.RoutePattern);
                 var odpoved = await klient.SendAsync(pozadavek);

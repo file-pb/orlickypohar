@@ -1,4 +1,7 @@
 using System.Net;
+using System.Net.Http.Json;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.AspNetCore.Routing.Patterns;
 
 namespace OrlickyPohar.Api.Tests;
@@ -52,6 +55,20 @@ public static class CestaZeVzoru
     {
         var s = "/" + (vzor ?? "").Trim('/');
         return s.EndsWith('/') ? s : s + "/";
+    }
+
+    /// <summary>
+    /// Tělo v typu, který endpoint <b>sám deklaruje</b>. Endpoint
+    /// s <c>Accepts</c> metadaty odmítne cizí typ obsahu <b>už při výběru
+    /// routy</b>, tedy 415 ještě před autorizací — a test by to ohlásil jako
+    /// otevřený endpoint. Týká se to nahrávání obrázků, papíru a směrnic.
+    /// </summary>
+    public static HttpContent Telo(Endpoint ep)
+    {
+        var typy = ep.Metadata.GetMetadata<IAcceptsMetadata>()?.ContentTypes ?? [];
+        if (typy.Any(t => t.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase)))
+            return new MultipartFormDataContent();
+        return JsonContent.Create(new { });
     }
 
     /// <summary>
