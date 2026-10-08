@@ -36,7 +36,29 @@ public sealed class PostgresFixture : WebApplicationFactory<Program>, IAsyncLife
     async Task IAsyncLifetime.InitializeAsync()
     {
         await _db.StartAsync();
-        _ = Server; // vynutí start hostitele, který zároveň pustí migrace
+
+        // `Program.cs` má kolem celého startu try/catch: výjimku zaloguje
+        // jako Fatal a vrátí 1. Navenek z toho zbyde jen nicneříkající
+        // „The entry point exited without ever building an IHost" a příčina
+        // zůstane v konzoli, kterou nikdo nepřečte. Zachytíme ji a přilepíme
+        // k chybě. (Při souběžných kolekcích může výpis obsahovat i řádky
+        // z jiného hostitele — Console je globální.)
+        var puvodni = Console.Out;
+        var zachyt = new StringWriter();
+        Console.SetOut(zachyt);
+        try
+        {
+            _ = Server; // vynutí start hostitele, který zároveň pustí migrace
+        }
+        catch (Exception e)
+        {
+            throw new InvalidOperationException(
+                $"Hostitel nenaběhl. Co aplikace vypsala:\n{zachyt}", e);
+        }
+        finally
+        {
+            Console.SetOut(puvodni);
+        }
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -54,8 +76,8 @@ public sealed class PostgresFixture : WebApplicationFactory<Program>, IAsyncLife
         // rovnou 401, metadata poskytovatele potřebuje teprve k ověření
         // podpisu. Ostatní testy správy chodí přes služby, ne přes HTTP.
         //
-        // Touž změnu potřebuje i `OchranaZapisuTests` v #125; až se obojí
-        // sejde, je to týž řádek dvakrát.
+        // Platí to stejně pro `OchranaZapisuTests` — čtení i zápisy stojí
+        // na tomtéž: bez identity není co hlídat.
         builder.UseSetting("Identita:Authority", "https://identita.neexistuje.invalid");
         builder.UseSetting("Identita:Audience", "orlickypohar-test");
     }

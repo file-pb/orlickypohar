@@ -65,14 +65,14 @@ public class OchranaCteniTests(PostgresFixture fx)
             var metody = ep.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods ?? [];
             if (!metody.Contains("GET")) continue;
 
-            var vzor = Normalizuj(ep.RoutePattern.RawText);
+            var vzor = CestaZeVzoru.Normalizuj(ep.RoutePattern.RawText);
             if (!Chranene.Any(p => vzor.StartsWith(p, StringComparison.Ordinal))) continue;
 
             var klic = $"GET {vzor}";
             nalezene.Add(klic);
             if (VedomeVerejne.ContainsKey(klic)) continue;
 
-            var odpoved = await klient.GetAsync(Vypln(ep.RoutePattern));
+            var odpoved = await klient.GetAsync(CestaZeVzoru.Vypln(ep.RoutePattern));
             if (odpoved.StatusCode is not (HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden))
                 otevrene.Add($"{klic} → {(int)odpoved.StatusCode}");
         }
@@ -92,25 +92,5 @@ public class OchranaCteniTests(PostgresFixture fx)
         // pod stejnou cestou, byl by rovnou vědomě veřejný.
         VedomeVerejne.Keys.Except(nalezene).ShouldBeEmpty(
             "Tyhle výjimky ve VedomeVerejne neodpovídají žádnému endpointu. Smaž je.");
-    }
-
-    /// <summary>Doplní parametry cesty tak, aby prošly omezeními.</summary>
-    private static string Vypln(RoutePattern vzor)
-    {
-        var cesta = vzor.RawText ?? "/";
-        foreach (var p in vzor.Parameters)
-        {
-            var celociselny = p.ParameterPolicies.Any(pol => pol.Content is "int" or "long");
-            var hodnota = celociselny ? "1" : "x";
-            cesta = System.Text.RegularExpressions.Regex.Replace(
-                cesta, $@"\{{\*?{p.Name}(:[^}}]*)?\??\}}", hodnota);
-        }
-        return cesta.StartsWith('/') ? cesta : "/" + cesta;
-    }
-
-    private static string Normalizuj(string? vzor)
-    {
-        var s = "/" + (vzor ?? "").Trim('/');
-        return s.EndsWith('/') ? s : s + "/";
     }
 }
