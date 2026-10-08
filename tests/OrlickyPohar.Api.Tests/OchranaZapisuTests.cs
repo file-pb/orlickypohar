@@ -34,7 +34,28 @@ public sealed class IdentitaFixture : WebApplicationFactory<Program>, IAsyncLife
     async Task IAsyncLifetime.InitializeAsync()
     {
         await _db.StartAsync();
-        _ = Server;
+
+        // `Program.cs` má kolem celého startu try/catch, který výjimku jen
+        // zaloguje jako Fatal a vrátí 1. Navenek z toho je nicneříkající
+        // „The entry point exited without ever building an IHost" a skutečná
+        // příčina zůstane v konzoli, kterou nikdo nečte. Zachytíme ji
+        // a přilepíme k chybě, ať se nehádá.
+        var puvodni = Console.Out;
+        var zachyt = new StringWriter();
+        Console.SetOut(zachyt);
+        try
+        {
+            _ = Server;
+        }
+        catch (Exception e)
+        {
+            throw new InvalidOperationException(
+                $"Hostitel s identitou nenaběhl. Co aplikace vypsala:\n{zachyt}", e);
+        }
+        finally
+        {
+            Console.SetOut(puvodni);
+        }
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
