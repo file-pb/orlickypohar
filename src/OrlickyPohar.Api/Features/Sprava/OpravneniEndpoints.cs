@@ -2,6 +2,8 @@ using System.Security.Claims;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Import;
 
+using OrlickyPohar.Api.Features.Sprava;
+
 namespace OrlickyPohar.Api.Features.Sprava;
 
 /// <summary>
@@ -28,7 +30,7 @@ public static class OpravneniEndpoints
 {
     public static void MapSpravaOpravneni(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/sprava/serie/{serie}/opravneni").WithTags("Správa");
+        var g = app.MapSpravu("/sprava/serie/{serie}/opravneni");
 
         // Tvar odpovědi se musí říct ručně: handlery vracejí `IResult`,
         // protože se z nich chodí ven šesti různými způsoby, a z toho
@@ -69,7 +71,7 @@ public static class OpravneniEndpoints
     /// </summary>
     public static void MapSpravaOpravneniWebu(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/sprava/web/opravneni").WithTags("Správa");
+        var g = app.MapSpravu("/sprava/web/opravneni");
 
         g.MapGet("/", WebPrehledAsync)
             .Produces<PrehledWebuDto>()

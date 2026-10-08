@@ -24,7 +24,7 @@ public static class KapitanstviEndpoints
 {
     public static void MapKapitanstvi(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/sprava/serie/{serie}/lode").WithTags("Správa");
+        var g = app.MapSpravu("/sprava/serie/{serie}/lode");
 
         g.MapGet("/", SeznamAsync)
             .Produces<List<LodSpravaDto>>()

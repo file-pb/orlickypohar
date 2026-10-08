@@ -25,7 +25,7 @@ public static class SmerniceEndpoints
 {
     public static void MapSmernice(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/sprava/serie/{serie}/zastavky/{zavod}/smernice").WithTags("Správa");
+        var g = app.MapSpravu("/sprava/serie/{serie}/zastavky/{zavod}/smernice");
 
         g.MapGet("/", SeznamAsync)
             .Produces<List<SmerniceDto>>()

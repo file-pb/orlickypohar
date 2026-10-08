@@ -26,7 +26,7 @@ public static class KalendarEndpoints
 {
     public static void MapKalendar(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/sprava/serie/{serie}/zastavky").WithTags("Správa");
+        var g = app.MapSpravu("/sprava/serie/{serie}/zastavky");
 
         // Tvar odpovědi se říká ručně: handlery vracejí `IResult`, protože
         // se z nich chodí ven víc způsoby, a z toho dokument nic neodvodí.
