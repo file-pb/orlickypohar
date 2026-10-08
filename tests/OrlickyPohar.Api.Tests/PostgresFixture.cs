@@ -44,6 +44,20 @@ public sealed class PostgresFixture : WebApplicationFactory<Program>, IAsyncLife
         builder.UseSetting("ConnectionStrings:Postgres", _db.GetConnectionString());
         builder.UseSetting("Import:Token", Token);
         builder.UseSetting("Landsat:Token", LandsatToken);
+        // Identita se nastavuje schválně, i když je autorita vymyšlená
+        // a nedostupná. Bez ní `Program.cs` chráněné řezy pod /sprava/
+        // vůbec nezaregistruje (`if (identita)`) — a `OchranaCteniTests`,
+        // který je má hlídat, by neměl co kontrolovat. Chytá to jeho
+        // pojistka na prázdný seznam; tohle je ta příčina.
+        //
+        // Na síť se přitom nesahá: požadavek bez tokenu odmítne JwtBearer
+        // rovnou 401, metadata poskytovatele potřebuje teprve k ověření
+        // podpisu. Ostatní testy správy chodí přes služby, ne přes HTTP.
+        //
+        // Touž změnu potřebuje i `OchranaZapisuTests` v #125; až se obojí
+        // sejde, je to týž řádek dvakrát.
+        builder.UseSetting("Identita:Authority", "https://identita.neexistuje.invalid");
+        builder.UseSetting("Identita:Audience", "orlickypohar-test");
     }
 
     async Task IAsyncLifetime.DisposeAsync()

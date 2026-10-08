@@ -1467,10 +1467,21 @@ a odvolání zamítnutí se má vrátit to, co organizátor nastavil.
 
 **Oprávnění se kontroluje při vydání, ne až u mapy.** Pro trať je to
 dodržené od 5. 10. 2026: roli prověří endpoint, než cokoliv vydá
-(`Features/Boje/BojeEndpoints.cs:51`, pravidlo na `:83`), a veřejná cesta
-k bójím neexistuje — celá skupina leží pod `/sprava/`. Otevřené to zůstává
-pro **vlastní trasu a živé polohy**: ty se budou vydávat i divákům, takže
-dvojí zámek výš musí držet endpoint, ne teprve vrstva mapy.
+(`Features/Boje/BojeEndpoints.cs`), a veřejná cesta k bójím neexistuje —
+celá skupina leží pod `/sprava/`.
+
+**Od 8. 10. 2026 to hlídá test, ne jen kázeň.** Vyšlo najevo, že handlery
+správy nejdřív přeloží adresu na rozsah a teprve pak se ptají na právo —
+jinak to u nich ani nejde, protože na právo se ptá *pro ten rozsah*.
+Nepřihlášený tím dostal 404 místo 403 a z toho rozdílu si přečetl, které
+ročníky a zastávky existují. Celá skupina `/sprava/` proto vyžaduje
+přihlášení (`Features/Sprava/SkupinaSpravy.cs`) a `OchranaCteniTests`
+prochází endpointy sám, takže se to u nového endpointu nedá zapomenout.
+
+**Otevřené to zůstává pro vlastní trasu a živé polohy**: ty se budou
+vydávat i divákům, tedy *mimo* `/sprava/`, kde práh přihlášení neplatí.
+Dvojí zámek tam musí držet endpoint, ne teprve vrstva mapy — a rozhodnutí
+patří do seznamu výjimek v tom testu, i s důvodem.
 
 **Totéž platí pro pořadí na vodě.** Ukazovat se smí za stejných podmínek.
 Pozor ale na to, co se ukazuje: pořadí v závodě rozhoduje cíl, ne vzdálenost
@@ -3713,12 +3724,10 @@ trasu a živé polohy.
 (`Features/Zavody/Zavod.cs`), takže ZFP ani náprava nemají kde být. Dokud to
 pole nevznikne, nejde fáze 5 dokončit ani s odpověďmi rozhodčího.
 
-**Bóje mají API, ale nikdo je nepoužívá.** Obrazovka není na webu ani v appce,
-a `packages/api-client/openapi.json` bóje nezná: snímek má 73 cest, běžící API
-75. Dokud se klient nepřegeneruje (`packages/api-client/generuj.sh`), nejde ta
-obrazovka napsat typově ani ji vyvíjet proti `tools/fake-api.py`, který bóje
-taky neumí. Je to nejmenší kus práce z celého auditu a stojí před všemi
-bójovými.
+**Bóje mají API, ale nikdo je nepoužívá.** Obrazovka není na webu ani
+v appce. Klient už bóje zná — snímek se přegeneroval 8. 10. 2026 a cesty
+v něm jsou —, takže zbývá ta obrazovka a podpora v `tools/fake-api.py`,
+který bóje pořád neumí.
 
 ### Co by bolelo při závodu
 
