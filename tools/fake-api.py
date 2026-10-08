@@ -44,8 +44,19 @@ for _z in D["zavody"]:
 # Snímek druhého zapisovatele u poslední odjeté regaty: dvě lodě prohozené
 # a jedna, kterou jeden z nich nemá. Přesně ty dva případy, které plán
 # u porovnání jmenuje.
+def zavod_zkousky():
+    """
+    Zastávka, na které stojí zkouška ovládání: odjetá, s rozjížďkami a
+    <b>s nejdelším seznamem lodí</b>. Na tempo v C5 je potřeba dlouhý
+    seznam a na C7 druhý zapisovatel — obojí musí sedět na jedné regatě,
+    jinak se tempo měří jinde, než kde je připravený konflikt.
+    """
+    odjete = [z for z in D["zavody"] if z["stav"] == "Odjety" and z["rozjizdky"]]
+    return max(odjete, key=lambda z: len(z["ucasti"]), default=None)
+
+
 def _nasad_druhy_snimek():
-    z = next((z for z in D["zavody"] if z["stav"] == "Odjety" and z["rozjizdky"]), None)
+    z = zavod_zkousky()
     if not z:
         return
     r = z["rozjizdky"][0]
@@ -472,10 +483,9 @@ def naklady_dto():
 DRUHY_ZAPISOVATEL = MILOS
 
 # Zastávka, u které leží nasazený snímek druhého zapisovatele. Je to tatáž,
-# na které se zkouší C7, takže Miloš na ní musí mít roli — jinak by v přehledu
-# oprávnění stál zápis od člověka, který tam nemá co dělat.
-ZAVOD_DVOU_ZAPISOVATELU = next(
-    (z["slug"] for z in D["zavody"] if z["stav"] == "Odjety" and z["rozjizdky"]), None)
+# na které se zkouší C5 a C7, takže Miloš na ní musí mít roli — od chvíle,
+# kdy mock role vymáhá, by se jinak k zápisu vůbec nedostal.
+ZAVOD_DVOU_ZAPISOVATELU = (zavod_zkousky() or {}).get("slug")
 
 OPRAVNENI = [{"id": 1, "uzivatelId": JA["id"], "zobrazovane": JA["zobrazovane"],
               "email": JA["email"], "role": "Spravce", "zavod": None,
