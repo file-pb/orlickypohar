@@ -142,6 +142,82 @@ get /a
 ma "pak nová verze z cache" test "$cache" = HIT
 ma "…opravdu nová" test "$(vykresleni "$telo")" -gt "$puvodni"
 
+echo "Jména cookie sezení sedí s tím, co posílá web"
+# N2: jediná pojistka proti uložení osobní stránky do cache je, že se taková
+# odpověď pozná podle cookie sezení. `proxy_ignore_headers` zahazuje
+# `Cache-Control` i `Vary`, a GET přihlášeného nemusí nést `Set-Cookie` —
+# takže když se jméno cookie změní ve web/lib/oidc.ts a nezmění v nginxu,
+# personalizované HTML se uloží pod anonymní klíč.
+#
+# Nekontrolují se řetězce proti řetězcům: jména se vytáhnou z oidc.ts
+# a pošlou skutečnému nginxu. Prochází tedy to, co doopravdy nastane.
+OIDC="$ADRESAR/../../../web/lib/oidc.ts"
+jmena=$(grep -oE 'export const COOKIE_[A-Z]+ = "[a-z_]+"' "$OIDC" | sed -E 's/.*"([a-z_]+)".*/\1/')
+ma "jména cookie se v oidc.ts našla" test -n "$jmena"
+
+for j in $jmena; do
+  get "/cookie-$j" -H "Cookie: $j=cokoliv"
+  ma "cookie $j jde mimo cache" test "$cache" = BYPASS
+done
+# Dělený token: web ukládá kusy jako `op_token.0`, `op_token.1`, …
+get /cookie-kus -H "Cookie: op_token.0=cokoliv"
+ma "dělená cookie op_token.0 jde mimo cache" test "$cache" = BYPASS
+
+# Negativní kontrola: kdyby výraz chytal cokoliv, prošly by i tyhle testy
+# a nic by neověřovaly. Cizí cookie se cachovat MUSÍ.
+get /cookie-cizi -H "Cookie: op_tokenovnik=cokoliv"
+ma "cizí jméno se naopak cachuje (výraz nechytá vše)" test "$cache" = MISS
+get /cookie-cizi -H "Cookie: op_tokenovnik=cokoliv"
+ma "…a podruhé je to HIT" test "$cache" = HIT
+
+echo "Limit vykreslování: jeden klient nesmí sebrat web ostatním"
+# Měří se to, co bylo naměřeno v produkci: klient s cookie sezení jde mimo
+# cache, takže každý jeho požadavek vykresluje. Útočník a kontrolní
+# návštěvník MUSÍ mít různou Cf-Connecting-Ip, jinak by kontrolního odmítl
+# vlastní limit a vypadalo by to jako kolaps webu.
+utocnik="203.0.113.7"; divak="203.0.113.8"
+# SOUBĚŽNĚ, ne za sebou. Sekvenční smyčka 25 curlů trvá přes deset vteřin
+# a limit se jí průběžně doplňuje (2/s), takže by neodmítla nic a test by
+# prošel naprázdno — první verze téhle zkoušky na to padla.
+: > "$ADRESAR/.limit"
+for i in $(seq 1 30); do
+  curl -s -o /dev/null -w '%{http_code}\n' \
+    -H "Cf-Connecting-Ip: $utocnik" -H "Cookie: op_token=x" "$URL/limit$i" \
+    >> "$ADRESAR/.limit" &
+done
+wait
+stavy=$(cat "$ADRESAR/.limit"); rm -f "$ADRESAR/.limit"
+ma "nad dávku přijde 429" test "$(grep -c 429 <<<"$stavy")" -gt 0
+ma "…a část přitom projde (limit nezavírá úplně)" test "$(grep -c 200 <<<"$stavy")" -gt 0
+
+# Kontrolní návštěvník BĚHEM útoku, ne po něm — jinak se měří klid.
+for i in $(seq 1 30); do
+  curl -s -o /dev/null -H "Cf-Connecting-Ip: $utocnik" -H "Cookie: op_token=x" "$URL/soub$i" &
+done
+get /a -H "Cf-Connecting-Ip: $divak"
+ma "jiný klient dostane stránku i během útoku" test "$stav" = 200
+wait
+
+# Cachované požadavky mají prázdný klíč zóny, takže je limit míjí — jinak
+# by nával diváků na tutéž stránku spadl do 429 a mikrocache by byla k ničemu.
+stavy=$(for _ in $(seq 1 25); do
+          curl -s -o /dev/null -w '%{http_code}\n' -H "Cf-Connecting-Ip: $divak" "$URL/a"
+        done)
+ma "25× táž stránka z cache bez 429" test "$(grep -c 429 <<<"$stavy")" -eq 0
+
+# Zapisovatel v cíli: souvislé ukládání nesmí narazit. Tempo určuje doba
+# odezvy, ne prst — cil.tsx posílá další sadu hned, jak se vrátí předchozí.
+zapisovatel="203.0.113.9"
+stavy=$(for i in $(seq 1 20); do
+          curl -s -o /dev/null -w '%{http_code}\n' -X POST \
+            -H "Cf-Connecting-Ip: $zapisovatel" -H "Cookie: op_token=x" \
+            "$URL/sprava/2027/vysledky/z/1/cil"
+        done)
+ma "20 zápisů správy za sebou projde bez 429" test "$(grep -c 429 <<<"$stavy")" -eq 0
+
+get /cache-zdravi -H "Cf-Connecting-Ip: $utocnik"
+ma "zdraví se nelimituje ani útočníkovi" test "$stav" = 200
+
 if [ "$chyb" -gt 0 ]; then
   echo "Selhalo: $chyb"
   docker logs op-cache-test-cache 2>&1 | tail -20
