@@ -96,7 +96,8 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
         {hlava}
         <p className="prazdno">
           K výsledkům téhle regaty nemáš přístup. Zapisuje je její pořadatel,
-          ověřuje a schvaluje rozhodčí ročníku.
+          ověřuje a schvaluje rozhodčí ročníku —{" "}
+          <Link href="/napoveda#vysledky">který krok komu patří</Link>.
         </p>
       </>
     );
@@ -143,9 +144,15 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
       {prehled.rozjizdky.length === 0 ? (
         <p className="prazdno">
           Regata zatím nemá jedinou rozjížďku.{" "}
-          {prehled.smiPridatRozjizdku
-            ? "Přidej první a rovnou do ní zapiš výsledky."
-            : "Přidat ji může pořadatel regaty, jakmile je závod vypsaný."}
+          {prehled.smiPridatRozjizdku ? (
+            "Přidej první a rovnou do ní zapiš výsledky."
+          ) : (
+            <>
+              Přidat ji může pořadatel regaty, jakmile je závod vypsaný —
+              vypisuje se v{" "}
+              <Link href={`/sprava/${serie}/kalendar`}>kalendáři</Link>.
+            </>
+          )}
         </p>
       ) : (
         <ul className="seznam">
@@ -333,7 +340,8 @@ function Rozjizdka({
         rozjizdka.publikovano && (
           <p className="poznamka">
             Čísla jsou venku, i když zápis ještě neprošel celým workflow.
-            Publikace je vlastní příznak, ne poslední stupeň.
+            Publikace je vlastní příznak, ne poslední stupeň —{" "}
+            <Link href="/napoveda#vysledky">jak to spolu souvisí</Link>.
           </p>
         )}
     </div>

@@ -86,7 +86,8 @@ export default async function SpravaPoradatele({ params, searchParams }: Paramet
         {hlava}
         <p className="prazdno">
           V tomhle ročníku k pořadatelům přístup nemáš. Medailonek upravuje rozhodčí, nebo
-          organizátor regaty, kterou klub pořádá.
+          organizátor regaty, kterou klub pořádá —{" "}
+          <Link href="/napoveda#role">co která role smí</Link>.
         </p>
       </>
     );

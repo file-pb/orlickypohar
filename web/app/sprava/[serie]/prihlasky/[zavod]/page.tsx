@@ -126,6 +126,8 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
         {hlava}
         <p className="prazdno">
           K přihláškám téhle regaty nemáš přístup. Spravuje je její pořadatel.
+          Co smíš ty, ukáže <Link href={`/sprava/${serie}`}>rozcestník ročníku</Link>;
+          co která role smí, je v <Link href="/napoveda#role">nápovědě</Link>.
         </p>
       </>
     );
@@ -183,14 +185,22 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
         <>
           <h2>Čekají na vyřízení</h2>
           <p className="poznamka" style={{ marginTop: 0 }}>
-            Přihlášky z webu a vrácené k doplnění. Na webu nejsou, dokud je nezapíšeš.
+            Přihlášky z webu a vrácené k doplnění. Na webu nejsou, dokud je
+            nezapíšeš —{" "}
+            <Link href={`/serie/${serie}/zavody/${zavod}`}>co je venku</Link>.
           </p>
           <Tabulka serie={serie} zavod={zavod} lode={cekaji} kategorie={prehled.kategorie} kod={vystaveny} />
         </>
       )}
 
       {prihlasene.length === 0 ? (
-        <p className="prazdno">Na regatu zatím není přihlášená žádná loď.</p>
+        <p className="prazdno">
+          Na regatu zatím není přihlášená žádná loď. Přihlas ji formulářem níž,
+          nebo pošli posádkám{" "}
+          <Link href={`/serie/${serie}/zavody/${zavod}/prihlaska`}>
+            odkaz na veřejnou přihlášku
+          </Link>.
+        </p>
       ) : (
         <Tabulka
           serie={serie}

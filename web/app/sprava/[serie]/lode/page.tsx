@@ -248,6 +248,8 @@ function Detail({
           se kódem, který vystavíš u lodi v{" "}
           <Link href={`/sprava/${serie}/kalendar`}>přihláškách zastávky</Link>.
           Přihlášky jsou u každé regaty v kalendáři — vlastní adresu nemají.
+          Jak se posádka připojuje, je v{" "}
+          <Link href="/napoveda#posadka">nápovědě</Link>.
         </p>
       ) : (
         <ul className="seznam">

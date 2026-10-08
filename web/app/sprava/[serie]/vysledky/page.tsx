@@ -70,6 +70,8 @@ export default async function SpravaVysledku({
         <p className="prazdno">
           V tomhle ročníku k výsledkům nemáš přístup. Zapisuje je pořadatel
           závodu, ověřuje a schvaluje rozhodčí — o roli požádej správce ročníku.
+          Kdo smí který krok, je v{" "}
+          <Link href="/napoveda#vysledky">nápovědě</Link>.
         </p>
       </>
     );
@@ -80,7 +82,11 @@ export default async function SpravaVysledku({
       <p className="podtitulek">Vyber regatu, jejíž rozjížďky chceš posunout.</p>
 
       {zastavky.length === 0 ? (
-        <p className="prazdno">Ročník zatím nemá jedinou regatu.</p>
+        <p className="prazdno">
+          Ročník zatím nemá jedinou regatu. Zakládá je rozhodčí v{" "}
+          <Link href={`/sprava/${serie}/kalendar`}>kalendáři</Link>;{" "}
+          <Link href="/napoveda#vypsat-regatu">jak to jde po sobě</Link>.
+        </p>
       ) : (
         <ul className="seznam">
           {zastavky.map((z) => (

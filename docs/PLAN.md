@@ -3889,10 +3889,21 @@ víc času než kterýkoliv návod nad ním.
 a `#co-neumime` z deseti míst ve správě i na veřejném webu. Přejmenovat je
 jde jen s projitím odkazů.
 
-**Zbytek inventury je fronta, ne hotovo.** Propojeno je deset nejdražších
-míst; dalších zhruba sto čtyřicet vět čeká. Sahat na ně má smysl po
-zkoušce ovládání s pořadatelem — ta řekne, které z nich doopravdy zdržují,
-a která tvrzení jsou navíc nepřesná jako to o kapitánovi.
+**Propojeno je zhruba třicet pět míst** napříč správou i veřejným webem
+(9. 10. 2026): prázdné stavy, odmítnutí podle role, hlášky z API (u těch
+stojí odkaz vedle textu, protože do něj nejde), kód pro posádku, stavy
+regaty a zápisu, bodování a veřejná přihláška.
+
+**Druhá nepravda, kterou to odhalilo:** veřejná přihláška tvrdila, že
+kategorii lodi v ročníku změní správce. Nezmění ji nikdo —
+`Prihlaska.KategorieId` se zapíše při založení (`PrihlaskySprava.cs:456`)
+a dál ji přepíše jen import. Věta je opravená.
+
+**Zbytek je fronta, ne hotovo.** Ze 154 vět zůstává přes sto takových, kde
+by odkaz byl spíš ozdoba — výpadky, prázdné seznamy s formulářem hned pod
+nimi, štítky stavů. Sahat na ně má smysl až po zkoušce ovládání
+s pořadatelem: ta řekne, které doopravdy zdržují, a hlavně kolik dalších
+tvrzení je nepřesných jako ta dvě výše.
 
 ## Kde se pokračuje
 

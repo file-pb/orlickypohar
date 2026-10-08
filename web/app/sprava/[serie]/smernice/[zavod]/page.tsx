@@ -76,7 +76,8 @@ export default async function SmerniceZastavky({ params, searchParams }: Paramet
         </p>
       ) : stav === "nesmi" ? (
         <p className="prazdno">
-          Směrnici smí vyvěsit pořadatel téhle regaty nebo rozhodčí ročníku.
+          Směrnici smí vyvěsit pořadatel téhle regaty nebo rozhodčí ročníku —{" "}
+          <Link href="/napoveda#role">co která role smí</Link>.
         </p>
       ) : smernice === undefined ? (
         <Vypadek />
@@ -113,7 +114,9 @@ export default async function SmerniceZastavky({ params, searchParams }: Paramet
           <h2>Vyvěšené verze</h2>
           {smernice.length === 0 ? (
             <p className="prazdno">
-              U téhle regaty zatím směrnice není. Bez ní se regata nejede, tak ji vyvěs včas.
+              U téhle regaty zatím směrnice není. Bez ní se regata nejede, tak
+              ji vyvěs včas formulářem výš —{" "}
+              <Link href="/napoveda#smernice">co o směrnici platí</Link>.
             </p>
           ) : (
             <ul className="seznam">

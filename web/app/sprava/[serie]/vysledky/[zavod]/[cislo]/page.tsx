@@ -159,16 +159,24 @@ export default async function ZapisRozjizdky({ params, searchParams }: Parametry
         ulozeno={Boolean(zpravy.stav && !zpravy.chyba)}
       />
 
+      {/* Hláška chodí z API (`Zapis.ProcNelze`), takže odkaz nemůže být v ní.
+          Důvod bývá stav regaty nebo stav zápisu; obojí se řeší na stránce
+          regaty, respektive v kalendáři. */}
       {zapis.procNelze && (
         <p className="hlaska" role="status">
-          {zapis.procNelze}
+          {zapis.procNelze}{" "}
+          <Link href={`/sprava/${serie}/vysledky/${zavod}`}>Stránka regaty</Link> ·{" "}
+          <Link href={`/sprava/${serie}/kalendar`}>kalendář</Link> ·{" "}
+          <Link href="/napoveda#vysledky">jak to jde po sobě</Link>
         </p>
       )}
 
       {zapis.lode.length === 0 ? (
         <p className="prazdno">
           Do ročníku zatím není přihlášená žádná loď, takže není komu výsledek
-          zapsat.
+          zapsat. Přihlásit ji — i úplně novou — jde{" "}
+          <Link href={`/sprava/${serie}/prihlasky/${zavod}`}>v přihláškách regaty</Link>,
+          nebo se lodě přihlásí samy z webu, jakmile je regata vypsaná.
         </p>
       ) : (
         <form action={zapisAkce}>
@@ -245,7 +253,8 @@ export default async function ZapisRozjizdky({ params, searchParams }: Parametry
               <p className="poznamka">
                 Ukládá se celá rozjížďka najednou. Prázdný řádek znamená, že loď
                 v téhle rozjížďce výsledek nemá. Pořadí, nebo kód — ne obojí.
-                Časy z importu zůstávají, jak jsou.
+                Časy z importu zůstávají, jak jsou. Co se s výsledky děje dál,
+                je v <Link href="/napoveda#vysledky">nápovědě</Link>.
               </p>
             </div>
           )}

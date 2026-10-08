@@ -198,7 +198,11 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
           tvrdily, že je teprve mít bude. */}
       {akce ? (
         <>
-          <p className="poznamka">Akce mimo pohár — do průběžného pořadí se nepočítá.</p>
+          <p className="poznamka">
+            Akce mimo pohár — do{" "}
+            <Link href={`/serie/${slug}/poradi`}>průběžného pořadí</Link> se
+            nepočítá.
+          </p>
           {clanky && clanky.length > 0 ? (
             <>
               <h2>Novinky k akci</h2>
@@ -268,7 +272,8 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
       {radky.length > 0 && zavod.stav !== "Odjety" && (
         <p className="poznamka">
           Regata není vedená jako odjetá, takže se tyhle výsledky do průběžného
-          pořadí seriálu nepočítají.
+          pořadí seriálu nepočítají —{" "}
+          <Link href={`/serie/${slug}/poradi`}>co v pořadí je</Link>.
         </p>
       )}
 
@@ -278,7 +283,8 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
             ? "Čísla v rozjížďkách jsou body — pořadí v celém poli, bez ohledu na kategorii."
             : "Čísla v rozjížďkách jsou body — pořadí v této kategorii, ne v celém poli."}
           {zavod.pocetSkrtu > 0 && " Škrtnutá rozjížďka je přeškrtnutá a do součtu se nepočítá."}
-          {zavod.rozjizdky.some((r) => !r.doSerie) && " Rozjížďka s * se nepočítá do poháru."}
+          {zavod.rozjizdky.some((r) => !r.doSerie) && " Rozjížďka s * se nepočítá do poháru."}{" "}
+          <Link href="/pravidla">Jak se počítají body</Link>
         </p>
       )}
 

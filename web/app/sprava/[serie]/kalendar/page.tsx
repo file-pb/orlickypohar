@@ -193,7 +193,8 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
             <p className="poznamka">
               {naAkcich
                 ? "Akce vznikne jako plánovaná a veřejnost ji zatím neuvidí. Do poháru se nepočítá a nemá výsledky ani přihlášky lodí; psát se k ní dá jako k regatě."
-                : "Regata vznikne jako plánovaná a veřejnost ji zatím neuvidí."}
+                : "Regata vznikne jako plánovaná a veřejnost ji zatím neuvidí."}{" "}
+              <Link href="/napoveda#vypsat-regatu">Co přijde potom</Link>
             </p>
           </form>
         </>
@@ -277,7 +278,8 @@ function Pole({ zastavka, akce }: { zastavka?: ZastavkaRadek; akce?: boolean }) 
           </select>
           <span className="poznamka">
             Do poháru jdou body vždycky po kategoriích. Tohle rozhoduje jen o tom,
-            jaké tabulky regata vyhlásí.
+            jaké tabulky regata vyhlásí. Jak se body počítají, je{" "}
+            <Link href="/pravidla">v pravidlech</Link>.
           </span>
         </label>
       )}

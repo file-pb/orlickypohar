@@ -96,7 +96,8 @@ export default async function SpravaClanku({ params, searchParams }: Parametry) 
         <p className="prazdno">
           {web
             ? "Obecné články smí psát editor webu. O roli požádej správce webu."
-            : "V tomhle ročníku nemáš právo psát. O roli editora požádej správce ročníku."}
+            : "V tomhle ročníku nemáš právo psát. O roli editora požádej správce ročníku."}{" "}
+          <Link href="/napoveda#role">Co která role smí</Link>
         </p>
       </>
     );

@@ -135,7 +135,11 @@ export default async function Prihlaska({ params, searchParams }: Parametry) {
           <p className="poznamka" style={{ marginTop: 0 }}>
             {nalezena
               ? nalezena.vRocniku
-                ? "Loď v tomhle ročníku jede, kategorii proto nemění formulář, ale správce."
+                // Dřív tu stálo „kategorii nemění formulář, ale správce".
+                // Kategorii přihlášky nemění v aplikaci nikdo: `KategorieId`
+                // se zapíše při založení (`PrihlaskySprava.cs:456`) a dál ji
+                // přepíše jen import. Oprava 9. 10. 2026.
+                ? "Loď v tomhle ročníku jede, takže kategorii tenhle formulář nemění — platí ta z přihlášky do ročníku."
                 : `Loď jsme našli v poháru${nalezena.posledniRok ? ` (naposledy ${nalezena.posledniRok})` : ""}. Zkontroluj údaje a doplň kontakt.`
               : "Tuhle loď zatím neznáme. Vyplň, co o ní má pořadatel vědět."}
           </p>
@@ -211,13 +215,19 @@ function Formular({
               </option>
             ))}
           </select>
-          <span className="poznamka">Loď jede celý ročník v jedné kategorii.</span>
+          <span className="poznamka">
+            Loď jede celý ročník v jedné kategorii — vybírá se jednou a{" "}
+            <Link href="/napoveda#co-neumime">zpátky to vzít nejde</Link>.
+          </span>
         </label>
       )}
 
       <h2>Kapitán</h2>
       <p className="poznamka" style={{ marginTop: 0 }}>
         Kdo loď řídí a s kým se pořadatel domluví. Kontakt veřejně nikde není.
+        Podle téhle adresy se účet při příštím přihlášení{" "}
+        <Link href="/napoveda#moje-lod">sám spáruje s lodí</Link>, takže sem
+        patří adresa toho, kdo má loď spravovat — ne sdílená schránka klubu.
       </p>
 
       <label>
@@ -271,7 +281,8 @@ function Formular({
 
       <button type="submit">Odeslat přihlášku</button>
       <p className="poznamka">
-        Přihlášku uvidí pořadatel regaty. Ve startovní listině bude loď, až ji zapíše.
+        Přihlášku uvidí pořadatel regaty. Ve startovní listině bude loď, až ji
+        zapíše — <Link href="/napoveda#prihlasit-lod">co se s přihláškou děje</Link>.
       </p>
     </form>
   );
