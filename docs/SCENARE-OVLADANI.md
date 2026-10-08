@@ -81,7 +81,7 @@ Rozlišují se tři stavy, ne dva: **místní zápis v telefonu**, **čeká na
 odeslání**, **potvrzeno serverem.** Obrazovka to umí
 (`uloženo / ukládám… / neuloženo`), zápis to musí rozlišovat taky.
 
-### Co se na mocku zatím ověřit nedá
+### Co mock vymáhá a co ne
 
 **Skupina B, posádka v A3 a F1 už jdou** (6. 10. 2026): mock umí `/ja/lode`,
 `/ja/lode/{id}/kod`, `/ja/lode/{id}/pripojeni`, `/ja/pripojeni` a nároky,
@@ -91,16 +91,27 @@ včetně **platnosti kódu, přechodů rolí a odmítnutí**. Projeto scénáři
 Jeden kód je nasazený **už prošlý** (`PROSLY`), aby se u B2 nečekalo
 patnáct minut.
 
-Zbývá dvojí, kde se závěry **nedělají**:
+**Od 8. 10. 2026 mock role vymáhá.** Brána stojí na jednom místě, hned za
+kontrolou tokenu, hlídá `/sprava/**` a pravidla má opsaná z `Prava.Smi`:
+rozhodčí není stupeň, pověření k jedné zastávce platí jen na ni, právo na
+celý web všude. Kde role závisí na tom, *co* se posílá, hlídají si to
+handlery samy — stupeň workflow podle `Workflow.KdoSmi`, zařazení do poháru
+podle `KdoSmiDoSerie`, vyloučení přihlášky podle `Prihlasky.cs`.
 
-| Co | Proč | Co by to spravilo |
-|---|---|---|
-| **E4 v plném rozsahu** | Mock u zápisu **práva nerozlišuje** — přihlášeného bere jako pořadatele. Udělení role proto přístup druhého účtu doopravdy nezmění; jiný podpis autora to nedokládá | Vymáhat v mocku rozsah role, ne jen podepisovat |
-| Odmítnutí ve správě ročníku (D4, D5) | Mock je odvozuje z **pravidel stavu**, ne z role, takže se měří hláška, ne oprávnění. Dvě výjimky, kde roli vymáhá doopravdy: **B4 a B5 podle vztahu k lodi** (403, jen majitel nebo kapitán) a **pořadatelský kód k cizí lodi** (`tools/fake-api.py:1196`, 403 bez role na celý ročník nebo na celý web). **C2 sem nepatří** — zapsat posádku ve správě nejde ani v mocku, ani ve webu, takže to není odmítnuté právo, ale chybějící funkce | Vymáhat rozsah role i ve správě ročníku |
+**Obrazovka nabízí jen to, co projde:** `smiZapisovat`, `smiPublikovat`,
+`smiZalozit`, `smiPridatRozjizdku` i nabídka stupňů se počítají z práv toho,
+kdo se ptá. Projito: rozhodčí na potvrzené rozjížďce vidí jen *Vrátit do
+poháru* a *Vrátit k revizi*, správce celou sadu, a pořadatel cizí regaty
+dostane „K výsledkům téhle regaty nemáš přístup".
 
-Co naopak **jde**: role se liší v tom, co člověk **vidí** — nabídka, rozcestník
-a jeho položky se počítají z týchž pravidel jako na serveru. Scénáře o tom,
-kam se kdo dostane, tedy platí; scénáře o tom, co mu server zakáže, zatím ne.
+Dvě věci z toho stojí za zapamatování, protože mění, co scénáře měří:
+
+- **Potvrzení a publikace nejsou práce rozhodčího.** `Workflow.KdoSmi` dává
+  rozhodčímu *Ověřeno*, *Schváleno* a *K revizi*; *Potvrzeno*, *Eliminováno*
+  i puštění ven patří **správci**. D2 tedy rozhodčí dotáhne po *Schváleno*
+  a dál to předává — zadání „pusť je ven" se bez správce nedokončí.
+- **C2 není odmítnuté právo, ale chybějící funkce** — zapsat posádku ve
+  správě nejde nikomu, ani v mocku, ani ve webu.
 
 **Druhý zapisovatel na mocku je.** Mock bere token jako jméno účtu
 (`TOKENY` v `tools/fake-api.py`): `filip` je správce ročníku, `milos`
@@ -155,38 +166,30 @@ ne účty, kterými se zkoušejí — a ty se od nich v mocku lišily. Tabulka j
 | A | žádný — bez cookie | — | ročník je publikovaný | plná |
 | B1–B4 | `jana` | **majitelka** lodi JOY (CZE 457), ve správě nic | k lodi nikdo další | plná, s výhradou níž |
 | B5 | `petr` | posádka lodi SENDY (CZE 204) | loď **nemá odpovědného** | plná |
-| C | `milos` | organizátor **jen zastávky `jarni-vitr`** | 11 účastí, 1 rozjížďka | **jen `jarni-vitr`**, viz níž |
-| C5, C7 na `izolepa` | `filip` + `milos` | správce ročníku + organizátor cizí zastávky | 22 účastí, 3 rozjížďky | **tempo a konflikt ano, rozsah role ne** |
+| C | `milos` | organizátor **jen zastávky `izolepa`** | 22 účastí, 3 rozjížďky | plná |
+| C7, druhý telefon | `filip` | správce ročníku, píše všude | tamtéž | plná |
 | D1–D3 | `zdenek` | **rozhodčí celého ročníku** | výsledky `Potvrzeno`, nic nečeká | plná pro navigaci |
 | D4, D5 | `zdenek` | tamtéž | — | **jen hláška** — mock odmítá z pravidel stavu, ne z role |
 | E1–E3 | `filip` | správce ročníku (`zavod: null`) | LUNA má kapitána od kódu → *ke kontrole* | plná, výhrada u E2 |
 | E4 | `filip` | tamtéž | Jana je v seznamu účtů bez role | **jen zadání** — udělenou roli mock nevymáhá |
 | E5 | `dana` | správkyně **celého webu**, v ročníku nic | — | plná |
 
-Tři věci z toho, které měří něco jiného, než co je v názvu skupiny:
+Dvě věci z toho, které měří něco jiného, než co je v názvu skupiny:
 
 - **Skupina se jmenuje „kapitán", účet je majitelka.** `jana` je *majitel*,
   ne *kapitán*. Práva jsou tatáž — odpovědný za loď je majitel i kapitán
   (`Features/Lode/Kapitanstvi.cs`, `Odpovedny`) — ale **kapitána bez
   majitelství mock nemá**, takže se nezkouší, jestli se obě role na
   obrazovce chovají stejně. Zapiš u B, kterou rolí se jelo.
-- **Miloš má roli jen na `jarni-vitr`** (`tools/fake-api.py`,
-  `ZAVOD_DVOU_ZAPISOVATELU` je první odjetá zastávka s rozjížďkou), a ta má
-  **11 účastí**. C5 chce 25–30 lodí a konflikt v C7 je zreprodukovaný na
-  `izolepa` s 22. **Obojí v jednom průchodu nejde:** na `izolepa` Miloš roli
-  nemá a projde jen proto, že mock u zápisu rozsah nevymáhá. Rozhodnutí:
-  **tempo a konflikt se jedou na `izolepa`** (tam je na čem), a do zápisu se
-  napíše, že se **neměřilo, kam se dostane organizátor jedné zastávky** —
-  to je samostatné krátké sezení na `jarni-vitr`.
 - **E2 si Filip potvrzuje vlastní kapitánství.** Loď *ke kontrole* je LUNA
   a kapitána od kódu na ní má právě `filip`. Scénář se tím dá odjet, ale
   otázka „pozná z obrazovky, proč je ke kontrole" se ptá člověka, který
   tam vidí své jméno. Pro čisté měření přehoď vazbu na jiný účet.
 
-Kombinace, u kterých se **závěr nedělá**, se v zápisu značí `NEODJETO` s
-důvodem — ne „prošlo". Dnes to jsou: **E4 v plném rozsahu**, **D4 a D5
-jako odmítnutí práva** a **celá skupina C jako organizátor jedné zastávky**,
-pokud se jelo na `izolepa`.
+Kombinace, u kterých se **závěr nedělá**, se v zápisu značí `NEODJETO`
+s důvodem — ne „prošlo". Od 8. 10. 2026, kdy **mock role vymáhá**, nejsou
+žádné: odmítnutí ve správě ročníku je skutečné odmítnutí, ne hláška
+z pravidel stavu.
 
 ## Příprava dat a lidí
 
@@ -522,13 +525,20 @@ rozhodnutí mezi dvěma platnými čísly — ne hledání cesty.
 **D1 — Založit regatu.**
 *Zadání:* Založ regatu a dej jí termín.
 
-**D2 — Ověřit výsledky.**
+**D2 — Ověřit výsledky.** Rozhodčí to sám nedotáhne, a to je zjištění.
 *Zadání:* Ověř výsledky jedné rozjížďky a pusť je ven.
+*Pro moderátora:* **„pustit ven" není jeho.** `Workflow.KdoSmi` dává
+rozhodčímu *Ověřeno*, *Schváleno* a *K revizi*; *Potvrzeno* a publikaci
+dělá správce. Zadání je proto schválně napsané tak, jak ho člověk dostane
+ústně — a měří se, jestli pozná, kde jeho část končí, a najde, kdo
+pokračuje. Nedokončení tu **není selhání účastníka.**
 *Projito 8. 10. 2026 jako `zdenek`:* celá řada navrženo → ověřeno →
 schváleno → potvrzeno → venku, každý krok s větou, co znamená („Čísla sedí
 s papírem z vody", „Protesty vyřízené, pořadí platí", „Konečné. Dál se
 needituje"). Po ověření se *zapsat výsledky* mění na *zobrazit zápis* —
-zápis se zavírá sám. **Veřejnou stránku ověř až novým načtením:** hned po
+zápis se zavírá sám. **Pozor:** průchod byl ještě před tím, než mock začal
+vymáhat role, takže poslední dva kroky udělal rozhodčí neprávem; dnes mu
+obrazovka nabídne jen *Ověřit* a *Schválit*. **Veřejnou stránku ověř až novým načtením:** hned po
 *Pustit ven* ukazovala ještě starou tabulku z mezipaměti routeru a sloupec
 rozjížďky v ní chyběl. Zapsat jako „data nesedí" by bylo mylné.
 
