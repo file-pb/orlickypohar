@@ -53,6 +53,10 @@ jobs:
       # nový test se tak do řetězu dostane sám a filtr se nemusí opravovat.
       - name: Testy bez Dockeru
         run: dotnet test -c Release --nologo --filter "Category!=Integracni"
+        # Licence ImageSharpu: `dotnet test -c Release` ji vyžaduje stejně jako
+        # publish (v Debugu je to jen varování, proto to lokálně neselže).
+        env:
+          SIXLABORS_LICENSE_KEY: ${{ secrets.SIXLABORS_LICENSE_KEY }}
 
       # Pravidla mikrocache před webem proti falešnému webu: hlavně že se
       # stránka přihlášeného nikdy nedostane do cache. Když to selže,
@@ -204,6 +208,10 @@ jobs:
 
       - name: Integrační testy
         run: dotnet test -c Release --nologo --filter "Category=Integracni"
+        # Licence ImageSharpu: `dotnet test -c Release` ji vyžaduje stejně jako
+        # publish (v Debugu je to jen varování, proto to lokálně neselže).
+        env:
+          SIXLABORS_LICENSE_KEY: ${{ secrets.SIXLABORS_LICENSE_KEY }}
 
   # Nasazení. Vlastní úloha, ne poslední krok buildu, a to ze tří důvodů:
   #
