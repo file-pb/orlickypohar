@@ -176,15 +176,27 @@ echo "Limit vykreslování: jeden klient nesmí sebrat web ostatním"
 # návštěvník MUSÍ mít různou Cf-Connecting-Ip, jinak by kontrolního odmítl
 # vlastní limit a vypadalo by to jako kolaps webu.
 utocnik="203.0.113.7"; divak="203.0.113.8"
-stavy=$(for i in $(seq 1 25); do
-          curl -s -o /dev/null -w '%{http_code}\n' \
-            -H "Cf-Connecting-Ip: $utocnik" -H "Cookie: op_token=x" "$URL/limit$i"
-        done)
+# SOUBĚŽNĚ, ne za sebou. Sekvenční smyčka 25 curlů trvá přes deset vteřin
+# a limit se jí průběžně doplňuje (2/s), takže by neodmítla nic a test by
+# prošel naprázdno — první verze téhle zkoušky na to padla.
+: > "$ADRESAR/.limit"
+for i in $(seq 1 30); do
+  curl -s -o /dev/null -w '%{http_code}\n' \
+    -H "Cf-Connecting-Ip: $utocnik" -H "Cookie: op_token=x" "$URL/limit$i" \
+    >> "$ADRESAR/.limit" &
+done
+wait
+stavy=$(cat "$ADRESAR/.limit"); rm -f "$ADRESAR/.limit"
 ma "nad dávku přijde 429" test "$(grep -c 429 <<<"$stavy")" -gt 0
 ma "…a část přitom projde (limit nezavírá úplně)" test "$(grep -c 200 <<<"$stavy")" -gt 0
 
+# Kontrolní návštěvník BĚHEM útoku, ne po něm — jinak se měří klid.
+for i in $(seq 1 30); do
+  curl -s -o /dev/null -H "Cf-Connecting-Ip: $utocnik" -H "Cookie: op_token=x" "$URL/soub$i" &
+done
 get /a -H "Cf-Connecting-Ip: $divak"
-ma "jiný klient dostane stránku dál" test "$stav" = 200
+ma "jiný klient dostane stránku i během útoku" test "$stav" = 200
+wait
 
 # Cachované požadavky mají prázdný klíč zóny, takže je limit míjí — jinak
 # by nával diváků na tutéž stránku spadl do 429 a mikrocache by byla k ničemu.
