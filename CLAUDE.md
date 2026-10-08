@@ -45,7 +45,7 @@ curl -s https://orlickypohar-api.klihovka.cz/health   # musí vrátit Healthy
 
 | Otázka | Kde je odpověď |
 |---|---|
-| Co je hotové a co dál | [docs/PLAN.md](docs/PLAN.md) — oddíly *Stav* a *Kde se pokračuje* |
+| Co je hotové a co dál | [docs/PLAN.md](docs/PLAN.md) — hlavička a oddíly *Fáze* a *Kde se pokračuje* |
 | Jestli se k funkci vůbec někdo doklikne | [docs/SCENARE-OVLADANI.md](docs/SCENARE-OVLADANI.md) — scénáře po rolích a co o navigaci víme z auditu |
 | Proč model vypadá takhle | [docs/PLAN.md](docs/PLAN.md) |
 | Čím se liší pracovní Mac | [platform/docs/JINY-STROJ.md](https://github.com/file-pb/platform/blob/main/docs/JINY-STROJ.md) |

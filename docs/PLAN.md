@@ -6,19 +6,30 @@ výsledky, administrace a mobilní přístup.
 **Jméno projektu:** `orlickypohar` → `orlickypohar.klihovka.cz`
 (bez pomlčky a podtržítka — jméno slouží zároveň jako databáze, role i subdoména).
 
-**Stav k 8. 9. 2026: fáze 1 nasazená, fáze 2 hotová.**
+**Stav k 8. 10. 2026: fáze 0 až 4 a fáze 6 hotové; ve fázi 5 zbývají
+protesty a penalizace; fáze 7 a 9 nezačaté; z fáze 8 stojí bóje na trati.**
+Co přesně chybí a v jakém pořadí to dělat, je v oddílu *Co ještě chybí
+(audit 8. 10. 2026)*.
 
 | | |
 |---|---|
 | `orlickypohar.klihovka.cz` | veřejný web (Next.js), běží |
 | `orlickypohar-api.klihovka.cz` | API, běží |
-| V databázi | vymyšlený ročník 2025 — 16 lodí, 10 závodů, 334 výsledků |
-| Publikováno | **ne**, proto web hlásí „zatím žádný ročník" |
+| V databázi | dva ročníky: **2026 (nanečisto)** — 37 lodí, 8 zastávek (7 odjetých, 1 zrušená), 13 rozjížděk, 226 výsledků; jména, kategorie a pořadí v kategoriích jsou ze sešitu rozhodčího, rozjížďky vymyšlené (`data/2026-nanecisto.json`); **2027** — 9 plánovaných zastávek z termínové listiny rozhodčího, bez lodí a bez výsledků |
+| Publikováno | **oba ročníky** (ověřeno na produkci 8. 10. 2026) — `/serie` vrací jen publikované (`Features/Serial/SerieEndpoints.cs:76`) a vrací oba. Dřív tu stálo „ne, proto web hlásí zatím žádný ročník"; prázdný stav v kódu zůstává (`web/app/page.tsx`), jen ho produkce nepotkává. Soubor `data/2026-nanecisto.json` je nepublikovaný schválně, na produkci se nahrává `tools/gen-mock.py --publikovat` |
+| Appka | čtecí, bez přihlášení — ročníky, zastávka, výsledky, pořadí (`app/src/app/`); v CI se jen kontrolují typy proti API, `npx tsc --noEmit` (`.github/workflows/build-deploy.yml:188`) |
 | Nasazení | automatické: push do `main` → build → háček → server |
+| Verze na produkci | `ea26b63` — API i web stejná jako `main` (`/verze` obou služeb, 8. 10. 2026) |
 
 Bodovací pravidla jsou rozluštěná ze skutečných tabulek rozhodčího a ověřená
-proti výsledkové listině závodu (viz *Co říkají skutečná data*). Otevřená
-zůstává jediná otázka — bonus u 24hodinovky.
+proti výsledkové listině závodu (viz *Co říkají skutečná data*). ~~Otevřená
+zůstává jediná otázka — bonus u 24hodinovky.~~ **Bonus u 24hodinovky
+potvrdil rozhodčí 22. 9. 2026** (oddíl *Pravidla seriálu od rozhodčího*)
+a je naprogramovaný: hodnotu nese `Zavod.PosunDoSerie`
+(`Features/Zavody/Zavod.cs:287`), `SerieBodovani.BodyDoSerie` ji přičítá
+k umístění (`Features/Bodovani/Serie.cs:93`) a drží to `BodovaniTests`.
+Otevřená zůstává dvacítka za diskvalifikaci a hodnocení trestů — na nich
+visí protesty a penalizace z fáze 5 (8. 10. 2026).
 
 ---
 
@@ -281,17 +292,27 @@ ve kterém se otočky na vodě evidují (zbytečně) a náprava se nedá zapsat
 ### Co náš model už umí a co ne
 
 **Umí:** tresty, které se projeví jako kód. `Vysledek.Kod` je přesně na to
-a `DSQ`, `OCS`, `RET`, `RDG` v číselníku jsou. Chybí jen další kódy ze
-standardu — `DNE` (diskvalifikace nezahrnutá do škrtů), `UFD` a `BFD`
-(vlajkové starty), `ZFP` (dvacetiprocentní penalizace). Je to řádek do
-výčtu, ne změna modelu.
+a `DSQ`, `OCS`, `RET`, `RDG` v číselníku `KodVysledku`
+(`Features/Zavody/Zavod.cs:184`) jsou, vedle `DNF`, `DNS` a `DNC`. Chybí
+jen další kódy ze standardu — `DNE` (diskvalifikace nezahrnutá do škrtů),
+`UFD` a `BFD` (vlajkové starty), `ZFP` (dvacetiprocentní penalizace).
+Je to řádek do výčtu, ne změna modelu — v databázi je `Kod` prostý `int?`,
+takže migrace není potřeba. Propsat se to ale musí i do klienta: popisky
+drží `web/lib/vysledky.ts:39` jako vyčerpávající `Record<KodVysledku,
+string>`, takže jakmile se přegeneruje `schema.d.ts` (`generuj.sh` ho píše
+webu i appce), web bez nového řádku v `KODY` neprojde překladem
+(8. 10. 2026).
 
 **Neumí dvě věci:**
 
 1. **Kód bez čísla nestačí.** Bodová penalizace přičítá body a náprava je
    naopak přiděluje (typicky průměr z ostatních rozjížděk, nebo body podle
    pořadí, které by loď získala). Obojí potřebuje u výsledku **číslo**, ne
-   jen značku. Dnes není kam ho zapsat.
+   jen značku. Dnes není kam ho zapsat: `Vysledek` nese pořadí, dojezd, čas
+   a kód, a **body se tam záměrně neukládají** — počítají se
+   (`Features/Zavody/Zavod.cs:470`). Rozhodnutí komise tedy potřebuje vlastní
+   místo, ne jen další číslo u výsledku, a **blokuje to dokončení fáze 5**
+   (ne její začátek — oprávnění, workflow a zápis výsledků hotové jsou).
 
    `DNE` navíc mění chování škrtu: nesmí se škrtnout. To je příznak
    u kódu, ne u výsledku.
@@ -339,20 +360,50 @@ Potvrdit to ale musí rozhodčí, ne my.
 
 ### Kdy to stavět
 
-**Ne teď — jen s tím počítat.** Filipovo rozhodnutí z 8. 9. 2026. Protest
-bez administrace a bez identity nemá kdo zapsat —
+**Ne teď — jen s tím počítat.** Filipovo rozhodnutí z 8. 9. 2026. ~~Protest
+bez administrace a bez identity nemá kdo zapsat~~ — **ten důvod odpadl**:
+identita je hotová od 9. 9. 2026 a administrace mezi 9. a 14. 9. 2026
+(`Features/Sprava/Rozsahy.cs`, `Features/Zavody/Workflow.cs`,
+`Features/Zavody/Zapis.cs`). Odklad dnes drží dvě jiné věci: chybějící místo
+pro číslo u výsledku (výš) a nezodpovězené otázky rozhodčího. Protest —
 patří do fáze 5, kde vzniká zadávání a schvalování, a rozhodnutí komise je
 přesně ten druh zápisu, u kterého musí být vidět, kdo ho udělal.
 
 Do té doby se penalizace zapíše tak, jak se dnes zapisuje všechno ostatní:
-kódem u výsledku. Rozhodnutí, které se nedá vyjádřit kódem, je ta chvíle,
-kdy je potřeba číslo — a teprve tehdy má smysl migrace.
+kódem u výsledku; jediná stopa po projednaném protestu je stav `Schvaleno`
+— „protesty vyřízené, pořadí platí" (`Features/Zavody/Zavod.cs:160`).
+Rozhodnutí, které se nedá vyjádřit kódem, je ta chvíle, kdy je potřeba
+číslo — a teprve tehdy má smysl migrace toho pole u výsledku.
+
+**Hodnoty trestů jsou ale od 5. 10. 2026 verzované na ročníku** (oddíl
+*Verze bodovacích pravidel*). Dvacítku za diskvalifikaci i přirážku za
+nápravu drží `PravidlaBodovani.V1`
+(`Features/Bodovani/PravidlaBodovani.cs:53`), ročník si nese číslo verze
+(`Serie.VerzePravidel`, `Features/Serial/Serie.cs:60`) a obě čtecí cesty
+si pravidla vyzvednou podle něj (`Features/Bodovani/PoradiEndpoints.cs:78`,
+`Features/Zavody/ZavodEndpoints.cs:251`). **Pro fázi 5 z toho plyne
+postup:** až rozhodčí čísla upřesní — „na příští rok upravíme", 22. 9. 2026,
+body za tresty se mají upravit na ročník 2027 — přidá se `V2` a ročníku se
+přepne `VerzePravidel`. `V1` se neopravuje, protože podle ní se vyhlašovalo
+(dnes 2026 i 2027). Vyhlášený ročník se nesmí pohnout.
+
+Co z toho dnes počítá kód: náprava dostává místo hned za posledním
+dokončivším (`Features/Bodovani/Bodovani.cs:84`), diskvalifikace pevných
+20 bodů do seriálu (`Features/Bodovani/Serie.cs:91`), ale **jen loď, která
+nemá v žádné rozjížďce nic jiného než `DSQ`**
+(`Features/Bodovani/Bodovani.cs:126`) — jednotlivý `DSQ` se boduje jako
+každý jiný kód, tedy přihlášených do závodu plus jedna. Příznak
+diskvalifikace na účasti by byl přesnější a čeká na rozhodčího; dokud není,
+je to odvozenina z kódů, ne zápis rozhodnutí komise.
 
 **Co potřebuje odpověď od rozhodčího dřív, než se to postaví:**
 
 1. Vede se dnes protest vůbec písemně, nebo se řeší domluvou na břehu?
 2. Používá se bodová penalizace (procentní), nebo jen diskvalifikace?
-3. Jak se dnes počítá náprava — průměr, nebo přidělené pořadí?
+3. Jak se dnes počítá náprava — průměr, nebo přidělené pořadí? Než odpověď
+   přijde, dává kód místo hned za posledním dokončivším
+   (`PrirazkaZaNapravu` v `Features/Bodovani/PravidlaBodovani.cs:46`) —
+   provizorium, ne pravidlo (8. 10. 2026).
 4. Má se protest zveřejňovat, nebo je to interní věc komise? Na tom stojí,
    jestli se to vůbec dostane na veřejné stránky.
 
@@ -1034,6 +1085,13 @@ to na iPhonu spolehlivě neuměly.
 | Android transport | FCM (Firebase, zdarma) |
 | Evidence příjemců | tabulka `Zarizeni` — token, platforma, odběry |
 
+**Je to celý plán, ne rozdělaná práce** (8. 10. 2026): tabulku `Zarizeni`
+databáze nemá (`Data/AppDbContext.cs:18-43`), odesílací úloha žádná není
+(`Program.cs` registruje jen `SberVodocetu`, `SberPrevzatych`
+a `UklidKontaktu` — :73, :97 a :100), Outbox v kódu není a appka nemá ani
+`expo-notifications` (`app/package.json`). Podrobněji v *Co ještě chybí
+(audit 8. 10. 2026)*.
+
 ### Dvě úrovně upozornění
 
 | Komu | Příklad | Přihlášení |
@@ -1197,6 +1255,13 @@ ona: když se uloží „start odložen" a odeslání selže, nikdo se to nedozv
 
 Řeší se to ve fázi, kdy vzniká odesílání — ne dřív.
 
+**Data pro „změnu trati" už ale leží hotová** (8. 10. 2026): přenastavení
+bóje zakládá nový záznam a ten nese `NahrazujeId` na svého předchůdce
+(`Features/Boje/BojeSprava.cs:69`), zatímco **starému** se zapíše
+`NahrazenaV` (`BojeSprava.cs:73`, popsané na `Boje.cs:66`). Je tedy z čeho
+zprávu postavit i čím doložit, jak trať stála předtím. Chybí jedině
+odeslání — a s ním právě ten Outbox.
+
 ### Appka je oficiální vývěska (Filip, 3. 10. 2026)
 
 Rozhodnuto: **appka je oficiální vývěskou závodu.** Tři důsledky, bez
@@ -1300,12 +1365,25 @@ pořadí na vodě a čitelnou mapu.
   záznam, ne přepis — během dne se trať mění a trasa musí jít porovnat se
   stavem, který zrovna platil. Je to totéž pravidlo jako u směrnice.
 - **Bóje patří k zastávce a mají pořadí**, aby z nich šla složit trať a kola.
-- **Jde to i bez signálu:** appka pípnutí podrží a odešle později.
+- **Jde to i bez signálu:** appka pípnutí podrží a odešle později. **Tohle
+  dnešní API neunese** (8. 10. 2026): `PipnutiVstup` čas nenese
+  (`Features/Boje/Boje.cs:95-101`) a `PostavenaV` se bere ze serverových
+  hodin v okamžiku zápisu (`Features/Boje/BojeSprava.cs:42` a `:67`), takže
+  podržené pípnutí by se uložilo s časem nahrání, ne s časem postavení —
+  a čas z první odrážky je tím pádem taky serverový, ne z GPS. Pole s časem
+  z telefonu je tedy podmínka, ne detail.
 - **Smí organizátor té regaty nebo rozhodčí**, stejně jako u směrnice.
 
-**Hotové API (5. 10. 2026):** `Features/Boje/` — pípnutí, seznam, sebrání.
-Smí organizátor regaty nebo rozhodčí, stejně jako u směrnice; veřejné čtení
-zatím není, protože kdy se trať smí ukázat divákům, patří rozhodčímu.
+**Hotové API (5. 10. 2026):** `Features/Boje/` — pípnutí, seznam, sebrání;
+zapojené v `Program.cs:95` a `:211`, migrace `20261005193300_Boje`, testy
+`BojeTests.cs` a `PipnutiTests.cs`. Smí organizátor regaty nebo rozhodčí,
+stejně jako u směrnice; veřejné čtení zatím není, protože kdy se trať smí
+ukázat divákům, patří rozhodčímu.
+
+**Nad tím API ale zatím nic nestojí** (8. 10. 2026): obrazovka není na webu
+ani v appce, bóje nejsou v `packages/api-client/openapi.json`, takže na ně
+generované typy nedosáhnou, a `tools/fake-api.py` je neumí. Podrobně
+v oddílu *Co ještě chybí (audit 8. 10. 2026)*.
 
 | Pravidlo | Proč |
 |---|---|
@@ -1387,6 +1465,13 @@ rozhodčí má právo veta. V datech to musí být uložené jako dvě věci —
 organizátor a jestli rozhodčí zamítl —, ne jako jeden sloupec: po zamítnutí
 a odvolání zamítnutí se má vrátit to, co organizátor nastavil.
 
+**Oprávnění se kontroluje při vydání, ne až u mapy.** Pro trať je to
+dodržené od 5. 10. 2026: roli prověří endpoint, než cokoliv vydá
+(`Features/Boje/BojeEndpoints.cs:51`, pravidlo na `:83`), a veřejná cesta
+k bójím neexistuje — celá skupina leží pod `/sprava/`. Otevřené to zůstává
+pro **vlastní trasu a živé polohy**: ty se budou vydávat i divákům, takže
+dvojí zámek výš musí držet endpoint, ne teprve vrstva mapy.
+
 **Totéž platí pro pořadí na vodě.** Ukazovat se smí za stejných podmínek.
 Pozor ale na to, co se ukazuje: pořadí v závodě rozhoduje cíl, ne vzdálenost
 k bóji. Dokud není zadaná trať, je každé „pořadí na vodě" dohad a nesmí se
@@ -1410,7 +1495,7 @@ v appce.
 | Kdo vyvěšuje | Organizátor zastávky nebo rozhodčí; u záznamu je kdo a kdy |
 | Odvolání | **Záznam se nemaže, obsah se dá stáhnout.** Stažená verze zmizí z úložiště i z veřejného čtení, řádek i důvod zůstanou |
 | Kde je vidět | Stránka zastávky na webu, táž obrazovka v appce, odkaz v kalendáři |
-| Kontrola | Zastávka ve stavu *vypsaná* bez směrnice je ve správě vidět jako nedodělek — regata bez směrnice se nejede |
+| Kontrola | Zastávka ve stavu *vypsaná* bez směrnice **má být** ve správě vidět jako nedodělek — regata bez směrnice se nejede. **Zbývá k 8. 10. 2026:** správa k ní vede jen odkaz (`web/app/sprava/[serie]/kalendar/page.tsx:329`) a API žádný příznak o chybějící směrnici nevydává |
 
 **Formát je soubor, ne text v databázi.** Směrnice je dokument, který
 pořadatel píše ve Wordu a vydává jako PDF; převádět ho na bloky by znamenalo
@@ -1727,10 +1812,10 @@ Počítáno na pět hodin týdně.
 | 2 | ~~**Bodování** — nízkobodový systém, kódy, škrty, pořadí po kategoriích~~ | **hotovo** | Čisté funkce **ověřené proti skutečnému sešitu rozhodčího**, vydané endpointem a vidět na webu |
 | 3 | ~~**Mobilní appka, jen čtení**~~ | **hotovo 8. 9. 2026** | Nepotřebovala přihlášení, takže vznikla dřív než identita. Běží na telefonu, typy si bere z OpenAPI a jde poslat jako APK |
 | 4 | ~~**Identita a role** — Zitadel, mapování `(issuer, subject) → UserId`~~ | **hotovo 9. 9. 2026** | Zitadel na vlastním stroji, přihlášení na webu, API ověřuje tokeny. Odblokovalo odloženou položku platformy |
-| 5 | **Administrace a workflow** — zadávání, stavy, publikace, protesty a penalizace | skoro hotovo | Oprávnění, kalendář a workflow výsledků hotové 11. 9. 2026; zápis výsledků, přihlášky lodí a role od rozhodčího 14. 9. Zbývají protesty a penalizace — čekají na odpovědi rozhodčího |
-| 6 | **Blog a fotky** — model, import, veřejné čtení, novinky na webu | skoro hotovo | Psaní článků i fotky v kartách hotové 11. 9. 2026; nahrávání vlastní fotky do R2 v kódu 16. 9. 2026, zapne se založením bucketu (viz *Fotky v R2*) |
-| 7 | **Upozornění** — veřejná i účastnická, odesílání, Outbox | 2–3 týdny | Účastnická stojí na identitě z fáze 4 a na napojení osoby k lodi |
-| 8 | **Tracker** — záznam trasy, offline, nahrání, prohlížení | 4–6 týdnů | Samostatná linka; potřebuje jen identitu a kontext závodu |
+| 5 | **Administrace a workflow** — zadávání, stavy, publikace, protesty a penalizace | skoro hotovo | Oprávnění, kalendář a workflow výsledků hotové 11. 9. 2026; zápis výsledků, přihlášky lodí a role od rozhodčího 14. 9. Zbývají protesty a penalizace — vedle odpovědí rozhodčího k nim chybí u výsledku pole pro číslo (`Features/Zavody/Zavod.cs:476` `Vysledek`), takže ZFP ani náprava nemají kam; `RDG` proto zatím dostává místo za posledním dokončivším (`Features/Bodovani/Bodovani.cs:58-59`) |
+| 6 | ~~**Blog a fotky** — model, import, veřejné čtení, novinky na webu~~ | **hotovo 16. 9. 2026** | Psaní článků i fotky v kartách hotové 11. 9. 2026; nahrávání do R2 i bucket s vlastní doménou 16. 9. 2026 (viz *Fotky v R2*). Úložiště se zapne jen při úplném nastavení (`Features/Fotky/Uloziste.cs:143`) a vydává `immutable` cache (`:99`); ověřeno 8. 10. 2026, že produkce fotky z `orlickypohar-foto.klihovka.cz` doopravdy servíruje |
+| 7 | **Upozornění** — veřejná i účastnická, odesílání, Outbox | 2–3 týdny, **nezačatá** | Oba předpoklady jsou hotové: identita z fáze 4 (9. 9. 2026) i napojení osoby k lodi (4. 10. 2026, `Features/Lode/VazbaKLodi.cs`, kapitánství upravené 5. 10. 2026). K 8. 10. 2026 v kódu přesto není Outbox, tabulka `Zarizeni` ani odesílací úloha. Data pro upozornění „změna trati" už jsou — přenastavená bóje se nepřepisuje (`Features/Boje/Boje.cs:57`, `:70`); chybí odeslání, ne záznam |
+| 8 | **Tracker** — ~~bóje na trati~~, záznam trasy, offline, nahrání, prohlížení | bóje **hotové 5. 10. 2026**, zbytek 4–6 týdnů | Samostatná linka; potřebuje jen identitu a kontext závodu. Bóje mají API (`Features/Boje/`), migraci `20261005193300_Boje` a deset testů (`tests/OrlickyPohar.Api.Tests/BojeTests.cs`, `PipnutiTests.cs`), ale žádnou obrazovku — `packages/api-client/openapi.json` je nezná (73 cest proti 75 v běžícím API, 8. 10. 2026). Trasa jako entita, mapa ani poloha v appce nezačaté |
 | 9 | Handicap | až bude potřeba | |
 
 Realisticky **čtyři měsíce** do použitelné verze. Fáze 1 dá něco, co jde
@@ -1767,8 +1852,8 @@ a platí pro ni totéž co pro firmware na lodi.
 
 | Odložená položka | Spoušť | Stav |
 |---|---|---|
-| **Zitadel** | druhá aplikace se skutečnými uživateli | **nastala** — řeší fáze 3 |
-| **Outbox** | akce, která nesmí být ztracena | **nastala** — push rozhodčího lodím, řeší fáze 7 |
+| **Zitadel** | druhá aplikace se skutečnými uživateli | **nastala**, hotovo 9. 9. 2026 — řešila fáze 4, běží na `ucty.klihovka.cz` |
+| **Outbox** | akce, která nesmí být ztracena | **nastane s fází 7** — push rozhodčího lodím; k 8. 10. 2026 v kódu žádné odesílání, Outbox ani `Zarizeni` není |
 | Stavy životního cyklu projektů | čtvrtý projekt | tohle je druhý |
 
 Platí pravidlo platformy č. 5: **vlastní interní `UserId`** a tabulka
@@ -2092,19 +2177,24 @@ Sloupec „Body přepočet" odpovídá součtu bez nejhoršího výsledku: PEZI 
 0+12+1 = 13 a přepočet 1, tedy bez dvanáctky; M1 má 44 a přepočet 31, tedy
 bez třináctky.
 
-**Co z dat čistě nevychází a patří se zeptat:**
+**Co z dat čistě nevycházelo a bylo potřeba se zeptat** — všechny tři body
+zodpovězené 22. 9. 2026, viz *Pravidla seriálu od rozhodčího* a *Zodpovězeno*:
 
 1. **24hodinovka je bonusová, ne násobená.** *Potvrzeno 22. 9. 2026
    pravidly rozhodčího.* Filip slyšel, že „se počítá dvakrát". Data ale ukazují posun celého pole o jedničku dolů, ne násobek:
    vítěz −1, druhý 0, třetí 1 — a stejně ve všech třech kategoriích.
 
    Koeficient 2 by dal druhému 2 body a osmému 14; bonus mu dá 0 a 6.
-   V seriálu je to propastný rozdíl, takže **tohle je potřeba potvrdit
-   od rozhodčího dřív, než se to naprogramuje.**
+   V seriálu je to propastný rozdíl, takže se čekalo na rozhodčího — bonus
+   **potvrdil 22. 9. 2026** (viz *Pravidla seriálu od rozhodčího*).
 
-   Pokud platí bonus, není to `KoeficientDoSerie` — to pole násobí. Byl by
-   to samostatný odečet na závodě, nebo se 24hodinovka dá zapsat prostě tak,
-   jak je: hodnotami, které rozhodčí spočítal.
+   Není to `KoeficientDoSerie` — to pole násobí. Je to samostatný posun na
+   závodě, **naprogramovaný 22. 9. 2026**: `Zavod.PosunDoSerie`
+   (`Features/Zavody/Zavod.cs:287`, migrace `PravidlaSerialu`), výpočet ho
+   přičítá k místu (`Features/Bodovani/Serie.cs:93`) a endpoint pořadí ho
+   předává (`Features/Bodovani/PoradiEndpoints.cs:90` a `:179`). Neúčast
+   bonus nemá; obojí drží `BodovaniTests` —
+   `Na_24hodinovce_ma_vitez_minus_jedna` a `Neucast_na_24hodinovce_bonus_nema`.
 2. **Několik řádků škrtu neodpovídá.** LUNA i MAMBA mají přepočet vyšší,
    než by drhnutí nejhoršího dalo. Je na −1 zvláštní pravidlo, nebo je to
    překlep? *Vysvětleno 22. 9. 2026:* ročník škrtá **dva** závody, ne jeden.
@@ -2115,8 +2205,13 @@ bez třináctky.
    v regatě za pevných 20 bodů**. SPRUNZEL má stejnou dvacítku z Poháru
    Slunce. Úvaha níž (místo za posledním z celého pole) je tím vyvrácená;
    nechávám ji tu jako doklad, jak snadno se ze samotného čísla vyčte špatný
-   původ. **Pořád otevřené:** Filip 8. 9. slyšel, že ČERVENÉ CAFE
-   „odstoupila", sešit ji ale vede jako diskvalifikovanou.
+   původ. **Dořešeno 22. 9. 2026:** Filip 8. 9. slyšel, že ČERVENÉ CAFE
+   „odstoupila", sešit ji ale vede jako diskvalifikovanou — a rozhodčí
+   dvacítku potvrdil jako „podle platných pravidel" (viz *Odpovědi rozhodčího
+   na doplňující otázky*), takže platí sešit. Kód s ní tak zachází: v sešitu
+   rozhodčího je ta zastávka `DSQ` za 20 bodů
+   (`data/2026-poradi-rozhodci.json:1365`) a prožene ji test
+   `SerieTests.Dvacitka_za_diskvalifikaci_se_da_skrtnout`.
 
    Původní úvaha:
    24hodinovka se jede a vyhodnocuje jako **jeden celek přes celé pole**
@@ -2131,6 +2226,10 @@ bez třináctky.
    jako celé pole musí lodě s kódem dostat do seriálu hodnotu odvozenou
    z **jejich kategorie**, ne z celkového pořadí. Jinak jeden odstup zničí
    celý ročník — dvacítka v seriálu je víc než součet čtyř běžných závodů.
+   **Takhle to kód počítá**: pořadí se dělá uvnitř kategorie
+   (`Features/Bodovani/Bodovani.cs:177`) a do seriálu jde pořadí mínus jedna
+   (`Features/Bodovani/Serie.cs:93`); drží to test
+   `Lod_s_kodem_dostane_do_serie_poradi_ze_sve_kategorie` v `BodovaniTests`.
 
    **A je to nejlepší doklad, proč tabulka nestačí.** V Excelu není kam
    napsat, že loď *odstoupila*; zbylo po ní jen číslo a jeho původ se musí
@@ -2142,7 +2241,7 @@ bez třináctky.
 sloupec** — `Body` jako `SUM(B:J)`. `Pořadí`, `Body přepočet` i `Pořadí
 přepočet` jsou psané rukou. Škrt i seřazení tedy dnes dělá člověk v Excelu
 u každé změny znovu, pro tři kategorie zvlášť. To je přesně ta práce, kterou
-má převzít počítání z fáze 2.
+**počítání z fáze 2 převzalo** — viz *Fáze 2 krok za krokem — hotovo* níž.
 
 ### Fáze 3 — co stojí a co zbývá
 
@@ -2154,7 +2253,7 @@ lodí. Barvy má appka stejné jako web, protože je to jeden produkt.
 |---|---|
 | ~~Vyzkoušet na skutečném telefonu~~ | hotovo 8. 9. 2026 — `npm run telefon` |
 | ~~Sdílený klient z OpenAPI~~ | hotovo 8. 9. 2026 — `packages/api-client/generuj.sh` |
-| Ikona a splash | jsou ze šablony |
+| ~~Ikona a splash~~ | hotovo 8. 9. 2026 — vlastní ikona místo šablony („Ikona je značka závodu"); logo v křivkách 15. 9. 2026, `app/assets/images/` a `app/app.json` |
 | ~~Vydání (APK)~~ | hotovo 8. 9. 2026 — `npm run apk`; iOS odloženo, viz níž |
 
 **Podoba tabulek čeká na rozhodčího, neladí se dopředu.** Filip, 8. 9. 2026:
@@ -2163,8 +2262,18 @@ i to, co se kde zobrazuje. Ladit rozložení dřív znamená stavět na pěti
 dohadech (bonus u 24hodinovky, pořadí kódů, škrt, neúčast, koeficient) —
 a překreslovat pak obojí, jen podruhé dráž.
 
+**Čtyři z těch pěti rozhodčí 22. 9. 2026 zodpověděl a jsou v kódu:** bonus
+u 24hodinovky (`Zavod.PosunDoSerie`), kódy podle ZPJ A5.2 — s výhradou, že
+`RDG` zůstává za posledním (`Features/Bodovani/Bodovani.cs:84`) —, škrty jako
+číslo na ročníku (`Serie.PocetSkrtu`, výchozí 1, ročník 2026 má 2) a neúčast
+z přihlášených do závodu. **Nejistý zůstává koeficient**, a kromě něj hodnota
+20 za diskvalifikaci, kterou si rozhodčí podle vlastních slov „nějak vymyslel"
+a která se upraví na ročník 2027.
+
 Co je hotové, tedy **stačí, že je čitelné a pravdivé**; hezké bude, až bude
-co ukazovat. Otevřené otázky jsou vypsané výš u bodování a u protestů.
+co ukazovat. Otevřené u bodování zůstávají **koeficient** a **dvacítka za
+diskvalifikaci** (pracovní hodnota, upraví se na ročník 2027); u protestů
+čekají odpovědi rozhodčího a místo pro číslo u výsledku.
 
 **Účet u Applu se zatím neplatí.** Filip, 8. 9. 2026: 99 $ ročně je moc na
 to, aby si člověk jen hrál. Appka tedy zůstává v Expo Go na vlastním telefonu
@@ -2189,13 +2298,16 @@ prostředí.
 | 2.1 | ~~Body závodu a pořadí seriálu jako čisté funkce~~ | hotovo; `Bodovani.cs` a `Serie.cs` |
 | 2.2 | ~~Testy proti sešitu rozhodčího~~ | hotovo; součet sedí na 37 lodích z 37, `SerieTests` |
 | 2.3 | ~~Testy pravidla pro kódy a škrtů~~ | hotovo; `BodovaniTests` proti listině FxCK Cancer 2026 |
-| 2.4 | ~~`GET /serie/{slug}/poradi`~~ | hotovo; obě čísla, jen zastávky ve stavu `Odjety` |
+| 2.4 | ~~`GET /serie/{slug}/poradi`~~ | hotovo; obě čísla, jen publikovaná kola poháru ve stavu `Odjety` (`Features/Bodovani/PoradiEndpoints.cs:85-86`) |
 | 2.5 | ~~Body závodu počítá server~~ | hotovo; web je už nesčítá, jen ukazuje |
 | 2.6 | ~~Stránka průběžného pořadí~~ | hotovo; jméno lodi a body ukotvené i na telefonu |
 
-**Co zůstává na rozhodčím**, ne na kódu: bonus u 24hodinovky, pořadí kódů za
-`DNF` a `DNS`, pět řádků škrtu, které sešitu neodpovídají (LUNA, JOY, MAMBA,
-SULA, FILOZEP), a co znamená neúčast na zastávce. Nic z toho se nedopočítává —
+**Co zůstávalo na rozhodčím** — bonus u 24hodinovky, pořadí kódů za `DNF`
+a `DNS`, řádky, které sešitu neodpovídaly, a co znamená neúčast na zastávce —
+**zodpověděl 22. 9. 2026** (oddíl *Pravidla seriálu od rozhodčího*); u
+neodpovídajících řádků platí výpočet a chyba je v sešitu. Na rozhodčím dnes
+zůstává hodnota 20 za diskvalifikaci, seznam lodí přihlášených na zastávky,
+kam nepřijely, a dvě nové lodě z Poháru Slunce. Nic z toho se nedopočítává —
 počítá se podle pravidla a rozdíl se drží na očích.
 
 ### Fáze 6 — blog a novinky
@@ -3564,6 +3676,161 @@ a rozdíl mezi třemi kopiemi by se poznal až ztraceným dojezdem.
 doplnění do formuláře → uložení → návrat na cíl → přenačtení stránky. Pořadí
 zůstalo správné a nic se nenabídlo k přepsání.
 
+## Co ještě chybí (audit 8. 10. 2026)
+
+Audit devíti oblastí: appka, bóje, upozornění, tracker, zbytky fáze 5, provoz,
+zkouška ovládání, data a obsah, testy. Každá mezera se ověřovala **proti kódu,
+ne proti tomuhle dokumentu** — a to byl dobrý nápad: na **33 místech vedl
+dokument jako nehotové něco, co v kódu hotové je** (bonus 24hodinovky, rozstřel,
+verze bodovacích pravidel, bucket na fotky, bóje, rozcestník správy). Všechna
+jsou týmž dnem opravená. **Pracovat podle plánu bez kontroly v kódu tedy nejde**
+a tenhle oddíl na tom nic nemění: i on zastará.
+
+Podrobný výpis všech nálezů v repozitáři není — je to jednorázový běh. Tady je
+to, co má následek.
+
+### Co blokuje nejvíc
+
+**Appka neumí přihlášení.** Je to pořád čtecí klient z fáze 3: čtyři obrazovky,
+`app/src/lib/api.ts` posílá jen `accept: application/json` a v závislostech není
+`expo-auth-session`, `expo-secure-store`, `expo-notifications` ani
+`expo-location`. Blokuje to pět oblastí z devíti — bóje a cíl v appce, moje
+lodě, účastnická upozornění i tracker, protože všechno visí na `/sprava/*`
+nebo `/ja/*`. Web tok má hotový a `web/lib/oidc.ts` s appkou počítá.
+
+**Fáze 7 není rozdělaná, je nezačatá.** Outbox nemá entitu ani migraci, tabulka
+`Zarizeni` v modelu neexistuje, odesílací úloha žádná a e-maily nemají čím jít.
+Jedna věc je ale napřed: data pro upozornění „změna trati" existují, protože
+bóje se přenastavením nepřepisuje (`Features/Boje/Boje.cs:55`). Chybí odeslání,
+ne záznam.
+
+**Z fáze 8 stojí jen bóje.** Trasa jako entita neexistuje, mapa v projektu není
+ani rozestavěná, appka neumí polohu. Nález G je u bójí už dodržený — roli
+kontroluje `BojeEndpoints.cs:51`, ne až obrazovka — takže zbývá pro vlastní
+trasu a živé polohy.
+
+**Protesty stojí na jednom chybějícím poli.** U výsledku není kam zapsat číslo
+(`Features/Zavody/Zavod.cs`), takže ZFP ani náprava nemají kde být. Dokud to
+pole nevznikne, nejde fáze 5 dokončit ani s odpověďmi rozhodčího.
+
+**Bóje mají API, ale nikdo je nepoužívá.** Obrazovka není na webu ani v appce,
+a `packages/api-client/openapi.json` bóje nezná: snímek má 73 cest, běžící API
+75. Dokud se klient nepřegeneruje (`packages/api-client/generuj.sh`), nejde ta
+obrazovka napsat typově ani ji vyvíjet proti `tools/fake-api.py`, který bóje
+taky neumí. Je to nejmenší kus práce z celého auditu a stojí před všemi
+bójovými.
+
+### Co by bolelo při závodu
+
+**Migrace jdou při startu a není k nim záloha.** `Program.cs` pouští
+`MigrateAsync()` při každém náběhu a nejbližší bod obnovy je noční záloha
+z platformy, tedy až 24 hodin stará. O závodním víkendu je to den zápisů.
+Nemusí z toho být mechanismus — stačí ruční dump před nasazením.
+
+**Obsahový bucket nemá druhou kopii.** `platform/scripts/backup.sh` bere
+databáze a tajemství; fotky a vyvěšené směrnice v R2 ne. Jsou to jediná data
+projektu bez záloh.
+
+**Zelené nasazení, které nic nenasadilo.** Krok `Deploy` i krok `Ověřit, co
+doopravdy běží` jsou podmíněné `vars.DEPLOY_WEBHOOK != ''`
+(`.github/workflows/build-deploy.yml`). Prázdná proměnná dá úspěšný běh,
+nedotčenou produkci a nulovou stopu — nejhorší možný tvar poruchy, protože
+ochrana ze 6. 10. právě na tohle mlčí.
+
+**Pro den závodu neexistuje postup.** Co udělat, když web leží, v jakém pořadí
+a co se nesmí — hlavně to, že nasadit starší commit úloha odmítne a `obnova`
+to neřeší. Dnes je tím postupem Filip a jeho paměť.
+
+**Zátěžový test nikdy neproběhl a míří mimo cache.** Postup v
+`platform/docs/PROVOZ.md` jde na kontejner `orlickypohar-web-1`, tedy mimo
+nginx, který se kvůli špičce postavil.
+
+**Hláška u konfliktu tvrdí nepravdu, když je telefon sdílený.** `RevizeNesedi`
+(`Features/Zavody/Zapis.cs`) říká „Rozjížďku mezitím uložil někdo jiný", i když
+to byl tentýž účet na druhém telefonu. Odhalila to vlastní zkouška C7 a je to
+jediný její nález, který není opravený; sdílený telefon je u vody
+pravděpodobný.
+
+### Co se zapne prvními skutečnými přihláškami
+
+**Veřejný našeptávač vydává jména majitelů.** `GET /lode/napoveda?vse=true`
+odpoví bez tokenu celým seznamem včetně `majitel` (ověřeno na produkci
+8. 10. 2026). Veřejná startovní listina přitom vydává jen kormidelníka
+a majitel je jinak jen ve `/sprava`. Dnes jsou ta jména vygenerovaná; první
+skutečná přihláška z toho udělá únik, protože formulář bez vyplněného majitele
+zapíše jako majitele kapitána. Oprava je jeden řádek v projekci.
+
+**O zpracování osobních údajů není nikde nic.** Formulář sbírá e-mail, telefon,
+jméno a příjmení kapitána, volný text posádky a číslo ČSJ, a u zaškrtávátka
+stojí, že se pořadatel může ozvat — ale není stránka, na kterou by to
+odkázalo. Minimalizace a retence hotové jsou a jsou dobré
+(`UklidKontaktu.cs` maže kontakty starší než začátek předloňského roku),
+jen se netýkají jmen posádky ani záznamu osoby, a **smazat se nedá nic**:
+mazací endpoint nad lodí, osobou ani ročníkem neexistuje. Žádost „smažte mě"
+se dnes vyřídí jedině ručním SQL na produkci.
+
+**Pruh ukázkových dat nerozlišuje ročník.** `web/app/ukazka.tsx` se rozhoduje
+jen podle toho, jestli je `UKAZKOVE_SERIE` neprázdná, a visí v `layout.tsx` nad
+celým webem. V compose je `2026-nanecisto`, takže jakmile se vypíše skutečný
+2027, bude o sobě tvrdit, že je vymyšlený — a vypnout to jde jen za cenu, že
+2026 přijde o varování.
+
+**Ročník 2027 je devětkrát `Planovany`.** Celý řetěz veřejných přihlášek
+a vývěsky — vedený jako hotový — nikdy neběžel na skutečných datech. Dokud se
+aspoň jedna zastávka nepřepne na `Vypsany`, je to nevyzkoušené.
+
+### Druhá vrstva, která chybí
+
+Žádné **bezpečnostní hlavičky**: `Content-Security-Policy`,
+`Strict-Transport-Security`, `X-Frame-Options` ani `Referrer-Policy` nejsou ani
+ve webu, ani v nginxu, ani v Traefiku. Není to otevřená díra — tělo článku se
+vykresluje strukturovanými bloky a `dangerouslySetInnerHTML` je v celém webu
+třikrát, vždy nad QR kódem vyrobeným na serveru — ale je to chybějící druhá
+vrstva.
+
+Web **nemá service worker ani manifest**, takže jedno obnovení bez signálu
+cílovou obrazovku sebere (rozdělaný zápis přežije, leží v `localStorage`).
+Appka se šíří jako interní APK přes QR, takže pořadatel s iPhonem ji nedostane
+vůbec.
+
+**Testy.** Správcovské endpointy se testují přes službu, ne přes HTTP, a je to
+zdůvodněné rozhodnutí: testovací hostitel nemá poskytovatele identity, takže se
+k endpointu s platným tokenem nedostaneš (`ClankySpravaTests.cs:8`). Cena toho
+rozhodnutí je, že **zapomenutá kontrola práv** na jednom z 23 souborů endpointů
+by neprasknula — a rozsahy oprávnění nemají ani jeden test. Web a appka nemají
+test žádný, takže změnu práv na serveru nikdo nehlídá proti
+`web/lib/co-smim.ts`, který je má doslova přepsané. Dependabot sleduje NuGet
+a GitHub Actions, ne npm.
+
+### Zkouška ovládání
+
+Sezení s pořadatelem **neproběhlo** a šest scénářů na mocku ani neběží: C3
+(vyvěsit směrnici), celá skupina D (není účet rozhodčího), A5 (ročník se
+skrytými výsledky), A7 a E5 (potřebují dva ročníky) a C5, který chce 25–30
+lodí a mock jich má 22. Scénáře samy jsou v `docs/SCENARE-OVLADANI.md`.
+
+### Co z toho vědomě nedělat
+
+Stav 503 u výpadkové stránky (zdůvodněno v *Zbývá doladit*), historie kategorie
+lodi, protesty do odpovědí rozhodčího, handicap do doby, kdy bude potřeba.
+To nejsou mezery, to jsou rozhodnutí.
+
+### Pořadí
+
+1. **Přegenerovat klienta z OpenAPI** — půl hodiny a stojí před každou prací
+   na bójích.
+2. **Vypsat jednu zastávku 2027** a vyvěsit u ní směrnici. Obsah, ne kód,
+   a teprve tím se celý řetěz přihlášek a vývěsky zkusí na skutečných datech.
+3. **Pruh ukázky podle ročníku**, protože bod 2 ho hned odhalí.
+4. **Majitel z našeptávače a stránka o osobních údajích** — před otevřením
+   přihlášek, ne po.
+5. **Zelené nasazení bez nasazení** a **postup pro den závodu** včetně dumpu
+   před migrací.
+6. **Hláška u konfliktu** a doplnění mocku tam, kde brání zkoušce.
+
+Appka, upozornění a tracker až potom: jsou to největší kusy, ale na první závod
+(15. 5. 2027) nemají vliv.
+
 ## Kde se pokračuje
 
 Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
@@ -3575,8 +3842,10 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
    ve tvarech skutečného API, včetně přihlášení (identita podle tokenu)
    a osobních cest `/ja/*`. Jména účtů a pravidla jsou v README, oddíl Web.
 3. **Nasazení** — nic ručního. Push do `main` postaví čtyři image (API,
-   web, úloha `landsat`, nginx `cache`) a háček je vymění na serveru
-   i s `docker-compose.yml`. Háček přenáší **jen compose** — cokoliv
+   web, úloha `landsat`, nginx `cache`) a po zelených testech je háček
+   vymění na serveru i s `docker-compose.yml`. Nasazení už neběží vedle
+   integračních testů: úloha `nasazeni` čeká na `build`, `appka`
+   i `integrace` (`.github/workflows/build-deploy.yml:218`). Háček přenáší **jen compose** — cokoliv
    dalšího, co služba potřebuje (třeba konfigurace nginxu), musí jet
    v image.
 
@@ -3585,14 +3854,22 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
    `/verze` a najde novější SHA, než posílal — a skončí chybou, místo aby
    tvrdil úspěch. Je to ta kontrola, co mluví (6. 10. 2026 se to stalo
    dvakrát). **Soudit se má podle `/verze` obou služeb**, ne podle barvy
-   běhu; dokud sedí s `main`, je produkce v pořádku. Záruku místo zúžení
-   okna dá až zámek na straně serveru — vede se jako `platform#7`.
+   běhu; dokud sedí s `main`, je produkce v pořádku. **Zámek na serveru
+   už je** — `deploy-hook/hook.py:200` v platformě pustí jedno nasazení
+   a druhému vrátí `409`. Chybí kontrola verze **pod** tím zámkem: háček
+   hlavičku `X-Deploy-Sha` vůbec nečte, takže kontrola *Nevracet produkci
+   do minulosti* běží jen v CI mimo zámek a zavírá jen naše vlastní cesty
+   (`.github/workflows/build-deploy.yml:245`, komentář na :289). Jako
+   `platform#7` se tedy vede ta kontrola pod zámkem, ne zámek sám
+   (ověřeno 8. 10. 2026).
 4. **Pravidla seriálu jsou od 22. 9. 2026 v kódu** (oddíl *Pravidla
    seriálu od rozhodčího*): neúčast, bonus 24hodinovky, dvacítka za
    diskvalifikaci, dva škrty, rozstřel. Zbývají drobné otázky vypsané
    tamtéž; na dvacítce a hodnocení trestů visí fáze 5 (protesty
    a penalizace) — Filip, 22. 9.: varianty si necháme navrhnout později.
-5. **Zápis z vody je hotový celý** (22.–23. 9. 2026), kroky 1 až 5:
+5. **Zápis z vody je hotový celý** (22.–23. 9. 2026; koncept z telefonu
+   dotažený 6. 10. 2026, oddíl *Koncept z telefonu u zápisu z vody*),
+   kroky 1 až 5:
    cílová obrazovka s pozdní lodí a poznávacími znaky, fotka papíru,
    porovnání dvou zapisovatelů a podržení klepnutí bez signálu. K tomu
    přepínání rozjížďky do poháru a celkové pořadí regaty napříč
@@ -3602,39 +3879,70 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
 6. **Fáze 5 je skoro hotová** (stav k 14. 9. 2026). Hotové: udělování
    oprávnění (i rozhodčím na zastávku), kalendář zastávek, přihlášky lodí,
    workflow a zápis výsledků, psaní novinek. Protesty a penalizace čekají
-   na odpovědi rozhodčího. Komunitní akce v kalendáři hotové 15. 9. Další
-   na řadě je **design** (oddíl *Podněty z 14. 9. 2026*). Pořadatel jako
+   na odpovědi rozhodčího. Komunitní akce v kalendáři hotové 15. 9.
+   ~~Další na řadě je **design**~~ — **hotový 15. 9. 2026** (oddíl
+   *Podněty z 14. 9. 2026*, pododdíl *Design (až po funkcích)*).
+   Pořadatel jako
    záznam s medailonkem hotový 15. 9.; vlastní obrázek pořadatele i fotky
    k článkům běží na R2 od 18. 9. (*Fotky v R2*). Seznam přihlášených účtů
    na obrazovce oprávnění hotový 15. 9. (oddíl *Čím pokračovat ve fázi 5*).
    Veřejné přihlášky lodí kroky 1–5 hotové 18. 9.; krok 6 čeká na
    rozhodčího, krok 7 je Outbox.
-7. **Skutečná data** — až dorazí, nahradí `data/2025-mock.json` a nahrají se
-   importem. Struktura zůstane.
-8. **Widgety** (stav k 18. 9. 2026, oddíl *Widgety s cizími daty*).
-   Tlakový trend (#26) a radar na hodinu (#27, oddíl *Radar na příští
-   hodinu*) hotové 18. 9. Dál push „déšť do hodiny" v appce. Blesky nemají volný zdroj (ČHMÚ je
-   nedává, Blitzortung zakazuje komerční použití).
+7. **Skutečná data už částečně dorazila.** `data/2025-mock.json` od
+   8. 9. 2026 neexistuje; nahradil ho `data/2026-nanecisto.json`, který
+   vyrábí `tools/gen-mock.py` a který v repozitáři zůstává nepublikovaný.
+   Vymyšlené v něm jsou jen rozjížďky, a ani ty všechny — jména lodí,
+   kategorie, regaty a pořadí v kategoriích jsou ze sešitu rozhodčího
+   a u FxCK Cancer jsou skutečné i rozjížďky. Ročníkové soubory se
+   skutečnými daty jsou tři: sešit rozhodčího
+   `data/2026-poradi-rozhodci.json`, výsledková listina
+   `data/2026-fxck-cancer.json` a termínová listina `data/2027-kalendar.json`
+   — ta je naimportovaná a publikovaná, produkce ji v `GET /serie` vrací
+   jako ročník `2027` (ověřeno 8. 10. 2026). Zbývají výsledkové listiny
+   ostatních zastávek 2026; až dorazí, nahradí mock a nahrají se importem.
+   Struktura zůstane.
+8. **Widgety na webu jsou hotové** (stav k 6. 10. 2026, oddíl *Widgety
+   s cizími daty*). Tlakový trend (#26) a radar na hodinu (#27, oddíl
+   *Radar na příští hodinu*) hotové 18. 9.; na opendata.chmi.cz stojí vítr
+   (`web/lib/vitr.ts`), výstrahy (`web/lib/chmi.ts`) a radar
+   (`web/lib/radar.ts`, kreslí se uvnitř výstrah). Výstrahy od 6. 10. 2026
+   nemlčí ani při výpadku zdroje. Zbývá push „déšť do hodiny" v appce,
+   a ten **čeká na Outbox**, který neexistuje. Blesky nemají volný zdroj
+   (ČHMÚ je nedává, Blitzortung zakazuje komerční použití).
 9. **Zátěž** (stav k 22. 9. 2026, oddíl *Mikrocache před webem*).
    Timeouty kontrol zdraví (#32) a nginx cache (#34) nasazené 22. 9.
    Na produkci ověřeno hlavičkou `X-Cache`: druhý požadavek HIT, tmavý
    vzhled vlastní položka, s cookie sezení BYPASS. **Zbývá zátěžový test
-   na serveru** podle platform/docs/PROVOZ.md na tempu 40 — termín před
-   prvním závodem se skutečnými daty.
+   na serveru** na tempu 40 — termín před prvním závodem se skutečnými
+   daty. **Postup v platform/docs/PROVOZ.md ale takhle nepoběží**: pouští
+   `hey` v síti `edge` proti `orlickypohar-web-1`, a web v `edge` od
+   22. 9. 2026 není (`deploy/docker-compose.yml:146`). Správné adresy má
+   oddíl *Mikrocache před webem* — měřit se má `cache` v `edge`.
+   Opravit to chce i v platformě (8. 10. 2026).
 
 ## Zbývá doladit
 
-Nic z toho nebrání založit projekt a napsat první migraci.
+~~Nic z toho nebrání založit projekt a napsat první migraci.~~ **Projekt
+běží od 6. 9. 2026** (první commit `e4e909b`, „Orlický pohár ze šablony
+služby"; migrací je dnes 35) a produkce jede na `main`. Z bodů níž jsou
+tři zodpovězené a otevřený zůstává jen čtvrtý.
 
 1. ~~**Škrtají se v seriálu celé závody?**~~ **Zodpovězeno:** ano. Při
    devíti zastávkách dva (rozhodčí, 22. 9. 2026); počet je číslo na ročníku
    (`Serie.PocetSkrtu`). Škrtnout se dá i −1 ze 24hodinovky a dvacítka za
    diskvalifikaci.
-2. ~~**Seznam závodů a jejich typy.**~~ **Zodpovězeno daty:** ročník 2026 má
-   devět zastávek — Jarní vítr, Radavská regata, 24hodinovka, Vánoční regata,
-   Izolepa, FxCK Cancer, Radavský pohár, O pohár Vltavy, Pohár Slunce — a tři
-   kategorie: do 7 m, nad 7 m, RACE. Stopa z článku o čtyřech kategoriích
-   neplatila.
+2. ~~**Seznam závodů a jejich typy.**~~ **Zodpovězeno daty:** sešit
+   rozhodčího vede v roce 2026 devět zastávek — Jarní vítr, Radavská
+   regata, 24hodinovka, Vánoční regata, Izolepa, FxCK Cancer, Radavský
+   pohár, O pohár Vltavy, Pohár Slunce — a tři kategorie: do 7 m,
+   nad 7 m, RACE. Stopa z článku o čtyřech kategoriích neplatila.
+   **V ročníku jich je osm, odjetých sedm:** Vánoční regata z dat
+   23. 9. 2026 vypadla („někdy v létě, ale jestli v plánu není, tak ji tam
+   nedávej", `tools/gen-mock.py:87`) a Radavská regata v nich zůstává ve
+   stavu `Zruseny`, protože se nejela (rozhodčí, 22. 9. 2026,
+   `tools/gen-mock.py:196`). Produkce u `2026-nanecisto` hlásí
+   `pocetZavodu: 8`; devět zastávek má až termínová listina 2027
+   (ověřeno 8. 10. 2026).
 
    Seriál se na Facebooku jmenuje **ORLÍK CUP** (skupina `148250098639632`),
    výsledky tam dává Miloš Zvonař z YC Písek. Skupina je zavřená: obsah se

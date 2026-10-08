@@ -59,13 +59,14 @@ a návrh úpravy nesmí vzniknout během sezení — jen pozorování.
 
 ## Kde se to zkouší a co z toho plyne
 
-**Mock** (`tools/fake-api.py` + `npm --prefix web run dev`) na A, C, D, E
-a F2–F3: scénáře zapisují a mažou data, na produkci nemají co dělat.
+**Mock** (`tools/fake-api.py` + `npm --prefix web run dev`) na A, B, C, D, E
+a F: scénáře zapisují a mažou data, na produkci nemají co dělat. Skupina B
+a F1 přibyly 6. 10. 2026 (viz níž).
 
 Mock **nic neukládá na disk.** Data načte při startu (`tools/fake-api.py:23`)
 a nikdy je nezapisuje zpátky; stav žije v běžícím procesu. Celou sestavu
 s databází na tomhle stroji rozjet nejde (není tu kontejnerový běh a Docker Hub
-je odtud nedostupný — `README.md:233`). **Hranice závěru je tedy tahle:**
+je odtud nedostupný — `README.md:24`). **Hranice závěru je tedy tahle:**
 
 - **Co mock dokládá:** že je stav správný v běžícím procesu.
 - **Co nedokládá:** trvanlivost. Zůstává neověřená a tak se i zapíše — ne jako
@@ -95,15 +96,17 @@ Zbývá dvojí, kde se závěry **nedělají**:
 | Co | Proč | Co by to spravilo |
 |---|---|---|
 | **E4 v plném rozsahu** | Mock u zápisu **práva nerozlišuje** — přihlášeného bere jako pořadatele. Udělení role proto přístup druhého účtu doopravdy nezmění; jiný podpis autora to nedokládá | Vymáhat v mocku rozsah role, ne jen podepisovat |
-| Odmítnutí ve správě ročníku (C2, D4, D5) | Mock je odvozuje z **pravidel stavu**, ne z role, takže se měří hláška, ne oprávnění. U lodí to neplatí: **B4 a B5 odmítá mock doopravdy podle vztahu k lodi** (403, jen majitel nebo kapitán) | Vymáhat rozsah role i ve správě ročníku |
+| Odmítnutí ve správě ročníku (D4, D5) | Mock je odvozuje z **pravidel stavu**, ne z role, takže se měří hláška, ne oprávnění. Dvě výjimky, kde roli vymáhá doopravdy: **B4 a B5 podle vztahu k lodi** (403, jen majitel nebo kapitán) a **pořadatelský kód k cizí lodi** (`tools/fake-api.py:1196`, 403 bez role na celý ročník nebo na celý web). **C2 sem nepatří** — zapsat posádku ve správě nejde ani v mocku, ani ve webu, takže to není odmítnuté právo, ale chybějící funkce | Vymáhat rozsah role i ve správě ročníku |
 
 Co naopak **jde**: role se liší v tom, co člověk **vidí** — nabídka, rozcestník
 a jeho položky se počítají z týchž pravidel jako na serveru. Scénáře o tom,
 kam se kdo dostane, tedy platí; scénáře o tom, co mu server zakáže, zatím ne.
 
 **Druhý zapisovatel na mocku je.** Mock bere token jako jméno účtu
-(`TOKENY` v `tools/fake-api.py`): `filip` je správce ročníku, `milos`
-organizátor jedné zastávky, neznámý token zůstává Filipem. **C7 je tím celé
+(`TOKENY` v `tools/fake-api.py:371`): `filip` je správce ročníku, `milos`
+organizátor jedné zastávky, neznámé jméno mock odmítne čtyřistajedničkou
+(`tools/fake-api.py:1360`) — dřív padalo na Filipa (změněno 6. 10. 2026).
+**C7 je tím celé
 proveditelné** — ověřeno průchodem od konfliktu přes porovnání dvou sloupců
 až po ruční společný výsledek.
 
@@ -116,11 +119,11 @@ Tyhle věci není potřeba objevovat znovu — je potřeba změřit, **jak moc v
 
 | Zjištění | Kde |
 |---|---|
-| Nabídka účtu se počítá **jen z rolí na ročník**. Kdo má roli na celý web a žádnou v ročníku, nevidí v nabídce ročníkové položky — ačkoliv na ty obrazovky smí a po zadání adresy ho pustí | `web/app/profil.tsx` |
-| **Přihlášky nemají v nabídce položku.** Jde se na ně oklikou z kalendáře („přihlášky →") nebo z výsledků regaty („přihlášené lodě →") | `kalendar/page.tsx:325` |
-| **Správa nemá rozcestník.** Neexistuje `/sprava` ani `/sprava/{ročník}`; jediná navigace je rozbalovací nabídka pod ikonkou účtu | — |
+| ~~Nabídka účtu se počítá **jen z rolí na ročník**. Kdo má roli na celý web a žádnou v ročníku, nevidí v nabídce ročníkové položky — ačkoliv na ty obrazovky smí a po zadání adresy ho pustí~~ | **hotovo 6. 10. 2026** — nabídka i rozcestník počítají z jedněch pravidel, která ročníková práva míchají s rolí na celý web: `web/lib/co-smim.ts:46`, `web/app/profil.tsx:28`. Kdo má roli jen na web, jde přes položku Správa (`web/app/profil.tsx:92`); zkratky „Ročník {slug}" zůstávají schválně jen pro vlastní ročníky |
+| ~~**Přihlášky nemají v nabídce položku.** Jde se na ně oklikou z kalendáře („přihlášky →") nebo z výsledků regaty („přihlášené lodě →")~~ | **hotovo 6. 10. 2026** — rozcestník ročníku vypisuje u každé regaty Výsledky · Přihlášky · Plachetní směrnice (`web/lib/co-smim.ts:179`, vykresluje `web/app/sprava/[serie]/page.tsx:163`). V rozbalovací nabídce pod ikonkou účtu položka není a nemá být — ta vede jen na rozcestník |
+| ~~**Správa nemá rozcestník.** Neexistuje `/sprava` ani `/sprava/{ročník}`; jediná navigace je rozbalovací nabídka pod ikonkou účtu~~ | **hotovo 6. 10. 2026** (70cb074) — `web/app/sprava/page.tsx`, `web/app/sprava/[serie]/page.tsx`; nabídka na rozcestník vede, `web/app/profil.tsx:92` |
 | **Posádku nejde zadat ve správě.** Pořadatel ji jen vidí; zapsat ji umí kapitán ve veřejné přihlášce nebo import. Kormidelník totéž | `prihlasky/[zavod]/page.tsx:494` |
-| Směrnice a medailonek pořadatele jsou taky jen z kalendáře | `kalendar/page.tsx:313,329` |
+| **Medailonek pořadatele je jen z kalendáře.** ~~Směrnice taky~~ — ty jsou od 6. 10. 2026 na rozcestníku ročníku | `kalendar/page.tsx:313`; směrnice `web/lib/co-smim.ts:186` |
 
 Prokázaná chyba z auditu je podklad pro opravu **i když ji zkouška mine.** Malá
 zkouška není důkaz, že nevadí — jen ji nepotkala.
@@ -150,8 +153,8 @@ telefon.
   se zkouší proti nim. Dojezdy musí přijít **těsně za sebou**, ne vlastním
   tempem: čte je někdo druhý ze seznamu.
 - **Stav výsledků.** Zapisovat jde na zastávce ve stavu `Vypsany` nebo `Odjety`
-  (`tools/fake-api.py:683`) a jen dokud jsou výsledky `Navrzeno` nebo `KRevizi`
-  (`tools/fake-api.py:677,693`). Vybrat konkrétní rozjížďku předem.
+  (`tools/fake-api.py:867`) a jen dokud jsou výsledky `Navrzeno` nebo `KRevizi`
+  (`tools/fake-api.py:858,877`). Vybrat konkrétní rozjížďku předem.
 - **Prošlý kód (B2).** Platnost je 15 minut
   (`src/OrlickyPohar.Api/Features/Lode/PripojovaciKod.cs:71`). Čekat na ni
   rozbije sezení — mít prošlý kód připravený dopředu a druhého člověka, který
@@ -164,8 +167,9 @@ telefon.
   okamžik — ne druhý člověk klikající podle sluchu.
 
   **Postup, kterým se konflikt vyvolá** (ověřený, `izolepa`, 1. rozjížďka):
-  1. Založ `web/.env.local` — negitovaný soubor, bez něj se přihlášení vůbec
-     nenabízí a nikdo není přihlášený. Hodnoty jsou nesmyslné schválně, na
+  1. Potřebuješ `web/.env.local` — negitovaný soubor (`web/.gitignore:34`), bez
+     něj se přihlášení vůbec nenabízí a nikdo není přihlášený. Na tomhle stroji
+     už leží; na jiném ho založ takhle. Hodnoty jsou nesmyslné schválně, na
      poskytovatele se nikdo neptá:
 
      ```
@@ -291,9 +295,9 @@ loď zapiš v okamžiku, kdy nastane, otázky odlož za dávku.
 *Zadání:* Dvě lodě dojely v jiném pořadí, než jsi zapsal, a jedna ti vypadla.
 Oprav to.
 *Pro moderátora:* **dvakrát tutéž loď klepnout nejde** — dojetá loď ze seznamu
-zmizí (`cil.tsx:211`) a stejnou sadu odmítne i API („Loď je v zápisu dvakrát",
-`tools/fake-api.py:707`). Zkouší se tedy **záměna dvou lodí** (přesun v pořadí,
-`cil.tsx:221`) a **vynechaný dojezd** dopsaný pozdě. Dvojí klepnutí na totéž
+zmizí (`cil.tsx:234`) a stejnou sadu odmítne i API („Loď je v zápisu dvakrát",
+`tools/fake-api.py:888`). Zkouší se tedy **záměna dvou lodí** (přesun v pořadí,
+`cil.tsx:244`) a **vynechaný dojezd** dopsaný pozdě. Dvojí klepnutí na totéž
 nech jako samostatné pozorování: co se stane a pozná to.
 
 **C7 — Dva telefony.** Dokončit, ne jen vidět hlášku.
@@ -309,8 +313,8 @@ liší), správný společný výsledek zůstává na tvém listu.
 zůstanou v telefonu. **Společný výsledek je dosažitelný ručně** — porovnání
 nabídne buď „Použít verzi: {kdo}", nebo odkaz na formulář zápisu se větou
 „Když platí kus od každého, sepište správné pořadí"
-(`porovnani/page.tsx:127,132`); formulář si nese čerstvou revizi
-(`[cislo]/page.tsx:165`), takže ruční pořadí se se starou verzí neutká.
+(`porovnani/page.tsx:146,152`); formulář si nese čerstvou revizi
+(`[cislo]/page.tsx:181`), takže ruční pořadí se se starou verzí neutká.
 Automatické sloučení aplikace neumí a nemusí.
 **Dvě místa, kde se dřív ztrácel dojezd, jsou opravená** (6. 10. 2026) —
 zkouška je teď kontroluje, místo aby na ně doplácela:
@@ -337,7 +341,7 @@ než přišel konflikt?
 (`ZapisSprava.cs:369`, test `Dva_zapisovatele_maji_kazdy_svuj_snimek`), takže
 při **jednom účtu na dvou telefonech** druhé uložení ten první snímek přepíše:
 konflikt (409) nastane, ale porovnání ukáže jediný sloupec a větu „Zapisoval
-jeden člověk, takže se porovnávat nemá s čím" (`porovnani/page.tsx:103`).
+jeden člověk ({kdo}), takže se porovnávat nemá s čím" (`porovnani/page.tsx:125`).
 Účastník by skončil ve slepé uličce a jeho neúspěch by neznamenal nic.
 Varianta s jedním účtem je proto **samostatné pozorování s předem známým
 koncem**, ne cesta k společnému výsledku — a eviduje se jako funkční mezera
@@ -356,9 +360,10 @@ zkoušky.
 a vrať se k zápisu. Pokračuj. — potom: — Načti stránku znovu.
 *Pro moderátora:* dvě různé věci. Přepnutí aplikace zkouší, jestli přežije
 otevřená stránka; **nové načtení s neodeslanými dojezdy** zkouší obnovu
-konceptu z telefonu (`cil.tsx:154`) — bez něj by nefunkční obnova zůstala
+konceptu z telefonu (`cil.tsx:163`) — bez něj by nefunkční obnova zůstala
 schovaná za tím, že karta nezmizela. Když se zápis mezitím změnil, nabídne
-*Přesto odeslat / Zahodit* (`cil.tsx:159,330`). Ověř, že se **nic
+*Odeslat z telefonu a přepsat uložené / Zahodit zápis z telefonu*
+(`cil.tsx:382,392`). Ověř, že se **nic
 neztratilo**, a zapiš, jestli po návratu věděl, jak na tom je.
 
 ## D. Rozhodčí ročníku
@@ -374,6 +379,10 @@ neztratilo**, a zapiš, jestli po návratu věděl, jak na tom je.
 *Pro moderátora:* má je vrátit s důvodem. **Pokračuj dál:** pořadatel opravu
 udělá a pošle je zpátky, rozhodčí je pustí ven. Pochopí pořadatel, že se bez
 vrácení čísla přepsat nedala? Dozvěděl se, že se má něco opravit, z aplikace?
+Od 6. 10. 2026 na to rozcestník ročníku odpovídá sám: vrácené výsledky stojí
+na prvním řádku „Co teď" s počtem k revizi a se sdělením, že rozhodčí napsal,
+co je špatně (`web/app/sprava/[serie]/page.tsx:234`) — ten důvod samotný ale
+na rozcestníku není, takže se pořád měří, jestli ho člověk najde.
 
 **D4 — Zapsat výsledky sám.**
 *Zadání:* Zapiš výsledky téhle rozjížďky.
@@ -405,12 +414,14 @@ udělená a druhý netuší, kam jít. Dozvěděl se vůbec, že ji má?
 
 **E5 — Správce celého webu.**
 *Zadání:* Přesuň termín budoucí regaty ročníku 2027.
-*Pro moderátora:* účet s rolí **jen na celý web**. V nabídce ročníkové položky
-nejsou (viz audit), přes `/sprava/{ročník}/kalendar` se tam dostane. **Ruční
+*Pro moderátora:* účet s rolí **jen na celý web** (`dana`,
+`tools/fake-api.py:352,371`). Zkratky na ročník v nabídce nejsou, cesta vede
+přes **Správa → ročník → Kalendář ročníku**: rozcestník ročníky zná i z role
+na celý web (`web/lib/co-smim.ts:92`, `web/app/sprava/page.tsx:46`). **Ruční
 adresu podej až po zaznamenaném neúspěchu** — schopnost uhodnout adresu není
-měřítko použitelnosti. Veřejný kalendář najde snadno a vstup do správy
-zůstane neobjevený; proto se zadává úprava, ne hledání. Dnes
-nejpravděpodobnější místo, kde člověk usoudí, že funkce neexistuje.
+měřítko použitelnosti. Veřejný kalendář najde snadno; proto se zadává úprava,
+ne hledání. Od rozcestníku (6. 10. 2026) se tu měří, jestli tu cestu najde — ne
+jestli usoudí, že funkce neexistuje.
 
 ## F. Napříč rolemi
 
@@ -424,14 +435,14 @@ najdi výsledek.
 *Zadání:* (po uložení zápisu a po opravě) Vrať se tlačítkem Zpět. — a po C4: —
 Načti znovu adresu té stažené směrnice.
 *Pro moderátora:* u zápisu nesmí jít uložit starší stav; obrazovka cíle si
-proti tomu po návratu načítá čerstvý zápis (`cil.tsx:205`). U směrnice je
+proti tomu po návratu načítá čerstvý zápis (`cil.tsx:214`). U směrnice je
 rozhodující **nové načtení původní adresy po stažení** — že má člověk PDF
 pořád otevřené nebo uložené v telefonu, selhání odvolání není.
 
 **F3 — Bez signálu.**
 *Zadání:* (v C5) Zapni letový režim, zapiš tři dojezdy, pak signál vrať.
 *Pro moderátora:* **čeká se**, že se dojezdy dopraví samy — hned po chycení
-sítě, jinak do půl minuty (`cil.tsx:178`). Rozliš místní zápis, čekání
+sítě, jinak do půl minuty (`cil.tsx:192`). Rozliš místní zápis, čekání
 a potvrzení serverem podle hranice výš: potvrzení je nové nezávislé načtení
 a porovnání všech údajů, ne zelená hláška. Trvanlivost tím ověřená není.
 
@@ -455,7 +466,9 @@ bod 4, ne rozbor.
 4. Vyvěsit a stáhnout PDF, ověřit veřejný stav — **C3, C4, A6**
 
 **Rezerva**, když zbude čas: **C1** (pozdě příchozí loď). Do prvního sezení
-nepatří skupina B ani F1 — na mocku nejsou proveditelné.
+nepatří skupina B ani F1 — ~~na mocku nejsou proveditelné~~; od 6. 10. 2026 na
+mocku jdou (viz výš), ale první sezení je o pořadateli a F1 chce čerstvého
+člověka.
 
 Výstupem jsou konkrétní blokátory práce pořadatele. Ostatní role potřebují
 vlastní krátká sezení.

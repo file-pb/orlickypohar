@@ -35,7 +35,7 @@ místo něj načte soubor z `/run/secrets`, viz [secrets/README.md](secrets/READ
 ```
 Serie ─┬─ Kategorie          Race / Nad7m / Pod7m
        ├─ Prihlaska          loď v ročníku, v jedné kategorii  ← nositel bodů
-       └─ Zavod              jedno z ~12 zastavení
+       └─ Zavod              jedno z devíti zastavení
            ├─ Ucast          která loď přijela a kdo ji vezl
            └─ Rozjizdka
                └─ Vysledek   účast × rozjížďka
@@ -65,12 +65,12 @@ ssh deploy@178.105.62.172 'C=$(docker ps --format "{{.Names}}" | grep orlickypoh
 nepublikovaný, aby se vymyšlená data nedala omylem vystavit — na produkci
 je ročník naopak publikovaný a web u něj ukazuje pruh, že data nejsou
 skutečná. Import stav publikace **přepisuje**, takže nahrání doslovného
-souboru z `data/` by ročník i všech devět zastávek schovalo a web by hlásil
+souboru z `data/` by ročník i všech osm zastávek schovalo a web by hlásil
 „zatím žádný ročník". Není to kosmetika, ale výpadek — proto je to
 přepínač generátoru a ne ruční úprava souboru před odesláním.
 
-Odpověď má u každé skupiny počty; `"clanky":{"nove":11,...}` znamená, že
-se založilo jedenáct článků.
+Odpověď má u každé skupiny počty; `"clanky":{"nove":8,...}` znamená, že
+se založilo osm článků — tolik jich generátor vyrábí (8. 10. 2026).
 
 Import je **idempotentní**: druhé odeslání téhož souboru vrátí samé nuly
 ve `nove` a nic nepřidá. Opravený výsledek přepíše původní řádek. Buď projde
@@ -152,15 +152,25 @@ správce ročníku odebrat nelze — jinak by se do administrace nedostal nikdo.
 
 ## Administrace
 
-Za přihlášením jsou čtyři obrazovky. Všechny jsou **serverové a bez
-javascriptu** — chodí se tam zřídka a často z telefonu na břehu.
+Za přihlášením je sedmnáct stránek (`web/app/sprava`). Skoro všechny jsou
+**serverové a bez javascriptu** — chodí se tam zřídka a často z telefonu na
+břehu. Výjimkou je zápis z vody: cílová obrazovka a dvě části konceptu
+z telefonu javascript potřebují (`"use client"` v
+`web/app/sprava/[serie]/vysledky/[zavod]/[cislo]/`).
 
 | Kde | Kdo | Co |
 |---|---|---|
-| `/sprava/{serie}/opravneni` | správce | uděluje role |
+| `/sprava/{serie}/opravneni` | rozhodčí a správce | uděluje role; rozhodčí jen organizátora a editora na jednu zastávku, seznam účtů vidí správce |
 | `/sprava/{serie}/clanky` | editor a výš | píše novinky |
 | `/sprava/{serie}/kalendar` | rozhodčí, organizátor | zakládá zastávky, termíny, stavy, zveřejnění |
 | `/sprava/{serie}/vysledky` | rozhodčí, organizátor | workflow výsledků po rozjížďkách |
+| `/sprava/{serie}/lode` | správce | kdo patří ke které lodi, kapitánství od kódu |
+| `/sprava/{serie}/prihlasky/{zavod}` | rozhodčí, organizátor | kdo přijel, pozdní loď, startovné |
+| `/sprava/{serie}/smernice/{zavod}` | rozhodčí, organizátor | vyvěšuje a stahuje plachetní směrnice |
+| `/sprava/{serie}/poradatele/{poradatel}` | rozhodčí, organizátor | medailonek klubu, společný všem ročníkům |
+| `/sprava` a `/sprava/{serie}` | kdokoliv s rolí | rozcestníky — vedou úkolem a jmenují roli |
+| `/sprava/opravneni-webu` | správce webu | role platné ve všech ročnících |
+| `/sprava/naklady` | správce webu | co web stojí |
 
 **Kalendář:** plánovaný → potvrzený (rozhodčí) → vypsaný → odjetý
 (organizátor), nebo zrušený. Po jednom kroku, oběma směry; rozhoduje cílový
@@ -331,9 +341,13 @@ dotnet test                                    # včetně Testcontainers
 
 `ModelTests` drží model proti migracím, `KontraktTests` tvar importního
 souboru, `BodovaniTests` a `SerieTests` bodovací pravidla — všechno bez
-databáze. `ImportTests`, `CteniTests` a `PoradiTests` mají značku
-`Category=Integracni` a potřebují Docker; na pracovním stroji se pustit
-nedají a běží ve vedlejší úloze CI, která nasazení neblokuje.
+databáze. Značku `Category=Integracni` nese dvacet tři tříd (8. 10. 2026) —
+mimo jiné `ImportTests`, `CteniTests`, `PoradiTests` a celá rodina
+`*SpravaTests` — a potřebují Docker; na pracovním stroji se pustit nedají.
+Běží ve vlastní úloze CI `integrace`, na kterou nasazení od 6. 10. 2026
+**čeká**: dokud byl deploy krokem buildu, běžel vedle integrace, takže
+červená integrace mohla znamenat už nasazenou vadnou verzi
+(`.github/workflows/build-deploy.yml:218`).
 
 ## Adresy
 

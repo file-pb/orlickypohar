@@ -84,4 +84,9 @@ Dvě věci, které se zapisují natrvalo a mění se draho:
   o co stát. Do té doby Expo Go na vlastním telefonu a APK pro ostatní.
 - **Push upozornění** (fáze 7) — potřebují development build, na iOS
   i placený účet u Applu. V Expo Go se vyzkoušet nedají.
-- **Ikona a splash** jsou zatím ze šablony.
+- ~~**Ikona a splash** jsou zatím ze šablony.~~ **hotovo 8. 9. 2026** —
+  ikonu, splash, favicon i tři vrstvy androidí ikony kreslí kódem
+  `scripts/ikona.py` (Pillow; `ikona.py:564` a `ikona.py:568`) a `app.json`
+  je bere z `assets/images/` (`app.json:7`, `app.json:11`, `app.json:22`,
+  `app.json:30`). Kreslí se kódem schválně: v diffu je vidět, co se na
+  značce změnilo.

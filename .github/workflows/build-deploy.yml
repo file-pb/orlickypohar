@@ -230,8 +230,10 @@ jobs:
           # potomkem toho nasazovaného, tedy novější.
           fetch-depth: 0
 
-      # Co na produkci běží teď. Neznámá nebo nedostupná verze nasazení
-      # nezastaví — první nasazení s `/verze` ji ještě vrátit nemůže.
+      # Co na produkci běží teď. Tenhle krok sám nepadá (`|| true`), protože
+      # rozhodnutí patří kroku „Nevracet produkci do minulosti" pod ním:
+      # nečitelná verze nasazení **zastaví** a cesta ven je ruční spuštění
+      # s `obnova = true` (zdůvodnění tam, 6. 10. 2026).
       - name: Co běží na produkci
         id: bezi
         run: |
