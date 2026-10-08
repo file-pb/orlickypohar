@@ -299,14 +299,25 @@ jobs:
       # se starým nastavením a chybějící tajemství by se projevilo až za běhu.
       #
       # Tajemství jde hlavičkou, ne v URL: adresa se objevuje v logu běhu.
-      # `X-Deploy-Sha` je pro server, aby tutéž kontrolu mohl udělat pod svým
-      # zámkem — tahle tu běží mimo něj a zavírá jen naše vlastní cesty.
+      #
+      # `X-Deploy-Sha` a `X-Deploy-Poradi` jsou pro server: tutéž kontrolu
+      # dělá ještě jednou **pod svým zámkem**, takže mezi ni a nasazení se
+      # nevejde druhý build. Ta zdejší běží mimo zámek a zavírá jen naše
+      # vlastní cesty (`platform#7`). Pořadí je čas commitu v sekundách —
+      # háček repozitář nemá a předka od potomka sám nepozná.
+      #
+      # `X-Deploy-Obnova` posílá výslovné vrácení na starší build dál, aby
+      # ho server neodmítl: tady už je rozhodnuté, že se tak stát má.
       - name: Deploy
         if: ${{ steps.kontrola.outputs.nasadit == 'ano' && vars.DEPLOY_WEBHOOK != '' }}
         run: |
+          poradi=$(git log -1 --format=%ct "${{ github.sha }}")
+          echo "Posílám ${{ github.sha }}, čas commitu $poradi."
           curl -fsS --max-time 900 -X POST "${{ vars.DEPLOY_WEBHOOK }}" \
             -H "X-Deploy-Token: ${{ secrets.DEPLOY_TOKEN }}" \
             -H "X-Deploy-Sha: ${{ github.sha }}" \
+            -H "X-Deploy-Poradi: $poradi" \
+            -H "X-Deploy-Obnova: ${{ inputs.obnova == true && 'ano' || 'ne' }}" \
             -H "Content-Type: application/yaml" \
             --data-binary @deploy/docker-compose.yml
 

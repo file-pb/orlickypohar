@@ -391,12 +391,14 @@ nehodu:
    jinak ochranu obešel a vypadalo by to jako obyčejné nasazení. Cesta ven
    je výslovná: ruční spuštění s volbou `obnova`.
 
-**Není to záruka, jen zúžení.** Mezi přečtením verze a odesláním je okno,
-ve kterém se stav může změnit; skupina souběhu ho zavírá jen pro naše vlastní
-cesty. **Záruku dá až háček**, který pod svým zámkem přečte běžící SHA,
-porovná ho s `X-Deploy-Sha` a teprve pak sáhne na produkci — zámek musí držet
-přes kontrolu i změnu. Dokud to tam není, neříkej, že starší build produkci
-přepsat nemůže.
+**Tahle kontrola sama je jen zúžení** — mezi přečtením verze a odesláním je
+okno a skupina souběhu ho zavírá jen pro naše vlastní cesty. **Záruku dává
+háček** (8. 10. 2026, `platform#7`): pod jedním zámkem přečte, co naposled
+nasadil, porovná s `X-Deploy-Sha` a `X-Deploy-Poradi` a teprve pak sáhne na
+produkci; stav zapisuje taky ještě pod zámkem. Starší commit odmítne
+čtyřistadevítkou. Proto se k požadavku přikládá **čas commitu**
+(`X-Deploy-Poradi`): server repozitář nemá a předka od potomka sám nepozná.
+Výslovné vrácení prochází přes `X-Deploy-Obnova: ano`.
 
 **Obě služby vydávají `/verze`** s commitem, ze kterého je image (build arg
 `VERZE`). Nasazení si tím po sobě ověří, co doopravdy běží — `Healthy` a HTTP
@@ -405,11 +407,12 @@ přepsat nemůže.
 varování, i po obnově. Zelená nad službou, o které nevíme, co na ní běží, je
 falešná jistota.
 
-**Co zbývá na straně serveru:** háček pod společným zámkem přečte běžící SHA,
-porovná ho s hlavičkou `X-Deploy-Sha` a teprve pak nasadí. Vede se jako
-[platform#7](https://github.com/file-pb/platform/issues/7), včetně toho, že
-se to má ověřit soubojem starého a nového požadavku přímo proti háčku —
-v obou pořadích.
+**Zámek na serveru je hotový** ([platform#7](https://github.com/file-pb/platform/issues/7),
+8. 10. 2026). Souboj obou pořadí proti skutečnému háčku jede
+`deploy-hook/zkouska.py` v repozitáři platformy — v obou případech skončí
+produkce na novějším commitu. Zkouška přitom našla chybu v první podobě
+opravy: stav se zapisoval až po uvolnění zámku, takže se mezi zápis
+a kontrolu druhého požadavku pořád vešla mezera.
 
 ## Testy
 
