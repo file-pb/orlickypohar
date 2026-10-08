@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { klicKonceptu, precti, radkyKonceptu, rozdily, type Koncept } from "./koncept";
+import {
+  klicKonceptu,
+  podleRizika,
+  precti,
+  radkyKonceptu,
+  rozdily,
+  type Koncept,
+  type Rozdil,
+} from "./koncept";
 
 /**
  * Neodeslaný zápis z telefonu na stránce porovnání.
@@ -13,6 +21,12 @@ import { klicKonceptu, precti, radkyKonceptu, rozdily, type Koncept } from "./ko
  *
  * Klientské kvůli jedinému údaji: úložiště prohlížeče. Server o něm neví
  * a vědět nemůže — a právě proto je to místo, kde se ztrácí práce.
+ *
+ * <b>Dva seznamy, ne jeden.</b> Dřív tu stálo „má navíc tohle" a pod tím
+ * obojí dohromady, s radou počítat i s nimi. Jenže řádek, u kterého má
+ * uložený zápis jinou hodnotu, nic navíc nenese — může to být čerstvá
+ * oprava druhého zapisovatele, a ta rada vedla k jejímu vrácení
+ * (reprodukce C12, 8. 10. 2026).
  */
 export function KonceptVPorovnani({
   serie,
@@ -40,8 +54,11 @@ export function KonceptVPorovnani({
   if (!koncept) return null;
 
   const jmeno = (id: number) => jmena[id] ?? `loď ${id}`;
-  const chybejici = rozdily(koncept, ulozene);
+  const { chybi, jinak } = podleRizika(rozdily(koncept, ulozene));
   const poradi = radkyKonceptu(koncept).filter((r) => r.poradi != null);
+
+  const vypis = (r: Rozdil) =>
+    `${jmeno(r.id)} — ${r.kod ? `kód ${r.kod.toUpperCase()}` : `${r.poradi}. místo`}`;
 
   return (
     <div className="hlaska" role="status">
@@ -50,26 +67,45 @@ export function KonceptVPorovnani({
         ty jsou ze serveru, tenhle se tam nedostal.
       </p>
 
-      {chybejici.length === 0 ? (
+      {chybi.length === 0 && jinak.length === 0 && (
         <p>Uložený zápis ho obsahuje celý, takže o nic přijít nejde.</p>
-      ) : (
+      )}
+
+      {chybi.length > 0 && (
         <>
-          <p>Proti uloženému zápisu má navíc tohle:</p>
+          <p>
+            <b>Tohle uložený zápis vůbec nemá</b> — bez doplnění se to ztratí:
+          </p>
           <ul>
-            {chybejici.map((r) => (
-              <li key={r.id}>
-                {jmeno(r.id)} —{" "}
-                {r.kod
-                  ? `kód ${r.kod.toUpperCase()}`
-                  : `${r.poradi}. místo`}
-                {r.proc === "jinak" && " (uložené má jiné)"}
-              </li>
+            {chybi.map((r) => (
+              <li key={r.id}>{vypis(r)}</li>
             ))}
           </ul>
           <p>
             Když sepisuješ společné pořadí, počítej i s nimi —{" "}
             <a href={zapisAdresa}>ve formuláři zápisu</a> je jde doplnit jedním
             klepnutím.
+          </p>
+        </>
+      )}
+
+      {jinak.length > 0 && (
+        <>
+          <p>
+            <b>Tady má uložený zápis něco jiného.</b> Neztrácí se tím nic —
+            obě čísla existují a jde o to, které platí:
+          </p>
+          <ul>
+            {jinak.map((r) => (
+              <li key={r.id}>
+                {vypis(r)} — uložené má jiné
+              </li>
+            ))}
+          </ul>
+          <p>
+            <b>Mohl to být druhý zapisovatel</b>, který tvůj zápis opravil.
+            Přepsat ho čísly z telefonu má smysl jen tehdy, když víš, že platí
+            tvoje — jinak tím tu opravu vrátíš zpátky.
           </p>
         </>
       )}

@@ -70,11 +70,33 @@ export function radkyKonceptu(koncept: Koncept): { id: number; poradi: number | 
   ];
 }
 
+export type Rozdil = {
+  id: number;
+  poradi: number | null;
+  kod: string | null;
+  /** `chybi` = uložené o lodi neví; `jinak` = uložené má u ní něco jiného. */
+  proc: "chybi" | "jinak";
+};
+
+/**
+ * Rozdíly rozdělené podle toho, čím hrozí. <b>Smíchat je dohromady je past</b>
+ * (reprodukce scénáře C12, 8. 10. 2026): `chybi` je práce, která se bez
+ * doplnění ztratí, kdežto `jinak` je střet dvou hodnot — a ta uložená může
+ * být čerstvá oprava druhého zapisovatele. Obrazovka, která obojí vypsala
+ * pod „má navíc, počítej i s nimi", radila vrátit cizí opravu zpátky.
+ */
+export function podleRizika(rozdil: Rozdil[]): { chybi: Rozdil[]; jinak: Rozdil[] } {
+  return {
+    chybi: rozdil.filter((r) => r.proc === "chybi"),
+    jinak: rozdil.filter((r) => r.proc === "jinak"),
+  };
+}
+
 /** Co má koncept jinak než uložený zápis. Prázdné znamená „uložené ho pokrývá". */
 export function rozdily(
   koncept: Koncept,
   ulozene: { id: number; poradi: number | null; kod: string | null }[],
-): { id: number; poradi: number | null; kod: string | null; proc: "chybi" | "jinak" }[] {
+): Rozdil[] {
   const podleId = new Map(ulozene.map((u) => [u.id, u]));
 
   return radkyKonceptu(koncept)

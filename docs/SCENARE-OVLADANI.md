@@ -123,7 +123,7 @@ Tyhle věci není potřeba objevovat znovu — je potřeba změřit, **jak moc v
 | ~~**Přihlášky nemají v nabídce položku.** Jde se na ně oklikou z kalendáře („přihlášky →") nebo z výsledků regaty („přihlášené lodě →")~~ | **hotovo 6. 10. 2026** — rozcestník ročníku vypisuje u každé regaty Výsledky · Přihlášky · Plachetní směrnice (`web/lib/co-smim.ts:179`, vykresluje `web/app/sprava/[serie]/page.tsx:163`). V rozbalovací nabídce pod ikonkou účtu položka není a nemá být — ta vede jen na rozcestník |
 | ~~**Správa nemá rozcestník.** Neexistuje `/sprava` ani `/sprava/{ročník}`; jediná navigace je rozbalovací nabídka pod ikonkou účtu~~ | **hotovo 6. 10. 2026** (70cb074) — `web/app/sprava/page.tsx`, `web/app/sprava/[serie]/page.tsx`; nabídka na rozcestník vede, `web/app/profil.tsx:92` |
 | **Posádku nejde zadat ve správě.** Pořadatel ji jen vidí; zapsat ji umí kapitán ve veřejné přihlášce nebo import. Kormidelník totéž | `prihlasky/[zavod]/page.tsx:494` |
-| **Koncept z telefonu se vydává za ztracenou práci, i když je to vlastní přepsaný zápis.** `rozdily` (`web/app/sprava/[serie]/vysledky/[zavod]/[cislo]/koncept.ts:74`) hází do jedné hromady dva různé případy: řádek, který **v uloženém zápisu vůbec není** (`chybi` — ten se opravdu ztratí), a řádek, kde **uložené má jiné** (`jinak` — konflikt, klidně cizí oprava). Obojí se pak vypíše pod větou „Proti uloženému zápisu má navíc tohle" a „počítej i s nimi" (`koncept-ukazka.tsx:57,70`), ve formuláři dokonce jako „neodeslaný zápis, **který uložená čísla nemají**". V C12 jsou všechny rozdíly `jinak` a koncept je **vlastní dřívější zápis, který druhý zapisovatel opravil** — rada tedy vede k vrácení té opravy. *Doplnit do formuláře* to jedním klepnutím udělá. **Nalezeno reprodukcí C12 8. 10. 2026, opravit bez ohledu na zkoušku** | `koncept.ts:74`, `koncept-ukazka.tsx:53` |
+| ~~**Koncept z telefonu se vydává za ztracenou práci, i když je to vlastní přepsaný zápis.** `rozdily` hází do jedné hromady řádek, který v uloženém zápisu vůbec není, a řádek, kde uložené má jiné. Obojí se vypíše pod „Proti uloženému zápisu má navíc tohle" a „počítej i s nimi", ve formuláři dokonce jako zápis, „který uložená čísla nemají" — a *Doplnit do formuláře* jedním klepnutím vrátí cizí opravu zpátky~~ | **nalezeno reprodukcí C12 a opraveno 8. 10. 2026** — `podleRizika` (`koncept.ts`) rozdíly rozděluje a obě obrazovky mají **dva seznamy**: „tohle uložený zápis vůbec nemá, bez doplnění se to ztratí" a „tady má uložený zápis něco jiného… mohl to být druhý zapisovatel, který tvůj zápis opravil". Ve formuláři jsou místo jednoho tlačítka dvě — *Doplnit chybějící* a *Přepsat rozdílná čísly z telefonu* |
 | **Rozhodčí se k výsledkům dostane jen přes „Co teď".** V „Celém ročníku" má Kalendář a Oprávnění, ne Výsledky (ta položka chce organizátora, `web/lib/co-smim.ts:133`), a odkazy u jednotlivých regat chtějí organizátora všechny tři (`co-smim.ts:168,175,182`). Zbývá tedy úkol „Ověřit a pustit ven", a ten se počítá jen pro rozjížďky, které **nejsou k revizi** (`web/app/sprava/[serie]/page.tsx:263`). Dokud je něco k revizi, rozhodčí na tu regatu odkaz nemá — ačkoliv server ho k výsledkům pouští (`VysledkyEndpoints.cs:480`) a potvrzení i vrácení je jeho práce (`Workflow.cs:51`). **Změřit v D2 a D3**, pak rozhodnout | `web/lib/co-smim.ts:133` |
 | **Medailonek pořadatele je jen z kalendáře.** ~~Směrnice taky~~ — ty jsou od 6. 10. 2026 na rozcestníku ročníku | `kalendar/page.tsx:313`; směrnice `web/lib/co-smim.ts:186` |
 
@@ -505,12 +505,16 @@ připravenými příkazy.
 *Stav scénáře:* **zreprodukováno v prohlížeči 8. 10. 2026** proti mocku,
 celou cestou — nová rozjížďka, výpadek, tři klepnutí, uložení telefonu A
 mimo prohlížeč, oprava od Miloše, návrat sítě, konflikt, porovnání.
-A **našlo to chybu**, viz audit níž: porovnání i formulář tvrdí o konceptu,
-že ho uložená čísla „nemají", a radí ho započítat — přitom je to vlastní
-starší zápis, který mezitím někdo opravil. *Doplnit do formuláře* opravdu
-jedním klepnutím vrátí starší pořadí (ověřeno; neuloženo). **Do sezení
-s člověkem patří až po opravě té hlášky** — jinak se měří, jestli účastník
-odolá špatné radě.
+A **našlo to chybu, která je týž den opravená** (viz audit výš): porovnání
+i formulář tvrdily o konceptu, že ho uložená čísla „nemají", a radily ho
+započítat — přitom to byl vlastní starší zápis, který mezitím někdo opravil,
+a *Doplnit do formuláře* jedním klepnutím vracelo starší pořadí. Teď jsou
+rozdíly ve dvou seznamech a tlačítka jsou dvě; **ověřeno průchodem po
+opravě**: *Doplnit chybějící* dopsalo jen chybějící dojezd a cizí opravu
+nechalo být.
+
+**Scénář je tím proveditelný**, a je to jediný scénář, u kterého se měří
+rozhodnutí mezi dvěma platnými čísly — ne hledání cesty.
 
 ## D. Rozhodčí ročníku
 
@@ -612,9 +616,10 @@ bod 4, ne rozbor.
    účty, jinak není co porovnávat) — **C7**
 4. Vyvěsit a stáhnout PDF, ověřit veřejný stav — **C3, C4, A6**
 
-**Rezerva**, když zbude čas: **C1** (pozdě příchozí loď). **C12** do
-sezení nepatří, dokud se neopraví hláška o konceptu (viz audit) — dnes by
-se měřilo, jestli účastník odolá špatné radě na obrazovce. Do prvního sezení
+**Rezerva**, když zbude čas: **C1** (pozdě příchozí loď) nebo **C12**
+(uložení, o kterém telefon neví). C12 je náročná na přípravu — tři kroky
+mimo prohlížeč — ale ze všech rezerv nejvíc říká o tom, jestli je obrazovka
+srozumitelná ve chvíli, kdy se rozhoduje mezi dvěma platnými čísly. Do prvního sezení
 nepatří skupina B ani F1 — ~~na mocku nejsou proveditelné~~; od 6. 10. 2026 na
 mocku jdou (viz výš), ale první sezení je o pořadateli a F1 chce čerstvého
 člověka.
