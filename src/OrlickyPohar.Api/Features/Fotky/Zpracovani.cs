@@ -25,8 +25,11 @@ public record Varianty(byte[] Nahled, byte[] Velky, int Sirka, int Vyska);
 /// <para>
 /// ImageSharp je čistě řízený kód, bez nativních knihoven — běží stejně na
 /// alpine, na ARM i na vývojovém stroji. Licence: Six Labors Split License,
-/// pro jednotlivce s obratem pod milion dolarů pod Apache 2.0. Řada 3.1
-/// schválně: čtyřka chce při buildu licenční klíč.
+/// pro jednotlivce s obratem pod milion dolarů zdarma. Od řady 4 se licence
+/// ověřuje při buildu — klíč je v prostředí (`SIXLABORS_LICENSE_KEY`), ne
+/// v gitu. Důvod přechodu na 4.1.2: v řadě 3.1 zůstalo pět ohlášených
+/// zranitelností bez opravy, čtyři z nich nedosažitelné kvůli omezené
+/// sadě dekodérů níž.
 /// </para>
 /// </summary>
 public static class Zpracovani

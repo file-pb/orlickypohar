@@ -2,6 +2,7 @@ using OrlickyPohar.Api.Features.Fotky;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp.Metadata.Profiles.Exif;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -89,7 +90,9 @@ public class FotkyTests
 
         var velky = Image.Identify(varianty.Velky);
         var nahled = Image.Identify(varianty.Nahled);
-        Assert.Equal("Webp", velky.Metadata.DecodedImageFormat?.Name);
+        // Formát, ne jeho jmenovka: ImageSharp 4 přejmenoval `Name` z „Webp"
+        // na „WEBP" a test na řetězec by tu změnu vydával za vadu výstupu.
+        Assert.Same(WebpFormat.Instance, velky.Metadata.DecodedImageFormat);
         Assert.Equal((1600, 1200), (velky.Width, velky.Height));
         Assert.Equal((480, 360), (nahled.Width, nahled.Height));
     }

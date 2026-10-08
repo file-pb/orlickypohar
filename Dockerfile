@@ -8,7 +8,11 @@ COPY src/OrlickyPohar.Api/*.csproj src/OrlickyPohar.Api/
 RUN dotnet restore src/OrlickyPohar.Api/OrlickyPohar.Api.csproj -a $TARGETARCH
 
 COPY . .
-RUN dotnet publish src/OrlickyPohar.Api/OrlickyPohar.Api.csproj \
+# Licenční klíč ImageSharpu přes BuildKit secret, ne `--build-arg`: build-arg
+# zůstává čitelný v historii image. Mount existuje jen po dobu tohohle RUN.
+RUN --mount=type=secret,id=sixlabors \
+    SIXLABORS_LICENSE_KEY="$(cat /run/secrets/sixlabors 2>/dev/null)" \
+    dotnet publish src/OrlickyPohar.Api/OrlickyPohar.Api.csproj \
     -a $TARGETARCH -c Release -o /app --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS final

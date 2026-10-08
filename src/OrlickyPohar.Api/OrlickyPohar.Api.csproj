@@ -6,6 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(SIXLABORS_LICENSE_KEY)' != ''">
+    <SixLaborsLicenseKey>$(SIXLABORS_LICENSE_KEY)</SixLaborsLicenseKey>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="4.0.104.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
@@ -19,7 +23,13 @@
     <PackageReference Include="Scalar.AspNetCore" Version="2.17.13" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="9.1.0" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+    <!-- ImageSharp 4 ověřuje licenci při buildu: v Debug varuje, v Release je to
+         chyba. Klíč jde z prostředí, aby nebyl v gitu ani v historii image.
+         Bez proměnné se vlastnost nenastaví a lokální Debug build i testy
+         projdou s varováním — záměrně, ať se dá pracovat bez klíče.
+         Licence: Six Labors Split License, komunitní klíč pro nekomerční
+         projekty z licensing.sixlabors.com. -->
+    <PackageReference Include="SixLabors.ImageSharp" Version="4.1.2" />
   </ItemGroup>
 
 </Project>

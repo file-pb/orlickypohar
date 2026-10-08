@@ -91,6 +91,9 @@ jobs:
           # Commit do image, ať po nasazení jde ověřit, co doopravdy běží.
           build-args: |
             VERZE=${{ github.sha }}
+          # ImageSharp 4 chce licenci při publish. Jako secret, ne build-arg.
+          secrets: |
+            sixlabors=${{ secrets.SIXLABORS_LICENSE_KEY }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
