@@ -9,8 +9,9 @@ namespace OrlickyPohar.Api.Tests;
 /// Psaní článků proti reálnému PostgreSQL.
 /// <para>
 /// Přes službu, ne přes HTTP — ze stejného důvodu jako u
-/// <see cref="SpravaTests"/>: testovací hostitel nemá poskytovatele identity,
-/// takže se k endpointům nedá dostat s platným tokenem. Ověřuje se to, co
+/// <see cref="SpravaTests"/>: poskytovatel identity v testech je vymyšlený,
+/// takže se k endpointům nedá dostat s platným tokenem — jen ověřit, že bez
+/// něj odmítnou (<see cref="OchranaZapisuTests"/>). Ověřuje se to, co
 /// na databázi skutečně stojí: <b>unikátní slug v ročníku</b> a <b>rozsah
 /// výpisu</b>.
 /// </para>

@@ -1,84 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Routing.Patterns;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using Testcontainers.PostgreSql;
 
 namespace OrlickyPohar.Api.Tests;
-
-/// <summary>
-/// Hostitel <b>s nakonfigurovanou identitou</b>. Vlastní, protože
-/// <see cref="PostgresFixture"/> ji schválně nemá — a bez ní se chráněné
-/// řezy v <c>Program.cs</c> vůbec nezaregistrují (`if (identita)`).
-/// <para>
-/// Kdyby tenhle test běžel nad běžnou fixture, byl by <b>zelený a nic by
-/// neověřil</b>: endpointy pod <c>/sprava/</c> by v hostiteli neexistovaly,
-/// takže by neměl co kontrolovat. To je přesně ta třída chyby, kterou má
-/// hlídat.
-/// </para>
-/// <para>
-/// Autorita je vymyšlená a nedostupná schválně. Požadavek <b>bez tokenu</b>
-/// odmítne JwtBearer rovnou 401 — metadata poskytovatele potřebuje teprve
-/// k ověření podpisu, a ten se tu nikdy nekontroluje. Test tedy nesahá na síť.
-/// </para>
-/// </summary>
-public sealed class IdentitaFixture : WebApplicationFactory<Program>, IAsyncLifetime
-{
-    private readonly PostgreSqlContainer _db =
-        new PostgreSqlBuilder("postgres:17-alpine").Build();
-
-    async Task IAsyncLifetime.InitializeAsync()
-    {
-        await _db.StartAsync();
-
-        // `Program.cs` má kolem celého startu try/catch, který výjimku jen
-        // zaloguje jako Fatal a vrátí 1. Navenek z toho je nicneříkající
-        // „The entry point exited without ever building an IHost" a skutečná
-        // příčina zůstane v konzoli, kterou nikdo nečte. Zachytíme ji
-        // a přilepíme k chybě, ať se nehádá.
-        var puvodni = Console.Out;
-        var zachyt = new StringWriter();
-        Console.SetOut(zachyt);
-        try
-        {
-            _ = Server;
-        }
-        catch (Exception e)
-        {
-            throw new InvalidOperationException(
-                $"Hostitel s identitou nenaběhl. Co aplikace vypsala:\n{zachyt}", e);
-        }
-        finally
-        {
-            Console.SetOut(puvodni);
-        }
-    }
-
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        builder.UseSetting("ConnectionStrings:Postgres", _db.GetConnectionString());
-        builder.UseSetting("Import:Token", PostgresFixture.Token);
-        builder.UseSetting("Landsat:Token", PostgresFixture.LandsatToken);
-        builder.UseSetting("Identita:Authority", "https://identita.neexistuje.invalid");
-        builder.UseSetting("Identita:Audience", "orlickypohar-test");
-    }
-
-    async Task IAsyncLifetime.DisposeAsync()
-    {
-        await base.DisposeAsync();
-        await _db.DisposeAsync();
-    }
-}
-
-[CollectionDefinition(Name)]
-public class IdentitaCollection : ICollectionFixture<IdentitaFixture>
-{
-    public const string Name = "identita";
-}
 
 /// <summary>
 /// Každý zapisovací endpoint musí bez přihlášení odmítnout — 401 nebo 403.
@@ -97,8 +24,8 @@ public class IdentitaCollection : ICollectionFixture<IdentitaFixture>
 /// endpoint, který vrátí 404 dřív než 403, prozrazuje, co existuje.
 /// </summary>
 [Trait("Category", "Integracni")]
-[Collection(IdentitaCollection.Name)]
-public class OchranaZapisuTests(IdentitaFixture fx)
+[Collection(PostgresCollection.Name)]
+public class OchranaZapisuTests(PostgresFixture fx)
 {
     /// <summary>
     /// Zapisovací endpointy, které SMÍ být bez přihlášení. Každý s důvodem.
@@ -143,8 +70,9 @@ public class OchranaZapisuTests(IdentitaFixture fx)
         nalezene.ShouldNotBeEmpty(
             "Test nenašel jediný zapisovací endpoint — pak nic neověřuje.");
         nalezene.Any(k => k.Contains("/sprava/")).ShouldBeTrue(
-            "Test nevidí žádný endpoint pod /sprava/. Hostitel nemá identitu, " +
-            "takže se chráněné řezy nezaregistrovaly — a test by byl zelený naprázdno.");
+            "Test nevidí žádný endpoint pod /sprava/ — v PostgresFixture nejspíš " +
+            "zmizelo nastavení Identita:Authority a chráněné řezy se nezaregistrovaly. " +
+            "Test by pak byl zelený naprázdno.");
 
         otevrene.ShouldBeEmpty(
             "Tyhle zapisovací endpointy bez přihlášení neodmítly. Buď je chraň, " +

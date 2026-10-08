@@ -47,8 +47,7 @@ try
     var uloziste = builder.Services.PridejUloziste(builder.Configuration);
 
     // Správa stojí na identitě, ale registruje se vždycky: integrační testy
-    // ji volají přes službu, ne přes HTTP, a nemají nakonfigurovaného
-    // poskytovatele.
+    // ji volají přes službu, ne přes HTTP, s vymyšleným poskytovatelem.
     builder.Services.AddScoped<Rozsahy>();
     builder.Services.AddScoped<OpravneniSprava>();
     builder.Services.AddScoped<ClankySprava>();
