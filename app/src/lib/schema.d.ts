@@ -3503,6 +3503,121 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/boje": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše bóje regaty
+         * @description Pořadatel regaty, nebo rozhodčí ročníku. S `historie=true` i přenastavené a sebrané — trasa se k trati vztahuje tak, jak stála tehdy.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    historie?: boolean;
+                };
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BojeDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Zapíše polohu postavené nebo přenastavené bóje
+         * @description Pořadatel regaty, nebo rozhodčí. Přenastavení je nový záznam — starý zůstává. Poloha mimo Orlík nebo přesnost horší než 100 m se odmítne.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PipnutiVstup"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BojeDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/boje/{boje}/sebrana": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Označí bóji za sebranou z vody
+         * @description Pořadatel regaty, nebo rozhodčí. Ze zápisu bóje nemizí.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    boje: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/poradatele/{poradatel}": {
         parameters: {
             query?: never;
@@ -3659,6 +3774,23 @@ export interface components {
             /** Format: int32 */
             body: number;
             skrtnuto: boolean;
+        };
+        BojeDto: {
+            /** Format: int32 */
+            id: number;
+            nazev: string;
+            /** Format: int32 */
+            poradi: number;
+            /** Format: double */
+            sirka: number;
+            /** Format: double */
+            delka: number;
+            /** Format: double */
+            presnostM: null | number;
+            /** Format: date-time */
+            postavenaV: string;
+            postavil: null | string;
+            sebrana: boolean;
         };
         ClanekDto: {
             slug: string;
@@ -3980,6 +4112,19 @@ export interface components {
         };
         PapirFormular: {
             soubor: null | components["schemas"]["IFormFile"];
+        };
+        PipnutiVstup: {
+            nazev: null | string;
+            /** Format: int32 */
+            poradi: number;
+            /** Format: double */
+            sirka: number;
+            /** Format: double */
+            delka: number;
+            /** Format: double */
+            presnostM: null | number;
+            /** Format: int32 */
+            nahrazujeId: null | number;
         };
         PoradatelDto: {
             slug: string;
@@ -4614,6 +4759,16 @@ export interface components {
             publikovanych: number;
             /** Format: int32 */
             kRevizi: number;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            kPodpisu: number;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            kPublikaci: number;
         };
         ZavodDetailDto: {
             slug: string;
@@ -4701,6 +4856,7 @@ export interface components {
              * @default 0
              */
             posunDoSerie: number;
+            puvodniSlug?: null | string;
         };
         ZmenaRoleDto: {
             kdo: string;

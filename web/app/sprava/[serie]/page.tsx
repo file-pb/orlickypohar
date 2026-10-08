@@ -258,16 +258,32 @@ function coTeď(udelena: Udelena[], serie: string, zastavky: ZastavkaVysledky[])
     });
   }
 
-  // 3. Hotové, ale ne venku. Tohle je práce rozhodčího a nikde se nepřipomíná.
-  for (const z of zastavky.filter(
-    (z) => z.pocetRozjizdek > z.publikovanych && z.kRevizi === 0,
-  )) {
+  // 3. Čeká na podpis rozhodčího. Nikde jinde se to nepřipomíná — a dřív
+  //    se to počítalo z publikace, takže rozjížďka, která už venku byla
+  //    a jen prošla revizí, rozhodčímu nenaskočila vůbec: pořadatel mu ji
+  //    předal a on se to nedozvěděl (průchod scénářem D3, 8. 10. 2026).
+  for (const z of zastavky.filter((z) => z.kPodpisu > 0)) {
     if (!smi(udelena, { role: "Rozhodci", serie })) continue;
     ukoly.push({
-      nazev: `Ověřit a pustit ven — ${z.nazev}`,
-      popis: `${z.pocetRozjizdek - z.publikovanych} z ${z.pocetRozjizdek} rozjížděk není venku.`,
+      nazev: `Ověřit výsledky — ${z.nazev}`,
+      popis: `${z.kPodpisu} z ${z.pocetRozjizdek} rozjížděk čeká na tvůj podpis.`,
       kam: kam(z.zavod),
       role: "Rozhodci",
+    });
+  }
+
+  // 4. Podepsané, a přesto ne venku. Publikace není stav a není to podpis:
+  //    „čísla platí" říká rozhodčí, „ať to vidí veřejnost" správce.
+  for (const z of zastavky.filter((z) => z.kPublikaci > 0)) {
+    if (!smi(udelena, { role: "Spravce", serie })) continue;
+    ukoly.push({
+      nazev: `Pustit ven — ${z.nazev}`,
+      popis:
+        z.kPublikaci === 1
+          ? "Jedna potvrzená rozjížďka, a nikdo ji neuvidí."
+          : `${z.kPublikaci} potvrzených rozjížděk nikdo neuvidí.`,
+      kam: kam(z.zavod),
+      role: "Spravce",
     });
   }
 

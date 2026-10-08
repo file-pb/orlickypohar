@@ -3519,6 +3519,145 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/zastavky/{zavod}/boje": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vyp\u00ed\u0161e b\u00f3je regaty",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. S `historie=true` i p\u0159enastaven\u00e9 a sebran\u00e9 \u2014 trasa se k trati vztahuje tak, jak st\u00e1la tehdy.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "historie",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/BojeDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Zap\u00ed\u0161e polohu postaven\u00e9 nebo p\u0159enastaven\u00e9 b\u00f3je",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. P\u0159enastaven\u00ed je nov\u00fd z\u00e1znam \u2014 star\u00fd z\u016fst\u00e1v\u00e1. Poloha mimo Orl\u00edk nebo p\u0159esnost hor\u0161\u00ed ne\u017e 100 m se odm\u00edtne.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PipnutiVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BojeDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/boje/{boje}/sebrana": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Ozna\u010d\u00ed b\u00f3ji za sebranou z vody",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. Ze z\u00e1pisu b\u00f3je nemiz\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "boje",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/poradatele/{poradatel}": {
             "get": {
                 "tags": [
@@ -3725,6 +3864,61 @@
                         "format": "int32"
                     },
                     "skrtnuto": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "BojeDto": {
+                "required": [
+                    "id",
+                    "nazev",
+                    "poradi",
+                    "sirka",
+                    "delka",
+                    "presnostM",
+                    "postavenaV",
+                    "postavil",
+                    "sebrana"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "poradi": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "sirka": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "delka": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "presnostM": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "postavenaV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "postavil": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "sebrana": {
                         "type": "boolean"
                     }
                 }
@@ -5028,6 +5222,51 @@
                                 "$ref": "#/components/schemas/IFormFile"
                             }
                         ]
+                    }
+                }
+            },
+            "PipnutiVstup": {
+                "required": [
+                    "nazev",
+                    "poradi",
+                    "sirka",
+                    "delka",
+                    "presnostM",
+                    "nahrazujeId"
+                ],
+                "type": "object",
+                "properties": {
+                    "nazev": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "poradi": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "sirka": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "delka": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "presnostM": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "nahrazujeId": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
                     }
                 }
             },
@@ -7483,6 +7722,16 @@
                     "kRevizi": {
                         "type": "integer",
                         "format": "int32"
+                    },
+                    "kPodpisu": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 0
+                    },
+                    "kPublikaci": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 0
                     }
                 }
             },
@@ -7779,6 +8028,12 @@
                         "type": "integer",
                         "format": "int32",
                         "default": 0
+                    },
+                    "puvodniSlug": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     }
                 }
             },
