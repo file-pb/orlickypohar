@@ -115,83 +115,157 @@ export type Polozka = {
 };
 
 /**
+ * Jedna podoba položky — táž obrazovka, ale jiná role a jiná věta o tom,
+ * co se tam dělá.
+ */
+type Varianta = Polozka & { pozadavek: Pozadavek };
+
+/**
+ * Z několika podob položky ta, na kterou člověk doopravdy má.
+ *
+ * <b>Proč to není jedna role na položku.</b> Server u výsledků, přihlášek
+ * i směrnic pouští <b>pořadatele zastávky nebo rozhodčího ročníku</b>
+ * (`VysledkyEndpoints.PohledAsync`, `PrihlaskyEndpoints.PrehledAsync`,
+ * `SmerniceEndpoints.SmiAsync`), jenže rozcestník u nich chtěl pořadatele —
+ * takže rozhodčí neviděl ani jeden odkaz na práci, která je jeho
+ * (audit, 8. 10. 2026). Pořadí podob rozhoduje: kdo je obojí, dostane tu
+ * první, a popis má odpovídat tomu, co ten člověk na obrazovce dělá.
+ */
+function prvniPlatna(udelena: Udelena[], varianty: Varianta[]): Polozka | null {
+  const platna = varianty.find((v) => smi(udelena, v.pozadavek));
+  if (!platna) return null;
+
+  const { pozadavek: _pozadavek, ...polozka } = platna;
+  return polozka;
+}
+
+/**
  * Co se dá dělat s celým ročníkem. Pořadí je podle toho, jak často se to
  * dělá: kalendář a výsledky vedou, oprávnění se nastaví raz za rok.
  */
 export function polozkyRocniku(udelena: Udelena[], serie: string): Polozka[] {
   const kam = (cesta: string) => `/sprava/${encodeURIComponent(serie)}${cesta}`;
 
-  const vse: (Polozka & { pozadavek: Pozadavek })[] = [
-    {
-      nazev: "Kalendář ročníku",
-      popis: "Vypsat regatu, posunout termín, zrušit.",
-      kam: kam("/kalendar"),
-      role: "Rozhodci",
-      pozadavek: { role: "Rozhodci", serie },
-    },
-    {
-      nazev: "Výsledky",
-      popis: "Zápis z vody, oprava a vypuštění ven.",
-      kam: kam("/vysledky"),
-      role: "Organizator",
-      pozadavek: { role: "Organizator", serie },
-    },
-    {
+  const vse: Varianta[][] = [
+    [
+      {
+        nazev: "Kalendář ročníku",
+        popis: "Vypsat regatu, posunout termín, zrušit.",
+        kam: kam("/kalendar"),
+        role: "Rozhodci",
+        pozadavek: { role: "Rozhodci", serie },
+      },
+    ],
+    [
+      {
+        nazev: "Výsledky",
+        popis: "Zápis z vody, oprava a vypuštění ven.",
+        kam: kam("/vysledky"),
+        role: "Organizator",
+        pozadavek: { role: "Organizator", serie },
+      },
+      {
+        nazev: "Výsledky",
+        popis: "Ověřit rozjížďky, vrátit k revizi a pustit ven.",
+        kam: kam("/vysledky"),
+        role: "Rozhodci",
+        pozadavek: { role: "Rozhodci", serie },
+      },
+    ],
+    [{
       nazev: "Lodě a kapitáni",
       popis: "Kdo patří ke které lodi, kapitánství od kódu.",
       kam: kam("/lode"),
       role: "Spravce",
       pozadavek: { role: "Spravce", serie },
-    },
-    {
+    }],
+    [{
       nazev: "Novinky ročníku",
       popis: "Články o seriálu a o regatách.",
       kam: kam("/clanky"),
       role: "Editor",
       pozadavek: { role: "Editor", serie },
-    },
-    {
+    }],
+    [{
       nazev: "Oprávnění",
       popis: "Komu udělit roli pořadatele, rozhodčího, správce.",
       kam: kam("/opravneni"),
       role: "Rozhodci",
       pozadavek: { role: "Rozhodci", serie },
-    },
+    }],
   ];
 
-  return vse.filter((p) => smi(udelena, p.pozadavek)).map(({ pozadavek: _, ...p }) => p);
+  return vse
+    .map((varianty) => prvniPlatna(udelena, varianty))
+    .filter((p): p is Polozka => p !== null);
 }
 
-/** Co se dá dělat s jednou zastávkou. Tyhle obrazovky dnes v nabídce nejsou. */
+/**
+ * Co se dá dělat s jednou zastávkou. Tyhle obrazovky dnes v nabídce nejsou.
+ *
+ * <b>Rozhodčí sem patří taky.</b> U všech tří ho server pouští a u dvou má
+ * vlastní práci, kterou nikdo jiný udělat nesmí: ověřit rozjížďky a pustit
+ * je ven, a vyloučit loď ze závodu (`Prihlasky.cs`: „O vyloučení ze závodu
+ * rozhoduje rozhodčí"). Dokud tu stál jen pořadatel, neměl na ně odkaz.
+ */
 export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string): Polozka[] {
   const kam = (cesta: string) =>
     `/sprava/${encodeURIComponent(serie)}${cesta}/${encodeURIComponent(zavod)}`;
 
-  const vse: (Polozka & { pozadavek: Pozadavek })[] = [
-    {
-      nazev: "Výsledky",
-      popis: "Rozjížďky, zápis z cíle, oprava.",
-      kam: kam("/vysledky"),
-      role: "Organizator",
-      pozadavek: { role: "Organizator", serie, zavod },
-    },
-    {
-      nazev: "Přihlášky",
-      popis: "Kdo přijel, pozdě příchozí loď, startovné.",
-      kam: kam("/prihlasky"),
-      role: "Organizator",
-      pozadavek: { role: "Organizator", serie, zavod },
-    },
-    {
-      nazev: "Plachetní směrnice",
-      popis: "Vyvěsit PDF, stáhnout odvolanou verzi.",
-      kam: kam("/smernice"),
-      role: "Organizator",
-      pozadavek: { role: "Organizator", serie, zavod },
-    },
+  const vse: Varianta[][] = [
+    [
+      {
+        nazev: "Výsledky",
+        popis: "Rozjížďky, zápis z cíle, oprava.",
+        kam: kam("/vysledky"),
+        role: "Organizator",
+        pozadavek: { role: "Organizator", serie, zavod },
+      },
+      {
+        nazev: "Výsledky",
+        popis: "Ověřit rozjížďky, vrátit k revizi a pustit ven.",
+        kam: kam("/vysledky"),
+        role: "Rozhodci",
+        pozadavek: { role: "Rozhodci", serie },
+      },
+    ],
+    [
+      {
+        nazev: "Přihlášky",
+        popis: "Kdo přijel, pozdě příchozí loď, startovné.",
+        kam: kam("/prihlasky"),
+        role: "Organizator",
+        pozadavek: { role: "Organizator", serie, zavod },
+      },
+      {
+        nazev: "Přihlášky",
+        popis: "Kdo přijel a koho vyloučit ze závodu.",
+        kam: kam("/prihlasky"),
+        role: "Rozhodci",
+        pozadavek: { role: "Rozhodci", serie },
+      },
+    ],
+    [
+      {
+        nazev: "Plachetní směrnice",
+        popis: "Vyvěsit PDF, stáhnout odvolanou verzi.",
+        kam: kam("/smernice"),
+        role: "Organizator",
+        pozadavek: { role: "Organizator", serie, zavod },
+      },
+      {
+        nazev: "Plachetní směrnice",
+        popis: "Vyvěsit PDF, stáhnout odvolanou verzi.",
+        kam: kam("/smernice"),
+        role: "Rozhodci",
+        pozadavek: { role: "Rozhodci", serie },
+      },
+    ],
   ];
 
-  return vse.filter((p) => smi(udelena, p.pozadavek)).map(({ pozadavek: _, ...p }) => p);
+  return vse
+    .map((varianty) => prvniPlatna(udelena, varianty))
+    .filter((p): p is Polozka => p !== null);
 }
 
 /** Co se dá dělat s celým webem, mimo ročníky. */
