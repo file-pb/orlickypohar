@@ -205,6 +205,16 @@ stavy=$(for _ in $(seq 1 25); do
         done)
 ma "25× táž stránka z cache bez 429" test "$(grep -c 429 <<<"$stavy")" -eq 0
 
+# Zapisovatel v cíli: souvislé ukládání nesmí narazit. Tempo určuje doba
+# odezvy, ne prst — cil.tsx posílá další sadu hned, jak se vrátí předchozí.
+zapisovatel="203.0.113.9"
+stavy=$(for i in $(seq 1 20); do
+          curl -s -o /dev/null -w '%{http_code}\n' -X POST \
+            -H "Cf-Connecting-Ip: $zapisovatel" -H "Cookie: op_token=x" \
+            "$URL/sprava/2027/vysledky/z/1/cil"
+        done)
+ma "20 zápisů správy za sebou projde bez 429" test "$(grep -c 429 <<<"$stavy")" -eq 0
+
 get /cache-zdravi -H "Cf-Connecting-Ip: $utocnik"
 ma "zdraví se nelimituje ani útočníkovi" test "$stav" = 200
 
