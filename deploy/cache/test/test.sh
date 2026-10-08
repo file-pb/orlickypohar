@@ -207,6 +207,25 @@ ma "25× táž stránka z cache bez 429" test "$(grep -c 429 <<<"$stavy")" -eq 0
 
 # Zapisovatel v cíli: souvislé ukládání nesmí narazit. Tempo určuje doba
 # odezvy, ne prst — cil.tsx posílá další sadu hned, jak se vrátí předchozí.
+# Neznámý parametr: flood na stále nové adresy musí narazit, zatímco známý
+# parametr i obyčejná stránka projdou. Jinak by limit škrtil normální provoz.
+utocnik2="203.0.113.11"; ctenar="203.0.113.12"
+: > "$ADRESAR/.divny"
+for i in $(seq 1 25); do
+  curl -s -o /dev/null -w '%{http_code}\n' -H "Cf-Connecting-Ip: $utocnik2" \
+    "$URL/?nesmysl=$i" >> "$ADRESAR/.divny" &
+done
+wait
+d=$(cat "$ADRESAR/.divny"); rm -f "$ADRESAR/.divny"
+ma "flood neznámým parametrem narazí" test "$(grep -c 429 <<<"$d")" -gt 0
+
+stavy=$(for i in $(seq 1 15); do
+          curl -s -o /dev/null -w '%{http_code}\n' -H "Cf-Connecting-Ip: $ctenar" "$URL/?trida=$i"
+        done)
+ma "známý parametr se neškrtí" test "$(grep -c 429 <<<"$stavy")" -eq 0
+get / -H "Cf-Connecting-Ip: $ctenar"
+ma "stránka bez parametrů jde dál" test "$stav" = 200
+
 zapisovatel="203.0.113.9"
 stavy=$(for i in $(seq 1 20); do
           curl -s -o /dev/null -w '%{http_code}\n' -X POST \
