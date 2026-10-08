@@ -82,7 +82,9 @@ export default async function RozcestnikRocniku({
         {hlava}
         <p className="prazdno">
           V tomhle ročníku nemáš žádnou roli, takže tu není co spravovat. Roli
-          udílí správce ročníku.
+          udílí správce ročníku — pořadatele a editora jedné regaty i rozhodčí.
+          Co která role smí, stojí v{" "}
+          <Link href="/napoveda#role">nápovědě</Link>.
         </p>
       </>
     );

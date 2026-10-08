@@ -3852,6 +3852,48 @@ To nejsou mezery, to jsou rozhodnutí.
 Appka, upozornění a tracker až potom: jsou to největší kusy, ale na první závod
 (15. 5. 2027) nemají vliv.
 
+## Nápověda a prokliky (9. 10. 2026)
+
+**Zadání od Filipa:** *„budeme tam muset udělat help s návody jak co založit
+a ty informační věty (např. o založení lodi) udělat s proklikem, ať je to
+user friendly."*
+
+**Co bylo špatně.** Aplikace na spoustě míst říkala, co se dá nebo nedá
+udělat — a nechala člověka stát. „Lodě se přihlašují od vypsání" neřekne,
+kde se vypisuje; „kapitána určuje správce ročníku" neřekne, kdo to je ani
+kde se o to říct. Inventura webu našla **154 takových vět**: u 73 cílová
+adresa v aplikaci existuje a jen tam nevedl odkaz, 55 potřebuje návod
+a **26 nevede nikam, protože ta funkce není**.
+
+**Co vzniklo.** Stránka `/napoveda`, veřejná a bez přihlášení, rozdělená
+podle toho, kdo ji čte: *pro závodníky* (přihlásit loď, dostat se ke své
+lodi, připojit posádku), *pro pořadatele* (v jakém pořadí to jde, vypsat
+regatu, přihlášky, směrnice, bóje, výsledky, kdo co smí) a *když něco
+nejde* (proč regata není venku, co aplikace neumí).
+
+**Píše se podle kódu, ne podle představy.** Role jsou opsané z
+`Kalendar.KdoSmi`, `Workflow.KdoSmi` a `Prava.Smi`, stavy z `RADA`.
+Při psaní se tím našla **nepravda na obrazovce**: `/pripojeni` tvrdilo, že
+první připojený k lodi je kapitán a že kapitán mění role. Kód dělá
+z každého posádku (`Kody.RoleProNoveho`) a role mění jen správce ročníku
+(`KapitanstviEndpoints.SpravceAsync`). Věta je opravená.
+
+**Oddíl „Co aplikace neumí" je tam schválně.** Nejdražší je hledání
+funkce, která neexistuje — založit ročník z webu, zapsat posádku ve
+správě, změnit kategorii lodi, pozvat člověka rolí. Krátký seznam ušetří
+víc času než kterýkoliv návod nad ním.
+
+**Kotvy jsou součást kontraktu.** Odkazy do nápovědy míří na `#role`,
+`#po-sobe`, `#vypsat-regatu`, `#prihlasky`, `#smernice`, `#boje`,
+`#vysledky`, `#moje-lod`, `#posadka`, `#prihlasit-lod`, `#proc-neni-venku`
+a `#co-neumime` z deseti míst ve správě i na veřejném webu. Přejmenovat je
+jde jen s projitím odkazů.
+
+**Zbytek inventury je fronta, ne hotovo.** Propojeno je deset nejdražších
+míst; dalších zhruba sto čtyřicet vět čeká. Sahat na ně má smysl po
+zkoušce ovládání s pořadatelem — ta řekne, které z nich doopravdy zdržují,
+a která tvrzení jsou navíc nepřesná jako to o kapitánovi.
+
 ## Kde se pokračuje
 
 Kdo sem přijde z jiného stroje, potřebuje vědět tohle:

@@ -115,6 +115,8 @@ export default async function LodeRocniku({ params, searchParams }: Parametry) {
         <p className="prazdno">
           Kapitány lodí určuje správce ročníku. Vazba k lodi platí celý rok
           a napříč zastávkami, takže pověření k jedné regatě na ni nedosáhne.
+          Co která role smí, je v{" "}
+          <Link href="/napoveda#role">nápovědě</Link>.
         </p>
       </>
     );
@@ -150,7 +152,10 @@ export default async function LodeRocniku({ params, searchParams }: Parametry) {
       {lode.length === 0 ? (
         <p className="prazdno">
           V ročníku není přihlášená žádná loď. Vazby se zakládají k lodím
-          z přihlášek — nejdřív ročník naimportuj nebo lodě přihlas.
+          z přihlášek, takže nejdřív musí být koho přihlásit: lodě se
+          přihlašují u regaty v <Link href={`/sprava/${serie}/kalendar`}>kalendáři</Link>,
+          nebo se přihlásí samy z webu. Jak to jde po sobě, je v{" "}
+          <Link href="/napoveda#po-sobe">nápovědě</Link>.
         </p>
       ) : (
         <>

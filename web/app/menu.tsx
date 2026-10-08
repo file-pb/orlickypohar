@@ -41,6 +41,7 @@ export function Menu({
         )}
         <OdkazJinam href="/historie">Historie</OdkazJinam>
         <OdkazJinam href="/pravidla">Pravidla</OdkazJinam>
+        <OdkazJinam href="/napoveda">Nápověda</OdkazJinam>
         <OdkazJinam href="/appka">Appka</OdkazJinam>
         {/* Jen když je vzhled přepnutý ručně: bez toho by se z ruční volby
             nedalo vrátit k systému jinak než smazáním cookie. */}

@@ -113,8 +113,10 @@ export default async function MojeLode({ searchParams }: Parametry) {
 
       {lode.length === 0 ? (
         <p className="prazdno">
-          Zatím nepatříš k žádné lodi. Když jsi kapitán, nech si od pořadatele
-          vystavit kód a <Link href="/pripojeni">připoj se</Link>.
+          Zatím nepatříš k žádné lodi. Nech si od kapitána nebo od pořadatele
+          vystavit kód a <Link href="/pripojeni">připoj se</Link>; když kód
+          nemáš, dá se o loď požádat a kapitán to potvrdí. Všechny tři cesty
+          jsou v <Link href="/napoveda#moje-lod">nápovědě</Link>.
         </p>
       ) : (
         <ul className="seznam">
@@ -158,7 +160,10 @@ export default async function MojeLode({ searchParams }: Parametry) {
         <>
           <h2>{vybrana.nazev}: posádka</h2>
           {pripojeni.length === 0 ? (
-            <p className="prazdno">K lodi zatím nikdo připojený není.</p>
+            <p className="prazdno">
+              K lodi zatím nikdo připojený není. Posádka se připojí kódem,
+              který tu vystavíš — <Link href="/napoveda#posadka">jak na to</Link>.
+            </p>
           ) : (
             <ul className="seznam">
               {pripojeni.map((p) => (
@@ -219,7 +224,8 @@ export default async function MojeLode({ searchParams }: Parametry) {
               <div className="qr" dangerouslySetInnerHTML={{ __html: qr }} />
               <p className="poznamka">
                 Kód platí čtvrt hodiny a může ho použít víc lidí. Kdo ho zadá,
-                je posádka — kapitána lodi určuje správce ročníku.
+                je posádka — <Link href="/napoveda#role">kapitána lodi určuje
+                správce ročníku</Link>.
               </p>
             </>
           ) : (

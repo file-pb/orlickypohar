@@ -109,7 +109,8 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
         {hlava}
         <p className="prazdno">
           V tomhle ročníku nemáš ke kalendáři přístup. Termíny spravuje rozhodčí,
-          průběh závodu jeho pořadatel — o roli požádej správce ročníku.
+          průběh závodu jeho pořadatel — o roli požádej správce ročníku. Co
+          která role smí, je v <Link href="/napoveda#role">nápovědě</Link>.
         </p>
       </>
     );
@@ -159,6 +160,11 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
           {rocnik.publikovano
             ? "Veřejné stránky ho ukazují i s publikovanými regatami."
             : "Veřejné stránky ho neukazují vůbec — ani regaty a výsledky, které jsou samy publikované."}{" "}
+          {!rocnik.publikovano && !rocnik.smiPublikovat && (
+            <>
+              <Link href="/napoveda#proc-neni-venku">Proč web nic neukazuje</Link>{" "}
+            </>
+          )}
           {rocnik.smiPublikovat && (
             <form action={publikaceRocnikuAkce} className="radkove">
               <input type="hidden" name="serie" value={serie} />
@@ -196,7 +202,10 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
       <h2>{naAkcich ? "Akce" : "Regaty"}</h2>
       {zastavky.length === 0 ? (
         <p className="prazdno">
-          {naAkcich ? "Ročník zatím nemá jedinou komunitní akci." : "Ročník zatím nemá jedinou regatu."}
+          {naAkcich ? "Ročník zatím nemá jedinou komunitní akci." : "Ročník zatím nemá jedinou regatu."}{" "}
+          Zakládá je rozhodčí ročníku formulářem výš; celý postup od termínu
+          po vypsání je v{" "}
+          <Link href="/napoveda#vypsat-regatu">nápovědě</Link>.
         </p>
       ) : (
         <ul className="seznam">

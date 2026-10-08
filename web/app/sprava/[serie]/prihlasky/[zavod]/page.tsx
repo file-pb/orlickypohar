@@ -162,9 +162,14 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
           {hotovo(zpravy.stav, zpravy.lod, zpravy.nastav)}
         </p>
       )}
+      {/* Hláška chodí z API (`Prihlasky.ProcNelze`), takže odkaz nemůže být
+          v ní — stojí vedle. Nejčastější důvod je stav regaty, a ten se
+          mění v kalendáři. */}
       {prehled.procNelze && (
         <p className="hlaska" role="status">
-          {prehled.procNelze}
+          {prehled.procNelze}{" "}
+          <Link href={`/sprava/${serie}/kalendar`}>Kalendář ročníku</Link> ·{" "}
+          <Link href="/napoveda#vypsat-regatu">jak se regata vypisuje</Link>
         </p>
       )}
 
@@ -281,7 +286,8 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
                 Loď se tím stává účastníkem celého ročníku v kategorii, kterou
                 vybereš. Za regaty, na kterých nebyla, dostane v průběžném
                 pořadí tolik bodů, kolik lodí její kategorie bylo na tu regatu
-                přihlášeno — i těch, které se nakonec nedostavily.
+                přihlášeno — i těch, které se nakonec nedostavily. Celé
+                bodování je v <Link href="/pravidla">pravidlech</Link>.
               </p>
             </form>
           </details>
@@ -591,7 +597,8 @@ function Kod({ kod, doKdy, qr }: { kod: string; doKdy?: string; qr: string | nul
           minute: "2-digit",
           timeZone: "Europe/Prague",
         })}.` : "Platí čtvrt hodiny."}{" "}
-        Kdo kód zadá, je posádka. Kapitána lodi určuje správce ročníku.
+        Kdo kód zadá, je posádka.{" "}
+        <Link href="/napoveda#role">Kapitána lodi určuje správce ročníku.</Link>
       </p>
     </div>
   );

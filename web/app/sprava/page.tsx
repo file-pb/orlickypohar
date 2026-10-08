@@ -55,7 +55,8 @@ export default async function Sprava() {
         {hlava}
         <p className="prazdno">
           Žádnou roli ve správě nemáš. Svoje lodě najdeš pod{" "}
-          <Link href="/moje-lode">Moje lodě</Link>.
+          <Link href="/moje-lode">Moje lodě</Link>. Jak se role udělují, je
+          v <Link href="/napoveda#role">nápovědě</Link>.
         </p>
       </>
     );

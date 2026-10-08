@@ -232,8 +232,10 @@ export default async function Opravneni({ params, searchParams }: Parametry) {
 
       <p className="poznamka">
         Roli lze dát jen tomu, kdo se už aspoň jednou přihlásil — účet vzniká
-        přihlášením, pozvat člověka rolí nejde. Posledního správce ročníku
-        odebrat nelze.
+        přihlášením, pozvat člověka rolí nejde: pošli mu odkaz na web, ať se
+        přihlásí, a pak mu roli udělíš. Posledního správce ročníku odebrat
+        nelze. Co která role smí, je v{" "}
+        <Link href="/napoveda#role">nápovědě</Link>.
         {prehled.ucty && (
           <>
             {" "}

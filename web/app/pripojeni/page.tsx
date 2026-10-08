@@ -73,9 +73,14 @@ export default async function Pripojeni({ searchParams }: Parametry) {
         Kód platí čtvrt hodiny. Když vyprší, nech si vystavit nový — kapitán ho
         najde v <Link href="/moje-lode">mých lodích</Link>.
       </p>
+      {/* Dřív tu stálo, že první připojený je kapitán a že kapitán mění
+          role. Obojí je proti kódu: `Kody.RoleProNoveho` je natvrdo
+          `Posadka` a role u lodi mění jen správce ročníku
+          (`KapitanstviEndpoints.SpravceAsync`). Oprava 9. 10. 2026. */}
       <p className="poznamka">
-        První, kdo se k lodi připojí, je její kapitán. Další jsou posádka
-        a kapitán jim může roli změnit.
+        Kdo zadá kód, je <b>posádka</b> — kapitána lodi určuje správce
+        ročníku. Jak se to celé má k sobě, je v{" "}
+        <Link href="/napoveda#moje-lod">nápovědě</Link>.
       </p>
 
       {/* Třetí cesta: kdo kód nemá, požádá a kapitán potvrdí. Nestojí to
