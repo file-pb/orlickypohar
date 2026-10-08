@@ -46,7 +46,7 @@ public static class VysledkyEndpoints
 {
     public static void MapSpravaVysledku(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/sprava/serie/{serie}/vysledky").WithTags("Správa");
+        var g = app.MapSpravu("/sprava/serie/{serie}/vysledky");
 
         g.MapGet("/", ZastavkyAsync)
             .Produces<List<ZastavkaVysledkyDto>>()

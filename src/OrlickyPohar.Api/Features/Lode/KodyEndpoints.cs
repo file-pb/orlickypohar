@@ -93,6 +93,7 @@ public static class KodyEndpoints
                 "se stává ten, kdo loď převzal jako první, ne ten, koho někdo potvrdí.");
 
         app.MapPost("/sprava/serie/{serie}/lode/{lod:int}/kod", PoradatelKodAsync)
+            .RequireAuthorization()
             .Produces<KodDto>()
             .WithTags("Správa")
             .WithSummary("Vystaví připojovací kód k lodi ročníku")

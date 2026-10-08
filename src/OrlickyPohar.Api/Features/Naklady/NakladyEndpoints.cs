@@ -20,6 +20,7 @@ public static class NakladyEndpoints
     public static void MapNaklady(this IEndpointRouteBuilder app)
     {
         app.MapGet("/sprava/naklady", NakladyAsync)
+            .RequireAuthorization()
             .WithTags("Správa")
             .Produces<NakladyDto>()
             .WithSummary("Vrátí náklady na provoz a servis poháru, měsíčně i ročně")

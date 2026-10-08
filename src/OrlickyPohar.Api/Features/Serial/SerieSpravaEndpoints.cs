@@ -34,7 +34,7 @@ public static class SerieSpravaEndpoints
 {
     public static void MapSpravaSerie(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/sprava/serie/{serie}").WithTags("Správa");
+        var g = app.MapSpravu("/sprava/serie/{serie}");
 
         g.MapGet("/", StavAsync)
             .Produces<SerieSpravaDto>()

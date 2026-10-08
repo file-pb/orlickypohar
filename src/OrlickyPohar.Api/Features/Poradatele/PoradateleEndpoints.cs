@@ -20,7 +20,7 @@ public static class PoradateleEndpoints
 {
     public static void MapSpravaPoradatelu(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/sprava/serie/{serie}/poradatele").WithTags("Správa");
+        var g = app.MapSpravu("/sprava/serie/{serie}/poradatele");
 
         g.MapGet("/{poradatel}", DetailAsync)
             .Produces<PoradatelSpravaDto>()

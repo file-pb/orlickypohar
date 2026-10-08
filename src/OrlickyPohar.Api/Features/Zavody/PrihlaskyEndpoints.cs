@@ -17,7 +17,7 @@ public static class PrihlaskyEndpoints
 {
     public static void MapPrihlasky(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/sprava/serie/{serie}/zastavky/{zavod}/lode").WithTags("Správa");
+        var g = app.MapSpravu("/sprava/serie/{serie}/zastavky/{zavod}/lode");
 
         g.MapGet("/", PrehledAsync)
             .Produces<PrihlaskyZastavkyDto>()

@@ -30,7 +30,7 @@ public static class ClankySpravaEndpoints
 {
     public static void MapSpravaClanku(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/sprava/serie/{serie}/clanky").WithTags("Správa");
+        var g = app.MapSpravu("/sprava/serie/{serie}/clanky");
 
         // Tvar odpovědi se říká ručně: handlery vracejí `IResult`, protože
         // se z nich chodí ven víc způsoby, a z toho dokument nic neodvodí.
@@ -100,7 +100,7 @@ public static class ClankySpravaEndpoints
     /// </summary>
     public static void MapSpravaObecnychClanku(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/sprava/web/clanky").WithTags("Správa");
+        var g = app.MapSpravu("/sprava/web/clanky");
 
         g.MapGet("/", WebPrehledAsync)
             .Produces<PrehledObecnychClankuDto>()

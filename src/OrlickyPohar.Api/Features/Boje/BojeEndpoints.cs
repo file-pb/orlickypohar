@@ -21,7 +21,7 @@ public static class BojeEndpoints
 {
     public static void MapBoje(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/sprava/serie/{serie}/zastavky/{zavod}/boje").WithTags("Správa");
+        var g = app.MapSpravu("/sprava/serie/{serie}/zastavky/{zavod}/boje");
 
         g.MapGet("/", SeznamAsync)
             .Produces<List<BojeDto>>()
