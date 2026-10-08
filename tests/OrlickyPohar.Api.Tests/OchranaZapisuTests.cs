@@ -41,6 +41,7 @@ public class OchranaZapisuTests(PostgresFixture fx)
         var zdroj = fx.Services.GetRequiredService<EndpointDataSource>();
         var klient = fx.CreateClient();
         var otevrene = new List<string>();
+        var netrefene = new List<string>();
         var nalezene = new HashSet<string>();
 
         foreach (var ep in zdroj.Endpoints.OfType<RouteEndpoint>())
@@ -48,20 +49,32 @@ public class OchranaZapisuTests(PostgresFixture fx)
             var metody = ep.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods ?? [];
             foreach (var metoda in metody.Where(m => Zapisovaci.Contains(m)))
             {
-                var klic = $"{metoda} {Normalizuj(ep.RoutePattern.RawText)}";
+                var klic = $"{metoda} {CestaZeVzoru.Normalizuj(ep.RoutePattern.RawText)}";
                 nalezene.Add(klic);
                 if (VedomeVerejne.ContainsKey(klic)) continue;
 
-                using var pozadavek = new HttpRequestMessage(new HttpMethod(metoda), Vypln(ep.RoutePattern))
+                using var pozadavek = new HttpRequestMessage(new HttpMethod(metoda), CestaZeVzoru.Vypln(ep.RoutePattern))
                 {
                     // Prázdné tělo schválně: autorizace musí zasáhnout dřív
                     // než validace. 400 tady znamená „prošlo až k datům".
                     Content = JsonContent.Create(new { }),
                 };
+                var cesta = CestaZeVzoru.Vypln(ep.RoutePattern);
                 var odpoved = await klient.SendAsync(pozadavek);
 
-                if (odpoved.StatusCode is not (HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden))
-                    otevrene.Add($"{klic} → {(int)odpoved.StatusCode}");
+                if (odpoved.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+                    continue;
+
+                // 404 z routování není nález, je to vada tohohle testu:
+                // dosazená hodnota se netrefila do omezení v cestě.
+                if (odpoved.StatusCode == HttpStatusCode.NotFound
+                    && await CestaZeVzoru.NetrefenoAsync(klient, cesta))
+                {
+                    netrefene.Add($"{klic} (zkoušeno {cesta})");
+                    continue;
+                }
+
+                otevrene.Add($"{klic} → {(int)odpoved.StatusCode}");
             }
         }
 
@@ -74,6 +87,11 @@ public class OchranaZapisuTests(PostgresFixture fx)
             "zmizelo nastavení Identita:Authority a chráněné řezy se nezaregistrovaly. " +
             "Test by pak byl zelený naprázdno.");
 
+        // Dřív než nález: cesta, která se netrefila, nic neověřila.
+        netrefene.ShouldBeEmpty(
+            "U těchhle endpointů se dosazená adresa netrefila do žádné routy, " +
+            "takže o jejich ochraně test nic neříká. Doplň omezení do CestaZeVzoru.Vypln.");
+
         otevrene.ShouldBeEmpty(
             "Tyhle zapisovací endpointy bez přihlášení neodmítly. Buď je chraň, " +
             "nebo — je-li veřejný zápis záměr — přidej je do VedomeVerejne i s důvodem. " +
@@ -83,25 +101,5 @@ public class OchranaZapisuTests(PostgresFixture fx)
         // pod stejnou cestou, byl by rovnou vědomě veřejný.
         VedomeVerejne.Keys.Except(nalezene).ShouldBeEmpty(
             "Tyhle výjimky ve VedomeVerejne neodpovídají žádnému endpointu. Smaž je.");
-    }
-
-    /// <summary>Doplní parametry cesty tak, aby prošly omezeními.</summary>
-    private static string Vypln(RoutePattern vzor)
-    {
-        var cesta = vzor.RawText ?? "/";
-        foreach (var p in vzor.Parameters)
-        {
-            var celociselny = p.ParameterPolicies.Any(pol => pol.Content is "int" or "long");
-            var hodnota = celociselny ? "1" : "x";
-            cesta = System.Text.RegularExpressions.Regex.Replace(
-                cesta, $@"\{{\*?{p.Name}(:[^}}]*)?\??\}}", hodnota);
-        }
-        return cesta.StartsWith('/') ? cesta : "/" + cesta;
-    }
-
-    private static string Normalizuj(string? vzor)
-    {
-        var s = "/" + (vzor ?? "").Trim('/');
-        return s.EndsWith('/') ? s : s + "/";
     }
 }
