@@ -107,9 +107,8 @@ kam se kdo dostane, tedy platí; scénáře o tom, co mu server zakáže, zatím
 organizátor jedné zastávky, `zdenek` rozhodčí celého ročníku (přidán
 8. 10. 2026, aby skupina D nejela jako správce), neznámé jméno mock odmítne
 čtyřistajedničkou — dřív padalo na Filipa (změněno 6. 10. 2026).
-**C7 je tím celé
-proveditelné** — ověřeno průchodem od konfliktu přes porovnání dvou sloupců
-až po ruční společný výsledek.
+Scénář **C7 je tím celé proveditelné** — ověřeno průchodem od konfliktu
+přes porovnání dvou sloupců až po ruční společný výsledek.
 
 **Výpadek nevyrábí mock, ale zařízení:** letový režim na telefonu nebo
 *Offline* v nástrojích prohlížeče.
