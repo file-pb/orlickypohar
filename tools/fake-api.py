@@ -847,19 +847,44 @@ def proc_nejde_vysledek(ze, na, spravce):
             + " → ".join(NAZVY_VYSLEDKU[s] for s in RADA_VYSLEDKU) + ".")
 
 
-def rozjizdka_radek(r):
-    # Falešné API nerozlišuje rozsahy: přihlášený je správce, tedy smí i
-    # přeskakovat. Rozsahy se zkoušejí v testech, tady jde o obrazovku.
+def kdo_smi_na_stav(na):
+    """Čí podpis je který stupeň. Opsané z `Workflow.KdoSmi`."""
+    if na == "Navrzeno":
+        return "Organizator"
+    if na in ("Overeno", "Schvaleno", "KRevizi"):
+        return "Rozhodci"
+    return "Spravce"
+
+
+def kdo_smi_do_serie(stav):
+    """Dokud jsou čísla rozepsaná, rozhoduje pořadatel. Opsané z `KdoSmiDoSerie`."""
+    return "Organizator" if stav in OTEVRENY else "Rozhodci"
+
+
+def rozjizdka_radek(r, zavod=None):
+    """
+    Řádek rozjížďky pro správu, podle práv toho, kdo se ptá.
+
+    <b>Obrazovka musí nabízet jen to, co projde.</b> Dřív tu stálo
+    `smiPublikovat: True` a všechny stupně naráz, takže rozhodčí viděl
+    tlačítka, která by mu server odmítl, a scénáře D2 a D4 měřily něco
+    jiného, než co se zadalo (oponentura, 8. 10. 2026).
+    """
+    smi = smi_ted
+    spravce = smi("Spravce")
+    organizator = smi("Organizator", zavod)
+
     return {"cislo": r["cislo"], "startV": r.get("startV"), "stav": r["stav"],
             "doSerie": r["doSerie"], "stavVysledku": r["stavVysledku"],
             "publikovano": r["publikovano"], "duvodRevize": r.get("duvodRevize"),
-            "pocetVysledku": len(r.get("vysledky", [])), "smiPublikovat": True,
+            "pocetVysledku": len(r.get("vysledky", [])), "smiPublikovat": spravce,
+            # Přeskakovat smí jen správce — proto se mu posílá i do `proc_nejde`.
             "mozneStavy": [s for s in VSECHNY_VYSLEDKY
                            if s != r["stavVysledku"]
-                           and not proc_nejde_vysledek(r["stavVysledku"], s, True)],
-            "smiZapisovat": r["stavVysledku"] in OTEVRENY,
-            # Práva mock nerozlišuje: přihlášený je tu pořadatel i rozhodčí.
-            "smiDoPoharu": True,
+                           and not proc_nejde_vysledek(r["stavVysledku"], s, spravce)
+                           and smi(kdo_smi_na_stav(s), zavod)],
+            "smiZapisovat": organizator and r["stavVysledku"] in OTEVRENY,
+            "smiDoPoharu": smi(kdo_smi_do_serie(r["stavVysledku"]), zavod),
             "maPapir": bool(r.get("papir"))}
 
 
@@ -982,7 +1007,11 @@ def prihlasky_dto(z):
     lode = sorted(D["prihlasky"], key=lambda p: (KAT_PORADI[p["kategorie"]], nazvy(p["lod"])))
     return {"serie": D["slug"], "serieNazev": D["nazev"], "zavod": z["slug"],
             "zavodNazev": z["nazev"], "stavZavodu": z["stav"],
-            "smiSpravovat": chyba is None, "procNelze": chyba,
+            # Přihlášky vede pořadatel; rozhodčí jen vylučuje (`Prihlasky.cs`).
+            "smiSpravovat": chyba is None and smi_ted("Organizator", z["slug"]),
+            "procNelze": chyba or (None if smi_ted("Organizator", z["slug"]) else
+                                   "Přihlášky vede pořadatel regaty. Rozhodčí "
+                                   "rozhoduje jen o vyloučení ze závodu."),
             "kategorie": [k["nazev"] for k in sorted(D["kategorie"], key=lambda k: k["poradi"])],
             "lode": [lod_na_zastavce(z, p["lod"], chyba is None) for p in lode]}
 
@@ -995,7 +1024,12 @@ def zapis_dto(z, r):
     return {"serie": D["slug"], "serieNazev": D["nazev"], "zavod": z["slug"],
             "zavodNazev": z["nazev"], "stavZavodu": z["stav"], "cislo": r["cislo"],
             "stavVysledku": r["stavVysledku"], "duvodRevize": r.get("duvodRevize"),
-            "smiZapisovat": chyba is None, "procNelze": chyba,
+            # Zapisuje pořadatel. Rozhodčí čísla podepisuje, nesahá do nich —
+            # na tom stojí scénář D4, takže důvod musí být vidět na obrazovce.
+            "smiZapisovat": chyba is None and smi_ted("Organizator", z["slug"]),
+            "procNelze": chyba or (None if smi_ted("Organizator", z["slug"]) else
+                                   "Zápis vede pořadatel regaty. Rozhodčí výsledky "
+                                   "podepisuje, ale do čísel nesahá."),
             "lode": [{"prihlaskaId": PRIHLASKA_ID[p["lod"]], "lod": nazvy(p["lod"]),
                       "cisloPlachty": LODE[p["lod"]].get("cisloPlachty"),
                       "kategorie": p["kategorie"],
@@ -1008,7 +1042,7 @@ def zapis_dto(z, r):
                      for p in lode],
             "startV": r.get("startV"), "doSerie": r.get("doSerie", True),
             "papir": {k: v for k, v in r["papir"].items() if k != "id"} if r.get("papir") else None,
-            "smiPapir": True, "pocetNavrhu": len(r.get("navrhy", [])),
+            "smiPapir": smi_ted("Organizator", z["slug"]), "pocetNavrhu": len(r.get("navrhy", [])),
             # Podoba sady, ze které klient vychází. Posílá ji zpátky při
             # uložení a server tím pozná starší data (nález B).
             "revize": r.get("revize", 0)}
@@ -1062,12 +1096,12 @@ def prerad_kalendar():
 
 
 def zastavka_radek(z):
-    # Falešné API nerozlišuje rozsahy: kdo je přihlášený, smí všechno.
-    # Rozsahy se zkoušejí v testech, tady jde o obrazovku.
+    # Kalendář je práce rozhodčího: vypsat regatu, posunout termín, zrušit.
+    rozhodci = smi_ted("Rozhodci")
     return {**{k: z.get(k) for k in
                ("slug", "nazev", "datum", "datumKonce", "typ", "poradatel", "poradi",
                 "stav", "puvodniDatum", "publikovano")},
-            "smiUpravit": True, "smiPublikovat": True, "druh": z["druh"],
+            "smiUpravit": rozhodci, "smiPublikovat": rozhodci, "druh": z["druh"],
             "poradatelSlug": poradatel_zastavky(z)["slug"] if poradatel_zastavky(z) else None,
             "smiMedailonek": bool(poradatel_zastavky(z)),
             "vyhodnoceni": z.get("vyhodnoceni", "PoKategoriich"),
@@ -1139,7 +1173,10 @@ def proc_nejde_medailonek(v):
 
 
 def poradatel_sprava(p):
-    return {"serie": D["slug"], "serieNazev": D["nazev"], "poradatel": p, "smiUpravit": True,
+    return {"serie": D["slug"], "serieNazev": D["nazev"], "poradatel": p,
+            # Zjednodušení proti API: `Medailonek.SmiUpravit` váže pořadatele
+            # na jeho vlastní zastávky, tady stačí role v ročníku.
+            "smiUpravit": smi_ted("Rozhodci") or smi_ted("Organizator"),
             "zastavky": [{"slug": z["slug"], "nazev": z["nazev"], "datum": z["datum"],
                           "druh": z["druh"]}
                          for z in sorted(D["zavody"], key=lambda z: z["datum"])
@@ -1179,6 +1216,131 @@ def clanek_radek(c):
             "stav": c["stav"],
             "zavod": z["slug"] if z else None, "zavodNazev": z["nazev"] if z else None,
             "obrazek": c.get("obrazek")}
+
+
+# --- Kdo smí do správy ročníku ----------------------------------------------
+# Opsané z `Prava.Smi` a `web/lib/co-smim.ts`. <b>Dřív to mock nehlídal</b>
+# a přihlášeného bral všude jako pořadatele, takže scénáře o odmítnutí (D4,
+# D5, E4) měřily hlášku, ne oprávnění — a skupina D by se dala odjet účtem,
+# který na ni právo nemá (oponentura, 8. 10. 2026).
+#
+# Hlídá se jen `/sprava/**`. Veřejné stránky a osobní cesty `/ja/**` mají
+# vlastní pravidla a ta už mock vymáhal podle vztahu k lodi.
+
+# Která udělená role pokrývá tu požadovanou. Rozhodčí není stupeň: nedá ho
+# editor ani organizátor, a sám nepokrývá organizátora.
+POKRYVA = {
+    "Ctenar": {"Ctenar", "Editor", "Organizator", "Rozhodci", "Spravce"},
+    "Editor": {"Editor", "Organizator", "Spravce"},
+    "Organizator": {"Organizator", "Spravce"},
+    "Rozhodci": {"Rozhodci", "Spravce"},
+    "Spravce": {"Spravce"},
+}
+
+# Pseudorole pro cesty, kam server pouští pořadatele zastávky *nebo*
+# rozhodčího ročníku: výsledky, přihlášky, směrnice, medailonky.
+NAHLED = "Nahled"
+
+
+def prava_uctu(kdo):
+    """Udělená práva účtu — ročníková i na celý web, v jednom seznamu."""
+    if not kdo:
+        return []
+
+    return [{"role": o["role"], "zavod": o["zavod"], "web": False}
+            for o in OPRAVNENI if o["email"] == kdo["email"]] + [
+        {"role": r, "zavod": None, "web": True} for r in (kdo.get("web") or [])]
+
+
+def smi_role(prava, role, zavod=None):
+    """Má někdo s těmihle právy na tohle? Opsané z `Prava.Smi`."""
+    if role == "Ctenar":
+        return True
+    if role == NAHLED:
+        if smi_role(prava, "Rozhodci"):
+            return True
+        if zavod is not None:
+            return smi_role(prava, "Organizator", zavod)
+        # Otázka na celý ročník: pověření k jedné zastávce stačí. Přehled
+        # výsledků pouští i pořadatele jediné regaty — `PohledAsync` se ptá
+        # `zavody.Count > 0`, ne na právo k celému ročníku.
+        return any(u["role"] in POKRYVA["Organizator"] for u in prava)
+
+    for u in prava:
+        # Právo na celý web platí všude; pověření k jedné zastávce jen na ni.
+        if not u["web"] and u["zavod"] is not None and u["zavod"] != zavod:
+            continue
+        if u["role"] in POKRYVA[role]:
+            return True
+    return False
+
+
+# Práva toho, kdo se právě ptá. Server je jednovláknový (`HTTPServer`, ne
+# `ThreadingHTTPServer`), takže jeden požadavek nikdy nepřepíše druhý —
+# a DTO se díky tomu nemusí plnit právy skrz pět vrstev argumentů.
+KDO_SE_PTA = [[]]
+
+
+def smi_ted(role, zavod=None):
+    """Smí to ten, kdo poslal právě obsluhovaný požadavek?"""
+    return smi_role(KDO_SE_PTA[0], role, zavod)
+
+
+def role_pro_cestu(metoda, cesta):
+    """
+    Jakou roli ta cesta chce — `(role, zastávka)`, nebo `None`, když se
+    nehlídá. Zastávka `None` znamená otázku na celý ročník.
+
+    Workflow výsledků a stav přihlášky tu nejsou: tam role závisí na tom,
+    *co* se posílá, a hlídají si to ty handlery samy.
+    """
+    if cesta.startswith("/sprava/web/clanky"):
+        return ("Editor", "web")
+    if cesta == "/sprava/naklady":
+        return ("Spravce", "web")
+
+    zaklad = f'/sprava/serie/{D["slug"]}'
+    if not cesta.startswith(zaklad):
+        return None
+    zbytek = cesta[len(zaklad):]
+
+    if zbytek in ("", "/"):
+        return (NAHLED, None)
+    if zbytek == "/publikace":
+        return ("Spravce", None)
+    if zbytek.startswith("/opravneni"):
+        return ("Rozhodci", None)
+    if zbytek.startswith("/clanky"):
+        return ("Editor", None)
+    if zbytek.startswith("/lode"):
+        # Kód k cizí lodi si pořadatelskou výjimku hlídá sám (`poradatel_kod`).
+        return None if zbytek.endswith("/kod") else ("Spravce", None)
+
+    if (m := re.match(r'^/vysledky(?:/([a-z0-9-]+))?', zbytek)):
+        zavod = m.group(1)
+        if metoda == "GET":
+            return (NAHLED, zavod)
+        if zbytek.endswith("/publikace"):
+            return ("Spravce", None)
+        if zbytek.endswith("/stav") or zbytek.endswith("/pohar"):
+            return None
+        return ("Organizator", zavod)
+
+    if (m := re.match(r'^/zastavky(?:/([a-z0-9-]+))?', zbytek)):
+        zavod = m.group(1)
+        if "/smernice" in zbytek:
+            return (NAHLED, zavod)
+        if "/lode" in zbytek:
+            # Vyloučení patří rozhodčímu; řeší to `prepni_lod`.
+            return (NAHLED, zavod) if metoda == "GET" or zbytek.endswith("/stav") \
+                else ("Organizator", zavod)
+        # Kalendář: vypsat regatu, posunout termín, zrušit.
+        return ("Rozhodci", None)
+
+    if (m := re.match(r'^/poradatele(?:/([a-z0-9-]+))?', zbytek)):
+        return (NAHLED, None)
+
+    return None
 
 
 class H(BaseHTTPRequestHandler):
@@ -1380,6 +1542,35 @@ class H(BaseHTTPRequestHandler):
                         + ", ".join(sorted(TOKENY)) + ".")
         return True
 
+    def prava_nesedi(self):
+        """
+        Nemá volající na tuhle cestu roli? Odmítne se na jednom místě.
+
+        Běží hned za `token_nesedi`, tedy dřív než kterýkoliv handler.
+        Nepřihlášeného nechává projít: čtyřistajedničku na chráněné cestě
+        vrací handler sám a tohle pořadí se nemá měnit — jinak by se
+        „nepřihlášen" hlásilo jako „nemáš práva".
+        """
+        KDO_SE_PTA[0] = prava_uctu(self.prihlaseny())
+
+        if not self.headers.get("authorization"):
+            return False
+
+        chce = role_pro_cestu(self.command, urlparse(self.path).path)
+        if not chce:
+            return False
+
+        role, kde = chce
+        prava = KDO_SE_PTA[0]
+        if kde == "web":
+            prava = [u for u in prava if u["web"]]
+            kde = None
+        if smi_role(prava, role, kde):
+            return False
+
+        self.chyba(403, "Na tohle nemáš v ročníku roli.")
+        return True
+
     def prihlaseny(self):
         """
         Kdo volá, nebo `None` u neznámého jména — viz TOKENY.
@@ -1413,7 +1604,7 @@ class H(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_PUT(self):
-        if self.token_nesedi():
+        if self.token_nesedi() or self.prava_nesedi():
             return None
         cesta = urlparse(self.path).path
 
@@ -1656,7 +1847,7 @@ class H(BaseHTTPRequestHandler):
         return self._prazdna_odpoved()
 
     def do_POST(self):
-        if self.token_nesedi():
+        if self.token_nesedi() or self.prava_nesedi():
             return None
         cesta = urlparse(self.path).path
 
@@ -1679,7 +1870,8 @@ class H(BaseHTTPRequestHandler):
                 return self.send_error(401)
             ROCNIK_VENKU[0] = bool(self.telo_zadosti().get("publikovano"))
             return self.odpoved({"slug": D["slug"], "nazev": D["nazev"], "rok": D["rok"],
-                                 "publikovano": ROCNIK_VENKU[0], "smiPublikovat": True})
+                                 "publikovano": ROCNIK_VENKU[0],
+                                 "smiPublikovat": smi_ted("Spravce")})
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                           r'/rozjizdky/(\d+)/(stav|publikace|pohar)$', cesta)):
             return self.workflow(m.group(1), int(m.group(2)), m.group(3))
@@ -1787,18 +1979,26 @@ class H(BaseHTTPRequestHandler):
             return self.send_error(404)
 
         vstup = self.telo_zadosti()
+        muze = smi_ted
 
         if co == "publikace":
+            # „Čísla platí" říká rozhodčí, „ať to vidí veřejnost" správce.
+            if not muze("Spravce"):
+                return self.chyba(403, "Pouštět výsledky ven smí správce ročníku.")
             r["publikovano"] = bool(vstup.get("publikovano"))
-            return self.odpoved(rozjizdka_radek(r))
+            return self.odpoved(rozjizdka_radek(r, zavod))
 
         if co == "pohar":
-            # Práva mock nerozlišuje; hranici „kdo smí" hlídají testy API.
+            # Dokud jsou čísla rozepsaná, rozhoduje pořadatel; po podpisu rozhodčí.
+            if not muze(kdo_smi_do_serie(r["stavVysledku"]), zavod):
+                return self.chyba(403, "Na tohle nemáš v ročníku roli.")
             r["doSerie"] = bool(vstup.get("doSerie"))
-            return self.odpoved(rozjizdka_radek(r))
+            return self.odpoved(rozjizdka_radek(r, zavod))
 
         na, duvod = vstup.get("stav"), (vstup.get("duvod") or "").strip()
-        if (chyba := proc_nejde_vysledek(r["stavVysledku"], na, True)):
+        if na in VSECHNY_VYSLEDKY and not muze(kdo_smi_na_stav(na), zavod):
+            return self.chyba(403, f'Stav „{NAZVY_VYSLEDKU[na]}" je podpis někoho jiného.')
+        if (chyba := proc_nejde_vysledek(r["stavVysledku"], na, muze("Spravce"))):
             return self.chyba(400, chyba)
         if na == "KRevizi" and not duvod:
             return self.chyba(400, "Napiš, co je špatně. Bez důvodu začne ten, "
@@ -1807,7 +2007,7 @@ class H(BaseHTTPRequestHandler):
         if na == "KRevizi":
             r["duvodRevize"] = duvod
         r["stavVysledku"] = na
-        return self.odpoved(rozjizdka_radek(r))
+        return self.odpoved(rozjizdka_radek(r, zavod))
 
     def rozjizdka(self, zavod, cislo):
         """(zastávka, rozjížďka), nebo (None, None) s už odeslanou chybou."""
@@ -1949,6 +2149,14 @@ class H(BaseHTTPRequestHandler):
 
         telo = self.telo_zadosti()
         na, duvod = telo.get("stav"), (telo.get("duvod") or "").strip()
+
+        # Pořadatel vede přihlášky, rozhodčí vylučuje — opsané z `Prihlasky.cs`.
+        if na == "Vyloucena":
+            if not smi_ted("Rozhodci"):
+                return self.chyba(403, "O vyloučení ze závodu rozhoduje rozhodčí.")
+        elif not smi_ted("Organizator", z["slug"]):
+            return self.chyba(403, "Přihlášky vede pořadatel. Rozhodčí jen vylučuje.")
+
         if (chyba := proc_nejde_prepnout(u["stav"], na, ma_vysledky(z, lod))):
             return self.chyba(400, chyba)
         if na in S_DUVODEM and not duvod:
@@ -2054,7 +2262,7 @@ class H(BaseHTTPRequestHandler):
                 "doSerie": self.telo_zadosti().get("doSerie", True) is not False,
                 "stavVysledku": "Navrzeno", "publikovano": False, "vysledky": []}
         z["rozjizdky"].append(nova)
-        return self.odpoved(rozjizdka_radek(nova), 201)
+        return self.odpoved(rozjizdka_radek(nova, zavod), 201)
 
     def vlastnik_obrazku(self, druh, klic):
         if druh == "clanky":
@@ -2304,7 +2512,7 @@ class H(BaseHTTPRequestHandler):
         return self.odpoved(clanek_radek(c))
 
     def do_DELETE(self):
-        if self.token_nesedi():
+        if self.token_nesedi() or self.prava_nesedi():
             return None
         if (m := re.match(r'^/ja/lode/(\d+)/pripojeni/(\d+)$', urlparse(self.path).path)):
             if not self.headers.get("authorization"):
@@ -2378,7 +2586,7 @@ class H(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        if self.token_nesedi():
+        if self.token_nesedi() or self.prava_nesedi():
             return None
         rozdelena = urlparse(self.path)
         cesta, dotaz = rozdelena.path, parse_qs(rozdelena.query)
@@ -2561,7 +2769,7 @@ class H(BaseHTTPRequestHandler):
             if not self.headers.get("authorization"):
                 return self.send_error(401)
             telo = {"slug": D["slug"], "nazev": D["nazev"], "rok": D["rok"],
-                    "publikovano": ROCNIK_VENKU[0], "smiPublikovat": True}
+                    "publikovano": ROCNIK_VENKU[0], "smiPublikovat": smi_ted("Spravce")}
         elif cesta == "/sprava/naklady":
             # Co web stojí. Skutečné API to čte ze souboru platformy, který
             # na vývojovém stroji není — tady je snímek.
@@ -2575,7 +2783,15 @@ class H(BaseHTTPRequestHandler):
                      "stav": z["stav"], "pocetRozjizdek": len(z["rozjizdky"]),
                      "publikovanych": sum(1 for r in z["rozjizdky"] if r["publikovano"]),
                      "kRevizi": sum(1 for r in z["rozjizdky"]
-                                    if r["stavVysledku"] == "KRevizi")}
+                                    if r["stavVysledku"] == "KRevizi"),
+                     # Na koho se čeká. Podpis rozhodčího je na stavu zápisu,
+                     # ne na publikaci: veřejná rozjížďka může čekat zrovna tak.
+                     "kPodpisu": sum(1 for r in z["rozjizdky"]
+                                     if r["stavVysledku"] in ("Navrzeno", "Overeno",
+                                                              "Schvaleno")),
+                     "kPublikaci": sum(1 for r in z["rozjizdky"]
+                                       if r["stavVysledku"] == "Potvrzeno"
+                                       and not r["publikovano"])}
                     for z in sorted((z for z in D["zavody"] if z["druh"] == "Pohar"),
                                     key=lambda z: z["poradi"])]
         elif (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)$', cesta)):
@@ -2588,8 +2804,10 @@ class H(BaseHTTPRequestHandler):
             telo = {"serie": D["slug"], "serieNazev": D["nazev"],
                     "zavod": z["slug"], "zavodNazev": z["nazev"],
                     "stavZavodu": z["stav"], "zavodPublikovan": True,
-                    "rozjizdky": [rozjizdka_radek(r) for r in z["rozjizdky"]],
-                    "smiPridatRozjizdku": proc_nejde_na_zavod(z["stav"], z["druh"]) is None}
+                    "rozjizdky": [rozjizdka_radek(r, z["slug"])
+                                  for r in z["rozjizdky"]],
+                    "smiPridatRozjizdku": proc_nejde_na_zavod(z["stav"], z["druh"]) is None
+                    and smi_ted("Organizator", z["slug"])}
         elif (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                             r'/rozjizdky/(\d+)/navrhy$', cesta)):
             return self.navrhy(m.group(1), int(m.group(2)))
@@ -2608,7 +2826,8 @@ class H(BaseHTTPRequestHandler):
             if not self.headers.get("authorization"):
                 return self.send_error(401)
             telo = {
-                "serie": D["slug"], "serieNazev": D["nazev"], "smiZalozit": True,
+                "serie": D["slug"], "serieNazev": D["nazev"],
+                "smiZalozit": smi_ted("Rozhodci"),
                 "zastavky": [zastavka_radek(z) for z in
                              sorted(D["zavody"], key=lambda z: z["poradi"])],
             }
