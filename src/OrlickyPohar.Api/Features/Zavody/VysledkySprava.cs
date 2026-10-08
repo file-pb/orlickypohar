@@ -45,7 +45,23 @@ public record PrehledVysledkuDto(
 /// <summary>
 /// Zastávka v rozcestníku výsledků. Čísla stačí sečtená: odsud se vybírá,
 /// kam jít, ne co udělat.
+/// <para>
+/// <b>Proč tu jsou čtyři počty a ne dva.</b> Rozcestník z nich skládá
+/// „co teď", a práce rozhodčího je jiná než práce správce: rozhodčí
+/// podepisuje stav zápisu, správce pouští ven. Dokud se počítalo jen
+/// nepublikované, rozjížďka, která <b>už venku byla</b> a jen prošla
+/// revizí, rozhodčímu nikde nenaskočila — pořadatel mu ji předal a on se
+/// to nedozvěděl (průchod scénářem D3, 8. 10. 2026).
+/// </para>
 /// </summary>
+/// <param name="KRevizi">Čeká na pořadatele: vrácené s důvodem.</param>
+/// <param name="KPodpisu">
+/// Čeká na rozhodčího: zapsané, ale ještě ne potvrzené. Publikace do toho
+/// nemluví — veřejná rozjížďka může na podpis čekat zrovna tak.
+/// </param>
+/// <param name="KPublikaci">
+/// Čeká na správce: potvrzené, a přesto ne venku.
+/// </param>
 public record ZastavkaVysledkyDto(
     string Zavod,
     string Nazev,
@@ -53,7 +69,9 @@ public record ZastavkaVysledkyDto(
     StavZavodu Stav,
     int PocetRozjizdek,
     int Publikovanych,
-    int KRevizi);
+    int KRevizi,
+    int KPodpisu = 0,
+    int KPublikaci = 0);
 
 public record StavVysledkuVstup(StavVysledku Stav, string? Duvod = null);
 
@@ -81,7 +99,13 @@ public class VysledkySprava(AppDbContext db)
                 z.Slug, z.Nazev, z.Datum, z.Stav,
                 z.Rozjizdky.Count,
                 z.Rozjizdky.Count(r => r.Publikovano),
-                z.Rozjizdky.Count(r => r.StavVysledku == StavVysledku.KRevizi)))
+                z.Rozjizdky.Count(r => r.StavVysledku == StavVysledku.KRevizi),
+                z.Rozjizdky.Count(r =>
+                    r.StavVysledku == StavVysledku.Navrzeno
+                    || r.StavVysledku == StavVysledku.Overeno
+                    || r.StavVysledku == StavVysledku.Schvaleno),
+                z.Rozjizdky.Count(r =>
+                    r.StavVysledku == StavVysledku.Potvrzeno && !r.Publikovano)))
             .ToListAsync(ct);
 
     /// <summary>Rozjížďky zastávky i s počtem zapsaných výsledků.</summary>
