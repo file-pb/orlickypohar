@@ -124,6 +124,7 @@ Tyhle věci není potřeba objevovat znovu — je potřeba změřit, **jak moc v
 | ~~**Správa nemá rozcestník.** Neexistuje `/sprava` ani `/sprava/{ročník}`; jediná navigace je rozbalovací nabídka pod ikonkou účtu~~ | **hotovo 6. 10. 2026** (70cb074) — `web/app/sprava/page.tsx`, `web/app/sprava/[serie]/page.tsx`; nabídka na rozcestník vede, `web/app/profil.tsx:92` |
 | **Posádku nejde zadat ve správě.** Pořadatel ji jen vidí; zapsat ji umí kapitán ve veřejné přihlášce nebo import. Kormidelník totéž | `prihlasky/[zavod]/page.tsx:494` |
 | ~~**Koncept z telefonu se vydává za ztracenou práci, i když je to vlastní přepsaný zápis.** `rozdily` hází do jedné hromady řádek, který v uloženém zápisu vůbec není, a řádek, kde uložené má jiné. Obojí se vypíše pod „Proti uloženému zápisu má navíc tohle" a „počítej i s nimi", ve formuláři dokonce jako zápis, „který uložená čísla nemají" — a *Doplnit do formuláře* jedním klepnutím vrátí cizí opravu zpátky~~ | **nalezeno reprodukcí C12 a opraveno 8. 10. 2026** — `podleRizika` (`koncept.ts`) rozdíly rozděluje a obě obrazovky mají **dva seznamy**: „tohle uložený zápis vůbec nemá, bez doplnění se to ztratí" a „tady má uložený zápis něco jiného… mohl to být druhý zapisovatel, který tvůj zápis opravil". Ve formuláři jsou místo jednoho tlačítka dvě — *Doplnit chybějící* a *Přepsat rozdílná čísly z telefonu* |
+| **Předání opraveného zápisu zpátky rozhodčímu je tiché.** Pořadatel vrácenou práci na rozcestníku vidí; opačným směrem se nic nestane. Úkol „Ověřit a pustit ven" se počítá jen pro zastávky, kde **není venku všechno** (`web/app/sprava/[serie]/page.tsx`, `pocetRozjizdek > publikovanych`), takže rozjížďka, která **už venku je** a jen prošla revizí, rozhodčímu nikde nenaskočí — a přitom čeká na jeho podpis. Projito 8. 10. 2026: po `Vrátit do návrhu` říká rozcestník rozhodčího „Nic nečeká". **Rozhodnout, jestli má úkol viset podle stavu zápisu místo podle publikace** | `web/app/sprava/[serie]/page.tsx` |
 | ~~**Rozhodčí se k výsledkům dostane jen přes „Co teď".** V „Celém ročníku" má Kalendář a Oprávnění, ne Výsledky, a odkazy u jednotlivých regat chtějí organizátora všechny tři. Zbývá úkol „Ověřit a pustit ven", a ten se počítá jen pro rozjížďky, které nejsou k revizi — dokud je něco k revizi, rozhodčí na tu regatu odkaz nemá~~ | **hotovo 8. 10. 2026** — položka smí mít víc podob a vybere se ta, na kterou člověk má (`prvniPlatna` v `web/lib/co-smim.ts`). Rozhodčí teď vidí Výsledky v celém ročníku i všechny tři odkazy u každé regaty, se svými popisy („Ověřit rozjížďky, vrátit k revizi a pustit ven", „Kdo přijel a koho vyloučit ze závodu"). Opsané ze serveru, který ho u všech tří pouští (`VysledkyEndpoints.PohledAsync`, `PrihlaskyEndpoints.PrehledAsync`, `SmerniceEndpoints.SmiAsync`). **„Co teď" se nechalo být**: regata vrácená k revizi čeká na pořadatele, ne na rozhodčího — ten na ni teď má odkaz, i když ho to nenutí |
 | **Medailonek pořadatele je jen z kalendáře.** ~~Směrnice taky~~ — ty jsou od 6. 10. 2026 na rozcestníku ročníku | `kalendar/page.tsx:313`; směrnice `web/lib/co-smim.ts:186` |
 
@@ -523,6 +524,13 @@ rozhodnutí mezi dvěma platnými čísly — ne hledání cesty.
 
 **D2 — Ověřit výsledky.**
 *Zadání:* Ověř výsledky jedné rozjížďky a pusť je ven.
+*Projito 8. 10. 2026 jako `zdenek`:* celá řada navrženo → ověřeno →
+schváleno → potvrzeno → venku, každý krok s větou, co znamená („Čísla sedí
+s papírem z vody", „Protesty vyřízené, pořadí platí", „Konečné. Dál se
+needituje"). Po ověření se *zapsat výsledky* mění na *zobrazit zápis* —
+zápis se zavírá sám. **Veřejnou stránku ověř až novým načtením:** hned po
+*Pustit ven* ukazovala ještě starou tabulku z mezipaměti routeru a sloupec
+rozjížďky v ní chyběl. Zapsat jako „data nesedí" by bylo mylné.
 
 **D3 — Vrátit k revizi.** Dokončuje se až předáním, ne vrácením.
 *Zadání:* V těchhle výsledcích je chyba. Zařiď opravu.
@@ -531,8 +539,24 @@ udělá a pošle je zpátky, rozhodčí je pustí ven. Pochopí pořadatel, že 
 vrácení čísla přepsat nedala? Dozvěděl se, že se má něco opravit, z aplikace?
 Od 6. 10. 2026 na to rozcestník ročníku odpovídá sám: vrácené výsledky stojí
 na prvním řádku „Co teď" s počtem k revizi a se sdělením, že rozhodčí napsal,
-co je špatně (`web/app/sprava/[serie]/page.tsx:234`) — ten důvod samotný ale
+co je špatně (`web/app/sprava/[serie]/page.tsx`) — ten důvod samotný ale
 na rozcestníku není, takže se pořád měří, jestli ho člověk najde.
+
+*Projito 8. 10. 2026 (`zdenek` → `milos` → `zdenek`, `jarni-vitr`):*
+
+- **Směr k pořadateli funguje.** Vrácení chce důvod v rozbaleném poli, bez
+  něj to nejde. Miloš má na prvním řádku „Co teď" *Opravit vrácené výsledky*
+  a **důvod najde na stránce regaty**, jedno klepnutí dál.
+- **Aplikace mu řekne i další krok**: po uložení opravy stojí v hlášce
+  *„Až bude opravený celý, vrať ho na stránce regaty do návrhu, ať ho
+  rozhodčí ověří znovu."* Tohle je přesně to, co D3 měří — zapiš, jestli
+  tu větu účastník vůbec přečetl.
+- **Zpáteční směr je ale tichý** — viz audit výš. Rozhodčí se nedozví, že na
+  něj opravený zápis čeká.
+- **Důvod revize na obrazovce zůstává i po potvrzení.** Je to schválně
+  (`VysledkySprava.PrepniStavAsync`: přepíše ho až nové vrácení), ale
+  u rozjížďky označené *potvrzeno* se „K revizi: …" čte, jako by pořád něco
+  viselo. Zapiš, jestli to účastníka zmátlo — nenavrhuj.
 
 **D4 — Zapsat výsledky sám.**
 *Zadání:* Zapiš výsledky téhle rozjížďky.
