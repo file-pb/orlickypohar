@@ -1381,9 +1381,10 @@ stejně jako u směrnice; veřejné čtení zatím není, protože kdy se trať 
 ukázat divákům, patří rozhodčímu.
 
 **Nad tím API ale zatím nic nestojí** (8. 10. 2026): obrazovka není na webu
-ani v appce, bóje nejsou v `packages/api-client/openapi.json`, takže na ně
-generované typy nedosáhnou, a `tools/fake-api.py` je neumí. Podrobně
-v oddílu *Co ještě chybí (audit 8. 10. 2026)*.
+ani v appce a `tools/fake-api.py` bóje neumí, takže se nedají zkoušet ani
+lokálně. Typy už na ně dosáhnou — snímek se přegeneroval 8. 10. 2026 a obě
+kopie `schema.d.ts` cesty bójí znají. Podrobně v oddílu *Co ještě chybí
+(audit 8. 10. 2026)*.
 
 | Pravidlo | Proč |
 |---|---|
@@ -1826,7 +1827,7 @@ Počítáno na pět hodin týdně.
 | 5 | **Administrace a workflow** — zadávání, stavy, publikace, protesty a penalizace | skoro hotovo | Oprávnění, kalendář a workflow výsledků hotové 11. 9. 2026; zápis výsledků, přihlášky lodí a role od rozhodčího 14. 9. Zbývají protesty a penalizace — vedle odpovědí rozhodčího k nim chybí u výsledku pole pro číslo (`Features/Zavody/Zavod.cs:476` `Vysledek`), takže ZFP ani náprava nemají kam; `RDG` proto zatím dostává místo za posledním dokončivším (`Features/Bodovani/Bodovani.cs:58-59`) |
 | 6 | ~~**Blog a fotky** — model, import, veřejné čtení, novinky na webu~~ | **hotovo 16. 9. 2026** | Psaní článků i fotky v kartách hotové 11. 9. 2026; nahrávání do R2 i bucket s vlastní doménou 16. 9. 2026 (viz *Fotky v R2*). Úložiště se zapne jen při úplném nastavení (`Features/Fotky/Uloziste.cs:143`) a vydává `immutable` cache (`:99`); ověřeno 8. 10. 2026, že produkce fotky z `orlickypohar-foto.klihovka.cz` doopravdy servíruje |
 | 7 | **Upozornění** — veřejná i účastnická, odesílání, Outbox | 2–3 týdny, **nezačatá** | Oba předpoklady jsou hotové: identita z fáze 4 (9. 9. 2026) i napojení osoby k lodi (4. 10. 2026, `Features/Lode/VazbaKLodi.cs`, kapitánství upravené 5. 10. 2026). K 8. 10. 2026 v kódu přesto není Outbox, tabulka `Zarizeni` ani odesílací úloha. Data pro upozornění „změna trati" už jsou — přenastavená bóje se nepřepisuje (`Features/Boje/Boje.cs:57`, `:70`); chybí odeslání, ne záznam |
-| 8 | **Tracker** — ~~bóje na trati~~, záznam trasy, offline, nahrání, prohlížení | bóje **hotové 5. 10. 2026**, zbytek 4–6 týdnů | Samostatná linka; potřebuje jen identitu a kontext závodu. Bóje mají API (`Features/Boje/`), migraci `20261005193300_Boje` a deset testů (`tests/OrlickyPohar.Api.Tests/BojeTests.cs`, `PipnutiTests.cs`), ale žádnou obrazovku — `packages/api-client/openapi.json` je nezná (73 cest proti 75 v běžícím API, 8. 10. 2026). Trasa jako entita, mapa ani poloha v appce nezačaté |
+| 8 | **Tracker** — ~~bóje na trati~~, záznam trasy, offline, nahrání, prohlížení | bóje **hotové 5. 10. 2026**, zbytek 4–6 týdnů | Samostatná linka; potřebuje jen identitu a kontext závodu. Bóje mají API (`Features/Boje/`), migraci `20261005193300_Boje` a deset testů (`tests/OrlickyPohar.Api.Tests/BojeTests.cs`, `PipnutiTests.cs`), ale žádnou obrazovku, a `tools/fake-api.py` je neumí, takže se nedají zkoušet lokálně; snímek kontraktu je od 8. 10. 2026 zná. Trasa jako entita, mapa ani poloha v appce nezačaté |
 | 9 | Handicap | až bude potřeba | |
 
 Realisticky **čtyři měsíce** do použitelné verze. Fáze 1 dá něco, co jde
