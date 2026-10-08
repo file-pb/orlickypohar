@@ -167,6 +167,7 @@ z telefonu javascript potřebují (`"use client"` v
 | `/sprava/{serie}/lode` | správce | kdo patří ke které lodi, kapitánství od kódu |
 | `/sprava/{serie}/prihlasky/{zavod}` | rozhodčí, organizátor | kdo přijel, pozdní loď, startovné |
 | `/sprava/{serie}/smernice/{zavod}` | rozhodčí, organizátor | vyvěšuje a stahuje plachetní směrnice |
+| `/sprava/{serie}/boje/{zavod}` | rozhodčí, organizátor | pípne polohu bóje z telefonu, přenastaví, sebere |
 | `/sprava/{serie}/poradatele/{poradatel}` | rozhodčí, organizátor | medailonek klubu, společný všem ročníkům |
 | `/sprava` a `/sprava/{serie}` | kdokoliv s rolí | rozcestníky — vedou úkolem a jmenují roli |
 | `/sprava/opravneni-webu` | správce webu | role platné ve všech ročnících |

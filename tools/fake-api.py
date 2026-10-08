@@ -723,6 +723,95 @@ def _nasad_smernice():
     ]
 
 
+# --- Bóje na trati ----------------------------------------------------------
+# Opsané z `Features/Boje/`. Mock je potřebuje proto, že bez nich se
+# obrazovka bójí nedá zkoušet vůbec — a polohu z telefonu stejně nic
+# jiného než prohlížeč nedá.
+#
+# <b>Nic se nepřepisuje</b>, stejně jako v API: přenastavení je nový
+# záznam a starý se označí za nahrazený, sebrání je razítko. Seznam
+# proto drží i to, co už na trati nestojí.
+BOJE = {}
+BOJE_ID = [0]
+
+# Opsané z `Pipnuti` — mock musí odmítat totéž a týmiž slovy, jinak se
+# na něm hlášky nedají zkoušet.
+NAZEV_NEJVIC = 60
+NEJHORSI_PRESNOST_M = 100
+SIRKA_OD, SIRKA_DO = 49.2, 49.8
+DELKA_OD, DELKA_DO = 14.0, 14.5
+
+
+def proc_pipnuti_nejde(vstup):
+    """Proč pípnutí nejde — nebo None. Doslovně podle `Pipnuti.ProcNejde`."""
+    nazev = (vstup.get("nazev") or "").strip()
+    if not nazev:
+        return "Napiš, čím ta bóje je — třeba „bóje 1\"."
+    if len(nazev) > NAZEV_NEJVIC:
+        return f"Jméno bóje má nejvýš {NAZEV_NEJVIC} znaků."
+
+    presnost = vstup.get("presnostM")
+    if presnost is not None and presnost > NEJHORSI_PRESNOST_M:
+        return (f"Poloha je přesná jen na {round(presnost)} m. "
+                "Počkej na lepší signál a pípni znovu.")
+
+    sirka, delka = vstup.get("sirka"), vstup.get("delka")
+    if sirka is None or delka is None \
+            or not SIRKA_OD <= sirka <= SIRKA_DO or not DELKA_OD <= delka <= DELKA_DO:
+        return "Tahle poloha není na Orlíku. Zkontroluj, že telefon má signál z družic."
+
+    return None
+
+
+def boje_dto(b):
+    """Co z bóje vidí klient — `BojeDto`. Přenastavenou od platné nerozliší."""
+    return {k: b[k] for k in
+            ("id", "nazev", "poradi", "sirka", "delka", "presnostM", "postavenaV",
+             "postavil", "sebrana")}
+
+
+def _nasad_boje():
+    if not D["zavody"]:
+        return
+
+    def boje(nazev, poradi, sirka, delka, presnost, postavena, nahrazena=None, sebrana=False):
+        BOJE_ID[0] += 1
+        return {
+            "id": BOJE_ID[0], "nazev": nazev, "poradi": poradi,
+            "sirka": sirka, "delka": delka, "presnostM": presnost,
+            "postavenaV": postavena, "postavil": JA["zobrazovane"],
+            "nahrazenaV": nahrazena, "sebrana": sebrana,
+        }
+
+    # Trať u zastávky, na které stojí zkouška ovládání — tam má roli
+    # organizátora `milos`, takže se obrazovka dá zkoušet i za pořadatele,
+    # ne jen za správce. Dvě platné bóje a jedna přenastavená, aby bylo
+    # na čem vidět, že se nic nepřepsalo.
+    slug = ZAVOD_DVOU_ZAPISOVATELU or D["zavody"][0]["slug"]
+    BOJE[slug] = [
+        boje("start levý", 1, 49.5163, 14.1651, 4.0, "2026-10-08T07:12:00+00:00"),
+        boje("bóje 1", 2, 49.5201, 14.1702, 6.0, "2026-10-08T07:20:00+00:00",
+             nahrazena="2026-10-08T08:05:00+00:00"),
+        boje("bóje 1", 2, 49.5208, 14.1711, 3.0, "2026-10-08T08:05:00+00:00"),
+    ]
+
+
+def boje_zastavky(slug, i_historie):
+    """Platné podle pořadí, historie až za nimi — jako `SeznamAsync`."""
+    vse = BOJE.get(slug, [])
+    if not i_historie:
+        vse = [b for b in vse if b["nahrazenaV"] is None and not b["sebrana"]]
+    return [boje_dto(b) for b in sorted(
+        vse,
+        key=lambda b: (0 if b["nahrazenaV"] is None and not b["sebrana"] else 1,
+                       b["poradi"], _obracene(b["postavenaV"])))]
+
+
+def _obracene(iso):
+    """Řazení `ThenByDescending(PostavenaV)` bez práce s časem."""
+    return [-ord(z) for z in iso]
+
+
 def ucet_podle_id(id_uctu):
     return next((u for u in UCTY.values() if u["id"] == id_uctu), None)
 
@@ -908,6 +997,7 @@ LOD_PODLE_ID = {i: lod for lod, i in PRIHLASKA_ID.items()}
 _nasad_druhy_snimek()
 _nasad_vazby()
 _nasad_smernice()
+_nasad_boje()
 _nasad_kody()
 OTEVRENY = ("Navrzeno", "KRevizi")
 
@@ -1339,6 +1429,10 @@ def role_pro_cestu(metoda, cesta):
     if (m := re.match(r'^/zastavky(?:/([a-z0-9-]+))?', zbytek)):
         zavod = m.group(1)
         if "/smernice" in zbytek:
+            return (NAHLED, zavod)
+        if "/boje" in zbytek:
+            # Táž dvojice jako u směrnice: organizátor té regaty, nebo
+            # rozhodčí ročníku (`BojeEndpoints.SmiAsync`).
             return (NAHLED, zavod)
         if "/lode" in zbytek:
             # Vyloučení patří rozhodčímu; řeší to `prepni_lod`.
@@ -1856,6 +1950,64 @@ class H(BaseHTTPRequestHandler):
         s["duvodStazeni"] = duvod.strip()
         return self._prazdna_odpoved()
 
+    def pipni_boji(self, slug):
+        """
+        Opsané z `Features/Boje/BojeSprava.PipniAsync`.
+
+        <b>Přenastavení je nový záznam</b> a ten starý se označí za
+        nahrazený. Pořadí se po staré bóji převezme, **jméno ne** — to
+        chce API vždycky, i když komentář u `PipniAsync` slibuje opak.
+        """
+        if not self.zastavka(slug):
+            return None
+
+        vstup = self.telo_zadosti() or {}
+        if (chyba := proc_pipnuti_nejde(vstup)) is not None:
+            return self.chyba(400, chyba)
+
+        seznam = BOJE.setdefault(slug, [])
+        stara = None
+        if (nahrazuje := vstup.get("nahrazujeId")) is not None:
+            stara = next((b for b in seznam if b["id"] == nahrazuje), None)
+            if not stara:
+                return self.chyba(400, "Bóje, kterou chceš přenastavit, u téhle regaty není.")
+            if stara["nahrazenaV"] is not None:
+                return self.chyba(400, "Tahle bóje už je přenastavená.")
+
+        poradi = vstup.get("poradi") or 0
+        if poradi <= 0:
+            poradi = stara["poradi"] if stara else \
+                max((b["poradi"] for b in seznam), default=0) + 1
+
+        ted = ted_iso()
+        BOJE_ID[0] += 1
+        nova = {
+            "id": BOJE_ID[0], "nazev": (vstup.get("nazev") or "").strip(), "poradi": poradi,
+            "sirka": vstup["sirka"], "delka": vstup["delka"],
+            "presnostM": vstup.get("presnostM"),
+            "postavenaV": ted, "postavil": self.prihlaseny()["zobrazovane"],
+            "nahrazenaV": None, "sebrana": False,
+        }
+        seznam.append(nova)
+        if stara:
+            stara["nahrazenaV"] = ted
+
+        return self.odpoved(boje_dto(nova), 201)
+
+    def seber_boji(self, slug, boje_id):
+        """Razítko, ne smazání — bóje zůstává v historii."""
+        if not self.zastavka(slug):
+            return None
+
+        b = next((x for x in BOJE.get(slug, []) if x["id"] == boje_id), None)
+        if not b:
+            return self.chyba(400, "Taková bóje u téhle regaty není.")
+
+        # Druhé sebrání API nepovažuje za chybu; mock se chová stejně.
+        if not b["sebrana"]:
+            b["sebrana"] = True
+        return self._prazdna_odpoved()
+
     def do_POST(self):
         if self.token_nesedi() or self.prava_nesedi():
             return None
@@ -1893,6 +2045,12 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                           r'/rozjizdky/(\d+)/navrhy/([0-9a-f-]+)/pouzit$', cesta)):
             return self.pouzij_navrh(m.group(1), int(m.group(2)), m.group(3))
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/boje$', cesta)):
+            return self.pipni_boji(m.group(1))
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/boje/(\d+)/sebrana$', cesta)):
+            return self.seber_boji(m.group(1), int(m.group(2)))
         if (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/smernice/(\d+)/stazeni$',
                 cesta)):
@@ -2747,6 +2905,11 @@ class H(BaseHTTPRequestHandler):
                 "ucty": sorted(UCTY.values(), key=lambda u: u["naposledyPrihlasenV"],
                                reverse=True),
             }
+        elif (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/boje$', cesta)):
+            if not self.zastavka(m.group(1)):
+                return None
+            telo = boje_zastavky(m.group(1), dotaz.get("historie", [""])[0] == "true")
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/smernice$', cesta)):
             if not self.headers.get("authorization"):

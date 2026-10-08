@@ -261,6 +261,24 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
         pozadavek: { role: "Rozhodci", serie },
       },
     ],
+    // Táž dvě práva jako u směrnice, protože je tak kontroluje i API
+    // (`BojeEndpoints.SmiAsync`): organizátor té regaty, nebo rozhodčí ročníku.
+    [
+      {
+        nazev: "Bóje na trati",
+        popis: "Pípnout polohu bóje, přenastavit, sebrat z vody.",
+        kam: kam("/boje"),
+        role: "Organizator",
+        pozadavek: { role: "Organizator", serie, zavod },
+      },
+      {
+        nazev: "Bóje na trati",
+        popis: "Pípnout polohu bóje, přenastavit, sebrat z vody.",
+        kam: kam("/boje"),
+        role: "Rozhodci",
+        pozadavek: { role: "Rozhodci", serie },
+      },
+    ],
   ];
 
   return vse

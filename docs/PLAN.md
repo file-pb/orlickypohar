@@ -19,7 +19,7 @@ Co přesně chybí a v jakém pořadí to dělat, je v oddílu *Co ještě chyb�
 | Publikováno | **oba ročníky** (ověřeno na produkci 8. 10. 2026) — `/serie` vrací jen publikované (`Features/Serial/SerieEndpoints.cs:76`) a vrací oba. Dřív tu stálo „ne, proto web hlásí zatím žádný ročník"; prázdný stav v kódu zůstává (`web/app/page.tsx`), jen ho produkce nepotkává. Soubor `data/2026-nanecisto.json` je nepublikovaný schválně, na produkci se nahrává `tools/gen-mock.py --publikovat` |
 | Appka | čtecí, bez přihlášení — ročníky, zastávka, výsledky, pořadí (`app/src/app/`); v CI se jen kontrolují typy proti API, `npx tsc --noEmit` (`.github/workflows/build-deploy.yml:188`) |
 | Nasazení | automatické: push do `main` → build → háček → server |
-| Verze na produkci | `ea26b63` — API i web stejná jako `main` (`/verze` obou služeb, 8. 10. 2026) |
+| Verze na produkci | API i web běží na tom, co je v `main`. Soudí se to podle `/verze` **obou** služeb, ne podle barvy běhu — konkrétní SHA se sem nepíše, zastará každým nasazením |
 
 Bodovací pravidla jsou rozluštěná ze skutečných tabulek rozhodčího a ověřená
 proti výsledkové listině závodu (viz *Co říkají skutečná data*). ~~Otevřená
@@ -1380,11 +1380,17 @@ zapojené v `Program.cs:95` a `:211`, migrace `20261005193300_Boje`, testy
 stejně jako u směrnice; veřejné čtení zatím není, protože kdy se trať smí
 ukázat divákům, patří rozhodčímu.
 
-**Nad tím API ale zatím nic nestojí** (8. 10. 2026): obrazovka není na webu
-ani v appce a `tools/fake-api.py` bóje neumí, takže se nedají zkoušet ani
-lokálně. Typy už na ně dosáhnou — snímek se přegeneroval 8. 10. 2026 a obě
-kopie `schema.d.ts` cesty bójí znají. Podrobně v oddílu *Co ještě chybí
-(audit 8. 10. 2026)*.
+**Obrazovka je na webu od 9. 10. 2026**, ne v appce — appka nemá
+přihlášení ani polohu, a plán ji vede jako rychlejší cestu až po něm.
+`/sprava/{ročník}/boje/{regata}` pípne polohu, přenastaví a sebere;
+pořadatel dostane souřadnice i **přesnost, kterou telefon hlásí**, a
+tlačítko se odemkne, až je poloha k něčemu. Historie stojí pod tratí,
+aby bylo vidět, že přenastavením nic nezmizelo.
+
+**Co obrazovka vědomě neumí:** pípnout bez signálu (viz odrážka výš —
+API nenese čas z telefonu) a ukázat trať na mapě; zatím vypisuje
+souřadnice. Mock bóje umí od 9. 10. 2026 včetně pravidel a role, takže
+se dá zkoušet lokálně i ve zkoušce s pořadatelem.
 
 | Pravidlo | Proč |
 |---|---|
@@ -1827,7 +1833,7 @@ Počítáno na pět hodin týdně.
 | 5 | **Administrace a workflow** — zadávání, stavy, publikace, protesty a penalizace | skoro hotovo | Oprávnění, kalendář a workflow výsledků hotové 11. 9. 2026; zápis výsledků, přihlášky lodí a role od rozhodčího 14. 9. Zbývají protesty a penalizace — vedle odpovědí rozhodčího k nim chybí u výsledku pole pro číslo (`Features/Zavody/Zavod.cs:476` `Vysledek`), takže ZFP ani náprava nemají kam; `RDG` proto zatím dostává místo za posledním dokončivším (`Features/Bodovani/Bodovani.cs:58-59`) |
 | 6 | ~~**Blog a fotky** — model, import, veřejné čtení, novinky na webu~~ | **hotovo 16. 9. 2026** | Psaní článků i fotky v kartách hotové 11. 9. 2026; nahrávání do R2 i bucket s vlastní doménou 16. 9. 2026 (viz *Fotky v R2*). Úložiště se zapne jen při úplném nastavení (`Features/Fotky/Uloziste.cs:143`) a vydává `immutable` cache (`:99`); ověřeno 8. 10. 2026, že produkce fotky z `orlickypohar-foto.klihovka.cz` doopravdy servíruje |
 | 7 | **Upozornění** — veřejná i účastnická, odesílání, Outbox | 2–3 týdny, **nezačatá** | Oba předpoklady jsou hotové: identita z fáze 4 (9. 9. 2026) i napojení osoby k lodi (4. 10. 2026, `Features/Lode/VazbaKLodi.cs`, kapitánství upravené 5. 10. 2026). K 8. 10. 2026 v kódu přesto není Outbox, tabulka `Zarizeni` ani odesílací úloha. Data pro upozornění „změna trati" už jsou — přenastavená bóje se nepřepisuje (`Features/Boje/Boje.cs:57`, `:70`); chybí odeslání, ne záznam |
-| 8 | **Tracker** — ~~bóje na trati~~, záznam trasy, offline, nahrání, prohlížení | bóje **hotové 5. 10. 2026**, zbytek 4–6 týdnů | Samostatná linka; potřebuje jen identitu a kontext závodu. Bóje mají API (`Features/Boje/`), migraci `20261005193300_Boje` a deset testů (`tests/OrlickyPohar.Api.Tests/BojeTests.cs`, `PipnutiTests.cs`), ale žádnou obrazovku, a `tools/fake-api.py` je neumí, takže se nedají zkoušet lokálně; snímek kontraktu je od 8. 10. 2026 zná. Trasa jako entita, mapa ani poloha v appce nezačaté |
+| 8 | **Tracker** — ~~bóje na trati~~, záznam trasy, offline, nahrání, prohlížení | bóje **hotové 9. 10. 2026** (API 5. 10., obrazovka 9. 10.), zbytek 4–6 týdnů | Samostatná linka; potřebuje jen identitu a kontext závodu. Bóje mají API (`Features/Boje/`), migraci `20261005193300_Boje`, deset testů a od 9. 10. 2026 i obrazovku na webu (`/sprava/{ročník}/boje/{regata}`) a podporu v mocku. Trasa jako entita, mapa ani poloha v appce nezačaté |
 | 9 | Handicap | až bude potřeba | |
 
 Realisticky **čtyři měsíce** do použitelné verze. Fáze 1 dá něco, co jde
@@ -3725,10 +3731,11 @@ trasu a živé polohy.
 (`Features/Zavody/Zavod.cs`), takže ZFP ani náprava nemají kde být. Dokud to
 pole nevznikne, nejde fáze 5 dokončit ani s odpověďmi rozhodčího.
 
-**Bóje mají API, ale nikdo je nepoužívá.** Obrazovka není na webu ani
-v appce. Klient už bóje zná — snímek se přegeneroval 8. 10. 2026 a cesty
-v něm jsou —, takže zbývá ta obrazovka a podpora v `tools/fake-api.py`,
-který bóje pořád neumí.
+~~**Bóje mají API, ale nikdo je nepoužívá.**~~ **Hotové 9. 10. 2026** —
+`/sprava/{ročník}/boje/{regata}` pípne polohu z telefonu, přenastaví
+a sebere; `tools/fake-api.py` bóje umí včetně pravidel a role, takže se
+dají zkoušet lokálně. **Zbývá appka** (nemá přihlášení ani polohu)
+a **mapa** — obrazovka zatím vypisuje souřadnice.
 
 ### Co by bolelo při závodu
 
@@ -3807,7 +3814,11 @@ vůbec.
 zdůvodněné rozhodnutí: testovací hostitel nemá poskytovatele identity, takže se
 k endpointu s platným tokenem nedostaneš (`ClankySpravaTests.cs:8`). Cena toho
 rozhodnutí je, že **zapomenutá kontrola práv** na jednom z 23 souborů endpointů
-by neprasknula — a rozsahy oprávnění nemají ani jeden test. Web a appka nemají
+by neprasknula — a rozsahy oprávnění nemají ani jeden test. **Jedna polovina
+té ceny je od 8. 10. 2026 zaplacená**: `OchranaCteniTests` si endpointy
+prochází samy a vynucují, že každý GET pod `/sprava/` a `/ja/` bez přihlášení
+odmítne; `OchranaZapisuTests` dělají totéž pro zápisy. Nehlídají ale **roli**,
+jen ten práh. Web a appka nemají
 test žádný, takže změnu práv na serveru nikdo nehlídá proti
 `web/lib/co-smim.ts`, který je má doslova přepsané. Dependabot sleduje NuGet
 a GitHub Actions, ne npm.
@@ -3827,8 +3838,8 @@ To nejsou mezery, to jsou rozhodnutí.
 
 ### Pořadí
 
-1. **Přegenerovat klienta z OpenAPI** — půl hodiny a stojí před každou prací
-   na bójích.
+1. ~~**Přegenerovat klienta z OpenAPI**~~ — **hotovo 8. 10. 2026**, a na
+   něm postavená ~~**obrazovka bójí**~~ **9. 10. 2026**.
 2. **Vypsat jednu zastávku 2027** a vyvěsit u ní směrnici. Obsah, ne kód,
    a teprve tím se celý řetěz přihlášek a vývěsky zkusí na skutečných datech.
 3. **Pruh ukázky podle ročníku**, protože bod 2 ho hned odhalí.
@@ -3864,14 +3875,13 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
    `/verze` a najde novější SHA, než posílal — a skončí chybou, místo aby
    tvrdil úspěch. Je to ta kontrola, co mluví (6. 10. 2026 se to stalo
    dvakrát). **Soudit se má podle `/verze` obou služeb**, ne podle barvy
-   běhu; dokud sedí s `main`, je produkce v pořádku. **Zámek na serveru
-   už je** — `deploy-hook/hook.py:200` v platformě pustí jedno nasazení
-   a druhému vrátí `409`. Chybí kontrola verze **pod** tím zámkem: háček
-   hlavičku `X-Deploy-Sha` vůbec nečte, takže kontrola *Nevracet produkci
-   do minulosti* běží jen v CI mimo zámek a zavírá jen naše vlastní cesty
-   (`.github/workflows/build-deploy.yml:245`, komentář na :289). Jako
-   `platform#7` se tedy vede ta kontrola pod zámkem, ne zámek sám
-   (ověřeno 8. 10. 2026).
+   běhu; dokud sedí s `main`, je produkce v pořádku. **`platform#7` je od
+   8. 10. 2026 zavřený** (`e0f867b` v platformě): háček pod jedním zámkem
+   (`deploy-hook/hook.py:76`) přečte, co naposled nasadil, porovná to
+   s hlavičkami `X-Deploy-Sha` a `X-Deploy-Poradi` (čas commitu) a starší
+   build odmítne `409` (`hook.py:286-293`); stav zapisuje taky pod zámkem.
+   Je to tedy **záruka, ne zúžení okna** — ověřeno 9. 10. 2026 přečtením
+   háčku, zkoušku obou pořadí má platforma ve `deploy-hook/zkouska.py`.
 4. **Pravidla seriálu jsou od 22. 9. 2026 v kódu** (oddíl *Pravidla
    seriálu od rozhodčího*): neúčast, bonus 24hodinovky, dvacítka za
    diskvalifikaci, dva škrty, rozstřel. Zbývají drobné otázky vypsané
