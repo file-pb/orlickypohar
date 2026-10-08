@@ -103,9 +103,10 @@ a jeho položky se počítají z týchž pravidel jako na serveru. Scénáře o 
 kam se kdo dostane, tedy platí; scénáře o tom, co mu server zakáže, zatím ne.
 
 **Druhý zapisovatel na mocku je.** Mock bere token jako jméno účtu
-(`TOKENY` v `tools/fake-api.py:371`): `filip` je správce ročníku, `milos`
-organizátor jedné zastávky, neznámé jméno mock odmítne čtyřistajedničkou
-(`tools/fake-api.py:1360`) — dřív padalo na Filipa (změněno 6. 10. 2026).
+(`TOKENY` v `tools/fake-api.py`): `filip` je správce ročníku, `milos`
+organizátor jedné zastávky, `zdenek` rozhodčí celého ročníku (přidán
+8. 10. 2026, aby skupina D nejela jako správce), neznámé jméno mock odmítne
+čtyřistajedničkou — dřív padalo na Filipa (změněno 6. 10. 2026).
 **C7 je tím celé
 proveditelné** — ověřeno průchodem od konfliktu přes porovnání dvou sloupců
 až po ruční společný výsledek.
@@ -123,6 +124,7 @@ Tyhle věci není potřeba objevovat znovu — je potřeba změřit, **jak moc v
 | ~~**Přihlášky nemají v nabídce položku.** Jde se na ně oklikou z kalendáře („přihlášky →") nebo z výsledků regaty („přihlášené lodě →")~~ | **hotovo 6. 10. 2026** — rozcestník ročníku vypisuje u každé regaty Výsledky · Přihlášky · Plachetní směrnice (`web/lib/co-smim.ts:179`, vykresluje `web/app/sprava/[serie]/page.tsx:163`). V rozbalovací nabídce pod ikonkou účtu položka není a nemá být — ta vede jen na rozcestník |
 | ~~**Správa nemá rozcestník.** Neexistuje `/sprava` ani `/sprava/{ročník}`; jediná navigace je rozbalovací nabídka pod ikonkou účtu~~ | **hotovo 6. 10. 2026** (70cb074) — `web/app/sprava/page.tsx`, `web/app/sprava/[serie]/page.tsx`; nabídka na rozcestník vede, `web/app/profil.tsx:92` |
 | **Posádku nejde zadat ve správě.** Pořadatel ji jen vidí; zapsat ji umí kapitán ve veřejné přihlášce nebo import. Kormidelník totéž | `prihlasky/[zavod]/page.tsx:494` |
+| **Rozhodčí se k výsledkům dostane jen přes „Co teď".** V „Celém ročníku" má Kalendář a Oprávnění, ne Výsledky (ta položka chce organizátora, `web/lib/co-smim.ts:133`), a odkazy u jednotlivých regat chtějí organizátora všechny tři (`co-smim.ts:168,175,182`). Zbývá tedy úkol „Ověřit a pustit ven", a ten se počítá jen pro rozjížďky, které **nejsou k revizi** (`web/app/sprava/[serie]/page.tsx:263`). Dokud je něco k revizi, rozhodčí na tu regatu odkaz nemá — ačkoliv server ho k výsledkům pouští (`VysledkyEndpoints.cs:480`) a potvrzení i vrácení je jeho práce (`Workflow.cs:51`). **Změřit v D2 a D3**, pak rozhodnout | `web/lib/co-smim.ts:133` |
 | **Medailonek pořadatele je jen z kalendáře.** ~~Směrnice taky~~ — ty jsou od 6. 10. 2026 na rozcestníku ročníku | `kalendar/page.tsx:313`; směrnice `web/lib/co-smim.ts:186` |
 
 Prokázaná chyba z auditu je podklad pro opravu **i když ji zkouška mine.** Malá
@@ -131,7 +133,7 @@ zkouška není důkaz, že nevadí — jen ji nepotkala.
 ## Role, se kterými se zkouší
 
 Role se udělují na `/sprava/{ročník}/opravneni`. Pro zkoušku je potřeba
-**pět účtů**, ne jeden s přepínáním: půlka nálezů je o tom, co kdo v nabídce
+**šest účtů**, ne jeden s přepínáním: půlka nálezů je o tom, co kdo v nabídce
 vidí.
 
 1. **Nepřihlášený** — běžný návštěvník.
@@ -140,6 +142,51 @@ vidí.
 4. **Rozhodčí ročníku.**
 5. **Správce ročníku** a zvlášť **správce celého webu bez role v ročníku**.
 
+### Který účet kterou skupinu odjede
+
+Předchozí verze tohohle dokumentu jmenovala role, které se mají zkoušet, ale
+ne účty, kterými se zkoušejí — a ty se od nich v mocku lišily. Tabulka je
+**ověřená v mocku 8. 10. 2026** (`tools/fake-api.py`: `OPRAVNENI` a
+`_nasad_vazby`), a kde se liší role zadaná od role skutečné, stojí to u ní.
+
+| Skupina | Účet (`op_token`) | Role, kterou doopravdy má | Výchozí stav | Platnost závěru |
+|---|---|---|---|---|
+| A | žádný — bez cookie | — | ročník je publikovaný | plná |
+| B1–B4 | `jana` | **majitelka** lodi JOY (CZE 457), ve správě nic | k lodi nikdo další | plná, s výhradou níž |
+| B5 | `petr` | posádka lodi SENDY (CZE 204) | loď **nemá odpovědného** | plná |
+| C | `milos` | organizátor **jen zastávky `jarni-vitr`** | 11 účastí, 1 rozjížďka | **jen `jarni-vitr`**, viz níž |
+| C5, C7 na `izolepa` | `filip` + `milos` | správce ročníku + organizátor cizí zastávky | 22 účastí, 3 rozjížďky | **tempo a konflikt ano, rozsah role ne** |
+| D1–D3 | `zdenek` | **rozhodčí celého ročníku** | výsledky `Potvrzeno`, nic nečeká | plná pro navigaci |
+| D4, D5 | `zdenek` | tamtéž | — | **jen hláška** — mock odmítá z pravidel stavu, ne z role |
+| E1–E3 | `filip` | správce ročníku (`zavod: null`) | LUNA má kapitána od kódu → *ke kontrole* | plná, výhrada u E2 |
+| E4 | `filip` | tamtéž | Jana je v seznamu účtů bez role | **jen zadání** — udělenou roli mock nevymáhá |
+| E5 | `dana` | správkyně **celého webu**, v ročníku nic | — | plná |
+
+Tři věci z toho, které měří něco jiného, než co je v názvu skupiny:
+
+- **Skupina se jmenuje „kapitán", účet je majitelka.** `jana` je *majitel*,
+  ne *kapitán*. Práva jsou tatáž — odpovědný za loď je majitel i kapitán
+  (`Features/Lode/Kapitanstvi.cs`, `Odpovedny`) — ale **kapitána bez
+  majitelství mock nemá**, takže se nezkouší, jestli se obě role na
+  obrazovce chovají stejně. Zapiš u B, kterou rolí se jelo.
+- **Miloš má roli jen na `jarni-vitr`** (`tools/fake-api.py`,
+  `ZAVOD_DVOU_ZAPISOVATELU` je první odjetá zastávka s rozjížďkou), a ta má
+  **11 účastí**. C5 chce 25–30 lodí a konflikt v C7 je zreprodukovaný na
+  `izolepa` s 22. **Obojí v jednom průchodu nejde:** na `izolepa` Miloš roli
+  nemá a projde jen proto, že mock u zápisu rozsah nevymáhá. Rozhodnutí:
+  **tempo a konflikt se jedou na `izolepa`** (tam je na čem), a do zápisu se
+  napíše, že se **neměřilo, kam se dostane organizátor jedné zastávky** —
+  to je samostatné krátké sezení na `jarni-vitr`.
+- **E2 si Filip potvrzuje vlastní kapitánství.** Loď *ke kontrole* je LUNA
+  a kapitána od kódu na ní má právě `filip`. Scénář se tím dá odjet, ale
+  otázka „pozná z obrazovky, proč je ke kontrole" se ptá člověka, který
+  tam vidí své jméno. Pro čisté měření přehoď vazbu na jiný účet.
+
+Kombinace, u kterých se **závěr nedělá**, se v zápisu značí `NEODJETO` s
+důvodem — ne „prošlo". Dnes to jsou: **E4 v plném rozsahu**, **D4 a D5
+jako odmítnutí práva** a **celá skupina C jako organizátor jedné zastávky**,
+pokud se jelo na `izolepa`.
+
 ## Příprava dat a lidí
 
 Bez tohohle se měří improvizovaná příprava, ne aplikace. Každý scénář má mít
@@ -147,11 +194,17 @@ Bez tohohle se měří improvizovaná příprava, ne aplikace. Každý scénář
 telefon.
 
 - **Dlouhý seznam do cíle (C5).** V mocku má nejvíc lodí `izolepa` — 22 účastí
-  z 37 lodí v ročníku. Na 25–30 se dostane doplněním `ucasti`
-  v `data/2026-nanecisto.json`. Podobná jména tam už jsou (ČERVENÉ CAFE /
-  MODRÉ CAFE, SEA MOUSE III / FAR STAR III / Charlotte III) — hledání v seznamu
-  se zkouší proti nim. Dojezdy musí přijít **těsně za sebou**, ne vlastním
-  tempem: čte je někdo druhý ze seznamu.
+  z 37 lodí v ročníku, a to stačí; doplňovat `ucasti` v
+  `data/2026-nanecisto.json` není potřeba. Podobná jména tam už jsou (ČERVENÉ
+  CAFE / MODRÉ CAFE, SEA MOUSE III / FAR STAR III, MICHELLE / MICINY) —
+  hledání v seznamu se zkouší proti nim. Dojezdy musí přijít **těsně za
+  sebou**, ne vlastním tempem; přesný scénář je u C5.
+- **Prázdná rozjížďka pro C5.** Všechny tři rozjížďky `izolepy` mají dojezdy
+  zapsané, a do obsazeného cíle se klepat nedá — dojetá loď ze seznamu zmizí.
+  Zadání proto začíná **odstartováním nové rozjížďky**: ta vyjde prázdná jako
+  návrh (`tools/fake-api.py`, `pridej_rozjizdku`) a na odjeté zastávce ji
+  založit jde (`proc_nejde_na_zavod` pouští `Vypsany` i `Odjety`). Ověřeno
+  čtením kódu 8. 10. 2026, **projít si to před sezením stejně.**
 - **Stav výsledků.** Zapisovat jde na zastávce ve stavu `Vypsany` nebo `Odjety`
   (`tools/fake-api.py:867`) a jen dokud jsou výsledky `Navrzeno` nebo `KRevizi`
   (`tools/fake-api.py:858,877`). Vybrat konkrétní rozjížďku předem.
@@ -179,7 +232,8 @@ telefon.
      ```
 
   2. Kdo je kdo, se řídí cookie `op_token`. Jména zná mock: **`filip`**
-     (správce ročníku), **`milos`** (pořadatel jedné zastávky), **`dana`**
+     (správce ročníku), **`milos`** (pořadatel jedné zastávky — `jarni-vitr`),
+     **`zdenek`** (rozhodčí celého ročníku, přidán 8. 10. 2026), **`dana`**
      (správkyně celého webu bez role v ročníku), **`jana`** (majitelka lodi
      bez role ve správě), **`petr`** (posádka lodi bez kapitána) a `vyvoj`
      jako Filip.
@@ -285,11 +339,43 @@ zastavilo, co zkoušel a jestli našel, kdo to zapsat může (kapitán, import).
 ještě musí udělat ručně? Pak jde A6 s původní adresou.
 
 **C5 — Zápis z cíle.** Na telefonu, venku, jednou rukou.
-*Zadání:* Odstartuj rozjížďku a zapiš, jak lodě dojely. Jedna nedojela.
-*Pro moderátora:* **to hlavní z celé zkoušky.** 25–30 přihlášených, dojezdy
-těsně za sebou, jméno lodi čte někdo druhý. Zvládne to bez pomoci? Ví po
-každém klepnutí, že je uloženo? Stíhá tempo, nebo hledá v seznamu? Zmeškanou
-loď zapiš v okamžiku, kdy nastane, otázky odlož za dávku.
+*Zadání:* Odstartuj rozjížďku a zapiš, jak lodě dojely. Budu ti je číst.
+*Pro moderátora:* **to hlavní z celé zkoušky.** Dřív tu stálo jen „dojezdy
+těsně za sebou" — to si každý moderátor odmoderuje jinak a dvě sezení pak
+nejde srovnat. Tempo je proto **dané, čte se z papíru se stopkami** a
+nepřizpůsobuje se tomu, jak účastník stíhá. Zastávka `izolepa` (22 účastí),
+nově odstartovaná rozjížďka.
+
+**Co se čte** — jméno, a v závorce kolik sekund po předchozím:
+
+| # | Loď | po |
+|---|---|---|
+| 1 | MAMBA | — |
+| 2 | ČERVENÉ CAFE | 4 s |
+| 3 | MODRÉ CAFE | 2 s |
+| 4 | SEA MOUSE III | 6 s |
+| 5 | FAR STAR III | 2 s |
+| 6 | LUNA | 8 s |
+| 7 | THEA | 3 s |
+| 8 | Zephyr | 2 s |
+| 9 | MICHELLE | 1 s |
+| 10 | MICINY | 1 s |
+| 11 | HOGAN | 10 s |
+| 12 | AVENIR | 5 s |
+
+Pak jediná věta: **„SOCKA nedojela."** Celé čtení je asi 44 sekund. Trojice
+dvojic je tam schválně: dvě CAFE a dvě „III" po dvou sekundách a MICHELLE
+s MICINY po jedné — tam se pozná, jestli seznam jde prohledat, nebo se v něm
+chybuje.
+
+**Správný výsledek:** těch dvanáct lodí přesně v tomhle pořadí, SOCKA jako
+DNF, nic dalšího v rozjížďce. Porovnává se po scénáři **novým nezávislým
+načtením**, ne zelenou hláškou.
+
+*Sleduj:* zvládne to bez pomoci? Ví po každém klepnutí, že je uloženo? Stíhá
+tempo, nebo hledá v seznamu — a u které dvojice? **Otázky odlož až za celou
+dávku**; zmeškanou loď (SOCKA) ohlas v okamžiku, kdy na ni dojde řada, ne
+později.
 
 **C6 — Oprava omylu.**
 *Zadání:* Dvě lodě dojely v jiném pořadí, než jsi zapsal, a jedna ti vypadla.
@@ -355,16 +441,67 @@ zkoušky.
 **C8 — Papír.**
 *Zadání:* Dopiš zápis doma z fotky papíru a přilož ji.
 
-**C9 — Přerušení zápisu.**
-*Zadání:* (uprostřed C5, bez signálu) Zamkni telefon, podívej se do zprávy
-a vrať se k zápisu. Pokračuj. — potom: — Načti stránku znovu.
-*Pro moderátora:* dvě různé věci. Přepnutí aplikace zkouší, jestli přežije
-otevřená stránka; **nové načtení s neodeslanými dojezdy** zkouší obnovu
-konceptu z telefonu (`cil.tsx:163`) — bez něj by nefunkční obnova zůstala
-schovaná za tím, že karta nezmizela. Když se zápis mezitím změnil, nabídne
-*Odeslat z telefonu a přepsat uložené / Zahodit zápis z telefonu*
-(`cil.tsx:382,392`). Ověř, že se **nic
-neztratilo**, a zapiš, jestli po návratu věděl, jak na tom je.
+**C9 — Přerušení zápisu: přepnutí aplikace.** Se signálem.
+*Zadání:* (uprostřed C5) Zamkni telefon, podívej se do zprávy a vrať se
+k zápisu. Pokračuj.
+*Pro moderátora:* zkouší se **jediná věc** — přežije otevřená stránka
+uspání. Obrazovka si po návratu načítá čerstvý zápis (`cil.tsx:214`). Ověř,
+že nechybí ani jeden dojezd, a zapiš, jestli účastník po návratu věděl, na
+čem je. Dřív byly tyhle tři scénáře jeden a zápis z nich nešel rozdělit:
+nebylo poznat, co selhalo při uspání a co až při novém načtení.
+
+**C10 — Přerušení zápisu: nové načtení bez signálu.**
+*Zadání:* (navazuje, s neodeslanými dojezdy) Vypni signál a načti stránku
+znovu.
+*Pro moderátora:* **chybová stránka prohlížeče není ztráta dat** a nesmí se
+tak zapsat. Web je serverový, takže bez sítě se stránka nemá z čeho
+vykreslit; měří se tu jen tohle: **dozví se účastník, že jeho dojezdy
+pořád existují**, nebo si z chybové stránky odvodí, že o ně přišel? Jeho
+vlastní věta je celý výsledek scénáře. Zápis je `samostatně / s pomocí /
+nedokončil` **o rozpoznání stavu**, ne o dokončení úkolu — úkol tu žádný
+dokončitelný není.
+
+**C11 — Přerušení zápisu: obnova po vrácení signálu.**
+*Zadání:* Vrať signál a dostaň zápis do pořádku.
+*Pro moderátora:* tady se teprve zkouší **obnova konceptu z telefonu**
+(`cil.tsx:163`) — bez samostatného scénáře zůstává nefunkční obnova
+schovaná za tím, že karta předtím nezmizela. Když se zápis mezitím změnil,
+nabídne se *Odeslat z telefonu a přepsat uložené* / *Zahodit zápis
+z telefonu* (`cil.tsx:382,392`). **Čeká se**, že se nic neztratilo a že
+výsledek projde kontrolou novým nezávislým načtením. Zapiš, kterou
+z nabídek zvolil a proč — a jestli mu bylo jasné, co druhá udělá.
+
+**C12 — Uložení, o kterém telefon neví.** Nejzrádnější případ u vody.
+*Zadání:* (s neodeslanými dojezdy v telefonu) Ulož zápis a zařiď, aby ve
+výsledcích bylo správné pořadí.
+*Pro moderátora:* situace, kterou žádný scénář nepokrýval: **server zápis
+přijal, ale odpověď se k telefonu nevrátila.** Telefon si drží koncept jako
+neodeslaný, mezitím druhý zapisovatel opraví záměnu, a účastník pak klepne
+na uložení znovu.
+
+*Jak ji vyrobit* (bez simulace sítě, přes tři kroky, na `izolepa`):
+
+1. **Telefon A** naklepe dojezdy a **neuloží** — v telefonu leží
+   neodeslaný koncept.
+2. **Připravený příkaz** s hlavičkou `Authorization: Bearer filip` pošle
+   **tutéž sadu** na server (s čerstvou revizí, bez ní ji server odmítne).
+   Tím je na serveru zápis účastníka, o kterém jeho telefon neví.
+3. **Telefon B** (`milos`) načte čerstvý stav, prohodí dvě lodě a uloží.
+4. **Telefon A** klepne na uložení → konflikt a porovnání.
+
+*Správné řešení je zahodit koncept*, protože server už obsahuje totéž plus
+opravu od B. Nebezpečí je přesně obrácené: *Odeslat z telefonu a přepsat
+uložené* vrátí záměnu zpátky. **Měří se tedy jediná otázka:** pozná
+účastník z porovnání, že jeho koncept **nemá nic navíc**, a že tudíž není
+co odesílat? Zapiš jeho vlastní věty, čím se rozhodl.
+
+*Stav scénáře:* **ověřeno na API 8. 10. 2026** — na odjeté `izolepě` jde
+založit novou rozjížďku a vyjde prázdná s revizí 0, uložení se starší revizí
+vrací 409 s hláškou „Rozjížďku mezitím uložil někdo jiný", sada **bez**
+revize 400, a porovnání vydá **dva sloupce** (Filip a Miloš, každý se svým
+pořadím). **V prohlížeči zreprodukované není** — chování konceptu v telefonu
+a to, co o něm porovnání napíše, zbývá projít ručně. Než se s tímhle
+scénářem sedne k člověku, projít si ho sám, stejně jako u C7.
 
 ## D. Rozhodčí ročníku
 
@@ -459,13 +596,16 @@ dohromady **do dvou hodin včetně rozboru** — kdyby to mělo přetéct, obět
 bod 4, ne rozbor.
 
 1. Zapsat dávku dojezdů venku na telefonu — **C5**
-2. Opravit záměnu a vynechaný dojezd, pokračovat bez signálu, obnovit zápis
-   po přerušení a po novém načtení — **C6, F3, C9**
+2. Opravit záměnu a vynechaný dojezd, pak celá cesta výpadkem: uspání,
+   nové načtení bez signálu, obnova po vrácení signálu — **C6, C9, C10,
+   C11, F3**
 3. Vyřešit připravený konflikt a dojít ke společnému výsledku (dva různé
    účty, jinak není co porovnávat) — **C7**
 4. Vyvěsit a stáhnout PDF, ověřit veřejný stav — **C3, C4, A6**
 
-**Rezerva**, když zbude čas: **C1** (pozdě příchozí loď). Do prvního sezení
+**Rezerva**, když zbude čas: **C1** (pozdě příchozí loď) a **C12**
+(uložení, o kterém telefon neví) — C12 až po vlastní reprodukci
+v prohlížeči, dokud není, do sezení nepatří. Do prvního sezení
 nepatří skupina B ani F1 — ~~na mocku nejsou proveditelné~~; od 6. 10. 2026 na
 mocku jdou (viz výš), ale první sezení je o pořadateli a F1 chce čerstvého
 člověka.
@@ -481,8 +621,14 @@ Aby z každého nového názoru nevznikla další přestavba nabídky:
 - **Další navigační zásek** potřebuje **druhé nezávislé pozorování**, nebo
   potvrzení auditem, že cesta chybí. Jedno zaseknutí jednoho člověka je
   podnět, ne nález.
-- Po opravách přijde **čerstvý pořadatel na hlavní úkoly** (C5, C6, C7).
-  **Kolo končí, když je dokončí samostatně a výsledná data sedí.**
+- Po opravách přijde **čerstvý pořadatel na hlavní úkoly** (C5, C6, C7)
+  **a na výpadek s obnovou** (C10, C11, F3). Výpadek do závěrečného
+  průchodu patří proto, že se u vody stane častěji než konflikt a jeho
+  selhání je tiché: zelená hláška zůstane, chybí až data. Obrazovka
+  o výpadku je dnes čtyři měsíce stará a žádným sezením neprošla.
+- **Kolo končí, když ty úkoly dokončí samostatně a výsledná data sedí** —
+  kontrolou novým nezávislým načtením, ne hláškou. U C10 se za dokončení
+  bere **rozpoznání stavu**, ne provedení úkolu; úkol tam žádný není.
 
 ## Z čeho se bude vycházet při úpravách
 

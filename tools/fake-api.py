@@ -357,6 +357,16 @@ WEBOVA = {
     "web": ["Spravce"],
 }
 
+# Rozhodčí celého ročníku. Existuje kvůli skupině D zkoušky ovládání: role
+# `Rozhodci` **nepokrývá** `Organizator` (`web/lib/co-smim.ts:57`), takže
+# rozhodčí vidí v rozcestníku jiné položky než správce. Bez vlastního účtu
+# by se skupina D odjela jako Filip a měřilo by se, kam se dostane správce.
+ROZHODCI = {
+    "id": "01927f4e-0000-7000-8000-000000000006",
+    "zobrazovane": "Zdeněk Vávra",
+    "email": "zdenek@priklad.cz",
+}
+
 # Mock token nerozbaluje — nemá čím a nemá proč. Bere ho jako jméno účtu:
 # `Bearer milos` je Miloš. Dva různé tokeny jsou tedy dva lidé a stejný token
 # ve dvou kartách je jeden člověk; **obojí je potřeba**, protože jeden účet na
@@ -368,7 +378,8 @@ WEBOVA = {
 # a měřilo by se něco jiného, než co se zadalo (oponentura, 6. 10. 2026).
 # Kompatibilní výchozí token má proto vlastní jméno — `vyvoj` je Filip, takže
 # kdo chce starý postup „přihlásit se čímkoliv", napíše ho výslovně.
-TOKENY = {"filip": JA, "vyvoj": JA, "milos": MILOS, "dana": WEBOVA}
+TOKENY = {"filip": JA, "vyvoj": JA, "milos": MILOS, "dana": WEBOVA,
+          "zdenek": ROZHODCI}
 
 # Náklady: snímek souboru `stav/naklady.json`, který na serveru zapisuje
 # přehled platformy. Čísla jsou skutečná (24. 9. 2026), jen zamrzlá —
@@ -472,7 +483,11 @@ OPRAVNENI = [{"id": 1, "uzivatelId": JA["id"], "zobrazovane": JA["zobrazovane"],
              {"id": 2, "uzivatelId": MILOS["id"], "zobrazovane": MILOS["zobrazovane"],
               "email": MILOS["email"], "role": "Organizator",
               "zavod": ZAVOD_DVOU_ZAPISOVATELU,
-              "udelenoV": "2026-04-01T00:00:00+00:00"}]
+              "udelenoV": "2026-04-01T00:00:00+00:00"},
+             {"id": 3, "uzivatelId": ROZHODCI["id"],
+              "zobrazovane": ROZHODCI["zobrazovane"],
+              "email": ROZHODCI["email"], "role": "Rozhodci", "zavod": None,
+              "udelenoV": "2026-02-01T00:00:00+00:00"}]
 # Účty, kterým jde roli udělit. Skutečné API zná jen ty, kdo se aspoň
 # jednou přihlásili — bez toho by se nedal vyzkoušet stav „účet neexistuje",
 # a ten je na obrazovce vidět nejčastěji.
@@ -494,6 +509,10 @@ UCTY = {u["email"]: u for u in [
     {**{k: v for k, v in WEBOVA.items() if k != "web"},
      "zalozenV": "2026-01-15T00:00:00+00:00",
      "naposledyPrihlasenV": "2026-10-01T09:12:00+00:00"},
+    # Na konec schválně: `_nasad_vazby` věší vazby prvním třem účtům podle
+    # pořadí a vkládat doprostřed by přestavělo výchozí stav lodí.
+    {**ROZHODCI, "zalozenV": "2026-02-01T00:00:00+00:00",
+     "naposledyPrihlasenV": "2026-10-05T18:00:00+00:00"},
 ]}
 # Petr a Jana jsou v seznamu účtů odjakživa a `_nasad_vazby` je věší k lodím:
 # Petr je posádka lodi, která **nemá kapitána**, Jana je **majitelka** jiné.
