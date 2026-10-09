@@ -4305,10 +4305,20 @@ Klient se přegeneruje **až po nasazení** (`packages/api-client/generuj.sh`
 stahuje dokument z běžícího API), takže `schema.d.ts` nese majitele ještě
 o jedno PR dýl; web ho mezitím nečte.
 
-**O zpracování osobních údajů není nikde nic.** Formulář sbírá e-mail, telefon,
-jméno a příjmení kapitána, volný text posádky a číslo ČSJ, a u zaškrtávátka
-stojí, že se pořadatel může ozvat — ale není stránka, na kterou by to
-odkázalo. Minimalizace a retence hotové jsou a jsou dobré
+~~**O zpracování osobních údajů není nikde nic.**~~ **Stránka `/osobni-udaje`
+hotová 9. 10. 2026**, odkazuje na ni zaškrtávátko v přihlášce i kebab v menu.
+Rozhodnutí, která si to vyžádalo (Filip, 9. 10. 2026): **správci jsou dva** —
+provozovatel webu za web a databázi, pořadatel za přihlášky na svou zastávku;
+**žádost jde na obě strany**, na adresu provozovatele i pořadateli regaty;
+**retence zůstává ta, kterou dělá kód**. Stránka pokrývá přihlášky, výsledky
+a startovní listiny, účty i fotky.
+
+**Adresa provozovatele je v konfiguraci** (`KONTAKT_UDAJE`), ne v kódu — a
+dokud je prázdná, stránka o ní mlčí a pošle čtenáře za pořadatelem. Doplnit ji
+je jeden řádek v compose.
+
+Zbývá na tom jediné, co stránka přiznává nahlas: **smazat se pořád nedá
+tlačítkem**, mazací endpoint nad lodí, osobou ani ročníkem neexistuje. Minimalizace a retence hotové jsou a jsou dobré
 (`UklidKontaktu.cs` maže kontakty starší než začátek předloňského roku),
 jen se netýkají jmen posádky ani záznamu osoby, a **smazat se nedá nic**:
 mazací endpoint nad lodí, osobou ani ročníkem neexistuje. Žádost „smažte mě"
@@ -4379,11 +4389,10 @@ To nejsou mezery, to jsou rozhodnutí.
 2. ~~**Pruh ukázky podle ročníku.**~~ **Hotovo 9. 10. 2026.** Mělo to být dřív
    než vypsaná zastávka — a ukázalo se, že pozdě to bylo už tak: pruh nad
    skutečným 2027 nevisel „až se vypíše", ale od jeho publikace 8. 10. 2026.
-3. **Před otevřením přihlášek, ne po.** ~~Majitel z našeptávače~~ **hotovo
-   9. 10. 2026** — a nebyl to jeden řádek, jména vypisoval i veřejný formulář.
-   **Stránka o osobních údajích zbývá** a čeká na Filipa: kdo je správce
-   údajů, kam se píše žádost o výmaz a jestli platí retence, kterou dnes dělá
-   `UklidKontaktu`.
+3. ~~**Majitel z našeptávače a stránka o osobních údajích**~~ — před otevřením
+   přihlášek, ne po. **Obojí hotové 9. 10. 2026.** Majitel nebyl jeden řádek,
+   jména vypisoval i veřejný formulář; stránka stojí na Filipových
+   rozhodnutích o správcích, kontaktu a retenci a adresu bere z konfigurace.
 4. **Vypsat jednu zastávku 2027** a vyvěsit u ní směrnici. Obsah, ne kód,
    a teprve tím se celý řetěz přihlášek a vývěsky zkusí na skutečných datech.
    **Je to až čtvrtý bod, ne druhý** (opraveno 9. 10. 2026). `Vypsany`

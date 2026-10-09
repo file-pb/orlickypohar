@@ -278,7 +278,8 @@ function Formular({
       <label style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
         <input name="souhlas" type="checkbox" required style={{ width: "auto", marginTop: "0.2rem" }} />
         <span>
-          Loď smí být ve startovní listině a pořadatel se mi může ozvat na uvedený kontakt.
+          Loď smí být ve startovní listině a pořadatel se mi může ozvat na uvedený kontakt.{" "}
+          <Link href="/osobni-udaje">Co se s údaji děje</Link>.
         </span>
       </label>
 
