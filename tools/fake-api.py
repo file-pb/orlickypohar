@@ -360,12 +360,14 @@ MILOS = {
 # auditu: nabídka se počítala jen z ročníkových rolí, takže tenhle člověk
 # neviděl ročníkové položky, ačkoliv na ty obrazovky smí. Bez takového účtu
 # se ta oprava nedá vyzkoušet — a scénář E5 taky ne.
+#
+# Samu roli nese `OPRAVNENI_WEBU`, ne účet: skutečné API vydává pole `web`
+# v odpovědi na /ja z téže tabulky, kterou spravuje obrazovka oprávnění
+# (`Poskytovatel.WebRoleAsync`). Zapsaná u účtu by přežila i odebrání.
 WEBOVA = {
     "id": "01927f4e-0000-7000-8000-000000000005",
     "zobrazovane": "Dana Hlavní",
     "email": "dana@priklad.cz",
-    # Pole `web` vydává API od 22. 9. 2026; kdo ho nemá, nemá roli na web.
-    "web": ["Spravce"],
 }
 
 # Rozhodčí celého ročníku. Existuje kvůli skupině D zkoušky ovládání: role
@@ -498,6 +500,30 @@ OPRAVNENI = [{"id": 1, "uzivatelId": JA["id"], "zobrazovane": JA["zobrazovane"],
               "zobrazovane": ROZHODCI["zobrazovane"],
               "email": ROZHODCI["email"], "role": "Rozhodci", "zavod": None,
               "udelenoV": "2026-02-01T00:00:00+00:00"}]
+
+# Oprávnění na **celý web** — ve skutečném API tytéž řádky s prázdnou sérií
+# (`Opravneni.SerieId`), jen je vydává vlastní cesta `/sprava/web/opravneni`.
+# Dana je tu sama a `filip` tu schválně není: rozdíl mezi správcem ročníku
+# a správcem webu je přesně to, co skupina E zkoušky ovládání měří.
+OPRAVNENI_WEBU = [{"id": 4, "uzivatelId": WEBOVA["id"],
+                   "zobrazovane": WEBOVA["zobrazovane"],
+                   "email": WEBOVA["email"], "role": "Spravce", "zavod": None,
+                   "udelenoV": "2026-01-15T00:00:00+00:00"}]
+
+# Na web jdou jen tyhle dvě role (`Udeleni.ProcNejdeNaWebu`). Rozhodčí ani
+# pořadatel celého webu neexistují — jsou to funkce v ročníku nebo regatě.
+ROLE_WEBU = ("Editor", "Spravce")
+
+
+def novy_id():
+    """
+    Další číslo oprávnění. Skutečné API má jednu tabulku pro ročník i web,
+    takže dvě nezávislé řady by vyrobily dvě oprávnění s týmž `id` —
+    a odebrání by se dalo splést.
+    """
+    return max((o["id"] for o in OPRAVNENI + OPRAVNENI_WEBU), default=0) + 1
+
+
 # Účty, kterým jde roli udělit. Skutečné API zná jen ty, kdo se aspoň
 # jednou přihlásili — bez toho by se nedal vyzkoušet stav „účet neexistuje",
 # a ten je na obrazovce vidět nejčastěji.
@@ -515,9 +541,7 @@ UCTY = {u["email"]: u for u in [
      "naposledyPrihlasenV": "2026-09-14T19:40:00+00:00"},
     {**MILOS, "zalozenV": "2026-04-01T00:00:00+00:00",
      "naposledyPrihlasenV": "2026-09-19T14:30:00+00:00"},
-    # Bez `web`: v přehledu účtů se vedou role v ročníku, ne na webu.
-    {**{k: v for k, v in WEBOVA.items() if k != "web"},
-     "zalozenV": "2026-01-15T00:00:00+00:00",
+    {**WEBOVA, "zalozenV": "2026-01-15T00:00:00+00:00",
      "naposledyPrihlasenV": "2026-10-01T09:12:00+00:00"},
     # Na konec schválně: `_nasad_vazby` věší vazby prvním třem účtům podle
     # pořadí a vkládat doprostřed by přestavělo výchozí stav lodí.
@@ -1374,7 +1398,8 @@ def prava_uctu(kdo):
 
     return [{"role": o["role"], "zavod": o["zavod"], "web": False}
             for o in OPRAVNENI if o["email"] == kdo["email"]] + [
-        {"role": r, "zavod": None, "web": True} for r in (kdo.get("web") or [])]
+        {"role": o["role"], "zavod": None, "web": True}
+        for o in OPRAVNENI_WEBU if o["email"] == kdo["email"]]
 
 
 def smi_role(prava, role, zavod=None):
@@ -1421,6 +1446,10 @@ def role_pro_cestu(metoda, cesta):
     """
     if cesta.startswith("/sprava/web/clanky"):
         return ("Editor", "web")
+    # Role na celý web uděluje a odebírá jen správce webu — na ročníkovou
+    # roli se sem nedostane nikdo (`OpravneniEndpoints.SpravceWebu`).
+    if cesta.startswith("/sprava/web/opravneni"):
+        return ("Spravce", "web")
     if cesta == "/sprava/naklady":
         return ("Spravce", "web")
 
@@ -1525,7 +1554,8 @@ class H(BaseHTTPRequestHandler):
             o["email"] == kdo["email"] and o["zavod"] is None
             and o["role"] in ("Organizator", "Rozhodci", "Spravce")
             for o in OPRAVNENI
-        ) or "Spravce" in (kdo.get("web") or [])
+        ) or any(o["email"] == kdo["email"] and o["role"] == "Spravce"
+                 for o in OPRAVNENI_WEBU)
         if not smi:
             return self.send_error(403)
 
@@ -2127,6 +2157,9 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(r'^/sprava/web/clanky/([a-z0-9-]+)/obrazky$', cesta)):
             return self.nahraj_do_tela(m.group(1))
 
+        if cesta == '/sprava/web/opravneni':
+            return self.udel_na_webu()
+
         if (m := re.match(rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)/prihlasky$', cesta)):
             return self.verejna_prihlaska(m.group(1))
 
@@ -2158,6 +2191,63 @@ class H(BaseHTTPRequestHandler):
                 "role": role, "zavod": zavod, "udelenoV": "2026-01-01T00:00:00+00:00"}
         OPRAVNENI.append(novy)
         return self.odpoved(novy, 201)
+
+    def udel_na_webu(self):
+        """
+        Udělení role na celý web. Opsané z `OpravneniEndpoints.WebUdelAsync`
+        a `Udeleni.ProcNejdeNaWebu`: rozsah se nedá zúžit na regatu a projdou
+        jen editor a správce. Roli smí dát jen správce webu, a to hlídá
+        brána (`role_pro_cestu`) dřív, než se sem dojde.
+        """
+        if not self.headers.get("authorization"):
+            return self.send_error(401)
+
+        vstup = self.telo_zadosti()
+        email = (vstup.get("email") or "").strip().lower()
+        role = vstup.get("role")
+
+        if vstup.get("zavod"):
+            return self.chyba(400, "Právo na celý web se nedá omezit na regatu.")
+        if role == "Ctenar":
+            return self.chyba(400, "Čtenář se neuděluje: je to každý, i nepřihlášený.")
+        if role not in ROLE_WEBU:
+            return self.chyba(
+                400, f"Role {role} patří k ročníku nebo zastávce, ne k celému webu.")
+        if email not in UCTY:
+            return self.chyba(404, f"Na e-mail {email} se zatím nikdo nepřihlásil. "
+                                   "Účet vzniká až prvním přihlášením, rolí se pozvat nedá.")
+
+        # Druhé udělení téhož není chyba: vrací týž řádek a dvěstěčku.
+        stavajici = next((o for o in OPRAVNENI_WEBU
+                          if o["email"] == email and o["role"] == role), None)
+        if stavajici:
+            return self.odpoved(stavajici)
+
+        novy = {"id": novy_id(), "uzivatelId": UCTY[email]["id"],
+                "zobrazovane": UCTY[email]["zobrazovane"], "email": email,
+                "role": role, "zavod": None,
+                "udelenoV": "2026-01-01T00:00:00+00:00"}
+        OPRAVNENI_WEBU.append(novy)
+        return self.odpoved(novy, 201)
+
+    def odeber_z_webu(self, id_opravneni):
+        """
+        Opsané z `WebOdeberAsync`: posledního správce webu odebrat nejde —
+        tím by se všichni zamkli ven a zpátky by vedl jen importní token.
+        """
+        if not self.headers.get("authorization"):
+            return self.send_error(401)
+
+        o = next((o for o in OPRAVNENI_WEBU if o["id"] == id_opravneni), None)
+        if not o:
+            return self.send_error(404)
+        if o["role"] == "Spravce" \
+                and sum(1 for x in OPRAVNENI_WEBU if x["role"] == "Spravce") <= 1:
+            return self.chyba(409, "Poslední správce webu se odebrat nedá. "
+                                   "Nejdřív udělte roli někomu jinému.")
+
+        OPRAVNENI_WEBU.remove(o)
+        return self._prazdna_odpoved()
 
     def zastavka(self, slug):
         """Zastávka, nebo None. Hlídá i přihlášení — jako skutečné API."""
@@ -2768,6 +2858,9 @@ class H(BaseHTTPRequestHandler):
             self.end_headers()
             return
 
+        if (m := re.match(r'^/sprava/web/opravneni/(\d+)$', urlparse(self.path).path)):
+            return self.odeber_z_webu(int(m.group(1)))
+
         m = re.match(rf'^/sprava/serie/{D["slug"]}/opravneni/(\d+)$', urlparse(self.path).path)
         if not m:
             return self.send_error(404)
@@ -2922,6 +3015,11 @@ class H(BaseHTTPRequestHandler):
                 # v nabídce a stránka by nabízela odkaz, který skončí na 403.
                 "opravneni": [{"role": o["role"], "serie": D["slug"], "zavod": o["zavod"]}
                               for o in OPRAVNENI if o["email"] == kdo["email"]],
+                # Role na celý web jdou klientovi zvlášť, ne jako právo
+                # s prázdnou sérií (`IdentitaEndpoints`, `WebRoleAsync`) —
+                # slug ročníku u nich není co vydat.
+                "web": [o["role"] for o in OPRAVNENI_WEBU
+                        if o["email"] == kdo["email"]],
             }
         elif cesta == f'/sprava/serie/{D["slug"]}/opravneni':
             if not self.headers.get("authorization"):
@@ -3065,6 +3163,16 @@ class H(BaseHTTPRequestHandler):
                 return self.send_error(404)
             telo = {**clanek_radek(c), "telo": c["telo"],
                     "format": c.get("format", "Text")}
+        elif cesta == '/sprava/web/opravneni':
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            # `PrehledWebuDto` — jen udělená oprávnění a účty, kterým jde
+            # roli dát. Zastávky ani `smiNaRocnik` tu nejsou: na celý web
+            # se uděluje jedna ze dvou rolí a rozsah se nevybírá. Seznam
+            # účtů dostává vždycky, protože sem projde jen správce webu.
+            telo = {"opravneni": OPRAVNENI_WEBU,
+                    "ucty": sorted(UCTY.values(),
+                                   key=lambda u: u["naposledyPrihlasenV"], reverse=True)}
         elif cesta == '/sprava/web/clanky':
             if not self.headers.get("authorization"):
                 return self.send_error(401)
