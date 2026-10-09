@@ -115,7 +115,14 @@ export type PrvekVstup = components["schemas"]["PrvekVstup"];
 /** Tatáž délka jako `Prvky.PoznamkaNejvic` v API. */
 export const POZNAMKA_NEJVIC = 200;
 
-/** Jak se typ prvku jmenuje na obrazovce. */
+/**
+ * Jak se typ prvku jmenuje na obrazovce.
+ *
+ * <b>Čti to přes `nazevTypu`, ne přímo.</b> Změna kontraktu je dvoukroková
+ * — nejdřív se nasadí API, teprve pak se přegeneruje klient a nasadí web —,
+ * takže mezi tím chodí jména, která tenhle seznam ještě nezná. Prázdné
+ * místo v tabulce vypadá jako porucha; syrové jméno je ošklivé, ale pravdivé.
+ */
 export const NAZVY_TYPU: Record<TypPrvku, string> = {
   Znacka: "značka",
   Brana: "brána",
@@ -125,6 +132,16 @@ export const NAZVY_TYPU: Record<TypPrvku, string> = {
   CaraStart: "start",
   CaraCil: "cíl",
 };
+
+/** Jméno typu, nebo syrová hodnota, když ji tenhle klient nezná. */
+export function nazevTypu(typ: TypPrvku): string {
+  return NAZVY_TYPU[typ] ?? typ;
+}
+
+/** Totéž pro stranu. */
+export function nazevStrany(strana: NonNullable<StranaPrvku>): string {
+  return NAZVY_STRAN[strana] ?? strana;
+}
 
 /**
  * <b>Levobok a pravobok</b> (Filip, 9. 10. 2026: *„Stranu nazývej levobok

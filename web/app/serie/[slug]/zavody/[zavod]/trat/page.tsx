@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { ApiNedostupne, nactiVerejnouTrat, nactiZavod, type VerejnaTrat } from "@/lib/api";
-import { NAZVY_STRAN, NAZVY_TYPU } from "@/lib/trat";
+import { nazevStrany, nazevTypu } from "@/lib/trat";
 import { MapkaTrati, type PrvekNaMape } from "@/app/mapka-trati";
 import { IkonaPrvku } from "@/app/ikona-prvku";
 import { Drobecky } from "@/app/drobecky";
@@ -133,12 +133,12 @@ function PoradiPrvku({ prvky }: { prvky: VerejnaTrat["prvky"] }) {
           <li key={i}>
             <IkonaPrvku typ={p.typ} strana={p.strana} />
             <span className="poradi-prvku">{p.poradi}.</span>{" "}
-            <b>{NAZVY_TYPU[p.typ]}</b>{" "}
+            <b>{nazevTypu(p.typ)}</b>{" "}
             <span>
               {p.a.nazev}
               {p.b && ` – ${p.b.nazev}`}
             </span>
-            {p.strana && <span className="stitek">{NAZVY_STRAN[p.strana]}</span>}
+            {p.strana && <span className="stitek">{nazevStrany(p.strana)}</span>}
             {p.poznamka && <p className="poznamka">{p.poznamka}</p>}
           </li>
         ))}

@@ -1,4 +1,4 @@
-import { NAZVY_TYPU, type TypPrvku } from "@/lib/trat";
+import { nazevTypu, type TypPrvku } from "@/lib/trat";
 
 /**
  * Prvek, jak ho mapka potřebuje. <b>Vlastní tvar schválně</b>: správa a web
@@ -73,7 +73,7 @@ function popisekPrvku(p: PrvekNaMape) {
   if (p.typ === "Znacka") return p.konce[0].nazev;
   if (p.typ === "CaraStart") return "start";
   if (p.typ === "CaraCil") return "cíl";
-  return NAZVY_TYPU[p.typ];
+  return nazevTypu(p.typ);
 }
 
 /** Hezké číslo pro měřítko: 10, 20, 50, 100, 200, 500 m… */
@@ -181,7 +181,7 @@ export function MapkaTrati({ prvky }: { prvky: PrvekNaMape[] }) {
   const meritkoPx = meritkoM / metruNaPixel;
 
   const popis = vPoradi
-    .map((b) => `${b.prvek.poradi}. ${NAZVY_TYPU[b.prvek.typ]} ${b.konce.map((k) => k.nazev).join(" – ")}`)
+    .map((b) => `${b.prvek.poradi}. ${nazevTypu(b.prvek.typ)} ${b.konce.map((k) => k.nazev).join(" – ")}`)
     .join(", ");
 
   return (

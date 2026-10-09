@@ -159,7 +159,14 @@ public record VerejnyPrvekDto(
     StranaPrvku? Strana,
     string? Poznamka,
     VerejnyKonecDto A,
-    VerejnyKonecDto? B);
+    VerejnyKonecDto? B,
+    /// <summary>
+    /// Jen u startu: světová strana. Ven patří — teprve podle ní umí
+    /// mapka nakreslit šipku průjezdu, a závodník to potřebuje nejvíc.
+    /// </summary>
+    SvetovaStrana? Smer = null,
+    /// <summary>Jen u startu: pevná linie, nebo otevírající se brána.</summary>
+    DruhStartu? DruhStartu = null);
 
 /// <summary>
 /// Trať pro veřejnost. Vydává se jedině přijatá; u přestavby se vrací

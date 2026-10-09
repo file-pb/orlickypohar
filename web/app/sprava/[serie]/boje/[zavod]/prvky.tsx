@@ -2,6 +2,8 @@ import type { Boje } from "@/lib/boje";
 import {
   NAZVY_STRAN,
   NAZVY_TYPU,
+  nazevStrany,
+  nazevTypu,
   POZNAMKA_NEJVIC,
   type Prvek,
   type StranaPrvku,
@@ -50,13 +52,13 @@ export function PrvkyTrati({
             <li key={p.id}>
               <IkonaPrvku typ={p.typ} strana={p.strana} />
               <span className="poradi-prvku">{p.poradi}.</span>{" "}
-              <b>{NAZVY_TYPU[p.typ]}</b>{" "}
+              <b>{nazevTypu(p.typ)}</b>{" "}
               <span>
                 {p.a.nazev}
                 {p.b && ` – ${p.b.nazev}`}
                 {p.bodB && ` – ${p.bodB.popis}`}
               </span>
-              {p.strana && <span className="stitek">{NAZVY_STRAN[p.strana]}</span>}
+              {p.strana && <span className="stitek">{nazevStrany(p.strana)}</span>}
               {p.poznamka && <p className="poznamka">{p.poznamka}</p>}
               {!zamceno && (
                 <form action={smazPrvekAkce} className="formular radkove">

@@ -3,41 +3,118 @@ namespace OrlickyPohar.Api.Features.Boje;
 /// <summary>
 /// Co prvek na trati je. <b>Start a cíl jsou dvě různé funkce</b>, ne jedna
 /// „čára": tytéž dvě polohy můžou být ráno start a odpoledne cíl.
+///
+/// <para>
+/// <b>Čísla se nemění, jména ano</b> (Filip, 9. 10. 2026). Výčet se ukládá
+/// jako celé číslo, takže přejmenování nepotřebuje migraci — ale jde ven
+/// v JSON jako jméno, takže je to změna kontraktu a klient se musí
+/// přegenerovat.
+/// </para>
 /// </summary>
 public enum TypPrvku
 {
-    /// <summary>Jedna bóje, ponechává se jednou stranou.</summary>
-    Znacka = 0,
+    /// <summary>
+    /// Bóje, kterou se otáčí. Ponechává se stranou, kterou říká
+    /// <see cref="StranaPrvku"/>. Dřív se jmenovala „značka".
+    /// </summary>
+    OtocnaBoje = 0,
 
-    /// <summary>Dvě bóje, projíždí se mezi nimi; stranu si volí loď, směr je daný.</summary>
+    /// <summary>
+    /// Dvě bóje, projíždí se mezi nimi; stranu si volí loď.
+    /// <b>Může být i otočná</b> (Filip: <i>„brána je dobrá a může být
+    /// i otočná"</i>).
+    /// </summary>
     Brana = 1,
 
-    /// <summary>Dvě bóje, obě se ponechávají touž pevnou stranou; jedno místo v řadě.</summary>
+    /// <summary>
+    /// Otočná a hned za ní malá odskoková bóje. Obě se ponechávají touž
+    /// stranou a v řadě je to <b>jedno místo</b>, proto jeden prvek se
+    /// dvěma konci. Odskok je tam proto, aby se u otočné lodě netlačily
+    /// při ostrém obratu.
+    /// </summary>
     Odskok = 2,
 
-    /// <summary>Startovní čára: překonává se jedním směrem.</summary>
-    CaraStart = 3,
+    /// <summary>
+    /// Start: levobok, pravobok a směr. Nemusí to být pevná linie, viz
+    /// <see cref="DruhStartu"/>. Dřív „startovní čára".
+    /// </summary>
+    Start = 3,
 
-    /// <summary>Cílová čára: totéž, a opačný průjezd se nepočítá.</summary>
-    CaraCil = 4,
+    /// <summary>Cíl: levá a pravá. Opačný průjezd se nepočítá.</summary>
+    Cil = 4,
+
+    /// <summary>
+    /// Bóje, kterou se projíždí, ne otáčí. <b>Nemusí to být jen plavební
+    /// dráha</b> (Filip): i bóje, kterou jsme postavili sami. Jakou
+    /// stranou, závisí na směru průjezdu — táž bóje proto může být ve
+    /// dvou prvcích s různou stranou, což <c>Poradi</c> schválně připouští.
+    /// </summary>
+    PrujezdniBoje = 5,
+
+    /// <summary>
+    /// Otočná zóna nebo linie mezi dvěma objekty — molo, značka, objekt
+    /// na břehu, <b>i dráty vysokého napětí nad vodou</b> (Filip). Bóje
+    /// to být nemusí ani na jednom konci.
+    /// </summary>
+    OtocnaZona = 6,
 }
 
 /// <summary>
-/// Kterou stranou se značka nebo odskok ponechává.
+/// Kterým bokem lodi se prvek ponechává.
 /// <para>
-/// <b>Jmenuje se to „ponechat po levé / po pravé"</b> schválně. „Objíždí se
-/// levou" si půlka lidí přečte jako „ponechat po levé" a druhá jako „točit
-/// doleva", a to jsou protikladné věci.
+/// <b>Levobok a pravobok</b> (Filip, 9. 10. 2026). Dřív to byl opis
+/// „ponechat po levé", který měl zabránit tomu, aby si někdo „objíždí se
+/// levou" přečetl jako „točit doleva" — řešil to za cenu toho, že to
+/// nebylo námořnicky. Čísla zůstala, mění se jen jména.
 /// </para>
 /// </summary>
 public enum StranaPrvku
 {
+    /// <summary>Ponechat po levoboku.</summary>
     PoLeve = 0,
+
+    /// <summary>Ponechat po pravoboku.</summary>
     PoPrave = 1,
 }
 
 /// <summary>
-/// Jeden prvek trati: značka, brána, odskok nebo čára.
+/// Čím je start vytyčený (Filip, 9. 10. 2026: <i>„start může být pevná
+/// linie, ale také otevírající se brána za jedoucí startovací lodí jedoucí
+/// po linii startu"</i>).
+/// </summary>
+public enum DruhStartu
+{
+    /// <summary>Pevná linie mezi dvěma konci.</summary>
+    PevnaLinie = 0,
+
+    /// <summary>
+    /// Otevírající se brána: startuje se za startovací lodí, která jede po
+    /// linii startu. Konce pak popisují, kudy ta linie vede, ne kde stojí
+    /// branka — loď se po ní pohybuje.
+    /// </summary>
+    OtevirajiciSeBrana = 1,
+}
+
+/// <summary>
+/// Světová strana. <b>Osm směrů, ne stupně</b> (Filip, 9. 10. 2026):
+/// na vodě se člověk řídí rozhledem, a do poznámky stejně napíše
+/// „startujeme na zámek".
+/// </summary>
+public enum SvetovaStrana
+{
+    S = 0,
+    SV = 1,
+    V = 2,
+    JV = 3,
+    J = 4,
+    JZ = 5,
+    Z = 6,
+    SZ = 7,
+}
+
+/// <summary>
+/// Jeden prvek trati: start, cíl, otočná či průjezdní bóje, brána,
+/// odskok nebo otočná zóna.
 ///
 /// <para>
 /// <b>Prvek nese rozhodnutí, bóje zůstane měřením.</b> To je celé pravidlo
@@ -109,6 +186,18 @@ public class PrvekTrati
     /// </summary>
     public string? Poznamka { get; set; }
 
+    /// <summary>
+    /// Kterým směrem se startuje — světová strana. <b>Jen u startu.</b>
+    /// Teprve s ním umí mapka nakreslit šipku průjezdu; bez něj by si ho
+    /// musela vymyslet, a to je přesně ta lež, kvůli které prvky vznikly.
+    /// </summary>
+    public SvetovaStrana? Smer { get; set; }
+
+    /// <summary>
+    /// Čím je start vytyčený. <b>Jen u startu</b>, jinde <c>null</c>.
+    /// </summary>
+    public DruhStartu? DruhStartu { get; set; }
+
     /// <summary>Má prvek druhý konec, ať už bóji, nebo souřadnice?</summary>
     public bool MaDruhyKonec =>
         BojeBId is not null || (KonecBSirka is not null && KonecBDelka is not null);
@@ -129,15 +218,26 @@ public static class Prvky
     /// </summary>
     public const int PoznamkaNejvic = 200;
 
-    /// <summary>Potřebuje tenhle typ druhý konec?</summary>
-    public static bool Dvoukonec(TypPrvku typ) => typ != TypPrvku.Znacka;
+    /// <summary>
+    /// Potřebuje tenhle typ druhý konec? Jediné <b>jednokoncové</b> jsou
+    /// otočná a průjezdní bóje — jeden kus plastu ve vodě. Odskok má dva
+    /// konce schválně: je to otočná a hned za ní odskoková, dohromady
+    /// jedno místo v řadě.
+    /// </summary>
+    public static bool Dvoukonec(TypPrvku typ) =>
+        typ is not (TypPrvku.OtocnaBoje or TypPrvku.PrujezdniBoje);
 
     /// <summary>
-    /// Smí si loď u tohohle typu volit stranu? U brány ano, u značky
-    /// a odskoku ne — a u čáry se strana neuvádí vůbec, rozhoduje směr.
+    /// Uvádí se u tohohle typu strana? U otočné bóje, průjezdní bóje
+    /// a odskoku ano — tam ji určuje rozhodčí. U brány si ji volí loď
+    /// a u startu, cíle i otočné zóny rozhoduje směr průjezdu.
+    /// <para>
+    /// U průjezdní bóje závisí strana na směru, kterým se kolem pluje
+    /// (Filip): táž bóje proto může být ve dvou prvcích s různou stranou.
+    /// </para>
     /// </summary>
     public static bool StranaPatri(TypPrvku typ) =>
-        typ is TypPrvku.Znacka or TypPrvku.Odskok;
+        typ is TypPrvku.OtocnaBoje or TypPrvku.Odskok or TypPrvku.PrujezdniBoje;
 
     /// <summary>
     /// Proč prvek nejde uložit — nebo <c>null</c>.
@@ -148,8 +248,14 @@ public static class Prvky
     /// </summary>
     public static string? ProcNejde(
         TypPrvku typ, int? bojeBId, double? sirka, double? delka, string? popis,
-        StranaPrvku? strana, string? poznamka = null)
+        StranaPrvku? strana, string? poznamka = null,
+        SvetovaStrana? smer = null, DruhStartu? druhStartu = null)
     {
+        // Směr a druh dávají smysl jen u startu. Jinde by to bylo pole,
+        // které obrazovka ukáže a nikdo neví, co znamená.
+        if (typ != TypPrvku.Start && (smer is not null || druhStartu is not null))
+            return "Směr a druh startu se uvádějí jen u startu.";
+
         if (poznamka?.Trim().Length > PoznamkaNejvic)
             return $"Poznámka má nejvýš {PoznamkaNejvic} znaků. Na delší vysvětlení "
                    + "je plachetní směrnice.";
@@ -171,15 +277,16 @@ public static class Prvky
         }
         else if (maBoji || maBod)
         {
-            return "Značka má jeden konec. Dva konce má brána, odskok nebo čára.";
+            return "Tenhle prvek je jedna bóje. Dva konce má start, cíl, brána, "
+                   + "odskok a otočná zóna.";
         }
 
         if (popis?.Trim().Length > PopisNejvic)
             return $"Popis konce má nejvýš {PopisNejvic} znaků.";
 
         if (strana is not null && !StranaPatri(typ))
-            return "Strana se uvádí u značky a odskoku. U brány si ji volí loď, "
-                   + "u čáry rozhoduje směr průjezdu.";
+            return "Strana se uvádí u otočné bóje, průjezdní bóje a odskoku. "
+                   + "U brány si ji volí loď, u startu a cíle rozhoduje směr průjezdu.";
 
         return null;
     }

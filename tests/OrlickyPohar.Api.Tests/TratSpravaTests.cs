@@ -249,7 +249,7 @@ public class TratSpravaTests(PostgresFixture fixture)
         var (pravy, _) = await boje.PipniAsync(zavod.Id, Bod("start pravý"), kdo.Id, default);
 
         Assert.Null((await prvky.ZalozAsync(zavod.Id, new PrvekVstup(
-            TypPrvku.CaraStart, 1, levy!.Id, pravy!.Id,
+            TypPrvku.Start, 1, levy!.Id, pravy!.Id,
             Poznamka: "projíždí se po proudu"), default)).Chyba);
 
         await trate.HotovoAsync(zavod.Id, true, default);
@@ -258,7 +258,7 @@ public class TratSpravaTests(PostgresFixture fixture)
         var verejna = await trate.VerejnaAsync(zavod.Id, default);
 
         var prvek = Assert.Single(verejna!.Prvky);
-        Assert.Equal(TypPrvku.CaraStart, prvek.Typ);
+        Assert.Equal(TypPrvku.Start, prvek.Typ);
         Assert.Equal("start levý", prvek.A.Nazev);
         Assert.Equal("start pravý", prvek.B!.Nazev);
         // Poznámka „jak to jet" je psaná pro závodníky, takže ven patří.
@@ -343,7 +343,7 @@ public class TratSpravaTests(PostgresFixture fixture)
 
         var (prvni, _) = await boje.PipniAsync(zavod.Id, Bod("Značka"), kdo.Id, default);
         Assert.Null((await prvky.ZalozAsync(
-            zavod.Id, new PrvekVstup(TypPrvku.Znacka, 1, prvni!.Id), default)).Chyba);
+            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, prvni!.Id), default)).Chyba);
 
         // Prvek je rozhodnutí o trati; smazáním záznamu by se rozbil.
         var (druha, _) = await boje.PipniAsync(
@@ -373,7 +373,7 @@ public class TratSpravaTests(PostgresFixture fixture)
         var (levy, _) = await boje.PipniAsync(zavod.Id, Bod("start levý"), kdo.Id, default);
         var (pravy, _) = await boje.PipniAsync(zavod.Id, Bod("start pravý"), kdo.Id, default);
         await prvky.ZalozAsync(zavod.Id, new PrvekVstup(
-            TypPrvku.CaraStart, 1, levy!.Id, pravy!.Id, Poznamka: "po proudu"), default);
+            TypPrvku.Start, 1, levy!.Id, pravy!.Id, Poznamka: "po proudu"), default);
 
         var prvni = await RozjizdkaAsync(db, zavod, 1);
         var puvodni = (await trate.AktualniAsync(zavod.Id, default))!;
@@ -402,7 +402,7 @@ public class TratSpravaTests(PostgresFixture fixture)
         Assert.Equal(levy.Id, jeden.BojeAId);
         Assert.Equal(pravy.Id, jeden.BojeBId);
         Assert.Equal("po proudu", jeden.Poznamka);
-        Assert.Equal(TypPrvku.CaraStart, jeden.Typ);
+        Assert.Equal(TypPrvku.Start, jeden.Typ);
 
         // A originál zůstal, kde byl.
         Assert.Single(await db.PrvkyTrati.Where(x => x.TratId == puvodni.Id).ToListAsync());
@@ -456,7 +456,7 @@ public class TratSpravaTests(PostgresFixture fixture)
         var (zavod, kdo) = await RegataAsync(db);
 
         var (b, _) = await boje.PipniAsync(zavod.Id, Bod("Start"), kdo.Id, default);
-        await prvky.ZalozAsync(zavod.Id, new PrvekVstup(TypPrvku.Znacka, 1, b!.Id), default);
+        await prvky.ZalozAsync(zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, b!.Id), default);
         await trate.HotovoAsync(zavod.Id, true, default);
         await trate.PrijmiAsync(zavod.Id, kdo.Id, default);
 

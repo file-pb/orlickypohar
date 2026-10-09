@@ -93,6 +93,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int?>("BojeBId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("DruhStartu")
+                        .HasColumnType("integer");
+
                     b.Property<double?>("KonecBDelka")
                         .HasColumnType("double precision");
 
@@ -109,6 +112,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<string>("Poznamka")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<int?>("Smer")
+                        .HasColumnType("integer");
 
                     b.Property<int?>("Strana")
                         .HasColumnType("integer");
