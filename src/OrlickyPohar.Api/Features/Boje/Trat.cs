@@ -112,6 +112,11 @@ public record TratDto(
     string? DuvodVraceni,
     int? RozjizdkaId,
     /// <summary>
+    /// Číslo rozjížďky, které trať patří. Id samo o sobě obrazovce nestačí
+    /// a dohledávat ho zvlášť by byl druhý dotaz na totéž.
+    /// </summary>
+    int? CisloRozjizdky,
+    /// <summary>
     /// Trať, kterou tahle nahradila. Jediná viditelná stopa po krizové
     /// přestavbě — bez ní by obrazovka tvrdila, že trať vznikla z ničeho.
     /// </summary>
@@ -164,6 +169,12 @@ public record VerejnyPrvekDto(
 public record VerejnaTratDto(
     bool Prestavba,
     DateTimeOffset? PrijatoV,
+    /// <summary>
+    /// Rozjížďka, ke které trať patří, nebo <c>null</c> u regaty s jednou
+    /// tratí. <b>Bez toho si lidi stáhnou GPX od včerejší rozjížďky</b>
+    /// (plán, <i>Trať je veřejná, jakmile ji rozhodčí přijme</i>, past 2).
+    /// </summary>
+    int? CisloRozjizdky,
     IReadOnlyList<VerejnaBojeDto> Boje,
     /// <summary>
     /// Trať jako řada prvků — to, podle čeho se pluje. <c>Boje</c> vedle
@@ -171,6 +182,43 @@ public record VerejnaTratDto(
     /// zmizela úplně.
     /// </summary>
     IReadOnlyList<VerejnyPrvekDto> Prvky);
+
+/// <summary>
+/// Trať v nabídce „jede se tahle". <b>Počet prvků je tu schválně</b>:
+/// trať bez prvků se dá naklonovat taky, ale naklonuje se prázdno, a to má
+/// být vidět dřív než potom.
+/// </summary>
+public record TratNaVyberDto(
+    int Id,
+    StavTrati Stav,
+    int? CisloRozjizdky,
+    DateTimeOffset? PrijatoV,
+    int PocetPrvku,
+    /// <summary>Jelo se podle ní? Pak je to ta, kterou chce člověk zopakovat.</summary>
+    bool Odjeta,
+    /// <summary>
+    /// Volná trať se přiřadí, obsazená naklonuje (plán, <i>Výběr
+    /// a klonování trati</i>). Obrazovka tím pojmenuje knoflík správně
+    /// dřív, než na něj někdo sáhne.
+    /// </summary>
+    bool JdePriradit);
+
+/// <summary>Co se má s vybranou tratí stát a pro kterou rozjížďku.</summary>
+/// <param name="Rozjizdka">
+/// <b>Číslo</b> rozjížďky, které trať připadne — tak se rozjížďka adresuje
+/// i jinde v API (<c>rozjizdky/{cislo}/start</c>) a tak ji označují lidi.
+/// <c>null</c> znamená klon „na stůl": kopie, ke které se rozjížďka přiřadí
+/// později.
+/// </param>
+/// <param name="Stav">
+/// Stav, ve kterém klon začíná. Výchozí je <see cref="StavTrati.Hotovo"/>:
+/// klon je tvrzení stavitele („stojí to, co minule"), ne rozhodnutí
+/// rozhodčího (Filip, 9. 10. 2026).
+/// </param>
+public record KlonTratiVstup(int? Rozjizdka, StavTrati? Stav);
+
+/// <summary>Číslo rozjížďky, které trať připadne.</summary>
+public record PriradTratVstup(int Rozjizdka);
 
 /// <summary>
 /// Pravidla stavu trati. Čisté funkce, aby se na ně dalo odpovědět bez
@@ -237,4 +285,28 @@ public static class Stavba
     /// </summary>
     public static bool JeVerejna(StavTrati stav) =>
         stav is StavTrati.Prijato or StavTrati.Prestavba;
+
+    /// <summary>
+    /// Proč klon nesmí začít v tomhle stavu — nebo <c>null</c>.
+    /// <para>
+    /// <b>Výchozí je <see cref="StavTrati.Hotovo"/></b>, protože klon je
+    /// tvrzení stavitele („stojí to, co minule"), ne rozhodnutí rozhodčího
+    /// (Filip, 9. 10. 2026). <b><see cref="StavTrati.Prijato"/> proto smí
+    /// zvolit jen rozhodčí</b> — jinak by se zámek dal obejít knoflíkem na
+    /// stavitelské obrazovce.
+    /// </para>
+    /// <para>
+    /// <see cref="StavTrati.Prestavba"/> znamená „tahle trať se právě
+    /// mění". Začít v něm nedává smysl: nic se nemění, nic tu předtím
+    /// nebylo.
+    /// </para>
+    /// </summary>
+    public static string? ProcNejdeKlon(StavTrati stav, bool jeRozhodci) => stav switch
+    {
+        StavTrati.Rozestaveno or StavTrati.Hotovo => null,
+        StavTrati.Prijato when jeRozhodci => null,
+        StavTrati.Prijato =>
+            "Přijmout trať smí jen rozhodčí. Naklonuj ji jako hotovou a nech ji přijmout.",
+        _ => "Klon nemůže začít v přestavbě — přestavuje se trať, která už stojí.",
+    };
 }

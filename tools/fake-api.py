@@ -898,9 +898,24 @@ def trat_zaloz(slug, stav="Rozestaveno", nahrazuje=None):
     return t
 
 
+def rozjizdka_trati(slug, t):
+    """Rozjížďka, které trať patří, nebo None. Mock drží `rozjizdkaId` jako
+    **číslo** rozjížďky: rozjížďky tu vlastní id nemají a číslo je stejně
+    to, čím se adresují v API."""
+    if t.get("rozjizdkaId") is None:
+        return None
+    z = next((x for x in D["zavody"] if x["slug"] == slug), None)
+    return next((r for r in (z or {}).get("rozjizdky", [])
+                 if r["cislo"] == t["rozjizdkaId"]), None)
+
+
 def trat_odjeta(slug, t):
-    """Odstartovala po přijetí téhle trati rozjížďka? Pak se podle ní jelo.
-    Nikam se to neukládá, dopočítá se — jako v `TratSprava`."""
+    """Jelo se podle téhle trati? Opsané z `TratSprava.OdjetaAsync`.
+
+    Trať rozjížďky se pozná podle **své** rozjížďky — odstartovala, tedy se
+    podle ní jelo. U trati, která rozjížďce nepatří, se to dopočítá z času."""
+    if (r := rozjizdka_trati(slug, t)) is not None:
+        return r.get("startV") is not None
     if not t["prijatoV"]:
         return False
     z = next((x for x in D["zavody"] if x["slug"] == slug), None)
@@ -929,6 +944,34 @@ def prvky_trati(slug):
         return []
     vse = PRVKY.get(t["id"], [])
     return [prvek_dto(slug, p) for p in sorted(vse, key=lambda p: (p["poradi"], p["id"]))]
+
+
+def trat_na_vyber(slug, t):
+    """Řádek nabídky „jede se tahle". Opsané z `TratNaVyberDto`."""
+    return {"id": t["id"], "stav": t["stav"], "cisloRozjizdky": t.get("rozjizdkaId"),
+            "prijatoV": t["prijatoV"], "pocetPrvku": len(PRVKY.get(t["id"], [])),
+            "odjeta": trat_odjeta(slug, t), "jdePriradit": t.get("rozjizdkaId") is None}
+
+
+def volna_rozjizdka(slug, cislo):
+    """(číslo, None), když rozjížďka může trať převzít — jinak (None, důvod).
+    Opsané z `TratSprava.VolnaRozjizdkaAsync`."""
+    z = next((x for x in D["zavody"] if x["slug"] == slug), None)
+    if not any(r["cislo"] == cislo for r in (z or {}).get("rozjizdky", [])):
+        return None, f"Rozjížďka číslo {cislo} u téhle regaty není."
+    if any(x.get("rozjizdkaId") == cislo for x in TRATE.get(slug) or []):
+        return None, "Tahle rozjížďka už trať má. Když se přestavuje, použij přestavbu."
+    return cislo, None
+
+
+def proc_nejde_klon(stav, rozhodci):
+    """Opsané z `Stavba.ProcNejdeKlon`."""
+    if stav in ("Rozestaveno", "Hotovo"):
+        return None
+    if stav == "Prijato":
+        return None if rozhodci else (
+            "Přijmout trať smí jen rozhodčí. Naklonuj ji jako hotovou a nech ji přijmout.")
+    return "Klon nemůže začít v přestavbě — přestavuje se trať, která už stojí."
 
 
 def proc_nejde_prvek(slug, v):
@@ -990,11 +1033,16 @@ def trat_verejna(slug):
 
     Bóje se berou k okamžiku přijetí. Mock drží sebrání jako příznak, ne
     čas — vyjde to nastejno, protože sebrat se dá jen u odemčené trati."""
-    t = trat_aktualni(slug)
-    if not t or t["stav"] not in ("Prijato", "Prestavba"):
+    # Nejnovější trať rozhoduje jen o přestavbě: to je ta, která se právě
+    # mění ve vodě. Jinak se vydává **nejnovější přijatá** — čerstvý klon
+    # ve stavu `Hotovo` by jinak veřejně shodil trať, podle které se pluje.
+    if (a := trat_aktualni(slug)) and a["stav"] == "Prestavba":
+        return {"prestavba": True, "prijatoV": None, "cisloRozjizdky": None,
+                "boje": [], "prvky": []}
+
+    t = next((x for x in reversed(TRATE.get(slug) or []) if x["stav"] == "Prijato"), None)
+    if not t:
         return None
-    if t["stav"] == "Prestavba":
-        return {"prestavba": True, "prijatoV": None, "boje": [], "prvky": []}
 
     prijato = t["prijatoV"]
     stojici = [b for b in BOJE.get(slug, [])
@@ -1018,6 +1066,7 @@ def trat_verejna(slug):
     vsechny = sorted(PRVKY.get(t["id"], []), key=lambda p: (p["poradi"], p["id"]))
 
     return {"prestavba": False, "prijatoV": prijato,
+            "cisloRozjizdky": t.get("rozjizdkaId"),
             "boje": [{"nazev": b["nazev"], "poradi": b["poradi"],
                       "sirka": b["sirka"], "delka": b["delka"]}
                      for b in sorted(stojici, key=lambda b: (b["poradi"], b["id"]))],
@@ -1033,6 +1082,7 @@ def trat_dto(slug, t):
     return {**{k: t[k] for k in
                ("id", "stav", "zalozenaV", "prijatoV", "prijal", "duvodVraceni", "rozjizdkaId",
                 "nahrazujeId")},
+            "cisloRozjizdky": t.get("rozjizdkaId"),
             "odjeta": trat_odjeta(slug, t),
             "smiHlasitHotovo": stavitel and proc_nejde_hotovo(t["stav"]) is None,
             "smiPrijmout": rozhodci and proc_nejde_prijmout(t["stav"]) is None,
@@ -2403,6 +2453,62 @@ class H(BaseHTTPRequestHandler):
         PRVKY[trat_aktualni(slug)["id"]].remove(p)
         return self._prazdna_odpoved()
 
+    def trat_seznam(self, slug):
+        if not self.zastavka(slug):
+            return None
+        return self.odpoved([trat_na_vyber(slug, t)
+                             for t in reversed(TRATE.get(slug) or [])])
+
+    def trat_prirad(self, slug, trat_id):
+        """Volná trať se přiřadí rozjížďce; obsazená ne — ta se klonuje."""
+        if not self.zastavka(slug):
+            return None
+        t = next((x for x in TRATE.get(slug) or [] if x["id"] == trat_id), None)
+        if not t:
+            return self.chyba(400, "Taková trať u téhle regaty není.")
+        if t.get("rozjizdkaId") is not None:
+            return self.chyba(400, "Tahle trať už rozjížďce patří. Odebrat by znamenalo "
+                                   "přepsat, podle čeho se jelo — naklonuj ji.")
+
+        cislo, chyba = volna_rozjizdka(slug, (self.telo_zadosti() or {}).get("rozjizdka"))
+        if chyba:
+            return self.chyba(400, chyba)
+
+        t["rozjizdkaId"] = cislo
+        return self.odpoved(trat_dto(slug, t))
+
+    def trat_klon(self, slug, trat_id):
+        """Kopie prvků na tytéž bóje. **Žádná nová pípnutí** — vyrobila by
+        se tím měření, která se nestala."""
+        if not self.zastavka(slug):
+            return None
+        v = self.telo_zadosti() or {}
+        stav = v.get("stav") or "Hotovo"
+        if (chyba := proc_nejde_klon(stav, smi_ted("Rozhodci"))):
+            return self.chyba(400, chyba)
+
+        zdroj = next((x for x in TRATE.get(slug) or [] if x["id"] == trat_id), None)
+        if not zdroj:
+            return self.chyba(400, "Taková trať u téhle regaty není.")
+
+        cislo = None
+        if v.get("rozjizdka") is not None:
+            cislo, chyba = volna_rozjizdka(slug, v["rozjizdka"])
+            if chyba:
+                return self.chyba(400, chyba)
+
+        nova = trat_zaloz(slug, stav)
+        nova["rozjizdkaId"] = cislo
+        if stav == "Prijato":
+            nova["prijatoV"] = ted_iso()
+            nova["prijal"] = self.prihlaseny()["zobrazovane"]
+
+        for x in sorted(PRVKY.get(zdroj["id"], []), key=lambda q: (q["poradi"], q["id"])):
+            PRVEK_ID[0] += 1
+            PRVKY.setdefault(nova["id"], []).append({**x, "id": PRVEK_ID[0]})
+
+        return self.odpoved(trat_dto(slug, nova), 201)
+
     def trat_stav(self, slug):
         """Stav trati regaty. 404, dokud nemá ani jednu bóji — stavba
         začíná prvním pípnutím, ne zvláštním knoflíkem."""
@@ -2617,6 +2723,14 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/trat/prvky$', cesta)):
             return self.prvek_zaloz(m.group(1))
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                r'/trat/(\d+)/rozjizdka$', cesta)):
+            return self.trat_prirad(m.group(1), int(m.group(2)))
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                r'/trat/(\d+)/klon$', cesta)):
+            return self.trat_klon(m.group(1), int(m.group(2)))
         if (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                 r'/trat/(hotovo|prijeti|vraceni|prestavba)$', cesta)):
@@ -3626,6 +3740,9 @@ class H(BaseHTTPRequestHandler):
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/trat/prvky$', cesta)):
             return self.prvky_seznam(m.group(1))
+        elif (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/trat/seznam$', cesta)):
+            return self.trat_seznam(m.group(1))
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/trat$', cesta)):
             return self.trat_stav(m.group(1))
