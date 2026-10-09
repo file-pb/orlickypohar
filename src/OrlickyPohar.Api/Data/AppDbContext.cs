@@ -36,6 +36,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<NarokNaLod> Naroky => Set<NarokNaLod>();
     public DbSet<Features.Boje.Boje> Boje => Set<Features.Boje.Boje>();
     public DbSet<Features.Boje.Trat> Trate => Set<Features.Boje.Trat>();
+    public DbSet<Features.Boje.PrvekTrati> PrvkyTrati => Set<Features.Boje.PrvekTrati>();
     public DbSet<MereniNadrze> MereniNadrze => Set<MereniNadrze>();
     public DbSet<PrevzatyClanek> PrevzateClanky => Set<PrevzatyClanek>();
     public DbSet<TeplotaHladiny> TeplotyHladiny => Set<TeplotaHladiny>();
@@ -220,6 +221,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         trat.HasOne(x => x.Prijal).WithMany().HasForeignKey(x => x.PrijalId)
             .OnDelete(DeleteBehavior.SetNull);
         trat.Ignore(x => x.Zamcena);
+
+        var prvek = b.Entity<Features.Boje.PrvekTrati>();
+        prvek.Property(x => x.KonecBPopis).HasMaxLength(Features.Boje.Prvky.PopisNejvic);
+        // Prvky se čtou vždycky celé pro jednu trať, a v pořadí.
+        prvek.HasIndex(x => new { x.TratId, x.Poradi });
+        prvek.HasOne(x => x.Trat).WithMany().HasForeignKey(x => x.TratId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Bóje se nemaže ani při sebrání, takže kaskáda tu nemá co dělat —
+        // a kdyby přece, prvek bez konce je horší než prvek žádný.
+        prvek.HasOne(x => x.BojeA).WithMany().HasForeignKey(x => x.BojeAId)
+            .OnDelete(DeleteBehavior.Restrict);
+        prvek.HasOne(x => x.BojeB).WithMany().HasForeignKey(x => x.BojeBId)
+            .OnDelete(DeleteBehavior.Restrict);
+        prvek.Ignore(x => x.MaDruhyKonec);
 
         var nadrz = b.Entity<MereniNadrze>();
         nadrz.ToTable("MereniNadrze");
