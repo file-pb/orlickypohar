@@ -3775,6 +3775,44 @@ co se stalo, a log nginxu ji má v poli `cache`.
 v adrese ji obejdou a vynutí vykreslení. To je případ „hodně požadavků od
 jednoho klienta" a patří k limitu rychlosti (S11 v platformě).
 
+### Dvě repliky webu, rozdělené cookie sezení (9. 10. 2026)
+
+Limity z 9. 10. (`limit_req` 2/s mimo cache, `limit_conn 8`) zaškrtily útok
+přes vymyšlenou cookie, ale **flood na stále nové adresy (`?x=N`) ne** —
+takový požadavek je *cachovatelný*, takže do zóny `render` nespadne, a osm
+souběžných vykreslení jednovláknový web vytíží naplno.
+
+Změřeno (platform `scripts/zatez.sh`, pět cest): z pěti zátěží selhává
+jediná, a přihlášený při ní čeká **2,22 s** místo 0,15 s. Pořadatel
+zapisující z vody je přihlášený, takže kritérium S11 splněné není.
+
+**Přidat kapacitu by nepomohlo.** Čekání přihlášeného není nedostatek
+výkonu, je to **fronta za útočníkem**: dvojnásobná kapacita ji zkrátí na
+polovinu, neodstraní. Ověřeno přípravkem na vlastním aliasu (poučení 54):
+při tomtéž floodu měl přihlášený na společné replice **1,9 s**, na vlastní
+replice **0,20 s**, tedy stejně jako v klidu, a replice to vytížilo **4 %**
+procesoru.
+
+**Řešení:** druhá replika webu (`web-sezeni`) a nginx rozhoduje podle jediné
+věci — má klient cookie sezení? Kdo ji má, jde na vlastní repliku; všechno
+ostatní na anonymní. Flood je anonymní, takže se celý zavře do anonymní
+repliky a procesor pořadatelovy repliky nechá na pokoji.
+
+- Pravidlo je schválně **jedno a podle cookie, ne seznam cest** — seznam
+  cest je přesně to, na čem padlo poučení 53.
+- Druhá replika dědí prostředí a limity **přes kotvu v compose**, ne
+  opsáním: vynechaná proměnná je u druhé kopie webu nejčastější chyba.
+- `/health-sezeni` v cache, aby dohled druhou repliku viděl. Bez toho by
+  spadlá replika sezení znamenala 502 pro každého přihlášeného, a `/health`
+  by přitom hlásil klid. **Zbývá přidat dohled v Uptime Kumě** — to je
+  změna u nástroje, ne v repozitáři.
+- Test cache staví **dva** falešné weby, každý se hlásí jménem, a ověřuje
+  oba směry i to, že se stránka jedné nedostane přes cache k druhé.
+
+**Vědomá mez:** kdo ještě cookie sezení nemá, jde na anonymní repliku —
+během floodu je tedy pomalé i samo přihlášení. Pořadatel, který je už
+přihlášený, je v pořádku; ten, kdo se přihlašuje právě v tu chvíli, čeká.
+
 ## Radar na příští hodinu
 
 **Pod výstrahami ČHMÚ** (`web/lib/radar.ts`, 18. 9. 2026): jestli nad

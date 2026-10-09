@@ -4,8 +4,13 @@ Test tak pozná, jestli odpověď přišla z cache (číslo se nezměnilo), nebo
 ji web vykreslil znovu. V těle je i to, co by skutečný web podle cookie
 ukázal — vzhled a jestli je někdo přihlášený —, aby šlo ověřit, že se
 stránka přihlášeného nikdy nedostane k nikomu jinému.
+
+Běží ve dvou kopiích, jako v produkci: `REPLIKA` říká, která odpověděla.
+Bez toho by se rozdělení podle cookie sezení nedalo ověřit výsledkem —
+jen čtením konfigurace.
 """
 
+import os
 import threading
 import time
 from http.cookies import SimpleCookie
@@ -13,12 +18,15 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 zamek = threading.Lock()
 pocet = 0
+REPLIKA = os.environ.get("REPLIKA", "anonym")
 
 
 class Web(BaseHTTPRequestHandler):
     def _odpovez(self):
         global pocet
         if self.path == "/health":
+            # Přesně "Healthy", jako skutečný web — kontrakt platformy.
+            # Která replika odpověděla, říká hlavička `X-Replika` níž.
             return self._posli(200, b"Healthy")
         with zamek:
             pocet += 1
@@ -28,7 +36,10 @@ class Web(BaseHTTPRequestHandler):
         cookie = SimpleCookie(self.headers.get("Cookie", ""))
         rezim = cookie["op_rezim"].value if "op_rezim" in cookie else ""
         prihlaseny = any(k.startswith("op_tok") for k in cookie)
-        telo = f"vykresleni={cislo} cesta={self.path} rezim={rezim} prihlaseny={int(prihlaseny)}\n"
+        telo = (
+            f"vykresleni={cislo} replika={REPLIKA} cesta={self.path} "
+            f"rezim={rezim} prihlaseny={int(prihlaseny)}\n"
+        )
         if self.path.startswith("/chyba"):
             return self._posli(500, telo.encode())
         if self.path.startswith("/neni"):
@@ -41,6 +52,9 @@ class Web(BaseHTTPRequestHandler):
     def _posli(self, stav, telo, dalsi=None):
         self.send_response(stav)
         self.send_header("Content-Type", "text/html; charset=utf-8")
+        # Kdo odpověděl. V hlavičce, ne jen v těle, aby se dala ověřit
+        # i cesta bez těla ke čtení (`/health`).
+        self.send_header("X-Replika", REPLIKA)
         # Stejně jako Next u dynamické stránky.
         self.send_header("Cache-Control", "private, no-cache, no-store, max-age=0, must-revalidate")
         self.send_header("Vary", "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Accept-Encoding")
