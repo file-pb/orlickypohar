@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Drobecky, drobeckySpravy } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { okamzik } from "@/app/datum";
-import { NAZEV_ROLE } from "@/lib/pripojeni";
+import { NAZEV_ROLE, NAZEV_ROLE_KOHO } from "@/lib/pripojeni";
 import {
   PUVOD,
   nactiLod,
@@ -344,7 +344,7 @@ function Vazba({
             <form action={potvrdRoliAkce} className="radkove">
               {skryte}
               <input type="hidden" name="role" value={vazba.role} />
-              <button type="submit">Potvrdit {NAZEV_ROLE[vazba.role]}</button>
+              <button type="submit">Potvrdit {NAZEV_ROLE_KOHO[vazba.role]}</button>
             </form>
           )}
 

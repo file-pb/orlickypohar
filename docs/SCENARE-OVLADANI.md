@@ -166,6 +166,65 @@ blokátor podle pravidla *Kdy je toho dost*, takže šel do oprav hned.
   takže mock ukazoval pořadateli cizí regaty jako jeho vlastní. Teď se
   u každého řádku ptá na *tu* zastávku.
 
+## Co odjela skupina E (9. 10. 2026)
+
+**Odjeto reprodukcí, ne účastníkem.** E1–E5 projetá proti mocku za `filip`
+a `dana`. Měří to jen to, co se bez cizího člověka změřit dá: **jestli cesta
+existuje, jestli role projde a jestli data sednou.** První orientaci, čas ani
+špatné odbočky to neměří — kdo aplikaci zná, nehledá. Sezení s pořadatelem
+to nenahrazuje.
+
+| Scénář | Cesta, kterou to šlo | Výsledek |
+|---|---|---|
+| E1 — určit kapitána | nabídka → Správa → *Lodě a kapitáni* → SENDY → *Určit kapitánem* | samostatně, data sedí (`rucne: true`, `urcil: Filip Burda`) |
+| E2 — kapitán od kódu | tamtéž → LUNA → *Potvrdit kapitána* | samostatně, data sedí; **ke kontrole se ale hledá očima** (viz pozorování) |
+| E3 — nahradit kapitána | tamtéž → LUNA → *Určit kapitána* z účtu, který k lodi nepatří | samostatně; Miloš kapitánem, Filip spadl na posádku, historie zapsala obojí |
+| E4 — udělit roli | Správa → *Oprávnění* → Jana, organizátor, Pohár Slunce | samostatně, data sedí. **Pokračování projito:** Jana po přihlášení dostane rozcestník „pořadatel — Pohár Slunce" s oddílem *Moje regaty*; na přihlášky cizí regaty ji server odmítne a odkáže na rozcestník |
+| E5 — správce celého webu | Správa → *Orlický pohár 2027* → *Kalendář ročníku* → *Upravit termín a údaje* | samostatně, data sedí (termín 15. 5. → 22. 5. 2027) |
+
+**E5 potřebuje ročník 2027.** Ročník 2026 má všechny termíny za sebou, takže
+„budoucí regatu" v něm není co přesunout; mock se pouští
+s `data/2027-kalendar.json`.
+
+### Opraveno hned
+
+| Nález | Oprava |
+|---|---|
+| ~~**Mock nešel pustit na ročníku bez lodí.** `data/2027-kalendar.json` je jediný ročník s budoucími termíny, tedy jediný, na kterém jde E5 odjet — a mock na něm padal (`_nasad_kody`, `StopIteration` nad prázdnými přihláškami). Přišlo to 6. 10. 2026 s prošlým kódem pro B2 (7b277dc) a do teď to nikdo nepotkal, protože se mock pouštěl jen na 2026~~ | **hotovo 9. 10. 2026** — bez přihlášek se prošlý kód nenasazuje a ten soubor jde servírovat |
+| ~~**„Potvrdit kapitán".** Tlačítko u kapitána od kódu skládalo jméno role v prvním pádě (`NAZEV_ROLE`), takže říkalo „Potvrdit kapitán", u majitele „Potvrdit majitel"~~ | **hotovo 9. 10. 2026** — `NAZEV_ROLE_KOHO` (čtvrtý pád) v `web/lib/pripojeni.ts` |
+| ~~**„Jarní vítr" uložena.** Věty po zápisu do kalendáře jsou v ženském rodě podle „regaty", ale vkládá se do nich jméno regaty, které má rod svůj~~ | **hotovo 9. 10. 2026** — jméno nese i podstatné jméno: „Regata „Jarní vítr" uložena." (`kalendar/page.tsx`, funkce `hotovo`) |
+
+### Pozorování, ze kterých návrh nevznikl
+
+Zapsané zvlášť schválně: rozhodnout o nich patří k návrhu, ne k měření.
+
+- **Loď ke kontrole stojí pod všemi loděmi bez kapitána.** Řadí se
+  `MaKapitana`, pak `KeKontrole`, pak abecedně
+  (`Features/Lode/Kapitanstvi.cs:237`; mock stejně), takže v ročníku, kde
+  kapitána nemá skoro nikdo, je jediný řádek, který čeká na rozhodnutí,
+  37. z 38. Obrazovka přitom o lodích bez kapitána říká „normální stav —
+  čeká na určení". Filtr, počet ani oddíl pro ke kontrole není a podtitulek
+  počítá lodě bez kapitána („Čeká 36 lodí").
+- **„Co teď" o kapitánství neví.** Počítá se jen ze zastávek
+  (`coTeď(udelena, serie, mojeZastavky)`), takže s LUNOU ke kontrole hlásí
+  „Nic nečeká."
+- **Loď s posádkou a bez kapitána je k nerozeznání od lodi, ke které nepatří
+  nikdo** — řádek říká jen „bez kapitána", ačkoliv `LodSpravaDto.Vazby`
+  posádku nese. Loď ze zadání E1 se najde jen podle jména.
+- **Panel lodi není po příchodu vidět.** Odkaz *posádka a kapitán →* vede
+  na `?lod=N` na tutéž stránku; panel začíná 1705 px pod okrajem při okně
+  768 px a stránka se na něj neposune (žádný fragment ani `id`). Po akci se
+  poloha drží (`scrollY` 1427), takže vadí jen první příchod.
+- **Hláška o udělení role v ročníku není `role="status"`** — chybová na téže
+  stránce `role="alert"` má a na oprávněních celého webu mají obojí.
+- **Drobečky na odmítnuté obrazovce říkají „Regata"** místo jména regaty.
+  U publikované regaty je přitom jméno veřejné.
+
+**Měřicí past, ne nález:** veřejné čtení má `revalidate: 60`
+(`web/lib/api.ts:98`), takže po přehození mocku na jiný ročník ukazuje
+rozcestník ještě minutu ročníky z toho předchozího. Vypadá to jako chyba
+v rozcestníku a není.
+
 ## Role, se kterými se zkouší
 
 Role se udělují na `/sprava/{ročník}/opravneni`. Pro zkoušku je potřeba
@@ -195,8 +254,8 @@ ne účty, kterými se zkoušejí — a ty se od nich v mocku lišily. Tabulka j
 | D1–D3 | `zdenek` | **rozhodčí celého ročníku** | výsledky `Potvrzeno`, nic nečeká | plná pro navigaci |
 | D4, D5 | `zdenek` | tamtéž | — | **jen hláška** — mock odmítá z pravidel stavu, ne z role |
 | E1–E3 | `filip` | správce ročníku (`zavod: null`) | LUNA má kapitána od kódu → *ke kontrole* | plná, výhrada u E2 |
-| E4 | `filip` | tamtéž | Jana je v seznamu účtů bez role | **jen zadání** — udělenou roli mock nevymáhá |
-| E5 | `dana` | správkyně **celého webu**, v ročníku nic | — | plná |
+| E4 | `filip` | tamtéž | Jana je v seznamu účtů bez role | plná od 8. 10. 2026 — mock roli vymáhá, včetně pokračování za Janu |
+| E5 | `dana` | správkyně **celého webu**, v ročníku nic | **ročník 2027** (`tools/fake-api.py data/2027-kalendar.json`) — 2026 má všechny termíny za sebou | plná |
 
 Dvě věci z toho, které měří něco jiného, než co je v názvu skupiny:
 
@@ -624,8 +683,8 @@ udělená a druhý netuší, kam jít. Dozvěděl se vůbec, že ji má?
 
 **E5 — Správce celého webu.**
 *Zadání:* Přesuň termín budoucí regaty ročníku 2027.
-*Pro moderátora:* účet s rolí **jen na celý web** (`dana`,
-`tools/fake-api.py:352,371`). Zkratky na ročník v nabídce nejsou, cesta vede
+*Pro moderátora:* účet s rolí **jen na celý web** (`dana`; v mocku
+`WEBOVA` a řádek v `OPRAVNENI_WEBU`). Zkratky na ročník v nabídce nejsou, cesta vede
 přes **Správa → ročník → Kalendář ročníku**: rozcestník ročníky zná i z role
 na celý web (`web/lib/co-smim.ts:92`, `web/app/sprava/page.tsx:46`). **Ruční
 adresu podej až po zaznamenaném neúspěchu** — schopnost uhodnout adresu není
