@@ -1354,10 +1354,54 @@ slučování víc telefonů, zhušťování podle kurzu, pořadí na vodě, pře
 s grafem rychlosti, porovnání dvou lodí, režim Expert. Všechno to snese
 rok odkladu a nic z toho se bez skutečných tras stejně nedá ověřit.
 
-**Pět scénářů je podmínka přijetí, ne hotová funkce:** zamčený telefon,
-výpadek s duplicitním doposláním, restart serveru, odvolání souhlasu při
-zahřáté cache a přestavba trati při přehrávání starší rozjížďky. Dokud
-neprojdou, veřejně se živé polohy nevydávají.
+**Scénáře přijetí, opravené 9. 10. 2026 po druhém kole oponentury.** Původní
+pětice obsahovala dva, které zkoušejí funkce, jež pilot **nemá** — odvolání
+souhlasu při zahřáté cache a přestavbu trati při přehrávání. Podmínka přijetí
+pro něco, co neexistuje, se nedá splnit; obojí patří k veřejné živé mapě,
+respektive k přehrávání, a zůstává tam. Na tom se shodly obě oponentury
+nezávisle.
+
+Pilot se přejímá na tomhle:
+
+1. **Zamčený telefon** — záznam běží po celou deklarovanou dobu, měří se
+   i spotřeba.
+2. **Systém zabil appku v půlce závodu.** Zamčený telefon není ten těžký
+   případ, zabitý proces je. Zapsaná část musí přežít a záznam pokračovat.
+   **Tohle je nejpravděpodobnější skutečná porucha** a jediná, která
+   z pilotu udělá nulu.
+3. **Výpadek a doposlání** — žádné duplicity ani ztracený potvrzený úsek.
+4. **Přerušené nahrání** se dá dokončit.
+5. **Posádka zapomene záznam ukončit** — trasa jinak pokračuje přes hospodu
+   domů a appka zaznamená, kde kdo bydlí. Chce to ostříhání na okno závodu
+   a dotaz po dojezdu. **Je to věc soukromí, ne pohodlí.**
+6. **Telefon přiřazený ke špatné lodi** — potvrzení jména lodi při startu
+   záznamu.
+
+**V pilotu musí být i způsob, jak se na výsledek podívat.** „Trasy vůbec
+vzniknou" je hodnota jen tehdy, když někdo řekne „vzorkování je moc hrubé"
+nebo „baterka umřela v šesté hodině". Stačí stažení trasy, počet bodů
+a časový rozsah — bez toho vzniknou soubory, které nikdo neotevře.
+
+**Čas je z telefonu, a ten se dá přestavit.** Trasa nahraná po dojezdu nese
+výhradně časy z telefonu, takže se musí rozhodnout, co s body v budoucnosti
+a s telefonem, kterému skočily hodiny. Jinak se první dlouhá trasa nedá
+přiložit ke stavu trati — a to je jediný důvod, proč se historie trati vede.
+
+**Pilot musí jít opustit.** Regata, přijetí trati ani výsledky nesmějí
+vyžadovat zapnutý tracker a už nahrané záznamy zůstávají. K tomu patří
+**termín rozhodnutí**: nesplněná přejímka znamená neveřejnou zkoušku nebo
+vypnutí pilotu, ne opravy mezi dvěma rozjížďkami.
+
+**Míří na konkrétní regatu, ne „na sezónu".** Pilot, který smí debutovat na
+druhém nebo třetím závodě 2027, nemusí být hotový k 15. květnu a přestane
+soupeřit o hodiny se stavy trati.
+
+**Nerozhodnutý předpoklad: jak se appka dostane na cizí telefon.** Poloha na
+pozadí chce deklarované background modes, tedy development build; plán
+8. 9. 2026 rozhodl neplatit 99 $ ročně za účet u Applu. „Jeden telefon na
+loď" tedy dnes znamená **Android, nebo Filipův vlastní telefon**. Je to
+rozhodnutí, ne formalita — a schvalování buildu je kalendář, který se
+hodinami nedohání.
 
 ### Co je na tom skutečně těžké
 
