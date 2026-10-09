@@ -4838,9 +4838,15 @@ tvrzení je nepřesných jako ta dvě výše.
 
 ## Zranitelnosti v appce: žádné overrides (10. 10. 2026)
 
-Dependabot má na `app/package-lock.json` **čtyři otevřená upozornění** a všechna
-čtyři zůstávají otevřená vědomě. Balík PR #160 je nezavřel a žádný další balík
-je nezavře, protože **ani jedno z nich se v řadě Expa 57 opravit nedá**.
+Dependabot měl na `app/package-lock.json` **čtyři otevřená upozornění** a žádné
+z nich se nezavírá overridem. Balík PR #160 je nezavřel a žádný další balík je
+nezavře, protože **ani jedno z nich se v řadě Expa 57 opravit nedá**.
+
+**Stav po rozhodnutí z 10. 10. 2026:** `braces` (#7) a `node-forge` (#6) jsou
+odmítnuté jako `tolerable_risk`, `uuid` (#1) jako `not_used`. **Otevřený
+zůstává schválně jen `decode-uri-component` (#2)** — je to jediné ze čtyř, kde
+oprava existuje a jednou přijde, takže slouží jako připomínka k přechodu na
+Expo 58. Neodmítá se proto, že by byl nebezpečnější než ostatní.
 
 Že to není jen zastaralý strom, je potřeba říct přesně: `package.json` sice píše
 `expo ~57.0.21`, ale lockfile drží **to nejnovější, co v řadě vyšlo** — `expo
@@ -4889,7 +4895,8 @@ Skutečná oprava je **`expo-router` 58.0.13 a výš, kde `query-string` ze
 závislostí úplně vypadl** — ne že by se povytáhl. To je major Expa a ten se
 podle `.github/dependabot.yml` zvedá s celým SDK, ne zvlášť. `expo-router@57.0.25`,
 nejnovější v naší řadě, má `query-string ^7.1.3` pořád. Vrátit se k tomu má
-tedy u přechodu na Expo 58, kde to spadne samo.
+tedy u přechodu na Expo 58, kde to spadne samo — a **upozornění #2 se nechává
+otevřené právě proto**, aby ta připomínka nezmizela.
 
 **Pozor na `npm audit` v tomhle repu.** U tří ze čtyř nabízí `fixAvailable:
 expo 44.0.6`, u Metra `react-native 0.72.17` — to je downgrade o třináct
