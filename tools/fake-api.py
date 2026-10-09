@@ -20,8 +20,8 @@ from urllib.parse import urlparse, parse_qs
 # Který ročník servírovat. Výchozí je mock; jiný se dá dát argumentem —
 # kalendář ročníku bez lodí (data/2027-kalendar.json) se jinak nedá na
 # webu vidět, dokud ho někdo nenahraje do databáze.
-D = json.load(open(sys.argv[1] if len(sys.argv) > 1 else "data/2026-nanecisto.json",
-                  encoding="utf-8"))
+SOUBOR = sys.argv[1] if len(sys.argv) > 1 else "data/2026-nanecisto.json"
+D = json.load(open(SOUBOR, encoding="utf-8"))
 LODE = {l["klic"]: l for l in D["lode"]}
 OSOBY = {o["klic"]: o for o in D["osoby"]}
 KAT = {p["lod"]: p["kategorie"] for p in D["prihlasky"]}
@@ -3349,5 +3349,8 @@ class H(BaseHTTPRequestHandler):
 # Web tak nepotřebuje žádné nastavení navíc a postup z README platí
 # i v čerstvém klonu, kde .env.local neexistuje.
 PORT = int(os.environ.get("PORT", "8080"))
-print(f"Falešné API z data/2026-nanecisto.json na http://127.0.0.1:{PORT}", flush=True)
+# Jméno souboru se vypisuje, ne hádá. Hláška dřív říkala 2026-nanecisto
+# i tehdy, když se mock pustil s jiným ročníkem — a jediné místo, kde se to
+# dá hned poznat, je právě tahle řádka (9. 10. 2026).
+print(f"Falešné API z {SOUBOR} ({D['slug']}) na http://127.0.0.1:{PORT}", flush=True)
 HTTPServer(("127.0.0.1", PORT), H).serve_forever()
