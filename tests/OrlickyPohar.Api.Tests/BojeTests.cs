@@ -39,18 +39,40 @@ public class BojeTests(PostgresFixture fixture)
 
     private (AppDbContext Db, BojeSprava Boje) Sluzby()
     {
+        var (db, boje, _) = SluzbyITrat();
+        return (db, boje);
+    }
+
+    /// <summary>
+    /// Služby i s tratí. Potřeba tam, kde se měří, jestli na záznamu bóje
+    /// něco visí: přijetí trati je právě ta věc, která ho udělá důležitým.
+    /// </summary>
+    private (AppDbContext Db, BojeSprava Boje, TratSprava Trat) SluzbyITrat()
+    {
         var scope = fixture.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         // Úložiště vlastní, ne ze služeb: v CI není nastavené a `Nahravani.Dto`
         // by bez veřejné adresy vydal null. Test má měřit projekci, ne to,
         // jestli má běh nakonfigurované R2.
         var uloziste = new VerejneUloziste();
+        var trate = new TratSprava(db, TimeProvider.System);
         return (db, new BojeSprava(
-            db, TimeProvider.System, uloziste, new TratSprava(db, TimeProvider.System),
+            db, TimeProvider.System, uloziste, trate,
             new OrlickyPohar.Api.Features.Fotky.FotkySprava(
                 db, uloziste, TimeProvider.System,
                 NullLogger<OrlickyPohar.Api.Features.Fotky.FotkySprava>.Instance),
-            NullLogger<BojeSprava>.Instance));
+            NullLogger<BojeSprava>.Instance), trate);
+    }
+
+    /// <summary>
+    /// Udělá z bóje „důležitou": rozhodčí trať přijme, takže šla ven ve
+    /// veřejné trati. Pak se zase odemkne, aby se dalo pípat a sbírat.
+    /// </summary>
+    private static async Task DulezitaAsync(TratSprava trate, Zavod zavod, Uzivatel kdo)
+    {
+        await trate.HotovoAsync(zavod.Id, true, default);
+        await trate.PrijmiAsync(zavod.Id, kdo.Id, default);
+        await trate.PrestavbaAsync(zavod.Id, true, default);
     }
 
     private static async Task<(Zavod Zavod, Uzivatel Kdo)> RegataAsync(AppDbContext db)
@@ -124,8 +146,16 @@ public class BojeTests(PostgresFixture fixture)
         Assert.Equal(ZdrojPolohy.Mapa, vse.Single(b => b.Id == zmapy.Id).Zdroj);
     }
 
+    /// <summary>
+    /// <b>Přenastavení při stavbě historii nevyrábí.</b> Dřív tenhle test
+    /// tvrdil opak — že původní záznam zůstane vždycky. Filip to otočil
+    /// (9. 10. 2026): <i>„Když se překlepnem, nebo rozhodneme to přendat
+    /// při stavbě, před schválením, tak nám ten údaj k ničemu není a ani
+    /// na něm nic nevisí."</i> Že záznam zůstane, když na něm něco visí,
+    /// hlídají testy ve <c>TratSpravaTests</c>.
+    /// </summary>
     [Fact]
-    public async Task Prenastaveni_nechava_puvodni_zaznam_v_historii()
+    public async Task Prenastaveni_pri_stavbe_nevyrabi_historii()
     {
         var (db, boje) = Sluzby();
         var (zavod, kdo) = await RegataAsync(db);
@@ -140,10 +170,11 @@ public class BojeTests(PostgresFixture fixture)
         Assert.Single(platne);
         Assert.Equal(nova!.Id, platne[0].Id);
         Assert.Equal(49.52, platne[0].Sirka, 5);
-        // …ale stará poloha zůstává, aby šlo přečíst trasu z té doby.
+        // …a historie je prázdná: trať nikdo nepřijal a žádný prvek na
+        // ten záznam neukazoval, takže na něm nic neviselo.
         var vse = await boje.SeznamAsync(zavod.Id, iHistorie: true, default);
-        Assert.Equal(2, vse.Count);
-        Assert.Contains(vse, b => b.Id == puvodni.Id && Math.Abs(b.Sirka - 49.516) < 0.0001);
+        Assert.Single(vse);
+        Assert.DoesNotContain(vse, b => b.Id == puvodni.Id);
         // Pořadí se po bóji, kterou nahrazuje, převezme.
         Assert.Equal(puvodni.Poradi, nova.Poradi);
     }
@@ -163,14 +194,28 @@ public class BojeTests(PostgresFixture fixture)
         Assert.NotNull(chyba);
     }
 
+    /// <summary>
+    /// <b>Sebraná bóje zůstane v záznamech jen tehdy, když na ní něco
+    /// visí</b> (Filip, 9. 10. 2026). Dřív tenhle test tvrdil, že zůstane
+    /// vždycky; bóje sebraná při stavbě ale nikomu nesloužila a v seznamu
+    /// jen překážela tomu, co platí.
+    /// </summary>
     [Fact]
-    public async Task Sebrana_boje_zmizi_z_trati_ale_ne_ze_zaznamu()
+    public async Task Sebrana_boje_zustane_v_zaznamech_jen_kdyz_na_ni_neco_visi()
     {
-        var (db, boje) = Sluzby();
+        var (db, boje, trate) = SluzbyITrat();
         var (zavod, kdo) = await RegataAsync(db);
-        var (postavena, _) = await boje.PipniAsync(zavod.Id, Bod("Bóje 1"), kdo.Id, default);
 
-        Assert.Null(await boje.SeberAsync(zavod.Id, postavena!.Id, default));
+        // Bóje sebraná při stavbě: nic na ní nevisí, takže nezůstane nic.
+        var (pri_stavbe, _) = await boje.PipniAsync(zavod.Id, Bod("Bóje 1"), kdo.Id, default);
+        Assert.Null(await boje.SeberAsync(zavod.Id, pri_stavbe!.Id, default));
+        Assert.Empty(await boje.SeznamAsync(zavod.Id, iHistorie: true, default));
+
+        // Bóje, která stála ve vodě při přijetí trati, šla ven veřejně —
+        // a co bylo veřejné, se zpětně nepřepisuje.
+        var (verejna, _) = await boje.PipniAsync(zavod.Id, Bod("Bóje 2"), kdo.Id, default);
+        await DulezitaAsync(trate, zavod, kdo);
+        Assert.Null(await boje.SeberAsync(zavod.Id, verejna!.Id, default));
 
         Assert.Empty(await boje.SeznamAsync(zavod.Id, iHistorie: false, default));
         var vse = await boje.SeznamAsync(zavod.Id, iHistorie: true, default);
@@ -244,27 +289,44 @@ public class BojeTests(PostgresFixture fixture)
     }
 
     /// <summary>
-    /// Sebraná bóje si fotky nechává. Záznam o poloze zůstává, aby šla
-    /// přečíst trasa z té doby — a fotka je jeho doklad. Úklid souborů,
-    /// které už nikdo nepotřebuje, patří na konec ročníku
-    /// (Filip, 9. 10. 2026), ne do „Sebrat z vody".
+    /// <b>Fotka jde se záznamem.</b> Dřív tu stálo, že sebraná bóje si
+    /// fotky nechává a úklid patří na konec ročníku — to bylo Filipovo
+    /// ranní rozhodnutí z 9. 10. 2026. Večer téhož dne ho otočil:
+    /// <i>„a ty fotky nemá taky cenu držet."</i> U polohy, kterou nikdo
+    /// neviděl a na které nic nestojí, není co dokládat — a fotka na
+    /// rozdíl od řádku stojí místo na disku.
+    /// <para>
+    /// Když na záznamu něco visí, zůstává i s fotkami.
+    /// </para>
     /// </summary>
     [Fact]
-    public async Task Sebrani_fotky_nemaze()
+    public async Task Fotka_jde_se_zaznamem()
     {
-        var (db, boje) = Sluzby();
+        var (db, boje, trate) = SluzbyITrat();
         var (zavod, kdo) = await RegataAsync(db);
-        var (postavena, _) = await boje.PipniAsync(zavod.Id, Bod("Bóje 1"), kdo.Id, default);
 
-        var fotka = Snimek(kdo.Id, "Bóje zblízka", Ted);
-        fotka.UBojeId = postavena!.Id;
-        db.Fotky.Add(fotka);
+        var (pri_stavbe, _) = await boje.PipniAsync(zavod.Id, Bod("Bóje 1"), kdo.Id, default);
+        var zahozena = Snimek(kdo.Id, "Bóje zblízka", Ted);
+        zahozena.UBojeId = pri_stavbe!.Id;
+        db.Fotky.Add(zahozena);
         await db.SaveChangesAsync();
 
-        Assert.Null(await boje.SeberAsync(zavod.Id, postavena.Id, default));
+        Assert.Null(await boje.SeberAsync(zavod.Id, pri_stavbe.Id, default));
+        Assert.Empty(await boje.SeznamAsync(zavod.Id, iHistorie: true, default));
+        Assert.False(await db.Fotky.AnyAsync(f => f.Id == zahozena.Id));
+
+        // A naopak: na čem něco visí, tomu fotka zůstane.
+        var (verejna, _) = await boje.PipniAsync(zavod.Id, Bod("Bóje 2"), kdo.Id, default);
+        var zustane = Snimek(kdo.Id, "Bóje a břeh", Ted);
+        zustane.UBojeId = verejna!.Id;
+        db.Fotky.Add(zustane);
+        await db.SaveChangesAsync();
+        await DulezitaAsync(trate, zavod, kdo);
+
+        Assert.Null(await boje.SeberAsync(zavod.Id, verejna.Id, default));
 
         var sebrana = (await boje.SeznamAsync(zavod.Id, iHistorie: true, default))
-            .Single(b => b.Id == postavena.Id);
+            .Single(b => b.Id == verejna.Id);
         Assert.True(sebrana.Sebrana);
         Assert.Single(sebrana.Fotky);
     }
@@ -278,9 +340,12 @@ public class BojeTests(PostgresFixture fixture)
     [Fact]
     public async Task Sebranou_boji_nejde_prenastavit()
     {
-        var (db, boje) = Sluzby();
+        var (db, boje, trate) = SluzbyITrat();
         var (zavod, kdo) = await RegataAsync(db);
         var (postavena, _) = await boje.PipniAsync(zavod.Id, Bod("Bóje 1"), kdo.Id, default);
+        // Bóje musí po sebrání zůstat, jinak by se neměřila tahle ochrana,
+        // ale jen to, že záznam zmizel.
+        await DulezitaAsync(trate, zavod, kdo);
         Assert.Null(await boje.SeberAsync(zavod.Id, postavena!.Id, default));
 
         var (nic, chyba) = await boje.PipniAsync(

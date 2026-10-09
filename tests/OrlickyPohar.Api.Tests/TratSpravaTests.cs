@@ -145,8 +145,12 @@ public class TratSpravaTests(PostgresFixture fixture)
 
         Assert.Null(chyba);
         Assert.Equal(StavTrati.Prestavba, po!.Stav);
-        // Přijetí se maže, aby `PrijatoV` neukazovalo na stav, který neplatí.
-        Assert.Null(po.PrijatoV);
+        // `PrijatoV` zůstává. Dřív se mazalo, „aby neukazovalo na stav,
+        // který neplatí" — jenže co platí teď, říká `Stav`, a smazáním
+        // času se ztrácel doklad, že trať chvíli byla veřejná. Na něm
+        // stojí rozhodnutí, jestli se záznam bóje smí zahodit, nebo ho
+        // někdo venku viděl (`BojeSprava.ZahodAsync`).
+        Assert.NotNull(po.PrijatoV);
         // Historie se nevyrábí: tahle trať ještě nikomu nesloužila.
         Assert.Equal(1, await db.Trate.CountAsync(t => t.ZavodId == zavod.Id));
         // A stavět se zase smí.
