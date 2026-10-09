@@ -148,11 +148,16 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
         }
 
         // Nepřijatá historie se nevyrábí: tahle trať ještě nikomu nesloužila,
-        // takže se jen odemkne. Přijetí se maže, aby `PrijatoV` neukazovalo
-        // na stav, který neplatí.
+        // takže se jen odemkne.
+        //
+        // <b>Přijetí se ale nemaže.</b> Dřív se `PrijatoV` nulovalo, „aby
+        // neukazovalo na stav, který neplatí" — jenže co teď platí, říká
+        // `Stav`, a smazáním času se ztrácel **doklad, že trať chvíli byla
+        // veřejná**. Na tom doklad visí: podle něj se pozná, jestli se
+        // záznam bóje smí zahodit jako nepotřebný, nebo ho někdo venku
+        // viděl (`BojeSprava.ZahodAsync`). `PrijatoV` je tedy „kdy ji
+        // rozhodčí naposledy přijal", ne „je přijatá".
         trat.Stav = StavTrati.Prestavba;
-        trat.PrijatoV = null;
-        trat.PrijalId = null;
         await db.SaveChangesAsync(ct);
 
         return (await DtoAsync(trat, true, jeRozhodci, ct), null);

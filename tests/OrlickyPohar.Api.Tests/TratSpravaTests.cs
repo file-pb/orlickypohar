@@ -48,10 +48,20 @@ public class TratSpravaTests(PostgresFixture fixture)
         var trat = new TratSprava(db, TimeProvider.System);
 
         return (db,
-            new BojeSprava(db, TimeProvider.System, new ZadneUloziste(), trat,
-                NullLogger<BojeSprava>.Instance),
+            BojeSluzba(db, trat),
             trat,
             new PrvkySprava(db, trat));
+    }
+
+    private static BojeSprava BojeSluzba(AppDbContext db, TratSprava trat)
+    {
+        var uloziste = new ZadneUloziste();
+        return new BojeSprava(
+            db, TimeProvider.System, uloziste, trat,
+            new OrlickyPohar.Api.Features.Fotky.FotkySprava(
+                db, uloziste, TimeProvider.System,
+                NullLogger<OrlickyPohar.Api.Features.Fotky.FotkySprava>.Instance),
+            NullLogger<BojeSprava>.Instance);
     }
 
     private static async Task<(Zavod Zavod, Uzivatel Kdo)> RegataAsync(AppDbContext db)
@@ -135,8 +145,12 @@ public class TratSpravaTests(PostgresFixture fixture)
 
         Assert.Null(chyba);
         Assert.Equal(StavTrati.Prestavba, po!.Stav);
-        // Přijetí se maže, aby `PrijatoV` neukazovalo na stav, který neplatí.
-        Assert.Null(po.PrijatoV);
+        // `PrijatoV` zůstává. Dřív se mazalo, „aby neukazovalo na stav,
+        // který neplatí" — jenže co platí teď, říká `Stav`, a smazáním
+        // času se ztrácel doklad, že trať chvíli byla veřejná. Na něm
+        // stojí rozhodnutí, jestli se záznam bóje smí zahodit, nebo ho
+        // někdo venku viděl (`BojeSprava.ZahodAsync`).
+        Assert.NotNull(po.PrijatoV);
         // Historie se nevyrábí: tahle trať ještě nikomu nesloužila.
         Assert.Equal(1, await db.Trate.CountAsync(t => t.ZavodId == zavod.Id));
         // A stavět se zase smí.
@@ -274,6 +288,70 @@ public class TratSpravaTests(PostgresFixture fixture)
 
         // Dalším hotovo důvod zmizí — už neplatí.
         Assert.Null((await trate.HotovoAsync(zavod.Id, true, default)).Trat!.DuvodVraceni);
+    }
+
+    [Fact]
+    public async Task Preklep_pri_stavbe_se_nedrzi_jako_historie()
+    {
+        // Filip, 9. 10. 2026: „Když se překlepnem, nebo rozhodneme to
+        // přendat při stavbě před schválením, tak nám ten údaj k ničemu
+        // není a ani na něm nic nevisí."
+        var (db, boje, trate) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (prvni, _) = await boje.PipniAsync(zavod.Id, Bod("Start"), kdo.Id, default);
+        var (druha, _) = await boje.PipniAsync(
+            zavod.Id, Bod("Start") with { NahrazujeId = prvni!.Id }, kdo.Id, default);
+
+        // Z překlepu nezůstal řádek, jen ta oprava.
+        Assert.Null(await db.Boje.FindAsync([prvni.Id], default));
+        Assert.Equal(1, await db.Boje.CountAsync(b => b.ZavodId == zavod.Id));
+        // A řetěz nekončí v prázdnu.
+        Assert.Null(await db.Boje.Where(b => b.Id == druha!.Id)
+            .Select(b => b.NahrazujeId).FirstAsync());
+
+        // Sebrání rozestavěné bóje taky nic nezanechá.
+        Assert.Null(await boje.SeberAsync(zavod.Id, druha!.Id, default));
+        Assert.Equal(0, await db.Boje.CountAsync(b => b.ZavodId == zavod.Id));
+    }
+
+    [Fact]
+    public async Task Co_bylo_v_prijate_trati_zustane_i_kdyz_na_nej_neukazuje_prvek()
+    {
+        // Veřejná trať vydává i seznam stojících bójí, takže i bóje bez
+        // prvku už byla venku — a co bylo veřejné, se zpětně nepřepisuje.
+        var (db, boje, trate) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (stojici, _) = await boje.PipniAsync(zavod.Id, Bod("Start"), kdo.Id, default);
+        await trate.HotovoAsync(zavod.Id, true, default);
+        await trate.PrijmiAsync(zavod.Id, kdo.Id, default);
+        await trate.PrestavbaAsync(zavod.Id, true, default);
+
+        Assert.Null(await boje.SeberAsync(zavod.Id, stojici!.Id, default));
+
+        var zustala = await db.Boje.FindAsync([stojici.Id], default);
+        Assert.NotNull(zustala);
+        Assert.NotNull(zustala!.SebranaV);
+    }
+
+    [Fact]
+    public async Task Boje_pouzita_prvkem_zustane()
+    {
+        var (db, boje, trate, prvky) = SluzbyIPrvky();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (prvni, _) = await boje.PipniAsync(zavod.Id, Bod("Značka"), kdo.Id, default);
+        Assert.Null((await prvky.ZalozAsync(
+            zavod.Id, new PrvekVstup(TypPrvku.Znacka, 1, prvni!.Id), default)).Chyba);
+
+        // Prvek je rozhodnutí o trati; smazáním záznamu by se rozbil.
+        var (druha, _) = await boje.PipniAsync(
+            zavod.Id, Bod("Značka") with { NahrazujeId = prvni.Id }, kdo.Id, default);
+
+        Assert.NotNull(await db.Boje.FindAsync([prvni.Id], default));
+        Assert.Equal(prvni.Id, await db.Boje.Where(b => b.Id == druha!.Id)
+            .Select(b => b.NahrazujeId).FirstAsync());
     }
 
     /// <summary>Rozjížďka regaty, ať je čemu trať přiřadit.</summary>

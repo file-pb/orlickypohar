@@ -227,6 +227,32 @@ public class FotkySprava(AppDbContext db, IUloziste uloziste, TimeProvider cas, 
     /// Smaže starou fotku. Nová je v tu chvíli uložená, takže úklid už
     /// nepřeruší ani odchod klienta — proto bez jeho tokenu.
     /// </summary>
+    /// <summary>
+    /// Smaže všechny fotky bóje. Vrací <c>false</c>, když se mazat nedá,
+    /// protože úložiště není zapnuté — volající pak nesmí smazat ani
+    /// záznam, jinak by soubory zůstaly viset bez vlastníka.
+    /// </summary>
+    public async Task<bool> OdeberVsechnyUBojeAsync(int bojeId, CancellationToken ct)
+    {
+        var id = await db.Fotky.Where(f => f.UBojeId == bojeId).Select(f => f.Id).ToListAsync(ct);
+        if (id.Count == 0) return true;
+        if (!uloziste.Pripraveno) return false;
+
+        foreach (var x in id) await SmazAsync(x);
+
+        // <b>Odpojit, co se smazalo.</b> `SmazAsync` maže
+        // `ExecuteDeleteAsync`, tedy mimo sledování změn: řádek z databáze
+        // zmizí, ale sledovaná entita zůstane. Kdyby volající hned potom
+        // smazal bóji, EF by k ní fotku kaskádou přidal do dávky a spadl
+        // na „expected to affect 1 row, but actually affected 0".
+        foreach (var e in db.ChangeTracker.Entries<Fotka>()
+                     .Where(e => id.Contains(e.Entity.Id))
+                     .ToList())
+            e.State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+
+        return true;
+    }
+
     private async Task SmazAsync(Guid id)
     {
         await db.Fotky.Where(f => f.Id == id).ExecuteDeleteAsync(CancellationToken.None);

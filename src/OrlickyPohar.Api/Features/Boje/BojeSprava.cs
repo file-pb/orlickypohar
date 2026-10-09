@@ -14,6 +14,7 @@ namespace OrlickyPohar.Api.Features.Boje;
 /// </summary>
 public class BojeSprava(
     AppDbContext db, TimeProvider cas, Fotky.IUloziste uloziste, TratSprava trate,
+    Fotky.FotkySprava fotky,
     ILogger<BojeSprava> log)
 {
     /// <summary>Bóje regaty. Platné podle pořadí, historie až za nimi.</summary>
@@ -109,6 +110,11 @@ public class BojeSprava(
         if (stara is not null) stara.NahrazenaV = ted;
         await db.SaveChangesAsync(ct);
 
+        if (stara is not null && await ZahodAsync(stara, nova, ct))
+            log.LogInformation(
+                "Přenastavený záznam bóje {Nazev} u regaty {Zavod} se nedržel — "
+                + "nic na něm neviselo", nova.Nazev, zavodId);
+
         log.LogInformation(
             "Bóje {Nazev} u regaty {Zavod} {Co} ze zdroje {Zdroj} (přesnost {Presnost} m)",
             nova.Nazev, zavodId, stara is null ? "postavena" : "přenastavena",
@@ -131,6 +137,68 @@ public class BojeSprava(
 
         boje.SebranaV = cas.GetUtcNow();
         await db.SaveChangesAsync(ct);
+
+        await ZahodAsync(boje, null, ct);
         return null;
+    }
+
+    /// <summary>
+    /// Zahodí záznam bóje, na kterém nic nevisí. Vrací, jestli se zahodil.
+    ///
+    /// <para>
+    /// <b>Historie začíná tam, kde na záznamu něco visí</b> (Filip,
+    /// 9. 10. 2026: <i>„historii smazaných bójí chci až po tom, co na nich
+    /// něco závisí"</i>). Překlep při pípnutí a hned opravené pořadí nejsou
+    /// historie, jsou to dva pokusy o totéž — a v seznamu pak překáží tomu,
+    /// co platí. Drží se proto jen záznam, na kterém doopravdy něco stojí.
+    /// </para>
+    ///
+    /// <para><b>Záviset na něm může dvojí:</b></para>
+    /// <list type="number">
+    /// <item><b>Prvek trati</b> na něj ukazuje. Pak je to rozhodnutí
+    /// o trati a smazáním by se rozbilo.</item>
+    /// <item><b>Stál ve vodě, když rozhodčí nějakou trať přijal.</b>
+    /// V tu chvíli šel ven ve veřejné trati, takže ho někdo mohl vidět —
+    /// a co bylo veřejné, se zpětně nepřepisuje. Platí i pro bóji, kterou
+    /// žádný prvek nepoužívá: veřejná trať vydává i seznam stojících bójí.
+    /// </item>
+    /// </list>
+    ///
+    /// <para>
+    /// <b>Bez úložiště se nemaže.</b> Smazat řádek a nechat soubory fotek
+    /// viset by bylo horší než neuklidit vůbec.
+    /// </para>
+    ///
+    /// <para>
+    /// Hranou je trať, která byla přijatá a pak se bez odjetí odemkla:
+    /// <c>PrestavbaAsync</c> jí smaže <c>PrijatoV</c>, takže se po ní
+    /// nepozná, že chvíli veřejná byla. Dopadá to ale na správnou stranu —
+    /// podle takové trati nikdo neplul.
+    /// </para>
+    /// </summary>
+    private async Task<bool> ZahodAsync(Boje stara, Boje? nastupce, CancellationToken ct)
+    {
+        if (await db.PrvkyTrati.AnyAsync(
+                p => p.BojeAId == stara.Id || p.BojeBId == stara.Id, ct))
+            return false;
+
+        var stala = await db.Trate.AnyAsync(
+            t => t.ZavodId == stara.ZavodId
+                 && t.PrijatoV != null
+                 && t.PrijatoV >= stara.PostavenaV
+                 && (stara.NahrazenaV == null || t.PrijatoV < stara.NahrazenaV)
+                 && (stara.SebranaV == null || t.PrijatoV < stara.SebranaV), ct);
+        if (stala) return false;
+
+        if (!await fotky.OdeberVsechnyUBojeAsync(stara.Id, ct)) return false;
+
+        // Nástupce se napojí na předchůdce zahozeného záznamu, ať řetěz
+        // přenastavení nekončí v prázdnu. Jiný záznam na zahozený ukazovat
+        // nemůže — na starou bóji se navazuje jen tím jedním pípnutím.
+        if (nastupce is not null) nastupce.NahrazujeId = stara.NahrazujeId;
+
+        db.Boje.Remove(stara);
+        await db.SaveChangesAsync(ct);
+        return true;
     }
 }

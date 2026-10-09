@@ -1671,6 +1671,43 @@ a které stejně potřebujeme pro upozornění posádce i pro tracker.
 **Co na webu nepůjde nikdy:** samotné sledování trasy. Hodiny běžící GPS na
 pozadí prohlížeč neumí, na iPhonu obzvlášť. To je důvod, proč appka existuje.
 
+#### Historie bójí začíná tam, kde na záznamu něco visí (Filip, 9. 10. 2026)
+
+Filip: *„Historii smazaných bójí chci až po tom, co na nich něco závisí.
+Když se překlepnem, nebo rozhodneme to přendat při stavbě, před schválením,
+tak nám ten údaj k ničemu není a ani na něm nic nevisí. A ty fotky nemá
+taky cenu držet."*
+
+**Záznamy bóje se dál nepřepisují** — mění se jen to, které vůbec vzniknou
+jako historie. Překlep v pořadí a hned opravené pípnutí nejsou dvě verze
+pravdy, jsou to dva pokusy o totéž, a v seznamu pak překáží tomu, co platí.
+
+**Záviset na záznamu může dvojí:**
+
+1. **Prvek trati** na něj ukazuje. Pak je to rozhodnutí o trati a smazáním
+   by se rozbilo.
+2. **Bóje stála ve vodě, když rozhodčí nějakou trať přijal.** V tu chvíli
+   šla ven ve veřejné trati, takže ji někdo mohl vidět — a co bylo veřejné,
+   se zpětně nepřepisuje. Platí i pro bóji, kterou žádný prvek nepoužívá:
+   veřejná trať vydává i seznam stojících bójí.
+
+Jinak se záznam při přenastavení nebo sebrání **zahodí i s fotkami**. Fotka
+je u bóje doklad k poloze a u polohy, kterou nikdo neviděl a na které nic
+nestojí, není co dokládat — a na rozdíl od řádku stojí místo na disku.
+
+**Dvě věci, které z toho plynou:**
+
+- **Bez úložiště se nemaže nic.** Smazat řádek a nechat soubory fotek viset
+  by bylo horší než neuklidit vůbec.
+- **Přestavba přestala mazat `PrijatoV`.** Dřív se nulovalo, „aby
+  neukazovalo na stav, který neplatí" — jenže co platí teď, říká `Stav`,
+  a smazáním času se ztrácel **doklad, že trať chvíli byla veřejná**. Právě
+  na něm tohle pravidlo stojí: bez něj by zmizela i bóje, kterou si někdo
+  stáhl v GPX. `PrijatoV` tedy znamená „kdy ji rozhodčí naposledy přijal".
+
+Nástupce v řetězu přenastavení se napojí na předchůdce zahozeného záznamu,
+ať řetěz nekončí v prázdnu.
+
 #### Trať není seznam bójí, ale řada prvků (Filip, 9. 10. 2026)
 
 *„Dokázali bychom bóje rozšířit i o definici cílové čáry? Nebo to, že musí

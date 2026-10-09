@@ -41,10 +41,20 @@ public class PrvkySpravaTests(PostgresFixture fixture)
         var trat = new TratSprava(db, TimeProvider.System);
 
         return (db,
-            new BojeSprava(db, TimeProvider.System, new ZadneUloziste(), trat,
-                NullLogger<BojeSprava>.Instance),
+            BojeSluzba(db, trat),
             trat,
             new PrvkySprava(db, trat));
+    }
+
+    private static BojeSprava BojeSluzba(AppDbContext db, TratSprava trat)
+    {
+        var uloziste = new ZadneUloziste();
+        return new BojeSprava(
+            db, TimeProvider.System, uloziste, trat,
+            new OrlickyPohar.Api.Features.Fotky.FotkySprava(
+                db, uloziste, TimeProvider.System,
+                NullLogger<OrlickyPohar.Api.Features.Fotky.FotkySprava>.Instance),
+            NullLogger<BojeSprava>.Instance);
     }
 
     private static async Task<(Zavod Zavod, Uzivatel Kdo)> RegataAsync(AppDbContext db)

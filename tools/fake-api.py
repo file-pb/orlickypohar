@@ -1145,7 +1145,8 @@ def _nasad_boje():
             "id": BOJE_ID[0], "nazev": nazev, "poradi": poradi,
             "sirka": sirka, "delka": delka, "presnostM": presnost,
             "postavenaV": postavena, "postavil": JA["zobrazovane"],
-            "nahrazenaV": nahrazena, "sebrana": sebrana, "zdroj": zdroj,
+            "nahrazenaV": nahrazena, "sebrana": sebrana,
+            "sebranaV": postavena if sebrana else None, "zdroj": zdroj,
         }
 
     # Trať u zastávky, na které stojí zkouška ovládání — tam má roli
@@ -1167,6 +1168,30 @@ def _nasad_boje():
     # Jako migrace: regata, která bóje má, dostane trať ve stavu
     # `Rozestaveno`. Přijetí dodnes neexistovalo, takže nikdo nic nepotvrdil.
     trat_zaloz(slug)
+
+
+def zahod_boji(slug, b):
+    """Zahodí záznam bóje, na kterém nic nevisí. Opsané z
+    `BojeSprava.ZahodAsync`.
+
+    Historie začíná tam, kde na záznamu něco visí (Filip, 9. 10. 2026).
+    Překlep při stavbě a hned opravené pořadí nejsou historie, jsou to dva
+    pokusy o totéž. Záviset na záznamu může prvek trati, nebo to, že bóje
+    stála ve vodě, když rozhodčí nějakou trať přijal — pak šla ven ve
+    veřejné trati a co bylo veřejné, se zpětně nepřepisuje."""
+    if any(p["bojeAId"] == b["id"] or p["bojeBId"] == b["id"]
+           for prvky in PRVKY.values() for p in prvky):
+        return False
+
+    for t in TRATE.get(slug) or []:
+        prijato = t.get("prijatoV")
+        if (prijato and prijato >= b["postavenaV"]
+                and (b["nahrazenaV"] is None or prijato < b["nahrazenaV"])
+                    and (b.get("sebranaV") is None or prijato < b["sebranaV"])):
+            return False
+
+    BOJE.get(slug, []).remove(b)
+    return True
 
 
 def boje_zastavky(slug, i_historie):
@@ -2566,7 +2591,10 @@ class H(BaseHTTPRequestHandler):
             nova["rozjizdkaId"] = t["rozjizdkaId"]
             return self.odpoved(trat_dto(slug, nova))
 
-        t["stav"], t["prijatoV"], t["prijal"] = "Prestavba", None, None
+        # `prijatoV` se schválně nemaže: je to doklad, že trať chvíli byla
+        # veřejná, a podle něj se pozná, jestli se záznam bóje smí zahodit.
+        # Co platí teď, říká `stav`.
+        t["stav"] = "Prestavba"
         return self.odpoved(trat_dto(slug, t))
 
     def pipni_boji(self, slug):
@@ -2614,12 +2642,14 @@ class H(BaseHTTPRequestHandler):
             "sirka": vstup["sirka"], "delka": vstup["delka"],
             "presnostM": vstup.get("presnostM"),
             "postavenaV": ted, "postavil": self.prihlaseny()["zobrazovane"],
-            "nahrazenaV": None, "sebrana": False,
+            "nahrazenaV": None, "sebrana": False, "sebranaV": None,
             "zdroj": vstup.get("zdroj") or "Telefon",
         }
         seznam.append(nova)
         if stara:
             stara["nahrazenaV"] = ted
+            if zahod_boji(slug, stara):
+                nova["nahrazujeId"] = stara.get("nahrazujeId")
 
         # Stavba začíná první bójí, ne zvláštním knoflíkem — opsané
         # z `BojeSprava.PipniAsync`, která volá `ZalozPokudChybiAsync`.
@@ -2662,7 +2692,8 @@ class H(BaseHTTPRequestHandler):
         return self._prazdna_odpoved()
 
     def seber_boji(self, slug, boje_id):
-        """Razítko, ne smazání — bóje zůstává v historii."""
+        """Razítko, ne smazání — pokud na bóji něco visí. Když ne, zmizí
+        i ten záznam (`zahod_boji`)."""
         if (zamceno := proc_nejde_stavet(slug)):
             return self.chyba(400, zamceno)
         if not self.zastavka(slug):
@@ -2674,7 +2705,12 @@ class H(BaseHTTPRequestHandler):
 
         # Druhé sebrání API nepovažuje za chybu; mock se chová stejně.
         if not b["sebrana"]:
-            b["sebrana"] = True
+            # Čas, ne jen příznak: po sebrání se musí dát zjistit, jestli
+            # bóje stála ve vodě, když se přijímala nějaká trať. Dokud se
+            # sebrané bóje jen razítkovaly, šlo to zahodit i to, co už
+            # bylo veřejné.
+            b["sebrana"], b["sebranaV"] = True, ted_iso()
+            zahod_boji(slug, b)
         return self._prazdna_odpoved()
 
     def do_POST(self):
