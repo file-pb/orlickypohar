@@ -79,6 +79,53 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("Boje");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Boje.PrvekTrati", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BojeAId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("BojeBId")
+                        .HasColumnType("integer");
+
+                    b.Property<double?>("KonecBDelka")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("KonecBPopis")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<double?>("KonecBSirka")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("Poradi")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Strana")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TratId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Typ")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BojeAId");
+
+                    b.HasIndex("BojeBId");
+
+                    b.HasIndex("TratId", "Poradi");
+
+                    b.ToTable("PrvkyTrati");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Boje.Trat", b =>
                 {
                     b.Property<int>("Id")
@@ -1262,6 +1309,32 @@ namespace OrlickyPohar.Api.Migrations
                     b.Navigation("Postavil");
 
                     b.Navigation("Zavod");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Boje.PrvekTrati", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Boje.Boje", "BojeA")
+                        .WithMany()
+                        .HasForeignKey("BojeAId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OrlickyPohar.Api.Features.Boje.Boje", "BojeB")
+                        .WithMany()
+                        .HasForeignKey("BojeBId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("OrlickyPohar.Api.Features.Boje.Trat", "Trat")
+                        .WithMany()
+                        .HasForeignKey("TratId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BojeA");
+
+                    b.Navigation("BojeB");
+
+                    b.Navigation("Trat");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Boje.Trat", b =>

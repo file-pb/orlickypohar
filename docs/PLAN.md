@@ -1780,17 +1780,33 @@ jsou protikladné věci.
 
 ##### Čím prvek vlastní
 
-**Nullable `RozjizdkaId` od prvního dne.** Bóje dnes visí na závodě, ale
-u vícerozjížďkového závodu může mít každá rozjížďka jinou trať a
-`Rozjizdka` v modelu už existuje. Jeden sloupec navíc teď je levnější než
-migrace nad daty, podle kterých se už jelo.
+~~**Nullable `RozjizdkaId` od prvního dne.**~~ **Přepsáno 9. 10. 2026:
+prvek patří trati.** Ten původní odstavec je starší než entita `Trat`
+a řešil, čím prvek vlastnit, když trať jako záznam neexistuje. Dnes
+existuje, nese `RozjizdkaId` sama, a prvek ji tím dědí — jeden cizí klíč
+místo dvou.
+
+##### Historie je řetěz tratí, ne řetěz uvnitř prvku
+
+Tady si plán odporoval a stojí za to říct jak: *„prvek ukazuje na jeden
+nebo dva konkrétní záznamy bóje"* proti *„celý řetěz přenastavení dostane
+jedno `PrvekId`"*. To druhé předpokládalo, že prvek žije přes přestavby,
+protože nic jiného, co by je oddělilo, neexistovalo.
+
+**Platí to první.** Prvek patří jedné trati a ukazuje na konkrétní bóje,
+které se nemění; přestavba zakládá novou trať a její prvky ukazují na to,
+co v tu chvíli stojí. „Týž prvek v čase" se tedy čte jako řetěz tratí
+(`Trat.NahrazujeId`), ne jako vazba uvnitř prvku. Klonování trati je pak
+přesně to, co chtěl Filip: zkopírují se prvky a ukazují na tytéž záznamy
+bójí, které pořád stojí ve vodě — **žádná vyrobená pípnutí**.
 
 ##### Převod toho, co už je
 
-Z každé stávající bóje se stane **jednobójová značka** s pořadím z bóje
-a **bez strany** — tu nelze z názvu domyslet a `null` musí znamenat
-„neuvedeno". **Celý řetěz přenastavení jedné bóje musí dostat jedno
-`PrvekId`**, které migrace spočítá z `NahrazujeId`; uhádnout se nedá.
+**Hotovo 9. 10. 2026.** Z každé **stojící** bóje se stala jednobójová
+značka s pořadím z bóje a **bez strany** — tu z názvu domyslet nejde
+a `null` musí znamenat „neuvedeno". Nahrazené a sebrané bóje prvek
+nedostaly: nepatřily k žádné přijaté trati, protože přijetí do dneška
+neexistovalo, a vyrábět jim prvek by bylo tvrzení, které se nedá doložit.
 
 ##### Dvě chyby, které se přitom našly
 
