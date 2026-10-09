@@ -830,6 +830,11 @@ BOJE_ID = [0]
 TRATE = {}
 TRAT_ID = [0]
 
+# Prvky trati, opsané z `Features/Boje/PrvekTrati.cs`. Drží se podle id
+# trati, protože prvek patří trati — ne závodu a ne bóji.
+PRVKY = {}
+PRVEK_ID = [0]
+
 # Opsané z `Pipnuti` — mock musí odmítat totéž a týmiž slovy, jinak se
 # na něm hlášky nedají zkoušet.
 NAZEV_NEJVIC = 60
@@ -900,6 +905,83 @@ def trat_odjeta(slug, t):
         return False
     z = next((x for x in D["zavody"] if x["slug"] == slug), None)
     return any((r.get("startV") or "") >= t["prijatoV"] for r in (z or {}).get("rozjizdky", []))
+
+
+def prvek_dto(slug, p):
+    def konec(id_boje):
+        b = next((x for x in BOJE.get(slug, []) if x["id"] == id_boje), None)
+        return None if not b else {"id": b["id"], "nazev": b["nazev"],
+                                   "sirka": b["sirka"], "delka": b["delka"]}
+
+    bod = None
+    if p["konecBSirka"] is not None and p["konecBDelka"] is not None:
+        bod = {"sirka": p["konecBSirka"], "delka": p["konecBDelka"],
+               "popis": p["konecBPopis"]}
+
+    return {"id": p["id"], "typ": p["typ"], "poradi": p["poradi"], "strana": p["strana"],
+            "poznamka": p["poznamka"], "a": konec(p["bojeAId"]),
+            "b": konec(p["bojeBId"]) if p["bojeBId"] else None, "bodB": bod}
+
+
+def prvky_trati(slug):
+    t = trat_aktualni(slug)
+    if not t:
+        return []
+    vse = PRVKY.get(t["id"], [])
+    return [prvek_dto(slug, p) for p in sorted(vse, key=lambda p: (p["poradi"], p["id"]))]
+
+
+def proc_nejde_prvek(slug, v):
+    """Opsané z `Prvky.ProcNejde` a `PrvkySprava.ProcNejdeAsync`."""
+    if (zamceno := proc_nejde_stavet(slug)):
+        return zamceno
+    if not trat_aktualni(slug):
+        return "Tahle regata zatím nemá ani jednu bóji, takže ani trať."
+
+    typ = v.get("typ")
+    if typ not in ("Znacka", "Brana", "Odskok", "CaraStart", "CaraCil"):
+        return "Neznámý typ prvku."
+
+    ma_boji = v.get("bojeBId") is not None
+    ma_bod = v.get("konecBSirka") is not None and v.get("konecBDelka") is not None
+    dvoukonec = typ != "Znacka"
+
+    if ma_boji and ma_bod:
+        return "Druhý konec je buď bóje, nebo bod — ne obojí."
+    if dvoukonec:
+        if not ma_boji and not ma_bod:
+            return ("Tenhle prvek má dva konce. Vyber druhou bóji, nebo zadej bod "
+                    "(třeba plavidlo komise).")
+        if ma_bod and not (v.get("konecBPopis") or "").strip():
+            return ("Napiš, čím ten druhý konec je — „plavidlo komise“, „bod na břehu“. "
+                    "Bez toho se na vodě nepozná, kam se pluje.")
+    elif ma_boji or ma_bod:
+        return "Značka má jeden konec. Dva konce má brána, odskok nebo čára."
+
+    if len((v.get("konecBPopis") or "").strip()) > 60:
+        return "Popis konce má nejvýš 60 znaků."
+    if len((v.get("poznamka") or "").strip()) > 200:
+        return "Poznámka má nejvýš 200 znaků. Na delší vysvětlení je plachetní směrnice."
+    if v.get("strana") and typ not in ("Znacka", "Odskok"):
+        return ("Strana se uvádí u značky a odskoku. U brány si ji volí loď, "
+                "u čáry rozhoduje směr průjezdu.")
+    if (v.get("poradi") or 0) <= 0:
+        return "Pořadí v trati začíná jedničkou."
+    if v.get("bojeAId") == v.get("bojeBId"):
+        return "Oba konce nemůžou být tatáž bóje."
+
+    for id_boje in (v.get("bojeAId"), v.get("bojeBId")):
+        if id_boje is None:
+            continue
+        b = next((x for x in BOJE.get(slug, []) if x["id"] == id_boje), None)
+        if not b:
+            return "Taková bóje u téhle regaty není."
+        if b["sebrana"]:
+            return "Ta bóje je sebraná z vody, takže k prvku na trati patřit nemůže."
+        if b["nahrazenaV"]:
+            return "Ta bóje je přenastavená. Vyber tu, která na trati stojí teď."
+
+    return None
 
 
 def trat_verejna(slug):
@@ -1971,6 +2053,9 @@ class H(BaseHTTPRequestHandler):
             return None
         cesta = urlparse(self.path).path
 
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                          r'/trat/prvky/(\d+)$', cesta)):
+            return self.prvek_uprav(m.group(1), int(m.group(2)))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                           r'/lode/(\d+)/znak$', cesta)):
             return self.znak(m.group(1), int(m.group(2)))
@@ -2244,6 +2329,60 @@ class H(BaseHTTPRequestHandler):
         s["duvodStazeni"] = duvod.strip()
         return self._prazdna_odpoved()
 
+    def prvky_seznam(self, slug):
+        if not self.zastavka(slug):
+            return None
+        return self.odpoved(prvky_trati(slug))
+
+    def prvek_zaloz(self, slug):
+        if not self.zastavka(slug):
+            return None
+        v = self.telo_zadosti() or {}
+        if (chyba := proc_nejde_prvek(slug, v)):
+            return self.chyba(400, chyba)
+
+        PRVEK_ID[0] += 1
+        p = {"id": PRVEK_ID[0], "typ": v["typ"], "poradi": v["poradi"],
+             "strana": v.get("strana"), "poznamka": (v.get("poznamka") or "").strip() or None,
+             "bojeAId": v["bojeAId"], "bojeBId": v.get("bojeBId"),
+             "konecBSirka": v.get("konecBSirka"), "konecBDelka": v.get("konecBDelka"),
+             "konecBPopis": (v.get("konecBPopis") or "").strip() or None}
+        PRVKY.setdefault(trat_aktualni(slug)["id"], []).append(p)
+        return self.odpoved(prvek_dto(slug, p), 201)
+
+    def _prvek(self, slug, prvek_id):
+        t = trat_aktualni(slug)
+        vse = PRVKY.get(t["id"], []) if t else []
+        return next((x for x in vse if x["id"] == prvek_id), None)
+
+    def prvek_uprav(self, slug, prvek_id):
+        if not self.zastavka(slug):
+            return None
+        v = self.telo_zadosti() or {}
+        if (chyba := proc_nejde_prvek(slug, v)):
+            return self.chyba(400, chyba)
+        if not (p := self._prvek(slug, prvek_id)):
+            return self.chyba(400, "Takový prvek na téhle trati není.")
+
+        p.update({"typ": v["typ"], "poradi": v["poradi"], "strana": v.get("strana"),
+                  "poznamka": (v.get("poznamka") or "").strip() or None,
+                  "bojeAId": v["bojeAId"], "bojeBId": v.get("bojeBId"),
+                  "konecBSirka": v.get("konecBSirka"), "konecBDelka": v.get("konecBDelka"),
+                  "konecBPopis": (v.get("konecBPopis") or "").strip() or None})
+        return self.odpoved(prvek_dto(slug, p))
+
+    def prvek_smaz(self, slug, prvek_id):
+        if not self.zastavka(slug):
+            return None
+        if (zamceno := proc_nejde_stavet(slug)):
+            return self.chyba(400, zamceno)
+        if not (p := self._prvek(slug, prvek_id)):
+            return self.chyba(400, "Takový prvek na téhle trati není.")
+
+        # Prvek se maže doopravdy, na rozdíl od bóje: není to měření.
+        PRVKY[trat_aktualni(slug)["id"]].remove(p)
+        return self._prazdna_odpoved()
+
     def trat_stav(self, slug):
         """Stav trati regaty. 404, dokud nemá ani jednu bóji — stavba
         začíná prvním pípnutím, ne zvláštním knoflíkem."""
@@ -2448,6 +2587,9 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/boje$', cesta)):
             return self.pipni_boji(m.group(1))
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/trat/prvky$', cesta)):
+            return self.prvek_zaloz(m.group(1))
         if (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                 r'/trat/(hotovo|prijeti|vraceni|prestavba)$', cesta)):
@@ -3181,6 +3323,9 @@ class H(BaseHTTPRequestHandler):
     def do_DELETE(self):
         if self.token_nesedi() or self.prava_nesedi():
             return None
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                          r'/trat/prvky/(\d+)$', urlparse(self.path).path)):
+            return self.prvek_smaz(m.group(1), int(m.group(2)))
         if (m := re.match(r'^/ja/lode/(\d+)/pripojeni/(\d+)$', urlparse(self.path).path)):
             if not self.headers.get("authorization"):
                 return self.send_error(401)
@@ -3451,6 +3596,9 @@ class H(BaseHTTPRequestHandler):
             if not self.zastavka(m.group(1)):
                 return None
             telo = boje_zastavky(m.group(1), dotaz.get("historie", [""])[0] == "true")
+        elif (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/trat/prvky$', cesta)):
+            return self.prvky_seznam(m.group(1))
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/trat$', cesta)):
             return self.trat_stav(m.group(1))

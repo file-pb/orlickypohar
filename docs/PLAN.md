@@ -1821,6 +1821,21 @@ zlobily dvojnásob:
 2. **`Poradi: 0` počítá přes nahrazené i sebrané** (viz výš), takže číslo
    roste s každým přenastavením.
 
+##### Poznámka, jak to jet (Filip, 9. 10. 2026)
+
+*„Poznámka pro pořadatele a závodníky, jak to mají jet."*
+
+Vzniklo to z otázky, kam dát **„po proudu / proti proudu"** u otočné bóje.
+Odpověď: **nikam do polí.** Proud pravidlo není — rozhoduje strana a směr —,
+ale věta *„první brána se projíždí po proudu"* se vymodelovat nedá a napsat
+musí jít. Prvek má proto `Poznamka`, volný text, který **vidí pořadatel
+i závodník**.
+
+**Je to doplněk, ne náhrada.** Co jde vyjádřit polem, do poznámky nepatří;
+obrazovka by pak ukazovala dvě pravdy a při sporu by nebylo jasné, která
+platí. Krátká schválně (200 znaků): čte se na vodě z telefonu a na delší
+vysvětlení je plachetní směrnice.
+
 ##### Co to nepřinese
 
 **Automatické pořadí v cíli.** K tomu je kromě čáry potřeba ještě kolo,

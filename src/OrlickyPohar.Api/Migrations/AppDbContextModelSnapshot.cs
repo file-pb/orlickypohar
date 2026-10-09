@@ -106,6 +106,10 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int>("Poradi")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Poznamka")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<int?>("Strana")
                         .HasColumnType("integer");
 

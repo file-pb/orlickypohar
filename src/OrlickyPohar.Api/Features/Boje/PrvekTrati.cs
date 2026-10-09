@@ -96,6 +96,19 @@ public class PrvekTrati
     /// <summary>Čím ten druhý konec je, když to není bóje. „plavidlo komise".</summary>
     public string? KonecBPopis { get; set; }
 
+    /// <summary>
+    /// Jak se tenhle prvek má jet, řečeno slovy. <b>Vidí ji pořadatel
+    /// i závodník</b> (Filip, 9. 10. 2026).
+    /// <para>
+    /// Je to <b>doplněk, ne náhrada</b> za stranu a směr. Vzniklo to
+    /// z otázky, kam dát „po proudu / proti proudu": proud pravidlo není,
+    /// rozhoduje strana a směr — ale věta <i>„první brána se projíždí po
+    /// proudu"</i> se vymodelovat nedá a napsat musí jít. Co jde vyjádřit
+    /// polem, do poznámky nepatří; obrazovka by pak ukazovala dvě pravdy.
+    /// </para>
+    /// </summary>
+    public string? Poznamka { get; set; }
+
     /// <summary>Má prvek druhý konec, ať už bóji, nebo souřadnice?</summary>
     public bool MaDruhyKonec =>
         BojeBId is not null || (KonecBSirka is not null && KonecBDelka is not null);
@@ -108,6 +121,13 @@ public class PrvekTrati
 public static class Prvky
 {
     public const int PopisNejvic = 60;
+
+    /// <summary>
+    /// Poznámka, jak prvek jet. Krátká schválně — čte se na vodě z telefonu
+    /// a dlouhý odstavec tam nikdo nepřečte. Na delší vysvětlení je
+    /// plachetní směrnice.
+    /// </summary>
+    public const int PoznamkaNejvic = 200;
 
     /// <summary>Potřebuje tenhle typ druhý konec?</summary>
     public static bool Dvoukonec(TypPrvku typ) => typ != TypPrvku.Znacka;
@@ -128,8 +148,12 @@ public static class Prvky
     /// </summary>
     public static string? ProcNejde(
         TypPrvku typ, int? bojeBId, double? sirka, double? delka, string? popis,
-        StranaPrvku? strana)
+        StranaPrvku? strana, string? poznamka = null)
     {
+        if (poznamka?.Trim().Length > PoznamkaNejvic)
+            return $"Poznámka má nejvýš {PoznamkaNejvic} znaků. Na delší vysvětlení "
+                   + "je plachetní směrnice.";
+
         var maBoji = bojeBId is not null;
         var maBod = sirka is not null && delka is not null;
 
