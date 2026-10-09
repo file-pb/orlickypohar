@@ -326,7 +326,7 @@ def clanky_verejne():
     # Ročník, který výsledky regat veřejně nevydává, mlčí i o nich psaným
     # slovem — zpráva ze závodu je výsledek napsaný větou. Článek celého
     # ročníku zůstává. Jako v API (ClanekEndpoints.Publikovane).
-    if not D.get("vysledkyZavoduVerejne", True):
+    if not VYSLEDKY_VENKU[0]:
         venku = [c for c in venku if not c.get("zavod")]
 
     return sorted(venku, key=lambda c: c["publikovanoV"], reverse=True)
@@ -339,6 +339,20 @@ def clanky_verejne():
 # Publikace ročníku (23. 9. 2026). Soubor je schválně nepublikovaný, mock
 # se ale tváří, že ročník venku je — jinak by neměl co servírovat.
 ROCNIK_VENKU = [True]
+
+# Vydává ročník výsledky jednotlivých regat? Výchozí je ze souboru, ale
+# správce to přepíná za běhu (`POST /sprava/serie/{slug}/vysledky-zavodu`),
+# stejně jako v API — scénář A5 se jinak nedá odjet, protože by chtěl
+# druhý ročníkový soubor jen kvůli jednomu příznaku.
+VYSLEDKY_VENKU = [bool(D.get("vysledkyZavoduVerejne", True))]
+
+
+def rocnik_dto():
+    """Ročník ve správě, tvarem `SerieSpravaDto`. Na jednom místě, protože
+    ho vrací čtení i oba přepínače a rozejít se nesmí."""
+    return {"slug": D["slug"], "nazev": D["nazev"], "rok": D["rok"],
+            "publikovano": ROCNIK_VENKU[0], "smiPublikovat": smi_ted("Spravce"),
+            "vysledkyZavoduVerejne": VYSLEDKY_VENKU[0]}
 
 JA = {
     "id": "01927f4e-0000-7000-8000-000000000001",
@@ -727,6 +741,10 @@ def ke_kontrole(v):
 # k první zastávce — jinak není co stahovat a obrazovka je prázdná.
 # Žije v paměti procesu, restart ji vrátí.
 SMERNICE = {}
+
+# Obsah nahraných směrnic podle jména souboru v adrese. Nasazené verze tu
+# nejsou — ty si `/fake-soubor/` vyrobí.
+SMERNICE_SOUBORY = {}
 
 
 # Odkdy se směrnice ukládají bez cache — opsané z `Vyveseni.CacheVypnutaOd`.
@@ -1520,6 +1538,9 @@ def role_pro_cestu(metoda, cesta):
         # Kód k cizí lodi si pořadatelskou výjimku hlídá sám (`poradatel_kod`).
         return None if zbytek.endswith("/kod") else ("Spravce", None)
 
+    if zbytek == "/vysledky-zavodu":
+        return ("Spravce", None)
+
     if (m := re.match(r'^/vysledky(?:/([a-z0-9-]+))?', zbytek)):
         zavod = m.group(1)
         if metoda == "GET":
@@ -2037,6 +2058,41 @@ class H(BaseHTTPRequestHandler):
         VAZBY.remove(vazba)
         return self._prazdna_odpoved()
 
+    def vyves_smernici(self, slug):
+        """Nová verze směrnice. Opsané z `Features/Smernice`: kontroly jsou
+        tytéž jako `Vyveseni.ProcNejde` a `JePdf`, verze je `max + 1` a starší
+        zůstávají — oprava je nová verze, ne přepis."""
+        if not self.headers.get("authorization"):
+            return self.send_error(401)
+        if not self.zastavka(slug):
+            return None
+
+        pole, soubor = self.nahrany_soubor()
+        if not soubor:
+            return None
+        data, nazev = soubor
+
+        poznamka = (pole["poznamka"].get_payload(decode=True).decode()
+                    if pole.get("poznamka") else "") or ""
+        if len(poznamka.strip()) > 300:
+            return self.chyba(400, "Poznámka může mít nejvýš 300 znaků.")
+
+        verze = max((x["verze"] for x in SMERNICE.get(slug, [])), default=0) + 1
+        klic = f"smernice-{uuid.uuid4().hex}.pdf"
+        SMERNICE_SOUBORY[klic] = data
+
+        s = {"verze": verze, "nazev": nazev,
+             "adresa": f"http://127.0.0.1:{PORT}/fake-soubor/{klic}",
+             "vyveseneV": ted_iso(),
+             "poznamka": poznamka.strip() or None,
+             "vyvesil": self.prihlaseny()["zobrazovane"],
+             "stazenoV": None, "stahl": None, "duvodStazeni": None,
+             # Nově vyvěšené už nemůže uvíznout v edge cache: hlavička se
+             # dává při nahrání a od 6. 10. 2026 je `no-store`.
+             "mohlaUvaznoutVCache": False}
+        SMERNICE.setdefault(slug, []).append(s)
+        return self.odpoved(s, 201)
+
     def stahni_smernici(self, slug, verze):
         """Opsané z `Features/Smernice/SmerniceSprava.cs`: záznam zůstává,
         soubor mizí. Důvod je povinný."""
@@ -2180,9 +2236,12 @@ class H(BaseHTTPRequestHandler):
             if not self.headers.get("authorization"):
                 return self.send_error(401)
             ROCNIK_VENKU[0] = bool(self.telo_zadosti().get("publikovano"))
-            return self.odpoved({"slug": D["slug"], "nazev": D["nazev"], "rok": D["rok"],
-                                 "publikovano": ROCNIK_VENKU[0],
-                                 "smiPublikovat": smi_ted("Spravce")})
+            return self.odpoved(rocnik_dto())
+        if cesta == f'/sprava/serie/{D["slug"]}/vysledky-zavodu':
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            VYSLEDKY_VENKU[0] = bool(self.telo_zadosti().get("verejne"))
+            return self.odpoved(rocnik_dto())
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                           r'/rozjizdky/(\d+)/(stav|publikace|pohar)$', cesta)):
             return self.workflow(m.group(1), int(m.group(2)), m.group(3))
@@ -2207,6 +2266,9 @@ class H(BaseHTTPRequestHandler):
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/smernice/(\d+)/stazeni$',
                 cesta)):
             return self.stahni_smernici(m.group(1), int(m.group(2)))
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/smernice$', cesta)):
+            return self.vyves_smernici(m.group(1))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode$', cesta)):
             return self.prihlas_lod(m.group(1))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode/(\d+)/stav$', cesta)):
@@ -2674,6 +2736,37 @@ class H(BaseHTTPRequestHandler):
 
         return pole, (data, soubor.get_content_type())
 
+    def nahrany_soubor(self):
+        """Pole formuláře a (data, jméno) směrnice, nebo (None, None) s odeslanou
+        chybou. Kontroly jsou tytéž jako `Vyveseni.ProcNejde` a `JePdf` v API —
+        včetně toho, že o PDF rozhoduje **obsah**, ne koncovka."""
+        delka = int(self.headers.get("Content-Length", "0") or 0)
+        zprava = BytesParser(policy=HTTP).parsebytes(
+            b"Content-Type: " + self.headers["Content-Type"].encode() + b"\r\n\r\n"
+            + self.rfile.read(delka))
+        pole = {c.get_param("name", header="content-disposition"): c for c in zprava.iter_parts()}
+
+        soubor = pole.get("soubor")
+        data = soubor.get_payload(decode=True) if soubor else b""
+        nazev = (soubor.get_filename() or "").strip() if soubor else ""
+        if not data:
+            self.chyba(400, "Vyber soubor se směrnicí.")
+            return None, None
+        if len(data) > 20 * 1024 * 1024:
+            self.chyba(400, "Směrnice může mít nejvýš 20 MB.")
+            return None, None
+        if not nazev:
+            self.chyba(400, "Soubor nemá jméno.")
+            return None, None
+        if len(nazev) > 200:
+            self.chyba(400, "Jméno souboru má nejvýš 200 znaků.")
+            return None, None
+        if not data.startswith(b"%PDF-"):
+            self.chyba(400, "Směrnice musí být PDF. Word nebo sken ulož jako PDF a nahraj znovu.")
+            return None, None
+
+        return pole, (data, nazev)
+
     def uloz_fotku(self, vlastnik, klic, data, typ, autor, popis):
         """Uloží fotku vlastníkovi a starou zahodí i ze „soubory"."""
         if vlastnik.get(klic):
@@ -2975,14 +3068,17 @@ class H(BaseHTTPRequestHandler):
         rozdelena = urlparse(self.path)
         cesta, dotaz = rozdelena.path, parse_qs(rozdelena.query)
 
-        if (m := re.match(r'^/fake-soubor/(smernice-v\d+\.pdf)$', cesta)):
+        if (m := re.match(r'^/fake-soubor/(smernice-[0-9a-zA-Z]+\.pdf)$', cesta)):
             # Stažení v API maže soubor z úložiště, takže adresa přestane
             # platit — a právě tohle měří F2. Záznam o verzi zůstává.
             s = next((x for z in SMERNICE.values() for x in z
                       if x["adresa"].endswith("/" + m.group(1))), None)
             if not s or s["stazenoV"]:
                 return self.send_error(404)
-            data = _pdf(f"Plachetni smernice v{s['verze']} (mock)")
+            # Nahrané PDF se vrací tak, jak přišlo; nasazené verze si mock
+            # vyrábí sám, protože v repozitáři žádné nejsou.
+            data = SMERNICE_SOUBORY.get(m.group(1)) \
+                or _pdf(f"Plachetni smernice v{s['verze']} (mock)")
             self.send_response(200)
             self.send_header("Content-Type", "application/pdf")
             self.send_header("Content-Length", str(len(data)))
@@ -3188,8 +3284,7 @@ class H(BaseHTTPRequestHandler):
         elif cesta == f'/sprava/serie/{D["slug"]}':
             if not self.headers.get("authorization"):
                 return self.send_error(401)
-            telo = {"slug": D["slug"], "nazev": D["nazev"], "rok": D["rok"],
-                    "publikovano": ROCNIK_VENKU[0], "smiPublikovat": smi_ted("Spravce")}
+            telo = rocnik_dto()
         elif cesta == "/sprava/naklady":
             # Co web stojí. Skutečné API to čte ze souboru platformy, který
             # na vývojovém stroji není — tady je snímek.
@@ -3394,7 +3489,7 @@ class H(BaseHTTPRequestHandler):
             # Jako v API: zastávka zůstane i se seznamem lodí, rozjížďky
             # a pořadí odejdou prázdné a klient dostane příznak, aby
             # nemlčel bez vysvětlení.
-            if not D.get("vysledkyZavoduVerejne", True):
+            if not VYSLEDKY_VENKU[0]:
                 telo = {**telo, "rozjizdky": [], "poradi": [], "poradiCelkem": [],
                         "vysledkySkryte": True}
         else:

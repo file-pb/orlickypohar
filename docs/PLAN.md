@@ -4387,10 +4387,21 @@ a GitHub Actions, ne npm.
 
 ### Zkouška ovládání
 
-Sezení s pořadatelem **neproběhlo** a šest scénářů na mocku ani neběží: C3
-(vyvěsit směrnici), celá skupina D (není účet rozhodčího), A5 (ročník se
-skrytými výsledky), A7 a E5 (potřebují dva ročníky) a C5, který chce 25–30
-lodí a mock jich má 22. Scénáře samy jsou v `docs/SCENARE-OVLADANI.md`.
+Sezení s pořadatelem **neproběhlo.** Tvrzení, že na mocku neběží šest
+scénářů, ale **z větší části neplatilo už v době, kdy se psalo** — prověřeno
+proti kódu 9. 10. 2026:
+
+| Scénář | Audit tvrdil | Jak to je |
+|---|---|---|
+| C3 vyvěsit směrnici | neběží | platilo; **hotovo 9. 10. 2026** — mock přijímá `POST .../zastavky/{zavod}/smernice` |
+| skupina D | není účet rozhodčího | **neplatilo** — `zdenek` je rozhodčí celého ročníku (`OPRAVNENI` ve `fake-api.py`) |
+| A5 skryté výsledky | neběží | příznak mock číst uměl; **hotovo 9. 10. 2026** — správce ho přepíná za běhu jako v API |
+| A7, E5 dva ročníky | neběží | **E5 běží** nad `data/2027-kalendar.json`; **A7 zbývá** |
+| C5 25–30 lodí | mock jich má 22 | **neplatilo** — 22 je *účastí na izolepě* z 37 lodí ročníku a scénáře říkají, že to stačí |
+
+**Zbývá tedy A7 a sezení se skutečným pořadatelem.** Dva ročníky naráz jsou
+přestavba mocku, ne přílepek: `D` je jeden globální ročník, na kterém stojí
+celý soubor. Scénáře samy jsou v `docs/SCENARE-OVLADANI.md`.
 
 ### Co z toho vědomě nedělat
 
@@ -4418,9 +4429,10 @@ To nejsou mezery, to jsou rozhodnutí.
    přihlášek, ne po" a stál za vypsáním.
 5. ~~**Zelené nasazení bez nasazení** a **postup pro den závodu** včetně dumpu
    před migrací.~~ **Obojí hotové 9. 10. 2026** (*DEN-ZAVODU.md*).
-6. ~~**Hláška u konfliktu**~~ **hotová 9. 10. 2026.** Zbývá **doplnění mocku**
-   tam, kde brání zkoušce ovládání (C3, celá skupina D, A5, A7, E5 a C5 —
-   viz *Zkouška ovládání*).
+6. ~~**Hláška u konfliktu**~~ **hotová 9. 10. 2026**, a s ní i **doplnění
+   mocku** — až na A7. Mock umí vyvěsit směrnici (C3) i přepnout skryté
+   výsledky (A5); tři z pěti nálezů auditu přitom neplatily, viz *Zkouška
+   ovládání*.
 
 Appka, upozornění a tracker až potom: jsou to největší kusy, ale na první závod
 (15. 5. 2027) nemají vliv.
