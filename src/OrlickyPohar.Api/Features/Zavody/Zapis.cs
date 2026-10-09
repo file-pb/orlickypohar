@@ -65,6 +65,16 @@ public static class Zapis
         + "co se liší, a ulož znovu.";
 
     /// <summary>
+    /// Totéž, když tu novější revizi uložil <b>tentýž účet</b> — typicky
+    /// druhý telefon u vody. Hláška výš by tvrdila nepravdu a poslala
+    /// zapisovatele hledat člověka, který neexistuje (zkouška ovládání C7).
+    /// </summary>
+    public const string RevizeNesediTentyzUcet =
+        "Mezitím se rozjížďka uložila z tvého účtu na jiném zařízení, takže tahle "
+        + "sada vychází ze starších čísel. Zápis se nikam neztratil: otevři porovnání "
+        + "zápisů, podívej se, co se liší, a ulož znovu.";
+
+    /// <summary>
     /// Proč sadu uložit nejde kvůli revizi — nebo <c>null</c>.
     /// <para>
     /// <b>Chybějící revize je taky chyba</b>, ne „tak tedy bez kontroly".

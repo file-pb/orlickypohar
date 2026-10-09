@@ -4288,11 +4288,17 @@ načtení stránky bez signálu ne.
 `platform/docs/PROVOZ.md` jde na kontejner `orlickypohar-web-1`, tedy mimo
 nginx, který se kvůli špičce postavil.
 
-**Hláška u konfliktu tvrdí nepravdu, když je telefon sdílený.** `RevizeNesedi`
-(`Features/Zavody/Zapis.cs`) říká „Rozjížďku mezitím uložil někdo jiný", i když
-to byl tentýž účet na druhém telefonu. Odhalila to vlastní zkouška C7 a je to
-jediný její nález, který není opravený; sdílený telefon je u vody
-pravděpodobný.
+~~**Hláška u konfliktu tvrdí nepravdu, když je telefon sdílený.**~~
+**Opraveno 9. 10. 2026.** `RevizeNesedi` říkala „Rozjížďku mezitím uložil
+někdo jiný" i tehdy, když to byl tentýž účet na druhém telefonu — a to je
+u vody pravděpodobné (zkouška C7).
+
+Nebylo to jen přeformulování: **autora poslední revize jde dohledat.**
+`UlozAsync` zapisuje ke každému uložení snímek (`ZapisyNavrhu` s
+`UzivatelId`), takže při konfliktu stačí porovnat jeho autora s tím, kdo
+ukládá, a vybrat mezi `RevizeNesedi` a novým `RevizeNesediTentyzUcet`.
+Dotaz jde **jen při konfliktu**, ne při každém uložení. Jeden integrační
+test zkouší obě větve naráz: druhý telefon téhož účtu a cizí účet.
 
 ### Co se zapne prvními skutečnými přihláškami
 
@@ -4412,7 +4418,9 @@ To nejsou mezery, to jsou rozhodnutí.
    přihlášek, ne po" a stál za vypsáním.
 5. ~~**Zelené nasazení bez nasazení** a **postup pro den závodu** včetně dumpu
    před migrací.~~ **Obojí hotové 9. 10. 2026** (*DEN-ZAVODU.md*).
-6. **Hláška u konfliktu** a doplnění mocku tam, kde brání zkoušce.
+6. ~~**Hláška u konfliktu**~~ **hotová 9. 10. 2026.** Zbývá **doplnění mocku**
+   tam, kde brání zkoušce ovládání (C3, celá skupina D, A5, A7, E5 a C5 —
+   viz *Zkouška ovládání*).
 
 Appka, upozornění a tracker až potom: jsou to největší kusy, ale na první závod
 (15. 5. 2027) nemají vliv.

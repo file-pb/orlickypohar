@@ -86,9 +86,10 @@ public record NavrhyDto(
 public record ZapisVstup(IReadOnlyList<ZapisRadekVstup> Radky, int? Revize = null);
 
 /// <summary>
-/// Jak dopadlo uložení sady. <c>Konflikt</c> znamená, že mezitím uložil
-/// někdo jiný — klient si svou sadu musí nechat a nabídnout porovnání,
-/// ne ji zahodit.
+/// Jak dopadlo uložení sady. <c>Konflikt</c> znamená, že se mezitím uložilo
+/// něco novějšího — klient si svou sadu musí nechat a nabídnout porovnání,
+/// ne ji zahodit. Jestli to byl někdo jiný, nebo tentýž účet z druhého
+/// telefonu, rozhoduje text chyby, ne tenhle příznak.
 /// </summary>
 public record VysledekUlozeni(string? Chyba, bool Konflikt = false)
 {
@@ -220,7 +221,23 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
         // naslepo umí smazat opravu, o které klient nevěděl. Konfliktem je
         // jen nesoulad — chybějící revize je starý klient, ne souběh.
         if (Zapis.ProcNejdeUlozitRevizi(revize, rozjizdka.Revize) is { } stara)
-            return new VysledekUlozeni(stara, Konflikt: revize is not null);
+        {
+            // „Uložil někdo jiný" je tvrzení, které samo porovnání čísel
+            // neunese: u vody bývá jeden účet na dvou telefonech (zkouška
+            // ovládání C7). Autora poslední revize dohledáme ze snímků —
+            // a jen při konfliktu, na každé uložení by to byl dotaz za nic.
+            Guid? posledni = null;
+            if (revize is not null && kdo is not null)
+                posledni = await db.ZapisyNavrhu
+                    .Where(n => n.RozjizdkaId == rozjizdka.Id)
+                    .OrderByDescending(n => n.ZapsanoV)
+                    .Select(n => (Guid?)n.UzivatelId)
+                    .FirstOrDefaultAsync(ct);
+
+            return new VysledekUlozeni(
+                posledni == kdo && posledni is not null ? Zapis.RevizeNesediTentyzUcet : stara,
+                Konflikt: revize is not null);
+        }
 
         var prihlasky = await db.Prihlasky
             .Where(p => p.SerieId == zavod.SerieId)
