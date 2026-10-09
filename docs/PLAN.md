@@ -1555,6 +1555,40 @@ a které stejně potřebujeme pro upozornění posádce i pro tracker.
 **Co na webu nepůjde nikdy:** samotné sledování trasy. Hodiny běžící GPS na
 pozadí prohlížeč neumí, na iPhonu obzvlášť. To je důvod, proč appka existuje.
 
+#### Trať je veřejná, jakmile ji rozhodčí přijme (Filip, 9. 10. 2026)
+
+*„Bóje, mapka, GPX — to bych, když už to bude schválené a před startem,
+zveřejnil taky."*
+
+**Zveřejnění není samostatný knoflík, je to důsledek akceptace.** Dnes leží
+celá trať pod `/sprava/` a veřejná cesta k bójím neexistuje, protože *kdy se
+trať smí ukázat divákům, patří rozhodčímu* (viz *Kdo trasy vidí*). Jakmile
+bude existovat stav „rozhodčí trať přijal", je tím ta otázka zodpovězená
+a trať se zveřejní sama.
+
+**Komu to slouží.** Nejvíc závodníkovi: GPX si před startem natáhne do
+chartplotteru. Pak divákovi a médiím. A protože to dostanou všichni
+najednou, není to výhoda pro nikoho — dnešní stav, kdy trať vidí jen
+pořadatel a rozhodčí, je k závodníkům přísnější, ne spravedlivější.
+
+**Dvě pasti, obě o tom, že obrazovka nesmí lhát:**
+
+1. **Odemčení kvůli přestavbě.** Veřejná stránka v tu chvíli nesmí dál
+   ukazovat starou trať jako platnou — někdo už má GPX v plotteru a popluje
+   k bóji, která se mezitím posunula. Odemčená trať proto veřejně znamená
+   **„trať se přestavuje, počkej"**: ne tiché zmizení (vypadá to jako chyba)
+   a rozhodně ne starý obrázek.
+2. **Která trať.** U vícerozjížďkového závodu může mít každá rozjížďka
+   jinou, a dnes bóje visí na regatě, ne na rozjížďce. Dokud je trať jedna,
+   je zveřejnění triviální; jakmile budou dvě, musí veřejná stránka říct,
+   ke které rozjížďce patří — jinak si lidi stáhnou GPX od té včerejší.
+
+**Pořadí prací z toho plyne samo: stavy trati jsou první.** Bez akceptace
+není co zveřejnit; publikovat něco, co nikdo nepotvrdil, by bylo horší než
+nepublikovat nic. Vlastní zveřejnění je pak přívažek — veřejný endpoint
+**mimo `/sprava/`**, který pustí jen přijatou trať, a výjimka v
+`OchranaCteniTests` i s důvodem, jak to ten test vyžaduje.
+
 ### Připojení k lodi přes QR (Filip, 4. 10. 2026)
 
 *„Co to přihlašování zjednodušit tím, že po rozkliknutí lodi se zobrazí
@@ -1756,6 +1790,49 @@ na břehu se lidi dívají na telefon i na notebook.
 - **Historie plavby**: stopa s přehráváním (1×, 10×, 60×), graf rychlosti
   propojený s mapou a barva stopy podle rychlosti. Porovnání dvou lodí
   a stažení GPX až na skutečných datech.
+
+### Tabule do hospody (Filip, 9. 10. 2026)
+
+*„Stránka, která by se dala pustit v hospodě na telku, když se něco pojede —
+aktuální data rozjížděk, lokace a dráhy lodí, stav regaty a rozjížděk.
+Prostě map / LiveRanking / dashboard pro diváky a případně média."*
+
+**Rozpadá se to na dvě části a ta efektní stojí na nenapsaném.** Stav
+k 9. 10. 2026:
+
+| Co by na tabuli bylo | Stav |
+|---|---|
+| stav regaty a jednotlivých rozjížděk | hotové |
+| startovní listina | hotové |
+| výsledky rozjížděk | hotové, ale **jen publikované** |
+| průběžné pořadí poháru | hotové |
+| trať — bóje, mapka, GPX | data hotová, veřejně se nevydávají; viz *Trať je veřejná, jakmile ji rozhodčí přijme* |
+| polohy a dráhy lodí | **neexistuje nic** — fáze 8, trasa jako entita ani poloha v appce nezačaté |
+
+**Tabule bez trackeru dává smysl sama** — co se zrovna jede, kdo je
+přihlášený, jak dopadly odjeté rozjížďky, jak to hýbe pohárem — a je to
+schránka, do které mapa a živé pořadí jen zapadnou, až fáze 8 vznikne.
+
+**Tři rozhodnutí, která si to vyrobí, ať je uděláme předem:**
+
+1. **Živé dojezdy versus workflow.** Hospoda chce čísla hned, jenže zápis
+   schválně čeká na rozhodčího a publikaci dělá správce. Tabule
+   s nepotvrzenými dojezdy vyrobí u piva „změněné výsledky", které se jen
+   poprvé ukázaly moc brzy. Buď jen publikované — někdy i o půl hodiny
+   pozadu —, nebo výslovně **předběžné, nepotvrzené**, a to zasáhne do
+   workflow výsledků, ne jen do zobrazení.
+2. **Pořadí na vodě je dohad.** Pořadí v závodě rozhoduje cíl, ne vzdálenost
+   k bóji (*Kdo trasy vidí*). LiveRanking se tak musí i tvářit, jinak tabule
+   vyrobí výsledek, který neplatí.
+3. **Dvojí zámek u živé mapy.** Organizátor o zveřejnění požádá, rozhodčí má
+   veto, a držet to musí **endpoint**, ne až vrstva mapy — veřejné živé cesty
+   povedou mimo `/sprava/`. Tabule je první věc, která tenhle návrh donutí
+   doopravdy postavit.
+
+**Dvě provozní.** U každé lodi musí být vidět **stáří polohy**; a tabule běží
+v hospodě hodiny bez obsluhy, takže výpadek API musí přežít a říct „data
+stará šest minut", ne zamrznout. Zátěž problém není: obnovování po deseti
+vteřinách je přesně to, na co je mikrocache před webem stavěná.
 
 ### Nezávislost
 
