@@ -7893,7 +7893,8 @@
                 "required": [
                     "prestavba",
                     "prijatoV",
-                    "boje"
+                    "boje",
+                    "prvky"
                 ],
                 "type": "object",
                 "properties": {
@@ -7912,6 +7913,82 @@
                         "items": {
                             "$ref": "#/components/schemas/VerejnaBojeDto"
                         }
+                    },
+                    "prvky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/VerejnyPrvekDto"
+                        }
+                    }
+                }
+            },
+            "VerejnyKonecDto": {
+                "required": [
+                    "nazev",
+                    "sirka",
+                    "delka"
+                ],
+                "type": "object",
+                "properties": {
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "sirka": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "delka": {
+                        "type": "number",
+                        "format": "double"
+                    }
+                }
+            },
+            "VerejnyPrvekDto": {
+                "required": [
+                    "typ",
+                    "poradi",
+                    "strana",
+                    "poznamka",
+                    "a",
+                    "b"
+                ],
+                "type": "object",
+                "properties": {
+                    "typ": {
+                        "$ref": "#/components/schemas/TypPrvku"
+                    },
+                    "poradi": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "strana": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/StranaPrvku"
+                            }
+                        ]
+                    },
+                    "poznamka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "a": {
+                        "$ref": "#/components/schemas/VerejnyKonecDto"
+                    },
+                    "b": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/VerejnyKonecDto"
+                            }
+                        ]
                     }
                 }
             },

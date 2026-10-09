@@ -11,9 +11,9 @@ import {
   type Byvala,
 } from "@/lib/boje";
 import { nazevZastavky } from "@/lib/kalendar";
-import { MapkaTrati } from "./trat";
+import { MapkaTrati, type PrvekNaMape } from "@/app/mapka-trati";
 import { Pipani } from "./pipani";
-import { nactiPrvky, nactiStavTrati } from "@/lib/trat";
+import { nactiPrvky, nactiStavTrati, type Prvek } from "@/lib/trat";
 import { PrvkyTrati } from "./prvky";
 import { StavTrati } from "./stav-trati";
 import { nahrajFotkuAkce, odeberFotkuAkce, seberAkce } from "./akce";
@@ -170,7 +170,7 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
           />
 
           <h2>Co stojí na trati</h2>
-          <MapkaTrati prvky={prvky} />
+          <MapkaTrati prvky={prvky.map(naMapu)} />
           {trat.length === 0 ? (
             <p className="prazdno">
               Zatím nic. Až bóji spustíš do vody, pípni ji — poloha z tvého
@@ -332,6 +332,19 @@ function NaTrati({
       )}
     </>
   );
+}
+
+/**
+ * Prvek ze správy pro mapku. Bod se kreslí jako konec stejně jako bóje,
+ * jen prázdným kolečkem — tam nic neplave.
+ */
+function naMapu(p: Prvek): PrvekNaMape {
+  const konce = [{ nazev: p.a.nazev, sirka: p.a.sirka, delka: p.a.delka }];
+  if (p.b) konce.push({ nazev: p.b.nazev, sirka: p.b.sirka, delka: p.b.delka });
+  else if (p.bodB)
+    konce.push({ nazev: p.bodB.popis, sirka: p.bodB.sirka, delka: p.bodB.delka });
+
+  return { klic: p.id, typ: p.typ, poradi: p.poradi, konce, druhyNeniBoje: !!p.bodB };
 }
 
 /** Bóje, která už na trati nestojí. Sebrat ani přenastavit nejde. */

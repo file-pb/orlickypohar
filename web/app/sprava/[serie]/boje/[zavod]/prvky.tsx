@@ -6,6 +6,7 @@ import {
   type Prvek,
   type TypPrvku,
 } from "@/lib/trat";
+import { IkonaPrvku } from "@/app/ikona-prvku";
 import { prvekAkce, smazPrvekAkce } from "./akce";
 
 /**
@@ -68,6 +69,8 @@ export function PrvkyTrati({
           ))}
         </ul>
       )}
+
+      <BojeMimoPrvky prvky={prvky} boje={boje} zamceno={zamceno} />
 
       {zamceno ? (
         <p className="poznamka">
@@ -179,57 +182,48 @@ export function PrvkyTrati({
 }
 
 /**
- * Tvar prvku. Tentýž jazyk jako na mapě: kolečko je konec, plná úsečka
- * mezi dvěma konci je čára nebo brána, obloučky ukazují stranu.
+ * Bóje, která na vodě stojí, ale žádný prvek ji nepoužívá.
+ *
+ * <b>Ticho je tady past.</b> Pípnutá bóje se pořadateli ukazuje v seznamu
+ * „Co stojí na trati", takže vypadá hotově — ale mapka a veřejná stránka
+ * kreslí podle prvků, takže se venku neobjeví. Rozdíl mezi „stojí na vodě"
+ * a „je součástí trati" nikde jinde vidět není.
+ *
+ * <para>
+ * Neříká se tomu chyba: zbylá bóje po přestavbě nebo bóje k něčemu jinému
+ * je legitimní. Jen ať je vidět, že se o ní venku neví.
+ * </para>
  */
-function IkonaPrvku({ typ, strana }: { typ: TypPrvku; strana: Prvek["strana"] }) {
-  const vlevo = strana === "PoLeve";
+function BojeMimoPrvky({
+  prvky,
+  boje,
+  zamceno,
+}: {
+  prvky: Prvek[];
+  boje: Boje[];
+  zamceno: boolean;
+}) {
+  // Při prázdném seznamu to už říká prázdný stav výš; dvě hlášky o tomtéž
+  // jen zabírají obrazovku.
+  if (prvky.length === 0) return null;
+
+  const vPrvcich = new Set(prvky.flatMap((p) => [p.a.id, ...(p.b ? [p.b.id] : [])]));
+  const mimo = boje.filter((b) => !vPrvcich.has(b.id));
+  if (mimo.length === 0) return null;
 
   return (
-    <svg
-      className="ikona-prvku"
-      viewBox="0 0 32 20"
-      width="32"
-      height="20"
-      role="img"
-      aria-label={NAZVY_TYPU[typ]}
-    >
-      {typ !== "Znacka" && (
-        <line x1="6" y1="10" x2="26" y2="10" stroke="currentColor" strokeWidth="2" />
-      )}
-      {typ === "Znacka" ? (
-        <>
-          <circle cx="16" cy="10" r="4" fill="currentColor" />
-          {strana && (
-            <path
-              d={vlevo ? "M 9 4 A 7 7 0 0 0 9 16" : "M 23 4 A 7 7 0 0 1 23 16"}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-            />
-          )}
-        </>
-      ) : (
-        <>
-          <circle cx="6" cy="10" r="4" fill="currentColor" />
-          <circle cx="26" cy="10" r="4" fill="currentColor" />
-          {/* Start a cíl mají navíc písmeno: tytéž dvě polohy můžou být
-              ráno start a odpoledne cíl, takže tvar sám je nerozliší. */}
-          {(typ === "CaraStart" || typ === "CaraCil") && (
-            <text x="16" y="7" textAnchor="middle" fontSize="8" fill="currentColor">
-              {typ === "CaraStart" ? "S" : "C"}
-            </text>
-          )}
-          {typ === "Odskok" && strana && (
-            <path
-              d={vlevo ? "M 2 5 A 5 5 0 0 0 2 15" : "M 30 5 A 5 5 0 0 1 30 15"}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-            />
-          )}
-        </>
-      )}
-    </svg>
+    <p className="hlaska" role="status">
+      <b>
+        {mimo.length === 1 ? "Jedna bóje stojí mimo trať" : `${mimo.length} bóje stojí mimo trať`}:
+      </b>{" "}
+      {mimo.map((b) => b.nazev).join(", ")}. Na vodě {mimo.length === 1 ? "je" : "jsou"}, ale
+      žádný prvek {mimo.length === 1 ? "ji" : "je"} nepoužívá — na mapce trati a na veřejné
+      stránce proto {mimo.length === 1 ? "nebude" : "nebudou"}.{" "}
+      {zamceno
+        ? "Trať je přijatá, takže se to teď nespraví; pokud to tak být nemá, je to přestavba."
+        : mimo.length === 1
+          ? "Udělej z ní prvek, nebo ji seber."
+          : "Udělej z nich prvky, nebo je seber."}
+    </p>
   );
 }

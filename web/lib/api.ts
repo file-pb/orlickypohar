@@ -108,6 +108,40 @@ async function nacti<T>(cesta: string): Promise<T | null> {
 }
 
 export const nactiSerie = () => nacti<SerieShrnuti[]>("/serie");
+
+/** Trať pro diváka. `null` znamená „zatím není zveřejněná", ne chybu. */
+export type VerejnaTrat = components["schemas"]["VerejnaTratDto"];
+
+/**
+ * Trať regaty, jakmile ji rozhodčí přijal.
+ *
+ * <b>Minutová cache je tu málo.</b> Ostatní veřejná čtení se mění po
+ * závodě; trať se mění **při přestavbě, tedy za provozu** — a dokud stránka
+ * ukazuje starou, pluje podle ní někdo k bóji, která se mezitím posunula.
+ * Proto se čte bez cache; mikrocache před webem ji stejně podrží deset
+ * vteřin pro všechny naráz.
+ */
+export async function nactiVerejnouTrat(
+  serie: string,
+  zavod: string,
+): Promise<VerejnaTrat | null> {
+  const cesta =
+    `/serie/${encodeURIComponent(serie)}/zavody/${encodeURIComponent(zavod)}/trat`;
+
+  let odpoved: Response;
+  try {
+    odpoved = await fetch(`${API}${cesta}`, {
+      cache: "no-store",
+      headers: { accept: "application/json" },
+    });
+  } catch (e) {
+    throw new ApiNedostupne(`API ${cesta} se nepodařilo zavolat: ${e}`);
+  }
+
+  if (odpoved.status === 404) return null;
+  if (!odpoved.ok) throw new ApiNedostupne(`API ${cesta} vrátilo ${odpoved.status}`);
+  return (await odpoved.json()) as VerejnaTrat;
+}
 export const nactiSerii = (slug: string) => nacti<SerieDetail>(`/serie/${slug}`);
 export const nactiZavod = (serie: string, zavod: string) =>
   nacti<ZavodDetail>(`/serie/${serie}/zavody/${zavod}`);

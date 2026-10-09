@@ -5144,6 +5144,23 @@ export interface components {
             /** Format: date-time */
             prijatoV: null | string;
             boje: components["schemas"]["VerejnaBojeDto"][];
+            prvky: components["schemas"]["VerejnyPrvekDto"][];
+        };
+        VerejnyKonecDto: {
+            nazev: string;
+            /** Format: double */
+            sirka: number;
+            /** Format: double */
+            delka: number;
+        };
+        VerejnyPrvekDto: {
+            typ: components["schemas"]["TypPrvku"];
+            /** Format: int32 */
+            poradi: number;
+            strana: null | components["schemas"]["StranaPrvku"];
+            poznamka: null | string;
+            a: components["schemas"]["VerejnyKonecDto"];
+            b: null | components["schemas"]["VerejnyKonecDto"];
         };
         VodocetDto: {
             /** Format: date-time */
