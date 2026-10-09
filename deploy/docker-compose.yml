@@ -171,6 +171,11 @@ services:
       # poskytovatele: heslo, e-mail, druhý faktor. Adresa je tady, a ne
       # v kódu, aby výměna poskytovatele neznamenala změnu webu.
       IDENTITA_UCET_URL: "https://ucty.${PLATFORM_DOMAIN:?}/ui/console/users/me"
+      # Adresa pro žádosti o osobní údaje (výpis, oprava, výmaz). Ukáže se
+      # na stránce /osobni-udaje. Prázdná znamená, že stránka o adrese mlčí
+      # a pošle čtenáře za pořadatelem regaty — mlčet je lepší než napsat
+      # adresu, která nikomu nechodí.
+      KONTAKT_UDAJE: ""
     deploy:
       resources:
         limits: { memory: 512m, cpus: "1.0" }
