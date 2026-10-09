@@ -79,6 +79,52 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("Boje");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Boje.Trat", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("DuvodVraceni")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int?>("NahrazujeId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("PrijalId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("PrijatoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("RozjizdkaId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Stav")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("ZalozenaV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ZavodId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NahrazujeId");
+
+                    b.HasIndex("PrijalId");
+
+                    b.HasIndex("RozjizdkaId");
+
+                    b.HasIndex("ZavodId", "Stav");
+
+                    b.ToTable("Trate");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Clanky.Clanek", b =>
                 {
                     b.Property<int>("Id")
@@ -1214,6 +1260,38 @@ namespace OrlickyPohar.Api.Migrations
                     b.Navigation("Nahrazuje");
 
                     b.Navigation("Postavil");
+
+                    b.Navigation("Zavod");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Boje.Trat", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Boje.Trat", "Nahrazuje")
+                        .WithMany()
+                        .HasForeignKey("NahrazujeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Prijal")
+                        .WithMany()
+                        .HasForeignKey("PrijalId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("OrlickyPohar.Api.Features.Zavody.Rozjizdka", "Rozjizdka")
+                        .WithMany()
+                        .HasForeignKey("RozjizdkaId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("OrlickyPohar.Api.Features.Zavody.Zavod", "Zavod")
+                        .WithMany()
+                        .HasForeignKey("ZavodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Nahrazuje");
+
+                    b.Navigation("Prijal");
+
+                    b.Navigation("Rozjizdka");
 
                     b.Navigation("Zavod");
                 });

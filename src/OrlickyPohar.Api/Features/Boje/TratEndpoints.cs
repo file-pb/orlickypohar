@@ -1,0 +1,160 @@
+using System.Security.Claims;
+using OrlickyPohar.Api.Features.Identita;
+using OrlickyPohar.Api.Features.Sprava;
+
+namespace OrlickyPohar.Api.Features.Boje;
+
+/// <summary>Důvod, proč rozhodčí vrací trať stavitelům.</summary>
+public record VraceniTratiVstup(string? Duvod);
+
+/// <summary>
+/// Stav trati: stavitelé hlásí hotovo, rozhodčí přijímá a zamyká, přestavba
+/// odemyká.
+///
+/// <para>
+/// <b>Kdo co smí</b> (Filip, 9. 10. 2026). Hlásit hotovo a odemknout na
+/// přestavbu smí organizátor regaty i rozhodčí ročníku — trať přestavuje
+/// pořadatel a na vodě nemá jak shánět rozhodčího. <b>Přijmout a vrátit smí
+/// jen rozhodčí</b>: přijetí je to, co trať zveřejní, a tohle rozhodnutí je
+/// jeho.
+/// </para>
+///
+/// <para>
+/// <b>Veřejná cesta tu pořád není.</b> Zveřejnění přijaté trati je další
+/// krok a patří k němu výjimka v <c>OchranaCteniTests</c> i s důvodem —
+/// dokud nevznikne, leží celá trať pod <c>/sprava/</c>.
+/// </para>
+/// </summary>
+public static class TratEndpoints
+{
+    public static void MapTrat(this IEndpointRouteBuilder app)
+    {
+        var g = app.MapSpravu("/sprava/serie/{serie}/zastavky/{zavod}/trat");
+
+        g.MapGet("/", StavAsync)
+            .Produces<TratDto>()
+            .WithTags("Bóje")
+            .WithSummary("Stav trati regaty")
+            .WithDescription(
+                "Organizátor regaty, nebo rozhodčí ročníku. Vrací 404, dokud regata nemá "
+                + "ani jednu bóji — stavba začíná prvním pípnutím, ne zvláštním knoflíkem.");
+
+        g.MapPost("/hotovo", HotovoAsync)
+            .Produces<TratDto>()
+            .WithTags("Bóje")
+            .WithSummary("Stavitelé hlásí, že trať stojí")
+            .WithDescription("Organizátor regaty, nebo rozhodčí ročníku.");
+
+        g.MapPost("/prijeti", PrijmiAsync)
+            .Produces<TratDto>()
+            .WithTags("Bóje")
+            .WithSummary("Rozhodčí trať přijme, tím se zamkne a je veřejná")
+            .WithDescription(
+                "Jen rozhodčí ročníku. Zamčenou trať nejde přestavovat ani do ní pípat.");
+
+        g.MapPost("/vraceni", VratAsync)
+            .Produces<TratDto>()
+            .WithTags("Bóje")
+            .WithSummary("Rozhodčí vrátí trať stavitelům")
+            .WithDescription("Jen rozhodčí ročníku. Důvod je povinný.");
+
+        g.MapPost("/prestavba", PrestavbaAsync)
+            .Produces<TratDto>()
+            .WithTags("Bóje")
+            .WithSummary("Odemkne přijatou trať na přestavbu")
+            .WithDescription(
+                "Organizátor regaty, nebo rozhodčí ročníku. Veřejně to znamená „trať se "
+                + "přestavuje, počkej\". Podle odjeté trati se už jelo, takže se nepřepíše — "
+                + "vznikne nová a stará zůstane přijatá.");
+    }
+
+    private static async Task<IResult> StavAsync(
+        string serie, string zavod, ClaimsPrincipal kdo, Rozsahy rozsahy, TratSprava sprava,
+        CancellationToken ct)
+    {
+        var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
+        if (odpoved is not null) return odpoved;
+
+        var stav = await sprava.StavAsync(
+            rozsah!.ZavodId!.Value, true, await JeRozhodciAsync(kdo, rozsahy, rozsah, ct), ct);
+
+        return stav is null ? Results.NotFound() : Results.Ok(stav);
+    }
+
+    private static async Task<IResult> HotovoAsync(
+        string serie, string zavod, ClaimsPrincipal kdo, Rozsahy rozsahy, TratSprava sprava,
+        CancellationToken ct)
+    {
+        var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
+        if (odpoved is not null) return odpoved;
+
+        return Odpoved(await sprava.HotovoAsync(
+            rozsah!.ZavodId!.Value, await JeRozhodciAsync(kdo, rozsahy, rozsah, ct), ct));
+    }
+
+    private static async Task<IResult> PrijmiAsync(
+        string serie, string zavod, ClaimsPrincipal kdo, Rozsahy rozsahy, TratSprava sprava,
+        CancellationToken ct)
+    {
+        var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct, jenRozhodci: true);
+        if (odpoved is not null) return odpoved;
+        if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
+
+        return Odpoved(await sprava.PrijmiAsync(rozsah!.ZavodId!.Value, uzivatel, ct));
+    }
+
+    private static async Task<IResult> VratAsync(
+        string serie, string zavod, VraceniTratiVstup vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, TratSprava sprava, CancellationToken ct)
+    {
+        var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct, jenRozhodci: true);
+        if (odpoved is not null) return odpoved;
+
+        return Odpoved(await sprava.VratAsync(rozsah!.ZavodId!.Value, vstup.Duvod, ct));
+    }
+
+    private static async Task<IResult> PrestavbaAsync(
+        string serie, string zavod, ClaimsPrincipal kdo, Rozsahy rozsahy, TratSprava sprava,
+        CancellationToken ct)
+    {
+        var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
+        if (odpoved is not null) return odpoved;
+
+        return Odpoved(await sprava.PrestavbaAsync(
+            rozsah!.ZavodId!.Value, await JeRozhodciAsync(kdo, rozsahy, rozsah, ct), ct));
+    }
+
+    private static IResult Odpoved((TratDto? Trat, string? Chyba) vysledek) =>
+        vysledek.Chyba is { } chyba
+            ? Results.BadRequest(new { error = chyba })
+            : Results.Ok(vysledek.Trat);
+
+    /// <summary>
+    /// Rozsah regaty i s právem na něj — nebo odpověď, kterou má endpoint
+    /// vrátit. Pořadí je totéž jako u ostatních cest správy: nejdřív rozsah,
+    /// pak právo, protože na právo se ptáme pro ten rozsah.
+    /// </summary>
+    private static async Task<(Rozsahy.Rozsah? Rozsah, IResult? Odpoved)> RozsahAsync(
+        string serie, string zavod, ClaimsPrincipal kdo, Rozsahy rozsahy, CancellationToken ct,
+        bool jenRozhodci = false)
+    {
+        if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
+            return (null, Results.NotFound());
+
+        var smi = jenRozhodci
+            ? await JeRozhodciAsync(kdo, rozsahy, rozsah, ct)
+            : await StaviAsync(kdo, rozsahy, rozsah, ct);
+
+        return smi ? (rozsah, null) : (null, Results.Forbid());
+    }
+
+    /// <summary>Kdo smí do trati sáhnout: organizátor regaty, nebo rozhodčí.</summary>
+    private static async Task<bool> StaviAsync(
+        ClaimsPrincipal kdo, Rozsahy rozsahy, Rozsahy.Rozsah rozsah, CancellationToken ct) =>
+        await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Organizator, rozsah.SerieId, rozsah.ZavodId), ct)
+        || await JeRozhodciAsync(kdo, rozsahy, rozsah, ct);
+
+    private static Task<bool> JeRozhodciAsync(
+        ClaimsPrincipal kdo, Rozsahy rozsahy, Rozsahy.Rozsah rozsah, CancellationToken ct) =>
+        rozsahy.SmiAsync(kdo, new Pozadavek(Role.Rozhodci, rozsah.SerieId), ct);
+}

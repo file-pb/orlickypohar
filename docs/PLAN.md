@@ -1847,6 +1847,96 @@ nepublikovat nic. Vlastní zveřejnění je pak přívažek — veřejný endpoi
 **mimo `/sprava/`**, který pustí jen přijatou trať, a výjimka v
 `OchranaCteniTests` i s důvodem, jak to ten test vyžaduje.
 
+#### Stavy trati (Filip, 9. 10. 2026)
+
+**Postavené 9. 10. 2026** — entita `Trat`, stavy, pravidla a endpointy pod
+`/sprava/serie/{serie}/zastavky/{zavod}/trat`. Veřejná cesta zatím není; to je
+další krok a patří k němu výjimka v `OchranaCteniTests` i s důvodem.
+
+| Stav | Co znamená | Kdo do něj pustí |
+|---|---|---|
+| `Rozestaveno` | staví se, veřejně nic | vzniká prvním pípnutím |
+| `Hotovo` | stavitelé hlásí, že trať stojí | organizátor regaty i rozhodčí |
+| `Prijato` | **zamčeno a veřejné** | jen rozhodčí |
+| `Prestavba` | veřejně „trať se přestavuje, počkej" | organizátor regaty i rozhodčí |
+
+**Zámek něco znamená.** Do přijaté trati nejde pípnout ani sebrat bóji
+(`TratSprava.ProcNejdeStavetAsync` volá `BojeSprava` u pípnutí i sebrání).
+Bez toho by „zamčeno" byl jen nápis a veřejně vydaná trať by se dala tiše
+změnit pod lodí, která podle ní pluje.
+
+**Stavba začíná první bójí**, ne zvláštním knoflíkem, který by nikdo nestiskl.
+Regata bez bóje trať nemá a `GET` vrací 404.
+
+**Odemknout smí pořadatel i rozhodčí** (Filip): trať přestavuje pořadatel a na
+vodě nemá jak shánět rozhodčího. Bezpečné je to proto, že odemčení **je
+vidět** — veřejně okamžitě znamená „počkej". Zpátky k přijetí vede jen přes
+rozhodčího.
+
+**Přestavba přijaté trati je výjimka, ne režim** (Filip: *„systémově to nechci,
+ale může se to stát"*) — vítr odfoukne bójku nebo ji někdo ukradne, a to se
+stane i v průběhu rozjížďky. Proto:
+
+- Podle **odjeté** trati se už jelo, takže se nepřepisuje: vznikne nová
+  s `NahrazujeId` na starou a stará zůstane přijatá navždy. Historie je řetěz,
+  stejně jako u bóje.
+- **„Odjelo se podle ní" se nikam neukládá** — pozná se tak, že po přijetí
+  odstartovala rozjížďka (`StartV`). Je to dopočet z toho, co v datech už je,
+  takže start rozjížďky o trati nemusí vědět.
+- Odemčení **neodjeté** trati žádnou historii nevyrábí, jen ji odemkne a smaže
+  přijetí, aby `PrijatoV` neukazovalo na stav, který neplatí.
+
+**Členství bójí v trati se zatím neukládá.** Dokud se trať nevybírá
+a neklonuje, je to „co zrovna stojí u téhle regaty", a to už vrací
+`BojeEndpoints`. Výslovné členství přijde s výběrem a klonováním (níž)
+a nahradí ho pak prvky trati.
+
+**Zkrácení trati není přestavba.** Když rozhodčí zkrátí trať, přijatá trať se
+nemění — mění se to, kde se dojelo. Nic se tedy neodemyká a veřejně se nehlásí
+„přestavuje se, počkej" uprostřed závodu. Zapíše se to na rozjížďku, až budou
+prvky (*zkráceno u prvku X v čase T*).
+
+##### Otevřené: výběr a klonování trati
+
+Filip, 9. 10. 2026: *„Jakmile založím novou rozjížďku, můžu si vybrat již
+postavenou trať a ta se mi naklonuje z té, co se odjela."*
+
+**Klon nesmí znamenat nová pípnutí.** Vyrobila by se tím měření, která se
+nestala, s falešným časem a přesností — přesně to, co zakazuje oddíl *Trať
+není seznam bójí, ale řada prvků*. Klon tedy kopíruje **definici trati**
+a ukazuje na tytéž záznamy bójí, které pořád stojí ve vodě.
+
+Z toho plyne, že **členství se uložit musí** (ve vodě může stát víc tratí
+najednou, takže „co zrovna stojí" nestačí). Nerozhodnuté zůstává, jestli má
+rozjížďka mít trať povinně už při založení a v jakém stavu klon začíná.
+
+##### Otevřené: sebraný dojezd a hendikep
+
+Filip, 9. 10. 2026: *„Pokud by se jelo na hendikep, jak bychom řešili zkrácení
+trati při nepříznivém větru — rozhodčí jede proti lodím a pípá je do cíle?"*
+
+**Řádné zkrácení u bóje hendikepu nevadí:** všichni dojedou přes tutéž čáru,
+takže přepočet zůstává „čas × koeficient" a na délce trati nezáleží.
+**Sebraný dojezd ano** — každá loď urazila jinou vzdálenost za jiný čas, takže
+poměr nemá co porovnávat. Hendikep by se musel počítat z rychlosti po trati,
+a k tomu je potřeba vědět, kolik která loď ujela.
+
+Tři cesty, žádná zatím nezvolená:
+
+1. **Pravidlo místo dat, zadarmo:** směrnice řekne, že sebraná rozjížďka se
+   boduje pořadím bez přepočtu. Platí hned a protest má podle čeho rozhodnout.
+2. **Zapisovat polohu dojezdu**, aby se to dalo spočítat později. Dnes se
+   u dojezdu ukládá jen čas. Chtělo by to polohu a přesnost z telefonu
+   rozhodčího (který jede proti poli, takže je to poloha jeho — na desítky
+   metrů, a koeficient je mnohem hrubší) a příznak na rozjížďce, že skončila
+   sebráním.
+3. **Trasy z trackeru**, které jediné dají skutečně uplutou dráhu.
+
+I s polohami zbývá rozhodnout, co je „ujetá vzdálenost": po trati k tomu bodu
+(spočitatelné hned, ale zvýhodní toho, kdo jel špatně), nebo skutečně uplutá
+(jen z tras). **Kdo nezapíše polohu, zavře si obě dveře** — proto je bod 2
+levná pojistka, i když se nikdy nepoužije.
+
 ### Připojení k lodi přes QR (Filip, 4. 10. 2026)
 
 *„Co to přihlašování zjednodušit tím, že po rozkliknutí lodi se zobrazí
