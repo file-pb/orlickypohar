@@ -2057,6 +2057,37 @@ class H(BaseHTTPRequestHandler):
 
         return self.odpoved(boje_dto(nova), 201)
 
+    def nahraj_fotku_boje(self, slug, boje_id):
+        """Fotka k bóji. Autora doplní API, souhlas se neptá — je to doklad
+        k poloze, ne obrázek na web. Fotek může být u bóje víc."""
+        boje = next((b for b in BOJE.get(slug, []) if b["id"] == boje_id), None)
+        if not boje:
+            return self.chyba(400, "Taková bóje u téhle regaty není.")
+
+        pole, fotka = self.nahrana_fotka()
+        if not fotka:
+            return None
+
+        data, typ = fotka
+        id = uuid.uuid4().hex
+        FOTKY[id] = (data, typ)
+        adresa = f"http://127.0.0.1:{PORT}/fake-foto/{id}"
+        obrazek = {"id": id, "nahled": adresa, "velky": adresa, "sirka": 1600, "vyska": 1067,
+                   "autor": self.prihlaseny()["zobrazovane"], "popis": f"Bóje {boje['nazev']}"}
+        boje.setdefault("fotky", []).append(obrazek)
+        return self.odpoved(obrazek, 201)
+
+    def odeber_fotku_boje(self, slug, boje_id, fotka_id):
+        """Odebere jednu fotku bóje. Sebrání bóje fotky nemaže."""
+        boje = next((b for b in BOJE.get(slug, []) if b["id"] == boje_id), None)
+        if not boje:
+            return self.chyba(400, "Taková bóje u téhle regaty není.")
+
+        zbyde = [f for f in boje.get("fotky", []) if f["id"] != fotka_id]
+        FOTKY.pop(fotka_id, None)
+        boje["fotky"] = zbyde
+        return self._prazdna_odpoved()
+
     def seber_boji(self, slug, boje_id):
         """Razítko, ne smazání — bóje zůstává v historii."""
         if not self.zastavka(slug):
@@ -2114,6 +2145,9 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/boje/(\d+)/sebrana$', cesta)):
             return self.seber_boji(m.group(1), int(m.group(2)))
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/boje/(\d+)/fotky$', cesta)):
+            return self.nahraj_fotku_boje(m.group(1), int(m.group(2)))
         if (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/smernice/(\d+)/stazeni$',
                 cesta)):
@@ -2629,15 +2663,11 @@ class H(BaseHTTPRequestHandler):
         if text("souhlas") != "true":
             return self.chyba(400, "Potvrď, že autor souhlasí se zveřejněním fotky na webu.")
 
-        if vlastnik.get("obrazek"):
-            FOTKY.pop(vlastnik["obrazek"]["id"], None)
-        id = uuid.uuid4().hex
-        FOTKY[id] = (data, soubor.get_content_type())
-        adresa = f"http://127.0.0.1:{PORT}/fake-foto/{id}"
-        vlastnik["obrazek"] = {"id": id, "nahled": adresa, "velky": adresa, "sirka": 1600,
-                               "vyska": 1067, "autor": text("autor"),
-                               "popis": text("popis") or None}
-        return self.odpoved({k: v for k, v in vlastnik["obrazek"].items() if k != "id"})
+        # Dřív si tahle větev skládala fotku sama a sahala přitom na `data`
+        # a `soubor`, které v jejím rozsahu nejsou — spadlo by to na
+        # NameError. `uloz_fotku` dělá totéž a dělá to na jednom místě.
+        return self.odpoved(self.uloz_fotku(
+            vlastnik, "obrazek", *fotka, text("autor"), text("popis") or None))
 
     def nahraj_do_tela(self, slug):
         """Obrázek do těla článku. Na rozdíl od hlavního nic nenahrazuje —
@@ -2812,6 +2842,11 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/lode/(\d+)/vazby/(\d+)$',
                           urlparse(self.path).path)):
             return self.odeber_vazbu(int(m.group(1)), int(m.group(2)))
+
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/boje/(\d+)/fotky/([0-9a-f-]+)$',
+                urlparse(self.path).path)):
+            return self.odeber_fotku_boje(m.group(1), int(m.group(2)), m.group(3))
 
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode/(\d+)$',
                           urlparse(self.path).path)):

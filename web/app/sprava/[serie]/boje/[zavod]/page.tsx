@@ -3,11 +3,17 @@ import { notFound } from "next/navigation";
 import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { okamzik } from "@/app/datum";
-import { NAZEV_NEJVIC, nactiTrat, type Boje, type Byvala } from "@/lib/boje";
+import {
+  NAZEV_NEJVIC,
+  NAZVY_ZDROJU,
+  nactiTrat,
+  type Boje,
+  type Byvala,
+} from "@/lib/boje";
 import { nazevZastavky } from "@/lib/kalendar";
 import { MapkaTrati } from "./trat";
 import { Pipani } from "./pipani";
-import { seberAkce } from "./akce";
+import { nahrajFotkuAkce, odeberFotkuAkce, seberAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -70,7 +76,18 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
       )}
       {zpravy.stav === "sebrano" && (
         <p className="hlaska" role="status">
-          Bóje je označená za sebranou. Z trati zmizela, v historii zůstala.
+          Bóje je označená za sebranou. Z trati zmizela, v historii zůstala —
+          i s fotkami, protože ty jsou doklad k poloze.
+        </p>
+      )}
+      {zpravy.stav === "fotka" && (
+        <p className="hlaska" role="status">
+          Fotka je u bóje. Uložila se přepočtená na web, originál nikam.
+        </p>
+      )}
+      {zpravy.stav === "fotkaPryc" && (
+        <p className="hlaska" role="status">
+          Fotka je pryč i ze souborů. Poloha a čas u bóje zůstaly.
         </p>
       )}
 
@@ -172,12 +189,7 @@ function NaTrati({ boje, serie, zavod }: { boje: Boje; serie: string; zavod: str
   return (
     <>
       <span className="stitek">{boje.poradi}.</span> <span>{boje.nazev}</span>
-      <span className="detail">
-        {souradnice(boje)}
-        {boje.presnostM !== null && ` · přesnost ${Math.round(boje.presnostM)} m`}
-        {` · ${okamzik(boje.postavenaV)}`}
-        {boje.postavil && ` · postavil ${boje.postavil}`}
-      </span>
+      <Puvod boje={boje} />
 
       <p className="poznamka">
         <Link href={`/sprava/${serie}/boje/${zavod}?prenastav=${boje.id}`}>
@@ -194,6 +206,39 @@ function NaTrati({ boje, serie, zavod }: { boje: Boje; serie: string; zavod: str
           Ukázat na mapě
         </a>
       </p>
+
+      {boje.fotky.length > 0 && (
+        <p className="fotky-boje">
+          {boje.fotky.map((f) => (
+            <span key={f.id} className="fotka">
+              <a href={f.velky} target="_blank" rel="noopener noreferrer">
+                <img src={f.nahled} alt={f.popis ?? `Bóje ${boje.nazev}`} width={120} height={90} />
+              </a>
+              <form action={odeberFotkuAkce}>
+                <input type="hidden" name="serie" value={serie} />
+                <input type="hidden" name="zavod" value={zavod} />
+                <input type="hidden" name="boje" value={boje.id} />
+                <input type="hidden" name="fotka" value={f.id} />
+                <button type="submit" className="maly">Odebrat</button>
+              </form>
+            </span>
+          ))}
+        </p>
+      )}
+
+      {/* Fotek může být víc: jedna zblízka neukáže, co je za bójí na
+          břehu. Obyčejný formulář — fotit umí `capture` sám a u stolu se
+          stejně vybírá ze souborů. */}
+      <form action={nahrajFotkuAkce} className="formular radkove">
+        <input type="hidden" name="serie" value={serie} />
+        <input type="hidden" name="zavod" value={zavod} />
+        <input type="hidden" name="boje" value={boje.id} />
+        <label>
+          {boje.fotky.length === 0 ? "Vyfotit bóji" : "Přidat další fotku"}
+          <input type="file" name="soubor" accept="image/*" capture="environment" required />
+        </label>
+        <button type="submit">Nahrát fotku</button>
+      </form>
 
       {/* Sebrání nepotřebuje polohu, takže ani javascript. */}
       <form action={seberAkce} className="formular">
@@ -212,12 +257,50 @@ function Byvsi({ boje, proc }: Byvala) {
     <>
       <span className="stitek">{boje.poradi}.</span> <span>{boje.nazev}</span>{" "}
       <span className="stitek">{proc}</span>
-      <span className="detail">
-        {souradnice(boje)}
-        {boje.presnostM !== null && ` · přesnost ${Math.round(boje.presnostM)} m`}
-        {` · ${okamzik(boje.postavenaV)}`}
-        {boje.postavil && ` · postavil ${boje.postavil}`}
-      </span>
+      <Puvod boje={boje} />
+      {/* Fotky zůstávají i u bóje, která už na trati nestojí: doklad
+          k poloze, podle které se možná jelo. Mazat se nedají odsud —
+          historie se neupravuje. */}
+      <Fotky boje={boje} />
     </>
+  );
+}
+
+/**
+ * Odkud ta poloha je. <b>Přesnost hlásí jen telefon</b>, takže u bodu
+ * z mapy se místo čísla řekne, že se odečetl — prázdné místo by vypadalo
+ * jako telefon, který přesnost neumí.
+ */
+function Puvod({ boje }: { boje: Boje }) {
+  const zdroj = boje.zdroj ?? "Telefon";
+
+  return (
+    <span className="detail">
+      {souradnice(boje)}
+      {zdroj === "Telefon"
+        ? boje.presnostM !== null
+          ? ` · přesnost ${Math.round(boje.presnostM)} m`
+          : " · přesnost telefon nehlásil"
+        : ` · ${NAZVY_ZDROJU[zdroj]}, neměřeno`}
+      {` · ${okamzik(boje.postavenaV)}`}
+      {boje.postavil && ` · zapsal ${boje.postavil}`}
+    </span>
+  );
+}
+
+/** Fotky u bóje. Náhled vede na velkou — prohlížeč to umí sám. */
+function Fotky({ boje }: { boje: Boje }) {
+  if (boje.fotky.length === 0) return null;
+
+  return (
+    <p className="fotky-boje">
+      {boje.fotky.map((f) => (
+        <a key={f.id} href={f.velky} target="_blank" rel="noopener noreferrer">
+          {/* Obyčejný `img`: adresy jsou z našeho úložiště a rozměry
+              známe z API, takže není co optimalizovat na cizí doméně. */}
+          <img src={f.nahled} alt={f.popis ?? `Bóje ${boje.nazev}`} width={120} height={90} />
+        </a>
+      ))}
+    </p>
   );
 }

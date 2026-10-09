@@ -1433,9 +1433,9 @@ tlačítko se odemkne, až je poloha k něčemu. Historie stojí pod tratí,
 aby bylo vidět, že přenastavením nic nezmizelo.
 
 **Co obrazovka vědomě neumí:** pípnout bez signálu (viz odrážka výš —
-API nenese čas z telefonu). Mapka trati nad seznamem je od 9. 10. 2026.
-Mock bóje umí včetně pravidel a role, takže se dá zkoušet lokálně
-i ve zkoušce s pořadatelem.
+API nenese čas z telefonu). Mapka trati nad seznamem je od 9. 10. 2026,
+stejně jako zadání polohy z mapy a fotky u bóje. Mock bóje umí včetně
+pravidel a role, takže se dá zkoušet lokálně i ve zkoušce s pořadatelem.
 
 | Pravidlo | Proč |
 |---|---|
@@ -1477,7 +1477,22 @@ pravdivé bez dopisování.
 **Zkratky se musí rozbalit na serveru**, protože v QR ani ve zprávě od
 kamaráda nic jiného není. Jde to jen na známé hostitele a jen po http(s) —
 rozbalování cizí adresy je požadavek, který posílá náš server, ne
-prohlížeč.
+prohlížeč. Čte se **jen hlavička `location`**, tělo cílové stránky ne:
+stačí adresa, na kterou to vede. Jeden neúspěch se zopakuje, protože
+dlouho běžící server drží spojení otevřená a to první po pauze spadne
+hned (změřeno 9. 10. 2026: úspěch za 275 ms, pak pád za 64 ms).
+
+**QR se čte z obrázku, ne z kamery** — u stolu ho stejně dostaneš jako
+screenshot. Knihovna (`jsqr`) se stahuje **až když někdo fotku vybere**,
+takže pípání u vody o ni nezakopne. Kreslí se na bílý podklad s okrajem:
+QR potřebuje kolem sebe klidovou zónu a fotka obrazovky ji často nemá —
+bez okraje se Filipův kód z Mapy.com nepřečetl ani vestavěnou čtečkou
+macOS.
+
+**Obrazovka napřed ukáže, čemu rozumí, a staví se až potom.** Špatně
+přečtená souřadnice posune celou trať a poznalo by se to až na vodě;
+jedno klepnutí navíc je proti tomu nic. U zkratky se vypíše i adresa,
+na kterou vedla.
 
 #### Fotky bóje: víc než jedna (Filip, 9. 10. 2026)
 

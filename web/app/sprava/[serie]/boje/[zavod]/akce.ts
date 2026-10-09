@@ -1,7 +1,16 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { NEJHORSI_PRESNOST_M, pipni, seber } from "@/lib/boje";
+import {
+  FOTKA_NEJVIC_MB,
+  NEJHORSI_PRESNOST_M,
+  nahrajFotku,
+  odeberFotku,
+  pipni,
+  seber,
+  type ZdrojPolohy,
+} from "@/lib/boje";
+import { prectiISeZkratkou } from "@/lib/zkratky";
 
 /**
  * Serverové akce obrazovky bójí.
@@ -29,6 +38,7 @@ export async function pipniAkce(
     delka: number;
     presnostM: number | null;
     nahrazujeId: number | null;
+    zdroj?: ZdrojPolohy;
   },
 ): Promise<{ chyba: string | null }> {
   const nazev = vstup.nazev.trim();
@@ -37,10 +47,15 @@ export async function pipniAkce(
   if (!Number.isFinite(vstup.sirka) || !Number.isFinite(vstup.delka))
     return { chyba: "Poloha z telefonu nepřišla celá. Pípni prosím znovu." };
 
+  const zdroj: ZdrojPolohy = vstup.zdroj ?? "Telefon";
+  // Přesnost měří jen telefon. API ji od jiného zdroje odmítne, takže se
+  // u polohy z mapy neposílá vůbec — ne aby se „pro jistotu" dopsala nula.
+  const presnostM = zdroj === "Telefon" ? vstup.presnostM : null;
+
   // Přesnost hlídá i API; tady se chytá dřív, aby se zbytečně neposílala.
-  if (vstup.presnostM !== null && vstup.presnostM > NEJHORSI_PRESNOST_M)
+  if (presnostM !== null && presnostM > NEJHORSI_PRESNOST_M)
     return {
-      chyba: `Poloha je přesná jen na ${Math.round(vstup.presnostM)} m. Počkej na lepší signál a pípni znovu.`,
+      chyba: `Poloha je přesná jen na ${Math.round(presnostM)} m. Počkej na lepší signál a pípni znovu.`,
     };
 
   const poradi = Number.isInteger(vstup.poradi) && vstup.poradi > 0 ? vstup.poradi : 0;
@@ -54,11 +69,66 @@ export async function pipniAkce(
     poradi,
     sirka: vstup.sirka,
     delka: vstup.delka,
-    presnostM: vstup.presnostM,
+    presnostM,
     nahrazujeId,
+    zdroj,
   });
 
   return { chyba };
+}
+
+/**
+ * Přečte polohu z toho, co člověk vložil — souřadnic, odkazu do mapy nebo
+ * textu z QR kódu. <b>Je to serverová akce, protože zkrácený odkaz musí
+ * rozbalit server</b>; prohlížeč na cizí doménu nedosáhne.
+ *
+ * Nic to nezapisuje. Obrazovka napřed ukáže, čemu rozumí, a teprve pak se
+ * staví bóje — špatně přečtená souřadnice posune celou trať a bez téhle
+ * mezizastávky by se to poznalo až na vodě.
+ */
+export async function prectiAkce(vstup: string) {
+  // Dlouhý vstup není odkaz ani souřadnice, je to vložená stránka.
+  const text = String(vstup ?? "").slice(0, 2000);
+  return prectiISeZkratkou(text);
+}
+
+/**
+ * Fotka k bóji. Obyčejný formulář, žádný javascript — fotit umí
+ * `<input type="file" capture>` sám a u stolu se stejně vybírá ze souborů.
+ */
+export async function nahrajFotkuAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const kam = (zprava: Record<string, string>) =>
+    `/sprava/${encodeURIComponent(serie)}/boje/${encodeURIComponent(zavod)}?${new URLSearchParams(zprava)}`;
+
+  const boje = Number(formular.get("boje") ?? 0);
+  if (!Number.isInteger(boje) || boje <= 0) redirect(kam({ chyba: "Ke které bóji ta fotka patří?" }));
+
+  const soubor = formular.get("soubor");
+  if (!(soubor instanceof File) || soubor.size === 0)
+    redirect(kam({ chyba: "Vyber soubor s fotkou." }));
+  if (soubor.size > FOTKA_NEJVIC_MB * 1024 * 1024)
+    redirect(kam({ chyba: `Fotka může mít nejvýš ${FOTKA_NEJVIC_MB} MB.` }));
+
+  const chyba = await nahrajFotku(serie, zavod, boje, soubor);
+  redirect(kam(chyba ? { chyba } : { stav: "fotka" }));
+}
+
+/** Odebrání jedné fotky. Smaže i soubory v úložišti. */
+export async function odeberFotkuAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const kam = (zprava: Record<string, string>) =>
+    `/sprava/${encodeURIComponent(serie)}/boje/${encodeURIComponent(zavod)}?${new URLSearchParams(zprava)}`;
+
+  const boje = Number(formular.get("boje") ?? 0);
+  const fotka = String(formular.get("fotka") ?? "");
+  if (!Number.isInteger(boje) || boje <= 0 || !fotka)
+    redirect(kam({ chyba: "Která fotka se má odebrat?" }));
+
+  const chyba = await odeberFotku(serie, zavod, boje, fotka);
+  redirect(kam(chyba ? { chyba } : { stav: "fotkaPryc" }));
 }
 
 /**

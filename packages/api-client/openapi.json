@@ -3573,7 +3573,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "Zap\u00ed\u0161e polohu postaven\u00e9 nebo p\u0159enastaven\u00e9 b\u00f3je",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. P\u0159enastaven\u00ed je nov\u00fd z\u00e1znam \u2014 star\u00fd z\u016fst\u00e1v\u00e1. Poloha mimo Orl\u00edk nebo p\u0159esnost hor\u0161\u00ed ne\u017e 100 m se odm\u00edtne.",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. P\u0159enastaven\u00ed je nov\u00fd z\u00e1znam \u2014 star\u00fd z\u016fst\u00e1v\u00e1. Poloha mimo Orl\u00edk nebo p\u0159esnost hor\u0161\u00ed ne\u017e 100 m se odm\u00edtne. `zdroj` \u0159\u00edk\u00e1, odkud poloha je: `Telefon` ji zm\u011b\u0159il u b\u00f3je a hl\u00e1s\u00ed p\u0159esnost, `Mapa` a `Qr` ji maj\u00ed ode\u010dtenou a p\u0159esnost u nich nesm\u00ed p\u0159ij\u00edt. Chyb\u011bj\u00edc\u00ed `zdroj` znamen\u00e1 `Telefon`.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3648,6 +3648,121 @@
                             "pattern": "^-?(?:0|[1-9]\\d*)$",
                             "type": "integer",
                             "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/boje/{boje}/fotky": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "P\u0159ilo\u017e\u00ed k b\u00f3ji fotku z okam\u017eiku postaven\u00ed",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. Je to doklad k poloze: ze sou\u0159adnic se nepozn\u00e1 barva b\u00f3je ani co je za n\u00ed na b\u0159ehu. **Fotek m\u016f\u017ee b\u00fdt v\u00edc** \u2014 jedna zbl\u00edzka neuk\u00e1\u017ee z\u00e1rove\u0148 b\u00f3ji i b\u0159eh za n\u00ed. JPEG, PNG nebo WebP do 15 MB; ukl\u00e1d\u00e1 se p\u0159epo\u010dten\u00e9 na WebP, origin\u00e1l nikam. Ve\u0159ejn\u011b se nevyd\u00e1vaj\u00ed, stejn\u011b jako cel\u00e1 tra\u0165. Bez nastaven\u00e9ho \u00falo\u017ei\u0161t\u011b vrac\u00ed 503.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "boje",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FotkaBojeFormular"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FotkaBojeFormular"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ObrazekDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/boje/{boje}/fotky/{fotka}": {
+            "delete": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Odebere jednu fotku b\u00f3je a sma\u017ee jej\u00ed soubory",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. Sebr\u00e1n\u00ed b\u00f3je fotky nema\u017ee \u2014 z\u00e1znam o poloze z\u016fst\u00e1v\u00e1 a fotka je jeho doklad.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "boje",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "fotka",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
                         }
                     }
                 ],
@@ -3878,7 +3993,8 @@
                     "presnostM",
                     "postavenaV",
                     "postavil",
-                    "sebrana"
+                    "sebrana",
+                    "fotky"
                 ],
                 "type": "object",
                 "properties": {
@@ -3920,6 +4036,15 @@
                     },
                     "sebrana": {
                         "type": "boolean"
+                    },
+                    "fotky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ObrazekDto"
+                        }
+                    },
+                    "zdroj": {
+                        "$ref": "#/components/schemas/ZdrojPolohy"
                     }
                 }
             },
@@ -4231,6 +4356,24 @@
                     "Bloky"
                 ],
                 "default": "Text"
+            },
+            "FotkaBojeFormular": {
+                "required": [
+                    "soubor"
+                ],
+                "type": "object",
+                "properties": {
+                    "soubor": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/IFormFile"
+                            }
+                        ]
+                    }
+                }
             },
             "FotkaFormular": {
                 "required": [
@@ -5093,7 +5236,8 @@
                     "sirka",
                     "vyska",
                     "autor",
-                    "popis"
+                    "popis",
+                    "id"
                 ],
                 "type": "object",
                 "properties": {
@@ -5119,6 +5263,10 @@
                             "null",
                             "string"
                         ]
+                    },
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
                     }
                 }
             },
@@ -5267,6 +5415,16 @@
                             "integer"
                         ],
                         "format": "int32"
+                    },
+                    "zdroj": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/ZdrojPolohy"
+                            }
+                        ]
                     }
                 }
             },
@@ -8036,6 +8194,14 @@
                         ]
                     }
                 }
+            },
+            "ZdrojPolohy": {
+                "enum": [
+                    "Telefon",
+                    "Mapa",
+                    "Qr"
+                ],
+                "default": "Telefon"
             },
             "ZmenaRoleDto": {
                 "required": [

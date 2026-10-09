@@ -768,6 +768,44 @@ header.hlavicka .jen-uzke { display: none; }
 }
 .do-spravy b { color: var(--text); }
 
+/* Poloha odjinud než z GPS. Složené schválně: z mobilu se pípá, tohle je
+   cesta pro nestandardní případ (Filip, 9. 10. 2026). */
+.zmapy {
+  border: 1px dashed var(--linka); border-radius: 10px;
+  padding: 0.6rem 0.9rem; margin-top: 1.25rem;
+}
+.zmapy > summary { cursor: pointer; font-weight: 600; }
+.zmapy[open] > summary { margin-bottom: 0.75rem; }
+.zmapy textarea {
+  width: 100%; font: inherit; padding: 0.45rem 0.6rem;
+  border: 1px solid var(--linka); border-radius: 8px;
+  background: var(--pozadi); color: var(--text);
+}
+.zmapy .tlacitka { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.6rem; }
+.zmapy .hlaska .detail { display: block; word-break: break-all; margin-top: 0.3rem; }
+
+/* Výběr souboru jako tlačítko: vlastní `input[type=file]` vypadá v každém
+   prohlížeči jinak a vedle našeho tlačítka by se to pralo. */
+.jako-tlacitko { position: relative; overflow: hidden; display: inline-flex; }
+.jako-tlacitko input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%;
+}
+
+/* Fotky u bóje. Doklad k poloze, takže malé náhledy vedle sebe —
+   nejsou to obrázky na web. */
+.fotky-boje { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.6rem; }
+.fotky-boje img {
+  display: block; width: 120px; height: 90px; object-fit: cover;
+  border-radius: 8px; border: 1px solid var(--linka);
+}
+.fotky-boje .fotka { display: flex; flex-direction: column; gap: 0.25rem; align-items: center; }
+.fotky-boje button.maly {
+  font: inherit; font-size: 0.75rem; cursor: pointer;
+  padding: 0.15rem 0.6rem; border-radius: 999px;
+  border: 1px solid var(--linka); background: var(--pozadi); color: var(--tlumeny);
+}
+.fotky-boje button.maly:hover { border-color: var(--stav-zruseny); color: var(--stav-zruseny); }
+
 .udeleni {
   display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end;
   background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;

@@ -18,6 +18,15 @@ import type { components } from "./schema";
 const API = process.env.API_URL ?? "http://localhost:8080";
 
 export type Boje = components["schemas"]["BojeDto"];
+export type ZdrojPolohy = components["schemas"]["ZdrojPolohy"];
+export type Obrazek = components["schemas"]["ObrazekDto"];
+
+/** Jak se zdroj polohy jmenuje na obrazovce. */
+export const NAZVY_ZDROJU: Record<ZdrojPolohy, string> = {
+  Telefon: "pípnuto u bóje",
+  Mapa: "z mapy",
+  Qr: "z QR kódu",
+};
 
 /**
  * Tytéž hranice jako v `Pipnuti` v API. Hlídají se i tady, aby člověk
@@ -120,6 +129,7 @@ export async function pipni(
     delka: number;
     presnostM: number | null;
     nahrazujeId: number | null;
+    zdroj?: ZdrojPolohy;
   },
 ): Promise<string | null> {
   const t = await tokenZeSezeni();
@@ -157,6 +167,68 @@ export async function seber(
       headers: { authorization: `Bearer ${t}`, accept: "application/json" },
       cache: "no-store",
     });
+    return odpoved.ok ? null : await hlaska(odpoved);
+  } catch {
+    return "API se nedaří zavolat.";
+  }
+}
+
+/** Stejná hranice jako v API (`Nahravani.NejvicBajtu`). */
+export const FOTKA_NEJVIC_MB = 15;
+
+/**
+ * Přiloží k bóji fotku. <b>Fotek může být víc</b> — jedna zblízka
+ * neukáže, co je za bójí na břehu.
+ *
+ * Soubor jde přes server webu, ne z prohlížeče do úložiště: API ho
+ * přepočítá na WebP dřív, než se cokoliv uloží, takže se originál
+ * z telefonu nikam neukládá.
+ */
+export async function nahrajFotku(
+  serie: string,
+  zavod: string,
+  boje: number,
+  soubor: File,
+): Promise<string | null> {
+  const t = await tokenZeSezeni();
+  if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+
+  const telo = new FormData();
+  telo.set("soubor", soubor, soubor.name);
+
+  try {
+    const odpoved = await fetch(`${cesta(serie, zavod)}/${boje}/fotky`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${t}`, accept: "application/json" },
+      body: telo,
+      cache: "no-store",
+    });
+    if (odpoved.status === 413) return `Fotka může mít nejvýš ${FOTKA_NEJVIC_MB} MB.`;
+    return odpoved.ok ? null : await hlaska(odpoved);
+  } catch {
+    return "API se nedaří zavolat.";
+  }
+}
+
+/** Odebere jednu fotku bóje i její soubory. */
+export async function odeberFotku(
+  serie: string,
+  zavod: string,
+  boje: number,
+  fotka: string,
+): Promise<string | null> {
+  const t = await tokenZeSezeni();
+  if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+
+  try {
+    const odpoved = await fetch(
+      `${cesta(serie, zavod)}/${boje}/fotky/${encodeURIComponent(fotka)}`,
+      {
+        method: "DELETE",
+        headers: { authorization: `Bearer ${t}`, accept: "application/json" },
+        cache: "no-store",
+      },
+    );
     return odpoved.ok ? null : await hlaska(odpoved);
   } catch {
     return "API se nedaří zavolat.";

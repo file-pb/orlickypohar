@@ -264,6 +264,20 @@ export default function Napoveda() {
         tehdy. Sebrání je razítko, ne smazání. <b>Bez signálu to nejde</b> —
         podržené pípnutí by se uložilo s časem nahrání, ne s časem postavení.
       </p>
+      <p>
+        <b>Když u bóje nikdo s telefonem není</b>, dá se poloha zadat i z mapy:
+        pod pípnutím je <i>Nejde pípnout? Zadej polohu z mapy</i>. Bere
+        souřadnice, odkaz z Mapy.com i Google Maps a přečte i QR kód z fotky.
+        Zapíše se to jako <b>odečtená poloha, bez přesnosti</b> — mapa nic
+        neměří, a v seznamu je pak u bóje vidět, že se neměřila.
+      </p>
+      <p className="poznamka">
+        <b>Fotky k bóji</b> můžeš přidat kolikrát chceš a je to doklad
+        k poloze, ne obrázek na web: ze souřadnic se nepozná barva bóje ani
+        co je za ní na břehu. Ukládají se zmenšené, originál z telefonu nikam.
+        Sebráním bóje fotky nemizí — záznam o poloze zůstává a ony jsou jeho
+        doklad.
+      </p>
 
       <h2 id="vysledky">Výsledky: od zápisu po web</h2>
       <p>
