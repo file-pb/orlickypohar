@@ -1995,19 +1995,51 @@ nemění — mění se to, kde se dojelo. Nic se tedy neodemyká a veřejně se 
 „přestavuje se, počkej" uprostřed závodu. Zapíše se to na rozjížďku, až budou
 prvky (*zkráceno u prvku X v čase T*).
 
-##### Otevřené: výběr a klonování trati
+##### Výběr a klonování trati (Filip, 9. 10. 2026)
 
-Filip, 9. 10. 2026: *„Jakmile založím novou rozjížďku, můžu si vybrat již
-postavenou trať a ta se mi naklonuje z té, co se odjela."*
+Filip: *„Jakmile založím novou rozjížďku, můžu si vybrat již postavenou trať
+a ta se mi naklonuje z té, co se odjela."*
 
 **Klon nesmí znamenat nová pípnutí.** Vyrobila by se tím měření, která se
 nestala, s falešným časem a přesností — přesně to, co zakazuje oddíl *Trať
-není seznam bójí, ale řada prvků*. Klon tedy kopíruje **definici trati**
+není seznam bójí, ale řada prvků*. Klon kopíruje **definici trati**
 a ukazuje na tytéž záznamy bójí, které pořád stojí ve vodě.
 
-Z toho plyne, že **členství se uložit musí** (ve vodě může stát víc tratí
-najednou, takže „co zrovna stojí" nestačí). Nerozhodnuté zůstává, jestli má
-rozjížďka mít trať povinně už při založení a v jakém stavu klon začíná.
+**Členství se ukládat nemusí — ukládá ho prvek.** Dřív tu stálo, že ho bude
+potřeba vymyslet zvlášť; to bylo napsané, než prvky existovaly. Prvek patří
+trati a ukazuje na konkrétní záznamy bójí, takže klon je kopie prvků na
+tytéž bóje a nic dalšího k tomu není třeba.
+
+**Trať při založení rozjížďky povinná není.** Filip: *„Většinou se nejdřív
+staví trať a pak se na ni založí rozjížďka. Ale u některých závodů, jako
+maraton nebo dálková plavba, je jasná první rozjížďka a teprve pak se staví
+trať."* Obě pořadí tedy musí jít a **rozjížďka bez trati je legitimní stav**,
+ne rozdělaná práce.
+
+**Klon začíná v `Hotovo` a stav jde vybrat.** Filip: *„Asi bych to nechal ve
+stavu hotovo, nebo umožnil u klonu zaškrtnout, v jakém stavu má trať být,
+a pak to akceptovat při další rozjížďce."* Výchozí je `Hotovo`, protože klon
+je tvrzení stavitele („stojí to, co minule"), ne rozhodnutí rozhodčího.
+**`Prijato` smí při klonování zvolit jen rozhodčí** — jinak by se zámek dal
+obejít knoflíkem na stavitelské obrazovce.
+
+**Přiřadit, nebo naklonovat, jsou dvě různé věci:**
+
+| Zdrojová trať | Co se stane | Proč |
+|---|---|---|
+| ještě nepatří žádné rozjížďce | **přiřadí se** | obvyklý postup „postav, pak založ rozjížďku"; vyrábět kopii hned po přijetí by znamenalo přijímat dvakrát totéž |
+| už patří rozjížďce | **naklonuje se** | podle ní se jelo nebo pojede; odebrat ji té rozjížďce by přepsalo historii |
+
+**Kterou trať vidí veřejnost, se tím mění.** Dokud byla trať jedna, stačilo
+„nejnovější, pokud je přijatá". S tratěmi po rozjížďkách by čerstvý klon ve
+stavu `Hotovo` veřejně shodil trať, podle které se zrovna pluje. Veřejně se
+proto vydává **nejnovější přijatá** trať — a když se nejnovější zrovna
+přestavuje, má přednost „počkej", protože to je ta, která se mění ve vodě.
+
+Na pípnutí a zámek to nesahá: `AktualniAsync` je dál „nejnovější trať
+regaty", tedy ta, na které se pracuje. Mezi rozjížďkami je to nově klon
+v `Hotovo`, takže se smí pípat — a to je správně, bóje se mezi rozjížďkami
+běžně posouvají.
 
 ##### Otevřené: sebraný dojezd a hendikep
 

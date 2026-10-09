@@ -275,4 +275,148 @@ public class TratSpravaTests(PostgresFixture fixture)
         // Dalším hotovo důvod zmizí — už neplatí.
         Assert.Null((await trate.HotovoAsync(zavod.Id, true, default)).Trat!.DuvodVraceni);
     }
+
+    /// <summary>Rozjížďka regaty, ať je čemu trať přiřadit.</summary>
+    private static async Task<Rozjizdka> RozjizdkaAsync(
+        AppDbContext db, Zavod zavod, int cislo, DateTimeOffset? start = null)
+    {
+        var r = new Rozjizdka { ZavodId = zavod.Id, Cislo = cislo, StartV = start };
+        db.Rozjizdky.Add(r);
+        await db.SaveChangesAsync();
+        return r;
+    }
+
+    [Fact]
+    public async Task Klon_kopiruje_prvky_na_tytez_boje_a_nevyrabi_pipnuti()
+    {
+        var (db, boje, trate, prvky) = SluzbyIPrvky();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (levy, _) = await boje.PipniAsync(zavod.Id, Bod("start levý"), kdo.Id, default);
+        var (pravy, _) = await boje.PipniAsync(zavod.Id, Bod("start pravý"), kdo.Id, default);
+        await prvky.ZalozAsync(zavod.Id, new PrvekVstup(
+            TypPrvku.CaraStart, 1, levy!.Id, pravy!.Id, Poznamka: "po proudu"), default);
+
+        var prvni = await RozjizdkaAsync(db, zavod, 1);
+        var puvodni = (await trate.AktualniAsync(zavod.Id, default))!;
+        Assert.Null((await trate.PriradAsync(zavod.Id, puvodni.Id, prvni.Cislo, true, default)).Chyba);
+
+        var druha = await RozjizdkaAsync(db, zavod, 2);
+        var (klon, chyba) = await trate.KlonujAsync(
+            zavod.Id, puvodni.Id, new KlonTratiVstup(druha.Cislo, null), kdo.Id, true, default);
+
+        Assert.Null(chyba);
+        // Výchozí stav je hotovo: klon je tvrzení stavitele, ne rozhodnutí
+        // rozhodčího (Filip, 9. 10. 2026).
+        Assert.Equal(StavTrati.Hotovo, klon!.Stav);
+        Assert.Equal(druha.Id, klon.RozjizdkaId);
+        Assert.Equal(2, klon.CisloRozjizdky);
+        Assert.Null(klon.PrijatoV);
+        // Klon starou trať nenahrazuje — obě platí dál.
+        Assert.Null(klon.NahrazujeId);
+
+        // Tohle je ta podstatná věc: žádná nová pípnutí. Prvky ukazují na
+        // tytéž záznamy bójí, které pořád stojí ve vodě.
+        Assert.Equal(2, await db.Boje.CountAsync(b => b.ZavodId == zavod.Id));
+
+        var zkopirovane = await db.PrvkyTrati.Where(x => x.TratId == klon.Id).ToListAsync();
+        var jeden = Assert.Single(zkopirovane);
+        Assert.Equal(levy.Id, jeden.BojeAId);
+        Assert.Equal(pravy.Id, jeden.BojeBId);
+        Assert.Equal("po proudu", jeden.Poznamka);
+        Assert.Equal(TypPrvku.CaraStart, jeden.Typ);
+
+        // A originál zůstal, kde byl.
+        Assert.Single(await db.PrvkyTrati.Where(x => x.TratId == puvodni.Id).ToListAsync());
+    }
+
+    [Fact]
+    public async Task Prijaty_klon_smi_jen_rozhodci()
+    {
+        var (db, boje, trate) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+        await boje.PipniAsync(zavod.Id, Bod("Start"), kdo.Id, default);
+        var zdroj = (await trate.AktualniAsync(zavod.Id, default))!;
+
+        var vstup = new KlonTratiVstup(null, StavTrati.Prijato);
+
+        // Stavitel by si tím odemkl zámek: přijetí je to, co trať zveřejní.
+        Assert.NotNull((await trate.KlonujAsync(
+            zavod.Id, zdroj.Id, vstup, kdo.Id, false, default)).Chyba);
+
+        var (klon, chyba) = await trate.KlonujAsync(
+            zavod.Id, zdroj.Id, vstup, kdo.Id, true, default);
+        Assert.Null(chyba);
+        Assert.Equal(StavTrati.Prijato, klon!.Stav);
+        Assert.NotNull(klon.PrijatoV);
+    }
+
+    [Fact]
+    public async Task Obsazena_trat_se_neprirazuje_a_rozjizdka_nema_dve()
+    {
+        var (db, boje, trate) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+        await boje.PipniAsync(zavod.Id, Bod("Start"), kdo.Id, default);
+        var zdroj = (await trate.AktualniAsync(zavod.Id, default))!;
+
+        var prvni = await RozjizdkaAsync(db, zavod, 1);
+        var druha = await RozjizdkaAsync(db, zavod, 2);
+        Assert.Null((await trate.PriradAsync(zavod.Id, zdroj.Id, prvni.Cislo, true, default)).Chyba);
+
+        // Odebrat trať rozjížďce by přepsalo, podle čeho se jelo.
+        Assert.NotNull((await trate.PriradAsync(zavod.Id, zdroj.Id, druha.Cislo, true, default)).Chyba);
+
+        // A druhá trať téže rozjížďky se taky nevyrobí — na to je přestavba.
+        Assert.NotNull((await trate.KlonujAsync(
+            zavod.Id, zdroj.Id, new KlonTratiVstup(prvni.Cislo, null), kdo.Id, true, default)).Chyba);
+    }
+
+    [Fact]
+    public async Task Verejne_plati_nejnovejsi_prijata_ne_nejnovejsi()
+    {
+        var (db, boje, trate, prvky) = SluzbyIPrvky();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (b, _) = await boje.PipniAsync(zavod.Id, Bod("Start"), kdo.Id, default);
+        await prvky.ZalozAsync(zavod.Id, new PrvekVstup(TypPrvku.Znacka, 1, b!.Id), default);
+        await trate.HotovoAsync(zavod.Id, true, default);
+        await trate.PrijmiAsync(zavod.Id, kdo.Id, default);
+
+        var prvni = await RozjizdkaAsync(db, zavod, 1);
+        var odjeta = (await trate.AktualniAsync(zavod.Id, default))!;
+        await trate.PriradAsync(zavod.Id, odjeta.Id, prvni.Cislo, true, default);
+
+        var druha = await RozjizdkaAsync(db, zavod, 2);
+        await trate.KlonujAsync(
+            zavod.Id, odjeta.Id, new KlonTratiVstup(druha.Cislo, null), kdo.Id, true, default);
+
+        // Čerstvý klon je nejnovější, ale nikdo ho nepřijal. Veřejně proto
+        // dál platí trať, podle které se zrovna pluje — jinak by stránka
+        // uprostřed závodu řekla „trať není vyvěšená".
+        var verejna = await trate.VerejnaAsync(zavod.Id, default);
+        Assert.NotNull(verejna);
+        Assert.False(verejna!.Prestavba);
+        Assert.Equal(1, verejna.CisloRozjizdky);
+        Assert.Single(verejna.Prvky);
+    }
+
+    [Fact]
+    public async Task Seznam_rekne_co_jde_priradit_a_co_se_musi_klonovat()
+    {
+        var (db, boje, trate) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+        await boje.PipniAsync(zavod.Id, Bod("Start"), kdo.Id, default);
+        var zdroj = (await trate.AktualniAsync(zavod.Id, default))!;
+
+        Assert.True(Assert.Single(await trate.SeznamAsync(zavod.Id, default)).JdePriradit);
+
+        var prvni = await RozjizdkaAsync(db, zavod, 1);
+        await trate.PriradAsync(zavod.Id, zdroj.Id, prvni.Cislo, true, default);
+
+        var obsazena = Assert.Single(await trate.SeznamAsync(zavod.Id, default));
+        Assert.False(obsazena.JdePriradit);
+        Assert.Equal(1, obsazena.CisloRozjizdky);
+        // Nespustila se, takže se podle ní ještě nejelo.
+        Assert.False(obsazena.Odjeta);
+    }
 }
