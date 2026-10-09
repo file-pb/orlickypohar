@@ -175,6 +175,16 @@ echo "Limit vykreslování: jeden klient nesmí sebrat web ostatním"
 # cache, takže každý jeho požadavek vykresluje. Útočník a kontrolní
 # návštěvník MUSÍ mít různou Cf-Connecting-Ip, jinak by kontrolního odmítl
 # vlastní limit a vypadalo by to jako kolaps webu.
+# Prefetch celé stránky nesmí narazit. Next posílá `RSC: 1` a `?_rsc=<hash>`
+# pro každý odkaz ve výřezu; stránky poháru jich mají 24 až 32. Dřív stačilo
+# otevřít úvodní stránku a od jedenáctého prefetche chodily 429 (poučení 53).
+prohlizec="203.0.113.21"
+stavy=$(for i in $(seq 1 32); do
+          curl -s -o /dev/null -w '%{http_code}\n' -H "Cf-Connecting-Ip: $prohlizec" \
+            -H 'RSC: 1' -H 'Next-Router-Prefetch: 1' "$URL/odkaz$i?_rsc=h$i" &
+        done; wait)
+ma "32 prefetchů naráz projde bez 429" test "$(grep -c 429 <<<"$stavy")" -eq 0
+
 utocnik="203.0.113.7"; divak="203.0.113.8"
 # SOUBĚŽNĚ, ne za sebou. Sekvenční smyčka 25 curlů trvá přes deset vteřin
 # a limit se jí průběžně doplňuje (2/s), takže by neodmítla nic a test by
