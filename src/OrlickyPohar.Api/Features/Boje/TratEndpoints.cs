@@ -71,6 +71,33 @@ public static class TratEndpoints
             .WithSummary("Rozhodčí vrátí trať stavitelům")
             .WithDescription("Jen rozhodčí ročníku. Důvod je povinný.");
 
+        g.MapGet("/prvky", PrvkyAsync)
+            .Produces<List<PrvekDto>>()
+            .WithTags("Bóje")
+            .WithSummary("Prvky trati v pořadí")
+            .WithDescription("Organizátor regaty, nebo rozhodčí ročníku.");
+
+        g.MapPost("/prvky", ZalozPrvekAsync)
+            .Produces<PrvekDto>(StatusCodes.Status201Created)
+            .WithTags("Bóje")
+            .WithSummary("Založí prvek trati")
+            .WithDescription(
+                "Organizátor regaty, nebo rozhodčí ročníku. Do přijaté trati nejde — "
+                + "prvek je rozhodnutí o trati, takže platí tentýž zámek jako u pípnutí.");
+
+        g.MapPut("/prvky/{prvek:int}", UpravPrvekAsync)
+            .Produces<PrvekDto>()
+            .WithTags("Bóje")
+            .WithSummary("Přepíše prvek trati")
+            .WithDescription("Organizátor regaty, nebo rozhodčí ročníku. Do přijaté trati nejde.");
+
+        g.MapDelete("/prvky/{prvek:int}", SmazPrvekAsync)
+            .WithTags("Bóje")
+            .WithSummary("Smaže prvek trati")
+            .WithDescription(
+                "Organizátor regaty, nebo rozhodčí ročníku. Prvek se maže doopravdy, "
+                + "na rozdíl od bóje: není to měření, je to rozhodnutí.");
+
         g.MapPost("/prestavba", PrestavbaAsync)
             .Produces<TratDto>()
             .WithTags("Bóje")
@@ -156,6 +183,52 @@ public static class TratEndpoints
 
         return Odpoved(await sprava.PrestavbaAsync(
             rozsah!.ZavodId!.Value, await JeRozhodciAsync(kdo, rozsahy, rozsah, ct), ct));
+    }
+
+    private static async Task<IResult> PrvkyAsync(
+        string serie, string zavod, ClaimsPrincipal kdo, Rozsahy rozsahy, PrvkySprava prvky,
+        CancellationToken ct)
+    {
+        var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
+        if (odpoved is not null) return odpoved;
+
+        return Results.Ok(await prvky.SeznamAsync(rozsah!.ZavodId!.Value, ct));
+    }
+
+    private static async Task<IResult> ZalozPrvekAsync(
+        string serie, string zavod, PrvekVstup vstup, ClaimsPrincipal kdo, Rozsahy rozsahy,
+        PrvkySprava prvky, CancellationToken ct)
+    {
+        var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
+        if (odpoved is not null) return odpoved;
+
+        var (prvek, chyba) = await prvky.ZalozAsync(rozsah!.ZavodId!.Value, vstup, ct);
+        return chyba is not null
+            ? Results.BadRequest(new { error = chyba })
+            : Results.Created((string?)null, prvek);
+    }
+
+    private static async Task<IResult> UpravPrvekAsync(
+        string serie, string zavod, int prvek, PrvekVstup vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, PrvkySprava prvky, CancellationToken ct)
+    {
+        var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
+        if (odpoved is not null) return odpoved;
+
+        var (upraveny, chyba) = await prvky.UpravAsync(rozsah!.ZavodId!.Value, prvek, vstup, ct);
+        return chyba is not null ? Results.BadRequest(new { error = chyba }) : Results.Ok(upraveny);
+    }
+
+    private static async Task<IResult> SmazPrvekAsync(
+        string serie, string zavod, int prvek, ClaimsPrincipal kdo, Rozsahy rozsahy,
+        PrvkySprava prvky, CancellationToken ct)
+    {
+        var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
+        if (odpoved is not null) return odpoved;
+
+        return await prvky.SmazAsync(rozsah!.ZavodId!.Value, prvek, ct) is { } chyba
+            ? Results.BadRequest(new { error = chyba })
+            : Results.NoContent();
     }
 
     private static IResult Odpoved((TratDto? Trat, string? Chyba) vysledek) =>
