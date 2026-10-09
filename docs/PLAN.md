@@ -1842,6 +1842,88 @@ obrazovka by pak ukazovala dvě pravdy a při sporu by nebylo jasné, která
 platí. Krátká schválně (200 znaků): čte se na vodě z telefonu a na delší
 vysvětlení je plachetní směrnice.
 
+##### Názvosloví a typy prvku (Filip, 9. 10. 2026 večer)
+
+Filip prošel hotovou obrazovku a opravil slovník. **Je to oprava zadání, ne
+kosmetika:** půlka jmen, která jsem vymyslel, popisovala tvar místo věci.
+
+**Hotové v kódu:**
+
+- **Strana je `levobok` a `pravobok`**, ne „ponechat po levé". Opis měl
+  zabránit tomu, aby si někdo „objíždí se levou" přečetl jako „točit
+  doleva" — řešil to ale za cenu toho, že to nebylo námořnicky.
+- **Start je start a cíl je cíl.** „Startovní čára" a „cílová čára"
+  popisovaly tvar.
+- **Slovo „konec" z obrazovky zmizelo** — čte se jako cíl. Bóje prvku se
+  jmenují bóje, u startu a cíle levobok a pravobok.
+- **„Jak to jet" začíná světovou stranou** (*„na jih, startujeme na
+  zámek"*). Na vodě se člověk řídí rozhledem, ne stupni.
+
+**Rozhodnuté, ještě nepostavené:**
+
+| Typ prvku | Co nese | Pozn. |
+|---|---|---|
+| **Start** | levobok, pravobok, **směr** (světová strana) | může být pevná linie, **nebo otevírající se brána** za jedoucí startovací lodí po linii startu |
+| **Cíl** | levá, pravá | |
+| **Otočná bóje** | strana (levobok/pravobok) | barvu nese bóje, ne prvek |
+| **Průjezdní bóje** | strana | **nemusí to být jen plavební dráha** — i bóje, kterou jsme postavili |
+| **Brána** | | zůstává, Filip: *„ta je dobrá a může být i otočná"* |
+| **Otočná zóna / linie** | dva objekty | spojnice; **i dráty vysokého napětí nad vodou** |
+| **Odskok** | strana | zůstává — viz níž |
+
+**Odskok zůstává, a obrazovka ho musí vysvětlit.** Nejdřív jsem ho chtěl
+zrušit s tím, že ho Filip nezná, takže se nejezdí. Filip to zarazil:
+*„odskok nevyhazuj, protože ho neznám — když je standardem, tak ho tam
+nechej."* Má pravdu a je to pravidlo i do budoucna: **neznalost jednoho
+pořadatele není důkaz, že se věc nepoužívá.** Odskok je malá bójka kousek
+za návětrnou značkou; obeplouvá se hned po ní a je tam proto, aby se u ní
+lodě netlačily při ostrém obratu. Když tomu jméno nic neříká, patří
+vysvětlení do nápovědy u pole, ne do zahození typu.
+
+**Strana závisí na směru průjezdu**, ne na bóji: *„může být např. pravobok
+po proudu a levobok proti, nebo ve směru jiném"*. Model to umí bez nového
+pole — táž bóje je ve dvou prvcích s různým pořadím a různou stranou, a to
+`Poradi` schválně připouští.
+
+**Konce nemusí být bóje, a to oba.** Start, cíl i otočná zóna se běžně
+vytyčí proti **molu, objektu na břehu nebo plavidlu komise**. Dnes to umí
+jen druhý konec; musí to umět i první.
+
+##### Barva a tvar bóje (Filip, 9. 10. 2026)
+
+**Patří to na bóji, ne na prvek** (Filipova volba): barva je vlastnost toho
+kusu plastu ve vodě, ne rozhodnutí o trati — a pak se ukáže všude,
+v seznamu bójí, v prvku i na mapce.
+
+**Dvě pole, ne jeden výčet znaků.** Nejdřív jsem z vyhlášky chtěl udělat
+čtyři hotové druhy (červená válcová, zelená kuželová, žlutá vyhrazená,
+závodní). Filip doplnil paletu: *„asi přidáme ještě modrou, zelenou, bílou,
+červenou, žlutou a oranžovou barvu."* Tím to padá — bóje, které stavíme my,
+mají barvu, jakou zrovna máme, a výčet hotových znaků by je neuměl zapsat.
+
+| Pole | Hodnoty |
+|---|---|
+| **Barva** | modrá, zelená, bílá, červená, žlutá, oranžová (+ neuvedeno) |
+| **Tvar** | válcová, kuželová, kulová, sférický vršek, plovatka, jiný (+ neuvedeno) |
+
+**Znaky z vyhlášky jsou pak kombinace**, ne zvláštní kategorie — a mapka je
+podle nich umí pojmenovat:
+
+| Barva + tvar | Co to je podle vyhlášky |
+|---|---|
+| červená + válcová | **pravá** strana plavební dráhy; vrcholový znak červený válec |
+| zelená + kuželová | **levá** strana plavební dráhy; vrcholový znak zelený kužel vrcholem vzhůru |
+| žlutá + jiný než znaky vodní cesty | zakázaná nebo vyhrazená vodní plocha; vrcholový znak žluté „X" |
+| žlutá + sférický vršek | sportovní bóje, kterou stavíme my |
+
+**Pozor na záměnu, kterou jsem udělal:** červená je **pravá** strana
+plavební dráhy, ne levá. Zelená je levá. Kdyby to mapka kreslila obráceně,
+posílala by lodě na špatnou stranu dráhy.
+
+Barva se kreslí vždycky, tvar jen když je vyplněný — červený válec a zelený
+kužel pozná každý, kdo na Vltavě jezdí, i bez legendy. **Tvar je proto
+nepovinný:** na vodě se pípá jednou rukou a barva sama nese nejvíc.
+
 ##### Co to nepřinese
 
 **Automatické pořadí v cíli.** K tomu je kromě čáry potřeba ještě kolo,
