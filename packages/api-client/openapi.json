@@ -3978,6 +3978,194 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/zastavky/{zavod}/trat/prvky": {
+            "get": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Prvky trati v po\u0159ad\u00ed",
+                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PrvekDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Zalo\u017e\u00ed prvek trati",
+                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Do p\u0159ijat\u00e9 trati nejde \u2014 prvek je rozhodnut\u00ed o trati, tak\u017ee plat\u00ed tent\u00fd\u017e z\u00e1mek jako u p\u00edpnut\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PrvekVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PrvekDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/trat/prvky/{prvek}": {
+            "put": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "P\u0159ep\u00ed\u0161e prvek trati",
+                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Do p\u0159ijat\u00e9 trati nejde.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "prvek",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PrvekVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PrvekDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Sma\u017ee prvek trati",
+                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Prvek se ma\u017ee doopravdy, na rozd\u00edl od b\u00f3je: nen\u00ed to m\u011b\u0159en\u00ed, je to rozhodnut\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "prvek",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/zastavky/{zavod}/trat/prestavba": {
             "post": {
                 "tags": [
@@ -4793,6 +4981,53 @@
                     "Rdg",
                     null
                 ]
+            },
+            "KonecBodDto": {
+                "required": [
+                    "sirka",
+                    "delka",
+                    "popis"
+                ],
+                "type": "object",
+                "properties": {
+                    "sirka": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "delka": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "popis": {
+                        "type": "string"
+                    }
+                }
+            },
+            "KonecBojeDto": {
+                "required": [
+                    "id",
+                    "nazev",
+                    "sirka",
+                    "delka"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "sirka": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "delka": {
+                        "type": "number",
+                        "format": "double"
+                    }
+                }
             },
             "LodDetailSpravaDto": {
                 "required": [
@@ -6438,6 +6673,135 @@
                     }
                 }
             },
+            "PrvekDto": {
+                "required": [
+                    "id",
+                    "typ",
+                    "poradi",
+                    "strana",
+                    "poznamka",
+                    "a",
+                    "b",
+                    "bodB"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "typ": {
+                        "$ref": "#/components/schemas/TypPrvku"
+                    },
+                    "poradi": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "strana": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/StranaPrvku"
+                            }
+                        ]
+                    },
+                    "poznamka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "a": {
+                        "$ref": "#/components/schemas/KonecBojeDto"
+                    },
+                    "b": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/KonecBojeDto"
+                            }
+                        ]
+                    },
+                    "bodB": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/KonecBodDto"
+                            }
+                        ]
+                    }
+                }
+            },
+            "PrvekVstup": {
+                "required": [
+                    "typ",
+                    "poradi",
+                    "bojeAId"
+                ],
+                "type": "object",
+                "properties": {
+                    "typ": {
+                        "$ref": "#/components/schemas/TypPrvku"
+                    },
+                    "poradi": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "bojeAId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "bojeBId": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "konecBSirka": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "konecBDelka": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "konecBPopis": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "strana": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/StranaPrvku"
+                            }
+                        ]
+                    },
+                    "poznamka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
             "PublikaceSerieVstup": {
                 "required": [
                     "publikovano"
@@ -7107,6 +7471,13 @@
                     }
                 }
             },
+            "StranaPrvku": {
+                "enum": [
+                    "PoLeve",
+                    "PoPrave",
+                    null
+                ]
+            },
             "TeplotaHladinyDto": {
                 "required": [
                     "snimky",
@@ -7220,6 +7591,15 @@
                         "type": "boolean"
                     }
                 }
+            },
+            "TypPrvku": {
+                "enum": [
+                    "Znacka",
+                    "Brana",
+                    "Odskok",
+                    "CaraStart",
+                    "CaraCil"
+                ]
             },
             "UcastDto": {
                 "required": [

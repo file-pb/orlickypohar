@@ -1759,9 +1759,15 @@ jsou protikladné věci.
 
 ##### Co to vyvolá
 
-- **Spojnice v mapce** vede dnes z bodu do bodu; u brány a čáry má vést
-  **doprostřed mezi dvě polohy** a pak dál. Kreslení samo je přívažek —
-  `MapkaTrati` spojnici v pořadí už kreslí jako SVG nad dlaždicemi.
+- ~~**Spojnice v mapce** vede dnes z bodu do bodu~~ — **hotovo 9. 10. 2026.**
+  Mapka kreslí podle prvků: čára a brána jako **plná úsečka mezi konci**,
+  dráha jejich **středem**, popisek u středu. Dřív se seřadily bóje podle
+  `poradi` a spojily lomenou čárou, takže dvě bóje se stejným číslem — tedy
+  start — se nakreslily jako noha trati.
+  **Šipka směru průjezdu se nekreslí**, protože směr v datech není; vymyslet
+  si ho by byla ta lež, kvůli které prvky vznikly. Naznačí ho dráha.
+  Seznam prvků má u každého **tutéž ikonku**, jaký je tvar na mapě (Filip:
+  *„ať je to veselejší a přehlednější"*), takže seznam a mapa mluví stejně.
 - **GPX bránu jako bránu neumí** a dřívější slib v tomhle oddíle byl
   přehnaný: formát zná body, trasy a stopy, závodní bránu ne. Dosažitelné
   je vyvézt oba konce jako body a do trasy dát pojmenovaný střed — ale

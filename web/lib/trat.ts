@@ -106,3 +106,101 @@ export async function posunTrat(
       : "Do trati smí sáhnout pořadatel téhle regaty nebo rozhodčí ročníku.";
   return `API odpovědělo ${odpoved.status}.`;
 }
+
+export type Prvek = components["schemas"]["PrvekDto"];
+export type TypPrvku = components["schemas"]["TypPrvku"];
+export type StranaPrvku = components["schemas"]["StranaPrvku"];
+export type PrvekVstup = components["schemas"]["PrvekVstup"];
+
+/** Tatáž délka jako `Prvky.PoznamkaNejvic` v API. */
+export const POZNAMKA_NEJVIC = 200;
+
+/** Jak se typ prvku jmenuje na obrazovce. */
+export const NAZVY_TYPU: Record<TypPrvku, string> = {
+  Znacka: "značka",
+  Brana: "brána",
+  Odskok: "odskok",
+  CaraStart: "startovní čára",
+  CaraCil: "cílová čára",
+};
+
+/**
+ * Strana se jmenuje „ponechat po levé / po pravé" schválně. „Objíždí se
+ * levou" si půlka lidí přečte jako „ponechat po levé" a druhá jako „točit
+ * doleva", a to jsou protikladné věci.
+ */
+export const NAZVY_STRAN: Record<NonNullable<StranaPrvku>, string> = {
+  PoLeve: "ponechat po levé",
+  PoPrave: "ponechat po pravé",
+};
+
+/** Prvky trati v pořadí. Bez trati prázdno, ne chyba. */
+export async function nactiPrvky(serie: string, zavod: string): Promise<Prvek[]> {
+  const t = await tokenZeSezeni();
+  if (!t) return [];
+
+  try {
+    const odpoved = await fetch(`${cesta(serie, zavod)}/prvky`, {
+      headers: { authorization: `Bearer ${t}`, accept: "application/json" },
+      cache: "no-store",
+    });
+    return odpoved.ok ? ((await odpoved.json()) as Prvek[]) : [];
+  } catch {
+    // Výpadek prvků nesmí shodit obrazovku bójí: bóje se dají stavět
+    // i bez toho, aby se vědělo, co je brána.
+    return [];
+  }
+}
+
+/** Založí prvek. Vrací chybu k zobrazení, nebo `null`. */
+export async function zalozPrvek(
+  serie: string,
+  zavod: string,
+  vstup: PrvekVstup,
+): Promise<string | null> {
+  return await posli(`${cesta(serie, zavod)}/prvky`, "POST", vstup);
+}
+
+/** Smaže prvek. Vrací chybu k zobrazení, nebo `null`. */
+export async function smazPrvek(
+  serie: string,
+  zavod: string,
+  prvek: number,
+): Promise<string | null> {
+  return await posli(`${cesta(serie, zavod)}/prvky/${prvek}`, "DELETE");
+}
+
+async function posli(adresa: string, metoda: string, telo?: unknown): Promise<string | null> {
+  const t = await tokenZeSezeni();
+  if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+
+  let odpoved: Response;
+  try {
+    odpoved = await fetch(adresa, {
+      method: metoda,
+      headers: {
+        authorization: `Bearer ${t}`,
+        accept: "application/json",
+        ...(telo ? { "content-type": "application/json" } : {}),
+      },
+      body: telo ? JSON.stringify(telo) : undefined,
+      cache: "no-store",
+    });
+  } catch {
+    return "Nedaří se spojit s API. Zkus to za chvíli.";
+  }
+
+  if (odpoved.ok) return null;
+
+  try {
+    const chyba = (await odpoved.json()) as { error?: string };
+    if (chyba?.error) return chyba.error;
+  } catch {
+    // Tělo nemusí být JSON.
+  }
+
+  if (odpoved.status === 401) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+  if (odpoved.status === 403)
+    return "Do trati smí sáhnout pořadatel téhle regaty nebo rozhodčí ročníku.";
+  return `API odpovědělo ${odpoved.status}.`;
+}

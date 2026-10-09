@@ -13,7 +13,8 @@ import {
 import { nazevZastavky } from "@/lib/kalendar";
 import { MapkaTrati } from "./trat";
 import { Pipani } from "./pipani";
-import { nactiStavTrati } from "@/lib/trat";
+import { nactiPrvky, nactiStavTrati } from "@/lib/trat";
+import { PrvkyTrati } from "./prvky";
 import { StavTrati } from "./stav-trati";
 import { nahrajFotkuAkce, odeberFotkuAkce, seberAkce } from "./akce";
 
@@ -49,10 +50,11 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
 
   // Název regaty v odpovědi o bójích není, a bez něj nadpis neřekne, čí
   // trať se zrovna staví (Filip, 9. 10. 2026).
-  const [{ stav, trat, byvale }, nazev, stavTrati] = await Promise.all([
+  const [{ stav, trat, byvale }, nazev, stavTrati, prvky] = await Promise.all([
     nactiTrat(serie, zavod),
     nazevZastavky(serie, zavod),
     nactiStavTrati(serie, zavod),
+    nactiPrvky(serie, zavod),
   ]);
   if (stav === "neni") notFound();
 
@@ -86,6 +88,17 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
       {zpravy.stav === "fotka" && (
         <p className="hlaska" role="status">
           Fotka je u bóje. Uložila se přepočtená na web, originál nikam.
+        </p>
+      )}
+      {zpravy.stav === "prvek" && (
+        <p className="hlaska" role="status">
+          Prvek je na trati. Mapka ho kreslí podle typu — čára a brána jako
+          úsečku mezi konci, dráha jejím středem.
+        </p>
+      )}
+      {zpravy.stav === "prvekPryc" && (
+        <p className="hlaska" role="status">
+          Prvek je pryč. Bóje zůstaly — smazalo se rozhodnutí, ne měření.
         </p>
       )}
       {zpravy.stav === "trat-hotovo" && (
@@ -146,8 +159,18 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
             />
           )}
 
+          {/* Prvky stojí nad mapkou: mapka je kreslí, takže kdo chce něco
+              změnit, má to mít nad obrázkem, ne pod ním. */}
+          <PrvkyTrati
+            serie={serie}
+            zavod={zavod}
+            prvky={prvky}
+            boje={trat}
+            zamceno={stavTrati.trat?.stav === "Prijato"}
+          />
+
           <h2>Co stojí na trati</h2>
-          <MapkaTrati boje={trat} />
+          <MapkaTrati prvky={prvky} />
           {trat.length === 0 ? (
             <p className="prazdno">
               Zatím nic. Až bóji spustíš do vody, pípni ji — poloha z tvého

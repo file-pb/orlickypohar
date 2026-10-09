@@ -10,7 +10,7 @@ import {
   seber,
   type ZdrojPolohy,
 } from "@/lib/boje";
-import { posunTrat } from "@/lib/trat";
+import { posunTrat, smazPrvek, zalozPrvek, type PrvekVstup } from "@/lib/trat";
 import { prectiISeZkratkou } from "@/lib/zkratky";
 
 /**
@@ -173,4 +173,62 @@ export async function stavTratiAkce(formular: FormData) {
   const chyba = await posunTrat(serie, zavod, krok, duvod || undefined);
 
   redirect(kam(chyba ? { chyba } : { stav: `trat-${krok}` }));
+}
+
+/**
+ * Založení prvku trati. Obyčejný formulář: prvek nepotřebuje polohu
+ * z prohlížeče, skládá se z bójí, které už stojí.
+ */
+export async function prvekAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const kam = (zprava: Record<string, string>) =>
+    `/sprava/${encodeURIComponent(serie)}/boje/${encodeURIComponent(zavod)}?${new URLSearchParams(zprava)}`;
+
+  const cislo = (jmeno: string) => {
+    const text = String(formular.get(jmeno) ?? "").trim().replace(",", ".");
+    if (!text) return null;
+    const hodnota = Number(text);
+    return Number.isFinite(hodnota) ? hodnota : null;
+  };
+
+  const typ = String(formular.get("typ") ?? "");
+  const bojeA = Number(formular.get("bojeA") ?? 0);
+  if (!Number.isInteger(bojeA) || bojeA <= 0)
+    redirect(kam({ chyba: "Vyber první konec prvku." }));
+
+  const bodSirka = cislo("bodSirka");
+  const bodDelka = cislo("bodDelka");
+  // Půl bodu je horší než žádný: tiše by se z něj stala značka.
+  if ((bodSirka === null) !== (bodDelka === null))
+    redirect(kam({ chyba: "U bodu vyplň obě souřadnice, šířku i délku." }));
+
+  const chyba = await zalozPrvek(serie, zavod, {
+    typ: typ as PrvekVstup["typ"],
+    poradi: Number(formular.get("poradi") ?? 0),
+    bojeAId: bojeA,
+    bojeBId: Number(formular.get("bojeB") ?? 0) || null,
+    konecBSirka: bodSirka,
+    konecBDelka: bodDelka,
+    konecBPopis: String(formular.get("bodPopis") ?? "").trim() || null,
+    strana: (String(formular.get("strana") ?? "") || null) as PrvekVstup["strana"],
+    poznamka: String(formular.get("poznamka") ?? "").trim() || null,
+  });
+
+  redirect(kam(chyba ? { chyba } : { stav: "prvek" }));
+}
+
+/** Smazání prvku. Prvek je rozhodnutí, ne měření — maže se doopravdy. */
+export async function smazPrvekAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const kam = (zprava: Record<string, string>) =>
+    `/sprava/${encodeURIComponent(serie)}/boje/${encodeURIComponent(zavod)}?${new URLSearchParams(zprava)}`;
+
+  const prvek = Number(formular.get("prvek") ?? 0);
+  if (!Number.isInteger(prvek) || prvek <= 0)
+    redirect(kam({ chyba: "Který prvek se má smazat?" }));
+
+  const chyba = await smazPrvek(serie, zavod, prvek);
+  redirect(kam(chyba ? { chyba } : { stav: "prvekPryc" }));
 }

@@ -1,4 +1,4 @@
-import type { Boje } from "@/lib/boje";
+import { NAZVY_TYPU, type Prvek } from "@/lib/trat";
 
 /**
  * Mapka trati: bóje nad mapovým podkladem.
@@ -49,6 +49,17 @@ function doPixelu(sirka: number, delka: number, z: number) {
   return { x, y };
 }
 
+/**
+ * Co se píše k prvku na mapě. U značky jméno bóje, u dvoukoncového prvku
+ * jeho druh — „start" říká víc než „start levý – start pravý".
+ */
+function popisekPrvku(p: Prvek) {
+  if (p.typ === "Znacka") return p.a.nazev;
+  if (p.typ === "CaraStart") return "start";
+  if (p.typ === "CaraCil") return "cíl";
+  return NAZVY_TYPU[p.typ];
+}
+
 /** Hezké číslo pro měřítko: 10, 20, 50, 100, 200, 500 m… */
 function kulateMetry(hrube: number) {
   const rad = 10 ** Math.floor(Math.log10(Math.max(hrube, 1)));
@@ -56,11 +67,20 @@ function kulateMetry(hrube: number) {
   return (podil >= 5 ? 5 : podil >= 2 ? 2 : 1) * rad;
 }
 
-export function MapkaTrati({ boje }: { boje: Boje[] }) {
-  if (boje.length === 0) return null;
+/** Konce prvku jako holé souřadnice — bóje i bod se kreslí stejně. */
+function konce(p: Prvek) {
+  const vse = [{ sirka: p.a.sirka, delka: p.a.delka, nazev: p.a.nazev }];
+  if (p.b) vse.push({ sirka: p.b.sirka, delka: p.b.delka, nazev: p.b.nazev });
+  else if (p.bodB) vse.push({ sirka: p.bodB.sirka, delka: p.bodB.delka, nazev: p.bodB.popis });
+  return vse;
+}
 
-  const sirky = boje.map((b) => b.sirka);
-  const delky = boje.map((b) => b.delka);
+export function MapkaTrati({ prvky }: { prvky: Prvek[] }) {
+  if (prvky.length === 0) return null;
+
+  const vsechnyKonce = prvky.flatMap(konce);
+  const sirky = vsechnyKonce.map((b) => b.sirka);
+  const delky = vsechnyKonce.map((b) => b.delka);
   const stredSirka = (Math.min(...sirky) + Math.max(...sirky)) / 2;
   const stredDelka = (Math.min(...delky) + Math.max(...delky)) / 2;
   const kosinus = Math.cos((stredSirka * Math.PI) / 180);
@@ -79,15 +99,33 @@ export function MapkaTrati({ boje }: { boje: Boje[] }) {
   const z = Math.max(Z_NEJMENE, Math.min(Z_NEJVIC, Math.floor(idealni)));
 
   const stred = doPixelu(stredSirka, stredDelka, z);
-  const body = boje.map((b) => {
-    const p = doPixelu(b.sirka, b.delka, z);
-    return { boje: b, x: p.x - stred.x + SIRKA / 2, y: p.y - stred.y };
+  const naPlatno = (sirka: number, delka: number) => {
+    const p = doPixelu(sirka, delka, z);
+    return { x: p.x - stred.x + SIRKA / 2, y: p.y - stred.y };
+  };
+
+  // Prvek se kreslí svými konci a **uzlem** — tím místem, kterým vede
+  // dráha. U značky je to ona sama, u brány a čáry **střed mezi konci**.
+  // Dřív vedla spojnice z konce na konec, takže kreslila start jako nohu
+  // trati (Filip, 9. 10. 2026).
+  const body = prvky.map((prvek) => {
+    const k = konce(prvek).map((x) => ({ ...x, ...naPlatno(x.sirka, x.delka) }));
+    const uzel = {
+      x: k.reduce((s, x) => s + x.x, 0) / k.length,
+      y: k.reduce((s, x) => s + x.y, 0) / k.length,
+    };
+    return { prvek, konce: k, uzel };
   });
 
   // Výška podle toho, jak je trať vysoká — ať se nekreslí pás vody navíc.
-  const rozpetiY = Math.max(...body.map((b) => Math.abs(b.y))) * 2 + 120;
+  const rozpetiY =
+    Math.max(...body.flatMap((b) => b.konce.map((k) => Math.abs(k.y)))) * 2 + 120;
   const vyska = Math.round(Math.min(NEJVYSSI, Math.max(320, rozpetiY)));
-  const posunute = body.map((b) => ({ ...b, y: b.y + vyska / 2 }));
+  const posunute = body.map((b) => ({
+    ...b,
+    konce: b.konce.map((k) => ({ ...k, y: k.y + vyska / 2 })),
+    uzel: { ...b.uzel, y: b.uzel.y + vyska / 2 },
+  }));
 
   // Dlaždice, které výřez překrývají. Levý horní roh výřezu ve světě:
   const levo = stred.x - SIRKA / 2;
@@ -111,14 +149,18 @@ export function MapkaTrati({ boje }: { boje: Boje[] }) {
     }
   }
 
-  const vPoradi = [...posunute].sort((a, b) => a.boje.poradi - b.boje.poradi);
-  const cara = vPoradi.map((b) => `${b.x.toFixed(1)},${b.y.toFixed(1)}`).join(" ");
+  const vPoradi = [...posunute].sort(
+    (a, b) => a.prvek.poradi - b.prvek.poradi || a.prvek.id - b.prvek.id,
+  );
+  const cara = vPoradi.map((b) => `${b.uzel.x.toFixed(1)},${b.uzel.y.toFixed(1)}`).join(" ");
 
   const metruNaPixel = naPixelPriZ0 / 2 ** z;
   const meritkoM = kulateMetry((SIRKA / 4) * metruNaPixel);
   const meritkoPx = meritkoM / metruNaPixel;
 
-  const popis = vPoradi.map((b) => `${b.boje.poradi}. ${b.boje.nazev}`).join(", ");
+  const popis = vPoradi
+    .map((b) => `${b.prvek.poradi}. ${NAZVY_TYPU[b.prvek.typ]} ${b.konce.map((k) => k.nazev).join(" – ")}`)
+    .join(", ");
 
   return (
     <figure className="mapka-trati">
@@ -156,13 +198,44 @@ export function MapkaTrati({ boje }: { boje: Boje[] }) {
           />
         )}
 
+        {/* Čára a brána jako **plná úsečka mezi konci**: tohle je ta čára,
+            ne noha trati. Dráha výš se jí dotýká uprostřed.
+            Šipku směru průjezdu schválně nekreslíme — směr v datech zatím
+            není a vymyslet si ho by byla přesně ta lež, kvůli které prvky
+            vznikly. */}
+        {posunute
+          .filter((b) => b.konce.length === 2)
+          .map((b) => (
+            <line
+              key={`konce-${b.prvek.id}`}
+              x1={b.konce[0].x}
+              y1={b.konce[0].y}
+              x2={b.konce[1].x}
+              y2={b.konce[1].y}
+              stroke="#1a1a1a"
+              strokeWidth="2.5"
+              strokeOpacity="0.85"
+            />
+          ))}
+
         {posunute.map((b) => (
-          <g key={b.boje.id}>
-            {/* Bílý lem, ať je bóje vidět nad vodou i nad lesem. */}
-            <circle cx={b.x} cy={b.y} r="8" fill="#c1121f" stroke="#fff" strokeWidth="3" />
+          <g key={b.prvek.id}>
+            {/* Bílý lem, ať je konec vidět nad vodou i nad lesem. */}
+            {b.konce.map((k, i) => (
+              <circle
+                key={i}
+                cx={k.x}
+                cy={k.y}
+                r="8"
+                fill={b.prvek.b === null && b.prvek.bodB !== null && i === 1 ? "#fff" : "#c1121f"}
+                stroke={b.prvek.b === null && b.prvek.bodB !== null && i === 1 ? "#c1121f" : "#fff"}
+                strokeWidth="3"
+              />
+            ))}
+            {/* Popisek u uzlu, tedy tam, kudy se pluje. */}
             <text
-              x={b.x}
-              y={b.y - 15}
+              x={b.uzel.x}
+              y={b.uzel.y - 15}
               textAnchor="middle"
               fontSize="14"
               fill="#1a1a1a"
@@ -170,7 +243,7 @@ export function MapkaTrati({ boje }: { boje: Boje[] }) {
               strokeWidth="3.5"
               paintOrder="stroke"
             >
-              {b.boje.poradi}. {b.boje.nazev}
+              {b.prvek.poradi}. {popisekPrvku(b.prvek)}
             </text>
           </g>
         ))}
