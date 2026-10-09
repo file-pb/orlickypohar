@@ -3542,7 +3542,7 @@ export interface paths {
         put?: never;
         /**
          * Zapíše polohu postavené nebo přenastavené bóje
-         * @description Pořadatel regaty, nebo rozhodčí. Přenastavení je nový záznam — starý zůstává. Poloha mimo Orlík nebo přesnost horší než 100 m se odmítne.
+         * @description Pořadatel regaty, nebo rozhodčí. Přenastavení je nový záznam — starý zůstává. Poloha mimo Orlík nebo přesnost horší než 100 m se odmítne. `zdroj` říká, odkud poloha je: `Telefon` ji změřil u bóje a hlásí přesnost, `Mapa` a `Qr` ji mají odečtenou a přesnost u nich nesmí přijít. Chybějící `zdroj` znamená `Telefon`.
          */
         post: {
             parameters: {
@@ -3613,6 +3613,96 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/boje/{boje}/fotky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Přiloží k bóji fotku z okamžiku postavení
+         * @description Pořadatel regaty, nebo rozhodčí. Je to doklad k poloze: ze souřadnic se nepozná barva bóje ani co je za ní na břehu. **Fotek může být víc** — jedna zblízka neukáže zároveň bóji i břeh za ní. JPEG, PNG nebo WebP do 15 MB; ukládá se přepočtené na WebP, originál nikam. Veřejně se nevydávají, stejně jako celá trať. Bez nastaveného úložiště vrací 503.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    boje: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": components["schemas"]["FotkaBojeFormular"];
+                    "application/x-www-form-urlencoded": components["schemas"]["FotkaBojeFormular"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObrazekDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/boje/{boje}/fotky/{fotka}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Odebere jednu fotku bóje a smaže její soubory
+         * @description Pořadatel regaty, nebo rozhodčí. Sebrání bóje fotky nemaže — záznam o poloze zůstává a fotka je jeho doklad.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    boje: number;
+                    fotka: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -3791,6 +3881,8 @@ export interface components {
             postavenaV: string;
             postavil: null | string;
             sebrana: boolean;
+            fotky: components["schemas"]["ObrazekDto"][];
+            zdroj?: components["schemas"]["ZdrojPolohy"];
         };
         ClanekDto: {
             slug: string;
@@ -3868,6 +3960,9 @@ export interface components {
          * @enum {unknown}
          */
         FormatClanku: "Text" | "Html" | "Bloky";
+        FotkaBojeFormular: {
+            soubor: null | components["schemas"]["IFormFile"];
+        };
         FotkaFormular: {
             soubor: null | components["schemas"]["IFormFile"];
             autor: null | string;
@@ -4087,6 +4182,8 @@ export interface components {
             vyska: number;
             autor: string;
             popis: null | string;
+            /** Format: uuid */
+            id: string;
         };
         OpravneniDto: {
             role: components["schemas"]["Role"];
@@ -4125,6 +4222,7 @@ export interface components {
             presnostM: null | number;
             /** Format: int32 */
             nahrazujeId: null | number;
+            zdroj?: null | components["schemas"]["ZdrojPolohy"];
         };
         PoradatelDto: {
             slug: string;
@@ -4858,6 +4956,11 @@ export interface components {
             posunDoSerie: number;
             puvodniSlug?: null | string;
         };
+        /**
+         * @default Telefon
+         * @enum {unknown}
+         */
+        ZdrojPolohy: "Telefon" | "Mapa" | "Qr";
         ZmenaRoleDto: {
             kdo: string;
             predchozi: null | components["schemas"]["RoleKLodi"];

@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { pipniAkce } from "./akce";
+import { prectiAkce, pipniAkce } from "./akce";
+import type { Cteni } from "@/lib/souradnice";
+import type { ZdrojPolohy } from "@/lib/boje";
 
 /**
  * Pípání bóje — jediná část správy, která potřebuje javascript.
@@ -269,6 +271,238 @@ export function Pipani({
           {hotovo}
         </p>
       )}
+
+      <ZMapy
+        serie={serie}
+        zavod={zavod}
+        nazev={nazev}
+        poradi={poradi}
+        prenastavuje={prenastavuje}
+        poUlozeni={(zprava) => {
+          poUlozeni.current = true;
+          setHotovo(zprava);
+          setNazev("");
+          setPoradi("");
+          router.refresh();
+        }}
+      />
     </section>
+  );
+}
+
+/**
+ * Poloha odjinud než z GPS — souřadnice, odkaz do mapy, QR kód.
+ *
+ * <b>Je to cesta pro nestandardní případ</b> (Filip, 9. 10. 2026): zapíše
+ * ji někdo u počítače za stavitele, který pípat neumí, nebo ji rozhodčí
+ * dostane po telefonu od člověka mimo proces. Z mobilu se pípá dál z GPS,
+ * takže tohle je schválně složené a pojmenované tím, kdy se to hodí.
+ *
+ * <b>Nejdřív se ukáže, čemu obrazovka rozumí, a teprve pak se staví.</b>
+ * Špatně přečtená souřadnice posune celou trať a poznalo by se to až na
+ * vodě; jedno klepnutí navíc je proti tomu nic.
+ *
+ * <b>Nečeká na polohu z telefonu.</b> U stolu žádná není a tenhle blok na
+ * ní nesmí viset.
+ */
+function ZMapy({
+  serie,
+  zavod,
+  nazev,
+  poradi,
+  prenastavuje,
+  poUlozeni,
+}: {
+  serie: string;
+  zavod: string;
+  nazev: string;
+  poradi: string;
+  prenastavuje: { id: number; nazev: string } | null;
+  poUlozeni: (zprava: string) => void;
+}) {
+  const [vstup, setVstup] = useState("");
+  const [ctu, setCtu] = useState(false);
+  const [precteno, setPrecteno] = useState<(Cteni & { odkud?: string }) | null>(null);
+  const [zdroj, setZdroj] = useState<ZdrojPolohy>("Mapa");
+  const [posilam, setPosilam] = useState(false);
+  const [chyba, setChyba] = useState<string | null>(null);
+
+  async function prect(text: string, odkud: ZdrojPolohy) {
+    setCtu(true);
+    setChyba(null);
+    setZdroj(odkud);
+    setPrecteno(await prectiAkce(text));
+    setCtu(false);
+  }
+
+  /**
+   * QR z obrázku. <b>Knihovna se stahuje až tady</b>, ne při načtení
+   * stránky — pípání u vody ji nepotřebuje a je to 45 kB.
+   *
+   * Kreslí se na bílý podklad s okrajem: QR potřebuje kolem sebe klidovou
+   * zónu a fotka obrazovky ji často nemá. Bez okraje se tenhle konkrétní
+   * kód z Mapy.com nepřečetl (ověřeno 9. 10. 2026).
+   */
+  async function zFotky(soubor: File) {
+    setCtu(true);
+    setChyba(null);
+    setPrecteno(null);
+    try {
+      const jsQR = (await import("jsqr")).default;
+      const obrazek = await createImageBitmap(soubor);
+
+      const nejvic = 1400;
+      const mera = Math.min(1, nejvic / Math.max(obrazek.width, obrazek.height));
+      const sirka = Math.round(obrazek.width * mera);
+      const vyska = Math.round(obrazek.height * mera);
+      const okraj = Math.round(Math.max(sirka, vyska) * 0.08);
+
+      const platno = document.createElement("canvas");
+      platno.width = sirka + okraj * 2;
+      platno.height = vyska + okraj * 2;
+      const kresba = platno.getContext("2d");
+      if (!kresba) throw new Error("plátno");
+      kresba.fillStyle = "#fff";
+      kresba.fillRect(0, 0, platno.width, platno.height);
+      kresba.drawImage(obrazek, okraj, okraj, sirka, vyska);
+
+      const body = kresba.getImageData(0, 0, platno.width, platno.height);
+      const nalezeno = jsQR(body.data, platno.width, platno.height, {
+        inversionAttempts: "attemptBoth",
+      });
+
+      if (!nalezeno) {
+        setCtu(false);
+        setChyba(
+          "V té fotce žádný QR kód nevidím. Zkus ji oříznout na samotný kód, " +
+            "nebo vlož odkaz rovnou.",
+        );
+        return;
+      }
+
+      setVstup(nalezeno.data);
+      setCtu(false);
+      await prect(nalezeno.data, "Qr");
+    } catch {
+      setCtu(false);
+      setChyba("Fotku se nepodařilo přečíst.");
+    }
+  }
+
+  async function postav() {
+    if (precteno?.stav !== "poloha") return;
+
+    setPosilam(true);
+    setChyba(null);
+
+    const vysledek = await pipniAkce(serie, zavod, {
+      nazev,
+      poradi: Number(poradi) || 0,
+      sirka: precteno.poloha.sirka,
+      delka: precteno.poloha.delka,
+      presnostM: null,
+      nahrazujeId: prenastavuje?.id ?? null,
+      zdroj,
+    });
+
+    setPosilam(false);
+    if (vysledek.chyba) {
+      setChyba(vysledek.chyba);
+      return;
+    }
+
+    setVstup("");
+    setPrecteno(null);
+    poUlozeni(
+      prenastavuje
+        ? `Bóje „${nazev.trim()}“ je přenastavená podle mapy. Ta předchozí zůstala v historii.`
+        : `Bóje „${nazev.trim()}“ stojí na trati podle mapy.`,
+    );
+  }
+
+  return (
+    <details className="zmapy">
+      <summary>Nejde pípnout? Zadej polohu z mapy</summary>
+
+      <p className="poznamka">
+        Pro případ, kdy u bóje nikdo s telefonem není — polohu opíšeš
+        z mapy nebo ti ji někdo pošle odkazem. <b>Uloží se jako odečtená</b>,
+        bez přesnosti, protože mapa nic neměří.
+      </p>
+
+      <label className="siroke">
+        Souřadnice nebo odkaz z mapy
+        <textarea
+          rows={2}
+          value={vstup}
+          onChange={(e) => setVstup(e.target.value)}
+          placeholder="49.4957253N, 14.1841419E — nebo odkaz z Mapy.com či Google Maps"
+        />
+      </label>
+
+      <div className="tlacitka">
+        <button type="button" onClick={() => prect(vstup, "Mapa")} disabled={ctu || !vstup.trim()}>
+          {ctu ? "Čtu…" : "Přečíst"}
+        </button>
+
+        <label className="jako-tlacitko">
+          Načíst z fotky QR kódu
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const soubor = e.target.files?.[0];
+              // Vstup se vyprázdní, ať jde tatáž fotka vybrat znovu.
+              e.target.value = "";
+              if (soubor) zFotky(soubor);
+            }}
+          />
+        </label>
+      </div>
+
+      {precteno?.stav === "nic" && (
+        <p className="hlaska chyba" role="alert">
+          {precteno.duvod}
+        </p>
+      )}
+
+      {precteno?.stav === "poloha" && (
+        <div className="hlaska" role="status">
+          <b>
+            {precteno.poloha.sirka.toFixed(5)}, {precteno.poloha.delka.toFixed(5)}
+          </b>{" "}
+          — {precteno.jak}.{" "}
+          <a
+            href={`https://www.openstreetmap.org/?mlat=${precteno.poloha.sirka}&mlon=${precteno.poloha.delka}#map=17/${precteno.poloha.sirka}/${precteno.poloha.delka}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Zkontrolovat na mapě
+          </a>
+          {precteno.odkud && (
+            <span className="detail">Zkratka vedla na {precteno.odkud}</span>
+          )}
+          <p className="poznamka">
+            Jméno a pořadí se berou z polí výš. Zapíše se to jako{" "}
+            {zdroj === "Qr" ? "poloha z QR kódu" : "poloha z mapy"}.
+          </p>
+          <button type="button" onClick={postav} disabled={posilam || nazev.trim().length === 0}>
+            {posilam
+              ? "Posílám…"
+              : nazev.trim().length === 0
+                ? "Nejdřív napiš, čím ta bóje je"
+                : prenastavuje
+                  ? "Přenastavit sem"
+                  : "Postavit sem"}
+          </button>
+        </div>
+      )}
+
+      {chyba && (
+        <p className="hlaska chyba" role="alert">
+          {chyba}
+        </p>
+      )}
+    </details>
   );
 }
