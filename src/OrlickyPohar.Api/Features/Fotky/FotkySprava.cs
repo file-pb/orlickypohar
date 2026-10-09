@@ -239,6 +239,17 @@ public class FotkySprava(AppDbContext db, IUloziste uloziste, TimeProvider cas, 
         if (!uloziste.Pripraveno) return false;
 
         foreach (var x in id) await SmazAsync(x);
+
+        // <b>Odpojit, co se smazalo.</b> `SmazAsync` maže
+        // `ExecuteDeleteAsync`, tedy mimo sledování změn: řádek z databáze
+        // zmizí, ale sledovaná entita zůstane. Kdyby volající hned potom
+        // smazal bóji, EF by k ní fotku kaskádou přidal do dávky a spadl
+        // na „expected to affect 1 row, but actually affected 0".
+        foreach (var e in db.ChangeTracker.Entries<Fotka>()
+                     .Where(e => id.Contains(e.Entity.Id))
+                     .ToList())
+            e.State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+
         return true;
     }
 
