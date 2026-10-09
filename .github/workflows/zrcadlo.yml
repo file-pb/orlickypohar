@@ -54,6 +54,9 @@ jobs:
             cil="$zrcadlo/${par##*|}"
             echo "::group::$zdroj → $cil"
             docker buildx imagetools create --tag "$cil" "$zdroj"
-            docker buildx imagetools inspect "$cil" | head -5
+            # Bez roury: `| head` zavře rouru, `inspect` dostane SIGPIPE
+            # a `set -o pipefail` z toho udělá pád celého běhu. Kopie už
+            # v tu chvíli byla hotová, takže to shazovalo zdravý výsledek.
+            docker buildx imagetools inspect "$cil" > /dev/null
             echo "::endgroup::"
           done

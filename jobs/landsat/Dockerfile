@@ -1,6 +1,11 @@
 # Plánovaná úloha: teplota hladiny Orlíku z Landsatu. Nemá HTTP ani port,
 # jen jednou denně počítá a posílá čísla do API (README.md).
-FROM python:3.13-slim
+# Základní obraz z našeho zrcadla v GHCR, ne přímo z Docker Hubu:
+# anonymní stahování z Hubu má limit na IP runneru a ta je sdílená, takže
+# ho vyčerpá kdokoliv jiný (9. 10. 2026 nám tím spadl build i integrace).
+# Zrcadlo plní `.github/workflows/zrcadlo.yml`, kde je i cena toho řešení.
+ARG ZRCADLO=ghcr.io/file-pb/orlickypohar/zrcadlo
+FROM ${ZRCADLO}/python:3.13-slim
 
 # Kola rasterio nesou GDAL, ale libexpat berou ze systému a slim image
 # ji nemá (import padal na libexpat.so.1, zachytil to build v CI).

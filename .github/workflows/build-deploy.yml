@@ -58,6 +58,19 @@ jobs:
         env:
           SIXLABORS_LICENSE_KEY: ${{ secrets.SIXLABORS_LICENSE_KEY }}
 
+      # Přihlášení stojí **nad** vším, co staví image, a běží i na pull
+      # requestu. Základní obrazy se berou z našeho zrcadla v GHCR
+      # (`.github/workflows/zrcadlo.yml`) a to je po pushi soukromé —
+      # anonymní dotaz na manifest vrací 403. Dřív se tenhle krok na pull
+      # requestu přeskakoval, protože se přihlášení potřebovalo jen
+      # k pushi; teď je potřeba i ke čtení. Co se kam pushuje, hlídá
+      # `push:` u build-push-action, ne tohle.
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       # Pravidla mikrocache před webem proti falešnému webu: hlavně že se
       # stránka přihlášeného nikdy nedostane do cache. Když to selže,
       # nenasadí se nic — chyba tady by ukazovala cizí stránky.
@@ -65,13 +78,6 @@ jobs:
         run: deploy/cache/test/test.sh
 
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
-
-      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
-        if: github.event_name != 'pull_request'
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         id: meta
@@ -199,6 +205,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # Čtení ze zrcadla základních obrazů; zapisovat sem nemá co.
+      packages: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -206,12 +214,26 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Integrační testy
         run: dotnet test -c Release --nologo --filter "Category=Integracni"
-        # Licence ImageSharpu: `dotnet test -c Release` ji vyžaduje stejně jako
-        # publish (v Debugu je to jen varování, proto to lokálně neselže).
         env:
+          # Licence ImageSharpu: `dotnet test -c Release` ji vyžaduje stejně jako
+          # publish (v Debugu je to jen varování, proto to lokálně neselže).
           SIXLABORS_LICENSE_KEY: ${{ secrets.SIXLABORS_LICENSE_KEY }}
+          # PostgreSQL ze zrcadla, ne z Docker Hubu. Lokálně se proměnná
+          # nenastavuje a `PostgresFixture` sáhne na Hub jako dřív — jeden
+          # vývojářský stroj limit nevyčerpá.
+          POSTGRES_IMAGE: ghcr.io/${{ github.repository }}/zrcadlo/postgres:17-alpine
+          # Ryuk uklízí kontejnery po skončení testů a tahá se taky z Hubu.
+          # Na runneru, který se po běhu zahodí celý, není co uklízet.
+          # Schválně jen tady, ne v kódu: lokálně uklízet potřeba je.
+          TESTCONTAINERS_RYUK_DISABLED: 'true'
 
   # Nasazení. Vlastní úloha, ne poslední krok buildu, a to ze tří důvodů:
   #
