@@ -734,6 +734,40 @@ SMERNICE = {}
 CACHE_VYPNUTA_OD = "2026-10-06T02:00:00+00:00"
 
 
+def _pdf(text):
+    """
+    Nejmenší platné PDF s jednou stránkou a jedním řádkem textu.
+
+    Skládá se tady, protože v repozitáři žádné PDF neleží a **stažení
+    směrnice se bez souboru nedá zkoušet**: adresa vydávaná v `adresa`
+    vracela čtyřistačtyřku i před stažením, takže se odvolání nedalo
+    poznat od souboru, který nikdy nebyl (scénář F2, 9. 10. 2026).
+    """
+    obsah = f"BT /F1 18 Tf 60 720 Td ({text}) Tj ET".encode("latin-1", "replace")
+    objekty = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] "
+        b"/Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>",
+        b"<< /Length %d >>\nstream\n%s\nendstream" % (len(obsah), obsah),
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
+
+    out = bytearray(b"%PDF-1.4\n")
+    offsety = []
+    for i, o in enumerate(objekty, 1):
+        offsety.append(len(out))
+        out += b"%d 0 obj\n" % i + o + b"\nendobj\n"
+
+    xref = len(out)
+    out += b"xref\n0 %d\n0000000000 65535 f \n" % (len(objekty) + 1)
+    for off in offsety:
+        out += b"%010d 00000 n \n" % off
+    out += b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (
+        len(objekty) + 1, xref)
+    return bytes(out)
+
+
 def _nasad_smernice():
     if not D["zavody"]:
         return
@@ -1135,7 +1169,14 @@ def ma_vysledky(z, lod):
 def lod_na_zastavce(z, lod, smi=True):
     u = next((u for u in z["ucasti"] if u["lod"] == lod), None)
     vysledky = ma_vysledky(z, lod)
-    return {"prihlaskaId": PRIHLASKA_ID[lod], "lod": nazvy(lod),
+    return {"prihlaskaId": PRIHLASKA_ID[lod],
+            # `LodId` vydává `LodNaZastavceDto` od 4. 10. 2026 a obrazovka
+            # přihlášek na něm staví vystavení připojovacího kódu od stolu
+            # registrace. Mock ho neposílal, takže se do skrytého pole
+            # dostávalo prázdno a každé vystavení skončilo na „Kód se
+            # nepovedlo vystavit" (nalezeno 9. 10. 2026 při scénáři F1).
+            "lodId": PRIHLASKA_ID[lod],
+            "lod": nazvy(lod),
             "cisloPlachty": LODE[lod].get("cisloPlachty"), "typLodi": LODE[lod].get("typ"),
             "majitel": jmeno(LODE[lod]["majitel"]), "kategorie": KAT[lod],
             "stav": u["stav"] if u else None, "maVysledky": vysledky,
@@ -2928,6 +2969,21 @@ class H(BaseHTTPRequestHandler):
             return None
         rozdelena = urlparse(self.path)
         cesta, dotaz = rozdelena.path, parse_qs(rozdelena.query)
+
+        if (m := re.match(r'^/fake-soubor/(smernice-v\d+\.pdf)$', cesta)):
+            # Stažení v API maže soubor z úložiště, takže adresa přestane
+            # platit — a právě tohle měří F2. Záznam o verzi zůstává.
+            s = next((x for z in SMERNICE.values() for x in z
+                      if x["adresa"].endswith("/" + m.group(1))), None)
+            if not s or s["stazenoV"]:
+                return self.send_error(404)
+            data = _pdf(f"Plachetni smernice v{s['verze']} (mock)")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/pdf")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
 
         if (m := re.match(r'^/fake-foto/([0-9a-f]+)$', cesta)) and m.group(1) in FOTKY:
             data, typ = FOTKY[m.group(1)]

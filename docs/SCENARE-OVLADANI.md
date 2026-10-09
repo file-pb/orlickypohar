@@ -226,6 +226,57 @@ Zapsané zvlášť schválně: rozhodnout o nich patří k návrhu, ne k měřen
 rozcestník ještě minutu ročníky z toho předchozího. Vypadá to jako chyba
 v rozcestníku a není.
 
+## Co odjela skupina F (9. 10. 2026)
+
+Zase **reprodukcí, ne účastníkem** (viz skupinu E). F1 se u čerstvého člověka
+měří na odbočkách, a to tahle zkouška neumí. Co změřit šlo: že cesta existuje,
+že role projde a že data sednou — u F2 a F3 navíc, že **nejde uložit starší
+stav** a že **neodeslaná klepnutí dojdou sama**.
+
+| Scénář | Co se měřilo | Výsledek |
+|---|---|---|
+| F1 — od začátku do konce | přihlášení → připojení k lodi kódem od pořadatele → směrnice na veřejné stránce regaty → výsledek téže regaty | **řetěz projde celý**, tři zádrhely na cestě (níž) |
+| F2 — Zpět | po uložení zápisu přidala cizí ruka dojezd; pak Zpět na cílovou obrazovku a klepnutí | **starší stav neprojde**: po návratu je na obrazovce čerstvý zápis (`router.refresh()` při připojení), klepnutí staví na něm a cizí dojezd zůstal — revize 3, čtyři dojezdy |
+| F2 — stará adresa směrnice | stažení verze 2 z vývěsky, pak nové načtení původní adresy | **404**; nestažená verze 1 dál 200 a záznam drží kdo, kdy a proč |
+| F3 — bez signálu, obrazovka zavřená | tři klepnutí s vypnutým API, pak znovu otevřená cílová obrazovka | odešla **sama, bez jediného kliknutí**; koncept z telefonu se po uložení zahodil |
+| F3 — bez signálu, obrazovka otevřená | dvě klepnutí s vypnutým API, pak se API vrátilo a obrazovky se nikdo nedotkl | „neuloženo" 13:47:42 → „uloženo" do 13:48:39, tedy **v dokumentovaném půlminutovém okně** |
+
+Všechny čtyři případy potvrdilo **nezávislé čtení zápisu z API**, ne zelená
+hláška na obrazovce.
+
+**Výpadek vyráběl vypnutý server, ne zařízení.** Pro obrazovku je to totéž
+(odpověď nedojde), ale událost `online` tím nenastane — měřil se tedy
+třicetisekundový časovač, ne doručení hned po chycení sítě. Na to je potřeba
+telefon v letovém režimu.
+
+### Opraveno hned
+
+| Nález | Oprava |
+|---|---|
+| ~~**Pořadatel nemohl vystavit připojovací kód.** `LodNaZastavceDto` nese `LodId` od 4. 10. 2026 právě kvůli tomu, mock ho ale neposílal: skryté pole zůstalo prázdné a každé vystavení skončilo na „Kód se nepovedlo vystavit". **F1 tím začínal slepou uličkou**~~ | **hotovo 9. 10. 2026** — mock vydává `lodId`, totéž číslo jako u přihlášky |
+| ~~**Soubor směrnice v mocku vůbec neexistoval.** `adresa` mířila na `/fake-soubor/…`, kde nic neposlouchalo, takže vracela 404 i před stažením — odvolání nešlo poznat od souboru, který nikdy nebyl. **F2 se o to nedalo opřít**~~ | **hotovo 9. 10. 2026** — mock skládá nejmenší platné PDF a servíruje ho, dokud verze není stažená; po stažení 404, jako když soubor zmizí z R2 |
+
+### Pozorování, ze kterých návrh nevznikl
+
+- **Kdo už k nějaké lodi patří, nemá v „Mých lodích" kudy se připojit
+  k další.** Odkaz na `/pripojeni` je jen ve větvi „Zatím nepatříš k žádné
+  lodi" (`lode.length === 0` ve `web/app/moje-lode/page.tsx`) — a právě ta
+  věta vysvětluje
+  všechny tři cesty. Kdo dostane kód na druhou loď, musí adresu znát.
+- **Panel lodi v „Mých lodích" se neptá na roli.** Po připojení kódem se
+  otevře s `?lod=…` a posádka v něm vidí *Vystavit kód* i rozhodování
+  o žádostech. Server to odmítne (403) a obrazovka řekne jen „Kód se
+  nepovedlo vystavit" — proti pravidlu *obrazovka nabízí jen to, co projde*.
+- **Mock nemá účet bez lodi a bez role**, tedy přesně profil čerstvého
+  účastníka z F1: `petr` a `jana` mají loď, `dana` a `zdenek` roli. F1 se
+  proto jela Petrem, který už loď má — neměřilo se první připojení, ale
+  druhé.
+- **Odvolaná směrnice visí na veřejné stránce ještě do minuty.** Soubor
+  zmizí hned (404), stránku regaty ale drží `revalidate: 60`. Pro F2 je to
+  to podstatné: dokument je odvolaný okamžitě, odkaz na něj do minuty.
+  Tatáž past při F1 na chvíli vypadala jako chybějící oddíl se směrnicí —
+  stránka byla z mezipaměti z doby, kdy mock neběžel.
+
 ## Role, se kterými se zkouší
 
 Role se udělují na `/sprava/{ročník}/opravneni`. Pro zkoušku je potřeba
