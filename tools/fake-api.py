@@ -934,6 +934,7 @@ def prvek_dto(slug, p):
                "popis": p["konecBPopis"]}
 
     return {"id": p["id"], "typ": p["typ"], "poradi": p["poradi"], "strana": p["strana"],
+            "smer": p.get("smer"), "druhStartu": p.get("druhStartu"),
             "poznamka": p["poznamka"], "a": konec(p["bojeAId"]),
             "b": konec(p["bojeBId"]) if p["bojeBId"] else None, "bodB": bod}
 
@@ -982,12 +983,19 @@ def proc_nejde_prvek(slug, v):
         return "Tahle regata zatím nemá ani jednu bóji, takže ani trať."
 
     typ = v.get("typ")
-    if typ not in ("Znacka", "Brana", "Odskok", "CaraStart", "CaraCil"):
+    if typ not in ("OtocnaBoje", "Brana", "Odskok", "Start", "Cil",
+                   "PrujezdniBoje", "OtocnaZona"):
         return "Neznámý typ prvku."
+
+    # Směr a druh startu dávají smysl jen u startu.
+    if typ != "Start" and (v.get("smer") or v.get("druhStartu")):
+        return "Směr a druh startu se uvádějí jen u startu."
 
     ma_boji = v.get("bojeBId") is not None
     ma_bod = v.get("konecBSirka") is not None and v.get("konecBDelka") is not None
-    dvoukonec = typ != "Znacka"
+    # Jednokoncové jsou jen bóje samotné. Odskok má dva konce schválně:
+    # otočná a hned za ní odskoková, dohromady jedno místo v řadě.
+    dvoukonec = typ not in ("OtocnaBoje", "PrujezdniBoje")
 
     if ma_boji and ma_bod:
         return "Druhý konec je buď bóje, nebo bod — ne obojí."
@@ -999,15 +1007,16 @@ def proc_nejde_prvek(slug, v):
             return ("Napiš, čím ten druhý konec je — „plavidlo komise“, „bod na břehu“. "
                     "Bez toho se na vodě nepozná, kam se pluje.")
     elif ma_boji or ma_bod:
-        return "Značka má jeden konec. Dva konce má brána, odskok nebo čára."
+        return ("Tenhle prvek je jedna bóje. Dva konce má start, cíl, brána, "
+                "odskok a otočná zóna.")
 
     if len((v.get("konecBPopis") or "").strip()) > 60:
         return "Popis konce má nejvýš 60 znaků."
     if len((v.get("poznamka") or "").strip()) > 200:
         return "Poznámka má nejvýš 200 znaků. Na delší vysvětlení je plachetní směrnice."
-    if v.get("strana") and typ not in ("Znacka", "Odskok"):
-        return ("Strana se uvádí u značky a odskoku. U brány si ji volí loď, "
-                "u čáry rozhoduje směr průjezdu.")
+    if v.get("strana") and typ not in ("OtocnaBoje", "Odskok", "PrujezdniBoje"):
+        return ("Strana se uvádí u otočné bóje, průjezdní bóje a odskoku. "
+                "U brány si ji volí loď, u startu a cíle rozhoduje směr průjezdu.")
     if (v.get("poradi") or 0) <= 0:
         return "Pořadí v trati začíná jedničkou."
     if v.get("bojeAId") == v.get("bojeBId"):
@@ -1071,6 +1080,7 @@ def trat_verejna(slug):
                       "sirka": b["sirka"], "delka": b["delka"]}
                      for b in sorted(stojici, key=lambda b: (b["poradi"], b["id"]))],
             "prvky": [{"typ": p["typ"], "poradi": p["poradi"], "strana": p["strana"],
+                       "smer": p.get("smer"), "druhStartu": p.get("druhStartu"),
                        "poznamka": p["poznamka"], "a": verejny_konec(p, "a"),
                        "b": verejny_konec(p, "b")}
                       for p in vsechny]}
@@ -2441,7 +2451,8 @@ class H(BaseHTTPRequestHandler):
              "strana": v.get("strana"), "poznamka": (v.get("poznamka") or "").strip() or None,
              "bojeAId": v["bojeAId"], "bojeBId": v.get("bojeBId"),
              "konecBSirka": v.get("konecBSirka"), "konecBDelka": v.get("konecBDelka"),
-             "konecBPopis": (v.get("konecBPopis") or "").strip() or None}
+             "konecBPopis": (v.get("konecBPopis") or "").strip() or None,
+             "smer": v.get("smer"), "druhStartu": v.get("druhStartu")}
         PRVKY.setdefault(trat_aktualni(slug)["id"], []).append(p)
         return self.odpoved(prvek_dto(slug, p), 201)
 
@@ -2463,7 +2474,8 @@ class H(BaseHTTPRequestHandler):
                   "poznamka": (v.get("poznamka") or "").strip() or None,
                   "bojeAId": v["bojeAId"], "bojeBId": v.get("bojeBId"),
                   "konecBSirka": v.get("konecBSirka"), "konecBDelka": v.get("konecBDelka"),
-                  "konecBPopis": (v.get("konecBPopis") or "").strip() or None})
+                  "konecBPopis": (v.get("konecBPopis") or "").strip() or None,
+             "smer": v.get("smer"), "druhStartu": v.get("druhStartu")})
         return self.odpoved(prvek_dto(slug, p))
 
     def prvek_smaz(self, slug, prvek_id):

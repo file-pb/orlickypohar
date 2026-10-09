@@ -213,7 +213,8 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
                     ? new VerejnyKonecDto(p.BojeB.Nazev, p.BojeB.Sirka, p.BojeB.Delka)
                     : p.KonecBSirka != null && p.KonecBDelka != null
                         ? new VerejnyKonecDto(p.KonecBPopis!, p.KonecBSirka.Value, p.KonecBDelka.Value)
-                        : null))
+                        : null,
+                p.Smer, p.DruhStartu))
             .ToListAsync(ct);
 
         return new VerejnaTratDto(false, prijato, cislo, Prvky: prvky, Boje: await db.Boje

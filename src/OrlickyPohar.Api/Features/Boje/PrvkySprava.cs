@@ -18,7 +18,11 @@ public record PrvekDto(
     string? Poznamka,
     KonecBojeDto A,
     KonecBojeDto? B,
-    KonecBodDto? BodB);
+    KonecBodDto? BodB,
+    /// <summary>Jen u startu: světová strana, kterou se startuje.</summary>
+    SvetovaStrana? Smer = null,
+    /// <summary>Jen u startu: pevná linie, nebo otevírající se brána.</summary>
+    DruhStartu? DruhStartu = null);
 
 /// <summary>Co přijde při zakládání nebo úpravě prvku.</summary>
 public record PrvekVstup(
@@ -30,7 +34,9 @@ public record PrvekVstup(
     double? KonecBDelka = null,
     string? KonecBPopis = null,
     StranaPrvku? Strana = null,
-    string? Poznamka = null);
+    string? Poznamka = null,
+    SvetovaStrana? Smer = null,
+    DruhStartu? DruhStartu = null);
 
 /// <summary>
 /// Prvky trati: čára, brána, odskok a značka.
@@ -65,7 +71,8 @@ public class PrvkySprava(AppDbContext db, TratSprava trate)
                     : new KonecBojeDto(p.BojeB.Id, p.BojeB.Nazev, p.BojeB.Sirka, p.BojeB.Delka),
                 p.KonecBSirka == null || p.KonecBDelka == null
                     ? null
-                    : new KonecBodDto(p.KonecBSirka.Value, p.KonecBDelka.Value, p.KonecBPopis!)))
+                    : new KonecBodDto(p.KonecBSirka.Value, p.KonecBDelka.Value, p.KonecBPopis!),
+                p.Smer, p.DruhStartu))
             .ToListAsync(ct);
     }
 
@@ -123,7 +130,7 @@ public class PrvkySprava(AppDbContext db, TratSprava trate)
 
         if (Prvky.ProcNejde(
                 v.Typ, v.BojeBId, v.KonecBSirka, v.KonecBDelka, v.KonecBPopis, v.Strana,
-                v.Poznamka) is { } chyba)
+                v.Poznamka, v.Smer, v.DruhStartu) is { } chyba)
             return chyba;
 
         if (v.Poradi <= 0) return "Pořadí v trati začíná jedničkou.";
@@ -163,6 +170,8 @@ public class PrvkySprava(AppDbContext db, TratSprava trate)
         prvek.KonecBSirka = v.KonecBSirka;
         prvek.KonecBDelka = v.KonecBDelka;
         prvek.KonecBPopis = string.IsNullOrWhiteSpace(v.KonecBPopis) ? null : v.KonecBPopis.Trim();
+        prvek.Smer = v.Smer;
+        prvek.DruhStartu = v.DruhStartu;
     }
 
     private Task<PrvekTrati?> NajdiAsync(int zavodId, int prvekId, CancellationToken ct) =>
@@ -180,6 +189,7 @@ public class PrvkySprava(AppDbContext db, TratSprava trate)
                     : new KonecBojeDto(p.BojeB.Id, p.BojeB.Nazev, p.BojeB.Sirka, p.BojeB.Delka),
                 p.KonecBSirka == null || p.KonecBDelka == null
                     ? null
-                    : new KonecBodDto(p.KonecBSirka.Value, p.KonecBDelka.Value, p.KonecBPopis!)))
+                    : new KonecBodDto(p.KonecBSirka.Value, p.KonecBDelka.Value, p.KonecBPopis!),
+                p.Smer, p.DruhStartu))
             .FirstOrDefaultAsync(ct);
 }

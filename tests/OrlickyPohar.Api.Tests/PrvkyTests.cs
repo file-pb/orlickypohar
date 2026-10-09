@@ -17,22 +17,24 @@ public class PrvkyTests
         double? sirka = null,
         double? delka = null,
         string? popis = null,
-        StranaPrvku? strana = null) =>
-        Prvky.ProcNejde(typ, bojeB, sirka, delka, popis, strana);
+        StranaPrvku? strana = null,
+        SvetovaStrana? smer = null,
+        DruhStartu? druhStartu = null) =>
+        Prvky.ProcNejde(typ, bojeB, sirka, delka, popis, strana, null, smer, druhStartu);
 
     [Fact]
     public void Znacka_ma_jeden_konec()
     {
-        Assert.Null(Jde(TypPrvku.Znacka));
-        Assert.NotNull(Jde(TypPrvku.Znacka, bojeB: 7));
-        Assert.NotNull(Jde(TypPrvku.Znacka, sirka: 49.5, delka: 14.1, popis: "bod"));
+        Assert.Null(Jde(TypPrvku.OtocnaBoje));
+        Assert.NotNull(Jde(TypPrvku.OtocnaBoje, bojeB: 7));
+        Assert.NotNull(Jde(TypPrvku.OtocnaBoje, sirka: 49.5, delka: 14.1, popis: "bod"));
     }
 
     [Theory]
     [InlineData(TypPrvku.Brana)]
     [InlineData(TypPrvku.Odskok)]
-    [InlineData(TypPrvku.CaraStart)]
-    [InlineData(TypPrvku.CaraCil)]
+    [InlineData(TypPrvku.Start)]
+    [InlineData(TypPrvku.Cil)]
     public void Dvoukonec_bez_druheho_konce_neprojde(TypPrvku typ)
     {
         Assert.NotNull(Jde(typ));
@@ -50,9 +52,9 @@ public class PrvkyTests
     {
         // Start se běžně vytyčí mezi bójí a plavidlem komise. Bez popisu
         // se na vodě nepozná, kam se pluje.
-        Assert.NotNull(Jde(TypPrvku.CaraStart, sirka: 49.5, delka: 14.1));
-        Assert.NotNull(Jde(TypPrvku.CaraStart, sirka: 49.5, delka: 14.1, popis: "   "));
-        Assert.Null(Jde(TypPrvku.CaraStart, sirka: 49.5, delka: 14.1, popis: "plavidlo komise"));
+        Assert.NotNull(Jde(TypPrvku.Start, sirka: 49.5, delka: 14.1));
+        Assert.NotNull(Jde(TypPrvku.Start, sirka: 49.5, delka: 14.1, popis: "   "));
+        Assert.Null(Jde(TypPrvku.Start, sirka: 49.5, delka: 14.1, popis: "plavidlo komise"));
     }
 
     [Fact]
@@ -67,20 +69,58 @@ public class PrvkyTests
     public void Strana_patri_jen_tam_kde_ji_nevoli_lod()
     {
         // U brány si stranu volí loď, u čáry rozhoduje směr průjezdu.
-        Assert.Null(Jde(TypPrvku.Znacka, strana: StranaPrvku.PoLeve));
+        Assert.Null(Jde(TypPrvku.OtocnaBoje, strana: StranaPrvku.PoLeve));
         Assert.Null(Jde(TypPrvku.Odskok, bojeB: 7, strana: StranaPrvku.PoPrave));
+        Assert.Null(Jde(TypPrvku.PrujezdniBoje, strana: StranaPrvku.PoLeve));
         Assert.NotNull(Jde(TypPrvku.Brana, bojeB: 7, strana: StranaPrvku.PoLeve));
-        Assert.NotNull(Jde(TypPrvku.CaraStart, bojeB: 7, strana: StranaPrvku.PoLeve));
+        Assert.NotNull(Jde(TypPrvku.Start, bojeB: 7, strana: StranaPrvku.PoLeve));
+        Assert.NotNull(Jde(TypPrvku.OtocnaZona, bojeB: 7, strana: StranaPrvku.PoLeve));
     }
 
     [Fact]
-    public void Dvoukonec_zna_jen_znacku_jako_vyjimku()
+    public void Jednokoncove_jsou_jen_boje_samotne()
     {
-        Assert.False(Prvky.Dvoukonec(TypPrvku.Znacka));
-        Assert.True(Prvky.Dvoukonec(TypPrvku.Brana));
+        // Jeden kus plastu ve vodě.
+        Assert.False(Prvky.Dvoukonec(TypPrvku.OtocnaBoje));
+        Assert.False(Prvky.Dvoukonec(TypPrvku.PrujezdniBoje));
+
+        // Odskok má dva konce schválně: otočná a hned za ní odskoková,
+        // dohromady jedno místo v řadě.
         Assert.True(Prvky.Dvoukonec(TypPrvku.Odskok));
-        Assert.True(Prvky.Dvoukonec(TypPrvku.CaraStart));
-        Assert.True(Prvky.Dvoukonec(TypPrvku.CaraCil));
+        Assert.True(Prvky.Dvoukonec(TypPrvku.Brana));
+        Assert.True(Prvky.Dvoukonec(TypPrvku.Start));
+        Assert.True(Prvky.Dvoukonec(TypPrvku.Cil));
+        // Otočná zóna je spojnice dvou objektů — i drátů nad vodou.
+        Assert.True(Prvky.Dvoukonec(TypPrvku.OtocnaZona));
+    }
+
+    /// <summary>
+    /// Směr a druh startu dávají smysl jen u startu. Jinde by to bylo
+    /// pole, které obrazovka ukáže a nikdo neví, co znamená.
+    /// </summary>
+    [Fact]
+    public void Smer_a_druh_patri_jen_ke_startu()
+    {
+        Assert.Null(Jde(TypPrvku.Start, bojeB: 7, smer: SvetovaStrana.J));
+        Assert.Null(Jde(
+            TypPrvku.Start, bojeB: 7, druhStartu: DruhStartu.OtevirajiciSeBrana));
+
+        Assert.NotNull(Jde(TypPrvku.Cil, bojeB: 7, smer: SvetovaStrana.J));
+        Assert.NotNull(Jde(TypPrvku.OtocnaBoje, smer: SvetovaStrana.SZ));
+        Assert.NotNull(Jde(
+            TypPrvku.Brana, bojeB: 7, druhStartu: DruhStartu.PevnaLinie));
+    }
+
+    /// <summary>
+    /// Průjezdní bóje je jedna bóje se stranou. Strana závisí na směru
+    /// průjezdu, takže táž bóje může být ve dvou prvcích s různou
+    /// stranou — to ale hlídá pořadí, ne tohle pravidlo.
+    /// </summary>
+    [Fact]
+    public void Prujezdni_boje_je_jedna_boje_se_stranou()
+    {
+        Assert.Null(Jde(TypPrvku.PrujezdniBoje, strana: StranaPrvku.PoPrave));
+        Assert.NotNull(Jde(TypPrvku.PrujezdniBoje, bojeB: 7));
     }
 
     [Fact]
@@ -88,7 +128,7 @@ public class PrvkyTests
     {
         // Tytéž dvě polohy můžou být ráno start a odpoledne cíl, takže to
         // nesmí být jeden typ s příznakem.
-        Assert.NotEqual(TypPrvku.CaraStart, TypPrvku.CaraCil);
+        Assert.NotEqual(TypPrvku.Start, TypPrvku.Cil);
     }
 
     /// <summary>Strana, která je u toho typu přípustná — jinak <c>null</c>.</summary>

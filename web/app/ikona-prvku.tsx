@@ -1,4 +1,4 @@
-import { NAZVY_TYPU, type StranaPrvku, type TypPrvku } from "@/lib/trat";
+import { nazevTypu, type StranaPrvku, type TypPrvku } from "@/lib/trat";
 
 /**
  * Tvar prvku. <b>Jedno místo pro správu i pro web</b>: kdo si tvar
@@ -23,7 +23,7 @@ export function IkonaPrvku({ typ, strana }: { typ: TypPrvku; strana: StranaPrvku
       width="32"
       height="20"
       role="img"
-      aria-label={NAZVY_TYPU[typ]}
+      aria-label={nazevTypu(typ)}
     >
       {typ !== "Znacka" && (
         <line x1="6" y1="10" x2="26" y2="10" stroke="currentColor" strokeWidth="2" />

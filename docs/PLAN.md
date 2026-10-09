@@ -1896,6 +1896,29 @@ kosmetika:** půlka jmen, která jsem vymyslel, popisovala tvar místo věci.
 - **„Jak to jet" začíná světovou stranou** (*„na jih, startujeme na
   zámek"*). Na vodě se člověk řídí rozhledem, ne stupni.
 
+**Postavené v API 10. 10. 2026** (jména výčtu, směr startu a druh startu;
+barva a tvar bóje jsou další krok):
+
+`TypPrvku` se přejmenoval a rozšířil. **Čísla zůstala**, protože se výčet
+ukládá jako celé číslo — migraci to nepotřebuje. Jde ven ale v JSON jako
+jméno, takže je to změna kontraktu: `Znacka → OtocnaBoje`,
+`CaraStart → Start`, `CaraCil → Cil`, nové `PrujezdniBoje` a `OtocnaZona`.
+Přibyl `Smer` (osm světových stran) a `DruhStartu`, obojí **jen u startu**.
+
+Dvoukoncové jsou start, cíl, brána, odskok a otočná zóna; jednokoncové
+**jen otočná a průjezdní bóje**. Odskok má dva konce schválně — je to
+otočná a hned za ní odskoková, dohromady jedno místo v řadě. (Při psaní
+jsem ho omylem udělal jednokoncovým a shodily to vlastní testy; zadání
+znělo „nech ho tam", ne „předělej ho".)
+
+Strana se uvádí u otočné bóje, průjezdní bóje a odskoku. U brány si ji
+volí loď, u startu, cíle a otočné zóny rozhoduje směr průjezdu.
+
+Web čte jména přes `nazevTypu`/`nazevStrany`, které u neznámé hodnoty
+vrátí syrové jméno. **Změna kontraktu je dvoukroková**, takže mezi
+nasazením API a webu chodí jména, která klient nezná — prázdné místo
+v tabulce vypadá jako porucha, syrové jméno je ošklivé, ale pravdivé.
+
 **Rozhodnuté, ještě nepostavené:**
 
 | Typ prvku | Co nese | Pozn. |
