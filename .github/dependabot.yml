@@ -28,6 +28,48 @@ updates:
           - "Microsoft.*"
           - "System.*"
 
+  - package-ecosystem: npm
+    directory: "/web"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "web"
+    groups:
+      # Next a jeho typy se vydávají spolu; jedno PR místo tří.
+      next:
+        patterns:
+          - "next"
+          - "eslint-config-next"
+          - "@next/*"
+      typy:
+        patterns:
+          - "@types/*"
+
+  - package-ecosystem: npm
+    directory: "/app"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "app"
+    ignore:
+      # expo-router drží číslo řady podle Expo SDK a jeho peer závislosti
+      # chtějí celou tu řadu (@expo/ui, expo-constants, @expo/metro-runtime).
+      # Major sám o sobě by vyrobil smíšený strom, který CI nezachytí —
+      # appka se jen typově kontroluje, nestaví a nespouští. Zvedá se
+      # s celým SDK, ne zvlášť.
+      - dependency-name: "expo-router"
+        update-types: ["version-update:semver-major"]
+      # Totéž platí pro expo samotné a react-native: patří k sobě a mění
+      # se dohromady při upgradu SDK.
+      - dependency-name: "expo"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-native"
+        update-types: ["version-update:semver-major"]
+
   - package-ecosystem: docker
     directory: "/"
     schedule:
