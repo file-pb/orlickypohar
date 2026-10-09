@@ -9,7 +9,7 @@ public class NapovedaTests
 {
     private static NapovedaLodiDto Lod(
         string nazev, string? plachta = null, bool vRocniku = false, int? rok = 2026) =>
-        new(nazev, plachta, "Pirát", "Jan Novák", "Race", null, vRocniku, rok);
+        new(nazev, plachta, "Pirát", "Race", null, vRocniku, rok);
 
     private static readonly NapovedaLodiDto[] Lode =
     [
@@ -74,14 +74,16 @@ public class NapovedaTests
     }
 
     [Fact]
-    public void Napoveda_nenese_kontakt()
+    public void Napoveda_nenese_kontakt_ani_majitele()
     {
         // Pojistka na tvar: našeptávač je veřejný a kontakt se z něj
-        // nesmí dát vylovit napsáním názvu lodi.
+        // nesmí dát vylovit napsáním názvu lodi. Majitel k zákazu přibyl
+        // 9. 10. 2026 — veřejně je kormidelník, majitel jen pod /sprava/.
         var pole = typeof(NapovedaLodiDto).GetProperties().Select(p => p.Name);
 
         Assert.DoesNotContain(pole, p => p.Contains("mail", StringComparison.OrdinalIgnoreCase)
                                          || p.Contains("telefon", StringComparison.OrdinalIgnoreCase)
-                                         || p.Contains("kontakt", StringComparison.OrdinalIgnoreCase));
+                                         || p.Contains("kontakt", StringComparison.OrdinalIgnoreCase)
+                                         || p.Contains("majitel", StringComparison.OrdinalIgnoreCase));
     }
 }

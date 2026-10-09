@@ -4286,12 +4286,24 @@ pravděpodobný.
 
 ### Co se zapne prvními skutečnými přihláškami
 
-**Veřejný našeptávač vydává jména majitelů.** `GET /lode/napoveda?vse=true`
-odpoví bez tokenu celým seznamem včetně `majitel` (ověřeno na produkci
-8. 10. 2026). Veřejná startovní listina přitom vydává jen kormidelníka
-a majitel je jinak jen ve `/sprava`. Dnes jsou ta jména vygenerovaná; první
-skutečná přihláška z toho udělá únik, protože formulář bez vyplněného majitele
-zapíše jako majitele kapitána. Oprava je jeden řádek v projekci.
+~~**Veřejný našeptávač vydává jména majitelů.**~~ **Opraveno 9. 10. 2026.**
+`GET /lode/napoveda?vse=true` odpovídal bez tokenu celým seznamem včetně
+`majitel`, ačkoliv veřejná startovní listina vydává jen kormidelníka a majitel
+je jinak jen pod `/sprava/`. Smysl to má i u vygenerovaných jmen: první
+skutečná přihláška z nich udělá skutečná, protože formulář bez vyplněného
+majitele zapíše jako majitele kapitána.
+
+**Jeden řádek v projekci to ale nebyl.** Jména majitelů vypisoval i veřejný
+formulář přihlášky, v nabídce lodí (`datalist` s `lode-poharu` na stránce
+`prihlaska`) — tedy ne jen API, ale i stránka. Pole z `NapovedaLodiDto`
+zmizelo, nabídka ukazuje kormidelníka a drží to `NapovedaTests`: pojistka na
+tvar DTO nově zakazuje `majitel`, ne jen kontakty. Integrační test se navíc
+ptá **syrového těla** odpovědi, protože tvrzení nad typem, který to pole už
+nemá, by nehlídalo nic.
+
+Klient se přegeneruje **až po nasazení** (`packages/api-client/generuj.sh`
+stahuje dokument z běžícího API), takže `schema.d.ts` nese majitele ještě
+o jedno PR dýl; web ho mezitím nečte.
 
 **O zpracování osobních údajů není nikde nic.** Formulář sbírá e-mail, telefon,
 jméno a příjmení kapitána, volný text posádky a číslo ČSJ, a u zaškrtávátka
@@ -4367,8 +4379,11 @@ To nejsou mezery, to jsou rozhodnutí.
 2. ~~**Pruh ukázky podle ročníku.**~~ **Hotovo 9. 10. 2026.** Mělo to být dřív
    než vypsaná zastávka — a ukázalo se, že pozdě to bylo už tak: pruh nad
    skutečným 2027 nevisel „až se vypíše", ale od jeho publikace 8. 10. 2026.
-3. **Majitel z našeptávače a stránka o osobních údajích** — před otevřením
-   přihlášek, ne po.
+3. **Před otevřením přihlášek, ne po.** ~~Majitel z našeptávače~~ **hotovo
+   9. 10. 2026** — a nebyl to jeden řádek, jména vypisoval i veřejný formulář.
+   **Stránka o osobních údajích zbývá** a čeká na Filipa: kdo je správce
+   údajů, kam se píše žádost o výmaz a jestli platí retence, kterou dnes dělá
+   `UklidKontaktu`.
 4. **Vypsat jednu zastávku 2027** a vyvěsit u ní směrnici. Obsah, ne kód,
    a teprve tím se celý řetěz přihlášek a vývěsky zkusí na skutečných datech.
    **Je to až čtvrtý bod, ne druhý** (opraveno 9. 10. 2026). `Vypsany`

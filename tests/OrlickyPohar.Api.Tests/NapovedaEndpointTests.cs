@@ -66,12 +66,24 @@ public class NapovedaEndpointTests(PostgresFixture fixture)
 
         Assert.Equal(("Šárka", "CZE 777", "Race"), (sarka.Lod, sarka.CisloPlachty, sarka.Kategorie));
         Assert.Equal("Petr Svoboda", sarka.Kormidelnik);
-        Assert.Equal("Jan Novák", sarka.Majitel);
+        // Majitel se nevydává (9. 10. 2026). Ptáme se syrového těla, ne typu:
+        // na DTO už to pole není, takže by tvrzení nad ním nic nehlídalo.
+        Assert.DoesNotContain("Novák", await SyroveAsync("sark", "napoveda-2026"),
+            StringComparison.Ordinal);
         Assert.Equal(2024, sarka.PosledniRok);
         Assert.False(sarka.VRocniku);
 
         var sumava = Assert.Single(await NapovedaAsync("sumav", "napoveda-2026"));
         Assert.True(sumava.VRocniku);
+    }
+
+    /// <summary>Syrové tělo odpovědi — pro tvrzení, že se něco v JSONu vůbec neobjeví.</summary>
+    private async Task<string> SyroveAsync(string dotaz, string? serie = null)
+    {
+        var adresa = $"/lode/napoveda?q={Uri.EscapeDataString(dotaz)}"
+                     + (serie is null ? "" : $"&serie={serie}");
+
+        return await fixture.CreateClient().GetStringAsync(adresa);
     }
 
     [Fact]
