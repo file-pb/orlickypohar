@@ -1939,6 +1939,65 @@ tak tvářit.
 být vidět **stáří polohy** („před 8 s", červeně „před 6 minutami"). Mapa,
 která ukazuje starou polohu jako aktuální, je horší než žádná.
 
+### Živá data na palubě: režim nastavuje regata (Filip, 9. 10. 2026)
+
+*„Tohle je o tom, co nastaví organizátor a rozhodčí do zastávky."*
+
+Oponentura chtěla do plachetní směrnice 2027 **jednu větu** o tom, jestli se
+živá data smějí používat na palubě, a tvrdila, že musí být dřív, než se vydá
+první veřejná poloha. Ta naléhavost platí; jedna věta ne. **Je to nastavení
+regaty, ne pravidlo seriálu** — totéž rozhodnutí jako u tabule (*„co já vím,
+jakou budou mít rozhodčí, organizátoři a lidi náladu — prostě se to musí
+nechat nastavit"*). Režimy jsou dva:
+
+| Režim | Co smí posádka za jízdy |
+|---|---|
+| **trať a vlastní poloha** | trať a vlastní polohu ano; polohy cizích lodí a pořadí na vodě ne |
+| **jen mezi rozjížďkami** | během rozjížďky nic živého, mezi nimi a po dojezdu ano |
+
+**Směrnice pak neříká pravidlo, říká zvolený režim** — a tady je past:
+nastavení v aplikaci a věta v PDF jsou dvě různá místa a nic je nedrží
+u sebe. Když se rozejdou, protest nemá podle čeho rozhodnout, tedy přesně to,
+čemu ta věta měla zabránit. **Stránka regaty proto musí režim říct slovy**,
+vygenerovaně z nastavení, a směrnice na ni má odkázat místo opisování.
+
+Co tím není dotčené: **GPX do plotteru** (trať je veřejná, jakmile ji rozhodčí
+přijme) a **telefon, který jen nahrává**. Pilot se žádného režimu netýká —
+nahrává po dojezdu a za jízdy neukazuje nic.
+
+#### Trasa se láme startem rozjížďky
+
+*„Dráhy lodí se zaznamenávají a zobrazují historicky po rozjížďkách, aby v tom
+nebyl maglajz; jakmile se zahájí další rozjížďka, začne se kreslit dráha lodě
+znovu."*
+
+**`Trasa` tedy visí na rozjížďce, ne na závodě** — stejně jako prvek trati
+dostal nullable `RozjizdkaId` od prvního dne. Bez toho by se celý závodní den
+slil do jedné čáry a nešlo by říct, co se jelo kdy.
+
+**Zpětná animace jízd** je tím zároveň zadaná jako přehrávání *jednoho
+segmentu*, ne rozsekávání dlouhé trasy podle časů. Do pilotu nepatří (shodly
+se obě oponentury), ale tvar dat se rozhoduje teď, protože pozdější rozdělení
+by bylo migrace nad daty, podle kterých se už jelo.
+
+#### Kdo co vidí
+
+| Kdo | Kdy |
+|---|---|
+| rozhodčí | **vždycky**, bez ohledu na nastavení |
+| veřejnost živě | jen když to nevypnul organizátor ani rozhodčí |
+| veřejnost zpětně | **organizátor smí jízdy zveřejnit na vyžádání, až po uzavření regaty** |
+
+**Vypnout smí kterýkoliv z nich.** Není to obrat proti souhlasu z oddílu *Kdo
+trasy vidí*, je to upřesnění: souhlas obou dál platí, jen je výslovné, že
+organizátor není pouhý žadatel. V datech to zůstávají dvě věci, ne jeden
+sloupec.
+
+**Zveřejnění po regatě je třetí stav, ne tentýž knoflík.** Regata mohla jet
+s vypnutým živým přenosem a jízdy se stejně hodí vydat potom, až o pořadí
+nejde — a obráceně, zavřený archiv nemá zhasnout to, co lidi viděli živě.
+Odvolání souhlasu nepůsobí zpětně a nemá předstírat, že ano.
+
 ### Plachetní směrnice u zastávky (Filip, 3. 10. 2026)
 
 *„To je nutnost u regaty."* A s rozhodnutím, že **appka je oficiální
