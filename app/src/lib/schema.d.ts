@@ -3922,6 +3922,150 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/trat/prvky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Prvky trati v pořadí
+         * @description Organizátor regaty, nebo rozhodčí ročníku.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PrvekDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Založí prvek trati
+         * @description Organizátor regaty, nebo rozhodčí ročníku. Do přijaté trati nejde — prvek je rozhodnutí o trati, takže platí tentýž zámek jako u pípnutí.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PrvekVstup"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PrvekDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/trat/prvky/{prvek}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Přepíše prvek trati
+         * @description Organizátor regaty, nebo rozhodčí ročníku. Do přijaté trati nejde.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    prvek: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PrvekVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PrvekDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /**
+         * Smaže prvek trati
+         * @description Organizátor regaty, nebo rozhodčí ročníku. Prvek se maže doopravdy, na rozdíl od bóje: není to měření, je to rozhodnutí.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    prvek: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/zastavky/{zavod}/trat/prestavba": {
         parameters: {
             query?: never;
@@ -4259,6 +4403,22 @@ export interface components {
         };
         /** @enum {unknown} */
         KodVysledku: "Dnf" | "Dns" | "Dnc" | "Ocs" | "Dsq" | "Ret" | "Rdg" | null;
+        KonecBodDto: {
+            /** Format: double */
+            sirka: number;
+            /** Format: double */
+            delka: number;
+            popis: string;
+        };
+        KonecBojeDto: {
+            /** Format: int32 */
+            id: number;
+            nazev: string;
+            /** Format: double */
+            sirka: number;
+            /** Format: double */
+            delka: number;
+        };
         LodDetailSpravaDto: {
             lod: components["schemas"]["LodSpravaDto"];
             zmeny: components["schemas"]["ZmenaRoleDto"][];
@@ -4661,6 +4821,34 @@ export interface components {
             /** Format: date-time */
             vzniklaV: string;
         };
+        PrvekDto: {
+            /** Format: int32 */
+            id: number;
+            typ: components["schemas"]["TypPrvku"];
+            /** Format: int32 */
+            poradi: number;
+            strana: null | components["schemas"]["StranaPrvku"];
+            poznamka: null | string;
+            a: components["schemas"]["KonecBojeDto"];
+            b: null | components["schemas"]["KonecBojeDto"];
+            bodB: null | components["schemas"]["KonecBodDto"];
+        };
+        PrvekVstup: {
+            typ: components["schemas"]["TypPrvku"];
+            /** Format: int32 */
+            poradi: number;
+            /** Format: int32 */
+            bojeAId: number;
+            /** Format: int32 */
+            bojeBId?: null | number;
+            /** Format: double */
+            konecBSirka?: null | number;
+            /** Format: double */
+            konecBDelka?: null | number;
+            konecBPopis?: null | string;
+            strana?: null | components["schemas"]["StranaPrvku"];
+            poznamka?: null | string;
+        };
         PublikaceSerieVstup: {
             publikovano: boolean;
         };
@@ -4842,6 +5030,8 @@ export interface components {
         StazeniVstup: {
             duvod: null | string;
         };
+        /** @enum {unknown} */
+        StranaPrvku: "PoLeve" | "PoPrave" | null;
         TeplotaHladinyDto: {
             snimky: components["schemas"]["SnimekHladinyDto"][];
             zdroj: string;
@@ -4872,6 +5062,8 @@ export interface components {
             smiPrijmout: boolean;
             smiPrestavet: boolean;
         };
+        /** @enum {unknown} */
+        TypPrvku: "Znacka" | "Brana" | "Odskok" | "CaraStart" | "CaraCil";
         UcastDto: {
             lod: string;
             kategorie: string;

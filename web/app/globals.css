@@ -798,6 +798,15 @@ header.hlavicka .jen-uzke { display: none; }
 .stav-trati h2 { margin-top: 0; }
 .stav-trati .stitek { margin-left: 0; font-size: 0.85rem; }
 .stav-trati .tlacitka { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
+/* Prvky trati. Ikonka je tentýž tvar jako na mapě, aby seznam a mapa
+   mluvily stejně: kolečko konec, úsečka čára nebo brána, oblouček strana. */
+.ikona-prvku { vertical-align: -0.35em; margin-right: 0.35rem; color: var(--stav-zruseny); }
+.seznam-prvku { list-style: none; padding: 0; }
+.seznam-prvku > li {
+  border-bottom: 1px solid var(--linka); padding: 0.6rem 0;
+}
+.seznam-prvku > li:last-child { border-bottom: 0; }
+.poradi-prvku { color: var(--tlumeny); font-variant-numeric: tabular-nums; }
 .zmapy .hlaska .detail { display: block; word-break: break-all; margin-top: 0.3rem; }
 
 /* Výběr souboru jako tlačítko: vlastní `input[type=file]` vypadá v každém
