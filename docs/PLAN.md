@@ -1433,9 +1433,9 @@ tlačítko se odemkne, až je poloha k něčemu. Historie stojí pod tratí,
 aby bylo vidět, že přenastavením nic nezmizelo.
 
 **Co obrazovka vědomě neumí:** pípnout bez signálu (viz odrážka výš —
-API nenese čas z telefonu) a ukázat trať na mapě; zatím vypisuje
-souřadnice. Mock bóje umí od 9. 10. 2026 včetně pravidel a role, takže
-se dá zkoušet lokálně i ve zkoušce s pořadatelem.
+API nenese čas z telefonu). Mapka trati nad seznamem je od 9. 10. 2026.
+Mock bóje umí včetně pravidel a role, takže se dá zkoušet lokálně
+i ve zkoušce s pořadatelem.
 
 | Pravidlo | Proč |
 |---|---|
@@ -1444,6 +1444,80 @@ se dá zkoušet lokálně i ve zkoušce s pořadatelem.
 | přesnost z telefonu se ukládá | iPhone s vypnutou přesnou polohou hlásí i 65 m a bez čísla by to vypadalo stejně jako 5 m |
 | nad 100 m se pípnutí odmítne | to už není poloha z družic, ale ze sítě |
 | poloha mimo Orlík se odmítne | prohozená šířka a délka je nejčastější překlep a postavila by bóji v Africe |
+| u polohy **z mapy** nesmí přijít přesnost | mapa nic neměří; číslo u ní by bylo vymyšlené |
+
+#### Když pípnout nejde (Filip, 9. 10. 2026)
+
+*„Potřeboval bych mít možnost bóji pípnout nejen tak, jak funguje nyní, ale
+také tím, že zadám manuálně souřadnice, nebo vyfotím QR, nebo URL z map."*
+A k tomu důvody: *„tuhle definici z mapy využije někdo u počítače v případě,
+že ten, kdo staví bóje, nebude zdatný je pípnout z telefonu"* a *„pokud
+dojde k posunu a rozhodčí si zavolá s někým úplně mimo proces — ukotvi mi
+to tam a pošli mi odkaz v mapě"*.
+
+**Z mobilu se pípá dál tak, jak to je** (Filip tamtéž). Tohle je cesta pro
+nestandardní řešení, ne náhrada: zapisuje ji někdo **jiný, než kdo tu bóji
+viděl**, a jeho zdrojem je mapa, ne měření.
+
+**Proto má bóje `zdroj`** (`ZdrojPolohy`: `Telefon`, `Mapa`, `Qr`). Dokud
+ho neměla, slilo se „telefon přesnost nehlásí" a „opsáno z mapy" do jednoho
+prázdného `presnostM` a záznam o tom rozdílu mlčel. Chybějící `zdroj`
+znamená `Telefon`, protože jinudy to dřív nešlo — starší záznamy jsou tedy
+pravdivé bez dopisování.
+
+**Co se dá přečíst** (ověřeno 9. 10. 2026 na tvarech, které Filip poslal):
+
+| Vstup | Kde je poloha |
+|---|---|
+| `49.4957253N, 14.1841419E` i holá dvojice | šířka na Orlíku je 49,2–49,8 a délka 14,0–14,5, takže se nedají prohodit |
+| `mapy.com/…?source=coor&id=14.1841,49.4957` | `id` je ten bod a má **délku první**; `x`/`y` je jen střed mapy |
+| `mapy.com/s/lasupogahe` (i z QR) | zkratka, rozbalí se až na serveru |
+| `maps.app.goo.gl/nUMo8…` | rozbalí se na `google.com/maps/search/49.495688,+14.183463` — **šířku první** |
+
+**Zkratky se musí rozbalit na serveru**, protože v QR ani ve zprávě od
+kamaráda nic jiného není. Jde to jen na známé hostitele a jen po http(s) —
+rozbalování cizí adresy je požadavek, který posílá náš server, ne
+prohlížeč.
+
+#### Fotky bóje: víc než jedna (Filip, 9. 10. 2026)
+
+*„Je potřeba ty fotky komprimovat na velikost webu, jsou pouze
+informativní."* Komprese tu je od začátku a žádná zvláštní být nemusí:
+fotka projde `Zpracovani.ZpracujAsync`, uloží se jako **WebP v kvalitě 80
+ve dvou šířkách — 480 a 1600 px** — a originál z telefonu se nikam
+neukládá. Je to tatáž cesta jako u fotek na web, takže se nemá co rozejít.
+
+**Jedna fotka nestačí.** Snímek zblízka neukáže, co je za bójí na břehu,
+a teprve obojí dohromady říká, kde to je. Vazba proto vede **od fotky
+k bóji** (`Fotka.UBojeId`), stejně jako u obrázků v těle článku, a ne
+opačně jako u medailonku.
+
+#### Co je pokus a co historie (Filip, 9. 10. 2026)
+
+*„Všechno, co neprošlo rozjížďkou, jsou pokusy. Sebrání bóje ještě před
+tím, než se trasa schválí, je jen nějaký log, ale nemá z hlediska závodu
+hodnotu. Jakmile ale podle toho lodě pojedou nebo jely, to už historickou
+hodnotu má, a velmi — může se podle toho v budoucnu třeba počítat
+hendikep."*
+
+**Tohle je dělicí čára, ne odstín.** Stejný záznam o bóji znamená před
+schválením trati a po odjetí rozjížďky něco úplně jiného, a plyne z toho
+dvojí:
+
+1. **Sebrání bóje fotky nemaže.** Záznam o poloze zůstává a fotka je jeho
+   doklad; u trati, podle které se jelo, je to podklad, který už nikdo
+   nevyrobí znovu.
+2. **Úklid na konci ročníku** (Filip tamtéž: *„když budeme přecházet na
+   nový ročník, je potřeba vymyslet nějaký úklid toho, co už nikdy
+   potřebovat nebudem — takže i takovéto soubory"*) **smí sáhnout jen na
+   to, podle čeho nikdo nejel.** Bóje z trati, kterou projela rozjížďka,
+   se nemaže nikdy. Pravidlo retence tedy nezní „starší než rok", ale
+   „nikdy nesloužila odjeté rozjížďce".
+
+**Rozhodnout to jde teprve se stavy trati** — dnes bóje visí na zastávce,
+ne na rozjížďce, takže se „podle téhle trati se jelo" nemá z čeho přečíst.
+Je to další důvod, proč stavy trati (akceptace rozhodčím, zámek,
+přestavba) patří před úklid, ne za něj.
 
 **Na webu to jde taky** (Filip se ptal 4. 10.): prohlížeč na telefonu umí
 přes HTTPS sáhnout na GPS se stejnou přesností, dokud je stránka v popředí.

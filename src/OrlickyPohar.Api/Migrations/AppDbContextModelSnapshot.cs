@@ -33,9 +33,6 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<double>("Delka")
                         .HasColumnType("double precision");
 
-                    b.Property<Guid?>("FotkaId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTimeOffset?>("NahrazenaV")
                         .HasColumnType("timestamp with time zone");
 
@@ -68,9 +65,10 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int>("ZavodId")
                         .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                    b.Property<int>("Zdroj")
+                        .HasColumnType("integer");
 
-                    b.HasIndex("FotkaId");
+                    b.HasKey("Id");
 
                     b.HasIndex("NahrazujeId");
 
@@ -173,6 +171,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int>("Sirka")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("UBojeId")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("VTeleClankuId")
                         .HasColumnType("integer");
 
@@ -182,6 +183,8 @@ namespace OrlickyPohar.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("NahralId");
+
+                    b.HasIndex("UBojeId");
 
                     b.HasIndex("VTeleClankuId");
 
@@ -1191,10 +1194,6 @@ namespace OrlickyPohar.Api.Migrations
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Boje.Boje", b =>
                 {
-                    b.HasOne("OrlickyPohar.Api.Features.Fotky.Fotka", "Fotka")
-                        .WithMany()
-                        .HasForeignKey("FotkaId");
-
                     b.HasOne("OrlickyPohar.Api.Features.Boje.Boje", "Nahrazuje")
                         .WithMany()
                         .HasForeignKey("NahrazujeId")
@@ -1211,8 +1210,6 @@ namespace OrlickyPohar.Api.Migrations
                         .HasForeignKey("ZavodId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Fotka");
 
                     b.Navigation("Nahrazuje");
 
@@ -1253,7 +1250,14 @@ namespace OrlickyPohar.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("OrlickyPohar.Api.Features.Boje.Boje", "UBoje")
+                        .WithMany("Fotky")
+                        .HasForeignKey("UBojeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Nahral");
+
+                    b.Navigation("UBoje");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Identita.Opravneni", b =>
@@ -1640,6 +1644,11 @@ namespace OrlickyPohar.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Ucast");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Boje.Boje", b =>
+                {
+                    b.Navigation("Fotky");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Lode.Osoba", b =>

@@ -26,7 +26,7 @@ public class BojeSprava(
         // EF do SQL nepřeloží. Bójí je na regatě pár, takže o nic nejde.
         var boje = await dotaz
             .Include(b => b.Postavil)
-            .Include(b => b.Fotka)
+            .Include(b => b.Fotky)
             .OrderBy(b => b.NahrazenaV == null && b.SebranaV == null ? 0 : 1)
             .ThenBy(b => b.Poradi)
             .ThenByDescending(b => b.PostavenaV)
@@ -39,7 +39,11 @@ public class BojeSprava(
     private BojeDto Dto(Boje b) => new(
         b.Id, b.Nazev, b.Poradi, b.Sirka, b.Delka, b.PresnostM, b.PostavenaV,
         b.Postavil?.Zobrazovane, b.SebranaV != null,
-        Fotky.Nahravani.Dto(b.Fotka, uloziste.VerejnaAdresa));
+        [.. b.Fotky
+            .OrderBy(f => f.NahranoV)
+            .Select(f => Fotky.Nahravani.Dto(f, uloziste.VerejnaAdresa))
+            .OfType<Fotky.ObrazekDto>()],
+        b.Zdroj);
 
     /// <summary>
     /// Zapíše pípnutí. Při přenastavení převezme pořadí i jméno po bóji,
@@ -75,6 +79,7 @@ public class BojeSprava(
             Sirka = vstup.Sirka,
             Delka = vstup.Delka,
             PresnostM = vstup.PresnostM,
+            Zdroj = vstup.Zdroj ?? ZdrojPolohy.Telefon,
             PostavenaV = ted,
             PostavilId = kdo,
             NahrazujeId = stara?.Id,
@@ -85,12 +90,13 @@ public class BojeSprava(
         await db.SaveChangesAsync(ct);
 
         log.LogInformation(
-            "Bóje {Nazev} u regaty {Zavod} {Co} (přesnost {Presnost} m)",
-            nova.Nazev, zavodId, stara is null ? "postavena" : "přenastavena", vstup.PresnostM);
+            "Bóje {Nazev} u regaty {Zavod} {Co} ze zdroje {Zdroj} (přesnost {Presnost} m)",
+            nova.Nazev, zavodId, stara is null ? "postavena" : "přenastavena",
+            nova.Zdroj, vstup.PresnostM);
 
         await db.Entry(nova).Reference(b => b.Postavil).LoadAsync(ct);
-        // Fotka se přikládá až po pípnutí vlastním požadavkem: dokud
-        // poloha neexistuje, není k čemu ji přiložit.
+        // Fotky se přikládají až po pípnutí vlastními požadavky: dokud
+        // poloha neexistuje, není k čemu je přiložit.
         return (Dto(nova), null);
     }
 

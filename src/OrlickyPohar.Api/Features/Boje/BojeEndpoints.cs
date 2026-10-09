@@ -42,7 +42,10 @@ public static class BojeEndpoints
             .WithSummary("Zapíše polohu postavené nebo přenastavené bóje")
             .WithDescription(
                 "Pořadatel regaty, nebo rozhodčí. Přenastavení je nový záznam — starý " +
-                "zůstává. Poloha mimo Orlík nebo přesnost horší než 100 m se odmítne.");
+                "zůstává. Poloha mimo Orlík nebo přesnost horší než 100 m se odmítne. " +
+                "`zdroj` říká, odkud poloha je: `Telefon` ji změřil u bóje a hlásí " +
+                "přesnost, `Mapa` a `Qr` ji mají odečtenou a přesnost u nich nesmí " +
+                "přijít. Chybějící `zdroj` znamená `Telefon`.");
 
         g.MapPost("/{boje:int}/sebrana", SeberAsync)
             .WithSummary("Označí bóji za sebranou z vody")
@@ -50,18 +53,23 @@ public static class BojeEndpoints
 
         // Token jde v hlavičce, ne v cookie — proti podvrženému formuláři
         // tu není co chránit, stejně jako u fotky papírového zápisu.
-        g.MapPut("/{boje:int}/fotka", FotkaAsync)
+        g.MapPost("/{boje:int}/fotky", FotkaAsync)
             .DisableAntiforgery()
             .WithMetadata(new RequestSizeLimitAttribute(Nahravani.NejvicBajtu + 1024 * 1024))
-            .Produces<ObrazekDto>()
+            .Produces<ObrazekDto>(StatusCodes.Status201Created)
             .WithSummary("Přiloží k bóji fotku z okamžiku postavení")
             .WithDescription(
                 "Pořadatel regaty, nebo rozhodčí. Je to doklad k poloze: ze souřadnic se " +
-                "nepozná barva bóje ani co je za ní na břehu. JPEG, PNG nebo WebP do 15 MB. " +
-                "Veřejně se nevydává, stejně jako celá trať. Bez nastaveného úložiště vrací 503.");
+                "nepozná barva bóje ani co je za ní na břehu. **Fotek může být víc** — " +
+                "jedna zblízka neukáže zároveň bóji i břeh za ní. JPEG, PNG nebo WebP " +
+                "do 15 MB; ukládá se přepočtené na WebP, originál nikam. Veřejně se " +
+                "nevydávají, stejně jako celá trať. Bez nastaveného úložiště vrací 503.");
 
-        g.MapDelete("/{boje:int}/fotka", OdeberFotkuAsync)
-            .WithSummary("Odebere fotku bóje a smaže její soubory");
+        g.MapDelete("/{boje:int}/fotky/{fotka:guid}", OdeberFotkuAsync)
+            .WithSummary("Odebere jednu fotku bóje a smaže její soubory")
+            .WithDescription(
+                "Pořadatel regaty, nebo rozhodčí. Sebrání bóje fotky nemaže — záznam " +
+                "o poloze zůstává a fotka je jeho doklad.");
     }
 
     private static async Task<IResult> SeznamAsync(
@@ -116,7 +124,6 @@ public static class BojeEndpoints
         if (!await SmiAsync(kdo, rozsahy, rozsah, ct)) return (null, Results.Forbid());
 
         var nalezena = await db.Boje
-            .Include(b => b.Fotka)
             .FirstOrDefaultAsync(b => b.Id == boje && b.ZavodId == rozsah.ZavodId, ct);
 
         return nalezena is null
@@ -143,18 +150,20 @@ public static class BojeEndpoints
         var vstup = new FotkaFormular(
             formular.Soubor, jmeno, $"Bóje {nalezena!.Nazev}", Souhlas: true);
 
-        var (obrazek, chyba) = await fotky.NastavAsync(nalezena, vstup, uzivatel, ct);
-        return obrazek is null ? Results.BadRequest(new { error = chyba }) : Results.Ok(obrazek);
+        var (obrazek, chyba) = await fotky.PridejKBojiAsync(nalezena.Id, vstup, uzivatel, ct);
+        return obrazek is null
+            ? Results.BadRequest(new { error = chyba })
+            : Results.Created((string?)null, obrazek);
     }
 
     private static async Task<IResult> OdeberFotkuAsync(
-        string serie, string zavod, int boje, ClaimsPrincipal kdo, Rozsahy rozsahy,
+        string serie, string zavod, int boje, Guid fotka, ClaimsPrincipal kdo, Rozsahy rozsahy,
         AppDbContext db, FotkySprava fotky, CancellationToken ct)
     {
         var (nalezena, odpoved) = await NajdiAsync(serie, zavod, boje, kdo, rozsahy, db, ct);
         if (odpoved is not null) return odpoved;
 
-        return await fotky.OdeberAsync(nalezena!, ct) is { } chyba
+        return await fotky.OdeberZBojeAsync(nalezena!.Id, fotka, ct) is { } chyba
             ? Results.Json(new { error = chyba }, statusCode: StatusCodes.Status503ServiceUnavailable)
             : Results.NoContent();
     }

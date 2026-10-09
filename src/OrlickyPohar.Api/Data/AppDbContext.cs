@@ -235,6 +235,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // v úložišti musí uklidit kód, který k úložišti má přístup, ne
         // kaskáda v databázi.
         fotka.HasIndex(x => x.VTeleClankuId);
+        // Fotky bóje. Totéž pravidlo jako u těla článku: mazání bóje je
+        // odpojí, ne smaže — soubor v úložišti musí uklidit kód, který
+        // k úložišti má přístup, ne kaskáda v databázi.
+        fotka.HasOne(x => x.UBoje).WithMany(x => x.Fotky).HasForeignKey(x => x.UBojeId)
+            .OnDelete(DeleteBehavior.SetNull);
+        fotka.HasIndex(x => x.UBojeId);
 
         var ucast = b.Entity<Ucast>();
         ucast.Property(x => x.Posadka).HasMaxLength(400);
