@@ -182,6 +182,7 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
             t.Prijal?.Zobrazovane,
             t.DuvodVraceni,
             t.RozjizdkaId,
+            t.NahrazujeId,
             odjeta,
             SmiHlasitHotovo: jeStavitel && Stavba.ProcNejdeHotovo(t.Stav) is null,
             SmiPrijmout: jeRozhodci && Stavba.ProcNejdePrijmout(t.Stav) is null,
