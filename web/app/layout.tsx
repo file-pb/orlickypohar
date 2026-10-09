@@ -8,6 +8,7 @@ import { Domu } from "@/app/domu";
 import { Menu } from "@/app/menu";
 import { Logo, ZnakPozadi } from "@/app/logo";
 import { PruhUkazky } from "@/app/ukazka";
+import { UKAZKOVE_SERIE } from "@/lib/ukazka";
 import { PrepinacRezimu } from "@/app/rezim";
 import { cookies } from "next/headers";
 import { COOKIE_REZIM, jeRezim } from "@/lib/rezim";
@@ -47,11 +48,10 @@ export default async function Layout({ children }: { children: React.ReactNode }
   // Cookie bez platného tokenu je vlastní stav, ne „nepřihlášený". Kdyby se
   // slil s ním, nabízel by web přihlášení někomu, kdo se nemůže odhlásit.
   const sezeni = ja ? true : await maSezeni();
-  // Nejnovější ročník pro odkazy v hlavičce. Výpadek API hlavičku shodit
-  // nesmí, odkazy se jen vynechají.
-  const rocnik = await nactiSerie()
-    .then((serie) => serie?.[0])
-    .catch(() => undefined);
+  // Nejnovější ročník pro odkazy v hlavičce, celý seznam pro pruh ukázky.
+  // Výpadek API hlavičku shodit nesmí, odkazy se jen vynechají.
+  const serie = await nactiSerie().catch(() => undefined);
+  const rocnik = serie?.[0];
   // Ručně zvolený vzhled. Bez cookie `undefined` a web se řídí systémem.
   const ulozeny = (await cookies()).get(COOKIE_REZIM)?.value;
   const rezim = jeRezim(ulozeny) ? ulozeny : undefined;
@@ -64,8 +64,13 @@ export default async function Layout({ children }: { children: React.ReactNode }
             tahat na klienta hydrataci. */}
         <span id="nahoru" />
         <ZnakPozadi />
-        {/* Jediné upozornění na vymyšlená data, nad menu (Filip, 15. 9. 2026). */}
-        <PruhUkazky />
+        {/* Jediné upozornění na vymyšlená data, nad menu (Filip, 15. 9. 2026).
+            Od 9. 10. 2026 jen nad ročníkem, který ukázkový doopravdy je —
+            rozhoduje `patriPruh`. */}
+        <PruhUkazky
+          ukazkove={UKAZKOVE_SERIE}
+          ukazkovyNekde={Boolean(serie?.some((s) => UKAZKOVE_SERIE.includes(s.slug)))}
+        />
         <header className="hlavicka">
           <div className="obal">
             {/* Logo Orlik Yacht Series od rozhodčího (22. 9. 2026). Appka má

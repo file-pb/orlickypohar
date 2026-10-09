@@ -4302,11 +4302,19 @@ jen se netýkají jmen posádky ani záznamu osoby, a **smazat se nedá nic**:
 mazací endpoint nad lodí, osobou ani ročníkem neexistuje. Žádost „smažte mě"
 se dnes vyřídí jedině ručním SQL na produkci.
 
-**Pruh ukázkových dat nerozlišuje ročník.** `web/app/ukazka.tsx` se rozhoduje
-jen podle toho, jestli je `UKAZKOVE_SERIE` neprázdná, a visí v `layout.tsx` nad
-celým webem. V compose je `2026-nanecisto`, takže jakmile se vypíše skutečný
-2027, bude o sobě tvrdit, že je vymyšlený — a vypnout to jde jen za cenu, že
-2026 přijde o varování.
+~~**Pruh ukázkových dat nerozlišuje ročník.**~~ **Opraveno 9. 10. 2026** — a
+nebylo to „jakmile se vypíše 2027", jak tu stálo: **lhalo to už tehdy.** Ročník
+2027 je publikovaný od 8. 10. 2026, `nactiSerie` ho vrací první (ověřeno na
+produkci dotazem na `/serie`) a úvodní stránka ho bere jako aktuální, takže pruh
+visel nad termínovou listinou od rozhodčího a tvrdil o ní, že je vymyšlená.
+
+Pruh se teď váže na ročník, o kterém stránka je (`patriPruh`
+v `web/app/ukazka.tsx`): `/serie/{slug}` a `/sprava/{slug}` podle slugu, **úvod
+podle toho, jestli je ukázkový některý publikovaný ročník** — úvod je smíšený,
+pořadí a novinky bere z předchozího ročníku, dokud je ten nejnovější nemá, takže
+se ukázková data objeví i nad neukázkovým ročníkem. Jinde pruh není. Seznam
+ročníků čte server (`web/lib/ukazka.ts`) a posílá ho v props; v klientském
+balíku by z `process.env` zbylo prázdno, tedy pruh, který nikdy není.
 
 **Ročník 2027 je devětkrát `Planovany`.** Celý řetěz veřejných přihlášek
 a vývěsky — vedený jako hotový — nikdy neběžel na skutečných datech. Dokud se
@@ -4356,10 +4364,9 @@ To nejsou mezery, to jsou rozhodnutí.
 
 1. ~~**Přegenerovat klienta z OpenAPI**~~ — **hotovo 8. 10. 2026**, a na
    něm postavená ~~**obrazovka bójí**~~ **9. 10. 2026**.
-2. **Pruh ukázky podle ročníku.** Musí být dřív než vypsaná zastávka, ne až
-   po ní: `PruhUkazky` visí v `layout.tsx` nad celým webem a rozhoduje se jen
-   podle neprázdné `UKAZKOVE_SERIE`, takže by o skutečném 2027 tvrdil, že je
-   vymyšlený.
+2. ~~**Pruh ukázky podle ročníku.**~~ **Hotovo 9. 10. 2026.** Mělo to být dřív
+   než vypsaná zastávka — a ukázalo se, že pozdě to bylo už tak: pruh nad
+   skutečným 2027 nevisel „až se vypíše", ale od jeho publikace 8. 10. 2026.
 3. **Majitel z našeptávače a stránka o osobních údajích** — před otevřením
    přihlášek, ne po.
 4. **Vypsat jednu zastávku 2027** a vyvěsit u ní směrnici. Obsah, ne kód,
