@@ -63,12 +63,23 @@ public class BojeSprava(
                 .FirstOrDefaultAsync(b => b.Id == nahrazuje && b.ZavodId == zavodId, ct);
             if (stara is null) return (null, "Bóje, kterou chceš přenastavit, u téhle regaty není.");
             if (stara.NahrazenaV is not null) return (null, "Tahle bóje už je přenastavená.");
+            // Sebraná bóje ve vodě není, takže se nemá co přenastavovat.
+            // Dřív se hlídalo jen nahrazení, takže šla sebraná bóje
+            // přenastavením „oživit" — vznikl by platný záznam navazující
+            // na něco, co leží na břehu (oponentura, 9. 10. 2026).
+            if (stara.SebranaV is not null)
+                return (null, "Tahle bóje je sebraná z vody. Pípni ji jako novou.");
         }
 
+        // „Za poslední" znamená za poslední **na trati**, ne za poslední,
+        // která kdy existovala. Dřív se počítalo přes všechny záznamy včetně
+        // nahrazených a sebraných, takže po sebrání poslední bóje dostala
+        // další číslo, které na trati nikomu nepatřilo, a čísla rostla
+        // s historií (oponentura, 9. 10. 2026).
         var poradi = vstup.Poradi > 0
             ? vstup.Poradi
             : stara?.Poradi ?? (await db.Boje
-                .Where(b => b.ZavodId == zavodId)
+                .Where(b => b.ZavodId == zavodId && b.NahrazenaV == null && b.SebranaV == null)
                 .MaxAsync(b => (int?)b.Poradi, ct) ?? 0) + 1;
 
         var nova = new Boje

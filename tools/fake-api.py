@@ -2085,11 +2085,16 @@ class H(BaseHTTPRequestHandler):
                 return self.chyba(400, "Bóje, kterou chceš přenastavit, u téhle regaty není.")
             if stara["nahrazenaV"] is not None:
                 return self.chyba(400, "Tahle bóje už je přenastavená.")
+            # Sebraná bóje ve vodě není — opsáno z `PipniAsync`.
+            if stara["sebrana"]:
+                return self.chyba(400, "Tahle bóje je sebraná z vody. Pípni ji jako novou.")
 
         poradi = vstup.get("poradi") or 0
         if poradi <= 0:
-            poradi = stara["poradi"] if stara else \
-                max((b["poradi"] for b in seznam), default=0) + 1
+            # „Za poslední" se počítá jen z toho, co na trati stojí.
+            poradi = stara["poradi"] if stara else max(
+                (b["poradi"] for b in seznam
+                 if b["nahrazenaV"] is None and not b["sebrana"]), default=0) + 1
 
         ted = ted_iso()
         BOJE_ID[0] += 1

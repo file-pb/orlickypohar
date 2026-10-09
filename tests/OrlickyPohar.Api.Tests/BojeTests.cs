@@ -264,6 +264,56 @@ public class BojeTests(PostgresFixture fixture)
         Assert.Single(sebrana.Fotky);
     }
 
+    /// <summary>
+    /// Sebraná bóje ve vodě není, takže se nemá co přenastavovat. Dřív
+    /// se hlídalo jen nahrazení, takže šla sebraná bóje přenastavením
+    /// „oživit" — vznikl by platný záznam navazující na něco, co leží
+    /// na břehu (oponentura, 9. 10. 2026).
+    /// </summary>
+    [Fact]
+    public async Task Sebranou_boji_nejde_prenastavit()
+    {
+        var (db, boje) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+        var (postavena, _) = await boje.PipniAsync(zavod.Id, Bod("Bóje 1"), kdo.Id, default);
+        Assert.Null(await boje.SeberAsync(zavod.Id, postavena!.Id, default));
+
+        var (nic, chyba) = await boje.PipniAsync(
+            zavod.Id, Bod("Bóje 1", nahrazuje: postavena.Id), kdo.Id, default);
+
+        Assert.Null(nic);
+        Assert.Contains("sebraná", chyba);
+        // A trať tím nezískala druhý záznam.
+        Assert.Empty(await boje.SeznamAsync(zavod.Id, iHistorie: false, default));
+    }
+
+    /// <summary>
+    /// „Za poslední" znamená za poslední <b>na trati</b>. Dřív se počítalo
+    /// přes všechny záznamy včetně sebraných, takže po sebrání poslední
+    /// bóje dostala další číslo, které na trati nikomu nepatřilo
+    /// (oponentura, 9. 10. 2026).
+    /// </summary>
+    [Fact]
+    public async Task Poradi_za_posledni_pocita_jen_to_co_stoji()
+    {
+        var (db, boje) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (prvni, _) = await boje.PipniAsync(zavod.Id, Bod("Start"), kdo.Id, default);
+        var (druha, _) = await boje.PipniAsync(zavod.Id, Bod("Bóje 1"), kdo.Id, default);
+        Assert.Equal(2, druha!.Poradi);
+
+        // Druhou sebereme: na trati zůstala jedna, takže další je druhá.
+        Assert.Null(await boje.SeberAsync(zavod.Id, druha.Id, default));
+        var (treti, _) = await boje.PipniAsync(zavod.Id, Bod("Cíl"), kdo.Id, default);
+        Assert.Equal(2, treti!.Poradi);
+
+        // Přenastavení pořadí nemění ani teď — bere ho po staré bóji.
+        var (ctvrta, _) = await boje.PipniAsync(
+            zavod.Id, Bod("Start", nahrazuje: prvni!.Id), kdo.Id, default);
+        Assert.Equal(prvni.Poradi, ctvrta!.Poradi);
+    }
+
     private static OrlickyPohar.Api.Features.Fotky.Fotka Snimek(
         Guid kdo, string popis, DateTimeOffset kdy) => new()
     {
