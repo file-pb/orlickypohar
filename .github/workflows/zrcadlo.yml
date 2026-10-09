@@ -1,0 +1,59 @@
+# Zrcadlo základních obrazů do GHCR.
+#
+# Proč vůbec: **anonymní stahování z Docker Hubu má limit na IP runneru**,
+# kterou GitHub sdílí se všemi ostatními uživateli. 9. 10. 2026 ho osmnáct
+# nasazení za den vyčerpalo a shodilo build i integrační testy naráz —
+# `429 Too Many Requests`, žádná chyba v kódu. Reruny padaly na totéž,
+# protože okno je šestihodinové.
+#
+# Co s tím tahle úloha dělá: jednou za měsíc (a na požádání) zkopíruje
+# základní obrazy do našeho GHCR a Dockerfily pak sahají tam. Běžné buildy
+# se tím Docker Hubu přestanou dotýkat úplně; limit vyčerpá leda tahle
+# úloha sama, a ta tahá čtyři obrazy měsíčně.
+#
+# **Cena toho řešení je, že kopie zastarává.** Proto ten plán: bez něj by
+# nám bezpečnostní záplaty základních obrazů tiše utíkaly. Kopíruje se
+# značka, ne otisk — každý běh tedy přinese, co je pod značkou nového.
+name: zrcadlo
+
+on:
+  schedule:
+    # První v měsíci po půlnoci UTC. Čas je schválně mimo závodní dny.
+    - cron: '17 1 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  zrcadlo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # `imagetools create` kopíruje mezi registry, aniž by se obraz
+      # rozbaloval na runneru, a zachová celý manifest (tedy i víc
+      # architektur). `docker pull && push` by z vícearchitekturního
+      # obrazu udělal jednoarchitekturní.
+      - name: Přetáhnout základní obrazy
+        run: |
+          set -euo pipefail
+          zrcadlo="ghcr.io/${GITHUB_REPOSITORY}/zrcadlo"
+          for par in \
+            "docker.io/nginxinc/nginx-unprivileged:1.30-alpine|nginx-unprivileged:1.30-alpine" \
+            "docker.io/library/postgres:17-alpine|postgres:17-alpine" \
+            "docker.io/library/node:22-alpine|node:22-alpine" \
+            "docker.io/library/python:3.13-slim|python:3.13-slim"
+          do
+            zdroj="${par%%|*}"
+            cil="$zrcadlo/${par##*|}"
+            echo "::group::$zdroj → $cil"
+            docker buildx imagetools create --tag "$cil" "$zdroj"
+            docker buildx imagetools inspect "$cil" | head -5
+            echo "::endgroup::"
+          done
