@@ -111,6 +111,15 @@ public class Boje
     public int? NahrazujeId { get; set; }
     public Boje? Nahrazuje { get; set; }
 
+    /// <summary>Jakou barvu ta bóje má. <c>null</c> znamená „neuvedeno".</summary>
+    public BarvaBoje? Barva { get; set; }
+
+    /// <summary>
+    /// Jaký má tvar. <c>null</c> znamená „neuvedeno" — na vodě se pípá
+    /// jednou rukou a barva sama nese nejvíc.
+    /// </summary>
+    public TvarBoje? Tvar { get; set; }
+
     /// <summary>
     /// Kdy ji někdo sebral z vody. Sebraná bóje zmizí z trati, ale zůstane
     /// v historii — trasa z té doby se bez ní nedá přečíst.
@@ -128,6 +137,49 @@ public class Boje
 }
 
 /// <summary>Bóje, jak ji vidí klient.</summary>
+/// <summary>
+/// Barva bóje (Filip, 9. 10. 2026). <b>Patří bóji, ne prvku:</b> je to
+/// vlastnost toho kusu plastu ve vodě, ne rozhodnutí o trati — a pak se
+/// ukáže všude, v seznamu bójí i na mapce.
+/// <para>
+/// Není to výčet znaků z vyhlášky. Ty jsou kombinace barvy a tvaru
+/// (červená válcová je pravá strana plavební dráhy, zelená kuželová
+/// levá), a bóje, které stavíme my, mají barvu, jakou zrovna máme.
+/// </para>
+/// </summary>
+public enum BarvaBoje
+{
+    Cervena = 0,
+    Zelena = 1,
+    Zluta = 2,
+    Oranzova = 3,
+    Bila = 4,
+    Modra = 5,
+}
+
+/// <summary>
+/// Tvar bóje. <b>Nepovinný schválně:</b> na vodě se pípá jednou rukou
+/// a barva sama nese nejvíc. Tvar se kreslí, jen když je vyplněný.
+/// </summary>
+public enum TvarBoje
+{
+    /// <summary>Válcová. S červenou je to pravá strana plavební dráhy.</summary>
+    Valcova = 0,
+
+    /// <summary>Kuželová. Se zelenou je to levá strana plavební dráhy.</summary>
+    Kuzelova = 1,
+
+    Kulova = 2,
+
+    /// <summary>Válec se sférickým vrškem — sportovní bóje, kterou stavíme my.</summary>
+    SferickyVrsek = 3,
+
+    /// <summary>Plovatka: tyč nad hladinou, ne těleso.</summary>
+    Plovatka = 4,
+
+    Jiny = 5,
+}
+
 public record BojeDto(
     int Id,
     string Nazev,
@@ -139,7 +191,9 @@ public record BojeDto(
     string? Postavil,
     bool Sebrana,
     IReadOnlyList<Fotky.ObrazekDto> Fotky,
-    ZdrojPolohy Zdroj = ZdrojPolohy.Telefon);
+    ZdrojPolohy Zdroj = ZdrojPolohy.Telefon,
+    BarvaBoje? Barva = null,
+    TvarBoje? Tvar = null);
 
 /// <summary>Pípnutí polohy: co posílá web i appka.</summary>
 /// <param name="Nazev">Čím bóje je — „bóje 1", „start levý".</param>
@@ -160,7 +214,9 @@ public record PipnutiVstup(
     double Delka,
     double? PresnostM,
     int? NahrazujeId,
-    ZdrojPolohy? Zdroj = null);
+    ZdrojPolohy? Zdroj = null,
+    BarvaBoje? Barva = null,
+    TvarBoje? Tvar = null);
 
 /// <summary>Pravidla pípnutí. Čisté funkce, bez databáze.</summary>
 public static class Pipnuti

@@ -30,6 +30,9 @@ namespace OrlickyPohar.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("Barva")
+                        .HasColumnType("integer");
+
                     b.Property<double>("Delka")
                         .HasColumnType("double precision");
 
@@ -61,6 +64,9 @@ namespace OrlickyPohar.Api.Migrations
 
                     b.Property<double>("Sirka")
                         .HasColumnType("double precision");
+
+                    b.Property<int?>("Tvar")
+                        .HasColumnType("integer");
 
                     b.Property<int>("ZavodId")
                         .HasColumnType("integer");

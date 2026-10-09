@@ -135,10 +135,21 @@ public record TratDto(
 /// jsou údaje o tom, kdo a jak měřil — to patří do správy.
 /// </para>
 /// </summary>
-public record VerejnaBojeDto(string Nazev, int Poradi, double Sirka, double Delka);
+public record VerejnaBojeDto(
+    string Nazev, int Poradi, double Sirka, double Delka,
+    /// <summary>
+    /// Barva a tvar jdou ven schválně: podle nich závodník bóji pozná na
+    /// vodě a mapka ji umí nakreslit tak, jak vypadá. Na rozdíl od jména
+    /// stavitele a přesnosti měření to není údaj o tom, kdo a jak měřil.
+    /// </summary>
+    BarvaBoje? Barva = null,
+    TvarBoje? Tvar = null);
 
 /// <summary>Konec prvku pro diváka: jméno a kam se pluje, nic víc.</summary>
-public record VerejnyKonecDto(string Nazev, double Sirka, double Delka);
+public record VerejnyKonecDto(
+    string Nazev, double Sirka, double Delka,
+    BarvaBoje? Barva = null,
+    TvarBoje? Tvar = null);
 
 /// <summary>
 /// Prvek trati pro diváka.

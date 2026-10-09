@@ -384,6 +384,64 @@ public class BojeTests(PostgresFixture fixture)
         Assert.Equal(prvni.Poradi, ctvrta!.Poradi);
     }
 
+    /// <summary>
+    /// <b>Barva a tvar patří bóji, ne prvku</b> (Filip, 9. 10. 2026): je to
+    /// vlastnost toho kusu plastu ve vodě. Přenastavená bóje si je proto
+    /// přebírá — je to tentýž kus, jen jinde.
+    /// </summary>
+    [Fact]
+    public async Task Prenastavena_boje_si_barvu_a_tvar_prebira()
+    {
+        var (db, boje, trate) = SluzbyITrat();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (puvodni, _) = await boje.PipniAsync(
+            zavod.Id,
+            Bod("bóje 1") with { Barva = BarvaBoje.Zelena, Tvar = TvarBoje.Kuzelova },
+            kdo.Id, default);
+        Assert.Equal(BarvaBoje.Zelena, puvodni!.Barva);
+        Assert.Equal(TvarBoje.Kuzelova, puvodni.Tvar);
+
+        // Posunutí beze změny barvy: přebírá se.
+        var (posunuta, _) = await boje.PipniAsync(
+            zavod.Id, Bod("bóje 1", nahrazuje: puvodni.Id), kdo.Id, default);
+        Assert.Equal(BarvaBoje.Zelena, posunuta!.Barva);
+        Assert.Equal(TvarBoje.Kuzelova, posunuta.Tvar);
+
+        // A když se vymění za jinou, platí nová.
+        var (jina, _) = await boje.PipniAsync(
+            zavod.Id,
+            Bod("bóje 1", nahrazuje: posunuta.Id) with { Barva = BarvaBoje.Oranzova },
+            kdo.Id, default);
+        Assert.Equal(BarvaBoje.Oranzova, jina!.Barva);
+        // Tvar se nezadal, takže se dál přebírá.
+        Assert.Equal(TvarBoje.Kuzelova, jina.Tvar);
+    }
+
+    /// <summary>
+    /// Barva jde ven i veřejně: podle ní závodník bóji pozná na vodě.
+    /// Jméno stavitele a přesnost měření ven nejdou, protože to jsou
+    /// údaje o tom, kdo a jak měřil — barva je údaj o bóji.
+    /// </summary>
+    [Fact]
+    public async Task Verejna_trat_nese_barvu_boje()
+    {
+        var (db, boje, trate) = SluzbyITrat();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        await boje.PipniAsync(
+            zavod.Id,
+            Bod("pravá strana dráhy") with { Barva = BarvaBoje.Cervena, Tvar = TvarBoje.Valcova },
+            kdo.Id, default);
+        await trate.HotovoAsync(zavod.Id, true, default);
+        await trate.PrijmiAsync(zavod.Id, kdo.Id, default);
+
+        var verejna = await trate.VerejnaAsync(zavod.Id, default);
+        var venku = Assert.Single(verejna!.Boje);
+        Assert.Equal(BarvaBoje.Cervena, venku.Barva);
+        Assert.Equal(TvarBoje.Valcova, venku.Tvar);
+    }
+
     private static OrlickyPohar.Api.Features.Fotky.Fotka Snimek(
         Guid kdo, string popis, DateTimeOffset kdy) => new()
     {
