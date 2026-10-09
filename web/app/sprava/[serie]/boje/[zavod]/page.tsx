@@ -13,6 +13,8 @@ import {
 import { nazevZastavky } from "@/lib/kalendar";
 import { MapkaTrati } from "./trat";
 import { Pipani } from "./pipani";
+import { nactiStavTrati } from "@/lib/trat";
+import { StavTrati } from "./stav-trati";
 import { nahrajFotkuAkce, odeberFotkuAkce, seberAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
@@ -47,9 +49,10 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
 
   // Název regaty v odpovědi o bójích není, a bez něj nadpis neřekne, čí
   // trať se zrovna staví (Filip, 9. 10. 2026).
-  const [{ stav, trat, byvale }, nazev] = await Promise.all([
+  const [{ stav, trat, byvale }, nazev, stavTrati] = await Promise.all([
     nactiTrat(serie, zavod),
     nazevZastavky(serie, zavod),
+    nactiStavTrati(serie, zavod),
   ]);
   if (stav === "neni") notFound();
 
@@ -85,6 +88,28 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
           Fotka je u bóje. Uložila se přepočtená na web, originál nikam.
         </p>
       )}
+      {zpravy.stav === "trat-hotovo" && (
+        <p className="hlaska" role="status">
+          Hotovo je nahlášené. Teď je řada na rozhodčím — veřejná bude trať, až ji přijme.
+        </p>
+      )}
+      {zpravy.stav === "trat-prijeti" && (
+        <p className="hlaska" role="status">
+          Trať je přijatá, zamčená a veřejná. Pípnout ani sebrat bóji už nejde;
+          na úpravu ji odemkni přestavbou.
+        </p>
+      )}
+      {zpravy.stav === "trat-vraceni" && (
+        <p className="hlaska" role="status">
+          Trať je zpátky u stavitelů i s důvodem. Veřejně se neukazuje.
+        </p>
+      )}
+      {zpravy.stav === "trat-prestavba" && (
+        <p className="hlaska" role="status">
+          Trať je odemčená. Veřejně teď stojí, že se přestavuje — stará se už
+          neukazuje, aby podle ní nikdo neplul.
+        </p>
+      )}
       {zpravy.stav === "fotkaPryc" && (
         <p className="hlaska" role="status">
           Fotka je pryč i ze souborů. Poloha a čas u bóje zůstaly.
@@ -103,14 +128,23 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
         <Vypadek />
       ) : (
         <>
-          <Pipani
-            serie={serie}
-            zavod={zavod}
-            prenastavuje={
-              prenastavovana ? { id: prenastavovana.id, nazev: prenastavovana.nazev } : null
-            }
-            nejvicZnaku={NAZEV_NEJVIC}
-          />
+          {stavTrati.stav === "ok" && stavTrati.trat && (
+            <StavTrati serie={serie} zavod={zavod} trat={stavTrati.trat} />
+          )}
+
+          {/* U zamčené trati se formulář neukazuje vůbec. API pípnutí
+              odmítne, ale dozvědět se to až z chyby je na vodě o dvě
+              klepnutí a jednu nadávku navíc — důvod stojí v panelu výš. */}
+          {stavTrati.trat?.stav !== "Prijato" && (
+            <Pipani
+              serie={serie}
+              zavod={zavod}
+              prenastavuje={
+                prenastavovana ? { id: prenastavovana.id, nazev: prenastavovana.nazev } : null
+              }
+              nejvicZnaku={NAZEV_NEJVIC}
+            />
+          )}
 
           <h2>Co stojí na trati</h2>
           <MapkaTrati boje={trat} />
@@ -123,7 +157,12 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
             <ul className="seznam">
               {trat.map((b) => (
                 <li key={b.id}>
-                  <NaTrati boje={b} serie={serie} zavod={zavod} />
+                  <NaTrati
+                    boje={b}
+                    serie={serie}
+                    zavod={zavod}
+                    zamceno={stavTrati.trat?.stav === "Prijato"}
+                  />
                 </li>
               ))}
             </ul>
@@ -185,17 +224,33 @@ const souradnice = (b: Boje) => `${b.sirka.toFixed(5)}, ${b.delka.toFixed(5)}`;
  * <b>Přenastavení jde přes adresu</b> (`?prenastav=`), ne přes stav
  * v prohlížeči — seznam tím zůstane serverový a odkaz se dá poslat.
  */
-function NaTrati({ boje, serie, zavod }: { boje: Boje; serie: string; zavod: string }) {
+function NaTrati({
+  boje,
+  serie,
+  zavod,
+  zamceno,
+}: {
+  boje: Boje;
+  serie: string;
+  zavod: string;
+  zamceno: boolean;
+}) {
   return (
     <>
       <span className="stitek">{boje.poradi}.</span> <span>{boje.nazev}</span>
       <Puvod boje={boje} />
 
       <p className="poznamka">
-        <Link href={`/sprava/${serie}/boje/${zavod}?prenastav=${boje.id}`}>
-          Přenastavit
-        </Link>{" "}
-        ·{" "}
+        {/* Přenastavení u zamčené trati mizí taky: vede na formulář
+            pípnutí, který tam v tu chvíli není. */}
+        {!zamceno && (
+          <>
+            <Link href={`/sprava/${serie}/boje/${zavod}?prenastav=${boje.id}`}>
+              Přenastavit
+            </Link>{" "}
+            ·{" "}
+          </>
+        )}
         {/* Kde přesně ta jedna bóje leží. Mapu web nevkládá, odkazuje na ni —
             stejné pravidlo jako u medailonku pořadatele. */}
         <a
@@ -240,13 +295,18 @@ function NaTrati({ boje, serie, zavod }: { boje: Boje; serie: string; zavod: str
         <button type="submit">Nahrát fotku</button>
       </form>
 
-      {/* Sebrání nepotřebuje polohu, takže ani javascript. */}
-      <form action={seberAkce} className="formular">
-        <input type="hidden" name="serie" value={serie} />
-        <input type="hidden" name="zavod" value={zavod} />
-        <input type="hidden" name="boje" value={boje.id} />
-        <button type="submit">Sebrat z vody</button>
-      </form>
+      {/* Sebrání nepotřebuje polohu, takže ani javascript. U zamčené trati
+          mizí ze stejného důvodu jako pípnutí: API by ho odmítlo a člověk by
+          se to dozvěděl až z chyby. Fotka zůstává — je to doklad k poloze,
+          ne změna trati. */}
+      {!zamceno && (
+        <form action={seberAkce} className="formular">
+          <input type="hidden" name="serie" value={serie} />
+          <input type="hidden" name="zavod" value={zavod} />
+          <input type="hidden" name="boje" value={boje.id} />
+          <button type="submit">Sebrat z vody</button>
+        </form>
+      )}
     </>
   );
 }

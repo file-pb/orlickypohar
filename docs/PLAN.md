@@ -1876,8 +1876,11 @@ s důvodem**, ne povolením. První takový zápis je právě veřejná trať.
 #### Stavy trati (Filip, 9. 10. 2026)
 
 **Postavené 9. 10. 2026** — entita `Trat`, stavy, pravidla a endpointy pod
-`/sprava/serie/{serie}/zastavky/{zavod}/trat`. Veřejná cesta zatím není; to je
-další krok a patří k němu výjimka v `OchranaCteniTests` i s důvodem.
+`/sprava/serie/{serie}/zastavky/{zavod}/trat`, veřejná cesta
+`GET /serie/{serie}/zavody/{zavod}/trat` i **obrazovka ve správě**: panel
+stavu stojí nad pípnutím, protože rozhoduje, jestli se vůbec smí pípat,
+a u zamčené trati se formulář pípnutí neukazuje vůbec. Dozvědět se o zámku
+až z chyby API je na vodě o dvě klepnutí navíc.
 
 | Stav | Co znamená | Kdo do něj pustí |
 |---|---|---|
