@@ -4066,6 +4066,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/trat/seznam": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tratě regaty na výběr
+         * @description Organizátor regaty, nebo rozhodčí ročníku. Od nejnovější. `jdePriradit` říká, jestli je trať volná — volná se přiřadí, obsazená naklonuje.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TratNaVyberDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/trat/{trat}/rozjizdka": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Přiřadí volnou trať rozjížďce
+         * @description Organizátor regaty, nebo rozhodčí ročníku. Obvyklý postup: nejdřív se staví trať, pak se na ni založí rozjížďka. Trať, která už rozjížďce patří, se přiřadit nedá — ta se klonuje.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    trat: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PriradTratVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TratDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/trat/{trat}/klon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Naklonuje trať pro další rozjížďku
+         * @description Organizátor regaty, nebo rozhodčí ročníku. Kopíruje prvky na tytéž bóje — žádná nová pípnutí. Výchozí stav klonu je `Hotovo`; `Prijato` smí zvolit jen rozhodčí.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    trat: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["KlonTratiVstup"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TratDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/zastavky/{zavod}/trat/prestavba": {
         parameters: {
             query?: never;
@@ -4395,6 +4531,11 @@ export interface components {
             nazev: string;
             /** Format: int32 */
             poradi: number;
+        };
+        KlonTratiVstup: {
+            /** Format: int32 */
+            rozjizdka: null | number;
+            stav: null | components["schemas"]["StavTrati"];
         };
         KodDto: {
             kod: string;
@@ -4821,6 +4962,10 @@ export interface components {
             /** Format: date-time */
             vzniklaV: string;
         };
+        PriradTratVstup: {
+            /** Format: int32 */
+            rozjizdka: number;
+        };
         PrvekDto: {
             /** Format: int32 */
             id: number;
@@ -5056,11 +5201,26 @@ export interface components {
             /** Format: int32 */
             rozjizdkaId: null | number;
             /** Format: int32 */
+            cisloRozjizdky: null | number;
+            /** Format: int32 */
             nahrazujeId: null | number;
             odjeta: boolean;
             smiHlasitHotovo: boolean;
             smiPrijmout: boolean;
             smiPrestavet: boolean;
+        };
+        TratNaVyberDto: {
+            /** Format: int32 */
+            id: number;
+            stav: components["schemas"]["StavTrati"];
+            /** Format: int32 */
+            cisloRozjizdky: null | number;
+            /** Format: date-time */
+            prijatoV: null | string;
+            /** Format: int32 */
+            pocetPrvku: number;
+            odjeta: boolean;
+            jdePriradit: boolean;
         };
         /** @enum {unknown} */
         TypPrvku: "Znacka" | "Brana" | "Odskok" | "CaraStart" | "CaraCil";
@@ -5143,6 +5303,8 @@ export interface components {
             prestavba: boolean;
             /** Format: date-time */
             prijatoV: null | string;
+            /** Format: int32 */
+            cisloRozjizdky: null | number;
             boje: components["schemas"]["VerejnaBojeDto"][];
             prvky: components["schemas"]["VerejnyPrvekDto"][];
         };

@@ -54,6 +54,16 @@ export default async function VerejnaTratStranka({ params }: Parametry) {
       <h1>Trať</h1>
       <p className="podtitulek">
         {zavod.nazev} · {datum(zavod.datum, zavod.datumKonce)}
+        {/* Ke které rozjížďce trať patří (plán, *Trať je veřejná*, past 2).
+            U vícerozjížďkové regaty má každá jinou — bez tohohle si lidi
+            stáhnou GPX od té včerejší. U regaty s jednou tratí to číslo
+            není a věta by jen překážela. */}
+        {trat?.cisloRozjizdky != null && (
+          <>
+            {" · "}
+            <b>{trat.cisloRozjizdky}. rozjížďka</b>
+          </>
+        )}
       </p>
 
       {trat === null ? (
