@@ -45,7 +45,8 @@ public class BojeTests(PostgresFixture fixture)
         // by bez veřejné adresy vydal null. Test má měřit projekci, ne to,
         // jestli má běh nakonfigurované R2.
         return (db, new BojeSprava(
-            db, TimeProvider.System, new VerejneUloziste(), NullLogger<BojeSprava>.Instance));
+            db, TimeProvider.System, new VerejneUloziste(), new TratSprava(db, TimeProvider.System),
+            NullLogger<BojeSprava>.Instance));
     }
 
     private static async Task<(Zavod Zavod, Uzivatel Kdo)> RegataAsync(AppDbContext db)

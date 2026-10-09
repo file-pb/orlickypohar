@@ -35,6 +35,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<PripojovaciKod> PripojovaciKody => Set<PripojovaciKod>();
     public DbSet<NarokNaLod> Naroky => Set<NarokNaLod>();
     public DbSet<Features.Boje.Boje> Boje => Set<Features.Boje.Boje>();
+    public DbSet<Features.Boje.Trat> Trate => Set<Features.Boje.Trat>();
     public DbSet<MereniNadrze> MereniNadrze => Set<MereniNadrze>();
     public DbSet<PrevzatyClanek> PrevzateClanky => Set<PrevzatyClanek>();
     public DbSet<TeplotaHladiny> TeplotyHladiny => Set<TeplotaHladiny>();
@@ -204,6 +205,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         boje.HasOne(x => x.Nahrazuje).WithMany().HasForeignKey(x => x.NahrazujeId)
             .OnDelete(DeleteBehavior.SetNull);
         boje.Ignore(x => x.Platna);
+
+        var trat = b.Entity<Features.Boje.Trat>();
+        trat.Property(x => x.DuvodVraceni).HasMaxLength(Features.Boje.Stavba.DuvodNejvic);
+        // Stav trati se čte při každém otevření správy bójí.
+        trat.HasIndex(x => new { x.ZavodId, x.Stav });
+        trat.HasOne(x => x.Zavod).WithMany().HasForeignKey(x => x.ZavodId)
+            .OnDelete(DeleteBehavior.Cascade);
+        trat.HasOne(x => x.Rozjizdka).WithMany().HasForeignKey(x => x.RozjizdkaId)
+            .OnDelete(DeleteBehavior.SetNull);
+        // Řetěz přestaveb: nová trať ukazuje na tu, kterou nahradila.
+        trat.HasOne(x => x.Nahrazuje).WithMany().HasForeignKey(x => x.NahrazujeId)
+            .OnDelete(DeleteBehavior.SetNull);
+        trat.HasOne(x => x.Prijal).WithMany().HasForeignKey(x => x.PrijalId)
+            .OnDelete(DeleteBehavior.SetNull);
+        trat.Ignore(x => x.Zamcena);
 
         var nadrz = b.Entity<MereniNadrze>();
         nadrz.ToTable("MereniNadrze");

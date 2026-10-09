@@ -92,6 +92,7 @@ try
     builder.Services.AddScoped<KapitanstviSprava>();
     // Bóje na trati: pípnutí polohy pořadatelem z webu i z appky.
     builder.Services.AddScoped<BojeSprava>();
+    builder.Services.AddScoped<TratSprava>();
     if (builder.Configuration.GetValue<bool>("Prevzate:Sber"))
         builder.Services.AddHostedService<SberPrevzatych>();
     // Kontakty kapitánů se drží do konce následující sezóny, pak se mažou.
@@ -208,6 +209,7 @@ try
         app.MapKody();
         app.MapKapitanstvi();
         app.MapBoje();
+        app.MapTrat();
         app.MapSpravaPoradatelu();
         app.MapNaklady();
     }

@@ -13,7 +13,8 @@ namespace OrlickyPohar.Api.Features.Boje;
 /// </para>
 /// </summary>
 public class BojeSprava(
-    AppDbContext db, TimeProvider cas, Fotky.IUloziste uloziste, ILogger<BojeSprava> log)
+    AppDbContext db, TimeProvider cas, Fotky.IUloziste uloziste, TratSprava trate,
+    ILogger<BojeSprava> log)
 {
     /// <summary>Bóje regaty. Platné podle pořadí, historie až za nimi.</summary>
     public async Task<List<BojeDto>> SeznamAsync(int zavodId, bool iHistorie, CancellationToken ct)
@@ -53,6 +54,14 @@ public class BojeSprava(
         int zavodId, PipnutiVstup vstup, Guid kdo, CancellationToken ct)
     {
         if (Pipnuti.ProcNejde(vstup) is { } chyba) return (null, chyba);
+        // Do trati, kterou rozhodčí přijal, se nesahá. Bez téhle kontroly by
+        // „zamčeno" byl jen nápis a veřejně vydaná trať by se dala tiše změnit
+        // pod lodí, která podle ní pluje.
+        if (await trate.ProcNejdeStavetAsync(zavodId, ct) is { } zamceno) return (null, zamceno);
+
+        // Stavba začíná první bójí, ne zvláštním knoflíkem, který by nikdo
+        // nestiskl.
+        await trate.ZalozPokudChybiAsync(zavodId, ct);
 
         var ted = cas.GetUtcNow();
         Boje? stara = null;
@@ -114,6 +123,8 @@ public class BojeSprava(
     /// <summary>Označí bóji za sebranou. Ze zápisu nemizí.</summary>
     public async Task<string?> SeberAsync(int zavodId, int bojeId, CancellationToken ct)
     {
+        if (await trate.ProcNejdeStavetAsync(zavodId, ct) is { } zamceno) return zamceno;
+
         var boje = await db.Boje.FirstOrDefaultAsync(b => b.Id == bojeId && b.ZavodId == zavodId, ct);
         if (boje is null) return "Taková bóje u téhle regaty není.";
         if (boje.SebranaV is not null) return null;
