@@ -76,6 +76,14 @@ public class Fotka
 /// <param name="Id">
 /// Id fotky. Klient ho potřebuje, aby šlo odebrat <b>jednu konkrétní</b>
 /// z několika u bóje; u vlastníků s jediným obrázkem k ničemu není.
+/// <para>
+/// <b>Bez výchozí hodnoty, a je to podmínka, ne styl.</b> `Guid Id = default`
+/// shodí generování OpenAPI dokumentu pětistovkou: exportér schématu zapisuje
+/// výchozí hodnoty do dokumentu a `default(Guid)` na tom padá
+/// (`JsonException: The JSON value could not be converted to System.Guid`,
+/// produkce 9. 10. 2026). Klient se generuje právě z toho dokumentu, takže
+/// by se tím rozbilo i generování typů pro web a appku.
+/// </para>
 /// </param>
 public record ObrazekDto(
     string Nahled,
@@ -84,7 +92,7 @@ public record ObrazekDto(
     int Vyska,
     string Autor,
     string? Popis,
-    Guid Id = default);
+    Guid Id);
 
 /// <summary>
 /// Pravidla nahrávání. Čisté funkce, bez databáze a bez úložiště.

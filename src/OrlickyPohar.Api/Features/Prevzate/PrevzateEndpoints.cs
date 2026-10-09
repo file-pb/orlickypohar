@@ -85,5 +85,5 @@ public static class PrevzateEndpoints
             : new ObrazekDto(
                 Nahravani.Adresa(verejnaAdresa, PrevzateFotky.Klic(fotka, Nahravani.SirkaNahledu)),
                 Nahravani.Adresa(verejnaAdresa, PrevzateFotky.Klic(fotka, Nahravani.SirkaVelke)),
-                sirka ?? 0, vyska ?? 0, zdroj, null);
+                sirka ?? 0, vyska ?? 0, zdroj, null, fotka);
 }
