@@ -4264,11 +4264,15 @@ Nemusí z toho být mechanismus — stačí ruční dump před nasazením.
 databáze a tajemství; fotky a vyvěšené směrnice v R2 ne. Jsou to jediná data
 projektu bez záloh.
 
-**Zelené nasazení, které nic nenasadilo.** Krok `Deploy` i krok `Ověřit, co
-doopravdy běží` jsou podmíněné `vars.DEPLOY_WEBHOOK != ''`
-(`.github/workflows/build-deploy.yml`). Prázdná proměnná dá úspěšný běh,
-nedotčenou produkci a nulovou stopu — nejhorší možný tvar poruchy, protože
-ochrana ze 6. 10. právě na tohle mlčí.
+~~**Zelené nasazení, které nic nenasadilo.**~~ **Opraveno 9. 10. 2026.** Krok
+`Deploy` i krok `Ověřit, co doopravdy běží` byly podmíněné
+`vars.DEPLOY_WEBHOOK != ''`, takže prázdná proměnná dávala úspěšný běh,
+nedotčenou produkci a nulovou stopu. Ochrana ze 6. 10. na to mlčí právem —
+hlídá, *co* se nasazuje, ne *jestli* se nasazuje.
+
+Úloha `nasazeni` teď začíná krokem **Je kam nasadit**, který při prázdné
+proměnné skončí chybou dřív, než se vůbec přečte produkce; obě podmínky na
+prázdnou proměnnou zmizely, protože to byly ony, kdo tu poruchu vyráběl.
 
 **Pro den závodu neexistuje postup.** Co udělat, když web leží, v jakém pořadí
 a co se nesmí — hlavně to, že nasadit starší commit úloha odmítne a `obnova`
@@ -4400,8 +4404,8 @@ To nejsou mezery, to jsou rozhodnutí.
    majitele z našeptávače, ani chybějící stránka o osobních údajích. Původní
    pořadí si odporovalo samo: bod o přihláškách u sebe měl „před otevřením
    přihlášek, ne po" a stál za vypsáním.
-5. **Zelené nasazení bez nasazení** a **postup pro den závodu** včetně dumpu
-   před migrací.
+5. ~~**Zelené nasazení bez nasazení**~~ **hotovo 9. 10. 2026.** Zbývá
+   **postup pro den závodu** včetně dumpu před migrací.
 6. **Hláška u konfliktu** a doplnění mocku tam, kde brání zkoušce.
 
 Appka, upozornění a tracker až potom: jsou to největší kusy, ale na první závod

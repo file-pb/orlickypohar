@@ -241,6 +241,23 @@ jobs:
           # potomkem toho nasazovaného, tedy novější.
           fetch-depth: 0
 
+      # Prázdná `DEPLOY_WEBHOOK` dávala **zelený běh, nedotčenou produkci
+      # a nulovou stopu** (audit 8. 10. 2026). Byl to nejhorší možný tvar
+      # poruchy: ochrana proti návratu do minulosti ze 6. 10. 2026 na něj
+      # mlčí, protože ta hlídá, *co* se nasazuje, ne *jestli* se nasazuje.
+      #
+      # Stojí to první, ještě než se čte produkce: job, který nemá kam
+      # nasadit, nemá co dělat ani kontroly.
+      - name: Je kam nasadit
+        run: |
+          if [ -z "${{ vars.DEPLOY_WEBHOOK }}" ]; then
+            echo "::error::Proměnná DEPLOY_WEBHOOK je prázdná, takže se nemá kam nasadit."
+            echo "Dokud chybí, byl by běh zelený a produkce by se nehnula."
+            echo "Doplň ji v nastavení repozitáře (Settings → Secrets and variables → Actions → Variables)."
+            exit 1
+          fi
+          echo "DEPLOY_WEBHOOK je nastavená."
+
       # Co na produkci běží teď. Tenhle krok sám nepadá (`|| true`), protože
       # rozhodnutí patří kroku „Nevracet produkci do minulosti" pod ním:
       # nečitelná verze nasazení **zastaví** a cesta ven je ruční spuštění
@@ -309,7 +326,7 @@ jobs:
       # `X-Deploy-Obnova` posílá výslovné vrácení na starší build dál, aby
       # ho server neodmítl: tady už je rozhodnuté, že se tak stát má.
       - name: Deploy
-        if: ${{ steps.kontrola.outputs.nasadit == 'ano' && vars.DEPLOY_WEBHOOK != '' }}
+        if: ${{ steps.kontrola.outputs.nasadit == 'ano' }}
         run: |
           poradi=$(git log -1 --format=%ct "${{ github.sha }}")
           echo "Posílám ${{ github.sha }}, čas commitu $poradi."
@@ -328,7 +345,7 @@ jobs:
       # výsledek končí chybou, i po obnově: zelená nad službou, o které
       # nevíme, co na ní běží, je falešná jistota.
       - name: Ověřit, co doopravdy běží
-        if: ${{ steps.kontrola.outputs.nasadit == 'ano' && vars.DEPLOY_WEBHOOK != '' }}
+        if: ${{ steps.kontrola.outputs.nasadit == 'ano' }}
         run: |
           ocekavano='${{ github.sha }}'
           chyba=0
