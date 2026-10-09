@@ -758,6 +758,16 @@ header.hlavicka .jen-uzke { display: none; }
 .hlaska button.maly:hover { border-color: var(--voda); color: var(--voda); }
 .hlaska.hotovo { border-left-color: var(--stav-vypsany); }
 
+/* Cesta do správy z veřejné stránky. Čárkovaně jako `.prazdno`, protože to
+   není část té stránky — je to rámeček, který vidí jen ten, kdo tu má roli,
+   a nemá se plést s obsahem pro čtenáře. */
+.do-spravy {
+  border: 1px dashed var(--linka); border-radius: 10px;
+  background: var(--papir); color: var(--tlumeny);
+  padding: 0.7rem 0.9rem; margin: 0 0 1.5rem; font-size: 0.9rem;
+}
+.do-spravy b { color: var(--text); }
+
 .udeleni {
   display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end;
   background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
@@ -1739,6 +1749,9 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 .kalendar-uvod .prepinac-kalendare { width: fit-content; }
 /* Kotva po přepnutí: nadpis nesmí zajet pod ukotvenou hlavičku. */
 #kalendar { scroll-margin-top: 6rem; }
+/* Totéž pro kartu regaty na rozcestníku ročníku, na kterou míří drobečky
+   z obrazovek té regaty (`drobekRegaty`). */
+.seznam > li[id] { scroll-margin-top: 6rem; }
 /* Akce mezi koly ve „Vše". Čárkovaně, ať se nesplete se štítkem stavu. */
 .stitek.stitek-akce { border-style: dashed; }
 

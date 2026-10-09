@@ -142,6 +142,30 @@ Tyhle věci není potřeba objevovat znovu — je potřeba změřit, **jak moc v
 Prokázaná chyba z auditu je podklad pro opravu **i když ji zkouška mine.** Malá
 zkouška není důkaz, že nevadí — jen ji nepotkala.
 
+## Co našlo první sezení (9. 10. 2026)
+
+První nález je od Filipa při vlastním průchodu, ne z auditu — a je to
+blokátor podle pravidla *Kdy je toho dost*, takže šel do oprav hned.
+
+| Zjištění | Oprava |
+|---|---|
+| ~~**Do editace bójí nejde vlézt z kalendáře ani z detailu zastávky.** Odkaz na bóje byl jen na rozcestníku ročníku; kalendář si svůj výpis odkazů u regaty skládal ručně (přihlášky, výsledky, směrnice) a o bójích nevěděl~~ | **hotovo 9. 10. 2026** — kalendář bere výpis z `polozkyZastavky` (`web/lib/co-smim.ts`), tedy z téhož zdroje jako rozcestník. Přibyly bóje a zmizely odkazy na regaty, ke kterým ten člověk práva nemá |
+| ~~**Cesta nahoře neodpovídá tomu, jak se chodí.** U ročníku *Domů » Ročník » Správa*, kde „Ročník" mířil na **veřejnou** stránku, takže krok nahoru vedl ze správy ven; u bójí a směrnic *Domů » Kalendář » Bóje*, ačkoliv se na ně chodí z rozcestníku ročníku~~ | **hotovo 9. 10. 2026** — jeden tvar *Domů » Správa » Ročník » {regata} » {obrazovka}*, skládá ho `drobeckySpravy` (`web/app/drobecky.tsx`). Pravidlo i tabulka cest jsou v `docs/PLAN.md`, *Jak se chodí po správě* |
+| ~~**Z veřejné stránky regaty nevedlo do správy nic.** Pořadatel na ní stojí (dívá se na výsledky jako divák) a do své práce se musel vracet přes nabídku účtu a rozcestník~~ | **hotovo 9. 10. 2026** — rámeček s odkazy na tu regatu pro toho, kdo na ni má práva, a na stránce ročníku odkaz na rozcestník. Mikrocache požadavek s cookie sezení nekešuje, takže se rámeček nemůže dostat k někomu jinému |
+| ~~**Obrazovka bójí neřekla, čí trať se staví.** Nadpis „Bóje na trati" a nic víc — API o bójích název regaty nevydává~~ | **hotovo 9. 10. 2026** — název se bere z kalendáře (`nazevZastavky`), který smí číst každý, kdo se na bóje dostane; totéž u směrnic. Výpadek toho čtení obrazovku neshodí, jen zůstane bez názvu |
+
+**Dvě nepravdy v mocku**, které by tohle sezení měřilo místo aplikace
+(nalezeno při ověřování téhle opravy, opraveno 9. 10. 2026):
+
+- **Kalendář mock nepouštěl pořadateli vůbec** (chtěl rozhodčího na celý
+  ročník), kdežto `KalendarEndpoints.PohledAsync` pouští i pořadatele
+  jediné zastávky a jen schová tlačítka. Pořadatel by v C* kalendář
+  neotevřel a vypadalo by to jako chybějící právo.
+- **Řádek kalendáře nabízel tlačítka a medailonek bez ohledu na roli.**
+  Server je filtruje (`Kalendar.KdoSmi`, `SmiKalendar || organizator`),
+  takže mock ukazoval pořadateli cizí regaty jako jeho vlastní. Teď se
+  u každého řádku ptá na *tu* zastávku.
+
 ## Role, se kterými se zkouší
 
 Role se udělují na `/sprava/{ročník}/opravneni`. Pro zkoušku je potřeba

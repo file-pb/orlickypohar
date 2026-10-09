@@ -112,6 +112,12 @@ export type Polozka = {
   kam: string;
   /** Role, ze které právo plyne — kvůli „co mám pod jakou rolí". */
   role: Role;
+  /**
+   * Nápis do řádku, kde se položky vypisují za sebou — v kalendáři jich
+   * je u každé regaty pět a „Plachetní směrnice" by řádek zlomilo. Nese
+   * ho jen to, co se takhle vypisuje; jinde se bere `nazev`.
+   */
+  kratky?: string;
 };
 
 /**
@@ -216,6 +222,7 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
     [
       {
         nazev: "Výsledky",
+        kratky: "výsledky",
         popis: "Rozjížďky, zápis z cíle, oprava.",
         kam: kam("/vysledky"),
         role: "Organizator",
@@ -223,6 +230,7 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
       },
       {
         nazev: "Výsledky",
+        kratky: "výsledky",
         popis: "Ověřit rozjížďky, vrátit k revizi a pustit ven.",
         kam: kam("/vysledky"),
         role: "Rozhodci",
@@ -232,6 +240,7 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
     [
       {
         nazev: "Přihlášky",
+        kratky: "přihlášky",
         popis: "Kdo přijel, pozdě příchozí loď, startovné.",
         kam: kam("/prihlasky"),
         role: "Organizator",
@@ -239,6 +248,7 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
       },
       {
         nazev: "Přihlášky",
+        kratky: "přihlášky",
         popis: "Kdo přijel a koho vyloučit ze závodu.",
         kam: kam("/prihlasky"),
         role: "Rozhodci",
@@ -248,6 +258,7 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
     [
       {
         nazev: "Plachetní směrnice",
+        kratky: "směrnice",
         popis: "Vyvěsit PDF, stáhnout odvolanou verzi.",
         kam: kam("/smernice"),
         role: "Organizator",
@@ -255,6 +266,7 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
       },
       {
         nazev: "Plachetní směrnice",
+        kratky: "směrnice",
         popis: "Vyvěsit PDF, stáhnout odvolanou verzi.",
         kam: kam("/smernice"),
         role: "Rozhodci",
@@ -266,6 +278,7 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
     [
       {
         nazev: "Bóje na trati",
+        kratky: "bóje",
         popis: "Pípnout polohu bóje, přenastavit, sebrat z vody.",
         kam: kam("/boje"),
         role: "Organizator",
@@ -273,6 +286,7 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
       },
       {
         nazev: "Bóje na trati",
+        kratky: "bóje",
         popis: "Pípnout polohu bóje, přenastavit, sebrat z vody.",
         kam: kam("/boje"),
         role: "Rozhodci",

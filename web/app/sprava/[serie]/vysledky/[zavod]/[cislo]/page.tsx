@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Drobecky } from "@/app/drobecky";
+import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { NEJVIC_MB } from "@/lib/fotky";
 import {
@@ -61,13 +61,11 @@ export default async function ZapisRozjizdky({ params, searchParams }: Parametry
   const hlava = (
     <>
       <Drobecky
-        cesta={[
-          { text: "Domů", kam: "/" },
-          { text: "Ročník", kam: `/serie/${serie}` },
-          { text: "Výsledky", kam: `/sprava/${serie}/vysledky` },
-          { text: "Regata", kam: `/sprava/${serie}/vysledky/${zavod}` },
+        cesta={drobeckySpravy(serie, [
+          drobekRegaty(serie, zavod),
+          { text: "Výsledky", kam: `/sprava/${serie}/vysledky/${zavod}` },
           { text: `${cisloRozjizdky}. rozjížďka` },
-        ]}
+        ])}
       />
       <h1>{cisloRozjizdky}. rozjížďka</h1>
     </>
@@ -110,13 +108,11 @@ export default async function ZapisRozjizdky({ params, searchParams }: Parametry
   return (
     <>
       <Drobecky
-        cesta={[
-          { text: "Domů", kam: "/" },
-          { text: "Ročník", kam: `/serie/${serie}` },
-          { text: "Výsledky", kam: `/sprava/${serie}/vysledky` },
-          { text: zapis.zavodNazev, kam: `/sprava/${serie}/vysledky/${zavod}` },
+        cesta={drobeckySpravy(serie, [
+          drobekRegaty(serie, zavod, zapis.zavodNazev),
+          { text: "Výsledky", kam: `/sprava/${serie}/vysledky/${zavod}` },
           { text: `${zapis.cislo}. rozjížďka` },
-        ]}
+        ])}
       />
       <h1>{zapis.cislo}. rozjížďka</h1>
       <p className="podtitulek">

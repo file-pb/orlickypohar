@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Drobecky } from "@/app/drobecky";
+import { Drobecky, drobeckySpravy } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { datum } from "@/app/datum";
 import { nactiPoradatele, souradniceTextem } from "@/lib/poradatele";
@@ -49,12 +49,12 @@ export default async function SpravaPoradatele({ params, searchParams }: Paramet
   const hlava = (
     <>
       <Drobecky
-        cesta={[
-          { text: "Domů", kam: "/" },
-          { text: "Ročník", kam: `/serie/${serie}` },
+        cesta={drobeckySpravy(serie, [
+          // Na medailonek se chodí z kalendáře — rozcestník na pořadatele
+          // odkaz nemá, protože medailonek patří klubu, ne regatě.
           { text: "Kalendář", kam: `/sprava/${serie}/kalendar` },
           { text: detail?.poradatel.nazev ?? "Pořadatel" },
-        ]}
+        ])}
       />
       <h1>Pořadatel — správa</h1>
     </>

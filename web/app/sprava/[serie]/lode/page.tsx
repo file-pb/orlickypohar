@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Drobecky } from "@/app/drobecky";
+import { Drobecky, drobeckySpravy } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { okamzik } from "@/app/datum";
 import { NAZEV_ROLE } from "@/lib/pripojeni";
@@ -56,13 +56,7 @@ export default async function LodeRocniku({ params, searchParams }: Parametry) {
 
   const hlava = (
     <>
-      <Drobecky
-        cesta={[
-          { text: "Domů", kam: "/" },
-          { text: "Ročník", kam: `/serie/${serie}` },
-          { text: "Lodě" },
-        ]}
-      />
+      <Drobecky cesta={drobeckySpravy(serie, [{ text: "Lodě" }])} />
       <h1>Lodě ročníku</h1>
     </>
   );

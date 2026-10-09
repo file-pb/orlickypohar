@@ -45,7 +45,8 @@ export default function Napoveda() {
             <a href="#posadka">připojit posádku</a>
           </li>
           <li>
-            <b>Pro pořadatele:</b> <a href="#po-sobe">v jakém pořadí</a> ·{" "}
+            <b>Pro pořadatele:</b> <a href="#kde-to-je">kde se co najde</a> ·{" "}
+            <a href="#po-sobe">v jakém pořadí</a> ·{" "}
             <a href="#vypsat-regatu">vypsat regatu</a> ·{" "}
             <a href="#prihlasky">přihlášky</a> · <a href="#smernice">směrnice</a> ·{" "}
             <a href="#boje">bóje</a> · <a href="#vysledky">výsledky</a> ·{" "}
@@ -116,6 +117,32 @@ export default function Napoveda() {
       <p className="poznamka">
         Role posádky se z webu nemění. Kdo má být kapitán, řekne{" "}
         <a href="#role">správci ročníku</a>.
+      </p>
+
+      <h2 id="kde-to-je">Kde se co ve správě najde</h2>
+      <p>
+        <b>Jedny dveře:</b> ikonka účtu vpravo nahoře a v ní <i>Správa</i>.
+        Kdo má roli v jediném ročníku, jde rovnou do něj.
+      </p>
+      <p>
+        <b>Rozcestník ročníku je hlavní místo.</b> Nahoře stojí <i>Co teď</i>
+        — co čeká zrovna dneska. Pod tím je <b>karta každé regaty</b> a na ní
+        pohromadě všechno, co se k jedné regatě dělá: výsledky, přihlášky,
+        plachetní směrnice a bóje na trati. Teprve pod regatami jsou věci
+        celého ročníku: kalendář a termíny, lodě a kapitáni, novinky,
+        oprávnění.
+      </p>
+      <p>
+        <b>Jde to i z veřejné stránky regaty.</b> Komu na ni role stačí, uvidí
+        tam rámeček s odkazy do správy té regaty — nemusí se vracet přes
+        nabídku účtu. Odkazy na práci u regaty jsou i v kalendáři, u jejího
+        řádku.
+      </p>
+      <p className="poznamka">
+        <b>Cesta nahoře ukazuje, kde jsi:</b> Domů » Správa » Ročník »
+        {" "}<i>regata</i> » obrazovka. Klepnutím na jméno regaty se vrátíš na
+        její kartu na rozcestníku, ne na kalendář — kalendář je o termínech
+        a stavech.
       </p>
 
       <h2 id="po-sobe">V jakém pořadí to jde</h2>

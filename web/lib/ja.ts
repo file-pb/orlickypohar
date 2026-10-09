@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prihlasovaniJde, tokenZeSezeni } from "@/lib/oidc";
 import type { components } from "./schema";
 
@@ -31,7 +32,16 @@ export async function maSezeni(): Promise<boolean> {
  */
 export type Sezeni = { ja: Ja | null; duvod: string | null };
 
-export async function nactiJa(): Promise<Sezeni> {
+/**
+ * Jedno čtení na požadavek. Hlavička si o přihlášeného říká v layoutu
+ * a stránka znovu kvůli oprávněním — a od té doby, co se na práva ptají
+ * i veřejné stránky (odkaz do správy u regaty), by to byla tři volání
+ * `/ja` na jedno vykreslení. `cache` z Reactu platí v rámci jednoho
+ * požadavku, takže se nic nesdílí mezi návštěvníky.
+ */
+export const nactiJa = cache(nactiJaZeServeru);
+
+async function nactiJaZeServeru(): Promise<Sezeni> {
   if (!prihlasovaniJde) return { ja: null, duvod: null };
 
   const token = await tokenZeSezeni();

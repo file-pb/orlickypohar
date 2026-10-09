@@ -1198,15 +1198,23 @@ def prerad_kalendar():
 def zastavka_radek(z):
     # Kalendář je práce rozhodčího: vypsat regatu, posunout termín, zrušit.
     rozhodci = smi_ted("Rozhodci")
+    # Pořadatel **téhle** zastávky. Řádek vidí i pořadatel jiné regaty
+    # (kalendář je celoroční), takže se to musí ptát na ni — jinak mu
+    # obrazovka nabídne tlačítka a odkazy, které API odmítne. Opsané
+    # z `Pohled.Radek` v `KalendarEndpoints`.
+    organizator = smi_ted("Organizator", z["slug"])
     return {**{k: z.get(k) for k in
                ("slug", "nazev", "datum", "datumKonce", "typ", "poradatel", "poradi",
                 "stav", "puvodniDatum", "publikovano")},
             "smiUpravit": rozhodci, "smiPublikovat": rozhodci, "druh": z["druh"],
             "poradatelSlug": poradatel_zastavky(z)["slug"] if poradatel_zastavky(z) else None,
-            "smiMedailonek": bool(poradatel_zastavky(z)),
+            "smiMedailonek": bool(poradatel_zastavky(z)) and (rozhodci or organizator),
             "vyhodnoceni": z.get("vyhodnoceni", "PoKategoriich"),
+            # Vypsat a odjet patří pořadateli, zbytek řady rozhodčímu
+            # (`Kalendar.KdoSmi`).
             "mozneStavy": [s for s in VSECHNY_STAVY
-                           if s != z["stav"] and not proc_nejde(z["stav"], s)]}
+                           if s != z["stav"] and not proc_nejde(z["stav"], s)
+                           and (organizator if s in ("Vypsany", "Odjety") else rozhodci)]}
 
 
 # Pořadatelé jako záznam — v API `Features/Poradatele`. Páruje se podle
@@ -1438,7 +1446,14 @@ def role_pro_cestu(metoda, cesta):
             # Vyloučení patří rozhodčímu; řeší to `prepni_lod`.
             return (NAHLED, zavod) if metoda == "GET" or zbytek.endswith("/stav") \
                 else ("Organizator", zavod)
-        # Kalendář: vypsat regatu, posunout termín, zrušit.
+        # Kalendář. <b>Čtení pouští i pořadatele jediné zastávky</b> —
+        # `KalendarEndpoints.PohledAsync` se ptá `zavody.Count > 0` a jen
+        # schová tlačítka (`smiKalendar`). Mock tu dřív chtěl rozhodčího na
+        # celý ročník, takže pořadatel kalendář vůbec neotevřel a nešlo
+        # vyzkoušet, co z něj vidí (9. 10. 2026).
+        if metoda == "GET":
+            return (NAHLED, None)
+        # Zápis do kalendáře: vypsat regatu, posunout termín, zrušit.
         return ("Rozhodci", None)
 
     if (m := re.match(r'^/poradatele(?:/([a-z0-9-]+))?', zbytek)):

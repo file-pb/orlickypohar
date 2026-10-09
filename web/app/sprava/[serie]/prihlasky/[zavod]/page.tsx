@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Drobecky } from "@/app/drobecky";
+import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
 import { Stav } from "@/app/stav";
 import { Vypadek } from "@/app/vypadek";
 import {
@@ -89,12 +89,10 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
   const hlava = (
     <>
       <Drobecky
-        cesta={[
-          { text: "Domů", kam: "/" },
-          { text: "Ročník", kam: `/serie/${serie}` },
-          { text: "Kalendář", kam: `/sprava/${serie}/kalendar` },
+        cesta={drobeckySpravy(serie, [
+          drobekRegaty(serie, zavod),
           { text: "Přihlášky" },
-        ]}
+        ])}
       />
       <h1>Přihlášené lodě</h1>
     </>
@@ -142,12 +140,10 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
   return (
     <>
       <Drobecky
-        cesta={[
-          { text: "Domů", kam: "/" },
-          { text: "Ročník", kam: `/serie/${serie}` },
-          { text: "Kalendář", kam: `/sprava/${serie}/kalendar` },
-          { text: prehled.zavodNazev },
-        ]}
+        cesta={drobeckySpravy(serie, [
+          drobekRegaty(serie, zavod, prehled.zavodNazev),
+          { text: "Přihlášky" },
+        ])}
       />
       <h1>{prehled.zavodNazev}</h1>
       <p className="podtitulek">

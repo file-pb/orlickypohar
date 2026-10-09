@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Drobecky } from "@/app/drobecky";
+import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { datumClanku } from "@/app/datum";
 import { NEJVIC_MB, nactiSmernice, visi, type Smernice } from "@/lib/smernice";
+import { nazevZastavky } from "@/lib/kalendar";
 import { stahniAkce, vyvesAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
@@ -35,7 +36,12 @@ export default async function SmerniceZastavky({ params, searchParams }: Paramet
   const { serie, zavod } = await params;
   const zpravy = await searchParams;
 
-  const { stav, data: smernice } = await nactiSmernice(serie, zavod);
+  // Název regaty obrazovka z vlastního API nedostane — a bez něj neřekne,
+  // u které regaty se vlastně vyvěšuje (Filip, 9. 10. 2026).
+  const [{ stav, data: smernice }, nazev] = await Promise.all([
+    nactiSmernice(serie, zavod),
+    nazevZastavky(serie, zavod),
+  ]);
   if (stav === "neni") notFound();
 
   // Platná je nejnovější verze, která visí. Stažená platná být nemůže —
@@ -45,13 +51,13 @@ export default async function SmerniceZastavky({ params, searchParams }: Paramet
   return (
     <>
       <Drobecky
-        cesta={[
-          { text: "Domů", kam: "/" },
-          { text: "Kalendář", kam: `/sprava/${serie}/kalendar` },
+        cesta={drobeckySpravy(serie, [
+          drobekRegaty(serie, zavod, nazev),
           { text: "Plachetní směrnice" },
-        ]}
+        ])}
       />
       <h1>Plachetní směrnice</h1>
+      {nazev && <p className="podtitulek">{nazev}</p>}
 
       {zpravy.chyba && (
         <p className="hlaska chyba" role="alert">
@@ -134,7 +140,9 @@ export default async function SmerniceZastavky({ params, searchParams }: Paramet
           )}
 
           <p className="poznamka">
-            <Link href={`/sprava/${serie}/kalendar`}>Zpátky na kalendář</Link>
+            {/* Zpátky na kartu té regaty, ne na kalendář: na kartě jsou
+                všechny čtyři věci k ní pohromadě a kalendář je o termínech. */}
+            <Link href={`/sprava/${serie}#${zavod}`}>Zpátky na regatu</Link>
           </p>
         </>
       )}

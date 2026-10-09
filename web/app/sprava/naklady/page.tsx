@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import Link from "next/link";
-import { Drobecky } from "@/app/drobecky";
+import { Drobecky, drobeckySpravy } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { nactiNaklady, type NakladovaPolozka } from "@/lib/naklady";
 import { GrafDnu } from "./graf";
@@ -37,7 +37,7 @@ export default async function Naklady() {
 
   const hlava = (
     <>
-      <Drobecky cesta={[{ text: "Domů", kam: "/" }, { text: "Co web stojí" }]} />
+      <Drobecky cesta={drobeckySpravy(null, [{ text: "Co web stojí" }])} />
       <h1>Co web stojí</h1>
     </>
   );

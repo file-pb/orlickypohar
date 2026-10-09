@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Drobecky } from "@/app/drobecky";
+import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { okamzik } from "@/app/datum";
 import { NAZEV_NEJVIC, nactiTrat, type Boje, type Byvala } from "@/lib/boje";
+import { nazevZastavky } from "@/lib/kalendar";
 import { MapkaTrati } from "./trat";
 import { Pipani } from "./pipani";
 import { seberAkce } from "./akce";
@@ -30,15 +31,20 @@ type Parametry = {
  * rozhodčímu, takže tyhle endpointy jsou celé pod `/sprava/` a veřejná
  * cesta k bójím neexistuje.
  *
- * <b>Mapa tu není.</b> Zatím se vypisují souřadnice: mapa je samostatná
- * práce (plán, fáze 8) a bez ní je obrazovka použitelná — pořadatel
- * potřebuje hlavně vědět, že se pípnutí zapsalo a s jakou přesností.
+ * <b>Mapka je od 9. 10. 2026 nad seznamem</b>, pořád ale vedle souřadnic:
+ * neposouvá se ani nepřibližuje, takže na „kde přesně ta bóje leží"
+ * odpovídá odkaz do mapy u každé z nich, případně stažená trať v GPX.
  */
 export default async function BojeZastavky({ params, searchParams }: Parametry) {
   const { serie, zavod } = await params;
   const zpravy = await searchParams;
 
-  const { stav, trat, byvale } = await nactiTrat(serie, zavod);
+  // Název regaty v odpovědi o bójích není, a bez něj nadpis neřekne, čí
+  // trať se zrovna staví (Filip, 9. 10. 2026).
+  const [{ stav, trat, byvale }, nazev] = await Promise.all([
+    nactiTrat(serie, zavod),
+    nazevZastavky(serie, zavod),
+  ]);
   if (stav === "neni") notFound();
 
   // Přenastavuje se jen bóje, která na trati doopravdy stojí. Podvržené id
@@ -49,13 +55,13 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
   return (
     <>
       <Drobecky
-        cesta={[
-          { text: "Domů", kam: "/" },
-          { text: "Kalendář", kam: `/sprava/${serie}/kalendar` },
+        cesta={drobeckySpravy(serie, [
+          drobekRegaty(serie, zavod, nazev),
           { text: "Bóje na trati" },
-        ]}
+        ])}
       />
       <h1>Bóje na trati</h1>
+      {nazev && <p className="podtitulek">{nazev}</p>}
 
       {zpravy.chyba && (
         <p className="hlaska chyba" role="alert">
@@ -143,7 +149,9 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
           )}
 
           <p className="poznamka">
-            <Link href={`/sprava/${serie}/kalendar`}>Zpátky na kalendář</Link>
+            {/* Zpátky na kartu té regaty, ne na kalendář: na kartě jsou
+                všechny čtyři věci k ní pohromadě a kalendář je o termínech. */}
+            <Link href={`/sprava/${serie}#${zavod}`}>Zpátky na regatu</Link>
           </p>
         </>
       )}
