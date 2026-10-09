@@ -1888,6 +1888,13 @@ nepřijatou trať nevydá vůbec, u přestavby vrátí jen příznak a bóje zam
 Veřejná bóje nese **jen jméno, pořadí a polohu** — jméno stavitele, přesnost
 měření ani fotky ven nejdou, protože to jsou údaje o tom, kdo a jak měřil.
 
+**Od 9. 10. 2026 vydává veřejná cesta trať jako řadu prvků**, ne jen bóje.
+Napsala se dřív, než prvky existovaly, a kdyby u toho zůstalo, web by si
+z dvojice bójí složil nohu trati — ta chyba, kvůli které prvky vznikly.
+Bóje v odpovědi zůstávají vedle prvků: starší klient o prvcích neví a bez
+nich by mu trať zmizela úplně. Poznámka „jak to jet" jde ven taky, je psaná
+pro závodníky.
+
 Bóje se berou **k okamžiku přijetí**, ne „jak stojí teď". U přijaté trati to
 vyjde nastejno (do zamčené se nedá pípnout), ale podle času je to správně
 i pro historické tratě a nic to nestojí: záznam o bóji se nepřepisuje a časy

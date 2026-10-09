@@ -994,17 +994,37 @@ def trat_verejna(slug):
     if not t or t["stav"] not in ("Prijato", "Prestavba"):
         return None
     if t["stav"] == "Prestavba":
-        return {"prestavba": True, "prijatoV": None, "boje": []}
+        return {"prestavba": True, "prijatoV": None, "boje": [], "prvky": []}
 
     prijato = t["prijatoV"]
     stojici = [b for b in BOJE.get(slug, [])
                if b["postavenaV"] <= prijato
                and (b["nahrazenaV"] is None or b["nahrazenaV"] > prijato)
                and not b["sebrana"]]
+    # Veřejně jde ven **trať jako řada prvků**: divák potřebuje vědět, co je
+    # čára a co značka. Bóje zůstávají vedle toho, protože starší klient
+    # o prvcích neví a bez nich by mu trať zmizela úplně.
+    def verejny_konec(p, ktery):
+        id_boje = p["bojeAId"] if ktery == "a" else p["bojeBId"]
+        if id_boje:
+            b = next((x for x in BOJE.get(slug, []) if x["id"] == id_boje), None)
+            return None if not b else {"nazev": b["nazev"], "sirka": b["sirka"],
+                                       "delka": b["delka"]}
+        if ktery == "b" and p["konecBSirka"] is not None and p["konecBDelka"] is not None:
+            return {"nazev": p["konecBPopis"], "sirka": p["konecBSirka"],
+                    "delka": p["konecBDelka"]}
+        return None
+
+    vsechny = sorted(PRVKY.get(t["id"], []), key=lambda p: (p["poradi"], p["id"]))
+
     return {"prestavba": False, "prijatoV": prijato,
             "boje": [{"nazev": b["nazev"], "poradi": b["poradi"],
                       "sirka": b["sirka"], "delka": b["delka"]}
-                     for b in sorted(stojici, key=lambda b: (b["poradi"], b["id"]))]}
+                     for b in sorted(stojici, key=lambda b: (b["poradi"], b["id"]))],
+            "prvky": [{"typ": p["typ"], "poradi": p["poradi"], "strana": p["strana"],
+                       "poznamka": p["poznamka"], "a": verejny_konec(p, "a"),
+                       "b": verejny_konec(p, "b")}
+                      for p in vsechny]}
 
 
 def trat_dto(slug, t):

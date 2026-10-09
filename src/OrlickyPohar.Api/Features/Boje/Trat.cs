@@ -132,6 +132,30 @@ public record TratDto(
 /// </summary>
 public record VerejnaBojeDto(string Nazev, int Poradi, double Sirka, double Delka);
 
+/// <summary>Konec prvku pro diváka: jméno a kam se pluje, nic víc.</summary>
+public record VerejnyKonecDto(string Nazev, double Sirka, double Delka);
+
+/// <summary>
+/// Prvek trati pro diváka.
+/// <para>
+/// <b>Veřejně se vydává prvek, ne bóje.</b> Divák i závodník potřebují
+/// vědět, co je čára a co značka — jinak si z dvojice bójí složí nohu
+/// trati, což je přesně ta chyba, kvůli které prvky vznikly.
+/// </para>
+/// <para>
+/// Chybí tu jméno stavitele, přesnost měření i fotky, stejně jako
+/// u <see cref="VerejnaBojeDto"/>: jsou to údaje o tom, kdo a jak měřil.
+/// Poznámka „jak to jet" naopak patří ven — je psaná pro závodníky.
+/// </para>
+/// </summary>
+public record VerejnyPrvekDto(
+    TypPrvku Typ,
+    int Poradi,
+    StranaPrvku? Strana,
+    string? Poznamka,
+    VerejnyKonecDto A,
+    VerejnyKonecDto? B);
+
 /// <summary>
 /// Trať pro veřejnost. Vydává se jedině přijatá; u přestavby se vrací
 /// <see cref="Prestavba"/> a bóje se zamlčí, protože starý obrázek lže
@@ -140,7 +164,13 @@ public record VerejnaBojeDto(string Nazev, int Poradi, double Sirka, double Delk
 public record VerejnaTratDto(
     bool Prestavba,
     DateTimeOffset? PrijatoV,
-    IReadOnlyList<VerejnaBojeDto> Boje);
+    IReadOnlyList<VerejnaBojeDto> Boje,
+    /// <summary>
+    /// Trať jako řada prvků — to, podle čeho se pluje. <c>Boje</c> vedle
+    /// toho zůstávají: starší klient o prvcích neví a bez nich by mu trať
+    /// zmizela úplně.
+    /// </summary>
+    IReadOnlyList<VerejnyPrvekDto> Prvky);
 
 /// <summary>
 /// Pravidla stavu trati. Čisté funkce, aby se na ně dalo odpovědět bez

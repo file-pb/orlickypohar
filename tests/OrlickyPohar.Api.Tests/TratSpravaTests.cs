@@ -37,13 +37,21 @@ public class TratSpravaTests(PostgresFixture fixture)
 
     private (AppDbContext Db, BojeSprava Boje, TratSprava Trat) Sluzby()
     {
+        var (db, boje, trat, _) = SluzbyIPrvky();
+        return (db, boje, trat);
+    }
+
+    private (AppDbContext Db, BojeSprava Boje, TratSprava Trat, PrvkySprava Prvky) SluzbyIPrvky()
+    {
         var scope = fixture.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var trat = new TratSprava(db, TimeProvider.System);
 
-        return (db, new BojeSprava(
-            db, TimeProvider.System, new ZadneUloziste(), trat,
-            NullLogger<BojeSprava>.Instance), trat);
+        return (db,
+            new BojeSprava(db, TimeProvider.System, new ZadneUloziste(), trat,
+                NullLogger<BojeSprava>.Instance),
+            trat,
+            new PrvkySprava(db, trat));
     }
 
     private static async Task<(Zavod Zavod, Uzivatel Kdo)> RegataAsync(AppDbContext db)
@@ -210,7 +218,41 @@ public class TratSpravaTests(PostgresFixture fixture)
         var behem = await trate.VerejnaAsync(zavod.Id, default);
         Assert.True(behem!.Prestavba);
         Assert.Empty(behem.Boje);
+        Assert.Empty(behem.Prvky);
         Assert.Null(behem.PrijatoV);
+    }
+
+    [Fact]
+    public async Task Verejne_jde_ven_trat_jako_rada_prvku()
+    {
+        // Divák potřebuje vědět, co je čára a co značka. Kdyby dostal jen
+        // bóje, složil by si z dvojice nohu trati — přesně tu chybu, kvůli
+        // které prvky vznikly.
+        var (db, boje, trate, prvky) = SluzbyIPrvky();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (levy, _) = await boje.PipniAsync(zavod.Id, Bod("start levý"), kdo.Id, default);
+        var (pravy, _) = await boje.PipniAsync(zavod.Id, Bod("start pravý"), kdo.Id, default);
+
+        Assert.Null((await prvky.ZalozAsync(zavod.Id, new PrvekVstup(
+            TypPrvku.CaraStart, 1, levy!.Id, pravy!.Id,
+            Poznamka: "projíždí se po proudu"), default)).Chyba);
+
+        await trate.HotovoAsync(zavod.Id, true, default);
+        await trate.PrijmiAsync(zavod.Id, kdo.Id, default);
+
+        var verejna = await trate.VerejnaAsync(zavod.Id, default);
+
+        var prvek = Assert.Single(verejna!.Prvky);
+        Assert.Equal(TypPrvku.CaraStart, prvek.Typ);
+        Assert.Equal("start levý", prvek.A.Nazev);
+        Assert.Equal("start pravý", prvek.B!.Nazev);
+        // Poznámka „jak to jet" je psaná pro závodníky, takže ven patří.
+        Assert.Equal("projíždí se po proudu", prvek.Poznamka);
+
+        // Bóje zůstávají vedle prvků: starší klient o prvcích neví a bez
+        // nich by mu trať zmizela úplně.
+        Assert.Equal(2, verejna.Boje.Count);
     }
 
     [Fact]
