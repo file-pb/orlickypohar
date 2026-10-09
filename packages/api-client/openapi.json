@@ -4990,7 +4990,6 @@
                     "lod",
                     "cisloPlachty",
                     "typ",
-                    "majitel",
                     "kategorie",
                     "kormidelnik",
                     "vRocniku",
@@ -5012,9 +5011,6 @@
                             "null",
                             "string"
                         ]
-                    },
-                    "majitel": {
-                        "type": "string"
                     },
                     "kategorie": {
                         "type": [

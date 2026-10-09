@@ -4116,7 +4116,6 @@ export interface components {
             lod: string;
             cisloPlachty: null | string;
             typ: null | string;
-            majitel: string;
             kategorie: null | string;
             kormidelnik: null | string;
             vRocniku: boolean;
