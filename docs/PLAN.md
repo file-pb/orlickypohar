@@ -63,6 +63,11 @@ zastavení a kormidelník se mezi závody mění. Ale kategorii už nenese.
 
 ### Entity
 
+**Tabulka je doménový model, ne stav kódu.** `Zarizeni` (fáze 7) ani
+`Trasa` (fáze 8) zatím neexistují — stojí tu proto, že s nimi model počítá
+a ostatní rozhodnutí se o ně opírají. Co je doopravdy napsané, říká oddíl
+*Fáze*. Oponent 9. 10. 2026 z té tabulky vyčetl, že `Trasa` hotová je.
+
 | Entita | K čemu | Poznámka |
 |---|---|---|
 | `Serie` | ročník poháru | |
@@ -1332,6 +1337,28 @@ a porovná. Tohle je funkce, kterou web neumí a nikdy umět nebude.
 Zároveň je to **samostatný projekt velikosti zbytku appky.** Mapa je ta
 snadná část, těžké je všechno kolem ní.
 
+### Pilot do května 2027, ne celý tracker (Filip, 9. 10. 2026)
+
+Dvě nezávislé oponentury se shodly, že celý popsaný tracker se do sezóny
+2027 nevejde — rozpočet je kolem **155 hodin** a zbývá v něm i fronta
+z auditu a nedodělaná fáze 5. Rozešly se v tom, jestli se vejde aspoň
+pilot. **Filip rozhodl, že ano.**
+
+**Co pilot je:** jeden telefon na loď, záznam a odesílání polohy, nahrání
+po dojezdu. Sezóna se s ním dá zahájit **i bez veřejné živé mapy** — první
+hodnota je v tom, že trasy vůbec vzniknou a dá se na nich zjistit, co
+z téhle kapitoly stojí za doděláni.
+
+**Co do pilotu nepatří** (obě oponentury se na tom shodly): automatické
+slučování víc telefonů, zhušťování podle kurzu, pořadí na vodě, přehrávání
+s grafem rychlosti, porovnání dvou lodí, režim Expert. Všechno to snese
+rok odkladu a nic z toho se bez skutečných tras stejně nedá ověřit.
+
+**Pět scénářů je podmínka přijetí, ne hotová funkce:** zamčený telefon,
+výpadek s duplicitním doposláním, restart serveru, odvolání souhlasu při
+zahřáté cache a přestavba trati při přehrávání starší rozjížďky. Dokud
+neprojdou, veřejně se živé polohy nevydávají.
+
 ### Co je na tom skutečně těžké
 
 | Věc | Proč |
@@ -1635,12 +1662,26 @@ Co to **neznamená**: nesaháme po PostGIS ani po telemetrické službě.
 |---|---|
 | organizátor, správce, rozhodčí | **živě vždycky**, bez ohledu na nastavení |
 | závodník | svou trasu vždycky |
-| veřejnost | živou mapu, **když to organizátor zapne a rozhodčí to nezamítne** |
+| veřejnost | živou mapu, **když to organizátor zapne a rozhodčí schválí** |
 
-Je to tedy **dvojí zámek, ne přepínač**: organizátor o zveřejnění požádá,
-rozhodčí má právo veta. V datech to musí být uložené jako dvě věci — co chce
-organizátor a jestli rozhodčí zamítl —, ne jako jeden sloupec: po zamítnutí
-a odvolání zamítnutí se má vrátit to, co organizátor nastavil.
+**Upřesněno 9. 10. 2026 po oponentuře**, protože se to v tomhle oddíle
+dalo číst dvěma způsoby. Tabulka říkala *„a rozhodčí to nezamítne"*, tedy
+zveřejněno, dokud někdo nevetuje; odstavec pod ní *„organizátor
+o zveřejnění požádá"*, tedy čekání na souhlas. Naprogramovat se dá obojí
+a každé dává jiný výchozí stav. **Platí souhlas:** bez rozhodčího se
+veřejně nic neukáže.
+
+**Zveřejnění je atribut konkrétní regaty** (Filip, 9. 10. 2026), ne
+ročníku a ne rozjížďky. Další regata tím nic nedědí a nikdo nemusí po
+závodě nic vypínat — což je ta chyba, kterou by zdědění vyrobilo.
+
+V datech to zůstávají **dvě věci** — co chce organizátor a jak rozhodl
+rozhodčí —, ne jeden sloupec: po odvolání souhlasu se má vrátit to, co
+nastavil organizátor, ne nic. K tomu patří záznam **kdo a kdy** rozhodl,
+jinak se spor po závodě nedá rozhodnout.
+
+**Odvolání souhlasu nepůsobí zpětně** a nemá předstírat, že ano: tabule
+i telefony už data mají. Patří to do hlášky, ne do kódu.
 
 **Oprávnění se kontroluje při vydání, ne až u mapy.** Pro trať je to
 dodržené od 5. 10. 2026: roli prověří endpoint, než cokoliv vydá
@@ -1815,6 +1856,27 @@ k 9. 10. 2026:
 přihlášený, jak dopadly odjeté rozjížďky, jak to hýbe pohárem — a je to
 schránka, do které mapa a živé pořadí jen zapadnou, až fáze 8 vznikne.
 
+**Stav u každého čísla, a dá se to nastavit** (Filip, 9. 10. 2026). Oba
+oponenti radili ukazovat **jen publikované výsledky**. Filip zvolil třetí
+cestu: tabule nahoře řekne, že **hodnoty jsou informativní a jejich
+platnost potvrzuje, případně mění rozhodčí**, a u každého výsledku ukáže,
+v jakém je stavu — *under review* jako ve vodním slalomu, *potvrzeno* se
+zazelená, protest a jeho vyhodnocení taky. *„Alespoň to bude mít procesní
+děj."*
+
+Tím se spor o nepotvrzená čísla neřeší zamlčením, ale tím, že číslo nese
+svůj stav. **Má to dvě ceny.** Za prvé se stav výsledku stává součástí
+veřejného kontraktu, ne jen vnitřkem administrace. Za druhé se tím na
+tabuli dostanou **protesty**, a ty jsou právě ta nedodělaná část fáze 5 —
+u výsledku není kam zapsat číslo a `RDG` zatím dostává místo za posledním
+dokončivším.
+
+**Proto je to přepínač u regaty, ne pravidlo** (Filip tamtéž: *„co já vím,
+jakou budou mít rozhodčí, organizátoři a lidi náladu — prostě se to musí
+nechat nastavit"*). Výchozí stav je ten konzervativní, tedy **jen
+publikované**; kdo chce procesní děj, zapne si ho. Rozhodnutí tím nepadá
+na nás ani napevno do kódu.
+
 **Tři rozhodnutí, která si to vyrobí, ať je uděláme předem:**
 
 1. **Živé dojezdy versus workflow.** Hospoda chce čísla hned, jenže zápis
@@ -1831,10 +1893,23 @@ schránka, do které mapa a živé pořadí jen zapadnou, až fáze 8 vznikne.
    povedou mimo `/sprava/`. Tabule je první věc, která tenhle návrh donutí
    doopravdy postavit.
 
-**Dvě provozní.** U každé lodi musí být vidět **stáří polohy**; a tabule běží
-v hospodě hodiny bez obsluhy, takže výpadek API musí přežít a říct „data
-stará šest minut", ne zamrznout. Zátěž problém není: obnovování po deseti
-vteřinách je přesně to, na co je mikrocache před webem stavěná.
+**Dvě provozní, obě opravené po oponentuře 9. 10. 2026** — původní znění
+tvrdilo u obou pravý opak toho, co kód dělá.
+
+**Stáří polohy se nesmí vykreslit na serveru.** Mikrocache stojí **před
+webem** a drží odpověď 10 s (`proxy_cache_valid 200 404 10s`
+v `deploy/cache/default.conf`), takže serverem vykreslené „před 8 s" v ní
+zmrzne a bude lhát o deset vteřin plus dobu jednoho vykreslení. Posílat se
+proto musí **čas zdroje** a stáří si spočítá prohlížeč. Tím se cache
+z překážky stává výhodou: jeden snímek obslouží celou hospodu.
+
+**Výpadek API dnešní web nepřežije.** `Vypadek` se vykresluje jako součást
+stránky, která vrací **200**, takže ho nginx uloží jako platnou odpověď —
+a `proxy_cache_use_stale updating` chyby nepokrývá, takže starou dobrou
+stránku při výpadku nevydá. Tabule tedy dneska ukáže „nedaří se načíst",
+ne „data stará šest minut". Je to **požadavek, ne vlastnost**: buď výpadek
+nevracet se stavem 200, nebo nechat tabuli držet poslední dobrá data
+v prohlížeči.
 
 ### Nezávislost
 
