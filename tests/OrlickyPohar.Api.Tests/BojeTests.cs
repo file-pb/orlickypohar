@@ -44,8 +44,12 @@ public class BojeTests(PostgresFixture fixture)
         // Úložiště vlastní, ne ze služeb: v CI není nastavené a `Nahravani.Dto`
         // by bez veřejné adresy vydal null. Test má měřit projekci, ne to,
         // jestli má běh nakonfigurované R2.
+        var uloziste = new VerejneUloziste();
         return (db, new BojeSprava(
-            db, TimeProvider.System, new VerejneUloziste(), new TratSprava(db, TimeProvider.System),
+            db, TimeProvider.System, uloziste, new TratSprava(db, TimeProvider.System),
+            new OrlickyPohar.Api.Features.Fotky.FotkySprava(
+                db, uloziste, TimeProvider.System,
+                NullLogger<OrlickyPohar.Api.Features.Fotky.FotkySprava>.Instance),
             NullLogger<BojeSprava>.Instance));
     }
 

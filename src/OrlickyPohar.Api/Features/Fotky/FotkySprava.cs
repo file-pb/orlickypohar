@@ -227,6 +227,21 @@ public class FotkySprava(AppDbContext db, IUloziste uloziste, TimeProvider cas, 
     /// Smaže starou fotku. Nová je v tu chvíli uložená, takže úklid už
     /// nepřeruší ani odchod klienta — proto bez jeho tokenu.
     /// </summary>
+    /// <summary>
+    /// Smaže všechny fotky bóje. Vrací <c>false</c>, když se mazat nedá,
+    /// protože úložiště není zapnuté — volající pak nesmí smazat ani
+    /// záznam, jinak by soubory zůstaly viset bez vlastníka.
+    /// </summary>
+    public async Task<bool> OdeberVsechnyUBojeAsync(int bojeId, CancellationToken ct)
+    {
+        var id = await db.Fotky.Where(f => f.UBojeId == bojeId).Select(f => f.Id).ToListAsync(ct);
+        if (id.Count == 0) return true;
+        if (!uloziste.Pripraveno) return false;
+
+        foreach (var x in id) await SmazAsync(x);
+        return true;
+    }
+
     private async Task SmazAsync(Guid id)
     {
         await db.Fotky.Where(f => f.Id == id).ExecuteDeleteAsync(CancellationToken.None);
