@@ -1,0 +1,108 @@
+import { tokenZeSezeni } from "@/lib/oidc";
+import type { Stav } from "@/lib/sprava";
+import type { components } from "./schema";
+
+/**
+ * Stav trati: stavitelé hlásí hotovo, rozhodčí přijímá a zamyká, přestavba
+ * odemyká.
+ *
+ * <b>Zámek je to podstatné.</b> Přijatá trať je veřejná, takže se do ní
+ * nesmí sáhnout, aniž by se o tom venku vědělo — API pípnutí i sebrání
+ * odmítne. Obrazovka to proto musí říct <b>dřív</b>, než na to člověk
+ * narazí tlačítkem: formulář pípnutí se u zamčené trati schová a místo něj
+ * stojí důvod.
+ *
+ * <b>Co kdo smí, rozhoduje server</b> a posílá to v odpovědi
+ * (<c>smiHlasitHotovo</c>, <c>smiPrijmout</c>, <c>smiPrestavet</c>).
+ * Obrazovka podle toho jen skrývá tlačítka; kdo pošle formulář přesto,
+ * dostane odpověď z API.
+ */
+
+const API = process.env.API_URL ?? "http://localhost:8080";
+
+export type Trat = components["schemas"]["TratDto"];
+export type StavTrati = components["schemas"]["StavTrati"];
+
+/** Krok, kterým se stav posune. Jmenuje se stejně jako cesta v API. */
+export type KrokTrati = "hotovo" | "prijeti" | "vraceni" | "prestavba";
+
+/** Tatáž délka jako `Stavba.DuvodNejvic` v API. */
+export const DUVOD_NEJVIC = 300;
+
+const cesta = (serie: string, zavod: string) =>
+  `${API}/sprava/serie/${encodeURIComponent(serie)}/zastavky/${encodeURIComponent(zavod)}/trat`;
+
+/**
+ * Stav trati. <c>trat: null</c> znamená, že regata nemá ani jednu bóji —
+ * stavba začíná prvním pípnutím, ne zvláštním knoflíkem, takže to není
+ * chyba ani výpadek.
+ */
+export async function nactiStavTrati(
+  serie: string,
+  zavod: string,
+): Promise<{ stav: Stav; trat?: Trat | null }> {
+  const t = await tokenZeSezeni();
+  if (!t) return { stav: "neprihlasen" };
+
+  let odpoved: Response;
+  try {
+    odpoved = await fetch(cesta(serie, zavod), {
+      headers: { authorization: `Bearer ${t}`, accept: "application/json" },
+      cache: "no-store",
+    });
+  } catch {
+    return { stav: "vypadek" };
+  }
+
+  if (odpoved.status === 401) return { stav: "odmitnut" };
+  if (odpoved.status === 403) return { stav: "nesmi" };
+  // 404 tu neznamená „regata neexistuje", ale „ještě nemá bóji". Rozliší to
+  // obrazovka bójí, která stejnou regatu načítá vedle.
+  if (odpoved.status === 404) return { stav: "ok", trat: null };
+  if (!odpoved.ok) return { stav: "vypadek" };
+
+  return { stav: "ok", trat: (await odpoved.json()) as Trat };
+}
+
+/** Posune stav trati. Vrací chybu k zobrazení, nebo `null`. */
+export async function posunTrat(
+  serie: string,
+  zavod: string,
+  krok: KrokTrati,
+  duvod?: string,
+): Promise<string | null> {
+  const t = await tokenZeSezeni();
+  if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+
+  let odpoved: Response;
+  try {
+    odpoved = await fetch(`${cesta(serie, zavod)}/${krok}`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${t}`,
+        accept: "application/json",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(krok === "vraceni" ? { duvod } : {}),
+      cache: "no-store",
+    });
+  } catch {
+    return "Nedaří se spojit s API. Zkus to za chvíli.";
+  }
+
+  if (odpoved.ok) return null;
+
+  try {
+    const telo = (await odpoved.json()) as { error?: string };
+    if (telo?.error) return telo.error;
+  } catch {
+    // Tělo nemusí být JSON — 401 z ověřování ho nemá vůbec.
+  }
+
+  if (odpoved.status === 401) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+  if (odpoved.status === 403)
+    return krok === "prijeti" || krok === "vraceni"
+      ? "Přijmout nebo vrátit trať smí jen rozhodčí ročníku."
+      : "Do trati smí sáhnout pořadatel téhle regaty nebo rozhodčí ročníku.";
+  return `API odpovědělo ${odpoved.status}.`;
+}

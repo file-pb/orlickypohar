@@ -411,6 +411,13 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
    zelená vypsaného závodu. */
 .stitek.stav-potvrzeny { color: var(--text); }
 .stitek.stav-zruseny { color: var(--stav-zruseny); }
+/* Stav trati. Tytéž barvy jako u stavů zastávky, ať se to čte stejně:
+   tlumeně, co nikdo nevidí; vodní modrá, co je venku; červená, co se
+   právě přestavuje a veřejně znamená „počkej". */
+.stitek.stav-rozestaveno { color: var(--tlumeny); }
+.stitek.stav-hotovo { color: var(--stav-vypsany); }
+.stitek.stav-prijato { color: var(--voda); }
+.stitek.stav-prestavba { color: var(--stav-zruseny); }
 .karta.zrusena { background: transparent; }
 .karta.zrusena .detail { color: var(--tlumeny); }
 .skrtnute { text-decoration: line-through; text-decoration-color: var(--tlumeny); }
@@ -782,6 +789,15 @@ header.hlavicka .jen-uzke { display: none; }
   background: var(--pozadi); color: var(--text);
 }
 .zmapy .tlacitka { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.6rem; }
+/* Panel stavu trati stojí nad pípnutím, protože rozhoduje, jestli se smí
+   vůbec pípat. Orámovaný, ať se na vodě najde bez čtení. */
+.stav-trati {
+  border: 1px solid var(--linka); border-radius: 10px; background: var(--papir);
+  padding: 0.9rem 1rem; margin: 1rem 0;
+}
+.stav-trati h2 { margin-top: 0; }
+.stav-trati .stitek { margin-left: 0; font-size: 0.85rem; }
+.stav-trati .tlacitka { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
 .zmapy .hlaska .detail { display: block; word-break: break-all; margin-top: 0.3rem; }
 
 /* Výběr souboru jako tlačítko: vlastní `input[type=file]` vypadá v každém

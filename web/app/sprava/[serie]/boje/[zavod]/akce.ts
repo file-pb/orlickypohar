@@ -10,6 +10,7 @@ import {
   seber,
   type ZdrojPolohy,
 } from "@/lib/boje";
+import { posunTrat } from "@/lib/trat";
 import { prectiISeZkratkou } from "@/lib/zkratky";
 
 /**
@@ -149,4 +150,27 @@ export async function seberAkce(formular: FormData) {
 
   const chyba = await seber(serie, zavod, boje);
   redirect(kam(chyba ? { chyba } : { stav: "sebrano" }));
+}
+
+/**
+ * Posun stavu trati. Obyčejný formulář, žádný javascript: tyhle kroky
+ * nepotřebují polohu, a rozhodčí je může dělat z čehokoliv, co má po ruce.
+ *
+ * <b>Krok přichází z formuláře, tak se ověřuje.</b> Vstup je neověřený, i
+ * když ho vyrobila tatáž obrazovka — akce je POST na stránku.
+ */
+export async function stavTratiAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const kam = (zprava: Record<string, string>) =>
+    `/sprava/${encodeURIComponent(serie)}/boje/${encodeURIComponent(zavod)}?${new URLSearchParams(zprava)}`;
+
+  const krok = String(formular.get("krok") ?? "");
+  if (krok !== "hotovo" && krok !== "prijeti" && krok !== "vraceni" && krok !== "prestavba")
+    redirect(kam({ chyba: "Neznámý krok se stavem trati." }));
+
+  const duvod = String(formular.get("duvod") ?? "").trim();
+  const chyba = await posunTrat(serie, zavod, krok, duvod || undefined);
+
+  redirect(kam(chyba ? { chyba } : { stav: `trat-${krok}` }));
 }

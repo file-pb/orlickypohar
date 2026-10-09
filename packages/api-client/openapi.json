@@ -681,6 +681,45 @@
                 }
             }
         },
+        "/serie/{serie}/zavody/{zavod}/trat": {
+            "get": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Tra\u0165 regaty, jakmile ji rozhod\u010d\u00ed p\u0159ijal",
+                "description": "Bez p\u0159ihl\u00e1\u0161en\u00ed. Nep\u0159ijat\u00e1 tra\u0165 se nevyd\u00e1v\u00e1 v\u016fbec; u p\u0159estavby se vrac\u00ed jen p\u0159\u00edznak, \u017ee se tra\u0165 p\u0159estavuje, a b\u00f3je se zaml\u010d\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VerejnaTratDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sprava/naklady": {
             "get": {
                 "tags": [
@@ -3773,6 +3812,211 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/zastavky/{zavod}/trat": {
+            "get": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Stav trati regaty",
+                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Vrac\u00ed 404, dokud regata nem\u00e1 ani jednu b\u00f3ji \u2014 stavba za\u010d\u00edn\u00e1 prvn\u00edm p\u00edpnut\u00edm, ne zvl\u00e1\u0161tn\u00edm knofl\u00edkem.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TratDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/trat/hotovo": {
+            "post": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Stavitel\u00e9 hl\u00e1s\u00ed, \u017ee tra\u0165 stoj\u00ed",
+                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TratDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/trat/prijeti": {
+            "post": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Rozhod\u010d\u00ed tra\u0165 p\u0159ijme, t\u00edm se zamkne a je ve\u0159ejn\u00e1",
+                "description": "Jen rozhod\u010d\u00ed ro\u010dn\u00edku. Zam\u010denou tra\u0165 nejde p\u0159estavovat ani do n\u00ed p\u00edpat.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TratDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/trat/vraceni": {
+            "post": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Rozhod\u010d\u00ed vr\u00e1t\u00ed tra\u0165 stavitel\u016fm",
+                "description": "Jen rozhod\u010d\u00ed ro\u010dn\u00edku. D\u016fvod je povinn\u00fd.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VraceniTratiVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TratDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/trat/prestavba": {
+            "post": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Odemkne p\u0159ijatou tra\u0165 na p\u0159estavbu",
+                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Ve\u0159ejn\u011b to znamen\u00e1 \u201etra\u0165 se p\u0159estavuje, po\u010dkej\". Podle odjet\u00e9 trati se u\u017e jelo, tak\u017ee se nep\u0159ep\u00ed\u0161e \u2014 vznikne nov\u00e1 a star\u00e1 z\u016fstane p\u0159ijat\u00e1.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TratDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/poradatele/{poradatel}": {
             "get": {
                 "tags": [
@@ -6753,6 +6997,14 @@
                     "Zrusena"
                 ]
             },
+            "StavTrati": {
+                "enum": [
+                    "Rozestaveno",
+                    "Hotovo",
+                    "Prijato",
+                    "Prestavba"
+                ]
+            },
             "StavUcasti": {
                 "enum": [
                     "Prihlasena",
@@ -6891,6 +7143,81 @@
                     "pixelu": {
                         "type": "integer",
                         "format": "int32"
+                    }
+                }
+            },
+            "TratDto": {
+                "required": [
+                    "id",
+                    "stav",
+                    "zalozenaV",
+                    "prijatoV",
+                    "prijal",
+                    "duvodVraceni",
+                    "rozjizdkaId",
+                    "nahrazujeId",
+                    "odjeta",
+                    "smiHlasitHotovo",
+                    "smiPrijmout",
+                    "smiPrestavet"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "stav": {
+                        "$ref": "#/components/schemas/StavTrati"
+                    },
+                    "zalozenaV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "prijatoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "prijal": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "duvodVraceni": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "rozjizdkaId": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "nahrazujeId": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "odjeta": {
+                        "type": "boolean"
+                    },
+                    "smiHlasitHotovo": {
+                        "type": "boolean"
+                    },
+                    "smiPrijmout": {
+                        "type": "boolean"
+                    },
+                    "smiPrestavet": {
+                        "type": "boolean"
                     }
                 }
             },
@@ -7082,6 +7409,32 @@
                     }
                 }
             },
+            "VerejnaBojeDto": {
+                "required": [
+                    "nazev",
+                    "poradi",
+                    "sirka",
+                    "delka"
+                ],
+                "type": "object",
+                "properties": {
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "poradi": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "sirka": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "delka": {
+                        "type": "number",
+                        "format": "double"
+                    }
+                }
+            },
             "VerejnaPrihlaskaVstup": {
                 "required": [
                     "lod",
@@ -7153,6 +7506,32 @@
                             "string"
                         ],
                         "format": "date-time"
+                    }
+                }
+            },
+            "VerejnaTratDto": {
+                "required": [
+                    "prestavba",
+                    "prijatoV",
+                    "boje"
+                ],
+                "type": "object",
+                "properties": {
+                    "prestavba": {
+                        "type": "boolean"
+                    },
+                    "prijatoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "boje": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/VerejnaBojeDto"
+                        }
                     }
                 }
             },
@@ -7229,6 +7608,20 @@
                     },
                     "zdroj": {
                         "type": "string"
+                    }
+                }
+            },
+            "VraceniTratiVstup": {
+                "required": [
+                    "duvod"
+                ],
+                "type": "object",
+                "properties": {
+                    "duvod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     }
                 }
             },
@@ -8339,6 +8732,9 @@
         },
         {
             "name": "Spr\u00e1va"
+        },
+        {
+            "name": "B\u00f3je"
         }
     ]
 }

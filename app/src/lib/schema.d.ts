@@ -814,6 +814,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/serie/{serie}/zavody/{zavod}/trat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Trať regaty, jakmile ji rozhodčí přijal
+         * @description Bez přihlášení. Nepřijatá trať se nevydává vůbec; u přestavby se vrací jen příznak, že se trať přestavuje, a bóje se zamlčí.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VerejnaTratDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/naklady": {
         parameters: {
             query?: never;
@@ -3708,6 +3750,220 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/trat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stav trati regaty
+         * @description Organizátor regaty, nebo rozhodčí ročníku. Vrací 404, dokud regata nemá ani jednu bóji — stavba začíná prvním pípnutím, ne zvláštním knoflíkem.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TratDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/trat/hotovo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stavitelé hlásí, že trať stojí
+         * @description Organizátor regaty, nebo rozhodčí ročníku.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TratDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/trat/prijeti": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rozhodčí trať přijme, tím se zamkne a je veřejná
+         * @description Jen rozhodčí ročníku. Zamčenou trať nejde přestavovat ani do ní pípat.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TratDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/trat/vraceni": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rozhodčí vrátí trať stavitelům
+         * @description Jen rozhodčí ročníku. Důvod je povinný.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["VraceniTratiVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TratDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/trat/prestavba": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Odemkne přijatou trať na přestavbu
+         * @description Organizátor regaty, nebo rozhodčí ročníku. Veřejně to znamená „trať se přestavuje, počkej". Podle odjeté trati se už jelo, takže se nepřepíše — vznikne nová a stará zůstane přijatá.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TratDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/poradatele/{poradatel}": {
         parameters: {
             query?: never;
@@ -4559,6 +4815,8 @@ export interface components {
         /** @enum {unknown} */
         StavRozjizdky: "Planovana" | "Probiha" | "Dokoncena" | "Zrusena";
         /** @enum {unknown} */
+        StavTrati: "Rozestaveno" | "Hotovo" | "Prijato" | "Prestavba";
+        /** @enum {unknown} */
         StavUcasti: "Prihlasena" | "Potvrzena" | "Zrusena" | "Pozadavek" | "KDoplneni" | "Odmitnuta" | "Nedostavila" | "Vyloucena";
         StavUcastiVstup: {
             stav: components["schemas"]["StavUcasti"];
@@ -4594,6 +4852,25 @@ export interface components {
             teplota: number;
             /** Format: int32 */
             pixelu: number;
+        };
+        TratDto: {
+            /** Format: int32 */
+            id: number;
+            stav: components["schemas"]["StavTrati"];
+            /** Format: date-time */
+            zalozenaV: string;
+            /** Format: date-time */
+            prijatoV: null | string;
+            prijal: null | string;
+            duvodVraceni: null | string;
+            /** Format: int32 */
+            rozjizdkaId: null | number;
+            /** Format: int32 */
+            nahrazujeId: null | number;
+            odjeta: boolean;
+            smiHlasitHotovo: boolean;
+            smiPrijmout: boolean;
+            smiPrestavet: boolean;
         };
         UcastDto: {
             lod: string;
@@ -4645,6 +4922,15 @@ export interface components {
             roleUrcenaV: null | string;
             keKontrole: boolean;
         };
+        VerejnaBojeDto: {
+            nazev: string;
+            /** Format: int32 */
+            poradi: number;
+            /** Format: double */
+            sirka: number;
+            /** Format: double */
+            delka: number;
+        };
         VerejnaPrihlaskaVstup: {
             lod: string;
             kapitan: components["schemas"]["KapitanVstup"];
@@ -4660,6 +4946,12 @@ export interface components {
             past?: null | string;
             /** Format: date-time */
             zobrazenoV?: null | string;
+        };
+        VerejnaTratDto: {
+            prestavba: boolean;
+            /** Format: date-time */
+            prijatoV: null | string;
+            boje: components["schemas"]["VerejnaBojeDto"][];
         };
         VodocetDto: {
             /** Format: date-time */
@@ -4680,6 +4972,9 @@ export interface components {
             zmenaObjemu: null | number;
             historie: components["schemas"]["BodHladinyDto"][];
             zdroj: string;
+        };
+        VraceniTratiVstup: {
+            duvod: null | string;
         };
         /** @enum {unknown} */
         Vyhodnoceni: "CelePole" | "PoKategoriich" | "Oboje";
