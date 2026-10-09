@@ -12,7 +12,8 @@ namespace OrlickyPohar.Api.Features.Boje;
 /// tehdy, ne jak stojí teď.
 /// </para>
 /// </summary>
-public class BojeSprava(AppDbContext db, TimeProvider cas, ILogger<BojeSprava> log)
+public class BojeSprava(
+    AppDbContext db, TimeProvider cas, Fotky.IUloziste uloziste, ILogger<BojeSprava> log)
 {
     /// <summary>Bóje regaty. Platné podle pořadí, historie až za nimi.</summary>
     public async Task<List<BojeDto>> SeznamAsync(int zavodId, bool iHistorie, CancellationToken ct)
@@ -20,15 +21,25 @@ public class BojeSprava(AppDbContext db, TimeProvider cas, ILogger<BojeSprava> l
         var dotaz = db.Boje.Where(b => b.ZavodId == zavodId);
         if (!iHistorie) dotaz = dotaz.Where(b => b.NahrazenaV == null && b.SebranaV == null);
 
-        return await dotaz
+        // Načítá se celý záznam, ne projekce do DTO: adresy fotky skládá
+        // `Fotka.Dto` z veřejné adresy úložiště a to je čistá funkce, kterou
+        // EF do SQL nepřeloží. Bójí je na regatě pár, takže o nic nejde.
+        var boje = await dotaz
+            .Include(b => b.Postavil)
+            .Include(b => b.Fotka)
             .OrderBy(b => b.NahrazenaV == null && b.SebranaV == null ? 0 : 1)
             .ThenBy(b => b.Poradi)
             .ThenByDescending(b => b.PostavenaV)
-            .Select(b => new BojeDto(
-                b.Id, b.Nazev, b.Poradi, b.Sirka, b.Delka, b.PresnostM, b.PostavenaV,
-                b.Postavil!.Zobrazovane, b.SebranaV != null))
             .ToListAsync(ct);
+
+        return [.. boje.Select(Dto)];
     }
+
+    /// <summary>Bóje, jak ji vidí klient. Jedno místo, ať se tvary nerozejdou.</summary>
+    private BojeDto Dto(Boje b) => new(
+        b.Id, b.Nazev, b.Poradi, b.Sirka, b.Delka, b.PresnostM, b.PostavenaV,
+        b.Postavil?.Zobrazovane, b.SebranaV != null,
+        Fotky.Nahravani.Dto(b.Fotka, uloziste.VerejnaAdresa));
 
     /// <summary>
     /// Zapíše pípnutí. Při přenastavení převezme pořadí i jméno po bóji,
@@ -78,9 +89,9 @@ public class BojeSprava(AppDbContext db, TimeProvider cas, ILogger<BojeSprava> l
             nova.Nazev, zavodId, stara is null ? "postavena" : "přenastavena", vstup.PresnostM);
 
         await db.Entry(nova).Reference(b => b.Postavil).LoadAsync(ct);
-        return (new BojeDto(
-            nova.Id, nova.Nazev, nova.Poradi, nova.Sirka, nova.Delka, nova.PresnostM,
-            nova.PostavenaV, nova.Postavil?.Zobrazovane, false), null);
+        // Fotka se přikládá až po pípnutí vlastním požadavkem: dokud
+        // poloha neexistuje, není k čemu ji přiložit.
+        return (Dto(nova), null);
     }
 
     /// <summary>Označí bóji za sebranou. Ze zápisu nemizí.</summary>

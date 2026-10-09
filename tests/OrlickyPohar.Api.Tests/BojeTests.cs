@@ -28,7 +28,8 @@ public class BojeTests(PostgresFixture fixture)
     {
         var scope = fixture.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        return (db, new BojeSprava(db, TimeProvider.System, NullLogger<BojeSprava>.Instance));
+        var uloziste = scope.ServiceProvider.GetRequiredService<OrlickyPohar.Api.Features.Fotky.IUloziste>();
+        return (db, new BojeSprava(db, TimeProvider.System, uloziste, NullLogger<BojeSprava>.Instance));
     }
 
     private static async Task<(Zavod Zavod, Uzivatel Kdo)> RegataAsync(AppDbContext db)
@@ -157,5 +158,41 @@ public class BojeTests(PostgresFixture fixture)
         Assert.Null(nic);
         Assert.NotNull(chyba);
         Assert.Empty(await db.Boje.Where(b => b.ZavodId == zavod.Id).ToListAsync());
+    }
+
+    /// <summary>
+    /// Fotka je doklad k poloze, takže musí dojít až ke klientovi — a čerstvě
+    /// pípnutá bóje žádnou nemá. Bez téhle kontroly by se projekce dala
+    /// omylem zúžit zpátky na SQL a fotka by tiše vypadla.
+    /// </summary>
+    [Fact]
+    public async Task Fotka_u_boje_dojde_do_seznamu_a_bez_ni_je_prazdno()
+    {
+        var (db, boje) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (postavena, _) = await boje.PipniAsync(zavod.Id, Bod("Bóje 1"), kdo.Id, default);
+        Assert.Null(postavena!.Fotka);
+        Assert.Null((await boje.SeznamAsync(zavod.Id, false, default)).Single().Fotka);
+
+        var fotka = new OrlickyPohar.Api.Features.Fotky.Fotka
+        {
+            Id = Guid.NewGuid(),
+            Autor = "Miloš Zvonař",
+            Popis = "Bóje Bóje 1",
+            Sirka = 1600,
+            Vyska = 1200,
+            NahralId = kdo.Id,
+            NahranoV = Ted,
+        };
+        db.Fotky.Add(fotka);
+        var zaznam = await db.Boje.SingleAsync(b => b.Id == postavena.Id);
+        zaznam.FotkaId = fotka.Id;
+        await db.SaveChangesAsync();
+
+        var sFotkou = (await boje.SeznamAsync(zavod.Id, false, default)).Single();
+        Assert.NotNull(sFotkou.Fotka);
+        Assert.Equal("Miloš Zvonař", sFotkou.Fotka!.Autor);
+        Assert.Contains(fotka.Id.ToString("N"), sFotkou.Fotka.Nahled);
     }
 }

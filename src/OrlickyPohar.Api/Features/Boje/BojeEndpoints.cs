@@ -1,8 +1,15 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Fotky;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Sprava;
 
 namespace OrlickyPohar.Api.Features.Boje;
+
+/// <summary>Co přijde ve formuláři s fotkou bóje.</summary>
+public record FotkaBojeFormular(IFormFile? Soubor);
 
 /// <summary>
 /// Stavění bójí pořadatelem — z webu i z appky, přes stejné endpointy.
@@ -40,6 +47,21 @@ public static class BojeEndpoints
         g.MapPost("/{boje:int}/sebrana", SeberAsync)
             .WithSummary("Označí bóji za sebranou z vody")
             .WithDescription("Pořadatel regaty, nebo rozhodčí. Ze zápisu bóje nemizí.");
+
+        // Token jde v hlavičce, ne v cookie — proti podvrženému formuláři
+        // tu není co chránit, stejně jako u fotky papírového zápisu.
+        g.MapPut("/{boje:int}/fotka", FotkaAsync)
+            .DisableAntiforgery()
+            .WithMetadata(new RequestSizeLimitAttribute(Nahravani.NejvicBajtu + 1024 * 1024))
+            .Produces<ObrazekDto>()
+            .WithSummary("Přiloží k bóji fotku z okamžiku postavení")
+            .WithDescription(
+                "Pořadatel regaty, nebo rozhodčí. Je to doklad k poloze: ze souřadnic se " +
+                "nepozná barva bóje ani co je za ní na břehu. JPEG, PNG nebo WebP do 15 MB. " +
+                "Veřejně se nevydává, stejně jako celá trať. Bez nastaveného úložiště vrací 503.");
+
+        g.MapDelete("/{boje:int}/fotka", OdeberFotkuAsync)
+            .WithSummary("Odebere fotku bóje a smaže její soubory");
     }
 
     private static async Task<IResult> SeznamAsync(
@@ -78,6 +100,63 @@ public static class BojeEndpoints
 
         var chyba = await sprava.SeberAsync(rozsah.ZavodId.Value, boje, ct);
         return chyba is null ? Results.NoContent() : Results.BadRequest(new { error = chyba });
+    }
+
+    /// <summary>
+    /// Bóje té regaty i s právem na ni — nebo odpověď, kterou má endpoint
+    /// vrátit. Pořadí je totéž jako u ostatních cest správy: nejdřív rozsah,
+    /// pak právo, teprve pak data.
+    /// </summary>
+    private static async Task<(Boje? Boje, IResult? Odpoved)> NajdiAsync(
+        string serie, string zavod, int boje, ClaimsPrincipal kdo, Rozsahy rozsahy,
+        AppDbContext db, CancellationToken ct)
+    {
+        if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
+            return (null, Results.NotFound());
+        if (!await SmiAsync(kdo, rozsahy, rozsah, ct)) return (null, Results.Forbid());
+
+        var nalezena = await db.Boje
+            .Include(b => b.Fotka)
+            .FirstOrDefaultAsync(b => b.Id == boje && b.ZavodId == rozsah.ZavodId, ct);
+
+        return nalezena is null
+            ? (null, Results.BadRequest(new { error = "Taková bóje u téhle regaty není." }))
+            : (nalezena, null);
+    }
+
+    private static async Task<IResult> FotkaAsync(
+        string serie, string zavod, int boje, [FromForm] FotkaBojeFormular formular,
+        ClaimsPrincipal kdo, Rozsahy rozsahy, AppDbContext db, FotkySprava fotky,
+        CancellationToken ct)
+    {
+        var (nalezena, odpoved) = await NajdiAsync(serie, zavod, boje, kdo, rozsahy, db, ct);
+        if (odpoved is not null) return odpoved;
+        if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
+
+        if (!fotky.Pripraveno)
+            return Results.Json(
+                new { error = FotkySprava.Vypnuto }, statusCode: StatusCodes.Status503ServiceUnavailable);
+
+        // Souhlas se neptá a autor je ten, kdo fotil: tohle není fotka na web,
+        // je to doklad k poloze. Kdo ji nahrál, stojí stejně v `Fotka.Nahral`.
+        var jmeno = kdo.FindFirst("name")?.Value ?? kdo.FindFirst("preferred_username")?.Value ?? "pořadatel";
+        var vstup = new FotkaFormular(
+            formular.Soubor, jmeno, $"Bóje {nalezena!.Nazev}", Souhlas: true);
+
+        var (obrazek, chyba) = await fotky.NastavAsync(nalezena, vstup, uzivatel, ct);
+        return obrazek is null ? Results.BadRequest(new { error = chyba }) : Results.Ok(obrazek);
+    }
+
+    private static async Task<IResult> OdeberFotkuAsync(
+        string serie, string zavod, int boje, ClaimsPrincipal kdo, Rozsahy rozsahy,
+        AppDbContext db, FotkySprava fotky, CancellationToken ct)
+    {
+        var (nalezena, odpoved) = await NajdiAsync(serie, zavod, boje, kdo, rozsahy, db, ct);
+        if (odpoved is not null) return odpoved;
+
+        return await fotky.OdeberAsync(nalezena!, ct) is { } chyba
+            ? Results.Json(new { error = chyba }, statusCode: StatusCodes.Status503ServiceUnavailable)
+            : Results.NoContent();
     }
 
     private static async Task<bool> SmiAsync(

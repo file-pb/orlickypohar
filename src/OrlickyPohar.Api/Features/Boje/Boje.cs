@@ -19,12 +19,26 @@ namespace OrlickyPohar.Api.Features.Boje;
 /// a místo mazání se bóje označí za sebranou.
 /// </para>
 /// </summary>
-public class Boje
+public class Boje : Fotky.IMaFotku
 {
     public int Id { get; set; }
 
     public int ZavodId { get; set; }
     public Zavod? Zavod { get; set; }
+
+    /// <summary>
+    /// Fotka bóje z okamžiku postavení (Filip, 9. 10. 2026). Je to doklad
+    /// k poloze, ne obrázek na web: ze souřadnic se nepozná, jestli je ta
+    /// bóje nafouklá, jakou má barvu a co je za ní na břehu. Veřejně se
+    /// nevydává — stejně jako celá trať.
+    /// <para>
+    /// <b>Patří k záznamu, ne k bóji jako věci.</b> Přenastavení zakládá
+    /// nový záznam, takže i fotka je nová; ta stará zůstane u staré polohy
+    /// a je z ní vidět, jak trať vypadala tehdy.
+    /// </para>
+    /// </summary>
+    public Guid? FotkaId { get; set; }
+    public Fotky.Fotka? Fotka { get; set; }
 
     /// <summary>
     /// Čím bóje na trati je: „start levý", „bóje 1", „cíl". Volný text —
@@ -83,7 +97,8 @@ public record BojeDto(
     double? PresnostM,
     DateTimeOffset PostavenaV,
     string? Postavil,
-    bool Sebrana);
+    bool Sebrana,
+    Fotky.ObrazekDto? Fotka);
 
 /// <summary>Pípnutí polohy: co posílá web i appka.</summary>
 /// <param name="Nazev">Čím bóje je — „bóje 1", „start levý".</param>
