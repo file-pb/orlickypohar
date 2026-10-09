@@ -16,7 +16,7 @@ URL="http://127.0.0.1:$PORT"
 chyb=0
 
 uklid() {
-  docker rm -f op-cache-test-web op-cache-test-cache >/dev/null 2>&1 || true
+  docker rm -f op-cache-test-web op-cache-test-web-sezeni op-cache-test-cache >/dev/null 2>&1 || true
   docker network rm "$SIT" >/dev/null 2>&1 || true
 }
 trap uklid EXIT
@@ -24,13 +24,18 @@ uklid
 
 docker build -q -t op-cache-test "$ADRESAR/.." >/dev/null
 docker network create "$SIT" >/dev/null
-# Alias jako v produkci — nginx hledá web pod tímhle jménem.
+# Aliasy jako v produkci — nginx hledá repliky pod těmihle jmény. Dvě,
+# protože přihlášený jde na vlastní (S11, `$web_replika` v default.conf),
+# a každá se v odpovědi hlásí jménem, aby se rozdělení ověřilo výsledkem.
 docker run -d --name op-cache-test-web --network "$SIT" --network-alias orlickypohar-web \
-  -v "$ADRESAR:/t:ro" python:3.13-alpine python /t/falesny_web.py >/dev/null
+  -e REPLIKA=anonym -v "$ADRESAR:/t:ro" python:3.13-alpine python /t/falesny_web.py >/dev/null
+docker run -d --name op-cache-test-web-sezeni --network "$SIT" \
+  --network-alias orlickypohar-web-sezeni \
+  -e REPLIKA=sezeni -v "$ADRESAR:/t:ro" python:3.13-alpine python /t/falesny_web.py >/dev/null
 docker run -d --name op-cache-test-cache --network "$SIT" -p "$PORT:8080" op-cache-test >/dev/null
 
 for _ in $(seq 1 50); do
-  curl -fs "$URL/health" >/dev/null 2>&1 && break
+  curl -fs "$URL/health" >/dev/null 2>&1 && curl -fs "$URL/health-sezeni" >/dev/null 2>&1 && break
   sleep 0.2
 done
 
@@ -42,6 +47,7 @@ get() {
   telo=$(curl -s -D "$hlavicky" "$@" "$URL$cesta")
   stav=$(head -1 "$hlavicky" | awk '{print $2}')
   cache=$(grep -i '^x-cache:' "$hlavicky" | awk '{print $2}' | tr -d '\r' || true)
+  replika=$(grep -i '^x-replika:' "$hlavicky" | awk '{print $2}' | tr -d '\r' || true)
   rm -f "$hlavicky"
 }
 vykresleni() { sed -E 's/.*vykresleni=([0-9]+).*/\1/' <<<"$1"; }
@@ -50,7 +56,7 @@ ok()  { echo "  ok    $1"; }
 spatne() { echo "  CHYBA $1"; chyb=$((chyb + 1)); }
 ma() { # POPIS PODMÍNKA…
   local popis=$1; shift
-  if "$@"; then ok "$popis"; else spatne "$popis (stav=$stav cache=$cache telo=$telo)"; fi
+  if "$@"; then ok "$popis"; else spatne "$popis (stav=$stav cache=$cache replika=$replika telo=$telo)"; fi
 }
 
 echo "Nepřihlášený: druhý požadavek z cache"
@@ -169,6 +175,66 @@ get /cookie-cizi -H "Cookie: op_tokenovnik=cokoliv"
 ma "cizí jméno se naopak cachuje (výraz nechytá vše)" test "$cache" = MISS
 get /cookie-cizi -H "Cookie: op_tokenovnik=cokoliv"
 ma "…a podruhé je to HIT" test "$cache" = HIT
+
+echo "Přihlášený jde na vlastní repliku"
+# Vlastní adresa klienta, a tedy vlastní rozpočet limitu. Bez ní sdílí
+# tenhle blok zónu `render` se všemi testy výš, které hlavičku neposílají,
+# a jedno cizí 429 by vypadalo jako špatně nasměrovaná replika.
+smerovani="203.0.113.30"
+# Nález S11: na společné replice se přihlášený zařadí do fronty za
+# útočníkem, který si vyžádal vykreslení na stále nové adresy. Změřeno
+# 9. 10. 2026: společná replika 1,9 s, vlastní 0,20 s.
+#
+# Ověřuje se to VÝSLEDKEM — kdo odpověděl —, ne čtením mapy v konfiguraci.
+get /r1 -H "Cf-Connecting-Ip: $smerovani"
+ma "anonym na anonymní replice" test "$replika" = anonym
+get /r1 -H "Cf-Connecting-Ip: $smerovani" -H "Cookie: op_token=tajne"
+ma "přihlášený na replice sezení" test "$replika" = sezeni
+ma "…a je to vidět i v těle" grep -q "replika=sezeni" <<<"$telo"
+get /r2 -H "Cf-Connecting-Ip: $smerovani" -H "Cookie: op_token.0=a"
+ma "dělená cookie taky na repliku sezení" test "$replika" = sezeni
+get /r3 -H "Cf-Connecting-Ip: $smerovani" -H "Cookie: op_rezim=tmavy"
+ma "cookie vzhledu repliku nemění" test "$replika" = anonym
+
+# RSC prefetch jde mimo cache, ale bez cookie sezení patří davu, ne
+# pořadateli. Kdyby šel na repliku sezení, nával diváků by ji zavalil
+# přesně v okamžiku, kdy ji pořadatel potřebuje.
+get /r4 -H "Cf-Connecting-Ip: $smerovani" -H "RSC: 1"
+ma "anonymní RSC prefetch zůstává na anonymní replice" test "$replika" = anonym
+get /r4 -H "Cf-Connecting-Ip: $smerovani" -H "RSC: 1" -H "Cookie: op_token=tajne"
+ma "RSC přihlášeného jde na jeho repliku" test "$replika" = sezeni
+
+# `/sprava` je celá mimo cache a má volnější strop 10/s. Web na ní
+# anonymovi 401 nevrací (to dělá API), takže se mu stránka vykreslí —
+# jeden klient si tudy vyžádá 8,7 vykreslení/s, dvojnásobek kapacity.
+# Musí proto skončit na anonymní replice.
+get /sprava/2027 -H "Cf-Connecting-Ip: $smerovani"
+ma "anonymní /sprava na anonymní replice" test "$replika" = anonym
+get /sprava/2027 -H "Cf-Connecting-Ip: $smerovani" -H "Cookie: op_token=tajne"
+ma "/sprava přihlášeného na jeho replice" test "$replika" = sezeni
+get /prihlaseni/zacatek -H "Cf-Connecting-Ip: $smerovani"
+ma "/prihlaseni bez cookie na anonymní replice" test "$replika" = anonym
+
+# Dohled musí vidět OBĚ. `/health` jde bez cookie na anonymní repliku,
+# takže spadlá replika sezení by znamenala 502 pro každého přihlášeného
+# a monitoring by hlásil klid.
+get /health -H "Cf-Connecting-Ip: $smerovani"
+ma "/health je anonymní replika" test "$replika" = anonym
+ma "…a vrací přesně Healthy" test "$telo" = Healthy
+get /health-sezeni -H "Cf-Connecting-Ip: $smerovani"
+ma "/health-sezeni je replika sezení" test "$replika" = sezeni
+ma "…a vrací přesně Healthy" test "$telo" = Healthy
+
+# Negativní kontrola: kdyby mapa vracela pořád totéž jméno, polovina
+# testů výš by prošla. Projít musí OBA směry, a navíc se stránka jedné
+# repliky nesmí objevit u druhé přes cache.
+get /r5 -H "Cf-Connecting-Ip: $smerovani" -H "Cookie: op_token=tajne"; sezeni_vykresleni=$(vykresleni "$telo")
+get /r5 -H "Cf-Connecting-Ip: $smerovani"
+ma "stránka přihlášeného se neuložila pro anonyma" test "$(vykresleni "$telo")" != "$sezeni_vykresleni"
+ma "…a anonym dostal anonymní repliku" test "$replika" = anonym
+get /r5 -H "Cf-Connecting-Ip: $smerovani"
+ma "anonymní verze se cachuje normálně" test "$cache" = HIT
+ma "…a z cache je pořád anonymní replika" test "$replika" = anonym
 
 echo "Limit vykreslování: jeden klient nesmí sebrat web ostatním"
 # Měří se to, co bylo naměřeno v produkci: klient s cookie sezení jde mimo

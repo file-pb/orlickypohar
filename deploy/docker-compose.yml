@@ -139,7 +139,11 @@ services:
       retries: 5
       start_period: 20s
 
-  web:
+  # Dvě repliky webu, a liší se jen síťovým aliasem. Druhá dědí přes
+  # kotvu `*web-sluzba` celé prostředí i limity — schválně, protože
+  # vynechaná proměnná prostředí je u druhé kopie webu nejčastější chyba
+  # (poučení 54). Vypsat ji podruhé ručně znamená, že se jednou rozejdou.
+  web: &web-sluzba
     image: ${IMAGE_WEB:?Nastav IMAGE_WEB na tag z GHCR}
     restart: unless-stopped
     logging: *logging
@@ -187,6 +191,26 @@ services:
       timeout: 10s
       retries: 5
       start_period: 20s
+
+  # Replika jen pro přihlášené. Kdo má cookie sezení, jde vždycky mimo cache,
+  # takže každý jeho požadavek je vykreslení — a na společné replice se
+  # zařadí do fronty za útočníkem, který si vyžádal vykreslení na stále
+  # nové adresy (`?x=N`). Nález S11 v platformě.
+  #
+  # Změřeno 9. 10. 2026 při tom floodu: přihlášený na společné replice
+  # **1,9 s**, na vlastní **0,20 s**, tedy stejně jako v klidu. Replika
+  # přitom zůstala na 4 % procesoru, takže se dvoujádrový stroj nevytíží
+  # dvakrát — flood se celý zavře do anonymní repliky.
+  #
+  # Rozdělení dělá nginx (`$web_replika` v deploy/cache/default.conf),
+  # ne Docker: žádný sdílený alias. Sdílený alias není měřicí přípravek
+  # ani rozdělení, je to střídání (poučení 54).
+  web-sezeni:
+    <<: *web-sluzba
+    networks:
+      interni:
+        aliases: [orlickypohar-web-sezeni]
+      ven: {}
 
   # Mikrocache před webem (deploy/cache/, důvody v default.conf): stránku
   # pro nepřihlášené vykreslí web nejvýš jednou za 10 s. Veřejná adresa
