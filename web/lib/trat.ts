@@ -120,18 +120,22 @@ export const NAZVY_TYPU: Record<TypPrvku, string> = {
   Znacka: "značka",
   Brana: "brána",
   Odskok: "odskok",
-  CaraStart: "startovní čára",
-  CaraCil: "cílová čára",
+  // Start je start a cíl je cíl (Filip, 9. 10. 2026). „Startovní čára"
+  // a „cílová čára" byly popisy tvaru, ne jména věcí.
+  CaraStart: "start",
+  CaraCil: "cíl",
 };
 
 /**
- * Strana se jmenuje „ponechat po levé / po pravé" schválně. „Objíždí se
- * levou" si půlka lidí přečte jako „ponechat po levé" a druhá jako „točit
- * doleva", a to jsou protikladné věci.
+ * <b>Levobok a pravobok</b> (Filip, 9. 10. 2026: *„Stranu nazývej levobok
+ * a pravobok"*). Dřív tu stálo „ponechat po levé" — opis, který měl
+ * zabránit tomu, aby si někdo „objíždí se levou" přečetl jako „točit
+ * doleva". Opis to řešil za cenu toho, že to nebylo námořnicky: bok lodi
+ * je levobok a pravobok, a tak to říká rozhodčí i na vodě.
  */
 export const NAZVY_STRAN: Record<NonNullable<StranaPrvku>, string> = {
-  PoLeve: "ponechat po levé",
-  PoPrave: "ponechat po pravé",
+  PoLeve: "levobok",
+  PoPrave: "pravobok",
 };
 
 /** Prvky trati v pořadí. Bez trati prázdno, ne chyba. */

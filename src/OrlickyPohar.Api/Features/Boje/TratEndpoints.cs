@@ -98,6 +98,33 @@ public static class TratEndpoints
                 "Organizátor regaty, nebo rozhodčí ročníku. Prvek se maže doopravdy, "
                 + "na rozdíl od bóje: není to měření, je to rozhodnutí.");
 
+        g.MapGet("/seznam", SeznamAsync)
+            .Produces<List<TratNaVyberDto>>()
+            .WithTags("Bóje")
+            .WithSummary("Tratě regaty na výběr")
+            .WithDescription(
+                "Organizátor regaty, nebo rozhodčí ročníku. Od nejnovější. "
+                + "`jdePriradit` říká, jestli je trať volná — volná se přiřadí, "
+                + "obsazená naklonuje.");
+
+        g.MapPost("/{trat:int}/rozjizdka", PriradAsync)
+            .Produces<TratDto>()
+            .WithTags("Bóje")
+            .WithSummary("Přiřadí volnou trať rozjížďce")
+            .WithDescription(
+                "Organizátor regaty, nebo rozhodčí ročníku. Obvyklý postup: nejdřív se "
+                + "staví trať, pak se na ni založí rozjížďka. Trať, která už rozjížďce "
+                + "patří, se přiřadit nedá — ta se klonuje.");
+
+        g.MapPost("/{trat:int}/klon", KlonujAsync)
+            .Produces<TratDto>(StatusCodes.Status201Created)
+            .WithTags("Bóje")
+            .WithSummary("Naklonuje trať pro další rozjížďku")
+            .WithDescription(
+                "Organizátor regaty, nebo rozhodčí ročníku. Kopíruje prvky na tytéž bóje — "
+                + "žádná nová pípnutí. Výchozí stav klonu je `Hotovo`; `Prijato` smí "
+                + "zvolit jen rozhodčí.");
+
         g.MapPost("/prestavba", PrestavbaAsync)
             .Produces<TratDto>()
             .WithTags("Bóje")
@@ -183,6 +210,45 @@ public static class TratEndpoints
 
         return Odpoved(await sprava.PrestavbaAsync(
             rozsah!.ZavodId!.Value, await JeRozhodciAsync(kdo, rozsahy, rozsah, ct), ct));
+    }
+
+    private static async Task<IResult> SeznamAsync(
+        string serie, string zavod, ClaimsPrincipal kdo, Rozsahy rozsahy, TratSprava sprava,
+        CancellationToken ct)
+    {
+        var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
+        if (odpoved is not null) return odpoved;
+
+        return Results.Ok(await sprava.SeznamAsync(rozsah!.ZavodId!.Value, ct));
+    }
+
+    private static async Task<IResult> PriradAsync(
+        string serie, string zavod, int trat, PriradTratVstup vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, TratSprava sprava, CancellationToken ct)
+    {
+        var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
+        if (odpoved is not null) return odpoved;
+
+        return Odpoved(await sprava.PriradAsync(
+            rozsah!.ZavodId!.Value, trat, vstup.Rozjizdka,
+            await JeRozhodciAsync(kdo, rozsahy, rozsah, ct), ct));
+    }
+
+    private static async Task<IResult> KlonujAsync(
+        string serie, string zavod, int trat, KlonTratiVstup vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, TratSprava sprava, CancellationToken ct)
+    {
+        var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
+        if (odpoved is not null) return odpoved;
+        if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
+
+        var (novaTrat, chyba) = await sprava.KlonujAsync(
+            rozsah!.ZavodId!.Value, trat, vstup, uzivatel,
+            await JeRozhodciAsync(kdo, rozsahy, rozsah, ct), ct);
+
+        return chyba is not null
+            ? Results.BadRequest(new { error = chyba })
+            : Results.Created((string?)null, novaTrat);
     }
 
     private static async Task<IResult> PrvkyAsync(

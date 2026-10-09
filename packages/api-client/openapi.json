@@ -4166,6 +4166,166 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/zastavky/{zavod}/trat/seznam": {
+            "get": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Trat\u011b regaty na v\u00fdb\u011br",
+                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Od nejnov\u011bj\u0161\u00ed. `jdePriradit` \u0159\u00edk\u00e1, jestli je tra\u0165 voln\u00e1 \u2014 voln\u00e1 se p\u0159i\u0159ad\u00ed, obsazen\u00e1 naklonuje.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TratNaVyberDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/trat/{trat}/rozjizdka": {
+            "post": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "P\u0159i\u0159ad\u00ed volnou tra\u0165 rozj\u00ed\u017e\u010fce",
+                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Obvykl\u00fd postup: nejd\u0159\u00edv se stav\u00ed tra\u0165, pak se na ni zalo\u017e\u00ed rozj\u00ed\u017e\u010fka. Tra\u0165, kter\u00e1 u\u017e rozj\u00ed\u017e\u010fce pat\u0159\u00ed, se p\u0159i\u0159adit ned\u00e1 \u2014 ta se klonuje.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "trat",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PriradTratVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TratDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/trat/{trat}/klon": {
+            "post": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Naklonuje tra\u0165 pro dal\u0161\u00ed rozj\u00ed\u017e\u010fku",
+                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Kop\u00edruje prvky na tyt\u00e9\u017e b\u00f3je \u2014 \u017e\u00e1dn\u00e1 nov\u00e1 p\u00edpnut\u00ed. V\u00fdchoz\u00ed stav klonu je `Hotovo`; `Prijato` sm\u00ed zvolit jen rozhod\u010d\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "trat",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/KlonTratiVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TratDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/zastavky/{zavod}/trat/prestavba": {
             "post": {
                 "tags": [
@@ -4951,6 +5111,32 @@
                     "poradi": {
                         "type": "integer",
                         "format": "int32"
+                    }
+                }
+            },
+            "KlonTratiVstup": {
+                "required": [
+                    "rozjizdka",
+                    "stav"
+                ],
+                "type": "object",
+                "properties": {
+                    "rozjizdka": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "stav": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/StavTrati"
+                            }
+                        ]
                     }
                 }
             },
@@ -6673,6 +6859,18 @@
                     }
                 }
             },
+            "PriradTratVstup": {
+                "required": [
+                    "rozjizdka"
+                ],
+                "type": "object",
+                "properties": {
+                    "rozjizdka": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
             "PrvekDto": {
                 "required": [
                     "id",
@@ -7526,6 +7724,7 @@
                     "prijal",
                     "duvodVraceni",
                     "rozjizdkaId",
+                    "cisloRozjizdky",
                     "nahrazujeId",
                     "odjeta",
                     "smiHlasitHotovo",
@@ -7571,6 +7770,13 @@
                         ],
                         "format": "int32"
                     },
+                    "cisloRozjizdky": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
                     "nahrazujeId": {
                         "type": [
                             "null",
@@ -7588,6 +7794,51 @@
                         "type": "boolean"
                     },
                     "smiPrestavet": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "TratNaVyberDto": {
+                "required": [
+                    "id",
+                    "stav",
+                    "cisloRozjizdky",
+                    "prijatoV",
+                    "pocetPrvku",
+                    "odjeta",
+                    "jdePriradit"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "stav": {
+                        "$ref": "#/components/schemas/StavTrati"
+                    },
+                    "cisloRozjizdky": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "prijatoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "pocetPrvku": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "odjeta": {
+                        "type": "boolean"
+                    },
+                    "jdePriradit": {
                         "type": "boolean"
                     }
                 }
@@ -7893,6 +8144,7 @@
                 "required": [
                     "prestavba",
                     "prijatoV",
+                    "cisloRozjizdky",
                     "boje",
                     "prvky"
                 ],
@@ -7907,6 +8159,13 @@
                             "string"
                         ],
                         "format": "date-time"
+                    },
+                    "cisloRozjizdky": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
                     },
                     "boje": {
                         "type": "array",

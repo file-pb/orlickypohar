@@ -1879,6 +1879,88 @@ obrazovka by pak ukazovala dvě pravdy a při sporu by nebylo jasné, která
 platí. Krátká schválně (200 znaků): čte se na vodě z telefonu a na delší
 vysvětlení je plachetní směrnice.
 
+##### Názvosloví a typy prvku (Filip, 9. 10. 2026 večer)
+
+Filip prošel hotovou obrazovku a opravil slovník. **Je to oprava zadání, ne
+kosmetika:** půlka jmen, která jsem vymyslel, popisovala tvar místo věci.
+
+**Hotové v kódu:**
+
+- **Strana je `levobok` a `pravobok`**, ne „ponechat po levé". Opis měl
+  zabránit tomu, aby si někdo „objíždí se levou" přečetl jako „točit
+  doleva" — řešil to ale za cenu toho, že to nebylo námořnicky.
+- **Start je start a cíl je cíl.** „Startovní čára" a „cílová čára"
+  popisovaly tvar.
+- **Slovo „konec" z obrazovky zmizelo** — čte se jako cíl. Bóje prvku se
+  jmenují bóje, u startu a cíle levobok a pravobok.
+- **„Jak to jet" začíná světovou stranou** (*„na jih, startujeme na
+  zámek"*). Na vodě se člověk řídí rozhledem, ne stupni.
+
+**Rozhodnuté, ještě nepostavené:**
+
+| Typ prvku | Co nese | Pozn. |
+|---|---|---|
+| **Start** | levobok, pravobok, **směr** (světová strana) | může být pevná linie, **nebo otevírající se brána** za jedoucí startovací lodí po linii startu |
+| **Cíl** | levá, pravá | |
+| **Otočná bóje** | strana (levobok/pravobok) | barvu nese bóje, ne prvek |
+| **Průjezdní bóje** | strana | **nemusí to být jen plavební dráha** — i bóje, kterou jsme postavili |
+| **Brána** | | zůstává, Filip: *„ta je dobrá a může být i otočná"* |
+| **Otočná zóna / linie** | dva objekty | spojnice; **i dráty vysokého napětí nad vodou** |
+| **Odskok** | strana | zůstává — viz níž |
+
+**Odskok zůstává, a obrazovka ho musí vysvětlit.** Nejdřív jsem ho chtěl
+zrušit s tím, že ho Filip nezná, takže se nejezdí. Filip to zarazil:
+*„odskok nevyhazuj, protože ho neznám — když je standardem, tak ho tam
+nechej."* Má pravdu a je to pravidlo i do budoucna: **neznalost jednoho
+pořadatele není důkaz, že se věc nepoužívá.** Odskok je malá bójka kousek
+za návětrnou značkou; obeplouvá se hned po ní a je tam proto, aby se u ní
+lodě netlačily při ostrém obratu. Když tomu jméno nic neříká, patří
+vysvětlení do nápovědy u pole, ne do zahození typu.
+
+**Strana závisí na směru průjezdu**, ne na bóji: *„může být např. pravobok
+po proudu a levobok proti, nebo ve směru jiném"*. Model to umí bez nového
+pole — táž bóje je ve dvou prvcích s různým pořadím a různou stranou, a to
+`Poradi` schválně připouští.
+
+**Konce nemusí být bóje, a to oba.** Start, cíl i otočná zóna se běžně
+vytyčí proti **molu, objektu na břehu nebo plavidlu komise**. Dnes to umí
+jen druhý konec; musí to umět i první.
+
+##### Barva a tvar bóje (Filip, 9. 10. 2026)
+
+**Patří to na bóji, ne na prvek** (Filipova volba): barva je vlastnost toho
+kusu plastu ve vodě, ne rozhodnutí o trati — a pak se ukáže všude,
+v seznamu bójí, v prvku i na mapce.
+
+**Dvě pole, ne jeden výčet znaků.** Nejdřív jsem z vyhlášky chtěl udělat
+čtyři hotové druhy (červená válcová, zelená kuželová, žlutá vyhrazená,
+závodní). Filip doplnil paletu: *„asi přidáme ještě modrou, zelenou, bílou,
+červenou, žlutou a oranžovou barvu."* Tím to padá — bóje, které stavíme my,
+mají barvu, jakou zrovna máme, a výčet hotových znaků by je neuměl zapsat.
+
+| Pole | Hodnoty |
+|---|---|
+| **Barva** | modrá, zelená, bílá, červená, žlutá, oranžová (+ neuvedeno) |
+| **Tvar** | válcová, kuželová, kulová, sférický vršek, plovatka, jiný (+ neuvedeno) |
+
+**Znaky z vyhlášky jsou pak kombinace**, ne zvláštní kategorie — a mapka je
+podle nich umí pojmenovat:
+
+| Barva + tvar | Co to je podle vyhlášky |
+|---|---|
+| červená + válcová | **pravá** strana plavební dráhy; vrcholový znak červený válec |
+| zelená + kuželová | **levá** strana plavební dráhy; vrcholový znak zelený kužel vrcholem vzhůru |
+| žlutá + jiný než znaky vodní cesty | zakázaná nebo vyhrazená vodní plocha; vrcholový znak žluté „X" |
+| žlutá + sférický vršek | sportovní bóje, kterou stavíme my |
+
+**Pozor na záměnu, kterou jsem udělal:** červená je **pravá** strana
+plavební dráhy, ne levá. Zelená je levá. Kdyby to mapka kreslila obráceně,
+posílala by lodě na špatnou stranu dráhy.
+
+Barva se kreslí vždycky, tvar jen když je vyplněný — červený válec a zelený
+kužel pozná každý, kdo na Vltavě jezdí, i bez legendy. **Tvar je proto
+nepovinný:** na vodě se pípá jednou rukou a barva sama nese nejvíc.
+
 ##### Co to nepřinese
 
 **Automatické pořadí v cíli.** K tomu je kromě čáry potřeba ještě kolo,
@@ -2032,19 +2114,51 @@ nemění — mění se to, kde se dojelo. Nic se tedy neodemyká a veřejně se 
 „přestavuje se, počkej" uprostřed závodu. Zapíše se to na rozjížďku, až budou
 prvky (*zkráceno u prvku X v čase T*).
 
-##### Otevřené: výběr a klonování trati
+##### Výběr a klonování trati (Filip, 9. 10. 2026)
 
-Filip, 9. 10. 2026: *„Jakmile založím novou rozjížďku, můžu si vybrat již
-postavenou trať a ta se mi naklonuje z té, co se odjela."*
+Filip: *„Jakmile založím novou rozjížďku, můžu si vybrat již postavenou trať
+a ta se mi naklonuje z té, co se odjela."*
 
 **Klon nesmí znamenat nová pípnutí.** Vyrobila by se tím měření, která se
 nestala, s falešným časem a přesností — přesně to, co zakazuje oddíl *Trať
-není seznam bójí, ale řada prvků*. Klon tedy kopíruje **definici trati**
+není seznam bójí, ale řada prvků*. Klon kopíruje **definici trati**
 a ukazuje na tytéž záznamy bójí, které pořád stojí ve vodě.
 
-Z toho plyne, že **členství se uložit musí** (ve vodě může stát víc tratí
-najednou, takže „co zrovna stojí" nestačí). Nerozhodnuté zůstává, jestli má
-rozjížďka mít trať povinně už při založení a v jakém stavu klon začíná.
+**Členství se ukládat nemusí — ukládá ho prvek.** Dřív tu stálo, že ho bude
+potřeba vymyslet zvlášť; to bylo napsané, než prvky existovaly. Prvek patří
+trati a ukazuje na konkrétní záznamy bójí, takže klon je kopie prvků na
+tytéž bóje a nic dalšího k tomu není třeba.
+
+**Trať při založení rozjížďky povinná není.** Filip: *„Většinou se nejdřív
+staví trať a pak se na ni založí rozjížďka. Ale u některých závodů, jako
+maraton nebo dálková plavba, je jasná první rozjížďka a teprve pak se staví
+trať."* Obě pořadí tedy musí jít a **rozjížďka bez trati je legitimní stav**,
+ne rozdělaná práce.
+
+**Klon začíná v `Hotovo` a stav jde vybrat.** Filip: *„Asi bych to nechal ve
+stavu hotovo, nebo umožnil u klonu zaškrtnout, v jakém stavu má trať být,
+a pak to akceptovat při další rozjížďce."* Výchozí je `Hotovo`, protože klon
+je tvrzení stavitele („stojí to, co minule"), ne rozhodnutí rozhodčího.
+**`Prijato` smí při klonování zvolit jen rozhodčí** — jinak by se zámek dal
+obejít knoflíkem na stavitelské obrazovce.
+
+**Přiřadit, nebo naklonovat, jsou dvě různé věci:**
+
+| Zdrojová trať | Co se stane | Proč |
+|---|---|---|
+| ještě nepatří žádné rozjížďce | **přiřadí se** | obvyklý postup „postav, pak založ rozjížďku"; vyrábět kopii hned po přijetí by znamenalo přijímat dvakrát totéž |
+| už patří rozjížďce | **naklonuje se** | podle ní se jelo nebo pojede; odebrat ji té rozjížďce by přepsalo historii |
+
+**Kterou trať vidí veřejnost, se tím mění.** Dokud byla trať jedna, stačilo
+„nejnovější, pokud je přijatá". S tratěmi po rozjížďkách by čerstvý klon ve
+stavu `Hotovo` veřejně shodil trať, podle které se zrovna pluje. Veřejně se
+proto vydává **nejnovější přijatá** trať — a když se nejnovější zrovna
+přestavuje, má přednost „počkej", protože to je ta, která se mění ve vodě.
+
+Na pípnutí a zámek to nesahá: `AktualniAsync` je dál „nejnovější trať
+regaty", tedy ta, na které se pracuje. Mezi rozjížďkami je to nově klon
+v `Hotovo`, takže se smí pípat — a to je správně, bóje se mezi rozjížďkami
+běžně posouvají.
 
 ##### Otevřené: sebraný dojezd a hendikep
 
@@ -2261,6 +2375,42 @@ kontrola, že soubor opravdu začíná `%PDF`, a uložení beze změny obsahu.
 
 **Verze se čísluje v rámci zastávky** (1, 2, 3…) a platná je ta nejvyšší.
 Mazací endpoint na *záznam* schválně neexistuje — ani pro správce.
+
+#### Základní obrazy ze zrcadla, ne z Docker Hubu (9. 10. 2026)
+
+**Anonymní stahování z Docker Hubu má limit na IP runneru**, a tu GitHub
+sdílí se všemi ostatními uživateli. Osmnáct nasazení za den ho vyčerpalo
+a shodilo `build` (`nginxinc/nginx-unprivileged`) i `integrace`
+(`postgres:17-alpine`) naráz. Hláška je `429 Too Many Requests`
+a `toomanyrequests: unauthenticated pull rate limit` — **není to chyba
+kódu** a rerun hned po sobě padá na totéž, protože okno je šestihodinové.
+`mcr.microsoft.com` (obrazy .NET) limit nemá, ty nespadly nikdy.
+
+Volba padla na **zrcadlo v GHCR** (`.github/workflows/zrcadlo.yml`) místo
+přihlášení k Docker Hubu. Přihlášení by bylo menší zásah — limit se pak
+počítá na účet, který nikdo jiný nevyčerpává —, ale nechává Docker Hub
+v cestě každého buildu. Zrcadlo ho odtamtud odstraní úplně.
+
+**Dvě věci, které z toho plynou a nejsou samozřejmé:**
+
+1. **Balíček v GHCR je po pushi soukromý** (anonymní dotaz na manifest
+   `ghcr.io/file-pb/orlickypohar*` vrací 403). Přihlášení v `build` se
+   proto přesunulo **nad** první krok, který obraz tahá, a přestalo mít
+   `if: github.event_name != 'pull_request'`. Dřív se přihlašovalo jen
+   kvůli pushi; teď je potřeba i ke čtení. Co se kam pushuje, dál hlídá
+   `push:` u `build-push-action`.
+2. **Kopie zastarává.** Proto je úloha měsíčně plánovaná. Kopíruje se
+   značka, ne otisk, takže každý běh přinese, co je pod značkou nového.
+
+**Pořadí při zavádění je podstatné:** nejdřív se úloha jednou spustí
+a zrcadlo naplní, teprve pak smí `FROM` ukazovat na zrcadlo. Obráceně by
+se build rozbil na prázdném registru.
+
+Lokálně se nic nemění: `ARG ZRCADLO` má výchozí hodnotu a `PostgresFixture`
+bez proměnné `POSTGRES_IMAGE` sáhne na Hub jako dřív — jeden vývojářský
+stroj limit nevyčerpá. V CI se navíc vypíná Ryuk (uklízeč kontejnerů
+Testcontainers, taky z Hubu): na runneru, který se po běhu zahodí celý,
+není co uklízet.
 
 #### Stažení z vývěsky (oponentura, 5. 10. 2026)
 

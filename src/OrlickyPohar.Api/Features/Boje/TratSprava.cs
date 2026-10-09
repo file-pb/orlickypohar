@@ -180,11 +180,26 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
     /// </summary>
     public async Task<VerejnaTratDto?> VerejnaAsync(int zavodId, CancellationToken ct)
     {
-        var trat = await AktualniAsync(zavodId, ct);
-        if (trat is null || !Stavba.JeVerejna(trat.Stav)) return null;
+        // Nejnovější trať rozhoduje jen o přestavbě: to je ta, která se právě
+        // mění ve vodě. Jinak se vydává **nejnovější přijatá** — od chvíle,
+        // kdy má každá rozjížďka vlastní trať, by čerstvý klon ve stavu
+        // `Hotovo` jinak veřejně shodil trať, podle které se zrovna pluje
+        // (plán, *Výběr a klonování trati*).
+        if (await AktualniAsync(zavodId, ct) is { Stav: StavTrati.Prestavba })
+            return new VerejnaTratDto(
+                Prestavba: true, PrijatoV: null, CisloRozjizdky: null, Boje: [], Prvky: []);
 
-        if (trat.Stav == StavTrati.Prestavba)
-            return new VerejnaTratDto(Prestavba: true, PrijatoV: null, Boje: [], Prvky: []);
+        var trat = await db.Trate
+            .Where(t => t.ZavodId == zavodId && t.Stav == StavTrati.Prijato)
+            .OrderByDescending(t => t.Id)
+            .FirstOrDefaultAsync(ct);
+
+        if (trat is null) return null;
+
+        var cislo = trat.RozjizdkaId is { } rozjizdka
+            ? await db.Rozjizdky.Where(r => r.Id == rozjizdka)
+                .Select(r => (int?)r.Cislo).FirstOrDefaultAsync(ct)
+            : null;
 
         var prijato = trat.PrijatoV!.Value;
 
@@ -201,7 +216,7 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
                         : null))
             .ToListAsync(ct);
 
-        return new VerejnaTratDto(false, prijato, Prvky: prvky, Boje: await db.Boje
+        return new VerejnaTratDto(false, prijato, cislo, Prvky: prvky, Boje: await db.Boje
             .Where(b => b.ZavodId == zavodId
                         && b.PostavenaV <= prijato
                         && (b.NahrazenaV == null || b.NahrazenaV > prijato)
@@ -212,20 +227,183 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
     }
 
     /// <summary>
-    /// Odstartovala po přijetí téhle trati nějaká rozjížďka? Pak se podle ní
-    /// jelo. Platí pro <b>poslední</b> trať regaty; u starších by se muselo
-    /// omezit i shora, přijetím té následující.
+    /// Tratě regaty na výběr: <i>„jede se tahle"</i>. Od nejnovější, protože
+    /// ta, kterou chce člověk zopakovat, bývá ta poslední.
     /// </summary>
-    private Task<bool> OdjetaAsync(Trat trat, CancellationToken ct) =>
-        trat.PrijatoV is not { } prijato
-            ? Task.FromResult(false)
-            : db.Rozjizdky.AnyAsync(
-                r => r.ZavodId == trat.ZavodId && r.StartV != null && r.StartV >= prijato, ct);
+    public async Task<List<TratNaVyberDto>> SeznamAsync(int zavodId, CancellationToken ct)
+    {
+        var trate = await db.Trate
+            .Where(t => t.ZavodId == zavodId)
+            .OrderByDescending(t => t.Id)
+            .ToListAsync(ct);
+
+        var cisla = await db.Rozjizdky
+            .Where(r => r.ZavodId == zavodId)
+            .ToDictionaryAsync(r => r.Id, r => r.Cislo, ct);
+
+        var prvku = await db.PrvkyTrati
+            .Where(p => p.Trat!.ZavodId == zavodId)
+            .GroupBy(p => p.TratId)
+            .Select(g => new { TratId = g.Key, Pocet = g.Count() })
+            .ToDictionaryAsync(x => x.TratId, x => x.Pocet, ct);
+
+        var hotovo = new List<TratNaVyberDto>();
+        foreach (var t in trate)
+            hotovo.Add(new TratNaVyberDto(
+                t.Id,
+                t.Stav,
+                t.RozjizdkaId is { } r && cisla.TryGetValue(r, out var c) ? c : null,
+                t.PrijatoV,
+                prvku.GetValueOrDefault(t.Id),
+                await OdjetaAsync(t, ct),
+                JdePriradit: t.RozjizdkaId is null));
+
+        return hotovo;
+    }
+
+    /// <summary>
+    /// Přiřadí volnou trať rozjížďce. Obvyklý postup: <b>nejdřív se staví
+    /// trať, pak se na ni založí rozjížďka</b> (Filip, 9. 10. 2026) —
+    /// vyrábět v tu chvíli kopii by znamenalo přijímat dvakrát totéž.
+    /// </summary>
+    public async Task<(TratDto? Trat, string? Chyba)> PriradAsync(
+        int zavodId, int tratId, int cisloRozjizdky, bool jeRozhodci, CancellationToken ct)
+    {
+        var trat = await db.Trate
+            .Include(t => t.Prijal)
+            .FirstOrDefaultAsync(t => t.Id == tratId && t.ZavodId == zavodId, ct);
+
+        if (trat is null) return (null, "Taková trať u téhle regaty není.");
+        if (trat.RozjizdkaId is not null)
+            return (null, "Tahle trať už rozjížďce patří. Odebrat by znamenalo přepsat, "
+                          + "podle čeho se jelo — naklonuj ji.");
+
+        var (rozjizdkaId, chyba) = await VolnaRozjizdkaAsync(zavodId, cisloRozjizdky, ct);
+        if (chyba is not null) return (null, chyba);
+
+        trat.RozjizdkaId = rozjizdkaId;
+        await db.SaveChangesAsync(ct);
+
+        return (await DtoAsync(trat, true, jeRozhodci, ct), null);
+    }
+
+    /// <summary>
+    /// Naklonuje trať: <b>kopii prvků na tytéž bóje</b>, žádná nová pípnutí
+    /// (plán, <i>Výběr a klonování trati</i>). Vyrobit pípnutí by znamenalo
+    /// měření, které se nestalo, s falešným časem a přesností.
+    /// </summary>
+    public async Task<(TratDto? Trat, string? Chyba)> KlonujAsync(
+        int zavodId, int tratId, KlonTratiVstup vstup, Guid kdo, bool jeRozhodci,
+        CancellationToken ct)
+    {
+        var stav = vstup.Stav ?? StavTrati.Hotovo;
+        if (Stavba.ProcNejdeKlon(stav, jeRozhodci) is { } procNe) return (null, procNe);
+
+        var zdroj = await db.Trate
+            .FirstOrDefaultAsync(t => t.Id == tratId && t.ZavodId == zavodId, ct);
+        if (zdroj is null) return (null, "Taková trať u téhle regaty není.");
+
+        int? rozjizdkaId = null;
+        if (vstup.Rozjizdka is { } cislo)
+        {
+            var (id, chyba) = await VolnaRozjizdkaAsync(zavodId, cislo, ct);
+            if (chyba is not null) return (null, chyba);
+            rozjizdkaId = id;
+        }
+
+        var ted = cas.GetUtcNow();
+        var nova = new Trat
+        {
+            ZavodId = zavodId,
+            RozjizdkaId = rozjizdkaId,
+            Stav = stav,
+            ZalozenaV = ted,
+            // `NahrazujeId` se schválně nenastavuje: klon starou trať
+            // nenahrazuje, obě platí dál. Řetěz nahrazení je o přestavbě.
+            PrijatoV = stav == StavTrati.Prijato ? ted : null,
+            PrijalId = stav == StavTrati.Prijato ? kdo : null,
+        };
+        db.Trate.Add(nova);
+        await db.SaveChangesAsync(ct);
+
+        var prvky = await db.PrvkyTrati
+            .Where(x => x.TratId == zdroj.Id)
+            .OrderBy(x => x.Poradi).ThenBy(x => x.Id)
+            .ToListAsync(ct);
+
+        db.PrvkyTrati.AddRange(prvky.Select(x => new PrvekTrati
+        {
+            TratId = nova.Id,
+            Typ = x.Typ,
+            Poradi = x.Poradi,
+            Strana = x.Strana,
+            Poznamka = x.Poznamka,
+            // Tytéž záznamy bójí: pořád stojí ve vodě a jejich poloha je
+            // měření, které se stalo. Kopíruje se rozhodnutí, ne měření.
+            BojeAId = x.BojeAId,
+            BojeBId = x.BojeBId,
+            KonecBSirka = x.KonecBSirka,
+            KonecBDelka = x.KonecBDelka,
+            KonecBPopis = x.KonecBPopis,
+        }));
+        await db.SaveChangesAsync(ct);
+
+        if (nova.PrijalId is not null)
+            await db.Entry(nova).Reference(t => t.Prijal).LoadAsync(ct);
+
+        return (await DtoAsync(nova, true, jeRozhodci, ct), null);
+    }
+
+    /// <summary>
+    /// Id rozjížďky daného čísla, když může trať převzít — jinak důvod.
+    /// Druhou trať téže rozjížďky vyrábí jedině přestavba, a ta má vlastní
+    /// cestu.
+    /// </summary>
+    private async Task<(int Id, string? Chyba)> VolnaRozjizdkaAsync(
+        int zavodId, int cislo, CancellationToken ct)
+    {
+        var id = await db.Rozjizdky
+            .Where(r => r.ZavodId == zavodId && r.Cislo == cislo)
+            .Select(r => (int?)r.Id)
+            .FirstOrDefaultAsync(ct);
+
+        if (id is null) return (0, $"Rozjížďka číslo {cislo} u téhle regaty není.");
+
+        return await db.Trate.AnyAsync(t => t.RozjizdkaId == id, ct)
+            ? (0, "Tahle rozjížďka už trať má. Když se přestavuje, použij přestavbu.")
+            : (id.Value, null);
+    }
+
+    /// <summary>
+    /// Jelo se podle téhle trati? Pak se nepřepisuje.
+    /// <para>
+    /// <b>Trať rozjížďky se pozná podle její rozjížďky</b> — odstartovala,
+    /// tedy se podle ní jelo. U trati, která rozjížďce ještě nepatří, se to
+    /// dopočítá z času: odstartovala po jejím přijetí nějaká rozjížďka?
+    /// Ten dopočet platí pro <b>poslední</b> trať regaty; u starších by se
+    /// musel omezit i shora, přijetím té následující — a právě proto je
+    /// vazba na rozjížďku lepší odpověď než čas.
+    /// </para>
+    /// </summary>
+    private async Task<bool> OdjetaAsync(Trat trat, CancellationToken ct)
+    {
+        if (trat.RozjizdkaId is { } rozjizdka)
+            return await db.Rozjizdky.AnyAsync(
+                r => r.Id == rozjizdka && r.StartV != null, ct);
+
+        return trat.PrijatoV is { } prijato
+               && await db.Rozjizdky.AnyAsync(
+                   r => r.ZavodId == trat.ZavodId && r.StartV != null && r.StartV >= prijato, ct);
+    }
 
     private async Task<TratDto> DtoAsync(
         Trat t, bool jeStavitel, bool jeRozhodci, CancellationToken ct)
     {
         var odjeta = await OdjetaAsync(t, ct);
+        var cislo = t.RozjizdkaId is { } rozjizdka
+            ? await db.Rozjizdky.Where(r => r.Id == rozjizdka)
+                .Select(r => (int?)r.Cislo).FirstOrDefaultAsync(ct)
+            : null;
 
         return new TratDto(
             t.Id,
@@ -235,6 +413,7 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
             t.Prijal?.Zobrazovane,
             t.DuvodVraceni,
             t.RozjizdkaId,
+            cislo,
             t.NahrazujeId,
             odjeta,
             SmiHlasitHotovo: jeStavitel && Stavba.ProcNejdeHotovo(t.Stav) is null,

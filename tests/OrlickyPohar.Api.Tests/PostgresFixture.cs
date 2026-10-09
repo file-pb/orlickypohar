@@ -28,8 +28,18 @@ public sealed class PostgresFixture : WebApplicationFactory<Program>, IAsyncLife
     public const string Token = "testovaci-token";
     public const string LandsatToken = "testovaci-landsat";
 
-    private readonly PostgreSqlContainer _db =
-        new PostgreSqlBuilder("postgres:17-alpine").Build();
+    /// <summary>
+    /// Obraz PostgreSQL. <b>V CI ze zrcadla v GHCR</b>, protože anonymní
+    /// stahování z Docker Hubu má limit na IP runneru a ta je sdílená se
+    /// všemi ostatními (9. 10. 2026 nám tím spadly integrační testy
+    /// i build). Lokálně se proměnná nenastavuje a jede se z Hubu —
+    /// jeden vývojářský stroj limit nevyčerpá a přihlašovat se kvůli tomu
+    /// do GHCR by byla překážka navíc.
+    /// </summary>
+    private static readonly string Obraz =
+        Environment.GetEnvironmentVariable("POSTGRES_IMAGE") ?? "postgres:17-alpine";
+
+    private readonly PostgreSqlContainer _db = new PostgreSqlBuilder(Obraz).Build();
 
     // Explicitní implementace: WebApplicationFactory má vlastní DisposeAsync
     // s jiným návratovým typem, takže by se jinak srazily.
