@@ -1120,6 +1120,31 @@ skutečně zakazovat. (Filip, 8. 9. 2026.)
 odkaz s náhledem. Číst obsah ze skupiny zpátky do webu prakticky nejde —
 skupiny jsou zavřené a Facebook to API nedává. Počítej s jednosměrným tokem.
 
+### Úvodník a taby (Filip, 9. 10. 2026)
+
+Návrh stránky regaty měl dvě nerozhodnuté otázky a do plánu se proto
+nezapisoval. **Obě jsou rozhodnuté.**
+
+**Úvodník je článek s příznakem, ne pole na regatě.** `Clanek` s vazbou na
+závod a příznakem „úvodník", nejvýš jeden na regatu. Zdědí tím všechno
+hotové: editor strukturovaných bloků, čištění při zápisu (oddíl *Tělo
+článku*), fotky v R2 a psaní dopředu s datem vydání. Pole na regatě by
+vyrobilo druhý editor vedle článků, nedalo by se naplánovat a fotky by v něm
+nebyly — a dovybavovalo by se to zpátky.
+
+**Každá část má vlastní adresu; na úzké obrazovce se vykreslí jako akordeon.**
+Dnes je závod jedna stránka (`web/app/serie/[slug]/zavody/[zavod]`). Části
+dostanou vlastní cesty pod ní, a to ze dvou důvodů: posílají se na ně odkazy
+— směrnice se vyvěšuje právě proto, aby šel poslat odkaz — a **mikrocache
+drží každou adresu zvlášť**, takže tabule v hospodě i telefon u vody dostanou
+jen svůj kus, ne celou stránku.
+
+Na mobilu je z týchž adres akordeon otevřený na sekci, která odpovídá adrese.
+**Má to jednu past:** akordeon nesmí natáhnout data všech částí, jinak je to
+druhý tvar stránky s jinou cenou a mobil zaplatí i za to, co nerozbalil.
+Načítá se tedy jen otevřená sekce a rozbalení jiné je navigace na její
+adresu, ne nové vykreslení celku.
+
 ## Upozornění (push)
 
 Appka má závodním lodím nosit informace — během závodu (odložený start,
@@ -1396,12 +1421,30 @@ vypnutí pilotu, ne opravy mezi dvěma rozjížďkami.
 druhém nebo třetím závodě 2027, nemusí být hotový k 15. květnu a přestane
 soupeřit o hodiny se stavy trati.
 
-**Nerozhodnutý předpoklad: jak se appka dostane na cizí telefon.** Poloha na
-pozadí chce deklarované background modes, tedy development build; plán
-8. 9. 2026 rozhodl neplatit 99 $ ročně za účet u Applu. „Jeden telefon na
-loď" tedy dnes znamená **Android, nebo Filipův vlastní telefon**. Je to
-rozhodnutí, ne formalita — a schvalování buildu je kalendář, který se
-hodinami nedohání.
+**Vyvíjí se pro obě platformy, iOS se zkouší v simulátoru, účet u Applu se
+nekupuje** (Filip, 9. 10. 2026: *„postav to i pro Apple, já to zatím budu
+spouštět v simulátoru, ale vyvinuté to mít budeme pro obě platformy"*). Dev
+build pro simulátor se nepodepisuje, takže na něj účet potřeba není;
+`app.json` k tomu zatím nemá ani oddíl `ios` s `bundleIdentifier` — má jen
+`android.package`.
+
+**Co tím ale neodpadlo.** Simulátor neprokáže přejímací podmínky 1 a 2, tedy
+zamčený telefon se spotřebou a appku zabitou systémem v půlce závodu — a to
+je právě ta „nejpravděpodobnější skutečná porucha". Na ně je potřeba fyzický
+telefon. Volné Apple ID dev build z Xcode podepíše, ale profil platí sedm
+dní, takže na **cizí** iPhone se tím appka rozumně nedostane; k tomu vede
+EAS Build s interní distribucí nebo TestFlight, a ty ten zaplacený účet
+chtějí. **Přejímka pilotu na iOSu tedy zůstává za rozhodnutím o 99 $** a ten
+termín je kalendář, ne hodiny. Na Androidu nic z toho neplatí — `npm run apk`
+staví interní APK (`eas build --profile preview`) už dnes.
+
+**Expo Go na pilota nestačí ani na jedné platformě.** Jeho nativní binárka je
+pevná, takže se do ní nedá deklarovat `UIBackgroundModes: location` ani
+foreground service; `expo-location` proto v Expo Go polohu na pozadí neumí
+a flagy `isIosBackgroundLocationEnabled` a `isAndroidBackgroundLocationEnabled`
+jsou config-plugin flagy, které mění nativní konfiguraci (dokumentace Expa
+k `Location` a `TaskManager`, ověřeno 9. 10. 2026). Na všechno ostatní Expo Go
+dost je — přihlášení, moje lodě, bóje, obrazovky —, jen ne na záznam polohy.
 
 ### Co je na tom skutečně těžké
 
@@ -4313,11 +4356,19 @@ To nejsou mezery, to jsou rozhodnutí.
 
 1. ~~**Přegenerovat klienta z OpenAPI**~~ — **hotovo 8. 10. 2026**, a na
    něm postavená ~~**obrazovka bójí**~~ **9. 10. 2026**.
-2. **Vypsat jednu zastávku 2027** a vyvěsit u ní směrnici. Obsah, ne kód,
-   a teprve tím se celý řetěz přihlášek a vývěsky zkusí na skutečných datech.
-3. **Pruh ukázky podle ročníku**, protože bod 2 ho hned odhalí.
-4. **Majitel z našeptávače a stránka o osobních údajích** — před otevřením
+2. **Pruh ukázky podle ročníku.** Musí být dřív než vypsaná zastávka, ne až
+   po ní: `PruhUkazky` visí v `layout.tsx` nad celým webem a rozhoduje se jen
+   podle neprázdné `UKAZKOVE_SERIE`, takže by o skutečném 2027 tvrdil, že je
+   vymyšlený.
+3. **Majitel z našeptávače a stránka o osobních údajích** — před otevřením
    přihlášek, ne po.
+4. **Vypsat jednu zastávku 2027** a vyvěsit u ní směrnici. Obsah, ne kód,
+   a teprve tím se celý řetěz přihlášek a vývěsky zkusí na skutečných datech.
+   **Je to až čtvrtý bod, ne druhý** (opraveno 9. 10. 2026). `Vypsany`
+   znamená, že se lodě smějí hlásit, takže ho nesmí předběhnout ani únik
+   majitele z našeptávače, ani chybějící stránka o osobních údajích. Původní
+   pořadí si odporovalo samo: bod o přihláškách u sebe měl „před otevřením
+   přihlášek, ne po" a stál za vypsáním.
 5. **Zelené nasazení bez nasazení** a **postup pro den závodu** včetně dumpu
    před migrací.
 6. **Hláška u konfliktu** a doplnění mocku tam, kde brání zkoušce.
