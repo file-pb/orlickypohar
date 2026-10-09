@@ -1,7 +1,12 @@
 # Web se staví ve dvou krocích: v prvním se instaluje a sestavuje,
 # ve druhém zůstane jen to, co běží.
 
-FROM node:22-alpine AS build
+# Základní obraz z našeho zrcadla v GHCR, ne přímo z Docker Hubu:
+# anonymní stahování z Hubu má limit na IP runneru a ta je sdílená, takže
+# ho vyčerpá kdokoliv jiný (9. 10. 2026 nám tím spadl build i integrace).
+# Zrcadlo plní `.github/workflows/zrcadlo.yml`, kde je i cena toho řešení.
+ARG ZRCADLO=ghcr.io/file-pb/orlickypohar/zrcadlo
+FROM ${ZRCADLO}/node:22-alpine AS build
 WORKDIR /src
 
 # Závislosti zvlášť, aby se vrstva nepřestavovala při každé změně kódu.
@@ -11,7 +16,7 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM node:22-alpine AS runtime
+FROM ${ZRCADLO}/node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=8080

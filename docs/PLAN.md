@@ -2225,6 +2225,42 @@ kontrola, že soubor opravdu začíná `%PDF`, a uložení beze změny obsahu.
 **Verze se čísluje v rámci zastávky** (1, 2, 3…) a platná je ta nejvyšší.
 Mazací endpoint na *záznam* schválně neexistuje — ani pro správce.
 
+#### Základní obrazy ze zrcadla, ne z Docker Hubu (9. 10. 2026)
+
+**Anonymní stahování z Docker Hubu má limit na IP runneru**, a tu GitHub
+sdílí se všemi ostatními uživateli. Osmnáct nasazení za den ho vyčerpalo
+a shodilo `build` (`nginxinc/nginx-unprivileged`) i `integrace`
+(`postgres:17-alpine`) naráz. Hláška je `429 Too Many Requests`
+a `toomanyrequests: unauthenticated pull rate limit` — **není to chyba
+kódu** a rerun hned po sobě padá na totéž, protože okno je šestihodinové.
+`mcr.microsoft.com` (obrazy .NET) limit nemá, ty nespadly nikdy.
+
+Volba padla na **zrcadlo v GHCR** (`.github/workflows/zrcadlo.yml`) místo
+přihlášení k Docker Hubu. Přihlášení by bylo menší zásah — limit se pak
+počítá na účet, který nikdo jiný nevyčerpává —, ale nechává Docker Hub
+v cestě každého buildu. Zrcadlo ho odtamtud odstraní úplně.
+
+**Dvě věci, které z toho plynou a nejsou samozřejmé:**
+
+1. **Balíček v GHCR je po pushi soukromý** (anonymní dotaz na manifest
+   `ghcr.io/file-pb/orlickypohar*` vrací 403). Přihlášení v `build` se
+   proto přesunulo **nad** první krok, který obraz tahá, a přestalo mít
+   `if: github.event_name != 'pull_request'`. Dřív se přihlašovalo jen
+   kvůli pushi; teď je potřeba i ke čtení. Co se kam pushuje, dál hlídá
+   `push:` u `build-push-action`.
+2. **Kopie zastarává.** Proto je úloha měsíčně plánovaná. Kopíruje se
+   značka, ne otisk, takže každý běh přinese, co je pod značkou nového.
+
+**Pořadí při zavádění je podstatné:** nejdřív se úloha jednou spustí
+a zrcadlo naplní, teprve pak smí `FROM` ukazovat na zrcadlo. Obráceně by
+se build rozbil na prázdném registru.
+
+Lokálně se nic nemění: `ARG ZRCADLO` má výchozí hodnotu a `PostgresFixture`
+bez proměnné `POSTGRES_IMAGE` sáhne na Hub jako dřív — jeden vývojářský
+stroj limit nevyčerpá. V CI se navíc vypíná Ryuk (uklízeč kontejnerů
+Testcontainers, taky z Hubu): na runneru, který se po běhu zahodí celý,
+není co uklízet.
+
 #### Stažení z vývěsky (oponentura, 5. 10. 2026)
 
 Do 6. 10. 2026 platilo „vyvěšené zůstává" na záznam **i na obsah** — a to
