@@ -178,12 +178,20 @@ echo "Limit vykreslování: jeden klient nesmí sebrat web ostatním"
 # Prefetch celé stránky nesmí narazit. Next posílá `RSC: 1` a `?_rsc=<hash>`
 # pro každý odkaz ve výřezu; stránky poháru jich mají 24 až 32. Dřív stačilo
 # otevřít úvodní stránku a od jedenáctého prefetche chodily 429 (poučení 53).
+# Souběh schválně NÍZKÝ, ne 32 naráz. Prohlížeč tolik spojení neotevře:
+# k Cloudflare jde HTTP/2 po jednom a dál se spojení sdílejí, takže nginx
+# vidí hodně požadavků na málo spojeních. Doklad z provozu 9. 10.: za půl
+# hodiny osm varování zóny `render` a jen jedno `souben`. Kdyby se střílelo
+# 32 naráz, měřil by se `limit_conn`, ne dávka — a test by tvrdil něco
+# jiného, než co se na něj píše.
 prohlizec="203.0.113.21"
-stavy=$(for i in $(seq 1 32); do
-          curl -s -o /dev/null -w '%{http_code}\n' -H "Cf-Connecting-Ip: $prohlizec" \
-            -H 'RSC: 1' -H 'Next-Router-Prefetch: 1' "$URL/odkaz$i?_rsc=h$i" &
-        done; wait)
-ma "32 prefetchů naráz projde bez 429" test "$(grep -c 429 <<<"$stavy")" -eq 0
+: > "$ADRESAR/.pref"
+seq 1 32 | xargs -P 6 -I{} sh -c \
+  "curl -s -o /dev/null -w '%{http_code}\n' -H 'Cf-Connecting-Ip: $prohlizec' \
+     -H 'RSC: 1' -H 'Next-Router-Prefetch: 1' '$URL/odkaz{}?_rsc=h{}'" >> "$ADRESAR/.pref"
+stavy=$(cat "$ADRESAR/.pref"); rm -f "$ADRESAR/.pref"
+ma "32 prefetchů stránky projde bez 429" test "$(grep -c 429 <<<"$stavy")" -eq 0
+ma "…a opravdu jich odešlo 32" test "$(grep -c . <<<"$stavy")" -eq 32
 
 utocnik="203.0.113.7"; divak="203.0.113.8"
 # SOUBĚŽNĚ, ne za sebou. Sekvenční smyčka 25 curlů trvá přes deset vteřin
