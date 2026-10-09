@@ -344,6 +344,16 @@ telefon.
   návrh (`tools/fake-api.py`, `pridej_rozjizdku`) a na odjeté zastávce ji
   založit jde (`proc_nejde_na_zavod` pouští `Vypsany` i `Odjety`). Ověřeno
   čtením kódu 8. 10. 2026, **projít si to před sezením stejně.**
+- **Vyvěšení směrnice (C3).** Mock přijímá nahrání od 9. 10. 2026 a kontroluje
+  totéž co API (`Vyveseni.ProcNejde` a `JePdf`): jen PDF — a rozhoduje
+  **obsah, ne koncovka** —, do 20 MB, verze je `max + 1` a starší zůstávají.
+  Nahraný soubor se pak vrací přesně tak, jak přišel, takže A6 po C3 ukazuje
+  tu správnou verzi. Mít PDF připravené dopředu.
+- **Skryté výsledky (A5).** Ročník se přepne ve správě (`POST
+  /sprava/serie/{slug}/vysledky-zavodu`, smí **správce**) a mock se pak chová
+  jako API: zastávka zůstane i se seznamem lodí, rozjížďky a pořadí odejdou
+  prázdné a klient dostane `vysledkySkryte`. Přepnout **před** scénářem a po
+  něm vrátit — stav žije v paměti procesu, takže restart mocku ho srovná.
 - **Stav výsledků.** Zapisovat jde na zastávce ve stavu `Vypsany` nebo `Odjety`
   (`proc_nejde_na_zavod` v `tools/fake-api.py`) a jen dokud jsou výsledky
   `Navrzeno` nebo `KRevizi` (konstanta `OTEVRENY`, hlídá ji
