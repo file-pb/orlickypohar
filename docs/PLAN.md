@@ -1584,6 +1584,56 @@ a které stejně potřebujeme pro upozornění posádce i pro tracker.
 **Co na webu nepůjde nikdy:** samotné sledování trasy. Hodiny běžící GPS na
 pozadí prohlížeč neumí, na iPhonu obzvlášť. To je důvod, proč appka existuje.
 
+#### Trať není seznam bójí, ale řada prvků (Filip, 9. 10. 2026)
+
+*„Dokázali bychom bóje rozšířit i o definici cílové čáry? Nebo to, že musí
+být průjezdní brána, jako u závodů optíků, kdy polovina točí pravou
+a polovina levou bóji?"*
+
+**Cílová čára i brána jsou tatáž věc: dvě bóje, které spolu tvoří jeden
+prvek trati.** Nechybí nový druh bóje, chybí **vazba mezi dvěma** a to, co
+ta dvojice znamená. Dneska to pořadatel vyjadřuje jménem — „start levý",
+„start pravý" — takže dvojice existuje v jeho hlavě, ne v datech, a mapka
+kreslí dva puntíky tam, kde je čára.
+
+**Co se o to rozbije, je `Poradi`.** Dnes je to pořadí v lineární řadě.
+Brána ale zabírá **jedno místo v řadě a má dvě bóje**, takže z trati se
+musí stát řada **prvků** — značka, brána, čára — a teprve prvek má jednu
+nebo dvě bóje.
+
+**A chybí strana objíždění.** Dnes se nikam nezapisuje. U značky je to
+„levou / pravou", u brány je pointa v tom, že **si loď vybere** — právě to
+z brány dělá bránu, a ne jen dvě bóje vedle sebe.
+
+| Prvek | Bójí | Co o něm musí být vidět |
+|---|---|---|
+| značka | 1 | kterou stranou se objíždí |
+| brána | 2 | že se projíždí mezi nimi a strana je na lodi |
+| čára (start, cíl) | 2 | že se **přes** ni jede, ne kolem |
+
+**Kde ta vazba má bydlet — návrh, ne rozhodnutí.** Nabízí se buď vlastní
+záznam prvku, který ukazuje na bóje, nebo pole přímo na bóji. **Doporučuju
+pole na bóji**, protože bóje je dnes **nepřepisovaný záznam**: přenastavení
+zakládá nový a starý zůstane. Prvek, který na bóje jen ukazuje, by musel
+mít vlastní historii, jinak by se posunutím jedné půlky brány přepsala
+i minulost — a to je přesně to, čemu se celý oddíl vyhýbá. Cena je, že
+**obě bóje dvojice musí nést tutéž vazbu**, takže je obrazovka musí pípat
+jako dvojici a čtení brát nejnovější platný záznam na každé straně.
+
+**Co se tím získá hned:** mapka nakreslí čáru a bránu místo puntíků (SVG
+nad dlaždicemi už spojnici v pořadí kreslí, viz `MapkaTrati`), GPX ponese
+bránu jako bránu, a pořadatel přestane kódovat „levý/pravý" do jména.
+
+**Co se tím nezíská:** automatické pořadí v cíli. K tomu je kromě čáry
+potřeba ještě kolo a čas, a před tím varovaly obě oponentury 9. 10. 2026.
+
+**Jedna věc, která z toho vypadne a není zadarmo:** dnešní spojnice vede
+z bodu do bodu, u brány má vést **doprostřed mezi dvě bóje** a pak dál.
+Není to těžké, ale je to druhá změna, kterou ta první vyvolá.
+
+Je to **změna kontraktu**, takže dvoukroková: nejdřív API a nasazení, pak
+přegenerovat klienta a teprve pak web.
+
 #### Trať je veřejná, jakmile ji rozhodčí přijme (Filip, 9. 10. 2026)
 
 *„Bóje, mapka, GPX — to bych, když už to bude schválené a před startem,
