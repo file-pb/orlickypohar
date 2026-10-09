@@ -647,7 +647,16 @@ def _nasad_kody():
     (scénář B2), a vyrobit si prošlý kód jinak nejde.
     """
     from datetime import timedelta
-    lod_id = next(iter(PRIHLASKA_ID.values()))
+
+    # Kalendář ročníku bez lodí (`data/2027-kalendar.json`) nemá ke komu kód
+    # přivěsit a scénář B2 se na takovém ročníku nejede. Dřív tu mock padal
+    # na `StopIteration`, takže ten soubor nešel servírovat vůbec — a to je
+    # jediný ročník s budoucími termíny, tedy jediný, na kterém jde odjet
+    # E5 (nalezeno 9. 10. 2026 při zkoušce ovládání).
+    lod_id = next(iter(PRIHLASKA_ID.values()), None)
+    if lod_id is None:
+        return
+
     ted = _ted()
     KODY.append({"kod": "PROSLY", "lodId": lod_id, "vystavilId": JA["id"],
                  "vystavenV": _iso(ted - timedelta(minutes=30)),

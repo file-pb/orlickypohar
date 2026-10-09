@@ -24,6 +24,19 @@ export const NAZEV_ROLE: Record<RoleKLodi, string> = {
   Fanousek: "fanoušek",
 };
 
+/**
+ * Jméno role ve čtvrtém pádu — do vazby „Potvrdit {koho}".
+ *
+ * Mapa je zvlášť, protože první pád do té věty nepatří: tlačítko dřív
+ * říkalo „Potvrdit kapitán" (zkouška ovládání, 9. 10. 2026).
+ */
+export const NAZEV_ROLE_KOHO: Record<RoleKLodi, string> = {
+  Majitel: "majitele",
+  Kapitan: "kapitána",
+  Posadka: "posádku",
+  Fanousek: "fanouška",
+};
+
 /** Adresa, která se zabalí do QR. Otevře připojení i v obyčejném prohlížeči. */
 export const adresaKodu = (kod: string) =>
   `${(process.env.WEB_URL ?? "https://orlickypohar.klihovka.cz").replace(/\/$/, "")}` +

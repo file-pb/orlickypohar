@@ -413,7 +413,11 @@ function Zastavka({
 /** Věta po zápisu. Skládá se tady, protože jména regat zná stránka, ne akce. */
 function hotovo(stav: string, co?: string, nastav?: StavZavodu, druh?: DruhZastavky) {
   const akce = druh === "Akce";
-  const jmeno = co ? `„${co}"` : akce ? "Akce" : "Regata";
+  // Jméno nese i to podstatné jméno: věty níž jsou v ženském rodě podle
+  // „regaty", ale jména regat mají rod svůj — bez něj vyjde „Jarní vítr"
+  // uložena (zkouška ovládání, 9. 10. 2026).
+  const druhNazev = akce ? "Akce" : "Regata";
+  const jmeno = co ? `${druhNazev} „${co}"` : druhNazev;
 
   switch (stav) {
     case "zalozeno":
