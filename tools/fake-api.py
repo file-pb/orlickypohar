@@ -3018,10 +3018,21 @@ class H(BaseHTTPRequestHandler):
                 polozky.append((vaha if vaha is not None else 9, lod))
 
             polozky.sort(key=lambda p: (p[0], nazvy_klic(p[1]["nazev"])))
+
+            # Kormidelník z nejnovější zastávky, kde loď jela — jako
+            # `NapovedaEndpoints`. Majitel se nevydává (9. 10. 2026): veřejně
+            # je kormidelník, majitel jen pod /sprava/.
+            kormidelnici = {}
+            for z in sorted(D["zavody"], key=lambda z: z["datum"]):
+                for u in z.get("ucasti", []):
+                    if u.get("kormidelnik"):
+                        kormidelnici[u["lod"]] = u["kormidelnik"]
+
             return self.odpoved([
                 {"lod": lod["nazev"], "cisloPlachty": lod.get("cisloPlachty"), "typ": lod.get("typ"),
-                 "majitel": jmeno(lod["majitel"]), "kategorie": KAT.get(lod["klic"]),
-                 "kormidelnik": None, "vRocniku": lod["klic"] in KAT, "posledniRok": D["rok"]}
+                 "kategorie": KAT.get(lod["klic"]),
+                 "kormidelnik": jmeno(kormidelnici[lod["klic"]]) if lod["klic"] in kormidelnici else None,
+                 "vRocniku": lod["klic"] in KAT, "posledniRok": D["rok"]}
                 for _, lod in polozky[:500 if vse else 8]])
 
         if cesta == "/vodocet/orlik":

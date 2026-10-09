@@ -8,9 +8,17 @@ namespace OrlickyPohar.Api.Features.Lode;
 /// Loď, jak ji napovídá veřejný formulář přihlášky.
 /// <para>
 /// <b>Jen to, co už na webu veřejně je</b> — jméno lodi, plachta, typ,
-/// majitel, poslední kategorie a kormidelník. Kontakty nikdy: našeptávač
+/// poslední kategorie a kormidelník. Kontakty nikdy: našeptávač
 /// je otevřený komukoliv a jinak by z něj šlo vylovit cizí e-mail
 /// napsáním názvu lodi.
+/// </para>
+/// <para>
+/// <b>Majitel tu byl do 9. 10. 2026 a byl to přesně ten únik, před kterým
+/// odstavec výš varuje.</b> Veřejná startovní listina vydává kormidelníka,
+/// majitel je jinak jen pod <c>/sprava/</c> — a našeptávač ho vydával
+/// komukoliv bez tokenu. Že jsou dnešní jména vygenerovaná, na tom nic
+/// nemění: první skutečná přihláška z nich udělá skutečná, protože formulář
+/// bez vyplněného majitele zapíše jako majitele kapitána.
 /// </para>
 /// </summary>
 /// <param name="Kategorie">Kategorie, ve které loď naposledy jela. V ročníku je závazná.</param>
@@ -20,7 +28,6 @@ public record NapovedaLodiDto(
     string Lod,
     string? CisloPlachty,
     string? Typ,
-    string Majitel,
     string? Kategorie,
     string? Kormidelnik,
     bool VRocniku,

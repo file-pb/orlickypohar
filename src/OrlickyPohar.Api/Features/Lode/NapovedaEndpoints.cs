@@ -10,7 +10,8 @@ namespace OrlickyPohar.Api.Features.Lode;
 /// Našeptávač lodí pro přihlášku (plán, oddíl <i>Veřejné přihlášky lodí</i>).
 /// <para>
 /// <b>Veřejné čtení</b>, jako výsledky. Vydává jen údaje, které na webu
-/// stejně jsou; kontakty se nenapovídají nikdy.
+/// stejně jsou; kontakty ani majitele nenapovídá nikdy (viz
+/// <see cref="NapovedaLodiDto"/>).
 /// </para>
 /// <para>
 /// Hledá se přes <b>všechny ročníky</b> — loď, která jela loni a letos
@@ -51,7 +52,6 @@ public static class NapovedaEndpoints
                 l.Nazev,
                 l.CisloPlachty,
                 l.Typ,
-                Majitel = l.Majitel!.Jmeno + " " + l.Majitel.Prijmeni,
                 VRocniku = serieId != null && db.Prihlasky.Any(p => p.LodId == l.Id && p.SerieId == serieId),
                 // Kategorie z ročníku, na který se ptáme; jinak z posledního,
                 // kde loď jela — v něm se dá čekat i letos.
@@ -81,7 +81,7 @@ public static class NapovedaEndpoints
             .ToListAsync(ct);
 
         var vsechny = lode.Select(l => new NapovedaLodiDto(
-            l.Nazev, l.CisloPlachty, l.Typ, l.Majitel, l.Kategorie, l.Kormidelnik, l.VRocniku, l.PosledniRok));
+            l.Nazev, l.CisloPlachty, l.Typ, l.Kategorie, l.Kormidelnik, l.VRocniku, l.PosledniRok));
 
         var nabidka = vse
             ? [.. vsechny.OrderByDescending(l => l.VRocniku).ThenBy(l => l.Lod, Jmena.Cesky).Take(500)]

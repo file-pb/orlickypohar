@@ -119,10 +119,13 @@ export default async function Prihlaska({ params, searchParams }: Parametry) {
             Loď, která už v poháru jela, najdeš v nabídce a údaje se předvyplní. Novou prostě napiš.
           </span>
         </label>
+        {/* Kormidelník, ne majitel: nabídka je veřejná a jméno majitele
+            patří jen do správy (9. 10. 2026). Loď se podle plachty a typu
+            pozná stejně dobře. */}
         <datalist id="lode-poharu">
           {vsechny.map((l) => (
             <option key={l.lod} value={l.lod}>
-              {[l.cisloPlachty, l.typ, l.majitel].filter(Boolean).join(" · ")}
+              {[l.cisloPlachty, l.typ, l.kormidelnik].filter(Boolean).join(" · ")}
             </option>
           ))}
         </datalist>
