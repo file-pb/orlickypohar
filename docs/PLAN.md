@@ -1966,6 +1966,14 @@ mají barvu, jakou zrovna máme, a výčet hotových znaků by je neuměl zapsat
 | **Barva** | modrá, zelená, bílá, červená, žlutá, oranžová (+ neuvedeno) |
 | **Tvar** | válcová, kuželová, kulová, sférický vršek, plovatka, jiný (+ neuvedeno) |
 
+**Postavené v API 10. 10. 2026.** `Boje.Barva` a `Boje.Tvar`, obojí
+nepovinné. **Přenastavená bóje si je přebírá** po té staré, když je
+pípnutí neuvede — je to tentýž kus plastu, jen jinde. Jméno se takhle
+nepřebírá, protože to API chce vždycky. Barva i tvar jdou **ven i
+veřejně**: na rozdíl od jména stavitele a přesnosti měření to není údaj
+o tom, kdo a jak měřil, ale o bóji, a mapka ji podle nich umí nakreslit
+tak, jak vypadá.
+
 **Znaky z vyhlášky jsou pak kombinace**, ne zvláštní kategorie — a mapka je
 podle nich umí pojmenovat:
 

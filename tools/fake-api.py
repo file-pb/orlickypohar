@@ -880,6 +880,7 @@ def boje_dto(b):
                 "postavil", "sebrana", "zdroj")},
             # Fotek může být u bóje víc; mock je drží u záznamu, server
             # vazbou od fotky k bóji (`Fotka.UBojeId`).
+            "barva": b.get("barva"), "tvar": b.get("tvar"),
             "fotky": b.get("fotky") or []}
 
 
@@ -1066,10 +1067,11 @@ def trat_verejna(slug):
         if id_boje:
             b = next((x for x in BOJE.get(slug, []) if x["id"] == id_boje), None)
             return None if not b else {"nazev": b["nazev"], "sirka": b["sirka"],
-                                       "delka": b["delka"]}
+                                       "delka": b["delka"],
+                                       "barva": b.get("barva"), "tvar": b.get("tvar")}
         if ktery == "b" and p["konecBSirka"] is not None and p["konecBDelka"] is not None:
             return {"nazev": p["konecBPopis"], "sirka": p["konecBSirka"],
-                    "delka": p["konecBDelka"]}
+                    "delka": p["konecBDelka"], "barva": None, "tvar": None}
         return None
 
     vsechny = sorted(PRVKY.get(t["id"], []), key=lambda p: (p["poradi"], p["id"]))
@@ -1077,7 +1079,8 @@ def trat_verejna(slug):
     return {"prestavba": False, "prijatoV": prijato,
             "cisloRozjizdky": t.get("rozjizdkaId"),
             "boje": [{"nazev": b["nazev"], "poradi": b["poradi"],
-                      "sirka": b["sirka"], "delka": b["delka"]}
+                      "sirka": b["sirka"], "delka": b["delka"],
+                      "barva": b.get("barva"), "tvar": b.get("tvar")}
                      for b in sorted(stojici, key=lambda b: (b["poradi"], b["id"]))],
             "prvky": [{"typ": p["typ"], "poradi": p["poradi"], "strana": p["strana"],
                        "smer": p.get("smer"), "druhStartu": p.get("druhStartu"),
@@ -1149,7 +1152,7 @@ def _nasad_boje():
         return
 
     def boje(nazev, poradi, sirka, delka, presnost, postavena, nahrazena=None, sebrana=False,
-             zdroj="Telefon"):
+             zdroj="Telefon", barva=None, tvar=None):
         BOJE_ID[0] += 1
         return {
             "id": BOJE_ID[0], "nazev": nazev, "poradi": poradi,
@@ -1157,6 +1160,7 @@ def _nasad_boje():
             "postavenaV": postavena, "postavil": JA["zobrazovane"],
             "nahrazenaV": nahrazena, "sebrana": sebrana,
             "sebranaV": postavena if sebrana else None, "zdroj": zdroj,
+            "barva": barva, "tvar": tvar,
         }
 
     # Trať u zastávky, na které stojí zkouška ovládání — tam má roli
@@ -2656,6 +2660,10 @@ class H(BaseHTTPRequestHandler):
             "postavenaV": ted, "postavil": self.prihlaseny()["zobrazovane"],
             "nahrazenaV": None, "sebrana": False, "sebranaV": None,
             "zdroj": vstup.get("zdroj") or "Telefon",
+            # Barvu a tvar si přenastavená bóje přebírá po té staré: je to
+            # tentýž kus plastu, jen jinde. Opsané z `PipniAsync`.
+            "barva": vstup.get("barva") or (stara or {}).get("barva"),
+            "tvar": vstup.get("tvar") or (stara or {}).get("tvar"),
         }
         seznam.append(nova)
         if stara:

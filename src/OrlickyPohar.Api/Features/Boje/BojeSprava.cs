@@ -45,7 +45,7 @@ public class BojeSprava(
             .OrderBy(f => f.NahranoV)
             .Select(f => Fotky.Nahravani.Dto(f, uloziste.VerejnaAdresa))
             .OfType<Fotky.ObrazekDto>()],
-        b.Zdroj);
+        b.Zdroj, b.Barva, b.Tvar);
 
     /// <summary>
     /// Zapíše pípnutí. Při přenastavení převezme pořadí i jméno po bóji,
@@ -101,6 +101,11 @@ public class BojeSprava(
             Delka = vstup.Delka,
             PresnostM = vstup.PresnostM,
             Zdroj = vstup.Zdroj ?? ZdrojPolohy.Telefon,
+            // Barvu a tvar si přenastavená bóje přebírá po té staré, když
+            // je vstup neuvede: je to tentýž kus plastu, jen jinde. Jméno
+            // se takhle nepřebírá, protože to API chce vždycky.
+            Barva = vstup.Barva ?? stara?.Barva,
+            Tvar = vstup.Tvar ?? stara?.Tvar,
             PostavenaV = ted,
             PostavilId = kdo,
             NahrazujeId = stara?.Id,
