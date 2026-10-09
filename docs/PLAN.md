@@ -1590,46 +1590,138 @@ pozadí prohlížeč neumí, na iPhonu obzvlášť. To je důvod, proč appka ex
 být průjezdní brána, jako u závodů optíků, kdy polovina točí pravou
 a polovina levou bóji?"*
 
-**Cílová čára i brána jsou tatáž věc: dvě bóje, které spolu tvoří jeden
-prvek trati.** Nechybí nový druh bóje, chybí **vazba mezi dvěma** a to, co
-ta dvojice znamená. Dneska to pořadatel vyjadřuje jménem — „start levý",
-„start pravý" — takže dvojice existuje v jeho hlavě, ne v datech, a mapka
-kreslí dva puntíky tam, kde je čára.
+**Cílová čára i brána jsou tatáž věc: dvě polohy, které spolu tvoří jeden
+prvek trati.** Nechybí nový druh bóje, chybí **prvek** — a ten dnes
+neexistuje vůbec. Pořadatel ho vyjadřuje jménem („start levý", „start
+pravý"), takže dvojice žije v jeho hlavě, ne v datech, a mapka kreslí dva
+puntíky tam, kde je čára.
 
-**Co se o to rozbije, je `Poradi`.** Dnes je to pořadí v lineární řadě.
-Brána ale zabírá **jedno místo v řadě a má dvě bóje**, takže z trati se
-musí stát řada **prvků** — značka, brána, čára — a teprve prvek má jednu
-nebo dvě bóje.
+**Tenhle oddíl je přepsaný 9. 10. 2026 po dvou nezávislých oponenturách.**
+Původní znění doporučovalo uložit vazbu **na bóji** a zdůvodňovalo to
+historií. Oba oponenti to zamítli, nezávisle a z různých důvodů, a mají
+pravdu — viz *Proč ne pole na bóji* níž.
 
-**A chybí strana objíždění.** Dnes se nikam nezapisuje. U značky je to
-„levou / pravou", u brány je pointa v tom, že **si loď vybere** — právě to
-z brány dělá bránu, a ne jen dvě bóje vedle sebe.
+##### Co prvek je
 
-| Prvek | Bójí | Co o něm musí být vidět |
+**Prvek nese rozhodnutí, bóje zůstane měřením.** To je celé pravidlo
+a plyne z něj zbytek.
+
+| Na prvku | Na bóji |
+|---|---|
+| typ (značka, brána, čára, odskok) | poloha, čas, přesnost, zdroj, fotky |
+| pořadí v trati a opakování | řetěz přenastavení (`NahrazujeId`) |
+| strana a směr průjezdu | sebrání |
+| které polohy k němu patří | — |
+
+**Prvek ukazuje na polohy, ne naopak.** Odkazuje na jeden nebo dva
+**konkrétní záznamy `Boje`**, a protože ty se nikdy nepřepisují, je odkaz
+zároveň odkazem na *polohu v konkrétní čas*. Přenastavení půlky brány
+založí novou polohu i nový prvek; ten starý dál ukazuje, kde to stálo
+tehdy. Historie tím vzniká sama a prvek žádný vlastní mechanismus
+nepotřebuje.
+
+##### Proč ne pole na bóji
+
+Původní zdůvodnění znělo, že prvek by musel mít vlastní historii. **Neplatí
+to:** odkaz na nepřepisovaný záznam polohy minulost přepsat nemůže.
+Zdůvodnění si pletlo „ukazuje na bóji" s „ukazuje na aktuální polohu bóje".
+
+Rozhodující je ale něco jiného, co našla až oponentura:
+
+1. **Identita, typ, pořadí a strana jsou rozhodnutí rozhodčího, ne
+   měření.** Na nepřepisovaném záznamu měření je lze změnit jedině zápisem
+   nového záznamu — tedy vyrobením pípnutí, které se nestalo, s falešným
+   časem, autorem a přesností. Záznam, který je nepřepisovaný *protože je
+   to měření*, by se stal nosičem rozhodnutí. (Platí to i na samotnou
+   `Strana`, kterou druhý oponent na bóji ponechával — jeho vlastní
+   argument mluví proti ní.)
+2. **`Poradi` na bóji neunese opakování.** Trať `start → A → brána → A →
+   brána → cíl` potřebuje tutéž značku dvakrát; na bóji by to šlo jen
+   vyrobením falešné druhé bóje. Přitom u toho pole v modelu stojí
+   *„Podle něj se skládá trať a kola"* — kola se čekala od začátku a tenhle
+   tvar je neunese. **Tohle samo o sobě stačí** a s historií nemá nic
+   společného.
+3. **Klient by musel přenášet čtyři pole při každém přenastavení.** Dnes
+   server nepřebírá po staré bóji ani jméno — `ProcNejde` ho vyžaduje
+   u každého pípnutí a web to zachraňuje předvyplněním v prohlížeči,
+   ačkoliv doc komentář u `PipniAsync` tvrdí opak. Vzor, který se měl
+   rozšířit, je na úrovni API rozbitý už dnes a maskuje ho jediný klient.
+
+##### Typy a co k nim patří
+
+| Typ | Poloh | Co o něm musí být vidět |
 |---|---|---|
-| značka | 1 | kterou stranou se objíždí |
-| brána | 2 | že se projíždí mezi nimi a strana je na lodi |
-| čára (start, cíl) | 2 | že se **přes** ni jede, ne kolem |
+| značka | 1 | kterou stranou se **ponechává** |
+| odskok | 2 | obě se ponechávají touž pevnou stranou, jedno místo v řadě |
+| brána | 2 | projíždí se mezi nimi, stranu si volí loď, ale **směr je daný** |
+| čára — start | 2 | překonává se **jedním směrem** |
+| čára — cíl | 2 | totéž, a opačný průjezd se nepočítá |
 
-**Kde ta vazba má bydlet — návrh, ne rozhodnutí.** Nabízí se buď vlastní
-záznam prvku, který ukazuje na bóje, nebo pole přímo na bóji. **Doporučuju
-pole na bóji**, protože bóje je dnes **nepřepisovaný záznam**: přenastavení
-zakládá nový a starý zůstane. Prvek, který na bóje jen ukazuje, by musel
-mít vlastní historii, jinak by se posunutím jedné půlky brány přepsala
-i minulost — a to je přesně to, čemu se celý oddíl vyhýbá. Cena je, že
-**obě bóje dvojice musí nést tutéž vazbu**, takže je obrazovka musí pípat
-jako dvojici a čtení brát nejnovější platný záznam na každé straně.
+**Start a cíl jsou dvě různé funkce**, ne jedna „čára": tytéž dvě polohy
+můžou být ráno start a odpoledne cíl.
 
-**Co se tím získá hned:** mapka nakreslí čáru a bránu místo puntíků (SVG
-nad dlaždicemi už spojnici v pořadí kreslí, viz `MapkaTrati`), GPX ponese
-bránu jako bránu, a pořadatel přestane kódovat „levý/pravý" do jména.
+**Konec čáry nemusí být bóje.** Start i cíl se běžně vytyčí mezi bójí
+a **plavidlem komise**, nebo bójí a bodem na břehu. Prvek proto musí umět
+konec, který je jen souřadnice bez záznamu bóje. Bez toho pořadatel pípne
+neexistující bóji na pozici lodi — tedy přesně to kódování do jména, které
+tenhle oddíl ruší.
 
-**Co se tím nezíská:** automatické pořadí v cíli. K tomu je kromě čáry
-potřeba ještě kolo a čas, a před tím varovaly obě oponentury 9. 10. 2026.
+**Strana se jmenuje „ponechat po levé / po pravé".** „Objíždí se levou" si
+půlka lidí přečte jako „ponechat po levé" a druhá jako „točit doleva", a to
+jsou protikladné věci.
 
-**Jedna věc, která z toho vypadne a není zadarmo:** dnešní spojnice vede
-z bodu do bodu, u brány má vést **doprostřed mezi dvě bóje** a pak dál.
-Není to těžké, ale je to druhá změna, kterou ta první vyvolá.
+##### Co to vyvolá
+
+- **Spojnice v mapce** vede dnes z bodu do bodu; u brány a čáry má vést
+  **doprostřed mezi dvě polohy** a pak dál. Kreslení samo je přívažek —
+  `MapkaTrati` spojnici v pořadí už kreslí jako SVG nad dlaždicemi.
+- **GPX bránu jako bránu neumí** a dřívější slib v tomhle oddíle byl
+  přehnaný: formát zná body, trasy a stopy, závodní bránu ne. Dosažitelné
+  je vyvézt oba konce jako body a do trasy dát pojmenovaný střed — ale
+  **nenahrazuje to pravidlo průjezdu**. Dnes se každá bóje píše jako bod
+  i jako uzel trasy, takže plotter vede k jednomu konci čáry a pak k druhému.
+- **`Poradi: 0` přestane fungovat tak, jak je popsané.** „Za poslední" dnes
+  bere `max(Poradi)+1` přes **všechny** bóje závodu včetně nahrazených
+  a sebraných, takže dvě půlky brány pípnuté zvlášť dostanou různá čísla.
+- **Prvek a jeho polohy se musí uložit jednou transakcí** a neúplný prvek
+  nesmí projít přijetím trati. Měřit oba konce může pořadatel postupně —
+  pípnutí se uloží jako podklad a dvojici potvrdí až potom, takže se
+  nemusí předstírat měření druhého konce.
+- **`BojeDto` musí nést prvek v témže kroku.** Dnes nenese ani `nahrazenaV`,
+  proto web čte seznam dvakrát a dělá rozdíl; bez prvku v odpovědi by
+  obrazovka půlky nespárovala a kontrakt by se měnil dvakrát.
+
+##### Čím prvek vlastní
+
+**Nullable `RozjizdkaId` od prvního dne.** Bóje dnes visí na závodě, ale
+u vícerozjížďkového závodu může mít každá rozjížďka jinou trať a
+`Rozjizdka` v modelu už existuje. Jeden sloupec navíc teď je levnější než
+migrace nad daty, podle kterých se už jelo.
+
+##### Převod toho, co už je
+
+Z každé stávající bóje se stane **jednobójová značka** s pořadím z bóje
+a **bez strany** — tu nelze z názvu domyslet a `null` musí znamenat
+„neuvedeno". **Celý řetěz přenastavení jedné bóje musí dostat jedno
+`PrvekId`**, které migrace spočítá z `NahrazujeId`; uhádnout se nedá.
+
+##### Dvě chyby, které se přitom našly
+
+Obě jsou v dnešním kódu a s tímhle návrhem nesouvisí, ale u brány by
+zlobily dvojnásob:
+
+1. **Sebranou bóji jde přenastavit.** `PipniAsync` kontroluje `NahrazenaV`,
+   nikoli `SebranaV`, takže se sebraná bóje dá přenastavením „oživit".
+   U brány by vznikla půlka, která je sebraná a zároveň stojí. Patří k tomu
+   rozhodnutí, co je napůl sebraná dvojice — nejspíš že sebrání jedné půlky
+   sebere celý prvek.
+2. **`Poradi: 0` počítá přes nahrazené i sebrané** (viz výš), takže číslo
+   roste s každým přenastavením.
+
+##### Co to nepřinese
+
+**Automatické pořadí v cíli.** K tomu je kromě čáry potřeba ještě kolo,
+čas a rozhodnutí o hendikepu — a před tím varovaly obě oponentury.
 
 Je to **změna kontraktu**, takže dvoukroková: nejdřív API a nasazení, pak
 přegenerovat klienta a teprve pak web.
