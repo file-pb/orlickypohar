@@ -159,6 +159,41 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
     }
 
     /// <summary>
+    /// Trať pro veřejnost, nebo <c>null</c>, když se vydávat nemá.
+    ///
+    /// <para>
+    /// <b>Rozhodnutí drží tenhle dotaz, ne vrstva mapy</b> (plán, nález G):
+    /// nepřijatá trať se nevydá vůbec a u přestavby se vrací jen příznak.
+    /// </para>
+    ///
+    /// <para>
+    /// Bóje se berou <b>k okamžiku přijetí</b>, ne „jak stojí teď". U přijaté
+    /// trati to vyjde nastejno, protože do zamčené trati nejde pípnout — ale
+    /// psát to podle času je správně i pro historické tratě a nic to nestojí:
+    /// záznam o bóji se nikdy nepřepisuje a časy nese.
+    /// </para>
+    /// </summary>
+    public async Task<VerejnaTratDto?> VerejnaAsync(int zavodId, CancellationToken ct)
+    {
+        var trat = await AktualniAsync(zavodId, ct);
+        if (trat is null || !Stavba.JeVerejna(trat.Stav)) return null;
+
+        if (trat.Stav == StavTrati.Prestavba)
+            return new VerejnaTratDto(Prestavba: true, PrijatoV: null, Boje: []);
+
+        var prijato = trat.PrijatoV!.Value;
+
+        return new VerejnaTratDto(false, prijato, await db.Boje
+            .Where(b => b.ZavodId == zavodId
+                        && b.PostavenaV <= prijato
+                        && (b.NahrazenaV == null || b.NahrazenaV > prijato)
+                        && (b.SebranaV == null || b.SebranaV > prijato))
+            .OrderBy(b => b.Poradi).ThenBy(b => b.Id)
+            .Select(b => new VerejnaBojeDto(b.Nazev, b.Poradi, b.Sirka, b.Delka))
+            .ToListAsync(ct));
+    }
+
+    /// <summary>
     /// Odstartovala po přijetí téhle trati nějaká rozjížďka? Pak se podle ní
     /// jelo. Platí pro <b>poslední</b> trať regaty; u starších by se muselo
     /// omezit i shora, přijetím té následující.

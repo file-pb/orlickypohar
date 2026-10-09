@@ -49,8 +49,25 @@ public class OchranaCteniTests(PostgresFixture fx)
     /// a s ním i to, že dvojí zámek vyhodnocuje endpoint. Výjimka bez důvodu
     /// je díra, na kterou se za rok nikdo nezeptá.
     /// </para>
+    ///
+    /// <para>
+    /// <b>Opraveno 9. 10. 2026, protože ten slib nefungoval.</b> Seznam se
+    /// porovnával jen s endpointy pod chráněnými předponami, takže zápis
+    /// o veřejné cestě — tedy přesně to, co sem komentář posílá — shodil
+    /// závěrečné tvrzení jako „mrtvá výjimka". Napsat rozhodnutí sem tedy
+    /// nešlo. Nově se k existujícím cestám počítají <b>všechny</b> GET
+    /// endpointy a pro cestu mimo <c>/sprava/</c> je záznam tím, čím má být:
+    /// <b>zapsaným rozhodnutím</b>, ne povolením.
+    /// </para>
     /// </summary>
-    private static readonly Dictionary<string, string> VedomeVerejne = new();
+    private static readonly Dictionary<string, string> VedomeVerejne = new()
+    {
+        ["GET /serie/{serie}/zavody/{zavod}/trat/"] =
+            "Trať je veřejná, jakmile ji rozhodčí přijme (plán, oddíl téhož jména). "
+            + "Rozhodnutí drží endpoint: nepřijatou trať nevydá vůbec, u přestavby "
+            + "řekne jen „přestavuje se\" a bóje zamlčí. Jména stavitelů, přesnost "
+            + "měření ani fotky se ven nedávají — veřejně je jen to, kam se pluje.",
+    };
 
     [Fact]
     public async Task Kazde_chranene_cteni_bez_prihlaseni_odmitne()
@@ -58,7 +75,10 @@ public class OchranaCteniTests(PostgresFixture fx)
         var zdroj = fx.Services.GetRequiredService<EndpointDataSource>();
         var klient = fx.CreateClient();
         var otevrene = new List<string>();
-        var nalezene = new HashSet<string>();
+        // Všechny GET cesty, aby se dala poznat mrtvá výjimka i u té veřejné.
+        var vsechny = new HashSet<string>();
+        // Jen ty pod chráněnými předponami — na nich stojí pojistka níž.
+        var chranene = new HashSet<string>();
 
         foreach (var ep in zdroj.Endpoints.OfType<RouteEndpoint>())
         {
@@ -66,10 +86,12 @@ public class OchranaCteniTests(PostgresFixture fx)
             if (!metody.Contains("GET")) continue;
 
             var vzor = CestaZeVzoru.Normalizuj(ep.RoutePattern.RawText);
+            var klic = $"GET {vzor}";
+            vsechny.Add(klic);
+
             if (!Chranene.Any(p => vzor.StartsWith(p, StringComparison.Ordinal))) continue;
 
-            var klic = $"GET {vzor}";
-            nalezene.Add(klic);
+            chranene.Add(klic);
             if (VedomeVerejne.ContainsKey(klic)) continue;
 
             var odpoved = await klient.GetAsync(CestaZeVzoru.Vypln(ep.RoutePattern));
@@ -79,7 +101,7 @@ public class OchranaCteniTests(PostgresFixture fx)
 
         // Pojistka dřív než hlavní tvrzení: prázdný seznam u hostitele, který
         // chráněné řezy vůbec nezaregistroval, by vypadal jako úspěch.
-        nalezene.ShouldNotBeEmpty(
+        chranene.ShouldNotBeEmpty(
             "Test nenašel jediné čtení pod /sprava/ ani /ja/ — pak nic neověřuje. " +
             "V PostgresFixture nejspíš zmizelo nastavení Identita:Authority.");
 
@@ -90,7 +112,7 @@ public class OchranaCteniTests(PostgresFixture fx)
 
         // Mrtvá výjimka je tichá díra: endpoint zmizel, ale kdyby se vrátil
         // pod stejnou cestou, byl by rovnou vědomě veřejný.
-        VedomeVerejne.Keys.Except(nalezene).ShouldBeEmpty(
+        VedomeVerejne.Keys.Except(vsechny).ShouldBeEmpty(
             "Tyhle výjimky ve VedomeVerejne neodpovídají žádnému endpointu. Smaž je.");
     }
 }

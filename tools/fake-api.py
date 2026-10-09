@@ -902,6 +902,29 @@ def trat_odjeta(slug, t):
     return any((r.get("startV") or "") >= t["prijatoV"] for r in (z or {}).get("rozjizdky", []))
 
 
+def trat_verejna(slug):
+    """Trať pro diváka, nebo None. Opsané z `TratSprava.VerejnaAsync`:
+    nepřijatá se nevydá vůbec, u přestavby se vrací jen příznak.
+
+    Bóje se berou k okamžiku přijetí. Mock drží sebrání jako příznak, ne
+    čas — vyjde to nastejno, protože sebrat se dá jen u odemčené trati."""
+    t = trat_aktualni(slug)
+    if not t or t["stav"] not in ("Prijato", "Prestavba"):
+        return None
+    if t["stav"] == "Prestavba":
+        return {"prestavba": True, "prijatoV": None, "boje": []}
+
+    prijato = t["prijatoV"]
+    stojici = [b for b in BOJE.get(slug, [])
+               if b["postavenaV"] <= prijato
+               and (b["nahrazenaV"] is None or b["nahrazenaV"] > prijato)
+               and not b["sebrana"]]
+    return {"prestavba": False, "prijatoV": prijato,
+            "boje": [{"nazev": b["nazev"], "poradi": b["poradi"],
+                      "sirka": b["sirka"], "delka": b["delka"]}
+                     for b in sorted(stojici, key=lambda b: (b["poradi"], b["id"]))]}
+
+
 def trat_dto(slug, t):
     rozhodci = smi_ted("Rozhodci")
     stavitel = rozhodci or smi_ted("Organizator", slug)
@@ -3613,6 +3636,13 @@ class H(BaseHTTPRequestHandler):
                 return self.send_error(404)
             telo = {**clanek_shrnuti(c), "telo": c["telo"],
                     "format": c.get("format", "Text")}
+        elif (m := re.match(rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)/trat$', cesta)):
+            # Veřejná cesta, takže **ne** `self.zastavka` — ta vymáhá
+            # přihlášení, protože je psaná pro správu.
+            if not any(z["slug"] == m.group(1) for z in D["zavody"]):
+                return self.send_error(404)
+            v = trat_verejna(m.group(1))
+            return self.odpoved(v) if v else self.send_error(404)
         elif (m := re.match(rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)$', cesta)):
             z = next((z for z in D["zavody"] if z["slug"] == m.group(1)), None)
             if not z:

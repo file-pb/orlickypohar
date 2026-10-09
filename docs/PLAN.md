@@ -1843,9 +1843,35 @@ pořadatel a rozhodčí, je k závodníkům přísnější, ne spravedlivější
 
 **Pořadí prací z toho plyne samo: stavy trati jsou první.** Bez akceptace
 není co zveřejnit; publikovat něco, co nikdo nepotvrdil, by bylo horší než
-nepublikovat nic. Vlastní zveřejnění je pak přívažek — veřejný endpoint
-**mimo `/sprava/`**, který pustí jen přijatou trať, a výjimka v
-`OchranaCteniTests` i s důvodem, jak to ten test vyžaduje.
+nepublikovat nic.
+
+**Hotové 9. 10. 2026.** `GET /serie/{serie}/zavody/{zavod}/trat` leží mimo
+`/sprava/`, takže ho nekryje práh přihlášení a rozhodnutí drží endpoint sám:
+nepřijatou trať nevydá vůbec, u přestavby vrátí jen příznak a bóje zamlčí.
+Veřejná bóje nese **jen jméno, pořadí a polohu** — jméno stavitele, přesnost
+měření ani fotky ven nejdou, protože to jsou údaje o tom, kdo a jak měřil.
+
+Bóje se berou **k okamžiku přijetí**, ne „jak stojí teď". U přijaté trati to
+vyjde nastejno (do zamčené se nedá pípnout), ale podle času je to správně
+i pro historické tratě a nic to nestojí: záznam o bóji se nepřepisuje a časy
+nese.
+
+**Na skrytých výsledcích ročníku to nezávisí.** Trať je informace o tom, kudy
+se pluje, ne výsledek — ročník, který výsledky regat nevydává, trať vydat
+může a má.
+
+##### `OchranaCteniTests` ten slib nesplňoval
+
+Test měl u `VedomeVerejne` napsáno, že *„až přibude veřejná mapa a živé
+polohy, patří rozhodnutí sem"*. **Nešlo to.** Seznam se porovnával jen
+s endpointy pod chráněnými předponami, takže zápis o veřejné cestě shodil
+závěrečné tvrzení jako „mrtvou výjimku" — tedy přesně ten zápis, ke kterému
+komentář vyzýval.
+
+Opraveno 9. 10. 2026: k existujícím cestám se nově počítají **všechny** GET
+endpointy, zatímco odmítnutí se dál vymáhá jen pod `/sprava/` a `/ja/`. Pro
+cestu mimo správu je tím záznam tím, čím má být — **zapsaným rozhodnutím
+s důvodem**, ne povolením. První takový zápis je právě veřejná trať.
 
 #### Stavy trati (Filip, 9. 10. 2026)
 

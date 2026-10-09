@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Sprava;
 
@@ -29,6 +31,17 @@ public static class TratEndpoints
 {
     public static void MapTrat(this IEndpointRouteBuilder app)
     {
+        // Veřejná cesta leží MIMO `/sprava/`, takže ji nekryje práh
+        // přihlášení a rozhodnutí musí držet endpoint sám. Zapsané je to
+        // i ve `VedomeVerejne` v `OchranaCteniTests`, i s důvodem.
+        app.MapGet("/serie/{serie}/zavody/{zavod}/trat", VerejnaAsync)
+            .Produces<VerejnaTratDto>()
+            .WithTags("Bóje")
+            .WithSummary("Trať regaty, jakmile ji rozhodčí přijal")
+            .WithDescription(
+                "Bez přihlášení. Nepřijatá trať se nevydává vůbec; u přestavby se vrací "
+                + "jen příznak, že se trať přestavuje, a bóje se zamlčí.");
+
         var g = app.MapSpravu("/sprava/serie/{serie}/zastavky/{zavod}/trat");
 
         g.MapGet("/", StavAsync)
@@ -66,6 +79,27 @@ public static class TratEndpoints
                 "Organizátor regaty, nebo rozhodčí ročníku. Veřejně to znamená „trať se "
                 + "přestavuje, počkej\". Podle odjeté trati se už jelo, takže se nepřepíše — "
                 + "vznikne nová a stará zůstane přijatá.");
+    }
+
+    /// <summary>
+    /// Trať pro diváka. Filtr na publikaci je tentýž jako u veřejné zastávky;
+    /// <b>na skrytých výsledcích ročníku nezávisí</b> — trať je informace
+    /// o tom, kudy se pluje, ne výsledek.
+    /// </summary>
+    private static async Task<IResult> VerejnaAsync(
+        string serie, string zavod, AppDbContext db, TratSprava sprava, CancellationToken ct)
+    {
+        var zavodId = await db.Zavody
+            .Where(z => z.Slug == zavod && z.Publikovano
+                        && z.Serie!.Slug == serie && z.Serie.Publikovano)
+            .Select(z => (int?)z.Id)
+            .FirstOrDefaultAsync(ct);
+
+        if (zavodId is null) return Results.NotFound();
+
+        return await sprava.VerejnaAsync(zavodId.Value, ct) is { } trat
+            ? Results.Ok(trat)
+            : Results.NotFound();
     }
 
     private static async Task<IResult> StavAsync(
