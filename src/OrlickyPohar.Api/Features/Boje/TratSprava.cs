@@ -179,11 +179,24 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
         if (trat is null || !Stavba.JeVerejna(trat.Stav)) return null;
 
         if (trat.Stav == StavTrati.Prestavba)
-            return new VerejnaTratDto(Prestavba: true, PrijatoV: null, Boje: []);
+            return new VerejnaTratDto(Prestavba: true, PrijatoV: null, Boje: [], Prvky: []);
 
         var prijato = trat.PrijatoV!.Value;
 
-        return new VerejnaTratDto(false, prijato, await db.Boje
+        var prvky = await db.PrvkyTrati
+            .Where(p => p.TratId == trat.Id)
+            .OrderBy(p => p.Poradi).ThenBy(p => p.Id)
+            .Select(p => new VerejnyPrvekDto(
+                p.Typ, p.Poradi, p.Strana, p.Poznamka,
+                new VerejnyKonecDto(p.BojeA!.Nazev, p.BojeA.Sirka, p.BojeA.Delka),
+                p.BojeB != null
+                    ? new VerejnyKonecDto(p.BojeB.Nazev, p.BojeB.Sirka, p.BojeB.Delka)
+                    : p.KonecBSirka != null && p.KonecBDelka != null
+                        ? new VerejnyKonecDto(p.KonecBPopis!, p.KonecBSirka.Value, p.KonecBDelka.Value)
+                        : null))
+            .ToListAsync(ct);
+
+        return new VerejnaTratDto(false, prijato, Prvky: prvky, Boje: await db.Boje
             .Where(b => b.ZavodId == zavodId
                         && b.PostavenaV <= prijato
                         && (b.NahrazenaV == null || b.NahrazenaV > prijato)
