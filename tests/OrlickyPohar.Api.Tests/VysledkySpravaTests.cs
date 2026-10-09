@@ -568,6 +568,44 @@ public class VysledkySpravaTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task Konflikt_rozlisi_cizi_ucet_od_druheho_telefonu()
+    {
+        // Zkouška ovládání C7: na vodě bývá jeden účet na dvou telefonech
+        // a hláška „uložil někdo jiný" v tu chvíli tvrdila nepravdu.
+        var slug = "zapis-dva-telefony";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
+
+        var dana = new Uzivatel { Id = Guid.NewGuid(), Zobrazovane = "Dana Zapisovatelka" };
+        var bob = new Uzivatel { Id = Guid.NewGuid(), Zobrazovane = "Bob Zapisovatel" };
+        db.Uzivatele.AddRange(dana, bob);
+        await db.SaveChangesAsync();
+
+        var vychozi = rozjizdka.Revize;
+
+        // První telefon Dany uloží obě lodě.
+        Assert.Null((await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 1), new(prihlasky[1], PoradiVCili: 2)],
+            default, dana.Id, vychozi)).Chyba);
+
+        // Druhý telefon téhož účtu posílá sadu, ze které vycházel.
+        var druhyTelefon = await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 1)], default, dana.Id, vychozi);
+
+        Assert.True(druhyTelefon.Konflikt);
+        Assert.Equal(Zapis.RevizeNesediTentyzUcet, druhyTelefon.Chyba);
+
+        // Cizí účet dostane původní hlášku — ta je pravdivá.
+        var cizi = await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 1)], default, bob.Id, vychozi);
+
+        Assert.True(cizi.Konflikt);
+        Assert.Equal(Zapis.RevizeNesedi, cizi.Chyba);
+    }
+
+    [Fact]
     public async Task Zapis_bez_revize_se_neuklada()
     {
         // Krok 3: sada bez revize už neprojde. Uložení maže lodě, které
