@@ -8,8 +8,10 @@ a mobilní přístup. .NET 10, Minimal API, PostgreSQL, vertikální řezy.
 co doklonovat, co musí být nainstalované a jak ověřit, že to drží.
 
 Doménový model, stav a co dál jsou v [docs/PLAN.md](docs/PLAN.md), konvence
-kódu v [CLAUDE.md](CLAUDE.md). Provoz, server a poučení z chyb žijí
-v repozitáři [file-pb/platform](https://github.com/file-pb/platform).
+kódu v [CLAUDE.md](CLAUDE.md). Co dělat, když o závodním víkendu něco leží,
+je v [docs/DEN-ZAVODU.md](docs/DEN-ZAVODU.md). Provoz, server a poučení
+z chyb žijí v repozitáři
+[file-pb/platform](https://github.com/file-pb/platform).
 
 ## Rychlý start
 

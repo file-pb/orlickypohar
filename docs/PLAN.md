@@ -4258,7 +4258,9 @@ a **mapa** — obrazovka zatím vypisuje souřadnice.
 **Migrace jdou při startu a není k nim záloha.** `Program.cs` pouští
 `MigrateAsync()` při každém náběhu a nejbližší bod obnovy je noční záloha
 z platformy, tedy až 24 hodin stará. O závodním víkendu je to den zápisů.
-Nemusí z toho být mechanismus — stačí ruční dump před nasazením.
+Mechanismus z toho být nemusí a není: **ruční dump před nasazením je od
+9. 10. 2026 zapsaný postup** (*Den závodu*), ne něco, co si někdo musí
+pamatovat.
 
 **Obsahový bucket nemá druhou kopii.** `platform/scripts/backup.sh` bere
 databáze a tajemství; fotky a vyvěšené směrnice v R2 ne. Jsou to jediná data
@@ -4274,9 +4276,13 @@ hlídá, *co* se nasazuje, ne *jestli* se nasazuje.
 proměnné skončí chybou dřív, než se vůbec přečte produkce; obě podmínky na
 prázdnou proměnnou zmizely, protože to byly ony, kdo tu poruchu vyráběl.
 
-**Pro den závodu neexistuje postup.** Co udělat, když web leží, v jakém pořadí
-a co se nesmí — hlavně to, že nasadit starší commit úloha odmítne a `obnova`
-to neřeší. Dnes je tím postupem Filip a jeho paměť.
+~~**Pro den závodu neexistuje postup.**~~ **Napsaný 9. 10. 2026:**
+[DEN-ZAVODU.md](DEN-ZAVODU.md). Dump před nasazením, pořadí kroků při výpadku
+(a jak podle odpovědi poznat, jestli leží API, kontejner, nebo celý server),
+proč **nasadit starší commit nejde a `obnova` to neřeší** — ta pouští jen
+případ nečitelné `/verze` a rozchod háčku s produkcí, cesta zpět je `git
+revert`. A to, co u vody rozhoduje: rozdělaný zápis v `localStorage` přežije,
+načtení stránky bez signálu ne.
 
 **Zátěžový test nikdy neproběhl a míří mimo cache.** Postup v
 `platform/docs/PROVOZ.md` jde na kontejner `orlickypohar-web-1`, tedy mimo
@@ -4404,8 +4410,8 @@ To nejsou mezery, to jsou rozhodnutí.
    majitele z našeptávače, ani chybějící stránka o osobních údajích. Původní
    pořadí si odporovalo samo: bod o přihláškách u sebe měl „před otevřením
    přihlášek, ne po" a stál za vypsáním.
-5. ~~**Zelené nasazení bez nasazení**~~ **hotovo 9. 10. 2026.** Zbývá
-   **postup pro den závodu** včetně dumpu před migrací.
+5. ~~**Zelené nasazení bez nasazení** a **postup pro den závodu** včetně dumpu
+   před migrací.~~ **Obojí hotové 9. 10. 2026** (*DEN-ZAVODU.md*).
 6. **Hláška u konfliktu** a doplnění mocku tam, kde brání zkoušce.
 
 Appka, upozornění a tracker až potom: jsou to největší kusy, ale na první závod
