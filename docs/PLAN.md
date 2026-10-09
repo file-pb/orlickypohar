@@ -4690,6 +4690,28 @@ To nejsou mezery, to jsou rozhodnutí.
 Appka, upozornění a tracker až potom: jsou to největší kusy, ale na první závod
 (15. 5. 2027) nemají vliv.
 
+## Loďka u přihlášky (Filip, 9. 10. 2026)
+
+*„Přihlášky by mohly mít loďku podle kategorie a stavu."*
+
+**Hotové 9. 10. 2026** (`web/app/lodka.tsx`): tvar nese kategorii, barva
+a výplň stav — vybarvená jede, prázdná čeká na pořadatele, tlumená je mimo
+závod, červená je vyloučená. Dělení stavů je totéž, jaké obrazovka používá
+na rozdělení seznamu (`skupinaStavu`), aby ikona a sloupce neříkaly každý
+něco jiného.
+
+**Je to jediné místo v kódu, které sahá na jména kategorií.** Kategorie
+nejsou výčet, jsou to řádky v databázi a nic v nich neříká, jak je loď
+velká; ročník 2026 má `Pod7m`, `Nad7m` a `Race` ze sešitu rozhodčího.
+Tvar se proto přiřazuje podle jména a **co se netrefí, dostane neutrální
+loďku** — jiný ročník tím nerozbije obrazovku, jen nedostane rozlišení.
+
+**Rozdíl tvarů je při dvaceti pixelech jemný** a stojí za to to vědět: první
+pokus se slil do jednoho trojúhelníku a musel se překreslit s mezerami mezi
+plachtami. I tak nese ikona v tabulce přihlášek hlavně **stav**, protože
+kategorie je stejně v záhlaví skupiny nad řádky. Hlasitější tvar by chtěl
+větší ikonu nebo barvu podle kategorie — a ta se pere s barvou stavu.
+
 ## Nápověda a prokliky (9. 10. 2026)
 
 **Zadání od Filipa:** *„budeme tam muset udělat help s návody jak co založit

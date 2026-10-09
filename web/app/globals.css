@@ -807,6 +807,15 @@ header.hlavicka .jen-uzke { display: none; }
 }
 .seznam-prvku > li:last-child { border-bottom: 0; }
 .poradi-prvku { color: var(--tlumeny); font-variant-numeric: tabular-nums; }
+/* Loďka u přihlášky: tvar nese kategorii, barva stav. Vybarvená jede,
+   prázdná čeká na pořadatele, tlumená je mimo závod. Výplň jde přes
+   proměnnou, aby se „prázdná" dala udělat jedním místem místo osmi. */
+.lodka { vertical-align: -0.3em; margin-right: 0.4rem; flex: none; }
+.lodka-jede { color: var(--stav-vypsany); --lodka-vypln: 1; }
+.lodka-ceka { color: var(--voda); --lodka-vypln: 0; }
+.lodka-vyloucena { color: var(--stav-zruseny); --lodka-vypln: 1; }
+.lodka-mimo { color: var(--tlumeny); --lodka-vypln: 0; }
+.lodka-bez { color: var(--linka); --lodka-vypln: 0; }
 .zmapy .hlaska .detail { display: block; word-break: break-all; margin-top: 0.3rem; }
 
 /* Výběr souboru jako tlačítko: vlastní `input[type=file]` vypadá v každém
