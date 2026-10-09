@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Drobecky } from "@/app/drobecky";
+import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { nactiNavrhy, nactiZapis, type Navrh, type NavrhRadek } from "@/lib/vysledky";
 import { KonceptVPorovnani } from "../koncept-ukazka";
@@ -46,13 +46,12 @@ export default async function PorovnaniZapisu({ params, searchParams }: Parametr
   const zapisAdresa = `/sprava/${serie}/vysledky/${zavod}/${cisloRozjizdky}`;
   const drobecky = (
     <Drobecky
-      cesta={[
-        { text: "Domů", kam: "/" },
-        { text: "Výsledky", kam: `/sprava/${serie}/vysledky` },
-        { text: data?.zavodNazev ?? "Regata", kam: `/sprava/${serie}/vysledky/${zavod}` },
+      cesta={drobeckySpravy(serie, [
+        drobekRegaty(serie, zavod, data?.zavodNazev),
+        { text: "Výsledky", kam: `/sprava/${serie}/vysledky/${zavod}` },
         { text: `${cisloRozjizdky}. rozjížďka`, kam: zapisAdresa },
         { text: "Porovnání" },
-      ]}
+      ])}
     />
   );
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Drobecky } from "@/app/drobecky";
+import { Drobecky, drobeckySpravy } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { ROLE_WEBU, nactiPrehledWebu } from "@/lib/sprava";
 import { odeberZWebuAkce, udelNaWebuAkce } from "./akce";
@@ -24,7 +24,7 @@ export default async function OpravneniWebu({ searchParams }: Parametry) {
 
   const hlava = (
     <>
-      <Drobecky cesta={[{ text: "Domů", kam: "/" }, { text: "Oprávnění na celý web" }]} />
+      <Drobecky cesta={drobeckySpravy(null, [{ text: "Oprávnění na celý web" }])} />
       <h1>Oprávnění na celý web</h1>
     </>
   );

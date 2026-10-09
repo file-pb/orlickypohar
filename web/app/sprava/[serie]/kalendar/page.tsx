@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Drobecky } from "@/app/drobecky";
+import { Drobecky, drobeckySpravy } from "@/app/drobecky";
 import { Stav } from "@/app/stav";
 import { Vypadek } from "@/app/vypadek";
 import { datum } from "@/app/datum";
@@ -15,6 +15,8 @@ import {
   type ZastavkaRadek,
 } from "@/lib/kalendar";
 import { nactiRocnik } from "@/lib/rocnik";
+import { nactiJa } from "@/lib/ja";
+import { polozkyZastavky, prava, type Udelena } from "@/lib/co-smim";
 import { publikaceAkce, publikaceRocnikuAkce, stavAkce, ulozAkce, zalozAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
@@ -49,10 +51,14 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
   const { serie } = await params;
   const zpravy = await searchParams;
 
-  const [{ stav, prehled }, { rocnik }] = await Promise.all([
+  const [{ stav, prehled }, { rocnik }, { ja }] = await Promise.all([
     nactiKalendar(serie),
     nactiRocnik(serie),
+    nactiJa(),
   ]);
+  // Odkazy u regaty se nabízejí podle práv, ne všem stejně — kalendář vidí
+  // i pořadatel jediné zastávky a u cizích regat by to byly slepé odkazy.
+  const udelena = prava(ja);
 
   // Výpadek nesmí spolknout výsledek zápisu: když se nepovede načíst
   // kalendář, ale akce něco vzkázala, musí to být vidět nad výpadkem.
@@ -72,13 +78,7 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
 
   const hlava = (
     <>
-      <Drobecky
-        cesta={[
-          { text: "Domů", kam: "/" },
-          { text: "Ročník", kam: `/serie/${serie}` },
-          { text: "Kalendář" },
-        ]}
-      />
+      <Drobecky cesta={drobeckySpravy(serie, [{ text: "Kalendář" }])} />
       <h1>Kalendář — správa</h1>
     </>
   );
@@ -212,7 +212,7 @@ export default async function SpravaKalendare({ params, searchParams }: Parametr
         <ul className="seznam">
           {zastavky.map((z) => (
             <li key={z.slug}>
-              <Zastavka serie={serie} zastavka={z} />
+              <Zastavka serie={serie} zastavka={z} udelena={udelena} />
             </li>
           ))}
         </ul>
@@ -297,10 +297,22 @@ function Pole({ zastavka, akce }: { zastavka?: ZastavkaRadek; akce?: boolean }) 
   );
 }
 
-function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek }) {
+function Zastavka({
+  serie,
+  zastavka,
+  udelena,
+}: {
+  serie: string;
+  zastavka: ZastavkaRadek;
+  udelena: Udelena[];
+}) {
   const zrusena = zastavka.stav === "Zruseny";
   const akce = zastavka.druh === "Akce";
   const zpet = akce ? "akce" : "";
+  // Komunitní akce výsledky ani přihlášky nemá a zrušená regata je má, ale
+  // API je odmítne — odkaz na ně by byl slib naprázdno (totéž pravidlo
+  // jako na rozcestníku ročníku).
+  const prace = akce || zrusena ? [] : polozkyZastavky(udelena, serie, zastavka.slug);
 
   return (
     <div className={`karta ${zrusena ? "zrusena" : ""}`}>
@@ -327,19 +339,17 @@ function Zastavka({ serie, zastavka }: { serie: string; zastavka: ZastavkaRadek 
         {zastavka.puvodniDatum && (
           <span className="presun"> · přesunuto z {datum(zastavka.puvodniDatum)}</span>
         )}
-        {/* Odsud se chodí na přihlášky a výsledky té regaty. Kalendář je
-            rozcestník ročníku, takže je to jediné místo, kde se ty cesty
-            nabízejí samy. Komunitní akce nemá ani jedno. */}
-        {!akce && (
-          <>
+        {/* Odsud se chodí na práci u té regaty. Seznam je tentýž jako na
+            rozcestníku ročníku (`polozkyZastavky`), a je to schválně: dvě
+            ruční kopie se rozešly hned při prvním přírůstku — bóje se
+            přidaly na rozcestník a v kalendáři na ně odkaz nebyl
+            (Filip, 9. 10. 2026: „do editace bójí nejde vlézt z kalendáře"). */}
+        {prace.map((p) => (
+          <span key={p.kam}>
             {" · "}
-            <Link href={`/sprava/${serie}/prihlasky/${zastavka.slug}`}>přihlášky →</Link>
-            {" · "}
-            <Link href={`/sprava/${serie}/vysledky/${zastavka.slug}`}>výsledky →</Link>
-            {" · "}
-            <Link href={`/sprava/${serie}/smernice/${zastavka.slug}`}>směrnice →</Link>
-          </>
-        )}
+            <Link href={p.kam}>{p.kratky ?? p.nazev} →</Link>
+          </span>
+        ))}
       </div>
 
       {/* Posun stavu rovnou ze seznamu: nejčastější úkon je „potvrdit

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Drobecky } from "@/app/drobecky";
+import { Drobecky, drobeckySpravy } from "@/app/drobecky";
 import { nactiSerie } from "@/lib/api";
 import { nactiJa } from "@/lib/ja";
 import { NAZVY_ROLI, polozkyWebu, prava, roleVRocniku, rocniky } from "@/lib/co-smim";
@@ -25,7 +25,7 @@ export default async function Sprava() {
 
   const hlava = (
     <>
-      <Drobecky cesta={[{ text: "Domů", kam: "/" }, { text: "Správa" }]} />
+      <Drobecky cesta={drobeckySpravy(null)} />
       <h1>Správa</h1>
     </>
   );

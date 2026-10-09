@@ -1022,6 +1022,51 @@ regaty smí psát na stránku Radavské regaty a nikam jinam. Je to přesně ten
 rozsah, který plán popisuje u rolí — článek proto nese vazbu buď na sérii,
 nebo na zastávku, a právo se odvozuje od ní.
 
+### Jak se chodí po správě (Filip, 9. 10. 2026)
+
+Vzniklo z první chybky při zkoušce ovládání: *„do editace bójí nejde vlézt
+z kalendáře a detailu zastávky. Většinou jdu přes správa, pak ročník a pak
+na zastávce tlačítko — nahoře se mi cesta nějak přehodí a je tam ročník
+a pak správa, a to neodpovídá realitě."*
+
+**Drobeček je adresa.** Cesta nahoře neříká, odkud kdo přišel, ale kde
+v adresách stojí — jinak se u každé obrazovky hádá, co je „nad" ní.
+Dřív to u ročníku bylo *Domů » Ročník » Správa* s odkazem na **veřejnou**
+stránku ročníku, takže krok nahoru vedl ze správy ven, a u bójí a směrnic
+*Domů » Kalendář » …*, ačkoliv se na ně chodí z rozcestníku ročníku.
+
+| Adresa | Cesta nahoře |
+|---|---|
+| `/sprava` | Domů » Správa |
+| `/sprava/{ročník}` | Domů » Správa » Ročník |
+| `/sprava/{ročník}/kalendar` (a `vysledky`, `lode`, `opravneni`, `clanky`) | … » Ročník » Kalendář |
+| `/sprava/{ročník}/boje/{regata}` (a `prihlasky`, `smernice`) | … » Ročník » **{regata}** » Bóje na trati |
+| `/sprava/{ročník}/vysledky/{regata}/{n}/cil` | … » Ročník » **{regata}** » Výsledky » {n}. rozjížďka » Cíl |
+
+**Drobeček regaty míří na její kartu na rozcestníku ročníku**
+(`/sprava/{ročník}#{regata}`). Vlastní stránka „regata ve správě"
+neexistuje a nepotřebuje být: ta karta je ona — má u sebe všechno, co se
+k jedné regatě dělá. Odtud se na to chodí, takže tam drobečky vedou
+zpátky; totéž dělá odkaz *Zpátky na regatu* místo dřívějšího *Zpátky na
+kalendář*. Kalendář zůstává tam, kde je doopravdy nad věcí: u medailonku
+pořadatele, protože ten patří klubu, ne regatě.
+
+**Poslední drobeček nikdy není odkaz** a zahazuje se to v `Drobecky`, ne
+u každé stránky: půlka obrazovek správy má „hlavu", která se vykreslí i ve
+stavu „nemáš práva", a nesla by tentýž seznam dvakrát.
+
+**Co se u regaty nabízí, říká `web/lib/co-smim.ts` a nikdo jiný.** Kalendář
+si ten výpis dřív skládal sám — tři odkazy ručně, všem stejně. Rozešlo se
+to při prvním přírůstku: bóje se přidaly na rozcestník a v kalendáři na ně
+odkaz nebyl. A protože kalendář vidí i pořadatel jediné zastávky, nabízel
+mu odkazy na cizí regaty, které API odmítne.
+
+**Do správy se dá i z veřejné stránky**, když na to člověk má práva: na
+stránce regaty rámeček s odkazy na tu regatu, na stránce ročníku odkaz na
+rozcestník. Na cachování to vliv nemá — mikrocache před webem pouští
+požadavek s cookie sezení mimo cache (`deploy/cache/default.conf`, mapa
+`$sezeni`), takže se rámeček nemůže uložit a vydat někomu jinému.
+
 ## Stránka zastávky — cílový tvar
 
 Filipův záměr do budoucna, ne úkol na teď. Zapsané, aby se model nevyvíjel

@@ -8,6 +8,8 @@ import { Boky } from "@/app/boky";
 import { NadpisTridy, TabyTrid, vyberTridu } from "@/app/tridy";
 import { PrepinacKalendare } from "@/app/kalendar-volba";
 import { volbaKalendare, zastavkyKalendare, type SAkci, type VolbaKalendare } from "@/lib/kalendar-volba";
+import { nactiJa } from "@/lib/ja";
+import { prava, roleVRocniku } from "@/lib/co-smim";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -50,6 +52,12 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
   // Starší API akce nevydává — pak prostě žádné nejsou.
   const akce = serie.akce ?? [];
   const volba = await volbaKalendare(kalendar);
+
+  // Kdo tu má roli, se do správy dostane odsud, ne jen přes nabídku účtu.
+  // Mikrocache požadavek s cookie sezení nekešuje, takže se odkaz nemůže
+  // dostat k někomu, kdo roli nemá (`deploy/cache/default.conf`).
+  const { ja } = await nactiJa();
+  const maRoli = roleVRocniku(prava(ja), slug).length > 0;
   const zastavky = zastavkyKalendare(serie.zavody, akce, volba);
 
   // Lodě po kategoriích, v pořadí, které si drží série — abecedně by Nad7m
@@ -90,6 +98,12 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
         <Link href={`/serie/${serie.slug}/poradi`}>Průběžné pořadí seriálu →</Link>
         {" · "}
         <Link href={`/serie/${serie.slug}/novinky`}>Novinky ročníku →</Link>
+        {maRoli && (
+          <>
+            {" · "}
+            <Link href={`/sprava/${serie.slug}`}>Správa ročníku →</Link>
+          </>
+        )}
       </p>
 
       {/* Kalendář je zároveň rozcestník: každá regata nese svůj stav

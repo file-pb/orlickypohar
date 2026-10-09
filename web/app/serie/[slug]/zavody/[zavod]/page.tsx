@@ -18,6 +18,8 @@ import { Drobecky } from "@/app/drobecky";
 import { Boky } from "@/app/boky";
 import { CELKEM, NadpisTridy, TabyTrid, vyberTridu } from "@/app/tridy";
 import { Medailonek, maObsah } from "@/app/medailonek";
+import { nactiJa } from "@/lib/ja";
+import { polozkyZastavky, prava, roleVRocniku } from "@/lib/co-smim";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -116,6 +118,21 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
     ...(zavod.vyhodnoceni === "CelePole" ? [] : [...new Set(radky.map((r) => r.kategorie))]),
   ];
   const akce = zavod.druh === "Akce";
+
+  // Cesta do správy rovnou odsud (Filip, 9. 10. 2026: „klidně ať do správy
+  // mohu ze zastávky, když na to mám práva"). Veřejná stránka regaty je
+  // místo, kde pořadatel stejně stojí — a dřív z ní do své práce nevedlo
+  // nic, muselo se přes nabídku účtu a rozcestník.
+  //
+  // Na cache to nemá vliv: mikrocache před webem pouští požadavek s cookie
+  // sezení mimo cache (`deploy/cache/default.conf`, mapa `$sezeni`), takže
+  // se tenhle rámeček nemůže uložit a vydat někomu jinému.
+  const { ja } = await nactiJa();
+  const udelena = prava(ja);
+  const maRoli = roleVRocniku(udelena, slug).length > 0;
+  // Komunitní akce výsledky ani přihlášky nemá; vede z ní jen rozcestník.
+  const prace = akce ? [] : polozkyZastavky(udelena, slug, slugZavodu);
+
   const aktivni = vyberTridu(kategorie, trida);
   const videt = aktivni === CELKEM ? radkyCelkem : radky.filter((r) => r.kategorie === aktivni);
 
@@ -152,6 +169,29 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
           <span className="presun"> · přesunuto z {datum(zavod.puvodniDatum)}</span>
         )}
       </p>
+
+      {maRoli && (
+        <p className="do-spravy">
+          {prace.length > 0 ? (
+            <>
+              <b>Tuhle regatu spravuješ.</b>{" "}
+              {prace.map((p, i) => (
+                <span key={p.kam}>
+                  {i > 0 && " · "}
+                  <Link href={p.kam}>{p.kratky ?? p.nazev} →</Link>
+                </span>
+              ))}
+              {" · "}
+              <Link href={`/sprava/${slug}#${slugZavodu}`}>vše k regatě →</Link>
+            </>
+          ) : (
+            <>
+              <b>V tomhle ročníku máš roli.</b>{" "}
+              <Link href={`/sprava/${slug}`}>Správa ročníku →</Link>
+            </>
+          )}
+        </p>
+      )}
 
       {/* Plachetní směrnice hned pod hlavičkou: je to dokument, podle kterého
           se jede, a appka i web jsou oficiální vývěska (plán, oddíl *Appka je

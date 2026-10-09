@@ -146,6 +146,25 @@ export async function nactiKalendar(
   return { stav: "ok", prehled: (await odpoved.json()) as PrehledZastavek };
 }
 
+/**
+ * Jak se ta regata jmenuje. Pro obrazovky, které název neznají a přesto ho
+ * mají říct — bóje a směrnice dostávají z API jen svoje záznamy, takže
+ * nadpis „Bóje na trati" neprozradil, čí trať se zrovna staví, a drobeček
+ * s regatou by neměl co napsat.
+ *
+ * <b>Čte se kalendář, protože ho ten člověk smí číst.</b>
+ * `KalendarEndpoints.PohledAsync` pouští rozhodčího, správce **nebo
+ * pořadatele jediné zastávky** — tedy každého, kdo se na bóje a směrnice
+ * dostane. Výpadek nebo odmítnutí vrací `null` a obrazovka se obejde bez
+ * názvu; kvůli nadpisu se nic neshodí.
+ */
+export async function nazevZastavky(serie: string, zavod: string): Promise<string | null> {
+  const { stav, prehled } = await nactiKalendar(serie);
+  if (stav !== "ok" || !prehled) return null;
+
+  return prehled.zastavky.find((z) => z.slug === zavod)?.nazev ?? null;
+}
+
 export async function zaloz(serie: string, vstup: ZastavkaVstup): Promise<string | null> {
   return zapis(kam(serie), "POST", vstup);
 }

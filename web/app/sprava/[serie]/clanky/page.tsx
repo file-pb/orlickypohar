@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Drobecky } from "@/app/drobecky";
+import { Drobecky, drobeckySpravy } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { datumClanku } from "@/app/datum";
 import { STAVY, jeWeb, nactiPrehled, nazevStavu, type ClanekRadek, type StavClanku } from "@/lib/clanky";
@@ -57,12 +57,8 @@ export default async function SpravaClanku({ params, searchParams }: Parametry) 
       <Drobecky
         cesta={
           web
-            ? [{ text: "Domů", kam: "/" }, { text: "Obecné články" }]
-            : [
-                { text: "Domů", kam: "/" },
-                { text: "Ročník", kam: `/serie/${serie}` },
-                { text: "Novinky" },
-              ]
+            ? drobeckySpravy(null, [{ text: "Obecné články" }])
+            : drobeckySpravy(serie, [{ text: "Novinky" }])
         }
       />
       <h1>{web ? "Obecné články — správa" : "Novinky — správa"}</h1>

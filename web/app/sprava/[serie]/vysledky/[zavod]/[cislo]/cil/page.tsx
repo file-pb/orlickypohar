@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Drobecky } from "@/app/drobecky";
+import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { KODY, nactiZapis, nazevStavu, type ZapisRozjizdky } from "@/lib/vysledky";
 import { Cil } from "./cil";
@@ -36,13 +36,12 @@ export default async function CilovaObrazovka({ params }: Parametry) {
 
   const drobecky = (
     <Drobecky
-      cesta={[
-        { text: "Domů", kam: "/" },
-        { text: "Výsledky", kam: `/sprava/${serie}/vysledky` },
-        { text: zapis?.zavodNazev ?? "Regata", kam: regataAdresa },
+      cesta={drobeckySpravy(serie, [
+        drobekRegaty(serie, zavod, zapis?.zavodNazev),
+        { text: "Výsledky", kam: regataAdresa },
         { text: `${cisloRozjizdky}. rozjížďka`, kam: zapisAdresa },
         { text: "Cíl" },
-      ]}
+      ])}
     />
   );
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Drobecky } from "@/app/drobecky";
+import { Drobecky, drobeckySpravy } from "@/app/drobecky";
 import { Stav } from "@/app/stav";
 import { Vypadek } from "@/app/vypadek";
 import { datum } from "@/app/datum";
@@ -54,13 +54,7 @@ export default async function RozcestnikRocniku({
 
   const hlava = (
     <>
-      <Drobecky
-        cesta={[
-          { text: "Domů", kam: "/" },
-          { text: "Ročník", kam: `/serie/${serie}` },
-          { text: "Správa" },
-        ]}
-      />
+      <Drobecky cesta={drobeckySpravy(serie)} />
       <h1>Správa ročníku</h1>
     </>
   );
@@ -142,12 +136,17 @@ export default async function RozcestnikRocniku({
         <>
           <h2>{jenSve ? "Moje regaty" : "Regaty ročníku"}</h2>
           <p className="poznamka">
-            U každé je zápis výsledků, přihlášky i směrnice — všechno, co se
-            k jedné regatě dělá, pohromadě.
+            U každé je zápis výsledků, přihlášky, směrnice i bóje na trati —
+            všechno, co se k jedné regatě dělá, pohromadě. Odsud se na to
+            chodí a drobečky na těch obrazovkách sem vedou zpátky.
           </p>
           <ul className="seznam">
             {mojeZastavky.map((z) => (
-              <li key={z.zavod}>
+              /* Kotva na kartu regaty. Je to adresa toho, co jinde chybí —
+                 „regata ve správě" vlastní stránku nemá a tahle karta je
+                 ona, takže na ni míří drobeček regaty i „zpátky na regatu"
+                 z bójí a směrnic (`drobekRegaty`). */
+              <li key={z.zavod} id={z.zavod}>
                 <div className="karta">
                   <div className="nazev">
                     {z.nazev}

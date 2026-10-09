@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Drobecky } from "@/app/drobecky";
+import { Drobecky, drobeckySpravy } from "@/app/drobecky";
 import { Stav } from "@/app/stav";
 import { Vypadek } from "@/app/vypadek";
 import { datum } from "@/app/datum";
@@ -32,13 +32,7 @@ export default async function SpravaVysledku({
 
   const hlava = (
     <>
-      <Drobecky
-        cesta={[
-          { text: "Domů", kam: "/" },
-          { text: "Ročník", kam: `/serie/${serie}` },
-          { text: "Výsledky" },
-        ]}
-      />
+      <Drobecky cesta={drobeckySpravy(serie, [{ text: "Výsledky" }])} />
       <h1>Výsledky — správa</h1>
     </>
   );
