@@ -29,7 +29,7 @@
          projdou s varováním — záměrně, ať se dá pracovat bez klíče.
          Licence: Six Labors Split License, komunitní klíč pro nekomerční
          projekty z licensing.sixlabors.com. -->
-    <PackageReference Include="SixLabors.ImageSharp" Version="4.1.2" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="4.1.3" />
   </ItemGroup>
 
 </Project>
