@@ -4,6 +4,7 @@ import {
   NAZVY_TYPU,
   POZNAMKA_NEJVIC,
   type Prvek,
+  type StranaPrvku,
   type TypPrvku,
 } from "@/lib/trat";
 import { IkonaPrvku } from "@/app/ikona-prvku";
@@ -104,7 +105,7 @@ export function PrvkyTrati({
           </label>
 
           <label>
-            První konec
+            Bóje — u startu a cíle levobok
             <select name="bojeA" required defaultValue="">
               <option value="" disabled>
                 Vyber bóji
@@ -118,9 +119,9 @@ export function PrvkyTrati({
           </label>
 
           <label>
-            Druhý konec
+            Druhá bóje — u startu a cíle pravobok
             <select name="bojeB" defaultValue="">
-              <option value="">žádný (značka), nebo bod níž</option>
+              <option value="">žádná (značka), nebo bod níž</option>
               {boje.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.nazev}
@@ -128,14 +129,19 @@ export function PrvkyTrati({
               ))}
             </select>
             <span className="poznamka">
-              Konec čáry nemusí být bóje — start se běžně vytyčí mezi bójí
-              a plavidlem komise. Pak nech prázdné a vyplň bod.
+              Nemusí to být bóje — start, cíl i otočná zóna se běžně vytyčí
+              mezi bójí a plavidlem komise, molem nebo objektem na břehu.
+              Pak nech prázdné a vyplň bod.
             </span>
           </label>
 
           <label>
             Bod místo druhé bóje — čím je
-            <input name="bodPopis" maxLength={60} placeholder="plavidlo komise" />
+            <input
+              name="bodPopis"
+              maxLength={60}
+              placeholder="plavidlo komise, molo, objekt na břehu"
+            />
           </label>
           <label>
             Jeho poloha
@@ -151,14 +157,19 @@ export function PrvkyTrati({
 
           <label>
             Strana
+            {/* Jména z jednoho místa: nabídka i výpis musí říkat totéž,
+                jinak si člověk myslí, že jsou to dvě různé věci. */}
             <select name="strana" defaultValue="">
               <option value="">neuvedeno</option>
-              <option value="PoLeve">ponechat po levé</option>
-              <option value="PoPrave">ponechat po pravé</option>
+              {(Object.keys(NAZVY_STRAN) as NonNullable<StranaPrvku>[]).map((s) => (
+                <option key={s} value={s}>
+                  {NAZVY_STRAN[s]}
+                </option>
+              ))}
             </select>
             <span className="poznamka">
-              Jen u značky a odskoku. U brány si stranu volí loď, u čáry
-              rozhoduje směr průjezdu.
+              Jen u značky a odskoku. U brány si stranu volí loď, u startu
+              a cíle rozhoduje směr průjezdu.
             </span>
           </label>
 
@@ -167,10 +178,13 @@ export function PrvkyTrati({
             <input
               name="poznamka"
               maxLength={POZNAMKA_NEJVIC}
-              placeholder="projíždí se po proudu"
+              placeholder="na jih, startujeme na zámek"
             />
             <span className="poznamka">
-              Vidí to pořadatel i závodník. Na delší vysvětlení je plachetní směrnice.
+              Začni <b>světovou stranou</b> a přidej, podle čeho se to pozná
+              („na jih, startujeme na zámek“) — na vodě se člověk řídí
+              rozhledem, ne stupni. Vidí to pořadatel i závodník; na delší
+              vysvětlení je plachetní směrnice.
             </span>
           </label>
 
