@@ -4,6 +4,7 @@ import { Drobecky } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { okamzik } from "@/app/datum";
 import { NAZEV_NEJVIC, nactiTrat, type Boje, type Byvala } from "@/lib/boje";
+import { MapkaTrati } from "./trat";
 import { Pipani } from "./pipani";
 import { seberAkce } from "./akce";
 
@@ -89,6 +90,7 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
           />
 
           <h2>Co stojí na trati</h2>
+          <MapkaTrati boje={trat} />
           {trat.length === 0 ? (
             <p className="prazdno">
               Zatím nic. Až bóji spustíš do vody, pípni ji — poloha z tvého
@@ -104,10 +106,23 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
             </ul>
           )}
 
+          {trat.length > 0 && (
+            <p className="poznamka">
+              {/* Zoomovat se dá ve vlastním nástroji, ne v naší mapce: víc bodů
+                  najednou se do adresy cizí mapy spolehlivě dostat nedá, kdežto
+                  GPX otevře Mapy.cz, OsmAnd i chartplotter na lodi. */}
+              <a href={`/sprava/${serie}/boje/${zavod}/trat.gpx`} download>
+                Stáhnout trať (GPX)
+              </a>{" "}
+              — otevře se v mapě i v chartplotteru, kde si ji můžeš přiblížit.
+            </p>
+          )}
+
           <p className="poznamka">
             Pípnutí bez signálu obrazovka neumí a je to schválně: API u polohy
             nenese čas z telefonu, takže podržené pípnutí by se uložilo s časem
-            nahrání, ne s časem postavení. Radši se to nepovede hned.
+            nahrání, ne s časem postavení. Radši se to nepovede hned.{" "}
+            <Link href="/napoveda#boje">Jak se trať staví</Link>
           </p>
 
           {byvale && byvale.length > 0 && (
@@ -159,7 +174,17 @@ function NaTrati({ boje, serie, zavod }: { boje: Boje; serie: string; zavod: str
       <p className="poznamka">
         <Link href={`/sprava/${serie}/boje/${zavod}?prenastav=${boje.id}`}>
           Přenastavit
-        </Link>
+        </Link>{" "}
+        ·{" "}
+        {/* Kde přesně ta jedna bóje leží. Mapu web nevkládá, odkazuje na ni —
+            stejné pravidlo jako u medailonku pořadatele. */}
+        <a
+          href={`https://www.openstreetmap.org/?mlat=${boje.sirka}&mlon=${boje.delka}#map=17/${boje.sirka}/${boje.delka}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Ukázat na mapě
+        </a>
       </p>
 
       {/* Sebrání nepotřebuje polohu, takže ani javascript. */}

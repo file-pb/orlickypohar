@@ -1828,3 +1828,8 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 .graf-cisla > summary:hover { color: var(--voda); }
 .graf-cisla .tabulka-obal { margin-top: 0.5rem; }
 .poznamka.bez-odsazeni { margin-top: 0; }
+
+/* Mapka trati: bóje nad dlaždicemi, které servíruje náš server. Barvy jsou
+   natvrdo, ne z proměnných vzhledu — podklad je světlý v obou režimech. */
+.mapka-trati { margin: 1rem 0; }
+.mapka { width: 100%; height: auto; display: block; border-radius: 8px; background: #e8e6e1; }
