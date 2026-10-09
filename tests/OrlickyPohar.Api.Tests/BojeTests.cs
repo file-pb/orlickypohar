@@ -203,38 +203,76 @@ public class BojeTests(PostgresFixture fixture)
     }
 
     /// <summary>
-    /// Fotka je doklad k poloze, takže musí dojít až ke klientovi — a čerstvě
+    /// Fotky jsou doklad k poloze, takže musí dojít až ke klientovi — a čerstvě
     /// pípnutá bóje žádnou nemá. Bez téhle kontroly by se projekce dala
-    /// omylem zúžit zpátky na SQL a fotka by tiše vypadla.
+    /// omylem zúžit zpátky na SQL a fotky by tiše vypadly.
+    /// <para>
+    /// <b>Víc než jedna</b>: jeden snímek zblízka neukáže zároveň bóji
+    /// i břeh za ní, a teprve obojí dohromady říká, kde to je.
+    /// </para>
     /// </summary>
     [Fact]
-    public async Task Fotka_u_boje_dojde_do_seznamu_a_bez_ni_je_prazdno()
+    public async Task Fotky_u_boje_dojdou_do_seznamu_v_poradi_nahrani()
     {
         var (db, boje) = Sluzby();
         var (zavod, kdo) = await RegataAsync(db);
 
         var (postavena, _) = await boje.PipniAsync(zavod.Id, Bod("Bóje 1"), kdo.Id, default);
-        Assert.Null(postavena!.Fotka);
-        Assert.Null((await boje.SeznamAsync(zavod.Id, false, default)).Single().Fotka);
+        Assert.Empty(postavena!.Fotky);
+        Assert.Empty((await boje.SeznamAsync(zavod.Id, false, default)).Single().Fotky);
 
-        var fotka = new OrlickyPohar.Api.Features.Fotky.Fotka
-        {
-            Id = Guid.NewGuid(),
-            Autor = "Miloš Zvonař",
-            Popis = "Bóje Bóje 1",
-            Sirka = 1600,
-            Vyska = 1200,
-            NahralId = kdo.Id,
-            NahranoV = Ted,
-        };
-        db.Fotky.Add(fotka);
-        var zaznam = await db.Boje.SingleAsync(b => b.Id == postavena.Id);
-        zaznam.FotkaId = fotka.Id;
+        var zblizka = Snimek(kdo.Id, "Bóje zblízka", Ted);
+        // Druhá je starší, ať je vidět, že se řadí podle nahrání a ne
+        // podle toho, jak je vrátí databáze.
+        var sbrehem = Snimek(kdo.Id, "Bóje a břeh za ní", Ted.AddMinutes(-5));
+        db.Fotky.AddRange(sbrehem, zblizka);
+        foreach (var f in new[] { zblizka, sbrehem }) f.UBojeId = postavena.Id;
         await db.SaveChangesAsync();
 
-        var sFotkou = (await boje.SeznamAsync(zavod.Id, false, default)).Single();
-        Assert.NotNull(sFotkou.Fotka);
-        Assert.Equal("Miloš Zvonař", sFotkou.Fotka!.Autor);
-        Assert.Contains(fotka.Id.ToString("N"), sFotkou.Fotka.Nahled);
+        var sFotkami = (await boje.SeznamAsync(zavod.Id, false, default)).Single();
+        Assert.Equal(2, sFotkami.Fotky.Count);
+        Assert.Equal(["Bóje a břeh za ní", "Bóje zblízka"], sFotkami.Fotky.Select(f => f.Popis));
+        Assert.Equal("Miloš Zvonař", sFotkami.Fotky[0].Autor);
+        Assert.Contains(sbrehem.Id.ToString("N"), sFotkami.Fotky[0].Nahled);
+        // Id musí dojít ke klientovi, jinak nejde odebrat jedna z několika.
+        Assert.Equal(sbrehem.Id, sFotkami.Fotky[0].Id);
     }
+
+    /// <summary>
+    /// Sebraná bóje si fotky nechává. Záznam o poloze zůstává, aby šla
+    /// přečíst trasa z té doby — a fotka je jeho doklad. Úklid souborů,
+    /// které už nikdo nepotřebuje, patří na konec ročníku
+    /// (Filip, 9. 10. 2026), ne do „Sebrat z vody".
+    /// </summary>
+    [Fact]
+    public async Task Sebrani_fotky_nemaze()
+    {
+        var (db, boje) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+        var (postavena, _) = await boje.PipniAsync(zavod.Id, Bod("Bóje 1"), kdo.Id, default);
+
+        var fotka = Snimek(kdo.Id, "Bóje zblízka", Ted);
+        fotka.UBojeId = postavena!.Id;
+        db.Fotky.Add(fotka);
+        await db.SaveChangesAsync();
+
+        Assert.Null(await boje.SeberAsync(zavod.Id, postavena.Id, default));
+
+        var sebrana = (await boje.SeznamAsync(zavod.Id, iHistorie: true, default))
+            .Single(b => b.Id == postavena.Id);
+        Assert.True(sebrana.Sebrana);
+        Assert.Single(sebrana.Fotky);
+    }
+
+    private static OrlickyPohar.Api.Features.Fotky.Fotka Snimek(
+        Guid kdo, string popis, DateTimeOffset kdy) => new()
+    {
+        Id = Guid.NewGuid(),
+        Autor = "Miloš Zvonař",
+        Popis = popis,
+        Sirka = 1600,
+        Vyska = 1200,
+        NahralId = kdo,
+        NahranoV = kdy,
+    };
 }

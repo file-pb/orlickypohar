@@ -47,7 +47,7 @@ public enum ZdrojPolohy
 /// a místo mazání se bóje označí za sebranou.
 /// </para>
 /// </summary>
-public class Boje : Fotky.IMaFotku
+public class Boje
 {
     public int Id { get; set; }
 
@@ -55,18 +55,23 @@ public class Boje : Fotky.IMaFotku
     public Zavod? Zavod { get; set; }
 
     /// <summary>
-    /// Fotka bóje z okamžiku postavení (Filip, 9. 10. 2026). Je to doklad
-    /// k poloze, ne obrázek na web: ze souřadnic se nepozná, jestli je ta
+    /// Fotky bóje z okamžiku postavení (Filip, 9. 10. 2026). Jsou to doklady
+    /// k poloze, ne obrázky na web: ze souřadnic se nepozná, jestli je ta
     /// bóje nafouklá, jakou má barvu a co je za ní na břehu. Veřejně se
-    /// nevydává — stejně jako celá trať.
+    /// nevydávají — stejně jako celá trať.
+    /// <para>
+    /// <b>Víc než jedna</b> (Filip, 9. 10. 2026): jeden snímek zblízka
+    /// neukáže zároveň bóji i břeh za ní, a teprve obojí dohromady říká,
+    /// kde to je.
+    /// </para>
     /// <para>
     /// <b>Patří k záznamu, ne k bóji jako věci.</b> Přenastavení zakládá
-    /// nový záznam, takže i fotka je nová; ta stará zůstane u staré polohy
-    /// a je z ní vidět, jak trať vypadala tehdy.
+    /// nový záznam, takže i fotky jsou nové; ty staré zůstanou u staré
+    /// polohy a je z nich vidět, jak trať vypadala tehdy. Sebrání na nich
+    /// nemění nic — záznam o poloze zůstává a fotka je jeho doklad.
     /// </para>
     /// </summary>
-    public Guid? FotkaId { get; set; }
-    public Fotky.Fotka? Fotka { get; set; }
+    public ICollection<Fotky.Fotka> Fotky { get; set; } = [];
 
     /// <summary>
     /// Čím bóje na trati je: „start levý", „bóje 1", „cíl". Volný text —
@@ -133,7 +138,7 @@ public record BojeDto(
     DateTimeOffset PostavenaV,
     string? Postavil,
     bool Sebrana,
-    Fotky.ObrazekDto? Fotka,
+    IReadOnlyList<Fotky.ObrazekDto> Fotky,
     ZdrojPolohy Zdroj = ZdrojPolohy.Telefon);
 
 /// <summary>Pípnutí polohy: co posílá web i appka.</summary>

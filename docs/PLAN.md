@@ -1479,6 +1479,46 @@ kamaráda nic jiného není. Jde to jen na známé hostitele a jen po http(s) �
 rozbalování cizí adresy je požadavek, který posílá náš server, ne
 prohlížeč.
 
+#### Fotky bóje: víc než jedna (Filip, 9. 10. 2026)
+
+*„Je potřeba ty fotky komprimovat na velikost webu, jsou pouze
+informativní."* Komprese tu je od začátku a žádná zvláštní být nemusí:
+fotka projde `Zpracovani.ZpracujAsync`, uloží se jako **WebP v kvalitě 80
+ve dvou šířkách — 480 a 1600 px** — a originál z telefonu se nikam
+neukládá. Je to tatáž cesta jako u fotek na web, takže se nemá co rozejít.
+
+**Jedna fotka nestačí.** Snímek zblízka neukáže, co je za bójí na břehu,
+a teprve obojí dohromady říká, kde to je. Vazba proto vede **od fotky
+k bóji** (`Fotka.UBojeId`), stejně jako u obrázků v těle článku, a ne
+opačně jako u medailonku.
+
+#### Co je pokus a co historie (Filip, 9. 10. 2026)
+
+*„Všechno, co neprošlo rozjížďkou, jsou pokusy. Sebrání bóje ještě před
+tím, než se trasa schválí, je jen nějaký log, ale nemá z hlediska závodu
+hodnotu. Jakmile ale podle toho lodě pojedou nebo jely, to už historickou
+hodnotu má, a velmi — může se podle toho v budoucnu třeba počítat
+hendikep."*
+
+**Tohle je dělicí čára, ne odstín.** Stejný záznam o bóji znamená před
+schválením trati a po odjetí rozjížďky něco úplně jiného, a plyne z toho
+dvojí:
+
+1. **Sebrání bóje fotky nemaže.** Záznam o poloze zůstává a fotka je jeho
+   doklad; u trati, podle které se jelo, je to podklad, který už nikdo
+   nevyrobí znovu.
+2. **Úklid na konci ročníku** (Filip tamtéž: *„když budeme přecházet na
+   nový ročník, je potřeba vymyslet nějaký úklid toho, co už nikdy
+   potřebovat nebudem — takže i takovéto soubory"*) **smí sáhnout jen na
+   to, podle čeho nikdo nejel.** Bóje z trati, kterou projela rozjížďka,
+   se nemaže nikdy. Pravidlo retence tedy nezní „starší než rok", ale
+   „nikdy nesloužila odjeté rozjížďce".
+
+**Rozhodnout to jde teprve se stavy trati** — dnes bóje visí na zastávce,
+ne na rozjížďce, takže se „podle téhle trati se jelo" nemá z čeho přečíst.
+Je to další důvod, proč stavy trati (akceptace rozhodčím, zámek,
+přestavba) patří před úklid, ne za něj.
+
 **Na webu to jde taky** (Filip se ptal 4. 10.): prohlížeč na telefonu umí
 přes HTTPS sáhnout na GPS se stejnou přesností, dokud je stránka v popředí.
 Dvě ceny: byl by to **první kousek administrace s javascriptem** a bez

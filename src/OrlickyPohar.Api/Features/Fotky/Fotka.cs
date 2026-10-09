@@ -47,6 +47,18 @@ public class Fotka
     /// </summary>
     public int? VTeleClankuId { get; set; }
 
+    /// <summary>
+    /// Bóje, ke které fotka patří. Prázdné znamená, že fotka visí jinde —
+    /// u článku, medailonku nebo papírového zápisu.
+    /// <para>
+    /// <b>Vazba vede od fotky k bóji</b>, ne opačně jako u článku: u bóje
+    /// jich je víc než jedna. Jedna fotka zblízka neřekne, co je za bójí
+    /// na břehu, a právě to z ní dělá doklad k poloze (Filip, 9. 10. 2026).
+    /// </para>
+    /// </summary>
+    public int? UBojeId { get; set; }
+    public Boje.Boje? UBoje { get; set; }
+
     /// <summary>Kdo fotku nahrál a tím potvrdil souhlas autora se zveřejněním.</summary>
     public Guid NahralId { get; set; }
     public Uzivatel? Nahral { get; set; }
@@ -61,13 +73,18 @@ public class Fotka
 /// kde soubory leží — výměna úložiště pak znamená změnit jednu proměnnou.
 /// </para>
 /// </summary>
+/// <param name="Id">
+/// Id fotky. Klient ho potřebuje, aby šlo odebrat <b>jednu konkrétní</b>
+/// z několika u bóje; u vlastníků s jediným obrázkem k ničemu není.
+/// </param>
 public record ObrazekDto(
     string Nahled,
     string Velky,
     int Sirka,
     int Vyska,
     string Autor,
-    string? Popis);
+    string? Popis,
+    Guid Id = default);
 
 /// <summary>
 /// Pravidla nahrávání. Čisté funkce, bez databáze a bez úložiště.
@@ -137,5 +154,5 @@ public static class Nahravani
             : new ObrazekDto(
                 Adresa(verejnaAdresa, Klic(f.Id, SirkaNahledu)),
                 Adresa(verejnaAdresa, Klic(f.Id, SirkaVelke)),
-                f.Sirka, f.Vyska, f.Autor, f.Popis);
+                f.Sirka, f.Vyska, f.Autor, f.Popis, f.Id);
 }

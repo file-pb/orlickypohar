@@ -774,9 +774,12 @@ def proc_pipnuti_nejde(vstup):
 
 def boje_dto(b):
     """Co z bóje vidí klient — `BojeDto`. Přenastavenou od platné nerozliší."""
-    return {k: b[k] for k in
-            ("id", "nazev", "poradi", "sirka", "delka", "presnostM", "postavenaV",
-             "postavil", "sebrana", "zdroj")}
+    return {**{k: b[k] for k in
+               ("id", "nazev", "poradi", "sirka", "delka", "presnostM", "postavenaV",
+                "postavil", "sebrana", "zdroj")},
+            # Fotek může být u bóje víc; mock je drží u záznamu, server
+            # vazbou od fotky k bóji (`Fotka.UBojeId`).
+            "fotky": b.get("fotky") or []}
 
 
 def _nasad_boje():
