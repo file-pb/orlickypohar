@@ -819,6 +819,17 @@ def _nasad_smernice():
 BOJE = {}
 BOJE_ID = [0]
 
+# Stavy trati, opsané z `Features/Boje/Trat.cs`. Mock je potřebuje proto, že
+# bez nich se nedá v prohlížeči zkusit to podstatné: **zámek**. Přijatá trať
+# je veřejná, takže do ní nejde pípnout ani sebrat bóji — kdyby to šlo, byl
+# by stav jen nápis.
+#
+# Drží se **seznam** tratí na zastávku, ne jedna: přestavba trati, podle které
+# se už jelo, zakládá novou a stará zůstává přijatá. Je to výjimka (odfouklá
+# bójka), ne režim, ale zapsat ji model umět musí.
+TRATE = {}
+TRAT_ID = [0]
+
 # Opsané z `Pipnuti` — mock musí odmítat totéž a týmiž slovy, jinak se
 # na něm hlášky nedají zkoušet.
 NAZEV_NEJVIC = 60
@@ -867,6 +878,87 @@ def boje_dto(b):
             "fotky": b.get("fotky") or []}
 
 
+def trat_aktualni(slug):
+    """Trať, na které se zrovna pracuje. Nejnovější vyhrává."""
+    vse = TRATE.get(slug) or []
+    return vse[-1] if vse else None
+
+
+def trat_zaloz(slug, stav="Rozestaveno", nahrazuje=None):
+    TRAT_ID[0] += 1
+    t = {"id": TRAT_ID[0], "stav": stav, "zalozenaV": ted_iso(),
+         "prijatoV": None, "prijal": None, "duvodVraceni": None,
+         "rozjizdkaId": None, "nahrazujeId": nahrazuje}
+    TRATE.setdefault(slug, []).append(t)
+    return t
+
+
+def trat_odjeta(slug, t):
+    """Odstartovala po přijetí téhle trati rozjížďka? Pak se podle ní jelo.
+    Nikam se to neukládá, dopočítá se — jako v `TratSprava`."""
+    if not t["prijatoV"]:
+        return False
+    z = next((x for x in D["zavody"] if x["slug"] == slug), None)
+    return any((r.get("startV") or "") >= t["prijatoV"] for r in (z or {}).get("rozjizdky", []))
+
+
+def trat_dto(slug, t):
+    rozhodci = smi_ted("Rozhodci")
+    stavitel = rozhodci or smi_ted("Organizator", slug)
+    return {**{k: t[k] for k in
+               ("id", "stav", "zalozenaV", "prijatoV", "prijal", "duvodVraceni", "rozjizdkaId",
+                "nahrazujeId")},
+            "odjeta": trat_odjeta(slug, t),
+            "smiHlasitHotovo": stavitel and proc_nejde_hotovo(t["stav"]) is None,
+            "smiPrijmout": rozhodci and proc_nejde_prijmout(t["stav"]) is None,
+            "smiPrestavet": stavitel and proc_nejde_prestavba(t["stav"]) is None}
+
+
+# Pravidla přechodů, opsaná z `Stavba` — i s hláškami, aby se v prohlížeči
+# zkoušelo totéž, co uvidí člověk na vodě.
+def proc_nejde_hotovo(stav):
+    if stav in ("Rozestaveno", "Prestavba"):
+        return None
+    if stav == "Hotovo":
+        return "Hotovo už je nahlášené, trať čeká na rozhodčího."
+    return "Trať je přijatá a zamčená. Na úpravu ji nejdřív odemkni přestavbou."
+
+
+def proc_nejde_prijmout(stav):
+    if stav == "Hotovo":
+        return None
+    if stav == "Prijato":
+        return "Tahle trať je už přijatá."
+    return "Stavitelé zatím nehlásili hotovo. Přijmout jde trať, o které někdo řekl, že stojí."
+
+
+def proc_nejde_vratit(stav, duvod):
+    if stav != "Hotovo":
+        return "Vrátit jde jen trať, která čeká na přijetí."
+    oriznuty = (duvod or "").strip()
+    if not oriznuty:
+        return ("Napiš, co na trati chybí. Vrácení bez důvodu je jen „ne“ a stavitelé "
+                "nevědí, co mají dodělat.")
+    return "Důvod má nejvýš 300 znaků." if len(oriznuty) > 300 else None
+
+
+def proc_nejde_prestavba(stav):
+    if stav == "Prijato":
+        return None
+    if stav == "Prestavba":
+        return "Trať se už přestavuje."
+    return "Přestavět jde jen přijatá trať. Rozestavěnou prostě dostav."
+
+
+def proc_nejde_stavet(slug):
+    """Do přijaté trati se nesahá — ani pípnutím, ani sebráním."""
+    t = trat_aktualni(slug)
+    if t and t["stav"] == "Prijato":
+        return ("Trať je přijatá rozhodčím a zamčená. Na úpravu ji nejdřív odemkni "
+                "přestavbou — veřejně se tím řekne, že se přestavuje.")
+    return None
+
+
 def _nasad_boje():
     if not D["zavody"]:
         return
@@ -896,6 +988,10 @@ def _nasad_boje():
         boje("cíl", 3, 49.4957254, 14.1841419, None, "2026-10-08T08:40:00+00:00",
              zdroj="Mapa"),
     ]
+
+    # Jako migrace: regata, která bóje má, dostane trať ve stavu
+    # `Rozestaveno`. Přijetí dodnes neexistovalo, takže nikdo nic nepotvrdil.
+    trat_zaloz(slug)
 
 
 def boje_zastavky(slug, i_historie):
@@ -1555,6 +1651,13 @@ def role_pro_cestu(metoda, cesta):
         zavod = m.group(1)
         if "/smernice" in zbytek:
             return (NAHLED, zavod)
+        if "/trat" in zbytek:
+            # Přijmout a vrátit smí jen rozhodčí — přijetí je to, co trať
+            # zveřejní. Hlásit hotovo a odemknout smí i organizátor regaty,
+            # protože trať přestavuje on a na vodě nemá jak shánět rozhodčího.
+            if zbytek.endswith("/prijeti") or zbytek.endswith("/vraceni"):
+                return ("Rozhodci", None)
+            return (NAHLED, zavod)
         if "/boje" in zbytek:
             # Táž dvojice jako u směrnice: organizátor té regaty, nebo
             # rozhodčí ročníku (`BojeEndpoints.SmiAsync`).
@@ -2118,6 +2221,66 @@ class H(BaseHTTPRequestHandler):
         s["duvodStazeni"] = duvod.strip()
         return self._prazdna_odpoved()
 
+    def trat_stav(self, slug):
+        """Stav trati regaty. 404, dokud nemá ani jednu bóji — stavba
+        začíná prvním pípnutím, ne zvláštním knoflíkem."""
+        if not self.zastavka(slug):
+            return None
+        t = trat_aktualni(slug)
+        return self.odpoved(trat_dto(slug, t)) if t else self.send_error(404)
+
+    def _trat(self, slug):
+        """Trať regaty, nebo None s už odeslanou chybou."""
+        if not self.zastavka(slug):
+            return None
+        t = trat_aktualni(slug)
+        if not t:
+            self.chyba(400, "Tahle regata zatím nemá ani jednu bóji.")
+            return None
+        return t
+
+    def trat_hotovo(self, slug):
+        if not (t := self._trat(slug)):
+            return None
+        if (chyba := proc_nejde_hotovo(t["stav"])):
+            return self.chyba(400, chyba)
+        t["stav"], t["duvodVraceni"] = "Hotovo", None
+        return self.odpoved(trat_dto(slug, t))
+
+    def trat_prijmi(self, slug):
+        if not (t := self._trat(slug)):
+            return None
+        if (chyba := proc_nejde_prijmout(t["stav"])):
+            return self.chyba(400, chyba)
+        t["stav"], t["prijatoV"] = "Prijato", ted_iso()
+        t["prijal"], t["duvodVraceni"] = self.prihlaseny()["zobrazovane"], None
+        return self.odpoved(trat_dto(slug, t))
+
+    def trat_vrat(self, slug):
+        if not (t := self._trat(slug)):
+            return None
+        duvod = (self.telo_zadosti() or {}).get("duvod")
+        if (chyba := proc_nejde_vratit(t["stav"], duvod)):
+            return self.chyba(400, chyba)
+        t["stav"], t["duvodVraceni"] = "Rozestaveno", duvod.strip()
+        return self.odpoved(trat_dto(slug, t))
+
+    def trat_prestavba(self, slug):
+        if not (t := self._trat(slug)):
+            return None
+        if (chyba := proc_nejde_prestavba(t["stav"])):
+            return self.chyba(400, chyba)
+
+        # Podle odjeté trati se už jelo, takže se nepřepisuje: vznikne nová
+        # a stará zůstane přijatá navždy. Je to výjimka, ne běžná cesta.
+        if trat_odjeta(slug, t):
+            nova = trat_zaloz(slug, "Prestavba", nahrazuje=t["id"])
+            nova["rozjizdkaId"] = t["rozjizdkaId"]
+            return self.odpoved(trat_dto(slug, nova))
+
+        t["stav"], t["prijatoV"], t["prijal"] = "Prestavba", None, None
+        return self.odpoved(trat_dto(slug, t))
+
     def pipni_boji(self, slug):
         """
         Opsané z `Features/Boje/BojeSprava.PipniAsync`.
@@ -2125,7 +2288,11 @@ class H(BaseHTTPRequestHandler):
         <b>Přenastavení je nový záznam</b> a ten starý se označí za
         nahrazený. Pořadí se po staré bóji převezme, **jméno ne** — to
         chce API vždycky, i když komentář u `PipniAsync` slibuje opak.
+
+        Do přijaté trati se nesahá — bez toho by byl zámek jen nápis.
         """
+        if (zamceno := proc_nejde_stavet(slug)):
+            return self.chyba(400, zamceno)
         if not self.zastavka(slug):
             return None
 
@@ -2201,6 +2368,8 @@ class H(BaseHTTPRequestHandler):
 
     def seber_boji(self, slug, boje_id):
         """Razítko, ne smazání — bóje zůstává v historii."""
+        if (zamceno := proc_nejde_stavet(slug)):
+            return self.chyba(400, zamceno)
         if not self.zastavka(slug):
             return None
 
@@ -2256,6 +2425,12 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/boje$', cesta)):
             return self.pipni_boji(m.group(1))
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                r'/trat/(hotovo|prijeti|vraceni|prestavba)$', cesta)):
+            return {"hotovo": self.trat_hotovo, "prijeti": self.trat_prijmi,
+                    "vraceni": self.trat_vrat,
+                    "prestavba": self.trat_prestavba}[m.group(2)](m.group(1))
         if (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/boje/(\d+)/sebrana$', cesta)):
             return self.seber_boji(m.group(1), int(m.group(2)))
@@ -3253,6 +3428,9 @@ class H(BaseHTTPRequestHandler):
             if not self.zastavka(m.group(1)):
                 return None
             telo = boje_zastavky(m.group(1), dotaz.get("historie", [""])[0] == "true")
+        elif (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/trat$', cesta)):
+            return self.trat_stav(m.group(1))
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/smernice$', cesta)):
             if not self.headers.get("authorization"):

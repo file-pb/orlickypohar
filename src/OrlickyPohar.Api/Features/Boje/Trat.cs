@@ -111,6 +111,11 @@ public record TratDto(
     string? Prijal,
     string? DuvodVraceni,
     int? RozjizdkaId,
+    /// <summary>
+    /// Trať, kterou tahle nahradila. Jediná viditelná stopa po krizové
+    /// přestavbě — bez ní by obrazovka tvrdila, že trať vznikla z ničeho.
+    /// </summary>
+    int? NahrazujeId,
     /// <summary>Odjela podle ní nějaká rozjížďka? Pak se už nepřestavuje.</summary>
     bool Odjeta,
     bool SmiHlasitHotovo,
