@@ -332,7 +332,14 @@ export async function novinkySNahradou(
   const nase = await nactiVlastniNovinky(predchozi.slug, limit).catch(() => null);
   if (!nase?.length) return { data: novinky };
 
+  // <b>Podle času, ne „naše a za nimi převzaté".</b> Dřív se obě řady
+  // jen slepily za sebe a uřízly na `limit` — a protože loňských je víc
+  // než limit, převzaté se na úvodní stránku nikdy nedostaly, i když byly
+  // o tři týdny novější. Mísit je podle data je přesně to, kvůli čemu
+  // převzaté vznikly: aby výpis byl plný i v zimě (Filip, 23. 9. 2026).
   const prevzate = (novinky ?? []).filter((n) => n.vnejsi);
-  const vsechny = [...nase, ...prevzate];
+  const vsechny = [...nase, ...prevzate].sort(
+    (a, b) => Date.parse(b.publikovanoV) - Date.parse(a.publikovanoV),
+  );
   return { data: limit ? vsechny.slice(0, limit) : vsechny, nahrada: predchozi };
 }

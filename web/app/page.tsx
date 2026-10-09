@@ -200,10 +200,16 @@ export default async function Rozcestnik({
         <section className="novinky-blok">
           <h2>Novinky</h2>
           {/* Když jsou novinky z loňska, musí to být vidět nad nimi —
-              jinak by se stará pozvánka tvářila jako letošní. */}
+              jinak by se stará pozvánka tvářila jako letošní.
+              <b>Věta se řídí tím, co je doopravdy ve výpisu.</b> Po
+              seřazení podle data může výpis vyjít celý ze svazu a loňské
+              se do něj nevejdou; „z ročníku 2026" by pak ukazovalo na
+              něco, co tam není. */}
           {novinkyZ && (
             <p className="poznamka">
-              Z ročníku {novinkyZ.rok}; letos ještě žádná novinka nevyšla.
+              {clanky.some((c) => !c.vnejsi)
+                ? `Z ročníku ${novinkyZ.rok}; letos ještě žádná novinka nevyšla.`
+                : "Letos ještě žádná novinka nevyšla, tohle je od svazu."}
             </p>
           )}
           <VypisNovinek serie={(novinkyZ ?? aktualni).slug} clanky={clanky} hlavni />
