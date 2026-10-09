@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
+import { Lodka } from "@/app/lodka";
 import { Stav } from "@/app/stav";
 import { Vypadek } from "@/app/vypadek";
 import {
@@ -350,6 +351,7 @@ function Tabulka({
               ...vKategorii.map((l) => (
                 <tr key={l.prihlaskaId}>
                   <td className="lod">
+                    <Lodka kategorie={l.kategorie} stav={l.stav} />
                     {l.lod}
                     <div className="majitel">
                       {[l.cisloPlachty, l.typLodi, l.majitel].filter(Boolean).join(" · ")}
