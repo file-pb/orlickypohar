@@ -4,6 +4,34 @@ using OrlickyPohar.Api.Features.Zavody;
 namespace OrlickyPohar.Api.Features.Boje;
 
 /// <summary>
+/// Odkud se poloha bóje vzala.
+/// <para>
+/// <b>Měří jediný z nich.</b> Telefon u bóje hlásí i přesnost a ta se
+/// ukládá; bod odečtený z mapy žádnou přesnost nemá a tvářit se, že má,
+/// by byl výmysl. Dokud tohle pole nebylo, slil se „telefon přesnost
+/// nehlásí" a „opsáno z mapy" do jednoho prázdného čísla.
+/// </para>
+/// <para>
+/// Proč se poloha vůbec zadává jinak než pípnutím (Filip, 9. 10. 2026):
+/// někdo u počítače ji zapíše za stavitele, který pípat neumí, nebo si
+/// rozhodčí po posunu zavolá s člověkem úplně mimo proces — *„ukotvi mi
+/// to tam a pošli mi odkaz v mapě"*. V obou případech zapisuje někdo
+/// jiný, než kdo tu bóji viděl, a záznam to má říct.
+/// </para>
+/// </summary>
+public enum ZdrojPolohy
+{
+    /// <summary>Změřeno telefonem u bóje. Jediný zdroj, který měří.</summary>
+    Telefon = 0,
+
+    /// <summary>Odečteno z mapy — opsané souřadnice nebo odkaz do mapy.</summary>
+    Mapa = 1,
+
+    /// <summary>Z QR kódu, který nesl odkaz do mapy. Taky odečtené, jen jinudy.</summary>
+    Qr = 2,
+}
+
+/// <summary>
 /// Bóje postavená na trati (Filip, 4. 10. 2026: *„musíme udělat verzi
 /// v appce pro pořadatele, který staví bójky, aby pípnul GPS, když postaví
 /// bójku, nebo přenastaví"*).
@@ -56,8 +84,15 @@ public class Boje : Fotky.IMaFotku
     /// Přesnost hlášená telefonem v metrech. <b>Ukládá se schválně</b>:
     /// iPhone s vypnutou přesnou polohou hlásí klidně 65 m a bez tohohle
     /// čísla by se taková poloha tvářila stejně jako přesná.
+    /// <para>U polohy z mapy je prázdná — mapa přesnost neměří.</para>
     /// </summary>
     public double? PresnostM { get; set; }
+
+    /// <summary>
+    /// Odkud se poloha vzala. Starší záznamy jsou všechny z telefonu,
+    /// protože jinudy to tehdy nešlo — nula je tedy pravda, ne doplněk.
+    /// </summary>
+    public ZdrojPolohy Zdroj { get; set; }
 
     public DateTimeOffset PostavenaV { get; set; }
 
@@ -98,7 +133,8 @@ public record BojeDto(
     DateTimeOffset PostavenaV,
     string? Postavil,
     bool Sebrana,
-    Fotky.ObrazekDto? Fotka);
+    Fotky.ObrazekDto? Fotka,
+    ZdrojPolohy Zdroj = ZdrojPolohy.Telefon);
 
 /// <summary>Pípnutí polohy: co posílá web i appka.</summary>
 /// <param name="Nazev">Čím bóje je — „bóje 1", „start levý".</param>
@@ -107,13 +143,19 @@ public record BojeDto(
 /// <param name="Delka">Zeměpisná délka ve stupních.</param>
 /// <param name="PresnostM">Přesnost z telefonu v metrech, když ji hlásí.</param>
 /// <param name="NahrazujeId">Při přenastavení id bóje, která tam stála dosud.</param>
+/// <param name="Zdroj">
+/// Odkud poloha je. Chybějící znamená <c>Telefon</c>, aby klient, který
+/// o poli neví, posílal dál pravdu — dokud tohle pole nebylo, jiná cesta
+/// než pípnutí z telefonu neexistovala.
+/// </param>
 public record PipnutiVstup(
     string? Nazev,
     int Poradi,
     double Sirka,
     double Delka,
     double? PresnostM,
-    int? NahrazujeId);
+    int? NahrazujeId,
+    ZdrojPolohy? Zdroj = null);
 
 /// <summary>Pravidla pípnutí. Čisté funkce, bez databáze.</summary>
 public static class Pipnuti
@@ -143,11 +185,23 @@ public static class Pipnuti
         if (vstup.Nazev.Trim().Length > NazevNejvic)
             return $"Jméno bóje má nejvýš {NazevNejvic} znaků.";
 
+        var zdroj = vstup.Zdroj ?? ZdrojPolohy.Telefon;
+
+        // Přesnost umí říct jen měření. Kdyby ji směl poslat i bod z mapy,
+        // stálo by v záznamu číslo, které nikdo nezměřil — a právě kvůli
+        // tomu se zdroj zavedl.
+        if (zdroj != ZdrojPolohy.Telefon && vstup.PresnostM is not null)
+            return "Přesnost hlásí jen telefon. U polohy z mapy ji neposílej.";
+
         if (vstup.PresnostM is { } presnost && presnost > NejhorsiPresnostM)
             return $"Poloha je přesná jen na {presnost:0} m. Počkej na lepší signál a pípni znovu.";
 
+        // Platí pro obojí, a u mapy o to víc: odkaz může vést kamkoliv na
+        // světě a prohozená šířka s délkou jsou v mapách běžná past.
         if (vstup.Sirka is < SirkaOd or > SirkaDo || vstup.Delka is < DelkaOd or > DelkaDo)
-            return "Tahle poloha není na Orlíku. Zkontroluj, že telefon má signál z družic.";
+            return zdroj == ZdrojPolohy.Telefon
+                ? "Tahle poloha není na Orlíku. Zkontroluj, že telefon má signál z družic."
+                : "Tahle poloha není na Orlíku. Zkontroluj, že se v odkazu neprohodila šířka s délkou.";
 
         return null;
     }

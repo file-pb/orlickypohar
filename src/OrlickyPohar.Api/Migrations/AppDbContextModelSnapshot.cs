@@ -68,6 +68,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int>("ZavodId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Zdroj")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("FotkaId");

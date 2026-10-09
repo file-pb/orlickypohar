@@ -79,6 +79,10 @@ public class BojeTests(PostgresFixture fixture)
     private static PipnutiVstup Bod(string nazev, double sirka = 49.516, int? nahrazuje = null) =>
         new(nazev, 0, sirka, 14.165, 5, nahrazuje);
 
+    /// <summary>Bod odečtený z mapy: bez přesnosti, protože mapa neměří.</summary>
+    private static PipnutiVstup ZMapy(string nazev, ZdrojPolohy zdroj = ZdrojPolohy.Mapa) =>
+        new(nazev, 0, 49.4957254, 14.1841419, null, null, zdroj);
+
     [Fact]
     public async Task Postavena_boje_dostane_poradi_za_posledni()
     {
@@ -91,6 +95,28 @@ public class BojeTests(PostgresFixture fixture)
         Assert.Equal(1, prvni!.Poradi);
         Assert.Equal(2, druha!.Poradi);
         Assert.Equal("Pořadatel", druha.Postavil);
+    }
+
+    [Fact]
+    public async Task Zdroj_polohy_se_ulozi_a_vrati()
+    {
+        var (db, boje) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (pipnuta, _) = await boje.PipniAsync(zavod.Id, Bod("Start levý"), kdo.Id, default);
+        var (zmapy, _) = await boje.PipniAsync(zavod.Id, ZMapy("Bóje 1"), kdo.Id, default);
+        var (zqr, _) = await boje.PipniAsync(zavod.Id, ZMapy("Cíl", ZdrojPolohy.Qr), kdo.Id, default);
+
+        // Pípnutí měří a hlásí přesnost; odečtený bod ji nemá a nesmí mít.
+        Assert.Equal(ZdrojPolohy.Telefon, pipnuta!.Zdroj);
+        Assert.Equal(5, pipnuta.PresnostM);
+        Assert.Equal(ZdrojPolohy.Mapa, zmapy!.Zdroj);
+        Assert.Null(zmapy.PresnostM);
+        Assert.Equal(ZdrojPolohy.Qr, zqr!.Zdroj);
+
+        // A drží to i po novém načtení, ne jen v odpovědi na zápis.
+        var vse = await boje.SeznamAsync(zavod.Id, iHistorie: true, default);
+        Assert.Equal(ZdrojPolohy.Mapa, vse.Single(b => b.Id == zmapy.Id).Zdroj);
     }
 
     [Fact]

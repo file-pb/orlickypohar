@@ -42,7 +42,10 @@ public static class BojeEndpoints
             .WithSummary("Zapíše polohu postavené nebo přenastavené bóje")
             .WithDescription(
                 "Pořadatel regaty, nebo rozhodčí. Přenastavení je nový záznam — starý " +
-                "zůstává. Poloha mimo Orlík nebo přesnost horší než 100 m se odmítne.");
+                "zůstává. Poloha mimo Orlík nebo přesnost horší než 100 m se odmítne. " +
+                "`zdroj` říká, odkud poloha je: `Telefon` ji změřil u bóje a hlásí " +
+                "přesnost, `Mapa` a `Qr` ji mají odečtenou a přesnost u nich nesmí " +
+                "přijít. Chybějící `zdroj` znamená `Telefon`.");
 
         g.MapPost("/{boje:int}/sebrana", SeberAsync)
             .WithSummary("Označí bóji za sebranou z vody")

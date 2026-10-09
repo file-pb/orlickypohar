@@ -750,7 +750,13 @@ def proc_pipnuti_nejde(vstup):
     if len(nazev) > NAZEV_NEJVIC:
         return f"Jméno bóje má nejvýš {NAZEV_NEJVIC} znaků."
 
+    zdroj = vstup.get("zdroj") or "Telefon"
     presnost = vstup.get("presnostM")
+
+    # Přesnost umí říct jen měření; bod odečtený z mapy žádnou nemá.
+    if zdroj != "Telefon" and presnost is not None:
+        return "Přesnost hlásí jen telefon. U polohy z mapy ji neposílej."
+
     if presnost is not None and presnost > NEJHORSI_PRESNOST_M:
         return (f"Poloha je přesná jen na {round(presnost)} m. "
                 "Počkej na lepší signál a pípni znovu.")
@@ -758,7 +764,10 @@ def proc_pipnuti_nejde(vstup):
     sirka, delka = vstup.get("sirka"), vstup.get("delka")
     if sirka is None or delka is None \
             or not SIRKA_OD <= sirka <= SIRKA_DO or not DELKA_OD <= delka <= DELKA_DO:
-        return "Tahle poloha není na Orlíku. Zkontroluj, že telefon má signál z družic."
+        return ("Tahle poloha není na Orlíku. Zkontroluj, že telefon má signál z družic."
+                if zdroj == "Telefon" else
+                "Tahle poloha není na Orlíku. "
+                "Zkontroluj, že se v odkazu neprohodila šířka s délkou.")
 
     return None
 
@@ -767,20 +776,21 @@ def boje_dto(b):
     """Co z bóje vidí klient — `BojeDto`. Přenastavenou od platné nerozliší."""
     return {k: b[k] for k in
             ("id", "nazev", "poradi", "sirka", "delka", "presnostM", "postavenaV",
-             "postavil", "sebrana")}
+             "postavil", "sebrana", "zdroj")}
 
 
 def _nasad_boje():
     if not D["zavody"]:
         return
 
-    def boje(nazev, poradi, sirka, delka, presnost, postavena, nahrazena=None, sebrana=False):
+    def boje(nazev, poradi, sirka, delka, presnost, postavena, nahrazena=None, sebrana=False,
+             zdroj="Telefon"):
         BOJE_ID[0] += 1
         return {
             "id": BOJE_ID[0], "nazev": nazev, "poradi": poradi,
             "sirka": sirka, "delka": delka, "presnostM": presnost,
             "postavenaV": postavena, "postavil": JA["zobrazovane"],
-            "nahrazenaV": nahrazena, "sebrana": sebrana,
+            "nahrazenaV": nahrazena, "sebrana": sebrana, "zdroj": zdroj,
         }
 
     # Trať u zastávky, na které stojí zkouška ovládání — tam má roli
@@ -793,6 +803,10 @@ def _nasad_boje():
         boje("bóje 1", 2, 49.5201, 14.1702, 6.0, "2026-10-08T07:20:00+00:00",
              nahrazena="2026-10-08T08:05:00+00:00"),
         boje("bóje 1", 2, 49.5208, 14.1711, 3.0, "2026-10-08T08:05:00+00:00"),
+        # Jedna odečtená z mapy, ať je na čem vidět, že se měřená od
+        # opsané pozná — a že u ní přesnost schválně chybí.
+        boje("cíl", 3, 49.4957254, 14.1841419, None, "2026-10-08T08:40:00+00:00",
+             zdroj="Mapa"),
     ]
 
 
@@ -2002,6 +2016,7 @@ class H(BaseHTTPRequestHandler):
             "presnostM": vstup.get("presnostM"),
             "postavenaV": ted, "postavil": self.prihlaseny()["zobrazovane"],
             "nahrazenaV": None, "sebrana": False,
+            "zdroj": vstup.get("zdroj") or "Telefon",
         }
         seznam.append(nova)
         if stara:
