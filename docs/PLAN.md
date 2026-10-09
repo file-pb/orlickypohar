@@ -4704,8 +4704,10 @@ prochází samy a vynucují, že každý GET pod `/sprava/` a `/ja/` bez přihl�
 odmítne; `OchranaZapisuTests` dělají totéž pro zápisy. Nehlídají ale **roli**,
 jen ten práh. Web a appka nemají
 test žádný, takže změnu práv na serveru nikdo nehlídá proti
-`web/lib/co-smim.ts`, který je má doslova přepsané. Dependabot sleduje NuGet
-a GitHub Actions, ne npm.
+`web/lib/co-smim.ts`, který je má doslova přepsané. Věta, že Dependabot
+nesleduje npm, tu stála omylem: `.github/dependabot.yml` má npm pro `/web`
+i `/app`, jen s vypnutými majory u `expo`, `expo-router` a `react-native`.
+Co z toho plyne pro otevřená upozornění, je v oddílu *Zranitelnosti v appce*.
 
 ### Zkouška ovládání
 
@@ -4833,6 +4835,67 @@ by odkaz byl spíš ozdoba — výpadky, prázdné seznamy s formulářem hned p
 nimi, štítky stavů. Sahat na ně má smysl až po zkoušce ovládání
 s pořadatelem: ta řekne, které doopravdy zdržují, a hlavně kolik dalších
 tvrzení je nepřesných jako ta dvě výše.
+
+## Zranitelnosti v appce: žádné overrides (10. 10. 2026)
+
+Dependabot má na `app/package-lock.json` **čtyři otevřená upozornění** a všechna
+čtyři zůstávají otevřená vědomě. Balík PR #160 je nezavřel a žádný další balík
+je nezavře, protože **ani jedno z nich se v řadě Expa 57 opravit nedá**.
+
+Že to není jen zastaralý strom, je potřeba říct přesně: `package.json` sice píše
+`expo ~57.0.21`, ale lockfile drží **to nejnovější, co v řadě vyšlo** — `expo
+57.0.27`, `expo-router 57.0.25`, `@expo/cli 57.0.28`, `metro 0.84.5` (ověřeno
+10. 10. 2026). Expo se tedy posunulo a tranzitivní závislosti s ním, a všechna
+čtyři upozornění přesto zůstala. Čekat na další patch v téhle řadě nemá smysl.
+
+| Balík | Máme | Visí na | Oprava | Proč nic neděláme |
+|---|---|---|---|---|
+| `braces` (high, CVE-2026-93687) | 3.0.3 | `metro` → `metro-file-map` → `micromatch ^4.0.4` → `braces ^3.0.3` | **neexistuje** | není kam overridovat |
+| `node-forge` (high, CVE-2026-85393) | 1.4.0 | `expo` → `@expo/cli` → `node-forge ^1.3.3`, a týž CLI ještě přes `@expo/code-signing-certificates` | **neexistuje** | není kam overridovat |
+| `decode-uri-component` (medium, CVE-2026-45822) | 0.2.2 | **`expo-router`** → `query-string ^7.1.3` → `decode-uri-component ^0.2.2` | 0.5.0, ale dosažitelná jen přes Expo 58 | override rozbije `require` |
+| `uuid` (medium, CVE-2026-41907) | 7.0.3 | `@expo/config-plugins` → `xcode ^3.0.1` → `uuid ^7.0.3` | 11.1.1 | zranitelná funkce se nevolá |
+
+**U braces a node-forge není co rozhodovat.** Obě advisory mají
+`first_patched_version: null` — záplata neexistuje v žádné verzi, není to tak,
+že by ji Expo jen nepovytáhlo. Čekání je jediná možnost a override není kam
+namířit. Obě přitom běží jen při buildu: `braces` ve sledování souborů Metra,
+`node-forge` v `@expo/cli` (dev server a podepisování `expo-updates`). Do
+telefonu ani na server se nedostanou.
+
+**U uuid vůbec nejde o nás.** Advisory GHSA-w5hq-g745-h8pq je *„missing buffer
+bounds check in v3/v5/v6 when `buf` is provided"*. `xcode` volá uuid na jednom
+jediném místě, `uuid.v4()` v `node_modules/xcode/lib/pbxProject.js:90`; v3, v5
+ani v6 nepoužívá nikde a `buf` nepředává. **Zranitelná funkce se v téhle
+závislosti nevolá**, takže override přes čtyři majory by neopravil nic — a cenu
+by měl, protože Xcode na stroji není a generování iOS projektu by se buildem
+ověřit nedalo. Není kam jít ani legitimně: `xcode@latest` je pořád 3.0.1
+s `uuid ^7.0.3`.
+
+**U decode-uri-component je potřeba opravit naši vlastní úvahu.** Neplatí u něj,
+že „neběží na serveru ani se nepublikuje". `query-string` je v runtime buildu
+`expo-router` — `build/fork/getStateFromPath.js` a `getPathFromState.js`,
+tedy parsování deep linků — takže **decode-uri-component se do telefonu
+publikuje.** Dopad je ale malý a ohraničený: DoS exponenciálním dekódováním
+rozbitého percent-encodingu, čili appka zatuhne na škodlivém odkazu, na který
+uživatel sám klikne. Žádný server, žádná data, žádná cizí loď.
+
+Override na 0.5.0 **technicky nejde.** Verze 0.5.0 je `"type": "module"`
+s jediným vstupem `exports.default`, zatímco `query-string@7.1.3` je CJS a dělá
+`require('decode-uri-component')` (`node_modules/query-string/index.js:3`).
+Override by ten `require` rozbil. Verze 0.3.0 a 0.4.x jsou pořád v rozsahu
+`<= 0.4.2`, takže nepomůžou.
+
+Skutečná oprava je **`expo-router` 58.0.13 a výš, kde `query-string` ze
+závislostí úplně vypadl** — ne že by se povytáhl. To je major Expa a ten se
+podle `.github/dependabot.yml` zvedá s celým SDK, ne zvlášť. `expo-router@57.0.25`,
+nejnovější v naší řadě, má `query-string ^7.1.3` pořád. Vrátit se k tomu má
+tedy u přechodu na Expo 58, kde to spadne samo.
+
+**Pozor na `npm audit` v tomhle repu.** U tří ze čtyř nabízí `fixAvailable:
+expo 44.0.6`, u Metra `react-native 0.72.17` — to je downgrade o třináct
+majorů do pravěku, ne oprava. Správně míří jedině u `decode-uri-component`,
+kde ukazuje na `expo-router 58.0.17`. Řídit se tu dá tedy jen Dependabotem
+a rozsahy z advisory, ne `fixAvailable`.
 
 ## Kde se pokračuje
 
