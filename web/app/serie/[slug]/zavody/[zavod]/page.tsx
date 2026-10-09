@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   nactiClanky,
+  nactiVerejnouTrat,
   nactiZavod,
   type BodyVRozjizdce,
   type Rozjizdka,
@@ -94,13 +95,18 @@ function naRadky(zavod: ZavodDetail, poradi = zavod.poradi): Radek[] {
 export default async function Zastavka({ params, searchParams }: Parametry) {
   const { slug, zavod: slugZavodu } = await params;
   const { trida } = await searchParams;
-  let zavod, clanky;
+  let zavod, clanky, trat;
   try {
     // Regatu pořádá jiný subjekt a stránka je jeho — kromě výsledků na ni
     // patří i jeho vlastní blog, viz PLAN.md „Stránka regaty".
-    [zavod, clanky] = await Promise.all([
+    //
+    // Trať se tu načítá jen proto, aby se poznalo, jestli na ni vede odkaz.
+    // Obsah trati je na vlastní adrese: čte se bez cache a na stránce
+    // regaty by minutu starý obrázek trati byl nebezpečný.
+    [zavod, clanky, trat] = await Promise.all([
       nactiZavod(slug, slugZavodu),
       nactiClanky(slug, { zavod: slugZavodu }),
+      nactiVerejnouTrat(slug, slugZavodu),
     ]);
   } catch (e) {
     if (e instanceof ApiNedostupne) return <Vypadek />;
@@ -231,6 +237,26 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
             </details>
           )}
         </section>
+      )}
+
+      {/* Trať pod směrnicí, protože obojí je „podle čeho se jede". Odkaz je
+          tu jen tehdy, když je trať doopravdy vyvěšená — slepý odkaz na
+          stránku s „zatím nic" je horší než žádný. Přestavbu hlásí už
+          rozcestník: kdo stránku otevře mezi rozjížďkami, má vědět, že se
+          trať právě mění, a ne až po kliknutí. */}
+      {trat && (
+        <p className="poznamka">
+          {trat.prestavba ? (
+            <>
+              <b>Trať se právě přestavuje.</b>{" "}
+              <Link href={`/serie/${slug}/zavody/${slugZavodu}/trat`}>Co je s tratí →</Link>
+            </>
+          ) : (
+            <Link href={`/serie/${slug}/zavody/${slugZavodu}/trat`}>
+              Trať regaty — mapka a soupis bójí →
+            </Link>
+          )}
+        </p>
       )}
 
       {/* Komunitní akce má stránku kvůli článkům a upoutávkám. Výsledky,

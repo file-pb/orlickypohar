@@ -2515,6 +2515,13 @@ class H(BaseHTTPRequestHandler):
         if stara:
             stara["nahrazenaV"] = ted
 
+        # Stavba začíná první bójí, ne zvláštním knoflíkem — opsané
+        # z `BojeSprava.PipniAsync`, která volá `ZalozPokudChybiAsync`.
+        # Dokud to mock neuměl, zůstal stav trati u regaty bez trati na 404
+        # navždycky a obrazovka přijetí se nedala vyzkoušet vůbec.
+        if not trat_aktualni(slug):
+            trat_zaloz(slug)
+
         return self.odpoved(boje_dto(nova), 201)
 
     def nahraj_fotku_boje(self, slug, boje_id):

@@ -1904,6 +1904,32 @@ nese.
 se pluje, ne výsledek — ročník, který výsledky regat nevydává, trať vydat
 může a má.
 
+##### Stránka trati na webu (9. 10. 2026)
+
+`/serie/{serie}/zavody/{zavod}/trat` — **vlastní adresa, ne odstavec na
+stránce regaty**. Je to to, co si závodník otevře před startem a pošle dál,
+a hlavně se **čte bez cache**: ostatní veřejná čtení se mění po závodě,
+trať při přestavbě, tedy za provozu. Mikrocache před webem ji stejně podrží
+deset vteřin pro všechny naráz, takže se API neuvaří.
+
+Stránka má tři stavy a žádný z nich není prázdno: nepřijatá trať říká
+„zatím není vyvěšená", přestavba říká **„počkej"** a přijatá ukazuje mapku,
+soupis prvků a poznámky „jak to jet". Odkaz ze stránky regaty je **jen
+tehdy, když je co ukázat**, a při přestavbě hlásí přestavbu už tam —
+rozcestník nemá tajit, že se trať zrovna mění.
+
+**Bóje, která stojí na vodě a není v žádném prvku**, se na obou stranách
+pojmenuje: veřejně větou „na vodě stojí i …, není součástí trati" (závodník
+ji uvidí a bez toho by hádal, jestli ji má obeplout) a ve správě
+upozorněním „udělej z ní prvek, nebo ji seber". Chyba to není — zbylá bóje
+po přestavbě je legitimní — jen se o ní venku jinak neví.
+
+**Tvar prvku kreslí jedno místo** (`web/app/ikona-prvku.tsx`) pro správu
+i pro web, a **prvky se stejným uzlem mají jeden popisek**: start a cíl
+bývají tytéž dvě bóje a dřív se jejich popisky na mapě kreslily přes sebe.
+Spojený popisek „1. start · 5. cíl" je zároveň pravda o vodě — stojí tam
+jedna čára, ne dvě.
+
 ##### `OchranaCteniTests` ten slib nesplňoval
 
 Test měl u `VedomeVerejne` napsáno, že *„až přibude veřejná mapa a živé
@@ -2300,7 +2326,7 @@ k 9. 10. 2026:
 | startovní listina | hotové |
 | výsledky rozjížděk | hotové, ale **jen publikované** |
 | průběžné pořadí poháru | hotové |
-| trať — bóje, mapka, GPX | data hotová, veřejně se nevydávají; viz *Trať je veřejná, jakmile ji rozhodčí přijme* |
+| trať — bóje, mapka, GPX | **hotové** (9. 10. 2026): `/serie/{serie}/zavody/{zavod}/trat`, viz *Trať je veřejná, jakmile ji rozhodčí přijme* |
 | polohy a dráhy lodí | **neexistuje nic** — fáze 8, trasa jako entita ani poloha v appce nezačaté |
 
 **Tabule bez trackeru dává smysl sama** — co se zrovna jede, kdo je
