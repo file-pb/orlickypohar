@@ -174,6 +174,46 @@ public class TratSpravaTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task Verejne_se_vydava_jen_prijata_trat()
+    {
+        var (db, boje, trate) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        await boje.PipniAsync(zavod.Id, Bod("Start"), kdo.Id, default);
+        var (nahrazena, _) = await boje.PipniAsync(zavod.Id, Bod("Bóje 1"), kdo.Id, default);
+        var (sebrana, _) = await boje.PipniAsync(zavod.Id, Bod("Bóje 2"), kdo.Id, default);
+
+        // Rozestavěná trať veřejně neexistuje — ani když bóje ve vodě stojí.
+        Assert.Null(await trate.VerejnaAsync(zavod.Id, default));
+
+        // Jedna se přenastaví, jedna sebere. Ani jedna nemá být venku:
+        // nahrazená proto, že na jejím místě stojí novější záznam, sebraná
+        // proto, že ve vodě není.
+        await boje.PipniAsync(
+            zavod.Id, new PipnutiVstup("Bóje 1", 0, 49.517, 14.166, 5, nahrazena!.Id), kdo.Id, default);
+        Assert.Null(await boje.SeberAsync(zavod.Id, sebrana!.Id, default));
+
+        await trate.HotovoAsync(zavod.Id, true, default);
+        await trate.PrijmiAsync(zavod.Id, kdo.Id, default);
+
+        var verejna = await trate.VerejnaAsync(zavod.Id, default);
+
+        Assert.NotNull(verejna);
+        Assert.False(verejna!.Prestavba);
+        Assert.NotNull(verejna.PrijatoV);
+        Assert.Equal(["Start", "Bóje 1"], verejna.Boje.Select(b => b.Nazev).ToArray());
+
+        // Přestavba veřejně znamená „počkej", ne tiché zmizení a ne starý
+        // obrázek: příznak ano, bóje ne.
+        await trate.PrestavbaAsync(zavod.Id, true, default);
+
+        var behem = await trate.VerejnaAsync(zavod.Id, default);
+        Assert.True(behem!.Prestavba);
+        Assert.Empty(behem.Boje);
+        Assert.Null(behem.PrijatoV);
+    }
+
+    [Fact]
     public async Task Vraceni_stavitelum_nese_duvod()
     {
         var (db, boje, trate) = Sluzby();

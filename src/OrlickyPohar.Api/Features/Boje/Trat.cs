@@ -123,6 +123,26 @@ public record TratDto(
     bool SmiPrestavet);
 
 /// <summary>
+/// Bóje, jak ji vidí divák: <b>jen kam se pluje</b>.
+/// <para>
+/// Chybí tu schválně jméno stavitele, přesnost měření, čas postavení
+/// i fotky. Nic z toho závodníkovi k navigaci nepomůže a jméno s přesností
+/// jsou údaje o tom, kdo a jak měřil — to patří do správy.
+/// </para>
+/// </summary>
+public record VerejnaBojeDto(string Nazev, int Poradi, double Sirka, double Delka);
+
+/// <summary>
+/// Trať pro veřejnost. Vydává se jedině přijatá; u přestavby se vrací
+/// <see cref="Prestavba"/> a bóje se zamlčí, protože starý obrázek lže
+/// a tiché zmizení vypadá jako chyba.
+/// </summary>
+public record VerejnaTratDto(
+    bool Prestavba,
+    DateTimeOffset? PrijatoV,
+    IReadOnlyList<VerejnaBojeDto> Boje);
+
+/// <summary>
 /// Pravidla stavu trati. Čisté funkce, aby se na ně dalo odpovědět bez
 /// databáze — role a „odjelo se podle ní" řeší volající.
 /// </summary>
