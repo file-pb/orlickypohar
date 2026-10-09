@@ -24,12 +24,28 @@ public class BojeTests(PostgresFixture fixture)
 {
     private static readonly DateTimeOffset Ted = new(2026, 10, 5, 8, 0, 0, TimeSpan.Zero);
 
+    /// <summary>Úložiště, které nic neukládá, ale zná veřejnou adresu.</summary>
+    private sealed class VerejneUloziste : OrlickyPohar.Api.Features.Fotky.IUloziste
+    {
+        public bool Pripraveno => true;
+        public string? VerejnaAdresa => "https://foto.example";
+
+        public Task UlozAsync(
+            string klic, byte[] data, string typ, CancellationToken ct, string? cache = null) =>
+            Task.CompletedTask;
+
+        public Task SmazAsync(string klic, CancellationToken ct) => Task.CompletedTask;
+    }
+
     private (AppDbContext Db, BojeSprava Boje) Sluzby()
     {
         var scope = fixture.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var uloziste = scope.ServiceProvider.GetRequiredService<OrlickyPohar.Api.Features.Fotky.IUloziste>();
-        return (db, new BojeSprava(db, TimeProvider.System, uloziste, NullLogger<BojeSprava>.Instance));
+        // Úložiště vlastní, ne ze služeb: v CI není nastavené a `Nahravani.Dto`
+        // by bez veřejné adresy vydal null. Test má měřit projekci, ne to,
+        // jestli má běh nakonfigurované R2.
+        return (db, new BojeSprava(
+            db, TimeProvider.System, new VerejneUloziste(), NullLogger<BojeSprava>.Instance));
     }
 
     private static async Task<(Zavod Zavod, Uzivatel Kdo)> RegataAsync(AppDbContext db)
