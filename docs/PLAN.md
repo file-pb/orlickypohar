@@ -5110,6 +5110,54 @@ majorů do pravěku, ne oprava. Správně míří jedině u `decode-uri-componen
 kde ukazuje na `expo-router 58.0.17`. Řídit se tu dá tedy jen Dependabotem
 a rozsahy z advisory, ne `fixAvailable`.
 
+## Kvóty CI (audit hračkárny, 10. 10. 2026)
+
+Hračkárna si 10. 10. 2026 změřila, na kterých bezplatných hladinách visí
+(`platform/docs/KVOTY.md`), a nejdražší nález byl v poháru: **4 707
+fakturovatelných minut Actions za třicet dní** ze 4 780 za všechny
+repozitáře, proti hladině **2 000 na celý účet**. Job `build` z toho udělal
+2 874 minut — 558 běhů po 5,2 minuty. Actions cache repozitáře zároveň stála
+na 10,2–10,5 GB při limitu 10 GB **na repozitář**, tedy se trvale vytloukala.
+
+Důležité je, **na co je která kvóta počítaná**. Jen kvóty na IP nám může
+vyčerpat cizí provoz — a to pouze tam, kde je IP sdílená, tedy na runneru
+GitHubu. Přesně to byl 9. 10. 2026 Docker Hub (`429`, osmnáct nasazení) a za
+ním stojí ve stejné řadě `api.nuget.org` a `registry.npmjs.org`.
+
+**Opravy jsou převzaté ze šablony `service-template`**, ne vymyšlené tady:
+platí pravidlo toku z `platform/docs/ARCHITEKTURA.md` — oprava patří tam,
+odkud chyba přišla, a odtud se kopíruje do projektů.
+
+| Nález | Co se změnilo | Proč |
+|---|---|---|
+| K2 | `scope=api/web/landsat/cache` u každé vrstvy cache | Bez `scope` jdou všechny čtyři obrazy do klíče `buildkit` a **přepisují se** — zdokumentované chování buildx. Index pro `main` měl verzi #1151 při 37 živých záznamech, tedy přepsaný tisíckrát; platilo se 10,6 GB blobů za cache, kterou mohl použít jen poslední ze čtyř obrazů (poučení o jedné cache pro čtyři obrazy). |
+| K3 | cache `~/.nuget/packages` v `build` i `integrace`, `cache: 'npm'` u `setup-node` v `appka` | Oba registry škrtí **po IP, a tu runner sdílí s cizími projekty** — 9. 10. 2026 na tom jeden build spadl na `Connection reset by peer`. Tatáž zeď jako limit Docker Hubu, o vrstvu dál a s horší hláškou: resetnuté spojení vypadá na chybu sítě a hledá se špatně. |
+| K4 | skupina souběhu na celém workflow | Druhý push do téže větve ten předchozí **zruší**. Na `main` se neruší nic — tam je každý běh nasazení. Skupina `nasazeni-produkce` u jobu `nasazeni` zůstává; řeší jinou věc (jedno nasazení naráz přes všechny cesty do produkce, ruční spuštění včetně). |
+| K5 | `.github/workflows/uklid-balicku.yml` | Každý push do `main` poslal do GHCR novou verzi obrazu a **nic ji nikdy nemazalo** — čtyři obrazy po 90–450 MB a 260 pushů za měsíc. Maže podle věku (starší 30 dnů), vždy nechá 10 nejnovějších a vše se značkou `latest`; zrcadlo vynechává. Ruční spuštění je nanečisto. |
+| K7 | datovaná značka zrcadla | Pohyblivá značka znamenala, že přesyn tiše změní základ: tentýž commit se před ním a po něm postavil z jiného obrazu. A `FROM ${ZRCADLO}/...` složený z `ARG` **přestal být čitelný pro Dependabota**, takže o posunu nevěděl nikdo. Zrcadlo teď dává dvě značky — pohyblivou pro ruční práci, datovanou pro Dockerfily — a posun samo ohlásí `::notice::` se seznamem souborů, kde se datum přepisuje. |
+
+**Čím se ta oprava měří, až se o ní bude pochybovat.** Čísla jsou z běhů
+10. 10. 2026 a každé jde dohledat:
+
+- `gh api /repos/file-pb/orlickypohar/actions/caches` — dřív **jediný** index
+  `index-buildkit-1-f921bd05` s verzí #1151 pro `main`, dnes **čtyři**
+  (`index-api-`, `index-web-`, `index-landsat-`, `index-cache-`), každý
+  od verze #1. Verze už neroste o čtyři na běh.
+- Krok `Testy bez Dockeru` v jobu `build`: **61 s → 35 s** (cache NuGetu se
+  obnoví za 4 s místo stahování).
+- Job `appka`: **38 s → 16 s**, job `integrace`: **1 m 43 s → 1 m 15 s**.
+- Obrazy `landsat` a `cache`, kde se nic neměnilo: **26 s → 3 s** a
+  **7 s → 4 s**. To je ten rozdíl mezi cache, která se přepsala, a cache,
+  která se trefila.
+
+Výpis balíčků v GHCR `GITHUB_TOKEN` **neumí** — `/users/{owner}/packages`
+vrací `400 Invalid argument`, protože je to instalační token a endpoint chce
+uživatelský (změřeno sondou, běh 38010860433). Čtení balíčku a jeho verzí
+umí, takže se jména balíčků v `uklid-balicku.yml` nezjišťují, ale píšou
+a před úklidem se ověřují. **Neověřené zůstává samotné smazání:** když
+skončí na 403, je potřeba osobní token s `delete:packages` v tajemství
+`GHCR_UKLID_TOKEN`. Balíček `orlickypohar` měl v tu chvíli **1 122 verzí**.
+
 ## Kde se pokračuje
 
 Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
