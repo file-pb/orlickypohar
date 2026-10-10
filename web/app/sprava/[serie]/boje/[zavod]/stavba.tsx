@@ -243,6 +243,7 @@ export function Stavba({
               stred={stred}
               vyber={(bod) => zapis({ ...bod, presnost: null }, "Mapa")}
               zrus={() => setZMapy(false)}
+              cekam={delam}
             />
           ) : (
             <>
@@ -284,23 +285,5 @@ function kdeJsem(): Promise<{ sirka: number; delka: number; presnost: number | n
       () => hotovo("Polohu se nepodařilo zjistit. Povol ji v nastavení stránky."),
       { enableHighAccuracy: true, timeout: 15_000, maximumAge: 0 },
     );
-  });
-}
-
-async function pipniBod(
-  serie: string,
-  zavod: string,
-  jmeno: string,
-  poloha: { sirka: number; delka: number; presnost: number | null },
-  barva: BarvaBoje | null,
-): Promise<{ chyba: string | null; id: number | null }> {
-  return await pipniAkce(serie, zavod, {
-    nazev: jmeno,
-    poradi: 0,
-    sirka: poloha.sirka,
-    delka: poloha.delka,
-    presnostM: poloha.presnost,
-    nahrazujeId: null,
-    barva: barva ?? undefined,
   });
 }

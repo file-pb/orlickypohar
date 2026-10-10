@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { DLAZDICE, Z_NEJMENE, Z_NEJVIC, doPixelu, metruNaPixel, zPixelu } from "@/lib/mapa";
+import { naOrliku } from "@/lib/souradnice";
 
 /**
  * Výběr bodu z mapy.
@@ -30,12 +31,18 @@ export function MapkaVyber({
   vyskaObrazu = 240,
   vyber,
   zrus,
+  cekam = false,
 }: {
   stred: { sirka: number; delka: number };
   sirkaObrazu?: number;
   vyskaObrazu?: number;
   vyber: (bod: { sirka: number; delka: number }) => void;
   zrus: () => void;
+  /**
+   * Běží zápis vybraného bodu. Dokud běží, tlačítko nepustí druhé
+   * klepnutí — to by založilo druhou bóji na témže místě.
+   */
+  cekam?: boolean;
 }) {
   const [z, setZ] = useState(15);
   const [kde, setKde] = useState(stred);
@@ -73,6 +80,13 @@ export function MapkaVyber({
   };
 
   const naMetr = metruNaPixel(kde.sirka, z);
+
+  /**
+   * <b>Mimo Orlík řekne tlačítko, ne až API.</b> Mez hlídá i server, ale
+   * jeho věta mluví o prohozené šířce a délce — u křížku na mapě je to
+   * nesmysl, protože prohodit se tam nedá nic.
+   */
+  const jeNaOrliku = naOrliku(kde.sirka, kde.delka);
 
   return (
     <div className="vyber-mapy">
@@ -116,10 +130,15 @@ export function MapkaVyber({
         </button>
       </div>
 
-      <button type="button" className="velke" onClick={() => vyber(kde)}>
-        Vzít tenhle bod
+      <button
+        type="button"
+        className="velke"
+        onClick={() => vyber(kde)}
+        disabled={cekam || !jeNaOrliku}
+      >
+        {cekam ? "Zapisuji…" : jeNaOrliku ? "Vzít tenhle bod" : "Mimo Orlík — posuň mapu"}
       </button>
-      <button type="button" className="zrusit" onClick={zrus}>
+      <button type="button" className="zrusit" onClick={zrus} disabled={cekam}>
         Zpět
       </button>
 

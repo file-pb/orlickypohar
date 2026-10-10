@@ -926,11 +926,27 @@ th.vlevo, td.vlevo { text-align: left; }
   margin: 0;
 }
 .formular fieldset legend { padding: 0 0.3rem; font-size: 0.85rem; font-weight: 600; }
-.formular > button {
+.formular > button,
+.formular > .tlacitka > button {
   justify-self: start; font: inherit; font-weight: 600; cursor: pointer;
   padding: 0.6rem 1.1rem; border: 0; border-radius: 8px;
   background: var(--voda); color: var(--papir);
 }
+
+/* Pípnutí a výběr bodu z mapy stojí vedle sebe: jsou to dva nástroje na
+   dvě situace a mají mít stejně blízko (Filip, 10. 10. 2026). Výběr
+   z mapy je druhotný vzhledem, ne umístěním — u bóje, kterou zrovna
+   spouštíš do vody, se pípá.
+
+   Zakázané tlačítko musí být poznat: barva pozadí je naše, takže ho
+   prohlížeč sám nezešedne a „nejdřív vyber jméno" by jinak vypadalo
+   jako rozbité tlačítko. */
+.formular > .tlacitka { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.formular > .tlacitka > button { min-height: 44px; }
+.formular > .tlacitka > button.jinak {
+  background: transparent; color: inherit; border: 1px solid var(--linka);
+}
+.formular > .tlacitka > button:disabled { opacity: 0.5; cursor: default; }
 
 .formular > h2 { margin: 0.6rem 0 0; font-size: 1.05rem; }
 
@@ -1993,12 +2009,18 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
    jediná věc, kterou stavitel na vodě dělá opakovaně. */
 .stavba { margin: 1rem 0 1.5rem; }
 .stavba .krok { font-size: 1.05rem; margin: 0.4rem 0 0.7rem; }
-.stavba .velke {
+/* Tlačítka výběru z mapy nesmějí viset na `.stavba`: tatáž komponenta
+   visí i pod formulářem jedné bóje, a tam by "Vzít tenhle bod" zůstalo
+   drobné vedle velkého tlačítka průvodce. Stejná věc má vypadat stejně
+   na obou místech. */
+.stavba .velke,
+.vyber-mapy .velke {
   min-height: 56px;
   width: 100%;
   font-size: 1.15rem;
 }
-.stavba .zrusit { margin-top: 0.5rem; background: transparent; }
+.stavba .zrusit,
+.vyber-mapy .zrusit { margin-top: 0.5rem; background: transparent; }
 
 /* Výběr bodu z mapy. Dlaždice jsou pozicované absolutně v okně, které
    se posouvá pod pevným křížkem. */
