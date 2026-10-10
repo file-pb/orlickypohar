@@ -2022,6 +2022,47 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 .stavba .zrusit,
 .vyber-mapy .zrusit { margin-top: 0.5rem; background: transparent; }
 
+/* Nabídka v průvodci: typ, předpis, značení. Jsou to velké terče pro
+   palec na vodě, ne položky seznamu — proto na celou šířku, pod sebou
+   a s podtitulkem, který říká, co ta volba znamená.
+
+   `.volby` samo je jinde styl pro `fieldset`, takže se tohle scopuje
+   pod `.stavba`; kdyby ne, přebila by se obojí navzájem. */
+.stavba .volby { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.8rem; }
+.stavba .volba {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: "znacka jmeno" "znacka detail";
+  align-items: center;
+  gap: 0 0.7rem;
+  min-height: 56px;
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  text-align: left;
+  border: 1px solid var(--linka, #3a3a3a);
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+}
+.stavba .volba.vybrany { border-color: var(--voda); box-shadow: inset 0 0 0 1px var(--voda); }
+.stavba .volba > b { grid-area: jmeno; font-size: 1.05rem; }
+.stavba .volba .detail { grid-area: detail; font-size: 0.85rem; opacity: 0.75; }
+/* Místo pro znak se drží i u plavidla a mola, kde žádný není: jinak by
+   se nadpisy v seznamu rozjely do dvou sloupců. */
+.stavba .volba .znacka { grid-area: znacka; display: inline-flex; width: 22px; justify-content: center; }
+
+/* „Jako minule" je zkratka, ne volba — proto čárkovaně, aby se
+   nepletla s předvolbami pod ní. */
+.stavba .jakoMinule {
+  width: 100%;
+  text-align: left;
+  border-style: dashed;
+  border-color: var(--voda);
+  margin-bottom: 0.6rem;
+}
+
+.stavba .ruzice { margin-top: 0.6rem; }
+
 /* Výběr bodu z mapy. Dlaždice jsou pozicované absolutně v okně, které
    se posouvá pod pevným křížkem. */
 .vyber-mapy .plocha {

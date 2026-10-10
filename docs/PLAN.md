@@ -5379,6 +5379,41 @@ Pozor na souběh: mez Orlíku je od PR #207 vytažená jako `naOrliku`
 v `web/lib/souradnice.ts` a `MapkaVyber` má prop `cekam`, který zamkne
 tlačítko během zápisu — průvodce má použít obojí, ne si to psát znovu.
 
+## Obrazovka průvodce (11. 10. 2026)
+
+Sdružené typy, předvolby značení a růžice jsou v obrazovce.
+
+**Typ říká, kolik bodů se pípá.** Pět tlačítek: jedna značka, dvě
+značky, start, cíl, odskok. Čím prvek je, rozhodne až předpis — věta
+z vody, ne jméno z databáze: *„otočit levobokem"* uloží `OtocnaBoje`,
+*„nechat po levoboku"* `PrujezdniBoje`, *„projet a otočit se"*
+`OtocnaBrana`, *„stačí se jí dotknout"* otočnou linii.
+
+**Předpis se volí před pípáním, ne po něm**, a plyne to ze sdružení:
+dokud se neví, jestli se u značky otáčí nebo projíždí, nejde ji
+pojmenovat — a jméno se po zápisu nepřepisuje, protože záznam značky je
+měření. Pořadí kroků je tedy *kolik bodů → jak se to jede → pípat*.
+Jména tím zůstanou mluvící („otočná 3", „brána 3 vlevo").
+
+**Růžice nabízí dvě možnosti, ne osm.** Azimut linie plyne z obou
+pípnutých poloh a šipka je na ni vždycky kolmá. Azimut se počítá
+s **kosinem zeměpisné šířky** — bez té opravy vychází stočený k východu
+a u šikmé linie by růžice ukázala vedle (stejný přírůstek ve stupních
+dává 33°, ne 45°). Dva body blíž než pět metrů linii netvoří: růžice
+se nedohaduje, ale řekne to.
+
+**Značení se mezi body nepředvyplňuje.** Druhý konec brány bývá tentýž
+znak, ale u startu je to klidně molo proti lodi. Na jeden dotyk je
+„jako minule", zvlášť pro každý typ.
+
+Ověřeno proklikáním proti mocku: `Start` mezi `Plavidlo` a
+`ObjektNaBrehu`, směr `S`, druh `PevnaLinie`, bez strany — tedy přesně
+to, co šlo včera zapsat jen přes chybu.
+
+**Zbývá z téhož zadání:** cartoon náhled prvku nad obsahem průvodce,
+tlačítko „projet to znovu jinak", fotky u bodu, poznámka mimo hlavní
+cestu, a výběr značky místo zadávání bodu ve formuláři prvku.
+
 ## Růžová a plameňák (Filip, 11. 10. 2026)
 
 *„Někam ještě napasuj k barvám bójí růžovou a tvar plameňák — to je jen
