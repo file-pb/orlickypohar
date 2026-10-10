@@ -33,7 +33,7 @@ export default async function Poradi({ params, searchParams }: Parametry) {
   try {
     poradi = await nactiPoradi(slug);
   } catch (e) {
-    if (e instanceof ApiNedostupne) return <Vypadek />;
+    if (e instanceof ApiNedostupne) return <Vypadek co="Pořadí" />;
     throw e;
   }
   if (!poradi) notFound();
