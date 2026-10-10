@@ -11,6 +11,7 @@ import {
   seber,
   uklidHistorii,
   type BarvaBoje,
+  type DruhZnaceni,
   type TvarBoje,
   type ZdrojPolohy,
 } from "@/lib/boje";
@@ -54,6 +55,7 @@ export async function pipniAkce(
     zdroj?: ZdrojPolohy;
     barva?: BarvaBoje;
     tvar?: TvarBoje;
+    znaceni?: DruhZnaceni;
   },
 ): Promise<{ chyba: string | null; id: number | null }> {
   const nazev = vstup.nazev.trim();
@@ -93,6 +95,9 @@ export async function pipniAkce(
     // 2026; prošla proto, že se barvy ověřovaly přímo proti API.
     barva: vstup.barva,
     tvar: vstup.tvar,
+    // A značení touž cestou. Kdyby se tu zapomnělo, předvolba z průvodce
+    // by se tiše zahodila — přesně jako barva 9. 10. 2026.
+    znaceni: vstup.znaceni,
   });
 
   return { chyba, id: boje?.id ?? null };

@@ -4,6 +4,8 @@ import type { components } from "./schema";
 
 export type BarvaBoje = components["schemas"]["BarvaBoje"];
 export type TvarBoje = components["schemas"]["TvarBoje"];
+/** Čím je značka značená — bóje, znak dráhy, plavidlo, objekt na břehu. */
+export type DruhZnaceni = components["schemas"]["DruhZnaceni"];
 
 /**
  * Bóje na trati — pípnutí polohy, přenastavení a sebrání.
@@ -135,6 +137,7 @@ export async function pipni(
     zdroj?: ZdrojPolohy;
     barva?: BarvaBoje;
     tvar?: TvarBoje;
+    znaceni?: DruhZnaceni;
   },
 ): Promise<{ chyba: string | null; boje: Boje | null }> {
   const t = await tokenZeSezeni();
