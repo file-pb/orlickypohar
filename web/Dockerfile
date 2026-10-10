@@ -6,7 +6,12 @@
 # ho vyčerpá kdokoliv jiný (9. 10. 2026 nám tím spadl build i integrace).
 # Zrcadlo plní `.github/workflows/zrcadlo.yml`, kde je i cena toho řešení.
 ARG ZRCADLO=ghcr.io/file-pb/orlickypohar/zrcadlo
-FROM ${ZRCADLO}/node:22-alpine AS build
+# Datovaná značka ve zrcadle, ne pohyblivá. Pohyblivá by znamenala, že
+# měsíční přesyn tiše změní základ: tentýž commit by se před ním a po něm
+# postavil z jiného obrazu. Datum přepisuje přesyn sám — ohlásí
+# `::notice::`, které soubory se mají změnit (platform/docs/KVOTY.md, K7).
+ARG ZRCADLO_ZNACKA=2026-10
+FROM ${ZRCADLO}/node:22-alpine-${ZRCADLO_ZNACKA} AS build
 WORKDIR /src
 
 # Závislosti zvlášť, aby se vrstva nepřestavovala při každé změně kódu.
@@ -16,7 +21,7 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM ${ZRCADLO}/node:22-alpine AS runtime
+FROM ${ZRCADLO}/node:22-alpine-${ZRCADLO_ZNACKA} AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=8080
