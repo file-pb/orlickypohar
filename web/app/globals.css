@@ -2061,6 +2061,14 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
   margin-bottom: 0.6rem;
 }
 
+/* „Projet to znovu jinak" je zkratka nad nabídkou typů, ne další typ —
+   proto čárkovaně, stejně jako „jako minule". */
+.stavba .volba.znovu {
+  border-style: dashed;
+  border-color: var(--voda);
+  margin-bottom: 0.8rem;
+}
+
 .stavba .ruzice { margin-top: 0.6rem; }
 
 /* Náhled prvku. Je to kontrola zadání, ne obrázek na web — proto stojí

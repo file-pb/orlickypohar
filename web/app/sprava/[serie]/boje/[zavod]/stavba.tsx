@@ -85,12 +85,31 @@ export function Stavba({
     Record<string, { znaceni: DruhZnaceni; barva: BarvaBoje; tvar: TvarBoje }>
   >({});
 
+  /**
+   * Co se postavilo naposled. <b>Drží se kvůli „projet to znovu jinak"</b>
+   * (Filip, 10. 10. 2026): tatáž dvojice bójí se v jedné rozjížďce jede
+   * několikrát a pokaždé může mít jiný předpis — po proudu a pak zpátky
+   * proti němu. Opakovaný průjezd je další položka trati, ne druhá
+   * hodnota na prvku, takže se nepípá a nevybírá značení znovu.
+   */
+  const [posledni, setPosledni] = useState<{
+    typ: TypStavby;
+    body: { id: number; poloha: Poloha; znak: { barva: BarvaBoje; tvar: TvarBoje; znaceni: DruhZnaceni } }[];
+  } | null>(null);
+
   const [zMapy, setZMapy] = useState(false);
   const [delam, setDelam] = useState(false);
   const [chyba, setChyba] = useState<string | null>(null);
   const [hlaska, setHlaska] = useState<string | null>(null);
 
-  const krok: "typ" | "jak" | "body" = !typ ? "typ" : !volba ? "jak" : "body";
+  const vsechnyBody = typ ? hotove.length >= typ.body.length : false;
+  const krok: "typ" | "jak" | "body" | "zavrsit" = !typ
+    ? "typ"
+    : !volba
+      ? "jak"
+      : vsechnyBody
+        ? "zavrsit"
+        : "body";
   const bod = typ ? typ.body[hotove.length] : null;
   const jmena = typ ? jmenaBodu(typ, volba, dalsiPoradi) : [];
   const vybrana = predvolba(znaceni);
@@ -184,7 +203,13 @@ export function Stavba({
     await slozPrvek(vsechny);
   };
 
-  const slozPrvek = async (body: { id: number }[]) => {
+  /**
+   * Složí prvek z bodů, které dostane. <b>Bere je parametrem, ne ze
+   * stavu:</b> při posledním pípnutí se volá hned po `setHotove`, a to
+   * se ještě nestihlo projevit — ze stavu by chyběl právě ten bod, co
+   * prvek dokončil.
+   */
+  const slozPrvek = async (body: typeof hotove) => {
     if (!typ || !volba) return;
     setDelam(true);
 
@@ -207,6 +232,7 @@ export function Stavba({
     }
 
     setHlaska(`${volba.jmeno.toLowerCase()} — prvek je na trati.`);
+    setPosledni({ typ, body });
     vycisti();
     router.refresh();
   };
@@ -275,6 +301,26 @@ export function Stavba({
             Nejdřív kolik bodů. Čím to je, se řekne hned potom — a značky se
             pojmenují samy.
           </p>
+          {posledni && (
+            <button
+              type="button"
+              className="volba znovu"
+              onClick={() => {
+                setTyp(posledni.typ);
+                setVolba(null);
+                setSmer(null);
+                setHotove(posledni.body);
+                setHlaska(null);
+                setChyba(null);
+              }}
+            >
+              <b>Projet to znovu jinak</b>
+              <span className="detail">
+                Tytéž značky, nový předpis. Nepípá se, nevybírá značení.
+              </span>
+            </button>
+          )}
+
           <div className="volby">
             {TYPY.map((t) => (
               <button key={t.id} type="button" className="volba" onClick={() => setTyp(t)}>
@@ -426,7 +472,30 @@ export function Stavba({
 
       {/* Růžice se ukáže, až stojí oba body: dřív azimut linie neexistuje
           a vymyslet ho nejde. Prvek na ni počká. */}
-      {typ && volba && patriSmer(typ) && hotove.length === 2 && !dvojice && (
+      {krok === "zavrsit" && typ && volba && !patriSmer(typ) && (
+        <div className="ruzice">
+          {/* Tenhle krok nastane jen po „projet to znovu jinak": v běžné
+              cestě prvek vznikne posledním pípnutím a ptát se podruhé by
+              bylo klepnutí navíc. */}
+          <p className="krok">
+            <b>{volba.jmeno}</b>
+            <span className="detail"> — tytéž značky, jen nový předpis.</span>
+          </p>
+          <button
+            type="button"
+            className="velke"
+            disabled={delam}
+            onClick={() => slozPrvek(hotove)}
+          >
+            {delam ? "Zapisuji…" : "Na trať"}
+          </button>
+          <button type="button" className="zrusit" onClick={vycisti} disabled={delam}>
+            Zrušit
+          </button>
+        </div>
+      )}
+
+      {krok === "zavrsit" && typ && volba && patriSmer(typ) && !dvojice && (
         <div className="ruzice">
           {/* Dva body na jednom místě linii netvoří. Vymyslet k nim směr
               by znamenalo nakreslit na mapu šipku, kterou nikdo neurčil —
@@ -441,7 +510,7 @@ export function Stavba({
         </div>
       )}
 
-      {typ && volba && patriSmer(typ) && dvojice && (
+      {krok === "zavrsit" && typ && volba && patriSmer(typ) && dvojice && (
         <div className="ruzice">
           <p className="krok">
             <b>{typ.jak === "start" ? "Kterým směrem se startuje" : "Kterým směrem se proplouvá"}</b>
