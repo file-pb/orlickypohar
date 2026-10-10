@@ -51,7 +51,11 @@ export function ProcNejsouVysledky(stav: StavZavodu) {
     case "Potvrzeny":
       return "Termín platí. Pořadatel závod ještě nevypsal.";
     case "Vypsany":
-      return "Závod je vypsaný — přihlásit se dá u pořadatele.";
+      // Dřív tu stálo „přihlásit se dá u pořadatele". Ta věta je starší
+      // než veřejná přihláška (17. 9. 2026) a od té doby mate: posílá
+      // člověka shánět pořadatele ve chvíli, kdy hned pod ní svítí
+      // tlačítko „Přihlásit loď" a může se přihlásit sám.
+      return "Závod je vypsaný — přihlásit loď můžeš rovnou tady.";
     default:
       return "Výsledky zatím nejsou zveřejněné.";
   }
