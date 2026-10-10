@@ -45,7 +45,7 @@ public class BojeSprava(
             .OrderBy(f => f.NahranoV)
             .Select(f => Fotky.Nahravani.Dto(f, uloziste.VerejnaAdresa))
             .OfType<Fotky.ObrazekDto>()],
-        b.Zdroj, b.Barva, b.Tvar);
+        b.Zdroj, b.Barva, b.Tvar, b.Znaceni, b.Popis);
 
     /// <summary>
     /// Zapíše pípnutí. Při přenastavení převezme pořadí i jméno po bóji,
@@ -106,6 +106,12 @@ public class BojeSprava(
             // se takhle nepřebírá, protože to API chce vždycky.
             Barva = vstup.Barva ?? stara?.Barva,
             Tvar = vstup.Tvar ?? stara?.Tvar,
+            // Značení a poznámka se přebírají týmž pravidlem: je to tatáž
+            // věc, jen jinde. U plavidla to platí nejvíc — loď komise se
+            // za dopoledne posune několikrát a pokaždé vybírat „plavidlo"
+            // je práce, kterou stavitel na vodě nemá dělat.
+            Znaceni = vstup.Znaceni ?? stara?.Znaceni,
+            Popis = string.IsNullOrWhiteSpace(vstup.Popis) ? stara?.Popis : vstup.Popis.Trim(),
             PostavenaV = ted,
             PostavilId = kdo,
             NahrazujeId = stara?.Id,

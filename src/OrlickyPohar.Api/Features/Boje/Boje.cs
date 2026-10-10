@@ -121,6 +121,20 @@ public class Boje
     public TvarBoje? Tvar { get; set; }
 
     /// <summary>
+    /// Čím je značka značená. <c>null</c> znamená „neuvedeno“ — viz
+    /// <see cref="DruhZnaceni"/>, proč se starým záznamům nic nedoplňuje.
+    /// </summary>
+    public DruhZnaceni? Znaceni { get; set; }
+
+    /// <summary>
+    /// Poznámka ke značce (Filip, 10. 10. 2026: <i>„občas tam potřebuju
+    /// napsat poznámku“</i>). Jméno je krátký štítek do seznamu a na mapku;
+    /// sem patří to, co se do jména nevejde — „kotva se trhá“, „molo
+    /// u klubovny, druhý pacholík“.
+    /// </summary>
+    public string? Popis { get; set; }
+
+    /// <summary>
     /// Kdy ji někdo sebral z vody. Sebraná bóje zmizí z trati, ale zůstane
     /// v historii — trasa z té doby se bez ní nedá přečíst.
     /// </summary>
@@ -180,6 +194,56 @@ public enum TvarBoje
     Jiny = 5,
 }
 
+/// <summary>
+/// Čím je ta značka na vodě značená (Filip, 10. 10. 2026). <b>Jeden dotyk
+/// nese význam, barvu i tvar</b> — dřív se barva klikala zvlášť, tvar
+/// nezadával vůbec a význam se dohadoval z jejich kombinace.
+///
+/// <para>
+/// <b>Nepovinné schválně.</b> Starší záznamy žádné značení nevybíraly
+/// a doplnit jim „naše bóje“ by byl výmysl: rozhodčí mohl stejně dobře
+/// pípnout znak plavební dráhy, protože průjezdní bóje je pokrývá
+/// schválně obojí. Prázdno znamená „neuvedeno“, stejně jako u barvy
+/// a tvaru. Tím se tohle pole liší od <see cref="ZdrojPolohy"/>, kde nula
+/// byla pravda — jinudy než pípnutím to tehdy nešlo.
+/// </para>
+///
+/// <para>
+/// <b>Plavidlo a objekt na břehu tu jsou proto, aby bod prvku nemusel být
+/// bóje</b> (Filip: <i>„cíl mezi lodí a molem je dost pravděpodobný“</i>,
+/// a totéž u startu). Měření polohy to je pořád, takže patří do téhle
+/// tabulky — a molo i loď komise tím dostanou fotku i historii. Fotka
+/// mola je zrovna ten doklad, kde linie končila.
+/// </para>
+/// </summary>
+public enum DruhZnaceni
+{
+    /// <summary>Pravá strana plavební dráhy: červený válec, nebo červená plovatka.</summary>
+    DrahaPrava = 0,
+
+    /// <summary>Levá strana plavební dráhy: zelený kužel, nebo zelená plovatka.</summary>
+    DrahaLeva = 1,
+
+    /// <summary>Sportovní znak dráhy: žlutý válec se sférickým vrškem.</summary>
+    DrahaSport = 2,
+
+    /// <summary>Zákaz vplutí: žlutý kužel.</summary>
+    DrahaZakaz = 3,
+
+    /// <summary>
+    /// Bóje, kterou stavíme my. Barvu i tvar má, jaké zrovna máme —
+    /// obrazovka nabízí žlutou se sférickým vrškem, ale to je její
+    /// výchozí stav, ne pravidlo.
+    /// </summary>
+    NaseBoje = 4,
+
+    /// <summary>Plavidlo: startovací loď, plavidlo komise. Hýbe se, takže přepípnutí je u něj běžné.</summary>
+    Plavidlo = 5,
+
+    /// <summary>Objekt na břehu: molo, dráty nad vodou, značka na skále.</summary>
+    ObjektNaBrehu = 6,
+}
+
 public record BojeDto(
     int Id,
     string Nazev,
@@ -193,7 +257,9 @@ public record BojeDto(
     IReadOnlyList<Fotky.ObrazekDto> Fotky,
     ZdrojPolohy Zdroj = ZdrojPolohy.Telefon,
     BarvaBoje? Barva = null,
-    TvarBoje? Tvar = null);
+    TvarBoje? Tvar = null,
+    DruhZnaceni? Znaceni = null,
+    string? Popis = null);
 
 /// <summary>Pípnutí polohy: co posílá web i appka.</summary>
 /// <param name="Nazev">Čím bóje je — „bóje 1", „start levý".</param>
@@ -207,6 +273,15 @@ public record BojeDto(
 /// o poli neví, posílal dál pravdu — dokud tohle pole nebylo, jiná cesta
 /// než pípnutí z telefonu neexistovala.
 /// </param>
+/// <param name="Znaceni">
+/// Čím je značka značená. Chybějící znamená „neuvedeno“ — klient, který
+/// o poli neví, tím nic nevymýšlí.
+/// </param>
+/// <param name="Popis">
+/// Poznámka ke značce. <b>Nepatří na hlavní cestu průvodce</b> (Filip,
+/// 10. 10. 2026: <i>„přednost má ergonomie klikacího zadávání“</i>) —
+/// píše se jen občas, takže obrazovka ji má mít schovanou.
+/// </param>
 public record PipnutiVstup(
     string? Nazev,
     int Poradi,
@@ -216,12 +291,27 @@ public record PipnutiVstup(
     int? NahrazujeId,
     ZdrojPolohy? Zdroj = null,
     BarvaBoje? Barva = null,
-    TvarBoje? Tvar = null);
+    TvarBoje? Tvar = null,
+    DruhZnaceni? Znaceni = null,
+    string? Popis = null);
 
 /// <summary>Pravidla pípnutí. Čisté funkce, bez databáze.</summary>
 public static class Pipnuti
 {
     public const int NazevNejvic = 60;
+
+    /// <summary>
+    /// Poznámka ke značce. Krátká schválně — je to doplněk ke jménu, ne
+    /// místo na popis trati; na ten je plachetní směrnice.
+    /// </summary>
+    public const int PopisNejvic = 200;
+
+    /// <summary>
+    /// Je ta značka bóje? <b>Plavidlo a objekt na břehu nejsou</b>, a tím
+    /// se řídí, co u nich smí být vyplněné.
+    /// </summary>
+    public static bool JeBoje(DruhZnaceni druh) =>
+        druh is not (DruhZnaceni.Plavidlo or DruhZnaceni.ObjektNaBrehu);
 
     /// <summary>
     /// Nad tuhle přesnost se poloha nebere. Telefon u vody hlásí běžně 3 až
@@ -245,6 +335,17 @@ public static class Pipnuti
         if (string.IsNullOrWhiteSpace(vstup.Nazev)) return "Napiš, čím ta bóje je — třeba „bóje 1\".";
         if (vstup.Nazev.Trim().Length > NazevNejvic)
             return $"Jméno bóje má nejvýš {NazevNejvic} znaků.";
+
+        if (vstup.Popis?.Trim().Length > PopisNejvic)
+            return $"Poznámka má nejvýš {PopisNejvic} znaků. Na delší vysvětlení "
+                   + "je plachetní směrnice.";
+
+        // Plavidlo ani molo nejsou kus plastu, takže barva a tvar u nich nic
+        // neznamenají. Kdyby je směly nést, nakreslila by mapka u lodi komise
+        // červený válec — a závodník by hledal bóji, která tam není.
+        if (vstup.Znaceni is { } druh && !JeBoje(druh)
+            && (vstup.Barva is not null || vstup.Tvar is not null))
+            return "Plavidlo ani objekt na břehu nemají barvu a tvar bóje.";
 
         var zdroj = vstup.Zdroj ?? ZdrojPolohy.Telefon;
 

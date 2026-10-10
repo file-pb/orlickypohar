@@ -143,13 +143,21 @@ public record VerejnaBojeDto(
     /// stavitele a přesnosti měření to není údaj o tom, kdo a jak měřil.
     /// </summary>
     BarvaBoje? Barva = null,
-    TvarBoje? Tvar = null);
+    TvarBoje? Tvar = null,
+    /// <summary>
+    /// Značení jde ven týmž důvodem jako barva: <b>závodník podle něj
+    /// značku pozná</b>. „Pravá strana dráhy“ navíc říká víc než červená
+    /// a válec dohromady — a u plavidla nebo mola je to jediné, co ji
+    /// popisuje, protože barvu ani tvar nemají.
+    /// </summary>
+    DruhZnaceni? Znaceni = null);
 
 /// <summary>Konec prvku pro diváka: jméno a kam se pluje, nic víc.</summary>
 public record VerejnyKonecDto(
     string Nazev, double Sirka, double Delka,
     BarvaBoje? Barva = null,
-    TvarBoje? Tvar = null);
+    TvarBoje? Tvar = null,
+    DruhZnaceni? Znaceni = null);
 
 /// <summary>
 /// Prvek trati pro diváka.

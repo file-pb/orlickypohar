@@ -210,11 +210,11 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
                 p.Typ, p.Poradi, p.Strana, p.Poznamka,
                 new VerejnyKonecDto(
                     p.BojeA!.Nazev, p.BojeA.Sirka, p.BojeA.Delka,
-                    p.BojeA.Barva, p.BojeA.Tvar),
+                    p.BojeA.Barva, p.BojeA.Tvar, p.BojeA.Znaceni),
                 p.BojeB != null
                     ? new VerejnyKonecDto(
                         p.BojeB.Nazev, p.BojeB.Sirka, p.BojeB.Delka,
-                        p.BojeB.Barva, p.BojeB.Tvar)
+                        p.BojeB.Barva, p.BojeB.Tvar, p.BojeB.Znaceni)
                     : p.KonecBSirka != null && p.KonecBDelka != null
                         ? new VerejnyKonecDto(p.KonecBPopis!, p.KonecBSirka.Value, p.KonecBDelka.Value)
                         : null,
@@ -227,7 +227,8 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
                         && (b.NahrazenaV == null || b.NahrazenaV > prijato)
                         && (b.SebranaV == null || b.SebranaV > prijato))
             .OrderBy(b => b.Poradi).ThenBy(b => b.Id)
-            .Select(b => new VerejnaBojeDto(b.Nazev, b.Poradi, b.Sirka, b.Delka, b.Barva, b.Tvar))
+            .Select(b => new VerejnaBojeDto(
+                b.Nazev, b.Poradi, b.Sirka, b.Delka, b.Barva, b.Tvar, b.Znaceni))
             .ToListAsync(ct));
     }
 

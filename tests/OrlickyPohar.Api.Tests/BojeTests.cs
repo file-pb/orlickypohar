@@ -443,6 +443,75 @@ public class BojeTests(PostgresFixture fixture)
     }
 
     /// <summary>
+    /// <b>Značení jde ven týmž důvodem jako barva:</b> závodník podle něj
+    /// značku pozná. U plavidla a mola je to dokonce jediné, co ji popisuje,
+    /// protože barvu ani tvar nemají — bez tohohle pole by na veřejné trati
+    /// stál bezbarvý bod bez vysvětlení.
+    /// </summary>
+    [Fact]
+    public async Task Verejna_trat_nese_znaceni()
+    {
+        var (db, boje, trate) = SluzbyITrat();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        await boje.PipniAsync(
+            zavod.Id,
+            Bod("plavidlo komise") with { Znaceni = DruhZnaceni.Plavidlo },
+            kdo.Id, default);
+        await trate.HotovoAsync(zavod.Id, true, default);
+        await trate.PrijmiAsync(zavod.Id, kdo.Id, default);
+
+        var verejna = await trate.VerejnaAsync(zavod.Id, default);
+        var venku = Assert.Single(verejna!.Boje);
+        Assert.Equal(DruhZnaceni.Plavidlo, venku.Znaceni);
+        // A protože to bóje není, barva ani tvar tam nejsou.
+        Assert.Null(venku.Barva);
+        Assert.Null(venku.Tvar);
+    }
+
+    /// <summary>
+    /// Značení a poznámka se přenastavením <b>přebírají</b> — stejné
+    /// pravidlo jako u barvy a tvaru, a ze stejného důvodu: je to tatáž
+    /// věc, jen jinde.
+    /// <para>
+    /// U plavidla to platí nejvíc: loď komise se za dopoledne posune
+    /// několikrát a vybírat pokaždé „plavidlo“ je práce, kterou stavitel
+    /// na vodě nemá dělat.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Prenastavena_znacka_si_znaceni_a_poznamku_prebira()
+    {
+        var (db, boje, trate) = SluzbyITrat();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (puvodni, _) = await boje.PipniAsync(
+            zavod.Id,
+            Bod("plavidlo komise") with
+            {
+                Znaceni = DruhZnaceni.Plavidlo,
+                Popis = "startovací loď, stojí na kotvě",
+            },
+            kdo.Id, default);
+        Assert.Equal(DruhZnaceni.Plavidlo, puvodni!.Znaceni);
+        Assert.Equal("startovací loď, stojí na kotvě", puvodni.Popis);
+
+        // Posun beze změny: obojí se přebírá.
+        var (posunuta, _) = await boje.PipniAsync(
+            zavod.Id, Bod("plavidlo komise", nahrazuje: puvodni.Id), kdo.Id, default);
+        Assert.Equal(DruhZnaceni.Plavidlo, posunuta!.Znaceni);
+        Assert.Equal("startovací loď, stojí na kotvě", posunuta.Popis);
+
+        // Nová poznámka přebije starou; značení se dál přebírá.
+        var (jina, _) = await boje.PipniAsync(
+            zavod.Id,
+            Bod("plavidlo komise", nahrazuje: posunuta.Id) with { Popis = "už jede po linii" },
+            kdo.Id, default);
+        Assert.Equal("už jede po linii", jina!.Popis);
+        Assert.Equal(DruhZnaceni.Plavidlo, jina.Znaceni);
+    }
+
+    /// <summary>
     /// Jednorázový úklid historie (Filip, 10. 10. 2026: <i>„vymaž tu
     /// historii bójí, ať tam nestraší"</i>). Pravidlo #186 platilo jen
     /// dopředu — záznamy, které vznikly dřív, zůstávaly.
