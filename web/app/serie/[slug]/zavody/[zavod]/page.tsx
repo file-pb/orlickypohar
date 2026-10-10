@@ -109,7 +109,7 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
       nactiVerejnouTrat(slug, slugZavodu),
     ]);
   } catch (e) {
-    if (e instanceof ApiNedostupne) return <Vypadek />;
+    if (e instanceof ApiNedostupne) return <Vypadek co="Výsledky" />;
     throw e;
   }
   if (!zavod) notFound();

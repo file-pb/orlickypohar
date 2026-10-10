@@ -35,7 +35,7 @@ export default async function Prihlaska({ params, searchParams }: Parametry) {
   try {
     zavod = await nactiZavod(slug, zavodSlug);
   } catch (e) {
-    if (e instanceof ApiNedostupne) return <Vypadek />;
+    if (e instanceof ApiNedostupne) return <Vypadek co="Přihláška" />;
     throw e;
   }
   if (!zavod) notFound();

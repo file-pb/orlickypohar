@@ -36,7 +36,7 @@ export default async function VerejnaTratStranka({ params }: Parametry) {
       nactiVerejnouTrat(slug, slugZavodu),
     ]);
   } catch (e) {
-    if (e instanceof ApiNedostupne) return <Vypadek />;
+    if (e instanceof ApiNedostupne) return <Vypadek co="Trať" />;
     throw e;
   }
   if (!zavod) notFound();

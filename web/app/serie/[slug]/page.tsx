@@ -43,7 +43,7 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
   try {
     serie = await nactiSerii(slug);
   } catch (e) {
-    if (e instanceof ApiNedostupne) return <Vypadek />;
+    if (e instanceof ApiNedostupne) return <Vypadek co="Ročník" />;
     throw e;
   }
   if (!serie) notFound();
