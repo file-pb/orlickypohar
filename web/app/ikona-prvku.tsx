@@ -1,4 +1,4 @@
-import { nazevTypu, type StranaPrvku, type TypPrvku } from "@/lib/trat";
+import { dvaBody, nazevTypu, type StranaPrvku, type TypPrvku } from "@/lib/trat";
 
 /**
  * Tvar prvku. <b>Jedno místo pro správu i pro web</b>: kdo si tvar
@@ -25,10 +25,10 @@ export function IkonaPrvku({ typ, strana }: { typ: TypPrvku; strana: StranaPrvku
       role="img"
       aria-label={nazevTypu(typ)}
     >
-      {typ !== "Znacka" && (
+      {dvaBody(typ) && (
         <line x1="6" y1="10" x2="26" y2="10" stroke="currentColor" strokeWidth="2" />
       )}
-      {typ === "Znacka" ? (
+      {!dvaBody(typ) ? (
         <>
           <circle cx="16" cy="10" r="4" fill="currentColor" />
           {strana && (
@@ -46,9 +46,9 @@ export function IkonaPrvku({ typ, strana }: { typ: TypPrvku; strana: StranaPrvku
           <circle cx="26" cy="10" r="4" fill="currentColor" />
           {/* Start a cíl mají navíc písmeno: tytéž dvě polohy můžou být
               ráno start a odpoledne cíl, takže tvar sám je nerozliší. */}
-          {(typ === "CaraStart" || typ === "CaraCil") && (
+          {(typ === "Start" || typ === "Cil") && (
             <text x="16" y="7" textAnchor="middle" fontSize="8" fill="currentColor">
-              {typ === "CaraStart" ? "S" : "C"}
+              {typ === "Start" ? "S" : "C"}
             </text>
           )}
           {typ === "Odskok" && strana && (

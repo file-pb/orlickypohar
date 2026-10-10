@@ -4537,6 +4537,17 @@
     },
     "components": {
         "schemas": {
+            "BarvaBoje": {
+                "enum": [
+                    "Cervena",
+                    "Zelena",
+                    "Zluta",
+                    "Oranzova",
+                    "Bila",
+                    "Modra",
+                    null
+                ]
+            },
             "BodHladinyDto": {
                 "required": [
                     "cas",
@@ -4637,6 +4648,26 @@
                     },
                     "zdroj": {
                         "$ref": "#/components/schemas/ZdrojPolohy"
+                    },
+                    "barva": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BarvaBoje"
+                            }
+                        ]
+                    },
+                    "tvar": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/TvarBoje"
+                            }
+                        ]
                     }
                 }
             },
@@ -4933,6 +4964,13 @@
                         "type": "boolean"
                     }
                 }
+            },
+            "DruhStartu": {
+                "enum": [
+                    "PevnaLinie",
+                    "OtevirajiciSeBrana",
+                    null
+                ]
             },
             "DruhZastavky": {
                 "enum": [
@@ -6086,6 +6124,26 @@
                                 "$ref": "#/components/schemas/ZdrojPolohy"
                             }
                         ]
+                    },
+                    "barva": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BarvaBoje"
+                            }
+                        ]
+                    },
+                    "tvar": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/TvarBoje"
+                            }
+                        ]
                     }
                 }
             },
@@ -6933,6 +6991,26 @@
                                 "$ref": "#/components/schemas/KonecBodDto"
                             }
                         ]
+                    },
+                    "smer": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/SvetovaStrana"
+                            }
+                        ]
+                    },
+                    "druhStartu": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DruhStartu"
+                            }
+                        ]
                     }
                 }
             },
@@ -6996,6 +7074,26 @@
                         "type": [
                             "null",
                             "string"
+                        ]
+                    },
+                    "smer": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/SvetovaStrana"
+                            }
+                        ]
+                    },
+                    "druhStartu": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DruhStartu"
+                            }
                         ]
                     }
                 }
@@ -7676,6 +7774,19 @@
                     null
                 ]
             },
+            "SvetovaStrana": {
+                "enum": [
+                    "S",
+                    "SV",
+                    "V",
+                    "JV",
+                    "J",
+                    "JZ",
+                    "Z",
+                    "SZ",
+                    null
+                ]
+            },
             "TeplotaHladinyDto": {
                 "required": [
                     "snimky",
@@ -7843,13 +7954,26 @@
                     }
                 }
             },
+            "TvarBoje": {
+                "enum": [
+                    "Valcova",
+                    "Kuzelova",
+                    "Kulova",
+                    "SferickyVrsek",
+                    "Plovatka",
+                    "Jiny",
+                    null
+                ]
+            },
             "TypPrvku": {
                 "enum": [
-                    "Znacka",
+                    "OtocnaBoje",
                     "Brana",
                     "Odskok",
-                    "CaraStart",
-                    "CaraCil"
+                    "Start",
+                    "Cil",
+                    "PrujezdniBoje",
+                    "OtocnaZona"
                 ]
             },
             "UcastDto": {
@@ -8063,6 +8187,26 @@
                     "delka": {
                         "type": "number",
                         "format": "double"
+                    },
+                    "barva": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BarvaBoje"
+                            }
+                        ]
+                    },
+                    "tvar": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/TvarBoje"
+                            }
+                        ]
                     }
                 }
             },
@@ -8199,6 +8343,26 @@
                     "delka": {
                         "type": "number",
                         "format": "double"
+                    },
+                    "barva": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BarvaBoje"
+                            }
+                        ]
+                    },
+                    "tvar": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/TvarBoje"
+                            }
+                        ]
                     }
                 }
             },
@@ -8246,6 +8410,26 @@
                             },
                             {
                                 "$ref": "#/components/schemas/VerejnyKonecDto"
+                            }
+                        ]
+                    },
+                    "smer": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/SvetovaStrana"
+                            }
+                        ]
+                    },
+                    "druhStartu": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DruhStartu"
                             }
                         ]
                     }

@@ -1,4 +1,4 @@
-import { nazevTypu, type TypPrvku } from "@/lib/trat";
+import { dvaBody, nazevTypu, type TypPrvku } from "@/lib/trat";
 
 /**
  * Prvek, jak ho mapka potřebuje. <b>Vlastní tvar schválně</b>: správa a web
@@ -70,9 +70,11 @@ function doPixelu(sirka: number, delka: number, z: number) {
  * jeho druh — „start" říká víc než „start levý – start pravý".
  */
 function popisekPrvku(p: PrvekNaMape) {
-  if (p.typ === "Znacka") return p.konce[0].nazev;
-  if (p.typ === "CaraStart") return "start";
-  if (p.typ === "CaraCil") return "cíl";
+  // Jednokoncový prvek je ta bóje, takže se píše její jméno. U prvku mezi
+  // dvěma konci říká víc jeho druh: „start" místo „start levý – start pravý".
+  if (!dvaBody(p.typ)) return p.konce[0].nazev;
+  if (p.typ === "Start") return "start";
+  if (p.typ === "Cil") return "cíl";
   return nazevTypu(p.typ);
 }
 
