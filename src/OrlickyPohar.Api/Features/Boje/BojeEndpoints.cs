@@ -24,6 +24,9 @@ public record FotkaBojeFormular(IFormFile? Soubor);
 /// (plán, *Kdo trasy vidí*).
 /// </para>
 /// </summary>
+/// <summary>Kolik záznamů historie je k zahození, nebo kolik jich zmizelo.</summary>
+public record UklidDto(int Pocet);
+
 public static class BojeEndpoints
 {
     public static void MapBoje(this IEndpointRouteBuilder app)
@@ -64,6 +67,23 @@ public static class BojeEndpoints
                 "jedna zblízka neukáže zároveň bóji i břeh za ní. JPEG, PNG nebo WebP " +
                 "do 15 MB; ukládá se přepočtené na WebP, originál nikam. Veřejně se " +
                 "nevydávají, stejně jako celá trať. Bez nastaveného úložiště vrací 503.");
+
+        g.MapGet("/uklid", KUklizeniAsync)
+            .Produces<UklidDto>()
+            .WithTags("Bóje")
+            .WithSummary("Kolik záznamů v historii je k zahození")
+            .WithDescription(
+                "Pořadatel regaty, nebo rozhodčí. Nic nemaže — obrazovka to musí říct "
+                + "dřív, než se na něco klikne.");
+
+        g.MapPost("/uklid", UklidAsync)
+            .Produces<UklidDto>()
+            .WithTags("Bóje")
+            .WithSummary("Zahodí záznamy historie, na kterých nic nevisí")
+            .WithDescription(
+                "Pořadatel regaty, nebo rozhodčí. Maže doopravdy a nejde to vzít zpátky. "
+                + "Drží se záznam, na který ukazuje prvek trati, a ten, který stál ve vodě "
+                + "při přijetí nějaké trati — ten už byl veřejný.");
 
         g.MapDelete("/{boje:int}/fotky/{fotka:guid}", OdeberFotkuAsync)
             .WithSummary("Odebere jednu fotku bóje a smaže její soubory")
@@ -154,6 +174,28 @@ public static class BojeEndpoints
         return obrazek is null
             ? Results.BadRequest(new { error = chyba })
             : Results.Created((string?)null, obrazek);
+    }
+
+    private static async Task<IResult> KUklizeniAsync(
+        string serie, string zavod, ClaimsPrincipal kdo, Rozsahy rozsahy, BojeSprava sprava,
+        CancellationToken ct)
+    {
+        if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
+            return Results.NotFound();
+        if (!await SmiAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        return Results.Ok(new UklidDto(await sprava.KUklizeniAsync(rozsah.ZavodId.Value, ct)));
+    }
+
+    private static async Task<IResult> UklidAsync(
+        string serie, string zavod, ClaimsPrincipal kdo, Rozsahy rozsahy, BojeSprava sprava,
+        CancellationToken ct)
+    {
+        if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
+            return Results.NotFound();
+        if (!await SmiAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        return Results.Ok(new UklidDto(await sprava.UklidAsync(rozsah.ZavodId.Value, ct)));
     }
 
     private static async Task<IResult> OdeberFotkuAsync(

@@ -9,6 +9,7 @@ import {
   odeberFotku,
   pipni,
   seber,
+  uklidHistorii,
   type BarvaBoje,
   type TvarBoje,
   type ZdrojPolohy,
@@ -242,4 +243,23 @@ export async function smazPrvekAkce(formular: FormData) {
 
   const chyba = await smazPrvek(serie, zavod, prvek);
   redirect(kam(chyba ? { chyba } : { stav: "prvekPryc" }));
+}
+
+/**
+ * Úklid historie bójí (Filip, 10. 10. 2026: „vymaž tu historii bójí, ať
+ * tam nestraší"). <b>Maže doopravdy</b>, takže se počet napíše zpátky do
+ * hlášky — ať je vidět, co se stalo, a ne jen že se něco stalo.
+ */
+export async function uklidAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const kam = (zprava: Record<string, string>) =>
+    `/sprava/${encodeURIComponent(serie)}/boje/${encodeURIComponent(zavod)}?${new URLSearchParams(zprava)}`;
+
+  const vysledek = await uklidHistorii(serie, zavod);
+  redirect(
+    typeof vysledek === "string"
+      ? kam({ chyba: vysledek })
+      : kam({ uklizeno: String(vysledek) }),
+  );
 }
