@@ -32,7 +32,12 @@ docker run -d --name op-cache-test-web --network "$SIT" --network-alias orlickyp
 docker run -d --name op-cache-test-web-sezeni --network "$SIT" \
   --network-alias orlickypohar-web-sezeni \
   -e REPLIKA=sezeni -v "$ADRESAR:/t:ro" python:3.13-alpine python /t/falesny_web.py >/dev/null
-docker run -d --name op-cache-test-cache --network "$SIT" -p "$PORT:8080" op-cache-test >/dev/null
+# Port JEN na localhost. Bez `127.0.0.1:` ho Docker vystaví na všechny
+# adresy a projde přes DNAT i okolo ufw — 10. 10. 2026 se takhle našel
+# zapomenutý kontejner z tohohle testu, který odpovídal 200 z internetu
+# (platform/docs/POUCENI.md, 61). Firewall to dnes zahodí, ale test to
+# nemá vystavovat vůbec: `$URL` míří na 127.0.0.1, takže tím nic neztrácí.
+docker run -d --name op-cache-test-cache --network "$SIT" -p "127.0.0.1:$PORT:8080" op-cache-test >/dev/null
 
 for _ in $(seq 1 50); do
   curl -fs "$URL/health" >/dev/null 2>&1 && curl -fs "$URL/health-sezeni" >/dev/null 2>&1 && break
