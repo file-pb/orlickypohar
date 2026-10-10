@@ -904,6 +904,28 @@ th.vlevo, td.vlevo { text-align: left; }
 .formular textarea { resize: vertical; line-height: 1.6; font-family: inherit; }
 .formular :focus-visible { outline: 2px solid var(--voda); outline-offset: 1px; }
 .formular label > .poznamka { margin: 0; font-size: 0.8rem; }
+
+/* Přepínač patří před svůj text, ne nad něj: `.formular label` je grid,
+   takže by se jinak zalomil a kroužek by stál na vlastním řádku. */
+.formular label.volba {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: normal;
+}
+.formular label.volba input { width: auto; margin: 0; }
+
+/* Druhý konec je jedna věc, ne tři pole za sebou — rámeček to říká dřív,
+   než si to člověk přečte. */
+.formular fieldset {
+  display: grid;
+  gap: 0.6rem;
+  border: 1px solid var(--linka, #3a3a3a);
+  border-radius: 6px;
+  padding: 0.7rem 0.8rem 0.9rem;
+  margin: 0;
+}
+.formular fieldset legend { padding: 0 0.3rem; font-size: 0.85rem; font-weight: 600; }
 .formular > button {
   justify-self: start; font: inherit; font-weight: 600; cursor: pointer;
   padding: 0.6rem 1.1rem; border: 0; border-radius: 8px;

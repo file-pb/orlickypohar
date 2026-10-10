@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { polohaZRadku } from "@/lib/poloha";
 import {
   FOTKA_NEJVIC_MB,
   NEJHORSI_PRESNOST_M,
@@ -197,11 +198,15 @@ export async function prvekAkce(formular: FormData) {
   if (!Number.isInteger(bojeA) || bojeA <= 0)
     redirect(kam({ chyba: "Vyber první konec prvku." }));
 
-  const bodSirka = cislo("bodSirka");
-  const bodDelka = cislo("bodDelka");
-  // Půl bodu je horší než žádný: tiše by se z něj stala značka.
-  if ((bodSirka === null) !== (bodDelka === null))
-    redirect(kam({ chyba: "U bodu vyplň obě souřadnice, šířku i délku." }));
+  // Poloha bodu přichází jedním řádkem (Filip, 10. 10. 2026). Parser je
+  // sdílený s formulářem, aby obrazovka i server odmítaly totéž — a aby
+  // se hláška nemusela psát dvakrát jinak.
+  const radek = String(formular.get("bodPoloha") ?? "").trim();
+  const bod = radek ? polohaZRadku(radek) : null;
+  if (typeof bod === "string") redirect(kam({ chyba: bod }));
+
+  const bodSirka = bod?.sirka ?? null;
+  const bodDelka = bod?.delka ?? null;
 
   const chyba = await zalozPrvek(serie, zavod, {
     typ: typ as PrvekVstup["typ"],
@@ -213,6 +218,8 @@ export async function prvekAkce(formular: FormData) {
     konecBPopis: String(formular.get("bodPopis") ?? "").trim() || null,
     strana: (String(formular.get("strana") ?? "") || null) as PrvekVstup["strana"],
     poznamka: String(formular.get("poznamka") ?? "").trim() || null,
+    smer: (String(formular.get("smer") ?? "") || null) as PrvekVstup["smer"],
+    druhStartu: (String(formular.get("druhStartu") ?? "") || null) as PrvekVstup["druhStartu"],
   });
 
   redirect(kam(chyba ? { chyba } : { stav: "prvek" }));

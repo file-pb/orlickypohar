@@ -1,19 +1,12 @@
 import type { Boje } from "@/lib/boje";
-import {
-  NAZVY_STRAN,
-  NAZVY_TYPU,
-  nazevStrany,
-  nazevTypu,
-  POZNAMKA_NEJVIC,
-  type Prvek,
-  type StranaPrvku,
-  type TypPrvku,
-} from "@/lib/trat";
+import { nazevStrany, nazevTypu, type Prvek } from "@/lib/trat";
 import { IkonaPrvku } from "@/app/ikona-prvku";
-import { prvekAkce, smazPrvekAkce } from "./akce";
+import { smazPrvekAkce } from "./akce";
+import { NovyPrvek } from "./novy-prvek";
 
 /**
- * Prvky trati: čára, brána, odskok a značka.
+ * Prvky trati: start, cíl, otočná a průjezdní bóje, brána, odskok
+ * a otočná zóna.
  *
  * <b>Tohle je to, co mapce chybělo.</b> Dokud prvek neexistoval, dvě bóje
  * tvořící start žily jen v hlavě pořadatele a v názvu („start levý",
@@ -43,8 +36,9 @@ export function PrvkyTrati({
 
       {prvky.length === 0 ? (
         <p className="prazdno">
-          Zatím žádné. Bóje samy netvoří trať — teprve prvek řekne, co je
-          značka a co dvojice tvořící start, bránu nebo cíl.
+          Zatím žádné. Bóje samy netvoří trať — teprve prvek řekne, která se
+          objíždí, kterou se projíždí a která dvojice tvoří start, bránu
+          nebo cíl.
         </p>
       ) : (
         <ul className="seznam-prvku">
@@ -83,115 +77,12 @@ export function PrvkyTrati({
       ) : boje.length === 0 ? (
         <p className="poznamka">Nejdřív pípni aspoň jednu bóji, pak z ní bude co složit.</p>
       ) : (
-        <form action={prvekAkce} className="formular">
-          <input type="hidden" name="serie" value={serie} />
-          <input type="hidden" name="zavod" value={zavod} />
-
-          <label>
-            Co to je
-            <select name="typ" required defaultValue="Znacka">
-              {(Object.keys(NAZVY_TYPU) as TypPrvku[]).map((t) => (
-                <option key={t} value={t}>
-                  {NAZVY_TYPU[t]}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            Pořadí v trati
-            <input name="poradi" type="number" min={1} defaultValue={prvky.length + 1} required />
-            <span className="poznamka">
-              Smí se opakovat — trať, která jede tutéž bóji dvakrát, to potřebuje.
-            </span>
-          </label>
-
-          <label>
-            Bóje — u startu a cíle levobok
-            <select name="bojeA" required defaultValue="">
-              <option value="" disabled>
-                Vyber bóji
-              </option>
-              {boje.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.nazev}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            Druhá bóje — u startu a cíle pravobok
-            <select name="bojeB" defaultValue="">
-              <option value="">žádná (značka), nebo bod níž</option>
-              {boje.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.nazev}
-                </option>
-              ))}
-            </select>
-            <span className="poznamka">
-              Nemusí to být bóje — start, cíl i otočná zóna se běžně vytyčí
-              mezi bójí a plavidlem komise, molem nebo objektem na břehu.
-              Pak nech prázdné a vyplň bod.
-            </span>
-          </label>
-
-          <label>
-            Bod místo druhé bóje — čím je
-            <input
-              name="bodPopis"
-              maxLength={60}
-              placeholder="plavidlo komise, molo, objekt na břehu"
-            />
-          </label>
-          <label>
-            Jeho poloha
-            <input name="bodSirka" placeholder="49.5163" inputMode="decimal" />
-          </label>
-          <label>
-            {/* Dvě pole schválně: jedno pole „49.5163, 14.1651" vypadá
-                pohodlněji, ale rozpadne se na prvním desetinném čárkovém
-                zápisu a nikdo nepozná proč. */}
-            <span className="skryte">Zeměpisná délka bodu</span>
-            <input name="bodDelka" placeholder="14.1651" inputMode="decimal" />
-          </label>
-
-          <label>
-            Strana
-            {/* Jména z jednoho místa: nabídka i výpis musí říkat totéž,
-                jinak si člověk myslí, že jsou to dvě různé věci. */}
-            <select name="strana" defaultValue="">
-              <option value="">neuvedeno</option>
-              {(Object.keys(NAZVY_STRAN) as NonNullable<StranaPrvku>[]).map((s) => (
-                <option key={s} value={s}>
-                  {NAZVY_STRAN[s]}
-                </option>
-              ))}
-            </select>
-            <span className="poznamka">
-              Jen u značky a odskoku. U brány si stranu volí loď, u startu
-              a cíle rozhoduje směr průjezdu.
-            </span>
-          </label>
-
-          <label>
-            Jak to jet
-            <input
-              name="poznamka"
-              maxLength={POZNAMKA_NEJVIC}
-              placeholder="na jih, startujeme na zámek"
-            />
-            <span className="poznamka">
-              Začni <b>světovou stranou</b> a přidej, podle čeho se to pozná
-              („na jih, startujeme na zámek“) — na vodě se člověk řídí
-              rozhledem, ne stupni. Vidí to pořadatel i závodník; na delší
-              vysvětlení je plachetní směrnice.
-            </span>
-          </label>
-
-          <button type="submit">Přidat prvek</button>
-        </form>
+        <NovyPrvek
+          serie={serie}
+          zavod={zavod}
+          boje={boje}
+          dalsiPoradi={prvky.length + 1}
+        />
       )}
     </section>
   );

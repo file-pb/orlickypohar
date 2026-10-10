@@ -124,13 +124,51 @@ export const POZNAMKA_NEJVIC = 200;
  * místo v tabulce vypadá jako porucha; syrové jméno je ošklivé, ale pravdivé.
  */
 export const NAZVY_TYPU: Record<TypPrvku, string> = {
-  Znacka: "značka",
+  OtocnaBoje: "otočná bóje",
+  PrujezdniBoje: "průjezdní bóje",
   Brana: "brána",
   Odskok: "odskok",
+  OtocnaZona: "otočná zóna",
   // Start je start a cíl je cíl (Filip, 9. 10. 2026). „Startovní čára"
   // a „cílová čára" byly popisy tvaru, ne jména věcí.
-  CaraStart: "start",
-  CaraCil: "cíl",
+  Start: "start",
+  Cil: "cíl",
+};
+
+/**
+ * Co o typu potřebuje vědět formulář. <b>Dva body, nebo jedna bóje</b> —
+ * Filip, 10. 10. 2026: *„Tady bude vždy potřeba definovat dva body, na
+ * rozdíl od ostatních typů."*
+ */
+export function dvaBody(typ: TypPrvku): boolean {
+  return typ !== "OtocnaBoje" && typ !== "PrujezdniBoje";
+}
+
+/** Uvádí se u typu strana? U brány si ji volí loď, u čar rozhoduje směr. */
+export function stranaPatri(typ: TypPrvku): boolean {
+  return typ === "OtocnaBoje" || typ === "PrujezdniBoje" || typ === "Odskok";
+}
+
+export type SvetovaStrana = components["schemas"]["SvetovaStrana"];
+export type DruhStartu = components["schemas"]["DruhStartu"];
+
+/** Osm směrů, ne stupně: na vodě se člověk řídí rozhledem. */
+export const SMERY: NonNullable<SvetovaStrana>[] = ["S", "SV", "V", "JV", "J", "JZ", "Z", "SZ"];
+
+export const NAZVY_SMERU: Record<NonNullable<SvetovaStrana>, string> = {
+  S: "na sever",
+  SV: "na severovýchod",
+  V: "na východ",
+  JV: "na jihovýchod",
+  J: "na jih",
+  JZ: "na jihozápad",
+  Z: "na západ",
+  SZ: "na severozápad",
+};
+
+export const NAZVY_DRUHU_STARTU: Record<NonNullable<DruhStartu>, string> = {
+  PevnaLinie: "pevná linie",
+  OtevirajiciSeBrana: "otevírající se brána za startovací lodí",
 };
 
 /** Jméno typu, nebo syrová hodnota, když ji tenhle klient nezná. */
