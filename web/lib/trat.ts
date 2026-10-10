@@ -127,6 +127,9 @@ export const NAZVY_TYPU: Record<TypPrvku, string> = {
   OtocnaBoje: "otočná bóje",
   PrujezdniBoje: "průjezdní bóje",
   Brana: "brána",
+  // Otočná brána se od průjezdní liší tím, *že* se v ní otáčí, ne kde:
+  // stranu, okolo které loď točí, si volí posádka (Filip, 10. 10. 2026).
+  OtocnaBrana: "otočná brána",
   Odskok: "odskok",
   OtocnaZona: "otočná zóna",
   // Start je start a cíl je cíl (Filip, 9. 10. 2026). „Startovní čára"

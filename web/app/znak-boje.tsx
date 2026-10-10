@@ -27,6 +27,10 @@ export const BARVY: Record<NonNullable<BarvaBoje>, string> = {
   Oranzova: "#e8740c",
   Bila: "#ffffff",
   Modra: "#1f5fa8",
+  // Fórek pro Izolepu (Filip, 11. 10. 2026). Světlejší než červená
+  // schválně — dvě barvy, které se mají rozeznat, se nesmí lišit jen
+  // odstínem.
+  Ruzova: "#f06ba8",
 };
 
 export const NAZVY_BAREV: Record<NonNullable<BarvaBoje>, string> = {
@@ -36,6 +40,7 @@ export const NAZVY_BAREV: Record<NonNullable<BarvaBoje>, string> = {
   Oranzova: "oranžová",
   Bila: "bílá",
   Modra: "modrá",
+  Ruzova: "růžová",
 };
 
 export const NAZVY_TVARU: Record<NonNullable<TvarBoje>, string> = {
@@ -45,6 +50,7 @@ export const NAZVY_TVARU: Record<NonNullable<TvarBoje>, string> = {
   SferickyVrsek: "válec se sférickým vrškem",
   Plovatka: "plovatka",
   Jiny: "jiný tvar",
+  Plamenak: "plameňák",
 };
 
 /**
@@ -56,6 +62,10 @@ export function znakPodleVyhlasky(barva?: BarvaBoje, tvar?: TvarBoje): string | 
   if (barva === "Cervena" && tvar === "Valcova") return "pravá strana plavební dráhy";
   if (barva === "Zelena" && tvar === "Kuzelova") return "levá strana plavební dráhy";
   if (barva === "Zluta" && tvar === "SferickyVrsek") return "sportovní bóje";
+  // Plameňák stojí před žlutou schválně: vyhláška ho nezná, takže se za
+  // její znak nesmí vydávat ani tehdy, když je zrovna žlutý. Jinak by
+  // nafukovací pták hlásil zakázanou vodní plochu.
+  if (tvar === "Plamenak") return null;
   if (barva === "Zluta") return "zakázaná nebo vyhrazená vodní plocha";
   return null;
 }
@@ -97,6 +107,39 @@ export function ZnakBoje({
           <rect x={x - r * 0.8} y={y - r * 0.3} width={r * 1.6} height={r * 1.6} {...spolecne} />
           <circle cx={x} cy={y - r * 0.6} r={r * 0.65} {...spolecne} />
         </g>
+      );
+    case "Plamenak":
+      // Nafukovací plameňák (Filip, 11. 10. 2026). Při osmnácti pixelech
+      // z ptáka nezbyde ornitologie, ale <b>nesmí splynout s kolečkem</b>
+      // — to je celý důvod, proč má vlastní tvar.
+      //
+      // <b>Jedna silueta, ne poskládané díly.</b> Z těla, krku a hlavy
+      // zvlášť vyšla kachna: bílý lem obkroužil každý kus a krk zmizel.
+      // Takhle lem obchází celý obrys a krk zůstane krkem.
+      //
+      // <b>Tenčí lem než u ostatních tvarů</b>, a taky kvůli krku: při
+      // třech jednotkách na dvaadvacetijednotkové ploše je rám širší než
+      // on sám. Plameňák je zato velký a růžový, takže se na mapě ztratí
+      // nejmíň ze všech.
+      return (
+        <path
+          d={
+            `M ${x - r} ${y + r * 0.35}` +
+            ` C ${x - r} ${y - r * 0.2}, ${x - r * 0.5} ${y - r * 0.45}, ${x + r * 0.02} ${y - r * 0.4}` +
+            ` C ${x + r * 0.34} ${y - r * 0.7}, ${x + r * 0.14} ${y - r}, ${x + r * 0.3} ${y - r * 1.22}` +
+            ` C ${x + r * 0.36} ${y - r * 1.42}, ${x + r * 0.64} ${y - r * 1.46}, ${x + r * 0.72} ${y - r * 1.28}` +
+            ` L ${x + r * 1.02} ${y - r * 0.9}` +
+            ` L ${x + r * 0.68} ${y - r * 0.98}` +
+            ` C ${x + r * 0.64} ${y - r * 1.1}, ${x + r * 0.56} ${y - r * 1.12}, ${x + r * 0.52} ${y - r * 1.18}` +
+            ` C ${x + r * 0.42} ${y - r * 0.94}, ${x + r * 0.66} ${y - r * 0.68}, ${x + r * 0.32} ${y - r * 0.26}` +
+            ` C ${x + r * 0.64} ${y + r * 0.1}, ${x + r * 0.56} ${y + r * 0.95}, ${x - r * 0.12} ${y + r}` +
+            ` C ${x - r * 0.72} ${y + r * 1.04}, ${x - r} ${y + r * 0.8}, ${x - r} ${y + r * 0.35} Z`
+          }
+          fill={vypln}
+          stroke="#fff"
+          strokeWidth={1.2}
+          strokeLinejoin="round"
+        />
       );
     default:
       // Kulová, „jiný" i neuvedený tvar: kolečko. Barva nese nejvíc
