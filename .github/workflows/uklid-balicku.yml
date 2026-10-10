@@ -1,0 +1,114 @@
+# Retence obrazů v GHCR.
+#
+# <b>Proč:</b> každý push do `main` pošle do registru novou verzi obrazu
+# a **nic ji nikdy nemaže**. U soukromých balíčků se úložiště počítá na
+# ÚČET (Free 500 MB, Pro 1 GB) a každé stažení mimo Actions se počítá jako
+# odchozí data (Free 1 GB za měsíc) — a server si při každém nasazení obraz
+# stahuje. Změřeno auditem kvót 10. 10. 2026 (platform/docs/KVOTY.md,
+# nález K5).
+#
+# Tady jsou **čtyři obrazy** (`orlickypohar`, `-web`, `-landsat`, `-cache`)
+# po 90–450 MB a za třicet dní 260 pushů do `main`. Nic z toho nikdy žádnou
+# starou verzi nesmazalo.
+#
+# Na disku serveru totéž řeší `platform/scripts/docker-uklid.sh`. Tahle
+# úloha je jeho druhá polovina — úklid v registru.
+#
+# <b>Maže se podle věku, ne podle počtu.</b> Počet je špatná míra: při
+# dvanácti nasazeních za den je „posledních dvacet verzí" jediný den a
+# návrat k předvčerejší verzi už nejde. Proto: starší než STARI dnů, ale
+# vždycky zůstane NECHAT nejnovějších a všechno se značkou `latest`.
+#
+# <b>Ruční spuštění je nanečisto</b>, plánované maže. Mazání verze je
+# nevratné, takže ruka na klávesnici dostane nejdřív výpis.
+#
+# <b>Neověřeno k 10. 10. 2026:</b> jestli na smazání verze stačí
+# `GITHUB_TOKEN`, nebo jestli u balíčků vlastněných uživatelem (ne
+# organizací) chce GitHub osobní token s `delete:packages`. Když první
+# běh skončí na 403, je to tenhle případ — pak se do repozitáře přidá
+# tajemství `GHCR_UKLID_TOKEN` a níž se vymění za `GITHUB_TOKEN`.
+name: uklid-balicku
+
+on:
+  schedule:
+    # Druhého v měsíci, den po zrcadle, aby se běhy nepotkaly.
+    - cron: '41 2 2 * *'
+  workflow_dispatch:
+    inputs:
+      nanecisto:
+        description: 'Jen vypsat, co by se smazalo'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  uklid:
+    runs-on: ubuntu-latest
+    env:
+      # Ruční běh maže jen tehdy, když se u něj zaškrtnutí vědomě zruší.
+      # Plánovaný běh maže — jinak by tu retence jen vypadala, že existuje.
+      NANECISTO: ${{ (github.event_name == 'workflow_dispatch' && inputs.nanecisto) && 'ano' || 'ne' }}
+      STARI: '30'
+      NECHAT: '10'
+    steps:
+      - name: Smazat staré verze obrazů
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          vlastnik="${GITHUB_REPOSITORY%%/*}"
+          projekt="${GITHUB_REPOSITORY##*/}"
+          mez=$(date -u -d "-${STARI} days" +%Y-%m-%d)
+          echo "režim: $([ "$NANECISTO" = ano ] && echo nanečisto || echo ostrý), mez $mez, necháváme $NECHAT nejnovějších"
+
+          # Balíčky tohohle repozitáře: `orlickypohar`, `orlickypohar-web`
+          # a podobně. Zrcadlo (`orlickypohar/zrcadlo/node` a další tři) se
+          # schválně vynechává — tam je každá verze jediná kopie základního
+          # obrazu a datované značky jsou to, čím je build reprodukovatelný.
+          if ! gh api -X GET "/users/$vlastnik/packages?package_type=container&per_page=100" \
+                 --jq '.[].name' > vsechny.txt 2>chyba.txt; then
+            echo "::error::Nepodařilo se vypsat balíčky: $(tr -d '\n' < chyba.txt). Nejspíš na to nestačí GITHUB_TOKEN — viz hlavička souboru."
+            exit 1
+          fi
+          grep -E "^${projekt}(-[a-z0-9-]+)?$" vsechny.txt > balicky.txt || true
+          [ -s balicky.txt ] || { echo "::notice::Žádný balíček k úklidu."; exit 0; }
+
+          celkem=0
+          while read -r b; do
+            [ -n "$b" ] || continue
+            echo "::group::$b"
+            # Verze: id, značky, datum vzniku. Řadí se **tady**, od nejnovější
+            # — pořadí z API není nikde slíbené a `NR > n` níž na něm stojí.
+            if ! gh api -X GET "/users/$vlastnik/packages/container/$b/versions?per_page=100" \
+                   --paginate --jq '.[] | [.id, (.metadata.container.tags | join(",")), .created_at] | @tsv' \
+                   2>/dev/null | sort -t"$(printf '\t')" -k3,3r > verze.txt; then
+              echo "::warning::verze $b se nepodařilo přečíst"; echo "::endgroup::"; continue
+            fi
+
+            awk -F'\t' -v n="$NECHAT" -v mez="$mez" \
+              'NR > n && $2 !~ /(^|,)latest(,|$)/ && substr($3, 1, 10) < mez { print $1"\t"$2 }' \
+              verze.txt > ke-smazani.txt
+
+            echo "verzí celkem $(wc -l < verze.txt | tr -d ' '), ke smazání $(wc -l < ke-smazani.txt | tr -d ' ')"
+            while IFS=$'\t' read -r id znacky; do
+              [ -n "$id" ] || continue
+              if [ "$NANECISTO" = "ano" ]; then
+                echo "  nanečisto: smazal bych $id [${znacky:-bez značky}]"
+              elif gh api -X DELETE "/users/$vlastnik/packages/container/$b/versions/$id" >/dev/null; then
+                echo "  smazáno $id [${znacky:-bez značky}]"
+                celkem=$((celkem + 1))
+              else
+                echo "::warning::$id se smazat nepodařilo"
+              fi
+            done < ke-smazani.txt
+            echo "::endgroup::"
+          done < balicky.txt
+
+          if [ "$NANECISTO" = "ano" ]; then
+            echo "::notice::Běželo to nanečisto. Ostré smazání: Actions → uklid-balicku → Run workflow a odškrtnout nanečisto."
+          else
+            echo "::notice::Smazáno $celkem verzí."
+          fi

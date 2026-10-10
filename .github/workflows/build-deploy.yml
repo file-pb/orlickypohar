@@ -29,6 +29,24 @@ env:
   IMAGE_LANDSAT: ghcr.io/${{ github.repository }}-landsat
   IMAGE_CACHE: ghcr.io/${{ github.repository }}-cache
 
+# Jedna rozdělaná sada běhů na větev. Druhý push do téže větve ten předchozí
+# **zruší** — starší výsledek už nikoho nezajímá a minuty Actions jsou kvóta
+# na účet, která se 10. 10. 2026 ukázala jako nejbližší zeď: 4 707 minut za
+# třicet dní proti hladině 2 000 (platform/docs/KVOTY.md, nález K4). Polovina
+# těch běhů byla zbytečná — na pull request se tlačí opravy po sobě a staví
+# se každá.
+#
+# Na `main` se **neruší nic**: tam je každý běh nasazení a zrušený běh by
+# znamenal verzi, která se na produkci nikdy nedostala.
+#
+# Tahle skupina je na workflow, zatímco job `nasazeni` má svoji vlastní
+# (`nasazeni-produkce`). Nekolidují: workflow-level skupina řeší „jeden
+# rozdělaný běh na větev", ta u jobu „jedno nasazení naráz přes všechny
+# cesty do produkce, včetně ručního spuštění". Obě musí zůstat.
+concurrency:
+  group: build-deploy-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 # Externí akce jsou připnuté na otisk commitu, ne na značku. Značka se dá
 # přesunout, takže kdo ovládne repozitář akce, spustí si kód v tomhle CI —
 # a to má právo zápisu do registru. Otisky aktualizuje Dependabot.
@@ -44,6 +62,25 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: '10.0.x'
+
+      # Balíčky NuGetu z cache. Dva důvody a oba se 9. 10. 2026 ukázaly:
+      #
+      # 1. `api.nuget.org` nemá zveřejněný limit, ale škrtí po IP — a tu
+      #    runner GitHubu **sdílí s cizími projekty**. Jeden build toho dne
+      #    spadl na `Connection reset by peer`. Je to tatáž zeď jako limit
+      #    Docker Hubu, jen o vrstvu dál a s horší hláškou: nevrací čistou
+      #    429 s vysvětlením, ale resetnuté spojení, takže to vypadá na
+      #    chybu sítě a hledá se to špatně.
+      # 2. Stahování se platí minutami, a ty jsou kvóta na účet.
+      #
+      # Klíč je z `*.csproj`, protože `packages.lock.json` tu není. Je to
+      # hrubší než lockfile (změna verze balíčku bez změny csproj se
+      # nepozná), zato to nevyžaduje přepnout celé repo na lockfiles.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
 
       # Jen testy bez Dockeru: doběhnou za vteřiny a hlídají datový kontrakt,
       # tedy to nejdražší na pozdější otočení. Integrační testy běží ve
@@ -104,8 +141,17 @@ jobs:
           # ImageSharp 4 chce licenci při publish. Jako secret, ne build-arg.
           secrets: |
             sixlabors=${{ secrets.SIXLABORS_LICENSE_KEY }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # `scope` musí mít **každý** build vlastní. Bez něj jde všechno do
+          # klíče `buildkit` a je to zdokumentované chování buildx: *„if you
+          # build multiple images, each build will overwrite the cache of the
+          # previous."* Tady se takhle čtyři obrazy přepisovaly dokola —
+          # index `buildkit-1-f921bd05` pro `main` měl 10. 10. 2026 verzi
+          # **#1151** při 37 živých záznamech, tedy přepsaný tisíckrát.
+          # Platilo se 10,6 GB blobů (limit je 10 GB **na repozitář**, takže
+          # se cache trvale vytloukala) a kupovala se z nich cache pro
+          # poslední ze čtyř obrazů. Nález K2 v platform/docs/KVOTY.md.
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
 
       # Web je druhá image, ne druhý repozitář. Staví se vždycky, i když se
       # měnilo jen API — filtrování podle cest by ušetřilo minutu buildu
@@ -127,8 +173,8 @@ jobs:
           labels: ${{ steps.meta-web.outputs.labels }}
           build-args: |
             VERZE=${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
 
       # Třetí image: plánovaná úloha s teplotou hladiny ze satelitu.
       # Build zároveň ověří, že kola rasterio sedí na Python v image.
@@ -147,8 +193,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-landsat.outputs.tags }}
           labels: ${{ steps.meta-landsat.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=landsat
+          cache-to: type=gha,mode=max,scope=landsat
 
       # Čtvrtá image: nginx s mikrocache před webem (deploy/cache/).
       - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
@@ -166,8 +212,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-cache.outputs.tags }}
           labels: ${{ steps.meta-cache.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=cache
+          cache-to: type=gha,mode=max,scope=cache
 
 
   # Testy proti reálnému PostgreSQL přes Testcontainers. Běží VEDLE buildu,
@@ -189,9 +235,16 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # `cache: 'npm'` je cache balíčků, ne Node.js — `setup-node` si ji
+      # obstará sám z `package-lock.json`. Důvod je stejný jako u NuGetu:
+      # `registry.npmjs.org` škrtí po IP, a tu runner sdílí s cizími
+      # projekty (platform/docs/KVOTY.md, nález K3). Cesta k lockfilu se
+      # musí napsat, protože appka není v korzeni repozitáře.
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
 
       - name: Závislosti appky
         run: npm ci
@@ -213,6 +266,15 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: '10.0.x'
+
+      # Tatáž cache jako v jobu `build` a schválně se stejným klíčem: oba
+      # joby restorují totéž řešení, takže se o jeden záznam dělí. Kdo
+      # z nich doběhne první, ten cache uloží.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
 
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
