@@ -5465,8 +5465,26 @@ Průvodce má na fotku **vlastní akci**, která nepřesměrovává: ta od
 formuláře jedné bóje po nahrání skočí na stránku a uprostřed stavby
 prvku by zahodila rozdělanou práci.
 
-**Zbývá z téhož zadání:** výběr značky místo zadávání bodu ve formuláři
-prvku.
+### Druhý bod ve formuláři je značka
+
+Formulář prvku si druhý konec vybírá **ze seznamu značek**, ne jako
+souřadnice. Molo i plavidlo komise jsou od #209 plnohodnotné značky se
+značením, fotkou a historií — zadávat je tu znovu ručně by vyrobilo
+druhý zápis téhož místa, který by o sobě navzájem nevěděl.
+
+Chybí-li ta značka, pípne se výš jako každá jiná: předvolby *plavidlo*
+a *objekt na břehu* jsou na to v obrazovce a polohu si vezme z mapy,
+takže tam nikdo jezdit nemusí. Je to o krok víc než napsat souřadnice,
+ale ten krok je ten, který molu dá doklad a historii.
+
+`web/lib/poloha.ts` tím ztratil posledního odběratele a **je smazaný**;
+jednořádkové zadávání polohy zůstává u pípnutí jedné bóje, kde se čte
+odkaz nebo QR (`lib/souradnice.ts`).
+
+**Tím je celé zadání průvodce postavené.** Zbývá jediný úklid: zrušit
+sloupce `KonecBSirka/Delka/Popis`. Do nich už nikdo nepíše a data jsou
+přestěhovaná, takže je to čistá migrace — ale až po ověření, že na
+záložní čtecí cestu opravdu nic nepadá.
 
 ## Růžová a plameňák (Filip, 11. 10. 2026)
 

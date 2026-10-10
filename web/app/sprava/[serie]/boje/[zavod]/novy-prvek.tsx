@@ -15,7 +15,6 @@ import {
   type StranaPrvku,
   type TypPrvku,
 } from "@/lib/trat";
-import { PRIKLAD, polohaZRadku } from "@/lib/poloha";
 import { prvekAkce } from "./akce";
 
 /**
@@ -48,14 +47,7 @@ export function NovyPrvek({
   dalsiPoradi: number;
 }) {
   const [typ, setTyp] = useState<TypPrvku>("OtocnaBoje");
-  const [druhyJeBod, setDruhyJeBod] = useState(false);
-  const [poloha, setPoloha] = useState("");
-
   const dvou = dvaBody(typ);
-  const chybaPolohy =
-    dvou && druhyJeBod && poloha.trim() !== "" && typeof polohaZRadku(poloha) === "string"
-      ? (polohaZRadku(poloha) as string)
-      : null;
 
   return (
     <form action={prvekAkce} className="formular">
@@ -104,75 +96,30 @@ export function NovyPrvek({
         <fieldset className="druhy-konec">
           <legend>Druhý bod — pravobok</legend>
 
-          {/* Přepínač místo „nech prázdné a vyplň níž": dvě cesty
-              k témuž poli se člověk musí domyslet, přepínač je vidět. */}
-          <label className="volba">
-            <input
-              type="radio"
-              name="druhyJe"
-              checked={!druhyJeBod}
-              onChange={() => setDruhyJeBod(false)}
-            />
-            je to bóje
-          </label>
-          <label className="volba">
-            <input
-              type="radio"
-              name="druhyJe"
-              checked={druhyJeBod}
-              onChange={() => setDruhyJeBod(true)}
-            />
-            je to něco jiného — molo, objekt na břehu, plavidlo komise, dráty nad vodou
-          </label>
-
-          {druhyJeBod ? (
-            <>
-              <label>
-                Čím to je
-                <input
-                  name="bodPopis"
-                  maxLength={60}
-                  required
-                  placeholder="koupací molo, plavidlo komise, dráty vysokého napětí"
-                />
-              </label>
-              <label>
-                Poloha
-                <input
-                  name="bodPoloha"
-                  required
-                  inputMode="decimal"
-                  placeholder={PRIKLAD}
-                  value={poloha}
-                  onChange={(e) => setPoloha(e.target.value)}
-                  aria-invalid={chybaPolohy ? true : undefined}
-                />
-                <span className="poznamka">
-                  Šířka a délka na jeden řádek, oddělené mezerou nebo čárkou.
-                  Desetinná čárka i tečka projdou obojí.
-                </span>
-                {chybaPolohy && (
-                  <span className="poznamka chyba" role="alert">
-                    {chybaPolohy}
-                  </span>
-                )}
-              </label>
-            </>
-          ) : (
-            <label>
-              Bóje
-              <select name="bojeB" required defaultValue="">
-                <option value="" disabled>
-                  Vyber bóji
+          {/* <b>Značka, ne souřadnice.</b> Molo i plavidlo komise jsou od
+              #209 plnohodnotné značky se značením, fotkou a historií —
+              takže se vybírají ze seznamu jako každá jiná. Zadávat je tu
+              znovu ručně by vyrobilo druhý zápis téhož místa, který by
+              o sobě navzájem nevěděl. */}
+          <label>
+            Značka
+            <select name="bojeB" required defaultValue="">
+              <option value="" disabled>
+                Vyber značku
+              </option>
+              {boje.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.nazev}
                 </option>
-                {boje.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.nazev}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
+              ))}
+            </select>
+            <span className="poznamka">
+              Chybí tu molo, plavidlo komise nebo dráty nad vodou? Pípni je
+              výš jako značku — u „Čím je to značené" na to jsou předvolby
+              <b> plavidlo</b> a <b>objekt na břehu</b> a polohu si vezmeš
+              z mapy, takže tam jezdit nemusíš.
+            </span>
+          </label>
         </fieldset>
       )}
 
