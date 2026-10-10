@@ -10,6 +10,7 @@ import {
   type RozjizdkaRadek,
   type StavVysledku,
 } from "@/lib/vysledky";
+import { nactiTrate } from "@/lib/trat";
 import { poharAkce, pridejRozjizdkuAkce, publikaceAkce, stavAkce } from "../akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
@@ -39,7 +40,16 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
   const { serie, zavod } = await params;
   const zpravy = await searchParams;
 
-  const { stav, data: prehled } = await nactiRozjizdky(serie, zavod);
+  // Tratě jen kvůli ukazateli u rozjížďky. Vlastní volání schválně: když
+  // selže, ukazatel prostě nic netvrdí a zbytek obrazovky jede dál —
+  // workflow výsledků na trati nestojí.
+  const [{ stav, data: prehled }, trate] = await Promise.all([
+    nactiRozjizdky(serie, zavod),
+    nactiTrate(serie, zavod),
+  ]);
+  const sTrati = new Set(
+    trate.map((t) => t.cisloRozjizdky).filter((c): c is number => c !== null),
+  );
 
   // Výpadek nesmí spolknout výsledek zápisu.
   if (stav === "vypadek")
@@ -159,6 +169,7 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
                 zavod={zavod}
                 rozjizdka={r}
                 otevriRevizi={zpravy.revize === String(r.cislo)}
+                sTrati={sTrati}
               />
             </li>
           ))}
@@ -190,11 +201,14 @@ function Rozjizdka({
   zavod,
   rozjizdka,
   otevriRevizi,
+  sTrati,
 }: {
   serie: string;
   zavod: string;
   rozjizdka: RozjizdkaRadek;
   otevriRevizi: boolean;
+  /** Čísla rozjížděk, které už trať mají. */
+  sTrati: Set<number>;
 }) {
   const skryta = ["Navrzeno", "Overeno", "Schvaleno"] as const;
 
@@ -226,6 +240,17 @@ function Rozjizdka({
         {rozjizdka.pocetVysledku === 0
           ? "zatím bez zapsaných výsledků"
           : `${rozjizdka.pocetVysledku} zapsaných výsledků`}
+        {" · "}
+        {/* <b>Jen to říká, nenastavuje</b> (Filip, 10. 10. 2026). Trať se
+            přiřazuje u bójí; druhé místo, kde by to šlo nastavit, by se
+            s tím prvním dřív nebo později rozešlo. Bez téhle věty ale nic
+            nepřipomene, že nově založená rozjížďka trať nemá — zjistilo
+            by se to až u vody. */}
+        {sTrati.has(rozjizdka.cislo) ? (
+          <>trať přiřazená</>
+        ) : (
+          <Link href={`/sprava/${serie}/boje/${zavod}`}>bez trati — přiřadit</Link>
+        )}
         {" · "}
         {/* Zápis vidí i ten, kdo ho nemění — rozhodčí ověřuje právě tohle. */}
         <Link href={`/sprava/${serie}/vysledky/${zavod}/${rozjizdka.cislo}`}>

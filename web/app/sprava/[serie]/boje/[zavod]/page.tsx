@@ -184,6 +184,8 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
                 prenastavovana ? { id: prenastavovana.id, nazev: prenastavovana.nazev } : null
               }
               nejvicZnaku={NAZEV_NEJVIC}
+              stojici={trat.map((b) => b.nazev)}
+              byvala={[...(byvale ?? []).map(({ boje }) => boje.nazev)].reverse()}
             />
           )}
 

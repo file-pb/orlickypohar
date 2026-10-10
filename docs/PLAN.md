@@ -1922,6 +1922,13 @@ ale věta *„první brána se projíždí po proudu"* se vymodelovat nedá a na
 musí jít. Prvek má proto `Poznamka`, volný text, který **vidí pořadatel
 i závodník**.
 
+**Potvrzeno 10. 10. 2026, otázka je uzavřená.** Filip: *„U otočné bóje —
+stačí nová průjezdní bóje, je to to samé, akorát se točí 180. Asi na to
+stačí nějaký popis."* Tedy **žádné pole pro proud nepřibude**. Rozdíl mezi
+„obepluješ ji" a „projedeš kolem" už nesou dva různé typy — otočná
+a průjezdní bóje —, a právě těch 180 stupňů je to, co je odlišuje. Zbytek
+je popis, protože je to věta pro člověka, ne pravidlo pro stroj.
+
 **Je to doplněk, ne náhrada.** Co jde vyjádřit polem, do poznámky nepatří;
 obrazovka by pak ukazovala dvě pravdy a při sporu by nebylo jasné, která
 platí. Krátká schválně (200 znaků): čte se na vodě z telefonu a na delší
@@ -2251,6 +2258,20 @@ podle `jdePriradit` ze serveru, ne podle odhadu obrazovky.
 znamenala další načítání a riziko, že ukazuje stav, který už neplatí.
 Neexistující i obsazené číslo odmítne server vlastní hláškou.
 
+**Umístění potvrzené 10. 10. 2026, zatím beze změny.** Filip to popisoval
+od okamžiku zakládání rozjížďky, tedy z obrazovky výsledků; obrazovka
+vznikla u bójí, kde trať žije a kde pořadatel stojí, když ji staví.
+Filip: *„To je asi ok. Čas ukáže, kdyžtak to změníme, ale teď ne."*
+
+**Ukazatel ve výsledcích se ale dělá** (Filip tamtéž: *„to je dobré,
+ukazatel udělej"*). U rozjížďky bude stát, jestli trať má, a odkaz sem.
+**Nic nenastavuje, jen to říká** — jinak by vznikly dvě místa, kde se dá
+trať přiřadit, a ta se dřív nebo později rozejdou.
+
+Důvod je provozní: obrazovka výsledků je tam, kde se rozjížďka zakládá,
+a bez téhle věty nic nepřipomene, že třetí rozjížďka ještě trať nemá.
+Zjistilo by se to až tím, že se tam člověk podívá — nebo u vody.
+
 **Kterou trať vidí veřejnost, se tím mění.** Dokud byla trať jedna, stačilo
 „nejnovější, pokud je přijatá". S tratěmi po rozjížďkách by čerstvý klon ve
 stavu `Hotovo` veřejně shodil trať, podle které se zrovna pluje. Veřejně se
@@ -2262,7 +2283,7 @@ regaty", tedy ta, na které se pracuje. Mezi rozjížďkami je to nově klon
 v `Hotovo`, takže se smí pípat — a to je správně, bóje se mezi rozjížďkami
 běžně posouvají.
 
-##### Otevřené: sebraný dojezd a hendikep
+##### Odložené: sebraný dojezd a hendikep
 
 Filip, 9. 10. 2026: *„Pokud by se jelo na hendikep, jak bychom řešili zkrácení
 trati při nepříznivém větru — rozhodčí jede proti lodím a pípá je do cíle?"*
@@ -2288,6 +2309,17 @@ I s polohami zbývá rozhodnout, co je „ujetá vzdálenost": po trati k tomu b
 (spočitatelné hned, ale zvýhodní toho, kdo jel špatně), nebo skutečně uplutá
 (jen z tras). **Kdo nezapíše polohu, zavře si obě dveře** — proto je bod 2
 levná pojistka, i když se nikdy nepoužije.
+
+**Odloženo (Filip, 10. 10. 2026):** *„Nechej na jindy, musíme to vymyslet
+pořádně."* Není to zapomenuté ani zamítnuté — je to rozhodnutí o pravidlech
+závodu, ne o kódu, a udělat ho mezi dvěma commity by znamenalo zvolit
+nejlevnější cestu a tvářit se, že je to návrh.
+
+**Co z toho plyne pro mezidobí:** nic se nestaví a **nic se ani nerozbíjí**.
+Bod 2 (polohu dojezdu zapisovat) zůstává levnou pojistkou, kterou lze přidat
+kdykoliv; dokud se nezvolí cesta, nemá smysl ho dělat na slepo. Kdyby se
+hendikepová regata se sebraným dojezdem objevila dřív, než se rozhodne, platí
+cesta 1 jako nouzová — pořadí bez přepočtu a věta ve směrnici.
 
 ### Připojení k lodi přes QR (Filip, 4. 10. 2026)
 
