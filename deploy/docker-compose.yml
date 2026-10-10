@@ -97,6 +97,12 @@ services:
       - Fotky__KlicId
       - Fotky__Klic
     labels:
+      # Výměna bez výpadku: nový kontejner nabíhá vedle starého a starý se
+      # zastaví teprve, až je nový zdravý (platform/deploy-hook/README.md).
+      # Změřeno 10. 10. 2026, že bez toho je každé nasazení pro návštěvníka
+      # 25,7 s rozbitého API. Podmínkou je, že po dobu výměny běží stará i nová verze
+      # proti jedné databázi — migrace proto přidávají, neruší.
+      platforma.nasazeni: bez-vypadku
       # POZOR: Compose dosazuje proměnné jen do HODNOT, ne do klíčů.
       # Jméno routeru proto musí být napevno a unikátní napříč všemi
       # aplikacemi na serveru — přejmenuj ho spolu s projektem.
@@ -180,6 +186,13 @@ services:
       # a pošle čtenáře za pořadatelem regaty — mlčet je lepší než napsat
       # adresu, která nikomu nechodí.
       KONTAKT_UDAJE: ""
+    labels:
+      # Výměna bez výpadku: nový kontejner nabíhá vedle starého a starý se
+      # zastaví teprve, až je nový zdravý (platform/deploy-hook/README.md).
+      # Změřeno 10. 10. 2026, že bez toho je každé nasazení pro návštěvníka
+      # 22,3 s rozbitého webu. Podmínkou je, že po dobu výměny běží stará i nová verze
+      # proti jedné databázi — migrace proto přidávají, neruší.
+      platforma.nasazeni: bez-vypadku
     deploy:
       resources:
         limits: { memory: 512m, cpus: "1.0" }
@@ -222,6 +235,12 @@ services:
     logging: *logging
     networks: [edge, interni]
     labels:
+      # Výměna bez výpadku: nový kontejner nabíhá vedle starého a starý se
+      # zastaví teprve, až je nový zdravý (platform/deploy-hook/README.md).
+      # Změřeno 10. 10. 2026, že bez toho je každé nasazení pro návštěvníka
+      # 22,3 s bez adresy (Traefik ztratí router). Podmínkou je, že po dobu výměny běží stará i nová verze
+      # proti jedné databázi — migrace proto přidávají, neruší.
+      platforma.nasazeni: bez-vypadku
       # Jména routeru a služby zůstala po webu — adresa se nemění.
       traefik.enable: "true"
       traefik.docker.network: edge

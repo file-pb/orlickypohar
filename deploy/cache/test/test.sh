@@ -302,6 +302,40 @@ ma "20 zápisů správy za sebou projde bez 429" test "$(grep -c 429 <<<"$stavy"
 get /cache-zdravi -H "Cf-Connecting-Ip: $utocnik"
 ma "zdraví se nelimituje ani útočníkovi" test "$stav" = 200
 
+# --- Výpadek původu -----------------------------------------------------
+#
+# Musí být až tady: scénář ZASTAVUJE repliky a nic po něm už by nefungovalo.
+#
+# Proč to vzniklo: od 10. 10. 2026 vyměňuje platforma kontejnery „nastartuj
+# vedle a starého zastav potom". Mezera se tím zavřela, ale cache je ta
+# poslední záchrana pro případy, které výměna neřeší — spadlý web, nezdařený
+# start. A hlavně se tu hlídá, že se **stará stránka nikdy nedostane
+# k přihlášenému**: to je tatáž podmínka jako u ukládání, jen z druhé strany.
+echo "Výpadek původu: stará stránka ano, přihlášenému ne"
+
+# Nejdřív si cache musí mít co pamatovat — a klíč s prázdným vzhledem.
+get /vypadek
+ma "stránka je v cache" test "$stav" = 200
+ocekavane=$(vykresleni "$telo")
+
+docker stop op-cache-test-web op-cache-test-web-sezeni >/dev/null
+
+get /vypadek
+ma "nepřihlášený dostane poslední dobrou stránku" test "$stav" = 200
+ma "…a je to opravdu ta uložená, ne nová" test "$(vykresleni "$telo")" = "$ocekavane"
+ma "…označená jako STALE" test "$cache" = STALE
+
+get /vypadek -H "Cookie: op_token=x"
+ma "přihlášený starou stránku NEDOSTANE" test "$stav" = 502
+
+get /nikdy-nenavstivena
+ma "nenavštívená adresa se nevymyslí" test "$stav" = 502
+
+# Zdraví nginxu samotného musí přežít i mrtvý web — jinak by Traefik
+# vyřadil ze směrování i cache, která má zbytek zakrývat (poučení 44).
+get /cache-zdravi
+ma "zdraví cache drží i při mrtvém webu" test "$stav" = 200
+
 if [ "$chyb" -gt 0 ]; then
   echo "Selhalo: $chyb"
   docker logs op-cache-test-cache 2>&1 | tail -20
