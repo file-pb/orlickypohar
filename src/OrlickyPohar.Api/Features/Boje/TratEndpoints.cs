@@ -268,7 +268,13 @@ public static class TratEndpoints
         var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
         if (odpoved is not null) return odpoved;
 
-        var (prvek, chyba) = await prvky.ZalozAsync(rozsah!.ZavodId!.Value, vstup, ct);
+        // Autora značky, která z nebójového bodu vznikne, bere prvek odsud.
+        // Dohledat ho z druhého konce by byla polopravda: prvek může zakládat
+        // někdo jiný, než kdo tu bóji pípal.
+        if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
+
+        var (prvek, chyba) = await prvky.ZalozAsync(
+            rozsah!.ZavodId!.Value, vstup, uzivatel, ct);
         return chyba is not null
             ? Results.BadRequest(new { error = chyba })
             : Results.Created((string?)null, prvek);
@@ -281,7 +287,10 @@ public static class TratEndpoints
         var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
         if (odpoved is not null) return odpoved;
 
-        var (upraveny, chyba) = await prvky.UpravAsync(rozsah!.ZavodId!.Value, prvek, vstup, ct);
+        if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
+
+        var (upraveny, chyba) = await prvky.UpravAsync(
+            rozsah!.ZavodId!.Value, prvek, vstup, uzivatel, ct);
         return chyba is not null ? Results.BadRequest(new { error = chyba }) : Results.Ok(upraveny);
     }
 
