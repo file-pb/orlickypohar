@@ -5,7 +5,12 @@
 # ho vyčerpá kdokoliv jiný (9. 10. 2026 nám tím spadl build i integrace).
 # Zrcadlo plní `.github/workflows/zrcadlo.yml`, kde je i cena toho řešení.
 ARG ZRCADLO=ghcr.io/file-pb/orlickypohar/zrcadlo
-FROM ${ZRCADLO}/python:3.13-slim
+# Datovaná značka ve zrcadle, ne pohyblivá. Pohyblivá by znamenala, že
+# měsíční přesyn tiše změní základ: tentýž commit by se před ním a po něm
+# postavil z jiného obrazu. Datum přepisuje přesyn sám — ohlásí
+# `::notice::`, které soubory se mají změnit (platform/docs/KVOTY.md, K7).
+ARG ZRCADLO_ZNACKA=2026-10
+FROM ${ZRCADLO}/python:3.13-slim-${ZRCADLO_ZNACKA}
 
 # Kola rasterio nesou GDAL, ale libexpat berou ze systému a slim image
 # ji nemá (import padal na libexpat.so.1, zachytil to build v CI).

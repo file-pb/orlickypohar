@@ -11,9 +11,19 @@
 # se tím Docker Hubu přestanou dotýkat úplně; limit vyčerpá leda tahle
 # úloha sama, a ta tahá čtyři obrazy měsíčně.
 #
-# **Cena toho řešení je, že kopie zastarává.** Proto ten plán: bez něj by
-# nám bezpečnostní záplaty základních obrazů tiše utíkaly. Kopíruje se
-# značka, ne otisk — každý běh tedy přinese, co je pod značkou nového.
+# **Dvě značky na obraz, a to schválně.** Datovaná (`node:22-alpine-2026-10`)
+# je nehybná: tentýž commit se z ní postaví dnes i za rok stejně. Pohyblivá
+# (`node:22-alpine`) ukazuje na poslední přesyn a je pro ruční práci.
+# Dockerfily berou **datovanou**.
+#
+# Proč ne jen pohyblivou, jak to tu bylo do 10. 10. 2026: přesyn tiše
+# měnil základ pod nohama, takže **build nebyl reprodukovatelný** — tentýž
+# commit se před přesynem a po něm postavil z jiného obrazu. A `FROM
+# ${ZRCADLO}/...` složený z `ARG` navíc **přestal být čitelný pro
+# Dependabota**: dřív hlídal `node:22-alpine`, pak viděl jen proměnnou,
+# takže o posunu základního obrazu nevěděl nikdo. Proto tahle úloha posun
+# ohlásí sama — `::notice::` a souhrn běhu říkají, které datum přepsat
+# (platform/docs/KVOTY.md, nález K7).
 name: zrcadlo
 
 on:
@@ -41,9 +51,13 @@ jobs:
       # architektur). `docker pull && push` by z vícearchitekturního
       # obrazu udělal jednoarchitekturní.
       - name: Přetáhnout základní obrazy
+        id: kopie
         run: |
           set -euo pipefail
           zrcadlo="ghcr.io/${GITHUB_REPOSITORY}/zrcadlo"
+          datum=$(date -u +%Y-%m)
+          zmeny=0
+
           for par in \
             "docker.io/nginxinc/nginx-unprivileged:1.30-alpine|nginx-unprivileged:1.30-alpine" \
             "docker.io/library/postgres:17-alpine|postgres:17-alpine" \
@@ -51,12 +65,63 @@ jobs:
             "docker.io/library/python:3.13-slim|python:3.13-slim"
           do
             zdroj="${par%%|*}"
-            cil="$zrcadlo/${par##*|}"
-            echo "::group::$zdroj → $cil"
-            docker buildx imagetools create --tag "$cil" "$zdroj"
+            jmeno="${par##*|}"
+            echo "::group::$zdroj → $jmeno"
+
+            # Otisk, který pod datovanou značkou leží teď — kvůli hlášení,
+            # co se změnilo. Při prvním běhu po zavedení datovaných značek
+            # tam neleží nic, takže se posun ohlásí u všech čtyř; to je
+            # správně, Dockerfily se tím datem právě zavádějí.
+            pred=$(docker buildx imagetools inspect "$zrcadlo/${jmeno}-${datum}" \
+                     --format '{{.Manifest.Digest}}' 2>/dev/null || echo "nic")
+
+            docker buildx imagetools create \
+              --tag "$zrcadlo/$jmeno" \
+              --tag "$zrcadlo/${jmeno}-${datum}" \
+              "$zdroj"
+
             # Bez roury: `| head` zavře rouru, `inspect` dostane SIGPIPE
             # a `set -o pipefail` z toho udělá pád celého běhu. Kopie už
             # v tu chvíli byla hotová, takže to shazovalo zdravý výsledek.
-            docker buildx imagetools inspect "$cil" > /dev/null
+            po=$(docker buildx imagetools inspect "$zrcadlo/${jmeno}-${datum}" \
+                   --format '{{.Manifest.Digest}}')
+
+            if [ "$pred" != "$po" ]; then
+              zmeny=$((zmeny + 1))
+              {
+                echo "### \`$jmeno\` se posunul"
+                echo
+                echo "- bylo: \`$pred\`"
+                echo "- je:   \`$po\`"
+                echo "- nová nehybná značka: \`$zrcadlo/${jmeno}-${datum}\`"
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
             echo "::endgroup::"
           done
+
+          echo "zmeny=$zmeny" >> "$GITHUB_OUTPUT"
+          echo "datum=$datum" >> "$GITHUB_OUTPUT"
+          echo "Datovaná značka tohohle přesynu: -$datum"
+
+      # Posun základního obrazu se musí dozvědět člověk, jinak je plán
+      # přesynu k ničemu: záplaty by přicházely, ale nikdo by nevěděl, že
+      # má přepsat datum v Dockerfilu. Dependabot to za nás neudělá —
+      # `FROM` složený z `ARG` nečte.
+      - name: Co je potřeba přepsat v repozitáři
+        if: ${{ steps.kopie.outputs.zmeny != '0' }}
+        run: |
+          datum='${{ steps.kopie.outputs.datum }}'
+          echo "::notice::Základní obrazy se posunuly. Přepiš ZRCADLO_ZNACKA na $datum ve třech Dockerfilech (web/, jobs/landsat/, deploy/cache/) a v .github/workflows/build-deploy.yml, ať se build staví z nového základu."
+          {
+            echo
+            echo "## Co přepsat"
+            echo
+            echo "Na \`$datum\` ve čtyřech souborech:"
+            echo
+            echo "- \`web/Dockerfile\` — \`ARG ZRCADLO_ZNACKA\`"
+            echo "- \`jobs/landsat/Dockerfile\` — \`ARG ZRCADLO_ZNACKA\`"
+            echo "- \`deploy/cache/Dockerfile\` — \`ARG ZRCADLO_ZNACKA\`"
+            echo "- \`.github/workflows/build-deploy.yml\` — \`env.ZRCADLO_ZNACKA\` (PostgreSQL pro integrační testy)"
+            echo
+            echo "Je to jeden malý pull request, který CI postaví a ověří — tedy viditelná a recenzovatelná aktualizace základu."
+          } >> "$GITHUB_STEP_SUMMARY"

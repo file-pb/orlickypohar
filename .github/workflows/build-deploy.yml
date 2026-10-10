@@ -28,6 +28,13 @@ env:
   IMAGE_WEB: ghcr.io/${{ github.repository }}-web
   IMAGE_LANDSAT: ghcr.io/${{ github.repository }}-landsat
   IMAGE_CACHE: ghcr.io/${{ github.repository }}-cache
+  # Datum nehybné značky ve zrcadle (`.github/workflows/zrcadlo.yml`).
+  # Zrcadlo vyrábí u každého obrazu značku pohyblivou i datovanou; bere se
+  # **datovaná**, aby se tentýž commit postavil vždycky stejně. Když měsíční
+  # přesyn ohlásí posun základního obrazu, přepíše se datum tady a ve třech
+  # Dockerfilech — to je ta jediná změna, kterou přesyn stojí, a je na ní
+  # vidět, kdy se základ posunul (platform/docs/KVOTY.md, nález K7).
+  ZRCADLO_ZNACKA: '2026-10'
 
 # Jedna rozdělaná sada běhů na větev. Druhý push do téže větve ten předchozí
 # **zruší** — starší výsledek už nikoho nezajímá a minuty Actions jsou kvóta
@@ -291,7 +298,7 @@ jobs:
           # PostgreSQL ze zrcadla, ne z Docker Hubu. Lokálně se proměnná
           # nenastavuje a `PostgresFixture` sáhne na Hub jako dřív — jeden
           # vývojářský stroj limit nevyčerpá.
-          POSTGRES_IMAGE: ghcr.io/${{ github.repository }}/zrcadlo/postgres:17-alpine
+          POSTGRES_IMAGE: ghcr.io/${{ github.repository }}/zrcadlo/postgres:17-alpine-${{ env.ZRCADLO_ZNACKA }}
           # Ryuk uklízí kontejnery po skončení testů a tahá se taky z Hubu.
           # Na runneru, který se po běhu zahodí celý, není co uklízet.
           # Schválně jen tady, ne v kódu: lokálně uklízet potřeba je.
