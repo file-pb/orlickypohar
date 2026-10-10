@@ -1,4 +1,5 @@
 import { dvaBody, nazevTypu, type SvetovaStrana, type TypPrvku } from "@/lib/trat";
+import { DLAZDICE, Z_NEJMENE, Z_NEJVIC, doPixelu } from "@/lib/mapa";
 import { ZnakBoje } from "@/app/znak-boje";
 import type { BarvaBoje, TvarBoje } from "@/lib/boje";
 
@@ -75,13 +76,6 @@ function SipkaSmeru({ x, y, smer }: { x: number; y: number; smer: NonNullable<Sv
   );
 }
 
-/** Hrana dlaždice v pixelech, jak je vydává OSM. */
-const DLAZDICE = 256;
-
-/** Rozsah přiblížení, který pouští i obslužná cesta dlaždic. */
-const Z_NEJMENE = 10;
-const Z_NEJVIC = 17;
-
 /** Jak velký výřez se kreslí; výška se dopočítá podle tvaru trati. */
 const SIRKA = 640;
 const NEJVYSSI = 640;
@@ -91,16 +85,6 @@ const NEJVYSSI = 640;
 const NEJMENSI_ROZPETI_M = 250;
 
 const METRU_NA_STUPEN = 111_320;
-
-/** Souřadnice → pixely světa při daném přiblížení (slippy map). */
-function doPixelu(sirka: number, delka: number, z: number) {
-  const n = DLAZDICE * 2 ** z;
-  const x = ((delka + 180) / 360) * n;
-  const radiany = (sirka * Math.PI) / 180;
-  const y =
-    ((1 - Math.log(Math.tan(radiany) + 1 / Math.cos(radiany)) / Math.PI) / 2) * n;
-  return { x, y };
-}
 
 /**
  * Co se píše k prvku na mapě. U značky jméno bóje, u dvoukoncového prvku

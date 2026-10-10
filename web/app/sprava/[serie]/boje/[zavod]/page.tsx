@@ -193,7 +193,18 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
               to, kvůli čemu tam člověk je. Pípnutí jedné bóje zůstává
               níž — je to cesta pro zvláštní případ, ne hlavní. */}
           {stavTrati.trat?.stav !== "Prijato" && (
-            <Stavba serie={serie} zavod={zavod} dalsiPoradi={prvky.length + 1} />
+            <Stavba
+              serie={serie}
+              zavod={zavod}
+              dalsiPoradi={prvky.length + 1}
+              // Mapa se otevře u poslední pípnuté bóje; bez bójí
+              // u Orlické přehrady, ne u nulového poledníku.
+              stred={
+                trat.length > 0
+                  ? { sirka: trat[trat.length - 1].sirka, delka: trat[trat.length - 1].delka }
+                  : { sirka: 49.5163, delka: 14.1651 }
+              }
+            />
           )}
 
           {/* Prvky stojí nad mapkou: mapka je kreslí, takže kdo chce něco

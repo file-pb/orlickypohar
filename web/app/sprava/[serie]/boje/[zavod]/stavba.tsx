@@ -14,6 +14,7 @@ import {
   type TypPrvku,
 } from "@/lib/trat";
 import { body, patriSmer, patriStrana } from "@/lib/stavba-prvku";
+import { MapkaVyber } from "@/app/mapka-vyber";
 import { pipniAkce, slozPrvekAkce } from "./akce";
 
 /**
@@ -36,11 +37,14 @@ export function Stavba({
   serie,
   zavod,
   dalsiPoradi,
+  stred,
 }: {
   serie: string;
   zavod: string;
   /** Kolikátý prvek se staví — jen do automatických jmen. */
   dalsiPoradi: number;
+  /** Kam se otevře mapa, když se vybírá bod. Nejlíp poslední bóje. */
+  stred: { sirka: number; delka: number };
 }) {
   const router = useRouter();
   const [typ, setTyp] = useState<TypPrvku | null>(null);
@@ -48,6 +52,7 @@ export function Stavba({
   const [barva, setBarva] = useState<NonNullable<BarvaBoje> | "">("");
   const [strana, setStrana] = useState<StranaPrvku>(null);
   const [smer, setSmer] = useState<SvetovaStrana>(null);
+  const [zMapy, setZMapy] = useState(false);
   const [delam, setDelam] = useState(false);
   const [chyba, setChyba] = useState<string | null>(null);
   const [hlaska, setHlaska] = useState<string | null>(null);
@@ -67,34 +72,41 @@ export function Stavba({
   const zrus = () => {
     setTyp(null);
     setHotove([]);
+    setZMapy(false);
     setChyba(null);
   };
 
-  const pipni = async () => {
+  /**
+   * Zapíše bod, ať přišel z telefonu nebo z mapy.
+   *
+   * <b>Zdroj se rozlišuje.</b> U polohy z mapy se neposílá přesnost —
+   * není to měření, takže vymyslet k ní metry by byla lež v datech.
+   */
+  const zapis = async (
+    poloha: { sirka: number; delka: number; presnost: number | null },
+    zdroj: "Telefon" | "Mapa",
+  ) => {
     if (!typ || !krok) return;
     setDelam(true);
     setChyba(null);
 
-    const poloha = await kdeJsem();
-    if (typeof poloha === "string") {
-      setChyba(poloha);
-      setDelam(false);
-      return;
-    }
-
-    const { chyba: chybaPipnuti, id } = await pipniBod(
-      serie,
-      zavod,
-      krok.jmeno(dalsiPoradi),
-      poloha,
-      barva || null,
-    );
+    const { chyba: chybaPipnuti, id } = await pipniAkce(serie, zavod, {
+      nazev: krok.jmeno(dalsiPoradi),
+      poradi: 0,
+      sirka: poloha.sirka,
+      delka: poloha.delka,
+      presnostM: zdroj === "Telefon" ? poloha.presnost : null,
+      nahrazujeId: null,
+      zdroj,
+      barva: barva || undefined,
+    });
     if (chybaPipnuti || id === null) {
       setChyba(chybaPipnuti ?? "Bóji se nepodařilo zapsat.");
       setDelam(false);
       return;
     }
 
+    setZMapy(false);
     const vsechny = [...hotove, id];
     if (vsechny.length < kroky.length) {
       setHotove(vsechny);
@@ -103,7 +115,6 @@ export function Stavba({
       return;
     }
 
-    // Poslední bod: prvek se složí sám, aby stavitel nemusel nikam jinam.
     const { chyba: chybaPrvku } = await slozPrvekAkce(serie, zavod, {
       typ,
       poradi: dalsiPoradi,
@@ -115,7 +126,6 @@ export function Stavba({
 
     setDelam(false);
     if (chybaPrvku) {
-      // Bóje už ve vodě jsou a zapsané taky; prvek se dá složit ručně níž.
       setChyba(`Bóje jsou zapsané, ale prvek se nepovedl: ${chybaPrvku}`);
       setTyp(null);
       router.refresh();
@@ -126,6 +136,17 @@ export function Stavba({
     setTyp(null);
     setHotove([]);
     router.refresh();
+  };
+
+  const pipni = async () => {
+    setDelam(true);
+    const poloha = await kdeJsem();
+    setDelam(false);
+    if (typeof poloha === "string") {
+      setChyba(poloha);
+      return;
+    }
+    await zapis(poloha, "Telefon");
   };
 
   return (
@@ -214,12 +235,33 @@ export function Stavba({
             </div>
           )}
 
-          <button type="button" className="velke" onClick={pipni} disabled={delam}>
-            {delam ? "Zapisuji…" : "Pípnout tady"}
-          </button>
-          <button type="button" className="zrusit" onClick={zrus} disabled={delam}>
-            Zrušit
-          </button>
+          {/* Dva nástroje na dvě situace (Filip, 10. 10. 2026): bóji,
+              kterou pokládáš, pípneš; molo na druhém břehu vybereš
+              z mapy, protože tam jezdit nemusíš. */}
+          {zMapy ? (
+            <MapkaVyber
+              stred={stred}
+              vyber={(bod) => zapis({ ...bod, presnost: null }, "Mapa")}
+              zrus={() => setZMapy(false)}
+            />
+          ) : (
+            <>
+              <button type="button" className="velke" onClick={pipni} disabled={delam}>
+                {delam ? "Zapisuji…" : "Pípnout tady"}
+              </button>
+              <button
+                type="button"
+                className="chip"
+                onClick={() => setZMapy(true)}
+                disabled={delam}
+              >
+                Vybrat z mapy
+              </button>
+              <button type="button" className="zrusit" onClick={zrus} disabled={delam}>
+                Zrušit
+              </button>
+            </>
+          )}
         </>
       )}
     </section>
