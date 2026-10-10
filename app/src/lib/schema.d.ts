@@ -3708,6 +3708,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/boje/uklid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kolik záznamů v historii je k zahození
+         * @description Pořadatel regaty, nebo rozhodčí. Nic nemaže — obrazovka to musí říct dřív, než se na něco klikne.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UklidDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Zahodí záznamy historie, na kterých nic nevisí
+         * @description Pořadatel regaty, nebo rozhodčí. Maže doopravdy a nejde to vzít zpátky. Drží se záznam, na který ukazuje prvek trati, a ten, který stál ve vodě při přijetí nějaké trati — ten už byl veřejný.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UklidDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/zastavky/{zavod}/boje/{boje}/fotky/{fotka}": {
         parameters: {
             query?: never;
@@ -4389,7 +4457,7 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /** @enum {unknown} */
-        BarvaBoje: "Cervena" | "Zelena" | "Zluta" | "Oranzova" | "Bila" | "Modra" | null;
+        BarvaBoje: "Cervena" | "Zelena" | "Zluta" | "Oranzova" | "Bila" | "Modra" | "Ruzova" | null;
         BodHladinyDto: {
             /** Format: date-time */
             cas: string;
@@ -4423,6 +4491,8 @@ export interface components {
             zdroj?: components["schemas"]["ZdrojPolohy"];
             barva?: null | components["schemas"]["BarvaBoje"];
             tvar?: null | components["schemas"]["TvarBoje"];
+            znaceni?: null | components["schemas"]["DruhZnaceni"];
+            popis?: null | string;
         };
         ClanekDto: {
             slug: string;
@@ -4497,6 +4567,8 @@ export interface components {
          * @enum {unknown}
          */
         DruhZastavky: "Pohar" | "Akce";
+        /** @enum {unknown} */
+        DruhZnaceni: "DrahaPrava" | "DrahaLeva" | "DrahaSport" | "DrahaZakaz" | "NaseBoje" | "Plavidlo" | "ObjektNaBrehu" | null;
         /**
          * @default Text
          * @enum {unknown}
@@ -4565,6 +4637,7 @@ export interface components {
             sirka: number;
             /** Format: double */
             delka: number;
+            znaceni?: null | components["schemas"]["DruhZnaceni"];
         };
         LodDetailSpravaDto: {
             lod: components["schemas"]["LodSpravaDto"];
@@ -4787,6 +4860,8 @@ export interface components {
             zdroj?: null | components["schemas"]["ZdrojPolohy"];
             barva?: null | components["schemas"]["BarvaBoje"];
             tvar?: null | components["schemas"]["TvarBoje"];
+            znaceni?: null | components["schemas"]["DruhZnaceni"];
+            popis?: null | string;
         };
         PoradatelDto: {
             slug: string;
@@ -5005,6 +5080,7 @@ export interface components {
             poznamka?: null | string;
             smer?: null | components["schemas"]["SvetovaStrana"];
             druhStartu?: null | components["schemas"]["DruhStartu"];
+            konecBZnaceni?: null | components["schemas"]["DruhZnaceni"];
         };
         PublikaceSerieVstup: {
             publikovano: boolean;
@@ -5237,9 +5313,9 @@ export interface components {
             jdePriradit: boolean;
         };
         /** @enum {unknown} */
-        TvarBoje: "Valcova" | "Kuzelova" | "Kulova" | "SferickyVrsek" | "Plovatka" | "Jiny" | null;
+        TvarBoje: "Valcova" | "Kuzelova" | "Kulova" | "SferickyVrsek" | "Plovatka" | "Jiny" | "Plamenak" | null;
         /** @enum {unknown} */
-        TypPrvku: "OtocnaBoje" | "Brana" | "Odskok" | "Start" | "Cil" | "PrujezdniBoje" | "OtocnaZona";
+        TypPrvku: "OtocnaBoje" | "Brana" | "Odskok" | "Start" | "Cil" | "PrujezdniBoje" | "OtocnaZona" | "OtocnaBrana";
         UcastDto: {
             lod: string;
             kategorie: string;
@@ -5268,6 +5344,10 @@ export interface components {
             email: string;
             role: components["schemas"]["Role"];
             zavod?: null | string;
+        };
+        UklidDto: {
+            /** Format: int32 */
+            pocet: number;
         };
         UrceniKapitanaVstup: {
             /** Format: uuid */
@@ -5300,6 +5380,7 @@ export interface components {
             delka: number;
             barva?: null | components["schemas"]["BarvaBoje"];
             tvar?: null | components["schemas"]["TvarBoje"];
+            znaceni?: null | components["schemas"]["DruhZnaceni"];
         };
         VerejnaPrihlaskaVstup: {
             lod: string;
@@ -5334,6 +5415,7 @@ export interface components {
             delka: number;
             barva?: null | components["schemas"]["BarvaBoje"];
             tvar?: null | components["schemas"]["TvarBoje"];
+            znaceni?: null | components["schemas"]["DruhZnaceni"];
         };
         VerejnyPrvekDto: {
             typ: components["schemas"]["TypPrvku"];

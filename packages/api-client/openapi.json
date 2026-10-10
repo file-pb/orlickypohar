@@ -3761,6 +3761,82 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/zastavky/{zavod}/boje/uklid": {
+            "get": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Kolik z\u00e1znam\u016f v historii je k zahozen\u00ed",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. Nic nema\u017ee \u2014 obrazovka to mus\u00ed \u0159\u00edct d\u0159\u00edv, ne\u017e se na n\u011bco klikne.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UklidDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Zahod\u00ed z\u00e1znamy historie, na kter\u00fdch nic nevis\u00ed",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. Ma\u017ee doopravdy a nejde to vz\u00edt zp\u00e1tky. Dr\u017e\u00ed se z\u00e1znam, na kter\u00fd ukazuje prvek trati, a ten, kter\u00fd st\u00e1l ve vod\u011b p\u0159i p\u0159ijet\u00ed n\u011bjak\u00e9 trati \u2014 ten u\u017e byl ve\u0159ejn\u00fd.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UklidDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/zastavky/{zavod}/boje/{boje}/fotky/{fotka}": {
             "delete": {
                 "tags": [
@@ -4545,6 +4621,7 @@
                     "Oranzova",
                     "Bila",
                     "Modra",
+                    "Ruzova",
                     null
                 ]
             },
@@ -4667,6 +4744,22 @@
                             {
                                 "$ref": "#/components/schemas/TvarBoje"
                             }
+                        ]
+                    },
+                    "znaceni": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DruhZnaceni"
+                            }
+                        ]
+                    },
+                    "popis": {
+                        "type": [
+                            "null",
+                            "string"
                         ]
                     }
                 }
@@ -4979,6 +5072,18 @@
                 ],
                 "default": "Pohar"
             },
+            "DruhZnaceni": {
+                "enum": [
+                    "DrahaPrava",
+                    "DrahaLeva",
+                    "DrahaSport",
+                    "DrahaZakaz",
+                    "NaseBoje",
+                    "Plavidlo",
+                    "ObjektNaBrehu",
+                    null
+                ]
+            },
             "FormatClanku": {
                 "enum": [
                     "Text",
@@ -5250,6 +5355,16 @@
                     "delka": {
                         "type": "number",
                         "format": "double"
+                    },
+                    "znaceni": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DruhZnaceni"
+                            }
+                        ]
                     }
                 }
             },
@@ -6143,6 +6258,22 @@
                             {
                                 "$ref": "#/components/schemas/TvarBoje"
                             }
+                        ]
+                    },
+                    "znaceni": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DruhZnaceni"
+                            }
+                        ]
+                    },
+                    "popis": {
+                        "type": [
+                            "null",
+                            "string"
                         ]
                     }
                 }
@@ -7095,6 +7226,16 @@
                                 "$ref": "#/components/schemas/DruhStartu"
                             }
                         ]
+                    },
+                    "konecBZnaceni": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DruhZnaceni"
+                            }
+                        ]
                     }
                 }
             },
@@ -7962,6 +8103,7 @@
                     "SferickyVrsek",
                     "Plovatka",
                     "Jiny",
+                    "Plamenak",
                     null
                 ]
             },
@@ -7973,7 +8115,8 @@
                     "Start",
                     "Cil",
                     "PrujezdniBoje",
-                    "OtocnaZona"
+                    "OtocnaZona",
+                    "OtocnaBrana"
                 ]
             },
             "UcastDto": {
@@ -8085,6 +8228,18 @@
                             "null",
                             "string"
                         ]
+                    }
+                }
+            },
+            "UklidDto": {
+                "required": [
+                    "pocet"
+                ],
+                "type": "object",
+                "properties": {
+                    "pocet": {
+                        "type": "integer",
+                        "format": "int32"
                     }
                 }
             },
@@ -8205,6 +8360,16 @@
                             },
                             {
                                 "$ref": "#/components/schemas/TvarBoje"
+                            }
+                        ]
+                    },
+                    "znaceni": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DruhZnaceni"
                             }
                         ]
                     }
@@ -8361,6 +8526,16 @@
                             },
                             {
                                 "$ref": "#/components/schemas/TvarBoje"
+                            }
+                        ]
+                    },
+                    "znaceni": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DruhZnaceni"
                             }
                         ]
                     }
