@@ -987,7 +987,7 @@ def proc_nejde_prvek(slug, v):
 
     typ = v.get("typ")
     if typ not in ("OtocnaBoje", "Brana", "Odskok", "Start", "Cil",
-                   "PrujezdniBoje", "OtocnaZona"):
+                   "PrujezdniBoje", "OtocnaZona", "OtocnaBrana"):
         return "Neznámý typ prvku."
 
     # Směr a druh startu dávají smysl jen u startu.
@@ -1011,15 +1011,18 @@ def proc_nejde_prvek(slug, v):
                     "Bez toho se na vodě nepozná, kam se pluje.")
     elif ma_boji or ma_bod:
         return ("Tenhle prvek je jedna bóje. Dva konce má start, cíl, brána, "
-                "odskok a otočná zóna.")
+                "otočná brána, odskok a otočná linie.")
 
     if len((v.get("konecBPopis") or "").strip()) > 60:
         return "Popis konce má nejvýš 60 znaků."
     if len((v.get("poznamka") or "").strip()) > 200:
         return "Poznámka má nejvýš 200 znaků. Na delší vysvětlení je plachetní směrnice."
     if v.get("strana") and typ not in ("OtocnaBoje", "Odskok", "PrujezdniBoje"):
+        # Otočná brána tu schválně není: i když se v ní otáčí, stranu volí
+        # loď. Opsané z `Prvky.StranaPatri`.
         return ("Strana se uvádí u otočné bóje, průjezdní bóje a odskoku. "
-                "U brány si ji volí loď, u startu a cíle rozhoduje směr průjezdu.")
+                "U brány — i té otočné — si ji volí loď, u startu a cíle "
+                "rozhoduje směr průjezdu.")
     if (v.get("poradi") or 0) <= 0:
         return "Pořadí v trati začíná jedničkou."
     if v.get("bojeAId") == v.get("bojeBId"):
