@@ -1184,15 +1184,12 @@ def _nasad_boje():
     trat_zaloz(slug)
 
 
-def zahod_boji(slug, b):
-    """Zahodí záznam bóje, na kterém nic nevisí. Opsané z
-    `BojeSprava.ZahodAsync`.
+def zbytecna_boje(slug, b):
+    """Visí na tom záznamu něco? Jádro pravidla, bez mazání.
 
-    Historie začíná tam, kde na záznamu něco visí (Filip, 9. 10. 2026).
-    Překlep při stavbě a hned opravené pořadí nejsou historie, jsou to dva
-    pokusy o totéž. Záviset na záznamu může prvek trati, nebo to, že bóje
-    stála ve vodě, když rozhodčí nějakou trať přijal — pak šla ven ve
-    veřejné trati a co bylo veřejné, se zpětně nepřepisuje."""
+    Záviset na něm může prvek trati, nebo to, že bóje stála ve vodě, když
+    rozhodčí nějakou trať přijal — pak šla ven ve veřejné trati a co bylo
+    veřejné, se zpětně nepřepisuje."""
     if any(p["bojeAId"] == b["id"] or p["bojeBId"] == b["id"]
            for prvky in PRVKY.values() for p in prvky):
         return False
@@ -1201,8 +1198,20 @@ def zahod_boji(slug, b):
         prijato = t.get("prijatoV")
         if (prijato and prijato >= b["postavenaV"]
                 and (b["nahrazenaV"] is None or prijato < b["nahrazenaV"])
-                    and (b.get("sebranaV") is None or prijato < b["sebranaV"])):
+                and (b.get("sebranaV") is None or prijato < b["sebranaV"])):
             return False
+    return True
+
+
+def zahod_boji(slug, b):
+    """Zahodí záznam bóje, na kterém nic nevisí. Opsané z
+    `BojeSprava.ZahodAsync`.
+
+    Historie začíná tam, kde na záznamu něco visí (Filip, 9. 10. 2026).
+    Překlep při stavbě a hned opravené pořadí nejsou historie, jsou to dva
+    pokusy o totéž."""
+    if not zbytecna_boje(slug, b):
+        return False
 
     BOJE.get(slug, []).remove(b)
     return True
@@ -2711,6 +2720,26 @@ class H(BaseHTTPRequestHandler):
         boje["fotky"] = zbyde
         return self._prazdna_odpoved()
 
+    def k_uklizeni(self, slug):
+        """Kolik záznamů historie je k zahození. Nic nemaže."""
+        if not self.zastavka(slug):
+            return None
+        return self.odpoved({"pocet": sum(
+            1 for b in BOJE.get(slug, [])
+            if (b["nahrazenaV"] or b["sebrana"]) and zbytecna_boje(slug, b))})
+
+    def uklid_historie(self, slug):
+        """Jednorázový úklid (Filip, 10. 10. 2026). Tentýž rozsudek jako
+        při pípnutí a sebrání — drží se jen to, na čem něco visí."""
+        if not self.zastavka(slug):
+            return None
+        # Odzadu, ať se řetěz přenastavení rozplétá od nejnovějšího.
+        pocet = 0
+        for b in list(reversed(BOJE.get(slug, []))):
+            if (b["nahrazenaV"] or b["sebrana"]) and zahod_boji(slug, b):
+                pocet += 1
+        return self.odpoved({"pocet": pocet})
+
     def seber_boji(self, slug, boje_id):
         """Razítko, ne smazání — pokud na bóji něco visí. Když ne, zmizí
         i ten záznam (`zahod_boji`)."""
@@ -2773,6 +2802,9 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                           r'/rozjizdky/(\d+)/navrhy/([0-9a-f-]+)/pouzit$', cesta)):
             return self.pouzij_navrh(m.group(1), int(m.group(2)), m.group(3))
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/boje/uklid$', cesta)):
+            return self.uklid_historie(m.group(1))
         if (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/boje$', cesta)):
             return self.pipni_boji(m.group(1))
@@ -3796,6 +3828,9 @@ class H(BaseHTTPRequestHandler):
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/trat/prvky$', cesta)):
             return self.prvky_seznam(m.group(1))
+        elif (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/boje/uklid$', cesta)):
+            return self.k_uklizeni(m.group(1))
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/trat/seznam$', cesta)):
             return self.trat_seznam(m.group(1))

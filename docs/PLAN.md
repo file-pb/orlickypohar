@@ -1708,6 +1708,16 @@ nestojí, není co dokládat — a na rozdíl od řádku stojí místo na disku.
 Nástupce v řetězu přenastavení se napojí na předchůdce zahozeného záznamu,
 ať řetěz nekončí v prázdnu.
 
+**Jednorázový úklid toho, co vzniklo dřív** (Filip, 10. 10. 2026: *„vymaž
+tu historii bójí, ať tam nestraší"*). Pravidlo výš platí dopředu, ale
+záznamy z doby před ním zůstaly. Obrazovka bójí proto nabídne úklid —
+a **nabídne ho jen tehdy, když je co uklidit, a vždycky řekne kolik**.
+
+**Proč akce a ne migrace:** je to mazání, které nejde vzít zpátky.
+Migrace by proběhla potichu při nasazení a nikdo by neviděl, co zmizelo.
+Takhle to člověk napřed uvidí a pak klikne. Rozsudek je tentýž jako při
+pípnutí a sebrání — jedno pravidlo na třech místech, ne tři výklady.
+
 #### Trať není seznam bójí, ale řada prvků (Filip, 9. 10. 2026)
 
 *„Dokázali bychom bóje rozšířit i o definici cílové čáry? Nebo to, že musí
