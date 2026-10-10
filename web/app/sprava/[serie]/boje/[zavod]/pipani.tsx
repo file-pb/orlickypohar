@@ -1,10 +1,10 @@
 "use client";
 
-import { NAZVY_BAREV, NAZVY_TVARU, znakPodleVyhlasky } from "@/app/znak-boje";
+import { BARVY, NAZVY_BAREV, NAZVY_TVARU, ZnakBoje, znakPodleVyhlasky } from "@/app/znak-boje";
 import type { BarvaBoje, TvarBoje } from "@/lib/boje";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { prectiAkce, pipniAkce } from "./akce";
 import type { Cteni } from "@/lib/souradnice";
 import type { ZdrojPolohy } from "@/lib/boje";
@@ -41,12 +41,18 @@ export function Pipani({
   zavod,
   prenastavuje,
   nejvicZnaku,
+  stojici,
+  byvala,
 }: {
   serie: string;
   zavod: string;
   /** Když se přenastavuje, id a jméno bóje, která tam stojí dosud. */
   prenastavuje: { id: number; nazev: string } | null;
   nejvicZnaku: number;
+  /** Jména bójí, které u regaty zrovna stojí. Ta se nenabízejí. */
+  stojici: string[];
+  /** Jména, která se u téhle regaty už použila — nabídka se jimi učí. */
+  byvala: string[];
 }) {
   const router = useRouter();
   const [poloha, setPoloha] = useState<Poloha | null>(null);
@@ -180,6 +186,19 @@ export function Pipani({
     poloha !== null && (poloha.presnost === null || poloha.presnost <= NEJHORSI_PRESNOST_M);
   const muzuPipnout = dostPresna && nazev.trim().length > 0 && !posilam;
 
+  /**
+   * Nabídka jmen. <b>Z toho, co se u téhle regaty už jmenovalo</b>, plus
+   * obvyklá jména pro případ, že se staví poprvé. Jména bójí, které
+   * zrovna stojí, se vynechávají — dvě „start levý" ve vodě naráz jsou
+   * překlep, ne záměr.
+   */
+  const navrhy = useMemo(() => {
+    const stoji = new Set(stojici);
+    const obvykla = ["start levý", "start pravý", "horní", "brána vlevo", "brána vpravo", "cíl"];
+    const vse = [...byvala, ...obvykla].filter((n) => !stoji.has(n));
+    return [...new Set(vse)].slice(0, 8);
+  }, [byvala, stojici]);
+
   async function pipni() {
     if (!poloha || !muzuPipnout) return;
 
@@ -243,62 +262,100 @@ export function Pipani({
                   : "")}
       </p>
 
-      <label>
-        Čím ta bóje je
-        <input
-          type="text"
-          value={nazev}
-          onChange={(e) => setNazev(e.target.value)}
-          maxLength={nejvicZnaku}
-          placeholder="Např. bóje 1, start levý, cíl"
-        />
-      </label>
+      {/* <b>Jména na jeden dotek</b> (Filip, 10. 10. 2026: „jede a tahá se
+          se závažím a lany na motoráku, není dobré ho zatěžovat formem
+          a textíky"). Nabídka je z toho, co se u téhle regaty už
+          jmenovalo, doplněná o obvyklá jména — psaní zůstává jako
+          záložní cesta, ne jako hlavní. */}
+      <fieldset className="volby">
+        <legend>Čím ta bóje je</legend>
+        <div className="chipy">
+          {navrhy.map((n) => (
+            <button
+              key={n}
+              type="button"
+              className={nazev === n ? "chip vybrany" : "chip"}
+              onClick={() => setNazev(nazev === n ? "" : n)}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+        <details>
+          <summary>Jiné jméno</summary>
+          <input
+            type="text"
+            value={nazev}
+            onChange={(e) => setNazev(e.target.value)}
+            maxLength={nejvicZnaku}
+            placeholder="Např. bóje 1, start levý, cíl"
+          />
+        </details>
+      </fieldset>
 
-      <label>
-        Pořadí na trati (nepovinné)
-        <input
-          type="number"
-          inputMode="numeric"
-          min={1}
-          value={poradi}
-          onChange={(e) => setPoradi(e.target.value)}
-          placeholder={prenastavuje ? "převezme se po staré bóji" : "nechej prázdné: zařadí se za poslední"}
-        />
-      </label>
-
-      <label>
-        Barva
-        <select value={barva} onChange={(e) => setBarva(e.target.value as NonNullable<BarvaBoje>)}>
-          <option value="">
-            {prenastavuje ? "převezme se po staré bóji" : "neuvedeno"}
-          </option>
+      {/* Barva je vlastnost, kterou stavitel vidí před sebou — ukázat ji
+          jde líp barvou než jménem v rozbalovátku. */}
+      <fieldset className="volby">
+        <legend>Barva</legend>
+        <div className="chipy">
           {(Object.keys(NAZVY_BAREV) as NonNullable<BarvaBoje>[]).map((b) => (
-            <option key={b} value={b}>
-              {NAZVY_BAREV[b]}
-            </option>
+            <button
+              key={b}
+              type="button"
+              className={barva === b ? "barva vybrana" : "barva"}
+              style={{ background: BARVY[b] }}
+              aria-label={NAZVY_BAREV[b]}
+              aria-pressed={barva === b}
+              title={NAZVY_BAREV[b]}
+              onClick={() => setBarva(barva === b ? "" : b)}
+            />
           ))}
-        </select>
-      </label>
+        </div>
+      </fieldset>
 
-      <label>
-        Tvar (nepovinný)
-        <select value={tvar} onChange={(e) => setTvar(e.target.value as NonNullable<TvarBoje>)}>
-          <option value="">
-            {prenastavuje ? "převezme se po staré bóji" : "neuvedeno"}
-          </option>
+      <details className="volby">
+        <summary>
+          Tvar a pořadí{" "}
+          <span className="poznamka">
+            {prenastavuje ? "převezmou se po staré bóji" : "nepovinné"}
+          </span>
+        </summary>
+
+        <div className="chipy">
           {(Object.keys(NAZVY_TVARU) as NonNullable<TvarBoje>[]).map((x) => (
-            <option key={x} value={x}>
+            <button
+              key={x}
+              type="button"
+              className={tvar === x ? "chip vybrany" : "chip"}
+              onClick={() => setTvar(tvar === x ? "" : x)}
+            >
+              <svg viewBox="0 0 22 22" width="18" height="18" aria-hidden="true">
+                <ZnakBoje x={11} y={11} r={7} barva={barva || undefined} tvar={x} />
+              </svg>{" "}
               {NAZVY_TVARU[x]}
-            </option>
+            </button>
           ))}
-        </select>
+        </div>
+
+        <label>
+          Pořadí na trati
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            value={poradi}
+            onChange={(e) => setPoradi(e.target.value)}
+            placeholder={prenastavuje ? "převezme se po staré bóji" : "nechej prázdné: zařadí se za poslední"}
+          />
+        </label>
+
         {znakPodleVyhlasky(barva || undefined, tvar || undefined) && (
           <span className="poznamka">
             Tahle kombinace je podle vyhlášky{" "}
             <b>{znakPodleVyhlasky(barva || undefined, tvar || undefined)}</b>.
           </span>
         )}
-      </label>
+      </details>
 
       <button type="button" onClick={pipni} disabled={!muzuPipnout}>
         {posilam ? "Posílám…" : prenastavuje ? "Pípnout novou polohu" : "Pípnout tady"}
