@@ -350,7 +350,7 @@ mimo jiné `ImportTests`, `CteniTests`, `PoradiTests` a celá rodina
 Běží ve vlastní úloze CI `integrace`, na kterou nasazení od 6. 10. 2026
 **čeká**: dokud byl deploy krokem buildu, běžel vedle integrace, takže
 červená integrace mohla znamenat už nasazenou vadnou verzi
-(`.github/workflows/build-deploy.yml:218`).
+(úloha `nasazeni` v `.github/workflows/build-deploy.yml` má `needs: [build, appka, integrace]`).
 
 ## Adresy
 
@@ -381,6 +381,32 @@ Potřebuje dvě věci v nastavení repozitáře: proměnnou `DEPLOY_WEBHOOK`
 `scripts/install-deploy-hook.sh` v repozitáři platformy. **Když proměnná
 chybí, krok nasazení se tiše přeskočí** a na serveru běží dál stará verze —
 což se pozná jen tím, že se nová funkce neobjeví.
+
+## Kvóty CI
+
+Audit kvót z 10. 10. 2026 (`platform/docs/KVOTY.md`) našel, že **nejbližší
+zeď nejsou registry obrazů, ale minuty Actions**: pohár spotřeboval 4 707
+fakturovatelných minut za třicet dní proti bezplatné hladině 2 000 **na celý
+účet**. Úloha `build` z toho udělala 2 874 minut — 558 běhů po 5,2 minuty.
+Actions cache repozitáře zároveň stála na 10,2–10,5 GB při limitu 10 GB,
+tedy se trvale vytloukala.
+
+Čtyři opravy v `build-deploy.yml`, všechny převzaté ze šablony
+`service-template`, protože tam chyba vznikla a odtud se kopíruje:
+
+| Co | Proč |
+|---|---|
+| `scope=api/web/landsat/cache` u každé vrstvy cache | Bez `scope` jdou všechny čtyři obrazy do klíče `buildkit` a **přepisují se**; je to zdokumentované chování buildx. Index pro `main` měl verzi #1151 při 37 živých záznamech — přepsaný tisíckrát. Platilo se 10,6 GB blobů a kupovala se z nich cache pro poslední ze čtyř obrazů. |
+| cache `~/.nuget/packages` v `build` i `integrace` | `api.nuget.org` škrtí **po IP, a tu runner GitHubu sdílí s cizími projekty** — 9. 10. 2026 na tom jeden build spadl na `Connection reset by peer`. Je to tatáž zeď jako limit Docker Hubu, jen o vrstvu dál a s horší hláškou: resetnuté spojení vypadá na chybu sítě. |
+| `cache: 'npm'` u `setup-node` v `appka` | Totéž pro `registry.npmjs.org`. Cesta k lockfilu se musí napsat, appka není v korzeni. |
+| skupina souběhu na celém workflow | Druhý push do téže větve ten předchozí **zruší**. Na `main` se neruší nic — tam je každý běh nasazení. Nekoliduje se skupinou `nasazeni-produkce` u úlohy `nasazeni`, ta řeší jinou věc: jedno nasazení naráz přes všechny cesty do produkce. |
+
+**Retence obrazů v GHCR** je samostatná úloha `uklid-balicku.yml`. Každý push
+do `main` pošle do registru novou verzi a dřív ji **nic nemazalo** — čtyři
+obrazy po 90–450 MB a 260 pushů za měsíc. Maže se podle věku (starší 30 dnů),
+vždycky zůstane 10 nejnovějších a všechno se značkou `latest`; zrcadlo se
+vynechává, tam je každá verze jediná kopie základního obrazu. **Ruční
+spuštění je nanečisto**, plánované maže — mazání verze je nevratné.
 
 ## Proměnné prostředí
 
