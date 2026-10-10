@@ -1963,3 +1963,14 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 .tabule .poradi .body { float: right; font-variant-numeric: tabular-nums; }
 .tabule .detail { font-size: 1.1vw; color: var(--tlumeny); }
 
+/* Průvodce stavbou prvku. Hlavní tlačítko je velké schválně: je to
+   jediná věc, kterou stavitel na vodě dělá opakovaně. */
+.stavba { margin: 1rem 0 1.5rem; }
+.stavba .krok { font-size: 1.05rem; margin: 0.4rem 0 0.7rem; }
+.stavba .velke {
+  min-height: 56px;
+  width: 100%;
+  font-size: 1.15rem;
+}
+.stavba .zrusit { margin-top: 0.5rem; background: transparent; }
+
