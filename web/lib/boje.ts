@@ -2,6 +2,9 @@ import { tokenZeSezeni } from "@/lib/oidc";
 import type { Stav } from "@/lib/sprava";
 import type { components } from "./schema";
 
+export type BarvaBoje = components["schemas"]["BarvaBoje"];
+export type TvarBoje = components["schemas"]["TvarBoje"];
+
 /**
  * Bóje na trati — pípnutí polohy, přenastavení a sebrání.
  *

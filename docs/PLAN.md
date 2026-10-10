@@ -1998,6 +1998,20 @@ podle nich umí pojmenovat:
 plavební dráhy, ne levá. Zelená je levá. Kdyby to mapka kreslila obráceně,
 posílala by lodě na špatnou stranu dráhy.
 
+**Na obrazovkách od 10. 10. 2026.** Barva a tvar se vybírají při pípnutí
+(u přenastavení prázdné znamená „převezme se po staré bóji"), ukazují se
+v seznamu bójí a kreslí je mapka i veřejná stránka — všechno z jednoho
+místa, `web/app/znak-boje.tsx`. Formulář u kombinace rovnou napíše, co
+znamená podle vyhlášky, takže si pořadatel ověří, že vybral správně.
+
+**Mapka konečně kreslí šipku směru startu.** Dosud ji nekreslila schválně,
+protože směr v datech nebyl a vymyslet si ho by byla lež; od `Smer`
+na prvku ho má.
+
+Ve správě si barvu dohledá stránka ze svého seznamu bójí — `KonecBojeDto`
+ji nenese a kvůli jednomu poli by se měnil kontrakt a čekalo na další
+nasazení. Veřejné DTO ji má, protože tam žádný seznam bójí k ruce není.
+
 Barva se kreslí vždycky, tvar jen když je vyplněný — červený válec a zelený
 kužel pozná každý, kdo na Vltavě jezdí, i bez legendy. **Tvar je proto
 nepovinný:** na vodě se pípá jednou rukou a barva sama nese nejvíc.

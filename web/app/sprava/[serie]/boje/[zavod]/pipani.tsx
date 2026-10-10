@@ -1,5 +1,7 @@
 "use client";
 
+import { NAZVY_BAREV, NAZVY_TVARU, znakPodleVyhlasky } from "@/app/znak-boje";
+import type { BarvaBoje, TvarBoje } from "@/lib/boje";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -51,6 +53,11 @@ export function Pipani({
   const [chybaPolohy, setChybaPolohy] = useState<string | null>(null);
   const [nazev, setNazev] = useState(prenastavuje?.nazev ?? "");
   const [poradi, setPoradi] = useState("");
+  // Barva a tvar: prázdné znamená „neuvedeno". U přenastavení se obojí
+  // převezme po staré bóji, takže se tu nechává prázdné schválně — je to
+  // tentýž kus plastu a na vodě ho nikdo nechce přeťukávat.
+  const [barva, setBarva] = useState<NonNullable<BarvaBoje> | "">("");
+  const [tvar, setTvar] = useState<NonNullable<TvarBoje> | "">("");
   const [posilam, setPosilam] = useState(false);
   const [chyba, setChyba] = useState<string | null>(null);
   const [hotovo, setHotovo] = useState<string | null>(null);
@@ -187,6 +194,8 @@ export function Pipani({
       delka: poloha.delka,
       presnostM: poloha.presnost,
       nahrazujeId: prenastavuje?.id ?? null,
+      barva: barva || null,
+      tvar: tvar || null,
     });
 
     setPosilam(false);
@@ -255,6 +264,40 @@ export function Pipani({
           onChange={(e) => setPoradi(e.target.value)}
           placeholder={prenastavuje ? "převezme se po staré bóji" : "nechej prázdné: zařadí se za poslední"}
         />
+      </label>
+
+      <label>
+        Barva
+        <select value={barva} onChange={(e) => setBarva(e.target.value as NonNullable<BarvaBoje>)}>
+          <option value="">
+            {prenastavuje ? "převezme se po staré bóji" : "neuvedeno"}
+          </option>
+          {(Object.keys(NAZVY_BAREV) as NonNullable<BarvaBoje>[]).map((b) => (
+            <option key={b} value={b}>
+              {NAZVY_BAREV[b]}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label>
+        Tvar (nepovinný)
+        <select value={tvar} onChange={(e) => setTvar(e.target.value as NonNullable<TvarBoje>)}>
+          <option value="">
+            {prenastavuje ? "převezme se po staré bóji" : "neuvedeno"}
+          </option>
+          {(Object.keys(NAZVY_TVARU) as NonNullable<TvarBoje>[]).map((x) => (
+            <option key={x} value={x}>
+              {NAZVY_TVARU[x]}
+            </option>
+          ))}
+        </select>
+        {znakPodleVyhlasky(barva || undefined, tvar || undefined) && (
+          <span className="poznamka">
+            Tahle kombinace je podle vyhlášky{" "}
+            <b>{znakPodleVyhlasky(barva || undefined, tvar || undefined)}</b>.
+          </span>
+        )}
       </label>
 
       <button type="button" onClick={pipni} disabled={!muzuPipnout}>
