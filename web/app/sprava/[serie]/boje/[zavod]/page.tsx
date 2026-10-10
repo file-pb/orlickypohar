@@ -15,9 +15,10 @@ import { nazevZastavky } from "@/lib/kalendar";
 import { MapkaTrati, type PrvekNaMape } from "@/app/mapka-trati";
 import { ZnakVRadku } from "@/app/znak-boje";
 import { Pipani } from "./pipani";
-import { nactiPrvky, nactiStavTrati, type Prvek } from "@/lib/trat";
+import { nactiPrvky, nactiStavTrati, nactiTrate, type Prvek } from "@/lib/trat";
 import { PrvkyTrati } from "./prvky";
 import { StavTrati } from "./stav-trati";
+import { VyberTrati } from "./vyber-trati";
 import { nahrajFotkuAkce, odeberFotkuAkce, seberAkce, uklidAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
@@ -52,12 +53,14 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
 
   // Název regaty v odpovědi o bójích není, a bez něj nadpis neřekne, čí
   // trať se zrovna staví (Filip, 9. 10. 2026).
-  const [{ stav, trat, byvale }, nazev, stavTrati, prvky, kUklizeni] = await Promise.all([
+  const [{ stav, trat, byvale }, nazev, stavTrati, prvky, kUklizeni, trate] =
+    await Promise.all([
     nactiTrat(serie, zavod),
     nazevZastavky(serie, zavod),
     nactiStavTrati(serie, zavod),
     nactiPrvky(serie, zavod),
     nactiKUklizeni(serie, zavod),
+    nactiTrate(serie, zavod),
   ]);
   if (stav === "neni") notFound();
 
@@ -98,6 +101,16 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
           {zpravy.uklizeno === "1"
             ? "Zahodil se jeden záznam historie."
             : `Zahodilo se ${zpravy.uklizeno} záznamů historie.`}
+        </p>
+      )}
+      {zpravy.stav === "trat-prirazena" && (
+        <p className="hlaska" role="status">
+          Trať je přiřazená rozjížďce.
+        </p>
+      )}
+      {zpravy.stav === "trat-klon" && (
+        <p className="hlaska" role="status">
+          Trať je naklonovaná i s prvky. Bóje zůstaly tytéž — nic se nepípalo znovu.
         </p>
       )}
       {zpravy.stav === "prvek" && (
@@ -154,6 +167,10 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
           {stavTrati.stav === "ok" && stavTrati.trat && (
             <StavTrati serie={serie} zavod={zavod} trat={stavTrati.trat} />
           )}
+
+          {/* Výběr a klonování hned pod stavem: obojí je o tom, která
+              trať platí, a patří to k sobě dřív než k bójím. */}
+          <VyberTrati serie={serie} zavod={zavod} trate={trate} />
 
           {/* U zamčené trati se formulář neukazuje vůbec. API pípnutí
               odmítne, ale dozvědět se to až z chyby je na vodě o dvě

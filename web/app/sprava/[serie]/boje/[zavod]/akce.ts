@@ -14,7 +14,15 @@ import {
   type TvarBoje,
   type ZdrojPolohy,
 } from "@/lib/boje";
-import { posunTrat, smazPrvek, zalozPrvek, type PrvekVstup } from "@/lib/trat";
+import {
+  klonujTrat,
+  posunTrat,
+  priradTrat,
+  smazPrvek,
+  zalozPrvek,
+  type PrvekVstup,
+  type StavTrati,
+} from "@/lib/trat";
 import { prectiISeZkratkou } from "@/lib/zkratky";
 
 /**
@@ -263,3 +271,49 @@ export async function uklidAkce(formular: FormData) {
       : kam({ uklizeno: String(vysledek) }),
   );
 }
+
+/** Přiřadí volnou trať rozjížďce. */
+export async function priradTratAkce(formular: FormData) {
+  const { serie, zavod, kam } = zaklad(formular);
+  const trat = Number(formular.get("trat") ?? 0);
+  const rozjizdka = Number(formular.get("rozjizdka") ?? 0);
+
+  if (!Number.isInteger(rozjizdka) || rozjizdka <= 0)
+    redirect(kam({ chyba: "Napiš číslo rozjížďky." }));
+
+  const chyba = await priradTrat(serie, zavod, trat, rozjizdka);
+  redirect(kam(chyba ? { chyba } : { stav: "trat-prirazena" }));
+}
+
+/**
+ * Naklonuje trať pro další rozjížďku. Prázdné číslo znamená kopii „na
+ * stůl" — rozjížďka se přiřadí potom.
+ */
+export async function klonujTratAkce(formular: FormData) {
+  const { serie, zavod, kam } = zaklad(formular);
+  const trat = Number(formular.get("trat") ?? 0);
+  const cislo = Number(formular.get("rozjizdka") ?? 0);
+  const stav = String(formular.get("stav") ?? "") || null;
+
+  const chyba = await klonujTrat(
+    serie,
+    zavod,
+    trat,
+    cislo > 0 ? cislo : null,
+    stav as StavTrati,
+  );
+  redirect(kam(chyba ? { chyba } : { stav: "trat-klon" }));
+}
+
+/** Společný začátek akcí obrazovky bójí: odkud a kam. */
+function zaklad(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  return {
+    serie,
+    zavod,
+    kam: (zprava: Record<string, string>) =>
+      `/sprava/${encodeURIComponent(serie)}/boje/${encodeURIComponent(zavod)}?${new URLSearchParams(zprava)}`,
+  };
+}
+
