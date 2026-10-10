@@ -5432,9 +5432,24 @@ a na veřejnou stránku trati.
 nápis sport"* — u Orlíku se jí říká **Mimoň**). Nápis se nekreslí: při
 osmnácti pixelech by z něj byla šmouha a tvar sám stačí.
 
-**Zbývá z téhož zadání:** tlačítko „projet to znovu jinak", fotky
-u bodu, poznámka mimo hlavní cestu, a výběr značky místo zadávání bodu
-ve formuláři prvku.
+### Projet to znovu jinak
+
+Tlačítko nad nabídkou typů, které postaví **další položku trati nad
+týmiž značkami**: nepípá se a nevybírá značení, jen se řekne nový
+předpis. Filip, 10. 10. 2026: *„brána i bóje můžou být v jedné
+rozjížďce jeté několikrát a pokaždé může být předpis jak to jet jiný —
+po proudu, pak otočit a okolo stejných bójí proti proudu zpět."*
+
+Přibyl kvůli tomu **čtvrtý krok průvodce**: u typů bez růžice prvek
+jinak vzniká posledním pípnutím, jenže tady se nepípá, takže se musí
+dokončit tlačítkem. V běžné cestě se neukáže — ptát se podruhé by bylo
+klepnutí navíc.
+
+Ověřeno proklikáním: nad bójemi #8 a #9 vznikla `Brana` a hned po ní
+`OtocnaBrana`, obojí na týchž záznamech, a počet značek se nezměnil.
+
+**Zbývá z téhož zadání:** fotky u bodu, poznámka mimo hlavní cestu,
+a výběr značky místo zadávání bodu ve formuláři prvku.
 
 ## Růžová a plameňák (Filip, 11. 10. 2026)
 
