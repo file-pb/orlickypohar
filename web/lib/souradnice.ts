@@ -36,7 +36,12 @@ export type Cteni =
   | { stav: "zkratka"; adresa: string }
   | { stav: "nic"; duvod: string };
 
-const naOrliku = (sirka: number, delka: number) =>
+/**
+ * Leží bod na Orlíku? <b>Exportované, protože tutéž mez potřebuje i výběr
+ * bodu z mapy</b> — a čtyři konstanty skládané do podmínky na dvou místech
+ * se jednou rozejdou.
+ */
+export const naOrliku = (sirka: number, delka: number) =>
   sirka >= SIRKA_OD && sirka <= SIRKA_DO && delka >= DELKA_OD && delka <= DELKA_DO;
 
 /**

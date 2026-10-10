@@ -5,6 +5,7 @@ import type { BarvaBoje, TvarBoje } from "@/lib/boje";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { MapkaVyber } from "@/app/mapka-vyber";
 import { prectiAkce, pipniAkce } from "./akce";
 import type { Cteni } from "@/lib/souradnice";
 import type { ZdrojPolohy } from "@/lib/boje";
@@ -43,6 +44,7 @@ export function Pipani({
   nejvicZnaku,
   stojici,
   byvala,
+  stred,
 }: {
   serie: string;
   zavod: string;
@@ -53,6 +55,8 @@ export function Pipani({
   stojici: string[];
   /** Jména, která se u téhle regaty už použila — nabídka se jimi učí. */
   byvala: string[];
+  /** Kam se otevře mapa, když se bod bere z ní. Nejlíp poslední bóje. */
+  stred: { sirka: number; delka: number };
 }) {
   const router = useRouter();
   const [poloha, setPoloha] = useState<Poloha | null>(null);
@@ -65,6 +69,7 @@ export function Pipani({
   const [barva, setBarva] = useState<NonNullable<BarvaBoje> | "">("");
   const [tvar, setTvar] = useState<NonNullable<TvarBoje> | "">("");
   const [posilam, setPosilam] = useState(false);
+  const [zMapy, setZMapy] = useState(false);
   const [chyba, setChyba] = useState<string | null>(null);
   const [hotovo, setHotovo] = useState<string | null>(null);
 
@@ -236,6 +241,54 @@ export function Pipani({
     router.refresh();
   }
 
+  /**
+   * Zápis bodu vzatého z mapy.
+   *
+   * <b>Nečeká na polohu z telefonu</b>, a právě o to jde: start mezi
+   * molem na břehu a bójí plavební dráhy se z mapy vybere rychleji, než
+   * se tam dojede pípnout (Filip, 10. 10. 2026). Jméno, barva, tvar
+   * i pořadí se berou z polí výš, takže se nic nepřeťukává podruhé.
+   *
+   * <b>Přesnost se neposílá</b> — mapa nic neměří a API by číslo od
+   * jiného zdroje než telefonu odmítlo (`Pipnuti.ProcNejde`).
+   */
+  async function vezmiZMapy(bod: { sirka: number; delka: number }) {
+    setPosilam(true);
+    setChyba(null);
+    setHotovo(null);
+
+    const vysledek = await pipniAkce(serie, zavod, {
+      nazev,
+      poradi: Number(poradi) || 0,
+      sirka: bod.sirka,
+      delka: bod.delka,
+      presnostM: null,
+      nahrazujeId: prenastavuje?.id ?? null,
+      zdroj: "Mapa",
+      barva: barva || null,
+      tvar: tvar || null,
+    });
+
+    setPosilam(false);
+
+    if (vysledek.chyba) {
+      // Mapa zůstane otevřená, aby ten bod nebylo potřeba hledat znovu.
+      setChyba(vysledek.chyba);
+      return;
+    }
+
+    setZMapy(false);
+    poUlozeni.current = true;
+    setHotovo(
+      prenastavuje
+        ? `Bóje „${nazev.trim()}“ je přenastavená podle mapy. Ta předchozí zůstala v historii.`
+        : `Bóje „${nazev.trim()}“ stojí na trati podle mapy.`,
+    );
+    setNazev("");
+    setPoradi("");
+    router.refresh();
+  }
+
   return (
     <section className="formular">
       <h2>{prenastavuje ? `Přenastavit „${prenastavuje.nazev}“` : "Pípnout bóji"}</h2>
@@ -357,9 +410,34 @@ export function Pipani({
         )}
       </details>
 
-      <button type="button" onClick={pipni} disabled={!muzuPipnout}>
-        {posilam ? "Posílám…" : prenastavuje ? "Pípnout novou polohu" : "Pípnout tady"}
-      </button>
+      {/* <b>Dva nástroje na dvě situace</b> (Filip, 10. 10. 2026): bóji,
+          kterou právě spouštíš do vody, pípneš; molo na druhém břehu
+          vybereš z mapy, protože tam jezdit nemusíš. Proto stojí vedle
+          sebe, a ne v rozbalovátku — mají mít stejně blízko. */}
+      <div className="tlacitka">
+        <button type="button" onClick={pipni} disabled={!muzuPipnout}>
+          {posilam ? "Posílám…" : prenastavuje ? "Pípnout novou polohu" : "Pípnout tady"}
+        </button>
+        <button
+          type="button"
+          className="jinak"
+          onClick={() => setZMapy(true)}
+          disabled={posilam || zMapy || nazev.trim().length === 0}
+        >
+          {nazev.trim().length === 0 ? "Nejdřív vyber, čím ta bóje je" : "Vybrat z mapy"}
+        </button>
+      </div>
+
+      {zMapy && (
+        <MapkaVyber
+          // Mapa se otevře tam, kde člověk zrovna stojí; u stolu poloha
+          // není, tak u poslední bóje na trati.
+          stred={poloha ?? stred}
+          vyber={vezmiZMapy}
+          zrus={() => setZMapy(false)}
+          cekam={posilam}
+        />
+      )}
 
       {chyba && (
         <p className="hlaska chyba" role="alert">
@@ -372,7 +450,7 @@ export function Pipani({
         </p>
       )}
 
-      <ZMapy
+      <ZOdkazu
         serie={serie}
         zavod={zavod}
         nazev={nazev}
@@ -391,21 +469,24 @@ export function Pipani({
 }
 
 /**
- * Poloha odjinud než z GPS — souřadnice, odkaz do mapy, QR kód.
+ * Poloha z cizího zápisu — souřadnic, odkazu do mapy, QR kódu.
  *
  * <b>Je to cesta pro nestandardní případ</b> (Filip, 9. 10. 2026): zapíše
  * ji někdo u počítače za stavitele, který pípat neumí, nebo ji rozhodčí
- * dostane po telefonu od člověka mimo proces. Z mobilu se pípá dál z GPS,
- * takže tohle je schválně složené a pojmenované tím, kdy se to hodí.
+ * dostane po telefonu od člověka mimo proces — *„ukotvi mi to tam a pošli
+ * mi odkaz v mapě"*. Z mobilu se pípá z GPS a bod, který je vidět na
+ * mapě, se bere křížkem výš; tohle zůstává pro polohu, kterou někdo
+ * poslal hotovou.
  *
  * <b>Nejdřív se ukáže, čemu obrazovka rozumí, a teprve pak se staví.</b>
  * Špatně přečtená souřadnice posune celou trať a poznalo by se to až na
- * vodě; jedno klepnutí navíc je proti tomu nic.
+ * vodě; jedno klepnutí navíc je proti tomu nic. Bod vybraný křížkem
+ * tuhle mezizastávku nemá, protože je vidět na mapě sám.
  *
  * <b>Nečeká na polohu z telefonu.</b> U stolu žádná není a tenhle blok na
  * ní nesmí viset.
  */
-function ZMapy({
+function ZOdkazu({
   serie,
   zavod,
   nazev,
@@ -522,12 +603,14 @@ function ZMapy({
 
   return (
     <details className="zmapy">
-      <summary>Nejde pípnout? Zadej polohu z mapy</summary>
+      <summary>Máš polohu od někoho jiného? Odkaz nebo QR kód</summary>
 
       <p className="poznamka">
-        Pro případ, kdy u bóje nikdo s telefonem není — polohu opíšeš
-        z mapy nebo ti ji někdo pošle odkazem. <b>Uloží se jako odečtená</b>,
-        bez přesnosti, protože mapa nic neměří.
+        Pro případ, kdy u bóje nikdo s telefonem není a polohu ti někdo
+        pošle odkazem nebo ji opíšeš odjinud. Bod, který prostě vidíš na
+        mapě, vezmi radši křížkem — tlačítkem <b>Vybrat z mapy</b> výš.{" "}
+        <b>Uloží se jako odečtená</b>, bez přesnosti, protože mapa nic
+        neměří.
       </p>
 
       <label className="siroke">

@@ -70,6 +70,14 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
   const prenastav = Number(zpravy.prenastav ?? 0);
   const prenastavovana = trat?.find((b) => b.id === prenastav);
 
+  // Kam se otevře mapa, když se bod bere z ní: u poslední pípnuté bóje,
+  // a bez bójí u Orlické přehrady — ne u nulového poledníku. Platí pro
+  // pípnutí jedné bóje i pro průvodce, takže se počítá jen jednou.
+  const stredMapy =
+    trat && trat.length > 0
+      ? { sirka: trat[trat.length - 1].sirka, delka: trat[trat.length - 1].delka }
+      : { sirka: 49.5163, delka: 14.1651 };
+
   return (
     <>
       <Drobecky
@@ -186,6 +194,7 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
               nejvicZnaku={NAZEV_NEJVIC}
               stojici={trat.map((b) => b.nazev)}
               byvala={[...(byvale ?? []).map(({ boje }) => boje.nazev)].reverse()}
+              stred={stredMapy}
             />
           )}
 
@@ -197,13 +206,7 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
               serie={serie}
               zavod={zavod}
               dalsiPoradi={prvky.length + 1}
-              // Mapa se otevře u poslední pípnuté bóje; bez bójí
-              // u Orlické přehrady, ne u nulového poledníku.
-              stred={
-                trat.length > 0
-                  ? { sirka: trat[trat.length - 1].sirka, delka: trat[trat.length - 1].delka }
-                  : { sirka: 49.5163, delka: 14.1651 }
-              }
+              stred={stredMapy}
             />
           )}
 
