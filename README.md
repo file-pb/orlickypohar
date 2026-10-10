@@ -408,6 +408,16 @@ vždycky zůstane 10 nejnovějších a všechno se značkou `latest`; zrcadlo se
 vynechává, tam je každá verze jediná kopie základního obrazu. **Ruční
 spuštění je nanečisto**, plánované maže — mazání verze je nevratné.
 
+Jména balíčků jsou v `BALICKY` **napsaná, ne zjištěná**: výpis balíčků
+uživatele (`/users/{owner}/packages`) pod `GITHUB_TOKEN` vrací `400 Invalid
+argument`, protože je to instalační token a endpoint chce uživatelský
+(změřeno 10. 10. 2026). Čtení balíčku a jeho verzí token zvládne, takže se
+každé napsané jméno před úklidem ověří proti registru — překlep by jinak
+znamenal, že se tiše neuklidí nic. **Jestli na samotné smazání token stačí,
+se ještě neví**; na 403 je potřeba osobní token s `delete:packages`
+v tajemství `GHCR_UKLID_TOKEN`. Proto je ruční běh nanečisto: zjistí se to
+bez následků.
+
 **Zrcadlo vyrábí dvě značky na obraz.** Pohyblivá (`node:22-alpine`) ukazuje
 na poslední přesyn a je pro ruční práci; **datovaná**
 (`node:22-alpine-2026-10`) je nehybná a berou ji Dockerfily. Bez toho by

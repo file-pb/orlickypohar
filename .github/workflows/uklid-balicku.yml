@@ -22,11 +22,21 @@
 # <b>Ruční spuštění je nanečisto</b>, plánované maže. Mazání verze je
 # nevratné, takže ruka na klávesnici dostane nejdřív výpis.
 #
-# <b>Neověřeno k 10. 10. 2026:</b> jestli na smazání verze stačí
-# `GITHUB_TOKEN`, nebo jestli u balíčků vlastněných uživatelem (ne
-# organizací) chce GitHub osobní token s `delete:packages`. Když první
-# běh skončí na 403, je to tenhle případ — pak se do repozitáře přidá
-# tajemství `GHCR_UKLID_TOKEN` a níž se vymění za `GITHUB_TOKEN`.
+# <b>Co GITHUB_TOKEN umí a co ne</b> — změřeno v orlickypohar 10. 10. 2026
+# (běh 38010860433, sonda na čtyři různé dotazy):
+#
+# - **výpis balíčků uživatele neumí**: `/users/{owner}/packages` vrací
+#   `400 Invalid argument`, protože `GITHUB_TOKEN` je instalační token
+#   a tenhle endpoint chce uživatelský. Proto se jména balíčků **nezjišťují,
+#   ale píšou** do `BALICKY` níž — jsou to tytéž, které staví `build-deploy.yml`;
+# - **čtení balíčku a jeho verzí umí** (ověřeno na `orlickypohar`: private,
+#   1 122 verzí), takže zbytek úlohy na tokenu nevisí.
+#
+# <b>Neověřeno zůstává jen smazání.</b> Když skončí na 403, chce GitHub
+# u balíčků vlastněných uživatelem (ne organizací) osobní token
+# s `delete:packages` — pak se do repozitáře přidá tajemství
+# `GHCR_UKLID_TOKEN` a níž se vymění za `GITHUB_TOKEN`. Ruční běh je
+# nanečisto právě proto, aby se to zjistilo bez následků.
 name: uklid-balicku
 
 on:
@@ -53,6 +63,11 @@ jobs:
       NANECISTO: ${{ (github.event_name == 'workflow_dispatch' && inputs.nanecisto) && 'ano' || 'ne' }}
       STARI: '30'
       NECHAT: '10'
+      # Jména balíčků k úklidu, oddělená mezerou — ty čtyři, které staví
+      # `build-deploy.yml`. Zrcadlo (`orlickypohar/zrcadlo/node` a další tři)
+      # se sem **nepíše**: tam je každá verze jediná kopie základního obrazu
+      # a datované značky jsou to, čím je build reprodukovatelný.
+      BALICKY: 'orlickypohar orlickypohar-web orlickypohar-landsat orlickypohar-cache'
     steps:
       - name: Smazat staré verze obrazů
         env:
@@ -64,17 +79,19 @@ jobs:
           mez=$(date -u -d "-${STARI} days" +%Y-%m-%d)
           echo "režim: $([ "$NANECISTO" = ano ] && echo nanečisto || echo ostrý), mez $mez, necháváme $NECHAT nejnovějších"
 
-          # Balíčky tohohle repozitáře: `orlickypohar`, `orlickypohar-web`
-          # a podobně. Zrcadlo (`orlickypohar/zrcadlo/node` a další tři) se
-          # schválně vynechává — tam je každá verze jediná kopie základního
-          # obrazu a datované značky jsou to, čím je build reprodukovatelný.
-          if ! gh api -X GET "/users/$vlastnik/packages?package_type=container&per_page=100" \
-                 --jq '.[].name' > vsechny.txt 2>chyba.txt; then
-            echo "::error::Nepodařilo se vypsat balíčky: $(tr -d '\n' < chyba.txt). Nejspíš na to nestačí GITHUB_TOKEN — viz hlavička souboru."
-            exit 1
-          fi
-          grep -E "^${projekt}(-[a-z0-9-]+)?$" vsechny.txt > balicky.txt || true
-          [ -s balicky.txt ] || { echo "::notice::Žádný balíček k úklidu."; exit 0; }
+          # Jména se píšou, nezjišťují: výpis balíčků uživatele pod
+          # `GITHUB_TOKEN` vrací 400 (hlavička souboru). Zato se **ověří,
+          # že každý napsaný balíček opravdu existuje** — překlep ve jméně
+          # by jinak znamenal, že se tiše neuklidí nic.
+          : > balicky.txt
+          for b in ${BALICKY:-$projekt}; do
+            if gh api "/users/$vlastnik/packages/container/$b" --jq '.name' >/dev/null 2>chyba.txt; then
+              echo "$b" >> balicky.txt
+            else
+              echo "::warning::Balíček $b se nepodařilo přečíst: $(tr -d '\n' < chyba.txt). Jméno v BALICKY, nebo na to nestačí token?"
+            fi
+          done
+          [ -s balicky.txt ] || { echo "::error::Žádný z balíčků v BALICKY (${BALICKY:-$projekt}) se nepodařilo přečíst, takže se neuklidilo nic."; exit 1; }
 
           celkem=0
           while read -r b; do
