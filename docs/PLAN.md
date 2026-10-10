@@ -1884,6 +1884,13 @@ ale věta *„první brána se projíždí po proudu"* se vymodelovat nedá a na
 musí jít. Prvek má proto `Poznamka`, volný text, který **vidí pořadatel
 i závodník**.
 
+**Potvrzeno 10. 10. 2026, otázka je uzavřená.** Filip: *„U otočné bóje —
+stačí nová průjezdní bóje, je to to samé, akorát se točí 180. Asi na to
+stačí nějaký popis."* Tedy **žádné pole pro proud nepřibude**. Rozdíl mezi
+„obepluješ ji" a „projedeš kolem" už nesou dva různé typy — otočná
+a průjezdní bóje —, a právě těch 180 stupňů je to, co je odlišuje. Zbytek
+je popis, protože je to věta pro člověka, ne pravidlo pro stroj.
+
 **Je to doplněk, ne náhrada.** Co jde vyjádřit polem, do poznámky nepatří;
 obrazovka by pak ukazovala dvě pravdy a při sporu by nebylo jasné, která
 platí. Krátká schválně (200 znaků): čte se na vodě z telefonu a na delší
