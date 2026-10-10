@@ -55,12 +55,12 @@ export async function pipniAkce(
     barva?: BarvaBoje;
     tvar?: TvarBoje;
   },
-): Promise<{ chyba: string | null }> {
+): Promise<{ chyba: string | null; id: number | null }> {
   const nazev = vstup.nazev.trim();
-  if (!nazev) return { chyba: "Napiš, čím ta bóje je — třeba „bóje 1“." };
+  if (!nazev) return { chyba: "Napiš, čím ta bóje je — třeba „bóje 1“.", id: null };
 
   if (!Number.isFinite(vstup.sirka) || !Number.isFinite(vstup.delka))
-    return { chyba: "Poloha z telefonu nepřišla celá. Pípni prosím znovu." };
+    return { chyba: "Poloha z telefonu nepřišla celá. Pípni prosím znovu.", id: null };
 
   const zdroj: ZdrojPolohy = vstup.zdroj ?? "Telefon";
   // Přesnost měří jen telefon. API ji od jiného zdroje odmítne, takže se
@@ -71,6 +71,7 @@ export async function pipniAkce(
   if (presnostM !== null && presnostM > NEJHORSI_PRESNOST_M)
     return {
       chyba: `Poloha je přesná jen na ${Math.round(presnostM)} m. Počkej na lepší signál a pípni znovu.`,
+      id: null,
     };
 
   const poradi = Number.isInteger(vstup.poradi) && vstup.poradi > 0 ? vstup.poradi : 0;
@@ -79,7 +80,7 @@ export async function pipniAkce(
       ? vstup.nahrazujeId
       : null;
 
-  const chyba = await pipni(serie, zavod, {
+  const { chyba, boje } = await pipni(serie, zavod, {
     nazev,
     poradi,
     sirka: vstup.sirka,
@@ -87,9 +88,14 @@ export async function pipniAkce(
     presnostM,
     nahrazujeId,
     zdroj,
+    // Barva a tvar se sem dřív nepředávaly: typ je přijímal a `pipni` je
+    // zahazoval, takže výběr ve formuláři nic nedělal. Chyba z 9. 10.
+    // 2026; prošla proto, že se barvy ověřovaly přímo proti API.
+    barva: vstup.barva,
+    tvar: vstup.tvar,
   });
 
-  return { chyba };
+  return { chyba, id: boje?.id ?? null };
 }
 
 /**
@@ -315,5 +321,20 @@ function zaklad(formular: FormData) {
     kam: (zprava: Record<string, string>) =>
       `/sprava/${encodeURIComponent(serie)}/boje/${encodeURIComponent(zavod)}?${new URLSearchParams(zprava)}`,
   };
+}
+
+/**
+ * Založí prvek a vrátí chybu místo přesměrování.
+ *
+ * <b>Pro stavbu prvku na vodě</b> (Filip, 10. 10. 2026): průvodce pípne
+ * body a hned z nich složí prvek, takže potřebuje odpověď, ne odskok na
+ * jinou adresu. `prvekAkce` přesměrovává, protože ji volá formulář.
+ */
+export async function slozPrvekAkce(
+  serie: string,
+  zavod: string,
+  vstup: PrvekVstup,
+): Promise<{ chyba: string | null }> {
+  return { chyba: await zalozPrvek(serie, zavod, vstup) };
 }
 

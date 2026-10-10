@@ -133,10 +133,12 @@ export async function pipni(
     presnostM: number | null;
     nahrazujeId: number | null;
     zdroj?: ZdrojPolohy;
+    barva?: BarvaBoje;
+    tvar?: TvarBoje;
   },
-): Promise<string | null> {
+): Promise<{ chyba: string | null; boje: Boje | null }> {
   const t = await tokenZeSezeni();
-  if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+  if (!t) return { chyba: "Přihlášení vypršelo. Přihlas se prosím znovu.", boje: null };
 
   try {
     const odpoved = await fetch(cesta(serie, zavod), {
@@ -149,9 +151,12 @@ export async function pipni(
       body: JSON.stringify(vstup),
       cache: "no-store",
     });
-    return odpoved.ok ? null : await hlaska(odpoved);
+    // Vrací se i zapsaná bóje: průvodce stavbou z ní potřebuje `id`, aby
+    // z pípnutých bodů hned složil prvek.
+    if (!odpoved.ok) return { chyba: await hlaska(odpoved), boje: null };
+    return { chyba: null, boje: (await odpoved.json()) as Boje };
   } catch {
-    return "API se nedaří zavolat.";
+    return { chyba: "API se nedaří zavolat.", boje: null };
   }
 }
 

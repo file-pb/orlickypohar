@@ -18,6 +18,7 @@ import { Pipani } from "./pipani";
 import { nactiPrvky, nactiStavTrati, nactiTrate, type Prvek } from "@/lib/trat";
 import { PrvkyTrati } from "./prvky";
 import { StavTrati } from "./stav-trati";
+import { Stavba } from "./stavba";
 import { VyberTrati } from "./vyber-trati";
 import { nahrajFotkuAkce, odeberFotkuAkce, seberAkce, uklidAkce } from "./akce";
 
@@ -186,6 +187,13 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
               stojici={trat.map((b) => b.nazev)}
               byvala={[...(byvale ?? []).map(({ boje }) => boje.nazev)].reverse()}
             />
+          )}
+
+          {/* Stavba prvku je první věc pod stavem trati: na vodě je to
+              to, kvůli čemu tam člověk je. Pípnutí jedné bóje zůstává
+              níž — je to cesta pro zvláštní případ, ne hlavní. */}
+          {stavTrati.trat?.stav !== "Prijato" && (
+            <Stavba serie={serie} zavod={zavod} dalsiPoradi={prvky.length + 1} />
           )}
 
           {/* Prvky stojí nad mapkou: mapka je kreslí, takže kdo chce něco

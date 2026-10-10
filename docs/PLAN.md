@@ -1718,6 +1718,44 @@ Migrace by proběhla potichu při nasazení a nikdo by neviděl, co zmizelo.
 Takhle to člověk napřed uvidí a pak klikne. Rozsudek je tentýž jako při
 pípnutí a sebrání — jedno pravidlo na třech místech, ne tři výklady.
 
+#### Na vodě se staví prvek, ne bóje (Filip, 10. 10. 2026)
+
+*„Stavitel bude potřebovat kliknout na typ prvku, dostat se do obrazovky
+pro daný typ a tam to jen pípnout, zvolit atributy, popojet, pípnout."*
+A k tomu: *„Jede a tahá se se závažím a lany na motoráku, není dobré ho
+zatěžovat formem a textíky. Ono i takové kombo je docela zátěž."*
+
+**Jednotkou práce je prvek.** Stavitel nemyslí „pokládám bóji 1 a bóji 2
+a potom z nich složím start" — myslí „pokládám start". Obrazovka proto
+začíná výběrem typu a dál se jen pípá: po posledním bodu vznikne prvek
+sám.
+
+**Jména se nezadávají**, plynou z typu a pořadí („start levobok",
+„otočná 3"). Psaní zůstává jen pro zvláštní případ, schované.
+
+**Poloha se bere při každém doteku znovu** — mezi dvěma body se popojede,
+takže držet jedno měření by druhou bóji položilo tam, kde stála první.
+
+**Pravidla průvodce jsou čistý modul bez Reactu a DOM**
+(`web/lib/stavba-prvku.ts`), protože **tentýž průvodce má jít do appky**
+(Filip tamtéž). Appka je React Native, takže z webové obrazovky se tam
+nepřenese nic — ale kolik bodů který typ potřebuje, jak se pojmenují
+a jaké atributy dávají smysl, ano. Až appka začne zapisovat, přestěhuje
+se ten soubor do balíčku sdíleného oběma klienty, jako dnes
+`schema.d.ts`; do té doby se do něj nesmí dostat nic webového, jinak ta
+cesta zmizí.
+
+**Pípnutí jedné bóje zůstává**, ale jako cesta pro zvláštní případ —
+přenastavení, bóje mimo prvek, zápis za někoho od počítače.
+
+##### Chyba, kterou to odhalilo
+
+`pipniAkce` barvu a tvar v typu přijímala, ale **nepředávala je dál** do
+`pipni`, takže výběr ve formuláři se tiše zahazoval. Vzniklo to
+9. 10. 2026 spolu s barvami a prošlo to proto, že se barvy ověřovaly
+přímo proti API, ne přes formulář. **Ověřovat cestu, kterou jde uživatel,
+ne tu, která se ověřuje snadněji.**
+
 #### Trať není seznam bójí, ale řada prvků (Filip, 9. 10. 2026)
 
 *„Dokázali bychom bóje rozšířit i o definici cílové čáry? Nebo to, že musí
