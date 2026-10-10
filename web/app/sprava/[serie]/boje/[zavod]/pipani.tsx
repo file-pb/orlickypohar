@@ -48,8 +48,11 @@ export function Pipani({
 }: {
   serie: string;
   zavod: string;
-  /** Když se přenastavuje, id a jméno bóje, která tam stojí dosud. */
-  prenastavuje: { id: number; nazev: string } | null;
+  /**
+   * Když se přenastavuje, bóje, která tam stojí dosud — i s polohou.
+   * Poloha je tu kvůli mapě: viz střed u <c>MapkaVyber</c> níž.
+   */
+  prenastavuje: { id: number; nazev: string; sirka: number; delka: number } | null;
   nejvicZnaku: number;
   /** Jména bójí, které u regaty zrovna stojí. Ta se nenabízejí. */
   stojici: string[];
@@ -430,9 +433,19 @@ export function Pipani({
 
       {zMapy && (
         <MapkaVyber
-          // Mapa se otevře tam, kde člověk zrovna stojí; u stolu poloha
-          // není, tak u poslední bóje na trati.
-          stred={poloha ?? stred}
+          // U přenastavení se otevře na staré poloze té bóje (Filip,
+          // 10. 10. 2026). Bóji se posouvá o kus, ne na druhý konec
+          // přehrady, takže je to ta nejbližší známá pravda — a je blíž
+          // než i vlastní poloha, protože z mapy se vybírá právě tehdy,
+          // když u ní člověk nestojí.
+          //
+          // Jinak tam, kde člověk zrovna stojí; u stolu poloha není, tak
+          // u poslední bóje na trati.
+          stred={
+            prenastavuje
+              ? { sirka: prenastavuje.sirka, delka: prenastavuje.delka }
+              : (poloha ?? stred)
+          }
           vyber={vezmiZMapy}
           zrus={() => setZMapy(false)}
           cekam={posilam}
