@@ -2605,6 +2605,24 @@ nechat nastavit"*). Výchozí stav je ten konzervativní, tedy **jen
 publikované**; kdo chce procesní děj, zapne si ho. Rozhodnutí tím nepadá
 na nás ani napevno do kódu.
 
+**Postavená 10. 10. 2026** na `/serie/{serie}/zavody/{zavod}/tabule`:
+stav regaty, rozjížďky s dojezdy, průběžné pořadí a startovní listina.
+Bez boků a bez navigace — visí to přes místnost, takže pixel, který není
+čitelný od vedlejšího stolu, je k ničemu; velikosti jsou ve `vw`.
+
+**Jen publikované výsledky.** Přepínač „procesní děj" (under review,
+potvrzeno, protest) zatím není, takže platí ten konzervativní výchozí
+stav. Skryté výsledky ročníku se nevydávají ani do snímku — tabule je
+veřejná plocha, ne obcházka workflow.
+
+**Obě provozní poznámky níž jsou splněné, ne jen zapsané.** Snímek se
+tahá vlastní cestou `tabule/data`, obnovuje se po dvaceti vteřinách
+a **výpadek nevrací 200** (503), takže si ho mikrocache neuloží jako
+platnou odpověď. Prohlížeč si při neúspěchu **drží poslední dobrý
+snímek** a jen u něj roste stáří, které si počítá sám z `kdy`. Ověřeno
+vypnutím mocku: tabule držela data a stáří rostlo 0 → 13 → 18 → 29 s, po
+návratu spadlo na 8 bez načtení stránky.
+
 **Tři rozhodnutí, která si to vyrobí, ať je uděláme předem:**
 
 1. **Živé dojezdy versus workflow.** Hospoda chce čísla hned, jenže zápis
