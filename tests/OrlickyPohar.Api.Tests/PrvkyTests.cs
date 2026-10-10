@@ -32,6 +32,7 @@ public class PrvkyTests
 
     [Theory]
     [InlineData(TypPrvku.Brana)]
+    [InlineData(TypPrvku.OtocnaBrana)]
     [InlineData(TypPrvku.Odskok)]
     [InlineData(TypPrvku.Start)]
     [InlineData(TypPrvku.Cil)]
@@ -92,6 +93,42 @@ public class PrvkyTests
         Assert.True(Prvky.Dvoukonec(TypPrvku.Cil));
         // Otočná zóna je spojnice dvou objektů — i drátů nad vodou.
         Assert.True(Prvky.Dvoukonec(TypPrvku.OtocnaZona));
+        // Otočná brána jsou taky dvě bóje; otáčí se mezi nimi.
+        Assert.True(Prvky.Dvoukonec(TypPrvku.OtocnaBrana));
+    }
+
+    /// <summary>
+    /// <b>Otočná brána nenese stranu</b> (Filip, 10. 10. 2026): <i>„u brány
+    /// se tam branou vjede, ale stranu, okolo které točí — jestli si
+    /// nakonec vybere tu levou bóji nebo pravou — volí loď."</i>
+    /// <para>
+    /// Od průjezdní brány se liší tím, <b>že</b> se v ní otáčí, ne kde.
+    /// Proto vlastní typ, ne pole na bráně — a proto se tohle měří: kdyby
+    /// někdo stranu u otočné brány „dodělal", vydával by rozhodnutí
+    /// posádky za pravidlo trati.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public void Otocna_brana_stranu_nenese()
+    {
+        Assert.False(Prvky.StranaPatri(TypPrvku.OtocnaBrana));
+        Assert.False(Prvky.StranaPatri(TypPrvku.Brana));
+
+        Assert.Null(Jde(TypPrvku.OtocnaBrana, bojeB: 7));
+        Assert.NotNull(Jde(TypPrvku.OtocnaBrana, bojeB: 7, strana: StranaPrvku.PoLeve));
+        Assert.NotNull(Jde(TypPrvku.OtocnaBrana, bojeB: 7, strana: StranaPrvku.PoPrave));
+    }
+
+    /// <summary>
+    /// Směr ani druh startu k otočné bráně nepatří — není to čára, kterou
+    /// se proplouvá v jednom směru.
+    /// </summary>
+    [Fact]
+    public void Otocna_brana_nema_smer_ani_druh()
+    {
+        Assert.NotNull(Jde(TypPrvku.OtocnaBrana, bojeB: 7, smer: SvetovaStrana.J));
+        Assert.NotNull(Jde(
+            TypPrvku.OtocnaBrana, bojeB: 7, druhStartu: DruhStartu.PevnaLinie));
     }
 
     /// <summary>

@@ -5353,11 +5353,31 @@ kdo tu bóji pípal.
 nikdo nepostavil; tiché zahození bodu by zapřelo, co volající poslal.
 Web tuhle cestu nevolá — prvky jen zakládá a maže.
 
-**Zbývá z téhož zadání:** zrušit `KonecB*` sloupce; `OtocnaBrana` jako
-nová hodnota výčtu (sloupec `Typ` je `integer` bez check constraintu,
-takže **bez migrace**); sdružené typy, předvolby, růžice, cartoon náhled
-a „projet to znovu jinak“ v obrazovce; výběr značky místo zadávání bodu
-ve formuláři prvku.
+### Otočná brána
+
+Brána, ve které se otáčí: vjede se mezi bóje, otočí se a **branou se už
+v tom průjezdu nevrací**. Od průjezdní brány se liší tím, **že** se v ní
+otáčí, ne kde — a proto je to vlastní hodnota výčtu, ne pole na bráně.
+
+**Strana se u ní nezapisuje**, a to je celé jádro. Filip, 10. 10. 2026:
+*„u brány se tam branou vjede, ale stranu, okolo které točí — jestli si
+nakonec vybere tu levou bóji nebo pravou — volí loď. Prostě tou branou
+projede."* `Prvky.StranaPatri` tedy bránu vylučuje **správně** a nic se
+neuvolňuje; dřívější návrh „projet a otočit u levé / u pravé" byl chybný
+a zapisoval by rozhodnutí posádky jako pravidlo trati.
+
+Migraci to nestojí: sloupec `Typ` je `integer` a nikde na něm není check
+constraint (ověřeno v `AppDbContextModelSnapshot.cs`). Jde ven v JSON
+jako jméno, takže je to změna kontraktu a klient se musí přegenerovat.
+
+**Zbývá z téhož zadání:** zrušit `KonecB*` sloupce; přegenerovat klienta;
+sdružené typy, předvolby značení, růžice, cartoon náhled a „projet to
+znovu jinak“ v obrazovce; výběr značky místo zadávání bodu ve formuláři
+prvku.
+
+Pozor na souběh: mez Orlíku je od PR #207 vytažená jako `naOrliku`
+v `web/lib/souradnice.ts` a `MapkaVyber` má prop `cekam`, který zamkne
+tlačítko během zápisu — průvodce má použít obojí, ne si to psát znovu.
 
 ## Fotky lodi v přihlášce (Filip, 10. 10. 2026)
 

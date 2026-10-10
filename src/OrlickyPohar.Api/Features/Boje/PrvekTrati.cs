@@ -55,8 +55,34 @@ public enum TypPrvku
     /// Otočná zóna nebo linie mezi dvěma objekty — molo, značka, objekt
     /// na břehu, <b>i dráty vysokého napětí nad vodou</b> (Filip). Bóje
     /// to být nemusí ani na jednom konci.
+    /// <para>
+    /// <b>Linie se stačí dotknout</b> (Filip, 10. 10. 2026): odtud se taky
+    /// vzala — *„někdy se řekne, že pod drátama VN se má závodník
+    /// otočit"*. Nevolí se u ní bok ani směr.
+    /// </para>
     /// </summary>
     OtocnaZona = 6,
+
+    /// <summary>
+    /// Brána, ve které se otáčí. Vjede se mezi bóje, otočí se a <b>branou
+    /// se už v tom průjezdu nevrací</b> (Filip, 10. 10. 2026).
+    ///
+    /// <para>
+    /// <b>Strana se nezapisuje.</b> Filip: *„u brány se tam branou vjede,
+    /// ale stranu, okolo které točí — jestli si nakonec vybere tu levou
+    /// bóji nebo pravou — volí loď. Prostě tou branou projede."* Od
+    /// průjezdní <see cref="Brana"/> se tedy liší tím, <b>že</b> se v ní
+    /// otáčí, ne kde — a proto to je vlastní typ, ne pole na bráně.
+    /// </para>
+    ///
+    /// <para>
+    /// Nová hodnota výčtu <b>nepotřebuje migraci</b>: sloupec <c>Typ</c> je
+    /// <c>integer</c> a nikde na něm není check constraint. Jde ven v JSON
+    /// jako jméno, takže je to změna kontraktu a klient se musí
+    /// přegenerovat.
+    /// </para>
+    /// </summary>
+    OtocnaBrana = 7,
 }
 
 /// <summary>
@@ -235,6 +261,11 @@ public static class Prvky
     /// U průjezdní bóje závisí strana na směru, kterým se kolem pluje
     /// (Filip): táž bóje proto může být ve dvou prvcích s různou stranou.
     /// </para>
+    /// <para>
+    /// <b>Otočná brána tu schválně není</b> (Filip, 10. 10. 2026): i když se
+    /// v ní otáčí, <i>„stranu, okolo které točí, volí loď"</i>. Zapsat ji
+    /// by znamenalo vydávat za pravidlo něco, co je rozhodnutí posádky.
+    /// </para>
     /// </summary>
     public static bool StranaPatri(TypPrvku typ) =>
         typ is TypPrvku.OtocnaBoje or TypPrvku.Odskok or TypPrvku.PrujezdniBoje;
@@ -278,7 +309,7 @@ public static class Prvky
         else if (maBoji || maBod)
         {
             return "Tenhle prvek je jedna bóje. Dva konce má start, cíl, brána, "
-                   + "odskok a otočná zóna.";
+                   + "otočná brána, odskok a otočná linie.";
         }
 
         if (popis?.Trim().Length > PopisNejvic)
@@ -286,7 +317,8 @@ public static class Prvky
 
         if (strana is not null && !StranaPatri(typ))
             return "Strana se uvádí u otočné bóje, průjezdní bóje a odskoku. "
-                   + "U brány si ji volí loď, u startu a cíle rozhoduje směr průjezdu.";
+                   + "U brány — i té otočné — si ji volí loď, u startu a cíle "
+                   + "rozhoduje směr průjezdu.";
 
         return null;
     }
