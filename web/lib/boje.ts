@@ -43,6 +43,9 @@ export const NEJHORSI_PRESNOST_M = 100;
 /** Tatáž délka jako `Pipnuti.NazevNejvic` v API. */
 export const NAZEV_NEJVIC = 60;
 
+/** Tatáž délka jako `Pipnuti.PopisNejvic` v API. */
+export const POPIS_NEJVIC = 200;
+
 const cesta = (serie: string, zavod: string) =>
   `${API}/sprava/serie/${encodeURIComponent(serie)}/zastavky/${encodeURIComponent(zavod)}/boje`;
 
@@ -138,6 +141,7 @@ export async function pipni(
     barva?: BarvaBoje;
     tvar?: TvarBoje;
     znaceni?: DruhZnaceni;
+    popis?: string;
   },
 ): Promise<{ chyba: string | null; boje: Boje | null }> {
   const t = await tokenZeSezeni();

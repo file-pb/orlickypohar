@@ -2069,6 +2069,11 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
   margin-bottom: 0.8rem;
 }
 
+/* Poznámka ke značce se rozbalí, až ji někdo vyvolá: píše se jen občas
+   a hlavní cesta je předvolba → pípnout. */
+.stavba .poznamka-znacky { display: block; margin: 0.2rem 0 0.6rem; font-size: 0.9rem; }
+.stavba .poznamka-znacky input { width: 100%; min-height: 44px; margin-top: 0.25rem; }
+
 .stavba .ruzice { margin-top: 0.6rem; }
 
 /* Náhled prvku. Je to kontrola zadání, ne obrázek na web — proto stojí

@@ -5448,8 +5448,25 @@ klepnutí navíc.
 Ověřeno proklikáním: nad bójemi #8 a #9 vznikla `Brana` a hned po ní
 `OtocnaBrana`, obojí na týchž záznamech, a počet značek se nezměnil.
 
-**Zbývá z téhož zadání:** fotky u bodu, poznámka mimo hlavní cestu,
-a výběr značky místo zadávání bodu ve formuláři prvku.
+### Fotka a poznámka u bodu
+
+Obojí je **mimo hlavní cestu** (Filip, 10. 10. 2026: *„přednost má
+ergonomie klikacího zadávání, nechci, aby se to tam cpalo a ničilo to
+kompaktnost"*): dvě malá tlačítka vedle „Vybrat z mapy", a poznámka se
+rozbalí teprve po kliknutí. Hlavní cesta zůstává předvolba → pípnout.
+
+**Fotky jsou u bodu, ne u celého prvku** (Filip): u prvku se dvěma body
+by společná fotka neřekla, které značky patří. Drží se do pípnutí —
+dřív značka nemá id, na které by se dala pověsit — a nahrává se hned po
+něm. Když se nepovede, **značka zůstane**: fotka je doklad navíc, ne
+podmínka, a stavbu na vodě kvůli ní nemá smysl zastavovat.
+
+Průvodce má na fotku **vlastní akci**, která nepřesměrovává: ta od
+formuláře jedné bóje po nahrání skočí na stránku a uprostřed stavby
+prvku by zahodila rozdělanou práci.
+
+**Zbývá z téhož zadání:** výběr značky místo zadávání bodu ve formuláři
+prvku.
 
 ## Růžová a plameňák (Filip, 11. 10. 2026)
 

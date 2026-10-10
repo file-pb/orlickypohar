@@ -56,6 +56,7 @@ export async function pipniAkce(
     barva?: BarvaBoje;
     tvar?: TvarBoje;
     znaceni?: DruhZnaceni;
+    popis?: string;
   },
 ): Promise<{ chyba: string | null; id: number | null }> {
   const nazev = vstup.nazev.trim();
@@ -98,6 +99,7 @@ export async function pipniAkce(
     // A značení touž cestou. Kdyby se tu zapomnělo, předvolba z průvodce
     // by se tiše zahodila — přesně jako barva 9. 10. 2026.
     znaceni: vstup.znaceni,
+    popis: vstup.popis?.trim() || undefined,
   });
 
   return { chyba, id: boje?.id ?? null };
@@ -139,6 +141,25 @@ export async function nahrajFotkuAkce(formular: FormData) {
 
   const chyba = await nahrajFotku(serie, zavod, boje, soubor);
   redirect(kam(chyba ? { chyba } : { stav: "fotka" }));
+}
+
+/**
+ * Fotka ke značce z průvodce. <b>Nepřesměrovává</b>, na rozdíl od
+ * `nahrajFotkuAkce`: průvodce je klientská obrazovka a přesměrování by
+ * uprostřed stavby prvku zahodilo rozdělanou práci.
+ */
+export async function fotkaKeZnacceAkce(
+  serie: string,
+  zavod: string,
+  boje: number,
+  soubor: File,
+): Promise<{ chyba: string | null }> {
+  if (!Number.isInteger(boje) || boje <= 0) return { chyba: "Ke které značce ta fotka patří?" };
+  if (soubor.size === 0) return { chyba: "Fotka je prázdná." };
+  if (soubor.size > FOTKA_NEJVIC_MB * 1024 * 1024)
+    return { chyba: `Fotka může mít nejvýš ${FOTKA_NEJVIC_MB} MB.` };
+
+  return { chyba: await nahrajFotku(serie, zavod, boje, soubor) };
 }
 
 /** Odebrání jedné fotky. Smaže i soubory v úložišti. */
