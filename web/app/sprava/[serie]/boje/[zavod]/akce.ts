@@ -9,6 +9,8 @@ import {
   odeberFotku,
   pipni,
   seber,
+  type BarvaBoje,
+  type TvarBoje,
   type ZdrojPolohy,
 } from "@/lib/boje";
 import { posunTrat, smazPrvek, zalozPrvek, type PrvekVstup } from "@/lib/trat";
@@ -41,6 +43,8 @@ export async function pipniAkce(
     presnostM: number | null;
     nahrazujeId: number | null;
     zdroj?: ZdrojPolohy;
+    barva?: BarvaBoje;
+    tvar?: TvarBoje;
   },
 ): Promise<{ chyba: string | null }> {
   const nazev = vstup.nazev.trim();

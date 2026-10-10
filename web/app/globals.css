@@ -1940,3 +1940,5 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
    natvrdo, ne z proměnných vzhledu — podklad je světlý v obou režimech. */
 .mapka-trati { margin: 1rem 0; }
 .mapka { width: 100%; height: auto; display: block; border-radius: 8px; background: #e8e6e1; }
+
+.znak-boje { vertical-align: -0.25em; margin-right: 0.3rem; }

@@ -1,4 +1,6 @@
-import { dvaBody, nazevTypu, type TypPrvku } from "@/lib/trat";
+import { dvaBody, nazevTypu, type SvetovaStrana, type TypPrvku } from "@/lib/trat";
+import { ZnakBoje } from "@/app/znak-boje";
+import type { BarvaBoje, TvarBoje } from "@/lib/boje";
 
 /**
  * Prvek, jak ho mapka potřebuje. <b>Vlastní tvar schválně</b>: správa a web
@@ -10,10 +12,19 @@ export type PrvekNaMape = {
   klic: string | number;
   typ: TypPrvku;
   poradi: number;
-  /** Jeden konec u značky, dva u brány a čáry. */
-  konce: { nazev: string; sirka: number; delka: number }[];
+  /** Jeden konec u bóje samotné, dva u prvku mezi dvěma konci. */
+  konce: {
+    nazev: string;
+    sirka: number;
+    delka: number;
+    /** Jak bóje vypadá. U konce, který bóje není, chybí obojí. */
+    barva?: BarvaBoje;
+    tvar?: TvarBoje;
+  }[];
   /** Druhý konec není bóje — kreslí se prázdným kolečkem. */
   druhyNeniBoje?: boolean;
+  /** Jen u startu: světová strana, podle které se kreslí šipka průjezdu. */
+  smer?: SvetovaStrana;
 };
 
 /**
@@ -37,6 +48,32 @@ export type PrvekNaMape = {
  * <b>Projekce je Web Mercator</b> (EPSG:3857), tedy tatáž, ve které jsou
  * dlaždice — bez toho by bóje nad podkladem seděly jen náhodou.
  */
+
+/**
+ * Šipka průjezdu. <b>Sever nahoře</b>, takže se úhel počítá od svislice
+ * po směru hodinových ručiček — stejně jako na kompasu.
+ */
+function SipkaSmeru({ x, y, smer }: { x: number; y: number; smer: NonNullable<SvetovaStrana> }) {
+  const stupne = { S: 0, SV: 45, V: 90, JV: 135, J: 180, JZ: 225, Z: 270, SZ: 315 }[smer];
+  const d = 30;
+
+  return (
+    <g transform={`translate(${x} ${y}) rotate(${stupne})`}>
+      {/* Kreslí se od uzlu ven, tedy odkud kam se startuje. Bílý lem
+          jako u všeho ostatního — nad lesem by černá čára zmizela. */}
+      <line
+        x1={0}
+        y1={0}
+        x2={0}
+        y2={-d}
+        stroke="#1a1a1a"
+        strokeWidth="3"
+        strokeOpacity="0.9"
+      />
+      <polygon points={`0,${-d - 7} -5,${-d + 3} 5,${-d + 3}`} fill="#1a1a1a" />
+    </g>
+  );
+}
 
 /** Hrana dlaždice v pixelech, jak je vydává OSM. */
 const DLAZDICE = 256;
@@ -245,17 +282,27 @@ export function MapkaTrati({ prvky }: { prvky: PrvekNaMape[] }) {
         {skupiny.map((b) => (
           <g key={b.prvek.klic}>
             {/* Bílý lem, ať je konec vidět nad vodou i nad lesem. */}
-            {b.konce.map((k, i) => (
-              <circle
-                key={i}
-                cx={k.x}
-                cy={k.y}
-                r="8"
-                fill={b.prvek.druhyNeniBoje && i === 1 ? "#fff" : "#c1121f"}
-                stroke={b.prvek.druhyNeniBoje && i === 1 ? "#c1121f" : "#fff"}
-                strokeWidth="3"
-              />
-            ))}
+            {b.konce.map((k, i) =>
+              b.prvek.druhyNeniBoje && i === 1 ? (
+                // Konec, který bóje není — plavidlo komise, molo, dráty.
+                // Prázdné kolečko: je to místo, ne předmět ve vodě.
+                <circle
+                  key={i}
+                  cx={k.x}
+                  cy={k.y}
+                  r="8"
+                  fill="#fff"
+                  stroke="#c1121f"
+                  strokeWidth="3"
+                />
+              ) : (
+                <ZnakBoje key={i} x={k.x} y={k.y} barva={k.barva} tvar={k.tvar} />
+              ),
+            )}
+            {/* Šipka průjezdu u startu. Dřív se nekreslila vůbec, protože
+                směr v datech nebyl a vymyslet si ho by byla lež; od
+                10. 10. 2026 ho prvek nese. */}
+            {b.prvek.smer && <SipkaSmeru x={b.uzel.x} y={b.uzel.y} smer={b.prvek.smer} />}
             {/* Popisek u uzlu, tedy tam, kudy se pluje. */}
             <text
               x={b.uzel.x}

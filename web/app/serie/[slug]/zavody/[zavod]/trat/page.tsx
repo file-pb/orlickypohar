@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { ApiNedostupne, nactiVerejnouTrat, nactiZavod, type VerejnaTrat } from "@/lib/api";
-import { nazevStrany, nazevTypu } from "@/lib/trat";
+import { NAZVY_SMERU, nazevStrany, nazevTypu } from "@/lib/trat";
 import { MapkaTrati, type PrvekNaMape } from "@/app/mapka-trati";
 import { IkonaPrvku } from "@/app/ikona-prvku";
 import { Drobecky } from "@/app/drobecky";
@@ -139,6 +139,7 @@ function PoradiPrvku({ prvky }: { prvky: VerejnaTrat["prvky"] }) {
               {p.b && ` – ${p.b.nazev}`}
             </span>
             {p.strana && <span className="stitek">{nazevStrany(p.strana)}</span>}
+            {p.smer && <span className="stitek">{NAZVY_SMERU[p.smer]}</span>}
             {p.poznamka && <p className="poznamka">{p.poznamka}</p>}
           </li>
         ))}
@@ -177,10 +178,18 @@ function MimoTrat({ trat }: { trat: VerejnaTrat }) {
 
 /** Veřejný prvek pro mapku. Jestli je druhý konec bóje, se ven nevydává. */
 function naMapu(p: VerejnaTrat["prvky"][number], i: number): PrvekNaMape {
-  const konce = [{ nazev: p.a.nazev, sirka: p.a.sirka, delka: p.a.delka }];
-  if (p.b) konce.push({ nazev: p.b.nazev, sirka: p.b.sirka, delka: p.b.delka });
+  const konec = (k: NonNullable<VerejnaTrat["prvky"][number]["b"]>) => ({
+    nazev: k.nazev,
+    sirka: k.sirka,
+    delka: k.delka,
+    barva: k.barva,
+    tvar: k.tvar,
+  });
 
-  return { klic: i, typ: p.typ, poradi: p.poradi, konce };
+  const konce = [konec(p.a)];
+  if (p.b) konce.push(konec(p.b));
+
+  return { klic: i, typ: p.typ, poradi: p.poradi, konce, smer: p.smer };
 }
 
 function kdy(kdy: string) {

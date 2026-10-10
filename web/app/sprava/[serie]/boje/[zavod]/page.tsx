@@ -12,6 +12,7 @@ import {
 } from "@/lib/boje";
 import { nazevZastavky } from "@/lib/kalendar";
 import { MapkaTrati, type PrvekNaMape } from "@/app/mapka-trati";
+import { ZnakVRadku } from "@/app/znak-boje";
 import { Pipani } from "./pipani";
 import { nactiPrvky, nactiStavTrati, type Prvek } from "@/lib/trat";
 import { PrvkyTrati } from "./prvky";
@@ -170,7 +171,7 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
           />
 
           <h2>Co stojí na trati</h2>
-          <MapkaTrati prvky={prvky.map(naMapu)} />
+          <MapkaTrati prvky={prvky.map((p) => naMapu(p, trat))} />
           {trat.length === 0 ? (
             <p className="prazdno">
               Zatím nic. Až bóji spustíš do vody, pípni ji — poloha z tvého
@@ -260,7 +261,11 @@ function NaTrati({
 }) {
   return (
     <>
-      <span className="stitek">{boje.poradi}.</span> <span>{boje.nazev}</span>
+      <span className="stitek">{boje.poradi}.</span>{" "}
+      {/* Značka u jména: na vodě se bóje hledá podle toho, jak vypadá,
+          ne podle pořadí v seznamu. */}
+      <ZnakVRadku barva={boje.barva} tvar={boje.tvar} />
+      <span>{boje.nazev}</span>{" "}
       <Puvod boje={boje} />
 
       <p className="poznamka">
@@ -338,14 +343,42 @@ function NaTrati({
  * Prvek ze správy pro mapku. Bod se kreslí jako konec stejně jako bóje,
  * jen prázdným kolečkem — tam nic neplave.
  */
-function naMapu(p: Prvek): PrvekNaMape {
-  const konce = [{ nazev: p.a.nazev, sirka: p.a.sirka, delka: p.a.delka }];
-  if (p.b) konce.push({ nazev: p.b.nazev, sirka: p.b.sirka, delka: p.b.delka });
-  else if (p.bodB)
-    konce.push({ nazev: p.bodB.popis, sirka: p.bodB.sirka, delka: p.bodB.delka });
+/**
+ * Prvek pro mapku. <b>Barvu si dohledá ze seznamu bójí</b>, který stránka
+ * stejně má: `KonecBojeDto` ji nenese a kvůli jednomu poli by se měnil
+ * kontrakt a čekalo na další nasazení. Veřejná strana ji v DTO má, protože
+ * tam žádný seznam bójí k ruce není.
+ */
+function naMapu(p: Prvek, boje: Boje[]): PrvekNaMape {
+  const znak = (id: number) => {
+    const b = boje.find((x) => x.id === id);
+    return { barva: b?.barva, tvar: b?.tvar };
+  };
 
-  return { klic: p.id, typ: p.typ, poradi: p.poradi, konce, druhyNeniBoje: !!p.bodB };
+  const konce = [
+    { nazev: p.a.nazev, sirka: p.a.sirka, delka: p.a.delka, ...znak(p.a.id) },
+  ];
+  if (p.b) konce.push({ nazev: p.b.nazev, sirka: p.b.sirka, delka: p.b.delka, ...znak(p.b.id) });
+  else if (p.bodB)
+    konce.push({
+      nazev: p.bodB.popis,
+      sirka: p.bodB.sirka,
+      delka: p.bodB.delka,
+      barva: undefined,
+      tvar: undefined,
+    });
+
+  return {
+    klic: p.id,
+    typ: p.typ,
+    poradi: p.poradi,
+    konce,
+    druhyNeniBoje: !!p.bodB,
+    smer: p.smer,
+  };
 }
+
+
 
 /** Bóje, která už na trati nestojí. Sebrat ani přenastavit nejde. */
 function Byvsi({ boje, proc }: Byvala) {
