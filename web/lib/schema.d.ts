@@ -4388,6 +4388,8 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @enum {unknown} */
+        BarvaBoje: "Cervena" | "Zelena" | "Zluta" | "Oranzova" | "Bila" | "Modra" | null;
         BodHladinyDto: {
             /** Format: date-time */
             cas: string;
@@ -4419,6 +4421,8 @@ export interface components {
             sebrana: boolean;
             fotky: components["schemas"]["ObrazekDto"][];
             zdroj?: components["schemas"]["ZdrojPolohy"];
+            barva?: null | components["schemas"]["BarvaBoje"];
+            tvar?: null | components["schemas"]["TvarBoje"];
         };
         ClanekDto: {
             slug: string;
@@ -4486,6 +4490,8 @@ export interface components {
         DoSerieVstup: {
             doSerie: boolean;
         };
+        /** @enum {unknown} */
+        DruhStartu: "PevnaLinie" | "OtevirajiciSeBrana" | null;
         /**
          * @default Pohar
          * @enum {unknown}
@@ -4779,6 +4785,8 @@ export interface components {
             /** Format: int32 */
             nahrazujeId: null | number;
             zdroj?: null | components["schemas"]["ZdrojPolohy"];
+            barva?: null | components["schemas"]["BarvaBoje"];
+            tvar?: null | components["schemas"]["TvarBoje"];
         };
         PoradatelDto: {
             slug: string;
@@ -4977,6 +4985,8 @@ export interface components {
             a: components["schemas"]["KonecBojeDto"];
             b: null | components["schemas"]["KonecBojeDto"];
             bodB: null | components["schemas"]["KonecBodDto"];
+            smer?: null | components["schemas"]["SvetovaStrana"];
+            druhStartu?: null | components["schemas"]["DruhStartu"];
         };
         PrvekVstup: {
             typ: components["schemas"]["TypPrvku"];
@@ -4993,6 +5003,8 @@ export interface components {
             konecBPopis?: null | string;
             strana?: null | components["schemas"]["StranaPrvku"];
             poznamka?: null | string;
+            smer?: null | components["schemas"]["SvetovaStrana"];
+            druhStartu?: null | components["schemas"]["DruhStartu"];
         };
         PublikaceSerieVstup: {
             publikovano: boolean;
@@ -5177,6 +5189,8 @@ export interface components {
         };
         /** @enum {unknown} */
         StranaPrvku: "PoLeve" | "PoPrave" | null;
+        /** @enum {unknown} */
+        SvetovaStrana: "S" | "SV" | "V" | "JV" | "J" | "JZ" | "Z" | "SZ" | null;
         TeplotaHladinyDto: {
             snimky: components["schemas"]["SnimekHladinyDto"][];
             zdroj: string;
@@ -5223,7 +5237,9 @@ export interface components {
             jdePriradit: boolean;
         };
         /** @enum {unknown} */
-        TypPrvku: "Znacka" | "Brana" | "Odskok" | "CaraStart" | "CaraCil";
+        TvarBoje: "Valcova" | "Kuzelova" | "Kulova" | "SferickyVrsek" | "Plovatka" | "Jiny" | null;
+        /** @enum {unknown} */
+        TypPrvku: "OtocnaBoje" | "Brana" | "Odskok" | "Start" | "Cil" | "PrujezdniBoje" | "OtocnaZona";
         UcastDto: {
             lod: string;
             kategorie: string;
@@ -5282,6 +5298,8 @@ export interface components {
             sirka: number;
             /** Format: double */
             delka: number;
+            barva?: null | components["schemas"]["BarvaBoje"];
+            tvar?: null | components["schemas"]["TvarBoje"];
         };
         VerejnaPrihlaskaVstup: {
             lod: string;
@@ -5314,6 +5332,8 @@ export interface components {
             sirka: number;
             /** Format: double */
             delka: number;
+            barva?: null | components["schemas"]["BarvaBoje"];
+            tvar?: null | components["schemas"]["TvarBoje"];
         };
         VerejnyPrvekDto: {
             typ: components["schemas"]["TypPrvku"];
@@ -5323,6 +5343,8 @@ export interface components {
             poznamka: null | string;
             a: components["schemas"]["VerejnyKonecDto"];
             b: null | components["schemas"]["VerejnyKonecDto"];
+            smer?: null | components["schemas"]["SvetovaStrana"];
+            druhStartu?: null | components["schemas"]["DruhStartu"];
         };
         VodocetDto: {
             /** Format: date-time */
