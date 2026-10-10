@@ -169,6 +169,12 @@ public enum BarvaBoje
     Oranzova = 3,
     Bila = 4,
     Modra = 5,
+
+    /// <summary>
+    /// Růžová. Fórek pro Izolepu (Filip, 11. 10. 2026) — ve výčtu je
+    /// proto, že ta bóje ve vodě opravdu plave.
+    /// </summary>
+    Ruzova = 6,
 }
 
 /// <summary>
@@ -192,6 +198,13 @@ public enum TvarBoje
     Plovatka = 4,
 
     Jiny = 5,
+
+    /// <summary>
+    /// Nafukovací plameňák, specialita Izolepy (Filip, 11. 10. 2026).
+    /// <b>Vyhláška ho nezná</b>, takže se za její znak nikdy nevydává —
+    /// jinak je to tvar jako každý jiný.
+    /// </summary>
+    Plamenak = 6,
 }
 
 /// <summary>
