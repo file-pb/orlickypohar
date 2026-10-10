@@ -5379,6 +5379,21 @@ Pozor na souběh: mez Orlíku je od PR #207 vytažená jako `naOrliku`
 v `web/lib/souradnice.ts` a `MapkaVyber` má prop `cekam`, který zamkne
 tlačítko během zápisu — průvodce má použít obojí, ne si to psát znovu.
 
+## Růžová a plameňák (Filip, 11. 10. 2026)
+
+*„Někam ještě napasuj k barvám bójí růžovou a tvar plameňák — to je jen
+taková specialita pro Izolepu."* A později: *„no je to jasný plameňák
+a růžová je fórek."*
+
+Je to **fórek, který ve vodě opravdu plave**, takže patří do výčtu jako
+každá jiná barva a tvar. Obojí je nová hodnota výčtu, tedy **bez
+migrace** — jen změna kontraktu a přegenerování klienta.
+
+Jediná poctivost, kterou to chce: **vyhláška plameňáka nezná**, takže se
+za její znak nevydává. `znakPodleVyhlasky` na něj proto nesmí nic vracet,
+i kdyby byl žlutý — dnes totiž každá žlutá bóje hlásí „zakázaná nebo
+vyhrazená vodní plocha".
+
 ## Fotky lodi v přihlášce (Filip, 10. 10. 2026)
 
 *„Nahrát třeba 3 fotečky k lodi v přihlášce a uložit to komprimovaně.“*

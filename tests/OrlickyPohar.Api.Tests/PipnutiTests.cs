@@ -139,6 +139,33 @@ public class PipnutiTests
     }
 
     /// <summary>
+    /// Růžová a plameňák jsou <b>specialita Izolepy</b> (Filip,
+    /// 11. 10. 2026), ne znak z vyhlášky. Na naší bóji projdou jako každá
+    /// jiná barva a tvar — a u plavidla se odmítnou ze stejného důvodu
+    /// jako ostatní, protože loď komise není kus plastu.
+    /// </summary>
+    [Fact]
+    public void Plamenak_je_normalni_tvar_nasi_boje()
+    {
+        Assert.Null(Pipnuti.ProcNejde(Bod() with
+        {
+            Znaceni = DruhZnaceni.NaseBoje,
+            Barva = BarvaBoje.Ruzova,
+            Tvar = TvarBoje.Plamenak,
+        }));
+
+        // I bez značení: barva a tvar jsou vlastnosti bóje, ne rozhodnutí.
+        Assert.Null(Pipnuti.ProcNejde(
+            Bod() with { Barva = BarvaBoje.Ruzova, Tvar = TvarBoje.Plamenak }));
+
+        Assert.NotNull(Pipnuti.ProcNejde(Bod() with
+        {
+            Znaceni = DruhZnaceni.Plavidlo,
+            Tvar = TvarBoje.Plamenak,
+        }));
+    }
+
+    /// <summary>
     /// Co je bóje a co ne. Rozhoduje to, co u značky smí být vyplněné,
     /// takže se to měří zvlášť — a nová hodnota výčtu tím dostane otázku,
     /// na kterou musí někdo odpovědět.
