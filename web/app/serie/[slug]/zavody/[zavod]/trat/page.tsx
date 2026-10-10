@@ -184,6 +184,7 @@ function naMapu(p: VerejnaTrat["prvky"][number], i: number): PrvekNaMape {
     delka: k.delka,
     barva: k.barva,
     tvar: k.tvar,
+    znaceni: k.znaceni,
   });
 
   const konce = [konec(p.a)];

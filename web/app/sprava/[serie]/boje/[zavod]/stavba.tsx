@@ -19,6 +19,7 @@ import {
   type Volba,
 } from "@/lib/stavba-prvku";
 import { MapkaVyber } from "@/app/mapka-vyber";
+import { NahledPrvku, type ZnackaNahledu } from "@/app/nahled-prvku";
 import { pipniAkce, slozPrvekAkce } from "./akce";
 
 type Poloha = { sirka: number; delka: number };
@@ -73,7 +74,9 @@ export function Stavba({
   const [typ, setTyp] = useState<TypStavby | null>(null);
   const [volba, setVolba] = useState<Volba | null>(null);
   const [smer, setSmer] = useState<SvetovaStrana>(null);
-  const [hotove, setHotove] = useState<{ id: number; poloha: Poloha }[]>([]);
+  const [hotove, setHotove] = useState<
+    { id: number; poloha: Poloha; znak: { barva: BarvaBoje; tvar: TvarBoje; znaceni: DruhZnaceni } }[]
+  >([]);
 
   const [znaceni, setZnaceni] = useState<DruhZnaceni>(null);
   const [barva, setBarva] = useState<BarvaBoje>(null);
@@ -150,7 +153,10 @@ export function Stavba({
     if (znaceni) setMinule({ ...minule, [typ.id]: { znaceni, barva, tvar } });
     setZMapy(false);
 
-    const vsechny = [...hotove, { id, poloha: { sirka: poloha.sirka, delka: poloha.delka } }];
+    const vsechny = [
+      ...hotove,
+      { id, poloha: { sirka: poloha.sirka, delka: poloha.delka }, znak: { barva, tvar, znaceni } },
+    ];
     setHotove(vsechny);
 
     if (vsechny.length < typ.body.length) {
@@ -178,7 +184,7 @@ export function Stavba({
     await slozPrvek(vsechny);
   };
 
-  const slozPrvek = async (body: { id: number; poloha: Poloha }[]) => {
+  const slozPrvek = async (body: { id: number }[]) => {
     if (!typ || !volba) return;
     setDelam(true);
 
@@ -216,6 +222,23 @@ export function Stavba({
     await zapis(poloha, "Telefon");
   };
 
+  // Náhled: pípnuté značky plus ta, kterou stavitel zrovna vybral.
+  // Čekající se kreslí průsvitně — ještě ve vodě není.
+  const doNahledu: ZnackaNahledu[] = hotove.map((h) => ({
+    barva: h.znak.barva ?? undefined,
+    tvar: h.znak.tvar ?? undefined,
+    znaceni: h.znak.znaceni ?? undefined,
+    jmeno: predvolba(h.znak.znaceni)?.jmeno ?? "značka",
+  }));
+  if (krok === "body" && znaceni)
+    doNahledu.push({
+      barva: barva ?? undefined,
+      tvar: tvar ?? undefined,
+      znaceni: znaceni ?? undefined,
+      jmeno: vybrana?.jmeno ?? "značka",
+      cekajici: true,
+    });
+
   // Růžice: azimut linie plyne z obou pípnutých poloh, průjezd je na ni
   // kolmý. Nabízí se proto dvě možnosti, ne osm.
   const dvojice =
@@ -234,6 +257,16 @@ export function Stavba({
         <p className="hlaska" role="status">
           {hlaska}
         </p>
+      )}
+
+      {typ && volba && (
+        <NahledPrvku
+          typ={typ}
+          stopa={volba.stopa}
+          znacky={doNahledu}
+          smer={smer}
+          popisek={`${volba.jmeno}${doNahledu.length ? " — " + popisZnacek(doNahledu) : ""}`}
+        />
       )}
 
       {krok === "typ" && (
@@ -313,6 +346,7 @@ export function Stavba({
                   <ZnakVRadku
                     barva={p.barva ?? undefined}
                     tvar={p.tvary[0] ?? undefined}
+                    znaceni={p.id}
                   />
                 </span>
                 <b>{p.jmeno}</b>
@@ -444,6 +478,15 @@ export function Stavba({
       )}
     </section>
   );
+}
+
+/**
+ * Krátký popis značek do titulku náhledu — a zároveň jeho `aria-label`,
+ * takže musí říkat, co je na obrázku. <b>Jméno značení, ne barva:</b>
+ * „sport" nese víc než „žlutá", a plavidlo s molem žádnou barvu nemají.
+ */
+function popisZnacek(znacky: ZnackaNahledu[]): string {
+  return znacky.map((z) => z.jmeno + (z.cekajici ? " (čeká)" : "")).join(" a ");
 }
 
 /**

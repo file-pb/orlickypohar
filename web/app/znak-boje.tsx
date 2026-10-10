@@ -1,4 +1,4 @@
-import type { BarvaBoje, TvarBoje } from "@/lib/boje";
+import type { BarvaBoje, DruhZnaceni, TvarBoje } from "@/lib/boje";
 
 /**
  * Jak bóje vypadá na vodě: barva a tvar.
@@ -43,6 +43,18 @@ export const NAZVY_BAREV: Record<NonNullable<BarvaBoje>, string> = {
   Ruzova: "růžová",
 };
 
+/** Jak se značení jmenuje v popiskách. `zadne` drží prázdno pro čitelnost. */
+export const NAZVY_ZNACENI: Record<string, string> = {
+  DrahaPrava: "pravá strana dráhy",
+  DrahaLeva: "levá strana dráhy",
+  DrahaSport: "sport",
+  DrahaZakaz: "zákaz vplutí",
+  NaseBoje: "",
+  Plavidlo: "plavidlo",
+  ObjektNaBrehu: "objekt na břehu",
+  zadne: "",
+};
+
 export const NAZVY_TVARU: Record<NonNullable<TvarBoje>, string> = {
   Valcova: "válcová",
   Kuzelova: "kuželová",
@@ -80,15 +92,65 @@ export function ZnakBoje({
   r = 8,
   barva,
   tvar,
+  znaceni,
 }: {
   x: number;
   y: number;
   r?: number;
   barva?: BarvaBoje;
   tvar?: TvarBoje;
+  /**
+   * Čím je značka značená. <b>Rozhoduje dřív než tvar</b>, protože
+   * plavidlo a objekt na břehu žádný tvar ani barvu nemají — a bez
+   * tohohle by se kreslily jako červené kolečko, tedy jako bóje, která
+   * tam neplave.
+   */
+  znaceni?: DruhZnaceni;
 }) {
   const vypln = barva ? BARVY[barva] : "#c1121f";
   const spolecne = { fill: vypln, stroke: "#fff", strokeWidth: 3 } as const;
+
+  // Plavidlo: lodička. Hýbe se a není to bóje, takže nesmí vypadat jako
+  // něco zakotveného.
+  if (znaceni === "Plavidlo")
+    return (
+      <g>
+        <path
+          d={`M ${x - r} ${y + r * 0.25} H ${x + r} L ${x + r * 0.65} ${y + r} H ${x - r * 0.6} Z`}
+          fill="#dfe5ea"
+          stroke="#fff"
+          strokeWidth={2}
+          strokeLinejoin="round"
+        />
+        <path
+          d={`M ${x} ${y + r * 0.2} V ${y - r * 1.15}`}
+          stroke="#fff"
+          strokeWidth={2.4}
+        />
+        <path
+          d={`M ${x + r * 0.16} ${y - r} L ${x + r * 0.95} ${y + r * 0.1} H ${x + r * 0.16} Z`}
+          fill="#dfe5ea"
+          stroke="#fff"
+          strokeWidth={2}
+          strokeLinejoin="round"
+        />
+      </g>
+    );
+
+  // Objekt na břehu: kapka. Je to místo, ne těleso ve vodě.
+  if (znaceni === "ObjektNaBrehu")
+    return (
+      <path
+        d={
+          `M ${x} ${y - r * 1.15} C ${x} ${y - r * 1.15}, ${x + r} ${y - r * 0.1}, ${x + r} ${y + r * 0.3}` +
+          ` A ${r} ${r} 0 0 1 ${x - r} ${y + r * 0.3}` +
+          ` C ${x - r} ${y - r * 0.1}, ${x} ${y - r * 1.15}, ${x} ${y - r * 1.15} Z`
+        }
+        fill="#9aa6af"
+        stroke="#fff"
+        strokeWidth={2.4}
+      />
+    );
 
   switch (tvar) {
     case "Kuzelova":
@@ -102,11 +164,17 @@ export function ZnakBoje({
       // Tyč nad hladinou, ne těleso — proto úzká a vysoká.
       return <rect x={x - r * 0.35} y={y - r * 1.4} width={r * 0.7} height={r * 2.8} {...spolecne} />;
     case "SferickyVrsek":
+      // Poklop, ne válec s koulí nahoře (Filip, 11. 10. 2026: *„u té bójky
+      // sport to vypadá spíš jako polokoule poklop a uprostřed je nápis
+      // sport"*). Tohle je ta, které se u Orlíku říká Mimoň.
+      //
+      // Nápis se nekreslí: při osmnácti pixelech by z něj byla šmouha,
+      // a tvar sám stačí k tomu, aby se nepletl s kulovou bójí.
       return (
-        <g>
-          <rect x={x - r * 0.8} y={y - r * 0.3} width={r * 1.6} height={r * 1.6} {...spolecne} />
-          <circle cx={x} cy={y - r * 0.6} r={r * 0.65} {...spolecne} />
-        </g>
+        <path
+          d={`M ${x - r} ${y + r * 0.5} A ${r} ${r * 0.95} 0 0 1 ${x + r} ${y + r * 0.5} Z`}
+          {...spolecne}
+        />
       );
     case "Plamenak":
       // Nafukovací plameňák (Filip, 11. 10. 2026). Při osmnácti pixelech
@@ -154,12 +222,23 @@ export function ZnakBoje({
  * <b>Bez barvy ani tvaru se nekreslí nic</b>, místo šedivého kolečka:
  * prázdno aspoň nelže. Tvar je nepovinný, takže samotná barva stačí.
  */
-export function ZnakVRadku({ barva, tvar }: { barva?: BarvaBoje; tvar?: TvarBoje }) {
-  if (!barva && !tvar) return null;
+export function ZnakVRadku({
+  barva,
+  tvar,
+  znaceni,
+}: {
+  barva?: BarvaBoje;
+  tvar?: TvarBoje;
+  znaceni?: DruhZnaceni;
+}) {
+  // Plavidlo a molo barvu ani tvar nemají, ale nakreslit se mají — proto
+  // se prázdno pozná až po nich.
+  if (!barva && !tvar && !znaceni) return null;
 
-  const popis = [barva && NAZVY_BAREV[barva], tvar && NAZVY_TVARU[tvar]]
-    .filter(Boolean)
-    .join(", ");
+  const popis =
+    [NAZVY_ZNACENI[znaceni ?? "zadne"], barva && NAZVY_BAREV[barva], tvar && NAZVY_TVARU[tvar]]
+      .filter(Boolean)
+      .join(", ") || "značka";
 
   return (
     <svg
@@ -171,7 +250,7 @@ export function ZnakVRadku({ barva, tvar }: { barva?: BarvaBoje; tvar?: TvarBoje
       aria-label={popis}
     >
       <title>{popis}</title>
-      <ZnakBoje x={11} y={11} r={7} barva={barva} tvar={tvar} />
+      <ZnakBoje x={11} y={11} r={7} barva={barva} tvar={tvar} znaceni={znaceni} />
     </svg>
   );
 }

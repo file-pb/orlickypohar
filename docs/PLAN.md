@@ -5410,9 +5410,31 @@ Ověřeno proklikáním proti mocku: `Start` mezi `Plavidlo` a
 `ObjektNaBrehu`, směr `S`, druh `PevnaLinie`, bez strany — tedy přesně
 to, co šlo včera zapsat jen přes chybu.
 
-**Zbývá z téhož zadání:** cartoon náhled prvku nad obsahem průvodce,
-tlačítko „projet to znovu jinak", fotky u bodu, poznámka mimo hlavní
-cestu, a výběr značky místo zadávání bodu ve formuláři prvku.
+### Náhled prvku a kreslení značení
+
+**Cartoon náhled** visí nad obsahem průvodce (Filip, 10. 10. 2026:
+*„mohl by tam být takový malý cartoon náhled toho prvku, co zadávám"*).
+Je to kontrola zadání, ne ozdoba: ukazuje, kterou stranou se jede a kudy
+loď projede. Kreslí se **schematicky**, ne podle souřadnic — skutečnou
+polohu ukazuje mapa, tohle má ukázat tvar pravidla. U **otočné brány**
+se nekreslí jedna plná stopa, ale dvě přerušované větve: stranu si volí
+posádka, takže jedna čára by tvrdila něco, co rozhodčí neurčil.
+
+**`ZnakBoje` zná značení**, a to byla skutečná vada, ne jen chybějící
+funkce náhledu: od #209 je plavidlo záznam bez barvy a tvaru, takže se
+kreslilo jako **červené kolečko** — tedy jako bóje, která tam neplave.
+Totéž platilo na mapě trati a v seznamech. Nově má plavidlo lodičku
+a objekt na břehu kapku, a značení se předává i do mapky ve správě
+a na veřejnou stránku trati.
+
+**Sportovní bóje je poklop, ne válec s koulí** (Filip, 11. 10. 2026:
+*„u té bójky sport to vypadá spíš jako polokoule poklop a uprostřed je
+nápis sport"* — u Orlíku se jí říká **Mimoň**). Nápis se nekreslí: při
+osmnácti pixelech by z něj byla šmouha a tvar sám stačí.
+
+**Zbývá z téhož zadání:** tlačítko „projet to znovu jinak", fotky
+u bodu, poznámka mimo hlavní cestu, a výběr značky místo zadávání bodu
+ve formuláři prvku.
 
 ## Růžová a plameňák (Filip, 11. 10. 2026)
 

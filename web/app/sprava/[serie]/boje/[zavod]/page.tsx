@@ -344,7 +344,7 @@ function NaTrati({
       <span className="stitek">{boje.poradi}.</span>{" "}
       {/* Značka u jména: na vodě se bóje hledá podle toho, jak vypadá,
           ne podle pořadí v seznamu. */}
-      <ZnakVRadku barva={boje.barva} tvar={boje.tvar} />
+      <ZnakVRadku barva={boje.barva} tvar={boje.tvar} znaceni={boje.znaceni} />
       <span>{boje.nazev}</span>{" "}
       <Puvod boje={boje} />
 
@@ -432,7 +432,7 @@ function NaTrati({
 function naMapu(p: Prvek, boje: Boje[]): PrvekNaMape {
   const znak = (id: number) => {
     const b = boje.find((x) => x.id === id);
-    return { barva: b?.barva, tvar: b?.tvar };
+    return { barva: b?.barva, tvar: b?.tvar, znaceni: b?.znaceni };
   };
 
   const konce = [
@@ -446,6 +446,10 @@ function naMapu(p: Prvek, boje: Boje[]): PrvekNaMape {
       delka: p.bodB.delka,
       barva: undefined,
       tvar: undefined,
+      // Záložní cesta pro prvky z doby před tím, než se bod ukládal jako
+      // záznam značky. Značení u nich není a doplnit se nedá, takže se
+      // nakreslí neutrálně — hádat by znamenalo vymýšlet.
+      znaceni: undefined,
     });
 
   return {
