@@ -259,6 +259,23 @@ export default async function Zastavka({ params, searchParams }: Parametry) {
         </p>
       )}
 
+      {/* Odkaz na tabuli. <b>Bez něj je stránka nedostupná</b> — postavil
+          jsem ji a zapomněl na ni cestu, což je přesně ta vada, kterou
+          mělo zavřít #198 u klonování trati (Filip, 10. 10. 2026:
+          „je tam někde na to odkaz nebo tlačítko?").
+
+          Ukazuje se od vypsání dál: u plánované regaty, kde se ještě
+          nepřihlašuje ani nejede, by tabule neměla co zobrazit. */}
+      {(zavod.stav === "Vypsany" || zavod.stav === "Odjety" || zavod.stav === "Potvrzeny") && (
+        <p className="poznamka">
+          <Link href={`/serie/${slug}/zavody/${slugZavodu}/tabule`}>
+            Tabule na velkou obrazovku →
+          </Link>{" "}
+          Stav regaty, dojezdy a průběžné pořadí přes celou plochu; obnovuje
+          se sama.
+        </p>
+      )}
+
       {/* Komunitní akce má stránku kvůli článkům a upoutávkám. Výsledky,
           přihlášené lodě ani pravidla závodu nemá — a prázdné nadpisy by
           tvrdily, že je teprve mít bude. */}
