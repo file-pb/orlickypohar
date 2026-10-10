@@ -1942,3 +1942,24 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 .mapka { width: 100%; height: auto; display: block; border-radius: 8px; background: #e8e6e1; }
 
 .znak-boje { vertical-align: -0.25em; margin-right: 0.3rem; }
+
+/* Tabule do hospody: čte se přes místnost, ne z klína. Velikosti jsou
+   proto v `vw` — telka může být cokoliv od notebooku po projektor. */
+.tabule { padding: 1.5vw 2vw; }
+.tabule header { display: flex; align-items: baseline; gap: 1.2vw; flex-wrap: wrap; }
+.tabule h1 { font-size: 3.2vw; margin: 0; }
+.tabule h2 { font-size: 1.7vw; margin: 0 0 0.6vw; }
+.tabule .stari { margin-left: auto; font-size: 1.1vw; color: var(--tlumeny); }
+.tabule .stari.zastarale { color: var(--stav-zruseny); }
+.tabule .sloupce {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(22vw, 1fr));
+  gap: 2vw;
+  margin-top: 1.5vw;
+}
+.tabule li { font-size: 1.4vw; line-height: 1.5; }
+.tabule .dojezd, .tabule .poradi, .tabule .lode { list-style: none; padding: 0; margin: 0.4vw 0 0; }
+.tabule .poradi li, .tabule .lode li { border-bottom: 1px solid var(--linka, #2a2a2a); padding: 0.25vw 0; }
+.tabule .poradi .body { float: right; font-variant-numeric: tabular-nums; }
+.tabule .detail { font-size: 1.1vw; color: var(--tlumeny); }
+
