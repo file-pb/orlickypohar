@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BARVY, NAZVY_BAREV, NAZVY_TVARU, ZnakVRadku } from "@/app/znak-boje";
+import { POPIS_NEJVIC } from "@/lib/boje";
 import type { BarvaBoje, DruhZnaceni, TvarBoje } from "@/lib/boje";
 import { NAZVY_SMERU, type DruhStartu, type SvetovaStrana } from "@/lib/trat";
 import {
@@ -20,7 +21,7 @@ import {
 } from "@/lib/stavba-prvku";
 import { MapkaVyber } from "@/app/mapka-vyber";
 import { NahledPrvku, type ZnackaNahledu } from "@/app/nahled-prvku";
-import { pipniAkce, slozPrvekAkce } from "./akce";
+import { fotkaKeZnacceAkce, pipniAkce, slozPrvekAkce } from "./akce";
 
 type Poloha = { sirka: number; delka: number };
 
@@ -97,6 +98,18 @@ export function Stavba({
     body: { id: number; poloha: Poloha; znak: { barva: BarvaBoje; tvar: TvarBoje; znaceni: DruhZnaceni } }[];
   } | null>(null);
 
+  /**
+   * Fotka a poznámka k bodu, který se zrovna pípá. <b>Drží se do
+   * pípnutí</b>: značka ještě nemá id, takže fotku není kam připnout.
+   * Obojí je mimo hlavní cestu (Filip, 10. 10. 2026: *„přednost má
+   * ergonomie klikacího zadávání, nechci, aby se to tam cpalo"*) —
+   * jedno tlačítko, které se rozbalí, až když ho někdo vyvolá.
+   */
+  const [fotka, setFotka] = useState<File | null>(null);
+  const [popis, setPopis] = useState("");
+  const [pisuPopis, setPisuPopis] = useState(false);
+  const vyberFotky = useRef<HTMLInputElement>(null);
+
   const [zMapy, setZMapy] = useState(false);
   const [delam, setDelam] = useState(false);
   const [chyba, setChyba] = useState<string | null>(null);
@@ -162,6 +175,7 @@ export function Stavba({
       barva: barva ?? undefined,
       tvar: tvar ?? undefined,
       znaceni: znaceni ?? undefined,
+      popis: popis.trim() || undefined,
     });
     if (chybaPipnuti || id === null) {
       setChyba(chybaPipnuti ?? "Značku se nepodařilo zapsat.");
@@ -171,6 +185,18 @@ export function Stavba({
 
     if (znaceni) setMinule({ ...minule, [typ.id]: { znaceni, barva, tvar } });
     setZMapy(false);
+
+    // Fotka až po pípnutí: dřív značka nemá id, na které by se dala
+    // pověsit. Když se nepovede, značka zůstane — je to doklad navíc,
+    // ne podmínka, a stavbu na vodě kvůli ní zastavovat nebudeme.
+    if (fotka) {
+      const { chyba: chybaFotky } = await fotkaKeZnacceAkce(serie, zavod, id, fotka);
+      if (chybaFotky) setChyba(`Značka je zapsaná, ale fotka ne: ${chybaFotky}`);
+      setFotka(null);
+      if (vyberFotky.current) vyberFotky.current.value = "";
+    }
+    setPopis("");
+    setPisuPopis(false);
 
     const vsechny = [
       ...hotove,
@@ -454,14 +480,57 @@ export function Stavba({
               >
                 {delam ? "Zapisuji…" : znaceni ? "Pípnout tady" : "Nejdřív vyber značení"}
               </button>
-              <button
-                type="button"
-                className="chip"
-                onClick={() => setZMapy(true)}
-                disabled={delam || !znaceni}
-              >
-                Vybrat z mapy
-              </button>
+              <div className="chipy">
+                <button
+                  type="button"
+                  className="chip"
+                  onClick={() => setZMapy(true)}
+                  disabled={delam || !znaceni}
+                >
+                  Vybrat z mapy
+                </button>
+
+                {/* Fotka a poznámka stojí stranou hlavní cesty: píšou se
+                    jen občas a hlavní cesta je předvolba → pípnout. */}
+                <button
+                  type="button"
+                  className={fotka ? "chip vybrany" : "chip"}
+                  onClick={() => vyberFotky.current?.click()}
+                  disabled={delam}
+                >
+                  {fotka ? "Fotka připravená" : "Vyfotit"}
+                </button>
+                <button
+                  type="button"
+                  className={popis.trim() ? "chip vybrany" : "chip"}
+                  onClick={() => setPisuPopis(!pisuPopis)}
+                  disabled={delam}
+                >
+                  Poznámka
+                </button>
+              </div>
+
+              <input
+                ref={vyberFotky}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="skryte"
+                onChange={(e) => setFotka(e.target.files?.[0] ?? null)}
+              />
+
+              {pisuPopis && (
+                <label className="poznamka-znacky">
+                  Poznámka ke značce
+                  <input
+                    type="text"
+                    value={popis}
+                    maxLength={POPIS_NEJVIC}
+                    placeholder="kotva se trhá"
+                    onChange={(e) => setPopis(e.target.value)}
+                  />
+                </label>
+              )}
               <button type="button" className="zrusit" onClick={vycisti} disabled={delam}>
                 Zrušit prvek
               </button>
