@@ -2224,7 +2224,7 @@ regaty", tedy ta, na které se pracuje. Mezi rozjížďkami je to nově klon
 v `Hotovo`, takže se smí pípat — a to je správně, bóje se mezi rozjížďkami
 běžně posouvají.
 
-##### Otevřené: sebraný dojezd a hendikep
+##### Odložené: sebraný dojezd a hendikep
 
 Filip, 9. 10. 2026: *„Pokud by se jelo na hendikep, jak bychom řešili zkrácení
 trati při nepříznivém větru — rozhodčí jede proti lodím a pípá je do cíle?"*
@@ -2250,6 +2250,17 @@ I s polohami zbývá rozhodnout, co je „ujetá vzdálenost": po trati k tomu b
 (spočitatelné hned, ale zvýhodní toho, kdo jel špatně), nebo skutečně uplutá
 (jen z tras). **Kdo nezapíše polohu, zavře si obě dveře** — proto je bod 2
 levná pojistka, i když se nikdy nepoužije.
+
+**Odloženo (Filip, 10. 10. 2026):** *„Nechej na jindy, musíme to vymyslet
+pořádně."* Není to zapomenuté ani zamítnuté — je to rozhodnutí o pravidlech
+závodu, ne o kódu, a udělat ho mezi dvěma commity by znamenalo zvolit
+nejlevnější cestu a tvářit se, že je to návrh.
+
+**Co z toho plyne pro mezidobí:** nic se nestaví a **nic se ani nerozbíjí**.
+Bod 2 (polohu dojezdu zapisovat) zůstává levnou pojistkou, kterou lze přidat
+kdykoliv; dokud se nezvolí cesta, nemá smysl ho dělat na slepo. Kdyby se
+hendikepová regata se sebraným dojezdem objevila dřív, než se rozhodne, platí
+cesta 1 jako nouzová — pořadí bez přepočtu a věta ve směrnici.
 
 ### Připojení k lodi přes QR (Filip, 4. 10. 2026)
 
