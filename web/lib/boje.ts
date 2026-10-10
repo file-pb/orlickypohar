@@ -234,3 +234,45 @@ export async function odeberFotku(
     return "API se nedaří zavolat.";
   }
 }
+
+/**
+ * Kolik záznamů historie je k zahození. <b>Nic nemaže</b> — obrazovka to
+ * musí říct dřív, než se na něco klikne, protože mazání nejde vzít zpátky.
+ * Při výpadku vrací <c>null</c> a obrazovka úklid prostě nenabídne.
+ */
+export async function nactiKUklizeni(serie: string, zavod: string): Promise<number | null> {
+  const t = await tokenZeSezeni();
+  if (!t) return null;
+
+  try {
+    const odpoved = await fetch(`${cesta(serie, zavod)}/uklid`, {
+      headers: { authorization: `Bearer ${t}`, accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!odpoved.ok) return null;
+    return ((await odpoved.json()) as { pocet: number }).pocet;
+  } catch {
+    return null;
+  }
+}
+
+/** Úklid historie. Vrací počet zahozených, nebo text chyby. */
+export async function uklidHistorii(
+  serie: string,
+  zavod: string,
+): Promise<number | string> {
+  const t = await tokenZeSezeni();
+  if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+
+  try {
+    const odpoved = await fetch(`${cesta(serie, zavod)}/uklid`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${t}`, accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!odpoved.ok) return await hlaska(odpoved);
+    return ((await odpoved.json()) as { pocet: number }).pocet;
+  } catch {
+    return "API se nedaří zavolat.";
+  }
+}

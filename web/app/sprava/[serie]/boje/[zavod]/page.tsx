@@ -6,6 +6,7 @@ import { okamzik } from "@/app/datum";
 import {
   NAZEV_NEJVIC,
   NAZVY_ZDROJU,
+  nactiKUklizeni,
   nactiTrat,
   type Boje,
   type Byvala,
@@ -16,7 +17,7 @@ import { Pipani } from "./pipani";
 import { nactiPrvky, nactiStavTrati, type Prvek } from "@/lib/trat";
 import { PrvkyTrati } from "./prvky";
 import { StavTrati } from "./stav-trati";
-import { nahrajFotkuAkce, odeberFotkuAkce, seberAkce } from "./akce";
+import { nahrajFotkuAkce, odeberFotkuAkce, seberAkce, uklidAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -25,7 +26,7 @@ export const metadata = { title: "Bóje na trati — správa" };
 
 type Parametry = {
   params: Promise<{ serie: string; zavod: string }>;
-  searchParams: Promise<{ chyba?: string; stav?: string; prenastav?: string }>;
+  searchParams: Promise<{ chyba?: string; stav?: string; prenastav?: string; uklizeno?: string }>;
 };
 
 /**
@@ -50,11 +51,12 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
 
   // Název regaty v odpovědi o bójích není, a bez něj nadpis neřekne, čí
   // trať se zrovna staví (Filip, 9. 10. 2026).
-  const [{ stav, trat, byvale }, nazev, stavTrati, prvky] = await Promise.all([
+  const [{ stav, trat, byvale }, nazev, stavTrati, prvky, kUklizeni] = await Promise.all([
     nactiTrat(serie, zavod),
     nazevZastavky(serie, zavod),
     nactiStavTrati(serie, zavod),
     nactiPrvky(serie, zavod),
+    nactiKUklizeni(serie, zavod),
   ]);
   if (stav === "neni") notFound();
 
@@ -88,6 +90,13 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
       {zpravy.stav === "fotka" && (
         <p className="hlaska" role="status">
           Fotka je u bóje. Uložila se přepočtená na web, originál nikam.
+        </p>
+      )}
+      {zpravy.uklizeno && (
+        <p className="hlaska" role="status">
+          {zpravy.uklizeno === "1"
+            ? "Zahodil se jeden záznam historie."
+            : `Zahodilo se ${zpravy.uklizeno} záznamů historie.`}
         </p>
       )}
       {zpravy.stav === "prvek" && (
@@ -214,9 +223,29 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
             <>
               <h2>Historie</h2>
               <p className="poznamka">
-                Přenastavené a sebrané bóje. Zůstávají, protože trasa lodi se
-                k trati vztahuje tak, jak stála tehdy — ne jak stojí teď.
+                Přenastavené a sebrané bóje. Drží se ty, na kterých něco visí:
+                ukazuje na ně prvek trati, nebo stály ve vodě, když rozhodčí
+                trať přijal — tedy když už byly venku.
               </p>
+
+              {/* Úklid nabídne obrazovka jen tehdy, když je co uklidit,
+                  a vždycky řekne kolik. Mazání nejde vzít zpátky, takže
+                  tlačítko „ukliď" bez čísla by byl výstřel naslepo. */}
+              {kUklizeni !== null && kUklizeni > 0 && (
+                <form action={uklidAkce} className="formular radkove">
+                  <input type="hidden" name="serie" value={serie} />
+                  <input type="hidden" name="zavod" value={zavod} />
+                  <p className="poznamka">
+                    {kUklizeni === 1
+                      ? "Jeden záznam tu zůstal po překlepu nebo přestavbě a nic na něm nevisí."
+                      : `${kUklizeni} záznamů tu zůstalo po překlepech a přestavbách a nic na nich nevisí.`}{" "}
+                    <button type="submit">
+                      {kUklizeni === 1 ? "Zahodit ho" : "Zahodit je"}
+                    </button>{" "}
+                    Smaže se i s fotkami a nejde to vrátit.
+                  </p>
+                </form>
+              )}
               <ul className="seznam">
                 {byvale.map(({ boje, proc }) => (
                   <li key={boje.id}>

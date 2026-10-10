@@ -181,20 +181,80 @@ public class BojeSprava(
     /// podle takové trati nikdo neplul.
     /// </para>
     /// </summary>
-    private async Task<bool> ZahodAsync(Boje stara, Boje? nastupce, CancellationToken ct)
+    /// <summary>
+    /// Kolik záznamů v historii regaty je k zahození — tedy nic na nich
+    /// nevisí. <b>Nic nemaže</b>, jen počítá: obrazovka to musí říct
+    /// dřív, než se na něco klikne.
+    /// </summary>
+    public async Task<int> KUklizeniAsync(int zavodId, CancellationToken ct)
+    {
+        var pocet = 0;
+        foreach (var b in await NeplatneAsync(zavodId, ct))
+            if (await ZbytecnyAsync(b, ct)) pocet++;
+
+        return pocet;
+    }
+
+    /// <summary>
+    /// Jednorázový úklid historie (Filip, 10. 10. 2026: <i>„vymaž tu
+    /// historii bójí, ať tam nestraší"</i>). Platí tentýž rozsudek jako
+    /// při pípnutí a sebrání — drží se jen záznam, na kterém něco visí.
+    ///
+    /// <para>
+    /// <b>Proč akce a ne migrace:</b> je to mazání, které nejde vzít
+    /// zpátky. Migrace by proběhla potichu při nasazení a nikdo by
+    /// neviděl, co zmizelo. Takhle obrazovka nejdřív řekne kolik, a maže
+    /// se na klik.
+    /// </para>
+    ///
+    /// <para>
+    /// Vrací, kolik záznamů zmizelo. Záznamy, u kterých se nedají smazat
+    /// fotky (vypnuté úložiště), zůstanou — stejně jako jinde.
+    /// </para>
+    /// </summary>
+    public async Task<int> UklidAsync(int zavodId, CancellationToken ct)
+    {
+        var zahozeno = 0;
+        foreach (var b in await NeplatneAsync(zavodId, ct))
+            if (await ZahodAsync(b, null, ct)) zahozeno++;
+
+        if (zahozeno > 0)
+            log.LogInformation(
+                "Úklid historie bójí u regaty {Zavod}: zahozeno {Pocet} záznamů",
+                zavodId, zahozeno);
+
+        return zahozeno;
+    }
+
+    /// <summary>
+    /// Záznamy, které už ve vodě nestojí. <b>Od nejnovějšího</b>, aby se
+    /// řetěz přenastavení rozplétal odzadu a nástupce vždycky existoval
+    /// dřív, než se sáhne na jeho předchůdce.
+    /// </summary>
+    private Task<List<Boje>> NeplatneAsync(int zavodId, CancellationToken ct) =>
+        db.Boje
+            .Where(b => b.ZavodId == zavodId && (b.NahrazenaV != null || b.SebranaV != null))
+            .OrderByDescending(b => b.Id)
+            .ToListAsync(ct);
+
+    /// <summary>Visí na tom záznamu něco? Jádro pravidla, bez mazání.</summary>
+    private async Task<bool> ZbytecnyAsync(Boje stara, CancellationToken ct)
     {
         if (await db.PrvkyTrati.AnyAsync(
                 p => p.BojeAId == stara.Id || p.BojeBId == stara.Id, ct))
             return false;
 
-        var stala = await db.Trate.AnyAsync(
+        return !await db.Trate.AnyAsync(
             t => t.ZavodId == stara.ZavodId
                  && t.PrijatoV != null
                  && t.PrijatoV >= stara.PostavenaV
                  && (stara.NahrazenaV == null || t.PrijatoV < stara.NahrazenaV)
                  && (stara.SebranaV == null || t.PrijatoV < stara.SebranaV), ct);
-        if (stala) return false;
+    }
 
+    private async Task<bool> ZahodAsync(Boje stara, Boje? nastupce, CancellationToken ct)
+    {
+        if (!await ZbytecnyAsync(stara, ct)) return false;
         if (!await fotky.OdeberVsechnyUBojeAsync(stara.Id, ct)) return false;
 
         // Nástupce se napojí na předchůdce zahozeného záznamu, ať řetěz

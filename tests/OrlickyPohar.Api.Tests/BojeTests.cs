@@ -442,6 +442,52 @@ public class BojeTests(PostgresFixture fixture)
         Assert.Equal(TvarBoje.Valcova, venku.Tvar);
     }
 
+    /// <summary>
+    /// Jednorázový úklid historie (Filip, 10. 10. 2026: <i>„vymaž tu
+    /// historii bójí, ať tam nestraší"</i>). Pravidlo #186 platilo jen
+    /// dopředu — záznamy, které vznikly dřív, zůstávaly.
+    /// <para>
+    /// Měří se obojí: že zmizí, co je k ničemu, <b>a že zůstane, na čem
+    /// něco visí</b>. Úklid, který bere všechno, by byl snadný a špatný.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Uklid_vezme_jen_to_na_cem_nic_nevisi()
+    {
+        var (db, boje, trate) = SluzbyITrat();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        // Dva staré překlepy: pípnuto a hned přenastaveno. Aby je úklid
+        // měl co najít, vyrobí se ručně — pípnutí je dnes zahodí samo.
+        var zbytecna = new OrlickyPohar.Api.Features.Boje.Boje
+        {
+            ZavodId = zavod.Id, Nazev = "překlep", Poradi = 1, Sirka = 49.5, Delka = 14.1,
+            PostavenaV = Ted, PostavilId = kdo.Id, NahrazenaV = Ted.AddMinutes(1),
+        };
+        var druha = new OrlickyPohar.Api.Features.Boje.Boje
+        {
+            ZavodId = zavod.Id, Nazev = "sebraná", Poradi = 2, Sirka = 49.5, Delka = 14.1,
+            PostavenaV = Ted, PostavilId = kdo.Id, SebranaV = Ted.AddMinutes(2),
+        };
+        db.Boje.AddRange(zbytecna, druha);
+        await db.SaveChangesAsync();
+
+        // A jedna, která stála ve vodě, když rozhodčí trať přijal.
+        var (verejna, _) = await boje.PipniAsync(zavod.Id, Bod("byla venku"), kdo.Id, default);
+        await DulezitaAsync(trate, zavod, kdo);
+        Assert.Null(await boje.SeberAsync(zavod.Id, verejna!.Id, default));
+
+        Assert.Equal(2, await boje.KUklizeniAsync(zavod.Id, default));
+        Assert.Equal(2, await boje.UklidAsync(zavod.Id, default));
+
+        var zbylo = await boje.SeznamAsync(zavod.Id, iHistorie: true, default);
+        Assert.Equal(verejna.Id, Assert.Single(zbylo).Id);
+
+        // Druhý běh nemá co dělat — a nesmí sáhnout na to, co zůstalo.
+        Assert.Equal(0, await boje.KUklizeniAsync(zavod.Id, default));
+        Assert.Equal(0, await boje.UklidAsync(zavod.Id, default));
+    }
+
     private static OrlickyPohar.Api.Features.Fotky.Fotka Snimek(
         Guid kdo, string popis, DateTimeOffset kdy) => new()
     {
