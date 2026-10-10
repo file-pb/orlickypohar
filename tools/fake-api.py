@@ -928,7 +928,8 @@ def prvek_dto(slug, p):
     def konec(id_boje):
         b = next((x for x in BOJE.get(slug, []) if x["id"] == id_boje), None)
         return None if not b else {"id": b["id"], "nazev": b["nazev"],
-                                   "sirka": b["sirka"], "delka": b["delka"]}
+                                   "sirka": b["sirka"], "delka": b["delka"],
+                                   "znaceni": b.get("znaceni")}
 
     bod = None
     if p["konecBSirka"] is not None and p["konecBDelka"] is not None:
@@ -2464,15 +2465,49 @@ class H(BaseHTTPRequestHandler):
         if (chyba := proc_nejde_prvek(slug, v)):
             return self.chyba(400, chyba)
 
+        # Nebójový bod se zapíše jako záznam značky — opsané
+        # z `PrvkySprava.ZaznamBoduAsync`. Tři kolonky na prvku nové
+        # prvky už neplní vůbec.
+        boje_b = self.znacka_z_bodu(slug, v)
+
         PRVEK_ID[0] += 1
         p = {"id": PRVEK_ID[0], "typ": v["typ"], "poradi": v["poradi"],
              "strana": v.get("strana"), "poznamka": (v.get("poznamka") or "").strip() or None,
-             "bojeAId": v["bojeAId"], "bojeBId": v.get("bojeBId"),
-             "konecBSirka": v.get("konecBSirka"), "konecBDelka": v.get("konecBDelka"),
-             "konecBPopis": (v.get("konecBPopis") or "").strip() or None,
+             "bojeAId": v["bojeAId"], "bojeBId": boje_b,
+             "konecBSirka": None, "konecBDelka": None, "konecBPopis": None,
              "smer": v.get("smer"), "druhStartu": v.get("druhStartu")}
         PRVKY.setdefault(trat_aktualni(slug)["id"], []).append(p)
         return self.odpoved(prvek_dto(slug, p), 201)
+
+    def znacka_z_bodu(self, slug, v):
+        """
+        Nebójový bod prvku jako záznam značky — opsané
+        z `PrvkySprava.ZaznamBoduAsync`.
+
+        Zdroj je mapa, ne telefon: jsou to opsané souřadnice, které nikdo
+        neměřil, takže přesnost zůstane prázdná. Značení se nedoplňuje,
+        když ho vstup neřekne — hádat se v záznamu nemá.
+        """
+        if v.get("bojeBId"):
+            return v["bojeBId"]
+        if v.get("konecBSirka") is None or v.get("konecBDelka") is None:
+            return None
+
+        seznam = BOJE.setdefault(slug, [])
+        poradi = max((b["poradi"] for b in seznam
+                      if b["nahrazenaV"] is None and not b["sebrana"]), default=0) + 1
+
+        BOJE_ID[0] += 1
+        seznam.append({
+            "id": BOJE_ID[0], "nazev": (v.get("konecBPopis") or "").strip(),
+            "poradi": poradi, "sirka": v["konecBSirka"], "delka": v["konecBDelka"],
+            "presnostM": None, "postavenaV": ted_iso(),
+            "postavil": self.prihlaseny()["zobrazovane"],
+            "nahrazenaV": None, "sebrana": False, "sebranaV": None,
+            "zdroj": "Mapa", "barva": None, "tvar": None,
+            "znaceni": v.get("konecBZnaceni"), "popis": None,
+        })
+        return BOJE_ID[0]
 
     def _prvek(self, slug, prvek_id):
         t = trat_aktualni(slug)
@@ -2488,12 +2523,18 @@ class H(BaseHTTPRequestHandler):
         if not (p := self._prvek(slug, prvek_id)):
             return self.chyba(400, "Takový prvek na téhle trati není.")
 
+        ma_bod = (v.get("konecBSirka") is not None
+                  and v.get("konecBDelka") is not None)
+        if p.get("bojeBId") and not v.get("bojeBId") and ma_bod:
+            return self.chyba(400, "Tenhle prvek už má druhý konec jako značku. "
+                                   "Vyber značku, nebo prvek smaž a postav znovu.")
+
         p.update({"typ": v["typ"], "poradi": v["poradi"], "strana": v.get("strana"),
                   "poznamka": (v.get("poznamka") or "").strip() or None,
-                  "bojeAId": v["bojeAId"], "bojeBId": v.get("bojeBId"),
-                  "konecBSirka": v.get("konecBSirka"), "konecBDelka": v.get("konecBDelka"),
-                  "konecBPopis": (v.get("konecBPopis") or "").strip() or None,
-             "smer": v.get("smer"), "druhStartu": v.get("druhStartu")})
+                  "bojeAId": v["bojeAId"],
+                  "bojeBId": self.znacka_z_bodu(slug, v),
+                  "konecBSirka": None, "konecBDelka": None, "konecBPopis": None,
+                  "smer": v.get("smer"), "druhStartu": v.get("druhStartu")})
         return self.odpoved(prvek_dto(slug, p))
 
     def prvek_smaz(self, slug, prvek_id):

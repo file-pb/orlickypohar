@@ -5323,10 +5323,41 @@ a tvar. U plavidla to platí nejvíc: loď komise se za dopoledne posune
 několikrát a vybírat pokaždé „plavidlo“ je práce, kterou stavitel na vodě
 nemá dělat.
 
-**Zbývá z téhož zadání:** přestěhovat `KonecB*` do záznamů a tři sloupce
-zrušit; `OtocnaBrana` jako nová hodnota výčtu (sloupec `Typ` je `integer`
-bez check constraintu, takže **bez migrace**); sdružené typy, předvolby,
-růžice a „projet to znovu jinak“ v obrazovce.
+**Fotky jsou u bodu, ne u celého prvku** (Filip, 10. 10. 2026). U prvku se
+dvěma body by společná fotka neřekla, které značky patří. **„Jako minule"
+si pamatuje značení zvlášť po typech:** regata má jiný slovník u otočných
+než u brány a jedno naposled použité by po každé změně typu nabídlo
+špatnou předvolbu.
+
+### Bod prvku je záznam značky
+
+Nebójový konec se přestěhoval do záznamů a zápisová cesta od té chvíle
+žádný bod do `KonecB*` nezapisuje. **Sloupce zůstávají jako záložní
+cesta** a zruší se až dalším krokem, nad daty, o kterých už bude
+ověřeno, že jsou přestěhovaná — kdyby přesun nějaký řádek minul, veřejná
+stránka trati ho pořád přečte. Produkce v tu chvíli neměla ani jednu
+přijatou trať, takže řádků k přesunu je nejspíš nula, ale **dokázat to
+nešlo**: produkční databáze se odsud nečte a CI ověří jen průběh nad
+prázdnou tabulkou.
+
+Co migrace nedokáže odvodit, **nevymýšlí**: značení zůstane prázdné,
+protože z popisu „plavidlo komise" by se dalo jen hádat. Autora bere
+z bóje na prvním konci téhož prvku — v SQL není přihlášený uživatel
+a ten člověk to tehdy zapisoval. Zdroj je `Mapa` a přesnost prázdná,
+protože to byly opsané souřadnice, které nikdo neměřil. V živém kódu
+autora předává endpoint, protože prvek může zakládat někdo jiný, než
+kdo tu bóji pípal.
+
+`UpravAsync` s bodem na prvku, který už značku na druhém konci má,
+**odmítne nahlas**. Tiché zdvojení by nechalo v seznamu značku, kterou
+nikdo nepostavil; tiché zahození bodu by zapřelo, co volající poslal.
+Web tuhle cestu nevolá — prvky jen zakládá a maže.
+
+**Zbývá z téhož zadání:** zrušit `KonecB*` sloupce; `OtocnaBrana` jako
+nová hodnota výčtu (sloupec `Typ` je `integer` bez check constraintu,
+takže **bez migrace**); sdružené typy, předvolby, růžice, cartoon náhled
+a „projet to znovu jinak“ v obrazovce; výběr značky místo zadávání bodu
+ve formuláři prvku.
 
 ## Fotky lodi v přihlášce (Filip, 10. 10. 2026)
 

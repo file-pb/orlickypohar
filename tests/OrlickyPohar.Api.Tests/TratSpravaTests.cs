@@ -50,7 +50,7 @@ public class TratSpravaTests(PostgresFixture fixture)
         return (db,
             BojeSluzba(db, trat),
             trat,
-            new PrvkySprava(db, trat));
+            new PrvkySprava(db, trat, TimeProvider.System));
     }
 
     private static BojeSprava BojeSluzba(AppDbContext db, TratSprava trat)
@@ -250,7 +250,7 @@ public class TratSpravaTests(PostgresFixture fixture)
 
         Assert.Null((await prvky.ZalozAsync(zavod.Id, new PrvekVstup(
             TypPrvku.Start, 1, levy!.Id, pravy!.Id,
-            Poznamka: "projíždí se po proudu"), default)).Chyba);
+            Poznamka: "projíždí se po proudu"), kdo.Id, default)).Chyba);
 
         await trate.HotovoAsync(zavod.Id, true, default);
         await trate.PrijmiAsync(zavod.Id, kdo.Id, default);
@@ -343,7 +343,7 @@ public class TratSpravaTests(PostgresFixture fixture)
 
         var (prvni, _) = await boje.PipniAsync(zavod.Id, Bod("Značka"), kdo.Id, default);
         Assert.Null((await prvky.ZalozAsync(
-            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, prvni!.Id), default)).Chyba);
+            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, prvni!.Id), kdo.Id, default)).Chyba);
 
         // Prvek je rozhodnutí o trati; smazáním záznamu by se rozbil.
         var (druha, _) = await boje.PipniAsync(
@@ -373,7 +373,7 @@ public class TratSpravaTests(PostgresFixture fixture)
         var (levy, _) = await boje.PipniAsync(zavod.Id, Bod("start levý"), kdo.Id, default);
         var (pravy, _) = await boje.PipniAsync(zavod.Id, Bod("start pravý"), kdo.Id, default);
         await prvky.ZalozAsync(zavod.Id, new PrvekVstup(
-            TypPrvku.Start, 1, levy!.Id, pravy!.Id, Poznamka: "po proudu"), default);
+            TypPrvku.Start, 1, levy!.Id, pravy!.Id, Poznamka: "po proudu"), kdo.Id, default);
 
         var prvni = await RozjizdkaAsync(db, zavod, 1);
         var puvodni = (await trate.AktualniAsync(zavod.Id, default))!;
@@ -456,7 +456,8 @@ public class TratSpravaTests(PostgresFixture fixture)
         var (zavod, kdo) = await RegataAsync(db);
 
         var (b, _) = await boje.PipniAsync(zavod.Id, Bod("Start"), kdo.Id, default);
-        await prvky.ZalozAsync(zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, b!.Id), default);
+        await prvky.ZalozAsync(
+            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, b!.Id), kdo.Id, default);
         await trate.HotovoAsync(zavod.Id, true, default);
         await trate.PrijmiAsync(zavod.Id, kdo.Id, default);
 

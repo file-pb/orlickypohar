@@ -43,7 +43,7 @@ public class PrvkySpravaTests(PostgresFixture fixture)
         return (db,
             BojeSluzba(db, trat),
             trat,
-            new PrvkySprava(db, trat));
+            new PrvkySprava(db, trat, TimeProvider.System));
     }
 
     private static BojeSprava BojeSluzba(AppDbContext db, TratSprava trat)
@@ -98,7 +98,7 @@ public class PrvkySpravaTests(PostgresFixture fixture)
 
         var (prvek, chyba) = await prvky.ZalozAsync(zavod.Id, new PrvekVstup(
             TypPrvku.Start, 1, levy!.Id, pravy!.Id,
-            Poznamka: "projíždí se po proudu"), default);
+            Poznamka: "projíždí se po proudu"), kdo.Id, default);
 
         Assert.Null(chyba);
         Assert.Equal(TypPrvku.Start, prvek!.Typ);
@@ -108,26 +108,78 @@ public class PrvkySpravaTests(PostgresFixture fixture)
         Assert.Null(prvek.BodB);
     }
 
+    /// <summary>
+    /// <b>Nebójový bod se zapíše jako záznam značky</b> (Filip, 10. 10. 2026:
+    /// <i>„cíl mezi lodí a molem je dost pravděpodobný“</i>, a totéž u startu).
+    /// Dřív z něj byly tři kolonky na prvku, takže molo ani loď komise neměly
+    /// fotku ani historii — a prvnímu bodu to nešlo vůbec.
+    /// <para>
+    /// Druhý konec proto vyjde jako <c>B</c>, <b>ne</b> jako <c>BodB</c>:
+    /// ta záložní cesta zůstává jen pro řádky, které vznikly dřív.
+    /// </para>
+    /// </summary>
     [Fact]
-    public async Task Konec_smi_byt_bod_kdyz_rekne_cim_je()
+    public async Task Nebojovy_bod_vznikne_jako_znacka()
     {
-        // Start se běžně vytyčí mezi bójí a plavidlem komise.
         var (db, boje, _, prvky) = Sluzby();
         var (zavod, kdo) = await RegataAsync(db);
         var (b, _) = await boje.PipniAsync(zavod.Id, Bod("start levý"), kdo.Id, default);
 
+        // Bez popisu to nejde dál: záznam značky by neměl jméno a na vodě
+        // by se nepoznalo, kam se pluje.
         var (bez, chybaBez) = await prvky.ZalozAsync(zavod.Id, new PrvekVstup(
-            TypPrvku.Start, 1, b!.Id, KonecBSirka: 49.52, KonecBDelka: 14.17), default);
+            TypPrvku.Start, 1, b!.Id, KonecBSirka: 49.52, KonecBDelka: 14.17),
+            kdo.Id, default);
         Assert.Null(bez);
         Assert.NotNull(chybaBez);
 
         var (prvek, chyba) = await prvky.ZalozAsync(zavod.Id, new PrvekVstup(
             TypPrvku.Start, 1, b.Id, KonecBSirka: 49.52, KonecBDelka: 14.17,
-            KonecBPopis: "plavidlo komise"), default);
+            KonecBPopis: "plavidlo komise", KonecBZnaceni: DruhZnaceni.Plavidlo),
+            kdo.Id, default);
 
         Assert.Null(chyba);
-        Assert.Equal("plavidlo komise", prvek!.BodB!.Popis);
-        Assert.Null(prvek.B);
+        Assert.Null(prvek!.BodB);
+        Assert.Equal("plavidlo komise", prvek.B!.Nazev);
+        Assert.Equal(DruhZnaceni.Plavidlo, prvek.B.Znaceni);
+
+        // A je to doopravdy záznam té regaty: zdroj mapa, protože to byly
+        // opsané souřadnice, a přesnost prázdná, protože nikdo neměřil.
+        var znacka = await db.Boje.AsNoTracking().FirstAsync(x => x.Id == prvek.B.Id);
+        Assert.Equal(zavod.Id, znacka.ZavodId);
+        Assert.Equal(ZdrojPolohy.Mapa, znacka.Zdroj);
+        Assert.Null(znacka.PresnostM);
+        Assert.Equal(kdo.Id, znacka.PostavilId);
+        // Značení se nedoplňuje jinak než ze vstupu.
+        Assert.Equal(DruhZnaceni.Plavidlo, znacka.Znaceni);
+    }
+
+    /// <summary>
+    /// Úprava, která by z bodu udělala <b>další</b> značku, i když prvek už
+    /// jednu na druhém konci má, se odmítne nahlas. Tiché zdvojení by
+    /// nechalo v seznamu značku, kterou nikdo nepostavil; tiché zahození
+    /// bodu by zapřelo, co volající poslal.
+    /// <para>Web tuhle cestu nevolá — prvky jen zakládá a maže.</para>
+    /// </summary>
+    [Fact]
+    public async Task Uprava_nezdvoji_znacku_na_druhem_konci()
+    {
+        var (db, boje, _, prvky) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+        var (a, _) = await boje.PipniAsync(zavod.Id, Bod("start levý"), kdo.Id, default);
+
+        var (prvek, _) = await prvky.ZalozAsync(zavod.Id, new PrvekVstup(
+            TypPrvku.Start, 1, a!.Id, KonecBSirka: 49.52, KonecBDelka: 14.17,
+            KonecBPopis: "plavidlo komise"), kdo.Id, default);
+        var znacek = await db.Boje.CountAsync(x => x.ZavodId == zavod.Id);
+
+        var (nic, chyba) = await prvky.UpravAsync(zavod.Id, prvek!.Id, new PrvekVstup(
+            TypPrvku.Start, 1, a.Id, KonecBSirka: 49.53, KonecBDelka: 14.18,
+            KonecBPopis: "jiné plavidlo"), kdo.Id, default);
+
+        Assert.Null(nic);
+        Assert.NotNull(chyba);
+        Assert.Equal(znacek, await db.Boje.CountAsync(x => x.ZavodId == zavod.Id));
     }
 
     [Fact]
@@ -141,7 +193,7 @@ public class PrvkySpravaTests(PostgresFixture fixture)
         Assert.Null(await boje.SeberAsync(zavod.Id, pryc!.Id, default));
 
         var (prvek, chyba) = await prvky.ZalozAsync(zavod.Id, new PrvekVstup(
-            TypPrvku.Brana, 1, stoji!.Id, pryc.Id), default);
+            TypPrvku.Brana, 1, stoji!.Id, pryc.Id), kdo.Id, default);
 
         Assert.Null(prvek);
         Assert.NotNull(chyba);
@@ -155,7 +207,7 @@ public class PrvkySpravaTests(PostgresFixture fixture)
 
         var (a, _) = await boje.PipniAsync(zavod.Id, Bod("bóje 1"), kdo.Id, default);
         var (zalozeny, _) = await prvky.ZalozAsync(
-            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, a!.Id), default);
+            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, a!.Id), kdo.Id, default);
 
         await trate.HotovoAsync(zavod.Id, true, default);
         await trate.PrijmiAsync(zavod.Id, kdo.Id, default);
@@ -163,9 +215,10 @@ public class PrvkySpravaTests(PostgresFixture fixture)
         // Tentýž zámek jako u pípnutí: veřejně vydaná trať se nesmí
         // přeskládat pod lodí, která podle ní pluje.
         Assert.NotNull((await prvky.ZalozAsync(
-            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 2, a.Id), default)).Chyba);
+            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 2, a.Id), kdo.Id, default)).Chyba);
         Assert.NotNull((await prvky.UpravAsync(
-            zavod.Id, zalozeny!.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 9, a.Id), default)).Chyba);
+            zavod.Id, zalozeny!.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 9, a.Id),
+            kdo.Id, default)).Chyba);
         Assert.NotNull(await prvky.SmazAsync(zavod.Id, zalozeny.Id, default));
 
         // A nic se nezměnilo.
@@ -184,9 +237,9 @@ public class PrvkySpravaTests(PostgresFixture fixture)
         var (a, _) = await boje.PipniAsync(zavod.Id, Bod("bóje A"), kdo.Id, default);
 
         Assert.Null((await prvky.ZalozAsync(
-            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 2, a!.Id), default)).Chyba);
+            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 2, a!.Id), kdo.Id, default)).Chyba);
         Assert.Null((await prvky.ZalozAsync(
-            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 4, a.Id), default)).Chyba);
+            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 4, a.Id), kdo.Id, default)).Chyba);
 
         var seznam = await prvky.SeznamAsync(zavod.Id, default);
 
