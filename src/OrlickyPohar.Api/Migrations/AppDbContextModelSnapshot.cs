@@ -47,6 +47,10 @@ namespace OrlickyPohar.Api.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
 
+                    b.Property<string>("Popis")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<int>("Poradi")
                         .HasColumnType("integer");
 
@@ -72,6 +76,9 @@ namespace OrlickyPohar.Api.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("Zdroj")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Znaceni")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");

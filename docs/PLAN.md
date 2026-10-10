@@ -5284,6 +5284,56 @@ a před úklidem se ověřují. **Neověřené zůstává samotné smazání:** 
 skončí na 403, je potřeba osobní token s `delete:packages` v tajemství
 `GHCR_UKLID_TOKEN`. Balíček `orlickypohar` měl v tu chvíli **1 122 verzí**.
 
+## Značení značky (Filip, 10. 10. 2026)
+
+Z prokopávání ergonomie průvodce (náhledy:
+`claude.ai/artifact/K1cEU3gM7M9R1seveeKnRQ`). **Značení patří bodu, ne
+prvku**, a nese význam, barvu i tvar v jednom dotyku: dřív se barva
+klikala zvlášť, tvar se v průvodci nezadával vůbec a význam se dohadoval
+z jejich kombinace.
+
+`DruhZnaceni` je **nepovinné**. Starším záznamům se nic nedoplňuje:
+rozhodčí mohl stejně dobře pípnout znak plavební dráhy, protože
+průjezdní bóje je pokrývá schválně obojí — „naše bóje“ by tedy byl
+výmysl. Tím se to liší od `ZdrojPolohy`, kde nula byla pravda, protože
+jinudy než pípnutím to tehdy nešlo.
+
+**Plavidlo a objekt na břehu jsou druhy značení**, aby bod prvku nemusel
+být bóje. Filip: *„cíl mezi lodí a molem je dost pravděpodobný“*, a totéž
+u startu. Měření polohy to je pořád, takže patří do téže tabulky — a molo
+i loď komise tím dostanou fotku i historii. **Fotka mola je zrovna ten
+doklad, kde linie končila.** Barvu ani tvar nemají a server to odmítne:
+jinak by mapka u lodi komise nakreslila červený válec a závodník by
+hledal bóji, která tam není.
+
+**Vyhláškové kombinace se schválně nevynucují.** Předvolba v obrazovce je
+nabídka, ne zákon — server nemá odmítat zápis toho, co rozhodčí na vodě
+skutečně vidí.
+
+`Popis` je poznámka ke značce (Filip: *„občas tam potřebuju napsat
+poznámku“*). Jméno je krátký štítek do seznamu a na mapku; sem patří, co
+se do jména nevejde. **Na hlavní cestu průvodce nepatří** — Filip:
+*„přednost má ergonomie klikacího zadávání, nechci aby se to tam cpalo
+a ničilo to kompaktnost“*. Píše se jen občas, takže obrazovka ji má mít
+schovanou: ve formuláři jedné bóje jako běžné pole, v průvodci nejvýš
+jako druhotné tlačítko.
+
+Značení i poznámka se přenastavením **přebírají**, stejně jako barva
+a tvar. U plavidla to platí nejvíc: loď komise se za dopoledne posune
+několikrát a vybírat pokaždé „plavidlo“ je práce, kterou stavitel na vodě
+nemá dělat.
+
+**Zbývá z téhož zadání:** přestěhovat `KonecB*` do záznamů a tři sloupce
+zrušit; `OtocnaBrana` jako nová hodnota výčtu (sloupec `Typ` je `integer`
+bez check constraintu, takže **bez migrace**); sdružené typy, předvolby,
+růžice a „projet to znovu jinak“ v obrazovce.
+
+## Fotky lodi v přihlášce (Filip, 10. 10. 2026)
+
+*„Nahrát třeba 3 fotečky k lodi v přihlášce a uložit to komprimovaně.“*
+Mechanismus na fotky už je (`Fotky`, `ObrazekDto`, komprese u bójí),
+takže jde o nové místo a limit, ne o nový podsystém. Nezačato.
+
 ## Kde se pokračuje
 
 Kdo sem přijde z jiného stroje, potřebuje vědět tohle:

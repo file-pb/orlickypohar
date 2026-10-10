@@ -84,4 +84,74 @@ public class PipnutiTests
         Assert.NotNull(Pipnuti.ProcNejde(Bod(nazev: "   ")));
         Assert.NotNull(Pipnuti.ProcNejde(Bod(nazev: new string('a', Pipnuti.NazevNejvic + 1))));
     }
+
+    /// <summary>
+    /// <b>Plavidlo ani objekt na břehu nejsou kus plastu</b>, takže barva
+    /// a tvar u nich nic neznamenají. Kdyby je směly nést, nakreslila by
+    /// mapka u lodi komise červený válec a závodník by hledal bóji, která
+    /// tam není.
+    /// </summary>
+    [Fact]
+    public void Plavidlo_a_breh_nemaji_barvu_ani_tvar()
+    {
+        Assert.NotNull(Pipnuti.ProcNejde(
+            Bod() with { Znaceni = DruhZnaceni.Plavidlo, Barva = BarvaBoje.Cervena }));
+        Assert.NotNull(Pipnuti.ProcNejde(
+            Bod() with { Znaceni = DruhZnaceni.Plavidlo, Tvar = TvarBoje.Valcova }));
+        Assert.NotNull(Pipnuti.ProcNejde(
+            Bod() with { Znaceni = DruhZnaceni.ObjektNaBrehu, Barva = BarvaBoje.Bila }));
+
+        // Samotné plavidlo ano — poloha komisní lodi je měření jako každé jiné.
+        Assert.Null(Pipnuti.ProcNejde(Bod() with { Znaceni = DruhZnaceni.Plavidlo }));
+        Assert.Null(Pipnuti.ProcNejde(Bod() with { Znaceni = DruhZnaceni.ObjektNaBrehu }));
+    }
+
+    /// <summary>
+    /// Barva a tvar u znaku plavební dráhy <b>se schválně nevynucují</b>.
+    /// Vyhláškové kombinace jsou standard, ale server nemá odmítat zápis
+    /// toho, co rozhodčí na vodě skutečně vidí — předvolba v obrazovce
+    /// je nabídka, ne zákon.
+    /// </summary>
+    [Fact]
+    public void Znak_drahy_smi_mit_jakoukoli_barvu()
+    {
+        Assert.Null(Pipnuti.ProcNejde(
+            Bod() with { Znaceni = DruhZnaceni.DrahaPrava, Barva = BarvaBoje.Cervena, Tvar = TvarBoje.Valcova }));
+        // Netypická kombinace projde taky: na vodě plave, co plave.
+        Assert.Null(Pipnuti.ProcNejde(
+            Bod() with { Znaceni = DruhZnaceni.DrahaPrava, Barva = BarvaBoje.Zluta, Tvar = TvarBoje.Kuzelova }));
+    }
+
+    /// <summary>
+    /// Poznámka ke značce je krátká schválně — doplněk ke jménu, ne popis
+    /// trati. Na ten je plachetní směrnice.
+    /// </summary>
+    [Fact]
+    public void Dlouha_poznamka_se_odmitne()
+    {
+        Assert.Null(Pipnuti.ProcNejde(
+            Bod() with { Popis = new string('a', Pipnuti.PopisNejvic) }));
+        Assert.NotNull(Pipnuti.ProcNejde(
+            Bod() with { Popis = new string('a', Pipnuti.PopisNejvic + 1) }));
+        // Prázdná poznámka je v pořádku: píše se jen občas.
+        Assert.Null(Pipnuti.ProcNejde(Bod() with { Popis = null }));
+        Assert.Null(Pipnuti.ProcNejde(Bod() with { Popis = "   " }));
+    }
+
+    /// <summary>
+    /// Co je bóje a co ne. Rozhoduje to, co u značky smí být vyplněné,
+    /// takže se to měří zvlášť — a nová hodnota výčtu tím dostane otázku,
+    /// na kterou musí někdo odpovědět.
+    /// </summary>
+    [Fact]
+    public void Boje_je_vsechno_krome_plavidla_a_brehu()
+    {
+        Assert.True(Pipnuti.JeBoje(DruhZnaceni.DrahaPrava));
+        Assert.True(Pipnuti.JeBoje(DruhZnaceni.DrahaLeva));
+        Assert.True(Pipnuti.JeBoje(DruhZnaceni.DrahaSport));
+        Assert.True(Pipnuti.JeBoje(DruhZnaceni.DrahaZakaz));
+        Assert.True(Pipnuti.JeBoje(DruhZnaceni.NaseBoje));
+        Assert.False(Pipnuti.JeBoje(DruhZnaceni.Plavidlo));
+        Assert.False(Pipnuti.JeBoje(DruhZnaceni.ObjektNaBrehu));
+    }
 }

@@ -196,6 +196,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         var boje = b.Entity<Features.Boje.Boje>();
         boje.Property(x => x.Nazev).HasMaxLength(Pipnuti.NazevNejvic);
+        boje.Property(x => x.Popis).HasMaxLength(Pipnuti.PopisNejvic);
         // Platné bóje regaty se čtou při každém zobrazení trati.
         boje.HasIndex(x => new { x.ZavodId, x.NahrazenaV, x.SebranaV });
         boje.HasOne(x => x.Zavod).WithMany().HasForeignKey(x => x.ZavodId)
