@@ -2000,3 +2000,19 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 }
 .stavba .zrusit { margin-top: 0.5rem; background: transparent; }
 
+/* Výběr bodu z mapy. Dlaždice jsou pozicované absolutně v okně, které
+   se posouvá pod pevným křížkem. */
+.vyber-mapy .plocha {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  touch-action: none; /* jinak si tah vezme rolování stránky */
+  cursor: grab;
+  max-width: 100%;
+  background: var(--voda-podklad, #1b2a36);
+}
+.vyber-mapy .plocha img { position: absolute; width: 256px; height: 256px; user-select: none; }
+.vyber-mapy .krizek { position: absolute; inset: 0; pointer-events: none; }
+.vyber-mapy .krizek line { stroke: #c1121f; stroke-width: 2; }
+.vyber-mapy .krizek circle { stroke: #c1121f; stroke-width: 2; }
+

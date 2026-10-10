@@ -1748,6 +1748,35 @@ cesta zmizí.
 **Pípnutí jedné bóje zůstává**, ale jako cesta pro zvláštní případ —
 přenastavení, bóje mimo prvek, zápis za někoho od počítače.
 
+##### Výběr bodu z mapy (Filip, 10. 10. 2026)
+
+*„U startu, když je mezi molem na břehu a bójí plavební dráhy, je vybrání
+z mapy rychlejší než pípnutí. U průjezdních bójí a bran, kde se to staví,
+je pípnutí mocný nástroj. Ale teď musím jít jinam na web a vzít si
+souřadnice a kopírovat to do textu."*
+
+**Pípnutí a mapa jsou dva nástroje na dvě situace** a mají mít stejně
+blízko. Průvodce proto u každého bodu nabízí obojí.
+
+- **Křížek stojí uprostřed a hýbe se mapou pod ním**, ne prstem po mapě.
+  Na houpající se palubě se do bodu netrefíš; posunout podklad jde
+  i jednou rukou.
+- **Přibližuje se tlačítky, ne štípnutím** — dvěma prsty v rukavicích
+  nikdo nic nezvětší.
+- **Poloha z mapy nemá přesnost.** Není to měření, takže vymyslet k ní
+  metry by byla lež v datech; zdroj se ukládá jako `Mapa`.
+
+**Bez mapové knihovny.** Leaflet by pro „táhni podklad a přečti střed"
+znamenal sto čtyřicet kilobajtů, vlastní CSS a tanec kolem vykreslování
+na serveru. Projekce se vytáhla do `web/lib/mapa.ts` — čistého modulu,
+ze kterého počítá mapka trati i výběr bodu, takže se matematika nemůže
+na dvou místech rozejít. Dlaždice jdou přes náš server jako všude jinde.
+
+**Kotva tahu patří do `ref`, ne do stavu.** Stav se projeví až po
+překreslení, takže při svižném tahu dorazí `pointermove` dřív, než se
+`pointerdown` stihne zapsat, a mapa přeskočí. Vyšlo to najevo při
+zkoušení a je to skutečná vada, ne jen vada zkoušky.
+
 ##### Chyba, kterou to odhalilo
 
 `pipniAkce` barvu a tvar v typu přijímala, ale **nepředávala je dál** do
