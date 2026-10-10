@@ -65,6 +65,15 @@ get /a
 ma "druhý je HIT" test "$cache" = HIT
 ma "stejné vykreslení" test "$(vykresleni "$telo")" = "$prvni"
 
+# Položka pro oddíl „Výpadek původu" na konci. Ukládá se UŽ TADY schválně:
+# do té doby jí vyprší platnost (10 s) bez jediného čekání navíc, takže
+# poslední oddíl ověří opravdu `proxy_cache_use_stale`, a ne obyčejný HIT.
+# Na runneru GitHubu to tak poprvé neprošlo — tam byl mezi uložením a
+# výpadkem necelý interval a odpověď přišla jako HIT.
+# NEPŘESOUVEJ to dolů k tomu oddílu.
+get /vypadek
+ocekavane_vypadek=$(vykresleni "$telo")
+
 echo "Vzhled je v klíči, neplatná hodnota ne"
 get /b -H "Cookie: op_rezim=tmavy"
 ma "tmavý poprvé MISS" test "$cache" = MISS
@@ -313,17 +322,17 @@ ma "zdraví se nelimituje ani útočníkovi" test "$stav" = 200
 # k přihlášenému**: to je tatáž podmínka jako u ukládání, jen z druhé strany.
 echo "Výpadek původu: stará stránka ano, přihlášenému ne"
 
-# Nejdřív si cache musí mít co pamatovat — a klíč s prázdným vzhledem.
-get /vypadek
-ma "stránka je v cache" test "$stav" = 200
-ocekavane=$(vykresleni "$telo")
-
+# `/vypadek` leží v cache od začátku testu a platnost jí mezitím vypršela,
+# takže nginx musí jít na web — a ten za chvíli nebude.
 docker stop op-cache-test-web op-cache-test-web-sezeni >/dev/null
 
 get /vypadek
 ma "nepřihlášený dostane poslední dobrou stránku" test "$stav" = 200
-ma "…a je to opravdu ta uložená, ne nová" test "$(vykresleni "$telo")" = "$ocekavane"
-ma "…označená jako STALE" test "$cache" = STALE
+ma "…a je to opravdu ta uložená, ne nová" \
+   test "$(vykresleni "$telo")" = "$ocekavane_vypadek"
+# STALE, ne HIT: HIT by znamenal, že položka ještě platila a o výpadku
+# nedokazuje nic. Když tady svítí HIT, posunul se oddíl nahoru.
+ma "…vydaná jako STALE, tedy opravdu přes výpadek" test "$cache" = STALE
 
 get /vypadek -H "Cookie: op_token=x"
 ma "přihlášený starou stránku NEDOSTANE" test "$stav" = 502
