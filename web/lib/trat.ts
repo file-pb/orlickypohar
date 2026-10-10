@@ -263,3 +263,56 @@ async function posli(adresa: string, metoda: string, telo?: unknown): Promise<st
     return "Do trati smí sáhnout pořadatel téhle regaty nebo rozhodčí ročníku.";
   return `API odpovědělo ${odpoved.status}.`;
 }
+
+export type TratNaVyber = components["schemas"]["TratNaVyberDto"];
+
+/** Jména stavů trati pro nabídku „jede se tahle". */
+export const NAZVY_STAVU: Record<NonNullable<StavTrati>, string> = {
+  Rozestaveno: "staví se",
+  Hotovo: "hotová, čeká na rozhodčího",
+  Prijato: "přijatá",
+  Prestavba: "přestavuje se",
+};
+
+/**
+ * Tratě regaty na výběr, od nejnovější. Prázdno, když regata trať nemá —
+ * to není chyba, stavba začíná první bójí.
+ */
+export async function nactiTrate(serie: string, zavod: string): Promise<TratNaVyber[]> {
+  const t = await tokenZeSezeni();
+  if (!t) return [];
+
+  try {
+    const odpoved = await fetch(`${cesta(serie, zavod)}/seznam`, {
+      headers: { authorization: `Bearer ${t}`, accept: "application/json" },
+      cache: "no-store",
+    });
+    return odpoved.ok ? ((await odpoved.json()) as TratNaVyber[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Přiřadí volnou trať rozjížďce. Vrací text chyby, nebo `null`. */
+export async function priradTrat(
+  serie: string,
+  zavod: string,
+  trat: number,
+  rozjizdka: number,
+): Promise<string | null> {
+  return await posli(`${cesta(serie, zavod)}/${trat}/rozjizdka`, "POST", { rozjizdka });
+}
+
+/**
+ * Naklonuje trať. <b>Kopíruje prvky na tytéž bóje</b> — žádná nová
+ * pípnutí; vyrobila by se tím měření, která se nestala.
+ */
+export async function klonujTrat(
+  serie: string,
+  zavod: string,
+  trat: number,
+  rozjizdka: number | null,
+  stav: StavTrati | null,
+): Promise<string | null> {
+  return await posli(`${cesta(serie, zavod)}/${trat}/klon`, "POST", { rozjizdka, stav });
+}

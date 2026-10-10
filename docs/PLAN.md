@@ -2204,6 +2204,15 @@ obejít knoflíkem na stavitelské obrazovce.
 | ještě nepatří žádné rozjížďce | **přiřadí se** | obvyklý postup „postav, pak založ rozjížďku"; vyrábět kopii hned po přijetí by znamenalo přijímat dvakrát totéž |
 | už patří rozjížďce | **naklonuje se** | podle ní se jelo nebo pojede; odebrat ji té rozjížďce by přepsalo historii |
 
+**Obrazovka od 10. 10. 2026** je na stránce bójí pod stavem trati: seznam
+tratí regaty se stavem, rozjížďkou, počtem prvků a tím, jestli se podle ní
+jelo. U volné trati nabídne **přiřazení**, u obsazené **klonování** —
+podle `jdePriradit` ze serveru, ne podle odhadu obrazovky.
+
+**Rozjížďka se zadává číslem, ne nabídkou.** Pořadatel ho zná; nabídka by
+znamenala další načítání a riziko, že ukazuje stav, který už neplatí.
+Neexistující i obsazené číslo odmítne server vlastní hláškou.
+
 **Kterou trať vidí veřejnost, se tím mění.** Dokud byla trať jedna, stačilo
 „nejnovější, pokud je přijatá". S tratěmi po rozjížďkách by čerstvý klon ve
 stavu `Hotovo` veřejně shodil trať, podle které se zrovna pluje. Veřejně se
