@@ -2063,6 +2063,36 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 
 .stavba .ruzice { margin-top: 0.6rem; }
 
+/* Náhled prvku. Je to kontrola zadání, ne obrázek na web — proto stojí
+   nad obsahem průvodce a je vidět pořád, zatímco se klikají atributy. */
+.nahled-prvku { margin: 0 0 0.8rem; }
+/* Strop schválně: na telefonu je přes celou šířku, u stolu by se bez
+   něj roztáhl přes půl obrazovky a z kontroly zadání by byl plakát. */
+.nahled-prvku svg { display: block; width: 100%; max-width: 420px; height: auto; border-radius: 10px; }
+.nahled-prvku .hladina { fill: var(--voda-podklad, #1b2a36); }
+.nahled-prvku .linie {
+  stroke: var(--text, #e8e6e1);
+  stroke-width: 2;
+  stroke-dasharray: 7 6;
+  opacity: 0.8;
+}
+.nahled-prvku .stopa {
+  fill: none;
+  stroke: var(--text, #e8e6e1);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.nahled-prvku .hrot { fill: var(--text, #e8e6e1); }
+/* Větve otočné brány: přerušovaně a slaběji, protože ani jedna z nich
+   není „ta správná" — stranu si volí loď. */
+.nahled-prvku .stopa.vetev { stroke-width: 2.2; stroke-dasharray: 6 5; opacity: 0.65; }
+.nahled-prvku .hrot.vetev { opacity: 0.65; }
+.nahled-prvku figcaption {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  margin-top: 0.3rem;
+}
+
 /* Výběr bodu z mapy. Dlaždice jsou pozicované absolutně v okně, které
    se posouvá pod pevným křížkem. */
 .vyber-mapy .plocha {

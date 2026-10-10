@@ -1,7 +1,7 @@
 import { dvaBody, nazevTypu, type SvetovaStrana, type TypPrvku } from "@/lib/trat";
 import { DLAZDICE, Z_NEJMENE, Z_NEJVIC, doPixelu } from "@/lib/mapa";
 import { ZnakBoje } from "@/app/znak-boje";
-import type { BarvaBoje, TvarBoje } from "@/lib/boje";
+import type { BarvaBoje, DruhZnaceni, TvarBoje } from "@/lib/boje";
 
 /**
  * Prvek, jak ho mapka potřebuje. <b>Vlastní tvar schválně</b>: správa a web
@@ -21,6 +21,12 @@ export type PrvekNaMape = {
     /** Jak bóje vypadá. U konce, který bóje není, chybí obojí. */
     barva?: BarvaBoje;
     tvar?: TvarBoje;
+    /**
+     * Čím je značka značená. <b>Bez tohohle kreslí mapa plavidlo jako
+     * červenou bóji</b> — barvu ani tvar totiž nemá a kreslení by sáhlo
+     * po výchozí. Závodník by pak hledal bóji, která tam neplave.
+     */
+    znaceni?: DruhZnaceni;
   }[];
   /** Druhý konec není bóje — kreslí se prázdným kolečkem. */
   druhyNeniBoje?: boolean;
@@ -280,7 +286,7 @@ export function MapkaTrati({ prvky }: { prvky: PrvekNaMape[] }) {
                   strokeWidth="3"
                 />
               ) : (
-                <ZnakBoje key={i} x={k.x} y={k.y} barva={k.barva} tvar={k.tvar} />
+                <ZnakBoje key={i} x={k.x} y={k.y} barva={k.barva} tvar={k.tvar} znaceni={k.znaceni} />
               ),
             )}
             {/* Šipka průjezdu u startu. Dřív se nekreslila vůbec, protože
