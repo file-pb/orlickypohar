@@ -2220,6 +2220,16 @@ podle `jdePriradit` ze serveru, ne podle odhadu obrazovky.
 znamenala další načítání a riziko, že ukazuje stav, který už neplatí.
 Neexistující i obsazené číslo odmítne server vlastní hláškou.
 
+**Umístění potvrzené 10. 10. 2026, zatím beze změny.** Filip to popisoval
+od okamžiku zakládání rozjížďky, tedy z obrazovky výsledků; obrazovka
+vznikla u bójí, kde trať žije a kde pořadatel stojí, když ji staví.
+Filip: *„To je asi ok. Čas ukáže, kdyžtak to změníme, ale teď ne."*
+
+Nabízel jsem jako kompromis ukazatel ve výsledcích („má tahle rozjížďka
+trať?") s odkazem sem. **Nedělá se ani ten** — dokud se neví, jestli
+umístění vadí, je druhý ovládací prvek pro tutéž věc jen další místo,
+které se může rozejít.
+
 **Kterou trať vidí veřejnost, se tím mění.** Dokud byla trať jedna, stačilo
 „nejnovější, pokud je přijatá". S tratěmi po rozjížďkách by čerstvý klon ve
 stavu `Hotovo` veřejně shodil trať, podle které se zrovna pluje. Veřejně se
