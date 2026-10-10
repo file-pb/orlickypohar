@@ -189,7 +189,17 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
               serie={serie}
               zavod={zavod}
               prenastavuje={
-                prenastavovana ? { id: prenastavovana.id, nazev: prenastavovana.nazev } : null
+                prenastavovana
+                  ? {
+                      id: prenastavovana.id,
+                      nazev: prenastavovana.nazev,
+                      // Poloha jde s sebou kvůli mapě: u přenastavení se
+                      // má otevřít na staré poloze té bóje, ne u poslední
+                      // na trati.
+                      sirka: prenastavovana.sirka,
+                      delka: prenastavovana.delka,
+                    }
+                  : null
               }
               nejvicZnaku={NAZEV_NEJVIC}
               stojici={trat.map((b) => b.nazev)}
