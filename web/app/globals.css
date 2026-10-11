@@ -1277,6 +1277,25 @@ th.vlevo, td.vlevo { text-align: left; }
 /* V tabu a v boku je znak hlavní poznávací značka třídy, proto velký. */
 /* Aspoň dvakrát proti původním 1,2 em (asi 19 px): v tabu 2,6 rem. */
 .taby-trid a { padding-top: 0.3rem; padding-bottom: 0.3rem; gap: 0.55rem; }
+
+/* Taby sekcí regaty. Na telefonu se nezalamují do dvou řad, ale posouvají
+   se do strany — zalomené by při každém přepnutí přeskládaly obsah pod
+   sebou a stránka by poskočila. */
+.taby-sekci { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.taby-sekci::-webkit-scrollbar { display: none; }
+.taby-sekci a { white-space: nowrap; }
+
+/* Pruh upozornění nad taby: co se u regaty zrovna děje. Naléhavé nese
+   barvu, ostatní jsou klidné řádky — kdyby svítilo všechno, nesvítí nic. */
+.upozorneni { list-style: none; margin: 0 0 1.25rem; padding: 0; display: grid; gap: 0.4rem; }
+.upozorneni li {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--linka);
+  background: var(--papir);
+  font-size: 0.925rem;
+}
+.upozorneni li.nalehave { border-color: var(--voda); background: var(--zvyrazneni); }
 .taby-trid .znak-tridy { height: 2.6rem; }
 /* Na telefonu se tři taby do řádku nevešly a třetí spadl pod ostatní
    (Filip, 15. 9. 2026: „není to hezké"). Proto tu drží jednu řadu, každá
