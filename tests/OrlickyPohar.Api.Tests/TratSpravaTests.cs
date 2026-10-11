@@ -500,34 +500,124 @@ public class TratSpravaTests(PostgresFixture fixture)
     }
 
     [Fact]
-    public async Task Seznam_nabidne_nejblizsi_rozjizdku_bez_trati()
+    public async Task Rozjizdky_na_vyber_reknou_ktera_tra_ma_a_ktera_uz_jela()
     {
         var (db, boje, trate) = Sluzby();
         var (zavod, kdo) = await RegataAsync(db);
         await boje.PipniAsync(zavod.Id, Bod("Start"), kdo.Id, default);
         var zdroj = (await trate.AktualniAsync(zavod.Id, default))!;
 
-        // Regata bez rozjížděk nemá co nabídnout. Číslo z prstu by
-        // pojmenovalo knoflík, který by hned selhal na „taková rozjížďka
-        // u téhle regaty není“.
-        Assert.Null(Assert.Single(await trate.SeznamAsync(zavod.Id, default)).DalsiVolnaRozjizdka);
+        var prvni = await RozjizdkaAsync(db, zavod, 1, Ted);
+        await RozjizdkaAsync(db, zavod, 2);
+        await trate.PriradAsync(zavod.Id, zdroj.Id, prvni.Cislo, true, default);
 
+        var nabidka = await trate.RozjizdkyAsync(zavod.Id, default);
+
+        Assert.Equal([1, 2], nabidka.Select(r => r.Cislo));
+        Assert.Equal(zdroj.Id, nabidka[0].TratId);
+        Assert.True(nabidka[0].Odstartovana);
+        // Druhá trať nemá, takže se na ni dá zaškrtnout.
+        Assert.Null(nabidka[1].TratId);
+        Assert.False(nabidka[1].Odstartovana);
+    }
+
+    [Fact]
+    public async Task Otisk_drzi_klony_pohromade_a_po_uprave_je_rozdeli()
+    {
+        var (db, boje, trate, prvky) = SluzbyIPrvky();
+        var (zavod, kdo) = await RegataAsync(db);
+        var (b, _) = await boje.PipniAsync(zavod.Id, Bod("Start"), kdo.Id, default);
+        await prvky.ZalozAsync(
+            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, b!.Id), kdo.Id, default);
+
+        var zdroj = (await trate.AktualniAsync(zavod.Id, default))!;
         var prvni = await RozjizdkaAsync(db, zavod, 1);
         var druha = await RozjizdkaAsync(db, zavod, 2);
-        Assert.Equal(
-            1, Assert.Single(await trate.SeznamAsync(zavod.Id, default)).DalsiVolnaRozjizdka);
-
         await trate.PriradAsync(zavod.Id, zdroj.Id, prvni.Cislo, true, default);
-        Assert.Equal(
-            2, Assert.Single(await trate.SeznamAsync(zavod.Id, default)).DalsiVolnaRozjizdka);
-
-        await trate.KlonujAsync(
+        var (klon, _) = await trate.KlonujAsync(
             zavod.Id, zdroj.Id, new KlonTratiVstup(druha.Cislo, null), kdo.Id, true, default);
 
-        // Obsazené jsou obě, takže se nenabízí nic — a obrazovka to pozná
-        // dřív, než někdo klikne.
-        var vsechny = await trate.SeznamAsync(zavod.Id, default);
-        Assert.Equal(2, vsechny.Count);
-        Assert.All(vsechny, t => Assert.Null(t.DalsiVolnaRozjizdka));
+        // Čerstvý klon jede totéž, takže se obě tratě tváří jako jedna.
+        var spolu = await trate.SeznamAsync(zavod.Id, default);
+        Assert.Equal(2, spolu.Count);
+        Assert.NotNull(spolu[0].Otisk);
+        Assert.Equal(spolu[0].Otisk, spolu[1].Otisk);
+
+        // Klon je kopie, ne vazba: úprava jedné instance druhou nechá být
+        // a pohled „jede se stejně“ se tím musí rozpadnout sám.
+        var klonPrvek = await db.PrvkyTrati.SingleAsync(x => x.TratId == klon!.Id);
+        Assert.Null(await prvky.UpravAsync(
+            zavod.Id,
+            klonPrvek.Id,
+            new PrvekVstup(TypPrvku.OtocnaBoje, 1, b.Id, Poznamka: "cíl se mění"),
+            kdo.Id,
+            default));
+
+        var zvlast = await trate.SeznamAsync(zavod.Id, default);
+        Assert.NotEqual(zvlast[0].Otisk, zvlast[1].Otisk);
+    }
+
+    [Fact]
+    public async Task Odskrtnuti_smaze_instanci_jen_kdyz_stejna_zbyde_jinde()
+    {
+        var (db, boje, trate, prvky) = SluzbyIPrvky();
+        var (zavod, kdo) = await RegataAsync(db);
+        var (b, _) = await boje.PipniAsync(zavod.Id, Bod("Start"), kdo.Id, default);
+        await prvky.ZalozAsync(
+            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, b!.Id), kdo.Id, default);
+
+        var zdroj = (await trate.AktualniAsync(zavod.Id, default))!;
+        var prvni = await RozjizdkaAsync(db, zavod, 1);
+        var druha = await RozjizdkaAsync(db, zavod, 2);
+        await trate.PriradAsync(zavod.Id, zdroj.Id, prvni.Cislo, true, default);
+        var (klon, _) = await trate.KlonujAsync(
+            zavod.Id, zdroj.Id, new KlonTratiVstup(druha.Cislo, null), kdo.Id, true, default);
+
+        // Stejný předpis zbyde u první rozjížďky, takže klon je navíc.
+        Assert.Null((await trate.OdvazAsync(zavod.Id, klon!.Id, false, default)).Chyba);
+        var po = await trate.SeznamAsync(zavod.Id, default);
+        Assert.Equal(zdroj.Id, Assert.Single(po).Id);
+
+        // Teď je poslední svého druhu: odškrtnutí ji nesmí zahodit, jinak
+        // by nebylo co upravit a změnit.
+        Assert.Null((await trate.OdvazAsync(zavod.Id, zdroj.Id, false, default)).Chyba);
+        var zbyla = Assert.Single(await trate.SeznamAsync(zavod.Id, default));
+        Assert.Equal(zdroj.Id, zbyla.Id);
+        Assert.Null(zbyla.CisloRozjizdky);
+        Assert.True(zbyla.JdePriradit);
+    }
+
+    [Fact]
+    public async Task Odjeta_trat_se_nezamyka_ale_chce_potvrdit()
+    {
+        var (db, boje, trate, prvky) = SluzbyIPrvky();
+        var (zavod, kdo) = await RegataAsync(db);
+        var (b, _) = await boje.PipniAsync(zavod.Id, Bod("Start"), kdo.Id, default);
+        await prvky.ZalozAsync(
+            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, b!.Id), kdo.Id, default);
+        await trate.HotovoAsync(zavod.Id, true, default);
+        await trate.PrijmiAsync(zavod.Id, kdo.Id, default);
+
+        var zdroj = (await trate.AktualniAsync(zavod.Id, default))!;
+        var prvni = await RozjizdkaAsync(db, zavod, 1);
+        await trate.PriradAsync(zavod.Id, zdroj.Id, prvni.Cislo, true, default);
+
+        // Přijatá trať je zamčená doopravdy: cesta ven je vrácení.
+        var zamcena = await trate.ZahodAsync(zavod.Id, zdroj.Id, true, default);
+        Assert.NotNull(zamcena.Chyba);
+        Assert.False(zamcena.ChcePotvrdit);
+
+        await trate.VratAsync(zavod.Id, "zkouška", default);
+        prvni.StartV = Ted.AddHours(1);
+        await db.SaveChangesAsync();
+
+        // Odjetá se naproti tomu jen zeptá — a s potvrzením pustí.
+        var ptaSe = await trate.ZahodAsync(zavod.Id, zdroj.Id, false, default);
+        Assert.NotNull(ptaSe.Chyba);
+        Assert.True(ptaSe.ChcePotvrdit);
+        Assert.NotEmpty(await trate.SeznamAsync(zavod.Id, default));
+
+        Assert.Null((await trate.ZahodAsync(zavod.Id, zdroj.Id, true, default)).Chyba);
+        Assert.Empty(await trate.SeznamAsync(zavod.Id, default));
     }
 }

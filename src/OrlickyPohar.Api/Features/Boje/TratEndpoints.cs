@@ -107,6 +107,32 @@ public static class TratEndpoints
                 + "`jdePriradit` říká, jestli je trať volná — volná se přiřadí, "
                 + "obsazená naklonuje.");
 
+        g.MapGet("/rozjizdky", RozjizdkyAsync)
+            .Produces<List<RozjizdkaNaVyberDto>>()
+            .WithTags("Bóje")
+            .WithSummary("Rozjížďky regaty na výběr")
+            .WithDescription(
+                "Organizátor regaty, nebo rozhodčí ročníku. Podle čísla. `tratId` říká, "
+                + "která trať rozjížďce patří; `odstartovana` to, že se podle ní už jelo "
+                + "a trať se jí nebere.");
+
+        g.MapDelete("/{trat:int}/rozjizdka", OdvazAsync)
+            .WithTags("Bóje")
+            .WithSummary("V téhle rozjížďce se ta trať nejede")
+            .WithDescription(
+                "Organizátor regaty, nebo rozhodčí ročníku. Instance zmizí jen tehdy, "
+                + "když stejný předpis zbyde u jiné rozjížďky; poslední se od rozjížďky "
+                + "jen odváže a zůstane na stole, aby bylo co upravit. U odjeté trati "
+                + "vrátí 409 a chce `?potvrzeno=true` — může to rozkopat výsledky.");
+
+        g.MapDelete("/{trat:int}", ZahodAsync)
+            .WithTags("Bóje")
+            .WithSummary("Zahodí trať")
+            .WithDescription(
+                "Organizátor regaty, nebo rozhodčí ročníku. Přijatou trať zahodit nejde, "
+                + "napřed ji musí vrátit rozhodčí. U odjeté vrátí 409 a chce "
+                + "`?potvrzeno=true`. Záznamy bójí zůstávají — pořád stojí ve vodě.");
+
         g.MapPost("/{trat:int}/rozjizdka", PriradAsync)
             .Produces<TratDto>()
             .WithTags("Bóje")
@@ -220,6 +246,54 @@ public static class TratEndpoints
         if (odpoved is not null) return odpoved;
 
         return Results.Ok(await sprava.SeznamAsync(rozsah!.ZavodId!.Value, ct));
+    }
+
+    private static async Task<IResult> RozjizdkyAsync(
+        string serie, string zavod, ClaimsPrincipal kdo, Rozsahy rozsahy, TratSprava sprava,
+        CancellationToken ct)
+    {
+        var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
+        if (odpoved is not null) return odpoved;
+
+        return Results.Ok(await sprava.RozjizdkyAsync(rozsah!.ZavodId!.Value, ct));
+    }
+
+    private static async Task<IResult> OdvazAsync(
+        string serie, string zavod, int trat, bool? potvrzeno, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, TratSprava sprava, CancellationToken ct)
+    {
+        var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
+        if (odpoved is not null) return odpoved;
+
+        var (chyba, chcePotvrdit) = await sprava.OdvazAsync(
+            rozsah!.ZavodId!.Value, trat, potvrzeno ?? false, ct);
+
+        if (chyba is null) return Results.NoContent();
+
+        // Potvrzení není chyba vstupu, a obrazovka to musí poznat bez čtení
+        // textu: na 409 se ptá, na 400 jen hlásí.
+        return chcePotvrdit
+            ? Results.Conflict(new { error = chyba, potvrdit = true })
+            : Results.BadRequest(new { error = chyba });
+    }
+
+    private static async Task<IResult> ZahodAsync(
+        string serie, string zavod, int trat, bool? potvrzeno, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, TratSprava sprava, CancellationToken ct)
+    {
+        var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
+        if (odpoved is not null) return odpoved;
+
+        var (chyba, chcePotvrdit) = await sprava.ZahodAsync(
+            rozsah!.ZavodId!.Value, trat, potvrzeno ?? false, ct);
+
+        if (chyba is null) return Results.NoContent();
+
+        // Potvrzení není chyba vstupu, a obrazovka to musí poznat bez čtení
+        // textu: na 409 se ptá, na 400 jen hlásí.
+        return chcePotvrdit
+            ? Results.Conflict(new { error = chyba, potvrdit = true })
+            : Results.BadRequest(new { error = chyba });
     }
 
     private static async Task<IResult> PriradAsync(

@@ -2403,28 +2403,69 @@ tratí regaty se stavem, rozjížďkou, počtem prvků a tím, jestli se podle n
 jelo. U volné trati nabídne **přiřazení**, u obsazené **klonování** —
 podle `jdePriradit` ze serveru, ne podle odhadu obrazovky.
 
-**Číslo rozjížďky se nezadává — přiřazuje se samo** (Filip, 11. 10. 2026:
-*„tratě regaty s nějakým číslem je taky věc, co to znepřehledňuje"*). Do
-té doby tu stálo, že ho pořadatel napíše ručně; na nasazené obrazovce se
-ukázalo, že políčko na číslo je uprostřed seznamu tratí šum, a pořadatel
-stejně nemá na výběr — volná rozjížďka bývá právě jedna, ta nejbližší.
+**Číslo rozjížďky se nepíše — vybírá se ze zaškrtávátek** (Filip,
+11. 10. 2026: *„tratě regaty s nějakým číslem je taky věc, co to
+znepřehledňuje"*, a 12. 10. 2026: *„rozjížďce se musí nabídnout výběr
+tratí k přiřazení a trati se musí nabídnout výběr z rozjížděk"*). Do té
+doby tu stálo, že ho pořadatel napíše ručně; na nasazené obrazovce se
+ukázalo, že políčko na číslo je uprostřed seznamu tratí šum.
 
-**Spočítat to smí jedině server.** Obrazovka vidí tratě, ne rozjížďky,
-takže by neuměla rozlišit „rozjížďka 3 ještě není založená" od „rozjížďka
-3 je volná" — a nabídla by knoflík, který hned selže na *„taková
-rozjížďka u téhle regaty není"*. `TratNaVyberDto.DalsiVolnaRozjizdka`
-proto nese číslo nejbližší rozjížďky bez trati, nebo `null`, když žádná
-není. Obsazenost se počítá stejným pravidlem, jakým se řídí přiřazení:
-rozjížďka je obsazená, ukazuje-li na ni jakákoliv trať, přestavbu
-nevyjímaje.
+**Vypsat rozjížďky smí jedině server.** Obrazovka vidí tratě, ne
+rozjížďky, takže by neuměla rozlišit „rozjížďka 3 ještě není založená" od
+„rozjížďka 3 je volná" — a nabídla by knoflík, který hned selže na
+*„taková rozjížďka u téhle regaty není"*. Nabídku proto vydává
+`GET …/trat/rozjizdky` jako `RozjizdkaNaVyberDto`: číslo, trať která jí
+patří, a jestli se podle ní už jelo.
 
-Je to vlastnost regaty, ne řádku, takže na všech řádcích stojí táž
-hodnota. Zabalit odpověď do objektu kvůli jednomu číslu by rozbilo tvar,
-který klienti už čtou — a mobilní aplikace zůstávají lidem v telefonech.
+##### Klon je kopie, ne vazba (Filip, 12. 10. 2026)
 
-Když volná rozjížďka není, obrazovka to **řekne místo knoflíku**. Čísla,
-která by selhala, se nenabízejí vůbec; obsazené číslo tím pádem odmítá
-server už jen jako pojistku proti souběhu, ne jako běžnou cestu.
+Filip: *„rozjížďka má jednu trať, trať může mít z pohledu uživatele více
+rozjížděk, ale v datech bych to vedl jako klony, protože může dojít
+k rychlému posunu a změně trati a data na to musí být připravena tak, že
+se nic nestane, jen najednou ty rozjížďky budou mít odlišné trati."*
+A dál: *„datově by klon měl být jen kopie a jinak by měl prostě
+samostatnou instanci. Není to vazba. Jen to usnadňuje editaci, že se
+nemusí kreslit znovu."*
+
+Scénář, který to vynutil, je jeho vlastní: postaví se trať, jede se na ní
+první a druhá rozjížďka, pak se přestaví a jede třetí a čtvrtá. **Po
+odstartování čtvrté přestane foukat a rozhodčí přesune cíl.** Upraví se
+trať u čtvrté rozjížďky — i když byla klonovaná z té pro třetí, a ta se
+tím měnit nesmí.
+
+**Model se tedy nemění: trať patří rozjížďce, jedna ku jedné.** Sdružení
+„tyhle rozjížďky jedou totéž" je **pohled, ne data**.
+
+**Ten pohled se počítá z obsahu, ne z původu.** Kdyby obrazovka skládala
+skupiny podle toho, odkud klon vznikl, tvrdila by po přesunu cíle dál, že
+se ve třetí a čtvrté jede stejně. Proto `TratNaVyberDto.Otisk`: složený
+řetězec ze všeho, co je na trati předpisem — pořadí, typ, obě značky,
+strana, směr, druh startu a poznámka „jak to jet". Shodný otisk znamená
+jeden řádek s více zaškrtnutými rozjížďkami; první úprava jedné instance
+skupinu rozpadne sama a v datech k tomu není potřeba nic. Trať bez prvků
+otisk nemá (`null`) — prázdno není předpis.
+
+Otisk je schválně **čitelný řetězec, ne hash**: porovnává se jen sám se
+sebou, je kratší než trať a při ladění je na něm vidět, čím se dvě tratě
+liší.
+
+**Odškrtnutí u rozjížďky smaže instanci jen tehdy, když stejná zbyde
+jinde** (Filip, 12. 10. 2026: *„pokud není jediná taková, protože to by
+se pak nedala upravovat a změnit"*). Poslední trať toho předpisu se od
+rozjížďky jen odváže a zůstane v seznamu „na stole". Jinak by odškrtnutí
+zahodilo práci, kterou nikdo zahodit nechtěl. Rozhoduje o tom server:
+shodu otisků ověří jedině ten, kdo vidí prvky všech tratí naráz.
+Zahození nadobro je zvláštní knoflík v listu tratí a tak se i jmenuje.
+
+**Odjetá trať se nezamyká, jen se na ni ptá** (Filip, 12. 10. 2026:
+*„odjetou bych jen pojistil proti úpravám nějakým alertem… ale pokud se
+v tom někdo chce hrabat i po dojetí, tak bych to asi neblokoval; jen to
+celé pak vrátí workflow schvalování výsledků"*). Server ji napoprvé
+odmítne s 409 a `potvrdit: true`; s `?potvrzeno=true` ji pustí. Zámek by
+nutil obcházet cestou, kterou nikdo nevidí, kdežto otázka nechá
+rozhodnutí na tom, kdo ví, co dělá. **Přijatá trať se ale zamyká dál** —
+to není historie, ale zámek rozhodčího, a cesta ven existuje a jmenuje se
+vrácení.
 
 **Umístění potvrzené 10. 10. 2026, zatím beze změny.** Filip to popisoval
 od okamžiku zakládání rozjížďky, tedy z obrazovky výsledků; obrazovka

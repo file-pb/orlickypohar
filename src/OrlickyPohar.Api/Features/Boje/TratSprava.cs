@@ -245,39 +245,209 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
             .Where(r => r.ZavodId == zavodId)
             .ToDictionaryAsync(r => r.Id, r => r.Cislo, ct);
 
-        var prvku = await db.PrvkyTrati
+        // Prvky celé regaty najednou: otisk se z nich skládá a dotaz na
+        // každou trať zvlášť by u osmi rozjížděk znamenal osm kol.
+        var prvky = await db.PrvkyTrati
             .Where(p => p.Trat!.ZavodId == zavodId)
-            .GroupBy(p => p.TratId)
-            .Select(g => new { TratId = g.Key, Pocet = g.Count() })
-            .ToDictionaryAsync(x => x.TratId, x => x.Pocet, ct);
-
-        // Rozjížďka je obsazená, jakmile na ni ukazuje jakákoliv trať —
-        // stejné pravidlo, jakým se přiřazení řídí, takže nabídnuté číslo
-        // projde. Přestavba sem patří taky: druhá trať téže rozjížďky
-        // vzniká jedině tou cestou a tahle o ni nesmí znovu soupeřit.
-        var obsazene = trate.Where(t => t.RozjizdkaId is not null)
-            .Select(t => t.RozjizdkaId!.Value)
-            .ToHashSet();
-        var dalsiVolna = cisla
-            .Where(r => !obsazene.Contains(r.Key))
-            .Select(r => (int?)r.Value)
-            .OrderBy(c => c)
-            .FirstOrDefault();
+            .OrderBy(p => p.Poradi).ThenBy(p => p.Id)
+            .ToListAsync(ct);
+        var poTratich = prvky.GroupBy(p => p.TratId)
+            .ToDictionary(g => g.Key, g => g.ToList());
 
         var hotovo = new List<TratNaVyberDto>();
         foreach (var t in trate)
+        {
+            var sve = poTratich.GetValueOrDefault(t.Id) ?? [];
             hotovo.Add(new TratNaVyberDto(
                 t.Id,
                 t.Stav,
                 t.RozjizdkaId is { } r && cisla.TryGetValue(r, out var c) ? c : null,
                 t.PrijatoV,
-                prvku.GetValueOrDefault(t.Id),
+                sve.Count,
                 await OdjetaAsync(t, ct),
                 JdePriradit: t.RozjizdkaId is null,
-                DalsiVolnaRozjizdka: dalsiVolna));
+                Otisk: Otisk(sve)));
+        }
 
         return hotovo;
     }
+
+    /// <summary>
+    /// Rozjížďky regaty do nabídky „na které trati se jede“.
+    /// </summary>
+    public async Task<List<RozjizdkaNaVyberDto>> RozjizdkyAsync(
+        int zavodId, CancellationToken ct)
+    {
+        var rozjizdky = await db.Rozjizdky
+            .Where(r => r.ZavodId == zavodId)
+            .OrderBy(r => r.Cislo)
+            .Select(r => new { r.Id, r.Cislo, r.StartV })
+            .ToListAsync(ct);
+
+        var trate = await db.Trate
+            .Where(t => t.ZavodId == zavodId && t.RozjizdkaId != null)
+            .Select(t => new { t.Id, RozjizdkaId = t.RozjizdkaId!.Value })
+            .ToListAsync(ct);
+
+        // Přestavba umí mít na jedné rozjížďce víc tratí; platí ta
+        // poslední, protože právě ta nahradila předchozí.
+        var naRozjizdce = trate
+            .GroupBy(t => t.RozjizdkaId)
+            .ToDictionary(g => g.Key, g => g.Max(t => t.Id));
+
+        return [.. rozjizdky.Select(r => new RozjizdkaNaVyberDto(
+            r.Cislo,
+            naRozjizdce.TryGetValue(r.Id, out var tratId) ? tratId : null,
+            Odstartovana: r.StartV is not null))];
+    }
+
+    /// <summary>
+    /// <b>„V téhle rozjížďce se ta trať nejede.“</b> Odškrtnutí
+    /// zaškrtávátka u rozjížďky.
+    ///
+    /// <para>
+    /// <b>Instance zmizí jen tehdy, když stejná zbyde jinde</b> (Filip,
+    /// 12. 10. 2026: <i>„odškrtnutí od rozjížďky smaže instanci trati,
+    /// pokud není jediná taková, protože to by se pak nedala upravovat
+    /// a změnit“</i>). Poslední trať toho předpisu se proto od rozjížďky
+    /// jen odváže a zůstane v seznamu „na stole“ — jinak by odškrtnutí
+    /// zahodilo práci, kterou nikdo zahodit nechtěl, a nebylo by co
+    /// upravit. Zahodit ji nadobro jde z listu tratí, kde se to tak
+    /// i jmenuje.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Rozhoduje o tom server, ne obrazovka.</b> „Stejná trať“ je
+    /// shoda otisků a tu umí ověřit jedině ten, kdo vidí prvky všech
+    /// tratí naráz; obrazovka by rozhodovala podle seznamu, který mezitím
+    /// mohl zastarat.
+    /// </para>
+    /// </summary>
+    public async Task<(string? Chyba, bool ChcePotvrdit)> OdvazAsync(
+        int zavodId, int tratId, bool potvrzeno, CancellationToken ct)
+    {
+        var trat = await db.Trate
+            .FirstOrDefaultAsync(t => t.Id == tratId && t.ZavodId == zavodId, ct);
+
+        if (trat is null) return ("Taková trať u téhle regaty není.", false);
+        if (trat.RozjizdkaId is null)
+            return ("Tahle trať žádné rozjížďce nepatří, takže není co odškrtnout.", false);
+        if (await ProcNejdeSahnoutAsync(trat, potvrzeno, ct) is var (proc, ptat) && proc is not null)
+            return (proc, ptat);
+
+        // Zbyde po odškrtnutí stejný předpis jinde? Pak je tahle instance
+        // navíc a smaže se celá; jinak se jen uvolní. Prvky celé regaty
+        // jedním dotazem — na trať zvlášť by to byl dotaz za každou.
+        var poTratich = (await db.PrvkyTrati
+                .Where(x => x.Trat!.ZavodId == zavodId)
+                .ToListAsync(ct))
+            .GroupBy(x => x.TratId)
+            .ToDictionary(g => g.Key, g => Otisk([.. g]));
+
+        var muj = poTratich.GetValueOrDefault(trat.Id);
+        var jinde = muj is not null
+                    && poTratich.Any(x => x.Key != trat.Id && x.Value == muj);
+
+        if (jinde)
+        {
+            await db.PrvkyTrati.Where(p => p.TratId == trat.Id).ExecuteDeleteAsync(ct);
+            db.Trate.Remove(trat);
+        }
+        else
+        {
+            trat.RozjizdkaId = null;
+        }
+
+        await db.SaveChangesAsync(ct);
+        return (null, false);
+    }
+
+    /// <summary>
+    /// Zahodí trať i s jejím předpisem — knoflík v listu tratí.
+    ///
+    /// <para>
+    /// <b>Co se zahodit nedá.</b> Trať, podle které se jelo, je doklad
+    /// o závodu. Přijatá trať visí veřejně a zmizet smí jen vědomě, tedy
+    /// přes vrácení rozhodčím.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Záznamy bójí zůstávají.</b> Prvek na ně jen ukazuje; bóje pořád
+    /// stojí ve vodě a jejich poloha je měření, které se stalo.
+    /// </para>
+    /// </summary>
+    public async Task<(string? Chyba, bool ChcePotvrdit)> ZahodAsync(
+        int zavodId, int tratId, bool potvrzeno, CancellationToken ct)
+    {
+        var trat = await db.Trate
+            .FirstOrDefaultAsync(t => t.Id == tratId && t.ZavodId == zavodId, ct);
+
+        if (trat is null) return ("Taková trať u téhle regaty není.", false);
+        if (await ProcNejdeSahnoutAsync(trat, potvrzeno, ct) is var (proc, ptat) && proc is not null)
+            return (proc, ptat);
+
+        await db.PrvkyTrati.Where(p => p.TratId == trat.Id).ExecuteDeleteAsync(ct);
+        db.Trate.Remove(trat);
+        await db.SaveChangesAsync(ct);
+        return (null, false);
+    }
+
+    /// <summary>
+    /// Proč se do téhle trati nesmí sáhnout, a jestli stačí potvrdit.
+    ///
+    /// <para>
+    /// <b>Odjetá trať se nezamyká, jen se na ni ptá</b> (Filip,
+    /// 12. 10. 2026: <i>„odjetou bych jen pojistil proti úpravám nějakým
+    /// alertem… ale pokud se v tom někdo chce hrabat i po dojetí, tak
+    /// bych to asi neblokoval; jen to celé pak vrátí workflow schvalování
+    /// výsledků“</i>). Zámek by nutil obcházet cestou, kterou nikdo
+    /// nevidí; otázka nechá rozhodnutí na tom, kdo ví, co dělá, a zapíše
+    /// se jako vědomý krok.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Přijatá trať se ale zamyká dál.</b> Je to zámek rozhodčího, ne
+    /// historie — a cesta ven existuje a jmenuje se vrácení. Pustit ji
+    /// potvrzením by ten zámek obešlo knoflíkem na stavitelské obrazovce.
+    /// </para>
+    /// </summary>
+    private async Task<(string? Proc, bool ChcePotvrdit)> ProcNejdeSahnoutAsync(
+        Trat trat, bool potvrzeno, CancellationToken ct)
+    {
+        if (trat.Stav == StavTrati.Prijato)
+            return ("Trať je přijatá a visí veřejně. Nejdřív ji nech vrátit rozhodčím.",
+                    false);
+
+        if (!potvrzeno && await OdjetaAsync(trat, ct))
+            return ("Podle téhle trati se jelo. Zahodit ji může rozkopat výsledky té "
+                    + "rozjížďky a celé je to pak vrátí do schvalování. Potvrď, že to tak chceš.",
+                    true);
+
+        return (null, false);
+    }
+
+    /// <summary>
+    /// Otisk předpisu trati. Prázdná trať předpis nemá, takže <c>null</c>.
+    /// <para>
+    /// Je to prostý složený řetězec, ne hash: je kratší než trať sama,
+    /// porovnává se jen sám se sebou a při ladění je na něm vidět, čím se
+    /// dvě tratě liší. Hash by k tomu nepřidal nic než neprůhlednost.
+    /// </para>
+    /// </summary>
+    private static string? Otisk(List<PrvekTrati> prvky) =>
+        prvky.Count == 0
+            ? null
+            : string.Join("|", prvky
+                .OrderBy(p => p.Poradi).ThenBy(p => p.Id)
+                .Select(p => string.Join(
+                    ":",
+                    (int)p.Typ,
+                    p.BojeAId,
+                    p.BojeBId?.ToString() ?? "-",
+                    p.Strana?.ToString() ?? "-",
+                    p.Smer?.ToString() ?? "-",
+                    p.DruhStartu?.ToString() ?? "-",
+                    p.Poznamka ?? "-")));
 
     /// <summary>
     /// Přiřadí volnou trať rozjížďce. Obvyklý postup: <b>nejdřív se staví

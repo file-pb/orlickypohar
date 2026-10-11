@@ -229,22 +229,41 @@ public record TratNaVyberDto(
     /// </summary>
     bool JdePriradit,
     /// <summary>
-    /// Číslo nejbližší rozjížďky regaty, která zatím trať nemá, nebo
-    /// <c>null</c>, když žádná taková není.
+    /// Otisk předpisu trati: shodný řetězec znamená, že se jede totéž.
+    /// U trati bez prvků <c>null</c> — prázdno není předpis a sdružovat
+    /// dvě prázdné tratě by tvrdilo víc, než co o nich víme.
     /// <para>
-    /// <b>Číslo se nezadává ručně</b> (Filip, 11. 10. 2026: <i>„tratě
-    /// regaty s nějakým číslem je taky věc, co to znepřehledňuje"</i>).
-    /// Spočítat to smí jedině server: zná rozjížďky i to, která už trať
-    /// má, kdežto obrazovka vidí jen tratě a neexistující číslo by
-    /// slibovalo knoflík, který hned selže.
+    /// <b>K čemu je.</b> Klon je kopie, ne vazba (Filip, 12. 10. 2026:
+    /// <i>„datově by klon měl být jen kopie a jinak by měl prostě
+    /// samostatnou instanci… jen uživatel to chápe, že některé rozjížďky
+    /// se jedou na stejné trati, to bych mu tento pohled rád
+    /// simuloval"</i>). Obrazovka ten pohled skládá ze shody otisků, ne
+    /// z toho, odkud klon vznikl — jinak by po změně cíle u čtvrté
+    /// rozjížďky dál tvrdila, že se jede stejně jako ve třetí.
     /// </para>
     /// <para>
-    /// Je to vlastnost regaty, ne řádku, takže na všech řádcích stojí
-    /// táž hodnota. Zabalit odpověď do objektu kvůli jednomu číslu by
-    /// rozbilo tvar, který klienti už čtou.
+    /// Počítá se ze všeho, co je na trati předpisem: pořadí, typ, obě
+    /// značky, strana, směr, druh startu a poznámka „jak to jet“.
+    /// Poznámka v tom je proto, že ji čte závodník — dvě tratě, které se
+    /// liší jen jí, nejedou totéž.
     /// </para>
     /// </summary>
-    int? DalsiVolnaRozjizdka);
+    string? Otisk);
+
+/// <summary>
+/// Rozjížďka regaty v nabídce „na které trati se jede“.
+/// <para>
+/// <b>Nabídka, ne psané číslo</b> (Filip, 11. 10. 2026: <i>„tratě regaty
+/// s nějakým číslem je taky věc, co to znepřehledňuje“</i>). Vypsat smí
+/// jen server: obrazovka vidí tratě, ne rozjížďky, takže by neuměla
+/// rozlišit nezaloženou rozjížďku od volné.
+/// </para>
+/// </summary>
+/// <param name="TratId">Trať, která téhle rozjížďce patří, nebo <c>null</c>.</param>
+/// <param name="Odstartovana">
+/// Už se podle ní jelo. Trať se jí pak nebere — ani odškrtnutím.
+/// </param>
+public record RozjizdkaNaVyberDto(int Cislo, int? TratId, bool Odstartovana);
 
 /// <summary>Co se má s vybranou tratí stát a pro kterou rozjížďku.</summary>
 /// <param name="Rozjizdka">
