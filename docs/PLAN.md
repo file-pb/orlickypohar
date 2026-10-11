@@ -6,10 +6,11 @@ výsledky, administrace a mobilní přístup.
 **Jméno projektu:** `orlickypohar` → `orlickypohar.klihovka.cz`
 (bez pomlčky a podtržítka — jméno slouží zároveň jako databáze, role i subdoména).
 
-**Stav k 8. 10. 2026: fáze 0 až 4 a fáze 6 hotové; ve fázi 5 zbývají
-protesty a penalizace; fáze 7 a 9 nezačaté; z fáze 8 stojí bóje na trati.**
-Co přesně chybí a v jakém pořadí to dělat, je v oddílu *Co ještě chybí
-(audit 8. 10. 2026)*.
+**Stav k 11. 10. 2026: fáze 0 až 4 a fáze 6 hotové; ve fázi 5 zbývají
+protesty a penalizace; fáze 7 a 9 nezačaté; z fáze 8 stojí bóje na trati
+i s mapkou a trať se staví průvodcem.** Co přesně chybí, je v oddílu *Co
+ještě chybí (audit 8. 10. 2026)*; v jakém pořadí to dělat, v *Pořadí po
+11. 10. 2026* na jeho konci.
 
 | | |
 |---|---|
@@ -952,9 +953,11 @@ Znamená to dvě vydání appky, ne jedno: nejdřív čtecí, později se do ní
 přidá přihlášení a zadávání. Není to zdržení, je to pořadí — učit se Expo
 současně s OAuth tokem na mobilu jsou dva problémy najednou.
 
-Kdy přesně přijde mobilní administrace, se rozhodne až podle toho, jestli
-pořadatelé skutečně zadávají výsledky od vody. Když se ukáže, že je zadávají
-večer u počítače, je to práce navíc bez užitku — a to se pozná až z provozu.
+~~Kdy přesně přijde mobilní administrace, se rozhodne až podle toho, jestli
+pořadatelé skutečně zadávají výsledky od vody.~~ **Rozhodnuto 11. 10. 2026**
+seznamem toho, co má appka umět — viz *Co je v appce důležité*. Čekat na
+provoz nemá smysl, když zadavatel řekl, co chce; zůstává ale pravda, kvůli
+které ta věta vznikla: **co appka přidá, je offline, ne obrazovky.**
 
 ### Proč nativní a ne PWA
 
@@ -5194,8 +5197,63 @@ To nejsou mezery, to jsou rozhodnutí.
    výsledky (A5); tři z pěti nálezů auditu přitom neplatily, viz *Zkouška
    ovládání*.
 
-Appka, upozornění a tracker až potom: jsou to největší kusy, ale na první závod
-(15. 5. 2027) nemají vliv.
+~~Appka, upozornění a tracker až potom: jsou to největší kusy, ale na první
+závod (15. 5. 2027) nemají vliv.~~ **Přepsáno 11. 10. 2026** — pro tracker to
+platí dál, pro upozornění ne. Viz *Pořadí po 11. 10. 2026* níž.
+
+### Co je v appce důležité (Filip, 11. 10. 2026)
+
+Doslova: *„nejdůležitější věci v app je tracker, pushky, stavy rozjížděk,
+rychlé protesty, přihlášky, posádky a správa lodi, startování rozjížděk,
+cílová funkcionalita a stavění trati."* K tomu: *„tohle je zrovna
+funkcionalita, kterou by appka měla mít… proto i API apod."*
+
+<b>Stavění trati je na tom seznamu poslední</b> a čtení trati na něm není
+vůbec — nabízel jsem ho jako levný první krok a je to vedle.
+
+Ten seznam se dělí podle toho, co které položce chybí:
+
+| Co | Stav |
+|---|---|
+| přihlášky, posádky, správa lodi, stavy rozjížděk, cílová funkcionalita, stavění trati | **je v API i na webu**, v appce chybí jen obrazovka |
+| rychlé protesty | **neexistuje nikde** — v API je jediná zmínka, komentář u stavu závodu „Protesty vyřízené"; je to zbytek fáze 5 a stojí na chybějícím poli pro číslo pravidla |
+| startování rozjížděk | neověřeno, nejspíš taky nic |
+| tracker, pushky | **nativní, jinde se udělat nedají** |
+
+<b>Osm z deseti jsou zápisy, takže stojí na přihlášení v appce.</b> To je
+jedna brána pro skoro celý seznam, a appka ho nemá vůbec.
+
+<b>Co appka přidá nad prohlížeč na telefonu, je offline — ne obrazovky.</b>
+Pípnutí v prohlížeči dnes funguje: `pipani.tsx` používá
+`navigator.geolocation.watchPosition` a fotka jede přes
+`capture="environment"`. Přenést obrazovky bez fronty by vyrobilo druhou
+implementaci téhož, jen hůř udržovanou. Fronta v kódu nikde není
+(`grep` na outbox/offline nenajde nic ve `web/` ani v `app/`).
+
+### Pořadí po 11. 10. 2026
+
+1. **Zálohy obsahového bucketu.** Nejlevnější položka a jediná
+   nenahraditelná: fotky a vyvěšené směrnice v R2 jsou jediná data projektu
+   bez zálohy. Patří do repozitáře `platform` (`scripts/backup.sh`), ne sem.
+2. **Přihlášení v appce.** Brána pro osm z deseti položek Filipova seznamu
+   a podle auditu to, co blokuje nejvíc. Fáze 4 to předpokládá; dnešní věta
+   *„rozhodne se až podle toho, jestli pořadatelé skutečně zadávají výsledky
+   od vody"* v *Administrace i na mobilu* je tím rozhodnutá a neplatí.
+3. **Fáze 7, upozornění.** Odhad 2–3 týdny. <b>Důvod, proč to jde nahoru:</b>
+   3. 10. 2026 padlo, že **appka je oficiální vývěska závodu** — a vývěska,
+   která neumí říct „start se odkládá", tu roli neplní. Broadcast navíc
+   nepotřebuje účty, jen registraci zařízení, takže kus hodnoty jde udělat
+   dřív než zbytek.
+4. **Vypsat zbylé zastávky 2027 a vyvěsit směrnice.** Obsah, ne kód. Jarní
+   vítr (15. 5. 2027) je `Vypsany` od 11. 10. 2026, zbylých osm je
+   `Planovany` (ověřeno na produkci).
+5. **Protesty a penalizace** — zbytek fáze 5, až po závodě. Chybí pole pro
+   číslo pravidla u výsledku.
+6. **Tracker.** Pro něj ta původní věta platí dál: je to samostatný projekt
+   velikosti zbytku appky a na první závod nemá vliv.
+
+Mimo pořadí visí dál: zátěžový test (míří mimo nginx), A7 v mocku, sezení
+se skutečným pořadatelem a testy správy přes HTTP místo přes službu.
 
 ## Loďka u přihlášky (Filip, 9. 10. 2026)
 
