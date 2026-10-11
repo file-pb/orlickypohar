@@ -1652,15 +1652,53 @@ th.vlevo, td.vlevo { text-align: left; }
 .paticka-souhrn {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.7rem;
   flex: 1;
   min-width: 0;
-  /* Čísel může být víc, než se vejde — radši je uříznout než zalomit
-     lištu do dvou řádků. */
-  overflow: hidden;
+  /* Na telefonu se všech šest údajů nevejde. Místo uříznutí se dají
+     posunout do strany; pořadí je pořadí důležitosti, takže za okrajem
+     končí to, co snese čekat. Lištu to neroztáhne do dvou řádků. */
+  overflow-x: auto;
+  overflow-y: hidden;
   white-space: nowrap;
+  scrollbar-width: none;
+  /* Prst po liště posouvá, ťuknutí ji otevře — o rozdíl se stará
+     prohlížeč, proto tu není žádný javascript. */
+  -webkit-overflow-scrolling: touch;
 }
-.paticka-udaj { font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+.paticka-souhrn::-webkit-scrollbar { display: none; }
+/* Poslední údaj u okraje vybledne, ať je poznat, že lišta pokračuje —
+   uříznuté slovo jinak vypadá jako chyba. Týmž způsobem to říká pás
+   partnerů. Jen u pravého okraje: vlevo nic nechybí. */
+@media (max-width: 599.98px) {
+  .paticka-souhrn { mask-image: linear-gradient(90deg, #000 85%, transparent); }
+}
+.paticka-udaj {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+/* Údaj druhého řádu u téhož čísla — nárazy u větru. */
+.paticka-vedle { color: var(--tlumeny); font-size: 0.8rem; }
+/* Tytéž barvy jako šipka vodočtu a změna teploty v boku — na liště musí
+   šipka znamenat totéž, co znamená o patro výš. */
+.paticka-trend { font-size: 0.8rem; line-height: 1; }
+.paticka-trend.nahoru { color: var(--voda); }
+.paticka-trend.dolu { color: var(--stav-zruseny); }
+/* Kompas s rukávem na liště. Menší než v boku a bez písmene „S" —
+   na čtení tu není místo, jen na směr. */
+.paticka-udaj .vitr-rukav { height: 1.6rem; width: 1.6rem; flex: none; }
+.paticka-udaj .koupani-tecka { flex: none; }
+/* Pásek radaru: šest desetiminutových kroků vedle sebe. Je to tentýž
+   údaj jako pás v boku, jen zmenšený na výšku řádku. */
+.paticka-radar { display: inline-flex; gap: 1px; height: 1rem; flex: none; }
+.paticka-radar > span {
+  width: 3px;
+  border-radius: 1px;
+  background: var(--linka);
+}
 .paticka-stitek {
   color: var(--tlumeny);
   font-size: 0.75rem;
@@ -1679,7 +1717,15 @@ th.vlevo, td.vlevo { text-align: left; }
 .paticka-vystraha.stupen-3,
 .paticka-vystraha.stupen-4 { border-color: currentColor; font-weight: 600; }
 
-.paticka-popis { color: var(--tlumeny); font-size: 0.85rem; white-space: nowrap; }
+.paticka-popis { color: var(--tlumeny); font-size: 0.85rem; white-space: nowrap; flex: none; }
+.paticka-sipka { flex: none; }
+/* Na telefonu ustoupí nápis číslům: „Počasí a voda" zabírá přes třetinu
+   lišty a co lišta dělá, řekne šipka. Zpátky je od šířky, kde na něj
+   místo zbyde. */
+.paticka-popis { display: none; }
+@media (min-width: 600px) {
+  .paticka-popis { display: inline; }
+}
 /* Šipka jako dva tahy; otočí se, když je panel otevřený. */
 .paticka-sipka {
   width: 0.6rem; height: 0.6rem;
