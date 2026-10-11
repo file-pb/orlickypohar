@@ -22,9 +22,29 @@ namespace OrlickyPohar.Api.Features.Identita;
 /// <c>Identita__Authority</c> a <c>Identita__Audience</c>. Nic jiného o něm
 /// aplikace nepotřebuje vědět a nic jiného se o něm nikde nedozví.
 /// </para>
+/// <para>
+/// <b>Publik smí být víc, oddělených čárkou.</b> Jedno API obsluhuje víc
+/// klientů — web a od 11. 10. 2026 i appku — a poskytovatel dává každému
+/// klientovi token s jeho vlastním <c>aud</c>. S jediným publikem by token
+/// z appky dostal 401 a v logu by stálo, že nesedí publikum; vypadalo by
+/// to jako chyba přihlášení, a přitom by přihlášení proběhlo správně.
+/// </para>
 /// </summary>
 public static class Poskytovatel
 {
+    /// <summary>
+    /// Publika z konfigurace. Jedna hodnota je pořád platná konfigurace —
+    /// čárka jen připouští víc klientů téhož API.
+    /// <para>
+    /// Mezery okolo čárky se zahazují: v compose se seznam píše ručně a
+    /// publikum s mezerou navíc by se neshodovalo s ničím, přičemž chyba
+    /// by se projevila až jako 401 u jednoho klienta ze dvou.
+    /// </para>
+    /// </summary>
+    public static string[] Publika(string? konfigurace) =>
+        (konfigurace ?? string.Empty)
+            .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
     /// <summary>
     /// Zaregistruje překlad přihlášení na interní účet.
     /// <para>
@@ -44,11 +64,16 @@ public static class Poskytovatel
         if (string.IsNullOrEmpty(autorita) || string.IsNullOrEmpty(publikum))
             return false;
 
+        var publika = Publika(publikum);
+        if (publika.Length == 0) return false;
+
         sluzby.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(o =>
             {
                 o.Authority = autorita;
-                o.Audience = publikum;
+                // `o.Audience` se schválně nenastavuje: doplnilo by se do
+                // `ValidAudience` a vedle `ValidAudiences` by to bylo druhé
+                // místo, kde se táž věc rozhoduje.
                 // Nároky se nechávají tak, jak stojí v tokenu. Výchozí
                 // mapování přejmenuje `sub` na dlouhou adresu ze světa WS-*
                 // a z kódu, který má být čitelný proti specifikaci OIDC,
@@ -59,7 +84,7 @@ public static class Poskytovatel
                     ValidateIssuer = true,
                     ValidIssuer = autorita,
                     ValidateAudience = true,
-                    ValidAudience = publikum,
+                    ValidAudiences = publika,
                     ValidateLifetime = true,
                     // Výchozí tolerance je pět minut. Server má čas z NTP,
                     // takže pět minut navíc pro token, který měl přestat
