@@ -66,32 +66,48 @@ async function souhrn() {
     nactiOrlik().catch(() => null),
   ]);
 
+  // Co platí hned, jde dopředu; klidný stav dozadu. Pořadí je to, co na
+  // telefonu rozhoduje, co ještě bude vidět.
+  const napred: React.ReactNode[] = [];
   const polozky: React.ReactNode[] = [];
 
-  // Výstraha první a barevně: je to jediná položka, kvůli které má smysl
-  // lištu otevřít hned.
+  // Výstrahy jsou na liště vždycky, i když žádná neplatí (Filip, 11. 10.
+  // 2026). Mlčení by si čtenář přeložil jako „nic nehrozí" — a to je
+  // tvrzení, které při výpadku ČHMÚ nikdo neověřil. Dutá tečka proto
+  // znamená „nevíme", zelená „nic neplatí", štítek „tohle platí".
   const nejvyssi = vystrahy?.vystrahy.reduce<number | null>(
     (nej, v) => (nej === null || v.stupen > nej ? v.stupen : nej),
     null,
   );
   if (nejvyssi != null)
-    polozky.push(
+    napred.push(
       <span key="vystraha" className={`paticka-udaj paticka-vystraha stupen-${nejvyssi}`}>
         {vystrahy!.vystrahy.length === 1 ? vystrahy!.vystrahy[0].jev : "výstrahy ČHMÚ"}
       </span>,
     );
-
-  // Déšť jen tehdy, když doopravdy přijde. „Bez srážek" je na liště
-  // zbytečné slovo — ticho znamená totéž. Pásek je tu i tak: ukazuje,
-  // jak hustě a kdy, což se do slov nevejde.
-  const prsi = radar?.kroky.find((k) => k.dbz !== null && k.dbz >= DEST_DBZ);
-  if (prsi && radar)
+  else
     polozky.push(
-      <span key="dest" className="paticka-udaj paticka-dest">
-        <PasekRadaru kroky={radar.kroky} />
-        {prsi.minut === 0 ? "prší" : `déšť za ${prsi.minut} min`}
+      <span key="vystraha" className="paticka-udaj">
+        <span
+          className={`vystrahy-tecka${vystrahy ? "" : " nezname"}`}
+          aria-hidden="true"
+        />
+        {vystrahy ? "bez výstrah" : "výstrahy nenačteny"}
       </span>,
     );
+
+  // Radar je na liště vždycky, ne jen když prší: pásek ukazuje, jak hustě
+  // a kdy, a prázdný pásek je odpověď „do hodiny nic". Věta se mění.
+  const prsi = radar?.kroky.find((k) => k.dbz !== null && k.dbz >= DEST_DBZ);
+  if (radar) {
+    const polozka = (
+      <span key="dest" className={`paticka-udaj${prsi ? " paticka-dest" : ""}`}>
+        <PasekRadaru kroky={radar.kroky} />
+        {prsi ? (prsi.minut === 0 ? "prší" : `déšť za ${prsi.minut} min`) : "bez srážek"}
+      </span>
+    );
+    (prsi ? napred : polozky).push(polozka);
+  }
 
   const ted = vitr[0]?.historie.at(-1);
   if (ted)
@@ -146,7 +162,7 @@ async function souhrn() {
       </span>,
     );
 
-  return polozky;
+  return [...napred, ...polozky];
 }
 
 /**

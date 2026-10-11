@@ -12,9 +12,20 @@ import { dvaBody, nazevTypu, type StranaPrvku, type TypPrvku } from "@/lib/trat"
  *
  * Tentýž jazyk jako na mapě: kolečko je konec, plná úsečka mezi dvěma konci
  * je čára nebo brána, obloučky ukazují stranu.
+ *
+ * <para>
+ * <b>Oblouček je loď, ne značka</b> (Filip, 12. 10. 2026: *„pravobok nebo
+ * levobok vždy hovoří o tom, čím míjím daný objekt — to je takové
+ * názvosloví, aby se to právě nepletlo"*). Levobok tedy znamená, že loď
+ * má značku po levé ruce, takže **sama jede vpravo od ní** a oblouček
+ * patří napravo od kolečka. Do 12. 10. 2026 to tu bylo zrcadlově:
+ * oblouček se kreslil na stranu, která se jmenovala, tedy přesně ta
+ * záměna, které názvosloví předchází. Mapka (`lib/voda.ts`) i náhled prvku to
+ * měly správně, takže seznam jediný tvrdil opak.
+ * </para>
  */
 export function IkonaPrvku({ typ, strana }: { typ: TypPrvku; strana: StranaPrvku }) {
-  const vlevo = strana === "PoLeve";
+  const lodVpravo = strana === "PoLeve";
 
   return (
     <svg
@@ -33,7 +44,7 @@ export function IkonaPrvku({ typ, strana }: { typ: TypPrvku; strana: StranaPrvku
           <circle cx="16" cy="10" r="4" fill="currentColor" />
           {strana && (
             <path
-              d={vlevo ? "M 9 4 A 7 7 0 0 0 9 16" : "M 23 4 A 7 7 0 0 1 23 16"}
+              d={lodVpravo ? "M 23 4 A 7 7 0 0 1 23 16" : "M 9 4 A 7 7 0 0 0 9 16"}
               fill="none"
               stroke="currentColor"
               strokeWidth="1.6"
@@ -53,7 +64,7 @@ export function IkonaPrvku({ typ, strana }: { typ: TypPrvku; strana: StranaPrvku
           )}
           {typ === "Odskok" && strana && (
             <path
-              d={vlevo ? "M 2 5 A 5 5 0 0 0 2 15" : "M 30 5 A 5 5 0 0 1 30 15"}
+              d={lodVpravo ? "M 30 5 A 5 5 0 0 1 30 15" : "M 2 5 A 5 5 0 0 0 2 15"}
               fill="none"
               stroke="currentColor"
               strokeWidth="1.6"
