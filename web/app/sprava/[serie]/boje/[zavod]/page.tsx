@@ -177,37 +177,6 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
             <StavTrati serie={serie} zavod={zavod} trat={stavTrati.trat} />
           )}
 
-          {/* Výběr a klonování hned pod stavem: obojí je o tom, která
-              trať platí, a patří to k sobě dřív než k bójím. */}
-          <VyberTrati serie={serie} zavod={zavod} trate={trate} />
-
-          {/* U zamčené trati se formulář neukazuje vůbec. API pípnutí
-              odmítne, ale dozvědět se to až z chyby je na vodě o dvě
-              klepnutí a jednu nadávku navíc — důvod stojí v panelu výš. */}
-          {stavTrati.trat?.stav !== "Prijato" && (
-            <Pipani
-              serie={serie}
-              zavod={zavod}
-              prenastavuje={
-                prenastavovana
-                  ? {
-                      id: prenastavovana.id,
-                      nazev: prenastavovana.nazev,
-                      // Poloha jde s sebou kvůli mapě: u přenastavení se
-                      // má otevřít na staré poloze té bóje, ne u poslední
-                      // na trati.
-                      sirka: prenastavovana.sirka,
-                      delka: prenastavovana.delka,
-                    }
-                  : null
-              }
-              nejvicZnaku={NAZEV_NEJVIC}
-              stojici={trat.map((b) => b.nazev)}
-              byvala={[...(byvale ?? []).map(({ boje }) => boje.nazev)].reverse()}
-              stred={stredMapy}
-            />
-          )}
-
           {/* Stavba prvku je první věc pod stavem trati: na vodě je to
               to, kvůli čemu tam člověk je. Pípnutí jedné bóje zůstává
               níž — je to cesta pro zvláštní případ, ne hlavní. */}
@@ -218,6 +187,45 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
               dalsiPoradi={prvky.length + 1}
               stred={stredMapy}
             />
+          )}
+
+          {/* <b>Pípnutí jedné bóje je zvláštní případ, ne hlavní cesta</b>
+              (Filip, 11. 10. 2026: *„proč mám Pípnout bóji jako úvodní
+              možnost, když to stavím od prvku?"*). Proto až pod
+              průvodcem a schované — rozbalí se samo, když se přenastavuje,
+              protože to je jediná věc, která sem posílá odjinud.
+
+              U zamčené trati se formulář neukazuje vůbec. API pípnutí
+              odmítne, ale dozvědět se to až z chyby je na vodě o dvě
+              klepnutí a jednu nadávku navíc — důvod stojí v panelu výš. */}
+          {stavTrati.trat?.stav !== "Prijato" && (
+            <details className="jedna-boje" open={!!prenastavovana}>
+              <summary>
+                {prenastavovana ? "Přenastavit bóji" : "Pípnout jednu bóji zvlášť"}
+              </summary>
+              <Pipani
+                bezNadpisu
+                serie={serie}
+                zavod={zavod}
+                prenastavuje={
+                  prenastavovana
+                    ? {
+                        id: prenastavovana.id,
+                        nazev: prenastavovana.nazev,
+                        // Poloha jde s sebou kvůli mapě: u přenastavení
+                        // se má otevřít na staré poloze té bóje, ne
+                        // u poslední na trati.
+                        sirka: prenastavovana.sirka,
+                        delka: prenastavovana.delka,
+                      }
+                    : null
+                }
+                nejvicZnaku={NAZEV_NEJVIC}
+                stojici={trat.map((b) => b.nazev)}
+                byvala={[...(byvale ?? []).map(({ boje }) => boje.nazev)].reverse()}
+                stred={stredMapy}
+              />
+            </details>
           )}
 
           {/* Prvky stojí nad mapkou: mapka je kreslí, takže kdo chce něco
@@ -251,6 +259,11 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
               ))}
             </ul>
           )}
+
+          {/* <b>Až pod stavbou</b> (Filip, 11. 10. 2026): která trať platí
+              a klonování jsou úkoly od stolu, kdežto nahoře má být to,
+              kvůli čemu je člověk na vodě. */}
+          <VyberTrati serie={serie} zavod={zavod} trate={trate} />
 
           {trat.length > 0 && (
             <p className="poznamka">

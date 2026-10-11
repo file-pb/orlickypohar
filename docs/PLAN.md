@@ -5503,6 +5503,39 @@ je dnes značka a plavidlo i molo mají vlastní tvar podle značení.
 
 **Tím je celé zadání průvodce hotové.**
 
+## Ergonomie obrazovky bójí (Filip, 11. 10. 2026)
+
+*„Stránka Bóje na trati je stále uživatelsky nepřehledná."* Tři věci,
+všechny naše chyby v uspořádání:
+
+**Pořadí.** *„Proč mám Pípnout bóji jako úvodní možnost, když to stavím
+od prvku?"* Komentář v kódu přitom říkal, že průvodce má být první
+a pípnutí jedné bóje níž — provedení tomu neodpovídalo. Nově: stav
+trati → **postavit prvek** → pípnutí jedné bóje v rozbalovátku (otevře
+se samo při přenastavení) → prvky → mapka → tratě regaty. „Tratě
+regaty" šly dolů, protože výběr a klonování jsou úkoly od stolu.
+
+**Zamčená tlačítka vypadají jako chybějící funkce.** *„Levá strana
+startu nejde nastavit z mapy."* Šla, ale až po výběru značení — a do té
+doby stálo na tlačítku „Nejdřív vyber značení". Zadání přitom říká, že
+výchozí je *naše bóje, žlutá se sférickým vrškem*; čekat na volbu, která
+má rozumný výchozí stav, bylo zbytečné. Předvolba je teď předvybraná
+a nic není zamčené.
+
+**Mapa.** Ovládání leží v rohu mapy, ne pod ní — pod mapou ho člověk
+hledá a mezitím ztratí, kam koukal. Přibyl **přepínač na satelit**:
+mola, ostrůvky a břehy jsou na snímku vidět tak, jak je člověk uvidí
+z lodi.
+
+Satelitní podklad je **Esri World Imagery** — bez klíče, s uvedením
+zdroje. **Ortofoto ČÚZK by bylo nad Orlíkem ostřejší**, ale jeho WMTS
+11. 10. 2026 neběželo (`arcgis1` hlásilo „Service not started",
+`arcgis2` čtyřistačtyřku). Zdroj je v proxy na jednom místě, takže
+výměna je jeden řádek, až se vrátí.
+
+**Nedodělané:** mapa má pevných 320 px, takže na telefonu nevyplní
+šířku. Chce to proměnlivou mřížku dlaždic, ne jen jiné číslo.
+
 ## Zamrzlé pípnutí (Filip, 11. 10. 2026)
 
 *„Zapisování startu z mapy po přiřazení bodu zamrzne."* Tlačítko

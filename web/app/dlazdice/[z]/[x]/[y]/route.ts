@@ -15,10 +15,27 @@
  * Přepnout na Mapy.com jde výměnou adresy a přidáním klíče; tarif Basic
  * (250 tis. kreditů měsíčně zdarma) by na tohle stačil, ale chce
  * registraci, logo a copyright v obrázku.
+ *
+ * <b>Satelitní podklad je Esri World Imagery</b> (Filip, 11. 10. 2026:
+ * *„umožnil bych přepínač na satelitní pohled"*). Nechce klíč ani účet
+ * a chce uvedení zdroje, které obrazovka píše pod mapou.
+ *
+ * <para>
+ * <b>Ortofoto ČÚZK by nad Orlíkem bylo ostřejší</b>, ale jeho WMTS
+ * 11. 10. 2026 neběželo: `ags.cuzk.cz/arcgis1` vracelo „Error handling
+ * service request: Service not started" a `arcgis2` čtyřistačtyřku.
+ * Adresa je správná, služba ne — vyměnit zdroj je tady jeden řádek, až
+ * se vrátí.
+ * </para>
  */
 
-const ZDROJ = (z: number, x: number, y: number) =>
-  `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+type Podklad = "mapa" | "satelit";
+
+const ZDROJE: Record<Podklad, (z: number, x: number, y: number) => string> = {
+  mapa: (z, x, y) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`,
+  satelit: (z, x, y) =>
+    `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`,
+};
 
 /** Kontakt v hlavičce chtějí pravidla OSM; bez něj dlaždice odmítají. */
 const KDO = "OrlickyPohar/1.0 (+https://orlickypohar.klihovka.cz)";
@@ -28,10 +45,13 @@ const Z_NEJMENE = 10;
 const Z_NEJVIC = 17;
 
 export async function GET(
-  _: Request,
+  zadost: Request,
   { params }: { params: Promise<{ z: string; x: string; y: string }> },
 ) {
   const { z, x, y } = await params;
+  // Podklad přijde dotazem, ať zůstane jedna cesta a jedna mezipaměť.
+  const podklad: Podklad =
+    new URL(zadost.url).searchParams.get("podklad") === "satelit" ? "satelit" : "mapa";
   const cz = Number(z);
   const cx = Number(x);
   const cy = Number(y);
@@ -48,8 +68,8 @@ export async function GET(
 
   let odpoved: Response;
   try {
-    odpoved = await fetch(ZDROJ(cz, cx, cy), {
-      headers: { "user-agent": KDO, accept: "image/png" },
+    odpoved = await fetch(ZDROJE[podklad](cz, cx, cy), {
+      headers: { "user-agent": KDO, accept: "image/png,image/jpeg" },
       // Dlaždice se nemění; den je u OSM běžná doba, kterou drží i prohlížeč.
       next: { revalidate: 86_400 },
     });
@@ -61,7 +81,9 @@ export async function GET(
 
   return new Response(odpoved.body, {
     headers: {
-      "content-type": "image/png",
+      // Satelit chodí jako JPEG, mapa jako PNG — typ se bere z odpovědi,
+      // ne z přání.
+      "content-type": odpoved.headers.get("content-type") ?? "image/png",
       "cache-control": "public, max-age=86400, immutable",
     },
   });

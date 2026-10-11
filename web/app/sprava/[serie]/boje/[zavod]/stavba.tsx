@@ -25,6 +25,9 @@ import { fotkaKeZnacceAkce, pipniAkce, slozPrvekAkce } from "./akce";
 
 type Poloha = { sirka: number; delka: number };
 
+/** Předvolba, se kterou průvodce začíná. Nejčastější případ. */
+const VYCHOZI = ZNACENI.find((z) => z.id === "NaseBoje")!;
+
 /**
  * Stavba prvku na vodě: vyber, kolik bodů, řekni jak se to jede, a pípej.
  *
@@ -79,9 +82,22 @@ export function Stavba({
     { id: number; poloha: Poloha; znak: { barva: BarvaBoje; tvar: TvarBoje; znaceni: DruhZnaceni } }[]
   >([]);
 
-  const [znaceni, setZnaceni] = useState<DruhZnaceni>(null);
-  const [barva, setBarva] = useState<BarvaBoje>(null);
-  const [tvar, setTvar] = useState<TvarBoje>(null);
+  /**
+   * Výchozí značení je <b>naše bóje</b> — žlutá se sférickým vrškem.
+   * Zadání to tak říká (*„a to je výchozí stav, nic se neklikne"*) a je
+   * to nejčastější případ.
+   *
+   * <para>
+   * <b>Dřív tu nebylo nic a tlačítka byla zamčená</b>, takže to
+   * vypadalo, že z mapy vzít bod nejde (Filip, 11. 10. 2026: *„levá
+   * strana startu nejde nastavit z mapy"*). Čekat na volbu, která má
+   * rozumný výchozí stav, je zbytečné — a zamčené tlačítko s jiným
+   * nápisem vypadá jako chybějící funkce, ne jako podmínka.
+   * </para>
+   */
+  const [znaceni, setZnaceni] = useState<DruhZnaceni>(VYCHOZI.id);
+  const [barva, setBarva] = useState<BarvaBoje>(VYCHOZI.barva);
+  const [tvar, setTvar] = useState<TvarBoje>(VYCHOZI.tvary[0] ?? null);
   const [minule, setMinule] = useState<
     Record<string, { znaceni: DruhZnaceni; barva: BarvaBoje; tvar: TvarBoje }>
   >({});
@@ -131,14 +147,18 @@ export function Stavba({
   const zMinula = typ ? minule[typ.id] : undefined;
   const predvolbaMinule = zMinula ? predvolba(zMinula.znaceni) : null;
 
+  const naVychozi = () => {
+    setZnaceni(VYCHOZI.id);
+    setBarva(VYCHOZI.barva);
+    setTvar(VYCHOZI.tvary[0] ?? null);
+  };
+
   const vycisti = () => {
     setTyp(null);
     setVolba(null);
     setSmer(null);
     setHotove([]);
-    setZnaceni(null);
-    setBarva(null);
-    setTvar(null);
+    naVychozi();
     setZMapy(false);
     setChyba(null);
   };
@@ -211,12 +231,10 @@ export function Stavba({
       setHotove(vsechny);
 
       if (vsechny.length < typ.body.length) {
-        // Značení se pro další bod nepředvyplňuje: druhý konec brány bývá
-        // tentýž znak, ale u startu je to klidně molo proti lodi. Na jeden
-        // dotyk je k dispozici „jako minule".
-        setZnaceni(null);
-        setBarva(null);
-        setTvar(null);
+        // Značení se pro další bod nepřebírá z předchozího: druhý konec
+        // brány bývá tentýž znak, ale u startu je to klidně molo proti
+        // lodi. Vrací se na výchozí a na jeden dotyk je „jako minule".
+        naVychozi();
         router.refresh();
         return;
       }
@@ -496,20 +514,15 @@ export function Stavba({
             />
           ) : (
             <>
-              <button
-                type="button"
-                className="velke"
-                onClick={pipni}
-                disabled={delam || !znaceni}
-              >
-                {delam ? "Zapisuji…" : znaceni ? "Pípnout tady" : "Nejdřív vyber značení"}
+              <button type="button" className="velke" onClick={pipni} disabled={delam}>
+                {delam ? "Zapisuji…" : "Pípnout tady"}
               </button>
               <div className="chipy">
                 <button
                   type="button"
                   className="chip"
                   onClick={() => setZMapy(true)}
-                  disabled={delam || !znaceni}
+                  disabled={delam}
                 >
                   Vybrat z mapy
                 </button>

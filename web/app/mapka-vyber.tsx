@@ -47,6 +47,12 @@ export function MapkaVyber({
   const [z, setZ] = useState(15);
   const [kde, setKde] = useState(stred);
   /**
+   * Podklad. <b>Satelit u bójí pomáhá</b> (Filip, 11. 10. 2026): mola,
+   * ostrůvky a břehy jsou na snímku vidět tak, jak je člověk uvidí
+   * z lodi, kdežto v mapě je to jen obrys.
+   */
+  const [satelit, setSatelit] = useState(false);
+  /**
    * Kotva tahu je v `ref`, ne ve stavu. Stav se projeví až po
    * překreslení, takže při svižném tahu dorazí `pointermove` dřív, než
    * se `pointerdown` stihne zapsat — a mapa přeskočí nebo se nehne.
@@ -64,7 +70,7 @@ export function MapkaVyber({
       if (tx < 0 || ty < 0 || tx >= naSvete || ty >= naSvete) continue;
       dlazdice.push({
         klic: `${z}-${tx}-${ty}`,
-        cesta: `/dlazdice/${z}/${tx}/${ty}`,
+        cesta: `/dlazdice/${z}/${tx}/${ty}${satelit ? "?podklad=satelit" : ""}`,
         x: tx * DLAZDICE - levo,
         y: ty * DLAZDICE - nahore,
       });
@@ -114,21 +120,45 @@ export function MapkaVyber({
           <line x1={sirkaObrazu / 2} y1={vyskaObrazu / 2 - 14} x2={sirkaObrazu / 2} y2={vyskaObrazu / 2 + 14} />
           <circle cx={sirkaObrazu / 2} cy={vyskaObrazu / 2} r={7} fill="none" />
         </svg>
+
+        {/* Ovládání leží na mapě, ne pod ní (Filip, 11. 10. 2026).
+            Pod mapou je člověk hledá a mezitím ztratí, kam koukal.
+            `pointerdown` se zastaví, aby stisk tlačítka netáhl
+            podkladem. */}
+        <div className="ovladani" onPointerDown={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            aria-label="Přiblížit"
+            title="Přiblížit"
+            onClick={() => priblizeni(1)}
+            disabled={z >= Z_NEJVIC}
+          >
+            +
+          </button>
+          <button
+            type="button"
+            aria-label="Oddálit"
+            title="Oddálit"
+            onClick={() => priblizeni(-1)}
+            disabled={z <= Z_NEJMENE}
+          >
+            −
+          </button>
+          <button
+            type="button"
+            className="podklad"
+            aria-pressed={satelit}
+            onClick={() => setSatelit(!satelit)}
+          >
+            {satelit ? "Mapa" : "Satelit"}
+          </button>
+        </div>
       </div>
 
       <p className="poznamka">
         Křížek je bod, který vezmeš. Posouvej mapou pod ním.{" "}
         {kde.sirka.toFixed(5)}, {kde.delka.toFixed(5)} · {Math.round(naMetr)} m na pixel
       </p>
-
-      <div className="chipy">
-        <button type="button" className="chip" onClick={() => priblizeni(1)} disabled={z >= Z_NEJVIC}>
-          Přiblížit
-        </button>
-        <button type="button" className="chip" onClick={() => priblizeni(-1)} disabled={z <= Z_NEJMENE}>
-          Oddálit
-        </button>
-      </div>
 
       <button
         type="button"
@@ -144,9 +174,23 @@ export function MapkaVyber({
 
       <p className="poznamka">
         Podklad{" "}
-        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">
-          © přispěvatelé OpenStreetMap
-        </a>
+        {satelit ? (
+          <a
+            href="https://www.esri.com/en-us/legal/terms/full-master-agreement"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            © Esri World Imagery
+          </a>
+        ) : (
+          <a
+            href="https://www.openstreetmap.org/copyright"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            © přispěvatelé OpenStreetMap
+          </a>
+        )}
         .
       </p>
     </div>
