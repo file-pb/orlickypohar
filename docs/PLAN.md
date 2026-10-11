@@ -1920,12 +1920,20 @@ jsou protikladné věci.
   formuláři: fyzika prvku je daná tím, jak se postavil, a skrytá políčka
   by z toho udělala něco, co jde podstrčit.
 
-  **Co v detailu zatím není:** fotka, sebrání z vody a přenastavení
-  značky. Filip je chtěl *„až v detailu"*, ale sám k nim dodal *„to ještě
-  doladíme"* — jsou to operace nad **bójí**, ne nad prvkem, a jedna bóje
-  může být ve více prvcích. Zůstávají proto v seznamu „Co stojí na trati"
-  pod mapkou, dokud se nerozhodne, co se má stát, když se značka použitá
-  dvakrát sebere.
+  **Značky prvku jsou v detailu taky** — fotka, sebrání z vody,
+  přenastavení (Filip: *„až v detailu dej možnost takové editace"*). Dřív
+  se za tím muselo scrollovat pod mapku a hledat tutéž bóji podle jména.
+  Kreslí to **tatáž komponenta** jako seznam pod mapkou
+  (`znacka-na-trati.tsx`), ne druhá podobná: fotka nahraná odsud i
+  odtamtud je tatáž fotka u téže bóje. Pod mapkou seznam zůstává, protože
+  bóje, kterou žádný prvek nepoužívá, žádný detail prvku nemá — a právě na
+  ni upozorňuje hláška „stojí mimo trať".
+
+  **Když značku používá víc prvků, řekne se to** („tatáž značka je i
+  v prvku 4. průjezdní bóje"). Sebrání je údaj o **bóji**, ne o prvku —
+  bóje je buď ve vodě, nebo ne. Bez té věty by to ze seznamu vypadalo, že
+  se tlačítko týká jen tohohle průjezdu, a to je přesně ta záměna, kvůli
+  které prvky vznikly.
 
   **Spojnice vede po vodě, ne přímo** (Filip, 11. 10. 2026: *„ta rovná
   spojnice je hloupá, naznak trati působí přirozeněji… pokud by to byl

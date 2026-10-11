@@ -13,6 +13,7 @@ import {
   type StranaPrvku,
 } from "@/lib/trat";
 import { IkonaPrvku } from "@/app/ikona-prvku";
+import { ZnackaNaTrati } from "./znacka-na-trati";
 import {
   presunPrvekAkce,
   smazPrvekAkce,
@@ -92,6 +93,8 @@ export function PrvkyTrati({
                   serie={serie}
                   zavod={zavod}
                   prvek={p}
+                  prvky={prvky}
+                  boje={boje}
                   zamceno={zamceno}
                   prvni={i === 0}
                   posledni={i === prvky.length - 1}
@@ -131,6 +134,8 @@ function DetailPrvku({
   serie,
   zavod,
   prvek,
+  prvky,
+  boje,
   zamceno,
   prvni,
   posledni,
@@ -138,15 +143,24 @@ function DetailPrvku({
   serie: string;
   zavod: string;
   prvek: Prvek;
+  prvky: Prvek[];
+  boje: Boje[];
   zamceno: boolean;
   prvni: boolean;
   posledni: boolean;
 }) {
+  const znacky = (
+    <Znacky serie={serie} zavod={zavod} prvek={prvek} prvky={prvky} boje={boje} zamceno={zamceno} />
+  );
+
   if (zamceno) {
     return (
-      <p className="poznamka">
-        Trať je přijatá, takže se prvek nemění. Na změnu je přestavba.
-      </p>
+      <div className="detail-prvku">
+        <p className="poznamka">
+          Trať je přijatá, takže se prvek nemění. Na změnu je přestavba.
+        </p>
+        {znacky}
+      </div>
     );
   }
 
@@ -261,6 +275,69 @@ function DetailPrvku({
         značek. Fyzika prvku je už daná, takže se u nového dopisuje jen to,
         jak se jede.
       </p>
+
+      {znacky}
+    </div>
+  );
+}
+
+/**
+ * Značky, ze kterých je prvek složený — a co se s nimi dá udělat
+ * (Filip, 11. 10. 2026: *„až v detailu dej možnost takové editace, přidat
+ * fotku, sebrat z vody nebo přenastavit"*). Dřív se za tím muselo scrollovat
+ * pod mapku a hledat tutéž bóji podle jména.
+ *
+ * <b>Je to tatáž komponenta jako v seznamu pod mapkou</b>, ne druhá
+ * podobná: fotka nahraná odsud i odtamtud je tatáž fotka u téže bóje.
+ *
+ * <b>Když značku používá víc prvků, řekne se to.</b> Sebrání je údaj
+ * o bóji, ne o prvku — bóje je buď ve vodě, nebo ne. Ze seznamu by to
+ * vypadalo, že se seznam týká jen tohohle průjezdu, a to je přesně ta
+ * záměna, kvůli které prvky vznikly.
+ */
+function Znacky({
+  serie,
+  zavod,
+  prvek,
+  prvky,
+  boje,
+  zamceno,
+}: {
+  serie: string;
+  zavod: string;
+  prvek: Prvek;
+  prvky: Prvek[];
+  boje: Boje[];
+  zamceno: boolean;
+}) {
+  const konce = [prvek.a, ...(prvek.b ? [prvek.b] : [])];
+  const nalezene = konce
+    .map((k) => boje.find((b) => b.id === k.id))
+    .filter((b): b is Boje => b !== undefined);
+  if (nalezene.length === 0) return null;
+
+  return (
+    <div className="znacky-prvku">
+      <h3>{nalezene.length === 1 ? "Značka prvku" : "Značky prvku"}</h3>
+      <ul className="seznam">
+        {nalezene.map((b) => {
+          const jinde = prvky.filter(
+            (p) => p.id !== prvek.id && (p.a.id === b.id || p.b?.id === b.id),
+          );
+          return (
+            <li key={b.id}>
+              <ZnackaNaTrati boje={b} serie={serie} zavod={zavod} zamceno={zamceno} />
+              {jinde.length > 0 && (
+                <p className="poznamka">
+                  Tatáž značka je i v prvku{" "}
+                  {jinde.map((p) => `${p.poradi}. ${nazevTypu(p.typ)}`).join(", ")}. Sebrání
+                  a přenastavení platí pro všechny — bóje je buď ve vodě, nebo ne.
+                </p>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
