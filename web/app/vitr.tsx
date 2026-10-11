@@ -147,7 +147,12 @@ function Tlak({ trend }: { trend: TlakTrend | null }) {
  * Pět pruhů, každý jako u skutečného rukávu za 3 uzly: při 15 kt je
  * nafouknutý celý, při bezvětří visí prázdný.
  */
-function Rukav({ smer, rychlost, velky }: { smer: number | null; rychlost: number; velky?: boolean }) {
+/**
+ * Kompas s rukávem. Exportovaný kvůli liště u spodku okna — rukáv je to
+ * jediné, co o větru řekne směr bez čtení, a na liště je na čtení místo
+ * ještě míň než v boku.
+ */
+export function Rukav({ smer, rychlost, velky }: { smer: number | null; rychlost: number; velky?: boolean }) {
   const trida = velky ? "vitr-rukav velky" : "vitr-rukav";
   if (smer === null) return <span className={trida} />;
 
