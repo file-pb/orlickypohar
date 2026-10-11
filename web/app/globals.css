@@ -1283,7 +1283,24 @@ th.vlevo, td.vlevo { text-align: left; }
    sebou a stránka by poskočila. */
 .taby-sekci { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
 .taby-sekci::-webkit-scrollbar { display: none; }
-.taby-sekci a { white-space: nowrap; }
+.taby-sekci a { white-space: nowrap; display: inline-flex; align-items: center; gap: 0.45rem; }
+/* Signální vlajka u sekce. Pevné barvy mezinárodního kódu, z motivu jen
+   rámeček — bez něj by bílá v bílé vlajce splynula s pozadím. */
+.taby-sekci .vlajka {
+  height: 0.95rem;
+  width: 1.425rem;
+  flex: none;
+  border: 1px solid var(--linka);
+  border-radius: 1px;
+}
+/* Úvod nese značku poháru místo vlajky; srovnat ji do stejné výšky. */
+.taby-sekci .znak-celkem { height: 1.3rem; width: auto; }
+/* Neotevřená sekce má vlajku tlumenější, ať nepřetahuje pozornost
+   z té otevřené. */
+.taby-sekci a:not([aria-current="page"]) .vlajka,
+.taby-sekci a:not([aria-current="page"]) .znak-celkem { opacity: 0.55; }
+.taby-sekci a:hover .vlajka,
+.taby-sekci a:hover .znak-celkem { opacity: 1; }
 
 /* Pruh upozornění nad taby: co se u regaty zrovna děje. Naléhavé nese
    barvu, ostatní jsou klidné řádky — kdyby svítilo všechno, nesvítí nic. */

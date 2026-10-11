@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { VerejnaTrat, ZavodDetail } from "@/lib/api";
 import { Drobecky } from "@/app/drobecky";
+import { ZnackaPuvodni } from "@/app/logo-puvodni";
+import { VlajkaIkona, type Vlajka } from "@/app/vlajky";
 import { nactiJa } from "@/lib/ja";
 import { polozkyZastavky, prava, roleVRocniku } from "@/lib/co-smim";
 import { DoSpravy, Hlavicka } from "./hlavicka";
@@ -35,6 +37,21 @@ const NAZVY: Record<Sekce, string> = {
   trat: "Trať",
   lode: "Lodě",
   vysledky: "Výsledky",
+};
+
+/**
+ * Signální vlajka u každé sekce (Filip, 11. 10. 2026: *„ať je to živější"*).
+ * Vybraná podle toho, co vlajka doopravdy znamená v Závodních signálech —
+ * proč a která, viz `app/vlajky.tsx`. Úvod vlajku nemá: žádný signál
+ * neznamená „tady je řeč o celé regatě", a tak nese značku poháru, stejně
+ * jako ji v tabech tříd nese pořadí celého pole.
+ */
+const VLAJKY: Record<Sekce, Vlajka | null> = {
+  uvod: null,
+  smernice: "L",
+  trat: "M",
+  lode: "P",
+  vysledky: "modra",
 };
 
 /** Které sekce ta která regata má. Pořadí je pořadí tabů. */
@@ -118,6 +135,7 @@ export async function HlavaZastavky({
               href={adresaSekce(serie, zavod, s)}
               aria-current={s === aktivni ? "page" : undefined}
             >
+              {VLAJKY[s] ? <VlajkaIkona vlajka={VLAJKY[s]} /> : <ZnackaPuvodni />}
               {NAZVY[s]}
             </Link>
           ))}
