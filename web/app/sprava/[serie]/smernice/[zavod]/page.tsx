@@ -5,7 +5,7 @@ import { Vypadek } from "@/app/vypadek";
 import { datumClanku } from "@/app/datum";
 import { NEJVIC_MB, nactiSmernice, visi, type Smernice } from "@/lib/smernice";
 import { nazevZastavky } from "@/lib/kalendar";
-import { stahniAkce, vyvesAkce } from "./akce";
+import { stahniAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -89,9 +89,17 @@ export default async function SmerniceZastavky({ params, searchParams }: Paramet
         <Vypadek />
       ) : (
         <>
-          <form action={vyvesAkce} className="formular">
-            <input type="hidden" name="serie" value={serie} />
-            <input type="hidden" name="zavod" value={zavod} />
+          {/* <b>Obyčejný formulář na vlastní koncový bod</b>, ne serverová
+              akce: Cloudflare před webem odmítal nahrávání se stavem 403,
+              protože se jeho pravidlo chytá na kombinaci „soubor + hlavička
+              `Next-Action`". Podrobně v `nahrat/route.ts`. Série a zastávka
+              jsou v cestě, takže skrytá pole nejsou potřeba. */}
+          <form
+            method="post"
+            action={`/sprava/${encodeURIComponent(serie)}/smernice/${encodeURIComponent(zavod)}/nahrat`}
+            encType="multipart/form-data"
+            className="formular"
+          >
             <label>
               Soubor směrnice (PDF, nejvýš {NEJVIC_MB} MB)
               <input type="file" name="soubor" accept="application/pdf" required />
