@@ -3,6 +3,18 @@ import type { Stav } from "@/lib/sprava";
 import type { components } from "./schema";
 
 /**
+ * Jak dlouho se čeká na API, než se to vzdá.
+ *
+ * <b>Bez limitu se čeká navždy</b>, a na vodě to vypadá jako zamrzlá
+ * obrazovka: tlačítko zůstane na „Zapisuji…" a nikdo se nedozví, že se
+ * nic neděje (Filip, 11. 10. 2026: *„zapisování startu z mapy po
+ * přiřazení bodu zamrzne"*). Patnáct sekund je stejná mez jako
+ * u radaru a větru — přes mobilní signál u přehrady je to dost
+ * i na pomalé spojení.
+ */
+export const CEKAT_MS = 15_000;
+
+/**
  * Stav trati: stavitelé hlásí hotovo, rozhodčí přijímá a zamyká, přestavba
  * odemyká.
  *
@@ -49,6 +61,7 @@ export async function nactiStavTrati(
     odpoved = await fetch(cesta(serie, zavod), {
       headers: { authorization: `Bearer ${t}`, accept: "application/json" },
       cache: "no-store",
+      signal: AbortSignal.timeout(CEKAT_MS),
     });
   } catch {
     return { stav: "vypadek" };
@@ -85,6 +98,7 @@ export async function posunTrat(
       },
       body: JSON.stringify(krok === "vraceni" ? { duvod } : {}),
       cache: "no-store",
+      signal: AbortSignal.timeout(CEKAT_MS),
     });
   } catch {
     return "Nedaří se spojit s API. Zkus to za chvíli.";
@@ -205,6 +219,7 @@ export async function nactiPrvky(serie: string, zavod: string): Promise<Prvek[]>
     const odpoved = await fetch(`${cesta(serie, zavod)}/prvky`, {
       headers: { authorization: `Bearer ${t}`, accept: "application/json" },
       cache: "no-store",
+      signal: AbortSignal.timeout(CEKAT_MS),
     });
     return odpoved.ok ? ((await odpoved.json()) as Prvek[]) : [];
   } catch {
@@ -247,6 +262,7 @@ async function posli(adresa: string, metoda: string, telo?: unknown): Promise<st
       },
       body: telo ? JSON.stringify(telo) : undefined,
       cache: "no-store",
+      signal: AbortSignal.timeout(CEKAT_MS),
     });
   } catch {
     return "Nedaří se spojit s API. Zkus to za chvíli.";
@@ -289,6 +305,7 @@ export async function nactiTrate(serie: string, zavod: string): Promise<TratNaVy
     const odpoved = await fetch(`${cesta(serie, zavod)}/seznam`, {
       headers: { authorization: `Bearer ${t}`, accept: "application/json" },
       cache: "no-store",
+      signal: AbortSignal.timeout(CEKAT_MS),
     });
     return odpoved.ok ? ((await odpoved.json()) as TratNaVyber[]) : [];
   } catch {

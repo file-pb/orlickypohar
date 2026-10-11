@@ -164,69 +164,81 @@ export function Stavba({
     setDelam(true);
     setChyba(null);
 
-    const { chyba: chybaPipnuti, id } = await pipniAkce(serie, zavod, {
-      nazev: jmena[hotove.length],
-      poradi: 0,
-      sirka: poloha.sirka,
-      delka: poloha.delka,
-      presnostM: zdroj === "Telefon" ? poloha.presnost : null,
-      nahrazujeId: null,
-      zdroj,
-      barva: barva ?? undefined,
-      tvar: tvar ?? undefined,
-      znaceni: znaceni ?? undefined,
-      popis: popis.trim() || undefined,
-    });
-    if (chybaPipnuti || id === null) {
-      setChyba(chybaPipnuti ?? "Značku se nepodařilo zapsat.");
+    // <b>Vždycky se musí dojít k `finally`.</b> Když se cokoliv utrhne —
+    // volání nevrátí nic, akce vyhodí výjimku —, zůstane jinak `delam`
+    // na true a obrazovka navždy visí na „Zapisuji…" (Filip, 11. 10.
+    // 2026). Zamrzlá obrazovka je horší než chyba: u chyby se dá
+    // rozhodnout, co dál.
+    try {
+
+      const { chyba: chybaPipnuti, id } = await pipniAkce(serie, zavod, {
+        nazev: jmena[hotove.length],
+        poradi: 0,
+        sirka: poloha.sirka,
+        delka: poloha.delka,
+        presnostM: zdroj === "Telefon" ? poloha.presnost : null,
+        nahrazujeId: null,
+        zdroj,
+        barva: barva ?? undefined,
+        tvar: tvar ?? undefined,
+        znaceni: znaceni ?? undefined,
+        popis: popis.trim() || undefined,
+      });
+      if (chybaPipnuti || id === null) {
+        setChyba(chybaPipnuti ?? "Značku se nepodařilo zapsat.");
+        return;
+      }
+
+      if (znaceni) setMinule({ ...minule, [typ.id]: { znaceni, barva, tvar } });
+      setZMapy(false);
+
+      // Fotka až po pípnutí: dřív značka nemá id, na které by se dala
+      // pověsit. Když se nepovede, značka zůstane — je to doklad navíc,
+      // ne podmínka, a stavbu na vodě kvůli ní zastavovat nebudeme.
+      if (fotka) {
+        const { chyba: chybaFotky } = await fotkaKeZnacceAkce(serie, zavod, id, fotka);
+        if (chybaFotky) setChyba(`Značka je zapsaná, ale fotka ne: ${chybaFotky}`);
+        setFotka(null);
+        if (vyberFotky.current) vyberFotky.current.value = "";
+      }
+      setPopis("");
+      setPisuPopis(false);
+
+      const vsechny = [
+        ...hotove,
+        { id, poloha: { sirka: poloha.sirka, delka: poloha.delka }, znak: { barva, tvar, znaceni } },
+      ];
+      setHotove(vsechny);
+
+      if (vsechny.length < typ.body.length) {
+        // Značení se pro další bod nepředvyplňuje: druhý konec brány bývá
+        // tentýž znak, ale u startu je to klidně molo proti lodi. Na jeden
+        // dotyk je k dispozici „jako minule".
+        setZnaceni(null);
+        setBarva(null);
+        setTvar(null);
+        router.refresh();
+        return;
+      }
+
+      // U startu a cíle se ještě čeká na růžici: azimut linie vznikne teprve
+      // tímhle druhým bodem, takže dřív se směr vybrat nedal. Prvek se složí
+      // až po něm — jinak by se uložil bez směru a šipka by se neměla odkud
+      // vzít.
+      if (patriSmer(typ)) {
+        router.refresh();
+        return;
+      }
+
+      await slozPrvek(vsechny);
+    } catch (e) {
+      setChyba(
+        `Zápis se nepovedl: ${e instanceof Error ? e.message : "neznámá chyba"}. ` +
+          "Zkus to prosím znovu.",
+      );
+    } finally {
       setDelam(false);
-      return;
     }
-
-    if (znaceni) setMinule({ ...minule, [typ.id]: { znaceni, barva, tvar } });
-    setZMapy(false);
-
-    // Fotka až po pípnutí: dřív značka nemá id, na které by se dala
-    // pověsit. Když se nepovede, značka zůstane — je to doklad navíc,
-    // ne podmínka, a stavbu na vodě kvůli ní zastavovat nebudeme.
-    if (fotka) {
-      const { chyba: chybaFotky } = await fotkaKeZnacceAkce(serie, zavod, id, fotka);
-      if (chybaFotky) setChyba(`Značka je zapsaná, ale fotka ne: ${chybaFotky}`);
-      setFotka(null);
-      if (vyberFotky.current) vyberFotky.current.value = "";
-    }
-    setPopis("");
-    setPisuPopis(false);
-
-    const vsechny = [
-      ...hotove,
-      { id, poloha: { sirka: poloha.sirka, delka: poloha.delka }, znak: { barva, tvar, znaceni } },
-    ];
-    setHotove(vsechny);
-
-    if (vsechny.length < typ.body.length) {
-      // Značení se pro další bod nepředvyplňuje: druhý konec brány bývá
-      // tentýž znak, ale u startu je to klidně molo proti lodi. Na jeden
-      // dotyk je k dispozici „jako minule".
-      setZnaceni(null);
-      setBarva(null);
-      setTvar(null);
-      setDelam(false);
-      router.refresh();
-      return;
-    }
-
-    // U startu a cíle se ještě čeká na růžici: azimut linie vznikne teprve
-    // tímhle druhým bodem, takže dřív se směr vybrat nedal. Prvek se složí
-    // až po něm — jinak by se uložil bez směru a šipka by se neměla odkud
-    // vzít.
-    if (patriSmer(typ)) {
-      setDelam(false);
-      router.refresh();
-      return;
-    }
-
-    await slozPrvek(vsechny);
   };
 
   /**
@@ -239,28 +251,40 @@ export function Stavba({
     if (!typ || !volba) return;
     setDelam(true);
 
-    const { chyba: chybaPrvku } = await slozPrvekAkce(serie, zavod, {
-      typ: volba.typ,
-      poradi: dalsiPoradi,
-      bojeAId: body[0].id,
-      bojeBId: body[1]?.id ?? null,
-      strana: volba.strana,
-      smer: patriSmer(typ) ? smer : null,
-      druhStartu: patriDruhStartu(typ) ? druhStartuZVolby(volba) : null,
-    });
+    // Totéž `finally` jako u zápisu bodu: zamrzlá obrazovka je horší
+    // než chyba.
+    try {
+      const { chyba: chybaPrvku } = await slozPrvekAkce(serie, zavod, {
+        typ: volba.typ,
+        poradi: dalsiPoradi,
+        bojeAId: body[0].id,
+        bojeBId: body[1]?.id ?? null,
+        strana: volba.strana,
+        smer: patriSmer(typ) ? smer : null,
+        druhStartu: patriDruhStartu(typ) ? druhStartuZVolby(volba) : null,
+      });
 
-    setDelam(false);
-    if (chybaPrvku) {
-      setChyba(`Značky jsou zapsané, ale prvek se nepovedl: ${chybaPrvku}`);
+      if (chybaPrvku) {
+        // Značky zůstanou: jsou to měření, která se opravdu stala.
+        setChyba(`Značky jsou zapsané, ale prvek se nepovedl: ${chybaPrvku}`);
+        vycisti();
+        router.refresh();
+        return;
+      }
+
+      setHlaska(`${volba.jmeno.toLowerCase()} — prvek je na trati.`);
+      setPosledni({ typ, body });
       vycisti();
       router.refresh();
-      return;
+    } catch (e) {
+      setChyba(
+        "Značky jsou zapsané, ale prvek se nepovedl: " +
+          `${e instanceof Error ? e.message : "neznámá chyba"}. Zkus ho složit ve formuláři níž.`,
+      );
+      router.refresh();
+    } finally {
+      setDelam(false);
     }
-
-    setHlaska(`${volba.jmeno.toLowerCase()} — prvek je na trati.`);
-    setPosledni({ typ, body });
-    vycisti();
-    router.refresh();
   };
 
   const pipni = async () => {

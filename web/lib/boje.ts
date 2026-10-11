@@ -2,6 +2,30 @@ import { tokenZeSezeni } from "@/lib/oidc";
 import type { Stav } from "@/lib/sprava";
 import type { components } from "./schema";
 
+/**
+ * Jak dlouho se čeká na API, než se to vzdá.
+ *
+ * <b>Bez limitu se čeká navždy</b>, a na vodě to vypadá jako zamrzlá
+ * obrazovka: tlačítko zůstane na „Zapisuji…" a nikdo se nedozví, že se
+ * nic neděje (Filip, 11. 10. 2026: *„zapisování startu z mapy po
+ * přiřazení bodu zamrzne"*). Patnáct sekund je stejná mez jako
+ * u radaru a větru — přes mobilní signál u přehrady je to dost
+ * i na pomalé spojení.
+ */
+export const CEKAT_MS = 15_000;
+
+/**
+ * Proč volání selhalo, slovy. <b>Vypršení se pozná od nedostupnosti</b>:
+ * „nedaří se zavolat" u pomalého API lže a pořadatel u vody pak neví,
+ * jestli to má zkusit znovu, nebo jestli se zápis možná povedl.
+ */
+function duvodSelhani(chyba: unknown): string {
+  const jmeno = chyba instanceof Error ? chyba.name : "";
+  return jmeno === "TimeoutError" || jmeno === "AbortError"
+    ? `API neodpovědělo do ${Math.round(CEKAT_MS / 1000)} s. Zkus to prosím znovu.`
+    : "API se nedaří zavolat.";
+}
+
 export type BarvaBoje = components["schemas"]["BarvaBoje"];
 export type TvarBoje = components["schemas"]["TvarBoje"];
 /** Čím je značka značená — bóje, znak dráhy, plavidlo, objekt na břehu. */
@@ -78,6 +102,7 @@ async function nacti(
     odpoved = await fetch(adresa, {
       headers: { authorization: `Bearer ${t}`, accept: "application/json" },
       cache: "no-store",
+      signal: AbortSignal.timeout(CEKAT_MS),
     });
   } catch {
     return { stav: "vypadek" };
@@ -157,13 +182,14 @@ export async function pipni(
       },
       body: JSON.stringify(vstup),
       cache: "no-store",
+      signal: AbortSignal.timeout(CEKAT_MS),
     });
     // Vrací se i zapsaná bóje: průvodce stavbou z ní potřebuje `id`, aby
     // z pípnutých bodů hned složil prvek.
     if (!odpoved.ok) return { chyba: await hlaska(odpoved), boje: null };
     return { chyba: null, boje: (await odpoved.json()) as Boje };
-  } catch {
-    return { chyba: "API se nedaří zavolat.", boje: null };
+  } catch (e) {
+    return { chyba: duvodSelhani(e), boje: null };
   }
 }
 
@@ -181,10 +207,11 @@ export async function seber(
       method: "POST",
       headers: { authorization: `Bearer ${t}`, accept: "application/json" },
       cache: "no-store",
+      signal: AbortSignal.timeout(CEKAT_MS),
     });
     return odpoved.ok ? null : await hlaska(odpoved);
-  } catch {
-    return "API se nedaří zavolat.";
+  } catch (e) {
+    return duvodSelhani(e);
   }
 }
 
@@ -217,11 +244,12 @@ export async function nahrajFotku(
       headers: { authorization: `Bearer ${t}`, accept: "application/json" },
       body: telo,
       cache: "no-store",
+      signal: AbortSignal.timeout(CEKAT_MS),
     });
     if (odpoved.status === 413) return `Fotka může mít nejvýš ${FOTKA_NEJVIC_MB} MB.`;
     return odpoved.ok ? null : await hlaska(odpoved);
-  } catch {
-    return "API se nedaří zavolat.";
+  } catch (e) {
+    return duvodSelhani(e);
   }
 }
 
@@ -242,11 +270,12 @@ export async function odeberFotku(
         method: "DELETE",
         headers: { authorization: `Bearer ${t}`, accept: "application/json" },
         cache: "no-store",
+        signal: AbortSignal.timeout(CEKAT_MS),
       },
     );
     return odpoved.ok ? null : await hlaska(odpoved);
-  } catch {
-    return "API se nedaří zavolat.";
+  } catch (e) {
+    return duvodSelhani(e);
   }
 }
 
@@ -263,6 +292,7 @@ export async function nactiKUklizeni(serie: string, zavod: string): Promise<numb
     const odpoved = await fetch(`${cesta(serie, zavod)}/uklid`, {
       headers: { authorization: `Bearer ${t}`, accept: "application/json" },
       cache: "no-store",
+      signal: AbortSignal.timeout(CEKAT_MS),
     });
     if (!odpoved.ok) return null;
     return ((await odpoved.json()) as { pocet: number }).pocet;
@@ -284,10 +314,11 @@ export async function uklidHistorii(
       method: "POST",
       headers: { authorization: `Bearer ${t}`, accept: "application/json" },
       cache: "no-store",
+      signal: AbortSignal.timeout(CEKAT_MS),
     });
     if (!odpoved.ok) return await hlaska(odpoved);
     return ((await odpoved.json()) as { pocet: number }).pocet;
-  } catch {
-    return "API se nedaří zavolat.";
+  } catch (e) {
+    return duvodSelhani(e);
   }
 }

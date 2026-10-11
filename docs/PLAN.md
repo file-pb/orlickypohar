@@ -5503,6 +5503,34 @@ je dnes značka a plavidlo i molo mají vlastní tvar podle značení.
 
 **Tím je celé zadání průvodce hotové.**
 
+## Zamrzlé pípnutí (Filip, 11. 10. 2026)
+
+*„Zapisování startu z mapy po přiřazení bodu zamrzne."* Tlačítko
+zůstalo na „Zapisuji…" a nešlo s tím nic dělat.
+
+**Na mocku se to zopakovat nedalo**, takže příčina není v logice
+průvodce. Zamrznout na „Zapisuji…" jde ale jen dvěma způsoby a oba byly
+v kódu možné:
+
+1. **Volání se nikdy nevrátí.** `web/lib/boje.ts` ani `trat.ts` neměly
+   na žádném z dvanácti volání časový limit, zatímco `radar.ts`,
+   `vitr.ts` i `zkratky.ts` ho mají. Visící API tedy znamenalo čekání
+   bez konce. Nově `AbortSignal.timeout(CEKAT_MS)` u všech a hláška
+   rozliší **vypršení od nedostupnosti** — „nedaří se zavolat" u pomalého
+   API lže a pořadatel pak neví, jestli se zápis možná povedl.
+2. **Výjimka, kterou nikdo nechytá.** `zapis` i `slozPrvek` nastavovaly
+   `delam` na true a vracely ho jen po úspěšných cestách; odmítnutý slib
+   ze serverové akce by ho nechal zapnutý. Nově je tělo obou v
+   `try`/`finally`.
+
+Ověřeno vyrobením obou případů: proti odmítnutému spojení se obrazovka
+vrátí do vteřiny, proti serveru, který spojení přijme a neodpoví, do
+šestnácti — dřív nikdy.
+
+**Zůstává nejisté, která z těch dvou příčin to byla.** Produkční konzoli
+odsud nepřečtu. Obě jsou ale zavřené a příště bude místo zamrznutí vidět
+věta, proč.
+
 ## Růžová a plameňák (Filip, 11. 10. 2026)
 
 *„Někam ještě napasuj k barvám bójí růžovou a tvar plameňák — to je jen
