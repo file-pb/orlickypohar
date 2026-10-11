@@ -2080,6 +2080,15 @@ kosmetika:** půlka jmen, která jsem vymyslel, popisovala tvar místo věci.
 - **Strana je `levobok` a `pravobok`**, ne „ponechat po levé". Opis měl
   zabránit tomu, aby si někdo „objíždí se levou" přečetl jako „točit
   doleva" — řešil to ale za cenu toho, že to nebylo námořnicky.
+
+  **Bok je vždycky bok lodi, ne strana značky** (Filip, 12. 10. 2026:
+  *„pravobok nebo levobok vždy hovoří o tom, čím míjím daný objekt — to
+  je takové názvosloví, aby se to právě nepletlo"*). `PoLeve` tedy
+  znamená značku po levoboku lodi, a loď proto jede **vpravo od ní**.
+  Kdo to kreslí, musí stopu odsadit na opačnou stranu, než se bok
+  jmenuje; ikonka prvku v seznamu to měla do 12. 10. 2026 zrcadlově,
+  zatímco mapka i náhled prvku správně. Nestačí tedy pravidlo znát —
+  každé nové místo, které stranu kreslí, se musí ověřit obrázkem.
 - **Start je start a cíl je cíl.** „Startovní čára" a „cílová čára"
   popisovaly tvar.
 - **Slovo „konec" z obrazovky zmizelo** — čte se jako cíl. Bóje prvku se
