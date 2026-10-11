@@ -275,6 +275,22 @@ export function MapkaTrati({ prvky }: { prvky: PrvekNaMape[] }) {
           />
         ))}
 
+        {/* <b>Kotvy pro odkaz „na mapě" ze seznamu prvků.</b> Jeden
+            neviditelný kroužek na prvek; `:target` z něj udělá obroučku a
+            prohlížeč na něj odroluje. Bez javascriptu, takže to funguje
+            i tam, kde ho stránka nemá. */}
+        {posunute.map((b) => (
+          <circle
+            key={`kotva-${b.prvek.klic}`}
+            id={`prvek-${b.prvek.klic}`}
+            className="kotva-prvku"
+            cx={b.uzel.x}
+            cy={b.uzel.y}
+            r={18}
+            fill="none"
+          />
+        ))}
+
         {/* Spojnice v pořadí objíždění, po vodě a u značek s obloučkem na
             tu stranu, kterou se míjí. Čárkovaná a tenká schválně: je to
             pořadí a hrubá cesta, ne vytyčená dráha — loď křižuje a u břehu

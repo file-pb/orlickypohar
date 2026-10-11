@@ -1883,6 +1883,58 @@ jsou protikladné věci.
   Seznam prvků má u každého **tutéž ikonku**, jaký je tvar na mapě (Filip:
   *„ať je to veselejší a přehlednější"*), takže seznam a mapa mluví stejně.
 
+  **Seznam je od 11. 10. 2026 seznam, ne formulář.** Filip: *„čekal bych,
+  že zde bude list umístěných prvků, které třeba budu moci posouvat jako
+  prvky trasy v navigaci… ten list by mohl být kompaktní a vpravo by mohla
+  být možnost rozbalit detail a upravit"*. Řádek je jedna věta — tvar,
+  číslo, co to je, kterou značkou, kterým bokem a jak to jet —, všechno
+  ostatní je v detailu, který se rozklepne: úprava předpisu, posun
+  v pořadí, opakovaný průjezd a smazání.
+
+  **Starý formulář pod seznamem je pryč.** Od #208 prvky staví průvodce
+  nahoře, ale pole „Co to je" pod seznamem tu zůstalo a Filip **dvakrát**
+  hlásil, že neví, co edituje; sekce měřila 1 316 px a většinu z toho
+  zabíralo to, co se dalo udělat o kus výš. Dvě cesty k témuž nejsou
+  výběr, jen nejistota. Po odstranění má sekce 276 px.
+
+  **Odkaz „v mapce"** na konci řádku skočí na tutéž značku v mapce dole a
+  obkrouží ji. Dělá to `:target` nad neviditelným kroužkem, ne javascript,
+  a `scroll-margin-top` ho posadí doprostřed výřezu — bez něj prohlížeč
+  odroluje tak, že značka je úplně nahoře a zbytek mapky zůstane nad
+  obrazovkou. Jmenuje se jinak než **„Ukázat na mapě"** o kus níž: to
+  otevírá OpenStreetMap, tohle zůstává na stránce.
+
+  **„Projet to znovu jinak"** je tlačítko na prvku (Filip, 11. 10. 2026:
+  *„fyzika toho prvku už definována byla"*). Přidá na konec trati další
+  průjezd týchž značek bez poznámky a rovnou mu otevře detail — jiný je
+  jen způsob jetí. Protože API při zakládání vrací jen chybu, ne id, pozná
+  se nový prvek tím, že je poslední (`?otevrit=posledni`).
+
+  **Posun v pořadí přečísluje celou trať**, ne jen prohodí dvě čísla:
+  pořadí se smí opakovat a mezi stejnými čísly rozhoduje id, takže
+  prohození hodnot by u takové dvojice neudělalo nic a tlačítko by
+  vypadalo rozbitě.
+
+  **Detail mění jen předpis** — jak to jet, kterým bokem, kterým směrem se
+  startuje. Typ a značky bere akce ze serveru, ne ze skrytých políček ve
+  formuláři: fyzika prvku je daná tím, jak se postavil, a skrytá políčka
+  by z toho udělala něco, co jde podstrčit.
+
+  **Značky prvku jsou v detailu taky** — fotka, sebrání z vody,
+  přenastavení (Filip: *„až v detailu dej možnost takové editace"*). Dřív
+  se za tím muselo scrollovat pod mapku a hledat tutéž bóji podle jména.
+  Kreslí to **tatáž komponenta** jako seznam pod mapkou
+  (`znacka-na-trati.tsx`), ne druhá podobná: fotka nahraná odsud i
+  odtamtud je tatáž fotka u téže bóje. Pod mapkou seznam zůstává, protože
+  bóje, kterou žádný prvek nepoužívá, žádný detail prvku nemá — a právě na
+  ni upozorňuje hláška „stojí mimo trať".
+
+  **Když značku používá víc prvků, řekne se to** („tatáž značka je i
+  v prvku 4. průjezdní bóje"). Sebrání je údaj o **bóji**, ne o prvku —
+  bóje je buď ve vodě, nebo ne. Bez té věty by to ze seznamu vypadalo, že
+  se tlačítko týká jen tohohle průjezdu, a to je přesně ta záměna, kvůli
+  které prvky vznikly.
+
   **Spojnice vede po vodě, ne přímo** (Filip, 11. 10. 2026: *„ta rovná
   spojnice je hloupá, naznak trati působí přirozeněji… pokud by to byl
   problém, tak raději bez čáry"*). Orlík je zatopené údolí, takže přímka
