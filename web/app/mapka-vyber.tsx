@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DLAZDICE, Z_NEJMENE, Z_NEJVIC, doPixelu, metruNaPixel, zPixelu } from "@/lib/mapa";
 import { naOrliku } from "@/lib/souradnice";
 
@@ -25,6 +25,15 @@ import { naOrliku } from "@/lib/souradnice";
  * vykreslování na serveru. Projekce je v `lib/mapa.ts`, dlaždice jdou
  * přes náš server jako všude jinde.
  */
+/**
+ * Výška podle šířky. Na telefonu je mapa přes celou šířku a čtverec by
+ * sežral obrazovku i s tlačítky pod ní; u stolu by zase pruh přes celé
+ * okno byl na výběr bodu k ničemu, proto strop.
+ */
+function vyskaProSirku(sirka: number) {
+  return Math.round(Math.min(Math.max(sirka * 0.75, 200), 360));
+}
+
 export function MapkaVyber({
   stred,
   sirkaObrazu = 320,
@@ -34,6 +43,11 @@ export function MapkaVyber({
   cekam = false,
 }: {
   stred: { sirka: number; delka: number };
+  /**
+   * Rozměr, než se mapa změří. <b>Skutečný se bere z DOM</b>, protože
+   * mapa je přes celou šířku — na telefonu jí pevných 320 px nechávalo
+   * pruh vedle (Filip, 11. 10. 2026).
+   */
   sirkaObrazu?: number;
   vyskaObrazu?: number;
   vyber: (bod: { sirka: number; delka: number }) => void;
@@ -59,14 +73,40 @@ export function MapkaVyber({
    */
   const tah = useRef<{ x: number; y: number } | null>(null);
 
+  /**
+   * Skutečný rozměr plochy. <b>Mřížka dlaždic se z něj počítá</b>, takže
+   * se nesmí hádat: kdyby se vzal odhad, zbyl by u kraje prázdný pruh
+   * nebo by se tahaly dlaždice, které nejsou vidět.
+   */
+  const plocha = useRef<HTMLDivElement>(null);
+  const [rozmer, setRozmer] = useState({ sirka: sirkaObrazu, vyska: vyskaObrazu });
+
+  useEffect(() => {
+    // <b>Měří se při připojení, ne přes `ResizeObserver`.</b> Ten se při
+    // připojení nespustil spolehlivě a mapa zůstávala na náhradním
+    // rozměru. `getBoundingClientRect` hned po připojení je jisté;
+    // posluchač na okno pak pokryje otočení telefonu.
+    const zmer = () => {
+      const sirka = Math.round(plocha.current?.getBoundingClientRect().width ?? 0);
+      if (sirka > 0) setRozmer((p) => (p.sirka === sirka ? p : { sirka, vyska: vyskaProSirku(sirka) }));
+    };
+    zmer();
+    window.addEventListener("resize", zmer);
+    window.addEventListener("orientationchange", zmer);
+    return () => {
+      window.removeEventListener("resize", zmer);
+      window.removeEventListener("orientationchange", zmer);
+    };
+  }, []);
+
   const strediste = doPixelu(kde.sirka, kde.delka, z);
-  const levo = strediste.x - sirkaObrazu / 2;
-  const nahore = strediste.y - vyskaObrazu / 2;
+  const levo = strediste.x - rozmer.sirka / 2;
+  const nahore = strediste.y - rozmer.vyska / 2;
 
   const dlazdice: { klic: string; cesta: string; x: number; y: number }[] = [];
   const naSvete = 2 ** z;
-  for (let tx = Math.floor(levo / DLAZDICE); tx <= Math.floor((levo + sirkaObrazu) / DLAZDICE); tx++)
-    for (let ty = Math.floor(nahore / DLAZDICE); ty <= Math.floor((nahore + vyskaObrazu) / DLAZDICE); ty++) {
+  for (let tx = Math.floor(levo / DLAZDICE); tx <= Math.floor((levo + rozmer.sirka) / DLAZDICE); tx++)
+    for (let ty = Math.floor(nahore / DLAZDICE); ty <= Math.floor((nahore + rozmer.vyska) / DLAZDICE); ty++) {
       if (tx < 0 || ty < 0 || tx >= naSvete || ty >= naSvete) continue;
       dlazdice.push({
         klic: `${z}-${tx}-${ty}`,
@@ -97,8 +137,9 @@ export function MapkaVyber({
   return (
     <div className="vyber-mapy">
       <div
+        ref={plocha}
         className="plocha"
-        style={{ width: sirkaObrazu, height: vyskaObrazu }}
+        style={{ height: rozmer.vyska }}
         onPointerDown={(e) => {
           (e.target as Element).setPointerCapture?.(e.pointerId);
           tah.current = { x: e.clientX, y: e.clientY };
@@ -115,10 +156,10 @@ export function MapkaVyber({
           // eslint-disable-next-line @next/next/no-img-element
           <img key={d.klic} src={d.cesta} alt="" draggable={false} style={{ left: d.x, top: d.y }} />
         ))}
-        <svg className="krizek" viewBox={`0 0 ${sirkaObrazu} ${vyskaObrazu}`} aria-hidden="true">
-          <line x1={sirkaObrazu / 2 - 14} y1={vyskaObrazu / 2} x2={sirkaObrazu / 2 + 14} y2={vyskaObrazu / 2} />
-          <line x1={sirkaObrazu / 2} y1={vyskaObrazu / 2 - 14} x2={sirkaObrazu / 2} y2={vyskaObrazu / 2 + 14} />
-          <circle cx={sirkaObrazu / 2} cy={vyskaObrazu / 2} r={7} fill="none" />
+        <svg className="krizek" viewBox={`0 0 ${rozmer.sirka} ${rozmer.vyska}`} aria-hidden="true">
+          <line x1={rozmer.sirka / 2 - 14} y1={rozmer.vyska / 2} x2={rozmer.sirka / 2 + 14} y2={rozmer.vyska / 2} />
+          <line x1={rozmer.sirka / 2} y1={rozmer.vyska / 2 - 14} x2={rozmer.sirka / 2} y2={rozmer.vyska / 2 + 14} />
+          <circle cx={rozmer.sirka / 2} cy={rozmer.vyska / 2} r={7} fill="none" />
         </svg>
 
         {/* Ovládání leží na mapě, ne pod ní (Filip, 11. 10. 2026).
