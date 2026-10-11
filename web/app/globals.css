@@ -1598,6 +1598,128 @@ th.vlevo, td.vlevo { text-align: left; }
 @media (min-width: 1280px) {
   .doplnky > .doplnek-i-v-boku { display: none; }
 }
+
+/* --- Lišta s počasím a vodou u spodku okna (Filip, 11. 10. 2026) ---------
+   Widgety, které nejsou v boku, bydlí tady. Zavřená je jeden řádek čísel;
+   ťuknutím se rozbalí panel, který se roluje uvnitř sebe. Chování je
+   v `app/paticka-lista.tsx`, tady je jen vzhled. */
+:root { --lista-pocasi: 3.5rem; }
+.paticka-pocasi {
+  position: fixed;
+  left: 0; right: 0;
+  /* Nad pevným pruhem partnerů, ne přes něj — jako tlačítko „nahoru".
+     Dvě lišty přes sebe u spodku jsou přesně to, čemu se tahle vyhýbá. */
+  bottom: var(--paticka, 0rem);
+  /* Pod pruhem partnerů (ten má 15), aby se za něj zajetá schovala.
+     Rozbalený panel roste nahoru, takže se s pruhem nepotká. */
+  z-index: 14;
+  background: var(--papir);
+  border-top: 1px solid var(--linka);
+  /* Stín vzhůru, ať je poznat, že lišta leží na obsahu, a ne v něm. */
+  box-shadow: 0 -4px 16px rgb(0 0 0 / 0.12);
+  transition: transform 0.22s ease;
+}
+/* Zajetá při rolování dolů: posune se přesně o svou výšku, čímž skončí
+   za pruhem partnerů. Proužek z ní nezůstane. */
+.paticka-pocasi.schovana { transform: translateY(100%); }
+@media (prefers-reduced-motion: reduce) {
+  .paticka-pocasi { transition: none; }
+}
+
+.paticka-lista {
+  /* Vlastní šipka místo trojúhelníčku, který `summary` kreslí samo.
+     `list-style` platí v Chrome a Firefoxu, pseudoprvek v starším Safari. */
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: var(--lista-pocasi);
+  /* Dole odsazení o bezpečnou zónu: na telefonu bez tlačítka domů by
+     jinak řádek ležel na čáře gesta. */
+  padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom)) 1rem;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.paticka-lista::-webkit-details-marker { display: none; }
+.paticka-lista::marker { content: ""; }
+.paticka-lista:hover .paticka-popis { color: var(--voda); }
+
+.paticka-souhrn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1;
+  min-width: 0;
+  /* Čísel může být víc, než se vejde — radši je uříznout než zalomit
+     lištu do dvou řádků. */
+  overflow: hidden;
+  white-space: nowrap;
+}
+.paticka-udaj { font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+.paticka-stitek {
+  color: var(--tlumeny);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: 0.3rem;
+}
+.paticka-dest { color: var(--voda); }
+.paticka-vystraha {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  background: var(--zvyrazneni);
+  border: 1px solid var(--linka);
+}
+.paticka-vystraha.stupen-3,
+.paticka-vystraha.stupen-4 { border-color: currentColor; font-weight: 600; }
+
+.paticka-popis { color: var(--tlumeny); font-size: 0.85rem; white-space: nowrap; }
+/* Šipka jako dva tahy; otočí se, když je panel otevřený. */
+.paticka-sipka {
+  width: 0.6rem; height: 0.6rem;
+  border-right: 2px solid var(--tlumeny);
+  border-bottom: 2px solid var(--tlumeny);
+  transform: rotate(-135deg);
+  transition: transform 0.22s ease;
+}
+.paticka-pocasi[open] .paticka-sipka { transform: rotate(45deg); }
+
+.paticka-obsah {
+  /* Panel nesmí přerůst okno — roluje se uvnitř sebe. Zbytek výšky je
+     obsazený: dole pruh partnerů a lišta, nahoře hlavička stránky. Pod tu
+     panel nesmí, protože hlavička je nad ním (z-index 20) a schovala by
+     i lištu se „Zavřít". Těch 7 rem je hlavička a kousek obsahu nad ní,
+     ať je poznat, že stránka pod panelem pokračuje. */
+  max-height: min(32rem, calc(100vh - var(--paticka, 0rem) - var(--lista-pocasi) - 7rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 1rem calc(1.25rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--linka);
+}
+/* Uvnitř panelu nepotřebují widgety odstup shora — ten dělá čára lišty. */
+.doplnky-v-paticce { margin-top: 1.25rem; }
+
+/* Místo pod obsahem, aby poslední řádek stránky nekončil pod lištou.
+   Přičítá se k místu, které si bere pruh partnerů. Jen tam, kde lišta je:
+   `:has` ji najde, a prohlížeč, který `:has` neumí, nechá stránku jak byla
+   — lišta přes poslední řádek je menší vada než mezera u všech. */
+body:has(.paticka-pocasi) { padding-bottom: calc(var(--paticka, 0rem) + var(--lista-pocasi)); }
+/* Tlačítko „nahoru" nad lištu, ze stejného důvodu, z jakého je nad pruhem
+   partnerů. Zajetá lišta pod ním nechá mezeru; to je lacinější než ho
+   posouvat s každým pohnutím stránky. */
+body:has(.paticka-pocasi) .nahoru {
+  bottom: calc(var(--paticka, 0rem) + var(--lista-pocasi) + 0.75rem);
+}
+
+@media print {
+  .paticka-pocasi { display: none; }
+}
 .doplnky-siroke { display: none; }
 /* S boky: pod obsahem jen dva widgety vedle sebe, ostatní jsou v bocích. */
 @media (min-width: 1280px) {
