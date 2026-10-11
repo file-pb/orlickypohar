@@ -53,7 +53,10 @@ export function Pipani({
    * Když se přenastavuje, bóje, která tam stojí dosud — i s polohou.
    * Poloha je tu kvůli mapě: viz střed u <c>MapkaVyber</c> níž.
    */
-  prenastavuje: { id: number; nazev: string; sirka: number; delka: number } | null;
+  prenastavuje:
+    | { id: number; nazev: string; sirka: number; delka: number;
+        barva: BarvaBoje; tvar: TvarBoje }
+    | null;
   nejvicZnaku: number;
   /** Jména bójí, které u regaty zrovna stojí. Ta se nenabízejí. */
   stojici: string[];
@@ -72,11 +75,13 @@ export function Pipani({
   const [chybaPolohy, setChybaPolohy] = useState<string | null>(null);
   const [nazev, setNazev] = useState(prenastavuje?.nazev ?? "");
   const [poradi, setPoradi] = useState("");
-  // Barva a tvar: prázdné znamená „neuvedeno". U přenastavení se obojí
-  // převezme po staré bóji, takže se tu nechává prázdné schválně — je to
-  // tentýž kus plastu a na vodě ho nikdo nechce přeťukávat.
-  const [barva, setBarva] = useState<NonNullable<BarvaBoje> | "">("");
-  const [tvar, setTvar] = useState<NonNullable<TvarBoje> | "">("");
+  // Barva a tvar: prázdné znamená „neuvedeno". <b>U přenastavení se
+  // předvyberou po staré bóji</b> (Filip, 12. 10. 2026). Server je sice
+  // převezme i bez toho, ale prázdná nabídka tvrdila, že bóje žádný tvar
+  // nemá, a nebylo z ní poznat, co se vlastně přenáší. Pořád je to tentýž
+  // kus plastu, takže se nic nepřeťukává — jen je vidět, co je zač.
+  const [barva, setBarva] = useState<NonNullable<BarvaBoje> | "">(prenastavuje?.barva ?? "");
+  const [tvar, setTvar] = useState<NonNullable<TvarBoje> | "">(prenastavuje?.tvar ?? "");
   const [posilam, setPosilam] = useState(false);
   const [zMapy, setZMapy] = useState(false);
   const [chyba, setChyba] = useState<string | null>(null);
@@ -98,11 +103,13 @@ export function Pipani({
    */
   useEffect(() => {
     setNazev(prenastavuje?.nazev ?? "");
+    setBarva(prenastavuje?.barva ?? "");
+    setTvar(prenastavuje?.tvar ?? "");
     setPoradi("");
     setChyba(null);
     if (poUlozeni.current) poUlozeni.current = false;
     else setHotovo(null);
-  }, [prenastavuje?.id, prenastavuje?.nazev]);
+  }, [prenastavuje?.id, prenastavuje?.nazev, prenastavuje?.barva, prenastavuje?.tvar]);
 
   const sleduji = useRef<number | null>(null);
 
@@ -313,17 +320,25 @@ export function Pipani({
         </p>
       )}
 
-      <p aria-live="polite" className={chybaPolohy ? "hlaska chyba" : "detail"}>
-        {chybaPolohy
-          ? chybaPolohy
-          : poloha === null
-            ? "Hledám polohu…"
-            : poloha.presnost === null
-              ? `Poloha ${poloha.sirka.toFixed(5)}, ${poloha.delka.toFixed(5)} — telefon přesnost nehlásí.`
-              : `Poloha ${poloha.sirka.toFixed(5)}, ${poloha.delka.toFixed(5)} — přesnost ${Math.round(poloha.presnost)} m.` +
-                (poloha.presnost > NEJHORSI_PRESNOST_M
-                  ? " To je moc; počkej, až se chytnou družice."
-                  : "")}
+      {/* <b>Dokud se bere bod z mapy, stav GPS není chyba</b> (Filip,
+          12. 10. 2026). Hlídač ticha běží dál, protože sledování se
+          nevypíná — ale jeho hláška svítila červeně na témže místě jako
+          chyby zápisu, takže povedené přenastavení z mapy vypadalo jako
+          selhání. Z mapy se poloha telefonu nepoužívá vůbec, tak se to
+          i řekne. */}
+      <p aria-live="polite" className={chybaPolohy && !zMapy ? "hlaska chyba" : "detail"}>
+        {zMapy
+          ? "Bod bereš z mapy, takže na polohu telefonu se nečeká."
+          : chybaPolohy
+            ? chybaPolohy
+            : poloha === null
+              ? "Hledám polohu…"
+              : poloha.presnost === null
+                ? `Poloha ${poloha.sirka.toFixed(5)}, ${poloha.delka.toFixed(5)} — telefon přesnost nehlásí.`
+                : `Poloha ${poloha.sirka.toFixed(5)}, ${poloha.delka.toFixed(5)} — přesnost ${Math.round(poloha.presnost)} m.` +
+                  (poloha.presnost > NEJHORSI_PRESNOST_M
+                    ? " To je moc; počkej, až se chytnou družice."
+                    : "")}
       </p>
 
       {/* <b>Jména na jeden dotek</b> (Filip, 10. 10. 2026: „jede a tahá se
@@ -391,6 +406,7 @@ export function Pipani({
               key={x}
               type="button"
               className={tvar === x ? "chip vybrany" : "chip"}
+              aria-pressed={tvar === x}
               onClick={() => setTvar(tvar === x ? "" : x)}
             >
               <svg viewBox="0 0 22 22" width="18" height="18" aria-hidden="true">
