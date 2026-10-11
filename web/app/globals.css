@@ -1666,29 +1666,51 @@ th.vlevo, td.vlevo { text-align: left; }
 .paticka-lista::marker { content: ""; }
 .paticka-lista:hover .paticka-popis { color: var(--voda); }
 
+/* Okno, ve kterém se pás údajů točí. Vybledlé okraje říkají, že text
+   pokračuje za hranou — týmž způsobem to dělá pás partnerů. */
 .paticka-souhrn {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
+  display: block;
   flex: 1;
   min-width: 0;
-  /* Na telefonu se všech šest údajů nevejde. Místo uříznutí se dají
-     posunout do strany; pořadí je pořadí důležitosti, takže za okrajem
-     končí to, co snese čekat. Lištu to neroztáhne do dvou řádků. */
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: hidden;
   white-space: nowrap;
-  scrollbar-width: none;
-  /* Prst po liště posouvá, ťuknutí ji otevře — o rozdíl se stará
-     prohlížeč, proto tu není žádný javascript. */
-  -webkit-overflow-scrolling: touch;
 }
-.paticka-souhrn::-webkit-scrollbar { display: none; }
-/* Poslední údaj u okraje vybledne, ať je poznat, že lišta pokračuje —
-   uříznuté slovo jinak vypadá jako chyba. Týmž způsobem to říká pás
-   partnerů. Jen u pravého okraje: vlevo nic nechybí. */
-@media (max-width: 599.98px) {
-  .paticka-souhrn { mask-image: linear-gradient(90deg, #000 85%, transparent); }
+.paticka-pocasi.toci .paticka-souhrn {
+  mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+}
+
+.paticka-pas { display: flex; align-items: center; width: max-content; }
+/* Odstup nese každý údaj sám, ne mezera mřížky: pás se posouvá přesně
+   o polovinu své šířky a `gap` mezi kopiemi by tu polovinu rozhodil. */
+.paticka-udaj { margin-right: 1.75rem; }
+.paticka-kopie { display: flex; align-items: center; }
+
+/* Vejdou-li se údaje, stojí a rozprostřou se po celé liště; druhá kopie
+   je pak jen zdvojení a schová se. */
+.paticka-pocasi:not(.toci) .paticka-pas { width: 100%; justify-content: space-between; }
+.paticka-pocasi:not(.toci) .paticka-kopie { flex: 1; justify-content: space-between; }
+.paticka-pocasi:not(.toci) .paticka-dalsi { display: none; }
+.paticka-pocasi:not(.toci) .paticka-udaj:last-child { margin-right: 0; }
+
+/* Točí se jen to, co se nevejde. Rychlost je daná délkou pásu, ne
+   pevným časem: s pěti údaji by stejný čas znamenal závod, s dvěma
+   plazení. */
+.paticka-pocasi.toci .paticka-pas { animation: paticka-posun 28s linear infinite; }
+.paticka-pocasi.toci .paticka-lista:hover .paticka-pas,
+.paticka-pocasi.toci .paticka-lista:focus-within .paticka-pas { animation-play-state: paused; }
+/* Nad otevřeným panelem pás stojí: tam je lišta hlavička s „Zavřít",
+   ne běžící řádek, a pohyb by odváděl oči od widgetů pod ní. */
+.paticka-pocasi[open].toci .paticka-pas { animation-play-state: paused; }
+@keyframes paticka-posun {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+/* Bez animací se pás nehýbe a posouvá se prstem — jako pás partnerů. */
+@media (prefers-reduced-motion: reduce) {
+  .paticka-pocasi.toci .paticka-souhrn { overflow-x: auto; scrollbar-width: none; mask-image: none; }
+  .paticka-pocasi.toci .paticka-souhrn::-webkit-scrollbar { display: none; }
+  .paticka-pocasi.toci .paticka-pas { animation: none; }
+  .paticka-pocasi.toci .paticka-dalsi { display: none; }
 }
 .paticka-udaj {
   display: inline-flex;
@@ -1697,6 +1719,7 @@ th.vlevo, td.vlevo { text-align: left; }
   font-size: 0.95rem;
   font-variant-numeric: tabular-nums;
 }
+.paticka-udaj .vystrahy-tecka { width: 0.5rem; height: 0.5rem; box-shadow: none; }
 /* Údaj druhého řádu u téhož čísla — nárazy u větru. */
 .paticka-vedle { color: var(--tlumeny); font-size: 0.8rem; }
 /* Tytéž barvy jako šipka vodočtu a změna teploty v boku — na liště musí
