@@ -5023,9 +5023,12 @@ Mechanismus z toho být nemusí a není: **ruční dump před nasazením je od
 9. 10. 2026 zapsaný postup** (*Den závodu*), ne něco, co si někdo musí
 pamatovat.
 
-**Obsahový bucket nemá druhou kopii.** `platform/scripts/backup.sh` bere
-databáze a tajemství; fotky a vyvěšené směrnice v R2 ne. Jsou to jediná data
-projektu bez záloh.
+~~**Obsahový bucket nemá druhou kopii.**~~ **Opraveno 11. 10. 2026** —
+`platform/scripts/backup.sh` zrcadlí i obsahový bucket. Při stavbě se
+ukázalo, že **žádný token R2 nedosáhne na oba buckety**, i když jsou
+v témže účtu: skript proto čte klíčem aplikace a zapisuje klíčem
+platformy. Je to bezpečnější než jeden token na obojí — kompromitovaná
+aplikace se k zálohám nedostane.
 
 ~~**Zelené nasazení, které nic nenasadilo.**~~ **Opraveno 9. 10. 2026.** Krok
 `Deploy` i krok `Ověřit, co doopravdy běží` byly podmíněné
@@ -5232,9 +5235,17 @@ implementaci téhož, jen hůř udržovanou. Fronta v kódu nikde není
 
 ### Pořadí po 11. 10. 2026
 
-1. **Zálohy obsahového bucketu.** Nejlevnější položka a jediná
-   nenahraditelná: fotky a vyvěšené směrnice v R2 jsou jediná data projektu
-   bez zálohy. Patří do repozitáře `platform` (`scripts/backup.sh`), ne sem.
+1. ~~**Zálohy obsahového bucketu.**~~ **Hotové 11. 10. 2026**, commit
+   `88f6b44` v repozitáři `platform`. Zálohuje se celý bucket
+   `orlickypohar-fotky`, tedy `fotky/`, `prevzate/` i `smernice/` —
+   vyvěšené směrnice jdou do téhož bucketu (`PlachetniSmernice.cs` skládá
+   klíč `smernice/{id}.pdf`). Zrcadlí se přírůstkově, ověřeno obnovou a
+   kontrolními součty, ne pohledem do logu.
+
+   **Co z toho plyne pro pohár:** záloha běží v 3:30, takže **fotka
+   nahraná po třetí hodině a smazaná před další nocí je pryč**. Fotky
+   nahrává pořadatel, který má originál v telefonu, takže to snese — ale
+   je to napsané v `platform/runbooks/RESTORE.md`, ne předpokládané.
 2. **Přihlášení v appce.** Brána pro osm z deseti položek Filipova seznamu
    a podle auditu to, co blokuje nejvíc. Fáze 4 to předpokládá; dnešní věta
    *„rozhodne se až podle toho, jestli pořadatelé skutečně zadávají výsledky
