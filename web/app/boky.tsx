@@ -20,6 +20,7 @@ import { BokVystrahy } from "@/app/vystrahy";
 import { dnesVPraze, vyberTerminu } from "@/lib/terminy";
 import { PrepinacKalendare } from "@/app/kalendar-volba";
 import { volbaKalendare, zastavkyKalendare } from "@/lib/kalendar-volba";
+import { PatickaPocasi } from "@/app/paticka";
 
 /**
  * Boky širokého monitoru.
@@ -103,6 +104,11 @@ export async function Boky({
   // jediná jeho kopie, takže o tom rozhoduje CSS podle šířky, ne tenhle
   // seznam.
   const vBocich = [...vlevoDoplnky, ...vpravoDoplnky];
+  // Widgety, které v boku nejsou, jdou do lišty u spodku okna (Filip,
+  // 11. 10. 2026). Pod obsahem zůstává jen to, co bok nese — na úzkém
+  // displeji, kde bok není, je tam jediná jejich kopie.
+  const doListy = dole.filter((d) => !vBocich.includes(d));
+  const podObsahem = dole.filter((d) => vBocich.includes(d));
 
   return (
     <div className="s-boky">
@@ -120,10 +126,14 @@ export async function Boky({
           {siroke.length > 0 && (
             <div className="doplnky-siroke">{await doplnky(siroke, slug, stredDoplnky)}</div>
           )}
-          {/* Doplňky pod obsahem. Od úklidu boků (11. 10. 2026) je tohle
-              jejich místo v každé šířce; v boku zůstal jen vodočet a ten
-              se tu nad 1280 px schová, aby nebyl dvakrát. */}
-          <div className="doplnky">{await doplnky(dole, slug, [], vBocich)}</div>
+          {/* Vodočet pod obsahem pro displej, kde bok není. Nad 1280 px
+              ho CSS schová — tam stojí v boku. */}
+          <div className="doplnky">{await doplnky(podObsahem, slug, [], vBocich)}</div>
+          {doListy.length > 0 && (
+            <PatickaPocasi>
+              <div className="doplnky doplnky-v-paticce">{await doplnky(doListy, slug)}</div>
+            </PatickaPocasi>
+          )}
         </>
       )}
     </div>
