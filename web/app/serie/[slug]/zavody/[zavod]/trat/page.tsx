@@ -190,7 +190,7 @@ function naMapu(p: VerejnaTrat["prvky"][number], i: number): PrvekNaMape {
   const konce = [konec(p.a)];
   if (p.b) konce.push(konec(p.b));
 
-  return { klic: i, typ: p.typ, poradi: p.poradi, konce, smer: p.smer };
+  return { klic: i, typ: p.typ, poradi: p.poradi, konce, smer: p.smer, strana: p.strana };
 }
 
 function kdy(kdy: string) {

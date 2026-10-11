@@ -1882,6 +1882,58 @@ jsou protikladné věci.
   si ho by byla ta lež, kvůli které prvky vznikly. Naznačí ho dráha.
   Seznam prvků má u každého **tutéž ikonku**, jaký je tvar na mapě (Filip:
   *„ať je to veselejší a přehlednější"*), takže seznam a mapa mluví stejně.
+
+  **Spojnice vede po vodě, ne přímo** (Filip, 11. 10. 2026: *„ta rovná
+  spojnice je hloupá, naznak trati působí přirozeněji… pokud by to byl
+  problém, tak raději bez čáry"*). Orlík je zatopené údolí, takže přímka
+  mezi bójemi vede přes kopec častěji, než by člověk řekl: na náhodných
+  párech vodních bodů přetíná suchou zem noha 200–600 m ve **24 %**
+  případů, 600–1 200 m v **65 %** a 1,2–2,5 km v **89 %**. Náhodné páry
+  nadsazují — opravdová trať leží v jednom úseku zátopy —, ale na dlouhé
+  trati je přímka prostě lež.
+
+  Obrys nádrže je **statický soubor** `web/lib/orlik-obrys.ts`,
+  vygenerovaný `tools/obrys-nadrze.py` z OSM (relace 11092220, ODbL):
+  jeden kruh o 1 365 bodech, 26 kB. Za běhu se na Overpassu neviselo
+  schválně — ze tří zrcadel odpovídalo při psaní jedno. Cesta se hledá
+  A\* po mřížce 25 m, napne se jako provázek a rohy se zaoblí; celé
+  **v serverovém renderu**, takže obrys do prohlížeče nejde a na mobilu
+  to nestojí nic. Měřeno: trať mocku 2–6 ms, trať přes celou zátopu
+  o šesti uzlech 5–11 ms.
+
+  **U značky, kde se ví, kterým bokem se míjí, spojnice zatočí** — mapa
+  tím říká i *kudy*, ne jen kam. Oblouk se zmenšuje, dokud se na vodu
+  nevejde; u bóje padesát metrů od břehu zbyde malý, u brány žádný,
+  protože bok si tam volí posádka. Cesta se drží **30 m od břehu**, jinak
+  by se napnutá čára opírala o výběžek a zaoblení rohu by uhýbalo do
+  kopce. Kde cesta po vodě není, **čára chybí**; rovnou přes kopec se
+  nekreslí, to je přesně to, co se tím rušilo.
+
+  **Nohy, které jedou týmž korytem, se rozestoupí do pruhů** (Filip,
+  11. 10. 2026: *„pokud dráha vede stejnou cestou tam i zpět, hrozí
+  překrývání a nepřehlednost… u maratonů se jezdí kola, kde jedno je
+  veliké a uvnitř je např. menší okruh"*). Pořadí pruhů je pořadí jetí,
+  takže dřívější kolo leží pořád na téže straně a dá se očima sledovat;
+  rozestup je 8 px, při menším se dvě čárkované čáry čtou jako jedna
+  silnější. **Ne „každý doprava"** — to rozdělí cestu tam a zpět, ale dvě
+  kola stejným směrem, tedy přesně ten maraton, by zůstala přes sebe;
+  pruh se proto bere ze seznamu noh v okolí, ne ze směru. U konců se
+  rozestup vytrácí, aby se tahy sešly v bóji a ne vedle ní, a každý
+  posunutý bod se ověřuje — rozestup nikdy nevytlačí čáru na břeh.
+  Ověřeno na trati se sedmi prvky (velké kolo, malé uvnitř, velké znovu):
+  451 bodů, žádný mimo vodu, 7–17 ms; maraton o patnácti uzlech přes
+  celou zátopu 15–22 ms.
+
+  Zkouška je `web/lib/voda.zkouska.ts`, pouští se ručně
+  (`node web/lib/voda.zkouska.ts`, bez balíčků) — v CI ne, minuty Actions
+  jsou nejbližší zeď. Hlídá hlavně **bok**: tam se dá splést znaménko tak,
+  že obrázek vypadá hezky a říká opak. Jeden takový nález už tam je — u
+  průjezdu, kde se směr skoro nemění, vycházelo geometricky obkroužení
+  o 353° místo nuly, a obojí je „správně"; co z toho je pravda, říká
+  teprve typ prvku. Druhý: po navzorkování kvůli rozestupu zůstával u
+  značky kus původní čáry, která vede doprostřed, zatímco oblouk začíná
+  na straně — mezi nimi čára přeskočila **rovnou přes bóji**. Konec nohy
+  se proto ořezává na trojnásobek poloměru a do oblouku se naklání.
 - **GPX bránu jako bránu neumí** a dřívější slib v tomhle oddíle byl
   přehnaný: formát zná body, trasy a stopy, závodní bránu ne. Dosažitelné
   je vyvézt oba konce jako body a do trasy dát pojmenovaný střed — ale
