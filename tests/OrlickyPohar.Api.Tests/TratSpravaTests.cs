@@ -498,4 +498,36 @@ public class TratSpravaTests(PostgresFixture fixture)
         // Nespustila se, takže se podle ní ještě nejelo.
         Assert.False(obsazena.Odjeta);
     }
+
+    [Fact]
+    public async Task Seznam_nabidne_nejblizsi_rozjizdku_bez_trati()
+    {
+        var (db, boje, trate) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+        await boje.PipniAsync(zavod.Id, Bod("Start"), kdo.Id, default);
+        var zdroj = (await trate.AktualniAsync(zavod.Id, default))!;
+
+        // Regata bez rozjížděk nemá co nabídnout. Číslo z prstu by
+        // pojmenovalo knoflík, který by hned selhal na „taková rozjížďka
+        // u téhle regaty není“.
+        Assert.Null(Assert.Single(await trate.SeznamAsync(zavod.Id, default)).DalsiVolnaRozjizdka);
+
+        var prvni = await RozjizdkaAsync(db, zavod, 1);
+        var druha = await RozjizdkaAsync(db, zavod, 2);
+        Assert.Equal(
+            1, Assert.Single(await trate.SeznamAsync(zavod.Id, default)).DalsiVolnaRozjizdka);
+
+        await trate.PriradAsync(zavod.Id, zdroj.Id, prvni.Cislo, true, default);
+        Assert.Equal(
+            2, Assert.Single(await trate.SeznamAsync(zavod.Id, default)).DalsiVolnaRozjizdka);
+
+        await trate.KlonujAsync(
+            zavod.Id, zdroj.Id, new KlonTratiVstup(druha.Cislo, null), kdo.Id, true, default);
+
+        // Obsazené jsou obě, takže se nenabízí nic — a obrazovka to pozná
+        // dřív, než někdo klikne.
+        var vsechny = await trate.SeznamAsync(zavod.Id, default);
+        Assert.Equal(2, vsechny.Count);
+        Assert.All(vsechny, t => Assert.Null(t.DalsiVolnaRozjizdka));
+    }
 }

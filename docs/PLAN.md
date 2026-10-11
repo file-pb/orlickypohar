@@ -942,6 +942,19 @@ Kritéria výběru jsou výš: detail lodi, velká skupina na startu, náklon po
 plnými plachtami. **Zámek Orlík v pozadí je nejcennější** — obecná voda může
 být odkudkoliv, zámek fotku usadí na Orlík.
 
+### Fotky lodi v přihlášce — nápad (Filip, 10. 10. 2026)
+
+K lodi se mají dát nahrát *„třeba 3 fotečky"* a **uložit komprimovaně**.
+Není to nový podsystém: mechanismus na fotky stojí (`Fotky`, `ObrazekDto`,
+přepočet do WebP, úložiště R2) a používají ho bóje, články i pořadatelé.
+Chybí tedy **místo** — fotky u lodi, ne u bóje — a **limit**, protože
+přihlášek je řádově víc než bójí a nahrávání bez stropu je pozvánka
+k zaplnění úložiště.
+
+Otevřené zůstává, kdo je smí nahrát (kapitán lodi, nebo i pořadatel) a
+jestli jsou veřejné. Nestaví se, dokud na to nepřijde řada; zapsané je to
+proto, aby se u prvních skutečných přihlášek nevymýšlelo znovu.
+
 ### Administrace i na mobilu
 
 Zadání chce administraci **na webu i na mobilu**, ne jen na webu. To mění
@@ -2283,9 +2296,28 @@ tratí regaty se stavem, rozjížďkou, počtem prvků a tím, jestli se podle n
 jelo. U volné trati nabídne **přiřazení**, u obsazené **klonování** —
 podle `jdePriradit` ze serveru, ne podle odhadu obrazovky.
 
-**Rozjížďka se zadává číslem, ne nabídkou.** Pořadatel ho zná; nabídka by
-znamenala další načítání a riziko, že ukazuje stav, který už neplatí.
-Neexistující i obsazené číslo odmítne server vlastní hláškou.
+**Číslo rozjížďky se nezadává — přiřazuje se samo** (Filip, 11. 10. 2026:
+*„tratě regaty s nějakým číslem je taky věc, co to znepřehledňuje"*). Do
+té doby tu stálo, že ho pořadatel napíše ručně; na nasazené obrazovce se
+ukázalo, že políčko na číslo je uprostřed seznamu tratí šum, a pořadatel
+stejně nemá na výběr — volná rozjížďka bývá právě jedna, ta nejbližší.
+
+**Spočítat to smí jedině server.** Obrazovka vidí tratě, ne rozjížďky,
+takže by neuměla rozlišit „rozjížďka 3 ještě není založená" od „rozjížďka
+3 je volná" — a nabídla by knoflík, který hned selže na *„taková
+rozjížďka u téhle regaty není"*. `TratNaVyberDto.DalsiVolnaRozjizdka`
+proto nese číslo nejbližší rozjížďky bez trati, nebo `null`, když žádná
+není. Obsazenost se počítá stejným pravidlem, jakým se řídí přiřazení:
+rozjížďka je obsazená, ukazuje-li na ni jakákoliv trať, přestavbu
+nevyjímaje.
+
+Je to vlastnost regaty, ne řádku, takže na všech řádcích stojí táž
+hodnota. Zabalit odpověď do objektu kvůli jednomu číslu by rozbilo tvar,
+který klienti už čtou — a mobilní aplikace zůstávají lidem v telefonech.
+
+Když volná rozjížďka není, obrazovka to **řekne místo knoflíku**. Čísla,
+která by selhala, se nenabízejí vůbec; obsazené číslo tím pádem odmítá
+server už jen jako pojistku proti souběhu, ne jako běžnou cestu.
 
 **Umístění potvrzené 10. 10. 2026, zatím beze změny.** Filip to popisoval
 od okamžiku zakládání rozjížďky, tedy z obrazovky výsledků; obrazovka

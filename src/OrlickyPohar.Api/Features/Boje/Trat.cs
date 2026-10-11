@@ -227,7 +227,24 @@ public record TratNaVyberDto(
     /// a klonování trati</i>). Obrazovka tím pojmenuje knoflík správně
     /// dřív, než na něj někdo sáhne.
     /// </summary>
-    bool JdePriradit);
+    bool JdePriradit,
+    /// <summary>
+    /// Číslo nejbližší rozjížďky regaty, která zatím trať nemá, nebo
+    /// <c>null</c>, když žádná taková není.
+    /// <para>
+    /// <b>Číslo se nezadává ručně</b> (Filip, 11. 10. 2026: <i>„tratě
+    /// regaty s nějakým číslem je taky věc, co to znepřehledňuje"</i>).
+    /// Spočítat to smí jedině server: zná rozjížďky i to, která už trať
+    /// má, kdežto obrazovka vidí jen tratě a neexistující číslo by
+    /// slibovalo knoflík, který hned selže.
+    /// </para>
+    /// <para>
+    /// Je to vlastnost regaty, ne řádku, takže na všech řádcích stojí
+    /// táž hodnota. Zabalit odpověď do objektu kvůli jednomu číslu by
+    /// rozbilo tvar, který klienti už čtou.
+    /// </para>
+    /// </summary>
+    int? DalsiVolnaRozjizdka);
 
 /// <summary>Co se má s vybranou tratí stát a pro kterou rozjížďku.</summary>
 /// <param name="Rozjizdka">

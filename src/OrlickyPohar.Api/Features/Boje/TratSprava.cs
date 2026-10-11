@@ -251,6 +251,19 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
             .Select(g => new { TratId = g.Key, Pocet = g.Count() })
             .ToDictionaryAsync(x => x.TratId, x => x.Pocet, ct);
 
+        // Rozjížďka je obsazená, jakmile na ni ukazuje jakákoliv trať —
+        // stejné pravidlo, jakým se přiřazení řídí, takže nabídnuté číslo
+        // projde. Přestavba sem patří taky: druhá trať téže rozjížďky
+        // vzniká jedině tou cestou a tahle o ni nesmí znovu soupeřit.
+        var obsazene = trate.Where(t => t.RozjizdkaId is not null)
+            .Select(t => t.RozjizdkaId!.Value)
+            .ToHashSet();
+        var dalsiVolna = cisla
+            .Where(r => !obsazene.Contains(r.Key))
+            .Select(r => (int?)r.Value)
+            .OrderBy(c => c)
+            .FirstOrDefault();
+
         var hotovo = new List<TratNaVyberDto>();
         foreach (var t in trate)
             hotovo.Add(new TratNaVyberDto(
@@ -260,7 +273,8 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
                 t.PrijatoV,
                 prvku.GetValueOrDefault(t.Id),
                 await OdjetaAsync(t, ct),
-                JdePriradit: t.RozjizdkaId is null));
+                JdePriradit: t.RozjizdkaId is null,
+                DalsiVolnaRozjizdka: dalsiVolna));
 
         return hotovo;
     }
