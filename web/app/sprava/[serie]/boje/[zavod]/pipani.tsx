@@ -45,6 +45,7 @@ export function Pipani({
   stojici,
   byvala,
   stred,
+  bezNadpisu,
 }: {
   serie: string;
   zavod: string;
@@ -60,6 +61,11 @@ export function Pipani({
   byvala: string[];
   /** Kam se otevře mapa, když se bod bere z ní. Nejlíp poslední bóje. */
   stred: { sirka: number; delka: number };
+  /**
+   * Nadpis se vynechá, když formulář visí v rozbalovátku — jeho
+   * `summary` už ten nadpis je a dvakrát pod sebou vypadá jako chyba.
+   */
+  bezNadpisu?: boolean;
 }) {
   const router = useRouter();
   const [poloha, setPoloha] = useState<Poloha | null>(null);
@@ -294,7 +300,9 @@ export function Pipani({
 
   return (
     <section className="formular">
-      <h2>{prenastavuje ? `Přenastavit „${prenastavuje.nazev}“` : "Pípnout bóji"}</h2>
+      {!bezNadpisu && (
+        <h2>{prenastavuje ? `Přenastavit „${prenastavuje.nazev}“` : "Pípnout bóji"}</h2>
+      )}
 
       {prenastavuje && (
         <p className="poznamka">

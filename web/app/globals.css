@@ -2074,6 +2074,16 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 .stavba .poznamka-znacky { display: block; margin: 0.2rem 0 0.6rem; font-size: 0.9rem; }
 .stavba .poznamka-znacky input { width: 100%; min-height: 44px; margin-top: 0.25rem; }
 
+/* Pípnutí jedné bóje je zvláštní případ — rozbalovátko, ne sekce. */
+.jedna-boje { margin: 0.6rem 0 1.2rem; }
+.jedna-boje > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+}
+
 .stavba .ruzice { margin-top: 0.6rem; }
 
 /* Náhled prvku. Je to kontrola zadání, ne obrázek na web — proto stojí
@@ -2118,6 +2128,33 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
   background: var(--voda-podklad, #1b2a36);
 }
 .vyber-mapy .plocha img { position: absolute; width: 256px; height: 256px; user-select: none; }
+/* Ovládání leží na mapě, v rohu. Terče 44 px, aby se trefil palec
+   i v rukavici. */
+.vyber-mapy .ovladani {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-end;
+}
+.vyber-mapy .ovladani button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 0.6rem;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #16181c;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.vyber-mapy .ovladani button.podklad { font-size: 0.9rem; }
+.vyber-mapy .ovladani button[aria-pressed="true"] { background: #16181c; color: #fff; }
+.vyber-mapy .ovladani button:disabled { opacity: 0.45; cursor: default; }
+
 .vyber-mapy .krizek { position: absolute; inset: 0; pointer-events: none; }
 .vyber-mapy .krizek line { stroke: #c1121f; stroke-width: 2; }
 .vyber-mapy .krizek circle { stroke: #c1121f; stroke-width: 2; }
