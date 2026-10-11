@@ -16,10 +16,14 @@ import {
 } from "@/lib/boje";
 import {
   klonujTrat,
+  nactiPrvky,
   posunTrat,
   priradTrat,
   smazPrvek,
+  upravPrvek,
+  vstupZPrvku,
   zalozPrvek,
+  type Prvek,
   type PrvekVstup,
   type StavTrati,
 } from "@/lib/trat";
@@ -224,39 +228,90 @@ export async function stavTratiAkce(formular: FormData) {
  * Založení prvku trati. Obyčejný formulář: prvek nepotřebuje polohu
  * z prohlížeče, skládá se z bójí, které už stojí.
  */
-export async function prvekAkce(formular: FormData) {
-  const serie = String(formular.get("serie") ?? "");
-  const zavod = String(formular.get("zavod") ?? "");
-  const kam = (zprava: Record<string, string>) =>
-    `/sprava/${encodeURIComponent(serie)}/boje/${encodeURIComponent(zavod)}?${new URLSearchParams(zprava)}`;
+/**
+ * Úprava prvku z jeho detailu v seznamu.
+ *
+ * <b>Co se smí měnit, je jen předpis</b> — jak to jet, kterým bokem,
+ * kterým směrem se startuje. Typ a bóje se berou ze serveru, ne
+ * z formuláře: fyzika prvku je daná tím, jak se postavil, a skrytá
+ * políčka by z toho udělala něco, co jde podstrčit.
+ */
+export async function upravPrvekAkce(formular: FormData) {
+  const { serie, zavod, kam } = zaklad(formular);
+  const id = Number(formular.get("prvek") ?? 0);
+  if (!Number.isInteger(id) || id <= 0) redirect(kam({ chyba: "Který prvek se má upravit?" }));
 
-  const cislo = (jmeno: string) => {
-    const text = String(formular.get(jmeno) ?? "").trim().replace(",", ".");
-    if (!text) return null;
-    const hodnota = Number(text);
-    return Number.isFinite(hodnota) ? hodnota : null;
-  };
+  const prvek = (await nactiPrvky(serie, zavod)).find((p) => p.id === id);
+  if (!prvek) redirect(kam({ chyba: "Ten prvek v trati není. Někdo ho mezitím smazal?" }));
 
-  const typ = String(formular.get("typ") ?? "");
-  const bojeA = Number(formular.get("bojeA") ?? 0);
-  if (!Number.isInteger(bojeA) || bojeA <= 0)
-    redirect(kam({ chyba: "Vyber první konec prvku." }));
-
-  // Druhý bod je značka, ne souřadnice: molo i plavidlo komise jsou od
-  // #209 plnohodnotné značky, takže se vybírají ze seznamu. Pole
-  // `konecB*` tím ztratila posledního pisatele a zruší se dalším krokem.
-  const chyba = await zalozPrvek(serie, zavod, {
-    typ: typ as PrvekVstup["typ"],
-    poradi: Number(formular.get("poradi") ?? 0),
-    bojeAId: bojeA,
-    bojeBId: Number(formular.get("bojeB") ?? 0) || null,
-    strana: (String(formular.get("strana") ?? "") || null) as PrvekVstup["strana"],
-    poznamka: String(formular.get("poznamka") ?? "").trim() || null,
-    smer: (String(formular.get("smer") ?? "") || null) as PrvekVstup["smer"],
-    druhStartu: (String(formular.get("druhStartu") ?? "") || null) as PrvekVstup["druhStartu"],
+  const text = (jmeno: string) => String(formular.get(jmeno) ?? "").trim() || null;
+  const chyba = await upravPrvek(serie, zavod, id, {
+    ...vstupZPrvku(prvek),
+    strana: text("strana") as PrvekVstup["strana"],
+    poznamka: text("poznamka"),
+    smer: text("smer") as PrvekVstup["smer"],
+    druhStartu: text("druhStartu") as PrvekVstup["druhStartu"],
   });
 
-  redirect(kam(chyba ? { chyba } : { stav: "prvek" }));
+  redirect(kam(chyba ? { chyba } : { stav: "prvekUpraven", otevrit: String(id) }));
+}
+
+/**
+ * „Projet to znovu jinak" (Filip, 11. 10. 2026): *„fyzika toho prvku už
+ * definována byla"*, takže opakovaný průjezd je <b>nový prvek nad týmiž
+ * značkami</b>, ne nové pole u starého. Zakládá se bez poznámky — právě
+ * ta se u něj dopisuje, protože jiný je jen způsob jetí.
+ */
+export async function zopakujPrvekAkce(formular: FormData) {
+  const { serie, zavod, kam } = zaklad(formular);
+  const id = Number(formular.get("prvek") ?? 0);
+  if (!Number.isInteger(id) || id <= 0) redirect(kam({ chyba: "Který prvek se má projet znovu?" }));
+
+  const prvky = await nactiPrvky(serie, zavod);
+  const prvek = prvky.find((p) => p.id === id);
+  if (!prvek) redirect(kam({ chyba: "Ten prvek v trati není. Někdo ho mezitím smazal?" }));
+
+  const chyba = await zalozPrvek(serie, zavod, {
+    ...vstupZPrvku(prvek),
+    poradi: prvky.length + 1,
+    poznamka: null,
+  });
+
+  // `posledni` místo čísla: API vrací při zakládání jen chybu, ne id.
+  redirect(kam(chyba ? { chyba } : { stav: "prvekZnovu", otevrit: "posledni" }));
+}
+
+/**
+ * Posun prvku v pořadí.
+ *
+ * <b>Přečísluje se celá trať</b>, ne jen prohodí dvě čísla. Pořadí se smí
+ * opakovat (trať, která jede tutéž bóji dvakrát, to potřebuje) a mezi
+ * stejnými čísly rozhoduje id — prohození hodnot by u takové dvojice
+ * neudělalo nic a tlačítko by vypadalo rozbitě.
+ */
+export async function presunPrvekAkce(formular: FormData) {
+  const { serie, zavod, kam } = zaklad(formular);
+  const id = Number(formular.get("prvek") ?? 0);
+  const nahoru = String(formular.get("smer") ?? "") === "nahoru";
+  if (!Number.isInteger(id) || id <= 0) redirect(kam({ chyba: "Který prvek se má posunout?" }));
+
+  const prvky = await nactiPrvky(serie, zavod);
+  const kde = prvky.findIndex((p) => p.id === id);
+  if (kde < 0) redirect(kam({ chyba: "Ten prvek v trati není. Někdo ho mezitím smazal?" }));
+
+  const kam2 = nahoru ? kde - 1 : kde + 1;
+  if (kam2 < 0 || kam2 >= prvky.length) redirect(kam({ stav: "prvekUpraven", otevrit: String(id) }));
+
+  const poradi: Prvek[] = [...prvky];
+  [poradi[kde], poradi[kam2]] = [poradi[kam2], poradi[kde]];
+
+  for (const [i, p] of poradi.entries()) {
+    if (p.poradi === i + 1) continue;
+    const chyba = await upravPrvek(serie, zavod, p.id, { ...vstupZPrvku(p), poradi: i + 1 });
+    if (chyba) redirect(kam({ chyba }));
+  }
+
+  redirect(kam({ stav: "prvekPresunut", otevrit: String(id) }));
 }
 
 /** Smazání prvku. Prvek je rozhodnutí, ne měření — maže se doopravdy. */

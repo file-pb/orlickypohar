@@ -802,10 +802,72 @@ header.hlavicka .jen-uzke { display: none; }
    mluvily stejně: kolečko konec, úsečka čára nebo brána, oblouček strana. */
 .ikona-prvku { vertical-align: -0.35em; margin-right: 0.35rem; color: var(--stav-zruseny); }
 .seznam-prvku { list-style: none; padding: 0; }
-.seznam-prvku > li {
-  border-bottom: 1px solid var(--linka); padding: 0.6rem 0;
-}
+
+/* Řádek je jedna věta a vpravo odkaz na mapu. Odkaz leží mimo `summary`
+   (uvnitř by zároveň rozklápěl detail), takže se umisťuje absolutně. */
+.seznam-prvku > li { border-bottom: 1px solid var(--linka); position: relative; }
 .seznam-prvku > li:last-child { border-bottom: 0; }
+.seznam-prvku > li > .na-mape {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.2rem 0 0.6rem;
+  font-size: 0.85rem;
+  color: var(--tlumeny);
+}
+.seznam-prvku > li > .na-mape:hover { color: var(--voda); }
+
+.seznam-prvku .prvek > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0.5rem 5.5rem 0.5rem 0;
+  cursor: pointer;
+}
+.seznam-prvku .prvek > summary .ikona-prvku { flex: none; }
+.seznam-prvku .poradi-prvku { color: var(--tlumeny); font-variant-numeric: tabular-nums; }
+.seznam-prvku .znacky { color: var(--tlumeny); }
+/* Poznámka se vejde na řádek celá jen někdy; zbytek se nechá uříznout,
+   protože v detailu je stejně celá. */
+.seznam-prvku .jak-to-jet {
+  flex: 1 1 100%;
+  font-size: 0.85rem;
+  color: var(--tlumeny);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.seznam-prvku .prvek[open] > summary { font-weight: 600; }
+
+.detail-prvku { padding: 0 0 1rem; }
+.detail-prvku .formular { margin-bottom: 0.8rem; }
+.detail-prvku > .poznamka { font-size: 0.8rem; }
+.akce-prvku { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.akce-prvku button {
+  font: inherit;
+  min-height: 44px;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--linka);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.akce-prvku button:hover:not(:disabled) { border-color: var(--voda); color: var(--voda); }
+.akce-prvku button:disabled { opacity: 0.45; cursor: default; }
+.akce-prvku button.nebezpecne:hover { border-color: var(--stav-zruseny); color: var(--stav-zruseny); }
+
+/* Kotva prvku v mapce: neviditelná, dokud na ni odkaz neskočí.
+   `scroll-margin-top` ji po skoku posadí doprostřed výřezu — bez něj
+   prohlížeč odroluje tak, že značka je úplně nahoře a zbytek mapky
+   zůstane nad obrazovkou. */
+.mapka .kotva-prvku { stroke: none; pointer-events: none; scroll-margin-top: 45vh; }
+.mapka .kotva-prvku:target { stroke: var(--voda); stroke-width: 3; }
 .poradi-prvku { color: var(--tlumeny); font-variant-numeric: tabular-nums; }
 /* Loďka u přihlášky: tvar nese kategorii, barva stav. Vybarvená jede,
    prázdná čeká na pořadatele, tlumená je mimo závod. Výplň jde přes

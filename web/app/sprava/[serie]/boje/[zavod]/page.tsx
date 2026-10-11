@@ -29,7 +29,13 @@ export const metadata = { title: "Bóje na trati — správa" };
 
 type Parametry = {
   params: Promise<{ serie: string; zavod: string }>;
-  searchParams: Promise<{ chyba?: string; stav?: string; prenastav?: string; uklizeno?: string }>;
+  searchParams: Promise<{
+    chyba?: string;
+    stav?: string;
+    prenastav?: string;
+    uklizeno?: string;
+    otevrit?: string;
+  }>;
 };
 
 /**
@@ -69,6 +75,14 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
   // tím nemá co nabídnout a formulář zůstane na „pípnout novou".
   const prenastav = Number(zpravy.prenastav ?? 0);
   const prenastavovana = trat?.find((b) => b.id === prenastav);
+
+  // Po akci se znovu rozbalí detail prvku, kterého se týkala. „posledni"
+  // posílá zopakování průjezdu: API při zakládání vrací jen chybu, ne id,
+  // takže nový prvek se pozná tím, že je na konci.
+  const otevreny =
+    zpravy.otevrit === "posledni"
+      ? prvky[prvky.length - 1]?.id
+      : Number(zpravy.otevrit) || undefined;
 
   // Kam se otevře mapa, když se bod bere z ní: u poslední pípnuté bóje,
   // a bez bójí u Orlické přehrady — ne u nulového poledníku. Platí pro
@@ -126,6 +140,23 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
         <p className="hlaska" role="status">
           Prvek je na trati. Mapka ho kreslí podle typu — čára a brána jako
           úsečku mezi konci, dráha jejím středem.
+        </p>
+      )}
+      {zpravy.stav === "prvekUpraven" && (
+        <p className="hlaska" role="status">
+          Uloženo. Změnil se jen předpis — značky i jejich poloha zůstávají.
+        </p>
+      )}
+      {zpravy.stav === "prvekZnovu" && (
+        <p className="hlaska" role="status">
+          Další průjezd týchž značek je na konci trati. Dopiš u něj, jak se
+          jede — fyzika prvku už daná je.
+        </p>
+      )}
+      {zpravy.stav === "prvekPresunut" && (
+        <p className="hlaska" role="status">
+          Pořadí se přečíslovalo. Trať se jede v tom pořadí, v jakém prvky
+          stojí v seznamu.
         </p>
       )}
       {zpravy.stav === "prvekPryc" && (
@@ -236,6 +267,7 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
             prvky={prvky}
             boje={trat}
             zamceno={stavTrati.trat?.stav === "Prijato"}
+            otevrit={otevreny}
           />
 
           <h2>Co stojí na trati</h2>
