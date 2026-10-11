@@ -8,10 +8,18 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_IDENTITA_AUTHORITY": "https://ucty.klihovka.cz",
+        "EXPO_PUBLIC_IDENTITA_CLIENT_ID": ""
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_IDENTITA_AUTHORITY": "https://ucty.klihovka.cz",
+        "EXPO_PUBLIC_IDENTITA_CLIENT_ID": ""
+      }
     }
   },
   "submit": {
