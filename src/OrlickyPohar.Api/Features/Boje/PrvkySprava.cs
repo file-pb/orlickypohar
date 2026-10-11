@@ -12,16 +12,6 @@ namespace OrlickyPohar.Api.Features.Boje;
 public record KonecBojeDto(
     int Id, string Nazev, double Sirka, double Delka, DruhZnaceni? Znaceni = null);
 
-/// <summary>
-/// Konec prvku zapsaný jen souřadnicemi, bez záznamu značky.
-/// <para>
-/// <b>Jen pro řádky z doby před #209.</b> Nové prvky si nebójový bod
-/// zapisují jako záznam značky, takže tohle zůstává jako záložní cesta —
-/// a zruší se, až bude ověřené, že na ni nic nepadá.
-/// </para>
-/// </summary>
-public record KonecBodDto(double Sirka, double Delka, string Popis);
-
 /// <summary>Prvek trati, jak ho vidí správa.</summary>
 public record PrvekDto(
     int Id,
@@ -31,7 +21,6 @@ public record PrvekDto(
     string? Poznamka,
     KonecBojeDto A,
     KonecBojeDto? B,
-    KonecBodDto? BodB,
     /// <summary>Jen u startu: světová strana, kterou se startuje.</summary>
     SvetovaStrana? Smer = null,
     /// <summary>Jen u startu: pevná linie, nebo otevírající se brána.</summary>
@@ -90,9 +79,6 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
                     ? null
                     : new KonecBojeDto(
                         p.BojeB.Id, p.BojeB.Nazev, p.BojeB.Sirka, p.BojeB.Delka, p.BojeB.Znaceni),
-                p.KonecBSirka == null || p.KonecBDelka == null
-                    ? null
-                    : new KonecBodDto(p.KonecBSirka.Value, p.KonecBDelka.Value, p.KonecBPopis!),
                 p.Smer, p.DruhStartu))
             .ToListAsync(ct);
     }
@@ -247,14 +233,6 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
         prvek.BojeAId = v.BojeAId;
         prvek.BojeBId = bojeBId;
 
-        // Nebójový bod se od téhle změny ukládá jako záznam značky, takže
-        // tyhle tři kolonky nové prvky neplní vůbec. Zůstávají jen pro
-        // řádky, které vznikly dřív, a zruší se, až bude ověřené, že na
-        // tu záložní cestu nic nepadá.
-        prvek.KonecBSirka = null;
-        prvek.KonecBDelka = null;
-        prvek.KonecBPopis = null;
-
         prvek.Smer = v.Smer;
         prvek.DruhStartu = v.DruhStartu;
     }
@@ -274,9 +252,6 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
                     ? null
                     : new KonecBojeDto(
                         p.BojeB.Id, p.BojeB.Nazev, p.BojeB.Sirka, p.BojeB.Delka, p.BojeB.Znaceni),
-                p.KonecBSirka == null || p.KonecBDelka == null
-                    ? null
-                    : new KonecBodDto(p.KonecBSirka.Value, p.KonecBDelka.Value, p.KonecBPopis!),
                 p.Smer, p.DruhStartu))
             .FirstOrDefaultAsync(ct);
 }

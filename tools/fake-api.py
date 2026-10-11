@@ -931,15 +931,10 @@ def prvek_dto(slug, p):
                                    "sirka": b["sirka"], "delka": b["delka"],
                                    "znaceni": b.get("znaceni")}
 
-    bod = None
-    if p["konecBSirka"] is not None and p["konecBDelka"] is not None:
-        bod = {"sirka": p["konecBSirka"], "delka": p["konecBDelka"],
-               "popis": p["konecBPopis"]}
-
     return {"id": p["id"], "typ": p["typ"], "poradi": p["poradi"], "strana": p["strana"],
             "smer": p.get("smer"), "druhStartu": p.get("druhStartu"),
             "poznamka": p["poznamka"], "a": konec(p["bojeAId"]),
-            "b": konec(p["bojeBId"]) if p["bojeBId"] else None, "bodB": bod}
+            "b": konec(p["bojeBId"]) if p["bojeBId"] else None}
 
 
 def prvky_trati(slug):
@@ -1075,10 +1070,6 @@ def trat_verejna(slug):
                                        "delka": b["delka"],
                                        "barva": b.get("barva"), "tvar": b.get("tvar"),
                                        "znaceni": b.get("znaceni")}
-        if ktery == "b" and p["konecBSirka"] is not None and p["konecBDelka"] is not None:
-            return {"nazev": p["konecBPopis"], "sirka": p["konecBSirka"],
-                    "delka": p["konecBDelka"], "barva": None, "tvar": None,
-                    "znaceni": None}
         return None
 
     vsechny = sorted(PRVKY.get(t["id"], []), key=lambda p: (p["poradi"], p["id"]))
@@ -2477,7 +2468,6 @@ class H(BaseHTTPRequestHandler):
         p = {"id": PRVEK_ID[0], "typ": v["typ"], "poradi": v["poradi"],
              "strana": v.get("strana"), "poznamka": (v.get("poznamka") or "").strip() or None,
              "bojeAId": v["bojeAId"], "bojeBId": boje_b,
-             "konecBSirka": None, "konecBDelka": None, "konecBPopis": None,
              "smer": v.get("smer"), "druhStartu": v.get("druhStartu")}
         PRVKY.setdefault(trat_aktualni(slug)["id"], []).append(p)
         return self.odpoved(prvek_dto(slug, p), 201)
@@ -2536,7 +2526,6 @@ class H(BaseHTTPRequestHandler):
                   "poznamka": (v.get("poznamka") or "").strip() or None,
                   "bojeAId": v["bojeAId"],
                   "bojeBId": self.znacka_z_bodu(slug, v),
-                  "konecBSirka": None, "konecBDelka": None, "konecBPopis": None,
                   "smer": v.get("smer"), "druhStartu": v.get("druhStartu")})
         return self.odpoved(prvek_dto(slug, p))
 

@@ -421,8 +421,6 @@ function NaTrati({
 
 /**
  * Prvek ze správy pro mapku. Bod se kreslí jako konec stejně jako bóje,
- * jen prázdným kolečkem — tam nic neplave.
- */
 /**
  * Prvek pro mapku. <b>Barvu si dohledá ze seznamu bójí</b>, který stránka
  * stejně má: `KonecBojeDto` ji nenese a kvůli jednomu poli by se měnil
@@ -439,25 +437,12 @@ function naMapu(p: Prvek, boje: Boje[]): PrvekNaMape {
     { nazev: p.a.nazev, sirka: p.a.sirka, delka: p.a.delka, ...znak(p.a.id) },
   ];
   if (p.b) konce.push({ nazev: p.b.nazev, sirka: p.b.sirka, delka: p.b.delka, ...znak(p.b.id) });
-  else if (p.bodB)
-    konce.push({
-      nazev: p.bodB.popis,
-      sirka: p.bodB.sirka,
-      delka: p.bodB.delka,
-      barva: undefined,
-      tvar: undefined,
-      // Záložní cesta pro prvky z doby před tím, než se bod ukládal jako
-      // záznam značky. Značení u nich není a doplnit se nedá, takže se
-      // nakreslí neutrálně — hádat by znamenalo vymýšlet.
-      znaceni: undefined,
-    });
 
   return {
     klic: p.id,
     typ: p.typ,
     poradi: p.poradi,
     konce,
-    druhyNeniBoje: !!p.bodB,
     smer: p.smer,
   };
 }

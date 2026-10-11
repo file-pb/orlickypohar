@@ -50,7 +50,6 @@ export function PrvkyTrati({
               <span>
                 {p.a.nazev}
                 {p.b && ` – ${p.b.nazev}`}
-                {p.bodB && ` – ${p.bodB.popis}`}
               </span>
               {p.strana && <span className="stitek">{nazevStrany(p.strana)}</span>}
               {p.poznamka && <p className="poznamka">{p.poznamka}</p>}

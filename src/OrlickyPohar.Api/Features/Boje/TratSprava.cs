@@ -215,9 +215,7 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
                     ? new VerejnyKonecDto(
                         p.BojeB.Nazev, p.BojeB.Sirka, p.BojeB.Delka,
                         p.BojeB.Barva, p.BojeB.Tvar, p.BojeB.Znaceni)
-                    : p.KonecBSirka != null && p.KonecBDelka != null
-                        ? new VerejnyKonecDto(p.KonecBPopis!, p.KonecBSirka.Value, p.KonecBDelka.Value)
-                        : null,
+                    : null,
                 p.Smer, p.DruhStartu))
             .ToListAsync(ct);
 
@@ -348,9 +346,6 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
             // měření, které se stalo. Kopíruje se rozhodnutí, ne měření.
             BojeAId = x.BojeAId,
             BojeBId = x.BojeBId,
-            KonecBSirka = x.KonecBSirka,
-            KonecBDelka = x.KonecBDelka,
-            KonecBPopis = x.KonecBPopis,
         }));
         await db.SaveChangesAsync(ct);
 

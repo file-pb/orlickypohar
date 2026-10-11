@@ -109,16 +109,6 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int?>("DruhStartu")
                         .HasColumnType("integer");
 
-                    b.Property<double?>("KonecBDelka")
-                        .HasColumnType("double precision");
-
-                    b.Property<string>("KonecBPopis")
-                        .HasMaxLength(60)
-                        .HasColumnType("character varying(60)");
-
-                    b.Property<double?>("KonecBSirka")
-                        .HasColumnType("double precision");
-
                     b.Property<int>("Poradi")
                         .HasColumnType("integer");
 
