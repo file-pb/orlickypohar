@@ -457,6 +457,7 @@ function naMapu(p: Prvek, boje: Boje[]): PrvekNaMape {
     poradi: p.poradi,
     konce,
     smer: p.smer,
+    strana: p.strana,
   };
 }
 

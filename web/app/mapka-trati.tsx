@@ -1,4 +1,12 @@
-import { dvaBody, nazevTypu, type SvetovaStrana, type TypPrvku } from "@/lib/trat";
+import {
+  dvaBody,
+  nazevTypu,
+  stranaPatri,
+  type StranaPrvku,
+  type SvetovaStrana,
+  type TypPrvku,
+} from "@/lib/trat";
+import { spojniceTrati, type UzelTrati } from "@/lib/voda";
 import { DLAZDICE, Z_NEJMENE, Z_NEJVIC, doPixelu } from "@/lib/mapa";
 import { ZnakBoje } from "@/app/znak-boje";
 import type { BarvaBoje, DruhZnaceni, TvarBoje } from "@/lib/boje";
@@ -31,6 +39,12 @@ export type PrvekNaMape = {
   /** Druhý konec není bóje — kreslí se prázdným kolečkem. */
   /** Jen u startu: světová strana, podle které se kreslí šipka průjezdu. */
   smer?: SvetovaStrana;
+  /**
+   * Na kterém boku loď prvek míjí. Podle toho se spojnice u značky
+   * zatočí, takže mapa říká i <b>kudy</b>, ne jen kam. U brány chybí
+   * schválně — bok si volí posádka.
+   */
+  strana?: StranaPrvku;
 };
 
 /**
@@ -202,9 +216,34 @@ export function MapkaTrati({ prvky }: { prvky: PrvekNaMape[] }) {
   });
 
   const vPoradi = [...posunute].sort((a, b) => a.prvek.poradi - b.prvek.poradi);
-  const cara = vPoradi.map((b) => `${b.uzel.x.toFixed(1)},${b.uzel.y.toFixed(1)}`).join(" ");
 
   const metruNaPixel = naPixelPriZ0 / 2 ** z;
+
+  // <b>Spojnice vede po vodě, ne přímo</b> (Filip, 11. 10. 2026: *„ta rovná
+  // spojnice je hloupá, naznak trati působí přirozeněji"*). Orlík je
+  // zatopené údolí, takže přímka mezi bójemi vede přes kopec častěji, než
+  // by člověk řekl — naměřené podíly jsou v `lib/voda.ts`. Kde se cesta po
+  // vodě nenajde, čára chybí: *„pokud by to byl problém, tak raději bez
+  // čáry"*.
+  const uzly: UzelTrati[] = vPoradi.map((b) => ({
+    poloha: {
+      sirka: b.konce.reduce((s, k) => s + k.sirka, 0) / b.konce.length,
+      delka: b.konce.reduce((s, k) => s + k.delka, 0) / b.konce.length,
+    },
+    // Bok jen u typů, kterým patří. U brány ho data mít nemají, a kdyby
+    // ho přesto přinesla, mapa by kreslila rozhodnutí, které nikdo neudělal.
+    bok: stranaPatri(b.prvek.typ) ? b.prvek.strana ?? null : null,
+    // Jen u otočné bóje se opravdu točí. Průjezdní se mine a odskok taky.
+    otaci: b.prvek.typ === "OtocnaBoje",
+  }));
+  const tahy = spojniceTrati(uzly, metruNaPixel).map((tah) =>
+    tah
+      .map((p) => {
+        const q = naPlatno(p.sirka, p.delka);
+        return `${q.x.toFixed(1)},${(q.y + vyska / 2).toFixed(1)}`;
+      })
+      .join(" "),
+  );
   const meritkoM = kulateMetry((SIRKA / 4) * metruNaPixel);
   const meritkoPx = meritkoM / metruNaPixel;
 
@@ -236,17 +275,23 @@ export function MapkaTrati({ prvky }: { prvky: PrvekNaMape[] }) {
           />
         ))}
 
-        {/* Spojnice v pořadí objíždění. Čárkovaná schválně: je to pořadí,
-            ne vytyčená dráha — kudy loď pluje, rozhoduje směr obeplutí. */}
-        {posunute.length > 1 && (
+        {/* Spojnice v pořadí objíždění, po vodě a u značek s obloučkem na
+            tu stranu, kterou se míjí. Čárkovaná a tenká schválně: je to
+            pořadí a hrubá cesta, ne vytyčená dráha — loď křižuje a u břehu
+            nejede. Tahů je víc než jeden, kdykoli nějaká noha cestu
+            nenajde; tam čára prostě chybí. */}
+        {tahy.map((body, i) => (
           <polyline
-            points={cara}
+            key={`spojnice-${i}`}
+            points={body}
             fill="none"
             stroke="#c1121f"
-            strokeWidth="3"
-            strokeDasharray="8 6"
+            strokeWidth="1.75"
+            strokeDasharray="7 5"
+            strokeLinejoin="round"
+            strokeLinecap="round"
           />
-        )}
+        ))}
 
         {/* Čára a brána jako **plná úsečka mezi konci**: tohle je ta čára,
             ne noha trati. Dráha výš se jí dotýká uprostřed.

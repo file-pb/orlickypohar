@@ -1882,6 +1882,40 @@ jsou protikladné věci.
   si ho by byla ta lež, kvůli které prvky vznikly. Naznačí ho dráha.
   Seznam prvků má u každého **tutéž ikonku**, jaký je tvar na mapě (Filip:
   *„ať je to veselejší a přehlednější"*), takže seznam a mapa mluví stejně.
+
+  **Spojnice vede po vodě, ne přímo** (Filip, 11. 10. 2026: *„ta rovná
+  spojnice je hloupá, naznak trati působí přirozeněji… pokud by to byl
+  problém, tak raději bez čáry"*). Orlík je zatopené údolí, takže přímka
+  mezi bójemi vede přes kopec častěji, než by člověk řekl: na náhodných
+  párech vodních bodů přetíná suchou zem noha 200–600 m ve **24 %**
+  případů, 600–1 200 m v **65 %** a 1,2–2,5 km v **89 %**. Náhodné páry
+  nadsazují — opravdová trať leží v jednom úseku zátopy —, ale na dlouhé
+  trati je přímka prostě lež.
+
+  Obrys nádrže je **statický soubor** `web/lib/orlik-obrys.ts`,
+  vygenerovaný `tools/obrys-nadrze.py` z OSM (relace 11092220, ODbL):
+  jeden kruh o 1 365 bodech, 26 kB. Za běhu se na Overpassu neviselo
+  schválně — ze tří zrcadel odpovídalo při psaní jedno. Cesta se hledá
+  A\* po mřížce 25 m, napne se jako provázek a rohy se zaoblí; celé
+  **v serverovém renderu**, takže obrys do prohlížeče nejde a na mobilu
+  to nestojí nic. Měřeno: trať mocku 2–6 ms, trať přes celou zátopu
+  o šesti uzlech 5–11 ms.
+
+  **U značky, kde se ví, kterým bokem se míjí, spojnice zatočí** — mapa
+  tím říká i *kudy*, ne jen kam. Oblouk se zmenšuje, dokud se na vodu
+  nevejde; u bóje padesát metrů od břehu zbyde malý, u brány žádný,
+  protože bok si tam volí posádka. Cesta se drží **30 m od břehu**, jinak
+  by se napnutá čára opírala o výběžek a zaoblení rohu by uhýbalo do
+  kopce. Kde cesta po vodě není, **čára chybí**; rovnou přes kopec se
+  nekreslí, to je přesně to, co se tím rušilo.
+
+  Zkouška je `web/lib/voda.zkouska.ts`, pouští se ručně
+  (`node web/lib/voda.zkouska.ts`, bez balíčků) — v CI ne, minuty Actions
+  jsou nejbližší zeď. Hlídá hlavně **bok**: tam se dá splést znaménko tak,
+  že obrázek vypadá hezky a říká opak. Jeden takový nález už tam je — u
+  průjezdu, kde se směr skoro nemění, vycházelo geometricky obkroužení
+  o 353° místo nuly, a obojí je „správně"; co z toho je pravda, říká
+  teprve typ prvku.
 - **GPX bránu jako bránu neumí** a dřívější slib v tomhle oddíle byl
   přehnaný: formát zná body, trasy a stopy, závodní bránu ne. Dosažitelné
   je vyvézt oba konce jako body a do trasy dát pojmenovaný střed — ale
