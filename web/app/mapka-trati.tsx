@@ -29,7 +29,6 @@ export type PrvekNaMape = {
     znaceni?: DruhZnaceni;
   }[];
   /** Druhý konec není bóje — kreslí se prázdným kolečkem. */
-  druhyNeniBoje?: boolean;
   /** Jen u startu: světová strana, podle které se kreslí šipka průjezdu. */
   smer?: SvetovaStrana;
 };
@@ -272,23 +271,12 @@ export function MapkaTrati({ prvky }: { prvky: PrvekNaMape[] }) {
         {skupiny.map((b) => (
           <g key={b.prvek.klic}>
             {/* Bílý lem, ať je konec vidět nad vodou i nad lesem. */}
-            {b.konce.map((k, i) =>
-              b.prvek.druhyNeniBoje && i === 1 ? (
-                // Konec, který bóje není — plavidlo komise, molo, dráty.
-                // Prázdné kolečko: je to místo, ne předmět ve vodě.
-                <circle
-                  key={i}
-                  cx={k.x}
-                  cy={k.y}
-                  r="8"
-                  fill="#fff"
-                  stroke="#c1121f"
-                  strokeWidth="3"
-                />
-              ) : (
-                <ZnakBoje key={i} x={k.x} y={k.y} barva={k.barva} tvar={k.tvar} znaceni={k.znaceni} />
-              ),
-            )}
+            {/* Každý konec je značka, i plavidlo a molo — ty mají svůj
+                tvar podle značení. Prázdné kolečko pro „něco, co není
+                bóje" tu bývalo do doby, než značení existovalo. */}
+            {b.konce.map((k, i) => (
+              <ZnakBoje key={i} x={k.x} y={k.y} barva={k.barva} tvar={k.tvar} znaceni={k.znaceni} />
+            ))}
             {/* Šipka průjezdu u startu. Dřív se nekreslila vůbec, protože
                 směr v datech nebyl a vymyslet si ho by byla lež; od
                 10. 10. 2026 ho prvek nese. */}

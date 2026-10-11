@@ -224,7 +224,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         trat.Ignore(x => x.Zamcena);
 
         var prvek = b.Entity<Features.Boje.PrvekTrati>();
-        prvek.Property(x => x.KonecBPopis).HasMaxLength(Features.Boje.Prvky.PopisNejvic);
         prvek.Property(x => x.Poznamka).HasMaxLength(Features.Boje.Prvky.PoznamkaNejvic);
         // Prvky se čtou vždycky celé pro jednu trať, a v pořadí.
         prvek.HasIndex(x => new { x.TratId, x.Poradi });

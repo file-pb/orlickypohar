@@ -192,13 +192,6 @@ public class PrvekTrati
     public int? BojeBId { get; set; }
     public Boje? BojeB { get; set; }
 
-    /// <summary>Druhý konec, když to bóje není — plavidlo komise, bod na břehu.</summary>
-    public double? KonecBSirka { get; set; }
-    public double? KonecBDelka { get; set; }
-
-    /// <summary>Čím ten druhý konec je, když to není bóje. „plavidlo komise".</summary>
-    public string? KonecBPopis { get; set; }
-
     /// <summary>
     /// Jak se tenhle prvek má jet, řečeno slovy. <b>Vidí ji pořadatel
     /// i závodník</b> (Filip, 9. 10. 2026).
@@ -224,9 +217,12 @@ public class PrvekTrati
     /// </summary>
     public DruhStartu? DruhStartu { get; set; }
 
-    /// <summary>Má prvek druhý konec, ať už bóji, nebo souřadnice?</summary>
-    public bool MaDruhyKonec =>
-        BojeBId is not null || (KonecBSirka is not null && KonecBDelka is not null);
+    /// <summary>
+    /// Má prvek druhý konec? <b>Vždycky je to značka</b> — nebójový bod
+    /// se od #209 ukládá jako její záznam a sloupce se souřadnicemi už
+    /// neexistují.
+    /// </summary>
+    public bool MaDruhyKonec => BojeBId is not null;
 }
 
 /// <summary>

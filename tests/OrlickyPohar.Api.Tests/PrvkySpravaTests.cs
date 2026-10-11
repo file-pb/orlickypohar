@@ -105,7 +105,6 @@ public class PrvkySpravaTests(PostgresFixture fixture)
         Assert.Equal("start levý", prvek.A.Nazev);
         Assert.Equal("start pravý", prvek.B!.Nazev);
         Assert.Equal("projíždí se po proudu", prvek.Poznamka);
-        Assert.Null(prvek.BodB);
     }
 
     /// <summary>
@@ -114,8 +113,8 @@ public class PrvkySpravaTests(PostgresFixture fixture)
     /// Dřív z něj byly tři kolonky na prvku, takže molo ani loď komise neměly
     /// fotku ani historii — a prvnímu bodu to nešlo vůbec.
     /// <para>
-    /// Druhý konec proto vyjde jako <c>B</c>, <b>ne</b> jako <c>BodB</c>:
-    /// ta záložní cesta zůstává jen pro řádky, které vznikly dřív.
+    /// Druhý konec proto vyjde jako <c>B</c>, tedy jako značka se jménem
+    /// a značením — sloupce se souřadnicemi na prvku už neexistují.
     /// </para>
     /// </summary>
     [Fact]
@@ -139,8 +138,7 @@ public class PrvkySpravaTests(PostgresFixture fixture)
             kdo.Id, default);
 
         Assert.Null(chyba);
-        Assert.Null(prvek!.BodB);
-        Assert.Equal("plavidlo komise", prvek.B!.Nazev);
+        Assert.Equal("plavidlo komise", prvek!.B!.Nazev);
         Assert.Equal(DruhZnaceni.Plavidlo, prvek.B.Znaceni);
 
         // A je to doopravdy záznam té regaty: zdroj mapa, protože to byly

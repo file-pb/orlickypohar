@@ -5481,10 +5481,27 @@ ale ten krok je ten, který molu dá doklad a historii.
 jednořádkové zadávání polohy zůstává u pípnutí jedné bóje, kde se čte
 odkaz nebo QR (`lib/souradnice.ts`).
 
-**Tím je celé zadání průvodce postavené.** Zbývá jediný úklid: zrušit
-sloupce `KonecBSirka/Delka/Popis`. Do nich už nikdo nepíše a data jsou
-přestěhovaná, takže je to čistá migrace — ale až po ověření, že na
-záložní čtecí cestu opravdu nic nepadá.
+### Sloupce KonecB* zrušené
+
+Od #218 do nich nikdo nepsal a data byla přestěhovaná (#209), takže
+zmizely i se záložní čtecí cestou a s výstupním `BodB` v DTO prvku —
+to by po zrušení sloupců nikdy nemohlo být vyplněné.
+
+**Migrace napřed přesun dožene, teprve pak ruší.** Přesun v #209 bral
+jen řádky, které měly obě souřadnice a prázdné `BojeBId`; kdyby nějaký
+minul, zahodily by se tu jeho jediné údaje o tom, kde ten konec byl.
+Proti produkčním datům to vyzkoušet nejde, takže se to radši udělá
+znovu — nad přestěhovanými daty je to prázdný běh.
+
+**Vstupní cesta zůstává:** `PrvekVstup.KonecB*` dál umí říct „druhý
+konec je tady" a server z toho vyrobí záznam značky
+(`ZaznamBoduAsync`). Není to mrtvý kód — má test a je to jediný způsob,
+jak založit prvek s nebójovým koncem jedním voláním.
+
+Z mapky zmizelo prázdné kolečko pro „konec, co není bóje": každý konec
+je dnes značka a plavidlo i molo mají vlastní tvar podle značení.
+
+**Tím je celé zadání průvodce hotové.**
 
 ## Růžová a plameňák (Filip, 11. 10. 2026)
 
