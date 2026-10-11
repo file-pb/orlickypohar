@@ -47,17 +47,26 @@ export async function POST(
   { params }: { params: Promise<{ serie: string; zavod: string }> },
 ) {
   const { serie, zavod } = await params;
-  const kam = (zprava: Record<string, string>) =>
-    new URL(
-      `/sprava/${encodeURIComponent(serie)}/smernice/${encodeURIComponent(zavod)}` +
-        `?${new URLSearchParams(zprava)}`,
-      pozadavek.url,
-    );
 
-  // 303: po POSTu se má prohlížeč vrátit GETem, jinak by obnovení stránky
-  // nabídlo odeslat soubor znovu.
+  /**
+   * <b>Relativní adresa, ne složená z `pozadavek.url`.</b> V kontejneru je
+   * `pozadavek.url` vnitřní adresa, na které Next poslouchá, takže by
+   * prohlížeč skončil na `https://0.0.0.0:8080/…` — platforma to má jako
+   * poučení a já jsem na to stejně naletěl. `Location` smí být relativní
+   * a prohlížeč si ji doplní sám, takže není co poskládat špatně.
+   *
+   * 303: po POSTu se má prohlížeč vrátit GETem, jinak by obnovení stránky
+   * nabídlo odeslat soubor znovu.
+   */
   const zpet = (zprava: Record<string, string>) =>
-    NextResponse.redirect(kam(zprava), 303);
+    new NextResponse(null, {
+      status: 303,
+      headers: {
+        location:
+          `/sprava/${encodeURIComponent(serie)}/smernice/${encodeURIComponent(zavod)}` +
+          `?${new URLSearchParams(zprava)}`,
+      },
+    });
 
   const puvod = pozadavek.headers.get("origin");
   const hostitel = pozadavek.headers.get("host");
