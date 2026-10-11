@@ -84,9 +84,7 @@ export default async function Rocnik({ params, searchParams }: Parametry) {
       serie={serie.slug}
       vlevo="novinky"
       vpravo="akce"
-      vlevoDoplnky={["vitr", "vystrahy"]}
-      vpravoDoplnky={["koupani"]}
-      stredDoplnky={["vodocet", "teplota"]}
+      vpravoDoplnky={["vodocet"]}
     >
       <h1>{serie.nazev}</h1>
       <p className="podtitulek">
