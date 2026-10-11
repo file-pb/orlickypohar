@@ -31,8 +31,16 @@ export default function Rocniky() {
         </Karta>
       ))}
 
-      {/* Odkaz ven schválně: appka je čtečka, ne náhrada webu. */}
+      {/* Účet až pod ročníky: appka je pro většinu lidí čtečka a
+          přihlášení potřebuje jen ten, kdo zadává. */}
       <View style={{ marginTop: 24 }}>
+        <Link href="/ucet" style={{ color: t.voda }}>
+          Účet a přihlášení
+        </Link>
+      </View>
+
+      {/* Odkaz ven schválně: appka je čtečka, ne náhrada webu. */}
+      <View style={{ marginTop: 16 }}>
         <Link href="https://orlickypohar.klihovka.cz" style={{ color: t.voda }}>
           orlickypohar.klihovka.cz
         </Link>

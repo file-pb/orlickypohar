@@ -90,3 +90,29 @@ Dvě věci, které se zapisují natrvalo a mění se draho:
   je bere z `assets/images/` (`app.json:7`, `app.json:11`, `app.json:22`,
   `app.json:30`). Kreslí se kódem schválně: v diffu je vidět, co se na
   značce změnilo.
+
+## Přihlášení
+
+Appka se přihlašuje tímtéž tokem jako web — Authorization Code s PKCE,
+veřejný klient bez tajemství. Bere dvě proměnné:
+
+```
+EXPO_PUBLIC_IDENTITA_AUTHORITY=https://ucty.klihovka.cz
+EXPO_PUBLIC_IDENTITA_CLIENT_ID=<client id z Zitadelu>
+```
+
+Bez nich se přihlašování nikde nenabízí a obrazovka *Účet* to řekne —
+stejné pravidlo jako `prihlasovaniJde` na webu.
+
+**U poskytovatele se zakládá aplikace typu Native** s návratovou adresou
+`orlickypohar://prihlaseni` a *Auth Token Type* přepnutým na `JWT`.
+Výchozí `Bearer` je neprůhledný řetězec, který naše API odmítne a v
+odpovědi pošle `error="invalid_token"` **bez popisu** — právě ta chybějící
+věta je ta stopa (runbook `platform/runbooks/ZITADEL.md`).
+
+**V Expo Go přihlášení nefunguje a je to tak správně.**
+`AuthSession.makeRedirectUri` vrací vlastní schéma jen ve standalone nebo
+bare buildu; jinde spadne na `exp://<adresa-notebooku>:8081/--/prihlaseni`,
+a ta se mění s Wi-Fi. Zkouší se proto v APK (`npm run apk`). Kdo to přesto
+chce v Expo Go, najde tu adresu vypsanou na obrazovce *Účet* a musí si ji
+u poskytovatele přidat.
