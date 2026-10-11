@@ -167,6 +167,43 @@ if (stred) {
   }
 }
 
+// <b>Cesta tam i zpět týmž korytem.</b> Bez rozestupu se obě nohy kreslí
+// přes sebe a trať s koly je nečitelná (Filip, 11. 10. 2026).
+const rozpeti = (tah: Poloha[], od: Poloha, kam: Poloha) => {
+  const stred = { sirka: (od.sirka + kam.sirka) / 2, delka: (od.delka + kam.delka) / 2 };
+  const dx = (kam.delka - od.delka) * MX;
+  const dy = (kam.sirka - od.sirka) * MY;
+  const d = Math.hypot(dx, dy);
+  const nx = -dy / d;
+  const ny = dx / d;
+  const stranou = tah
+    .filter((p) => vzdal(p, stred) < 80)
+    .map((p) => ((p.delka - stred.delka) * MX * nx + (p.sirka - stred.sirka) * MY * ny));
+  return stranou.length < 2 ? 0 : Math.max(...stranou) - Math.min(...stranou);
+};
+
+for (const [kolik, nejmene] of [
+  [2, 12],
+  [3, 24],
+] as const) {
+  const uzly = [];
+  for (let i = 0; i <= kolik; i++) uzly.push({ poloha: i % 2 ? boje[1] : boje[0], bok: null });
+  const tahy = spojniceTrati(uzly, 2);
+  tvrd(`${kolik} průjezdy týmž korytem: jeden tah`, tahy.length === 1);
+  if (tahy.length !== 1) continue;
+  const r = rozpeti(tahy[0], boje[0], boje[1]);
+  tvrd(`${kolik} průjezdy: tahy se uprostřed rozestoupí (${r.toFixed(0)} m)`, r >= nejmene);
+  tvrd(`${kolik} průjezdy: rozestup nevytlačil čáru na břeh`, tahy[0].every((p) => lezNaVode(m, p)));
+  tvrd(`${kolik} průjezdy: u bójí se tahy sejdou`, vzdal(tahy[0][0], boje[0]) < 1);
+}
+
+// Jediný průjezd se nemá o co rozestupovat — čára vede přesně po cestě.
+{
+  const samotna = spojniceTrati([{ poloha: boje[0], bok: null }, { poloha: boje[1], bok: null }], 2);
+  const r = rozpeti(samotna[0], boje[0], boje[1]);
+  tvrd(`jediná noha: žádný rozestup (${r.toFixed(1)} m)`, r < 2);
+}
+
 // Bod 188 m od vody: mapa vody o něm nic neví, čára se nekreslí.
 tvrd(
   "uzel mimo vodu nedostane čáru",

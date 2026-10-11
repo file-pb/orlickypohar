@@ -516,6 +516,25 @@ function oblouček(
   return { vstup, body, vystup };
 }
 
+/** Poslední bod nohy, který leží dál než `polomer` od uzlu. `null`, když
+ *  je celá noha kratší — pak oblouk nemá na čem začít. */
+function posledniZa(m: Mrizka, noha: Poloha[], uzel: Poloha, polomer: number) {
+  for (let i = noha.length - 1; i >= 0; i--) {
+    const d = Math.hypot((noha[i].delka - uzel.delka) * m.mx, (noha[i].sirka - uzel.sirka) * m.my);
+    if (d > polomer) return i;
+  }
+  return null;
+}
+
+/** Totéž od začátku nohy. */
+function prvniZa(m: Mrizka, noha: Poloha[], uzel: Poloha, polomer: number) {
+  for (let i = 0; i < noha.length; i++) {
+    const d = Math.hypot((noha[i].delka - uzel.delka) * m.mx, (noha[i].sirka - uzel.sirka) * m.my);
+    if (d > polomer) return i;
+  }
+  return null;
+}
+
 /** Jak velký oblouček se u značky kreslí. Měřítko mapy rozhoduje: na
  *  dlouhé trati by 25 m byly dva pixely. */
 function velikostObloucku(metruNaPixel: number) {
@@ -531,6 +550,165 @@ function velikostObloucku(metruNaPixel: number) {
  * Rovná čára přes kopec je to, co se tím ruší, takže ji nemá smysl vracet
  * jako záložní řešení.
  */
+/** Jak daleko od sebe se rozestoupí tahy, které jedou týmž korytem.
+ *  Osm pixelů: čára je 1,75 px a čárkovaná, při menším rozestupu se dvě
+ *  vedle sebe čtou jako jedna silnější. */
+function velikostRozestupu(metruNaPixel: number) {
+  return Math.max(10, metruNaPixel * 8);
+}
+
+type Vzorek = { bod: { x: number; y: number }; smer: { x: number; y: number } };
+
+/**
+ * Rovnoměrné navzorkování cesty po `krok` metrech i se směrem. Rozestup
+ * se počítá po bodech, takže body musí být rozprostřené — napnutá cesta
+ * má mezi rohy klidně kilometr.
+ */
+function navzorkuj(m: Mrizka, cesta: Poloha[], krok: number): Vzorek[] {
+  const xy = cesta.map((p) => ({
+    x: (p.delka - m.delkaOd) * m.mx,
+    y: (p.sirka - m.sirkaOd) * m.my,
+  }));
+  const body: { x: number; y: number }[] = [xy[0]];
+  let zbytek = 0;
+  for (let i = 0; i + 1 < xy.length; i++) {
+    const dx = xy[i + 1].x - xy[i].x;
+    const dy = xy[i + 1].y - xy[i].y;
+    const d = Math.hypot(dx, dy);
+    if (d === 0) continue;
+    let ujito = krok - zbytek;
+    while (ujito <= d) {
+      body.push({ x: xy[i].x + (dx * ujito) / d, y: xy[i].y + (dy * ujito) / d });
+      ujito += krok;
+    }
+    zbytek = d - (ujito - krok);
+  }
+  const posledni = xy[xy.length - 1];
+  if (Math.hypot(posledni.x - body[body.length - 1].x, posledni.y - body[body.length - 1].y) > 1) {
+    body.push(posledni);
+  } else {
+    body[body.length - 1] = posledni;
+  }
+
+  return body.map((bod, i) => {
+    const a = body[Math.max(0, i - 1)];
+    const b = body[Math.min(body.length - 1, i + 1)];
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const d = Math.hypot(dx, dy) || 1;
+    return { bod, smer: { x: dx / d, y: dy / d } };
+  });
+}
+
+/**
+ * Rozestup soubežných tahů.
+ *
+ * <b>Zadání od Filipa (11. 10. 2026):</b> *„pokud dráha vede stejnou
+ * cestou tam i zpět, hrozí překrývání a nepřehlednost… u maratonů se
+ * jezdí kola, kde jedno je veliké a uvnitř je např. menší okruh"*.
+ *
+ * Nohy, které jedou týmž korytem, dostanou každá svůj <b>pruh</b> a
+ * rozestoupí se kolmo na směr koryta. Pořadí pruhů je pořadí jetí, takže
+ * dřívější kolo leží pořád na téže straně a dá se očima sledovat.
+ *
+ * <b>Proč ne prostě „každý doprava"</b>: to rozdělí cestu tam a zpět, ale
+ * dvě kola stejným směrem — tedy přesně ten maraton — by zůstala přes
+ * sebe. Pruh se proto bere ze seznamu noh v okolí, ne ze směru.
+ *
+ * <b>U konců se rozestup vytrácí</b>, aby se tahy u bóje sešly v ní a ne
+ * vedle ní, a aby nerozhodily oblouček obeplutí, který se vkládá potom.
+ * A každý posunutý bod se ověří: rozestup nikdy nevytlačí čáru na břeh.
+ */
+function rozestupNoh(m: Mrizka, nohy: (Poloha[] | null)[], rozestup: number): void {
+  const krok = Math.max(8, rozestup);
+  const dosah = rozestup * 3;
+  const vzorky = nohy.map((n) => (n && n.length > 1 ? navzorkuj(m, n, krok) : null));
+
+  // Prostorový rozškatulkování, ať se nehledá každý s každým.
+  const prihradky = new Map<string, { noha: number; i: number }[]>();
+  const klic = (x: number, y: number) => `${Math.floor(x / dosah)},${Math.floor(y / dosah)}`;
+  vzorky.forEach((v, noha) => {
+    v?.forEach((vz, i) => {
+      const k = klic(vz.bod.x, vz.bod.y);
+      const seznam = prihradky.get(k);
+      if (seznam) seznam.push({ noha, i });
+      else prihradky.set(k, [{ noha, i }]);
+    });
+  });
+
+  for (let noha = 0; noha < vzorky.length; noha++) {
+    const v = vzorky[noha];
+    if (!v) continue;
+
+    // Posun v metrech pro každý vzorek, zatím bez vyhlazení.
+    const posuny = v.map((vz) => {
+      const okoli: { noha: number; smer: { x: number; y: number } }[] = [];
+      const cx = Math.floor(vz.bod.x / dosah);
+      const cy = Math.floor(vz.bod.y / dosah);
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+          for (const c of prihradky.get(`${cx + dx},${cy + dy}`) ?? []) {
+            if (c.noha === noha) continue;
+            const jiny = vzorky[c.noha]![c.i];
+            if (Math.hypot(jiny.bod.x - vz.bod.x, jiny.bod.y - vz.bod.y) > dosah) continue;
+            if (!okoli.some((o) => o.noha === c.noha)) okoli.push({ noha: c.noha, smer: jiny.smer });
+          }
+        }
+      }
+      if (okoli.length === 0) return { x: 0, y: 0 };
+
+      const nohy = [...okoli.map((o) => o.noha), noha].sort((a, b) => a - b);
+      const pruh = nohy.indexOf(noha);
+      // Kolmice se bere od nejnižší nohy v hloučku, ať všichni měří od
+      // téhož — jinak by si cesta tam a zpět spočítala stranu opačně a
+      // skončily by na sobě.
+      const vedouci = okoli.find((o) => o.noha === nohy[0])?.smer ?? vz.smer;
+      const souhlas = vedouci.x * vz.smer.x + vedouci.y * vz.smer.y >= 0 ? 1 : -1;
+      const kolmice = { x: vz.smer.y * souhlas, y: -vz.smer.x * souhlas };
+      const o = (pruh - (nohy.length - 1) / 2) * rozestup;
+      return { x: kolmice.x * o, y: kolmice.y * o };
+    });
+
+    // Vyhlazení: hloučky vznikají a končí skokem, bez tohohle by čára cukala.
+    const okno = Math.max(1, Math.round(rozestup / krok) * 2 + 1);
+    const hladke = posuny.map((_, i) => {
+      let sx = 0;
+      let sy = 0;
+      let n = 0;
+      for (let k = i - okno; k <= i + okno; k++) {
+        if (k < 0 || k >= posuny.length) continue;
+        sx += posuny[k].x;
+        sy += posuny[k].y;
+        n++;
+      }
+      return { x: sx / n, y: sy / n };
+    });
+
+    const utlum = Math.max(4 * rozestup, 40);
+    const hotovo: Poloha[] = v.map((vz, i) => {
+      // Čím blíž ke konci nohy, tím menší posun — u bóje nulový.
+      const odKraje = Math.min(i, v.length - 1 - i) * krok;
+      const miraKraje = Math.min(1, odKraje / utlum);
+      for (const podil of [1, 0.6, 0.3, 0]) {
+        const f = miraKraje * podil;
+        const p = {
+          delka: m.delkaOd + (vz.bod.x + hladke[i].x * f) / m.mx,
+          sirka: m.sirkaOd + (vz.bod.y + hladke[i].y * f) / m.my,
+        };
+        if (f === 0 || lezNaVode(m, p)) return p;
+      }
+      // Nedosažitelné: podíl 0 vrací bod bez posunu.
+      return { delka: m.delkaOd + vz.bod.x / m.mx, sirka: m.sirkaOd + vz.bod.y / m.my };
+    });
+
+    // Konce zůstávají přesně na bóji, ať na ně navazuje oblouček.
+    const puvodni = nohy[noha]!;
+    hotovo[0] = puvodni[0];
+    hotovo[hotovo.length - 1] = puvodni[puvodni.length - 1];
+    nohy[noha] = hotovo;
+  }
+}
+
 export function spojniceTrati(uzly: UzelTrati[], metruNaPixel: number): Poloha[][] {
   if (uzly.length < 2) return [];
   const m = mrizkaVody(uzly.map((u) => u.poloha));
@@ -540,33 +718,52 @@ export function spojniceTrati(uzly: UzelTrati[], metruNaPixel: number): Poloha[]
     .slice(0, -1)
     .map((u, i) => cestaPoVode(m, u.poloha, uzly[i + 1].poloha));
 
+  // Nejdřív rozestup, teprve pak obloučky: oblouček se počítá ze směru,
+  // kterým noha do uzlu přichází, a ten se rozestupem mění.
+  rozestupNoh(m, nohy, velikostRozestupu(metruNaPixel));
+
   // Obloučky u vnitřních uzlů: na krajních je jen jeden směr, není co obeplout.
   for (let i = 1; i < uzly.length - 1; i++) {
     const bok = uzly[i].bok;
     const pred = nohy[i - 1];
     const po = nohy[i];
     if (!bok || !pred || !po || pred.length < 2 || po.length < 2) continue;
-    const prichod = smer(m, pred[pred.length - 2], pred[pred.length - 1]);
-    const odchod = smer(m, po[0], po[1]);
-    if (!prichod || !odchod) continue;
+    const uzel = uzly[i].poloha;
+
     // <b>Oblouk smí jen po vodě, a tak se zmenšuje, dokud se nevejde.</b>
     // Bóje padesát metrů od břehu je běžná a zahodit u ní obeplutí celé
     // by znamenalo, že ten detail chybí zrovna tam, kde na něm záleží.
     // Když se nevejde ani ten nejmenší, uzel zůstane bodem: lež o
     // obeplutí je horší než chybějící detail.
-    let o: ReturnType<typeof oblouček> | null = null;
+    let hotovo: { a: number; b: number; o: ReturnType<typeof oblouček> } | null = null;
     for (const podil of [1, 0.6, 0.35]) {
-      if (r * podil < 15) break;
-      const zkusmo = oblouček(m, uzly[i].poloha, prichod, odchod, bok, uzly[i].otaci ?? false, r * podil);
-      if ([zkusmo.vstup, ...zkusmo.body, zkusmo.vystup].every((p) => lezNaVode(m, p))) {
-        o = zkusmo;
-        break;
+      const polomer = r * podil;
+      if (polomer < 15) break;
+      // <b>Konec nohy se musí uříznout, a to pořádně daleko.</b> Oblouk
+      // začíná na té straně značky, kterou se míjí — jenže cesta k uzlu
+      // vede doprostřed, takže poslední kus původní čáry leží na opačné
+      // straně a mezi ním a obloukem by čára přeskočila přes bóji.
+      // Useknuté dál se místo skoku nakloní. Dokud byly nohy jen pár
+      // bodů, bylo to schované; po navzorkování kvůli rozestupu ne.
+      let a: number | null = null;
+      let b: number | null = null;
+      for (const nasobek of [3, 2, 1.2]) {
+        a = posledniZa(m, pred, uzel, polomer * nasobek);
+        b = prvniZa(m, po, uzel, polomer * nasobek);
+        if (a !== null && b !== null) break;
       }
+      if (a === null || b === null) continue;
+      const prichod = smer(m, pred[a], uzel);
+      const odchod = smer(m, uzel, po[b]);
+      if (!prichod || !odchod) continue;
+      const o = oblouček(m, uzel, prichod, odchod, bok, uzly[i].otaci ?? false, polomer);
+      if (![o.vstup, ...o.body, o.vystup].every((p) => lezNaVode(m, p))) continue;
+      hotovo = { a, b, o };
+      break;
     }
-    if (!o) continue;
-    pred[pred.length - 1] = o.vstup;
-    po[0] = o.vystup;
-    pred.push(...o.body);
+    if (!hotovo) continue;
+    nohy[i - 1] = [...pred.slice(0, hotovo.a + 1), hotovo.o.vstup, ...hotovo.o.body];
+    nohy[i] = [hotovo.o.vystup, ...po.slice(hotovo.b)];
   }
 
   // Sousední povedené nohy se spojí do jednoho tahu, díra tah ukončí.
