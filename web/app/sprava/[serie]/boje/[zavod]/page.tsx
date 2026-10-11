@@ -17,6 +17,7 @@ import { ZnakVRadku } from "@/app/znak-boje";
 import { Pipani } from "./pipani";
 import { nactiPrvky, nactiStavTrati, nactiTrate, type Prvek } from "@/lib/trat";
 import { PrvkyTrati } from "./prvky";
+import { Puvod, ZnackaNaTrati } from "./znacka-na-trati";
 import { StavTrati } from "./stav-trati";
 import { Stavba } from "./stavba";
 import { VyberTrati } from "./vyber-trati";
@@ -29,7 +30,13 @@ export const metadata = { title: "Bóje na trati — správa" };
 
 type Parametry = {
   params: Promise<{ serie: string; zavod: string }>;
-  searchParams: Promise<{ chyba?: string; stav?: string; prenastav?: string; uklizeno?: string }>;
+  searchParams: Promise<{
+    chyba?: string;
+    stav?: string;
+    prenastav?: string;
+    uklizeno?: string;
+    otevrit?: string;
+  }>;
 };
 
 /**
@@ -69,6 +76,14 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
   // tím nemá co nabídnout a formulář zůstane na „pípnout novou".
   const prenastav = Number(zpravy.prenastav ?? 0);
   const prenastavovana = trat?.find((b) => b.id === prenastav);
+
+  // Po akci se znovu rozbalí detail prvku, kterého se týkala. „posledni"
+  // posílá zopakování průjezdu: API při zakládání vrací jen chybu, ne id,
+  // takže nový prvek se pozná tím, že je na konci.
+  const otevreny =
+    zpravy.otevrit === "posledni"
+      ? prvky[prvky.length - 1]?.id
+      : Number(zpravy.otevrit) || undefined;
 
   // Kam se otevře mapa, když se bod bere z ní: u poslední pípnuté bóje,
   // a bez bójí u Orlické přehrady — ne u nulového poledníku. Platí pro
@@ -126,6 +141,23 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
         <p className="hlaska" role="status">
           Prvek je na trati. Mapka ho kreslí podle typu — čára a brána jako
           úsečku mezi konci, dráha jejím středem.
+        </p>
+      )}
+      {zpravy.stav === "prvekUpraven" && (
+        <p className="hlaska" role="status">
+          Uloženo. Změnil se jen předpis — značky i jejich poloha zůstávají.
+        </p>
+      )}
+      {zpravy.stav === "prvekZnovu" && (
+        <p className="hlaska" role="status">
+          Další průjezd týchž značek je na konci trati. Dopiš u něj, jak se
+          jede — fyzika prvku už daná je.
+        </p>
+      )}
+      {zpravy.stav === "prvekPresunut" && (
+        <p className="hlaska" role="status">
+          Pořadí se přečíslovalo. Trať se jede v tom pořadí, v jakém prvky
+          stojí v seznamu.
         </p>
       )}
       {zpravy.stav === "prvekPryc" && (
@@ -236,6 +268,7 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
             prvky={prvky}
             boje={trat}
             zamceno={stavTrati.trat?.stav === "Prijato"}
+            otevrit={otevreny}
           />
 
           <h2>Co stojí na trati</h2>
@@ -249,7 +282,7 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
             <ul className="seznam">
               {trat.map((b) => (
                 <li key={b.id}>
-                  <NaTrati
+                  <ZnackaNaTrati
                     boje={b}
                     serie={serie}
                     zavod={zavod}
@@ -341,97 +374,6 @@ const souradnice = (b: Boje) => `${b.sirka.toFixed(5)}, ${b.delka.toFixed(5)}`;
  * <b>Přenastavení jde přes adresu</b> (`?prenastav=`), ne přes stav
  * v prohlížeči — seznam tím zůstane serverový a odkaz se dá poslat.
  */
-function NaTrati({
-  boje,
-  serie,
-  zavod,
-  zamceno,
-}: {
-  boje: Boje;
-  serie: string;
-  zavod: string;
-  zamceno: boolean;
-}) {
-  return (
-    <>
-      <span className="stitek">{boje.poradi}.</span>{" "}
-      {/* Značka u jména: na vodě se bóje hledá podle toho, jak vypadá,
-          ne podle pořadí v seznamu. */}
-      <ZnakVRadku barva={boje.barva} tvar={boje.tvar} znaceni={boje.znaceni} />
-      <span>{boje.nazev}</span>{" "}
-      <Puvod boje={boje} />
-
-      <p className="poznamka">
-        {/* Přenastavení u zamčené trati mizí taky: vede na formulář
-            pípnutí, který tam v tu chvíli není. */}
-        {!zamceno && (
-          <>
-            <Link href={`/sprava/${serie}/boje/${zavod}?prenastav=${boje.id}`}>
-              Přenastavit
-            </Link>{" "}
-            ·{" "}
-          </>
-        )}
-        {/* Kde přesně ta jedna bóje leží. Mapu web nevkládá, odkazuje na ni —
-            stejné pravidlo jako u medailonku pořadatele. */}
-        <a
-          href={`https://www.openstreetmap.org/?mlat=${boje.sirka}&mlon=${boje.delka}#map=17/${boje.sirka}/${boje.delka}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Ukázat na mapě
-        </a>
-      </p>
-
-      {boje.fotky.length > 0 && (
-        <p className="fotky-boje">
-          {boje.fotky.map((f) => (
-            <span key={f.id} className="fotka">
-              <a href={f.velky} target="_blank" rel="noopener noreferrer">
-                <img src={f.nahled} alt={f.popis ?? `Bóje ${boje.nazev}`} width={120} height={90} />
-              </a>
-              <form action={odeberFotkuAkce}>
-                <input type="hidden" name="serie" value={serie} />
-                <input type="hidden" name="zavod" value={zavod} />
-                <input type="hidden" name="boje" value={boje.id} />
-                <input type="hidden" name="fotka" value={f.id} />
-                <button type="submit" className="maly">Odebrat</button>
-              </form>
-            </span>
-          ))}
-        </p>
-      )}
-
-      {/* Fotek může být víc: jedna zblízka neukáže, co je za bójí na
-          břehu. Obyčejný formulář — fotit umí `capture` sám a u stolu se
-          stejně vybírá ze souborů. */}
-      <form action={nahrajFotkuAkce} className="formular radkove">
-        <input type="hidden" name="serie" value={serie} />
-        <input type="hidden" name="zavod" value={zavod} />
-        <input type="hidden" name="boje" value={boje.id} />
-        <label>
-          {boje.fotky.length === 0 ? "Vyfotit bóji" : "Přidat další fotku"}
-          <input type="file" name="soubor" accept="image/*" capture="environment" required />
-        </label>
-        <button type="submit">Nahrát fotku</button>
-      </form>
-
-      {/* Sebrání nepotřebuje polohu, takže ani javascript. U zamčené trati
-          mizí ze stejného důvodu jako pípnutí: API by ho odmítlo a člověk by
-          se to dozvěděl až z chyby. Fotka zůstává — je to doklad k poloze,
-          ne změna trati. */}
-      {!zamceno && (
-        <form action={seberAkce} className="formular">
-          <input type="hidden" name="serie" value={serie} />
-          <input type="hidden" name="zavod" value={zavod} />
-          <input type="hidden" name="boje" value={boje.id} />
-          <button type="submit">Sebrat z vody</button>
-        </form>
-      )}
-    </>
-  );
-}
-
 /**
  * Prvek ze správy pro mapku. Bod se kreslí jako konec stejně jako bóje,
 /**
@@ -457,6 +399,7 @@ function naMapu(p: Prvek, boje: Boje[]): PrvekNaMape {
     poradi: p.poradi,
     konce,
     smer: p.smer,
+    strana: p.strana,
   };
 }
 
@@ -474,28 +417,6 @@ function Byvsi({ boje, proc }: Byvala) {
           historie se neupravuje. */}
       <Fotky boje={boje} />
     </>
-  );
-}
-
-/**
- * Odkud ta poloha je. <b>Přesnost hlásí jen telefon</b>, takže u bodu
- * z mapy se místo čísla řekne, že se odečetl — prázdné místo by vypadalo
- * jako telefon, který přesnost neumí.
- */
-function Puvod({ boje }: { boje: Boje }) {
-  const zdroj = boje.zdroj ?? "Telefon";
-
-  return (
-    <span className="detail">
-      {souradnice(boje)}
-      {zdroj === "Telefon"
-        ? boje.presnostM !== null
-          ? ` · přesnost ${Math.round(boje.presnostM)} m`
-          : " · přesnost telefon nehlásil"
-        : ` · ${NAZVY_ZDROJU[zdroj]}, neměřeno`}
-      {` · ${okamzik(boje.postavenaV)}`}
-      {boje.postavil && ` · zapsal ${boje.postavil}`}
-    </span>
   );
 }
 

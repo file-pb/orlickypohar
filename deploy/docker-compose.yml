@@ -49,7 +49,13 @@ services:
       # Bez nich se ověřování nezapne a chráněné endpointy se nezaregistrují
       # vůbec — zapomenutá proměnná není totéž co otevřený endpoint.
       Identita__Authority: "https://ucty.${PLATFORM_DOMAIN:?}"
-      Identita__Audience: "390035493066113030"
+      # Klientů je víc než jeden: web a appka mají u poskytovatele každý
+      # svou aplikaci, takže i svoje `aud` v tokenu. Oddělují se čárkou,
+      # první je web, druhá appka (Native, PKCE, návratová adresa
+      # `orlickypohar://prihlaseni`, Auth Token Type JWT; založená
+      # 11. 10. 2026). Příkaz `Identita__Audience` s jedinou hodnotou je
+      # pořád platná konfigurace — seznam jen připouští víc klientů.
+      Identita__Audience: "390035493066113030,394696941801308166"
       # Úložiště fotek (Cloudflare R2 přes S3 protokol). Endpoint obsahuje
       # číslo účtu u Cloudflaru, proto leží v .env vedle tohohle souboru,
       # ne tady. Bez něj, nebo s prázdnými klíči, aplikace naběhne a jen

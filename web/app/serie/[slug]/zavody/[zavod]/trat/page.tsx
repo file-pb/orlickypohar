@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
-import { ApiNedostupne, nactiVerejnouTrat, nactiZavod, type VerejnaTrat } from "@/lib/api";
+import { type VerejnaTrat } from "@/lib/api";
 import { NAZVY_SMERU, nazevStrany, nazevTypu } from "@/lib/trat";
 import { MapkaTrati, type PrvekNaMape } from "@/app/mapka-trati";
 import { IkonaPrvku } from "@/app/ikona-prvku";
-import { Drobecky } from "@/app/drobecky";
+import { Boky } from "@/app/boky";
 import { Vypadek } from "@/app/vypadek";
-import { datum } from "@/app/datum";
+import { HlavaZastavky } from "../hlava";
+import { nactiZastavku } from "../data";
 
 export const dynamic = "force-dynamic";
 
@@ -28,43 +29,32 @@ export const metadata = { title: "Trať" };
 export default async function VerejnaTratStranka({ params }: Parametry) {
   const { slug, zavod: slugZavodu } = await params;
 
-  let zavod;
-  let trat: VerejnaTrat | null;
-  try {
-    [zavod, trat] = await Promise.all([
-      nactiZavod(slug, slugZavodu),
-      nactiVerejnouTrat(slug, slugZavodu),
-    ]);
-  } catch (e) {
-    if (e instanceof ApiNedostupne) return <Vypadek co="Trať" />;
-    throw e;
-  }
-  if (!zavod) notFound();
+  const zastavka = await nactiZastavku(slug, slugZavodu);
+  if (!zastavka) return <Vypadek co="Trať" />;
+
+  const { detail: zavod, trat } = zastavka;
+  // Komunitní akce trať nemá a sekce pro ni neexistuje.
+  if (zavod.druh === "Akce") notFound();
 
   return (
-    <>
-      <Drobecky
-        cesta={[
-          { text: "Domů", kam: "/" },
-          { text: "Ročník", kam: `/serie/${slug}` },
-          { text: zavod.nazev, kam: `/serie/${slug}/zavody/${slugZavodu}` },
-          { text: "Trať" },
-        ]}
+    <Boky serie={slug}>
+      <HlavaZastavky
+        serie={slug}
+        zavod={slugZavodu}
+        detail={zavod}
+        trat={trat}
+        aktivni="trat"
       />
-      <h1>Trať</h1>
-      <p className="podtitulek">
-        {zavod.nazev} · {datum(zavod.datum, zavod.datumKonce)}
+      <h2>
+        Trať
         {/* Ke které rozjížďce trať patří (plán, *Trať je veřejná*, past 2).
             U vícerozjížďkové regaty má každá jinou — bez tohohle si lidi
             stáhnou GPX od té včerejší. U regaty s jednou tratí to číslo
             není a věta by jen překážela. */}
         {trat?.cisloRozjizdky != null && (
-          <>
-            {" · "}
-            <b>{trat.cisloRozjizdky}. rozjížďka</b>
-          </>
+          <span className="stitek"> {trat.cisloRozjizdky}. rozjížďka</span>
         )}
-      </p>
+      </h2>
 
       {trat === null ? (
         <p className="prazdno">
@@ -111,7 +101,7 @@ export default async function VerejnaTratStranka({ params }: Parametry) {
           )}
         </>
       )}
-    </>
+    </Boky>
   );
 }
 
@@ -190,7 +180,7 @@ function naMapu(p: VerejnaTrat["prvky"][number], i: number): PrvekNaMape {
   const konce = [konec(p.a)];
   if (p.b) konce.push(konec(p.b));
 
-  return { klic: i, typ: p.typ, poradi: p.poradi, konce, smer: p.smer };
+  return { klic: i, typ: p.typ, poradi: p.poradi, konce, smer: p.smer, strana: p.strana };
 }
 
 function kdy(kdy: string) {

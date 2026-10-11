@@ -37,6 +37,16 @@ export const POLOMER_KM = 8;
 const OBRAZ = { w: 680, h: 460, zapad: 11.267, vychod: 20.77, jih: 48.047, sever: 52.167 };
 
 /** Od kolika dBZ je to déšť: podle stupnice ČHMÚ ~1 mm/h. */
+/** Barva políčka podle stupnice ČHMÚ (scl-dbz-mmh.png), po 4 dBZ od 4. */
+const BARVY = [
+  "#380070", "#3000a8", "#0000fc", "#006cc0", "#00a000", "#00bc00", "#34d800", "#9cdc00",
+  "#e0dc00", "#fcb000", "#fc8400", "#fc5800", "#fc0000", "#a00000", "#fcfcfc",
+];
+
+/** Tatáž stupnice v boku i na liště — dvě různé modré by lhaly o síle deště. */
+export const barvaDbz = (dbz: number) =>
+  BARVY[Math.min(BARVY.length - 1, Math.max(0, Math.floor((dbz - 4) / 4)))];
+
 export const DEST_DBZ = 24;
 /** Silný déšť: ~10 mm/h a víc. */
 export const SILNY_DBZ = 40;

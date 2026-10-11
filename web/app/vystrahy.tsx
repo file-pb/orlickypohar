@@ -1,5 +1,6 @@
 import { nactiVystrahy, STRANKA_VYSTRAH, type Stupen, type Vystraha } from "@/lib/chmi";
 import {
+  barvaDbz as barva,
   BOURKA_DBZ,
   DEST_DBZ,
   nactiRadar,
@@ -128,13 +129,6 @@ function zprava(kroky: Krok[]) {
   const slovo = d.slovo[0].toUpperCase() + d.slovo.slice(1);
   return { text: `${slovo} kolem ${casPraha(prvni.cas)}, asi za ${prvni.minut} minut.`, trida: d.trida };
 }
-
-/** Barva políčka podle stupnice ČHMÚ (scl-dbz-mmh.png), po 4 dBZ od 4. */
-const BARVY = [
-  "#380070", "#3000a8", "#0000fc", "#006cc0", "#00a000", "#00bc00", "#34d800", "#9cdc00",
-  "#e0dc00", "#fcb000", "#fc8400", "#fc5800", "#fc0000", "#a00000", "#fcfcfc",
-];
-const barva = (dbz: number) => BARVY[Math.min(BARVY.length - 1, Math.max(0, Math.floor((dbz - 4) / 4)))];
 
 function RadarHodina({ radar }: { radar: Radar }) {
   const z = zprava(radar.kroky);

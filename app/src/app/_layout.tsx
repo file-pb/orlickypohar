@@ -19,6 +19,7 @@ export default function Layout() {
           contentStyle: { backgroundColor: t.pozadi },
         }}>
         <Stack.Screen name="index" options={{ title: 'Orlický pohár' }} />
+        <Stack.Screen name="ucet" options={{ title: 'Účet' }} />
       </Stack>
     </>
   );

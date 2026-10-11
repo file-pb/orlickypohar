@@ -238,6 +238,43 @@ export async function zalozPrvek(
   return await posli(`${cesta(serie, zavod)}/prvky`, "POST", vstup);
 }
 
+/**
+ * Upraví prvek. Vrací chybu k zobrazení, nebo `null`.
+ *
+ * <b>Posílá se celý vstup</b>, ne jen změněná pole — API má na prvku
+ * `PUT`, ne `PATCH`. Nerozepsané pole by se tím přepsalo prázdnem, takže
+ * si volající musí zbytek vzít z `vstupZPrvku`.
+ */
+export async function upravPrvek(
+  serie: string,
+  zavod: string,
+  prvek: number,
+  vstup: PrvekVstup,
+): Promise<string | null> {
+  return await posli(`${cesta(serie, zavod)}/prvky/${prvek}`, "PUT", vstup);
+}
+
+/**
+ * Prvek, jak ho vrací API, přeložený na vstup pro zápis.
+ *
+ * <b>Proč to je:</b> úprava jednoho pole musí poslat i všechna ostatní.
+ * Kdyby si je skládala obrazovka ze skrytých políček, dal by se prvku
+ * podstrčit jiný typ nebo jiná bóje — a hlavně by se na každé nové pole
+ * muselo myslet na dvou místech.
+ */
+export function vstupZPrvku(p: Prvek): PrvekVstup {
+  return {
+    typ: p.typ,
+    poradi: p.poradi,
+    bojeAId: p.a.id,
+    bojeBId: p.b?.id ?? null,
+    strana: p.strana,
+    poznamka: p.poznamka,
+    smer: p.smer ?? null,
+    druhStartu: p.druhStartu ?? null,
+  };
+}
+
 /** Smaže prvek. Vrací chybu k zobrazení, nebo `null`. */
 export async function smazPrvek(
   serie: string,

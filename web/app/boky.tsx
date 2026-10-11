@@ -20,6 +20,7 @@ import { BokVystrahy } from "@/app/vystrahy";
 import { dnesVPraze, vyberTerminu } from "@/lib/terminy";
 import { PrepinacKalendare } from "@/app/kalendar-volba";
 import { volbaKalendare, zastavkyKalendare } from "@/lib/kalendar-volba";
+import { PatickaPocasi } from "@/app/paticka";
 
 /**
  * Boky širokého monitoru.
@@ -52,17 +53,17 @@ const DOLE: Doplnek[] = ["vodocet", "teplota", "koupani", "vitr", "vystrahy", "p
 
 /**
  * Rozložení boků (Filip, 18. 9. 2026: stránka má být v každém rozměru
- * kompaktní). Widgety mají všechny stránky s boky, nejen úvod; výchozí
- * rozdělení je to z úvodu.
+ * kompaktní).
+ *
+ * <b>V boku zůstal jediný widget: vodočet</b> (Filip, 11. 10. 2026). Bok
+ * nese to, co je o poháru — pořadí, kalendář, novinky, nejbližší akci —
+ * a k tomu stav hladiny, protože ten rozhoduje, jestli se vůbec vypluje.
+ * Počasí, vítr, výstrahy, teplota a koupání jdou pod obsah; mají skončit
+ * v patičce, která se drží dole, a ta se staví zvlášť.
  *
  * Widgety nikdy nerostou do šířky středu — velké vypadaly jako špalky
- * (Filip, 18. 9. 2026). Místo toho se se šířkou okna přesouvají:
- * - od 1600 px jdou pod obsah i widgety z levého boku, každý ve vlastním
- *   úzkém sloupci; pravý bok si své nechává, jinak by pod krátkým
- *   kalendářem zel prázdný (Filip, 18. 9. 2026);
- * - od 1280 px jsou pod obsahem jen dva sloupce (`stredDoplnky`; vlevo
- *   teplota a vítr, vpravo výstrahy nad počasím), zbytek v bocích;
- * - bez boků jsou pod obsahem ve sloupcích, na telefonu pod sebou.
+ * (Filip, 18. 9. 2026). Pod obsahem stojí ve sloupcích po 17 rem, na
+ * telefonu pod sebou.
  *
  * Bok s widgety není ukotvený (`sticky`): může být delší než okno a ukotvený
  * by se posouval uvnitř sebe. Ukotvený zůstává jen samotné pořadí nebo kalendář.
@@ -72,8 +73,8 @@ export async function Boky({
   vlevo = "poradi",
   vpravo = "kalendar",
   vlevoDoplnky = [],
-  vpravoDoplnky = ["vodocet", "koupani"],
-  stredDoplnky = ["teplota", "vitr", "vystrahy", "pocasi"],
+  vpravoDoplnky = ["vodocet"],
+  stredDoplnky = [],
   dole = DOLE,
   kalendar,
   children,
@@ -83,7 +84,11 @@ export async function Boky({
   vpravo?: Bok;
   vlevoDoplnky?: Doplnek[];
   vpravoDoplnky?: Doplnek[];
-  /** Pod obsahem už od 1280 px; ostatní tam přijdou až od 1600 px. */
+  /**
+   * Widgety, které u téhle stránky patří pod obsah už na úzké mřížce.
+   * Od úklidu boků (11. 10. 2026) je pod obsahem všechno kromě vodočtu,
+   * takže to zůstává prázdné — dokud bude patička, kam to celé přejde.
+   */
   stredDoplnky?: Doplnek[];
   dole?: Doplnek[];
   /** Parametr `?kalendar=` stránky, ať bok ukáže totéž co zbytek stránky. */
@@ -94,6 +99,16 @@ export async function Boky({
   // Pod obsahem s boky: střední widgety a od 1600 px i ty z levého boku.
   // Pravé zůstávají v boku ve všech šířkách.
   const siroke = DOLE.filter((d) => [...vlevoDoplnky, ...stredDoplnky].includes(d));
+  // Co stojí v boku, nesmí se pod obsahem objevit podruhé — ale jen tam,
+  // kde bok doopravdy je. Na telefonu bok není a vodočet pod obsahem je
+  // jediná jeho kopie, takže o tom rozhoduje CSS podle šířky, ne tenhle
+  // seznam.
+  const vBocich = [...vlevoDoplnky, ...vpravoDoplnky];
+  // Widgety, které v boku nejsou, jdou do lišty u spodku okna (Filip,
+  // 11. 10. 2026). Pod obsahem zůstává jen to, co bok nese — na úzkém
+  // displeji, kde bok není, je tam jediná jejich kopie.
+  const doListy = dole.filter((d) => !vBocich.includes(d));
+  const podObsahem = dole.filter((d) => vBocich.includes(d));
 
   return (
     <div className="s-boky">
@@ -111,9 +126,14 @@ export async function Boky({
           {siroke.length > 0 && (
             <div className="doplnky-siroke">{await doplnky(siroke, slug, stredDoplnky)}</div>
           )}
-          {/* Doplňky pod obsahem pro displej, kde boky nejsou (Filip,
-              16. 9. 2026). S boky je CSS schová, tam jsou v bocích. */}
-          <div className="doplnky">{await doplnky(dole, slug)}</div>
+          {/* Vodočet pod obsahem pro displej, kde bok není. Nad 1280 px
+              ho CSS schová — tam stojí v boku. */}
+          <div className="doplnky">{await doplnky(podObsahem, slug, [], vBocich)}</div>
+          {doListy.length > 0 && (
+            <PatickaPocasi>
+              <div className="doplnky doplnky-v-paticce">{await doplnky(doListy, slug)}</div>
+            </PatickaPocasi>
+          )}
         </>
       )}
     </div>
@@ -133,13 +153,22 @@ async function aktualniRocnik() {
  * Widgety v daném pořadí. Každý zvlášť v try — výpadek jednoho zdroje
  * nesmí vzít ostatní.
  */
-async function doplnky(ktere: Doplnek[], slug: string, stredni: Doplnek[] = []) {
+async function doplnky(
+  ktere: Doplnek[],
+  slug: string,
+  stredni: Doplnek[] = [],
+  /** Widgety, které tatáž stránka ukazuje i v boku — pod obsahem jsou navíc. */
+  vBoku: Doplnek[] = [],
+) {
   const vysledek: React.ReactNode[] = [];
   for (const d of ktere) {
     try {
       const obsah = await doplnek(d, slug);
       // Obal s názvem widgetu: podle něj ho široké rozložení posadí do mřížky.
-      const trida = `doplnek doplnek-${d}${stredni.includes(d) ? " doplnek-stred" : ""}`;
+      const trida =
+        `doplnek doplnek-${d}` +
+        (stredni.includes(d) ? " doplnek-stred" : "") +
+        (vBoku.includes(d) ? " doplnek-i-v-boku" : "");
       if (obsah) vysledek.push(<div key={d} className={trida}>{obsah}</div>);
     } catch {
       // Chybějící widget je v pořádku; stránka stojí na hlavním obsahu.

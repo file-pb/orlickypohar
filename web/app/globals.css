@@ -249,6 +249,9 @@ header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
 h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 0.35rem; letter-spacing: -0.02em; }
 h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 .podtitulek { color: var(--tlumeny); margin: 0 0 2rem; }
+/* Podtitulek těsně nad tabulkou — pod ním hned následují taby tříd,
+   takže celý odstup odstavce by je od jejich nadpisu odtrhl. */
+.podtitulek.tesne { margin-bottom: 1rem; }
 
 /* Úvodní fotka. Vystupuje z obalu na celou šířku okna — proto ty záporné
    okraje; jinak by seděla v šedesáti rem a nebyla by z ní žádná událost.
@@ -460,6 +463,8 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
    rozjížděk se na telefon nevejde. Řešení je vodorovný posuv s ukotveným
    sloupcem lodi — jméno zůstane vidět, čísla se posouvají pod ním. */
 .tabulka-obal { overflow-x: auto; border: 1px solid var(--linka); border-radius: 10px; background: var(--papir); }
+/* Odstup pod tabulkou, aby na ni nenasedl následující odstavec. */
+.tabulka-sekce { margin-bottom: 1.5rem; }
 table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
 th, td { padding: 0.55rem 0.7rem; text-align: right; white-space: nowrap; }
 thead th { font-weight: 600; color: var(--tlumeny); font-size: 0.8rem; border-bottom: 1px solid var(--linka); }
@@ -802,10 +807,72 @@ header.hlavicka .jen-uzke { display: none; }
    mluvily stejně: kolečko konec, úsečka čára nebo brána, oblouček strana. */
 .ikona-prvku { vertical-align: -0.35em; margin-right: 0.35rem; color: var(--stav-zruseny); }
 .seznam-prvku { list-style: none; padding: 0; }
-.seznam-prvku > li {
-  border-bottom: 1px solid var(--linka); padding: 0.6rem 0;
-}
+
+/* Řádek je jedna věta a vpravo odkaz na mapu. Odkaz leží mimo `summary`
+   (uvnitř by zároveň rozklápěl detail), takže se umisťuje absolutně. */
+.seznam-prvku > li { border-bottom: 1px solid var(--linka); position: relative; }
 .seznam-prvku > li:last-child { border-bottom: 0; }
+.seznam-prvku > li > .na-mape {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.2rem 0 0.6rem;
+  font-size: 0.85rem;
+  color: var(--tlumeny);
+}
+.seznam-prvku > li > .na-mape:hover { color: var(--voda); }
+
+.seznam-prvku .prvek > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0.5rem 5.5rem 0.5rem 0;
+  cursor: pointer;
+}
+.seznam-prvku .prvek > summary .ikona-prvku { flex: none; }
+.seznam-prvku .poradi-prvku { color: var(--tlumeny); font-variant-numeric: tabular-nums; }
+.seznam-prvku .znacky { color: var(--tlumeny); }
+/* Poznámka se vejde na řádek celá jen někdy; zbytek se nechá uříznout,
+   protože v detailu je stejně celá. */
+.seznam-prvku .jak-to-jet {
+  flex: 1 1 100%;
+  font-size: 0.85rem;
+  color: var(--tlumeny);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.seznam-prvku .prvek[open] > summary { font-weight: 600; }
+
+.detail-prvku { padding: 0 0 1rem; }
+.detail-prvku .formular { margin-bottom: 0.8rem; }
+.detail-prvku > .poznamka { font-size: 0.8rem; }
+.akce-prvku { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.akce-prvku button {
+  font: inherit;
+  min-height: 44px;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--linka);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.akce-prvku button:hover:not(:disabled) { border-color: var(--voda); color: var(--voda); }
+.akce-prvku button:disabled { opacity: 0.45; cursor: default; }
+.akce-prvku button.nebezpecne:hover { border-color: var(--stav-zruseny); color: var(--stav-zruseny); }
+
+/* Kotva prvku v mapce: neviditelná, dokud na ni odkaz neskočí.
+   `scroll-margin-top` ji po skoku posadí doprostřed výřezu — bez něj
+   prohlížeč odroluje tak, že značka je úplně nahoře a zbytek mapky
+   zůstane nad obrazovkou. */
+.mapka .kotva-prvku { stroke: none; pointer-events: none; scroll-margin-top: 45vh; }
+.mapka .kotva-prvku:target { stroke: var(--voda); stroke-width: 3; }
 .poradi-prvku { color: var(--tlumeny); font-variant-numeric: tabular-nums; }
 /* Loďka u přihlášky: tvar nese kategorii, barva stav. Vybarvená jede,
    prázdná čeká na pořadatele, tlumená je mimo závod. Výplň jde přes
@@ -1210,6 +1277,25 @@ th.vlevo, td.vlevo { text-align: left; }
 /* V tabu a v boku je znak hlavní poznávací značka třídy, proto velký. */
 /* Aspoň dvakrát proti původním 1,2 em (asi 19 px): v tabu 2,6 rem. */
 .taby-trid a { padding-top: 0.3rem; padding-bottom: 0.3rem; gap: 0.55rem; }
+
+/* Taby sekcí regaty. Na telefonu se nezalamují do dvou řad, ale posouvají
+   se do strany — zalomené by při každém přepnutí přeskládaly obsah pod
+   sebou a stránka by poskočila. */
+.taby-sekci { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.taby-sekci::-webkit-scrollbar { display: none; }
+.taby-sekci a { white-space: nowrap; }
+
+/* Pruh upozornění nad taby: co se u regaty zrovna děje. Naléhavé nese
+   barvu, ostatní jsou klidné řádky — kdyby svítilo všechno, nesvítí nic. */
+.upozorneni { list-style: none; margin: 0 0 1.25rem; padding: 0; display: grid; gap: 0.4rem; }
+.upozorneni li {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--linka);
+  background: var(--papir);
+  font-size: 0.925rem;
+}
+.upozorneni li.nalehave { border-color: var(--voda); background: var(--zvyrazneni); }
 .taby-trid .znak-tridy { height: 2.6rem; }
 /* Na telefonu se tři taby do řádku nevešly a třetí spadl pod ostatní
    (Filip, 15. 9. 2026: „není to hezké"). Proto tu drží jednu řadu, každá
@@ -1502,8 +1588,183 @@ th.vlevo, td.vlevo { text-align: left; }
 .doplnky { columns: 17rem; column-gap: 1.75rem; margin-top: 2.5rem; }
 .doplnky > * { break-inside: avoid; margin: 0 0 1.75rem; }
 .doplnky:empty { display: none; }
+/* Dřív se tenhle blok na širokém monitoru schovával, protože tam widgety
+   stály v bocích. Od úklidu boků (11. 10. 2026) je v boku jen vodočet,
+   takže tohle je jediné místo, kde ostatní jsou — v každé šířce. Co je
+   v boku, se tu schová právě tam, kde bok je; níž je tohle jeho jediná
+   kopie. */
+/* Táž hranice jako u `.s-boky > .bok`: pod ní bok není a tohle je jediná
+   kopie. Kdyby se rozešly, mezi nimi by vodočet buď zmizel, nebo byl dvakrát. */
 @media (min-width: 1280px) {
-  .doplnky { display: none; }
+  .doplnky > .doplnek-i-v-boku { display: none; }
+}
+
+/* --- Lišta s počasím a vodou u spodku okna (Filip, 11. 10. 2026) ---------
+   Widgety, které nejsou v boku, bydlí tady. Zavřená je jeden řádek čísel;
+   ťuknutím se rozbalí panel, který se roluje uvnitř sebe. Chování je
+   v `app/paticka-lista.tsx`, tady je jen vzhled. */
+:root { --lista-pocasi: 3.5rem; }
+.paticka-pocasi {
+  position: fixed;
+  left: 0; right: 0;
+  /* Nad pevným pruhem partnerů, ne přes něj — jako tlačítko „nahoru".
+     Dvě lišty přes sebe u spodku jsou přesně to, čemu se tahle vyhýbá. */
+  bottom: var(--paticka, 0rem);
+  /* Pod pruhem partnerů (ten má 15), aby se za něj zajetá schovala.
+     Rozbalený panel roste nahoru, takže se s pruhem nepotká. */
+  z-index: 14;
+  background: var(--papir);
+  border-top: 1px solid var(--linka);
+  /* Stín vzhůru, ať je poznat, že lišta leží na obsahu, a ne v něm. */
+  box-shadow: 0 -4px 16px rgb(0 0 0 / 0.12);
+  transition: transform 0.22s ease;
+}
+/* Zajetá při rolování dolů: posune se přesně o svou výšku, čímž skončí
+   za pruhem partnerů. Proužek z ní nezůstane. */
+.paticka-pocasi.schovana { transform: translateY(100%); }
+@media (prefers-reduced-motion: reduce) {
+  .paticka-pocasi { transition: none; }
+}
+
+.paticka-lista {
+  /* Vlastní šipka místo trojúhelníčku, který `summary` kreslí samo.
+     `list-style` platí v Chrome a Firefoxu, pseudoprvek v starším Safari. */
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: var(--lista-pocasi);
+  /* Dole odsazení o bezpečnou zónu: na telefonu bez tlačítka domů by
+     jinak řádek ležel na čáře gesta. */
+  padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom)) 1rem;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.paticka-lista::-webkit-details-marker { display: none; }
+.paticka-lista::marker { content: ""; }
+.paticka-lista:hover .paticka-popis { color: var(--voda); }
+
+.paticka-souhrn {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex: 1;
+  min-width: 0;
+  /* Na telefonu se všech šest údajů nevejde. Místo uříznutí se dají
+     posunout do strany; pořadí je pořadí důležitosti, takže za okrajem
+     končí to, co snese čekat. Lištu to neroztáhne do dvou řádků. */
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  scrollbar-width: none;
+  /* Prst po liště posouvá, ťuknutí ji otevře — o rozdíl se stará
+     prohlížeč, proto tu není žádný javascript. */
+  -webkit-overflow-scrolling: touch;
+}
+.paticka-souhrn::-webkit-scrollbar { display: none; }
+/* Poslední údaj u okraje vybledne, ať je poznat, že lišta pokračuje —
+   uříznuté slovo jinak vypadá jako chyba. Týmž způsobem to říká pás
+   partnerů. Jen u pravého okraje: vlevo nic nechybí. */
+@media (max-width: 599.98px) {
+  .paticka-souhrn { mask-image: linear-gradient(90deg, #000 85%, transparent); }
+}
+.paticka-udaj {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+/* Údaj druhého řádu u téhož čísla — nárazy u větru. */
+.paticka-vedle { color: var(--tlumeny); font-size: 0.8rem; }
+/* Tytéž barvy jako šipka vodočtu a změna teploty v boku — na liště musí
+   šipka znamenat totéž, co znamená o patro výš. */
+.paticka-trend { font-size: 0.8rem; line-height: 1; }
+.paticka-trend.nahoru { color: var(--voda); }
+.paticka-trend.dolu { color: var(--stav-zruseny); }
+/* Kompas s rukávem na liště. Menší než v boku a bez písmene „S" —
+   na čtení tu není místo, jen na směr. */
+.paticka-udaj .vitr-rukav { height: 1.6rem; width: 1.6rem; flex: none; }
+.paticka-udaj .koupani-tecka { flex: none; }
+/* Pásek radaru: šest desetiminutových kroků vedle sebe. Je to tentýž
+   údaj jako pás v boku, jen zmenšený na výšku řádku. */
+.paticka-radar { display: inline-flex; gap: 1px; height: 1rem; flex: none; }
+.paticka-radar > span {
+  width: 3px;
+  border-radius: 1px;
+  background: var(--linka);
+}
+.paticka-stitek {
+  color: var(--tlumeny);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: 0.3rem;
+}
+.paticka-dest { color: var(--voda); }
+.paticka-vystraha {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  background: var(--zvyrazneni);
+  border: 1px solid var(--linka);
+}
+.paticka-vystraha.stupen-3,
+.paticka-vystraha.stupen-4 { border-color: currentColor; font-weight: 600; }
+
+.paticka-popis { color: var(--tlumeny); font-size: 0.85rem; white-space: nowrap; flex: none; }
+.paticka-sipka { flex: none; }
+/* Na telefonu ustoupí nápis číslům: „Počasí a voda" zabírá přes třetinu
+   lišty a co lišta dělá, řekne šipka. Zpátky je od šířky, kde na něj
+   místo zbyde. */
+.paticka-popis { display: none; }
+@media (min-width: 600px) {
+  .paticka-popis { display: inline; }
+}
+/* Šipka jako dva tahy; otočí se, když je panel otevřený. */
+.paticka-sipka {
+  width: 0.6rem; height: 0.6rem;
+  border-right: 2px solid var(--tlumeny);
+  border-bottom: 2px solid var(--tlumeny);
+  transform: rotate(-135deg);
+  transition: transform 0.22s ease;
+}
+.paticka-pocasi[open] .paticka-sipka { transform: rotate(45deg); }
+
+.paticka-obsah {
+  /* Panel nesmí přerůst okno — roluje se uvnitř sebe. Zbytek výšky je
+     obsazený: dole pruh partnerů a lišta, nahoře hlavička stránky. Pod tu
+     panel nesmí, protože hlavička je nad ním (z-index 20) a schovala by
+     i lištu se „Zavřít". Těch 7 rem je hlavička a kousek obsahu nad ní,
+     ať je poznat, že stránka pod panelem pokračuje. */
+  max-height: min(32rem, calc(100vh - var(--paticka, 0rem) - var(--lista-pocasi) - 7rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 1rem calc(1.25rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--linka);
+}
+/* Uvnitř panelu nepotřebují widgety odstup shora — ten dělá čára lišty. */
+.doplnky-v-paticce { margin-top: 1.25rem; }
+
+/* Místo pod obsahem, aby poslední řádek stránky nekončil pod lištou.
+   Přičítá se k místu, které si bere pruh partnerů. Jen tam, kde lišta je:
+   `:has` ji najde, a prohlížeč, který `:has` neumí, nechá stránku jak byla
+   — lišta přes poslední řádek je menší vada než mezera u všech. */
+body:has(.paticka-pocasi) { padding-bottom: calc(var(--paticka, 0rem) + var(--lista-pocasi)); }
+/* Tlačítko „nahoru" nad lištu, ze stejného důvodu, z jakého je nad pruhem
+   partnerů. Zajetá lišta pod ním nechá mezeru; to je lacinější než ho
+   posouvat s každým pohnutím stránky. */
+body:has(.paticka-pocasi) .nahoru {
+  bottom: calc(var(--paticka, 0rem) + var(--lista-pocasi) + 0.75rem);
+}
+
+@media print {
+  .paticka-pocasi { display: none; }
 }
 .doplnky-siroke { display: none; }
 /* S boky: pod obsahem jen dva widgety vedle sebe, ostatní jsou v bocích. */

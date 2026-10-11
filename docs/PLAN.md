@@ -6,10 +6,11 @@ výsledky, administrace a mobilní přístup.
 **Jméno projektu:** `orlickypohar` → `orlickypohar.klihovka.cz`
 (bez pomlčky a podtržítka — jméno slouží zároveň jako databáze, role i subdoména).
 
-**Stav k 8. 10. 2026: fáze 0 až 4 a fáze 6 hotové; ve fázi 5 zbývají
-protesty a penalizace; fáze 7 a 9 nezačaté; z fáze 8 stojí bóje na trati.**
-Co přesně chybí a v jakém pořadí to dělat, je v oddílu *Co ještě chybí
-(audit 8. 10. 2026)*.
+**Stav k 11. 10. 2026: fáze 0 až 4 a fáze 6 hotové; ve fázi 5 zbývají
+protesty a penalizace; fáze 7 a 9 nezačaté; z fáze 8 stojí bóje na trati
+i s mapkou a trať se staví průvodcem.** Co přesně chybí, je v oddílu *Co
+ještě chybí (audit 8. 10. 2026)*; v jakém pořadí to dělat, v *Pořadí po
+11. 10. 2026* na jeho konci.
 
 | | |
 |---|---|
@@ -965,9 +966,11 @@ Znamená to dvě vydání appky, ne jedno: nejdřív čtecí, později se do ní
 přidá přihlášení a zadávání. Není to zdržení, je to pořadí — učit se Expo
 současně s OAuth tokem na mobilu jsou dva problémy najednou.
 
-Kdy přesně přijde mobilní administrace, se rozhodne až podle toho, jestli
-pořadatelé skutečně zadávají výsledky od vody. Když se ukáže, že je zadávají
-večer u počítače, je to práce navíc bez užitku — a to se pozná až z provozu.
+~~Kdy přesně přijde mobilní administrace, se rozhodne až podle toho, jestli
+pořadatelé skutečně zadávají výsledky od vody.~~ **Rozhodnuto 11. 10. 2026**
+seznamem toho, co má appka umět — viz *Co je v appce důležité*. Čekat na
+provoz nemá smysl, když zadavatel řekl, co chce; zůstává ale pravda, kvůli
+které ta věta vznikla: **co appka přidá, je offline, ne obrazovky.**
 
 ### Proč nativní a ne PWA
 
@@ -1895,6 +1898,110 @@ jsou protikladné věci.
   si ho by byla ta lež, kvůli které prvky vznikly. Naznačí ho dráha.
   Seznam prvků má u každého **tutéž ikonku**, jaký je tvar na mapě (Filip:
   *„ať je to veselejší a přehlednější"*), takže seznam a mapa mluví stejně.
+
+  **Seznam je od 11. 10. 2026 seznam, ne formulář.** Filip: *„čekal bych,
+  že zde bude list umístěných prvků, které třeba budu moci posouvat jako
+  prvky trasy v navigaci… ten list by mohl být kompaktní a vpravo by mohla
+  být možnost rozbalit detail a upravit"*. Řádek je jedna věta — tvar,
+  číslo, co to je, kterou značkou, kterým bokem a jak to jet —, všechno
+  ostatní je v detailu, který se rozklepne: úprava předpisu, posun
+  v pořadí, opakovaný průjezd a smazání.
+
+  **Starý formulář pod seznamem je pryč.** Od #208 prvky staví průvodce
+  nahoře, ale pole „Co to je" pod seznamem tu zůstalo a Filip **dvakrát**
+  hlásil, že neví, co edituje; sekce měřila 1 316 px a většinu z toho
+  zabíralo to, co se dalo udělat o kus výš. Dvě cesty k témuž nejsou
+  výběr, jen nejistota. Po odstranění má sekce 276 px.
+
+  **Odkaz „v mapce"** na konci řádku skočí na tutéž značku v mapce dole a
+  obkrouží ji. Dělá to `:target` nad neviditelným kroužkem, ne javascript,
+  a `scroll-margin-top` ho posadí doprostřed výřezu — bez něj prohlížeč
+  odroluje tak, že značka je úplně nahoře a zbytek mapky zůstane nad
+  obrazovkou. Jmenuje se jinak než **„Ukázat na mapě"** o kus níž: to
+  otevírá OpenStreetMap, tohle zůstává na stránce.
+
+  **„Projet to znovu jinak"** je tlačítko na prvku (Filip, 11. 10. 2026:
+  *„fyzika toho prvku už definována byla"*). Přidá na konec trati další
+  průjezd týchž značek bez poznámky a rovnou mu otevře detail — jiný je
+  jen způsob jetí. Protože API při zakládání vrací jen chybu, ne id, pozná
+  se nový prvek tím, že je poslední (`?otevrit=posledni`).
+
+  **Posun v pořadí přečísluje celou trať**, ne jen prohodí dvě čísla:
+  pořadí se smí opakovat a mezi stejnými čísly rozhoduje id, takže
+  prohození hodnot by u takové dvojice neudělalo nic a tlačítko by
+  vypadalo rozbitě.
+
+  **Detail mění jen předpis** — jak to jet, kterým bokem, kterým směrem se
+  startuje. Typ a značky bere akce ze serveru, ne ze skrytých políček ve
+  formuláři: fyzika prvku je daná tím, jak se postavil, a skrytá políčka
+  by z toho udělala něco, co jde podstrčit.
+
+  **Značky prvku jsou v detailu taky** — fotka, sebrání z vody,
+  přenastavení (Filip: *„až v detailu dej možnost takové editace"*). Dřív
+  se za tím muselo scrollovat pod mapku a hledat tutéž bóji podle jména.
+  Kreslí to **tatáž komponenta** jako seznam pod mapkou
+  (`znacka-na-trati.tsx`), ne druhá podobná: fotka nahraná odsud i
+  odtamtud je tatáž fotka u téže bóje. Pod mapkou seznam zůstává, protože
+  bóje, kterou žádný prvek nepoužívá, žádný detail prvku nemá — a právě na
+  ni upozorňuje hláška „stojí mimo trať".
+
+  **Když značku používá víc prvků, řekne se to** („tatáž značka je i
+  v prvku 4. průjezdní bóje"). Sebrání je údaj o **bóji**, ne o prvku —
+  bóje je buď ve vodě, nebo ne. Bez té věty by to ze seznamu vypadalo, že
+  se tlačítko týká jen tohohle průjezdu, a to je přesně ta záměna, kvůli
+  které prvky vznikly.
+
+  **Spojnice vede po vodě, ne přímo** (Filip, 11. 10. 2026: *„ta rovná
+  spojnice je hloupá, naznak trati působí přirozeněji… pokud by to byl
+  problém, tak raději bez čáry"*). Orlík je zatopené údolí, takže přímka
+  mezi bójemi vede přes kopec častěji, než by člověk řekl: na náhodných
+  párech vodních bodů přetíná suchou zem noha 200–600 m ve **24 %**
+  případů, 600–1 200 m v **65 %** a 1,2–2,5 km v **89 %**. Náhodné páry
+  nadsazují — opravdová trať leží v jednom úseku zátopy —, ale na dlouhé
+  trati je přímka prostě lež.
+
+  Obrys nádrže je **statický soubor** `web/lib/orlik-obrys.ts`,
+  vygenerovaný `tools/obrys-nadrze.py` z OSM (relace 11092220, ODbL):
+  jeden kruh o 1 365 bodech, 26 kB. Za běhu se na Overpassu neviselo
+  schválně — ze tří zrcadel odpovídalo při psaní jedno. Cesta se hledá
+  A\* po mřížce 25 m, napne se jako provázek a rohy se zaoblí; celé
+  **v serverovém renderu**, takže obrys do prohlížeče nejde a na mobilu
+  to nestojí nic. Měřeno: trať mocku 2–6 ms, trať přes celou zátopu
+  o šesti uzlech 5–11 ms.
+
+  **U značky, kde se ví, kterým bokem se míjí, spojnice zatočí** — mapa
+  tím říká i *kudy*, ne jen kam. Oblouk se zmenšuje, dokud se na vodu
+  nevejde; u bóje padesát metrů od břehu zbyde malý, u brány žádný,
+  protože bok si tam volí posádka. Cesta se drží **30 m od břehu**, jinak
+  by se napnutá čára opírala o výběžek a zaoblení rohu by uhýbalo do
+  kopce. Kde cesta po vodě není, **čára chybí**; rovnou přes kopec se
+  nekreslí, to je přesně to, co se tím rušilo.
+
+  **Nohy, které jedou týmž korytem, se rozestoupí do pruhů** (Filip,
+  11. 10. 2026: *„pokud dráha vede stejnou cestou tam i zpět, hrozí
+  překrývání a nepřehlednost… u maratonů se jezdí kola, kde jedno je
+  veliké a uvnitř je např. menší okruh"*). Pořadí pruhů je pořadí jetí,
+  takže dřívější kolo leží pořád na téže straně a dá se očima sledovat;
+  rozestup je 8 px, při menším se dvě čárkované čáry čtou jako jedna
+  silnější. **Ne „každý doprava"** — to rozdělí cestu tam a zpět, ale dvě
+  kola stejným směrem, tedy přesně ten maraton, by zůstala přes sebe;
+  pruh se proto bere ze seznamu noh v okolí, ne ze směru. U konců se
+  rozestup vytrácí, aby se tahy sešly v bóji a ne vedle ní, a každý
+  posunutý bod se ověřuje — rozestup nikdy nevytlačí čáru na břeh.
+  Ověřeno na trati se sedmi prvky (velké kolo, malé uvnitř, velké znovu):
+  451 bodů, žádný mimo vodu, 7–17 ms; maraton o patnácti uzlech přes
+  celou zátopu 15–22 ms.
+
+  Zkouška je `web/lib/voda.zkouska.ts`, pouští se ručně
+  (`node web/lib/voda.zkouska.ts`, bez balíčků) — v CI ne, minuty Actions
+  jsou nejbližší zeď. Hlídá hlavně **bok**: tam se dá splést znaménko tak,
+  že obrázek vypadá hezky a říká opak. Jeden takový nález už tam je — u
+  průjezdu, kde se směr skoro nemění, vycházelo geometricky obkroužení
+  o 353° místo nuly, a obojí je „správně"; co z toho je pravda, říká
+  teprve typ prvku. Druhý: po navzorkování kvůli rozestupu zůstával u
+  značky kus původní čáry, která vede doprostřed, zatímco oblouk začíná
+  na straně — mezi nimi čára přeskočila **rovnou přes bóji**. Konec nohy
+  se proto ořezává na trojnásobek poloměru a do oblouku se naklání.
 - **GPX bránu jako bránu neumí** a dřívější slib v tomhle oddíle byl
   přehnaný: formát zná body, trasy a stopy, závodní bránu ne. Dosažitelné
   je vyvézt oba konce jako body a do trasy dát pojmenovaný střed — ale
@@ -4948,9 +5055,12 @@ Mechanismus z toho být nemusí a není: **ruční dump před nasazením je od
 9. 10. 2026 zapsaný postup** (*Den závodu*), ne něco, co si někdo musí
 pamatovat.
 
-**Obsahový bucket nemá druhou kopii.** `platform/scripts/backup.sh` bere
-databáze a tajemství; fotky a vyvěšené směrnice v R2 ne. Jsou to jediná data
-projektu bez záloh.
+~~**Obsahový bucket nemá druhou kopii.**~~ **Opraveno 11. 10. 2026** —
+`platform/scripts/backup.sh` zrcadlí i obsahový bucket. Při stavbě se
+ukázalo, že **žádný token R2 nedosáhne na oba buckety**, i když jsou
+v témže účtu: skript proto čte klíčem aplikace a zapisuje klíčem
+platformy. Je to bezpečnější než jeden token na obojí — kompromitovaná
+aplikace se k zálohám nedostane.
 
 ~~**Zelené nasazení, které nic nenasadilo.**~~ **Opraveno 9. 10. 2026.** Krok
 `Deploy` i krok `Ověřit, co doopravdy běží` byly podmíněné
@@ -5122,8 +5232,71 @@ To nejsou mezery, to jsou rozhodnutí.
    výsledky (A5); tři z pěti nálezů auditu přitom neplatily, viz *Zkouška
    ovládání*.
 
-Appka, upozornění a tracker až potom: jsou to největší kusy, ale na první závod
-(15. 5. 2027) nemají vliv.
+~~Appka, upozornění a tracker až potom: jsou to největší kusy, ale na první
+závod (15. 5. 2027) nemají vliv.~~ **Přepsáno 11. 10. 2026** — pro tracker to
+platí dál, pro upozornění ne. Viz *Pořadí po 11. 10. 2026* níž.
+
+### Co je v appce důležité (Filip, 11. 10. 2026)
+
+Doslova: *„nejdůležitější věci v app je tracker, pushky, stavy rozjížděk,
+rychlé protesty, přihlášky, posádky a správa lodi, startování rozjížděk,
+cílová funkcionalita a stavění trati."* K tomu: *„tohle je zrovna
+funkcionalita, kterou by appka měla mít… proto i API apod."*
+
+<b>Stavění trati je na tom seznamu poslední</b> a čtení trati na něm není
+vůbec — nabízel jsem ho jako levný první krok a je to vedle.
+
+Ten seznam se dělí podle toho, co které položce chybí:
+
+| Co | Stav |
+|---|---|
+| přihlášky, posádky, správa lodi, stavy rozjížděk, cílová funkcionalita, stavění trati | **je v API i na webu**, v appce chybí jen obrazovka |
+| rychlé protesty | **neexistuje nikde** — v API je jediná zmínka, komentář u stavu závodu „Protesty vyřízené"; je to zbytek fáze 5 a stojí na chybějícím poli pro číslo pravidla |
+| startování rozjížděk | neověřeno, nejspíš taky nic |
+| tracker, pushky | **nativní, jinde se udělat nedají** |
+
+<b>Osm z deseti jsou zápisy, takže stojí na přihlášení v appce.</b> To je
+jedna brána pro skoro celý seznam, a appka ho nemá vůbec.
+
+<b>Co appka přidá nad prohlížeč na telefonu, je offline — ne obrazovky.</b>
+Pípnutí v prohlížeči dnes funguje: `pipani.tsx` používá
+`navigator.geolocation.watchPosition` a fotka jede přes
+`capture="environment"`. Přenést obrazovky bez fronty by vyrobilo druhou
+implementaci téhož, jen hůř udržovanou. Fronta v kódu nikde není
+(`grep` na outbox/offline nenajde nic ve `web/` ani v `app/`).
+
+### Pořadí po 11. 10. 2026
+
+1. ~~**Zálohy obsahového bucketu.**~~ **Hotové 11. 10. 2026**, commit
+   `88f6b44` v repozitáři `platform`. Zálohuje se celý bucket
+   `orlickypohar-fotky`, tedy `fotky/`, `prevzate/` i `smernice/` —
+   vyvěšené směrnice jdou do téhož bucketu (`PlachetniSmernice.cs` skládá
+   klíč `smernice/{id}.pdf`). Zrcadlí se přírůstkově, ověřeno obnovou a
+   kontrolními součty, ne pohledem do logu.
+
+   **Co z toho plyne pro pohár:** záloha běží v 3:30, takže **fotka
+   nahraná po třetí hodině a smazaná před další nocí je pryč**. Fotky
+   nahrává pořadatel, který má originál v telefonu, takže to snese — ale
+   je to napsané v `platform/runbooks/RESTORE.md`, ne předpokládané.
+2. **Přihlášení v appce.** Brána pro osm z deseti položek Filipova seznamu
+   a podle auditu to, co blokuje nejvíc. Fáze 4 to předpokládá; dnešní věta
+   *„rozhodne se až podle toho, jestli pořadatelé skutečně zadávají výsledky
+   od vody"* v *Administrace i na mobilu* je tím rozhodnutá a neplatí.
+3. **Fáze 7, upozornění.** Odhad 2–3 týdny. <b>Důvod, proč to jde nahoru:</b>
+   3. 10. 2026 padlo, že **appka je oficiální vývěska závodu** — a vývěska,
+   která neumí říct „start se odkládá", tu roli neplní. Broadcast navíc
+   nepotřebuje účty, jen registraci zařízení, takže kus hodnoty jde udělat
+   dřív než zbytek.
+4. **Vypsat zbylé zastávky 2027 a vyvěsit směrnice.** Obsah, ne kód. Jarní
+   vítr (15. 5. 2027) je `Vypsany` od 11. 10. 2026, zbylých osm je
+   `Planovany` (ověřeno na produkci).
+5. **Protesty a penalizace** — zbytek fáze 5, až po závodě. Chybí pole pro
+   číslo pravidla u výsledku.
+6. **Tracker.** Pro něj ta původní věta platí dál: je to samostatný projekt
+   velikosti zbytku appky a na první závod nemá vliv.
+
+Mimo pořadí visí dál: zátěžový test (míří mimo nginx), A7 v mocku, sezení
+se skutečným pořadatelem a testy správy přes HTTP místo přes službu.
 
 ## Loďka u přihlášky (Filip, 9. 10. 2026)
 

@@ -26,9 +26,16 @@ const cesta = (serie: string, zavod: string) =>
   `${API}/sprava/serie/${encodeURIComponent(serie)}/zastavky/${encodeURIComponent(zavod)}/smernice`;
 
 async function hlaska(odpoved: Response) {
+  // <b>Tělo se čte jako text, ne rovnou jako JSON.</b> Když odpověď nemá
+  // naše pole `error`, bývá v ní stejně něco, co říká proč — třeba výčet
+  // vadných polí z ověřování modelu. Dřív se to zahodilo a zbylo „API
+  // odpovědělo 400.", což se nedá vyšetřit ani z logu (12. 10. 2026).
+  let telo = "";
   try {
-    const telo = (await odpoved.json()) as { error?: string };
-    if (telo?.error) return telo.error;
+    telo = await odpoved.text();
+    const json = JSON.parse(telo) as { error?: string; title?: string };
+    if (json?.error) return json.error;
+    if (json?.title) return `API: ${json.title}`;
   } catch {
     // Tělo nemusí být JSON — 401 z ověřování ho nemá vůbec.
   }
@@ -37,7 +44,10 @@ async function hlaska(odpoved: Response) {
   if (odpoved.status === 403) return "Směrnici smí vyvěsit pořadatel regaty nebo rozhodčí.";
   if (odpoved.status === 404) return "Tahle regata neexistuje.";
   if (odpoved.status === 413) return `Směrnice může mít nejvýš ${NEJVIC_MB} MB.`;
-  return `API odpovědělo ${odpoved.status}.`;
+  const konec = telo.trim().slice(0, 200);
+  return konec
+    ? `API odpovědělo ${odpoved.status}: ${konec}`
+    : `API odpovědělo ${odpoved.status}.`;
 }
 
 /**
