@@ -41,7 +41,31 @@ export function PatickaLista({
 }) {
   const [otevreno, setOtevreno] = useState(false);
   const [schovana, setSchovana] = useState(false);
+  const [toci, setToci] = useState(false);
   const ramec = useRef<HTMLDetailsElement>(null);
+  const okno = useRef<HTMLSpanElement>(null);
+  const pas = useRef<HTMLSpanElement>(null);
+
+  // Točí se jen tehdy, když se údaje nevejdou (Filip, 11. 10. 2026: *„když
+  // je to širší, tak toč jako carousell"*). Když se vejdou, rozprostřou se
+  // po liště a stojí — pohyb bez důvodu jen odvádí oči od stránky.
+  //
+  // Měří se tady, protože CSS porovnat dvě šířky neumí. Druhá kopie pásu
+  // je v HTML vždycky; dokud se netočí, CSS ji schová.
+  useEffect(() => {
+    const prepocitej = () => {
+      const o = okno.current;
+      const p = pas.current;
+      if (!o || !p) return;
+      // Pás nese dvě kopie, takže jedna měří polovinu jeho šířky.
+      setToci(p.scrollWidth / 2 > o.clientWidth + 1);
+    };
+
+    prepocitej();
+    const sleduj = new ResizeObserver(prepocitej);
+    if (okno.current) sleduj.observe(okno.current);
+    return () => sleduj.disconnect();
+  }, [souhrn]);
 
   useEffect(() => {
     if (otevreno) return;
@@ -89,14 +113,26 @@ export function PatickaLista({
   return (
     <details
       ref={ramec}
-      className={`paticka-pocasi${schovana && !otevreno ? " schovana" : ""}`}
+      className={`paticka-pocasi${schovana && !otevreno ? " schovana" : ""}${
+        toci ? " toci" : ""
+      }`}
       // Stav drží `details` samo; React se o něm jen dozví, aby věděl,
       // že nemá zajíždět. Řídit `open` z Reactu by při nativním rozbalení
       // dvakrát přepsalo totéž.
       onToggle={(e) => setOtevreno(e.currentTarget.open)}
     >
       <summary className="paticka-lista">
-        <span className="paticka-souhrn">{souhrn}</span>
+        <span className="paticka-souhrn" ref={okno}>
+          <span className="paticka-pas" ref={pas}>
+            <span className="paticka-kopie">{souhrn}</span>
+            {/* Druhá kopie, aby pás dojel do stejného obrázku a mohl
+                začít znovu bez skoku. Pro čtečku je to tentýž text
+                podruhé, proto schovaná. */}
+            <span className="paticka-kopie paticka-dalsi" aria-hidden="true">
+              {souhrn}
+            </span>
+          </span>
+        </span>
         <span className="paticka-sipka" aria-hidden="true" />
         <span className="paticka-popis">{otevreno ? "Zavřít" : "Počasí a voda"}</span>
       </summary>
