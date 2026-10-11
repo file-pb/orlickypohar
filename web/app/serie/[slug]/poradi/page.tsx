@@ -118,7 +118,10 @@ function Tabulka({
               <th>Celkem</th>
               {zastavky.map((z) => (
                 <th key={z.slug} title={z.nazev}>
-                  <Link href={`/serie/${slug}/zavody/${z.slug}`}>{zkratka(z.nazev)}</Link>
+                  {/* Rovnou do výsledků té regaty, ne na její úvod: kdo
+                      stojí v tabulce pořadí, chce vidět, odkud ta čísla
+                      jsou. */}
+                  <Link href={`/serie/${slug}/zavody/${z.slug}/vysledky`}>{zkratka(z.nazev)}</Link>
                 </th>
               ))}
             </tr>
