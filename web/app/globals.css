@@ -1588,8 +1588,15 @@ th.vlevo, td.vlevo { text-align: left; }
 .doplnky { columns: 17rem; column-gap: 1.75rem; margin-top: 2.5rem; }
 .doplnky > * { break-inside: avoid; margin: 0 0 1.75rem; }
 .doplnky:empty { display: none; }
+/* Dřív se tenhle blok na širokém monitoru schovával, protože tam widgety
+   stály v bocích. Od úklidu boků (11. 10. 2026) je v boku jen vodočet,
+   takže tohle je jediné místo, kde ostatní jsou — v každé šířce. Co je
+   v boku, se tu schová právě tam, kde bok je; níž je tohle jeho jediná
+   kopie. */
+/* Táž hranice jako u `.s-boky > .bok`: pod ní bok není a tohle je jediná
+   kopie. Kdyby se rozešly, mezi nimi by vodočet buď zmizel, nebo byl dvakrát. */
 @media (min-width: 1280px) {
-  .doplnky { display: none; }
+  .doplnky > .doplnek-i-v-boku { display: none; }
 }
 .doplnky-siroke { display: none; }
 /* S boky: pod obsahem jen dva widgety vedle sebe, ostatní jsou v bocích. */

@@ -1,9 +1,13 @@
 /**
  * Výběr termínů do kalendáře v boku (Filip, 16. 9. 2026).
  *
- * Tři termíny. Přednost mají nadcházející; když jich do konce sezóny zbývá
- * méně, doplní se nejbližšími odjetými — bok nemá zůstat prázdný jen proto,
- * že sezóna končí. Zrušené se nepočítají ani do jednoho.
+ * Šest termínů (Filip, 11. 10. 2026; původně tři). Boku se uvolnilo místo
+ * tím, že z něj odešly widgety s počasím a vodou — a celá sezóna je kolem
+ * deseti regat, takže šest z nich je skoro ona.
+ *
+ * Přednost mají nadcházející; když jich do konce sezóny zbývá méně, doplní
+ * se nejbližšími odjetými — bok nemá zůstat prázdný jen proto, že sezóna
+ * končí. Zrušené se nepočítají ani do jednoho.
  *
  * Čistá funkce bez Reactu, ať jde vyzkoušet i stav, který ukázková data
  * nemají (konec sezóny, prázdný ročník).
@@ -15,7 +19,7 @@ export type TerminKalendare = {
   stav: string;
 };
 
-export const TERMINU_V_BOKU = 3;
+export const TERMINU_V_BOKU = 6;
 
 /** Dnešek v pražském pásmu jako YYYY-MM-DD — regaty se jedou na Orlíku. */
 export const dnesVPraze = () =>
