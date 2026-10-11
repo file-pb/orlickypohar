@@ -5533,8 +5533,16 @@ zdroje. **Ortofoto ČÚZK by bylo nad Orlíkem ostřejší**, ale jeho WMTS
 `arcgis2` čtyřistačtyřku). Zdroj je v proxy na jednom místě, takže
 výměna je jeden řádek, až se vrátí.
 
-**Nedodělané:** mapa má pevných 320 px, takže na telefonu nevyplní
-šířku. Chce to proměnlivou mřížku dlaždic, ne jen jiné číslo.
+**Mapa je přes celou šířku** (Filip, 11. 10. 2026). Mřížka dlaždic se
+počítá ze **změřené** šířky, ne z odhadu: kdyby se hádalo, zbyl by
+u kraje prázdný pruh nebo by se tahaly dlaždice, které nejsou vidět.
+Výška plyne ze šířky, se stropem — na telefonu by čtverec sežral
+obrazovku i s tlačítky, u stolu by pruh přes celé okno byl k ničemu.
+
+Měří se **při připojení přes `getBoundingClientRect`**, ne
+`ResizeObserver`em: ten se při připojení nespouštěl spolehlivě a mapa
+zůstávala na náhradním rozměru. Otočení telefonu pokrývá posluchač na
+okno.
 
 ## Zamrzlé pípnutí (Filip, 11. 10. 2026)
 

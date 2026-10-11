@@ -2121,6 +2121,9 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 .vyber-mapy .plocha {
   position: relative;
   overflow: hidden;
+  /* Šířku dává rodič, výšku komponenta podle změřené šířky. Na telefonu
+     tím mapa vyplní obrazovku, dřív jí zbýval pruh vedle. */
+  width: 100%;
   border-radius: 6px;
   touch-action: none; /* jinak si tah vezme rolování stránky */
   cursor: grab;
