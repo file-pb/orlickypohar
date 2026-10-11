@@ -249,6 +249,9 @@ header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
 h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 0.35rem; letter-spacing: -0.02em; }
 h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 .podtitulek { color: var(--tlumeny); margin: 0 0 2rem; }
+/* Podtitulek těsně nad tabulkou — pod ním hned následují taby tříd,
+   takže celý odstup odstavce by je od jejich nadpisu odtrhl. */
+.podtitulek.tesne { margin-bottom: 1rem; }
 
 /* Úvodní fotka. Vystupuje z obalu na celou šířku okna — proto ty záporné
    okraje; jinak by seděla v šedesáti rem a nebyla by z ní žádná událost.
@@ -460,6 +463,8 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
    rozjížděk se na telefon nevejde. Řešení je vodorovný posuv s ukotveným
    sloupcem lodi — jméno zůstane vidět, čísla se posouvají pod ním. */
 .tabulka-obal { overflow-x: auto; border: 1px solid var(--linka); border-radius: 10px; background: var(--papir); }
+/* Odstup pod tabulkou, aby na ni nenasedl následující odstavec. */
+.tabulka-sekce { margin-bottom: 1.5rem; }
 table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
 th, td { padding: 0.55rem 0.7rem; text-align: right; white-space: nowrap; }
 thead th { font-weight: 600; color: var(--tlumeny); font-size: 0.8rem; border-bottom: 1px solid var(--linka); }
