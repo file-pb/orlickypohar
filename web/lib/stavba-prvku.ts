@@ -36,10 +36,20 @@ import type { StranaPrvku, SvetovaStrana, TypPrvku } from "@/lib/trat";
 /** Který krok průvodce zrovna běží. */
 export type Krok = "typ" | "jak" | "body" | "hotovo";
 
-/** Jak se stopa lodi nakreslí v náhledu. Kreslí to obrazovka, rozhoduje tohle. */
+/**
+ * Jak se stopa lodi nakreslí v náhledu. Kreslí to obrazovka, rozhoduje tohle.
+ *
+ * <b>Otáčení i míjení mají variantu po každém boku</b> (Filip,
+ * 11. 10. 2026). Jedna stopa pro oba boky nestačí: zrcadlením se mění
+ * chiralita, takže levá otočka nakreslená u pravoboku je špatná odpověď
+ * na to jediné, na co se stavitel u náhledu ptá. U bran varianty nejsou,
+ * protože tam se strana nezapisuje — volí ji loď.
+ */
 export type Stopa =
-  | "otoc"
-  | "mine"
+  | "otocLevobok"
+  | "otocPravobok"
+  | "mineLevobok"
+  | "minePravobok"
   | "mezi"
   | "branaOtocna"
   | "dotek"
@@ -163,7 +173,7 @@ export const VOLBY: Record<TypStavby["jak"], Volba[]> = {
       detail: "otočná bóje",
       typ: "OtocnaBoje",
       strana: "PoLeve",
-      stopa: "otoc",
+      stopa: "otocLevobok",
       jmena: [znacka("otočná")],
     },
     {
@@ -171,7 +181,7 @@ export const VOLBY: Record<TypStavby["jak"], Volba[]> = {
       detail: "otočná bóje",
       typ: "OtocnaBoje",
       strana: "PoPrave",
-      stopa: "otoc",
+      stopa: "otocPravobok",
       jmena: [znacka("otočná")],
     },
     {
@@ -179,7 +189,7 @@ export const VOLBY: Record<TypStavby["jak"], Volba[]> = {
       detail: "jen se míjí, netočí se",
       typ: "PrujezdniBoje",
       strana: "PoLeve",
-      stopa: "mine",
+      stopa: "mineLevobok",
       jmena: [znacka("průjezdní")],
     },
     {
@@ -187,7 +197,7 @@ export const VOLBY: Record<TypStavby["jak"], Volba[]> = {
       detail: "jen se míjí, netočí se",
       typ: "PrujezdniBoje",
       strana: "PoPrave",
-      stopa: "mine",
+      stopa: "minePravobok",
       jmena: [znacka("průjezdní")],
     },
   ],

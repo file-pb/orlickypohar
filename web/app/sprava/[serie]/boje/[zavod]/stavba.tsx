@@ -163,10 +163,18 @@ export function Stavba({
     setChyba(null);
   };
 
+  /**
+   * Přepnutí předvolby. <b>Tvar se drží jen tehdy, když ho nová
+   * předvolba zná</b> (Filip, 11. 10. 2026: po „Pravé straně dráhy" se
+   * změnila barva, ale tvar zůstal poklop). Dřív tu bylo
+   * `tvar ?? p.tvary[0]`, což fungovalo jen dokud byl `tvar` prázdný —
+   * s výchozí předvolbou „naše bóje" má ale hodnotu od začátku, takže
+   * si sférický vršek nesl do červeného válce.
+   */
   const vybranaPredvolba = (p: Predvolba) => {
     setZnaceni(p.id);
     setBarva(p.volnaBarva ? (barva ?? p.barva) : p.barva);
-    setTvar(p.tvary.length === 1 ? p.tvary[0] : p.tvary.length === 0 ? null : (tvar ?? p.tvary[0]));
+    setTvar(tvar && p.tvary.includes(tvar) ? tvar : (p.tvary[0] ?? null));
   };
 
   /**

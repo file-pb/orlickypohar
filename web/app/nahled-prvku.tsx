@@ -46,15 +46,30 @@ function stopaPodle(stopa: Stopa): {
   hroty?: [string, string];
 } | null {
   switch (stopa) {
-    case "otoc":
+    // Levobok a pravobok jsou zrcadlení přes svislou osu náhledu.
+    // Zrcadlit se musí: je to právě ta jedna věc, kterou se ty dva
+    // předpisy liší, a na obrázku se pozná jedině tím, po které ruce
+    // lodi značka zůstane. Příjezd zprava nebo zleva přitom nic netvrdí
+    // — směr příjezdu určuje předchozí prvek, ne tenhle.
+    case "otocLevobok":
       return {
         d: "M 300 176 Q 228 146 222 100 Q 216 56 150 56",
         hrot: "translate(150,56) rotate(-90)",
       };
-    case "mine":
+    case "otocPravobok":
+      return {
+        d: "M 40 176 Q 112 146 118 100 Q 124 56 190 56",
+        hrot: "translate(190,56) rotate(90)",
+      };
+    case "mineLevobok":
       return {
         d: "M 300 176 Q 222 140 222 100 Q 222 62 300 26",
         hrot: "translate(300,26) rotate(40)",
+      };
+    case "minePravobok":
+      return {
+        d: "M 40 176 Q 118 140 118 100 Q 118 62 40 26",
+        hrot: "translate(40,26) rotate(-40)",
       };
     case "mezi":
       return { d: "M 170 180 L 170 32", hrot: "translate(170,32) rotate(0)" };
