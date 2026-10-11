@@ -27,7 +27,7 @@ import { Upozorneni, upozorneniZastavky } from "./upozorneni";
  * akce výsledky a lodě, které nikdy nebudou.
  */
 
-export type Sekce = "uvod" | "smernice" | "trat" | "lode" | "vysledky";
+ export type Sekce = "uvod" | "smernice" | "trat" | "lode" | "vysledky";
 
 const NAZVY: Record<Sekce, string> = {
   uvod: "Úvod",
@@ -46,10 +46,11 @@ function sekce(zavod: ZavodDetail, trat: VerejnaTrat | null, akce: boolean): Sek
     ...((zavod.smernice?.length ?? 0) > 0 ? (["smernice"] as const) : []),
     ...(trat ? (["trat"] as const) : []),
     "lode",
-    // Ročník se skrytými výsledky je ten, kde vznikaly ručně a nesouhlasí
-    // (viz stránka pořadí). Prázdný tab „Výsledky" by sliboval, že se
-    // objeví.
-    ...(zavod.vysledkySkryte ? [] : (["vysledky"] as const)),
+    // Výsledky i u ročníku, který je nevydává. Sekce tam není proto, že by
+    // v ní byla tabulka, ale proto, aby se nemlčelo: „vznikaly ručně, platí
+    // pořadí seriálu" je odpověď, a bez tabu by na ni nevedla cesta —
+    // přesně ta vada, kterou Filip našel u tabule (10. 10. 2026).
+    "vysledky",
   ];
 }
 
