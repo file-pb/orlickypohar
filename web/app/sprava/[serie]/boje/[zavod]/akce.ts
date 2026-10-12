@@ -9,6 +9,7 @@ import {
   pipni,
   seber,
   uklidHistorii,
+  zahodZaznam,
   type BarvaBoje,
   type DruhZnaceni,
   type TvarBoje,
@@ -199,6 +200,72 @@ export async function seberAkce(formular: FormData) {
 
   const chyba = await seber(serie, zavod, boje);
   redirect(kam(chyba ? { chyba } : { stav: "sebrano" }));
+}
+
+/**
+ * Sebrání celého prvku z vody (Filip, 12. 10. 2026: *„u dvojobjektových
+ * prvků k nim u sbírání z vody a detailu přistupujeme jako k jednomu
+ * prvku"*).
+ *
+ * <b>Prvek se sbírá jedním úkonem, ne po bójích.</b> Na vodě se nevytahuje
+ * „levobok cíle", vytahuje se cíl; dvě tlačítka vedle sebe nutila myslet
+ * v značkách, ne v tom, co se zrovna dělá.
+ *
+ * <para>
+ * <b>Sbírají se pořád značky</b> — sebrání je údaj o bóji, protože bóje je
+ * buď ve vodě, nebo ne. Prvek je tu jen jednotka práce. Když některou
+ * značku používá i jiný prvek, přijde o ni; na to upozorňuje detail
+ * prvku už od 11. 10. 2026.
+ * </para>
+ *
+ * <para>
+ * <b>Když druhá značka selže, první zůstane sebraná</b> a chyba to řekne.
+ * Nic se nevrací zpátky: sebrání je razítko o tom, co se stalo na vodě,
+ * a „odsebrat" API neumí schválně.
+ * </para>
+ */
+export async function seberPrvekAkce(formular: FormData) {
+  const { serie, zavod, kam } = zaklad(formular);
+
+  const id = Number(formular.get("prvek") ?? 0);
+  if (!Number.isInteger(id) || id <= 0) redirect(kam({ chyba: "Který prvek se má sebrat?" }));
+
+  const prvek = (await nactiPrvky(serie, zavod)).find((p) => p.id === id);
+  if (!prvek) redirect(kam({ chyba: "Ten prvek v trati není. Někdo ho mezitím smazal?" }));
+
+  // Značky jednoho prvku můžou být tatáž bóje jen omylem, ale kdyby ano,
+  // druhé sebrání by vrátilo chybu o už sebrané bóji.
+  const znacky = [prvek.a.id, ...(prvek.b && prvek.b.id !== prvek.a.id ? [prvek.b.id] : [])];
+
+  for (const boje of znacky) {
+    const chyba = await seber(serie, zavod, boje);
+    if (chyba) redirect(kam({ chyba }));
+  }
+
+  redirect(kam({ stav: "sebrano" }));
+}
+
+/**
+ * Zahodí jeden záznam z historie bójí (Filip, 12. 10. 2026: *„Historie
+ * bude mít možnost záznam smazat"*).
+ *
+ * <b>Vedle hromadného úklidu, ne místo něj.</b> Úklid bere všechno,
+ * na čem nic nevisí; tohle je na jeden konkrétní překlep, který člověk
+ * vidí před sebou.
+ *
+ * <b>Proč se tu nehlídá, že na záznamu nic nevisí:</b> ten rozsudek má
+ * server a vrací ho větou. Druhá kopie pravidla v obrazovce by se nutně
+ * rozešla — jako se rozešlo pravidlo o směru u cíle.
+ */
+export async function zahodZaznamAkce(formular: FormData) {
+  const { serie, zavod, kam } = zaklad(formular);
+
+  const boje = Number(formular.get("boje") ?? 0);
+  if (!Number.isInteger(boje) || boje <= 0)
+    redirect(kam({ chyba: "Který záznam se má zahodit?" }));
+
+  const chyba = await zahodZaznam(serie, zavod, boje);
+  redirect(kam(chyba ? { chyba } : { uklizeno: "1" }));
 }
 
 /**

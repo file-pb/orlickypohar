@@ -21,7 +21,7 @@ import { Puvod, ZnackaNaTrati } from "./znacka-na-trati";
 import { StavTrati } from "./stav-trati";
 import { Stavba } from "./stavba";
 import { VyberTrati } from "./vyber-trati";
-import { nahrajFotkuAkce, odeberFotkuAkce, seberAkce, uklidAkce } from "./akce";
+import { uklidAkce, zahodZaznamAkce } from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -265,8 +265,16 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
             </details>
           )}
 
-          {/* Prvky stojí nad mapkou: mapka je kreslí, takže kdo chce něco
-              změnit, má to mít nad obrázkem, ne pod ním. */}
+          {/* <b>Seznam prvků je nosný přehled a mapka patří hned pod něj</b>
+              (Filip, 12. 10. 2026: *„Seznam »Prvky trati« hlavní nosný
+              přehled a pod ním rovnou mapka"*). Mapka prvky kreslí, takže
+              čte se shora dolů: co trať je, a jak to vypadá.
+
+              <b>Seznam všech bójí pod mapkou je pryč</b> (Filip tamtéž:
+              *„pod mapkou je stale seznam prvků trati a ten je
+              zbytečný/matoucí, stačí ten list nahoře"*). Co se s bójí dá
+              dělat, je v detailu jejího prvku; bóje, kterou žádný prvek
+              nepoužívá, se nabídne v hlášce „stojí mimo trať". */}
           <PrvkyTrati
             serie={serie}
             zavod={zavod}
@@ -276,26 +284,12 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
             otevrit={otevreny}
           />
 
-          <h2>Co stojí na trati</h2>
           <MapkaTrati prvky={prvky.map((p) => naMapu(p, trat))} />
-          {trat.length === 0 ? (
+          {trat.length === 0 && (
             <p className="prazdno">
               Zatím nic. Až bóji spustíš do vody, pípni ji — poloha z tvého
               telefonu je ta nejpřesnější, kterou kdo má.
             </p>
-          ) : (
-            <ul className="seznam">
-              {trat.map((b) => (
-                <li key={b.id}>
-                  <ZnackaNaTrati
-                    boje={b}
-                    serie={serie}
-                    zavod={zavod}
-                    zamceno={stavTrati.trat?.stav === "Prijato"}
-                  />
-                </li>
-              ))}
-            </ul>
           )}
 
           {/* <b>Až pod stavbou</b> (Filip, 11. 10. 2026): která trať platí
@@ -323,8 +317,18 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
           </p>
 
           {byvale && byvale.length > 0 && (
-            <>
-              <h2>Historie</h2>
+            /* <b>Historie je sbalená</b> (Filip, 12. 10. 2026: *„Historie
+               […] bude zabalená v tabu, nebo akordeonu, rozbalí se až po
+               kliknutí na tlačítko, aby nerušila"*). Je to doklad, do
+               kterého se kouká výjimečně — rozbalená zabírala konec
+               obrazovky pokaždé, i když se zrovna stavěla trať. */
+            <details className="historie-boji">
+              <summary>
+                Historie{" "}
+                <span className="stitek">
+                  {byvale.length === 1 ? "1 záznam" : `${byvale.length} záznamů`}
+                </span>
+              </summary>
               <p className="poznamka">
                 Přenastavené a sebrané bóje. Drží se ty, na kterých něco visí:
                 ukazuje na ně prvek trati, nebo stály ve vodě, když rozhodčí
@@ -352,11 +356,11 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
               <ul className="seznam">
                 {byvale.map(({ boje, proc }) => (
                   <li key={boje.id}>
-                    <Byvsi boje={boje} proc={proc} />
+                    <Byvsi boje={boje} proc={proc} serie={serie} zavod={zavod} />
                   </li>
                 ))}
               </ul>
-            </>
+            </details>
           )}
 
           <p className="poznamka">
@@ -411,7 +415,12 @@ function naMapu(p: Prvek, boje: Boje[]): PrvekNaMape {
 
 
 /** Bóje, která už na trati nestojí. Sebrat ani přenastavit nejde. */
-function Byvsi({ boje, proc }: Byvala) {
+function Byvsi({
+  boje,
+  proc,
+  serie,
+  zavod,
+}: Byvala & { serie: string; zavod: string }) {
   return (
     <>
       <span className="stitek">{boje.poradi}.</span> <span>{boje.nazev}</span>{" "}
@@ -421,6 +430,23 @@ function Byvsi({ boje, proc }: Byvala) {
           k poloze, podle které se možná jelo. Mazat se nedají odsud —
           historie se neupravuje. */}
       <Fotky boje={boje} />
+
+      {/* <b>Zahodit jeden záznam</b> (Filip, 12. 10. 2026: *„Historie bude
+          mít možnost záznam smazat"*). Vedle hromadného úklidu výš, který
+          bere všechno k ničemu naráz — tohle je na jeden konkrétní překlep.
+
+          Tlačítko je tu u každého záznamu, i u toho, na kterém něco visí:
+          rozsudek patří serveru a ten odpoví větou, proč ne. Schovat ho
+          podle `kUklizeni` by znamenalo počítat pravidlo podruhé
+          a obrazovka by si ho nutně spočítala jinak. */}
+      <form action={zahodZaznamAkce} className="formular radkove">
+        <input type="hidden" name="serie" value={serie} />
+        <input type="hidden" name="zavod" value={zavod} />
+        <input type="hidden" name="boje" value={boje.id} />
+        <button type="submit" className="maly nebezpecne">
+          Zahodit záznam
+        </button>
+      </form>
     </>
   );
 }

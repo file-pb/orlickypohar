@@ -27,11 +27,19 @@ export function ZnackaNaTrati({
   serie,
   zavod,
   zamceno,
+  bezSebrani = false,
 }: {
   boje: Boje;
   serie: string;
   zavod: string;
   zamceno: boolean;
+  /**
+   * Nekreslit „Sebrat z vody“. <b>Pro značky uvnitř prvku</b> (Filip,
+   * 12. 10. 2026): prvek se sbírá jedním úkonem nad celkem, ne po
+   * bójích — dvě tlačítka vedle sebe nutila myslet ve značkách místo
+   * v tom, co se zrovna vytahuje z vody.
+   */
+  bezSebrani?: boolean;
 }) {
   return (
     <>
@@ -101,7 +109,7 @@ export function ZnackaNaTrati({
           mizí ze stejného důvodu jako pípnutí: API by ho odmítlo a člověk by
           se to dozvěděl až z chyby. Fotka zůstává — je to doklad k poloze,
           ne změna trati. */}
-      {!zamceno && (
+      {!zamceno && !bezSebrani && (
         <form action={seberAkce} className="formular">
           <input type="hidden" name="serie" value={serie} />
           <input type="hidden" name="zavod" value={zavod} />
