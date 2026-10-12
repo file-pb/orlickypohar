@@ -546,12 +546,12 @@ public class TratSpravaTests(PostgresFixture fixture)
         // Klon je kopie, ne vazba: úprava jedné instance druhou nechá být
         // a pohled „jede se stejně“ se tím musí rozpadnout sám.
         var klonPrvek = await db.PrvkyTrati.SingleAsync(x => x.TratId == klon!.Id);
-        Assert.Null(await prvky.UpravAsync(
+        Assert.Null((await prvky.UpravAsync(
             zavod.Id,
             klonPrvek.Id,
             new PrvekVstup(TypPrvku.OtocnaBoje, 1, b.Id, Poznamka: "cíl se mění"),
             kdo.Id,
-            default));
+            default)).Chyba);
 
         var zvlast = await trate.SeznamAsync(zavod.Id, default);
         Assert.NotEqual(zvlast[0].Otisk, zvlast[1].Otisk);
@@ -608,7 +608,9 @@ public class TratSpravaTests(PostgresFixture fixture)
         Assert.False(zamcena.ChcePotvrdit);
 
         await trate.VratAsync(zavod.Id, "zkouška", default);
-        prvni.StartV = Ted.AddHours(1);
+        // Přijetí razítkuje `TimeProvider.System`, ne `Ted`, a odjetá je
+        // trať podle startu po přijetí — start tedy musí být po „teď“.
+        prvni.StartV = DateTimeOffset.UtcNow.AddHours(1);
         await db.SaveChangesAsync();
 
         // Odjetá se naproti tomu jen zeptá — a s potvrzením pustí.

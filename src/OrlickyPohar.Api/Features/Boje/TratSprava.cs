@@ -250,6 +250,10 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
         var prvky = await db.PrvkyTrati
             .Where(p => p.Trat!.ZavodId == zavodId)
             .OrderBy(p => p.Poradi).ThenBy(p => p.Id)
+            // Jen se z nich počítá otisk a počet. Sledovat je nemá smysl
+            // a škodí to: mazání trati jinde jde přes `ExecuteDeleteAsync`
+            // a sledovaná kopie by se pak smazala podruhé.
+            .AsNoTracking()
             .ToListAsync(ct);
         var poTratich = prvky.GroupBy(p => p.TratId)
             .ToDictionary(g => g.Key, g => g.ToList());
@@ -340,6 +344,11 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
         // jedním dotazem — na trať zvlášť by to byl dotaz za každou.
         var poTratich = (await db.PrvkyTrati
                 .Where(x => x.Trat!.ZavodId == zavodId)
+                // Bez sledování schválně: níž se prvky mažou přes
+                // `ExecuteDeleteAsync`, které jde mimo sledování změn,
+                // takže sledovaná kopie by se EF při ukládání pokusila
+                // smazat podruhé a spadlo by to na souběh.
+                .AsNoTracking()
                 .ToListAsync(ct))
             .GroupBy(x => x.TratId)
             .ToDictionary(g => g.Key, g => Otisk([.. g]));
@@ -348,15 +357,8 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
         var jinde = muj is not null
                     && poTratich.Any(x => x.Key != trat.Id && x.Value == muj);
 
-        if (jinde)
-        {
-            await db.PrvkyTrati.Where(p => p.TratId == trat.Id).ExecuteDeleteAsync(ct);
-            db.Trate.Remove(trat);
-        }
-        else
-        {
-            trat.RozjizdkaId = null;
-        }
+        if (jinde) await SmazSPrvkyAsync(trat, ct);
+        else trat.RozjizdkaId = null;
 
         await db.SaveChangesAsync(ct);
         return (null, false);
@@ -386,10 +388,28 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
         if (await ProcNejdeSahnoutAsync(trat, potvrzeno, ct) is var (proc, ptat) && proc is not null)
             return (proc, ptat);
 
-        await db.PrvkyTrati.Where(p => p.TratId == trat.Id).ExecuteDeleteAsync(ct);
-        db.Trate.Remove(trat);
+        await SmazSPrvkyAsync(trat, ct);
         await db.SaveChangesAsync(ct);
         return (null, false);
+    }
+
+    /// <summary>
+    /// Označí trať i její prvky ke smazání.
+    ///
+    /// <para>
+    /// <b>Přes sledování změn, ne `ExecuteDeleteAsync`.</b> To jde mimo
+    /// ně, takže prvky, které si kontext načetl dřív — třeba když se
+    /// o kousek výš klonovalo — by v něm zůstaly viset a uložení by je
+    /// chtělo smazat podruhé. Skončí to `DbUpdateConcurrencyException`,
+    /// tedy chybou o souběhu tam, kde žádný souběh není. Tahle past už
+    /// jednou stála čas u mazání fotek bóje.
+    /// </para>
+    /// </summary>
+    private async Task SmazSPrvkyAsync(Trat trat, CancellationToken ct)
+    {
+        db.PrvkyTrati.RemoveRange(
+            await db.PrvkyTrati.Where(p => p.TratId == trat.Id).ToListAsync(ct));
+        db.Trate.Remove(trat);
     }
 
     /// <summary>
