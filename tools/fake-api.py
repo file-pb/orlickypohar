@@ -2784,6 +2784,31 @@ class H(BaseHTTPRequestHandler):
                 pocet += 1
         return self.odpoved({"pocet": pocet})
 
+    def zahod_zaznam(self, slug, boje_id):
+        """Zahození jednoho záznamu historie (Filip, 12. 10. 2026). Tentýž
+        rozsudek jako u hromadného úklidu; stojící bóje není historie."""
+        if not self.zastavka(slug):
+            return None
+
+        b = next((x for x in BOJE.get(slug, []) if x["id"] == boje_id), None)
+        if not b:
+            return self.chyba(400, "Takový záznam u téhle regaty není.")
+        if not b["nahrazenaV"] and not b["sebrana"]:
+            return self.chyba(
+                400, "Tahle bóje na trati pořád stojí. Nejdřív ji seber, nebo přenastav.")
+        if not zbytecna_boje(slug, b):
+            return self.chyba(
+                400,
+                "Na tomhle záznamu něco visí: ukazuje na něj prvek trati, nebo bóje "
+                "stála ve vodě, když rozhodčí trať přijal. Takový záznam je doklad "
+                "k poloze, podle které se možná jelo.")
+
+        if not zahod_boji(slug, b):
+            return self.chyba(400, "Záznam se zahodit nepodařilo.")
+        self.send_response(204)
+        self.end_headers()
+        return True
+
     def seber_boji(self, slug, boje_id):
         """Razítko, ne smazání — pokud na bóji něco visí. Když ne, zmizí
         i ten záznam (`zahod_boji`)."""
@@ -3611,6 +3636,11 @@ class H(BaseHTTPRequestHandler):
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/boje/(\d+)/fotky/([0-9a-f-]+)$',
                 urlparse(self.path).path)):
             return self.odeber_fotku_boje(m.group(1), int(m.group(2)), m.group(3))
+
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/boje/(\d+)$',
+                urlparse(self.path).path)):
+            return self.zahod_zaznam(m.group(1), int(m.group(2)))
 
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode/(\d+)$',
                           urlparse(self.path).path)):

@@ -622,32 +622,34 @@ public class BojeTests(PostgresFixture fixture)
         var (db, boje, _) = SluzbyITrat();
         var (zavod, kdo) = await RegataAsync(db);
 
-        // Řetěz tří pípnutí: první ← druhé ← třetí.
-        var (prvni, _) = await boje.PipniAsync(zavod.Id, Bod("první"), kdo.Id, default);
-        var (druha, _) = await boje.PipniAsync(
-            zavod.Id, Bod("druhá", nahrazuje: prvni!.Id), kdo.Id, default);
-        var (treti, _) = await boje.PipniAsync(
-            zavod.Id, Bod("třetí", nahrazuje: druha!.Id), kdo.Id, default);
+        // <b>Celý řetěz ručně, žádné pípání.</b> `PipniAsync` zbytečný
+        // záznam samo zahodí, takže postavit řetěz pípnutími znamená
+        // postavit ho do prázdna — předchůdce zmizí dřív, než se na něj
+        // dá ukázat, a test spadne na přípravě dat místo na tom, co měří.
+        OrlickyPohar.Api.Features.Boje.Boje Zaznam(string nazev, int poradi, bool nahrazena) =>
+            new()
+            {
+                ZavodId = zavod.Id, Nazev = nazev, Poradi = poradi, Sirka = 49.5, Delka = 14.1,
+                PostavenaV = Ted, PostavilId = kdo.Id,
+                NahrazenaV = nahrazena ? Ted.AddMinutes(poradi) : null,
+            };
 
-        // Pípnutí zahazuje zbytečné samo, takže se řetěz postaví ručně:
-        // jinak by uprostřed nebylo co mazat.
-        var prostredni = new OrlickyPohar.Api.Features.Boje.Boje
-        {
-            ZavodId = zavod.Id, Nazev = "prostřední", Poradi = 9, Sirka = 49.5, Delka = 14.1,
-            PostavenaV = Ted, PostavilId = kdo.Id, NahrazenaV = Ted.AddMinutes(1),
-        };
-        db.Boje.Add(prostredni);
+        var prvni = Zaznam("první", 1, nahrazena: true);
+        var prostredni = Zaznam("prostřední", 2, nahrazena: true);
+        var posledni = Zaznam("poslední", 3, nahrazena: false);
+        db.Boje.AddRange(prvni, prostredni, posledni);
         await db.SaveChangesAsync();
 
-        var naKonci = await db.Boje.FirstAsync(b => b.Id == treti!.Id);
-        naKonci.NahrazujeId = prostredni.Id;
         prostredni.NahrazujeId = prvni.Id;
+        posledni.NahrazujeId = prostredni.Id;
         await db.SaveChangesAsync();
 
         Assert.Null(await boje.ZahodZaznamAsync(zavod.Id, prostredni.Id, default));
 
-        // Nástupce teď ukazuje na předchůdce zahozeného, ne do prázdna.
-        var po = await db.Boje.FirstAsync(b => b.Id == treti!.Id);
+        // <b>Jádro testu.</b> Bez přepojení by tu bylo `null`: mazání má
+        // na cizím klíči `SetNull`, takže databáze řetěz utne a nástupce
+        // přestane vědět, co nahradil.
+        var po = await db.Boje.FirstAsync(b => b.Id == posledni.Id);
         Assert.Equal(prvni.Id, po.NahrazujeId);
         Assert.False(await db.Boje.AnyAsync(b => b.Id == prostredni.Id));
     }
