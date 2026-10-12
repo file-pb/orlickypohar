@@ -152,10 +152,11 @@ public static class BojeEndpoints
     }
 
     private static async Task<IResult> FotkaAsync(
-        string serie, string zavod, int boje, [FromForm] FotkaBojeFormular formular,
+        string serie, string zavod, int boje, IFormFile? soubor,
         ClaimsPrincipal kdo, Rozsahy rozsahy, AppDbContext db, FotkySprava fotky,
         CancellationToken ct)
     {
+        var formular = new FotkaBojeFormular(soubor);
         var (nalezena, odpoved) = await NajdiAsync(serie, zavod, boje, kdo, rozsahy, db, ct);
         if (odpoved is not null) return odpoved;
         if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();

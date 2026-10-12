@@ -203,9 +203,11 @@ public static class ClankySpravaEndpoints
     }
 
     private static async Task<IResult> WebNastavObrazekAsync(
-        string clanek, [FromForm] FotkaFormular formular, ClaimsPrincipal kdo,
+        string clanek, IFormFile? soubor, [FromForm] string? autor, [FromForm] string? popis,
+        [FromForm] bool? souhlas, ClaimsPrincipal kdo,
         Rozsahy rozsahy, ClankySprava sprava, FotkySprava fotky, CancellationToken ct)
     {
+        var formular = new FotkaFormular(soubor, autor, popis, souhlas ?? false);
         if (await ObecnySPravem(clanek, kdo, rozsahy, sprava, ct) is not { } nalezeny)
             return Results.NotFound();
         if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
@@ -218,9 +220,11 @@ public static class ClankySpravaEndpoints
     }
 
     private static async Task<IResult> WebNahrajDoTelaAsync(
-        string clanek, [FromForm] FotkaFormular formular, ClaimsPrincipal kdo,
+        string clanek, IFormFile? soubor, [FromForm] string? autor, [FromForm] string? popis,
+        [FromForm] bool? souhlas, ClaimsPrincipal kdo,
         Rozsahy rozsahy, ClankySprava sprava, FotkySprava fotky, CancellationToken ct)
     {
+        var formular = new FotkaFormular(soubor, autor, popis, souhlas ?? false);
         if (await ObecnySPravem(clanek, kdo, rozsahy, sprava, ct) is not { } nalezeny)
             return Results.NotFound();
         if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
@@ -271,9 +275,11 @@ public static class ClankySpravaEndpoints
 
 
     private static async Task<IResult> NastavObrazekAsync(
-        string serie, string clanek, [FromForm] FotkaFormular formular, ClaimsPrincipal kdo,
+        string serie, string clanek, IFormFile? soubor, [FromForm] string? autor, [FromForm] string? popis,
+        [FromForm] bool? souhlas, ClaimsPrincipal kdo,
         Rozsahy rozsahy, ClankySprava sprava, FotkySprava fotky, CancellationToken ct)
     {
+        var formular = new FotkaFormular(soubor, autor, popis, souhlas ?? false);
         if (await NajdiSPravem(serie, clanek, kdo, rozsahy, sprava, ct) is not { } nalezeny)
             return Results.NotFound();
         if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
@@ -286,9 +292,11 @@ public static class ClankySpravaEndpoints
     }
 
     private static async Task<IResult> NahrajDoTelaAsync(
-        string serie, string clanek, [FromForm] FotkaFormular formular, ClaimsPrincipal kdo,
+        string serie, string clanek, IFormFile? soubor, [FromForm] string? autor, [FromForm] string? popis,
+        [FromForm] bool? souhlas, ClaimsPrincipal kdo,
         Rozsahy rozsahy, ClankySprava sprava, FotkySprava fotky, CancellationToken ct)
     {
+        var formular = new FotkaFormular(soubor, autor, popis, souhlas ?? false);
         if (await NajdiSPravem(serie, clanek, kdo, rozsahy, sprava, ct) is not { } nalezeny)
             return Results.NotFound();
         if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
