@@ -204,35 +204,40 @@ function DetailPrvku({
           </label>
         )}
 
-        {prvek.typ === "Start" && (
-          <>
-            <label>
-              Startuje se
-              <select name="smer" defaultValue={prvek.smer ?? ""}>
-                <option value="">neuvedeno</option>
-                {SMERY.map((s) => (
-                  <option key={s} value={s}>
-                    {NAZVY_SMERU[s]}
-                  </option>
-                ))}
-              </select>
-              <span className="poznamka">
-                Podle toho mapka nakreslí šipku průjezdu. Bez směru ji kreslit
-                nemůže — vymyslela by si ho.
-              </span>
-            </label>
+        {/* <b>Směr má start i cíl</b>, protože obojí je linie a mapka
+            u obou kreslí šipku. Pole tu navíc být musí: `upravPrvekAkce`
+            čte `smer` z formuláře vždycky, takže bez něj by uložení
+            poznámky u cíle šipku nenápadně smazalo. */}
+        {(prvek.typ === "Start" || prvek.typ === "Cil") && (
+          <label>
+            {prvek.typ === "Start" ? "Startuje se" : "Proplouvá se"}
+            <select name="smer" defaultValue={prvek.smer ?? ""}>
+              <option value="">neuvedeno</option>
+              {SMERY.map((s) => (
+                <option key={s} value={s}>
+                  {NAZVY_SMERU[s]}
+                </option>
+              ))}
+            </select>
+            <span className="poznamka">
+              Podle toho mapka nakreslí šipku průjezdu. Bez směru ji kreslit
+              nemůže — vymyslela by si ho.
+            </span>
+          </label>
+        )}
 
-            <label>
-              Čím je start vytyčený
-              <select name="druhStartu" defaultValue={prvek.druhStartu ?? "PevnaLinie"}>
-                {(Object.keys(NAZVY_DRUHU_STARTU) as NonNullable<DruhStartu>[]).map((d) => (
-                  <option key={d} value={d}>
-                    {NAZVY_DRUHU_STARTU[d]}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </>
+        {/* Druh vytyčení je jen startu: cíl se neotevírá za startovací lodí. */}
+        {prvek.typ === "Start" && (
+          <label>
+            Čím je start vytyčený
+            <select name="druhStartu" defaultValue={prvek.druhStartu ?? "PevnaLinie"}>
+              {(Object.keys(NAZVY_DRUHU_STARTU) as NonNullable<DruhStartu>[]).map((d) => (
+                <option key={d} value={d}>
+                  {NAZVY_DRUHU_STARTU[d]}
+                </option>
+              ))}
+            </select>
+          </label>
         )}
 
         <div className="tlacitka">

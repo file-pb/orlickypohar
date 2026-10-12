@@ -985,9 +985,12 @@ def proc_nejde_prvek(slug, v):
                    "PrujezdniBoje", "OtocnaZona", "OtocnaBrana"):
         return "Neznámý typ prvku."
 
-    # Směr a druh startu dávají smysl jen u startu.
-    if typ != "Start" and (v.get("smer") or v.get("druhStartu")):
-        return "Směr a druh startu se uvádějí jen u startu."
+    # Směr průjezdu patří linii, startovní i cílové — mapka z něj kreslí
+    # šipku. Druh vytyčení je jen startu.
+    if v.get("smer") and typ not in ("Start", "Cil"):
+        return "Směr průjezdu se uvádí jen u startu a cíle."
+    if v.get("druhStartu") and typ != "Start":
+        return "Čím je start vytyčený, se uvádí jen u startu."
 
     ma_boji = v.get("bojeBId") is not None
     ma_bod = v.get("konecBSirka") is not None and v.get("konecBDelka") is not None

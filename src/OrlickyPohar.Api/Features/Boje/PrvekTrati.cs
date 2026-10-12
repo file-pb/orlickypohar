@@ -278,10 +278,17 @@ public static class Prvky
         StranaPrvku? strana, string? poznamka = null,
         SvetovaStrana? smer = null, DruhStartu? druhStartu = null)
     {
-        // Směr a druh dávají smysl jen u startu. Jinde by to bylo pole,
-        // které obrazovka ukáže a nikdo neví, co znamená.
-        if (typ != TypPrvku.Start && (smer is not null || druhStartu is not null))
-            return "Směr a druh startu se uvádějí jen u startu.";
+        // Směr průjezdu patří linii, a to startovní i cílové: mapka z něj
+        // kreslí šipku a bez něj by si ji musela vymyslet. Dřív to pravidlo
+        // mluvilo jen o startu, takže průvodce cíl nikdy neuložil — směr
+        // u něj vybrat musí a server ho odmítal.
+        if (smer is not null && typ is not (TypPrvku.Start or TypPrvku.Cil))
+            return "Směr průjezdu se uvádí jen u startu a cíle.";
+
+        // Čím je linie vytyčená, se ptá jen u startu. Cíl se neotevírá za
+        // startovací lodí, takže tam ta volba nemá druhou možnost.
+        if (druhStartu is not null && typ != TypPrvku.Start)
+            return "Čím je start vytyčený, se uvádí jen u startu.";
 
         if (poznamka?.Trim().Length > PoznamkaNejvic)
             return $"Poznámka má nejvýš {PoznamkaNejvic} znaků. Na delší vysvětlení "

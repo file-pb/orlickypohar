@@ -153,6 +153,13 @@ export function Stavba({
     setTvar(VYCHOZI.tvary[0] ?? null);
   };
 
+  /**
+   * Průvodce zpátky na začátek. <b>Chybu nemaže</b>, a to schválně:
+   * volá se i po neúspěchu, kde je ta chyba jediné, co se stavitel
+   * o výsledku dozví. Dokud to `vycisti` dělalo samo, přepsalo to
+   * `setChyba` z téhož handleru na `null` — prvek se neuložil a na
+   * obrazovce nebylo nic. Kdo chce čistý štít, řekne si o něj.
+   */
   const vycisti = () => {
     setTyp(null);
     setVolba(null);
@@ -160,7 +167,6 @@ export function Stavba({
     setHotove([]);
     naVychozi();
     setZMapy(false);
-    setChyba(null);
   };
 
   /**
@@ -298,6 +304,7 @@ export function Stavba({
         return;
       }
 
+      setChyba(null);
       setHlaska(`${volba.jmeno.toLowerCase()} — prvek je na trati.`);
       setPosledni({ typ, body });
       vycisti();

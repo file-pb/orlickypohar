@@ -132,20 +132,63 @@ public class PrvkyTests
     }
 
     /// <summary>
-    /// Směr a druh startu dávají smysl jen u startu. Jinde by to bylo
-    /// pole, které obrazovka ukáže a nikdo neví, co znamená.
+    /// <b>Směr průjezdu patří startu i cíli</b> — obojí je linie a mapka
+    /// u obou kreslí šipku. Jinde by to bylo pole, které obrazovka ukáže
+    /// a nikdo neví, co znamená.
+    ///
+    /// <para>
+    /// <b>Proč to tu stojí takhle rozepsané:</b> dřív pravidlo mluvilo jen
+    /// o startu a tenhle test to fixoval. Průvodce přitom u cíle směr
+    /// vynucuje (<c>patriSmer</c> ve <c>stavba-prvku.ts</c>), takže se cíl
+    /// nikdy neuložil a test přesto procházel — kontroloval server sám,
+    /// ne souhru s obrazovkou.
+    /// </para>
     /// </summary>
     [Fact]
-    public void Smer_a_druh_patri_jen_ke_startu()
+    public void Smer_patri_startu_i_cili()
     {
         Assert.Null(Jde(TypPrvku.Start, bojeB: 7, smer: SvetovaStrana.J));
+        Assert.Null(Jde(TypPrvku.Cil, bojeB: 7, smer: SvetovaStrana.J));
+
+        Assert.NotNull(Jde(TypPrvku.OtocnaBoje, smer: SvetovaStrana.SZ));
+        Assert.NotNull(Jde(TypPrvku.Brana, bojeB: 7, smer: SvetovaStrana.J));
+    }
+
+    /// <summary>
+    /// Čím je linie vytyčená, se ptá jen u startu: cíl se neotevírá za
+    /// startovací lodí, takže tam ta volba nemá druhou možnost.
+    /// </summary>
+    [Fact]
+    public void Druh_startu_patri_jen_ke_startu()
+    {
         Assert.Null(Jde(
             TypPrvku.Start, bojeB: 7, druhStartu: DruhStartu.OtevirajiciSeBrana));
 
-        Assert.NotNull(Jde(TypPrvku.Cil, bojeB: 7, smer: SvetovaStrana.J));
-        Assert.NotNull(Jde(TypPrvku.OtocnaBoje, smer: SvetovaStrana.SZ));
+        Assert.NotNull(Jde(TypPrvku.Cil, bojeB: 7, druhStartu: DruhStartu.PevnaLinie));
         Assert.NotNull(Jde(
             TypPrvku.Brana, bojeB: 7, druhStartu: DruhStartu.PevnaLinie));
+    }
+
+    /// <summary>
+    /// <b>Co průvodce pošle u cíle, to server přijme.</b> Tohle je ta
+    /// kontrola, která chyběla: pravidlo serveru se čte podle toho, co
+    /// o typu tvrdí průvodce, ne samo o sobě.
+    ///
+    /// <para>
+    /// Průvodce v <c>stavba-prvku.ts</c> vynucuje směr u obou linií
+    /// (<c>patriSmer</c>: <c>jak === "start" || jak === "cil"</c>) a druh
+    /// jen u startu (<c>patriDruhStartu</c>). Když se to v jednom
+    /// rozejde, prvek se neuloží a stavitel na vodě dostane prázdnou
+    /// trať — proto to stojí v testu, a ne jen v komentáři.
+    /// </para>
+    /// </summary>
+    [Theory]
+    [InlineData(TypPrvku.Start, DruhStartu.PevnaLinie)]
+    [InlineData(TypPrvku.Cil, null)]
+    public void Linii_prujezdce_posila_smer_a_server_ji_prijme(
+        TypPrvku typ, DruhStartu? druhStartu)
+    {
+        Assert.Null(Jde(typ, bojeB: 7, smer: SvetovaStrana.J, druhStartu: druhStartu));
     }
 
     /// <summary>
