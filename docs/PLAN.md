@@ -5381,6 +5381,11 @@ implementaci téhož, jen hůř udržovanou. Fronta v kódu nikde není
    s `[FromForm]` se nenaveze, což lámalo **všech osm** nahrávacích
    koncových bodů. Celé v oddílu *Nahrávání souborů*.
 
+   ~~**Zbylá nahrávání převést na koncové body.**~~ **Odpadlo 12. 10.
+   2026.** Nahrávání fotky bóje na produkci změřeno ostrým souborem
+   a **prochází**; blokaci se nepodařilo reprodukovat ani s PDF. Stačila
+   oprava vazby, která je nasazená. Podrobnosti i s měřením tamtéž.
+
 1. ~~**Zálohy obsahového bucketu.**~~ **Hotové 11. 10. 2026**, commit
    `88f6b44` v repozitáři `platform`. Zálohuje se celý bucket
    `orlickypohar-fotky`, tedy `fotky/`, `prevzate/` i `smernice/` —
@@ -5447,9 +5452,31 @@ reagovat — a navíc to funguje bez javascriptu.
 bezpečnější než skipovat bezpečnostní pravidla"*. Souhlas — tohle
 nevypíná nic.
 
-**Co z toho plyne pro zbytek:** stejnou cestou jdou **fotky bójí, fotky
-lodí i obrázky k článkům**. Jsou to pořád serverové akce, takže je nejspíš
-postihuje totéž. Neověřeno, ale čekat se s tím nemá.
+**Co z toho plyne pro zbytek — a co se z toho ukázalo jako nepravda.**
+Tady původně stálo, že fotky bójí, fotky lodí a obrázky k článkům jdou
+stejnou cestou, takže je *„nejspíš postihuje totéž"*. **Změřeno 12. 10.
+2026: nepostihuje.**
+
+Nahrávání fotky bóje na produkci **projde** — ověřeno ostrým souborem ve
+správě: `POST` na `/sprava/2027/boje/jarni-vitr` vrátil 200, fotka se
+přepočítala a stáhla se z `orlickypohar-foto.klihovka.cz` jako
+`…-480.webp`; zkušební fotka pak zase smazaná. Předtím devět variant
+zvenčí (JPEG i PDF, 331 B až 900 kB, s `Next-Action`, s velkou cookie,
+s `Origin`/`Referer` i s hlavičkami Nextu) — **ani jedna nedostala 403**,
+všechny dorazily až k Nextu, který odpověděl svým `Server action not
+found.`
+
+Blokaci se tedy **nepodařilo reprodukovat ani s PDF**, tedy ani s tím,
+co směrnici shazovalo. Co se mezitím na straně Cloudflare změnilo, nevíme
+— do toho účtu nevidíme.
+
+**Pro práci z toho plyne:** zbylá nahrávání se na koncové body převádět
+nemusí, stačila oprava vazby, která je nasazená. Kdyby se 403 vrátilo,
+vzor je u směrnice a převod je pak přímočarý.
+
+**A poučení:** ta původní věta byla dohad označený jako *„neověřeno"*
+a stejně se z něj v zadání další session stala práce k udělání. Dohad
+patří buď změřit, nebo nepsat do pořadí úkolů.
 
 ### Dvě chyby, které u toho vylezly
 
