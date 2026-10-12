@@ -2721,7 +2721,21 @@ class H(BaseHTTPRequestHandler):
         seznam.append(nova)
         if stara:
             stara["nahrazenaV"] = ted
-            if zahod_boji(slug, stara):
+            # Prvky trati jdou s bójí: přenastavení je tentýž kus plastu
+            # jinde. Opsané z `BojeSprava.PrepojPrvkyAsync` — bez toho by
+            # prvek zůstal viset na starém záznamu a mapka i GPX by trať
+            # kreslily podle staré polohy.
+            bylo_v_prvku = False
+            for p in PRVKY.get(slug, []):
+                if p["bojeAId"] == stara["id"]:
+                    p["bojeAId"] = nova["id"]
+                    bylo_v_prvku = True
+                if p.get("bojeBId") == stara["id"]:
+                    p["bojeBId"] = nova["id"]
+                    bylo_v_prvku = True
+            # Záznam, který byl v prvku, se drží: `zahod_boji` je na
+            # překlepy, ne na doklad o tom, jak trať vypadala.
+            if not bylo_v_prvku and zahod_boji(slug, stara):
                 nova["nahrazujeId"] = stara.get("nahrazujeId")
 
         # Stavba začíná první bójí, ne zvláštním knoflíkem — opsané
