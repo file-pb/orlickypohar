@@ -602,18 +602,20 @@ public class TratSpravaTests(PostgresFixture fixture)
         var prvni = await RozjizdkaAsync(db, zavod, 1);
         await trate.PriradAsync(zavod.Id, zdroj.Id, prvni.Cislo, true, default);
 
-        // Přijatá trať je zamčená doopravdy: cesta ven je vrácení.
+        // Přijatá, ale ještě neodjetá: zámek rozhodčího platí a potvrzení
+        // ho neobejde. Cesta ven je přestavba, ne knoflík na stavitelské
+        // obrazovce.
         var zamcena = await trate.ZahodAsync(zavod.Id, zdroj.Id, true, default);
         Assert.NotNull(zamcena.Chyba);
         Assert.False(zamcena.ChcePotvrdit);
 
-        await trate.VratAsync(zavod.Id, "zkouška", default);
-        // Přijetí razítkuje `TimeProvider.System`, ne `Ted`, a odjetá je
-        // trať podle startu po přijetí — start tedy musí být po „teď“.
+        // Odjetá je trať jedině s přijetím, takže tohle je zároveň
+        // přijatá trať — a přesto se má jen zeptat. Přijetí razítkuje
+        // `TimeProvider.System`, ne pevné `Ted`, takže start musí být po
+        // „teď“, jinak trať jako odjetá nevyjde.
         prvni.StartV = DateTimeOffset.UtcNow.AddHours(1);
         await db.SaveChangesAsync();
 
-        // Odjetá se naproti tomu jen zeptá — a s potvrzením pustí.
         var ptaSe = await trate.ZahodAsync(zavod.Id, zdroj.Id, false, default);
         Assert.NotNull(ptaSe.Chyba);
         Assert.True(ptaSe.ChcePotvrdit);

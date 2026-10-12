@@ -2472,9 +2472,19 @@ v tom někdo chce hrabat i po dojetí, tak bych to asi neblokoval; jen to
 celé pak vrátí workflow schvalování výsledků"*). Server ji napoprvé
 odmítne s 409 a `potvrdit: true`; s `?potvrzeno=true` ji pustí. Zámek by
 nutil obcházet cestou, kterou nikdo nevidí, kdežto otázka nechá
-rozhodnutí na tom, kdo ví, co dělá. **Přijatá trať se ale zamyká dál** —
-to není historie, ale zámek rozhodčího, a cesta ven existuje a jmenuje se
-vrácení.
+rozhodnutí na tom, kdo ví, co dělá.
+
+**Na odjetou trať se ptáme dřív, než zamykáme přijetí** — a není to
+pořádkumilovnost. Odjetá je trať jedině tehdy, když má `PrijatoV`
+a nějaká rozjížďka podle ní startovala, takže **každá odjetá trať je
+zároveň přijatá**. V opačném pořadí by zámek přijetí zaskočil vždycky
+první a potvrzení by nešlo použít nikdy: mrtvý kód, který vypadá jako
+hotová funkce. Napsané to tak bylo a chytily to až integrační testy,
+které lokálně neběží.
+
+**Přijatá, ale ještě neodjetá trať zamčená zůstává** — to není historie,
+ale zámek rozhodčího. Cesta ven je **přestavba**, ne vrácení: vrácení
+umí jen trať, která teprve čeká na přijetí (`ProcNejdeVratit`).
 
 **Umístění potvrzené 10. 10. 2026, zatím beze změny.** Filip to popisoval
 od okamžiku zakládání rozjížďky, tedy z obrazovky výsledků; obrazovka

@@ -421,29 +421,38 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
     /// alertem… ale pokud se v tom někdo chce hrabat i po dojetí, tak
     /// bych to asi neblokoval; jen to celé pak vrátí workflow schvalování
     /// výsledků“</i>). Zámek by nutil obcházet cestou, kterou nikdo
-    /// nevidí; otázka nechá rozhodnutí na tom, kdo ví, co dělá, a zapíše
-    /// se jako vědomý krok.
+    /// nevidí; otázka nechá rozhodnutí na tom, kdo ví, co dělá.
     /// </para>
     ///
     /// <para>
-    /// <b>Přijatá trať se ale zamyká dál.</b> Je to zámek rozhodčího, ne
-    /// historie — a cesta ven existuje a jmenuje se vrácení. Pustit ji
-    /// potvrzením by ten zámek obešlo knoflíkem na stavitelské obrazovce.
+    /// <b>Na odjetou trať se proto ptáme dřív, než zamykáme přijetí</b>,
+    /// a to ne pro pořádek: odjetá je trať jedině tehdy, když má
+    /// <c>PrijatoV</c> a nějaká rozjížďka podle ní startovala — tedy
+    /// <b>každá odjetá trať je zároveň přijatá</b>. V opačném pořadí by
+    /// zámek přijetí zaskočil vždycky první a potvrzení by nešlo použít
+    /// nikdy; byl by to mrtvý kód, který vypadá jako hotová funkce.
+    /// (Chytily to až integrační testy, lokálně neběží.)
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Přijatá, ale ještě neodjetá trať zamčená zůstává.</b> To je
+    /// zámek rozhodčího, ne historie, a cesta ven existuje: přestavba.
+    /// Vrácení to není — to umí jen trať, která teprve čeká na přijetí.
     /// </para>
     /// </summary>
     private async Task<(string? Proc, bool ChcePotvrdit)> ProcNejdeSahnoutAsync(
         Trat trat, bool potvrzeno, CancellationToken ct)
     {
-        if (trat.Stav == StavTrati.Prijato)
-            return ("Trať je přijatá a visí veřejně. Nejdřív ji nech vrátit rozhodčím.",
-                    false);
+        if (await OdjetaAsync(trat, ct))
+            return potvrzeno
+                ? (null, false)
+                : ("Podle téhle trati se jelo. Zahodit ji může rozkopat výsledky té "
+                   + "rozjížďky a celé je to pak vrátí do schvalování. Potvrď, že to tak chceš.",
+                   true);
 
-        if (!potvrzeno && await OdjetaAsync(trat, ct))
-            return ("Podle téhle trati se jelo. Zahodit ji může rozkopat výsledky té "
-                    + "rozjížďky a celé je to pak vrátí do schvalování. Potvrď, že to tak chceš.",
-                    true);
-
-        return (null, false);
+        return trat.Stav == StavTrati.Prijato
+            ? ("Trať je přijatá a visí veřejně. Na změnu je přestavba.", false)
+            : (null, false);
     }
 
     /// <summary>
