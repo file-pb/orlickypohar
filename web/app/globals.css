@@ -835,7 +835,45 @@ header.hlavicka .jen-uzke { display: none; }
   cursor: pointer;
 }
 .seznam-prvku .prvek > summary .ikona-prvku { flex: none; }
-.seznam-prvku .poradi-prvku { color: var(--tlumeny); font-variant-numeric: tabular-nums; }
+
+/* Osa pořadí vlevo (Filip, 12. 10. 2026, podle plánovače trasy v mapách).
+   Trať je posloupnost, ne hromada — a to řekne svislá linka na první
+   pohled líp než číslo schované v textu řádku. Kreslí se čistě v CSS:
+   spojnice je `::before` řádku, kolečko je samo číslo vytažené na levý
+   okraj. Krajní řádky mají spojnici useknutou u svého kolečka, aby trať
+   nikde nepokračovala tam, kde nic není. */
+.seznam-prvku > li { padding-left: 2.6rem; }
+.seznam-prvku > li::before {
+  content: "";
+  position: absolute;
+  left: 0.94rem;
+  top: 0;
+  bottom: 0;
+  border-left: 2px dotted var(--linka);
+}
+.seznam-prvku > li:first-child::before { top: 1.45rem; }
+.seznam-prvku > li:last-child::before { bottom: calc(100% - 1.45rem); }
+.seznam-prvku .poradi-prvku {
+  position: absolute;
+  left: 0;
+  top: 0.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--linka);
+  border-radius: 50%;
+  /* Kolečko musí spojnici překrýt, jinak jí tečky prosvítají skrz. */
+  background: var(--pozadi);
+  font-size: 0.8rem;
+  color: var(--tlumeny);
+  font-variant-numeric: tabular-nums;
+}
+.seznam-prvku .prvek[open] > summary .poradi-prvku {
+  border-color: var(--voda);
+  color: var(--voda);
+}
 .seznam-prvku .znacky { color: var(--tlumeny); }
 /* Poznámka se vejde na řádek celá jen někdy; zbytek se nechá uříznout,
    protože v detailu je stejně celá. */

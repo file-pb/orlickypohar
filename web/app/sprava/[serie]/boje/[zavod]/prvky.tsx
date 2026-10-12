@@ -79,7 +79,7 @@ export function PrvkyTrati({
               <details className="prvek" open={otevrit === p.id}>
                 <summary>
                   <IkonaPrvku typ={p.typ} strana={p.strana} />
-                  <span className="poradi-prvku">{p.poradi}.</span>
+                  <span className="poradi-prvku">{p.poradi}</span>
                   <b>{nazevTypu(p.typ)}</b>
                   <span className="znacky">
                     {p.a.nazev}
