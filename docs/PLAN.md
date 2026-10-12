@@ -5244,6 +5244,11 @@ implementaci téhož, jen hůř udržovanou. Fronta v kódu nikde není
 
 ### Pořadí po 11. 10. 2026
 
+0. **Vyvěšení směrnice nefunguje.** Předběhlo zbytek, protože Jarní vítr
+   je vypsaný a bez směrnice se regata nejede. Cloudflare i přesměrování
+   spravené 12. 10. 2026; zbývá prázdná 400 z API a integrační test přes
+   HTTP, který ji ukáže. Celé v oddílu *Nahrávání souborů*.
+
 1. ~~**Zálohy obsahového bucketu.**~~ **Hotové 11. 10. 2026**, commit
    `88f6b44` v repozitáři `platform`. Zálohuje se celý bucket
    `orlickypohar-fotky`, tedy `fotky/`, `prevzate/` i `smernice/` —
@@ -5266,7 +5271,8 @@ implementaci téhož, jen hůř udržovanou. Fronta v kódu nikde není
    dřív než zbytek.
 4. **Vypsat zbylé zastávky 2027 a vyvěsit směrnice.** Obsah, ne kód. Jarní
    vítr (15. 5. 2027) je `Vypsany` od 11. 10. 2026, zbylých osm je
-   `Planovany` (ověřeno na produkci).
+   `Planovany` (ověřeno na produkci). **Blokuje to bod 0** — směrnici
+   dneska vyvěsit nejde.
 5. **Protesty a penalizace** — zbytek fáze 5, až po závodě. Chybí pole pro
    číslo pravidla u výsledku.
 6. **Tracker.** Pro něj ta původní věta platí dál: je to samostatný projekt
@@ -5274,6 +5280,89 @@ implementaci téhož, jen hůř udržovanou. Fronta v kódu nikde není
 
 Mimo pořadí visí dál: zátěžový test (míří mimo nginx), A7 v mocku, sezení
 se skutečným pořadatelem a testy správy přes HTTP místo přes službu.
+
+## Nahrávání souborů (12. 10. 2026)
+
+Filip hlásil, že **nejde vyvěsit plachetní směrnici**. Hledalo se to dlouho
+a stálo to tři mylné závěry, tak ať je tu celé — platí to pro všechna
+nahrávání, ne jen pro směrnici.
+
+### Co to bylo: Cloudflare, ne my
+
+Požadavek **vůbec nedorazil k našemu nginxu**, takže v logu nebyl. Odmítal
+ho Cloudflare stavem **403** a prohlížeč z té blokační stránky udělal
+`An unexpected response was received from the server`; chybová hranice to
+vykreslila jako výpadek, takže to vypadalo na naši poruchu.
+
+Zúženo třemi pokusy, které se lišily jedinou věcí:
+
+| požadavek | výsledek |
+|---|---|
+| multipart s PDF, **bez** hlavičky `Next-Action` | projde až k nám |
+| hlavička `Next-Action` **bez** souboru | projde až k nám |
+| **obojí naráz** | **403**, blokační stránka Cloudflare |
+
+Pravidlo WAF se tedy chytá na kombinaci *„nahrávaný soubor v požadavku,
+který nese hlavičku serverové akce"*.
+
+**Opraveno tím, že nahrávání směrnice není serverová akce, ale vlastní
+koncový bod** (`sprava/[serie]/smernice/[zavod]/nahrat/route.ts`).
+Obyčejný formulářový POST hlavičku akce nenese, takže pravidlo nemá na co
+reagovat — a navíc to funguje bez javascriptu.
+
+**Proč ne výjimka ve WAF:** je v účtu, na který nedosáhneme, a plošné
+*Skip* by vyplo managed pravidla pro celou správu. Filip: *„přijde mi to
+bezpečnější než skipovat bezpečnostní pravidla"*. Souhlas — tohle
+nevypíná nic.
+
+**Co z toho plyne pro zbytek:** stejnou cestou jdou **fotky bójí, fotky
+lodí i obrázky k článkům**. Jsou to pořád serverové akce, takže je nejspíš
+postihuje totéž. Neověřeno, ale čekat se s tím nemá.
+
+### Dvě chyby, které u toho vylezly
+
+**Přesměrování se skládalo z `pozadavek.url`** a prohlížeč skončil na
+`https://0.0.0.0:8080/…` — v kontejneru je to vnitřní adresa, na které
+Next poslouchá. Platforma to má mezi poučeními; `Location` je proto
+relativní, prohlížeč si ji doplní sám a není co poskládat špatně.
+
+**Hláška z API se zahazovala.** `hlaska` ve `web/lib/smernice.ts` četla
+tělo rovnou jako JSON a sahala jen po našem poli `error`; bez něj zbylo
+„API odpovědělo 400." a nešlo zjistit proč ani z logu. Teď se tělo čte
+jako text a co z něj zbude, jde zkráceně do hlášky.
+
+### Co zůstává otevřené
+
+**API na skutečnou směrnici odpovídá 400 s prázdným tělem.** Všechny
+čtyřistovky, které si `VyvesAsync` vyrábí sám, nesou vysvětlení — prázdná
+tedy znamená, že se to láme **dřív, než se handler spustí**, tedy na
+vazbě parametrů požadavku.
+
+Sedí k tomu nález auditu z 8. 10.: **správcovské endpointy se testují přes
+službu, ne přes HTTP.** Zrovna ta vrstva, která tu selhává, není pokrytá
+vůbec — a vyvěšení směrnice tedy na produkci nejspíš nikdy nefungovalo.
+Proti mocku ano, ten se chová jinak.
+
+**Další krok:** integrační test, který na ten endpoint pošle skutečný
+multipart přes HTTP. Doběhne v CI, kde je Postgres i Docker, a v jeho
+výstupu bude celá odpověď i s důvodem. Opraví to chybu i tu mezeru
+v testech naráz.
+
+### Mimochodem, mikrocache
+
+Při hledání se našlo nesouvisející: zóna `sprava` vrací **429** na
+předběžná načtení Nextu (`?_rsc=`). Má `rate=10r/s burst=30 nodelay`
+a v logu stálo `excess: 30.450` — Next při vykreslení seznamu odkazů ve
+správě vystřelí desítky RSC požadavků naráz a do té dávky se nevejde.
+Rychlost je pro ustálený provoz v pořádku, dávka je malá.
+
+### Nasazení ruší jedno druhé
+
+Merge do `main` spustí nasazení a **novější běh ten rozdělaný ukončí**
+(souběh ve workflow). Večer 11. 10. se tím zahodila dvě nasazení. Nic se
+neztratí, protože novější build veze i starší commity, ale mezi
+„smergnuto" a „venku" může být deset minut a dvě zrušené fronty — na to
+myslet, když se něco zkouší hned po nasazení.
 
 ## Loďka u přihlášky (Filip, 9. 10. 2026)
 
