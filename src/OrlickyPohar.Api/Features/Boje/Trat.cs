@@ -227,7 +227,43 @@ public record TratNaVyberDto(
     /// a klonování trati</i>). Obrazovka tím pojmenuje knoflík správně
     /// dřív, než na něj někdo sáhne.
     /// </summary>
-    bool JdePriradit);
+    bool JdePriradit,
+    /// <summary>
+    /// Otisk předpisu trati: shodný řetězec znamená, že se jede totéž.
+    /// U trati bez prvků <c>null</c> — prázdno není předpis a sdružovat
+    /// dvě prázdné tratě by tvrdilo víc, než co o nich víme.
+    /// <para>
+    /// <b>K čemu je.</b> Klon je kopie, ne vazba (Filip, 12. 10. 2026:
+    /// <i>„datově by klon měl být jen kopie a jinak by měl prostě
+    /// samostatnou instanci… jen uživatel to chápe, že některé rozjížďky
+    /// se jedou na stejné trati, to bych mu tento pohled rád
+    /// simuloval"</i>). Obrazovka ten pohled skládá ze shody otisků, ne
+    /// z toho, odkud klon vznikl — jinak by po změně cíle u čtvrté
+    /// rozjížďky dál tvrdila, že se jede stejně jako ve třetí.
+    /// </para>
+    /// <para>
+    /// Počítá se ze všeho, co je na trati předpisem: pořadí, typ, obě
+    /// značky, strana, směr, druh startu a poznámka „jak to jet“.
+    /// Poznámka v tom je proto, že ji čte závodník — dvě tratě, které se
+    /// liší jen jí, nejedou totéž.
+    /// </para>
+    /// </summary>
+    string? Otisk);
+
+/// <summary>
+/// Rozjížďka regaty v nabídce „na které trati se jede“.
+/// <para>
+/// <b>Nabídka, ne psané číslo</b> (Filip, 11. 10. 2026: <i>„tratě regaty
+/// s nějakým číslem je taky věc, co to znepřehledňuje“</i>). Vypsat smí
+/// jen server: obrazovka vidí tratě, ne rozjížďky, takže by neuměla
+/// rozlišit nezaloženou rozjížďku od volné.
+/// </para>
+/// </summary>
+/// <param name="TratId">Trať, která téhle rozjížďce patří, nebo <c>null</c>.</param>
+/// <param name="Odstartovana">
+/// Už se podle ní jelo. Trať se jí pak nebere — ani odškrtnutím.
+/// </param>
+public record RozjizdkaNaVyberDto(int Cislo, int? TratId, bool Odstartovana);
 
 /// <summary>Co se má s vybranou tratí stát a pro kterou rozjížďku.</summary>
 /// <param name="Rozjizdka">

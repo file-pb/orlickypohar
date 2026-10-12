@@ -943,6 +943,19 @@ Kritéria výběru jsou výš: detail lodi, velká skupina na startu, náklon po
 plnými plachtami. **Zámek Orlík v pozadí je nejcennější** — obecná voda může
 být odkudkoliv, zámek fotku usadí na Orlík.
 
+### Fotky lodi v přihlášce — nápad (Filip, 10. 10. 2026)
+
+K lodi se mají dát nahrát *„třeba 3 fotečky"* a **uložit komprimovaně**.
+Není to nový podsystém: mechanismus na fotky stojí (`Fotky`, `ObrazekDto`,
+přepočet do WebP, úložiště R2) a používají ho bóje, články i pořadatelé.
+Chybí tedy **místo** — fotky u lodi, ne u bóje — a **limit**, protože
+přihlášek je řádově víc než bójí a nahrávání bez stropu je pozvánka
+k zaplnění úložiště.
+
+Otevřené zůstává, kdo je smí nahrát (kapitán lodi, nebo i pořadatel) a
+jestli jsou veřejné. Nestaví se, dokud na to nepřijde řada; zapsané je to
+proto, aby se u prvních skutečných přihlášek nevymýšlelo znovu.
+
 ### Administrace i na mobilu
 
 Zadání chce administraci **na webu i na mobilu**, ne jen na webu. To mění
@@ -2447,9 +2460,79 @@ tratí regaty se stavem, rozjížďkou, počtem prvků a tím, jestli se podle n
 jelo. U volné trati nabídne **přiřazení**, u obsazené **klonování** —
 podle `jdePriradit` ze serveru, ne podle odhadu obrazovky.
 
-**Rozjížďka se zadává číslem, ne nabídkou.** Pořadatel ho zná; nabídka by
-znamenala další načítání a riziko, že ukazuje stav, který už neplatí.
-Neexistující i obsazené číslo odmítne server vlastní hláškou.
+**Číslo rozjížďky se nepíše — vybírá se ze zaškrtávátek** (Filip,
+11. 10. 2026: *„tratě regaty s nějakým číslem je taky věc, co to
+znepřehledňuje"*, a 12. 10. 2026: *„rozjížďce se musí nabídnout výběr
+tratí k přiřazení a trati se musí nabídnout výběr z rozjížděk"*). Do té
+doby tu stálo, že ho pořadatel napíše ručně; na nasazené obrazovce se
+ukázalo, že políčko na číslo je uprostřed seznamu tratí šum.
+
+**Vypsat rozjížďky smí jedině server.** Obrazovka vidí tratě, ne
+rozjížďky, takže by neuměla rozlišit „rozjížďka 3 ještě není založená" od
+„rozjížďka 3 je volná" — a nabídla by knoflík, který hned selže na
+*„taková rozjížďka u téhle regaty není"*. Nabídku proto vydává
+`GET …/trat/rozjizdky` jako `RozjizdkaNaVyberDto`: číslo, trať která jí
+patří, a jestli se podle ní už jelo.
+
+##### Klon je kopie, ne vazba (Filip, 12. 10. 2026)
+
+Filip: *„rozjížďka má jednu trať, trať může mít z pohledu uživatele více
+rozjížděk, ale v datech bych to vedl jako klony, protože může dojít
+k rychlému posunu a změně trati a data na to musí být připravena tak, že
+se nic nestane, jen najednou ty rozjížďky budou mít odlišné trati."*
+A dál: *„datově by klon měl být jen kopie a jinak by měl prostě
+samostatnou instanci. Není to vazba. Jen to usnadňuje editaci, že se
+nemusí kreslit znovu."*
+
+Scénář, který to vynutil, je jeho vlastní: postaví se trať, jede se na ní
+první a druhá rozjížďka, pak se přestaví a jede třetí a čtvrtá. **Po
+odstartování čtvrté přestane foukat a rozhodčí přesune cíl.** Upraví se
+trať u čtvrté rozjížďky — i když byla klonovaná z té pro třetí, a ta se
+tím měnit nesmí.
+
+**Model se tedy nemění: trať patří rozjížďce, jedna ku jedné.** Sdružení
+„tyhle rozjížďky jedou totéž" je **pohled, ne data**.
+
+**Ten pohled se počítá z obsahu, ne z původu.** Kdyby obrazovka skládala
+skupiny podle toho, odkud klon vznikl, tvrdila by po přesunu cíle dál, že
+se ve třetí a čtvrté jede stejně. Proto `TratNaVyberDto.Otisk`: složený
+řetězec ze všeho, co je na trati předpisem — pořadí, typ, obě značky,
+strana, směr, druh startu a poznámka „jak to jet". Shodný otisk znamená
+jeden řádek s více zaškrtnutými rozjížďkami; první úprava jedné instance
+skupinu rozpadne sama a v datech k tomu není potřeba nic. Trať bez prvků
+otisk nemá (`null`) — prázdno není předpis.
+
+Otisk je schválně **čitelný řetězec, ne hash**: porovnává se jen sám se
+sebou, je kratší než trať a při ladění je na něm vidět, čím se dvě tratě
+liší.
+
+**Odškrtnutí u rozjížďky smaže instanci jen tehdy, když stejná zbyde
+jinde** (Filip, 12. 10. 2026: *„pokud není jediná taková, protože to by
+se pak nedala upravovat a změnit"*). Poslední trať toho předpisu se od
+rozjížďky jen odváže a zůstane v seznamu „na stole". Jinak by odškrtnutí
+zahodilo práci, kterou nikdo zahodit nechtěl. Rozhoduje o tom server:
+shodu otisků ověří jedině ten, kdo vidí prvky všech tratí naráz.
+Zahození nadobro je zvláštní knoflík v listu tratí a tak se i jmenuje.
+
+**Odjetá trať se nezamyká, jen se na ni ptá** (Filip, 12. 10. 2026:
+*„odjetou bych jen pojistil proti úpravám nějakým alertem… ale pokud se
+v tom někdo chce hrabat i po dojetí, tak bych to asi neblokoval; jen to
+celé pak vrátí workflow schvalování výsledků"*). Server ji napoprvé
+odmítne s 409 a `potvrdit: true`; s `?potvrzeno=true` ji pustí. Zámek by
+nutil obcházet cestou, kterou nikdo nevidí, kdežto otázka nechá
+rozhodnutí na tom, kdo ví, co dělá.
+
+**Na odjetou trať se ptáme dřív, než zamykáme přijetí** — a není to
+pořádkumilovnost. Odjetá je trať jedině tehdy, když má `PrijatoV`
+a nějaká rozjížďka podle ní startovala, takže **každá odjetá trať je
+zároveň přijatá**. V opačném pořadí by zámek přijetí zaskočil vždycky
+první a potvrzení by nešlo použít nikdy: mrtvý kód, který vypadá jako
+hotová funkce. Napsané to tak bylo a chytily to až integrační testy,
+které lokálně neběží.
+
+**Přijatá, ale ještě neodjetá trať zamčená zůstává** — to není historie,
+ale zámek rozhodčího. Cesta ven je **přestavba**, ne vrácení: vrácení
+umí jen trať, která teprve čeká na přijetí (`ProcNejdeVratit`).
 
 **Umístění potvrzené 10. 10. 2026, zatím beze změny.** Filip to popisoval
 od okamžiku zakládání rozjížďky, tedy z obrazovky výsledků; obrazovka
