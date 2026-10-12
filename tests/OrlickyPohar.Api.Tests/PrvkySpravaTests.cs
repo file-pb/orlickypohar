@@ -87,6 +87,176 @@ public class PrvkySpravaTests(PostgresFixture fixture)
 
     private static PipnutiVstup Bod(string nazev) => new(nazev, 0, 49.516, 14.165, 5, null);
 
+    /// <summary>
+    /// <b>Přenastavení bóje vezme prvky s sebou.</b> Přenastavení je tentýž
+    /// kus plastu jinde, takže prvek, který tu bóji používá, musí ukazovat
+    /// na nový záznam.
+    ///
+    /// <para>
+    /// <b>Proč to je napsané takhle — měří se poloha v DTO, ne jen id.</b>
+    /// `PrvekDto` nese souřadnice připojené bóje a z nich kreslí mapka
+    /// i GPX. Dokud se prvky nepřepojovaly, visel prvek na starém záznamu
+    /// a trať se kreslila podle **staré** polohy; v chartplotteru na lodi
+    /// to je bod tam, kde bóje není. Test na samotné `BojeAId` by prošel
+    /// i tehdy, kdyby se poloha brala odjinud — proto se tu porovnává to,
+    /// co se doopravdy vykreslí.
+    /// </para>
+    ///
+    /// <para>
+    /// Objeveno 12. 10. 2026 na produkci: prvek „start“ na Jarním větru
+    /// držel přenastavený levobok a nová bóje se mezitím hlásila jako
+    /// „stojí mimo trať“.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Prenastaveni_boje_prepoji_prvek_i_jeho_polohu()
+    {
+        var (db, boje, _, prvky) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (levy, _) = await boje.PipniAsync(zavod.Id, Bod("start levobok"), kdo.Id, default);
+        var (pravy, _) = await boje.PipniAsync(zavod.Id, Bod("start pravobok"), kdo.Id, default);
+
+        var (prvek, _) = await prvky.ZalozAsync(zavod.Id, new PrvekVstup(
+            TypPrvku.Start, 1, levy!.Id, pravy!.Id), kdo.Id, default);
+        Assert.Equal(49.516, prvek!.A.Sirka, 3);
+
+        // Levobok se posune o kus dál po proudu.
+        var (posunuty, chyba) = await boje.PipniAsync(
+            zavod.Id,
+            new PipnutiVstup("start levobok", 0, 49.5205, 14.1702, 4, levy.Id),
+            kdo.Id, default);
+        Assert.Null(chyba);
+
+        var po = Assert.Single(await prvky.SeznamAsync(zavod.Id, default));
+        Assert.Equal(posunuty!.Id, po.A.Id);
+        Assert.Equal(49.5205, po.A.Sirka, 4);
+        Assert.Equal(14.1702, po.A.Delka, 4);
+
+        // Druhý konec se nesahá.
+        Assert.Equal(pravy!.Id, po.B!.Id);
+
+        // <b>A nová bóje už není „mimo trať“.</b> Tak se totiž na obrazovce
+        // hlásí každá, kterou žádný prvek nepoužívá — přenastavená bóje by
+        // tam stála jako cizí.
+        var naTrati = await boje.SeznamAsync(zavod.Id, iHistorie: false, default);
+        Assert.Contains(naTrati, b => b.Id == posunuty.Id);
+    }
+
+    /// <summary>
+    /// <b>Migrace, která dožene prvky visící na přenastavené bóji.</b>
+    /// Pouští <b>tentýž</b> příkaz, jaký je v migraci
+    /// <c>PrvekNaAktualniBoji</c> — vlastní kopie by měřila sama sebe.
+    ///
+    /// <para>
+    /// <b>Proč to má vlastní test:</b> migrace se v CI spustí nad prázdnou
+    /// databází, takže ověří syntaxi a nic víc. Jestli doopravdy přepojí,
+    /// se bez vyrobených vadných dat nepozná.
+    /// </para>
+    ///
+    /// <para>
+    /// Data se staví ručně, protože `PipniAsync` dnes prvky přepojuje sám
+    /// — tou cestou by se vadný stav už nevyrobil.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Migrace_dozene_prvky_visici_na_prenastavene_boji()
+    {
+        var (db, boje, _, prvky) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (prvni, _) = await boje.PipniAsync(zavod.Id, Bod("otočná"), kdo.Id, default);
+        var (druhy, _) = await boje.PipniAsync(zavod.Id, Bod("brána pravá"), kdo.Id, default);
+        var (prvek, _) = await prvky.ZalozAsync(zavod.Id, new PrvekVstup(
+            TypPrvku.Brana, 1, prvni!.Id, druhy!.Id), kdo.Id, default);
+
+        // Vadný stav jako před 12. 10. 2026: přenastavení, které prvek
+        // nechalo viset na starém záznamu. Dvakrát za sebou, ať se ověří
+        // i to, že cyklus dojde na konec řetězu.
+        var stary = await db.Boje.FirstAsync(b => b.Id == prvni.Id);
+        var prostredni = new Boje
+        {
+            ZavodId = zavod.Id, Nazev = "otočná", Poradi = stary.Poradi,
+            Sirka = 49.52, Delka = 14.17, PostavenaV = Ted, PostavilId = kdo.Id,
+            NahrazujeId = stary.Id, NahrazenaV = Ted.AddMinutes(2),
+        };
+        db.Boje.Add(prostredni);
+        stary.NahrazenaV = Ted.AddMinutes(1);
+        await db.SaveChangesAsync();
+
+        var nejnovejsi = new Boje
+        {
+            ZavodId = zavod.Id, Nazev = "otočná", Poradi = stary.Poradi,
+            Sirka = 49.53, Delka = 14.18, PostavenaV = Ted, PostavilId = kdo.Id,
+            NahrazujeId = prostredni.Id,
+        };
+        db.Boje.Add(nejnovejsi);
+        await db.SaveChangesAsync();
+
+        // Prvek pořád ukazuje na úplně první záznam — to je ta vada.
+        var pred = await db.PrvkyTrati.AsNoTracking().FirstAsync(p => p.Id == prvek!.Id);
+        Assert.Equal(stary.Id, pred.BojeAId);
+
+        await db.Database.ExecuteSqlRawAsync(
+            OrlickyPohar.Api.Migrations.PrvekNaAktualniBoji.OpravaSql);
+
+        db.ChangeTracker.Clear();
+        var po = await db.PrvkyTrati.AsNoTracking().FirstAsync(p => p.Id == prvek!.Id);
+        Assert.Equal(nejnovejsi.Id, po.BojeAId);
+
+        // Druhý konec nikdo nepřenastavoval, takže se nesmí hnout.
+        Assert.Equal(druhy.Id, po.BojeBId);
+
+        // A druhý běh nemá co dělat: migrace je idempotentní.
+        await db.Database.ExecuteSqlRawAsync(
+            OrlickyPohar.Api.Migrations.PrvekNaAktualniBoji.OpravaSql);
+        db.ChangeTracker.Clear();
+        var znovu = await db.PrvkyTrati.AsNoTracking().FirstAsync(p => p.Id == prvek!.Id);
+        Assert.Equal(nejnovejsi.Id, znovu.BojeAId);
+    }
+
+    /// <summary>
+    /// <b>Záznam, který byl v prvku, se po přenastavení drží.</b>
+    /// `ZahodAsync` existuje kvůli překlepům — pípnuto a hned přenastaveno,
+    /// nic na tom neviselo. Bóje, na kterou ukazoval prvek, ale překlep
+    /// nebyla: je to doklad o tom, jak trať vypadala.
+    ///
+    /// <para>
+    /// Bez téhle podmínky by ho smazalo **právě to přepojení**, protože ho
+    /// uvolnilo: po něm už na starém záznamu nic nevisí.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Zaznam_z_prvku_zustane_v_historii_i_po_prenastaveni()
+    {
+        var (db, boje, _, prvky) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (levy, _) = await boje.PipniAsync(zavod.Id, Bod("start levobok"), kdo.Id, default);
+        var (pravy, _) = await boje.PipniAsync(zavod.Id, Bod("start pravobok"), kdo.Id, default);
+        await prvky.ZalozAsync(zavod.Id, new PrvekVstup(
+            TypPrvku.Start, 1, levy!.Id, pravy!.Id), kdo.Id, default);
+
+        await boje.PipniAsync(
+            zavod.Id,
+            new PipnutiVstup("start levobok", 0, 49.5205, 14.1702, 4, levy.Id),
+            kdo.Id, default);
+
+        var vse = await boje.SeznamAsync(zavod.Id, iHistorie: true, default);
+        Assert.Contains(vse, b => b.Id == levy.Id);
+
+        // Pro srovnání: bóje, která v žádném prvku nebyla, se po
+        // přenastavení nedrží — tak to bylo odjakživa a nemění se to.
+        var (volna, _) = await boje.PipniAsync(zavod.Id, Bod("jen tak"), kdo.Id, default);
+        await boje.PipniAsync(
+            zavod.Id,
+            new PipnutiVstup("jen tak", 0, 49.5301, 14.1801, 4, volna!.Id),
+            kdo.Id, default);
+
+        var potom = await boje.SeznamAsync(zavod.Id, iHistorie: true, default);
+        Assert.DoesNotContain(potom, b => b.Id == volna.Id);
+    }
+
     [Fact]
     public async Task Dve_boje_se_spoji_do_startovni_cary()
     {

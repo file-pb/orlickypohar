@@ -121,7 +121,27 @@ public class BojeSprava(
         if (stara is not null) stara.NahrazenaV = ted;
         await db.SaveChangesAsync(ct);
 
-        if (stara is not null && await ZahodAsync(stara, nova, ct))
+        // <b>Prvky trati jdou s bójí.</b> Přenastavení je tentýž kus plastu
+        // jinde, takže prvek, který tu bóji používá, musí ukazovat na nový
+        // záznam. Dokud se to nedělalo, zůstal prvek viset na tom starém —
+        // a protože DTO prvku nese polohu připojené bóje, kreslila mapka
+        // i GPX trať podle **staré** polohy. V chartplotteru na lodi to
+        // znamená bod tam, kde bóje není (objeveno 12. 10. 2026 na trati
+        // Jarního větru, kde prvek „start“ držel přenastavený levobok).
+        //
+        // <para>
+        // Nová bóje by se jinak navíc tvářila jako cizí: obrazovka ji hlásí
+        // mezi „bóje stojí mimo trať“, protože ji žádný prvek nepoužívá.
+        // A starý záznam nejde uklidit, protože na něj prvek ukazuje.
+        // </para>
+        var byloVPrvku = stara is not null && await PrepojPrvkyAsync(stara.Id, nova.Id, ct);
+
+        // <b>Záznam, který byl součástí trati, se drží.</b> `ZahodAsync`
+        // existuje kvůli překlepům — pípnuto a hned přenastaveno, nic na
+        // tom neviselo. Bóje, na kterou ukazoval prvek, ale překlep nebyla:
+        // je to doklad o tom, jak trať vypadala. Bez téhle podmínky by ho
+        // přepojení o pár řádků výš smazalo právě tím, že ho uvolnilo.
+        if (stara is not null && !byloVPrvku && await ZahodAsync(stara, nova, ct))
             log.LogInformation(
                 "Přenastavený záznam bóje {Nazev} u regaty {Zavod} se nedržel — "
                 + "nic na něm neviselo", nova.Nazev, zavodId);
@@ -135,6 +155,45 @@ public class BojeSprava(
         // Fotky se přikládají až po pípnutí vlastními požadavky: dokud
         // poloha neexistuje, není k čemu je přiložit.
         return (Dto(nova), null);
+    }
+
+    /// <summary>
+    /// Přepne prvky trati ze staré bóje na novou. Volá se při přenastavení.
+    ///
+    /// <para>
+    /// <b>Oba konce zvlášť</b>, protože táž bóje může být v jednom prvku
+    /// jen jednou, ale ve dvou prvcích klidně na různých koncích.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Nekontroluje se, že prvek patří téhle regatě</b>, a nemusí:
+    /// obě bóje jsou z ní, protože `stara` se hledala podle `zavodId`
+    /// a `nova` se právě založila. Prvek ukazující na bóji cizí regaty
+    /// by byl porušený zápis, ne případ, co má řešit tohle.
+    /// </para>
+    /// </summary>
+    /// <returns>Jestli ta bóje v nějakém prvku byla.</returns>
+    private async Task<bool> PrepojPrvkyAsync(int staraId, int novaId, CancellationToken ct)
+    {
+        var prvky = await db.PrvkyTrati
+            .Where(p => p.BojeAId == staraId || p.BojeBId == staraId)
+            .ToListAsync(ct);
+
+        if (prvky.Count == 0) return false;
+
+        foreach (var p in prvky)
+        {
+            if (p.BojeAId == staraId) p.BojeAId = novaId;
+            if (p.BojeBId == staraId) p.BojeBId = novaId;
+        }
+
+        await db.SaveChangesAsync(ct);
+
+        log.LogInformation(
+            "Přenastavení bóje {Stara} na {Nova} přepojilo {Pocet} prvků trati",
+            staraId, novaId, prvky.Count);
+
+        return true;
     }
 
     /// <summary>Označí bóji za sebranou. Ze zápisu nemizí.</summary>
