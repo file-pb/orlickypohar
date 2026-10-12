@@ -1148,6 +1148,54 @@ druhý tvar stránky s jinou cenou a mobil zaplatí i za to, co nerozbalil.
 Načítá se tedy jen otevřená sekce a rozbalení jiné je navigace na její
 adresu, ne nové vykreslení celku.
 
+## Stránka regaty: postavená (11.–12. 10. 2026)
+
+Filip: *„udělat konečně tu stránku té regaty, je nepřehledná a spaghetti."*
+Hotové sedmi PR (#229, #230, #231, #233, #234, #238, #240). Jeden soubor
+o 572 řádcích s hlavní komponentou o 333 řádcích v kuse se rozdělil na
+šest; obsah se nezměnil, ověřeno na pixel. Pak přišly **sekce místo
+svitku** — Úvod · Směrnice · Trať · Lodě · Výsledky, každá s vlastní
+adresou a vlastními daty — a stránka na telefonu spadla z 3985 na
+1013 px.
+
+Nad taby je **pruh upozornění z polí, která API vydávalo a web je nikde
+neukazoval**: `StavRozjizdky.Probiha` → „Právě se jede 1. rozjížďka",
+`RozjizdkaDto.startV` → „Start 2. rozjížďky v 14:30", k tomu přestavba
+trati, nová směrnice do 7 dní, otevřené přihlášky a zrušení. Nejvýš tři
+naráz. Vlajky u tabů jsou podle Závodních signálů (Směrnice L, Trať M,
+Lodě P, Výsledky modrá); Úvod nese značku poháru, protože „celá regata"
+žádný signál není.
+
+### Tři věci, které z toho plynou pro další práci
+
+**Pás partnerů je `position: fixed` se `z-index: 15`.** Cokoliv dalšího
+u spodku okna s ním musí počítat — lišta počasí sedí nad ním a zajíždí za
+něj, tlačítko „nahoru" jde o lištu výš.
+
+**Tab se ukazuje i pro prázdnou sekci** (ročník se skrytými výsledky).
+Taby nejsou nabídka odkazů, ale obsah stránky; sekce s vysvětlením, na
+kterou nevede cesta, je přesně ta vada, kterou Filip našel u tabule
+10. 10. 2026.
+
+**Styly se v projektu nedělají výhradně třídami**, jak tvrdilo zadání,
+které jsem na tu práci psal. Změřeno 12. 10. 2026: `style={{` je
+v 15 souborech, z toho 9 ve správě. Na stránce zastávky se uklidily,
+jinde ne — a tvrzení v zadání bylo moje, nepodložené.
+
+### Co se vědomě neudělalo
+
+Prezentace regaty jako na `cyc.cz/izolepa-cup` (program, časy,
+představení) — Úvod dnes ukazuje články pořadatele, což je většina efektu
+bez zásahu do API; úvodník jako příznak `Clanek` nemá a pole přímo na
+regatě by vyrobilo druhý editor vedle článků. Rozprava a pokyny
+rozhodčího v upozorněních — nemají datový typ. Graf tlaku s historií —
+chce vlastní sbírání dat z ČHMÚ v čase. Alerty jako widget v bočním
+panelu na širokém monitoru (Filipův nápad z 11. 10.).
+
+**A jeden nález mimo rozsah:** `Boky` vykreslují widgety do DOM vícekrát
+a CSS pak kopie schovává, takže se data načítají několikrát. Je to napříč
+webem, ne jen na téhle stránce.
+
 ## Upozornění (push)
 
 Appka má závodním lodím nosit informace — během závodu (odložený start,
