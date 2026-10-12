@@ -16,6 +16,7 @@ import { IkonaPrvku } from "@/app/ikona-prvku";
 import { ZnackaNaTrati } from "./znacka-na-trati";
 import {
   presunPrvekAkce,
+  seberPrvekAkce,
   smazPrvekAkce,
   upravPrvekAkce,
   zopakujPrvekAkce,
@@ -76,18 +77,32 @@ export function PrvkyTrati({
         <ul className="seznam-prvku">
           {prvky.map((p, i) => (
             <li key={p.id}>
-              <details className="prvek" open={otevrit === p.id}>
-                <summary>
-                  <IkonaPrvku typ={p.typ} strana={p.strana} />
-                  <span className="poradi-prvku">{p.poradi}</span>
-                  <b>{nazevTypu(p.typ)}</b>
-                  <span className="znacky">
-                    {p.a.nazev}
-                    {p.b && ` – ${p.b.nazev}`}
-                  </span>
-                  {p.strana && <span className="stitek">{nazevStrany(p.strana)}</span>}
-                  {p.poznamka && <span className="jak-to-jet">{p.poznamka}</span>}
-                </summary>
+              {/* <b>Řádek sám je výběr na mapce</b> (Filip, 12. 10. 2026:
+                  *„Vybraný řádek Prvků trati se vyznačí na mapce — využije
+                  se funkce v mapce a není potřeba tam mít na to tlačítko"*).
+                  Je to odkaz na kotvu prvku: `:target` z ní v mapce udělá
+                  obroučku a prohlížeč k ní odroluje. Žádný javascript,
+                  a dá se poslat odkazem. Dřív tu vedle řádku visel ještě
+                  odkaz „v mapce" — tlačítko navíc za něco, co umí řádek. */}
+              <a className="shrnuti-prvku" href={`#prvek-${p.id}`}>
+                <IkonaPrvku typ={p.typ} strana={p.strana} />
+                <span className="poradi-prvku">{p.poradi}</span>
+                <b>{nazevTypu(p.typ)}</b>
+                <span className="znacky">
+                  {p.a.nazev}
+                  {p.b && ` – ${p.b.nazev}`}
+                </span>
+                {p.strana && <span className="stitek">{nazevStrany(p.strana)}</span>}
+                {p.poznamka && <span className="jak-to-jet">{p.poznamka}</span>}
+              </a>
+
+              {/* <b>Akordeon přes `name`</b> (Filip tamtéž: *„toto po stisku
+                  rozbalí detail vybraného prvku listu a ostatní prvky listu
+                  zavře"*). Dělá to prohlížeč sám — `name` na `details` je
+                  nativní vzájemné vyloučení, takže na to není potřeba ani
+                  javascript, ani stav v adrese. */}
+              <details className="prvek" name="prvek-trati" open={otevrit === p.id}>
+                <summary>{zamceno ? "Detail" : "Přenastavit a detail"}</summary>
 
                 <DetailPrvku
                   serie={serie}
@@ -100,19 +115,18 @@ export function PrvkyTrati({
                   posledni={i === prvky.length - 1}
                 />
               </details>
-
-              {/* Mimo `summary`: odkaz uvnitř něj by zároveň rozklepl detail.
-                  A „v mapce", ne „na mapě" — tak se o kus níž jmenuje odkaz
-                  do OpenStreetMap a byly by to dvě různé věci stejně. */}
-              <a className="na-mape" href={`#prvek-${p.id}`}>
-                v mapce
-              </a>
             </li>
           ))}
         </ul>
       )}
 
-      <BojeMimoPrvky prvky={prvky} boje={boje} zamceno={zamceno} />
+      <BojeMimoPrvky
+        serie={serie}
+        zavod={zavod}
+        prvky={prvky}
+        boje={boje}
+        zamceno={zamceno}
+      />
 
       {zamceno && (
         <p className="poznamka">
@@ -331,7 +345,14 @@ function Znacky({
           );
           return (
             <li key={b.id}>
-              <ZnackaNaTrati boje={b} serie={serie} zavod={zavod} zamceno={zamceno} />
+              {/* Bez sebrání: to je o kus níž nad celým prvkem. */}
+              <ZnackaNaTrati
+                boje={b}
+                serie={serie}
+                zavod={zavod}
+                zamceno={zamceno}
+                bezSebrani
+              />
               {jinde.length > 0 && (
                 <p className="poznamka">
                   Tatáž značka je i v prvku{" "}
@@ -343,6 +364,23 @@ function Znacky({
           );
         })}
       </ul>
+
+      {/* <b>Prvek se sbírá vcelku</b> (Filip, 12. 10. 2026: *„u
+          dvojobjektových prvků k nim u sbírání z vody a detailu
+          přistupujeme jako k jednomu prvku"*). Na vodě se nevytahuje
+          „levobok cíle", vytahuje se cíl. */}
+      {!zamceno && (
+        <form action={seberPrvekAkce} className="formular">
+          <input type="hidden" name="serie" value={serie} />
+          <input type="hidden" name="zavod" value={zavod} />
+          <input type="hidden" name="prvek" value={prvek.id} />
+          <button type="submit">
+            {nalezene.length === 1
+              ? "Sebrat z vody"
+              : `Sebrat ${nazevTypu(prvek.typ)} z vody — obě značky`}
+          </button>
+        </form>
+      )}
     </div>
   );
 }
@@ -361,10 +399,14 @@ function Znacky({
  * </para>
  */
 function BojeMimoPrvky({
+  serie,
+  zavod,
   prvky,
   boje,
   zamceno,
 }: {
+  serie: string;
+  zavod: string;
   prvky: Prvek[];
   boje: Boje[];
   zamceno: boolean;
@@ -378,18 +420,42 @@ function BojeMimoPrvky({
   if (mimo.length === 0) return null;
 
   return (
-    <p className="hlaska" role="status">
-      <b>
-        {mimo.length === 1 ? "Jedna bóje stojí mimo trať" : `${mimo.length} bóje stojí mimo trať`}:
-      </b>{" "}
-      {mimo.map((b) => b.nazev).join(", ")}. Na vodě {mimo.length === 1 ? "je" : "jsou"}, ale
-      žádný prvek {mimo.length === 1 ? "ji" : "je"} nepoužívá — na mapce trati a na veřejné
-      stránce proto {mimo.length === 1 ? "nebude" : "nebudou"}.{" "}
-      {zamceno
-        ? "Trať je přijatá, takže se to teď nespraví; pokud to tak být nemá, je to přestavba."
-        : mimo.length === 1
-          ? "Udělej z ní prvek, nebo ji seber."
-          : "Udělej z nich prvky, nebo je seber."}
-    </p>
+    <div className="boje-mimo">
+      <p className="hlaska" role="status">
+        <b>
+          {mimo.length === 1
+            ? "Jedna bóje stojí mimo trať"
+            : `${mimo.length} bóje stojí mimo trať`}
+          :
+        </b>{" "}
+        {mimo.map((b) => b.nazev).join(", ")}. Na vodě {mimo.length === 1 ? "je" : "jsou"}, ale
+        žádný prvek {mimo.length === 1 ? "ji" : "je"} nepoužívá — na mapce trati a na veřejné
+        stránce proto {mimo.length === 1 ? "nebude" : "nebudou"}.{" "}
+        {zamceno
+          ? "Trať je přijatá, takže se to teď nespraví; pokud to tak být nemá, je to přestavba."
+          : mimo.length === 1
+            ? "Udělej z ní prvek, nebo ji seber."
+            : "Udělej z nich prvky, nebo je seber."}
+      </p>
+
+      {/* <b>A tady je to místo, kde se to dá udělat.</b> Dokud byl pod
+          mapkou seznam všech bójí, vedla k takové bóji cesta přes něj;
+          ten seznam je od 12. 10. 2026 pryč jako zbytečný (Filip:
+          *„pod mapkou je stále seznam prvků trati a ten je
+          zbytečný/matoucí"*). Bez tohohle by zbyla rada bez místa, kde ji
+          splnit — a zrovna bóje mimo prvky žádný detail prvku nemá. */}
+      <details className="jine-boje">
+        <summary>
+          {mimo.length === 1 ? "Ukázat tu bóji" : `Ukázat ty ${mimo.length} bóje`}
+        </summary>
+        <ul className="seznam">
+          {mimo.map((b) => (
+            <li key={b.id}>
+              <ZnackaNaTrati boje={b} serie={serie} zavod={zavod} zamceno={zamceno} />
+            </li>
+          ))}
+        </ul>
+      </details>
+    </div>
   );
 }

@@ -215,6 +215,34 @@ export async function seber(
   }
 }
 
+/**
+ * Zahodí jeden záznam z historie bójí. Vrací text chyby, nebo `null`.
+ *
+ * <b>Rozsudek je na serveru</b>, ne tady: drží se záznam, na který ukazuje
+ * prvek trati, a ten, který stál ve vodě při přijetí nějaké trati. Kdyby si
+ * to obrazovka počítala sama, počítala by to podruhé — a nutně jinak.
+ */
+export async function zahodZaznam(
+  serie: string,
+  zavod: string,
+  boje: number,
+): Promise<string | null> {
+  const t = await tokenZeSezeni();
+  if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+
+  try {
+    const odpoved = await fetch(`${cesta(serie, zavod)}/${boje}`, {
+      method: "DELETE",
+      headers: { authorization: `Bearer ${t}`, accept: "application/json" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(CEKAT_MS),
+    });
+    return odpoved.ok ? null : await hlaska(odpoved);
+  } catch (e) {
+    return duvodSelhani(e);
+  }
+}
+
 /** Stejná hranice jako v API (`Nahravani.NejvicBajtu`). */
 export const FOTKA_NEJVIC_MB = 15;
 
