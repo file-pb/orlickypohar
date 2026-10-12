@@ -85,6 +85,16 @@ public static class BojeEndpoints
                 + "Drží se záznam, na který ukazuje prvek trati, a ten, který stál ve vodě "
                 + "při přijetí nějaké trati — ten už byl veřejný.");
 
+        g.MapDelete("/{boje:int}", ZahodZaznamAsync)
+            .WithTags("Bóje")
+            .WithSummary("Zahodí jeden záznam z historie bójí")
+            .WithDescription(
+                "Pořadatel regaty, nebo rozhodčí. Maže doopravdy a nejde to vzít zpátky. "
+                + "Platí tentýž rozsudek jako u hromadného úklidu: drží se záznam, na "
+                + "který ukazuje prvek trati, a ten, který stál ve vodě při přijetí "
+                + "nějaké trati — ten už byl veřejný. **Bóji, která na trati stojí, "
+                + "to nesmaže**; na tu je sebrání nebo přenastavení.");
+
         g.MapDelete("/{boje:int}/fotky/{fotka:guid}", OdeberFotkuAsync)
             .WithSummary("Odebere jednu fotku bóje a smaže její soubory")
             .WithDescription(
@@ -197,6 +207,19 @@ public static class BojeEndpoints
         if (!await SmiAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
 
         return Results.Ok(new UklidDto(await sprava.UklidAsync(rozsah.ZavodId.Value, ct)));
+    }
+
+    private static async Task<IResult> ZahodZaznamAsync(
+        string serie, string zavod, int boje, ClaimsPrincipal kdo, Rozsahy rozsahy,
+        BojeSprava sprava, CancellationToken ct)
+    {
+        if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
+            return Results.NotFound();
+        if (!await SmiAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        return await sprava.ZahodZaznamAsync(rozsah.ZavodId.Value, boje, ct) is { } chyba
+            ? Results.Json(new { error = chyba }, statusCode: StatusCodes.Status400BadRequest)
+            : Results.NoContent();
     }
 
     private static async Task<IResult> OdeberFotkuAsync(

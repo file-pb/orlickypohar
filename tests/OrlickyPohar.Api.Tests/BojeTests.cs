@@ -557,6 +557,103 @@ public class BojeTests(PostgresFixture fixture)
         Assert.Equal(0, await boje.UklidAsync(zavod.Id, default));
     }
 
+    /// <summary>
+    /// Zahození jednoho záznamu historie (Filip, 12. 10. 2026: <i>„Historie
+    /// bude mít možnost záznam smazat"</i>). Platí tentýž rozsudek jako
+    /// u hromadného úklidu — měří se proto obojí: že zmizí, co je k ničemu,
+    /// a že se neuhne u toho, na čem něco visí.
+    /// </summary>
+    [Fact]
+    public async Task Zahozeni_zaznamu_plati_tentyz_rozsudek_jako_uklid()
+    {
+        var (db, boje, trate) = SluzbyITrat();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var zbytecna = new OrlickyPohar.Api.Features.Boje.Boje
+        {
+            ZavodId = zavod.Id, Nazev = "překlep", Poradi = 1, Sirka = 49.5, Delka = 14.1,
+            PostavenaV = Ted, PostavilId = kdo.Id, NahrazenaV = Ted.AddMinutes(1),
+        };
+        db.Boje.Add(zbytecna);
+        await db.SaveChangesAsync();
+
+        // Ta, která stála ve vodě při přijetí trati, je doklad k poloze.
+        var (verejna, _) = await boje.PipniAsync(zavod.Id, Bod("byla venku"), kdo.Id, default);
+        await DulezitaAsync(trate, zavod, kdo);
+        Assert.Null(await boje.SeberAsync(zavod.Id, verejna!.Id, default));
+
+        Assert.Null(await boje.ZahodZaznamAsync(zavod.Id, zbytecna.Id, default));
+        Assert.NotNull(await boje.ZahodZaznamAsync(zavod.Id, verejna.Id, default));
+
+        var zbylo = await boje.SeznamAsync(zavod.Id, iHistorie: true, default);
+        Assert.Equal(verejna.Id, Assert.Single(zbylo).Id);
+    }
+
+    /// <summary>
+    /// <b>Bóje, která na trati stojí, není historie.</b> Mazátko je na
+    /// záznamy, co už ve vodě nejsou; na stojící bóji je sebrání nebo
+    /// přenastavení, a smazat ji by znamenalo zahodit měření, podle
+    /// kterého se zrovna pluje.
+    /// </summary>
+    [Fact]
+    public async Task Stojici_boje_se_jako_zaznam_nemaze()
+    {
+        var (db, boje, _) = SluzbyITrat();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (stoji, _) = await boje.PipniAsync(zavod.Id, Bod("stojí"), kdo.Id, default);
+
+        Assert.NotNull(await boje.ZahodZaznamAsync(zavod.Id, stoji!.Id, default));
+        Assert.NotNull(await boje.ZahodZaznamAsync(zavod.Id, 987_654, default));
+
+        Assert.Single(await boje.SeznamAsync(zavod.Id, iHistorie: true, default));
+    }
+
+    /// <summary>
+    /// <b>Past, kterou hromadný úklid nemá.</b> Úklid jde od nejnovějšího,
+    /// takže nástupce zahazovaného záznamu je v tu chvíli obvykle sám pryč.
+    /// Tady se ale maže libovolný záznam, klidně uprostřed řetězu
+    /// přenastavení — a kdyby se nástupce nepřepojil na předchůdce,
+    /// ukazovalo by jeho <c>NahrazujeId</c> do prázdna.
+    /// </summary>
+    [Fact]
+    public async Task Zahozeni_uprostred_retezu_prepoji_nastupce()
+    {
+        var (db, boje, _) = SluzbyITrat();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        // <b>Celý řetěz ručně, žádné pípání.</b> `PipniAsync` zbytečný
+        // záznam samo zahodí, takže postavit řetěz pípnutími znamená
+        // postavit ho do prázdna — předchůdce zmizí dřív, než se na něj
+        // dá ukázat, a test spadne na přípravě dat místo na tom, co měří.
+        OrlickyPohar.Api.Features.Boje.Boje Zaznam(string nazev, int poradi, bool nahrazena) =>
+            new()
+            {
+                ZavodId = zavod.Id, Nazev = nazev, Poradi = poradi, Sirka = 49.5, Delka = 14.1,
+                PostavenaV = Ted, PostavilId = kdo.Id,
+                NahrazenaV = nahrazena ? Ted.AddMinutes(poradi) : null,
+            };
+
+        var prvni = Zaznam("první", 1, nahrazena: true);
+        var prostredni = Zaznam("prostřední", 2, nahrazena: true);
+        var posledni = Zaznam("poslední", 3, nahrazena: false);
+        db.Boje.AddRange(prvni, prostredni, posledni);
+        await db.SaveChangesAsync();
+
+        prostredni.NahrazujeId = prvni.Id;
+        posledni.NahrazujeId = prostredni.Id;
+        await db.SaveChangesAsync();
+
+        Assert.Null(await boje.ZahodZaznamAsync(zavod.Id, prostredni.Id, default));
+
+        // <b>Jádro testu.</b> Bez přepojení by tu bylo `null`: mazání má
+        // na cizím klíči `SetNull`, takže databáze řetěz utne a nástupce
+        // přestane vědět, co nahradil.
+        var po = await db.Boje.FirstAsync(b => b.Id == posledni.Id);
+        Assert.Equal(prvni.Id, po.NahrazujeId);
+        Assert.False(await db.Boje.AnyAsync(b => b.Id == prostredni.Id));
+    }
+
     private static OrlickyPohar.Api.Features.Fotky.Fotka Snimek(
         Guid kdo, string popis, DateTimeOffset kdy) => new()
     {
