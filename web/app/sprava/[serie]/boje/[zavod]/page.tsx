@@ -249,6 +249,11 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
                         // u poslední na trati.
                         sirka: prenastavovana.sirka,
                         delka: prenastavovana.delka,
+                        // Barva a tvar jdou taky: formulář je předvybere,
+                        // aby bylo vidět, co ta bóje je. Bez nich vypadá
+                        // růžový plameňák jako bóje bez tvaru.
+                        barva: prenastavovana.barva ?? null,
+                        tvar: prenastavovana.tvar ?? null,
                       }
                     : null
                 }
