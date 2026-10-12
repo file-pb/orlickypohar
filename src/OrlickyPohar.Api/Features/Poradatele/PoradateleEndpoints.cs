@@ -52,9 +52,11 @@ public static class PoradateleEndpoints
     }
 
     private static async Task<IResult> NastavObrazekAsync(
-        string serie, string poradatel, [FromForm] FotkaFormular formular, ClaimsPrincipal kdo,
+        string serie, string poradatel, IFormFile? soubor, [FromForm] string? autor, [FromForm] string? popis,
+        [FromForm] bool? souhlas, ClaimsPrincipal kdo,
         Rozsahy rozsahy, PoradateleSprava sprava, FotkySprava fotky, CancellationToken ct)
     {
+        var formular = new FotkaFormular(soubor, autor, popis, souhlas ?? false);
         if (await NajdiAsync(serie, poradatel, rozsahy, sprava, ct) is not { } nalez)
             return Results.NotFound();
 

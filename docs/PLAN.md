@@ -5292,10 +5292,11 @@ implementaci téhož, jen hůř udržovanou. Fronta v kódu nikde není
 
 ### Pořadí po 11. 10. 2026
 
-0. **Vyvěšení směrnice nefunguje.** Předběhlo zbytek, protože Jarní vítr
-   je vypsaný a bez směrnice se regata nejede. Cloudflare i přesměrování
-   spravené 12. 10. 2026; zbývá prázdná 400 z API a integrační test přes
-   HTTP, který ji ukáže. Celé v oddílu *Nahrávání souborů*.
+0. ~~**Vyvěšení směrnice nefunguje.**~~ **Spravené 12. 10. 2026** ve
+   dvou krocích: Cloudflare odmítal požadavek s hlavičkou serverové akce,
+   a pod tím se skrývala druhá příčina — `IFormFile` uvnitř záznamu
+   s `[FromForm]` se nenaveze, což lámalo **všech osm** nahrávacích
+   koncových bodů. Celé v oddílu *Nahrávání souborů*.
 
 1. ~~**Zálohy obsahového bucketu.**~~ **Hotové 11. 10. 2026**, commit
    `88f6b44` v repozitáři `platform`. Zálohuje se celý bucket
@@ -5379,22 +5380,37 @@ tělo rovnou jako JSON a sahala jen po našem poli `error`; bez něj zbylo
 „API odpovědělo 400." a nešlo zjistit proč ani z logu. Teď se tělo čte
 jako text a co z něj zbude, jde zkráceně do hlášky.
 
-### Co zůstává otevřené
+### Druhá příčina: `IFormFile` uvnitř záznamu se nenaveze
 
-**API na skutečnou směrnici odpovídá 400 s prázdným tělem.** Všechny
-čtyřistovky, které si `VyvesAsync` vyrábí sám, nesou vysvětlení — prázdná
-tedy znamená, že se to láme **dřív, než se handler spustí**, tedy na
-vazbě parametrů požadavku.
+Po opravě Cloudflare dorazil požadavek až do API — a to odpovědělo
+**400 s prázdným tělem**. Všechny čtyřistovky, které si `VyvesAsync`
+vyrábí sám, nesou vysvětlení, takže prázdná znamenala selhání **před
+handlerem**. Anonymní požadavek přitom dostal 401, tedy je to **za**
+autorizací: zbyla vazba parametrů.
 
-Sedí k tomu nález auditu z 8. 10.: **správcovské endpointy se testují přes
-službu, ne přes HTTP.** Zrovna ta vrstva, která tu selhává, není pokrytá
-vůbec — a vyvěšení směrnice tedy na produkci nejspíš nikdy nefungovalo.
-Proti mocku ano, ten se chová jinak.
+Reprodukováno 12. 10. 2026 bez databáze a bez Dockeru — drobná aplikace
+se dvěma tvary parametru a týmž multipartem:
 
-**Další krok:** integrační test, který na ten endpoint pošle skutečný
-multipart přes HTTP. Doběhne v CI, kde je Postgres i Docker, a v jeho
-výstupu bude celá odpověď i s důvodem. Opraví to chybu i tu mezeru
-v testech naráz.
+| tvar parametru | výsledek |
+|---|---|
+| `[FromForm] SmerniceFormular` s `IFormFile` uvnitř | **400, prázdné tělo** |
+| `IFormFile? soubor` jako samostatný parametr | 200, soubor se naveze |
+
+**Postihovalo to všech osm nahrávacích koncových bodů**, ne jen směrnici:
+fotka bóje, fotka pořadatele, čtyři obrázky k článkům a papírový zápis
+výsledků. Nahrávání souborů do API tedy nikdy nefungovalo; proti mocku
+ano, protože ten vazbu neřeší.
+
+Opraveno tím, že `IFormFile` je všude **samostatný parametr** a záznam
+(`SmerniceFormular`, `FotkaFormular`, …) se skládá až v handleru — vrstva
+služeb a její testy se tím nemění.
+
+**Proč to nikdo nechytil:** nález auditu z 8. 10. 2026 — *správcovské
+endpointy se testují přes službu, ne přes HTTP*. Zrovna ta vrstva, která
+selhávala, nebyla pokrytá vůbec. Teď ji hlídá `VazbaNahraniTests`: jeden
+test na tvar, který používáme, a jeden na ten, který to rozbil. Ten druhý
+je schválně test cizího chování — až ho příští .NET spraví, spadne a bude
+to pokyn, že se podpisy dají zjednodušit zpátky.
 
 ### Mimochodem, mikrocache
 

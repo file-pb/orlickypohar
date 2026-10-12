@@ -60,9 +60,10 @@ public static class SmerniceEndpoints
     }
 
     private static async Task<IResult> VyvesAsync(
-        string serie, string zavod, [FromForm] SmerniceFormular formular, ClaimsPrincipal kdo,
-        Rozsahy rozsahy, SmerniceSprava sprava, CancellationToken ct)
+        string serie, string zavod, IFormFile? soubor, [FromForm] string? poznamka,
+        ClaimsPrincipal kdo, Rozsahy rozsahy, SmerniceSprava sprava, CancellationToken ct)
     {
+        var formular = new SmerniceFormular(soubor, poznamka);
         if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
             return Results.NotFound();
         if (!await SmiAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();

@@ -199,9 +199,10 @@ public static class VysledkyEndpoints
     }
 
     private static async Task<IResult> PapirAsync(
-        string serie, string zavod, int cislo, [FromForm] PapirFormular formular, ClaimsPrincipal kdo,
+        string serie, string zavod, int cislo, IFormFile? soubor, ClaimsPrincipal kdo,
         Rozsahy rozsahy, VysledkySprava sprava, FotkySprava fotky, IUloziste uloziste, CancellationToken ct)
     {
+        var formular = new PapirFormular(soubor);
         if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
             return Results.NotFound();
 
