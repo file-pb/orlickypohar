@@ -557,6 +557,101 @@ public class BojeTests(PostgresFixture fixture)
         Assert.Equal(0, await boje.UklidAsync(zavod.Id, default));
     }
 
+    /// <summary>
+    /// Zahození jednoho záznamu historie (Filip, 12. 10. 2026: <i>„Historie
+    /// bude mít možnost záznam smazat"</i>). Platí tentýž rozsudek jako
+    /// u hromadného úklidu — měří se proto obojí: že zmizí, co je k ničemu,
+    /// a že se neuhne u toho, na čem něco visí.
+    /// </summary>
+    [Fact]
+    public async Task Zahozeni_zaznamu_plati_tentyz_rozsudek_jako_uklid()
+    {
+        var (db, boje, trate) = SluzbyITrat();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var zbytecna = new OrlickyPohar.Api.Features.Boje.Boje
+        {
+            ZavodId = zavod.Id, Nazev = "překlep", Poradi = 1, Sirka = 49.5, Delka = 14.1,
+            PostavenaV = Ted, PostavilId = kdo.Id, NahrazenaV = Ted.AddMinutes(1),
+        };
+        db.Boje.Add(zbytecna);
+        await db.SaveChangesAsync();
+
+        // Ta, která stála ve vodě při přijetí trati, je doklad k poloze.
+        var (verejna, _) = await boje.PipniAsync(zavod.Id, Bod("byla venku"), kdo.Id, default);
+        await DulezitaAsync(trate, zavod, kdo);
+        Assert.Null(await boje.SeberAsync(zavod.Id, verejna!.Id, default));
+
+        Assert.Null(await boje.ZahodZaznamAsync(zavod.Id, zbytecna.Id, default));
+        Assert.NotNull(await boje.ZahodZaznamAsync(zavod.Id, verejna.Id, default));
+
+        var zbylo = await boje.SeznamAsync(zavod.Id, iHistorie: true, default);
+        Assert.Equal(verejna.Id, Assert.Single(zbylo).Id);
+    }
+
+    /// <summary>
+    /// <b>Bóje, která na trati stojí, není historie.</b> Mazátko je na
+    /// záznamy, co už ve vodě nejsou; na stojící bóji je sebrání nebo
+    /// přenastavení, a smazat ji by znamenalo zahodit měření, podle
+    /// kterého se zrovna pluje.
+    /// </summary>
+    [Fact]
+    public async Task Stojici_boje_se_jako_zaznam_nemaze()
+    {
+        var (db, boje, _) = SluzbyITrat();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (stoji, _) = await boje.PipniAsync(zavod.Id, Bod("stojí"), kdo.Id, default);
+
+        Assert.NotNull(await boje.ZahodZaznamAsync(zavod.Id, stoji!.Id, default));
+        Assert.NotNull(await boje.ZahodZaznamAsync(zavod.Id, 987_654, default));
+
+        Assert.Single(await boje.SeznamAsync(zavod.Id, iHistorie: true, default));
+    }
+
+    /// <summary>
+    /// <b>Past, kterou hromadný úklid nemá.</b> Úklid jde od nejnovějšího,
+    /// takže nástupce zahazovaného záznamu je v tu chvíli obvykle sám pryč.
+    /// Tady se ale maže libovolný záznam, klidně uprostřed řetězu
+    /// přenastavení — a kdyby se nástupce nepřepojil na předchůdce,
+    /// ukazovalo by jeho <c>NahrazujeId</c> do prázdna.
+    /// </summary>
+    [Fact]
+    public async Task Zahozeni_uprostred_retezu_prepoji_nastupce()
+    {
+        var (db, boje, _) = SluzbyITrat();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        // Řetěz tří pípnutí: první ← druhé ← třetí.
+        var (prvni, _) = await boje.PipniAsync(zavod.Id, Bod("první"), kdo.Id, default);
+        var (druha, _) = await boje.PipniAsync(
+            zavod.Id, Bod("druhá", nahrazuje: prvni!.Id), kdo.Id, default);
+        var (treti, _) = await boje.PipniAsync(
+            zavod.Id, Bod("třetí", nahrazuje: druha!.Id), kdo.Id, default);
+
+        // Pípnutí zahazuje zbytečné samo, takže se řetěz postaví ručně:
+        // jinak by uprostřed nebylo co mazat.
+        var prostredni = new OrlickyPohar.Api.Features.Boje.Boje
+        {
+            ZavodId = zavod.Id, Nazev = "prostřední", Poradi = 9, Sirka = 49.5, Delka = 14.1,
+            PostavenaV = Ted, PostavilId = kdo.Id, NahrazenaV = Ted.AddMinutes(1),
+        };
+        db.Boje.Add(prostredni);
+        await db.SaveChangesAsync();
+
+        var naKonci = await db.Boje.FirstAsync(b => b.Id == treti!.Id);
+        naKonci.NahrazujeId = prostredni.Id;
+        prostredni.NahrazujeId = prvni.Id;
+        await db.SaveChangesAsync();
+
+        Assert.Null(await boje.ZahodZaznamAsync(zavod.Id, prostredni.Id, default));
+
+        // Nástupce teď ukazuje na předchůdce zahozeného, ne do prázdna.
+        var po = await db.Boje.FirstAsync(b => b.Id == treti!.Id);
+        Assert.Equal(prvni.Id, po.NahrazujeId);
+        Assert.False(await db.Boje.AnyAsync(b => b.Id == prostredni.Id));
+    }
+
     private static OrlickyPohar.Api.Features.Fotky.Fotka Snimek(
         Guid kdo, string popis, DateTimeOffset kdy) => new()
     {

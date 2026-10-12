@@ -233,6 +233,52 @@ public class BojeSprava(
     }
 
     /// <summary>
+    /// Zahodí <b>jeden</b> záznam historie (Filip, 12. 10. 2026:
+    /// <i>„Historie bude mít možnost záznam smazat"</i>). Vrací důvod,
+    /// proč to nejde — nebo <c>null</c>, když je zahozený.
+    ///
+    /// <para>
+    /// <b>Oproti hromadnému úklidu tu je past s řetězem.</b> Úklid jde od
+    /// nejnovějšího, takže nástupce zahazovaného záznamu je v tu chvíli
+    /// obvykle sám pryč a není co napojovat. Tady se maže libovolný
+    /// záznam, klidně uprostřed řetězu přenastavení — a kdyby se nástupce
+    /// nepřepojil na předchůdce, ukazoval by jeho <c>NahrazujeId</c> do
+    /// prázdna. Proto se nástupce dohledá a předá dál.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Stojící bóje se nemaže.</b> Historie je to, co už ve vodě
+    /// nestojí; na bóji na trati je sebrání nebo přenastavení, ne mazátko.
+    /// </para>
+    /// </summary>
+    public async Task<string?> ZahodZaznamAsync(int zavodId, int bojeId, CancellationToken ct)
+    {
+        var zaznam = await db.Boje
+            .FirstOrDefaultAsync(b => b.Id == bojeId && b.ZavodId == zavodId, ct);
+
+        if (zaznam is null) return "Takový záznam u téhle regaty není.";
+        if (zaznam is { NahrazenaV: null, SebranaV: null })
+            return "Tahle bóje na trati pořád stojí. Nejdřív ji seber, nebo přenastav.";
+
+        var nastupce = await db.Boje
+            .FirstOrDefaultAsync(b => b.NahrazujeId == zaznam.Id, ct);
+
+        if (!await ZbytecnyAsync(zaznam, ct))
+            return "Na tomhle záznamu něco visí: ukazuje na něj prvek trati, nebo bóje "
+                   + "stála ve vodě, když rozhodčí trať přijal. Takový záznam je doklad "
+                   + "k poloze, podle které se možná jelo.";
+
+        if (!await ZahodAsync(zaznam, nastupce, ct))
+            return "Záznam se zahodit nepodařilo. Nejspíš nejde smazat jeho fotky — "
+                   + "zkus to za chvíli.";
+
+        log.LogInformation(
+            "Zahozen záznam historie bóje {Boje} u regaty {Zavod}", bojeId, zavodId);
+
+        return null;
+    }
+
+    /// <summary>
     /// Záznamy, které už ve vodě nestojí. <b>Od nejnovějšího</b>, aby se
     /// řetěz přenastavení rozplétal odzadu a nástupce vždycky existoval
     /// dřív, než se sáhne na jeho předchůdce.
