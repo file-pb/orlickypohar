@@ -5554,6 +5554,18 @@ Druhá cesta je ta správná, případně obojí. **Je to rozhodnutí pro
 Filipa**, ne věc k tichému udělání — mění se tím, jak rychle obrazovky
 správy naskakují po kliknutí.
 
+**Kolik to čekání doopravdy je (změřeno 14. 10. 2026):** čas do prvního
+bajtu na veřejné stránce s voláním API a s vynechanou cache je ustáleně
+**0,42–0,73 s**, ale **první požadavek po chvíli nečinnosti 1,2–2,8 s**
+(`/serie/2027` 2,80 s, `/serie/2027/zavody/jarni-vitr` 1,18 s). Bez
+prefetche se tedy nejvíc pozná **první** kliknutí po otevření správy, ne
+každé. Stránky správy chtějí přihlášení, takže je to náhrada za ně, ne
+ony samy — řádově ale totéž, protože sahají do téhož API.
+
+Pozor na adresu: **`/2027` je 404**, ročník je `/serie/2027`. První
+měření šlo omylem na `/2027`, takže měřilo rychlost chybové stránky —
+rozdíl proti skutečnosti je ten chvost u prvního požadavku.
+
 Dva požadavky z toho měření vrátily **503** a při opakování 200. Časově
 to padlo do nasazení #257, takže to nejspíš byl výměnný okamžik
 kontejneru, ne vada — jistota to ale není.
@@ -5708,6 +5720,44 @@ expo 44.0.6`, u Metra `react-native 0.72.17` — to je downgrade o třináct
 majorů do pravěku, ne oprava. Správně míří jedině u `decode-uri-component`,
 kde ukazuje na `expo-router 58.0.17`. Řídit se tu dá tedy jen Dependabotem
 a rozsahy z advisory, ne `fixAvailable`.
+
+
+## PR od Dependabota nemůžou být zelené (14. 10. 2026)
+
+Všech osm otevřených PR (#247–#254) mělo `build` i `integrace` červené —
+**včetně bumpu `actions/setup-node`, který build rozbít neumí.** Příznak
+tedy nebyl o obsahu těch PR a posuzovat je podle barvy nešlo.
+
+Příčina: `dotnet test -c Release` potřebuje licenci ImageSharpu
+(`build-deploy.yml:99-103`) a `OrlickyPohar.Api.csproj:9` ji nastaví jen
+tehdy, když proměnná není prázdná. Klíč chodí ze `secrets`. **Actions
+secrets ale pro PR od Dependabota nejsou dostupné** — Dependabot má
+vlastní trezor a ten je prázdný (`gh api .../dependabot/secrets` vrátil
+prázdný seznam). Klíč proto dojde prázdný, vlastnost se nenastaví a build
+spadne na „No Six Labors license found" bez ohledu na to, co PR mění.
+
+Dvě cesty, obě platné:
+
+- **Dávka přes vlastní větev** (#261, #262, #263). Tam klíč je, takže řetěz
+  změnu doopravdy posoudí. Je to zároveň zavedený postup z `82b2d95` —
+  jedna dávka místo mnoha merge, protože každý merge je nasazení a minuty
+  Actions jsou nejbližší kvóta (`platform/docs/KVOTY.md`).
+- **Přidat tentýž klíč do Dependabot secrets.** Spraví to natrvalo a ty PR
+  začnou být hodnotitelné samy. Hodnotu klíče z repozitáře přečíst nejde,
+  takže to musí naklikat Filip.
+
+**`@types/node` 26 (#252) je zavřené, ne zapomenuté.** Je to podruhé:
+v `82b2d95` Dependabot navrhoval 20 → 26 a zůstalo `^22`, protože typy mají
+sledovat runtime. Node je pořád **22** — `node:22-alpine` v obou fázích
+`web/Dockerfile` (14 a 24) a `node-version: '22'` v řetězu. Typy pro Node 26
+by popisovaly API, které v tom běhu není, tedy by kontrola schválila kód,
+co za běhu spadne. Zvedne se, až se zvedne Node.
+
+**Co u TypeScriptu 7 riziko zmenšuje:** nepřekládá vydaný kód ani v jednom
+projektu. Web překládá Turbopack — v logu buildu jsou to dvě oddělené fáze,
+`Compiled successfully` a zvlášť `Finished TypeScript` — a v appce je
+`typescript` v devDependencies, kód tam překládá Metro. TS 7 tedy může
+rozbít jedině kontrolu typů při buildu, a ta padne v řetězu, ne na produkci.
 
 ## Kvóty CI (audit hračkárny, 10. 10. 2026)
 
