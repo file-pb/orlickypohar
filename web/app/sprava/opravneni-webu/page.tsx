@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/app/sprava/odkaz";
 import { Drobecky, drobeckySpravy } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
 import { ROLE_WEBU, nactiPrehledWebu } from "@/lib/sprava";

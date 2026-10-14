@@ -5550,9 +5550,16 @@ Dvě cesty, a ta první řeší jen příznak:
   příčinu: správa není rozcestník, kde se bloudí, a předvykreslovat 66
   stránek dopředu je plýtvání i bez limitu.
 
-Druhá cesta je ta správná, případně obojí. **Je to rozhodnutí pro
+Druhá cesta je ta správná, případně obojí. Bylo to **rozhodnutí pro
 Filipa**, ne věc k tichému udělání — mění se tím, jak rychle obrazovky
-správy naskakují po kliknutí.
+správy naskakují po kliknutí. **Rozhodl 14. 10. 2026: vypnout prefetch**,
+`burst` zůstává.
+
+**Jak je to udělané:** ne atributem na devadesáti místech, ale jednou
+komponentou `web/app/sprava/odkaz.tsx`, kterou správa importuje místo
+`next/link`. Rozsypaný `prefetch={false}` by znamenal, že první nově
+přidaný odkaz ho mít nebude a nikdo si toho nevšimne. Předvolba se dá pro
+jednotlivý odkaz přebít, kdyby se někde předběžné načtení vyplatilo.
 
 **Kolik to čekání doopravdy je (změřeno 14. 10. 2026):** čas do prvního
 bajtu na veřejné stránce s voláním API a s vynechanou cache je ustáleně
