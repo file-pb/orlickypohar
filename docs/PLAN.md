@@ -5561,6 +5561,26 @@ komponentou `web/app/sprava/odkaz.tsx`, kterou správa importuje místo
 přidaný odkaz ho mít nebude a nikdo si toho nevšimne. Předvolba se dá pro
 jednotlivý odkaz přebít, kdyby se někde předběžné načtení vyplatilo.
 
+**Doloženo na nasazené obrazovce (15. 10. 2026).** Tentýž prohlížeč, tentýž
+přihlášený účet, táž adresa `/sprava/2027`, jen jiná nasazená verze:
+
+| | požadavků `?_rsc=` | 429 |
+|---|---|---|
+| před (`b8e73c1`) | **66** | 8 |
+| po (`fba82e0`) | **8** | **0** |
+
+Že to není cache prohlížeče, je ověřené tím, že v tomtéž tabu `/verze`
+vrátilo `fba82e0`. Obrazovka se chová normálně — kliknutí na „Přihlášky"
+u Jarního větru otevřelo `/sprava/2027/prihlasky/jarni-vitr`.
+
+**Těch 8, co zůstalo, nejsou odkazy správy:** jsou to `/`, `/serie/2027`,
+`/serie/2027/poradi` a `/sprava`, tedy hlavička a menu účtu, každý dvakrát.
+Jdou mimo `sprava/odkaz.tsx`, vedou na veřejné stránky a mikrocache je
+obsluhuje z cache, takže zůstávají.
+
+Tři **503** z prvního měření padly přesně do okamžiku, kdy dobíhalo
+nasazení — podporuje to domněnku, že 503 je výměna kontejneru, ne vada.
+
 **Kolik to čekání doopravdy je (změřeno 14. 10. 2026):** čas do prvního
 bajtu na veřejné stránce s voláním API a s vynechanou cache je ustáleně
 **0,42–0,73 s**, ale **první požadavek po chvíli nečinnosti 1,2–2,8 s**
