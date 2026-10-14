@@ -389,11 +389,24 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 
 /* Karty ročníků a zastávek */
 .seznam { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.75rem; }
-/* Na širokém displeji dva sloupce. Devět zastávek pod sebou je na takovém
-   monitoru sloupec, který nejde přehlédnout jedním pohledem — a přesně to
-   má kalendář umět. */
+/* Na širokém displeji dva sloupce, ale <b>jen u seznamů karet</b>. Devět
+   zastávek pod sebou je na takovém monitoru sloupec, který nejde
+   přehlédnout jedním pohledem — a přesně to má kalendář umět.
+
+   Třídu `.seznam` ale používá sedmnáct obrazovek a karty v ní má šest.
+   Zbylým jedenácti dva sloupce nedávaly smysl a u vyvěšených směrnic to
+   bylo rozbité (Filip, 15. 10. 2026: *„když dojde na stažení směrnic, tak
+   se to takhle blbě poskládá"*): verze nejsou karty, takže se dvě postavily
+   vedle sebe, formulář „Stáhnout z vývěsky" roztáhl řádek do výšky a text
+   sousední verze se rozlil přes celou šířku.
+
+   Ptá se to na skutečný obsah, ne na jméno obrazovky: karta se do seznamu
+   dostává i z komponenty (`Zastavka` v kalendáři, `Rozjizdka` ve
+   výsledcích), takže podle souboru by to nešlo spolehlivě rozhodnout —
+   `Radek` v lodích naopak vrací holé `li` bez karty. A kdyby prohlížeč
+   `:has` neuměl, zůstane jeden sloupec: to je ta bezpečnější strana. */
 @media (min-width: 1180px) {
-  .seznam { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .seznam:has(> li > .karta) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 .karta {
   display: block; padding: 1rem 1.15rem; background: var(--papir);
@@ -421,6 +434,19 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 .stitek.stav-hotovo { color: var(--stav-vypsany); }
 .stitek.stav-prijato { color: var(--voda); }
 .stitek.stav-prestavba { color: var(--stav-zruseny); }
+/* Vyvěšené verze směrnice. <b>Není to seznam karet</b>, ale záznamů pod
+   sebou — a každý nese tři různé věci: soubor se štítky, kdo a kdy, a co se
+   s ní stalo. Bez těchhle pravidel se slily do jednoho odstavce, protože
+   `.detail` je jinak stylovaný jen uvnitř `.karta` (Filip, 15. 10. 2026). */
+.verze-smernice > li { padding: 0.55rem 0; border-bottom: 1px solid var(--linka); }
+.verze-smernice > li:last-child { border-bottom: 0; }
+.verze-smernice .detail {
+  display: block; color: var(--tlumeny); font-size: 0.875rem; margin-top: 0.15rem;
+}
+/* Formulář stažení patří pod údaje, ne vedle nich: je to úkon nad tou
+   verzí, a na úzké obrazovce by se vedle textu stejně nevešel. */
+.verze-smernice .formular { margin-top: 0.5rem; }
+
 .karta.zrusena { background: transparent; }
 .karta.zrusena .detail { color: var(--tlumeny); }
 .skrtnute { text-decoration: line-through; text-decoration-color: var(--tlumeny); }
