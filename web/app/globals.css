@@ -905,6 +905,16 @@ header.hlavicka .jen-uzke { display: none; }
   color: var(--voda);
 }
 .seznam-prvku .znacky { color: var(--tlumeny); }
+
+/* Detail prvku na veřejné stránce trati. <b>Obrázek, věta, věta</b> —
+   je to odpověď závodníkovi na „co to je a jak to vypadá" (Filip,
+   15. 10. 2026), ne editace. Odsazuje se stejně jako detail ve správě,
+   aby se obě obrazovky četly stejně. */
+.detail-prvku-verejny { padding: 0 0 0.9rem; }
+.detail-prvku-verejny .nahled-prvku { margin: 0 0 0.6rem; max-width: 22rem; }
+.detail-prvku-verejny p { margin: 0 0 0.35rem; }
+.detail-prvku-verejny .jak-se-jede { color: var(--text); }
+.detail-prvku-verejny .poznamka { font-size: 0.85rem; }
 /* Poznámka se vejde na řádek celá jen někdy; zbytek se nechá uříznout,
    protože v detailu je stejně celá. */
 .seznam-prvku .jak-to-jet {

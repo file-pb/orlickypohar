@@ -1,4 +1,5 @@
 import type { BarvaBoje, DruhZnaceni, TvarBoje } from "@/lib/boje";
+import { dvaBody } from "@/lib/trat";
 import type { StranaPrvku, SvetovaStrana, TypPrvku } from "@/lib/trat";
 
 /**
@@ -456,4 +457,34 @@ export function patriSmer(typ: TypStavby): boolean {
 /** Nese ten typ druh startu? */
 export function patriDruhStartu(typ: TypStavby): boolean {
   return typ.jak === "start";
+}
+
+/**
+ * Typ stavby a stopa pro <b>už postavený</b> prvek — opačný směr než
+ * průvodce, který z volby teprve dělá prvek.
+ *
+ * <b>Proč to jde:</b> `VOLBY` je úplný soupis toho, co se dá postavit,
+ * a dvojice typ + strana v něm určuje stopu jednoznačně. Veřejná stránka
+ * tedy může nakreslit tentýž náhled, jaký viděl stavitel, aniž by si
+ * mapování opisovala podruhé.
+ *
+ * <b>Když se stopa nenajde, vrací `null`</b> a náhled se nakreslí bez ní.
+ * To je schválně: vymyslet si, kudy loď jede, je přesně ta lež, kvůli
+ * které prvky vznikly. Týká se to odskoku, který `VOLBY` jako typ nezná —
+ * staví se přes „jedna značka" a uloží se jako vlastní typ.
+ */
+export function stopaProPrvek(typ: TypPrvku, strana: StranaPrvku): Stopa | null {
+  const vsechny = Object.values(VOLBY).flat();
+  return (
+    vsechny.find((v) => v.typ === typ && v.strana === strana)?.stopa ??
+    vsechny.find((v) => v.typ === typ)?.stopa ??
+    null
+  );
+}
+
+/** Kolik bodů prvek má, v podobě, které rozumí náhled. */
+export function typStavbyProPrvek(typ: TypPrvku): TypStavby {
+  const id: TypStavby["id"] =
+    typ === "Start" ? "Start" : typ === "Cil" ? "Cil" : typ === "Odskok" ? "Odskok" : dvaBody(typ) ? "Dve" : "Jedna";
+  return TYPY.find((t) => t.id === id)!;
 }
