@@ -86,14 +86,38 @@ export function znakPodleVyhlasky(barva?: BarvaBoje, tvar?: TvarBoje): string | 
  * Značka bóje na mapě. <b>Bílý lem vždycky</b>, ať je vidět nad vodou,
  * lesem i nad bílou bójí — bez něj by bílá na světlém podkladu zmizela.
  */
-export function ZnakBoje({
+/**
+ * Kolik plastičnosti značka unese. <b>Rozhoduje o tom velikost a podklad</b>
+ * (Filip, 15. 10. 2026: *„na mapce tam to musí být přehledné a jasné:
+ * jednoduchou, plochou, a jinde B a C"*).
+ *
+ * Na mapce je značka osm pixelů nad fotomapou, kde každý odlesk ubírá
+ * čitelnost — tam zůstává plochá. V řádku seznamu má osmnáct pixelů, což
+ * unese světlo, ale ne odlesk. Ve velkém náhledu prvku je místa dost na
+ * obojí.
+ *
+ * <b>Dělá se to vrstvením, ne přechodem.</b> Gradient by potřeboval `defs`
+ * s jedinečným id, a tahle značka se kreslí mnohokrát v jednom SVG
+ * i ve víc SVG na jedné stránce — duplicitní id je nevalidní dokument.
+ * Vrstvení je tentýž tvar menší a posunutý, takže funguje i u kužele
+ * a válce, kde by plošné světlo přeteklo přes okraj.
+ */
+export type Plasticita = "zadna" | "objem" | "odlesk";
+
+function ZakladniZnak({
   x,
   y,
   r = 8,
   barva,
   tvar,
   znaceni,
+  vyplnPrepis,
+  bezLemu = false,
 }: {
+  /** Čím přebarvit výplň. Používá vrstva světla, viz `Plasticita`. */
+  vyplnPrepis?: string;
+  /** Vrstva světla lem nemá — obkroužila by sama sebe uvnitř značky. */
+  bezLemu?: boolean;
   x: number;
   y: number;
   r?: number;
@@ -107,8 +131,10 @@ export function ZnakBoje({
    */
   znaceni?: DruhZnaceni;
 }) {
-  const vypln = barva ? BARVY[barva] : "#c1121f";
-  const spolecne = { fill: vypln, stroke: "#fff", strokeWidth: 3 } as const;
+  const vypln = vyplnPrepis ?? (barva ? BARVY[barva] : "#c1121f");
+  const spolecne = bezLemu
+    ? ({ fill: vypln } as const)
+    : ({ fill: vypln, stroke: "#fff", strokeWidth: 3 } as const);
 
   // Plavidlo: lodička. Hýbe se a není to bóje, takže nesmí vypadat jako
   // něco zakotveného.
@@ -217,6 +243,77 @@ export function ZnakBoje({
 }
 
 /**
+ * Značka bóje. <b>Bílý lem vždycky</b>, ať je vidět nad vodou, lesem
+ * i nad bílou bójí — bez něj by bílá na světlém podkladu zmizela.
+ *
+ * Plastičnost se skládá z téhož tvaru nakresleného podruhé: menší,
+ * posunutý k levému hornímu okraji a bílý s nízkým krytím. Proto drží tvar
+ * i u kužele a válce, kde by plošné světlo přeteklo ven.
+ *
+ * <b>Plavidlo, objekt na břehu a plameňák zůstávají ploché</b> bez ohledu
+ * na to, co se žádá. Lodička a pták mají obrys, do kterého se zmenšená
+ * kopie netrefí — vznikla by z ní šmouha, a plameňák se pozná tvarem,
+ * ne leskem.
+ */
+export function ZnakBoje({
+  x,
+  y,
+  r = 8,
+  barva,
+  tvar,
+  znaceni,
+  plasticita = "zadna",
+}: {
+  x: number;
+  y: number;
+  r?: number;
+  barva?: BarvaBoje;
+  tvar?: TvarBoje;
+  znaceni?: DruhZnaceni;
+  plasticita?: Plasticita;
+}) {
+  const zaklad = (
+    <ZakladniZnak x={x} y={y} r={r} barva={barva} tvar={tvar} znaceni={znaceni} />
+  );
+
+  const slozity =
+    znaceni === "Plavidlo" || znaceni === "ObjektNaBrehu" || tvar === "Plamenak";
+  if (plasticita === "zadna" || slozity) return zaklad;
+
+  return (
+    <g>
+      {zaklad}
+      {/* Světlo: tentýž tvar na 55 % velikosti, posunutý k levému hornímu
+          okraji. Bez lemu — ten by uvnitř značky obkroužil sám sebe. */}
+      <g opacity="0.3">
+        <ZakladniZnak
+          x={x - r * 0.26}
+          y={y - r * 0.26}
+          r={r * 0.55}
+          barva={barva}
+          tvar={tvar}
+          znaceni={znaceni}
+          vyplnPrepis="#ffffff"
+          bezLemu
+        />
+      </g>
+      {plasticita === "odlesk" && (
+        /* Ostrý odlesk až u velkého náhledu: při osmnácti pixelech je z něj
+           bílá tečka, která vypadá jako chyba vykreslení. */
+        <ellipse
+          cx={x - r * 0.3}
+          cy={y - r * 0.38}
+          rx={r * 0.26}
+          ry={r * 0.17}
+          fill="#ffffff"
+          opacity="0.55"
+        />
+      )}
+    </g>
+  );
+}
+
+/**
  * Značka bóje do řádku textu — seznam bójí, výpis prvků.
  *
  * <b>Bez barvy ani tvaru se nekreslí nic</b>, místo šedivého kolečka:
@@ -250,7 +347,7 @@ export function ZnakVRadku({
       aria-label={popis}
     >
       <title>{popis}</title>
-      <ZnakBoje x={11} y={11} r={7} barva={barva} tvar={tvar} znaceni={znaceni} />
+      <ZnakBoje x={11} y={11} r={7} barva={barva} tvar={tvar} znaceni={znaceni} plasticita="objem" />
     </svg>
   );
 }
