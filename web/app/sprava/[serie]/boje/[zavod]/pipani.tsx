@@ -410,7 +410,7 @@ export function Pipani({
               onClick={() => setTvar(tvar === x ? "" : x)}
             >
               <svg viewBox="0 0 22 22" width="18" height="18" aria-hidden="true">
-                <ZnakBoje x={11} y={11} r={7} barva={barva || undefined} tvar={x} />
+                <ZnakBoje x={11} y={11} r={7} barva={barva || undefined} tvar={x} plasticita="objem" />
               </svg>{" "}
               {NAZVY_TVARU[x]}
             </button>
