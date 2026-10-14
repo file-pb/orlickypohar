@@ -39,6 +39,9 @@ export function Menu({
             </OdkazJinam>
           </>
         )}
+        {/* Tabule do hospody. Vede na rozcestník, ne na konkrétní závod:
+            hlavička by jinak musela na každé stránce zjišťovat, co se jede. */}
+        <OdkazJinam href="/tabule">Tabule na telku</OdkazJinam>
         <OdkazJinam href="/historie">Historie</OdkazJinam>
         <OdkazJinam href="/pravidla">Pravidla</OdkazJinam>
         <OdkazJinam href="/napoveda">Nápověda</OdkazJinam>
