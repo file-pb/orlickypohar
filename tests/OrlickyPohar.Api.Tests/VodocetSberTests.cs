@@ -25,7 +25,10 @@ public class VodocetSberTests(PostgresFixture fixture)
     public async Task Rada_a_aktualni_hodnoty_se_slijou_a_stare_zmizi()
     {
         var hodina = Nyni.AddMinutes(-10);
-        var stara = Nyni.AddDays(-4);
+        // Za hranicí uchování. Do 15. 10. 2026 stačily čtyři dny, dokud se
+        // držely tři; teď se drží rok s rezervou kvůli grafu, takže „staré"
+        // začíná až za ní.
+        var stara = Nyni.AddDays(-401);
 
         await VDbAsync(async db =>
         {
@@ -45,7 +48,7 @@ public class VodocetSberTests(PostgresFixture fixture)
         await VDbAsync(async db =>
         {
             var radky = await db.MereniNadrze
-                .Where(m => m.Cas >= Nyni.AddDays(-5) && m.Cas <= Nyni)
+                .Where(m => m.Cas >= Nyni.AddDays(-402) && m.Cas <= Nyni)
                 .OrderBy(m => m.Cas).ToListAsync();
 
             Assert.Equal([hodina, Nyni], radky.Select(r => r.Cas));
@@ -55,5 +58,30 @@ public class VodocetSberTests(PostgresFixture fixture)
             Assert.Equal((334.71m, 120m, 14.3m, 345.4m), (h.Hladina, h.Odtok!.Value, h.Pritok!.Value, h.Objem!.Value));
             Assert.Equal(14.5m, radky[1].Pritok);
         });
+    }
+
+    /// <summary>
+    /// Měření staré pár dnů <b>zůstává</b> — graf za týden a měsíc na něm
+    /// stojí. Dřív mizelo po třech dnech, a právě to Filipovu žádost
+    /// o delší rozsahy blokovalo.
+    /// </summary>
+    [Fact]
+    public async Task Mereni_stare_nekolik_dnu_zustava()
+    {
+        var pred = Nyni.AddDays(-4);
+
+        await VDbAsync(async db =>
+        {
+            db.MereniNadrze.Add(new MereniNadrze { Cas = pred, Hladina = 333m, Pritok = 9m });
+            await db.SaveChangesAsync();
+        });
+
+        await VDbAsync(db => SberVodocetu.UlozAsync(db, new StrankaPvl(
+            new MereniPvl(Nyni, 334.69m, 345.3m, 14.5m, 0m), []), Nyni, default));
+
+        await VDbAsync(async db =>
+            Assert.True(
+                await db.MereniNadrze.AnyAsync(m => m.Cas == pred),
+                "Měření staré čtyři dny se nemá mazat, jen prořídnout."));
     }
 }
