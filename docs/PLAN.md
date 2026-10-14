@@ -5530,6 +5530,34 @@ a v logu stálo `excess: 30.450` — Next při vykreslení seznamu odkazů ve
 správě vystřelí desítky RSC požadavků naráz a do té dávky se nevejde.
 Rychlost je pro ustálený provoz v pořádku, dávka je malá.
 
+**Změřeno 12. 10. 2026** v prohlížeči na `/sprava/2027`, kde to Filip
+viděl: jedno otevření té stránky vystřelí **66 požadavků `?_rsc=`**
+a **19 z nich dostane 429**.
+
+To číslo ale mění, co s tím dělat. Těch 66 nejsou levné požadavky —
+každý je **plné serverové vykreslení stránky správy i s voláním API**.
+Next si dopředu načítá všech devět regat krát čtyři odkazy (výsledky,
+přihlášky, směrnice, bóje), celý ročník a věci mimo ročník; člověk si
+pak otevře jednu.
+
+Dvě cesty, a ta první řeší jen příznak:
+
+- **Zvednout `burst`** (`deploy/cache/default.conf:208`) 429 odstraní,
+  ale pustí těch 66 drahých vykreslení dovnitř. Web zvládne ~4,9
+  vykreslení za vteřinu (změřeno 8. 10.), takže se fronta jen přesune
+  z nginxu do webu.
+- **Vypnout prefetch** na odkazech ve správě (`prefetch={false}`) řeší
+  příčinu: správa není rozcestník, kde se bloudí, a předvykreslovat 66
+  stránek dopředu je plýtvání i bez limitu.
+
+Druhá cesta je ta správná, případně obojí. **Je to rozhodnutí pro
+Filipa**, ne věc k tichému udělání — mění se tím, jak rychle obrazovky
+správy naskakují po kliknutí.
+
+Dva požadavky z toho měření vrátily **503** a při opakování 200. Časově
+to padlo do nasazení #257, takže to nejspíš byl výměnný okamžik
+kontejneru, ne vada — jistota to ale není.
+
 ### Nasazení ruší jedno druhé
 
 Merge do `main` spustí nasazení a **novější běh ten rozdělaný ukončí**
