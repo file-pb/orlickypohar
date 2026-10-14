@@ -14,25 +14,30 @@ public class VodocetProredeniTests
 {
     private static readonly DateTimeOffset Nyni = new(2026, 10, 15, 12, 0, 0, TimeSpan.Zero);
 
-    /// <summary>Řada po deseti minutách, jak ji dává sběr.</summary>
-    private static List<DateTimeOffset> Rada(TimeSpan odStari, TimeSpan doStari) =>
+    /// <summary>
+    /// Řada po deseti minutách, jak ji dává sběr. <b>Vzorky na celou hodinu
+    /// jsou chudší</b> — tak to chodí v produkci: hodinová řada Povodí nese
+    /// jen hladinu a odtok, kdežto aktuální hodnoty i přítok a objem.
+    /// </summary>
+    private static List<Prorideni.Vzorek> Rada(TimeSpan odStari, TimeSpan doStari) =>
         [.. Enumerable
             .Range(0, (int)((odStari - doStari).TotalMinutes / 10))
-            .Select(i => Nyni - odStari + TimeSpan.FromMinutes(10 * i))];
+            .Select(i => Nyni - odStari + TimeSpan.FromMinutes(10 * i))
+            .Select(c => new Prorideni.Vzorek(c, c.Minute == 0 ? 1 : 3))];
 
     [Fact]
     public void Poslednich_24_h_zustane_cele()
     {
-        var casy = Rada(TimeSpan.FromHours(24), TimeSpan.Zero);
+        var vzorky = Rada(TimeSpan.FromHours(24), TimeSpan.Zero);
 
-        Assert.Empty(Prorideni.KeSmazani(casy, Nyni));
+        Assert.Empty(Prorideni.KeSmazani(vzorky, Nyni));
     }
 
     [Fact]
     public void Druhy_a_treti_den_zridne_na_pulhodiny()
     {
-        var casy = Rada(TimeSpan.FromDays(3), TimeSpan.FromDays(1));
-        var zbyde = casy.Count - Prorideni.KeSmazani(casy, Nyni).Count;
+        var vzorky = Rada(TimeSpan.FromDays(3), TimeSpan.FromDays(1));
+        var zbyde = vzorky.Count - Prorideni.KeSmazani(vzorky, Nyni).Count;
 
         // Dva dny po půlhodině.
         Assert.Equal(2 * 48, zbyde);
@@ -41,22 +46,35 @@ public class VodocetProredeniTests
     [Fact]
     public void Starsi_nez_ctrnact_dnu_zridne_na_dve_hodiny()
     {
-        var casy = Rada(TimeSpan.FromDays(20), TimeSpan.FromDays(15));
-        var zbyde = casy.Count - Prorideni.KeSmazani(casy, Nyni).Count;
+        var vzorky = Rada(TimeSpan.FromDays(20), TimeSpan.FromDays(15));
+        var zbyde = vzorky.Count - Prorideni.KeSmazani(vzorky, Nyni).Count;
 
         // Pět dnů po dvou hodinách.
         Assert.Equal(5 * 12, zbyde);
     }
 
     [Fact]
-    public void Zustava_prvni_vzorek_v_kroku_at_uklid_bezi_kdykoli()
+    public void Z_kroku_zustane_vzorek_s_vic_hodnotami()
     {
-        var casy = Rada(TimeSpan.FromDays(3), TimeSpan.FromDays(1));
-        var smazat = Prorideni.KeSmazani(casy, Nyni).ToHashSet();
-        var zbyle = casy.Where(c => !smazat.Contains(c)).OrderBy(c => c).ToList();
+        var vzorky = Rada(TimeSpan.FromDays(3), TimeSpan.FromDays(1));
+        var smazat = Prorideni.KeSmazani(vzorky, Nyni).ToHashSet();
+        var zbyle = vzorky.Where(v => !smazat.Contains(v.Cas)).ToList();
 
-        // Každý zbylý vzorek sedí na celou nebo na půl hodiny — to je ta
-        // vlastnost, kvůli které se seskupuje po kroku a ne „každý n-tý".
+        // Celá hodina je v téhle řadě ten chudší vzorek, takže z každého
+        // kroku musí zbýt ten druhý — jinak by se z historie vytratil
+        // přítok, který hodinová řada Povodí nemá.
+        Assert.All(zbyle, v => Assert.Equal(3, v.Hodnot));
+    }
+
+    [Fact]
+    public void Pri_shode_rozhoduje_cas_at_je_vyber_urcity()
+    {
+        // Všechny vzorky stejně bohaté: zbýt má ten nejstarší v kroku.
+        var vzorky = Rada(TimeSpan.FromDays(3), TimeSpan.FromDays(1))
+            .Select(v => v with { Hodnot = 3 }).ToList();
+        var smazat = Prorideni.KeSmazani(vzorky, Nyni).ToHashSet();
+        var zbyle = vzorky.Where(v => !smazat.Contains(v.Cas)).Select(v => v.Cas).ToList();
+
         Assert.All(zbyle, c => Assert.True(c.Minute % 30 == 0, $"{c:HH:mm} nesedí na půlhodinu"));
     }
 
@@ -65,11 +83,11 @@ public class VodocetProredeniTests
     {
         // Denní vzorky starší tří měsíců: krok pásma je taky den, takže
         // druhý průchod nesmí smazat nic.
-        var casy = Enumerable.Range(0, 100)
-            .Select(i => Nyni - TimeSpan.FromDays(100 - i))
+        var vzorky = Enumerable.Range(0, 100)
+            .Select(i => new Prorideni.Vzorek(Nyni - TimeSpan.FromDays(100 - i), 3))
             .ToList();
 
-        Assert.Empty(Prorideni.KeSmazani(casy, Nyni).Where(c => c < Nyni - TimeSpan.FromDays(90)));
+        Assert.Empty(Prorideni.KeSmazani(vzorky, Nyni).Where(c => c < Nyni - TimeSpan.FromDays(90)));
     }
 
     [Fact]

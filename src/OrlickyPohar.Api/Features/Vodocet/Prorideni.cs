@@ -14,8 +14,14 @@ namespace OrlickyPohar.Api.Features.Vodocet;
 /// <b>Ponechává se vzorek, nepočítá se průměr.</b> Denní průměr je údaj,
 /// který nikdo nenaměřil, a hladina nádrže se mění pomalu — jeden skutečný
 /// vzorek na den dá na ročním grafu stejnou křivku a nic si nevymýšlí.
-/// Ponechává se <b>první měření v pásmu</b>, ne poslední ani prostřední:
-/// je to jediná volba, která nezávisí na tom, kdy úklid běžel.
+/// </para>
+/// <para>
+/// <b>Z každého kroku zůstane ten nejbohatší vzorek</b>, ne první. Povodí
+/// dává v hodinové řadě jen hladinu a odtok, kdežto přítok a objem jen jako
+/// aktuální hodnotu — takže „první v kroku" by často padl na řádek z řady
+/// a přítok s objemem by se z historie vytratily právě na těch delších
+/// rozsazích, kvůli kterým se vůbec drží. Při shodě rozhoduje čas, aby byl
+/// výběr určitý.
 /// </para>
 /// </summary>
 public static class Prorideni
@@ -63,9 +69,17 @@ public static class Prorideni
     /// zůstane.
     /// </para>
     /// </summary>
+    /// <summary>
+    /// Vzorek k posouzení: čas a kolik hodnot u něj je. Hladinu má každý
+    /// řádek, takže se počítají jen objem, přítok a odtok.
+    /// </summary>
+    public readonly record struct Vzorek(DateTimeOffset Cas, int Hodnot);
+
     public static IReadOnlyList<DateTimeOffset> KeSmazani(
-        IEnumerable<DateTimeOffset> casy, DateTimeOffset nyni)
+        IEnumerable<Vzorek> vzorky, DateTimeOffset nyni)
     {
+        var casy = vzorky.Select(v => v.Cas).ToList();
+        var bohatost = vzorky.ToDictionary(v => v.Cas, v => v.Hodnot);
         var smazat = new List<DateTimeOffset>();
 
         foreach (var pasmo in Pasma)
@@ -87,7 +101,13 @@ public static class Prorideni
             // takže hranice nezávisí na tom, kdy úklid běžel.
             var tiky = pasmo.Krok.Ticks;
             foreach (var skupina in vPasmu.GroupBy(c => c.UtcTicks / tiky))
-                smazat.AddRange(skupina.Skip(1));
+            {
+                var zustane = skupina
+                    .OrderByDescending(c => bohatost.GetValueOrDefault(c))
+                    .ThenBy(c => c)
+                    .First();
+                smazat.AddRange(skupina.Where(c => c != zustane));
+            }
         }
 
         return smazat;

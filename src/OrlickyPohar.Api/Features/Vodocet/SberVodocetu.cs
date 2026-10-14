@@ -136,14 +136,16 @@ public class SberVodocetu(
     /// </summary>
     private static async Task ProredAsync(AppDbContext db, DateTimeOffset nyni, CancellationToken ct)
     {
-        // Jen časy, ne celé řádky: rozhodnutí závisí výhradně na nich
-        // a tahle tabulka má v ustáleném stavu kolem 1 250 řádků.
-        var casy = await db.MereniNadrze
+        // Čas a počet hodnot, ne celé řádky: víc k rozhodnutí netřeba
+        // a tahle tabulka má v ustáleném stavu kolem 1 200 řádků.
+        var vzorky = await db.MereniNadrze
             .Where(m => m.Cas < nyni - Prorideni.Pasma[0].Od)
-            .Select(m => m.Cas)
+            .Select(m => new Prorideni.Vzorek(
+                m.Cas,
+                (m.Objem == null ? 0 : 1) + (m.Pritok == null ? 0 : 1) + (m.Odtok == null ? 0 : 1)))
             .ToListAsync(ct);
 
-        var smazat = Prorideni.KeSmazani(casy, nyni);
+        var smazat = Prorideni.KeSmazani(vzorky, nyni);
         if (smazat.Count == 0) return;
 
         await db.MereniNadrze.Where(m => smazat.Contains(m.Cas)).ExecuteDeleteAsync(ct);
