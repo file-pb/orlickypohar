@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/app/sprava/odkaz";
 import { notFound } from "next/navigation";
 import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
 import { Lodka } from "@/app/lodka";

@@ -2,7 +2,7 @@
 
 import { BARVY, NAZVY_BAREV, NAZVY_TVARU, ZnakBoje, znakPodleVyhlasky } from "@/app/znak-boje";
 import type { BarvaBoje, TvarBoje } from "@/lib/boje";
-import Link from "next/link";
+import Link from "@/app/sprava/odkaz";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MapkaVyber } from "@/app/mapka-vyber";
