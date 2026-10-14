@@ -87,7 +87,8 @@ public class VodocetProredeniTests
             .Select(i => new Prorideni.Vzorek(Nyni - TimeSpan.FromDays(100 - i), 3))
             .ToList();
 
-        Assert.Empty(Prorideni.KeSmazani(vzorky, Nyni).Where(c => c < Nyni - TimeSpan.FromDays(90)));
+        Assert.DoesNotContain(
+            Prorideni.KeSmazani(vzorky, Nyni), c => c < Nyni - TimeSpan.FromDays(90));
     }
 
     [Fact]
