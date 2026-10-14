@@ -5,9 +5,23 @@ namespace OrlickyPohar.Api.Features.Vodocet;
 
 /// <summary>
 /// Každých deset minut stáhne stránku Orlíku a uloží, co na ní je; měření
-/// starší tří dnů smaže (Filip, 16. 9. 2026: po deseti minutách a staré
-/// promazávat, ať tabulka nebobtná). Na výpočet stačí 24 h, zbytek je
-/// rezerva na výpadek.
+/// starší roku s rezervou smaže (Filip, 16. 9. 2026: po deseti minutách
+/// a staré promazávat, ať tabulka nebobtná). Na výpočet bilance stačí 24 h;
+/// zbytek je historie pro graf a rezerva na výpadek.
+/// <para>
+/// <b>Do 15. 10. 2026 se drželi tři dny</b> a víc nebylo k čemu — graf
+/// uměl jen posledních 24 h. Filip pak chtěl přepínání rozsahu až na rok
+/// a ptal se, jestli to nezatíží; spočítáno: sběr dává <b>144 řádků
+/// denně</b> (jeden po deseti minutách, ověřeno na produkční řadě), tedy
+/// <b>52 560 za rok</b>. Při zhruba osmdesáti bajtech na řádek i s režií
+/// Postgresu a indexem jsou to jednotky MB ročně — proti disku stroje nic.
+/// Dražší je přenos: rok po deseti minutách je 2,8 MB, a to se řeší
+/// hustotou bodů podle rozsahu, ne kratší pamětí.
+/// </para>
+/// <para>
+/// <b>Zpětně to data nevyrobí.</b> Rok bude k dispozici za rok; do té doby
+/// se nabízejí jen rozsahy, které v datech opravdu jsou.
+/// </para>
 /// <para>
 /// <b>Zapíná se proměnnou <c>Vodocet__Sber=true</c></b>, jen v nasazení.
 /// Testy ani vývojový stroj tak na cizí server nesahají.
@@ -23,7 +37,12 @@ public class SberVodocetu(
     : BackgroundService
 {
     public static readonly TimeSpan Interval = TimeSpan.FromMinutes(10);
-    public static readonly TimeSpan Uchovani = TimeSpan.FromDays(3);
+    /// <summary>
+    /// Jak hluboko se měření drží. Rok a pět týdnů navrch: roční graf má
+    /// sahat na celý rok i den po půlnoci, a mazat přesně na hraně by
+    /// z posledního dne ukrajovalo.
+    /// </summary>
+    public static readonly TimeSpan Uchovani = TimeSpan.FromDays(400);
 
     public const string Klient = "pvl";
 
@@ -99,5 +118,34 @@ public class SberVodocetu(
 
         await db.SaveChangesAsync(ct);
         await db.MereniNadrze.Where(m => m.Cas < od).ExecuteDeleteAsync(ct);
+        await ProredAsync(db, nyni, ct);
+    }
+
+    /// <summary>
+    /// Prořídne starší měření podle <see cref="Prorideni.Pasma"/>.
+    /// <para>
+    /// <b>Běží při každém sběru</b>, tedy po deseti minutách. Je to levné:
+    /// v ustáleném stavu přibude za deset minut jeden řádek, takže se maže
+    /// nejvýš pár jich — jen když se zrovna překročí hranice pásma.
+    /// </para>
+    /// <para>
+    /// <b>Čas se bere z aplikace, ne z databáze.</b> Je to tentýž čas,
+    /// kterým se řídí mazání nad <see cref="Uchovani"/>, takže se obě
+    /// hranice nemůžou rozejít o běh hodin.
+    /// </para>
+    /// </summary>
+    private static async Task ProredAsync(AppDbContext db, DateTimeOffset nyni, CancellationToken ct)
+    {
+        // Jen časy, ne celé řádky: rozhodnutí závisí výhradně na nich
+        // a tahle tabulka má v ustáleném stavu kolem 1 250 řádků.
+        var casy = await db.MereniNadrze
+            .Where(m => m.Cas < nyni - Prorideni.Pasma[0].Od)
+            .Select(m => m.Cas)
+            .ToListAsync(ct);
+
+        var smazat = Prorideni.KeSmazani(casy, nyni);
+        if (smazat.Count == 0) return;
+
+        await db.MereniNadrze.Where(m => smazat.Contains(m.Cas)).ExecuteDeleteAsync(ct);
     }
 }
