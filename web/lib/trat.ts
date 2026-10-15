@@ -52,13 +52,15 @@ const cesta = (serie: string, zavod: string) =>
 export async function nactiStavTrati(
   serie: string,
   zavod: string,
+  /** Kterou trať chce obrazovka. Bez ní tu nejnovější, jako dřív. */
+  trat?: number,
 ): Promise<{ stav: Stav; trat?: Trat | null }> {
   const t = await tokenZeSezeni();
   if (!t) return { stav: "neprihlasen" };
 
   let odpoved: Response;
   try {
-    odpoved = await fetch(cesta(serie, zavod), {
+    odpoved = await fetch(`${cesta(serie, zavod)}${trat ? `?trat=${trat}` : ""}`, {
       headers: { authorization: `Bearer ${t}`, accept: "application/json" },
       cache: "no-store",
       signal: AbortSignal.timeout(CEKAT_MS),
@@ -211,12 +213,17 @@ export const NAZVY_STRAN: Record<NonNullable<StranaPrvku>, string> = {
 };
 
 /** Prvky trati v pořadí. Bez trati prázdno, ne chyba. */
-export async function nactiPrvky(serie: string, zavod: string): Promise<Prvek[]> {
+export async function nactiPrvky(
+  serie: string,
+  zavod: string,
+  /** Kterou trať. Bez ní tu nejnovější. */
+  trat?: number,
+): Promise<Prvek[]> {
   const t = await tokenZeSezeni();
   if (!t) return [];
 
   try {
-    const odpoved = await fetch(`${cesta(serie, zavod)}/prvky`, {
+    const odpoved = await fetch(`${cesta(serie, zavod)}/prvky${trat ? `?trat=${trat}` : ""}`, {
       headers: { authorization: `Bearer ${t}`, accept: "application/json" },
       cache: "no-store",
       signal: AbortSignal.timeout(CEKAT_MS),
@@ -350,6 +357,29 @@ export async function nactiTrate(serie: string, zavod: string): Promise<TratNaVy
   }
 }
 
+/**
+ * Zkrátí trať: od teď je cíl u zadaného prvku. Vrací text chyby, nebo
+ * `null`. <b>Co jde a co ne, hlídá server</b> — jen u běžící rozjížďky
+ * a ne u posledního prvku.
+ */
+export async function zkratTrat(
+  serie: string,
+  zavod: string,
+  trat: number,
+  prvek: number,
+): Promise<string | null> {
+  return await posli(`${cesta(serie, zavod)}/${trat}/zkraceni`, "POST", { prvek });
+}
+
+/** Zruší zkrácení — jede se zase celá trať. */
+export async function zrusZkraceni(
+  serie: string,
+  zavod: string,
+  trat: number,
+): Promise<string | null> {
+  return await posli(`${cesta(serie, zavod)}/${trat}/zkraceni`, "DELETE");
+}
+
 /** Přiřadí volnou trať rozjížďce. Vrací text chyby, nebo `null`. */
 export async function priradTrat(
   serie: string,
@@ -358,6 +388,48 @@ export async function priradTrat(
   rozjizdka: number,
 ): Promise<string | null> {
   return await posli(`${cesta(serie, zavod)}/${trat}/rozjizdka`, "POST", { rozjizdka });
+}
+
+/**
+ * Odškrtne trati rozjížďku. Vrací text chyby a příznak, že se server ptá
+ * na potvrzení (odpoví 409) — <b>potvrzení není chyba vstupu</b>, takže to
+ * obrazovka musí poznat bez čtení textu.
+ */
+export async function odvazTrat(
+  serie: string,
+  zavod: string,
+  trat: number,
+  potvrzeno: boolean,
+): Promise<{ chyba: string | null; potvrdit: boolean }> {
+  const t = await tokenZeSezeni();
+  if (!t) return { chyba: "Přihlášení vypršelo. Přihlas se prosím znovu.", potvrdit: false };
+
+  const adresa = `${cesta(serie, zavod)}/${trat}/rozjizdka${potvrzeno ? "?potvrzeno=true" : ""}`;
+  try {
+    const odpoved = await fetch(adresa, {
+      method: "DELETE",
+      headers: { authorization: `Bearer ${t}`, accept: "application/json" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(CEKAT_MS),
+    });
+    if (odpoved.ok) return { chyba: null, potvrdit: false };
+
+    const telo = (await odpoved.json().catch(() => null)) as
+      | { error?: string; potvrdit?: boolean }
+      | null;
+    return {
+      chyba:
+        telo?.error ??
+        (odpoved.status === 401
+          ? "Přihlášení vypršelo. Přihlas se prosím znovu."
+          : odpoved.status === 403
+            ? "Do trati smí sáhnout pořadatel téhle regaty nebo rozhodčí ročníku."
+            : `API odpovědělo ${odpoved.status}.`),
+      potvrdit: odpoved.status === 409 && telo?.potvrdit === true,
+    };
+  } catch {
+    return { chyba: "Nedaří se spojit s API. Zkus to za chvíli.", potvrdit: false };
+  }
 }
 
 /**
@@ -372,4 +444,16 @@ export async function klonujTrat(
   stav: StavTrati | null,
 ): Promise<string | null> {
   return await posli(`${cesta(serie, zavod)}/${trat}/klon`, "POST", { rozjizdka, stav });
+}
+
+/**
+ * Založí další, prázdnou trať regaty. Vrací chybu k zobrazení, nebo `null`.
+ *
+ * <b>Opakované volání vrací tutéž trať</b>, dokud ta prázdná nedostane
+ * rozjížďku — hlídá to API, aby po dvojím kliknutí na plus regatě
+ * nepřibyly dvě prázdné tratě, které nejdou uklidit. Obrazovka proto
+ * nemusí nic blokovat.
+ */
+export async function zalozDalsiTrat(serie: string, zavod: string): Promise<string | null> {
+  return await posli(`${cesta(serie, zavod)}/dalsi`, "POST");
 }

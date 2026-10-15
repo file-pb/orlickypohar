@@ -389,11 +389,24 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 
 /* Karty ročníků a zastávek */
 .seznam { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.75rem; }
-/* Na širokém displeji dva sloupce. Devět zastávek pod sebou je na takovém
-   monitoru sloupec, který nejde přehlédnout jedním pohledem — a přesně to
-   má kalendář umět. */
+/* Na širokém displeji dva sloupce, ale <b>jen u seznamů karet</b>. Devět
+   zastávek pod sebou je na takovém monitoru sloupec, který nejde
+   přehlédnout jedním pohledem — a přesně to má kalendář umět.
+
+   Třídu `.seznam` ale používá sedmnáct obrazovek a karty v ní má šest.
+   Zbylým jedenácti dva sloupce nedávaly smysl a u vyvěšených směrnic to
+   bylo rozbité (Filip, 15. 10. 2026: *„když dojde na stažení směrnic, tak
+   se to takhle blbě poskládá"*): verze nejsou karty, takže se dvě postavily
+   vedle sebe, formulář „Stáhnout z vývěsky" roztáhl řádek do výšky a text
+   sousední verze se rozlil přes celou šířku.
+
+   Ptá se to na skutečný obsah, ne na jméno obrazovky: karta se do seznamu
+   dostává i z komponenty (`Zastavka` v kalendáři, `Rozjizdka` ve
+   výsledcích), takže podle souboru by to nešlo spolehlivě rozhodnout —
+   `Radek` v lodích naopak vrací holé `li` bez karty. A kdyby prohlížeč
+   `:has` neuměl, zůstane jeden sloupec: to je ta bezpečnější strana. */
 @media (min-width: 1180px) {
-  .seznam { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .seznam:has(> li > .karta) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 .karta {
   display: block; padding: 1rem 1.15rem; background: var(--papir);
@@ -421,6 +434,19 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 .stitek.stav-hotovo { color: var(--stav-vypsany); }
 .stitek.stav-prijato { color: var(--voda); }
 .stitek.stav-prestavba { color: var(--stav-zruseny); }
+/* Vyvěšené verze směrnice. <b>Není to seznam karet</b>, ale záznamů pod
+   sebou — a každý nese tři různé věci: soubor se štítky, kdo a kdy, a co se
+   s ní stalo. Bez těchhle pravidel se slily do jednoho odstavce, protože
+   `.detail` je jinak stylovaný jen uvnitř `.karta` (Filip, 15. 10. 2026). */
+.verze-smernice > li { padding: 0.55rem 0; border-bottom: 1px solid var(--linka); }
+.verze-smernice > li:last-child { border-bottom: 0; }
+.verze-smernice .detail {
+  display: block; color: var(--tlumeny); font-size: 0.875rem; margin-top: 0.15rem;
+}
+/* Formulář stažení patří pod údaje, ne vedle nich: je to úkon nad tou
+   verzí, a na úzké obrazovce by se vedle textu stejně nevešel. */
+.verze-smernice .formular { margin-top: 0.5rem; }
+
 .karta.zrusena { background: transparent; }
 .karta.zrusena .detail { color: var(--tlumeny); }
 .skrtnute { text-decoration: line-through; text-decoration-color: var(--tlumeny); }
@@ -825,6 +851,56 @@ header.hlavicka .jen-uzke { display: none; }
   text-decoration: none;
 }
 .seznam-prvku .shrnuti-prvku:hover .znacky { color: var(--voda); }
+/* Řádek je `summary`, takže se chová jako tlačítko. Vlastní trojúhelník
+   prohlížeče pryč — vpravo je slovo „Upravit", které řekne totéž líp. */
+.seznam-prvku .shrnuti-prvku { cursor: pointer; list-style: none; }
+.seznam-prvku .shrnuti-prvku::-webkit-details-marker { display: none; }
+.seznam-prvku .znaky-prvku { display: inline-flex; gap: 0.15rem; flex: none; }
+/* Fotka a „Upravit" doprava (Filip, 15. 10. 2026). `margin-left: auto`
+   je odsune na konec řádku i při zalomení štítků. */
+.seznam-prvku .vpravo {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 0.4rem; flex: none;
+}
+.seznam-prvku .nahled-fotky {
+  width: 32px; height: 24px; object-fit: cover; border-radius: 4px;
+  border: 1px solid var(--linka);
+}
+.seznam-prvku .rozbalit { font-size: 0.8rem; color: var(--tlumeny); }
+.seznam-prvku .shrnuti-prvku:hover .rozbalit { color: var(--voda); }
+
+/* Štítek boku barevně a průhledně (Filip, 15. 10. 2026). Červená a zelená
+   jsou poziční světla lodi, takže barva mluví týmž jazykem jako název:
+   levobok znamená, že loď má značku po levé ruce. Výplň je průhledná,
+   aby štítek v řádku nekřičel víc než jméno značky. */
+.stitek.bok-levy {
+  color: var(--stav-zruseny); border-color: color-mix(in srgb, var(--stav-zruseny) 45%, transparent);
+  background: color-mix(in srgb, var(--stav-zruseny) 14%, transparent);
+}
+.stitek.bok-pravy {
+  color: var(--stav-vypsany); border-color: color-mix(in srgb, var(--stav-vypsany) 45%, transparent);
+  background: color-mix(in srgb, var(--stav-vypsany) 14%, transparent);
+}
+/* Mezi značkami: obě barvy naráz, protože jedna z nich zůstane po každé
+   ruce. Přechod, ne půlka napůl — ostrý předěl vypadá jako chyba. */
+.stitek.bok-mezi {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--tlumeny) 50%, transparent);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--stav-zruseny) 20%, transparent),
+    color-mix(in srgb, var(--stav-vypsany) 20%, transparent)
+  );
+}
+/* Start a cíl nejsou boky, ale linie — proto vlastní barvy: vodní modrá
+   pro výjezd, zlatá pro konec. */
+.stitek.bok-start {
+  color: var(--voda); border-color: color-mix(in srgb, var(--voda) 45%, transparent);
+  background: color-mix(in srgb, var(--voda) 14%, transparent);
+}
+.stitek.bok-cil {
+  color: #c79a2e; border-color: color-mix(in srgb, #c79a2e 45%, transparent);
+  background: color-mix(in srgb, #c79a2e 14%, transparent);
+}
 .seznam-prvku .shrnuti-prvku .ikona-prvku { flex: none; }
 
 /* Rozklápěcí detail je samostatné tlačítko pod řádkem. `name` na
@@ -879,6 +955,16 @@ header.hlavicka .jen-uzke { display: none; }
   color: var(--voda);
 }
 .seznam-prvku .znacky { color: var(--tlumeny); }
+
+/* Detail prvku na veřejné stránce trati. <b>Obrázek, věta, věta</b> —
+   je to odpověď závodníkovi na „co to je a jak to vypadá" (Filip,
+   15. 10. 2026), ne editace. Odsazuje se stejně jako detail ve správě,
+   aby se obě obrazovky četly stejně. */
+.detail-prvku-verejny { padding: 0 0 0.9rem; }
+.detail-prvku-verejny .nahled-prvku { margin: 0 0 0.6rem; max-width: 22rem; }
+.detail-prvku-verejny p { margin: 0 0 0.35rem; }
+.detail-prvku-verejny .jak-se-jede { color: var(--text); }
+.detail-prvku-verejny .poznamka { font-size: 0.85rem; }
 /* Poznámka se vejde na řádek celá jen někdy; zbytek se nechá uříznout,
    protože v detailu je stejně celá. */
 .seznam-prvku .jak-to-jet {
@@ -906,7 +992,111 @@ header.hlavicka .jen-uzke { display: none; }
 .historie-boji { margin-top: 1.5rem; }
 .historie-boji > summary { font-size: 1.1rem; }
 
+/* „Totéž jedou ještě…" u trati a u rozjížďky. <b>Malá a rozbalovací</b>
+   (Filip, 15. 10. 2026): je to doplňující pohled, ne údaj, kvůli kterému
+   se na obrazovku chodí — zabalená zabere řádek, rozbalená vydá odkazy. */
+.stejna-trat { margin: 0.25rem 0 0; font-size: 0.78rem; }
+.stejna-trat > summary { color: var(--tlumeny); cursor: pointer; }
+.stejna-trat > summary:hover { color: var(--voda); }
+.stejna-trat > p { margin: 0.2rem 0 0; }
+
+/* Záložky tratí regaty. <b>Jedna za každou trať, plus na konci</b>
+   (Filip, 15. 10. 2026). Nejsou to taby v jedné stránce, ale odkazy —
+   výběr je v adrese, takže se dá poslat a přežije akci. */
+/* Výběr trati u rozjížďky je součást řádku s detaily, ne samostatný
+   panel: patří k větě „bez trati", ne vedle ní. */
+.formular.radkove.vybrat-trat {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  margin: 0; padding: 0; background: none; border: none;
+}
+.formular.radkove.vybrat-trat label { margin: 0; }
+.formular.radkove.vybrat-trat select { max-width: 18rem; padding: 0.1rem 0.4rem; }
+.formular.radkove.vybrat-trat button { padding: 0.1rem 0.6rem; }
+
+/* Plus v záložkách: zabalené je to jen znaménko, rozbalené výběr
+   rozjížďky. Bez javascriptu, jako zbytek správy. */
+.zalozky-trati .pridat-trat > summary {
+  list-style: none; cursor: pointer; user-select: none;
+}
+.zalozky-trati .pridat-trat > summary::-webkit-details-marker { display: none; }
+.zalozky-trati .pridat-trat[open] { flex-basis: 100%; }
+.zalozky-trati .pridat-trat .formular.radkove {
+  display: flex; align-items: center; gap: 0.5rem; margin: 0.4rem 0 0;
+}
+
+.zalozky-trati {
+  display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0 0 0.9rem;
+  align-items: stretch;
+}
+.zalozky-trati a,
+.zalozky-trati button {
+  display: inline-flex; flex-direction: column; justify-content: center;
+  padding: 0.3rem 0.75rem; min-height: 44px;
+  font-size: 0.85rem; color: var(--tlumeny); text-decoration: none;
+  background: transparent; border: 1px solid var(--linka); border-radius: 10px;
+  cursor: pointer;
+}
+.zalozky-trati a:hover,
+.zalozky-trati button:hover { color: var(--voda); border-color: var(--voda); }
+/* Vybraná nese barvu vody a plnější rámeček — na vodě se kouká v slunci. */
+.zalozky-trati a.vybrany {
+  color: var(--voda); border-color: var(--voda); font-weight: 600;
+  background: var(--zvyrazneni);
+}
+.zalozky-trati .stav { font-size: 0.72rem; font-weight: 400; color: var(--tlumeny); }
+/* Plus je užší a vycentrované: je to akce, ne záložka. */
+.zalozky-trati button { font-size: 1.1rem; padding: 0.3rem 0.9rem; align-items: center; }
+
 .detail-prvku { padding: 0 0 1rem; }
+
+/* Taby v detailu prvku. <b>Bez javascriptu</b>: přepínače jsou schované
+   a panel se vybírá podle toho, který je zaškrtnutý. Pořadí v značce je
+   proto dané — přepínače napřed, pak záložky, pak panely ve stejném
+   pořadí jako přepínače.
+
+   `nth-of-type` počítá zvlášť mezi `input` a zvlášť mezi `section`, takže
+   `<div class="zalozky">` mezi nimi nevadí. */
+.prvek-taby > input { position: absolute; opacity: 0; pointer-events: none; }
+.prvek-taby > .zalozky { display: flex; gap: 0.3rem; margin: 0 0 0.7rem; flex-wrap: wrap; }
+.prvek-taby > .zalozky label {
+  padding: 0.25rem 0.7rem; font-size: 0.85rem; color: var(--tlumeny);
+  border: 1px solid var(--linka); border-radius: 999px; cursor: pointer;
+  /* Dotyková plocha: na vodě se kliká palcem v rukavici. */
+  min-height: 32px; display: inline-flex; align-items: center;
+}
+.prvek-taby > .zalozky label:hover { color: var(--voda); border-color: var(--voda); }
+.prvek-taby > section { display: none; }
+.prvek-taby > input:nth-of-type(1):checked ~ section:nth-of-type(1) { display: block; }
+.prvek-taby > input:nth-of-type(2):checked ~ section:nth-of-type(2) { display: block; }
+/* Vybraná záložka. `:has` je tu proto, že label stojí jinde v značce než
+   přepínač, takže se na něj `~` nedostane. */
+.prvek-taby:has(> input:nth-of-type(1):checked) > .zalozky label:nth-of-type(1),
+.prvek-taby:has(> input:nth-of-type(2):checked) > .zalozky label:nth-of-type(2) {
+  color: var(--voda); border-color: var(--voda); font-weight: 600;
+}
+/* Obtažení klávesnicí musí být vidět na záložce, ne na schovaném přepínači. */
+.prvek-taby > input:focus-visible ~ .zalozky label { outline: 2px solid var(--voda); }
+
+/* Výběr značky u dvojznačkového prvku. Táž technika jako u tabů: přepínač
+   je schovaný a `:has` podle něj vybere, která položka seznamu se ukáže.
+   `:has` je tu nutné, protože přepínače a seznam jsou sourozenci, ne
+   potomek a rodič — a bez javascriptu se jinak nespojí. */
+.volba-znacky { display: flex; gap: 0.3rem; margin: 0 0 0.6rem; flex-wrap: wrap; }
+.volba-znacky input { position: absolute; opacity: 0; pointer-events: none; }
+.volba-znacky label {
+  padding: 0.2rem 0.65rem; font-size: 0.8rem; color: var(--tlumeny);
+  border: 1px solid var(--linka); border-radius: 999px; cursor: pointer;
+  min-height: 30px; display: inline-flex; align-items: center;
+}
+.volba-znacky span:has(input:checked) label {
+  color: var(--voda); border-color: var(--voda); font-weight: 600;
+}
+.volba-znacky:has(input:focus-visible) label { outline: 2px solid var(--voda); }
+.jen-vybrana > li { display: none; }
+.volba-znacky:has(> span:nth-of-type(1) > input:checked) ~ .jen-vybrana > li:nth-of-type(1),
+.volba-znacky:has(> span:nth-of-type(2) > input:checked) ~ .jen-vybrana > li:nth-of-type(2) {
+  display: list-item;
+}
 .detail-prvku .formular { margin-bottom: 0.8rem; }
 .detail-prvku > .poznamka { font-size: 0.8rem; }
 .akce-prvku { display: flex; flex-wrap: wrap; gap: 0.5rem; }
@@ -1504,6 +1694,32 @@ th.vlevo, td.vlevo { text-align: left; }
 }
 .vodocet-jednotka { font-size: 0.75rem; color: var(--tlumeny); }
 .vodocet-zmena { margin: 0.25rem 0 0.5rem; font-size: 0.8rem; color: var(--tlumeny); }
+/* Přepínač rozsahu nad grafem. <b>Malá tlačítka v řádku</b> (Filip,
+   15. 10. 2026) — je jich až sedm a widget má v boku kolem tří set pixelů,
+   takže se musí vejít na jeden řádek i s diakritikou. */
+.vodocet-rozsahy {
+  display: flex; gap: 0.2rem; margin: 0 0 0.35rem; flex-wrap: wrap;
+}
+.vodocet-rozsahy button {
+  flex: 1 1 auto; min-width: 2.1rem; padding: 0.1rem 0.25rem;
+  font-size: 0.7rem; font-variant-numeric: tabular-nums;
+  background: transparent; color: var(--tlumeny);
+  border: 1px solid var(--linka); border-radius: 999px; cursor: pointer;
+}
+.vodocet-rozsahy button:hover { color: var(--voda); border-color: var(--voda); }
+/* Vybraný nese barvu vody jako zbytek widgetu, ne výplň: plná pilulka by
+   v boku přetáhla pozornost z hladiny, kvůli které tu widget je. */
+.vodocet-rozsahy button.vybrany {
+  color: var(--voda); border-color: var(--voda); font-weight: 600;
+}
+/* Během načítání křivka zešedne, ale nezmizí — skok na prázdno a zpátky
+   je nepříjemnější než chvíle staré křivky. */
+.vodocet-graf.nacita { opacity: 0.45; }
+/* Místo grafu, dokud řada nedorazí: drží výšku, ať obsah pod ním
+   nepodskakuje. */
+.vodocet-graf-misto { height: 56px; }
+.vodocet-chyba { font-size: 0.78rem; color: var(--tlumeny); margin: 0.2rem 0 0; }
+
 .vodocet-graf { display: block; width: 100%; height: 3.5rem; }
 .vodocet-graf .plocha { fill: color-mix(in srgb, var(--voda) 16%, transparent); }
 .vodocet-graf .cara {
@@ -2312,6 +2528,25 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 
 /* Mapka trati: bóje nad dlaždicemi, které servíruje náš server. Barvy jsou
    natvrdo, ne z proměnných vzhledu — podklad je světlý v obou režimech. */
+/* Zkrácení: tlačítko pod prvkem, u kterého má být cíl. Mimo panel
+   úprav schválně — je to rozhodnutí za jízdy, ne změna předpisu. */
+.formular.radkove.zkratit { margin: 0 0 0.4rem 2.5rem; padding: 0; background: none; border: none; }
+.formular.radkove.zkratit button { padding: 0.1rem 0.6rem; font-size: 0.9rem; }
+.stitek.zkraceno { border-color: var(--stav-zruseny); color: var(--stav-zruseny); }
+
+/* Náhled fotky na konci řádku prvku: malý čtvereček, ať řádek zůstane
+   řádkem. Fotky celé jsou až v detailu. */
+.shrnuti-prvku .nahled-znacky { margin-left: auto; flex: none; line-height: 0; }
+.shrnuti-prvku .nahled-znacky img {
+  width: 2.4rem; height: 2.4rem; object-fit: cover; border-radius: 4px;
+}
+/* Fotky značky v detailu prvku. Vedle sebe, dokud se vejdou. */
+.fotky-znacky h4 { margin: 0.75rem 0 0.25rem; font-size: 1rem; }
+.fotky-znacky .rada-fotek { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.fotky-znacky figure { margin: 0; max-width: 16rem; }
+.fotky-znacky figure img { width: 100%; height: auto; border-radius: 6px; display: block; }
+.fotky-znacky figcaption { font-size: 0.85rem; color: var(--tlumeny); margin-top: 0.25rem; }
+
 .mapka-trati { margin: 1rem 0; }
 .mapka { width: 100%; height: auto; display: block; border-radius: 8px; background: #e8e6e1; }
 
@@ -2319,12 +2554,292 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 
 /* Tabule do hospody: čte se přes místnost, ne z klína. Velikosti jsou
    proto v `vw` — telka může být cokoliv od notebooku po projektor. */
+/* Tabule do televize. <b>Není to stránka webu, je to infopanel</b>
+   (Filip, 15. 10. 2026: *„nikdo tam nebude klikat, je to čistě informativní
+   stránka jako do televize. Bude fullscreen a nebude scrollovat ani nijak
+   interaktivně fungovat kromě toho loga, kterým se budeme vracet"*).
+
+   Hlavička webu se proto schovává. `:has` na `body` je tu místo vlastního
+   kořenového layoutu schválně: route group by znamenala přestěhovat celou
+   cestu `serie/[slug]/zavody/[zavod]` do druhé skupiny jen kvůli jedné
+   stránce, a tahle jedna řádka dělá totéž. */
+/* Hlavička, loga partnerů a „nahoru" patří webu, ne televizi. Změřeno:
+   partneři a „nahoru" přidávali dohromady 120 px pod panel, takže obraz
+   přetékal a spodek se uřízl — a „nahoru" je navíc ta interaktivita, co tu
+   nemá co dělat.
+
+   Loga partnerů se sem jednou vrátí, ale jako prvek panelu, ne jako patička
+   webu (Filip, 15. 10. 2026: *„loga partnerů tam pak zapracujeme jindy, teď
+   tam jen zabírají místo informacím"*). */
+body:has(.tabule) > .hlavicka,
+body:has(.tabule) > .partneri,
+body:has(.tabule) > .nahoru { display: none; }
+/* Obal webu má kolem obsahu vzduch; panel si ho řídí sám. */
+body:has(.tabule) > .obal { padding: 0; max-width: none; }
+/* Žádné rolování: co se nevejde, se má střídat samo, ne čekat na palec,
+   který k televizi nikdo nenatáhne. */
+body:has(.tabule) { overflow: hidden; }
+
+.tabule {
+  padding: 1.5vw 2vw;
+  /* Celá obrazovka, ne jen tolik, kolik je obsahu — na televizi se panel
+     nemá krčit u horního okraje. */
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column;
+  position: relative;
+}
+/* Vrch tabule: logo vlevo, název uprostřed, stav vpravo (Filip, 15. 10.
+   2026). Postranní sloupce mají stejnou šířku, takže název sedí na středu
+   obrazovky, ne na středu zbylého místa. */
+.tabule .vrch {
+  display: grid; grid-template-columns: 14vw 1fr 14vw; align-items: center;
+  gap: 1vw; margin-bottom: 1vw;
+}
+.tabule .vrch h1 { margin: 0; min-width: 0; }
+.tabule .vrch .stav { display: flex; flex-direction: column; align-items: flex-end; gap: 0.3vw; }
+.tabule .vrch .stav p { margin: 0; }
+/* Logo v rohu: jediná klikatelná věc. Je malé schválně — má být po ruce,
+   ne součást sdělení. */
+.tabule .odchod {
+  display: block; width: 4.5vw; height: 4.5vw; opacity: 0.55;
+}
+.tabule .odchod:hover { opacity: 1; }
+.tabule .odchod svg { display: block; width: 100%; height: 100%; }
+
+/* Název závodu toutéž Inter Black a týmiž proužky jako nápis u loga.
+   Písmo je podmnožina (7 kB) z web/scripts/pismo-nadpis.py — celý Inter
+   Black má 335 kB a kvůli jednomu nadpisu by se nevyplatil. */
+@font-face {
+  font-family: "Nadpis tabule";
+  src: url("/pismo/inter-black.woff2") format("woff2");
+  font-weight: 900; font-style: normal; font-display: swap;
+}
+.tabule-nazev { display: block; width: 100%; height: 6.5vw; }
+.tabule-nazev text {
+  font-family: "Nadpis tabule", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 900; font-size: 5vw; letter-spacing: 0.01em;
+}
+/* Alert doprostřed televize: vyjede, chvíli visí a usadí se k tomu, čeho
+   se týká (Filip, 15. 10. 2026). Je to to jediné, co se na pasivním panelu
+   hýbe, takže si to může dovolit být velké.
+
+   Usazení je součást téže animace — karta na konci couvne k místu, kam
+   informace patří: dojezd a konec rozjížďky dolů k výsledkům, start a stav
+   závodu nahoru k hlavičce. */
+/* Clona ztmaví panel pod kartou a zase zmizí. Kratší než karta: v půlce
+   jejího života už se dá číst i to, co je pod ní. */
+.tabule-clona {
+  position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background: rgb(0 0 0 / 0.55);
+  animation: tabule-clona 4.5s ease-in-out forwards;
+}
+@keyframes tabule-clona {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tabule-clona { animation: none; opacity: 0.45; }
+}
+
+.tabule-alert {
+  position: absolute; left: 50%; top: 50%; z-index: 5;
+  display: flex; flex-direction: column; align-items: center; gap: 0.5vw;
+  /* Nahoře víc místa na barevný pruh, který kartu drží pohromadě. */
+  padding: 2.4vw 4vw 2.2vw; border-radius: 1.2vw;
+  background: var(--papir); border: 2px solid var(--voda);
+  box-shadow: 0 1.5vw 5vw rgb(0 0 0 / 0.6), 0 0 0 0.6vw rgb(255 255 255 / 0.04);
+  text-align: center; pointer-events: none; overflow: hidden;
+  animation: tabule-alert 4.5s ease-in-out forwards;
+}
+/* Pruh v barvě druhu přes celou šířku karty. Dědí barvu z rámečku,
+   takže nová barva stačí nastavit na jednom místě. */
+.tabule-alert::before {
+  content: ""; position: absolute; inset: 0 0 auto; height: 0.5vw;
+  background: currentColor; color: inherit;
+  border-color: inherit; background-color: currentColor;
+}
+.tabule-alert { color: var(--voda); }
+.tabule-alert.start, .tabule-alert.trat, .tabule-alert.dokonceno,
+.tabule-alert.zavod { color: var(--stav-vypsany); }
+.tabule-alert.ceka, .tabule-alert.zrusena { color: var(--stav-zruseny); }
+.tabule-alert .druh {
+  font-style: normal; font-size: 1vw; letter-spacing: 0.18em;
+  text-transform: uppercase; color: currentColor; font-weight: 700;
+}
+.tabule-alert b { font-size: 4.5vw; line-height: 1; color: var(--text); }
+.tabule-alert span {
+  font-size: 1.5vw; color: var(--tlumeny);
+  border: 1px solid var(--linka, #2a2a2a); border-radius: 2vw;
+  padding: 0.15vw 1vw;
+}
+/* Dojezd je ta nejsilnější zpráva, proto vodní modrá; konec rozjížďky
+   a závodu zeleně jako „vypsáno" jinde na webu. */
+.tabule-alert.dojezd { border-color: var(--voda); }
+.tabule-alert.start { border-color: var(--stav-vypsany); }
+.tabule-alert.dokonceno, .tabule-alert.zavod { border-color: var(--stav-vypsany); }
+/* Trať: schválení je povolení vyjet, přestavba je „počkej". Obojí nese
+   tentýž druh, barvu rozlišuje až stav — zeleně se jede, červeně se stojí. */
+.tabule-alert.trat { border-color: var(--stav-vypsany); }
+.tabule-alert.ceka, .tabule-alert.zrusena { border-color: var(--stav-zruseny); }
+.tabule-alert.lod { border-color: var(--voda); }
+
+@keyframes tabule-alert {
+  /* Nálet: zvětší se zpoza středu. */
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+  8% { transform: translate(-50%, -50%) scale(1.04); opacity: 1; }
+  12% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  /* Drží dost dlouho na přečtení přes místnost. */
+  78% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  /* Usazení: zmenší se a odjede dolů k výsledkům. */
+  100% { transform: translate(-50%, 55vh) scale(0.25); opacity: 0; }
+}
+/* Kdo si vypnul animace, dostane alert bez pohybu — ale pořád ho dostane. */
+@media (prefers-reduced-motion: reduce) {
+  .tabule-alert { animation: tabule-alert-klid 4.5s steps(1) forwards; }
+  @keyframes tabule-alert-klid {
+    0% { transform: translate(-50%, -50%); opacity: 0; }
+    5% { transform: translate(-50%, -50%); opacity: 1; }
+    95% { transform: translate(-50%, -50%); opacity: 1; }
+    100% { transform: translate(-50%, -50%); opacity: 0; }
+  }
+}
+/* <b>Každá zpráva dosedá tam, kam patří</b> (Filip, 15. 10. 2026:
+   *„pak po pár sekundách najetí do toho svého chlívečku, to tomu dá tu
+   dynamiku"*). Divák tak nejen přečte, co se stalo, ale uvidí i kde si
+   to má příště najít. Směry odpovídají rozvržení: vlevo rozjížďky
+   a lodě, uprostřed pořadí, vpravo semafor, mapka a dojezdy.
+
+   Je to animace, ne přesun v DOM — doopravdy kartu přenést by znamenalo
+   měřit polohu cíle a dopočítávat dráhu za výsledek, který na televizi
+   nikdo nerozezná. */
+.tabule-alert.start, .tabule-alert.trat, .tabule-alert.ceka {
+  animation-name: tabule-alert-vpravo-nahoru;
+}
+.tabule-alert.dokonceno, .tabule-alert.zrusena, .tabule-alert.lod {
+  animation-name: tabule-alert-vlevo;
+}
+.tabule-alert.zavod { animation-name: tabule-alert-nahoru; }
+/* Dojezd končí v pořadí (Filip, 15. 10. 2026: *„loď dojede, tak se
+   zobrazí a zajede do pořadí"*) — tedy doprostřed dolů, výchozí
+   animace. Tam ta informace zůstane; widget „právě dojeli" ji jen
+   chvíli drží navíc. */
+@keyframes tabule-alert-vpravo-nahoru {
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+  8% { transform: translate(-50%, -50%) scale(1.04); opacity: 1; }
+  12% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  78% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(32vw, -12vh) scale(0.2); opacity: 0; }
+}
+@keyframes tabule-alert-nahoru {
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+  8% { transform: translate(-50%, -50%) scale(1.04); opacity: 1; }
+  12% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  78% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -45vh) scale(0.25); opacity: 0; }
+}
+@keyframes tabule-alert-vlevo {
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+  8% { transform: translate(-50%, -50%) scale(1.04); opacity: 1; }
+  12% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  78% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-38vw, 5vh) scale(0.2); opacity: 0; }
+}
+
 .tabule { padding: 1.5vw 2vw; }
-.tabule header { display: flex; align-items: baseline; gap: 1.2vw; flex-wrap: wrap; }
-.tabule h1 { font-size: 3.2vw; margin: 0; }
 .tabule h2 { font-size: 1.7vw; margin: 0 0 0.6vw; }
-.tabule .stari { margin-left: auto; font-size: 1.1vw; color: var(--tlumeny); }
+.tabule .stari { font-size: 1.1vw; color: var(--tlumeny); }
 .tabule .stari.zastarale { color: var(--stav-zruseny); }
+/* Pás atributů: velká čísla, malé popisky. Vejde se, co se vejde —
+   dlaždice se zalomí, protože počet atributů závisí na závodě. */
+.tabule .atributy {
+  display: flex; flex-wrap: wrap; gap: 0.8vw; margin-bottom: 1.2vw;
+}
+.tabule .dlazdice {
+  flex: 1 1 8vw; min-width: 8vw;
+  background: var(--panel, #1a1a1a); border-radius: 0.6vw;
+  padding: 0.7vw 0.9vw; display: flex; flex-direction: column; gap: 0.1vw;
+}
+.tabule .dlazdice b { font-size: 2.1vw; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tabule .dlazdice span { font-size: 0.95vw; color: var(--tlumeny); }
+.tabule .dlazdice i { font-size: 0.85vw; color: var(--tlumeny); font-style: normal; opacity: 0.75; }
+
+/* Karusel tříd. Tečky jen ukazují, kolik panelů se střídá — klepnout na
+   ně nejde, na televizi není čím. */
+.tabule .karusel h2 { display: flex; align-items: center; gap: 0.6vw; }
+.tabule .karusel h2 svg { height: 2.2vw; width: auto; flex: none; }
+.tabule .karusel .tecky { margin-left: auto; display: flex; gap: 0.35vw; }
+.tabule .karusel .tecky i {
+  width: 0.5vw; height: 0.5vw; border-radius: 50%;
+  background: var(--tlumeny); opacity: 0.35;
+}
+.tabule .karusel .tecky i.ted { opacity: 1; background: var(--logo-napis, currentColor); }
+/* Panel při přepnutí najede — jediná věc kromě alertu, která se na
+   pasivní tabuli hýbe, takže si smí vzít pozornost na půl vteřiny. */
+.tabule .karusel .poradi { animation: karusel-panel 0.45s ease-out; }
+@keyframes karusel-panel {
+  from { opacity: 0; transform: translateY(0.8vw); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tabule .karusel .poradi { animation: none; }
+}
+
+/* Pravý sloupeček: semafor, mapka a kdo právě dojel. */
+.tabule .sloupecek { display: flex; flex-direction: column; gap: 1vw; min-width: 0; }
+/* Semafor je hlavní sdělení pravého sloupce, ne ozdoba — proto velký
+   (Filip, 15. 10. 2026: *„semaforek rozjížďky větší"*). */
+.tabule .semafor {
+  display: flex; flex-direction: column; gap: 0.7vw;
+  background: var(--panel, #1a1a1a); border-radius: 0.8vw; padding: 1vw 1.2vw;
+}
+.tabule .semafor .horni { display: flex; align-items: center; gap: 1.1vw; }
+.tabule .semafor .svetla {
+  display: flex; flex-direction: column; gap: 0.5vw;
+  padding: 0.7vw; border-radius: 1vw; background: #111; flex: none;
+}
+.tabule .semafor .svetla i {
+  width: 2.1vw; height: 2.1vw; border-radius: 50%;
+  background: #2b2b2b; display: block;
+}
+/* Stopky a odpočet. Číslice stejně široké, jinak se text při každé
+   vteřině posune a na televizi to poskakuje. */
+.tabule .semafor .casomira { display: flex; align-items: baseline; gap: 0.6vw; }
+.tabule .semafor .casomira b {
+  font-size: 3.4vw; line-height: 1; font-variant-numeric: tabular-nums;
+}
+.tabule .semafor .casomira span { font-size: 1vw; color: var(--tlumeny); }
+.tabule .semafor .pocty { margin: 0; font-size: 1.2vw; color: var(--tlumeny); }
+.tabule .semafor .pocty b { font-size: 1.6vw; color: var(--text); }
+/* Svítí jen to jedno; zhasnutá světla jsou taky informace. */
+.tabule .semafor.sviti-ceka .svetla i.ceka { background: #e8a33d; box-shadow: 0 0 1.2vw #e8a33d; }
+.tabule .semafor.sviti-jede .svetla i.jede { background: #3ba55d; box-shadow: 0 0 1.2vw #3ba55d; }
+.tabule .semafor.sviti-dojeto .svetla i.dojeto { background: #6fa8dc; box-shadow: 0 0 1.2vw #6fa8dc; }
+.tabule .semafor.sviti-zruseno .svetla i.ceka { background: var(--stav-zruseny); box-shadow: 0 0 1.2vw var(--stav-zruseny); }
+.tabule .semafor .co { display: flex; flex-direction: column; min-width: 0; }
+.tabule .semafor .co b { font-size: 2.2vw; line-height: 1.15; }
+.tabule .semafor .co span { font-size: 1.1vw; color: var(--tlumeny); }
+
+/* Mapka je doplněk, ne hlavní sdělení — proto strop na výšku. */
+.tabule .mapka-mala { max-width: 22vw; }
+.tabule .mapka-mala .mapka-trati { margin: 0; }
+/* Na televizi zůstane jen uvedení zdroje, návod ke čtení ne — souvislý
+   text sem nepatří a odkaz u bóje stejně nikdo nerozklikne. */
+.tabule .mapka-mala figcaption { font-size: 0.75vw; }
+.tabule .mapka-mala figcaption .navod { display: none; }
+
+.tabule .dojeli ol { list-style: none; padding: 0; margin: 0; }
+.tabule .dojeli li { display: flex; align-items: baseline; gap: 0.5vw; padding: 0.3vw 0; }
+.tabule .dojeli li b { font-size: 1.8vw; font-variant-numeric: tabular-nums; }
+
+/* Rozjížďky nesou jen stav: kdo dojel, říká widget vpravo. */
+.tabule .stavy { list-style: none; padding: 0; margin: 0; }
+.tabule .stavy li { display: flex; align-items: baseline; gap: 0.6vw; padding: 0.35vw 0; }
+.tabule .stavy li b { font-size: 1.8vw; font-variant-numeric: tabular-nums; }
+.tabule .stav-rozjizdky.probiha { border-color: var(--stav-vypsany); color: var(--stav-vypsany); }
+.tabule .stav-rozjizdky.zrusena { border-color: var(--stav-zruseny); color: var(--stav-zruseny); }
+
 .tabule .sloupce {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(22vw, 1fr));

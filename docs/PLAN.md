@@ -2951,10 +2951,33 @@ nechat nastavit"*). Výchozí stav je ten konzervativní, tedy **jen
 publikované**; kdo chce procesní děj, zapne si ho. Rozhodnutí tím nepadá
 na nás ani napevno do kódu.
 
-**Postavená 10. 10. 2026** na `/serie/{serie}/zavody/{zavod}/tabule`:
-stav regaty, rozjížďky s dojezdy, průběžné pořadí a startovní listina.
+**Postavená 10. 10. 2026** na `/serie/{serie}/zavody/{zavod}/tabule`.
 Bez boků a bez navigace — visí to přes místnost, takže pixel, který není
 čitelný od vedlejšího stolu, je k ničemu; velikosti jsou ve `vw`.
+
+**Přestavěná 15. 10. 2026 na livescore** (Filip: *„je to emotivní
+divácký dashboard ze závodů… prostě livescore"*). Nahoře logo vlevo,
+název závodu uprostřed v téže proužkované Inter Black jako nápis
+„Orlická série" (živý `<text>` v podmnožině písma, protože název se
+mění s každou regatou a nejde předgenerovat jako křivky), stav vpravo.
+Pod tím pás atributů, pak dva karusely a pravý sloupec.
+
+**Karusel je jeden obecný, dvě sady panelů.** Vlevo se střídají
+rozjížďky (jen stavy) a lodě na startu — tím odpadla jedna tabulka.
+Uprostřed pořadí: jeden panel na třídu, plus celkové, když se počítá.
+<b>Co je panel, rozhoduje `vyhodnoceni` závodu</b>, ne co je v datech:
+celkové pořadí API spočítá vždycky, i u závodu jetého jen po
+kategoriích, takže podle jeho přítomnosti by tabule vyhlašovala pořadí,
+které se v tom závodě nevyhlašuje. Tečky neukazují, kam klepnout — na
+televizi není čím; jsou tam, aby divák věděl, že u jedné třídy nevidí
+všechno.
+
+**Vpravo semafor rozjížďky**, stopky od startu nebo odpočet do
+vyhlášeného startu, a „X v cíli, čeká se na Y". Lodě s kódem (DNF, DNS)
+se počítají mezi vyřízené, jinak by tabule do večera čekala na loď,
+která nevyjela. Pod semaforem mapka trati a poslední tři v cíli —
+poslední <b>podle pořadí v cíli</b>, protože výsledek nese uplynulý čas,
+ne hodinu dojezdu.
 
 **Jen publikované výsledky.** Přepínač „procesní děj" (under review,
 potvrzeno, protest) zatím není, takže platí ten konzervativní výchozí
@@ -2994,6 +3017,38 @@ v `deploy/cache/default.conf`), takže serverem vykreslené „před 8 s" v ní
 zmrzne a bude lhát o deset vteřin plus dobu jednoho vykreslení. Posílat se
 proto musí **čas zdroje** a stáří si spočítá prohlížeč. Tím se cache
 z překážky stává výhodou: jeden snímek obslouží celou hospodu.
+
+**Alerty vyjedou z porovnání snímků, ne z API** (Filip, 15. 10. 2026:
+*„alerty, které vyjedou při změnách, typicky: schválení trati, rozjížďky
+nebo nějaké rozhodnutí, a nebo právě starty a dojezdy"*). Tabule poslední
+snímek drží, takže změnu pozná sama; posílat navíc proud událostí by
+znamenalo druhou cestu k týmž datům a dvě místa, kde se dá splést, co je
+nového. Bez předchozího snímku se nevyhlašuje nic — kdo přijde k televizi
+v půlce závodu, nemá dostat salvu alertů o všem, co se stalo před ním.
+Hlásí se starty, dojezdy, dojetá rozjížďka, dojetá regata a trať.
+
+**U trati se hlásí přechod, ne změna razítka.** Veřejný endpoint vydává
+trať, která je *na řadě*, takže po dojezdu rozjížďky se `prijatoV` změní
+samo — a alert zavěšený na razítku by vyhlásil „Trať schválena" ve chvíli,
+kdy rozhodčí nic neudělal, jen se posunula rozjížďka na svou, ráno už
+schválenou trať. Podmínka je proto `jedeSe()` = přijato a neprobíhá
+přestavba; opačný směr dává „Trať se přestavuje" nebo „Čeká se na trať".
+
+**Alert může přijít až o deset sekund později** a to je v pořádku:
+`proxy_cache_valid 200 404 10s` platí i pro `tabule/data`, takže celá
+hospoda dostane tentýž snímek. Nic se neztratí — porovnání běží proti
+poslednímu snímku, který prohlížeč drží, ne proti času.
+
+**Fronta alertů se zasekávala a byla to tichá vada** (15. 10. 2026):
+události se počítaly uvnitř updateru `setSnimek` a volalo se v něm
+`setFronta` — vedlejší efekt ve stavové funkci. React updater spouští
+i víckrát, takže se každá událost zařadila dvakrát; druhá kopie měla
+tentýž klíč, React element recykloval, CSS animace se nespustila znovu
+a karta zůstala v DOM neviditelná. A protože se fronta nehnula, nevyjel
+od té chvíle <b>žádný další alert</b>. Změřeno v prohlížeči: hlava
+fronty stála 37 s, zatímco zbytek obrazovky se dál obnovoval. Porovnání
+proto běží mimo updater, proti snímku v `useRef`, a fronta zahazuje
+duplicitní klíče.
 
 **Výpadek API dnešní web nepřežije.** `Vypadek` se vykresluje jako součást
 stránky, která vrací **200**, takže ho nginx uloží jako platnou odpověď —
@@ -5530,6 +5585,97 @@ a v logu stálo `excess: 30.450` — Next při vykreslení seznamu odkazů ve
 správě vystřelí desítky RSC požadavků naráz a do té dávky se nevejde.
 Rychlost je pro ustálený provoz v pořádku, dávka je malá.
 
+**Změřeno 12. 10. 2026** v prohlížeči na `/sprava/2027`, kde to Filip
+viděl: jedno otevření té stránky vystřelí **66 požadavků `?_rsc=`**
+a **19 z nich dostane 429**.
+
+To číslo ale mění, co s tím dělat. Těch 66 nejsou levné požadavky —
+každý je **plné serverové vykreslení stránky správy i s voláním API**.
+Next si dopředu načítá všech devět regat krát čtyři odkazy (výsledky,
+přihlášky, směrnice, bóje), celý ročník a věci mimo ročník; člověk si
+pak otevře jednu.
+
+Dvě cesty, a ta první řeší jen příznak:
+
+- **Zvednout `burst`** (`deploy/cache/default.conf:208`) 429 odstraní,
+  ale pustí těch 66 drahých vykreslení dovnitř. Web zvládne ~4,9
+  vykreslení za vteřinu (změřeno 8. 10.), takže se fronta jen přesune
+  z nginxu do webu.
+- **Vypnout prefetch** na odkazech ve správě (`prefetch={false}`) řeší
+  příčinu: správa není rozcestník, kde se bloudí, a předvykreslovat 66
+  stránek dopředu je plýtvání i bez limitu.
+
+Druhá cesta je ta správná, případně obojí. Bylo to **rozhodnutí pro
+Filipa**, ne věc k tichému udělání — mění se tím, jak rychle obrazovky
+správy naskakují po kliknutí. **Rozhodl 14. 10. 2026: vypnout prefetch**,
+`burst` zůstává.
+
+**Jak je to udělané:** ne atributem na devadesáti místech, ale jednou
+komponentou `web/app/sprava/odkaz.tsx`, kterou správa importuje místo
+`next/link`. Rozsypaný `prefetch={false}` by znamenal, že první nově
+přidaný odkaz ho mít nebude a nikdo si toho nevšimne. Předvolba se dá pro
+jednotlivý odkaz přebít, kdyby se někde předběžné načtení vyplatilo.
+
+**Doloženo na nasazené obrazovce (15. 10. 2026).** Tentýž prohlížeč, tentýž
+přihlášený účet, táž adresa `/sprava/2027`, jen jiná nasazená verze:
+
+| | požadavků `?_rsc=` | 429 |
+|---|---|---|
+| před (`b8e73c1`) | **66** | 8 |
+| po (`fba82e0`) | **8** | **0** |
+
+Že to není cache prohlížeče, je ověřené tím, že v tomtéž tabu `/verze`
+vrátilo `fba82e0`. Obrazovka se chová normálně — kliknutí na „Přihlášky"
+u Jarního větru otevřelo `/sprava/2027/prihlasky/jarni-vitr`.
+
+**Těch 8, co zůstalo, nejsou odkazy správy:** jsou to `/`, `/serie/2027`,
+`/serie/2027/poradi` a `/sprava`, tedy hlavička a menu účtu, každý dvakrát.
+Jdou mimo `sprava/odkaz.tsx`, vedou na veřejné stránky a mikrocache je
+obsluhuje z cache, takže zůstávají.
+
+Tři **503** z prvního měření padly přesně do okamžiku, kdy dobíhalo
+nasazení — podporuje to domněnku, že 503 je výměna kontejneru, ne vada.
+
+**Kolik to čekání doopravdy je (změřeno 14. 10. 2026):** čas do prvního
+bajtu na veřejné stránce s voláním API a s vynechanou cache je ustáleně
+**0,42–0,73 s**, ale **první požadavek po chvíli nečinnosti 1,2–2,8 s**
+(`/serie/2027` 2,80 s, `/serie/2027/zavody/jarni-vitr` 1,18 s). Bez
+prefetche se tedy nejvíc pozná **první** kliknutí po otevření správy, ne
+každé. Stránky správy chtějí přihlášení, takže je to náhrada za ně, ne
+ony samy — řádově ale totéž, protože sahají do téhož API.
+
+Pozor na adresu: **`/2027` je 404**, ročník je `/serie/2027`. První
+měření šlo omylem na `/2027`, takže měřilo rychlost chybové stránky —
+rozdíl proti skutečnosti je ten chvost u prvního požadavku.
+
+Dva požadavky z toho měření vrátily **503** a při opakování 200. Časově
+to padlo do nasazení #257, takže to nejspíš byl výměnný okamžik
+kontejneru, ne vada — jistota to ale není.
+
+### Objem a hladina spolu nesedí (15. 10. 2026)
+
+Widget ukazuje vedle sebe změnu hladiny a změnu objemu nádrže. **Jejich
+poměr nevychází** a hledat v tom chybu nemá smysl — je to vlastnost zdroje.
+
+Změřeno na denní řadě z produkce: Povodí mění **hladinu 57× za den**,
+obvykle po centimetru, kdežto **objem jen 16×**, a to skoky od 0,15 do
+0,9 mil. m³. Objem tedy za hladinou zaostává. Kdo z těch dvou čísel
+dopočítá plochu nádrže, dostane pokaždé jinou: naměřeno 23,7, 16,7
+a 13,1 km², přičemž Orlík má kolem 26.
+
+Prošlo se při tom dvěma mylnými závěry, ať je po nich stopa:
+
+- že si čísla protiřečí kvůli různým okrajům okna. Hladina se brala od
+  prvního měření **uvnitř** okna, objem od měření nejbližšího jeho
+  **hraně**. Sjednotilo se to (#278) a je to správně samo o sobě, ale
+  nesoulad to nevyřešilo;
+- že se každé počítá z jiné podmnožiny měření. Ověřeno po #279, kdy řada
+  začala vydávat i objem: ze 143 bodů za den jich má objem 139, API i ruční
+  výpočet ze stejných bodů dávají totéž. Hypotéza padla.
+
+**Nedopočítávat tedy jedno z druhého.** Obojí je měření a každé má svou
+přesnost; widget je ukazuje vedle sebe, ne jako kontrolu jednoho druhým.
+
 ### Nasazení ruší jedno druhé
 
 Merge do `main` spustí nasazení a **novější běh ten rozdělaný ukončí**
@@ -5680,6 +5826,44 @@ expo 44.0.6`, u Metra `react-native 0.72.17` — to je downgrade o třináct
 majorů do pravěku, ne oprava. Správně míří jedině u `decode-uri-component`,
 kde ukazuje na `expo-router 58.0.17`. Řídit se tu dá tedy jen Dependabotem
 a rozsahy z advisory, ne `fixAvailable`.
+
+
+## PR od Dependabota nemůžou být zelené (14. 10. 2026)
+
+Všech osm otevřených PR (#247–#254) mělo `build` i `integrace` červené —
+**včetně bumpu `actions/setup-node`, který build rozbít neumí.** Příznak
+tedy nebyl o obsahu těch PR a posuzovat je podle barvy nešlo.
+
+Příčina: `dotnet test -c Release` potřebuje licenci ImageSharpu
+(`build-deploy.yml:99-103`) a `OrlickyPohar.Api.csproj:9` ji nastaví jen
+tehdy, když proměnná není prázdná. Klíč chodí ze `secrets`. **Actions
+secrets ale pro PR od Dependabota nejsou dostupné** — Dependabot má
+vlastní trezor a ten je prázdný (`gh api .../dependabot/secrets` vrátil
+prázdný seznam). Klíč proto dojde prázdný, vlastnost se nenastaví a build
+spadne na „No Six Labors license found" bez ohledu na to, co PR mění.
+
+Dvě cesty, obě platné:
+
+- **Dávka přes vlastní větev** (#261, #262, #263). Tam klíč je, takže řetěz
+  změnu doopravdy posoudí. Je to zároveň zavedený postup z `82b2d95` —
+  jedna dávka místo mnoha merge, protože každý merge je nasazení a minuty
+  Actions jsou nejbližší kvóta (`platform/docs/KVOTY.md`).
+- **Přidat tentýž klíč do Dependabot secrets.** Spraví to natrvalo a ty PR
+  začnou být hodnotitelné samy. Hodnotu klíče z repozitáře přečíst nejde,
+  takže to musí naklikat Filip.
+
+**`@types/node` 26 (#252) je zavřené, ne zapomenuté.** Je to podruhé:
+v `82b2d95` Dependabot navrhoval 20 → 26 a zůstalo `^22`, protože typy mají
+sledovat runtime. Node je pořád **22** — `node:22-alpine` v obou fázích
+`web/Dockerfile` (14 a 24) a `node-version: '22'` v řetězu. Typy pro Node 26
+by popisovaly API, které v tom běhu není, tedy by kontrola schválila kód,
+co za běhu spadne. Zvedne se, až se zvedne Node.
+
+**Co u TypeScriptu 7 riziko zmenšuje:** nepřekládá vydaný kód ani v jednom
+projektu. Web překládá Turbopack — v logu buildu jsou to dvě oddělené fáze,
+`Compiled successfully` a zvlášť `Finished TypeScript` — a v appce je
+`typescript` v devDependencies, kód tam překládá Metro. TS 7 tedy může
+rozbít jedině kontrolu typů při buildu, a ta padne v řetězu, ne na produkci.
 
 ## Kvóty CI (audit hračkárny, 10. 10. 2026)
 

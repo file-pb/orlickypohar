@@ -57,8 +57,14 @@ public class Boje
     /// <summary>
     /// Fotky bóje z okamžiku postavení (Filip, 9. 10. 2026). Jsou to doklady
     /// k poloze, ne obrázky na web: ze souřadnic se nepozná, jestli je ta
-    /// bóje nafouklá, jakou má barvu a co je za ní na břehu. Veřejně se
-    /// nevydávají — stejně jako celá trať.
+    /// bóje nafouklá, jakou má barvu a co je za ní na břehu.
+    /// <para>
+    /// <b>Od 15. 10. 2026 jdou ven i veřejně</b>, u značek na trati regaty
+    /// (Filip: *„náhledy bójí a fotky v trati na regatě"*). Původně se
+    /// nevydávaly „stejně jako celá trať" — jenže trať je veřejná od chvíle,
+    /// kdy ji rozhodčí přijme, takže ten důvod padl. Co ven nejde dál, jsou
+    /// údaje o měření: kdo pípal a s jakou přesností.
+    /// </para>
     /// <para>
     /// <b>Víc než jedna</b> (Filip, 9. 10. 2026): jeden snímek zblízka
     /// neukáže zároveň bóji i břeh za ní, a teprve obojí dohromady říká,

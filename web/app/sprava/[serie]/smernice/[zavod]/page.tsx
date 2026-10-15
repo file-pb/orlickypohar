@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/app/sprava/odkaz";
 import { notFound } from "next/navigation";
 import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
@@ -133,7 +133,7 @@ export default async function SmerniceZastavky({ params, searchParams }: Paramet
               <Link href="/napoveda#smernice">co o směrnici platí</Link>.
             </p>
           ) : (
-            <ul className="seznam">
+            <ul className="seznam verze-smernice">
               {smernice.map((s) => (
                 <li key={s.verze}>
                   <Verze
@@ -186,16 +186,18 @@ function Verze({
       <>
         <span>{smernice.nazev}</span> <span className="stitek">verze {smernice.verze}</span>
         <span className="stitek">stažená z vývěsky</span>
+        {/* Kdo a kdy — jeden řádek. Důvod stažení sem nepatří: je to věta,
+            ne údaj, a za „stáhl Filip Burda · " se slila s hláškou
+            o smazaném souboru do „stará verze Soubor je smazaný." */}
         <span className="detail">
           vyvěšeno {datumClanku(smernice.vyveseneV)}
           {smernice.vyvesil && ` · vyvěsil ${smernice.vyvesil}`}
           {smernice.stazenoV && ` · staženo ${datumClanku(smernice.stazenoV)}`}
           {smernice.stahl && ` · stáhl ${smernice.stahl}`}
-          {smernice.duvodStazeni && ` · ${smernice.duvodStazeni}`}
         </span>
-        {" "}
         <span className="detail">
           Soubor je smazaný.
+          {smernice.duvodStazeni && ` Důvod stažení: ${smernice.duvodStazeni}`}
           {smernice.mohlaUvaznoutVCache && (
             <>
               {" "}Tahle verze je starší než vypnutí cache, takže ji ještě

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 
+using OrlickyPohar.Api.Features.Zavody;
 namespace OrlickyPohar.Api.Features.Boje;
 
 /// <summary>
@@ -21,9 +22,17 @@ namespace OrlickyPohar.Api.Features.Boje;
 /// rozjížďky o trati nemusí vědět.
 /// </para>
 /// </summary>
-public class TratSprava(AppDbContext db, TimeProvider cas)
+public class TratSprava(AppDbContext db, TimeProvider cas, Fotky.IUloziste uloziste)
 {
-    /// <summary>Trať, na které se zrovna pracuje. Nejnovější vyhrává.</summary>
+    /// <summary>
+    /// Trať, na které se zrovna pracuje. Nejnovější vyhrává.
+    /// <para>
+    /// <b>Je to dohad, ne volba</b> — a od 15. 10. 2026 jen záloha pro ni.
+    /// Regata má tratí víc (jednu na rozjížďku) a obrazovka si odteď říká,
+    /// kterou chce, přes <see cref="VybranaAsync"/>. Dohad zůstává pro
+    /// volání, která trať neřeší: pípnutí patří regatě, ne trati.
+    /// </para>
+    /// </summary>
     public Task<Trat?> AktualniAsync(int zavodId, CancellationToken ct) =>
         db.Trate
             .Include(t => t.Prijal)
@@ -32,14 +41,120 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
             .FirstOrDefaultAsync(ct);
 
     /// <summary>
+    /// Trať, kterou si obrazovka vybrala — nebo ta nejnovější, když si
+    /// nevybrala.
+    /// <para>
+    /// <b>Cizí trať se nevydá.</b> Kontroluje se, že vybrané id patří téhle
+    /// regatě; jinak by stačilo hádat čísla a číst tratě odjinud. Když id
+    /// nesedí, vrací se <c>null</c> — ne tiše nejnovější, protože obrazovka
+    /// by pak ukazovala jinou trať, než o kterou si řekla, a nikdo by si
+    /// toho nevšiml.
+    /// </para>
+    /// </summary>
+    public async Task<Trat?> VybranaAsync(int zavodId, int? tratId, CancellationToken ct) =>
+        tratId is null
+            ? await AktualniAsync(zavodId, ct)
+            : await db.Trate
+                .Include(t => t.Prijal)
+                .FirstOrDefaultAsync(t => t.Id == tratId && t.ZavodId == zavodId, ct);
+
+    /// <summary>
     /// Stav pro správu, nebo <c>null</c>, když regata trať ještě nemá.
     /// Příznaky „smí" počítá volající z role, tady jde jen o stav.
     /// </summary>
     public async Task<TratDto?> StavAsync(
-        int zavodId, bool jeStavitel, bool jeRozhodci, CancellationToken ct)
+        int zavodId, bool jeStavitel, bool jeRozhodci, CancellationToken ct,
+        int? tratId = null)
     {
-        var trat = await AktualniAsync(zavodId, ct);
+        var trat = await VybranaAsync(zavodId, tratId, ct);
         return trat is null ? null : await DtoAsync(trat, jeStavitel, jeRozhodci, ct);
+    }
+
+    /// <summary>
+    /// Zkrátí trať: od vyhlášení je cíl u zadaného prvku.
+    ///
+    /// <para>
+    /// Filip, 15. 10. 2026: *„za běhu do toho má jít sáhnout a trať
+    /// zkrátit"*, *„zkrácení počítá normální pořadí, jen cíl je u té
+    /// bóje"*. Na bodování to tedy nesahá — je to údaj o tom, kudy se
+    /// jelo, a posun cíle pro ty, kdo ještě nedojeli.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Jde to i na zamčené trati.</b> Zámek brání tichým změnám
+    /// předpisu pod lodí, která podle něj pluje; tohle je opak — hlasité
+    /// rozhodnutí rozhodčího, které se zapisuje i s časem a jménem.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Jen u rozjížďky, která se jede.</b> Zkrátit trať, na kterou se
+    /// ještě nevyjelo, znamená postavit ji kratší; zkrátit odjetou by
+    /// přepsalo, podle čeho se jelo.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Poslední prvek zkrátit nejde</b> — tam cíl už je, a „zkrácení"
+    /// bez zkrácení by byl jen zápis, který mate.
+    /// </para>
+    /// </summary>
+    public async Task<string?> ZkratAsync(
+        int zavodId, int tratId, int prvekId, Guid kdo, CancellationToken ct)
+    {
+        var trat = await db.Trate
+            .FirstOrDefaultAsync(t => t.Id == tratId && t.ZavodId == zavodId, ct);
+        if (trat is null) return "Taková trať u téhle regaty není.";
+
+        if (trat.RozjizdkaId is null)
+            return "Trať nepatří žádné rozjížďce, takže není co zkracovat.";
+
+        var rozjizdka = await db.Rozjizdky
+            .FirstOrDefaultAsync(r => r.Id == trat.RozjizdkaId, ct);
+        if (rozjizdka is null) return "Rozjížďka trati se nenašla.";
+        if (rozjizdka.Stav != StavRozjizdky.Probiha)
+            return rozjizdka.Stav == StavRozjizdky.Dokoncena
+                ? "Rozjížďka je dojetá. Trať, podle které se jelo, se už nemění."
+                : "Rozjížďka se nejede. Dokud se nevyjelo, stavěj rovnou kratší trať.";
+
+        var prvky = await db.PrvkyTrati
+            .Where(x => x.TratId == trat.Id)
+            .OrderBy(x => x.Poradi).ThenBy(x => x.Id)
+            .Select(x => x.Id)
+            .ToListAsync(ct);
+
+        var kde = prvky.IndexOf(prvekId);
+        if (kde < 0) return "Takový prvek na téhle trati není.";
+        if (kde == prvky.Count - 1)
+            return "U posledního prvku už cíl je, zkrátit se tam nedá.";
+
+        trat.ZkracenoUPrvkuId = prvekId;
+        trat.ZkracenoV = cas.GetUtcNow();
+        trat.ZkratilId = kdo;
+        await db.SaveChangesAsync(ct);
+        return null;
+    }
+
+    /// <summary>
+    /// Zruší zkrácení — jede se zase celá trať. <b>Na vodě se překlepne
+    /// stejně snadno jako jinde</b>, a dokud rozjížďka běží, není důvod
+    /// to nejít vrátit.
+    /// </summary>
+    public async Task<string?> ZrusZkraceniAsync(int zavodId, int tratId, CancellationToken ct)
+    {
+        var trat = await db.Trate
+            .FirstOrDefaultAsync(t => t.Id == tratId && t.ZavodId == zavodId, ct);
+        if (trat is null) return "Taková trať u téhle regaty není.";
+        if (!trat.Zkracena) return "Tahle trať zkrácená není.";
+
+        var rozjizdka = await db.Rozjizdky
+            .FirstOrDefaultAsync(r => r.Id == trat.RozjizdkaId, ct);
+        if (rozjizdka?.Stav != StavRozjizdky.Probiha)
+            return "Rozjížďka se nejede, zkrácení se už nemění.";
+
+        trat.ZkracenoUPrvkuId = null;
+        trat.ZkracenoV = null;
+        trat.ZkratilId = null;
+        await db.SaveChangesAsync(ct);
+        return null;
     }
 
     /// <summary>
@@ -54,6 +169,43 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
         var nova = new Trat { ZavodId = zavodId, ZalozenaV = cas.GetUtcNow() };
         db.Trate.Add(nova);
         return nova;
+    }
+
+    /// <summary>
+    /// Založí <b>další prázdnou trať</b> vedle těch, co regata má.
+    /// <para>
+    /// <b>Proč to nestačilo doteď:</b> trať vznikala jen prvním pípnutím
+    /// (a to jen když žádná nebyla) nebo klonem. Postavit druhou, jinou
+    /// trať pro další rozjížďku tedy nešlo jinak než naklonovat tu minulou
+    /// a přestavět ji. Filip, 15. 10. 2026: *„nemáme možnost dělat do
+    /// regaty další tratě… na konci třeba plusko"*.
+    /// </para>
+    /// <para>
+    /// <b>Rozjížďka se nepřiřazuje.</b> Pořadí obou kroků je volné — dá se
+    /// napřed postavit trať a pak jí přiřadit rozjížďku, nebo vyhlásit
+    /// rozjížďku a stavět, zatímco lodě čekají na vodě (Filip tamtéž).
+    /// Svázat to hned by jednu z těch cest zavřelo.
+    /// </para>
+    /// <para>
+    /// <b>Prázdná trať bez rozjížďky se nezakládá dvakrát.</b> Kdo klikne
+    /// na plus dvakrát, dostane tutéž — jinak by regatě přibývaly prázdné
+    /// tratě, které nejdou nijak uklidit.
+    /// </para>
+    /// </summary>
+    public async Task<TratDto> DalsiAsync(int zavodId, bool jeRozhodci, CancellationToken ct)
+    {
+        var volna = await db.Trate
+            .Include(t => t.Prijal)
+            .Where(t => t.ZavodId == zavodId && t.RozjizdkaId == null)
+            .Where(t => !db.PrvkyTrati.Any(p => p.TratId == t.Id))
+            .OrderByDescending(t => t.Id)
+            .FirstOrDefaultAsync(ct);
+        if (volna is not null) return await DtoAsync(volna, true, jeRozhodci, ct);
+
+        var nova = new Trat { ZavodId = zavodId, ZalozenaV = cas.GetUtcNow() };
+        db.Trate.Add(nova);
+        await db.SaveChangesAsync(ct);
+        return await DtoAsync(nova, true, jeRozhodci, ct);
     }
 
     /// <summary>
@@ -178,6 +330,58 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
     /// záznam o bóji se nikdy nepřepisuje a časy nese.
     /// </para>
     /// </summary>
+    /// <summary>
+    /// Přijatá trať <b>rozjížďky, která je na řadě</b> — ta, podle které se
+    /// zrovna pluje, nebo podle které se poplave nejblíž.
+    /// <para>
+    /// Filip, 15. 10. 2026: *„mapu aktuální rozjížďky/trati, a pokud se nic
+    /// nejede zrovna, tak té nejbližší, co se pojede"*. Do té doby se brala
+    /// <b>nejnovější přijatá podle id</b>, což od chvíle, kdy má každá
+    /// rozjížďka vlastní trať, znamenalo něco jiného: divák mohl koukat na
+    /// trať čtvrté rozjížďky, zatímco se jela druhá.
+    /// </para>
+    /// <para>
+    /// Pořadí je probíhající → nejbližší plánovaná → poslední dokončená.
+    /// Poslední krok je tu proto, aby stránka po závodě nezmizela: trať,
+    /// podle které se dojelo, je pořád to, co diváka zajímá.
+    /// </para>
+    /// <para>
+    /// <b>Když rozjížďka na řadě přijatou trať nemá</b> (třeba se zrovna
+    /// staví, zatímco lodě čekají na vodě), spadne se na nejnovější
+    /// přijatou. Ukázat prázdno by bylo horší: na vodě něco stojí a divák
+    /// se dívá právě proto.
+    /// </para>
+    /// </summary>
+    private async Task<Trat?> NaRadeAsync(int zavodId, CancellationToken ct)
+    {
+        var rozjizdky = await db.Rozjizdky
+            .Where(r => r.ZavodId == zavodId && r.Stav != StavRozjizdky.Zrusena)
+            .Select(r => new { r.Id, r.Cislo, r.Stav })
+            .ToListAsync(ct);
+
+        var naRade =
+            rozjizdky.FirstOrDefault(r => r.Stav == StavRozjizdky.Probiha)
+            ?? rozjizdky.Where(r => r.Stav == StavRozjizdky.Planovana)
+                .OrderBy(r => r.Cislo).FirstOrDefault()
+            ?? rozjizdky.Where(r => r.Stav == StavRozjizdky.Dokoncena)
+                .OrderByDescending(r => r.Cislo).FirstOrDefault();
+
+        if (naRade is not null)
+        {
+            var jeji = await db.Trate
+                .Where(t => t.ZavodId == zavodId && t.RozjizdkaId == naRade.Id
+                            && t.Stav == StavTrati.Prijato)
+                .OrderByDescending(t => t.Id)
+                .FirstOrDefaultAsync(ct);
+            if (jeji is not null) return jeji;
+        }
+
+        return await db.Trate
+            .Where(t => t.ZavodId == zavodId && t.Stav == StavTrati.Prijato)
+            .OrderByDescending(t => t.Id)
+            .FirstOrDefaultAsync(ct);
+    }
+
     public async Task<VerejnaTratDto?> VerejnaAsync(int zavodId, CancellationToken ct)
     {
         // Nejnovější trať rozhoduje jen o přestavbě: to je ta, která se právě
@@ -189,11 +393,7 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
             return new VerejnaTratDto(
                 Prestavba: true, PrijatoV: null, CisloRozjizdky: null, Boje: [], Prvky: []);
 
-        var trat = await db.Trate
-            .Where(t => t.ZavodId == zavodId && t.Stav == StavTrati.Prijato)
-            .OrderByDescending(t => t.Id)
-            .FirstOrDefaultAsync(ct);
-
+        var trat = await NaRadeAsync(zavodId, ct);
         if (trat is null) return null;
 
         var cislo = trat.RozjizdkaId is { } rozjizdka
@@ -203,23 +403,67 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
 
         var prijato = trat.PrijatoV!.Value;
 
-        var prvky = await db.PrvkyTrati
+        // Fotky značek jdou ven s trať. <b>Jedním dotazem na celou trať</b>:
+        // na konec zvlášť by to byl dotaz za každou bóji, a prvek jich má
+        // až dvě.
+        // <b>Přes id bójí, ne přes navigaci.</b> `SelectMany` nad
+        // `BojeA.Fotky.Concat(BojeB.Fotky)` EF nepřeloží (integrační testy
+        // 15. 10. 2026: „The LINQ expression … could not be translated"),
+        // a tiché přepnutí na vyhodnocení v paměti by stáhlo všechny fotky
+        // regaty.
+        var naTrati = db.PrvkyTrati.Where(p => p.TratId == trat.Id);
+        var bojeIds = await naTrati.Select(p => p.BojeAId)
+            .Union(naTrati.Where(p => p.BojeBId != null).Select(p => p.BojeBId!.Value))
+            .ToListAsync(ct);
+
+        var fotky = await db.Fotky
+            .Where(f => f.UBojeId != null && bojeIds.Contains(f.UBojeId.Value))
+            .OrderBy(f => f.NahranoV)
+            .ToListAsync(ct);
+
+        var podleBoje = fotky
+            .GroupBy(f => f.UBojeId!.Value)
+            .ToDictionary(
+                g => g.Key,
+                g => (IReadOnlyList<Fotky.ObrazekDto>)[.. g
+                    .Select(f => Fotky.Nahravani.Dto(f, uloziste.VerejnaAdresa))
+                    .OfType<Fotky.ObrazekDto>()]);
+
+        var surove = await db.PrvkyTrati
             .Where(p => p.TratId == trat.Id)
             .OrderBy(p => p.Poradi).ThenBy(p => p.Id)
+            .Select(p => new
+            {
+                p.Typ, p.Poradi, p.Strana, p.Poznamka, p.Smer, p.DruhStartu,
+                A = new { Boje = p.BojeAId, p.BojeA!.Nazev, p.BojeA.Sirka, p.BojeA.Delka,
+                          p.BojeA.Barva, p.BojeA.Tvar, p.BojeA.Znaceni },
+                B = p.BojeB != null
+                    ? new { Boje = p.BojeB.Id, p.BojeB.Nazev, p.BojeB.Sirka, p.BojeB.Delka,
+                            p.BojeB.Barva, p.BojeB.Tvar, p.BojeB.Znaceni }
+                    : null,
+            })
+            .ToListAsync(ct);
+
+        IReadOnlyList<Fotky.ObrazekDto>? KFotkam(int bojeId) =>
+            podleBoje.TryGetValue(bojeId, out var f) && f.Count > 0 ? f : null;
+
+        var prvky = surove
             .Select(p => new VerejnyPrvekDto(
                 p.Typ, p.Poradi, p.Strana, p.Poznamka,
                 new VerejnyKonecDto(
-                    p.BojeA!.Nazev, p.BojeA.Sirka, p.BojeA.Delka,
-                    p.BojeA.Barva, p.BojeA.Tvar, p.BojeA.Znaceni),
-                p.BojeB != null
+                    p.A.Nazev, p.A.Sirka, p.A.Delka,
+                    p.A.Barva, p.A.Tvar, p.A.Znaceni, KFotkam(p.A.Boje)),
+                p.B != null
                     ? new VerejnyKonecDto(
-                        p.BojeB.Nazev, p.BojeB.Sirka, p.BojeB.Delka,
-                        p.BojeB.Barva, p.BojeB.Tvar, p.BojeB.Znaceni)
+                        p.B.Nazev, p.B.Sirka, p.B.Delka,
+                        p.B.Barva, p.B.Tvar, p.B.Znaceni, KFotkam(p.B.Boje))
                     : null,
                 p.Smer, p.DruhStartu))
-            .ToListAsync(ct);
+            .ToList();
 
-        return new VerejnaTratDto(false, prijato, cislo, Prvky: prvky, Boje: await db.Boje
+        return new VerejnaTratDto(false, prijato, cislo,
+            ZkracenoUPrvkuId: trat.ZkracenoUPrvkuId, ZkracenoV: trat.ZkracenoV,
+            Prvky: prvky, Boje: await db.Boje
             .Where(b => b.ZavodId == zavodId
                         && b.PostavenaV <= prijato
                         && (b.NahrazenaV == null || b.NahrazenaV > prijato)
@@ -618,6 +862,9 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
             ? await db.Rozjizdky.Where(r => r.Id == rozjizdka)
                 .Select(r => (int?)r.Cislo).FirstOrDefaultAsync(ct)
             : null;
+        var jede = t.RozjizdkaId is { } beziciId
+                   && await db.Rozjizdky.AnyAsync(
+                       r => r.Id == beziciId && r.Stav == StavRozjizdky.Probiha, ct);
 
         return new TratDto(
             t.Id,
@@ -632,6 +879,12 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
             odjeta,
             SmiHlasitHotovo: jeStavitel && Stavba.ProcNejdeHotovo(t.Stav) is null,
             SmiPrijmout: jeRozhodci && Stavba.ProcNejdePrijmout(t.Stav) is null,
-            SmiPrestavet: jeStavitel && Stavba.ProcNejdePrestavba(t.Stav) is null);
+            SmiPrestavet: jeStavitel && Stavba.ProcNejdePrestavba(t.Stav) is null,
+            ZkracenoUPrvkuId: t.ZkracenoUPrvkuId,
+            ZkracenoV: t.ZkracenoV,
+            Zkratil: t.Zkratil?.Zobrazovane,
+            // Zkracuje se jen to, co se zrovna jede — stejná podmínka jako
+            // v `ZkratAsync`, aby obrazovka nenabízela, co server odmítne.
+            SmiZkratit: jeRozhodci && t.RozjizdkaId is not null && jede);
     }
 }

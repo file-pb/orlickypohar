@@ -69,9 +69,12 @@ public record PrvekVstup(
 public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
 {
     /// <summary>Prvky trati v pořadí. Bez trati prázdno, ne chyba.</summary>
-    public async Task<List<PrvekDto>> SeznamAsync(int zavodId, CancellationToken ct)
+    public async Task<List<PrvekDto>> SeznamAsync(
+        int zavodId, CancellationToken ct, int? tratId = null)
     {
-        if (await trate.AktualniAsync(zavodId, ct) is not { } trat) return [];
+        // Bez vybrané trati platí dohad „nejnovější" jako dřív; s vybranou
+        // se vydá právě ona. Cizí id vrátí prázdno, ne jinou trať.
+        if (await trate.VybranaAsync(zavodId, tratId, ct) is not { } trat) return [];
 
         return await db.PrvkyTrati
             .Where(p => p.TratId == trat.Id)

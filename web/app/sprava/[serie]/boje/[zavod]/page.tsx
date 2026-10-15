@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/app/sprava/odkaz";
 import { notFound } from "next/navigation";
 import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
@@ -20,6 +20,7 @@ import { PrvkyTrati } from "./prvky";
 import { Puvod, ZnackaNaTrati } from "./znacka-na-trati";
 import { StavTrati } from "./stav-trati";
 import { Stavba } from "./stavba";
+import { nactiRozjizdky } from "@/lib/vysledky";
 import { VyberTrati } from "./vyber-trati";
 import { uklidAkce, zahodZaznamAkce } from "./akce";
 
@@ -36,6 +37,8 @@ type Parametry = {
     prenastav?: string;
     uklizeno?: string;
     otevrit?: string;
+    /** Kterou trať regaty obrazovka ukazuje. Bez ní tu nejnovější. */
+    trat?: string;
   }>;
 };
 
@@ -59,17 +62,25 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
   const { serie, zavod } = await params;
   const zpravy = await searchParams;
 
+  // Která trať se ukazuje. Nula znamená „nevybráno" — API pak vydá tu
+  // nejnovější, jako dřív.
+  const vybranaTrat = Number(zpravy.trat ?? 0) || undefined;
+
   // Název regaty v odpovědi o bójích není, a bez něj nadpis neřekne, čí
   // trať se zrovna staví (Filip, 9. 10. 2026).
-  const [{ stav, trat, byvale }, nazev, stavTrati, prvky, kUklizeni, trate] =
+  // Rozjížďky se čtou jen kvůli plusu: nabízí ty, které trať nemají.
+  // Výpadek jejich čtení nesmí shodit stavbu — plus pak nenabídne nic.
+  const [{ stav, trat, byvale }, nazev, stavTrati, prvky, kUklizeni, trate, prehled] =
     await Promise.all([
     nactiTrat(serie, zavod),
     nazevZastavky(serie, zavod),
-    nactiStavTrati(serie, zavod),
-    nactiPrvky(serie, zavod),
+    nactiStavTrati(serie, zavod, vybranaTrat),
+    nactiPrvky(serie, zavod, vybranaTrat),
     nactiKUklizeni(serie, zavod),
     nactiTrate(serie, zavod),
+    nactiRozjizdky(serie, zavod),
   ]);
+  const rozjizdky = (prehled.data?.rozjizdky ?? []).map((r) => r.cislo);
   if (stav === "neni") notFound();
 
   // Přenastavuje se jen bóje, která na trati doopravdy stojí. Podvržené id
@@ -162,7 +173,23 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
       )}
       {zpravy.stav === "prvekPryc" && (
         <p className="hlaska" role="status">
-          Prvek je pryč. Bóje zůstaly — smazalo se rozhodnutí, ne měření.
+          Prvek je pryč a jeho značky jsou sebrané z vody. V historii bójí
+          zůstaly — smazalo se rozhodnutí o trati, ne měření.
+        </p>
+      )}
+      {/* Druhý průjezd týchž značek. Bóje se nesbírají, protože na nich
+          stojí jiný prvek — a sebrat je by rozbilo trať jinde, než kam
+          člověk klikl. */}
+      {zpravy.stav === "novaTrat" && (
+        <p className="hlaska" role="status">
+          Nová trať je založená a obrazovka je na ní. Rozjížďku jí přiřadíš,
+          až bude postavená — nebo klidně hned, když se na ni čeká na vodě.
+        </p>
+      )}
+      {zpravy.stav === "prujezdPryc" && (
+        <p className="hlaska" role="status">
+          Průjezd je pryč. Značky zůstaly ve vodě, protože je používá ještě
+          jiný prvek trati.
         </p>
       )}
       {zpravy.stav === "trat-hotovo" && (
@@ -281,6 +308,9 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
             prvky={prvky}
             boje={trat}
             zamceno={stavTrati.trat?.stav === "Prijato"}
+            tratId={stavTrati.trat?.id}
+            smiZkratit={stavTrati.trat?.smiZkratit ?? false}
+            zkraceniU={stavTrati.trat?.zkracenoUPrvkuId ?? null}
             otevrit={otevreny}
           />
 
@@ -295,7 +325,13 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
           {/* <b>Až pod stavbou</b> (Filip, 11. 10. 2026): která trať platí
               a klonování jsou úkoly od stolu, kdežto nahoře má být to,
               kvůli čemu je člověk na vodě. */}
-          <VyberTrati serie={serie} zavod={zavod} trate={trate} />
+          <VyberTrati
+            serie={serie}
+            zavod={zavod}
+            trate={trate}
+            rozjizdky={rozjizdky}
+            vybrana={stavTrati.trat?.id}
+          />
 
           {trat.length > 0 && (
             <p className="poznamka">

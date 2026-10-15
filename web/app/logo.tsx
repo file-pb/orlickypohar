@@ -65,6 +65,15 @@ export function Logo() {
 }
 
 /**
+ * Jen kulatá značka, bez nápisu vedle ní. Tabule si název závodu píše
+ * sama a ve stejné grafice (`app/tabule-nazev.tsx`), takže by vedle sebe
+ * stály dva proužkované nápisy a soupeřily o pozornost.
+ */
+export function Znak() {
+  return <Kresba className="logo logo-oys" />;
+}
+
+/**
  * Logo jako slabý rozostřený vodoznak na pozadí stránek. Průhlednost
  * a rozostření mu dává CSS.
  */

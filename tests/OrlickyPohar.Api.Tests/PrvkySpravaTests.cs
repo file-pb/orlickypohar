@@ -38,7 +38,7 @@ public class PrvkySpravaTests(PostgresFixture fixture)
     {
         var scope = fixture.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var trat = new TratSprava(db, TimeProvider.System);
+        var trat = new TratSprava(db, TimeProvider.System, new ZadneUloziste());
 
         return (db,
             BojeSluzba(db, trat),

@@ -185,7 +185,15 @@ export function NahledPrvku({
           if (!z) return null;
           return (
             <g key={i} opacity={z.cekajici ? 0.45 : 1}>
-              <ZnakBoje x={m.x} y={m.y} r={m.r} barva={z.barva} tvar={z.tvar} znaceni={z.znaceni} />
+              <ZnakBoje
+              x={m.x}
+              y={m.y}
+              r={m.r}
+              barva={z.barva}
+              tvar={z.tvar}
+              znaceni={z.znaceni}
+              plasticita="odlesk"
+            />
             </g>
           );
         })}

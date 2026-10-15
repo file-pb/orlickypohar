@@ -1,5 +1,7 @@
 import { NAZVY_STAVU, type TratNaVyber } from "@/lib/trat";
-import { klonujTratAkce, priradTratAkce } from "./akce";
+import { dalsiTratAkce } from "./akce";
+import Link from "@/app/sprava/odkaz";
+import { StejnaTrat } from "@/app/sprava/stejna-trat";
 
 /**
  * Komu trať patří a jak se vezme ta z minula.
@@ -28,80 +30,144 @@ export function VyberTrati({
   serie,
   zavod,
   trate,
+  rozjizdky,
+  vybrana,
 }: {
   serie: string;
   zavod: string;
   trate: TratNaVyber[];
+  /** Čísla rozjížděk regaty. Plus z nich nabízí ty, které trať nemají. */
+  rozjizdky: number[];
+  /** Trať, kterou obrazovka právě ukazuje. */
+  vybrana?: number;
 }) {
-  if (trate.length === 0) return null;
+  if (trate.length === 0 && rozjizdky.length === 0) return null;
+
+  // Rozjížďky bez trati. Nabídnout tu, která už trať má, by znamenalo
+  // slíbit druhou — a server by to stejně odmítl.
+  const obsazene = new Set(trate.map((t) => t.cisloRozjizdky));
+  const volne = rozjizdky.filter((c) => !obsazene.has(c));
+
+  // Trať, kterou obrazovka ukazuje — bez výběru ta, na kterou spadla.
+  const vybranaTrat = trate.find((t) => t.id === vybrana) ?? trate[0];
 
   return (
     <section className="vyber-trati" aria-labelledby="vyber-trati-nadpis">
       <h2 id="vyber-trati-nadpis">Tratě regaty</h2>
 
-      <ul className="seznam">
-        {trate.map((t) => (
-          <li key={t.id}>
-            <b>
-              {t.cisloRozjizdky ? `${t.cisloRozjizdky}. rozjížďka` : "zatím bez rozjížďky"}
-            </b>{" "}
-            <span className="stitek">{NAZVY_STAVU[t.stav]}</span>
-            {t.odjeta && <span className="stitek">jelo se podle ní</span>}
-            <span className="detail">
-              {" "}
-              {t.pocetPrvku === 0
-                ? "bez prvků"
-                : t.pocetPrvku === 1
-                  ? "1 prvek"
-                  : `${t.pocetPrvku} prvků`}
-            </span>
+      {/* <b>Záložka za každou trať</b> (Filip, 15. 10. 2026: *„každá
+          rozjížďka vlastní tab… na konci třeba plusko a možnost zadat
+          další trať"*). Seznam pod sebou byl zavádějící: vypadal jako
+          přehled, ale obrazovka přitom pořád ukazovala jen tu nejnovější.
 
-            {t.jdePriradit ? (
-              <form action={priradTratAkce} className="formular radkove">
-                <input type="hidden" name="serie" value={serie} />
-                <input type="hidden" name="zavod" value={zavod} />
-                <input type="hidden" name="trat" value={t.id} />
-                <label>
-                  Přiřadit rozjížďce číslo
-                  <input name="rozjizdka" type="number" min={1} required />
-                </label>
-                <button type="submit">Přiřadit</button>
-              </form>
-            ) : (
-              <form action={klonujTratAkce} className="formular radkove">
-                <input type="hidden" name="serie" value={serie} />
-                <input type="hidden" name="zavod" value={zavod} />
-                <input type="hidden" name="trat" value={t.id} />
-                <label>
-                  Jede se znovu v rozjížďce číslo
-                  <input name="rozjizdka" type="number" min={1} />
-                  <span className="poznamka">
-                    Prázdné udělá kopii „na stůl" — rozjížďku jí přiřadíš potom.
-                  </span>
-                </label>
-                <label>
-                  Klon začne ve stavu
-                  <select name="stav" defaultValue="Hotovo">
-                    <option value="Rozestaveno">{NAZVY_STAVU.Rozestaveno}</option>
-                    <option value="Hotovo">{NAZVY_STAVU.Hotovo}</option>
-                    <option value="Prijato">{NAZVY_STAVU.Prijato}</option>
-                  </select>
-                  <span className="poznamka">
-                    Výchozí je hotová: klon je tvrzení stavitele, že stojí to, co
-                    minule. Přijmout ji smí jen rozhodčí.
-                  </span>
-                </label>
-                <button type="submit">Naklonovat</button>
-              </form>
-            )}
-          </li>
-        ))}
-      </ul>
+          Popisek nese číslo rozjížďky, když ho trať má. Nemusí ho mít —
+          pořadí je volné: dá se postavit trať a pak jí přiřadit rozjížďku,
+          nebo vyhlásit rozjížďku a stavět, zatímco lodě čekají na vodě.
 
-      <p className="poznamka">
-        Klon kopíruje prvky na <b>tytéž bóje</b> — žádná nová pípnutí. Vyrobila
-        by se tím měření, která se nestala, s falešným časem a přesností.
-      </p>
+          Odkazy, ne javascript: výběr je v adrese, takže se dá poslat
+          a po akci zůstane. */}
+      <nav className="zalozky-trati" aria-label="Tratě regaty">
+        {trate.map((t) => {
+          const jeTato = t.id === vybrana;
+          return (
+            <Link
+              key={t.id}
+              href={`/sprava/${serie}/boje/${zavod}?trat=${t.id}`}
+              className={jeTato ? "vybrany" : undefined}
+              aria-current={jeTato ? "page" : undefined}
+            >
+              {t.cisloRozjizdky ? `${t.cisloRozjizdky}. rozjížďka` : "bez rozjížďky"}
+              <span className="stav">{NAZVY_STAVU[t.stav]}</span>
+            </Link>
+          );
+        })}
+
+        {/* <b>Plus se zeptá, pro kterou rozjížďku</b> (Filip, 15. 10. 2026:
+            *„stačí jen seznam nad tím, ke které rozjížďce je trať připnuta
+            a v jakém je to stavu; plusko jen nabídne výběr z rozjížděk"*).
+            Dřív zakládalo trať bez vazby a přiřazovalo se jinde — dvě
+            místa pro jednu věc, a ta druhá byla zmatečná.
+
+            Rozbalovací, ne javascript: zabalené je to pořád jen plus. */}
+        <details className="pridat-trat">
+          <summary title="Další trať regaty" aria-label="Založit další trať">
+            +
+          </summary>
+          {volne.length === 0 ? (
+            <p className="poznamka">
+              Každá rozjížďka už trať má. Další rozjížďku založíš u výsledků.
+            </p>
+          ) : (
+            <form action={dalsiTratAkce} className="formular radkove">
+              <input type="hidden" name="serie" value={serie} />
+              <input type="hidden" name="zavod" value={zavod} />
+              <label>
+                Trať pro rozjížďku
+                <select name="rozjizdka" defaultValue={String(volne[0])}>
+                  {volne.map((c) => (
+                    <option key={c} value={c}>
+                      {c}. rozjížďka
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="submit">Založit</button>
+            </form>
+          )}
+        </details>
+      </nav>
+
+      {/* <b>Jen informace, žádné přiřazování</b> (Filip, 15. 10. 2026:
+          *„trať má maximálně někde mít přes ten klíč info, ke kterým
+          rozjížďkám je přiřazena, ale rozjížďka se má založit pod
+          výsledky a pak má být možné přiřadit rozjížďce trať"*).
+
+          Tratě jsou samostatné a vazba na rozjížďku je obyčejná 1:1 —
+          patří tam, kde rozjížďka vzniká, tedy k výsledkům. Tady by
+          z toho byla druhá cesta k témuž a obrazovka stavby by se starala
+          o něco, co se staví jinde. */}
+      {/* Vede počtem, ne výčtem: kolik rozjížděk ji jede, je tu
+          <b>minoritní informace</b> (Filip, 15. 10. 2026). Čísla
+          a odkazy na ně jsou až v rozbalovací poznámce. Odkaz vede na
+          výsledky rozjížďky — tam se startuje a tam jsou dojezdy
+          (Filip, 15. 10. 2026: *„dá se do nich prokliknout a tam ji
+          třeba odstartovat, nebo kouknout na výsledky"*). */}
+      {vybranaTrat && (
+        <p className="detail">
+          {vybranaTrat.cisloRozjizdky ? (
+            <>
+              {"Jede ji "}
+              <Link href={`/sprava/${serie}/vysledky/${zavod}/${vybranaTrat.cisloRozjizdky}`}>
+                {vybranaTrat.cisloRozjizdky}. rozjížďka
+              </Link>
+              {"."}
+            </>
+          ) : (
+            "Zatím ji nejede žádná rozjížďka."
+          )}
+          <StejnaTrat
+            serie={serie}
+            zavod={zavod}
+            cisla={shodneSTrati(vybranaTrat, trate)}
+          />
+        </p>
+      )}
     </section>
   );
 }
+
+/**
+ * Čísla rozjížděk, které jedou totéž co tahle trať.
+ *
+ * <b>Trať bez prvků se nepáruje</b>: otisk je u ní `null`, protože prázdno
+ * není předpis — dvě prázdné tratě spolu nemají nic společného.
+ */
+function shodneSTrati(trat: TratNaVyber, trate: TratNaVyber[]): number[] {
+  if (!trat.otisk) return [];
+
+  return trate
+    .filter((t) => t.id !== trat.id && t.otisk === trat.otisk && t.cisloRozjizdky !== null)
+    .map((t) => t.cisloRozjizdky!)
+    .sort((a, b) => a - b);
+}
+

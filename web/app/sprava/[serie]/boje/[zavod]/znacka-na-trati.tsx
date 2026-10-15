@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/app/sprava/odkaz";
 import { NAZVY_ZDROJU, type Boje } from "@/lib/boje";
 import { okamzik } from "@/app/datum";
 import { ZnakVRadku } from "@/app/znak-boje";
