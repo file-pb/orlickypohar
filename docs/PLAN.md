@@ -2951,10 +2951,33 @@ nechat nastavit"*). Výchozí stav je ten konzervativní, tedy **jen
 publikované**; kdo chce procesní děj, zapne si ho. Rozhodnutí tím nepadá
 na nás ani napevno do kódu.
 
-**Postavená 10. 10. 2026** na `/serie/{serie}/zavody/{zavod}/tabule`:
-stav regaty, rozjížďky s dojezdy, průběžné pořadí a startovní listina.
+**Postavená 10. 10. 2026** na `/serie/{serie}/zavody/{zavod}/tabule`.
 Bez boků a bez navigace — visí to přes místnost, takže pixel, který není
 čitelný od vedlejšího stolu, je k ničemu; velikosti jsou ve `vw`.
+
+**Přestavěná 15. 10. 2026 na livescore** (Filip: *„je to emotivní
+divácký dashboard ze závodů… prostě livescore"*). Nahoře logo vlevo,
+název závodu uprostřed v téže proužkované Inter Black jako nápis
+„Orlická série" (živý `<text>` v podmnožině písma, protože název se
+mění s každou regatou a nejde předgenerovat jako křivky), stav vpravo.
+Pod tím pás atributů, pak dva karusely a pravý sloupec.
+
+**Karusel je jeden obecný, dvě sady panelů.** Vlevo se střídají
+rozjížďky (jen stavy) a lodě na startu — tím odpadla jedna tabulka.
+Uprostřed pořadí: jeden panel na třídu, plus celkové, když se počítá.
+<b>Co je panel, rozhoduje `vyhodnoceni` závodu</b>, ne co je v datech:
+celkové pořadí API spočítá vždycky, i u závodu jetého jen po
+kategoriích, takže podle jeho přítomnosti by tabule vyhlašovala pořadí,
+které se v tom závodě nevyhlašuje. Tečky neukazují, kam klepnout — na
+televizi není čím; jsou tam, aby divák věděl, že u jedné třídy nevidí
+všechno.
+
+**Vpravo semafor rozjížďky**, stopky od startu nebo odpočet do
+vyhlášeného startu, a „X v cíli, čeká se na Y". Lodě s kódem (DNF, DNS)
+se počítají mezi vyřízené, jinak by tabule do večera čekala na loď,
+která nevyjela. Pod semaforem mapka trati a poslední tři v cíli —
+poslední <b>podle pořadí v cíli</b>, protože výsledek nese uplynulý čas,
+ne hodinu dojezdu.
 
 **Jen publikované výsledky.** Přepínač „procesní děj" (under review,
 potvrzeno, protest) zatím není, takže platí ten konzervativní výchozí
@@ -3015,6 +3038,17 @@ přestavba; opačný směr dává „Trať se přestavuje" nebo „Čeká se na 
 `proxy_cache_valid 200 404 10s` platí i pro `tabule/data`, takže celá
 hospoda dostane tentýž snímek. Nic se neztratí — porovnání běží proti
 poslednímu snímku, který prohlížeč drží, ne proti času.
+
+**Fronta alertů se zasekávala a byla to tichá vada** (15. 10. 2026):
+události se počítaly uvnitř updateru `setSnimek` a volalo se v něm
+`setFronta` — vedlejší efekt ve stavové funkci. React updater spouští
+i víckrát, takže se každá událost zařadila dvakrát; druhá kopie měla
+tentýž klíč, React element recykloval, CSS animace se nespustila znovu
+a karta zůstala v DOM neviditelná. A protože se fronta nehnula, nevyjel
+od té chvíle <b>žádný další alert</b>. Změřeno v prohlížeči: hlava
+fronty stála 37 s, zatímco zbytek obrazovky se dál obnovoval. Porovnání
+proto běží mimo updater, proti snímku v `useRef`, a fronta zahazuje
+duplicitní klíče.
 
 **Výpadek API dnešní web nepřežije.** `Vypadek` se vykresluje jako součást
 stránky, která vrací **200**, takže ho nginx uloží jako platnou odpověď —
