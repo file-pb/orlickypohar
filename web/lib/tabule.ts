@@ -156,7 +156,10 @@ function panely(detail: ZavodDetail): Snimek["tabule"] {
     });
 
   // Prázdný panel není co ukazovat; jeden prázdný ale zůstane, aby tabule
-  // uměla říct „zatím se nejelo" místo prázdného místa.
+  // uměla říct „zatím se nejelo" místo prázdného místa. <b>Bez něj zmizel
+  // celý prostřední sloupec</b> a obrazovka vypadala rozbitě: závod před
+  // prvním startem nemá v pořadí nikoho, takže panelů bylo nula.
   const neprazdne = tridy.filter((t) => t.lode.length > 0);
-  return neprazdne.length > 0 ? neprazdne : tridy.slice(0, 1);
+  if (neprazdne.length > 0) return neprazdne;
+  return tridy.length > 0 ? tridy.slice(0, 1) : [{ kategorie: "Pořadí", lode: [] }];
 }

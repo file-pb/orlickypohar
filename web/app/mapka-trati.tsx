@@ -406,8 +406,15 @@ export function MapkaTrati({ prvky }: { prvky: PrvekNaMape[] }) {
         <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">
           © přispěvatelé OpenStreetMap
         </a>
-        . Sever nahoře. Mapka se neposouvá — ukazuje právě trať a kus vody
-        kolem; kde přesně bóje leží, otevře odkaz na mapu u každé z nich.
+        .{" "}
+        {/* Návod ke čtení mapy. <b>Vlastní značka</b>, protože na tabuli
+            se schovává: televize je pasivní plocha, kde se nečte souvislý
+            text a odkaz u bóje stejně nikdo nerozklikne. Uvedení zdroje
+            zůstává — to chtějí pravidla OSM. */}
+        <span className="navod">
+          Sever nahoře. Mapka se neposouvá — ukazuje právě trať a kus vody
+          kolem; kde přesně bóje leží, otevře odkaz na mapu u každé z nich.
+        </span>
       </figcaption>
     </figure>
   );
