@@ -3179,6 +3179,18 @@ class H(BaseHTTPRequestHandler):
                 z["ucasti"].append({"lod": lod, "kormidelnik": None, "posadka": None, "stav": "Potvrzena"})
             elif u["stav"] != "Vyloucena":
                 u["stav"] = "Potvrzena"
+
+        # Rozjížďka je dojetá, až má každá loď na vodě dojezd nebo kód —
+        # opsané z `ZapisSprava.PrepocitejStav`. Počítají se jen lodě, které
+        # jedou (`VEREJNE_UCASTI`); odhlášená ani nedostavená se nečeká.
+        if r.get("stav") != "Zrusena":
+            jedou = {u["lod"] for u in z["ucasti"] if u.get("stav") in VEREJNE_UCASTI}
+            maji = {v["lod"] for v in r["vysledky"]}
+            if jedou and jedou <= maji:
+                r["stav"] = "Dokoncena"
+            elif r.get("stav") == "Dokoncena":
+                r["stav"] = "Probiha" if r.get("startV") else "Planovana"
+
         return self.odpoved(zapis_dto(z, r))
 
     def prihlas_lod(self, zavod):

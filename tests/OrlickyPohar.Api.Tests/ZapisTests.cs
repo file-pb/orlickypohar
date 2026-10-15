@@ -227,4 +227,84 @@ public class ZapisTests
         Assert.Null(VysledekUlozeni.Ulozeno.Chyba);
         Assert.False(VysledekUlozeni.Ulozeno.Konflikt);
     }
+
+    /// <summary>
+    /// <b>Rozjížďka dojede, až mají výsledek všichni na vodě.</b>
+    ///
+    /// <para>
+    /// Objeveno 15. 10. 2026 při průchodu scénáři Izolepy: <c>Dokoncena</c>
+    /// se nenastavovalo nikde a jediný přechod v API byl
+    /// <c>Planovana → Probiha</c> při startu. Rozjížďka proto zůstala
+    /// „probíhá" i po schválení a publikaci — tabule hlásila „jede se",
+    /// alert „rozjížďka dojeta" nevyjel nikdy a veřejná trať se po dojetí
+    /// první rozjížďky už neposunula na další.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public void Dojeto_az_maji_vysledek_vsichni_na_vode()
+    {
+        (StavUcasti, bool)[] jednaCeka =
+            [(StavUcasti.Potvrzena, true), (StavUcasti.Prihlasena, false)];
+
+        Assert.Equal(
+            StavRozjizdky.Probiha,
+            Zapis.StavPoZapisu(StavRozjizdky.Probiha, true, jednaCeka));
+
+        // Kód je taky vyřízení — na loď s DNF se nečeká.
+        Assert.Equal(
+            StavRozjizdky.Dokoncena,
+            Zapis.StavPoZapisu(StavRozjizdky.Probiha, true,
+                [(StavUcasti.Potvrzena, true), (StavUcasti.Potvrzena, true)]));
+    }
+
+    /// <summary>
+    /// Kdo na vodě není, rozjížďku nedrží — a vyloučená loď své výsledky má,
+    /// takže se počítá. Stejné rozdělení jako <see cref="Zapis.NaRegate"/>.
+    /// </summary>
+    [Theory]
+    [InlineData(StavUcasti.Zrusena, StavRozjizdky.Dokoncena)]
+    [InlineData(StavUcasti.Nedostavila, StavRozjizdky.Dokoncena)]
+    [InlineData(StavUcasti.Pozadavek, StavRozjizdky.Dokoncena)]
+    [InlineData(StavUcasti.Vyloucena, StavRozjizdky.Probiha)]
+    [InlineData(StavUcasti.Prihlasena, StavRozjizdky.Probiha)]
+    public void Ceka_se_jen_na_lode_na_vode(StavUcasti druha, StavRozjizdky cekam)
+    {
+        Assert.Equal(
+            cekam,
+            Zapis.StavPoZapisu(StavRozjizdky.Probiha, true,
+                [(StavUcasti.Potvrzena, true), (druha, false)]));
+    }
+
+    /// <summary>
+    /// Oprava vrací rozjížďku zpátky: smazaný dojezd nesmí nechat dojetou
+    /// rozjížďku s dírou. Bez startu se vrací mezi plánované — do rozjížďky
+    /// přepisované z papíru se nikdy nestartovalo.
+    /// </summary>
+    [Theory]
+    [InlineData(true, StavRozjizdky.Probiha)]
+    [InlineData(false, StavRozjizdky.Planovana)]
+    public void Smazany_dojezd_vrati_rozjizdku_zpatky(bool odstartovano, StavRozjizdky cekam)
+    {
+        Assert.Equal(
+            cekam,
+            Zapis.StavPoZapisu(StavRozjizdky.Dokoncena, odstartovano,
+                [(StavUcasti.Potvrzena, true), (StavUcasti.Potvrzena, false)]));
+    }
+
+    /// <summary>
+    /// Zrušená rozjížďka se nejede, ať je v ní zapsáno cokoliv. A prázdná
+    /// regata nedojede sama od sebe — bez lodí na vodě není co dojet.
+    /// </summary>
+    [Fact]
+    public void Zrusena_a_prazdna_rozjizdka_stav_nemeni()
+    {
+        Assert.Equal(
+            StavRozjizdky.Zrusena,
+            Zapis.StavPoZapisu(StavRozjizdky.Zrusena, true,
+                [(StavUcasti.Potvrzena, true)]));
+
+        Assert.Equal(
+            StavRozjizdky.Probiha,
+            Zapis.StavPoZapisu(StavRozjizdky.Probiha, true, []));
+    }
 }

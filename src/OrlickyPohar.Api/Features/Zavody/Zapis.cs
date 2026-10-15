@@ -113,6 +113,45 @@ public static class Zapis
         stav is StavUcasti.Prihlasena or StavUcasti.Potvrzena or StavUcasti.Vyloucena;
 
     /// <summary>
+    /// <b>Jaký stav má rozjížďka po uložení sady.</b> Dojetá je ta, kde má
+    /// každá loď na vodě dojezd nebo kód; loď bez výsledku ji drží otevřenou,
+    /// protože se na ni čeká.
+    ///
+    /// <para>
+    /// <b>Proč to je funkce výsledků, ne tlačítko</b> (15. 10. 2026):
+    /// <c>Dokoncena</c> se do té doby nenastavovalo nikde a jediný přechod
+    /// v API byl <c>Planovana → Probiha</c> při startu. Rozjížďka tak zůstala
+    /// „probíhá" napořád — tabule hlásila „jede se" i po schválení a
+    /// publikaci, alert „rozjížďka dojeta" nevyjel nikdy a veřejná trať, která
+    /// bere rozjížďku na řadě, se po dojetí první už neposunula na další.
+    /// </para>
+    ///
+    /// <para>
+    /// Počítají se jen lodě <see cref="NaRegate"/> — odhlášená ani nedostavená
+    /// se nečeká, vyloučená ano, protože své výsledky má. Platí to i zpátky:
+    /// smazaný dojezd vrátí rozjížďku mezi probíhající, aby oprava nenechala
+    /// dojetou rozjížďku s dírou. Zrušené se to netýká, ta se nejede.
+    /// </para>
+    /// </summary>
+    public static StavRozjizdky StavPoZapisu(
+        StavRozjizdky ted, bool odstartovano,
+        IEnumerable<(StavUcasti Stav, bool MaVysledek)> lode)
+    {
+        if (ted == StavRozjizdky.Zrusena) return ted;
+
+        var naVode = lode.Where(l => NaRegate(l.Stav)).ToList();
+        if (naVode.Count > 0 && naVode.TrueForAll(l => l.MaVysledek))
+            return StavRozjizdky.Dokoncena;
+
+        // Zpátky jen z dojeté: nedojetá rozjížďka bez startu zůstává
+        // plánovaná, i když do ní někdo zapsal půlku papíru.
+        if (ted == StavRozjizdky.Dokoncena)
+            return odstartovano ? StavRozjizdky.Probiha : StavRozjizdky.Planovana;
+
+        return ted;
+    }
+
+    /// <summary>
     /// Naměřený čas: od startu rozjížďky do dojezdu. <c>null</c>, když start
     /// zapsaný není, nebo když by vyšel záporný — to je špatně nastavený
     /// start, ne loď, která dojela dřív, než vyjela.

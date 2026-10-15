@@ -220,6 +220,86 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         return (db, zapis, rozjizdka, prihlasky);
     }
 
+    /// <summary>
+    /// <b>Rozjížďka dojede, až mají výsledek všichni — a oprava ji vrátí
+    /// zpátky mezi probíhající.</b>
+    ///
+    /// <para>
+    /// Objeveno 15. 10. 2026 při průchodu scénáři Izolepy: <c>Dokoncena</c>
+    /// se nenastavovalo nikde a jediný přechod v celém API byl
+    /// <c>Planovana → Probiha</c> při startu. Rozjížďka proto zůstala
+    /// „probíhá" i po schválení a publikaci — tabule hlásila „jede se",
+    /// alert „rozjížďka dojeta" nevyjel nikdy a veřejná trať, která bere
+    /// rozjížďku na řadě, se po dojetí první už nikdy neposunula na další.
+    /// </para>
+    ///
+    /// <para>
+    /// Kód se počítá jako dojezd: loď s DNF rozjížďku nedrží otevřenou,
+    /// protože se na ni nečeká.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Rozjizdka_dojede_az_maji_vysledek_vsichni()
+    {
+        var slug = "zapis-dojeto";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
+
+        Assert.Null(await zapis.StartAsync(rozjizdka, DateTimeOffset.UnixEpoch, default));
+        Assert.Equal(StavRozjizdky.Probiha, rozjizdka.Stav);
+
+        // Anička v cíli, Bóra pořád na vodě — čeká se na ni.
+        Assert.Null((await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 1), new(prihlasky[1])],
+            default, revize: rozjizdka.Revize)).Chyba);
+        Assert.Equal(StavRozjizdky.Probiha, rozjizdka.Stav);
+
+        // Bóra nedokončila. Kód je taky vyřízení, takže je dojeto.
+        Assert.Null((await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 1), new(prihlasky[1], Kod: KodVysledku.Dnf)],
+            default, revize: rozjizdka.Revize)).Chyba);
+        Assert.Equal(StavRozjizdky.Dokoncena, rozjizdka.Stav);
+
+        // Oprava: kód byl omyl, Bóra se pořád čeká.
+        Assert.Null((await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 1), new(prihlasky[1])],
+            default, revize: rozjizdka.Revize)).Chyba);
+        Assert.Equal(StavRozjizdky.Probiha, rozjizdka.Stav);
+
+        // A sedí to i v databázi, ne jen na sledovaném objektu.
+        Assert.Equal(
+            StavRozjizdky.Probiha,
+            await db.Rozjizdky.AsNoTracking()
+                .Where(r => r.Id == rozjizdka.Id).Select(r => r.Stav).FirstAsync());
+    }
+
+    /// <summary>
+    /// Odhlášená loď rozjížďku nedrží: na vodě není, takže se na ni nečeká.
+    /// </summary>
+    [Fact]
+    public async Task Odhlasena_lod_rozjizdku_nedrzi_otevrenou()
+    {
+        var slug = "zapis-odhlasena";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
+        Assert.Null(await zapis.StartAsync(rozjizdka, DateTimeOffset.UnixEpoch, default));
+
+        var bora = await db.Ucasti.FirstAsync(
+            u => u.ZavodId == rozjizdka.ZavodId && u.PrihlaskaId == prihlasky[1]);
+        bora.Stav = StavUcasti.Zrusena;
+        await db.SaveChangesAsync();
+
+        Assert.Null((await zapis.UlozAsync(rozjizdka,
+            [new(prihlasky[0], PoradiVCili: 1), new(prihlasky[1])],
+            default, revize: rozjizdka.Revize)).Chyba);
+
+        Assert.Equal(StavRozjizdky.Dokoncena, rozjizdka.Stav);
+    }
+
     [Fact]
     public async Task Zapis_prepise_poradi_a_smaze_co_v_sade_neni()
     {
