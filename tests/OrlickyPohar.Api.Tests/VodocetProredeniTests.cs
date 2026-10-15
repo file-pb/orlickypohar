@@ -107,12 +107,15 @@ public class VodocetProredeniTests
     [Fact]
     public void Nabizi_se_jen_rozsahy_pro_ktere_jsou_data()
     {
-        // Pět dnů sběru: den a tři dny ano, rok ne.
+        // Pět dnů sběru: den, tři dny a týden ano (týden je z víc než
+        // půlky), dva týdny a dál ne.
         var dostupne = RozsahyGrafu.Dostupne(Nyni - TimeSpan.FromDays(5), Nyni);
 
         Assert.Contains("24h", dostupne);
         Assert.Contains("3d", dostupne);
-        Assert.DoesNotContain("3m", dostupne);
+        Assert.Contains("1t", dostupne);
+        Assert.DoesNotContain("2t", dostupne);
+        Assert.DoesNotContain("1m", dostupne);
         Assert.DoesNotContain("1r", dostupne);
     }
 

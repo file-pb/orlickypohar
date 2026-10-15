@@ -124,6 +124,50 @@
                 }
             }
         },
+        "/vodocet/orlik/rada": {
+            "get": {
+                "tags": [
+                    "Vodo\u010det"
+                ],
+                "summary": "Hladina Orl\u00edku za zvolen\u00fd rozsah",
+                "description": "Rozsah je jeden z kl\u00ed\u010d\u016f, kter\u00e9 `/vodocet/orlik` vrac\u00ed v `dostupneRozsahy`. Body jsou pro\u0159\u00eddl\u00e9 podle st\u00e1\u0159\u00ed u\u017e v datab\u00e1zi a odpov\u011b\u010f je nav\u00edc zastropovan\u00e1, tak\u017ee ani ro\u010dn\u00ed graf nep\u0159es\u00e1hne p\u00e1r set bod\u016f. 400 na nezn\u00e1m\u00fd rozsah, 404, dokud nen\u00ed ulo\u017een\u00e9 \u017e\u00e1dn\u00e9 m\u011b\u0159en\u00ed.",
+                "parameters": [
+                    {
+                        "name": "rozsah",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RadaHladinyDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/vodocet/orlik": {
             "get": {
                 "tags": [
@@ -1424,12 +1468,41 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/FotkaFormular"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/FotkaFormular"
+                                "type": "object",
+                                "allOf": [
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "soubor": {
+                                                "$ref": "#/components/schemas/IFormFile"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "autor": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "popis": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "souhlas": {
+                                                "type": "boolean"
+                                            }
+                                        }
+                                    }
+                                ]
                             }
                         }
                     },
@@ -1507,12 +1580,41 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/FotkaFormular"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/FotkaFormular"
+                                "type": "object",
+                                "allOf": [
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "soubor": {
+                                                "$ref": "#/components/schemas/IFormFile"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "autor": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "popis": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "souhlas": {
+                                                "type": "boolean"
+                                            }
+                                        }
+                                    }
+                                ]
                             }
                         }
                     },
@@ -1748,12 +1850,41 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/FotkaFormular"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/FotkaFormular"
+                                "type": "object",
+                                "allOf": [
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "soubor": {
+                                                "$ref": "#/components/schemas/IFormFile"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "autor": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "popis": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "souhlas": {
+                                                "type": "boolean"
+                                            }
+                                        }
+                                    }
+                                ]
                             }
                         }
                     },
@@ -1814,12 +1945,41 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/FotkaFormular"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/FotkaFormular"
+                                "type": "object",
+                                "allOf": [
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "soubor": {
+                                                "$ref": "#/components/schemas/IFormFile"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "autor": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "popis": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "souhlas": {
+                                                "type": "boolean"
+                                            }
+                                        }
+                                    }
+                                ]
                             }
                         }
                     },
@@ -2431,12 +2591,12 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/PapirFormular"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PapirFormular"
+                                "type": "object",
+                                "properties": {
+                                    "soubor": {
+                                        "$ref": "#/components/schemas/IFormFile"
+                                    }
+                                }
                             }
                         }
                     },
@@ -3264,12 +3424,25 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/SmerniceFormular"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/SmerniceFormular"
+                                "type": "object",
+                                "allOf": [
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "soubor": {
+                                                "$ref": "#/components/schemas/IFormFile"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "poznamka": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                ]
                             }
                         }
                     },
@@ -3736,12 +3909,12 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/FotkaBojeFormular"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/FotkaBojeFormular"
+                                "type": "object",
+                                "properties": {
+                                    "soubor": {
+                                        "$ref": "#/components/schemas/IFormFile"
+                                    }
+                                }
                             }
                         }
                     },
@@ -3833,6 +4006,48 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/boje/{boje}": {
+            "delete": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Zahod\u00ed jeden z\u00e1znam z historie b\u00f3j\u00ed",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. Ma\u017ee doopravdy a nejde to vz\u00edt zp\u00e1tky. Plat\u00ed tent\u00fd\u017e rozsudek jako u hromadn\u00e9ho \u00faklidu: dr\u017e\u00ed se z\u00e1znam, na kter\u00fd ukazuje prvek trati, a ten, kter\u00fd st\u00e1l ve vod\u011b p\u0159i p\u0159ijet\u00ed n\u011bjak\u00e9 trati \u2014 ten u\u017e byl ve\u0159ejn\u00fd. **B\u00f3ji, kter\u00e1 na trati stoj\u00ed, to nesma\u017ee**; na tu je sebr\u00e1n\u00ed nebo p\u0159enastaven\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "boje",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
                     }
                 }
             }
@@ -4284,7 +4499,96 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/zastavky/{zavod}/trat/rozjizdky": {
+            "get": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Rozj\u00ed\u017e\u010fky regaty na v\u00fdb\u011br",
+                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Podle \u010d\u00edsla. `tratId` \u0159\u00edk\u00e1, kter\u00e1 tra\u0165 rozj\u00ed\u017e\u010fce pat\u0159\u00ed; `odstartovana` to, \u017ee se podle n\u00ed u\u017e jelo a tra\u0165 se j\u00ed nebere.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RozjizdkaNaVyberDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/zastavky/{zavod}/trat/{trat}/rozjizdka": {
+            "delete": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "V t\u00e9hle rozj\u00ed\u017e\u010fce se ta tra\u0165 nejede",
+                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Instance zmiz\u00ed jen tehdy, kdy\u017e stejn\u00fd p\u0159edpis zbyde u jin\u00e9 rozj\u00ed\u017e\u010fky; posledn\u00ed se od rozj\u00ed\u017e\u010fky jen odv\u00e1\u017ee a z\u016fstane na stole, aby bylo co upravit. U odjet\u00e9 trati vr\u00e1t\u00ed 409 a chce `?potvrzeno=true` \u2014 m\u016f\u017ee to rozkopat v\u00fdsledky.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "trat",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "potvrzeno",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
             "post": {
                 "tags": [
                     "B\u00f3je"
@@ -4339,6 +4643,55 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/trat/{trat}": {
+            "delete": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Zahod\u00ed tra\u0165",
+                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. P\u0159ijatou tra\u0165 zahodit nejde, nap\u0159ed ji mus\u00ed vr\u00e1tit rozhod\u010d\u00ed. U odjet\u00e9 vr\u00e1t\u00ed 409 a chce `?potvrzeno=true`. Z\u00e1znamy b\u00f3j\u00ed z\u016fst\u00e1vaj\u00ed \u2014 po\u0159\u00e1d stoj\u00ed ve vod\u011b.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "trat",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "potvrzeno",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
                     }
                 }
             }
@@ -4556,12 +4909,41 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/FotkaFormular"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/FotkaFormular"
+                                "type": "object",
+                                "allOf": [
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "soubor": {
+                                                "$ref": "#/components/schemas/IFormFile"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "autor": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "popis": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "souhlas": {
+                                                "type": "boolean"
+                                            }
+                                        }
+                                    }
+                                ]
                             }
                         }
                     },
@@ -5092,65 +5474,8 @@
                 ],
                 "default": "Text"
             },
-            "FotkaBojeFormular": {
-                "required": [
-                    "soubor"
-                ],
-                "type": "object",
-                "properties": {
-                    "soubor": {
-                        "oneOf": [
-                            {
-                                "type": "null"
-                            },
-                            {
-                                "$ref": "#/components/schemas/IFormFile"
-                            }
-                        ]
-                    }
-                }
-            },
-            "FotkaFormular": {
-                "required": [
-                    "soubor",
-                    "autor",
-                    "popis",
-                    "souhlas"
-                ],
-                "type": "object",
-                "properties": {
-                    "soubor": {
-                        "oneOf": [
-                            {
-                                "type": "null"
-                            },
-                            {
-                                "$ref": "#/components/schemas/IFormFile"
-                            }
-                        ]
-                    },
-                    "autor": {
-                        "type": [
-                            "null",
-                            "string"
-                        ]
-                    },
-                    "popis": {
-                        "type": [
-                            "null",
-                            "string"
-                        ]
-                    },
-                    "souhlas": {
-                        "type": "boolean"
-                    }
-                }
-            },
             "IFormFile": {
-                "type": [
-                    "null",
-                    "string"
-                ],
+                "type": "string",
                 "format": "binary"
             },
             "JaDto": {
@@ -5310,27 +5635,6 @@
                     "Rdg",
                     null
                 ]
-            },
-            "KonecBodDto": {
-                "required": [
-                    "sirka",
-                    "delka",
-                    "popis"
-                ],
-                "type": "object",
-                "properties": {
-                    "sirka": {
-                        "type": "number",
-                        "format": "double"
-                    },
-                    "delka": {
-                        "type": "number",
-                        "format": "double"
-                    },
-                    "popis": {
-                        "type": "string"
-                    }
-                }
             },
             "KonecBojeDto": {
                 "required": [
@@ -6166,24 +6470,6 @@
                     },
                     "prijmeni": {
                         "type": "string"
-                    }
-                }
-            },
-            "PapirFormular": {
-                "required": [
-                    "soubor"
-                ],
-                "type": "object",
-                "properties": {
-                    "soubor": {
-                        "oneOf": [
-                            {
-                                "type": "null"
-                            },
-                            {
-                                "$ref": "#/components/schemas/IFormFile"
-                            }
-                        ]
                     }
                 }
             },
@@ -7068,8 +7354,7 @@
                     "strana",
                     "poznamka",
                     "a",
-                    "b",
-                    "bodB"
+                    "b"
                 ],
                 "type": "object",
                 "properties": {
@@ -7110,16 +7395,6 @@
                             },
                             {
                                 "$ref": "#/components/schemas/KonecBojeDto"
-                            }
-                        ]
-                    },
-                    "bodB": {
-                        "oneOf": [
-                            {
-                                "type": "null"
-                            },
-                            {
-                                "$ref": "#/components/schemas/KonecBodDto"
                             }
                         ]
                     },
@@ -7280,6 +7555,34 @@
                     "Rucne"
                 ]
             },
+            "RadaHladinyDto": {
+                "required": [
+                    "rozsah",
+                    "od",
+                    "do",
+                    "body"
+                ],
+                "type": "object",
+                "properties": {
+                    "rozsah": {
+                        "type": "string"
+                    },
+                    "od": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "do": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "body": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/BodHladinyDto"
+                        }
+                    }
+                }
+            },
             "Role": {
                 "enum": [
                     "Ctenar",
@@ -7340,6 +7643,30 @@
                         "items": {
                             "$ref": "#/components/schemas/VysledekDto"
                         }
+                    }
+                }
+            },
+            "RozjizdkaNaVyberDto": {
+                "required": [
+                    "cislo",
+                    "tratId",
+                    "odstartovana"
+                ],
+                "type": "object",
+                "properties": {
+                    "cislo": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "tratId": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "odstartovana": {
+                        "type": "boolean"
                     }
                 }
             },
@@ -7705,31 +8032,6 @@
                     }
                 }
             },
-            "SmerniceFormular": {
-                "required": [
-                    "soubor",
-                    "poznamka"
-                ],
-                "type": "object",
-                "properties": {
-                    "soubor": {
-                        "oneOf": [
-                            {
-                                "type": "null"
-                            },
-                            {
-                                "$ref": "#/components/schemas/IFormFile"
-                            }
-                        ]
-                    },
-                    "poznamka": {
-                        "type": [
-                            "null",
-                            "string"
-                        ]
-                    }
-                }
-            },
             "SnimekHladinyDto": {
                 "required": [
                     "snimek",
@@ -8058,7 +8360,8 @@
                     "prijatoV",
                     "pocetPrvku",
                     "odjeta",
-                    "jdePriradit"
+                    "jdePriradit",
+                    "otisk"
                 ],
                 "type": "object",
                 "properties": {
@@ -8092,6 +8395,12 @@
                     },
                     "jdePriradit": {
                         "type": "boolean"
+                    },
+                    "otisk": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     }
                 }
             },
@@ -8621,7 +8930,8 @@
                     "odtokZaDen",
                     "zmenaObjemu",
                     "historie",
-                    "zdroj"
+                    "zdroj",
+                    "dostupneRozsahy"
                 ],
                 "type": "object",
                 "properties": {
@@ -8683,6 +8993,12 @@
                     },
                     "zdroj": {
                         "type": "string"
+                    },
+                    "dostupneRozsahy": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 }
             },

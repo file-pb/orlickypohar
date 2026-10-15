@@ -1,4 +1,5 @@
-import { casPraha, minuty, nactiOrlik, zmenaCm, type BodHladiny } from "@/lib/vodocet";
+import { casPraha, nactiOrlik, zmenaCm } from "@/lib/vodocet";
+import { VodocetGraf } from "@/app/vodocet-graf";
 
 /**
  * Vodočet Orlíku do boku (Filip, 16. 9. 2026): velké číslo hladiny se
@@ -49,7 +50,7 @@ export async function BokVodocet() {
       </div>
       <p className="vodocet-zmena">{veta}</p>
 
-      <Graf historie={stav.historie} />
+      <VodocetGraf vychozi={stav.historie} rozsahy={stav.dostupneRozsahy} />
 
       <dl className="vodocet-toky">
         <div>
@@ -112,47 +113,6 @@ function Trend({ nahoru }: { nahoru: boolean }) {
           <polyline points="11,10 15,10 15,6" />
         </>
       )}
-    </svg>
-  );
-}
-
-/**
- * Průběh hladiny. Osa se roztahuje na rozsah dat, ale nejméně na 5 cm —
- * jinak by centimetrové kolísání vypadalo jako povodeň.
- */
-function Graf({ historie }: { historie: BodHladiny[] }) {
-  if (historie.length < 2) return null;
-
-  const W = 240;
-  const H = 56;
-  const hodnoty = historie.map((m) => m.hladina);
-  const stred = (Math.max(...hodnoty) + Math.min(...hodnoty)) / 2;
-  const rozsah = Math.max(Math.max(...hodnoty) - Math.min(...hodnoty), 0.05);
-  const spodek = stred - rozsah / 2;
-
-  // Osa podle času měření, ne podle pořadí: nejnovější bod bývá 10 minut
-  // za předchozím, ne hodinu.
-  const t0 = minuty(historie[0].cas);
-  const t1 = minuty(historie[historie.length - 1].cas);
-  const body = hodnoty.map((h, i) => {
-    const x = ((minuty(historie[i].cas) - t0) / Math.max(t1 - t0, 1)) * W;
-    const y = H - 4 - ((h - spodek) / rozsah) * (H - 8);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  });
-
-  const od = historie[0];
-  const doCas = historie[historie.length - 1];
-
-  return (
-    <svg
-      className="vodocet-graf"
-      viewBox={`0 0 ${W} ${H}`}
-      preserveAspectRatio="none"
-      role="img"
-      aria-label={`Hladina od ${casPraha(od.cas)} (${f(od.hladina, 2)} m) do ${casPraha(doCas.cas)} (${f(doCas.hladina, 2)} m)`}
-    >
-      <polygon className="plocha" points={`0,${H} ${body.join(" ")} ${W},${H}`} />
-      <polyline className="cara" points={body.join(" ")} />
     </svg>
   );
 }

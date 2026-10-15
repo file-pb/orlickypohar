@@ -141,6 +141,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/vodocet/orlik/rada": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Hladina Orlíku za zvolený rozsah
+         * @description Rozsah je jeden z klíčů, které `/vodocet/orlik` vrací v `dostupneRozsahy`. Body jsou prořídlé podle stáří už v databázi a odpověď je navíc zastropovaná, takže ani roční graf nepřesáhne pár set bodů. 400 na neznámý rozsah, 404, dokud není uložené žádné měření.
+         */
+        get: {
+            parameters: {
+                query: {
+                    rozsah: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RadaHladinyDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": string;
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/vodocet/orlik": {
         parameters: {
             query?: never;
@@ -1642,8 +1699,15 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "multipart/form-data": components["schemas"]["FotkaFormular"];
-                    "application/x-www-form-urlencoded": components["schemas"]["FotkaFormular"];
+                    "multipart/form-data": {
+                        soubor?: components["schemas"]["IFormFile"];
+                    } & {
+                        autor?: string;
+                    } & {
+                        popis?: string;
+                    } & {
+                        souhlas?: boolean;
+                    };
                 };
             };
             responses: {
@@ -1734,8 +1798,15 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "multipart/form-data": components["schemas"]["FotkaFormular"];
-                    "application/x-www-form-urlencoded": components["schemas"]["FotkaFormular"];
+                    "multipart/form-data": {
+                        soubor?: components["schemas"]["IFormFile"];
+                    } & {
+                        autor?: string;
+                    } & {
+                        popis?: string;
+                    } & {
+                        souhlas?: boolean;
+                    };
                 };
             };
             responses: {
@@ -1945,8 +2016,15 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "multipart/form-data": components["schemas"]["FotkaFormular"];
-                    "application/x-www-form-urlencoded": components["schemas"]["FotkaFormular"];
+                    "multipart/form-data": {
+                        soubor?: components["schemas"]["IFormFile"];
+                    } & {
+                        autor?: string;
+                    } & {
+                        popis?: string;
+                    } & {
+                        souhlas?: boolean;
+                    };
                 };
             };
             responses: {
@@ -2031,8 +2109,15 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "multipart/form-data": components["schemas"]["FotkaFormular"];
-                    "application/x-www-form-urlencoded": components["schemas"]["FotkaFormular"];
+                    "multipart/form-data": {
+                        soubor?: components["schemas"]["IFormFile"];
+                    } & {
+                        autor?: string;
+                    } & {
+                        popis?: string;
+                    } & {
+                        souhlas?: boolean;
+                    };
                 };
             };
             responses: {
@@ -2590,8 +2675,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "multipart/form-data": components["schemas"]["PapirFormular"];
-                    "application/x-www-form-urlencoded": components["schemas"]["PapirFormular"];
+                    "multipart/form-data": {
+                        soubor?: components["schemas"]["IFormFile"];
+                    };
                 };
             };
             responses: {
@@ -3265,8 +3351,11 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "multipart/form-data": components["schemas"]["SmerniceFormular"];
-                    "application/x-www-form-urlencoded": components["schemas"]["SmerniceFormular"];
+                    "multipart/form-data": {
+                        soubor?: components["schemas"]["IFormFile"];
+                    } & {
+                        poznamka?: string;
+                    };
                 };
             };
             responses: {
@@ -3686,8 +3775,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "multipart/form-data": components["schemas"]["FotkaBojeFormular"];
-                    "application/x-www-form-urlencoded": components["schemas"]["FotkaBojeFormular"];
+                    "multipart/form-data": {
+                        soubor?: components["schemas"]["IFormFile"];
+                    };
                 };
             };
             responses: {
@@ -3771,6 +3861,47 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/boje/{boje}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Zahodí jeden záznam z historie bójí
+         * @description Pořadatel regaty, nebo rozhodčí. Maže doopravdy a nejde to vzít zpátky. Platí tentýž rozsudek jako u hromadného úklidu: drží se záznam, na který ukazuje prvek trati, a ten, který stál ve vodě při přijetí nějaké trati — ten už byl veřejný. **Bóji, která na trati stojí, to nesmaže**; na tu je sebrání nebo přenastavení.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    boje: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -4176,6 +4307,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/trat/rozjizdky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Rozjížďky regaty na výběr
+         * @description Organizátor regaty, nebo rozhodčí ročníku. Podle čísla. `tratId` říká, která trať rozjížďce patří; `odstartovana` to, že se podle ní už jelo a trať se jí nebere.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RozjizdkaNaVyberDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/zastavky/{zavod}/trat/{trat}/rozjizdka": {
         parameters: {
             query?: never;
@@ -4217,7 +4390,77 @@ export interface paths {
                 };
             };
         };
-        delete?: never;
+        /**
+         * V téhle rozjížďce se ta trať nejede
+         * @description Organizátor regaty, nebo rozhodčí ročníku. Instance zmizí jen tehdy, když stejný předpis zbyde u jiné rozjížďky; poslední se od rozjížďky jen odváže a zůstane na stole, aby bylo co upravit. U odjeté trati vrátí 409 a chce `?potvrzeno=true` — může to rozkopat výsledky.
+         */
+        delete: {
+            parameters: {
+                query?: {
+                    potvrzeno?: boolean;
+                };
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    trat: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/trat/{trat}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Zahodí trať
+         * @description Organizátor regaty, nebo rozhodčí ročníku. Přijatou trať zahodit nejde, napřed ji musí vrátit rozhodčí. U odjeté vrátí 409 a chce `?potvrzeno=true`. Záznamy bójí zůstávají — pořád stojí ve vodě.
+         */
+        delete: {
+            parameters: {
+                query?: {
+                    potvrzeno?: boolean;
+                };
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    trat: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -4408,8 +4651,15 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "multipart/form-data": components["schemas"]["FotkaFormular"];
-                    "application/x-www-form-urlencoded": components["schemas"]["FotkaFormular"];
+                    "multipart/form-data": {
+                        soubor?: components["schemas"]["IFormFile"];
+                    } & {
+                        autor?: string;
+                    } & {
+                        popis?: string;
+                    } & {
+                        souhlas?: boolean;
+                    };
                 };
             };
             responses: {
@@ -4574,17 +4824,8 @@ export interface components {
          * @enum {unknown}
          */
         FormatClanku: "Text" | "Html" | "Bloky";
-        FotkaBojeFormular: {
-            soubor: null | components["schemas"]["IFormFile"];
-        };
-        FotkaFormular: {
-            soubor: null | components["schemas"]["IFormFile"];
-            autor: null | string;
-            popis: null | string;
-            souhlas: boolean;
-        };
         /** Format: binary */
-        IFormFile: null | string;
+        IFormFile: string;
         JaDto: {
             /** Format: uuid */
             id: string;
@@ -4622,13 +4863,6 @@ export interface components {
         };
         /** @enum {unknown} */
         KodVysledku: "Dnf" | "Dns" | "Dnc" | "Ocs" | "Dsq" | "Ret" | "Rdg" | null;
-        KonecBodDto: {
-            /** Format: double */
-            sirka: number;
-            /** Format: double */
-            delka: number;
-            popis: string;
-        };
         KonecBojeDto: {
             /** Format: int32 */
             id: number;
@@ -4841,9 +5075,6 @@ export interface components {
             klic: string;
             jmeno: string;
             prijmeni: string;
-        };
-        PapirFormular: {
-            soubor: null | components["schemas"]["IFormFile"];
         };
         PipnutiVstup: {
             nazev: null | string;
@@ -5059,7 +5290,6 @@ export interface components {
             poznamka: null | string;
             a: components["schemas"]["KonecBojeDto"];
             b: null | components["schemas"]["KonecBojeDto"];
-            bodB: null | components["schemas"]["KonecBodDto"];
             smer?: null | components["schemas"]["SvetovaStrana"];
             druhStartu?: null | components["schemas"]["DruhStartu"];
         };
@@ -5093,6 +5323,14 @@ export interface components {
         };
         /** @enum {unknown} */
         PuvodVazby: "Email" | "Kod" | "Narok" | "Rucne";
+        RadaHladinyDto: {
+            rozsah: string;
+            /** Format: date-time */
+            od: string;
+            /** Format: date-time */
+            do: string;
+            body: components["schemas"]["BodHladinyDto"][];
+        };
         /** @enum {unknown} */
         Role: "Ctenar" | "Editor" | "Rozhodci" | "Spravce" | "Organizator";
         /** @enum {unknown} */
@@ -5108,6 +5346,13 @@ export interface components {
             stav: components["schemas"]["StavRozjizdky"];
             doSerie: boolean;
             vysledky: components["schemas"]["VysledekDto"][];
+        };
+        RozjizdkaNaVyberDto: {
+            /** Format: int32 */
+            cislo: number;
+            /** Format: int32 */
+            tratId: null | number;
+            odstartovana: boolean;
         };
         RozjizdkaSpravaRadek: {
             /** Format: int32 */
@@ -5213,10 +5458,6 @@ export interface components {
             /** @default false */
             mohlaUvaznoutVCache: boolean;
         };
-        SmerniceFormular: {
-            soubor: null | components["schemas"]["IFormFile"];
-            poznamka: null | string;
-        };
         SnimekHladinyDto: {
             snimek: string;
             /** Format: date-time */
@@ -5311,6 +5552,7 @@ export interface components {
             pocetPrvku: number;
             odjeta: boolean;
             jdePriradit: boolean;
+            otisk: null | string;
         };
         /** @enum {unknown} */
         TvarBoje: "Valcova" | "Kuzelova" | "Kulova" | "SferickyVrsek" | "Plovatka" | "Jiny" | "Plamenak" | null;
@@ -5447,6 +5689,7 @@ export interface components {
             zmenaObjemu: null | number;
             historie: components["schemas"]["BodHladinyDto"][];
             zdroj: string;
+            dostupneRozsahy: string[];
         };
         VraceniTratiVstup: {
             duvod: null | string;
