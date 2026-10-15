@@ -247,6 +247,13 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         await using var scope = fixture.Services.CreateAsyncScope();
         var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
 
+        // Ročník z fixture má rozjížďky rovnou dojeté, protože je takhle
+        // nese importní soubor. Tenhle test začíná na vodě, takže si
+        // výchozí stav nastaví sám — `StartAsync` přepíná jen z plánované,
+        // aby oprava času startu u dojeté rozjížďky nevracela stav zpátky.
+        rozjizdka.Stav = StavRozjizdky.Planovana;
+        await db.SaveChangesAsync();
+
         Assert.Null(await zapis.StartAsync(rozjizdka, DateTimeOffset.UnixEpoch, default));
         Assert.Equal(StavRozjizdky.Probiha, rozjizdka.Stav);
 
@@ -286,6 +293,10 @@ public class VysledkySpravaTests(PostgresFixture fixture)
 
         await using var scope = fixture.Services.CreateAsyncScope();
         var (db, zapis, rozjizdka, prihlasky) = await OtevrenaAsync(scope, slug);
+
+        // Jako výš: fixture dává rozjížďky dojeté, tenhle test je chce rozjeté.
+        rozjizdka.Stav = StavRozjizdky.Planovana;
+        await db.SaveChangesAsync();
         Assert.Null(await zapis.StartAsync(rozjizdka, DateTimeOffset.UnixEpoch, default));
 
         var bora = await db.Ucasti.FirstAsync(
