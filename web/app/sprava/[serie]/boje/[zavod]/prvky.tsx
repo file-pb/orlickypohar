@@ -5,6 +5,7 @@ import {
   NAZVY_STRAN,
   POZNAMKA_NEJVIC,
   SMERY,
+  dvaBody,
   nazevStrany,
   nazevTypu,
   stranaPatri,
@@ -13,6 +14,7 @@ import {
   type StranaPrvku,
 } from "@/lib/trat";
 import { IkonaPrvku } from "@/app/ikona-prvku";
+import { ZnakVRadku } from "@/app/znak-boje";
 import { ZavriMimo } from "@/app/zavri-mimo";
 import { ZnackaNaTrati } from "./znacka-na-trati";
 import {
@@ -84,32 +86,39 @@ export function PrvkyTrati({
                   obroučku a prohlížeč k ní odroluje. Žádný javascript,
                   a dá se poslat odkazem. Dřív tu vedle řádku visel ještě
                   odkaz „v mapce" — tlačítko navíc za něco, co umí řádek. */}
-              <a className="shrnuti-prvku" href={`#prvek-${p.id}`}>
-                <IkonaPrvku typ={p.typ} strana={p.strana} />
-                <span className="poradi-prvku">{p.poradi}</span>
-                <b>{nazevTypu(p.typ)}</b>
-                <span className="znacky">
-                  {p.a.nazev}
-                  {p.b && ` – ${p.b.nazev}`}
-                </span>
-                {p.strana && <span className="stitek">{nazevStrany(p.strana)}</span>}
-                {p.poznamka && <span className="jak-to-jet">{p.poznamka}</span>}
-              </a>
+              {/* <b>Celý řádek je `summary`</b> (Filip, 15. 10. 2026:
+                  *„klepnutím na řádek… se detail zavře"* a *„doprava
+                  v řádku bude to tlačítko náhled fotky, když bude,
+                  a detail"*). Dřív byl řádek odkaz na mapku a rozklápěcí
+                  tlačítko viselo pod ním; odkaz na mapku se přestěhoval do
+                  detailu, protože dvě různé reakce na klepnutí do téhož
+                  řádku se neuhodnou.
 
-              {/* <b>Akordeon přes `name`</b> (Filip tamtéž: *„toto po stisku
-                  rozbalí detail vybraného prvku listu a ostatní prvky listu
-                  zavře"*). Dělá to prohlížeč sám — `name` na `details` je
-                  nativní vzájemné vyloučení, takže na to není potřeba ani
-                  javascript, ani stav v adrese. */}
+                  Akordeon dělá `name` na `details` sám, bez javascriptu.
+                  `ZavriMimo` k tomu přidává zavření klepnutím jinam
+                  a Escapem. */}
               <details className="prvek" name="prvek-trati" open={otevrit === p.id}>
-                {/* Zavře se klepnutím na řádek, kamkoli jinam i Escapem
-                    (Filip, 15. 10. 2026: *„klepnutím na řádek nebo mimo
-                    detail se detail zavře"*). Řádek nad tím je sourozenec,
-                    ne potomek, takže je pro tuhle komponentu „mimo" —
-                    jedna věc obslouží obojí. Mezi řádky to zvládne sám
-                    prohlížeč přes `name`. */}
                 <ZavriMimo />
-                <summary>{zamceno ? "Detail" : "Přenastavit a detail"}</summary>
+                <summary className="shrnuti-prvku">
+                  <IkonaPrvku typ={p.typ} strana={p.strana} />
+                  {/* Značka vedle tvaru (Filip, 15. 10. 2026): tvar říká,
+                      co to je za prvek, značka jak to vypadá na vodě. */}
+                  <ZnackyPrvku prvek={p} boje={boje} />
+                  <span className="poradi-prvku">{p.poradi}</span>
+                  <b>{nazevTypu(p.typ)}</b>
+                  <span className="znacky">
+                    {p.a.nazev}
+                    {p.b && ` – ${p.b.nazev}`}
+                  </span>
+                  <StitekBoku prvek={p} />
+                  {p.poznamka && <span className="jak-to-jet">{p.poznamka}</span>}
+                  <span className="vpravo">
+                    <NahledFotky prvek={p} boje={boje} />
+                    <span className="rozbalit" aria-hidden="true">
+                      {zamceno ? "Detail" : "Upravit"}
+                    </span>
+                  </span>
+                </summary>
 
                 <DetailPrvku
                   serie={serie}
@@ -209,6 +218,13 @@ function DetailPrvku({
           jinak, nahoru, dolu a smazat dej hned navrch detailu"*). Dřív
           visely pod formulářem, takže se k nim muselo projít přes pole,
           která člověk měnit nechtěl. */}
+      {/* Odkaz na mapku se sem přestěhoval z řádku: ten je teď `summary`
+          a klepnutí do něj patří rozbalení. `:target` v mapce prvek
+          obkrouží a prohlížeč k němu odroluje — žádný javascript. */}
+      <p className="poznamka">
+        <a href={`#prvek-${prvek.id}`}>Ukázat v mapce ↓</a>
+      </p>
+
       <div className="akce-prvku">
         <form action={zopakujPrvekAkce}>
           {skryte}
@@ -525,5 +541,79 @@ function BojeMimoPrvky({
         </ul>
       </details>
     </div>
+  );
+}
+
+/**
+ * Značky prvku v řádku — jak vypadají na vodě.
+ *
+ * <b>Barvu a tvar nese bóje, ne konec prvku</b>, takže se dohledávají
+ * v seznamu bójí podle id. Rozšiřovat kvůli tomu `KonecBojeDto` by
+ * znamenalo vozit tytéž údaje dvakrát.
+ */
+function ZnackyPrvku({ prvek, boje }: { prvek: Prvek; boje: Boje[] }) {
+  const konce = [prvek.a, ...(prvek.b ? [prvek.b] : [])]
+    .map((k) => boje.find((b) => b.id === k.id))
+    .filter((b): b is Boje => b !== undefined);
+  if (konce.length === 0) return null;
+
+  return (
+    <span className="znaky-prvku">
+      {konce.map((b) => (
+        <ZnakVRadku key={b.id} barva={b.barva} tvar={b.tvar} znaceni={b.znaceni} />
+      ))}
+    </span>
+  );
+}
+
+/**
+ * Štítek boku barevně (Filip, 15. 10. 2026: *„tag točení dej barevně
+ * trochu průhledně — levá je červená a pravá je zelená, střed je
+ * kombinací obou barev"*).
+ *
+ * <b>Barva je o boku lodi, ne o straně značky.</b> Levobok znamená, že
+ * loď má značku po levé ruce — a červená s zelenou jsou pozičními světly
+ * lodi, takže to sedí na totéž názvosloví, kterým mluví rozhodčí.
+ *
+ * <b>Start a cíl mají vlastní barvu</b> místo kombinace: nejsou to boky,
+ * jsou to linie. Start dostal vodní modrou jako zbytek webu, cíl zlatou —
+ * je to konec, ne průjezd.
+ */
+function StitekBoku({ prvek }: { prvek: Prvek }) {
+  if (prvek.typ === "Start") return <span className="stitek bok-start">start</span>;
+  if (prvek.typ === "Cil") return <span className="stitek bok-cil">cíl</span>;
+
+  // Brána a otočná zóna stranu nemají: projíždí se mezi značkami, takže
+  // štítek nese to, a ne bok, který nikdo nerozhodl.
+  if (!prvek.strana)
+    return dvaBody(prvek.typ) ? <span className="stitek bok-mezi">mezi nimi</span> : null;
+
+  return (
+    <span className={`stitek ${prvek.strana === "PoLeve" ? "bok-levy" : "bok-pravy"}`}>
+      {nazevStrany(prvek.strana)}
+    </span>
+  );
+}
+
+/**
+ * Náhled fotky vpravo v řádku, <b>když nějaká je</b> (Filip, 15. 10.
+ * 2026). Bere první fotku kterékoli značky prvku: v řádku jde o to, že
+ * fotka existuje, ne která to je — vybírat se dá v detailu.
+ */
+function NahledFotky({ prvek, boje }: { prvek: Prvek; boje: Boje[] }) {
+  const fotka = [prvek.a, ...(prvek.b ? [prvek.b] : [])]
+    .map((k) => boje.find((b) => b.id === k.id))
+    .flatMap((b) => b?.fotky ?? [])[0];
+  if (!fotka) return null;
+
+  return (
+    <img
+      className="nahled-fotky"
+      src={fotka.nahled}
+      alt=""
+      width={32}
+      height={24}
+      loading="lazy"
+    />
   );
 }

@@ -851,6 +851,56 @@ header.hlavicka .jen-uzke { display: none; }
   text-decoration: none;
 }
 .seznam-prvku .shrnuti-prvku:hover .znacky { color: var(--voda); }
+/* Řádek je `summary`, takže se chová jako tlačítko. Vlastní trojúhelník
+   prohlížeče pryč — vpravo je slovo „Upravit", které řekne totéž líp. */
+.seznam-prvku .shrnuti-prvku { cursor: pointer; list-style: none; }
+.seznam-prvku .shrnuti-prvku::-webkit-details-marker { display: none; }
+.seznam-prvku .znaky-prvku { display: inline-flex; gap: 0.15rem; flex: none; }
+/* Fotka a „Upravit" doprava (Filip, 15. 10. 2026). `margin-left: auto`
+   je odsune na konec řádku i při zalomení štítků. */
+.seznam-prvku .vpravo {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 0.4rem; flex: none;
+}
+.seznam-prvku .nahled-fotky {
+  width: 32px; height: 24px; object-fit: cover; border-radius: 4px;
+  border: 1px solid var(--linka);
+}
+.seznam-prvku .rozbalit { font-size: 0.8rem; color: var(--tlumeny); }
+.seznam-prvku .shrnuti-prvku:hover .rozbalit { color: var(--voda); }
+
+/* Štítek boku barevně a průhledně (Filip, 15. 10. 2026). Červená a zelená
+   jsou poziční světla lodi, takže barva mluví týmž jazykem jako název:
+   levobok znamená, že loď má značku po levé ruce. Výplň je průhledná,
+   aby štítek v řádku nekřičel víc než jméno značky. */
+.stitek.bok-levy {
+  color: var(--stav-zruseny); border-color: color-mix(in srgb, var(--stav-zruseny) 45%, transparent);
+  background: color-mix(in srgb, var(--stav-zruseny) 14%, transparent);
+}
+.stitek.bok-pravy {
+  color: var(--stav-vypsany); border-color: color-mix(in srgb, var(--stav-vypsany) 45%, transparent);
+  background: color-mix(in srgb, var(--stav-vypsany) 14%, transparent);
+}
+/* Mezi značkami: obě barvy naráz, protože jedna z nich zůstane po každé
+   ruce. Přechod, ne půlka napůl — ostrý předěl vypadá jako chyba. */
+.stitek.bok-mezi {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--tlumeny) 50%, transparent);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--stav-zruseny) 20%, transparent),
+    color-mix(in srgb, var(--stav-vypsany) 20%, transparent)
+  );
+}
+/* Start a cíl nejsou boky, ale linie — proto vlastní barvy: vodní modrá
+   pro výjezd, zlatá pro konec. */
+.stitek.bok-start {
+  color: var(--voda); border-color: color-mix(in srgb, var(--voda) 45%, transparent);
+  background: color-mix(in srgb, var(--voda) 14%, transparent);
+}
+.stitek.bok-cil {
+  color: #c79a2e; border-color: color-mix(in srgb, #c79a2e 45%, transparent);
+  background: color-mix(in srgb, #c79a2e 14%, transparent);
+}
 .seznam-prvku .shrnuti-prvku .ikona-prvku { flex: none; }
 
 /* Rozklápěcí detail je samostatné tlačítko pod řádkem. `name` na
