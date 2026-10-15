@@ -357,6 +357,29 @@ export async function nactiTrate(serie: string, zavod: string): Promise<TratNaVy
   }
 }
 
+/**
+ * Zkrátí trať: od teď je cíl u zadaného prvku. Vrací text chyby, nebo
+ * `null`. <b>Co jde a co ne, hlídá server</b> — jen u běžící rozjížďky
+ * a ne u posledního prvku.
+ */
+export async function zkratTrat(
+  serie: string,
+  zavod: string,
+  trat: number,
+  prvek: number,
+): Promise<string | null> {
+  return await posli(`${cesta(serie, zavod)}/${trat}/zkraceni`, "POST", { prvek });
+}
+
+/** Zruší zkrácení — jede se zase celá trať. */
+export async function zrusZkraceni(
+  serie: string,
+  zavod: string,
+  trat: number,
+): Promise<string | null> {
+  return await posli(`${cesta(serie, zavod)}/${trat}/zkraceni`, "DELETE");
+}
+
 /** Přiřadí volnou trať rozjížďce. Vrací text chyby, nebo `null`. */
 export async function priradTrat(
   serie: string,

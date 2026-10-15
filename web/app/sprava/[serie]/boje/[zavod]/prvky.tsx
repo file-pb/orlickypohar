@@ -22,7 +22,9 @@ import {
   odeberPrvekAkce,
   presunPrvekAkce,
   upravPrvekAkce,
+  zkratTratAkce,
   zopakujPrvekAkce,
+  zrusZkraceniAkce,
 } from "./akce";
 
 /**
@@ -56,6 +58,9 @@ export function PrvkyTrati({
   prvky,
   boje,
   zamceno,
+  tratId,
+  smiZkratit,
+  zkraceniU,
   otevrit,
 }: {
   serie: string;
@@ -63,6 +68,12 @@ export function PrvkyTrati({
   prvky: Prvek[];
   boje: Boje[];
   zamceno: boolean;
+  /** Trať, které prvky patří. Potřebné pro zkrácení. */
+  tratId?: number;
+  /** Smí přihlášený zkracovat? Rozhodne server, obrazovka jen nenabízí. */
+  smiZkratit?: boolean;
+  /** Prvek, u kterého je teď cíl. */
+  zkraceniU?: number | null;
   /** Který detail má být po návratu z akce rozbalený. */
   otevrit?: number;
 }) {
@@ -113,6 +124,9 @@ export function PrvkyTrati({
                   </span>
                   <StitekBoku typ={p.typ} strana={p.strana} />
                   {p.poznamka && <span className="jak-to-jet">{p.poznamka}</span>}
+                  {zkraceniU === p.id && (
+                    <span className="stitek zkraceno">tady je cíl</span>
+                  )}
                   <span className="vpravo">
                     <NahledFotky prvek={p} boje={boje} />
                     <span className="rozbalit" aria-hidden="true">
@@ -131,6 +145,22 @@ export function PrvkyTrati({
                   prvni={i === 0}
                   posledni={i === prvky.length - 1}
                 />
+
+                {/* Zkrácení je úkon rozhodčího za jízdy, ne úprava
+                    předpisu — proto je <b>mimo</b> panel úprav a nabízí
+                    se i na zamčené trati. Tlačítko na prvku, u kterého
+                    má být cíl; u posledního ne, tam cíl je. */}
+                {smiZkratit && tratId && i < prvky.length - 1 && (
+                  <form action={zkratTratAkce} className="formular radkove zkratit">
+                    <input type="hidden" name="serie" value={serie} />
+                    <input type="hidden" name="zavod" value={zavod} />
+                    <input type="hidden" name="trat" value={tratId} />
+                    <input type="hidden" name="prvek" value={p.id} />
+                    <button type="submit">
+                      {zkraceniU === p.id ? "Zkráceno tady" : "Zkrátit sem"}
+                    </button>
+                  </form>
+                )}
               </details>
             </li>
           ))}
@@ -144,6 +174,15 @@ export function PrvkyTrati({
         boje={boje}
         zamceno={zamceno}
       />
+
+      {zkraceniU && tratId && smiZkratit && (
+        <form action={zrusZkraceniAkce} className="formular radkove">
+          <input type="hidden" name="serie" value={serie} />
+          <input type="hidden" name="zavod" value={zavod} />
+          <input type="hidden" name="trat" value={tratId} />
+          <button type="submit">Zrušit zkrácení — jede se celá</button>
+        </form>
+      )}
 
       {zamceno && (
         <p className="poznamka">

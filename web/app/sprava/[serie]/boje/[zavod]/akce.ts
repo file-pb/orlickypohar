@@ -22,6 +22,8 @@ import {
   zalozDalsiTrat,
   posunTrat,
   priradTrat,
+  zkratTrat,
+  zrusZkraceni,
   smazPrvek,
   upravPrvek,
   vstupZPrvku,
@@ -475,6 +477,34 @@ export async function klonujTratAkce(formular: FormData) {
     stav as StavTrati,
   );
   redirect(kam(chyba ? { chyba } : { stav: "trat-klon" }));
+}
+
+/**
+ * Zkrácení trati za jízdy (Filip, 15. 10. 2026: *„za běhu do toho má
+ * jít sáhnout a trať zkrátit"*).
+ *
+ * <b>Jedno tlačítko na prvek, ne nabídka.</b> Rozhodčí to mačká na vodě
+ * u znamení — vybrat z rozbalovacího seznamu a potvrdit jsou dva úkony
+ * navíc ve chvíli, kdy na ně není čas.
+ */
+export async function zkratTratAkce(formular: FormData) {
+  const { serie, zavod, kam } = zaklad(formular);
+  const trat = Number(formular.get("trat") ?? 0);
+  const prvek = Number(formular.get("prvek") ?? 0);
+  if (!trat || !prvek) redirect(kam({ chyba: "U kterého prvku se zkracuje?" }));
+
+  const chyba = await zkratTrat(serie, zavod, trat, prvek);
+  redirect(kam(chyba ? { chyba, trat: String(trat) } : { trat: String(trat), stav: "zkraceno" }));
+}
+
+/** Zruší zkrácení — jede se zase celá trať. */
+export async function zrusZkraceniAkce(formular: FormData) {
+  const { serie, zavod, kam } = zaklad(formular);
+  const trat = Number(formular.get("trat") ?? 0);
+  if (!trat) redirect(kam({ chyba: "Které trati se zkrácení ruší?" }));
+
+  const chyba = await zrusZkraceni(serie, zavod, trat);
+  redirect(kam(chyba ? { chyba, trat: String(trat) } : { trat: String(trat), stav: "zkraceni-zruseno" }));
 }
 
 /** Společný začátek akcí obrazovky bójí: odkud a kam. */

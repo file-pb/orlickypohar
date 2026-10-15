@@ -151,6 +151,11 @@ function PoradiPrvku({
               </span>
               <StitekBoku typ={p.typ} strana={p.strana} />
               {p.smer && <span className="stitek">{NAZVY_SMERU[p.smer]}</span>}
+              {/* Náhled fotky vpravo v řádku (Filip, 15. 10. 2026:
+                  *„náhledy bójí a fotky v trati na regatě"*). Jeden
+                  obrázek na konec, ne galerie — řádek má zůstat řádkem.
+                  Celé fotky jsou v detailu. */}
+              <NahledyZnacek prvek={p} />
             </div>
 
             {/* <b>Detail je pro závodníka, ne pro pořadatele</b> (Filip,
@@ -295,6 +300,37 @@ function DetailPrvku({ prvek }: { prvek: VerejnaTrat["prvky"][number] }) {
       {/* Co k tomu řekl pořadatel. Na řádku se dřív usekávala,
           tady je celá. */}
       {prvek.poznamka && <p className="poznamka">{prvek.poznamka}</p>}
+
+      {/* <b>Fotky až tady, ne v náhledu nad mapkou.</b> Ze souřadnic se
+          nepozná, jestli je bóje nafouklá a co je za ní na břehu — to je
+          přesně to, co závodník u vody hledá. Nákres nad nimi říká, jak
+          se prvek pluje; fotka, jak vypadá. */}
+      {konce.map((k) =>
+        (k.fotky ?? []).length === 0 ? null : (
+          <div className="fotky-znacky" key={k.nazev}>
+            {/* Jméno konce jen u prvku, který má dva — u jedné značky by
+                to byl nadpis nad jedinou věcí. */}
+            {konce.length > 1 && <h4>{k.nazev}</h4>}
+            <div className="rada-fotek">
+              {k.fotky!.map((f) => (
+                <figure key={f.id}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={f.nahled}
+                    alt={f.popis ?? `Značka ${k.nazev}`}
+                    width={f.sirka}
+                    height={f.vyska}
+                    loading="lazy"
+                  />
+                  <figcaption>
+                    {f.popis && `${f.popis} · `}Foto {f.autor}
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+        ),
+      )}
     </div>
   );
 }
@@ -327,6 +363,26 @@ function ZnackyPrvku({
           znaceni={b.znaceni ?? undefined}
         />
       ))}
+    </span>
+  );
+}
+
+/**
+ * Náhled fotky značky v řádku prvku. <b>Jeden obrázek, ne galerie</b> —
+ * řádek má po otevření detailu ustoupit, ne soupeřit. Když má prvek dva
+ * konce a oba fotku, vezme se první: na řádku jde o to, že fotka je,
+ * ne o to kolik jich je.
+ */
+function NahledyZnacek({ prvek }: { prvek: VerejnaTrat["prvky"][number] }) {
+  const prvni = [prvek.a, ...(prvek.b ? [prvek.b] : [])]
+    .flatMap((k) => k.fotky ?? [])
+    .at(0);
+  if (!prvni) return null;
+
+  return (
+    <span className="nahled-znacky">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={prvni.nahled} alt="" width={prvni.sirka} height={prvni.vyska} loading="lazy" />
     </span>
   );
 }

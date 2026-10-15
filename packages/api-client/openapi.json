@@ -4126,6 +4126,14 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "trat",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
                     }
                 ],
                 "responses": {
@@ -4291,6 +4299,14 @@
                         "required": true,
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    {
+                        "name": "trat",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
                         }
                     }
                 ],
@@ -4755,6 +4771,137 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/zastavky/{zavod}/trat/dalsi": {
+            "post": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Zalo\u017e\u00ed dal\u0161\u00ed, pr\u00e1zdnou tra\u0165 regaty",
+                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Pro dal\u0161\u00ed rozj\u00ed\u017e\u010fku, kter\u00e1 se pojede jinudy \u2014 klon je od toho, kdy\u017e se jede stejn\u011b. Rozj\u00ed\u017e\u010fka se nep\u0159i\u0159azuje: d\u00e1 se postavit nap\u0159ed tra\u0165, nebo nap\u0159ed vyhl\u00e1sit rozj\u00ed\u017e\u010fku a stav\u011bt, zat\u00edmco lod\u011b \u010dekaj\u00ed. Opakovan\u00e9 vol\u00e1n\u00ed vrac\u00ed tut\u00e9\u017e pr\u00e1zdnou tra\u0165, ne dal\u0161\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TratDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/trat/{trat}/zkraceni": {
+            "post": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Rozhod\u010d\u00ed zkr\u00e1t\u00ed tra\u0165 \u2014 c\u00edl je od te\u010f u zadan\u00e9ho prvku",
+                "description": "Jen rozhod\u010d\u00ed ro\u010dn\u00edku a jen u rozj\u00ed\u017e\u010fky, kter\u00e1 se jede. Jde to i na p\u0159ijat\u00e9 trati: ve vod\u011b se nic nem\u011bn\u00ed, jen se \u010d\u00e1st p\u0159estane plout. Po\u0159ad\u00ed se po\u010d\u00edt\u00e1 norm\u00e1ln\u011b.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "trat",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ZkraceniVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "B\u00f3je"
+                ],
+                "summary": "Rozhod\u010d\u00ed zkr\u00e1cen\u00ed zru\u0161\u00ed \u2014 jede se zase cel\u00e1 tra\u0165",
+                "description": "Jen rozhod\u010d\u00ed ro\u010dn\u00edku a jen dokud se rozj\u00ed\u017e\u010fka jede.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "trat",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/zastavky/{zavod}/trat/prestavba": {
             "post": {
                 "tags": [
@@ -5020,6 +5167,13 @@
                     },
                     "hladina": {
                         "type": "number",
+                        "format": "double"
+                    },
+                    "objem": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
                         "format": "double"
                     }
                 }
@@ -7560,7 +7714,11 @@
                     "rozsah",
                     "od",
                     "do",
-                    "body"
+                    "body",
+                    "pritok",
+                    "odtok",
+                    "zmenaObjemu",
+                    "zmenaHladinyCm"
                 ],
                 "type": "object",
                 "properties": {
@@ -7580,6 +7738,34 @@
                         "items": {
                             "$ref": "#/components/schemas/BodHladinyDto"
                         }
+                    },
+                    "pritok": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "odtok": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "zmenaObjemu": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "zmenaHladinyCm": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
                     }
                 }
             },
@@ -8349,6 +8535,30 @@
                     },
                     "smiPrestavet": {
                         "type": "boolean"
+                    },
+                    "zkracenoUPrvkuId": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "zkracenoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "zkratil": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "smiZkratit": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -8796,6 +9006,20 @@
                         "items": {
                             "$ref": "#/components/schemas/VerejnyPrvekDto"
                         }
+                    },
+                    "zkracenoUPrvkuId": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "zkracenoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
                     }
                 }
             },
@@ -8847,6 +9071,15 @@
                                 "$ref": "#/components/schemas/DruhZnaceni"
                             }
                         ]
+                    },
+                    "fotky": {
+                        "type": [
+                            "null",
+                            "array"
+                        ],
+                        "items": {
+                            "$ref": "#/components/schemas/ObrazekDto"
+                        }
                     }
                 }
             },
@@ -9982,6 +10215,18 @@
                     "Qr"
                 ],
                 "default": "Telefon"
+            },
+            "ZkraceniVstup": {
+                "required": [
+                    "prvek"
+                ],
+                "type": "object",
+                "properties": {
+                    "prvek": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
             },
             "ZmenaRoleDto": {
                 "required": [
