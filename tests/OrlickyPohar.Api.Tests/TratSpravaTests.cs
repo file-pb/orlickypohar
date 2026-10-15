@@ -634,11 +634,17 @@ public class TratSpravaTests(PostgresFixture fixture)
     {
         var (db, _, trat) = Sluzby();
         var (zavod, _) = await RegataAsync(db);
+        var rozjizdka = await RozjizdkaAsync(db, zavod, 1);
 
+        // První trať dostane rozjížďku — bez toho by `DalsiAsync` vrátila
+        // tutéž prázdnou a druhá by nevznikla. (Na to je vlastní test níž;
+        // tenhle by pak neměřil nic.)
         var starsi = await trat.DalsiAsync(zavod.Id, false, default);
-        var novejsi = await trat.DalsiAsync(zavod.Id, false, default);
+        var ulozena = await db.Trate.FirstAsync(t => t.Id == starsi.Id);
+        ulozena.RozjizdkaId = rozjizdka.Id;
+        await db.SaveChangesAsync();
 
-        // Druhá musí doopravdy vzniknout, jinak test neměří nic.
+        var novejsi = await trat.DalsiAsync(zavod.Id, false, default);
         Assert.NotEqual(starsi.Id, novejsi.Id);
 
         var vybrana = await trat.VybranaAsync(zavod.Id, starsi.Id, default);
