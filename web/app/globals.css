@@ -942,6 +942,14 @@ header.hlavicka .jen-uzke { display: none; }
 .historie-boji { margin-top: 1.5rem; }
 .historie-boji > summary { font-size: 1.1rem; }
 
+/* „Totéž jedou ještě…" u trati a u rozjížďky. <b>Malá a rozbalovací</b>
+   (Filip, 15. 10. 2026): je to doplňující pohled, ne údaj, kvůli kterému
+   se na obrazovku chodí — zabalená zabere řádek, rozbalená vydá odkazy. */
+.stejna-trat { margin: 0.25rem 0 0; font-size: 0.78rem; }
+.stejna-trat > summary { color: var(--tlumeny); cursor: pointer; }
+.stejna-trat > summary:hover { color: var(--voda); }
+.stejna-trat > p { margin: 0.2rem 0 0; }
+
 .detail-prvku { padding: 0 0 1rem; }
 
 /* Taby v detailu prvku. <b>Bez javascriptu</b>: přepínače jsou schované

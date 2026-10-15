@@ -12,6 +12,7 @@ import {
 } from "@/lib/vysledky";
 import { nactiTrate } from "@/lib/trat";
 import { poharAkce, pridejRozjizdkuAkce, publikaceAkce, stavAkce } from "../akce";
+import { StejnaTrat } from "@/app/sprava/stejna-trat";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -50,6 +51,20 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
   const sTrati = new Set(
     trate.map((t) => t.cisloRozjizdky).filter((c): c is number => c !== null),
   );
+
+  // Které rozjížďky jedou totéž co která. Počítá se z otisku předpisu,
+  // takže jakmile se jedna trať upraví, dvojice se rozpadne — a právě to
+  // má ta věta u rozjížďky říct (Filip, 15. 10. 2026: „to samé můžeme dát
+  // do rozjížďky malou info poznámku, že má stejnou trať jako vedlejší").
+  const stejnaTrat = new Map<number, number[]>();
+  for (const t of trate) {
+    if (t.otisk === null || t.cisloRozjizdky === null) continue;
+    const shodne = trate
+      .filter((x) => x.otisk === t.otisk && x.cisloRozjizdky !== null && x.id !== t.id)
+      .map((x) => x.cisloRozjizdky!)
+      .sort((a, b) => a - b);
+    if (shodne.length > 0) stejnaTrat.set(t.cisloRozjizdky, shodne);
+  }
 
   // Výpadek nesmí spolknout výsledek zápisu.
   if (stav === "vypadek")
@@ -170,6 +185,7 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
                 rozjizdka={r}
                 otevriRevizi={zpravy.revize === String(r.cislo)}
                 sTrati={sTrati}
+                stejnaTrat={stejnaTrat.get(r.cislo) ?? []}
               />
             </li>
           ))}
@@ -202,6 +218,7 @@ function Rozjizdka({
   rozjizdka,
   otevriRevizi,
   sTrati,
+  stejnaTrat,
 }: {
   serie: string;
   zavod: string;
@@ -209,6 +226,8 @@ function Rozjizdka({
   otevriRevizi: boolean;
   /** Čísla rozjížděk, které už trať mají. */
   sTrati: Set<number>;
+  /** Čísla rozjížděk, které jedou totéž. Prázdné, když je trať jedinečná. */
+  stejnaTrat: number[];
 }) {
   const skryta = ["Navrzeno", "Overeno", "Schvaleno"] as const;
 
@@ -247,7 +266,13 @@ function Rozjizdka({
             nepřipomene, že nově založená rozjížďka trať nemá — zjistilo
             by se to až u vody. */}
         {sTrati.has(rozjizdka.cislo) ? (
-          <>trať přiřazená</>
+          <>
+            trať přiřazená
+            {/* Rozhodčí na rozpravě vyhlásí „tři rozjížďky na téhle trati";
+                tohle je ta věta zpátky. Počítá se z otisku předpisu, takže
+                jakmile se jedna z nich upraví, zmizí. */}
+            <StejnaTrat serie={serie} zavod={zavod} cisla={stejnaTrat} />
+          </>
         ) : (
           <Link href={`/sprava/${serie}/boje/${zavod}`}>bez trati — přiřadit</Link>
         )}
