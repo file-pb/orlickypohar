@@ -2514,7 +2514,48 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 
 /* Tabule do hospody: čte se přes místnost, ne z klína. Velikosti jsou
    proto v `vw` — telka může být cokoliv od notebooku po projektor. */
-.tabule { padding: 1.5vw 2vw; }
+/* Tabule do televize. <b>Není to stránka webu, je to infopanel</b>
+   (Filip, 15. 10. 2026: *„nikdo tam nebude klikat, je to čistě informativní
+   stránka jako do televize. Bude fullscreen a nebude scrollovat ani nijak
+   interaktivně fungovat kromě toho loga, kterým se budeme vracet"*).
+
+   Hlavička webu se proto schovává. `:has` na `body` je tu místo vlastního
+   kořenového layoutu schválně: route group by znamenala přestěhovat celou
+   cestu `serie/[slug]/zavody/[zavod]` do druhé skupiny jen kvůli jedné
+   stránce, a tahle jedna řádka dělá totéž. */
+/* Hlavička, loga partnerů a „nahoru" patří webu, ne televizi. Změřeno:
+   partneři a „nahoru" přidávali dohromady 120 px pod panel, takže obraz
+   přetékal a spodek se uřízl — a „nahoru" je navíc ta interaktivita, co tu
+   nemá co dělat.
+
+   Loga partnerů se sem jednou vrátí, ale jako prvek panelu, ne jako patička
+   webu (Filip, 15. 10. 2026: *„loga partnerů tam pak zapracujeme jindy, teď
+   tam jen zabírají místo informacím"*). */
+body:has(.tabule) > .hlavicka,
+body:has(.tabule) > .partneri,
+body:has(.tabule) > .nahoru { display: none; }
+/* Obal webu má kolem obsahu vzduch; panel si ho řídí sám. */
+body:has(.tabule) > .obal { padding: 0; max-width: none; }
+/* Žádné rolování: co se nevejde, se má střídat samo, ne čekat na palec,
+   který k televizi nikdo nenatáhne. */
+body:has(.tabule) { overflow: hidden; }
+
+.tabule {
+  padding: 1.5vw 2vw;
+  /* Celá obrazovka, ne jen tolik, kolik je obsahu — na televizi se panel
+     nemá krčit u horního okraje. */
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column;
+  position: relative;
+}
+/* Logo v rohu: jediná klikatelná věc. Je malé schválně — má být po ruce,
+   ne součást sdělení. */
+.tabule .odchod {
+  position: absolute; top: 1.2vw; right: 2vw;
+  width: 4.5vw; height: 4.5vw; opacity: 0.55;
+}
+.tabule .odchod:hover { opacity: 1; }
+.tabule .odchod svg { width: 100%; height: 100%; }
 .tabule header { display: flex; align-items: baseline; gap: 1.2vw; flex-wrap: wrap; }
 .tabule h1 { font-size: 3.2vw; margin: 0; }
 .tabule h2 { font-size: 1.7vw; margin: 0 0 0.6vw; }
