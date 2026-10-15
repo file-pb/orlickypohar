@@ -360,6 +360,36 @@ public static class Stavba
         _ => "Trať je přijatá a zamčená. Na úpravu ji nejdřív odemkni přestavbou.",
     };
 
+    /// <summary>
+    /// <b>Hotovo nejde nahlásit, dokud některý prvek stojí na značce, která
+    /// už ve vodě není.</b> Vrací hlášku, nebo <c>null</c>.
+    ///
+    /// <para>
+    /// Objeveno 15. 10. 2026 při průchodu scénáři Izolepy: sebral jsem bóji,
+    /// kterou používal prvek trati. Hláška řekla „z trati zmizela", jenže
+    /// prvek zůstal — hotovo šlo nahlásit, rozhodčí trať přijal a závodník
+    /// pak na veřejné trati pořád viděl „2. otočná bóje", ke které měl plout.
+    /// <see cref="Prvky"/> brání takový prvek <b>založit</b>, ale bóje se dá
+    /// sebrat až potom, takže kontrola musí být i na konci stavby.
+    /// </para>
+    ///
+    /// <para>
+    /// Sbírat se tím nebrání — sbírá se při přestavbě a to je celý smysl.
+    /// Brání se jen tomu, odejít od rozestavěné trati jako od hotové.
+    /// </para>
+    /// </summary>
+    public static string? ProcNejdeHotovoKvuliZnackam(IReadOnlyList<(int Poradi, string Znacka)> chybejici)
+    {
+        if (chybejici.Count == 0) return null;
+
+        var vypis = string.Join(", ", chybejici.Select(ch => $"{ch.Poradi}. ({ch.Znacka})"));
+        return chybejici.Count == 1
+            ? $"Prvek {vypis} stojí na značce, která je sebraná z vody. "
+              + "Pípni ji znovu, nebo prvek smaž — jinak by trať vedla k bóji, která tam není."
+            : $"Tyhle prvky stojí na značkách sebraných z vody: {vypis}. "
+              + "Pípni je znovu, nebo prvky smaž — jinak by trať vedla k bójím, které tam nejsou.";
+    }
+
     /// <summary>Proč nejde přijmout — nebo <c>null</c>. Smí jen rozhodčí.</summary>
     public static string? ProcNejdePrijmout(StavTrati stav) => stav switch
     {

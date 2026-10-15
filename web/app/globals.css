@@ -2852,6 +2852,10 @@ body:has(.tabule) { overflow: hidden; }
 .tabule .poradi .body { float: right; font-variant-numeric: tabular-nums; }
 .tabule .detail { font-size: 1.1vw; color: var(--tlumeny); }
 
+/* „A ještě tři lodě" pod zkráceným pořadím: deset řádků je na telku strop,
+   ale pole dvanácti lodí nesmí vypadat jako pole deseti. */
+.tabule .dalsi { font-size: 1.1vw; color: var(--tlumeny); margin: 0.4vw 0 0; }
+
 /* Pípání na klik (Filip, 10. 10. 2026: stavitel se na motoráku tahá se
    závažím a lany). Cíle jsou velké schválně — na houpající se palubě se
    netrefíš do odkazu velkého jako písmeno. */

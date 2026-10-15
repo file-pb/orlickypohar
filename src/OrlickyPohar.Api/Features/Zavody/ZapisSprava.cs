@@ -306,6 +306,11 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
 
         if (kdo is { } zapisovatel) await SnimekAsync(rozjizdka.Id, zapisovatel, radky, ct);
 
+        rozjizdka.Stav = Zapis.StavPoZapisu(
+            rozjizdka.Stav,
+            rozjizdka.StartV is not null,
+            ucasti.Values.Select(u => (u.Stav, sVysledkem.Contains(u.PrihlaskaId))));
+
         // Nová podoba sady. Klient, který vyšel ze staré, už neprojde.
         rozjizdka.Revize++;
 

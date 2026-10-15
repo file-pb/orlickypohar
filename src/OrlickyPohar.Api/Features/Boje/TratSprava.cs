@@ -226,12 +226,37 @@ public class TratSprava(AppDbContext db, TimeProvider cas, Fotky.IUloziste ulozi
         if (trat is null) return (null, "Tahle regata zatím nemá ani jednu bóji.");
         if (Stavba.ProcNejdeHotovo(trat.Stav) is { } chyba) return (null, chyba);
 
+        if (Stavba.ProcNejdeHotovoKvuliZnackam(await PrvkyBezZnackyAsync(trat.Id, ct))
+            is { } chybiZnacka)
+            return (null, chybiZnacka);
+
         trat.Stav = StavTrati.Hotovo;
         trat.DuvodVraceni = null;
         await db.SaveChangesAsync(ct);
 
         return (await DtoAsync(trat, true, jeRozhodci, ct), null);
     }
+
+    /// <summary>
+    /// Prvky, kterým některý konec leží na sebrané značce — pořadí prvku
+    /// a jméno té značky, k vypsání do hlášky.
+    /// <para>
+    /// Přenastavení se nehlídá: to prvky přepojuje samo
+    /// (<c>BojeSprava.PrenastavAsync</c>), takže značka pod prvkem zůstane
+    /// stát. Sebrání je druhý případ — bóje je z vody venku a nic ji
+    /// nenahradilo.
+    /// </para>
+    /// </summary>
+    private async Task<IReadOnlyList<(int Poradi, string Znacka)>> PrvkyBezZnackyAsync(
+        int tratId, CancellationToken ct) =>
+        await db.PrvkyTrati
+            .Where(p => p.TratId == tratId)
+            .Where(p => p.BojeA!.SebranaV != null || (p.BojeB != null && p.BojeB.SebranaV != null))
+            .OrderBy(p => p.Poradi).ThenBy(p => p.Id)
+            .Select(p => new ValueTuple<int, string>(
+                p.Poradi,
+                p.BojeA!.SebranaV != null ? p.BojeA.Nazev : p.BojeB!.Nazev))
+            .ToListAsync(ct);
 
     /// <summary>Rozhodčí přijímá: trať se zamkne a je veřejná.</summary>
     public async Task<(TratDto? Trat, string? Chyba)> PrijmiAsync(

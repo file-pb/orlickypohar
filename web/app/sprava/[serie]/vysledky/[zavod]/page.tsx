@@ -54,8 +54,12 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
     nactiRozjizdky(serie, zavod),
     nactiTrate(serie, zavod),
   ]);
+  // `null` je výpadek čtení, ne „žádné tratě" (viz `nactiTrate`). Pro
+  // odvozené seznamy se chová jako prázdno; u výběru trati se ale musí
+  // poznat, jinak by řádek tvrdil „bez trati" o rozjížďce, která ji má.
+  const seznamTrati = trate ?? [];
   const sTrati = new Set(
-    trate.map((t) => t.cisloRozjizdky).filter((c): c is number => c !== null),
+    seznamTrati.map((t) => t.cisloRozjizdky).filter((c): c is number => c !== null),
   );
 
   // Které rozjížďky jedou totéž co která. Počítá se z otisku předpisu,
@@ -63,9 +67,9 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
   // má ta věta u rozjížďky říct (Filip, 15. 10. 2026: „to samé můžeme dát
   // do rozjížďky malou info poznámku, že má stejnou trať jako vedlejší").
   const stejnaTrat = new Map<number, number[]>();
-  for (const t of trate) {
+  for (const t of seznamTrati) {
     if (t.otisk === null || t.cisloRozjizdky === null) continue;
-    const shodne = trate
+    const shodne = seznamTrati
       .filter((x) => x.otisk === t.otisk && x.cisloRozjizdky !== null && x.id !== t.id)
       .map((x) => x.cisloRozjizdky!)
       .sort((a, b) => a - b);
@@ -74,7 +78,9 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
 
   // Postavené tratě na výběr. <b>Prázdná se nenabízí</b>: vybrat trať
   // bez prvků znamená nevybrat nic a jen si vyrobit druhou prázdnou.
-  const naVyber = trate
+  const naVyber = trate === null
+    ? null
+    : trate
     .filter((t) => t.pocetPrvku > 0)
     .map((t) => ({
       id: t.id,
@@ -248,7 +254,7 @@ function Rozjizdka({
   /** Čísla rozjížděk, které jedou totéž. Prázdné, když je trať jedinečná. */
   stejnaTrat: number[];
   /** Postavené tratě regaty na výběr. */
-  naVyber: { id: number; popis: string }[];
+  naVyber: { id: number; popis: string }[] | null;
 }) {
   const skryta = ["Navrzeno", "Overeno", "Schvaleno"] as const;
 
@@ -324,7 +330,12 @@ function Rozjizdka({
               <input type="hidden" name="zavod" value={zavod} />
               <input type="hidden" name="cislo" value={rozjizdka.cislo} />
               <input type="hidden" name="stav" value={na} />
-              <button type="submit" title={STAVY[na].popis}>
+              {/* Viditelný text napřed — viz obrazovka přihlášek. */}
+              <button
+                type="submit"
+                title={STAVY[na].popis}
+                aria-label={`${STAVY[na].tlacitko} — ${STAVY[na].popis}`}
+              >
                 {STAVY[na].tlacitko}
               </button>
             </form>
@@ -458,7 +469,7 @@ function TratRozjizdky({
   rozjizdka: RozjizdkaRadek;
   maTrat: boolean;
   stejnaTrat: number[];
-  naVyber: { id: number; popis: string }[];
+  naVyber: { id: number; popis: string }[] | null;
 }) {
   const editor = `/sprava/${serie}/boje/${zavod}`;
   const jede = rozjizdka.stav === "Probiha";
@@ -482,6 +493,10 @@ function TratRozjizdky({
   // Odjetá rozjížďka bez trati je historie, ne úkol: přiřadit ji teď
   // zpětně by tvrdilo, že se podle ní jelo.
   if (odjeto) return <>bez trati</>;
+
+  // Výpadek čtení není „žádná trať": nabídnout tu „postavit" by poslalo
+  // stavitele stavět něco, co už možná stojí.
+  if (naVyber === null) return <>trati se teď nedaří načíst</>;
 
   if (naVyber.length === 0)
     return (

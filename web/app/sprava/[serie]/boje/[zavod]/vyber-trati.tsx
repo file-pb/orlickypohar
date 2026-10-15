@@ -2,6 +2,7 @@ import { NAZVY_STAVU, type TratNaVyber } from "@/lib/trat";
 import { dalsiTratAkce } from "./akce";
 import Link from "@/app/sprava/odkaz";
 import { StejnaTrat } from "@/app/sprava/stejna-trat";
+import { Vypadek } from "@/app/vypadek";
 
 /**
  * Komu trať patří a jak se vezme ta z minula.
@@ -35,12 +36,24 @@ export function VyberTrati({
 }: {
   serie: string;
   zavod: string;
-  trate: TratNaVyber[];
+  /** <c>null</c> je výpadek čtení, ne „žádné tratě" — viz `nactiTrate`. */
+  trate: TratNaVyber[] | null;
   /** Čísla rozjížděk regaty. Plus z nich nabízí ty, které trať nemají. */
   rozjizdky: number[];
   /** Trať, kterou obrazovka právě ukazuje. */
   vybrana?: number;
 }) {
+  // Výpadek se musí poznat. Mizející sekce vypadá jako „nic tu není",
+  // jenže přiřazení trati rozjížďce a klonování je jediná cesta, jak
+  // rozjet další rozjížďku — a stavitel by marně hledal, kam zmizela.
+  if (trate === null)
+    return (
+      <section className="vyber-trati" aria-labelledby="vyber-trati-nadpis">
+        <h2 id="vyber-trati-nadpis">Tratě regaty</h2>
+        <Vypadek co="Tratě regaty" />
+      </section>
+    );
+
   if (trate.length === 0 && rozjizdky.length === 0) return null;
 
   // Rozjížďky bez trati. Nabídnout tu, která už trať má, by znamenalo

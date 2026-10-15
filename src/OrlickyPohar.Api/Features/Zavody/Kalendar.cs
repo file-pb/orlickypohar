@@ -138,7 +138,8 @@ public static class Kalendar
     /// Vrací větu, protože jediný, kdo z toho něco má, je člověk na druhé
     /// straně obrazovky.
     /// </summary>
-    public static string? ProcNejdeUlozit(string? nazev, DateOnly datum, DateOnly? konec, string? slug)
+    public static string? ProcNejdeUlozit(
+        string? nazev, DateOnly datum, DateOnly? konec, string? slug, int? rokSerie = null)
     {
         if (string.IsNullOrWhiteSpace(nazev)) return "Regata musí mít název.";
 
@@ -149,6 +150,58 @@ public static class Kalendar
         // zapsaný dvakrát je neškodný a odmítat ho by bylo jen otravné.
         if (konec is { } k && k < datum)
             return "Konec závodu je dřív než jeho začátek.";
+
+        // <b>Regata patří do roku svého ročníku</b> (16. 10. 2026). Kalendář
+        // je kalendář jednoho ročníku, takže termín v jiném roce je skoro
+        // jistě překlep — při průchodu scénáři Izolepy jsem do ročníku 2026
+        // vypsal regatu na rok 2027 a nic se neozvalo. Hlídá se celý termín
+        // včetně konce: vícedenní závod přes Silvestra by ročník přesáhl.
+        if (rokSerie is { } rok)
+        {
+            if (datum.Year != rok)
+                return $"Ročník je {rok}, ale termín vychází na rok {datum.Year}. "
+                       + "Oprav termín, nebo regatu vypiš v ročníku, kam patří.";
+
+            if (konec is { } kon && kon.Year != rok)
+                return $"Ročník je {rok}, ale konec závodu vychází na rok {kon.Year}.";
+        }
+
+        return null;
+    }
+
+    /// <summary>Nejvyšší koeficient, který dává smysl. Víc je překlep.</summary>
+    public const decimal KoeficientNejvic = 10m;
+
+    /// <summary>
+    /// <b>Proč nejdou uložit počty do poháru</b> — nebo <c>null</c>.
+    ///
+    /// <para>
+    /// Počet škrtů, koeficient a bonus do seriálu se do 16. 10. 2026 nedaly
+    /// nastavit odnikud než importem celého ročníku: <c>ZastavkaVstup</c> je
+    /// nenesl, takže regata vypsaná v kalendáři měla navždy škrty 0 a
+    /// koeficient 1,0 — a u okruhové regaty je obvyklý jeden škrt.
+    /// </para>
+    ///
+    /// <para>
+    /// Rozsahy jsou široké schválně: pravidla si rozhodčí upřesňuje a
+    /// aplikace mu do nich nemá mluvit. Brání se jen tomu, co je jistě
+    /// překlep — záporný počet škrtů a koeficient, který by výsledky
+    /// vynuloval nebo poslal do nesmyslného řádu.
+    /// </para>
+    /// </summary>
+    public static string? ProcNejdouPocty(int? pocetSkrtu, decimal? koeficient)
+    {
+        if (pocetSkrtu is < 0) return "Počet škrtů nemůže být záporný.";
+
+        if (koeficient is null) return null;
+
+        if (koeficient <= 0)
+            return "Koeficient do poháru musí být kladný. Regatu, která se do poháru "
+                   + "počítat nemá, z něj vyndej u rozjížďky.";
+
+        if (koeficient > KoeficientNejvic)
+            return $"Koeficient do poháru je nejvýš {KoeficientNejvic:0.#}. "
+                   + "Vyšší číslo bývá překlep.";
 
         return null;
     }

@@ -1021,8 +1021,6 @@ def proc_nejde_prvek(slug, v):
         return ("Strana se uvádí u otočné bóje, průjezdní bóje a odskoku. "
                 "U brány — i té otočné — si ji volí loď, u startu a cíle "
                 "rozhoduje směr průjezdu.")
-    if (v.get("poradi") or 0) <= 0:
-        return "Pořadí v trati začíná jedničkou."
     if v.get("bojeAId") == v.get("bojeBId"):
         return "Oba konce nemůžou být tatáž bóje."
 
@@ -1112,6 +1110,24 @@ def proc_nejde_hotovo(stav):
     if stav == "Hotovo":
         return "Hotovo už je nahlášené, trať čeká na rozhodčího."
     return "Trať je přijatá a zamčená. Na úpravu ji nejdřív odemkni přestavbou."
+
+
+def proc_nejde_hotovo_kvuli_znackam(chybejici):
+    """
+    Hotovo nejde nahlásit, dokud prvek stojí na sebrané značce — opsané
+    z `Stavba.ProcNejdeHotovoKvuliZnackam`. Založit takový prvek nejde,
+    ale bóje se dá sebrat až potom.
+    """
+    if not chybejici:
+        return None
+    vypis = ", ".join(f"{poradi}. ({znacka})" for poradi, znacka in chybejici)
+    if len(chybejici) == 1:
+        return (f"Prvek {vypis} stojí na značce, která je sebraná z vody. "
+                "Pípni ji znovu, nebo prvek smaž — jinak by trať vedla "
+                "k bóji, která tam není.")
+    return (f"Tyhle prvky stojí na značkách sebraných z vody: {vypis}. "
+            "Pípni je znovu, nebo prvky smaž — jinak by trať vedla k bójím, "
+            "které tam nejsou.")
 
 
 def proc_nejde_prijmout(stav):
@@ -1641,6 +1657,10 @@ def zastavka_radek(z):
             "poradatelSlug": poradatel_zastavky(z)["slug"] if poradatel_zastavky(z) else None,
             "smiMedailonek": bool(poradatel_zastavky(z)) and (rozhodci or organizator),
             "vyhodnoceni": z.get("vyhodnoceni", "PoKategoriich"),
+            # Počty do poháru: formulář je potřebuje předvyplnit.
+            "pocetSkrtu": z.get("pocetSkrtu", 0),
+            "koeficientDoSerie": z.get("koeficientDoSerie", 1.0),
+            "posunDoSerie": z.get("posunDoSerie", 0),
             # Vypsat a odjet patří pořadateli, zbytek řady rozhodčímu
             # (`Kalendar.KdoSmi`).
             "mozneStavy": [s for s in VSECHNY_STAVY
@@ -1738,14 +1758,42 @@ def zastavka_ze_vstupu(vstup):
     if konec and konec < datum:
         return None, "Konec závodu je dřív než jeho začátek."
 
+    # Regata patří do roku svého ročníku — opsané z `Kalendar.ProcNejdeUlozit`.
+    rok = D["rok"]
+    if datum[:4] != str(rok):
+        return None, (f"Ročník je {rok}, ale termín vychází na rok {datum[:4]}. "
+                      "Oprav termín, nebo regatu vypiš v ročníku, kam patří.")
+    if konec and konec[:4] != str(rok):
+        return None, f"Ročník je {rok}, ale konec závodu vychází na rok {konec[:4]}."
+
     vyhodnoceni = vstup.get("vyhodnoceni") or "PoKategoriich"
     if vyhodnoceni not in ("PoKategoriich", "CelePole", "Oboje"):
         return None, f"Neznámé vyhodnocení {vyhodnoceni}."
 
-    return {"nazev": nazev, "datum": datum, "datumKonce": konec,
-            "typ": (vstup.get("typ") or "").strip() or None,
-            "vyhodnoceni": vyhodnoceni,
-            "poradatel": (vstup.get("poradatel") or "").strip() or None}, None
+    # Počty do poháru — opsané z `Kalendar.ProcNejdouPocty`. Nezadáno není
+    # nula: starý klient je neposílá a úprava termínu by jinak
+    # naimportovanému ročníku vynulovala škrty i koeficient.
+    skrty, koeficient = vstup.get("pocetSkrtu"), vstup.get("koeficientDoSerie")
+    if skrty is not None and skrty < 0:
+        return None, "Počet škrtů nemůže být záporný."
+    if koeficient is not None:
+        if koeficient <= 0:
+            return None, ("Koeficient do poháru musí být kladný. Regatu, která se "
+                          "do poháru počítat nemá, z něj vyndej u rozjížďky.")
+        if koeficient > 10:
+            return None, "Koeficient do poháru je nejvýš 10. Vyšší číslo bývá překlep."
+
+    hodnoty = {"nazev": nazev, "datum": datum, "datumKonce": konec,
+               "typ": (vstup.get("typ") or "").strip() or None,
+               "vyhodnoceni": vyhodnoceni,
+               "poradatel": (vstup.get("poradatel") or "").strip() or None}
+
+    for klic, hodnota in (("pocetSkrtu", skrty), ("koeficientDoSerie", koeficient),
+                          ("posunDoSerie", vstup.get("posunDoSerie"))):
+        if hodnota is not None:
+            hodnoty[klic] = hodnota
+
+    return hodnoty, None
 
 
 def clanek_radek(c):
@@ -2467,8 +2515,15 @@ class H(BaseHTTPRequestHandler):
         # prvky už neplní vůbec.
         boje_b = self.znacka_z_bodu(slug, v)
 
+        # Pořadí určuje server a nový prvek jde na konec trati — opsané
+        # z `PrvkySprava.ZalozAsync`. Bere se nejvyšší pořadí, ne počet:
+        # čísla se smějí opakovat, takže počet by vrátil číslo, které už
+        # někdo má.
+        sourozenci = PRVKY.get(trat_aktualni(slug)["id"], [])
+        poradi = max((x["poradi"] for x in sourozenci), default=0) + 1
+
         PRVEK_ID[0] += 1
-        p = {"id": PRVEK_ID[0], "typ": v["typ"], "poradi": v["poradi"],
+        p = {"id": PRVEK_ID[0], "typ": v["typ"], "poradi": poradi,
              "strana": v.get("strana"), "poznamka": (v.get("poznamka") or "").strip() or None,
              "bojeAId": v["bojeAId"], "bojeBId": boje_b,
              "smer": v.get("smer"), "druhStartu": v.get("druhStartu")}
@@ -2516,6 +2571,9 @@ class H(BaseHTTPRequestHandler):
         v = self.telo_zadosti() or {}
         if (chyba := proc_nejde_prvek(slug, v)):
             return self.chyba(400, chyba)
+        # Jen při úpravě: při zakládání si pořadí počítá server sám.
+        if (v.get("poradi") or 0) <= 0:
+            return self.chyba(400, "Pořadí v trati začíná jedničkou.")
         if not (p := self._prvek(slug, prvek_id)):
             return self.chyba(400, "Takový prvek na téhle trati není.")
 
@@ -2623,6 +2681,20 @@ class H(BaseHTTPRequestHandler):
             return None
         if (chyba := proc_nejde_hotovo(t["stav"])):
             return self.chyba(400, chyba)
+
+        # Prvky, kterým některý konec leží na sebrané značce. Přenastavení
+        # se nehlídá: to prvky přepojuje samo.
+        podle_id = {b["id"]: b for b in BOJE.get(slug, [])}
+        chybejici = []
+        for p in sorted(PRVKY.get(t["id"], []), key=lambda x: (x["poradi"], x["id"])):
+            for konec in ("bojeAId", "bojeBId"):
+                b = podle_id.get(p.get(konec))
+                if b and b.get("sebranaV"):
+                    chybejici.append((p["poradi"], b["nazev"]))
+                    break
+        if (chyba := proc_nejde_hotovo_kvuli_znackam(chybejici)):
+            return self.chyba(400, chyba)
+
         t["stav"], t["duvodVraceni"] = "Hotovo", None
         return self.odpoved(trat_dto(slug, t))
 
@@ -3171,6 +3243,18 @@ class H(BaseHTTPRequestHandler):
                 z["ucasti"].append({"lod": lod, "kormidelnik": None, "posadka": None, "stav": "Potvrzena"})
             elif u["stav"] != "Vyloucena":
                 u["stav"] = "Potvrzena"
+
+        # Rozjížďka je dojetá, až má každá loď na vodě dojezd nebo kód —
+        # opsané z `ZapisSprava.PrepocitejStav`. Počítají se jen lodě, které
+        # jedou (`VEREJNE_UCASTI`); odhlášená ani nedostavená se nečeká.
+        if r.get("stav") != "Zrusena":
+            jedou = {u["lod"] for u in z["ucasti"] if u.get("stav") in VEREJNE_UCASTI}
+            maji = {v["lod"] for v in r["vysledky"]}
+            if jedou and jedou <= maji:
+                r["stav"] = "Dokoncena"
+            elif r.get("stav") == "Dokoncena":
+                r["stav"] = "Probiha" if r.get("startV") else "Planovana"
+
         return self.odpoved(zapis_dto(z, r))
 
     def prihlas_lod(self, zavod):
@@ -3541,9 +3625,9 @@ class H(BaseHTTPRequestHandler):
                                    "Změň název.")
 
         # Nová zastávka je vždycky plánovaná a nepublikovaná — stejně jako v API.
-        nova = {**hodnoty, "slug": slug, "stav": "Planovany", "publikovano": False,
-                "puvodniDatum": None, "poradi": 0, "pocetSkrtu": 0,
-                "koeficientDoSerie": 1.0,
+        nova = {"pocetSkrtu": 0, "koeficientDoSerie": 1.0, "posunDoSerie": 0,
+                **hodnoty, "slug": slug, "stav": "Planovany", "publikovano": False,
+                "puvodniDatum": None, "poradi": 0,
                 "ucasti": [], "rozjizdky": [], "druh": vstup.get("druh") or "Pohar"}
         D["zavody"].append(nova)
         prerad_kalendar()
@@ -3803,6 +3887,10 @@ class H(BaseHTTPRequestHandler):
                 "cas": body[-1]["cas"], "hladina": 334.66, "objem": 345.4, "pritok": 14.33,
                 "odtok": 0.0, "pritokZaDen": 1_231_000.0, "odtokZaDen": 3_016_656.0,
                 "zmenaObjemu": -1_780_000.0, "historie": body,
+                # Rozsahy grafu (od 15. 10. 2026). Mock drží jen den měření,
+                # takže nabízí 24 h — bez tohohle pole padne `VodocetGraf`
+                # a s ním celý postranní panel, tedy každá veřejná stránka.
+                "dostupneRozsahy": ["24h"],
                 "zdroj": "https://www.pvl.cz/portal/nadrze/cz/pc/Mereni.aspx?id=VLOR&oid=2"})
 
         if cesta == "/vodocet/teplota-hladiny":

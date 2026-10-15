@@ -286,14 +286,26 @@ function tridyPanely(snimek: Snimek): Panel[] {
       t.lode.length === 0 ? (
         <p className="prazdno">Zatím se nejelo.</p>
       ) : (
-        <ol className="poradi">
-          {t.lode.map((p) => (
-            <li key={p.lod}>
-              <b>{p.misto}.</b> {p.lod}
-              <span className="body">{p.body}</span>
-            </li>
-          ))}
-        </ol>
+        <>
+          <ol className="poradi">
+            {t.lode.map((p) => (
+              <li key={p.lod}>
+                <b>{p.misto}.</b> {p.lod}
+                <span className="body">{p.body}</span>
+              </li>
+            ))}
+          </ol>
+          {t.dalsich > 0 && <p className="dalsi">{jesteLodi(t.dalsich)}</p>}
+        </>
       ),
   }));
+}
+
+/**
+ * „A ještě tři lodě" pod zkráceným pořadím. Na telku se víc než deset
+ * řádků nevejde, ale pole dvanácti lodí nesmí vypadat jako pole deseti.
+ */
+function jesteLodi(kolik: number) {
+  if (kolik === 1) return "a ještě jedna loď";
+  return `a ještě ${kolik} ${kolik < 5 ? "lodě" : "lodí"}`;
 }

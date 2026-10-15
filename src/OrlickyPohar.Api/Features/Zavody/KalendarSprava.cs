@@ -37,7 +37,12 @@ public record ZastavkaRadek(
     bool SmiMedailonek = false,
     // Jak se regata vyhodnocuje. Aditivně, na konci: formulář kalendáře
     // to předvyplňuje (Filip, 22. 9. 2026).
-    Vyhodnoceni Vyhodnoceni = Vyhodnoceni.PoKategoriich);
+    Vyhodnoceni Vyhodnoceni = Vyhodnoceni.PoKategoriich,
+    // Počty do poháru. Formulář je potřebuje předvyplnit, jinak by úprava
+    // termínu ukazovala prázdno tam, kde nějaká hodnota platí.
+    int PocetSkrtu = 0,
+    decimal KoeficientDoSerie = 1.0m,
+    int PosunDoSerie = 0);
 
 public record PrehledZastavekDto(
     string Serie,
@@ -68,7 +73,28 @@ public record ZastavkaVstup(
     // Platí jen při založení. Úprava druh nemění — viz `Zavod.Druh`.
     DruhZastavky Druh = DruhZastavky.Pohar,
     // Bez hodnoty zůstává „po kategoriích", jak se regaty vyhodnocují běžně.
-    Vyhodnoceni Vyhodnoceni = Vyhodnoceni.PoKategoriich);
+    Vyhodnoceni Vyhodnoceni = Vyhodnoceni.PoKategoriich,
+    /// <summary>
+    /// Kolik nejhorších rozjížděk se v regatě škrtá. Okruhová typicky 1,
+    /// vytrvalostní 0.
+    /// <para>
+    /// <b>Nepovinné, a „nezadáno" není nula</b>: starý klient tahle pole
+    /// neposílá a úprava termínu by jinak naimportovanému ročníku vynulovala
+    /// škrty i koeficient. Bez hodnoty se nechá, co na zastávce je.
+    /// </para>
+    /// <para>
+    /// <b>Stojí na konci schválně</b>: vložené doprostřed by rozbilo
+    /// poziční volání.
+    /// </para>
+    /// </summary>
+    int? PocetSkrtu = null,
+    /// <summary>Váha regaty v seriálu, běžně 1,0. Nepovinné jako škrty.</summary>
+    decimal? KoeficientDoSerie = null,
+    /// <summary>
+    /// Kolik se přičte lodím s umístěním — typicky bonus −1 u 24hodinovky.
+    /// Není to koeficient: bonus posouvá, nenásobí. Nepovinné jako škrty.
+    /// </summary>
+    int? PosunDoSerie = null);
 
 public record StavZastavkyVstup(StavZavodu Stav);
 
@@ -128,8 +154,15 @@ public class KalendarSprava(AppDbContext db)
         int serieId, ZastavkaVstup vstup, CancellationToken ct)
     {
         var slug = Kalendar.Slug(vstup.Nazev ?? "");
-        if (Kalendar.ProcNejdeUlozit(vstup.Nazev, vstup.Datum, vstup.DatumKonce, slug) is { } chyba)
+        var rok = await db.Serie.Where(s => s.Id == serieId).Select(s => (int?)s.Rok)
+            .FirstOrDefaultAsync(ct);
+
+        if (Kalendar.ProcNejdeUlozit(vstup.Nazev, vstup.Datum, vstup.DatumKonce, slug, rok)
+            is { } chyba)
             return (null, chyba);
+
+        if (Kalendar.ProcNejdouPocty(vstup.PocetSkrtu, vstup.KoeficientDoSerie) is { } pocty)
+            return (null, pocty);
 
         if (await db.Zavody.AnyAsync(z => z.SerieId == serieId && z.Slug == slug, ct))
             return (null, $"Regata s adresou „{slug}“ už v ročníku je. Změň název.");
@@ -144,6 +177,9 @@ public class KalendarSprava(AppDbContext db)
             Typ = Prazdne(vstup.Typ),
             Druh = vstup.Druh,
             Vyhodnoceni = vstup.Vyhodnoceni,
+            PocetSkrtu = vstup.PocetSkrtu ?? 0,
+            KoeficientDoSerie = vstup.KoeficientDoSerie ?? 1.0m,
+            PosunDoSerie = vstup.PosunDoSerie ?? 0,
             Stav = StavZavodu.Planovany,
             Publikovano = false,
             // Pořadí se hned přepočítá podle data; tohle je jen než dostane
@@ -165,8 +201,15 @@ public class KalendarSprava(AppDbContext db)
     /// </summary>
     public async Task<string?> UpravAsync(Zavod zastavka, ZastavkaVstup vstup, CancellationToken ct)
     {
-        if (Kalendar.ProcNejdeUlozit(vstup.Nazev, vstup.Datum, vstup.DatumKonce, zastavka.Slug) is { } chyba)
+        var rok = await db.Serie.Where(s => s.Id == zastavka.SerieId).Select(s => (int?)s.Rok)
+            .FirstOrDefaultAsync(ct);
+
+        if (Kalendar.ProcNejdeUlozit(
+                vstup.Nazev, vstup.Datum, vstup.DatumKonce, zastavka.Slug, rok) is { } chyba)
             return chyba;
+
+        if (Kalendar.ProcNejdouPocty(vstup.PocetSkrtu, vstup.KoeficientDoSerie) is { } pocty)
+            return pocty;
 
         zastavka.PuvodniDatum = Kalendar.PuvodniPoPresunu(
             zastavka.Stav, zastavka.Datum, vstup.Datum, zastavka.PuvodniDatum);
@@ -176,6 +219,10 @@ public class KalendarSprava(AppDbContext db)
         zastavka.DatumKonce = vstup.DatumKonce;
         zastavka.Typ = Prazdne(vstup.Typ);
         zastavka.Vyhodnoceni = vstup.Vyhodnoceni;
+        // Co nepřišlo, se nemění — viz `ZastavkaVstup.PocetSkrtu`.
+        zastavka.PocetSkrtu = vstup.PocetSkrtu ?? zastavka.PocetSkrtu;
+        zastavka.KoeficientDoSerie = vstup.KoeficientDoSerie ?? zastavka.KoeficientDoSerie;
+        zastavka.PosunDoSerie = vstup.PosunDoSerie ?? zastavka.PosunDoSerie;
         // Jiné jméno přiřadí jiného pořadatele; přejmenovat klub se dá jen
         // v jeho medailonku, jinak by jeden překlep v kalendáři přepsal
         // jméno na všech jeho zastávkách.

@@ -201,7 +201,8 @@ function Radek({ serie, clanek }: { serie: string; clanek: ClanekRadek }) {
             <input type="hidden" name="serie" value={serie} />
             <input type="hidden" name="slug" value={clanek.slug} />
             <input type="hidden" name="stav" value={s.stav} />
-            <button type="submit" title={s.popis}>
+            {/* Viditelný text napřed — viz obrazovka přihlášek. */}
+            <button type="submit" title={s.popis} aria-label={`${s.nazev} — ${s.popis}`}>
               {s.nazev}
             </button>
           </form>

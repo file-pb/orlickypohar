@@ -77,4 +77,31 @@ public class TratTests
         Assert.False(Stavba.JeVerejna(StavTrati.Rozestaveno));
         Assert.False(Stavba.JeVerejna(StavTrati.Hotovo));
     }
+
+    /// <summary>
+    /// <b>Hotovo nejde nahlásit, dokud prvek stojí na sebrané značce.</b>
+    ///
+    /// <para>
+    /// Objeveno 15. 10. 2026 při průchodu scénáři Izolepy: po sebrání bóje
+    /// prvek zůstal, hotovo prošlo, rozhodčí trať přijal — a závodník na
+    /// veřejné trati pořád viděl značku, ke které měl plout, ačkoliv byla
+    /// z vody venku.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public void Hotovo_nejde_s_prvkem_na_sebrane_znacce()
+    {
+        Assert.Null(Stavba.ProcNejdeHotovoKvuliZnackam([]));
+
+        var jeden = Stavba.ProcNejdeHotovoKvuliZnackam([(2, "otočná 2")]);
+        Assert.NotNull(jeden);
+        Assert.Contains("2. (otočná 2)", jeden);
+        Assert.Contains("sebraná z vody", jeden);
+
+        // Víc prvků se vypíše v jedné hlášce — stavitel má jít k vodě jednou.
+        var vic = Stavba.ProcNejdeHotovoKvuliZnackam([(2, "otočná 2"), (4, "brána 4 vlevo")]);
+        Assert.NotNull(vic);
+        Assert.Contains("2. (otočná 2)", vic);
+        Assert.Contains("4. (brána 4 vlevo)", vic);
+    }
 }

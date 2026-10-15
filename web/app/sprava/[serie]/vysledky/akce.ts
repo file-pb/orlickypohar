@@ -120,6 +120,11 @@ export async function tratRozjizdceAkce(formular: FormData) {
     redirect(kam(serie, zavod, { chyba: "Vyber, která trať se pojede." }));
 
   const trate = await nactiTrate(serie, zavod);
+  // Výpadek čtení není „taková trať tu není" — ta hláška by poslala
+  // pořadatele hledat chybu v tom, co vybral.
+  if (trate === null)
+    redirect(kam(serie, zavod, { chyba: "Seznam tratí se teď nepodařilo načíst. Zkus to prosím znovu." }));
+
   const vybrana = trate.find((t) => t.id === trat);
   if (!vybrana) redirect(kam(serie, zavod, { chyba: "Taková trať u téhle regaty není." }));
 

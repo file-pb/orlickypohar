@@ -347,9 +347,11 @@ export async function zopakujPrvekAkce(formular: FormData) {
   const prvek = prvky.find((p) => p.id === id);
   if (!prvek) redirect(kam({ chyba: "Ten prvek v trati není. Někdo ho mezitím smazal?" }));
 
+  // Pořadí posílá nulu schválně: nový prvek dává na konec server, takže
+  // „na konec trati" platí i tehdy, když se seznam mezitím změnil.
   const chyba = await zalozPrvek(serie, zavod, {
     ...vstupZPrvku(prvek),
-    poradi: prvky.length + 1,
+    poradi: 0,
     poznamka: null,
   });
 
@@ -436,6 +438,11 @@ export async function dalsiTratAkce(formular: FormData) {
   // Která to je, řekne až nové načtení: API vrací tutéž prázdnou trať,
   // když už jedna je, takže se na ni dá spolehnout i při dvojím kliknutí.
   const trate = await nactiTrate(serie, zavod);
+  // `null` je výpadek čtení. Trať nejspíš vznikla, jen o ní nevíme —
+  // „nepovedlo se" by bylo tvrzení o něčem, co se možná povedlo.
+  if (trate === null)
+    redirect(kam({ chyba: "Trať asi vznikla, ale seznam tratí se nepodařilo načíst. Zkus to prosím znovu." }));
+
   const prazdna = trate.find((t) => t.cisloRozjizdky === null && t.pocetPrvku === 0);
   if (!prazdna) redirect(kam({ stav: "novaTrat" }));
 
