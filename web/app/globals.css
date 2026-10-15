@@ -943,6 +943,55 @@ header.hlavicka .jen-uzke { display: none; }
 .historie-boji > summary { font-size: 1.1rem; }
 
 .detail-prvku { padding: 0 0 1rem; }
+
+/* Taby v detailu prvku. <b>Bez javascriptu</b>: přepínače jsou schované
+   a panel se vybírá podle toho, který je zaškrtnutý. Pořadí v značce je
+   proto dané — přepínače napřed, pak záložky, pak panely ve stejném
+   pořadí jako přepínače.
+
+   `nth-of-type` počítá zvlášť mezi `input` a zvlášť mezi `section`, takže
+   `<div class="zalozky">` mezi nimi nevadí. */
+.prvek-taby > input { position: absolute; opacity: 0; pointer-events: none; }
+.prvek-taby > .zalozky { display: flex; gap: 0.3rem; margin: 0 0 0.7rem; flex-wrap: wrap; }
+.prvek-taby > .zalozky label {
+  padding: 0.25rem 0.7rem; font-size: 0.85rem; color: var(--tlumeny);
+  border: 1px solid var(--linka); border-radius: 999px; cursor: pointer;
+  /* Dotyková plocha: na vodě se kliká palcem v rukavici. */
+  min-height: 32px; display: inline-flex; align-items: center;
+}
+.prvek-taby > .zalozky label:hover { color: var(--voda); border-color: var(--voda); }
+.prvek-taby > section { display: none; }
+.prvek-taby > input:nth-of-type(1):checked ~ section:nth-of-type(1) { display: block; }
+.prvek-taby > input:nth-of-type(2):checked ~ section:nth-of-type(2) { display: block; }
+/* Vybraná záložka. `:has` je tu proto, že label stojí jinde v značce než
+   přepínač, takže se na něj `~` nedostane. */
+.prvek-taby:has(> input:nth-of-type(1):checked) > .zalozky label:nth-of-type(1),
+.prvek-taby:has(> input:nth-of-type(2):checked) > .zalozky label:nth-of-type(2) {
+  color: var(--voda); border-color: var(--voda); font-weight: 600;
+}
+/* Obtažení klávesnicí musí být vidět na záložce, ne na schovaném přepínači. */
+.prvek-taby > input:focus-visible ~ .zalozky label { outline: 2px solid var(--voda); }
+
+/* Výběr značky u dvojznačkového prvku. Táž technika jako u tabů: přepínač
+   je schovaný a `:has` podle něj vybere, která položka seznamu se ukáže.
+   `:has` je tu nutné, protože přepínače a seznam jsou sourozenci, ne
+   potomek a rodič — a bez javascriptu se jinak nespojí. */
+.volba-znacky { display: flex; gap: 0.3rem; margin: 0 0 0.6rem; flex-wrap: wrap; }
+.volba-znacky input { position: absolute; opacity: 0; pointer-events: none; }
+.volba-znacky label {
+  padding: 0.2rem 0.65rem; font-size: 0.8rem; color: var(--tlumeny);
+  border: 1px solid var(--linka); border-radius: 999px; cursor: pointer;
+  min-height: 30px; display: inline-flex; align-items: center;
+}
+.volba-znacky span:has(input:checked) label {
+  color: var(--voda); border-color: var(--voda); font-weight: 600;
+}
+.volba-znacky:has(input:focus-visible) label { outline: 2px solid var(--voda); }
+.jen-vybrana > li { display: none; }
+.volba-znacky:has(> span:nth-of-type(1) > input:checked) ~ .jen-vybrana > li:nth-of-type(1),
+.volba-znacky:has(> span:nth-of-type(2) > input:checked) ~ .jen-vybrana > li:nth-of-type(2) {
+  display: list-item;
+}
 .detail-prvku .formular { margin-bottom: 0.8rem; }
 .detail-prvku > .poznamka { font-size: 0.8rem; }
 .akce-prvku { display: flex; flex-wrap: wrap; gap: 0.5rem; }
