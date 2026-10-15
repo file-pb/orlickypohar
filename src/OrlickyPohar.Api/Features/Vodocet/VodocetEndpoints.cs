@@ -4,7 +4,16 @@ using OrlickyPohar.Api.Data;
 
 namespace OrlickyPohar.Api.Features.Vodocet;
 
-public record BodHladinyDto(DateTimeOffset Cas, decimal Hladina);
+public record BodHladinyDto(
+    DateTimeOffset Cas,
+    decimal Hladina,
+    /// <summary>
+    /// Objem nádrže v mil. m³, pokud ho Povodí u toho času uvedlo.
+    /// <b>Má ho jen část měření</b>: v hodinové řadě je hladina a odtok,
+    /// objem a přítok jen v aktuálních hodnotách. Proto nullable — a proto
+    /// se změna objemu počítá z jiných bodů než změna hladiny.
+    /// </summary>
+    decimal? Objem = null);
 
 /// <summary>
 /// Stav Orlíku pro widget. Časy v UTC; objemy v m³, průtoky v m³/s,
@@ -147,7 +156,7 @@ public static class VodocetEndpoints
 
         var body = mereni
             .Where(m => m.Cas >= od)
-            .Select(m => new BodHladinyDto(m.Cas, m.Hladina))
+            .Select(m => new BodHladinyDto(m.Cas, m.Hladina, m.Objem))
             .ToList();
 
         return TypedResults.Ok(new RadaHladinyDto(
