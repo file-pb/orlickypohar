@@ -37,7 +37,12 @@ public record ZastavkaRadek(
     bool SmiMedailonek = false,
     // Jak se regata vyhodnocuje. Aditivně, na konci: formulář kalendáře
     // to předvyplňuje (Filip, 22. 9. 2026).
-    Vyhodnoceni Vyhodnoceni = Vyhodnoceni.PoKategoriich);
+    Vyhodnoceni Vyhodnoceni = Vyhodnoceni.PoKategoriich,
+    // Počty do poháru. Formulář je potřebuje předvyplnit, jinak by úprava
+    // termínu ukazovala prázdno tam, kde nějaká hodnota platí.
+    int PocetSkrtu = 0,
+    decimal KoeficientDoSerie = 1.0m,
+    int PosunDoSerie = 0);
 
 public record PrehledZastavekDto(
     string Serie,
@@ -149,7 +154,11 @@ public class KalendarSprava(AppDbContext db)
         int serieId, ZastavkaVstup vstup, CancellationToken ct)
     {
         var slug = Kalendar.Slug(vstup.Nazev ?? "");
-        if (Kalendar.ProcNejdeUlozit(vstup.Nazev, vstup.Datum, vstup.DatumKonce, slug) is { } chyba)
+        var rok = await db.Serie.Where(s => s.Id == serieId).Select(s => (int?)s.Rok)
+            .FirstOrDefaultAsync(ct);
+
+        if (Kalendar.ProcNejdeUlozit(vstup.Nazev, vstup.Datum, vstup.DatumKonce, slug, rok)
+            is { } chyba)
             return (null, chyba);
 
         if (Kalendar.ProcNejdouPocty(vstup.PocetSkrtu, vstup.KoeficientDoSerie) is { } pocty)
@@ -192,7 +201,11 @@ public class KalendarSprava(AppDbContext db)
     /// </summary>
     public async Task<string?> UpravAsync(Zavod zastavka, ZastavkaVstup vstup, CancellationToken ct)
     {
-        if (Kalendar.ProcNejdeUlozit(vstup.Nazev, vstup.Datum, vstup.DatumKonce, zastavka.Slug) is { } chyba)
+        var rok = await db.Serie.Where(s => s.Id == zastavka.SerieId).Select(s => (int?)s.Rok)
+            .FirstOrDefaultAsync(ct);
+
+        if (Kalendar.ProcNejdeUlozit(
+                vstup.Nazev, vstup.Datum, vstup.DatumKonce, zastavka.Slug, rok) is { } chyba)
             return chyba;
 
         if (Kalendar.ProcNejdouPocty(vstup.PocetSkrtu, vstup.KoeficientDoSerie) is { } pocty)

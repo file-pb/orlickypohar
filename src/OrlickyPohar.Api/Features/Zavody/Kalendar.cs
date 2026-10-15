@@ -138,7 +138,8 @@ public static class Kalendar
     /// Vrací větu, protože jediný, kdo z toho něco má, je člověk na druhé
     /// straně obrazovky.
     /// </summary>
-    public static string? ProcNejdeUlozit(string? nazev, DateOnly datum, DateOnly? konec, string? slug)
+    public static string? ProcNejdeUlozit(
+        string? nazev, DateOnly datum, DateOnly? konec, string? slug, int? rokSerie = null)
     {
         if (string.IsNullOrWhiteSpace(nazev)) return "Regata musí mít název.";
 
@@ -149,6 +150,21 @@ public static class Kalendar
         // zapsaný dvakrát je neškodný a odmítat ho by bylo jen otravné.
         if (konec is { } k && k < datum)
             return "Konec závodu je dřív než jeho začátek.";
+
+        // <b>Regata patří do roku svého ročníku</b> (16. 10. 2026). Kalendář
+        // je kalendář jednoho ročníku, takže termín v jiném roce je skoro
+        // jistě překlep — při průchodu scénáři Izolepy jsem do ročníku 2026
+        // vypsal regatu na rok 2027 a nic se neozvalo. Hlídá se celý termín
+        // včetně konce: vícedenní závod přes Silvestra by ročník přesáhl.
+        if (rokSerie is { } rok)
+        {
+            if (datum.Year != rok)
+                return $"Ročník je {rok}, ale termín vychází na rok {datum.Year}. "
+                       + "Oprav termín, nebo regatu vypiš v ročníku, kam patří.";
+
+            if (konec is { } kon && kon.Year != rok)
+                return $"Ročník je {rok}, ale konec závodu vychází na rok {kon.Year}.";
+        }
 
         return null;
     }

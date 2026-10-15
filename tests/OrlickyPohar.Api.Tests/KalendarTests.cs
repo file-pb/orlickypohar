@@ -270,4 +270,32 @@ public class KalendarTests
         Assert.NotNull(chyba);
         Assert.Contains(vetaObsahuje, chyba);
     }
+
+    /// <summary>
+    /// <b>Regata patří do roku svého ročníku.</b> Kalendář je kalendář
+    /// jednoho ročníku, takže termín v jiném roce je skoro jistě překlep —
+    /// při průchodu scénáři Izolepy (15. 10. 2026) jsem do ročníku 2026
+    /// vypsal regatu na rok 2027 a nic se neozvalo.
+    /// </summary>
+    [Fact]
+    public void Termin_mimo_rok_rocniku_se_odmitne()
+    {
+        var vRoce = new DateOnly(2026, 6, 20);
+        var jinyRok = new DateOnly(2027, 6, 19);
+
+        Assert.Null(Kalendar.ProcNejdeUlozit("Izolepa", vRoce, null, "izolepa", 2026));
+
+        var chyba = Kalendar.ProcNejdeUlozit("Izolepa", jinyRok, null, "izolepa", 2026);
+        Assert.NotNull(chyba);
+        Assert.Contains("2027", chyba);
+
+        // Vícedenní závod přes Silvestra ročník taky přesahuje.
+        var konec = Kalendar.ProcNejdeUlozit(
+            "Silvestr", new DateOnly(2026, 12, 31), new DateOnly(2027, 1, 1), "silvestr", 2026);
+        Assert.NotNull(konec);
+        Assert.Contains("konec závodu", konec);
+
+        // Bez roku se nehlídá nic — volající, který ho nezná, ať projde.
+        Assert.Null(Kalendar.ProcNejdeUlozit("Izolepa", jinyRok, null, "izolepa"));
+    }
 }
