@@ -30,15 +30,23 @@ export function VyberTrati({
   serie,
   zavod,
   trate,
+  rozjizdky,
   vybrana,
 }: {
   serie: string;
   zavod: string;
   trate: TratNaVyber[];
+  /** Čísla rozjížděk regaty. Plus z nich nabízí ty, které trať nemají. */
+  rozjizdky: number[];
   /** Trať, kterou obrazovka právě ukazuje. */
   vybrana?: number;
 }) {
-  if (trate.length === 0) return null;
+  if (trate.length === 0 && rozjizdky.length === 0) return null;
+
+  // Rozjížďky bez trati. Nabídnout tu, která už trať má, by znamenalo
+  // slíbit druhou — a server by to stejně odmítl.
+  const obsazene = new Set(trate.map((t) => t.cisloRozjizdky));
+  const volne = rozjizdky.filter((c) => !obsazene.has(c));
 
   // Trať, kterou obrazovka ukazuje — bez výběru ta, na kterou spadla.
   const vybranaTrat = trate.find((t) => t.id === vybrana) ?? trate[0];
@@ -74,15 +82,39 @@ export function VyberTrati({
           );
         })}
 
-        {/* Plus zakládá prázdnou trať pro další rozjížďku. Klon je od toho,
-            když se jede stejně; tohle je, když se pojede jinudy. */}
-        <form action={dalsiTratAkce}>
-          <input type="hidden" name="serie" value={serie} />
-          <input type="hidden" name="zavod" value={zavod} />
-          <button type="submit" title="Další trať regaty" aria-label="Založit další trať">
+        {/* <b>Plus se zeptá, pro kterou rozjížďku</b> (Filip, 15. 10. 2026:
+            *„stačí jen seznam nad tím, ke které rozjížďce je trať připnuta
+            a v jakém je to stavu; plusko jen nabídne výběr z rozjížděk"*).
+            Dřív zakládalo trať bez vazby a přiřazovalo se jinde — dvě
+            místa pro jednu věc, a ta druhá byla zmatečná.
+
+            Rozbalovací, ne javascript: zabalené je to pořád jen plus. */}
+        <details className="pridat-trat">
+          <summary title="Další trať regaty" aria-label="Založit další trať">
             +
-          </button>
-        </form>
+          </summary>
+          {volne.length === 0 ? (
+            <p className="poznamka">
+              Každá rozjížďka už trať má. Další rozjížďku založíš u výsledků.
+            </p>
+          ) : (
+            <form action={dalsiTratAkce} className="formular radkove">
+              <input type="hidden" name="serie" value={serie} />
+              <input type="hidden" name="zavod" value={zavod} />
+              <label>
+                Trať pro rozjížďku
+                <select name="rozjizdka" defaultValue={String(volne[0])}>
+                  {volne.map((c) => (
+                    <option key={c} value={c}>
+                      {c}. rozjížďka
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="submit">Založit</button>
+            </form>
+          )}
+        </details>
       </nav>
 
       {/* <b>Jen informace, žádné přiřazování</b> (Filip, 15. 10. 2026:

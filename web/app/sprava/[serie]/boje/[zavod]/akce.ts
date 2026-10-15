@@ -421,6 +421,13 @@ export async function dalsiTratAkce(formular: FormData) {
   const kam = (zprava: Record<string, string>) =>
     `/sprava/${encodeURIComponent(serie)}/boje/${encodeURIComponent(zavod)}?${new URLSearchParams(zprava)}`;
 
+  // <b>Rovnou k rozjížďce, kterou si vybral</b> (Filip, 15. 10. 2026:
+  // *„plusko jen nabídne výběr z rozjížděk"*). Trať bez vazby by se
+  // musela přiřazovat zvlášť a právě to druhé místo bylo zmatečné.
+  const rozjizdka = Number(formular.get("rozjizdka") ?? 0);
+  if (!Number.isInteger(rozjizdka) || rozjizdka <= 0)
+    redirect(kam({ chyba: "Vyber, pro kterou rozjížďku se trať staví." }));
+
   const chyba = await zalozDalsiTrat(serie, zavod);
   if (chyba) redirect(kam({ chyba }));
 
@@ -428,11 +435,13 @@ export async function dalsiTratAkce(formular: FormData) {
   // když už jedna je, takže se na ni dá spolehnout i při dvojím kliknutí.
   const trate = await nactiTrate(serie, zavod);
   const prazdna = trate.find((t) => t.cisloRozjizdky === null && t.pocetPrvku === 0);
+  if (!prazdna) redirect(kam({ stav: "novaTrat" }));
 
+  const chybaPrirazeni = await priradTrat(serie, zavod, prazdna.id, rozjizdka);
   redirect(
-    prazdna
-      ? kam({ trat: String(prazdna.id), stav: "novaTrat" })
-      : kam({ stav: "novaTrat" }),
+    chybaPrirazeni
+      ? kam({ trat: String(prazdna.id), chyba: chybaPrirazeni })
+      : kam({ trat: String(prazdna.id), stav: "novaTrat" }),
   );
 }
 
