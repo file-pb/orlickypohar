@@ -72,6 +72,10 @@ public static class TratEndpoints
             .WithDescription("Jen rozhodčí ročníku. Důvod je povinný.");
 
         g.MapGet("/prvky", PrvkyAsync)
+            .WithDescription(
+                "Bez `trat` platí ta nejnovější; s ním právě ta vybraná. Cizí id "
+                + "vrátí prázdný seznam, ne jinou trať — regata jich má víc a tiché "
+                + "podstrčení jiné by si nikdo nevšiml.")
             .Produces<List<PrvekDto>>()
             .WithTags("Bóje")
             .WithSummary("Prvky trati v pořadí")
@@ -151,6 +155,17 @@ public static class TratEndpoints
                 + "žádná nová pípnutí. Výchozí stav klonu je `Hotovo`; `Prijato` smí "
                 + "zvolit jen rozhodčí.");
 
+        g.MapPost("/dalsi", DalsiAsync)
+            .Produces<TratDto>(StatusCodes.Status201Created)
+            .WithTags("Bóje")
+            .WithSummary("Založí další, prázdnou trať regaty")
+            .WithDescription(
+                "Organizátor regaty, nebo rozhodčí ročníku. Pro další rozjížďku, která "
+                + "se pojede jinudy — klon je od toho, když se jede stejně. Rozjížďka "
+                + "se nepřiřazuje: dá se postavit napřed trať, nebo napřed vyhlásit "
+                + "rozjížďku a stavět, zatímco lodě čekají. Opakované volání vrací "
+                + "tutéž prázdnou trať, ne další.");
+
         g.MapPost("/prestavba", PrestavbaAsync)
             .Produces<TratDto>()
             .WithTags("Bóje")
@@ -184,13 +199,14 @@ public static class TratEndpoints
 
     private static async Task<IResult> StavAsync(
         string serie, string zavod, ClaimsPrincipal kdo, Rozsahy rozsahy, TratSprava sprava,
-        CancellationToken ct)
+        CancellationToken ct, int? trat = null)
     {
         var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
         if (odpoved is not null) return odpoved;
 
         var stav = await sprava.StavAsync(
-            rozsah!.ZavodId!.Value, true, await JeRozhodciAsync(kdo, rozsahy, rozsah, ct), ct);
+            rozsah!.ZavodId!.Value, true, await JeRozhodciAsync(kdo, rozsahy, rozsah, ct), ct,
+            trat);
 
         return stav is null ? Results.NotFound() : Results.Ok(stav);
     }
@@ -225,6 +241,19 @@ public static class TratEndpoints
         if (odpoved is not null) return odpoved;
 
         return Odpoved(await sprava.VratAsync(rozsah!.ZavodId!.Value, vstup.Duvod, ct));
+    }
+
+    private static async Task<IResult> DalsiAsync(
+        string serie, string zavod, ClaimsPrincipal kdo, Rozsahy rozsahy, TratSprava sprava,
+        CancellationToken ct)
+    {
+        var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
+        if (odpoved is not null) return odpoved;
+
+        var trat = await sprava.DalsiAsync(
+            rozsah!.ZavodId!.Value, await JeRozhodciAsync(kdo, rozsahy, rozsah, ct), ct);
+
+        return Results.Created((string?)null, trat);
     }
 
     private static async Task<IResult> PrestavbaAsync(
@@ -327,12 +356,12 @@ public static class TratEndpoints
 
     private static async Task<IResult> PrvkyAsync(
         string serie, string zavod, ClaimsPrincipal kdo, Rozsahy rozsahy, PrvkySprava prvky,
-        CancellationToken ct)
+        CancellationToken ct, int? trat = null)
     {
         var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
         if (odpoved is not null) return odpoved;
 
-        return Results.Ok(await prvky.SeznamAsync(rozsah!.ZavodId!.Value, ct));
+        return Results.Ok(await prvky.SeznamAsync(rozsah!.ZavodId!.Value, ct, trat));
     }
 
     private static async Task<IResult> ZalozPrvekAsync(

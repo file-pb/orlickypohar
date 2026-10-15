@@ -23,7 +23,15 @@ namespace OrlickyPohar.Api.Features.Boje;
 /// </summary>
 public class TratSprava(AppDbContext db, TimeProvider cas)
 {
-    /// <summary>Trať, na které se zrovna pracuje. Nejnovější vyhrává.</summary>
+    /// <summary>
+    /// Trať, na které se zrovna pracuje. Nejnovější vyhrává.
+    /// <para>
+    /// <b>Je to dohad, ne volba</b> — a od 15. 10. 2026 jen záloha pro ni.
+    /// Regata má tratí víc (jednu na rozjížďku) a obrazovka si odteď říká,
+    /// kterou chce, přes <see cref="VybranaAsync"/>. Dohad zůstává pro
+    /// volání, která trať neřeší: pípnutí patří regatě, ne trati.
+    /// </para>
+    /// </summary>
     public Task<Trat?> AktualniAsync(int zavodId, CancellationToken ct) =>
         db.Trate
             .Include(t => t.Prijal)
@@ -32,13 +40,32 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
             .FirstOrDefaultAsync(ct);
 
     /// <summary>
+    /// Trať, kterou si obrazovka vybrala — nebo ta nejnovější, když si
+    /// nevybrala.
+    /// <para>
+    /// <b>Cizí trať se nevydá.</b> Kontroluje se, že vybrané id patří téhle
+    /// regatě; jinak by stačilo hádat čísla a číst tratě odjinud. Když id
+    /// nesedí, vrací se <c>null</c> — ne tiše nejnovější, protože obrazovka
+    /// by pak ukazovala jinou trať, než o kterou si řekla, a nikdo by si
+    /// toho nevšiml.
+    /// </para>
+    /// </summary>
+    public async Task<Trat?> VybranaAsync(int zavodId, int? tratId, CancellationToken ct) =>
+        tratId is null
+            ? await AktualniAsync(zavodId, ct)
+            : await db.Trate
+                .Include(t => t.Prijal)
+                .FirstOrDefaultAsync(t => t.Id == tratId && t.ZavodId == zavodId, ct);
+
+    /// <summary>
     /// Stav pro správu, nebo <c>null</c>, když regata trať ještě nemá.
     /// Příznaky „smí" počítá volající z role, tady jde jen o stav.
     /// </summary>
     public async Task<TratDto?> StavAsync(
-        int zavodId, bool jeStavitel, bool jeRozhodci, CancellationToken ct)
+        int zavodId, bool jeStavitel, bool jeRozhodci, CancellationToken ct,
+        int? tratId = null)
     {
-        var trat = await AktualniAsync(zavodId, ct);
+        var trat = await VybranaAsync(zavodId, tratId, ct);
         return trat is null ? null : await DtoAsync(trat, jeStavitel, jeRozhodci, ct);
     }
 
@@ -54,6 +81,43 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
         var nova = new Trat { ZavodId = zavodId, ZalozenaV = cas.GetUtcNow() };
         db.Trate.Add(nova);
         return nova;
+    }
+
+    /// <summary>
+    /// Založí <b>další prázdnou trať</b> vedle těch, co regata má.
+    /// <para>
+    /// <b>Proč to nestačilo doteď:</b> trať vznikala jen prvním pípnutím
+    /// (a to jen když žádná nebyla) nebo klonem. Postavit druhou, jinou
+    /// trať pro další rozjížďku tedy nešlo jinak než naklonovat tu minulou
+    /// a přestavět ji. Filip, 15. 10. 2026: *„nemáme možnost dělat do
+    /// regaty další tratě… na konci třeba plusko"*.
+    /// </para>
+    /// <para>
+    /// <b>Rozjížďka se nepřiřazuje.</b> Pořadí obou kroků je volné — dá se
+    /// napřed postavit trať a pak jí přiřadit rozjížďku, nebo vyhlásit
+    /// rozjížďku a stavět, zatímco lodě čekají na vodě (Filip tamtéž).
+    /// Svázat to hned by jednu z těch cest zavřelo.
+    /// </para>
+    /// <para>
+    /// <b>Prázdná trať bez rozjížďky se nezakládá dvakrát.</b> Kdo klikne
+    /// na plus dvakrát, dostane tutéž — jinak by regatě přibývaly prázdné
+    /// tratě, které nejdou nijak uklidit.
+    /// </para>
+    /// </summary>
+    public async Task<TratDto> DalsiAsync(int zavodId, bool jeRozhodci, CancellationToken ct)
+    {
+        var volna = await db.Trate
+            .Include(t => t.Prijal)
+            .Where(t => t.ZavodId == zavodId && t.RozjizdkaId == null)
+            .Where(t => !db.PrvkyTrati.Any(p => p.TratId == t.Id))
+            .OrderByDescending(t => t.Id)
+            .FirstOrDefaultAsync(ct);
+        if (volna is not null) return await DtoAsync(volna, true, jeRozhodci, ct);
+
+        var nova = new Trat { ZavodId = zavodId, ZalozenaV = cas.GetUtcNow() };
+        db.Trate.Add(nova);
+        await db.SaveChangesAsync(ct);
+        return await DtoAsync(nova, true, jeRozhodci, ct);
     }
 
     /// <summary>
