@@ -624,4 +624,79 @@ public class TratSpravaTests(PostgresFixture fixture)
         Assert.Null((await trate.ZahodAsync(zavod.Id, zdroj.Id, true, default)).Chyba);
         Assert.Empty(await trate.SeznamAsync(zavod.Id, default));
     }
+
+    /// <summary>
+    /// Vybraná trať se vydá i tehdy, když není nejnovější. Bez toho by
+    /// taby rozjížděk ukazovaly pořád tutéž trať.
+    /// </summary>
+    [Fact]
+    public async Task Vybrana_trat_se_vyda_i_kdyz_neni_nejnovejsi()
+    {
+        var (db, _, trat) = Sluzby();
+        var (zavod, _) = await RegataAsync(db);
+
+        var starsi = await trat.DalsiAsync(zavod.Id, false, default);
+        var novejsi = await trat.DalsiAsync(zavod.Id, false, default);
+
+        // Druhá musí doopravdy vzniknout, jinak test neměří nic.
+        Assert.NotEqual(starsi.Id, novejsi.Id);
+
+        var vybrana = await trat.VybranaAsync(zavod.Id, starsi.Id, default);
+        Assert.Equal(starsi.Id, vybrana!.Id);
+    }
+
+    /// <summary>
+    /// Trať cizí regaty se nevydá. Id je číslo, které jde uhodnout — bez
+    /// téhle kontroly by stačilo zkoušet, a obrazovka by cizí trať ukázala
+    /// jako vlastní.
+    /// </summary>
+    [Fact]
+    public async Task Trat_jine_regaty_se_nevyda()
+    {
+        var (db, _, trat) = Sluzby();
+        var (nase, _) = await RegataAsync(db);
+        var (cizi, _) = await RegataAsync(db);
+
+        var ciziTrat = await trat.DalsiAsync(cizi.Id, false, default);
+
+        Assert.Null(await trat.VybranaAsync(nase.Id, ciziTrat.Id, default));
+    }
+
+    /// <summary>
+    /// Plus zmáčknuté dvakrát nevyrobí dvě prázdné tratě — ty by v tabech
+    /// zůstaly navždy a uklidit by se nedaly.
+    /// </summary>
+    [Fact]
+    public async Task Dalsi_trat_se_nezaklada_dvakrat_naprazdno()
+    {
+        var (db, _, trat) = Sluzby();
+        var (zavod, _) = await RegataAsync(db);
+
+        var prvni = await trat.DalsiAsync(zavod.Id, false, default);
+        var druha = await trat.DalsiAsync(zavod.Id, false, default);
+
+        Assert.Equal(prvni.Id, druha.Id);
+        Assert.Equal(1, await db.Trate.CountAsync(t => t.ZavodId == zavod.Id));
+    }
+
+    /// <summary>
+    /// Jakmile prázdná trať dostane rozjížďku, plus založí další —
+    /// to je ten případ, kdy se staví druhá trať pro druhou rozjížďku.
+    /// </summary>
+    [Fact]
+    public async Task Po_prirazeni_rozjizdky_zalozi_plus_dalsi_trat()
+    {
+        var (db, _, trat) = Sluzby();
+        var (zavod, _) = await RegataAsync(db);
+        var rozjizdka = await RozjizdkaAsync(db, zavod, 1);
+
+        var prvni = await trat.DalsiAsync(zavod.Id, false, default);
+        var ulozena = await db.Trate.FirstAsync(t => t.Id == prvni.Id);
+        ulozena.RozjizdkaId = rozjizdka.Id;
+        await db.SaveChangesAsync();
+
+        var druha = await trat.DalsiAsync(zavod.Id, false, default);
+
+        Assert.NotEqual(prvni.Id, druha.Id);
+    }
 }
