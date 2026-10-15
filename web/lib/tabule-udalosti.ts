@@ -35,27 +35,35 @@ export function udalosti(stary: Snimek | null, novy: Snimek): Udalost[] {
 
   const ven: Udalost[] = [];
 
-  // Trať. <b>Schválení je na tabuli zpráva</b> (Filip, 15. 10. 2026):
-  // znamená, že se pojede podle toho, co je ve vodě, a lodě můžou na start.
-  // Přestavba je zpráva opačná a stejně důležitá — lodě čekají a bez téhle
-  // věty nikdo neví proč. Má vlastní druh, protože obrazovka skládá třídu
-  // jen z druhu a červená „čeká se" se nesmí splést se zelenou „jede se".
-  if (stary.trat?.prijatoV !== novy.trat?.prijatoV && novy.trat?.prijatoV)
+  // Trať. <b>Nehlásí se změna razítka, ale přechod „nejede se → jede se"</b>
+  // (Filip, 15. 10. 2026: *„alerty, typicky schválení trati… čeká se,
+  // schváleno"*). Veřejný endpoint vydává trať, která je na řadě, takže po
+  // dojezdu rozjížďky se razítko změní samo — a kdyby alert visel na
+  // razítku, tabule by vyhlásila „schváleno" ve chvíli, kdy rozhodčí nic
+  // neudělal, jen se posunula rozjížďka.
+  const jedeSe = (t: Snimek["trat"]) => !!t?.prijatoV && !t.prestavba;
+
+  if (!jedeSe(stary.trat) && jedeSe(novy.trat) && novy.trat)
     ven.push({
-      klic: `trat-prijata-${novy.trat.prijatoV}`,
+      klic: `trat-jede-${novy.trat.prijatoV}`,
       druh: "trat",
       titulek: "Trať schválena",
       detail: novy.trat.cisloRozjizdky
         ? `${novy.trat.cisloRozjizdky}. rozjížďka`
-        : "rozhodčí ji přijal",
+        : "jede se podle ní",
     });
 
-  if (!stary.trat?.prestavba && novy.trat?.prestavba)
+  // Opačná zpráva, stejně důležitá: lodě čekají a bez téhle věty nikdo
+  // neví proč. Vlastní druh, protože obrazovka skládá třídu jen z druhu
+  // a červená „čeká se" se nesmí splést se zelenou „jede se".
+  if (jedeSe(stary.trat) && !jedeSe(novy.trat) && novy.trat)
     ven.push({
-      klic: "trat-prestavba",
+      klic: `trat-ceka-${novy.trat.cisloRozjizdky ?? "x"}`,
       druh: "ceka",
-      titulek: "Trať se přestavuje",
-      detail: "čeká se na novou",
+      titulek: novy.trat.prestavba ? "Trať se přestavuje" : "Čeká se na trať",
+      detail: novy.trat.cisloRozjizdky
+        ? `před ${novy.trat.cisloRozjizdky}. rozjížďkou`
+        : "rozhodčí ji ještě nepřijal",
     });
 
   // Stav celé regaty. Nejsilnější zpráva, proto první.
