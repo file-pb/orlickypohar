@@ -3962,7 +3962,9 @@ export interface paths {
          */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    trat?: number;
+                };
                 header?: never;
                 path: {
                     serie: string;
@@ -4134,7 +4136,9 @@ export interface paths {
          */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    trat?: number;
+                };
                 header?: never;
                 path: {
                     serie: string;
@@ -4513,6 +4517,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/trat/dalsi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Založí další, prázdnou trať regaty
+         * @description Organizátor regaty, nebo rozhodčí ročníku. Pro další rozjížďku, která se pojede jinudy — klon je od toho, když se jede stejně. Rozjížďka se nepřiřazuje: dá se postavit napřed trať, nebo napřed vyhlásit rozjížďku a stavět, zatímco lodě čekají. Opakované volání vrací tutéž prázdnou trať, ne další.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TratDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/trat/{trat}/zkraceni": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rozhodčí zkrátí trať — cíl je od teď u zadaného prvku
+         * @description Jen rozhodčí ročníku a jen u rozjížďky, která se jede. Jde to i na přijaté trati: ve vodě se nic nemění, jen se část přestane plout. Pořadí se počítá normálně.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    trat: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ZkraceniVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /**
+         * Rozhodčí zkrácení zruší — jede se zase celá trať
+         * @description Jen rozhodčí ročníku a jen dokud se rozjížďka jede.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    trat: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/zastavky/{zavod}/trat/prestavba": {
         parameters: {
             query?: never;
@@ -4713,6 +4829,8 @@ export interface components {
             cas: string;
             /** Format: double */
             hladina: number;
+            /** Format: double */
+            objem?: null | number;
         };
         BodyVRozjizdceDto: {
             /** Format: int32 */
@@ -5330,6 +5448,14 @@ export interface components {
             /** Format: date-time */
             do: string;
             body: components["schemas"]["BodHladinyDto"][];
+            /** Format: double */
+            pritok: null | number;
+            /** Format: double */
+            odtok: null | number;
+            /** Format: double */
+            zmenaObjemu: null | number;
+            /** Format: int32 */
+            zmenaHladinyCm: null | number;
         };
         /** @enum {unknown} */
         Role: "Ctenar" | "Editor" | "Rozhodci" | "Spravce" | "Organizator";
@@ -5539,6 +5665,13 @@ export interface components {
             smiHlasitHotovo: boolean;
             smiPrijmout: boolean;
             smiPrestavet: boolean;
+            /** Format: int32 */
+            zkracenoUPrvkuId?: null | number;
+            /** Format: date-time */
+            zkracenoV?: null | string;
+            zkratil?: null | string;
+            /** @default false */
+            smiZkratit: boolean;
         };
         TratNaVyberDto: {
             /** Format: int32 */
@@ -5648,6 +5781,10 @@ export interface components {
             cisloRozjizdky: null | number;
             boje: components["schemas"]["VerejnaBojeDto"][];
             prvky: components["schemas"]["VerejnyPrvekDto"][];
+            /** Format: int32 */
+            zkracenoUPrvkuId?: null | number;
+            /** Format: date-time */
+            zkracenoV?: null | string;
         };
         VerejnyKonecDto: {
             nazev: string;
@@ -5658,6 +5795,7 @@ export interface components {
             barva?: null | components["schemas"]["BarvaBoje"];
             tvar?: null | components["schemas"]["TvarBoje"];
             znaceni?: null | components["schemas"]["DruhZnaceni"];
+            fotky?: null | components["schemas"]["ObrazekDto"][];
         };
         VerejnyPrvekDto: {
             typ: components["schemas"]["TypPrvku"];
@@ -5973,6 +6111,10 @@ export interface components {
          * @enum {unknown}
          */
         ZdrojPolohy: "Telefon" | "Mapa" | "Qr";
+        ZkraceniVstup: {
+            /** Format: int32 */
+            prvek: number;
+        };
         ZmenaRoleDto: {
             kdo: string;
             predchozi: null | components["schemas"]["RoleKLodi"];

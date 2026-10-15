@@ -308,6 +308,9 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
             prvky={prvky}
             boje={trat}
             zamceno={stavTrati.trat?.stav === "Prijato"}
+            tratId={stavTrati.trat?.id}
+            smiZkratit={stavTrati.trat?.smiZkratit ?? false}
+            zkraceniU={stavTrati.trat?.zkracenoUPrvkuId ?? null}
             otevrit={otevreny}
           />
 
