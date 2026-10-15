@@ -1,5 +1,6 @@
 import { NAZVY_STAVU, type TratNaVyber } from "@/lib/trat";
 import { klonujTratAkce, priradTratAkce } from "./akce";
+import { StejnaTrat } from "@/app/sprava/stejna-trat";
 
 /**
  * Komu trať patří a jak se vezme ta z minula.
@@ -56,6 +57,8 @@ export function VyberTrati({
                   : `${t.pocetPrvku} prvků`}
             </span>
 
+            <StejnaTrat serie={serie} zavod={zavod} cisla={shodneSTrati(t, trate)} />
+
             {t.jdePriradit ? (
               <form action={priradTratAkce} className="formular radkove">
                 <input type="hidden" name="serie" value={serie} />
@@ -104,4 +107,19 @@ export function VyberTrati({
       </p>
     </section>
   );
+}
+
+/**
+ * Čísla rozjížděk, které jedou totéž co tahle trať.
+ *
+ * <b>Trať bez prvků se nepáruje</b>: otisk je u ní `null`, protože prázdno
+ * není předpis — dvě prázdné tratě spolu nemají nic společného.
+ */
+function shodneSTrati(trat: TratNaVyber, trate: TratNaVyber[]): number[] {
+  if (!trat.otisk) return [];
+
+  return trate
+    .filter((t) => t.id !== trat.id && t.otisk === trat.otisk && t.cisloRozjizdky !== null)
+    .map((t) => t.cisloRozjizdky!)
+    .sort((a, b) => a - b);
 }
