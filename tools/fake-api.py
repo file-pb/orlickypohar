@@ -1112,6 +1112,24 @@ def proc_nejde_hotovo(stav):
     return "Trať je přijatá a zamčená. Na úpravu ji nejdřív odemkni přestavbou."
 
 
+def proc_nejde_hotovo_kvuli_znackam(chybejici):
+    """
+    Hotovo nejde nahlásit, dokud prvek stojí na sebrané značce — opsané
+    z `Stavba.ProcNejdeHotovoKvuliZnackam`. Založit takový prvek nejde,
+    ale bóje se dá sebrat až potom.
+    """
+    if not chybejici:
+        return None
+    vypis = ", ".join(f"{poradi}. ({znacka})" for poradi, znacka in chybejici)
+    if len(chybejici) == 1:
+        return (f"Prvek {vypis} stojí na značce, která je sebraná z vody. "
+                "Pípni ji znovu, nebo prvek smaž — jinak by trať vedla "
+                "k bóji, která tam není.")
+    return (f"Tyhle prvky stojí na značkách sebraných z vody: {vypis}. "
+            "Pípni je znovu, nebo prvky smaž — jinak by trať vedla k bójím, "
+            "které tam nejsou.")
+
+
 def proc_nejde_prijmout(stav):
     if stav == "Hotovo":
         return None
@@ -2631,6 +2649,20 @@ class H(BaseHTTPRequestHandler):
             return None
         if (chyba := proc_nejde_hotovo(t["stav"])):
             return self.chyba(400, chyba)
+
+        # Prvky, kterým některý konec leží na sebrané značce. Přenastavení
+        # se nehlídá: to prvky přepojuje samo.
+        podle_id = {b["id"]: b for b in BOJE.get(slug, [])}
+        chybejici = []
+        for p in sorted(PRVKY.get(t["id"], []), key=lambda x: (x["poradi"], x["id"])):
+            for konec in ("bojeAId", "bojeBId"):
+                b = podle_id.get(p.get(konec))
+                if b and b.get("sebranaV"):
+                    chybejici.append((p["poradi"], b["nazev"]))
+                    break
+        if (chyba := proc_nejde_hotovo_kvuli_znackam(chybejici)):
+            return self.chyba(400, chyba)
+
         t["stav"], t["duvodVraceni"] = "Hotovo", None
         return self.odpoved(trat_dto(slug, t))
 
