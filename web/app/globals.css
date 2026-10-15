@@ -2556,6 +2556,61 @@ body:has(.tabule) { overflow: hidden; }
 }
 .tabule .odchod:hover { opacity: 1; }
 .tabule .odchod svg { width: 100%; height: 100%; }
+/* Alert doprostřed televize: vyjede, chvíli visí a usadí se k tomu, čeho
+   se týká (Filip, 15. 10. 2026). Je to to jediné, co se na pasivním panelu
+   hýbe, takže si to může dovolit být velké.
+
+   Usazení je součást téže animace — karta na konci couvne k místu, kam
+   informace patří: dojezd a konec rozjížďky dolů k výsledkům, start a stav
+   závodu nahoru k hlavičce. */
+.tabule-alert {
+  position: absolute; left: 50%; top: 50%; z-index: 5;
+  display: flex; flex-direction: column; align-items: center; gap: 0.6vw;
+  padding: 2.2vw 3.5vw; border-radius: 1vw;
+  background: var(--papir); border: 2px solid var(--voda);
+  box-shadow: 0 1vw 4vw rgb(0 0 0 / 0.45);
+  text-align: center; pointer-events: none;
+  animation: tabule-alert 4.5s ease-in-out forwards;
+}
+.tabule-alert b { font-size: 4.5vw; line-height: 1; }
+.tabule-alert span { font-size: 1.6vw; color: var(--tlumeny); }
+/* Dojezd je ta nejsilnější zpráva, proto vodní modrá; konec rozjížďky
+   a závodu zeleně jako „vypsáno" jinde na webu. */
+.tabule-alert.dojezd { border-color: var(--voda); }
+.tabule-alert.start { border-color: var(--stav-vypsany); }
+.tabule-alert.dokonceno, .tabule-alert.zavod { border-color: var(--stav-vypsany); }
+
+@keyframes tabule-alert {
+  /* Nálet: zvětší se zpoza středu. */
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+  8% { transform: translate(-50%, -50%) scale(1.04); opacity: 1; }
+  12% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  /* Drží dost dlouho na přečtení přes místnost. */
+  78% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  /* Usazení: zmenší se a odjede dolů k výsledkům. */
+  100% { transform: translate(-50%, 55vh) scale(0.25); opacity: 0; }
+}
+/* Kdo si vypnul animace, dostane alert bez pohybu — ale pořád ho dostane. */
+@media (prefers-reduced-motion: reduce) {
+  .tabule-alert { animation: tabule-alert-klid 4.5s steps(1) forwards; }
+  @keyframes tabule-alert-klid {
+    0% { transform: translate(-50%, -50%); opacity: 0; }
+    5% { transform: translate(-50%, -50%); opacity: 1; }
+    95% { transform: translate(-50%, -50%); opacity: 1; }
+    100% { transform: translate(-50%, -50%); opacity: 0; }
+  }
+}
+/* Start a stav závodu se usazují nahoru, k hlavičce panelu. */
+.tabule-alert.start, .tabule-alert.zavod { animation-name: tabule-alert-nahoru; }
+@keyframes tabule-alert-nahoru {
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+  8% { transform: translate(-50%, -50%) scale(1.04); opacity: 1; }
+  12% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  78% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -45vh) scale(0.25); opacity: 0; }
+}
+
+.tabule { padding: 1.5vw 2vw; }
 .tabule header { display: flex; align-items: baseline; gap: 1.2vw; flex-wrap: wrap; }
 .tabule h1 { font-size: 3.2vw; margin: 0; }
 .tabule h2 { font-size: 1.7vw; margin: 0 0 0.6vw; }

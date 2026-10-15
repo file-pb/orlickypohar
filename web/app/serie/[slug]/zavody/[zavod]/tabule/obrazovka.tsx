@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Snimek } from "@/lib/tabule";
 import { Logo } from "@/app/logo";
+import { udalosti, type Udalost } from "@/lib/tabule-udalosti";
 
 /**
  * Tabule, která se obnovuje sama a přežije výpadek.
@@ -30,6 +31,12 @@ export function Obrazovka({
 }) {
   const [snimek, setSnimek] = useState(prvni);
   const [ted, setTed] = useState(() => Date.now());
+  /**
+   * Fronta alertů doprostřed obrazovky. <b>Fronta, ne jeden</b>: v cíli
+   * dojede několik lodí během jednoho obnovení, a překrýt je navzájem by
+   * znamenalo, že se dvě z nich na televizi vůbec neobjeví.
+   */
+  const [fronta, setFronta] = useState<Udalost[]>([]);
 
   useEffect(() => {
     const adresa = `/serie/${encodeURIComponent(serie)}/zavody/${encodeURIComponent(zavod)}/tabule/data`;
@@ -37,7 +44,16 @@ export function Obrazovka({
     const nacti = async () => {
       try {
         const odpoved = await fetch(adresa, { cache: "no-store" });
-        if (odpoved.ok) setSnimek((await odpoved.json()) as Snimek);
+        if (odpoved.ok) {
+          const novy = (await odpoved.json()) as Snimek;
+          setSnimek((stary) => {
+            // Alerty se počítají proti snímku, který právě visí na
+            // obrazovce — ne proti tomu, co bylo při načtení stránky.
+            const nove = udalosti(stary, novy);
+            if (nove.length > 0) setFronta((f) => [...f, ...nove]);
+            return novy;
+          });
+        }
         // Neúspěch se schválně nikam nepíše: tabule drží, co má.
       } catch {
         // Totéž u spadlé sítě.
@@ -66,6 +82,8 @@ export function Obrazovka({
       <Link className="odchod" href="/" aria-label="Zpět na Orlický pohár">
         <Logo />
       </Link>
+
+      <Alert udalost={fronta[0]} hotovo={() => setFronta((f) => f.slice(1))} />
       <header>
         <h1>{snimek.nazev}</h1>
         <p className={`stitek stav-${snimek.stav.toLowerCase()}`}>{STAVY[snimek.stav]}</p>
@@ -159,3 +177,38 @@ const STAVY_ROZJIZDEK: Record<Snimek["rozjizdky"][number]["stav"], string> = {
   Dokoncena: "dojeto",
   Zrusena: "zrušena",
 };
+
+/** Jak dlouho alert visí, než se usadí. Dost na přečtení přes místnost. */
+const ALERT_MS = 4500;
+
+/**
+ * Alert doprostřed obrazovky (Filip, 15. 10. 2026: *„ideálně vyanimovat
+ * modal na střed a pak tu informaci vrátit na její místečko v prvku"*).
+ *
+ * <b>Usazení dělá animace, ne přesun v DOM.</b> Karta se na konci zmenší
+ * a odjede k místu, kam informace patří. Opravdu ji tam přenést by
+ * znamenalo měřit polohu cíle a dopočítávat dráhu — na televizi, která se
+ * nehýbe, je to práce navíc za výsledek, který nikdo nerozezná.
+ *
+ * <b>Bez tlačítka na zavření.</b> Panel je pasivní: alert zmizí sám
+ * a další z fronty nastoupí po něm.
+ */
+function Alert({ udalost, hotovo }: { udalost?: Udalost; hotovo: () => void }) {
+  useEffect(() => {
+    if (!udalost) return;
+    const casovac = setTimeout(hotovo, ALERT_MS);
+    return () => clearTimeout(casovac);
+    // Časovač má běžet od chvíle, kdy se objevila tahle událost, takže
+    // závisí jen na jejím klíči — `hotovo` se mezi vykresleními mění.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [udalost?.klic]);
+
+  if (!udalost) return null;
+
+  return (
+    <div className={`tabule-alert ${udalost.druh}`} role="status" key={udalost.klic}>
+      <b>{udalost.titulek}</b>
+      {udalost.detail && <span>{udalost.detail}</span>}
+    </div>
+  );
+}
