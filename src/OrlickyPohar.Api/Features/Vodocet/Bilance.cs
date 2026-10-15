@@ -198,18 +198,34 @@ public static class Bilance
     }
 
     /// <summary>
-    /// O kolik centimetrů se za okno změnila hladina. Z prvního a posledního
-    /// měření v něm — hladinu má každý řádek, takže tohle vyjde i tam, kde
-    /// se průtoky spočítat nedají.
+    /// O kolik centimetrů se za okno změnila hladina. Hladinu má každý
+    /// řádek, takže tohle vyjde i tam, kde se průtoky spočítat nedají.
+    /// <para>
+    /// <b>Měří se od hrany okna, ne od prvního měření v něm</b> — stejně
+    /// jako změna objemu. Napsané naopak to dávalo dvě čísla, která si
+    /// protiřečila: za tři dny vycházelo −8 cm a k tomu změna objemu
+    /// −1,66 mil. m³, zatímco osmi centimetrům odpovídá −1,9 (plocha
+    /// nádrže vyjde z naměřených 24 h na 23,7 km²). Rozdíl dělalo to, že
+    /// hladina začínala až u prvního bodu uvnitř okna, kdežto objem
+    /// u bodu nejbližšího jeho hraně — a v řídké historii je mezi nimi
+    /// klidně půl dne.
+    /// </para>
     /// </summary>
     public static int? ZmenaHladinyCm(
         IEnumerable<MereniNadrze> mereni, DateTimeOffset konec, TimeSpan okno)
     {
-        var vOkne = mereni.Where(m => m.Cas >= konec - okno && m.Cas <= konec).ToList();
-        if (vOkne.Count < 2) return null;
+        var tolerance = Tolerance(okno);
+        var s = mereni.Where(m => m.Cas <= konec).ToList();
+        if (s.Count < 2) return null;
 
-        var prvni = vOkne.MinBy(m => m.Cas)!;
-        var posledni = vOkne.MaxBy(m => m.Cas)!;
+        var posledni = s.MaxBy(m => m.Cas)!;
+        if (posledni.Cas < konec - tolerance) return null;
+
+        var zacatek = posledni.Cas - okno;
+        var prvni = s.MinBy(m => (m.Cas - zacatek).Duration())!;
+        if ((prvni.Cas - zacatek).Duration() > tolerance) return null;
+        if (prvni.Cas == posledni.Cas) return null;
+
         return (int)Math.Round((posledni.Hladina - prvni.Hladina) * 100);
     }
 }
