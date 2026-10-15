@@ -1540,6 +1540,32 @@ th.vlevo, td.vlevo { text-align: left; }
 }
 .vodocet-jednotka { font-size: 0.75rem; color: var(--tlumeny); }
 .vodocet-zmena { margin: 0.25rem 0 0.5rem; font-size: 0.8rem; color: var(--tlumeny); }
+/* Přepínač rozsahu nad grafem. <b>Malá tlačítka v řádku</b> (Filip,
+   15. 10. 2026) — je jich až sedm a widget má v boku kolem tří set pixelů,
+   takže se musí vejít na jeden řádek i s diakritikou. */
+.vodocet-rozsahy {
+  display: flex; gap: 0.2rem; margin: 0 0 0.35rem; flex-wrap: wrap;
+}
+.vodocet-rozsahy button {
+  flex: 1 1 auto; min-width: 2.1rem; padding: 0.1rem 0.25rem;
+  font-size: 0.7rem; font-variant-numeric: tabular-nums;
+  background: transparent; color: var(--tlumeny);
+  border: 1px solid var(--linka); border-radius: 999px; cursor: pointer;
+}
+.vodocet-rozsahy button:hover { color: var(--voda); border-color: var(--voda); }
+/* Vybraný nese barvu vody jako zbytek widgetu, ne výplň: plná pilulka by
+   v boku přetáhla pozornost z hladiny, kvůli které tu widget je. */
+.vodocet-rozsahy button.vybrany {
+  color: var(--voda); border-color: var(--voda); font-weight: 600;
+}
+/* Během načítání křivka zešedne, ale nezmizí — skok na prázdno a zpátky
+   je nepříjemnější než chvíle staré křivky. */
+.vodocet-graf.nacita { opacity: 0.45; }
+/* Místo grafu, dokud řada nedorazí: drží výšku, ať obsah pod ním
+   nepodskakuje. */
+.vodocet-graf-misto { height: 56px; }
+.vodocet-chyba { font-size: 0.78rem; color: var(--tlumeny); margin: 0.2rem 0 0; }
+
 .vodocet-graf { display: block; width: 100%; height: 3.5rem; }
 .vodocet-graf .plocha { fill: color-mix(in srgb, var(--voda) 16%, transparent); }
 .vodocet-graf .cara {

@@ -39,16 +39,24 @@ public static class RozsahyGrafu
         Vsechny.FirstOrDefault(r => r.Klic == klic) is { Klic: not null } n ? n.Delka : null;
 
     /// <summary>
-    /// Které rozsahy mají čím být vyplněné. <b>Stačí osmina</b>: kdo má
-    /// data za pět dnů, uvidí na týdenním grafu užitečnou křivku, jen
-    /// kratší. Celý rozsah by znamenal, že týden naskočí přesně sedmý den
-    /// a do té doby je volba zbytečně schovaná.
+    /// Které rozsahy mají čím být vyplněné. <b>Musí být aspoň z půlky</b>.
+    /// <para>
+    /// Napřed tu stála osmina, a na ostrých datech se ukázalo, proč je to
+    /// málo: při necelém týdnu historie se nabízel „1 měsíc", takže graf
+    /// hlásil měsíc a ukázal pár dnů. Přesně to Filip nechtěl (15. 10.
+    /// 2026: *„pokud nemáme historická data, abychom umožnili takový graf
+    /// zobrazit, tak ho zatím nenabízej"*).
+    /// </para>
+    /// <para>
+    /// Půlka je kompromis: čekat na celý rozsah by znamenalo, že týdenní
+    /// graf naskočí přesně sedmý den, i když šestý už nese skoro totéž.
+    /// </para>
     /// </summary>
     public static IReadOnlyList<string> Dostupne(DateTimeOffset? nejstarsi, DateTimeOffset nyni)
     {
         if (nejstarsi is null) return [];
         var mame = nyni - nejstarsi.Value;
-        return [.. Vsechny.Where(r => mame >= r.Delka / 8).Select(r => r.Klic)];
+        return [.. Vsechny.Where(r => mame >= r.Delka / 2).Select(r => r.Klic)];
     }
 
     /// <summary>
