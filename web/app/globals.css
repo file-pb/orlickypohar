@@ -2586,17 +2586,54 @@ body:has(.tabule) { overflow: hidden; }
    Usazení je součást téže animace — karta na konci couvne k místu, kam
    informace patří: dojezd a konec rozjížďky dolů k výsledkům, start a stav
    závodu nahoru k hlavičce. */
+/* Clona ztmaví panel pod kartou a zase zmizí. Kratší než karta: v půlce
+   jejího života už se dá číst i to, co je pod ní. */
+.tabule-clona {
+  position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background: rgb(0 0 0 / 0.55);
+  animation: tabule-clona 4.5s ease-in-out forwards;
+}
+@keyframes tabule-clona {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tabule-clona { animation: none; opacity: 0.45; }
+}
+
 .tabule-alert {
   position: absolute; left: 50%; top: 50%; z-index: 5;
-  display: flex; flex-direction: column; align-items: center; gap: 0.6vw;
-  padding: 2.2vw 3.5vw; border-radius: 1vw;
+  display: flex; flex-direction: column; align-items: center; gap: 0.5vw;
+  /* Nahoře víc místa na barevný pruh, který kartu drží pohromadě. */
+  padding: 2.4vw 4vw 2.2vw; border-radius: 1.2vw;
   background: var(--papir); border: 2px solid var(--voda);
-  box-shadow: 0 1vw 4vw rgb(0 0 0 / 0.45);
-  text-align: center; pointer-events: none;
+  box-shadow: 0 1.5vw 5vw rgb(0 0 0 / 0.6), 0 0 0 0.6vw rgb(255 255 255 / 0.04);
+  text-align: center; pointer-events: none; overflow: hidden;
   animation: tabule-alert 4.5s ease-in-out forwards;
 }
-.tabule-alert b { font-size: 4.5vw; line-height: 1; }
-.tabule-alert span { font-size: 1.6vw; color: var(--tlumeny); }
+/* Pruh v barvě druhu přes celou šířku karty. Dědí barvu z rámečku,
+   takže nová barva stačí nastavit na jednom místě. */
+.tabule-alert::before {
+  content: ""; position: absolute; inset: 0 0 auto; height: 0.5vw;
+  background: currentColor; color: inherit;
+  border-color: inherit; background-color: currentColor;
+}
+.tabule-alert { color: var(--voda); }
+.tabule-alert.start, .tabule-alert.trat, .tabule-alert.dokonceno,
+.tabule-alert.zavod { color: var(--stav-vypsany); }
+.tabule-alert.ceka, .tabule-alert.zrusena { color: var(--stav-zruseny); }
+.tabule-alert .druh {
+  font-style: normal; font-size: 1vw; letter-spacing: 0.18em;
+  text-transform: uppercase; color: currentColor; font-weight: 700;
+}
+.tabule-alert b { font-size: 4.5vw; line-height: 1; color: var(--text); }
+.tabule-alert span {
+  font-size: 1.5vw; color: var(--tlumeny);
+  border: 1px solid var(--linka, #2a2a2a); border-radius: 2vw;
+  padding: 0.15vw 1vw;
+}
 /* Dojezd je ta nejsilnější zpráva, proto vodní modrá; konec rozjížďky
    a závodu zeleně jako „vypsáno" jinde na webu. */
 .tabule-alert.dojezd { border-color: var(--voda); }
@@ -2605,7 +2642,8 @@ body:has(.tabule) { overflow: hidden; }
 /* Trať: schválení je povolení vyjet, přestavba je „počkej". Obojí nese
    tentýž druh, barvu rozlišuje až stav — zeleně se jede, červeně se stojí. */
 .tabule-alert.trat { border-color: var(--stav-vypsany); }
-.tabule-alert.ceka { border-color: var(--stav-zruseny); }
+.tabule-alert.ceka, .tabule-alert.zrusena { border-color: var(--stav-zruseny); }
+.tabule-alert.lod { border-color: var(--voda); }
 
 @keyframes tabule-alert {
   /* Nálet: zvětší se zpoza středu. */
@@ -2627,8 +2665,33 @@ body:has(.tabule) { overflow: hidden; }
     100% { transform: translate(-50%, -50%); opacity: 0; }
   }
 }
-/* Start a stav závodu se usazují nahoru, k hlavičce panelu. */
-.tabule-alert.start, .tabule-alert.zavod { animation-name: tabule-alert-nahoru; }
+/* <b>Každá zpráva dosedá tam, kam patří</b> (Filip, 15. 10. 2026:
+   *„pak po pár sekundách najetí do toho svého chlívečku, to tomu dá tu
+   dynamiku"*). Divák tak nejen přečte, co se stalo, ale uvidí i kde si
+   to má příště najít. Směry odpovídají rozvržení: vlevo rozjížďky
+   a lodě, uprostřed pořadí, vpravo semafor, mapka a dojezdy.
+
+   Je to animace, ne přesun v DOM — doopravdy kartu přenést by znamenalo
+   měřit polohu cíle a dopočítávat dráhu za výsledek, který na televizi
+   nikdo nerozezná. */
+.tabule-alert.start, .tabule-alert.trat, .tabule-alert.ceka {
+  animation-name: tabule-alert-vpravo-nahoru;
+}
+.tabule-alert.dokonceno, .tabule-alert.zrusena, .tabule-alert.lod {
+  animation-name: tabule-alert-vlevo;
+}
+.tabule-alert.zavod { animation-name: tabule-alert-nahoru; }
+/* Dojezd končí v pořadí (Filip, 15. 10. 2026: *„loď dojede, tak se
+   zobrazí a zajede do pořadí"*) — tedy doprostřed dolů, výchozí
+   animace. Tam ta informace zůstane; widget „právě dojeli" ji jen
+   chvíli drží navíc. */
+@keyframes tabule-alert-vpravo-nahoru {
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+  8% { transform: translate(-50%, -50%) scale(1.04); opacity: 1; }
+  12% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  78% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(32vw, -12vh) scale(0.2); opacity: 0; }
+}
 @keyframes tabule-alert-nahoru {
   0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
   8% { transform: translate(-50%, -50%) scale(1.04); opacity: 1; }
@@ -2636,11 +2699,103 @@ body:has(.tabule) { overflow: hidden; }
   78% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
   100% { transform: translate(-50%, -45vh) scale(0.25); opacity: 0; }
 }
+@keyframes tabule-alert-vlevo {
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+  8% { transform: translate(-50%, -50%) scale(1.04); opacity: 1; }
+  12% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  78% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-38vw, 5vh) scale(0.2); opacity: 0; }
+}
 
 .tabule { padding: 1.5vw 2vw; }
 .tabule h2 { font-size: 1.7vw; margin: 0 0 0.6vw; }
 .tabule .stari { font-size: 1.1vw; color: var(--tlumeny); }
 .tabule .stari.zastarale { color: var(--stav-zruseny); }
+/* Pás atributů: velká čísla, malé popisky. Vejde se, co se vejde —
+   dlaždice se zalomí, protože počet atributů závisí na závodě. */
+.tabule .atributy {
+  display: flex; flex-wrap: wrap; gap: 0.8vw; margin-bottom: 1.2vw;
+}
+.tabule .dlazdice {
+  flex: 1 1 8vw; min-width: 8vw;
+  background: var(--panel, #1a1a1a); border-radius: 0.6vw;
+  padding: 0.7vw 0.9vw; display: flex; flex-direction: column; gap: 0.1vw;
+}
+.tabule .dlazdice b { font-size: 2.1vw; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tabule .dlazdice span { font-size: 0.95vw; color: var(--tlumeny); }
+.tabule .dlazdice i { font-size: 0.85vw; color: var(--tlumeny); font-style: normal; opacity: 0.75; }
+
+/* Karusel tříd. Tečky jen ukazují, kolik panelů se střídá — klepnout na
+   ně nejde, na televizi není čím. */
+.tabule .karusel h2 { display: flex; align-items: center; gap: 0.6vw; }
+.tabule .karusel h2 svg { height: 2.2vw; width: auto; flex: none; }
+.tabule .karusel .tecky { margin-left: auto; display: flex; gap: 0.35vw; }
+.tabule .karusel .tecky i {
+  width: 0.5vw; height: 0.5vw; border-radius: 50%;
+  background: var(--tlumeny); opacity: 0.35;
+}
+.tabule .karusel .tecky i.ted { opacity: 1; background: var(--logo-napis, currentColor); }
+/* Panel při přepnutí najede — jediná věc kromě alertu, která se na
+   pasivní tabuli hýbe, takže si smí vzít pozornost na půl vteřiny. */
+.tabule .karusel .poradi { animation: karusel-panel 0.45s ease-out; }
+@keyframes karusel-panel {
+  from { opacity: 0; transform: translateY(0.8vw); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tabule .karusel .poradi { animation: none; }
+}
+
+/* Pravý sloupeček: semafor, mapka a kdo právě dojel. */
+.tabule .sloupecek { display: flex; flex-direction: column; gap: 1vw; min-width: 0; }
+/* Semafor je hlavní sdělení pravého sloupce, ne ozdoba — proto velký
+   (Filip, 15. 10. 2026: *„semaforek rozjížďky větší"*). */
+.tabule .semafor {
+  display: flex; flex-direction: column; gap: 0.7vw;
+  background: var(--panel, #1a1a1a); border-radius: 0.8vw; padding: 1vw 1.2vw;
+}
+.tabule .semafor .horni { display: flex; align-items: center; gap: 1.1vw; }
+.tabule .semafor .svetla {
+  display: flex; flex-direction: column; gap: 0.5vw;
+  padding: 0.7vw; border-radius: 1vw; background: #111; flex: none;
+}
+.tabule .semafor .svetla i {
+  width: 2.1vw; height: 2.1vw; border-radius: 50%;
+  background: #2b2b2b; display: block;
+}
+/* Stopky a odpočet. Číslice stejně široké, jinak se text při každé
+   vteřině posune a na televizi to poskakuje. */
+.tabule .semafor .casomira { display: flex; align-items: baseline; gap: 0.6vw; }
+.tabule .semafor .casomira b {
+  font-size: 3.4vw; line-height: 1; font-variant-numeric: tabular-nums;
+}
+.tabule .semafor .casomira span { font-size: 1vw; color: var(--tlumeny); }
+.tabule .semafor .pocty { margin: 0; font-size: 1.2vw; color: var(--tlumeny); }
+.tabule .semafor .pocty b { font-size: 1.6vw; color: var(--text); }
+/* Svítí jen to jedno; zhasnutá světla jsou taky informace. */
+.tabule .semafor.sviti-ceka .svetla i.ceka { background: #e8a33d; box-shadow: 0 0 1.2vw #e8a33d; }
+.tabule .semafor.sviti-jede .svetla i.jede { background: #3ba55d; box-shadow: 0 0 1.2vw #3ba55d; }
+.tabule .semafor.sviti-dojeto .svetla i.dojeto { background: #6fa8dc; box-shadow: 0 0 1.2vw #6fa8dc; }
+.tabule .semafor.sviti-zruseno .svetla i.ceka { background: var(--stav-zruseny); box-shadow: 0 0 1.2vw var(--stav-zruseny); }
+.tabule .semafor .co { display: flex; flex-direction: column; min-width: 0; }
+.tabule .semafor .co b { font-size: 2.2vw; line-height: 1.15; }
+.tabule .semafor .co span { font-size: 1.1vw; color: var(--tlumeny); }
+
+/* Mapka je doplněk, ne hlavní sdělení — proto strop na výšku. */
+.tabule .mapka-mala { max-width: 22vw; }
+.tabule .mapka-mala .mapka-trati { margin: 0; }
+
+.tabule .dojeli ol { list-style: none; padding: 0; margin: 0; }
+.tabule .dojeli li { display: flex; align-items: baseline; gap: 0.5vw; padding: 0.3vw 0; }
+.tabule .dojeli li b { font-size: 1.8vw; font-variant-numeric: tabular-nums; }
+
+/* Rozjížďky nesou jen stav: kdo dojel, říká widget vpravo. */
+.tabule .stavy { list-style: none; padding: 0; margin: 0; }
+.tabule .stavy li { display: flex; align-items: baseline; gap: 0.6vw; padding: 0.35vw 0; }
+.tabule .stavy li b { font-size: 1.8vw; font-variant-numeric: tabular-nums; }
+.tabule .stav-rozjizdky.probiha { border-color: var(--stav-vypsany); color: var(--stav-vypsany); }
+.tabule .stav-rozjizdky.zrusena { border-color: var(--stav-zruseny); color: var(--stav-zruseny); }
+
 .tabule .sloupce {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(22vw, 1fr));

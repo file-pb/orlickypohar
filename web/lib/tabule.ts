@@ -1,4 +1,5 @@
 import type { VerejnaTrat, ZavodDetail } from "@/lib/api";
+import { naMapu, type PrvekNaMape } from "@/app/mapka-trati";
 
 /**
  * Snímek regaty pro tabuli v hospodě.
@@ -21,7 +22,28 @@ export type Snimek = {
     poradi: { lod: string; kategorie: string; misto: number | null; kod: string | null }[];
   }[];
   lode: { lod: string; kategorie: string; kormidelnik: string | null; potvrzena: boolean }[];
-  poradi: { lod: string; kategorie: string; body: number; misto: number }[];
+  /**
+   * Pořadí rozdělené na panely karuselu (Filip, 15. 10. 2026: *„rozjeď ty
+   * třídy lodí v karuselech, je to podle toho, kolik tříd se jede a když
+   * se počítá i celkové pořadí"*).
+   *
+   * <b>Co je panel, rozhoduje `vyhodnoceni`, ne počet tříd v datech.</b>
+   * Celkové pořadí API spočítá vždycky, i když se jede jen po třídách —
+   * kdyby tabule brala za vodítko jeho přítomnost, ukazovala by pořadí,
+   * které se v tomhle závodě nevyhlašuje.
+   */
+  tabule: { kategorie: string; lode: { lod: string; body: number; misto: number }[] }[];
+  /** Atributy závodu do grafiky nad obsahem. */
+  zavod: {
+    typ: string | null;
+    poradatel: string | null;
+    datum: string;
+    datumKonce: string | null;
+    pocetSkrtu: number;
+    koeficientDoSerie: number;
+    /** Kolik prvků má trať na řadě. `null`, když žádná není. */
+    prvkyTrati: number | null;
+  };
   /**
    * Trať, podle které se pluje. <b>Kvůli alertu o schválení</b> (Filip,
    * 15. 10. 2026) — a taky proto, že „čeká se na trať" je na tabuli
@@ -38,6 +60,12 @@ export type Snimek = {
     prestavba: boolean;
     cisloRozjizdky: number | null;
   } | null;
+  /**
+   * Prvky trati na mapku (Filip, 15. 10. 2026: *„fajn by bylo tam dát
+   * mapku trasy menší"*). Prázdné, když žádná trať není — mapa se pak
+   * nekreslí vůbec, místo prázdného rámečku.
+   */
+  mapa: PrvekNaMape[];
 };
 
 /** Kolik řádků se na telku vejde, aniž by se muselo rolovat. */
@@ -67,9 +95,11 @@ export function snimekZavodu(
       stav: r.stav,
       startV: r.startV,
       doSerie: r.doSerie,
+      // Bez ořezu: desátým místem dojezdy nekončí a utnout je tady by
+      // znamenalo, že o pozdějších lodích se nedozví ani alert, ani
+      // widget „právě dojeli".
       poradi: [...r.vysledky]
         .sort((a, b) => (a.poradiVCili ?? 999) - (b.poradiVCili ?? 999))
-        .slice(0, NEJVIC)
         .map((v) => ({
           lod: v.lod,
           kategorie: v.kategorie,
@@ -83,11 +113,50 @@ export function snimekZavodu(
       kormidelnik: u.kormidelnik,
       potvrzena: u.potvrzena,
     })),
-    poradi: detail.poradi.slice(0, NEJVIC).map((p, i) => ({
-      lod: p.lod,
-      kategorie: p.kategorie,
-      body: p.body,
-      misto: i + 1,
-    })),
+    tabule: panely(detail),
+    zavod: {
+      typ: detail.typ,
+      poradatel: detail.poradatel,
+      datum: detail.datum,
+      datumKonce: detail.datumKonce,
+      pocetSkrtu: detail.pocetSkrtu,
+      koeficientDoSerie: detail.koeficientDoSerie,
+      prvkyTrati: trat ? trat.prvky.length : null,
+    },
+    mapa: trat ? trat.prvky.map(naMapu) : [],
   };
+}
+
+/** Pseudo-třída pro pořadí celého pole. Totéž jméno jako `app/tridy.tsx`. */
+const CELKEM = "Celkem";
+
+/**
+ * Panely karuselu. Třídy v pořadí, v jakém je posílá API — abecedně by
+ * Nad7m předběhlo Race bez důvodu, a to pořadí si drží série.
+ */
+function panely(detail: ZavodDetail): Snimek["tabule"] {
+  const radek = (p: { lod: string; body: number }, i: number) => ({
+    lod: p.lod,
+    body: p.body,
+    misto: i + 1,
+  });
+
+  const tridy: Snimek["tabule"] = [];
+  if (detail.vyhodnoceni !== "CelePole")
+    for (const p of detail.poradi) {
+      let panel = tridy.find((t) => t.kategorie === p.kategorie);
+      if (!panel) tridy.push((panel = { kategorie: p.kategorie, lode: [] }));
+      if (panel.lode.length < NEJVIC) panel.lode.push(radek(p, panel.lode.length));
+    }
+
+  if (detail.vyhodnoceni !== "PoKategoriich")
+    tridy.push({
+      kategorie: CELKEM,
+      lode: (detail.poradiCelkem ?? []).slice(0, NEJVIC).map(radek),
+    });
+
+  // Prázdný panel není co ukazovat; jeden prázdný ale zůstane, aby tabule
+  // uměla říct „zatím se nejelo" místo prázdného místa.
+  const neprazdne = tridy.filter((t) => t.lode.length > 0);
+  return neprazdne.length > 0 ? neprazdne : tridy.slice(0, 1);
 }
