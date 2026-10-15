@@ -162,7 +162,17 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
       )}
       {zpravy.stav === "prvekPryc" && (
         <p className="hlaska" role="status">
-          Prvek je pryč. Bóje zůstaly — smazalo se rozhodnutí, ne měření.
+          Prvek je pryč a jeho značky jsou sebrané z vody. V historii bójí
+          zůstaly — smazalo se rozhodnutí o trati, ne měření.
+        </p>
+      )}
+      {/* Druhý průjezd týchž značek. Bóje se nesbírají, protože na nich
+          stojí jiný prvek — a sebrat je by rozbilo trať jinde, než kam
+          člověk klikl. */}
+      {zpravy.stav === "prujezdPryc" && (
+        <p className="hlaska" role="status">
+          Průjezd je pryč. Značky zůstaly ve vodě, protože je používá ještě
+          jiný prvek trati.
         </p>
       )}
       {zpravy.stav === "trat-hotovo" && (

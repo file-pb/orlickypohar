@@ -203,49 +203,6 @@ export async function seberAkce(formular: FormData) {
 }
 
 /**
- * Sebrání celého prvku z vody (Filip, 12. 10. 2026: *„u dvojobjektových
- * prvků k nim u sbírání z vody a detailu přistupujeme jako k jednomu
- * prvku"*).
- *
- * <b>Prvek se sbírá jedním úkonem, ne po bójích.</b> Na vodě se nevytahuje
- * „levobok cíle", vytahuje se cíl; dvě tlačítka vedle sebe nutila myslet
- * v značkách, ne v tom, co se zrovna dělá.
- *
- * <para>
- * <b>Sbírají se pořád značky</b> — sebrání je údaj o bóji, protože bóje je
- * buď ve vodě, nebo ne. Prvek je tu jen jednotka práce. Když některou
- * značku používá i jiný prvek, přijde o ni; na to upozorňuje detail
- * prvku už od 11. 10. 2026.
- * </para>
- *
- * <para>
- * <b>Když druhá značka selže, první zůstane sebraná</b> a chyba to řekne.
- * Nic se nevrací zpátky: sebrání je razítko o tom, co se stalo na vodě,
- * a „odsebrat" API neumí schválně.
- * </para>
- */
-export async function seberPrvekAkce(formular: FormData) {
-  const { serie, zavod, kam } = zaklad(formular);
-
-  const id = Number(formular.get("prvek") ?? 0);
-  if (!Number.isInteger(id) || id <= 0) redirect(kam({ chyba: "Který prvek se má sebrat?" }));
-
-  const prvek = (await nactiPrvky(serie, zavod)).find((p) => p.id === id);
-  if (!prvek) redirect(kam({ chyba: "Ten prvek v trati není. Někdo ho mezitím smazal?" }));
-
-  // Značky jednoho prvku můžou být tatáž bóje jen omylem, ale kdyby ano,
-  // druhé sebrání by vrátilo chybu o už sebrané bóji.
-  const znacky = [prvek.a.id, ...(prvek.b && prvek.b.id !== prvek.a.id ? [prvek.b.id] : [])];
-
-  for (const boje of znacky) {
-    const chyba = await seber(serie, zavod, boje);
-    if (chyba) redirect(kam({ chyba }));
-  }
-
-  redirect(kam({ stav: "sebrano" }));
-}
-
-/**
  * Zahodí jeden záznam z historie bójí (Filip, 12. 10. 2026: *„Historie
  * bude mít možnost záznam smazat"*).
  *
@@ -329,6 +286,54 @@ export async function upravPrvekAkce(formular: FormData) {
  * značkami</b>, ne nové pole u starého. Zakládá se bez poznámky — právě
  * ta se u něj dopisuje, protože jiný je jen způsob jetí.
  */
+/**
+ * Odebere prvek z trati — a značky, které tím zůstanou nikomu, i z vody.
+ *
+ * <b>Jedno tlačítko místo dvou</b> (Filip, 15. 10. 2026: *„Sebrat z vody
+ * a smazat prvek je stejné pro uživatele… uživatel by ten rozdíl
+ * nechápal"*). Dřív tu stály vedle sebe „Smazat prvek" a „Sebrat z vody"
+ * a nutily stavitele rozmýšlet rozdíl mezi zápisem o trati a zápisem
+ * o bóji — rozdíl, který na vodě nikdo neřeší: vytáhl jsem to, tak to
+ * tam není.
+ *
+ * <b>Dvakrát projížděná značka se z vody nebere</b> (Filip tamtéž:
+ * *„pokud je prvek dvakrát projížděný, tak smaž jenom ten průjezd, ale
+ * neber ho z vody"*). Bóje stojí dál, protože ji používá jiný prvek —
+ * sebrat ji by tiše rozbilo trať na jiném místě, než kam člověk klikl.
+ *
+ * <b>Pořadí je schválně: napřed prvek, potom bóje.</b> Když sebrání
+ * selže, zůstane bóje ve vodě bez prvku — a na to obrazovka upozorňuje
+ * („stojí mimo trať"), takže se to dá spravit. Opačné pořadí by při chybě
+ * nechalo prvek ukazovat na sebranou bóji, a to nehlásí nikdo.
+ */
+export async function odeberPrvekAkce(formular: FormData) {
+  const { serie, zavod, kam } = zaklad(formular);
+
+  const id = Number(formular.get("prvek") ?? 0);
+  if (!Number.isInteger(id) || id <= 0) redirect(kam({ chyba: "Který prvek se má odebrat?" }));
+
+  const prvky = await nactiPrvky(serie, zavod);
+  const prvek = prvky.find((p) => p.id === id);
+  if (!prvek) redirect(kam({ chyba: "Ten prvek v trati není. Někdo ho mezitím smazal?" }));
+
+  // Značky, které po smazání nezůstanou v žádném jiném prvku.
+  const jinde = new Set(
+    prvky.filter((p) => p.id !== id).flatMap((p) => [p.a.id, ...(p.b ? [p.b.id] : [])]),
+  );
+  const kSebrani = [prvek.a.id, ...(prvek.b && prvek.b.id !== prvek.a.id ? [prvek.b.id] : [])]
+    .filter((b) => !jinde.has(b));
+
+  const chyba = await smazPrvek(serie, zavod, id);
+  if (chyba) redirect(kam({ chyba }));
+
+  for (const boje of kSebrani) {
+    const potiz = await seber(serie, zavod, boje);
+    if (potiz) redirect(kam({ chyba: `Prvek je pryč, ale bóje zůstala ve vodě: ${potiz}` }));
+  }
+
+  redirect(kam({ stav: kSebrani.length > 0 ? "prvekPryc" : "prujezdPryc" }));
+}
+
 export async function zopakujPrvekAkce(formular: FormData) {
   const { serie, zavod, kam } = zaklad(formular);
   const id = Number(formular.get("prvek") ?? 0);
@@ -379,21 +384,6 @@ export async function presunPrvekAkce(formular: FormData) {
   }
 
   redirect(kam({ stav: "prvekPresunut", otevrit: String(id) }));
-}
-
-/** Smazání prvku. Prvek je rozhodnutí, ne měření — maže se doopravdy. */
-export async function smazPrvekAkce(formular: FormData) {
-  const serie = String(formular.get("serie") ?? "");
-  const zavod = String(formular.get("zavod") ?? "");
-  const kam = (zprava: Record<string, string>) =>
-    `/sprava/${encodeURIComponent(serie)}/boje/${encodeURIComponent(zavod)}?${new URLSearchParams(zprava)}`;
-
-  const prvek = Number(formular.get("prvek") ?? 0);
-  if (!Number.isInteger(prvek) || prvek <= 0)
-    redirect(kam({ chyba: "Který prvek se má smazat?" }));
-
-  const chyba = await smazPrvek(serie, zavod, prvek);
-  redirect(kam(chyba ? { chyba } : { stav: "prvekPryc" }));
 }
 
 /**

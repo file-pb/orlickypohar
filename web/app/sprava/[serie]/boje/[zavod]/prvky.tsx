@@ -13,11 +13,11 @@ import {
   type StranaPrvku,
 } from "@/lib/trat";
 import { IkonaPrvku } from "@/app/ikona-prvku";
+import { ZavriMimo } from "@/app/zavri-mimo";
 import { ZnackaNaTrati } from "./znacka-na-trati";
 import {
+  odeberPrvekAkce,
   presunPrvekAkce,
-  seberPrvekAkce,
-  smazPrvekAkce,
   upravPrvekAkce,
   zopakujPrvekAkce,
 } from "./akce";
@@ -102,6 +102,13 @@ export function PrvkyTrati({
                   nativní vzájemné vyloučení, takže na to není potřeba ani
                   javascript, ani stav v adrese. */}
               <details className="prvek" name="prvek-trati" open={otevrit === p.id}>
+                {/* Zavře se klepnutím na řádek, kamkoli jinam i Escapem
+                    (Filip, 15. 10. 2026: *„klepnutím na řádek nebo mimo
+                    detail se detail zavře"*). Řádek nad tím je sourozenec,
+                    ne potomek, takže je pro tuhle komponentu „mimo" —
+                    jedna věc obslouží obojí. Mezi řádky to zvládne sám
+                    prohlížeč přes `name`. */}
+                <ZavriMimo />
                 <summary>{zamceno ? "Detail" : "Přenastavit a detail"}</summary>
 
                 <DetailPrvku
@@ -186,8 +193,54 @@ function DetailPrvku({
     </>
   );
 
+  // Kolikrát se týmiž značkami projíždí. Rozhoduje to o tom, co udělá
+  // „Odebrat": u jediného průjezdu se značky seberou i z vody, u druhého
+  // zmizí jen ten průjezd.
+  const prujezdu = prvky.filter(
+    (p) => p.a.id === prvek.a.id && (p.b?.id ?? null) === (prvek.b?.id ?? null),
+  ).length;
+
   return (
     <div className="detail-prvku">
+      {/* <b>Akce navrch</b> (Filip, 15. 10. 2026: *„ty tlačítka projet
+          jinak, nahoru, dolu a smazat dej hned navrch detailu"*). Dřív
+          visely pod formulářem, takže se k nim muselo projít přes pole,
+          která člověk měnit nechtěl. */}
+      <div className="akce-prvku">
+        <form action={zopakujPrvekAkce}>
+          {skryte}
+          <button type="submit">Projet to znovu jinak</button>
+        </form>
+
+        <form action={presunPrvekAkce}>
+          {skryte}
+          <input type="hidden" name="smer" value="nahoru" />
+          <button type="submit" disabled={prvni}>
+            Posunout nahoru
+          </button>
+        </form>
+
+        <form action={presunPrvekAkce}>
+          {skryte}
+          <input type="hidden" name="smer" value="dolu" />
+          <button type="submit" disabled={posledni}>
+            Posunout dolů
+          </button>
+        </form>
+
+        {/* <b>Jedno tlačítko místo dvojice</b> (Filip tamtéž: *„Sebrat
+            z vody a smazat prvek je stejné pro uživatele"*). Co udělá, se
+            řekne rovnou na něm — rozdíl mezi „zmizí i z vody" a „zůstane,
+            protože se tudy jede dvakrát" se nedá uhodnout z ničeho na
+            obrazovce. */}
+        <form action={odeberPrvekAkce}>
+          {skryte}
+          <button type="submit" className="nebezpecne">
+            {prujezdu > 1 ? "Odebrat tenhle průjezd" : "Odebrat z trati i z vody"}
+          </button>
+        </form>
+      </div>
+
       <form action={upravPrvekAkce} className="formular">
         {skryte}
 
@@ -258,36 +311,6 @@ function DetailPrvku({
           <button type="submit">Uložit</button>
         </div>
       </form>
-
-      <div className="akce-prvku">
-        <form action={zopakujPrvekAkce}>
-          {skryte}
-          <button type="submit">Projet to znovu jinak</button>
-        </form>
-
-        <form action={presunPrvekAkce}>
-          {skryte}
-          <input type="hidden" name="smer" value="nahoru" />
-          <button type="submit" disabled={prvni}>
-            Posunout nahoru
-          </button>
-        </form>
-
-        <form action={presunPrvekAkce}>
-          {skryte}
-          <input type="hidden" name="smer" value="dolu" />
-          <button type="submit" disabled={posledni}>
-            Posunout dolů
-          </button>
-        </form>
-
-        <form action={smazPrvekAkce}>
-          {skryte}
-          <button type="submit" className="nebezpecne">
-            Smazat prvek
-          </button>
-        </form>
-      </div>
 
       <p className="poznamka">
         <b>Projet to znovu jinak</b> přidá na konec trati další průjezd týchž
@@ -365,22 +388,11 @@ function Znacky({
         })}
       </ul>
 
-      {/* <b>Prvek se sbírá vcelku</b> (Filip, 12. 10. 2026: *„u
-          dvojobjektových prvků k nim u sbírání z vody a detailu
-          přistupujeme jako k jednomu prvku"*). Na vodě se nevytahuje
-          „levobok cíle", vytahuje se cíl. */}
-      {!zamceno && (
-        <form action={seberPrvekAkce} className="formular">
-          <input type="hidden" name="serie" value={serie} />
-          <input type="hidden" name="zavod" value={zavod} />
-          <input type="hidden" name="prvek" value={prvek.id} />
-          <button type="submit">
-            {nalezene.length === 1
-              ? "Sebrat z vody"
-              : `Sebrat ${nazevTypu(prvek.typ)} z vody — obě značky`}
-          </button>
-        </form>
-      )}
+      {/* <b>„Sebrat z vody" tady bývalo</b> a od 15. 10. 2026 není
+          (Filip: *„Sebrat z vody i s tím panelem odstraň"*). Prvek se
+          odebírá jedním tlačítkem nahoře, které bóje sebere samo —
+          dvě tlačítka na dvou místech nutila rozmýšlet rozdíl mezi
+          zápisem o trati a zápisem o bóji. */}
     </div>
   );
 }
