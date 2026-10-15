@@ -1003,24 +1003,6 @@ header.hlavicka .jen-uzke { display: none; }
 /* Záložky tratí regaty. <b>Jedna za každou trať, plus na konci</b>
    (Filip, 15. 10. 2026). Nejsou to taby v jedné stránce, ale odkazy —
    výběr je v adrese, takže se dá poslat a přežije akci. */
-/* Přiřazení trati rozjížďce: jeden řádek na rozjížďku, nabídka vpravo.
-   Na telefonu u vody se to zalomí pod sebe — palec má mít co trefit. */
-.vyber-trati .prirazeni { list-style: none; padding: 0; margin: 0 0 1rem; }
-.vyber-trati .prirazeni > li {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.75rem;
-  padding: 0.6rem 0; border-bottom: 1px solid var(--linka, #2a2a2a);
-}
-.vyber-trati .prirazeni > li > b { min-width: 8rem; }
-.vyber-trati .prirazeni > li > .detail { flex: 1 1 10rem; }
-/* Nabídka a tlačítko drží u sebe: patří k sobě jako jedna otázka
-   a jedna odpověď, ne jako dvě pole formuláře. */
-.vyber-trati .prirazeni .formular.radkove {
-  display: flex; align-items: center; gap: 0.5rem; margin: 0; padding: 0;
-  background: none; border: none; flex: 0 1 auto;
-}
-.vyber-trati .prirazeni .formular.radkove label { margin: 0; }
-.vyber-trati .prirazeni .formular.radkove select { max-width: 20rem; }
-
 .zalozky-trati {
   display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0 0 0.9rem;
   align-items: stretch;

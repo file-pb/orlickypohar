@@ -20,7 +20,6 @@ import { PrvkyTrati } from "./prvky";
 import { Puvod, ZnackaNaTrati } from "./znacka-na-trati";
 import { StavTrati } from "./stav-trati";
 import { Stavba } from "./stavba";
-import { nactiRozjizdky } from "@/lib/vysledky";
 import { VyberTrati } from "./vyber-trati";
 import { uklidAkce, zahodZaznamAkce } from "./akce";
 
@@ -68,10 +67,7 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
 
   // Název regaty v odpovědi o bójích není, a bez něj nadpis neřekne, čí
   // trať se zrovna staví (Filip, 9. 10. 2026).
-  // Rozjížďky se čtou kvůli přiřazení trati: ptá se rozjížďka, ne trať,
-  // takže obrazovka musí vědět, které vůbec jsou. Výpadek jejich čtení
-  // nesmí shodit stavbu — nabídne se pak prázdný seznam.
-  const [{ stav, trat, byvale }, nazev, stavTrati, prvky, kUklizeni, trate, prehled] =
+  const [{ stav, trat, byvale }, nazev, stavTrati, prvky, kUklizeni, trate] =
     await Promise.all([
     nactiTrat(serie, zavod),
     nazevZastavky(serie, zavod),
@@ -79,9 +75,7 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
     nactiPrvky(serie, zavod, vybranaTrat),
     nactiKUklizeni(serie, zavod),
     nactiTrate(serie, zavod),
-    nactiRozjizdky(serie, zavod),
   ]);
-  const rozjizdky = prehled.data?.rozjizdky ?? [];
   if (stav === "neni") notFound();
 
   // Přenastavuje se jen bóje, která na trati doopravdy stojí. Podvržené id
@@ -327,7 +321,6 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
             serie={serie}
             zavod={zavod}
             trate={trate}
-            rozjizdky={rozjizdky}
             vybrana={stavTrati.trat?.id}
           />
 
