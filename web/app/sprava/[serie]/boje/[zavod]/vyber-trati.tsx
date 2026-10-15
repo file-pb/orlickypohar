@@ -96,10 +96,23 @@ export function VyberTrati({
           o něco, co se staví jinde. */}
       {/* Vede počtem, ne výčtem: kolik rozjížděk ji jede, je tu
           <b>minoritní informace</b> (Filip, 15. 10. 2026). Čísla
-          a odkazy na ně jsou až v rozbalovací poznámce. */}
+          a odkazy na ně jsou až v rozbalovací poznámce. Odkaz vede na
+          výsledky rozjížďky — tam se startuje a tam jsou dojezdy
+          (Filip, 15. 10. 2026: *„dá se do nich prokliknout a tam ji
+          třeba odstartovat, nebo kouknout na výsledky"*). */}
       {vybranaTrat && (
         <p className="detail">
-          {kdoJiJede(vybranaTrat, trate)}
+          {vybranaTrat.cisloRozjizdky ? (
+            <>
+              {"Jede ji "}
+              <Link href={`/sprava/${serie}/vysledky/${zavod}/${vybranaTrat.cisloRozjizdky}`}>
+                {vybranaTrat.cisloRozjizdky}. rozjížďka
+              </Link>
+              {"."}
+            </>
+          ) : (
+            "Zatím ji nejede žádná rozjížďka."
+          )}
           <StejnaTrat
             serie={serie}
             zavod={zavod}
@@ -126,10 +139,3 @@ function shodneSTrati(trat: TratNaVyber, trate: TratNaVyber[]): number[] {
     .sort((a, b) => a - b);
 }
 
-/** Kolik rozjížděk jede podle téhle trati. Jedna věta, bez výčtu. */
-function kdoJiJede(trat: TratNaVyber, trate: TratNaVyber[]) {
-  const kolik = (trat.cisloRozjizdky ? 1 : 0) + shodneSTrati(trat, trate).length;
-  if (kolik === 0) return "Zatím ji nejede žádná rozjížďka.";
-  if (kolik === 1) return "Jede ji jedna rozjížďka.";
-  return `Jedou ji ${kolik} rozjížďky.`;
-}
