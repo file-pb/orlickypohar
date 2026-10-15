@@ -2784,6 +2784,10 @@ body:has(.tabule) { overflow: hidden; }
 /* Mapka je doplněk, ne hlavní sdělení — proto strop na výšku. */
 .tabule .mapka-mala { max-width: 22vw; }
 .tabule .mapka-mala .mapka-trati { margin: 0; }
+/* Na televizi zůstane jen uvedení zdroje, návod ke čtení ne — souvislý
+   text sem nepatří a odkaz u bóje stejně nikdo nerozklikne. */
+.tabule .mapka-mala figcaption { font-size: 0.75vw; }
+.tabule .mapka-mala figcaption .navod { display: none; }
 
 .tabule .dojeli ol { list-style: none; padding: 0; margin: 0; }
 .tabule .dojeli li { display: flex; align-items: baseline; gap: 0.5vw; padding: 0.3vw 0; }
