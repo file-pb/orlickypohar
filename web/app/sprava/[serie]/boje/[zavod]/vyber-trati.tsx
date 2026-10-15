@@ -1,5 +1,5 @@
 import { NAZVY_STAVU, type TratNaVyber } from "@/lib/trat";
-import { dalsiTratAkce, klonujTratAkce, priradTratAkce } from "./akce";
+import { dalsiTratAkce, tratRozjizdceAkce } from "./akce";
 import Link from "@/app/sprava/odkaz";
 import { StejnaTrat } from "@/app/sprava/stejna-trat";
 
@@ -30,15 +30,19 @@ export function VyberTrati({
   serie,
   zavod,
   trate,
+  rozjizdky,
   vybrana,
 }: {
   serie: string;
   zavod: string;
   trate: TratNaVyber[];
+  /** Rozjížďky regaty. Prázdné, když je regata ještě nemá. */
+  rozjizdky: { cislo: number }[];
   /** Trať, kterou obrazovka právě ukazuje. */
   vybrana?: number;
 }) {
-  if (trate.length === 0) return null;
+  // Bez trati i bez rozjížďky není co nabízet; stavba začíná první bójí.
+  if (trate.length === 0 && rozjizdky.length === 0) return null;
 
   return (
     <section className="vyber-trati" aria-labelledby="vyber-trati-nadpis">
@@ -82,69 +86,77 @@ export function VyberTrati({
         </form>
       </nav>
 
-      <ul className="seznam">
-        {trate.map((t) => (
-          <li key={t.id}>
-            <b>
-              {t.cisloRozjizdky ? `${t.cisloRozjizdky}. rozjížďka` : "zatím bez rozjížďky"}
-            </b>{" "}
-            <span className="stitek">{NAZVY_STAVU[t.stav]}</span>
-            {t.odjeta && <span className="stitek">jelo se podle ní</span>}
-            <span className="detail">
-              {" "}
-              {t.pocetPrvku === 0
-                ? "bez prvků"
-                : t.pocetPrvku === 1
-                  ? "1 prvek"
-                  : `${t.pocetPrvku} prvků`}
-            </span>
-
-            <StejnaTrat serie={serie} zavod={zavod} cisla={shodneSTrati(t, trate)} />
-
-            {t.jdePriradit ? (
-              <form action={priradTratAkce} className="formular radkove">
-                <input type="hidden" name="serie" value={serie} />
-                <input type="hidden" name="zavod" value={zavod} />
-                <input type="hidden" name="trat" value={t.id} />
-                <label>
-                  Přiřadit rozjížďce číslo
-                  <input name="rozjizdka" type="number" min={1} required />
-                </label>
-                <button type="submit">Přiřadit</button>
-              </form>
-            ) : (
-              <form action={klonujTratAkce} className="formular radkove">
-                <input type="hidden" name="serie" value={serie} />
-                <input type="hidden" name="zavod" value={zavod} />
-                <input type="hidden" name="trat" value={t.id} />
-                <label>
-                  Jede se znovu v rozjížďce číslo
-                  <input name="rozjizdka" type="number" min={1} />
-                  <span className="poznamka">
-                    Prázdné udělá kopii „na stůl" — rozjížďku jí přiřadíš potom.
+      {/* <b>Ptá se rozjížďka, ne trať</b> (Filip, 15. 10. 2026: *„to
+          přiřazení trati rozjížďkám a opačně je hrozně neintuitivní…
+          nikdo nepochopí, jak to přiřadit"*). Dřív tu byl tentýž seznam
+          tratí podruhé a u každé políčko na číslo rozjížďky; rozhodčí
+          ale přemýšlí opačně — „druhá rozjížďka pojede po týhle trati".
+          Jedna nabídka na řádek, žádné psaní čísel a žádné tlačítko,
+          které se pod rukama mění. */}
+      <h3>Která trať se pojede</h3>
+      {rozjizdky.length === 0 ? (
+        <p className="prazdno">
+          Regata zatím nemá rozjížďku. Trať se dá stavět i tak — přiřadí se,
+          až rozjížďka vznikne.
+        </p>
+      ) : (
+        <ul className="prirazeni">
+          {rozjizdky.map((r) => {
+            const ma = trate.find((t) => t.cisloRozjizdky === r.cislo);
+            return (
+              <li key={r.cislo}>
+                <b>{r.cislo}. rozjížďka</b>
+                {ma ? (
+                  <span className="detail">
+                    {popisTrati(ma)}
+                    <StejnaTrat serie={serie} zavod={zavod} cisla={shodneSTrati(ma, trate)} />
                   </span>
-                </label>
-                <label>
-                  Klon začne ve stavu
-                  <select name="stav" defaultValue="Hotovo">
-                    <option value="Rozestaveno">{NAZVY_STAVU.Rozestaveno}</option>
-                    <option value="Hotovo">{NAZVY_STAVU.Hotovo}</option>
-                    <option value="Prijato">{NAZVY_STAVU.Prijato}</option>
-                  </select>
-                  <span className="poznamka">
-                    Výchozí je hotová: klon je tvrzení stavitele, že stojí to, co
-                    minule. Přijmout ji smí jen rozhodčí.
-                  </span>
-                </label>
-                <button type="submit">Naklonovat</button>
-              </form>
-            )}
-          </li>
-        ))}
-      </ul>
+                ) : (
+                  <span className="detail">zatím bez trati</span>
+                )}
+
+                {/* Odjetá trať se nepřepisuje: přepsalo by to, podle čeho
+                    se jelo. */}
+                {!ma?.odjeta && (
+                  <form action={tratRozjizdceAkce} className="formular radkove">
+                    <input type="hidden" name="serie" value={serie} />
+                    <input type="hidden" name="zavod" value={zavod} />
+                    <input type="hidden" name="rozjizdka" value={r.cislo} />
+                    <label>
+                      <span className="skryte">Trať pro {r.cislo}. rozjížďku</span>
+                      <select name="volba" defaultValue="">
+                        <option value="" disabled>
+                          {ma ? "změnit na…" : "vybrat trať…"}
+                        </option>
+                        <option value="nova">nová prázdná trať</option>
+                        {trate
+                          .filter((t) => t.jdePriradit && t.id !== ma?.id)
+                          .map((t) => (
+                            <option key={`p${t.id}`} value={`prirad:${t.id}`}>
+                              postavená trať bez rozjížďky ({popisTrati(t)})
+                            </option>
+                          ))}
+                        {trate
+                          .filter((t) => t.cisloRozjizdky !== null && t.cisloRozjizdky !== r.cislo)
+                          .map((t) => (
+                            <option key={`k${t.id}`} value={`klon:${t.id}`}>
+                              stejná jako {t.cisloRozjizdky}. rozjížďka
+                            </option>
+                          ))}
+                      </select>
+                    </label>
+                    <button type="submit">Použít</button>
+                  </form>
+                )}
+                {ma?.odjeta && <span className="stitek">jelo se podle ní</span>}
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       <p className="poznamka">
-        Klon kopíruje prvky na <b>tytéž bóje</b> — žádná nová pípnutí. Vyrobila
+        „Stejná jako" kopíruje prvky na <b>tytéž bóje</b> — žádná nová pípnutí. Vyrobila
         by se tím měření, která se nestala, s falešným časem a přesností.
       </p>
     </section>
@@ -164,4 +176,11 @@ function shodneSTrati(trat: TratNaVyber, trate: TratNaVyber[]): number[] {
     .filter((t) => t.id !== trat.id && t.otisk === trat.otisk && t.cisloRozjizdky !== null)
     .map((t) => t.cisloRozjizdky!)
     .sort((a, b) => a - b);
+}
+
+/** Trať jednou krátkou větou: kolik prvků a v jakém je stavu. */
+function popisTrati(t: TratNaVyber) {
+  const prvky =
+    t.pocetPrvku === 0 ? "bez prvků" : t.pocetPrvku === 1 ? "1 prvek" : `${t.pocetPrvku} prvků`;
+  return `${prvky}, ${NAZVY_STAVU[t.stav]}`;
 }

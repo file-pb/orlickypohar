@@ -436,36 +436,68 @@ export async function dalsiTratAkce(formular: FormData) {
   );
 }
 
-export async function priradTratAkce(formular: FormData) {
+/**
+ * Která trať se pojede v téhle rozjížďce.
+ *
+ * <b>Jedna akce místo tří</b> (Filip, 15. 10. 2026: *„to přiřazení trati
+ * rozjížďkám a opačně je hrozně neintuitivní, nikdo nepochopí, jak to
+ * přiřadit"*). Dřív se u <i>trati</i> psalo číslo rozjížďky a tlačítko se
+ * pod rukama měnilo mezi „Přiřadit" a „Naklonovat" podle serverového
+ * příznaku, který na obrazovce vidět nebyl. Rozhodčí ale přemýšlí
+ * opačně — „druhá rozjížďka pojede po týhle trati" — takže se ptá
+ * rozjížďka a volba je jedna nabídka.
+ *
+ * Co se pod kterou volbou stane, zůstává beze změny: volná trať se
+ * <b>přiřadí</b> (kopie hned po přijetí by znamenala přijímat dvakrát
+ * totéž), cizí se <b>naklonuje</b> (odebrat ji té rozjížďce by přepsalo,
+ * podle čeho se jelo).
+ */
+export async function tratRozjizdceAkce(formular: FormData) {
   const { serie, zavod, kam } = zaklad(formular);
-  const trat = Number(formular.get("trat") ?? 0);
   const rozjizdka = Number(formular.get("rozjizdka") ?? 0);
+  const volba = String(formular.get("volba") ?? "");
 
   if (!Number.isInteger(rozjizdka) || rozjizdka <= 0)
-    redirect(kam({ chyba: "Napiš číslo rozjížďky." }));
+    redirect(kam({ chyba: "Která rozjížďka to je, se nepodařilo přečíst." }));
+  if (!volba) redirect(kam({ chyba: "Vyber, po které trati se pojede." }));
 
-  const chyba = await priradTrat(serie, zavod, trat, rozjizdka);
-  redirect(kam(chyba ? { chyba } : { stav: "trat-prirazena" }));
-}
+  if (volba === "nova") {
+    const chyba = await zalozDalsiTrat(serie, zavod);
+    if (chyba) redirect(kam({ chyba }));
 
-/**
- * Naklonuje trať pro další rozjížďku. Prázdné číslo znamená kopii „na
- * stůl" — rozjížďka se přiřadí potom.
- */
-export async function klonujTratAkce(formular: FormData) {
-  const { serie, zavod, kam } = zaklad(formular);
-  const trat = Number(formular.get("trat") ?? 0);
-  const cislo = Number(formular.get("rozjizdka") ?? 0);
-  const stav = String(formular.get("stav") ?? "") || null;
+    // API vrací tutéž prázdnou trať, když už jedna je, takže dvojí
+    // kliknutí nevyrobí dvě. Tu prázdnou pak rovnou přiřadíme — jinak by
+    // uživatel skončil u trati „bez rozjížďky" a musel by přiřazovat
+    // podruhé, což je přesně ten krok navíc, kvůli kterému se to mění.
+    const trate = await nactiTrate(serie, zavod);
+    const prazdna = trate.find((t) => t.cisloRozjizdky === null && t.pocetPrvku === 0);
+    if (!prazdna) redirect(kam({ chyba: "Prázdná trať se nenašla." }));
 
-  const chyba = await klonujTrat(
-    serie,
-    zavod,
-    trat,
-    cislo > 0 ? cislo : null,
-    stav as StavTrati,
-  );
-  redirect(kam(chyba ? { chyba } : { stav: "trat-klon" }));
+    const chybaPrirazeni = await priradTrat(serie, zavod, prazdna.id, rozjizdka);
+    redirect(
+      chybaPrirazeni
+        ? kam({ chyba: chybaPrirazeni })
+        : kam({ trat: String(prazdna.id), stav: "novaTrat" }),
+    );
+  }
+
+  const [co, id] = volba.split(":");
+  const trat = Number(id ?? 0);
+  if (!trat) redirect(kam({ chyba: "Vybraná trať se nepodařilo přečíst." }));
+
+  if (co === "prirad") {
+    const chyba = await priradTrat(serie, zavod, trat, rozjizdka);
+    redirect(chyba ? kam({ chyba }) : kam({ trat: String(trat), stav: "trat-prirazena" }));
+  }
+
+  if (co === "klon") {
+    // Klon je tvrzení stavitele, že stojí totéž co minule — proto hotová.
+    // Přijmout ji smí jen rozhodčí, a to na obrazovce trati.
+    const chyba = await klonujTrat(serie, zavod, trat, rozjizdka, "Hotovo" as StavTrati);
+    redirect(chyba ? kam({ chyba }) : kam({ stav: "trat-klon" }));
+  }
+
+  redirect(kam({ chyba: "Téhle volbě nerozumím." }));
 }
 
 /** Společný začátek akcí obrazovky bójí: odkud a kam. */
