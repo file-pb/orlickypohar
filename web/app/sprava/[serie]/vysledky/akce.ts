@@ -8,6 +8,7 @@ import {
   zaradDoPoharu,
   type StavVysledku,
 } from "@/lib/vysledky";
+import { klonujTrat, nactiTrate, priradTrat } from "@/lib/trat";
 
 /**
  * Zápisy z obrazovky výsledků. Serverové akce, ne javascript v prohlížeči:
@@ -94,4 +95,39 @@ export async function poharAkce(formular: FormData) {
       chyba ? { chyba } : { stav: doSerie ? "vPoharu" : "mimoPohar", cislo: String(cislo) },
     ),
   );
+}
+
+/**
+ * Přiřadí rozjížďce postavenou trať.
+ *
+ * <b>Patří to sem, ne k bójím</b> (Filip, 15. 10. 2026: *„tady bych
+ * umožnil rozjížďce možnost vybrat z postavených tratí, nebo se
+ * prokliknout na editor nové trati"*). Rozjížďka vzniká pod výsledky,
+ * takže i vazba na trať patří k ní; obrazovka stavby o ní jen říká.
+ *
+ * <b>Přiřadit, nebo naklonovat, rozhoduje server.</b> Volná trať se
+ * přiřadí; trať, která už nějaké rozjížďce patří, se naklonuje —
+ * odebrat ji té původní by přepsalo, podle čeho se jelo. Obrazovka to
+ * nehádá, posílá jen id a číslo.
+ */
+export async function tratRozjizdceAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const cislo = Number(formular.get("cislo") ?? 0);
+  const trat = Number(formular.get("trat") ?? 0);
+
+  if (!Number.isInteger(cislo) || cislo <= 0 || !Number.isInteger(trat) || trat <= 0)
+    redirect(kam(serie, zavod, { chyba: "Vyber, která trať se pojede." }));
+
+  const trate = await nactiTrate(serie, zavod);
+  const vybrana = trate.find((t) => t.id === trat);
+  if (!vybrana) redirect(kam(serie, zavod, { chyba: "Taková trať u téhle regaty není." }));
+
+  // Klon začíná jako hotová: je to tvrzení stavitele, že stojí totéž co
+  // minule. Přijmout ji smí jen rozhodčí, a to na obrazovce trati.
+  const chyba = vybrana.jdePriradit
+    ? await priradTrat(serie, zavod, trat, cislo)
+    : await klonujTrat(serie, zavod, trat, cislo, "Hotovo");
+
+  redirect(kam(serie, zavod, chyba ? { chyba } : { stav: "trat-prirazena" }));
 }

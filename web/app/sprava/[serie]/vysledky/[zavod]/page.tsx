@@ -10,8 +10,14 @@ import {
   type RozjizdkaRadek,
   type StavVysledku,
 } from "@/lib/vysledky";
-import { nactiTrate } from "@/lib/trat";
-import { poharAkce, pridejRozjizdkuAkce, publikaceAkce, stavAkce } from "../akce";
+import { NAZVY_STAVU, nactiTrate } from "@/lib/trat";
+import {
+  poharAkce,
+  pridejRozjizdkuAkce,
+  publikaceAkce,
+  stavAkce,
+  tratRozjizdceAkce,
+} from "../akce";
 import { StejnaTrat } from "@/app/sprava/stejna-trat";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
@@ -65,6 +71,17 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
       .sort((a, b) => a - b);
     if (shodne.length > 0) stejnaTrat.set(t.cisloRozjizdky, shodne);
   }
+
+  // Postavené tratě na výběr. <b>Prázdná se nenabízí</b>: vybrat trať
+  // bez prvků znamená nevybrat nic a jen si vyrobit druhou prázdnou.
+  const naVyber = trate
+    .filter((t) => t.pocetPrvku > 0)
+    .map((t) => ({
+      id: t.id,
+      popis:
+        (t.cisloRozjizdky ? `jako ${t.cisloRozjizdky}. rozjížďka` : "zatím bez rozjížďky") +
+        ` — ${t.pocetPrvku === 1 ? "1 prvek" : `${t.pocetPrvku} prvků`}, ${NAZVY_STAVU[t.stav]}`,
+    }));
 
   // Výpadek nesmí spolknout výsledek zápisu.
   if (stav === "vypadek")
@@ -186,6 +203,7 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
                 otevriRevizi={zpravy.revize === String(r.cislo)}
                 sTrati={sTrati}
                 stejnaTrat={stejnaTrat.get(r.cislo) ?? []}
+                naVyber={naVyber}
               />
             </li>
           ))}
@@ -219,6 +237,7 @@ function Rozjizdka({
   otevriRevizi,
   sTrati,
   stejnaTrat,
+  naVyber,
 }: {
   serie: string;
   zavod: string;
@@ -228,6 +247,8 @@ function Rozjizdka({
   sTrati: Set<number>;
   /** Čísla rozjížděk, které jedou totéž. Prázdné, když je trať jedinečná. */
   stejnaTrat: number[];
+  /** Postavené tratě regaty na výběr. */
+  naVyber: { id: number; popis: string }[];
 }) {
   const skryta = ["Navrzeno", "Overeno", "Schvaleno"] as const;
 
@@ -265,17 +286,14 @@ function Rozjizdka({
             s tím prvním dřív nebo později rozešlo. Bez téhle věty ale nic
             nepřipomene, že nově založená rozjížďka trať nemá — zjistilo
             by se to až u vody. */}
-        {sTrati.has(rozjizdka.cislo) ? (
-          <>
-            trať přiřazená
-            {/* Rozhodčí na rozpravě vyhlásí „tři rozjížďky na téhle trati";
-                tohle je ta věta zpátky. Počítá se z otisku předpisu, takže
-                jakmile se jedna z nich upraví, zmizí. */}
-            <StejnaTrat serie={serie} zavod={zavod} cisla={stejnaTrat} />
-          </>
-        ) : (
-          <Link href={`/sprava/${serie}/boje/${zavod}`}>bez trati — přiřadit</Link>
-        )}
+        <TratRozjizdky
+          serie={serie}
+          zavod={zavod}
+          rozjizdka={rozjizdka}
+          maTrat={sTrati.has(rozjizdka.cislo)}
+          stejnaTrat={stejnaTrat}
+          naVyber={naVyber}
+        />
         {" · "}
         {/* Zápis vidí i ten, kdo ho nemění — rozhodčí ověřuje právě tohle. */}
         <Link href={`/sprava/${serie}/vysledky/${zavod}/${rozjizdka.cislo}`}>
@@ -412,4 +430,83 @@ function hotovo(stav: string, cislo?: string, nastav?: StavVysledku) {
     default:
       return "Hotovo.";
   }
+}
+
+/**
+ * Trať rozjížďky: co se s ní smí dělat, určuje stav rozjížďky
+ * (Filip, 15. 10. 2026).
+ *
+ * <b>Odjetá se nepřenastavuje.</b> Trať je to, podle čeho se jelo —
+ * přepsat ji zpětně by přepsalo výsledek. Zůstává jen údaj.
+ *
+ * <b>Když se jede, nestaví se, ale přestavuje.</b> Lodě jsou na vodě
+ * a něco už tam stojí; slovo „postavit" by lhalo o tom, co se děje.
+ *
+ * <b>Před startem bez trati se přiřazuje</b> z postavených, a kdo si
+ * nevybere, odejde ji postavit.
+ */
+function TratRozjizdky({
+  serie,
+  zavod,
+  rozjizdka,
+  maTrat,
+  stejnaTrat,
+  naVyber,
+}: {
+  serie: string;
+  zavod: string;
+  rozjizdka: RozjizdkaRadek;
+  maTrat: boolean;
+  stejnaTrat: number[];
+  naVyber: { id: number; popis: string }[];
+}) {
+  const editor = `/sprava/${serie}/boje/${zavod}`;
+  const jede = rozjizdka.stav === "Probiha";
+  const odjeto = rozjizdka.stav === "Dokoncena";
+
+  if (maTrat)
+    return (
+      <>
+        {odjeto ? (
+          "jelo se podle trati"
+        ) : (
+          <Link href={editor}>{jede ? "trať — přestavit" : "trať přiřazená"}</Link>
+        )}
+        {/* Rozhodčí na rozpravě vyhlásí „tři rozjížďky na téhle trati";
+            tohle je ta věta zpátky. Počítá se z otisku předpisu, takže
+            jakmile se jedna z nich upraví, zmizí. */}
+        <StejnaTrat serie={serie} zavod={zavod} cisla={stejnaTrat} />
+      </>
+    );
+
+  // Odjetá rozjížďka bez trati je historie, ne úkol: přiřadit ji teď
+  // zpětně by tvrdilo, že se podle ní jelo.
+  if (odjeto) return <>bez trati</>;
+
+  if (naVyber.length === 0)
+    return (
+      <>
+        bez trati — <Link href={editor}>{jede ? "přestavit" : "postavit"}</Link>
+      </>
+    );
+
+  return (
+    <form action={tratRozjizdceAkce} className="formular radkove vybrat-trat">
+      <input type="hidden" name="serie" value={serie} />
+      <input type="hidden" name="zavod" value={zavod} />
+      <input type="hidden" name="cislo" value={rozjizdka.cislo} />
+      <label>
+        <span className="skryte">Trať pro {rozjizdka.cislo}. rozjížďku</span>
+        <select name="trat" defaultValue={String(naVyber[0].id)}>
+          {naVyber.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.popis}
+            </option>
+          ))}
+        </select>
+      </label>
+      <button type="submit">Přiřadit</button>
+      <Link href={editor}>{jede ? "nebo přestavět" : "nebo postavit novou"}</Link>
+    </form>
+  );
 }
