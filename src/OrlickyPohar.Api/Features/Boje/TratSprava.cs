@@ -71,6 +71,93 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
     }
 
     /// <summary>
+    /// Zkrátí trať: od vyhlášení je cíl u zadaného prvku.
+    ///
+    /// <para>
+    /// Filip, 15. 10. 2026: *„za běhu do toho má jít sáhnout a trať
+    /// zkrátit"*, *„zkrácení počítá normální pořadí, jen cíl je u té
+    /// bóje"*. Na bodování to tedy nesahá — je to údaj o tom, kudy se
+    /// jelo, a posun cíle pro ty, kdo ještě nedojeli.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Jde to i na zamčené trati.</b> Zámek brání tichým změnám
+    /// předpisu pod lodí, která podle něj pluje; tohle je opak — hlasité
+    /// rozhodnutí rozhodčího, které se zapisuje i s časem a jménem.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Jen u rozjížďky, která se jede.</b> Zkrátit trať, na kterou se
+    /// ještě nevyjelo, znamená postavit ji kratší; zkrátit odjetou by
+    /// přepsalo, podle čeho se jelo.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Poslední prvek zkrátit nejde</b> — tam cíl už je, a „zkrácení"
+    /// bez zkrácení by byl jen zápis, který mate.
+    /// </para>
+    /// </summary>
+    public async Task<string?> ZkratAsync(
+        int zavodId, int tratId, int prvekId, Guid kdo, CancellationToken ct)
+    {
+        var trat = await db.Trate
+            .FirstOrDefaultAsync(t => t.Id == tratId && t.ZavodId == zavodId, ct);
+        if (trat is null) return "Taková trať u téhle regaty není.";
+
+        if (trat.RozjizdkaId is null)
+            return "Trať nepatří žádné rozjížďce, takže není co zkracovat.";
+
+        var rozjizdka = await db.Rozjizdky
+            .FirstOrDefaultAsync(r => r.Id == trat.RozjizdkaId, ct);
+        if (rozjizdka is null) return "Rozjížďka trati se nenašla.";
+        if (rozjizdka.Stav != StavRozjizdky.Probiha)
+            return rozjizdka.Stav == StavRozjizdky.Dokoncena
+                ? "Rozjížďka je dojetá. Trať, podle které se jelo, se už nemění."
+                : "Rozjížďka se nejede. Dokud se nevyjelo, stavěj rovnou kratší trať.";
+
+        var prvky = await db.PrvkyTrati
+            .Where(x => x.TratId == trat.Id)
+            .OrderBy(x => x.Poradi).ThenBy(x => x.Id)
+            .Select(x => x.Id)
+            .ToListAsync(ct);
+
+        var kde = prvky.IndexOf(prvekId);
+        if (kde < 0) return "Takový prvek na téhle trati není.";
+        if (kde == prvky.Count - 1)
+            return "U posledního prvku už cíl je, zkrátit se tam nedá.";
+
+        trat.ZkracenoUPrvkuId = prvekId;
+        trat.ZkracenoV = cas.GetUtcNow();
+        trat.ZkratilId = kdo;
+        await db.SaveChangesAsync(ct);
+        return null;
+    }
+
+    /// <summary>
+    /// Zruší zkrácení — jede se zase celá trať. <b>Na vodě se překlepne
+    /// stejně snadno jako jinde</b>, a dokud rozjížďka běží, není důvod
+    /// to nejít vrátit.
+    /// </summary>
+    public async Task<string?> ZrusZkraceniAsync(int zavodId, int tratId, CancellationToken ct)
+    {
+        var trat = await db.Trate
+            .FirstOrDefaultAsync(t => t.Id == tratId && t.ZavodId == zavodId, ct);
+        if (trat is null) return "Taková trať u téhle regaty není.";
+        if (!trat.Zkracena) return "Tahle trať zkrácená není.";
+
+        var rozjizdka = await db.Rozjizdky
+            .FirstOrDefaultAsync(r => r.Id == trat.RozjizdkaId, ct);
+        if (rozjizdka?.Stav != StavRozjizdky.Probiha)
+            return "Rozjížďka se nejede, zkrácení se už nemění.";
+
+        trat.ZkracenoUPrvkuId = null;
+        trat.ZkracenoV = null;
+        trat.ZkratilId = null;
+        await db.SaveChangesAsync(ct);
+        return null;
+    }
+
+    /// <summary>
     /// Trať regaty, a když žádná není, tak se založí. Volá se z pípnutí:
     /// <b>stavba začíná první bójí</b>, ne zvláštním knoflíkem, který by
     /// nikdo nestiskl.
@@ -332,7 +419,9 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
                 p.Smer, p.DruhStartu))
             .ToListAsync(ct);
 
-        return new VerejnaTratDto(false, prijato, cislo, Prvky: prvky, Boje: await db.Boje
+        return new VerejnaTratDto(false, prijato, cislo,
+            ZkracenoUPrvkuId: trat.ZkracenoUPrvkuId, ZkracenoV: trat.ZkracenoV,
+            Prvky: prvky, Boje: await db.Boje
             .Where(b => b.ZavodId == zavodId
                         && b.PostavenaV <= prijato
                         && (b.NahrazenaV == null || b.NahrazenaV > prijato)
@@ -731,6 +820,9 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
             ? await db.Rozjizdky.Where(r => r.Id == rozjizdka)
                 .Select(r => (int?)r.Cislo).FirstOrDefaultAsync(ct)
             : null;
+        var jede = t.RozjizdkaId is { } beziciId
+                   && await db.Rozjizdky.AnyAsync(
+                       r => r.Id == beziciId && r.Stav == StavRozjizdky.Probiha, ct);
 
         return new TratDto(
             t.Id,
@@ -745,6 +837,12 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
             odjeta,
             SmiHlasitHotovo: jeStavitel && Stavba.ProcNejdeHotovo(t.Stav) is null,
             SmiPrijmout: jeRozhodci && Stavba.ProcNejdePrijmout(t.Stav) is null,
-            SmiPrestavet: jeStavitel && Stavba.ProcNejdePrestavba(t.Stav) is null);
+            SmiPrestavet: jeStavitel && Stavba.ProcNejdePrestavba(t.Stav) is null,
+            ZkracenoUPrvkuId: t.ZkracenoUPrvkuId,
+            ZkracenoV: t.ZkracenoV,
+            Zkratil: t.Zkratil?.Zobrazovane,
+            // Zkracuje se jen to, co se zrovna jede — stejná podmínka jako
+            // v `ZkratAsync`, aby obrazovka nenabízela, co server odmítne.
+            SmiZkratit: jeRozhodci && t.RozjizdkaId is not null && jede);
     }
 }

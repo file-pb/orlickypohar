@@ -98,6 +98,31 @@ public class Trat
     /// </summary>
     public string? DuvodVraceni { get; set; }
 
+    /// <summary>
+    /// Prvek, u kterého se zkrátilo — od té chvíle je tam cíl.
+    /// <para>
+    /// <b>Zkrácení není přestavba.</b> Ve vodě se nic nemění, prvky
+    /// zůstávají; jen se část z nich přestane plout. Proto jde i na
+    /// přijaté trati: zámek brání tichým změnám předpisu, ne rozhodnutí
+    /// rozhodčího, které se zapisuje i s časem a jménem.
+    /// </para>
+    /// <para>
+    /// <b>Pořadí se počítá normálně</b> (Filip, 15. 10. 2026: *„zkrácení
+    /// počítá normální pořadí, jen cíl je u té bóje"*), takže na bodování
+    /// tohle pole nesahá. Je to údaj o tom, kudy se jelo.
+    /// </para>
+    /// </summary>
+    public int? ZkracenoUPrvkuId { get; set; }
+    public PrvekTrati? ZkracenoUPrvku { get; set; }
+
+    /// <summary>Kdy a kdo zkrácení vyhlásil.</summary>
+    public DateTimeOffset? ZkracenoV { get; set; }
+    public Guid? ZkratilId { get; set; }
+    public Uzivatel? Zkratil { get; set; }
+
+    /// <summary>Jede se zkrácená trať?</summary>
+    public bool Zkracena => ZkracenoUPrvkuId is not null;
+
     /// <summary>Zamčená trať se nedá přestavovat, jen nahradit novou.</summary>
     public bool Zamcena => Stav == StavTrati.Prijato;
 }
@@ -125,7 +150,17 @@ public record TratDto(
     bool Odjeta,
     bool SmiHlasitHotovo,
     bool SmiPrijmout,
-    bool SmiPrestavet);
+    bool SmiPrestavet,
+    /// <summary>
+    /// Prvek, u kterého se zkrátilo — od té chvíle je tam cíl. `null`,
+    /// když se jede celá trať. <b>Id prvku, ne příznak</b>: bez něj by
+    /// se hendikep nedal dopočítat a odjeté regaty se už nedoplní.
+    /// </summary>
+    int? ZkracenoUPrvkuId = null,
+    DateTimeOffset? ZkracenoV = null,
+    string? Zkratil = null,
+    /// <summary>Smí přihlášený zkrátit? Jen rozhodčí, a jen když se jede.</summary>
+    bool SmiZkratit = false);
 
 /// <summary>
 /// Bóje, jak ji vidí divák: <b>jen kam se pluje</b>.
@@ -207,7 +242,18 @@ public record VerejnaTratDto(
     /// toho zůstávají: starší klient o prvcích neví a bez nich by mu trať
     /// zmizela úplně.
     /// </summary>
-    IReadOnlyList<VerejnyPrvekDto> Prvky);
+    IReadOnlyList<VerejnyPrvekDto> Prvky,
+    /// <summary>
+    /// Prvek, u kterého rozhodčí zkrátil — od té chvíle je tam cíl.
+    /// <c>null</c>, když se jede celá trať.
+    /// <para>
+    /// <b>Jde ven i vynechaným prvkům navzdory.</b> Závodník má vidět, co
+    /// se mělo plout a kde to skončilo; smazat zbytek by z trati udělalo
+    /// něco, co nikdy nestálo ve vodě.
+    /// </para>
+    /// </summary>
+    int? ZkracenoUPrvkuId = null,
+    DateTimeOffset? ZkracenoV = null);
 
 /// <summary>
 /// Trať v nabídce „jede se tahle". <b>Počet prvků je tu schválně</b>:

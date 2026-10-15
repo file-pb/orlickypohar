@@ -364,6 +364,69 @@ public class TratSpravaTests(PostgresFixture fixture)
         return r;
     }
 
+    /// <summary>
+    /// Zkrácení trati (Filip, 15. 10. 2026: *„za běhu do toho má jít
+    /// sáhnout a trať zkrátit"*).
+    ///
+    /// <para>
+    /// <b>U konkrétního prvku</b>, ne jen příznakem — jinak by se
+    /// nedal dopočítat hendikep a odjeté regaty se už nedoplní. Na
+    /// pořadí to nesahá: *„zkrácení počítá normální pořadí, jen cíl je
+    /// u té bóje"*.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Zkraceni_posune_cil_k_prvku_a_jde_i_na_zamcene_trati()
+    {
+        var (db, boje, trate, prvky) = SluzbyIPrvky();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (a, _) = await boje.PipniAsync(zavod.Id, Bod("A"), kdo.Id, default);
+        var (b, _) = await boje.PipniAsync(zavod.Id, Bod("B"), kdo.Id, default);
+        await prvky.ZalozAsync(zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, a!.Id), kdo.Id, default);
+        await prvky.ZalozAsync(zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 2, b!.Id), kdo.Id, default);
+
+        var rozjizdka = await RozjizdkaAsync(db, zavod, 1);
+        var trat = (await trate.AktualniAsync(zavod.Id, default))!;
+        Assert.Null((await trate.PriradAsync(zavod.Id, trat.Id, rozjizdka.Cislo, true, default)).Chyba);
+
+        var seznam = await db.PrvkyTrati.Where(x => x.TratId == trat.Id)
+            .OrderBy(x => x.Poradi).ToListAsync();
+
+        // Dokud se nejede, zkracovat nejde — to by bylo stavět kratší trať.
+        Assert.NotNull(await trate.ZkratAsync(zavod.Id, trat.Id, seznam[0].Id, kdo.Id, default));
+
+        // Zamčená a běžící: zkrátit jde, zámek tomu nebrání.
+        trat.Stav = StavTrati.Prijato;
+        trat.PrijatoV = DateTimeOffset.UnixEpoch;
+        rozjizdka.Stav = StavRozjizdky.Probiha;
+        await db.SaveChangesAsync();
+
+        // U posledního prvku cíl už je.
+        Assert.NotNull(await trate.ZkratAsync(zavod.Id, trat.Id, seznam[1].Id, kdo.Id, default));
+
+        Assert.Null(await trate.ZkratAsync(zavod.Id, trat.Id, seznam[0].Id, kdo.Id, default));
+        await db.Entry(trat).ReloadAsync();
+        Assert.Equal(seznam[0].Id, trat.ZkracenoUPrvkuId);
+        Assert.NotNull(trat.ZkracenoV);
+        Assert.Equal(kdo.Id, trat.ZkratilId);
+
+        // Prvky zůstávají: ve vodě se nic nezměnilo.
+        Assert.Equal(2, await db.PrvkyTrati.CountAsync(x => x.TratId == trat.Id));
+
+        // Zrušit jde, dokud se jede.
+        Assert.Null(await trate.ZrusZkraceniAsync(zavod.Id, trat.Id, default));
+        await db.Entry(trat).ReloadAsync();
+        Assert.Null(trat.ZkracenoUPrvkuId);
+
+        // Po dojetí už ne — to by přepsalo, podle čeho se jelo.
+        Assert.Null(await trate.ZkratAsync(zavod.Id, trat.Id, seznam[0].Id, kdo.Id, default));
+        rozjizdka.Stav = StavRozjizdky.Dokoncena;
+        await db.SaveChangesAsync();
+        Assert.NotNull(await trate.ZkratAsync(zavod.Id, trat.Id, seznam[0].Id, kdo.Id, default));
+        Assert.NotNull(await trate.ZrusZkraceniAsync(zavod.Id, trat.Id, default));
+    }
+
     [Fact]
     public async Task Klon_kopiruje_prvky_na_tytez_boje_a_nevyrabi_pipnuti()
     {

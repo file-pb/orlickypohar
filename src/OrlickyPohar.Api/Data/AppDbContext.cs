@@ -221,7 +221,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .OnDelete(DeleteBehavior.SetNull);
         trat.HasOne(x => x.Prijal).WithMany().HasForeignKey(x => x.PrijalId)
             .OnDelete(DeleteBehavior.SetNull);
+        // Zkrácení: prvek, u kterého je od vyhlášení cíl. Restrict, ne
+        // kaskáda — smazat prvek, na který zkrácení ukazuje, by zahodilo
+        // záznam o tom, kudy se jelo.
+        trat.HasOne(x => x.ZkracenoUPrvku).WithMany().HasForeignKey(x => x.ZkracenoUPrvkuId)
+            .OnDelete(DeleteBehavior.Restrict);
+        trat.HasOne(x => x.Zkratil).WithMany().HasForeignKey(x => x.ZkratilId)
+            .OnDelete(DeleteBehavior.SetNull);
         trat.Ignore(x => x.Zamcena);
+        trat.Ignore(x => x.Zkracena);
 
         var prvek = b.Entity<Features.Boje.PrvekTrati>();
         prvek.Property(x => x.Poznamka).HasMaxLength(Features.Boje.Prvky.PoznamkaNejvic);
