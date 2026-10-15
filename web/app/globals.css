@@ -2548,14 +2548,37 @@ body:has(.tabule) { overflow: hidden; }
   display: flex; flex-direction: column;
   position: relative;
 }
+/* Vrch tabule: logo vlevo, název uprostřed, stav vpravo (Filip, 15. 10.
+   2026). Postranní sloupce mají stejnou šířku, takže název sedí na středu
+   obrazovky, ne na středu zbylého místa. */
+.tabule .vrch {
+  display: grid; grid-template-columns: 14vw 1fr 14vw; align-items: center;
+  gap: 1vw; margin-bottom: 1vw;
+}
+.tabule .vrch h1 { margin: 0; min-width: 0; }
+.tabule .vrch .stav { display: flex; flex-direction: column; align-items: flex-end; gap: 0.3vw; }
+.tabule .vrch .stav p { margin: 0; }
 /* Logo v rohu: jediná klikatelná věc. Je malé schválně — má být po ruce,
    ne součást sdělení. */
 .tabule .odchod {
-  position: absolute; top: 1.2vw; right: 2vw;
-  width: 4.5vw; height: 4.5vw; opacity: 0.55;
+  display: block; width: 4.5vw; height: 4.5vw; opacity: 0.55;
 }
 .tabule .odchod:hover { opacity: 1; }
-.tabule .odchod svg { width: 100%; height: 100%; }
+.tabule .odchod svg { display: block; width: 100%; height: 100%; }
+
+/* Název závodu toutéž Inter Black a týmiž proužky jako nápis u loga.
+   Písmo je podmnožina (7 kB) z web/scripts/pismo-nadpis.py — celý Inter
+   Black má 335 kB a kvůli jednomu nadpisu by se nevyplatil. */
+@font-face {
+  font-family: "Nadpis tabule";
+  src: url("/pismo/inter-black.woff2") format("woff2");
+  font-weight: 900; font-style: normal; font-display: swap;
+}
+.tabule-nazev { display: block; width: 100%; height: 6.5vw; }
+.tabule-nazev text {
+  font-family: "Nadpis tabule", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 900; font-size: 5vw; letter-spacing: 0.01em;
+}
 /* Alert doprostřed televize: vyjede, chvíli visí a usadí se k tomu, čeho
    se týká (Filip, 15. 10. 2026). Je to to jediné, co se na pasivním panelu
    hýbe, takže si to může dovolit být velké.
@@ -2615,10 +2638,8 @@ body:has(.tabule) { overflow: hidden; }
 }
 
 .tabule { padding: 1.5vw 2vw; }
-.tabule header { display: flex; align-items: baseline; gap: 1.2vw; flex-wrap: wrap; }
-.tabule h1 { font-size: 3.2vw; margin: 0; }
 .tabule h2 { font-size: 1.7vw; margin: 0 0 0.6vw; }
-.tabule .stari { margin-left: auto; font-size: 1.1vw; color: var(--tlumeny); }
+.tabule .stari { font-size: 1.1vw; color: var(--tlumeny); }
 .tabule .stari.zastarale { color: var(--stav-zruseny); }
 .tabule .sloupce {
   display: grid;

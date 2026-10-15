@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Snimek } from "@/lib/tabule";
-import { Logo } from "@/app/logo";
+import { Znak } from "@/app/logo";
+import { NazevZavodu } from "@/app/tabule-nazev";
 import { udalosti, type Udalost } from "@/lib/tabule-udalosti";
 
 /**
@@ -79,17 +80,23 @@ export function Obrazovka({
           Hlavička webu se na tabuli schovává v CSS, tohle je náhrada za
           cestu zpátky — bez ní by se z televize nedalo odejít jinak než
           adresou. */}
-      <Link className="odchod" href="/" aria-label="Zpět na Orlický pohár">
-        <Logo />
-      </Link>
-
       <Alert udalost={fronta[0]} hotovo={() => setFronta((f) => f.slice(1))} />
-      <header>
-        <h1>{snimek.nazev}</h1>
-        <p className={`stitek stav-${snimek.stav.toLowerCase()}`}>{STAVY[snimek.stav]}</p>
-        <p className={stari > 120 ? "stari zastarale" : "stari"}>
-          {stari < 60 ? `data před ${stari} s` : `data stará ${Math.round(stari / 60)} min`}
-        </p>
+      {/* Logo vlevo, název uprostřed, stav vpravo (Filip, 15. 10. 2026).
+          Jen kulatá značka: nápis „Orlická série" vedle ní by stál vedle
+          názvu závodu v téže grafice a oba by se přebíjely. */}
+      <header className="vrch">
+        <Link className="odchod" href="/" aria-label="Zpět na Orlický pohár">
+          <Znak />
+        </Link>
+        <h1>
+          <NazevZavodu text={snimek.nazev} />
+        </h1>
+        <div className="stav">
+          <p className={`stitek stav-${snimek.stav.toLowerCase()}`}>{STAVY[snimek.stav]}</p>
+          <p className={stari > 120 ? "stari zastarale" : "stari"}>
+            {stari < 60 ? `data před ${stari} s` : `data stará ${Math.round(stari / 60)} min`}
+          </p>
+        </div>
       </header>
 
       {snimek.vysledkySkryte && (
