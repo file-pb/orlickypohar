@@ -705,4 +705,118 @@ public class TratSpravaTests(PostgresFixture fixture)
 
         Assert.NotEqual(prvni.Id, druha.Id);
     }
+
+    /// <summary>
+    /// Pomocník: přijatá trať přiřazená rozjížďce. Veřejná trať bere jen
+    /// přijaté, takže bez přijetí by testy neměřily nic.
+    /// </summary>
+    private static async Task<Trat> PrijataTratAsync(
+        AppDbContext db, Zavod zavod, Rozjizdka? rozjizdka)
+    {
+        var t = new Trat
+        {
+            ZavodId = zavod.Id,
+            RozjizdkaId = rozjizdka?.Id,
+            Stav = StavTrati.Prijato,
+            ZalozenaV = Ted,
+            PrijatoV = Ted,
+        };
+        db.Trate.Add(t);
+        await db.SaveChangesAsync();
+        return t;
+    }
+
+    /// <summary>
+    /// Divák vidí trať rozjížďky, která se právě jede — ne tu nejnovější.
+    /// Dřív rozhodovalo id, takže se dalo koukat na trať čtvrté rozjížďky,
+    /// zatímco se jela druhá.
+    /// </summary>
+    [Fact]
+    public async Task Verejna_trat_je_od_probihajici_rozjizdky()
+    {
+        var (db, _, trat) = Sluzby();
+        var (zavod, _) = await RegataAsync(db);
+
+        var prvni = await RozjizdkaAsync(db, zavod, 1);
+        var druha = await RozjizdkaAsync(db, zavod, 2);
+        prvni.Stav = StavRozjizdky.Probiha;
+        druha.Stav = StavRozjizdky.Planovana;
+        await db.SaveChangesAsync();
+
+        var tratPrvni = await PrijataTratAsync(db, zavod, prvni);
+        // Novější trať patří druhé rozjížďce — podle id by vyhrála ona.
+        await PrijataTratAsync(db, zavod, druha);
+
+        var verejna = await trat.VerejnaAsync(zavod.Id, default);
+
+        Assert.Equal(1, verejna!.CisloRozjizdky);
+        Assert.NotNull(tratPrvni);
+    }
+
+    /// <summary>
+    /// Když se nic nejede, bere se nejbližší plánovaná — ta, co se pojede.
+    /// </summary>
+    [Fact]
+    public async Task Bez_probihajici_se_bere_nejblizsi_planovana()
+    {
+        var (db, _, trat) = Sluzby();
+        var (zavod, _) = await RegataAsync(db);
+
+        var druha = await RozjizdkaAsync(db, zavod, 2);
+        var treti = await RozjizdkaAsync(db, zavod, 3);
+        await PrijataTratAsync(db, zavod, treti);
+        await PrijataTratAsync(db, zavod, druha);
+
+        var verejna = await trat.VerejnaAsync(zavod.Id, default);
+
+        Assert.Equal(2, verejna!.CisloRozjizdky);
+    }
+
+    /// <summary>
+    /// Po závodě zůstane poslední dokončená, aby stránka nezmizela —
+    /// trať, podle které se dojelo, diváka pořád zajímá.
+    /// </summary>
+    [Fact]
+    public async Task Po_zavode_zustane_posledni_dokoncena()
+    {
+        var (db, _, trat) = Sluzby();
+        var (zavod, _) = await RegataAsync(db);
+
+        var prvni = await RozjizdkaAsync(db, zavod, 1);
+        var druha = await RozjizdkaAsync(db, zavod, 2);
+        prvni.Stav = StavRozjizdky.Dokoncena;
+        druha.Stav = StavRozjizdky.Dokoncena;
+        await db.SaveChangesAsync();
+
+        await PrijataTratAsync(db, zavod, druha);
+        await PrijataTratAsync(db, zavod, prvni);
+
+        var verejna = await trat.VerejnaAsync(zavod.Id, default);
+
+        Assert.Equal(2, verejna!.CisloRozjizdky);
+    }
+
+    /// <summary>
+    /// Rozjížďka na řadě trať mít nemusí — staví se, zatímco lodě čekají.
+    /// Ukázat prázdno by bylo horší než ukázat tu poslední přijatou.
+    /// </summary>
+    [Fact]
+    public async Task Bez_trati_u_rozjizdky_se_vyda_posledni_prijata()
+    {
+        var (db, _, trat) = Sluzby();
+        var (zavod, _) = await RegataAsync(db);
+
+        var prvni = await RozjizdkaAsync(db, zavod, 1);
+        var druha = await RozjizdkaAsync(db, zavod, 2);
+        druha.Stav = StavRozjizdky.Probiha;
+        await db.SaveChangesAsync();
+
+        // Druhá se zrovna staví, přijatou trať má jen první.
+        await PrijataTratAsync(db, zavod, prvni);
+
+        var verejna = await trat.VerejnaAsync(zavod.Id, default);
+
+        Assert.NotNull(verejna);
+        Assert.Equal(1, verejna!.CisloRozjizdky);
+    }
 }

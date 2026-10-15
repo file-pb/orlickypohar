@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 
+using OrlickyPohar.Api.Features.Zavody;
 namespace OrlickyPohar.Api.Features.Boje;
 
 /// <summary>
@@ -242,6 +243,58 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
     /// záznam o bóji se nikdy nepřepisuje a časy nese.
     /// </para>
     /// </summary>
+    /// <summary>
+    /// Přijatá trať <b>rozjížďky, která je na řadě</b> — ta, podle které se
+    /// zrovna pluje, nebo podle které se poplave nejblíž.
+    /// <para>
+    /// Filip, 15. 10. 2026: *„mapu aktuální rozjížďky/trati, a pokud se nic
+    /// nejede zrovna, tak té nejbližší, co se pojede"*. Do té doby se brala
+    /// <b>nejnovější přijatá podle id</b>, což od chvíle, kdy má každá
+    /// rozjížďka vlastní trať, znamenalo něco jiného: divák mohl koukat na
+    /// trať čtvrté rozjížďky, zatímco se jela druhá.
+    /// </para>
+    /// <para>
+    /// Pořadí je probíhající → nejbližší plánovaná → poslední dokončená.
+    /// Poslední krok je tu proto, aby stránka po závodě nezmizela: trať,
+    /// podle které se dojelo, je pořád to, co diváka zajímá.
+    /// </para>
+    /// <para>
+    /// <b>Když rozjížďka na řadě přijatou trať nemá</b> (třeba se zrovna
+    /// staví, zatímco lodě čekají na vodě), spadne se na nejnovější
+    /// přijatou. Ukázat prázdno by bylo horší: na vodě něco stojí a divák
+    /// se dívá právě proto.
+    /// </para>
+    /// </summary>
+    private async Task<Trat?> NaRadeAsync(int zavodId, CancellationToken ct)
+    {
+        var rozjizdky = await db.Rozjizdky
+            .Where(r => r.ZavodId == zavodId && r.Stav != StavRozjizdky.Zrusena)
+            .Select(r => new { r.Id, r.Cislo, r.Stav })
+            .ToListAsync(ct);
+
+        var naRade =
+            rozjizdky.FirstOrDefault(r => r.Stav == StavRozjizdky.Probiha)
+            ?? rozjizdky.Where(r => r.Stav == StavRozjizdky.Planovana)
+                .OrderBy(r => r.Cislo).FirstOrDefault()
+            ?? rozjizdky.Where(r => r.Stav == StavRozjizdky.Dokoncena)
+                .OrderByDescending(r => r.Cislo).FirstOrDefault();
+
+        if (naRade is not null)
+        {
+            var jeji = await db.Trate
+                .Where(t => t.ZavodId == zavodId && t.RozjizdkaId == naRade.Id
+                            && t.Stav == StavTrati.Prijato)
+                .OrderByDescending(t => t.Id)
+                .FirstOrDefaultAsync(ct);
+            if (jeji is not null) return jeji;
+        }
+
+        return await db.Trate
+            .Where(t => t.ZavodId == zavodId && t.Stav == StavTrati.Prijato)
+            .OrderByDescending(t => t.Id)
+            .FirstOrDefaultAsync(ct);
+    }
+
     public async Task<VerejnaTratDto?> VerejnaAsync(int zavodId, CancellationToken ct)
     {
         // Nejnovější trať rozhoduje jen o přestavbě: to je ta, která se právě
@@ -253,11 +306,7 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
             return new VerejnaTratDto(
                 Prestavba: true, PrijatoV: null, CisloRozjizdky: null, Boje: [], Prvky: []);
 
-        var trat = await db.Trate
-            .Where(t => t.ZavodId == zavodId && t.Stav == StavTrati.Prijato)
-            .OrderByDescending(t => t.Id)
-            .FirstOrDefaultAsync(ct);
-
+        var trat = await NaRadeAsync(zavodId, ct);
         if (trat is null) return null;
 
         var cislo = trat.RozjizdkaId is { } rozjizdka
