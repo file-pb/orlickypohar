@@ -2995,6 +2995,27 @@ zmrzne a bude lhát o deset vteřin plus dobu jednoho vykreslení. Posílat se
 proto musí **čas zdroje** a stáří si spočítá prohlížeč. Tím se cache
 z překážky stává výhodou: jeden snímek obslouží celou hospodu.
 
+**Alerty vyjedou z porovnání snímků, ne z API** (Filip, 15. 10. 2026:
+*„alerty, které vyjedou při změnách, typicky: schválení trati, rozjížďky
+nebo nějaké rozhodnutí, a nebo právě starty a dojezdy"*). Tabule poslední
+snímek drží, takže změnu pozná sama; posílat navíc proud událostí by
+znamenalo druhou cestu k týmž datům a dvě místa, kde se dá splést, co je
+nového. Bez předchozího snímku se nevyhlašuje nic — kdo přijde k televizi
+v půlce závodu, nemá dostat salvu alertů o všem, co se stalo před ním.
+Hlásí se starty, dojezdy, dojetá rozjížďka, dojetá regata a trať.
+
+**U trati se hlásí přechod, ne změna razítka.** Veřejný endpoint vydává
+trať, která je *na řadě*, takže po dojezdu rozjížďky se `prijatoV` změní
+samo — a alert zavěšený na razítku by vyhlásil „Trať schválena" ve chvíli,
+kdy rozhodčí nic neudělal, jen se posunula rozjížďka na svou, ráno už
+schválenou trať. Podmínka je proto `jedeSe()` = přijato a neprobíhá
+přestavba; opačný směr dává „Trať se přestavuje" nebo „Čeká se na trať".
+
+**Alert může přijít až o deset sekund později** a to je v pořádku:
+`proxy_cache_valid 200 404 10s` platí i pro `tabule/data`, takže celá
+hospoda dostane tentýž snímek. Nic se neztratí — porovnání běží proti
+poslednímu snímku, který prohlížeč drží, ne proti času.
+
 **Výpadek API dnešní web nepřežije.** `Vypadek` se vykresluje jako součást
 stránky, která vrací **200**, takže ho nginx uloží jako platnou odpověď —
 a `proxy_cache_use_stale updating` chyby nepokrývá, takže starou dobrou
