@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Boje;
 using OrlickyPohar.Api.Features.Bodovani;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Import;
@@ -195,6 +196,18 @@ public class VysledkySpravaTests(PostgresFixture fixture)
 
         var rozjizdka = await db.Rozjizdky.FirstAsync(r => r.Zavod!.Serie!.Slug == slug && r.Cislo == 2);
         rozjizdka.StavVysledku = StavVysledku.Navrzeno;
+
+        // Přijatá trať. <b>Bez ní se od 15. 10. 2026 nestartuje</b>, takže
+        // „stav, do kterého se dá zapisovat" ji musí mít — jinak by testy
+        // zápisu padaly na podmínku, se kterou nemají co do činění.
+        db.Trate.Add(new Trat
+        {
+            ZavodId = rozjizdka.ZavodId,
+            RozjizdkaId = rozjizdka.Id,
+            Stav = StavTrati.Prijato,
+            ZalozenaV = DateTimeOffset.UnixEpoch,
+            PrijatoV = DateTimeOffset.UnixEpoch,
+        });
         await db.SaveChangesAsync();
 
         // Anička, pak Bóra — v pořadí, v jakém je ročník vypisuje.
@@ -304,6 +317,66 @@ public class VysledkySpravaTests(PostgresFixture fixture)
             [new(prihlasky[0], PoradiVCili: 1), new(prihlasky[1], Kod: KodVysledku.Dnf)], default, revize: rozjizdka.Revize)).Chyba);
 
         Assert.Equal(2, await db.Ucasti.CountAsync(u => u.Zavod!.Serie!.Slug == slug));
+    }
+
+    /// <summary>
+    /// <b>Bez přijaté trati se nestartuje</b> (Filip, 15. 10. 2026:
+    /// *„to, co nemá trať, nejde odstartovat"*, a na doptání: musí být
+    /// přijatá rozhodčím). Přijetí je to, čím rozhodčí říká „jede se podle
+    /// tohohle".
+    /// </summary>
+    [Fact]
+    public async Task Rozjizdka_bez_prijate_trati_nejde_odstartovat()
+    {
+        var slug = "zapis-start-bez-trati";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (db, zapis, rozjizdka, _) = await OtevrenaAsync(scope, slug);
+
+        // Trať z pomocníka odejde do přestavby: přiřazená je, přijatá ne.
+        var trat = await db.Trate.FirstAsync(t => t.RozjizdkaId == rozjizdka.Id);
+        trat.Stav = StavTrati.Prestavba;
+        trat.PrijatoV = null;
+        await db.SaveChangesAsync();
+
+        var kdy = new DateTimeOffset(2026, 6, 20, 11, 0, 0, TimeSpan.FromHours(2));
+        Assert.NotNull(await zapis.StartAsync(rozjizdka, kdy, default));
+        Assert.Equal(StavRozjizdky.Planovana, rozjizdka.Stav);
+
+        // Jakmile ji rozhodčí přijme, start projde.
+        trat.Stav = StavTrati.Prijato;
+        trat.PrijatoV = kdy;
+        await db.SaveChangesAsync();
+
+        Assert.Null(await zapis.StartAsync(rozjizdka, kdy, default));
+        Assert.Equal(StavRozjizdky.Probiha, rozjizdka.Stav);
+    }
+
+    /// <summary>
+    /// <b>Běžící rozjížďce jde start přepsat i bez přijaté trati.</b>
+    /// Tlačítko se na vodě snadno zmáčkne o znamení dřív a trať mezitím
+    /// mohla odejít do přestavby — opravit čas musí jít pořád.
+    /// </summary>
+    [Fact]
+    public async Task Bezici_rozjizdce_jde_start_prepsat_i_kdyz_trat_neni_prijata()
+    {
+        var slug = "zapis-start-prepis";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (db, zapis, rozjizdka, _) = await OtevrenaAsync(scope, slug);
+
+        var kdy = new DateTimeOffset(2026, 6, 20, 11, 0, 0, TimeSpan.FromHours(2));
+        Assert.Null(await zapis.StartAsync(rozjizdka, kdy, default));
+
+        var trat = await db.Trate.FirstAsync(t => t.RozjizdkaId == rozjizdka.Id);
+        trat.Stav = StavTrati.Prestavba;
+        await db.SaveChangesAsync();
+
+        Assert.Null(await zapis.StartAsync(rozjizdka, kdy.AddMinutes(3), default));
+        await db.Entry(rozjizdka).ReloadAsync();
+        Assert.Equal(kdy.AddMinutes(3), rozjizdka.StartV);
     }
 
     [Fact]

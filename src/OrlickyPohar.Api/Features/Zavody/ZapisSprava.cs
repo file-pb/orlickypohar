@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Boje;
 using OrlickyPohar.Api.Features.Bodovani;
 
 namespace OrlickyPohar.Api.Features.Zavody;
@@ -442,6 +443,21 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
     {
         var zavod = await db.Zavody.FirstAsync(z => z.Id == rozjizdka.ZavodId, ct);
         if (Zapis.ProcNejdePrepsat(zavod.Stav, rozjizdka.StavVysledku) is { } zamceno) return zamceno;
+
+        // <b>Bez přijaté trati se nestartuje</b> (Filip, 15. 10. 2026:
+        // *„to, co nemá trať, nejde odstartovat"* — a na doptání: musí být
+        // přijatá rozhodčím). Přijetí je to, čím rozhodčí říká „jede se
+        // podle tohohle"; odstartovat dřív by znamenalo pustit lodě na
+        // trať, kterou nikdo nepotvrdil a která se pod nimi ještě může
+        // změnit.
+        //
+        // <b>Jen první start.</b> Přepsat čas běžící rozjížďky musí jít
+        // pořád — tlačítko se na vodě snadno zmáčkne o znamení dřív a mezitím
+        // mohla trať odejít do přestavby.
+        if (rozjizdka.Stav == StavRozjizdky.Planovana
+            && !await db.Trate.AnyAsync(
+                t => t.RozjizdkaId == rozjizdka.Id && t.Stav == StavTrati.Prijato, ct))
+            return "Rozjížďka nemá přijatou trať. Přiřaď jí trať a nech ji rozhodčím přijmout.";
 
         rozjizdka.StartV = kdy.ToUniversalTime();
         if (rozjizdka.Stav == StavRozjizdky.Planovana) rozjizdka.Stav = StavRozjizdky.Probiha;
