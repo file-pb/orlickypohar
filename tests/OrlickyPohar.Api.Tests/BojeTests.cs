@@ -55,7 +55,7 @@ public class BojeTests(PostgresFixture fixture)
         // by bez veřejné adresy vydal null. Test má měřit projekci, ne to,
         // jestli má běh nakonfigurované R2.
         var uloziste = new VerejneUloziste();
-        var trate = new TratSprava(db, TimeProvider.System);
+        var trate = new TratSprava(db, TimeProvider.System, new VerejneUloziste());
         return (db, new BojeSprava(
             db, TimeProvider.System, uloziste, trate,
             new OrlickyPohar.Api.Features.Fotky.FotkySprava(
@@ -440,6 +440,46 @@ public class BojeTests(PostgresFixture fixture)
         var venku = Assert.Single(verejna!.Boje);
         Assert.Equal(BarvaBoje.Cervena, venku.Barva);
         Assert.Equal(TvarBoje.Valcova, venku.Tvar);
+    }
+
+    /// <summary>
+    /// <b>Fotky značky jdou ven s tratí</b> (Filip, 15. 10. 2026:
+    /// *„náhledy bójí a fotky v trati na regatě"*). Ze souřadnic se
+    /// nepozná, jestli je bóje nafouklá a co je za ní na břehu; dokud
+    /// byla neveřejná celá trať, nevydávaly se ani fotky — ten důvod
+    /// padl.
+    /// </summary>
+    [Fact]
+    public async Task Verejna_trat_nese_fotky_znacky()
+    {
+        var (db, boje, trate) = SluzbyITrat();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (znacka, _) = await boje.PipniAsync(zavod.Id, Bod("otočná 1"), kdo.Id, default);
+
+        var prvky = new PrvkySprava(db, trate, TimeProvider.System);
+        Assert.Null((await prvky.ZalozAsync(
+            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, znacka!.Id), kdo.Id, default)).Chyba);
+
+        db.Fotky.Add(new OrlickyPohar.Api.Features.Fotky.Fotka
+        {
+            Id = Guid.NewGuid(),
+            UBojeId = znacka.Id,
+            NahralId = kdo.Id,
+            NahranoV = DateTimeOffset.UnixEpoch,
+            Autor = "Filip Burda",
+            Sirka = 1200,
+            Vyska = 900,
+        });
+        await db.SaveChangesAsync();
+
+        await trate.HotovoAsync(zavod.Id, true, default);
+        await trate.PrijmiAsync(zavod.Id, kdo.Id, default);
+
+        var verejna = await trate.VerejnaAsync(zavod.Id, default);
+        var prvek = Assert.Single(verejna!.Prvky);
+        var fotka = Assert.Single(prvek.A.Fotky!);
+        Assert.StartsWith("https://foto.example", fotka.Velky);
     }
 
     /// <summary>
