@@ -351,7 +351,10 @@ public class VysledkySpravaTests(PostgresFixture fixture)
 
         // Jakmile ji rozhodčí přijme, start projde.
         trat.Stav = StavTrati.Prijato;
-        trat.PrijatoV = kdy;
+        // <b>UTC</b>: Npgsql do `timestamp with time zone` jiný posun
+        // nepustí. `StartAsync` si svůj čas převádí sám, tady to musí
+        // udělat test.
+        trat.PrijatoV = kdy.ToUniversalTime();
         await db.SaveChangesAsync();
 
         Assert.Null(await zapis.StartAsync(rozjizdka, kdy, default));
