@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Vypadek } from "@/app/vypadek";
+import type { ZavodDetail } from "@/lib/api";
 import { Boky } from "@/app/boky";
 import { HlavaZastavky } from "../hlava";
 import { nactiZastavku } from "../data";
@@ -47,11 +48,7 @@ export default async function Lode({ params, searchParams }: Parametry) {
       {detail.lode.length === 0 ? (
         <>
           <h2>Přihlášené lodě</h2>
-          <p className="prazdno">
-            {prihlasuje
-              ? "Zatím se nikdo nepřihlásil — můžeš být první."
-              : "Na tuhle regatu se nikdo nepřihlásil."}
-          </p>
+          <p className="prazdno">{prazdnySeznam(detail.stav, prihlasuje)}</p>
           {prihlasuje && (
             <p className="poznamka">
               <Link href={naPrihlasku}>Přihlásit loď →</Link>
@@ -70,4 +67,26 @@ export default async function Lode({ params, searchParams }: Parametry) {
       )}
     </Boky>
   );
+}
+
+/**
+ * Co stojí nad prázdným seznamem lodí.
+ *
+ * <para>
+ * <b>„Nikdo se nepřihlásil" u regaty, která ještě není vypsaná, je lež
+ * o budoucnosti</b> (průchod scénáři Izolepy, 15. 10. 2026): zní jako
+ * konečný stav, přitom se přihlášky teprve otevřou. Čtenář přitom nemá
+ * z čeho poznat rozdíl — odkaz na přihlášku se u nevypsané regaty
+ * neukazuje, takže vidí jen tu větu.
+ * </para>
+ */
+function prazdnySeznam(stav: ZavodDetail["stav"], prihlasuje: boolean) {
+  if (prihlasuje) return "Zatím se nikdo nepřihlásil — můžeš být první.";
+
+  if (stav === "Zruseny") return "Regata je zrušená, takže se na ni nikdo nehlásí.";
+
+  if (stav === "Planovany" || stav === "Potvrzeny")
+    return "Přihlášky zatím nejsou otevřené. Otevřou se, až pořadatel regatu vypíše.";
+
+  return "Na tuhle regatu se nikdo nepřihlásil.";
 }
