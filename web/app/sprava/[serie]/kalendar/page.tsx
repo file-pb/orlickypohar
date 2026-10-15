@@ -362,7 +362,12 @@ function Zastavka({
             <input type="hidden" name="nazev" value={zastavka.nazev} />
             <input type="hidden" name="stav" value={na} />
             <input type="hidden" name="zpet" value={zpet} />
-            <button type="submit" title={prechod(na, zastavka.druh).popis}>
+            {/* Viditelný text napřed — viz obrazovka přihlášek. */}
+            <button
+              type="submit"
+              title={prechod(na, zastavka.druh).popis}
+              aria-label={`${nazevPrechodu(zastavka.stav, na, zastavka.druh)} — ${prechod(na, zastavka.druh).popis}`}
+            >
               {nazevPrechodu(zastavka.stav, na, zastavka.druh)}
             </button>
           </form>

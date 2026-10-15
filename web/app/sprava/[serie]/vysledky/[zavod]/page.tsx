@@ -324,7 +324,12 @@ function Rozjizdka({
               <input type="hidden" name="zavod" value={zavod} />
               <input type="hidden" name="cislo" value={rozjizdka.cislo} />
               <input type="hidden" name="stav" value={na} />
-              <button type="submit" title={STAVY[na].popis}>
+              {/* Viditelný text napřed — viz obrazovka přihlášek. */}
+              <button
+                type="submit"
+                title={STAVY[na].popis}
+                aria-label={`${STAVY[na].tlacitko} — ${STAVY[na].popis}`}
+              >
                 {STAVY[na].tlacitko}
               </button>
             </form>

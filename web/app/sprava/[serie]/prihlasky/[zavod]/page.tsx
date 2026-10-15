@@ -392,7 +392,16 @@ function Tabulka({
                           <form key={na} action={stavLodiAkce}>
                             <Skryte serie={serie} zavod={zavod} lod={l} />
                             <input type="hidden" name="stav" value={na} />
-                            <button type="submit" title={STAVY_UCASTI[na].popis}>
+                            {/* `aria-label` začíná viditelným textem
+                                schválně: samotný `title` ho přebije, takže
+                                čtečka i hlasové ovládání znaly tlačítko jako
+                                dlouhou větu a „klikni na Zapsat" nefungovalo
+                                (WCAG 2.5.3). */}
+                            <button
+                              type="submit"
+                              title={STAVY_UCASTI[na].popis}
+                              aria-label={`${tlacitko(l.stav, na)} — ${STAVY_UCASTI[na].popis}`}
+                            >
                               {tlacitko(l.stav, na)}
                             </button>
                           </form>
@@ -404,7 +413,12 @@ function Tabulka({
                         .filter((na): na is StavUcasti => na != null && potrebujeDuvod(na))
                         .map((na) => (
                           <details key={na} className="s-duvodem">
-                            <summary title={STAVY_UCASTI[na].popis}>{tlacitko(l.stav, na)}…</summary>
+                            <summary
+                              title={STAVY_UCASTI[na].popis}
+                              aria-label={`${tlacitko(l.stav, na)} — ${STAVY_UCASTI[na].popis}`}
+                            >
+                              {tlacitko(l.stav, na)}…
+                            </summary>
                             <form action={stavLodiAkce}>
                               <Skryte serie={serie} zavod={zavod} lod={l} />
                               <input type="hidden" name="stav" value={na} />
