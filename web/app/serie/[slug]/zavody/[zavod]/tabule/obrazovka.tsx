@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import type { Snimek } from "@/lib/tabule";
+import { Logo } from "@/app/logo";
 
 /**
  * Tabule, která se obnovuje sama a přežije výpadek.
@@ -55,6 +57,15 @@ export function Obrazovka({
 
   return (
     <div className="tabule">
+      {/* <b>Jediná klikatelná věc na obrazovce</b> (Filip, 15. 10. 2026:
+          *„tam stačí jen hlavní logo, na které když se klepne, tak jsme
+          zpět na hlavní stránce webu… jinak ať tam nic neotravuje"*).
+          Hlavička webu se na tabuli schovává v CSS, tohle je náhrada za
+          cestu zpátky — bez ní by se z televize nedalo odejít jinak než
+          adresou. */}
+      <Link className="odchod" href="/" aria-label="Zpět na Orlický pohár">
+        <Logo />
+      </Link>
       <header>
         <h1>{snimek.nazev}</h1>
         <p className={`stitek stav-${snimek.stav.toLowerCase()}`}>{STAVY[snimek.stav]}</p>
