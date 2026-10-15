@@ -1021,8 +1021,6 @@ def proc_nejde_prvek(slug, v):
         return ("Strana se uvádí u otočné bóje, průjezdní bóje a odskoku. "
                 "U brány — i té otočné — si ji volí loď, u startu a cíle "
                 "rozhoduje směr průjezdu.")
-    if (v.get("poradi") or 0) <= 0:
-        return "Pořadí v trati začíná jedničkou."
     if v.get("bojeAId") == v.get("bojeBId"):
         return "Oba konce nemůžou být tatáž bóje."
 
@@ -2467,8 +2465,15 @@ class H(BaseHTTPRequestHandler):
         # prvky už neplní vůbec.
         boje_b = self.znacka_z_bodu(slug, v)
 
+        # Pořadí určuje server a nový prvek jde na konec trati — opsané
+        # z `PrvkySprava.ZalozAsync`. Bere se nejvyšší pořadí, ne počet:
+        # čísla se smějí opakovat, takže počet by vrátil číslo, které už
+        # někdo má.
+        sourozenci = PRVKY.get(trat_aktualni(slug)["id"], [])
+        poradi = max((x["poradi"] for x in sourozenci), default=0) + 1
+
         PRVEK_ID[0] += 1
-        p = {"id": PRVEK_ID[0], "typ": v["typ"], "poradi": v["poradi"],
+        p = {"id": PRVEK_ID[0], "typ": v["typ"], "poradi": poradi,
              "strana": v.get("strana"), "poznamka": (v.get("poznamka") or "").strip() or None,
              "bojeAId": v["bojeAId"], "bojeBId": boje_b,
              "smer": v.get("smer"), "druhStartu": v.get("druhStartu")}
@@ -2516,6 +2521,9 @@ class H(BaseHTTPRequestHandler):
         v = self.telo_zadosti() or {}
         if (chyba := proc_nejde_prvek(slug, v)):
             return self.chyba(400, chyba)
+        # Jen při úpravě: při zakládání si pořadí počítá server sám.
+        if (v.get("poradi") or 0) <= 0:
+            return self.chyba(400, "Pořadí v trati začíná jedničkou.")
         if not (p := self._prvek(slug, prvek_id)):
             return self.chyba(400, "Takový prvek na téhle trati není.")
 

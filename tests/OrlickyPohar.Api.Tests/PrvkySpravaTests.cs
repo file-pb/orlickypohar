@@ -404,14 +404,95 @@ public class PrvkySpravaTests(PostgresFixture fixture)
 
         var (a, _) = await boje.PipniAsync(zavod.Id, Bod("bóje A"), kdo.Id, default);
 
-        Assert.Null((await prvky.ZalozAsync(
-            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 2, a!.Id), kdo.Id, default)).Chyba);
-        Assert.Null((await prvky.ZalozAsync(
-            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 4, a.Id), kdo.Id, default)).Chyba);
+        var (prvni, chybaPrvni) = await prvky.ZalozAsync(
+            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 0, a!.Id), kdo.Id, default);
+        var (druhy, chybaDruhy) = await prvky.ZalozAsync(
+            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 0, a.Id), kdo.Id, default);
+        Assert.Null(chybaPrvni);
+        Assert.Null(chybaDruhy);
+
+        // Přečíslování na tutéž hodnotu: právě to pole Poradi na bóji neuneslo.
+        Assert.Null((await prvky.UpravAsync(
+            zavod.Id, druhy!.Id, new PrvekVstup(TypPrvku.OtocnaBoje, prvni!.Poradi, a.Id),
+            kdo.Id, default)).Chyba);
 
         var seznam = await prvky.SeznamAsync(zavod.Id, default);
 
-        Assert.Equal([2, 4], seznam.Select(p => p.Poradi).ToArray());
+        Assert.Equal([1, 1], seznam.Select(p => p.Poradi).ToArray());
         Assert.All(seznam, p => Assert.Equal(a.Id, p.A.Id));
+    }
+
+    /// <summary>
+    /// <b>Pořadí prvku určuje server, ne obrazovka.</b> Nový prvek patří na
+    /// konec trati i tehdy, když klient pošle číslo, které si spočítal ze
+    /// zastaralého seznamu.
+    ///
+    /// <para>
+    /// Objeveno 15. 10. 2026 při průchodu scénáři Izolepy: obrazovka brala
+    /// pořadí z délky seznamu, který měla vyrenderovaný
+    /// (<c>boje/[zavod]/page.tsx</c>), a mezi pípnutím prvního bodu a
+    /// dokončením prvku se překreslila s prázdným seznamem. Cíl postavený
+    /// jako třetí tak dostal jedničku, stejnou jako start — a veřejná trať
+    /// pak závodníkovi vypsala <c>start → cíl → otočka</c>.
+    /// </para>
+    ///
+    /// <para>
+    /// Test proto posílá <b>jedničku u každého prvku</b>: to je přesně ta
+    /// hodnota, kterou vadná obrazovka posílala.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Poradi_noveho_prvku_urci_server_i_kdyz_klient_posle_jinak()
+    {
+        var (db, boje, _, prvky) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (levy, _) = await boje.PipniAsync(zavod.Id, Bod("start levobok"), kdo.Id, default);
+        var (pravy, _) = await boje.PipniAsync(zavod.Id, Bod("start pravobok"), kdo.Id, default);
+        var (otocna, _) = await boje.PipniAsync(zavod.Id, Bod("otočná"), kdo.Id, default);
+        var (cilA, _) = await boje.PipniAsync(zavod.Id, Bod("cíl levobok"), kdo.Id, default);
+        var (cilB, _) = await boje.PipniAsync(zavod.Id, Bod("cíl pravobok"), kdo.Id, default);
+
+        var (start, _) = await prvky.ZalozAsync(zavod.Id, new PrvekVstup(
+            TypPrvku.Start, 1, levy!.Id, pravy!.Id, Smer: SvetovaStrana.S,
+            DruhStartu: DruhStartu.PevnaLinie), kdo.Id, default);
+        var (toc, _) = await prvky.ZalozAsync(zavod.Id, new PrvekVstup(
+            TypPrvku.OtocnaBoje, 1, otocna!.Id, Strana: StranaPrvku.PoLeve), kdo.Id, default);
+        var (cil, _) = await prvky.ZalozAsync(zavod.Id, new PrvekVstup(
+            TypPrvku.Cil, 1, cilA!.Id, cilB!.Id, Smer: SvetovaStrana.J), kdo.Id, default);
+
+        Assert.Equal(1, start!.Poradi);
+        Assert.Equal(2, toc!.Poradi);
+        Assert.Equal(3, cil!.Poradi);
+
+        // A hlavně: trať se čte start → otočka → cíl, ne start → cíl → otočka.
+        var seznam = await prvky.SeznamAsync(zavod.Id, default);
+        Assert.Equal(
+            [TypPrvku.Start, TypPrvku.OtocnaBoje, TypPrvku.Cil],
+            seznam.Select(p => p.Typ).ToArray());
+    }
+
+    /// <summary>
+    /// Posun prvku pořadí měnit <b>smí</b> — přečíslování trati je úprava,
+    /// ne zakládání, a právě tudy chodí tlačítka „posunout nahoru/dolů".
+    /// </summary>
+    [Fact]
+    public async Task Uprava_poradi_ho_zmeni_a_nula_se_odmitne()
+    {
+        var (db, boje, _, prvky) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (a, _) = await boje.PipniAsync(zavod.Id, Bod("bóje A"), kdo.Id, default);
+        var (prvek, _) = await prvky.ZalozAsync(
+            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, a!.Id), kdo.Id, default);
+
+        var (posunuty, chyba) = await prvky.UpravAsync(
+            zavod.Id, prvek!.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 7, a.Id), kdo.Id, default);
+        Assert.Null(chyba);
+        Assert.Equal(7, posunuty!.Poradi);
+
+        var (_, nula) = await prvky.UpravAsync(
+            zavod.Id, prvek.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 0, a.Id), kdo.Id, default);
+        Assert.Equal("Pořadí v trati začíná jedničkou.", nula);
     }
 }

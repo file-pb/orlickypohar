@@ -29,6 +29,11 @@ public record PrvekDto(
 /// <summary>Co přijde při zakládání nebo úpravě prvku.</summary>
 public record PrvekVstup(
     TypPrvku Typ,
+    /// <summary>
+    /// Kolikátý je prvek v trati. <b>Platí jen při úpravě</b> — při zakládání
+    /// si pořadí určuje server a tahle hodnota se ignoruje, protože klient
+    /// počítá z toho, co měl zrovna načtené, a to bývá o krok pozadu.
+    /// </summary>
     int Poradi,
     int BojeAId,
     int? BojeBId = null,
@@ -83,7 +88,19 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
             .ToListAsync(ct);
     }
 
-    /// <summary>Založí prvek. Vrací ho, nebo důvod, proč to nejde.</summary>
+    /// <summary>
+    /// Založí prvek. Vrací ho, nebo důvod, proč to nejde.
+    ///
+    /// <para>
+    /// <b>Pořadí určuje server, ne klient</b> (15. 10. 2026). Nový prvek jde
+    /// vždycky na konec trati. Dokud si ho počítala obrazovka z délky
+    /// seznamu, který měla načtený, stačilo, aby se mezi pípnutím a
+    /// dokončením prvku překreslila s prázdným seznamem — a cíl postavený
+    /// jako poslední dostal jedničku, takže se trať četla
+    /// <c>start → cíl → otočka</c>. Číslo musí vzniknout tam, kde je vidět
+    /// celá trať, a pod touž transakcí, která prvek ukládá.
+    /// </para>
+    /// </summary>
     public async Task<(PrvekDto? Prvek, string? Chyba)> ZalozAsync(
         int zavodId, PrvekVstup vstup, Guid kdo, CancellationToken ct)
     {
@@ -92,7 +109,7 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
         var trat = await trate.AktualniAsync(zavodId, ct);
         var bojeBId = await ZaznamBoduAsync(zavodId, vstup, kdo, ct);
         var prvek = new PrvekTrati { TratId = trat!.Id };
-        Napln(prvek, vstup, bojeBId);
+        Napln(prvek, vstup, bojeBId, await DalsiPoradiAsync(trat.Id, ct));
 
         db.PrvkyTrati.Add(prvek);
         await db.SaveChangesAsync(ct);
@@ -105,6 +122,10 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
         int zavodId, int prvekId, PrvekVstup vstup, Guid kdo, CancellationToken ct)
     {
         if (await ProcNejdeAsync(zavodId, vstup, ct) is { } chyba) return (null, chyba);
+
+        // Pořadí se ověřuje jen tady: při zakládání ho server počítá sám,
+        // takže by se kontrolovalo číslo, které stejně nikdo nepoužije.
+        if (vstup.Poradi <= 0) return (null, "Pořadí v trati začíná jedničkou.");
 
         if (await NajdiAsync(zavodId, prvekId, ct) is not { } prvek)
             return (null, "Takový prvek na téhle trati není.");
@@ -120,7 +141,7 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
                           + "nebo prvek smaž a postav znovu.");
 
         var bojeBId = await ZaznamBoduAsync(zavodId, vstup, kdo, ct);
-        Napln(prvek, vstup, bojeBId);
+        Napln(prvek, vstup, bojeBId, vstup.Poradi);
         await db.SaveChangesAsync(ct);
 
         return (await JedenAsync(prvek.Id, ct), null);
@@ -198,7 +219,6 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
                 v.Poznamka, v.Smer, v.DruhStartu) is { } chyba)
             return chyba;
 
-        if (v.Poradi <= 0) return "Pořadí v trati začíná jedničkou.";
         if (v.BojeAId == v.BojeBId) return "Oba konce nemůžou být tatáž bóje.";
 
         if (await StojiAsync(zavodId, v.BojeAId, ct) is { } prvni) return prvni;
@@ -224,10 +244,10 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
         return null;
     }
 
-    private static void Napln(PrvekTrati prvek, PrvekVstup v, int? bojeBId)
+    private static void Napln(PrvekTrati prvek, PrvekVstup v, int? bojeBId, int poradi)
     {
         prvek.Typ = v.Typ;
-        prvek.Poradi = v.Poradi;
+        prvek.Poradi = poradi;
         prvek.Strana = v.Strana;
         prvek.Poznamka = string.IsNullOrWhiteSpace(v.Poznamka) ? null : v.Poznamka.Trim();
         prvek.BojeAId = v.BojeAId;
@@ -236,6 +256,19 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
         prvek.Smer = v.Smer;
         prvek.DruhStartu = v.DruhStartu;
     }
+
+    /// <summary>
+    /// Za poslední prvek trati — stejně jako pípnutí jde za poslední značku.
+    /// <para>
+    /// Bere se <b>nejvyšší pořadí</b>, ne počet prvků: čísla se smějí
+    /// opakovat (trať, která jede tutéž bóji dvakrát, to potřebuje), takže
+    /// počet by u takové trati vrátil číslo, které už někdo má.
+    /// </para>
+    /// </summary>
+    private async Task<int> DalsiPoradiAsync(int tratId, CancellationToken ct) =>
+        (await db.PrvkyTrati
+            .Where(p => p.TratId == tratId)
+            .MaxAsync(p => (int?)p.Poradi, ct) ?? 0) + 1;
 
     private Task<PrvekTrati?> NajdiAsync(int zavodId, int prvekId, CancellationToken ct) =>
         db.PrvkyTrati.FirstOrDefaultAsync(

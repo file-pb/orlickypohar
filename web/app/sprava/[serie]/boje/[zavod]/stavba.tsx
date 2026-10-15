@@ -288,7 +288,12 @@ export function Stavba({
     try {
       const { chyba: chybaPrvku } = await slozPrvekAkce(serie, zavod, {
         typ: volba.typ,
-        poradi: dalsiPoradi,
+        // <b>Pořadí si určí server</b> (15. 10. 2026). Tady se posílá nula,
+        // protože obrazovka ho spočítat nemůže: `dalsiPoradi` je z toho, co
+        // měla načtené při renderu, a mezi pípnutím a dokončením prvku se
+        // stránka překresluje. Cíl postavený jako poslední tak uměl dostat
+        // jedničku a trať se pak četla `start → cíl → otočka`.
+        poradi: 0,
         bojeAId: body[0].id,
         bojeBId: body[1]?.id ?? null,
         strana: volba.strana,

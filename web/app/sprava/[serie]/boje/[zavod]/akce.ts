@@ -338,9 +338,11 @@ export async function zopakujPrvekAkce(formular: FormData) {
   const prvek = prvky.find((p) => p.id === id);
   if (!prvek) redirect(kam({ chyba: "Ten prvek v trati není. Někdo ho mezitím smazal?" }));
 
+  // Pořadí posílá nulu schválně: nový prvek dává na konec server, takže
+  // „na konec trati" platí i tehdy, když se seznam mezitím změnil.
   const chyba = await zalozPrvek(serie, zavod, {
     ...vstupZPrvku(prvek),
-    poradi: prvky.length + 1,
+    poradi: 0,
     poznamka: null,
   });
 
