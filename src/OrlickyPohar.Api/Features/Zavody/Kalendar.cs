@@ -153,6 +153,43 @@ public static class Kalendar
         return null;
     }
 
+    /// <summary>Nejvyšší koeficient, který dává smysl. Víc je překlep.</summary>
+    public const decimal KoeficientNejvic = 10m;
+
+    /// <summary>
+    /// <b>Proč nejdou uložit počty do poháru</b> — nebo <c>null</c>.
+    ///
+    /// <para>
+    /// Počet škrtů, koeficient a bonus do seriálu se do 16. 10. 2026 nedaly
+    /// nastavit odnikud než importem celého ročníku: <c>ZastavkaVstup</c> je
+    /// nenesl, takže regata vypsaná v kalendáři měla navždy škrty 0 a
+    /// koeficient 1,0 — a u okruhové regaty je obvyklý jeden škrt.
+    /// </para>
+    ///
+    /// <para>
+    /// Rozsahy jsou široké schválně: pravidla si rozhodčí upřesňuje a
+    /// aplikace mu do nich nemá mluvit. Brání se jen tomu, co je jistě
+    /// překlep — záporný počet škrtů a koeficient, který by výsledky
+    /// vynuloval nebo poslal do nesmyslného řádu.
+    /// </para>
+    /// </summary>
+    public static string? ProcNejdouPocty(int? pocetSkrtu, decimal? koeficient)
+    {
+        if (pocetSkrtu is < 0) return "Počet škrtů nemůže být záporný.";
+
+        if (koeficient is null) return null;
+
+        if (koeficient <= 0)
+            return "Koeficient do poháru musí být kladný. Regatu, která se do poháru "
+                   + "počítat nemá, z něj vyndej u rozjížďky.";
+
+        if (koeficient > KoeficientNejvic)
+            return $"Koeficient do poháru je nejvýš {KoeficientNejvic:0.#}. "
+                   + "Vyšší číslo bývá překlep.";
+
+        return null;
+    }
+
     /// <summary>
     /// Původní termín po změně data — nebo <c>null</c>, když se žádný
     /// pamatovat nemá.

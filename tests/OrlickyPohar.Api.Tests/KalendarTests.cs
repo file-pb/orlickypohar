@@ -239,4 +239,35 @@ public class KalendarTests
         Assert.Equal(1, Kalendar.Preradit(vstup)[4]);
         Assert.Equal(2, Kalendar.Preradit(vstup)[5]);
     }
+
+    /// <summary>
+    /// <b>Počty do poháru jdou zadat z kalendáře.</b> Do 16. 10. 2026 je
+    /// nesl jen import ročníku, takže regata vypsaná klikáním měla navždy
+    /// škrty 0 a koeficient 1,0 — u okruhové regaty je přitom obvyklý jeden
+    /// škrt.
+    /// </summary>
+    [Fact]
+    public void Pocty_do_poharu_pousti_bezne_hodnoty()
+    {
+        Assert.Null(Kalendar.ProcNejdouPocty(1, 1.0m));
+        Assert.Null(Kalendar.ProcNejdouPocty(0, 0.5m));
+        Assert.Null(Kalendar.ProcNejdouPocty(3, Kalendar.KoeficientNejvic));
+
+        // Nezadáno není nula: starý klient pole neposílá a úprava termínu
+        // nesmí naimportovanému ročníku přepsat, co v něm je.
+        Assert.Null(Kalendar.ProcNejdouPocty(null, null));
+    }
+
+    [Theory]
+    [InlineData(-1, 1.0, "Počet škrtů")]
+    [InlineData(1, 0.0, "kladný")]
+    [InlineData(1, -2.0, "kladný")]
+    [InlineData(1, 11.0, "nejvýš")]
+    public void Pocty_do_poharu_odmitnou_preklep(int skrty, double koeficient, string vetaObsahuje)
+    {
+        var chyba = Kalendar.ProcNejdouPocty(skrty, (decimal)koeficient);
+
+        Assert.NotNull(chyba);
+        Assert.Contains(vetaObsahuje, chyba);
+    }
 }

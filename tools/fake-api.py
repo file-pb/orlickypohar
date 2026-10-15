@@ -1758,10 +1758,30 @@ def zastavka_ze_vstupu(vstup):
     if vyhodnoceni not in ("PoKategoriich", "CelePole", "Oboje"):
         return None, f"Neznámé vyhodnocení {vyhodnoceni}."
 
-    return {"nazev": nazev, "datum": datum, "datumKonce": konec,
-            "typ": (vstup.get("typ") or "").strip() or None,
-            "vyhodnoceni": vyhodnoceni,
-            "poradatel": (vstup.get("poradatel") or "").strip() or None}, None
+    # Počty do poháru — opsané z `Kalendar.ProcNejdouPocty`. Nezadáno není
+    # nula: starý klient je neposílá a úprava termínu by jinak
+    # naimportovanému ročníku vynulovala škrty i koeficient.
+    skrty, koeficient = vstup.get("pocetSkrtu"), vstup.get("koeficientDoSerie")
+    if skrty is not None and skrty < 0:
+        return None, "Počet škrtů nemůže být záporný."
+    if koeficient is not None:
+        if koeficient <= 0:
+            return None, ("Koeficient do poháru musí být kladný. Regatu, která se "
+                          "do poháru počítat nemá, z něj vyndej u rozjížďky.")
+        if koeficient > 10:
+            return None, "Koeficient do poháru je nejvýš 10. Vyšší číslo bývá překlep."
+
+    hodnoty = {"nazev": nazev, "datum": datum, "datumKonce": konec,
+               "typ": (vstup.get("typ") or "").strip() or None,
+               "vyhodnoceni": vyhodnoceni,
+               "poradatel": (vstup.get("poradatel") or "").strip() or None}
+
+    for klic, hodnota in (("pocetSkrtu", skrty), ("koeficientDoSerie", koeficient),
+                          ("posunDoSerie", vstup.get("posunDoSerie"))):
+        if hodnota is not None:
+            hodnoty[klic] = hodnota
+
+    return hodnoty, None
 
 
 def clanek_radek(c):
@@ -3593,9 +3613,9 @@ class H(BaseHTTPRequestHandler):
                                    "Změň název.")
 
         # Nová zastávka je vždycky plánovaná a nepublikovaná — stejně jako v API.
-        nova = {**hodnoty, "slug": slug, "stav": "Planovany", "publikovano": False,
-                "puvodniDatum": None, "poradi": 0, "pocetSkrtu": 0,
-                "koeficientDoSerie": 1.0,
+        nova = {"pocetSkrtu": 0, "koeficientDoSerie": 1.0, "posunDoSerie": 0,
+                **hodnoty, "slug": slug, "stav": "Planovany", "publikovano": False,
+                "puvodniDatum": None, "poradi": 0,
                 "ucasti": [], "rozjizdky": [], "druh": vstup.get("druh") or "Pohar"}
         D["zavody"].append(nova)
         prerad_kalendar()
