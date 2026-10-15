@@ -179,7 +179,23 @@ public static class Bilance
         return objem;
     }
 
-    /// <summary>Jak se za okno změnil objem nádrže, v m³. Z měřených objemů.</summary>
+    /// <summary>
+    /// Jak se za okno změnil objem nádrže, v m³. Z měřených objemů.
+    /// <para>
+    /// <b>S hladinou to nesedí a sedět nebude</b> (změřeno 15. 10. 2026).
+    /// Povodí mění hladinu za den asi 57×, obvykle po centimetru, kdežto
+    /// objem jen 16×, a to skoky od 0,15 do 0,9 mil. m³. Objem tedy za
+    /// hladinou zaostává, a kdo z těch dvou čísel dopočítá plochu nádrže,
+    /// dostane pokaždé jinou — naměřeno 23,7, 16,7 i 13,1 km². Není to
+    /// chyba výpočtu ani okraje okna; je to tím, že zdroj vydává dvě
+    /// různě hrubé veličiny.
+    /// </para>
+    /// <para>
+    /// Proto se tu objem nedopočítává z hladiny a hladina z objemu: obojí
+    /// je měření a každé má svou přesnost. Widget je ukazuje vedle sebe,
+    /// ne jako kontrolu jednoho druhým.
+    /// </para>
+    /// </summary>
     public static double? ZmenaObjemuZa(
         IEnumerable<MereniNadrze> mereni, DateTimeOffset konec, TimeSpan okno)
     {

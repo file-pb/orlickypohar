@@ -5597,6 +5597,30 @@ Dva požadavky z toho měření vrátily **503** a při opakování 200. Časov�
 to padlo do nasazení #257, takže to nejspíš byl výměnný okamžik
 kontejneru, ne vada — jistota to ale není.
 
+### Objem a hladina spolu nesedí (15. 10. 2026)
+
+Widget ukazuje vedle sebe změnu hladiny a změnu objemu nádrže. **Jejich
+poměr nevychází** a hledat v tom chybu nemá smysl — je to vlastnost zdroje.
+
+Změřeno na denní řadě z produkce: Povodí mění **hladinu 57× za den**,
+obvykle po centimetru, kdežto **objem jen 16×**, a to skoky od 0,15 do
+0,9 mil. m³. Objem tedy za hladinou zaostává. Kdo z těch dvou čísel
+dopočítá plochu nádrže, dostane pokaždé jinou: naměřeno 23,7, 16,7
+a 13,1 km², přičemž Orlík má kolem 26.
+
+Prošlo se při tom dvěma mylnými závěry, ať je po nich stopa:
+
+- že si čísla protiřečí kvůli různým okrajům okna. Hladina se brala od
+  prvního měření **uvnitř** okna, objem od měření nejbližšího jeho
+  **hraně**. Sjednotilo se to (#278) a je to správně samo o sobě, ale
+  nesoulad to nevyřešilo;
+- že se každé počítá z jiné podmnožiny měření. Ověřeno po #279, kdy řada
+  začala vydávat i objem: ze 143 bodů za den jich má objem 139, API i ruční
+  výpočet ze stejných bodů dávají totéž. Hypotéza padla.
+
+**Nedopočítávat tedy jedno z druhého.** Obojí je měření a každé má svou
+přesnost; widget je ukazuje vedle sebe, ne jako kontrolu jednoho druhým.
+
 ### Nasazení ruší jedno druhé
 
 Merge do `main` spustí nasazení a **novější běh ten rozdělaný ukončí**
