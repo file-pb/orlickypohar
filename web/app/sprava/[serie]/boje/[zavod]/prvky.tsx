@@ -196,6 +196,9 @@ function DetailPrvku({
   // Kolikrát se týmiž značkami projíždí. Rozhoduje to o tom, co udělá
   // „Odebrat": u jediného průjezdu se značky seberou i z vody, u druhého
   // zmizí jen ten průjezd.
+  // Kolikrát se týmiž značkami projíždí. Rozhoduje to o tom, co udělá
+  // „Odebrat": u jediného průjezdu se značky seberou i z vody, u druhého
+  // zmizí jen ten průjezd.
   const prujezdu = prvky.filter(
     (p) => p.a.id === prvek.a.id && (p.b?.id ?? null) === (prvek.b?.id ?? null),
   ).length;
@@ -241,84 +244,111 @@ function DetailPrvku({
         </form>
       </div>
 
-      <form action={upravPrvekAkce} className="formular">
-        {skryte}
+      {/* <b>Dva taby místo jednoho dlouhého sloupce</b> (Filip, 15. 10.
+          2026: *„aby toho nebylo na stránce moc najednou"*). Dělí se to
+          podle toho, co se mění: kde ta věc stojí (Umístění), a jak se
+          kolem ní jede (Typ prvku).
 
-        <label>
-          Jak to jet
-          <input
-            name="poznamka"
-            defaultValue={prvek.poznamka ?? ""}
-            maxLength={POZNAMKA_NEJVIC}
-            placeholder="po proudu, pozor na mělčinu"
-          />
-          <span className="poznamka">
-            Vidí to pořadatel i závodník. Na delší vysvětlení je plachetní směrnice.
-          </span>
-        </label>
+          Bez javascriptu, dvěma přepínači a CSS. `details` by z toho
+          udělalo akordeon, kde jdou otevřít oba naráz — a to je zase ten
+          dlouhý sloupec, kvůli kterému se taby dělaly. Přepínače musí
+          v značce stát před panely, aby na ně šlo dosáhnout `~`. */}
+      <div className="prvek-taby">
+        <input
+          type="radio"
+          name={`tab-prvku-${prvek.id}`}
+          id={`tab-${prvek.id}-umisteni`}
+          defaultChecked
+        />
+        <input type="radio" name={`tab-prvku-${prvek.id}`} id={`tab-${prvek.id}-typ`} />
 
-        {stranaPatri(prvek.typ) && (
-          <label>
-            Kterým bokem se ponechává
-            <select name="strana" defaultValue={prvek.strana ?? ""}>
-              <option value="">neuvedeno</option>
-              {(Object.keys(NAZVY_STRAN) as NonNullable<StranaPrvku>[]).map((s) => (
-                <option key={s} value={s}>
-                  {NAZVY_STRAN[s]}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-
-        {/* <b>Směr má start i cíl</b>, protože obojí je linie a mapka
-            u obou kreslí šipku. Pole tu navíc být musí: `upravPrvekAkce`
-            čte `smer` z formuláře vždycky, takže bez něj by uložení
-            poznámky u cíle šipku nenápadně smazalo. */}
-        {(prvek.typ === "Start" || prvek.typ === "Cil") && (
-          <label>
-            {prvek.typ === "Start" ? "Startuje se" : "Proplouvá se"}
-            <select name="smer" defaultValue={prvek.smer ?? ""}>
-              <option value="">neuvedeno</option>
-              {SMERY.map((s) => (
-                <option key={s} value={s}>
-                  {NAZVY_SMERU[s]}
-                </option>
-              ))}
-            </select>
-            <span className="poznamka">
-              Podle toho mapka nakreslí šipku průjezdu. Bez směru ji kreslit
-              nemůže — vymyslela by si ho.
-            </span>
-          </label>
-        )}
-
-        {/* Druh vytyčení je jen startu: cíl se neotevírá za startovací lodí. */}
-        {prvek.typ === "Start" && (
-          <label>
-            Čím je start vytyčený
-            <select name="druhStartu" defaultValue={prvek.druhStartu ?? "PevnaLinie"}>
-              {(Object.keys(NAZVY_DRUHU_STARTU) as NonNullable<DruhStartu>[]).map((d) => (
-                <option key={d} value={d}>
-                  {NAZVY_DRUHU_STARTU[d]}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-
-        <div className="tlacitka">
-          <button type="submit">Uložit</button>
+        <div className="zalozky">
+          <label htmlFor={`tab-${prvek.id}-umisteni`}>Umístění</label>
+          <label htmlFor={`tab-${prvek.id}-typ`}>Typ prvku</label>
         </div>
-      </form>
 
-      <p className="poznamka">
-        <b>Projet to znovu jinak</b> přidá na konec trati další průjezd týchž
-        značek. Fyzika prvku je už daná, takže se u nového dopisuje jen to,
-        jak se jede.
-      </p>
+        <section className="panel">{znacky}</section>
 
-      {znacky}
+        <section className="panel">
+          <form action={upravPrvekAkce} className="formular">
+            {skryte}
+
+            <label>
+              Jak to jet
+              <input
+                name="poznamka"
+                defaultValue={prvek.poznamka ?? ""}
+                maxLength={POZNAMKA_NEJVIC}
+                placeholder="po proudu, pozor na mělčinu"
+              />
+              <span className="poznamka">
+                Vidí to pořadatel i závodník. Na delší vysvětlení je plachetní
+                směrnice.
+              </span>
+            </label>
+
+            {stranaPatri(prvek.typ) && (
+              <label>
+                Kterým bokem se ponechává
+                <select name="strana" defaultValue={prvek.strana ?? ""}>
+                  <option value="">neuvedeno</option>
+                  {(Object.keys(NAZVY_STRAN) as NonNullable<StranaPrvku>[]).map((s) => (
+                    <option key={s} value={s}>
+                      {NAZVY_STRAN[s]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            {/* <b>Směr má start i cíl</b>, protože obojí je linie a mapka
+                u obou kreslí šipku. Pole tu navíc být musí: `upravPrvekAkce`
+                čte `smer` z formuláře vždycky, takže bez něj by uložení
+                poznámky u cíle šipku nenápadně smazalo. */}
+            {(prvek.typ === "Start" || prvek.typ === "Cil") && (
+              <label>
+                {prvek.typ === "Start" ? "Startuje se" : "Proplouvá se"}
+                <select name="smer" defaultValue={prvek.smer ?? ""}>
+                  <option value="">neuvedeno</option>
+                  {SMERY.map((s) => (
+                    <option key={s} value={s}>
+                      {NAZVY_SMERU[s]}
+                    </option>
+                  ))}
+                </select>
+                <span className="poznamka">
+                  Podle toho mapka nakreslí šipku průjezdu. Bez směru ji kreslit
+                  nemůže — vymyslela by si ho.
+                </span>
+              </label>
+            )}
+
+            {/* Druh vytyčení je jen startu: cíl se neotevírá za startovací lodí. */}
+            {prvek.typ === "Start" && (
+              <label>
+                Čím je start vytyčený
+                <select name="druhStartu" defaultValue={prvek.druhStartu ?? "PevnaLinie"}>
+                  {(Object.keys(NAZVY_DRUHU_STARTU) as NonNullable<DruhStartu>[]).map((d) => (
+                    <option key={d} value={d}>
+                      {NAZVY_DRUHU_STARTU[d]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            <div className="tlacitka">
+              <button type="submit">Uložit</button>
+            </div>
+          </form>
+
+          <p className="poznamka">
+            <b>Projet to znovu jinak</b> přidá na konec trati další průjezd
+            týchž značek. Fyzika prvku je už daná, takže se u nového dopisuje
+            jen to, jak se jede.
+          </p>
+        </section>
+      </div>
     </div>
   );
 }
@@ -361,7 +391,33 @@ function Znacky({
   return (
     <div className="znacky-prvku">
       <h3>{nalezene.length === 1 ? "Značka prvku" : "Značky prvku"}</h3>
-      <ul className="seznam">
+
+      {/* <b>U dvou značek se ukazuje jedna</b> (Filip, 15. 10. 2026:
+          *„v případě dvojznačkového dej přepínač toho, jestli editujeme
+          levou, nebo pravou stranu, aby toho nebylo na stránce moc
+          najednou"*). Obě pod sebou znamenaly dvě sady fotek, souřadnic
+          a odkazů naráz — a pořadatel mění vždycky jen jednu.
+
+          Přepínač nese <b>jména těch značek</b>, ne „levá" a „pravá":
+          v seznamu i na mapě se jmenují „start levobok" a „start
+          pravobok", takže jména jsou to jediné, co sedí na obojí. */}
+      {nalezene.length === 2 && (
+        <div className="volba-znacky">
+          {nalezene.map((b, i) => (
+            <span key={b.id}>
+              <input
+                type="radio"
+                name={`znacka-prvku-${prvek.id}`}
+                id={`znacka-${prvek.id}-${b.id}`}
+                defaultChecked={i === 0}
+              />
+              <label htmlFor={`znacka-${prvek.id}-${b.id}`}>{b.nazev}</label>
+            </span>
+          ))}
+        </div>
+      )}
+
+      <ul className={`seznam${nalezene.length === 2 ? " jen-vybrana" : ""}`}>
         {nalezene.map((b) => {
           const jinde = prvky.filter(
             (p) => p.id !== prvek.id && (p.a.id === b.id || p.b?.id === b.id),
