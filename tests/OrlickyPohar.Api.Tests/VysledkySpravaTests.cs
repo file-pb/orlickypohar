@@ -334,6 +334,11 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         await using var scope = fixture.Services.CreateAsyncScope();
         var (db, zapis, rozjizdka, _) = await OtevrenaAsync(scope, slug);
 
+        // <b>Stav se nastavuje, nepředpokládá.</b> Rozjížďka ze seedu je
+        // dokončená, takže by zábrana vůbec nenastala a test by měřil
+        // něco jiného, než si myslí.
+        rozjizdka.Stav = StavRozjizdky.Planovana;
+
         // Trať z pomocníka odejde do přestavby: přiřazená je, přijatá ne.
         var trat = await db.Trate.FirstAsync(t => t.RozjizdkaId == rozjizdka.Id);
         trat.Stav = StavTrati.Prestavba;
@@ -367,8 +372,14 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         await using var scope = fixture.Services.CreateAsyncScope();
         var (db, zapis, rozjizdka, _) = await OtevrenaAsync(scope, slug);
 
+        // Plánovaná s přijatou tratí: první start projde a rozjížďka se
+        // rozjede. Bez tohohle by byla dokončená a přepis by nic neříkal.
+        rozjizdka.Stav = StavRozjizdky.Planovana;
+        await db.SaveChangesAsync();
+
         var kdy = new DateTimeOffset(2026, 6, 20, 11, 0, 0, TimeSpan.FromHours(2));
         Assert.Null(await zapis.StartAsync(rozjizdka, kdy, default));
+        Assert.Equal(StavRozjizdky.Probiha, rozjizdka.Stav);
 
         var trat = await db.Trate.FirstAsync(t => t.RozjizdkaId == rozjizdka.Id);
         trat.Stav = StavTrati.Prestavba;
