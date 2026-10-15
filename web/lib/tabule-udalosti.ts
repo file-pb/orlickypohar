@@ -13,7 +13,7 @@ import type { Snimek } from "@/lib/tabule";
  * se považuje za novinku — a na televizi, kterou nikdo neobsluhuje, by
  * falešný alert visel do rána.
  */
-export type DruhUdalosti = "start" | "dojezd" | "dokonceno" | "zavod";
+export type DruhUdalosti = "start" | "dojezd" | "dokonceno" | "zavod" | "trat" | "ceka";
 
 export type Udalost = {
   /** Klíč pro React a pro rozpoznání téže události podruhé. */
@@ -34,6 +34,29 @@ export function udalosti(stary: Snimek | null, novy: Snimek): Udalost[] {
   if (!stary) return [];
 
   const ven: Udalost[] = [];
+
+  // Trať. <b>Schválení je na tabuli zpráva</b> (Filip, 15. 10. 2026):
+  // znamená, že se pojede podle toho, co je ve vodě, a lodě můžou na start.
+  // Přestavba je zpráva opačná a stejně důležitá — lodě čekají a bez téhle
+  // věty nikdo neví proč. Má vlastní druh, protože obrazovka skládá třídu
+  // jen z druhu a červená „čeká se" se nesmí splést se zelenou „jede se".
+  if (stary.trat?.prijatoV !== novy.trat?.prijatoV && novy.trat?.prijatoV)
+    ven.push({
+      klic: `trat-prijata-${novy.trat.prijatoV}`,
+      druh: "trat",
+      titulek: "Trať schválena",
+      detail: novy.trat.cisloRozjizdky
+        ? `${novy.trat.cisloRozjizdky}. rozjížďka`
+        : "rozhodčí ji přijal",
+    });
+
+  if (!stary.trat?.prestavba && novy.trat?.prestavba)
+    ven.push({
+      klic: "trat-prestavba",
+      druh: "ceka",
+      titulek: "Trať se přestavuje",
+      detail: "čeká se na novou",
+    });
 
   // Stav celé regaty. Nejsilnější zpráva, proto první.
   if (stary.stav !== novy.stav && novy.stav === "Odjety")

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ApiNedostupne, nactiZavod } from "@/lib/api";
+import { ApiNedostupne, nactiVerejnouTrat, nactiZavod } from "@/lib/api";
 import { snimekZavodu } from "@/lib/tabule";
 import { Vypadek } from "@/app/vypadek";
 import { Obrazovka } from "./obrazovka";
@@ -31,10 +31,13 @@ export default async function Tabule({ params }: Parametry) {
   const { slug, zavod } = await params;
 
   try {
-    const detail = await nactiZavod(slug, zavod);
+    const [detail, trat] = await Promise.all([
+      nactiZavod(slug, zavod),
+      nactiVerejnouTrat(slug, zavod).catch(() => null),
+    ]);
     if (!detail) notFound();
 
-    return <Obrazovka serie={slug} zavod={zavod} prvni={snimekZavodu(detail)} />;
+    return <Obrazovka serie={slug} zavod={zavod} prvni={snimekZavodu(detail, trat)} />;
   } catch (e) {
     if (e instanceof ApiNedostupne) return <Vypadek co="Tabule" />;
     throw e;

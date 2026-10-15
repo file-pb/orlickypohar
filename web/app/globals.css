@@ -2579,6 +2579,10 @@ body:has(.tabule) { overflow: hidden; }
 .tabule-alert.dojezd { border-color: var(--voda); }
 .tabule-alert.start { border-color: var(--stav-vypsany); }
 .tabule-alert.dokonceno, .tabule-alert.zavod { border-color: var(--stav-vypsany); }
+/* Trať: schválení je povolení vyjet, přestavba je „počkej". Obojí nese
+   tentýž druh, barvu rozlišuje až stav — zeleně se jede, červeně se stojí. */
+.tabule-alert.trat { border-color: var(--stav-vypsany); }
+.tabule-alert.ceka { border-color: var(--stav-zruseny); }
 
 @keyframes tabule-alert {
   /* Nálet: zvětší se zpoza středu. */
