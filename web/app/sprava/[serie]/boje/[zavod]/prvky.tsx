@@ -15,6 +15,7 @@ import {
 } from "@/lib/trat";
 import { IkonaPrvku } from "@/app/ikona-prvku";
 import { ZnakVRadku } from "@/app/znak-boje";
+import { StitekBoku } from "@/app/stitek-boku";
 import { ZavriMimo } from "@/app/zavri-mimo";
 import { ZnackaNaTrati } from "./znacka-na-trati";
 import {
@@ -110,7 +111,7 @@ export function PrvkyTrati({
                     {p.a.nazev}
                     {p.b && ` – ${p.b.nazev}`}
                   </span>
-                  <StitekBoku prvek={p} />
+                  <StitekBoku typ={p.typ} strana={p.strana} />
                   {p.poznamka && <span className="jak-to-jet">{p.poznamka}</span>}
                   <span className="vpravo">
                     <NahledFotky prvek={p} boje={boje} />
@@ -562,35 +563,6 @@ function ZnackyPrvku({ prvek, boje }: { prvek: Prvek; boje: Boje[] }) {
       {konce.map((b) => (
         <ZnakVRadku key={b.id} barva={b.barva} tvar={b.tvar} znaceni={b.znaceni} />
       ))}
-    </span>
-  );
-}
-
-/**
- * Štítek boku barevně (Filip, 15. 10. 2026: *„tag točení dej barevně
- * trochu průhledně — levá je červená a pravá je zelená, střed je
- * kombinací obou barev"*).
- *
- * <b>Barva je o boku lodi, ne o straně značky.</b> Levobok znamená, že
- * loď má značku po levé ruce — a červená s zelenou jsou pozičními světly
- * lodi, takže to sedí na totéž názvosloví, kterým mluví rozhodčí.
- *
- * <b>Start a cíl mají vlastní barvu</b> místo kombinace: nejsou to boky,
- * jsou to linie. Start dostal vodní modrou jako zbytek webu, cíl zlatou —
- * je to konec, ne průjezd.
- */
-function StitekBoku({ prvek }: { prvek: Prvek }) {
-  if (prvek.typ === "Start") return <span className="stitek bok-start">start</span>;
-  if (prvek.typ === "Cil") return <span className="stitek bok-cil">cíl</span>;
-
-  // Brána a otočná zóna stranu nemají: projíždí se mezi značkami, takže
-  // štítek nese to, a ne bok, který nikdo nerozhodl.
-  if (!prvek.strana)
-    return dvaBody(prvek.typ) ? <span className="stitek bok-mezi">mezi nimi</span> : null;
-
-  return (
-    <span className={`stitek ${prvek.strana === "PoLeve" ? "bok-levy" : "bok-pravy"}`}>
-      {nazevStrany(prvek.strana)}
     </span>
   );
 }

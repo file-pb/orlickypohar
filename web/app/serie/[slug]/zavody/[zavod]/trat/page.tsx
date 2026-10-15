@@ -3,6 +3,8 @@ import { type VerejnaTrat } from "@/lib/api";
 import { NAZVY_SMERU, nazevStrany, nazevTypu, type TypPrvku } from "@/lib/trat";
 import { MapkaTrati, type PrvekNaMape } from "@/app/mapka-trati";
 import { IkonaPrvku } from "@/app/ikona-prvku";
+import { ZnakVRadku } from "@/app/znak-boje";
+import { StitekBoku } from "@/app/stitek-boku";
 import { NahledPrvku } from "@/app/nahled-prvku";
 import { stopaProPrvek, typStavbyProPrvek } from "@/lib/stavba-prvku";
 import { Boky } from "@/app/boky";
@@ -74,7 +76,7 @@ export default async function VerejnaTratStranka({ params }: Parametry) {
       ) : (
         <>
           <MapkaTrati prvky={trat.prvky.map(naMapu)} />
-          <PoradiPrvku prvky={trat.prvky} />
+          <PoradiPrvku prvky={trat.prvky} boje={trat.boje} />
           <MimoTrat trat={trat} />
           {trat.prijatoV && (
             <p className="poznamka">
@@ -108,7 +110,14 @@ export default async function VerejnaTratStranka({ params }: Parametry) {
 }
 
 /** Soupis prvků v pořadí. Mapka ukazuje kde, tenhle seznam čím a jak. */
-function PoradiPrvku({ prvky }: { prvky: VerejnaTrat["prvky"] }) {
+function PoradiPrvku({
+  prvky,
+  boje,
+}: {
+  prvky: VerejnaTrat["prvky"];
+  /** Kvůli barvě a tvaru značek — konec prvku je nenese. */
+  boje: VerejnaTrat["boje"];
+}) {
   if (prvky.length === 0)
     return (
       <p className="prazdno">
@@ -130,13 +139,17 @@ function PoradiPrvku({ prvky }: { prvky: VerejnaTrat["prvky"] }) {
                 se překrývají (Filip, 15. 10. 2026). */}
             <div className="shrnuti-prvku">
               <IkonaPrvku typ={p.typ} strana={p.strana} />
+              {/* Tytéž značky jako ve správě: tvar říká, co je to za prvek,
+                  značka jak to vypadá na vodě. Závodník u vody hledá bóji
+                  podle vzhledu, ne podle jména. */}
+              <ZnackyPrvku prvek={p} boje={boje} />
               <span className="poradi-prvku">{p.poradi}.</span>
               <b>{nazevTypu(p.typ)}</b>
               <span className="znacky">
                 {p.a.nazev}
                 {p.b && ` – ${p.b.nazev}`}
               </span>
-              {p.strana && <span className="stitek">{nazevStrany(p.strana)}</span>}
+              <StitekBoku typ={p.typ} strana={p.strana} />
               {p.smer && <span className="stitek">{NAZVY_SMERU[p.smer]}</span>}
             </div>
 
@@ -300,5 +313,37 @@ function DetailPrvku({ prvek }: { prvek: VerejnaTrat["prvky"][number] }) {
           tady je celá. */}
       {prvek.poznamka && <p className="poznamka">{prvek.poznamka}</p>}
     </div>
+  );
+}
+
+/**
+ * Značky prvku v řádku. <b>Páruje se podle jména</b>, protože ven se id
+ * bójí nevydávají — tentýž kompromis jako v „bóje mimo trať" níž. Jmenná
+ * kolize by značku nenakreslila, a to je neškodnější chyba než nakreslit
+ * cizí.
+ */
+function ZnackyPrvku({
+  prvek,
+  boje,
+}: {
+  prvek: VerejnaTrat["prvky"][number];
+  boje: VerejnaTrat["boje"];
+}) {
+  const konce = [prvek.a, ...(prvek.b ? [prvek.b] : [])]
+    .map((k) => boje.find((b) => b.nazev === k.nazev))
+    .filter((b): b is VerejnaTrat["boje"][number] => b !== undefined);
+  if (konce.length === 0) return null;
+
+  return (
+    <span className="znaky-prvku">
+      {konce.map((b) => (
+        <ZnakVRadku
+          key={b.nazev}
+          barva={b.barva ?? undefined}
+          tvar={b.tvar ?? undefined}
+          znaceni={b.znaceni ?? undefined}
+        />
+      ))}
+    </span>
   );
 }
