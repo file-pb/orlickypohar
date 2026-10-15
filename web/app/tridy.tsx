@@ -23,10 +23,12 @@ export function slugTridy(nazev: string) {
     .replace(/[^a-z0-9]/g, "");
 }
 
-// Ořez vodoznaku potřebuje id unikátní v rámci stránky — na jedné stránce
-// je znak třídy v tabu i v boku. Komponenta běží jen na serveru, takže
-// počítadlo nemusí sedět s ničím v prohlížeči.
-let citac = 0;
+// Ořez vodoznaku potřebuje id. <b>Odvozené od třídy, ne z počítadla</b>:
+// znak se od 15. 10. 2026 kreslí i uvnitř klientské komponenty (karusel
+// na tabuli) a tam se počítadlo na serveru a v prohlížeči rozešlo —
+// React to ohlásil jako neopravitelný rozpor při hydrataci a ořez
+// vodoznaku ukazoval na neexistující id. Dvakrát tentýž znak na stránce
+// sdílí jeden ořez, což je v pořádku: pro stejnou třídu je to týž tvar.
 
 /**
  * Pseudo-třída: pořadí celého pole napříč kategoriemi. Chová se v tabech
@@ -44,7 +46,7 @@ export function ZnakTridy({ nazev }: { nazev: string }) {
   if (!(slug in ZNAKY_TRID)) return null;
 
   const z = ZNAKY_TRID[slug as Klic];
-  const orez = `znak-${slug}-${++citac}`;
+  const orez = `znak-${slug}-orez`;
   const pismeno = (trida: string, clipPath?: string) => (
     <text
       className={trida}

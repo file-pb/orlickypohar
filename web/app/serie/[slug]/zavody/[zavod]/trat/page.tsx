@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { type VerejnaTrat } from "@/lib/api";
 import { NAZVY_SMERU, nazevStrany, nazevTypu, type TypPrvku } from "@/lib/trat";
-import { MapkaTrati, type PrvekNaMape } from "@/app/mapka-trati";
+import { MapkaTrati, naMapu } from "@/app/mapka-trati";
 import { IkonaPrvku } from "@/app/ikona-prvku";
 import { ZnakVRadku } from "@/app/znak-boje";
 import { StitekBoku } from "@/app/stitek-boku";
@@ -198,23 +198,6 @@ function MimoTrat({ trat }: { trat: VerejnaTrat }) {
       {zbyle.length === 1 ? " ji" : " je"} proto nekreslíme.
     </p>
   );
-}
-
-/** Veřejný prvek pro mapku. Jestli je druhý konec bóje, se ven nevydává. */
-function naMapu(p: VerejnaTrat["prvky"][number], i: number): PrvekNaMape {
-  const konec = (k: NonNullable<VerejnaTrat["prvky"][number]["b"]>) => ({
-    nazev: k.nazev,
-    sirka: k.sirka,
-    delka: k.delka,
-    barva: k.barva,
-    tvar: k.tvar,
-    znaceni: k.znaceni,
-  });
-
-  const konce = [konec(p.a)];
-  if (p.b) konce.push(konec(p.b));
-
-  return { klic: i, typ: p.typ, poradi: p.poradi, konce, smer: p.smer, strana: p.strana };
 }
 
 function kdy(kdy: string) {

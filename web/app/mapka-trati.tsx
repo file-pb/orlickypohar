@@ -1,3 +1,4 @@
+import type { VerejnaTrat } from "@/lib/api";
 import {
   dvaBody,
   nazevTypu,
@@ -123,6 +124,28 @@ function kulateMetry(hrube: number) {
   const rad = 10 ** Math.floor(Math.log10(Math.max(hrube, 1)));
   const podil = hrube / rad;
   return (podil >= 5 ? 5 : podil >= 2 ? 2 : 1) * rad;
+}
+
+/**
+ * Veřejný prvek trati na mapku. Jestli je druhý konec bóje, se ven
+ * nevydává. <b>Je to tady, ne u stránky trati</b>, protože totéž
+ * potřebuje i snímek tabule — dvě kopie převodu by se rozešly, jakmile
+ * mapa začne kreslit něco nového.
+ */
+export function naMapu(p: VerejnaTrat["prvky"][number], i: number): PrvekNaMape {
+  const konec = (k: NonNullable<VerejnaTrat["prvky"][number]["b"]>) => ({
+    nazev: k.nazev,
+    sirka: k.sirka,
+    delka: k.delka,
+    barva: k.barva,
+    tvar: k.tvar,
+    znaceni: k.znaceni,
+  });
+
+  const konce = [konec(p.a)];
+  if (p.b) konce.push(konec(p.b));
+
+  return { klic: i, typ: p.typ, poradi: p.poradi, konce, smer: p.smer, strana: p.strana };
 }
 
 export function MapkaTrati({ prvky }: { prvky: PrvekNaMape[] }) {

@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Snimek } from "@/lib/tabule";
 import { Znak } from "@/app/logo";
 import { NazevZavodu } from "@/app/tabule-nazev";
+import { Atributy } from "./atributy";
+import { Karusel, type Panel } from "./karusel";
+import { Dojezdy, Semafor } from "./semafor";
+import { MapkaTrati } from "@/app/mapka-trati";
+import { ZnakTridy } from "@/app/tridy";
 import { udalosti, type Udalost } from "@/lib/tabule-udalosti";
 
 /**
@@ -38,6 +43,12 @@ export function Obrazovka({
    * znamenalo, že se dvě z nich na televizi vůbec neobjeví.
    */
   const [fronta, setFronta] = useState<Udalost[]>([]);
+  /**
+   * Snímek, proti kterému se porovnává. <b>Ref, ne stav</b>: čte se
+   * uvnitř obnovovací smyčky, která se nesmí restartovat pokaždé, když
+   * dorazí nová data.
+   */
+  const posledni = useRef(prvni);
 
   useEffect(() => {
     const adresa = `/serie/${encodeURIComponent(serie)}/zavody/${encodeURIComponent(zavod)}/tabule/data`;
@@ -47,13 +58,28 @@ export function Obrazovka({
         const odpoved = await fetch(adresa, { cache: "no-store" });
         if (odpoved.ok) {
           const novy = (await odpoved.json()) as Snimek;
-          setSnimek((stary) => {
-            // Alerty se počítají proti snímku, který právě visí na
-            // obrazovce — ne proti tomu, co bylo při načtení stránky.
-            const nove = udalosti(stary, novy);
-            if (nove.length > 0) setFronta((f) => [...f, ...nove]);
-            return novy;
-          });
+          // Snímek ze starší verze webu se zahodí. Mikrokeš před webem
+          // drží odpověď deset vteřin, takže při nasazení může do nového
+          // prohlížeče dorazit tělo bez polí, která komponenta čeká —
+          // a tabule by spadla místo toho, aby počkala na další obnovu.
+          if (!Array.isArray(novy?.tabule) || !novy?.zavod) return;
+
+          // Alerty se počítají proti snímku, který právě visí na
+          // obrazovce — ne proti tomu, co bylo při načtení stránky.
+          //
+          // <b>Mimo updater `setSnimek`.</b> Dokud se počítaly uvnitř něj,
+          // volalo se v updateru `setFronta` — vedlejší efekt ve stavové
+          // funkci. React updater spouští i víckrát, takže se každá
+          // událost zařadila dvakrát. Druhá kopie měla tentýž klíč, React
+          // element recykloval, animace se nespustila znovu a karta
+          // zůstala v DOM neviditelná — a protože fronta se nehnula,
+          // nevyjel od té chvíle **žádný další alert**. Změřeno 15. 10.
+          // 2026: hlava fronty stála 37 s, zatímco tabule běžela dál.
+          const nove = udalosti(posledni.current, novy);
+          posledni.current = novy;
+          setSnimek(novy);
+          if (nove.length > 0)
+            setFronta((f) => [...f, ...nove.filter((u) => !f.some((x) => x.klic === u.klic))]);
         }
         // Neúspěch se schválně nikam nepíše: tabule drží, co má.
       } catch {
@@ -106,60 +132,26 @@ export function Obrazovka({
         </p>
       )}
 
+      <Atributy snimek={snimek} />
+
       <div className="sloupce">
-        <section>
-          <h2>Rozjížďky</h2>
-          {snimek.rozjizdky.length === 0 ? (
-            <p className="prazdno">Zatím žádná.</p>
-          ) : (
-            <ul className="seznam">
-              {snimek.rozjizdky.map((r) => (
-                <li key={r.cislo}>
-                  <b>{r.cislo}.</b>{" "}
-                  <span className="stitek">{STAVY_ROZJIZDEK[r.stav]}</span>
-                  {!r.doSerie && <span className="stitek">mimo pohár</span>}
-                  {r.poradi.length > 0 && (
-                    <ol className="dojezd">
-                      {r.poradi.map((v, i) => (
-                        <li key={i}>
-                          <b>{v.misto ?? v.kod ?? "—"}</b> {v.lod}
-                        </li>
-                      ))}
-                    </ol>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        {/* Rozjížďky a lodě na startu se střídají v jednom sloupci
+            (Filip, 15. 10. 2026: *„na startu a rozjížďky se dá udělat
+            karuselem taky a přidat tam jenom stavy, tím se ušetří jedna
+            tabulka"*). Rozjížďka tu nese jen stav — kdo dojel, říká
+            widget vpravo a alert uprostřed. */}
+        <Karusel panely={polePanely(snimek)} />
+        <Karusel panely={tridyPanely(snimek)} />
 
-        <section>
-          <h2>Průběžné pořadí</h2>
-          {snimek.poradi.length === 0 ? (
-            <p className="prazdno">Zatím se nejelo.</p>
-          ) : (
-            <ol className="poradi">
-              {snimek.poradi.map((p) => (
-                <li key={`${p.lod}-${p.misto}`}>
-                  <b>{p.misto}.</b> {p.lod}{" "}
-                  <span className="detail">{p.kategorie}</span>
-                  <span className="body">{p.body}</span>
-                </li>
-              ))}
-            </ol>
+        <div className="sloupecek">
+          <Semafor snimek={snimek} ted={ted} />
+          {snimek.mapa.length > 0 && (
+            <div className="mapka-mala">
+              <MapkaTrati prvky={snimek.mapa} />
+            </div>
           )}
-        </section>
-
-        <section>
-          <h2>Na startu ({snimek.lode.length})</h2>
-          <ul className="lode">
-            {snimek.lode.map((l) => (
-              <li key={l.lod}>
-                {l.lod} <span className="detail">{l.kormidelnik ?? l.kategorie}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
+          <Dojezdy snimek={snimek} />
+        </div>
       </div>
     </div>
   );
@@ -213,9 +205,95 @@ function Alert({ udalost, hotovo }: { udalost?: Udalost; hotovo: () => void }) {
   if (!udalost) return null;
 
   return (
-    <div className={`tabule-alert ${udalost.druh}`} role="status" key={udalost.klic}>
-      <b>{udalost.titulek}</b>
-      {udalost.detail && <span>{udalost.detail}</span>}
-    </div>
+    <>
+      {/* Clona pod kartou. Televize visí v hospodě, kde se na ni nedívá
+          každý pořád — ztmavení na vteřinu je to, co pohled přitáhne. */}
+      <div className="tabule-clona" key={`clona-${udalost.klic}`} aria-hidden="true" />
+      <div className={`tabule-alert ${udalost.druh}`} role="status" key={udalost.klic}>
+        {/* Nadpisek říká, o jaký druh zprávy jde, dřív než divák dočte
+            co se stalo — barva sama o sobě význam nenese, komu barvy
+            splývají, ten by měl jen „LUNA" bez kontextu. */}
+        <i className="druh">{NADPISKY[udalost.druh]}</i>
+        <b>{udalost.titulek}</b>
+        {udalost.detail && <span>{udalost.detail}</span>}
+      </div>
+    </>
   );
+}
+
+/** Nadpisek nad zprávou. Jedno slovo, verzálky, v barvě druhu. */
+const NADPISKY: Record<Udalost["druh"], string> = {
+  start: "Start",
+  dojezd: "V cíli",
+  dokonceno: "Rozjížďka",
+  zrusena: "Zrušeno",
+  zavod: "Regata",
+  trat: "Trať",
+  ceka: "Čeká se",
+  lod: "Na startu",
+};
+
+/** Panely levého sloupce: co se jede a kdo je na startu. */
+function polePanely(snimek: Snimek): Panel[] {
+  return [
+    {
+      klic: "rozjizdky",
+      nadpis: "Rozjížďky",
+      obsah:
+        snimek.rozjizdky.length === 0 ? (
+          <p className="prazdno">Zatím žádná.</p>
+        ) : (
+          <ul className="stavy">
+            {snimek.rozjizdky.map((r) => (
+              <li key={r.cislo}>
+                <b>{r.cislo}.</b>
+                <span className={`stitek stav-rozjizdky ${r.stav.toLowerCase()}`}>
+                  {STAVY_ROZJIZDEK[r.stav]}
+                </span>
+                {!r.doSerie && <span className="stitek">mimo pohár</span>}
+              </li>
+            ))}
+          </ul>
+        ),
+    },
+    {
+      klic: "start",
+      nadpis: `Na startu (${snimek.lode.length})`,
+      obsah: (
+        <ul className="lode">
+          {snimek.lode.map((l) => (
+            <li key={l.lod}>
+              {l.lod} <span className="detail">{l.kormidelnik ?? l.kategorie}</span>
+            </li>
+          ))}
+        </ul>
+      ),
+    },
+  ];
+}
+
+/** Panely pořadí: jeden na třídu, plus celkové, když se počítá. */
+function tridyPanely(snimek: Snimek): Panel[] {
+  return snimek.tabule.map((t) => ({
+    klic: t.kategorie,
+    nadpis: (
+      <>
+        <ZnakTridy nazev={t.kategorie} />
+        {t.kategorie === "Celkem" ? "Celkové pořadí" : t.kategorie}
+      </>
+    ),
+    obsah:
+      t.lode.length === 0 ? (
+        <p className="prazdno">Zatím se nejelo.</p>
+      ) : (
+        <ol className="poradi">
+          {t.lode.map((p) => (
+            <li key={p.lod}>
+              <b>{p.misto}.</b> {p.lod}
+              <span className="body">{p.body}</span>
+            </li>
+          ))}
+        </ol>
+      ),
+  }));
 }

@@ -13,7 +13,7 @@ import type { Snimek } from "@/lib/tabule";
  * se považuje za novinku — a na televizi, kterou nikdo neobsluhuje, by
  * falešný alert visel do rána.
  */
-export type DruhUdalosti = "start" | "dojezd" | "dokonceno" | "zavod" | "trat" | "ceka";
+export type DruhUdalosti = "start" | "dojezd" | "dokonceno" | "zavod" | "trat" | "ceka" | "lod" | "zrusena";
 
 export type Udalost = {
   /** Klíč pro React a pro rozpoznání téže události podruhé. */
@@ -70,6 +70,18 @@ export function udalosti(stary: Snimek | null, novy: Snimek): Udalost[] {
   if (stary.stav !== novy.stav && novy.stav === "Odjety")
     ven.push({ klic: `zavod-${novy.stav}`, druh: "zavod", titulek: "Dojeto", detail: novy.nazev });
 
+  // Nová loď na startu. <b>Hlásí se jen přírůstek</b>, ne odhlášení:
+  // že někdo přibyl, je zpráva („dorazili"), že ubyl, je administrativa.
+  const bylo = new Set(stary.lode.map((l) => l.lod));
+  for (const l of novy.lode)
+    if (!bylo.has(l.lod))
+      ven.push({
+        klic: `lod-${l.lod}`,
+        druh: "lod",
+        titulek: l.lod,
+        detail: `na startu · ${l.kormidelnik ?? l.kategorie}`,
+      });
+
   const drive = new Map(stary.rozjizdky.map((r) => [r.cislo, r]));
 
   for (const r of novy.rozjizdky) {
@@ -83,6 +95,15 @@ export function udalosti(stary: Snimek | null, novy: Snimek): Udalost[] {
         druh: "start",
         titulek: `${r.cislo}. rozjížďka startuje`,
         detail: r.doSerie ? undefined : "mimo pohár",
+      });
+
+    // Zrušená rozjížďka je na vodě zpráva jako každá jiná — lodě se
+    // podle ní rozhodují, jestli zůstat na vodě.
+    if (r.stav === "Zrusena" && pred?.stav !== "Zrusena")
+      ven.push({
+        klic: `zrusena-${r.cislo}`,
+        druh: "zrusena",
+        titulek: `${r.cislo}. rozjížďka zrušena`,
       });
 
     if (r.stav === "Dokoncena" && pred?.stav !== "Dokoncena")
