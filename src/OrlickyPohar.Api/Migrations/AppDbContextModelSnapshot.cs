@@ -172,6 +172,15 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int>("ZavodId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("ZkracenoUPrvkuId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("ZkracenoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ZkratilId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("NahrazujeId");
@@ -179,6 +188,10 @@ namespace OrlickyPohar.Api.Migrations
                     b.HasIndex("PrijalId");
 
                     b.HasIndex("RozjizdkaId");
+
+                    b.HasIndex("ZkracenoUPrvkuId");
+
+                    b.HasIndex("ZkratilId");
 
                     b.HasIndex("ZavodId", "Stav");
 
@@ -1373,6 +1386,16 @@ namespace OrlickyPohar.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("OrlickyPohar.Api.Features.Boje.PrvekTrati", "ZkracenoUPrvku")
+                        .WithMany()
+                        .HasForeignKey("ZkracenoUPrvkuId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Zkratil")
+                        .WithMany()
+                        .HasForeignKey("ZkratilId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Nahrazuje");
 
                     b.Navigation("Prijal");
@@ -1380,6 +1403,10 @@ namespace OrlickyPohar.Api.Migrations
                     b.Navigation("Rozjizdka");
 
                     b.Navigation("Zavod");
+
+                    b.Navigation("ZkracenoUPrvku");
+
+                    b.Navigation("Zkratil");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Clanky.Clanek", b =>
