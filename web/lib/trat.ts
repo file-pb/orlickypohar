@@ -52,13 +52,15 @@ const cesta = (serie: string, zavod: string) =>
 export async function nactiStavTrati(
   serie: string,
   zavod: string,
+  /** Kterou trať chce obrazovka. Bez ní tu nejnovější, jako dřív. */
+  trat?: number,
 ): Promise<{ stav: Stav; trat?: Trat | null }> {
   const t = await tokenZeSezeni();
   if (!t) return { stav: "neprihlasen" };
 
   let odpoved: Response;
   try {
-    odpoved = await fetch(cesta(serie, zavod), {
+    odpoved = await fetch(`${cesta(serie, zavod)}${trat ? `?trat=${trat}` : ""}`, {
       headers: { authorization: `Bearer ${t}`, accept: "application/json" },
       cache: "no-store",
       signal: AbortSignal.timeout(CEKAT_MS),
@@ -211,12 +213,17 @@ export const NAZVY_STRAN: Record<NonNullable<StranaPrvku>, string> = {
 };
 
 /** Prvky trati v pořadí. Bez trati prázdno, ne chyba. */
-export async function nactiPrvky(serie: string, zavod: string): Promise<Prvek[]> {
+export async function nactiPrvky(
+  serie: string,
+  zavod: string,
+  /** Kterou trať. Bez ní tu nejnovější. */
+  trat?: number,
+): Promise<Prvek[]> {
   const t = await tokenZeSezeni();
   if (!t) return [];
 
   try {
-    const odpoved = await fetch(`${cesta(serie, zavod)}/prvky`, {
+    const odpoved = await fetch(`${cesta(serie, zavod)}/prvky${trat ? `?trat=${trat}` : ""}`, {
       headers: { authorization: `Bearer ${t}`, accept: "application/json" },
       cache: "no-store",
       signal: AbortSignal.timeout(CEKAT_MS),
@@ -372,4 +379,16 @@ export async function klonujTrat(
   stav: StavTrati | null,
 ): Promise<string | null> {
   return await posli(`${cesta(serie, zavod)}/${trat}/klon`, "POST", { rozjizdka, stav });
+}
+
+/**
+ * Založí další, prázdnou trať regaty. Vrací chybu k zobrazení, nebo `null`.
+ *
+ * <b>Opakované volání vrací tutéž trať</b>, dokud ta prázdná nedostane
+ * rozjížďku — hlídá to API, aby po dvojím kliknutí na plus regatě
+ * nepřibyly dvě prázdné tratě, které nejdou uklidit. Obrazovka proto
+ * nemusí nic blokovat.
+ */
+export async function zalozDalsiTrat(serie: string, zavod: string): Promise<string | null> {
+  return await posli(`${cesta(serie, zavod)}/dalsi`, "POST");
 }

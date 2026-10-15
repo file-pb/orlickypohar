@@ -950,6 +950,32 @@ header.hlavicka .jen-uzke { display: none; }
 .stejna-trat > summary:hover { color: var(--voda); }
 .stejna-trat > p { margin: 0.2rem 0 0; }
 
+/* Záložky tratí regaty. <b>Jedna za každou trať, plus na konci</b>
+   (Filip, 15. 10. 2026). Nejsou to taby v jedné stránce, ale odkazy —
+   výběr je v adrese, takže se dá poslat a přežije akci. */
+.zalozky-trati {
+  display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0 0 0.9rem;
+  align-items: stretch;
+}
+.zalozky-trati a,
+.zalozky-trati button {
+  display: inline-flex; flex-direction: column; justify-content: center;
+  padding: 0.3rem 0.75rem; min-height: 44px;
+  font-size: 0.85rem; color: var(--tlumeny); text-decoration: none;
+  background: transparent; border: 1px solid var(--linka); border-radius: 10px;
+  cursor: pointer;
+}
+.zalozky-trati a:hover,
+.zalozky-trati button:hover { color: var(--voda); border-color: var(--voda); }
+/* Vybraná nese barvu vody a plnější rámeček — na vodě se kouká v slunci. */
+.zalozky-trati a.vybrany {
+  color: var(--voda); border-color: var(--voda); font-weight: 600;
+  background: var(--zvyrazneni);
+}
+.zalozky-trati .stav { font-size: 0.72rem; font-weight: 400; color: var(--tlumeny); }
+/* Plus je užší a vycentrované: je to akce, ne záložka. */
+.zalozky-trati button { font-size: 1.1rem; padding: 0.3rem 0.9rem; align-items: center; }
+
 .detail-prvku { padding: 0 0 1rem; }
 
 /* Taby v detailu prvku. <b>Bez javascriptu</b>: přepínače jsou schované
