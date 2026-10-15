@@ -438,6 +438,11 @@ export async function dalsiTratAkce(formular: FormData) {
   // Která to je, řekne až nové načtení: API vrací tutéž prázdnou trať,
   // když už jedna je, takže se na ni dá spolehnout i při dvojím kliknutí.
   const trate = await nactiTrate(serie, zavod);
+  // `null` je výpadek čtení. Trať nejspíš vznikla, jen o ní nevíme —
+  // „nepovedlo se" by bylo tvrzení o něčem, co se možná povedlo.
+  if (trate === null)
+    redirect(kam({ chyba: "Trať asi vznikla, ale seznam tratí se nepodařilo načíst. Zkus to prosím znovu." }));
+
   const prazdna = trate.find((t) => t.cisloRozjizdky === null && t.pocetPrvku === 0);
   if (!prazdna) redirect(kam({ stav: "novaTrat" }));
 

@@ -341,8 +341,23 @@ export const NAZVY_STAVU: Record<NonNullable<StavTrati>, string> = {
  * Tratě regaty na výběr, od nejnovější. Prázdno, když regata trať nemá —
  * to není chyba, stavba začíná první bójí.
  */
-export async function nactiTrate(serie: string, zavod: string): Promise<TratNaVyber[]> {
+/**
+ * Tratě regaty k výběru. <b><c>null</c> znamená výpadek</b>, ne prázdno.
+ *
+ * <para>
+ * Dřív se vracelo prázdné pole na obojí a sekce „Tratě regaty" se na
+ * prázdném poli nevykreslila vůbec — při výpadku API tak zmizelo
+ * přiřazení trati rozjížďce i klonování, beze stopy a bez hlášky. Stavitel
+ * neměl jak poznat rozdíl mezi „žádné tratě" a „nepodařilo se načíst"
+ * (průchod scénáři Izolepy, 15. 10. 2026).
+ * </para>
+ */
+export async function nactiTrate(
+  serie: string,
+  zavod: string,
+): Promise<TratNaVyber[] | null> {
   const t = await tokenZeSezeni();
+  // Nepřihlášený žádné tratě nemá — to je prázdno, ne výpadek.
   if (!t) return [];
 
   try {
@@ -351,9 +366,9 @@ export async function nactiTrate(serie: string, zavod: string): Promise<TratNaVy
       cache: "no-store",
       signal: AbortSignal.timeout(CEKAT_MS),
     });
-    return odpoved.ok ? ((await odpoved.json()) as TratNaVyber[]) : [];
+    return odpoved.ok ? ((await odpoved.json()) as TratNaVyber[]) : null;
   } catch {
-    return [];
+    return null;
   }
 }
 

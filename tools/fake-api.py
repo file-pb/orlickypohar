@@ -1657,6 +1657,10 @@ def zastavka_radek(z):
             "poradatelSlug": poradatel_zastavky(z)["slug"] if poradatel_zastavky(z) else None,
             "smiMedailonek": bool(poradatel_zastavky(z)) and (rozhodci or organizator),
             "vyhodnoceni": z.get("vyhodnoceni", "PoKategoriich"),
+            # Počty do poháru: formulář je potřebuje předvyplnit.
+            "pocetSkrtu": z.get("pocetSkrtu", 0),
+            "koeficientDoSerie": z.get("koeficientDoSerie", 1.0),
+            "posunDoSerie": z.get("posunDoSerie", 0),
             # Vypsat a odjet patří pořadateli, zbytek řady rozhodčímu
             # (`Kalendar.KdoSmi`).
             "mozneStavy": [s for s in VSECHNY_STAVY
@@ -1753,6 +1757,14 @@ def zastavka_ze_vstupu(vstup):
         return None, "Zastávka musí mít termín."
     if konec and konec < datum:
         return None, "Konec závodu je dřív než jeho začátek."
+
+    # Regata patří do roku svého ročníku — opsané z `Kalendar.ProcNejdeUlozit`.
+    rok = D["rok"]
+    if datum[:4] != str(rok):
+        return None, (f"Ročník je {rok}, ale termín vychází na rok {datum[:4]}. "
+                      "Oprav termín, nebo regatu vypiš v ročníku, kam patří.")
+    if konec and konec[:4] != str(rok):
+        return None, f"Ročník je {rok}, ale konec závodu vychází na rok {konec[:4]}."
 
     vyhodnoceni = vstup.get("vyhodnoceni") or "PoKategoriich"
     if vyhodnoceni not in ("PoKategoriich", "CelePole", "Oboje"):
@@ -3875,6 +3887,10 @@ class H(BaseHTTPRequestHandler):
                 "cas": body[-1]["cas"], "hladina": 334.66, "objem": 345.4, "pritok": 14.33,
                 "odtok": 0.0, "pritokZaDen": 1_231_000.0, "odtokZaDen": 3_016_656.0,
                 "zmenaObjemu": -1_780_000.0, "historie": body,
+                # Rozsahy grafu (od 15. 10. 2026). Mock drží jen den měření,
+                # takže nabízí 24 h — bez tohohle pole padne `VodocetGraf`
+                # a s ním celý postranní panel, tedy každá veřejná stránka.
+                "dostupneRozsahy": ["24h"],
                 "zdroj": "https://www.pvl.cz/portal/nadrze/cz/pc/Mereni.aspx?id=VLOR&oid=2"})
 
         if cesta == "/vodocet/teplota-hladiny":

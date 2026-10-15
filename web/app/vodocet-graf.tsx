@@ -66,7 +66,8 @@ export function VodocetGraf({
   /** Co se vykreslilo na serveru: řada za 24 h i čísla k ní. */
   vychozi: Rada;
   /** Klíče rozsahů, pro které jsou data. Prázdné pole = žádná tlačítka. */
-  rozsahy: string[];
+  /** Může chybět, když API vrací starší tvar — viz `prepinat`. */
+  rozsahy?: string[];
   /** Okamžitý průtok — „teď", nezávisí na rozsahu. */
   pritokTed: number | null;
   odtokTed: number | null;
@@ -102,13 +103,19 @@ export function VodocetGraf({
   }
 
   // Jediný rozsah = není co přepínat, tlačítka by jen zabírala místo.
-  const prepinat = rozsahy.length > 1;
+  //
+  // <b>Chybějící pole se bere jako „žádné rozsahy".</b> Vodočet je doplněk
+  // a nesmí shodit stránku (`lib/vodocet.ts`), jenže `rozsahy.length` na
+  // odpovědi bez `dostupneRozsahy` shodilo celý postranní panel, a tím
+  // každou veřejnou stránku — stačilo starší API nebo starší odpověď
+  // v cache (16. 10. 2026).
+  const prepinat = (rozsahy?.length ?? 0) > 1;
 
   return (
     <>
       {prepinat && (
         <div className="vodocet-rozsahy" role="group" aria-label="Rozsah grafu">
-          {rozsahy.map((r) => (
+          {(rozsahy ?? []).map((r) => (
             <button
               key={r}
               type="button"
