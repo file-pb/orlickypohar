@@ -22,7 +22,7 @@ namespace OrlickyPohar.Api.Features.Boje;
 /// rozjížďky o trati nemusí vědět.
 /// </para>
 /// </summary>
-public class TratSprava(AppDbContext db, TimeProvider cas)
+public class TratSprava(AppDbContext db, TimeProvider cas, Fotky.IUloziste uloziste)
 {
     /// <summary>
     /// Trať, na které se zrovna pracuje. Nejnovější vyhrává.
@@ -316,21 +316,56 @@ public class TratSprava(AppDbContext db, TimeProvider cas)
 
         var prijato = trat.PrijatoV!.Value;
 
-        var prvky = await db.PrvkyTrati
+        // Fotky značek jdou ven s trať. <b>Jedním dotazem na celou trať</b>:
+        // na konec zvlášť by to byl dotaz za každou bóji, a prvek jich má
+        // až dvě.
+        var fotky = await db.PrvkyTrati
+            .Where(p => p.TratId == trat.Id)
+            .SelectMany(p => p.BojeA!.Fotky.Concat(
+                p.BojeB != null ? p.BojeB.Fotky : Enumerable.Empty<Fotky.Fotka>()))
+            .Distinct()
+            .OrderBy(f => f.NahranoV)
+            .ToListAsync(ct);
+
+        var podleBoje = fotky
+            .GroupBy(f => f.UBojeId!.Value)
+            .ToDictionary(
+                g => g.Key,
+                g => (IReadOnlyList<Fotky.ObrazekDto>)[.. g
+                    .Select(f => Fotky.Nahravani.Dto(f, uloziste.VerejnaAdresa))
+                    .OfType<Fotky.ObrazekDto>()]);
+
+        var surove = await db.PrvkyTrati
             .Where(p => p.TratId == trat.Id)
             .OrderBy(p => p.Poradi).ThenBy(p => p.Id)
+            .Select(p => new
+            {
+                p.Typ, p.Poradi, p.Strana, p.Poznamka, p.Smer, p.DruhStartu,
+                A = new { p.BojeAId, p.BojeA!.Nazev, p.BojeA.Sirka, p.BojeA.Delka,
+                          p.BojeA.Barva, p.BojeA.Tvar, p.BojeA.Znaceni },
+                B = p.BojeB != null
+                    ? new { BojeAId = p.BojeB.Id, p.BojeB.Nazev, p.BojeB.Sirka, p.BojeB.Delka,
+                            p.BojeB.Barva, p.BojeB.Tvar, p.BojeB.Znaceni }
+                    : null,
+            })
+            .ToListAsync(ct);
+
+        IReadOnlyList<Fotky.ObrazekDto>? KFotkam(int bojeId) =>
+            podleBoje.TryGetValue(bojeId, out var f) && f.Count > 0 ? f : null;
+
+        var prvky = surove
             .Select(p => new VerejnyPrvekDto(
                 p.Typ, p.Poradi, p.Strana, p.Poznamka,
                 new VerejnyKonecDto(
-                    p.BojeA!.Nazev, p.BojeA.Sirka, p.BojeA.Delka,
-                    p.BojeA.Barva, p.BojeA.Tvar, p.BojeA.Znaceni),
-                p.BojeB != null
+                    p.A.Nazev, p.A.Sirka, p.A.Delka,
+                    p.A.Barva, p.A.Tvar, p.A.Znaceni, KFotkam(p.A.BojeAId)),
+                p.B != null
                     ? new VerejnyKonecDto(
-                        p.BojeB.Nazev, p.BojeB.Sirka, p.BojeB.Delka,
-                        p.BojeB.Barva, p.BojeB.Tvar, p.BojeB.Znaceni)
+                        p.B.Nazev, p.B.Sirka, p.B.Delka,
+                        p.B.Barva, p.B.Tvar, p.B.Znaceni, KFotkam(p.B.BojeAId))
                     : null,
                 p.Smer, p.DruhStartu))
-            .ToListAsync(ct);
+            .ToList();
 
         return new VerejnaTratDto(false, prijato, cislo, Prvky: prvky, Boje: await db.Boje
             .Where(b => b.ZavodId == zavodId

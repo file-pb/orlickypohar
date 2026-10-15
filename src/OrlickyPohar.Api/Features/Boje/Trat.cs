@@ -152,12 +152,28 @@ public record VerejnaBojeDto(
     /// </summary>
     DruhZnaceni? Znaceni = null);
 
-/// <summary>Konec prvku pro diváka: jméno a kam se pluje, nic víc.</summary>
+/// <summary>Konec prvku pro diváka: jméno, kam se pluje, a jak to vypadá.</summary>
 public record VerejnyKonecDto(
     string Nazev, double Sirka, double Delka,
     BarvaBoje? Barva = null,
     TvarBoje? Tvar = null,
-    DruhZnaceni? Znaceni = null);
+    DruhZnaceni? Znaceni = null,
+    /// <summary>
+    /// Fotky značky (Filip, 15. 10. 2026: *„náhledy bójí a fotky v trati
+    /// na regatě"*).
+    /// <para>
+    /// <b>Dřív se veřejně nevydávaly</b>, protože se nevydávala celá
+    /// trať. Od chvíle, kdy je trať veřejná, ten důvod padl a fotka je
+    /// to nejužitečnější, co o značce jde říct: ze souřadnic se nepozná,
+    /// jestli je bóje nafouklá, jakou má barvu a co je za ní na břehu.
+    /// </para>
+    /// <para>
+    /// Jde ven i autor, jako u každé fotky na webu — popisek „Foto …" je
+    /// zvyk celého webu, ne výjimka. Co ven nejde dál, jsou údaje
+    /// o měření: kdo pípal a s jakou přesností.
+    /// </para>
+    /// </summary>
+    IReadOnlyList<Fotky.ObrazekDto>? Fotky = null);
 
 /// <summary>
 /// Prvek trati pro diváka.
