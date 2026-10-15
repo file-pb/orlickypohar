@@ -109,4 +109,107 @@ public static class Bilance
         // Objem je v milionech m³.
         return (double)(posledni.Objem!.Value - prvni.Objem!.Value) * 1_000_000;
     }
+
+    /// <summary>
+    /// Nejdelší díra, kterou okno <paramref name="okno"/> snese.
+    /// <para>
+    /// <b>Hodina platí jen pro den.</b> Historie se s věkem prořeďuje
+    /// (<see cref="Prorideni"/>), takže u delších oken jsou vzorky po
+    /// hodinách až dnech — s pevnou hodinou by bilance za dva týdny vyšla
+    /// vždycky jako „nespočítáno", i když data v pořádku jsou.
+    /// </para>
+    /// <para>
+    /// Padesátina okna je zvolená tak, aby ji nejhrubší pásmo prořeďování
+    /// s rezervou podlezlo: u dvou týdnů vyjde 6,7 h proti kroku 2 h, u roku
+    /// 7,3 dne proti kroku 1 den. Zároveň je to pořád dost přísné na to,
+    /// aby výpadek sběru přes půl okna číslo zahodil.
+    /// </para>
+    /// </summary>
+    public static TimeSpan Tolerance(TimeSpan okno) =>
+        okno <= Okno ? NejdelsiMezera : TimeSpan.FromTicks(Math.Max(okno.Ticks / 50, NejdelsiMezera.Ticks));
+
+    /// <summary>
+    /// Objem, který proteče za <paramref name="okno"/> před
+    /// <paramref name="konec"/>, v m³ — lichoběžníky mezi sousedními
+    /// měřeními. <c>null</c>, když sběr okno nepokrývá nebo v něm má díru
+    /// delší, než <see cref="Tolerance"/> dovolí.
+    /// <para>
+    /// <b>Proč nejde použít `OdtokZaDen` i pro delší okna:</b> ten bere
+    /// jen měření v celou hodinu a každé počítá za celou hodinu, což sedí
+    /// na hodinovou řadu Povodí za poslední den. Ve starší historii jsou
+    /// vzorky po dvou hodinách i po dnech, takže by se většina zahodila
+    /// a zbytek počítal za špatně dlouhé úseky.
+    /// </para>
+    /// </summary>
+    public static double? ProtekloZa(
+        IEnumerable<MereniNadrze> mereni, DateTimeOffset konec, TimeSpan okno,
+        Func<MereniNadrze, decimal?> hodnota)
+    {
+        var tolerance = Tolerance(okno);
+        var zacatek = konec - okno;
+        var body = mereni
+            .Where(m => hodnota(m) is not null && m.Cas <= konec)
+            .OrderBy(m => m.Cas)
+            .Select(m => (m.Cas, Q: (double)hodnota(m)!.Value))
+            .ToList();
+
+        var predOknem = body.FindLastIndex(b => b.Cas <= zacatek);
+        if (predOknem < 0) return null;
+
+        body = body[predOknem..];
+        if (body[^1].Cas < konec - tolerance) return null;
+
+        double objem = 0;
+        for (var i = 1; i < body.Count; i++)
+        {
+            var (t0, q0) = body[i - 1];
+            var (t1, q1) = body[i];
+            if (t1 - t0 > tolerance) return null;
+
+            if (t0 < zacatek)
+            {
+                var podil = (zacatek - t0) / (t1 - t0);
+                q0 += (q1 - q0) * podil;
+                t0 = zacatek;
+            }
+
+            objem += (q0 + q1) / 2 * (t1 - t0).TotalSeconds;
+        }
+
+        return objem;
+    }
+
+    /// <summary>Jak se za okno změnil objem nádrže, v m³. Z měřených objemů.</summary>
+    public static double? ZmenaObjemuZa(
+        IEnumerable<MereniNadrze> mereni, DateTimeOffset konec, TimeSpan okno)
+    {
+        var tolerance = Tolerance(okno);
+        var s = mereni.Where(m => m.Objem is not null && m.Cas <= konec).ToList();
+        if (s.Count == 0) return null;
+
+        var posledni = s.MaxBy(m => m.Cas)!;
+        if (posledni.Cas < konec - tolerance) return null;
+
+        var zacatek = posledni.Cas - okno;
+        var prvni = s.MinBy(m => (m.Cas - zacatek).Duration())!;
+        if ((prvni.Cas - zacatek).Duration() > tolerance) return null;
+
+        return (double)(posledni.Objem!.Value - prvni.Objem!.Value) * 1_000_000;
+    }
+
+    /// <summary>
+    /// O kolik centimetrů se za okno změnila hladina. Z prvního a posledního
+    /// měření v něm — hladinu má každý řádek, takže tohle vyjde i tam, kde
+    /// se průtoky spočítat nedají.
+    /// </summary>
+    public static int? ZmenaHladinyCm(
+        IEnumerable<MereniNadrze> mereni, DateTimeOffset konec, TimeSpan okno)
+    {
+        var vOkne = mereni.Where(m => m.Cas >= konec - okno && m.Cas <= konec).ToList();
+        if (vOkne.Count < 2) return null;
+
+        var prvni = vOkne.MinBy(m => m.Cas)!;
+        var posledni = vOkne.MaxBy(m => m.Cas)!;
+        return (int)Math.Round((posledni.Hladina - prvni.Hladina) * 100);
+    }
 }
