@@ -18,6 +18,8 @@ import {
 import {
   klonujTrat,
   nactiPrvky,
+  nactiTrate,
+  zalozDalsiTrat,
   posunTrat,
   priradTrat,
   smazPrvek,
@@ -406,6 +408,34 @@ export async function uklidAkce(formular: FormData) {
 }
 
 /** Přiřadí volnou trať rozjížďce. */
+/**
+ * Založí další, prázdnou trať regaty — plus na konci záložek.
+ *
+ * <b>Po založení se na ni rovnou přepne.</b> Kdo kliknul na plus, chce
+ * stavět; nechat ho na staré trati by znamenalo, že první pípnutí půjde
+ * do špatné.
+ */
+export async function dalsiTratAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const kam = (zprava: Record<string, string>) =>
+    `/sprava/${encodeURIComponent(serie)}/boje/${encodeURIComponent(zavod)}?${new URLSearchParams(zprava)}`;
+
+  const chyba = await zalozDalsiTrat(serie, zavod);
+  if (chyba) redirect(kam({ chyba }));
+
+  // Která to je, řekne až nové načtení: API vrací tutéž prázdnou trať,
+  // když už jedna je, takže se na ni dá spolehnout i při dvojím kliknutí.
+  const trate = await nactiTrate(serie, zavod);
+  const prazdna = trate.find((t) => t.cisloRozjizdky === null && t.pocetPrvku === 0);
+
+  redirect(
+    prazdna
+      ? kam({ trat: String(prazdna.id), stav: "novaTrat" })
+      : kam({ stav: "novaTrat" }),
+  );
+}
+
 export async function priradTratAkce(formular: FormData) {
   const { serie, zavod, kam } = zaklad(formular);
   const trat = Number(formular.get("trat") ?? 0);

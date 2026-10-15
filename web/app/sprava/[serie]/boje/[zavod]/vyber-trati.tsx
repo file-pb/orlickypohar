@@ -1,5 +1,6 @@
 import { NAZVY_STAVU, type TratNaVyber } from "@/lib/trat";
-import { klonujTratAkce, priradTratAkce } from "./akce";
+import { dalsiTratAkce, klonujTratAkce, priradTratAkce } from "./akce";
+import Link from "@/app/sprava/odkaz";
 import { StejnaTrat } from "@/app/sprava/stejna-trat";
 
 /**
@@ -29,16 +30,57 @@ export function VyberTrati({
   serie,
   zavod,
   trate,
+  vybrana,
 }: {
   serie: string;
   zavod: string;
   trate: TratNaVyber[];
+  /** Trať, kterou obrazovka právě ukazuje. */
+  vybrana?: number;
 }) {
   if (trate.length === 0) return null;
 
   return (
     <section className="vyber-trati" aria-labelledby="vyber-trati-nadpis">
       <h2 id="vyber-trati-nadpis">Tratě regaty</h2>
+
+      {/* <b>Záložka za každou trať</b> (Filip, 15. 10. 2026: *„každá
+          rozjížďka vlastní tab… na konci třeba plusko a možnost zadat
+          další trať"*). Seznam pod sebou byl zavádějící: vypadal jako
+          přehled, ale obrazovka přitom pořád ukazovala jen tu nejnovější.
+
+          Popisek nese číslo rozjížďky, když ho trať má. Nemusí ho mít —
+          pořadí je volné: dá se postavit trať a pak jí přiřadit rozjížďku,
+          nebo vyhlásit rozjížďku a stavět, zatímco lodě čekají na vodě.
+
+          Odkazy, ne javascript: výběr je v adrese, takže se dá poslat
+          a po akci zůstane. */}
+      <nav className="zalozky-trati" aria-label="Tratě regaty">
+        {trate.map((t) => {
+          const jeTato = t.id === vybrana;
+          return (
+            <Link
+              key={t.id}
+              href={`/sprava/${serie}/boje/${zavod}?trat=${t.id}`}
+              className={jeTato ? "vybrany" : undefined}
+              aria-current={jeTato ? "page" : undefined}
+            >
+              {t.cisloRozjizdky ? `${t.cisloRozjizdky}. rozjížďka` : "bez rozjížďky"}
+              <span className="stav">{NAZVY_STAVU[t.stav]}</span>
+            </Link>
+          );
+        })}
+
+        {/* Plus zakládá prázdnou trať pro další rozjížďku. Klon je od toho,
+            když se jede stejně; tohle je, když se pojede jinudy. */}
+        <form action={dalsiTratAkce}>
+          <input type="hidden" name="serie" value={serie} />
+          <input type="hidden" name="zavod" value={zavod} />
+          <button type="submit" title="Další trať regaty" aria-label="Založit další trať">
+            +
+          </button>
+        </form>
+      </nav>
 
       <ul className="seznam">
         {trate.map((t) => (

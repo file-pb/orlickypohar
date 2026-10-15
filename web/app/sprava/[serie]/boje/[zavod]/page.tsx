@@ -36,6 +36,8 @@ type Parametry = {
     prenastav?: string;
     uklizeno?: string;
     otevrit?: string;
+    /** Kterou trať regaty obrazovka ukazuje. Bez ní tu nejnovější. */
+    trat?: string;
   }>;
 };
 
@@ -59,14 +61,18 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
   const { serie, zavod } = await params;
   const zpravy = await searchParams;
 
+  // Která trať se ukazuje. Nula znamená „nevybráno" — API pak vydá tu
+  // nejnovější, jako dřív.
+  const vybranaTrat = Number(zpravy.trat ?? 0) || undefined;
+
   // Název regaty v odpovědi o bójích není, a bez něj nadpis neřekne, čí
   // trať se zrovna staví (Filip, 9. 10. 2026).
   const [{ stav, trat, byvale }, nazev, stavTrati, prvky, kUklizeni, trate] =
     await Promise.all([
     nactiTrat(serie, zavod),
     nazevZastavky(serie, zavod),
-    nactiStavTrati(serie, zavod),
-    nactiPrvky(serie, zavod),
+    nactiStavTrati(serie, zavod, vybranaTrat),
+    nactiPrvky(serie, zavod, vybranaTrat),
     nactiKUklizeni(serie, zavod),
     nactiTrate(serie, zavod),
   ]);
@@ -169,6 +175,12 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
       {/* Druhý průjezd týchž značek. Bóje se nesbírají, protože na nich
           stojí jiný prvek — a sebrat je by rozbilo trať jinde, než kam
           člověk klikl. */}
+      {zpravy.stav === "novaTrat" && (
+        <p className="hlaska" role="status">
+          Nová trať je založená a obrazovka je na ní. Rozjížďku jí přiřadíš,
+          až bude postavená — nebo klidně hned, když se na ni čeká na vodě.
+        </p>
+      )}
       {zpravy.stav === "prujezdPryc" && (
         <p className="hlaska" role="status">
           Průjezd je pryč. Značky zůstaly ve vodě, protože je používá ještě
@@ -305,7 +317,12 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
           {/* <b>Až pod stavbou</b> (Filip, 11. 10. 2026): která trať platí
               a klonování jsou úkoly od stolu, kdežto nahoře má být to,
               kvůli čemu je člověk na vodě. */}
-          <VyberTrati serie={serie} zavod={zavod} trate={trate} />
+          <VyberTrati
+            serie={serie}
+            zavod={zavod}
+            trate={trate}
+            vybrana={stavTrati.trat?.id}
+          />
 
           {trat.length > 0 && (
             <p className="poznamka">
