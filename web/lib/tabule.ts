@@ -32,7 +32,17 @@ export type Snimek = {
    * kdyby tabule brala za vodítko jeho přítomnost, ukazovala by pořadí,
    * které se v tomhle závodě nevyhlašuje.
    */
-  tabule: { kategorie: string; lode: { lod: string; body: number; misto: number }[] }[];
+  tabule: {
+    kategorie: string;
+    lode: { lod: string; body: number; misto: number }[];
+    /**
+     * Kolik lodí se do panelu nevešlo. Tabule je plocha na dálku, takže
+     * <b>deset řádků je strop</b> — ale divák má vědět, že tabulka
+     * pokračuje. Bez toho vypadalo pole dvanácti lodí jako pole deseti
+     * (průchod scénáři Izolepy, 15. 10. 2026).
+     */
+    dalsich: number;
+  }[];
   /** Atributy závodu do grafiky nad obsahem. */
   zavod: {
     typ: string | null;
@@ -145,15 +155,19 @@ function panely(detail: ZavodDetail): Snimek["tabule"] {
   if (detail.vyhodnoceni !== "CelePole")
     for (const p of detail.poradi) {
       let panel = tridy.find((t) => t.kategorie === p.kategorie);
-      if (!panel) tridy.push((panel = { kategorie: p.kategorie, lode: [] }));
+      if (!panel) tridy.push((panel = { kategorie: p.kategorie, lode: [], dalsich: 0 }));
       if (panel.lode.length < NEJVIC) panel.lode.push(radek(p, panel.lode.length));
+      else panel.dalsich++;
     }
 
-  if (detail.vyhodnoceni !== "PoKategoriich")
+  if (detail.vyhodnoceni !== "PoKategoriich") {
+    const celkem = detail.poradiCelkem ?? [];
     tridy.push({
       kategorie: CELKEM,
-      lode: (detail.poradiCelkem ?? []).slice(0, NEJVIC).map(radek),
+      lode: celkem.slice(0, NEJVIC).map(radek),
+      dalsich: Math.max(celkem.length - NEJVIC, 0),
     });
+  }
 
   // Prázdný panel není co ukazovat; jeden prázdný ale zůstane, aby tabule
   // uměla říct „zatím se nejelo" místo prázdného místa. <b>Bez něj zmizel
@@ -161,5 +175,5 @@ function panely(detail: ZavodDetail): Snimek["tabule"] {
   // prvním startem nemá v pořadí nikoho, takže panelů bylo nula.
   const neprazdne = tridy.filter((t) => t.lode.length > 0);
   if (neprazdne.length > 0) return neprazdne;
-  return tridy.length > 0 ? tridy.slice(0, 1) : [{ kategorie: "Pořadí", lode: [] }];
+  return tridy.length > 0 ? tridy.slice(0, 1) : [{ kategorie: "Pořadí", lode: [], dalsich: 0 }];
 }
