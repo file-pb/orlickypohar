@@ -1,4 +1,4 @@
-import type { ZavodDetail } from "@/lib/api";
+import type { VerejnaTrat, ZavodDetail } from "@/lib/api";
 
 /**
  * Snímek regaty pro tabuli v hospodě.
@@ -22,13 +22,40 @@ export type Snimek = {
   }[];
   lode: { lod: string; kategorie: string; kormidelnik: string | null; potvrzena: boolean }[];
   poradi: { lod: string; kategorie: string; body: number; misto: number }[];
+  /**
+   * Trať, podle které se pluje. <b>Kvůli alertu o schválení</b> (Filip,
+   * 15. 10. 2026) — a taky proto, že „čeká se na trať" je na tabuli
+   * zpráva sama o sobě: lodě jsou na vodě a nikdo neví proč.
+   *
+   * `null`, dokud regata přijatou trať nemá. Bere se ta od rozjížďky,
+   * která je na řadě (API, `NaRadeAsync`), takže se alert ohlásí o té
+   * trati, kterou diváci zrovna sledují.
+   */
+  trat: {
+    /** Kdy ji rozhodčí přijal. Změna = právě schválil. */
+    prijatoV: string | null;
+    /** Stojí se a přestavuje. */
+    prestavba: boolean;
+    cisloRozjizdky: number | null;
+  } | null;
 };
 
 /** Kolik řádků se na telku vejde, aniž by se muselo rolovat. */
 const NEJVIC = 10;
 
-export function snimekZavodu(detail: ZavodDetail): Snimek {
+export function snimekZavodu(
+  detail: ZavodDetail,
+  /** Veřejná trať. Nepovinná: výpadek jejího čtení nesmí shodit celý snímek. */
+  trat?: VerejnaTrat | null,
+): Snimek {
   return {
+    trat: trat
+      ? {
+          prijatoV: trat.prijatoV,
+          prestavba: trat.prestavba,
+          cisloRozjizdky: trat.cisloRozjizdky,
+        }
+      : null,
     kdy: new Date().toISOString(),
     nazev: detail.nazev,
     stav: detail.stav,

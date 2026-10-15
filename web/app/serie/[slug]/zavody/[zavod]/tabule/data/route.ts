@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { nactiZavod } from "@/lib/api";
+import { nactiVerejnouTrat, nactiZavod } from "@/lib/api";
 import { snimekZavodu } from "@/lib/tabule";
 
 /**
@@ -23,9 +23,15 @@ export async function GET(
   const { slug, zavod } = await params;
 
   try {
-    const detail = await nactiZavod(slug, zavod);
+    // Trať se čte vedle detailu a její výpadek snímek neshodí: tabule bez
+    // trati pořád umí ukázat rozjížďky a pořadí, kdežto „nedaří se načíst"
+    // by byla prázdná obrazovka až do rána.
+    const [detail, trat] = await Promise.all([
+      nactiZavod(slug, zavod),
+      nactiVerejnouTrat(slug, zavod).catch(() => null),
+    ]);
     if (!detail) return NextResponse.json({ error: "Regata není." }, { status: 404 });
-    return NextResponse.json(snimekZavodu(detail));
+    return NextResponse.json(snimekZavodu(detail, trat));
   } catch {
     return NextResponse.json({ error: "API nedostupné." }, { status: 503 });
   }
