@@ -3278,3 +3278,15 @@ body:has(.tabule) { overflow: hidden; }
    divákovi nezmizelo číslo z řady (Filip, 17. 10. 2026) — přeškrtnuté
    říká, že se nejela, a tlumené, že se o ni nemá opírat. */
 .tabulka-sekce th.zrusena { color: var(--tlumeny); text-decoration: line-through; }
+
+/* Věta o průběžných výsledcích na tabuli. Má být vidět přes místnost, ale
+   nesmí přebít název závodu — proto barva a ne velikost. */
+.tabule .hlaska.dej { font-size: 1.2vw; padding: 0.5vw 1vw; margin: 0.8vw 0 0; }
+.tabule .hlaska.dej b { color: var(--voda); }
+/* Štítky stavu zápisu u rozjížďky. Potvrzené se zazelená, čerstvé z vody
+   je tlumené — divák má na první pohled poznat, čemu se dá věřit. */
+.tabule .stitek.zapis-potvrzeno {
+  color: var(--stav-vypsany);
+  border-color: color-mix(in srgb, var(--stav-vypsany) 45%, transparent);
+}
+.tabule .stitek.zapis-navrzeno, .tabule .stitek.zapis-krevizi { color: var(--tlumeny); }

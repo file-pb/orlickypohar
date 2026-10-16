@@ -64,6 +64,9 @@ function vstupZFormulare(formular: FormData) {
     // hodnoty, které do ročníku přišly importem.
     pocetSkrtu: cislo("pocetSkrtu"),
     koeficientDoSerie: cislo("koeficientDoSerie"),
+    // Procesní děj je výběr se dvěma hodnotami, takže se posílá vždycky —
+    // na rozdíl od počtů výš tu „neměnit" nepotřebujeme.
+    procesniDej: text("procesniDej") === "ano",
     // Druh platí jen při založení; úprava ho v API nemění.
     druh: tab(formular) === "akce" ? ("Akce" as const) : ("Pohar" as const),
   };

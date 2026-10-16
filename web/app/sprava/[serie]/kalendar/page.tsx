@@ -320,6 +320,22 @@ function Pole({ zastavka, akce }: { zastavka?: ZastavkaRadek; akce?: boolean }) 
               Váha regaty v ročníku, běžně 1. Dvojka znamená dvojnásobné body.
             </span>
           </label>
+
+          {/* <b>Výběr, ne zaškrtávátko.</b> Nezaškrtnuté políčko se
+              neodešle vůbec a tenhle formulář má prázdno znamenat
+              „neměnit" — vypnutí procesního děje by tedy nešlo uložit. */}
+          <label>
+            Ukazovat průběžné výsledky
+            <select name="procesniDej" defaultValue={zastavka?.procesniDej ? "ano" : "ne"}>
+              <option value="ne">Ne — až po publikaci</option>
+              <option value="ano">Ano, i nepodepsané</option>
+            </select>
+            <span className="poznamka">
+              Na tabuli a na stránce regaty se objeví i čísla, která ještě
+              neprošla rozhodčím, každé se svým stavem. Bez toho jsou venku
+              až po publikaci — někdy i o půl hodiny později.
+            </span>
+          </label>
         </>
       )}
 

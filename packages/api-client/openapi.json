@@ -4372,6 +4372,14 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "trat",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
                     }
                 ],
                 "requestBody": {
@@ -4431,6 +4439,14 @@
                             "type": "integer",
                             "format": "int32"
                         }
+                    },
+                    {
+                        "name": "trat",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
                     }
                 ],
                 "requestBody": {
@@ -4485,6 +4501,14 @@
                         "required": true,
                         "schema": {
                             "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "trat",
+                        "in": "query",
+                        "schema": {
                             "type": "integer",
                             "format": "int32"
                         }
@@ -7331,6 +7355,10 @@
                                 "$ref": "#/components/schemas/NovaLodVstup"
                             }
                         ]
+                    },
+                    "potvrzeno": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -7861,6 +7889,9 @@
                         "items": {
                             "$ref": "#/components/schemas/VysledekDto"
                         }
+                    },
+                    "stavVysledku": {
+                        "$ref": "#/components/schemas/StavVysledku"
                     }
                 }
             },
@@ -8375,7 +8406,7 @@
                     "KRevizi",
                     "Eliminovano"
                 ],
-                "default": "Potvrzeno"
+                "default": "Navrzeno"
             },
             "StavVysledkuVstup": {
                 "required": [
@@ -9854,6 +9885,10 @@
                         "type": "integer",
                         "format": "int32",
                         "default": 0
+                    },
+                    "procesniDej": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -9931,6 +9966,12 @@
                             "integer"
                         ],
                         "format": "int32"
+                    },
+                    "procesniDej": {
+                        "type": [
+                            "null",
+                            "boolean"
+                        ]
                     }
                 }
             },
@@ -10109,6 +10150,10 @@
                         "type": "integer",
                         "format": "int32",
                         "default": 1
+                    },
+                    "procesniDej": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -10282,6 +10327,10 @@
                             "null",
                             "string"
                         ]
+                    },
+                    "procesniDej": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },

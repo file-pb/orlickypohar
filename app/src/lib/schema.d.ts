@@ -4172,7 +4172,9 @@ export interface paths {
          */
         post: {
             parameters: {
-                query?: never;
+                query?: {
+                    trat?: number;
+                };
                 header?: never;
                 path: {
                     serie: string;
@@ -4217,7 +4219,9 @@ export interface paths {
          */
         put: {
             parameters: {
-                query?: never;
+                query?: {
+                    trat?: number;
+                };
                 header?: never;
                 path: {
                     serie: string;
@@ -4250,7 +4254,9 @@ export interface paths {
          */
         delete: {
             parameters: {
-                query?: never;
+                query?: {
+                    trat?: number;
+                };
                 header?: never;
                 path: {
                     serie: string;
@@ -5355,6 +5361,8 @@ export interface components {
             /** Format: int32 */
             prihlaskaId?: null | number;
             novaLod?: null | components["schemas"]["NovaLodVstup"];
+            /** @default false */
+            potvrzeno: boolean;
         };
         PrihlaskaDto: {
             lod: string;
@@ -5480,6 +5488,7 @@ export interface components {
             stav: components["schemas"]["StavRozjizdky"];
             doSerie: boolean;
             vysledky: components["schemas"]["VysledekDto"][];
+            stavVysledku?: components["schemas"]["StavVysledku"];
         };
         RozjizdkaNaVyberDto: {
             /** Format: int32 */
@@ -5622,7 +5631,7 @@ export interface components {
             stav: components["schemas"]["StavClanku"];
         };
         /**
-         * @default Potvrzeno
+         * @default Navrzeno
          * @enum {unknown}
          */
         StavVysledku: "Navrzeno" | "Overeno" | "Schvaleno" | "Potvrzeno" | "KRevizi" | "Eliminovano";
@@ -6006,6 +6015,8 @@ export interface components {
              * @default 0
              */
             posunDoSerie: number;
+            /** @default false */
+            procesniDej: boolean;
         };
         ZastavkaVolbaDto: {
             slug: string;
@@ -6027,6 +6038,7 @@ export interface components {
             koeficientDoSerie?: null | number;
             /** Format: int32 */
             posunDoSerie?: null | number;
+            procesniDej?: null | boolean;
         };
         ZastavkaVysledkyDto: {
             zavod: string;
@@ -6082,6 +6094,8 @@ export interface components {
              * @default 1
              */
             verzePravidel: number;
+            /** @default false */
+            procesniDej: boolean;
         };
         ZavodShrnutiDto: {
             slug: string;
@@ -6138,6 +6152,8 @@ export interface components {
              */
             posunDoSerie: number;
             puvodniSlug?: null | string;
+            /** @default false */
+            procesniDej: boolean;
         };
         /**
          * @default Telefon

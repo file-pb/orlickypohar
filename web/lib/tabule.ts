@@ -14,9 +14,21 @@ export type Snimek = {
   nazev: string;
   stav: ZavodDetail["stav"];
   vysledkySkryte: boolean;
+  /**
+   * Pouští regata ven i nepodepsaná čísla? Tabule to musí říct nahlas —
+   * předběžné pořadí, které vypadá jako hotové, je horší než žádné.
+   */
+  procesniDej: boolean;
   rozjizdky: {
     cislo: number;
     stav: ZavodDetail["rozjizdky"][number]["stav"];
+    /**
+     * Kam došel zápis: co už někdo podepsal a co je zatím návrh.
+     * <c>null</c> u staršího API, které ho neposílá — <b>nedosazuje se
+     * pravděpodobná hodnota</b>, tabule radši štítek nevykreslí, než aby
+     * tvrdila „čerstvé z vody" o něčem, co může být potvrzené.
+     */
+    stavVysledku: ZavodDetail["rozjizdky"][number]["stavVysledku"] | null;
     startV: string | null;
     doSerie: boolean;
     poradi: { lod: string; kategorie: string; misto: number | null; kod: string | null }[];
@@ -100,9 +112,11 @@ export function snimekZavodu(
     // Skryté výsledky se nevydávají ani sem. Tabule je veřejná plocha,
     // ne obcházka workflow.
     vysledkySkryte: detail.vysledkySkryte,
+    procesniDej: detail.procesniDej ?? false,
     rozjizdky: detail.rozjizdky.map((r) => ({
       cislo: r.cislo,
       stav: r.stav,
+      stavVysledku: r.stavVysledku ?? null,
       startV: r.startV,
       doSerie: r.doSerie,
       // Bez ořezu: desátým místem dojezdy nekončí a utnout je tady by
