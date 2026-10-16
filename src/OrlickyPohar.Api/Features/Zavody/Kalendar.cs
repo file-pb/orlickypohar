@@ -173,6 +173,16 @@ public static class Kalendar
     public const decimal KoeficientNejvic = 10m;
 
     /// <summary>
+    /// Nejvyšší rozumný počet škrtů. <b>Tohle číslo slibovala jen
+    /// obrazovka</b> (`max="20"` na formuláři), server nic — přes API
+    /// prošlo i 99 (testovací session, 16. 10. 2026). Nespadlo by to,
+    /// protože bodování stejně škrtá nejvýš o jednu rozjížďku míň, než
+    /// kolik jich je, ale je to rozpor mezi tím, co se slibuje, a tím,
+    /// co se drží.
+    /// </summary>
+    public const int SkrtuNejvic = 20;
+
+    /// <summary>
     /// <b>Proč nejdou uložit počty do poháru</b> — nebo <c>null</c>.
     ///
     /// <para>
@@ -192,6 +202,9 @@ public static class Kalendar
     public static string? ProcNejdouPocty(int? pocetSkrtu, decimal? koeficient)
     {
         if (pocetSkrtu is < 0) return "Počet škrtů nemůže být záporný.";
+
+        if (pocetSkrtu > SkrtuNejvic)
+            return $"Škrtat jde nejvýš {SkrtuNejvic} rozjížděk. Vyšší číslo bývá překlep.";
 
         if (koeficient is null) return null;
 
