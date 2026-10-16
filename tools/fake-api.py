@@ -4434,14 +4434,29 @@ class H(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
-    def log_message(self, *a):
-        pass
+    def log_message(self, format, *args):
+        """
+        Ticho je výchozí, ale <b>jde zapnout</b>: `OP_LOG=1` vypisuje každý
+        požadavek na stderr jako `REQ "GET /ja/lode/3/naroky HTTP/1.1" 200`.
+
+        Bez toho se nedá ověřit tvrzení o tom, *kolik* dotazů obrazovka
+        posílá — a tichý log takové ověření nejen neumožní, on ho ještě
+        předstírá: grep v prázdném logu vrátí nulu stejně, jako kdyby
+        dotaz opravdu zmizel. Testovací session na to narazila, když
+        ověřovala, že se posádce přestal posílat dotaz na žádosti
+        (16. 10. 2026).
+        """
+        if LOG:
+            print("REQ " + (format % args), file=sys.stderr, flush=True)
 
 
 # Výchozí port je 8080, tedy tentýž, na kterém by běželo skutečné API.
 # Web tak nepotřebuje žádné nastavení navíc a postup z README platí
 # i v čerstvém klonu, kde .env.local neexistuje.
 PORT = int(os.environ.get("PORT", "8080"))
+# Výpis požadavků na stderr. Vypnutý, aby běžný běh nehlučel; zapíná se
+# `OP_LOG=1`, když se měří, co obrazovka volá.
+LOG = os.environ.get("OP_LOG") not in (None, "", "0")
 # Jméno souboru se vypisuje, ne hádá. Hláška dřív říkala 2026-nanecisto
 # i tehdy, když se mock pustil s jiným ročníkem — a jediné místo, kde se to
 # dá hned poznat, je právě tahle řádka (9. 10. 2026).
