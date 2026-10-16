@@ -938,8 +938,21 @@ def prvek_dto(slug, p):
             "b": konec(p["bojeBId"]) if p["bojeBId"] else None}
 
 
-def prvky_trati(slug):
-    t = trat_aktualni(slug)
+def trat_vybrana(slug, trat_id):
+    """Trať, kterou si obrazovka vybrala — nebo nejnovější, když si
+    nevybrala. Opsané z `TratSprava.VybranaAsync`.
+
+    <b>Cizí trať se nevydá</b>: kontroluje se, že id patří téhle regatě.
+    Mock to dřív neuměl vůbec a vracel pořád nejnovější, takže se na něm
+    nedala překontrolovat oprava, kvůli které akce sahaly na cizí trať
+    (397900b)."""
+    if trat_id is None:
+        return trat_aktualni(slug)
+    return next((x for x in TRATE.get(slug) or [] if x["id"] == trat_id), None)
+
+
+def prvky_trati(slug, trat_id=None):
+    t = trat_vybrana(slug, trat_id)
     if not t:
         return []
     vse = PRVKY.get(t["id"], [])
@@ -2513,7 +2526,7 @@ class H(BaseHTTPRequestHandler):
     def prvky_seznam(self, slug):
         if not self.zastavka(slug):
             return None
-        return self.odpoved(prvky_trati(slug))
+        return self.odpoved(prvky_trati(slug, self._vybrana_trat()))
 
     def prvek_zaloz(self, slug):
         if not self.zastavka(slug):
@@ -2675,14 +2688,20 @@ class H(BaseHTTPRequestHandler):
         začíná prvním pípnutím, ne zvláštním knoflíkem."""
         if not self.zastavka(slug):
             return None
-        t = trat_aktualni(slug)
+        t = trat_vybrana(slug, self._vybrana_trat())
         return self.odpoved(trat_dto(slug, t)) if t else self.send_error(404)
+
+    def _vybrana_trat(self):
+        """`?trat=` z adresy, nebo None. Stav i prvky se dělají na trati,
+        kterou obrazovka ukazuje (397900b)."""
+        hodnota = (parse_qs(urlparse(self.path).query).get("trat") or [None])[0]
+        return int(hodnota) if hodnota and hodnota.isdigit() else None
 
     def _trat(self, slug):
         """Trať regaty, nebo None s už odeslanou chybou."""
         if not self.zastavka(slug):
             return None
-        t = trat_aktualni(slug)
+        t = trat_vybrana(slug, self._vybrana_trat())
         if not t:
             self.chyba(400, "Tahle regata zatím nemá ani jednu bóji.")
             return None
