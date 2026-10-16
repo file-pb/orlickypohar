@@ -329,6 +329,67 @@ ma "20 zápisů správy za sebou projde bez 429" test "$(grep -c 429 <<<"$stavy"
 get /cache-zdravi -H "Cf-Connecting-Ip: $utocnik"
 ma "zdraví se nelimituje ani útočníkovi" test "$stav" = 200
 
+# ---------------------------------------------------------------------------
+# <b>Výměna replik: dvě adresy pod jedním jménem.</b> Tohle je ta situace,
+# kvůli které v konfiguraci stojí `proxy_next_upstream` — při nasazení
+# „nastartuj vedle a starou zastav potom" běží chvíli dva kontejnery pod
+# týmž aliasem a nginx má v záznamu resolveru obě adresy. Komentář
+# u toho pravidla tvrdí, že se při nedovolané replice zkusí druhá adresa;
+# <b>doložené to nebylo ani dokumentací, ani měřením</b> (16. 10. 2026) —
+# dokumentace nginxu mluví o přechodu mezi servery ve skupině `upstream`,
+# kdežto tady je cíl proměnná překládaná resolverem.
+#
+# Ověřit to šlo až od chvíle, kdy se repliky zabíjejí místo zastavování:
+# dřív by se na vypršení záznamu čekalo deset sekund navíc k deseti, které
+# stálo samo zastavení.
+echo "Výměna replik: nedovolaná adresa pod sdíleným jménem"
+
+docker run -d --name op-cache-test-web2 --network "$SIT" --network-alias orlickypohar-web   -e REPLIKA=anonym2 -v "$ADRESAR:/t:ro" python:3.13-alpine python /t/falesny_web.py >/dev/null
+
+# Čeká se na to, až nginx uvidí obě adresy — tedy až mu vyprší záznam
+# s jedinou. Pozná se to tím, že odpoví druhá replika; slepé `sleep` by
+# tvrdilo totéž, ale bez důkazu.
+# Pokaždé jiná cesta: táž by se podruhé vydala z cache a hlavička
+# `X-Replika` by pak mluvila o tom, kdo odpověděl posledně, ne teď.
+obe=ne
+for i in $(seq 1 60); do
+  get "/vymena-cekani-$i"
+  if [ "$replika" = anonym2 ]; then obe=ano; break; fi
+  sleep 0.5
+done
+ma "nginx vidí obě repliky pod jedním jménem" test "$obe" = ano
+
+# Zabije se ta, která právě odpověděla, a druhá zůstane. Požadavky pak
+# musí projít všechny: adresa mrtvé je v záznamu dál a round-robin na ni
+# bude střídavě sahat.
+docker kill op-cache-test-web2 >/dev/null
+
+# <b>Anonymně a pokaždé jinam.</b> Přihlášený by sem nepatřil: jeho
+# požadavky vede `$web_replika` na repliku sezení (default.conf:73),
+# která tenhle alias vůbec nemá. A táž cesta podruhé by přišla z cache,
+# aniž by se web dotkla.
+#
+# Osm kusů: kdyby se opakování nekonalo, round-robin pošle na mrtvou
+# adresu zhruba polovinu a tahle mez to pozná.
+spatnych=0
+pomalych=0
+for i in $(seq 1 8); do
+  get "/vymena-$i"
+  [ "$stav" -ge 500 ] && spatnych=$((spatnych + 1))
+  [ "$trvalo" -ge 1 ] && pomalych=$((pomalych + 1))
+done
+ma "při jedné mrtvé replice ze dvou projdou všechny požadavky" test "$spatnych" -eq 0
+# <b>Bez tohohle by oddíl mohl projít, aniž by cokoliv dokázal.</b> Kdyby
+# nginx mrtvou adresu z rotace vyřadil a posílal všechno na živou, prošlo
+# by osm z osmi taky — jen by se opakování nezkusilo ani jednou. Pomalý
+# požadavek je ten, který na mrtvou adresu sáhl, vyčkal strop a teprve
+# pak šel na druhou; aspoň jeden takový tu musí být, jinak se měřilo něco
+# jiného, než o čem je řeč.
+ma "…a aspoň jeden z nich si tu mrtvou adresu opravdu zkusil" test "$pomalych" -ge 1
+
+docker rm -f op-cache-test-web2 >/dev/null 2>&1 || true
+# ---------------------------------------------------------------------------
+
 # --- Výpadek původu -----------------------------------------------------
 #
 # Musí být až tady: scénář ZASTAVUJE repliky a nic po něm už by nefungovalo.
