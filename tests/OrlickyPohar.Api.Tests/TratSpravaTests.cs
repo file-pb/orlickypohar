@@ -596,12 +596,12 @@ public class TratSpravaTests(PostgresFixture fixture)
         await boje.PipniAsync(zavod.Id, Bod("Start"), kdo.Id, default);
         var zdroj = (await trate.AktualniAsync(zavod.Id, default))!;
 
-        Assert.True(Assert.Single(await trate.SeznamAsync(zavod.Id, default)).JdePriradit);
+        Assert.True(Assert.Single(await trate.SeznamAsync(zavod.Id, true, default)).JdePriradit);
 
         var prvni = await RozjizdkaAsync(db, zavod, 1);
         await trate.PriradAsync(zavod.Id, zdroj.Id, prvni.Cislo, true, default);
 
-        var obsazena = Assert.Single(await trate.SeznamAsync(zavod.Id, default));
+        var obsazena = Assert.Single(await trate.SeznamAsync(zavod.Id, true, default));
         Assert.False(obsazena.JdePriradit);
         Assert.Equal(1, obsazena.CisloRozjizdky);
         // Nespustila se, takže se podle ní ještě nejelo.
@@ -647,7 +647,7 @@ public class TratSpravaTests(PostgresFixture fixture)
             zavod.Id, zdroj.Id, new KlonTratiVstup(druha.Cislo, null), kdo.Id, true, default);
 
         // Čerstvý klon jede totéž, takže se obě tratě tváří jako jedna.
-        var spolu = await trate.SeznamAsync(zavod.Id, default);
+        var spolu = await trate.SeznamAsync(zavod.Id, true, default);
         Assert.Equal(2, spolu.Count);
         Assert.NotNull(spolu[0].Otisk);
         Assert.Equal(spolu[0].Otisk, spolu[1].Otisk);
@@ -662,7 +662,7 @@ public class TratSpravaTests(PostgresFixture fixture)
             kdo.Id,
             default)).Chyba);
 
-        var zvlast = await trate.SeznamAsync(zavod.Id, default);
+        var zvlast = await trate.SeznamAsync(zavod.Id, true, default);
         Assert.NotEqual(zvlast[0].Otisk, zvlast[1].Otisk);
     }
 
@@ -684,13 +684,13 @@ public class TratSpravaTests(PostgresFixture fixture)
 
         // Stejný předpis zbyde u první rozjížďky, takže klon je navíc.
         Assert.Null((await trate.OdvazAsync(zavod.Id, klon!.Id, false, default)).Chyba);
-        var po = await trate.SeznamAsync(zavod.Id, default);
+        var po = await trate.SeznamAsync(zavod.Id, true, default);
         Assert.Equal(zdroj.Id, Assert.Single(po).Id);
 
         // Teď je poslední svého druhu: odškrtnutí ji nesmí zahodit, jinak
         // by nebylo co upravit a změnit.
         Assert.Null((await trate.OdvazAsync(zavod.Id, zdroj.Id, false, default)).Chyba);
-        var zbyla = Assert.Single(await trate.SeznamAsync(zavod.Id, default));
+        var zbyla = Assert.Single(await trate.SeznamAsync(zavod.Id, true, default));
         Assert.Equal(zdroj.Id, zbyla.Id);
         Assert.Null(zbyla.CisloRozjizdky);
         Assert.True(zbyla.JdePriradit);
@@ -728,10 +728,10 @@ public class TratSpravaTests(PostgresFixture fixture)
         var ptaSe = await trate.ZahodAsync(zavod.Id, zdroj.Id, false, default);
         Assert.NotNull(ptaSe.Chyba);
         Assert.True(ptaSe.ChcePotvrdit);
-        Assert.NotEmpty(await trate.SeznamAsync(zavod.Id, default));
+        Assert.NotEmpty(await trate.SeznamAsync(zavod.Id, true, default));
 
         Assert.Null((await trate.ZahodAsync(zavod.Id, zdroj.Id, true, default)).Chyba);
-        Assert.Empty(await trate.SeznamAsync(zavod.Id, default));
+        Assert.Empty(await trate.SeznamAsync(zavod.Id, true, default));
     }
 
     /// <summary>

@@ -310,7 +310,18 @@ public record TratNaVyberDto(
     /// liší jen jí, nejedou totéž.
     /// </para>
     /// </summary>
-    string? Otisk);
+    string? Otisk,
+    /// <summary>
+    /// Smí přihlášený trať přijmout, případně vrátit stavitelům? Jen
+    /// rozhodčí a jen z hotové.
+    /// <para>
+    /// <b>Je to v seznamu schválně</b>: od 15. 10. 2026 se trať schvaluje
+    /// i od rozjížďky ve výsledcích (Filip: *„je-li vybrána a připojena,
+    /// tak musí umožnit její schválení nebo zadání k přepracování"*),
+    /// a ta obrazovka jiný zdroj o právech nemá.
+    /// </para>
+    /// </summary>
+    bool SmiPrijmout = false);
 
 /// <summary>
 /// Rozjížďka regaty v nabídce „na které trati se jede“.

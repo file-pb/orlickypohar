@@ -503,7 +503,7 @@ public class TratSprava(AppDbContext db, TimeProvider cas, Fotky.IUloziste ulozi
     /// Tratě regaty na výběr: <i>„jede se tahle"</i>. Od nejnovější, protože
     /// ta, kterou chce člověk zopakovat, bývá ta poslední.
     /// </summary>
-    public async Task<List<TratNaVyberDto>> SeznamAsync(int zavodId, CancellationToken ct)
+    public async Task<List<TratNaVyberDto>> SeznamAsync(int zavodId, bool jeRozhodci, CancellationToken ct)
     {
         var trate = await db.Trate
             .Where(t => t.ZavodId == zavodId)
@@ -539,7 +539,8 @@ public class TratSprava(AppDbContext db, TimeProvider cas, Fotky.IUloziste ulozi
                 sve.Count,
                 await OdjetaAsync(t, ct),
                 JdePriradit: t.RozjizdkaId is null,
-                Otisk: Otisk(sve)));
+                Otisk: Otisk(sve),
+                SmiPrijmout: jeRozhodci && Stavba.ProcNejdePrijmout(t.Stav) is null));
         }
 
         return hotovo;
