@@ -15,9 +15,17 @@ public record VysledekDto(
     string Lod, string Kategorie, string? Kormidelnik,
     int? PoradiVCili, int? CasSekundy, KodVysledku? Kod);
 
+/// <param name="StavVysledku">
+/// <b>V jakém stavu je zápis té rozjížďky.</b> Vydává se vždycky, i když
+/// regata procesní děj zapnutý nemá — divák pak u publikovaných čísel
+/// vidí, že jsou potvrzená, a to je informace, ne únik. Co se mění se
+/// zapnutým přepínačem, je <em>které</em> rozjížďky sem vůbec přijdou
+/// s čísly.
+/// </param>
 public record RozjizdkaDto(
     int Cislo, DateTimeOffset? StartV, StavRozjizdky Stav, bool DoSerie,
-    IReadOnlyList<VysledekDto> Vysledky);
+    IReadOnlyList<VysledekDto> Vysledky,
+    StavVysledku StavVysledku = StavVysledku.Navrzeno);
 
 /// <summary>
 /// Loď, která na zastávku přijela — bez ohledu na to, jestli se už jelo.
@@ -75,7 +83,11 @@ public record ZavodDetailDto(
     // Verze bodovacích pravidel ročníku. Vydává se ze stejného důvodu jako
     // počet škrtů a koeficient: bez ní se pořadí nedá zkontrolovat a čtenář
     // nemá jak poznat, podle čeho se počítalo.
-    int VerzePravidel = 1);
+    int VerzePravidel = 1,
+    // Regata, která pouští ven i nepodepsaná čísla — každé se svým stavem
+    // (Filip, 9. 10. 2026, „procesní děj"). Čtenář to musí vědět, jinak
+    // by předběžné pořadí vypadalo jako hotové. Aditivně, výchozí false.
+    bool ProcesniDej = false);
 
 /// <summary>
 /// Veřejné čtení jedné zastávky. Pravidla závodu (škrty, vyhodnocení,
@@ -159,6 +171,7 @@ public static class ZavodEndpoints
             {
                 z.Id, z.SerieId, z.Slug, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel,
                 z.Stav, z.PuvodniDatum, z.PocetSkrtu, z.Vyhodnoceni, z.KoeficientDoSerie,
+                z.ProcesniDej,
                 z.Druh, z.PoradatelZaznam, FotkaPoradatele = z.PoradatelZaznam!.Fotka,
                 VysledkyVerejne = z.Serie!.VysledkyZavoduVerejne,
                 z.Serie.VerzePravidel,
@@ -194,8 +207,22 @@ public static class ZavodEndpoints
         // Jen publikované: dokud správce výsledky nepustí ven, rozjížďka na
         // stránce je (jelo se), ale čísla u ní ne. Prázdná rozjížďka je
         // pravda, nepotvrzené pořadí by pravda být nemuselo.
+        // <b>Co se pustí ven, rozhoduje přepínač regaty</b> (Filip,
+        // 9. 10. 2026, „procesní děj"). Výchozí je ten konzervativní —
+        // jen publikovaná čísla —, protože publikaci dělá správce a
+        // hospoda by jinak viděla pořadí, které se ještě může změnit.
+        // Se zapnutým dějem jdou ven i nepodepsaná a každá rozjížďka
+        // s sebou nese `StavVysledku`, aby šlo poznat, co už někdo
+        // podepsal a co ne.
+        //
+        // <b>Eliminovaná ven nejde ani tak.</b> „Neplatí nikde" není
+        // stupeň rozpracovanosti, u kterého by mělo smysl ukazovat čísla
+        // a čekat, jak to dopadne.
         var radky = await db.Vysledky
-            .Where(v => v.Rozjizdka!.ZavodId == zavod.Id && v.Rozjizdka.Publikovano)
+            .Where(v => v.Rozjizdka!.ZavodId == zavod.Id
+                        && (v.Rozjizdka.Publikovano
+                            || (zavod.ProcesniDej
+                                && v.Rozjizdka.StavVysledku != StavVysledku.Eliminovano)))
             .OrderBy(v => v.Rozjizdka!.Cislo)
             .ThenBy(v => v.PoradiVCili ?? int.MaxValue)
             .Select(v => new
@@ -250,7 +277,7 @@ public static class ZavodEndpoints
                     v.Lod, v.Kategorie, v.Kormidelnik, v.PoradiVCili,
                     v.NamerenyCas == null ? null : (int)v.NamerenyCas.Value.TotalSeconds,
                     v.Kod)),
-            ]))
+            ], r.StavVysledku))
             .ToList();
 
         // Kódy mají přihlášených do závodu + 1 (A5.2), takže je potřeba
@@ -322,6 +349,7 @@ public static class ZavodEndpoints
                 ? null
                 : PoradateleSprava.Dto(zavod.PoradatelZaznam, zavod.FotkaPoradatele, uloziste.VerejnaAdresa),
             Smernice: await SmerniceAsync(db, uloziste, zavod.Id, ct),
-            VerzePravidel: zavod.VerzePravidel));
+            VerzePravidel: zavod.VerzePravidel,
+            ProcesniDej: zavod.ProcesniDej));
     }
 }

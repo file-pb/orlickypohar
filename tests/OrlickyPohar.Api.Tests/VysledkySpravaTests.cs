@@ -45,7 +45,8 @@ public class VysledkySpravaTests(PostgresFixture fixture)
     private static SerieVstup Rocnik(
         string slug,
         bool druhaPublikovana = true,
-        StavVysledku druhaStav = StavVysledku.Potvrzeno) => new(
+        StavVysledku druhaStav = StavVysledku.Potvrzeno,
+        bool procesniDej = false) => new(
         Slug: slug,
         Nazev: $"Pohár {slug}",
         Rok: 2026,
@@ -64,6 +65,7 @@ public class VysledkySpravaTests(PostgresFixture fixture)
                 Nazev: "Zahájení sezóny",
                 Datum: new DateOnly(2026, 4, 25),
                 Poradi: 1,
+                ProcesniDej: procesniDej,
                 Ucasti: [new("anicka", "novak", null), new("bora", "svoboda", null)],
                 Rozjizdky:
                 [
@@ -86,6 +88,55 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         Assert.Equal(HttpStatusCode.OK, odpoved.StatusCode);
 
         return (await odpoved.Content.ReadFromJsonAsync<T>(Json))!;
+    }
+
+    /// <summary>
+    /// <b>Procesní děj pouští ven i nepodepsaná čísla</b> (Filip,
+    /// 9. 10. 2026). Hospoda chce dojezdy hned, zápis schválně čeká na
+    /// rozhodčího — spor se neřeší zamlčením, ale tím, že číslo nese svůj
+    /// stav. Je to přepínač u regaty: bez něj platí ten konzervativní
+    /// výchozí stav a tenhle test by viděl prázdno
+    /// (<see cref="Nepublikovana_rozjizdka_je_videt_ale_bez_cisel"/>).
+    /// </summary>
+    [Fact]
+    public async Task S_procesnim_dejem_jsou_venku_i_nepodepsana_cisla()
+    {
+        var slug = "wf-dej";
+        await Nahraj(Rocnik(slug, druhaPublikovana: false,
+            druhaStav: StavVysledku.Navrzeno, procesniDej: true));
+
+        var zavod = await ZavodAsync(slug);
+
+        Assert.True(zavod.ProcesniDej);
+        var druha = zavod.Rozjizdky.Single(r => r.Cislo == 2);
+
+        // Čísla jsou venku a nesou svůj stav, takže divák pozná, že je
+        // ještě nikdo nepodepsal.
+        Assert.Equal(2, druha.Vysledky.Count);
+        Assert.Equal(StavVysledku.Navrzeno, druha.StavVysledku);
+
+        // A počítají se: vítěz má dva body ze dvou rozjížděk, ne jeden.
+        Assert.Equal(2, zavod.Poradi.Single(v => v.Poradi == 1).Body);
+    }
+
+    /// <summary>
+    /// Zrušená rozjížďka ven nejde ani s procesním dějem. „Neplatí nikde"
+    /// není stupeň rozpracovanosti, u kterého by mělo smysl ukazovat čísla
+    /// a čekat, jak to dopadne.
+    /// </summary>
+    [Fact]
+    public async Task Procesni_dej_nepousti_ven_zrusenou_rozjizdku()
+    {
+        var slug = "wf-dej-zrusena";
+        await Nahraj(Rocnik(slug, druhaPublikovana: false,
+            druhaStav: StavVysledku.Eliminovano, procesniDej: true));
+
+        var zavod = await ZavodAsync(slug);
+        var druha = zavod.Rozjizdky.Single(r => r.Cislo == 2);
+
+        Assert.Empty(druha.Vysledky);
+        Assert.Equal(StavRozjizdky.Zrusena, druha.Stav);
+        Assert.Equal(1, zavod.Poradi.Single(v => v.Poradi == 1).Body);
     }
 
     [Fact]

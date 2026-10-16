@@ -376,6 +376,7 @@ internal static class ImportHandler
             zavod.Typ = v.Typ;
             zavod.Poradi = v.Poradi;
             zavod.PocetSkrtu = v.PocetSkrtu;
+            zavod.ProcesniDej = v.ProcesniDej;
             zavod.Vyhodnoceni = v.Vyhodnoceni;
             zavod.KoeficientDoSerie = v.KoeficientDoSerie;
             zavod.PosunDoSerie = v.PosunDoSerie;

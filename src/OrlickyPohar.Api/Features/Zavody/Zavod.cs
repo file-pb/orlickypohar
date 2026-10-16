@@ -274,6 +274,24 @@ public class Zavod
 
     public Vyhodnoceni Vyhodnoceni { get; set; } = Vyhodnoceni.PoKategoriich;
 
+    /// <summary>
+    /// Ukazovat venku i čísla, která ještě nikdo nepodepsal — každé se
+    /// svým stavem.
+    /// <para>
+    /// <b>Je to přepínač u regaty, ne pravidlo</b> (Filip, 9. 10. 2026:
+    /// *„co já vím, jakou budou mít rozhodčí, organizátoři a lidi nálada —
+    /// prostě se to musí nechat nastavit"*). Spor o nepotvrzená čísla se
+    /// tím neřeší zamlčením, ale tím, že číslo nese svůj stav: hospoda
+    /// chce vidět dojezdy hned, kdežto zápis schválně čeká na rozhodčího.
+    /// </para>
+    /// <para>
+    /// <b>Výchozí je ten konzervativní</b>, tedy jen publikované. Kdo chce
+    /// procesní děj, zapne si ho — rozhodnutí tím nepadá na nás ani
+    /// napevno do kódu.
+    /// </para>
+    /// </summary>
+    public bool ProcesniDej { get; set; }
+
     // --- Výsledek závodu → body do seriálu ---
 
     /// <summary>Váha závodu v seriálu, běžně 1.0.</summary>
