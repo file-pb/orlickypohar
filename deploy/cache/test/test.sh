@@ -49,7 +49,11 @@ get() {
   local cesta=$1; shift
   local hlavicky
   hlavicky=$(mktemp)
+  local zacatek=$SECONDS
   telo=$(curl -s -D "$hlavicky" "$@" "$URL$cesta")
+  # Doba požadavku v celých sekundách. Na nic jemného tu nestačí a nemá —
+  # jediné, co se z ní tvrdí, je „netrvalo to minutu".
+  trvalo=$((SECONDS - zacatek))
   stav=$(head -1 "$hlavicky" | awk '{print $2}')
   cache=$(grep -i '^x-cache:' "$hlavicky" | awk '{print $2}' | tr -d '\r' || true)
   replika=$(grep -i '^x-replika:' "$hlavicky" | awk '{print $2}' | tr -d '\r' || true)
@@ -338,7 +342,21 @@ echo "Výpadek původu: stará stránka ano, přihlášenému ne"
 
 # `/vypadek` leží v cache od začátku testu a platnost jí mezitím vypršela,
 # takže nginx musí jít na web — a ten za chvíli nebude.
-docker stop op-cache-test-web op-cache-test-web-sezeni >/dev/null
+# <b>`kill`, ne `stop`.</b> Dvojí důvod. `falesny_web.py` běží jako PID 1
+# a nemá handler na SIGTERM, takže ho jádro u jedničky zahodí a `docker
+# stop` čeká celý svůj výchozí desetivteřinový timeout, než pošle SIGKILL
+# — deset sekund čistého čekání na každý běh CI, za nic.
+#
+# A hlavně: ten timeout běžel proti `resolver valid=10s`, takže o tom,
+# jestli má nginx adresu zastaveného kontejneru ještě v záznamu, dřív
+# rozhodoval závod dvou desetivteřinových lhůt. Odtud ten pád jednou za
+# pětadvacet běhů. Okamžité zabití staví oddíl vždycky do té horší
+# varianty — nginx se připojuje na mrtvou adresu — což je právě ten
+# případ, kvůli kterému tu `proxy_connect_timeout` je.
+#
+# Zabití je navíc věrnější tomu, co tenhle oddíl modeluje: spadlý web,
+# ne řádné odstavení.
+docker kill op-cache-test-web op-cache-test-web-sezeni >/dev/null
 
 get /vypadek
 ma "nepřihlášený dostane poslední dobrou stránku" test "$stav" = 200
@@ -356,6 +374,11 @@ ma "…vydaná jako STALE, tedy opravdu přes výpadek" test "$cache" = STALE
 # cokoliv pokazilo (16. 10. 2026).
 get /vypadek -H "Cookie: op_token=x"
 ma "přihlášený starou stránku NEDOSTANE" test "$stav" -ge 500
+# Strop na sestavení spojení (`proxy_connect_timeout`, default.conf). Bez
+# něj platí výchozí minuta nginxu a tenhle požadavek ji na mrtvé adrese
+# celou vyčká. Mez je velkorysá schválně: hlídá se, že strop existuje,
+# ne jak přesně je nastavený.
+ma "…a nečeká se na to minutu" test "$trvalo" -lt 15
 ma "…a nedostane ani její tělo" nenese_vykresleni "$telo" "$ocekavane_vypadek"
 
 get /nikdy-nenavstivena
