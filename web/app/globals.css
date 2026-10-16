@@ -228,6 +228,18 @@ header.hlavicka nav a:hover { color: var(--voda); text-decoration: none; }
    nevejdou a menu je důležitější než wordmark. */
 @media (max-width: 26rem) {
   header.hlavicka nav { gap: 0.85rem; }
+  /* <b>Menu se smí smrsknout a posouvat</b> (16. 10. 2026). S `flex: none`
+     se na 375 px nevešlo a roztáhlo celou stránku na 417 px: text se
+     uřízl u levého okraje a `position: fixed` okna se počítala k té širší
+     stránce, ne k displeji. Odkazy byly mimo obraz tak jako tak — rozdíl
+     je, že teď se k nim dá dojet a zbytek webu sedí. */
+  header.hlavicka nav {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  header.hlavicka nav::-webkit-scrollbar { display: none; }
 }
 
 /* Na širokém displeji dostane menu vzduch a odkazy vlastní terč. Na úzkém
@@ -955,6 +967,10 @@ header.hlavicka .jen-uzke { display: none; }
   color: var(--voda);
 }
 .seznam-prvku .znacky { color: var(--tlumeny); }
+/* Štítek boku se nesmí lepit na jméno značky (Filip, 16. 10. 2026:
+   „odsadit trochu"). Je to jiný druh údaje — jméno je to, co na vodě
+   stojí, štítek je pokyn, jak to objet. */
+.seznam-prvku .shrnuti-prvku .znacky { margin-right: 0.45rem; }
 
 /* Detail prvku na veřejné stránce trati. <b>Obrázek, věta, věta</b> —
    je to odpověď závodníkovi na „co to je a jak to vypadá" (Filip,
@@ -3070,3 +3086,117 @@ body:has(.tabule) { overflow: hidden; }
 .vyber-mapy .krizek line { stroke: #c1121f; stroke-width: 2; }
 .vyber-mapy .krizek circle { stroke: #c1121f; stroke-width: 2; }
 
+/* Detail prvku jako okno, ne rozklapovačka (Filip, 16. 10. 2026:
+   *„u čím se pluje nepoužívej detail, ale dej ikonky do řádky a pak modal
+   nebo offcanvas"*). Řádek zůstane řádkem a obrázky se nerozlézají do
+   seznamu; otevřít se dá nákresem i fotkou, protože obojí je jen náhled
+   téhož.
+
+   <b>Celé to drží zaškrtávátko a dva `label`y</b> — ikonka a pozadí okna.
+   Žádný javascript: na vodě je tahle stránka to poslední, co se stihlo
+   načíst, a rozbalit obrázek bóje musí jít i potom. */
+.seznam-prvku .prepinac-prvku {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.seznam-prvku .ikona-detailu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 32px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--linka);
+  border-radius: 6px;
+  background: var(--pozadi);
+  cursor: pointer;
+}
+.seznam-prvku .ikona-detailu:hover { border-color: var(--voda); }
+/* Zaostřené zaškrtávátko se musí poznat na ikonce — samo je neviditelné. */
+.seznam-prvku .prepinac-prvku:focus-visible ~ .shrnuti-prvku .ikona-detailu.nakres {
+  outline: 2px solid var(--voda);
+  outline-offset: 2px;
+}
+/* Nákres je v okně `figure` s popiskem; jako ikonka je z něj jen obrázek. */
+.seznam-prvku .ikona-detailu.nakres .nahled-prvku { margin: 0; width: 100%; }
+.seznam-prvku .ikona-detailu.nakres figcaption { display: none; }
+.seznam-prvku .ikona-detailu.foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.seznam-prvku .modal-prvku { display: none; }
+.seznam-prvku .prepinac-prvku:checked ~ .modal-prvku { display: block; }
+/* Pozadí překrývá celou stránku včetně ikonky, takže druhé kliknutí na
+   ikonku okno zavře — přesně jak si to Filip popsal. */
+.modal-prvku .pozadi-modalu {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: color-mix(in srgb, #000 55%, transparent);
+  cursor: pointer;
+}
+.modal-prvku .okno-modalu {
+  position: fixed;
+  z-index: 61;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(32rem, calc(100vw - 1.6rem));
+  max-height: min(86vh, 44rem);
+  overflow: auto;
+  padding: 1rem 1.1rem 0.6rem;
+  border: 1px solid var(--linka);
+  border-radius: 14px;
+  background: var(--pozadi);
+  box-shadow: 0 1.4rem 3rem rgb(0 0 0 / 35%);
+}
+.modal-prvku .zavrit-modal {
+  position: sticky;
+  top: 0;
+  float: right;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin: -0.3rem -0.4rem 0 0;
+  border-radius: 50%;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: var(--tlumeny);
+  cursor: pointer;
+}
+.modal-prvku .zavrit-modal:hover { color: var(--text); background: var(--linka); }
+.modal-prvku h3 { margin: 0 0 0.6rem; font-size: 1.05rem; }
+.modal-prvku h3 .znacky { color: var(--tlumeny); font-weight: 400; }
+
+/* Dva popsané údaje pod nákresem: čím ta bóje je a jak se objíždí. */
+.udaje-prvku {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 0.6rem;
+  margin: 0 0 0.6rem;
+  font-size: 0.9rem;
+}
+.udaje-prvku dt { color: var(--tlumeny); }
+.udaje-prvku dd { margin: 0; }
+
+/* Na telefonu okno zespoda, ne doprostřed: palec je dole a obrázek bóje
+   se čte líp na celou šířku. */
+@media (max-width: 560px) {
+  .modal-prvku .okno-modalu {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: 88vh;
+    transform: none;
+    border-radius: 14px 14px 0 0;
+    padding-bottom: 1.2rem;
+  }
+}
