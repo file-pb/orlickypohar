@@ -75,6 +75,15 @@ export const STAVY_UCASTI: Record<StavUcasti, { stitek: string; tlacitko: string
   },
 };
 
+/**
+ * Co stojí v `?potvrdit=` místo id přihlášky, když se potvrzuje nová loď.
+ * Id nemá — ještě neexistuje — a obrazovka přitom musí poznat, který
+ * formulář po potvrzení odeslat. Bydlí tady, a ne u serverových akcí:
+ * soubor s `"use server"` smí vyvážet jen asynchronní funkce a konstanta
+ * v něm shodí celý modul (16. 10. 2026).
+ */
+export const NOVA = "nova";
+
 /** Stejné pravidlo jako `Prihlasky.PotrebujeDuvod` v API: tyhle přechody chtějí napsat proč. */
 export const potrebujeDuvod = (na: StavUcasti) =>
   na === "KDoplneni" || na === "Odmitnuta" || na === "Vyloucena";
