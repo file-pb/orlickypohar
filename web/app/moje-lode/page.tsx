@@ -64,9 +64,14 @@ export default async function MojeLode({ searchParams }: Parametry) {
     );
 
   const vybrana = lod ? lode.find((l) => String(l.lodId) === lod) : undefined;
-  const pripojeni: Pripojeny[] = vybrana
-    ? ((await pripojeniLodi(vybrana.lodId)).data ?? [])
-    : [];
+  // <b>„Nesmím ti to ukázat" není „nikdo tu není."</b> Seznam posádky
+  // smí jen kapitán a majitel; posádce vrací API 403 a stránka z toho
+  // dělala větu „K lodi zatím nikdo připojený není" — a to ve chvíli,
+  // kdy ji čte právě ten, kdo je připojený (testovací session, 16. 10.
+  // 2026). Je to týž vzorec jako tichý výpadek u tratí.
+  const posadka = vybrana ? await pripojeniLodi(vybrana.lodId) : null;
+  const pripojeni: Pripojeny[] = posadka?.data ?? [];
+  const spravujeLod = posadka?.stav === "ok";
   // Žádosti čekající u téhle lodi a moje vlastní žádosti jinam.
   const zadosti: Narok[] = vybrana ? ((await narokyLodi(vybrana.lodId)).data ?? []) : [];
   const moje = (await mojeNaroky()).data ?? [];
@@ -159,7 +164,12 @@ export default async function MojeLode({ searchParams }: Parametry) {
       {vybrana && (
         <>
           <h2>{vybrana.nazev}: posádka</h2>
-          {pripojeni.length === 0 ? (
+          {!spravujeLod ? (
+            <p className="prazdno">
+              Kdo je k lodi připojený, vidí kapitán a majitel. Ty jsi
+              posádka — <Link href="/napoveda#role">co která role smí</Link>.
+            </p>
+          ) : pripojeni.length === 0 ? (
             <p className="prazdno">
               K lodi zatím nikdo připojený není. Posádka se připojí kódem,
               který tu vystavíš — <Link href="/napoveda#posadka">jak na to</Link>.
@@ -211,6 +221,11 @@ export default async function MojeLode({ searchParams }: Parametry) {
             </>
           )}
 
+          {/* Tlačítka, na která posádka nemá právo, se nenabízejí —
+              stejně jako se u zamčené trati neukáže přidání prvku.
+              Dřív vracela jen „Kód se nepovedlo vystavit." */}
+          {spravujeLod && (
+            <>
           <h2>Připojit dalšího</h2>
           {qr && kod ? (
             <>
@@ -233,6 +248,8 @@ export default async function MojeLode({ searchParams }: Parametry) {
               <input type="hidden" name="lod" value={vybrana.lodId} />
               <button type="submit">Vystavit kód</button>
             </form>
+          )}
+            </>
           )}
         </>
       )}
