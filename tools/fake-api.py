@@ -192,6 +192,17 @@ def venku(z, r):
     return bool(z.get("procesniDej")) and r.get("stavVysledku") != "Eliminovano"
 
 
+def do_bodovani(z):
+    """
+    Rozjížďky tak, jak do bodování vstupují v API: zrušená vypadne celá,
+    ostatní přijdou s čísly jen tehdy, když jdou ven. Bez tohohle by mock
+    s procesním dějem ukazoval nepodepsaná čísla, ale nepočítal je —
+    API je počítá (nalezeno 17. 10. 2026).
+    """
+    return [{**r, "vysledky": r["vysledky"] if venku(z, r) else []}
+            for r in z["rozjizdky"] if r.get("stavVysledku") != "Eliminovano"]
+
+
 def poradi_serie():
     """Průběžné pořadí po kategoriích, jen z odjetých zastávek.
 
@@ -4420,7 +4431,14 @@ class H(BaseHTTPRequestHandler):
                         "cislo": r["cislo"], "startV": r["startV"],
                         # Stav se u zrušené dopočítá — rozjížďka eliminovaná
                         # dřív nebo přinesená importem má uložený pořád starý.
-                        "stav": r["stav"] if plati(r) else "Zrusena",
+                        #
+                        # <b>Rozhoduje jen eliminace, ne publikace.</b> Stálo
+                        # tu `plati()`, které kontroluje obojí, takže se
+                        # nepublikovaná rozjížďka tvářila jako zrušená —
+                        # API přitom kouká jen na `Workflow.Plati`, tedy na
+                        # stav zápisu (nalezeno 17. 10. 2026 v prohlížeči).
+                        "stav": ("Zrusena" if r.get("stavVysledku") == "Eliminovano"
+                                 else r["stav"]),
                         "doSerie": r["doSerie"],
                         # Nepublikovaná rozjížďka na stránce zůstává, jen
                         # prázdná. Zrušená taky (Filip, 17. 10. 2026) — do
@@ -4438,11 +4456,10 @@ class H(BaseHTTPRequestHandler):
                     } for r in z["rozjizdky"]],
                     "poradi": [{**v, "lod": nazvy(v["lod"])}
                                for v in vysledky_zavodu(
-                                   [r for r in z["rozjizdky"] if plati(r)],
-                                   z.get("pocetSkrtu", 0))],
+                                   do_bodovani(z), z.get("pocetSkrtu", 0))],
                     "poradiCelkem": [{**v, "lod": nazvy(v["lod"])}
                                      for v in vysledky_zavodu(
-                                         [r for r in z["rozjizdky"] if plati(r)],
+                                         do_bodovani(z),
                                          z.get("pocetSkrtu", 0), napric=True)],
                     # Zrušená přihláška veřejně neexistuje, nepotvrzená nese
                     # poznámku — jako v API.

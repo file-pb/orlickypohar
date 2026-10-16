@@ -125,6 +125,19 @@ export function Obrazovka({
         </div>
       </header>
 
+      {/* <b>Nepodepsaná čísla se musí přiznat</b> (Filip, 9. 10. 2026:
+          *„tabule nahoře řekne, že hodnoty jsou informativní a jejich
+          platnost potvrzuje, případně mění rozhodčí"*). Bez téhle věty
+          vypadá předběžné pořadí jako hotové a hospoda si zapamatuje
+          výsledek, který se ještě změní. */}
+      {snimek.procesniDej && !snimek.vysledkySkryte && (
+        <p className="hlaska dej">
+          <b>Průběžné výsledky.</b> Čísla jsou informativní — jejich
+          platnost potvrzuje, případně mění rozhodčí. U každé rozjížďky je
+          vidět, jak daleko je zápis.
+        </p>
+      )}
+
       {snimek.vysledkySkryte && (
         <p className="hlaska">
           Ročník má výsledky zatím skryté, takže tady čísla nejsou. Tabule
@@ -251,6 +264,13 @@ function polePanely(snimek: Snimek): Panel[] {
                   {STAVY_ROZJIZDEK[r.stav]}
                 </span>
                 {!r.doSerie && <span className="stitek">mimo pohár</span>}
+                {/* Jen u regaty s procesním dějem: jinde jsou venku pouze
+                    publikovaná čísla a „potvrzeno" u všech by byl šum. */}
+                {snimek.procesniDej && r.poradi.length > 0 && r.stavVysledku && (
+                  <span className={`stitek zapis-${r.stavVysledku.toLowerCase()}`}>
+                    {ZAPIS[r.stavVysledku]}
+                  </span>
+                )}
               </li>
             ))}
           </ul>
@@ -278,6 +298,21 @@ function polePanely(snimek: Snimek): Panel[] {
     })),
   ];
 }
+
+/**
+ * Jak se stav zápisu jmenuje na tabuli. <b>Divácká slova, ne úřední</b>:
+ * „ověřeno" a „schváleno" jsou dva podpisy, které u piva nikdo nerozliší,
+ * takže obojí říká totéž — někdo se na to už díval. Potvrzené je hotové,
+ * návrh je čerstvý z vody.
+ */
+const ZAPIS: Record<NonNullable<Snimek["rozjizdky"][number]["stavVysledku"]>, string> = {
+  Navrzeno: "čerstvé z vody",
+  Overeno: "u rozhodčího",
+  Schvaleno: "u rozhodčího",
+  Potvrzeno: "potvrzeno",
+  KRevizi: "přepisuje se",
+  Eliminovano: "zrušeno",
+};
 
 /**
  * Kolik řádků panel unese, aby zůstaly čitelné přes místnost. Totéž
