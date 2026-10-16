@@ -212,8 +212,8 @@ public class TratSprava(AppDbContext db, TimeProvider cas, Fotky.IUloziste ulozi
     /// Proč do trati nejde sáhnout — nebo <c>null</c>. Pro pípnutí i sebrání:
     /// obojí mění, co stojí ve vodě.
     /// </summary>
-    public async Task<string?> ProcNejdeStavetAsync(int zavodId, CancellationToken ct) =>
-        await AktualniAsync(zavodId, ct) is { Stav: StavTrati.Prijato }
+    public async Task<string?> ProcNejdeStavetAsync(int zavodId, CancellationToken ct, int? tratId = null) =>
+        await VybranaAsync(zavodId, tratId, ct) is { Stav: StavTrati.Prijato }
             ? "Trať je přijatá rozhodčím a zamčená. Na úpravu ji nejdřív odemkni přestavbou — "
               + "veřejně se tím řekne, že se přestavuje."
             : null;

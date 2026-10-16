@@ -287,7 +287,7 @@ export async function upravPrvekAkce(formular: FormData) {
     poznamka: text("poznamka"),
     smer: text("smer") as PrvekVstup["smer"],
     druhStartu: text("druhStartu") as PrvekVstup["druhStartu"],
-  });
+  }, trat);
 
   const kde: Record<string, string> = trat ? { trat: String(trat) } : {};
   redirect(
@@ -342,7 +342,7 @@ export async function odeberPrvekAkce(formular: FormData) {
   const kSebrani = [prvek.a.id, ...(prvek.b && prvek.b.id !== prvek.a.id ? [prvek.b.id] : [])]
     .filter((b) => !jinde.has(b));
 
-  const chyba = await smazPrvek(serie, zavod, id);
+  const chyba = await smazPrvek(serie, zavod, id, trat);
   if (chyba) redirect(kam({ chyba }));
 
   for (const boje of kSebrani) {
@@ -372,7 +372,7 @@ export async function zopakujPrvekAkce(formular: FormData) {
     ...vstupZPrvku(prvek),
     poradi: 0,
     poznamka: null,
-  });
+  }, trat);
 
   // `posledni` místo čísla: API vrací při zakládání jen chybu, ne id.
   redirect(kam(chyba ? { ...kde, chyba } : { ...kde, stav: "prvekZnovu", otevrit: "posledni" }));
@@ -409,7 +409,7 @@ export async function presunPrvekAkce(formular: FormData) {
 
   for (const [i, p] of poradi.entries()) {
     if (p.poradi === i + 1) continue;
-    const chyba = await upravPrvek(serie, zavod, p.id, { ...vstupZPrvku(p), poradi: i + 1 });
+    const chyba = await upravPrvek(serie, zavod, p.id, { ...vstupZPrvku(p), poradi: i + 1 }, trat);
     if (chyba) redirect(kam({ ...naTrati, chyba }));
   }
 
@@ -561,7 +561,9 @@ export async function slozPrvekAkce(
   serie: string,
   zavod: string,
   vstup: PrvekVstup,
+  /** Do které trati se staví. Bez ní by prvek spadl na nejnovější. */
+  trat?: number,
 ): Promise<{ chyba: string | null }> {
-  return { chyba: await zalozPrvek(serie, zavod, vstup) };
+  return { chyba: await zalozPrvek(serie, zavod, vstup, trat) };
 }
 

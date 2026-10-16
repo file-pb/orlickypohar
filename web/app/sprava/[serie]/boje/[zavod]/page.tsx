@@ -245,6 +245,7 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
               zavod={zavod}
               dalsiPoradi={prvky.length + 1}
               stred={stredMapy}
+              tratId={stavTrati.trat?.id}
             />
           )}
 

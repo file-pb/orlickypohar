@@ -495,4 +495,54 @@ public class PrvkySpravaTests(PostgresFixture fixture)
             zavod.Id, prvek.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 0, a.Id), kdo.Id, default);
         Assert.Equal("Pořadí v trati začíná jedničkou.", nula);
     }
+
+    /// <summary>
+    /// <b>Prvek se zakládá a maže na vybrané trati</b>, a zámek se ptá
+    /// jí, ne nejnovější (testovací session, 16. 10. 2026).
+    ///
+    /// <para>
+    /// Dokud měla regata jednu trať, byl rozdíl nulový. Od chvíle, kdy má
+    /// každá rozjížďka svou, šel prvek založit na trať, kterou uživatel
+    /// nevidí — a smazat prvek zamčené trati pod záminkou odemčené jiné.
+    /// Přesně proti tomu stojí hlavička téhle třídy: veřejně vydaná trať
+    /// se nesmí dát přeskládat pod lodí, která podle ní pluje.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Prvek_patri_vybrane_trati_a_zamek_se_pta_ji()
+    {
+        var (db, boje, trate, prvky) = Sluzby();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        var (a, _) = await boje.PipniAsync(zavod.Id, Bod("A"), kdo.Id, default);
+        Assert.Null((await prvky.ZalozAsync(
+            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, a!.Id), kdo.Id, default)).Chyba);
+
+        var prvni = (await trate.AktualniAsync(zavod.Id, default))!;
+        prvni.Stav = StavTrati.Prijato;
+        prvni.PrijatoV = DateTimeOffset.UnixEpoch;
+        await db.SaveChangesAsync();
+
+        // Druhá, odemčená trať. Ta je „nejnovější".
+        await trate.DalsiAsync(zavod.Id, true, default);
+        var druha = (await trate.AktualniAsync(zavod.Id, default))!;
+        Assert.NotEqual(prvni.Id, druha.Id);
+
+        // Zakládání s vybranou tratí: na přijaté musí odmítnout…
+        Assert.NotNull((await prvky.ZalozAsync(
+            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, a.Id), kdo.Id, default,
+            prvni.Id)).Chyba);
+
+        // …a na odemčené projít, a skončit právě na ní.
+        Assert.Null((await prvky.ZalozAsync(
+            zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, a.Id), kdo.Id, default,
+            druha.Id)).Chyba);
+        Assert.Equal(1, await db.PrvkyTrati.CountAsync(x => x.TratId == druha.Id));
+
+        // Mazání prvku zamčené trati neprojde ani tehdy, když je nejnovější
+        // trať odemčená — dřív se zámek zeptal jí.
+        var naPrijate = await db.PrvkyTrati.FirstAsync(x => x.TratId == prvni.Id);
+        Assert.NotNull(await prvky.SmazAsync(zavod.Id, naPrijate.Id, default, prvni.Id));
+        Assert.True(await db.PrvkyTrati.AnyAsync(x => x.Id == naPrijate.Id));
+    }
 }

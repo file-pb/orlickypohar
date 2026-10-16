@@ -65,6 +65,7 @@ export function Stavba({
   zavod,
   dalsiPoradi,
   stred,
+  tratId,
 }: {
   serie: string;
   zavod: string;
@@ -72,6 +73,8 @@ export function Stavba({
   dalsiPoradi: number;
   /** Kam se otevře mapa, když se vybírá bod. Nejlíp poslední značka. */
   stred: Poloha;
+  /** Do které trati se staví — bez ní by prvek spadl na nejnovější. */
+  tratId?: number;
 }) {
   const router = useRouter();
 
@@ -299,7 +302,7 @@ export function Stavba({
         strana: volba.strana,
         smer: patriSmer(typ) ? smer : null,
         druhStartu: patriDruhStartu(typ) ? druhStartuZVolby(volba) : null,
-      });
+      }, tratId);
 
       if (chybaPrvku) {
         // Značky zůstanou: jsou to měření, která se opravdu stala.

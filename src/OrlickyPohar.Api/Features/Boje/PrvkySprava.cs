@@ -105,11 +105,11 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
     /// </para>
     /// </summary>
     public async Task<(PrvekDto? Prvek, string? Chyba)> ZalozAsync(
-        int zavodId, PrvekVstup vstup, Guid kdo, CancellationToken ct)
+        int zavodId, PrvekVstup vstup, Guid kdo, CancellationToken ct, int? tratId = null)
     {
-        if (await ProcNejdeAsync(zavodId, vstup, ct) is { } chyba) return (null, chyba);
+        if (await ProcNejdeAsync(zavodId, vstup, ct, tratId) is { } chyba) return (null, chyba);
 
-        var trat = await trate.AktualniAsync(zavodId, ct);
+        var trat = await trate.VybranaAsync(zavodId, tratId, ct);
         var bojeBId = await ZaznamBoduAsync(zavodId, vstup, kdo, ct);
         var prvek = new PrvekTrati { TratId = trat!.Id };
         Napln(prvek, vstup, bojeBId, await DalsiPoradiAsync(trat.Id, ct));
@@ -122,15 +122,16 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
 
     /// <summary>Přepíše prvek. Vrací ho, nebo důvod, proč to nejde.</summary>
     public async Task<(PrvekDto? Prvek, string? Chyba)> UpravAsync(
-        int zavodId, int prvekId, PrvekVstup vstup, Guid kdo, CancellationToken ct)
+        int zavodId, int prvekId, PrvekVstup vstup, Guid kdo, CancellationToken ct,
+        int? tratId = null)
     {
-        if (await ProcNejdeAsync(zavodId, vstup, ct) is { } chyba) return (null, chyba);
+        if (await ProcNejdeAsync(zavodId, vstup, ct, tratId) is { } chyba) return (null, chyba);
 
         // Pořadí se ověřuje jen tady: při zakládání ho server počítá sám,
         // takže by se kontrolovalo číslo, které stejně nikdo nepoužije.
         if (vstup.Poradi <= 0) return (null, "Pořadí v trati začíná jedničkou.");
 
-        if (await NajdiAsync(zavodId, prvekId, ct) is not { } prvek)
+        if (await NajdiAsync(zavodId, prvekId, ct, tratId) is not { } prvek)
             return (null, "Takový prvek na téhle trati není.");
 
         // Úprava, která by z bodu udělala další záznam, i když prvek už
@@ -197,11 +198,12 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
     }
 
     /// <summary>Smaže prvek. Vrací důvod, proč to nejde — nebo <c>null</c>.</summary>
-    public async Task<string?> SmazAsync(int zavodId, int prvekId, CancellationToken ct)
+    public async Task<string?> SmazAsync(
+        int zavodId, int prvekId, CancellationToken ct, int? tratId = null)
     {
-        if (await trate.ProcNejdeStavetAsync(zavodId, ct) is { } zamceno) return zamceno;
+        if (await trate.ProcNejdeStavetAsync(zavodId, ct, tratId) is { } zamceno) return zamceno;
 
-        if (await NajdiAsync(zavodId, prvekId, ct) is not { } prvek)
+        if (await NajdiAsync(zavodId, prvekId, ct, tratId) is not { } prvek)
             return "Takový prvek na téhle trati není.";
 
         // Prvek se maže doopravdy, na rozdíl od bóje. Není to měření, je to
@@ -211,10 +213,15 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
         return null;
     }
 
-    private async Task<string?> ProcNejdeAsync(int zavodId, PrvekVstup v, CancellationToken ct)
+    private async Task<string?> ProcNejdeAsync(
+        int zavodId, PrvekVstup v, CancellationToken ct, int? tratId = null)
     {
-        if (await trate.ProcNejdeStavetAsync(zavodId, ct) is { } zamceno) return zamceno;
-        if (await trate.AktualniAsync(zavodId, ct) is null)
+        // <b>Zámek se ptá té trati, do které se sahá</b>, ne nejnovější.
+        // Jinak by šlo přeskládat veřejně vydanou trať pod lodí, která
+        // podle ní pluje — přesně to, proti čemu stojí hlavička téhle
+        // třídy (testovací session, 16. 10. 2026).
+        if (await trate.ProcNejdeStavetAsync(zavodId, ct, tratId) is { } zamceno) return zamceno;
+        if (await trate.VybranaAsync(zavodId, tratId, ct) is null)
             return "Tahle regata zatím nemá ani jednu bóji, takže ani trať.";
 
         if (Prvky.ProcNejde(
@@ -273,9 +280,19 @@ public class PrvkySprava(AppDbContext db, TratSprava trate, TimeProvider cas)
             .Where(p => p.TratId == tratId)
             .MaxAsync(p => (int?)p.Poradi, ct) ?? 0) + 1;
 
-    private Task<PrvekTrati?> NajdiAsync(int zavodId, int prvekId, CancellationToken ct) =>
+    /// <summary>
+    /// Prvek regaty, volitelně omezený na jednu trať.
+    /// <para>
+    /// <b>Bez omezení hledá napříč tratěmi</b>, a to stačilo, dokud měla
+    /// regata jednu. Od chvíle, kdy má každá rozjížďka svou, by se tím
+    /// dal smazat prvek zamčené trati pod záminkou odemčené jiné.
+    /// </para>
+    /// </summary>
+    private Task<PrvekTrati?> NajdiAsync(
+        int zavodId, int prvekId, CancellationToken ct, int? tratId = null) =>
         db.PrvkyTrati.FirstOrDefaultAsync(
-            p => p.Id == prvekId && p.Trat!.ZavodId == zavodId, ct);
+            p => p.Id == prvekId && p.Trat!.ZavodId == zavodId
+                 && (tratId == null || p.TratId == tratId), ct);
 
     private async Task<PrvekDto?> JedenAsync(int prvekId, CancellationToken ct) =>
         await db.PrvkyTrati
