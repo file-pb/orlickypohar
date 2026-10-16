@@ -201,6 +201,39 @@ public class PrihlaskySpravaTests(PostgresFixture fixture)
         }
     }
 
+    /// <summary>
+    /// <b>Ptá se jen to, co počet přihlášených zvýší.</b> Otázka po
+    /// publikaci stála na opsaném výčtu stavů a ten se hned rozešel se
+    /// skutečností: „nedostavila se" i „vyloučená" se do počtu počítají
+    /// (<see cref="OrlickyPohar.Api.Features.Bodovani.Bodovani.PrihlasenaDoZavodu"/>),
+    /// takže návrat z nich nic nepřidává a ptát se nemá — stejně jako se
+    /// neptá druhé přihlášení téže lodi (nalezeno 16. 10. 2026).
+    /// </summary>
+    [Theory]
+    [InlineData(StavUcasti.Nedostavila)]
+    [InlineData(StavUcasti.Vyloucena)]
+    public async Task Navrat_do_poctu_prihlasenych_se_po_publikaci_nepta(StavUcasti ze)
+    {
+        var slug = $"prihlasky-navrat-{ze}".ToLowerInvariant();
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var k = await KontextAsync(scope, slug);
+
+        // Ročník z importu má publikované rozjížďky, takže zábrana platí.
+        Assert.True(await k.Db.Rozjizdky.AnyAsync(r => r.ZavodId == k.ZavodId && r.Publikovano));
+
+        var ucast = await k.Db.Ucasti.SingleAsync(u => u.ZavodId == k.ZavodId && u.PrihlaskaId == k.Anicka);
+        ucast.Stav = ze;
+        await k.Db.SaveChangesAsync();
+
+        var (_, _, chyba, chcePotvrdit) = await k.Sprava.PrihlasAsync(
+            k.ZavodId, new(PrihlaskaId: k.Anicka), default);
+
+        Assert.Null(chyba);
+        Assert.False(chcePotvrdit);
+    }
+
     [Fact]
     public async Task Vysledek_prihlasenou_lod_potvrdi()
     {
