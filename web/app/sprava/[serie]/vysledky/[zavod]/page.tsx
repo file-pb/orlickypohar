@@ -10,12 +10,15 @@ import {
   type RozjizdkaRadek,
   type StavVysledku,
 } from "@/lib/vysledky";
-import { NAZVY_STAVU, nactiTrate } from "@/lib/trat";
+import { NAZVY_STAVU, nactiTrate, type TratNaVyber } from "@/lib/trat";
 import {
   poharAkce,
   pridejRozjizdkuAkce,
   publikaceAkce,
+  novaTratAkce,
+  odpojTratAkce,
   stavAkce,
+  stavTratiURozjizdkyAkce,
   tratRozjizdceAkce,
 } from "../akce";
 import { StejnaTrat } from "@/app/sprava/stejna-trat";
@@ -58,6 +61,11 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
   // odvozené seznamy se chová jako prázdno; u výběru trati se ale musí
   // poznat, jinak by řádek tvrdil „bez trati" o rozjížďce, která ji má.
   const seznamTrati = trate ?? [];
+  // Trať podle čísla rozjížďky. Karta potřebuje celou, ne jen příznak:
+  // stav, id pro odkaz a jestli ji smí rozhodčí přijmout.
+  const podleRozjizdky = new Map<number, TratNaVyber>();
+  for (const t of trate ?? []) if (t.cisloRozjizdky !== null) podleRozjizdky.set(t.cisloRozjizdky, t);
+
   const sTrati = new Set(
     seznamTrati.map((t) => t.cisloRozjizdky).filter((c): c is number => c !== null),
   );
@@ -207,7 +215,7 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
                 zavod={zavod}
                 rozjizdka={r}
                 otevriRevizi={zpravy.revize === String(r.cislo)}
-                sTrati={sTrati}
+                trat={podleRozjizdky.get(r.cislo)}
                 stejnaTrat={stejnaTrat.get(r.cislo) ?? []}
                 naVyber={naVyber}
               />
@@ -241,7 +249,7 @@ function Rozjizdka({
   zavod,
   rozjizdka,
   otevriRevizi,
-  sTrati,
+  trat,
   stejnaTrat,
   naVyber,
 }: {
@@ -249,8 +257,8 @@ function Rozjizdka({
   zavod: string;
   rozjizdka: RozjizdkaRadek;
   otevriRevizi: boolean;
-  /** Čísla rozjížděk, které už trať mají. */
-  sTrati: Set<number>;
+  /** Trať rozjížďky, nebo `undefined`. */
+  trat?: TratNaVyber;
   /** Čísla rozjížděk, které jedou totéž. Prázdné, když je trať jedinečná. */
   stejnaTrat: number[];
   /** Postavené tratě regaty na výběr. */
@@ -296,7 +304,7 @@ function Rozjizdka({
           serie={serie}
           zavod={zavod}
           rozjizdka={rozjizdka}
-          maTrat={sTrati.has(rozjizdka.cislo)}
+          trat={trat}
           stejnaTrat={stejnaTrat}
           naVyber={naVyber}
         />
@@ -460,14 +468,15 @@ function TratRozjizdky({
   serie,
   zavod,
   rozjizdka,
-  maTrat,
+  trat,
   stejnaTrat,
   naVyber,
 }: {
   serie: string;
   zavod: string;
   rozjizdka: RozjizdkaRadek;
-  maTrat: boolean;
+  /** Trať rozjížďky, nebo `undefined`, když žádnou nemá. */
+  trat?: TratNaVyber;
   stejnaTrat: number[];
   naVyber: { id: number; popis: string }[] | null;
 }) {
@@ -475,18 +484,63 @@ function TratRozjizdky({
   const jede = rozjizdka.stav === "Probiha";
   const odjeto = rozjizdka.stav === "Dokoncena";
 
-  if (maTrat)
+  if (trat)
     return (
       <>
-        {odjeto ? (
-          "jelo se podle trati"
-        ) : (
-          <Link href={editor}>{jede ? "trať — přestavit" : "trať přiřazená"}</Link>
-        )}
-        {/* Rozhodčí na rozpravě vyhlásí „tři rozjížďky na téhle trati";
-            tohle je ta věta zpátky. Počítá se z otisku předpisu, takže
-            jakmile se jedna z nich upraví, zmizí. */}
+        <Link href={`${editor}?trat=${trat.id}`}>
+          {odjeto ? "jelo se podle trati" : jede ? "trať — přestavit" : "trať přiřazená"}
+        </Link>
+        <span className="stitek">{NAZVY_STAVU[trat.stav]}</span>
         <StejnaTrat serie={serie} zavod={zavod} cisla={stejnaTrat} />
+
+        {/* <b>Co s tratí, rovnou od rozjížďky</b> (Filip, 15. 10. 2026:
+            *„je-li vybrána a připojena, tak musí umožnit její schválení
+            nebo zadání k přepracování"*). Chodit kvůli tomu na obrazovku
+            bójí znamenalo odejít od zápisu.
+
+            Odjetá rozjížďka nenabízí nic: trať je to, podle čeho se jelo. */}
+        {!odjeto && (
+          <span className="co-s-trati">
+            {trat.smiPrijmout && (
+              <form action={stavTratiURozjizdkyAkce} className="formular radkove">
+                <input type="hidden" name="serie" value={serie} />
+                <input type="hidden" name="zavod" value={zavod} />
+                <input type="hidden" name="trat" value={trat.id} />
+                <input type="hidden" name="krok" value="prijeti" />
+                <button type="submit">Schválit trať</button>
+              </form>
+            )}
+            {trat.smiPrijmout && trat.stav === "Hotovo" && (
+              <details className="vratit-trat">
+                <summary>K přepracování</summary>
+                <form action={stavTratiURozjizdkyAkce} className="formular radkove">
+                  <input type="hidden" name="serie" value={serie} />
+                  <input type="hidden" name="zavod" value={zavod} />
+                  <input type="hidden" name="trat" value={trat.id} />
+                  <input type="hidden" name="krok" value="vraceni" />
+                  <label>
+                    <span className="skryte">Co chybí</span>
+                    <input name="duvod" placeholder="chybí cílová bóje" maxLength={200} />
+                  </label>
+                  <button type="submit">Vrátit stavitelům</button>
+                </form>
+              </details>
+            )}
+            {/* Odpojení je pod tlačítkem, ne vedle (Filip tamtéž): je to
+                krok zpátky, ne jedna z rovnocenných voleb. */}
+            <details className="odpojit-trat">
+              <summary>Odpojit</summary>
+              <form action={odpojTratAkce} className="formular radkove">
+                <input type="hidden" name="serie" value={serie} />
+                <input type="hidden" name="zavod" value={zavod} />
+                <input type="hidden" name="trat" value={trat.id} />
+                <input type="hidden" name="potvrzeno" value="ano" />
+                <button type="submit">Opravdu odpojit</button>
+                <span className="poznamka">Rozjížďka zůstane, trať se uvolní.</span>
+              </form>
+            </details>
+          </span>
+        )}
       </>
     );
 
@@ -498,20 +552,47 @@ function TratRozjizdky({
   // stavitele stavět něco, co už možná stojí.
   if (naVyber === null) return <>trati se teď nedaří načíst</>;
 
-  if (naVyber.length === 0)
-    return (
-      <>
-        bez trati — <Link href={editor}>{jede ? "přestavit" : "postavit"}</Link>
-      </>
-    );
+  // Postavit novou jde vždycky, i když je z čeho vybírat: dřív to byl
+  // jen odkaz do bójí a trať se tam musela zakládat zvlášť.
+  const postavit = (
+    <form action={novaTratAkce} className="formular radkove postavit-trat">
+      <input type="hidden" name="serie" value={serie} />
+      <input type="hidden" name="zavod" value={zavod} />
+      <input type="hidden" name="cislo" value={rozjizdka.cislo} />
+      <button type="submit">{jede ? "Postavit novou a přestavět" : "Postavit novou"}</button>
+    </form>
+  );
+
+  if (naVyber.length === 0) return <>bez trati — {postavit}</>;
+
+  return (
+    <>
+      <Vyber serie={serie} zavod={zavod} cislo={rozjizdka.cislo} naVyber={naVyber} />
+      {postavit}
+    </>
+  );
+}
+
+/** Nabídka postavených tratí pro rozjížďku, která žádnou nemá. */
+function Vyber({
+  serie,
+  zavod,
+  cislo,
+  naVyber,
+}: {
+  serie: string;
+  zavod: string;
+  cislo: number;
+  naVyber: { id: number; popis: string }[];
+}) {
 
   return (
     <form action={tratRozjizdceAkce} className="formular radkove vybrat-trat">
       <input type="hidden" name="serie" value={serie} />
       <input type="hidden" name="zavod" value={zavod} />
-      <input type="hidden" name="cislo" value={rozjizdka.cislo} />
+      <input type="hidden" name="cislo" value={cislo} />
       <label>
-        <span className="skryte">Trať pro {rozjizdka.cislo}. rozjížďku</span>
+        <span className="skryte">Trať pro {cislo}. rozjížďku</span>
         <select name="trat" defaultValue={String(naVyber[0].id)}>
           {naVyber.map((t) => (
             <option key={t.id} value={t.id}>
@@ -521,7 +602,6 @@ function TratRozjizdky({
         </select>
       </label>
       <button type="submit">Přiřadit</button>
-      <Link href={editor}>{jede ? "nebo přestavět" : "nebo postavit novou"}</Link>
     </form>
   );
 }
