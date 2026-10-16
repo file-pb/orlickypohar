@@ -224,6 +224,13 @@ public record VerejnyKonecDto(
 /// </para>
 /// </summary>
 public record VerejnyPrvekDto(
+    /// <summary>
+    /// Id prvku. <b>Bez něj nejde spárovat zkrácení</b> (testovací session,
+    /// 16. 10. 2026): veřejná trať vydává `ZkracenoUPrvkuId`, ale klient
+    /// dostal čtyři prvky bez id a neměl to k čemu přiřadit. Přes pořadí to
+    /// nejde — pořadí a id jsou dvě různé věci.
+    /// </summary>
+    int Id,
     TypPrvku Typ,
     int Poradi,
     StranaPrvku? Strana,
