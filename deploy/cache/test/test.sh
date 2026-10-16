@@ -49,17 +49,26 @@ get() {
   local cesta=$1; shift
   local hlavicky
   hlavicky=$(mktemp)
-  local zacatek=$SECONDS
-  telo=$(curl -s -D "$hlavicky" "$@" "$URL$cesta")
-  # Doba požadavku v celých sekundách. Na nic jemného tu nestačí a nemá —
-  # jediné, co se z ní tvrdí, je „netrvalo to minutu".
-  trvalo=$((SECONDS - zacatek))
+  # <b>Čas měří curl, ne `SECONDS`.</b> Bashové `SECONDS` je celé číslo od
+  # startu shellu, takže rozdíl dvou odečtení neříká, jak dlouho požadavek
+  # trval, ale kolik hranic sekundy přeskočil — dvacetimilisekundový
+  # požadavek přes tik dá jedničku. Kontrola postavená na tom by hlásila
+  # pomalý požadavek tam, kde žádný nebyl (16. 10. 2026).
+  local odpoved
+  odpoved=$(mktemp)
+  trvalo=$(curl -s -D "$hlavicky" -o "$odpoved" -w '%{time_total}' "$@" "$URL$cesta")
+  telo=$(cat "$odpoved")
+  rm -f "$odpoved"
   stav=$(head -1 "$hlavicky" | awk '{print $2}')
   cache=$(grep -i '^x-cache:' "$hlavicky" | awk '{print $2}' | tr -d '\r' || true)
   replika=$(grep -i '^x-replika:' "$hlavicky" | awk '{print $2}' | tr -d '\r' || true)
   rm -f "$hlavicky"
 }
 vykresleni() { sed -E 's/.*vykresleni=([0-9]+).*/\1/' <<<"$1"; }
+# `$trvalo` je desetinné, takže `test -lt` na něj nestačí — spadl by na
+# „integer expression expected". Porovnává `awk`.
+kratsi_nez() { awk -v t="$1" -v m="$2" 'BEGIN{exit !(t<m)}'; }
+aspon() { awk -v t="$1" -v m="$2" 'BEGIN{exit !(t>=m)}'; }
 # <b>Hledá se značka, ne shoda čísel.</b> `vykresleni()` je `sed`, který při
 # neodpovídajícím vzoru vrací vstup beze změny, takže porovnání „není rovno"
 # projde i u chybové stránky nginxu a u prázdného těla — tedy ze špatného
@@ -376,8 +385,12 @@ pomalych=0
 for i in $(seq 1 8); do
   get "/vymena-$i"
   [ "$stav" -ge 500 ] && spatnych=$((spatnych + 1))
-  [ "$trvalo" -ge 1 ] && pomalych=$((pomalych + 1))
+  # Práh 1,5 s: strop je 2 s, takže opakovaný požadavek je kolem dvou
+  # sekund, kdežto ten, co trefil živou repliku rovnou, kolem dvaceti
+  # milisekund. Mezi tím je místa dost i pro líný runner.
+  aspon "$trvalo" 1.5 && pomalych=$((pomalych + 1))
 done
+echo "  (z osmi požadavků bylo $pomalych opakovaných)"
 ma "při jedné mrtvé replice ze dvou projdou všechny požadavky" test "$spatnych" -eq 0
 # <b>Bez tohohle by oddíl mohl projít, aniž by cokoliv dokázal.</b> Kdyby
 # nginx mrtvou adresu z rotace vyřadil a posílal všechno na živou, prošlo
@@ -439,7 +452,7 @@ ma "přihlášený starou stránku NEDOSTANE" test "$stav" -ge 500
 # něj platí výchozí minuta nginxu a tenhle požadavek ji na mrtvé adrese
 # celou vyčká. Mez je velkorysá schválně: hlídá se, že strop existuje,
 # ne jak přesně je nastavený.
-ma "…a nečeká se na to minutu" test "$trvalo" -lt 15
+ma "…a nečeká se na to minutu" kratsi_nez "$trvalo" 15
 ma "…a nedostane ani její tělo" nenese_vykresleni "$telo" "$ocekavane_vypadek"
 
 get /nikdy-nenavstivena
