@@ -137,6 +137,46 @@ public class VysledkySpravaTests(PostgresFixture fixture)
     }
 
     /// <summary>
+    /// <b>Zrušená rozjížďka zůstane vidět, ale nepočítá se</b> (Filip,
+    /// 17. 10. 2026: *„ať zůstane vidět jako zrušená"*). Dřív se z výpisu
+    /// vyfiltrovala a divákovi prostě zmizelo číslo z řady — to je horší
+    /// než říct, že se nejela. Nepočítat ji se musí až u bodů; kdyby se
+    /// filtr jen odstranil, začala by se bodovat.
+    /// </summary>
+    [Fact]
+    public async Task Zrusena_rozjizdka_zustane_videt_a_nepocita_se()
+    {
+        var slug = "wf-zrusena-videt";
+        await Nahraj(Rocnik(slug));
+
+        var pred = await ZavodAsync(slug);
+        var bodyPred = pred.Poradi.ToDictionary(v => v.Lod, v => v.Body);
+        var cisel = pred.Rozjizdky.Count;
+        Assert.NotEmpty(bodyPred);
+
+        await using (var scope = fixture.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var sprava = scope.ServiceProvider.GetRequiredService<VysledkySprava>();
+            var zavodId = await db.Zavody.Where(z => z.Serie!.Slug == slug).Select(z => z.Id).FirstAsync();
+            var rozjizdka = (await sprava.NajdiAsync(zavodId, 1, default))!;
+
+            Assert.Null(await sprava.PrepniStavAsync(
+                rozjizdka, StavVysledku.Eliminovano, null, spravce: true, default));
+        }
+
+        var po = await ZavodAsync(slug);
+
+        // Vidět zůstává, a je na ní poznat, že se nejela.
+        Assert.Equal(cisel, po.Rozjizdky.Count);
+        Assert.Equal(StavRozjizdky.Zrusena, po.Rozjizdky.Single(r => r.Cislo == 1).Stav);
+
+        // A nepočítá se: body se musely změnit, protože jedna rozjížďka
+        // z bodování vypadla.
+        Assert.NotEqual(bodyPred, po.Poradi.ToDictionary(v => v.Lod, v => v.Body));
+    }
+
+    /// <summary>
     /// <b>Zrušená rozjížďka se pozná i na vodě, ne jen v zápisu.</b> Do
     /// 16. 10. 2026 se `Stav` při eliminaci neměnil, takže
     /// <see cref="StavRozjizdky.Zrusena"/> nenastal nikdy a semafor na

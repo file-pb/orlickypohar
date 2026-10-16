@@ -4405,7 +4405,9 @@ class H(BaseHTTPRequestHandler):
                         "cislo": r["cislo"], "startV": r["startV"], "stav": r["stav"],
                         "doSerie": r["doSerie"],
                         # Nepublikovaná rozjížďka na stránce zůstává, jen
-                        # prázdná; eliminovaná se sem vůbec nedostane.
+                        # prázdná. Zrušená taky (Filip, 17. 10. 2026) — do
+                        # bodů nejde, protože `poradi` níž filtruje
+                        # `plati()`, ale z řady zmizet nesmí.
                         "vysledky": [] if not r.get("publikovano", True) else [{
                             "lod": nazvy(v["lod"]),
                             "kategorie": KAT[v["lod"]],
@@ -4414,8 +4416,7 @@ class H(BaseHTTPRequestHandler):
                             "casSekundy": v.get("casSekundy"),
                             "kod": v.get("kod"),
                         } for v in r["vysledky"]],
-                    } for r in z["rozjizdky"]
-                        if r.get("stavVysledku") != "Eliminovano"],
+                    } for r in z["rozjizdky"]],
                     "poradi": [{**v, "lod": nazvy(v["lod"])}
                                for v in vysledky_zavodu(
                                    [r for r in z["rozjizdky"] if plati(r)],
