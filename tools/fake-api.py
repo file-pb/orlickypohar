@@ -4449,6 +4449,16 @@ class H(BaseHTTPRequestHandler):
         if LOG:
             print("REQ " + (format % args), file=sys.stderr, flush=True)
 
+    def log_error(self, format, *args):
+        """
+        Chyby jdou v `BaseHTTPRequestHandler` taky přes `log_message`, takže
+        by se `send_error` v logu objevil jako `REQ code 404, …` a `grep -c
+        REQ` by počítal požadavky, které žádné nejsou. Vlastní předpona je
+        drží oddělené: <b>počítat jde jen to, co je stejného druhu.</b>
+        """
+        if LOG:
+            print("CHYBA " + (format % args), file=sys.stderr, flush=True)
+
 
 # Výchozí port je 8080, tedy tentýž, na kterém by běželo skutečné API.
 # Web tak nepotřebuje žádné nastavení navíc a postup z README platí
