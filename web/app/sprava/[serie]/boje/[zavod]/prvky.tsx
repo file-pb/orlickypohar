@@ -142,6 +142,7 @@ export function PrvkyTrati({
                   prvky={prvky}
                   boje={boje}
                   zamceno={zamceno}
+                  tratId={tratId}
                   prvni={i === 0}
                   posledni={i === prvky.length - 1}
                 />
@@ -207,6 +208,7 @@ function DetailPrvku({
   prvky,
   boje,
   zamceno,
+  tratId,
   prvni,
   posledni,
 }: {
@@ -216,6 +218,8 @@ function DetailPrvku({
   prvky: Prvek[];
   boje: Boje[];
   zamceno: boolean;
+  /** Trať, do které prvek patří. */
+  tratId?: number;
   prvni: boolean;
   posledni: boolean;
 }) {
@@ -239,6 +243,9 @@ function DetailPrvku({
       <input type="hidden" name="serie" value={serie} />
       <input type="hidden" name="zavod" value={zavod} />
       <input type="hidden" name="prvek" value={prvek.id} />
+      {/* Která trať. Bez toho čtou akce prvky z nejnovější a přečíslují
+          cizí trať (Filip, 15. 10. 2026). */}
+      {tratId && <input type="hidden" name="trat" value={tratId} />}
     </>
   );
 

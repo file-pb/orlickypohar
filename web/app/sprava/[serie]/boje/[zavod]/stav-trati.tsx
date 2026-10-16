@@ -57,13 +57,13 @@ export function StavTrati({
 
       <div className="tlacitka">
         {trat.smiHlasitHotovo && (
-          <Krok serie={serie} zavod={zavod} krok="hotovo" popis="Hlásit hotovo" />
+          <Krok serie={serie} zavod={zavod} trat={trat.id} krok="hotovo" popis="Hlásit hotovo" />
         )}
         {trat.smiPrijmout && (
-          <Krok serie={serie} zavod={zavod} krok="prijeti" popis="Přijmout trať" />
+          <Krok serie={serie} zavod={zavod} trat={trat.id} krok="prijeti" popis="Přijmout trať" />
         )}
         {trat.smiPrestavet && (
-          <Krok serie={serie} zavod={zavod} krok="prestavba" popis="Odemknout na přestavbu" />
+          <Krok serie={serie} zavod={zavod} trat={trat.id} krok="prestavba" popis="Odemknout na přestavbu" />
         )}
       </div>
 
@@ -74,6 +74,7 @@ export function StavTrati({
           <input type="hidden" name="serie" value={serie} />
           <input type="hidden" name="zavod" value={zavod} />
           <input type="hidden" name="krok" value="vraceni" />
+          <input type="hidden" name="trat" value={trat.id} />
           <label>
             Vrátit stavitelům — co chybí
             <input name="duvod" maxLength={DUVOD_NEJVIC} placeholder="chybí cílová bóje" />
@@ -89,11 +90,14 @@ export function StavTrati({
 function Krok({
   serie,
   zavod,
+  trat,
   krok,
   popis,
 }: {
   serie: string;
   zavod: string;
+  /** Které trati se krok týká — bez toho sáhne server na nejnovější. */
+  trat: number;
   krok: string;
   popis: string;
 }) {
@@ -102,6 +106,7 @@ function Krok({
       <input type="hidden" name="serie" value={serie} />
       <input type="hidden" name="zavod" value={zavod} />
       <input type="hidden" name="krok" value={krok} />
+      <input type="hidden" name="trat" value={trat} />
       <button type="submit">{popis}</button>
     </form>
   );

@@ -220,9 +220,9 @@ public class TratSprava(AppDbContext db, TimeProvider cas, Fotky.IUloziste ulozi
 
     /// <summary>Stavitelé hlásí hotovo.</summary>
     public async Task<(TratDto? Trat, string? Chyba)> HotovoAsync(
-        int zavodId, bool jeRozhodci, CancellationToken ct)
+        int zavodId, bool jeRozhodci, CancellationToken ct, int? tratId = null)
     {
-        var trat = await AktualniAsync(zavodId, ct);
+        var trat = await VybranaAsync(zavodId, tratId, ct);
         if (trat is null) return (null, "Tahle regata zatím nemá ani jednu bóji.");
         if (Stavba.ProcNejdeHotovo(trat.Stav) is { } chyba) return (null, chyba);
 
@@ -260,9 +260,9 @@ public class TratSprava(AppDbContext db, TimeProvider cas, Fotky.IUloziste ulozi
 
     /// <summary>Rozhodčí přijímá: trať se zamkne a je veřejná.</summary>
     public async Task<(TratDto? Trat, string? Chyba)> PrijmiAsync(
-        int zavodId, Guid kdo, CancellationToken ct)
+        int zavodId, Guid kdo, CancellationToken ct, int? tratId = null)
     {
-        var trat = await AktualniAsync(zavodId, ct);
+        var trat = await VybranaAsync(zavodId, tratId, ct);
         if (trat is null) return (null, "Tahle regata zatím nemá ani jednu bóji.");
         if (Stavba.ProcNejdePrijmout(trat.Stav) is { } chyba) return (null, chyba);
 
@@ -278,9 +278,9 @@ public class TratSprava(AppDbContext db, TimeProvider cas, Fotky.IUloziste ulozi
 
     /// <summary>Rozhodčí vrací stavitelům. Důvod je povinný.</summary>
     public async Task<(TratDto? Trat, string? Chyba)> VratAsync(
-        int zavodId, string? duvod, CancellationToken ct)
+        int zavodId, string? duvod, CancellationToken ct, int? tratId = null)
     {
-        var trat = await AktualniAsync(zavodId, ct);
+        var trat = await VybranaAsync(zavodId, tratId, ct);
         if (trat is null) return (null, "Tahle regata zatím nemá ani jednu bóji.");
         if (Stavba.ProcNejdeVratit(trat.Stav, duvod) is { } chyba) return (null, chyba);
 
@@ -303,9 +303,9 @@ public class TratSprava(AppDbContext db, TimeProvider cas, Fotky.IUloziste ulozi
     /// </para>
     /// </summary>
     public async Task<(TratDto? Trat, string? Chyba)> PrestavbaAsync(
-        int zavodId, bool jeRozhodci, CancellationToken ct)
+        int zavodId, bool jeRozhodci, CancellationToken ct, int? tratId = null)
     {
-        var trat = await AktualniAsync(zavodId, ct);
+        var trat = await VybranaAsync(zavodId, tratId, ct);
         if (trat is null) return (null, "Tahle regata zatím nemá ani jednu bóji.");
         if (Stavba.ProcNejdePrestavba(trat.Stav) is { } chyba) return (null, chyba);
 
