@@ -73,7 +73,14 @@ export default async function MojeLode({ searchParams }: Parametry) {
   const pripojeni: Pripojeny[] = posadka?.data ?? [];
   const spravujeLod = posadka?.stav === "ok";
   // Žádosti čekající u téhle lodi a moje vlastní žádosti jinam.
-  const zadosti: Narok[] = vybrana ? ((await narokyLodi(vybrana.lodId)).data ?? []) : [];
+  //
+  // <b>Na žádosti se ptáme jen tehdy, když je smíme dostat.</b> Seznam
+  // posádky i seznam žádostí hlídá v API totéž právo
+  // (`KodySprava.SmiVystavitAsync` v `KodyEndpoints.cs:118` a `:168`),
+  // takže posádce vracel ten druhý dotaz vždycky 403 — požadavek navíc
+  // za odpověď, která se zahodí.
+  const zadosti: Narok[] =
+    vybrana && spravujeLod ? ((await narokyLodi(vybrana.lodId)).data ?? []) : [];
   const moje = (await mojeNaroky()).data ?? [];
 
   // QR se kreslí jako SVG přímo do stránky: žádný javascript, žádný další
