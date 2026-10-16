@@ -3200,3 +3200,8 @@ body:has(.tabule) { overflow: hidden; }
     padding-bottom: 1.2rem;
   }
 }
+
+/* Zrušená rozjížďka ve výsledkové tabulce. Zůstává ve sloupcích, aby
+   divákovi nezmizelo číslo z řady (Filip, 17. 10. 2026) — přeškrtnuté
+   říká, že se nejela, a tlumené, že se o ni nemá opírat. */
+.tabulka-sekce th.zrusena { color: var(--tlumeny); text-decoration: line-through; }

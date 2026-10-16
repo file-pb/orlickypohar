@@ -219,17 +219,32 @@ public static class ZavodEndpoints
 
         // Seznam rozjížděk se bere z rozjížděk, ne z výsledků: rozjížďka bez
         // jediného zapsaného řádku i ta s nepublikovanými čísly na stránce
-        // být má, jen prázdná. Eliminovaná ne — ta neplatí nikde.
+        // být má, jen prázdná.
+        //
+        // <b>Zrušená taky</b> (Filip, 17. 10. 2026: *„ať zůstane vidět jako
+        // zrušená"*). Dřív se odsud vyfiltrovala a divákovi prostě zmizela
+        // jedna rozjížďka z řady — to je horší než říct, že se nejela.
+        // Nepočítat ji se musí až u bodů, ne tím, že se zatají: filtr
+        // o pár řádků níž.
         var vsechny = await db.Rozjizdky
-            .Where(r => r.ZavodId == zavod.Id && r.StavVysledku != StavVysledku.Eliminovano)
+            .Where(r => r.ZavodId == zavod.Id)
             .OrderBy(r => r.Cislo)
-            .Select(r => new { r.Cislo, r.StartV, r.Stav, r.DoSerie })
+            .Select(r => new { r.Cislo, r.StartV, r.Stav, r.DoSerie, r.StavVysledku })
             .ToListAsync(ct);
 
         var podleCisla = radky.GroupBy(r => r.Cislo).ToDictionary(g => g.Key, g => g.ToList());
+        var stavVysledku = vsechny.ToDictionary(r => r.Cislo, r => r.StavVysledku);
 
+        // <b>Stav se u zrušené dopočítá, nebere se uložený.</b> `Stav` jde
+        // se zrušením od 17. 10. 2026, jenže rozjížďka eliminovaná dřív —
+        // nebo přinesená importem ročníku — ho má pořád starý. Na stránce
+        // by pak visela bez jakékoliv známky, že se nejela, což je přesně
+        // ta díra v číslování, kvůli které tu zůstává vidět.
         var rozjizdky = vsechny
-            .Select(r => new RozjizdkaDto(r.Cislo, r.StartV, r.Stav, r.DoSerie,
+            .Select(r => new RozjizdkaDto(
+                r.Cislo, r.StartV,
+                Workflow.Plati(r.StavVysledku) ? r.Stav : StavRozjizdky.Zrusena,
+                r.DoSerie,
             [
                 .. podleCisla.GetValueOrDefault(r.Cislo, []).Select(v => new VysledekDto(
                     v.Lod, v.Kategorie, v.Kormidelnik, v.PoradiVCili,
@@ -250,11 +265,17 @@ public static class ZavodEndpoints
         // ročník se nehýbe (viz PravidlaBodovani).
         var pravidla = PravidlaBodovani.Podle(zavod.VerzePravidel);
 
-        // Do bodů jde všechno, co se v závodě odjelo a je venku — příznak
-        // `DoSerie` rozhoduje o poháru, ne o výsledku závodu.
+        // <b>Do bodů jde všechno, co se v závodě odjelo a je venku</b> —
+        // příznak `DoSerie` rozhoduje o poháru, ne o výsledku závodu.
+        // Zrušená rozjížďka se nejela, takže se nepočítá nikam; na stránce
+        // zůstává vidět, aby divák poznal, proč v řadě chybí.
+        var bodovane = rozjizdky
+            .Where(r => Workflow.Plati(stavVysledku[r.Cislo]))
+            .ToList();
+
         var poradi = Vypocet.VysledkyZavodu(
         [
-            .. rozjizdky.Select(r => new RozjizdkaVstup(r.Cislo,
+            .. bodovane.Select(r => new RozjizdkaVstup(r.Cislo,
                 [.. r.Vysledky.Select(v => new VysledekVstup(v.Lod, v.Kategorie, v.PoradiVCili, v.Kod))])),
         ], zavod.PocetSkrtu, prihlaseno, pravidla);
 
@@ -274,7 +295,7 @@ public static class ZavodEndpoints
         // dlouhé regaty se vyhlašuje napříč kategoriemi.
         var celePole = Vypocet.VysledkyZavodu(
         [
-            .. rozjizdky.Select(r => new RozjizdkaVstup(r.Cislo,
+            .. bodovane.Select(r => new RozjizdkaVstup(r.Cislo,
                 [.. r.Vysledky.Select(v => new VysledekVstup(v.Lod, CelePole, v.PoradiVCili, v.Kod))])),
         ], zavod.PocetSkrtu, new Dictionary<string, int> { [CelePole] = prihlaseno.Values.Sum() },
             pravidla);

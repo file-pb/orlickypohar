@@ -82,10 +82,15 @@ export const STAVY: Record<StavVysledku, { stitek: string; tlacitko: string; pop
     tlacitko: "Vrátit k revizi",
     popis: "Vrátit zpátky s důvodem, co je špatně.",
   },
+  // <b>Zrušená, ne „eliminovaná"</b> (Filip, 16. 10. 2026). Pod tím slovem
+  // se na vodě rozhoduje: nefouká, rušíme. Stav v modelu se jmenuje dál
+  // `Eliminovano`, protože je to tentýž fakt z druhé strany — rozjížďka,
+  // která neplatí nikde, se nejela — a přejmenovávat ho v databázi kvůli
+  // slovu na tlačítku nemá smysl.
   Eliminovano: {
-    stitek: "eliminováno",
-    tlacitko: "Eliminovat",
-    popis: "Rozjížďka neplatí nikde — ani v závodě, ani v poháru.",
+    stitek: "zrušená",
+    tlacitko: "Zrušit rozjížďku",
+    popis: "Nejela se, nebo neplatí. Nepočítá se do závodu ani do poháru.",
   },
 };
 

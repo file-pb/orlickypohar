@@ -361,10 +361,11 @@ public static class VysledkyEndpoints
 
         var (rozsah, rozjizdka) = nalezena;
 
-        // Rozhoduje cílový stav: zapisuje pořadatel, ověřuje a schvaluje
-        // rozhodčí, potvrzuje a eliminuje správce.
+        // Rozhoduje cílový stav — a u zrušení i ten, ze kterého se jde:
+        // zapisuje pořadatel, ověřuje a schvaluje rozhodčí, potvrzuje
+        // správce, a ruší pořadatel, dokud je zápis otevřený.
         var pozadavek = new Pozadavek(
-            Workflow.KdoSmi(vstup.Stav), rozsah.SerieId, rozsah.ZavodId);
+            Workflow.KdoSmi(rozjizdka.StavVysledku, vstup.Stav), rozsah.SerieId, rozsah.ZavodId);
 
         if (!await rozsahy.SmiAsync(kdo, pozadavek, ct)) return Results.Forbid();
 
@@ -417,7 +418,9 @@ public static class VysledkyEndpoints
     /// </summary>
     private static Task<bool> SmiZapisovatAsync(
         ClaimsPrincipal kdo, Rozsahy rozsahy, Rozsahy.Rozsah rozsah, CancellationToken ct) =>
-        rozsahy.SmiAsync(kdo, new Pozadavek(Workflow.KdoSmi(StavVysledku.Navrzeno), rozsah.SerieId, rozsah.ZavodId), ct);
+        rozsahy.SmiAsync(kdo, new Pozadavek(
+            Workflow.KdoSmi(StavVysledku.Navrzeno, StavVysledku.Navrzeno),
+            rozsah.SerieId, rozsah.ZavodId), ct);
 
     private static async Task<(Rozsahy.Rozsah Rozsah, Rozjizdka Rozjizdka)?> NajdiAsync(
         string serie, string zavod, int cislo,
@@ -445,7 +448,7 @@ public static class VysledkyEndpoints
             var organizator = Poradatel(zavodId);
 
             var mozne = Workflow.MozneZ(r.StavVysledku, Spravce)
-                .Where(na => Workflow.KdoSmi(na) switch
+                .Where(na => Workflow.KdoSmi(r.StavVysledku, na) switch
                 {
                     Role.Organizator => organizator,
                     Role.Rozhodci => Rozhodci,

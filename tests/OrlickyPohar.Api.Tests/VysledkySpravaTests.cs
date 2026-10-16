@@ -107,17 +107,24 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         Assert.Equal(1, zavod.Poradi.Single(v => v.Poradi == 1).Body);
     }
 
+    /// <summary>
+    /// <b>Zrušená rozjížďka v řadě zůstane, jen se nepočítá</b> (Filip,
+    /// 17. 10. 2026). Do té doby z výpisu mizela úplně a tenhle test to
+    /// tvrdil jako správné chování — jenže divák pak nevidí zrušenou
+    /// rozjížďku, vidí díru v číslování a neví proč.
+    /// </summary>
     [Fact]
-    public async Task Eliminovana_rozjizdka_zmizi_uplne()
+    public async Task Zrusena_rozjizdka_v_rade_zustane_ale_nepocita_se()
     {
         var slug = "wf-eliminovana";
         await Nahraj(Rocnik(slug, druhaStav: StavVysledku.Eliminovano));
 
         var zavod = await ZavodAsync(slug);
 
-        // Neplatná rozjížďka není prázdná rozjížďka: nepočítá se a na
-        // stránce po ní nezůstane ani řádek.
-        Assert.Equal([1], zavod.Rozjizdky.Select(r => r.Cislo));
+        // Obě rozjížďky jsou v seznamu a na té druhé je poznat, že se
+        // nejela. Body má vítěz pořád z jedné, ne ze dvou.
+        Assert.Equal([1, 2], zavod.Rozjizdky.Select(r => r.Cislo));
+        Assert.Equal(StavRozjizdky.Zrusena, zavod.Rozjizdky.Single(r => r.Cislo == 2).Stav);
         Assert.Equal(1, zavod.Poradi.Single(v => v.Poradi == 1).Body);
     }
 
@@ -134,6 +141,78 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         // deset — kontroluje se tu, že se sloupec vůbec spočítal z jedné.
         Assert.Equal(0, vitez.Body);
         Assert.Single(poradi.Zastavky);
+    }
+
+    /// <summary>
+    /// <b>Zrušená rozjížďka zůstane vidět, ale nepočítá se</b> (Filip,
+    /// 17. 10. 2026: *„ať zůstane vidět jako zrušená"*). Dřív se z výpisu
+    /// vyfiltrovala a divákovi prostě zmizelo číslo z řady — to je horší
+    /// než říct, že se nejela. Nepočítat ji se musí až u bodů; kdyby se
+    /// filtr jen odstranil, začala by se bodovat.
+    /// </summary>
+    [Fact]
+    public async Task Zrusena_rozjizdka_zustane_videt_a_nepocita_se()
+    {
+        var slug = "wf-zrusena-videt";
+        await Nahraj(Rocnik(slug));
+
+        var pred = await ZavodAsync(slug);
+        var bodyPred = pred.Poradi.ToDictionary(v => v.Lod, v => v.Body);
+        var cisel = pred.Rozjizdky.Count;
+        Assert.NotEmpty(bodyPred);
+
+        await using (var scope = fixture.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var sprava = scope.ServiceProvider.GetRequiredService<VysledkySprava>();
+            var zavodId = await db.Zavody.Where(z => z.Serie!.Slug == slug).Select(z => z.Id).FirstAsync();
+            var rozjizdka = (await sprava.NajdiAsync(zavodId, 1, default))!;
+
+            Assert.Null(await sprava.PrepniStavAsync(
+                rozjizdka, StavVysledku.Eliminovano, null, spravce: true, default));
+        }
+
+        var po = await ZavodAsync(slug);
+
+        // Vidět zůstává, a je na ní poznat, že se nejela.
+        Assert.Equal(cisel, po.Rozjizdky.Count);
+        Assert.Equal(StavRozjizdky.Zrusena, po.Rozjizdky.Single(r => r.Cislo == 1).Stav);
+
+        // A nepočítá se: body se musely změnit, protože jedna rozjížďka
+        // z bodování vypadla.
+        Assert.NotEqual(bodyPred, po.Poradi.ToDictionary(v => v.Lod, v => v.Body));
+    }
+
+    /// <summary>
+    /// <b>Zrušená rozjížďka se pozná i na vodě, ne jen v zápisu.</b> Do
+    /// 16. 10. 2026 se `Stav` při eliminaci neměnil, takže
+    /// <see cref="StavRozjizdky.Zrusena"/> nenastal nikdy a semafor na
+    /// tabuli svítil zeleně i u rozjížďky, kterou rozhodčí vyndal.
+    /// </summary>
+    [Fact]
+    public async Task Zruseni_sebere_rozjizdku_i_z_vody_a_navrat_ji_vrati()
+    {
+        var slug = "wf-zruseni";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var sprava = scope.ServiceProvider.GetRequiredService<VysledkySprava>();
+
+        var zavodId = await db.Zavody.Where(z => z.Serie!.Slug == slug).Select(z => z.Id).FirstAsync();
+        var rozjizdka = (await sprava.NajdiAsync(zavodId, 1, default))!;
+        var puvodni = rozjizdka.Stav;
+
+        Assert.Null(await sprava.PrepniStavAsync(
+            rozjizdka, StavVysledku.Eliminovano, null, spravce: true, default));
+        Assert.Equal(StavRozjizdky.Zrusena, rozjizdka.Stav);
+
+        // Zpátky se z eliminace chodí jako návrh a rozjížďka se vrací tam,
+        // kam patří podle zápisu — ne natvrdo na „plánovaná".
+        Assert.Null(await sprava.PrepniStavAsync(
+            rozjizdka, StavVysledku.Navrzeno, null, spravce: true, default));
+        Assert.NotEqual(StavRozjizdky.Zrusena, rozjizdka.Stav);
+        Assert.Equal(puvodni, rozjizdka.Stav);
     }
 
     [Fact]

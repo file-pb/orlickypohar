@@ -73,9 +73,27 @@ export function Tabulka({
                   tabulka posouvá vodorovně a číslo, kvůli kterému se divák
                   dívá, musí zůstat vidět bez posouvání. */}
               <th className="body">Body</th>
+              {/* Zrušená rozjížďka ve sloupcích zůstává (Filip, 17. 10.
+                  2026) — kdyby zmizela, divák by jen viděl, že v řadě
+                  chybí číslo. Přeškrtnutá říká proč. Body v ní nikdo
+                  nemá, protože se nepočítá; co kdo dojel, než se zrušila,
+                  ve sloupci vidět je. */}
               {rozjizdky.map((r) => (
-                <th key={r.cislo} className={r.doSerie ? undefined : "mimo-serii"}>
-                  {r.cislo}.{!r.doSerie && <span title="nepočítá se do poháru">*</span>}
+                <th
+                  key={r.cislo}
+                  className={
+                    [r.doSerie ? "" : "mimo-serii", r.stav === "Zrusena" ? "zrusena" : ""]
+                      .filter(Boolean)
+                      .join(" ") || undefined
+                  }
+                >
+                  {r.stav === "Zrusena" ? (
+                    <span title="rozjížďka zrušená, nepočítá se">{r.cislo}.</span>
+                  ) : (
+                    <>
+                      {r.cislo}.{!r.doSerie && <span title="nepočítá se do poháru">*</span>}
+                    </>
+                  )}
                 </th>
               ))}
             </tr>
