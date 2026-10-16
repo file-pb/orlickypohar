@@ -144,18 +144,6 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
         if ((Kalendar.ProcNejdePoharove(zavod.Druh) ?? Prihlasky.ProcNejdeNaZavod(zavod.Stav)) is { } zamceno)
             return (null, false, zamceno, false);
 
-        // <b>Po publikaci se ptáme, nezakazujeme</b> (testovací session,
-        // 16. 10. 2026). Pozdní přihláška je podporovaná cesta — loď se
-        // domluví telefonem na startu a zapíše se dodatečně. Divné bylo,
-        // že se u vyhlášené regaty stala potichu, přestože mění základ,
-        // ze kterého se počítají body.
-        if (!vstup.Potvrzeno
-            && await db.Rozjizdky.AnyAsync(r => r.ZavodId == zavodId && r.Publikovano, ct))
-            return (null, false,
-                "Výsledky téhle regaty jsou venku. Přidáním lodi se změní počet přihlášených, "
-                + "ze kterého se počítají body za kódy a za neúčast v seriálu — i lodím, "
-                + "které už mají výsledek vyhlášený.", true);
-
         if ((vstup.PrihlaskaId is null) == (vstup.NovaLod is null))
             return (null, false, "Přihlas buď loď z ročníku, nebo novou loď — jedno z toho.", false);
 
@@ -179,6 +167,27 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
         var ucast = prihlaska.Id == 0
             ? null
             : await db.Ucasti.FirstOrDefaultAsync(u => u.ZavodId == zavodId && u.PrihlaskaId == prihlaska.Id, ct);
+
+        // <b>Po publikaci se ptáme, nezakazujeme</b> (testovací session,
+        // 16. 10. 2026). Pozdní přihláška je podporovaná cesta — loď se
+        // domluví telefonem na startu a zapíše se dodatečně. Divné bylo,
+        // že se u vyhlášené regaty stala potichu, přestože mění počet
+        // přihlášených, ze kterého se počítají body za kódy i za neúčast.
+        //
+        // <b>Až tady, ne na začátku.</b> Zeptat se dřív znamenalo ptát se
+        // i na požadavek, který stejně neprojde — a místo „loď patří do
+        // jiné kategorie" by přišla otázka o publikaci.
+        var pribude = ucast is null
+                      || ucast.Stav is StavUcasti.Zrusena or StavUcasti.Pozadavek
+                          or StavUcasti.KDoplneni or StavUcasti.Odmitnuta
+                          or StavUcasti.Nedostavila;
+
+        if (pribude && !vstup.Potvrzeno
+            && await db.Rozjizdky.AnyAsync(r => r.ZavodId == zavodId && r.Publikovano, ct))
+            return (null, false,
+                "Výsledky téhle regaty jsou venku. Přidáním lodi se změní počet přihlášených, "
+                + "ze kterého se počítají body za kódy a za neúčast v seriálu — i lodím, "
+                + "které už mají výsledek vyhlášený.", true);
 
         var nova = true;
         if (ucast is null)

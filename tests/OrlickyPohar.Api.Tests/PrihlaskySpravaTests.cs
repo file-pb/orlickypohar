@@ -98,7 +98,7 @@ public class PrihlaskySpravaTests(PostgresFixture fixture)
         await using var scope = fixture.Services.CreateAsyncScope();
         var k = await KontextAsync(scope, slug);
 
-        var (lod, nova, chyba, _) = await k.Sprava.PrihlasAsync(k.ZavodId, new(PrihlaskaId: k.Bora), default);
+        var (lod, nova, chyba, _) = await k.Sprava.PrihlasAsync(k.ZavodId, new(PrihlaskaId: k.Bora, Potvrzeno: true), default);
 
         Assert.Null(chyba);
         Assert.True(nova);
@@ -181,7 +181,7 @@ public class PrihlaskySpravaTests(PostgresFixture fixture)
         await using (var scope = fixture.Services.CreateAsyncScope())
         {
             var k = await KontextAsync(scope, slug);
-            Assert.Null((await k.Sprava.PrihlasAsync(k.ZavodId, new(PrihlaskaId: k.Bora), default)).Chyba);
+            Assert.Null((await k.Sprava.PrihlasAsync(k.ZavodId, new(PrihlaskaId: k.Bora, Potvrzeno: true), default)).Chyba);
         }
 
         // Sešit rozhodčího o přihlášce neví. Je to úplná pravda o tom, kdo
@@ -207,7 +207,7 @@ public class PrihlaskySpravaTests(PostgresFixture fixture)
         var k = await KontextAsync(scope, slug);
         var zapis = scope.ServiceProvider.GetRequiredService<ZapisSprava>();
 
-        Assert.Null((await k.Sprava.PrihlasAsync(k.ZavodId, new(PrihlaskaId: k.Bora), default)).Chyba);
+        Assert.Null((await k.Sprava.PrihlasAsync(k.ZavodId, new(PrihlaskaId: k.Bora, Potvrzeno: true), default)).Chyba);
 
         var rozjizdka = await k.Db.Rozjizdky.FirstAsync(r => r.ZavodId == k.ZavodId && r.Cislo == 1);
         Assert.Null((await zapis.UlozAsync(rozjizdka,
@@ -228,7 +228,7 @@ public class PrihlaskySpravaTests(PostgresFixture fixture)
         await using var scope = fixture.Services.CreateAsyncScope();
         var k = await KontextAsync(scope, slug);
 
-        await k.Sprava.PrihlasAsync(k.ZavodId, new(PrihlaskaId: k.Bora), default);
+        await k.Sprava.PrihlasAsync(k.ZavodId, new(PrihlaskaId: k.Bora, Potvrzeno: true), default);
 
         // Vrácení k doplnění bez důvodu neprojde, s důvodem ano.
         Assert.NotNull((await k.Sprava.PrepniAsync(k.ZavodId, k.Bora, StavUcasti.KDoplneni, default)).Chyba);
