@@ -56,6 +56,15 @@ get() {
   rm -f "$hlavicky"
 }
 vykresleni() { sed -E 's/.*vykresleni=([0-9]+).*/\1/' <<<"$1"; }
+# <b>Hledá se značka, ne shoda čísel.</b> `vykresleni()` je `sed`, který při
+# neodpovídajícím vzoru vrací vstup beze změny, takže porovnání „není rovno"
+# projde i u chybové stránky nginxu a u prázdného těla — tedy ze špatného
+# důvodu. Na „tohle tělo tady být nesmí" se musí ptát přímo.
+# Negace je uvnitř funkce, ne před ní: `ma` spouští svoje argumenty
+# jako příkaz a `!` mezi nimi je slovo, ne operátor. A číslo musí skončit,
+# jinak by `vykresleni=7` našlo i `vykresleni=71` a ohlásilo uloženou
+# stránku tam, kde je jiná.
+nenese_vykresleni() { ! grep -qE "vykresleni=$2([^0-9]|$)" <<<"$1"; }
 
 ok()  { echo "  ok    $1"; }
 spatne() { echo "  CHYBA $1"; chyb=$((chyb + 1)); }
@@ -347,7 +356,7 @@ ma "…vydaná jako STALE, tedy opravdu přes výpadek" test "$cache" = STALE
 # cokoliv pokazilo (16. 10. 2026).
 get /vypadek -H "Cookie: op_token=x"
 ma "přihlášený starou stránku NEDOSTANE" test "$stav" -ge 500
-ma "…a nedostane ani její tělo" test "$(vykresleni "$telo")" != "$ocekavane_vypadek"
+ma "…a nedostane ani její tělo" nenese_vykresleni "$telo" "$ocekavane_vypadek"
 
 get /nikdy-nenavstivena
 ma "nenavštívená adresa se nevymyslí" test "$stav" -ge 500
