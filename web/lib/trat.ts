@@ -85,23 +85,32 @@ export async function posunTrat(
   zavod: string,
   krok: KrokTrati,
   duvod?: string,
+  /**
+   * Trať, které se krok týká. <b>Bez ní server sáhne na nejnovější</b> —
+   * a od chvíle, kdy má každá rozjížďka svou, to znamená přijmout trať,
+   * na kterou se nikdo nedíval (Filip, 15. 10. 2026).
+   */
+  trat?: number,
 ): Promise<string | null> {
   const t = await tokenZeSezeni();
   if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
 
   let odpoved: Response;
   try {
-    odpoved = await fetch(`${cesta(serie, zavod)}/${krok}`, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${t}`,
-        accept: "application/json",
-        "content-type": "application/json",
+    odpoved = await fetch(
+      `${cesta(serie, zavod)}/${krok}${trat ? `?trat=${trat}` : ""}`,
+      {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${t}`,
+          accept: "application/json",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(krok === "vraceni" ? { duvod } : {}),
+        cache: "no-store",
+        signal: AbortSignal.timeout(CEKAT_MS),
       },
-      body: JSON.stringify(krok === "vraceni" ? { duvod } : {}),
-      cache: "no-store",
-      signal: AbortSignal.timeout(CEKAT_MS),
-    });
+    );
   } catch {
     return "Nedaří se spojit s API. Zkus to za chvíli.";
   }

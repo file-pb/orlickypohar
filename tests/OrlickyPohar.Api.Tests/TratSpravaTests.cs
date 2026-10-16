@@ -354,6 +354,52 @@ public class TratSpravaTests(PostgresFixture fixture)
             .Select(b => b.NahrazujeId).FirstAsync());
     }
 
+    /// <summary>
+    /// <b>Stav se mění na trati, kterou obrazovka ukazuje</b> — ne na
+    /// nejnovější (Filip, 15. 10. 2026: *„odemknout na přestavbu přepíná
+    /// selected trať na jinou"*).
+    ///
+    /// <para>
+    /// Dokud měla regata jednu trať, byl v tom rozdíl nulový. Od chvíle,
+    /// kdy má každá rozjížďka svou, to znamenalo, že rozhodčí mohl
+    /// <b>přijmout a veřejně vydat trať, kterou vůbec nečetl</b>: koukal
+    /// na trať druhé rozjížďky a server sáhl na nejnovější.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Stav_se_meni_na_vybrane_trati_ne_na_nejnovejsi()
+    {
+        var (db, boje, trate, prvky) = SluzbyIPrvky();
+        var (zavod, kdo) = await RegataAsync(db);
+
+        // První trať s prvkem a rozjížďkou.
+        var (a, _) = await boje.PipniAsync(zavod.Id, Bod("A"), kdo.Id, default);
+        await prvky.ZalozAsync(zavod.Id, new PrvekVstup(TypPrvku.OtocnaBoje, 1, a!.Id), kdo.Id, default);
+        var prvni = (await trate.AktualniAsync(zavod.Id, default))!;
+        var r1 = await RozjizdkaAsync(db, zavod, 1);
+        Assert.Null((await trate.PriradAsync(zavod.Id, prvni.Id, r1.Cislo, true, default)).Chyba);
+
+        // Druhá, novější trať — ta je „aktuální".
+        await RozjizdkaAsync(db, zavod, 2);
+        await trate.DalsiAsync(zavod.Id, true, default);
+        var druha = (await trate.AktualniAsync(zavod.Id, default))!;
+        Assert.NotEqual(prvni.Id, druha.Id);
+
+        // Hlásím hotovo na té první, vybrané. Novější se nesmí hnout.
+        Assert.Null((await trate.HotovoAsync(zavod.Id, true, default, prvni.Id)).Chyba);
+        await db.Entry(prvni).ReloadAsync();
+        await db.Entry(druha).ReloadAsync();
+        Assert.Equal(StavTrati.Hotovo, prvni.Stav);
+        Assert.Equal(StavTrati.Rozestaveno, druha.Stav);
+
+        // A přijmout taky tu vybranou.
+        Assert.Null((await trate.PrijmiAsync(zavod.Id, kdo.Id, default, prvni.Id)).Chyba);
+        await db.Entry(prvni).ReloadAsync();
+        await db.Entry(druha).ReloadAsync();
+        Assert.Equal(StavTrati.Prijato, prvni.Stav);
+        Assert.Equal(StavTrati.Rozestaveno, druha.Stav);
+    }
+
     /// <summary>Rozjížďka regaty, ať je čemu trať přiřadit.</summary>
     private static async Task<Rozjizdka> RozjizdkaAsync(
         AppDbContext db, Zavod zavod, int cislo, DateTimeOffset? start = null)

@@ -240,35 +240,35 @@ public static class TratEndpoints
     }
 
     private static async Task<IResult> HotovoAsync(
-        string serie, string zavod, ClaimsPrincipal kdo, Rozsahy rozsahy, TratSprava sprava,
+        string serie, string zavod, int? trat, ClaimsPrincipal kdo, Rozsahy rozsahy, TratSprava sprava,
         CancellationToken ct)
     {
         var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
         if (odpoved is not null) return odpoved;
 
         return Odpoved(await sprava.HotovoAsync(
-            rozsah!.ZavodId!.Value, await JeRozhodciAsync(kdo, rozsahy, rozsah, ct), ct));
+            rozsah!.ZavodId!.Value, await JeRozhodciAsync(kdo, rozsahy, rozsah, ct), ct, trat));
     }
 
     private static async Task<IResult> PrijmiAsync(
-        string serie, string zavod, ClaimsPrincipal kdo, Rozsahy rozsahy, TratSprava sprava,
+        string serie, string zavod, int? trat, ClaimsPrincipal kdo, Rozsahy rozsahy, TratSprava sprava,
         CancellationToken ct)
     {
         var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct, jenRozhodci: true);
         if (odpoved is not null) return odpoved;
         if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
 
-        return Odpoved(await sprava.PrijmiAsync(rozsah!.ZavodId!.Value, uzivatel, ct));
+        return Odpoved(await sprava.PrijmiAsync(rozsah!.ZavodId!.Value, uzivatel, ct, trat));
     }
 
     private static async Task<IResult> VratAsync(
-        string serie, string zavod, VraceniTratiVstup vstup, ClaimsPrincipal kdo,
+        string serie, string zavod, int? trat, VraceniTratiVstup vstup, ClaimsPrincipal kdo,
         Rozsahy rozsahy, TratSprava sprava, CancellationToken ct)
     {
         var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct, jenRozhodci: true);
         if (odpoved is not null) return odpoved;
 
-        return Odpoved(await sprava.VratAsync(rozsah!.ZavodId!.Value, vstup.Duvod, ct));
+        return Odpoved(await sprava.VratAsync(rozsah!.ZavodId!.Value, vstup.Duvod, ct, trat));
     }
 
     private static async Task<IResult> DalsiAsync(
@@ -285,14 +285,14 @@ public static class TratEndpoints
     }
 
     private static async Task<IResult> PrestavbaAsync(
-        string serie, string zavod, ClaimsPrincipal kdo, Rozsahy rozsahy, TratSprava sprava,
+        string serie, string zavod, int? trat, ClaimsPrincipal kdo, Rozsahy rozsahy, TratSprava sprava,
         CancellationToken ct)
     {
         var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
         if (odpoved is not null) return odpoved;
 
         return Odpoved(await sprava.PrestavbaAsync(
-            rozsah!.ZavodId!.Value, await JeRozhodciAsync(kdo, rozsahy, rozsah, ct), ct));
+            rozsah!.ZavodId!.Value, await JeRozhodciAsync(kdo, rozsahy, rozsah, ct), ct, trat));
     }
 
     private static async Task<IResult> SeznamAsync(

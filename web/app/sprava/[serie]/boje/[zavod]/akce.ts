@@ -246,10 +246,15 @@ export async function stavTratiAkce(formular: FormData) {
   if (krok !== "hotovo" && krok !== "prijeti" && krok !== "vraceni" && krok !== "prestavba")
     redirect(kam({ chyba: "Neznámý krok se stavem trati." }));
 
+  // <b>Id trati se posílá i vrací.</b> Bez něj server sáhne na nejnovější
+  // a obrazovka po přesměrování skočí jinam — rozhodčí pak přijme trať,
+  // na kterou se nedíval (Filip, 15. 10. 2026).
+  const trat = Number(formular.get("trat") ?? 0) || undefined;
   const duvod = String(formular.get("duvod") ?? "").trim();
-  const chyba = await posunTrat(serie, zavod, krok, duvod || undefined);
+  const chyba = await posunTrat(serie, zavod, krok, duvod || undefined, trat);
 
-  redirect(kam(chyba ? { chyba } : { stav: `trat-${krok}` }));
+  const kdeZustat: Record<string, string> = trat ? { trat: String(trat) } : {};
+  redirect(kam(chyba ? { ...kdeZustat, chyba } : { ...kdeZustat, stav: `trat-${krok}` }));
 }
 
 /**
@@ -269,7 +274,10 @@ export async function upravPrvekAkce(formular: FormData) {
   const id = Number(formular.get("prvek") ?? 0);
   if (!Number.isInteger(id) || id <= 0) redirect(kam({ chyba: "Který prvek se má upravit?" }));
 
-  const prvek = (await nactiPrvky(serie, zavod)).find((p) => p.id === id);
+  // <b>Prvky vybrané trati.</b> Bez id se četly z nejnovější, takže
+  // úprava brala pořadí z cizí trati (Filip, 15. 10. 2026).
+  const trat = Number(formular.get("trat") ?? 0) || undefined;
+  const prvek = (await nactiPrvky(serie, zavod, trat)).find((p) => p.id === id);
   if (!prvek) redirect(kam({ chyba: "Ten prvek v trati není. Někdo ho mezitím smazal?" }));
 
   const text = (jmeno: string) => String(formular.get(jmeno) ?? "").trim() || null;
@@ -281,7 +289,10 @@ export async function upravPrvekAkce(formular: FormData) {
     druhStartu: text("druhStartu") as PrvekVstup["druhStartu"],
   });
 
-  redirect(kam(chyba ? { chyba } : { stav: "prvekUpraven", otevrit: String(id) }));
+  const kde: Record<string, string> = trat ? { trat: String(trat) } : {};
+  redirect(
+    kam(chyba ? { ...kde, chyba } : { ...kde, stav: "prvekUpraven", otevrit: String(id) }),
+  );
 }
 
 /**
@@ -316,7 +327,11 @@ export async function odeberPrvekAkce(formular: FormData) {
   const id = Number(formular.get("prvek") ?? 0);
   if (!Number.isInteger(id) || id <= 0) redirect(kam({ chyba: "Který prvek se má odebrat?" }));
 
-  const prvky = await nactiPrvky(serie, zavod);
+  // Prvky <b>vybrané</b> trati: bez id se čtou z nejnovější a pořadí
+  // se pak počítá z cizího seznamu (Filip, 15. 10. 2026).
+  const trat = Number(formular.get("trat") ?? 0) || undefined;
+  const kde: Record<string, string> = trat ? { trat: String(trat) } : {};
+  const prvky = await nactiPrvky(serie, zavod, trat);
   const prvek = prvky.find((p) => p.id === id);
   if (!prvek) redirect(kam({ chyba: "Ten prvek v trati není. Někdo ho mezitím smazal?" }));
 
@@ -335,7 +350,7 @@ export async function odeberPrvekAkce(formular: FormData) {
     if (potiz) redirect(kam({ chyba: `Prvek je pryč, ale bóje zůstala ve vodě: ${potiz}` }));
   }
 
-  redirect(kam({ stav: kSebrani.length > 0 ? "prvekPryc" : "prujezdPryc" }));
+  redirect(kam({ ...kde, stav: kSebrani.length > 0 ? "prvekPryc" : "prujezdPryc" }));
 }
 
 export async function zopakujPrvekAkce(formular: FormData) {
@@ -343,7 +358,11 @@ export async function zopakujPrvekAkce(formular: FormData) {
   const id = Number(formular.get("prvek") ?? 0);
   if (!Number.isInteger(id) || id <= 0) redirect(kam({ chyba: "Který prvek se má projet znovu?" }));
 
-  const prvky = await nactiPrvky(serie, zavod);
+  // Prvky <b>vybrané</b> trati: bez id se čtou z nejnovější a pořadí
+  // se pak počítá z cizího seznamu (Filip, 15. 10. 2026).
+  const trat = Number(formular.get("trat") ?? 0) || undefined;
+  const kde: Record<string, string> = trat ? { trat: String(trat) } : {};
+  const prvky = await nactiPrvky(serie, zavod, trat);
   const prvek = prvky.find((p) => p.id === id);
   if (!prvek) redirect(kam({ chyba: "Ten prvek v trati není. Někdo ho mezitím smazal?" }));
 
@@ -356,7 +375,7 @@ export async function zopakujPrvekAkce(formular: FormData) {
   });
 
   // `posledni` místo čísla: API vrací při zakládání jen chybu, ne id.
-  redirect(kam(chyba ? { chyba } : { stav: "prvekZnovu", otevrit: "posledni" }));
+  redirect(kam(chyba ? { ...kde, chyba } : { ...kde, stav: "prvekZnovu", otevrit: "posledni" }));
 }
 
 /**
@@ -373,12 +392,17 @@ export async function presunPrvekAkce(formular: FormData) {
   const nahoru = String(formular.get("smer") ?? "") === "nahoru";
   if (!Number.isInteger(id) || id <= 0) redirect(kam({ chyba: "Který prvek se má posunout?" }));
 
-  const prvky = await nactiPrvky(serie, zavod);
+  // Prvky <b>vybrané</b> trati: bez id se čtou z nejnovější a pořadí
+  // se pak počítá z cizího seznamu (Filip, 15. 10. 2026).
+  const trat = Number(formular.get("trat") ?? 0) || undefined;
+  const naTrati: Record<string, string> = trat ? { trat: String(trat) } : {};
+  const prvky = await nactiPrvky(serie, zavod, trat);
   const kde = prvky.findIndex((p) => p.id === id);
   if (kde < 0) redirect(kam({ chyba: "Ten prvek v trati není. Někdo ho mezitím smazal?" }));
 
   const kam2 = nahoru ? kde - 1 : kde + 1;
-  if (kam2 < 0 || kam2 >= prvky.length) redirect(kam({ stav: "prvekUpraven", otevrit: String(id) }));
+  if (kam2 < 0 || kam2 >= prvky.length)
+    redirect(kam({ ...naTrati, stav: "prvekUpraven", otevrit: String(id) }));
 
   const poradi: Prvek[] = [...prvky];
   [poradi[kde], poradi[kam2]] = [poradi[kam2], poradi[kde]];
@@ -386,10 +410,10 @@ export async function presunPrvekAkce(formular: FormData) {
   for (const [i, p] of poradi.entries()) {
     if (p.poradi === i + 1) continue;
     const chyba = await upravPrvek(serie, zavod, p.id, { ...vstupZPrvku(p), poradi: i + 1 });
-    if (chyba) redirect(kam({ chyba }));
+    if (chyba) redirect(kam({ ...naTrati, chyba }));
   }
 
-  redirect(kam({ stav: "prvekPresunut", otevrit: String(id) }));
+  redirect(kam({ ...naTrati, stav: "prvekPresunut", otevrit: String(id) }));
 }
 
 /**
