@@ -284,6 +284,12 @@ a hlídají ji testy. Existuje proto, že **lokálně se
 databáze rozjet nedá** — Docker Hub je z pracovního stroje nedostupný — a bez
 něj by se stránky nedaly vidět jinak než nasazením.
 
+Požadavky mlčí, dokud se o ně neřekne: `OP_LOG=1 python3 tools/fake-api.py`
+vypisuje každý na stderr jako `REQ "GET /ja/lode/3/naroky HTTP/1.1" 200`.
+Je to jediný způsob, jak ověřit, **kolik** dotazů která obrazovka posílá —
+a bez něj se to ověřit nedá ani omylem: grep v tichém logu vrátí nulu
+stejně, jako kdyby se dotaz přestal posílat.
+
 ## Appka
 
 Čtecí appka pro telefon (Expo, React Native) — ročníky, kalendář, průběžné
