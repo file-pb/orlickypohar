@@ -64,6 +64,10 @@ export function VyberTrati({
   // Trať, kterou obrazovka ukazuje — bez výběru ta, na kterou spadla.
   const vybranaTrat = trate.find((t) => t.id === vybrana) ?? trate[0];
 
+  // Čísla tratí podle pořadí, v jakém vznikly. Seznam chodí od nejnovější,
+  // takže se počítá odzadu — „Trať 1" je ta první postavená.
+  const poradi = new Map([...trate].reverse().map((t, i) => [t.id, i + 1]));
+
   return (
     <section className="vyber-trati" aria-labelledby="vyber-trati-nadpis">
       <h2 id="vyber-trati-nadpis">Tratě regaty</h2>
@@ -89,8 +93,17 @@ export function VyberTrati({
               className={jeTato ? "vybrany" : undefined}
               aria-current={jeTato ? "page" : undefined}
             >
-              {t.cisloRozjizdky ? `${t.cisloRozjizdky}. rozjížďka` : "bez rozjížďky"}
-              <span className="stav">{NAZVY_STAVU[t.stav]}</span>
+              {/* <b>Záložka nese trať, ne rozjížďku</b> (Filip, 15. 10.
+                  2026: *„chtěl bych, aby tady byl tab trať 1, trať 2"*).
+                  Tratě jsou samostatné a rozjížďku mít nemusí — pojmenovat
+                  je podle ní znamenalo u nepřiřazené napsat „bez
+                  rozjížďky", což není jméno, ale nedostatek. Číslo je
+                  pořadí v regatě, ne id: id je vnitřní věc. */}
+              Trať {poradi.get(t.id)}
+              <span className="stav">
+                {t.cisloRozjizdky ? `${t.cisloRozjizdky}. rozjížďka · ` : ""}
+                {NAZVY_STAVU[t.stav]}
+              </span>
             </Link>
           );
         })}
