@@ -1241,6 +1241,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int>("PosunDoSerie")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("ProcesniDej")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("Publikovano")
                         .HasColumnType("boolean");
 

@@ -42,7 +42,10 @@ public record ZastavkaRadek(
     // termínu ukazovala prázdno tam, kde nějaká hodnota platí.
     int PocetSkrtu = 0,
     decimal KoeficientDoSerie = 1.0m,
-    int PosunDoSerie = 0);
+    int PosunDoSerie = 0,
+    // Procesní děj regaty. Formulář ho předvyplňuje jako ostatní počty;
+    // aditivně, na konci. Viz `Zavod.ProcesniDej`.
+    bool ProcesniDej = false);
 
 public record PrehledZastavekDto(
     string Serie,
@@ -94,7 +97,9 @@ public record ZastavkaVstup(
     /// Kolik se přičte lodím s umístěním — typicky bonus −1 u 24hodinovky.
     /// Není to koeficient: bonus posouvá, nenásobí. Nepovinné jako škrty.
     /// </summary>
-    int? PosunDoSerie = null);
+    int? PosunDoSerie = null,
+    /// <summary>Procesní děj u regaty. Nepovinné jako škrty.</summary>
+    bool? ProcesniDej = null);
 
 public record StavZastavkyVstup(StavZavodu Stav);
 
@@ -180,6 +185,7 @@ public class KalendarSprava(AppDbContext db)
             PocetSkrtu = vstup.PocetSkrtu ?? 0,
             KoeficientDoSerie = vstup.KoeficientDoSerie ?? 1.0m,
             PosunDoSerie = vstup.PosunDoSerie ?? 0,
+            ProcesniDej = vstup.ProcesniDej ?? false,
             Stav = StavZavodu.Planovany,
             Publikovano = false,
             // Pořadí se hned přepočítá podle data; tohle je jen než dostane
@@ -223,6 +229,7 @@ public class KalendarSprava(AppDbContext db)
         zastavka.PocetSkrtu = vstup.PocetSkrtu ?? zastavka.PocetSkrtu;
         zastavka.KoeficientDoSerie = vstup.KoeficientDoSerie ?? zastavka.KoeficientDoSerie;
         zastavka.PosunDoSerie = vstup.PosunDoSerie ?? zastavka.PosunDoSerie;
+        zastavka.ProcesniDej = vstup.ProcesniDej ?? zastavka.ProcesniDej;
         // Jiné jméno přiřadí jiného pořadatele; přejmenovat klub se dá jen
         // v jeho medailonku, jinak by jeden překlep v kalendáři přepsal
         // jméno na všech jeho zastávkách.

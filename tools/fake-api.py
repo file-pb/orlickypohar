@@ -179,6 +179,19 @@ def plati(r):
     return r.get("publikovano", True) and r.get("stavVysledku") != "Eliminovano"
 
 
+def venku(z, r):
+    """
+    Jdou čísla téhle rozjížďky ven? Opsané ze `ZavodEndpoints`.
+
+    Publikovaná ano vždycky. Nepublikovaná jen u regaty se zapnutým
+    procesním dějem — a ani tam ne, když je zrušená: „neplatí nikde"
+    není stupeň rozpracovanosti.
+    """
+    if r.get("publikovano", True):
+        return True
+    return bool(z.get("procesniDej")) and r.get("stavVysledku") != "Eliminovano"
+
+
 def poradi_serie():
     """Průběžné pořadí po kategoriích, jen z odjetých zastávek.
 
@@ -4399,6 +4412,8 @@ class H(BaseHTTPRequestHandler):
                        ("slug", "nazev", "datum", "datumKonce", "typ", "poradatel",
                         "stav", "puvodniDatum", "pocetSkrtu", "vyhodnoceni",
                         "koeficientDoSerie")},
+                    # Divák musí vědět, že kouká na nepodepsaná čísla.
+                    "procesniDej": bool(z.get("procesniDej")),
                     "druh": z["druh"],
                     "medailonek": poradatel_zastavky(z),
                     "rozjizdky": [{
@@ -4411,7 +4426,8 @@ class H(BaseHTTPRequestHandler):
                         # prázdná. Zrušená taky (Filip, 17. 10. 2026) — do
                         # bodů nejde, protože `poradi` níž filtruje
                         # `plati()`, ale z řady zmizet nesmí.
-                        "vysledky": [] if not r.get("publikovano", True) else [{
+                        "stavVysledku": r.get("stavVysledku", "Navrzeno"),
+                        "vysledky": [] if not venku(z, r) else [{
                             "lod": nazvy(v["lod"]),
                             "kategorie": KAT[v["lod"]],
                             "kormidelnik": jmeno(kormidelnici[v["lod"]]) if kormidelnici.get(v["lod"]) else None,

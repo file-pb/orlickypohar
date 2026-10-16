@@ -68,7 +68,10 @@ public record ZavodVstup(
     int PosunDoSerie = 0,
     // Pod kterou adresou tahle regata v ročníku už je. Vyplňuje se jen při
     // přejmenování — viz `ImportHandler`, oddíl o přejmenování.
-    string? PuvodniSlug = null);
+    string? PuvodniSlug = null,
+    // Pouští regata ven i nepodepsaná čísla? Starší soubory o tom nevědí
+    // a výchozí je ten konzervativní stav — viz `Zavod.ProcesniDej`.
+    bool ProcesniDej = false);
 
 /// <summary>
 /// Článek ročníku nebo zastávky. <c>Zavod</c> je slug zastávky ze stejného
