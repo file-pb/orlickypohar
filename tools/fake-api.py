@@ -1129,7 +1129,10 @@ def trat_verejna(slug):
                       "barva": b.get("barva"), "tvar": b.get("tvar"),
                       "znaceni": b.get("znaceni")}
                      for b in sorted(stojici, key=lambda b: (b["poradi"], b["id"]))],
-            "prvky": [{"typ": p["typ"], "poradi": p["poradi"], "strana": p["strana"],
+            # Id jde ven: bez něj nejde spárovat zkrácení, které se vydává
+            # jako `zkracenoUPrvkuId`.
+            "prvky": [{"id": p["id"], "typ": p["typ"], "poradi": p["poradi"],
+                       "strana": p["strana"],
                        "smer": p.get("smer"), "druhStartu": p.get("druhStartu"),
                        "poznamka": p["poznamka"], "a": verejny_konec(p, "a"),
                        "b": verejny_konec(p, "b")}

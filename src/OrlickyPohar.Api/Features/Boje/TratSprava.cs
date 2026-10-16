@@ -459,7 +459,7 @@ public class TratSprava(AppDbContext db, TimeProvider cas, Fotky.IUloziste ulozi
             .OrderBy(p => p.Poradi).ThenBy(p => p.Id)
             .Select(p => new
             {
-                p.Typ, p.Poradi, p.Strana, p.Poznamka, p.Smer, p.DruhStartu,
+                p.Id, p.Typ, p.Poradi, p.Strana, p.Poznamka, p.Smer, p.DruhStartu,
                 A = new { Boje = p.BojeAId, p.BojeA!.Nazev, p.BojeA.Sirka, p.BojeA.Delka,
                           p.BojeA.Barva, p.BojeA.Tvar, p.BojeA.Znaceni },
                 B = p.BojeB != null
@@ -474,7 +474,7 @@ public class TratSprava(AppDbContext db, TimeProvider cas, Fotky.IUloziste ulozi
 
         var prvky = surove
             .Select(p => new VerejnyPrvekDto(
-                p.Typ, p.Poradi, p.Strana, p.Poznamka,
+                p.Id, p.Typ, p.Poradi, p.Strana, p.Poznamka,
                 new VerejnyKonecDto(
                     p.A.Nazev, p.A.Sirka, p.A.Delka,
                     p.A.Barva, p.A.Tvar, p.A.Znaceni, KFotkam(p.A.Boje)),
