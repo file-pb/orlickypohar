@@ -39,6 +39,15 @@ const tab = (formular: FormData) =>
 function vstupZFormulare(formular: FormData) {
   const text = (klic: string) => String(formular.get(klic) ?? "").trim() || undefined;
 
+  // Číslo z formuláře. Prázdné pole je `undefined` (neměnit), nesmysl taky:
+  // raději ať API nechá, co má, než aby dostalo `NaN`.
+  const cislo = (klic: string) => {
+    const zadano = text(klic);
+    if (zadano === undefined) return undefined;
+    const n = Number(zadano.replace(",", "."));
+    return Number.isFinite(n) ? n : undefined;
+  };
+
   return {
     nazev: String(formular.get("nazev") ?? "").trim(),
     datum: String(formular.get("datum") ?? "").trim(),
@@ -50,6 +59,11 @@ function vstupZFormulare(formular: FormData) {
     // Jak se regata vyhodnocuje. Body do poháru to nemění — rozhoduje to
     // jen o tom, jestli se vyhlašuje i celkové pořadí napříč kategoriemi.
     vyhodnoceni: (text("vyhodnoceni") ?? "PoKategoriich") as Vyhodnoceni,
+    // Počty do poháru. <b>Prázdné pole je „neměnit"</b>, ne nula: API je
+    // bere jako nepovinná právě proto, aby úprava termínu nepřepsala
+    // hodnoty, které do ročníku přišly importem.
+    pocetSkrtu: cislo("pocetSkrtu"),
+    koeficientDoSerie: cislo("koeficientDoSerie"),
     // Druh platí jen při založení; úprava ho v API nemění.
     druh: tab(formular) === "akce" ? ("Akce" as const) : ("Pohar" as const),
   };

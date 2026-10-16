@@ -284,6 +284,45 @@ function Pole({ zastavka, akce }: { zastavka?: ZastavkaRadek; akce?: boolean }) 
         </label>
       )}
 
+      {/* Počty do poháru. Do 16. 10. 2026 je nesl jen import ročníku, takže
+          regata vypsaná klikáním měla navždy škrty 0 a koeficient 1,0 —
+          u okruhové regaty je přitom obvyklý jeden škrt. Akce se do poháru
+          nepočítá, takže se u ní neptáme. */}
+      {!akce && (
+        <>
+          <label>
+            Škrtá se nejhorších
+            <input
+              type="number"
+              name="pocetSkrtu"
+              min={0}
+              max={20}
+              step={1}
+              defaultValue={zastavka?.pocetSkrtu ?? 0}
+            />
+            <span className="poznamka">
+              Kolik nejhorších rozjížděk se lodi škrtá ve výsledku regaty.
+              Okruhový závod typicky 1, vytrvalostní 0.
+            </span>
+          </label>
+
+          <label>
+            Koeficient do poháru
+            <input
+              type="number"
+              name="koeficientDoSerie"
+              min={0.1}
+              max={10}
+              step={0.1}
+              defaultValue={zastavka?.koeficientDoSerie ?? 1}
+            />
+            <span className="poznamka">
+              Váha regaty v ročníku, běžně 1. Dvojka znamená dvojnásobné body.
+            </span>
+          </label>
+        </>
+      )}
+
       <label className="siroke">
         Pořadatel
         <input

@@ -9798,6 +9798,21 @@
                     },
                     "vyhodnoceni": {
                         "$ref": "#/components/schemas/Vyhodnoceni"
+                    },
+                    "pocetSkrtu": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 0
+                    },
+                    "koeficientDoSerie": {
+                        "type": "number",
+                        "format": "double",
+                        "default": 1
+                    },
+                    "posunDoSerie": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 0
                     }
                 }
             },
@@ -9854,6 +9869,27 @@
                     },
                     "vyhodnoceni": {
                         "$ref": "#/components/schemas/Vyhodnoceni"
+                    },
+                    "pocetSkrtu": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "koeficientDoSerie": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "posunDoSerie": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
                     }
                 }
             },

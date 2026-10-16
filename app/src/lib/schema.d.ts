@@ -5979,6 +5979,21 @@ export interface components {
             /** @default false */
             smiMedailonek: boolean;
             vyhodnoceni?: components["schemas"]["Vyhodnoceni"];
+            /**
+             * Format: int32
+             * @default 0
+             */
+            pocetSkrtu: number;
+            /**
+             * Format: double
+             * @default 1
+             */
+            koeficientDoSerie: number;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            posunDoSerie: number;
         };
         ZastavkaVolbaDto: {
             slug: string;
@@ -5994,6 +6009,12 @@ export interface components {
             poradatel?: null | string;
             druh?: components["schemas"]["DruhZastavky"];
             vyhodnoceni?: components["schemas"]["Vyhodnoceni"];
+            /** Format: int32 */
+            pocetSkrtu?: null | number;
+            /** Format: double */
+            koeficientDoSerie?: null | number;
+            /** Format: int32 */
+            posunDoSerie?: null | number;
         };
         ZastavkaVysledkyDto: {
             zavod: string;
