@@ -339,11 +339,18 @@ ma "…a je to opravdu ta uložená, ne nová" \
 # nedokazuje nic. Když tady svítí HIT, posunul se oddíl nahoru.
 ma "…vydaná jako STALE, tedy opravdu přes výpadek" test "$cache" = STALE
 
+# <b>Hlídá se „nedostane", ne konkrétní číslo.</b> Který kód přijde, závisí
+# na tom, jestli má nginx adresu zastaveného kontejneru ještě v záznamu
+# resolveru (`valid=10s`): uvnitř té lhůty se na ni marně připojuje a vrátí
+# 504, po ní jméno nepřeloží a vrátí 502. Obojí splňuje to, co tenhle oddíl
+# tvrdí; test na 502 padal jednou za čas na závodu s tou lhůtou, aniž by se
+# cokoliv pokazilo (16. 10. 2026).
 get /vypadek -H "Cookie: op_token=x"
-ma "přihlášený starou stránku NEDOSTANE" test "$stav" = 502
+ma "přihlášený starou stránku NEDOSTANE" test "$stav" -ge 500
+ma "…a nedostane ani její tělo" test "$(vykresleni "$telo")" != "$ocekavane_vypadek"
 
 get /nikdy-nenavstivena
-ma "nenavštívená adresa se nevymyslí" test "$stav" = 502
+ma "nenavštívená adresa se nevymyslí" test "$stav" -ge 500
 
 # Zdraví nginxu samotného musí přežít i mrtvý web — jinak by Traefik
 # vyřadil ze směrování i cache, která má zbytek zakrývat (poučení 44).
