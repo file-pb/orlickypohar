@@ -123,7 +123,11 @@ public class PrihlaskySpravaTests(PostgresFixture fixture)
         await using var scope = fixture.Services.CreateAsyncScope();
         var k = await KontextAsync(scope, slug);
 
-        var vstup = new PrihlaseniVstup(NovaLod: new($"Cassiopeia {slug}", "Pod7m", "Eva", "Malá", "CZE 886"));
+        // Ročník z importu má publikované rozjížďky, takže i tahle loď je
+        // pozdní přihláška do vyhlášené regaty. Test je o zakládání lodi,
+        // potvrzení patří k jeho zadání.
+        var vstup = new PrihlaseniVstup(
+            NovaLod: new($"Cassiopeia {slug}", "Pod7m", "Eva", "Malá", "CZE 886"), Potvrzeno: true);
 
         var prvni = await k.Sprava.PrihlasAsync(k.ZavodId, vstup, default);
         var druhe = await k.Sprava.PrihlasAsync(k.ZavodId, vstup, default);
