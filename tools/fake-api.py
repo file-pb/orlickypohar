@@ -1833,6 +1833,8 @@ def zastavka_ze_vstupu(vstup):
     skrty, koeficient = vstup.get("pocetSkrtu"), vstup.get("koeficientDoSerie")
     if skrty is not None and skrty < 0:
         return None, "Počet škrtů nemůže být záporný."
+    if skrty is not None and skrty > 20:
+        return None, "Škrtat jde nejvýš 20 rozjížděk. Vyšší číslo bývá překlep."
     if koeficient is not None:
         if koeficient <= 0:
             return None, ("Koeficient do poháru musí být kladný. Regatu, která se "

@@ -252,6 +252,7 @@ public class KalendarTests
         Assert.Null(Kalendar.ProcNejdouPocty(1, 1.0m));
         Assert.Null(Kalendar.ProcNejdouPocty(0, 0.5m));
         Assert.Null(Kalendar.ProcNejdouPocty(3, Kalendar.KoeficientNejvic));
+        Assert.Null(Kalendar.ProcNejdouPocty(Kalendar.SkrtuNejvic, 1.0m));
 
         // Nezadáno není nula: starý klient pole neposílá a úprava termínu
         // nesmí naimportovanému ročníku přepsat, co v něm je.
@@ -263,6 +264,10 @@ public class KalendarTests
     [InlineData(1, 0.0, "kladný")]
     [InlineData(1, -2.0, "kladný")]
     [InlineData(1, 11.0, "nejvýš")]
+    // Horní mez škrtů držela jen obrazovka (`max="20"`), server pustil 99
+    // (testovací session, 16. 10. 2026).
+    [InlineData(21, 1.0, "nejvýš 20")]
+    [InlineData(99, 1.0, "nejvýš 20")]
     public void Pocty_do_poharu_odmitnou_preklep(int skrty, double koeficient, string vetaObsahuje)
     {
         var chyba = Kalendar.ProcNejdouPocty(skrty, (decimal)koeficient);
