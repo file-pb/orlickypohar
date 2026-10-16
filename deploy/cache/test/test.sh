@@ -49,13 +49,26 @@ get() {
   local cesta=$1; shift
   local hlavicky
   hlavicky=$(mktemp)
+  local zacatek=$SECONDS
   telo=$(curl -s -D "$hlavicky" "$@" "$URL$cesta")
+  # Doba požadavku v celých sekundách. Na nic jemného tu nestačí a nemá —
+  # jediné, co se z ní tvrdí, je „netrvalo to minutu".
+  trvalo=$((SECONDS - zacatek))
   stav=$(head -1 "$hlavicky" | awk '{print $2}')
   cache=$(grep -i '^x-cache:' "$hlavicky" | awk '{print $2}' | tr -d '\r' || true)
   replika=$(grep -i '^x-replika:' "$hlavicky" | awk '{print $2}' | tr -d '\r' || true)
   rm -f "$hlavicky"
 }
 vykresleni() { sed -E 's/.*vykresleni=([0-9]+).*/\1/' <<<"$1"; }
+# <b>Hledá se značka, ne shoda čísel.</b> `vykresleni()` je `sed`, který při
+# neodpovídajícím vzoru vrací vstup beze změny, takže porovnání „není rovno"
+# projde i u chybové stránky nginxu a u prázdného těla — tedy ze špatného
+# důvodu. Na „tohle tělo tady být nesmí" se musí ptát přímo.
+# Negace je uvnitř funkce, ne před ní: `ma` spouští svoje argumenty
+# jako příkaz a `!` mezi nimi je slovo, ne operátor. A číslo musí skončit,
+# jinak by `vykresleni=7` našlo i `vykresleni=71` a ohlásilo uloženou
+# stránku tam, kde je jiná.
+nenese_vykresleni() { ! grep -qE "vykresleni=$2([^0-9]|$)" <<<"$1"; }
 
 ok()  { echo "  ok    $1"; }
 spatne() { echo "  CHYBA $1"; chyb=$((chyb + 1)); }
@@ -329,7 +342,21 @@ echo "Výpadek původu: stará stránka ano, přihlášenému ne"
 
 # `/vypadek` leží v cache od začátku testu a platnost jí mezitím vypršela,
 # takže nginx musí jít na web — a ten za chvíli nebude.
-docker stop op-cache-test-web op-cache-test-web-sezeni >/dev/null
+# <b>`kill`, ne `stop`.</b> Dvojí důvod. `falesny_web.py` běží jako PID 1
+# a nemá handler na SIGTERM, takže ho jádro u jedničky zahodí a `docker
+# stop` čeká celý svůj výchozí desetivteřinový timeout, než pošle SIGKILL
+# — deset sekund čistého čekání na každý běh CI, za nic.
+#
+# A hlavně: ten timeout běžel proti `resolver valid=10s`, takže o tom,
+# jestli má nginx adresu zastaveného kontejneru ještě v záznamu, dřív
+# rozhodoval závod dvou desetivteřinových lhůt. Odtud ten pád jednou za
+# pětadvacet běhů. Okamžité zabití staví oddíl vždycky do té horší
+# varianty — nginx se připojuje na mrtvou adresu — což je právě ten
+# případ, kvůli kterému tu `proxy_connect_timeout` je.
+#
+# Zabití je navíc věrnější tomu, co tenhle oddíl modeluje: spadlý web,
+# ne řádné odstavení.
+docker kill op-cache-test-web op-cache-test-web-sezeni >/dev/null
 
 get /vypadek
 ma "nepřihlášený dostane poslední dobrou stránku" test "$stav" = 200
@@ -339,11 +366,23 @@ ma "…a je to opravdu ta uložená, ne nová" \
 # nedokazuje nic. Když tady svítí HIT, posunul se oddíl nahoru.
 ma "…vydaná jako STALE, tedy opravdu přes výpadek" test "$cache" = STALE
 
+# <b>Hlídá se „nedostane", ne konkrétní číslo.</b> Který kód přijde, závisí
+# na tom, jestli má nginx adresu zastaveného kontejneru ještě v záznamu
+# resolveru (`valid=10s`): uvnitř té lhůty se na ni marně připojuje a vrátí
+# 504, po ní jméno nepřeloží a vrátí 502. Obojí splňuje to, co tenhle oddíl
+# tvrdí; test na 502 padal jednou za čas na závodu s tou lhůtou, aniž by se
+# cokoliv pokazilo (16. 10. 2026).
 get /vypadek -H "Cookie: op_token=x"
-ma "přihlášený starou stránku NEDOSTANE" test "$stav" = 502
+ma "přihlášený starou stránku NEDOSTANE" test "$stav" -ge 500
+# Strop na sestavení spojení (`proxy_connect_timeout`, default.conf). Bez
+# něj platí výchozí minuta nginxu a tenhle požadavek ji na mrtvé adrese
+# celou vyčká. Mez je velkorysá schválně: hlídá se, že strop existuje,
+# ne jak přesně je nastavený.
+ma "…a nečeká se na to minutu" test "$trvalo" -lt 15
+ma "…a nedostane ani její tělo" nenese_vykresleni "$telo" "$ocekavane_vypadek"
 
 get /nikdy-nenavstivena
-ma "nenavštívená adresa se nevymyslí" test "$stav" = 502
+ma "nenavštívená adresa se nevymyslí" test "$stav" -ge 500
 
 # Zdraví nginxu samotného musí přežít i mrtvý web — jinak by Traefik
 # vyřadil ze směrování i cache, která má zbytek zakrývat (poučení 44).
