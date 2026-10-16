@@ -372,11 +372,20 @@ docker kill op-cache-test-web2 >/dev/null
 # Osm kusů: kdyby se opakování nekonalo, round-robin pošle na mrtvou
 # adresu zhruba polovinu a tahle mez to pozná.
 spatnych=0
+pomalych=0
 for i in $(seq 1 8); do
   get "/vymena-$i"
   [ "$stav" -ge 500 ] && spatnych=$((spatnych + 1))
+  [ "$trvalo" -ge 1 ] && pomalych=$((pomalych + 1))
 done
 ma "při jedné mrtvé replice ze dvou projdou všechny požadavky" test "$spatnych" -eq 0
+# <b>Bez tohohle by oddíl mohl projít, aniž by cokoliv dokázal.</b> Kdyby
+# nginx mrtvou adresu z rotace vyřadil a posílal všechno na živou, prošlo
+# by osm z osmi taky — jen by se opakování nezkusilo ani jednou. Pomalý
+# požadavek je ten, který na mrtvou adresu sáhl, vyčkal strop a teprve
+# pak šel na druhou; aspoň jeden takový tu musí být, jinak se měřilo něco
+# jiného, než o čem je řeč.
+ma "…a aspoň jeden z nich si tu mrtvou adresu opravdu zkusil" test "$pomalych" -ge 1
 
 docker rm -f op-cache-test-web2 >/dev/null 2>&1 || true
 # ---------------------------------------------------------------------------
