@@ -250,8 +250,10 @@ export async function zalozPrvek(
   serie: string,
   zavod: string,
   vstup: PrvekVstup,
+  /** Do které trati. Bez ní server založí na nejnovější. */
+  trat?: number,
 ): Promise<string | null> {
-  return await posli(`${cesta(serie, zavod)}/prvky`, "POST", vstup);
+  return await posli(`${cesta(serie, zavod)}/prvky${naTrati(trat)}`, "POST", vstup);
 }
 
 /**
@@ -266,8 +268,9 @@ export async function upravPrvek(
   zavod: string,
   prvek: number,
   vstup: PrvekVstup,
+  trat?: number,
 ): Promise<string | null> {
-  return await posli(`${cesta(serie, zavod)}/prvky/${prvek}`, "PUT", vstup);
+  return await posli(`${cesta(serie, zavod)}/prvky/${prvek}${naTrati(trat)}`, "PUT", vstup);
 }
 
 /**
@@ -296,9 +299,13 @@ export async function smazPrvek(
   serie: string,
   zavod: string,
   prvek: number,
+  trat?: number,
 ): Promise<string | null> {
-  return await posli(`${cesta(serie, zavod)}/prvky/${prvek}`, "DELETE");
+  return await posli(`${cesta(serie, zavod)}/prvky/${prvek}${naTrati(trat)}`, "DELETE");
 }
+
+/** `?trat=` do adresy, nebo nic. Zámek i cíl zápisu se ptají téhle trati. */
+const naTrati = (trat?: number) => (trat ? `?trat=${trat}` : "");
 
 async function posli(adresa: string, metoda: string, telo?: unknown): Promise<string | null> {
   const t = await tokenZeSezeni();

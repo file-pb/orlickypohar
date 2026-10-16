@@ -420,7 +420,7 @@ public static class TratEndpoints
 
     private static async Task<IResult> ZalozPrvekAsync(
         string serie, string zavod, PrvekVstup vstup, ClaimsPrincipal kdo, Rozsahy rozsahy,
-        PrvkySprava prvky, CancellationToken ct)
+        PrvkySprava prvky, CancellationToken ct, int? trat = null)
     {
         var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
         if (odpoved is not null) return odpoved;
@@ -431,7 +431,7 @@ public static class TratEndpoints
         if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
 
         var (prvek, chyba) = await prvky.ZalozAsync(
-            rozsah!.ZavodId!.Value, vstup, uzivatel, ct);
+            rozsah!.ZavodId!.Value, vstup, uzivatel, ct, trat);
         return chyba is not null
             ? Results.BadRequest(new { error = chyba })
             : Results.Created((string?)null, prvek);
@@ -439,7 +439,7 @@ public static class TratEndpoints
 
     private static async Task<IResult> UpravPrvekAsync(
         string serie, string zavod, int prvek, PrvekVstup vstup, ClaimsPrincipal kdo,
-        Rozsahy rozsahy, PrvkySprava prvky, CancellationToken ct)
+        Rozsahy rozsahy, PrvkySprava prvky, CancellationToken ct, int? trat = null)
     {
         var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
         if (odpoved is not null) return odpoved;
@@ -447,18 +447,18 @@ public static class TratEndpoints
         if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Forbid();
 
         var (upraveny, chyba) = await prvky.UpravAsync(
-            rozsah!.ZavodId!.Value, prvek, vstup, uzivatel, ct);
+            rozsah!.ZavodId!.Value, prvek, vstup, uzivatel, ct, trat);
         return chyba is not null ? Results.BadRequest(new { error = chyba }) : Results.Ok(upraveny);
     }
 
     private static async Task<IResult> SmazPrvekAsync(
         string serie, string zavod, int prvek, ClaimsPrincipal kdo, Rozsahy rozsahy,
-        PrvkySprava prvky, CancellationToken ct)
+        PrvkySprava prvky, CancellationToken ct, int? trat = null)
     {
         var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
         if (odpoved is not null) return odpoved;
 
-        return await prvky.SmazAsync(rozsah!.ZavodId!.Value, prvek, ct) is { } chyba
+        return await prvky.SmazAsync(rozsah!.ZavodId!.Value, prvek, ct, trat) is { } chyba
             ? Results.BadRequest(new { error = chyba })
             : Results.NoContent();
     }
