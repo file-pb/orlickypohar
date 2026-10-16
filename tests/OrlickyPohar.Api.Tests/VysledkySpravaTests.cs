@@ -107,17 +107,24 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         Assert.Equal(1, zavod.Poradi.Single(v => v.Poradi == 1).Body);
     }
 
+    /// <summary>
+    /// <b>Zrušená rozjížďka v řadě zůstane, jen se nepočítá</b> (Filip,
+    /// 17. 10. 2026). Do té doby z výpisu mizela úplně a tenhle test to
+    /// tvrdil jako správné chování — jenže divák pak nevidí zrušenou
+    /// rozjížďku, vidí díru v číslování a neví proč.
+    /// </summary>
     [Fact]
-    public async Task Eliminovana_rozjizdka_zmizi_uplne()
+    public async Task Zrusena_rozjizdka_v_rade_zustane_ale_nepocita_se()
     {
         var slug = "wf-eliminovana";
         await Nahraj(Rocnik(slug, druhaStav: StavVysledku.Eliminovano));
 
         var zavod = await ZavodAsync(slug);
 
-        // Neplatná rozjížďka není prázdná rozjížďka: nepočítá se a na
-        // stránce po ní nezůstane ani řádek.
-        Assert.Equal([1], zavod.Rozjizdky.Select(r => r.Cislo));
+        // Obě rozjížďky jsou v seznamu a na té druhé je poznat, že se
+        // nejela. Body má vítěz pořád z jedné, ne ze dvou.
+        Assert.Equal([1, 2], zavod.Rozjizdky.Select(r => r.Cislo));
+        Assert.Equal(StavRozjizdky.Zrusena, zavod.Rozjizdky.Single(r => r.Cislo == 2).Stav);
         Assert.Equal(1, zavod.Poradi.Single(v => v.Poradi == 1).Body);
     }
 

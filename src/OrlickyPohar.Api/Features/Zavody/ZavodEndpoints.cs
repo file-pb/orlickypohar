@@ -235,8 +235,16 @@ public static class ZavodEndpoints
         var podleCisla = radky.GroupBy(r => r.Cislo).ToDictionary(g => g.Key, g => g.ToList());
         var stavVysledku = vsechny.ToDictionary(r => r.Cislo, r => r.StavVysledku);
 
+        // <b>Stav se u zrušené dopočítá, nebere se uložený.</b> `Stav` jde
+        // se zrušením od 17. 10. 2026, jenže rozjížďka eliminovaná dřív —
+        // nebo přinesená importem ročníku — ho má pořád starý. Na stránce
+        // by pak visela bez jakékoliv známky, že se nejela, což je přesně
+        // ta díra v číslování, kvůli které tu zůstává vidět.
         var rozjizdky = vsechny
-            .Select(r => new RozjizdkaDto(r.Cislo, r.StartV, r.Stav, r.DoSerie,
+            .Select(r => new RozjizdkaDto(
+                r.Cislo, r.StartV,
+                Workflow.Plati(r.StavVysledku) ? r.Stav : StavRozjizdky.Zrusena,
+                r.DoSerie,
             [
                 .. podleCisla.GetValueOrDefault(r.Cislo, []).Select(v => new VysledekDto(
                     v.Lod, v.Kategorie, v.Kormidelnik, v.PoradiVCili,

@@ -4402,7 +4402,10 @@ class H(BaseHTTPRequestHandler):
                     "druh": z["druh"],
                     "medailonek": poradatel_zastavky(z),
                     "rozjizdky": [{
-                        "cislo": r["cislo"], "startV": r["startV"], "stav": r["stav"],
+                        "cislo": r["cislo"], "startV": r["startV"],
+                        # Stav se u zrušené dopočítá — rozjížďka eliminovaná
+                        # dřív nebo přinesená importem má uložený pořád starý.
+                        "stav": r["stav"] if plati(r) else "Zrusena",
                         "doSerie": r["doSerie"],
                         # Nepublikovaná rozjížďka na stránce zůstává, jen
                         # prázdná. Zrušená taky (Filip, 17. 10. 2026) — do
