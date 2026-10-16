@@ -102,9 +102,15 @@ public static class PrihlaskyEndpoints
 
         if (!await PoradatelAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
 
-        var (lod, nova, chyba) = await sprava.PrihlasAsync(
+        var (lod, nova, chyba, chcePotvrdit) = await sprava.PrihlasAsync(
             rozsah.ZavodId.Value, vstup, ct, await rozsahy.UzivatelIdAsync(kdo, ct));
-        if (chyba is not null) return Results.BadRequest(new { error = chyba });
+
+        // Potvrzení není chyba vstupu, a obrazovka to musí poznat bez
+        // čtení textu: na 409 se ptá, na 400 jen hlásí.
+        if (chyba is not null)
+            return chcePotvrdit
+                ? Results.Conflict(new { error = chyba, potvrdit = true })
+                : Results.BadRequest(new { error = chyba });
 
         return nova
             ? Results.Created($"/sprava/serie/{serie}/zastavky/{zavod}/lode", lod)

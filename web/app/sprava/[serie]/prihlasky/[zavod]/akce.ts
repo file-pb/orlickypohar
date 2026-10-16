@@ -35,14 +35,19 @@ export async function prihlasAkce(formular: FormData) {
 
   if (!prihlaskaId) redirect(kam(serie, zavod, { chyba: "Vyber loď, kterou chceš přihlásit." }));
 
-  const vysledek = await prihlas(serie, zavod, { prihlaskaId });
+  // Potvrzení pozdní přihlášky u vyhlášené regaty: server se ptá 409
+  // a obrazovka nabídne tlačítko, které se zeptá podruhé s `potvrzeno`.
+  const potvrzeno = text(formular, "potvrzeno") === "ano";
+  const vysledek = await prihlas(serie, zavod, { prihlaskaId }, potvrzeno);
 
   redirect(
     kam(
       serie,
       zavod,
       "chyba" in vysledek
-        ? { chyba: vysledek.chyba }
+        ? vysledek.potvrdit
+          ? { chyba: vysledek.chyba, potvrdit: String(prihlaskaId) }
+          : { chyba: vysledek.chyba }
         : { stav: vysledek.nova ? "prihlasena" : "jiz", lod: vysledek.lod.lod },
     ),
   );

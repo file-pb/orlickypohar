@@ -32,6 +32,8 @@ type Parametry = {
   params: Promise<{ serie: string; zavod: string }>;
   searchParams: Promise<{
     chyba?: string;
+    /** Id přihlášky, u které se server ptá na potvrzení. */
+    potvrdit?: string;
     stav?: string;
     lod?: string;
     nastav?: StavUcasti;
@@ -155,6 +157,19 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
         <p className="hlaska chyba" role="alert">
           {zpravy.chyba}
         </p>
+      )}
+      {/* <b>Server se ptá, obrazovka nabídne odpověď</b>. Bez tohohle by
+          hláška o vyhlášených výsledcích pozdní přihlášku zablokovala
+          úplně — a to je legitimní cesta: loď se domluví telefonem na
+          startu a zapíše se dodatečně. */}
+      {zpravy.potvrdit && (
+        <form action={prihlasAkce} className="formular radkove">
+          <input type="hidden" name="serie" value={serie} />
+          <input type="hidden" name="zavod" value={zavod} />
+          <input type="hidden" name="prihlaskaId" value={zpravy.potvrdit} />
+          <input type="hidden" name="potvrzeno" value="ano" />
+          <button type="submit">Přihlásit i tak</button>
+        </form>
       )}
       {zpravy.stav && !zpravy.chyba && (
         <p className="hlaska hotovo" role="status">

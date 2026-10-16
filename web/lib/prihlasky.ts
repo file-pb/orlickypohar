@@ -136,10 +136,17 @@ export async function prihlas(
   serie: string,
   zavod: string,
   vstup: { prihlaskaId: number } | { novaLod: NovaLod },
-): Promise<{ chyba: string } | { lod: LodNaZastavce; nova: boolean }> {
-  const odpoved = await posli(kam(serie, zavod), vstup);
+  /**
+   * Vím, že výsledky jsou venku, a chci loď přidat i tak. Server se na
+   * to ptá 409, protože přidáním se mění počet přihlášených, ze kterého
+   * se počítají body za kódy a za neúčast.
+   */
+  potvrzeno = false,
+): Promise<{ chyba: string; potvrdit?: boolean } | { lod: LodNaZastavce; nova: boolean }> {
+  const odpoved = await posli(kam(serie, zavod), { ...vstup, potvrzeno });
   if (typeof odpoved === "string") return { chyba: odpoved };
-  if (!odpoved.ok) return { chyba: await hlaska(odpoved) };
+  if (!odpoved.ok)
+    return { chyba: await hlaska(odpoved), potvrdit: odpoved.status === 409 };
 
   return { lod: (await odpoved.json()) as LodNaZastavce, nova: odpoved.status === 201 };
 }

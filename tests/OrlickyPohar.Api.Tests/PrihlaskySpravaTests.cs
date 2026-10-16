@@ -98,7 +98,7 @@ public class PrihlaskySpravaTests(PostgresFixture fixture)
         await using var scope = fixture.Services.CreateAsyncScope();
         var k = await KontextAsync(scope, slug);
 
-        var (lod, nova, chyba) = await k.Sprava.PrihlasAsync(k.ZavodId, new(PrihlaskaId: k.Bora), default);
+        var (lod, nova, chyba, _) = await k.Sprava.PrihlasAsync(k.ZavodId, new(PrihlaskaId: k.Bora), default);
 
         Assert.Null(chyba);
         Assert.True(nova);
@@ -152,7 +152,7 @@ public class PrihlaskySpravaTests(PostgresFixture fixture)
 
         // Anička jede Race. Změna kategorie je rozhodnutí správce, ne
         // vedlejší účinek přihlášky.
-        var (_, _, chyba) = await k.Sprava.PrihlasAsync(
+        var (_, _, chyba, _) = await k.Sprava.PrihlasAsync(
             k.ZavodId, new(NovaLod: new($"Anička {slug}", "Pod7m", "Jan", "Novák")), default);
 
         Assert.Contains("Race", chyba);
@@ -386,5 +386,45 @@ public class PrihlaskySpravaTests(PostgresFixture fixture)
 
         // Přihláška sama zůstává — maže se kontakt, ne historie závodu.
         Assert.True(await db.Ucasti.AnyAsync(u => u.Prihlaska!.Lod!.Nazev == "Stara lod"));
+    }
+
+    /// <summary>
+    /// <b>Po vyhlášení výsledků se na pozdní přihlášku ptáme</b>
+    /// (testovací session, 16. 10. 2026).
+    ///
+    /// <para>
+    /// Pozdní přihláška je podporovaná cesta — loď se domluví telefonem
+    /// na startu. Divné bylo, že se u publikované regaty stala potichu,
+    /// přestože počet přihlášených vstupuje do bodů za kódy (A5.2)
+    /// i za neúčast v seriálu: lodi s DNF v už vyhlášené regatě se tím
+    /// změní zisk, aniž by se kdokoliv dotkl zápisu.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Pozdni_prihlaska_do_vyhlasene_regaty_se_pta()
+    {
+        var slug = "prihlasky-po-publikaci";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var k = await KontextAsync(scope, slug);
+
+        var rozjizdka = await k.Db.Rozjizdky.FirstAsync(r => r.ZavodId == k.ZavodId);
+        rozjizdka.Publikovano = true;
+        await k.Db.SaveChangesAsync();
+
+        var (_, _, chyba, ptaSe) = await k.Sprava.PrihlasAsync(
+            k.ZavodId, new(PrihlaskaId: k.Bora), default);
+        Assert.NotNull(chyba);
+        Assert.True(ptaSe);
+        Assert.False(await k.Db.Ucasti.AnyAsync(
+            u => u.ZavodId == k.ZavodId && u.PrihlaskaId == k.Bora));
+
+        // S potvrzením projde — zakázat ji by vzalo legitimní opravu.
+        var (lod, nova, potiz, _) = await k.Sprava.PrihlasAsync(
+            k.ZavodId, new(PrihlaskaId: k.Bora, Potvrzeno: true), default);
+        Assert.Null(potiz);
+        Assert.True(nova);
+        Assert.NotNull(lod);
     }
 }

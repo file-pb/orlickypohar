@@ -64,7 +64,19 @@ public record PrihlaskyZastavkyDto(
     IReadOnlyList<LodNaZastavceDto> Lode);
 
 /// <summary>Přihlásit loď z ročníku (<c>PrihlaskaId</c>), nebo novou loď. Jedno z toho.</summary>
-public record PrihlaseniVstup(int? PrihlaskaId = null, NovaLodVstup? NovaLod = null);
+public record PrihlaseniVstup(
+    int? PrihlaskaId = null,
+    NovaLodVstup? NovaLod = null,
+    /// <summary>
+    /// Vím, že výsledky jsou venku, a chci loď přidat i tak.
+    /// <para>
+    /// <b>Není to formalita.</b> Počet přihlášených vstupuje do bodů za
+    /// kódy (A5.2) i za neúčast v seriálu, takže přidáním lodi se změní
+    /// zisk lodím, které mají v už vyhlášené regatě DNF nebo OCS — a to
+    /// bez jediného zásahu do zápisu, který je přitom zamčený.
+    /// </para>
+    /// </summary>
+    bool Potvrzeno = false);
 
 public record StavUcastiVstup(StavUcasti Stav, string? Duvod = null);
 
@@ -124,16 +136,28 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
     /// (nebo se obnovila zrušená) — druhé přihlášení téže lodi není chyba,
     /// jen se nic nezmění.
     /// </summary>
-    public async Task<(LodNaZastavceDto? Lod, bool Nova, string? Chyba)> PrihlasAsync(
+    public async Task<(LodNaZastavceDto? Lod, bool Nova, string? Chyba, bool ChcePotvrdit)> PrihlasAsync(
         int zavodId, PrihlaseniVstup vstup, CancellationToken ct, Guid? kdo = null)
     {
         var zavod = await db.Zavody.FirstAsync(z => z.Id == zavodId, ct);
 
         if ((Kalendar.ProcNejdePoharove(zavod.Druh) ?? Prihlasky.ProcNejdeNaZavod(zavod.Stav)) is { } zamceno)
-            return (null, false, zamceno);
+            return (null, false, zamceno, false);
+
+        // <b>Po publikaci se ptáme, nezakazujeme</b> (testovací session,
+        // 16. 10. 2026). Pozdní přihláška je podporovaná cesta — loď se
+        // domluví telefonem na startu a zapíše se dodatečně. Divné bylo,
+        // že se u vyhlášené regaty stala potichu, přestože mění základ,
+        // ze kterého se počítají body.
+        if (!vstup.Potvrzeno
+            && await db.Rozjizdky.AnyAsync(r => r.ZavodId == zavodId && r.Publikovano, ct))
+            return (null, false,
+                "Výsledky téhle regaty jsou venku. Přidáním lodi se změní počet přihlášených, "
+                + "ze kterého se počítají body za kódy a za neúčast v seriálu — i lodím, "
+                + "které už mají výsledek vyhlášený.", true);
 
         if ((vstup.PrihlaskaId is null) == (vstup.NovaLod is null))
-            return (null, false, "Přihlas buď loď z ročníku, nebo novou loď — jedno z toho.");
+            return (null, false, "Přihlas buď loď z ročníku, nebo novou loď — jedno z toho.", false);
 
         Prihlaska prihlaska;
         if (vstup.PrihlaskaId is { } id)
@@ -141,14 +165,14 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
             // Přihláška z cizího ročníku by přihlásila loď, která do něj nepatří.
             if (await db.Prihlasky.FirstOrDefaultAsync(p => p.Id == id && p.SerieId == zavod.SerieId, ct)
                 is not { } nalezena)
-                return (null, false, $"Přihláška {id} do ročníku nepatří.");
+                return (null, false, $"Přihláška {id} do ročníku nepatří.", false);
 
             prihlaska = nalezena;
         }
         else
         {
             var (nalezena, chyba) = await PrihlaskaNoveLodiAsync(zavod.SerieId, vstup.NovaLod!, ct);
-            if (chyba is not null) return (null, false, chyba);
+            if (chyba is not null) return (null, false, chyba, false);
             prihlaska = nalezena!;
         }
 
@@ -178,7 +202,7 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
         await db.SaveChangesAsync(ct);
 
         var lod = (await LodeAsync(zavod.SerieId, zavodId, Prihlasky.Kdo.Poradatel, jenPrihlaska: prihlaska.Id, ct)).Single();
-        return (lod, nova, null);
+        return (lod, nova, null, false);
     }
 
     /// <summary>
