@@ -1040,6 +1040,32 @@ def proc_nejde_prvek(slug, v):
     return None
 
 
+def trat_na_rade(slug):
+    """Přijatá trať rozjížďky, která je na řadě. Opsané z
+    `TratSprava.NaRadeAsync`.
+
+    Pořadí je probíhající → nejbližší plánovaná → poslední dokončená,
+    a když ta svou přijatou trať nemá, spadne se na nejnovější přijatou.
+    Mock to dřív řešil jen tím posledním krokem, takže lokálně ukazoval
+    jinou trať než API — a scénáře o mapce a tabuli by lhaly."""
+    z = next((x for x in D["zavody"] if x["slug"] == slug), None)
+    rozjizdky = [r for r in (z or {}).get("rozjizdky", []) if r.get("stav") != "Zrusena"]
+
+    na_rade = (next((r for r in rozjizdky if r.get("stav") == "Probiha"), None)
+               or next(iter(sorted((r for r in rozjizdky if r.get("stav") == "Planovana"),
+                                   key=lambda r: r["cislo"])), None)
+               or next(iter(sorted((r for r in rozjizdky if r.get("stav") == "Dokoncena"),
+                                   key=lambda r: -r["cislo"])), None))
+
+    if na_rade is not None:
+        jeji = [x for x in TRATE.get(slug) or []
+                if x.get("rozjizdkaId") == na_rade["cislo"] and x["stav"] == "Prijato"]
+        if jeji:
+            return jeji[-1]
+
+    return next((x for x in reversed(TRATE.get(slug) or []) if x["stav"] == "Prijato"), None)
+
+
 def trat_verejna(slug):
     """Trať pro diváka, nebo None. Opsané z `TratSprava.VerejnaAsync`:
     nepřijatá se nevydá vůbec, u přestavby se vrací jen příznak.
@@ -1053,7 +1079,7 @@ def trat_verejna(slug):
         return {"prestavba": True, "prijatoV": None, "cisloRozjizdky": None,
                 "boje": [], "prvky": []}
 
-    t = next((x for x in reversed(TRATE.get(slug) or []) if x["stav"] == "Prijato"), None)
+    t = trat_na_rade(slug)
     if not t:
         return None
 
@@ -1069,16 +1095,22 @@ def trat_verejna(slug):
         id_boje = p["bojeAId"] if ktery == "a" else p["bojeBId"]
         if id_boje:
             b = next((x for x in BOJE.get(slug, []) if x["id"] == id_boje), None)
+            # Fotky jdou ven s tratí od 15. 10. 2026 — závodník podle nich
+            # značku na vodě pozná.
             return None if not b else {"nazev": b["nazev"], "sirka": b["sirka"],
                                        "delka": b["delka"],
                                        "barva": b.get("barva"), "tvar": b.get("tvar"),
-                                       "znaceni": b.get("znaceni")}
+                                       "znaceni": b.get("znaceni"),
+                                       "fotky": b.get("fotky") or []}
         return None
 
     vsechny = sorted(PRVKY.get(t["id"], []), key=lambda p: (p["poradi"], p["id"]))
 
     return {"prestavba": False, "prijatoV": prijato,
             "cisloRozjizdky": t.get("rozjizdkaId"),
+            # Zkrácení jde ven i závodníkovi: musí vidět, kde je teď cíl.
+            "zkracenoUPrvkuId": t.get("zkracenoUPrvkuId"),
+            "zkracenoV": t.get("zkracenoV"),
             "boje": [{"nazev": b["nazev"], "poradi": b["poradi"],
                       "sirka": b["sirka"], "delka": b["delka"],
                       "barva": b.get("barva"), "tvar": b.get("tvar"),
