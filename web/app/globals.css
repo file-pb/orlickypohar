@@ -2619,8 +2619,15 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
    webu (Filip, 15. 10. 2026: *„loga partnerů tam pak zapracujeme jindy, teď
    tam jen zabírají místo informacím"*). */
 body:has(.tabule) > .hlavicka,
-body:has(.tabule) > .partneri,
 body:has(.tabule) > .nahoru { display: none; }
+
+/* <b>Partneři na tabuli zůstávají</b> (Filip, 17. 10. 2026). Visí to
+   přes hospodu celý den, takže je to ta nejlepší plocha, jakou pro ně
+   pohár má — a zároveň to zaplní pruh, který byl předtím prázdný.
+   Vyšší než na webu, ať je logo čitelné od vedlejšího stolu. */
+body:has(.tabule) { --paticka: 7vw; }
+body:has(.tabule) > .partneri { border-top-color: var(--linka); }
+body:has(.tabule) > .partneri img { max-height: 4.4vw; }
 /* Obal webu má kolem obsahu vzduch; panel si ho řídí sám. */
 body:has(.tabule) > .obal { padding: 0; max-width: none; }
 /* Žádné rolování: co se nevejde, se má střídat samo, ne čekat na palec,
@@ -2628,10 +2635,27 @@ body:has(.tabule) > .obal { padding: 0; max-width: none; }
 body:has(.tabule) { overflow: hidden; }
 
 .tabule {
+  /* Místo na pás partnerů si odečítá `body` (`padding-bottom:
+     var(--paticka)`), takže tady se přidávat nesmí — po dvojí rezervaci
+     zůstalo nad logy sto osm pixelů prázdna (17. 10. 2026). */
   padding: 1.5vw 2vw;
-  /* Celá obrazovka, ne jen tolik, kolik je obsahu — na televizi se panel
-     nemá krčit u horního okraje. */
-  min-height: 100vh; min-height: 100dvh;
+  /* <b>Výška je obrazovka, ne obsah.</b> S pouhým `min-height` se
+     stránka při delším pořadí roztáhla za spodní okraj a `overflow:
+     hidden` na `body` zbytek tiše usekl — na 720px obrazovce byla
+     tabule vysoká 1056 px, takže čtyři řádky pořadí nikdo neviděl a nic
+     o nich neřeklo (změřeno 17. 10. 2026). Strop ji drží uvnitř a řádky
+     se do ní vejdou tím, že se semknou. */
+  /* <b>Obrazovka bez pásu partnerů.</b> Pouhé `min-height: 100vh` nechalo
+     stránku narůst podle obsahu a `overflow: hidden` na `body` zbytek
+     tiše usekl — na 720px obrazovce byla tabule vysoká 1056 px, takže
+     čtyři řádky pořadí nikdo neviděl a nic o nich neřeklo. A samotná
+     obrazovka nestačí: pás partnerů je `position: fixed`, takže spodních
+     `--paticka` nepatří obsahu (obojí změřeno 17. 10. 2026).
+
+     Zkoušel jsem to i tak, že výšku rozdělí `body` jako flex — dvakrát
+     to shodilo šířku, protože z tabule udělalo flexovou položku a mřížka
+     sloupců spadla do jednoho. Tohle je jednodušší a drží. */
+  height: calc(100dvh - var(--paticka));
   display: flex; flex-direction: column;
   position: relative;
 }
@@ -2794,7 +2818,8 @@ body:has(.tabule) { overflow: hidden; }
   100% { transform: translate(-38vw, 5vh) scale(0.2); opacity: 0; }
 }
 
-.tabule { padding: 1.5vw 2vw; }
+/* Odsazení řídí blok `.tabule` výš — druhá deklarace tady ho přebíjela
+   a brala s sebou i místo rezervované na pás partnerů (17. 10. 2026). */
 .tabule h2 { font-size: 1.7vw; margin: 0 0 0.6vw; }
 .tabule .stari { font-size: 1.1vw; color: var(--tlumeny); }
 .tabule .stari.zastarale { color: var(--stav-zruseny); }
@@ -2890,18 +2915,56 @@ body:has(.tabule) { overflow: hidden; }
 .tabule .sloupce {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(22vw, 1fr));
+  /* Řádek se musí vejít, ne narůst podle nejvyššího sloupce. Bez
+     `minmax(0, 1fr)` je automatický a pravý sloupec s mapkou protáhl
+     mřížku pod pás partnerů. */
+  grid-template-rows: minmax(0, 1fr);
   gap: 2vw;
   margin-top: 1.5vw;
+  /* <b>Zbytek obrazovky patří obsahu, ne prázdnu</b> (17. 10. 2026).
+     Mřížka se dřív srovnala podle obsahu a u krátké regaty zůstala
+     spodní polovina televize černá. Teď dobere, co zbývá, a řádky si to
+     místo rozdělí — šest lodí se ukáže velkoryse, dvacet se semkne. */
+  flex: 1;
+  min-height: 0;
+}
+.tabule .karusel, .tabule .sloupecek { display: flex; flex-direction: column; min-height: 0; }
+.tabule .karusel .panel { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.tabule .karusel .panel > ol,
+.tabule .karusel .panel > ul {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+/* <b>Řádky si výšku rozdělí rovným dílem</b> (`flex: 1 1 0`), takže se
+   jich deset vejde i tam, kde by se jich při pevné výšce vešlo šest —
+   a u šesti se naopak roztáhnou. Strop je proto, aby se jediná loď
+   neroztáhla přes celou výšku a nevypadalo to jako vada. */
+.tabule .karusel .panel li {
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: 4.5vw;
+  display: flex;
+  align-items: center;
+  gap: 0.6vw;
+  overflow: hidden;
 }
 .tabule li { font-size: 1.4vw; line-height: 1.5; }
 .tabule .dojezd, .tabule .poradi, .tabule .lode { list-style: none; padding: 0; margin: 0.4vw 0 0; }
 .tabule .poradi li, .tabule .lode li { border-bottom: 1px solid var(--linka, #2a2a2a); padding: 0.25vw 0; }
-.tabule .poradi .body { float: right; font-variant-numeric: tabular-nums; }
+/* Body doprava. `float` tu stál od začátku, jenže od chvíle, kdy je řádek
+   flexový (aby rostl do volného místa), plovoucí prvek z řádku vypadne a
+   číslo se nalepí na jméno lodi. `margin-left: auto` dělá totéž a flexu
+   rozumí. */
+.tabule .poradi .body { margin-left: auto; font-variant-numeric: tabular-nums; }
 .tabule .detail { font-size: 1.1vw; color: var(--tlumeny); }
 
 /* „A ještě tři lodě" pod zkráceným pořadím: deset řádků je na telku strop,
    ale pole dvanácti lodí nesmí vypadat jako pole deseti. */
-.tabule .dalsi { font-size: 1.1vw; color: var(--tlumeny); margin: 0.4vw 0 0; }
+/* „A ještě dvě lodě" se nesmí smrsknout — seznam nad ním bere `flex: 1`
+   a tahle věta pak zůstala napůl za okrajem panelu (17. 10. 2026).
+   Je to jediné místo, kde se divák dozví, že nevidí celé pole. */
+.tabule .dalsi { font-size: 1.1vw; color: var(--tlumeny); margin: 0.4vw 0 0; flex: none; }
 
 /* Pípání na klik (Filip, 10. 10. 2026: stavitel se na motoráku tahá se
    závažím a lany). Cíle jsou velké schválně — na houpající se palubě se
@@ -3125,7 +3188,17 @@ body:has(.tabule) { overflow: hidden; }
 .seznam-prvku .ikona-detailu.nakres figcaption { display: none; }
 .seznam-prvku .ikona-detailu.foto img {
   width: 100%;
-  height: 100%;
+  /* <b>Obrazovka bez pásu partnerů.</b> Pouhé `min-height: 100vh` nechalo
+     stránku narůst podle obsahu a `overflow: hidden` na `body` zbytek
+     tiše usekl — na 720px obrazovce byla tabule vysoká 1056 px, takže
+     čtyři řádky pořadí nikdo neviděl a nic o nich neřeklo. A samotná
+     obrazovka nestačí: pás partnerů je `position: fixed`, takže spodních
+     `--paticka` nepatří obsahu (obojí změřeno 17. 10. 2026).
+
+     Zkoušel jsem to i tak, že výšku rozdělí `body` jako flex — dvakrát
+     to shodilo šířku, protože z tabule udělalo flexovou položku a mřížka
+     sloupců spadla do jednoho. Tohle je jednodušší a drží. */
+  height: calc(100dvh - var(--paticka));
   object-fit: cover;
 }
 
