@@ -3,7 +3,7 @@ import { type VerejnaTrat } from "@/lib/api";
 import { NAZVY_SMERU, nazevStrany, nazevTypu, type TypPrvku } from "@/lib/trat";
 import { MapkaTrati, naMapu } from "@/app/mapka-trati";
 import { IkonaPrvku } from "@/app/ikona-prvku";
-import { ZnakVRadku } from "@/app/znak-boje";
+import { NAZVY_ZNACENI, ZnakVRadku, znakPodleVyhlasky } from "@/app/znak-boje";
 import { StitekBoku } from "@/app/stitek-boku";
 import { NahledPrvku } from "@/app/nahled-prvku";
 import { stopaProPrvek, typStavbyProPrvek } from "@/lib/stavba-prvku";
@@ -164,6 +164,19 @@ function PoradiPrvku({
                 tenhle obal, ne `li`: kolečko pořadí je `position: absolute`
                 vysoké 2 rem, takže bez něj přetéká do dalšího řádku a řádky
                 se překrývají (Filip, 15. 10. 2026). */}
+            {/* <b>Modal bez javascriptu</b> (Filip, 16. 10. 2026: *„nepoužívej
+                detail, ale dej ikonky do řádky a pak modal nebo offcanvas"*).
+                Přepínač je tohle zaškrtávátko: ikonky v řádku jsou jeho
+                `label`, pozadí okna taky — takže kliknutí mimo i druhé
+                kliknutí na ikonku zavírá, a stránka si vystačí s CSS.
+                Zůstává zaostřitelné, aby šlo okno otevřít i klávesnicí. */}
+            {/* <b>Vlastní předpona, ne „prvek-"</b>: mapka nad seznamem
+                kreslí značky s `id="prvek-0"` kvůli `:target`, takže
+                `label for="prvek-2"` by mířil na kolečko v SVG a okno by
+                se neotevřelo. Dvě stejná `id` v dokumentu si prohlížeč
+                nestěžuje — jen tiše vybere to první (16. 10. 2026). */}
+            <input type="checkbox" id={`okno-prvku-${p.id}`} className="prepinac-prvku" />
+
             <div className="shrnuti-prvku">
               <IkonaPrvku typ={p.typ} strana={p.strana} />
               {/* Tytéž značky jako ve správě: tvar říká, co je to za prvek,
@@ -184,21 +197,15 @@ function PoradiPrvku({
                   *„náhledy bójí a fotky v trati na regatě"*). Jeden
                   obrázek na konec, ne galerie — řádek má zůstat řádkem.
                   Celé fotky jsou v detailu. */}
-              <NahledyZnacek prvek={p} />
+              <IkonyDetailu prvek={p} pro={`okno-prvku-${p.id}`} />
             </div>
 
             {/* <b>Detail je pro závodníka, ne pro pořadatele</b> (Filip,
                 15. 10. 2026: *„cílem bude co nejlépe a nejjednodušeji
                 informovat závodníky, co je to zač a jak to vypadá"*).
                 Nejsou tu tedy žádné úpravy — jen obrázek, krátký popis
-                a věta o průjezdu.
-
-                `name` dělá z `details` akordeon sám: otevřením jednoho se
-                ostatní zavřou, bez javascriptu, stejně jako ve správě. */}
-            <details className="prvek" name="prvek-trati">
-              <summary>Detail</summary>
-              <DetailPrvku prvek={p} />
-            </details>
+                a věta o průjezdu. */}
+            <OknoPrvku prvek={p} pro={`okno-prvku-${p.id}`} />
           </li>
           );
         })}
@@ -308,8 +315,35 @@ function DetailPrvku({ prvek }: { prvek: VerejnaTrat["prvky"][number] }) {
   const typ = typStavbyProPrvek(prvek.typ);
   const konce = [prvek.a, ...(prvek.b ? [prvek.b] : [])];
 
+  // Co ta značka znamená podle vyhlášky. <b>Je to jiný údaj než bok</b>
+  // (Filip, 16. 10. 2026, a plyne to i z 12. 10.): „pravá strana plavební
+  // dráhy" říká, co bóje na vodě je, kdežto „pravobokem" říká, jak ji
+  // tahle rozjížďka objíždí. Červený válec může být na trati levobok
+  // a přitom pořád značit pravou stranu dráhy — kdo to čte jako jedno
+  // a totéž, objede ho špatně.
+  //
+  // <b>Zadané značení má přednost před dopočtem z barvy a tvaru.</b>
+  // Červená plovatka je na Orlíku pravá strana dráhy, ale do dvojice
+  // „červená + válcová" nespadá — dopočet by u ní mlčel, přestože to
+  // pořadatel u bóje vybral.
+  const vyhlaska = [
+    ...new Set(
+      konce
+        .map(
+          (k) =>
+            (k.znaceni ? NAZVY_ZNACENI[k.znaceni] : "") ||
+            znakPodleVyhlasky(k.barva ?? undefined, k.tvar ?? undefined),
+        )
+        .filter((v): v is string => !!v),
+    ),
+  ];
+
   return (
     <div className="detail-prvku-verejny">
+      <h3>
+        {nazevTypu(prvek.typ)} <span className="znacky">{konce.map((k) => k.nazev).join(" – ")}</span>
+      </h3>
+
       <NahledPrvku
         typ={typ}
         stopa={stopaProPrvek(prvek.typ, prvek.strana)}
@@ -322,6 +356,27 @@ function DetailPrvku({ prvek }: { prvek: VerejnaTrat["prvky"][number] }) {
         smer={prvek.smer ?? null}
         popisek={`${nazevTypu(prvek.typ)} ${konce.map((k) => k.nazev).join(" – ")}`}
       />
+
+      {/* Dva popsané údaje, ne věta (Filip, 16. 10. 2026). Závodník na
+          vodě hledá očima „čím" a „jak", ne souvětí. Řádek chybí, když
+          se nemá co napsat: bóje bez barvy vyhlášku neurčí a start ani
+          cíl se bokem neobjíždí. */}
+      {(vyhlaska.length > 0 || prvek.strana) && (
+        <dl className="udaje-prvku">
+          {vyhlaska.length > 0 && (
+            <>
+              <dt>Značka</dt>
+              <dd>{vyhlaska.join(", ")}</dd>
+            </>
+          )}
+          {prvek.strana && (
+            <>
+              <dt>Obeplutí</dt>
+              <dd>{nazevStrany(prvek.strana)}</dd>
+            </>
+          )}
+        </dl>
+      )}
 
       <p>{POPIS_TYPU[prvek.typ]}</p>
 
@@ -398,21 +453,72 @@ function ZnackyPrvku({
 }
 
 /**
- * Náhled fotky značky v řádku prvku. <b>Jeden obrázek, ne galerie</b> —
- * řádek má po otevření detailu ustoupit, ne soupeřit. Když má prvek dva
- * konce a oba fotku, vezme se první: na řádku jde o to, že fotka je,
- * ne o to kolik jich je.
+ * Ikonky na konci řádku: nákres průjezdu a fotka značky. <b>Obojí otevírá
+ * totéž okno</b> (Filip, 16. 10. 2026) — nejsou to dvě různá tlačítka, ale
+ * dva náhledy toho, co je uvnitř: jak se tudy pluje a jak to vypadá.
+ *
+ * <b>Jedna fotka, ne galerie.</b> Když má prvek dva konce a oba fotku,
+ * vezme se první: na řádku jde o to, že fotka je, ne kolik jich je. Celé
+ * jsou v okně.
  */
-function NahledyZnacek({ prvek }: { prvek: VerejnaTrat["prvky"][number] }) {
-  const prvni = [prvek.a, ...(prvek.b ? [prvek.b] : [])]
-    .flatMap((k) => k.fotky ?? [])
-    .at(0);
-  if (!prvni) return null;
+function IkonyDetailu({
+  prvek,
+  pro,
+}: {
+  prvek: VerejnaTrat["prvky"][number];
+  /** Id zaškrtávátka, které okno otevírá. */
+  pro: string;
+}) {
+  const fotka = [prvek.a, ...(prvek.b ? [prvek.b] : [])].flatMap((k) => k.fotky ?? []).at(0);
 
   return (
-    <span className="nahled-znacky">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={prvni.nahled} alt="" width={prvni.sirka} height={prvni.vyska} loading="lazy" />
+    <span className="vpravo">
+      <label className="ikona-detailu nakres" htmlFor={pro}>
+        <NahledPrvku
+          typ={typStavbyProPrvek(prvek.typ)}
+          stopa={stopaProPrvek(prvek.typ, prvek.strana)}
+          znacky={[prvek.a, ...(prvek.b ? [prvek.b] : [])].map((k) => ({
+            barva: k.barva ?? undefined,
+            tvar: k.tvar ?? undefined,
+            znaceni: k.znaceni ?? undefined,
+            jmeno: k.nazev,
+          }))}
+          smer={prvek.smer ?? null}
+          popisek={`Jak se pluje ${nazevTypu(prvek.typ).toLowerCase()}`}
+        />
+      </label>
+      {fotka && (
+        <label className="ikona-detailu foto" htmlFor={pro}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={fotka.nahled} alt="" width={fotka.sirka} height={fotka.vyska} loading="lazy" />
+        </label>
+      )}
     </span>
+  );
+}
+
+/**
+ * Okno s detailem prvku. <b>Pozadí je taky `label`</b>, takže kliknutí
+ * mimo zavírá — a protože pozadí překryje celý řádek, zavírá i druhé
+ * kliknutí na ikonku. Žádný javascript: na trati u vody je stránka
+ * nejspíš poslední věc, která se stihla načíst.
+ */
+function OknoPrvku({
+  prvek,
+  pro,
+}: {
+  prvek: VerejnaTrat["prvky"][number];
+  pro: string;
+}) {
+  return (
+    <div className="modal-prvku">
+      <label className="pozadi-modalu" htmlFor={pro} aria-label="Zavřít detail" />
+      <div className="okno-modalu" role="dialog" aria-label={nazevTypu(prvek.typ)}>
+        <label className="zavrit-modal" htmlFor={pro} aria-label="Zavřít detail">
+          ×
+        </label>
+        <DetailPrvku prvek={prvek} />
+      </div>
+    </div>
   );
 }

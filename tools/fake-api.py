@@ -1551,14 +1551,22 @@ VEREJNE_UCASTI = ("Prihlasena", "Potvrzena", "Vyloucena")
 S_DUVODEM = ("KDoplneni", "Odmitnuta", "Vyloucena")
 
 
-def proc_nejde_prepnout(ze, na, vysledky):
-    """Pravidla pro pořadatele — falešné API přihlášeného bere jako pořadatele."""
+def proc_nejde_prepnout(ze, na, vysledky, kdo="Poradatel"):
+    """
+    Opsané z `Prihlasky.ProcNejdePrepnout`. `kdo` je `Poradatel`, nebo
+    `Rozhodci` — role rozhoduje, a mock ji do 16. 10. 2026 ignoroval, takže
+    `mozneStavy` nenabídlo `Vyloucena` nikomu a scénář 2.10 nešel lokálně
+    odjet. POST ji přitom vymáhal, takže mock odporoval sám sobě.
+    """
     if ze == na:
         return None
     if na == "Pozadavek":
         return "Požadavek vzniká jen přihláškou z webu. Loď zapiš, nebo vrať k doplnění."
-    if "Vyloucena" in (ze, na):
+    vylouceni = "Vyloucena" in (ze, na)
+    if vylouceni and kdo != "Rozhodci":
         return "O vyloučení ze závodu rozhoduje rozhodčí."
+    if not vylouceni and kdo == "Rozhodci":
+        return "Přihlášky vede pořadatel. Rozhodčí jen vylučuje."
     if vysledky and na in ("Zrusena", "Odmitnuta", "KDoplneni", "Nedostavila"):
         return ("Loď už má na zastávce výsledky, takže přijela. "
                 "Tenhle stav jde nastavit, až výsledky v zápisu rozjížděk smažeš.")
@@ -1582,6 +1590,10 @@ def ma_vysledky(z, lod):
 def lod_na_zastavce(z, lod, smi=True):
     u = next((u for u in z["ucasti"] if u["lod"] == lod), None)
     vysledky = ma_vysledky(z, lod)
+    # Stejné rozhodnutí jako `PrihlaskySprava.Kdo`: pořadatel vede přihlášky,
+    # rozhodčí jen vylučuje, kdo není ani jeden, nepřepíná nic.
+    kdo = ("Poradatel" if smi_ted("Organizator", z["slug"])
+           else "Rozhodci" if smi_ted("Rozhodci") else None)
     return {"prihlaskaId": PRIHLASKA_ID[lod],
             # `LodId` vydává `LodNaZastavceDto` od 4. 10. 2026 a obrazovka
             # přihlášek na něm staví vystavení připojovacího kódu od stolu
@@ -1602,8 +1614,9 @@ def lod_na_zastavce(z, lod, smi=True):
             "historie": (u or {}).get("historie", []),
             "smiSmazat": bool(u) and smi and not vysledky
                          and u["stav"] in ("Pozadavek", "KDoplneni", "Odmitnuta"),
-            "mozneStavy": [] if not u or not smi else
-            [s for s in STAVY_UCASTI if s != u["stav"] and not proc_nejde_prepnout(u["stav"], s, vysledky)]}
+            "mozneStavy": [] if not u or not smi or not kdo else
+            [s for s in STAVY_UCASTI
+             if s != u["stav"] and not proc_nejde_prepnout(u["stav"], s, vysledky, kdo)]}
 
 
 def prihlasky_dto(z):
@@ -3445,13 +3458,18 @@ class H(BaseHTTPRequestHandler):
         na, duvod = telo.get("stav"), (telo.get("duvod") or "").strip()
 
         # Pořadatel vede přihlášky, rozhodčí vylučuje — opsané z `Prihlasky.cs`.
-        if na == "Vyloucena":
+        # Vrátit loď zpátky z vyloučení je taky rozhodnutí o vyloučení, proto
+        # se role posuzuje z obou stavů, ne jen z cílového.
+        if "Vyloucena" in (u["stav"], na):
+            kdo = "Rozhodci"
             if not smi_ted("Rozhodci"):
                 return self.chyba(403, "O vyloučení ze závodu rozhoduje rozhodčí.")
-        elif not smi_ted("Organizator", z["slug"]):
-            return self.chyba(403, "Přihlášky vede pořadatel. Rozhodčí jen vylučuje.")
+        else:
+            kdo = "Poradatel"
+            if not smi_ted("Organizator", z["slug"]):
+                return self.chyba(403, "Přihlášky vede pořadatel. Rozhodčí jen vylučuje.")
 
-        if (chyba := proc_nejde_prepnout(u["stav"], na, ma_vysledky(z, lod))):
+        if (chyba := proc_nejde_prepnout(u["stav"], na, ma_vysledky(z, lod), kdo)):
             return self.chyba(400, chyba)
         if na in S_DUVODEM and not duvod:
             return self.chyba(400, "Napiš důvod.")
