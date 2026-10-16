@@ -288,7 +288,11 @@ Požadavky mlčí, dokud se o ně neřekne: `OP_LOG=1 python3 tools/fake-api.py`
 vypisuje každý na stderr jako `REQ "GET /ja/lode/3/naroky HTTP/1.1" 200`.
 Je to jediný způsob, jak ověřit, **kolik** dotazů která obrazovka posílá —
 a bez něj se to ověřit nedá ani omylem: grep v tichém logu vrátí nulu
-stejně, jako kdyby se dotaz přestal posílat.
+stejně, jako kdyby se dotaz přestal posílat. Počítá se `grep -c "^REQ "`;
+chyby mají vlastní předponu `CHYBA`, aby `send_error` nenafukoval součet
+o řádky, které žádné požadavky nejsou. Značky vkládané do souboru zvenčí
+(`echo >> log`) si mock přepíše, protože píše na svůj offset — měř rozdílem
+počtu řádků před a po, ne vloženými značkami.
 
 ## Appka
 
