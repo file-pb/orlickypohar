@@ -895,7 +895,8 @@ def trat_zaloz(slug, stav="Rozestaveno", nahrazuje=None):
     TRAT_ID[0] += 1
     t = {"id": TRAT_ID[0], "stav": stav, "zalozenaV": ted_iso(),
          "prijatoV": None, "prijal": None, "duvodVraceni": None,
-         "rozjizdkaId": None, "nahrazujeId": nahrazuje}
+         "rozjizdkaId": None, "nahrazujeId": nahrazuje,
+         "zkracenoUPrvkuId": None, "zkracenoV": None, "zkratil": None}
     TRATE.setdefault(slug, []).append(t)
     return t
 
@@ -949,7 +950,8 @@ def trat_na_vyber(slug, t):
     """Řádek nabídky „jede se tahle". Opsané z `TratNaVyberDto`."""
     return {"id": t["id"], "stav": t["stav"], "cisloRozjizdky": t.get("rozjizdkaId"),
             "prijatoV": t["prijatoV"], "pocetPrvku": len(PRVKY.get(t["id"], [])),
-            "odjeta": trat_odjeta(slug, t), "jdePriradit": t.get("rozjizdkaId") is None}
+            "odjeta": trat_odjeta(slug, t), "jdePriradit": t.get("rozjizdkaId") is None,
+            "smiPrijmout": smi_ted("Rozhodci") and proc_nejde_prijmout(t["stav"]) is None}
 
 
 def volna_rozjizdka(slug, cislo):
@@ -1099,7 +1101,14 @@ def trat_dto(slug, t):
             "odjeta": trat_odjeta(slug, t),
             "smiHlasitHotovo": stavitel and proc_nejde_hotovo(t["stav"]) is None,
             "smiPrijmout": rozhodci and proc_nejde_prijmout(t["stav"]) is None,
-            "smiPrestavet": stavitel and proc_nejde_prestavba(t["stav"]) is None}
+            "smiPrestavet": stavitel and proc_nejde_prestavba(t["stav"]) is None,
+            "zkracenoUPrvkuId": t.get("zkracenoUPrvkuId"),
+            "zkracenoV": t.get("zkracenoV"),
+            "zkratil": t.get("zkratil"),
+            # Opsané z `TratSprava.DtoAsync`: zkracuje rozhodčí a jen to,
+            # co se zrovna jede.
+            "smiZkratit": rozhodci and t.get("rozjizdkaId") is not None
+                          and (rozjizdka_trati(slug, t) or {}).get("stav") == "Probiha"}
 
 
 # Pravidla přechodů, opsaná z `Stavba` — i s hláškami, aby se v prohlížeči
@@ -1929,7 +1938,10 @@ def role_pro_cestu(metoda, cesta):
             # Přijmout a vrátit smí jen rozhodčí — přijetí je to, co trať
             # zveřejní. Hlásit hotovo a odemknout smí i organizátor regaty,
             # protože trať přestavuje on a na vodě nemá jak shánět rozhodčího.
-            if zbytek.endswith("/prijeti") or zbytek.endswith("/vraceni"):
+            # Zkrácení taky: je to rozhodnutí rozhodčího za jízdy
+            # (`TratEndpoints`, jenRozhodci: true).
+            if (zbytek.endswith("/prijeti") or zbytek.endswith("/vraceni")
+                    or zbytek.endswith("/zkraceni")):
                 return ("Rozhodci", None)
             return (NAHLED, zavod)
         if "/boje" in zbytek:
@@ -2895,6 +2907,52 @@ class H(BaseHTTPRequestHandler):
         self.end_headers()
         return True
 
+    def trat_zkrat(self, slug, trat_id):
+        """Zkrácení trati. Opsané z `TratSprava.ZkratAsync` — i s pořadím
+        kontrol, aby se v prohlížeči zkoušelo totéž, co uvidí rozhodčí."""
+        if not smi_ted("Rozhodci"):
+            return self.chyba(403, "Trať zkracuje rozhodčí ročníku.")
+
+        t = next((x for x in TRATE.get(slug, []) if x["id"] == trat_id), None)
+        if not t:
+            return self.chyba(400, "Taková trať u téhle regaty není.")
+        if t.get("rozjizdkaId") is None:
+            return self.chyba(400, "Trať nepatří žádné rozjížďce, takže není co zkracovat.")
+
+        r = rozjizdka_trati(slug, t)
+        if (r or {}).get("stav") != "Probiha":
+            return self.chyba(400, "Rozjížďka je dojetá. Trať, podle které se jelo, se už nemění."
+                              if (r or {}).get("stav") == "Dokoncena"
+                              else "Rozjížďka se nejede. Dokud se nevyjelo, stavěj rovnou kratší trať.")
+
+        prvek_id = (self.telo_zadosti() or {}).get("prvek")
+        vsechny = [p["id"] for p in sorted(PRVKY.get(t["id"], []),
+                                           key=lambda p: (p["poradi"], p["id"]))]
+        if prvek_id not in vsechny:
+            return self.chyba(400, "Takový prvek na téhle trati není.")
+        if vsechny.index(prvek_id) == len(vsechny) - 1:
+            return self.chyba(400, "U posledního prvku už cíl je, zkrátit se tam nedá.")
+
+        t["zkracenoUPrvkuId"], t["zkracenoV"] = prvek_id, ted_iso()
+        t["zkratil"] = self.prihlaseny()["zobrazovane"]
+        return self._prazdna_odpoved()
+
+    def trat_zrus_zkraceni(self, slug, trat_id):
+        """Zrušení zkrácení — jede se zase celá trať."""
+        if not smi_ted("Rozhodci"):
+            return self.chyba(403, "Trať zkracuje rozhodčí ročníku.")
+
+        t = next((x for x in TRATE.get(slug, []) if x["id"] == trat_id), None)
+        if not t:
+            return self.chyba(400, "Taková trať u téhle regaty není.")
+        if t.get("zkracenoUPrvkuId") is None:
+            return self.chyba(400, "Tahle trať zkrácená není.")
+        if (rozjizdka_trati(slug, t) or {}).get("stav") != "Probiha":
+            return self.chyba(400, "Rozjížďka se nejede, zkrácení se už nemění.")
+
+        t["zkracenoUPrvkuId"] = t["zkracenoV"] = t["zkratil"] = None
+        return self._prazdna_odpoved()
+
     def seber_boji(self, slug, boje_id):
         """Razítko, ne smazání — pokud na bóji něco visí. Když ne, zmizí
         i ten záznam (`zahod_boji`)."""
@@ -2974,6 +3032,10 @@ class H(BaseHTTPRequestHandler):
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                 r'/trat/(\d+)/klon$', cesta)):
             return self.trat_klon(m.group(1), int(m.group(2)))
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                r'/trat/(\d+)/zkraceni$', cesta)):
+            return self.trat_zkrat(m.group(1), int(m.group(2)))
         if (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                 r'/trat/(hotovo|prijeti|vraceni|prestavba)$', cesta)):
@@ -3722,6 +3784,9 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                           r'/trat/prvky/(\d+)$', urlparse(self.path).path)):
             return self.prvek_smaz(m.group(1), int(m.group(2)))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                          r'/trat/(\d+)/zkraceni$', urlparse(self.path).path)):
+            return self.trat_zrus_zkraceni(m.group(1), int(m.group(2)))
         if (m := re.match(r'^/ja/lode/(\d+)/pripojeni/(\d+)$', urlparse(self.path).path)):
             if not self.headers.get("authorization"):
                 return self.send_error(401)

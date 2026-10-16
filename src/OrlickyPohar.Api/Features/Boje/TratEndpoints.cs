@@ -302,7 +302,8 @@ public static class TratEndpoints
         var (rozsah, odpoved) = await RozsahAsync(serie, zavod, kdo, rozsahy, ct);
         if (odpoved is not null) return odpoved;
 
-        return Results.Ok(await sprava.SeznamAsync(rozsah!.ZavodId!.Value, ct));
+        return Results.Ok(await sprava.SeznamAsync(
+            rozsah!.ZavodId!.Value, await JeRozhodciAsync(kdo, rozsahy, rozsah, ct), ct));
     }
 
     private static async Task<IResult> RozjizdkyAsync(
