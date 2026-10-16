@@ -120,12 +120,18 @@ function hodiny(sekund: number) {
  * z předchozí.
  */
 export function Dojezdy({ snimek }: { snimek: Snimek }) {
-  const vsechny = snimek.rozjizdky.flatMap((r) =>
-    r.poradi
-      .filter((v) => v.misto !== null)
-      .sort((a, b) => a.misto! - b.misto!)
-      .map((v) => ({ ...v, rozjizdka: r.cislo })),
-  );
+  // <b>Zrušená rozjížďka tady nemá co dělat.</b> Dojezdy v ní zůstávají
+  // zapsané a na výsledkové stránce jsou vidět, ale „Právě dojeli" je
+  // hlášení o závodě, ne archiv — po zrušení by tabule dál oznamovala
+  // pořadí, které neplatí (17. 10. 2026).
+  const vsechny = snimek.rozjizdky
+    .filter((r) => r.stav !== "Zrusena")
+    .flatMap((r) =>
+      r.poradi
+        .filter((v) => v.misto !== null)
+        .sort((a, b) => a.misto! - b.misto!)
+        .map((v) => ({ ...v, rozjizdka: r.cislo })),
+    );
   const posledni = vsechny.slice(-3).reverse();
   if (posledni.length === 0) return null;
 

@@ -256,20 +256,42 @@ function polePanely(snimek: Snimek): Panel[] {
           </ul>
         ),
     },
-    {
-      klic: "start",
+    // <b>Startovní listina se stránkuje, neusekává</b> (17. 10. 2026).
+    // Všech dvaadvacet lodí najednou se na obrazovku vejde jen tak, že se
+    // řádky stlačí na patnáct pixelů — změřeno, text se z nich uřízl.
+    // „A ještě dvanáct dalších" tu přitom nedává smysl: před startem se
+    // člověk dívá, jestli tam je jeho loď. Karusel už se střídá, takže
+    // z nich prostě udělá víc panelů a tečky řeknou, že nejsou všechny
+    // naráz.
+    ...stranky(snimek.lode, NA_STRANKU).map((cast, i) => ({
+      klic: `start-${i}`,
       nadpis: `Na startu (${snimek.lode.length})`,
       obsah: (
         <ul className="lode">
-          {snimek.lode.map((l) => (
+          {cast.map((l) => (
             <li key={l.lod}>
               {l.lod} <span className="detail">{l.kormidelnik ?? l.kategorie}</span>
             </li>
           ))}
         </ul>
       ),
-    },
+    })),
   ];
+}
+
+/**
+ * Kolik řádků panel unese, aby zůstaly čitelné přes místnost. Totéž
+ * číslo jako `NEJVIC` v `lib/tabule.ts`, odkud se krátí pořadí — kdyby
+ * se rozešla, jeden sloupec by se stlačil a druhý ne.
+ */
+const NA_STRANKU = 10;
+
+/** Rozdělí seznam na části po `kolik`. Prázdný seznam dá jednu prázdnou. */
+function stranky<T>(vse: T[], kolik: number): T[][] {
+  if (vse.length === 0) return [[]];
+  const ven: T[][] = [];
+  for (let i = 0; i < vse.length; i += kolik) ven.push(vse.slice(i, i + kolik));
+  return ven;
 }
 
 /** Panely pořadí: jeden na třídu, plus celkové, když se počítá. */
