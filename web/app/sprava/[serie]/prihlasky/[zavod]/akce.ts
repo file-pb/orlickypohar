@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import {
+  NOVA,
   prepniLod,
   prihlas,
   smazPrihlasku,
@@ -27,6 +28,7 @@ const kam = (serie: string, zavod: string, zprava: Record<string, string | undef
 };
 
 const text = (formular: FormData, pole: string) => String(formular.get(pole) ?? "").trim();
+
 
 export async function prihlasAkce(formular: FormData) {
   const serie = text(formular, "serie");
@@ -66,12 +68,18 @@ export async function novaLodAkce(formular: FormData) {
     typ: text(formular, "typ") || null,
   };
 
-  const vysledek = await prihlas(serie, zavod, { novaLod });
+  // Totéž potvrzení jako u lodi z ročníku. <b>Nová loď je ten případ, kvůli
+  // kterému otázka vznikla</b> — domluví se telefonem na startu a v ročníku
+  // ještě není. Bez tohohle ji do vyhlášené regaty nešlo přidat vůbec:
+  // otázka přišla, odpovědět na ni nebylo kde (16. 10. 2026).
+  const potvrzeno = text(formular, "potvrzeno") === "ano";
+  const vysledek = await prihlas(serie, zavod, { novaLod }, potvrzeno);
 
   if ("chyba" in vysledek)
     redirect(
       kam(serie, zavod, {
         chyba: vysledek.chyba,
+        potvrdit: vysledek.potvrdit ? NOVA : undefined,
         nova: "1",
         nazev: novaLod.nazev,
         kategorie: novaLod.kategorie,

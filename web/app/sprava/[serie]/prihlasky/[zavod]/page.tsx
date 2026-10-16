@@ -5,6 +5,7 @@ import { Lodka } from "@/app/lodka";
 import { Stav } from "@/app/stav";
 import { Vypadek } from "@/app/vypadek";
 import {
+  NOVA,
   STAVY_UCASTI,
   potrebujeDuvod,
   skupinaStavu,
@@ -32,7 +33,10 @@ type Parametry = {
   params: Promise<{ serie: string; zavod: string }>;
   searchParams: Promise<{
     chyba?: string;
-    /** Id přihlášky, u které se server ptá na potvrzení. */
+    /**
+     * U které přihlášky se server ptá na potvrzení: id přihlášky, nebo
+     * <c>nova</c> u lodi, která v ročníku ještě není a id tedy nemá.
+     */
     potvrdit?: string;
     stav?: string;
     lod?: string;
@@ -162,15 +166,32 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
           hláška o vyhlášených výsledcích pozdní přihlášku zablokovala
           úplně — a to je legitimní cesta: loď se domluví telefonem na
           startu a zapíše se dodatečně. */}
-      {zpravy.potvrdit && (
-        <form action={prihlasAkce} className="formular radkove">
-          <input type="hidden" name="serie" value={serie} />
-          <input type="hidden" name="zavod" value={zavod} />
-          <input type="hidden" name="prihlaskaId" value={zpravy.potvrdit} />
-          <input type="hidden" name="potvrzeno" value="ano" />
-          <button type="submit">Přihlásit i tak</button>
-        </form>
-      )}
+      {zpravy.potvrdit &&
+        (zpravy.potvrdit === NOVA ? (
+          // Nová loď id nemá, takže se celé zadání posílá znovu z adresy —
+          // odtud se předplní i formulář níž. Jedno klepnutí, ne „vyplň to
+          // ještě jednou": loď u startu čeká.
+          <form action={novaLodAkce} className="formular radkove">
+            <input type="hidden" name="serie" value={serie} />
+            <input type="hidden" name="zavod" value={zavod} />
+            <input type="hidden" name="nazev" value={zpravy.nazev ?? ""} />
+            <input type="hidden" name="kategorie" value={zpravy.kategorie ?? ""} />
+            <input type="hidden" name="jmeno" value={zpravy.jmeno ?? ""} />
+            <input type="hidden" name="prijmeni" value={zpravy.prijmeni ?? ""} />
+            <input type="hidden" name="cisloPlachty" value={zpravy.cisloPlachty ?? ""} />
+            <input type="hidden" name="typ" value={zpravy.typ ?? ""} />
+            <input type="hidden" name="potvrzeno" value="ano" />
+            <button type="submit">Založit a přihlásit i tak</button>
+          </form>
+        ) : (
+          <form action={prihlasAkce} className="formular radkove">
+            <input type="hidden" name="serie" value={serie} />
+            <input type="hidden" name="zavod" value={zavod} />
+            <input type="hidden" name="prihlaskaId" value={zpravy.potvrdit} />
+            <input type="hidden" name="potvrzeno" value="ano" />
+            <button type="submit">Přihlásit i tak</button>
+          </form>
+        ))}
       {zpravy.stav && !zpravy.chyba && (
         <p className="hlaska hotovo" role="status">
           {hotovo(zpravy.stav, zpravy.lod, zpravy.nastav)}
