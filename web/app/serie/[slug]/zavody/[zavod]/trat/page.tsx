@@ -76,7 +76,11 @@ export default async function VerejnaTratStranka({ params }: Parametry) {
       ) : (
         <>
           <MapkaTrati prvky={trat.prvky.map(naMapu)} />
-          <PoradiPrvku prvky={trat.prvky} boje={trat.boje} />
+          <PoradiPrvku
+            prvky={trat.prvky}
+            boje={trat.boje}
+            zkracenoU={trat.zkracenoUPrvkuId ?? null}
+          />
           <MimoTrat trat={trat} />
           {trat.prijatoV && (
             <p className="poznamka">
@@ -113,10 +117,19 @@ export default async function VerejnaTratStranka({ params }: Parametry) {
 function PoradiPrvku({
   prvky,
   boje,
+  zkracenoU,
 }: {
   prvky: VerejnaTrat["prvky"];
   /** Kvůli barvě a tvaru značek — konec prvku je nenese. */
   boje: VerejnaTrat["boje"];
+  /**
+   * Prvek, u kterého rozhodčí zkrátil — od něj je tam cíl.
+   *
+   * <b>Zbytek se zešedne, nemaže</b>: podle těch prvků se plulo, než
+   * padlo rozhodnutí, a trať, ze které se tiše ztrácejí značky, je
+   * horší než trať, která řekne, kde končí.
+   */
+  zkracenoU: number | null;
 }) {
   if (prvky.length === 0)
     return (
@@ -129,9 +142,23 @@ function PoradiPrvku({
   return (
     <>
       <h2>Čím se pluje</h2>
+
+      {/* Zkrácení je rozhodnutí za jízdy a veřejná trať je to, co má
+          závodník v telefonu. Bez téhle věty by plul k cíli, který
+          rozhodčí vyškrtl (testovací session, 16. 10. 2026). */}
+      {zkracenoU !== null && (
+        <p className="hlaska zkraceno">
+          <b>Trať je zkrácená.</b> Cíl je u prvku, který je níž označený —
+          prvky za ním se už nejedou.
+        </p>
+      )}
       <ol className="seznam-prvku">
-        {prvky.map((p, i) => (
-          <li key={i}>
+        {prvky.map((p, i) => {
+          const kde = zkracenoU === null ? -1 : prvky.findIndex((x) => x.id === zkracenoU);
+          const tadyCil = zkracenoU !== null && p.id === zkracenoU;
+          const uz = kde >= 0 && i > kde;
+          return (
+          <li key={i} className={uz ? "mimo-zkraceni" : undefined}>
             {/* Shrnutí je tentýž řádek jako ve správě — jedna věta: tvar,
                 číslo, co to je a kterou značkou. Výšku i odsazení nese
                 tenhle obal, ne `li`: kolečko pořadí je `position: absolute`
@@ -151,6 +178,8 @@ function PoradiPrvku({
               </span>
               <StitekBoku typ={p.typ} strana={p.strana} />
               {p.smer && <span className="stitek">{NAZVY_SMERU[p.smer]}</span>}
+              {tadyCil && <span className="stitek zkraceno">tady je cíl</span>}
+              {uz && <span className="stitek">nejede se</span>}
               {/* Náhled fotky vpravo v řádku (Filip, 15. 10. 2026:
                   *„náhledy bójí a fotky v trati na regatě"*). Jeden
                   obrázek na konec, ne galerie — řádek má zůstat řádkem.
@@ -171,7 +200,8 @@ function PoradiPrvku({
               <DetailPrvku prvek={p} />
             </details>
           </li>
-        ))}
+          );
+        })}
       </ol>
     </>
   );

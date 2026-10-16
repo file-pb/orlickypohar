@@ -4008,7 +4008,9 @@ export interface paths {
          */
         post: {
             parameters: {
-                query?: never;
+                query?: {
+                    trat?: number;
+                };
                 header?: never;
                 path: {
                     serie: string;
@@ -4050,7 +4052,9 @@ export interface paths {
          */
         post: {
             parameters: {
-                query?: never;
+                query?: {
+                    trat?: number;
+                };
                 header?: never;
                 path: {
                     serie: string;
@@ -4092,7 +4096,9 @@ export interface paths {
          */
         post: {
             parameters: {
-                query?: never;
+                query?: {
+                    trat?: number;
+                };
                 header?: never;
                 path: {
                     serie: string;
@@ -4644,7 +4650,9 @@ export interface paths {
          */
         post: {
             parameters: {
-                query?: never;
+                query?: {
+                    trat?: number;
+                };
                 header?: never;
                 path: {
                     serie: string;
@@ -5686,6 +5694,8 @@ export interface components {
             odjeta: boolean;
             jdePriradit: boolean;
             otisk: null | string;
+            /** @default false */
+            smiPrijmout: boolean;
         };
         /** @enum {unknown} */
         TvarBoje: "Valcova" | "Kuzelova" | "Kulova" | "SferickyVrsek" | "Plovatka" | "Jiny" | "Plamenak" | null;
@@ -5798,6 +5808,8 @@ export interface components {
             fotky?: null | components["schemas"]["ObrazekDto"][];
         };
         VerejnyPrvekDto: {
+            /** Format: int32 */
+            id: number;
             typ: components["schemas"]["TypPrvku"];
             /** Format: int32 */
             poradi: number;

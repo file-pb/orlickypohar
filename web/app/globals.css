@@ -2534,6 +2534,22 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 .formular.radkove.zkratit button { padding: 0.1rem 0.6rem; font-size: 0.9rem; }
 .stitek.zkraceno { border-color: var(--stav-zruseny); color: var(--stav-zruseny); }
 
+/* Zkrácená trať: prvky za cílem zůstávají, jen zešednou. Mizet nesmějí —
+   podle nich se plulo, než padlo rozhodnutí. */
+.seznam-prvku li.mimo-zkraceni { opacity: 0.5; }
+.hlaska.zkraceno { border-left: 3px solid var(--stav-zruseny); }
+
+/* Co s tratí u rozjížďky: schválit, vrátit, odpojit. Odpojení a vrácení
+   jsou rozbalovací — jsou to kroky zpátky, ne rovnocenné volby. */
+.co-s-trati { display: inline-flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.co-s-trati form.radkove,
+.formular.radkove.postavit-trat {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  margin: 0; padding: 0; background: none; border: none;
+}
+.co-s-trati button, .formular.radkove.postavit-trat button { padding: 0.1rem 0.6rem; }
+.co-s-trati details > summary { cursor: pointer; font-size: 0.9rem; }
+
 /* Náhled fotky na konci řádku prvku: malý čtvereček, ať řádek zůstane
    řádkem. Fotky celé jsou až v detailu. */
 .shrnuti-prvku .nahled-znacky { margin-left: auto; flex: none; line-height: 0; }

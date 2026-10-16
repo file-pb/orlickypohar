@@ -8,7 +8,7 @@ import {
   zaradDoPoharu,
   type StavVysledku,
 } from "@/lib/vysledky";
-import { klonujTrat, nactiTrate, priradTrat } from "@/lib/trat";
+import { klonujTrat, nactiTrate, odvazTrat, posunTrat, priradTrat, zalozDalsiTrat } from "@/lib/trat";
 
 /**
  * Zápisy z obrazovky výsledků. Serverové akce, ne javascript v prohlížeči:
@@ -135,4 +135,78 @@ export async function tratRozjizdceAkce(formular: FormData) {
     : await klonujTrat(serie, zavod, trat, cislo, "Hotovo");
 
   redirect(kam(serie, zavod, chyba ? { chyba } : { stav: "trat-prirazena" }));
+}
+
+/**
+ * Odpojí trať od rozjížďky (Filip, 15. 10. 2026: *„take možnost ji
+ * odepnout z rozjížďky… jakmile je rozjížďka odjetá, trať nepůjde
+ * odepnout"*).
+ *
+ * <b>Odjetou hlídá server</b>, obrazovka ji jen nenabízí. Dvě místa,
+ * která o témže rozhodují zvlášť, se dřív nebo později rozejdou.
+ */
+export async function odpojTratAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const trat = Number(formular.get("trat") ?? 0);
+  const potvrzeno = String(formular.get("potvrzeno") ?? "") === "ano";
+  if (!trat) redirect(kam(serie, zavod, { chyba: "Kterou trať odpojit?" }));
+
+  const { chyba, potvrdit } = await odvazTrat(serie, zavod, trat, potvrzeno);
+  if (!chyba) redirect(kam(serie, zavod, { stav: "trat-odpojena" }));
+
+  // Server se ptá, ne odmítá: dřív to obrazovka hlásila jako chybu
+  // a uživatel neměl jak odpovědět.
+  redirect(kam(serie, zavod, potvrdit ? { potvrdit: String(trat), chyba } : { chyba }));
+}
+
+/**
+ * Založí rozjížďce novou prázdnou trať a odejde ji stavět.
+ *
+ * <b>Založit a přiřadit v jednom</b>: trať bez vazby by se musela
+ * přiřazovat zvlášť a právě ten krok navíc byl na přiřazování
+ * matoucí.
+ */
+export async function novaTratAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const cislo = Number(formular.get("cislo") ?? 0);
+  if (!cislo) redirect(kam(serie, zavod, { chyba: "Pro kterou rozjížďku?" }));
+
+  const chyba = await zalozDalsiTrat(serie, zavod);
+  if (chyba) redirect(kam(serie, zavod, { chyba }));
+
+  // `null` je výpadek čtení, ne „žádné tratě" — rozlišuje to `nactiTrate`.
+  const trate = await nactiTrate(serie, zavod);
+  if (!trate) redirect(kam(serie, zavod, { chyba: "Tratě se teď nedaří načíst. Zkus to za chvíli." }));
+
+  const prazdna = trate.find((t) => t.cisloRozjizdky === null && t.pocetPrvku === 0);
+  if (!prazdna) redirect(kam(serie, zavod, { chyba: "Prázdná trať se nenašla." }));
+
+  const potiz = await priradTrat(serie, zavod, prazdna.id, cislo);
+  if (potiz) redirect(kam(serie, zavod, { chyba: potiz }));
+
+  // Rovnou na stavbu: kdo zakládá trať, jde ji postavit.
+  redirect(`/sprava/${encodeURIComponent(serie)}/boje/${encodeURIComponent(zavod)}?trat=${prazdna.id}`);
+}
+
+/**
+ * Rozhodčí přijme trať rozjížďky, nebo ji vrátí stavitelům — <b>rovnou
+ * od rozjížďky</b> (Filip, 15. 10. 2026: *„je-li vybrána a připojena,
+ * tak musí umožnit její schválení nebo zadání k přepracování"*).
+ * Chodit kvůli tomu na obrazovku bójí znamenalo odejít od zápisu.
+ */
+export async function stavTratiURozjizdkyAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const trat = Number(formular.get("trat") ?? 0);
+  const krok = String(formular.get("krok") ?? "");
+  const duvod = String(formular.get("duvod") ?? "").trim();
+
+  if (!trat) redirect(kam(serie, zavod, { chyba: "Které trati?" }));
+  if (krok !== "prijeti" && krok !== "vraceni")
+    redirect(kam(serie, zavod, { chyba: "Neznámý krok se stavem trati." }));
+
+  const chyba = await posunTrat(serie, zavod, krok, duvod || undefined, trat);
+  redirect(kam(serie, zavod, chyba ? { chyba } : { stav: `trat-${krok}` }));
 }
