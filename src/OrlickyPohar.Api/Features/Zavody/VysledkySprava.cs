@@ -145,9 +145,51 @@ public class VysledkySprava(AppDbContext db)
 
         if (na == StavVysledku.KRevizi) rozjizdka.DuvodRevize = duvod!.Trim();
 
+        // <b>Zrušená rozjížďka se musí poznat i na vodě, ne jen v zápisu.</b>
+        // Eliminace a zrušení jsou dvě strany téhož: rozjížďka, která
+        // neplatí nikde, se nejede. Do 16. 10. 2026 se `Stav` neměnil,
+        // takže `StavRozjizdky.Zrusena` nenastal nikdy a semafor na tabuli
+        // svítil zeleně i u rozjížďky, kterou rozhodčí vyndal.
+        //
+        // Drží se to tady, u jediného přechodu stavu, schválně: druhá
+        // cesta k témuž by se s touhle rozešla při první změně.
+        if (na == StavVysledku.Eliminovano)
+            rozjizdka.Stav = StavRozjizdky.Zrusena;
+        else if (rozjizdka.StavVysledku == StavVysledku.Eliminovano)
+            rozjizdka.Stav = await StavPodleZapisuAsync(rozjizdka, ct);
+
         rozjizdka.StavVysledku = na;
         await db.SaveChangesAsync(ct);
         return null;
+    }
+
+    /// <summary>
+    /// Kam rozjížďka patří, když přestala být zrušená: podle toho, jestli
+    /// odstartovala a jestli mají všechny lodě na vodě výsledek. Počítá to
+    /// <see cref="Zapis.StavPoZapisu"/>, tedy tatáž funkce jako po uložení
+    /// zápisu — jiný dopočet by se s ní rozešel.
+    /// <para>
+    /// Vychází se z <see cref="StavRozjizdky.Planovana"/>, protože
+    /// <c>StavPoZapisu</c> zrušenou rozjížďku schválně nechává být.
+    /// </para>
+    /// </summary>
+    private async Task<StavRozjizdky> StavPodleZapisuAsync(
+        Rozjizdka rozjizdka, CancellationToken ct)
+    {
+        var sVysledkem = await db.Vysledky
+            .Where(v => v.RozjizdkaId == rozjizdka.Id)
+            .Select(v => v.UcastId)
+            .ToListAsync(ct);
+
+        var lode = await db.Ucasti
+            .Where(u => u.ZavodId == rozjizdka.ZavodId)
+            .Select(u => new { u.Id, u.Stav })
+            .ToListAsync(ct);
+
+        return Zapis.StavPoZapisu(
+            StavRozjizdky.Planovana,
+            rozjizdka.StartV is not null,
+            lode.Select(u => (u.Stav, sVysledkem.Contains(u.Id))));
     }
 
     /// <summary>

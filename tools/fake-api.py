@@ -1443,13 +1443,37 @@ def proc_nejde_vysledek(ze, na, spravce):
             + " → ".join(NAZVY_VYSLEDKU[s] for s in RADA_VYSLEDKU) + ".")
 
 
-def kdo_smi_na_stav(na):
-    """Čí podpis je který stupeň. Opsané z `Workflow.KdoSmi`."""
+def kdo_smi_na_stav(ze, na):
+    """
+    Čí podpis je který stupeň. Opsané z `Workflow.KdoSmi`.
+
+    Zrušení (`Eliminovano`) je stranou té řady: „nefouká, rušíme" dělá
+    pořadatel, dokud je zápis otevřený, pak rozhodčí a správce. Zpátky
+    z eliminace taky rozhodčí — zrušená rozjížďka otevřený zápis není.
+    """
+    if "Eliminovano" in (ze, na):
+        return "Organizator" if ze in OTEVRENY else "Rozhodci"
     if na == "Navrzeno":
         return "Organizator"
     if na in ("Overeno", "Schvaleno", "KRevizi"):
         return "Rozhodci"
     return "Spravce"
+
+
+def stav_po_zapisu(z, r):
+    """
+    Kam rozjížďka patří podle zápisu — opsané z `Zapis.StavPoZapisu`.
+    Zrušenou nechává být; o tu se stará ten, kdo ji ruší.
+    """
+    if r.get("stav") == "Zrusena":
+        return r["stav"]
+    jedou = {u["lod"] for u in z["ucasti"] if u.get("stav") in VEREJNE_UCASTI}
+    maji = {v["lod"] for v in r.get("vysledky", [])}
+    if jedou and jedou <= maji:
+        return "Dokoncena"
+    if r.get("stav") == "Dokoncena":
+        return "Probiha" if r.get("startV") else "Planovana"
+    return r["stav"]
 
 
 def kdo_smi_do_serie(stav):
@@ -1478,7 +1502,7 @@ def rozjizdka_radek(r, zavod=None):
             "mozneStavy": [s for s in VSECHNY_VYSLEDKY
                            if s != r["stavVysledku"]
                            and not proc_nejde_vysledek(r["stavVysledku"], s, spravce)
-                           and smi(kdo_smi_na_stav(s), zavod)],
+                           and smi(kdo_smi_na_stav(r["stavVysledku"], s), zavod)],
             "smiZapisovat": organizator and r["stavVysledku"] in OTEVRENY,
             "smiDoPoharu": smi(kdo_smi_do_serie(r["stavVysledku"]), zavod),
             "maPapir": bool(r.get("papir"))}
@@ -3293,7 +3317,7 @@ class H(BaseHTTPRequestHandler):
             return self.odpoved(rozjizdka_radek(r, zavod))
 
         na, duvod = vstup.get("stav"), (vstup.get("duvod") or "").strip()
-        if na in VSECHNY_VYSLEDKY and not muze(kdo_smi_na_stav(na), zavod):
+        if na in VSECHNY_VYSLEDKY and not muze(kdo_smi_na_stav(r["stavVysledku"], na), zavod):
             return self.chyba(403, f'Stav „{NAZVY_VYSLEDKU[na]}" je podpis někoho jiného.')
         if (chyba := proc_nejde_vysledek(r["stavVysledku"], na, muze("Spravce"))):
             return self.chyba(400, chyba)
@@ -3303,6 +3327,16 @@ class H(BaseHTTPRequestHandler):
 
         if na == "KRevizi":
             r["duvodRevize"] = duvod
+
+        # Zrušená rozjížďka se nejede — `stav` jde s eliminací, jinak by
+        # `Zrusena` nenastalo nikdy a semafor na tabuli by o zrušení
+        # nevěděl. Opsané z `VysledkySprava.PrepniStavAsync`.
+        if na == "Eliminovano":
+            r["stav"] = "Zrusena"
+        elif r["stavVysledku"] == "Eliminovano":
+            r["stav"] = "Planovana"
+            r["stav"] = stav_po_zapisu(z, r)
+
         r["stavVysledku"] = na
         return self.odpoved(rozjizdka_radek(r, zavod))
 
@@ -3379,12 +3413,7 @@ class H(BaseHTTPRequestHandler):
         # opsané z `ZapisSprava.PrepocitejStav`. Počítají se jen lodě, které
         # jedou (`VEREJNE_UCASTI`); odhlášená ani nedostavená se nečeká.
         if r.get("stav") != "Zrusena":
-            jedou = {u["lod"] for u in z["ucasti"] if u.get("stav") in VEREJNE_UCASTI}
-            maji = {v["lod"] for v in r["vysledky"]}
-            if jedou and jedou <= maji:
-                r["stav"] = "Dokoncena"
-            elif r.get("stav") == "Dokoncena":
-                r["stav"] = "Probiha" if r.get("startV") else "Planovana"
+            r["stav"] = stav_po_zapisu(z, r)
 
         return self.odpoved(zapis_dto(z, r))
 

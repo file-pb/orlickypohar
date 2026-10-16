@@ -45,12 +45,33 @@ public static class Workflow
     public static Role KdoSmiDoSerie(StavVysledku stav) =>
         Zapis.Otevreny(stav) ? Role.Organizator : Role.Rozhodci;
 
-    public static Role KdoSmi(StavVysledku na) => na switch
-    {
-        StavVysledku.Navrzeno => Role.Organizator,
-        StavVysledku.Overeno or StavVysledku.Schvaleno or StavVysledku.KRevizi => Role.Rozhodci,
-        _ => Role.Spravce,
-    };
+    /// <summary>
+    /// Kdo smí posunout výsledky <paramref name="ze"/> na <paramref name="na"/>.
+    /// <para>
+    /// <b>Eliminace je zrušení rozjížďky a rozhoduje o ní stav zápisu</b>
+    /// (Filip, 16. 10. 2026: *„pořadatel dokud je zápis otevřený, pak
+    /// rozhodčí a správce"*). „Nefouká, rušíme" je rozhodnutí na vodě a
+    /// dělá ho pořadatel regaty, dokud jsou čísla rozepsaná. Jakmile je
+    /// někdo podepsal, je vyndání rozjížďky zásah do poháru a patří
+    /// rozhodčímu — tatáž úvaha jako u <see cref="KdoSmiDoSerie"/>.
+    /// </para>
+    /// <para>
+    /// <b>Zpátky z eliminace taky rozhodčí.</b> Eliminovaná rozjížďka není
+    /// otevřený zápis, takže pravidlo výš vychází na rozhodčího samo — a
+    /// je to ta opatrnější strana: co rozhodčí vyndal, ať pořadatel
+    /// nevrací. Filipova věta tenhle směr neřeší, tohle je dopočet z ní.
+    /// </para>
+    /// </summary>
+    public static Role KdoSmi(StavVysledku ze, StavVysledku na) =>
+        ze == StavVysledku.Eliminovano || na == StavVysledku.Eliminovano
+            ? Zapis.Otevreny(ze) ? Role.Organizator : Role.Rozhodci
+            : na switch
+            {
+                StavVysledku.Navrzeno => Role.Organizator,
+                StavVysledku.Overeno or StavVysledku.Schvaleno or StavVysledku.KRevizi
+                    => Role.Rozhodci,
+                _ => Role.Spravce,
+            };
 
     /// <summary>
     /// Proč výsledky takhle posunout nejde — nebo <c>null</c>, když to jde.

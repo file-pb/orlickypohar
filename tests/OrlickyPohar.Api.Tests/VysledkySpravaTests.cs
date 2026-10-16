@@ -136,6 +136,38 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         Assert.Single(poradi.Zastavky);
     }
 
+    /// <summary>
+    /// <b>Zrušená rozjížďka se pozná i na vodě, ne jen v zápisu.</b> Do
+    /// 16. 10. 2026 se `Stav` při eliminaci neměnil, takže
+    /// <see cref="StavRozjizdky.Zrusena"/> nenastal nikdy a semafor na
+    /// tabuli svítil zeleně i u rozjížďky, kterou rozhodčí vyndal.
+    /// </summary>
+    [Fact]
+    public async Task Zruseni_sebere_rozjizdku_i_z_vody_a_navrat_ji_vrati()
+    {
+        var slug = "wf-zruseni";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var sprava = scope.ServiceProvider.GetRequiredService<VysledkySprava>();
+
+        var zavodId = await db.Zavody.Where(z => z.Serie!.Slug == slug).Select(z => z.Id).FirstAsync();
+        var rozjizdka = (await sprava.NajdiAsync(zavodId, 1, default))!;
+        var puvodni = rozjizdka.Stav;
+
+        Assert.Null(await sprava.PrepniStavAsync(
+            rozjizdka, StavVysledku.Eliminovano, null, spravce: true, default));
+        Assert.Equal(StavRozjizdky.Zrusena, rozjizdka.Stav);
+
+        // Zpátky se z eliminace chodí jako návrh a rozjížďka se vrací tam,
+        // kam patří podle zápisu — ne natvrdo na „plánovaná".
+        Assert.Null(await sprava.PrepniStavAsync(
+            rozjizdka, StavVysledku.Navrzeno, null, spravce: true, default));
+        Assert.NotEqual(StavRozjizdky.Zrusena, rozjizdka.Stav);
+        Assert.Equal(puvodni, rozjizdka.Stav);
+    }
+
     [Fact]
     public async Task Vraceni_k_revizi_si_pamatuje_duvod()
     {

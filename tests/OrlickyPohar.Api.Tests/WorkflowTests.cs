@@ -114,10 +114,39 @@ public class WorkflowTests
     [InlineData(StavVysledku.Schvaleno, Role.Rozhodci)]
     [InlineData(StavVysledku.KRevizi, Role.Rozhodci)]
     [InlineData(StavVysledku.Potvrzeno, Role.Spravce)]
-    [InlineData(StavVysledku.Eliminovano, Role.Spravce)]
     public void Zapisuje_poradatel_schvaluje_rozhodci_potvrzuje_spravce(StavVysledku na, Role kdo)
     {
-        Assert.Equal(kdo, Workflow.KdoSmi(na));
+        Assert.Equal(kdo, Workflow.KdoSmi(StavVysledku.Navrzeno, na));
+    }
+
+    /// <summary>
+    /// <b>Zrušit rozjížďku smí pořadatel, dokud je zápis otevřený</b>
+    /// (Filip, 16. 10. 2026). „Nefouká, rušíme" je rozhodnutí na vodě;
+    /// jakmile jsou čísla podepsaná, je to zásah do poháru a patří
+    /// rozhodčímu.
+    /// </summary>
+    [Theory]
+    [InlineData(StavVysledku.Navrzeno, Role.Organizator)]
+    [InlineData(StavVysledku.KRevizi, Role.Organizator)]
+    [InlineData(StavVysledku.Overeno, Role.Rozhodci)]
+    [InlineData(StavVysledku.Schvaleno, Role.Rozhodci)]
+    [InlineData(StavVysledku.Potvrzeno, Role.Rozhodci)]
+    public void Rusi_poradatel_dokud_jsou_cisla_rozepsana(StavVysledku ze, Role kdo)
+    {
+        Assert.Equal(kdo, Workflow.KdoSmi(ze, StavVysledku.Eliminovano));
+    }
+
+    /// <summary>
+    /// Zpátky z eliminace rozhoduje rozhodčí: zrušená rozjížďka není
+    /// otevřený zápis. Filipova věta tenhle směr neřeší — je to dopočet
+    /// z ní, a ta opatrnější strana: co rozhodčí vyndal, ať pořadatel
+    /// nevrací.
+    /// </summary>
+    [Fact]
+    public void Z_eliminace_vraci_rozhodci()
+    {
+        foreach (var na in Enum.GetValues<StavVysledku>().Where(s => s != StavVysledku.Eliminovano))
+            Assert.Equal(Role.Rozhodci, Workflow.KdoSmi(StavVysledku.Eliminovano, na));
     }
 
     [Theory]
@@ -143,18 +172,29 @@ public class WorkflowTests
         var organizator = new[] { new UdeleneRole(Role.Organizator, 1, 7) };
         var rozhodci = new[] { new UdeleneRole(Role.Rozhodci, 1) };
 
-        Assert.True(Prava.Smi(organizator, new Pozadavek(Workflow.KdoSmi(StavVysledku.Navrzeno), 1, 7)));
-        Assert.False(Prava.Smi(organizator, new Pozadavek(Workflow.KdoSmi(StavVysledku.Overeno), 1, 7)));
+        var zNavrhu = (StavVysledku na) => new Pozadavek(
+            Workflow.KdoSmi(StavVysledku.Navrzeno, na), 1, 7);
 
-        Assert.True(Prava.Smi(rozhodci, new Pozadavek(Workflow.KdoSmi(StavVysledku.Schvaleno), 1, 7)));
-        Assert.False(Prava.Smi(rozhodci, new Pozadavek(Workflow.KdoSmi(StavVysledku.Navrzeno), 1, 7)));
+        Assert.True(Prava.Smi(organizator, zNavrhu(StavVysledku.Navrzeno)));
+        Assert.False(Prava.Smi(organizator, zNavrhu(StavVysledku.Overeno)));
 
-        // A potvrdit ani eliminovat nesmí ani jeden.
-        foreach (var stav in new[] { StavVysledku.Potvrzeno, StavVysledku.Eliminovano })
-        {
-            Assert.False(Prava.Smi(organizator, new Pozadavek(Workflow.KdoSmi(stav), 1, 7)));
-            Assert.False(Prava.Smi(rozhodci, new Pozadavek(Workflow.KdoSmi(stav), 1, 7)));
-        }
+        Assert.True(Prava.Smi(rozhodci, zNavrhu(StavVysledku.Schvaleno)));
+        Assert.False(Prava.Smi(rozhodci, zNavrhu(StavVysledku.Navrzeno)));
+
+        // Potvrdit nesmí ani jeden — to je správcův podpis.
+        Assert.False(Prava.Smi(organizator, zNavrhu(StavVysledku.Potvrzeno)));
+        Assert.False(Prava.Smi(rozhodci, zNavrhu(StavVysledku.Potvrzeno)));
+
+        // Zrušit rozepsanou rozjížďku ale pořadatel smí a rozhodčí ne —
+        // dokud nikdo čísla nepodepsal, je to rozhodnutí na vodě.
+        Assert.True(Prava.Smi(organizator, zNavrhu(StavVysledku.Eliminovano)));
+        Assert.False(Prava.Smi(rozhodci, zNavrhu(StavVysledku.Eliminovano)));
+
+        // U podepsaných naopak.
+        var zPotvrzeneho = new Pozadavek(
+            Workflow.KdoSmi(StavVysledku.Potvrzeno, StavVysledku.Eliminovano), 1, 7);
+        Assert.False(Prava.Smi(organizator, zPotvrzeneho));
+        Assert.True(Prava.Smi(rozhodci, zPotvrzeneho));
     }
 
     [Fact]
