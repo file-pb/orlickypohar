@@ -3418,6 +3418,27 @@ class H(BaseHTTPRequestHandler):
             if lod and lod in KAT and KAT[lod] != kategorie:
                 return self.chyba(400, f"Loď {nazev} už v ročníku je, a to v kategorii {KAT[lod]}. "
                                        "Přihlas ji ze seznamu lodí ročníku.")
+
+        u = next((u for u in z["ucasti"] if u["lod"] == lod), None) if lod else None
+
+        # Pozdní přihláška do vyhlášené regaty se ptá — opsané
+        # z `PrihlaskySprava.PrihlasAsync`. Ptá se jen na to, co počet
+        # přihlášených opravdu zvýší, proto `PRIHLASENA`: vrátit loď
+        # z „nedostavila se" nebo z vyloučení počet nemění.
+        #
+        # <b>Až tady, před každou změnou.</b> Odmítnutá přihláška nesmí
+        # nechat v ročníku novou loď — v API se neuloží vůbec nic.
+        if ((u is None or u["stav"] not in PRIHLASENA)
+                and not vstup.get("potvrzeno")
+                and any(r.get("publikovano") for r in z["rozjizdky"])):
+            return self.chyba(
+                409,
+                "Výsledky téhle regaty jsou venku. Přidáním lodi se změní počet přihlášených, "
+                "ze kterého se počítají body za kódy a za neúčast v seriálu — i lodím, "
+                "které už mají výsledek vyhlášený.")
+
+        if vstup.get("novaLod"):
+            n = vstup["novaLod"]
             if not lod:
                 # Nová loď i s majitelem, jako v API. Klíče jsou jen pro mock.
                 lod = f"nova-{len(LODE) + 1}"
@@ -3433,7 +3454,6 @@ class H(BaseHTTPRequestHandler):
                 PRIHLASKA_ID[lod] = max(PRIHLASKA_ID.values()) + 1
                 LOD_PODLE_ID[PRIHLASKA_ID[lod]] = lod
 
-        u = next((u for u in z["ucasti"] if u["lod"] == lod), None)
         if u and u["stav"] in VEREJNE_UCASTI:
             return self.odpoved(lod_na_zastavce(z, lod))
         if u:

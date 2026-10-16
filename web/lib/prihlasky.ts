@@ -69,7 +69,9 @@ export const STAVY_UCASTI: Record<StavUcasti, { stitek: string; tlacitko: string
   Vyloucena: {
     stitek: "vyloučená",
     tlacitko: "Vyloučit",
-    popis: "Vyloučená ze závodu rozhodčím. Na webu je s poznámkou.",
+    // Důvod je interní: veřejné `LodNaZavodeDto` nese jen `vyloucena`,
+    // žádný text. „Protest přijat" taky není věta na web.
+    popis: "Vyloučená ze závodu rozhodčím. Na webu je štítek, důvod ne.",
   },
 };
 

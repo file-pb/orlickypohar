@@ -3,6 +3,7 @@ using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Bodovani;
 using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Serial;
+using Vypocet = OrlickyPohar.Api.Features.Bodovani.Bodovani;
 using Kontakty = OrlickyPohar.Api.Features.Lode.Kontakty;
 using KontaktOsoby = OrlickyPohar.Api.Features.Lode.KontaktOsoby;
 
@@ -177,10 +178,13 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
         // <b>Až tady, ne na začátku.</b> Zeptat se dřív znamenalo ptát se
         // i na požadavek, který stejně neprojde — a místo „loď patří do
         // jiné kategorie" by přišla otázka o publikaci.
-        var pribude = ucast is null
-                      || ucast.Stav is StavUcasti.Zrusena or StavUcasti.Pozadavek
-                          or StavUcasti.KDoplneni or StavUcasti.Odmitnuta
-                          or StavUcasti.Nedostavila;
+        // <b>Přibude ten, kdo v počtu přihlášených ještě není.</b> Výčet
+        // tu stál opsaný a hned se rozešel: „nedostavila se" do počtu
+        // patří (<see cref="Vypocet.PrihlasenaDoZavodu"/>), takže
+        // přepnutí zpátky na přihlášenou nic nepřidává a ptát se nemá —
+        // přesně tak, jako se neptá druhé přihlášení téže lodi. Čte se
+        // to proto z téhož seznamu, ze kterého se počítá.
+        var pribude = ucast is null || !Vypocet.PrihlasenaDoZavodu.Contains(ucast.Stav);
 
         if (pribude && !vstup.Potvrzeno
             && await db.Rozjizdky.AnyAsync(r => r.ZavodId == zavodId && r.Publikovano, ct))
