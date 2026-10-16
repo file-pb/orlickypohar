@@ -1015,9 +1015,18 @@ header.hlavicka .jen-uzke { display: none; }
 
 /* Plus v záložkách: zabalené je to jen znaménko, rozbalené výběr
    rozjížďky. Bez javascriptu, jako zbytek správy. */
+/* Plus jako plus: kulaté, stejně vysoké jako záložky, obsah na středu.
+   Dřív to bylo znaménko přilepené vlevo nahoře (Filip, 15. 10. 2026:
+   *„pluska nahoře i dole vyveď nějak hezky a vystředěně"*). */
 .zalozky-trati .pridat-trat > summary {
   list-style: none; cursor: pointer; user-select: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px; padding: 0 0.6rem;
+  font-size: 1.25rem; line-height: 1; color: var(--tlumeny);
+  border: 1px solid var(--linka); border-radius: 10px;
 }
+.zalozky-trati .pridat-trat > summary:hover { color: var(--text); }
+.zalozky-trati .pridat-trat[open] > summary { color: var(--text); }
 .zalozky-trati .pridat-trat > summary::-webkit-details-marker { display: none; }
 .zalozky-trati .pridat-trat[open] { flex-basis: 100%; }
 .zalozky-trati .pridat-trat .formular.radkove {
@@ -2533,6 +2542,12 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 .formular.radkove.zkratit { margin: 0 0 0.4rem 2.5rem; padding: 0; background: none; border: none; }
 .formular.radkove.zkratit button { padding: 0.1rem 0.6rem; font-size: 0.9rem; }
 .stitek.zkraceno { border-color: var(--stav-zruseny); color: var(--stav-zruseny); }
+
+/* Pole s časem startu u cílové lišty. Malé, vedle „Přepsat na teď" —
+   je to oprava, ne hlavní tlačítko. */
+.cil-cas-startu input {
+  font-size: 0.9rem; padding: 0.1rem 0.3rem; width: 7.5rem;
+}
 
 /* Zkrácená trať: prvky za cílem zůstávají, jen zešednou. Mizet nesmějí —
    podle nich se plulo, než padlo rozhodnutí. */

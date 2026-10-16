@@ -252,10 +252,18 @@ export function Cil({
     );
   };
 
-  const odstartuj = async () => {
-    if (start && !window.confirm("Start už je zapsaný. Přepsat ho na teď? Časy dojetých se přepočítají."))
+  /**
+   * Zapíše start. <b>Bez času znamená „teď"</b>, s časem ten zadaný —
+   * oprava startu je skoro vždycky „startovalo se před minutou a já
+   * klepl pozdě" a přepsat ho na teď ji zhoršuje: posune start dopředu
+   * a lodím, co už dojely, čas zkrátí nebo zahodí (testovací session,
+   * 16. 10. 2026). Server konkrétní čas přijímá a dojezdy přepočítá.
+   */
+  const odstartuj = async (kdy?: string) => {
+    if (start && !kdy
+        && !window.confirm("Start už je zapsaný. Přepsat ho na teď? Časy dojetých se přepočítají."))
       return;
-    const v = new Date().toISOString();
+    const v = kdy ?? new Date().toISOString();
     const puvodni = start;
     setStart(v);
     try {
@@ -323,12 +331,29 @@ export function Cil({
               <span>
                 Start {hodiny(start)} · <b className="cil-cas">{trvani(start, ted)}</b>
               </span>
-              <button type="button" className="maly" onClick={odstartuj}>
-                Přepsat start
+              <button type="button" className="maly" onClick={() => odstartuj()}>
+                Přepsat na teď
               </button>
+              {/* Pole s časem vedle tlačítka: celá cesta na serveru už
+                  existuje, chybělo jen kam ten čas napsat. */}
+              <label className="cil-cas-startu">
+                <span className="skryte">Čas startu</span>
+                <input
+                  type="time"
+                  step={1}
+                  defaultValue={hodiny(start)}
+                  onChange={(e) => {
+                    const [h, m, se] = e.target.value.split(":").map(Number);
+                    if (Number.isNaN(h) || Number.isNaN(m)) return;
+                    const kdy = new Date(start);
+                    kdy.setHours(h, m, se || 0, 0);
+                    void odstartuj(kdy.toISOString());
+                  }}
+                />
+              </label>
             </>
           ) : (
-            <button type="button" className="cil-startuj" onClick={odstartuj}>
+            <button type="button" className="cil-startuj" onClick={() => odstartuj()}>
               Start
             </button>
           )}
