@@ -128,6 +128,23 @@ export function PrvkyTrati({
                     <span className="stitek zkraceno">tady je cíl</span>
                   )}
                   <span className="vpravo">
+                    {/* <b>Posouvání patří do řádku, ne do detailu</b>
+                        (Filip, 15. 10. 2026: *„nevidím, jestli se dá
+                        posunovat prvky v trati nahoru a dolů"*). Tlačítka
+                        tu byla celou dobu, jenže schovaná uvnitř
+                        rozbaleného prvku — kdo je nerozbalil, nevěděl
+                        o nich. Pořadí prvků je přitom to, co se na trati
+                        mění nejčastěji. */}
+                    {!zamceno && (
+                      <PresunRadkem
+                        serie={serie}
+                        zavod={zavod}
+                        prvek={p.id}
+                        tratId={tratId}
+                        prvni={i === 0}
+                        posledni={i === prvky.length - 1}
+                      />
+                    )}
                     <NahledFotky prvek={p} boje={boje} />
                     <span className="rozbalit" aria-hidden="true">
                       {zamceno ? "Detail" : "Upravit"}
@@ -201,6 +218,59 @@ export function PrvkyTrati({
  * na vodě. Které značky prvek tvoří a jakého je typu, se nemění: to je
  * jeho fyzika a stavěla se průvodcem.
  */
+/**
+ * Šipky pro posun prvku, přímo v řádku. <b>Jsou uvnitř `summary`</b>,
+ * a to je schválně: klepnutí na tlačítko uvnitř `summary` prohlížeč
+ * nebere jako klepnutí na `summary`, takže se detail neotevře. Ověřeno
+ * klikáním, ne přečtením specifikace.
+ *
+ * Tytéž akce zůstávají i v detailu — kdo tam je, nemusí řádek hledat.
+ */
+function PresunRadkem({
+  serie,
+  zavod,
+  prvek,
+  tratId,
+  prvni,
+  posledni,
+}: {
+  serie: string;
+  zavod: string;
+  prvek: number;
+  tratId?: number;
+  prvni: boolean;
+  posledni: boolean;
+}) {
+  const skryte = (
+    <>
+      <input type="hidden" name="serie" value={serie} />
+      <input type="hidden" name="zavod" value={zavod} />
+      <input type="hidden" name="prvek" value={prvek} />
+      {tratId !== undefined && <input type="hidden" name="trat" value={tratId} />}
+      <input type="hidden" name="zRadku" value="ano" />
+    </>
+  );
+
+  return (
+    <span className="presun-radkem">
+      <form action={presunPrvekAkce}>
+        {skryte}
+        <input type="hidden" name="smer" value="nahoru" />
+        <button type="submit" disabled={prvni} title="Posunout výš" aria-label="Posunout výš">
+          ↑
+        </button>
+      </form>
+      <form action={presunPrvekAkce}>
+        {skryte}
+        <input type="hidden" name="smer" value="dolu" />
+        <button type="submit" disabled={posledni} title="Posunout níž" aria-label="Posunout níž">
+          ↓
+        </button>
+      </form>
+    </span>
+  );
+}
+
 function DetailPrvku({
   serie,
   zavod,
