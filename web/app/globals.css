@@ -3290,3 +3290,17 @@ body:has(.tabule) { overflow: hidden; }
   border-color: color-mix(in srgb, var(--stav-vypsany) 45%, transparent);
 }
 .tabule .stitek.zapis-navrzeno, .tabule .stitek.zapis-krevizi { color: var(--tlumeny); }
+
+/* Šipky pro posun prvku v řádku trati. Malé a tlumené, dokud na ně
+   nesáhneš — pořadí se mění často, ale nemá křičet přes celý řádek. */
+.seznam-prvku .presun-radkem { display: inline-flex; gap: 0.15rem; flex: none; }
+.seznam-prvku .presun-radkem form { display: contents; }
+.seznam-prvku .presun-radkem button {
+  width: 1.9rem; height: 1.9rem; padding: 0; line-height: 1;
+  border: 1px solid var(--linka); border-radius: 6px;
+  background: var(--pozadi); color: var(--tlumeny); cursor: pointer;
+}
+.seznam-prvku .presun-radkem button:hover:not(:disabled) {
+  color: var(--voda); border-color: var(--voda);
+}
+.seznam-prvku .presun-radkem button:disabled { opacity: 0.3; cursor: default; }
