@@ -138,27 +138,41 @@ export function VodocetGraf({
         </p>
       )}
 
-      {/* <b>Čísla se řídí vybraným rozsahem</b> (Filip, 15. 10. 2026:
-          *„data nereflektují vybraný interval… chci vidět celkový přehled
-          podle vybrané doby"*). Okamžitý průtok v m³/s zůstává „teď" —
-          ten na rozsahu nezávisí a přepisovat ho by lhalo. */}
+      {/* <b>Velké číslo je průměr za vybraný rozsah, ne okamžitý průtok</b>
+          (Filip, 19. 10. 2026: *„nepočítá se nám odtok"*). Odtok se
+          nepočítal — Povodí ho hlásí správně a my taky, jenže Orlík pouští
+          vodu nárazově: v řadě za 18. 10. stojí dvacet hodin po 0,00 m³/s
+          a ve 20:00 skok na 252,93. Okamžitá hodnota je tedy většinu času
+          nula a na tabuli to vypadá, že se nic nepočítá, i když denní
+          objem dva miliony kubíků sedí.
+
+          Průměr se dopočítá z objemu děleno délkou rozsahu — žádný nový
+          údaj z API. Okamžitý průtok zůstává pod ním jako „právě teď":
+          je to pravda o téhle vteřině, jen to není ta pravda, kvůli které
+          se na vodočet člověk dívá. */}
       <dl className="vodocet-toky">
         <div>
           <dt>Přítok</dt>
-          <dd>{pritokTed == null ? "—" : `${f(pritokTed, 1)} m³/s`}</dd>
+          <dd>{prumer(rada?.pritok, vybrany)}</dd>
           <dd className="vodocet-den">
             {rada?.pritok != null
               ? `${objemem(rada.pritok)} za ${ZA[vybrany] ?? vybrany}`
               : `za ${ZA[vybrany] ?? vybrany} se nespočítá`}
           </dd>
+          <dd className="vodocet-ted">
+            {pritokTed == null ? "teď neznámý" : `právě teď ${f(pritokTed, 1)} m³/s`}
+          </dd>
         </div>
         <div>
           <dt>Odtok</dt>
-          <dd>{odtokTed == null ? "—" : `${f(odtokTed, 1)} m³/s`}</dd>
+          <dd>{prumer(rada?.odtok, vybrany)}</dd>
           <dd className="vodocet-den">
             {rada?.odtok != null
               ? `${objemem(rada.odtok)} za ${ZA[vybrany] ?? vybrany}`
               : `za ${ZA[vybrany] ?? vybrany} se nespočítá`}
+          </dd>
+          <dd className="vodocet-ted">
+            {odtokTed == null ? "teď neznámý" : `právě teď ${f(odtokTed, 1)} m³/s`}
           </dd>
         </div>
       </dl>
@@ -219,6 +233,35 @@ function Krivka({
       <polyline className="cara" points={souradnice.join(" ")} />
     </svg>
   );
+}
+
+/**
+ * Délka rozsahu v sekundách, pro přepočet objemu na průměrný průtok.
+ *
+ * <b>Musí sedět s `RozsahyGrafu.Vsechny` v API</b> (1, 3, 7, 14, 30, 90
+ * a 365 dní — ověřeno 19. 10. 2026), protože objem se tam počítá přes
+ * tohle okno. Klíč, který tu není, dá pomlčku, ne špatné číslo: kdyby
+ * API přidalo rozsah navíc, radši se nenapíše nic.
+ */
+const SEKUND: Record<string, number> = {
+  "24h": 24 * 3600,
+  "3d": 3 * 24 * 3600,
+  "1t": 7 * 24 * 3600,
+  "2t": 14 * 24 * 3600,
+  "1m": 30 * 24 * 3600,
+  "3m": 90 * 24 * 3600,
+  "1r": 365 * 24 * 3600,
+};
+
+/**
+ * Průměrný průtok za rozsah, v m³/s. <b>Nedosazuje se nic</b>: bez objemu
+ * nebo u neznámého rozsahu se napíše pomlčka, ne nula — nula by tvrdila,
+ * že neteklo, místo aby přiznala, že se to nespočítalo.
+ */
+function prumer(objem: number | null | undefined, rozsah: string) {
+  const sekund = SEKUND[rozsah];
+  if (objem == null || !sekund) return "—";
+  return `${f(objem / sekund, 1)} m³/s`;
 }
 
 /** Jak se rozsah řekne ve větě „…za poslední týden". */

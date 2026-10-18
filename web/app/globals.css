@@ -3315,3 +3315,8 @@ body:has(.tabule) { overflow: hidden; }
   color: var(--voda); border-color: var(--voda);
 }
 .seznam-prvku .presun-radkem button:disabled { opacity: 0.3; cursor: default; }
+
+/* „Právě teď" pod průměrem. Menší a tlumené: u Orlíku je okamžitý průtok
+   většinu času nula, protože se pouští nárazově — je to pravda o téhle
+   vteřině, ne to, kvůli čemu se na vodočet kouká. */
+.vodocet-toky .vodocet-ted { font-size: 0.78rem; color: var(--tlumeny); }
