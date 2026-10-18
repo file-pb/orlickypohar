@@ -396,13 +396,20 @@ export async function presunPrvekAkce(formular: FormData) {
   // se pak počítá z cizího seznamu (Filip, 15. 10. 2026).
   const trat = Number(formular.get("trat") ?? 0) || undefined;
   const naTrati: Record<string, string> = trat ? { trat: String(trat) } : {};
+  // <b>Z řádku se detail neotvírá.</b> Šipka v řádku je na to, aby se
+  // dalo posunout dvakrát za sebou; rozbalený prvek by pokaždé odstrčil
+  // seznam a druhá šipka by byla jinde. Z detailu se naopak nechává
+  // otevřený, aby se pokračovalo tam, kde se klikalo.
+  const zRadku = String(formular.get("zRadku") ?? "") === "ano";
+  const kamPo = (stav: string) =>
+    zRadku ? { ...naTrati, stav } : { ...naTrati, stav, otevrit: String(id) };
   const prvky = await nactiPrvky(serie, zavod, trat);
   const kde = prvky.findIndex((p) => p.id === id);
   if (kde < 0) redirect(kam({ chyba: "Ten prvek v trati není. Někdo ho mezitím smazal?" }));
 
   const kam2 = nahoru ? kde - 1 : kde + 1;
   if (kam2 < 0 || kam2 >= prvky.length)
-    redirect(kam({ ...naTrati, stav: "prvekUpraven", otevrit: String(id) }));
+    redirect(kam(kamPo("prvekUpraven")));
 
   const poradi: Prvek[] = [...prvky];
   [poradi[kde], poradi[kam2]] = [poradi[kam2], poradi[kde]];
@@ -413,7 +420,7 @@ export async function presunPrvekAkce(formular: FormData) {
     if (chyba) redirect(kam({ ...naTrati, chyba }));
   }
 
-  redirect(kam({ ...naTrati, stav: "prvekPresunut", otevrit: String(id) }));
+  redirect(kam(kamPo("prvekPresunut")));
 }
 
 /**

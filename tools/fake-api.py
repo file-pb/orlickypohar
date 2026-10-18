@@ -1012,11 +1012,11 @@ def proc_nejde_klon(stav, rozhodci):
     return "Klon nemůže začít v přestavbě — přestavuje se trať, která už stojí."
 
 
-def proc_nejde_prvek(slug, v):
+def proc_nejde_prvek(slug, v, trat_id=None):
     """Opsané z `Prvky.ProcNejde` a `PrvkySprava.ProcNejdeAsync`."""
-    if (zamceno := proc_nejde_stavet(slug)):
+    if (zamceno := proc_nejde_stavet(slug, trat_id)):
         return zamceno
-    if not trat_aktualni(slug):
+    if not trat_vybrana(slug, trat_id):
         return "Tahle regata zatím nemá ani jednu bóji, takže ani trať."
 
     typ = v.get("typ")
@@ -1237,9 +1237,15 @@ def proc_nejde_prestavba(stav):
     return "Přestavět jde jen přijatá trať. Rozestavěnou prostě dostav."
 
 
-def proc_nejde_stavet(slug):
-    """Do přijaté trati se nesahá — ani pípnutím, ani sebráním."""
-    t = trat_aktualni(slug)
+def proc_nejde_stavet(slug, trat_id=None):
+    """
+    Do přijaté trati se nesahá — ani pípnutím, ani sebráním.
+
+    Zámek platí na tu trať, které se úkon týká. Bez `trat_id` zůstává
+    dohad „nejnovější" jako u API (`ProcNejdeStavetAsync` má `tratId`
+    nepovinné) — pípnutí patří regatě, ne trati.
+    """
+    t = trat_vybrana(slug, trat_id)
     if t and t["stav"] == "Prijato":
         return ("Trať je přijatá rozhodčím a zamčená. Na úpravu ji nejdřív odemkni "
                 "přestavbou — veřejně se tím řekne, že se přestavuje.")
@@ -2630,7 +2636,7 @@ class H(BaseHTTPRequestHandler):
         if not self.zastavka(slug):
             return None
         v = self.telo_zadosti() or {}
-        if (chyba := proc_nejde_prvek(slug, v)):
+        if (chyba := proc_nejde_prvek(slug, v, self._vybrana_trat())):
             return self.chyba(400, chyba)
 
         # Nebójový bod se zapíše jako záznam značky — opsané
@@ -2642,7 +2648,7 @@ class H(BaseHTTPRequestHandler):
         # z `PrvkySprava.ZalozAsync`. Bere se nejvyšší pořadí, ne počet:
         # čísla se smějí opakovat, takže počet by vrátil číslo, které už
         # někdo má.
-        sourozenci = PRVKY.get(trat_aktualni(slug)["id"], [])
+        sourozenci = PRVKY.get(trat_vybrana(slug, self._vybrana_trat())["id"], [])
         poradi = max((x["poradi"] for x in sourozenci), default=0) + 1
 
         PRVEK_ID[0] += 1
@@ -2650,7 +2656,7 @@ class H(BaseHTTPRequestHandler):
              "strana": v.get("strana"), "poznamka": (v.get("poznamka") or "").strip() or None,
              "bojeAId": v["bojeAId"], "bojeBId": boje_b,
              "smer": v.get("smer"), "druhStartu": v.get("druhStartu")}
-        PRVKY.setdefault(trat_aktualni(slug)["id"], []).append(p)
+        PRVKY.setdefault(trat_vybrana(slug, self._vybrana_trat())["id"], []).append(p)
         return self.odpoved(prvek_dto(slug, p), 201)
 
     def znacka_z_bodu(self, slug, v):
@@ -2684,7 +2690,15 @@ class H(BaseHTTPRequestHandler):
         return BOJE_ID[0]
 
     def _prvek(self, slug, prvek_id):
-        t = trat_aktualni(slug)
+        """
+        Prvek <b>vybrané</b> trati. Stálo tu `trat_aktualni`, tedy dohad
+        „nejnovější" — takže úprava, posun i smazání prvku v jiné než
+        poslední trati spadly na „Takový prvek na téhle trati není."
+        API se přitom ptá na `?trat=` (`PrvkySprava.NajdiAsync` má
+        `tratId`). Nalezeno 17. 10. 2026 při pokusu zopakovat Filipovo
+        hlášení — na tomhle mocku se ověřit nedalo nic.
+        """
+        t = trat_vybrana(slug, self._vybrana_trat())
         vse = PRVKY.get(t["id"], []) if t else []
         return next((x for x in vse if x["id"] == prvek_id), None)
 
@@ -2692,7 +2706,7 @@ class H(BaseHTTPRequestHandler):
         if not self.zastavka(slug):
             return None
         v = self.telo_zadosti() or {}
-        if (chyba := proc_nejde_prvek(slug, v)):
+        if (chyba := proc_nejde_prvek(slug, v, self._vybrana_trat())):
             return self.chyba(400, chyba)
         # Jen při úpravě: při zakládání si pořadí počítá server sám.
         if (v.get("poradi") or 0) <= 0:
@@ -2716,13 +2730,13 @@ class H(BaseHTTPRequestHandler):
     def prvek_smaz(self, slug, prvek_id):
         if not self.zastavka(slug):
             return None
-        if (zamceno := proc_nejde_stavet(slug)):
+        if (zamceno := proc_nejde_stavet(slug, self._vybrana_trat())):
             return self.chyba(400, zamceno)
         if not (p := self._prvek(slug, prvek_id)):
             return self.chyba(400, "Takový prvek na téhle trati není.")
 
         # Prvek se maže doopravdy, na rozdíl od bóje: není to měření.
-        PRVKY[trat_aktualni(slug)["id"]].remove(p)
+        PRVKY[trat_vybrana(slug, self._vybrana_trat())["id"]].remove(p)
         return self._prazdna_odpoved()
 
     def trat_seznam(self, slug):
@@ -2874,7 +2888,7 @@ class H(BaseHTTPRequestHandler):
 
         Do přijaté trati se nesahá — bez toho by byl zámek jen nápis.
         """
-        if (zamceno := proc_nejde_stavet(slug)):
+        if (zamceno := proc_nejde_stavet(slug, self._vybrana_trat())):
             return self.chyba(400, zamceno)
         if not self.zastavka(slug):
             return None
@@ -3073,7 +3087,7 @@ class H(BaseHTTPRequestHandler):
     def seber_boji(self, slug, boje_id):
         """Razítko, ne smazání — pokud na bóji něco visí. Když ne, zmizí
         i ten záznam (`zahod_boji`)."""
-        if (zamceno := proc_nejde_stavet(slug)):
+        if (zamceno := proc_nejde_stavet(slug, self._vybrana_trat())):
             return self.chyba(400, zamceno)
         if not self.zastavka(slug):
             return None
