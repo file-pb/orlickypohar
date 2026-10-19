@@ -3320,3 +3320,7 @@ body:has(.tabule) { overflow: hidden; }
    většinu času nula, protože se pouští nárazově — je to pravda o téhle
    vteřině, ne to, kvůli čemu se na vodočet kouká. */
 .vodocet-toky .vodocet-ted { font-size: 0.78rem; color: var(--tlumeny); }
+
+/* Odepnout a smazat u vybrané trati. Pod záložkami a pod větou o tom, kdo
+   ji jede — jsou to úkony nad tou tratí, co je zrovna vidět. */
+.vyber-trati .trat-akce { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.6rem; }

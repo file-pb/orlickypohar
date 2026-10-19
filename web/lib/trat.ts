@@ -464,6 +464,54 @@ export async function odvazTrat(
 }
 
 /**
+ * Zahodí trať i s prvky. Vrací text chyby a příznak, že se server ptá na
+ * potvrzení — stejně jako <see cref="odvazTrat"/>.
+ *
+ * <b>Rozjížďka tím trať ztratí</b> (Filip, 19. 10. 2026: *„trať smazat,
+ * rozjížďka by tím pádem tu trať odepla"*). Vazba sedí na trati, takže
+ * smazáním zmizí sama; odvazovat zvlášť předem není potřeba.
+ *
+ * <b>Záznamy bójí zůstávají</b> — prvek na ně jen ukazuje, bóje pořád
+ * stojí ve vodě a jejich poloha je měření, které se stalo.
+ */
+export async function zahodTrat(
+  serie: string,
+  zavod: string,
+  trat: number,
+  potvrzeno: boolean,
+): Promise<{ chyba: string | null; potvrdit: boolean }> {
+  const t = await tokenZeSezeni();
+  if (!t) return { chyba: "Přihlášení vypršelo. Přihlas se prosím znovu.", potvrdit: false };
+
+  const adresa = `${cesta(serie, zavod)}/${trat}${potvrzeno ? "?potvrzeno=true" : ""}`;
+  try {
+    const odpoved = await fetch(adresa, {
+      method: "DELETE",
+      headers: { authorization: `Bearer ${t}`, accept: "application/json" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(CEKAT_MS),
+    });
+    if (odpoved.ok) return { chyba: null, potvrdit: false };
+
+    const telo = (await odpoved.json().catch(() => null)) as
+      | { error?: string; potvrdit?: boolean }
+      | null;
+    return {
+      chyba:
+        telo?.error ??
+        (odpoved.status === 401
+          ? "Přihlášení vypršelo. Přihlas se prosím znovu."
+          : odpoved.status === 403
+            ? "Do trati smí sáhnout pořadatel téhle regaty nebo rozhodčí ročníku."
+            : `API odpovědělo ${odpoved.status}.`),
+      potvrdit: odpoved.status === 409 && telo?.potvrdit === true,
+    };
+  } catch {
+    return { chyba: "Nedaří se spojit s API. Zkus to za chvíli.", potvrdit: false };
+  }
+}
+
+/**
  * Naklonuje trať. <b>Kopíruje prvky na tytéž bóje</b> — žádná nová
  * pípnutí; vyrobila by se tím měření, která se nestala.
  */

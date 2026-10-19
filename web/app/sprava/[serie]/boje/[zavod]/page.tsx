@@ -39,6 +39,11 @@ type Parametry = {
     otevrit?: string;
     /** Kterou trať regaty obrazovka ukazuje. Bez ní tu nejnovější. */
     trat?: string;
+    /**
+     * Na co se server zeptal podruhé: `odpojit`, nebo `smazat`.
+     * Odpověď na 409 je druhé odeslání téhož, takže se to nese adresou.
+     */
+    potvrdit?: string;
   }>;
 };
 
@@ -65,6 +70,7 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
   // Která trať se ukazuje. Nula znamená „nevybráno" — API pak vydá tu
   // nejnovější, jako dřív.
   const vybranaTrat = Number(zpravy.trat ?? 0) || undefined;
+  const potvrdit = zpravy.potvrdit;
 
   // Název regaty v odpovědi o bójích není, a bez něj nadpis neřekne, čí
   // trať se zrovna staví (Filip, 9. 10. 2026).
@@ -141,6 +147,18 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
       {zpravy.stav === "trat-prirazena" && (
         <p className="hlaska" role="status">
           Trať je přiřazená rozjížďce.
+        </p>
+      )}
+      {zpravy.stav === "tratOdpojena" && (
+        <p className="hlaska" role="status">
+          Trať už žádnou rozjížďku nejede. Stojí dál ve vodě a dá se přiřadit
+          jiné rozjížďce, nebo smazat.
+        </p>
+      )}
+      {zpravy.stav === "tratSmazana" && (
+        <p className="hlaska" role="status">
+          Trať je smazaná i s prvky a rozjížďka ji tím ztratila. Bóje zůstaly —
+          pořád stojí ve vodě a jejich poloha je měření, které se stalo.
         </p>
       )}
       {zpravy.stav === "trat-klon" && (
@@ -232,6 +250,22 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
         <Vypadek />
       ) : (
         <>
+          {/* <b>Záložky tratí nahoru</b> (Filip, 19. 10. 2026: *„chtěl bych
+              mít možnost přepínat tratě nahoře jako tab, nikoli dole"*).
+              Dřív stály až pod mapkou s odůvodněním, že výběr trati je
+              úkol od stolu — jenže když má regata tratí víc, je první
+              otázka na té obrazovce „kterou vlastně vidím", a odpověď byla
+              o dvě obrazovky níž. Všechno pod tím se jich týká, takže
+              patří nad to. */}
+          <VyberTrati
+            serie={serie}
+            zavod={zavod}
+            trate={trate}
+            rozjizdky={rozjizdky}
+            vybrana={stavTrati.trat?.id}
+            potvrdit={potvrdit}
+          />
+
           {stavTrati.stav === "ok" && stavTrati.trat && (
             <StavTrati serie={serie} zavod={zavod} trat={stavTrati.trat} />
           )}
@@ -322,17 +356,6 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
               telefonu je ta nejpřesnější, kterou kdo má.
             </p>
           )}
-
-          {/* <b>Až pod stavbou</b> (Filip, 11. 10. 2026): která trať platí
-              a klonování jsou úkoly od stolu, kdežto nahoře má být to,
-              kvůli čemu je člověk na vodě. */}
-          <VyberTrati
-            serie={serie}
-            zavod={zavod}
-            trate={trate}
-            rozjizdky={rozjizdky}
-            vybrana={stavTrati.trat?.id}
-          />
 
           {trat.length > 0 && (
             <p className="poznamka">

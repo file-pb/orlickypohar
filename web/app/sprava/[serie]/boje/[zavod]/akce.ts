@@ -19,6 +19,8 @@ import {
   klonujTrat,
   nactiPrvky,
   nactiTrate,
+  odvazTrat,
+  zahodTrat,
   zalozDalsiTrat,
   posunTrat,
   priradTrat,
@@ -546,6 +548,64 @@ export async function zrusZkraceniAkce(formular: FormData) {
 }
 
 /** Společný začátek akcí obrazovky bójí: odkud a kam. */
+/**
+ * Odepne trať od rozjížďky z editoru trati (Filip, 19. 10. 2026: *„trať
+ * odepnout z rozjížďky na editoru jak trati, tak i na editoru
+ * rozjížďky"*). Táž akce je u výsledků — vazba je jedna, jen se k ní dá
+ * sáhnout z obou stran, protože z obou stran se na ni člověk dívá.
+ *
+ * <b>Odjetá rozjížďka se neodepne</b>; to hlídá API a hláška je jeho.
+ */
+export async function odpojTratAkce(formular: FormData) {
+  const { serie, zavod, kam } = zaklad(formular);
+  const trat = Number(formular.get("trat") ?? 0);
+  if (!Number.isInteger(trat) || trat <= 0)
+    redirect(kam({ chyba: "Kterou trať mám odepnout?" }));
+
+  const potvrzeno = String(formular.get("potvrzeno") ?? "") === "ano";
+  const { chyba, potvrdit } = await odvazTrat(serie, zavod, trat, potvrzeno);
+
+  const kde = { trat: String(trat) };
+  if (chyba) redirect(kam(potvrdit ? { ...kde, chyba, potvrdit: "odpojit" } : { ...kde, chyba }));
+
+  // <b>Odepnutí může trať i smazat.</b> Zbyde-li tentýž předpis jinde, je
+  // tahle instance navíc a API ji zahodí celou (`TratSprava.OdvazAsync`).
+  // Držet se pak `?trat=` na mrtvé id znamená prázdná obrazovka bez
+  // záložek — ověřeno klikáním 19. 10. 2026. Výběr se proto drží, jen
+  // když trať pořád je.
+  const zbyle = await nactiTrate(serie, zavod);
+  const zustala = zbyle?.some((t) => t.id === trat) ?? false;
+  redirect(kam(zustala ? { ...kde, stav: "tratOdpojena" } : { stav: "tratOdpojena" }));
+}
+
+/**
+ * Zahodí trať i s prvky. Rozjížďka tím trať ztratí — vazba sedí na
+ * trati, takže odvazovat zvlášť předem není potřeba.
+ *
+ * <b>Po smazání se na vybranou trať nevrací</b>: ta už není. Adresa
+ * zůstane bez `?trat=` a obrazovka spadne na tu, která zbyla.
+ */
+export async function zahodTratAkce(formular: FormData) {
+  const { serie, zavod, kam } = zaklad(formular);
+  const trat = Number(formular.get("trat") ?? 0);
+  if (!Number.isInteger(trat) || trat <= 0)
+    redirect(kam({ chyba: "Kterou trať mám smazat?" }));
+
+  const potvrzeno = String(formular.get("potvrzeno") ?? "") === "ano";
+  const { chyba, potvrdit } = await zahodTrat(serie, zavod, trat, potvrzeno);
+
+  if (chyba)
+    redirect(
+      kam(
+        potvrdit
+          ? { trat: String(trat), chyba, potvrdit: "smazat" }
+          : { trat: String(trat), chyba },
+      ),
+    );
+
+  redirect(kam({ stav: "tratSmazana" }));
+}
+
 function zaklad(formular: FormData) {
   const serie = String(formular.get("serie") ?? "");
   const zavod = String(formular.get("zavod") ?? "");
