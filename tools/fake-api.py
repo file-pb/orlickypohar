@@ -4651,4 +4651,32 @@ LOG = os.environ.get("OP_LOG") not in (None, "", "0")
 # i tehdy, když se mock pustil s jiným ročníkem — a jediné místo, kde se to
 # dá hned poznat, je právě tahle řádka (9. 10. 2026).
 print(f"Falešné API z {SOUBOR} ({D['slug']}) na http://127.0.0.1:{PORT}", flush=True)
-HTTPServer(("127.0.0.1", PORT), H).serve_forever()
+# <b>Fronta na spojení musí být delší než pět.</b>
+#
+# Stránka správy bójí volá API osmkrát naráz (`Promise.all` v jejím
+# `page.tsx`). `HTTPServer` dědí ze `socketserver` frontu
+# `request_queue_size = 5`, takže šesté a další spojení operační systém
+# **odmítne** — Node dostane `ECONNREFUSED`, `fetch` spadne do `catch`
+# a obrazovka hlásí výpadek: „Tratě regaty se teď nedaří načíst".
+#
+# **Změřeno 19. 10. 2026:** ztrácel se tak jeden ze paralelních požadavků,
+# 4 až 6 načtení z 10, a pokaždé jiný. Hledal jsem to dvakrát v kódu webu
+# a chyba byla celou dobu tady; produkční Kestrel má frontu dlouhou
+# a chová se správně.
+#
+# Jednovláknový server zůstává — práva jednoho požadavku nesmí přepsat
+# druhý (viz výš). Fronta jen znamená, že spojení **počkají**, místo aby
+# je systém odmítl. Odpověď navíc říká, že spojení zavírá: HTTP/1.0
+# z `BaseHTTPRequestHandler` to na dotaz HTTP/1.1 sám nenapíše a klient
+# by si ho mohl nechat v poolu.
+class _Server(HTTPServer):
+    request_queue_size = 128
+
+
+class _ZavirejSpojeni(H):  # type: ignore[valid-type, misc]
+    def end_headers(self):
+        self.send_header("Connection", "close")
+        super().end_headers()
+
+
+_Server(("127.0.0.1", PORT), _ZavirejSpojeni).serve_forever()

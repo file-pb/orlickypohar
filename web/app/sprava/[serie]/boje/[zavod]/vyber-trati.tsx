@@ -70,6 +70,11 @@ export function VyberTrati({
   // Trať, kterou obrazovka ukazuje — bez výběru ta, na kterou spadla.
   const vybranaTrat = trate.find((t) => t.id === vybrana) ?? trate[0];
 
+  // Jedno id pro zaškrtávátko potvrzení i pro všechny popisky, co ho
+  // přepínají. Rozejít se nesmí: popisek, který ukazuje jinam, okno
+  // neotevře — a tlačítko by pak nedělalo nic.
+  const zavrit = `smazat-trat-${vybranaTrat?.id}`;
+
   // Čísla tratí podle pořadí, v jakém vznikly. Seznam chodí od nejnovější,
   // takže se počítá odzadu — „Trať 1" je ta první postavená.
   const poradi = new Map([...trate].reverse().map((t, i) => [t.id, i + 1]));
@@ -208,18 +213,72 @@ export function VyberTrati({
 
           {/* <b>Smazání trať i odepne</b> (Filip tamtéž). Vazba sedí na
               trati, takže zmizí sama — odepínat předem není potřeba a bylo
-              by to dvojí klikání za jednu věc. */}
-          <form action={zahodTratAkce}>
-            <input type="hidden" name="serie" value={serie} />
-            <input type="hidden" name="zavod" value={zavod} />
-            <input type="hidden" name="trat" value={vybranaTrat.id} />
-            {potvrdit === "smazat" && <input type="hidden" name="potvrzeno" value="ano" />}
-            <button type="submit" className="nebezpecne">
-              {potvrdit === "smazat"
-                ? "Smazat i tak"
-                : `Smazat trať ${poradi.get(vybranaTrat.id)}`}
-            </button>
-          </form>
+              by to dvojí klikání za jednu věc.
+
+              <b>Ale jedním klikem to nejde</b> (Filip, 19. 10. 2026:
+              *„tam vlož jenom modal na potvrzení, aby to nešlo jen jedním
+              klikem, kdyby o to někdo zavadil"*). Mazání je nevratné a
+              tlačítko stojí v řadě vedle odepnutí, které vratné je —
+              zavadit se o to dá snadno. Potvrzení **není** u odepnutí,
+              to zůstává na jeden klik (Filip tamtéž: *„to odepnutí je
+              v pořádku, to může jít hned"*).
+
+              Zaškrtávátko s popiskem, žádný javascript — stejný vzor jako
+              detail prvku na veřejné trati. `defaultChecked` otevře okno
+              samo, když se vrátíme s odmítnutím od serveru: jinak by
+              varování *„podle trati se už jelo"* přišlo do zavřeného okna
+              a člověk by ho musel otvírat znovu, aby se dozvěděl proč. */}
+          <div className="potvrdit-smazani">
+            <input
+              type="checkbox"
+              className="prepinac-potvrzeni"
+              id={zavrit}
+              defaultChecked={potvrdit === "smazat"}
+            />
+            <label className="spust-modal nebezpecne" htmlFor={zavrit}>
+              Smazat trať {poradi.get(vybranaTrat.id)}
+            </label>
+
+            <div className="modal-potvrzeni">
+              <label className="pozadi-modalu" htmlFor={zavrit} aria-label="Nemazat" />
+              <div className="okno-modalu" role="dialog" aria-label="Smazat trať">
+                <label className="zavrit-modal" htmlFor={zavrit} aria-label="Nemazat">
+                  ×
+                </label>
+                <h3>Smazat trať {poradi.get(vybranaTrat.id)}?</h3>
+                {/* Co přesně zmizí a co ne. Bez toho je potvrzení jen
+                    další klik: člověk musí vědět, že bóje zůstávají —
+                    jinak bude mazání odkládat ze strachu o měření. */}
+                <p>
+                  Zmizí i s prvky, které na ní stojí
+                  {vybranaTrat.cisloRozjizdky !== null && (
+                    <>
+                      {", a "}
+                      <b>{vybranaTrat.cisloRozjizdky}. rozjížďka</b> tím zůstane bez trati
+                    </>
+                  )}
+                  . Bóje na vodě zůstanou — prvek na ně jen ukazuje. Vrátit to nejde.
+                </p>
+                {potvrdit === "smazat" && (
+                  <p className="varovani">Podle téhle trati se už jelo.</p>
+                )}
+                <div className="volby-modalu">
+                  <label className="spust-modal" htmlFor={zavrit}>
+                    Nemazat
+                  </label>
+                  <form action={zahodTratAkce}>
+                    <input type="hidden" name="serie" value={serie} />
+                    <input type="hidden" name="zavod" value={zavod} />
+                    <input type="hidden" name="trat" value={vybranaTrat.id} />
+                    {potvrdit === "smazat" && <input type="hidden" name="potvrzeno" value="ano" />}
+                    <button type="submit" className="nebezpecne">
+                      {potvrdit === "smazat" ? "Smazat i tak" : "Smazat"}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </section>
