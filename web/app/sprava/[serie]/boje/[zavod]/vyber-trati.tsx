@@ -1,5 +1,5 @@
 import { NAZVY_STAVU, type TratNaVyber } from "@/lib/trat";
-import { dalsiTratAkce } from "./akce";
+import { dalsiTratAkce, odpojTratAkce, zahodTratAkce } from "./akce";
 import Link from "@/app/sprava/odkaz";
 import { StejnaTrat } from "@/app/sprava/stejna-trat";
 import { Vypadek } from "@/app/vypadek";
@@ -33,6 +33,7 @@ export function VyberTrati({
   trate,
   rozjizdky,
   vybrana,
+  potvrdit,
 }: {
   serie: string;
   zavod: string;
@@ -42,6 +43,11 @@ export function VyberTrati({
   rozjizdky: number[];
   /** Trať, kterou obrazovka právě ukazuje. */
   vybrana?: number;
+  /**
+   * Na co se server ptá podruhé: `odpojit`, nebo `smazat`. Chodí
+   * z adresy, protože odpověď na 409 je druhé odeslání téhož.
+   */
+  potvrdit?: string;
 }) {
   // Výpadek se musí poznat. Mizející sekce vypadá jako „nic tu není",
   // jenže přiřazení trati rozjížďce a klonování je jediná cesta, jak
@@ -177,6 +183,44 @@ export function VyberTrati({
             cisla={shodneSTrati(vybranaTrat, trate)}
           />
         </p>
+      )}
+
+      {vybranaTrat && (
+        <div className="trat-akce">
+          {/* <b>Odepnout jde z obou stran</b> (Filip, 19. 10. 2026: *„trať
+              odepnout z rozjížďky na editoru jak trati, tak i na editoru
+              rozjížďky"*). Vazba je jedna; z obou stran se na ni ale člověk
+              dívá, takže z obou stran na ni musí jít sáhnout. Nabízí se jen
+              u trati, která rozjížďku má — jinak není co odepínat. */}
+          {vybranaTrat.cisloRozjizdky !== null && (
+            <form action={odpojTratAkce}>
+              <input type="hidden" name="serie" value={serie} />
+              <input type="hidden" name="zavod" value={zavod} />
+              <input type="hidden" name="trat" value={vybranaTrat.id} />
+              {potvrdit === "odpojit" && <input type="hidden" name="potvrzeno" value="ano" />}
+              <button type="submit">
+                {potvrdit === "odpojit"
+                  ? `Odepnout i tak z ${vybranaTrat.cisloRozjizdky}. rozjížďky`
+                  : `Odepnout z ${vybranaTrat.cisloRozjizdky}. rozjížďky`}
+              </button>
+            </form>
+          )}
+
+          {/* <b>Smazání trať i odepne</b> (Filip tamtéž). Vazba sedí na
+              trati, takže zmizí sama — odepínat předem není potřeba a bylo
+              by to dvojí klikání za jednu věc. */}
+          <form action={zahodTratAkce}>
+            <input type="hidden" name="serie" value={serie} />
+            <input type="hidden" name="zavod" value={zavod} />
+            <input type="hidden" name="trat" value={vybranaTrat.id} />
+            {potvrdit === "smazat" && <input type="hidden" name="potvrzeno" value="ano" />}
+            <button type="submit" className="nebezpecne">
+              {potvrdit === "smazat"
+                ? "Smazat i tak"
+                : `Smazat trať ${poradi.get(vybranaTrat.id)}`}
+            </button>
+          </form>
+        </div>
       )}
     </section>
   );

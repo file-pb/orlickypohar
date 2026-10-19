@@ -936,6 +936,20 @@ def rozjizdka_trati(slug, t):
                  if r["cislo"] == t["rozjizdkaId"]), None)
 
 
+def otisk_trati(prvky):
+    """
+    Otisk předpisu trati — opsané z `TratSprava.Otisk`. Prázdná trať
+    předpis nemá, takže `None`: prázdno není předpis a dvě prázdné tratě
+    spolu nemají nic společného.
+    """
+    if not prvky:
+        return None
+    return "|".join(
+        ":".join(str(x) for x in (p["typ"], p.get("bojeAId"), p.get("bojeBId"),
+                                  p.get("strana"), p.get("smer")))
+        for p in sorted(prvky, key=lambda p: (p["poradi"], p["id"])))
+
+
 def trat_odjeta(slug, t):
     """Jelo se podle téhle trati? Opsané z `TratSprava.OdjetaAsync`.
 
@@ -988,6 +1002,9 @@ def trat_na_vyber(slug, t):
     return {"id": t["id"], "stav": t["stav"], "cisloRozjizdky": t.get("rozjizdkaId"),
             "prijatoV": t["prijatoV"], "pocetPrvku": len(PRVKY.get(t["id"], [])),
             "odjeta": trat_odjeta(slug, t), "jdePriradit": t.get("rozjizdkaId") is None,
+            # Otisk mock nevydával vůbec, takže „Totéž jedou ještě…" se na
+            # něm nedalo vidět ani vyzkoušet (19. 10. 2026).
+            "otisk": otisk_trati(PRVKY.get(t["id"], [])),
             "smiPrijmout": smi_ted("Rozhodci") and proc_nejde_prijmout(t["stav"]) is None}
 
 
@@ -2337,9 +2354,18 @@ class H(BaseHTTPRequestHandler):
             self._telo = self.telo_zadosti()
         return self._telo
 
-    def chyba(self, kod, text):
-        """Chyba ve tvaru, ve kterém ji vydává API: {"error": "..."}."""
-        data = json.dumps({"error": text}, ensure_ascii=False).encode()
+    def chyba(self, kod, text, potvrdit=False):
+        """
+        Chyba ve tvaru, ve kterém ji vydává API: {"error": "..."}.
+
+        `potvrdit` přibalí příznak, podle kterého obrazovka pozná, že se
+        server ptá podruhé — na 409 se ptá, na 400 jen hlásí. Bez něj by
+        musela číst text hlášky.
+        """
+        telo = {"error": text}
+        if potvrdit:
+            telo["potvrdit"] = True
+        data = json.dumps(telo, ensure_ascii=False).encode()
         self.send_response(kod)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(data)))
@@ -3067,6 +3093,74 @@ class H(BaseHTTPRequestHandler):
         t["zkracenoUPrvkuId"], t["zkracenoV"] = prvek_id, ted_iso()
         t["zkratil"] = self.prihlaseny()["zobrazovane"]
         return self._prazdna_odpoved()
+
+    def _proc_nejde_sahnout(self, slug, t, potvrzeno):
+        """
+        Proč do trati nejde sáhnout — `(text, chce_potvrdit)`. Opsané
+        z `TratSprava.ProcNejdeSahnoutAsync`.
+        """
+        if trat_odjeta(slug, t):
+            if potvrzeno:
+                return None, False
+            return ("Podle téhle trati se jelo. Zahodit ji může rozkopat výsledky té "
+                    "rozjížďky a celé je to pak vrátí do schvalování. "
+                    "Potvrď, že to tak chceš."), True
+        if t["stav"] == "Prijato":
+            return "Trať je přijatá a visí veřejně. Na změnu je přestavba.", False
+        return None, False
+
+    def _potvrzeno(self):
+        return (parse_qs(urlparse(self.path).query).get("potvrzeno") or [""])[0] == "true"
+
+    def trat_odvaz(self, slug, trat_id):
+        """
+        Odškrtne trati rozjížďku. Opsané z `TratSprava.OdvazAsync` —
+        včetně toho, že instance navíc (tentýž předpis jinde) se smaže
+        celá, místo aby zůstala viset bez rozjížďky.
+        """
+        if not self.zastavka(slug):
+            return None
+        t = next((x for x in TRATE.get(slug) or [] if x["id"] == trat_id), None)
+        if not t:
+            return self.chyba(400, "Taková trať u téhle regaty není.")
+        if t.get("rozjizdkaId") is None:
+            return self.chyba(400, "Tahle trať žádné rozjížďce nepatří, "
+                                   "takže není co odškrtnout.")
+
+        proc, ptat = self._proc_nejde_sahnout(slug, t, self._potvrzeno())
+        if proc:
+            return self.chyba(409 if ptat else 400, proc, potvrdit=ptat)
+
+        muj = otisk_trati(PRVKY.get(t["id"], []))
+        jinde = muj is not None and any(
+            x["id"] != t["id"] and otisk_trati(PRVKY.get(x["id"], [])) == muj
+            for x in TRATE.get(slug) or [])
+
+        if jinde:
+            self._smaz_trat(slug, t)
+        else:
+            t["rozjizdkaId"] = None
+        return self._prazdna_odpoved()
+
+    def trat_zahod(self, slug, trat_id):
+        """Zahodí trať i s prvky — opsané z `TratSprava.ZahodAsync`."""
+        if not self.zastavka(slug):
+            return None
+        t = next((x for x in TRATE.get(slug) or [] if x["id"] == trat_id), None)
+        if not t:
+            return self.chyba(400, "Taková trať u téhle regaty není.")
+
+        proc, ptat = self._proc_nejde_sahnout(slug, t, self._potvrzeno())
+        if proc:
+            return self.chyba(409 if ptat else 400, proc, potvrdit=ptat)
+
+        self._smaz_trat(slug, t)
+        return self._prazdna_odpoved()
+
+    def _smaz_trat(self, slug, t):
+        """Trať i s prvky pryč. Záznamy bójí zůstávají — stojí ve vodě."""
+        PRVKY.pop(t["id"], None)
+        TRATE[slug] = [x for x in TRATE.get(slug) or [] if x["id"] != t["id"]]
 
     def trat_zrus_zkraceni(self, slug, trat_id):
         """Zrušení zkrácení — jede se zase celá trať."""
@@ -3948,6 +4042,12 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                           r'/trat/(\d+)/zkraceni$', urlparse(self.path).path)):
             return self.trat_zrus_zkraceni(m.group(1), int(m.group(2)))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                          r'/trat/(\d+)/rozjizdka$', urlparse(self.path).path)):
+            return self.trat_odvaz(m.group(1), int(m.group(2)))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                          r'/trat/(\d+)$', urlparse(self.path).path)):
+            return self.trat_zahod(m.group(1), int(m.group(2)))
         if (m := re.match(r'^/ja/lode/(\d+)/pripojeni/(\d+)$', urlparse(self.path).path)):
             if not self.headers.get("authorization"):
                 return self.send_error(401)
