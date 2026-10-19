@@ -3217,14 +3217,14 @@ body:has(.tabule) { overflow: hidden; }
 .seznam-prvku .prepinac-prvku:checked ~ .modal-prvku { display: block; }
 /* Pozadí překrývá celou stránku včetně ikonky, takže druhé kliknutí na
    ikonku okno zavře — přesně jak si to Filip popsal. */
-.modal-prvku .pozadi-modalu {
+:is(.modal-prvku, .modal-potvrzeni) .pozadi-modalu {
   position: fixed;
   inset: 0;
   z-index: 60;
   background: color-mix(in srgb, #000 55%, transparent);
   cursor: pointer;
 }
-.modal-prvku .okno-modalu {
+:is(.modal-prvku, .modal-potvrzeni) .okno-modalu {
   position: fixed;
   z-index: 61;
   left: 50%;
@@ -3239,7 +3239,7 @@ body:has(.tabule) { overflow: hidden; }
   background: var(--pozadi);
   box-shadow: 0 1.4rem 3rem rgb(0 0 0 / 35%);
 }
-.modal-prvku .zavrit-modal {
+:is(.modal-prvku, .modal-potvrzeni) .zavrit-modal {
   position: sticky;
   top: 0;
   float: right;
@@ -3255,8 +3255,8 @@ body:has(.tabule) { overflow: hidden; }
   color: var(--tlumeny);
   cursor: pointer;
 }
-.modal-prvku .zavrit-modal:hover { color: var(--text); background: var(--linka); }
-.modal-prvku h3 { margin: 0 0 0.6rem; font-size: 1.05rem; }
+:is(.modal-prvku, .modal-potvrzeni) .zavrit-modal:hover { color: var(--text); background: var(--linka); }
+:is(.modal-prvku, .modal-potvrzeni) h3 { margin: 0 0 0.6rem; font-size: 1.05rem; }
 .modal-prvku h3 .znacky { color: var(--tlumeny); font-weight: 400; }
 
 /* Dva popsané údaje pod nákresem: čím ta bóje je a jak se objíždí. */
@@ -3273,7 +3273,7 @@ body:has(.tabule) { overflow: hidden; }
 /* Na telefonu okno zespoda, ne doprostřed: palec je dole a obrázek bóje
    se čte líp na celou šířku. */
 @media (max-width: 560px) {
-  .modal-prvku .okno-modalu {
+  :is(.modal-prvku, .modal-potvrzeni) .okno-modalu {
     top: auto;
     bottom: 0;
     left: 0;
@@ -3324,3 +3324,46 @@ body:has(.tabule) { overflow: hidden; }
 /* Odepnout a smazat u vybrané trati. Pod záložkami a pod větou o tom, kdo
    ji jede — jsou to úkony nad tou tratí, co je zrovna vidět. */
 .vyber-trati .trat-akce { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.6rem; }
+/* Tlačítko i popisek, který otevírá okno, musí vypadat stejně — jinak
+   vedle sebe stojí „tlačítko" a „odkaz" za dva úkony téhož druhu. */
+.vyber-trati .trat-akce button,
+.spust-modal {
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--linka);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.vyber-trati .trat-akce button:hover,
+.spust-modal:hover { border-color: var(--voda); color: var(--voda); }
+.vyber-trati .trat-akce button.nebezpecne:hover,
+.spust-modal.nebezpecne:hover { border-color: var(--stav-zruseny); color: var(--stav-zruseny); }
+
+/* Potvrzení mazání trati. Zaškrtávátko drží otevřenost okna, takže je
+   samo neviditelné — ale ne `display: none`, jinak na něj nejde
+   klávesnicí a okno by se bez myši nedalo otevřít. */
+.potvrdit-smazani { position: relative; }
+.prepinac-potvrzeni { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.prepinac-potvrzeni:focus-visible ~ .spust-modal {
+  outline: 2px solid var(--voda);
+  outline-offset: 2px;
+}
+.modal-potvrzeni { display: none; }
+.prepinac-potvrzeni:checked ~ .modal-potvrzeni { display: block; }
+.modal-potvrzeni p { margin: 0 0 0.8rem; }
+/* Odmítnutí od serveru: „podle téhle trati se už jelo". Barva zrušeného,
+   protože to je důvod, proč se první klik nepovedl. */
+.modal-potvrzeni .varovani { color: var(--stav-zruseny); font-weight: 600; }
+/* Nemazat je vlevo a vede pryč; smazat je vpravo a je nebezpečné. */
+.modal-potvrzeni .volby-modalu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-bottom: 0.4rem;
+}
