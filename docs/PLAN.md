@@ -6,11 +6,13 @@ výsledky, administrace a mobilní přístup.
 **Jméno projektu:** `orlickypohar` → `orlickypohar.klihovka.cz`
 (bez pomlčky a podtržítka — jméno slouží zároveň jako databáze, role i subdoména).
 
-**Stav k 11. 10. 2026: fáze 0 až 4 a fáze 6 hotové; ve fázi 5 zbývají
+**Stav k 19. 10. 2026: fáze 0 až 4 a fáze 6 hotové; ve fázi 5 zbývají
 protesty a penalizace; fáze 7 a 9 nezačaté; z fáze 8 stojí bóje na trati
-i s mapkou a trať se staví průvodcem.** Co přesně chybí, je v oddílu *Co
-ještě chybí (audit 8. 10. 2026)*; v jakém pořadí to dělat, v *Pořadí po
-11. 10. 2026* na jeho konci.
+i s mapkou, trať se staví průvodcem a dá se smazat i odepnout od
+rozjížďky.** Co je rozdělané a co na koho čeká, je v oddílu *Fronta
+k 19. 10. 2026* úplně dole — ten je ze všech nejčerstvější. Co přesně
+chybí, rozepisuje *Co ještě chybí (audit 8. 10. 2026)*; v jakém pořadí
+to dělat, *Pořadí po 11. 10. 2026* na jeho konci.
 
 | | |
 |---|---|
@@ -4470,9 +4472,23 @@ Rozhodnutí:
    fotek je pořád web.
 7. **Přepočet vždy jen jeden naráz** — rozbalená fotka zabere až 240 MB
    a API má limit 512 MB.
-8. **ImageSharp 3.1**, ne 4: čtyřka chce při buildu licenční klíč.
-   Licence je pro jednotlivce s obratem pod milion dolarů Apache 2.0;
-   Dependabot má major verzi vypnutou.
+8. **ImageSharp 4.1.3** — tady dřív stálo „3.1, ne 4" a „Dependabot má
+   major verzi vypnutou". **Obojí od commitu `8c3e808` neplatí**
+   (*Vlastní fotky k článkům a pořadatelům v R2*): čtyřka v repozitáři
+   je, major vypnutý není. Čtyřka chce při buildu licenční klíč —
+   v Debugu je to varování, **v Release chyba**, takže bez klíče
+   nepostaví API ani neprojdou testy.
+
+   Klíč čte `OrlickyPohar.Api.csproj` z proměnné
+   `SIXLABORS_LICENSE_KEY`; na GitHubu musí být **dvakrát**, protože
+   Dependabot má vlastní úložiště a k těm pro Actions nedosáhne — bez
+   toho padal každý jeho PR na `No Six Labors license found` (vyřešeno
+   19. 10. 2026). Sám klíč je podepsaný řetězec, ne krátké *License ID*:
+   na stroji je v klíčence (`security find-generic-password -s sixlabors
+   -a licence -w`), ověřit se dá Release buildem API za půl vteřiny.
+   Licence je pro jednotlivce s obratem pod milion dolarů Apache 2.0,
+   bezplatná *community* se žádá na `licensing.sixlabors.com` a klíč
+   chodí mailem.
 
 **Co je potřeba, aby to na serveru běželo** (jednou, v Cloudflaru):
 
@@ -6358,3 +6374,61 @@ tři zodpovězené a otevřený zůstává jen čtvrtý.
 4. **Co když loď kategorii přece jen změní** (nové plachty, přeměření).
    Návrh: správce ji smí přepsat a pořadí se přepočítá. Historie se nevede,
    dokud se neukáže, že je potřeba.
+
+## Fronta k 19. 10. 2026
+
+<b>Proč je tenhle oddíl v plánu, a ne v hlavě.</b> Filip, 19. 10. 2026:
+*„dvakrát jsem říkal u té editace trati a jednou jsem posílal i obrázek,
+jak to tam chci. To tu ve frontě nevidím a uděláno to není."* Fronta
+sestavená z plánu přehlédla to, co řekl v rozhovoru — a cizí session,
+která plán čte, o tom nemá odkud vědět. Jeho hlášení proto stojí
+<b>první</b> a zapisují se sem, ne jen do odpovědi.
+
+Stav se sem nepíše podle barvy nasazení: `main` i produkce byly
+19. 10. 2026 na `ebb37d8` (`/verze` obou služeb).
+
+### Co řekl a není hotové
+
+1. <b>Graf tlaku na stránce regaty.</b> Tlakový trend existuje jen jako
+   widget na hlavní (`web/app/vitr.tsx`); na stránce regaty se slovo
+   „tlak" nevyskytuje.
+2. <b>Úvodník jako příznak článku.</b> Pole neexistuje nikde — ani
+   v API, ani v mocku.
+
+### Čeká na Filipa
+
+1. <b>Zitadel:</b> Native klient a povolené přesměrování
+   `orlickypohar://prihlaseni`. Kód přihlášení v appce je hotový
+   a <b>nevyzkoušený</b> — v Expo Go se ověřit nedá (`makeRedirectUri`
+   tam vrací `exp://…`), zkouší se v APK. Visí na něm osm z deseti
+   věcí z jeho seznamu, co má appka umět.
+2. <b>Publikovat zbylé zastávky 2027 a plachetní směrnici.</b>
+3. <b>Odpovědi rozhodčího</b> na protesty a penalizace.
+
+### Velké, nezačaté
+
+1. <b>Protesty a penalizace</b> — zbytek fáze 5. Stojí na chybějícím
+   poli pro číslo pravidla a na rozhodčím.
+2. <b>Outbox / offline fronta</b> — v kódu není nic (`grep` na
+   outbox/offline nenajde ve `web/` ani v `app/` nic). Blokuje push
+   „déšť do hodiny" i to, čím má appka překonat prohlížeč na telefonu.
+3. <b>Tracker a pushky</b> — jediné dvě věci z jeho seznamu, které se
+   mimo nativní appku udělat nedají.
+
+### Nedoměřené
+
+1. <b>Zátěžový test na serveru</b>, tempo 40, před prvním ostrým
+   závodem. Postup v `platform/docs/PROVOZ.md` takhle nepoběží — míří
+   na `orlickypohar-web-1` v síti `edge`, kde web od 22. 9. 2026 není.
+2. <b>Zápis z vody na vodě</b>, se skutečným telefonem. Zatím to
+   neproběhlo nikde jinde než v prohlížeči proti mocku.
+3. <b>Sezení se skutečným pořadatelem.</b> Ze 37 scénářů
+   (`docs/SCENARE-OVLADANI.md`) jsou skupiny E a F odjeté reprodukcí,
+   zbytek ne; scénář A7 (minulá sezóna) neodjetý v mocku.
+4. <b>Testy správy přes HTTP.</b>
+
+### Drobnosti
+
+1. Odsazení tabule na demo ročnících.
+2. Kategorie lodi, když ji loď přece jen změní (viz *Zbývá doladit*,
+   bod 4).

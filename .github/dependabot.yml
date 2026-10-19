@@ -56,17 +56,20 @@ updates:
     commit-message:
       prefix: "app"
     ignore:
-      # expo-router drží číslo řady podle Expo SDK a jeho peer závislosti
-      # chtějí celou tu řadu (@expo/ui, expo-constants, @expo/metro-runtime).
-      # Major sám o sobě by vyrobil smíšený strom, který CI nezachytí —
-      # appka se jen typově kontroluje, nestaví a nespouští. Zvedá se
-      # s celým SDK, ne zvlášť.
-      - dependency-name: "expo-router"
+      # Balíčky Expo drží číslo řady podle SDK a jejich peer závislosti
+      # chtějí celou tu řadu. Major u jednoho z nich vyrobí smíšený strom,
+      # který CI nezachytí — appka se jen typově kontroluje, nestaví
+      # a nespouští. Zvedají se s celým SDK, ne zvlášť.
+      #
+      # Dřív tu stálo jen `expo` a `expo-router`, a 19. 10. 2026 to
+      # nestačilo: Dependabot poslal tři PR, co zvedaly
+      # `expo-secure-store`, `expo-crypto` a `expo-status-bar` na 58.x,
+      # zatímco `expo` zůstávalo na 57 (PR #329, #330, #331 — zavřené).
+      # Zrovna ty první dva přitom nesou přihlášení: secure-store drží
+      # token, crypto dělá PKCE. Vzor proto platí na všechny.
+      - dependency-name: "expo*"
         update-types: ["version-update:semver-major"]
-      # Totéž platí pro expo samotné a react-native: patří k sobě a mění
-      # se dohromady při upgradu SDK.
-      - dependency-name: "expo"
-        update-types: ["version-update:semver-major"]
+      # Totéž platí pro react-native: patří k SDK a mění se s ním.
       - dependency-name: "react-native"
         update-types: ["version-update:semver-major"]
 
