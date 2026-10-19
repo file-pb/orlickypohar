@@ -19,8 +19,6 @@ const drobne = new Intl.NumberFormat("cs-CZ", { minimumFractionDigits: 1, maximu
 const kc = (x: number) =>
   x === 0 ? "0 Kč" : `${(Math.abs(x) < 100 ? drobne : koruny).format(x)} Kč`;
 const hodiny = (x: number) => `${koruny.format(x)} h`;
-/** Přirážka se nesmí zaokrouhlit: při 2,5 % nesmí obrazovka hlásit 3 %. */
-const procenta = new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 2 });
 
 /**
  * Co stojí provozovat a servisovat tenhle web. Jen pro správce celého webu.
@@ -75,10 +73,13 @@ export default async function Naklady() {
   return (
     <>
       {hlava}
+      {/* Kolik procent je navíc proti přehledu platformy, se tu nepíše: je to
+          obchodní údaj, ne vysvětlení tabulky. Obrazovka je jen pro správce
+          webu, ale text se dá poslat dál screenshotem. Ceny přirážku
+          obsahují (API ji počítá), jen se nepojmenovává. */}
       <p className="podtitulek">
         <b>Provoz</b> je to, co stojí běh webu; <b>servis</b> to, co je potřeba platit, aby se na
-        něm dalo dělat. Položky jsou o {procenta.format(naklady.prirazkaProcent)} % výš než v přehledu
-        platformy — alokace serveru je spodní odhad, tohle je rezerva na to, co v ní není.
+        něm dalo dělat.
       </p>
 
       <div className="naklady-souhrn">
