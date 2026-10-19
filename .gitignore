@@ -10,3 +10,8 @@ appsettings.*.local.json
 
 secrets/*
 !secrets/README.md
+
+# Logy běžícího mocku a dev serveru. Pojistka: 19. 10. 2026 se mi
+# `mock.log` a `web.log` dostaly do commitu (#340) přes `git add -A`.
+# Patří mimo repozitář, ne do něj.
+/*.log
