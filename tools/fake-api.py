@@ -2821,6 +2821,29 @@ class H(BaseHTTPRequestHandler):
 
         return self.odpoved(trat_dto(slug, nova), 201)
 
+    def trat_dalsi(self, slug):
+        """
+        Další, prázdná trať regaty — opsané z `TratSprava.DalsiAsync`.
+
+        <b>Rozjížďka se nepřiřazuje.</b> Pořadí je volné: dá se postavit
+        napřed trať a pak jí přiřadit rozjížďku, nebo vyhlásit rozjížďku
+        a stavět, zatímco lodě čekají na vodě.
+
+        <b>Prázdná trať bez rozjížďky se nezakládá dvakrát.</b> Kdo klikne
+        na plus dvakrát, dostane tutéž — jinak by regatě přibývaly prázdné
+        tratě, které nejdou nijak uklidit. Hledá se od nejnovější, stejně
+        jako `OrderByDescending(t => t.Id)` v API.
+        """
+        if not self.zastavka(slug):
+            return None
+
+        volna = next(
+            (t for t in sorted(TRATE.get(slug) or [], key=lambda x: x["id"], reverse=True)
+             if t["rozjizdkaId"] is None and not PRVKY.get(t["id"])),
+            None,
+        )
+        return self.odpoved(trat_dto(slug, volna or trat_zaloz(slug)), 201)
+
     def trat_stav(self, slug):
         """Stav trati regaty. 404, dokud nemá ani jednu bóji — stavba
         začíná prvním pípnutím, ne zvláštním knoflíkem."""
@@ -3261,6 +3284,13 @@ class H(BaseHTTPRequestHandler):
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                 r'/trat/(\d+)/zkraceni$', cesta)):
             return self.trat_zkrat(m.group(1), int(m.group(2)))
+        # <b>Plus v záložkách tratí.</b> V mocku tahle cesta chyběla, takže
+        # „+" lokálně mlčky nic nezaložilo, zatímco na produkci trať
+        # vznikla (`TratEndpoints.cs`, `MapPost("/dalsi")`). Opraveno
+        # 19. 10. 2026.
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/trat/dalsi$', cesta)):
+            return self.trat_dalsi(m.group(1))
         if (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                 r'/trat/(hotovo|prijeti|vraceni|prestavba)$', cesta)):
