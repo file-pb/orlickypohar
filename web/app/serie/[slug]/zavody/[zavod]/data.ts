@@ -16,12 +16,20 @@ import { ApiNedostupne, nactiVerejnouTrat, nactiZavod, type VerejnaTrat, type Za
  */
 export type Zastavka = { detail: ZavodDetail; trat: VerejnaTrat | null };
 
-export async function nactiZastavku(serie: string, zavod: string): Promise<Zastavka | null> {
+export async function nactiZastavku(
+  serie: string,
+  zavod: string,
+  /**
+   * Která rozjížďka na stránce trati. Ostatní sekce ji nepředávají —
+   * potřebují trať jen kvůli pruhu o přestavbě, a tam je jedno která.
+   */
+  rozjizdka?: number,
+): Promise<Zastavka | null> {
   let detail, trat;
   try {
     [detail, trat] = await Promise.all([
       nactiZavod(serie, zavod),
-      nactiVerejnouTrat(serie, zavod),
+      nactiVerejnouTrat(serie, zavod, rozjizdka),
     ]);
   } catch (e) {
     if (e instanceof ApiNedostupne) return null;

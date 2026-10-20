@@ -55,7 +55,9 @@ public static class TratEndpoints
             .WithSummary("Trať regaty, jakmile ji rozhodčí přijal")
             .WithDescription(
                 "Bez přihlášení. Nepřijatá trať se nevydává vůbec; u přestavby se vrací "
-                + "jen příznak, že se trať přestavuje, a bóje se zamlčí.");
+                + "jen příznak, že se trať přestavuje, a bóje se zamlčí. Bez parametru "
+                + "vydává trať rozjížďky na řadě; `?rozjizdka=N` vybere konkrétní. "
+                + "Čísla rozjížděk, které veřejnou trať mají, vrací v poli `rozjizdky`.");
 
         var g = app.MapSpravu("/sprava/serie/{serie}/zastavky/{zavod}/trat");
 
@@ -210,8 +212,14 @@ public static class TratEndpoints
     /// o tom, kudy se pluje, ne výsledek.
     /// </summary>
     private static async Task<IResult> VerejnaAsync(
-        string serie, string zavod, AppDbContext db, TratSprava sprava, CancellationToken ct)
+        string serie, string zavod, int? rozjizdka,
+        AppDbContext db, TratSprava sprava, CancellationToken ct)
     {
+        // Nesmyslné číslo odmítnout rovnou: jinak by se `rozjizdka=0`
+        // chovalo jako „bez parametru" a divák by dostal jinou trať, než
+        // o kterou si řekl.
+        if (rozjizdka is <= 0) return Results.NotFound();
+
         var zavodId = await db.Zavody
             .Where(z => z.Slug == zavod && z.Publikovano
                         && z.Serie!.Slug == serie && z.Serie.Publikovano)
@@ -220,7 +228,7 @@ public static class TratEndpoints
 
         if (zavodId is null) return Results.NotFound();
 
-        return await sprava.VerejnaAsync(zavodId.Value, ct) is { } trat
+        return await sprava.VerejnaAsync(zavodId.Value, ct, rozjizdka) is { } trat
             ? Results.Ok(trat)
             : Results.NotFound();
     }

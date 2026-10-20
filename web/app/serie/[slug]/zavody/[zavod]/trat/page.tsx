@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { type VerejnaTrat } from "@/lib/api";
+import { nactiVerejnouTrat, type VerejnaTrat } from "@/lib/api";
 import { NAZVY_SMERU, nazevStrany, nazevTypu, type TypPrvku } from "@/lib/trat";
 import { MapkaTrati, naMapu } from "@/app/mapka-trati";
 import { IkonaPrvku } from "@/app/ikona-prvku";
@@ -14,7 +14,10 @@ import { nactiZastavku } from "../data";
 
 export const dynamic = "force-dynamic";
 
-type Parametry = { params: Promise<{ slug: string; zavod: string }> };
+type Parametry = {
+  params: Promise<{ slug: string; zavod: string }>;
+  searchParams: Promise<{ rozjizdka?: string }>;
+};
 
 export const metadata = { title: "Trať" };
 
@@ -30,13 +33,36 @@ export const metadata = { title: "Trať" };
  * jakmile ji rozhodčí přijme*). Prázdná stránka vypadá jako porucha a stará
  * mapka lže: kdo podle ní vyrazí, pluje k bóji, která už stojí jinde.
  */
-export default async function VerejnaTratStranka({ params }: Parametry) {
+export default async function VerejnaTratStranka({ params, searchParams }: Parametry) {
   const { slug, zavod: slugZavodu } = await params;
+  // Výběr je v adrese, ne v javascriptu: dá se poslat odkazem na konkrétní
+  // trať a po načtení zůstane. Nula a nesmysl se zahodí — API by na ně
+  // stejně vrátilo 404 a stránka by hlásila „trať není vyvěšená", což by
+  // u regaty, která tratě má, lhalo.
+  const vybrana = Number((await searchParams).rozjizdka ?? 0) || undefined;
 
-  const zastavka = await nactiZastavku(slug, slugZavodu);
+  const zastavka = await nactiZastavku(slug, slugZavodu, vybrana);
   if (!zastavka) return <Vypadek co="Trať" />;
 
   const { detail: zavod, trat } = zastavka;
+
+  /**
+   * Záložky, když vybraná rozjížďka trať nemá.
+   *
+   * <b>Bez tohohle byla stránka slepá ulička.</b> `?rozjizdka=9` — překlep,
+   * starý odkaz, zrušená rozjížďka — vrátí `null`, stránka napsala „trať
+   * zatím není vyvěšená" a <b>zahodila i záložky</b>, takže se divák neměl
+   * čím vrátit k tratím, které vyvěšené jsou. Hláška navíc lhala: regata
+   * tratě má, jen ne tuhle.
+   *
+   * Druhé volání jde jen touhle cestou, ne při každém načtení.
+   */
+  const nahradni = vybrana && trat === null
+    ? await nactiVerejnouTrat(slug, slugZavodu)
+    : null;
+  const rozjizdky = (trat ?? nahradni)?.rozjizdky ?? null;
+  // Jedna trať není z čeho vybírat; záložka by jen ubrala místo mapce.
+  const maZalozky = (rozjizdky?.length ?? 0) > 1;
   // Komunitní akce trať nemá a sekce pro ni neexistuje.
   if (zavod.druh === "Akce") notFound();
 
@@ -54,16 +80,65 @@ export default async function VerejnaTratStranka({ params }: Parametry) {
         {/* Ke které rozjížďce trať patří (plán, *Trať je veřejná*, past 2).
             U vícerozjížďkové regaty má každá jinou — bez tohohle si lidi
             stáhnou GPX od té včerejší. U regaty s jednou tratí to číslo
-            není a věta by jen překážela. */}
-        {trat?.cisloRozjizdky != null && (
+            není a věta by jen překážela.
+
+            Se záložkami se štítek neukazuje: zvýrazněná záložka říká
+            totéž a dvakrát pod sebou „2. rozjížďka" vypadá jako chyba. */}
+        {trat?.cisloRozjizdky != null && !maZalozky && (
           <span className="stitek"> {trat.cisloRozjizdky}. rozjížďka</span>
         )}
       </h2>
 
+      {/* <b>Záložka za každou veřejnou trať</b> (Filip, 20. 10. 2026:
+          *„tady se zobrazuje pouze jedna trať, i když je veřejná trať i ke
+          druhé rozjížďce. Tam bych dal tab, aby se dalo přepínat mezi
+          veřejnými tratěmi."*).
+
+          Stránka vydávala jen trať rozjížďky na řadě a o ostatních divák
+          neměl jak zjistit, že vůbec jsou — přitom u vícerozjížďkové
+          regaty je plují tytéž lodě a porovnat si je chtějí předem.
+
+          Odkazy, ne javascript: výběr je v adrese, takže se dá poslat.
+          U jedné trati se záložky nekreslí — jeden tab není z čeho vybírat
+          a jen by ubíral místo mapce. */}
+      {maZalozky && rozjizdky && (
+        <nav className="zalozky-trati verejne" aria-label="Tratě rozjížděk">
+          {rozjizdky.map((cislo) => {
+            // Bez výběru je zvýrazněná ta, kterou API vydalo samo — jinak
+            // by na „té na řadě" nesvítila žádná a vypadalo by to, že se
+            // kouká na něco mimo seznam.
+            const jeTato = (vybrana ?? trat?.cisloRozjizdky) === cislo;
+            return (
+              <a
+                key={cislo}
+                href={`/serie/${slug}/zavody/${slugZavodu}/trat?rozjizdka=${cislo}`}
+                className={jeTato ? "vybrany" : undefined}
+                aria-current={jeTato ? "page" : undefined}
+              >
+                {cislo}. rozjížďka
+              </a>
+            );
+          })}
+        </nav>
+      )}
+
       {trat === null ? (
         <p className="prazdno">
-          Trať zatím není vyvěšená. Objeví se tady ve chvíli, kdy ji rozhodčí
-          přijme — do té doby se staví a čísla by stejně neplatila.
+          {/* Dvě různé věci, dvě různé věty. „Regata trať nemá" u regaty,
+              která jich má dvě, je nepravda — a divák podle ní odejde,
+              místo aby klikl na záložku vedle. */}
+          {rozjizdky && rozjizdky.length > 0 ? (
+            <>
+              Trať téhle rozjížďky vyvěšená není. Vyber si nahoře tu, která
+              se jede — ostatní rozhodčí přijal.
+            </>
+          ) : (
+            <>
+              Trať zatím není vyvěšená. Objeví se tady ve chvíli, kdy ji
+              rozhodčí přijme — do té doby se staví a čísla by stejně
+              neplatila.
+            </>
+          )}
         </p>
       ) : trat.prestavba ? (
         // Tahle hláska je důvod, proč stránka vzniká. Dokud ji API vydávalo

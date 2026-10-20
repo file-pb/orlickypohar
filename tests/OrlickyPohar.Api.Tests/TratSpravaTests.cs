@@ -928,4 +928,128 @@ public class TratSpravaTests(PostgresFixture fixture)
         Assert.NotNull(verejna);
         Assert.Equal(1, verejna!.CisloRozjizdky);
     }
+
+    /// <summary>
+    /// <b>Divák se musí dozvědět, že veřejných tratí je víc</b> (Filip,
+    /// 20. 10. 2026: *„tady se zobrazuje pouze jedna trať, i když je
+    /// veřejná trať i ke druhé rozjížďce"*). Bez toho výčtu nemá web
+    /// z čeho postavit záložky.
+    /// </summary>
+    [Fact]
+    public async Task Verejne_rozjizdky_jdou_ven_vzestupne()
+    {
+        var (db, _, trat) = Sluzby();
+        var (zavod, _) = await RegataAsync(db);
+
+        var prvni = await RozjizdkaAsync(db, zavod, 1);
+        var druha = await RozjizdkaAsync(db, zavod, 2);
+        await PrijataTratAsync(db, zavod, druha);
+        await PrijataTratAsync(db, zavod, prvni);
+
+        var verejna = await trat.VerejnaAsync(zavod.Id, default);
+
+        Assert.Equal([1, 2], verejna!.Rozjizdky);
+    }
+
+    /// <summary>
+    /// Do výčtu patří jen rozjížďky s <b>přijatou</b> tratí. Rozestavěná
+    /// nebo přestavovaná trať veřejná není, takže záložka na ni by vedla
+    /// na prázdno.
+    /// </summary>
+    [Fact]
+    public async Task Ve_vyctu_jsou_jen_prijate_trate()
+    {
+        var (db, _, trat) = Sluzby();
+        var (zavod, _) = await RegataAsync(db);
+
+        var prvni = await RozjizdkaAsync(db, zavod, 1);
+        var druha = await RozjizdkaAsync(db, zavod, 2);
+        await PrijataTratAsync(db, zavod, prvni);
+
+        // Druhá má trať rozestavěnou, ne přijatou.
+        db.Trate.Add(new Trat
+        {
+            ZavodId = zavod.Id, RozjizdkaId = druha.Id, Stav = StavTrati.Rozestaveno,
+            ZalozenaV = Ted,
+        });
+        await db.SaveChangesAsync();
+
+        var verejna = await trat.VerejnaAsync(zavod.Id, default);
+
+        Assert.Equal([1], verejna!.Rozjizdky);
+    }
+
+    /// <summary>
+    /// Výběr podle čísla vydá trať té rozjížďky, ne té na řadě.
+    /// </summary>
+    [Fact]
+    public async Task Vybrana_rozjizdka_vyda_svou_trat()
+    {
+        var (db, _, trat) = Sluzby();
+        var (zavod, _) = await RegataAsync(db);
+
+        var prvni = await RozjizdkaAsync(db, zavod, 1);
+        var druha = await RozjizdkaAsync(db, zavod, 2);
+        prvni.Stav = StavRozjizdky.Probiha;
+        await db.SaveChangesAsync();
+
+        await PrijataTratAsync(db, zavod, prvni);
+        await PrijataTratAsync(db, zavod, druha);
+
+        // Na řadě je první, ale divák si vybral druhou.
+        var verejna = await trat.VerejnaAsync(zavod.Id, default, rozjizdka: 2);
+
+        Assert.Equal(2, verejna!.CisloRozjizdky);
+    }
+
+    /// <summary>
+    /// <b>Rozjížďka bez přijaté trati vrací null, ne náhradu.</b> Vydat
+    /// místo ní trať jiné rozjížďky by diváka tiše poslalo na špatnou
+    /// vodu — a to je horší než prázdná stránka.
+    /// </summary>
+    [Fact]
+    public async Task Vybrana_rozjizdka_bez_trati_nevraci_nahradu()
+    {
+        var (db, _, trat) = Sluzby();
+        var (zavod, _) = await RegataAsync(db);
+
+        var prvni = await RozjizdkaAsync(db, zavod, 1);
+        await RozjizdkaAsync(db, zavod, 2);
+        await PrijataTratAsync(db, zavod, prvni);
+
+        Assert.Null(await trat.VerejnaAsync(zavod.Id, default, rozjizdka: 2));
+        Assert.Null(await trat.VerejnaAsync(zavod.Id, default, rozjizdka: 99));
+    }
+
+    /// <summary>
+    /// <b>Přestavba zamlčí jen trať na řadě.</b> Kdo si vybral konkrétní
+    /// rozjížďku, dostane její trať — ta se nepřestavuje a ve vodě
+    /// spolehlivě stojí.
+    /// </summary>
+    [Fact]
+    public async Task Prestavba_nezamlci_vybranou_rozjizdku()
+    {
+        var (db, _, trat) = Sluzby();
+        var (zavod, _) = await RegataAsync(db);
+
+        var prvni = await RozjizdkaAsync(db, zavod, 1);
+        var druha = await RozjizdkaAsync(db, zavod, 2);
+        await PrijataTratAsync(db, zavod, prvni);
+
+        // Nejnovější trať je v přestavbě, takže bez výběru se zamlčí.
+        db.Trate.Add(new Trat
+        {
+            ZavodId = zavod.Id, RozjizdkaId = druha.Id, Stav = StavTrati.Prestavba,
+            ZalozenaV = Ted,
+        });
+        await db.SaveChangesAsync();
+
+        var bezVyberu = await trat.VerejnaAsync(zavod.Id, default);
+        Assert.True(bezVyberu!.Prestavba);
+        Assert.Equal([1], bezVyberu.Rozjizdky);
+
+        var prvniRozjizdka = await trat.VerejnaAsync(zavod.Id, default, rozjizdka: 1);
+        Assert.False(prvniRozjizdka!.Prestavba);
+        Assert.Equal(1, prvniRozjizdka.CisloRozjizdky);
+    }
 }

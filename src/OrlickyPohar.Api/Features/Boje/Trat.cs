@@ -276,7 +276,24 @@ public record VerejnaTratDto(
     /// </para>
     /// </summary>
     int? ZkracenoUPrvkuId = null,
-    DateTimeOffset? ZkracenoV = null);
+    DateTimeOffset? ZkracenoV = null,
+    /// <summary>
+    /// Čísla rozjížděk, které mají veřejnou trať — vzestupně. Podle nich
+    /// se dá přepnout na kteroukoliv z nich (<c>?rozjizdka=</c>).
+    /// <para>
+    /// <b>Proč to je</b> (Filip, 20. 10. 2026): *„tady se zobrazuje pouze
+    /// jedna trať, i když je veřejná trať i ke druhé rozjížďce. Tam bych
+    /// dal tab, aby se dalo přepínat mezi veřejnými tratěmi."* Endpoint
+    /// vydával jen tu na řadě a o ostatních divák neměl jak zjistit, že
+    /// vůbec jsou.
+    /// </para>
+    /// <para>
+    /// <b>Jen tratě s rozjížďkou.</b> Přijatá trať bez rozjížďky se nedá
+    /// pojmenovat ani adresovat; vydává se dál jako ta na řadě, jen na ni
+    /// nevede záložka.
+    /// </para>
+    /// </summary>
+    IReadOnlyList<int>? Rozjizdky = null);
 
 /// <summary>
 /// Trať v nabídce „jede se tahle". <b>Počet prvků je tu schválně</b>:

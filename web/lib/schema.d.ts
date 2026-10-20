@@ -5804,6 +5804,7 @@ export interface components {
             zkracenoUPrvkuId?: null | number;
             /** Format: date-time */
             zkracenoV?: null | string;
+            rozjizdky?: null | number[];
         };
         VerejnyKonecDto: {
             nazev: string;

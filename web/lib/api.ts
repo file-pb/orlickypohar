@@ -124,9 +124,16 @@ export type VerejnaTrat = components["schemas"]["VerejnaTratDto"];
 export async function nactiVerejnouTrat(
   serie: string,
   zavod: string,
+  /**
+   * Rozjížďka, jejíž trať se má vydat. Bez ní API vydá tu na řadě.
+   * <b>Neznámé číslo vrací 404</b>, tedy `null` — a to je správně: trať
+   * jiné rozjížďky by diváka tiše poslala na špatnou vodu.
+   */
+  rozjizdka?: number,
 ): Promise<VerejnaTrat | null> {
   const cesta =
-    `/serie/${encodeURIComponent(serie)}/zavody/${encodeURIComponent(zavod)}/trat`;
+    `/serie/${encodeURIComponent(serie)}/zavody/${encodeURIComponent(zavod)}/trat` +
+    (rozjizdka ? `?rozjizdka=${rozjizdka}` : "");
 
   let odpoved: Response;
   try {

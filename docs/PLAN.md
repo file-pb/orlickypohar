@@ -2293,6 +2293,31 @@ chartplotteru. Pak divákovi a médiím. A protože to dostanou všichni
 najednou, není to výhoda pro nikoho — dnešní stav, kdy trať vidí jen
 pořadatel a rozhodčí, je k závodníkům přísnější, ne spravedlivější.
 
+**Záložky mezi veřejnými tratěmi** (Filip, 20. 10. 2026): *„tady se
+zobrazuje pouze jedna trať, i když je veřejná trať i ke druhé rozjížďce.
+Tam bych dal tab, aby se dalo přepínat mezi veřejnými tratěmi."* Stránka
+vydávala jen trať rozjížďky na řadě (`NaRadeAsync`) a o ostatních divák
+neměl jak zjistit, že vůbec jsou — přitom u vícerozjížďkové regaty je
+plují tytéž lodě a chtějí si je porovnat předem.
+
+Hotové 20. 10. 2026. `VerejnaTratDto` nese `rozjizdky` — čísla rozjížděk
+s přijatou tratí — a endpoint bere `?rozjizdka=N`. Tři věci, které u toho
+byly rozhodnuté:
+
+- **Neznámé číslo vrací 404, ne náhradu.** Vydat místo vybrané trati jinou
+  by diváka tiše poslalo na špatnou vodu.
+- **Stránka přesto zůstane průchodná.** Když vybraná rozjížďka trať nemá,
+  web si dotáhne výčet druhým voláním a záložky nechá stát; bez toho byla
+  adresa s překlepem slepá ulička a hláška *„trať zatím není vyvěšená"*
+  lhala u regaty, která jich má dvě.
+- **Přestavba zamlčí jen trať na řadě.** Kdo si vybral konkrétní
+  rozjížďku, dostane její trať — ta se nepřestavuje a ve vodě stojí.
+
+A poznámka k mocku: dvě přijaté tratě má od 20. 10. 2026 i
+`tools/fake-api.py`. Do té doby měl jedinou, a tu rozestavěnou, takže
+veřejná stránka trati lokálně vracela 404 — tenhle stav se nedal
+vyzkoušet vůbec.
+
 **Dvě pasti, obě o tom, že obrazovka nesmí lhát:**
 
 1. **Odemčení kvůli přestavbě.** Veřejná stránka v tu chvíli nesmí dál
