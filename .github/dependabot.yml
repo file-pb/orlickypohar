@@ -69,9 +69,36 @@ updates:
       # token, crypto dělá PKCE. Vzor proto platí na všechny.
       - dependency-name: "expo*"
         update-types: ["version-update:semver-major"]
-      # Totéž platí pro react-native: patří k SDK a mění se s ním.
+      # <b>React a React Native drží SDK taky</b>, a tady to 20. 10. 2026
+      # stálo tři další červené PR (#345, #346, #347 — zavřené): bumpy
+      # `react-native` 0.86.3 → 0.88.0, `react-dom` 19.2.3 → 19.3.1
+      # a `react` shodily rovnou `npm install` na peer závislostech
+      # (`expo@"~57.0.30" from the root project` a dvacítka `@expo/*`).
+      #
+      # Minor je u nich stejně nebezpečný jako major: `react-native` je
+      # na nule, takže 0.86 → 0.88 je formálně minor, ale fakticky řada
+      # vedle — a předchozí pravidlo na major ho proto pustilo. Patch
+      # zůstává povolený; ten SDK snese.
       - dependency-name: "react-native"
-        update-types: ["version-update:semver-major"]
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+      - dependency-name: "react"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+      - dependency-name: "react-dom"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+      # Typy mají sledovat runtime — totéž pravidlo jako u `@types/node`
+      # ve webu (plán, *Závislosti*). `@types/react` pro 19.3 by popisoval
+      # React, který v appce není, takže by kontrola schválila kód, co za
+      # běhu spadne.
+      - dependency-name: "@types/react"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
 
   - package-ecosystem: docker
     directory: "/"
