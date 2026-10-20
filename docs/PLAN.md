@@ -6,13 +6,15 @@ výsledky, administrace a mobilní přístup.
 **Jméno projektu:** `orlickypohar` → `orlickypohar.klihovka.cz`
 (bez pomlčky a podtržítka — jméno slouží zároveň jako databáze, role i subdoména).
 
-**Stav k 19. 10. 2026: fáze 0 až 4 a fáze 6 hotové; ve fázi 5 zbývají
+**Stav k 20. 10. 2026: fáze 0 až 4 a fáze 6 hotové; ve fázi 5 zbývají
 protesty a penalizace; fáze 7 a 9 nezačaté; z fáze 8 stojí bóje na trati
-i s mapkou, trať se staví průvodcem a dá se smazat i odepnout od
-rozjížďky.** Co je rozdělané a co na koho čeká, je v oddílu *Fronta
-k 19. 10. 2026* úplně dole — ten je ze všech nejčerstvější. Co přesně
-chybí, rozepisuje *Co ještě chybí (audit 8. 10. 2026)*; v jakém pořadí
-to dělat, *Pořadí po 11. 10. 2026* na jeho konci.
+i s mapkou, trať se staví průvodcem, dá se smazat, odepnout od rozjížďky
+a veřejně se mezi tratěmi přepíná záložkami. Konec rozjížďky je od
+20. 10. rozhodnutí pořadatele, ne dopočet ze zápisu.** Co je rozdělané
+a co na koho čeká, je v oddílu *Fronta k 20. 10. 2026* úplně dole — ten
+je ze všech nejčerstvější. Co přesně chybí, rozepisuje *Co ještě chybí
+(audit 8. 10. 2026)*; v jakém pořadí to dělat, *Pořadí po 11. 10. 2026*
+na jeho konci.
 
 | | |
 |---|---|
@@ -6432,10 +6434,94 @@ tlačítko **Zastavit čas**. Co u toho bylo rozhodnuté:
 Z Filipova výčtu *„časomíra zastavena, rozjížďka pozastavena/dojetá,
 zrušená, opakování startu"* zůstává **nerozebrané „pozastavení"** — tedy
 přerušení rozjížďky, která pak pokračuje. Zrušení i opakování startu
-existují, dojetí teď taky; pozastavení by byl pátý stav a čeká na to, až
-se ukáže, co má na vodě znamenat.
+existují, dojetí teď taky; pozastavení by byl pátý stav.
 
-## Fronta k 19. 10. 2026
+**Odloženo rozhodnutím, ne opomenutím** (Filip, 20. 10. 2026:
+*„pozastavení zatím dělat nebudem, je to sporné a musí se to
+promyslet"*). Kdo sem přijde později: tohle není nedodělek k dokončení.
+
+## Fronta k 20. 10. 2026
+
+<b>Proč je tenhle oddíl v plánu, a ne v hlavě.</b> Filip, 19. 10. 2026:
+*„dvakrát jsem říkal u té editace trati a jednou jsem posílal i obrázek,
+jak to tam chci. To tu ve frontě nevidím a uděláno to není."* Fronta
+sestavená z plánu přehlédla to, co řekl v rozhovoru — a cizí session,
+která plán čte, o tom nemá odkud vědět. Jeho hlášení proto stojí
+<b>první</b> a zapisují se sem, ne jen do odpovědi.
+
+Stav se sem nepíše podle barvy nasazení: `main` i produkce byly
+20. 10. 2026 na `7bff59f` (`/verze` obou služeb).
+
+### Co řekl a není hotové
+
+1. <b>Graf tlaku na stránce regaty.</b> Tlakový trend existuje jen jako
+   widget na hlavní (`web/app/vitr.tsx`); na stránce regaty se slovo
+   „tlak" nevyskytuje.
+2. <b>Úvodník jako příznak článku.</b> Pole neexistuje nikde — ani
+   v API, ani v mocku.
+
+Ostatní z 19. a 20. 10. je hotové a nasazené: záložky mezi veřejnými
+tratěmi, cesta z revize, cíle dlaždic v „co teď", karta dojezdu na
+tabuli a zastavení časomíry. <b>Pozastavení rozjížďky je odložené
+rozhodnutím</b> (viz *Konec rozjížďky je rozhodnutí*).
+
+### Čeká na Filipa
+
+1. <b>Zitadel:</b> Native klient a povolené přesměrování
+   `orlickypohar://prihlaseni`. Kód přihlášení v appce je hotový
+   a <b>nevyzkoušený</b> — v Expo Go se ověřit nedá (`makeRedirectUri`
+   tam vrací `exp://…`), zkouší se v APK. Visí na něm osm z deseti
+   věcí z jeho seznamu, co má appka umět.
+2. <b>Publikovat zbylé zastávky 2027 a plachetní směrnici.</b>
+3. <b>Odpovědi rozhodčího</b> na protesty a penalizace.
+
+Licenční klíč ImageSharpu je od 20. 10. 2026 vyřízený — v Actions
+i v Dependabot secrets, ověřeno tím, že jeho PR poprvé prošly buildem.
+
+### Velké, nezačaté
+
+1. <b>Protesty a penalizace</b> — zbytek fáze 5. Stojí na chybějícím
+   poli pro číslo pravidla a na rozhodčím.
+2. <b>Outbox / offline fronta</b> — v kódu není nic. Blokuje push
+   „déšť do hodiny" i to, čím má appka překonat prohlížeč na telefonu.
+3. <b>Tracker a pushky</b> — jediné dvě věci z jeho seznamu, které se
+   mimo nativní appku udělat nedají.
+
+### Nedoměřené
+
+1. <b>Zátěžový test na serveru</b>, tempo 40, před prvním ostrým
+   závodem. Postup v `platform/docs/PROVOZ.md` takhle nepoběží — míří
+   na `orlickypohar-web-1` v síti `edge`, kde web od 22. 9. 2026 není.
+2. <b>Zápis z vody na vodě</b>, se skutečným telefonem. Zatím to
+   neproběhlo nikde jinde než v prohlížeči proti mocku. <b>Zastavení
+   časomíry je v tomhle stavu taky</b> — vyzkoušené proti mocku,
+   ne v cíli.
+3. <b>Sezení se skutečným pořadatelem.</b> Ze 37 scénářů
+   (`docs/SCENARE-OVLADANI.md`) jsou skupiny E a F odjeté reprodukcí,
+   zbytek ne; scénář A7 (minulá sezóna) neodjetý v mocku.
+4. <b>Testy správy přes HTTP.</b>
+
+### Drobnosti
+
+1. Odsazení tabule na demo ročnících.
+2. Kategorie lodi, když ji loď přece jen změní (viz *Zbývá doladit*,
+   bod 4).
+
+### Co se nasadilo 20. 10. 2026
+
+`39c369f` záložky mezi veřejnými tratěmi · `7ec667e` React v appce drží
+SDK · `a3846d5` cesta z revize · `641b251` cíle dlaždic · `cc6b1d6`
+karta dojezdu · `921256a` zastavení časomíry · `7bff59f` AWSSDK.S3
+a React pinovaný i v patchi.
+
+<b>Nastavení produkce:</b> u Jarního větru 2027 je od 20. 10. zapnutý
+<b>procesní děj</b> (Filip: *„dej ty dojezdy u tabule"*), takže tabule
+hlásí dojezdy, jak padají, a ne až po podpisu. Ostatní regaty ho zapnutý
+nemají — bez něj se nepodepsaná čísla ven nevydávají vůbec (`venku`
+v `ZavodEndpoints`), a to je ta nejčastější příčina, proč „se na tabuli
+nic neděje".
+
+## Fronta k 19. 10. 2026 (překonaná, viz výš)
 
 <b>Proč je tenhle oddíl v plánu, a ne v hlavě.</b> Filip, 19. 10. 2026:
 *„dvakrát jsem říkal u té editace trati a jednou jsem posílal i obrázek,
