@@ -966,4 +966,40 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         var nacteny = await zapis.NactiAsync(rozjizdka, poradatel: true, default);
         Assert.Equal(rozjizdka.Revize, nacteny.Revize);
     }
+
+    /// <summary>
+    /// <b>Rozcestník dostane čísla rozjížděk, ne jen počty</b> (Filip,
+    /// 20. 10. 2026: *„tyhle tři tlačítka vypadá že dělají asi to samé"*).
+    /// Bez čísel neumí dlaždice pustit do té rozjížďky, která čeká, a
+    /// všechny vedly na tentýž seznam.
+    /// </summary>
+    [Fact]
+    public async Task Zastavky_vydaji_cisla_rozjizdek_podle_toho_kdo_ceka()
+    {
+        var slug = "zastavky-cisla";
+        // Druhá rozjížďka čeká na podpis; první je potvrzená a venku.
+        await Nahraj(Rocnik(slug, druhaStav: StavVysledku.Overeno, druhaPublikovana: false));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var sprava = scope.ServiceProvider.GetRequiredService<VysledkySprava>();
+
+        var serieId = await db.Serie.Where(s => s.Slug == slug).Select(s => s.Id).SingleAsync();
+        var zastavka = Assert.Single(await sprava.ZastavkyAsync(serieId, default));
+
+        Assert.Equal([2], zastavka.KPodpisu);
+        Assert.Empty(zastavka.KRevizi);
+        Assert.Empty(zastavka.KPublikaci);
+
+        // Vrácení prvni k revizi se musí objevit u pořadatele, ne u rozhodčího.
+        var prvni = await db.Rozjizdky
+            .Where(r => r.Zavod!.Serie!.Slug == slug && r.Cislo == 1)
+            .SingleAsync();
+        prvni.StavVysledku = StavVysledku.KRevizi;
+        await db.SaveChangesAsync();
+
+        var po = Assert.Single(await sprava.ZastavkyAsync(serieId, default));
+        Assert.Equal([1], po.KRevizi);
+        Assert.Equal([2], po.KPodpisu);
+    }
 }

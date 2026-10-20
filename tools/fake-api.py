@@ -4472,16 +4472,19 @@ class H(BaseHTTPRequestHandler):
             telo = [{"zavod": z["slug"], "nazev": z["nazev"], "datum": z["datum"],
                      "stav": z["stav"], "pocetRozjizdek": len(z["rozjizdky"]),
                      "publikovanych": sum(1 for r in z["rozjizdky"] if r["publikovano"]),
-                     "kRevizi": sum(1 for r in z["rozjizdky"]
-                                    if r["stavVysledku"] == "KRevizi"),
+                     # <b>Čísla rozjížděk, ne počty</b> — rozcestník z nich
+                     # pouští rovnou do té, co čeká, když je jediná.
+                     # Vzestupně, ať dlaždice bere nejnižší nedodělanou.
+                     "kRevizi": sorted(r["cislo"] for r in z["rozjizdky"]
+                                       if r["stavVysledku"] == "KRevizi"),
                      # Na koho se čeká. Podpis rozhodčího je na stavu zápisu,
                      # ne na publikaci: veřejná rozjížďka může čekat zrovna tak.
-                     "kPodpisu": sum(1 for r in z["rozjizdky"]
-                                     if r["stavVysledku"] in ("Navrzeno", "Overeno",
-                                                              "Schvaleno")),
-                     "kPublikaci": sum(1 for r in z["rozjizdky"]
-                                       if r["stavVysledku"] == "Potvrzeno"
-                                       and not r["publikovano"])}
+                     "kPodpisu": sorted(r["cislo"] for r in z["rozjizdky"]
+                                        if r["stavVysledku"] in ("Navrzeno", "Overeno",
+                                                                 "Schvaleno")),
+                     "kPublikaci": sorted(r["cislo"] for r in z["rozjizdky"]
+                                          if r["stavVysledku"] == "Potvrzeno"
+                                          and not r["publikovano"])}
                     for z in sorted((z for z in D["zavody"] if z["druh"] == "Pohar"),
                                     key=lambda z: z["poradi"])]
         elif (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)$', cesta)):
