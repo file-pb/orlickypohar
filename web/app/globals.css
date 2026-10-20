@@ -1827,6 +1827,21 @@ th.vlevo, td.vlevo { text-align: left; }
 }
 .vitr-tlak-zmena { flex-basis: 100%; font-size: 0.72rem; color: var(--tlumeny); font-variant-numeric: tabular-nums; }
 
+/* Průběh tlaku za 24 h. Nízký pruh přes celou šířku boku: čte se z něj
+   tvar, ne hodnoty — ty stojí v číslech nad ním. `vector-effect` drží
+   čáru stejně tenkou i přes `preserveAspectRatio: none`, které viewBox
+   roztáhne do šířky boku. */
+.vitr-tlak-graf { display: block; width: 100%; height: 1.7rem; margin: 0.1rem 0 0.2rem; overflow: visible; }
+.vitr-tlak-graf .krivka {
+  fill: none; stroke: var(--voda); stroke-width: 1.5;
+  stroke-linejoin: round; stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.vitr-tlak-graf .osa {
+  fill: none; stroke: var(--linka); stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
 /* Teplota vody: nádrž ze satelitu a kvalita ke koupání. */
 .teplota-vody ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
 .teplota-reka { font-size: 0.85rem; font-weight: 600; }

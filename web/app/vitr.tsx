@@ -131,6 +131,7 @@ function Tlak({ trend }: { trend: TlakTrend | null }) {
           {sipka} {zmena} za {TLAK_HODIN} h · {popisTrendu(trend.zmena)}
         </span>
       </p>
+      <GrafTlaku prubeh={trend.prubeh} />
       {trend.zmena <= TLAK_VAROVANI && (
         <p className="vitr-stoceni">
           Tlak za {TLAK_HODIN} hodiny klesl o {f(-trend.zmena)} hPa. Takový pokles obvykle předchází zesílení
@@ -138,6 +139,59 @@ function Tlak({ trend }: { trend: TlakTrend | null }) {
         </p>
       )}
     </>
+  );
+}
+
+/**
+ * Průběh tlaku za 24 hodin (Filip, 20. 10. 2026 — poslední položka
+ * z fronty *Úvodník a taby*).
+ *
+ * <b>Číslo říká „kolik", tvar říká „co se děje".</b> Trend za tři hodiny
+ * nerozliší tlak, který klesá rovnoměrně celý den, od toho, co se zlomil
+ * před hodinou — a na vodě je to rozdíl mezi „bude foukat" a „fouká teď".
+ *
+ * <b>Kreslí se na serveru, bez javascriptu.</b> Je to statická křivka bez
+ * interakce, takže klientská komponenta by přinesla jen režii; stejně jako
+ * mapka trati je to prostě SVG v odpovědi.
+ *
+ * <b>Osa y je natažená na rozsah dat, ne na pevnou škálu.</b> Tlak se za
+ * den hýbe o jednotky hPa, takže na škále 950–1050 by křivka byla rovná
+ * čára. Kolik to dělá absolutně, stojí vedle v číslech.
+ */
+function GrafTlaku({ prubeh }: { prubeh: TlakTrend["prubeh"] }) {
+  // Pod pár body nemá křivka co ukázat a dvě měření nejsou průběh.
+  if (prubeh.length < 6) return null;
+
+  const hodnoty = prubeh.map((m) => m.tlak);
+  const nejmin = Math.min(...hodnoty);
+  const nejvic = Math.max(...hodnoty);
+  // Plochá řada by dělila nulou; půl hPa dá čáře místo uprostřed.
+  const rozpeti = nejvic - nejmin || 0.5;
+
+  const sirka = 100;
+  const vyska = 24;
+  const body = prubeh.map((m, i) => {
+    const x = (i / (prubeh.length - 1)) * sirka;
+    const y = vyska - ((m.tlak - nejmin) / rozpeti) * vyska;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+
+  const odKdy = new Date(prubeh[0].cas);
+  const hodin = Math.round((Date.parse(prubeh.at(-1)!.cas) - odKdy.getTime()) / 3_600_000);
+
+  return (
+    <svg
+      className="vitr-tlak-graf"
+      viewBox={`0 0 ${sirka} ${vyska}`}
+      preserveAspectRatio="none"
+      role="img"
+      aria-label={`Průběh tlaku za ${hodin} hodin: od ${Math.round(nejmin)} do ${Math.round(nejvic)} hPa na stanici.`}
+    >
+      {/* Čára pod křivkou dává oku, kde je dole — bez ní se stoupání
+          a klesání na úzkém pruhu plete. */}
+      <polyline className="osa" points={`0,${vyska} ${sirka},${vyska}`} />
+      <polyline className="krivka" points={body.join(" ")} />
+    </svg>
   );
 }
 
