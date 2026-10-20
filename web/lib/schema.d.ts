@@ -5944,6 +5944,9 @@ export interface components {
              * @default 0
              */
             revize: number;
+            /** Format: date-time */
+            konecV?: null | string;
+            stav?: components["schemas"]["StavRozjizdky"];
         };
         ZapisTeplotyRadek: {
             snimek: string;

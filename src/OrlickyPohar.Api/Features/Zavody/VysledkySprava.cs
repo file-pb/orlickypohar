@@ -205,7 +205,8 @@ public class VysledkySprava(AppDbContext db)
         return Zapis.StavPoZapisu(
             StavRozjizdky.Planovana,
             rozjizdka.StartV is not null,
-            lode.Select(u => (u.Stav, sVysledkem.Contains(u.Id))));
+            lode.Select(u => (u.Stav, sVysledkem.Contains(u.Id))),
+            rozjizdka.KonecV is not null);
     }
 
     /// <summary>

@@ -26,6 +26,9 @@ namespace OrlickyPohar.Api.Tests;
 [Collection(PostgresCollection.Name)]
 public class VysledkySpravaTests(PostgresFixture fixture)
 {
+    /// Pevný okamžik, ať se časy v testech dají porovnávat.
+    private static readonly DateTimeOffset Ted = DateTimeOffset.UnixEpoch.AddHours(9);
+
     private static readonly JsonSerializerOptions Json =
         new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
 
@@ -965,6 +968,72 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         // A obrazovka ji vydává, aby ji klient měl co poslat zpátky.
         var nacteny = await zapis.NactiAsync(rozjizdka, poradatel: true, default);
         Assert.Equal(rozjizdka.Revize, nacteny.Revize);
+    }
+
+    /// <summary>
+    /// <b>Zastavená časomíra uzavře rozjížďku, i když lodě nejsou zapsané</b>
+    /// (Filip, 20. 10. 2026: *„lodě bez cíle dopíšeme, ale čas už zastav"*).
+    /// Dřív se čekalo, až má každá loď dojezd nebo kód — tedy až se dopsal
+    /// papír, což je na vodě obráceně.
+    /// </summary>
+    [Fact]
+    public async Task Zastaveni_casu_uzavre_rozjizdku_i_bez_zapisu()
+    {
+        var slug = "konec-casomiry";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (db, zapis, rozjizdka, _) = await OtevrenaAsync(scope, slug);
+
+        // Bez startu není co zastavit — jinak by vznikla „dojetá" rozjížďka,
+        // která se nikdy nejela. Na to je zrušení.
+        rozjizdka.StartV = null;
+        rozjizdka.Stav = StavRozjizdky.Planovana;
+        await db.SaveChangesAsync();
+        Assert.NotNull(await zapis.KonecAsync(rozjizdka, Ted, default));
+
+        Assert.Null(await zapis.StartAsync(rozjizdka, Ted, default));
+        Assert.Equal(StavRozjizdky.Probiha, rozjizdka.Stav);
+
+        // Konec před startem je špatně nastavený čas, ne dojezd.
+        Assert.NotNull(await zapis.KonecAsync(rozjizdka, Ted.AddMinutes(-5), default));
+
+        // Ani jedna loď nemá dojezd, a rozjížďka je přesto dojetá.
+        Assert.Null(await zapis.KonecAsync(rozjizdka, Ted.AddMinutes(20), default));
+        Assert.Equal(StavRozjizdky.Dokoncena, rozjizdka.Stav);
+        Assert.Equal(Ted.AddMinutes(20), rozjizdka.KonecV);
+
+        // Zápis zůstal otevřený — lodě se dopisují dál.
+        Assert.Equal(StavVysledku.Navrzeno, rozjizdka.StavVysledku);
+
+        // Puštění vrátí rozhodování zápisu.
+        Assert.Null(await zapis.KonecAsync(rozjizdka, null, default));
+        Assert.Null(rozjizdka.KonecV);
+        Assert.Equal(StavRozjizdky.Probiha, rozjizdka.Stav);
+    }
+
+    /// <summary>
+    /// <b>Nový start je opakování startu</b> (Filip, 20. 10. 2026 ho jmenoval
+    /// mezi stavy rozjížďky). Zastavený čas u něj padá — jinak by rozjížďka,
+    /// která se právě rozjela znovu, zůstala viset jako dojetá.
+    /// </summary>
+    [Fact]
+    public async Task Opakovany_start_zrusi_zastavenou_casomiru()
+    {
+        var slug = "konec-opakovany-start";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var (_, zapis, rozjizdka, _) = await OtevrenaAsync(scope, slug);
+
+        Assert.Null(await zapis.StartAsync(rozjizdka, Ted, default));
+        Assert.Null(await zapis.KonecAsync(rozjizdka, Ted.AddMinutes(30), default));
+        Assert.Equal(StavRozjizdky.Dokoncena, rozjizdka.Stav);
+
+        Assert.Null(await zapis.StartAsync(rozjizdka, Ted.AddHours(1), default));
+
+        Assert.Null(rozjizdka.KonecV);
+        Assert.Equal(StavRozjizdky.Probiha, rozjizdka.Stav);
     }
 
     /// <summary>

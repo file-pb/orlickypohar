@@ -13,6 +13,12 @@ public record PublikaceVysledkuVstup(bool Publikovano);
 /// <summary>Start rozjížďky. Bez času platí okamžik požadavku.</summary>
 public record StartVstup(DateTimeOffset? StartV = null);
 
+/// <summary>
+/// Zastavení časomíry. Bez času se vezme okamžik požadavku;
+/// <c>Pustit: true</c> zastavení zruší a čas běží dál.
+/// </summary>
+public record KonecVstup(DateTimeOffset? KonecV = null, bool Pustit = false);
+
 /// <summary>Nová rozjížďka. Bez těla jde do poháru, jako dřív.</summary>
 public record NovaRozjizdkaVstup(bool DoSerie = true);
 
@@ -71,7 +77,17 @@ public static class VysledkyEndpoints
             .WithSummary("Zapíše start rozjížďky")
             .WithDescription(
                 "Cílová obrazovka. Bez času v těle se vezme okamžik požadavku. Jde přepsat, " +
-                "dokud je zápis otevřený; časy dojetých lodí se přepočítají.");
+                "dokud je zápis otevřený; časy dojetých lodí se přepočítají. Nový start " +
+                "zruší zastavenou časomíru — je to opakování startu.");
+
+        g.MapPost("/{zavod}/rozjizdky/{cislo:int}/konec", KonecAsync)
+            .Produces<ZapisRozjizdkyDto>()
+            .WithSummary("Zastaví časomíru rozjížďky, nebo ji pustí znovu")
+            .WithDescription(
+                "Cílová obrazovka. Zastavením je rozjížďka dojetá, i když lodě ještě nemají "
+                + "dojezd ani kód — ty se dopisují dál, zápis zůstává otevřený. Bez času "
+                + "v těle se vezme okamžik požadavku; `pustit: true` zastavení zruší a stav "
+                + "se dopočítá ze zápisu jako dřív. Zastavit jde jen odstartovanou rozjížďku.");
 
         // Token jde v hlavičce, ne v cookie — proti podvrženému formuláři
         // tu není co chránit (stejně jako u obrázku článku).
@@ -193,6 +209,24 @@ public static class VysledkyEndpoints
         if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
 
         if (await zapis.StartAsync(rozjizdka, vstup?.StartV ?? cas.GetUtcNow(), ct) is { } chyba)
+            return Results.BadRequest(new { error = chyba });
+
+        return Results.Ok(await zapis.NactiAsync(rozjizdka, poradatel: true, ct));
+    }
+
+    private static async Task<IResult> KonecAsync(
+        string serie, string zavod, int cislo, [FromBody] KonecVstup? vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, VysledkySprava sprava, ZapisSprava zapis, TimeProvider cas,
+        CancellationToken ct)
+    {
+        if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
+            return Results.NotFound();
+
+        var (rozsah, rozjizdka) = nalezena;
+        if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        var kdy = vstup?.Pustit == true ? (DateTimeOffset?)null : vstup?.KonecV ?? cas.GetUtcNow();
+        if (await zapis.KonecAsync(rozjizdka, kdy, ct) is { } chyba)
             return Results.BadRequest(new { error = chyba });
 
         return Results.Ok(await zapis.NactiAsync(rozjizdka, poradatel: true, ct));

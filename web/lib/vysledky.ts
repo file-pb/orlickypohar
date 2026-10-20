@@ -280,6 +280,30 @@ export async function odstartuj(
   return { zapis: (await odpoved.json()) as ZapisRozjizdky };
 }
 
+/**
+ * Zastaví časomíru rozjížďky, nebo ji pustí znovu.
+ *
+ * <b>Zastavením je rozjížďka dojetá</b>, i když lodě ještě nemají dojezd
+ * ani kód (Filip, 20. 10. 2026: *„lodě bez cíle dopíšeme, ale čas už
+ * zastav"*). Zápis zůstává otevřený a dopisuje se dál.
+ */
+export async function konecRozjizdky(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  /** `false` zastavení zruší a čas běží dál — opakování startu to udělá samo. */
+  zastavit: boolean,
+): Promise<{ chyba: string } | { zapis: ZapisRozjizdky }> {
+  const odpoved = await posli(
+    kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}/konec`),
+    zastavit ? {} : { pustit: true },
+    "POST",
+  );
+  if (typeof odpoved === "string") return { chyba: odpoved };
+  if (!odpoved.ok) return { chyba: await hlaska(odpoved) };
+  return { zapis: (await odpoved.json()) as ZapisRozjizdky };
+}
+
 /** Snímky zápisu od jednotlivých zapisovatelů (krok 4). */
 export const nactiNavrhy = (serie: string, zavod: string, cislo: number) =>
   cti<Navrhy>(kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}/navrhy`));

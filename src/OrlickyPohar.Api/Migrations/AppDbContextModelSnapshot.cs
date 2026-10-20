@@ -17,7 +17,7 @@ namespace OrlickyPohar.Api.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -1045,6 +1045,9 @@ namespace OrlickyPohar.Api.Migrations
 
                     b.Property<Guid?>("FotkaId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("KonecV")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("Publikovano")
                         .HasColumnType("boolean");

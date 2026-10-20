@@ -307,4 +307,66 @@ public class ZapisTests
             StavRozjizdky.Probiha,
             Zapis.StavPoZapisu(StavRozjizdky.Probiha, true, []));
     }
+
+    /// <summary>
+    /// <b>Zastavená časomíra uzavře rozjížďku bez ohledu na zápis</b>
+    /// (Filip, 20. 10. 2026: *„lodě bez cíle dopíšeme, ale čas už
+    /// zastav"*). Dokud to uměl jen zápis, rozjížďka se dvěma lodmi bez
+    /// dojezdu zůstávala „jede se" i hodinu po tom, co se na vodě
+    /// dojezdilo.
+    /// </summary>
+    [Fact]
+    public void Zastaveny_cas_rozjizdku_dojede_i_bez_zapisu()
+    {
+        // Dvě lodě na vodě, jen jedna zapsaná — bez zastavení se jede dál.
+        var jednaCeka = new[] { (StavUcasti.Potvrzena, true), (StavUcasti.Potvrzena, false) };
+
+        Assert.Equal(
+            StavRozjizdky.Probiha,
+            Zapis.StavPoZapisu(StavRozjizdky.Probiha, true, jednaCeka));
+
+        Assert.Equal(
+            StavRozjizdky.Dokoncena,
+            Zapis.StavPoZapisu(StavRozjizdky.Probiha, true, jednaCeka, casZastaven: true));
+
+        // Ani prázdná rozjížďka nezůstane viset: zastavit čas je rozhodnutí
+        // pořadatele, ne dopočet z toho, kdo dojel.
+        Assert.Equal(
+            StavRozjizdky.Dokoncena,
+            Zapis.StavPoZapisu(StavRozjizdky.Probiha, true, [], casZastaven: true));
+    }
+
+    /// <summary>
+    /// <b>Zrušená zůstane zrušená</b>, i když někdo zastaví čas. „Neplatí
+    /// nikde" není stupeň rozpracovanosti a zastavení časomíry z ní
+    /// rozjížďku nedělá.
+    /// </summary>
+    [Fact]
+    public void Zastaveny_cas_zrusenou_rozjizdku_neoziví()
+    {
+        Assert.Equal(
+            StavRozjizdky.Zrusena,
+            Zapis.StavPoZapisu(StavRozjizdky.Zrusena, true,
+                [(StavUcasti.Potvrzena, true)], casZastaven: true));
+    }
+
+    /// <summary>
+    /// Puštění časomíry zpátky vrátí rozhodování zápisu: dojetá rozjížďka
+    /// s nedopsanou lodí se zase jede.
+    /// </summary>
+    [Fact]
+    public void Pusteni_casu_vrati_rozhodovani_zapisu()
+    {
+        var jednaCeka = new[] { (StavUcasti.Potvrzena, true), (StavUcasti.Potvrzena, false) };
+
+        Assert.Equal(
+            StavRozjizdky.Probiha,
+            Zapis.StavPoZapisu(StavRozjizdky.Dokoncena, true, jednaCeka, casZastaven: false));
+
+        // Bez startu spadne až na plánovanou — nedojetá rozjížďka, co se
+        // nikdy nerozjela.
+        Assert.Equal(
+            StavRozjizdky.Planovana,
+            Zapis.StavPoZapisu(StavRozjizdky.Dokoncena, false, jednaCeka, casZastaven: false));
+    }
 }

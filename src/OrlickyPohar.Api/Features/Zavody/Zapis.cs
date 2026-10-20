@@ -135,9 +135,19 @@ public static class Zapis
     /// </summary>
     public static StavRozjizdky StavPoZapisu(
         StavRozjizdky ted, bool odstartovano,
-        IEnumerable<(StavUcasti Stav, bool MaVysledek)> lode)
+        IEnumerable<(StavUcasti Stav, bool MaVysledek)> lode,
+        /// <summary>
+        /// Zastavená časomíra. Rozjížďka je tím dojetá bez ohledu na zápis.
+        /// </summary>
+        bool casZastaven = false)
     {
         if (ted == StavRozjizdky.Zrusena) return ted;
+
+        // <b>Zastavená časomíra rozhoduje dřív než zápis</b> (Filip, 20. 10.
+        // 2026: *„lodě bez cíle dopíšeme, ale čas už zastav"*). Dokud to
+        // uměl jen zápis, nešlo rozjížďku uzavřít, dokud se nedopsal papír;
+        // na vodě je to opačně.
+        if (casZastaven) return StavRozjizdky.Dokoncena;
 
         var naVode = lode.Where(l => NaRegate(l.Stav)).ToList();
         if (naVode.Count > 0 && naVode.TrueForAll(l => l.MaVysledek))
