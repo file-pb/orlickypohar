@@ -14,7 +14,10 @@ public record ClanekSpravaRadek(
     DateTimeOffset PublikovanoV,
     StavClanku Stav,
     string? Zavod,
-    string? ZavodNazev);
+    string? ZavodNazev,
+    // Úvodník regaty. Ve výpisu se značí štítkem, aby bylo poznat, který
+    // článek regatu uvádí — jinak by se to muselo otevírat jeden po druhém.
+    bool Uvodnik = false);
 
 /// <summary>Zastávka, na kterou smí přihlášený psát. Prázdná volba je celý ročník.</summary>
 public record ZavodVolbaDto(string Slug, string Nazev);
@@ -40,7 +43,10 @@ public record ClanekVstupSprava(
     // V jakém tvaru autor tělo poslal. `Html` znamená „vloženo odjinud" —
     // server ho vyčistí a uloží jako bloky. Výchozí `Text` drží dosavadní
     // chování pro každého, kdo pole neposílá.
-    FormatClanku Format = FormatClanku.Text);
+    FormatClanku Format = FormatClanku.Text,
+    // Úvodník regaty. Platí jen u článku, který k regatě patří; nejvýš
+    // jeden na regatu. Výchozí `false` drží chování staršího klienta.
+    bool Uvodnik = false);
 
 /// <summary>
 /// Čtení a zápis článků pro autora.
@@ -86,7 +92,7 @@ public class ClankySprava(AppDbContext db, TimeProvider cas, IUloziste uloziste)
             .ThenByDescending(c => c.Id)
             .Select(c => new ClanekSpravaRadek(
                 c.Slug, c.Titulek, c.Perex, c.Autor, c.PublikovanoV, c.Stav,
-                c.Zavod!.Slug, c.Zavod.Nazev))
+                c.Zavod!.Slug, c.Zavod.Nazev, c.Uvodnik))
             .ToListAsync(ct);
     }
 
@@ -121,6 +127,8 @@ public class ClankySprava(AppDbContext db, TimeProvider cas, IUloziste uloziste)
         if (Psani.ProcNejdeUlozit(vstup.Titulek, vstup.Telo, slug) is { } chyba)
             return (null, chyba);
         if (ProcNejdeTelo(vstup) is { } chybaTela) return (null, chybaTela);
+        if (ProcNejdeUvodnik(vstup.Uvodnik, zavodId) is { } chybaUvodniku)
+            return (null, chybaUvodniku);
 
         if (await db.Clanky.AnyAsync(c => c.SerieId == serieId && c.Slug == slug, ct))
             return (null, serieId is null
@@ -141,9 +149,12 @@ public class ClankySprava(AppDbContext db, TimeProvider cas, IUloziste uloziste)
             // nepřijme a padlo by to až při zápisu.
             PublikovanoV = (vstup.PublikovanoV ?? cas.GetUtcNow()).ToUniversalTime(),
             Stav = StavClanku.Draft,
+            Uvodnik = vstup.Uvodnik,
         };
 
         db.Clanky.Add(clanek);
+        if (vstup.Uvodnik && zavodId is { } zavod)
+            await OdznacPredchoziUvodnikAsync(zavod, krome: 0, ct);
         await db.SaveChangesAsync(ct);
         return (clanek, null);
     }
@@ -157,6 +168,7 @@ public class ClankySprava(AppDbContext db, TimeProvider cas, IUloziste uloziste)
         if (Psani.ProcNejdeUlozit(vstup.Titulek, vstup.Telo, clanek.Slug) is { } chyba)
             return chyba;
         if (ProcNejdeTelo(vstup) is { } chybaTela) return chybaTela;
+        if (ProcNejdeUvodnik(vstup.Uvodnik, zavodId) is { } chybaUvodniku) return chybaUvodniku;
 
         clanek.Titulek = vstup.Titulek.Trim();
         clanek.Perex = Prazdne(vstup.Perex);
@@ -164,10 +176,46 @@ public class ClankySprava(AppDbContext db, TimeProvider cas, IUloziste uloziste)
         clanek.Format = vstup.Format == FormatClanku.Html ? FormatClanku.Bloky : vstup.Format;
         clanek.Autor = Prazdne(vstup.Autor);
         clanek.ZavodId = zavodId;
+        clanek.Uvodnik = vstup.Uvodnik;
         if (vstup.PublikovanoV is { } kdy) clanek.PublikovanoV = kdy.ToUniversalTime();
+
+        if (vstup.Uvodnik && zavodId is { } zavod)
+            await OdznacPredchoziUvodnikAsync(zavod, krome: clanek.Id, ct);
 
         await db.SaveChangesAsync(ct);
         return null;
+    }
+
+    /// <summary>
+    /// Proč článek nemůže být úvodník — nebo <c>null</c>.
+    ///
+    /// <para>
+    /// <b>Úvodník bez regaty nemá co uvádět.</b> Článek ročníku ani obecný
+    /// článek mimo sezónu se na stránce regaty neobjeví, takže příznak by
+    /// byl tichý nesmysl: zaškrtnutý a bez účinku.
+    /// </para>
+    /// </summary>
+    private static string? ProcNejdeUvodnik(bool uvodnik, int? zavodId) =>
+        uvodnik && zavodId is null
+            ? "Úvodník patří k regatě. Vyber zastávku, nebo příznak odškrtni."
+            : null;
+
+    /// <summary>
+    /// Odznačí úvodník, který regata měla dosud.
+    ///
+    /// <para>
+    /// <b>Nejvýš jeden na regatu se vymáhá přepsáním, ne chybou</b> (plán,
+    /// <i>Úvodník a taby</i>). Kdo označuje nový úvodník, chce právě to;
+    /// hláška „regata už úvodník má" by ho poslala hledat ten starý
+    /// a odškrtnout ho ručně, a mezitím by regata neměla žádný.
+    /// </para>
+    /// </summary>
+    private async Task OdznacPredchoziUvodnikAsync(int zavodId, int krome, CancellationToken ct)
+    {
+        var predchozi = await db.Clanky
+            .Where(c => c.ZavodId == zavodId && c.Uvodnik && c.Id != krome)
+            .ToListAsync(ct);
+        foreach (var c in predchozi) c.Uvodnik = false;
     }
 
     /// <summary>

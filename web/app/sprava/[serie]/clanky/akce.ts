@@ -35,6 +35,10 @@ function vstupZFormulare(formular: FormData) {
     // Zaškrtnuté políčko znamená „vložil jsem to odjinud" — server text
     // vyčistí a uloží jako bloky. Nezaškrtnuté je prostý text jako doteď.
     format: formular.get("vlozene") ? ("Html" as const) : ("Text" as const),
+    // Úvodník regaty. Nezaškrtnuté políčko se v `FormData` vůbec neposílá,
+    // takže `false` tu musí stát výslovně — jinak by odškrtnutí neudělalo
+    // nic a příznak by se nedal sundat.
+    uvodnik: formular.get("uvodnik") === "ano",
   };
 }
 

@@ -311,7 +311,9 @@ def clanek_shrnuti(c):
             "autor": c.get("autor"), "publikovanoV": c["publikovanoV"],
             "zavod": z["slug"] if z else None,
             "zavodNazev": z["nazev"] if z else None,
-            "obrazek": c.get("obrazek")}
+            "obrazek": c.get("obrazek"),
+            # Úvodník regaty — stránka regaty ho ukazuje nahoře.
+            "uvodnik": bool(c.get("uvodnik"))}
 
 
 def nazvy_klic(nazev):
@@ -2017,7 +2019,7 @@ def clanek_radek(c):
             "autor": c.get("autor"), "publikovanoV": c["publikovanoV"],
             "stav": c["stav"],
             "zavod": z["slug"] if z else None, "zavodNazev": z["nazev"] if z else None,
-            "obrazek": c.get("obrazek")}
+            "obrazek": c.get("obrazek"), "uvodnik": bool(c.get("uvodnik"))}
 
 
 # --- Kdo smí do správy ročníku ----------------------------------------------
@@ -2505,6 +2507,20 @@ class H(BaseHTTPRequestHandler):
         # proti skutečnému API. Web tělo ve formátu `Html` vypíše jako text,
         # takže se tu nic nerozbije.
         c["format"] = vstup.get("format") or "Text"
+
+        # Úvodník — opsané z `ClankySprava`: platí jen u článku s regatou
+        # a nejvýš jeden na regatu, takže nový odznačí předchozí. Přepsáním,
+        # ne chybou: kdo označuje nový úvodník, chce právě to.
+        uvodnik = bool(vstup.get("uvodnik"))
+        if uvodnik and not c.get("zavod"):
+            return self.chyba(400, "Úvodník patří k regatě. "
+                                   "Vyber zastávku, nebo příznak odškrtni.")
+        c["uvodnik"] = uvodnik
+        if uvodnik:
+            for x in seznam:
+                if x is not c and x.get("zavod") == c["zavod"]:
+                    x["uvodnik"] = False
+
         return self.odpoved(clanek_radek(c))
 
     def verejna_prihlaska(self, zavod):

@@ -245,6 +245,9 @@ namespace OrlickyPohar.Api.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<bool>("Uvodnik")
+                        .HasColumnType("boolean");
+
                     b.Property<int?>("ZavodId")
                         .HasColumnType("integer");
 
