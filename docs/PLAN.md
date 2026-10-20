@@ -1564,6 +1564,13 @@ je stejná poznámka, jakou nese přihlášení. Podmínky 3 a 4 (výpadek,
 doposlání, přerušené nahrání) pilot zatím nemá co splnit, protože nahrávání
 na server nemá — a mít ho nemůže, dokud není vyzkoušené přihlášení.
 
+**Nativně se appka na vývojovém Macu nespustí vůbec** (ověřeno 20. 10.
+2026): `xcode-select -p` ukazuje jen `/Library/Developer/CommandLineTools`,
+takže Xcode a s ním `simctl` chybí, a `~/Library/Android/sdk` není. Zkouška
+v iOS simulátoru, se kterou plán počítá místo zaplaceného účtu u Applu, tedy
+není dnes dostupná — odemkla by ji instalace Xcode. Jediná cesta k vyzkoušení
+appky je zatím APK z EAS na telefonu, i pro simulovanou plavbu.
+
 **Simulovaná plavba je součást pilotu, ne pomůcka.** Krmí týž zápis jako
 GPS, takže se zkouší skutečná cesta dat. Záznam má `zdroj = 'simulace'`
 a každý bod příznak podvrženého, takže se nemá jak vydávat za skutečnou
