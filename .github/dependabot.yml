@@ -83,11 +83,17 @@ updates:
         update-types:
           - "version-update:semver-major"
           - "version-update:semver-minor"
+      # <b>React drží SDK na přesné verzi, takže ani patch neprojde.</b>
+      # Změřeno 20. 10. 2026: `npx expo install --check` u SDK 57 jmenuje
+      # `react@19.2.3` a `react-dom@19.2.3` — ne „19.2.x", ale tu jednu.
+      # Dependabot poslal bumpy na 19.2.9 ve dvou PR (#350, #351), takže
+      # `react-dom` navíc shodil `npm install`: chce `react` téže verze
+      # a ten zůstával starý. Zvednou se s celým SDK.
       - dependency-name: "react"
-        update-types:
-          - "version-update:semver-major"
-          - "version-update:semver-minor"
       - dependency-name: "react-dom"
+      # `react-native-screens` je totéž: SDK 57 chce `~4.26.0`, Dependabot
+      # nabízel 4.30.0 (#352). Patch v rámci řady zůstává povolený.
+      - dependency-name: "react-native-screens"
         update-types:
           - "version-update:semver-major"
           - "version-update:semver-minor"
