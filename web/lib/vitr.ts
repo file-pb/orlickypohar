@@ -129,7 +129,27 @@ export function popisTrendu(zmena: number) {
 export const TLAK_VAROVANI = -3.6;
 export const TLAK_HODIN = 3;
 
-export type TlakTrend = { nazev: string; tlak: number; zmena: number; cas: string };
+export type TlakTrend = {
+  nazev: string;
+  tlak: number;
+  zmena: number;
+  cas: string;
+  /**
+   * Tlak na stanici za posledních 24 hodin, od nejstaršího. Pro graf.
+   *
+   * <b>Na stanici, ne přepočtený na hladinu.</b> Přepočet kolísá
+   * s teplotou, takže by graf ukazoval i denní chod teploty — a tvar
+   * křivky je přesně to, co se na něm čte. Absolutní hodnotu říká číslo
+   * vedle, to přepočtené je.
+   *
+   * <b>Proč to jde bez vlastního sbírání dat.</b> Plán u grafu tlaku
+   * stál, že „chce vlastní sbírání dat z ČHMÚ v čase" — neplatí to od
+   * chvíle, kdy widget větru stahuje včerejší i dnešní soubor stanice
+   * (18. 9. 2026). Změřeno 20. 10. 2026: Kocelovice dávají 144 měření
+   * tlaku za celý den po deseti minutách.
+   */
+  prubeh: { cas: string; tlak: number }[];
+};
 
 /**
  * Tlak a jeho změna za 3 hodiny z první stanice, která má výšku.
@@ -151,6 +171,7 @@ export function tlakovyTrend(stanice: VitrStanice[]): TlakTrend | null {
     tlak: tlakNaHladine(ted.tlak!, s.vyska!, ted.teplota),
     zmena: ted.tlak! - tehdy.tlak!,
     cas: ted.cas,
+    prubeh: sTlakem.map((m) => ({ cas: m.cas, tlak: m.tlak! })),
   };
 }
 
