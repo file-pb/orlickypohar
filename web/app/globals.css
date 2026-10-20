@@ -2731,11 +2731,27 @@ body:has(.tabule) { overflow: hidden; }
 .tabule-alert {
   position: absolute; left: 50%; top: 50%; z-index: 5;
   display: flex; flex-direction: column; align-items: center; gap: 0.5vw;
+  /* <b>Šířka podle obsahu, ne podle zbytku plochy</b> (Filip, 20. 10. 2026:
+     *„dej mu prosím větší okraje, text se tam nevejde"*). Absolutně
+     pozicovaná karta bez `width` se smrskne na „shrink-to-fit" v místě,
+     které zbývá od `left: 50%` doprava — tedy na polovinu obrazovky.
+     Změřeno na 1280 px: karta 384 px, ale titulek „12. ČERVENÉ CAFE III"
+     potřebuje 534, takže ho `overflow: hidden` uřízl.
+     Strop je kvůli jménům, co by přetekla i celou obrazovku. */
+  width: max-content; max-width: 86vw;
   /* Nahoře víc místa na barevný pruh, který kartu drží pohromadě. */
-  padding: 2.4vw 4vw 2.2vw; border-radius: 1.2vw;
+  padding: 2.6vw 5vw 2.4vw; border-radius: 1.2vw;
   background: var(--papir); border: 2px solid var(--voda);
   box-shadow: 0 1.5vw 5vw rgb(0 0 0 / 0.6), 0 0 0 0.6vw rgb(255 255 255 / 0.04);
   text-align: center; pointer-events: none; overflow: hidden;
+  /* Dlouhé jméno se zalomí, místo aby se uřízlo — přečíst „ČERVENÉ CA"
+     je horší než mít kartu o řádek vyšší.
+
+     <b>`break-word`, ne `anywhere`.</b> `anywhere` se počítá i do vnitřní
+     velikosti, takže `max-content` výš spadlo na šířku jednoho písmene
+     a karta se zase srazila (změřeno: 415 px na titulek za 559).
+     `break-word` zalomí jen při skutečném přetečení. */
+  overflow-wrap: break-word;
   animation: tabule-alert 4.5s ease-in-out forwards;
 }
 /* Pruh v barvě druhu přes celou šířku karty. Dědí barvu z rámečku,

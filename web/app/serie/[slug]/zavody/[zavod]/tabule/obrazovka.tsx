@@ -24,7 +24,20 @@ import { udalosti, type Udalost } from "@/lib/tabule-udalosti";
  * odpověď deset vteřin, takže serverem vypsané „před 8 s" by v ní zmrzlo
  * a lhalo o deset vteřin plus dobu vykreslení.
  */
-const OBNOVA_MS = 20_000;
+/**
+ * Jak často si obrazovka říká o nový snímek.
+ *
+ * <b>Pět vteřin, ne dvacet</b> (Filip, 20. 10. 2026: *„ten modal po dojetí
+ * lodě… by měl přijít ihned po projetí cílem"*). Dvacet vteřin plus
+ * minutová cache v `nactiZavod` znamenalo, že dojezd se ohlásil se
+ * zpožděním, které vypadalo náhodně. Cache je pryč a tohle je zbytek:
+ * mezi klepnutím v cíli a kartou na tabuli má být vteřin pár, ne půl
+ * minuty.
+ *
+ * Dotazů na API to nepřidá: mikrocache před webem drží odpověď deset
+ * vteřin pro všechny, takže se stejně ptá nanejvýš jednou za deset.
+ */
+const OBNOVA_MS = 5_000;
 
 export function Obrazovka({
   serie,

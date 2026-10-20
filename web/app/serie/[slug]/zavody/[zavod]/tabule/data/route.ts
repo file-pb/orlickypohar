@@ -26,8 +26,13 @@ export async function GET(
     // Trať se čte vedle detailu a její výpadek snímek neshodí: tabule bez
     // trati pořád umí ukázat rozjížďky a pořadí, kdežto „nedaří se načíst"
     // by byla prázdná obrazovka až do rána.
+    // <b>Bez minutové cache.</b> Obrazovka si o snímek říká po dvaceti
+    // vteřinách, jenže `nactiZavod` si odpověď držel minutu — takže alert
+    // „v cíli" vyskočil klidně o minutu později, a při smůle až po konci
+    // rozjížďky (Filip, 20. 10. 2026). Mikrocache nginxu před webem tutéž
+    // odpověď deset vteřin rozdá celé hospodě, takže API to nezatíží.
     const [detail, trat] = await Promise.all([
-      nactiZavod(slug, zavod),
+      nactiZavod(slug, zavod, true),
       nactiVerejnouTrat(slug, zavod).catch(() => null),
     ]);
     if (!detail) return NextResponse.json({ error: "Regata není." }, { status: 404 });
