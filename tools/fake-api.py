@@ -1120,20 +1120,46 @@ def trat_na_rade(slug):
     return next((x for x in reversed(TRATE.get(slug) or []) if x["stav"] == "Prijato"), None)
 
 
-def trat_verejna(slug):
+def verejne_rozjizdky(slug):
+    """Čísla rozjížděk, které mají přijatou trať — vzestupně. Opsané
+    z `TratSprava.VerejneRozjizdkyAsync`: trať bez rozjížďky se nedá
+    adresovat a zrušená rozjížďka se nejede, takže do výčtu nepatří."""
+    z = next((x for x in D["zavody"] if x["slug"] == slug), None)
+    zrusene = {r["cislo"] for r in (z or {}).get("rozjizdky", [])
+               if r.get("stav") == "Zrusena"}
+    return sorted({t["rozjizdkaId"] for t in TRATE.get(slug) or []
+                   if t["stav"] == "Prijato" and t.get("rozjizdkaId") is not None
+                   and t["rozjizdkaId"] not in zrusene})
+
+
+def trat_verejna(slug, rozjizdka=None):
     """Trať pro diváka, nebo None. Opsané z `TratSprava.VerejnaAsync`:
     nepřijatá se nevydá vůbec, u přestavby se vrací jen příznak.
 
     Bóje se berou k okamžiku přijetí. Mock drží sebrání jako příznak, ne
-    čas — vyjde to nastejno, protože sebrat se dá jen u odemčené trati."""
+    čas — vyjde to nastejno, protože sebrat se dá jen u odemčené trati.
+
+    `rozjizdka` vybere trať konkrétní rozjížďky; bez ní se vydá ta na řadě.
+    Neznámé číslo vrací None, tedy 404 — vydat místo toho jinou trať by
+    diváka tiše poslalo na špatnou vodu (Filip, 20. 10. 2026)."""
+    rozjizdky = verejne_rozjizdky(slug)
+
     # Nejnovější trať rozhoduje jen o přestavbě: to je ta, která se právě
     # mění ve vodě. Jinak se vydává **nejnovější přijatá** — čerstvý klon
     # ve stavu `Hotovo` by jinak veřejně shodil trať, podle které se pluje.
-    if (a := trat_aktualni(slug)) and a["stav"] == "Prestavba":
+    # Přestavba zamlčí jen trať na řadě: kdo si vybral konkrétní rozjížďku,
+    # dostane její trať, protože ta se nepřestavuje.
+    if rozjizdka is None and (a := trat_aktualni(slug)) and a["stav"] == "Prestavba":
         return {"prestavba": True, "prijatoV": None, "cisloRozjizdky": None,
-                "boje": [], "prvky": []}
+                "boje": [], "prvky": [], "rozjizdky": rozjizdky}
 
-    t = trat_na_rade(slug)
+    if rozjizdka is None:
+        t = trat_na_rade(slug)
+    else:
+        jeji = [x for x in TRATE.get(slug) or []
+                if x.get("rozjizdkaId") == rozjizdka and x["stav"] == "Prijato"
+                and rozjizdka in rozjizdky]
+        t = jeji[-1] if jeji else None
     if not t:
         return None
 
@@ -1162,6 +1188,7 @@ def trat_verejna(slug):
 
     return {"prestavba": False, "prijatoV": prijato,
             "cisloRozjizdky": t.get("rozjizdkaId"),
+            "rozjizdky": rozjizdky,
             # Zkrácení jde ven i závodníkovi: musí vidět, kde je teď cíl.
             "zkracenoUPrvkuId": t.get("zkracenoUPrvkuId"),
             "zkracenoV": t.get("zkracenoV"),
@@ -1305,6 +1332,38 @@ def _nasad_boje():
     # Jako migrace: regata, která bóje má, dostane trať ve stavu
     # `Rozestaveno`. Přijetí dodnes neexistovalo, takže nikdo nic nepotvrdil.
     trat_zaloz(slug)
+
+    # <b>Dvě přijaté tratě, každá jiné rozjížďce.</b> Bez nich se lokálně
+    # nedal vyzkoušet stav, který Filip 20. 10. 2026 hlásil z produkce:
+    # *„tady se zobrazuje pouze jedna trať, i když je veřejná trať i ke
+    # druhé rozjížďce."* Mock měl jedinou trať, a tu rozestavěnou — veřejná
+    # stránka trati tedy lokálně vracela 404 a přepínání nebylo na čem
+    # ukázat.
+    #
+    # Liší se schválně: druhá objíždí otočnou z druhé strany. Kdyby byly
+    # stejné, přepnutí záložky by vypadalo, že nic neudělalo.
+    start, _, otocna, cil = BOJE[slug]
+    for cislo, strana in ((1, "PoPrave"), (2, "PoLeve")):
+        t = trat_zaloz(slug, "Prijato")
+        t["rozjizdkaId"] = cislo
+        t["prijatoV"] = f"2026-10-08T09:{cislo:02d}:00+00:00"
+        t["prijal"] = JA["zobrazovane"]
+        # Hodnoty musí sedět s enumy v API (`TypPrvku`, `StranaPrvku`,
+        # `SvetovaStrana`, `DruhStartu`) — vymyšlená hodnota se na webu
+        # vykreslí surově a mock tím lže o tvaru dat.
+        for poradi, (typ, boje, bok, smer) in enumerate((
+            ("Start", start, None, "S"),
+            ("OtocnaBoje", otocna, strana, None),
+            ("Cil", cil, None, "J"),
+        ), start=1):
+            PRVEK_ID[0] += 1
+            PRVKY.setdefault(t["id"], []).append({
+                "id": PRVEK_ID[0], "typ": typ, "poradi": poradi,
+                "strana": bok, "poznamka": None,
+                "bojeAId": boje["id"], "bojeBId": None,
+                "smer": smer,
+                "druhStartu": "PevnaLinie" if typ == "Start" else None,
+            })
 
 
 def zbytecna_boje(slug, b):
@@ -4556,7 +4615,12 @@ class H(BaseHTTPRequestHandler):
             # přihlášení, protože je psaná pro správu.
             if not any(z["slug"] == m.group(1) for z in D["zavody"]):
                 return self.send_error(404)
-            v = trat_verejna(m.group(1))
+            # Nesmyslné číslo odmítnout rovnou, ať se `rozjizdka=0` nechová
+            # jako „bez parametru" — stejně jako `TratEndpoints`.
+            vybrana = (parse_qs(urlparse(self.path).query).get("rozjizdka") or [""])[0]
+            if vybrana and (not vybrana.isdigit() or int(vybrana) <= 0):
+                return self.send_error(404)
+            v = trat_verejna(m.group(1), int(vybrana) if vybrana else None)
             return self.odpoved(v) if v else self.send_error(404)
         elif (m := re.match(rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)$', cesta)):
             z = next((z for z in D["zavody"] if z["slug"] == m.group(1)), None)

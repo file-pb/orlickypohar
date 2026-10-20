@@ -407,22 +407,65 @@ public class TratSprava(AppDbContext db, TimeProvider cas, Fotky.IUloziste ulozi
             .FirstOrDefaultAsync(ct);
     }
 
-    public async Task<VerejnaTratDto?> VerejnaAsync(int zavodId, CancellationToken ct)
+    /// <summary>
+    /// Čísla rozjížděk, které mají přijatou trať — vzestupně.
+    ///
+    /// <para>
+    /// <b>Jen rozjížďky, ne tratě.</b> Přijatá trať bez rozjížďky se nedá
+    /// adresovat, takže se do výčtu nedostane; zrušená rozjížďka taky ne —
+    /// její trať se nejede.
+    /// </para>
+    /// </summary>
+    private async Task<IReadOnlyList<int>> VerejneRozjizdkyAsync(
+        int zavodId, CancellationToken ct) =>
+        await db.Trate
+            .Where(t => t.ZavodId == zavodId && t.Stav == StavTrati.Prijato
+                        && t.RozjizdkaId != null
+                        && t.Rozjizdka!.Stav != StavRozjizdky.Zrusena)
+            .Select(t => t.Rozjizdka!.Cislo)
+            .Distinct()
+            .OrderBy(c => c)
+            .ToListAsync(ct);
+
+    /// <param name="rozjizdka">
+    /// Číslo rozjížďky, jejíž trať se má vydat. Bez něj se vydá ta na řadě
+    /// (<see cref="NaRadeAsync"/>). <b>Neznámé číslo nebo rozjížďka bez
+    /// přijaté trati vrací <c>null</c></b>, tedy 404 — vydat místo toho
+    /// jinou trať by diváka tiše poslalo na špatnou vodu.
+    /// </param>
+    public async Task<VerejnaTratDto?> VerejnaAsync(
+        int zavodId, CancellationToken ct, int? rozjizdka = null)
     {
+        var rozjizdky = await VerejneRozjizdkyAsync(zavodId, ct);
+
         // Nejnovější trať rozhoduje jen o přestavbě: to je ta, která se právě
         // mění ve vodě. Jinak se vydává **nejnovější přijatá** — od chvíle,
         // kdy má každá rozjížďka vlastní trať, by čerstvý klon ve stavu
         // `Hotovo` jinak veřejně shodil trať, podle které se zrovna pluje
         // (plán, *Výběr a klonování trati*).
-        if (await AktualniAsync(zavodId, ct) is { Stav: StavTrati.Prestavba })
+        //
+        // <b>Přestavba zamlčí jen trať na řadě.</b> Kdo si vybral konkrétní
+        // rozjížďku, dostane její trať — ta se nepřestavuje a je pořád
+        // platná. Zamlčet kvůli jedné přestavbě i ostatní by vzalo divákovi
+        // i to, co ve vodě spolehlivě stojí.
+        if (rozjizdka is null
+            && await AktualniAsync(zavodId, ct) is { Stav: StavTrati.Prestavba })
             return new VerejnaTratDto(
-                Prestavba: true, PrijatoV: null, CisloRozjizdky: null, Boje: [], Prvky: []);
+                Prestavba: true, PrijatoV: null, CisloRozjizdky: null, Boje: [], Prvky: [],
+                Rozjizdky: rozjizdky);
 
-        var trat = await NaRadeAsync(zavodId, ct);
+        var trat = rozjizdka is { } cisloRozjizdky
+            ? await db.Trate
+                .Where(t => t.ZavodId == zavodId && t.Stav == StavTrati.Prijato
+                            && t.Rozjizdka!.Cislo == cisloRozjizdky
+                            && t.Rozjizdka.Stav != StavRozjizdky.Zrusena)
+                .OrderByDescending(t => t.Id)
+                .FirstOrDefaultAsync(ct)
+            : await NaRadeAsync(zavodId, ct);
         if (trat is null) return null;
 
-        var cislo = trat.RozjizdkaId is { } rozjizdka
-            ? await db.Rozjizdky.Where(r => r.Id == rozjizdka)
+        var cislo = trat.RozjizdkaId is { } jejiId
+            ? await db.Rozjizdky.Where(r => r.Id == jejiId)
                 .Select(r => (int?)r.Cislo).FirstOrDefaultAsync(ct)
             : null;
 
@@ -488,6 +531,7 @@ public class TratSprava(AppDbContext db, TimeProvider cas, Fotky.IUloziste ulozi
 
         return new VerejnaTratDto(false, prijato, cislo,
             ZkracenoUPrvkuId: trat.ZkracenoUPrvkuId, ZkracenoV: trat.ZkracenoV,
+            Rozjizdky: rozjizdky,
             Prvky: prvky, Boje: await db.Boje
             .Where(b => b.ZavodId == zavodId
                         && b.PostavenaV <= prijato
