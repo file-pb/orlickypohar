@@ -39,6 +39,14 @@ export default function Rocniky() {
         </Link>
       </View>
 
+      {/* Zkouška záznamu trasy. Nahrávání na web zatím nemá, takže tu stojí
+          sama za sebe a nic jiného v appce na ní nezávisí. */}
+      <View style={{ marginTop: 12 }}>
+        <Link href="/tracker" style={{ color: t.voda }}>
+          Záznam trasy (zkouška)
+        </Link>
+      </View>
+
       {/* Odkaz ven schválně: appka je čtečka, ne náhrada webu. */}
       <View style={{ marginTop: 16 }}>
         <Link href="https://orlickypohar.klihovka.cz" style={{ color: t.voda }}>

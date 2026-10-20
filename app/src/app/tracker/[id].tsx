@@ -1,0 +1,205 @@
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+
+import { Karta, Prazdno, Sekce, Stitek } from '@/components/ui';
+import { useTheme } from '@/hooks/use-theme';
+import { casAMinuty, rychlost, trvani, vzdalenost } from '@/lib/tracker/formaty';
+import { posliGpx } from '@/lib/tracker/gpx';
+import {
+  ostrihej,
+  prehled,
+  smazZaznam,
+  zaznam,
+  type Prehled,
+  type Zaznam,
+} from '@/lib/tracker/zaznam';
+
+/** Nabídka ostříhání: tolik minut od posledního bodu se zahodí. */
+const OSTRIHAT_MIN = [15, 30, 60];
+
+export default function DetailTrasy() {
+  const t = useTheme();
+  const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const [z, setZ] = useState<Zaznam | null>(null);
+  const [souhrn, setSouhrn] = useState<Prehled | null>(null);
+
+  const obnov = useCallback(() => {
+    if (!id) return;
+    setZ(zaznam(id));
+    setSouhrn(prehled(id));
+  }, [id]);
+
+  useEffect(() => {
+    obnov();
+    // Běžící trasa přirůstá, tak ať jde přehled sledovat při záznamu.
+    const timer = setInterval(obnov, 2000);
+    return () => clearInterval(timer);
+  }, [obnov]);
+
+  if (!z || !souhrn) return <Prazdno text="Trasa není." />;
+
+  function ostrihejO(minut: number) {
+    if (!souhrn?.posledni || !id) return;
+    const hranice = souhrn.posledni - minut * 60 * 1000;
+    Alert.alert(
+      `Ostříhat posledních ${minut} min?`,
+      'Body po té hranici se smažou. Je to kvůli soukromí — zapomenutý záznam jinak ukáže, kde kdo bydlí.',
+      [
+        { text: 'Zrušit', style: 'cancel' },
+        {
+          text: 'Ostříhat',
+          style: 'destructive',
+          onPress: () => {
+            const smazano = ostrihej(id, hranice);
+            obnov();
+            Alert.alert('Ostříháno', `Smazalo se ${smazano} bodů.`);
+          },
+        },
+      ],
+    );
+  }
+
+  function smaz() {
+    if (!id) return;
+    Alert.alert('Smazat trasu?', 'Zmizí celá, i body. Vrátit se to nedá.', [
+      { text: 'Zrušit', style: 'cancel' },
+      {
+        text: 'Smazat',
+        style: 'destructive',
+        onPress: () => {
+          smazZaznam(id);
+          router.back();
+        },
+      },
+    ]);
+  }
+
+  const radky: [string, string][] = [
+    ['Bodů', String(souhrn.pocetBodu)],
+    ['Délka', vzdalenost(souhrn.delkaM)],
+    [
+      'Rozsah',
+      souhrn.prvni && souhrn.posledni
+        ? `${casAMinuty(souhrn.prvni)} – ${casAMinuty(souhrn.posledni)}`
+        : '—',
+    ],
+    [
+      'Trvání záznamu',
+      souhrn.prvni && souhrn.posledni ? trvani(souhrn.posledni - souhrn.prvni) : '—',
+    ],
+    [
+      'Vzorkování',
+      souhrn.pocetBodu > 1 && souhrn.prvni && souhrn.posledni
+        ? `~${Math.round((souhrn.posledni - souhrn.prvni) / 1000 / (souhrn.pocetBodu - 1))} s / bod`
+        : '—',
+    ],
+    ['Nejvyšší rychlost', rychlost(souhrn.maxRychlostMS)],
+    [
+      'Nejhorší přesnost',
+      souhrn.nejhorsiPresnostM == null ? '—' : `${Math.round(souhrn.nejhorsiPresnostM)} m`,
+    ],
+  ];
+
+  return (
+    <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+        <Text style={{ color: t.text, fontSize: 24, fontWeight: '700', letterSpacing: -0.5 }}>
+          {z.lod}
+        </Text>
+        {z.zdroj === 'simulace' ? <Stitek text="simulace" /> : null}
+        {z.stav === 'bezi' ? <Stitek text="běží" barva={t.stavVypsany} /> : null}
+      </View>
+      {z.regata ? <Text style={{ color: t.tlumeny }}>{z.regata}</Text> : null}
+
+      <Sekce>Co se zapsalo</Sekce>
+      <Karta>
+        {radky.map(([k, v], i) => (
+          <View
+            key={k}
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              paddingVertical: 6,
+              borderTopWidth: i === 0 ? 0 : 1,
+              borderTopColor: t.linka,
+            }}>
+            <Text style={{ color: t.tlumeny }}>{k}</Text>
+            <Text style={{ color: t.text, fontWeight: '500' }}>{v}</Text>
+          </View>
+        ))}
+      </Karta>
+
+      {/* Čas nese trasa výhradně z telefonu, a ten se dá přestavit. Rozdíl
+          proti času z polohy je jediná měřitelná stopa, kterou po sobě skok
+          hodin nechá — proto je vidět, a ne schovaný v logu. */}
+      {souhrn.rozptylHodinMs != null && souhrn.rozptylHodinMs > 60_000 ? (
+        <Karta>
+          <Text style={{ color: t.stavZruseny, fontWeight: '600' }}>Hodiny telefonu se měnily</Text>
+          <Text style={{ color: t.tlumeny, marginTop: 4, fontSize: 13 }}>
+            Rozdíl mezi časem z polohy a hodinami telefonu se během záznamu rozešel
+            o {trvani(souhrn.rozptylHodinMs)}. Body zůstávají všechny; při nahrání se trasa
+            srovná na jednu osu.
+          </Text>
+        </Karta>
+      ) : null}
+
+      {souhrn.vBudoucnosti > 0 ? (
+        <Karta>
+          <Text style={{ color: t.stavZruseny, fontWeight: '600' }}>
+            {souhrn.vBudoucnosti} bodů má čas v budoucnosti
+          </Text>
+          <Text style={{ color: t.tlumeny, marginTop: 4, fontSize: 13 }}>
+            Proti hodinám telefonu teď. Nemazat — při nahrání se opraví posunem celé trasy.
+          </Text>
+        </Karta>
+      ) : null}
+
+      {souhrn.podvrzenych > 0 && z.zdroj !== 'simulace' ? (
+        <Karta>
+          <Text style={{ color: t.stavZruseny, fontWeight: '600' }}>
+            {souhrn.podvrzenych} bodů je podvržených
+          </Text>
+          <Text style={{ color: t.tlumeny, marginTop: 4, fontSize: 13 }}>
+            Android je označil jako polohu z falešného zdroje.
+          </Text>
+        </Karta>
+      ) : null}
+
+      <Sekce>Soukromí</Sekce>
+      <Karta>
+        <Text style={{ color: t.tlumeny, fontSize: 13 }}>
+          {z.ostrihano_do
+            ? `Ostříháno do ${casAMinuty(z.ostrihano_do)}.`
+            : 'Jestli záznam jel i po dojezdu, ostříhej konec.'}
+        </Text>
+        <View style={{ flexDirection: 'row', marginTop: 10, gap: 18 }}>
+          {OSTRIHAT_MIN.map((m) => (
+            <Pressable key={m} onPress={() => ostrihejO(m)}>
+              <Text style={{ color: t.voda }}>−{m} min</Text>
+            </Pressable>
+          ))}
+        </View>
+      </Karta>
+
+      <Sekce>Výsledek</Sekce>
+      <Pressable
+        onPress={() => {
+          if (!id) return;
+          posliGpx(id).catch((e: unknown) =>
+            Alert.alert('Nešlo to poslat', e instanceof Error ? e.message : String(e)),
+          );
+        }}>
+        <Text style={{ color: t.voda, fontWeight: '600', fontSize: 16 }}>Poslat jako GPX</Text>
+      </Pressable>
+      <Text style={{ color: t.tlumeny, fontSize: 12, marginTop: 4 }}>
+        Nahrávání na web pilot zatím nemá — GPX otevře každá mapa.
+      </Text>
+
+      <Pressable onPress={smaz} style={{ marginTop: 28 }}>
+        <Text style={{ color: t.stavZruseny }}>Smazat trasu</Text>
+      </Pressable>
+    </ScrollView>
+  );
+}

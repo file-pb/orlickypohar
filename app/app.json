@@ -32,7 +32,18 @@
         }
       ],
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-sharing",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Poloha slouží k záznamu trasy lodi během závodu.",
+          "locationAlwaysAndWhenInUsePermission": "Trasa se zaznamenává celý závod, i když je telefon zamčený v kapse. Bez oprávnění „Vždy\" by záznam skončil, jak zhasne displej.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
@@ -45,6 +56,10 @@
         "projectId": "247c0516-53e2-4457-bcbd-dc7b1cd6025a"
       }
     },
-    "owner": "file75"
+    "owner": "file75",
+    "ios": {
+      "bundleIdentifier": "cz.klihovka.orlickypohar",
+      "supportsTablet": true
+    }
   }
 }

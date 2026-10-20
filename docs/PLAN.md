@@ -1514,6 +1514,104 @@ jsou config-plugin flagy, které mění nativní konfiguraci (dokumentace Expa
 k `Location` a `TaskManager`, ověřeno 9. 10. 2026). Na všechno ostatní Expo Go
 dost je — přihlášení, moje lodě, bóje, obrazovky —, jen ne na záznam polohy.
 
+### Lokální záznam hotový, na pozadí nevyzkoušený (20. 10. 2026)
+
+Pilot se začal stavět od lokálního záznamu, protože přejímací podmínka č. 2
+je podle plánu ta jediná, která z pilotu udělá nulu — a protože **lokální
+záznam nepotřebuje přihlášení**, které je k 20. 10. 2026 napsané, ale
+nevyzkoušené.
+
+**Co je hotové** (`app/src/lib/tracker/`, obrazovky `app/src/app/tracker/`):
+
+| Část | Kde | Co dělá |
+|---|---|---|
+| úložiště | `db.ts` | SQLite ve WAL, schéma `zaznam` + `bod` |
+| operace | `zaznam.ts` | zakládání, zápis dávky, ukončení, ostříhání, přehled |
+| úloha na pozadí | `uloha.ts` | `expo-location` + `expo-task-manager`, služba na popředí |
+| simulovaná plavba | `simulace.ts` | syntetický zdroj do **téhož** zápisu jako GPS |
+| vývoz | `gpx.ts` | GPX ke sdílení — zatím jediná cesta, jak se trasa dostane z telefonu |
+
+Tři rozhodnutí, která z toho stojí za zapsání:
+
+1. **Stav záznamu leží v databázi, ne v paměti.** Když systém proces zabije,
+   probudí se jen úloha na pozadí v samostatném JS kontextu — bez jediné
+   obrazovky a bez paměti předchozího běhu. Jediné místo, kde se o běžícím
+   záznamu dá dozvědět, je disk.
+2. **Zápis je synchronní a před prvním `await`.** Zabitý proces `await`
+   nedokončí; po návratu z handleru je dávka na disku.
+3. **Identifikátor trasy je lokální, ne serverový.** Ročník 2027 se podle
+   Filipova plánu v dubnu smaže a naimportuje znovu, takže serverová ID
+   regaty a lodě se změní. Trasa zapsaná v telefonu to musí přežít.
+
+**Co je prokázané, a čím** — `npm run testy` v `app/`, deset kontrol
+a jedna dvoufázová (`app/testy/README.md` rozepisuje obojí):
+
+| Podmínka | Stav |
+|---|---|
+| 2 — zabitá appka | **zapsaná část a stav „běží" přežijí konec procesu** (dva samostatné procesy nad jedním souborem). Druhá polovina — že záznam *pokračuje* — testem na Node prokázat nelze |
+| 5 — zapomenutý záznam | ostříhání maže body po hranici a dřívější nechá; smazané jsou fyzicky pryč, ne skryté |
+| 6 — špatná loď | jméno lodi je povinné a potvrzuje se při startu záznamu |
+| čas z telefonu | skok hodin se pozná z rozptylu proti času z polohy a **žádný bod se nezahodí** |
+| „podívat se na výsledek" | přehled dá počet, rozsah, délku, vzorkování, nejhorší přesnost; GPX nic nedomýšlí |
+
+Dvacetičtyřhodinovka po 5 s je 17 280 bodů; zápis i přehled nad nimi jsou
+v desítkách milisekund. Je to číslo o našem SQL, ne o výkonu na telefonu.
+
+**Co prokázané není.** Podmínka 1 (zamčený telefon, spotřeba) a druhá
+polovina podmínky 2 — tedy že záznam po zabití appky **pokračuje** — chtějí
+fyzický telefon a APK; úloha na pozadí je napsaná, ale **nevyzkoušená**, což
+je stejná poznámka, jakou nese přihlášení. Podmínky 3 a 4 (výpadek,
+doposlání, přerušené nahrání) pilot zatím nemá co splnit, protože nahrávání
+na server nemá — a mít ho nemůže, dokud není vyzkoušené přihlášení.
+
+**Nativně se appka na vývojovém Macu nespustí vůbec** (ověřeno 20. 10.
+2026): `xcode-select -p` ukazuje jen `/Library/Developer/CommandLineTools`,
+takže Xcode a s ním `simctl` chybí, a `~/Library/Android/sdk` není. Zkouška
+v iOS simulátoru, se kterou plán počítá místo zaplaceného účtu u Applu, tedy
+není dnes dostupná — odemkla by ji instalace Xcode. Jediná cesta k vyzkoušení
+appky je zatím APK z EAS na telefonu, i pro simulovanou plavbu.
+
+**Simulovaná plavba je součást pilotu, ne pomůcka.** Krmí týž zápis jako
+GPS, takže se zkouší skutečná cesta dat. Záznam má `zdroj = 'simulace'`
+a každý bod příznak podvrženého, takže se nemá jak vydávat za skutečnou
+trasu. Zrychlený běh (`zhusteni`) udělá z dvacetičtyřhodinovky minuty — bez
+toho by se chování dlouhého záznamu neodladilo nikdy.
+
+### Dvě otevřené věci z plánu, rozhodnuté 20. 10. 2026
+
+**Čas z telefonu:** každý bod nese dva časy — `cas_gps` z polohy
+a `cas_zarizeni` z hodin telefonu v okamžiku zápisu. Hodiny se dají
+přestavit, čas z polohy ne, takže jejich **rozdíl je měřitelná stopa**, kterou
+po sobě skok hodin nechá; appka ji ukazuje na detailu trasy. Při nahrání se
+trasa srovná na jednu osu podle serverového času příjmu. **Žádný bod se
+kvůli času nezahazuje** — ani ten s časem v budoucnosti.
+
+**Posun se ukládá, ne zahlazuje** (Filip, 20. 10. 2026: *„když se rozchází
+čas serveru a mobilu, tak ten posun je potřeba s tím časem držet"*).
+Srovnat trasu na jednu osu a označit ji příznakem „čas opraven" nestačí —
+příznak říká jen, že se něco opravilo, ne o kolik. Uložit se musí **samotný
+posun** a čas, kdy se změřil, a to ze dvou důvodů:
+
+- trasa se dá kdykoli vrátit na původní měření a je z ní poznat, co je
+  měření a co korekce;
+- bez toho je původní údaj navždy pryč. Trasa se přikládá ke stavu trati,
+  takže by se chybná korekce tiše šířila dál a nikdo by na ni nepřišel.
+
+**Posun navíc není konstanta.** Telefon si může hodiny srovnat přes síť
+uprostřed závodu a posun se skokem změní. Proto ho appka drží **u každého
+bodu** (`cas_gps` i `cas_zarizeni`), ne jeden na celou trasu — a právě tenhle
+skok ukazuje na detailu trasy. Posun proti **serveru** v pilotu zatím není,
+protože nahrávání není; až bude, platí pro něj totéž.
+
+**Termín přejímky se neváže na Jarní vítr** (Filip, 20. 10. 2026:
+*„pokud se nám podaří otestovat už udělaný tracker, tak se nemusí čekat až
+na Jarní vítr. A testovací simulace budou probíhat, musíme to odladit"*).
+Pilot se ladí simulacemi průběžně a datum debutu se určí podle toho, co
+simulace a první skutečný záznam ukážou — ne naopak. **V dubnu 2027 se
+ročník 2027 smaže a naimportuje znovu** jako při importu, aby se do debutu
+šlo s čistými daty; proto to třetí rozhodnutí o lokálních identifikátorech
+výš.
+
 ### Co je na tom skutečně těžké
 
 | Věc | Proč |
@@ -3297,7 +3395,7 @@ Počítáno na pět hodin týdně.
 | 5 | **Administrace a workflow** — zadávání, stavy, publikace, protesty a penalizace | skoro hotovo | Oprávnění, kalendář a workflow výsledků hotové 11. 9. 2026; zápis výsledků, přihlášky lodí a role od rozhodčího 14. 9. Zbývají protesty a penalizace — vedle odpovědí rozhodčího k nim chybí u výsledku pole pro číslo (`Vysledek` ve `Features/Zavody/Zavod.cs`), takže ZFP ani náprava nemají kam; `RDG` proto zatím dostává místo za posledním dokončivším (doc u `BodyRozjizdky`) |
 | 6 | ~~**Blog a fotky** — model, import, veřejné čtení, novinky na webu~~ | **hotovo 16. 9. 2026** | Psaní článků i fotky v kartách hotové 11. 9. 2026; nahrávání do R2 i bucket s vlastní doménou 16. 9. 2026 (viz *Fotky v R2*). Úložiště se zapne jen při úplném nastavení (`FotkyNastaveni.Uplne`) a vydává `immutable` cache (`UlozAsync` ve `Features/Fotky/Uloziste.cs`); ověřeno 8. 10. 2026, že produkce fotky z `orlickypohar-foto.klihovka.cz` doopravdy servíruje |
 | 7 | **Upozornění** — veřejná i účastnická, odesílání, Outbox | 2–3 týdny, **nezačatá** | Oba předpoklady jsou hotové: identita z fáze 4 (9. 9. 2026) i napojení osoby k lodi (4. 10. 2026, `Features/Lode/VazbaKLodi.cs`, kapitánství upravené 5. 10. 2026). K 8. 10. 2026 v kódu přesto není Outbox, tabulka `Zarizeni` ani odesílací úloha. Data pro upozornění „změna trati" už jsou — přenastavená bóje se nepřepisuje (`Boje.NahrazujeId` a `NahrazenaV`); chybí odeslání, ne záznam |
-| 8 | **Tracker** — ~~bóje na trati~~, záznam trasy, offline, nahrání, prohlížení | bóje **hotové 9. 10. 2026** (API 5. 10., obrazovka 9. 10.), zbytek 4–6 týdnů | Samostatná linka; potřebuje jen identitu a kontext závodu. Bóje mají API (`Features/Boje/`), migraci `20261005193300_Boje`, deset testů a od 9. 10. 2026 i obrazovku na webu (`/sprava/{ročník}/boje/{regata}`) a podporu v mocku. Trasa jako entita, mapa ani poloha v appce nezačaté |
+| 8 | **Tracker** — ~~bóje na trati~~, záznam trasy, offline, nahrání, prohlížení | bóje **hotové 9. 10. 2026** (API 5. 10., obrazovka 9. 10.), zbytek 4–6 týdnů | Samostatná linka; potřebuje jen identitu a kontext závodu. Bóje mají API (`Features/Boje/`), migraci `20261005193300_Boje`, deset testů a od 9. 10. 2026 i obrazovku na webu (`/sprava/{ročník}/boje/{regata}`) a podporu v mocku. Trasa jako entita a mapa nezačaté; **lokální záznam polohy v appce hotový 20. 10. 2026** (`app/src/lib/tracker/`) — podrobně v oddílu *Tracker* |
 | 9 | Handicap | až bude potřeba | |
 
 Realisticky **čtyři měsíce** do použitelné verze. Fáze 1 dá něco, co jde

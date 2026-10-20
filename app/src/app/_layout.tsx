@@ -3,6 +3,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/theme';
+// Jen kvůli vedlejšímu efektu: `TaskManager.defineTask` musí být
+// vyhodnocené při startu bundle. Když systém appku zabije a probudí ji
+// na pozadí kvůli poloze, tohle je jediné, co se z appky spustí.
+import '@/lib/tracker/uloha';
 
 export default function Layout() {
   const tmave = useColorScheme() === 'dark';
@@ -20,6 +24,8 @@ export default function Layout() {
         }}>
         <Stack.Screen name="index" options={{ title: 'Orlický pohár' }} />
         <Stack.Screen name="ucet" options={{ title: 'Účet' }} />
+        <Stack.Screen name="tracker/index" options={{ title: 'Trasa' }} />
+        <Stack.Screen name="tracker/[id]" options={{ title: 'Trasa' }} />
       </Stack>
     </>
   );
