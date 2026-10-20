@@ -1583,9 +1583,25 @@ toho by se chování dlouhého záznamu neodladilo nikdy.
 a `cas_zarizeni` z hodin telefonu v okamžiku zápisu. Hodiny se dají
 přestavit, čas z polohy ne, takže jejich **rozdíl je měřitelná stopa**, kterou
 po sobě skok hodin nechá; appka ji ukazuje na detailu trasy. Při nahrání se
-trasa srovná na jednu osu podle serverového času příjmu a dostane příznak
-„čas opraven". **Žádný bod se kvůli času nezahazuje** — ani ten s časem
-v budoucnosti.
+trasa srovná na jednu osu podle serverového času příjmu. **Žádný bod se
+kvůli času nezahazuje** — ani ten s časem v budoucnosti.
+
+**Posun se ukládá, ne zahlazuje** (Filip, 20. 10. 2026: *„když se rozchází
+čas serveru a mobilu, tak ten posun je potřeba s tím časem držet"*).
+Srovnat trasu na jednu osu a označit ji příznakem „čas opraven" nestačí —
+příznak říká jen, že se něco opravilo, ne o kolik. Uložit se musí **samotný
+posun** a čas, kdy se změřil, a to ze dvou důvodů:
+
+- trasa se dá kdykoli vrátit na původní měření a je z ní poznat, co je
+  měření a co korekce;
+- bez toho je původní údaj navždy pryč. Trasa se přikládá ke stavu trati,
+  takže by se chybná korekce tiše šířila dál a nikdo by na ni nepřišel.
+
+**Posun navíc není konstanta.** Telefon si může hodiny srovnat přes síť
+uprostřed závodu a posun se skokem změní. Proto ho appka drží **u každého
+bodu** (`cas_gps` i `cas_zarizeni`), ne jeden na celou trasu — a právě tenhle
+skok ukazuje na detailu trasy. Posun proti **serveru** v pilotu zatím není,
+protože nahrávání není; až bude, platí pro něj totéž.
 
 **Termín přejímky se neváže na Jarní vítr** (Filip, 20. 10. 2026:
 *„pokud se nám podaří otestovat už udělaný tracker, tak se nemusí čekat až
