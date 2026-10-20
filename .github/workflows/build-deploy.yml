@@ -261,6 +261,13 @@ jobs:
         run: npx tsc --noEmit
         working-directory: app
 
+      # Záznam trasy je jediná část appky, která smí přijít o data, když ji
+      # systém zabije — testy hlídají právě to a žádnou další závislost
+      # nepotřebují (SQLite dělá vestavěné `node:sqlite`).
+      - name: Testy záznamu trasy
+        run: npm run testy
+        working-directory: app
+
   integrace:
     runs-on: ubuntu-latest
     permissions:

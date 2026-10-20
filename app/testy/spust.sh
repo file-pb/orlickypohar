@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Testy záznamu trasy. Co prokazují a co ne, stojí v testy/README.md.
+#
+# `--experimental-sqlite` je tu kvůli Node 22 v CI, kde `node:sqlite` ještě
+# flag potřebuje; na Node 24 je neškodné.
+set -euo pipefail
+cd "$(dirname "$0")"
+
+export NODE_NO_WARNINGS=1
+NODE=(node --experimental-sqlite --import ./register.mjs)
+
+echo "== Logika záznamu =="
+TEST_DB=":memory:" "${NODE[@]}" ./zaznam.test.ts
+
+# Zapsaná část musí přežít konec procesu — přejímací podmínka č. 2. Proto
+# dva samostatné procesy nad jedním souborem, ne jeden se dvěma spojeními.
+echo
+echo "== Přežití konce procesu =="
+DB="$(mktemp -t trasa-preziti).db"
+trap 'rm -f "$DB" "$DB"-wal "$DB"-shm' EXIT
+
+TEST_DB="$DB" "${NODE[@]}" ./preziti/faze1.ts >/dev/null
+VYSLEDEK="$(TEST_DB="$DB" "${NODE[@]}" ./preziti/faze2.ts)"
+echo "  $VYSLEDEK"
+
+python3 - "$VYSLEDEK" <<'PY'
+import json, sys
+v = json.loads(sys.argv[1])
+chyby = []
+if v.get('stav') != 'bezi':
+    chyby.append(f"záznam měl po restartu pořád běžet, je {v.get('stav')!r}")
+if v.get('pocet') != 120:
+    chyby.append(f"zapsaných bodů mělo přežít 120, přežilo {v.get('pocet')}")
+if v.get('lod') != 'LUNA':
+    chyby.append(f"jméno lodi se nedochovalo: {v.get('lod')!r}")
+if chyby:
+    print('  CHYBA ' + '; '.join(chyby))
+    sys.exit(1)
+print('  ok   zapsaná část i stav „běží" přežily konec procesu')
+PY
