@@ -6051,18 +6051,9 @@ export interface components {
             pocetRozjizdek: number;
             /** Format: int32 */
             publikovanych: number;
-            /** Format: int32 */
-            kRevizi: number;
-            /**
-             * Format: int32
-             * @default 0
-             */
-            kPodpisu: number;
-            /**
-             * Format: int32
-             * @default 0
-             */
-            kPublikaci: number;
+            kRevizi: number[];
+            kPodpisu: number[];
+            kPublikaci: number[];
         };
         ZavodDetailDto: {
             slug: string;

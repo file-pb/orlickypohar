@@ -151,8 +151,10 @@ export default async function RozcestnikRocniku({
                   <div className="nazev">
                     {z.nazev}
                     <Stav stav={z.stav} />
-                    {z.kRevizi > 0 && (
-                      <span className="stitek vysledek-krevizi">{z.kRevizi}× k revizi</span>
+                    {z.kRevizi.length > 0 && (
+                      <span className="stitek vysledek-krevizi">
+                        {z.kRevizi.length}× k revizi
+                      </span>
                     )}
                   </div>
                   <div className="detail">{datum(z.datum)}</div>
@@ -224,16 +226,33 @@ function coTeď(udelena: Udelena[], serie: string, zastavky: ZastavkaVysledky[])
   const kam = (zavod: string, cesta = "/vysledky") =>
     `/sprava/${encodeURIComponent(serie)}${cesta}/${encodeURIComponent(zavod)}`;
 
+  /**
+   * Kam dlaždici poslat, když čekají tyhle rozjížďky.
+   *
+   * <b>Jedna čekající znamená jít rovnou do ní</b> (Filip, 20. 10. 2026:
+   * *„tyhle tři tlačítka vypadá že dělají asi to samé"*). Vypadala tak,
+   * protože to dělala: všechny vedly na `/vysledky/{zavod}`, takže po
+   * kliknutí člověk stál před seznamem a znovu hledal, co šel dělat.
+   * U víc čekajících seznam zůstává — tam je výběr na místě.
+   */
+  const kRozjizdkam = (zavod: string, cisla: readonly number[]) =>
+    cisla.length === 1
+      ? `${kam(zavod)}/${cisla[0]}`
+      : kam(zavod);
+
   const ukoly: Polozka[] = [];
 
   // 1. Vrácené výsledky. Někdo na ně čeká a sám se to nedozví — rozhodčí
   //    napsal důvod a dokud se to neopraví, čísla nejdou dál.
-  for (const z of zastavky.filter((z) => z.kRevizi > 0)) {
+  for (const z of zastavky.filter((z) => z.kRevizi.length > 0)) {
     if (!smi(udelena, { role: "Organizator", serie, zavod: z.zavod })) continue;
     ukoly.push({
       nazev: `Opravit vrácené výsledky — ${z.nazev}`,
-      popis: `${z.kRevizi}× k revizi. Rozhodčí napsal, co je špatně.`,
-      kam: kam(z.zavod),
+      popis:
+        z.kRevizi.length === 1
+          ? `${z.kRevizi[0]}. rozjížďka. Rozhodčí napsal, co je špatně.`
+          : `${z.kRevizi.length}× k revizi. Rozhodčí napsal, co je špatně.`,
+      kam: kRozjizdkam(z.zavod, z.kRevizi),
       role: "Organizator",
     });
   }
@@ -253,8 +272,13 @@ function coTeď(udelena: Udelena[], serie: string, zastavky: ZastavkaVysledky[])
       popis:
         jede.datum === dnes
           ? "Dnes. Start a klepání v cíli."
-          : `${datum(jede.datum)}. Přihlášky, směrnice, rozjížďky.`,
-      kam: kam(jede.zavod),
+          : `${datum(jede.datum)}. Kdo je přihlášený a kdo chybí.`,
+      // <b>Dvě různé práce, dvě různá místa.</b> V den závodu se zapisuje
+      // v cíli, takže výsledky; předtím se sbírají přihlášky. Dřív vedlo
+      // obojí na výsledky, kde se den předem nedá dělat nic — a popis
+      // přitom sliboval „přihlášky, směrnice, rozjížďky", tedy tři místa,
+      // z nichž tam nebylo ani jedno (Filip, 20. 10. 2026).
+      kam: jede.datum === dnes ? kam(jede.zavod) : kam(jede.zavod, "/prihlasky"),
       role: "Organizator",
     });
   }
@@ -263,26 +287,31 @@ function coTeď(udelena: Udelena[], serie: string, zastavky: ZastavkaVysledky[])
   //    se to počítalo z publikace, takže rozjížďka, která už venku byla
   //    a jen prošla revizí, rozhodčímu nenaskočila vůbec: pořadatel mu ji
   //    předal a on se to nedozvěděl (průchod scénářem D3, 8. 10. 2026).
-  for (const z of zastavky.filter((z) => z.kPodpisu > 0)) {
+  for (const z of zastavky.filter((z) => z.kPodpisu.length > 0)) {
     if (!smi(udelena, { role: "Rozhodci", serie })) continue;
     ukoly.push({
       nazev: `Ověřit výsledky — ${z.nazev}`,
-      popis: `${z.kPodpisu} z ${z.pocetRozjizdek} rozjížděk čeká na tvůj podpis.`,
-      kam: kam(z.zavod),
+      popis:
+        z.kPodpisu.length === 1
+          ? `${z.kPodpisu[0]}. rozjížďka čeká na tvůj podpis.`
+          : `${z.kPodpisu.length} z ${z.pocetRozjizdek} rozjížděk čeká na tvůj podpis.`,
+      kam: kRozjizdkam(z.zavod, z.kPodpisu),
       role: "Rozhodci",
     });
   }
 
   // 4. Podepsané, a přesto ne venku. Publikace není stav a není to podpis:
   //    „čísla platí" říká rozhodčí, „ať to vidí veřejnost" správce.
-  for (const z of zastavky.filter((z) => z.kPublikaci > 0)) {
+  for (const z of zastavky.filter((z) => z.kPublikaci.length > 0)) {
     if (!smi(udelena, { role: "Spravce", serie })) continue;
     ukoly.push({
       nazev: `Pustit ven — ${z.nazev}`,
       popis:
-        z.kPublikaci === 1
-          ? "Jedna potvrzená rozjížďka, a nikdo ji neuvidí."
-          : `${z.kPublikaci} potvrzených rozjížděk nikdo neuvidí.`,
+        z.kPublikaci.length === 1
+          ? `${z.kPublikaci[0]}. rozjížďka je potvrzená, a nikdo ji neuvidí.`
+          : `${z.kPublikaci.length} potvrzených rozjížděk nikdo neuvidí.`,
+      // Tahle jediná zůstává na seznamu i u jedné: pouští se po dávkách
+      // a tlačítko „Pustit ven" je právě tam.
       kam: kam(z.zavod),
       role: "Spravce",
     });

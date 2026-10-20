@@ -89,9 +89,9 @@ export default async function SpravaVysledku({
                 <div className="nazev">
                   {z.nazev}
                   <Stav stav={z.stav} />
-                  {z.kRevizi > 0 && (
+                  {z.kRevizi.length > 0 && (
                     <span className="stitek vysledek-krevizi">
-                      {z.kRevizi}× k revizi
+                      {z.kRevizi.length}× k revizi
                     </span>
                   )}
                 </div>

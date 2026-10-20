@@ -43,8 +43,15 @@ public record PrehledVysledkuDto(
     bool SmiPridatRozjizdku = false);
 
 /// <summary>
-/// Zastávka v rozcestníku výsledků. Čísla stačí sečtená: odsud se vybírá,
-/// kam jít, ne co udělat.
+/// Zastávka v rozcestníku výsledků.
+/// <para>
+/// <b>Čísla rozjížděk, ne jen počty</b> (Filip, 20. 10. 2026: *„tyhle tři
+/// tlačítka vypadá že dělají asi to samé"*). Vypadala, protože to dělala:
+/// každá dlaždice v „co teď" vedla na tentýž seznam výsledků regaty, i když
+/// slibovala jinou práci. Aby mohla pustit rovnou do té rozjížďky, která
+/// čeká, musí rozcestník vědět <b>která to je</b> — dřív dostával jen
+/// kolik jich je. Počet se z toho spočítá; opačně ne.
+/// </para>
 /// <para>
 /// <b>Proč tu jsou čtyři počty a ne dva.</b> Rozcestník z nich skládá
 /// „co teď", a práce rozhodčího je jiná než práce správce: rozhodčí
@@ -54,13 +61,16 @@ public record PrehledVysledkuDto(
 /// to nedozvěděl (průchod scénářem D3, 8. 10. 2026).
 /// </para>
 /// </summary>
-/// <param name="KRevizi">Čeká na pořadatele: vrácené s důvodem.</param>
+/// <param name="KRevizi">
+/// Čísla rozjížděk, které čekají na pořadatele: vrácené s důvodem.
+/// </param>
 /// <param name="KPodpisu">
-/// Čeká na rozhodčího: zapsané, ale ještě ne potvrzené. Publikace do toho
-/// nemluví — veřejná rozjížďka může na podpis čekat zrovna tak.
+/// Čísla těch, co čekají na rozhodčího: zapsané, ale ještě ne potvrzené.
+/// Publikace do toho nemluví — veřejná rozjížďka může na podpis čekat
+/// zrovna tak.
 /// </param>
 /// <param name="KPublikaci">
-/// Čeká na správce: potvrzené, a přesto ne venku.
+/// Čísla těch, co čekají na správce: potvrzené, a přesto ne venku.
 /// </param>
 public record ZastavkaVysledkyDto(
     string Zavod,
@@ -69,9 +79,9 @@ public record ZastavkaVysledkyDto(
     StavZavodu Stav,
     int PocetRozjizdek,
     int Publikovanych,
-    int KRevizi,
-    int KPodpisu = 0,
-    int KPublikaci = 0);
+    IReadOnlyList<int> KRevizi,
+    IReadOnlyList<int> KPodpisu,
+    IReadOnlyList<int> KPublikaci);
 
 public record StavVysledkuVstup(StavVysledku Stav, string? Duvod = null);
 
@@ -95,17 +105,23 @@ public class VysledkySprava(AppDbContext db)
         db.Zavody
             .Where(z => z.SerieId == serieId && z.Druh == DruhZastavky.Pohar)
             .OrderBy(z => z.Poradi).ThenBy(z => z.Datum)
+            // Čísla se řadí vzestupně: dlaždice z nich bere tu první, a to
+            // má být nejnižší nedodělaná rozjížďka, ne náhodná.
             .Select(z => new ZastavkaVysledkyDto(
                 z.Slug, z.Nazev, z.Datum, z.Stav,
                 z.Rozjizdky.Count,
                 z.Rozjizdky.Count(r => r.Publikovano),
-                z.Rozjizdky.Count(r => r.StavVysledku == StavVysledku.KRevizi),
-                z.Rozjizdky.Count(r =>
-                    r.StavVysledku == StavVysledku.Navrzeno
-                    || r.StavVysledku == StavVysledku.Overeno
-                    || r.StavVysledku == StavVysledku.Schvaleno),
-                z.Rozjizdky.Count(r =>
-                    r.StavVysledku == StavVysledku.Potvrzeno && !r.Publikovano)))
+                z.Rozjizdky
+                    .Where(r => r.StavVysledku == StavVysledku.KRevizi)
+                    .OrderBy(r => r.Cislo).Select(r => r.Cislo).ToList(),
+                z.Rozjizdky
+                    .Where(r => r.StavVysledku == StavVysledku.Navrzeno
+                                || r.StavVysledku == StavVysledku.Overeno
+                                || r.StavVysledku == StavVysledku.Schvaleno)
+                    .OrderBy(r => r.Cislo).Select(r => r.Cislo).ToList(),
+                z.Rozjizdky
+                    .Where(r => r.StavVysledku == StavVysledku.Potvrzeno && !r.Publikovano)
+                    .OrderBy(r => r.Cislo).Select(r => r.Cislo).ToList()))
             .ToListAsync(ct);
 
     /// <summary>Rozjížďky zastávky i s počtem zapsaných výsledků.</summary>
