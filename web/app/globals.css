@@ -1374,6 +1374,14 @@ th.vlevo, td.vlevo { text-align: left; }
    je návod, kudy z revize ven. */
 .karta .duvod .dal { color: var(--tlumeny); }
 
+/* Zastavená časomíra na cílové liště. Štítek vedle času říká, že se už
+   nejede; tlačítko „Zastavit čas" je v barvě vody, protože je to hlavní
+   úkon na konci rozjížďky — ne nebezpečí. */
+.cil-lista .stitek.dojeto {
+  color: var(--stav-vypsany); border-color: currentColor; margin-left: 0.4rem;
+}
+.cil-lista button.zastavit-cas { color: var(--voda); border-color: currentColor; }
+
 /* Zápis výsledků. Pole jsou v tabulce, ne pod sebou: opisuje se z papíru
    z cíle, kde je loď na řádku, a třicet lodí pod sebou by na telefonu
    znamenalo třicet obrazovek. Jen ke čtení ztratí pole rámeček, aby

@@ -12,7 +12,7 @@ import {
   zapamatuj,
   type Koncept,
 } from "../koncept";
-import { odstartujAkce, pridejLodAkce, ulozCilAkce, znakAkce } from "./akce";
+import { konecAkce, odstartujAkce, pridejLodAkce, ulozCilAkce, znakAkce } from "./akce";
 
 /**
  * Klepací část cílové obrazovky.
@@ -83,6 +83,10 @@ export function Cil({
   );
 
   const [start, setStart] = useState<string | null>(zapis.startV ?? null);
+  // Zastavená časomíra. `null` znamená, že běží — podle toho se počítá čas
+  // na liště (Filip, 20. 10. 2026: *„lodě bez cíle dopíšeme, ale čas už
+  // zastav"*).
+  const [konec, setKonec] = useState<string | null>(zapis.konecV ?? null);
   const [dojeti, setDojeti] = useState<Dojezd[]>(() =>
     zapis.lode
       .filter((l) => l.poradiVCili != null)
@@ -214,7 +218,9 @@ export function Cil({
   useEffect(() => router.refresh(), [router]);
 
   useDisplejSviti();
-  const ted = useTed(start != null);
+  // Tiká jen dokud čas běží. Po zastavení se drží naměřený — hodiny, co
+  // běží dál, by říkaly, že se pořád jede.
+  const ted = useTed(start != null && konec == null);
 
   // Čím se koncept z telefonu liší od toho, co leží na serveru. Počítá se
   // z podoby, se kterou se stránka otevřela — `key` stránky se při změně
@@ -265,16 +271,48 @@ export function Cil({
       return;
     const v = kdy ?? new Date().toISOString();
     const puvodni = start;
+    const puvodniKonec = konec;
     setStart(v);
+    // Nový start je opakování startu: zastavený čas padá i tady, aby lišta
+    // nezůstala viset na „dojeto" u rozjížďky, co se zrovna rozjela znovu.
+    setKonec(null);
     try {
       const { chyba } = await odstartujAkce(serie, zavod, zapis.cislo, v);
       if (chyba) {
         setStart(puvodni);
+        setKonec(puvodniKonec);
         setChyba(chyba);
       }
     } catch {
       setStart(puvodni);
+      setKonec(puvodniKonec);
       setChyba("Start se nepodařilo uložit. Zkus to znovu.");
+    }
+  };
+
+  /**
+   * Zastaví časomíru, nebo ji pustí znovu.
+   *
+   * <b>Nečeká na dopsaný papír</b> (Filip, 20. 10. 2026: *„lodě bez cíle
+   * dopíšeme, ale čas už zastav"*). Rozjížďka je tím dojetá; zápis zůstává
+   * otevřený a lodě se dopisují dál.
+   */
+  const prepniKonec = async (zastavit: boolean) => {
+    if (!zastavit
+        && !window.confirm("Pustit časomíru znovu? Rozjížďka se tím vrátí mezi jedoucí."))
+      return;
+
+    const puvodni = konec;
+    setKonec(zastavit ? new Date().toISOString() : null);
+    try {
+      const { chyba } = await konecAkce(serie, zavod, zapis.cislo, zastavit);
+      if (chyba) {
+        setKonec(puvodni);
+        setChyba(chyba);
+      }
+    } catch {
+      setKonec(puvodni);
+      setChyba("Časomíru se nepodařilo přepnout. Zkus to znovu.");
     }
   };
 
@@ -329,8 +367,33 @@ export function Cil({
           {start ? (
             <>
               <span>
-                Start {hodiny(start)} · <b className="cil-cas">{trvani(start, ted)}</b>
+                Start {hodiny(start)} ·{" "}
+                {/* Po zastavení drží lišta naměřený čas, ne běžící. */}
+                <b className="cil-cas">{trvani(start, konec ? Date.parse(konec) : ted)}</b>
+                {konec && <span className="stitek dojeto"> dojeto {hodiny(konec)}</span>}
               </span>
+              {/* <b>Zastavit čas, než je papír dopsaný</b> (Filip, 20. 10.
+                  2026: *„hodilo by se mít možnost zastavit časomíru a říci,
+                  že rozjížďka je odjetá… lodě bez cíle dopíšeme, ale čas už
+                  zastav"*). Do té doby se rozjížďka uzavřela sama, teprve až
+                  měla každá loď dojezd nebo kód — tedy až po dopsání, což je
+                  na vodě obráceně.
+
+                  Puštění zpátky je pod potvrzením: vrací rozjížďku mezi
+                  jedoucí a to se omylem klepnout nemá. */}
+              {konec ? (
+                <button type="button" className="maly" onClick={() => void prepniKonec(false)}>
+                  Pustit znovu
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="maly zastavit-cas"
+                  onClick={() => void prepniKonec(true)}
+                >
+                  Zastavit čas
+                </button>
+              )}
               <button type="button" className="maly" onClick={() => odstartuj()}>
                 Přepsat na teď
               </button>

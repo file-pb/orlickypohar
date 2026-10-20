@@ -1573,6 +1573,10 @@ def stav_po_zapisu(z, r):
     """
     if r.get("stav") == "Zrusena":
         return r["stav"]
+    # Zastavená časomíra rozhoduje dřív než zápis: lodě bez cíle se dopisují
+    # dál, ale rozjížďka je dojetá (Filip, 20. 10. 2026).
+    if r.get("konecV"):
+        return "Dokoncena"
     jedou = {u["lod"] for u in z["ucasti"] if u.get("stav") in VEREJNE_UCASTI}
     maji = {v["lod"] for v in r.get("vysledky", [])}
     if jedou and jedou <= maji:
@@ -1600,7 +1604,8 @@ def rozjizdka_radek(r, zavod=None):
     spravce = smi("Spravce")
     organizator = smi("Organizator", zavod)
 
-    return {"cislo": r["cislo"], "startV": r.get("startV"), "stav": r["stav"],
+    return {"cislo": r["cislo"], "startV": r.get("startV"),
+            "konecV": r.get("konecV"), "stav": r["stav"],
             "doSerie": r["doSerie"], "stavVysledku": r["stavVysledku"],
             "publikovano": r["publikovano"], "duvodRevize": r.get("duvodRevize"),
             "pocetVysledku": len(r.get("vysledky", [])), "smiPublikovat": spravce,
@@ -1787,7 +1792,8 @@ def zapis_dto(z, r):
                       "naRegate": ucasti.get(p["lod"], {}).get("stav") in VEREJNE_UCASTI,
                       "poznavaciZnak": ucasti.get(p["lod"], {}).get("poznavaciZnak")}
                      for p in lode],
-            "startV": r.get("startV"), "doSerie": r.get("doSerie", True),
+            "startV": r.get("startV"), "konecV": r.get("konecV"),
+            "stav": r["stav"], "doSerie": r.get("doSerie", True),
             "papir": {k: v for k, v in r["papir"].items() if k != "id"} if r.get("papir") else None,
             "smiPapir": smi_ted("Organizator", z["slug"]), "pocetNavrhu": len(r.get("navrhy", [])),
             # Podoba sady, ze které klient vychází. Posílá ji zpátky při
@@ -3327,6 +3333,9 @@ class H(BaseHTTPRequestHandler):
                           r'/rozjizdky/(\d+)/start$', cesta)):
             return self.odstartuj(m.group(1), int(m.group(2)))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
+                          r'/rozjizdky/(\d+)/konec$', cesta)):
+            return self.konec_rozjizdky(m.group(1), int(m.group(2)))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                           r'/rozjizdky/(\d+)/navrhy/([0-9a-f-]+)/pouzit$', cesta)):
             return self.pouzij_navrh(m.group(1), int(m.group(2)), m.group(3))
         if (m := re.match(
@@ -3832,12 +3841,40 @@ class H(BaseHTTPRequestHandler):
         from datetime import datetime, timezone
         r["startV"] = self.telo_zadosti().get("startV") or \
             datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-        if r.get("stav") == "Planovana":
+        # Nový start je opakování startu: zastavený čas se zruší, jinak by
+        # rozjížďka vypadala jako dojetá, zatímco se zrovna rozjela znovu.
+        r["konecV"] = None
+        if r.get("stav") != "Zrusena":
             r["stav"] = "Probiha"
         # Časy dojetých se přepočítají k novému startu, jako v API.
         for v in r["vysledky"]:
             if v.get("dojezdV"):
                 v["casSekundy"] = cas_od_startu(r["startV"], v["dojezdV"])
+        return self.odpoved(zapis_dto(z, r))
+
+    def konec_rozjizdky(self, zavod, cislo):
+        """Zastaví časomíru, nebo ji pustí znovu — opsané z `ZapisSprava.KonecAsync`."""
+        z, r = self.rozjizdka(zavod, cislo)
+        if not r:
+            return None
+        if (chyba := proc_nejde_prepsat(z, r)):
+            return self.chyba(400, chyba)
+
+        from datetime import datetime, timezone
+        v = self.telo_zadosti() or {}
+        if v.get("pustit") is True:
+            r["konecV"] = None
+        else:
+            if not r.get("startV"):
+                return self.chyba(400, "Rozjížďka není odstartovaná, takže není co zastavit.")
+            konec = v.get("konecV") or \
+                datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            if konec < r["startV"]:
+                return self.chyba(400, "Konec vychází před startem. "
+                                       "Oprav čas startu, nebo konce.")
+            r["konecV"] = konec
+
+        r["stav"] = stav_po_zapisu(z, r)
         return self.odpoved(zapis_dto(z, r))
 
     def pridej_rozjizdku(self, zavod):
@@ -3849,7 +3886,7 @@ class H(BaseHTTPRequestHandler):
 
         # Nová rozjížďka je návrh a venku není — stejně jako v API.
         nova = {"cislo": max((r["cislo"] for r in z["rozjizdky"]), default=0) + 1,
-                "startV": None, "stav": "Planovana",
+                "startV": None, "konecV": None, "stav": "Planovana",
                 "doSerie": self.telo_zadosti().get("doSerie", True) is not False,
                 "stavVysledku": "Navrzeno", "publikovano": False, "vysledky": []}
         z["rozjizdky"].append(nova)

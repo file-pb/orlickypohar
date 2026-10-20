@@ -420,6 +420,26 @@ public class Rozjizdka : Fotky.IMaFotku
 
     public DateTimeOffset? StartV { get; set; }
 
+    /// <summary>
+    /// Kdy pořadatel zastavil časomíru. <c>null</c>, dokud běží.
+    ///
+    /// <para>
+    /// <b>Konec rozjížďky je rozhodnutí, ne dopočet</b> (Filip, 20. 10.
+    /// 2026: *„hodilo by se mít možnost zastavit časomíru a říci, že
+    /// rozjížďka je odjetá, teď je to závislé pouze na zápisu všech lodí…
+    /// lodě bez cíle dopíšeme, ale čas už zastav"*). Dokud se stav počítal
+    /// jen z toho, že každá loď má dojezd nebo kód, nešlo rozjížďku uzavřít
+    /// dřív, než se dopsal papír — a na vodě je to naopak: nejdřív se
+    /// zastaví čas, teprve pak se dopisuje.
+    /// </para>
+    /// <para>
+    /// <b>Není to totéž co stav.</b> Stav říká, co se s rozjížďkou děje;
+    /// tohle je okamžik, od kterého už nikdo nedojede. Zápis zůstává
+    /// otevřený a lodě se dopisují dál.
+    /// </para>
+    /// </summary>
+    public DateTimeOffset? KonecV { get; set; }
+
     public StavRozjizdky Stav { get; set; } = StavRozjizdky.Planovana;
 
     /// <summary>

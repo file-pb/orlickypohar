@@ -1,7 +1,14 @@
 "use server";
 
 import { prihlas } from "@/lib/prihlasky";
-import { nastavZnak, odstartuj, ulozCil, type ZapisLod, type ZapisRadek } from "@/lib/vysledky";
+import {
+  konecRozjizdky,
+  nastavZnak,
+  odstartuj,
+  ulozCil,
+  type ZapisLod,
+  type ZapisRadek,
+} from "@/lib/vysledky";
 
 /**
  * Serverové akce cílové obrazovky. Na rozdíl od zbytku správy je volá
@@ -35,6 +42,26 @@ export async function ulozCilAkce(
     return { chyba: vysledek.chyba, konflikt: vysledek.konflikt };
 
   return { chyba: null, revize: vysledek.zapis.revize };
+}
+
+/**
+ * Zastaví časomíru, nebo ji pustí znovu.
+ *
+ * <b>Proč vlastní akce a ne součást uložení:</b> zastavení času se na vodě
+ * dělá dřív, než je papír dopsaný — kdyby viselo na uložení zápisu,
+ * znamenalo by „zastav čas" totéž co „mám všechny lodě", a to je přesně to,
+ * co Filip 20. 10. 2026 reklamoval.
+ */
+export async function konecAkce(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  zastavit: boolean,
+): Promise<{ chyba: string | null }> {
+  if (!platne(cislo)) return { chyba: "Neplatné číslo rozjížďky." };
+
+  const vysledek = await konecRozjizdky(serie, zavod, cislo, zastavit);
+  return { chyba: "chyba" in vysledek ? vysledek.chyba : null };
 }
 
 export async function odstartujAkce(

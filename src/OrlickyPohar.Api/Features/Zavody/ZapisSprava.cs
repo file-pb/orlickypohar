@@ -57,7 +57,13 @@ public record ZapisRozjizdkyDto(
     int PocetNavrhu = 0,
     // Podoba sady, ze které klient vychází. Posílá ji zpátky při uložení
     // a server tím pozná, že mezitím někdo jiný uložil něco novějšího.
-    int Revize = 0);
+    int Revize = 0,
+    // Kdy se zastavila časomíra (20. 10. 2026). `null` znamená, že běží —
+    // obrazovka podle toho počítá čas, nebo ukazuje ten naměřený.
+    DateTimeOffset? KonecV = null,
+    // Stav rozjížďky. Cílová obrazovka ho potřebuje, aby mohla říct
+    // „dojeto" a nenabízet zastavení tomu, co se nejede.
+    StavRozjizdky Stav = StavRozjizdky.Planovana);
 
 /// <summary>Jeden řádek snímku i s tím, co o lodi ví ročník.</summary>
 public record NavrhRadekDto(
@@ -177,7 +183,7 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
             rozjizdka.Cislo, rozjizdka.StavVysledku, rozjizdka.DuvodRevize,
             procNelze is null, procNelze, lode, rozjizdka.StartV, rozjizdka.DoSerie,
             Fotky.Nahravani.Dto(papir, uloziste.VerejnaAdresa), poradatel, pocetNavrhu,
-            rozjizdka.Revize);
+            rozjizdka.Revize, rozjizdka.KonecV, rozjizdka.Stav);
     }
 
     /// <summary>
@@ -309,7 +315,8 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
         rozjizdka.Stav = Zapis.StavPoZapisu(
             rozjizdka.Stav,
             rozjizdka.StartV is not null,
-            ucasti.Values.Select(u => (u.Stav, sVysledkem.Contains(u.PrihlaskaId))));
+            ucasti.Values.Select(u => (u.Stav, sVysledkem.Contains(u.PrihlaskaId))),
+            rozjizdka.KonecV is not null);
 
         // Nová podoba sady. Klient, který vyšel ze staré, už neprojde.
         rozjizdka.Revize++;
@@ -465,11 +472,74 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
             return "Rozjížďka nemá přijatou trať. Přiřaď jí trať a nech ji rozhodčím přijmout.";
 
         rozjizdka.StartV = kdy.ToUniversalTime();
-        if (rozjizdka.Stav == StavRozjizdky.Planovana) rozjizdka.Stav = StavRozjizdky.Probiha;
+
+        // <b>Nový start pustí časomíru znovu</b> (Filip, 20. 10. 2026
+        // jmenoval mezi stavy i *„opakování startu"*). Zastavený čas by
+        // jinak zůstal viset u rozjížďky, která se zrovna rozjela znovu,
+        // a ta by vypadala jako dojetá.
+        rozjizdka.KonecV = null;
+
+        if (rozjizdka.Stav != StavRozjizdky.Zrusena) rozjizdka.Stav = StavRozjizdky.Probiha;
 
         // Časy už dojetých lodí se přepočítají k novému startu.
         var vysledky = await db.Vysledky.Where(v => v.RozjizdkaId == rozjizdka.Id && v.DojezdV != null).ToListAsync(ct);
         foreach (var v in vysledky) v.NamerenyCas = Zapis.NamerenyCas(rozjizdka.StartV, v.DojezdV!.Value);
+
+        await db.SaveChangesAsync(ct);
+        return null;
+    }
+
+    /// <summary>
+    /// Zastaví časomíru, nebo ji pustí znovu (<paramref name="kdy"/> je
+    /// <c>null</c>). Vrací text chyby, nebo <c>null</c>.
+    ///
+    /// <para>
+    /// <b>Konec rozjížďky nečeká na dopsaný papír</b> (Filip, 20. 10. 2026:
+    /// *„lodě bez cíle dopíšeme, ale čas už zastav"*). Dřív se stav počítal
+    /// jen z toho, že každá loď na vodě má dojezd nebo kód — takže rozjížďka,
+    /// kde dvě lodě nedojely a kódy se dopisovaly až na břehu, zůstávala
+    /// „jede se". Zastavená časomíra ji uzavře hned a zápis zůstane otevřený.
+    /// </para>
+    /// <para>
+    /// <b>Zastavit jde jen odstartovanou.</b> Zastavovat čas, který neběží,
+    /// nedává smysl — a kdyby to šlo, vznikla by „dojetá" rozjížďka, co se
+    /// nikdy nejela. Na to je zrušení.
+    /// </para>
+    /// </summary>
+    public async Task<string?> KonecAsync(
+        Rozjizdka rozjizdka, DateTimeOffset? kdy, CancellationToken ct)
+    {
+        var zavod = await db.Zavody.FirstAsync(z => z.Id == rozjizdka.ZavodId, ct);
+        if (Zapis.ProcNejdePrepsat(zavod.Stav, rozjizdka.StavVysledku) is { } zamceno) return zamceno;
+
+        if (kdy is { } konec)
+        {
+            if (rozjizdka.StartV is not { } start)
+                return "Rozjížďka není odstartovaná, takže není co zastavit.";
+            if (konec < start)
+                return "Konec vychází před startem. Oprav čas startu, nebo konce.";
+
+            rozjizdka.KonecV = konec.ToUniversalTime();
+        }
+        else
+        {
+            rozjizdka.KonecV = null;
+        }
+
+        var ucasti = await db.Ucasti
+            .Where(u => u.ZavodId == rozjizdka.ZavodId)
+            .Select(u => new { u.Id, u.Stav })
+            .ToListAsync(ct);
+        var sVysledkem = await db.Vysledky
+            .Where(v => v.RozjizdkaId == rozjizdka.Id)
+            .Select(v => v.UcastId)
+            .ToListAsync(ct);
+
+        rozjizdka.Stav = Zapis.StavPoZapisu(
+            rozjizdka.Stav,
+            rozjizdka.StartV is not null,
+            ucasti.Select(u => (u.Stav, sVysledkem.Contains(u.Id))),
+            rozjizdka.KonecV is not null);
 
         await db.SaveChangesAsync(ct);
         return null;

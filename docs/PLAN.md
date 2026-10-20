@@ -6400,6 +6400,41 @@ tři zodpovězené a otevřený zůstává jen čtvrtý.
    Návrh: správce ji smí přepsat a pořadí se přepočítá. Historie se nevede,
    dokud se neukáže, že je potřeba.
 
+## Konec rozjížďky je rozhodnutí (Filip, 20. 10. 2026)
+
+*„Hodilo by se mít možnost zastavit časomíru a říci, že rozjížďka je
+odjetá. Teď je to závislé pouze na zápisu všech lodí… lodě bez cíle
+dopíšeme, ale čas už zastav."*
+
+**Dokud o konci rozhodoval zápis, pořadí úkonů bylo obrácené.** Rozjížďka
+se uzavřela sama, teprve když měla **každá loď na vodě** dojezd nebo kód
+(`Zapis.StavPoZapisu`). Na vodě se ale nejdřív zastaví čas a teprve pak se
+dopisuje — takže rozjížďka, kde dvě lodě nedojely a kódy se psaly až na
+břehu, zůstávala „jede se".
+
+Hotové 20. 10. 2026. `Rozjizdka.KonecV` je okamžik, kdy pořadatel zastavil
+časomíru; endpoint `POST …/rozjizdky/{cislo}/konec`, na cílové obrazovce
+tlačítko **Zastavit čas**. Co u toho bylo rozhodnuté:
+
+- **Není to stav.** Stav říká, co se s rozjížďkou děje; `KonecV` je
+  okamžik, od kterého už nikdo nedojede. Zápis zůstává otevřený
+  (`StavVysledku` se nemění) a lodě se dopisují dál — ověřeno: rozjížďka
+  je `Dokoncena` s nula zapsanými výsledky.
+- **Zastavit jde jen odstartovanou.** Jinak by vznikla „dojetá"
+  rozjížďka, která se nikdy nejela; na to je zrušení. Konec před startem
+  se odmítne jako špatně nastavený čas.
+- **Nový start zastavení zruší** — to je *opakování startu*, které Filip
+  jmenoval mezi stavy. Bez toho by rozjížďka, co se právě rozjela znovu,
+  zůstala viset jako dojetá.
+- **Puštění zpátky** (`pustit: true`) vrátí rozhodování zápisu, takže
+  rozjížďka s nedopsanou lodí se zase jede.
+
+Z Filipova výčtu *„časomíra zastavena, rozjížďka pozastavena/dojetá,
+zrušená, opakování startu"* zůstává **nerozebrané „pozastavení"** — tedy
+přerušení rozjížďky, která pak pokračuje. Zrušení i opakování startu
+existují, dojetí teď taky; pozastavení by byl pátý stav a čeká na to, až
+se ukáže, co má na vodě znamenat.
+
 ## Fronta k 19. 10. 2026
 
 <b>Proč je tenhle oddíl v plánu, a ne v hlavě.</b> Filip, 19. 10. 2026:
