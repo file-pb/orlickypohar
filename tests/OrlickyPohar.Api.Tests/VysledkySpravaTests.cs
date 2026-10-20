@@ -1006,10 +1006,14 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         // Zápis zůstal otevřený — lodě se dopisují dál.
         Assert.Equal(StavVysledku.Navrzeno, rozjizdka.StavVysledku);
 
-        // Puštění vrátí rozhodování zápisu.
+        // <b>Puštění vrátí rozhodování zápisu</b> — a ten v tomhle ročníku
+        // říká „dojeto", protože obě lodě výsledek mají (`Rocnik` je zapisuje
+        // obě). Napsal jsem sem napřed `Probiha` a integrační testy to
+        // vyvrátily: špatně bylo očekávání, ne kód. Případ s nedopsanou lodí
+        // hlídá `ZapisTests.Pusteni_casu_vrati_rozhodovani_zapisu`.
         Assert.Null(await zapis.KonecAsync(rozjizdka, null, default));
         Assert.Null(rozjizdka.KonecV);
-        Assert.Equal(StavRozjizdky.Probiha, rozjizdka.Stav);
+        Assert.Equal(StavRozjizdky.Dokoncena, rozjizdka.Stav);
     }
 
     /// <summary>
