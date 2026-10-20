@@ -96,6 +96,39 @@ export const STAVY: Record<StavVysledku, { stitek: string; tlacitko: string; pop
 
 export const nazevStavu = (stav: StavVysledku) => STAVY[stav].stitek;
 
+/**
+ * Co udělá tlačítko, které vede ze stavu <c>ze</c> do stavu <c>na</c>.
+ *
+ * <b>Stejný cíl neznamená stejný úkon</b> (Filip, 20. 10. 2026: *„odjeli
+ * jsme rozjížďku, ale nemáme jak ji schválit — furt je tam k revizi, nějak
+ * tam není logika v tom flow odjeté rozjížďky"*). Z revize i ze zrušené
+ * rozjížďky vede jediná cesta vpřed, a to na „Navrženo". Jenže popsaná
+ * byla slovem <b>„Vrátit do návrhu"</b>, které zní jako couvnutí — takže
+ * to jediné tlačítko, které zápis posouvá dál, vypadalo jako krok zpátky
+ * a obrazovka nedávala smysl.
+ *
+ * Z „Ověřeno" nebo „Schváleno" je to naopak couvnutí doopravdy, a tam ten
+ * text zůstává.
+ */
+export function krokZe(
+  ze: StavVysledku,
+  na: StavVysledku,
+): { tlacitko: string; popis: string } {
+  if (na === "Navrzeno" && ze === "KRevizi")
+    return {
+      tlacitko: "Otevřít k opravě",
+      popis: "Zápis se odemkne. Po opravě projde ověřením a schválením znovu.",
+    };
+
+  if (na === "Navrzeno" && ze === "Eliminovano")
+    return {
+      tlacitko: "Vrátit do hry",
+      popis: "Rozjížďka se zase počítá. Zápis začíná od návrhu.",
+    };
+
+  return { tlacitko: STAVY[na].tlacitko, popis: STAVY[na].popis };
+}
+
 const token = () => tokenZeSezeni();
 
 /** Chybová hláška z API, nebo obecná podle stavu. Nikdy prázdná. */

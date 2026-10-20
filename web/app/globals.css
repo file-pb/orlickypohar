@@ -1370,6 +1370,9 @@ th.vlevo, td.vlevo { text-align: left; }
   margin: 0.6rem 0 0; font-size: 0.875rem;
   border-left: 3px solid var(--stav-zruseny); padding-left: 0.7rem;
 }
+/* Co bude dál. Tlumené schválně: důvod od rozhodčího je to hlavní, tohle
+   je návod, kudy z revize ven. */
+.karta .duvod .dal { color: var(--tlumeny); }
 
 /* Zápis výsledků. Pole jsou v tabulce, ne pod sebou: opisuje se z papíru
    z cíle, kde je loď na řádku, a třicet lodí pod sebou by na telefonu

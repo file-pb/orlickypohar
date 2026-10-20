@@ -4,6 +4,7 @@ import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
 import { Stav } from "@/app/stav";
 import { Vypadek } from "@/app/vypadek";
 import {
+  krokZe,
   STAVY,
   nactiRozjizdky,
   nazevStavu,
@@ -326,28 +327,44 @@ function Rozjizdka({
       {rozjizdka.duvodRevize && (
         <p className="duvod">
           <b>K revizi:</b> {rozjizdka.duvodRevize}
+          {/* <b>Co bude dál, musí stát u důvodu</b> (Filip, 20. 10. 2026).
+              Důvod sám říká, co je špatně, ne kudy ven — a ven vede jediná
+              cesta, přes odemčení zápisu. Jen dokud je rozjížďka v revizi:
+              po opravě by tahle věta překážela, důvod zůstává. */}
+          {rozjizdka.stavVysledku === "KRevizi" && (
+            <span className="dal">
+              {" "}
+              Zápis je zamčený. Otevři ho k opravě, pak projde ověřením
+              a schválením znovu.
+            </span>
+          )}
         </p>
       )}
 
       <div className="stavy">
         {rozjizdka.mozneStavy
           .filter((na) => na !== "KRevizi")
-          .map((na) => (
-            <form key={na} action={stavAkce}>
-              <input type="hidden" name="serie" value={serie} />
-              <input type="hidden" name="zavod" value={zavod} />
-              <input type="hidden" name="cislo" value={rozjizdka.cislo} />
-              <input type="hidden" name="stav" value={na} />
-              {/* Viditelný text napřed — viz obrazovka přihlášek. */}
-              <button
-                type="submit"
-                title={STAVY[na].popis}
-                aria-label={`${STAVY[na].tlacitko} — ${STAVY[na].popis}`}
-              >
-                {STAVY[na].tlacitko}
-              </button>
-            </form>
-          ))}
+          .map((na) => {
+            // Text podle toho, odkud se jde — „Vrátit do návrhu" je
+            // z revize krok vpřed, ne couvnutí (viz `krokZe`).
+            const krok = krokZe(rozjizdka.stavVysledku, na);
+            return (
+              <form key={na} action={stavAkce}>
+                <input type="hidden" name="serie" value={serie} />
+                <input type="hidden" name="zavod" value={zavod} />
+                <input type="hidden" name="cislo" value={rozjizdka.cislo} />
+                <input type="hidden" name="stav" value={na} />
+                {/* Viditelný text napřed — viz obrazovka přihlášek. */}
+                <button
+                  type="submit"
+                  title={krok.popis}
+                  aria-label={`${krok.tlacitko} — ${krok.popis}`}
+                >
+                  {krok.tlacitko}
+                </button>
+              </form>
+            );
+          })}
 
         {/* Do poháru, nebo mimo něj. Výsledku regaty se to netýká —
             ten se počítá ze všech odjetých rozjížděk. */}
