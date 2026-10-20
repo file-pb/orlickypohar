@@ -17,7 +17,10 @@ public record ClanekShrnutiDto(
     DateTimeOffset PublikovanoV,
     string? Zavod,
     string? ZavodNazev,
-    ObrazekDto? Obrazek = null);
+    ObrazekDto? Obrazek = null,
+    // Úvodník regaty: stránka regaty ho ukazuje nahoře místo v řadě
+    // s ostatními články. Aditivně, starší klient ho nečte.
+    bool Uvodnik = false);
 
 public record ClanekDto(
     string Slug,
@@ -31,7 +34,10 @@ public record ClanekDto(
     ObrazekDto? Obrazek = null,
     // Jak číst `Telo`. Aditivně a s výchozí hodnotou: klient, který o formátu
     // neví, dostane `Text` a chová se jako doteď.
-    FormatClanku Format = FormatClanku.Text);
+    FormatClanku Format = FormatClanku.Text,
+    // Úvodník regaty. Editor podle toho zaškrtne políčko, veřejná stránka
+    // regaty ho ukáže nahoře.
+    bool Uvodnik = false);
 
 /// <summary>
 /// Veřejné čtení blogu. Platí tu totéž co u ročníku: <b>nepublikovaný článek
@@ -124,7 +130,8 @@ public static class ClanekEndpoints
         var clanky = await dotaz
             .Select(c => new ClanekShrnutiDto(
                 c.Slug, c.Titulek, c.Perex, c.Autor, c.PublikovanoV,
-                c.Zavod!.Slug, c.Zavod.Nazev, Nahravani.Dto(c.Fotka, adresa)))
+                c.Zavod!.Slug, c.Zavod.Nazev, Nahravani.Dto(c.Fotka, adresa),
+                c.Uvodnik))
             .ToListAsync(ct);
 
         return TypedResults.Ok(clanky);

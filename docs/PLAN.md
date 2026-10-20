@@ -1146,7 +1146,15 @@ Návrh stránky regaty měl dvě nerozhodnuté otázky a do plánu se proto
 nezapisoval. **Obě jsou rozhodnuté.**
 
 **Úvodník je článek s příznakem, ne pole na regatě.** `Clanek` s vazbou na
-závod a příznakem „úvodník", nejvýš jeden na regatu. Zdědí tím všechno
+závod a příznakem „úvodník", nejvýš jeden na regatu. **Hotové 20. 10.
+2026** (`Clanek.Uvodnik`, migrace `UvodnikClanku`): zaškrtávátko v editoru
+článku, štítek ve výpisu správy a na úvodu regaty stojí nad ostatními
+novinkami. Dvě věci u toho byly rozhodnuté — **nejvýš jeden se vymáhá
+přepsáním, ne chybou** (kdo označuje nový úvodník, chce právě to; hláška
+„regata už úvodník má" by ho poslala hledat ten starý a mezitím by regata
+neměla žádný), a **příznak bez regaty se odmítne větou**, protože článek
+ročníku se na stránce regaty neobjeví a zaškrtnutý příznak by byl tichý
+nesmysl. Zdědí tím všechno
 hotové: editor strukturovaných bloků, čištění při zápisu (oddíl *Tělo
 článku*), fotky v R2 a psaní dopředu s datem vydání. Pole na regatě by
 vyrobilo druhý editor vedle článků, nedalo by se naplánovat a fotky by v něm
@@ -1203,10 +1211,13 @@ jinde ne — a tvrzení v zadání bylo moje, nepodložené.
 
 Prezentace regaty jako na `cyc.cz/izolepa-cup` (program, časy,
 představení) — Úvod dnes ukazuje články pořadatele, což je většina efektu
-bez zásahu do API; úvodník jako příznak `Clanek` nemá a pole přímo na
-regatě by vyrobilo druhý editor vedle článků. Rozprava a pokyny
-rozhodčího v upozorněních — nemají datový typ. Graf tlaku s historií —
-chce vlastní sbírání dat z ČHMÚ v čase. Alerty jako widget v bočním
+bez zásahu do API. (Úvodník jako příznak `Clanek` **od 20. 10. 2026 má**,
+viz *Úvodník a taby*.) Rozprava a pokyny
+rozhodčího v upozorněních — nemají datový typ. (Graf tlaku s historií je
+**hotový 20. 10. 2026**; tady stálo, že „chce vlastní sbírání dat z ČHMÚ
+v čase", a to od 18. 9. 2026 neplatilo — widget větru stahuje včerejší
+i dnešní soubor stanice, takže 24 hodin měření po deseti minutách tam
+leží. Byl to jediný důvod, proč se graf nedělal.) Alerty jako widget v bočním
 panelu na širokém monitoru (Filipův nápad z 11. 10.).
 
 **A jeden nález mimo rozsah:** `Boky` vykreslují widgety do DOM vícekrát

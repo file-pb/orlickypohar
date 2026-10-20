@@ -382,7 +382,7 @@ public static class ClankySpravaEndpoints
             nalezeny.Slug, nalezeny.Titulek, nalezeny.Perex, TeloKUprave(nalezeny), nalezeny.Autor,
             nalezeny.PublikovanoV, zavod?.Slug, zavod?.Nazev,
             Nahravani.Dto(nalezeny.Fotka, uloziste.VerejnaAdresa),
-            FormatKUprave(nalezeny)));
+            FormatKUprave(nalezeny), nalezeny.Uvodnik));
     }
 
     /// <summary>

@@ -1827,6 +1827,17 @@ th.vlevo, td.vlevo { text-align: left; }
 }
 .vitr-tlak-zmena { flex-basis: 100%; font-size: 0.72rem; color: var(--tlumeny); font-variant-numeric: tabular-nums; }
 
+/* Úvodník regaty na úvodu: stojí nad výpisem novinek a čte se jako první,
+   takže perex nese plnou velikost písma, ne zmenšenou jako ve výpisu. */
+.uvodnik { margin: 0 0 1.5rem; }
+.uvodnik h2 { margin: 0 0 0.4rem; }
+.uvodnik h2 a { color: inherit; text-decoration: none; }
+.uvodnik h2 a:hover { color: var(--voda); }
+.uvodnik-perex { margin: 0 0 0.5rem; }
+
+/* Štítek u článku ve správě — který z nich regatu uvádí. */
+.stitek.uvodnik-stitek { color: var(--voda); border-color: currentColor; }
+
 /* Průběh tlaku za 24 h. Nízký pruh přes celou šířku boku: čte se z něj
    tvar, ne hodnoty — ty stojí v číslech nad ním. `vector-effect` drží
    čáru stejně tenkou i přes `preserveAspectRatio: none`, které viewBox

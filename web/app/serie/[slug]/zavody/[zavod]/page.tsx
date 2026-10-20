@@ -50,6 +50,11 @@ export default async function Uvod({ params }: Parametry) {
   const { detail, trat } = zastavka;
   const akce = detail.druh === "Akce";
 
+  // Úvodník se z výpisu vyjme, aby tam nebyl dvakrát. U akce se nehledá:
+  // komunitní akce regatu neuvádí a příznak u ní nedává smysl.
+  const uvodnik = akce ? undefined : clanky?.find((c) => c.uvodnik);
+  const ostatni = uvodnik ? clanky?.filter((c) => c.slug !== uvodnik.slug) : clanky;
+
   return (
     <Boky serie={slug}>
       <HlavaZastavky
@@ -67,12 +72,32 @@ export default async function Uvod({ params }: Parametry) {
         </p>
       )}
 
-      {clanky && clanky.length > 0 ? (
+      {/* <b>Úvodník stojí nad výpisem, ne v něm</b> (plán, oddíl *Úvodník
+          a taby*). Je to článek jako každý jiný, jen označený — takže
+          z výpisu vypadne, aby tam nebyl dvakrát. Perex se tu ukazuje celý,
+          protože na úvodu regaty je to to první, co se čte.
+
+          Regata má nejvýš jeden, ale `find` je tu schválně místo
+          `[0]`: kdyby se do dat starší cestou dostaly dva, obrazovka
+          ukáže první a nespadne. */}
+      {uvodnik && (
+        <section className="uvodnik">
+          <h2>
+            <Link href={`/serie/${slug}/novinky/${uvodnik.slug}`}>{uvodnik.titulek}</Link>
+          </h2>
+          {uvodnik.perex && <p className="uvodnik-perex">{uvodnik.perex}</p>}
+          <p className="poznamka">
+            <Link href={`/serie/${slug}/novinky/${uvodnik.slug}`}>Číst celé →</Link>
+          </p>
+        </section>
+      )}
+
+      {ostatni && ostatni.length > 0 ? (
         <>
-          <h2>{akce ? "Novinky k akci" : "O regatě"}</h2>
-          <VypisNovinek serie={slug} clanky={clanky} />
+          <h2>{akce ? "Novinky k akci" : uvodnik ? "Další novinky" : "O regatě"}</h2>
+          <VypisNovinek serie={slug} clanky={ostatni} />
         </>
-      ) : (
+      ) : uvodnik ? null : (
         <p className="prazdno">
           {akce
             ? "K akci zatím nic nevyšlo."

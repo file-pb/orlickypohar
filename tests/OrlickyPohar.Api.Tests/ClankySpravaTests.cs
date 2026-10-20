@@ -277,4 +277,75 @@ public class ClankySpravaTests(PostgresFixture fixture)
 
         Assert.Equal(poPrvni, clanek.Telo);
     }
+
+    /// <summary>
+    /// <b>Úvodník je příznak článku a regata má nejvýš jeden</b> (plán,
+    /// <i>Úvodník a taby</i>). Nový ho předchozímu sebere — přepsáním, ne
+    /// chybou: kdo označuje nový úvodník, chce právě to, a hláška „regata
+    /// už úvodník má" by ho poslala hledat ten starý.
+    /// </summary>
+    [Fact]
+    public async Task Regata_ma_nejvys_jeden_uvodnik()
+    {
+        var (serieId, radava, izolepa) = await RocnikAsync("uvodnik-jeden");
+
+        var (prvni, _) = await SpravaAsync(s => s.ZalozAsync(
+            serieId, radava, Vstup("První úvodník") with { Uvodnik = true }, default));
+        Assert.True(prvni!.Uvodnik);
+
+        // Druhý úvodník téže regaty prvnímu příznak sebere.
+        var (druhy, _) = await SpravaAsync(s => s.ZalozAsync(
+            serieId, radava, Vstup("Druhý úvodník") with { Uvodnik = true }, default));
+        Assert.True(druhy!.Uvodnik);
+
+        await VeSluzbeAsync(async sp =>
+        {
+            var db = sp.GetRequiredService<AppDbContext>();
+            var obnoveny = await db.Clanky.FirstAsync(c => c.Id == prvni.Id);
+            Assert.False(obnoveny.Uvodnik);
+            return true;
+        });
+
+        // Jiná regata má svůj vlastní — příznak se sebere jen v rámci jedné.
+        var (jina, _) = await SpravaAsync(s => s.ZalozAsync(
+            serieId, izolepa, Vstup("Úvodník izolepy") with { Uvodnik = true }, default));
+        Assert.True(jina!.Uvodnik);
+
+        await VeSluzbeAsync(async sp =>
+        {
+            var db = sp.GetRequiredService<AppDbContext>();
+            Assert.True(await db.Clanky.AnyAsync(c => c.Id == druhy.Id && c.Uvodnik));
+            return true;
+        });
+    }
+
+    /// <summary>
+    /// <b>Úvodník bez regaty nemá co uvádět.</b> Článek ročníku se na
+    /// stránce regaty neobjeví, takže zaškrtnutý příznak by byl tichý
+    /// nesmysl — server ho odmítne větou, ne mlčky.
+    /// </summary>
+    [Fact]
+    public async Task Uvodnik_bez_regaty_se_odmitne()
+    {
+        var (serieId, radava, _) = await RocnikAsync("uvodnik-bez-regaty");
+
+        var (clanek, chyba) = await SpravaAsync(s => s.ZalozAsync(
+            serieId, null, Vstup("Článek ročníku") with { Uvodnik = true }, default));
+
+        Assert.Null(clanek);
+        Assert.NotNull(chyba);
+
+        // A odškrtnutí příznak sundá — bez toho by se nedal zrušit.
+        var (sUvodnikem, _) = await SpravaAsync(s => s.ZalozAsync(
+            serieId, radava, Vstup("Úvodník k sundání") with { Uvodnik = true }, default));
+        Assert.True(sUvodnikem!.Uvodnik);
+
+        await SpravaAsync(async s =>
+        {
+            await s.UpravAsync(
+                sUvodnikem, Vstup("Úvodník k sundání") with { Uvodnik = false }, radava, default);
+            return true;
+        });
+        Assert.False(sUvodnikem.Uvodnik);
+    }
 }

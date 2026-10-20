@@ -4888,6 +4888,8 @@ export interface components {
             zavodNazev: null | string;
             obrazek?: null | components["schemas"]["ObrazekDto"];
             format?: components["schemas"]["FormatClanku"];
+            /** @default false */
+            uvodnik?: boolean;
         };
         ClanekShrnutiDto: {
             slug: string;
@@ -4899,6 +4901,8 @@ export interface components {
             zavod: null | string;
             zavodNazev: null | string;
             obrazek?: null | components["schemas"]["ObrazekDto"];
+            /** @default false */
+            uvodnik?: boolean;
         };
         ClanekSpravaRadek: {
             slug: string;
@@ -4910,6 +4914,8 @@ export interface components {
             stav: components["schemas"]["StavClanku"];
             zavod: null | string;
             zavodNazev: null | string;
+            /** @default false */
+            uvodnik?: boolean;
         };
         ClanekVstup: {
             slug: string;
@@ -4933,6 +4939,8 @@ export interface components {
             /** Format: date-time */
             publikovanoV?: null | string;
             format?: components["schemas"]["FormatClanku"];
+            /** @default false */
+            uvodnik?: boolean;
         };
         DenNakladu: {
             den: string;

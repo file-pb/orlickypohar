@@ -114,6 +114,24 @@ public class Clanek : IMaFotku
     public Zavod? Zavod { get; set; }
 
     /// <summary>
+    /// Úvodník regaty: článek, kterým se její stránka představuje.
+    ///
+    /// <para>
+    /// <b>Je to příznak na článku, ne pole na regatě</b> (plán, oddíl
+    /// <i>Úvodník a taby</i>, rozhodnuto 9. 10. 2026). Pole přímo na
+    /// regatě by vyrobilo druhý editor vedle článků, nešlo by naplánovat
+    /// dopředu a fotky by v něm nebyly — a všechno tohle by se pak
+    /// dovybavovalo zpátky. Takhle úvodník dědí editor bloků, čištění při
+    /// zápisu, fotky v R2 i vydání s datem.
+    /// </para>
+    /// <para>
+    /// <b>Nejvýš jeden na regatu</b> a jen u článku, který k regatě patří
+    /// — úvodník bez regaty nemá co uvádět.
+    /// </para>
+    /// </summary>
+    public bool Uvodnik { get; set; }
+
+    /// <summary>
     /// Část veřejné adresy, unikátní v rámci ročníku — i u článků zastávek.
     /// Adresa článku je proto vždycky <c>/serie/{serie}/novinky/{slug}</c>
     /// bez ohledu na to, ke komu patří: odkaz zůstane platný i tehdy, když

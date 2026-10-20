@@ -159,6 +159,30 @@ export default async function UpravaClanku({ params, searchParams }: Parametry) 
           </label>
         )}
 
+        {/* <b>Úvodník je příznak článku, ne pole na regatě</b> (plán, oddíl
+            *Úvodník a taby*). Díky tomu dědí tenhle editor, čištění textu,
+            fotky i vydání s datem — pole přímo na regatě by vyrobilo druhý
+            editor vedle článků a tohle všechno by se do něj dovybavovalo.
+
+            Jen u článku, který k regatě patří: úvodník ročníku nemá co
+            uvádět a zaškrtnutý by byl tichý nesmysl. Server to odmítne
+            taky, tohle je jen druhá strana téhož pravidla. */}
+        {!web && (
+          <label className="volba">
+            <input
+              type="checkbox"
+              name="uvodnik"
+              value="ano"
+              defaultChecked={clanek.uvodnik ?? false}
+            />
+            Úvodník regaty
+            <span className="poznamka">
+              Stránka regaty ho ukáže nahoře místo v řadě s ostatními. Regata má
+              nejvýš jeden — označením nahradí ten dosavadní.
+            </span>
+          </label>
+        )}
+
         <label>
           Perex
           <input name="perex" maxLength={600} defaultValue={clanek.perex ?? ""} />

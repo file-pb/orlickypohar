@@ -187,6 +187,9 @@ function Radek({ serie, clanek }: { serie: string; clanek: ClanekRadek }) {
           {nazevStavu(clanek.stav)}
         </span>
         {clanek.zavodNazev && <span className="stitek">{clanek.zavodNazev}</span>}
+        {/* Který článek regatu uvádí. Bez štítku by se to muselo zjišťovat
+            otevíráním jednoho po druhém. */}
+        {clanek.uvodnik && <span className="stitek uvodnik-stitek">úvodník</span>}
       </div>
       <div className="detail">
         {datumClanku(clanek.publikovanoV)}
