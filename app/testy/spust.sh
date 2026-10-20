@@ -16,8 +16,11 @@ TEST_DB=":memory:" "${NODE[@]}" ./zaznam.test.ts
 # dva samostatné procesy nad jedním souborem, ne jeden se dvěma spojeními.
 echo
 echo "== Přežití konce procesu =="
-DB="$(mktemp -t trasa-preziti).db"
-trap 'rm -f "$DB" "$DB"-wal "$DB"-shm' EXIT
+# Vlastní adresář, ne `mktemp` se šablonou: SQLite si k souboru přidá
+# `-wal` a `-shm`, a `mktemp -t` chce na GNU šablonu s XXXXXX, na BSD ne.
+SLOZKA="$(mktemp -d)"
+DB="$SLOZKA/trasa.db"
+trap 'rm -rf "$SLOZKA"' EXIT
 
 TEST_DB="$DB" "${NODE[@]}" ./preziti/faze1.ts >/dev/null
 VYSLEDEK="$(TEST_DB="$DB" "${NODE[@]}" ./preziti/faze2.ts)"
