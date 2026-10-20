@@ -1991,7 +1991,14 @@ def zastavka_ze_vstupu(vstup):
                "poradatel": (vstup.get("poradatel") or "").strip() or None}
 
     for klic, hodnota in (("pocetSkrtu", skrty), ("koeficientDoSerie", koeficient),
-                          ("posunDoSerie", vstup.get("posunDoSerie"))):
+                          ("posunDoSerie", vstup.get("posunDoSerie")),
+                          # <b>Procesní děj se tu zahazoval.</b> Obrazovka
+                          # kalendáře ho posílá (`<select name="procesniDej">`)
+                          # a API ho ukládá, mock ne — takže přepínač lokálně
+                          # nedělal nic a nešlo vyzkoušet, že tabule hlásí
+                          # dojezdy, jak padají. Nalezeno 20. 10. 2026 při
+                          # hledání, proč alert „v cíli" přijde pozdě.
+                          ("procesniDej", vstup.get("procesniDej"))):
         if hodnota is not None:
             hodnoty[klic] = hodnota
 

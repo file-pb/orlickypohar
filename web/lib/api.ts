@@ -88,14 +88,23 @@ export type PrevzatyClanek = S["PrevzatyClanekDto"];
  */
 export class ApiNedostupne extends Error {}
 
-/** Vrací null u 404 — nepublikovaný ročník se chová, jako by neexistoval. */
-async function nacti<T>(cesta: string): Promise<T | null> {
+/**
+ * Vrací null u 404 — nepublikovaný ročník se chová, jako by neexistoval.
+ *
+ * <b>`cerstve` vypne minutovou cache.</b> Pro čtení, kde minuta není
+ * kompromis, ale chyba: tabule v hospodě hlásí dojezdy, jak padají, takže
+ * minutu stará odpověď znamená minutu staré pořadí (Filip, 20. 10. 2026:
+ * *„ten modal po dojetí lodě přišel později… ten by měl přijít ihned po
+ * projetí cílem"*). Mikrocache před webem drží tutéž odpověď deset vteřin
+ * pro celou hospodu, takže API to nezatíží.
+ */
+async function nacti<T>(cesta: string, cerstve = false): Promise<T | null> {
   let odpoved: Response;
   try {
     // Výsledky se mění po závodě, ne po vteřinách. Minuta je kompromis mezi
     // čerstvostí a tím, aby stránka nešla na API při každém načtení.
     odpoved = await fetch(`${API}${cesta}`, {
-      next: { revalidate: 60 },
+      ...(cerstve ? { cache: "no-store" as const } : { next: { revalidate: 60 } }),
       headers: { accept: "application/json" },
     });
   } catch (e) {
@@ -150,8 +159,8 @@ export async function nactiVerejnouTrat(
   return (await odpoved.json()) as VerejnaTrat;
 }
 export const nactiSerii = (slug: string) => nacti<SerieDetail>(`/serie/${slug}`);
-export const nactiZavod = (serie: string, zavod: string) =>
-  nacti<ZavodDetail>(`/serie/${serie}/zavody/${zavod}`);
+export const nactiZavod = (serie: string, zavod: string, cerstve = false) =>
+  nacti<ZavodDetail>(`/serie/${serie}/zavody/${zavod}`, cerstve);
 export const nactiPoradi = (slug: string) => nacti<PoradiSerie>(`/serie/${slug}/poradi`);
 
 /**
