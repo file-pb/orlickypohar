@@ -60,6 +60,7 @@ TaskManager.defineTask<DataPolohy>(ULOHA, async ({ data, error }) => {
       casGps: p.timestamp,
       podvrzeny: p.mocked === true,
     })),
+    INTERVAL_MS,
   );
 });
 
@@ -84,6 +85,15 @@ export async function zadejOpravneni(): Promise<StavOpravneni> {
  * nemá — veřejná živá mapa do něj nepatří.
  */
 export const INTERVAL_MS = 5000;
+
+/**
+ * <b>Na iOSu `timeInterval` nic neznamená.</b> Dokumentace `expo-location`
+ * ho vede jako Android only, takže iPhone dodává polohy vlastním tempem —
+ * změřeno 21. 10. 2026: při nastavených 5 s chodil bod každé 2,2 s. Proto
+ * se vzorkování hlídá ještě jednou při zápisu (`zapisBody` bere interval
+ * jako parametr). Tenhle údaj zůstává, protože na Androidu funguje a šetří
+ * práci už na úrovni systému.
+ */
 
 export async function spustZaznamNaPozadi() {
   if (await Location.hasStartedLocationUpdatesAsync(ULOHA)) return;
