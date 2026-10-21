@@ -2041,22 +2041,43 @@ pozastavení sledování posádkou, stav i na rozcestníku.
 **Co zbývá do přejímky:** změřit spotřebu. A pak to, co není technické —
 účet u Applu, bez kterého se appka na telefony posádek nedostane.
 
-### Registrace posádek: účty ano, ale na dvě ťuknutí (Filip, 21. 10. 2026)
+### Telefon jako mobilní klíč k lodi (Filip, 21. 10. 2026)
 
-*„Registrace je neodradí, jen to musíme udělat co nejjednodušší."* Pilot
-tedy **nepotřebuje bezúčtové párování** přes token zařízení, které plán
-zvažoval; zůstávají účty, jen se zkrátí cesta k nim.
+Filip upřesnil, co od koho chce — a je toho **míň, než plán předpokládal**:
 
-1. **Sociální přihlášení** (Google **i** Apple). Posádka neklepe e-mail ani
-   heslo, jen potvrdí účet, který v telefonu má. Apple vyžaduje, aby appka
-   nabízející jiné sociální přihlášení nabídla i Sign in with Apple — takže
-   obojí. Je to konfigurace u poskytovatele, kód appky se nemění.
-2. **QR, který rovnou páruje.** Kódy a párování s lodí systém má od 5. 10.,
-   jen se kód opisuje. QR by nesl `orlickypohar://pripojeni?kod=…`; appka se
-   po naskenování otevře, případně nejdřív přihlásí, a hned páruje.
+| | Co o něm systém ví |
+|---|---|
+| **kapitán** | jméno, mail, telefon — odpovědná osoba a zároveň komunikační záloha |
+| **posádka** | **jen QR**, nanejvýš jméno, aby se vědělo, kdo je kdo |
 
-Výsledek: **naskenuj QR → potvrď účet → telefon patří lodi.** Zapadá to do
-check-inu na rozpravě, kde jsou stejně všichni pohromadě.
+**Identitu posádce potvrzuje kapitán tím, že jí dá QR.** Systém nemusí
+ověřovat, kdo ten člověk je; stačí, že za něj ručí kapitán. Je to delegovaná
+důvěra, stejná jako když někdo dá klíč od loděnice.
+
+**Telefon se tím stane mobilním klíčem** k lodi — v appce i na webu. Není to
+přihlášení, je to oprávnění: *tenhle telefon patří k téhle lodi*.
+
+**Klíč říká kdo, okno říká kdy.** Klíč platí k lodi trvale, protože posádka
+se přes sezónu nemění každý závod a párovat se před každou regatou by byl
+přesně ten opruz, kterému se máme vyhnout. Kdy se smí zaznamenávat, řeší
+okna regaty (viz *Okno závodního dne se věší na rozpravu*). Kapitán klíč
+odebere, když někdo z posádky odejde.
+
+**Účet má hodnotu jen pro komunikaci a identitu** (Filip): bez něj není kam
+poslat *„start se odkládá o hodinu"* a nedá se rozlišit, kdo je na které
+lodi. Z pohledu posádky je to ale vedlejší produkt toho, že kapitán nahlásil
+posádku — ne něco, co by vyplňovala.
+
+**Změna kapitána je jediný okamžik, kdy se musí dodat data.** Je to zároveň
+okamžik, kdy se mění, kdo za loď odpovídá — takže k tomu patří i to, že
+dosavadní kapitán práva ztratí.
+
+**Co to znamená pro to, co je hotové:** nahrávání trasy (#371, #372) váže
+body na **přihlášeného uživatele**. Aby posádce stačilo QR, musí API umět
+vydávat a ověřovat **token zařízení** vedle uživatelského. Půl cesty je
+hotových — registrace zařízení pro upozornění už záměrně funguje bez
+přihlášení (plán, *Dvě úrovně upozornění*), takže posílat informace posádce
+bez účtu jde už dnes.
 
 ### Co je na tom skutečně těžké
 
