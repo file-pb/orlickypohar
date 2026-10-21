@@ -2037,6 +2037,22 @@ obrátku, i mimo bóji, a na rovině se naopak posílá málo.
 
 ### Co se odesílá živě: filtr a poloměry prvků (Filip, 21. 10. 2026)
 
+**Zastřešující zásada:** *„Prostě co nejvíce šetřit baterku a data."*
+Všechno v téhle sekci z ní plyne. Šetří je ale **různé věci** a plete se to:
+
+| Co šetří | Čím |
+|---|---|
+| **data** | filtr minimální změny a poloměry kolem prvků — každý neodeslaný bod je ušetřený bajt |
+| **baterku** | **dávkování**, ne filtr |
+
+**Proč dávkování a ne filtr:** GPS přijímač musí běžet pořád, aby držel fix
+— vypínat ho mezi vzorky se nevyplatí, protože nové hledání družic stojí víc
+energie, než se ušetří. Zápis po vteřinách je proto skoro zadarmo. Co
+baterku skutečně žere, je **rádio**, a tam je rozdíl mezi *zapnout vysílač
+šestkrát za minutu* a *jednou za minutu poslat dávku šesti poloh*.
+Dávkování tím ušetří obojí naráz a je důležitější než filtrování.
+
+
 Plán zná *okno u bóje, ve kterém se provoz zhustí*, a zhušťování při změně
 kurzu o víc než ~15°. Chybí k tomu dvě konkrétní věci.
 
