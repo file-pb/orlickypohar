@@ -36,6 +36,16 @@ public class OchranaZapisuTests(PostgresFixture fx)
         ["POST /serie/{serie}/zavody/{zavod}/prihlasky/"] =
             "veřejná přihláška lodi na zastávku — posádka se hlásí bez účtu "
             + "(Features/Zavody/VerejnaPrihlaskaEndpoints.cs)",
+        // Klíč nese koncové lomítko — tak ho skládá `CestaZeVzoru.Normalizuj`.
+        ["PUT /zarizeni/"] =
+            "registrace telefonu k veřejným upozorněním — plán (Dvě úrovně "
+            + "upozornění) říká, že výsledky, článek ani termín závodu nesmějí "
+            + "vyžadovat účet: divák nemá kvůli termínu nic zakládat. Zápis je "
+            + "proto bez přihlášení a token se místo toho kontroluje na tvar "
+            + "(Odbery.ProcNejdeZapsat). Účastnická upozornění — odložený start, "
+            + "změna trati — účet potřebují a půjdou jinou cestou, protože se "
+            + "musí vědět, které zařízení patří které lodi "
+            + "(Features/Upozorneni/UpozorneniEndpoints.cs)",
     };
 
     private static readonly string[] Zapisovaci = ["POST", "PUT", "PATCH", "DELETE"];

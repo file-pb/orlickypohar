@@ -1241,12 +1241,25 @@ to na iPhonu spolehlivě neuměly.
 | Android transport | FCM (Firebase, zdarma) |
 | Evidence příjemců | tabulka `Zarizeni` — token, platforma, odběry |
 
-**Je to celý plán, ne rozdělaná práce** (8. 10. 2026): tabulku `Zarizeni`
-databáze nemá (`Data/AppDbContext.cs`), odesílací úloha žádná není
-(`Program.cs` registruje jen `SberVodocetu`, `SberPrevzatych`
-a `UklidKontaktu`), Outbox v kódu není a appka nemá ani
-`expo-notifications` (`app/package.json`). Podrobněji v *Co ještě chybí
-(audit 8. 10. 2026)*.
+**Serverová část hotová 21. 10. 2026.** Do té doby to byl celý plán, ne
+rozdělaná práce (audit 8. 10. 2026). Teď v kódu je:
+
+| Co | Kde |
+|---|---|
+| Outbox | `Features/Upozorneni/Odeslani.cs`, migrace `Upozorneni` |
+| Evidence příjemců | `Zarizeni` — token, platforma, odběry |
+| Zápis do fronty | `UpozorneniSprava.Zarad` — **neukládá**, volá se v téže transakci jako změna |
+| Odesílání | `ExpoPush` + úloha `OdesilaniUloha` (`Upozorneni__Odesilat`) |
+| Registrace | `PUT /zarizeni`, **bez přihlášení** |
+| První zpráva | publikace výsledků rozjížďky (`VysledkySprava.PublikujAsync`) |
+
+**Co zbývá: appka.** `expo-notifications` v `app/package.json` není, takže
+zatím není komu posílat — úkol pro odběr, který nikdo nemá, se odbaví jako
+hotový. Teprve registrací prvního telefonu začnou zprávy chodit.
+
+**Účastnická upozornění zůstávají nezačatá.** Odložený start a změna trati
+potřebují vědět, které zařízení patří které lodi, tedy vazbu zařízení na
+účet — tabulka ji dnes nemá a `PUT /zarizeni` je veřejný.
 
 ### Dvě úrovně upozornění
 

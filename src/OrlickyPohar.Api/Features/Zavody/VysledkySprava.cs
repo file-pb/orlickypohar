@@ -214,9 +214,36 @@ public class VysledkySprava(AppDbContext db)
     /// potvrzený výsledek smí zůstat neveřejný a publikovaný se smí vrátit
     /// k revizi, aniž by se publikace ztratila.
     /// </summary>
-    public async Task PublikujAsync(Rozjizdka rozjizdka, bool publikovano, CancellationToken ct)
+    public async Task PublikujAsync(
+        Rozjizdka rozjizdka, bool publikovano, CancellationToken ct,
+        Upozorneni.UpozorneniSprava? upozorneni = null)
     {
+        var pousti = publikovano && !rozjizdka.Publikovano;
         rozjizdka.Publikovano = publikovano;
+
+        // <b>Upozornění se zařazuje do téže transakce jako publikace.</b>
+        // To je celý smysl outboxu: buď se uloží „je venku" i úkol zprávu
+        // poslat, nebo nic. Poslat rovnou odsud by znamenalo, že při pádu
+        // uložení odejde zpráva o něčem, co venku není — a naopak při pádu
+        // odesílání se nikdo nedozví, že výsledky jsou.
+        //
+        // <b>Jen při puštění ven, ne při stažení</b>, a jen když ještě
+        // venku nebyla: opakovaná publikace téže rozjížďky by poslala
+        // „výsledky jsou venku" podruhé.
+        if (pousti && upozorneni is not null)
+        {
+            var zavod = await db.Zavody
+                .Where(z => z.Id == rozjizdka.ZavodId)
+                .Select(z => new { z.Slug, z.Nazev, Serie = z.Serie!.Slug })
+                .FirstAsync(ct);
+
+            upozorneni.Zarad(
+                Upozorneni.Odbery.Zavod(zavod.Slug),
+                zavod.Nazev,
+                $"Výsledky {rozjizdka.Cislo}. rozjížďky jsou venku.",
+                $"/serie/{zavod.Serie}/zavody/{zavod.Slug}/vysledky");
+        }
+
         await db.SaveChangesAsync(ct);
     }
 

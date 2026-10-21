@@ -431,7 +431,8 @@ public static class VysledkyEndpoints
 
     private static async Task<IResult> PublikaceAsync(
         string serie, string zavod, int cislo, PublikaceVysledkuVstup vstup, ClaimsPrincipal kdo,
-        Rozsahy rozsahy, VysledkySprava sprava, CancellationToken ct)
+        Rozsahy rozsahy, VysledkySprava sprava, Upozorneni.UpozorneniSprava upozorneni,
+        CancellationToken ct)
     {
         if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
             return Results.NotFound();
@@ -442,7 +443,7 @@ public static class VysledkyEndpoints
         if (!await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Spravce, rozsah.SerieId), ct))
             return Results.Forbid();
 
-        await sprava.PublikujAsync(rozjizdka, vstup.Publikovano, ct);
+        await sprava.PublikujAsync(rozjizdka, vstup.Publikovano, ct, upozorneni);
         return Results.Ok(await RadekAsync(kdo, rozsahy, sprava, rozsah, rozjizdka, ct));
     }
 

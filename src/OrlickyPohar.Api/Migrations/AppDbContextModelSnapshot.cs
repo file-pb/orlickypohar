@@ -964,6 +964,97 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("Smernice");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Upozorneni.Odeslani", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Cesta")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("Chyba")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("Druh")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Odber")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<DateTimeOffset?>("OdeslanoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Pokusu")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
+
+                    b.Property<string>("Titulek")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<bool>("Vzdano")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("VzniklV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ZkusitPo")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OdeslanoV", "Vzdano", "ZkusitPo");
+
+                    b.ToTable("Odeslani");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Upozorneni.Zarizeni", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("NaposledyV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Odbery")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int>("Platforma")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("ZapsanoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.ToTable("Zarizeni");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Vodocet.MereniNadrze", b =>
                 {
                     b.Property<DateTimeOffset>("Cas")

@@ -2013,6 +2013,11 @@ def zastavka_ze_vstupu(vstup):
     return hodnoty, None
 
 
+# Telefony přihlášené k odběru upozornění. Mock je drží jen v paměti —
+# jde o to, aby se dala vyzkoušet registrace a její chybové hlášky.
+ZARIZENI = {}
+
+
 def clanek_radek(c):
     z = next((z for z in D["zavody"] if z["slug"] == c.get("zavod")), None)
     return {"slug": c["slug"], "titulek": c["titulek"], "perex": c.get("perex"),
@@ -2447,9 +2452,16 @@ class H(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_PUT(self):
+        cesta = urlparse(self.path).path
+
+        # <b>Registrace zařízení je bez přihlášení</b> — veřejná upozornění
+        # nesmějí vyžadovat účet (plán, *Dvě úrovně upozornění*). Proto
+        # stojí **před** kontrolou tokenu, která platí pro zbytek správy.
+        if cesta == "/zarizeni":
+            return self.zapis_zarizeni()
+
         if self.token_nesedi() or self.prava_nesedi():
             return None
-        cesta = urlparse(self.path).path
 
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                           r'/trat/prvky/(\d+)$', cesta)):
@@ -2483,6 +2495,38 @@ class H(BaseHTTPRequestHandler):
         if not m:
             return self.send_error(404)
         return self.uloz_clanek(m.group(1), SPRAVA_CLANKY)
+
+    def zapis_zarizeni(self):
+        """
+        Zápis telefonu k odběru — opsané z `UpozorneniSprava.ZapisZarizeniAsync`
+        a `Odbery.ProcNejdeZapsat`.
+
+        Mock zařízení nikam neposílá, jen drží seznam: na tom se dá vyzkoušet
+        obrazovka a chybové hlášky. Jestli push doopravdy dojde, se pozná až
+        proti skutečnému Expu.
+        """
+        v = self.telo_zadosti() or {}
+        token = (v.get("token") or "").strip()
+        odbery = v.get("odbery") or []
+
+        if not token:
+            return self.chyba(400, "Chybí token zařízení.")
+        if not (token.startswith("ExponentPushToken[") and token.endswith("]")):
+            return self.chyba(400, "Token nemá tvar, jaký Expo vydává.")
+        if len(odbery) > 50:
+            return self.chyba(400, "Zařízení smí odebírat nejvýš 50 věcí.")
+        if any(not (o.startswith("serie:") or o.startswith("zavod:")) for o in odbery):
+            return self.chyba(400, "Odběr musí být „serie:…“ nebo „zavod:…“.")
+
+        # Idempotentně: appka registruje při každém spuštění, protože Expo
+        # token po přeinstalaci mění.
+        ZARIZENI[token] = {"token": token,
+                           "platforma": v.get("platforma") or "Android",
+                           "odbery": sorted(set(odbery)),
+                           "naposledyV": ted_iso()}
+        self.send_response(204)
+        self.end_headers()
+        return None
 
     def uloz_clanek(self, slug, seznam):
         if not self.headers.get("authorization"):
