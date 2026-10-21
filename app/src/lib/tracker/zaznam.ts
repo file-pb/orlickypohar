@@ -22,6 +22,10 @@ export type Zaznam = {
   konec: number | null;
   ostrihano_do: number | null;
   nahrano_v: number | null;
+  /** Poslední bod, který server potvrdil. Co je za ním, se musí doposlat. */
+  potvrzeno_do: number;
+  /** Posádka označila nahrávání za dokončené. */
+  nahravani_hotovo: number;
 };
 
 /** Bod tak, jak do zápisu přichází — z GPS i ze simulace stejně. */
@@ -163,6 +167,44 @@ export function ostrihej(id: string, do_: number): number {
 
 export function smazZaznam(id: string) {
   databaze().runSync('DELETE FROM zaznam WHERE id = ?', [id]);
+}
+
+/** Body, které server ještě nepotvrdil, v pořadí, v jakém vznikly. */
+export function bodyKOdeslani(zaznamId: string, kolik: number): Bod[] {
+  const z = zaznam(zaznamId);
+  if (!z) return [];
+  return databaze().getAllSync<Bod>(
+    'SELECT * FROM bod WHERE zaznam_id = ? AND id > ? ORDER BY id LIMIT ?',
+    [zaznamId, z.potvrzeno_do, kolik],
+  );
+}
+
+/** Kolik bodů čeká na odeslání. */
+export function kolikCeka(zaznamId: string): number {
+  const z = zaznam(zaznamId);
+  if (!z) return 0;
+  const r = databaze().getFirstSync<{ pocet: number }>(
+    'SELECT COUNT(*) AS pocet FROM bod WHERE zaznam_id = ? AND id > ?',
+    [zaznamId, z.potvrzeno_do],
+  );
+  return r?.pocet ?? 0;
+}
+
+/**
+ * Posune hranici potvrzeného.
+ *
+ * <b>Nikdy zpátky.</b> Odpovědi ze serveru můžou dorazit přeházeně a starší
+ * potvrzení by jinak zahodilo novější — a body by se posílaly znovu.
+ */
+export function potvrzeno(zaznamId: string, doBodu: number) {
+  databaze().runSync(
+    'UPDATE zaznam SET potvrzeno_do = ? WHERE id = ? AND potvrzeno_do < ?',
+    [doBodu, zaznamId, doBodu],
+  );
+}
+
+export function nahravaniHotovo(zaznamId: string) {
+  databaze().runSync('UPDATE zaznam SET nahravani_hotovo = 1 WHERE id = ?', [zaznamId]);
 }
 
 export type Bod = {

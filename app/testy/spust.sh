@@ -12,6 +12,10 @@ NODE=(node --experimental-sqlite --import ./register.mjs)
 echo "== Logika záznamu =="
 TEST_DB=":memory:" "${NODE[@]}" ./zaznam.test.ts
 
+echo
+echo "== Odesílání na server =="
+TEST_DB=":memory:" "${NODE[@]}" ./nahravani.test.ts
+
 # Zapsaná část musí přežít konec procesu — přejímací podmínka č. 2. Proto
 # dva samostatné procesy nad jedním souborem, ne jeden se dvěma spojeními.
 echo

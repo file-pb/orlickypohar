@@ -6,6 +6,7 @@ import { Karta, Prazdno, Sekce, Stitek } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
 import { casAMinuty, rychlost, trvani, vzdalenost } from '@/lib/tracker/formaty';
 import { posliGpx } from '@/lib/tracker/gpx';
+import { dokonciNahraniAsync, stavNahravani, type StavNahravani } from '@/lib/tracker/nahravani';
 import {
   kolikByZmizelo,
   ostrihej,
@@ -25,11 +26,14 @@ export default function DetailTrasy() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [z, setZ] = useState<Zaznam | null>(null);
   const [souhrn, setSouhrn] = useState<Prehled | null>(null);
+  const [nahr, setNahr] = useState<StavNahravani | null>(null);
+  const [nahrava, setNahrava] = useState(false);
 
   const obnov = useCallback(() => {
     if (!id) return;
     setZ(zaznam(id));
     setSouhrn(prehled(id));
+    setNahr(stavNahravani(id));
   }, [id]);
 
   useEffect(() => {
@@ -195,6 +199,47 @@ export default function DetailTrasy() {
             </Pressable>
           ))}
         </View>
+      </Karta>
+
+      <Sekce>Nahrání na server</Sekce>
+      <Karta>
+        {nahr?.hotovo ? (
+          <Text style={{ color: t.stavVypsany }}>Nahráno celé.</Text>
+        ) : (
+          <>
+            <Text style={{ color: t.text }}>
+              {nahr?.ceka === 0
+                ? 'Všechny body jsou na serveru, zbývá nahrání uzavřít.'
+                : `Čeká ${nahr?.ceka ?? 0} bodů.`}
+            </Text>
+            {/* Dokud něco čeká, je trasa na serveru rozdělaná. Nahrání jde
+                kdykoli dokončit — i po výpadku a po restartu appky. */}
+            <Pressable
+              onPress={() => {
+                if (!id || nahrava) return;
+                setNahrava(true);
+                dokonciNahraniAsync(id)
+                  .then((v) => {
+                    obnov();
+                    if (!v.hotovo && v.zbyva > 0) {
+                      Alert.alert('Zbývá doposlat', `${v.zbyva} bodů se nepodařilo odeslat.`);
+                    } else if (!v.hotovo) {
+                      Alert.alert('Nepřihlášeno', 'Přihlas se na obrazovce Účet a zkus to znovu.');
+                    }
+                  })
+                  .catch((e: unknown) =>
+                    Alert.alert('Nahrání se nepovedlo',
+                      `${e instanceof Error ? e.message : String(e)}\n\nCo se nepotvrdilo, zůstalo v telefonu.`),
+                  )
+                  .finally(() => setNahrava(false));
+              }}
+              style={{ marginTop: 12 }}>
+              <Text style={{ color: nahrava ? t.tlumeny : t.voda, fontWeight: '600' }}>
+                {nahrava ? 'Nahrávám…' : 'Nahrát na server'}
+              </Text>
+            </Pressable>
+          </>
+        )}
       </Karta>
 
       <Sekce>Výsledek</Sekce>
