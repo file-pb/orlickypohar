@@ -1602,9 +1602,21 @@ balení plachet nebo koupání v zátoce mezi rozjížďkami."* Je to zároveň
 regaty nepatří.
 
 **Proč samostatná poslední poloha:** ořez na +10 minut skončí někde na vodě,
-takže návrat do mariny v uchované trase není. Pro bezpečnostní otázku *„kde
-je LUNA?"* ale stačí **jediný bod**, ne celá trasa návratu. Drží se proto
-odděleně a jen do chvíle, než pořadatel den uzavře.
+takže návrat do mariny v uchované trase není. Na otázku *„kde je LUNA?"* ale
+stačí **jediný bod**, ne celá trasa návratu. Drží se proto odděleně a jen do
+chvíle, než pořadatel den uzavře.
+
+**Používá se během celého dne, ne až po dojezdu** (Filip, 21. 10. 2026):
+
+- **Před zahájením procedury**, když se na loď čeká — *„kde je, ještě
+  nedorazila na pole?"*. Rozhodčí se podle toho rozhodne, jestli start
+  odložit, nebo ne.
+- **Když loď shání závodní výbor** kdykoli během dne.
+- **Po dojezdu**, dokud nejsou všichni zpátky.
+
+Patří proto do pořadatelského přehledu u každé lodi — ne jako mapa, ale jako
+údaj typu *„před 2 min, 1,2 km od startovní linie"*. Na mapu se dá kliknout,
+ale odpověď na otázku *„čekáme, nebo startujeme?"* musí být vidět hned.
 
 **Appka tím zůstává hloupá a tedy odolná:** zaznamenává a neřeší, co je
 závod a co čekání. Ořez přijde až při zpracování — v telefonu, před
