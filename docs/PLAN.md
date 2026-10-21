@@ -1558,6 +1558,190 @@ zůstat jako záchrana, ne jako jediné řešení.
 **V pilotu je to bezpředmětné** — jeden telefon na loď nemá co odpojovat.
 Patří to ke slučování víc telefonů, tedy za pilot.
 
+### Okno závodního dne se věší na rozpravu (Filip, 21. 10. 2026)
+
+Okno nesmí viset jen na termínové listině: start se posouvá podle větru.
+Pořadatel ho proto otevírá a zavírá sám — a **úkonem, kterým se otevírá, je
+rozprava**. Dělá se tak jako tak, jsou při ní všichni pohromadě a je dost
+dlouho před startem. Druhý den regaty má rozpravu taky.
+
+**Proč navěsit na existující úkon a nedělat nové tlačítko:** každé
+samostatné tlačítko je tlačítko, na které se dá zapomenout — a zapomenutý
+konec dne znamená přesně to sledování po hospodě. Pro konec dne platí totéž:
+má to být úkon, který se stejně odehraje (vyhlášení, uzavření poslední
+rozjížďky), ne zvláštní krok navíc.
+
+Rozprava má i lidskou stránku: je to okamžik, kdy rozhodčí k posádkám mluví,
+takže *„zapněte si trackery"* tam zapadne přirozeně a systém ve stejné
+chvíli otevře okno.
+
+**Start a cíl je příliš těsný ořez** (Filip, 21. 10. 2026). Okno musí mít
+rezervu na obou stranách:
+
+- **Před startem je procedura** — pět minut varování, manévrování u linie,
+  hledání místa. Takticky je z toho na trase vidět víc než z celého zbytku
+  rozjížďky; ořez na výstřel by zahodil to nejcennější.
+- **Po dojezdu je dobré vědět, kde loď je.** To je bezpečnostní rozměr,
+  který plán dosud nikde neměl: **poslední známá poloha lodi, která se
+  nevrátila**, je věc, kterou chcete mít na přehradě za šera nebo ve
+  zhoršeném počasí, i kdyby tracker nikdy nikomu neukázal jedinou
+  rozjížďku. Je to samostatný důvod pro celou tuhle kapitolu.
+
+**Tracker běží celý blok na vodě, uchovává se jen okno rozjížďky**
+(Filip, 21. 10. 2026). To jsou dvě různé věci a je dobré je nemíchat:
+
+| | Jak dlouho |
+|---|---|
+| **tracker zaznamenává** | celý blok na vodě, od rozpravy po konec dne |
+| **trasa se uchovává** | od začátku startovní procedury do **10 minut po dojezdu** každé rozjížďky |
+| **poslední známá poloha** | drží se do uzavření dne pořadatelem, pak se zahodí |
+
+**Proč ořez:** *„Trasa bude hezká a nebude se do ní motat to klikování při
+balení plachet nebo koupání v zátoce mezi rozjížďkami."* Je to zároveň
+čitelnost i soukromí — kde se kdo mezi rozjížďkami koupal, do výsledků
+regaty nepatří.
+
+**Proč samostatná poslední poloha:** ořez na +10 minut skončí někde na vodě,
+takže návrat do mariny v uchované trase není. Na otázku *„kde je LUNA?"* ale
+stačí **jediný bod**, ne celá trasa návratu. Drží se proto odděleně a jen do
+chvíle, než pořadatel den uzavře.
+
+**Používá se během celého dne, ne až po dojezdu** (Filip, 21. 10. 2026):
+
+- **Před zahájením procedury**, když se na loď čeká — *„kde je, ještě
+  nedorazila na pole?"*. Rozhodčí se podle toho rozhodne, jestli start
+  odložit, nebo ne.
+- **Když loď shání závodní výbor** kdykoli během dne.
+- **Po dojezdu**, dokud nejsou všichni zpátky.
+
+Patří proto do pořadatelského přehledu u každé lodi — ne jako mapa, ale jako
+údaj typu *„před 2 min, 1,2 km od startovní linie"*. Na mapu se dá kliknout,
+ale odpověď na otázku *„čekáme, nebo startujeme?"* musí být vidět hned.
+
+**Appka tím zůstává hloupá a tedy odolná:** zaznamenává a neřeší, co je
+závod a co čekání. Ořez přijde až při zpracování — v telefonu, před
+nahráním, aby se nenahrávalo nic, co se stejně má zahodit.
+
+**Den se dělí na bloky, ne na jeden kus.** U Radavy se po třech rozjížďkách
+jde na oběd a odpoledne se pokračuje. **Přes oběd se tracker nevypíná**
+(Filip: *„na obědě asi nemusíme tracker vypínat"*) — pauza je krátká, lodě
+zůstávají u mola a vypnutí by znamenalo, že po obědě musí čtyřicet posádek
+ručně ťuknout *Pokračovat*, protože iOS appku sám neprobudí. Půlka by na to
+zapomněla a odpolední rozjížďky by zůstaly bez trasy. Vypíná se až na konci
+dne; polední pauza v marině není večer v hospodě.
+
+### Kontrola trackerů před procedurou (Filip, 21. 10. 2026)
+
+Filip navrhl proceduru, ne funkci — a to je na tom to cenné, protože se dá
+nacvičit a opakovat každou regatu stejně:
+
+1. Od pořadatele přijde **„all ships tracker check"**.
+2. Posádky zkontrolují, že trackují; **appka to umí sama a při problému
+   pípne**.
+3. Až v seznamu **všichni zezelenají**, pořadatel zahájí proceduru.
+
+*(Filip pro ten okamžik navrhl název „smoke on" podle Red Bull Air Race.)*
+
+**Zelená nemusí být odpověď na dotaz.** Když appky posílají polohy, stačí
+pořadateli **čerstvost**: zelená = poslední bod mladší než minuta. Žádná
+obousměrná komunikace, která by na vodě stejně padala. Aktivní check má ale
+jednu výhodu navíc — **donutí telefon zkusit to teď** místo čekání na další
+interval. Patří tam proto obojí: seznam svítí sám podle čerstvosti a
+tlačítko *tracker check* pošle pobídku.
+
+**Pípnutí při problému je to podstatné.** Posádka se na vodě na telefon
+nedívá. Když tracker přestane posílat, musí si o pozornost říct sám — jinak
+se na to přijde až ve chvíli, kdy pořadatel vidí červenou a shání loď
+vysílačkou. Je to tentýž údaj jako ve stavovém panelu, jen přednesený, aniž
+by se někdo musel dívat.
+
+**Dává to procedurálně smysl i proti zapomenutí:** kontrola proběhne před
+zahájením procedury, tedy ve chvíli, kdy se s tím ještě dá něco dělat. Po
+startu už je pozdě.
+
+**Totéž patří na rozpravu, jako check-in** (Filip, 21. 10. 2026) — *„my
+i oni"*, tedy oboustranně: pořadatel vidí, kdo dorazil, posádka vidí, že je
+odbavená. Jsou to dvě kontroly v různých okamžicích a každá odpovídá na
+jinou otázku:
+
+| Kdy | Co se ptá | Proč tam |
+|---|---|---|
+| **rozprava — check-in** | „jsme tu a máme funkční tracker" | organizační; je **čas problém vyřešit** — doinstalovat appku, zapnout oprávnění, půjčit telefon |
+| **před procedurou — tracker check** | „posílá to teď" | provozní, vteřinová záležitost těsně před startem |
+
+Check-in na rozpravě má hodnotu i mimo tracker: **je to prezence**, která se
+dnes dělá na papíře nebo podle toho, koho rozhodčí vidí. Tím se z něj stává
+úkon, který pořadatel dělá kvůli sobě, a kontrola trackeru se na něj jen
+sveze — což je přesně ten druh návrhu, který přežije, protože nikoho nestojí
+krok navíc.
+
+### Vlastní trackery: jednou možná, teď ne (Filip, 21. 10. 2026)
+
+*„V budoucnu bychom mohli používat naše trackery a nějaké jednoduché GPS
+mobilní, které připneme k lodi, ale to je drahé a není to na pořadu dne."*
+
+**Co by to řešilo:** vlastní krabička je nezávislá na posádce — nemá vybitou
+baterku od navigace, nezapomene se zapnout, nikdo si u ní neuklepne
+oprávnění na *Povolit jednou*. Data by byla konzistentní napříč celým polem.
+
+**Proč kupovaná řešení nesedí:** profesionální jachtařské trackery jsou
+drahé hlavně proto, že jsou **satelitní** — dělají se pro moře. Orlík má
+normální pokrytí, takže celá ta kategorie odpadá. Levné GSM trackery zase
+vznikly proti krádeži lodí, takže šetří baterii a hlásí se **po minutách**;
+plán přitom u hlavního zdroje chce 5–10 s, protože minutový interval
+neukáže obrátku.
+
+**Vlastní krabička z ESP32 je ale v jiné cenové třídě** (Filip, 21. 10.
+2026). ESP32 ~100–200 Kč, GPS modul NEO-6M/8M ~150–300 Kč, článek, krabička
+— **řádově 500–1000 Kč za kus**. Klíčová vlastnost: **ESP32 má WiFi**, takže
+zapisuje celý závod offline a po návratu do mariny trasu sám nahraje. Žádná
+SIM, žádný tarif, žádný měsíční poplatek — a přesně to, co pilot potřebuje,
+protože **živou mapu nemá**. Spotřeba vychází kolem 80 mA (GPS ~40, ESP32
+bez WiFi podobně), tedy necelé 2 Ah na dvacetičtyřhodinovku; jeden článek
+18650 to utáhne s rezervou a nejede u toho displej ani rádio.
+
+**Čeho se bát: není to nákup, je to výroba.** Čtyřicet kusů znamená pájení,
+firmware, vodotěsnost a pak trvalou údržbu — někdo je bude nabíjet, opravovat
+a hledat. To je přesně ten druh věci, která se po druhé sezóně rozpadne,
+když visí na jednom člověku.
+
+**Rozumné pořadí:** postavit **jeden nebo dva kusy** a vzít je na regatu
+vedle telefonů. Porovnat trasy ze stejné lodi — z telefonu a z krabičky.
+Z toho se pozná, jestli je rozdíl v kvalitě dat takový, aby se do série
+vyplatilo jít. Víkendová práce, ne projekt.
+
+**Živá mapa by nechtěla GSM, ale LoRa.** SIM a tarif v každé krabičce je
+donekonečna placený účet; LoRa modul stojí ~300 Kč navíc a gateway na břehu
+stačí **jedna pro celou regatu**. Tři věci se musí spočítat dopředu:
+**duty cycle** (v pásmu 868 MHz smí zařízení vysílat 1 % času — jedna loď se
+vejde pohodlně, čtyřicet na jednom kanálu zahltí éter), **dosah v údolí**
+(Orlík je zaříznutý mezi kopce; pro vymezené závodní pole by jedna gateway
+u startovní linie stačila, pro dálkovou plavbu přes půl nádrže ne) a
+**kdo to postaví**. Je to ale odpověď na otázku „chceme vidět lodě v reálném
+čase", a ta přijde na řadu až po pilotu.
+
+**A proč je pilot správné pořadí:** je to levný způsob, jak zjistit, jestli
+se do hardwaru vyplatí jít. Když si po sezóně trasy nikdo neotevře, ušetřilo
+se za čtyřicet krabiček. Když naopak posádky budou nadávat, že jim telefon
+na dvacetičtyřhodinovce umřel v šesté hodině, je to změřený argument, který
+se dá někomu předložit — a to je přesně ten druh odpovědi, kvůli kterému
+plán pilot zavedl.
+
+### Stříhání se nesmí trefovat naslepo (Filip, 21. 10. 2026)
+
+Dnešní tlačítka *−15 / −30 / −60 min* jsou slepá: posádka nevidí, do kterého
+času sáhnou. *„Ten střih bych ještě vyladil, aby nám nestřihli do jízdy."*
+Na houpající se lodi po závodě je to knoflík, kterým si někdo ustřihne
+poslední rozjížďku.
+
+- **Správné řešení je okno závodu:** ostříhat na *start první rozjížďky až
+  dojezd poslední* (plus rezerva výš). Appka ten údaj zná ze serveru a nikdo
+  se nemusí trefovat. Je to tentýž údaj jako pro tvrdý konec záznamu —
+  postaví se jednou, použije dvakrát.
+- **Dokud ho nemá, musí být ruční stříhání čitelné:** místo *−15 min*
+  ukázat konkrétní čas a následek — *„ostříhat vše po 14:32 — smaže 180
+  bodů, trasa skončí u mola"*. Člověk pak vidí, co dělá.
+
 ### Appka musí ukazovat, že to jede (Filip, 21. 10. 2026)
 
 *„V appce je potřeba signalizovat, že máme funkční GPS, že jsme sledováni
@@ -1850,6 +2034,63 @@ potřeba 5–10 s, jinak loď skáče a z manévru na bóji není vidět nic.
 **Zhuštění bez trati:** kromě oken u bójí se zapisuje hustěji při změně
 kurzu o víc než ~15° nebo při větší změně rychlosti. Chytí to každou
 obrátku, i mimo bóji, a na rovině se naopak posílá málo.
+
+### Co se odesílá živě: filtr a poloměry prvků (Filip, 21. 10. 2026)
+
+**Zastřešující zásada:** *„Prostě co nejvíce šetřit baterku a data."*
+Všechno v téhle sekci z ní plyne. Šetří je ale **různé věci** a plete se to:
+
+| Co šetří | Čím |
+|---|---|
+| **data** | filtr minimální změny a poloměry kolem prvků — každý neodeslaný bod je ušetřený bajt |
+| **baterku** | **dávkování**, ne filtr |
+
+**Proč dávkování a ne filtr:** GPS přijímač musí běžet pořád, aby držel fix
+— vypínat ho mezi vzorky se nevyplatí, protože nové hledání družic stojí víc
+energie, než se ušetří. Zápis po vteřinách je proto skoro zadarmo. Co
+baterku skutečně žere, je **rádio**, a tam je rozdíl mezi *zapnout vysílač
+šestkrát za minutu* a *jednou za minutu poslat dávku šesti poloh*.
+Dávkování tím ušetří obojí naráz a je důležitější než filtrování.
+
+**Vysílač jede naplno jen chvíli** (Filip, 21. 10. 2026): *„Vysílač
+potřebuji nejvíce na startu a cíli a u obrátek jen chvilku."* Časově
+dominuje **start** — procedura trvá minuty, zatímco obrátka je pár sekund.
+Na dvacetičtyřhodinovce je start jediný za celý závod, takže z pohledu
+baterky je špička zanedbatelná; u okruhového závodu se čtyřmi rozjížďkami
+jsou čtyři. Mimo okna prvků se posílá řídce v dávkách, což je většina času
+na vodě.
+
+
+Plán zná *okno u bóje, ve kterém se provoz zhustí*, a zhušťování při změně
+kurzu o víc než ~15°. Chybí k tomu dvě konkrétní věci.
+
+**Filtr minimální změny.** Poloha, která se od předchozí liší o méně než
+**~5 m**, se živě neposílá — pod přesností GPS je to stejně spíš šum
+přijímače než loď. Dá se přibalit do příští dávky.
+
+**Poloměry kolem prvků dráhy nejsou stejné** — každý prvek má jiný význam:
+
+| Prvek | Poloměr plné frekvence | Proč |
+|---|---|---|
+| **start** | **100 m** | lodě se shlukují a manévrují na velké ploše; takticky je to nejcennější část |
+| **cíl** | **50 m** | dojezd, míň manévrování |
+| ostatní prvky (otočné bóje) | **30 m** | celá obrátka, ne jen její vrchol |
+
+**Proč u otočné bóje 30 a ne 15 m:** obrátka je oblouk, který bývá širší než
+bóje — loď na ni najíždí a vyjíždí v křivce o poloměru klidně deseti dvaceti
+metrů. Patnáct metrů by zachytilo vrchol manévru, ale ne jeho konec, a při
+přesnosti GPS 5–10 m by to bylo těsné. Filip hodnotu po téhle úvaze
+**zvýšil na 30 m** (21. 10. 2026).
+
+**Filtruje se odesílání, ne zápis.** Místo v telefonu je zadarmo, takže se
+zapisuje po vteřinách a po dojezdu se nahraje všechno — filtr patří jen na
+to, co jde živě přes drahé rádio. Jinak by se ta data ztratila natrvalo.
+
+**A musí tam být tep i bez pohybu.** Loď, která v bezvětří stojí, by
+s filtrem neposlala nic a pořadatel by v seznamu viděl *„nehlásí se"* místo
+*„stojí na místě"*. Kvůli takovému falešnému poplachu by výbor sháněl loď,
+která nikam nezmizela. Proto i bez pohybu odeslat aspoň jednou za minutu
+nebo dvě.
 
 ### Trať staví pořadatel, pípnutím u bóje (Filip, 4. 10. 2026)
 
