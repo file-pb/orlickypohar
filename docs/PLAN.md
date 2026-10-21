@@ -2052,6 +2052,14 @@ baterku skutečně žere, je **rádio**, a tam je rozdíl mezi *zapnout vysíla�
 šestkrát za minutu* a *jednou za minutu poslat dávku šesti poloh*.
 Dávkování tím ušetří obojí naráz a je důležitější než filtrování.
 
+**Vysílač jede naplno jen chvíli** (Filip, 21. 10. 2026): *„Vysílač
+potřebuji nejvíce na startu a cíli a u obrátek jen chvilku."* Časově
+dominuje **start** — procedura trvá minuty, zatímco obrátka je pár sekund.
+Na dvacetičtyřhodinovce je start jediný za celý závod, takže z pohledu
+baterky je špička zanedbatelná; u okruhového závodu se čtyřmi rozjížďkami
+jsou čtyři. Mimo okna prvků se posílá řídce v dávkách, což je většina času
+na vodě.
+
 
 Plán zná *okno u bóje, ve kterém se provoz zhustí*, a zhušťování při změně
 kurzu o víc než ~15°. Chybí k tomu dvě konkrétní věci.
