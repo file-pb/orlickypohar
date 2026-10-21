@@ -1599,6 +1599,17 @@ se to vyřešit na břehu.
 Je to tentýž druh údaje jako ve stavovém panelu v appce, jen z druhé strany:
 posádka vidí svůj telefon, pořadatel celé pole.
 
+**Nepatří to na vlastní obrazovku**, ale do **seznamů lodí, které už
+existují** — přihlášených i v závodě (Filip, 21. 10. 2026). U každé lodi
+malá ikonka stavu, po ťuknutí popup s detailem trackingu. Pořadatel tak
+nemusí nikam odbíhat: prochází startovní listinu, kterou by procházel
+stejně.
+
+**A ukazuje i včerejšek.** *„Tady jste měli včera tři mobily a teď máte
+dva."* U vícedenní regaty je rozdíl proti předchozímu dni informace, kterou
+samotný počet nedá — posádka o ten telefon nemusí vědět, že přišla. Dá se to
+říct dřív, než odrazí od mola.
+
 ### Co z toho čeká na přihlášení
 
 Všechna tři pravidla výš (loď v regatě, telefon u posádky, okno regaty)
