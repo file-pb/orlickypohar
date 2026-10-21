@@ -964,6 +964,121 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("Smernice");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Trasy.Trasa", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Dokoncena")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("Konec")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("LodId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LodNazev")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("LokalniId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("NahranoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("PosledniDavkaV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("PosunMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("RegataNazev")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<Guid>("UzivatelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("Zacatek")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ZavodId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Zdroj")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LodId");
+
+                    b.HasIndex("ZavodId");
+
+                    b.HasIndex("UzivatelId", "LokalniId")
+                        .IsUnique();
+
+                    b.ToTable("Trasy");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Trasy.TrasaBod", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CasGps")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CasZarizeni")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double>("Delka")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Kurz")
+                        .HasColumnType("double precision");
+
+                    b.Property<long>("LokalniId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("Podvrzeny")
+                        .HasColumnType("boolean");
+
+                    b.Property<double?>("PresnostM")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("RychlostMS")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("Sirka")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("TrasaId")
+                        .HasColumnType("integer");
+
+                    b.Property<double?>("VyskaM")
+                        .HasColumnType("double precision");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TrasaId", "CasGps");
+
+                    b.HasIndex("TrasaId", "LokalniId")
+                        .IsUnique();
+
+                    b.ToTable("TrasaBody");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Upozorneni.Odeslani", b =>
                 {
                     b.Property<int>("Id")
@@ -1792,6 +1907,40 @@ namespace OrlickyPohar.Api.Migrations
                     b.Navigation("Zavod");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Trasy.Trasa", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Lode.Lod", "Lod")
+                        .WithMany()
+                        .HasForeignKey("LodId");
+
+                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Uzivatel")
+                        .WithMany()
+                        .HasForeignKey("UzivatelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OrlickyPohar.Api.Features.Zavody.Zavod", "Zavod")
+                        .WithMany()
+                        .HasForeignKey("ZavodId");
+
+                    b.Navigation("Lod");
+
+                    b.Navigation("Uzivatel");
+
+                    b.Navigation("Zavod");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Trasy.TrasaBod", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Trasy.Trasa", "Trasa")
+                        .WithMany("Body")
+                        .HasForeignKey("TrasaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Trasa");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Rozjizdka", b =>
                 {
                     b.HasOne("OrlickyPohar.Api.Features.Fotky.Fotka", "Fotka")
@@ -1950,6 +2099,11 @@ namespace OrlickyPohar.Api.Migrations
             modelBuilder.Entity("OrlickyPohar.Api.Features.Serial.Serie", b =>
                 {
                     b.Navigation("Kategorie");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Trasy.Trasa", b =>
+                {
+                    b.Navigation("Body");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Ucast", b =>

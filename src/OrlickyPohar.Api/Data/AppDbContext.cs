@@ -45,6 +45,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Opravneni> Opravneni => Set<Opravneni>();
     public DbSet<Features.Upozorneni.Odeslani> Odeslani => Set<Features.Upozorneni.Odeslani>();
     public DbSet<Features.Upozorneni.Zarizeni> Zarizeni => Set<Features.Upozorneni.Zarizeni>();
+    public DbSet<Features.Trasy.Trasa> Trasy => Set<Features.Trasy.Trasa>();
+    public DbSet<Features.Trasy.TrasaBod> TrasaBody => Set<Features.Trasy.TrasaBod>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -430,5 +432,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // všechno při každém probuzení úlohy.
         odeslani.HasIndex(x => new { x.OdeslanoV, x.Vzdano, x.ZkusitPo });
 
+        var trasa = b.Entity<Features.Trasy.Trasa>();
+        trasa.Property(x => x.LokalniId).HasMaxLength(64).IsRequired();
+        trasa.Property(x => x.LodNazev).HasMaxLength(120).IsRequired();
+        trasa.Property(x => x.RegataNazev).HasMaxLength(120);
+        // Idempotence nahrávání nestojí na tom, že si ji server rozmyslí,
+        // ale na databázi: tentýž identifikátor z téhož telefonu je tatáž
+        // trasa. Bez unikátního indexu by souběžné nahrání založilo dvě.
+        trasa.HasIndex(x => new { x.UzivatelId, x.LokalniId }).IsUnique();
+
+        var bod = b.Entity<Features.Trasy.TrasaBod>();
+        // Totéž o patro níž: bod se pozná podle pořadového čísla, které mu
+        // dal telefon. Na tom stojí přejímací podmínka č. 3 — po výpadku se
+        // dávka pošle znovu a nic se nezdvojí.
+        bod.HasIndex(x => new { x.TrasaId, x.LokalniId }).IsUnique();
+        // Body se čtou po trase a v pořadí, v jakém vznikly.
+        bod.HasIndex(x => new { x.TrasaId, x.CasGps });
+        bod.HasOne(x => x.Trasa).WithMany(x => x.Body)
+            .HasForeignKey(x => x.TrasaId).OnDelete(DeleteBehavior.Cascade);
     }
 }
