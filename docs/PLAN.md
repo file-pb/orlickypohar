@@ -1503,9 +1503,9 @@ soupeřit o hodiny se stavy trati.
 **Vyvíjí se pro obě platformy, iOS se zkouší v simulátoru, účet u Applu se
 nekupuje** (Filip, 9. 10. 2026: *„postav to i pro Apple, já to zatím budu
 spouštět v simulátoru, ale vyvinuté to mít budeme pro obě platformy"*). Dev
-build pro simulátor se nepodepisuje, takže na něj účet potřeba není;
-`app.json` k tomu zatím nemá ani oddíl `ios` s `bundleIdentifier` — má jen
-`android.package`.
+build pro simulátor se nepodepisuje, takže na něj účet potřeba není.
+Oddíl `ios` s `bundleIdentifier` (`cz.klihovka.orlickypohar`) appka od
+20. 10. 2026 má.
 
 **Co tím ale neodpadlo.** Simulátor neprokáže přejímací podmínky 1 a 2, tedy
 zamčený telefon se spotřebou a appku zabitou systémem v půlce závodu — a to
@@ -1516,6 +1516,43 @@ EAS Build s interní distribucí nebo TestFlight, a ty ten zaplacený účet
 chtějí. **Přejímka pilotu na iOSu tedy zůstává za rozhodnutím o 99 $** a ten
 termín je kalendář, ne hodiny. Na Androidu nic z toho neplatí — `npm run apk`
 staví interní APK (`eas build --profile preview`) už dnes.
+
+### Účet u Applu je podmínka pilotu, ne volba (21. 10. 2026)
+
+Rozhodnutí o 99 $ plán dosud odkládal. Filip 21. 10. 2026 doplnil, co ho
+uzavírá: **posádky mají hlavně iPhony** (*„jsou to jachtaři, je tam hodně
+bohatších lidí"*). Tím přestává jít o pohodlí — bez zaplaceného účtu se
+appka na telefony většiny lodí nedostane vůbec a pilot nemá na čem běžet.
+
+**Co je zdarma a co ne:**
+
+| Cesta | Kolik telefonů | Co to chce |
+|---|---|---|
+| APK (Android) | bez omezení | nic, funguje dnes |
+| dev build z Xcode | **3 zařízení, profil 7 dní** | volné Apple ID; jen vlastní telefony |
+| TestFlight | až 10 000 testerů | zaplacený účet, první build projde beta review |
+| ad hoc (EAS internal) | 100 zařízení za rok | zaplacený účet **a UDID každého telefonu** |
+
+**TestFlight je pro posádky výrazně lepší než ad hoc:** nepotřebuje od lidí
+identifikátor telefonu. U posádek, které pořadatel vidí dvakrát za sezónu,
+je to rozdíl mezi „pošlu ti odkaz" a „najdi mi prosím UDID svého iPhonu".
+
+**Otevřená zůstává jedna věc, a má vlastní termín:** účet na **jednotlivce**
+se zřídí rychle a zaplatit ho může kdokoli, ale appka je vydaná pod jménem
+člověka. Účet na **organizaci** potřebuje právnickou osobu a číslo D-U-N-S,
+jehož přidělení je samostatná žádost na dny až týdny — zato appka pak patří
+poháru a nevisí na jednom člověku. U věci, kterou má používat celý seriál,
+stojí za to to rozhodnout **předem**; převod appky mezi účty je později
+otrava.
+
+**Termín:** při debutu na jaře 2027 má být účet živý nejpozději v březnu,
+s rezervou na beta review a na to, že se zřízení zasekne. Do té doby smí
+pilot zkoušet jen majitel vývojového Macu (tři vlastní zařízení, profil
+sedm dní) a kdokoli s Androidem.
+
+**Rozpočet:** 99 $ ročně je zhruba 8 $ měsíčně, tedy víc než celý provoz
+hračkárny (~5 €/měsíc). Není to důvod to nedělat, ale je to položka, která
+patří do plánu, ne až do dubnového překvapení.
 
 **Expo Go na pilota nestačí ani na jedné platformě.** Jeho nativní binárka je
 pevná, takže se do ní nedá deklarovat `UIBackgroundModes: location` ani
