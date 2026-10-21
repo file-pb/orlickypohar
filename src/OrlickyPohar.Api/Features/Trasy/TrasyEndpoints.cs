@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Http.HttpResults;
 using OrlickyPohar.Api.Features.Klice;
 
@@ -39,6 +40,9 @@ public static class TrasyEndpoints
                 "bude opakovat.");
 
         g.MapPost("/{lokalniId}/body", PridejAsync)
+            // Tělo se v dokumentu pojmenuje ručně, protože handler ho bere
+            // jako `JsonElement` — viz komentář u `PridejAsync`.
+            .Accepts<List<BodVstup>>("application/json")
             .Produces<DavkaDto>()
             .WithSummary("Přijme dávku bodů")
             .WithDescription(
@@ -96,11 +100,28 @@ public static class TrasyEndpoints
         return TypedResults.Ok(await sprava.ZalozAsync(klic, vstup, ct));
     }
 
-    private static async Task<Results<Ok<DavkaDto>, NotFound, UnauthorizedHttpResult>> PridejAsync(
-        string lokalniId, List<BodVstup> body, HttpContext ctx, KliceSprava klice,
-        TrasySprava sprava, CancellationToken ct)
+    /// <summary>
+    /// <b>Tělo bere jako <c>JsonElement</c> schválně.</b> U parametru typu
+    /// <c>List&lt;BodVstup&gt;</c> odmítne špatný tvar rovnou model binding,
+    /// tedy <b>dřív než se ověří klíč</b>, a endpoint pak i bez klíče
+    /// odpoví 400 místo 401 — prozradí tím, že existuje a jaký tvar čeká.
+    /// Chytil to test <c>OchranaZapisuTests</c>, protože měří skutečný
+    /// výsledek, ne metadata. Tvar se proto kontroluje až tady, za
+    /// autorizací.
+    /// </summary>
+    private static async Task<Results<Ok<DavkaDto>, NotFound, UnauthorizedHttpResult, ValidationProblem>>
+        PridejAsync(
+            string lokalniId, JsonElement? telo, HttpContext ctx, KliceSprava klice,
+            TrasySprava sprava, CancellationToken ct)
     {
         if (await KlicAsync(ctx, klice, ct) is not { } klic) return TypedResults.Unauthorized();
+
+        var body = Body(telo);
+        if (body is null)
+            return TypedResults.ValidationProblem(new Dictionary<string, string[]>
+            {
+                [""] = ["Čekal se seznam bodů."],
+            });
 
         return await sprava.PridejAsync(klic, lokalniId, body, ct) is { } davka
             ? TypedResults.Ok(davka)
@@ -116,6 +137,20 @@ public static class TrasyEndpoints
         return await sprava.DokonciAsync(klic, lokalniId, vstup?.Konec, ct) is { } trasa
             ? TypedResults.Ok(trasa)
             : TypedResults.NotFound();
+    }
+
+    /// <summary>Převede tělo na dávku. `null` u jiného tvaru než seznamu.</summary>
+    private static List<BodVstup>? Body(JsonElement? telo)
+    {
+        if (telo is not { ValueKind: JsonValueKind.Array } pole) return null;
+        try
+        {
+            return pole.Deserialize<List<BodVstup>>(JsonSerializerOptions.Web);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 }
 

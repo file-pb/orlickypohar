@@ -36,6 +36,13 @@ public class OchranaZapisuTests(PostgresFixture fx)
         ["POST /serie/{serie}/zavody/{zavod}/prihlasky/"] =
             "veřejná přihláška lodi na zastávku — posádka se hlásí bez účtu "
             + "(Features/Zavody/VerejnaPrihlaskaEndpoints.cs)",
+        ["POST /klice/uplatnit/"] =
+            "uplatnění pozvánky za mobilní klíč k lodi — pozvánka sama je tím "
+            + "oprávněním a posádka v tu chvíli ještě nic nemá. Smysl celého "
+            + "klíče je, že se posádka nemusí registrovat (plán, Telefon jako "
+            + "mobilní klíč k lodi), takže přihlášení by ho popřelo. Chrání ji "
+            + "jednorázovost, 48hodinová platnost a to, že kód je tajemství "
+            + "z generátoru náhody (Features/Klice/KliceEndpoints.cs)",
         // Klíč nese koncové lomítko — tak ho skládá `CestaZeVzoru.Normalizuj`.
         ["PUT /zarizeni/"] =
             "registrace telefonu k veřejným upozorněním — plán (Dvě úrovně "
