@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import {
-  body, bezicZaznam, ostrihej, prehled, smazZaznam, ukonciZaznam, zalozZaznam, zapisBody,
+  body, bezicZaznam, kolikByZmizelo, ostrihej, prehled, smazZaznam, ukonciZaznam,
+  zalozZaznam, zapisBody,
 } from '../src/lib/tracker/zaznam.ts';
+import { predJakDlouho, stavGps, svetloGps } from '../src/lib/tracker/stav.ts';
 import { slozGpx } from '../src/lib/tracker/gpx.ts';
 import { spustSimulaci } from '../src/lib/tracker/simulace.ts';
 import { rychlost, trvani, vzdalenost } from '../src/lib/tracker/formaty.ts';
@@ -166,6 +168,58 @@ await (async () => {
   ukonciZaznam(id); smazZaznam(id);
 })();
 
+console.log('Stav pro posádku');
+zkus('stav GPS ukazuje poslední bod, jeho stáří a přesnost', () => {
+  uklid();
+  const id = zalozZaznam({ lod: 'LUNA', zdroj: 'gps' });
+  const ted = Date.now();
+  zapisBody(id, [
+    { sirka: 49.5, delka: 14.1, casGps: ted - 30_000, presnost: 12 },
+    { sirka: 49.5, delka: 14.1, casGps: ted - 4_000, presnost: 6 },
+  ]);
+  const s = stavGps(id);
+  assert.equal(s.pocetBodu, 2);
+  assert.equal(s.presnostM, 6, 'přesnost musí být z posledního bodu, ne z nejhoršího');
+  assert.ok(s.stariMs! >= 4_000 && s.stariMs! < 10_000, 'stáří ' + s.stariMs);
+  ukonciZaznam(id); smazZaznam(id);
+});
+
+zkus('světlo rozliší jede, čeká a stojí', () => {
+  uklid();
+  const id = zalozZaznam({ lod: 'LUNA', zdroj: 'gps' });
+  const z = bezicZaznam()!;
+
+  zapisBody(id, [{ sirka: 49.5, delka: 14.1, casGps: Date.now() - 2_000 }]);
+  assert.equal(svetloGps(z, stavGps(id)), 'jede', 'čerstvý bod');
+
+  // Starý poslední bod znamená, že záznam běží, ale nic nechodí — to je
+  // jiná situace než ukončený záznam a posádka se zachová jinak.
+  uklid();
+  const id2 = zalozZaznam({ lod: 'PEZI', zdroj: 'gps' });
+  const z2 = bezicZaznam()!;
+  zapisBody(id2, [{ sirka: 49.5, delka: 14.1, casGps: Date.now() - 120_000 }]);
+  assert.equal(svetloGps(z2, stavGps(id2)), 'ceka', 'bod starý dvě minuty');
+
+  ukonciZaznam(id2);
+  assert.equal(svetloGps({ ...z2, stav: 'ukonceny' }, stavGps(id2)), 'stoji');
+  smazZaznam(id2);
+});
+
+console.log('Stříhání dopředu řekne, čeho se dotkne');
+zkus('kolikByZmizelo počítá jen body po hranici', () => {
+  uklid();
+  const id = zalozZaznam({ lod: 'LUNA', zdroj: 'gps' });
+  zapisBody(id, Array.from({ length: 100 }, (_, i) => ({
+    sirka: 49.5, delka: 14.1, casGps: T0 + i * 60_000,
+  })));
+  const hranice = T0 + 59 * 60_000;
+  // Hranice je inkluzivní stejně jako u ostrihej: bod na ní zůstává.
+  assert.equal(kolikByZmizelo(id, hranice), 40);
+  assert.equal(ostrihej(id, hranice), 40, 'musí sedět s tím, co se pak smaže');
+  assert.equal(kolikByZmizelo(id, hranice), 0, 'po ostříhání už není co mazat');
+  ukonciZaznam(id); smazZaznam(id);
+});
+
 console.log('Formáty');
 zkus('uzly, vzdálenost a trvání', () => {
   assert.equal(rychlost(2.5), '4.9 kt');
@@ -174,6 +228,9 @@ zkus('uzly, vzdálenost a trvání', () => {
   assert.equal(vzdalenost(12_340), '12.34 km');
   assert.equal(trvani(3_600_000 * 24), '24 h 00 min');
   assert.equal(trvani(125_000), '2 min 05 s');
+  assert.equal(predJakDlouho(4_000), 'před 4 s');
+  assert.equal(predJakDlouho(185_000), 'před 3 min');
+  assert.equal(predJakDlouho(null), 'zatím nic');
 });
 
 console.log(`\n${prosly} kontrol prošlo`);

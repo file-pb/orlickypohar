@@ -8,10 +8,19 @@ import { casAMinuty, trvani, vzdalenost } from '@/lib/tracker/formaty';
 import { spustSimulaci } from '@/lib/tracker/simulace';
 import {
   bezinaPozadi,
+  otevriNastaveni,
+  propichni,
   spustZaznamNaPozadi,
   zadejOpravneni,
   zastavZaznamNaPozadi,
 } from '@/lib/tracker/uloha';
+import {
+  predJakDlouho,
+  stavGps,
+  svetloGps,
+  type StavGps,
+  type Svetlo,
+} from '@/lib/tracker/stav';
 import {
   bezicZaznam,
   prehled,
@@ -23,6 +32,93 @@ import {
   type Zaznam,
 } from '@/lib/tracker/zaznam';
 
+
+/**
+ * Stavový panel. Ukazuje **čerstvost**, ne kontrolku: „poslední bod před 4 s,
+ * přesnost 6 m" říká víc než zelené kolečko, které svítí proto, že se nikdo
+ * nezeptal.
+ */
+function Radek({ svetlo, popis, hodnota }: { svetlo: Svetlo; popis: string; hodnota: string }) {
+  const t = useTheme();
+  const barva = { jede: t.stavVypsany, ceka: t.stavZruseny, stoji: t.tlumeny }[svetlo];
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 5 }}>
+      <View
+        style={{ width: 9, height: 9, borderRadius: 999, backgroundColor: barva, marginRight: 9 }}
+      />
+      <Text style={{ color: t.tlumeny, width: 72 }}>{popis}</Text>
+      <Text style={{ color: t.text, flex: 1 }}>{hodnota}</Text>
+    </View>
+  );
+}
+
+function Panel({
+  bezi,
+  gps,
+  naPozadi,
+}: {
+  bezi: Zaznam;
+  gps: StavGps;
+  naPozadi: boolean;
+}) {
+  const t = useTheme();
+  const [propich, setPropich] = useState<string | null>(null);
+  const [propichaSe, setPropichaSe] = useState(false);
+
+  async function zkus() {
+    setPropichaSe(true);
+    setPropich(null);
+    try {
+      const v = await propichni();
+      setPropich(
+        `poloha za ${(v.trvaloMs / 1000).toFixed(1)} s` +
+          (v.presnostM == null ? '' : `, přesnost ${Math.round(v.presnostM)} m`),
+      );
+    } catch (e) {
+      setPropich(`nepovedlo se: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setPropichaSe(false);
+    }
+  }
+
+  return (
+    <Karta>
+      <Radek
+        svetlo={svetloGps(bezi, gps)}
+        popis="GPS"
+        hodnota={
+          gps.posledniBod == null
+            ? 'čeká na první bod'
+            : `${predJakDlouho(gps.stariMs)}` +
+              (gps.presnostM == null ? '' : ` · přesnost ${Math.round(gps.presnostM)} m`)
+        }
+      />
+      <Radek
+        svetlo={bezi.zdroj === 'simulace' || naPozadi ? 'jede' : 'ceka'}
+        popis="Záznam"
+        hodnota={`${gps.pocetBodu} bodů · od ${casAMinuty(bezi.zacatek)}`}
+      />
+      {/* Nahrávání pilot nemá, ale řádek tu je schválně: posádka má vidět, že
+          se nikam nic neposílá, a ne se to domýšlet z toho, že nic nevidí. */}
+      <Radek svetlo="stoji" popis="Server" hodnota="nahrávání zatím není, trasa zůstává v telefonu" />
+
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, gap: 20 }}>
+        <Pressable onPress={() => void zkus()} disabled={propichaSe}>
+          <Text style={{ color: propichaSe ? t.tlumeny : t.voda, fontWeight: '600' }}>
+            {propichaSe ? 'Zkouším…' : 'Propíchnout'}
+          </Text>
+        </Pressable>
+        <Pressable onPress={() => void otevriNastaveni()}>
+          <Text style={{ color: t.tlumeny }}>Nastavení polohy</Text>
+        </Pressable>
+      </View>
+      {propich ? (
+        <Text style={{ color: t.tlumeny, fontSize: 13, marginTop: 6 }}>{propich}</Text>
+      ) : null}
+    </Karta>
+  );
+}
+
 /** Po dvanácti hodinách je pravděpodobnější, že se zapomnělo, než že se jede. */
 const DLOUHO_MS = 12 * 3600 * 1000;
 
@@ -31,6 +127,12 @@ export default function Tracker() {
   const router = useRouter();
   const [bezi, setBezi] = useState<Zaznam | null>(null);
   const [souhrn, setSouhrn] = useState<Prehled | null>(null);
+  const [gps, setGps] = useState<StavGps>({
+    posledniBod: null,
+    stariMs: null,
+    presnostM: null,
+    pocetBodu: 0,
+  });
   const [trasy, setTrasy] = useState<Zaznam[]>([]);
   const [lod, setLod] = useState('');
   const [regata, setRegata] = useState('');
@@ -42,6 +144,7 @@ export default function Tracker() {
     const z = bezicZaznam();
     setBezi(z);
     setSouhrn(z ? prehled(z.id) : null);
+    if (z) setGps(stavGps(z.id));
     setTrasy(seznamZaznamu());
   }, []);
 
@@ -207,7 +310,11 @@ export default function Tracker() {
             <Text style={{ color: t.voda, fontWeight: '600' }}>Ukončit záznam</Text>
           </Pressable>
         </Karta>
-      ) : (
+      ) : null}
+
+      {bezi ? <Panel bezi={bezi} gps={gps} naPozadi={naPozadi} /> : null}
+
+      {!bezi ? (
         <Karta>
           <Text style={{ color: t.tlumeny, fontSize: 13, marginBottom: 6 }}>Loď</Text>
           <TextInput
@@ -252,7 +359,7 @@ export default function Tracker() {
             Simulace je na ladění — zapisuje stejnou cestou jako GPS, ale body jsou vymyšlené.
           </Text>
         </Karta>
-      )}
+      ) : null}
 
       <Sekce>Zaznamenané trasy</Sekce>
       {trasy.length === 0 ? <Prazdno text="Zatím žádná trasa." /> : null}
