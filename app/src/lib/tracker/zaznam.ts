@@ -108,10 +108,18 @@ export function zalozZaznam(vstup: { lod: string; regata?: string | null; zdroj:
  * (viz `prehled`) a při nahrání se podle něj trasa srovná na jednu osu.
  * Žádný bod se kvůli času nezahazuje.
  */
-export function zapisBody(zaznamId: string, body: NovyBod[]): number {
+export function zapisBody(zaznamId: string, body: NovyBod[], intervalMs = 0): number {
   if (body.length === 0) return 0;
   const d = databaze();
   const nyni = Date.now();
+
+  // Na iOSu `timeInterval` v `expo-location` nic neznamená — dokumentace ho
+  // vede jako Android only —, takže systém dodává polohy, jak uzná za
+  // vhodné. Změřeno 21. 10. 2026: při nastavených 5 s chodil bod každé
+  // 2,2 s, tedy dvaapůlkrát víc, než jsme chtěli. Vzorkování se proto hlídá
+  // tady, při zápisu, a platí na obou platformách stejně.
+  const kZapisu = intervalMs > 0 ? proredi(zaznamId, body, intervalMs) : body;
+  if (kZapisu.length === 0) return 0;
 
   let zapsano = 0;
   d.withTransactionSync(() => {
@@ -122,7 +130,7 @@ export function zapisBody(zaznamId: string, body: NovyBod[]): number {
                $casGps, $casZarizeni, $podvrzeny)`,
     );
     try {
-      for (const b of body) {
+      for (const b of kZapisu) {
         const r = vlozit.executeSync({
           $zaznam: zaznamId,
           $sirka: b.sirka,
@@ -144,6 +152,32 @@ export function zapisBody(zaznamId: string, body: NovyBod[]): number {
     }
   });
   return zapsano;
+}
+
+/**
+ * Zahodí body, které přišly dřív než `intervalMs` od předchozího zapsaného.
+ *
+ * Měří se podle <b>času z polohy</b>, ne podle hodin telefonu: ty se dají
+ * přestavit a vzorkování by se tím rozsypalo. Bod bez rozumného odstupu
+ * nenese nic nového — loď se za dvě sekundy posune o pár metrů, což je pod
+ * přesností GPS.
+ */
+function proredi(zaznamId: string, body: NovyBod[], intervalMs: number): NovyBod[] {
+  const posledni = databaze().getFirstSync<{ cas_gps: number }>(
+    'SELECT cas_gps FROM bod WHERE zaznam_id = ? ORDER BY id DESC LIMIT 1',
+    [zaznamId],
+  );
+
+  let hranice = posledni?.cas_gps ?? Number.NEGATIVE_INFINITY;
+  const vybrane: NovyBod[] = [];
+  // Dávka může přijít přeházená; seřadit ji je levnější než se spolehnout,
+  // že systém polohy dodá v pořadí.
+  for (const b of [...body].sort((a, c) => a.casGps - c.casGps)) {
+    if (b.casGps - hranice < intervalMs) continue;
+    vybrane.push(b);
+    hranice = b.casGps;
+  }
+  return vybrane;
 }
 
 export function ukonciZaznam(id: string, konec = Date.now()) {

@@ -168,6 +168,54 @@ await (async () => {
   ukonciZaznam(id); smazZaznam(id);
 })();
 
+console.log('Vzorkování si hlídáme sami');
+zkus('hustší body se zahodí, interval se měří podle času z polohy', () => {
+  uklid();
+  const id = zalozZaznam({ lod: 'LUNA', zdroj: 'gps' });
+  // iOS dodává polohy vlastním tempem — tohle je, co přišlo při nastavených
+  // 5 s: bod každé dvě sekundy.
+  const hustě = Array.from({ length: 30 }, (_, i) => ({
+    sirka: 49.5 + i * 1e-5, delka: 14.16, casGps: T0 + i * 2000,
+  }));
+  const zapsano = zapisBody(id, hustě, 5000);
+
+  // Z třiceti bodů po dvou sekundách zbyde každý třetí: 0, 6, 12… s
+  assert.equal(zapsano, 10, 'zapsalo se ' + zapsano);
+  const b = body(id);
+  for (let i = 1; i < b.length; i += 1) {
+    assert.ok(
+      b[i].cas_gps - b[i - 1].cas_gps >= 5000,
+      `body ${i - 1} a ${i} jsou blíž než 5 s`,
+    );
+  }
+  ukonciZaznam(id); smazZaznam(id);
+});
+
+zkus('prořeďování navazuje na poslední zapsaný bod, ne na začátek dávky', () => {
+  uklid();
+  const id = zalozZaznam({ lod: 'LUNA', zdroj: 'gps' });
+  zapisBody(id, [{ sirka: 49.5, delka: 14.16, casGps: T0 }], 5000);
+  // Druhá dávka začíná dvě sekundy po tom, co už leží v databázi.
+  const druha = zapisBody(id, [
+    { sirka: 49.5, delka: 14.16, casGps: T0 + 2000 },
+    { sirka: 49.5, delka: 14.16, casGps: T0 + 7000 },
+  ], 5000);
+
+  assert.equal(druha, 1, 'první bod druhé dávky je moc blízko');
+  assert.equal(prehled(id).pocetBodu, 2);
+  ukonciZaznam(id); smazZaznam(id);
+});
+
+zkus('bez intervalu se nezahazuje nic — simulace si řídí tempo sama', () => {
+  uklid();
+  const id = zalozZaznam({ lod: 'LUNA', zdroj: 'simulace' });
+  const zapsano = zapisBody(id, Array.from({ length: 10 }, (_, i) => ({
+    sirka: 49.5, delka: 14.16, casGps: T0 + i * 100,
+  })));
+  assert.equal(zapsano, 10);
+  ukonciZaznam(id); smazZaznam(id);
+});
+
 console.log('Pozastavení sledování');
 zkus('pozastavený záznam zmizí úloze na pozadí, ale posádce zůstane', () => {
   uklid();

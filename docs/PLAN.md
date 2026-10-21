@@ -2041,6 +2041,36 @@ pozastavení sledování posádkou, stav i na rozcestníku.
 **Co zbývá do přejímky:** změřit spotřebu. A pak to, co není technické —
 účet u Applu, bez kterého se appka na telefony posádek nedostane.
 
+### Na iOSu si vzorkování musíme hlídat sami (21. 10. 2026)
+
+**Změřeno na Filipově iPhonu:** 5885 bodů za 3 hodiny 35 minut, tedy **bod
+každé 2,2 sekundy** — při nastavených pěti. Appka zapisovala
+**dvaapůlkrát hustěji**, než měla.
+
+**Příčina je v dokumentaci a dala se přečíst dopředu:** `timeInterval`
+u `expo-location` je **Android only**. Na iOSu se ignoruje, takže systém
+dodává polohy vlastním tempem a my jsme je všechny zapisovali. Vzorkování
+na iPhonu se tím vůbec neřídilo.
+
+**Oprava:** interval se hlídá ještě jednou **při zápisu** — bod, který
+přijde dřív než nastavený odstup od posledního zapsaného, se zahodí. Měří se
+podle **času z polohy**, ne podle hodin telefonu: ty se dají přestavit a
+vzorkování by se tím rozsypalo. Na Androidu se nic nemění, tam `timeInterval`
+funguje a šetří práci už na úrovni systému.
+
+**Co to dělalo:**
+
+| | Bylo | Má být |
+|---|---|---|
+| bod každých | 2,2 s | 5 s |
+| dvacetičtyřhodinovka | ~39 000 bodů | ~17 000 |
+
+**O spotřebě to zatím nic neříká.** Úbytek vyšel 45 % za 3,58 hodiny, tedy
+~12,6 % za hodinu — ale *„při běžném používání"*, takže v tom je displej
+i všechno ostatní. **Podmínka 1 zůstává nezměřená**; chce to telefon
+zamčený a nepoužívaný. Až se to bude měřit znovu, bude to už s opraveným
+vzorkováním.
+
 ### Telefon jako mobilní klíč k lodi (Filip, 21. 10. 2026)
 
 Filip upřesnil, co od koho chce — a je toho **míň, než plán předpokládal**:
