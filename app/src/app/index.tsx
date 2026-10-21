@@ -90,8 +90,15 @@ export default function Rocniky() {
         </Link>
       </View>
 
-      {/* Zkouška záznamu trasy. Nahrávání na web zatím nemá, takže tu stojí
-          sama za sebe a nic jiného v appce na ní nezávisí. */}
+      {/* Klíč k lodi kousek od účtu, ale výš než trasa: bez spárování
+          nemá záznam kam odejít. */}
+      <View style={{ marginTop: 12 }}>
+        <Link href="/klic" style={{ color: t.voda }}>
+          Klíč k lodi
+        </Link>
+      </View>
+
+      {/* Zkouška záznamu trasy. */}
       <View style={{ marginTop: 12 }}>
         <Link href="/tracker" style={{ color: t.voda }}>
           Záznam trasy (zkouška)

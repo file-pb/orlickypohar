@@ -1,0 +1,101 @@
+/**
+ * Mobilní klíč k lodi.
+ *
+ * <b>Trasa patří lodi, ne člověku.</b> Telefon se proto neprokazuje účtem
+ * posádky, ale klíčem, který mu kapitán vydal — a tím padá požadavek, aby
+ * si celá posádka zakládala účty. Od posádky chceme jen zdvojení zdrojů,
+ * ne registraci (Filip, 21. 10. 2026).
+ *
+ * Klíč se získá jednorázovou pozvánkou: kapitán ji vystaví a dá jako QR,
+ * posádka ji naskenuje a appka ji tady vymění za klíč. Pozvánka platí
+ * 48 hodin a jde uplatnit jednou; klíč pak drží, dokud ho kapitán
+ * neodebere, nebo dokud se posádka sama neodepne.
+ *
+ * Klíč je <b>tajemství</b>, takže leží v SecureStore (Keychain, resp.
+ * Keystore), ne v obyčejném úložišti.
+ */
+import * as SecureStore from 'expo-secure-store';
+
+const KLIC = 'op_klic_lodi';
+const KLIC_LOD = 'op_klic_lod';
+const KLIC_LOD_NAZEV = 'op_klic_lod_nazev';
+const KLIC_JMENO = 'op_klic_jmeno';
+
+const API = process.env.EXPO_PUBLIC_API_URL ?? 'https://orlickypohar-api.klihovka.cz';
+
+export type Klic = {
+  /** Číslo lodi, ke které klíč patří. */
+  lodId: number;
+  lodNazev: string;
+  /** Jméno, které kapitán k pozvánce napsal — ať posádka pozná, kdo je kdo. */
+  jmeno: string | null;
+};
+
+async function uloz(klic: string, hodnota: string | null) {
+  if (hodnota === null) await SecureStore.deleteItemAsync(klic);
+  else await SecureStore.setItemAsync(klic, hodnota);
+}
+
+/** Samo tajemství. Dál než do hlavičky požadavku nemá chodit. */
+export async function tajemstvi(): Promise<string | null> {
+  return SecureStore.getItemAsync(KLIC);
+}
+
+/** Ke které lodi je telefon spárovaný. `null` znamená „k žádné". */
+export async function klic(): Promise<Klic | null> {
+  const [tajne, lod, nazev, jmeno] = await Promise.all([
+    SecureStore.getItemAsync(KLIC),
+    SecureStore.getItemAsync(KLIC_LOD),
+    SecureStore.getItemAsync(KLIC_LOD_NAZEV),
+    SecureStore.getItemAsync(KLIC_JMENO),
+  ]);
+  if (!tajne || !lod) return null;
+  return { lodId: Number(lod), lodNazev: nazev ?? '', jmeno };
+}
+
+export type Uplatneni = { klic: string; lodId: number; lodNazev: string; jmeno: string | null };
+
+/**
+ * Vymění pozvánku za klíč a klíč si uloží.
+ *
+ * Vrací `null`, když pozvánka neplatí — je vymyšlená, prošlá, nebo už ji
+ * někdo uplatnil. Rozlišovat to nemá smysl: posádce pomůže jedině nová
+ * pozvánka od kapitána.
+ *
+ * <b>Jediný endpoint bez přihlášení</b> — pozvánka sama je tím oprávněním.
+ */
+export async function uplatni(kod: string): Promise<Klic | null> {
+  const odpoved = await fetch(`${API}/klice/uplatnit`, {
+    method: 'POST',
+    headers: { accept: 'application/json', 'content-type': 'application/json' },
+    body: JSON.stringify({ kod: kod.trim() }),
+  });
+
+  if (odpoved.status === 400) return null;
+  if (!odpoved.ok) throw new Error(`Uplatnění pozvánky vrátilo ${odpoved.status}`);
+
+  const u = (await odpoved.json()) as Uplatneni;
+
+  // Nový klíč přepíše starý: telefon patří jedné lodi. Kdyby šel někdo
+  // z posádky k jiné, starý klíč mu na původní lodi odebere kapitán.
+  await uloz(KLIC, u.klic);
+  await uloz(KLIC_LOD, String(u.lodId));
+  await uloz(KLIC_LOD_NAZEV, u.lodNazev);
+  await uloz(KLIC_JMENO, u.jmeno);
+
+  return { lodId: u.lodId, lodNazev: u.lodNazev, jmeno: u.jmeno };
+}
+
+/**
+ * Zapomene klíč v telefonu.
+ *
+ * <b>Na serveru klíč zůstává platný</b> — tohle není odepnutí z posádky.
+ * Odebrat ho umí jen kapitán; tady se jen tenhle telefon přestane lodí
+ * prokazovat.
+ */
+export async function zapomen() {
+  await uloz(KLIC, null);
+  await uloz(KLIC_LOD, null);
+  await uloz(KLIC_LOD_NAZEV, null);
+  await uloz(KLIC_JMENO, null);
+}

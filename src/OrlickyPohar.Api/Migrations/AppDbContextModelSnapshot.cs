@@ -431,6 +431,98 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("Uzivatele");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Klice.KlicLodi", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Jmeno")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<int>("LodId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("OdebranV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Otisk")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("PosledniPouzitiV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Sleduje")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("VydalId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("VydalUcetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("VydanV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LodId");
+
+                    b.HasIndex("Otisk")
+                        .IsUnique();
+
+                    b.HasIndex("VydalId");
+
+                    b.ToTable("Klice");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Klice.PozvankaKlice", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Jmeno")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<int>("LodId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Otisk")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("PlatiDo")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("UplatnenaV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("VydalUcetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("VydanaV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LodId");
+
+                    b.HasIndex("Otisk")
+                        .IsUnique();
+
+                    b.ToTable("Pozvanky");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Lode.KontaktOsoby", b =>
                 {
                     b.Property<int>("Id")
@@ -975,10 +1067,13 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<bool>("Dokoncena")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("KlicId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTimeOffset?>("Konec")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int?>("LodId")
+                    b.Property<int>("LodId")
                         .HasColumnType("integer");
 
                     b.Property<string>("LodNazev")
@@ -1004,9 +1099,6 @@ namespace OrlickyPohar.Api.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
 
-                    b.Property<Guid>("UzivatelId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTimeOffset>("Zacatek")
                         .HasColumnType("timestamp with time zone");
 
@@ -1022,7 +1114,7 @@ namespace OrlickyPohar.Api.Migrations
 
                     b.HasIndex("ZavodId");
 
-                    b.HasIndex("UzivatelId", "LokalniId")
+                    b.HasIndex("KlicId", "LokalniId")
                         .IsUnique();
 
                     b.ToTable("Trasy");
@@ -1702,6 +1794,34 @@ namespace OrlickyPohar.Api.Migrations
                     b.Navigation("Uzivatel");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Klice.KlicLodi", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Lode.Lod", "Lod")
+                        .WithMany()
+                        .HasForeignKey("LodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Vydal")
+                        .WithMany()
+                        .HasForeignKey("VydalId");
+
+                    b.Navigation("Lod");
+
+                    b.Navigation("Vydal");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Klice.PozvankaKlice", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Lode.Lod", "Lod")
+                        .WithMany()
+                        .HasForeignKey("LodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Lod");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Lode.KontaktOsoby", b =>
                 {
                     b.HasOne("OrlickyPohar.Api.Features.Lode.Osoba", "Osoba")
@@ -1909,13 +2029,15 @@ namespace OrlickyPohar.Api.Migrations
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Trasy.Trasa", b =>
                 {
+                    b.HasOne("OrlickyPohar.Api.Features.Klice.KlicLodi", "Klic")
+                        .WithMany()
+                        .HasForeignKey("KlicId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("OrlickyPohar.Api.Features.Lode.Lod", "Lod")
                         .WithMany()
-                        .HasForeignKey("LodId");
-
-                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Uzivatel")
-                        .WithMany()
-                        .HasForeignKey("UzivatelId")
+                        .HasForeignKey("LodId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1923,9 +2045,9 @@ namespace OrlickyPohar.Api.Migrations
                         .WithMany()
                         .HasForeignKey("ZavodId");
 
-                    b.Navigation("Lod");
+                    b.Navigation("Klic");
 
-                    b.Navigation("Uzivatel");
+                    b.Navigation("Lod");
 
                     b.Navigation("Zavod");
                 });

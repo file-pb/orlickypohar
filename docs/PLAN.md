@@ -2129,11 +2129,25 @@ chyba v bezpečnosti.** Kdyby kapitánův telefon nahrával přes účet a
 posádčin přes token, musely by se obě větve ověřovat zvlášť a jedna by se
 časem rozešla.
 
-**Co to znamená pro to, co je hotové:** nahrávání trasy (#371, #372) dnes
-váže body na **přihlášeného uživatele**. Bude je potřeba převést na token
-zařízení. Půl cesty je hotových — registrace zařízení pro upozornění už
-záměrně funguje bez přihlášení (plán, *Dvě úrovně upozornění*), takže
-posílat informace posádce bez účtu jde už dnes.
+**Hotovo (#375).** Trasa se už váže na **klíč a loď**, ne na přihlášeného
+uživatele. Telefon posílá klíč v hlavičce `X-Klic-Lodi` a účet k nahrávání
+nepotřebuje; že to tak skutečně je, hlídá test *telefon se prokazuje klíčem
+k lodi, ne tokenem účtu* — s autorizační hlavičkou místo klíče padá.
+
+Posádka klíč dostane jednorázovou pozvánkou: QR vede na
+`orlickypohar://klic?kod=…`, systémová kamera appku otevře a ta pozvánku
+vymění za klíč sama. Číst QR vlastní kamerou nemusíme, takže appka
+nepotřebuje přístup ke kameře ani další oprávnění. Ruční zadání kódu je
+záloha, kdyby QR nešlo naskenovat. Kód z odkazu se uplatňuje **jednou** —
+pozvánka je jednorázová a druhý pokus by posádce ohlásil, že neplatí.
+
+Obrazovka klíče zároveň rozlišuje dvě věci, které vypadají stejně:
+*zapomenout klíč* smaže tajemství z telefonu, ale **na lodi zůstává
+platný**; odebrat ho umí jen kapitán.
+
+**Zbývá vydávání pozvánek.** Server je umí (`POST /ja/lode/{lod}/klice`),
+ale kapitán je nemá odkud vystavit — ani z webu, ani z appky. Do té doby
+není co skenovat a pozvánka se vyrobí jen přes API.
 
 ### Co je na tom skutečně těžké
 

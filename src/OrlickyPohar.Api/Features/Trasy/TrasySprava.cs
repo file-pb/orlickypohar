@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Klice;
 
 namespace OrlickyPohar.Api.Features.Trasy;
 
@@ -65,10 +66,10 @@ public class TrasySprava(AppDbContext db, TimeProvider cas)
     /// existuje. Volá se před první dávkou a smí se zavolat kolikrát chce.
     /// </summary>
     public async Task<TrasaDto> ZalozAsync(
-        Guid uzivatel, ZalozTrasuVstup vstup, CancellationToken ct)
+        KlicLodi klic, ZalozTrasuVstup vstup, CancellationToken ct)
     {
         var trasa = await db.Trasy
-            .FirstOrDefaultAsync(t => t.UzivatelId == uzivatel && t.LokalniId == vstup.LokalniId, ct);
+            .FirstOrDefaultAsync(t => t.KlicId == klic.Id && t.LokalniId == vstup.LokalniId, ct);
 
         if (trasa is null)
         {
@@ -76,7 +77,8 @@ public class TrasySprava(AppDbContext db, TimeProvider cas)
             trasa = new Trasa
             {
                 LokalniId = vstup.LokalniId,
-                UzivatelId = uzivatel,
+                KlicId = klic.Id,
+                LodId = klic.LodId,
                 LodNazev = vstup.Lod.Trim(),
                 RegataNazev = string.IsNullOrWhiteSpace(vstup.Regata) ? null : vstup.Regata.Trim(),
                 Zdroj = vstup.Zdroj,
@@ -100,10 +102,10 @@ public class TrasySprava(AppDbContext db, TimeProvider cas)
     /// se přeskočí — opakované poslání dávky tedy nic nezdvojí.
     /// </summary>
     public async Task<DavkaDto?> PridejAsync(
-        Guid uzivatel, string lokalniId, IReadOnlyList<BodVstup> body, CancellationToken ct)
+        KlicLodi klic, string lokalniId, IReadOnlyList<BodVstup> body, CancellationToken ct)
     {
         var trasa = await db.Trasy
-            .FirstOrDefaultAsync(t => t.UzivatelId == uzivatel && t.LokalniId == lokalniId, ct);
+            .FirstOrDefaultAsync(t => t.KlicId == klic.Id && t.LokalniId == lokalniId, ct);
         if (trasa is null) return null;
 
         var prichozi = body.Select(b => b.LokalniId).ToHashSet();
@@ -149,10 +151,10 @@ public class TrasySprava(AppDbContext db, TimeProvider cas)
     /// Uzavře nahrávání. Do té doby je trasa rozdělaná a smí se doposílat.
     /// </summary>
     public async Task<TrasaDto?> DokonciAsync(
-        Guid uzivatel, string lokalniId, DateTimeOffset? konec, CancellationToken ct)
+        KlicLodi klic, string lokalniId, DateTimeOffset? konec, CancellationToken ct)
     {
         var trasa = await db.Trasy
-            .FirstOrDefaultAsync(t => t.UzivatelId == uzivatel && t.LokalniId == lokalniId, ct);
+            .FirstOrDefaultAsync(t => t.KlicId == klic.Id && t.LokalniId == lokalniId, ct);
         if (trasa is null) return null;
 
         trasa.Dokoncena = true;
@@ -161,10 +163,10 @@ public class TrasySprava(AppDbContext db, TimeProvider cas)
         return await DtoAsync(trasa, ct);
     }
 
-    public async Task<List<TrasaDto>> MojeAsync(Guid uzivatel, CancellationToken ct)
+    public async Task<List<TrasaDto>> MojeAsync(KlicLodi klic, CancellationToken ct)
     {
         var trasy = await db.Trasy
-            .Where(t => t.UzivatelId == uzivatel)
+            .Where(t => t.KlicId == klic.Id)
             .OrderByDescending(t => t.Zacatek)
             .ToListAsync(ct);
 

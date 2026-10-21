@@ -24,9 +24,17 @@ const T0 = Date.parse('2027-06-26T08:00:00Z');
 /** Falešné API, které se chová jako to skutečné: přijatý bod se nepřijme podruhé. */
 function falesnyServer() {
   const trasy = new Map<string, Set<number>>();
-  const stav = { zalozeni: 0, davky: 0, dokonceno: false, selziPo: Number.POSITIVE_INFINITY };
+  const stav = {
+    zalozeni: 0, davky: 0, dokonceno: false, selziPo: Number.POSITIVE_INFINITY,
+    /** Čím se poslední požadavek prokázal. Tím se měří, že jde klíč, ne token. */
+    klice: [] as (string | undefined)[],
+  };
 
-  globalThis.fetch = (async (url: string, init?: { method?: string; body?: string }) => {
+  globalThis.fetch = (async (
+    url: string,
+    init?: { method?: string; body?: string; headers?: Record<string, string> },
+  ) => {
+    stav.klice.push(init?.headers?.['x-klic-lodi']);
     const cesta = String(url).replace(/^https?:\/\/[^/]+/, '');
     const odpoved = (telo: unknown) =>
       ({ ok: true, status: 200, json: async () => telo }) as unknown as Response;
@@ -88,28 +96,42 @@ function trasaSBody(kolik: number): string {
 
 console.log('Odesílání trasy');
 
-await zkus('bez přihlášení se nic neodešle a fronta zůstane', async () => {
-  (Trezor as unknown as { nastav(k: string, v: string): void });
+await zkus('bez klíče k lodi se nic neodešle a fronta zůstane', async () => {
   const id = trasaSBody(10);
   falesnyServer();
-  // Token není — `token()` vrátí null a `posliZaSebe` null.
+  // Klíč není — `posliKlicem` vrátí null, aniž by se na API ozvalo.
   const v = await nahrajAsync(id);
-  assert.equal(v.prihlasen, false);
+  assert.equal(v.klicPlati, false);
   assert.equal(v.odeslano, 0);
   assert.equal(kolikCeka(id), 10, 'body musí zůstat ve frontě');
   ukonciZaznam(id); smazZaznam(id);
 });
 
-// Od téhle chvíle je přihlášeno.
-(Trezor as unknown as { nastav(k: string, v: string): void }).nastav('op_token', 'zkouska');
-(Trezor as unknown as { nastav(k: string, v: string): void }).nastav('op_platnost', '0');
+// Od téhle chvíle je telefon spárovaný s lodí.
+(Trezor as unknown as { nastav(k: string, v: string): void }).nastav('op_klic_lodi', 'tajemstvi');
+(Trezor as unknown as { nastav(k: string, v: string): void }).nastav('op_klic_lod', '7');
+
+await zkus('telefon se prokazuje klíčem k lodi, ne tokenem účtu', async () => {
+  const id = trasaSBody(10);
+  const { stav } = falesnyServer();
+  await nahrajAsync(id);
+
+  // Jádro věci: trasa patří lodi. Kdyby tu šel `authorization`, musela by
+  // se celá posádka registrovat.
+  assert.ok(stav.klice.length >= 2, 'mělo proběhnout založení i dávka');
+  assert.ok(
+    stav.klice.every((k) => k === 'tajemstvi'),
+    'každý požadavek se prokázal klíčem: ' + JSON.stringify(stav.klice),
+  );
+  ukonciZaznam(id); smazZaznam(id);
+});
 
 await zkus('fronta se vyprázdní a potvrdí podle serveru', async () => {
   const id = trasaSBody(450);
   const { trasy } = falesnyServer();
   const v = await nahrajAsync(id);
 
-  assert.equal(v.prihlasen, true);
+  assert.equal(v.klicPlati, true);
   assert.equal(v.odeslano, 450);
   assert.equal(v.zbyva, 0);
   assert.equal(trasy.get(id)!.size, 450, 'server má všechny body');

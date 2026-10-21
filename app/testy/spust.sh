@@ -13,6 +13,10 @@ echo "== Logika záznamu =="
 TEST_DB=":memory:" "${NODE[@]}" ./zaznam.test.ts
 
 echo
+echo "== Klíč k lodi =="
+TEST_DB=":memory:" "${NODE[@]}" ./klic.test.ts
+
+echo
 echo "== Odesílání na server =="
 TEST_DB=":memory:" "${NODE[@]}" ./nahravani.test.ts
 

@@ -1,6 +1,9 @@
 /**
  * Odesílání trasy na server.
  *
+ * Telefon se prokazuje <b>mobilním klíčem k lodi</b>, ne účtem posádky —
+ * trasa patří lodi. Viz `lib/klic.ts`.
+ *
  * <b>Nic se nemaže, dokud to server nepotvrdí.</b> Na vodě signál padá
  * uprostřed dávky a odpověď se ztratí; telefon pak neví, jestli body došly.
  * Proto se posílá znovu — a protože je server idempotentní, druhé poslání
@@ -11,7 +14,7 @@
  * duplicit) i **č. 4** (přerušené nahrání se dá dokončit, i po restartu
  * appky — stav je v databázi, ne v paměti).
  */
-import { posliZaSebe } from '../api';
+import { posliKlicem } from '../api';
 import {
   bodyKOdeslani,
   kolikCeka,
@@ -52,7 +55,7 @@ type DavkaOdpoved = { prijato: number; preskoceno: number; posledniBod: number |
 
 /** Založí trasu na serveru. Opakované volání druhou trasu nezaloží. */
 async function zalozAsync(z: Zaznam): Promise<TrasaOdpoved | null> {
-  return posliZaSebe<TrasaOdpoved>('/trasy', {
+  return posliKlicem<TrasaOdpoved>('/trasy', {
     lokalniId: z.id,
     lod: z.lod,
     regata: z.regata,
@@ -64,8 +67,8 @@ async function zalozAsync(z: Zaznam): Promise<TrasaOdpoved | null> {
 export type VysledekNahrani = {
   odeslano: number;
   zbyva: number;
-  /** `false` znamená, že nikdo není přihlášený — ne chybu. */
-  prihlasen: boolean;
+  /** `false` znamená, že telefon není spárovaný s lodí — ne chybu. */
+  klicPlati: boolean;
 };
 
 /**
@@ -74,10 +77,10 @@ export type VysledekNahrani = {
  */
 export async function nahrajAsync(zaznamId: string): Promise<VysledekNahrani> {
   const z = zaznam(zaznamId);
-  if (!z) return { odeslano: 0, zbyva: 0, prihlasen: true };
+  if (!z) return { odeslano: 0, zbyva: 0, klicPlati: true };
 
   const zalozena = await zalozAsync(z);
-  if (zalozena === null) return { odeslano: 0, zbyva: kolikCeka(zaznamId), prihlasen: false };
+  if (zalozena === null) return { odeslano: 0, zbyva: kolikCeka(zaznamId), klicPlati: false };
 
   // Server může mít víc, než si telefon pamatuje — třeba když se ztratila
   // odpověď na poslední dávku. Hranici proto nejdřív srovnáme podle něj.
@@ -88,8 +91,8 @@ export async function nahrajAsync(zaznamId: string): Promise<VysledekNahrani> {
     const davka = bodyKOdeslani(zaznamId, DAVKA);
     if (davka.length === 0) break;
 
-    const odpoved = await posliZaSebe<DavkaOdpoved>(`/trasy/${z.id}/body`, davka.map(toVstup));
-    if (odpoved === null) return { odeslano, zbyva: kolikCeka(zaznamId), prihlasen: false };
+    const odpoved = await posliKlicem<DavkaOdpoved>(`/trasy/${z.id}/body`, davka.map(toVstup));
+    if (odpoved === null) return { odeslano, zbyva: kolikCeka(zaznamId), klicPlati: false };
 
     // Potvrzuje se podle odpovědi serveru, ne podle toho, co jsme poslali.
     if (odpoved.posledniBod != null) potvrzeno(zaznamId, odpoved.posledniBod);
@@ -100,7 +103,7 @@ export async function nahrajAsync(zaznamId: string): Promise<VysledekNahrani> {
     if (odpoved.posledniBod == null || odpoved.posledniBod < davka[davka.length - 1].id) break;
   }
 
-  return { odeslano, zbyva: kolikCeka(zaznamId), prihlasen: true };
+  return { odeslano, zbyva: kolikCeka(zaznamId), klicPlati: true };
 }
 
 /**
@@ -111,14 +114,14 @@ export async function dokonciNahraniAsync(
   zaznamId: string,
 ): Promise<{ hotovo: boolean; zbyva: number }> {
   const vysledek = await nahrajAsync(zaznamId);
-  if (vysledek.zbyva > 0 || !vysledek.prihlasen) {
+  if (vysledek.zbyva > 0 || !vysledek.klicPlati) {
     return { hotovo: false, zbyva: vysledek.zbyva };
   }
 
   const z = zaznam(zaznamId);
   if (!z) return { hotovo: false, zbyva: 0 };
 
-  const odpoved = await posliZaSebe<TrasaOdpoved>(`/trasy/${z.id}/dokonceno`, {
+  const odpoved = await posliKlicem<TrasaOdpoved>(`/trasy/${z.id}/dokonceno`, {
     konec: z.konec ? new Date(z.konec).toISOString() : null,
   });
   if (odpoved === null) return { hotovo: false, zbyva: 0 };

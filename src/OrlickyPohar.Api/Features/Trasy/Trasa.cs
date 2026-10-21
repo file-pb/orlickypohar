@@ -1,4 +1,4 @@
-using OrlickyPohar.Api.Features.Identita;
+using OrlickyPohar.Api.Features.Klice;
 using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Zavody;
 
@@ -38,25 +38,34 @@ public class Trasa
     public int Id { get; set; }
 
     /// <summary>
-    /// Identifikátor, který trase dal telefon. Spolu s <see cref="UzivatelId"/>
+    /// Identifikátor, který trase dal telefon. Spolu s <see cref="KlicId"/>
     /// je jedinečný — podle toho se pozná opakované nahrání téže trasy.
     /// </summary>
     public required string LokalniId { get; set; }
 
-    /// <summary>Kdo trasu nahrál. Posádka nahrává za sebe, ne za loď.</summary>
-    public Guid UzivatelId { get; set; }
-    public Uzivatel? Uzivatel { get; set; }
-
     /// <summary>
-    /// Loď, ke které trasa patří — <b>nepovinně</b>. Pilot běží bez kontextu
-    /// závodu, takže posádka zatím píše jméno lodi rukou
-    /// (<see cref="LodNazev"/>); jakmile bude párování telefonu s lodí,
-    /// doplní se sem odkaz.
+    /// Mobilní klíč, kterým telefon trasu nahrál.
+    /// <para>
+    /// <b>Trasa patří lodi, ne člověku.</b> Nahrávání jde vždycky přes klíč,
+    /// ať telefon drží kapitán nebo posádka — dvě různé cesty k témuž by
+    /// znamenaly dvě místa, kde se dá udělat chyba v bezpečnosti.
+    /// </para>
     /// </summary>
-    public int? LodId { get; set; }
+    public int KlicId { get; set; }
+    public KlicLodi? Klic { get; set; }
+
+    /// <summary>Loď, ke které trasa patří. Bere se z klíče, nehádá se.</summary>
+    public int LodId { get; set; }
     public Lod? Lod { get; set; }
 
-    /// <summary>Jméno lodi tak, jak ho posádka zadala při startu záznamu.</summary>
+    /// <summary>
+    /// Jméno lodi tak, jak ho posádka potvrdila při startu záznamu.
+    /// <para>
+    /// Drží se vedle odkazu na loď schválně: přejímací podmínka č. 6 je
+    /// *„telefon přiřazený ke špatné lodi"*, a když se obojí rozejde, je to
+    /// vidět.
+    /// </para>
+    /// </summary>
     public required string LodNazev { get; set; }
 
     public int? ZavodId { get; set; }

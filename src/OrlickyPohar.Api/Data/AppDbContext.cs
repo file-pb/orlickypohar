@@ -47,6 +47,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Features.Upozorneni.Zarizeni> Zarizeni => Set<Features.Upozorneni.Zarizeni>();
     public DbSet<Features.Trasy.Trasa> Trasy => Set<Features.Trasy.Trasa>();
     public DbSet<Features.Trasy.TrasaBod> TrasaBody => Set<Features.Trasy.TrasaBod>();
+    public DbSet<Features.Klice.KlicLodi> Klice => Set<Features.Klice.KlicLodi>();
+    public DbSet<Features.Klice.PozvankaKlice> Pozvanky => Set<Features.Klice.PozvankaKlice>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -439,7 +441,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // Idempotence nahrávání nestojí na tom, že si ji server rozmyslí,
         // ale na databázi: tentýž identifikátor z téhož telefonu je tatáž
         // trasa. Bez unikátního indexu by souběžné nahrání založilo dvě.
-        trasa.HasIndex(x => new { x.UzivatelId, x.LokalniId }).IsUnique();
+        trasa.HasIndex(x => new { x.KlicId, x.LokalniId }).IsUnique();
 
         var bod = b.Entity<Features.Trasy.TrasaBod>();
         // Totéž o patro níž: bod se pozná podle pořadového čísla, které mu
@@ -450,5 +452,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         bod.HasIndex(x => new { x.TrasaId, x.CasGps });
         bod.HasOne(x => x.Trasa).WithMany(x => x.Body)
             .HasForeignKey(x => x.TrasaId).OnDelete(DeleteBehavior.Cascade);
+
+        var klic = b.Entity<Features.Klice.KlicLodi>();
+        klic.Property(x => x.Otisk).HasMaxLength(64).IsRequired();
+        klic.Property(x => x.Jmeno).HasMaxLength(120);
+        // Klíč se hledá podle otisku při každé dávce, takže index není
+        // pohodlí. Unikátní proto, že tentýž otisk znamená totéž tajemství.
+        klic.HasIndex(x => x.Otisk).IsUnique();
+        klic.HasIndex(x => x.LodId);
+
+        var pozvanka = b.Entity<Features.Klice.PozvankaKlice>();
+        pozvanka.Property(x => x.Otisk).HasMaxLength(64).IsRequired();
+        pozvanka.Property(x => x.Jmeno).HasMaxLength(120);
+        pozvanka.HasIndex(x => x.Otisk).IsUnique();
     }
 }
