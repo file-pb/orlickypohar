@@ -7001,11 +7001,9 @@ rozhodnutím</b> (viz *Konec rozjížďky je rozhodnutí*).
 
 ### Čeká na Filipa
 
-1. <b>Zitadel:</b> Native klient a povolené přesměrování
-   `orlickypohar://prihlaseni`. Kód přihlášení v appce je hotový
-   a <b>nevyzkoušený</b> — v Expo Go se ověřit nedá (`makeRedirectUri`
-   tam vrací `exp://…`), zkouší se v APK. Visí na něm osm z deseti
-   věcí z jeho seznamu, co má appka umět.
+1. ~~<b>Zitadel:</b> Native klient a povolené přesměrování.~~
+   <b>Hotovo a vyzkoušeno 21. 10. 2026</b> — appka ukazuje jméno i e-mail
+   přihlášeného. Podrobně v *Přihlášení v appce funguje*.
 2. <b>Publikovat zbylé zastávky 2027 a plachetní směrnici.</b>
 3. <b>Odpovědi rozhodčího</b> na protesty a penalizace.
 
@@ -7075,13 +7073,41 @@ Stav se sem nepíše podle barvy nasazení: `main` i produkce byly
 2. <b>Úvodník jako příznak článku.</b> Pole neexistuje nikde — ani
    v API, ani v mocku.
 
+### Přihlášení v appce funguje (21. 10. 2026)
+
+Od 20. 10. plán vedl přihlášení jako **napsané, ale nevyzkoušené** — a jako
+hlavní věc, která blokuje všechno ostatní. **21. 10. 2026 vyzkoušeno na
+iPhonu a funguje.** Appka ukazuje jméno i e-mail přihlášeného.
+
+**Prokázala se i ta těžší půlka toku**, ne jen otevření prohlížeče: návrat
+přes `orlickypohar://prihlaseni`, výměna kódu za token a načtení profilu.
+Právě ta se láme nejčastěji, protože vyžaduje, aby poskytovatel měl
+návratovou adresu povolenou a klient byl typu Native s PKCE.
+
+**Zkoušelo se v nativním buildu**, ne v Expo Go — ten to podle
+`app/src/lib/identita.ts` ani umět nemůže, protože `makeRedirectUri` tam
+vrací `exp://<adresa-v-síti>:8081`, která se mění s Wi-Fi.
+
+**Past u lokálních buildů:** `EXPO_PUBLIC_IDENTITA_AUTHORITY` a
+`EXPO_PUBLIC_IDENTITA_CLIENT_ID` jsou v `app/eas.json` jen u profilů
+`preview` a `production`. Build přes `expo run:ios` je tedy **nemá** a appka
+se schová (`prihlasovaniJde` je nepravda). Při lokálním buildu je potřeba je
+předat v prostředí — jinak to vypadá, že přihlášení chybí, a přitom chybí
+jen adresa poskytovatele.
+
+**Co zůstává neověřené:** obnova tokenu po vypršení. Appka si bere
+`offline_access` právě proto, aby se posádka nepřihlašovala každou hodinu
+znovu — na vodě to nejde. Jestli obnova nefunguje, selže to uprostřed
+závodu, a pozná se to až tím, že se appka otevře po delší době.
+
+**Co to odblokovává:** nahrávání trasy na server, tedy přejímací podmínky
+3 a 4, které pilot dosud neměl jak splnit.
+
 ### Čeká na Filipa
 
-1. <b>Zitadel:</b> Native klient a povolené přesměrování
-   `orlickypohar://prihlaseni`. Kód přihlášení v appce je hotový
-   a <b>nevyzkoušený</b> — v Expo Go se ověřit nedá (`makeRedirectUri`
-   tam vrací `exp://…`), zkouší se v APK. Visí na něm osm z deseti
-   věcí z jeho seznamu, co má appka umět.
+1. ~~<b>Zitadel:</b> Native klient a povolené přesměrování.~~
+   <b>Hotovo a vyzkoušeno 21. 10. 2026</b> — appka ukazuje jméno i e-mail
+   přihlášeného. Podrobně v *Přihlášení v appce funguje*.
 2. <b>Publikovat zbylé zastávky 2027 a plachetní směrnici.</b>
 3. <b>Odpovědi rozhodčího</b> na protesty a penalizace.
 
