@@ -1584,6 +1584,21 @@ jedno neťukne místo druhého na houpající se lodi.
 **Stav serveru pilot zatím nemá co ukazovat**, protože nahrávání nemá;
 zbylé dva řádky dávají smysl hned.
 
+### Pořadatel vidí, které lodě posílají (Filip, 21. 10. 2026)
+
+*„Appku si nahodí sami a jedou dál. My jen uvidíme, že máme polohy lodí,
+nebo ne."* Pořadatel tedy nemá nic spouštět ani nastavovat na cizích
+telefonech — má jen **přehled, od kterých lodí chodí polohy**.
+
+Proč to stojí za postavení hned, jak bude nahrávání: porucha se jinak zjistí
+až po dojezdu nad prázdnou trasou. Stačí seznam přihlášených lodí a u každé
+poslední přijatý bod — *„LUNA: před 8 s"*, *„PEZI: nic"*. Z toho se před
+startem pozná loď, která zapomněla spustit záznam nebo nemá oprávnění, a dá
+se to vyřešit na břehu.
+
+Je to tentýž druh údaje jako ve stavovém panelu v appce, jen z druhé strany:
+posádka vidí svůj telefon, pořadatel celé pole.
+
 ### Co z toho čeká na přihlášení
 
 Všechna tři pravidla výš (loď v regatě, telefon u posádky, okno regaty)
