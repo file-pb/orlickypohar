@@ -1587,9 +1587,28 @@ rezervu na obou stranách:
   zhoršeném počasí, i kdyby tracker nikdy nikomu neukázal jedinou
   rozjížďku. Je to samostatný důvod pro celou tuhle kapitolu.
 
-Konkrétní rezervu nastaví pořadatel; výchozí řádově půlhodina před a hodina
-po. Hranice soukromí zůstává tam, kde má — okno pokryje cestu na pole, závod
-i návrat, ale ne večer.
+**Tracker běží celý blok na vodě, uchovává se jen okno rozjížďky**
+(Filip, 21. 10. 2026). To jsou dvě různé věci a je dobré je nemíchat:
+
+| | Jak dlouho |
+|---|---|
+| **tracker zaznamenává** | celý blok na vodě, od rozpravy po konec dne |
+| **trasa se uchovává** | od začátku startovní procedury do **10 minut po dojezdu** každé rozjížďky |
+| **poslední známá poloha** | drží se do uzavření dne pořadatelem, pak se zahodí |
+
+**Proč ořez:** *„Trasa bude hezká a nebude se do ní motat to klikování při
+balení plachet nebo koupání v zátoce mezi rozjížďkami."* Je to zároveň
+čitelnost i soukromí — kde se kdo mezi rozjížďkami koupal, do výsledků
+regaty nepatří.
+
+**Proč samostatná poslední poloha:** ořez na +10 minut skončí někde na vodě,
+takže návrat do mariny v uchované trase není. Pro bezpečnostní otázku *„kde
+je LUNA?"* ale stačí **jediný bod**, ne celá trasa návratu. Drží se proto
+odděleně a jen do chvíle, než pořadatel den uzavře.
+
+**Appka tím zůstává hloupá a tedy odolná:** zaznamenává a neřeší, co je
+závod a co čekání. Ořez přijde až při zpracování — v telefonu, před
+nahráním, aby se nenahrávalo nic, co se stejně má zahodit.
 
 **Den se dělí na bloky, ne na jeden kus.** U Radavy se po třech rozjížďkách
 jde na oběd a odpoledne se pokračuje. **Přes oběd se tracker nevypíná**
