@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Identita;
+using OrlickyPohar.Api.Features.Klice;
+using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Trasy;
 
 namespace OrlickyPohar.Api.Tests;
@@ -27,12 +29,29 @@ public class TrasyTests(PostgresFixture fixture)
         return (db, new TrasySprava(db, TimeProvider.System));
     }
 
-    private static async Task<Guid> UzivatelAsync(AppDbContext db, string znacka)
+    /// <summary>
+    /// Klíč k lodi — tím se telefon prokazuje. Trasa patří lodi, ne člověku,
+    /// takže testy pracují s klíčem, ne s přihlášeným uživatelem.
+    /// </summary>
+    private static async Task<KlicLodi> KlicAsync(AppDbContext db, string znacka)
     {
-        var u = new Uzivatel { Id = Guid.NewGuid(), Zobrazovane = $"Posádka {znacka}" };
+        var u = new Uzivatel { Id = Guid.NewGuid(), Zobrazovane = $"Kapitán {znacka}" };
         db.Uzivatele.Add(u);
+        var lod = new Lod { Nazev = $"LUNA {znacka} {Guid.NewGuid():N}"[..20] };
+        db.Lode.Add(lod);
         await db.SaveChangesAsync();
-        return u.Id;
+
+        var klic = new KlicLodi
+        {
+            LodId = lod.Id,
+            Otisk = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N"),
+            Jmeno = $"Posádka {znacka}",
+            VydalUcetId = u.Id,
+            VydanV = Ted,
+        };
+        db.Klice.Add(klic);
+        await db.SaveChangesAsync();
+        return klic;
     }
 
     private static ZalozTrasuVstup Vstup(string lokalniId) =>
@@ -54,21 +73,21 @@ public class TrasyTests(PostgresFixture fixture)
     public async Task Zalozeni_tehoz_lokalniho_id_nevyrobi_druhou_trasu()
     {
         var (db, trasy) = Sluzby();
-        var kdo = await UzivatelAsync(db, "A");
+        var kdo = await KlicAsync(db, "A");
         var lokalni = $"t-{Guid.NewGuid():N}";
 
         var prvni = await trasy.ZalozAsync(kdo, Vstup(lokalni), default);
         var druha = await trasy.ZalozAsync(kdo, Vstup(lokalni), default);
 
         Assert.Equal(prvni.LokalniId, druha.LokalniId);
-        Assert.Equal(1, await db.Trasy.CountAsync(t => t.UzivatelId == kdo && t.LokalniId == lokalni));
+        Assert.Equal(1, await db.Trasy.CountAsync(t => t.KlicId == kdo.Id && t.LokalniId == lokalni));
     }
 
     [Fact]
     public async Task Tataz_davka_podruhe_nic_nezdvoji()
     {
         var (db, trasy) = Sluzby();
-        var kdo = await UzivatelAsync(db, "B");
+        var kdo = await KlicAsync(db, "B");
         var lokalni = $"t-{Guid.NewGuid():N}";
         await trasy.ZalozAsync(kdo, Vstup(lokalni), default);
 
@@ -79,7 +98,7 @@ public class TrasyTests(PostgresFixture fixture)
         Assert.Equal(0, znovu!.Prijato);
         Assert.Equal(50, znovu.Preskoceno);
 
-        var trasa = await db.Trasy.SingleAsync(t => t.LokalniId == lokalni && t.UzivatelId == kdo);
+        var trasa = await db.Trasy.SingleAsync(t => t.LokalniId == lokalni && t.KlicId == kdo.Id);
         Assert.Equal(50, await db.TrasaBody.CountAsync(b => b.TrasaId == trasa.Id));
     }
 
@@ -87,7 +106,7 @@ public class TrasyTests(PostgresFixture fixture)
     public async Task Prekryvajici_se_davka_doplni_jen_chybejici()
     {
         var (db, trasy) = Sluzby();
-        var kdo = await UzivatelAsync(db, "C");
+        var kdo = await KlicAsync(db, "C");
         var lokalni = $"t-{Guid.NewGuid():N}";
         await trasy.ZalozAsync(kdo, Vstup(lokalni), default);
 
@@ -99,7 +118,7 @@ public class TrasyTests(PostgresFixture fixture)
         Assert.Equal(10, druha.Preskoceno);
         Assert.Equal(49, druha.PosledniBod);
 
-        var trasa = await db.Trasy.SingleAsync(t => t.LokalniId == lokalni && t.UzivatelId == kdo);
+        var trasa = await db.Trasy.SingleAsync(t => t.LokalniId == lokalni && t.KlicId == kdo.Id);
         Assert.Equal(50, await db.TrasaBody.CountAsync(b => b.TrasaId == trasa.Id));
     }
 
@@ -107,7 +126,7 @@ public class TrasyTests(PostgresFixture fixture)
     public async Task Dvakrat_tyz_bod_v_jedne_davce_se_ulozi_jednou()
     {
         var (db, trasy) = Sluzby();
-        var kdo = await UzivatelAsync(db, "D");
+        var kdo = await KlicAsync(db, "D");
         var lokalni = $"t-{Guid.NewGuid():N}";
         await trasy.ZalozAsync(kdo, Vstup(lokalni), default);
 
@@ -117,7 +136,7 @@ public class TrasyTests(PostgresFixture fixture)
         var vysledek = await trasy.PridejAsync(kdo, lokalni, davka, default);
 
         Assert.Equal(3, vysledek!.Prijato);
-        var trasa = await db.Trasy.SingleAsync(t => t.LokalniId == lokalni && t.UzivatelId == kdo);
+        var trasa = await db.Trasy.SingleAsync(t => t.LokalniId == lokalni && t.KlicId == kdo.Id);
         Assert.Equal(3, await db.TrasaBody.CountAsync(b => b.TrasaId == trasa.Id));
     }
 
@@ -125,7 +144,7 @@ public class TrasyTests(PostgresFixture fixture)
     public async Task Prerusene_nahrani_jde_dokoncit()
     {
         var (db, trasy) = Sluzby();
-        var kdo = await UzivatelAsync(db, "E");
+        var kdo = await KlicAsync(db, "E");
         var lokalni = $"t-{Guid.NewGuid():N}";
         await trasy.ZalozAsync(kdo, Vstup(lokalni), default);
         await trasy.PridejAsync(kdo, lokalni, Davka(0, 10), default);
@@ -143,11 +162,11 @@ public class TrasyTests(PostgresFixture fixture)
     }
 
     [Fact]
-    public async Task Cizi_trasu_nelze_doplnit_ani_pri_znalosti_identifikatoru()
+    public async Task Cizim_klicem_nelze_doplnit_ani_pri_znalosti_identifikatoru()
     {
         var (db, trasy) = Sluzby();
-        var moje = await UzivatelAsync(db, "F");
-        var cizi = await UzivatelAsync(db, "G");
+        var moje = await KlicAsync(db, "F");
+        var cizi = await KlicAsync(db, "G");
         var lokalni = $"t-{Guid.NewGuid():N}";
         await trasy.ZalozAsync(moje, Vstup(lokalni), default);
 
@@ -160,7 +179,7 @@ public class TrasyTests(PostgresFixture fixture)
     public async Task Posun_hodin_se_ulozi_a_body_se_nezahazuji()
     {
         var (db, trasy) = Sluzby();
-        var kdo = await UzivatelAsync(db, "H");
+        var kdo = await KlicAsync(db, "H");
         var lokalni = $"t-{Guid.NewGuid():N}";
 
         // Telefon tvrdí, že záznam začal za dva dny — hodiny má rozjeté.
@@ -185,7 +204,7 @@ public class TrasyTests(PostgresFixture fixture)
     public async Task Simulovana_trasa_zustane_oznacena()
     {
         var (db, trasy) = Sluzby();
-        var kdo = await UzivatelAsync(db, "I");
+        var kdo = await KlicAsync(db, "I");
         var lokalni = $"t-{Guid.NewGuid():N}";
 
         await trasy.ZalozAsync(

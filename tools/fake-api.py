@@ -899,10 +899,23 @@ def proc_pipnuti_nejde(vstup):
     return None
 
 
-# Trasy nahrané z appky. Klíč je (uživatel, lokální id z telefonu) — mock
+# Mobilní klíče k lodi. Klíč je samotné tajemství, hodnota říká, ke které
+# lodi patří a jestli sleduje. Mock drží čitelné tajemství schválně: je to
+# mock, ne trezor, a test potřebuje vědět, co appce poslat.
+KLICE = {}
+POZVANKY = {}
+
+# Trasy nahrané z appky. Klíč je (klíč lodi, lokální id z telefonu) — mock
 # drží tutéž jedinečnost jako databáze, jinak by idempotenci nešlo vyzkoušet
 # a mock by lhal zrovna v té vlastnosti, na které nahrávání stojí.
 TRASY = {}
+
+
+def klic_z_hlavicky(self):
+    """Klíč z hlavičky `X-Klic-Lodi`, nebo None u chybějícího i odepnutého."""
+    tajemstvi = (self.headers.get("x-klic-lodi") or "").strip()
+    k = KLICE.get(tajemstvi)
+    return tajemstvi if k and k.get("sleduje", True) and not k.get("odebran") else None
 
 
 def trasa_dto(t):
@@ -2296,7 +2309,7 @@ class H(BaseHTTPRequestHandler):
         vypadalo by to, že to funguje, a na skutečném API by se trasy
         zdvojily. Mock proto drží tutéž jedinečnost jako databáze.
         """
-        kdo = self.prihlaseny()
+        kdo = klic_z_hlavicky(self)
         if not kdo:
             return self.send_error(401)
 
@@ -2310,7 +2323,7 @@ class H(BaseHTTPRequestHandler):
         if not lod:
             return self.chyba(400, "Jméno lodi chybí.")
 
-        klic = (kdo["id"], lokalni)
+        klic = (kdo, lokalni)
         if klic not in TRASY:
             TRASY[klic] = {
                 "lokalniId": lokalni,
@@ -2330,10 +2343,10 @@ class H(BaseHTTPRequestHandler):
         Přijme dávku. Body, které už pod svým pořadovým číslem dorazily, se
         přeskočí — opakované poslání téže dávky tedy nic nezdvojí.
         """
-        kdo = self.prihlaseny()
+        kdo = klic_z_hlavicky(self)
         if not kdo:
             return self.send_error(401)
-        t = TRASY.get((kdo["id"], lokalni))
+        t = TRASY.get((kdo, lokalni))
         if not t:
             return self.send_error(404)
 
@@ -2354,10 +2367,10 @@ class H(BaseHTTPRequestHandler):
 
     def dokonci_trasu(self, lokalni):
         """Uzavře nahrávání. Do té doby je trasa rozdělaná a smí se doposílat."""
-        kdo = self.prihlaseny()
+        kdo = klic_z_hlavicky(self)
         if not kdo:
             return self.send_error(401)
-        t = TRASY.get((kdo["id"], lokalni))
+        t = TRASY.get((kdo, lokalni))
         if not t:
             return self.send_error(404)
 
@@ -2366,6 +2379,44 @@ class H(BaseHTTPRequestHandler):
         if konec:
             t["konec"] = konec
         return self.odpoved(trasa_dto(t))
+
+    def pozvi_klicem(self, lod_id):
+        """Kapitán vytvoří pozvánku pro člena posádky. Kód vrátí jednou."""
+        kdo = self.prihlaseny()
+        if not kdo:
+            return self.send_error(401)
+
+        from datetime import timedelta
+
+        jmeno = ((self.telo_zadosti() or {}).get("jmeno") or "").strip() or None
+        kod = f"poz-{len(POZVANKY) + 1}"
+        POZVANKY[kod] = {"lodId": lod_id, "jmeno": jmeno, "uplatnena": False}
+        return self.odpoved(
+            {"id": len(POZVANKY), "kod": kod, "jmeno": jmeno,
+             "platiDo": _iso(_ted() + timedelta(hours=48))},
+            201)
+
+    def uplatni_pozvanku(self):
+        """
+        Vymění pozvánku za klíč. Vymyšlená, propadlá i už uplatněná dávají
+        tutéž odpověď — z chyby se nesmí dát nic vyčíst.
+        """
+        kod = ((self.telo_zadosti() or {}).get("kod") or "").strip()
+        p = POZVANKY.get(kod)
+        if not p or p["uplatnena"]:
+            return self.chyba(400, "Pozvánka neplatí.")
+
+        p["uplatnena"] = True
+        tajemstvi = f"klic-{len(KLICE) + 1}"
+        KLICE[tajemstvi] = {"lodId": p["lodId"], "jmeno": p["jmeno"], "sleduje": True,
+                            "odebran": False}
+        _klic, lod = lod_podle_id(p["lodId"])
+        return self.odpoved({
+            "klic": tajemstvi,
+            "lodId": p["lodId"],
+            "lodNazev": (lod or {}).get("nazev", ""),
+            "jmeno": p["jmeno"],
+        })
 
     def pripoj_se(self):
         """Uplatnění kódu. Propadlý a vymyšlený musí dát tutéž odpověď."""
@@ -2558,10 +2609,11 @@ class H(BaseHTTPRequestHandler):
         cesta = urlparse(self.path).path
 
         if cesta == "/trasy":
-            if not self.headers.get("authorization"):
+            klic = klic_z_hlavicky(self)
+            if not klic:
                 return self.send_error(401)
             return self.odpoved(sorted(
-                (trasa_dto(t) for t in TRASY.values()),
+                (trasa_dto(t) for k, t in TRASY.items() if k[0] == klic),
                 key=lambda t: t["zacatek"], reverse=True))
 
         # <b>Registrace zařízení je bez přihlášení</b> — veřejná upozornění
@@ -3473,17 +3525,20 @@ class H(BaseHTTPRequestHandler):
         # Osobní cesty. Stojí první, protože nepatří pod ročník.
         if not self.headers.get("authorization") and cesta.startswith("/ja"):
             return self.send_error(401)
-        if cesta == "/trasy":
+        if cesta == "/klice/uplatnit":
+            # Jediný endpoint bez přihlášení, a musí být: kdyby ho
+            # vyžadoval, posádka by potřebovala účet a smysl QR by padl.
+            return self.uplatni_pozvanku()
+        if (m := re.match(r'^/ja/lode/(\d+)/klice$', cesta)):
             if not self.headers.get("authorization"):
                 return self.send_error(401)
+            return self.pozvi_klicem(int(m.group(1)))
+
+        if cesta == "/trasy":
             return self.zaloz_trasu()
         if (m := re.match(r'^/trasy/([A-Za-z0-9_-]+)/body$', cesta)):
-            if not self.headers.get("authorization"):
-                return self.send_error(401)
             return self.pridej_body(m.group(1))
         if (m := re.match(r'^/trasy/([A-Za-z0-9_-]+)/dokonceno$', cesta)):
-            if not self.headers.get("authorization"):
-                return self.send_error(401)
             return self.dokonci_trasu(m.group(1))
 
         if cesta == "/ja/pripojeni":
