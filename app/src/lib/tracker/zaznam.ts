@@ -236,3 +236,18 @@ function delkaTrasy(zaznamId: string): number {
   }
   return m;
 }
+
+/**
+ * Kolik bodů by ostříhání smazalo — **než se zeptáme**.
+ *
+ * Bez toho je stříhání slepé: posádka vidí „−15 min" a netuší, čeho se to
+ * dotkne. Na houpající se lodi po závodě je to knoflík, kterým si někdo
+ * ustřihne poslední rozjížďku.
+ */
+export function kolikByZmizelo(zaznamId: string, do_: number): number {
+  const r = databaze().getFirstSync<{ pocet: number }>(
+    'SELECT COUNT(*) AS pocet FROM bod WHERE zaznam_id = ? AND cas_gps > ?',
+    [zaznamId, do_],
+  );
+  return r?.pocet ?? 0;
+}

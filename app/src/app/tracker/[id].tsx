@@ -7,6 +7,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { casAMinuty, rychlost, trvani, vzdalenost } from '@/lib/tracker/formaty';
 import { posliGpx } from '@/lib/tracker/gpx';
 import {
+  kolikByZmizelo,
   ostrihej,
   prehled,
   smazZaznam,
@@ -43,13 +44,21 @@ export default function DetailTrasy() {
   function ostrihejO(minut: number) {
     if (!souhrn?.posledni || !id) return;
     const hranice = souhrn.posledni - minut * 60 * 1000;
+    // Spočítat dopředu, čeho se to dotkne. Slepé „−15 min" je ten knoflík,
+    // kterým si někdo po závodě ustřihne poslední rozjížďku.
+    const zmizi = kolikByZmizelo(id, hranice);
+    if (zmizi === 0) {
+      Alert.alert('Není co ostříhat', `Po ${casAMinuty(hranice)} už žádný bod není.`);
+      return;
+    }
     Alert.alert(
-      `Ostříhat posledních ${minut} min?`,
-      'Body po té hranici se smažou. Je to kvůli soukromí — zapomenutý záznam jinak ukáže, kde kdo bydlí.',
+      `Ostříhat vše po ${casAMinuty(hranice)}?`,
+      `Smaže ${zmizi} z ${souhrn.pocetBodu} bodů. Trasa skončí v ${casAMinuty(hranice)}.\n\n` +
+        'Je to kvůli soukromí — zapomenutý záznam jinak ukáže, kde kdo bydlí. Smazané body se nedají vrátit.',
       [
         { text: 'Zrušit', style: 'cancel' },
         {
-          text: 'Ostříhat',
+          text: `Smazat ${zmizi} bodů`,
           style: 'destructive',
           onPress: () => {
             const smazano = ostrihej(id, hranice);
@@ -178,6 +187,11 @@ export default function DetailTrasy() {
           {OSTRIHAT_MIN.map((m) => (
             <Pressable key={m} onPress={() => ostrihejO(m)}>
               <Text style={{ color: t.voda }}>−{m} min</Text>
+              {/* Cílový čas pod tlačítkem: posádka vidí, kam to sáhne, ještě
+                  než na to ťukne. */}
+              <Text style={{ color: t.tlumeny, fontSize: 11 }}>
+                {souhrn.posledni ? `do ${casAMinuty(souhrn.posledni - m * 60 * 1000)}` : ''}
+              </Text>
             </Pressable>
           ))}
         </View>

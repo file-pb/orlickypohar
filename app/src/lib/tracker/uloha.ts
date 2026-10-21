@@ -12,6 +12,7 @@
  * obrazovky; proto si bere stav ze databáze a nesmí spoléhat na nic v paměti.
  */
 import * as Location from 'expo-location';
+import { Linking } from 'react-native';
 import * as TaskManager from 'expo-task-manager';
 
 import { bezicZaznam, zapisBody } from './zaznam';
@@ -114,4 +115,38 @@ export async function zastavZaznamNaPozadi() {
 
 export async function bezinaPozadi(): Promise<boolean> {
   return Location.hasStartedLocationUpdatesAsync(ULOHA);
+}
+
+export type Propichnuti = {
+  /** Jak dlouho trvalo, než GPS odpověděla. */
+  trvaloMs: number;
+  presnostM: number | null;
+  sirka: number;
+  delka: number;
+};
+
+/**
+ * Zkusí **teď hned** získat polohu a vrátí, jak dlouho to trvalo.
+ *
+ * Proč zvlášť a ne jen ukazovat poslední bod: kontrolka může svítit zeleně
+ * proto, že se nikdo nezeptal. Tohle je skutečný pokus s čerstvým výsledkem —
+ * a doba odpovědi je sama o sobě údaj. Když GPS odpoví za dvě sekundy, má
+ * družice; když za třicet, hledá je.
+ *
+ * Záznam to neruší: čte se jedna poloha navíc, odběr běží dál.
+ */
+export async function propichni(): Promise<Propichnuti> {
+  const zacatek = Date.now();
+  const p = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+  return {
+    trvaloMs: Date.now() - zacatek,
+    presnostM: p.coords.accuracy,
+    sirka: p.coords.latitude,
+    delka: p.coords.longitude,
+  };
+}
+
+/** Otevře nastavení appky, kde se dá oprávnění k poloze přepnout na „Vždy". */
+export async function otevriNastaveni() {
+  await Linking.openSettings();
 }
