@@ -1684,9 +1684,41 @@ mobilní, které připneme k lodi, ale to je drahé a není to na pořadu dne."*
 baterku od navigace, nezapomene se zapnout, nikdo si u ní neuklepne
 oprávnění na *Povolit jednou*. Data by byla konzistentní napříč celým polem.
 
-**Proč teď ne:** pořízení pro čtyřicet lodí, datové tarify a logistika
-(rozdat, vybrat, nabít) jsou řádově jinde než appka, kterou si posádka
-nainstaluje sama.
+**Proč kupovaná řešení nesedí:** profesionální jachtařské trackery jsou
+drahé hlavně proto, že jsou **satelitní** — dělají se pro moře. Orlík má
+normální pokrytí, takže celá ta kategorie odpadá. Levné GSM trackery zase
+vznikly proti krádeži lodí, takže šetří baterii a hlásí se **po minutách**;
+plán přitom u hlavního zdroje chce 5–10 s, protože minutový interval
+neukáže obrátku.
+
+**Vlastní krabička z ESP32 je ale v jiné cenové třídě** (Filip, 21. 10.
+2026). ESP32 ~100–200 Kč, GPS modul NEO-6M/8M ~150–300 Kč, článek, krabička
+— **řádově 500–1000 Kč za kus**. Klíčová vlastnost: **ESP32 má WiFi**, takže
+zapisuje celý závod offline a po návratu do mariny trasu sám nahraje. Žádná
+SIM, žádný tarif, žádný měsíční poplatek — a přesně to, co pilot potřebuje,
+protože **živou mapu nemá**. Spotřeba vychází kolem 80 mA (GPS ~40, ESP32
+bez WiFi podobně), tedy necelé 2 Ah na dvacetičtyřhodinovku; jeden článek
+18650 to utáhne s rezervou a nejede u toho displej ani rádio.
+
+**Čeho se bát: není to nákup, je to výroba.** Čtyřicet kusů znamená pájení,
+firmware, vodotěsnost a pak trvalou údržbu — někdo je bude nabíjet, opravovat
+a hledat. To je přesně ten druh věci, která se po druhé sezóně rozpadne,
+když visí na jednom člověku.
+
+**Rozumné pořadí:** postavit **jeden nebo dva kusy** a vzít je na regatu
+vedle telefonů. Porovnat trasy ze stejné lodi — z telefonu a z krabičky.
+Z toho se pozná, jestli je rozdíl v kvalitě dat takový, aby se do série
+vyplatilo jít. Víkendová práce, ne projekt.
+
+**Živá mapa by nechtěla GSM, ale LoRa.** SIM a tarif v každé krabičce je
+donekonečna placený účet; LoRa modul stojí ~300 Kč navíc a gateway na břehu
+stačí **jedna pro celou regatu**. Tři věci se musí spočítat dopředu:
+**duty cycle** (v pásmu 868 MHz smí zařízení vysílat 1 % času — jedna loď se
+vejde pohodlně, čtyřicet na jednom kanálu zahltí éter), **dosah v údolí**
+(Orlík je zaříznutý mezi kopce; pro vymezené závodní pole by jedna gateway
+u startovní linie stačila, pro dálkovou plavbu přes půl nádrže ne) a
+**kdo to postaví**. Je to ale odpověď na otázku „chceme vidět lodě v reálném
+čase", a ta přijde na řadu až po pilotu.
 
 **A proč je pilot správné pořadí:** je to levný způsob, jak zjistit, jestli
 se do hardwaru vyplatí jít. Když si po sezóně trasy nikdo neotevře, ušetřilo
