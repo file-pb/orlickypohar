@@ -1675,6 +1675,26 @@ dnes dělá na papíře nebo podle toho, koho rozhodčí vidí. Tím se z něj s
 sveze — což je přesně ten druh návrhu, který přežije, protože nikoho nestojí
 krok navíc.
 
+### Vlastní trackery: jednou možná, teď ne (Filip, 21. 10. 2026)
+
+*„V budoucnu bychom mohli používat naše trackery a nějaké jednoduché GPS
+mobilní, které připneme k lodi, ale to je drahé a není to na pořadu dne."*
+
+**Co by to řešilo:** vlastní krabička je nezávislá na posádce — nemá vybitou
+baterku od navigace, nezapomene se zapnout, nikdo si u ní neuklepne
+oprávnění na *Povolit jednou*. Data by byla konzistentní napříč celým polem.
+
+**Proč teď ne:** pořízení pro čtyřicet lodí, datové tarify a logistika
+(rozdat, vybrat, nabít) jsou řádově jinde než appka, kterou si posádka
+nainstaluje sama.
+
+**A proč je pilot správné pořadí:** je to levný způsob, jak zjistit, jestli
+se do hardwaru vyplatí jít. Když si po sezóně trasy nikdo neotevře, ušetřilo
+se za čtyřicet krabiček. Když naopak posádky budou nadávat, že jim telefon
+na dvacetičtyřhodinovce umřel v šesté hodině, je to změřený argument, který
+se dá někomu předložit — a to je přesně ten druh odpovědi, kvůli kterému
+plán pilot zavedl.
+
 ### Stříhání se nesmí trefovat naslepo (Filip, 21. 10. 2026)
 
 Dnešní tlačítka *−15 / −30 / −60 min* jsou slepá: posádka nevidí, do kterého
