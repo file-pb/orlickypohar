@@ -2035,6 +2035,39 @@ potřeba 5–10 s, jinak loď skáče a z manévru na bóji není vidět nic.
 kurzu o víc než ~15° nebo při větší změně rychlosti. Chytí to každou
 obrátku, i mimo bóji, a na rovině se naopak posílá málo.
 
+### Co se odesílá živě: filtr a poloměry prvků (Filip, 21. 10. 2026)
+
+Plán zná *okno u bóje, ve kterém se provoz zhustí*, a zhušťování při změně
+kurzu o víc než ~15°. Chybí k tomu dvě konkrétní věci.
+
+**Filtr minimální změny.** Poloha, která se od předchozí liší o méně než
+**~5 m**, se živě neposílá — pod přesností GPS je to stejně spíš šum
+přijímače než loď. Dá se přibalit do příští dávky.
+
+**Poloměry kolem prvků dráhy nejsou stejné** — každý prvek má jiný význam:
+
+| Prvek | Poloměr plné frekvence | Proč |
+|---|---|---|
+| **start** | **100 m** | lodě se shlukují a manévrují na velké ploše; takticky je to nejcennější část |
+| **cíl** | **50 m** | dojezd, míň manévrování |
+| ostatní prvky (otočné bóje) | **15 m** | samotná obrátka |
+
+**Otevřené u těch 15 m:** obrátka je oblouk, který bývá širší než bóje —
+loď na ni najíždí a vyjíždí v křivce o poloměru klidně deseti dvaceti metrů.
+Okno 15 m tedy zachytí vrchol manévru, ale ne jeho konec, a při přesnosti
+GPS 5–10 m je to těsné. **Ověřit na prvních skutečných trasách**, jestli
+nestačí spíš 30 m; podle toho, jestli jde o bod obrátky, nebo o celý manévr.
+
+**Filtruje se odesílání, ne zápis.** Místo v telefonu je zadarmo, takže se
+zapisuje po vteřinách a po dojezdu se nahraje všechno — filtr patří jen na
+to, co jde živě přes drahé rádio. Jinak by se ta data ztratila natrvalo.
+
+**A musí tam být tep i bez pohybu.** Loď, která v bezvětří stojí, by
+s filtrem neposlala nic a pořadatel by v seznamu viděl *„nehlásí se"* místo
+*„stojí na místě"*. Kvůli takovému falešnému poplachu by výbor sháněl loď,
+která nikam nezmizela. Proto i bez pohybu odeslat aspoň jednou za minutu
+nebo dvě.
+
 ### Trať staví pořadatel, pípnutím u bóje (Filip, 4. 10. 2026)
 
 *„Musíme udělat verzi v appce pro pořadatele, který staví bójky, aby pípnul
