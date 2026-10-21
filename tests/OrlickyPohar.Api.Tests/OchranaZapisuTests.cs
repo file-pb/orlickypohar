@@ -36,7 +36,8 @@ public class OchranaZapisuTests(PostgresFixture fx)
         ["POST /serie/{serie}/zavody/{zavod}/prihlasky/"] =
             "veřejná přihláška lodi na zastávku — posádka se hlásí bez účtu "
             + "(Features/Zavody/VerejnaPrihlaskaEndpoints.cs)",
-        ["PUT /zarizeni"] =
+        // Klíč nese koncové lomítko — tak ho skládá `CestaZeVzoru.Normalizuj`.
+        ["PUT /zarizeni/"] =
             "registrace telefonu k veřejným upozorněním — plán (Dvě úrovně "
             + "upozornění) říká, že výsledky, článek ani termín závodu nesmějí "
             + "vyžadovat účet: divák nemá kvůli termínu nic zakládat. Zápis je "
