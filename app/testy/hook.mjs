@@ -4,7 +4,10 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const KOREN = new URL('nahrady/', import.meta.url);
-const NAHRADY = new Set(['expo-sqlite', 'expo-file-system', 'expo-sharing']);
+const NAHRADY = new Set([
+  'expo-sqlite', 'expo-file-system', 'expo-sharing',
+  'expo-auth-session', 'expo-secure-store',
+]);
 
 export function resolve(spec, ctx, next) {
   if (NAHRADY.has(spec)) {

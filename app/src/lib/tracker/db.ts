@@ -29,6 +29,26 @@ export function databaze(): SQLite.SQLiteDatabase {
   return db;
 }
 
+/**
+ * Doplní sloupec, pokud v tabulce ještě není.
+ *
+ * Appka už může mít trasy z dřívějška a ty se nesmí zahodit jen proto, že
+ * přibyla vlastnost. `ALTER TABLE` v SQLite chybějící sloupec přidá a data
+ * nechá být; kontrola přes `PRAGMA` je tu proto, že druhé spuštění by
+ * jinak selhalo.
+ */
+function doplnSloupec(
+  d: SQLite.SQLiteDatabase,
+  tabulka: string,
+  sloupec: string,
+  definice: string,
+) {
+  const je = d
+    .getAllSync<{ name: string }>(`PRAGMA table_info(${tabulka})`)
+    .some((s) => s.name === sloupec);
+  if (!je) d.execSync(`ALTER TABLE ${tabulka} ADD COLUMN ${sloupec} ${definice}`);
+}
+
 function pripravSchema(d: SQLite.SQLiteDatabase) {
   d.execSync(`
     CREATE TABLE IF NOT EXISTS zaznam (
@@ -40,7 +60,13 @@ function pripravSchema(d: SQLite.SQLiteDatabase) {
       zacatek INTEGER NOT NULL,
       konec INTEGER,
       ostrihano_do INTEGER,
-      nahrano_v INTEGER
+      nahrano_v INTEGER,
+      -- Poslední bod, který server potvrdil. Do té hranice je trasa venku;
+      -- co je za ní, se musí doposlat. Bez toho by po výpadku nešlo poznat,
+      -- kde se přestalo, a posílalo by se všechno znovu.
+      potvrzeno_do INTEGER NOT NULL DEFAULT 0,
+      -- Posádka označila nahrávání za dokončené.
+      nahravani_hotovo INTEGER NOT NULL DEFAULT 0
     );
     CREATE TABLE IF NOT EXISTS bod (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,6 +83,10 @@ function pripravSchema(d: SQLite.SQLiteDatabase) {
     );
     CREATE INDEX IF NOT EXISTS bod_zaznam ON bod(zaznam_id, id);
   `);
+
+  // Trasy zapsané dřívější verzí appky tyhle sloupce nemají.
+  doplnSloupec(d, 'zaznam', 'potvrzeno_do', 'INTEGER NOT NULL DEFAULT 0');
+  doplnSloupec(d, 'zaznam', 'nahravani_hotovo', 'INTEGER NOT NULL DEFAULT 0');
 }
 
 /**

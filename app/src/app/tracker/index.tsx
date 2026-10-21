@@ -14,6 +14,7 @@ import {
   zadejOpravneni,
   zastavZaznamNaPozadi,
 } from '@/lib/tracker/uloha';
+import { stavNahravani } from '@/lib/tracker/nahravani';
 import {
   predJakDlouho,
   stavGps,
@@ -121,10 +122,13 @@ function Panel({
       />
       {/* Nahrávání pilot nemá, ale řádek tu je schválně: posádka má vidět, že
           se nikam nic neposílá, a ne se to domýšlet z toho, že nic nevidí. */}
+      {/* Za závodu se neodesílá: pilot nemá živou mapu a nahrává se po
+          dojezdu. Řádek tu přesto je, aby posádka viděla, kolik se nasbíralo
+          a co ji čeká — ne aby si to domýšlela z toho, že nic nevidí. */}
       <Radek
         svetlo="stoji"
         popis="Odesílání"
-        hodnota="zatím nikam — trasa zůstává v telefonu"
+        hodnota={`po dojezdu · ${stavNahravani(bezi.id)?.ceka ?? 0} bodů čeká`}
       />
 
       {/* Pozastavení je páka pro posádku, ne pro pořadatele: někdy je potřeba

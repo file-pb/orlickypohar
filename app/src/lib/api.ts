@@ -67,6 +67,34 @@ export async function nactiZaSebe<T>(cesta: string): Promise<T | null> {
   return (await odpoved.json()) as T;
 }
 
+/**
+ * Zápis za přihlášeného. `null` znamená „nikdo není přihlášený" — volající
+ * se podle toho rozhodne, jestli to zkusit později, nebo říct posádce, že
+ * se má přihlásit.
+ *
+ * <b>Chyba se vyhodí</b>, na rozdíl od čtení: u zápisu je rozdíl mezi
+ * „nepovedlo se" a „nic tam není" podstatný. Odesílání trasy na něm stojí —
+ * co se nepotvrdí, musí zůstat ve frontě.
+ */
+export async function posliZaSebe<T>(cesta: string, telo: unknown): Promise<T | null> {
+  const t = await token();
+  if (!t) return null;
+
+  const odpoved = await fetch(`${API}${cesta}`, {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      authorization: `Bearer ${t}`,
+    },
+    body: JSON.stringify(telo),
+  });
+
+  if (odpoved.status === 401) return null;
+  if (!odpoved.ok) throw new Error(`API ${cesta} vrátilo ${odpoved.status}`);
+  return (await odpoved.json()) as T;
+}
+
 /** Kdo jsem podle našeho API — včetně oprávnění. Tím se pozná, že token
  *  neplatí jen u poskytovatele, ale i u nás. */
 export const nactiJa = () => nactiZaSebe<Ja>('/ja');
