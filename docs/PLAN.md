@@ -2050,13 +2050,13 @@ přijímače než loď. Dá se přibalit do příští dávky.
 |---|---|---|
 | **start** | **100 m** | lodě se shlukují a manévrují na velké ploše; takticky je to nejcennější část |
 | **cíl** | **50 m** | dojezd, míň manévrování |
-| ostatní prvky (otočné bóje) | **15 m** | samotná obrátka |
+| ostatní prvky (otočné bóje) | **30 m** | celá obrátka, ne jen její vrchol |
 
-**Otevřené u těch 15 m:** obrátka je oblouk, který bývá širší než bóje —
-loď na ni najíždí a vyjíždí v křivce o poloměru klidně deseti dvaceti metrů.
-Okno 15 m tedy zachytí vrchol manévru, ale ne jeho konec, a při přesnosti
-GPS 5–10 m je to těsné. **Ověřit na prvních skutečných trasách**, jestli
-nestačí spíš 30 m; podle toho, jestli jde o bod obrátky, nebo o celý manévr.
+**Proč u otočné bóje 30 a ne 15 m:** obrátka je oblouk, který bývá širší než
+bóje — loď na ni najíždí a vyjíždí v křivce o poloměru klidně deseti dvaceti
+metrů. Patnáct metrů by zachytilo vrchol manévru, ale ne jeho konec, a při
+přesnosti GPS 5–10 m by to bylo těsné. Filip hodnotu po téhle úvaze
+**zvýšil na 30 m** (21. 10. 2026).
 
 **Filtruje se odesílání, ne zápis.** Místo v telefonu je zadarmo, takže se
 zapisuje po vteřinách a po dojezdu se nahraje všechno — filtr patří jen na
