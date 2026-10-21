@@ -1794,6 +1794,29 @@ dva."* U vícedenní regaty je rozdíl proti předchozímu dni informace, kterou
 samotný počet nedá — posádka o ten telefon nemusí vědět, že přišla. Dá se to
 říct dřív, než odrazí od mola.
 
+### Pozastavení a kde je stav vidět (Filip, 21. 10. 2026)
+
+**Posádka musí umět sledování pozastavit.** *„Je to jako informace o funkčním
+trekování s možností pozastavení — někdy je potřeba soukromí vynutit."*
+
+Je to **jiná věc než ukončení**: trasa pokračuje, jen v ní vznikne díra, a po
+obnovení se pokračuje v téže trase. A je to **jediná páka kolem záznamu,
+kterou neřídí pořadatel** — okna, tvrdý konec i ostříhání jsou v rukou
+organizace, tohle patří tomu, koho se to týká nejvíc.
+
+Při pauze se zastaví **i odběr polohy**, takže telefon polohu ani nedostává.
+Není to „zaznamenáváme, jen to neukazujeme" — to by byla ta výmluva, kterou
+plán odmítá u nočního běhu GPS.
+
+**Kde se stav zapíná a kde je vidět:**
+
+- **Při rozpravě** se udělá prezence a pozapínají se trackery; tím se panel
+  v appce rozsvítí a posádka vidí, jak to jede.
+- **Na rozcestníku** je krátký řádek se stavem, aby se obrazovka Trasa nemusela
+  hledat — a když neběží nic, řádek tam není.
+- **Plný panel** je na obrazovce Trasa jako samostatný oddíl *Sledování*:
+  trasa je výsledek, sledování je stav tady a teď.
+
 ### Co z toho čeká na přihlášení
 
 Všechna tři pravidla výš (loď v regatě, telefon u posádky, okno regaty)
