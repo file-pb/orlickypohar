@@ -76,6 +76,12 @@ services:
       Prevzate__Fotky: "true"
       # Kontakty kapitánů se jednou denně mažou po konci následující sezóny.
       Kontakty__Uklid: "true"
+      # Odesílání upozornění z outboxu přes Expo. Zapnuté schválně hned,
+      # i když zatím žádný telefon registrovaný není: úkol pro odběr, který
+      # nikdo nemá, se odbaví jako hotový, takže fronta nenaroste do zásoby
+      # a čeká se jen na první zaregistrovaný telefon. Vypnuté by se fronta
+      # plnila a nikdo by si toho nevšiml.
+      Upozorneni__Odesilat: "true"
       # Vlastní doména na bucketu. Jednoúrovňová, ze stejného důvodu jako API.
       Fotky__VerejnaAdresa: "https://${APP_NAME}-foto.${PLATFORM_DOMAIN:?}"
       # Co provoz a servis stojí — obrazovka pro správce webu. Čísla počítá

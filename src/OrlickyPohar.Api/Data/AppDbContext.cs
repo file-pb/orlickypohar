@@ -43,6 +43,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Uzivatel> Uzivatele => Set<Uzivatel>();
     public DbSet<UcetVazba> Vazby => Set<UcetVazba>();
     public DbSet<Opravneni> Opravneni => Set<Opravneni>();
+    public DbSet<Features.Upozorneni.Odeslani> Odeslani => Set<Features.Upozorneni.Odeslani>();
+    public DbSet<Features.Upozorneni.Zarizeni> Zarizeni => Set<Features.Upozorneni.Zarizeni>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -407,5 +409,26 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // Totéž právo dvakrát je tichý nepořádek: odebrání jednoho řádku by
         // vypadalo jako odebrání práva, a přitom by dál platilo z druhého.
         opravneni.HasIndex(x => new { x.UzivatelId, x.Role, x.SerieId, x.ZavodId }).IsUnique();
+        // --- Upozornění -----------------------------------------------------
+        var zarizeni = b.Entity<Features.Upozorneni.Zarizeni>();
+        zarizeni.Property(x => x.Token).HasMaxLength(200).IsRequired();
+        // Token je identita zařízení: Expo ho vydá znovu po přeinstalaci,
+        // takže registrace běží při každém spuštění appky. Bez unikátního
+        // indexu by tentýž telefon dostal všechno tolikrát, kolikrát se
+        // zaregistroval.
+        zarizeni.HasIndex(x => x.Token).IsUnique();
+        zarizeni.Property(x => x.Odbery).HasMaxLength(2000).IsRequired();
+
+        var odeslani = b.Entity<Features.Upozorneni.Odeslani>();
+        odeslani.Property(x => x.Odber).HasMaxLength(120).IsRequired();
+        odeslani.Property(x => x.Titulek).HasMaxLength(120).IsRequired();
+        odeslani.Property(x => x.Text).HasMaxLength(400).IsRequired();
+        odeslani.Property(x => x.Cesta).HasMaxLength(300);
+        odeslani.Property(x => x.Chyba).HasMaxLength(500);
+        // Fronta se čte jedním dotazem „co čeká" — index přesně na něj.
+        // Bez něj by se s rostoucí tabulkou odeslaných zpráv procházelo
+        // všechno při každém probuzení úlohy.
+        odeslani.HasIndex(x => new { x.OdeslanoV, x.Vzdano, x.ZkusitPo });
+
     }
 }

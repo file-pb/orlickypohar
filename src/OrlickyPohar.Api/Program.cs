@@ -10,6 +10,7 @@ using OrlickyPohar.Api.Features.Fotky;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Import;
 using OrlickyPohar.Api.Features.Lode;
+using OrlickyPohar.Api.Features.Upozorneni;
 using OrlickyPohar.Api.Features.Naklady;
 using OrlickyPohar.Api.Features.Poradatele;
 using OrlickyPohar.Api.Features.Prevzate;
@@ -99,6 +100,19 @@ try
     // Kontakty kapitánů se drží do konce následující sezóny, pak se mažou.
     if (builder.Configuration.GetValue<bool>("Kontakty:Uklid"))
         builder.Services.AddHostedService<UklidKontaktu>();
+    // Upozornění: zápis do outboxu, evidence zařízení a odesílání přes Expo.
+    // Zápis do fronty běží vždycky — je to jen řádek v téže transakci jako
+    // změna. Odesílá se jen tam, kde je to zapnuté: testy ani vývoj nemají
+    // volat Expo a nezapnutá úloha znamená, že fronta jen roste a čeká.
+    builder.Services.AddScoped<UpozorneniSprava>();
+    builder.Services.AddHttpClient<ExpoPush>(c =>
+    {
+        c.BaseAddress = new Uri("https://exp.host");
+        c.Timeout = TimeSpan.FromSeconds(20);
+        c.DefaultRequestHeaders.UserAgent.ParseAdd("OrlickyPohar/1.0 (+https://orlickypohar.klihovka.cz)");
+    });
+    if (builder.Configuration.GetValue<bool>("Upozorneni:Odesilat"))
+        builder.Services.AddHostedService<OdesilaniUloha>();
     // .NET popisuje čísla jako ["integer","string"], protože je při čtení
     // přijímá i v uvozovkách. Odpovědi je ale píšou vždycky jako čísla —
     // a generovaný klient by jinak u každého bodu nutil ověřovat, jestli
@@ -186,6 +200,7 @@ try
     app.MapPoradi();
     app.MapZavody();
     app.MapClanky();
+    app.MapUpozorneni();
     app.MapImport();
     app.MapVodocet();
     app.MapPrevzate();
