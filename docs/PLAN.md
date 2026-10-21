@@ -1630,6 +1630,35 @@ ručně ťuknout *Pokračovat*, protože iOS appku sám neprobudí. Půlka by na
 zapomněla a odpolední rozjížďky by zůstaly bez trasy. Vypíná se až na konci
 dne; polední pauza v marině není večer v hospodě.
 
+### Kontrola trackerů před procedurou (Filip, 21. 10. 2026)
+
+Filip navrhl proceduru, ne funkci — a to je na tom to cenné, protože se dá
+nacvičit a opakovat každou regatu stejně:
+
+1. Od pořadatele přijde **„all ships tracker check"**.
+2. Posádky zkontrolují, že trackují; **appka to umí sama a při problému
+   pípne**.
+3. Až v seznamu **všichni zezelenají**, pořadatel zahájí proceduru.
+
+*(Filip pro ten okamžik navrhl název „smoke on" podle Red Bull Air Race.)*
+
+**Zelená nemusí být odpověď na dotaz.** Když appky posílají polohy, stačí
+pořadateli **čerstvost**: zelená = poslední bod mladší než minuta. Žádná
+obousměrná komunikace, která by na vodě stejně padala. Aktivní check má ale
+jednu výhodu navíc — **donutí telefon zkusit to teď** místo čekání na další
+interval. Patří tam proto obojí: seznam svítí sám podle čerstvosti a
+tlačítko *tracker check* pošle pobídku.
+
+**Pípnutí při problému je to podstatné.** Posádka se na vodě na telefon
+nedívá. Když tracker přestane posílat, musí si o pozornost říct sám — jinak
+se na to přijde až ve chvíli, kdy pořadatel vidí červenou a shání loď
+vysílačkou. Je to tentýž údaj jako ve stavovém panelu, jen přednesený, aniž
+by se někdo musel dívat.
+
+**Dává to procedurálně smysl i proti zapomenutí:** kontrola proběhne před
+zahájením procedury, tedy ve chvíli, kdy se s tím ještě dá něco dělat. Po
+startu už je pozdě.
+
 ### Stříhání se nesmí trefovat naslepo (Filip, 21. 10. 2026)
 
 Dnešní tlačítka *−15 / −30 / −60 min* jsou slepá: posádka nevidí, do kterého
