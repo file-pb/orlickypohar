@@ -1558,6 +1558,62 @@ zůstat jako záchrana, ne jako jediné řešení.
 **V pilotu je to bezpředmětné** — jeden telefon na loď nemá co odpojovat.
 Patří to ke slučování víc telefonů, tedy za pilot.
 
+### Okno závodního dne se věší na rozpravu (Filip, 21. 10. 2026)
+
+Okno nesmí viset jen na termínové listině: start se posouvá podle větru.
+Pořadatel ho proto otevírá a zavírá sám — a **úkonem, kterým se otevírá, je
+rozprava**. Dělá se tak jako tak, jsou při ní všichni pohromadě a je dost
+dlouho před startem. Druhý den regaty má rozpravu taky.
+
+**Proč navěsit na existující úkon a nedělat nové tlačítko:** každé
+samostatné tlačítko je tlačítko, na které se dá zapomenout — a zapomenutý
+konec dne znamená přesně to sledování po hospodě. Pro konec dne platí totéž:
+má to být úkon, který se stejně odehraje (vyhlášení, uzavření poslední
+rozjížďky), ne zvláštní krok navíc.
+
+Rozprava má i lidskou stránku: je to okamžik, kdy rozhodčí k posádkám mluví,
+takže *„zapněte si trackery"* tam zapadne přirozeně a systém ve stejné
+chvíli otevře okno.
+
+**Start a cíl je příliš těsný ořez** (Filip, 21. 10. 2026). Okno musí mít
+rezervu na obou stranách:
+
+- **Před startem je procedura** — pět minut varování, manévrování u linie,
+  hledání místa. Takticky je z toho na trase vidět víc než z celého zbytku
+  rozjížďky; ořez na výstřel by zahodil to nejcennější.
+- **Po dojezdu je dobré vědět, kde loď je.** To je bezpečnostní rozměr,
+  který plán dosud nikde neměl: **poslední známá poloha lodi, která se
+  nevrátila**, je věc, kterou chcete mít na přehradě za šera nebo ve
+  zhoršeném počasí, i kdyby tracker nikdy nikomu neukázal jedinou
+  rozjížďku. Je to samostatný důvod pro celou tuhle kapitolu.
+
+Konkrétní rezervu nastaví pořadatel; výchozí řádově půlhodina před a hodina
+po. Hranice soukromí zůstává tam, kde má — okno pokryje cestu na pole, závod
+i návrat, ale ne večer.
+
+**Den se dělí na bloky, ne na jeden kus.** U Radavy se po třech rozjížďkách
+jde na oběd a odpoledne se pokračuje. **Přes oběd se tracker nevypíná**
+(Filip: *„na obědě asi nemusíme tracker vypínat"*) — pauza je krátká, lodě
+zůstávají u mola a vypnutí by znamenalo, že po obědě musí čtyřicet posádek
+ručně ťuknout *Pokračovat*, protože iOS appku sám neprobudí. Půlka by na to
+zapomněla a odpolední rozjížďky by zůstaly bez trasy. Vypíná se až na konci
+dne; polední pauza v marině není večer v hospodě.
+
+### Stříhání se nesmí trefovat naslepo (Filip, 21. 10. 2026)
+
+Dnešní tlačítka *−15 / −30 / −60 min* jsou slepá: posádka nevidí, do kterého
+času sáhnou. *„Ten střih bych ještě vyladil, aby nám nestřihli do jízdy."*
+Na houpající se lodi po závodě je to knoflík, kterým si někdo ustřihne
+poslední rozjížďku.
+
+- **Správné řešení je okno závodu:** ostříhat na *start první rozjížďky až
+  dojezd poslední* (plus rezerva výš). Appka ten údaj zná ze serveru a nikdo
+  se nemusí trefovat. Je to tentýž údaj jako pro tvrdý konec záznamu —
+  postaví se jednou, použije dvakrát.
+- **Dokud ho nemá, musí být ruční stříhání čitelné:** místo *−15 min*
+  ukázat konkrétní čas a následek — *„ostříhat vše po 14:32 — smaže 180
+  bodů, trasa skončí u mola"*. Člověk pak vidí, co dělá.
+
 ### Appka musí ukazovat, že to jede (Filip, 21. 10. 2026)
 
 *„V appce je potřeba signalizovat, že máme funkční GPS, že jsme sledováni
