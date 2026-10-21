@@ -224,7 +224,10 @@ export default function DetailTrasy() {
                     if (!v.hotovo && v.zbyva > 0) {
                       Alert.alert('Zbývá doposlat', `${v.zbyva} bodů se nepodařilo odeslat.`);
                     } else if (!v.hotovo) {
-                      Alert.alert('Nepřihlášeno', 'Přihlas se na obrazovce Účet a zkus to znovu.');
+                      Alert.alert(
+                        'Chybí klíč k lodi',
+                        'Telefon není spárovaný s lodí. Naskenuj QR od kapitána na obrazovce Klíč k lodi.',
+                      );
                     }
                   })
                   .catch((e: unknown) =>

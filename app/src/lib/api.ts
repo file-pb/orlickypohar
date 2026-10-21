@@ -4,6 +4,7 @@
 
 import type { components } from "./schema";
 import { token } from './identita';
+import { tajemstvi } from './klic';
 
 const API = process.env.EXPO_PUBLIC_API_URL ?? 'https://orlickypohar-api.klihovka.cz';
 
@@ -98,3 +99,31 @@ export async function posliZaSebe<T>(cesta: string, telo: unknown): Promise<T | 
 /** Kdo jsem podle našeho API — včetně oprávnění. Tím se pozná, že token
  *  neplatí jen u poskytovatele, ale i u nás. */
 export const nactiJa = () => nactiZaSebe<Ja>('/ja');
+
+/**
+ * Zápis za loď, ne za člověka. Telefon se prokazuje mobilním klíčem.
+ *
+ * `null` znamená „tenhle telefon není spárovaný s lodí" (nebo mu klíč
+ * odebrali) — ne chybu. Volající z toho pozná, že má posádku poslat za
+ * kapitánem pro novou pozvánku, ne že se má pokus opakovat.
+ *
+ * Na tom stojí celé nahrávání trasy: posádka účet mít nemusí.
+ */
+export async function posliKlicem<T>(cesta: string, telo: unknown): Promise<T | null> {
+  const k = await tajemstvi();
+  if (!k) return null;
+
+  const odpoved = await fetch(`${API}${cesta}`, {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      'x-klic-lodi': k,
+    },
+    body: JSON.stringify(telo),
+  });
+
+  if (odpoved.status === 401) return null;
+  if (!odpoved.ok) throw new Error(`API ${cesta} vrátilo ${odpoved.status}`);
+  return (await odpoved.json()) as T;
+}
