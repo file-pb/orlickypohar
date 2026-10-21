@@ -2072,12 +2072,26 @@ posádku — ne něco, co by vyplňovala.
 okamžik, kdy se mění, kdo za loď odpovídá — takže k tomu patří i to, že
 dosavadní kapitán práva ztratí.
 
-**Co to znamená pro to, co je hotové:** nahrávání trasy (#371, #372) váže
-body na **přihlášeného uživatele**. Aby posádce stačilo QR, musí API umět
-vydávat a ověřovat **token zařízení** vedle uživatelského. Půl cesty je
-hotových — registrace zařízení pro upozornění už záměrně funguje bez
-přihlášení (plán, *Dvě úrovně upozornění*), takže posílat informace posádce
-bez účtu jde už dnes.
+**Přes token chodí i kapitán** (Filip, 21. 10. 2026). Nahrávání trasy jde
+**vždycky** přes token zařízení, ať telefon drží kdokoli; kapitánův účet
+slouží ke správě lodi, k webu a ke komunikaci, ne k nahrávání.
+
+| | Čím se prokazuje |
+|---|---|
+| nahrávání trasy | **token zařízení**, vždy |
+| správa lodi, web, komunikace | **účet**, jen kapitán |
+
+Je to tentýž argument, jakým plán zdůvodňuje společný tok přihlášení pro web
+i appku: **dvě různé cesty k témuž znamenají dvě místa, kde se dá udělat
+chyba v bezpečnosti.** Kdyby kapitánův telefon nahrával přes účet a
+posádčin přes token, musely by se obě větve ověřovat zvlášť a jedna by se
+časem rozešla.
+
+**Co to znamená pro to, co je hotové:** nahrávání trasy (#371, #372) dnes
+váže body na **přihlášeného uživatele**. Bude je potřeba převést na token
+zařízení. Půl cesty je hotových — registrace zařízení pro upozornění už
+záměrně funguje bez přihlášení (plán, *Dvě úrovně upozornění*), takže
+posílat informace posádce bez účtu jde už dnes.
 
 ### Co je na tom skutečně těžké
 
