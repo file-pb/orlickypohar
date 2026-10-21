@@ -1,10 +1,59 @@
 import { Link, useRouter } from 'expo-router';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
+import { useEffect, useState } from 'react';
+
 import { Chyba, Karta, Nacitani, Nadpis, Prazdno } from '@/components/ui';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
 import { nactiSerie } from '@/lib/api';
+import { predJakDlouho, stavGps, type StavGps } from '@/lib/tracker/stav';
+import { otevrenyZaznam, type Zaznam } from '@/lib/tracker/zaznam';
+
+
+/**
+ * Stav sledování na rozcestníku. Ukáže se jen tehdy, když je co hlásit —
+ * posádka by neměla hledat obrazovku Trasa, aby zjistila, že záznam běží.
+ */
+function Sledovani() {
+  const t = useTheme();
+  const router = useRouter();
+  const [z, setZ] = useState<Zaznam | null>(null);
+  const [gps, setGps] = useState<StavGps | null>(null);
+
+  useEffect(() => {
+    const nacti = () => {
+      const o = otevrenyZaznam();
+      setZ(o);
+      setGps(o ? stavGps(o.id) : null);
+    };
+    nacti();
+    const timer = setInterval(nacti, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
+  if (!z) return null;
+
+  const pozastaveno = z.stav === 'pozastaveny';
+  const cerstve = !pozastaveno && gps?.stariMs != null && gps.stariMs < 20_000;
+  const barva = pozastaveno ? t.text : cerstve ? t.stavVypsany : t.stavZruseny;
+
+  return (
+    <Karta onPress={() => router.push('/tracker')}>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View
+          style={{ width: 9, height: 9, borderRadius: 999, backgroundColor: barva, marginRight: 9 }}
+        />
+        <Text style={{ color: t.text, fontWeight: '600', flex: 1 }}>
+          {pozastaveno ? 'Sledování pozastaveno' : `Sledování · ${z.lod}`}
+        </Text>
+        <Text style={{ color: t.tlumeny, fontSize: 13 }}>
+          {pozastaveno ? `${gps?.pocetBodu ?? 0} bodů` : predJakDlouho(gps?.stariMs ?? null)}
+        </Text>
+      </View>
+    </Karta>
+  );
+}
 
 export default function Rocniky() {
   const t = useTheme();
@@ -16,6 +65,8 @@ export default function Rocniky() {
       contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
       refreshControl={<RefreshControl refreshing={false} onRefresh={obnov} tintColor={t.voda} />}>
       <Nadpis tlumene="Seriál závodů plachetnic na Orlické přehradě">Ročníky</Nadpis>
+
+      <Sledovani />
 
       {nacita ? <Nacitani /> : null}
       {chyba ? <Chyba text={chyba} onZkusZnovu={obnov} /> : null}

@@ -22,7 +22,9 @@ import {
   type Svetlo,
 } from '@/lib/tracker/stav';
 import {
-  bezicZaznam,
+  obnovZaznam,
+  otevrenyZaznam,
+  pozastavZaznam,
   prehled,
   seznamZaznamu,
   smazZaznam,
@@ -40,7 +42,14 @@ import {
  */
 function Radek({ svetlo, popis, hodnota }: { svetlo: Svetlo; popis: string; hodnota: string }) {
   const t = useTheme();
-  const barva = { jede: t.stavVypsany, ceka: t.stavZruseny, stoji: t.tlumeny }[svetlo];
+  const barva = {
+    jede: t.stavVypsany,
+    ceka: t.stavZruseny,
+    stoji: t.tlumeny,
+    // Pozastaveno není porucha, ale ani běh — proto barva textu, ne červená
+    // ani zelená.
+    pozastaveno: t.text,
+  }[svetlo];
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 5 }}>
       <View
@@ -56,10 +65,12 @@ function Panel({
   bezi,
   gps,
   naPozadi,
+  onPrepni,
 }: {
   bezi: Zaznam;
   gps: StavGps;
   naPozadi: boolean;
+  onPrepni: () => void;
 }) {
   const t = useTheme();
   const [propich, setPropich] = useState<string | null>(null);
@@ -94,9 +105,19 @@ function Panel({
         }
       />
       <Radek
-        svetlo={bezi.zdroj === 'simulace' || naPozadi ? 'jede' : 'ceka'}
+        svetlo={
+          bezi.stav === 'pozastaveny'
+            ? 'pozastaveno'
+            : bezi.zdroj === 'simulace' || naPozadi
+              ? 'jede'
+              : 'ceka'
+        }
         popis="Zápis"
-        hodnota={`${gps.pocetBodu} bodů · od ${casAMinuty(bezi.zacatek)}`}
+        hodnota={
+          bezi.stav === 'pozastaveny'
+            ? `pozastaveno · ${gps.pocetBodu} bodů zapsáno`
+            : `${gps.pocetBodu} bodů · od ${casAMinuty(bezi.zacatek)}`
+        }
       />
       {/* Nahrávání pilot nemá, ale řádek tu je schválně: posádka má vidět, že
           se nikam nic neposílá, a ne se to domýšlet z toho, že nic nevidí. */}
@@ -105,6 +126,19 @@ function Panel({
         popis="Odesílání"
         hodnota="zatím nikam — trasa zůstává v telefonu"
       />
+
+      {/* Pozastavení je páka pro posádku, ne pro pořadatele: někdy je potřeba
+          soukromí vynutit. V trase vznikne díra a to je záměr. */}
+      <Pressable onPress={onPrepni} style={{ marginTop: 14 }}>
+        <Text style={{ color: t.voda, fontWeight: '600' }}>
+          {bezi.stav === 'pozastaveny' ? 'Pokračovat ve sledování' : 'Pozastavit sledování'}
+        </Text>
+      </Pressable>
+      {bezi.stav === 'pozastaveny' ? (
+        <Text style={{ color: t.tlumeny, fontSize: 12, marginTop: 4 }}>
+          Trasa se nezahodila — v místě pauzy v ní bude mezera.
+        </Text>
+      ) : null}
 
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, gap: 20 }}>
         <Pressable onPress={() => void zkus()} disabled={propichaSe}>
@@ -145,7 +179,7 @@ export default function Tracker() {
   const simulace = useRef<{ stop: () => void } | null>(null);
 
   const obnov = useCallback(() => {
-    const z = bezicZaznam();
+    const z = otevrenyZaznam();
     setBezi(z);
     setSouhrn(z ? prehled(z.id) : null);
     if (z) setGps(stavGps(z.id));
@@ -167,6 +201,29 @@ export default function Tracker() {
     }, 2000);
     return () => clearInterval(timer);
   }, [obnov]);
+
+  function prepniSledovani() {
+    const z = otevrenyZaznam();
+    if (!z) return;
+    if (z.stav === 'pozastaveny') {
+      obnovZaznam(z.id);
+      if (z.zdroj === 'gps') {
+        void spustZaznamNaPozadi().catch((e: unknown) =>
+          Alert.alert('Nešlo pokračovat', e instanceof Error ? e.message : String(e)),
+        );
+      } else {
+        simulace.current = spustSimulaci(z.id);
+      }
+    } else {
+      pozastavZaznam(z.id);
+      // Odběr polohy se zastaví, aby při pauze nejela GPS. Není to jen
+      // „nezapisujeme" — telefon polohu ani nedostává.
+      simulace.current?.stop();
+      simulace.current = null;
+      void zastavZaznamNaPozadi().catch(() => {});
+    }
+    obnov();
+  }
 
   async function spust(zdroj: 'gps' | 'simulace') {
     const jmeno = lod.trim();
@@ -321,7 +378,7 @@ export default function Tracker() {
       {bezi ? (
         <>
           <Sekce>Sledování</Sekce>
-          <Panel bezi={bezi} gps={gps} naPozadi={naPozadi} />
+          <Panel bezi={bezi} gps={gps} naPozadi={naPozadi} onPrepni={prepniSledovani} />
         </>
       ) : null}
 
