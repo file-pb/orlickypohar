@@ -899,6 +899,28 @@ def proc_pipnuti_nejde(vstup):
     return None
 
 
+# Trasy nahrané z appky. Klíč je (uživatel, lokální id z telefonu) — mock
+# drží tutéž jedinečnost jako databáze, jinak by idempotenci nešlo vyzkoušet
+# a mock by lhal zrovna v té vlastnosti, na které nahrávání stojí.
+TRASY = {}
+
+
+def trasa_dto(t):
+    body = t["body"]
+    return {
+        "lokalniId": t["lokalniId"],
+        "lod": t["lod"],
+        "regata": t.get("regata"),
+        "zdroj": t["zdroj"],
+        "zacatek": t["zacatek"],
+        "konec": t.get("konec"),
+        "pocetBodu": len(body),
+        "posunMs": t.get("posunMs"),
+        "dokoncena": t.get("dokoncena", False),
+        "posledniBod": max(body) if body else None,
+    }
+
+
 def boje_dto(b):
     """Co z bóje vidí klient — `BojeDto`. Přenastavenou od platné nerozliší."""
     return {**{k: b[k] for k in
@@ -2264,6 +2286,87 @@ class H(BaseHTTPRequestHandler):
         VAZBY.remove(vazba)
         return self._prazdna_odpoved()
 
+    def zaloz_trasu(self):
+        """
+        Založí trasu, nebo vrátí tu, která pod tímtéž lokálním identifikátorem
+        už existuje.
+
+        <b>Idempotence není pohodlí, je to podstata.</b> Na vodě signál padá
+        a appka nahrání zopakuje; kdyby mock pokaždé založil novou trasu,
+        vypadalo by to, že to funguje, a na skutečném API by se trasy
+        zdvojily. Mock proto drží tutéž jedinečnost jako databáze.
+        """
+        kdo = self.prihlaseny()
+        if not kdo:
+            return self.send_error(401)
+
+        t = self.telo_zadosti() or {}
+        lokalni = (t.get("lokalniId") or "").strip()
+        lod = (t.get("lod") or "").strip()
+        if not lokalni:
+            return self.chyba(400, "Identifikátor trasy z telefonu chybí.")
+        # Jméno lodi je povinné schválně: přejímací podmínka č. 6 je telefon
+        # přiřazený ke špatné lodi.
+        if not lod:
+            return self.chyba(400, "Jméno lodi chybí.")
+
+        klic = (kdo["id"], lokalni)
+        if klic not in TRASY:
+            TRASY[klic] = {
+                "lokalniId": lokalni,
+                "lod": lod,
+                "regata": (t.get("regata") or "").strip() or None,
+                "zdroj": t.get("zdroj", "Gps"),
+                "zacatek": t.get("zacatek"),
+                "konec": None,
+                "posunMs": 0,
+                "dokoncena": False,
+                "body": {},
+            }
+        return self.odpoved(trasa_dto(TRASY[klic]))
+
+    def pridej_body(self, lokalni):
+        """
+        Přijme dávku. Body, které už pod svým pořadovým číslem dorazily, se
+        přeskočí — opakované poslání téže dávky tedy nic nezdvojí.
+        """
+        kdo = self.prihlaseny()
+        if not kdo:
+            return self.send_error(401)
+        t = TRASY.get((kdo["id"], lokalni))
+        if not t:
+            return self.send_error(404)
+
+        prichozi = self.telo_zadosti() or []
+        prijato = 0
+        for b in prichozi:
+            cislo = b.get("lokalniId")
+            if cislo is None or cislo in t["body"]:
+                continue
+            t["body"][cislo] = b
+            prijato += 1
+
+        return self.odpoved({
+            "prijato": prijato,
+            "preskoceno": len(prichozi) - prijato,
+            "posledniBod": max(t["body"]) if t["body"] else None,
+        })
+
+    def dokonci_trasu(self, lokalni):
+        """Uzavře nahrávání. Do té doby je trasa rozdělaná a smí se doposílat."""
+        kdo = self.prihlaseny()
+        if not kdo:
+            return self.send_error(401)
+        t = TRASY.get((kdo["id"], lokalni))
+        if not t:
+            return self.send_error(404)
+
+        t["dokoncena"] = True
+        konec = (self.telo_zadosti() or {}).get("konec")
+        if konec:
+            t["konec"] = konec
+        return self.odpoved(trasa_dto(t))
+
     def pripoj_se(self):
         """Uplatnění kódu. Propadlý a vymyšlený musí dát tutéž odpověď."""
         kdo = self.prihlaseny()
@@ -2453,6 +2556,13 @@ class H(BaseHTTPRequestHandler):
 
     def do_PUT(self):
         cesta = urlparse(self.path).path
+
+        if cesta == "/trasy":
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            return self.odpoved(sorted(
+                (trasa_dto(t) for t in TRASY.values()),
+                key=lambda t: t["zacatek"], reverse=True))
 
         # <b>Registrace zařízení je bez přihlášení</b> — veřejná upozornění
         # nesmějí vyžadovat účet (plán, *Dvě úrovně upozornění*). Proto
@@ -3363,6 +3473,19 @@ class H(BaseHTTPRequestHandler):
         # Osobní cesty. Stojí první, protože nepatří pod ročník.
         if not self.headers.get("authorization") and cesta.startswith("/ja"):
             return self.send_error(401)
+        if cesta == "/trasy":
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            return self.zaloz_trasu()
+        if (m := re.match(r'^/trasy/([A-Za-z0-9_-]+)/body$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            return self.pridej_body(m.group(1))
+        if (m := re.match(r'^/trasy/([A-Za-z0-9_-]+)/dokonceno$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            return self.dokonci_trasu(m.group(1))
+
         if cesta == "/ja/pripojeni":
             return self.pripoj_se()
         if cesta == "/ja/naroky":
