@@ -95,12 +95,16 @@ function Panel({
       />
       <Radek
         svetlo={bezi.zdroj === 'simulace' || naPozadi ? 'jede' : 'ceka'}
-        popis="Záznam"
+        popis="Zápis"
         hodnota={`${gps.pocetBodu} bodů · od ${casAMinuty(bezi.zacatek)}`}
       />
       {/* Nahrávání pilot nemá, ale řádek tu je schválně: posádka má vidět, že
           se nikam nic neposílá, a ne se to domýšlet z toho, že nic nevidí. */}
-      <Radek svetlo="stoji" popis="Server" hodnota="nahrávání zatím není, trasa zůstává v telefonu" />
+      <Radek
+        svetlo="stoji"
+        popis="Odesílání"
+        hodnota="zatím nikam — trasa zůstává v telefonu"
+      />
 
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, gap: 20 }}>
         <Pressable onPress={() => void zkus()} disabled={propichaSe}>
@@ -312,7 +316,14 @@ export default function Tracker() {
         </Karta>
       ) : null}
 
-      {bezi ? <Panel bezi={bezi} gps={gps} naPozadi={naPozadi} /> : null}
+      {/* Sledování je jiná otázka než trasa: trasa je výsledek, tohle je stav
+          tady a teď. Proto vlastní nadpis a ne přílepek ke kartě záznamu. */}
+      {bezi ? (
+        <>
+          <Sekce>Sledování</Sekce>
+          <Panel bezi={bezi} gps={gps} naPozadi={naPozadi} />
+        </>
+      ) : null}
 
       {!bezi ? (
         <Karta>
