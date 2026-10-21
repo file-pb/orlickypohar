@@ -1949,12 +1949,11 @@ a jedna dvoufázová (`app/testy/README.md` rozepisuje obojí):
 Dvacetičtyřhodinovka po 5 s je 17 280 bodů; zápis i přehled nad nimi jsou
 v desítkách milisekund. Je to číslo o našem SQL, ne o výkonu na telefonu.
 
-**Co prokázané není.** Podmínka 1 (zamčený telefon, spotřeba) a druhá
-polovina podmínky 2 — tedy že záznam po zabití appky **pokračuje** — chtějí
-fyzický telefon a APK; úloha na pozadí je napsaná, ale **nevyzkoušená**, což
-je stejná poznámka, jakou nese přihlášení. Podmínky 3 a 4 (výpadek,
-doposlání, přerušené nahrání) pilot zatím nemá co splnit, protože nahrávání
-na server nemá — a mít ho nemůže, dokud není vyzkoušené přihlášení.
+**Co prokázané není** (stav k 21. 10. 2026): zbývá **podmínka 1** — zamčený
+telefon a spotřeba. Ta se nezměří jinak než hodinou až dvěma se zamčeným
+telefonem na skutečné trase.
+
+Zbytek se 21. 10. pohnul; viz *Pilot k 21. 10. 2026* níž.
 
 **Nativně se appka na vývojovém Macu nespustí vůbec** (ověřeno 20. 10.
 2026): `xcode-select -p` ukazuje jen `/Library/Developer/CommandLineTools`,
@@ -2003,6 +2002,61 @@ simulace a první skutečný záznam ukážou — ne naopak. **V dubnu 2027 se
 ročník 2027 smaže a naimportuje znovu** jako při importu, aby se do debutu
 šlo s čistými daty; proto to třetí rozhodnutí o lokálních identifikátorech
 výš.
+
+### Pilot k 21. 10. 2026
+
+Den, ve kterém se pilot posunul z „lokálního záznamu" na „čtyři z šesti
+přejímacích podmínek".
+
+**Záznam na pozadí je změřený.** iPhone, Release build, zhasnutý displej:
+**148 bodů za 12,1 minuty** při nastavených 5 s. Očekávaných bylo zhruba
+145, takže záznam běžel **souvisle a bez díry** — kdyby iOS GPS uspal nebo
+appku přiškrtil, bylo by to v tom čísle vidět. Baterka se za tu dobu
+nehnula.
+
+**Přihlášení funguje** (podrobně v *Přihlášení v appce funguje*). Tím padla
+blokace nahrávání.
+
+**Nahrávání je hotové na obou stranách.** Server (`Features/Trasy/`) i appka
+(`app/src/lib/tracker/nahravani.ts`). Celé stojí na jedné větě: **nic není
+odeslané, dokud to server nepotvrdí.** Trasa se pozná podle identifikátoru
+z telefonu, bod podle pořadového čísla, a obojí hlídá **jedinečný index
+v databázi** — ne rozvaha v kódu, protože dvě souběžná nahrání by ji
+obešla. Hranice potvrzeného se posouvá jen podle odpovědi serveru, nikdy
+podle toho, co se odeslalo.
+
+| Podmínka | Stav k 21. 10. 2026 |
+|---|---|
+| 1 — zamčený telefon, spotřeba | **chybí měření**; 12 minut je pod rozlišením ukazatele |
+| 2 — zabitá appka | zapsaná část přežije konec procesu (test); záznam na pozadí jede souvisle (změřeno) |
+| 3 — výpadek a doposlání | **hotovo** — idempotentní nahrávání, ověřeno testem s výpadkem uprostřed |
+| 4 — přerušené nahrání | **hotovo** — stav v SQLite, dokončí se i po restartu appky |
+| 5 — zapomenutý záznam | ostříhání maže doopravdy; tlačítka ukazují cílový čas a kolik bodů zmizí |
+| 6 — špatná loď | jméno lodi povinné a potvrzené při startu |
+
+**Co appka umí navíc proti ránu:** stavový panel s čerstvostí místo
+kontrolky, propíchnutí (skutečný pokus o polohu s dobou odpovědi),
+pozastavení sledování posádkou, stav i na rozcestníku.
+
+**Co zbývá do přejímky:** změřit spotřebu. A pak to, co není technické —
+účet u Applu, bez kterého se appka na telefony posádek nedostane.
+
+### Registrace posádek: účty ano, ale na dvě ťuknutí (Filip, 21. 10. 2026)
+
+*„Registrace je neodradí, jen to musíme udělat co nejjednodušší."* Pilot
+tedy **nepotřebuje bezúčtové párování** přes token zařízení, které plán
+zvažoval; zůstávají účty, jen se zkrátí cesta k nim.
+
+1. **Sociální přihlášení** (Google **i** Apple). Posádka neklepe e-mail ani
+   heslo, jen potvrdí účet, který v telefonu má. Apple vyžaduje, aby appka
+   nabízející jiné sociální přihlášení nabídla i Sign in with Apple — takže
+   obojí. Je to konfigurace u poskytovatele, kód appky se nemění.
+2. **QR, který rovnou páruje.** Kódy a párování s lodí systém má od 5. 10.,
+   jen se kód opisuje. QR by nesl `orlickypohar://pripojeni?kod=…`; appka se
+   po naskenování otevře, případně nejdřív přihlásí, a hned páruje.
+
+Výsledek: **naskenuj QR → potvrď účet → telefon patří lodi.** Zapadá to do
+check-inu na rozpravě, kde jsou stejně všichni pohromadě.
 
 ### Co je na tom skutečně těžké
 
