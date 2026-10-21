@@ -1659,6 +1659,22 @@ by se někdo musel dívat.
 zahájením procedury, tedy ve chvíli, kdy se s tím ještě dá něco dělat. Po
 startu už je pozdě.
 
+**Totéž patří na rozpravu, jako check-in** (Filip, 21. 10. 2026) — *„my
+i oni"*, tedy oboustranně: pořadatel vidí, kdo dorazil, posádka vidí, že je
+odbavená. Jsou to dvě kontroly v různých okamžicích a každá odpovídá na
+jinou otázku:
+
+| Kdy | Co se ptá | Proč tam |
+|---|---|---|
+| **rozprava — check-in** | „jsme tu a máme funkční tracker" | organizační; je **čas problém vyřešit** — doinstalovat appku, zapnout oprávnění, půjčit telefon |
+| **před procedurou — tracker check** | „posílá to teď" | provozní, vteřinová záležitost těsně před startem |
+
+Check-in na rozpravě má hodnotu i mimo tracker: **je to prezence**, která se
+dnes dělá na papíře nebo podle toho, koho rozhodčí vidí. Tím se z něj stává
+úkon, který pořadatel dělá kvůli sobě, a kontrola trackeru se na něj jen
+sveze — což je přesně ten druh návrhu, který přežije, protože nikoho nestojí
+krok navíc.
+
 ### Stříhání se nesmí trefovat naslepo (Filip, 21. 10. 2026)
 
 Dnešní tlačítka *−15 / −30 / −60 min* jsou slepá: posádka nevidí, do kterého
