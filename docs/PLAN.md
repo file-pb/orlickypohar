@@ -2057,11 +2057,23 @@ důvěra, stejná jako když někdo dá klíč od loděnice.
 **Telefon se tím stane mobilním klíčem** k lodi — v appce i na webu. Není to
 přihlášení, je to oprávnění: *tenhle telefon patří k téhle lodi*.
 
-**Klíč říká kdo, okno říká kdy.** Klíč platí k lodi trvale, protože posádka
-se přes sezónu nemění každý závod a párovat se před každou regatou by byl
-přesně ten opruz, kterému se máme vyhnout. Kdy se smí zaznamenávat, řeší
-okna regaty (viz *Okno závodního dne se věší na rozpravu*). Kapitán klíč
-odebere, když někdo z posádky odejde.
+**Klíč říká kdo, okno říká kdy.** Klíč platí k lodi **trvale** — dokud
+člověk neodejde nebo ho kapitán nevyndá. Posádka se přes sezónu nemění
+každý závod a párovat se před každou regatou by byl přesně ten opruz,
+kterému se máme vyhnout. Kdy se smí zaznamenávat, řeší okna regaty (viz
+*Okno závodního dne se věší na rozpravu*).
+
+**Odebrat jde ve dvou krocích, a to je podstatné** (Filip, 21. 10. 2026):
+
+| | Co to udělá | Kdy |
+|---|---|---|
+| **odepnout z trackingu** | telefon přestane posílat, člověk v posádce zůstane | tuhle regatu nejede, nebo odjel po prvním dni domů |
+| **odebrat z posádky** | klíč zaniká | odešel nadobro |
+
+To dočasné je důležitější, než vypadá: řeší past *„telefon, který zůstal
+v autě"*, aniž by se musel někdo příští závod párovat znovu. A sám člen
+posádky se smí odepnout taky — kdo odjíždí, vypne si to sám a není odkázaný
+na to, že na něj někdo nezapomene.
 
 **Účet má hodnotu jen pro komunikaci a identitu** (Filip): bez něj není kam
 poslat *„start se odkládá o hodinu"* a nedá se rozlišit, kdo je na které
