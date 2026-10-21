@@ -5,7 +5,12 @@
 import { databaze, noveId } from './db';
 
 export type Zdroj = 'gps' | 'simulace';
-export type Stav = 'bezi' | 'ukonceny';
+/**
+ * `pozastaveny` není totéž co `ukonceny`: trasa pokračuje, jen v ní vznikne
+ * díra. Je to páka pro posádku — jediná věc kolem záznamu, kterou neřídí
+ * pořadatel, ale ten, koho se to týká. Někdy je potřeba soukromí vynutit.
+ */
+export type Stav = 'bezi' | 'pozastaveny' | 'ukonceny';
 
 export type Zaznam = {
   id: string;
@@ -37,6 +42,25 @@ export function bezicZaznam(): Zaznam | null {
   return databaze().getFirstSync<Zaznam>("SELECT * FROM zaznam WHERE stav = 'bezi' LIMIT 1");
 }
 
+/**
+ * Záznam, který běží **nebo je pozastavený** — tedy ten, ke kterému se posádka
+ * ještě vrátí. Úloha na pozadí si naopak hlídá jen `bezicZaznam`, takže se
+ * pozastavením sama odmlčí a přestane číst polohu.
+ */
+export function otevrenyZaznam(): Zaznam | null {
+  return databaze().getFirstSync<Zaznam>(
+    "SELECT * FROM zaznam WHERE stav IN ('bezi', 'pozastaveny') ORDER BY zacatek DESC LIMIT 1",
+  );
+}
+
+export function pozastavZaznam(id: string) {
+  databaze().runSync("UPDATE zaznam SET stav = 'pozastaveny' WHERE id = ? AND stav = 'bezi'", [id]);
+}
+
+export function obnovZaznam(id: string) {
+  databaze().runSync("UPDATE zaznam SET stav = 'bezi' WHERE id = ? AND stav = 'pozastaveny'", [id]);
+}
+
 export function zaznam(id: string): Zaznam | null {
   return databaze().getFirstSync<Zaznam>('SELECT * FROM zaznam WHERE id = ?', [id]);
 }
@@ -53,8 +77,14 @@ export function seznamZaznamu(): Zaznam[] {
  */
 export function zalozZaznam(vstup: { lod: string; regata?: string | null; zdroj: Zdroj }): string {
   const d = databaze();
-  const bezi = bezicZaznam();
-  if (bezi) throw new Error('Jeden záznam už běží. Ukonči ho, než začneš další.');
+  const otevreny = otevrenyZaznam();
+  if (otevreny) {
+    throw new Error(
+      otevreny.stav === 'pozastaveny'
+        ? 'Jeden záznam je pozastavený. Ukonči ho, než začneš další.'
+        : 'Jeden záznam už běží. Ukonči ho, než začneš další.',
+    );
+  }
 
   const id = noveId();
   d.runSync(
@@ -113,6 +143,7 @@ export function zapisBody(zaznamId: string, body: NovyBod[]): number {
 }
 
 export function ukonciZaznam(id: string, konec = Date.now()) {
+  // Ukončit jde i pozastavený záznam — proto bez podmínky na stav.
   databaze().runSync("UPDATE zaznam SET stav = 'ukonceny', konec = ? WHERE id = ?", [konec, id]);
 }
 

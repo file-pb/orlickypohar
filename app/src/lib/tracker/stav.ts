@@ -48,7 +48,7 @@ export function stavGps(zaznamId: string): StavGps {
   };
 }
 
-export type Svetlo = 'jede' | 'ceka' | 'stoji';
+export type Svetlo = 'jede' | 'ceka' | 'stoji' | 'pozastaveno';
 
 /**
  * Barva řádku v panelu. Schválně tři stavy, ne dva: „čeká" je situace, kdy
@@ -56,6 +56,9 @@ export type Svetlo = 'jede' | 'ceka' | 'stoji';
  * rozbité, a posádka se podle toho zachová jinak než u „stojí".
  */
 export function svetloGps(z: Zaznam | null, s: StavGps): Svetlo {
+  // Pozastavení je vědomé rozhodnutí posádky, ne porucha — nesmí vypadat
+  // stejně jako „nic nechodí".
+  if (z?.stav === 'pozastaveny') return 'pozastaveno';
   if (!z || z.stav !== 'bezi') return 'stoji';
   if (s.stariMs == null || s.stariMs > PODEZRELE_MS) return 'ceka';
   return 'jede';

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {
-  body, bezicZaznam, kolikByZmizelo, ostrihej, prehled, smazZaznam, ukonciZaznam,
-  zalozZaznam, zapisBody,
+  body, bezicZaznam, kolikByZmizelo, obnovZaznam, ostrihej, otevrenyZaznam,
+  pozastavZaznam, prehled, smazZaznam, ukonciZaznam, zalozZaznam, zapisBody,
 } from '../src/lib/tracker/zaznam.ts';
 import { predJakDlouho, stavGps, svetloGps } from '../src/lib/tracker/stav.ts';
 import { slozGpx } from '../src/lib/tracker/gpx.ts';
@@ -168,6 +168,55 @@ await (async () => {
   ukonciZaznam(id); smazZaznam(id);
 })();
 
+console.log('Pozastavení sledování');
+zkus('pozastavený záznam zmizí úloze na pozadí, ale posádce zůstane', () => {
+  uklid();
+  const id = zalozZaznam({ lod: 'LUNA', zdroj: 'gps' });
+  pozastavZaznam(id);
+
+  // Tohle je ta podstatná vlastnost: úloha na pozadí si hlídá bezicZaznam,
+  // takže se při pauze sama odmlčí a přestane číst polohu.
+  assert.equal(bezicZaznam(), null, 'úloha nesmí pozastavený záznam najít');
+  assert.equal(otevrenyZaznam()?.id, id, 'posádce ale zůstane');
+  assert.equal(otevrenyZaznam()?.stav, 'pozastaveny');
+
+  obnovZaznam(id);
+  assert.equal(bezicZaznam()?.id, id, 'po obnovení ho úloha najde zase');
+  ukonciZaznam(id); smazZaznam(id);
+});
+
+zkus('během pauzy nejde založit další záznam', () => {
+  uklid();
+  const id = zalozZaznam({ lod: 'LUNA', zdroj: 'gps' });
+  pozastavZaznam(id);
+  assert.throws(() => zalozZaznam({ lod: 'PEZI', zdroj: 'gps' }), /pozastaven/);
+  ukonciZaznam(id); smazZaznam(id);
+});
+
+zkus('pauza nezahodí body a po obnovení se pokračuje v téže trase', () => {
+  uklid();
+  const id = zalozZaznam({ lod: 'LUNA', zdroj: 'gps' });
+  zapisBody(id, [{ sirka: 49.5, delka: 14.1, casGps: T0 }]);
+  pozastavZaznam(id);
+  assert.equal(prehled(id).pocetBodu, 1, 'pauza nesmí nic smazat');
+  obnovZaznam(id);
+  zapisBody(id, [{ sirka: 49.6, delka: 14.2, casGps: T0 + 600_000 }]);
+  const p = prehled(id);
+  assert.equal(p.pocetBodu, 2, 'pokračuje se v téže trase');
+  // Mezera po pauze je záměr: trasa má díru, ne vymyšlenou spojnici.
+  assert.equal(p.posledni! - p.prvni!, 600_000);
+  ukonciZaznam(id); smazZaznam(id);
+});
+
+zkus('ukončit jde i pozastavený záznam', () => {
+  uklid();
+  const id = zalozZaznam({ lod: 'LUNA', zdroj: 'gps' });
+  pozastavZaznam(id);
+  ukonciZaznam(id);
+  assert.equal(otevrenyZaznam(), null, 'po ukončení není co otevřít');
+  smazZaznam(id);
+});
+
 console.log('Stav pro posádku');
 zkus('stav GPS ukazuje poslední bod, jeho stáří a přesnost', () => {
   uklid();
@@ -199,6 +248,9 @@ zkus('světlo rozliší jede, čeká a stojí', () => {
   const z2 = bezicZaznam()!;
   zapisBody(id2, [{ sirka: 49.5, delka: 14.1, casGps: Date.now() - 120_000 }]);
   assert.equal(svetloGps(z2, stavGps(id2)), 'ceka', 'bod starý dvě minuty');
+
+  // Pozastavení je vědomé rozhodnutí, ne porucha — nesmí vypadat jako „čeká".
+  assert.equal(svetloGps({ ...z2, stav: 'pozastaveny' }, stavGps(id2)), 'pozastaveno');
 
   ukonciZaznam(id2);
   assert.equal(svetloGps({ ...z2, stav: 'ukonceny' }, stavGps(id2)), 'stoji');
