@@ -29,8 +29,13 @@ public class KliceTests(PostgresFixture fixture)
     private static async Task<(Guid Kapitan, int LodId)> LodSKapitanemAsync(AppDbContext db)
     {
         var u = new Uzivatel { Id = Guid.NewGuid(), Zobrazovane = "Kapitán" };
-        var lod = new Lod { Nazev = $"LUNA {Guid.NewGuid():N}"[..20] };
+        var osoba = new Osoba { Jmeno = "Majitel", Prijmeni = "Testovací" };
         db.Uzivatele.Add(u);
+        db.Osoby.Add(osoba);
+        await db.SaveChangesAsync();
+
+        // Loď musí mít majitele, MajitelId není nullable.
+        var lod = new Lod { Nazev = $"LUNA {Guid.NewGuid():N}"[..20], MajitelId = osoba.Id };
         db.Lode.Add(lod);
         await db.SaveChangesAsync();
 

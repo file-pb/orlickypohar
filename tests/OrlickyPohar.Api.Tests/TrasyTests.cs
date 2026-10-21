@@ -36,8 +36,13 @@ public class TrasyTests(PostgresFixture fixture)
     private static async Task<KlicLodi> KlicAsync(AppDbContext db, string znacka)
     {
         var u = new Uzivatel { Id = Guid.NewGuid(), Zobrazovane = $"Kapitán {znacka}" };
+        var osoba = new Osoba { Jmeno = "Majitel", Prijmeni = znacka };
         db.Uzivatele.Add(u);
-        var lod = new Lod { Nazev = $"LUNA {znacka} {Guid.NewGuid():N}"[..20] };
+        db.Osoby.Add(osoba);
+        await db.SaveChangesAsync();
+
+        // Loď musí mít majitele, MajitelId není nullable.
+        var lod = new Lod { Nazev = $"LUNA {znacka} {Guid.NewGuid():N}"[..20], MajitelId = osoba.Id };
         db.Lode.Add(lod);
         await db.SaveChangesAsync();
 
