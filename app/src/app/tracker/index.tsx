@@ -16,6 +16,7 @@ import {
   bezicZaznam,
   prehled,
   seznamZaznamu,
+  smazZaznam,
   ukonciZaznam,
   zalozZaznam,
   type Prehled,
@@ -46,12 +47,16 @@ export default function Tracker() {
 
   useEffect(() => {
     obnov();
-    void bezinaPozadi().then(setNaPozadi);
+    void bezinaPozadi()
+      .then(setNaPozadi)
+      .catch(() => setNaPozadi(false));
     // Stav se čte z databáze, ne z paměti — po restartu procesu je to jediné
     // místo, kde se o běžícím záznamu dá dozvědět.
     const timer = setInterval(() => {
       obnov();
-      void bezinaPozadi().then(setNaPozadi);
+      void bezinaPozadi()
+      .then(setNaPozadi)
+      .catch(() => setNaPozadi(false));
     }, 2000);
     return () => clearInterval(timer);
   }, [obnov]);
@@ -89,18 +94,37 @@ export default function Tracker() {
         { text: 'Zrušit', style: 'cancel' },
         {
           text: 'Je to správná loď',
-          onPress: () => {
+          onPress: async () => {
+            let id: string;
             try {
-              const id = zalozZaznam({ lod: jmeno, regata: regata.trim() || null, zdroj });
-              if (zdroj === 'gps') {
-                void spustZaznamNaPozadi();
-              } else {
-                simulace.current = spustSimulaci(id);
-              }
-              obnov();
+              id = zalozZaznam({ lod: jmeno, regata: regata.trim() || null, zdroj });
             } catch (e) {
               Alert.alert('Nešlo to', e instanceof Error ? e.message : String(e));
+              return;
             }
+
+            if (zdroj === 'simulace') {
+              simulace.current = spustSimulaci(id);
+              obnov();
+              return;
+            }
+
+            try {
+              await spustZaznamNaPozadi();
+            } catch (e) {
+              // Záznam, který se tváří, že běží, a přitom nic nezapisuje, je
+              // horší než žádný — posádka by se na něj celý závod spoléhala.
+              // Proto se po selhání startu zahodí.
+              ukonciZaznam(id);
+              smazZaznam(id);
+              obnov();
+              Alert.alert(
+                'Záznam nezačal',
+                `${e instanceof Error ? e.message : String(e)}\n\nV Expo Go to je očekávané — poloha na pozadí tam není. Zkoušej to v APK nebo ve vlastním buildu.`,
+              );
+              return;
+            }
+            obnov();
           },
         },
       ],
@@ -118,7 +142,7 @@ export default function Tracker() {
           onPress: () => {
             simulace.current?.stop();
             simulace.current = null;
-            void zastavZaznamNaPozadi();
+            void zastavZaznamNaPozadi().catch(() => {});
             ukonciZaznam(z.id);
             obnov();
           },
@@ -128,7 +152,7 @@ export default function Tracker() {
           onPress: () => {
             simulace.current?.stop();
             simulace.current = null;
-            void zastavZaznamNaPozadi();
+            void zastavZaznamNaPozadi().catch(() => {});
             ukonciZaznam(z.id);
             obnov();
             router.push(`/tracker/${z.id}`);
