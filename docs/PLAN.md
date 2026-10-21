@@ -2166,6 +2166,51 @@ přesně ve chvíli, kdy je potřeba nejvíc.
 | povýšení | když hlavní mlčí déle než minutu, server bere další v pořadí; jeho appka zrychlí, až chytí signál |
 | pořadí | určuje kapitán; výchozí je pořadí, v jakém se telefony přihlásily |
 
+**Jak se pozná, kdo na lodi není** (Filip, 21. 10. 2026)
+
+Původní pravidlo — *ignorovat zdroj vzdálený od ostatních víc než pár set
+metrů* — potřebuje upřesnit, proti čemu se ta vzdálenost měří.
+
+**Referencí je shluk, ne kapitán.** Těžiště se počítá jako **medián** poloh
+telefonů té lodi, aby jeden ulítlý bod netáhl výsledek. Kdo je od něj dál
+než pár set metrů **souvisle několik minut**, přestane se započítávat.
+Kapitán má hlas jako ostatní: *„i kapitán může mít výpadky nebo chyby"* —
+kdyby byl jedinou referencí, jeho vybitá baterka by vyhodila celou posádku.
+
+**Mlčení není vzdálenost.** Telefon, který nehlásí, není mimo loď — jen
+mlčí. Když přestane posílat celá loď, je to výpadek signálu, ne rozprchlá
+posádka. Vyhodnocuje se jen to, co přišlo.
+
+**Dva zdroje se medián rozsoudit nepokusí**, protože leží mezi nimi a oba
+jsou od něj stejně daleko. Rozhodne až **obrys nádrže**: zdroj mimo zátopu
+není na lodi, ať ho drží kdokoli. Filipův případ *„jeden na vodě a kapitán
+na suchu"* tím padá sám. Obrys už v repu je (`tools/obrys-nadrze.py` →
+`web/lib/orlik-obrys.ts`), protože se nemění.
+
+**Pohyb je třetí hlas.** Plachetnice jede dvě až pět uzlů a mění kurz; auto
+drží směr a dělá padesát, člověk v hospodě stojí. Rychlost i kurz se u bodu
+ukládají.
+
+**Obrys ale není tvrdá hranice:** mola a startovní linie jsou u břehu, takže
+to chce toleranci desítek metrů, a hladina kolísá. Je to hlas do
+vyhodnocení, ne rozsudek.
+
+**A automatika nesmí nic zrušit.** Jsou to dvě různé věci, které vypadají
+stejně:
+
+| | Kdo | Vratné |
+|---|---|---|
+| **nezapočítat zdroj do trasy** | systém, automaticky | ano — vrátí se do shluku a zase se počítá |
+| **odepnout ze sledování** | kapitán, pořadatel, nebo sám člen | ne, dokud to někdo nezapne |
+
+Automatika tedy jen přestane věřit poloze při skládání trasy. Klíč nechá
+být, nic nemaže. Za touhle hranicí by se z pomocníka stal rozhodčí — a smysl
+je opačný: **nevytvářet falešné pozice o lodi**.
+
+**Při jednom telefonu se nevyhodnocuje vůbec**, což je případ celého pilotu.
+Čísla výš (pár set metrů, několik minut, desítky metrů tolerance) jsou
+výchozí odhad **k ověření na prvních skutečných trasách**.
+
 **Dvě pasti:**
 
 1. **Telefon, který zůstal v autě.** Posílá se jen z telefonu, kde posádka
