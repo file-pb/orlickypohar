@@ -1503,9 +1503,9 @@ soupeřit o hodiny se stavy trati.
 **Vyvíjí se pro obě platformy, iOS se zkouší v simulátoru, účet u Applu se
 nekupuje** (Filip, 9. 10. 2026: *„postav to i pro Apple, já to zatím budu
 spouštět v simulátoru, ale vyvinuté to mít budeme pro obě platformy"*). Dev
-build pro simulátor se nepodepisuje, takže na něj účet potřeba není;
-`app.json` k tomu zatím nemá ani oddíl `ios` s `bundleIdentifier` — má jen
-`android.package`.
+build pro simulátor se nepodepisuje, takže na něj účet potřeba není.
+Oddíl `ios` s `bundleIdentifier` (`cz.klihovka.orlickypohar`) appka od
+20. 10. 2026 má.
 
 **Co tím ale neodpadlo.** Simulátor neprokáže přejímací podmínky 1 a 2, tedy
 zamčený telefon se spotřebou a appku zabitou systémem v půlce závodu — a to
@@ -1516,6 +1516,167 @@ EAS Build s interní distribucí nebo TestFlight, a ty ten zaplacený účet
 chtějí. **Přejímka pilotu na iOSu tedy zůstává za rozhodnutím o 99 $** a ten
 termín je kalendář, ne hodiny. Na Androidu nic z toho neplatí — `npm run apk`
 staví interní APK (`eas build --profile preview`) už dnes.
+
+### Kdy smí záznam vůbec běžet (Filip, 21. 10. 2026)
+
+Filip doplnil pravidla, která z trackeru dělají nástroj regaty, a ne sledovací
+zařízení. **Záznam smí běžet, jen když platí všechno z toho:**
+
+1. loď je přihlášená do té regaty,
+2. telefon patří někomu z posádky nebo kapitánovi,
+3. běží **okno** té regaty.
+
+**Okno, ne kalendářní den.** Den by nestačil: dvacetičtyřhodinovka startuje
+9. 7. 2027 v 19:00 a končí až druhý den večer, FxCK CANCER je dvoudenní
+(14.–15. 8.). Telefon si proto stáhne **seznam oken dopředu** a řídí se jím
+i bez signálu — tentýž mechanismus, jaký plán používá pro frekvenci
+vzorkování. Změna od pořadatele se projeví, až telefon chytí signál.
+
+**Mezi dny se nesleduje.** *„Nechceme sledovat závodníky, jak nám lezou po
+hospodě a areálu mariny ve svém volném čase."* Pořadatel okno na konci
+prvního dne zavře a ráno otevře znovu. Každé okno má navíc **tvrdý konec**,
+který platí, i když pořadatel zapomene cokoli vypnout — jinak se vrátíme
+k trase přes hospodu domů, tedy k přejímací podmínce č. 5.
+
+**Ráno to chce jedno ťuknutí a nejde to obejít.** iOS appku, které se záznam
+ukončil, sám neprobudí — spustí ji na pozadí jedině tehdy, když má aktivní
+odběr polohy. Obejít by to šlo jen tím, že GPS poběží celou noc a appka
+nebude zapisovat; to je ale přesně to sledování po hospodě, jen s výmluvou,
+a proto se to **nedělá**. Po ranním zatroubení tedy někdo na lodi appku
+otevře a ťukne *Pokračovat*; z plánu je vidět, že jde o druhý den téže
+regaty, takže se na loď neptá znovu a připojí k téže trase.
+
+**Telefon jde odpojit od lodi — a smí to kdokoli z těch tří:** pořadatel,
+kapitán, nebo **sám ten člen posádky**. Ta poslední cesta je důležitější,
+než vypadá: kdo odjede na druhý den domů, vypne si to sám a není odkázaný na
+to, že na něj někdo nezapomene. Plán tutéž past (*„telefon, který zůstal
+v autě"*) dosud řešil automatikou — ignorovat zdroj vzdálený od ostatních
+víc než pár set metrů. **Vědomé odpojení je lepší:** u lodi v marině
+a člena posádky na parkovišti by automatika sáhla vedle. Automatika smí
+zůstat jako záchrana, ne jako jediné řešení.
+
+**V pilotu je to bezpředmětné** — jeden telefon na loď nemá co odpojovat.
+Patří to ke slučování víc telefonů, tedy za pilot.
+
+### Appka musí ukazovat, že to jede (Filip, 21. 10. 2026)
+
+*„V appce je potřeba signalizovat, že máme funkční GPS, že jsme sledováni
+a že komunikujeme se serverem."* Posádka na vodě potřebuje vidět stav, ne
+doufat. Tři řádky, každý s **čerstvým** údajem, ne s kontrolkou:
+
+| Co | Co ukazuje | Jde vypnout? |
+|---|---|---|
+| GPS | kdy přišel poslední bod a s jakou přesností | ne (systémové) — ale jde odskočit do Nastavení |
+| záznam | běží od kdy, kolik bodů | **ano**, to je ten hlavní knoflík |
+| server | kolik bodů odesláno a kdy, kolik čeká | ano — bez signálu nemá smysl žrát baterku |
+
+**„Poslední bod před 4 s, přesnost 6 m" říká víc než zelená kontrolka.**
+Příznak „poslední bod před třemi minutami" je varování, i když je formálně
+všechno zapnuté.
+
+**Propíchnout a vypnout jsou dvě různá tlačítka.** *Propíchnout* zkusí
+**teď hned** získat polohu a dotknout se serveru a ukáže výsledek — nic
+nerozbije, dá se mačkat libovolně. *Vypnout záznam* je zásah do trasy:
+po opětovném zapnutí si iOS k první poloze chvíli hledá družice a vznikne
+přesně ta díra, které se posádka bojí. V UI proto patří odděleně, ať se
+jedno neťukne místo druhého na houpající se lodi.
+
+**Stav serveru pilot zatím nemá co ukazovat**, protože nahrávání nemá;
+zbylé dva řádky dávají smysl hned.
+
+### Pořadatel vidí, které lodě posílají (Filip, 21. 10. 2026)
+
+*„Appku si nahodí sami a jedou dál. My jen uvidíme, že máme polohy lodí,
+nebo ne."* Pořadatel tedy nemá nic spouštět ani nastavovat na cizích
+telefonech — má jen **přehled, od kterých lodí chodí polohy**.
+
+Proč to stojí za postavení hned, jak bude nahrávání: porucha se jinak zjistí
+až po dojezdu nad prázdnou trasou. Stačí seznam přihlášených lodí a u každé
+poslední přijatý bod — *„LUNA: před 8 s"*, *„PEZI: nic"*. Z toho se před
+startem pozná loď, která zapomněla spustit záznam nebo nemá oprávnění, a dá
+se to vyřešit na břehu.
+
+Je to tentýž druh údaje jako ve stavovém panelu v appce, jen z druhé strany:
+posádka vidí svůj telefon, pořadatel celé pole.
+
+**Nepatří to na vlastní obrazovku**, ale do **seznamů lodí, které už
+existují** — přihlášených i v závodě (Filip, 21. 10. 2026). U každé lodi
+malá ikonka stavu, po ťuknutí popup s detailem trackingu. Pořadatel tak
+nemusí nikam odbíhat: prochází startovní listinu, kterou by procházel
+stejně.
+
+**A ukazuje i včerejšek.** *„Tady jste měli včera tři mobily a teď máte
+dva."* U vícedenní regaty je rozdíl proti předchozímu dni informace, kterou
+samotný počet nedá — posádka o ten telefon nemusí vědět, že přišla. Dá se to
+říct dřív, než odrazí od mola.
+
+### Co z toho čeká na přihlášení
+
+Všechna tři pravidla výš (loď v regatě, telefon u posádky, okno regaty)
+potřebují **identitu a kontext ze serveru**. Pilot dnes nemá ani jedno:
+jméno lodi je volný text, který nikdo nekontroluje, a okno závodu neexistuje.
+
+| Jde postavit hned | Čeká na vyzkoušené přihlášení |
+|---|---|
+| tvrdý konec záznamu podle okna staženého dopředu | kontrola, že loď je v regatě a telefon patří posádce |
+| stavový panel: GPS a záznam, propíchnutí polohy | řádek o serveru, odesílání, odpojení telefonu od lodi |
+| tlačítko, které otevře Nastavení u chybějícího oprávnění | pozastavení okna pořadatelem |
+
+### Přejímací podmínka 2 zní na iOSu jinak (21. 10. 2026)
+
+Zkouška na telefonu odhalila, že **„odsuň appku z přehledu úloh" je na iOSu
+špatný test.** Když appku odsune **uživatel**, iOS ji pro polohové události
+nespustí, a to ani s oprávněním „Vždy" — je to záměr Applu. Obnovit appku
+umí jedině tehdy, když ji zabil **systém**, typicky kvůli paměti. Test by
+tedy vyšel falešně negativně a vypadalo by to, že pilot neprošel.
+
+| Platforma | Jak podmínku 2 zkoušet |
+|---|---|
+| Android | odsunout z přehledu úloh — služba na popředí to přežít **má** |
+| iOS | appku **neodsouvat**: nechat na pozadí, telefon zamknout a nechat ležet hodiny, pak ověřit, že body přibývaly souvisle |
+
+**Oprávnění „Vždy" je proto na iOSu nutné** a nejde ho nahradit mírnějším
+„Při používání": s ním umí iOS polohu na pozadí jen jako dočasný viditelný
+režim a appku po ukončení systémem nespustí vůbec. Povolení ale není
+sledování — appka se o polohu přihlásí teprve tehdy, když posádka ručně
+spustí záznam.
+
+### Účet u Applu je podmínka pilotu, ne volba (21. 10. 2026)
+
+Rozhodnutí o 99 $ plán dosud odkládal. Filip 21. 10. 2026 doplnil, co ho
+uzavírá: **posádky mají hlavně iPhony** (*„jsou to jachtaři, je tam hodně
+bohatších lidí"*). Tím přestává jít o pohodlí — bez zaplaceného účtu se
+appka na telefony většiny lodí nedostane vůbec a pilot nemá na čem běžet.
+
+**Co je zdarma a co ne:**
+
+| Cesta | Kolik telefonů | Co to chce |
+|---|---|---|
+| APK (Android) | bez omezení | nic, funguje dnes |
+| dev build z Xcode | **3 zařízení, profil 7 dní** | volné Apple ID; jen vlastní telefony |
+| TestFlight | až 10 000 testerů | zaplacený účet, první build projde beta review |
+| ad hoc (EAS internal) | 100 zařízení za rok | zaplacený účet **a UDID každého telefonu** |
+
+**TestFlight je pro posádky výrazně lepší než ad hoc:** nepotřebuje od lidí
+identifikátor telefonu. U posádek, které pořadatel vidí dvakrát za sezónu,
+je to rozdíl mezi „pošlu ti odkaz" a „najdi mi prosím UDID svého iPhonu".
+
+**Otevřená zůstává jedna věc, a má vlastní termín:** účet na **jednotlivce**
+se zřídí rychle a zaplatit ho může kdokoli, ale appka je vydaná pod jménem
+člověka. Účet na **organizaci** potřebuje právnickou osobu a číslo D-U-N-S,
+jehož přidělení je samostatná žádost na dny až týdny — zato appka pak patří
+poháru a nevisí na jednom člověku. U věci, kterou má používat celý seriál,
+stojí za to to rozhodnout **předem**; převod appky mezi účty je později
+otrava.
+
+**Termín:** při debutu na jaře 2027 má být účet živý nejpozději v březnu,
+s rezervou na beta review a na to, že se zřízení zasekne. Do té doby smí
+pilot zkoušet jen majitel vývojového Macu (tři vlastní zařízení, profil
+sedm dní) a kdokoli s Androidem.
+
+**Rozpočet:** 99 $ ročně je zhruba 8 $ měsíčně, tedy víc než celý provoz
+hračkárny (~5 €/měsíc). Není to důvod to nedělat, ale je to položka, která
+patří do plánu, ne až do dubnového překvapení.
 
 **Expo Go na pilota nestačí ani na jedné platformě.** Jeho nativní binárka je
 pevná, takže se do ní nedá deklarovat `UIBackgroundModes: location` ani
