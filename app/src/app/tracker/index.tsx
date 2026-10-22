@@ -334,7 +334,7 @@ export default function Tracker() {
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
-      <Nadpis tlumene="Zkouška záznamu trasy. Zatím bez nahrávání na web.">Trasa</Nadpis>
+      <Nadpis tlumene="Záznam se nahrává lodi, ke které je telefon spárovaný">Trasa</Nadpis>
 
       {bezi ? (
         <Karta>
@@ -391,7 +391,14 @@ export default function Tracker() {
           <Text style={{ color: t.tlumeny, fontSize: 13, marginBottom: 6 }}>Loď</Text>
           <TextInput
             value={lod}
-            onChangeText={setLod}
+            // Jméno lodi je jeden řádek. Bez tohohle se do pole vejde
+            // vložený odstavec a roztáhne obrazovku; jméno lodi přitom
+            // jde do požadavku na server, kde zalomení nemá co dělat.
+            onChangeText={(v) => setLod(v.replace(/\s+/g, ' ').trimStart())}
+            maxLength={40}
+            autoCapitalize="characters"
+            autoCorrect={false}
+            returnKeyType="done"
             placeholder="jméno lodi"
             placeholderTextColor={t.tlumeny}
             style={{
