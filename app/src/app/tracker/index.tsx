@@ -288,7 +288,7 @@ export default function Tracker() {
               obnov();
               Alert.alert(
                 'Záznam nezačal',
-                `${e instanceof Error ? e.message : String(e)}\n\nV Expo Go to je očekávané — poloha na pozadí tam není. Zkoušej to v APK nebo ve vlastním buildu.`,
+                `${e instanceof Error ? e.message : String(e)}\n\nV Expo Go poloha na pozadí není vůbec — tam to čekat nelze. Jinak zkontroluj, že je povolená poloha „Vždy".`,
               );
               return;
             }
@@ -359,8 +359,9 @@ export default function Tracker() {
 
           {bezi.zdroj === 'gps' && !naPozadi ? (
             <Text style={{ color: t.stavZruseny, marginTop: 8, fontSize: 13 }}>
-              Úloha na pozadí neběží. V Expo Go to je očekávané — poloha na pozadí tam není;
-              zkoušej to v APK.
+              Úloha na pozadí neběží — se zhasnutým displejem se nic nezapíše. Zkus záznam
+              ukončit a spustit znovu; pokud to nepomůže, zkontroluj v nastavení polohu
+              „Vždy".
             </Text>
           ) : null}
 
