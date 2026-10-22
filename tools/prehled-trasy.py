@@ -58,7 +58,11 @@ def prehled(db, zaznam):
     rozestupy = sorted(body[i][4] - body[i - 1][4] for i in range(1, len(body)))
     prostredni = rozestupy[len(rozestupy) // 2] / 1000 if rozestupy else 0
     nejvetsi = rozestupy[-1] / 1000 if rozestupy else 0
-    rychlosti = [b[3] for b in body if b[3] is not None]
+    # iOS dává rychlost `-1`, když ji neumí určit. Brát to jako naměřenou
+    # hodnotu by vyrobilo nesmysl („max -1,9 uzlu"), tak se takové body
+    # počítají zvlášť — kolik jich je, je samo o sobě zjištění.
+    rychlosti = [b[3] for b in body if b[3] is not None and b[3] >= 0]
+    bezRychlosti = sum(1 for b in body if b[3] is None or b[3] < 0)
     presnosti = [b[2] for b in body if b[2] is not None]
     od, do = body[0][4], body[-1][4]
 
@@ -68,10 +72,18 @@ def prehled(db, zaznam):
     # Prostřední rozestup říká, jak hustě se doopravdy vzorkovalo — průměr
     # by rozmazala jedna dlouhá mezera, a právě ta je zajímavá zvlášť.
     print(f"  rozestup:    {prostredni:.1f} s (prostřední), největší {nejvetsi:.0f} s")
+    # Prostřední hodnota sama neukáže, že většina bodů přišla po sekundě
+    # a zbytek po pěti — a právě to je otázka u vzorkování na iOSu.
+    husto = sum(1 for x in rozestupy if x < 1500)
+    if husto:
+        print(f"  z toho do 1,5 s: {husto} ({husto / len(rozestupy) * 100:.0f} %)")
     print(f"  délka:       {delka / 1000:.2f} km")
     if rychlosti:
         print(f"  rychlost:    max {max(rychlosti) * 1.94384:.1f} uzlu "
               f"({max(rychlosti) * 3.6:.0f} km/h)")
+    if bezRychlosti:
+        print(f"  bez rychlosti: {bezRychlosti} bodů "
+              f"({bezRychlosti / len(body) * 100:.0f} %)")
     if presnosti:
         print(f"  přesnost:    nejhorší {max(presnosti):.0f} m, "
               f"prostřední {sorted(presnosti)[len(presnosti) // 2]:.0f} m")
@@ -93,11 +105,15 @@ def main(cesta):
         print(f"\n{z['lod'] or '(bez lodi)'} — {z['stav']}"
               f"{' · ' + z['regata'] if z['regata'] else ''}")
         prehled(db, z)
-        ceka = db.execute(
-            "SELECT count(*) FROM bod WHERE zaznam_id = ? AND id > ?",
-            (z["id"], z["potvrzeno_do"])).fetchone()[0]
-        if ceka:
-            print(f"  nenahráno:   {ceka} bodů")
+        # Starší instalace sloupec „potvrzeno_do" nemají — appka ho doplní
+        # až při prvním startu novější verze. Stažená databáze tedy může
+        # být o schéma pozadu a nástroj se o to nesmí rozbít.
+        if "potvrzeno_do" in z.keys():
+            ceka = db.execute(
+                "SELECT count(*) FROM bod WHERE zaznam_id = ? AND id > ?",
+                (z["id"], z["potvrzeno_do"])).fetchone()[0]
+            if ceka:
+                print(f"  nenahráno:   {ceka} bodů")
 
     print(f"\n{len(zaznamy)} {_zaznamu(len(zaznamy))} celkem.")
 

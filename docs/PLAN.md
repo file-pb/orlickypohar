@@ -2071,6 +2071,43 @@ i všechno ostatní. **Podmínka 1 zůstává nezměřená**; chce to telefon
 zamčený a nepoužívaný. Až se to bude měřit znovu, bude to už s opraveným
 vzorkováním.
 
+#### Co ukázal patnáctihodinový záznam (22. 10. 2026)
+
+Filip nechal záznam běžet přes noc a ráno s ním jel autem do práce po
+dálnici. Databázi jsem si z telefonu stáhl a změřil (`tools/prehled-trasy.py`),
+takže tohle nejsou dojmy z obrazovky:
+
+| | |
+|---|---|
+| trvání | **15:52:10** v kuse |
+| bodů | **20 923** |
+| délka | 70,21 km |
+| nejvyšší rychlost | 146 km/h (dálnice) |
+| největší mezera | 4 817 s (≈ 80 min) |
+| na disku | 2,5 MB + 4 MB žurnálu |
+
+**Přejímací podmínka 2 tím prošla v provozu**, ne jen v testu: po
+osmdesátiminutové mezeře přes noc se záznam zase rozjel a pokračoval do
+rána. Dvě patnáctiminutové zkoušky z téhož dne přežily taky.
+
+**Vzorkování: 75 % bodů přišlo do 1,5 sekundy od předchozího** — a to i
+v klidu, nejen za jízdy. Oprava z *Na iOSu si vzorkování musíme hlídat
+sami* na tom telefonu **ještě nebyla**: schéma stažené databáze nemá
+sloupce z nahrávání (#371), takže ten build je starší. Měření tedy
+potvrzuje diagnózu, ale **opravu samotnou neověřuje** — to půjde až
+z dalšího záznamu.
+
+**Dvě třetiny bodů nemají rychlost.** iOS u 13 752 z 20 923 bodů vrátil
+`-1`, tedy *neumím určit*. Pro plán je to podstatné, protože rychlost má
+být jedním z hlasů při rozhodování, kdo není na lodi (*Jak se pozná, kdo
+na lodi není*): ten hlas má díry a nesmí se na něm stavět sám. Zajímavé
+je, kde nechybí — u bodů nad 36 km/h rychlost byla. Systém ji dává, když
+se něco zřetelně hýbe, což je přesně ten případ, kdy ji potřebujeme.
+
+Nástroj kvůli tomu počítá body bez rychlosti zvlášť: brát `-1` jako
+naměřenou hodnotu by vyrobilo nesmysl *„nejvyšší rychlost −1,9 uzlu"*,
+a ten by se někam zapsal jako fakt.
+
 ### Telefon jako mobilní klíč k lodi (Filip, 21. 10. 2026)
 
 Filip upřesnil, co od koho chce — a je toho **míň, než plán předpokládal**:
