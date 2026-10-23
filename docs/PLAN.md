@@ -1944,10 +1944,54 @@ v záznamu je bod po pěti sekundách, takže průjezd postem se interpoluje na
 vteřinu. Navíc sedí na okamžik: lidi jsou v hospodě večer po závodě, ne
 během rozjížďky.
 
-**Post na trati není pořadí**, a to je jeho hodnota. Plán právem varuje, že
-„pořadí na vodě" je bez cíle dohad; průjezd postem je fakt. Sestřih tak smí
-říct *„na druhé bóji si to LUNA s PEZI prohodily"*, aniž by kdy tvrdil, kdo
-vede.
+#### Co je post (Filip, 24. 10. 2026)
+
+*„Post je pomyslné pořadí na trati počítané k nějakému bodu, např. cíli.
+Jasně, lodě křižují a volí různé dráhy, ale toto je prostě tolerovaná věc.
+Je to pro atraktivitu sledování. Lodě se mohou měnit v pořadí zrovna jak
+křižují a tato akce udrží diváky u sledování závodu."*
+
+**Je to spojitá veličina, ne měřicí čára.** První nástřel z téhle rozpravy
+mířil jinam — post jako čára uprostřed úseku, průjezd jako událost. Filipovo
+pojetí je jednodušší a pro diváka lepší: pořadí se přepočítává pořád a
+prohození je okamžik, kdy se dvě lodě v tom pořadí vymění.
+
+**Křižování pořadím hází, a je to obsah, ne chyba.** Loď na kříž se
+k návětrné značce vzdušnou čarou přibližuje pomalu, takže po každém obratu
+může v pomyslném pořadí přeskočit. Právě to je ta akce, která drží diváka
+u obrazovky. Tolerovat se to tedy nemá jen proto, že to jinak nejde — ono to
+tak **má** vypadat.
+
+**Měřit se ale nesmí k cíli vzdušnou čarou.** U trojúhelníku se loď na
+odvětrné noze od cíle vzdaluje, i když jede správně, a pomyslné pořadí by ji
+řadilo poslední. Veličina proto je **dvojice: kolik prvků trati zbývá, a jak
+daleko je loď k tomu nejbližšímu dalšímu** — a řadí se lexikograficky.
+Vzdálenost stačí vzdušná, žádná cesta po vodě: lodě na téže noze mají tutéž
+překážku, takže by jim `cestaPoVode` změnila obě stejně a pořadím to nehne.
+
+**Který prvek je „další", se pozná z poloměrů**, které plán rozhodl kvůli
+zhuštění vzorkování (start 100 m, cíl 50 m, otočné bóje 30 m): loď, která
+byla v poloměru prvku, ho má odbytý a míří na následníka. Zvládne to
+i okruh na víc kol, protože se počítá postup, ne návštěva.
+
+**Pro režii potřebuje práh, jinak to bliká.** Při křižování se pořadí mezi
+dvojicí lodí mění klidně každou minutu; kdyby sestřih stříhal každou výměnu,
+nestříhá nic. Souboj je tedy prohození, které **vydrží** — řádově půl minuty
+nebo rozdíl nad pár desítek metrů. Hodnota se vyladí na prvních skutečných
+datech, protože odhadnout ji bez nich je věštění.
+
+**Pomyslné pořadí je nejlevnější divácká obrazovka, jakou máme.** Je to
+seznam, ne mapa: žádné dlaždice, žádné stopy, čitelné na telefonu u vody.
+Tím se zařazuje dřív než sestřih, který potřebuje tentýž výpočet a navíc
+režii.
+
+**Musí se tvářit jako dohad, protože jím je.** Plán odmítá vydávat
+vzdálenost k bóji za pořadí a to platí dál — proto u čísla stojí, že je
+pomyslné a že o výsledku rozhoduje cíl. Filipovo rozhodnutí tu větu
+nepopírá, jen říká, že dohad se ukázat smí, když se jako dohad tváří.
+
+**Post není pořadí v závodě**, a to je jeho hodnota. Sestřih tak smí říct
+*„na druhé bóji si to LUNA s PEZI prohodily"*, aniž by kdy tvrdil, kdo vede.
 
 #### Vybraná loď barevně, ostatní šedě a krátce
 
