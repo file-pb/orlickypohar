@@ -1,0 +1,78 @@
+# Hlídka odmítnutých zranitelností.
+#
+# <b>Proč:</b> 23. 10. 2026 byla dvě hlášení Dependabota odmítnuta jako
+# `tolerable_risk` — `zod` (#25) a `decode-uri-component` (#2). Odmítnuté
+# hlášení **GitHub sám znovu neotevře**, ani když vyjde dosažitelná záplata
+# nebo se riziko zhorší. Bez tohohle běhu by „přijali jsme riziko" tiše
+# přešlo v „nevíme, co se s tím stalo".
+#
+# Odmítnutí stálo na dvou měřitelných tvrzeních a na jednom úsudku o dopadu;
+# `tools/hlidka-zranitelnosti.py` hlídá všechna tři (podrobně v hlavičce
+# skriptu). Co nepřečte, nahlásí — neznámý tvar rozsahu ani nedostupné API
+# nesmí vyjít jako „nic se nestalo".
+#
+# <b>Čte lockfile, neinstaluje.</b> `app/package-lock.json` drží i rozsahy,
+# které si každý balíček vyžádal, takže běh je checkout a jeden skript.
+# Minuty Actions jsou v hračkárně nejbližší zeď (audit kvót 10. 10. 2026),
+# proto měsíčně a bez `npm ci`.
+#
+# <b>Nález jde do issue, ne do zeleného běhu.</b> Selhání běhu si nikdo
+# nevšimne; otevřené issue vydrží. Na jedno otevřené issue se dál komentuje,
+# aby jich nenarostla řada.
+name: hlidka-zranitelnosti
+
+on:
+  schedule:
+    # Třetího v měsíci, den po úklidu balíčků, aby se běhy nepotkaly.
+    - cron: '29 3 3 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  hlidka:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Zkontrolovat důvody odmítnutí
+        id: kontrola
+        run: |
+          set -uo pipefail
+          if python3 tools/hlidka-zranitelnosti.py > nalez.txt 2>&1; then
+            echo "zmena=ne" >> "$GITHUB_OUTPUT"
+          else
+            echo "zmena=ano" >> "$GITHUB_OUTPUT"
+          fi
+          cat nalez.txt
+
+      - name: Nahlásit změnu
+        if: steps.kontrola.outputs.zmena == 'ano'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NADPIS: 'Odmítnuté zranitelnosti: něco se změnilo'
+        run: |
+          set -uo pipefail
+          {
+            echo "Hlídka našla změnu u hlášení odmítnutých 23. 10. 2026"
+            echo "([#25 zod](../../security/dependabot/25), [#2 decode-uri-component](../../security/dependabot/2))."
+            echo
+            cat nalez.txt
+            echo
+            echo "Důvody odmítnutí a co se hlídá: hlavička \`tools/hlidka-zranitelnosti.py\`."
+            echo "Běh: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          } > telo.md
+
+          # Na existující issue se komentuje. Nové issue každý měsíc by
+          # znamenalo, že se po třech přestanou číst.
+          cislo=$(gh issue list --state open --search "$NADPIS in:title" \
+                    --json number,title --jq "[.[] | select(.title == \"$NADPIS\")] | first | .number // empty")
+          if [ -n "$cislo" ]; then
+            gh issue comment "$cislo" --body-file telo.md
+            echo "::notice::Přikomentováno k #$cislo."
+          else
+            url=$(gh issue create --title "$NADPIS" --body-file telo.md)
+            echo "::notice::Otevřeno $url"
+          fi
