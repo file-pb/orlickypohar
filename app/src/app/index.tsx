@@ -90,6 +90,13 @@ export default function Rocniky() {
         </Link>
       </View>
 
+      {/* Kapitánova cesta: odsud vydává klíče posádce. */}
+      <View style={{ marginTop: 12 }}>
+        <Link href="/lode" style={{ color: t.voda }}>
+          Moje lodě
+        </Link>
+      </View>
+
       {/* Klíč k lodi kousek od účtu, ale výš než trasa: bez spárování
           nemá záznam kam odejít. */}
       <View style={{ marginTop: 12 }}>
