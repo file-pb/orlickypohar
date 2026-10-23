@@ -41,7 +41,29 @@ public class KliceSprava(AppDbContext db, TimeProvider cas)
     /// okruh jako u kódů připojení, a schválně: klíč je jen jiná podoba
     /// téhož rozhodnutí, totiž koho k lodi pustit.
     /// </summary>
+    /// <summary>
+    /// Kdo smí vydat klíč dalšímu telefonu — <b>i posádka</b> (Filip,
+    /// 23. 10. 2026). Kapitán nemusí být u každého párování; kdo pozvánku
+    /// vystavil, se ukládá do <c>VydalUcetId</c>, takže stopa zůstane.
+    /// <para>
+    /// Platí jen pro členy posádky <b>s účtem</b>. Držitel klíče bez účtu
+    /// vydávat nesmí: klíč by uměl vyrobit klíč, ten zase další, a za
+    /// žádným by nestál účet, který to má na svědomí.
+    /// </para>
+    /// </summary>
     public Task<bool> SmiVydavatAsync(int lodId, Guid uzivatelId, CancellationToken ct) =>
+        db.VazbyKLodim.AnyAsync(
+            v => v.LodId == lodId && v.UzivatelId == uzivatelId
+                 && (v.Role == RoleKLodi.Majitel || v.Role == RoleKLodi.Kapitan
+                     || v.Role == RoleKLodi.Posadka), ct);
+
+    /// <summary>
+    /// Kdo smí cizím klíčem hýbat — vypnout sledování nebo ho odebrat.
+    /// <b>Jen majitel a kapitán</b>, protože odebrat klíč je zásah do cizího
+    /// telefonu a odpovídá za posádku kapitán. Vydat klíč smí víc lidí než
+    /// ho vzít.
+    /// </summary>
+    public Task<bool> SmiSpravovatAsync(int lodId, Guid uzivatelId, CancellationToken ct) =>
         db.VazbyKLodim.AnyAsync(
             v => v.LodId == lodId && v.UzivatelId == uzivatelId
                  && (v.Role == RoleKLodi.Majitel || v.Role == RoleKLodi.Kapitan), ct);

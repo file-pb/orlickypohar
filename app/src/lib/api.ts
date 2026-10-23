@@ -127,3 +127,67 @@ export async function posliKlicem<T>(cesta: string, telo: unknown): Promise<T | 
   if (!odpoved.ok) throw new Error(`API ${cesta} vrátilo ${odpoved.status}`);
   return (await odpoved.json()) as T;
 }
+
+// ---------------------------------------------------------------------------
+// Klíče k lodi očima kapitána. Tyhle volání jdou přes **účet**, ne přes klíč:
+// vydat klíč smí jen majitel nebo kapitán a to se pozná z přihlášení.
+// ---------------------------------------------------------------------------
+
+export type MojeLod = { lodId: number; nazev: string; cisloPlachty: string | null; role: string };
+export type KlicLodi = {
+  id: number;
+  jmeno: string | null;
+  vydanV: string;
+  posledniPouzitiV: string | null;
+  sleduje: boolean;
+  odebran: boolean;
+};
+export type Pozvanka = { id: number; kod: string; jmeno: string | null; platiDo: string };
+
+/** Lodě, ke kterým přihlášený patří — i s rolí, podle níž se pozná, kdo smí vydávat klíče. */
+export const nactiMojeLode = () => nactiZaSebe<MojeLod[]>('/ja/lode');
+
+export const nactiKliceLodi = (lod: number) => nactiZaSebe<KlicLodi[]>(`/ja/lode/${lod}/klice`);
+
+/** Vytvoří pozvánku. <b>Kód se vrací jednou</b> — podruhé ho nikdo nezjistí. */
+export const pozviKlicem = (lod: number, jmeno: string | null) =>
+  posliZaSebe<Pozvanka>(`/ja/lode/${lod}/klice`, { jmeno });
+
+/**
+ * Zapne nebo vypne sledování u jednoho klíče. Vratné — na rozdíl od odebrání.
+ * Tím se řeší „telefon zůstal v autě" a „tuhle regatu nejedu".
+ */
+export const prepniSledovani = (lod: number, klic: number, sleduje: boolean) =>
+  posliBezOdpovedi(`/ja/lode/${lod}/klice/${klic}/sledovani`, 'POST', { sleduje });
+
+/** Odebere klíč natrvalo. Nedá se oživit — pro odchod z posádky nadobro. */
+export const odeberKlic = (lod: number, klic: number) =>
+  posliBezOdpovedi(`/ja/lode/${lod}/klice/${klic}`, 'DELETE');
+
+/**
+ * Zápis, po kterém nic nepřijde (204). `false` znamená „nikdo není
+ * přihlášený"; cokoli jiného než úspěch se vyhodí, protože u zápisu se
+ * tiché selhání pozná pozdě.
+ */
+async function posliBezOdpovedi(
+  cesta: string,
+  metoda: 'POST' | 'DELETE',
+  telo?: unknown,
+): Promise<boolean> {
+  const t = await token();
+  if (!t) return false;
+
+  const odpoved = await fetch(`${API}${cesta}`, {
+    method: metoda,
+    headers: {
+      accept: 'application/json',
+      authorization: `Bearer ${t}`,
+      ...(telo === undefined ? {} : { 'content-type': 'application/json' }),
+    },
+    ...(telo === undefined ? {} : { body: JSON.stringify(telo) }),
+  });
+
+  if (odpoved.status === 401) return false;
+  if (!odpoved.ok) throw new Error(`API ${cesta} vrátilo ${odpoved.status}`);
+  return true;
+}

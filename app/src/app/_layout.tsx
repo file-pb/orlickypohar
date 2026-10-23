@@ -25,6 +25,8 @@ export default function Layout() {
         <Stack.Screen name="index" options={{ title: 'Orlický pohár' }} />
         <Stack.Screen name="ucet" options={{ title: 'Účet' }} />
         <Stack.Screen name="klic" options={{ title: 'Klíč k lodi' }} />
+        <Stack.Screen name="lode/index" options={{ title: 'Moje lodě' }} />
+        <Stack.Screen name="lode/[lod]" options={{ title: 'Klíče posádky' }} />
         <Stack.Screen name="tracker/index" options={{ title: 'Trasa' }} />
         <Stack.Screen name="tracker/[id]" options={{ title: 'Trasa' }} />
       </Stack>
