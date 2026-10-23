@@ -19,6 +19,11 @@
 # <b>Nález jde do issue, ne do zeleného běhu.</b> Selhání běhu si nikdo
 # nevšimne; otevřené issue vydrží. Na jedno otevřené issue se dál komentuje,
 # aby jich nenarostla řada.
+#
+# <b>Hlášení se dá vyzkoušet nanečisto</b> (`zkouska` u ručního běhu).
+# Hlídka, která měsíce mlčí, totiž nijak neukáže, že její poplach vůbec
+# funguje — a to je přesně ta kontrola, co měří sebe a ne svět. Zkouška
+# otevře issue s poznámkou, že je to zkouška; zavře se ručně.
 name: hlidka-zranitelnosti
 
 on:
@@ -26,6 +31,11 @@ on:
     # Třetího v měsíci, den po úklidu balíčků, aby se běhy nepotkaly.
     - cron: '29 3 3 * *'
   workflow_dispatch:
+    inputs:
+      zkouska:
+        description: 'Nanečisto: vynutit nález a vyzkoušet hlášení'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -39,14 +49,23 @@ jobs:
 
       - name: Zkontrolovat důvody odmítnutí
         id: kontrola
+        env:
+          ZKOUSKA: ${{ (github.event_name == 'workflow_dispatch' && inputs.zkouska) && 'ano' || 'ne' }}
         run: |
           set -uo pipefail
           if python3 tools/hlidka-zranitelnosti.py > nalez.txt 2>&1; then
-            echo "zmena=ne" >> "$GITHUB_OUTPUT"
+            zmena=ne
           else
-            echo "zmena=ano" >> "$GITHUB_OUTPUT"
+            zmena=ano
           fi
           cat nalez.txt
+          if [ "$ZKOUSKA" = "ano" ]; then
+            # Vynucený nález: ověřuje cestu hlášení, ne stav zranitelností.
+            echo >> nalez.txt
+            echo "**Tohle je zkouška hlášení, ne skutečný nález.** Pustil ji někdo ručně, aby se vědělo, že poplach funguje. Zavři to." >> nalez.txt
+            zmena=ano
+          fi
+          echo "zmena=$zmena" >> "$GITHUB_OUTPUT"
 
       - name: Nahlásit změnu
         if: steps.kontrola.outputs.zmena == 'ano'
