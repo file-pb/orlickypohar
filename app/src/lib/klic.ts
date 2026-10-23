@@ -22,6 +22,18 @@ const KLIC_LOD_NAZEV = 'op_klic_lod_nazev';
 const KLIC_JMENO = 'op_klic_jmeno';
 
 const API = process.env.EXPO_PUBLIC_API_URL ?? 'https://orlickypohar-api.klihovka.cz';
+const WEB = process.env.EXPO_PUBLIC_WEB_URL ?? 'https://orlickypohar.klihovka.cz';
+
+/**
+ * Adresa, která se zabalí do QR.
+ *
+ * <b>Míří na web, ne rovnou do appky.</b> Vlastní schéma `orlickypohar://`
+ * by u telefonu bez appky skončilo tím, že se nestane vůbec nic; takhle
+ * posádka skončí na stránce, která ji buď přehodí do appky, nebo jí řekne,
+ * kde appku vzít. Web pak skládá tutéž adresu v `lib/klice.ts`.
+ */
+export const adresaKlice = (kod: string) =>
+  `${WEB.replace(/\/$/, '')}/klic?kod=${encodeURIComponent(kod)}`;
 
 export type Klic = {
   /** Číslo lodi, ke které klíč patří. */

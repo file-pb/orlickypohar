@@ -274,6 +274,9 @@ export async function nactiNovinky(slug: string | null, limit?: number): Promise
       zdrojLogo: c.zdrojLogo ?? undefined,
       zavod: null,
       zavodNazev: null,
+      // Úvodník je náš příznak pro článek, který vede stránku regaty.
+      // Přejatý článek od svazu jím není a být nemůže.
+      uvodnik: false,
       adresa: c.odkaz,
       vnejsi: true,
       zdroj: c.zdroj,

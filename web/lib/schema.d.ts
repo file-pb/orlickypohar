@@ -95,6 +95,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/zarizeni": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Zapíše zařízení k odběru upozornění
+         * @description Bez přihlášení. Appka volá při každém spuštění, protože Expo token po přeinstalaci mění; druhý zápis téhož tokenu jen přepíše odběry. Odběr má tvar `serie:{slug}` nebo `zavod:{slug}`.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ZarizeniVstup"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/import/serie": {
         parameters: {
             query?: never;
@@ -871,6 +912,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/klice/uplatnit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Vymění pozvánku z QR za mobilní klíč k lodi
+         * @description Bez přihlášení — to je celý smysl. Pozvánka je jednorázová a platí 48 hodin. Vymyšlená, propadlá i už uplatněná dávají tutéž odpověď, aby se z ní nedalo nic vyčíst.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UplatneniVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UplatneniDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/serie/{serie}/zavody/{zavod}/trat": {
         parameters: {
             query?: never;
@@ -880,11 +971,13 @@ export interface paths {
         };
         /**
          * Trať regaty, jakmile ji rozhodčí přijal
-         * @description Bez přihlášení. Nepřijatá trať se nevydává vůbec; u přestavby se vrací jen příznak, že se trať přestavuje, a bóje se zamlčí.
+         * @description Bez přihlášení. Nepřijatá trať se nevydává vůbec; u přestavby se vrací jen příznak, že se trať přestavuje, a bóje se zamlčí. Bez parametru vydává trať rozjížďky na řadě; `?rozjizdka=N` vybere konkrétní. Čísla rozjížděk, které veřejnou trať mají, vrací v poli `rozjizdky`.
          */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    rozjizdka?: number;
+                };
                 header?: never;
                 path: {
                     serie: string;
@@ -2614,7 +2707,7 @@ export interface paths {
         put?: never;
         /**
          * Zapíše start rozjížďky
-         * @description Cílová obrazovka. Bez času v těle se vezme okamžik požadavku. Jde přepsat, dokud je zápis otevřený; časy dojetých lodí se přepočítají.
+         * @description Cílová obrazovka. Bez času v těle se vezme okamžik požadavku. Jde přepsat, dokud je zápis otevřený; časy dojetých lodí se přepočítají. Nový start zruší zastavenou časomíru — je to opakování startu.
          */
         post: {
             parameters: {
@@ -2630,6 +2723,53 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": null | components["schemas"]["StartVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZapisRozjizdkyDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/konec": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Zastaví časomíru rozjížďky, nebo ji pustí znovu
+         * @description Cílová obrazovka. Zastavením je rozjížďka dojetá, i když lodě ještě nemají dojezd ani kód — ty se dopisují dál, zápis zůstává otevřený. Bez času v těle se vezme okamžik požadavku; `pustit: true` zastavení zruší a stav se dopočítá ze zápisu jako dřív. Zastavit jde jen odstartovanou rozjížďku.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["KonecVstup"];
                 };
             };
             responses: {
@@ -3949,6 +4089,348 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/trasy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše trasy nahrané tímhle telefonem
+         * @description Včetně rozdělaných — podle `dokoncena` se pozná, co se ještě doposílá.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrasaDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Založí trasu, nebo vrátí tu existující
+         * @description Idempotentní podle `lokalniId`, které si vyrábí telefon. Opakované volání druhou trasu nezaloží — na vodě signál padá a nahrání se bude opakovat.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ZalozTrasuVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrasaDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trasy/{lokalniId}/body": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Přijme dávku bodů
+         * @description Idempotentní podle pořadového čísla bodu v telefonu: body, které už došly, se přeskočí a započítají jako `preskoceno`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    lokalniId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["JsonElement"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DavkaDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trasy/{lokalniId}/dokonceno": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Uzavře nahrávání trasy
+         * @description Do té doby je trasa rozdělaná a smí se do ní doposílat.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    lokalniId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["DokonceniVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrasaDto"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ja/lode/{lod}/klice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše klíče k lodi
+         * @description Majitel nebo kapitán. U každého je vidět, kdy se naposledy ozval.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    lod: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KlicDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Vytvoří pozvánku pro člena posádky
+         * @description Vrátí kód pro QR. Čitelný je jen tady a už nikdy — ukládá se otisk.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    lod: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["PozvaniVstup"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PozvankaDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ja/lode/{lod}/klice/{klic}/sledovani": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Odepne nebo zase připne klíč ze sledování
+         * @description Dočasné: člen posádky zůstává, jen tuhle regatu nejede nebo odjel po prvním dni domů. Příští závod se nemusí párovat znovu.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    lod: number;
+                    klic: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["SledovaniVstup"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ja/lode/{lod}/klice/{klic}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Odebere klíč natrvalo
+         * @description Klíč zaniká a nedá se oživit. Pro odchod z posádky nadobro.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    lod: number;
+                    klic: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/zastavky/{zavod}/trat": {
         parameters: {
             query?: never;
@@ -4889,7 +5371,7 @@ export interface components {
             obrazek?: null | components["schemas"]["ObrazekDto"];
             format?: components["schemas"]["FormatClanku"];
             /** @default false */
-            uvodnik?: boolean;
+            uvodnik: boolean;
         };
         ClanekShrnutiDto: {
             slug: string;
@@ -4902,7 +5384,7 @@ export interface components {
             zavodNazev: null | string;
             obrazek?: null | components["schemas"]["ObrazekDto"];
             /** @default false */
-            uvodnik?: boolean;
+            uvodnik: boolean;
         };
         ClanekSpravaRadek: {
             slug: string;
@@ -4915,7 +5397,7 @@ export interface components {
             zavod: null | string;
             zavodNazev: null | string;
             /** @default false */
-            uvodnik?: boolean;
+            uvodnik: boolean;
         };
         ClanekVstup: {
             slug: string;
@@ -4940,12 +5422,24 @@ export interface components {
             publikovanoV?: null | string;
             format?: components["schemas"]["FormatClanku"];
             /** @default false */
-            uvodnik?: boolean;
+            uvodnik: boolean;
+        };
+        DavkaDto: {
+            /** Format: int32 */
+            prijato: number;
+            /** Format: int32 */
+            preskoceno: number;
+            /** Format: int64 */
+            posledniBod: null | number;
         };
         DenNakladu: {
             den: string;
             /** Format: double */
             provozKcMesicne: number;
+        };
+        DokonceniVstup: {
+            /** Format: date-time */
+            konec: null | string;
         };
         DoSerieVstup: {
             doSerie: boolean;
@@ -4964,6 +5458,17 @@ export interface components {
          * @enum {unknown}
          */
         FormatClanku: "Text" | "Html" | "Bloky";
+        HttpValidationProblemDetails: {
+            type?: null | string;
+            title?: null | string;
+            /** Format: int32 */
+            status?: null | number;
+            detail?: null | string;
+            instance?: null | string;
+            errors?: {
+                [key: string]: string[];
+            };
+        };
         /** Format: binary */
         IFormFile: string;
         JaDto: {
@@ -4974,6 +5479,7 @@ export interface components {
             opravneni: components["schemas"]["OpravneniDto"][];
             web?: null | components["schemas"]["Role"][];
         };
+        JsonElement: unknown;
         KapitanVstup: {
             jmeno: string;
             prijmeni: string;
@@ -4990,6 +5496,17 @@ export interface components {
             nazev: string;
             /** Format: int32 */
             poradi: number;
+        };
+        KlicDto: {
+            /** Format: int32 */
+            id: number;
+            jmeno: null | string;
+            /** Format: date-time */
+            vydanV: string;
+            /** Format: date-time */
+            posledniPouzitiV: null | string;
+            sleduje: boolean;
+            odebran: boolean;
         };
         KlonTratiVstup: {
             /** Format: int32 */
@@ -5012,6 +5529,12 @@ export interface components {
             /** Format: double */
             delka: number;
             znaceni?: null | components["schemas"]["DruhZnaceni"];
+        };
+        KonecVstup: {
+            /** Format: date-time */
+            konecV?: null | string;
+            /** @default false */
+            pustit: boolean;
         };
         LodDetailSpravaDto: {
             lod: components["schemas"]["LodSpravaDto"];
@@ -5234,6 +5757,11 @@ export interface components {
             znaceni?: null | components["schemas"]["DruhZnaceni"];
             popis?: null | string;
         };
+        /**
+         * @default Android
+         * @enum {unknown}
+         */
+        PlatformaZarizeni: "Android" | "Ios";
         PoradatelDto: {
             slug: string;
             nazev: string;
@@ -5304,6 +5832,17 @@ export interface components {
              * @default 1
              */
             verzePravidel: number;
+        };
+        PozvaniVstup: {
+            jmeno: null | string;
+        };
+        PozvankaDto: {
+            /** Format: int32 */
+            id: number;
+            kod: string;
+            jmeno: null | string;
+            /** Format: date-time */
+            platiDo: string;
         };
         PraceDto: {
             /** Format: double */
@@ -5593,6 +6132,9 @@ export interface components {
              */
             verzePravidel: number;
         };
+        SledovaniVstup: {
+            sleduje: boolean;
+        };
         SmerniceDto: {
             /** Format: int32 */
             verze: number;
@@ -5669,6 +6211,23 @@ export interface components {
             teplota: number;
             /** Format: int32 */
             pixelu: number;
+        };
+        TrasaDto: {
+            lokalniId: string;
+            lod: string;
+            regata: null | string;
+            zdroj: components["schemas"]["ZdrojTrasy"];
+            /** Format: date-time */
+            zacatek: string;
+            /** Format: date-time */
+            konec: null | string;
+            /** Format: int32 */
+            pocetBodu: number;
+            /** Format: int64 */
+            posunMs: null | number;
+            dokoncena: boolean;
+            /** Format: int64 */
+            posledniBod: null | number;
         };
         TratDto: {
             /** Format: int32 */
@@ -5750,6 +6309,16 @@ export interface components {
         UklidDto: {
             /** Format: int32 */
             pocet: number;
+        };
+        UplatneniDto: {
+            klic: string;
+            /** Format: int32 */
+            lodId: number;
+            lodNazev: string;
+            jmeno: null | string;
+        };
+        UplatneniVstup: {
+            kod: string;
         };
         UrceniKapitanaVstup: {
             /** Format: uuid */
@@ -5896,6 +6465,14 @@ export interface components {
         VysledkySerieVstup: {
             verejne: boolean;
         };
+        ZalozTrasuVstup: {
+            lokalniId: string;
+            lod: string;
+            regata: null | string;
+            zdroj: components["schemas"]["ZdrojTrasy"];
+            /** Format: date-time */
+            zacatek: string;
+        };
         ZapisLodDto: {
             /** Format: int32 */
             prihlaskaId: number;
@@ -5973,6 +6550,11 @@ export interface components {
             radky: components["schemas"]["ZapisRadekVstup"][];
             /** Format: int32 */
             revize?: null | number;
+        };
+        ZarizeniVstup: {
+            token: null | string;
+            platforma?: components["schemas"]["PlatformaZarizeni"];
+            odbery?: null | string[];
         };
         ZastavkaDto: {
             slug: string;
@@ -6163,6 +6745,8 @@ export interface components {
          * @enum {unknown}
          */
         ZdrojPolohy: "Telefon" | "Mapa" | "Qr";
+        /** @enum {unknown} */
+        ZdrojTrasy: "Gps" | "Simulace";
         ZkraceniVstup: {
             /** Format: int32 */
             prvek: number;

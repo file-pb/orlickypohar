@@ -14,6 +14,7 @@ import {
   type KlicLodi,
   type Pozvanka,
 } from '@/lib/api';
+import { adresaKlice } from '@/lib/klic';
 import { casAMinuty } from '@/lib/tracker/formaty';
 
 /**
@@ -24,9 +25,10 @@ import { casAMinuty } from '@/lib/tracker/formaty';
  * potřebuje novou pozvánku. Proto se QR ukazuje hned a zůstane na obrazovce,
  * dokud ho kapitán sám nezavře.
  *
- * QR vede na `orlickypohar://klic?kod=…`. Čte ho **systémová kamera**, takže
- * appka nepotřebuje přístup ke kameře ani vlastní čtečku — posádka namíří
- * foťák a appka se otevře sama.
+ * QR vede na **web**, ne rovnou do appky. Čte ho systémová kamera, takže
+ * appka nepotřebuje přístup ke kameře ani vlastní čtečku. A kdo appku ještě
+ * nemá, neskončí ve slepé uličce: adresa `orlickypohar://` by u něj neudělala
+ * nic, kdežto stránka na webu ho pošle dál (Filip, 23. 10. 2026).
  */
 export default function KliceLodi() {
   const t = useTheme();
@@ -96,11 +98,11 @@ export default function KliceLodi() {
             {/* Bílé pozadí schválně i v tmavém režimu: čtečky počítají
                 s tmavým kódem na světlém podkladu. */}
             <View style={{ alignSelf: 'center', backgroundColor: '#fff', padding: 16, borderRadius: 12 }}>
-              <QRCode value={`orlickypohar://klic?kod=${pozvanka.kod}`} size={220} />
+              <QRCode value={adresaKlice(pozvanka.kod)} size={220} />
             </View>
             <Text style={{ color: t.tlumeny, marginTop: 16, fontSize: 12 }}>
               Kód uvidíš jenom teď — server si ho neukládá. Když obrazovku zavřeš, vystav novou
-              pozvánku.
+              pozvánku. Komu appka chybí, tomu se na té adrese ukáže, kde ji vzít.
             </Text>
             <Pressable onPress={() => setPozvanka(null)} style={{ marginTop: 12 }}>
               <Text style={{ color: t.voda, fontWeight: '600' }}>Hotovo</Text>

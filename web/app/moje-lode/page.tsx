@@ -14,7 +14,15 @@ import {
   type Narok,
   type Pripojeny,
 } from "@/lib/pripojeni";
-import { odeberAkce, rozhodniNarokAkce, vystavKodAkce } from "./akce";
+import { adresaKlice, kliceLodi, type Klic } from "@/lib/klice";
+import {
+  odeberAkce,
+  odeberKlicAkce,
+  pozviKlicemAkce,
+  prepniSledovaniAkce,
+  rozhodniNarokAkce,
+  vystavKodAkce,
+} from "./akce";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -26,6 +34,8 @@ type Parametry = {
     lod?: string;
     kod?: string;
     doKdy?: string;
+    klic?: string;
+    klicDoKdy?: string;
     chyba?: string;
     stav?: string;
   }>;
@@ -42,7 +52,7 @@ type Parametry = {
  * a kapitán ho má na obrazovce, dokud ji nezavře.
  */
 export default async function MojeLode({ searchParams }: Parametry) {
-  const { lod, kod, doKdy, chyba, stav } = await searchParams;
+  const { lod, kod, doKdy, klic, klicDoKdy, chyba, stav } = await searchParams;
   const { stav: nacteno, data: lode } = await mojeLode();
 
   if (nacteno === "neprihlasen" || nacteno === "odmitnut")
@@ -83,9 +93,19 @@ export default async function MojeLode({ searchParams }: Parametry) {
     vybrana && spravujeLod ? ((await narokyLodi(vybrana.lodId)).data ?? []) : [];
   const moje = (await mojeNaroky()).data ?? [];
 
+  // Telefony na palubě. Fanoušek na ně nemá právo, takže se na ně ani
+  // neptáme — je to týž důvod, proč se posádky neptáme na žádosti.
+  const smiKlice = vybrana ? vybrana.role !== "Fanousek" : false;
+  const klice: Klic[] =
+    vybrana && smiKlice ? ((await kliceLodi(vybrana.lodId)).data ?? []) : [];
+  const zive = klice.filter((k) => !k.odebran);
+
   // QR se kreslí jako SVG přímo do stránky: žádný javascript, žádný další
   // požadavek na obrázek a funguje i v tmavém režimu.
   const qr = kod ? await QRCode.toString(adresaKodu(kod), { type: "svg", margin: 1 }) : null;
+  const qrKlice = klic
+    ? await QRCode.toString(adresaKlice(klic), { type: "svg", margin: 1 })
+    : null;
 
   return (
     <Boky>
@@ -115,6 +135,21 @@ export default async function MojeLode({ searchParams }: Parametry) {
       {stav === "prijato" && (
         <p className="hlaska" role="status">
           Žádost je přijatá, člověk je teď posádka.
+        </p>
+      )}
+      {stav === "sledujeme" && (
+        <p className="hlaska" role="status">
+          Telefon se zase sleduje.
+        </p>
+      )}
+      {stav === "nesledujeme" && (
+        <p className="hlaska" role="status">
+          Telefon se přestal sledovat. V posádce zůstává — až pojede, stačí sledování zapnout.
+        </p>
+      )}
+      {stav === "klic-odebran" && (
+        <p className="hlaska" role="status">
+          Klíč je odebraný. Ten telefon se bude muset spárovat znovu.
         </p>
       )}
       {stav === "zamitnuto" && (
@@ -256,6 +291,90 @@ export default async function MojeLode({ searchParams }: Parametry) {
               <button type="submit">Vystavit kód</button>
             </form>
           )}
+            </>
+          )}
+
+          {/* Telefony na palubě — jiná věc než posádka výš.
+              Připojení váže účet a dává role; klíč váže telefon a slouží
+              k jedinému: posílat trasu. Posádka kvůli němu nemusí mít účet,
+              což je celý jeho smysl. */}
+          {smiKlice && (
+            <>
+              <h2>Telefony na palubě</h2>
+              <p className="poznamka">
+                Telefon se k lodi páruje klíčem, ne účtem — posádka se nemusí nikam
+                registrovat. Trasy z něj pak patří téhle lodi.
+              </p>
+
+              {zive.length === 0 ? (
+                <p className="prazdno">
+                  Zatím žádný. Vystav pozvánku a dej ji tomu, kdo pojede.
+                </p>
+              ) : (
+                <ul className="seznam">
+                  {zive.map((k) => (
+                    <li key={k.id}>
+                      <strong>{k.jmeno ?? `Telefon #${k.id}`}</strong>
+                      {!k.sleduje && <span className="stitek">nesleduje se</span>}
+                      <span className="detail">
+                        {" "}
+                        spárován {datumClanku(k.vydanV)}
+                        {k.posledniPouzitiV
+                          ? ` · naposled se ozval ${datumClanku(k.posledniPouzitiV)}`
+                          : " · zatím se neozval"}
+                      </span>
+                      {/* Sáhnout na cizí telefon smí jen kapitán a majitel.
+                          Vydat klíč smí víc lidí než ho vzít. */}
+                      {spravujeLod && (
+                        <>
+                          <form action={prepniSledovaniAkce} className="radkove">
+                            <input type="hidden" name="lod" value={vybrana.lodId} />
+                            <input type="hidden" name="klic" value={k.id} />
+                            <input
+                              type="hidden"
+                              name="sleduje"
+                              value={k.sleduje ? "ne" : "ano"}
+                            />
+                            <button type="submit">
+                              {k.sleduje ? "Vypnout sledování" : "Zapnout sledování"}
+                            </button>
+                          </form>
+                          <form action={odeberKlicAkce} className="radkove">
+                            <input type="hidden" name="lod" value={vybrana.lodId} />
+                            <input type="hidden" name="klic" value={k.id} />
+                            <button type="submit">Odebrat</button>
+                          </form>
+                        </>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {qrKlice && klic ? (
+                <>
+                  <h3>Pozvánka pro telefon</h3>
+                  <p>
+                    Ať si to posádka načte foťákem.{" "}
+                    {klicDoKdy && <>Platí do {datumClanku(klicDoKdy)}.</>}
+                  </p>
+                  <div className="qr" dangerouslySetInnerHTML={{ __html: qrKlice }} />
+                  <p className="poznamka">
+                    Platí 48 hodin a jen pro jeden telefon. <b>Kód uvidíš jenom teď</b> —
+                    server si ho neukládá, takže po zavření stránky je potřeba vystavit
+                    novou pozvánku. Kdo appku nemá, dostane na té adrese návod, kde ji vzít.
+                  </p>
+                </>
+              ) : (
+                <form action={pozviKlicemAkce} className="formular">
+                  <input type="hidden" name="lod" value={vybrana.lodId} />
+                  <label>
+                    Čí telefon to je <span className="poznamka">(nepovinné)</span>
+                    <input type="text" name="jmeno" maxLength={60} placeholder="třeba Honza" />
+                  </label>
+                  <button type="submit">Vystavit pozvánku</button>
+                </form>
+              )}
             </>
           )}
         </>
