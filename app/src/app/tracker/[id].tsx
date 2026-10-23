@@ -256,7 +256,7 @@ export default function DetailTrasy() {
         <Text style={{ color: t.voda, fontWeight: '600', fontSize: 16 }}>Poslat jako GPX</Text>
       </Pressable>
       <Text style={{ color: t.tlumeny, fontSize: 12, marginTop: 4 }}>
-        Nahrávání na web pilot zatím nemá — GPX otevře každá mapa.
+        Vedle nahrání na server: GPX otevře každá mapa.
       </Text>
 
       <Pressable onPress={smaz} style={{ marginTop: 28 }}>
