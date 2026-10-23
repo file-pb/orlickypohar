@@ -1589,6 +1589,65 @@ th.vlevo, td.vlevo { text-align: left; }
 }
 /* Úvod nese značku poháru místo vlajky; srovnat ji do stejné výšky. */
 .taby-sekci .znak-celkem { height: 1.3rem; width: auto; }
+
+/* Výběr sekce na úzkém displeji (Filip, 24. 10. 2026). Pruh tabů se tam
+   nevejde: změřeno na `jarni-vitr` při 375 px — 551 px obsahu v 335 px
+   místa, tři sekce z pěti vidět a posuvník schovaný, takže na zbytek
+   nevede cesta. Mez je 40 rem, protože při 640 px se pruh ještě vejde
+   (při 576 px přetéká o 15 px); nad ní zůstávají taby.
+
+   Rozbalené položky jsou vidět **všechny včetně otevřené** — tab je podle
+   hlavičky `hlava.tsx` obsah stránky, ne nabídka odkazů, a kde člověk
+   zrovna je, patří k celku. */
+.sekce-rozbal { display: none; }
+
+@media (max-width: 40rem) {
+  .taby-sekci { display: none; }
+
+  .sekce-rozbal {
+    display: block; position: relative; margin: 0 0 1.25rem;
+    border: 1px solid var(--linka); border-radius: 10px;
+  }
+  .sekce-rozbal > summary {
+    list-style: none; cursor: pointer;
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    font-weight: 600; color: var(--text);
+  }
+  .sekce-rozbal > summary::-webkit-details-marker { display: none; }
+  .sekce-rozbal > summary:focus { outline: none; }
+  .sekce-rozbal > summary:focus-visible { outline: 2px solid var(--voda); outline-offset: 2px; }
+  .sekce-rozbal[open] > summary { border-bottom: 1px solid var(--linka); }
+
+  .sekce-rozbal-tady { display: inline-flex; align-items: center; gap: 0.45rem; }
+  .sekce-rozbal-tady .vlajka { height: 0.85rem; width: auto; border-radius: 1px; }
+  .sekce-rozbal-tady .znak-celkem { height: 1.3rem; width: auto; }
+
+  /* Zbytek a šipka vpravo. Šipka je `::after`, aby ji čtečka nečetla jako
+     text — co dělá, říká už `summary` samo. */
+  .sekce-rozbal-zbytek {
+    margin-left: auto; color: var(--tlumeny); font-weight: 400; font-size: 0.85rem;
+  }
+  .sekce-rozbal > summary::after {
+    content: ""; flex: 0 0 auto; width: 0.5rem; height: 0.5rem;
+    border-right: 2px solid var(--tlumeny); border-bottom: 2px solid var(--tlumeny);
+    transform: rotate(45deg) translate(-0.1rem, -0.1rem);
+  }
+  .sekce-rozbal[open] > summary::after { transform: rotate(-135deg) translate(-0.2rem, -0.2rem); }
+
+  .sekce-rozbal nav { display: grid; padding: 0.3rem; }
+  .sekce-rozbal nav a {
+    display: flex; align-items: center; gap: 0.55rem;
+    padding: 0.55rem 0.5rem; border-radius: 7px;
+    color: var(--text); font-weight: 500;
+  }
+  .sekce-rozbal nav a:hover { background: var(--zvyrazneni); text-decoration: none; }
+  .sekce-rozbal nav a[aria-current="page"] { color: var(--voda); font-weight: 600; }
+  .sekce-rozbal nav .vlajka { height: 0.85rem; width: auto; border-radius: 1px; }
+  .sekce-rozbal nav .znak-celkem { height: 1.3rem; width: auto; }
+  .sekce-rozbal nav a:not([aria-current="page"]) .vlajka,
+  .sekce-rozbal nav a:not([aria-current="page"]) .znak-celkem { opacity: 0.55; }
+}
 /* Neotevřená sekce má vlajku tlumenější, ať nepřetahuje pozornost
    z té otevřené. */
 .taby-sekci a:not([aria-current="page"]) .vlajka,

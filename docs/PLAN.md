@@ -1173,6 +1173,16 @@ druhý tvar stránky s jinou cenou a mobil zaplatí i za to, co nerozbalil.
 Načítá se tedy jen otevřená sekce a rozbalení jiné je navigace na její
 adresu, ne nové vykreslení celku.
 
+**Akordeon hotový 24. 10. 2026**, o čtrnáct dní po tabech — ty se nasadily
+samy a na úzkém displeji zůstal pruh, který se tam nevejde. Filip to našel
+sám (*„u malých rozměrů bych raději tab předělal něco jako akordeon"*).
+Změřeno na `jarni-vitr` při 375 px: pruh měl **551 px obsahu v 335 px
+místa, vidět byly tři sekce z pěti** a posuvník je schovaný, takže na Lodě
+a Výsledky nevedla cesta. Pod 40 rem (640 px, kde se pruh ještě vejde) je
+teď jeden řádek s otevřenou sekcí a „a 4 další"; rozbalí se na celý seznam
+a klepnutí je navigace, přesně jak past výš žádá. Dělá to `<details>`, takže
+bez javascriptu — jediný skript je `ZavriMimo` na Escape a klepnutí jinam.
+
 ## Stránka regaty: postavená (11.–12. 10. 2026)
 
 Filip: *„udělat konečně tu stránku té regaty, je nepřehledná a spaghetti."*
@@ -1255,11 +1265,19 @@ rozdělaná práce (audit 8. 10. 2026). Teď v kódu je:
 
 **Co zbývá: appka.** `expo-notifications` v `app/package.json` není, takže
 zatím není komu posílat — úkol pro odběr, který nikdo nemá, se odbaví jako
-hotový. Teprve registrací prvního telefonu začnou zprávy chodit.
+hotový. **Appka se k odběru hlásí od 24. 10.** (`app/src/lib/upozorneni.ts`,
+přepínač na obrazovce ročníku): vyžádá oprávnění až u tlačítka, kde je
+napsané, co bude chodit, a pošle token na `PUT /zarizeni`. Ověřeno proti
+produkci jen tvarem požadavku — **push v Expo Go nefunguje** (od SDK 53),
+doručení se musí vyzkoušet v APK na telefonu.
 
-**Účastnická upozornění zůstávají nezačatá.** Odložený start a změna trati
-potřebují vědět, které zařízení patří které lodi, tedy vazbu zařízení na
-účet — tabulka ji dnes nemá a `PUT /zarizeni` je veřejný.
+**Účastnická upozornění zůstávají nezačatá, ale už nestojí na identitě.**
+Odložený start a změna trati potřebují vědět, které zařízení patří které
+lodi — a tu vazbu od 21. 10. nese **mobilní klíč** (`Features/Klice/KlicLodi.cs`,
+viz *Telefon jako mobilní klíč k lodi*). Druhé párování telefonu k lodi se
+proto stavět nemá. Chybí jen spojit adresu doručení s klíčem: tabulka
+`Zarizeni` dnes zná jen token a odběry, `PUT /zarizeni` je veřejný a klíč
+neví. Je to jeden sloupec, ne nový mechanismus.
 
 ### Dvě úrovně upozornění
 
@@ -1276,8 +1294,9 @@ je odvoditelný z dat — lodě, které mají `Ucast` na právě běžícím zá
 ale k doručení je potřeba vědět, které zařízení patří které lodi. A to bez
 identity nejde.
 
-**Důsledek pro pořadí fází:** účastnická upozornění stojí na identitě
-(fáze 4). Veřejná se dají udělat dřív.
+**Důsledek pro pořadí fází:** veřejná upozornění jsou hotová (fáze 7).
+Účastnická původně stála na identitě (fáze 4); od mobilního klíče stojí na
+něm, a ten účet nepotřebuje — klíč dává kapitán.
 
 ### Jak se z přihlášení stane „kormidelník lodi Anička"
 
@@ -2090,7 +2109,25 @@ takže tohle nejsou dojmy z obrazovky:
 osmdesátiminutové mezeře přes noc se záznam zase rozjel a pokračoval do
 rána. Dvě patnáctiminutové zkoušky z téhož dne přežily taky.
 
-**Vzorkování: 75 % bodů přišlo do 1,5 sekundy od předchozího** — a to i
+**Ověřeno 23. 10. 2026: oprava funguje.** První záznam z telefonu s opraveným
+vzorkováním (*Saddens*, 2 h 50 min, 1 080 bodů) proti tomu předchozímu:
+
+| | před opravou | po opravě |
+|---|---|---|
+| prostřední rozestup | 1,0 s | **6,0 s** |
+| bodů do 1,5 s | 72 % | **0 %** |
+| bodů za hodinu | ~1 320 | **~380** |
+
+Nula procent pod půldruhou sekundou znamená, že filtr při zápisu chytá
+všechno, co iOS posílá navíc. Šest sekund místo pěti je očekávané: systém
+dodává polohy po zhruba sekundě, takže první, která projde pětisekundovou
+hranicí, přijde typicky až v šesté.
+
+**Zbývá spotřeba se zhasnutým displejem** — jediná nesplněná přejímací
+podmínka. Měřit ji jde jen na telefonu **odpojeném od nabíječky**, jinak
+měření neřekne nic.
+
+**Před opravou to vypadalo takhle: 75 % bodů přišlo do 1,5 sekundy od předchozího** — a to i
 v klidu, nejen za jízdy. Oprava z *Na iOSu si vzorkování musíme hlídat
 sami* na tom telefonu **ještě nebyla**: schéma stažené databáze nemá
 sloupce z nahrávání (#371), takže ten build je starší. Měření tedy
@@ -7228,6 +7265,31 @@ existují, dojetí teď taky; pozastavení by byl pátý stav.
 **Odloženo rozhodnutím, ne opomenutím** (Filip, 20. 10. 2026:
 *„pozastavení zatím dělat nebudem, je to sporné a musí se to
 promyslet"*). Kdo sem přijde později: tohle není nedodělek k dokončení.
+
+## Přijaté riziko: dvě zranitelnosti v appce (23. 10. 2026)
+
+Dependabot hlásí v `app/package-lock.json` dvě zranitelnosti, které **nejde
+rozumně opravit**, a jsou proto odmítnuté jako `tolerable_risk`:
+
+| Hlášení | Kde | Proč to nejde |
+|---|---|---|
+| `zod` (high, 7.5) | `@expo/cli`, eslint plugin | Dependabot se o opravu pokusil a vzdal se sám (běh 40033508643): *„a patched version exists for zod, but the available update path would downgrade expo"*. `@expo/cli` chce `^3.25.76`, záplata je až ve 4.6.6. V APK zod není — jen build a lint, a vlastní zod schéma projekt nemá. |
+| `decode-uri-component` (medium) | `expo-router` → `query-string@7` | Opravená 0.5.1 je **ESM-only**, `query-string@7` ji volá přes `require`. Override by rozbil parsování deep linků — z teoretického DoS by se stal skutečný pád. Dopad je vyčerpání paměti na vlastním telefonu. |
+
+**Odmítnuté hlášení GitHub sám neotevře**, a to je ta past: bez hlídky by
+„přijali jsme riziko" tiše přešlo v „nevíme, co se s tím stalo". Proto
+`tools/hlidka-zranitelnosti.py` a měsíční běh `hlidka-zranitelnosti`
+kontrolují tři věci, každou z nich z lockfilu nebo z advisory API:
+
+1. pustí už `@expo/cli` zod od 4.6.6 výš?
+2. odešel `expo-router` od `query-string@7`, nebo pustí `decode-uri-component` od 0.5 výš?
+3. nepřišlo na tyhle balíčky hlášení, které sahá i na **důvěrnost nebo
+   integritu**? Odmítnutí stálo na tom, že je to jen dostupnost; tím by ten
+   důvod padl.
+
+Nález otevře issue, ne červený běh — selhání běhu si nikdo nevšimne.
+**Co hlídka nepřečte, nahlásí**: neznámý tvar rozsahu ani nedostupné API
+nesmí vyjít jako „nic se nestalo".
 
 ## Fronta k 20. 10. 2026
 

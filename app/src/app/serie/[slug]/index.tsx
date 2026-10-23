@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
+import { OdberUpozorneni } from '@/components/odber-upozorneni';
 import { Chyba, Karta, Nacitani, Nadpis, Prazdno, Sekce, Stav } from '@/components/ui';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
@@ -35,6 +36,8 @@ export default function Rocnik() {
           <Karta onPress={() => router.push(`/serie/${slug}/poradi`)}>
             <Text style={{ color: t.voda, fontWeight: '600' }}>Průběžné pořadí seriálu →</Text>
           </Karta>
+
+          <OdberUpozorneni slug={slug} />
 
           <Sekce>Kalendář</Sekce>
           {data.zavody.map((z) => (
