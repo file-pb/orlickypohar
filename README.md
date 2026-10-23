@@ -243,6 +243,20 @@ WEB_URL=http://localhost:3000
 KONEC
 ```
 
+**Blesky jdou posunout do minulosti.** Pruh s bouřkou nad regatou
+(`web/lib/blesky.ts`) se ukazuje jen v den regaty a jen když družice něco
+vidí — tedy od května do září. Mimo sezónu se dá zobrazit jedině snímkem
+z archivu:
+
+```bash
+echo 'BLESKY_TERMIN=2026-06-20T15:00:00Z' >> web/.env.local
+```
+
+Archiv vrstvy sahá k 30. 5. 2025 a chodí po pěti minutách. Ke zkoušení je
+ještě potřeba regata s dnešním datem — v mocku stačí přepsat `datum`
+u některé zastávky. Pozor na to, že `unstable_cache` drží výsledek i přes
+restart dev serveru; po změně termínu smaž `web/.next`.
+
 **Kdo je přihlášený, řídí cookie `op_token`** (nebo hlavička
 `Authorization: Bearer <jméno>` při volání API přímo). Mock zná tahle jména
 a jiné **odmítne** — překlep by jinak tiše udělal správce:

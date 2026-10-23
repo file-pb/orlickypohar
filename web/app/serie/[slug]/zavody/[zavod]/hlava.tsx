@@ -5,8 +5,9 @@ import { ZnackaPuvodni } from "@/app/logo-puvodni";
 import { VlajkaIkona, type Vlajka } from "@/app/vlajky";
 import { nactiJa } from "@/lib/ja";
 import { polozkyZastavky, prava, roleVRocniku } from "@/lib/co-smim";
+import { nactiBlesky } from "@/lib/blesky";
 import { DoSpravy, Hlavicka } from "./hlavicka";
-import { Upozorneni, upozorneniZastavky } from "./upozorneni";
+import { jedeSeDnes, Upozorneni, upozorneniZastavky } from "./upozorneni";
 
 /**
  * Hlava stránky regaty: cesta, název, co je nového a taby sekcí.
@@ -100,12 +101,24 @@ export async function HlavaZastavky({
   const prace = akce ? [] : polozkyZastavky(udelena, serie, zavod);
 
   const moje = sekce(detail, trat, akce);
-  const upozorneni = upozorneniZastavky(detail, trat, {
-    trat: adresaSekce(serie, zavod, "trat"),
-    tabule: `/serie/${serie}/zavody/${zavod}/tabule`,
-    prihlaska: `/serie/${serie}/zavody/${zavod}/prihlaska`,
-    smernice: adresaSekce(serie, zavod, "smernice"),
-  });
+
+  // Blesky se tahají jen v den regaty. Mimo něj je to zbytečné volání ven
+  // u každé stránky, kterou si někdo otevře kvůli loňským výsledkům —
+  // a informace, kterou nikdo nepotřebuje. Výpadek zdroje řeší `nactiBlesky`
+  // sám tím, že vrátí null, a upozornění pak chybí.
+  const blesky = jedeSeDnes(detail) ? await nactiBlesky() : null;
+
+  const upozorneni = upozorneniZastavky(
+    detail,
+    trat,
+    {
+      trat: adresaSekce(serie, zavod, "trat"),
+      tabule: `/serie/${serie}/zavody/${zavod}/tabule`,
+      prihlaska: `/serie/${serie}/zavody/${zavod}/prihlaska`,
+      smernice: adresaSekce(serie, zavod, "smernice"),
+    },
+    blesky,
+  );
 
   return (
     <>
