@@ -93,7 +93,7 @@ public static class KliceEndpoints
         KliceSprava klice, CancellationToken ct)
     {
         if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Unauthorized();
-        if (!await klice.SmiVydavatAsync(lod, uzivatel, ct)) return Results.Forbid();
+        if (!await klice.SmiSpravovatAsync(lod, uzivatel, ct)) return Results.Forbid();
 
         return await klice.SledujAsync(lod, klic, vstup?.Sleduje ?? true, ct)
             ? Results.NoContent()
@@ -105,7 +105,7 @@ public static class KliceEndpoints
         CancellationToken ct)
     {
         if (await rozsahy.UzivatelIdAsync(kdo, ct) is not { } uzivatel) return Results.Unauthorized();
-        if (!await klice.SmiVydavatAsync(lod, uzivatel, ct)) return Results.Forbid();
+        if (!await klice.SmiSpravovatAsync(lod, uzivatel, ct)) return Results.Forbid();
 
         return await klice.OdeberAsync(lod, klic, ct) ? Results.NoContent() : Results.NotFound();
     }

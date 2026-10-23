@@ -9,10 +9,10 @@ import { nactiMojeLode, type MojeLod } from '@/lib/api';
 /**
  * Lodě přihlášeného — odkud kapitán vydává klíče posádce.
  *
- * <b>Vydávat smí jen majitel a kapitán</b> (server to kontroluje
- * v `KliceSprava.SmiVydavatAsync`). Ostatní role tu loď vidí, ale bez
- * odkazu na klíče: nabídnout tlačítko, které skončí odmítnutím, je horší
- * než ho nenabídnout.
+ * <b>Vydávat smí každý, kdo je na lodi</b> — majitel, kapitán i posádka
+ * (server to kontroluje v `KliceSprava.SmiVydavatAsync`). Fanoušek tu loď
+ * vidí, ale bez odkazu na klíče: nabídnout tlačítko, které skončí
+ * odmítnutím, je horší než ho nenabídnout.
  */
 export default function MojeLode() {
   const t = useTheme();
@@ -36,11 +36,14 @@ export default function MojeLode() {
     void nacti();
   }, [nacti]);
 
-  const smiVydavat = (role: string) => role === 'Majitel' || role === 'Kapitan';
+  // Vydat klíč smí i posádka (Filip, 23. 10. 2026) — kapitán nemusí být
+  // u každého párování. Fanoušek ne; ten loď jen sleduje.
+  const smiVydavat = (role: string) =>
+    role === 'Majitel' || role === 'Kapitan' || role === 'Posadka';
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
-      <Nadpis tlumene="Klíče posádce vydává majitel nebo kapitán">Moje lodě</Nadpis>
+      <Nadpis tlumene="Klíč posádce vydá kapitán i kdokoli z posádky">Moje lodě</Nadpis>
 
       {nacita ? <Nacitani /> : null}
 

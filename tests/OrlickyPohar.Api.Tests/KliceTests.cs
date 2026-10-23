@@ -156,15 +156,53 @@ public class KliceTests(PostgresFixture fixture)
     }
 
     [Fact]
-    public async Task Vydavat_klice_smi_jen_kapitan_nebo_majitel()
+    public async Task Vydavat_klice_smi_i_posadka_ale_ne_kdokoli()
     {
         var (db, klice) = Sluzby();
         var (kapitan, lod) = await LodSKapitanemAsync(db);
+        var clen = await ClenAsync(db, lod, RoleKLodi.Posadka);
+        var fanousek = await ClenAsync(db, lod, RoleKLodi.Fanousek);
         var kolemjdouci = new Uzivatel { Id = Guid.NewGuid(), Zobrazovane = "Kolemjdoucí" };
         db.Uzivatele.Add(kolemjdouci);
         await db.SaveChangesAsync();
 
         Assert.True(await klice.SmiVydavatAsync(lod, kapitan, default));
+        // Kapitán nemusí být u každého párování (Filip, 23. 10. 2026).
+        Assert.True(await klice.SmiVydavatAsync(lod, clen, default));
+        Assert.False(await klice.SmiVydavatAsync(lod, fanousek, default));
         Assert.False(await klice.SmiVydavatAsync(lod, kolemjdouci.Id, default));
+    }
+
+    /// <summary>
+    /// Vydat klíč smí víc lidí než ho vzít: odebrání a vypnutí sledování je
+    /// zásah do cizího telefonu a za posádku odpovídá kapitán.
+    /// </summary>
+    [Fact]
+    public async Task Odebirat_klice_posadka_nesmi()
+    {
+        var (db, klice) = Sluzby();
+        var (kapitan, lod) = await LodSKapitanemAsync(db);
+        var clen = await ClenAsync(db, lod, RoleKLodi.Posadka);
+
+        Assert.True(await klice.SmiSpravovatAsync(lod, kapitan, default));
+        Assert.False(await klice.SmiSpravovatAsync(lod, clen, default));
+    }
+
+    private static async Task<Guid> ClenAsync(AppDbContext db, int lodId, RoleKLodi role)
+    {
+        var u = new Uzivatel { Id = Guid.NewGuid(), Zobrazovane = role.ToString() };
+        db.Uzivatele.Add(u);
+        await db.SaveChangesAsync();
+
+        db.VazbyKLodim.Add(new VazbaKLodi
+        {
+            LodId = lodId,
+            UzivatelId = u.Id,
+            Role = role,
+            Puvod = PuvodVazby.Kod,
+            VzniklaV = DateTimeOffset.UtcNow,
+        });
+        await db.SaveChangesAsync();
+        return u.Id;
     }
 }

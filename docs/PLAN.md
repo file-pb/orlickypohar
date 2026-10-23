@@ -2130,6 +2130,21 @@ každý závod a párovat se před každou regatou by byl přesně ten opruz,
 kterému se máme vyhnout. Kdy se smí zaznamenávat, řeší okna regaty (viz
 *Okno závodního dne se věší na rozpravu*).
 
+**Vydat klíč smí i posádka** (Filip, 23. 10. 2026). Kapitán nemusí stát
+u každého párování; kdo pozvánku vystavil, se ukládá (`VydalUcetId`), takže
+stopa zůstane. Platí to ale jen pro členy posádky **s účtem** — držitel
+klíče bez účtu vydávat nesmí, jinak by klíč uměl vyrobit klíč, ten zase
+další, a za žádným by nestál účet, který to má na svědomí.
+
+**Vydat klíč smí víc lidí než ho vzít.** Odebrání a vypnutí sledování je
+zásah do cizího telefonu a za posádku odpovídá kapitán:
+
+| | Majitel | Kapitán | Posádka | Fanoušek |
+|---|---|---|---|---|
+| vydat pozvánku | ano | ano | **ano** | ne |
+| vidět spárované telefony | ano | ano | ano | ne |
+| vypnout sledování, odebrat klíč | ano | ano | **ne** | ne |
+
 **Odebrat jde ve dvou krocích, a to je podstatné** (Filip, 21. 10. 2026):
 
 | | Co to udělá | Kdy |

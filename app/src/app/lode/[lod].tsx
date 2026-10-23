@@ -7,6 +7,7 @@ import { Karta, Nacitani, Nadpis, Sekce } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
 import {
   nactiKliceLodi,
+  nactiMojeLode,
   odeberKlic,
   pozviKlicem,
   prepniSledovani,
@@ -37,12 +38,19 @@ export default function KliceLodi() {
   const [pozvanka, setPozvanka] = useState<Pozvanka | null>(null);
   const [delam, setDelam] = useState(false);
   const [chyba, setChyba] = useState<string | null>(null);
+  // Vydat klíč smí i posádka, ale sáhnout na cizí klíč jen kapitán
+  // a majitel. Bez téhle znalosti by obrazovka nabízela tlačítka,
+  // která server odmítne.
+  const [smiSpravovat, setSmiSpravovat] = useState(false);
 
   const nacti = useCallback(async () => {
     if (!Number.isFinite(lodId)) return;
     setNacita(true);
     try {
-      setKlice(await nactiKliceLodi(lodId));
+      const [k, lode] = await Promise.all([nactiKliceLodi(lodId), nactiMojeLode()]);
+      setKlice(k);
+      const moje = lode?.find((l) => l.lodId === lodId);
+      setSmiSpravovat(moje?.role === 'Majitel' || moje?.role === 'Kapitan');
       setChyba(null);
     } catch (e) {
       setChyba(e instanceof Error ? e.message : 'Nedaří se spojit s API.');
@@ -139,6 +147,7 @@ export default function KliceLodi() {
               {k.sleduje ? 'Sleduje se' : 'Sledování vypnuté'}
             </Text>
 
+            {smiSpravovat ? (
             <View style={{ flexDirection: 'row', gap: 20, marginTop: 12 }}>
               {/* Vypnout sledování je vratné: na tuhle regatu nejede, ale
                   v posádce zůstává a příště se nemusí párovat znovu. */}
@@ -159,6 +168,7 @@ export default function KliceLodi() {
                 <Text style={{ color: t.stavZruseny }}>Odebrat</Text>
               </Pressable>
             </View>
+            ) : null}
           </Karta>
         </View>
       ))}
