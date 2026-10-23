@@ -1964,15 +1964,44 @@ tak **má** vypadat.
 
 **Měřit se ale nesmí k cíli vzdušnou čarou.** U trojúhelníku se loď na
 odvětrné noze od cíle vzdaluje, i když jede správně, a pomyslné pořadí by ji
-řadilo poslední. Veličina proto je **dvojice: kolik prvků trati zbývá, a jak
-daleko je loď k tomu nejbližšímu dalšímu** — a řadí se lexikograficky.
-Vzdálenost stačí vzdušná, žádná cesta po vodě: lodě na téže noze mají tutéž
-překážku, takže by jim `cestaPoVode` změnila obě stejně a pořadím to nehne.
+řadilo poslední.
 
-**Který prvek je „další", se pozná z poloměrů**, které plán rozhodl kvůli
-zhuštění vzorkování (start 100 m, cíl 50 m, otočné bóje 30 m): loď, která
-byla v poloměru prvku, ho má odbytý a míří na následníka. Zvládne to
-i okruh na víc kol, protože se počítá postup, ne návštěva.
+**Měří se podél trasy, kterou mapa už kreslí** (Filip, 24. 10. 2026: *„na
+mapě jsi stejně už navrhl trasu, a ta je pěkná, tak např. kolmicí k ní by se
+daly počítat ta pořadí, ne?"*). Loď se kolmo promítne na trasu a řadí se
+podle toho, **jak daleko po trase ten průmět leží**. Je to lepší než dvojice
+*zbývající prvky + vzdálenost k dalšímu*, kterou tenhle oddíl nesl první
+hodinu: ta má skok pokaždé, když loď odbyde prvek, takže pořadí dvou lodí
+u bóje blikalo podle toho, která už protnula poloměr. Průmět na trasu je
+spojitý a odvětrnou nohu zvládne sám — loď po trase postupuje, i když se od
+cíle vzdaluje.
+
+**Počítá se z `cestaPoVode`, ne ze `spojniceTrati`.** To je ta past: funkce,
+která kreslí hezkou čárkovanou trasu, bere `metruNaPixel`
+(`web/lib/voda.ts:712`) — podle měřítka zvětšuje obloučky obeplutí a
+`rozestupNoh` nohy navíc odsazuje stranou, ať se nepřekrývají. Pořadí
+počítané z ní by záviselo na zoomu mapy. Vrstva níž je ale tatáž trasa bez
+ozdob: nohy z `cestaPoVode`, v metrech. **Divák tedy vidí právě tu čáru,
+podle které se řadí**, jen v hezčí podobě.
+
+**Kola zůstávají na poloměrech prvků** (start 100 m, cíl 50 m, otočné bóje
+30 m — plán je rozhodl kvůli zhuštění vzorkování). Na okruhu je průmět
+dvojznačný, protože druhé kolo má tytéž souřadnice jako první; kolo se proto
+počítá zvlášť, z průjezdu poloměrem. Je to mnohem bezpečnější použití téže
+detekce než předtím: chyba stojí jednu událost za kolo, ne neustálé blikání
+pořadí.
+
+**Průmět musí být monotónní, ne absolutně nejbližší.** U bóje se trasa láme,
+takže loď blízko vrcholu má dvě skoro stejně dobré kolmice — jednu na
+příchozí nohu, jednu na odchozí — a pořadí by mezi nimi skákalo dopředu
+a zpět. Bere se proto ten průmět, který je nejblíž tomu předchozímu.
+
+**Pozor na jeden vedlejší účinek: projekce křižování vyhlazuje.** Vzdušná
+vzdálenost k bóji dělá při každém obratu velký skok, kdežto průmět na trasu
+postupuje klidněji — takže prohození, která mají držet diváka, budou
+**méně divoká** než u prvního návrhu. Nezmizí (po obratu se průmět na dlouhé
+noze rozjede, při obratu skoro stojí), ale je to volba mezi *víc akce* a
+*spravedlivější číslo*. Na skutečných datech se to pozná líp než teď.
 
 **Pro režii potřebuje práh, jinak to bliká.** Při křižování se pořadí mezi
 dvojicí lodí mění klidně každou minutu; kdyby sestřih stříhal každou výměnu,
