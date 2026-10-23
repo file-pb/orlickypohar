@@ -1255,11 +1255,19 @@ rozdělaná práce (audit 8. 10. 2026). Teď v kódu je:
 
 **Co zbývá: appka.** `expo-notifications` v `app/package.json` není, takže
 zatím není komu posílat — úkol pro odběr, který nikdo nemá, se odbaví jako
-hotový. Teprve registrací prvního telefonu začnou zprávy chodit.
+hotový. **Appka se k odběru hlásí od 24. 10.** (`app/src/lib/upozorneni.ts`,
+přepínač na obrazovce ročníku): vyžádá oprávnění až u tlačítka, kde je
+napsané, co bude chodit, a pošle token na `PUT /zarizeni`. Ověřeno proti
+produkci jen tvarem požadavku — **push v Expo Go nefunguje** (od SDK 53),
+doručení se musí vyzkoušet v APK na telefonu.
 
-**Účastnická upozornění zůstávají nezačatá.** Odložený start a změna trati
-potřebují vědět, které zařízení patří které lodi, tedy vazbu zařízení na
-účet — tabulka ji dnes nemá a `PUT /zarizeni` je veřejný.
+**Účastnická upozornění zůstávají nezačatá, ale už nestojí na identitě.**
+Odložený start a změna trati potřebují vědět, které zařízení patří které
+lodi — a tu vazbu od 21. 10. nese **mobilní klíč** (`Features/Klice/KlicLodi.cs`,
+viz *Telefon jako mobilní klíč k lodi*). Druhé párování telefonu k lodi se
+proto stavět nemá. Chybí jen spojit adresu doručení s klíčem: tabulka
+`Zarizeni` dnes zná jen token a odběry, `PUT /zarizeni` je veřejný a klíč
+neví. Je to jeden sloupec, ne nový mechanismus.
 
 ### Dvě úrovně upozornění
 
@@ -1276,8 +1284,9 @@ je odvoditelný z dat — lodě, které mají `Ucast` na právě běžícím zá
 ale k doručení je potřeba vědět, které zařízení patří které lodi. A to bez
 identity nejde.
 
-**Důsledek pro pořadí fází:** účastnická upozornění stojí na identitě
-(fáze 4). Veřejná se dají udělat dřív.
+**Důsledek pro pořadí fází:** veřejná upozornění jsou hotová (fáze 7).
+Účastnická původně stála na identitě (fáze 4); od mobilního klíče stojí na
+něm, a ten účet nepotřebuje — klíč dává kapitán.
 
 ### Jak se z přihlášení stane „kormidelník lodi Anička"
 
