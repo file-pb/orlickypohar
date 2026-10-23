@@ -2090,7 +2090,25 @@ takže tohle nejsou dojmy z obrazovky:
 osmdesátiminutové mezeře přes noc se záznam zase rozjel a pokračoval do
 rána. Dvě patnáctiminutové zkoušky z téhož dne přežily taky.
 
-**Vzorkování: 75 % bodů přišlo do 1,5 sekundy od předchozího** — a to i
+**Ověřeno 23. 10. 2026: oprava funguje.** První záznam z telefonu s opraveným
+vzorkováním (*Saddens*, 2 h 50 min, 1 080 bodů) proti tomu předchozímu:
+
+| | před opravou | po opravě |
+|---|---|---|
+| prostřední rozestup | 1,0 s | **6,0 s** |
+| bodů do 1,5 s | 72 % | **0 %** |
+| bodů za hodinu | ~1 320 | **~380** |
+
+Nula procent pod půldruhou sekundou znamená, že filtr při zápisu chytá
+všechno, co iOS posílá navíc. Šest sekund místo pěti je očekávané: systém
+dodává polohy po zhruba sekundě, takže první, která projde pětisekundovou
+hranicí, přijde typicky až v šesté.
+
+**Zbývá spotřeba se zhasnutým displejem** — jediná nesplněná přejímací
+podmínka. Měřit ji jde jen na telefonu **odpojeném od nabíječky**, jinak
+měření neřekne nic.
+
+**Před opravou to vypadalo takhle: 75 % bodů přišlo do 1,5 sekundy od předchozího** — a to i
 v klidu, nejen za jízdy. Oprava z *Na iOSu si vzorkování musíme hlídat
 sami* na tom telefonu **ještě nebyla**: schéma stažené databáze nemá
 sloupce z nahrávání (#371), takže ten build je starší. Měření tedy
