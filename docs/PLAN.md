@@ -7256,6 +7256,31 @@ existují, dojetí teď taky; pozastavení by byl pátý stav.
 *„pozastavení zatím dělat nebudem, je to sporné a musí se to
 promyslet"*). Kdo sem přijde později: tohle není nedodělek k dokončení.
 
+## Přijaté riziko: dvě zranitelnosti v appce (23. 10. 2026)
+
+Dependabot hlásí v `app/package-lock.json` dvě zranitelnosti, které **nejde
+rozumně opravit**, a jsou proto odmítnuté jako `tolerable_risk`:
+
+| Hlášení | Kde | Proč to nejde |
+|---|---|---|
+| `zod` (high, 7.5) | `@expo/cli`, eslint plugin | Dependabot se o opravu pokusil a vzdal se sám (běh 40033508643): *„a patched version exists for zod, but the available update path would downgrade expo"*. `@expo/cli` chce `^3.25.76`, záplata je až ve 4.6.6. V APK zod není — jen build a lint, a vlastní zod schéma projekt nemá. |
+| `decode-uri-component` (medium) | `expo-router` → `query-string@7` | Opravená 0.5.1 je **ESM-only**, `query-string@7` ji volá přes `require`. Override by rozbil parsování deep linků — z teoretického DoS by se stal skutečný pád. Dopad je vyčerpání paměti na vlastním telefonu. |
+
+**Odmítnuté hlášení GitHub sám neotevře**, a to je ta past: bez hlídky by
+„přijali jsme riziko" tiše přešlo v „nevíme, co se s tím stalo". Proto
+`tools/hlidka-zranitelnosti.py` a měsíční běh `hlidka-zranitelnosti`
+kontrolují tři věci, každou z nich z lockfilu nebo z advisory API:
+
+1. pustí už `@expo/cli` zod od 4.6.6 výš?
+2. odešel `expo-router` od `query-string@7`, nebo pustí `decode-uri-component` od 0.5 výš?
+3. nepřišlo na tyhle balíčky hlášení, které sahá i na **důvěrnost nebo
+   integritu**? Odmítnutí stálo na tom, že je to jen dostupnost; tím by ten
+   důvod padl.
+
+Nález otevře issue, ne červený běh — selhání běhu si nikdo nevšimne.
+**Co hlídka nepřečte, nahlásí**: neznámý tvar rozsahu ani nedostupné API
+nesmí vyjít jako „nic se nestalo".
+
 ## Fronta k 20. 10. 2026
 
 <b>Proč je tenhle oddíl v plánu, a ne v hlavě.</b> Filip, 19. 10. 2026:
