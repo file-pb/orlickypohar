@@ -1651,8 +1651,25 @@ Patří proto do pořadatelského přehledu u každé lodi — ne jako mapa, ale
 ale odpověď na otázku *„čekáme, nebo startujeme?"* musí být vidět hned.
 
 **Appka tím zůstává hloupá a tedy odolná:** zaznamenává a neřeší, co je
-závod a co čekání. Ořez přijde až při zpracování — v telefonu, před
-nahráním, aby se nenahrávalo nic, co se stejně má zahodit.
+závod a co čekání. ~~Ořez přijde až při zpracování — v telefonu, před
+nahráním, aby se nenahrávalo nic, co se stejně má zahodit.~~
+
+**Ořez v telefonu padl s průběžným přenosem** (24. 10. 2026). Obojí najednou
+nejde: ořez na okno rozjížďky potřebuje vědět, kdy rozjížďka skončila, a to
+se telefon dozví až po dojezdu — kdežto průběžně se odesílá dávno předtím.
+A odesílat se musí i mimo rozjížďku, protože *„kde je LUNA?"* a *„čekáme,
+nebo startujeme?"* jsou otázky z doby, kdy žádná rozjížďka neběží.
+
+Ořez se tím stěhuje **na server a mění se z nevysílání na mazání**: server
+dostane celý blok na vodě a po uzavření rozjížďky zahodí, co je mimo
+uchovávané okno. Appka zůstává hloupá, jen hloupější, než plán počítal.
+
+**Cena je v soukromí, ne v datech.** Mezi uzavřením rozjížďky a smazáním má
+server chvíli i to, co se má zahodit — tedy přesně to koupání v zátoce,
+kvůli kterému ořez vznikl. Dvě věci to drží: mazat **hned při uzavření
+rozjížďky** (ne nočním úklidem) a do té doby ta data nikomu nevydávat
+kromě rozhodčího, který je stejně vidí živě. Tvrdý konec okna platí dál
+a je poslední pojistkou pro den, který nikdo neuzavřel.
 
 **Den se dělí na bloky, ne na jeden kus.** U Radavy se po třech rozjížďkách
 jde na oběd a odpoledne se pokračuje. **Přes oběd se tracker nevypíná**
@@ -1885,11 +1902,30 @@ nehýbou.
 | divák na webu | přehled: kdo je na vodě, jak daleko, co se jede | stopy po regatě |
 | divák u telky | režie: souboj, celek, let po trati | tatáž režie, jen přehraná |
 
-Z toho plyne pořadí práce: **1.** stopa v appce po dojezdu (nestojí nic
-navíc a je to přejímací podmínka pilotu), **2.** pořadatelský řádek
-čerstvosti a vzdálenosti v seznamech lodí, které už existují — jediné místo,
-kde živý kanál opravdu musí vzniknout, **3.** posty na trati počítané ze
-záznamu a sestřih regaty na tabuli, **4.** teprve pak živě pro diváka.
+**Přenos je automatický a průběžný, ne úkon posádky** (Filip, 24. 10. 2026:
+*„všechno se musí přenášet automaticky a průběžně. Organizátor, resp.
+rozhodčí musí mít přehled o tom, jak lodě jedou a kde jsou"*). Dnešní stav —
+nahrání spustí až ruka po dojezdu — je tím zrušený: kdo neťukne, toho stopa
+by neexistovala, takže by chyběl v sestřihu, v přehledu pro diváka
+i v podkladu k protestu. **Na posádce nesmí viset nic než spuštění
+záznamu.**
+
+Tím se mění pořadí práce proti prvnímu nástřelu z téhle rozpravy, kde stála
+stopa po dojezdu první. **Průběžné odesílání je podmínka všeho ostatního**,
+protože teprve z něj data na serveru vznikají:
+
+| | Krok | Proč tam |
+|---|---|---|
+| **1** | průběžné odesílání z úlohy na pozadí, kdykoli je signál | bez něj nemá server co ukazovat ani co archivovat |
+| **2** | přehled pro rozhodčího: **kde jsou** (čerstvost, vzdálenost, směr) a **jak jedou** (poslední post, úsek trati) | to, co si Filip vyžádal; obsluhuje tracker check, odklad startu i shánění lodi |
+| **3** | stopa po dojezdu v appce a po regatě na webu | vzniká skoro zadarmo, data už na serveru jsou |
+| **4** | posty a sestřih regaty na tabuli | režie se nacvičí na záznamu |
+| **5** | živě pro diváka | až když se na 3 a 4 ukáže, že to stojí za dívání |
+
+**„Jak jedou" smí být pro rozhodčího dohad, pro diváka ne.** Plán právem
+odmítá vydávat vzdálenost k bóji za pořadí; u rozhodčího ale ten údaj čte
+člověk, který ví, co s ním, a nerozhoduje podle něj závod. Proto postup po
+trati v kroku 2 ano, veřejný žebříček pořád ne.
 
 #### Televize je režie, ne mapa
 
@@ -2003,8 +2039,8 @@ tracking stejně nerozjede. Je to poslední řádek v tom, co postaví okna.
 
 | Zjištění | Kde |
 |---|---|
-| **Živý kanál neběží.** Nahrávání spouští jen ruka z obrazovky trasy; úloha na pozadí neodesílá nic | `app/src/lib/tracker/uloha.ts`, `tracker/[id].tsx` |
-| Dávka je **200 bodů ≈ čtvrt hodiny** — správně pro nahrání po dojezdu, špatně pro živě | `app/src/lib/tracker/nahravani.ts:35` |
+| **Živý kanál neběží.** Nahrávání spouští jen ruka z obrazovky trasy; úloha na pozadí neodesílá nic — **to je ta věc, kterou ruší rozhodnutí o průběžném přenosu** | `app/src/lib/tracker/uloha.ts`, `tracker/[id].tsx` |
+| Dávka je **200 bodů ≈ čtvrt hodiny** — správně pro nahrání po dojezdu, špatně pro průběžný přenos; ten chce dávku po minutě, jak ji počítá *Co se odesílá živě* | `app/src/lib/tracker/nahravani.ts:35` |
 | Body trasy jsou **v Postgresu**, ne v R2, jak navrhuje *Kam trasy ukládat* | `AppDbContext.cs:49` |
 | `Trasa` visí na **`ZavodId`**, ne na rozjížďce | `Features/Trasy/Trasa.cs:71` |
 | `Rozjizdka.StartV` existuje, okno regaty ne — proto to pořadí práce výš | `Features/Zavody/Zavod.cs:421` |
