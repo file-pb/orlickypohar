@@ -7,6 +7,7 @@ import { nactiJa } from "@/lib/ja";
 import { polozkyZastavky, prava, roleVRocniku } from "@/lib/co-smim";
 import { DoSpravy, Hlavicka } from "./hlavicka";
 import { Upozorneni, upozorneniZastavky } from "./upozorneni";
+import { ZavriMimo } from "@/app/zavri-mimo";
 
 /**
  * Hlava stránky regaty: cesta, název, co je nového a taby sekcí.
@@ -21,6 +22,15 @@ import { Upozorneni, upozorneniZastavky } from "./upozorneni";
  * oddíl *Úvodník a taby*): posílají se na ně odkazy a mikrocache před webem
  * drží každou adresu zvlášť, takže telefon u vody stáhne jen svůj kus.
  * Z toho plyne i to hlavní: otevřená sekce si načte jen svoje data.
+ *
+ * <b>Na úzkém displeji je z tabů rozbalovátko</b> (Filip, 24. 10. 2026:
+ * *„u malých rozměrů bych raději tab předělal něco jako akordeon, protože
+ * tab se na šířku nevejde"*). Změřeno na `jarni-vitr` při 375 px: pruh má
+ * 551 px obsahu v 335 px místa, takže **ze pěti sekcí jsou vidět tři** a
+ * posuvník je schovaný — na Lodě a Výsledky nevede cesta. Pod 40 rem (640 px,
+ * kde se pruh ještě vejde) je proto místo pruhu jeden řádek s otevřenou
+ * sekcí, který se rozbalí na celý seznam. Obsah zůstává po adresách;
+ * akordeon je výběr, ne sloučení sekcí do jedné stránky.
  *
  * <b>Taby nejsou nabídka odkazů, ale obsah stránky.</b> Proto tu sekce
  * stojí i prázdná (lodě u regaty, kam se ještě nikdo nehlásil) — že je
@@ -128,18 +138,54 @@ export async function HlavaZastavky({
       <Upozorneni upozorneni={upozorneni} />
 
       {moje.length > 1 && (
-        <nav className="taby taby-sekci" aria-label="Části regaty">
-          {moje.map((s) => (
-            <Link
-              key={s}
-              href={adresaSekce(serie, zavod, s)}
-              aria-current={s === aktivni ? "page" : undefined}
-            >
-              {VLAJKY[s] ? <VlajkaIkona vlajka={VLAJKY[s]} /> : <ZnackaPuvodni />}
-              {NAZVY[s]}
-            </Link>
-          ))}
-        </nav>
+        <>
+          <nav className="taby taby-sekci" aria-label="Části regaty">
+            {moje.map((s) => (
+              <Link
+                key={s}
+                href={adresaSekce(serie, zavod, s)}
+                aria-current={s === aktivni ? "page" : undefined}
+              >
+                {VLAJKY[s] ? <VlajkaIkona vlajka={VLAJKY[s]} /> : <ZnackaPuvodni />}
+                {NAZVY[s]}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Týž výběr pro úzký displej. Značka je dvakrát, protože na
+              přepnutí stačí CSS — jedna z obou je vždy `display: none`,
+              a tím i mimo strom pro čtečky. */}
+          <details className="sekce-rozbal">
+            <ZavriMimo />
+            <summary>
+              <span className="sekce-rozbal-tady">
+                {VLAJKY[aktivni] ? (
+                  <VlajkaIkona vlajka={VLAJKY[aktivni]} />
+                ) : (
+                  <ZnackaPuvodni />
+                )}
+                {NAZVY[aktivni]}
+              </span>
+              {/* Zbytek sekcí se počítá, ne vypisuje: „a 4 další" říká, že
+                  je kam klepnout, i když je seznam zavřený. */}
+              <span className="sekce-rozbal-zbytek">
+                a {moje.length - 1} {moje.length - 1 < 5 ? "další" : "dalších"}
+              </span>
+            </summary>
+            <nav aria-label="Části regaty">
+              {moje.map((s) => (
+                <Link
+                  key={s}
+                  href={adresaSekce(serie, zavod, s)}
+                  aria-current={s === aktivni ? "page" : undefined}
+                >
+                  {VLAJKY[s] ? <VlajkaIkona vlajka={VLAJKY[s]} /> : <ZnackaPuvodni />}
+                  {NAZVY[s]}
+                </Link>
+              ))}
+            </nav>
+          </details>
+        </>
       )}
     </>
   );
