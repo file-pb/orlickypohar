@@ -84,6 +84,30 @@
                 }
             }
         },
+        "/zarizeni": {
+            "put": {
+                "tags": [
+                    "Upozorn\u011bn\u00ed"
+                ],
+                "summary": "Zap\u00ed\u0161e za\u0159\u00edzen\u00ed k odb\u011bru upozorn\u011bn\u00ed",
+                "description": "Bez p\u0159ihl\u00e1\u0161en\u00ed. Appka vol\u00e1 p\u0159i ka\u017ed\u00e9m spu\u0161t\u011bn\u00ed, proto\u017ee Expo token po p\u0159einstalaci m\u011bn\u00ed; druh\u00fd z\u00e1pis t\u00e9ho\u017e tokenu jen p\u0159ep\u00ed\u0161e odb\u011bry. Odb\u011br m\u00e1 tvar `serie:{slug}` nebo `zavod:{slug}`.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ZarizeniVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
         "/import/serie": {
             "post": {
                 "tags": [
@@ -725,13 +749,47 @@
                 }
             }
         },
+        "/klice/uplatnit": {
+            "post": {
+                "tags": [
+                    "Kl\u00ed\u010de"
+                ],
+                "summary": "Vym\u011bn\u00ed pozv\u00e1nku z QR za mobiln\u00ed kl\u00ed\u010d k lodi",
+                "description": "Bez p\u0159ihl\u00e1\u0161en\u00ed \u2014 to je cel\u00fd smysl. Pozv\u00e1nka je jednor\u00e1zov\u00e1 a plat\u00ed 48 hodin. Vymy\u0161len\u00e1, propadl\u00e1 i u\u017e uplatn\u011bn\u00e1 d\u00e1vaj\u00ed tut\u00e9\u017e odpov\u011b\u010f, aby se z n\u00ed nedalo nic vy\u010d\u00edst.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UplatneniVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UplatneniDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    }
+                }
+            }
+        },
         "/serie/{serie}/zavody/{zavod}/trat": {
             "get": {
                 "tags": [
                     "B\u00f3je"
                 ],
                 "summary": "Tra\u0165 regaty, jakmile ji rozhod\u010d\u00ed p\u0159ijal",
-                "description": "Bez p\u0159ihl\u00e1\u0161en\u00ed. Nep\u0159ijat\u00e1 tra\u0165 se nevyd\u00e1v\u00e1 v\u016fbec; u p\u0159estavby se vrac\u00ed jen p\u0159\u00edznak, \u017ee se tra\u0165 p\u0159estavuje, a b\u00f3je se zaml\u010d\u00ed.",
+                "description": "Bez p\u0159ihl\u00e1\u0161en\u00ed. Nep\u0159ijat\u00e1 tra\u0165 se nevyd\u00e1v\u00e1 v\u016fbec; u p\u0159estavby se vrac\u00ed jen p\u0159\u00edznak, \u017ee se tra\u0165 p\u0159estavuje, a b\u00f3je se zaml\u010d\u00ed. Bez parametru vyd\u00e1v\u00e1 tra\u0165 rozj\u00ed\u017e\u010fky na \u0159ad\u011b; `?rozjizdka=N` vybere konkr\u00e9tn\u00ed. \u010c\u00edsla rozj\u00ed\u017ed\u011bk, kter\u00e9 ve\u0159ejnou tra\u0165 maj\u00ed, vrac\u00ed v poli `rozjizdky`.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -747,6 +805,14 @@
                         "required": true,
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    {
+                        "name": "rozjizdka",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
                         }
                     }
                 ],
@@ -2493,7 +2559,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "Zap\u00ed\u0161e start rozj\u00ed\u017e\u010fky",
-                "description": "C\u00edlov\u00e1 obrazovka. Bez \u010dasu v t\u011ble se vezme okam\u017eik po\u017eadavku. Jde p\u0159epsat, dokud je z\u00e1pis otev\u0159en\u00fd; \u010dasy dojet\u00fdch lod\u00ed se p\u0159epo\u010d\u00edtaj\u00ed.",
+                "description": "C\u00edlov\u00e1 obrazovka. Bez \u010dasu v t\u011ble se vezme okam\u017eik po\u017eadavku. Jde p\u0159epsat, dokud je z\u00e1pis otev\u0159en\u00fd; \u010dasy dojet\u00fdch lod\u00ed se p\u0159epo\u010d\u00edtaj\u00ed. Nov\u00fd start zru\u0161\u00ed zastavenou \u010dasom\u00edru \u2014 je to opakov\u00e1n\u00ed startu.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2532,6 +2598,71 @@
                                     },
                                     {
                                         "$ref": "#/components/schemas/StartVstup"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZapisRozjizdkyDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/konec": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Zastav\u00ed \u010dasom\u00edru rozj\u00ed\u017e\u010fky, nebo ji pust\u00ed znovu",
+                "description": "C\u00edlov\u00e1 obrazovka. Zastaven\u00edm je rozj\u00ed\u017e\u010fka dojet\u00e1, i kdy\u017e lod\u011b je\u0161t\u011b nemaj\u00ed dojezd ani k\u00f3d \u2014 ty se dopisuj\u00ed d\u00e1l, z\u00e1pis z\u016fst\u00e1v\u00e1 otev\u0159en\u00fd. Bez \u010dasu v t\u011ble se vezme okam\u017eik po\u017eadavku; `pustit: true` zastaven\u00ed zru\u0161\u00ed a stav se dopo\u010d\u00edt\u00e1 ze z\u00e1pisu jako d\u0159\u00edv. Zastavit jde jen odstartovanou rozj\u00ed\u017e\u010fku.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "null"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/KonecVstup"
                                     }
                                 ]
                             }
@@ -4103,6 +4234,350 @@
                 }
             }
         },
+        "/trasy": {
+            "get": {
+                "tags": [
+                    "Trasy"
+                ],
+                "summary": "Vyp\u00ed\u0161e trasy nahran\u00e9 t\u00edmhle telefonem",
+                "description": "V\u010detn\u011b rozd\u011blan\u00fdch \u2014 podle `dokoncena` se pozn\u00e1, co se je\u0161t\u011b dopos\u00edl\u00e1.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TrasaDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Trasy"
+                ],
+                "summary": "Zalo\u017e\u00ed trasu, nebo vr\u00e1t\u00ed tu existuj\u00edc\u00ed",
+                "description": "Idempotentn\u00ed podle `lokalniId`, kter\u00e9 si vyr\u00e1b\u00ed telefon. Opakovan\u00e9 vol\u00e1n\u00ed druhou trasu nezalo\u017e\u00ed \u2014 na vod\u011b sign\u00e1l pad\u00e1 a nahr\u00e1n\u00ed se bude opakovat.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ZalozTrasuVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TrasaDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/trasy/{lokalniId}/body": {
+            "post": {
+                "tags": [
+                    "Trasy"
+                ],
+                "summary": "P\u0159ijme d\u00e1vku bod\u016f",
+                "description": "Idempotentn\u00ed podle po\u0159adov\u00e9ho \u010d\u00edsla bodu v telefonu: body, kter\u00e9 u\u017e do\u0161ly, se p\u0159esko\u010d\u00ed a zapo\u010d\u00edtaj\u00ed jako `preskoceno`.",
+                "parameters": [
+                    {
+                        "name": "lokalniId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "null"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/JsonElement"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DavkaDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/trasy/{lokalniId}/dokonceno": {
+            "post": {
+                "tags": [
+                    "Trasy"
+                ],
+                "summary": "Uzav\u0159e nahr\u00e1v\u00e1n\u00ed trasy",
+                "description": "Do t\u00e9 doby je trasa rozd\u011blan\u00e1 a sm\u00ed se do n\u00ed dopos\u00edlat.",
+                "parameters": [
+                    {
+                        "name": "lokalniId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "null"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/DokonceniVstup"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TrasaDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/ja/lode/{lod}/klice": {
+            "get": {
+                "tags": [
+                    "Kl\u00ed\u010de"
+                ],
+                "summary": "Vyp\u00ed\u0161e kl\u00ed\u010de k lodi",
+                "description": "Majitel nebo kapit\u00e1n. U ka\u017ed\u00e9ho je vid\u011bt, kdy se naposledy ozval.",
+                "parameters": [
+                    {
+                        "name": "lod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/KlicDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Kl\u00ed\u010de"
+                ],
+                "summary": "Vytvo\u0159\u00ed pozv\u00e1nku pro \u010dlena pos\u00e1dky",
+                "description": "Vr\u00e1t\u00ed k\u00f3d pro QR. \u010citeln\u00fd je jen tady a u\u017e nikdy \u2014 ukl\u00e1d\u00e1 se otisk.",
+                "parameters": [
+                    {
+                        "name": "lod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "null"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/PozvaniVstup"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PozvankaDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ja/lode/{lod}/klice/{klic}/sledovani": {
+            "post": {
+                "tags": [
+                    "Kl\u00ed\u010de"
+                ],
+                "summary": "Odepne nebo zase p\u0159ipne kl\u00ed\u010d ze sledov\u00e1n\u00ed",
+                "description": "Do\u010dasn\u00e9: \u010dlen pos\u00e1dky z\u016fst\u00e1v\u00e1, jen tuhle regatu nejede nebo odjel po prvn\u00edm dni dom\u016f. P\u0159\u00ed\u0161t\u00ed z\u00e1vod se nemus\u00ed p\u00e1rovat znovu.",
+                "parameters": [
+                    {
+                        "name": "lod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "klic",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "null"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/SledovaniVstup"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
+        "/ja/lode/{lod}/klice/{klic}": {
+            "delete": {
+                "tags": [
+                    "Kl\u00ed\u010de"
+                ],
+                "summary": "Odebere kl\u00ed\u010d natrvalo",
+                "description": "Kl\u00ed\u010d zanik\u00e1 a ned\u00e1 se o\u017eivit. Pro odchod z pos\u00e1dky nadobro.",
+                "parameters": [
+                    {
+                        "name": "lod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "klic",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/zastavky/{zavod}/trat": {
             "get": {
                 "tags": [
@@ -5418,6 +5893,10 @@
                     },
                     "format": {
                         "$ref": "#/components/schemas/FormatClanku"
+                    },
+                    "uvodnik": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -5476,6 +5955,10 @@
                                 "$ref": "#/components/schemas/ObrazekDto"
                             }
                         ]
+                    },
+                    "uvodnik": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -5528,6 +6011,10 @@
                             "null",
                             "string"
                         ]
+                    },
+                    "uvodnik": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -5620,6 +6107,35 @@
                     },
                     "format": {
                         "$ref": "#/components/schemas/FormatClanku"
+                    },
+                    "uvodnik": {
+                        "type": "boolean",
+                        "default": false
+                    }
+                }
+            },
+            "DavkaDto": {
+                "required": [
+                    "prijato",
+                    "preskoceno",
+                    "posledniBod"
+                ],
+                "type": "object",
+                "properties": {
+                    "prijato": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "preskoceno": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "posledniBod": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int64"
                     }
                 }
             },
@@ -5636,6 +6152,21 @@
                     "provozKcMesicne": {
                         "type": "number",
                         "format": "double"
+                    }
+                }
+            },
+            "DokonceniVstup": {
+                "required": [
+                    "konec"
+                ],
+                "type": "object",
+                "properties": {
+                    "konec": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
                     }
                 }
             },
@@ -5684,6 +6215,51 @@
                 ],
                 "default": "Text"
             },
+            "HttpValidationProblemDetails": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "title": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "status": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "detail": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "instance": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "errors": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
             "IFormFile": {
                 "type": "string",
                 "format": "binary"
@@ -5727,6 +6303,7 @@
                     }
                 }
             },
+            "JsonElement": {},
             "KapitanVstup": {
                 "required": [
                     "jmeno",
@@ -5789,6 +6366,46 @@
                     "poradi": {
                         "type": "integer",
                         "format": "int32"
+                    }
+                }
+            },
+            "KlicDto": {
+                "required": [
+                    "id",
+                    "jmeno",
+                    "vydanV",
+                    "posledniPouzitiV",
+                    "sleduje",
+                    "odebran"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "jmeno": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "vydanV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "posledniPouzitiV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "sleduje": {
+                        "type": "boolean"
+                    },
+                    "odebran": {
+                        "type": "boolean"
                     }
                 }
             },
@@ -5879,6 +6496,22 @@
                                 "$ref": "#/components/schemas/DruhZnaceni"
                             }
                         ]
+                    }
+                }
+            },
+            "KonecVstup": {
+                "type": "object",
+                "properties": {
+                    "konecV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "pustit": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -6774,6 +7407,13 @@
                     }
                 }
             },
+            "PlatformaZarizeni": {
+                "enum": [
+                    "Android",
+                    "Ios"
+                ],
+                "default": "Android"
+            },
             "PoradatelDto": {
                 "required": [
                     "slug",
@@ -7076,6 +7716,48 @@
                         "type": "integer",
                         "format": "int32",
                         "default": 1
+                    }
+                }
+            },
+            "PozvaniVstup": {
+                "required": [
+                    "jmeno"
+                ],
+                "type": "object",
+                "properties": {
+                    "jmeno": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
+            "PozvankaDto": {
+                "required": [
+                    "id",
+                    "kod",
+                    "jmeno",
+                    "platiDo"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "kod": {
+                        "type": "string"
+                    },
+                    "jmeno": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "platiDo": {
+                        "type": "string",
+                        "format": "date-time"
                     }
                 }
             },
@@ -8219,6 +8901,17 @@
                     }
                 }
             },
+            "SledovaniVstup": {
+                "required": [
+                    "sleduje"
+                ],
+                "type": "object",
+                "properties": {
+                    "sleduje": {
+                        "type": "boolean"
+                    }
+                }
+            },
             "SmerniceDto": {
                 "required": [
                     "verze",
@@ -8515,6 +9208,70 @@
                     "pixelu": {
                         "type": "integer",
                         "format": "int32"
+                    }
+                }
+            },
+            "TrasaDto": {
+                "required": [
+                    "lokalniId",
+                    "lod",
+                    "regata",
+                    "zdroj",
+                    "zacatek",
+                    "konec",
+                    "pocetBodu",
+                    "posunMs",
+                    "dokoncena",
+                    "posledniBod"
+                ],
+                "type": "object",
+                "properties": {
+                    "lokalniId": {
+                        "type": "string"
+                    },
+                    "lod": {
+                        "type": "string"
+                    },
+                    "regata": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "zdroj": {
+                        "$ref": "#/components/schemas/ZdrojTrasy"
+                    },
+                    "zacatek": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "konec": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "pocetBodu": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "posunMs": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int64"
+                    },
+                    "dokoncena": {
+                        "type": "boolean"
+                    },
+                    "posledniBod": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int64"
                     }
                 }
             },
@@ -8829,6 +9586,44 @@
                     }
                 }
             },
+            "UplatneniDto": {
+                "required": [
+                    "klic",
+                    "lodId",
+                    "lodNazev",
+                    "jmeno"
+                ],
+                "type": "object",
+                "properties": {
+                    "klic": {
+                        "type": "string"
+                    },
+                    "lodId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "lodNazev": {
+                        "type": "string"
+                    },
+                    "jmeno": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
+            "UplatneniVstup": {
+                "required": [
+                    "kod"
+                ],
+                "type": "object",
+                "properties": {
+                    "kod": {
+                        "type": "string"
+                    }
+                }
+            },
             "UrceniKapitanaVstup": {
                 "required": [
                     "uzivatelId"
@@ -9087,6 +9882,16 @@
                             "string"
                         ],
                         "format": "date-time"
+                    },
+                    "rozjizdky": {
+                        "type": [
+                            "null",
+                            "array"
+                        ],
+                        "items": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
                     }
                 }
             },
@@ -9462,6 +10267,37 @@
                     }
                 }
             },
+            "ZalozTrasuVstup": {
+                "required": [
+                    "lokalniId",
+                    "lod",
+                    "regata",
+                    "zdroj",
+                    "zacatek"
+                ],
+                "type": "object",
+                "properties": {
+                    "lokalniId": {
+                        "type": "string"
+                    },
+                    "lod": {
+                        "type": "string"
+                    },
+                    "regata": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "zdroj": {
+                        "$ref": "#/components/schemas/ZdrojTrasy"
+                    },
+                    "zacatek": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
             "ZapisLodDto": {
                 "required": [
                     "prihlaskaId",
@@ -9662,6 +10498,16 @@
                         "type": "integer",
                         "format": "int32",
                         "default": 0
+                    },
+                    "konecV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "stav": {
+                        "$ref": "#/components/schemas/StavRozjizdky"
                     }
                 }
             },
@@ -9727,6 +10573,32 @@
                             "integer"
                         ],
                         "format": "int32"
+                    }
+                }
+            },
+            "ZarizeniVstup": {
+                "required": [
+                    "token"
+                ],
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "platforma": {
+                        "$ref": "#/components/schemas/PlatformaZarizeni"
+                    },
+                    "odbery": {
+                        "type": [
+                            "null",
+                            "array"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 }
             },
@@ -9983,7 +10855,9 @@
                     "stav",
                     "pocetRozjizdek",
                     "publikovanych",
-                    "kRevizi"
+                    "kRevizi",
+                    "kPodpisu",
+                    "kPublikaci"
                 ],
                 "type": "object",
                 "properties": {
@@ -10009,18 +10883,25 @@
                         "format": "int32"
                     },
                     "kRevizi": {
-                        "type": "integer",
-                        "format": "int32"
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
                     },
                     "kPodpisu": {
-                        "type": "integer",
-                        "format": "int32",
-                        "default": 0
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
                     },
                     "kPublikaci": {
-                        "type": "integer",
-                        "format": "int32",
-                        "default": 0
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
                     }
                 }
             },
@@ -10342,6 +11223,12 @@
                 ],
                 "default": "Telefon"
             },
+            "ZdrojTrasy": {
+                "enum": [
+                    "Gps",
+                    "Simulace"
+                ]
+            },
             "ZkraceniVstup": {
                 "required": [
                     "prvek"
@@ -10475,6 +11362,9 @@
             "name": "Z\u00e1vody"
         },
         {
+            "name": "Upozorn\u011bn\u00ed"
+        },
+        {
             "name": "Import"
         },
         {
@@ -10496,7 +11386,13 @@
             "name": "Spr\u00e1va"
         },
         {
+            "name": "Kl\u00ed\u010de"
+        },
+        {
             "name": "B\u00f3je"
+        },
+        {
+            "name": "Trasy"
         }
     ]
 }

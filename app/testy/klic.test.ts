@@ -8,7 +8,7 @@
 import assert from 'node:assert/strict';
 import * as Trezor from 'expo-secure-store';
 
-import { klic, tajemstvi, uplatni, zapomen } from '../src/lib/klic.ts';
+import { adresaKlice, klic, tajemstvi, uplatni, zapomen } from '../src/lib/klic.ts';
 
 let prosly = 0;
 async function zkus(nazev: string, f: () => Promise<void> | void) {
@@ -120,6 +120,20 @@ await zkus('server na nečekanou chybu se neskryje', async () => {
     ({ ok: false, status: 500, json: async () => ({}) }) as unknown as Response) as typeof fetch;
   // 400 je odpověď, 500 je porucha — ta se nesmí tvářit jako neplatná pozvánka.
   await assert.rejects(() => uplatni('abc'), /500/);
+});
+
+await zkus('QR vede na web, ne rovnou do appky', () => {
+  // Vlastní schéma by u telefonu bez appky neudělalo nic. Stránka na webu
+  // posádku buď přehodí do appky, nebo jí řekne, kde ji vzít.
+  const a = adresaKlice('abc');
+  assert.ok(a.startsWith('https://'), a);
+  assert.ok(a.includes('/klic?kod=abc'), a);
+});
+
+await zkus('kód se do adresy zakóduje', () => {
+  // Kód je tajemství z generátoru náhody; kdyby v něm někdy byl znak se
+  // zvláštním významem v adrese, nesmí pozvánku rozbít.
+  assert.ok(adresaKlice('a+b/c=').includes('kod=a%2Bb%2Fc%3D'), adresaKlice('a+b/c='));
 });
 
 console.log(`\n${prosly} kontrol prošlo.`);
