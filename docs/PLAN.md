@@ -1173,6 +1173,16 @@ druhý tvar stránky s jinou cenou a mobil zaplatí i za to, co nerozbalil.
 Načítá se tedy jen otevřená sekce a rozbalení jiné je navigace na její
 adresu, ne nové vykreslení celku.
 
+**Akordeon hotový 24. 10. 2026**, o čtrnáct dní po tabech — ty se nasadily
+samy a na úzkém displeji zůstal pruh, který se tam nevejde. Filip to našel
+sám (*„u malých rozměrů bych raději tab předělal něco jako akordeon"*).
+Změřeno na `jarni-vitr` při 375 px: pruh měl **551 px obsahu v 335 px
+místa, vidět byly tři sekce z pěti** a posuvník je schovaný, takže na Lodě
+a Výsledky nevedla cesta. Pod 40 rem (640 px, kde se pruh ještě vejde) je
+teď jeden řádek s otevřenou sekcí a „a 4 další"; rozbalí se na celý seznam
+a klepnutí je navigace, přesně jak past výš žádá. Dělá to `<details>`, takže
+bez javascriptu — jediný skript je `ZavriMimo` na Escape a klepnutí jinam.
+
 ## Stránka regaty: postavená (11.–12. 10. 2026)
 
 Filip: *„udělat konečně tu stránku té regaty, je nepřehledná a spaghetti."*
