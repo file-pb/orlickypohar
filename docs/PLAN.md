@@ -1874,7 +1874,9 @@ tedy ve chvíli, kdy polohy existují a není je kde vidět: **zobrazení polohy
 na mapě dnes není nikde** — ani ve webu, ani v appce. Trasa jde z telefonu
 ven jen jako GPX (`app/src/lib/tracker/gpx.ts`) a jako textový přehled.
 
-**Rozhodnutí: trackování se zobrazuje jako stav, mapa jen jako záznam.**
+**Rozhodnutí: pro diváka se trackování zobrazuje jako stav, mapa je až
+záznam — pořadatel a výš ale mapu dostanou živě** (upřesněno Filipem
+24. 10. 2026, viz *Pořadatel chce mapu, a živě* níž).
 
 Důvod je v tom, co se kolem trackeru skutečně ptá:
 
@@ -1890,6 +1892,31 @@ Mapu si vynutí jediná z nich, a je to ta jediná, která se neptá živě.
 Druhý důvod je čitelnost: čtyřicet plachetnic při pěti uzlech je na zoomu 15
 **zhruba pixel za pět sekund**, takže živá mapa je čtyřicet teček, které se
 nehýbou.
+
+#### Pořadatel chce mapu, a živě (Filip, 24. 10. 2026)
+
+*„Pořadatel a výše musí mít k dispozici mapu, na které bude tracking, i moci
+zoomovat a koukat na lodě a jejich detaily."* Tabulka výš tedy platí pro
+diváka, ne pro závodní výbor: **tam, kde se podle polohy jedná, mapa je
+nutná.** Text *„1,2 km jihozápadně"* odpoví na *„startujeme?"*, ale
+neodpoví na *„je ještě na vodě, nebo už u břehu?"* — a to je otázka za šera
+a ve zhoršeném počasí, tedy ten bezpečnostní rozměr, kvůli kterému podle
+plánu celá kapitola existuje i bez jediné zveřejněné rozjížďky.
+
+**Je to jedna mapa, ne dvě** (Filip, 24. 10. 2026: *„resp. v případě, že to
+bude povolené i pro veřejnost, tak všichni"*). Staví se jednou a kdo ji
+vidí, rozhoduje přepínač *živý přenos ven*. Veřejná živá mapa tím přestává
+být samostatný kus práce a zůstává z ní rozhodnutí o přístupu.
+
+**Co to stojí: interaktivní mapa je nová komponenta.** Dnešní `MapkaTrati`
+(`web/app/mapka-trati.tsx:151`) bere jen prvky, nemá stav a nic v ní nejde
+posouvat ani rozkliknout — kreslí se na serveru a používá ji správa bójí
+a tabule. Zoom, posun, výběr lodi a karta s detailem jsou proto práce navíc.
+Použitelné zůstává všechno pod tím: dlaždice přes náš server, projekce
+z `web/lib/mapa.ts` i kreslení bójí.
+
+**V pořadí práce se tím mapa stěhuje z kroku 5 do kroku 2.** Pro diváka
+zůstává pozdě; pro rozhodčího je to součást přehledu, ne nadstavba nad ním.
 
 **Živě a záznam jsou dva sloupce u každé role, ne dvě fáze projektu**
 (Filip, 24. 10. 2026):
@@ -1917,7 +1944,7 @@ protože teprve z něj data na serveru vznikají:
 | | Krok | Proč tam |
 |---|---|---|
 | **1** | průběžné odesílání z úlohy na pozadí, kdykoli je signál | bez něj nemá server co ukazovat ani co archivovat |
-| **2** | přehled pro rozhodčího: **kde jsou** (čerstvost, vzdálenost, směr) a **jak jedou** (poslední post, úsek trati) | to, co si Filip vyžádal; obsluhuje tracker check, odklad startu i shánění lodi |
+| **2** | přehled pro rozhodčího: **kde jsou** (čerstvost, vzdálenost, směr), **jak jedou** (postup po trati) a **mapa** se zoomem a detailem lodi | to, co si Filip vyžádal; obsluhuje tracker check, odklad startu i shánění lodi za šera |
 | **3** | stopa po dojezdu v appce a po regatě na webu | vzniká skoro zadarmo, data už na serveru jsou |
 | **4** | posty a sestřih regaty na tabuli | režie se nacvičí na záznamu |
 | **5** | živě pro diváka | až když se na 3 a 4 ukáže, že to stojí za dívání |
