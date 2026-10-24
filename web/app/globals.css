@@ -2806,13 +2806,20 @@ body:has(.tabule) { overflow: hidden; }
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--linka);
 }
+/* Všechno v jednom řádku. Bez explicitního `grid-row` si auto-placement
+   zakládal nové řádky a pruh byl třikrát vyšší, než má být. */
+.tabule .vrch > * { grid-row: 1; }
+.tabule .vrch .odchod { grid-column: 1; }
 .tabule .vrch h1 { margin: 0; min-width: 0; grid-column: 2; }
 .tabule .vrch .atributy { grid-column: 3; justify-content: start; }
-.tabule .vrch .stav { grid-column: 4; flex-direction: row; gap: 0.8vw; align-items: baseline; }
+.tabule .vrch .stav {
+  grid-column: 4;
+  display: flex; flex-direction: row; gap: 0.8vw; align-items: baseline;
+}
 
 /* Stav rozjížďky s vlajkou je úplně vpravo (Filip, 24. 10. 2026). */
 .stav-rozjizdky-tabule {
-  grid-column: 5;
+  grid-column: 5; grid-row: 1;
   display: flex; align-items: center; gap: 0.5vw;
   margin: 0;
   font-size: 1vw; letter-spacing: 0.04em;
@@ -3114,7 +3121,7 @@ body:has(.tabule) { overflow: hidden; }
 .tabule-mapa .nacrt-na-tv .nacrt-swap {
   /* Pod pásek (3 vw) i pruh s názvem (zhruba 11 vw). Změřeno: hlavička
      končí na 227 px při šířce 1600. */
-  top: 12vw;
+  top: 6.5vw;
   left: 1.2vw;
   right: auto;
 }
@@ -3142,19 +3149,15 @@ body:has(.tabule) { overflow: hidden; }
    říkal totéž podruhé — jen ze zápisu místo z vody. Kde mapa chybí (závod
    bez zadané trati), zůstává: tam je to jediné pořadí, které tabule má. */
 .tabule:has(.tabule-mapa) .sloupce { display: none; }
-/* Žebříček začíná pod pruhem; ten má při 1600 px 162, tedy ~10 vw. */
-.tabule:has(.tabule-mapa) .tabule-mapa .nacrt-poradi { top: 11vw; }
+/* Žebříček začíná pod pruhem; ten je po zúžení vysoký 72 px na 1485,
+   tedy necelých 5 vw. */
+.tabule:has(.tabule-mapa) .tabule-mapa .nacrt-poradi { top: 5.8vw; }
 /* Všechno ostatní leží nad mapou. */
 .tabule > :not(.tabule-mapa) { position: relative; z-index: 1; }
 
-/* Nad mapou musí mít text svůj podklad, jinak se ztratí v lese. Karty
-   jsou poloprůhledné, aby bylo vidět, že pod nimi mapa pokračuje. */
-.tabule:has(.tabule-mapa) .vrch {
-  background: color-mix(in srgb, var(--pozadi) 82%, transparent);
-  backdrop-filter: blur(6px);
-  border-radius: 0.6vw;
-  padding-inline: 1vw;
-}
+/* Horní pruh není karta — jde od kraje ke kraji, takže žádné zaoblení
+   ani vnitřní odsazení karty (Filip, 24. 10. 2026). Podklad a rozměry
+   si řídí `.tabule .vrch` výš. */
 
 .tabule:has(.tabule-mapa) .karusel,
 .tabule:has(.tabule-mapa) .sloupecek > * {
