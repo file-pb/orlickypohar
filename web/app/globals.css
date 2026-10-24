@@ -3078,19 +3078,11 @@ body:has(.tabule) { overflow: hidden; }
   box-shadow: 0 0.3vw 1.5vw rgb(0 0 0 / 35%);
 }
 
-/* Karusel s výsledky ustupuje doleva dolů: pořadí na vodě je živé, tohle
-   je zápis. */
-.tabule:has(.tabule-mapa) .sloupce {
-  position: absolute;
-  left: 1vw; bottom: 1.2vw;
-  width: clamp(280px, 26vw, 460px);
-  justify-content: start;
-  grid-template-columns: minmax(0, 1fr);
-  /* Výška podle obsahu: mřížka tabule má řádek `minmax(0, 1fr)` kvůli
-     sloupcům přes celou plochu, a tady by panel stlačila do sebe. */
-  grid-template-rows: auto;
-  max-height: 40vh;
-}
+/* <b>Karusel s výsledky na mapové tabuli není</b> (Filip, 24. 10. 2026).
+   V úzké kartě vlevo dole se řádky slily přes sebe a vedle živého pořadí
+   říkal totéž podruhé — jen ze zápisu místo z vody. Kde mapa chybí (závod
+   bez zadané trati), zůstává: tam je to jediné pořadí, které tabule má. */
+.tabule:has(.tabule-mapa) .sloupce { display: none; }
 /* Všechno ostatní leží nad mapou. */
 .tabule > :not(.tabule-mapa) { position: relative; z-index: 1; }
 
