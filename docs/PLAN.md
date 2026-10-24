@@ -3134,9 +3134,34 @@ všechno, co iOS posílá navíc. Šest sekund místo pěti je očekávané: sys
 dodává polohy po zhruba sekundě, takže první, která projde pětisekundovou
 hranicí, přijde typicky až v šesté.
 
-**Zbývá spotřeba se zhasnutým displejem** — jediná nesplněná přejímací
-podmínka. Měřit ji jde jen na telefonu **odpojeném od nabíječky**, jinak
-měření neřekne nic.
+**Spotřeba se zhasnutým displejem: 1,96 % za hodinu** (24. 10. 2026).
+Záznam *TEST ZHASNUTI* běžel **9 hodin 16 minut v kuse**, telefon ležel
+zhasnutý a mimo nabíječku, baterie klesla ze 71 % na 53 %.
+
+| | |
+|---|---|
+| spotřeba | **1,96 % / h** |
+| z plné baterie | ~51 hodin |
+| závodní den (8 h) | 16 % |
+| dvacetičtyřhodinovka | 47 % |
+
+**Přejímací podmínka 1 je tím splněná** — ale jen pro telefon, který leží.
+Pro závod to není totéž a plán by si tím neměl lhát: viz níž.
+
+**iOS si v klidu zpomalí sám.** Rozestup vyšel **15 s**, ne pět, které si
+appka hlídá — 92 % mezer padlo mezi jedenáct a šestnáct sekund. Pro
+srovnání týž den a tatáž verze appky v pohybu (*Saddens*): **6,0 s**. Když
+se telefon nehýbe, systém polohy posílá zhruba dvaapůlkrát řidčeji, takže
+se appka tolikrát méně budí.
+
+**Z toho plyne, co to číslo je a co není.** Je to **spodní hranice**:
+tolik to vezme, když se nic neděje. Na vodě se telefon hýbe, systém posílá
+polohy častěji a mění se i viditelnost družic, takže spotřeba poroste —
+o kolik, **nevíme a nemá smysl to odhadovat**. Chce to měření v pohybu:
+pustit záznam, odpojit, zapsat procenta, po pár hodinách zase.
+
+Dvacetičtyřhodinovka na 47 % je tedy optimistický konec rozsahu, ne
+předpověď. Powerbanka (*výš*) platí dál.
 
 **Na dvacetičtyřhodinovku se stejně bude doporučovat powerbanka** (Filip,
 24. 10. 2026) — jeden telefon na lodi, zapojený. Žádná optimalizace
