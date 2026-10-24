@@ -981,13 +981,18 @@ export function NacrtMapy({
                   */}
                   {vSouboji && (
                     <span
-                      key={krok}
+                      key={`sipka-${krok}`}
                       className={`nacrt-sipka-radku ${jdeNahoru ? "nacrt-nahoru" : "nacrt-dolu"}`}
                     >
                       {jdeNahoru ? "▲" : "▼"}
                     </span>
                   )}
-                  <span key={vSouboji ? krok : "cislo"} className={vSouboji ? "nacrt-cislo-pod" : undefined}>
+                  {/* Klíče musí být mezi sourozenci různé, jinak si React
+                      šipku s číslem plete a animace se připne na špatný. */}
+                  <span
+                    key={vSouboji ? `cislo-${krok}` : "cislo"}
+                    className={vSouboji ? "nacrt-cislo-pod" : undefined}
+                  >
                     {v.stav === "nedostupna" ? "—" : i + 1}
                   </span>
                 </span>
