@@ -2783,15 +2783,49 @@ body:has(.tabule) { overflow: hidden; }
 
    Od 24. 10. 2026 je v témž pruhu i řádek atributů, pod názvem — pás
    dlaždic pod hlavičkou bral desetinu obrazovky na pět čísel. */
+/* <b>Jediný pruh nahoře, přes celou šířku a poloprůhledný</b> (Filip,
+   24. 10. 2026). Nese všechno naráz: značku, stav rozjížďky s vlajkou,
+   název, čísla a stáří dat. Dva pásy nad sebou braly dvakrát tolik
+   místa, které patří mapě. */
 .tabule .vrch {
+  position: absolute; left: 0; right: 0; top: 0; z-index: 3;
   display: grid;
-  grid-template-columns: 5vw auto minmax(0, 1fr) auto;
+  grid-template-columns: 4vw auto auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.2vw 1.2vw; margin-bottom: 0.6vw;
+  gap: 0 1.4vw;
+  margin: 0; padding: 0.3vw 1vw;
+  background: color-mix(in srgb, var(--pozadi) 72%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--linka);
 }
-.tabule .vrch h1 { margin: 0; min-width: 0; grid-column: 2; }
-.tabule .vrch .atributy { grid-column: 3; justify-content: start; }
-.tabule .vrch .stav { grid-column: 4; }
+.tabule .vrch h1 { margin: 0; min-width: 0; grid-column: 3; }
+.tabule .vrch .atributy { grid-column: 4; justify-content: start; }
+.tabule .vrch .stav { grid-column: 5; flex-direction: row; gap: 0.8vw; align-items: baseline; }
+
+/* Stav rozjížďky s vlajkou, hned za značkou. */
+.stav-rozjizdky-tabule {
+  grid-column: 2;
+  display: flex; align-items: center; gap: 0.5vw;
+  margin: 0;
+  font-size: 1vw; letter-spacing: 0.04em;
+  color: var(--tlumeny);
+  white-space: nowrap;
+}
+.stav-rozjizdky-tabule span { display: inline-block; animation: stav-prijezd 0.4s ease-out; }
+.stav-rozjizdky-tabule .vlajka { height: 1.4vw; width: auto; flex: none; }
+.stav-rozjizdky-tabule.sviti-ceka { color: #e8900c; }
+.stav-rozjizdky-tabule.sviti-jede { color: var(--stav-vypsany); }
+.stav-rozjizdky-tabule.sviti-dojeto { color: var(--voda); }
+.stav-rozjizdky-tabule.sviti-zruseno { color: var(--stav-zruseny); }
+
+@keyframes stav-prijezd {
+  from { opacity: 0; transform: translateY(0.4vw); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stav-rozjizdky-tabule span { animation: none; }
+}
 .tabule .vrch .stav { display: flex; flex-direction: column; align-items: flex-end; gap: 0.3vw; }
 .tabule .vrch .stav p { margin: 0; }
 /* Logo v rohu: jediná klikatelná věc. Je malé schválně — má být po ruce,
@@ -3072,7 +3106,7 @@ body:has(.tabule) { overflow: hidden; }
 .tabule-mapa .nacrt-na-tv .nacrt-swap {
   /* Pod pásek (3 vw) i pruh s názvem (zhruba 11 vw). Změřeno: hlavička
      končí na 227 px při šířce 1600. */
-  top: 15vw;
+  top: 12vw;
   left: 1.2vw;
   right: auto;
 }
@@ -3100,6 +3134,8 @@ body:has(.tabule) { overflow: hidden; }
    říkal totéž podruhé — jen ze zápisu místo z vody. Kde mapa chybí (závod
    bez zadané trati), zůstává: tam je to jediné pořadí, které tabule má. */
 .tabule:has(.tabule-mapa) .sloupce { display: none; }
+/* Žebříček začíná pod pruhem; ten má při 1600 px 162, tedy ~10 vw. */
+.tabule:has(.tabule-mapa) .tabule-mapa .nacrt-poradi { top: 11vw; }
 /* Všechno ostatní leží nad mapou. */
 .tabule > :not(.tabule-mapa) { position: relative; z-index: 1; }
 
@@ -4069,39 +4105,9 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   color: var(--voda);
 }
 
-/* Stav rozjížďky jako pásek úplně nahoře, přes celou šířku (Filip,
-   24. 10. 2026). Tenký schválně: je to kontext, ne sdělení. */
-.stavovy-prouzek {
-  position: absolute; left: 0; right: 0; top: 0; z-index: 3;
-  margin: 0;
-  padding: 0.3vw 0;
-  text-align: center;
-  font-size: 1.05vw;
-  letter-spacing: 0.06em;
-  border-bottom: 2px solid currentColor;
-  background: color-mix(in srgb, var(--pozadi) 88%, transparent);
-  backdrop-filter: blur(6px);
-  color: var(--tlumeny);
-}
 
-/* Pod páskem musí začít zbytek tabule, ať ho nepřekryje. */
-.tabule:has(.stavovy-prouzek) .vrch { margin-top: 2.2vw; }
 
-.stavovy-prouzek.sviti-ceka { color: #e8900c; }
-.stavovy-prouzek.sviti-jede { color: var(--stav-vypsany); }
-.stavovy-prouzek.sviti-dojeto { color: var(--voda); }
-.stavovy-prouzek.sviti-zruseno { color: var(--stav-zruseny); }
 
-.stavovy-prouzek span {
-  display: inline-block;
-  animation: stavovy-prouzek-prijezd 0.4s ease-out;
-}
-
-@keyframes stavovy-prouzek-prijezd {
-  from { opacity: 0; transform: translateY(0.4vw); }
-  to { opacity: 1; transform: none; }
-}
 
 @media (prefers-reduced-motion: reduce) {
-  .stavovy-prouzek span { animation: none; }
-}
+  }
