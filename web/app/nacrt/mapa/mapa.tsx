@@ -638,6 +638,27 @@ export function NacrtMapy({
             })}
         </svg>
 
+          <div className="nacrt-zoom">
+            <button
+              type="button"
+              onClick={() => setZ((v) => Math.min(Z_NEJVIC, v + 1))}
+              disabled={z >= Z_NEJVIC}
+              aria-label="přiblížit"
+              title="přiblížit"
+            >
+              +
+            </button>
+            <button
+              type="button"
+              onClick={() => setZ((v) => Math.max(Z_NEJMENE, v - 1))}
+              disabled={z <= Z_NEJMENE}
+              aria-label="oddálit"
+              title="oddálit"
+            >
+              −
+            </button>
+          </div>
+
         {rezim === "tabule" && zabery && (
           <div className="nacrt-swap">
             {zabery.duvod === "souboj" && posledniSwap ? (
@@ -703,12 +724,6 @@ export function NacrtMapy({
         </div>
 
         <div className="nacrt-ovladani">
-          <button type="button" onClick={() => setZ((v) => Math.min(Z_NEJVIC, v + 1))}>
-            přiblížit
-          </button>
-          <button type="button" onClick={() => setZ((v) => Math.max(Z_NEJMENE, v - 1))}>
-            oddálit
-          </button>
           <label>
             čas {Math.floor(cas / 60)}:{String(cas % 60).padStart(2, "0")}
             <input
