@@ -40,7 +40,10 @@ public static class OknaEndpoints
             .WithSummary("Uzavře závodní den")
             .WithDescription(
                 "Pořadatel regaty, nebo rozhodčí. Tím se přestává zaznamenávat — mezi "
-                + "dny se nesleduje. Uzavřít zavřené není chyba.");
+                + "dny se nesleduje. Uzavřít zavřené není chyba.\n\n"
+                + "V odpovědi je `zbylo`: **co po dni zůstalo otevřené** — rozjížďky, "
+                + "které pořád „běží\", a trasy, které telefon nedokončil. Nic se tím "
+                + "nezavírá; konec rozjížďky je rozhodnutí rozhodčího, ne dopočet.");
 
         // Telefon se prokazuje klíčem k lodi, ne přihlášením: trasa patří
         // lodi a okno je údaj, kterým se řídí záznam.

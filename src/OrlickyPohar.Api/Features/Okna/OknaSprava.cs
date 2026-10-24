@@ -13,6 +13,29 @@ namespace OrlickyPohar.Api.Features.Okna;
 /// </param>
 public record RozpravaVstup(int? TrvaniHodin);
 
+/// <summary>
+/// Co po závodním dni zůstalo otevřené.
+/// <para>
+/// <b>Uzavření dne je ten okamžik, kdy se to dá říct</b> (Filip, 24. 10.
+/// 2026: *„logické pojistky, aby nám tam nezůstávaly takové věci"*).
+/// Pořadatel ho dělá tak jako tak, takže se na něj dá pověsit kontrola —
+/// stejně jako rozprava nese otevření okna i zámek nastavení.
+/// </para>
+/// <para>
+/// <b>Nic se tím nezavírá.</b> Konec rozjížďky je rozhodnutí rozhodčího,
+/// ne dopočet; systém proto jen řekne, co zbylo, a nechá to na člověku.
+/// </para>
+/// </summary>
+/// <param name="Rozjizdky">Čísla rozjížděk, které pořád „běží".</param>
+/// <param name="RozdelaneTrasy">
+/// Trasy, které telefon nedokončil. Po tvrdém konci okna už do nich
+/// nikdo nic nepošle, takže zůstanou rozdělané napořád.
+/// </param>
+public record ZustaloOtevrene(IReadOnlyList<int> Rozjizdky, int RozdelaneTrasy)
+{
+    public bool Neco => Rozjizdky.Count > 0 || RozdelaneTrasy > 0;
+}
+
 /// <summary>Okno tak, jak ho vidí pořadatel i telefon.</summary>
 public record OknoDto(
     int Id,
@@ -20,7 +43,9 @@ public record OknoDto(
     DateTimeOffset OtevrenoV,
     DateTimeOffset TvrdyKonec,
     DateTimeOffset? ZavrenoV,
-    bool Bezi);
+    bool Bezi,
+    /// <summary>Co po dni zůstalo otevřené. Plní se jen při uzavírání.</summary>
+    ZustaloOtevrene? Zbylo = null);
 
 /// <summary>Okno i s regatou, ke které patří. Telefon si bere obojí.</summary>
 public record OknoRegatyDto(
@@ -103,7 +128,7 @@ public class OknaSprava(AppDbContext db, TimeProvider cas, NastaveniSprava nasta
             okno.ZavrenoV = ted;
             okno.ZavrelId = kdo;
             await db.SaveChangesAsync(ct);
-            return Dto(okno, ted);
+            return Dto(okno, ted) with { Zbylo = await ZbyloAsync(zavodId, okno, ct) };
         }
 
         var posledni = await db.Okna
@@ -112,6 +137,25 @@ public class OknaSprava(AppDbContext db, TimeProvider cas, NastaveniSprava nasta
             .FirstOrDefaultAsync(ct);
 
         return posledni is null ? null : Dto(posledni, ted);
+    }
+
+    /// <summary>
+    /// Co po dni zůstalo otevřené. Volá se při uzavírání, aby to pořadatel
+    /// viděl ve chvíli, kdy s tím ještě může něco udělat.
+    /// </summary>
+    public async Task<ZustaloOtevrene> ZbyloAsync(
+        int zavodId, OknoRegaty okno, CancellationToken ct)
+    {
+        var rozjizdky = await db.Rozjizdky
+            .Where(r => r.ZavodId == zavodId && r.Stav == StavRozjizdky.Probiha)
+            .OrderBy(r => r.Cislo)
+            .Select(r => r.Cislo)
+            .ToListAsync(ct);
+
+        var trasy = await db.Trasy
+            .CountAsync(t => t.OknoId == okno.Id && !t.Dokoncena, ct);
+
+        return new ZustaloOtevrene(rozjizdky, trasy);
     }
 
     public async Task<List<OknoDto>> SeznamAsync(int zavodId, CancellationToken ct)

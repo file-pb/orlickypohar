@@ -3,7 +3,10 @@ using Microsoft.Extensions.DependencyInjection;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Lode;
+using Microsoft.EntityFrameworkCore;
+using OrlickyPohar.Api.Features.Klice;
 using OrlickyPohar.Api.Features.Okna;
+using OrlickyPohar.Api.Features.Trasy;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Tracker;
 using OrlickyPohar.Api.Features.Zavody;
@@ -38,6 +41,21 @@ public class OknaTests(PostgresFixture fixture)
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var cas = new ZastavenyCas(ted ?? Rozprava);
         return (db, new OknaSprava(db, cas, new NastaveniSprava(db, cas)), cas);
+    }
+
+    /// <summary>Klíč k lodi — trasa se bez něj nedá založit.</summary>
+    private static async Task<KlicLodi> KlicAsync(AppDbContext db, int lodId, Guid kdo)
+    {
+        var klic = new KlicLodi
+        {
+            LodId = lodId,
+            Otisk = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N"),
+            VydalUcetId = kdo,
+            VydanV = Rozprava,
+        };
+        db.Klice.Add(klic);
+        await db.SaveChangesAsync();
+        return klic;
     }
 
     /// <summary>Regata s jednou přihlášenou lodí — bez účasti není co trackovat.</summary>
@@ -160,6 +178,61 @@ public class OknaTests(PostgresFixture fixture)
         Assert.True(nove);
         Assert.Equal(2, rano.Den);
         Assert.NotNull(await okna.ProLodAsync(lod.Id, cas.Ted, default));
+    }
+
+    [Fact]
+    public async Task Uzavreni_dne_rekne_co_zustalo_otevrene()
+    {
+        var (db, okna, cas) = Sluzby();
+        var (zavod, lod, kdo) = await RegataAsync(db);
+        await okna.OtevriAsync(zavod.Id, kdo, null, default);
+
+        // Rozjížďka, kterou nikdo nezastavil, a trasa, kterou telefon
+        // nedokončil — dvě věci, co po dni zůstanou viset.
+        db.Rozjizdky.Add(new Rozjizdka
+        {
+            ZavodId = zavod.Id, Cislo = 3, StartV = Rozprava.AddHours(2),
+            Stav = StavRozjizdky.Probiha,
+        });
+        var bezici = await okna.BeziciAsync(zavod.Id, Rozprava.AddHours(1), default);
+        db.Trasy.Add(new Trasa
+        {
+            LokalniId = $"t-{Guid.NewGuid():N}",
+            KlicId = (await KlicAsync(db, lod.Id, kdo)).Id,
+            LodId = lod.Id,
+            LodNazev = "LUNA",
+            ZavodId = zavod.Id,
+            OknoId = bezici!.Id,
+            Zacatek = Rozprava.AddHours(1),
+            NahranoV = Rozprava.AddHours(1),
+            PosledniDavkaV = Rozprava.AddHours(1),
+        });
+        await db.SaveChangesAsync();
+
+        cas.Ted = Rozprava.AddHours(9);
+        var zavrene = await okna.UzavriAsync(zavod.Id, kdo, default);
+
+        // Nic se nezavírá — jen se řekne, co zbylo. Konec rozjížďky je
+        // rozhodnutí rozhodčího, ne dopočet.
+        Assert.NotNull(zavrene!.Zbylo);
+        Assert.True(zavrene.Zbylo!.Neco);
+        Assert.Equal([3], zavrene.Zbylo.Rozjizdky);
+        Assert.Equal(1, zavrene.Zbylo.RozdelaneTrasy);
+        Assert.Equal(StavRozjizdky.Probiha,
+            (await db.Rozjizdky.SingleAsync(r => r.ZavodId == zavod.Id && r.Cislo == 3)).Stav);
+    }
+
+    [Fact]
+    public async Task Po_uklizenem_dni_nezbyva_nic()
+    {
+        var (db, okna, cas) = Sluzby();
+        var (zavod, _, kdo) = await RegataAsync(db);
+        await okna.OtevriAsync(zavod.Id, kdo, null, default);
+
+        cas.Ted = Rozprava.AddHours(9);
+        var zavrene = await okna.UzavriAsync(zavod.Id, kdo, default);
+
+        Assert.False(zavrene!.Zbylo!.Neco);
     }
 
     [Fact]
