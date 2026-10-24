@@ -136,7 +136,6 @@ export function Obrazovka({
           cestu zpátky — bez ní by se z televize nedalo odejít jinak než
           adresou. */}
       <Alert udalost={fronta[0]} hotovo={() => setFronta((f) => f.slice(1))} />
-      <StavovyProuzek snimek={snimek} ted={ted} ukazkovePolohy />
       {/* Logo vlevo, název uprostřed, stav vpravo (Filip, 15. 10. 2026).
           Jen kulatá značka: nápis „Orlická série" vedle ní by stál vedle
           názvu závodu v téže grafice a oba by se přebíjely. */}
@@ -147,6 +146,10 @@ export function Obrazovka({
         <h1>
           <NazevZavodu text={snimek.nazev} />
         </h1>
+        {/* Stav rozjížďky se vlajkou patří do téhož pruhu jako všechno
+            ostatní (Filip, 24. 10. 2026) — dva pásy nad sebou braly dvakrát
+            tolik místa než jeden. */}
+        <StavovyProuzek snimek={snimek} ted={ted} ukazkovePolohy />
         <div className="stav">
           <p className={`stitek stav-${snimek.stav.toLowerCase()}`}>{STAVY[snimek.stav]}</p>
           <p className={stari > 120 ? "stari zastarale" : "stari"}>

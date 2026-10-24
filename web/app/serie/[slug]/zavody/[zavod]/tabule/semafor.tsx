@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Snimek } from "@/lib/tabule";
+import { VlajkaStavu } from "./vlajka";
 
 /**
  * Semafor stavu rozjížďky (Filip, 15. 10. 2026: *„nějaký semaforek
@@ -230,7 +231,8 @@ export function StavovyProuzek({
   const zprava = zpravy[kde % zpravy.length];
 
   return (
-    <p className={`stavovy-prouzek sviti-${svetlo}`} role="status">
+    <p className={`stav-rozjizdky-tabule sviti-${svetlo}`} role="status">
+      <VlajkaStavu stav={svetlo} />
       {/* Klíč na textu: při střídání naběhne animace znovu, jinak by se
           řádek jen přepsal a nikdo by si změny nevšiml. */}
       <span key={zprava}>{zprava}</span>
