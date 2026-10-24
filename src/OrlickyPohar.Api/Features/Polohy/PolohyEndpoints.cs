@@ -41,7 +41,9 @@ public static class PolohyEndpoints
                 + "mimo ni se vydávání vypíná, protože ořez zezadu se nedá udělat "
                 + "dopředu. `vysila: false` znamená „teď ne\"; proč, se ven neříká. "
                 + "Loď bez polohy a poslední známá poloha mimo rozjížďku se nevydávají "
-                + "vůbec — to je údaj pro závodní výbor.");
+                + "vůbec — to je údaj pro závodní výbor. **Nezveřejněná regata ani "
+                + "nezveřejněný ročník se nevydají vůbec**, stejně jako u ostatních "
+                + "veřejných cest: veřejně neexistují.");
     }
 
     private static async Task<IResult> SnimekAsync(
@@ -58,8 +60,18 @@ public static class PolohyEndpoints
     private static async Task<IResult> VerejneAsync(
         string serie, string zavod, AppDbContext db, PolohySprava sprava, CancellationToken ct)
     {
+        // <b>Zveřejnění se ptá i tahle cesta.</b> Nepublikovaná regata
+        // veřejně neexistuje — a tady to platí dvakrát, protože ven jdou
+        // polohy lodí. Podmínka je tatáž jako u sousedních veřejných cest
+        // (`SerieEndpoints`, `ZavodEndpoints.DetailAsync`,
+        // `TratEndpoints`); tahle ji dřív neměla a odpovídala 200 na
+        // regatu, kterou detail vrací jako 404 (změřeno na produkci,
+        // 24. 10. 2026). Ven tehdy unikala jen existence, protože vysílání
+        // drží vypnutý přepínač — jenže ten měl být druhá pojistka, ne
+        // jediná.
         var zavodId = await db.Zavody
-            .Where(z => z.Slug == zavod && z.Serie!.Slug == serie)
+            .Where(z => z.Slug == zavod && z.Publikovano
+                        && z.Serie!.Slug == serie && z.Serie.Publikovano)
             .Select(z => (int?)z.Id)
             .FirstOrDefaultAsync(ct);
         if (zavodId is null) return Results.NotFound();

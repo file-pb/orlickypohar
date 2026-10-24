@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OrlickyPohar.Api.Data;
@@ -249,6 +250,41 @@ public class PolohyTests(PostgresFixture fixture)
         // Výchozí hodnota je bezpečná: ven nejde nic, i když se jede.
         Assert.False(ven.Vysila);
         Assert.Empty(ven.Lode);
+    }
+
+    /// <summary>
+    /// <b>Nezveřejněná regata veřejně neexistuje</b> — a na cestě, kterou
+    /// jdou ven polohy lodí, to platí dvakrát.
+    /// <para>
+    /// Měří se přes HTTP, protože podmínku drží <b>endpoint</b>, ne služba
+    /// pod ním: `VerejnyAsync` dostane rovnou `zavodId` a o zveřejnění nic
+    /// neví. Test přes službu by tedy prošel i tehdy, kdyby ta podmínka
+    /// v endpointu nebyla — a přesně tak to 24. 10. 2026 bylo. Cesta tehdy
+    /// odpovídala 200 na regatu, kterou detail vrací jako 404.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Nezverejnena_regata_se_ven_nevyda()
+    {
+        var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var regata = await RegataAsync(db, 1);
+
+        var zavod = await db.Zavody.Include(z => z.Serie).FirstAsync(z => z.Id == regata.ZavodId);
+        var cesta = $"/serie/{zavod.Serie!.Slug}/zavody/{zavod.Slug}/polohy";
+        var klient = fixture.CreateClient();
+
+        Assert.Equal(HttpStatusCode.NotFound, (await klient.GetAsync(cesta)).StatusCode);
+
+        // Zveřejněná zastávka v nezveřejněném ročníku pořád ne: širší rozsah
+        // rozhoduje, stejně jako u detailu regaty a u trati.
+        zavod.Publikovano = true;
+        await db.SaveChangesAsync();
+        Assert.Equal(HttpStatusCode.NotFound, (await klient.GetAsync(cesta)).StatusCode);
+
+        zavod.Serie.Publikovano = true;
+        await db.SaveChangesAsync();
+        Assert.Equal(HttpStatusCode.OK, (await klient.GetAsync(cesta)).StatusCode);
     }
 
     [Fact]
