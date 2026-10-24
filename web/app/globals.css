@@ -3752,28 +3752,13 @@ body:has(.tabule) { overflow: hidden; }
    ta druhá uhne stranou, zajede za ni a klesne — a na tu chvíli
    ztransparentní, dokud nedosedne na své místo (Filip, 24. 10. 2026).
    Jména přitom jedou rovně, aby se dala číst. */
-.nacrt-radek-nahoru { animation: nacrt-vzhuru 1s ease-in-out; }
-.nacrt-radek-dolu { animation: nacrt-dolu-za 1s ease-in-out; }
+/* Svislý pohyb řádků dělá FLIP v komponentě; tady zbývá jen barva šipek.
+   CSS animace by se s ním bila — hrála by dekoraci po skoku. */
 
 .nacrt-radek-nahoru .nacrt-cislo { color: var(--stav-vypsany); }
 .nacrt-radek-dolu .nacrt-cislo { color: var(--stav-zruseny); }
 
-@keyframes nacrt-vzhuru {
-  0% { transform: none; }
-  50% { transform: translateY(-16px); }
-  100% { transform: none; }
-}
 
-@keyframes nacrt-dolu-za {
-  0% { transform: none; opacity: 1; }
-  25% { transform: translateX(14px); opacity: 0.55; }
-  60% { transform: translate(14px, 16px); opacity: 0.55; }
-  100% { transform: none; opacity: 1; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .nacrt-radek-nahoru, .nacrt-radek-dolu { animation: none; }
-}
 
 /* Šipka u prohození svítí pár vteřin a zhasne; číslo pod ní se rozsvítí.
    Obojí v jedné buňce mřížky, takže řádek nepodskočí. */
