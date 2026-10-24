@@ -2784,11 +2784,14 @@ body:has(.tabule) { overflow: hidden; }
    Od 24. 10. 2026 je v témž pruhu i řádek atributů, pod názvem — pás
    dlaždic pod hlavičkou bral desetinu obrazovky na pět čísel. */
 .tabule .vrch {
-  display: grid; grid-template-columns: 14vw 1fr 14vw; align-items: center;
-  gap: 0.2vw 1vw; margin-bottom: 0.6vw;
+  display: grid;
+  grid-template-columns: 5vw auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.2vw 1.2vw; margin-bottom: 0.6vw;
 }
-.tabule .vrch h1 { margin: 0; min-width: 0; }
-.tabule .vrch .atributy { grid-column: 2; justify-content: center; }
+.tabule .vrch h1 { margin: 0; min-width: 0; grid-column: 2; }
+.tabule .vrch .atributy { grid-column: 3; justify-content: start; }
+.tabule .vrch .stav { grid-column: 4; }
 .tabule .vrch .stav { display: flex; flex-direction: column; align-items: flex-end; gap: 0.3vw; }
 .tabule .vrch .stav p { margin: 0; }
 /* Logo v rohu: jediná klikatelná věc. Je malé schválně — má být po ruce,
@@ -2807,10 +2810,12 @@ body:has(.tabule) { overflow: hidden; }
   src: url("/pismo/inter-black.woff2") format("woff2");
   font-weight: 900; font-style: normal; font-display: swap;
 }
-.tabule-nazev { display: block; width: 100%; height: 6.5vw; }
+/* Název je menší a atributy stojí vedle něj, ne pod ním (Filip, 24. 10.
+   2026) — na tabuli s mapou je každý vertikální pruh drahý. */
+.tabule-nazev { display: block; width: 100%; height: 3.4vw; }
 .tabule-nazev text {
   font-family: "Nadpis tabule", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  font-weight: 900; font-size: 5vw; letter-spacing: 0.01em;
+  font-weight: 900; font-size: 2.6vw; letter-spacing: 0.01em;
 }
 /* Alert doprostřed televize: vyjede, chvíli visí a usadí se k tomu, čeho
    se týká (Filip, 15. 10. 2026). Je to to jediné, co se na pasivním panelu
