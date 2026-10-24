@@ -3776,3 +3776,30 @@ body:has(.tabule) { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .nacrt-radek-nahoru, .nacrt-radek-dolu { animation: none; }
 }
+
+/* Šipka u prohození svítí pár vteřin a zhasne; číslo pod ní se rozsvítí.
+   Obojí v jedné buňce mřížky, takže řádek nepodskočí. */
+.nacrt-cislo { display: grid; place-items: center start; }
+.nacrt-cislo > * { grid-area: 1 / 1; }
+
+.nacrt-sipka-radku {
+  animation: nacrt-zhasni 4s ease-out forwards;
+}
+
+.nacrt-cislo-pod {
+  animation: nacrt-rozsvit 4s ease-out forwards;
+}
+
+@keyframes nacrt-zhasni {
+  0%, 45% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes nacrt-rozsvit {
+  0%, 45% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nacrt-sipka-radku, .nacrt-cislo-pod { animation-duration: 0.01s; }
+}

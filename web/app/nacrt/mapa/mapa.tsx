@@ -16,7 +16,7 @@
  * počítané v prohlížeči místo na serveru.
  */
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DLAZDICE, Z_NEJMENE, Z_NEJVIC, doPixelu } from "@/lib/mapa";
 import { ZnakBoje } from "@/app/znak-boje";
 import type { Poloha } from "@/lib/voda";
@@ -65,6 +65,15 @@ const HORENI_S = 180;
 const SOUBOJ_DO_POZICE = 6;
 /** Jak dlouho drží focus dvojice, která se právě prohodila. */
 const FOCUS_SOUBOJE_S = 90;
+/**
+ * A jak dlouho se prohození hraje v žebříčku.
+ *
+ * <b>Mnohem kratší než focus</b>: šipky a předjetí doprovázejí okamžik,
+ * ne celý záběr. Po minutě a půl už jsou obě lodě v seznamu kdovíkde,
+ * takže ustupující šipka ukazuje někam, kam se divák nedívá — a při
+ * zkoušce na náčrtu nebyla vidět vůbec.
+ */
+const ANIMACE_PROHOZENI_S = 20;
 /** Jak dlouho se na tabuli drží jedna loď, když se nic neděje. */
 const KOLOTOC_S = 60;
 
@@ -467,6 +476,27 @@ export function NacrtMapy({
       (p) => p.pozice <= SOUBOJ_DO_POZICE && cas - p.cas >= 0 && cas - p.cas <= HORENI_S,
     );
 
+  /**
+   * Při prohození odroluje seznam na tu dvojici. Bez toho se předjetí
+   * odehraje mimo výřez — žebříček má čtyřiadvacet řádků a vidět je jich
+   * tak devět.
+   */
+  const seznam = useRef<HTMLOListElement>(null);
+  useEffect(() => {
+    if (!posledniSwap || cas - posledniSwap.cas > ANIMACE_PROHOZENI_S) return;
+    const ol = seznam.current;
+    const a = ol?.querySelector(".nacrt-radek-nahoru");
+    const b = ol?.querySelector(".nacrt-radek-dolu");
+    if (!ol || !a || !b) return;
+    // Doprostřed mezi oba, ne na vítěze — ten, kdo o místo přišel, je ta
+    // půlka zprávy, kterou by jinak nikdo neviděl.
+    const r = ol.getBoundingClientRect();
+    const ra = a.getBoundingClientRect();
+    const rb = b.getBoundingClientRect();
+    const stred = (ra.top + rb.bottom) / 2 - r.top + ol.scrollTop;
+    ol.scrollTo({ top: stred - r.height / 2, behavior: "smooth" });
+  }, [posledniSwap, cas]);
+
   const vybranaLod = vStavu.find((v) => v.lod.id === vybrana) ?? null;
 
   return (
@@ -780,13 +810,14 @@ export function NacrtMapy({
             zrušit výběr ({zaskrtnute.size})
           </button>
         )}
-        <ol>
+        <ol ref={seznam}>
           {poradi.map((v, i) => {
             // Lodě, které se právě prohodily, se v žebříčku obkrouží kolem
             // sebe (Filip, 24. 10. 2026). Klíč nese čas prohození, takže
             // React řádek vymění a animace se spustí i u dalšího souboje.
-            const jdeNahoru = posledniSwap && lode[posledniSwap.nahoru].id === v.lod.id;
-            const jdeDolu = posledniSwap && lode[posledniSwap.dolu].id === v.lod.id;
+            const cerstve = posledniSwap && cas - posledniSwap.cas <= ANIMACE_PROHOZENI_S;
+            const jdeNahoru = cerstve && lode[posledniSwap!.nahoru].id === v.lod.id;
+            const jdeDolu = cerstve && lode[posledniSwap!.dolu].id === v.lod.id;
             const vSouboji = jdeNahoru || jdeDolu;
             return (
             <li
@@ -815,7 +846,19 @@ export function NacrtMapy({
                 onClick={() => vyber(v.lod.id)}
               >
                 <span className="nacrt-cislo">
-                  {jdeNahoru ? "▲" : jdeDolu ? "▼" : v.stav === "nedostupna" ? "—" : i + 1}
+                  {/*
+                    Šipka svítí pár vteřin a zhasne, číslo se pod ní
+                    rozsvítí (Filip, 24. 10. 2026). Oba leží ve stejné
+                    buňce mřížky, takže se nic neposouvá.
+                  */}
+                  {vSouboji && (
+                    <span className={`nacrt-sipka-radku ${jdeNahoru ? "nacrt-nahoru" : "nacrt-dolu"}`}>
+                      {jdeNahoru ? "▲" : "▼"}
+                    </span>
+                  )}
+                  <span className={vSouboji ? "nacrt-cislo-pod" : undefined}>
+                    {v.stav === "nedostupna" ? "—" : i + 1}
+                  </span>
                 </span>
                 <span className="nacrt-nazev">{v.lod.nazev}</span>
                 <span className="nacrt-kategorie">{v.lod.kategorie}</span>
