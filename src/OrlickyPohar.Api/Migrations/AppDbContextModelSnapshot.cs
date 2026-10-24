@@ -1094,6 +1094,88 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("Smernice");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Tracker.NastaveniTrackeru", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CoVidiPosadky")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.Property<bool>("JizdyPoRegateVerejne")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("ZamcenoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ZavodId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("ZivyPrenosVen")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ZavodId")
+                        .IsUnique();
+
+                    b.ToTable("NastaveniTrackeru");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Tracker.ZmenaNastaveniTrackeru", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Duvod")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTimeOffset>("Kdy")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("NaJizdy")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("NaPosadky")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("NaVen")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("NastaveniId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("PoZamku")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("UzivatelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("ZJizdy")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("ZPosadky")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("ZVen")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NastaveniId");
+
+                    b.ToTable("ZmenyNastaveniTrackeru");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Trasy.Trasa", b =>
                 {
                     b.Property<int>("Id")
@@ -2081,6 +2163,28 @@ namespace OrlickyPohar.Api.Migrations
                     b.Navigation("Zavod");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Tracker.NastaveniTrackeru", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Zavody.Zavod", "Zavod")
+                        .WithMany()
+                        .HasForeignKey("ZavodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Zavod");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Tracker.ZmenaNastaveniTrackeru", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Tracker.NastaveniTrackeru", "Nastaveni")
+                        .WithMany("Zmeny")
+                        .HasForeignKey("NastaveniId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Nastaveni");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Trasy.Trasa", b =>
                 {
                     b.HasOne("OrlickyPohar.Api.Features.Klice.KlicLodi", "Klic")
@@ -2281,6 +2385,11 @@ namespace OrlickyPohar.Api.Migrations
             modelBuilder.Entity("OrlickyPohar.Api.Features.Serial.Serie", b =>
                 {
                     b.Navigation("Kategorie");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Tracker.NastaveniTrackeru", b =>
+                {
+                    b.Navigation("Zmeny");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Trasy.Trasa", b =>

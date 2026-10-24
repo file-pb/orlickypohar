@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
+using OrlickyPohar.Api.Features.Tracker;
 using OrlickyPohar.Api.Features.Zavody;
 
 namespace OrlickyPohar.Api.Features.Okna;
@@ -43,7 +44,7 @@ public record OknoRegatyDto(
 /// chvíli nijak nepomohla.
 /// </para>
 /// </summary>
-public class OknaSprava(AppDbContext db, TimeProvider cas)
+public class OknaSprava(AppDbContext db, TimeProvider cas, NastaveniSprava nastaveni)
 {
     /// <summary>Stavy účasti, ve kterých loď na regatě závodí.</summary>
     private static readonly StavUcasti[] NaZavode =
@@ -79,6 +80,13 @@ public class OknaSprava(AppDbContext db, TimeProvider cas)
 
         db.Okna.Add(okno);
         await db.SaveChangesAsync(ct);
+
+        // Rozprava nese tři věci naráz: otevře okno, zamkne nastavení
+        // zobrazení a je to check-in. Je to dobře, protože se nedá udělat
+        // půlka — a když se neodklikne vůbec, okno se neotevře, tracker
+        // neběží a zůstane odemčené nastavení, které nemá na co působit.
+        await nastaveni.ZamkniAsync(zavodId, ted, ct);
+
         return (Dto(okno, ted), true);
     }
 

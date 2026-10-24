@@ -2613,6 +2613,35 @@ známá, je to záznam z jiného dne.
 k přepínači *živý přenos ven*, který zamyká rozprava; dokud ho systém
 nemá, platí bezpečná výchozí hodnota — ven nic.
 
+### Nastavení trackingu a zámek rozpravou (24. 10. 2026)
+
+Poslední řádek v tom, co postavila okna. `NastaveniTrackeru` drží tři
+přepínače z plánu a rozprava ho zamyká — `OknaSprava.OtevriAsync` volá
+`ZamkniAsync` hned po otevření okna, takže se nedá udělat půlka.
+
+| | Výchozí | Po zámku |
+|---|---|---|
+| co vidí posádky za jízdy | **jen sebe** | jen zpřísnit (`IOstatni` → `JenSebe` → `Nic`) |
+| živý přenos ven | **ne** | jen vypnout |
+| jízdy po regatě veřejně | **ne** | mění se dál, zámek se jich netýká |
+
+**Hodnoty `CoVidiPosadky` jdou od nejpřísnější k nejvolnější** (`Nic`=0,
+`JenSebe`=1, `IOstatni`=2) schválně: „zpřísnit" je pak porovnání čísel, ne
+tabulka výjimek.
+
+**Zamyká se i nastavení, které nikdo nezaložil.** Záznam vznikne až
+v okamžiku zámku, s výchozími hodnotami — a ty jsou proto bezpečné.
+
+**Po zámku je to věc rozhodčího**, ne organizátora regaty: ten nastavení
+dál vidí, ale nehýbe s ním. Každý zásah po zámku vyžaduje důvod a zapíše se
+do `ZmenaNastaveniTrackeru` s tím, kdo a kdy — to je ten doklad ke sporu
+*„vy jste nás viděli a my vás ne"*. Uložení beze změny hodnot důvod
+nepotřebuje; přeťuknutí formuláře není zásah do pravidel.
+
+**Co z toho ještě neplyne:** veřejný výdej poloh. Přepínač *živý přenos
+ven* existuje, ale snímek poloh se zatím vydává jen pořadateli a rozhodčímu
+— napojení veřejné mapy a tabule na něj je další krok.
+
 ### Co z toho čeká na přihlášení
 
 Všechna tři pravidla výš (loď v regatě, telefon u posádky, okno regaty)
