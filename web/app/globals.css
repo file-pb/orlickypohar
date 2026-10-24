@@ -3637,6 +3637,12 @@ body:has(.tabule) { overflow: hidden; }
 }
 
 .nacrt-taby button img { height: 1.1rem; width: auto; opacity: 0.55; }
+
+/* Tab „vše" nese všechny tři siluety, trochu přes sebe, ať nezabírají
+   víc místa než jedna a přitom je poznat, že jsou tři. */
+.nacrt-vse-znacky { display: flex; }
+.nacrt-vse-znacky img { height: 1rem; }
+.nacrt-vse-znacky img + img { margin-left: -0.35rem; }
 .nacrt-taby button:hover { background: var(--zvyrazneni); }
 
 .nacrt-taby button.vybrany {
