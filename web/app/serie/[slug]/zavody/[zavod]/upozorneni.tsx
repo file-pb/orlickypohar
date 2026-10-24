@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { VerejnaTrat, ZavodDetail } from "@/lib/api";
+import { STRANKA_BLESKU, type Blesky } from "@/lib/blesky";
 
 /**
  * Pruh upozornění nad celou stránkou regaty (Filip, 11. 10. 2026: *„Nad tím
@@ -13,6 +14,12 @@ import type { VerejnaTrat, ZavodDetail } from "@/lib/api";
  * vydává: stav rozjížďky, čas startu, přestavba trati, stav regaty, datum
  * vyvěšení směrnice. Rozprava mezi nimi chybí, protože ji model nemá —
  * až bude, přibude sem řádek.
+ *
+ * Jediná výjimka z toho pravidla jsou <b>blesky</b>: ty nejsou z našeho API,
+ * ale z družice přes EUMETSAT (`lib/blesky.ts`). Patří sem, protože jsou
+ * důvod regatu přerušit, a nikam jinam na stránku se nehodí — a ukazují se
+ * <b>jen v den regaty</b> (Filip, 24. 10. 2026: *„zajímá nás to nejvíce
+ * v den závodu, mimo tyto exponované dny to není až zase tak nutné"*).
  */
 
 type Upozorneni = {
@@ -26,22 +33,87 @@ type Upozorneni = {
 const cas = (kdy: string) =>
   new Date(kdy).toLocaleTimeString("cs-CZ", { hour: "numeric", minute: "2-digit" });
 
+/**
+ * Totéž pro čas, který přichází v UTC (snímek družice). Zónu je tu nutné
+ * říct: bez ní by se čas na vývojovém stroji a v kontejneru lišil o dvě
+ * hodiny, protože server jede v UTC.
+ */
+const casPraha = (iso: string) =>
+  new Date(iso).toLocaleTimeString("cs-CZ", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "Europe/Prague",
+  });
+
 /** Kolik dní je směrnice ještě novinka. Po týdnu ji každý, koho se týká, zná. */
 const CERSTVA_SMERNICE_DNU = 7;
 
 /** Kolik řádků pruhu se na telefonu vejde, aniž by odtlačil obsah pod okraj. */
 const NEJVIC_UPOZORNENI = 3;
 
+/**
+ * Od kolika kilometrů níž je bouřka věc, kvůli které se jde z vody.
+ * Družice má přesnost řádu deseti kilometrů (viz `lib/blesky.ts`), takže
+ * jemnější hranice by předstírala přesnost, kterou data nemají.
+ */
+const BOURKA_BLIZKO_KM = 30;
+
+/**
+ * Pod touhle plochou se aktivita nehlásí. ATBD přístroje připouští falešné
+ * výboje a jeden osamocený pixel je přesně ten případ; tohle jsou zhruba
+ * tři pixely výřezu.
+ */
+const NEJMENSI_PLOCHA_KM2 = 2;
+
 function dnuOd(kdy: string) {
   return (Date.now() - new Date(kdy).getTime()) / 86_400_000;
+}
+
+/** Datum v pražském pásmu jako YYYY-MM-DD — regaty se jedou na Orlíku. */
+const denVPraze = (kdy: Date) => kdy.toLocaleDateString("sv-SE", { timeZone: "Europe/Prague" });
+
+/** Jede se dnes? U vícedenní regaty platí celé rozpětí. */
+export function jedeSeDnes(zavod: ZavodDetail, ted = new Date()): boolean {
+  if (zavod.stav === "Zruseny") return false;
+  const dnes = denVPraze(ted);
+  return dnes >= zavod.datum && dnes <= (zavod.datumKonce ?? zavod.datum);
 }
 
 export function upozorneniZastavky(
   zavod: ZavodDetail,
   trat: VerejnaTrat | null,
   kam: { trat: string; tabule: string; prihlaska: string; smernice: string },
+  blesky: Blesky | null = null,
 ): Upozorneni[] {
   const u: Upozorneni[] = [];
+
+  // Bouřka je první, protože je to jediné upozornění o bezpečnosti — kvůli
+  // ostatním se nikdo z vody nevrací. Když se snímek nepodaří načíst, řádek
+  // chybí: pruh nikdy netvrdí, že je klid, takže se z jeho mlčení nedá nic
+  // vyčíst (na rozdíl od widgetu výstrah, který to říct musí).
+  if (blesky && blesky.nejblizKm !== null && blesky.plochaKm2 >= NEJMENSI_PLOCHA_KM2) {
+    const blizko = blesky.nejblizKm <= BOURKA_BLIZKO_KM;
+    u.push({
+      klic: "blesky",
+      nalehave: blizko,
+      text: (
+        <>
+          {blizko ? (
+            <b>
+              Bouřka {blesky.nejblizKm} km {blesky.smer}.
+            </b>
+          ) : (
+            <>
+              Blesková aktivita {blesky.nejblizKm} km {blesky.smer}.
+            </>
+          )}{" "}
+          <a href={STRANKA_BLESKU} target="_blank" rel="noopener noreferrer">
+            Z družice v {casPraha(blesky.cas)} →
+          </a>
+        </>
+      ),
+    });
+  }
 
   // Co se právě jede, je nejdůležitější věta na stránce. Tabule to ukazuje
   // v plné velikosti, tady stačí odkaz.
