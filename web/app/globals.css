@@ -2736,6 +2736,12 @@ body:has(.tabule) > .nahoru { display: none; }
    Sedm procent výšky obrazovky na loga je moc: patří tam, ale jsou to
    kulisy, ne sdělení — a každý jejich centimetr jde z mapy. */
 body:has(.tabule) { --paticka: 3.6vw; }
+/* Tabule jde od kraje ke kraji: obal stránky má odsazení pro čtení, tady
+   by ukrajoval pruh po stranách mapy i horní lišty. */
+body:has(.tabule) main.obal { max-width: none; padding: 0; }
+/* A sama tabule s mapou taky: odsazení si řeší panely, které na mapě
+   leží, ne plocha pod nimi. Horní pruh jinak začínal dva vw od kraje. */
+.tabule:has(.tabule-mapa) { padding: 0; }
 body:has(.tabule) > .partneri { border-top-color: var(--linka); }
 body:has(.tabule) > .partneri img { max-height: 2.2vw; }
 body:has(.tabule) > .partneri .partneri-pas a,
@@ -2790,21 +2796,23 @@ body:has(.tabule) { overflow: hidden; }
 .tabule .vrch {
   position: absolute; left: 0; right: 0; top: 0; z-index: 3;
   display: grid;
-  grid-template-columns: 4vw auto auto minmax(0, 1fr) auto;
+  grid-template-columns: 3vw auto minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 0 1.4vw;
-  margin: 0; padding: 0.3vw 1vw;
+  gap: 0 1.2vw;
+  /* Až do krajů (Filip, 24. 10. 2026): pruh drží celou šířku a obsah
+     v něm sedí u hran, ne uprostřed s okraji. */
+  margin: 0; padding: 0.15vw 0.6vw;
   background: color-mix(in srgb, var(--pozadi) 72%, transparent);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--linka);
 }
-.tabule .vrch h1 { margin: 0; min-width: 0; grid-column: 3; }
-.tabule .vrch .atributy { grid-column: 4; justify-content: start; }
-.tabule .vrch .stav { grid-column: 5; flex-direction: row; gap: 0.8vw; align-items: baseline; }
+.tabule .vrch h1 { margin: 0; min-width: 0; grid-column: 2; }
+.tabule .vrch .atributy { grid-column: 3; justify-content: start; }
+.tabule .vrch .stav { grid-column: 4; flex-direction: row; gap: 0.8vw; align-items: baseline; }
 
-/* Stav rozjížďky s vlajkou, hned za značkou. */
+/* Stav rozjížďky s vlajkou je úplně vpravo (Filip, 24. 10. 2026). */
 .stav-rozjizdky-tabule {
-  grid-column: 2;
+  grid-column: 5;
   display: flex; align-items: center; gap: 0.5vw;
   margin: 0;
   font-size: 1vw; letter-spacing: 0.04em;
@@ -2812,7 +2820,7 @@ body:has(.tabule) { overflow: hidden; }
   white-space: nowrap;
 }
 .stav-rozjizdky-tabule span { display: inline-block; animation: stav-prijezd 0.4s ease-out; }
-.stav-rozjizdky-tabule .vlajka { height: 1.4vw; width: auto; flex: none; }
+.stav-rozjizdky-tabule .vlajka { height: 1.8vw; width: auto; flex: none; }
 .stav-rozjizdky-tabule.sviti-ceka { color: #e8900c; }
 .stav-rozjizdky-tabule.sviti-jede { color: var(--stav-vypsany); }
 .stav-rozjizdky-tabule.sviti-dojeto { color: var(--voda); }
@@ -4111,3 +4119,17 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   }
+
+/* Vlající vlajka: každý svislý výsek se houpe s posunutou fází, takže
+   vlna běží od žerdi k cípu. Cíp se houpe víc než žerď — proto roste
+   i amplituda. */
+.vlajka-vysek { animation: vlajka-vlna 1.6s ease-in-out infinite; transform-box: fill-box; }
+
+@keyframes vlajka-vlna {
+  0%, 100% { transform: translateY(-0.55px) scaleY(0.97); }
+  50% { transform: translateY(0.55px) scaleY(1.03); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vlajka-vysek { animation: none; }
+}
