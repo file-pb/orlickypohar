@@ -18,6 +18,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { DLAZDICE, Z_NEJMENE, Z_NEJVIC, doPixelu } from "@/lib/mapa";
+import { ZnakBoje } from "@/app/znak-boje";
 import type { Poloha } from "@/lib/voda";
 import type { Lod, Znacka } from "./plavba";
 
@@ -112,7 +113,12 @@ export function NacrtMapy({
 }: {
   znacky: Znacka[];
   lode: Lod[];
-  /** Měřicí trasa po vodě, ze serveru. Divák ji nevidí. */
+  /**
+   * Měřicí trasa po vodě, ze serveru. <b>Nikdy se nekreslí</b> (Filip,
+   * 24. 10. 2026: *„měřicí trasu bych vůbec neumožnil zobrazit, ta je jen
+   * pro výpočet"*) — ani v náčrtu, aby se na ni nedalo zvyknout. Slouží
+   * jen k počítání postupu po trati.
+   */
   trasa: Poloha[];
   /** Spojnice trati z návrháře, pro každé přiblížení. Tahle se ukazovat smí. */
   spojnice: Record<number, Poloha[][]>;
@@ -137,7 +143,6 @@ export function NacrtMapy({
     setVybrana(id);
     if (id !== null) setHistorie((h) => [id, ...h.filter((x) => x !== id)].slice(0, 3));
   }
-  const [trasaVidet, setTrasaVidet] = useState(false);
   const [tratVidet, setTratVidet] = useState(true);
   const [pruhlednost, setPruhlednost] = useState(0.25);
   const tahne = useRef<{ x: number; y: number } | null>(null);
@@ -305,23 +310,6 @@ export function NacrtMapy({
               />
             ))}
 
-          {/*
-            Trasa, podle které se počítá pořadí. <b>Divák ji nevidí</b>
-            (Filip, 24. 10. 2026) — je to podklad výpočtu, ne část trati,
-            a nakreslená by tvrdila, že se po ní jede. V náčrtu jde zapnout,
-            protože bez ní se nedá posoudit, jestli měří rozumně.
-          */}
-          {trasaVidet && (
-          <polyline
-            points={uzly.map((u) => `${u.x},${u.y}`).join(" ")}
-            fill="none"
-            stroke="#fff"
-            strokeWidth={3}
-            strokeDasharray="10 7"
-            opacity={0.9}
-            style={{ filter: "drop-shadow(0 0 2px rgb(0 0 0 / 60%))" }}
-          />
-          )}
 
           {/* Ostatní lodě: celá dráha, barevně a hodně průhledně. */}
           {vStavu
@@ -386,18 +374,46 @@ export function NacrtMapy({
             </g>
           )}
 
-          {/* Značky až navrch, ať je přes ně nic nekreslí. */}
-          {znacky.map((m) => {
-            const p = naPlatno(m.sirka, m.delka);
-            return (
-              <g key={m.poradi}>
-                <circle cx={p.x} cy={p.y} r={7} fill="#f08c00" stroke="#fff" strokeWidth={2} />
-                <text x={p.x + 11} y={p.y + 4} className="nacrt-znacka">
-                  {m.poradi}. {m.nazev}
-                </text>
-              </g>
-            );
-          })}
+          {/*
+            Značky až navrch, ať je přes ně nic nekreslí — a <b>tak, jak je
+            kreslí návrhář</b> (Filip, 24. 10. 2026: *„i prvky z návrháře"*),
+            tedy znakem bóje s barvou a tvarem, ne kolečkem. Startovní a
+            cílová čára se kreslí jako čára mezi svými konci.
+          */}
+          {tratVidet &&
+            znacky.map((m) => {
+              const konce = m.konce.map((k) => ({ ...k, ...naPlatno(k.sirka, k.delka) }));
+              const uzel = naPlatno(m.sirka, m.delka);
+              return (
+                <g key={m.poradi}>
+                  {konce.length === 2 && (
+                    <line
+                      x1={konce[0].x}
+                      y1={konce[0].y}
+                      x2={konce[1].x}
+                      y2={konce[1].y}
+                      stroke="#fff"
+                      strokeWidth={2}
+                      opacity={0.85}
+                    />
+                  )}
+                  {konce.map((k, i) => (
+                    <ZnakBoje
+                      key={i}
+                      x={k.x}
+                      y={k.y}
+                      r={7}
+                      barva={k.barva}
+                      tvar={k.tvar}
+                      znaceni={k.znaceni}
+                    />
+                  ))}
+                  <text x={uzel.x + 12} y={uzel.y + 4} className="nacrt-znacka">
+                    {m.poradi}. {m.nazev}
+                  </text>
+                </g>
+              );
+            })}
         </svg>
 
         {vybranaLod && (
@@ -481,14 +497,6 @@ export function NacrtMapy({
               onChange={(e) => setTratVidet(e.target.checked)}
             />
             trať z návrháře
-          </label>
-          <label className="nacrt-prepinac">
-            <input
-              type="checkbox"
-              checked={trasaVidet}
-              onChange={(e) => setTrasaVidet(e.target.checked)}
-            />
-            měřicí trasa (na ostro neviditelná)
           </label>
           {vybrana !== null && (
             <label className="nacrt-prepinac">

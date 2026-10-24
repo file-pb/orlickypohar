@@ -2256,10 +2256,16 @@ nemíchat:
 | | Co to je | Vidět? |
 |---|---|---|
 | **spojnice trati** (`spojniceTrati`) | kudy se jede, s obloučky obeplutí a rozestupem noh; vyladěná od 11. 10. 2026 | **volitelně ano** |
-| **měřicí trasa** (`cestaProMereni`) | podklad pro postup po trati | **nikdy** |
+| **prvky trati** (`ZnakBoje`) | bóje s barvou, tvarem a značením, čáry mezi konci startu a cíle | **volitelně ano** |
+| **měřicí trasa** (`cestaProMereni`) | podklad pro postup po trati | **nikdy, ani v náčrtu** |
 
-Spojnice říká závodníkovi pravdu o trati, kterou stejně zná z GPX. Měřicí
-trasa by tvrdila, že se jede po ní.
+Spojnice a prvky říkají závodníkovi pravdu o trati, kterou stejně zná z GPX,
+a kreslí se tak, jak je kreslí návrhář — ne náhražkou. Měřicí trasa by
+tvrdila, že se jede po ní.
+
+**Zobrazit ji nejde nikde** (Filip, 24. 10. 2026: *„měřicí trasu bych vůbec
+neumožnil zobrazit, ta je jen pro výpočet"*). Náčrt ji nejdřív uměl zapnout
+jako ladicí pomůcku; i to je pryč, aby na ní nikdo nestavěl.
 
 **Hotové v náčrtu** (`web/app/nacrt/mapa`): měřicí trasa se počítá na
 serveru přes `cestaProMereni` s odstupem 60 m a pomyslné pořadí se měří

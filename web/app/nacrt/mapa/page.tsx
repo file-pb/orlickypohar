@@ -85,9 +85,9 @@ export default function Stranka() {
         Slouží k rozhodnutí o vzhledu, ne k sledování závodu.
       </p>
       <p className="nacrt-vysvetlivka">
-        Měřicí trasa: {trasa.length} bodů, {Math.round(delkaTrasy)} m po vodě
-        proti {Math.round(delkaPrimo)} m přímo mezi značkami. Divák ji nevidí;
-        v náčrtu se dá zapnout, aby se dalo posoudit, jestli měří rozumně.
+        Pořadí se počítá po trase, která se nikde nekreslí: {trasa.length} bodů
+        po vodě, {Math.round(delkaTrasy)} m proti {Math.round(delkaPrimo)} m
+        přímo mezi značkami.
       </p>
       <NacrtMapy znacky={znacky} lode={lode} trasa={trasa} spojnice={spojnice} />
     </main>

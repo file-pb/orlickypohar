@@ -17,6 +17,7 @@
  * otázku „jak dlouho trvá noha" ne.
  */
 
+import type { BarvaBoje, DruhZnaceni, TvarBoje } from "@/lib/boje";
 import { OBRYS_ORLIKU } from "@/lib/orlik-obrys";
 
 export type Bod = { sirka: number; delka: number; cas: number };
@@ -30,10 +31,27 @@ export type Lod = {
   dosloDo: number;
 };
 
+/**
+ * Značka trati tak, jak ji popisuje návrhář: jeden konec u bóje, dva
+ * u startovní a cílové čáry, a ke každému barva, tvar a čím je značená.
+ * Bez toho by náčrt kreslil kolečka místo trati.
+ */
+export type Konec = {
+  sirka: number;
+  delka: number;
+  barva: BarvaBoje;
+  tvar: TvarBoje;
+  znaceni: DruhZnaceni;
+};
+
 export type Znacka = {
   poradi: number;
   nazev: string;
   typ: "Start" | "OtocnaBoje" | "Cil";
+  /** Bok, kterým se značka míjí. U čar chybí. */
+  strana?: "PoLeve" | "PoPrave";
+  konce: Konec[];
+  /** Uzel, kterým vede dráha: bóje sama, nebo střed mezi konci. */
   sirka: number;
   delka: number;
 };
@@ -85,14 +103,31 @@ function naOse(podel: number, kolmo: number) {
  * natočený podle údolí.
  */
 export function trat(): Znacka[] {
-  const start = naOse(-300, 0);
+  // Startovní a cílová čára je tatáž, napříč osou — jak to bývá.
+  const levy = naOse(-300, 90);
+  const pravy = naOse(-300, -90);
+  const cara: Konec[] = [levy, pravy].map((p) => ({
+    ...p,
+    barva: "Zluta" as const,
+    tvar: "Valcova" as const,
+    znaceni: "NaseBoje" as const,
+  }));
+  const stredCary = {
+    sirka: (levy.sirka + pravy.sirka) / 2,
+    delka: (levy.delka + pravy.delka) / 2,
+  };
+
+  const boje = (p: { sirka: number; delka: number }): Konec[] => [
+    { ...p, barva: "Oranzova", tvar: "Kuzelova", znaceni: "NaseBoje" },
+  ];
   const navetrna = naOse(780, 0);
   const odpadavaci = naOse(150, -330);
+
   return [
-    { poradi: 1, nazev: "start", typ: "Start", ...start },
-    { poradi: 2, nazev: "N", typ: "OtocnaBoje", ...navetrna },
-    { poradi: 3, nazev: "O", typ: "OtocnaBoje", ...odpadavaci },
-    { poradi: 4, nazev: "cíl", typ: "Cil", ...start },
+    { poradi: 1, nazev: "start", typ: "Start", konce: cara, ...stredCary },
+    { poradi: 2, nazev: "N", typ: "OtocnaBoje", strana: "PoLeve", konce: boje(navetrna), ...navetrna },
+    { poradi: 3, nazev: "O", typ: "OtocnaBoje", strana: "PoLeve", konce: boje(odpadavaci), ...odpadavaci },
+    { poradi: 4, nazev: "cíl", typ: "Cil", konce: cara, ...stredCary },
   ];
 }
 
