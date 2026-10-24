@@ -2700,6 +2700,17 @@ nic neznamená.
 **Stopy si skládá prohlížeč** — `lib/stopy.ts` je sdílený mezi tabulí
 a pořadatelskou mapou, takže obě kreslí dráhy ze stejných dat stejně.
 
+### Kde loď je, slovy (24. 10. 2026)
+
+Doplněk k pořadatelské mapě: v seznamu lodí přibyl sloupec **Kde** —
+*„830 m na jihovýchod"*, měřeno od startovního prvku. Plán to žádá
+výslovně: odpověď na *„čekáme, nebo startujeme?"* musí být vidět hned,
+ne až po kliknutí do mapy.
+
+**Do padesáti metrů se píše „u startu".** Rozdíl pod přesností GPS je
+šum a směr by si vymýšlel stranu. **Bez startovního prvku se sloupec
+nevypisuje** — měřit od náhodné bóje by byl údaj, který nic neznamená.
+
 ### Co z toho čeká na přihlášení
 
 Všechna tři pravidla výš (loď v regatě, telefon u posádky, okno regaty)

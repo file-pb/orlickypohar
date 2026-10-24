@@ -6,6 +6,8 @@ import type { Znacka } from "@/app/nacrt/mapa/plavba";
 import type { Poloha } from "@/lib/voda";
 import type { PolohaLodi, SnimekPoloh } from "@/lib/polohy";
 import { useStopy } from "@/lib/stopy";
+import { azimut, nejblizsiStrana, vzdalenostM } from "@/lib/stavba-prvku";
+import { NAZVY_SMERU } from "@/lib/trat";
 
 /**
  * Jak často si obrazovka říká o nový snímek.
@@ -24,6 +26,29 @@ function predJakDlouho(ms: number | null): string {
   if (s < 60) return `před ${s} s`;
   const m = Math.floor(s / 60);
   return m < 60 ? `před ${m} min` : `před ${Math.floor(m / 60)} h ${m % 60} min`;
+}
+
+/**
+ * Kde loď je, slovy: <b>„1,2 km na jihozápad od startu"</b>.
+ *
+ * Plán to žádá výslovně (*Tracker běží celý blok na vodě*): odpověď na
+ * *„čekáme, nebo startujeme?"* musí být vidět hned, ne až po kliknutí do
+ * mapy. Na mapu se pak dá podívat, když je potřeba vědět víc.
+ */
+function kdeJe(
+  lod: { sirka: number | null; delka: number | null },
+  start: { sirka: number; delka: number } | null,
+): string | null {
+  if (lod.sirka === null || lod.delka === null || !start) return null;
+
+  const m = vzdalenostM(start, { sirka: lod.sirka, delka: lod.delka });
+  // Do padesáti metrů je rozdíl pod přesností GPS a směr by si vymýšlel
+  // stranu podle šumu.
+  if (m < 50) return "u startu";
+
+  const kam = NAZVY_SMERU[nejblizsiStrana(azimut(start, { sirka: lod.sirka, delka: lod.delka }))];
+  const kolik = m < 1000 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toFixed(1)} km`;
+  return `${kolik} ${kam}`;
 }
 
 const NAZVY_STAVU = {
@@ -65,6 +90,10 @@ export function ZiveLode({
     prvni ? Date.parse(prvni.oknoOd ?? prvni.ted) : null,
   );
   const lode = useStopy(snimek?.lode ?? null, od);
+  // Vzdálenost se měří od startu: „čekáme, nebo startujeme?" je otázka
+  // o něm. Bez startovního prvku se sloupec nevypisuje, místo aby se
+  // měřilo od náhodné bóje.
+  const start = znacky.find((z) => z.typ === "Start") ?? null;
 
   useEffect(() => {
     let zivy = true;
@@ -129,13 +158,14 @@ export function ZiveLode({
           <tr>
             <th>Loď</th>
             <th>Třída</th>
+            <th>Kde</th>
             <th>Poslední poloha</th>
             <th>Stav</th>
           </tr>
         </thead>
         <tbody>
           {(snimek?.lode ?? []).map((l) => (
-            <Radek key={l.lodId} lod={l} ted={ted} />
+            <Radek key={l.lodId} lod={l} ted={ted} start={start} />
           ))}
         </tbody>
       </table>
@@ -147,7 +177,15 @@ export function ZiveLode({
  * Jeden řádek přehledu. <b>Odpovídá na „trackuje nám celé pole?"</b>, takže
  * loď, která mlčí, tu musí být vidět — ne chybět.
  */
-function Radek({ lod, ted }: { lod: PolohaLodi; ted: number }) {
+function Radek({
+  lod,
+  ted,
+  start,
+}: {
+  lod: PolohaLodi;
+  ted: number;
+  start: { sirka: number; delka: number } | null;
+}) {
   const stari = lod.casGps === null ? null : ted - Date.parse(lod.casGps);
   return (
     <tr className={`tracker-${lod.stav.toLowerCase()}`}>
@@ -156,6 +194,7 @@ function Radek({ lod, ted }: { lod: PolohaLodi; ted: number }) {
         {lod.cisloPlachty ? <span className="stitek"> {lod.cisloPlachty}</span> : null}
       </td>
       <td>{lod.kategorie ?? "—"}</td>
+      <td>{kdeJe(lod, start) ?? "—"}</td>
       <td>{predJakDlouho(stari)}</td>
       <td>{NAZVY_STAVU[lod.stav]}</td>
     </tr>
