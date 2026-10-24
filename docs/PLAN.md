@@ -2458,9 +2458,18 @@ tím zůstává dvojí, ale každá na jinou otázku: **`Trasa` → regata** ř�
 *čí to je a kdy to smělo vzniknout*, **úsek → rozjížďka → závod** říká
 *co z toho patří do závodu*.
 
+**Trasa bez rozjížďky nesmí ztratit regatu** (Filip, 24. 10. 2026).
+Záznam, který k žádné rozjížďce nepatří — celý padl do čekání na vodě,
+rozjížďka se zrušila, posádka spustila záznam a nevyjela —, **pořád patří
+té regatě** a pořadatel ho u ní musí vidět. Právě proto je ta vazba na
+`Trase`, a ne jen na úseku: kdyby viselo všechno na rozjížďce, tyhle
+záznamy by se staly sirotky a zmizely by z přehledu zrovna ve dnech, kdy
+se něco nepovedlo.
+
 **Mazání se tím má o co opřít.** Dokud není úsek, není co nechat; ořez
 a mazání z oddílu *Tracker běží celý blok na vodě* jsou právě rozdíl mezi
-trasou a jejími úseky.
+trasou a jejími úseky. U trasy, která žádný úsek nedostane, to znamená, že
+se smaže celá — zůstane jen záznam, že vznikla.
 ### Co z toho čeká na přihlášení
 
 Všechna tři pravidla výš (loď v regatě, telefon u posádky, okno regaty)
