@@ -4,7 +4,14 @@ import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { Karta, Nadpis, Sekce } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
-import { klic as nactiKlic, uplatni, zapomen, type Klic } from '@/lib/klic';
+import {
+  klic as nactiKlic,
+  nastavSledovani,
+  sledovani,
+  uplatni,
+  zapomen,
+  type Klic,
+} from '@/lib/klic';
 
 /**
  * Spárování telefonu s lodí.
@@ -23,11 +30,36 @@ export default function KlicObrazovka() {
   const { kod: kodZOdkazu } = useLocalSearchParams<{ kod?: string }>();
 
   const [muj, setMuj] = useState<Klic | null>(null);
+  // `null` znamená „nevím" — telefon není spárovaný, nebo se server neozval.
+  const [sleduje, setSleduje] = useState<boolean | null>(null);
   const [kod, setKod] = useState('');
   const [delam, setDelam] = useState(false);
   const [zprava, setZprava] = useState<string | null>(null);
 
-  const nacti = useCallback(async () => setMuj(await nactiKlic()), []);
+  const nacti = useCallback(async () => {
+    const k = await nactiKlic();
+    setMuj(k);
+    setSleduje(k ? await sledovani() : null);
+  }, []);
+
+  async function prepniSledovani() {
+    if (sleduje === null) return;
+    setDelam(true);
+    setZprava(null);
+    try {
+      const novy = await nastavSledovani(!sleduje);
+      if (novy === null) {
+        setZprava('Klíč už neplatí — kapitán ho odebral. Potřebuješ novou pozvánku.');
+        setSleduje(null);
+        return;
+      }
+      setSleduje(novy);
+    } catch (e) {
+      setZprava(e instanceof Error ? e.message : 'Nedaří se spojit s API.');
+    } finally {
+      setDelam(false);
+    }
+  }
 
   useEffect(() => {
     void nacti();
@@ -81,10 +113,44 @@ export default function KlicObrazovka() {
             </Text>
           </Karta>
 
+          {/* <b>Kdo odjíždí, vypne si to sám</b> (plán, *Telefon jako mobilní
+              klíč k lodi*). Je to ta půlka odebrání, která nemá čekat na
+              kapitána — řeší past „telefon, který zůstal v autě" z té strany,
+              kde o ní člověk ví první. */}
+          <Sekce>Sledování</Sekce>
+          <Karta>
+            <Text style={{ color: t.text }}>
+              {sleduje === null
+                ? 'Nedaří se zjistit, jestli se z tohohle telefonu zaznamenává.'
+                : sleduje
+                  ? 'Při závodě se z tohohle telefonu zaznamenává trasa.'
+                  : 'Tenhle telefon je odepnutý — trasa se z něj neposílá.'}
+            </Text>
+            <Text style={{ color: t.tlumeny, marginTop: 8 }}>
+              Odepnutí je „tuhle regatu nejedu“, ne odchod z posádky: klíč zůstává a příští
+              závod se nemusíš párovat znovu.
+            </Text>
+            <Pressable
+              onPress={() => {
+                void prepniSledovani();
+              }}
+              disabled={delam || sleduje === null}
+              style={{ marginTop: 12 }}>
+              <Text
+                style={{
+                  color: delam || sleduje === null ? t.tlumeny : t.voda,
+                  fontWeight: '600',
+                }}>
+                {sleduje ? 'Odepnout se ze sledování' : 'Připnout se zpátky'}
+              </Text>
+            </Pressable>
+          </Karta>
+
           <Sekce>Odpojit telefon</Sekce>
           <Karta>
             <Text style={{ color: t.tlumeny }}>
-              Klíč se smaže z telefonu, ale na lodi zůstane platný — odebrat ho umí jen kapitán.
+              Klíč se smaže z telefonu, ale na lodi zůstane platný — odebrat ho umí jen
+              kapitán. Když jde jen o to nejet, stačí se odepnout výš.
             </Text>
             <Pressable
               onPress={() => {

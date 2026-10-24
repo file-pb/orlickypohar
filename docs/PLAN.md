@@ -3210,6 +3210,14 @@ zásah do cizího telefonu a za posádku odpovídá kapitán:
 | vidět spárované telefony | ano | ano | ano | ne |
 | vypnout sledování, odebrat klíč | ano | ano | **ne** | ne |
 
+**Odepnutí si držitel udělá sám** (hotovo 25. 10. 2026). `POST
+/klice/sledovani` se prokazuje klíčem, ne účtem — držitel žádný nemá —, a
+appka to má na obrazovce *Klíč k lodi*. Odepnutý klíč se smí ptát sám na
+sebe a připnout se zpátky; pro nahrávání dopadne jako neexistující. Odebrat
+se sám nemůže: to je odchod z posádky a zůstává kapitánovi. Oponentura
+24. 10. ukázala, že ta věta níž do té doby platila jen na papíře — a na lodi
+bez majitele i kapitána neodebral klíč vůbec nikdo.
+
 **Odebrat jde ve dvou krocích, a to je podstatné** (Filip, 21. 10. 2026):
 
 | | Co to udělá | Kdy |

@@ -63,13 +63,30 @@ public class KlicLodi
     /// posádky zůstává, jen tuhle regatu nejede nebo odjel po prvním dni
     /// domů. Telefon přestane posílat, ale příští závod se nemusí párovat
     /// znovu — a řeší to past *„telefon, který zůstal v autě"*.
+    /// <para>
+    /// <b>Smí to kapitán i sám držitel klíče.</b> Kapitán z výpisu klíčů
+    /// (<c>KliceSprava.SledujAsync</c>), držitel z telefonu
+    /// (<c>SledujSamAsync</c>) — plán to žádá větou, ne poznámkou pod čarou:
+    /// *„kdo odjíždí, vypne si to sám a není odkázaný na to, že na něj někdo
+    /// nezapomene."* Proto je odepnutí obousměrné i pro odepnutý klíč: jinak
+    /// by se telefon nepřipnul zpátky a bylo by to k ničemu právě tehdy, kdy
+    /// to má pomoct.
+    /// </para>
     /// </summary>
     public bool Sleduje { get; set; } = true;
 
     /// <summary>
     /// <b>Trvalé odebrání z posádky.</b> Klíč zaniká a nedá se oživit.
-    /// Smí to kapitán, pořadatel — a sám držitel klíče, protože kdo odjíždí,
-    /// vypne si to sám a není odkázaný na to, že na něj někdo nezapomene.
+    /// <b>Smí to majitel a kapitán</b> — odebrat klíč je zásah do cizího
+    /// telefonu a za posádku odpovídá kapitán.
+    /// <para>
+    /// Sám držitel se odebrat nemůže; co si zvládne sám, je odepnutí
+    /// (<see cref="Sleduje"/>). Do 25. 10. 2026 tu stálo, že odebrat smí
+    /// i pořadatel a sám držitel — neplatilo ani jedno a plán pořadatele
+    /// v tabulce nemá. <b>Otevřené zůstává, jestli tam patřit má</b>:
+    /// pořadatel je dnes jediný, kdo past *„telefon, který zůstal v autě"*
+    /// vidí z vody a nemá s ní co dělat.
+    /// </para>
     /// </summary>
     public DateTimeOffset? OdebranV { get; set; }
 

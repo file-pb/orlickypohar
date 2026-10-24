@@ -62,6 +62,11 @@ public class OchranaCteniTests(PostgresFixture fx)
     /// </summary>
     private static readonly Dictionary<string, string> VedomeVerejne = new()
     {
+        ["GET /klice/sledovani/"] =
+            "Telefon se ptá sám na sebe a prokazuje se klíčem k lodi, ne účtem — "
+            + "držitel klíče žádný nemá a mít nemusí. Ven nejde nic než to, jestli "
+            + "se z tohohle telefonu zaznamenává; bez klíče, s vymyšleným i "
+            + "s odebraným je odpověď 401, tedy táž.",
         ["GET /serie/{serie}/zavody/{zavod}/trat/"] =
             "Trať je veřejná, jakmile ji rozhodčí přijme (plán, oddíl téhož jména). "
             + "Rozhodnutí drží endpoint: nepřijatou trať nevydá vůbec, u přestavby "

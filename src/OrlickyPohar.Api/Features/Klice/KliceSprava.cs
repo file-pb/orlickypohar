@@ -147,6 +147,49 @@ public class KliceSprava(AppDbContext db, TimeProvider cas)
         return nalezeny;
     }
 
+    /// <summary>
+    /// Najde klíč, kterým se telefon hlásí <b>sám o sobě</b>: stačí, že
+    /// existuje a není odebraný.
+    /// <para>
+    /// <b>Odepnutý projde schválně.</b> Jinak by se telefon nemohl připnout
+    /// zpátky a odepnutí by bylo jednosměrné — tedy k ničemu právě v tom
+    /// případě, kvůli kterému vzniklo: *„odjel po prvním dni domů"* a příští
+    /// den jede zas.
+    /// </para>
+    /// <para>
+    /// <b>Použití se tu nerazítkuje.</b> <c>PosledniPouzitiV</c> odpovídá
+    /// kapitánovi na otázku „ozval se ten telefon?", a ta je o posílání
+    /// poloh; dotaz na vlastní nastavení by ji přepsal na „appka je
+    /// otevřená".
+    /// </para>
+    /// </summary>
+    public async Task<KlicLodi?> ProSebeAsync(HttpContext ctx, CancellationToken ct)
+    {
+        var hodnota = ctx.Request.Headers[Hlavicka].ToString();
+        if (string.IsNullOrWhiteSpace(hodnota)) return null;
+
+        var otisk = Otisk(hodnota);
+        var nalezeny = await db.Klice.FirstOrDefaultAsync(k => k.Otisk == otisk, ct);
+        return nalezeny is { OdebranV: null } ? nalezeny : null;
+    }
+
+    /// <summary>
+    /// Odepne nebo zase připne klíč <b>sám jeho držitel</b>. Plán to žádá
+    /// výslovně (*Telefon jako mobilní klíč k lodi*): „kdo odjíždí, vypne si
+    /// to sám a není odkázaný na to, že na něj někdo nezapomene."
+    /// <para>
+    /// Je to tatáž změna jako <see cref="SledujAsync"/>, jen se o ni hlásí
+    /// telefon místo kapitána. <b>Odebrat se sám nemůže</b> — to je zásah do
+    /// posádky a zůstává kapitánovi; tohle je jen „dneska nejedu".
+    /// </para>
+    /// </summary>
+    public async Task<bool> SledujSamAsync(KlicLodi klic, bool sleduj, CancellationToken ct)
+    {
+        klic.Sleduje = sleduj;
+        await db.SaveChangesAsync(ct);
+        return klic.Sleduje;
+    }
+
     public async Task<List<KlicDto>> SeznamAsync(int lodId, CancellationToken ct) =>
         await db.Klice
             .Where(k => k.LodId == lodId)

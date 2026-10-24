@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OrlickyPohar.Api.Data;
@@ -49,6 +50,77 @@ public class KliceTests(PostgresFixture fixture)
         });
         await db.SaveChangesAsync();
         return (u.Id, lod.Id);
+    }
+
+    /// <summary>Požadavek s klíčem v hlavičce — tak, jak ho posílá telefon.</summary>
+    private static HttpContext Kontext(string klic)
+    {
+        var ctx = new DefaultHttpContext();
+        ctx.Request.Headers[KliceSprava.Hlavicka] = klic;
+        return ctx;
+    }
+
+    /// <summary>
+    /// <b>Kdo odjíždí, vypne si to sám.</b> Plán to žádá větou, ne poznámkou
+    /// pod čarou, a držitel klíče k tomu nemá účet — jen klíč.
+    /// <para>
+    /// Podstatné je, že je to <b>obousměrné</b>: odepnutý klíč posílat nesmí,
+    /// ale mluvit sám o sobě ano. Kdyby <c>ProSebeAsync</c> odmítal odepnutý
+    /// klíč stejně jako <c>OverAsync</c>, bylo by odepnutí jednosměrné a
+    /// k ničemu právě v tom případě, kvůli kterému vzniklo — *„odjel po
+    /// prvním dni domů"* a příští den jede zas.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Drzitel_klice_se_odepne_i_pripne_sam()
+    {
+        var (db, klice) = Sluzby();
+        var (kapitan, lod) = await LodSKapitanemAsync(db);
+        var pozvanka = await klice.PozviAsync(lod, kapitan, "Tonda", default);
+        var uplatneni = await klice.UplatniAsync(pozvanka.Kod, default);
+        Assert.NotNull(uplatneni);
+
+        var muj = await klice.ProSebeAsync(Kontext(uplatneni!.Klic), default);
+        Assert.NotNull(muj);
+        Assert.False(await klice.SledujSamAsync(muj!, false, default));
+
+        // Odepnutý klíč neposílá — pro nahrávání dopadne jako neexistující.
+        Assert.Null(await klice.OverAsync(uplatneni.Klic, default));
+
+        // Ale o sobě mluvit smí, jinak by nebylo jak se vrátit.
+        var znovu = await klice.ProSebeAsync(Kontext(uplatneni.Klic), default);
+        Assert.NotNull(znovu);
+        Assert.True(await klice.SledujSamAsync(znovu!, true, default));
+        Assert.NotNull(await klice.OverAsync(uplatneni.Klic, default));
+    }
+
+    /// <summary>
+    /// <b>Odebraný klíč se sám neoživí.</b> Odepnutí je „dneska nejedu",
+    /// odebrání je odchod z posádky — a o tom rozhoduje kapitán, ne telefon.
+    /// </summary>
+    [Fact]
+    public async Task Odebrany_klic_se_sam_nepripne()
+    {
+        var (db, klice) = Sluzby();
+        var (kapitan, lod) = await LodSKapitanemAsync(db);
+        var pozvanka = await klice.PozviAsync(lod, kapitan, "Tonda", default);
+        var uplatneni = await klice.UplatniAsync(pozvanka.Kod, default);
+        Assert.NotNull(uplatneni);
+
+        var klicId = (await klice.SeznamAsync(lod, default)).Single().Id;
+        Assert.True(await klice.OdeberAsync(lod, klicId, default));
+
+        Assert.Null(await klice.ProSebeAsync(Kontext(uplatneni!.Klic), default));
+    }
+
+    /// <summary>Bez hlavičky a s vymyšleným klíčem dopadne dotaz stejně.</summary>
+    [Fact]
+    public async Task Bez_klice_se_o_sobe_nedozvi_nikdo()
+    {
+        var (_, klice) = Sluzby();
+
+        Assert.Null(await klice.ProSebeAsync(new DefaultHttpContext(), default));
+        Assert.Null(await klice.ProSebeAsync(Kontext("vymyslene"), default));
     }
 
     [Fact]

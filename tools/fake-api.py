@@ -945,6 +945,16 @@ def klic_z_hlavicky(self):
     return tajemstvi
 
 
+def klic_pro_sebe(self):
+    """
+    Klíč, kterým se telefon hlásí <b>o sobě</b> — stačí, že existuje a není
+    odebraný (`KliceSprava.ProSebeAsync`). Odepnutý projde schválně, jinak
+    by se nemohl připnout zpátky.
+    """
+    k = KLICE.get((self.headers.get("x-klic-lodi") or "").strip())
+    return k if k and not k.get("odebran") else None
+
+
 def klic_dto(k):
     """Klíč, jak ho vidí kapitán ve výpisu. Bez tajemství — to má jen telefon."""
     return {"id": k["id"], "jmeno": k.get("jmeno"), "vydanV": k["vydanV"],
@@ -3727,6 +3737,16 @@ class H(BaseHTTPRequestHandler):
         # Osobní cesty. Stojí první, protože nepatří pod ročník.
         if not self.headers.get("authorization") and cesta.startswith("/ja"):
             return self.send_error(401)
+        if cesta == "/klice/sledovani":
+            k = klic_pro_sebe(self)
+            if not k:
+                return self.send_error(401)
+            telo = self.telo_zadosti() or {}
+            if not isinstance(telo.get("sleduje"), bool):
+                return self.chyba(400, "Čekalo se `true` nebo `false`.")
+            k["sleduje"] = telo["sleduje"]
+            return self.odpoved({"sleduje": k["sleduje"]})
+
         if cesta == "/klice/uplatnit":
             # Jediný endpoint bez přihlášení, a musí být: kdyby ho
             # vyžadoval, posádka by potřebovala účet a smysl QR by padl.
@@ -4860,6 +4880,11 @@ class H(BaseHTTPRequestHandler):
             if not self.headers.get("authorization"):
                 return self.send_error(401)
             return self.moje_naroky()
+        elif cesta == "/klice/sledovani":
+            k = klic_pro_sebe(self)
+            if not k:
+                return self.send_error(401)
+            return self.odpoved({"sleduje": bool(k.get("sleduje", True))})
         elif (m := re.match(r'^/ja/lode/(\d+)/klice$', cesta)):
             if not self.headers.get("authorization"):
                 return self.send_error(401)

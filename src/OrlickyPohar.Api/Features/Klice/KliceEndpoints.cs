@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Http.HttpResults;
 using OrlickyPohar.Api.Features.Sprava;
 
@@ -37,6 +38,31 @@ public static class KliceEndpoints
                 "48 hodin. Vymyšlená, propadlá i už uplatněná dávají tutéž odpověď, " +
                 "aby se z ní nedalo nic vyčíst.");
 
+        // <b>Vlastní sledování si telefon řídí sám</b>, a taky bez
+        // přihlášení: plán žádá, aby si ten, kdo odjíždí, vypnul záznam sám
+        // a nebyl odkázaný na to, že na něj kapitán nezapomene. Držitel
+        // klíče účet nemá, takže jinou cestu než klíč nemá k dispozici.
+        app.MapGet("/klice/sledovani", StavSledovaniAsync)
+            .WithTags("Klíče")
+            .Produces<SledovaniDto>()
+            .Produces(StatusCodes.Status401Unauthorized)
+            .WithSummary("Řekne telefonu, jestli se z něj zaznamenává")
+            .WithDescription(
+                "Prokazuje se klíčem k lodi. Odpovídá i odepnutému klíči — jinak by " +
+                "se telefon nedozvěděl, proč neposílá. Odebraný klíč nepozná od " +
+                "neexistujícího.");
+
+        app.MapPost("/klice/sledovani", SledujSeAsync)
+            .WithTags("Klíče")
+            .Produces<SledovaniDto>()
+            .Produces(StatusCodes.Status401Unauthorized)
+            .WithSummary("Držitel klíče se odepne ze sledování, nebo se zase připne")
+            .WithDescription(
+                "Prokazuje se klíčem k lodi, ne účtem. Je to tatáž změna, jakou dělá " +
+                "kapitán ve výpisu klíčů — *„tuhle regatu nejedu“* —, jen o ni říká " +
+                "telefon sám. **Odebrat se sám nemůže**: to je zásah do posádky a " +
+                "zůstává kapitánovi.");
+
         var g = app.MapGroup("/ja/lode/{lod:int}/klice").WithTags("Klíče").RequireAuthorization();
 
         g.MapGet("/", SeznamAsync)
@@ -67,6 +93,43 @@ public static class KliceEndpoints
         await klice.UplatniAsync(vstup.Kod ?? "", ct) is { } k
             ? TypedResults.Ok(k)
             : TypedResults.BadRequest("Pozvánka neplatí.");
+
+    private static async Task<Results<Ok<SledovaniDto>, UnauthorizedHttpResult>>
+        StavSledovaniAsync(HttpContext ctx, KliceSprava klice, CancellationToken ct)
+    {
+        if (await klice.ProSebeAsync(ctx, ct) is not { } klic) return TypedResults.Unauthorized();
+        return TypedResults.Ok(new SledovaniDto(klic.Sleduje));
+    }
+
+    /// <summary>
+    /// <b>Tělo bere jako <c>JsonElement</c> schválně</b>, ze stejného důvodu
+    /// jako dávka bodů v <c>TrasyEndpoints</c>: u typovaného parametru
+    /// odmítne špatný tvar model binding, tedy <b>dřív než se ověří klíč</b>,
+    /// a endpoint pak i bez klíče odpoví 400 místo 401. Tvar se proto
+    /// kontroluje až tady, za autorizací.
+    /// </summary>
+    private static async Task<Results<Ok<SledovaniDto>, UnauthorizedHttpResult, ValidationProblem>>
+        SledujSeAsync(
+            JsonElement? telo, HttpContext ctx, KliceSprava klice, CancellationToken ct)
+    {
+        if (await klice.ProSebeAsync(ctx, ct) is not { } klic) return TypedResults.Unauthorized();
+
+        if (Sleduje(telo) is not { } sleduj)
+            return TypedResults.ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["sleduje"] = ["Čekalo se `true` nebo `false`."],
+            });
+
+        return TypedResults.Ok(new SledovaniDto(await klice.SledujSamAsync(klic, sleduj, ct)));
+    }
+
+    /// <summary>Hodnota z těla, nebo `null` u jiného tvaru.</summary>
+    private static bool? Sleduje(JsonElement? telo) =>
+        telo is { ValueKind: JsonValueKind.Object } o
+        && o.TryGetProperty("sleduje", out var v)
+        && v.ValueKind is JsonValueKind.True or JsonValueKind.False
+            ? v.GetBoolean()
+            : null;
 
     private static async Task<IResult> SeznamAsync(
         int lod, ClaimsPrincipal kdo, Rozsahy rozsahy, KliceSprava klice, CancellationToken ct)
@@ -113,3 +176,6 @@ public static class KliceEndpoints
 
 /// <summary>Zda klíč sleduje, nebo je dočasně odepnutý.</summary>
 public record SledovaniVstup(bool Sleduje);
+
+/// <summary>Stav sledování, jak ho vidí telefon o sobě.</summary>
+public record SledovaniDto(bool Sleduje);

@@ -117,6 +117,14 @@ nahlas, pro polohy platit nebude.
 
 ### N3 — Kdo odjíždí, vypnout si to nemůže. A klíč k lodi bez odpovědného nejde odebrat vůbec
 
+> **Opraveno z poloviny, 25. 10. 2026.** Držitel klíče se odepne i připne
+> sám (`POST /klice/sledovani`, prokazuje se klíčem; v appce na obrazovce
+> *Klíč k lodi*), takže věta z plánu konečně platí. **Otevřené zůstává
+> odebírání**: komentář u `OdebranV` sliboval pořadatele a držitele, kód ani
+> plán je nemají — komentář je srovnaný s kódem a otázka, jestli pořadatel
+> do té tabulky patří, je zapsaná u něj. Na lodi bez majitele i kapitána
+> klíč pořád neodebere nikdo; odepnout se z ní ale teď jde.
+
 Plán (*Telefon jako mobilní klíč k lodi*) má tabulku a pod ní větu:
 
 > *„A sám člen posádky se smí odepnout taky — kdo odjíždí, vypne si to sám

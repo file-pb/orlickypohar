@@ -99,6 +99,55 @@ export async function uplatni(kod: string): Promise<Klic | null> {
 }
 
 /**
+ * Jestli se z tohohle telefonu zaznamenává. `null` znamená „nedá se zjistit"
+ * — telefon není spárovaný, klíč odebrali, nebo neběží síť.
+ *
+ * <b>Stav drží server, ne telefon.</b> Odepnout klíč umí i kapitán ze své
+ * obrazovky, takže kdyby si appka pamatovala jen svoje poslední kliknutí,
+ * tvrdila by „zaznamenává se" telefonu, kterému to kapitán mezitím vypnul.
+ */
+export async function sledovani(): Promise<boolean | null> {
+  const tajne = await tajemstvi();
+  if (!tajne) return null;
+
+  const odpoved = await fetch(`${API}/klice/sledovani`, {
+    headers: { accept: 'application/json', 'x-klic-lodi': tajne },
+  });
+  if (!odpoved.ok) return null;
+
+  return ((await odpoved.json()) as { sleduje: boolean }).sleduje;
+}
+
+/**
+ * Odepne telefon ze sledování, nebo ho zase připne.
+ *
+ * Je to <b>„dneska nejedu", ne odchod z posádky</b>: klíč zůstává a příští
+ * závod se posádka nemusí párovat znovu. Odebrat klíč natrvalo umí jen
+ * kapitán — tohle je ta půlka, kterou si má člověk zvládnout sám, aniž by
+ * byl odkázaný na to, že na něj někdo nezapomene.
+ *
+ * `null` znamená, že klíč už neplatí — kapitán ho odebral.
+ */
+export async function nastavSledovani(sleduje: boolean): Promise<boolean | null> {
+  const tajne = await tajemstvi();
+  if (!tajne) return null;
+
+  const odpoved = await fetch(`${API}/klice/sledovani`, {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      'x-klic-lodi': tajne,
+    },
+    body: JSON.stringify({ sleduje }),
+  });
+  if (odpoved.status === 401) return null;
+  if (!odpoved.ok) throw new Error(`Nastavení sledování vrátilo ${odpoved.status}`);
+
+  return ((await odpoved.json()) as { sleduje: boolean }).sleduje;
+}
+
+/**
  * Zapomene klíč v telefonu.
  *
  * <b>Na serveru klíč zůstává platný</b> — tohle není odepnutí z posádky.
