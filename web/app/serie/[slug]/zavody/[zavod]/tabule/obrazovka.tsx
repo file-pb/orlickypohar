@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Snimek } from "@/lib/tabule";
 import { Znak } from "@/app/logo";
@@ -127,6 +127,17 @@ export function Obrazovka({
 
   const stari = Math.max(0, Math.round((ted - Date.parse(snimek.kdy)) / 1000));
 
+  /**
+   * Události z trackeru do téže fronty jako ty ze zápisu — karta
+   * doprostřed obrazovky je jedna a nemá se o co přetahovat (Filip,
+   * 24. 10. 2026: *„začni tam zobrazovat ty modaly animované, např. po
+   * dojetí nebo swap pořadí"*). Duplicitu hlídá klíč, stejně jako
+   * u dojezdů ze zápisu.
+   */
+  const zarad = useCallback((u: Udalost) => {
+    setFronta((f) => (f.some((x) => x.klic === u.klic) ? f : [...f, u]));
+  }, []);
+
   return (
     <div className="tabule">
       {/* <b>Jediná klikatelná věc na obrazovce</b> (Filip, 15. 10. 2026:
@@ -198,7 +209,7 @@ export function Obrazovka({
           skutečné by byla lež, ne ukázka; až přijdou první skutečné,
           tenhle vstup zmizí. */}
       <div className="tabule-mapa" aria-hidden="true">
-        <MapaTrackeru znacky={UKAZKA.znacky} lode={UKAZKA.lode} tabule />
+        <MapaTrackeru znacky={UKAZKA.znacky} lode={UKAZKA.lode} tabule onUdalost={zarad} />
       </div>
 
       <div className="sloupce">
@@ -283,6 +294,7 @@ function Alert({ udalost, hotovo }: { udalost?: Udalost; hotovo: () => void }) {
 const NADPISKY: Record<Udalost["druh"], string> = {
   start: "Start",
   dojezd: "V cíli",
+  souboj: "Na vodě",
   dokonceno: "Rozjížďka",
   zrusena: "Zrušeno",
   zavod: "Regata",

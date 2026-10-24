@@ -315,6 +315,7 @@ export function MapaTrackeru({
   spojnice,
   tabule,
   zebricek,
+  onUdalost,
 }: {
   znacky: Znacka[];
   lode: Lod[];
@@ -342,6 +343,18 @@ export function MapaTrackeru({
    * přijdou, zmizí tenhle vstup a nic jiného.
    */
   zebricek?: { id: number; nazev: string; kategorie: Lod["kategorie"] }[];
+  /**
+   * Co se právě stalo na vodě. <b>Mapa to neumí ukázat sama</b> — velká
+   * karta doprostřed obrazovky patří tabuli, která už jednu takovou má
+   * pro dojezdy ze zápisu. Tudy se k ní dostanou i události z trackeru:
+   * prohození v čele a loď, která právě dojela.
+   */
+  onUdalost?: (u: {
+    klic: string;
+    druh: "dojezd" | "souboj";
+    titulek: string;
+    detail?: string;
+  }) => void;
 }) {
   const { sirka: SIRKA, vyska: VYSKA } = tabule ? VYREZ.tabule : VYREZ.stranka;
   const [z, setZ] = useState(() => vychoziZ(znacky, SIRKA, VYSKA));
@@ -419,14 +432,22 @@ export function MapaTrackeru({
   // <b>Postup se měří po trase, ne po přímkách mezi značkami.</b> Přímka
   // mezi bójemi vede v zatopeném údolí přes kopec a loď, která ho objíždí,
   // by měla v pořadí propadnout za někoho, kdo ji nepředjel.
-  const uzly = (trasa ?? []).map((p) => naPlatno(p.sirka, p.delka));
+  /**
+   * Trasa, po které se měří postup. <b>Bez ní je postup všude nula</b>,
+   * takže nevznikne pořadí ani prohození — a tabule, která měřicí trasu
+   * nepočítá, tím přišla o celou režii. Náhradou jsou uzly značek
+   * v pořadí: hrubší než cesta po vodě, ale měří.
+   */
+  const uzly = (
+    trasa?.length
+      ? trasa
+      : [...znacky].sort((a, b) => a.poradi - b.poradi).map((m) => ({ sirka: m.sirka, delka: m.delka }))
+  ).map((p) => naPlatno(p.sirka, p.delka));
   const delkyNoh = uzly.slice(0, -1).map((a, i) => Math.hypot(uzly[i + 1].x - a.x, uzly[i + 1].y - a.y));
   const celkovaDelka = delkyNoh.reduce((s, d) => s + d, 0) || 1;
 
   /** Uzly trati v pořadí — podklad pro přímou spojnici, když není cesta po vodě. */
-  const uzlyTrati = [...znacky]
-    .sort((a, b) => a.poradi - b.poradi)
-    .map((m) => naPlatno(m.sirka, m.delka));
+  const uzlyTrati = uzly;
 
   /** Stav každé lodi k zvolenému času: poloha, stáří, postup, stopa. */
   /**
@@ -789,6 +810,27 @@ export function MapaTrackeru({
     }
     return ven;
   }, [tabule, zaber, poradi]);
+
+  /**
+   * Ohlášení ven: dojezdy. <b>Jen jednou za událost</b>
+   * — klíč nese čas, takže tabule pozná, že kartu už ukazovala, a při
+   * posunu času zpátky ji nevytáhne podruhé.
+   */
+  const ohlaseno = useRef(new Set<string>());
+  useEffect(() => {
+    if (!onUdalost) return;
+    // <b>Prohození velkou kartu nedostane</b> (Filip, 24. 10. 2026):
+    // má svou hlášku v rohu mapy a ta stačí. Karta přes půl obrazovky
+    // patří dojezdu, který se stane jednou za loď, ne souboji, který
+    // se stane každou chvíli.
+    for (const v of vStavu) {
+      if (!v.dojela) continue;
+      const klic = `cil-${v.lod.id}`;
+      if (ohlaseno.current.has(klic)) continue;
+      ohlaseno.current.add(klic);
+      onUdalost({ klic, druh: "dojezd", titulek: v.lod.nazev, detail: "v cíli" });
+    }
+  }, [cas, prohozeni, vStavu, lode, onUdalost]);
 
   /** Poslední prohození, které ještě hoří — tabule o něm řekne slovy. */
   const posledniSwap = [...prohozeni]

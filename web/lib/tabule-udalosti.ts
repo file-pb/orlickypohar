@@ -13,7 +13,17 @@ import type { Snimek } from "@/lib/tabule";
  * se považuje za novinku — a na televizi, kterou nikdo neobsluhuje, by
  * falešný alert visel do rána.
  */
-export type DruhUdalosti = "start" | "dojezd" | "dokonceno" | "zavod" | "trat" | "ceka" | "lod" | "zrusena";
+export type DruhUdalosti =
+  | "start"
+  | "dojezd"
+  | "dokonceno"
+  | "zavod"
+  | "trat"
+  | "ceka"
+  | "lod"
+  | "zrusena"
+  /** Prohození v čele, hlásí ho tracker (24. 10. 2026). */
+  | "souboj";
 
 export type Udalost = {
   /** Klíč pro React a pro rozpoznání téže události podruhé. */
