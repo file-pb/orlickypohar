@@ -3070,7 +3070,9 @@ body:has(.tabule) { overflow: hidden; }
 /* Specificita schválně vyšší: pravidlo pro náčrt (`.nacrt-na-tv`) stojí
    v souboru níž a jinak by ho přebilo. */
 .tabule-mapa .nacrt-na-tv .nacrt-swap {
-  top: 7.5vw;
+  /* Pod pásek (3 vw) i pruh s názvem (zhruba 11 vw). Změřeno: hlavička
+     končí na 227 px při šířce 1600. */
+  top: 15vw;
   left: 1.2vw;
   right: auto;
 }
