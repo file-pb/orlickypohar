@@ -25,6 +25,17 @@ import type { Lod, Znacka } from "./plavba";
 
 const KATEGORIE: Lod["kategorie"][] = ["Race", "Nad7m", "Pod7m"];
 
+/**
+ * Loď na mapě: trup s hrotem vpřed a vykrojenou zádí, nakreslený kolem
+ * počátku a natočený podle kurzu (Filip, 24. 10. 2026). <b>Proti kolečku
+ * to přidá směr</b> — a ten na mapě plachetnic znamená víc než poloha,
+ * protože z něj je vidět, na kterém boku loď jede a jestli už se otočila.
+ *
+ * Kde kurz neznáme — loď má jediné hlášení, takže se nemá z čeho spočítat
+ * — zůstane kolečko. Natočit loď na sever „aby něco bylo" by byl výmysl.
+ */
+const LODICKA = "M 0,-1 L 0.62,0.62 L 0,0.28 L -0.62,0.62 Z";
+
 /** Jak staré smí být hlášení, než loď přestane být čerstvá. */
 const STARNE_PO_S = 60;
 /** A kdy propadne nakonec. */
@@ -161,6 +172,42 @@ function vychoziZ(znacky: Znacka[]) {
   const podleX = Math.log2((naPixelPriZ0 * SIRKA) / (rozpetiX * 1.6));
   const podleY = Math.log2((naPixelPriZ0 * VYSKA) / (rozpetiY * 1.6));
   return Math.max(Z_NEJMENE, Math.min(Z_NEJVIC, Math.floor(Math.min(podleX, podleY))));
+}
+
+function Lodicka({
+  x,
+  y,
+  kurz,
+  velikost,
+  barva,
+  opacity,
+  silna,
+}: {
+  x: number;
+  y: number;
+  kurz: number | null;
+  velikost: number;
+  barva: string;
+  opacity: number;
+  silna?: boolean;
+}) {
+  const lem = silna ? 2 : 1.3;
+  if (kurz === null) {
+    return (
+      <circle cx={x} cy={y} r={velikost * 0.6} fill={barva} stroke="#fff" strokeWidth={lem} opacity={opacity} />
+    );
+  }
+  return (
+    <path
+      d={LODICKA}
+      transform={`translate(${x} ${y}) rotate(${kurz}) scale(${velikost})`}
+      fill={barva}
+      stroke="#fff"
+      strokeWidth={lem / velikost}
+      strokeLinejoin="round"
+      opacity={opacity}
+    />
+  );
 }
 
 export function NacrtMapy({
@@ -757,20 +804,13 @@ export function NacrtMapy({
                       strokeLinejoin="round"
                     />
                   )}
-                  <circle
-                    cx={v.poloha.x}
-                    cy={v.poloha.y}
-                    r={zaskrtnute.has(v.lod.id) ? 6.5 : 5}
-                    fill={barva(v.lod.id)}
-                    stroke="#fff"
-                    strokeWidth={1.5}
-                    opacity={
-                      v.stav === "nedostupna"
-                        ? 0.45
-                        : silaStopy === 0
-                          ? 0.6
-                          : 1
-                    }
+                  <Lodicka
+                    x={v.poloha.x}
+                    y={v.poloha.y}
+                    kurz={v.kurz}
+                    velikost={zaskrtnute.has(v.lod.id) ? 8 : 6.5}
+                    barva={barva(v.lod.id)}
+                    opacity={v.stav === "nedostupna" ? 0.45 : silaStopy === 0 ? 0.6 : 1}
                   />
                 </g>
               );
@@ -786,13 +826,14 @@ export function NacrtMapy({
                 strokeLinejoin="round"
                 style={{ filter: "drop-shadow(0 0 3px rgb(255 255 255 / 85%))" }}
               />
-              <circle
-                cx={vybranaLod.poloha.x}
-                cy={vybranaLod.poloha.y}
-                r={8}
-                fill={barva(vybranaLod.lod.id)}
-                stroke="#fff"
-                strokeWidth={2.5}
+              <Lodicka
+                x={vybranaLod.poloha.x}
+                y={vybranaLod.poloha.y}
+                kurz={vybranaLod.kurz}
+                velikost={11}
+                barva={barva(vybranaLod.lod.id)}
+                opacity={1}
+                silna
               />
             </g>
           )}
