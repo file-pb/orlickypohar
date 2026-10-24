@@ -3613,7 +3613,7 @@ body:has(.tabule) { overflow: hidden; }
   justify-self: end;
 }
 
-.nacrt-trida .znak-tridy { height: 1.05rem; width: auto; }
+.nacrt-trida .znak-tridy { height: 1.45rem; width: auto; }
 
 /* Taby tříd nad žebříčkem. Vybraný drží barvu, ostatní ustoupí. */
 /* Taky se vejdou na jednu řádku: sloupec má 300 px a čtyři taby se do
