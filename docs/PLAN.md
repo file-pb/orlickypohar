@@ -1501,12 +1501,24 @@ tracker si `.nacrt` přepisuje na `flex` kvůli stropu 16 : 9 na ultrawide —
 a **`grid-template-columns` flexbox ignoruje**. Pravidlo tedy existovalo
 a nedělalo nic.
 
-**Nedodělané zůstává:** stránka trackeru si nehlídá roli (jediná podmínka je
-`notFound()` u neexistující regaty). Data chráněná jsou — API chce
-organizátora té regaty nebo rozhodčího ročníku a `nactiPolohy` bez tokenu
-vrací `null` — takže cizí člověk uvidí prázdnou mapu, ne polohy. Není to
-únik, je to stránka, která se tváří, že existuje; ostatní obrazovky správy
-vracejí 404.
+**Dodělané 24. 10. 2026 (Filip: *„udělej ty tři zbylé věci"*).** Tracker byl
+hotová funkce, na kterou nevedla cesta — tatáž vada jako u tabule 10. 10.:
+
+| Co | Jak to je teď |
+|---|---|
+| chyběl v rozcestníku | `polozkyZastavky` má *Živé polohy lodí* vedle bójí, pro pořadatele regaty i rozhodčího ročníku |
+| z veřejné regaty nevedl odkaz na mapu mimo závodní den | v sekci *Trať* stojí odkaz na tabuli regaty vždycky, ne jen v upozornění „právě se jede rozjížďka" |
+| stránka trackeru nehlídala roli | ptá se na **tutéž podmínku jako API** a říká větu místo prázdné mapy |
+
+U toho třetího byl první pokus špatně a měření to ukázalo: větvit se dalo
+podle `stav` z `nactiTrat`, jenže **trať smí číst i ten, kdo na polohy
+nemá** — účet bez role v ročníku prošel a mapu dostal. Správná podmínka je
+opsaná z `PolohyEndpoints`: pořadatel téhle regaty, nebo rozhodčí ročníku.
+Rozhodnutí zůstává na API; tohle je jen to, aby obrazovka řekla pravdu.
+
+**Co zůstalo mimo:** ostatní obrazovky správy taky nevracejí 404, ale větu
+(ověřeno na bójích, směrnicích, přihláškách) — dřívější poznámka o 404 byla
+nepřesná a tracker se teď chová jako zbytek.
 
 ### Pilot do května 2027, ne celý tracker (Filip, 9. 10. 2026)
 

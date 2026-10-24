@@ -293,6 +293,29 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
         pozadavek: { role: "Rozhodci", serie },
       },
     ],
+    // <b>Tracker v rozcestníku chyběl</b> (Filip, 24. 10. 2026: *„proč na to
+    // nevidím odkaz v menu nebo pod regatou?"*). Živá mapa byla hotová a vedl
+    // na ni jediný odkaz, schovaný pod prvky trati na obrazovce bójí — tatáž
+    // vada jako u tabule 10. 10.: funkce bez cesty. Rozsah má stejný jako
+    // bóje, takže ji vidí pořadatel regaty i rozhodčí ročníku.
+    [
+      {
+        nazev: "Živé polohy lodí",
+        kratky: "polohy",
+        popis: "Kdo je na vodě, kde zrovna je a jak staré to hlášení je.",
+        kam: kam("/tracker"),
+        role: "Organizator",
+        pozadavek: { role: "Organizator", serie, zavod },
+      },
+      {
+        nazev: "Živé polohy lodí",
+        kratky: "polohy",
+        popis: "Kdo je na vodě, kde zrovna je a jak staré to hlášení je.",
+        kam: kam("/tracker"),
+        role: "Rozhodci",
+        pozadavek: { role: "Rozhodci", serie },
+      },
+    ],
   ];
 
   return vse

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { nactiVerejnouTrat, type VerejnaTrat } from "@/lib/api";
 import { NAZVY_SMERU, nazevStrany, nazevTypu, type TypPrvku } from "@/lib/trat";
@@ -157,6 +158,19 @@ export default async function VerejnaTratStranka({ params, searchParams }: Param
             zkracenoU={trat.zkracenoUPrvkuId ?? null}
           />
           <MimoTrat trat={trat} />
+
+          {/* <b>Odkaz na tabuli tu stojí vždycky</b> (Filip, 24. 10. 2026:
+              *„proč na to nevidím odkaz v menu nebo pod regatou?"*). Dřív
+              vedl na tabuli jediný odkaz, a jen v upozornění „právě se jede
+              rozjížďka" — mimo závodní den tedy na mapu s loděmi nevedla
+              z regaty cesta vůbec. Tady je k tomu nejblíž: kdo si otevřel
+              trať, dívá se na ta samá místa, po kterých se lodě pohybují. */}
+          <p className="poznamka">
+            <Link href={`/serie/${slug}/zavody/${slugZavodu}/tabule`}>
+              Tabule regaty
+            </Link>{" "}
+            — pořadí a mapa s loděmi, jak se zrovna jede.
+          </p>
           {trat.prijatoV && (
             <p className="poznamka">
               Vyvěšeno {kdy(trat.prijatoV)}, kdy trať přijal rozhodčí. Dokud je
