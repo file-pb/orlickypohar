@@ -1996,12 +1996,51 @@ takže loď blízko vrcholu má dvě skoro stejně dobré kolmice — jednu na
 příchozí nohu, jednu na odchozí — a pořadí by mezi nimi skákalo dopředu
 a zpět. Bere se proto ten průmět, který je nejblíž tomu předchozímu.
 
-**Pozor na jeden vedlejší účinek: projekce křižování vyhlazuje.** Vzdušná
-vzdálenost k bóji dělá při každém obratu velký skok, kdežto průmět na trasu
-postupuje klidněji — takže prohození, která mají držet diváka, budou
-**méně divoká** než u prvního návrhu. Nezmizí (po obratu se průmět na dlouhé
-noze rozjede, při obratu skoro stojí), ale je to volba mezi *víc akce* a
-*spravedlivější číslo*. Na skutečných datech se to pozná líp než teď.
+**Na návětrné noze se ale neměří podél trasy, ale po větru** (Filip,
+24. 10. 2026). Nejdřív se zdálo, že je to volba mezi *víc akce* a
+*spravedlivější číslo*: projekce na trasu křižování vyhlazuje, kdežto
+vzdušná vzdálenost k bóji při každém obratu skáče. Filip navrhl to obejít
+**pomyslnou čárou, která se nekreslí a slouží jen výpočtu** — a je to
+správný směr, i když sám o sobě dilema neřeší. Problém totiž není, kudy ta
+čára vede, ale že průmět na jedinou čáru zahazuje, kde loď na kříži je.
+
+Řeší to **příčka kolmá ke směru větru** (v jachtařském vysílání *ladder
+rung*). Na návětrné noze je vepředu ten, kdo je dál po větrné ose, bez
+ohledu na to, na kterém boku zrovna jede — a to je i to, co posádky samy
+považují za vedení. Na ostatních nohách zůstává průmět na trasu.
+
+**Dilema tím zmizí, jen jinudy, než se čekalo:** příčky jsou zároveň
+spravedlivější *a* živější. Dvě lodě na opačných bocích se po žebříčku
+střídají průběžně, takže vzniká přesně to, co Filip od pořadí chce —
+*plenty of swapping for the lead*. **Je to zároveň kritérium přijetí
+pomyslného pořadí:** když se v něm vedení skoro nemění, je špatně
+spočítané; neznamená to, že se nic nedělo.
+
+**Směr větru se nikde nebere, plyne z trati.** Startovní čára se staví kolmo
+k větru a startuje se proti němu, takže směr průjezdu startem — v datech už
+je, jako světová strana u prvku `Start` — ukazuje, odkud fouká. Záloha je
+směr ze startu na první návětrný prvek. Přesnost je tím přesně taková, jak
+dobře rozhodčí trať postavil, a to je ta správná míra: pořadí nemá být
+přesnější než trať, podle které se jede.
+
+**Kategorie startují společně** (Filip, 24. 10. 2026), takže pomyslné pořadí
+je **jeden seznam za celé pole** — tak, jak to divák na vodě vidí. Kategorie
+je u lodi štítek a dá se jím filtrovat, protože boduje se po kategoriích.
+Pro režii to znamená, že souboj uvnitř kategorie má přednost, ale souboj
+napříč se nezahazuje: fyzicky se stal.
+
+**Přepínač celkově / po kategoriích je filtr při zobrazení** (Filip,
+24. 10. 2026: *„to stačí počítat až při zobrazení jako filtr, ne?"*). Ano —
+a drží to proto, že **uloženou veličinou je postup po trati, ne pořadí.**
+Postup je jedno číslo na loď a okamžik a nezávisí na tom, kdo je zrovna
+v seznamu; pořadí celkové, pořadí v kategorii i prohození dvojice jsou nad
+ním dopočty. Uložené pořadí by se naopak muselo ukládat zvlášť pro každý
+filtr a při změně startovní listiny by zestárlo.
+
+**Postup se počítá při příjmu dávky a ukládá se k bodu.** Tím je zadarmo
+i historie, kterou režie potřebuje: *„na druhé bóji si to prohodily"* je
+otázka na postup v čase, ne na okamžitý stav. Jedno číslo navíc u bodu je
+proti souřadnicím zanedbatelné.
 
 **Pro režii potřebuje práh, jinak to bliká.** Při křižování se pořadí mezi
 dvojicí lodí mění klidně každou minutu; kdyby sestřih stříhal každou výměnu,
