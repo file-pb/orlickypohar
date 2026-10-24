@@ -1671,6 +1671,32 @@ rozjížďky** (ne nočním úklidem) a do té doby ta data nikomu nevydávat
 kromě rozhodčího, který je stejně vidí živě. Tvrdý konec okna platí dál
 a je poslední pojistkou pro den, který nikdo neuzavřel.
 
+**Ořezává se i při vydávání ven, ne jen při mazání** (Filip, 24. 10. 2026:
+*„to, do čeho nikomu nic není, nebudeme live vysílat veřejně, i když loď
+svoji pozici oznamovat bude"*). Oponentura 24. 10. 2026 ukázala, že bez
+toho odůvodnění ořezu nedrží: přepínač *živý přenos ven* by veřejnosti
+posílal průběžný tok z **celého bloku na vodě**, tedy přesně to, co se po
+uzavření rozjížďky maže, a mazání by z ochrany udělalo úklid archivu.
+
+| | Co vidí |
+|---|---|
+| **rozhodčí a pořadatel** | celý blok na vodě, průběžně |
+| **veřejnost** | jen to, co je uvnitř okna rozjížďky |
+| **telefon** | hlásí pořád, bez ohledu na obojí |
+
+**Loď hlásí dál i mimo okno** — jinak by zmizela z pořadatelského přehledu
+zrovna ve chvílích, kvůli kterým ten přehled vznikl (*„kde je LUNA?"*,
+*„čekáme, nebo startujeme?"*). Veřejný výdej se jen zavře.
+
+**Prakticky to znamená, že veřejný tok běží od začátku startovní procedury
+do dojezdu**, a pak se zastaví. Ořez zezadu se nedá udělat dopředu — kdy
+rozjížďka skončí, se server dozví až potom —, takže se vydávání vypíná,
+ne dodatečně maže.
+
+**Poslední známá poloha ven nepatří vůbec.** Je to bezpečnostní údaj pro
+závodní výbor a drží se mimo uchovávané okno schválně; veřejnosti by
+odpovídala na otázku, kterou si nemá klást.
+
 **Den se dělí na bloky, ne na jeden kus.** U Radavy se po třech rozjížďkách
 jde na oběd a odpoledne se pokračuje. **Přes oběd se tracker nevypíná**
 (Filip: *„na obědě asi nemusíme tracker vypínat"*) — pauza je krátká, lodě
