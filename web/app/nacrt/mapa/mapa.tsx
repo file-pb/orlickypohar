@@ -110,6 +110,29 @@ const HLASKA_KRATCE_MS = 2000;
 /** Jak dlouho se na tabuli drží jedna loď, když se nic neděje. */
 const KOLOTOC_S = 60;
 
+/**
+ * Režie zoomu na tabuli (Filip, 24. 10. 2026): *„musíme držet zoom celého
+ * pole, aby se to rozvrhlo hezky samo, a jak nám začnou dojíždět první
+ * lodě do cíle, tak na to budeme přepínat — zoom na prvních 5 lodí pole
+ * a pak zase na celé pole na chvíli."*
+ */
+/** Jak dlouho drží celkový záběr. */
+const ZABER_CELEK_MS = 18_000;
+/** A jak dlouho záběr na čelo. */
+const ZABER_CELO_MS = 12_000;
+/** Kolik lodí je „čelo". */
+const CELO_LODI = 5;
+/**
+ * Odkdy se považuje loď za dojetou a přestává záběr zajímat. Postup se
+ * počítá v pixelech po trase, takže podíl, ne metry.
+ */
+const DOJELA_PODIL = 0.97;
+/**
+ * Jak roztažené musí pole být, aby mělo cenu přepínat na čelo. Pod tím
+ * je celek a čelo skoro týž záběr a střídání by jen blikalo.
+ */
+const ROZTAZENE_POLE = 2;
+
 type Stav = "cerstva" | "starnouci" | "nedostupna";
 
 function stav(stariS: number | null): Stav {
@@ -167,6 +190,37 @@ const VYREZ = {
   // Tabule: mapa je pozadí celé obrazovky, takže poměr televize.
   tabule: { sirka: 1600, vyska: 900 },
 };
+
+/**
+ * Výřez, do kterého se vejde zadaná množina bodů i s rezervou.
+ *
+ * <b>Na tabuli se tím drží pole, ne trať</b> (Filip, 24. 10. 2026):
+ * záběr se sám přizpůsobuje tomu, kde lodě zrovna jsou, takže se mapa
+ * rozvrhne sama a nezůstane poloprázdná, když se pole stáhne k bóji.
+ */
+function vyrezPro(
+  body: { sirka: number; delka: number }[],
+  SIRKA: number,
+  VYSKA: number,
+  rezerva = 1.6,
+) {
+  if (body.length === 0) return null;
+  const sirky = body.map((b) => b.sirka);
+  const delky = body.map((b) => b.delka);
+  const stredSirka = (Math.min(...sirky) + Math.max(...sirky)) / 2;
+  const stredDelka = (Math.min(...delky) + Math.max(...delky)) / 2;
+  const kosinus = Math.cos((stredSirka * Math.PI) / 180);
+  const METRU_NA_STUPEN = 111_320;
+  // Jediná loď nebo těsný chuchvalec by přiblížily mapu na pár metrů,
+  // takže rozpětí má spodní hranici.
+  const rozpetiX = Math.max((Math.max(...delky) - Math.min(...delky)) * METRU_NA_STUPEN * kosinus, 150);
+  const rozpetiY = Math.max((Math.max(...sirky) - Math.min(...sirky)) * METRU_NA_STUPEN, 150);
+  const naPixelPriZ0 = 156_543.03 * kosinus;
+  const podleX = Math.log2((naPixelPriZ0 * SIRKA) / (rozpetiX * rezerva));
+  const podleY = Math.log2((naPixelPriZ0 * VYSKA) / (rozpetiY * rezerva));
+  const z = Math.max(Z_NEJMENE, Math.min(Z_NEJVIC, Math.floor(Math.min(podleX, podleY))));
+  return { z, stred: { sirka: stredSirka, delka: stredDelka } };
+}
 
 /** Přiblížení, při kterém se celá trať vejde do výřezu i s rezervou. */
 function vychoziZ(znacky: Znacka[], SIRKA: number, VYSKA: number) {
@@ -314,6 +368,7 @@ export function NacrtMapy({
   // by měla v pořadí propadnout za někoho, kdo ji nepředjel.
   const uzly = trasa.map((p) => naPlatno(p.sirka, p.delka));
   const delkyNoh = uzly.slice(0, -1).map((a, i) => Math.hypot(uzly[i + 1].x - a.x, uzly[i + 1].y - a.y));
+  const celkovaDelka = delkyNoh.reduce((s, d) => s + d, 0) || 1;
 
   /** Stav každé lodi k zvolenému času: poloha, stáří, postup, stopa. */
   /**
@@ -438,12 +493,15 @@ export function NacrtMapy({
       return {
         lod,
         poloha: posledni ? naPlatno(posledni.sirka, posledni.delka) : null,
+        // Ve stupních, aby šel spočítat výřez bez závislosti na zoomu.
+        kde: posledni ? { sirka: posledni.sirka, delka: posledni.delka } : null,
         stariS,
         stav: stav(stariS),
         postup,
         stopa: vPixelech,
         rychlostUzlu,
         kurz,
+        dojela: postup >= celkovaDelka * DOJELA_PODIL,
       };
     });
   }, [lode, cas, z, stred.sirka, stred.delka, postupy]);
@@ -553,17 +611,62 @@ export function NacrtMapy({
     return () => clearInterval(tik);
   }, [tabule, konec]);
 
-  /** A třídy se střídají samy, protože taby by nikdo neklikl. */
+  /**
+   * Záběr mapy na tabuli: střídá <b>celé pole</b> a <b>čelo</b>, a dojeté
+   * lodě do něj nepočítá — ty už nikoho nezajímají (Filip, 24. 10. 2026).
+   * Na čelo se přepíná, jen když je pole roztažené; jinak by byl celek
+   * i čelo skoro týž záběr a střídání by blikalo.
+   */
+  const [zaber, setZaber] = useState<"celek" | "celo">("celek");
+  const stavRef = useRef(vStavu);
+  stavRef.current = vStavu;
+  const poradiRef = useRef(poradi);
+  poradiRef.current = poradi;
+
+  useEffect(() => {
+    if (!tabule) return;
+    const tik = setTimeout(
+      () => setZaber((z) => (z === "celek" ? "celo" : "celek")),
+      zaber === "celek" ? ZABER_CELEK_MS : ZABER_CELO_MS,
+    );
+    return () => clearTimeout(tik);
+  }, [tabule, zaber]);
+
+  useEffect(() => {
+    if (!tabule) return;
+    const zavodi = poradiRef.current.filter((v) => v.kde && !v.dojela);
+    if (zavodi.length === 0) return;
+
+    const celek = vyrezPro(zavodi.map((v) => v.kde!), SIRKA, VYSKA);
+    const celo = vyrezPro(zavodi.slice(0, CELO_LODI).map((v) => v.kde!), SIRKA, VYSKA);
+    if (!celek || !celo) return;
+
+    // Roztažené pole se pozná z toho, o kolik se liší přiblížení obou
+    // záběrů: když je to míň než stupeň, není co střídat.
+    const roztazene = celo.z - celek.z >= Math.log2(ROZTAZENE_POLE);
+    const cil = zaber === "celo" && roztazene ? celo : celek;
+    setZ(cil.z);
+    setStred(cil.stred);
+  }, [tabule, zaber, Math.floor(cas / 10), SIRKA, VYSKA]);
+
+  /**
+   * Taby se na tabuli střídají samy — a <b>když se někde něco stane,
+   * přepne se na to</b> (Filip, 24. 10. 2026). Prohození uvnitř jedné
+   * třídy tedy přepne na ni; souboj napříč třídami patří celému poli,
+   * protože v žádné jedné by nedával smysl.
+   */
   useEffect(() => {
     if (!tabule) return;
     const kolo: (Lod["kategorie"] | null)[] = [null, ...KATEGORIE];
-    let i = 0;
-    const tik = setInterval(() => {
-      i = (i + 1) % kolo.length;
-      setFiltr(kolo[i]);
+    const tik = setTimeout(() => {
+      setFiltr((f) => kolo[(kolo.indexOf(f ?? null) + 1) % kolo.length]);
     }, 30_000);
-    return () => clearInterval(tik);
-  }, [tabule]);
+    return () => clearTimeout(tik);
+    // Závisí i na `filtr`, takže se odpočet po každém přepnutí — i tom
+    // vyvolaném soubojem — rozbíhá znovu. Jinak by tab vydržel chvíli
+    // a hned zmizel.
+  }, [tabule, filtr]);
+
 
   /** Co tabule ukazuje v zvoleném čase. */
   const zabery = rezie.get(Math.floor(cas / 10) * 10) ?? null;
@@ -750,6 +853,17 @@ export function NacrtMapy({
     );
     return () => clearTimeout(casovac);
   }, [posledniSwap?.cas, prohozeni]);
+
+  /**
+   * Souboj přepne tab na svou třídu. Stojí až tady, protože potřebuje
+   * `posledniSwap`.
+   */
+  useEffect(() => {
+    if (!tabule || !posledniSwap) return;
+    const a = lode[posledniSwap.nahoru].kategorie;
+    const b = lode[posledniSwap.dolu].kategorie;
+    setFiltr(a === b ? a : null);
+  }, [tabule, posledniSwap?.cas, lode]);
 
   const vybranaLod =
     vStavu.find((v) => v.lod.id === vybrana && (!filtr || v.lod.kategorie === filtr)) ?? null;

@@ -2237,6 +2237,29 @@ dává jedna loď, nebo dvojice, která se právě pere.
 časem stráveným mimo souboje — jinak po každém souboji přeskočí několik
 lodí a některé se na tabuli nedostanou vůbec.
 
+**Zoom je taky režie** (Filip, 24. 10. 2026): tabule drží **celé pole**,
+ne trať, takže se záběr přizpůsobuje tomu, kde lodě zrovna jsou. Jakmile
+se pole roztáhne a začnou dojíždět první lodě, střídá se **celek a čelo**
+— pět prvních, pak na chvíli zase celek. **Lodě, které dojely, do záběru
+nepatří**; výřez počítaný i s nimi by se roztáhl na prázdnou vodu u cíle.
+Na čelo se přepíná jen tehdy, když se oba záběry liší aspoň o stupeň
+přiblížení — jinak je to týž obrázek a střídání by blikalo.
+
+**Pravý panel je jediné místo pro pořadí** a taby se v něm střídají samy.
+**Když se někde něco stane, přepne se na to:** prohození uvnitř jedné
+třídy přepne na tu třídu, souboj napříč třídami patří celému poli.
+Odpočet střídání se tím pokaždé rozbíhá znovu, aby tab, na který se právě
+přepnulo, hned nezmizel.
+
+**Tohle všechno patří do stávající tabule, ne vedle ní.** Tabule už
+existuje (`serie/[slug]/zavody/[zavod]/tabule/`) a náčrt na `/nacrt/tabule`
+je jen ukázka rozvržení — používá dokonce její `Karusel`. Zkloubit to
+znamená: mapa jako pozadí pod dosavadní panely, panely zmenšit a položit
+na ni, a karusel nechat jak je. Mapa ale musí být **stálá**, ne jeden
+z panelů: karusel střídá po devíti vteřinách, kdežto režie mapy má takty
+desítek vteřin a do devítisekundového okna by se nevešel ani jeden celý
+záběr.
+
 **Hláška o prohození říká směr, ne jen jména** (Filip, 24. 10. 2026):
 zelená šipka nahoru u lodi, která jde dopředu, červená dolů u té druhé,
 a celé to přijede, ať si toho divák všimne. Bez šipek je to jen dvojice
