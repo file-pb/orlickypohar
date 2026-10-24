@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Sprava;
 
@@ -27,6 +29,19 @@ public static class PolohyEndpoints
                 + "pole?\". Stav polohy je trojí: `Cerstva` do minuty, `Starne` do pěti, "
                 + "pak `Nedostupna`. Snímek se drží v cache pět sekund, takže počet "
                 + "diváků nerozhoduje o počtu dotazů do databáze.");
+
+        // Veřejný výdej. Vlastní cesta, ne parametr té výš: kdo smí co
+        // vidět, se nemá rozhodovat uvnitř jednoho handleru.
+        app.MapGet("/serie/{serie}/zavody/{zavod}/polohy", VerejneAsync)
+            .WithTags("Polohy")
+            .Produces<VerejnyPohled>()
+            .WithSummary("Živé polohy pro diváka")
+            .WithDescription(
+                "Vysílá se, jen když to rozhodčí povolil **a zrovna běží rozjížďka** — "
+                + "mimo ni se vydávání vypíná, protože ořez zezadu se nedá udělat "
+                + "dopředu. `vysila: false` znamená „teď ne\"; proč, se ven neříká. "
+                + "Loď bez polohy a poslední známá poloha mimo rozjížďku se nevydávají "
+                + "vůbec — to je údaj pro závodní výbor.");
     }
 
     private static async Task<IResult> SnimekAsync(
@@ -38,6 +53,18 @@ public static class PolohyEndpoints
         if (!await SmiAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
 
         return Results.Ok(await sprava.SnimekAsync(rozsah.ZavodId.Value, ct));
+    }
+
+    private static async Task<IResult> VerejneAsync(
+        string serie, string zavod, AppDbContext db, PolohySprava sprava, CancellationToken ct)
+    {
+        var zavodId = await db.Zavody
+            .Where(z => z.Slug == zavod && z.Serie!.Slug == serie)
+            .Select(z => (int?)z.Id)
+            .FirstOrDefaultAsync(ct);
+        if (zavodId is null) return Results.NotFound();
+
+        return Results.Ok(await sprava.VerejnyAsync(zavodId.Value, ct));
     }
 
     private static async Task<bool> SmiAsync(

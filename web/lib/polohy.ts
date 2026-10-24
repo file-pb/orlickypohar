@@ -55,3 +55,40 @@ export async function nactiPolohy(
     return null;
   }
 }
+
+/**
+ * Co z poloh jde ven.
+ *
+ * <b>Vysílá se, jen když to rozhodčí povolil a zrovna běží rozjížďka.</b>
+ * Mimo ni se vydávání vypíná — kde se kdo mezi rozjížďkami koupal, do
+ * přenosu nepatří, a ořez zezadu se dopředu udělat nedá. `vysila: false`
+ * znamená „teď ne"; proč, se ven neříká.
+ *
+ * Tvar se píše ručně jen zčásti: řádky lodí jsou generované z OpenAPI.
+ */
+export type VerejnePolohy = {
+  vysila: boolean;
+  ted: string;
+  lode: PolohaLodi[];
+};
+
+/**
+ * Veřejné polohy regaty. Bez tokenu — tohle vidí každý, komu to rozhodčí
+ * pustil. `null` znamená „nepodařilo se zavolat", ne „nevysílá se".
+ */
+export async function nactiVerejnePolohy(
+  serie: string,
+  zavod: string,
+): Promise<VerejnePolohy | null> {
+  try {
+    const odpoved = await fetch(`${API}/serie/${serie}/zavody/${zavod}/polohy`, {
+      headers: { accept: "application/json" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(CEKAT_MS),
+    });
+    return odpoved.ok ? ((await odpoved.json()) as VerejnePolohy) : null;
+  } catch {
+    // Tabule drží, co má: výpadek API jí nesmí smazat obrazovku.
+    return null;
+  }
+}

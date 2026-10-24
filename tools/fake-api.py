@@ -1009,6 +1009,21 @@ def polohy_zastavky(slug, z):
     return {"ted": cas_iso(ted), "oknoBezi": True, "oknoOd": cas_iso(od), "lode": vysledek}
 
 
+def verejne_polohy(slug, z):
+    """Co z poloh jde ven — <b>jen za jízdy</b>.
+
+    Mock nemá nastavení trackingu, takže se chová jako regata s povoleným
+    přenosem: vysílá, když některá rozjížďka běží. Loď bez polohy se ven
+    neposílá, poslední známá poloha mimo rozjížďku taky ne.
+    """
+    snimek = polohy_zastavky(slug, z)
+    jede = any(r.get("stav") == "Probiha" for r in z.get("rozjizdky", []))
+    if not jede:
+        return {"vysila": False, "ted": snimek["ted"], "lode": []}
+    return {"vysila": True, "ted": snimek["ted"],
+            "lode": [l for l in snimek["lode"] if l["sirka"] is not None]}
+
+
 def cas_iso(sekundy):
     """Unixový čas na ISO v UTC — tak, jak ho posílá API."""
     from datetime import datetime, timezone
@@ -4771,6 +4786,12 @@ class H(BaseHTTPRequestHandler):
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/trat/prvky$', cesta)):
             return self.prvky_seznam(m.group(1))
+        elif (m := re.match(
+                rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)/polohy$', cesta)):
+            z = next((x for x in D["zavody"] if x["slug"] == m.group(1)), None)
+            if not z:
+                return self.send_error(404)
+            telo = verejne_polohy(m.group(1), z)
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/polohy$', cesta)):
             z = self.zastavka(m.group(1))

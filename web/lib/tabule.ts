@@ -1,4 +1,6 @@
 import type { VerejnaTrat, ZavodDetail } from "@/lib/api";
+import type { Znacka } from "@/app/nacrt/mapa/plavba";
+import { znackyZTrati } from "@/lib/znacky";
 import { naMapu, type PrvekNaMape } from "@/app/mapka-trati";
 
 /**
@@ -55,6 +57,11 @@ export type Snimek = {
      */
     dalsich: number;
   }[];
+  /**
+   * Značky trati pro mapu. <b>Prázdné, dokud trať není</b> — tabule pak
+   * jede po trati ukázkové plavby a napíše to u sebe.
+   */
+  znacky: Znacka[];
   /** Atributy závodu do grafiky nad obsahem. */
   zavod: {
     typ: string | null;
@@ -99,6 +106,7 @@ export function snimekZavodu(
   trat?: VerejnaTrat | null,
 ): Snimek {
   return {
+    znacky: znackyZTrati(trat),
     trat: trat
       ? {
           prijatoV: trat.prijatoV,

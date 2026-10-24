@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Okna;
+using OrlickyPohar.Api.Features.Tracker;
 using OrlickyPohar.Api.Features.Zavody;
 
 namespace OrlickyPohar.Api.Features.Polohy;
@@ -55,6 +56,28 @@ public record SnimekPoloh(
     IReadOnlyList<PolohaLodi> Lode);
 
 /// <summary>
+/// Co z poloh vidí veřejnost.
+/// <para>
+/// <b>Vysílá se jen za jízdy.</b> Rozhodčí a pořadatel vidí celý blok na
+/// vodě, veřejnost jen to, co je uvnitř okna rozjížďky — kde se kdo mezi
+/// rozjížďkami koupal, do přenosu nepatří. Ořez zezadu se nedá udělat
+/// dopředu (kdy rozjížďka skončí, se server dozví až potom), takže se
+/// vydávání <b>vypíná</b>, ne dodatečně maže.
+/// </para>
+/// <para>
+/// <b>Poslední známá poloha ven nepatří vůbec.</b> Je to bezpečnostní
+/// údaj pro závodní výbor a drží se mimo uchovávané okno schválně;
+/// veřejnosti by odpovídala na otázku, kterou si nemá klást.
+/// </para>
+/// </summary>
+/// <param name="Vysila">
+/// Běží veřejný přenos? <c>false</c> znamená „teď ne" — buď to rozhodčí
+/// nepovolil, nebo zrovna neběží rozjížďka. Rozdíl mezi obojím se ven
+/// neříká: tabuli i divákovi stačí, že se nevysílá.
+/// </param>
+public record VerejnyPohled(bool Vysila, DateTimeOffset Ted, IReadOnlyList<PolohaLodi> Lode);
+
+/// <summary>
 /// Poslední známá poloha každé lodi v regatě.
 /// <para>
 /// <b>Jeden dotaz do databáze bez ohledu na počet diváků.</b> Snímek se
@@ -72,6 +95,13 @@ public class PolohySprava(AppDbContext db, TimeProvider cas, OknaSprava okna)
     public static readonly TimeSpan Starne = TimeSpan.FromMinutes(5);
 
     /// <summary>
+    /// O kolik začíná veřejný přenos dřív než rozjížďka. Startovní
+    /// procedura je pět minut a patří do okna — je z ní takticky vidět
+    /// víc než z celého zbytku rozjížďky.
+    /// </summary>
+    public static readonly TimeSpan Procedura = TimeSpan.FromMinutes(5);
+
+    /// <summary>
     /// Jak dlouho platí snímek. Kratší by nic nepřineslo — telefony posílají
     /// po minutě —, delší by se na tabuli projevil jako zadrhávání.
     /// </summary>
@@ -86,6 +116,9 @@ public class PolohySprava(AppDbContext db, TimeProvider cas, OknaSprava okna)
     /// takže vlastní pole by cache nedělalo vůbec nic.
     /// </summary>
     private static readonly Dictionary<int, (DateTimeOffset Do, SnimekPoloh Snimek)> Cache = [];
+
+    /// <summary>Totéž pro veřejný výdej. Vlastní, protože nese jiná data.</summary>
+    private static readonly Dictionary<int, (DateTimeOffset Do, VerejnyPohled Pohled)> CacheVen = [];
 
     private static readonly Lock Zamek = new();
 
@@ -112,7 +145,64 @@ public class PolohySprava(AppDbContext db, TimeProvider cas, OknaSprava okna)
     /// <summary>Zahodí snímek regaty. Pro testy a pro okamžik, kdy se okno zavře.</summary>
     public static void Zapomen(int zavodId)
     {
-        lock (Zamek) Cache.Remove(zavodId);
+        lock (Zamek)
+        {
+            Cache.Remove(zavodId);
+            CacheVen.Remove(zavodId);
+        }
+    }
+
+    /// <summary>
+    /// Co se vydává ven. Dvě podmínky, obě musí platit: rozhodčí povolil
+    /// <i>živý přenos ven</i> a <b>zrovna běží rozjížďka</b>.
+    /// </summary>
+    public async Task<VerejnyPohled> VerejnyAsync(int zavodId, CancellationToken ct)
+    {
+        var ted = cas.GetUtcNow();
+
+        lock (Zamek)
+        {
+            if (CacheVen.TryGetValue(zavodId, out var ulozeny) && ulozeny.Do > ted)
+                return ulozeny.Pohled;
+        }
+
+        var pohled = await SpoctiVenAsync(zavodId, ted, ct);
+
+        lock (Zamek)
+        {
+            CacheVen[zavodId] = (ted + Platnost, pohled);
+        }
+
+        return pohled;
+    }
+
+    private async Task<VerejnyPohled> SpoctiVenAsync(
+        int zavodId, DateTimeOffset ted, CancellationToken ct)
+    {
+        var pusti = await db.NastaveniTrackeru
+            .Where(n => n.ZavodId == zavodId)
+            .Select(n => n.ZivyPrenosVen)
+            .FirstOrDefaultAsync(ct);
+        if (!pusti) return new VerejnyPohled(false, ted, []);
+
+        // Rozjížďka, která právě běží. Bez ní se ven nevysílá — i když
+        // telefony hlásí dál, protože pořadatelský přehled je na nich
+        // závislý celý den.
+        var jede = await db.Rozjizdky
+            .Where(r => r.ZavodId == zavodId && r.Stav == StavRozjizdky.Probiha)
+            .OrderByDescending(r => r.StartV)
+            .FirstOrDefaultAsync(ct);
+        if (jede is null) return new VerejnyPohled(false, ted, []);
+
+        // Procedura je součást okna: pět minut varování, manévrování
+        // u linie, hledání místa. Takticky je z toho vidět víc než ze
+        // zbytku rozjížďky, takže ořez na výstřel by zahodil to nejcennější.
+        var od = (jede.StartV ?? ted) - Procedura;
+
+        var lode = await LodeAsync(zavodId, od, ted, ct);
+        // Loď bez polohy se ven neposílá: divák nepotřebuje seznam
+        // nehlásících se lodí, to je otázka pro závodní výbor.
+        return new VerejnyPohled(true, ted, [.. lode.Where(l => l.Sirka is not null)]);
     }
 
     private async Task<SnimekPoloh> SpoctiAsync(
@@ -125,6 +215,23 @@ public class PolohySprava(AppDbContext db, TimeProvider cas, OknaSprava okna)
                        .OrderByDescending(o => o.OtevrenoV)
                        .FirstOrDefaultAsync(ct);
 
+        if (okno is null)
+        {
+            var bezPoloh = await LodeAsync(zavodId, null, ted, ct);
+            return new SnimekPoloh(ted, false, null, bezPoloh);
+        }
+
+        var lode = await LodeAsync(zavodId, okno.OtevrenoV, ted, ct);
+        return new SnimekPoloh(ted, okno.Bezi(ted), okno.OtevrenoV, lode);
+    }
+
+    /// <summary>
+    /// Celé pole s poslední polohou od zadaného okamžiku. <c>null</c> místo
+    /// něj znamená „žádné polohy" — lodě se vrátí, ale všechny nedostupné.
+    /// </summary>
+    private async Task<List<PolohaLodi>> LodeAsync(
+        int zavodId, DateTimeOffset? od, DateTimeOffset ted, CancellationToken ct)
+    {
         var ucasti = await db.Ucasti
             .Where(u => u.ZavodId == zavodId && NaZavode.Contains(u.Stav))
             .Select(u => new
@@ -136,11 +243,13 @@ public class PolohySprava(AppDbContext db, TimeProvider cas, OknaSprava okna)
             })
             .ToListAsync(ct);
 
-        if (okno is null)
+        PolohaLodi Bez(int lodId, string nazev, string? cislo, string? kategorie) =>
+            new(lodId, nazev, cislo, kategorie,
+                null, null, null, null, null, null, StavPolohy.Nedostupna);
+
+        if (od is null)
         {
-            return new SnimekPoloh(ted, false, null, [.. ucasti.Select(u => new PolohaLodi(
-                u.LodId, u.Nazev, u.CisloPlachty, u.Kategorie,
-                null, null, null, null, null, null, StavPolohy.Nedostupna))]);
+            return [.. ucasti.Select(u => Bez(u.LodId, u.Nazev, u.CisloPlachty, u.Kategorie))];
         }
 
         // Poslední bod každé trasy té regaty. Trasa na loď, ne naopak:
@@ -152,7 +261,7 @@ public class PolohySprava(AppDbContext db, TimeProvider cas, OknaSprava okna)
             {
                 t.LodId,
                 Bod = t.Body
-                    .Where(b => b.CasGps >= okno.OtevrenoV)
+                    .Where(b => b.CasGps >= od)
                     .OrderByDescending(b => b.CasGps)
                     .FirstOrDefault(),
             })
@@ -163,23 +272,20 @@ public class PolohySprava(AppDbContext db, TimeProvider cas, OknaSprava okna)
             .GroupBy(x => x.LodId)
             .ToDictionary(g => g.Key, g => g.MaxBy(x => x.Bod!.CasGps)!.Bod!);
 
-        var lode = ucasti.Select(u =>
-        {
-            if (!podleLodi.TryGetValue(u.LodId, out var bod))
+        return
+        [
+            .. ucasti.Select(u =>
             {
+                if (!podleLodi.TryGetValue(u.LodId, out var bod))
+                    return Bez(u.LodId, u.Nazev, u.CisloPlachty, u.Kategorie);
+
+                var stari = ted - bod.CasGps;
                 return new PolohaLodi(
                     u.LodId, u.Nazev, u.CisloPlachty, u.Kategorie,
-                    null, null, null, null, null, null, StavPolohy.Nedostupna);
-            }
-
-            var stari = ted - bod.CasGps;
-            return new PolohaLodi(
-                u.LodId, u.Nazev, u.CisloPlachty, u.Kategorie,
-                bod.Sirka, bod.Delka, bod.Kurz, bod.RychlostMS, bod.CasGps,
-                (long)stari.TotalMilliseconds, Stav(stari));
-        }).ToList();
-
-        return new SnimekPoloh(ted, okno.Bezi(ted), okno.OtevrenoV, lode);
+                    bod.Sirka, bod.Delka, bod.Kurz, bod.RychlostMS, bod.CasGps,
+                    (long)stari.TotalMilliseconds, Stav(stari));
+            }),
+        ];
     }
 
     /// <summary>
