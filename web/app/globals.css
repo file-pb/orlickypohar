@@ -2794,7 +2794,8 @@ body:has(.tabule) { overflow: hidden; }
    název, čísla a stáří dat. Dva pásy nad sebou braly dvakrát tolik
    místa, které patří mapě. */
 .tabule .vrch {
-  position: absolute; left: 0; right: 0; top: 0; z-index: 3;
+  /* Pruh končí u žebříčku, ne na hraně obrazovky — jinak by ho překryl. */
+  position: absolute; left: 0; right: clamp(280px, 24vw, 460px); top: 0; z-index: 3;
   display: grid;
   grid-template-columns: 3vw auto minmax(0, 1fr) auto auto;
   align-items: center;
@@ -3109,9 +3110,12 @@ body:has(.tabule) { overflow: hidden; }
 .tabule-mapa figcaption { display: none; }
 /* Mapa trackeru vyplní plochu celá; její vlastní rozvržení (žebříček
    vedle) tu nepoužíváme — pořadí nese karusel tabule. */
+/* Plochu vyplní celou, i na šířku: `.tabule-mapa` svůj obsah centruje,
+   takže se obal sám zúžil na šířku vykreslené mapy — a prvky uvnitř,
+   které se pozicují zprava, pak končily o padesát pixelů dřív. */
 .tabule-mapa .nacrt,
 .tabule-mapa .nacrt-mapa,
-.tabule-mapa .nacrt-platno-obal { height: 100%; display: block; }
+.tabule-mapa .nacrt-platno-obal { height: 100%; width: 100%; display: block; }
 .tabule-mapa .nacrt-platno { width: 100%; height: 100%; border-radius: 0; }
 .tabule-mapa .nacrt-ovladani,
 .tabule-mapa .nacrt-zoom { display: none; }
@@ -3126,7 +3130,12 @@ body:has(.tabule) { overflow: hidden; }
    divák najde. */
 .tabule-mapa .nacrt-na-tv .nacrt-swap { top: 5.8vw; }
 .tabule-mapa .nacrt-na-tv .nacrt-swap-souboj { left: 1.2vw; right: auto; }
-.tabule-mapa .nacrt-na-tv .nacrt-swap-kolotoc { left: auto; right: 25.5vw; }
+/* Těsně vedle žebříčku, ne někde uprostřed: odsazení je jeho šířka plus
+   mezera, takže hláška sedí u jeho hrany při každé šířce obrazovky. */
+.tabule-mapa .nacrt-na-tv .nacrt-swap-kolotoc {
+  left: auto;
+  right: calc(clamp(280px, 24vw, 460px) + 0.8vw);
+}
 
 /* <b>Pomyslné pořadí je ten panel z náčrtu</b> (Filip, 24. 10. 2026:
    *„dej tam tenhle rank, co jsme tu hodinu ladili"*) — se znaky tříd,
@@ -3160,7 +3169,9 @@ body:has(.tabule) { overflow: hidden; }
    Odsazení shora je pruh s ukázkovými daty plus horní lišta. */
 .tabule:has(.tabule-mapa) .tabule-mapa .nacrt-poradi {
   position: fixed;
-  top: calc(4.85vw + 28px);
+  /* Až nahoru: pruh s názvem končí před žebříčkem, takže ho nepřekrývá
+     a panel může začít hned pod ukázkovou lištou (Filip, 24. 10. 2026). */
+  top: 28px;
   right: 0;
   bottom: var(--paticka);
   border-radius: 0;
@@ -3170,8 +3181,11 @@ body:has(.tabule) { overflow: hidden; }
 .tabule-mapa .nacrt-stav { justify-self: end; text-align: right; }
 /* Jméno se zkrátí, než by rozhodilo řádek. */
 .nacrt-nazev { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* Všechno ostatní leží nad mapou. */
-.tabule > :not(.tabule-mapa) { position: relative; z-index: 1; }
+/* Všechno ostatní leží nad mapou. <b>Prvky, které se pozicují samy</b>
+   — horní lišta a pásy tříd — jsou z toho vyjmuté: tohle pravidlo jim
+   `position` přebíjelo, protože `:not()` zvyšuje specificitu a stojí
+   v souboru níž než ony. */
+.tabule > :not(.tabule-mapa, .vrch, .tabule-tridy) { position: relative; z-index: 1; }
 
 /* Horní pruh není karta — jde od kraje ke kraji, takže žádné zaoblení
    ani vnitřní odsazení karty (Filip, 24. 10. 2026). Podklad a rozměry
