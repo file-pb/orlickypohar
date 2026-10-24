@@ -3841,3 +3841,134 @@ body:has(.tabule) { overflow: hidden; }
 /* Řádek, který se zrovna nevyměňuje, drží v buňce místo pro šipku prázdné
    a neanimuje nic. */
 .nacrt-bez-sipky { opacity: 0; animation: none !important; }
+
+/* --- Náčrt v rozložení pro tabuli -----------------------------------
+   Televize v hospodě: žádné ovládání, velké písmo a <b>mapa jako pozadí
+   celé obrazovky</b>, na kterém leží všechno ostatní (Filip, 24. 10.
+   2026). Nadpis ani varovný rámeček tu nejsou — ukrojily by pruh, který
+   patří mapě.                                                        */
+
+/* Tabule běží na televizi sama za sebe: hlavička ani patička webu tam
+   nepatří a braly by mapě pruh nahoře i dole. */
+body:has(.nacrt-stranka-tv) .hlavicka,
+body:has(.nacrt-stranka-tv) .partneri,
+body:has(.nacrt-stranka-tv) .nahoru,
+body:has(.nacrt-stranka-tv) footer { display: none; }
+
+/* Obal stránky má padding a max-width pro čtení; tabule chce celou plochu. */
+body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
+
+.nacrt-stranka-tv {
+  max-width: none;
+  padding: 0;
+  height: 100dvh;
+  position: relative;
+  overflow: hidden;
+}
+
+.nacrt-pasek-tv {
+  position: absolute;
+  left: 50%;
+  bottom: 0.35rem;
+  transform: translateX(-50%);
+  z-index: 2;
+  margin: 0;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 35%);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: #fff;
+  opacity: 0.55;
+}
+
+/* Mapa je plátno, ne sloupec v mřížce. */
+.nacrt-na-tv {
+  display: block;
+  height: 100%;
+  gap: 0;
+}
+
+.nacrt-na-tv .nacrt-mapa,
+.nacrt-na-tv .nacrt-platno-obal { height: 100%; }
+
+.nacrt-na-tv .nacrt-platno {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
+/* Žebříček leží na mapě, ne vedle ní. */
+.nacrt-na-tv .nacrt-poradi {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  width: clamp(280px, 24vw, 460px);
+  z-index: 2;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  padding: 0.8rem 0.9rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--papir) 86%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 20px rgb(0 0 0 / 35%);
+}
+
+.nacrt-na-tv .nacrt-poradi h2 { font-size: 1.5rem; }
+.nacrt-na-tv .nacrt-vysvetlivka { font-size: 0.85rem; }
+.nacrt-na-tv .nacrt-poradi ol { max-height: none; overflow: hidden; }
+
+/* Řádek žebříčku se čte přes místnost, ne z klína. */
+.nacrt-na-tv .nacrt-poradi li button { font-size: 1.35rem; padding: 0.3rem 0.5rem; }
+.nacrt-na-tv .nacrt-cislo { font-size: 1.35rem; }
+.nacrt-na-tv .nacrt-kategorie,
+.nacrt-na-tv .nacrt-stav { font-size: 0.95rem; }
+.nacrt-na-tv .nacrt-trida .znak-tridy { height: 2rem; }
+
+/* Která třída je zrovna na řadě — místo tabů, které by nikdo neklikl. */
+.nacrt-trida-ted {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin: 0 0 0.3rem;
+  font-size: 1.1rem;
+  color: var(--tlumeny);
+}
+
+.nacrt-trida-ted .znak-tridy { height: 1.6rem; width: auto; }
+
+/* Hláška o souboji je na televizi to hlavní sdělení, tak jde doleva
+   nahoru, kam se dívá oko, a ne pod žebříček. */
+.nacrt-na-tv .nacrt-swap {
+  left: 1.5rem;
+  right: auto;
+  top: 1.5rem;
+  font-size: 1.6rem;
+  padding: 0.8rem 1.2rem;
+}
+
+.nacrt-na-tv .nacrt-souboj-pozice { font-size: 1rem; }
+.nacrt-na-tv .nacrt-zoom { display: none; }
+
+/* Panely stávající tabule nad mapou — ukázka, jak by do ní tracker
+   zapadl: mapa je pozadí, panely leží na ní. */
+.nacrt-panely-tv {
+  position: absolute;
+  left: 1.5rem;
+  bottom: 2.2rem;
+  z-index: 2;
+  width: clamp(280px, 26vw, 460px);
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--papir) 86%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 20px rgb(0 0 0 / 35%);
+}
+
+.nacrt-panely-tv .karusel h2 { margin: 0 0 0.4rem; font-size: 1.3rem; }
+.nacrt-panely-tv .karusel h2 .znak-tridy { height: 1.5rem; width: auto; }
+.nacrt-panely-tv ol.poradi-tabule { list-style: none; margin: 0; padding: 0; font-size: 1.2rem; }
+.nacrt-panely-tv ol.poradi-tabule li { padding: 0.1rem 0; }
+.nacrt-panely-tv ul.stavy { list-style: none; margin: 0; padding: 0; font-size: 1.2rem; }
+.nacrt-panely-tv ul.stavy li { display: flex; gap: 0.5rem; align-items: center; padding: 0.1rem 0; }
