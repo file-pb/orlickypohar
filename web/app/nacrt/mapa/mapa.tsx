@@ -156,11 +156,20 @@ function postupPoTrase(
   return nej;
 }
 
-const SIRKA = 880;
-const VYSKA = 560;
+/**
+ * Rozměry výřezu. <b>Na tabuli je mapa pozadím celé obrazovky</b>
+ * (Filip, 24. 10. 2026) a ostatní se rozvrhne na ni, takže má poměr
+ * televize. Protože se podle rozměrů počítá i výchozí přiblížení,
+ * nestačí SVG roztáhnout CSS — mapa by se zmenšila doprostřed.
+ */
+const VYREZ = {
+  stranka: { sirka: 880, vyska: 560 },
+  // Tabule: mapa je pozadí celé obrazovky, takže poměr televize.
+  tabule: { sirka: 1600, vyska: 900 },
+};
 
 /** Přiblížení, při kterém se celá trať vejde do výřezu i s rezervou. */
-function vychoziZ(znacky: Znacka[]) {
+function vychoziZ(znacky: Znacka[], SIRKA: number, VYSKA: number) {
   const sirky = znacky.map((m) => m.sirka);
   const delky = znacky.map((m) => m.delka);
   const stredSirka = (Math.min(...sirky) + Math.max(...sirky)) / 2;
@@ -215,9 +224,16 @@ export function NacrtMapy({
   lode,
   trasa,
   spojnice,
+  tabule,
 }: {
   znacky: Znacka[];
   lode: Lod[];
+  /**
+   * Rozložení pro televizi v hospodě. <b>Mizí celé ovládání</b> — na
+   * tabuli není kam klepnout —, čas běží sám a třídy se střídají místo
+   * tabů. Zbývá mapa, žebříček a režie, která si vybírá sama.
+   */
+  tabule?: boolean;
   /**
    * Měřicí trasa po vodě, ze serveru. <b>Nikdy se nekreslí</b> (Filip,
    * 24. 10. 2026: *„měřicí trasu bych vůbec neumožnil zobrazit, ta je jen
@@ -228,7 +244,8 @@ export function NacrtMapy({
   /** Spojnice trati z návrháře, pro každé přiblížení. Tahle se ukazovat smí. */
   spojnice: Record<number, Poloha[][]>;
 }) {
-  const [z, setZ] = useState(() => vychoziZ(znacky));
+  const { sirka: SIRKA, vyska: VYSKA } = tabule ? VYREZ.tabule : VYREZ.stranka;
+  const [z, setZ] = useState(() => vychoziZ(znacky, SIRKA, VYSKA));
   const [stred, setStred] = useState({
     sirka: znacky.reduce((s, m) => s + m.sirka, 0) / znacky.length,
     delka: znacky.reduce((s, m) => s + m.delka, 0) / znacky.length,
@@ -247,7 +264,9 @@ export function NacrtMapy({
    * se kreslí jakkoli průhledně. Mapa tedy začíná tečkami a dráhu dostane
    * až to, co si někdo vybral, nebo na co ukázala režie.
    */
-  const [rezim, setRezim] = useState<"nic" | "posledni" | "tabule">("nic");
+  const [rezim, setRezim] = useState<"nic" | "posledni" | "tabule">(
+    tabule ? "tabule" : "nic",
+  );
   /**
    * Lodě, které si divák zaškrtl v žebříčku (Filip, 24. 10. 2026: *„co to
    * udělat jako zaškrtávací body v ranku, tím si tam každý dá, co ho
@@ -523,6 +542,29 @@ export function NacrtMapy({
     return plan;
   }, [lode, postupy, prohozeni, konec]);
 
+  /**
+   * Na tabuli běží čas sám. <b>Dvojnásobnou rychlostí</b>, protože náčrt
+   * má ukázat režii za pár minut, ne za celou rozjížďku; na ostro poběží
+   * 1 : 1, protože tam se dívá na skutečný závod.
+   */
+  useEffect(() => {
+    if (!tabule) return;
+    const tik = setInterval(() => setCas((c) => (c + 10 > konec ? 0 : c + 10)), 5000);
+    return () => clearInterval(tik);
+  }, [tabule, konec]);
+
+  /** A třídy se střídají samy, protože taby by nikdo neklikl. */
+  useEffect(() => {
+    if (!tabule) return;
+    const kolo: (Lod["kategorie"] | null)[] = [null, ...KATEGORIE];
+    let i = 0;
+    const tik = setInterval(() => {
+      i = (i + 1) % kolo.length;
+      setFiltr(kolo[i]);
+    }, 30_000);
+    return () => clearInterval(tik);
+  }, [tabule]);
+
   /** Co tabule ukazuje v zvoleném čase. */
   const zabery = rezie.get(Math.floor(cas / 10) * 10) ?? null;
 
@@ -713,7 +755,7 @@ export function NacrtMapy({
     vStavu.find((v) => v.lod.id === vybrana && (!filtr || v.lod.kategorie === filtr)) ?? null;
 
   return (
-    <div className="nacrt">
+    <div className={tabule ? "nacrt nacrt-na-tv" : "nacrt"}>
       <div className="nacrt-mapa">
         <div className="nacrt-platno-obal">
         <svg
@@ -965,6 +1007,7 @@ export function NacrtMapy({
         )}
         </div>
 
+        {!tabule && (
         <div className="nacrt-ovladani">
           <label>
             čas {Math.floor(cas / 60)}:{String(cas % 60).padStart(2, "0")}
@@ -1004,10 +1047,17 @@ export function NacrtMapy({
             </label>
           )}
         </div>
+        )}
       </div>
 
       <aside className="nacrt-poradi">
         <h2>Pomyslné pořadí</h2>
+        {tabule ? (
+          <p className="nacrt-trida-ted">
+            <ZnakTridy nazev={filtr ?? CELKEM} />
+            {filtr ?? "celé pole"}
+          </p>
+        ) : (
         <div className="nacrt-taby" role="tablist" aria-label="třída lodí">
           <button
             type="button"
@@ -1037,11 +1087,12 @@ export function NacrtMapy({
             </button>
           ))}
         </div>
+        )}
         <p className="nacrt-vysvetlivka">
           Pořadí mezi loděmi, které hlásí polohu — ne pořadí závodu. O výsledku
           rozhoduje cíl.
         </p>
-        {zaskrtnute.size > 0 && (
+        {!tabule && zaskrtnute.size > 0 && (
           <button
             type="button"
             className="nacrt-zrusit"
@@ -1065,6 +1116,7 @@ export function NacrtMapy({
                 jdeNahoru ? "nacrt-radek-nahoru" : jdeDolu ? "nacrt-radek-dolu" : undefined
               }
             >
+              {!tabule && (
               <input
                 type="checkbox"
                 aria-label={`sledovat ${v.lod.nazev}`}
@@ -1079,6 +1131,7 @@ export function NacrtMapy({
                   })
                 }
               />
+              )}
               <button
                 type="button"
                 className={v.lod.id === vybrana ? "vybrana" : undefined}
