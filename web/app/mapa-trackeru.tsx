@@ -423,6 +423,11 @@ export function MapaTrackeru({
   const delkyNoh = uzly.slice(0, -1).map((a, i) => Math.hypot(uzly[i + 1].x - a.x, uzly[i + 1].y - a.y));
   const celkovaDelka = delkyNoh.reduce((s, d) => s + d, 0) || 1;
 
+  /** Uzly trati v pořadí — podklad pro přímou spojnici, když není cesta po vodě. */
+  const uzlyTrati = [...znacky]
+    .sort((a, b) => a.poradi - b.poradi)
+    .map((m) => naPlatno(m.sirka, m.delka));
+
   /** Stav každé lodi k zvolenému času: poloha, stáří, postup, stopa. */
   /**
    * Postup každé lodi ke každému jejímu hlášení. <b>Jeden průchod stopou</b>
@@ -762,6 +767,29 @@ export function MapaTrackeru({
     return doKonce < 20 ? 0.3 + (0.65 * doKonce) / 20 : 0.95;
   }, [zabery, cas]);
 
+  /**
+   * Které lodě dostanou jmenovku. Projde je odshora dolů a vynechá
+   * každou, která by se trefila do už umístěné.
+   */
+  const sJmenovkou = useMemo(() => {
+    if (!tabule || zaber !== "celo") return new Set<number>();
+    const SIRKA_JM = 86;
+    const VYSKA_JM = 22;
+    const umistene: { x: number; y: number }[] = [];
+    const ven = new Set<number>();
+    for (const v of poradi) {
+      if (!v.poloha) continue;
+      const kolize = umistene.some(
+        (u) =>
+          Math.abs(u.x - v.poloha!.x) < SIRKA_JM && Math.abs(u.y - v.poloha!.y) < VYSKA_JM,
+      );
+      if (kolize) continue;
+      umistene.push(v.poloha);
+      ven.add(v.lod.id);
+    }
+    return ven;
+  }, [tabule, zaber, poradi]);
+
   /** Poslední prohození, které ještě hoří — tabule o něm řekne slovy. */
   const posledniSwap = [...prohozeni]
     .reverse()
@@ -975,6 +1003,25 @@ export function MapaTrackeru({
             vede po vodě, naznačuje obeplutí značky a říká, kudy se jede.
             Je to něco jiného než měřicí trasa pod ní.
           */}
+          {/*
+            <b>Bez cesty po vodě se trať spojí přímo.</b> Spojnice
+            z návrháře se počítá na serveru nad mřížkou nádrže, a tam,
+            kde ji nemáme (tabule), je přímá čára přes uzly pořád lepší
+            než nic: divák aspoň vidí, kudy se jede a v jakém pořadí.
+          */}
+          {tratVidet && !spojnice && uzlyTrati.length > 1 && (
+            <polyline
+              points={uzlyTrati.map((u) => `${u.x},${u.y}`).join(" ")}
+              fill="none"
+              stroke="#fff"
+              strokeWidth={2.5}
+              strokeDasharray="9 7"
+              strokeLinecap="round"
+              opacity={0.85}
+              style={{ filter: "drop-shadow(0 0 2px rgb(0 0 0 / 55%))" }}
+            />
+          )}
+
           {tratVidet &&
             (spojnice?.[z] ?? []).map((tah, i) => (
               <polyline
@@ -996,6 +1043,13 @@ export function MapaTrackeru({
             ))}
 
 
+          {/*
+            <b>Jmenovky se nesmějí překrývat</b> (Filip, 24. 10. 2026).
+            Rozmisťovat je kolem lodí by znamenalo řešit, kam uhnout, aby
+            se neskryla jiná; levnější a čitelnější je nakreslit jen ty,
+            na které je místo — kde by se dvě potkaly, zůstane jen první.
+            Pole se v chumlu nedá popsat tak jako tak.
+          */}
           {/* Ostatní lodě: celá dráha, barevně a hodně průhledně. */}
           {vStavu
             // Tab nad žebříčkem platí i na mapu (Filip, 24. 10. 2026):
@@ -1008,7 +1062,7 @@ export function MapaTrackeru({
               // Při záběru na dojezd je lodí v obraze pár a je místo na
               // jmenovky (Filip, 24. 10. 2026). V celkovém záběru by se
               // čtyřiadvacet jmen slilo v jeden chuchvalec.
-              const blizko = tabule && zaber === "celo";
+              const blizko = tabule && zaber === "celo" && sJmenovkou.has(v.lod.id);
               const davno = historie.indexOf(v.lod.id);
               // Zaškrtnuté lodě vyhrávají nad vším ostatním: když si divák
               // vybral, koho sleduje, nemá mu to nic přebíjet.
@@ -1043,7 +1097,7 @@ export function MapaTrackeru({
                     x={v.poloha.x}
                     y={v.poloha.y}
                     kurz={v.kurz}
-                    velikost={blizko ? 11 : zaskrtnute.has(v.lod.id) ? 8 : 6.5}
+                    velikost={blizko ? 15 : zaskrtnute.has(v.lod.id) ? 12 : 10}
                     barva={barva(v.lod.id)}
                     opacity={v.stav === "nedostupna" ? 0.45 : silaStopy === 0 ? 0.6 : 1}
                   />
@@ -1068,7 +1122,7 @@ export function MapaTrackeru({
                 x={vybranaLod.poloha.x}
                 y={vybranaLod.poloha.y}
                 kurz={vybranaLod.kurz}
-                velikost={11}
+                velikost={16}
                 barva={barva(vybranaLod.lod.id)}
                 opacity={1}
                 silna

@@ -3121,7 +3121,7 @@ body:has(.tabule) { overflow: hidden; }
 .tabule-mapa .nacrt-na-tv .nacrt-swap {
   /* Pod pásek (3 vw) i pruh s názvem (zhruba 11 vw). Změřeno: hlavička
      končí na 227 px při šířce 1600. */
-  top: 6.5vw;
+  top: 5.8vw;
   left: 1.2vw;
   right: auto;
 }
@@ -3149,10 +3149,11 @@ body:has(.tabule) { overflow: hidden; }
    říkal totéž podruhé — jen ze zápisu místo z vody. Kde mapa chybí (závod
    bez zadané trati), zůstává: tam je to jediné pořadí, které tabule má. */
 .tabule:has(.tabule-mapa) .sloupce { display: none; }
-/* Žebříček začíná pod pruhem a jde až ke kraji obrazovky — na televizi
-   není důvod nechávat kolem panelu rám (Filip, 24. 10. 2026). */
+/* Žebříček navazuje přímo na pruh a jde až ke kraji obrazovky — na
+   televizi není důvod nechávat kolem panelu rám ani mezeru pod lištou
+   (Filip, 24. 10. 2026). Pruh měří 72 px na 1485, tedy 4,85 vw. */
 .tabule:has(.tabule-mapa) .tabule-mapa .nacrt-poradi {
-  top: 5.8vw;
+  top: 4.85vw;
   right: 0;
   bottom: 0;
   border-radius: 0;
