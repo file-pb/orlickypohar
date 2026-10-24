@@ -3088,8 +3088,7 @@ body:has(.tabule) { overflow: hidden; }
 
 /* Nad mapou musí mít text svůj podklad, jinak se ztratí v lese. Karty
    jsou poloprůhledné, aby bylo vidět, že pod nimi mapa pokračuje. */
-.tabule:has(.tabule-mapa) .vrch,
-.tabule:has(.tabule-mapa) .stavovy-prouzek {
+.tabule:has(.tabule-mapa) .vrch {
   background: color-mix(in srgb, var(--pozadi) 82%, transparent);
   backdrop-filter: blur(6px);
   border-radius: 0.6vw;
@@ -4053,17 +4052,23 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   color: var(--voda);
 }
 
-/* Stav rozjížďky jako proužek nahoře, v barvě stavu. Tenký schválně:
-   je to kontext, ne sdělení. */
+/* Stav rozjížďky jako pásek úplně nahoře, přes celou šířku (Filip,
+   24. 10. 2026). Tenký schválně: je to kontext, ne sdělení. */
 .stavovy-prouzek {
-  margin: 0 0 0.4vw;
-  padding: 0.25vw 0;
+  position: absolute; left: 0; right: 0; top: 0; z-index: 3;
+  margin: 0;
+  padding: 0.3vw 0;
   text-align: center;
   font-size: 1.05vw;
   letter-spacing: 0.06em;
   border-bottom: 2px solid currentColor;
+  background: color-mix(in srgb, var(--pozadi) 88%, transparent);
+  backdrop-filter: blur(6px);
   color: var(--tlumeny);
 }
+
+/* Pod páskem musí začít zbytek tabule, ať ho nepřekryje. */
+.tabule:has(.stavovy-prouzek) .vrch { margin-top: 2.2vw; }
 
 .stavovy-prouzek.sviti-ceka { color: #e8900c; }
 .stavovy-prouzek.sviti-jede { color: var(--stav-vypsany); }
