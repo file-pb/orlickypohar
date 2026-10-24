@@ -82,6 +82,8 @@ export type Mrizka = {
   voda: Uint8Array;
   /** Voda zmenšená o odstup od břehu — po téhle se hledá cesta. */
   plavna: Uint8Array;
+  /** Hrana buňky v metrech. Potřeba, když se maska zmenšuje o metry. */
+  krokM: number;
   /** Metry na stupeň délky na téhle šířce — pro počty vzdáleností. */
   mx: number;
   my: number;
@@ -159,6 +161,7 @@ export function mrizkaVody(body: Poloha[]): Mrizka {
     radku,
     voda,
     plavna: zmensi(voda, sloupcu, radku, Math.round(ODSTUP_OD_BREHU_M / krokM)),
+    krokM,
     mx,
     my,
   };
@@ -303,6 +306,39 @@ const SOUSEDI = [
 export function cestaPoVode(m: Mrizka, od: Poloha, kam: Poloha): Poloha[] | null {
   // Nejdřív s odstupem od břehu, a teprve když to nejde, i těsně kolem.
   return hledej(m, m.plavna, od, kam) ?? hledej(m, m.voda, od, kam);
+}
+
+/**
+ * Cesta, která se drží <b>dál od břehu než kreslená spojnice</b>.
+ *
+ * <b>K čemu</b> (Filip, 24. 10. 2026): *„měřicí trasa fakt pouze na vodě
+ * a mimo mělká místa"*. Podle téhle trasy se počítá pomyslné pořadí, takže
+ * nesmí vést tam, kam loď nemůže. Kreslená spojnice si vystačí s 30 m,
+ * protože jenom naznačuje směr; měřená musí mít pod kýlem vodu.
+ *
+ * <b>Mělčinu přitom neumíme změřit</b> — batymetrii nádrže nemáme a
+ * z obrysu se nevyčte. Vzdálenost od břehu je **náhražka**, ne hloubka:
+ * u strmého zatopeného svahu nadsazuje, v ploché zátoce podceňuje. Je to
+ * ale jediné, co z obrysu jde, a chybuje na správnou stranu — dál od
+ * břehu je hlouběji skoro vždycky.
+ *
+ * Kde se s plným odstupem cesta nenajde, povolí se postupně menší, až
+ * nakonec i voda těsně u břehu. Trasa je lepší než žádná.
+ */
+export function cestaProMereni(
+  m: Mrizka,
+  od: Poloha,
+  kam: Poloha,
+  odstupM: number,
+): Poloha[] | null {
+  for (const podil of [1, 0.6, 0.3]) {
+    const bunek = Math.round((odstupM * podil) / m.krokM);
+    if (bunek < 1) break;
+    const maska = zmensi(m.voda, m.sloupcu, m.radku, bunek);
+    const cesta = hledej(m, maska, od, kam);
+    if (cesta) return cesta;
+  }
+  return cestaPoVode(m, od, kam);
 }
 
 function hledej(m: Mrizka, maska: Uint8Array, od: Poloha, kam: Poloha): Poloha[] | null {

@@ -18,6 +18,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { DLAZDICE, Z_NEJMENE, Z_NEJVIC, doPixelu } from "@/lib/mapa";
+import type { Poloha } from "@/lib/voda";
 import type { Lod, Znacka } from "./plavba";
 
 /** Jak staré smí být hlášení, než loď přestane být čerstvá. */
@@ -103,7 +104,19 @@ function vychoziZ(znacky: Znacka[]) {
   return Math.max(Z_NEJMENE, Math.min(Z_NEJVIC, Math.floor(Math.min(podleX, podleY))));
 }
 
-export function NacrtMapy({ znacky, lode }: { znacky: Znacka[]; lode: Lod[] }) {
+export function NacrtMapy({
+  znacky,
+  lode,
+  trasa,
+  spojnice,
+}: {
+  znacky: Znacka[];
+  lode: Lod[];
+  /** Měřicí trasa po vodě, ze serveru. Divák ji nevidí. */
+  trasa: Poloha[];
+  /** Spojnice trati z návrháře, pro každé přiblížení. Tahle se ukazovat smí. */
+  spojnice: Record<number, Poloha[][]>;
+}) {
   const [z, setZ] = useState(() => vychoziZ(znacky));
   const [stred, setStred] = useState({
     sirka: znacky.reduce((s, m) => s + m.sirka, 0) / znacky.length,
@@ -125,6 +138,7 @@ export function NacrtMapy({ znacky, lode }: { znacky: Znacka[]; lode: Lod[] }) {
     if (id !== null) setHistorie((h) => [id, ...h.filter((x) => x !== id)].slice(0, 3));
   }
   const [trasaVidet, setTrasaVidet] = useState(false);
+  const [tratVidet, setTratVidet] = useState(true);
   const [pruhlednost, setPruhlednost] = useState(0.25);
   const tahne = useRef<{ x: number; y: number } | null>(null);
 
@@ -150,8 +164,10 @@ export function NacrtMapy({ znacky, lode }: { znacky: Znacka[]; lode: Lod[] }) {
     };
   };
 
-  // Uzly trasy a délky noh — podklad pro postup.
-  const uzly = znacky.map((m) => naPlatno(m.sirka, m.delka));
+  // <b>Postup se měří po trase, ne po přímkách mezi značkami.</b> Přímka
+  // mezi bójemi vede v zatopeném údolí přes kopec a loď, která ho objíždí,
+  // by měla v pořadí propadnout za někoho, kdo ji nepředjel.
+  const uzly = trasa.map((p) => naPlatno(p.sirka, p.delka));
   const delkyNoh = uzly.slice(0, -1).map((a, i) => Math.hypot(uzly[i + 1].x - a.x, uzly[i + 1].y - a.y));
 
   /** Stav každé lodi k zvolenému času: poloha, stáří, postup, stopa. */
@@ -263,6 +279,31 @@ export function NacrtMapy({ znacky, lode }: { znacky: Znacka[]; lode: Lod[] }) {
           {dlazdice.map((d) => (
             <image key={d.klic} href={d.cesta} x={d.x} y={d.y} width={DLAZDICE} height={DLAZDICE} />
           ))}
+
+          {/*
+            Spojnice trati z návrháře — <b>vyladěná a ukazovat se smí</b>:
+            vede po vodě, naznačuje obeplutí značky a říká, kudy se jede.
+            Je to něco jiného než měřicí trasa pod ní.
+          */}
+          {tratVidet &&
+            (spojnice[z] ?? []).map((tah, i) => (
+              <polyline
+                key={i}
+                points={tah
+                  .map((p) => {
+                    const q = naPlatno(p.sirka, p.delka);
+                    return `${q.x},${q.y}`;
+                  })
+                  .join(" ")}
+                fill="none"
+                stroke="#fff"
+                strokeWidth={2.5}
+                strokeDasharray="9 7"
+                strokeLinecap="round"
+                opacity={0.9}
+                style={{ filter: "drop-shadow(0 0 2px rgb(0 0 0 / 55%))" }}
+              />
+            ))}
 
           {/*
             Trasa, podle které se počítá pořadí. <b>Divák ji nevidí</b>
@@ -432,6 +473,14 @@ export function NacrtMapy({ znacky, lode }: { znacky: Znacka[]; lode: Lod[] }) {
               value={pruhlednost}
               onChange={(e) => setPruhlednost(Number(e.target.value))}
             />
+          </label>
+          <label className="nacrt-prepinac">
+            <input
+              type="checkbox"
+              checked={tratVidet}
+              onChange={(e) => setTratVidet(e.target.checked)}
+            />
+            trať z návrháře
           </label>
           <label className="nacrt-prepinac">
             <input
