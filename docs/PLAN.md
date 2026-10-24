@@ -2606,6 +2606,42 @@ v okně, přišla o celý záznam kvůli špatně nastavenému času.
 mimo (to čeká na úseky rozjížděk), a zámek nastavení zobrazení, který na
 rozpravu patří taky — zámek je poslední řádek v tom, co okna postaví.
 
+### Celý závodní den má obrazovku (25. 10. 2026)
+
+Poslední kus pořadí práce, a ten, bez kterého zbytek nejel: API okna
+i nastavení zobrazení umělo od 24. 10., jenže **pořadatel neměl odkud
+udělat rozpravu**, takže se tracking nerozjel a ven nešlo nic (oponentura,
+nález N6). Všechno tři visí na obrazovce trackeru
+(`/sprava/<serie>/tracker/<zavod>`), ne na třech vlastních:
+
+| Sekce | Co se tam dělá |
+|---|---|
+| **Závodní den** | rozprava otevře okno (volitelně na kolik hodin), konec dne ho zavře; výpis dnů |
+| **Co je vidět** | tři přepínače, zámek od rozpravy, po něm jen rozhodčí, jen zpřísnění a s důvodem |
+| **Telefony na palubě** | kdo z pole má spárovaný telefon, odepnutí ze sledování a odebrání klíče |
+
+**Je to jeden den a tři otázky téhož člověka** — *jede se?*, *kdo to
+uvidí?*, *hlásí se všichni?* — a chodit kvůli nim po obrazovkách by
+znamenalo odejít od mapy, nad kterou se rozhoduje.
+
+**Pořadatel na klíč dosáhne** (Filip, 25. 10. 2026). Past *„telefon, který
+zůstal v autě"* vidí z vody právě on; kapitán o ní neví. Vlastní cesta
+`/sprava/serie/{serie}/zastavky/{zavod}/klice` s týmž rozsahem jako polohy
+a okna, a sáhne jen na klíče lodí, které tu regatu jedou.
+
+**Ven se vydává, jen když běží i závodní den.** Konec rozjížďky je
+rozhodnutí rozhodčího, ne dopočet, takže zapomenutá rozjížďka znamenala, že
+tabule vysílá i večer, kdy se pole vrací k molu.
+
+Odjeto celým řetězem proti mocku (Izolepa): zapnout přenos ven → rozprava →
+nastavení zamčené, pořadatel už na ně nesmí a rozhodčí bez důvodu taky ne →
+odstartovaná rozjížďka → tabule vysílá 17 lodí bez přihlášení → uzavřít den
+→ přestane.
+
+**Co tím ještě není:** posádka má `GET /polohy`, ale appka jí to zatím
+neukazuje; a *mimo okno trasa nevznikne* se dá ověřit jen testy API, mock to
+pravidlo nemá.
+
 ### Živý kanál v appce je postavený (24. 10. 2026)
 
 Druhý kus pořadí práce. Odesílání už nevisí na ruce posádky: úloha na
@@ -3270,9 +3306,10 @@ Obrazovka klíče zároveň rozlišuje dvě věci, které vypadají stejně:
 *zapomenout klíč* smaže tajemství z telefonu, ale **na lodi zůstává
 platný**; odebrat ho umí jen kapitán.
 
-**Zbývá vydávání pozvánek.** Server je umí (`POST /ja/lode/{lod}/klice`),
-ale kapitán je nemá odkud vystavit — ani z webu, ani z appky. Do té doby
-není co skenovat a pozvánka se vyrobí jen přes API.
+~~**Zbývá vydávání pozvánek.**~~ **Hotové**: appka je vystavuje na obrazovce
+lodi a rovnou ukáže QR (`app/src/app/lode/[lod].tsx`), web na *Moje lodě*,
+a stránka `/klic`, na kterou QR vede, pozvánku uplatní i bez appky. Do
+25. 10. 2026 tu stálo, že to nejde odnikud — neplatilo to od 23. 10.
 
 ### Co je na tom skutečně těžké
 

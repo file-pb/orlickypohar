@@ -96,6 +96,11 @@ export default async function MojeLode({ searchParams }: Parametry) {
   // Telefony na palubě. Fanoušek na ně nemá právo, takže se na ně ani
   // neptáme — je to týž důvod, proč se posádky neptáme na žádosti.
   const smiKlice = vybrana ? vybrana.role !== "Fanousek" : false;
+  // <b>Sáhnout na cizí telefon smí jen majitel a kapitán</b> — vydat klíč
+  // smí víc lidí než ho vzít. Ptá se to na roli, ne na `spravujeLod`: ta
+  // říká jen to, že prošlo čtení připojení, a dvě množiny, které se dnes
+  // kryjí, se zítra rozejdou (oponentura, 24. 10. 2026).
+  const spravujeKlice = vybrana?.role === "Majitel" || vybrana?.role === "Kapitan";
   const klice: Klic[] =
     vybrana && smiKlice ? ((await kliceLodi(vybrana.lodId)).data ?? []) : [];
   const zive = klice.filter((k) => !k.odebran);
@@ -303,7 +308,9 @@ export default async function MojeLode({ searchParams }: Parametry) {
               <h2>Telefony na palubě</h2>
               <p className="poznamka">
                 Telefon se k lodi páruje klíčem, ne účtem — posádka se nemusí nikam
-                registrovat. Trasy z něj pak patří téhle lodi.
+                registrovat. Trasy z něj pak patří téhle lodi.{" "}
+                <b>Vypnout sledování je vratné, odebrat ne</b>: odebraný klíč už nedoposílá,
+                co má telefon rozdělané.
               </p>
 
               {zive.length === 0 ? (
@@ -325,7 +332,7 @@ export default async function MojeLode({ searchParams }: Parametry) {
                       </span>
                       {/* Sáhnout na cizí telefon smí jen kapitán a majitel.
                           Vydat klíč smí víc lidí než ho vzít. */}
-                      {spravujeLod && (
+                      {spravujeKlice && (
                         <>
                           <form action={prepniSledovaniAkce} className="radkove">
                             <input type="hidden" name="lod" value={vybrana.lodId} />

@@ -945,6 +945,43 @@ def klic_z_hlavicky(self):
     return tajemstvi
 
 
+# Okna závodních dnů a nastavení zobrazení. Mock je drží v paměti, takže
+# restart je srovná — stejně jako skrytí výsledků.
+OKNA = {}
+NASTAVENI = {}
+ZMENY_NASTAVENI = {}
+
+VIDENI_PORADI = {"Nic": 0, "JenSebe": 1, "IOstatni": 2}
+
+
+def okno_dto(o, ted=None):
+    from datetime import datetime, timezone
+    ted = ted or datetime.now(timezone.utc)
+    bezi = (o["zavrenoV"] is None
+            and datetime.fromisoformat(o["tvrdyKonec"].replace("Z", "+00:00")) > ted)
+    return {"id": o["id"], "den": o["den"], "otevrenoV": o["otevrenoV"],
+            "tvrdyKonec": o["tvrdyKonec"], "zavrenoV": o["zavrenoV"], "bezi": bezi}
+
+
+def okno_bezici(slug):
+    return next((o for o in OKNA.get(slug, []) if okno_dto(o)["bezi"]), None)
+
+
+def nastaveni_regaty(slug):
+    """Nastavení zobrazení. <b>Chybějící řádek je „jen sebe, ven nic"</b> —
+    výchozí hodnota musí být bezpečná, protože zamrzne i to, co nikdo
+    nenastavil."""
+    return NASTAVENI.setdefault(slug, {
+        "coVidiPosadky": "JenSebe", "zivyPrenosVen": False,
+        "jizdyPoRegateVerejne": False, "zamcenoV": None})
+
+
+def nastaveni_dto(n):
+    return {**{k: n[k] for k in
+               ("coVidiPosadky", "zivyPrenosVen", "jizdyPoRegateVerejne", "zamcenoV")},
+            "zamceno": n["zamcenoV"] is not None}
+
+
 def klice_regaty(slug):
     """Klíče všech lodí, které jedou tuhle regatu — pořadatelův pohled.
 
@@ -1091,18 +1128,26 @@ def polohy_zastavky(slug, z):
             "stariMs": int(stari * 1000),
             "stav": "Cerstva" if stari < 60 else ("Starne" if stari < 300 else "Nedostupna")})
 
-    return {"ted": cas_iso(ted), "oknoBezi": True, "oknoOd": cas_iso(od), "lode": vysledek}
+    # Okno se už nepředstírá: mock ho má (`OKNA`), takže snímek říká pravdu
+    # o tom, jestli závodní den běží. Polohy zůstávají simulované — telefony
+    # mock nemá —, ale `oknoBezi` je skutečný stav.
+    bezi = okno_bezici(slug) is not None
+    return {"ted": cas_iso(ted), "oknoBezi": bezi, "oknoOd": cas_iso(od), "lode": vysledek}
 
 
 def verejne_polohy(slug, z):
-    """Co z poloh jde ven — <b>jen za jízdy</b>.
+    """Co z poloh jde ven — <b>jen když to rozhodčí pustil a zrovna se jede</b>.
 
-    Mock nemá nastavení trackingu, takže se chová jako regata s povoleným
-    přenosem: vysílá, když některá rozjížďka běží. Loď bez polohy se ven
-    neposílá, poslední známá poloha mimo rozjížďku taky ne.
+    Obě podmínky musí platit, stejně jako v `PolohySprava.SpoctiVenAsync`.
+    Do 25. 10. 2026 tu stál jen běh rozjížďky a přepínač *živý přenos ven*
+    se na mocku vyzkoušet nedal vůbec — vysílalo se vždycky.
     """
     snimek = polohy_zastavky(slug, z)
-    jede = any(r.get("stav") == "Probiha" for r in z.get("rozjizdky", []))
+    pusti = nastaveni_regaty(slug)["zivyPrenosVen"]
+    # A běží závodní den: rozjížďka může po uzavření dne zůstat „běžící",
+    # protože její konec je rozhodnutí rozhodčího, ne dopočet.
+    den = okno_bezici(slug) is not None
+    jede = pusti and den and any(r.get("stav") == "Probiha" for r in z.get("rozjizdky", []))
     if not jede:
         return {"vysila": False, "ted": snimek["ted"], "lode": []}
     return {"vysila": True, "ted": snimek["ted"],
@@ -2566,6 +2611,89 @@ class H(BaseHTTPRequestHandler):
             t["konec"] = konec
         return self.odpoved(trasa_dto(t))
 
+    def okna_regaty(self, slug):
+        return self.odpoved([okno_dto(o) for o in OKNA.get(slug, [])])
+
+    def rozprava(self, slug):
+        """
+        Rozpravou se otevře okno závodního dne a <b>zaklapne nastavení</b>.
+        Druhá rozprava druhé okno nezaloží — na vodě se klikne dvakrát spíš
+        než vůbec.
+        """
+        from datetime import datetime, timedelta, timezone
+
+        if (bezi := okno_bezici(slug)):
+            return self.odpoved(okno_dto(bezi))
+
+        hodin = (self.telo_zadosti() or {}).get("trvaniHodin") or 14
+        hodin = max(1, min(int(hodin), 36))
+        ted = datetime.now(timezone.utc)
+        o = {"id": sum(len(v) for v in OKNA.values()) + 1,
+             "den": len(OKNA.get(slug, [])) + 1,
+             "otevrenoV": _iso(ted), "tvrdyKonec": _iso(ted + timedelta(hours=hodin)),
+             "zavrenoV": None}
+        OKNA.setdefault(slug, []).append(o)
+
+        # Zámek je poslední řádek v tom, co okna postaví.
+        n = nastaveni_regaty(slug)
+        if n["zamcenoV"] is None:
+            n["zamcenoV"] = _iso(ted)
+
+        return self.odpoved(okno_dto(o))
+
+    def uzavri_den(self, slug):
+        """Uzavřít zavřené není chyba."""
+        o = okno_bezici(slug)
+        if not o:
+            posledni = (OKNA.get(slug) or [None])[-1]
+            if not posledni:
+                return self.send_error(404)
+            return self.odpoved(okno_dto(posledni))
+
+        o["zavrenoV"] = ted_iso()
+        return self.odpoved({**okno_dto(o), "zbylo": {"rozjizdky": [], "trasy": 0}})
+
+    def nastaveni_trackeru(self, slug):
+        return self.odpoved(nastaveni_dto(nastaveni_regaty(slug)))
+
+    def uloz_nastaveni(self, slug):
+        """
+        Do rozpravy pořadatel i rozhodčí, po ní <b>jen rozhodčí a jen
+        zpřísnění</b> — a s důvodem. Zamčené nastavení je zároveň doklad.
+        """
+        n = nastaveni_regaty(slug)
+        v = self.telo_zadosti() or {}
+        nove = {
+            "coVidiPosadky": v.get("coVidiPosadky", n["coVidiPosadky"]),
+            "zivyPrenosVen": bool(v.get("zivyPrenosVen")),
+            "jizdyPoRegateVerejne": bool(v.get("jizdyPoRegateVerejne")),
+        }
+
+        if n["zamcenoV"] is not None:
+            if not smi_ted("Rozhodci"):
+                return self.chyba(403, "Po rozpravě s nastavením hýbe jen rozhodčí.")
+            if (VIDENI_PORADI.get(nove["coVidiPosadky"], 1)
+                    > VIDENI_PORADI.get(n["coVidiPosadky"], 1)):
+                return self.chyba(409, "Zamčené nastavení jde jen zpřísnit.")
+            if nove["zivyPrenosVen"] and not n["zivyPrenosVen"]:
+                return self.chyba(409, "Zamčené nastavení jde jen zpřísnit.")
+            meni_se = any(nove[k] != n[k] for k in nove)
+            if meni_se and not (v.get("duvod") or "").strip():
+                return self.chyba(409, "Zásah do zamčeného nastavení potřebuje důvod.")
+
+        ZMENY_NASTAVENI.setdefault(slug, []).append({
+            "kdy": ted_iso(), "kdo": (self.prihlaseny() or {}).get("zobrazovane", "?"),
+            "zPosadky": n["coVidiPosadky"], "naPosadky": nove["coVidiPosadky"],
+            "zVen": n["zivyPrenosVen"], "naVen": nove["zivyPrenosVen"],
+            "zJizdy": n["jizdyPoRegateVerejne"], "naJizdy": nove["jizdyPoRegateVerejne"],
+            "duvod": (v.get("duvod") or None), "poZamku": n["zamcenoV"] is not None,
+        })
+        n.update(nove)
+        return self.odpoved(nastaveni_dto(n))
+
+    def zmeny_nastaveni(self, slug):
+        return self.odpoved(ZMENY_NASTAVENI.get(slug, []))
+
     def klice_lodi(self, lod_id):
         """
         Výpis spárovaných telefonů. <b>Vidět je smí každý, kdo smí vydávat</b>
@@ -2856,13 +2984,11 @@ class H(BaseHTTPRequestHandler):
     def do_PUT(self):
         cesta = urlparse(self.path).path
 
-        if cesta == "/trasy":
-            klic = klic_z_hlavicky(self)
-            if not klic:
-                return self.send_error(401)
-            return self.odpoved(sorted(
-                (trasa_dto(t) for k, t in TRASY.items() if k[0] == klic),
-                key=lambda t: t["zacatek"], reverse=True))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                          r'/tracker/nastaveni$', cesta)):
+            if self.token_nesedi() or self.prava_nesedi():
+                return None
+            return self.uloz_nastaveni(m.group(1))
 
         # <b>Registrace zařízení je bez přihlášení</b> — veřejná upozornění
         # nesmějí vyžadovat účet (plán, *Dvě úrovně upozornění*). Proto
@@ -3787,6 +3913,13 @@ class H(BaseHTTPRequestHandler):
             # Jediný endpoint bez přihlášení, a musí být: kdyby ho
             # vyžadoval, posádka by potřebovala účet a smysl QR by padl.
             return self.uplatni_pozvanku()
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                          r'/okna/rozprava$', cesta)):
+            return self.rozprava(m.group(1))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                          r'/okna/uzavrit$', cesta)):
+            return self.uzavri_den(m.group(1))
+
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                           r'/klice/(\d+)/sledovani$', cesta)):
             k = klic_regaty(m.group(1), int(m.group(2)))
@@ -4943,6 +5076,13 @@ class H(BaseHTTPRequestHandler):
             if not k:
                 return self.send_error(401)
             return self.odpoved({"sleduje": bool(k.get("sleduje", True))})
+        elif cesta == "/trasy":
+            klic = klic_z_hlavicky(self)
+            if not klic:
+                return self.send_error(401)
+            return self.odpoved(sorted(
+                (trasa_dto(t) for k, t in TRASY.items() if k[0] == klic),
+                key=lambda t: t["zacatek"], reverse=True))
         elif cesta == "/polohy":
             # Posádka na palubě. Mock nemá nastavení trackingu ani okna
             # regaty, takže se chová jako regata s výchozím nastavením
@@ -5017,6 +5157,22 @@ class H(BaseHTTPRequestHandler):
             if not z:
                 return self.send_error(404)
             telo = verejne_polohy(m.group(1), z)
+        elif (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/okna$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            return self.okna_regaty(m.group(1))
+        elif (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/tracker/nastaveni$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            return self.nastaveni_trackeru(m.group(1))
+        elif (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                r'/tracker/nastaveni/zmeny$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            return self.zmeny_nastaveni(m.group(1))
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/klice$', cesta)):
             # Skutečné API má celou správu za RequireAuthorization; tahle

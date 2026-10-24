@@ -117,13 +117,15 @@ nahlas, pro polohy platit nebude.
 
 ### N3 — Kdo odjíždí, vypnout si to nemůže. A klíč k lodi bez odpovědného nejde odebrat vůbec
 
-> **Opraveno z poloviny, 25. 10. 2026.** Držitel klíče se odepne i připne
-> sám (`POST /klice/sledovani`, prokazuje se klíčem; v appce na obrazovce
-> *Klíč k lodi*), takže věta z plánu konečně platí. **Otevřené zůstává
-> odebírání**: komentář u `OdebranV` sliboval pořadatele a držitele, kód ani
-> plán je nemají — komentář je srovnaný s kódem a otázka, jestli pořadatel
-> do té tabulky patří, je zapsaná u něj. Na lodi bez majitele i kapitána
-> klíč pořád neodebere nikdo; odepnout se z ní ale teď jde.
+> **Opraveno, 25. 10. 2026.** Držitel klíče se odepne i připne sám
+> (`POST /klice/sledovani`, prokazuje se klíčem; v appce na obrazovce *Klíč
+> k lodi*), takže věta z plánu platí. A **pořadatel regaty na klíč dosáhne**
+> — Filip to rozhodl týž den: vlastní cesta
+> `/sprava/serie/{serie}/zastavky/{zavod}/klice`, na webu sekce *Telefony na
+> palubě* na obrazovce trackeru. Rozsah je tentýž jako u poloh a oken
+> (pořadatel té regaty nebo rozhodčí ročníku) a sáhne jen na klíče lodí,
+> které tu regatu jedou. Tím zmizel i případ *„loď bez odpovědného"*: klíč
+> na ní odebere pořadatel.
 
 Plán (*Telefon jako mobilní klíč k lodi*) má tabulku a pod ní větu:
 
@@ -157,6 +159,12 @@ rozhodnout, jestli pořadatel do tabulky patří — pak to srovnat v `KlicLodi.
 
 ### N4 — Odebrání klíče uzavře telefonu cestu k vlastní rozdělané trase
 
+> **Vyřešeno zápisem, 25. 10. 2026** — ne změnou chování. Odebrání zůstává
+> nevratné (klíč, který smí psát po odebrání, by nebyl odebraný), ale teď to
+> stojí u tlačítka: na webu u *Odebrat natrvalo* i na *Moje lodě*, v appce
+> v potvrzení. A je u něj i to, co má člověk udělat místo toho: odepnutí je
+> vratné.
+
 **Změřeno** (JOY, celý život klíče):
 
 ```
@@ -178,6 +186,14 @@ odebrat až po doposlání, nebo to u tlačítka říct.
 
 ### N5 — Nastavení, které nikdo nečte
 
+> **Opraveno 25. 10. 2026.** Čte ho `GET /polohy`, kde se telefon prokazuje
+> klíčem: nic, jen sebe, nebo i ostatní; mimo běžící okno nic. Chybějící
+> řádek nastavení znamená *jen sebe*, tedy totéž co vydává
+> `NastaveniSprava.NactiAsync` — bez přetypování na nullable by
+> `FirstOrDefault` vrátil `Nic` a dvě místa by o téže regatě tvrdila dvě
+> různé věci. **Zbývá to ukázat v appce**: endpoint existuje a má testy,
+> obrazovka na palubě zatím ne.
+
 `CoVidiPosadky` (*nic / jen sebe / i ostatní*) se ukládá, zamyká rozpravou,
 po zámku jde jen zpřísnit a každá změna se píše do `ZmenaNastaveniTrackeru`
 s důvodem — protože *„zamčené nastavení je zároveň doklad"* ke sporu
@@ -192,6 +208,15 @@ Doklad, který tvrdí „posádky viděly jen sebe", přitom nikdo neviděl nic,
 horší než žádný doklad.
 
 ### N6 — Řetěz se nedá projet, protože dvě obrazovky nejsou
+
+> **Opraveno 25. 10. 2026.** Obrazovka trackeru nese celý závodní den:
+> *Závodní den* (rozprava otevře, konec dne zavře), *Co je vidět* (tři
+> přepínače i se zámkem a důvodem) a *Telefony na palubě*. Tři otázky téhož
+> člověka v tentýž den — *jede se?*, *kdo to uvidí?*, *hlásí se všichni?* —
+> takže jedna obrazovka, ne tři. **Odjeto celým řetězem** (mock, Izolepa):
+> zapnout přenos ven → rozprava → nastavení zamčené, pořadatel už na ně
+> nesmí (403) a rozhodčí bez důvodu taky ne (409) → odstartovaná rozjížďka →
+> veřejná tabule vysílá 17 lodí bez přihlášení → uzavřít den → přestane.
 
 Appka nahraje trasu jen při běžícím okně (`TrasyEndpoints`: *„Bez běžícího
 okna regaty trasa nevznikne"*, 409). Okno otevírá pořadatel rozpravou
@@ -209,19 +234,33 @@ se žádný scénář okna ani přenosu ven nedá odjet (viz NEODJETO).
 
 ### N7 — Drobnosti
 
-- `web/app/moje-lode/page.tsx:84`: tlačítka *Vypnout sledování* a *Odebrat*
-  se kreslí podle `spravujeLod = posadka?.stav === "ok"`, tedy podle toho,
+> **Opraveny všechny tři, 25. 10. 2026.**
+
+- `web/app/moje-lode/page.tsx`: tlačítka *Vypnout sledování* a *Odebrat* se
+  kreslila podle `spravujeLod = posadka?.stav === "ok"`, tedy podle toho,
   jestli prošlo **čtení připojení** — ne podle role, kterou má obrazovka
-  o řádek výš (`vybrana.role`). Dnes se ty množiny kryjí, zítra je to další
-  půjčená podmínka. (Chování změřeno a je správné: posádka tlačítka nemá,
-  majitelka ano.)
-- `app/src/app/lode/[lod].tsx` nabízí *Vystavit pozvánku* každému, kdo
-  obrazovku otevře; `smiSpravovat` se počítá jen pro správu cizího klíče.
-  Server to odmítne (změřeno 403), takže jde o slib naprázdno, ne o díru.
-- Plán tvrdí: *„Zbývá vydávání pozvánek. Server je umí, ale kapitán je nemá
-  odkud vystavit — ani z webu, ani z appky."* **Neplatí**: má je appka
-  (`lode/[lod].tsx`, QR) i web (`moje-lode`), a stránka `/klic`, na kterou
-  QR vede, odpovídá (změřeno 200).
+  o řádek výš. Dnes se ty množiny kryjí, zítra je to další půjčená podmínka.
+  Teď se ptá na roli (`spravujeKlice`).
+- `app/src/app/lode/[lod].tsx` nabízelo *Vystavit pozvánku* každému, kdo
+  obrazovku otevřel. Server to odmítne (změřeno 403), takže šlo o slib
+  naprázdno, ne o díru — tlačítko teď vidí jen ten, kdo k lodi patří.
+- Plán tvrdil: *„Zbývá vydávání pozvánek. Server je umí, ale kapitán je nemá
+  odkud vystavit."* Neplatilo od 23. 10.; opraveno.
+
+### N8 — Uzavřený závodní den vysílání nezastavil
+
+**Vyšlo až při zkoušce celého řetězu 25. 10. 2026** a je to tentýž druh
+chybějící podmínky jako N2.
+
+`SpoctiVenAsync` se ptal na dvě věci: povolený přenos a běžící rozjížďku.
+Jenže **konec rozjížďky je rozhodnutí rozhodčího, ne dopočet** — uzavření
+dne ji jen vypíše v `zbylo` a nic s ní nedělá. Takže zapomenutá rozjížďka
+znamenala, že tabule vysílá dál i večer, kdy se pole vrací k molu: přesně
+ten výdej, kterému se má ořez vyhnout.
+
+Změřeno: po uzavření dne `oknoBezi: false`, a přitom `vysila: true`.
+Opraveno — ven se vydává, jen když běží i okno závodního dne. Hlídá to test
+`Po_uzavreni_dne_se_ven_nevysila`.
 
 ---
 
@@ -324,10 +363,15 @@ jedna strana přečetla podmínku té druhé nepřesně.
 
 ## NEODJETO (a proč)
 
+Stav k 25. 10. 2026, po opravách. První čtyři řádky z 24. 10. už odjet jdou
+— mock okna i nastavení dostal a obrazovka existuje.
+
 | Scénář | Proč |
 |---|---|
-| okno regaty: rozprava otevře, konec dne zavře, mimo okno 409 | mock `/okna` ani pravidlo nemá; API lokálně nejede (bez Dockeru); na webu ani v appce pro rozpravu není obrazovka |
-| *živý přenos ven*: rozhodčí pustí, pořadatel po zámku nesmí, zpřísnit ano | totéž — a mock vysílá bez přepínače |
-| *co vidí posádky* v praxi | nečte to žádný kód (N5), takže není co měřit |
-| klíč bez účtu na skutečném telefonu | APK/simulátor mimo rozsah téhle session; měřeno HTTP tvarem, který appka posílá |
+| ~~okno regaty: rozprava otevře, konec dne zavře~~ | **odjeto** přes obrazovku trackeru |
+| ~~*živý přenos ven*: rozhodčí pustí, pořadatel po zámku nesmí~~ | **odjeto**: 403 pořadateli, 409 bez důvodu |
+| ~~*co vidí posádky* v praxi~~ | **odjeto** na API (`GET /polohy`) a testy; v appce to zatím není vidět |
+| **mimo okno trasa nevznikne (409)** | mock to pravidlo nemá — trasu vezme vždycky. Platí z kódu a z testů API, změřit se to tady nedá |
+| klíč bez účtu na skutečném telefonu | APK/simulátor mimo rozsah; měřeno HTTP tvarem, který appka posílá |
 | trasa po odebrání klíče v databázi (zůstane, nebo zmizí) | ořez a mazání čeká na úseky rozjížděk, viz plán |
+| integrační testy API | na tomhle stroji není Docker ani Postgres; nové testy poběží v CI |

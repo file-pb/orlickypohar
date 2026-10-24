@@ -393,6 +393,43 @@ public class PolohyTests(PostgresFixture fixture)
         Assert.False((await polohy.VerejnyAsync(regata.ZavodId, default)).Vysila);
     }
 
+    /// <summary>
+    /// <b>Uzavřený závodní den vysílání zastaví</b>, i když rozjížďka zůstala
+    /// „běžící".
+    /// <para>
+    /// Konec rozjížďky je rozhodnutí rozhodčího, ne dopočet — uzavření dne ji
+    /// jen vypíše v <c>zbylo</c> a nic s ní nedělá. Bez téhle podmínky by
+    /// tabule vysílala i večer, kdy se pole vrací k molu, a to je přesně
+    /// výdej, kterému se má ořez vyhnout.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Po_uzavreni_dne_se_ven_nevysila()
+    {
+        var (db, polohy, okna, cas) = Sluzby();
+        var regata = await RegataAsync(db, 1);
+        var nastaveni = new NastaveniSprava(db, cas);
+        await nastaveni.UlozAsync(
+            regata.ZavodId,
+            new NastaveniVstup(CoVidiPosadky.JenSebe, true, false, null),
+            regata.Kdo, default);
+        await okna.OtevriAsync(regata.ZavodId, regata.Kdo, null, default);
+
+        cas.Ted = Rozprava.AddMinutes(10);
+        await BodAsync(db, cas, okna, regata.Lode[0].Klic, cas.Ted);
+        await RozjizdkaBeziAsync(db, regata.ZavodId, Rozprava.AddMinutes(8));
+        PolohySprava.Zapomen(regata.ZavodId);
+
+        Assert.True((await polohy.VerejnyAsync(regata.ZavodId, default)).Vysila);
+
+        // Den se uzavře, rozjížďka zůstane otevřená — tak, jak to uzavření
+        // vypisuje v `zbylo`.
+        await okna.UzavriAsync(regata.ZavodId, regata.Kdo, default);
+        PolohySprava.Zapomen(regata.ZavodId);
+
+        Assert.False((await polohy.VerejnyAsync(regata.ZavodId, default)).Vysila);
+    }
+
     [Fact]
     public async Task Ven_jdou_jen_polohy_z_rozjizdky_vcetne_procedury()
     {

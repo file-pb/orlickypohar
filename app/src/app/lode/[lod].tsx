@@ -44,6 +44,10 @@ export default function KliceLodi() {
   // a majitel. Bez téhle znalosti by obrazovka nabízela tlačítka,
   // která server odmítne.
   const [smiSpravovat, setSmiSpravovat] = useState(false);
+  // Vydat klíč smí jen ten, kdo k lodi patří. Server to hlídá
+  // (`SmiVydavatAsync`), ale tlačítko, které vrátí „nemáš práva", je slib
+  // naprázdno — a ten je horší než chybějící tlačítko.
+  const [smiVydavat, setSmiVydavat] = useState(false);
 
   const nacti = useCallback(async () => {
     if (!Number.isFinite(lodId)) return;
@@ -53,6 +57,7 @@ export default function KliceLodi() {
       setKlice(k);
       const moje = lode?.find((l) => l.lodId === lodId);
       setSmiSpravovat(moje?.role === 'Majitel' || moje?.role === 'Kapitan');
+      setSmiVydavat(moje !== undefined && moje.role !== 'Fanousek');
       setChyba(null);
     } catch (e) {
       setChyba(e instanceof Error ? e.message : 'Nedaří se spojit s API.');
@@ -109,7 +114,7 @@ export default function KliceLodi() {
             </Pressable>
           </Karta>
         </>
-      ) : (
+      ) : smiVydavat ? (
         <Karta>
           <Text style={{ color: t.text }}>
             Pozvánka platí 48 hodin a dá se uplatnit jednou. Každý telefon potřebuje svou.
@@ -119,6 +124,12 @@ export default function KliceLodi() {
               {delam ? 'Vystavuji…' : 'Vystavit pozvánku'}
             </Text>
           </Pressable>
+        </Karta>
+      ) : (
+        <Karta>
+          <Text style={{ color: t.tlumeny }}>
+            Klíč k téhle lodi vydává její majitel, kapitán nebo posádka.
+          </Text>
         </Karta>
       )}
 
@@ -183,6 +194,7 @@ export default function KliceLodi() {
     Alert.alert(
       'Odebrat klíč?',
       'Klíč zanikne a nedá se oživit — telefon se bude muset spárovat znovu. '
+        + 'Co má rozdělané a neodeslané, už nedoplní. '
         + 'Pro jednu regatu stačí vypnout sledování.',
       [
         { text: 'Zrušit', style: 'cancel' },

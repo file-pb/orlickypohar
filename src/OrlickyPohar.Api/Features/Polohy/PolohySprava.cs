@@ -237,6 +237,15 @@ public class PolohySprava(AppDbContext db, TimeProvider cas, OknaSprava okna)
             .FirstOrDefaultAsync(ct);
         if (!pusti) return new VerejnyPohled(false, ted, []);
 
+        // <b>A běží závodní den.</b> Konec rozjížďky je rozhodnutí
+        // rozhodčího, ne dopočet, takže rozjížďka může po uzavření dne
+        // zůstat „běžící" — uzavření ji vypíše v `zbylo` a nic s ní nedělá.
+        // Bez téhle podmínky by se pak vysílalo i večer, kdy se pole vrací
+        // k molu: přesně ten výdej, kterému se má ořez vyhnout (změřeno
+        // 25. 10. 2026 při zkoušce celého řetězu).
+        if (await okna.BeziciAsync(zavodId, ted, ct) is null)
+            return new VerejnyPohled(false, ted, []);
+
         // Rozjížďka, která právě běží. Bez ní se ven nevysílá — i když
         // telefony hlásí dál, protože pořadatelský přehled je na nich
         // závislý celý den.
