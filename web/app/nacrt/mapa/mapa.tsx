@@ -672,7 +672,8 @@ export function NacrtMapy({
     return () => clearTimeout(casovac);
   }, [posledniSwap?.cas, prohozeni]);
 
-  const vybranaLod = vStavu.find((v) => v.lod.id === vybrana) ?? null;
+  const vybranaLod =
+    vStavu.find((v) => v.lod.id === vybrana && (!filtr || v.lod.kategorie === filtr)) ?? null;
 
   return (
     <div className="nacrt">
@@ -729,6 +730,10 @@ export function NacrtMapy({
 
           {/* Ostatní lodě: celá dráha, barevně a hodně průhledně. */}
           {vStavu
+            // Tab nad žebříčkem platí i na mapu (Filip, 24. 10. 2026):
+            // filtrovat seznam a nechat na mapě celé pole by znamenalo
+            // dívat se na dvě různé regaty vedle sebe.
+            .filter((v) => !filtr || v.lod.kategorie === filtr)
             .filter((v) => v.lod.id !== vybrana && !(jenTuhle && vybrana !== null))
             .map((v) => {
               if (!v.poloha) return null;
