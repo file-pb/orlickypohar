@@ -17,6 +17,7 @@ using OrlickyPohar.Api.Features.Polohy;
 using OrlickyPohar.Api.Features.Poradatele;
 using OrlickyPohar.Api.Features.Prevzate;
 using OrlickyPohar.Api.Features.Smernice;
+using OrlickyPohar.Api.Features.Tracker;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Sprava;
 using OrlickyPohar.Api.Features.Klice;
@@ -59,6 +60,7 @@ try
     builder.Services.AddScoped<TrasySprava>();
     builder.Services.AddScoped<OknaSprava>();
     builder.Services.AddScoped<PolohySprava>();
+    builder.Services.AddScoped<NastaveniSprava>();
     builder.Services.AddScoped<KliceSprava>();
     builder.Services.AddScoped<KalendarSprava>();
     builder.Services.AddScoped<VysledkySprava>();
@@ -236,6 +238,7 @@ try
         app.MapTrasy();
         app.MapOkna();
         app.MapPolohy();
+        app.MapNastaveniTrackeru();
         app.MapKlice();
         app.MapTrat();
         app.MapSpravaPoradatelu();

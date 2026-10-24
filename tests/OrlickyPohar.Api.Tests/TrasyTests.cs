@@ -6,6 +6,7 @@ using OrlickyPohar.Api.Features.Klice;
 using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Okna;
 using OrlickyPohar.Api.Features.Serial;
+using OrlickyPohar.Api.Features.Tracker;
 using OrlickyPohar.Api.Features.Trasy;
 using OrlickyPohar.Api.Features.Zavody;
 
@@ -40,7 +41,7 @@ public class TrasyTests(PostgresFixture fixture)
     {
         var scope = fixture.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var okna = new OknaSprava(db, cas);
+        var okna = new OknaSprava(db, cas, new NastaveniSprava(db, cas));
         return (db, new TrasySprava(db, cas, okna), okna, cas);
     }
 

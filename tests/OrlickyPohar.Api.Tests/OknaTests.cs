@@ -5,6 +5,7 @@ using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Okna;
 using OrlickyPohar.Api.Features.Serial;
+using OrlickyPohar.Api.Features.Tracker;
 using OrlickyPohar.Api.Features.Zavody;
 
 namespace OrlickyPohar.Api.Tests;
@@ -36,7 +37,7 @@ public class OknaTests(PostgresFixture fixture)
         var scope = fixture.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var cas = new ZastavenyCas(ted ?? Rozprava);
-        return (db, new OknaSprava(db, cas), cas);
+        return (db, new OknaSprava(db, cas, new NastaveniSprava(db, cas)), cas);
     }
 
     /// <summary>Regata s jednou přihlášenou lodí — bez účasti není co trackovat.</summary>

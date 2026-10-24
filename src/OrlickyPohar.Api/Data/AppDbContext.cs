@@ -49,6 +49,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Features.Trasy.TrasaBod> TrasaBody => Set<Features.Trasy.TrasaBod>();
     public DbSet<Features.Klice.KlicLodi> Klice => Set<Features.Klice.KlicLodi>();
     public DbSet<Features.Okna.OknoRegaty> Okna => Set<Features.Okna.OknoRegaty>();
+    public DbSet<Features.Tracker.NastaveniTrackeru> NastaveniTrackeru =>
+        Set<Features.Tracker.NastaveniTrackeru>();
+    public DbSet<Features.Tracker.ZmenaNastaveniTrackeru> ZmenyNastaveniTrackeru =>
+        Set<Features.Tracker.ZmenaNastaveniTrackeru>();
     public DbSet<Features.Klice.PozvankaKlice> Pozvanky => Set<Features.Klice.PozvankaKlice>();
 
     protected override void OnModelCreating(ModelBuilder b)
@@ -469,6 +473,22 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // teď vůbec" (při zakládání trasy se neví, o kterou regatu jde).
         okno.HasIndex(x => new { x.ZavodId, x.OtevrenoV });
         okno.HasIndex(x => x.TvrdyKonec);
+
+        var nastaveni = b.Entity<Features.Tracker.NastaveniTrackeru>();
+        nastaveni.HasOne(x => x.Zavod).WithMany().HasForeignKey(x => x.ZavodId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Jedna regata, jedno nastavení. Dvě by znamenala dvě pravdy o tom,
+        // kdo koho smí vidět.
+        nastaveni.HasIndex(x => x.ZavodId).IsUnique();
+        // Výchozí hodnota patří do databáze, ne jen do konstruktoru: migrace
+        // by jinak stávajícím regatám zapsala nulu, tedy „posádky nevidí nic".
+        nastaveni.Property(x => x.CoVidiPosadky)
+            .HasDefaultValue(Features.Tracker.CoVidiPosadky.JenSebe);
+
+        var zmenaNastaveni = b.Entity<Features.Tracker.ZmenaNastaveniTrackeru>();
+        zmenaNastaveni.Property(x => x.Duvod).HasMaxLength(500);
+        zmenaNastaveni.HasOne(x => x.Nastaveni).WithMany(x => x.Zmeny)
+            .HasForeignKey(x => x.NastaveniId).OnDelete(DeleteBehavior.Cascade);
 
         var pozvanka = b.Entity<Features.Klice.PozvankaKlice>();
         pozvanka.Property(x => x.Otisk).HasMaxLength(64).IsRequired();

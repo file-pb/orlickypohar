@@ -6,6 +6,7 @@ using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Okna;
 using OrlickyPohar.Api.Features.Polohy;
 using OrlickyPohar.Api.Features.Serial;
+using OrlickyPohar.Api.Features.Tracker;
 using OrlickyPohar.Api.Features.Trasy;
 using OrlickyPohar.Api.Features.Zavody;
 
@@ -31,7 +32,7 @@ public class PolohyTests(PostgresFixture fixture)
         var scope = fixture.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var cas = new ZastavenyCas(ted ?? Rozprava);
-        var okna = new OknaSprava(db, cas);
+        var okna = new OknaSprava(db, cas, new NastaveniSprava(db, cas));
         return (db, new PolohySprava(db, cas, okna), okna, cas);
     }
 
