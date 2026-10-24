@@ -951,6 +951,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/serie/{serie}/zavody/{zavod}/polohy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Živé polohy pro diváka
+         * @description Vysílá se, jen když to rozhodčí povolil **a zrovna běží rozjížďka** — mimo ni se vydávání vypíná, protože ořez zezadu se nedá udělat dopředu. `vysila: false` znamená „teď ne"; proč, se ven neříká. Loď bez polohy a poslední známá poloha mimo rozjížďku se nevydávají vůbec — to je údaj pro závodní výbor.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VerejnyPohled"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/klice/uplatnit": {
         parameters: {
             query?: never;
@@ -4425,6 +4467,8 @@ export interface paths {
         /**
          * Uzavře závodní den
          * @description Pořadatel regaty, nebo rozhodčí. Tím se přestává zaznamenávat — mezi dny se nesleduje. Uzavřít zavřené není chyba.
+         *
+         *     V odpovědi je `zbylo`: **co po dni zůstalo otevřené** — rozjížďky, které pořád „běží", a trasy, které telefon nedokončil. Nic se tím nezavírá; konec rozjížďky je rozhodnutí rozhodčího, ne dopočet.
          */
         post: {
             parameters: {
@@ -4485,6 +4529,129 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["SnimekPoloh"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/tracker/nastaveni": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Nastavení zobrazení trackingu
+         * @description Pořadatel regaty, nebo rozhodčí ročníku. Výchozí hodnota je bezpečná: posádky vidí jen sebe, ven nejde nic.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NastaveniDto"];
+                    };
+                };
+            };
+        };
+        /**
+         * Změní nastavení zobrazení
+         * @description Do rozpravy pořadatel regaty nebo rozhodčí, po rozpravě **jen rozhodčí a jen zpřísnění** — rozšířit nesmí nikdo. Zásah do zamčeného nastavení vyžaduje `duvod`.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["NastaveniVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NastaveniDto"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChybaNastaveni"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/tracker/nastaveni/zmeny": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kdo nastavení kdy měnil a proč
+         * @description Pořadatel regaty, nebo rozhodčí. Je to doklad ke sporu „vy jste nás viděli a my vás ne".
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZmenaDto"][];
                     };
                 };
             };
@@ -5578,6 +5745,9 @@ export interface components {
             znaceni?: null | components["schemas"]["DruhZnaceni"];
             popis?: null | string;
         };
+        ChybaNastaveni: {
+            error: string;
+        };
         ChybaTrasy: {
             error: string;
         };
@@ -5647,6 +5817,8 @@ export interface components {
             /** @default false */
             uvodnik: boolean;
         };
+        /** @enum {unknown} */
+        CoVidiPosadky: "Nic" | "JenSebe" | "IOstatni";
         DavkaDto: {
             /** Format: int32 */
             prijato: number;
@@ -5891,6 +6063,20 @@ export interface components {
             lodId: number;
             poznamka: null | string;
         };
+        NastaveniDto: {
+            coVidiPosadky: components["schemas"]["CoVidiPosadky"];
+            zivyPrenosVen: boolean;
+            jizdyPoRegateVerejne: boolean;
+            /** Format: date-time */
+            zamcenoV: null | string;
+            zamceno: boolean;
+        };
+        NastaveniVstup: {
+            coVidiPosadky: components["schemas"]["CoVidiPosadky"];
+            zivyPrenosVen: boolean;
+            jizdyPoRegateVerejne: boolean;
+            duvod: null | string;
+        };
         NavrhDto: {
             /** Format: uuid */
             uzivatelId: string;
@@ -5952,6 +6138,7 @@ export interface components {
             /** Format: date-time */
             zavrenoV: null | string;
             bezi: boolean;
+            zbylo?: null | components["schemas"]["ZustaloOtevrene"];
         };
         OknoRegatyDto: {
             /** Format: int32 */
@@ -6684,6 +6871,12 @@ export interface components {
             znaceni?: null | components["schemas"]["DruhZnaceni"];
             fotky?: null | components["schemas"]["ObrazekDto"][];
         };
+        VerejnyPohled: {
+            vysila: boolean;
+            /** Format: date-time */
+            ted: string;
+            lode: components["schemas"]["PolohaLodi"][];
+        };
         VerejnyPrvekDto: {
             /** Format: int32 */
             id: number;
@@ -6971,6 +7164,8 @@ export interface components {
             verzePravidel: number;
             /** @default false */
             procesniDej: boolean;
+            /** Format: date-time */
+            oknoDo?: null | string;
         };
         ZavodShrnutiDto: {
             slug: string;
@@ -7041,6 +7236,20 @@ export interface components {
             /** Format: int32 */
             prvek: number;
         };
+        ZmenaDto: {
+            /** Format: date-time */
+            kdy: string;
+            /** Format: uuid */
+            uzivatelId: string;
+            zPosadky: components["schemas"]["CoVidiPosadky"];
+            naPosadky: components["schemas"]["CoVidiPosadky"];
+            zVen: boolean;
+            naVen: boolean;
+            zJizdy: boolean;
+            naJizdy: boolean;
+            duvod: null | string;
+            poZamku: boolean;
+        };
         ZmenaRoleDto: {
             kdo: string;
             predchozi: null | components["schemas"]["RoleKLodi"];
@@ -7062,6 +7271,12 @@ export interface components {
         };
         ZnakVstup: {
             znak: null | string;
+        };
+        ZustaloOtevrene: {
+            rozjizdky: number[];
+            /** Format: int32 */
+            rozdelaneTrasy: number;
+            neco?: boolean;
         };
     };
     responses: never;
