@@ -17,7 +17,7 @@
  */
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { DLAZDICE, Z_NEJMENE, Z_NEJVIC, doPixelu } from "@/lib/mapa";
+import { DLAZDICE, Z_NEJMENE, Z_NEJVIC, doPixelu, zPixelu } from "@/lib/mapa";
 import { ZnakBoje } from "@/app/znak-boje";
 import { CELKEM, ZnakTridy } from "@/app/tridy";
 import type { Poloha } from "@/lib/voda";
@@ -314,6 +314,7 @@ export function MapaTrackeru({
   trasa,
   spojnice,
   tabule,
+  odsazeni,
   zebricek,
   onPoradi,
   onUdalost,
@@ -326,6 +327,20 @@ export function MapaTrackeru({
    * tabů. Zbývá mapa, žebříček a režie, která si vybírá sama.
    */
   tabule?: boolean;
+  /**
+   * Čím je plocha mapy zakrytá, v pixelech (Filip, 24. 10. 2026: *„podle
+   * mne je schovaná za ostatními komponenty"*).
+   *
+   * <b>Mapa kreslí pod panely, ale pole se vejde mezi ně.</b> Dlaždice
+   * mají sahat až pod horní pruh a pod karusel tříd, protože jinak
+   * tabule nemá pozadí — jenže pole lodí centrované do celé plochy pak
+   * půlkou leží tam, kam divák nevidí. Odsazení odděluje jednu věc od
+   * druhé: kreslí se celá plocha, zaměřuje se jen její viditelné okno.
+   * Čísla si měří ten, kdo panely rozvrhuje, protože jen on zná jejich
+   * skutečnou výšku — natvrdo zapsaná by se rozešla s CSS při první
+   * změně velikosti písma.
+   */
+  odsazeni?: { nahore?: number; dole?: number; vlevo?: number; vpravo?: number };
   /**
    * Měřicí trasa po vodě, ze serveru. <b>Nikdy se nekreslí</b> (Filip,
    * 24. 10. 2026: *„měřicí trasu bych vůbec neumožnil zobrazit, ta je jen
@@ -395,6 +410,15 @@ export function MapaTrackeru({
 
   const vychozi = tabule ? VYREZ.tabule : VYREZ.stranka;
   const { sirka: SIRKA, vyska: VYSKA } = zmereno ?? vychozi;
+  // Viditelné okno uvnitř plochy: do něj se zaměřuje, ne do celého SVG.
+  const kryje = { nahore: 0, dole: 0, vlevo: 0, vpravo: 0, ...odsazeni };
+  const OKNO = {
+    sirka: Math.max(240, SIRKA - kryje.vlevo - kryje.vpravo),
+    vyska: Math.max(160, VYSKA - kryje.nahore - kryje.dole),
+  };
+  // O kolik je střed okna vedle středu plochy.
+  const posunX = (kryje.vlevo - kryje.vpravo) / 2;
+  const posunY = (kryje.nahore - kryje.dole) / 2;
   const [z, setZ] = useState(() => vychoziZ(znacky, SIRKA, VYSKA));
   const [stred, setStred] = useState({
     sirka: znacky.reduce((s, m) => s + m.sirka, 0) / znacky.length,
@@ -776,8 +800,12 @@ export function MapaTrackeru({
     const zavodi = poradiRef.current.filter((v) => v.kde && !v.dojela);
     if (zavodi.length === 0) return;
 
-    const celek = vyrezPro(zavodi.map((v) => v.kde!), SIRKA, VYSKA);
-    const celo = vyrezPro(zavodi.slice(0, CELO_LODI).map((v) => v.kde!), SIRKA, VYSKA);
+    const celek = vyrezPro(zavodi.map((v) => v.kde!), OKNO.sirka, OKNO.vyska);
+    const celo = vyrezPro(
+      zavodi.slice(0, CELO_LODI).map((v) => v.kde!),
+      OKNO.sirka,
+      OKNO.vyska,
+    );
     if (!celek || !celo) return;
 
     // Roztažené pole se pozná z toho, o kolik se liší přiblížení obou
@@ -785,8 +813,15 @@ export function MapaTrackeru({
     const roztazene = celo.z - celek.z >= Math.log2(ROZTAZENE_POLE);
     const cil = zaber === "celo" && roztazene ? celo : celek;
     setZ(cil.z);
-    setStred(cil.stred);
-  }, [tabule, zaber, Math.floor(cas / 10), SIRKA, VYSKA]);
+    // Střed pole míří doprostřed okna, ne doprostřed plochy: `naPlatno`
+    // sází `stred` na polovinu SVG, takže se o rozdíl posune sám střed.
+    if (!posunX && !posunY) {
+      setStred(cil.stred);
+    } else {
+      const p = doPixelu(cil.stred.sirka, cil.stred.delka, cil.z);
+      setStred(zPixelu(p.x - posunX, p.y - posunY, cil.z));
+    }
+  }, [tabule, zaber, Math.floor(cas / 10), OKNO.sirka, OKNO.vyska, posunX, posunY]);
 
   /**
    * <b>Na tabuli se třídy nestřídají</b> (Filip, 24. 10. 2026): vpravo
