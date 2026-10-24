@@ -93,7 +93,10 @@ public class TrasyTests(PostgresFixture fixture)
         };
         db.Klice.Add(klic);
 
-        var serie = new Serie { Slug = $"trasy-{znacka}-{Guid.NewGuid():N}"[..40], Nazev = "Trasová série", Rok = 2027 };
+        var serie = new Serie
+        {
+            Slug = $"trasy-{znacka}-{Guid.NewGuid():N}", Nazev = "Trasová série", Rok = 2027,
+        };
         db.Serie.Add(serie);
         await db.SaveChangesAsync();
 
@@ -102,7 +105,7 @@ public class TrasyTests(PostgresFixture fixture)
         var zavod = new Zavod
         {
             SerieId = serie.Id,
-            Slug = $"regata-{Guid.NewGuid():N}"[..40],
+            Slug = $"regata-{Guid.NewGuid():N}",
             Nazev = "Trasová regata",
             Datum = new DateOnly(2027, 5, 15),
         };
