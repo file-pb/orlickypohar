@@ -87,7 +87,14 @@ public record ZavodDetailDto(
     // Regata, která pouští ven i nepodepsaná čísla — každé se svým stavem
     // (Filip, 9. 10. 2026, „procesní děj"). Čtenář to musí vědět, jinak
     // by předběžné pořadí vypadalo jako hotové. Aditivně, výchozí false.
-    bool ProcesniDej = false);
+    bool ProcesniDej = false,
+    // Tvrdý konec okna závodního dne, pokud nějaké běželo. Vydává se kvůli
+    // tabuli: <b>rozjížďka, která „běží" po konci okna, je zapomenutá</b>,
+    // a tenhle čas je jediná mez, která to pozná u dvacetičtyřhodinovky
+    // stejně dobře jako u odpolední regaty (Filip, 24. 10. 2026: *„24 se
+    // jede klidně 30 h i s tou přípravou a dojezdy"*). Polohy to
+    // neprozrazuje, je to provozní čas regaty.
+    DateTimeOffset? OknoDo = null);
 
 /// <summary>
 /// Veřejné čtení jedné zastávky. Pravidla závodu (škrty, vyhodnocení,
@@ -198,7 +205,8 @@ public static class ZavodEndpoints
                     : PoradateleSprava.Dto(zavod.PoradatelZaznam, zavod.FotkaPoradatele, uloziste.VerejnaAdresa),
                 VysledkySkryte: true,
                 Smernice: smerniceSkryte,
-                VerzePravidel: zavod.VerzePravidel));
+                VerzePravidel: zavod.VerzePravidel,
+                OknoDo: await OknoDoAsync(db, zavod.Id, ct)));
         }
 
         // Jeden dotaz na všechny výsledky závodu, ne dotaz na rozjížďku.
@@ -350,6 +358,24 @@ public static class ZavodEndpoints
                 : PoradateleSprava.Dto(zavod.PoradatelZaznam, zavod.FotkaPoradatele, uloziste.VerejnaAdresa),
             Smernice: await SmerniceAsync(db, uloziste, zavod.Id, ct),
             VerzePravidel: zavod.VerzePravidel,
-            ProcesniDej: zavod.ProcesniDej));
+            ProcesniDej: zavod.ProcesniDej,
+            OknoDo: await OknoDoAsync(db, zavod.Id, ct)));
     }
+
+    /// <summary>
+    /// Tvrdý konec posledního okna závodního dne, nebo <c>null</c>, když
+    /// regata žádné nemá.
+    /// <para>
+    /// <b>Bere se poslední otevřené, ne to běžící.</b> Tabule s ním pozná
+    /// rozjížďku, kterou nikdo neuzavřel — a ta se pozná právě tím, že
+    /// „běží" i potom, co tracker dávno skončil.
+    /// </para>
+    /// </summary>
+    private static async Task<DateTimeOffset?> OknoDoAsync(
+        AppDbContext db, int zavodId, CancellationToken ct) =>
+        await db.Okna
+            .Where(o => o.ZavodId == zavodId)
+            .OrderByDescending(o => o.OtevrenoV)
+            .Select(o => (DateTimeOffset?)o.TvrdyKonec)
+            .FirstOrDefaultAsync(ct);
 }

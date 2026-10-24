@@ -55,8 +55,15 @@ export function Semafor({ snimek, ted }: { snimek: Snimek; ted: number }) {
   // Stopky běží od startu, odpočet do startu. Obojí z téhož času —
   // rozdíl je jen ve znaménku a v tom, co se o něm napíše.
   const odStartu = start !== null ? Math.floor((ted - start) / 1000) : null;
+  // Všichni dojeli nebo mají kód, a rozjížďka pořád „běží": stopky nemají
+  // co měřit a čekat se taky na nic nečeká. Je to jasná logická akce,
+  // která má přednost před hodinami.
+  const dojeli = svetlo === "jede" && snimek.lode.length > 0 && ceka_se === 0;
+
   const casomira =
-    svetlo === "jede" && odStartu !== null && odStartu >= DLOUHO_S
+    dojeli
+      ? { popis: "rozjížďka", hodnota: "čeká na uzavření" }
+      : svetlo === "jede" && odStartu !== null && zapomenuta(odStartu, snimek.oknoDo, ted)
       ? { popis: "rozjížďka", hodnota: "neuzavřená" }
       : svetlo === "jede" && odStartu !== null && odStartu >= 0
       ? { popis: "od startu", hodnota: hodiny(odStartu) }
@@ -113,14 +120,36 @@ export function Semafor({ snimek, ted }: { snimek: Snimek; ted: number }) {
  * (24. 10. 2026). Divák z takového čísla nic nemá a pořadateli má říct
  * něco jiného: že se zapomnělo zastavit čas.
  *
- * <b>Mez je nejdelší možné okno regaty, ne kulatých čtyřiadvacet hodin</b>
- * (Filip, 24. 10. 2026: *„u 24h je to více než okno dne"*). Dvacetičtyř-
- * hodinovka startuje večer a jede přes noc, takže by ji dvacet čtyři
- * hodin označily za zapomenutou zrovna v půlce závodu. Tracker se řídí
- * oknem a to má tvrdý konec nejvýš šestatřicet hodin
- * (`OknoRegaty.NejvicHodin`); co běží déle, neběží doopravdy.
+ * <b>Mez se nevymýšlí, bere se z okna té regaty</b> (Filip, 24. 10. 2026:
+ * *„u 24h je to více než okno dne"*, *„24 se jede klidně 30 h i s tou
+ * přípravou a dojezdy"*). Okno si pořadatel nastavuje při rozpravě, takže
+ * na dvacetičtyřhodinovce je dlouhé a na odpolední regatě krátké; za jeho
+ * tvrdým koncem tracker nic nezapisuje, a co „běží" i potom, neběží
+ * doopravdy. Kulaté číslo by jedné regatě lhalo vždycky.
+ *
+ * Náhradní mez platí jen pro regatu bez okna — tedy do první rozpravy.
+ * <b>Čtyřicet hodin</b> (Filip, 24. 10. 2026: *„maratony zavírej po
+ * 40 hodinách, pokud nedojde k nějaké jasné logické akci jako
+ * vyhodnocení nebo dojezdu všech lodí"*): dvacetičtyřhodinovka zabere
+ * i s přípravou a dojezdy ke třiceti hodinám, takže čtyřicet nepřekročí
+ * nic, co se doopravdy jede.
  */
-const DLOUHO_S = 36 * 3600;
+const BEZ_OKNA_S = 40 * 3600;
+
+/**
+ * Běží rozjížďka tak dlouho, že ji zjevně nikdo neuzavřel?
+ *
+ * <b>Čas je až poslední pojistka.</b> Napřed se ptáme na jasnou věc —
+ * jestli jsou všechny lodě vyřízené —, a teprve potom na hodiny. Mez
+ * přitom není kulaté číslo: bere se z okna té regaty, protože za jeho
+ * tvrdým koncem tracker nic nezapisuje a co „běží" i potom, neběží
+ * doopravdy.
+ */
+function zapomenuta(odStartu: number, oknoDo: string | null, ted: number): boolean {
+  if (oknoDo === null) return odStartu >= BEZ_OKNA_S;
+  const konec = Date.parse(oknoDo);
+  return Number.isFinite(konec) && ted > konec;
+}
 
 function hodiny(sekund: number) {
   const h = Math.floor(sekund / 3600);
@@ -224,7 +253,14 @@ export function StavovyProuzek({
 
     const start = rozjizdka.startV ? Date.parse(rozjizdka.startV) : null;
     const odStartu = start !== null ? Math.floor((ted - start) / 1000) : null;
-    if (svetlo === "jede" && odStartu !== null && odStartu >= DLOUHO_S) {
+    const vyrizeniVsichni =
+      svetlo === "jede" &&
+      snimek.lode.length > 0 &&
+      rozjizdka.poradi.filter((v) => v.misto !== null || v.kod).length >= snimek.lode.length;
+
+    if (vyrizeniVsichni) {
+      zpravy.push("rozjížďka čeká na uzavření");
+    } else if (svetlo === "jede" && odStartu !== null && zapomenuta(odStartu, snimek.oknoDo, ted)) {
       zpravy.push("rozjížďka neuzavřená");
     } else if (svetlo === "jede" && odStartu !== null && odStartu >= 0) {
       zpravy.push(`od startu ${hodiny(odStartu)}`);

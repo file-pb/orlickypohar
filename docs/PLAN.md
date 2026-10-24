@@ -2765,13 +2765,24 @@ proužek nahoře je od něj přes celou obrazovku daleko. Štítek *ukázka*
 proto stojí přímo u nadpisu pořadí a u každého pásu — a zmizí, jakmile
 začnou chodit skutečné polohy.
 
-**Zapomenutá rozjížďka se pozná podle okna, ne podle kulatého čísla**
-(Filip, 24. 10. 2026: *„u 24h je to více než okno dne"*). Stopky na tabuli
-běžely donekonečna u rozjížďky, kterou nikdo neuzavřel — na mocku *„od
-startu 3020:59:39"*. Mez, od které tabule říká *rozjížďka neuzavřená*, je
-proto **nejdelší možné okno regaty** (36 h, `OknoRegaty.NejvicHodin`):
-dvacetičtyřhodinovka startuje večer a jede přes noc, takže by ji
-čtyřiadvacet hodin označily za zapomenutou zrovna v půlce závodu.
+**Zapomenutá rozjížďka: napřed logická akce, teprve pak hodiny**
+(Filip, 24. 10. 2026: *„u 24h je to více než okno dne"*, *„maratony
+zavírej po 40 hodinách, pokud nedojde k nějaké jasné logické akci jako
+vyhodnocení nebo dojezdu všech lodí"*). Stopky na tabuli běžely
+donekonečna u rozjížďky, kterou nikdo neuzavřel — na mocku *„od startu
+3020:59:39"*. Pořadí otázek je teď tohle:
+
+| Pořadí | Co se ptá | Co tabule řekne |
+|---|---|---|
+| 1. | mají všechny lodě dojezd nebo kód? | *rozjížďka čeká na uzavření* |
+| 2. | je po tvrdém konci okna té regaty? | *rozjížďka neuzavřená* |
+| 3. | regata okno nemá (do první rozpravy) a běží to přes 40 h | *rozjížďka neuzavřená* |
+
+**Mez se nevymýšlí, bere se z okna.** Okno si pořadatel nastavuje při
+rozpravě, takže na dvacetičtyřhodinovce je dlouhé a na odpolední regatě
+krátké; za jeho tvrdým koncem tracker nic nezapisuje, a co „běží" i potom,
+neběží doopravdy. Kulaté číslo by jedné regatě lhalo vždycky — proto se
+`ZavodDetailDto` rozšířil o `OknoDo`.
 
 **A tracker dostal šířku.** Obsahový sloupec je míra pro čtení textu;
 mapa, ve které rozhodčí hledá lodě, je ta výjimka — kolem ní zbývalo na

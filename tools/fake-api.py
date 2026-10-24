@@ -5015,6 +5015,10 @@ class H(BaseHTTPRequestHandler):
                         "koeficientDoSerie")},
                     # Divák musí vědět, že kouká na nepodepsaná čísla.
                     "procesniDej": bool(z.get("procesniDej")),
+                    # Tvrdý konec okna závodního dne. Mock okna nevede,
+                    # takže ho bere ze zastávky, když si ho někdo dopsal —
+                    # tabule podle něj pozná neuzavřenou rozjížďku.
+                    "oknoDo": z.get("oknoDo"),
                     "druh": z["druh"],
                     "medailonek": poradatel_zastavky(z),
                     "rozjizdky": [{

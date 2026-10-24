@@ -58,6 +58,12 @@ export type Snimek = {
     dalsich: number;
   }[];
   /**
+   * Tvrdý konec okna závodního dne, nebo `null`. <b>Mez, za kterou je
+   * rozjížďka zapomenutá</b> — a jediná, která platí stejně na odpolední
+   * regatě i na dvacetičtyřhodinovce.
+   */
+  oknoDo: string | null;
+  /**
    * Značky trati pro mapu. <b>Prázdné, dokud trať není</b> — tabule pak
    * jede po trati ukázkové plavby a napíše to u sebe.
    */
@@ -106,6 +112,9 @@ export function snimekZavodu(
   trat?: VerejnaTrat | null,
 ): Snimek {
   return {
+    // `schema.d.ts` se generuje z běžícího API, takže se pole doplní, až
+    // se endpoint nasadí; do té doby je tady most, ne hádání typu.
+    oknoDo: (detail as ZavodDetail & { oknoDo?: string | null }).oknoDo ?? null,
     znacky: znackyZTrati(trat),
     trat: trat
       ? {
