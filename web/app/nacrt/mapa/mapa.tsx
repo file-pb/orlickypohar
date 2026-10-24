@@ -75,13 +75,19 @@ const FOCUS_SOUBOJE_S = 90;
  */
 const ANIMACE_PROHOZENI_S = 20;
 /**
- * Jak dlouho trvá jedno přehození dvou sousedů v žebříčku.
+ * Jedno přehození v žebříčku má tři takty (Filip, 24. 10. 2026): *„to, co
+ * jde dolů, má červenou šipku místo čísla, a to, co jde nahoru, zelenou
+ * místo čísla; odjedou swap a zhasnou šipky a zobrazí čísla, a pak jede
+ * další pár, pokud je potřeba."*
  *
- * <b>Spíš pomalu</b> (Filip, 24. 10. 2026): při 450 ms proletěla loď pěti
- * místy za dvě vteřiny a nešlo rozeznat, koho vlastně předjela. Smyslem
- * kaskády je, aby se to dalo sledovat očima, ne aby se seznam srovnal.
+ * <b>Další pár tedy čeká</b>, než ten předchozí dohraje celý. Dřív se
+ * krok spouštěl po pevném intervalu bez ohledu na to, kde jsou animace
+ * šipek, takže se takty překrývaly a v seznamu se to motalo.
  */
-const KROK_PREHOZENI_MS = 1500;
+/** Jak dlouho se dvojice míjí. */
+const VYMENA_MS = 1100;
+/** Kdy je po zhasnutí šipek a návratu čísel hotovo a smí jet další pár. */
+const TAKT_MS = 1900;
 /** Jak dlouho u řádku svítí šipka, než zhasne a odhalí číslo. */
 const SIPKA_MS = 2000;
 /** Hláška o souboji svítí dlouho, když za ní nic nejede, a krátce, když ano. */
@@ -542,18 +548,30 @@ export function NacrtMapy({
       if (prehazuje) setPrehazuje(null);
       return;
     }
-    const casovac = setTimeout(() => {
-      setZobrazene((p) => {
-        const dal = [...p];
-        [dal[i], dal[i + 1]] = [dal[i + 1], dal[i]];
-        return dal;
-      });
-      setKrok((k) => k + 1);
-    }, KROK_PREHOZENI_MS);
+    // Dokud běží takt předchozí dvojice, další nezačíná.
+    if (prehazuje) return;
+
     // Ten, co stoupá, je ten pod ním; ten, co klesá, je ten nad ním.
     setPrehazuje({ nahoru: zobrazene[i + 1], dolu: zobrazene[i] });
+    setZobrazene((p) => {
+      const dal = [...p];
+      [dal[i], dal[i + 1]] = [dal[i + 1], dal[i]];
+      return dal;
+    });
+    setKrok((k) => k + 1);
+  }, [cilove.join(","), zobrazene.join(","), prehazuje]);
+
+  /**
+   * Konec taktu má <b>vlastní efekt</b>. Když stál v tom hořejším, jeho
+   * cleanup ho zrušil hned při dalším průchodu (a ten přišel okamžitě,
+   * protože se změnilo `zobrazene`) — takže se `prehazuje` nikdy
+   * nevynulovalo a kaskáda se zastavila po první výměně.
+   */
+  useEffect(() => {
+    if (!prehazuje) return;
+    const casovac = setTimeout(() => setPrehazuje(null), TAKT_MS);
     return () => clearTimeout(casovac);
-  }, [cilove.join(","), zobrazene.join(",")]);
+  }, [prehazuje]);
 
   /**
    * Výměna míst, ne poskočení (Filip, 24. 10. 2026: *„nedá se to animovat
@@ -590,7 +608,7 @@ export function NacrtMapy({
               { transform: "none", opacity: 1 },
             ]
           : [{ transform: `translateY(${delta}px)` }, { transform: "none" }],
-        { duration: 1300, easing: "cubic-bezier(.4, 0, .2, 1)" },
+        { duration: VYMENA_MS, easing: "cubic-bezier(.4, 0, .2, 1)" },
       );
     });
     pozice.current = nove;

@@ -3766,24 +3766,24 @@ body:has(.tabule) { overflow: hidden; }
 .nacrt-cislo > * { grid-area: 1 / 1; }
 
 .nacrt-sipka-radku {
-  animation: nacrt-zhasni 2s ease-out forwards;
+  animation: nacrt-zhasni 1.9s ease-out forwards;
 }
 
 .nacrt-cislo-pod {
-  animation: nacrt-rozsvit 2s ease-out forwards;
+  animation: nacrt-rozsvit 1.9s ease-out forwards;
 }
 
 /* Šipka a číslo si buňku předávají, nepřekrývají se v ní. Dokud šipka
    svítí, číslo je pryč; teprve když dohasne, číslo se vrátí (Filip,
    24. 10. 2026). Překryv obou poloprůhledných by udělal nečitelnou změť. */
 @keyframes nacrt-zhasni {
-  0%, 62% { opacity: 1; }
-  78%, 100% { opacity: 0; }
+  0%, 58% { opacity: 1; }
+  74%, 100% { opacity: 0; }
 }
 
 @keyframes nacrt-rozsvit {
-  0%, 78% { opacity: 0; }
-  100% { opacity: 1; }
+  0%, 74% { opacity: 0; }
+  90%, 100% { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
