@@ -124,10 +124,15 @@ const KOLOTOC_S = 60;
  */
 /** Jak dlouho drží celkový záběr. */
 /**
- * Úroveň hrubého podkladu pod dlaždicemi. Na ní se celá přehrada vejde
- * do hrstky dlaždic, takže je po prvním načtení pořád po ruce.
+ * Úroveň hrubého podkladu pod dlaždicemi. Celé závodní pole se na ní
+ * vejde do hrstky dlaždic, takže je po prvním načtení pořád po ruce.
+ *
+ * <b>Čtrnáctka, ne třináctka:</b> při obvyklém přiblížení 16 je rozdíl
+ * dvě úrovně, tedy čtyřnásobné zvětšení. O úroveň níž byl podklad
+ * roztažený osmkrát a jeho popisky („402 m") přerostly do výšky prstu,
+ * což je přes půl obrazovky vidět, než dojedou ostré dlaždice.
  */
-const PODKLAD_Z = 13;
+const PODKLAD_Z = 14;
 
 const ZABER_CELEK_MS = 18_000;
 /** A jak dlouho záběr na čelo. */
