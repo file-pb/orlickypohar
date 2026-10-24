@@ -2583,6 +2583,36 @@ appka musí ukazovat, že to jede, a stejně tak proč nejede.
 i dokončení nahrávání se nezměnily; živý kanál je jen druhý spouštěč téhož
 odesílání. Výpadek sítě na vodě je normál, ne porucha.
 
+### Snímek poloh pro mapu (24. 10. 2026)
+
+Třetí kus. `GET /sprava/serie/{serie}/zastavky/{zavod}/polohy` vrací
+poslední známou polohu **každé lodi v regatě**, i té, která se ještě
+neozvala — otázka před procedurou zní *„trackuje nám celé pole?"* a na tu
+loď chybějící ve výpisu neodpovídá.
+
+| | Hodnota |
+|---|---|
+| **čerstvá** | do minuty; tohle je zelená z *tracker checku* |
+| **stárne** | do pěti minut — loď tam je, rádio vynechalo |
+| **nedostupná** | přes pět minut, nebo vůbec nic |
+
+**Poloha nemizí ani u nedostupné lodi.** *„Kde byla naposledy"* je ta
+otázka, kvůli které celá kapitola existuje i bez jediné zveřejněné
+rozjížďky.
+
+**Jeden dotaz bez ohledu na počet diváků.** Snímek se drží ve společné
+cache pět sekund: telefony posílají po minutě, takže čerstvější data
+stejně neexistují, a čtyřicet otevřených obrazovek nesmí znamenat čtyřicet
+dotazů. Odpověď nese **čas serveru**, aby si stáří počítal klient proti
+němu — na tabuli v hospodě může běžet stroj s hodinami o minuty vedle.
+
+**Bere se jen od otevření běžícího okna.** Včerejší poloha není poslední
+známá, je to záznam z jiného dne.
+
+**Zatím jen pro pořadatele a rozhodčího.** Veřejný výdej patří
+k přepínači *živý přenos ven*, který zamyká rozprava; dokud ho systém
+nemá, platí bezpečná výchozí hodnota — ven nic.
+
 ### Co z toho čeká na přihlášení
 
 Všechna tři pravidla výš (loď v regatě, telefon u posádky, okno regaty)
