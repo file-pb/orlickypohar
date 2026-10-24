@@ -2240,6 +2240,20 @@ zelená šipka nahoru u lodi, která jde dopředu, červená dolů u té druhé,
 a celé to přijede, ať si toho divák všimne. Bez šipek je to jen dvojice
 jmen a musí se domýšlet, kdo koho.
 
+**Totéž se odehraje i v žebříčku** (Filip, 24. 10. 2026: *„ta animace swap
+prosím i v ranku, a jako že okolo sebe obkrouží"*): dvojice se v seznamu
+obkrouží kolem sebe — postupující obloukem vpravo nahoru, druhá vlevo dolů
+— a čísla jim na tu chvíli nahradí šipky. Pořadí se čte v seznamu, takže
+tam ta událost patří stejně jako na mapu.
+
+**Bez výběru se nekreslí žádná dráha** (Filip, 24. 10. 2026: *„když nebudu
+mít nic zaškrtnuto, tak nezobrazuj dráhy všech"*). Mapa začíná tečkami;
+dráhu dostane jen to, co si někdo zaškrtl, nebo na co ukázala režie. Náčrt
+předtím ukázal, že čtyřicet drah je koberec, ať se kreslí jakkoli
+průhledně — a při prvním pokusu o režii svítilo 23 drah z 24, protože
+doznívala všechna stará prohození naráz. Hoří proto jen to, co je právě
+v záběru.
+
 **Odsud plyne i to, jak se vybírá, co je souboj.** Náčrt
 (`web/app/nacrt/mapa`) to má postavené a hned ukázal, že bez filtrů je
 tabule k ničemu:

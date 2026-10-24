@@ -162,7 +162,14 @@ export function NacrtMapy({
    * ještě chvíli slábne, takže je vidět souboj, ne jen jeho vítěz.
    */
   const [historie, setHistorie] = useState<number[]>([]);
-  const [rezim, setRezim] = useState<"vse" | "posledni" | "tabule">("vse");
+  /**
+   * Co se kreslí, když si divák nic nezaškrtl. <b>Výchozí je „nic"</b>
+   * (Filip, 24. 10. 2026: *„když nebudu mít nic zaškrtnuto, tak nezobrazuj
+   * dráhy všech"*) — náčrt předtím ukázal, že čtyřicet drah je koberec, ať
+   * se kreslí jakkoli průhledně. Mapa tedy začíná tečkami a dráhu dostane
+   * až to, co si někdo vybral, nebo na co ukázala režie.
+   */
+  const [rezim, setRezim] = useState<"nic" | "posledni" | "tabule">("nic");
   /**
    * Lodě, které si divák zaškrtl v žebříčku (Filip, 24. 10. 2026: *„co to
    * udělat jako zaškrtávací body v ranku, tím si tam každý dá, co ho
@@ -179,7 +186,6 @@ export function NacrtMapy({
     if (id !== null) setHistorie((h) => [id, ...h.filter((x) => x !== id)].slice(0, 3));
   }
   const [tratVidet, setTratVidet] = useState(true);
-  const [pruhlednost, setPruhlednost] = useState(0.25);
   const tahne = useRef<{ x: number; y: number } | null>(null);
 
   const konec = useMemo(
@@ -439,23 +445,20 @@ export function NacrtMapy({
   const zabery = rezie.get(Math.floor(cas / 10) * 10) ?? null;
 
   /**
-   * Jak silně právě hoří dráha lodi po prohození. Hoření je lineární —
-   * ze stovky na nulu za `HORENI_S` — a loď, která se prohodila víckrát
-   * naráz, si nechá to nejčerstvější.
+   * Jak silně svítí dráha toho, na co režie právě ukazuje.
+   *
+   * <b>Dohasíná v rámci záběru, ne napříč závodem.</b> První pokus nechával
+   * hořet každé prohození po dobu `HORENI_S`, jenže těch je za pár minut
+   * tolik, že v režimu tabule svítilo 23 drah z 24 — přesně ten koberec,
+   * kterému se vyhýbáme. Hoří proto jen to, co je zrovna na obrazovce, a ke
+   * konci záběru slábne, aby přechod na další nebyl střih přes černou.
    */
-  const hori = useMemo(() => {
-    const m = new Map<number, number>();
-    for (const p of prohozeni) {
-      if (p.pozice > SOUBOJ_DO_POZICE) continue;
-      const stari = cas - p.cas;
-      if (stari < 0 || stari > HORENI_S) continue;
-      const sila = 0.95 * (1 - stari / HORENI_S);
-      for (const i of [p.nahoru, p.dolu]) {
-        m.set(lode[i].id, Math.max(m.get(lode[i].id) ?? 0, sila));
-      }
-    }
-    return m;
-  }, [prohozeni, cas, lode]);
+  const silaZaberu = useMemo(() => {
+    if (!zabery) return 0;
+    const delka = zabery.duvod === "souboj" ? FOCUS_SOUBOJE_S : KOLOTOC_S;
+    const doKonce = delka - ((cas % delka) || 0);
+    return doKonce < 20 ? 0.3 + (0.65 * doKonce) / 20 : 0.95;
+  }, [zabery, cas]);
 
   /** Poslední prohození, které ještě hoří — tabule o něm řekne slovy. */
   const posledniSwap = [...prohozeni]
@@ -533,13 +536,11 @@ export function NacrtMapy({
                   : 0
                 : rezim === "tabule"
                   ? zabery?.lode.includes(v.lod.id)
-                    ? 0.95
-                    : hori.get(v.lod.id) ?? 0
-                  : rezim === "posledni"
-                    ? davno > 0
-                      ? DOZNIVANI[davno]
-                      : 0
-                    : pruhlednost;
+                    ? silaZaberu
+                    : 0
+                  : rezim === "posledni" && davno > 0
+                    ? DOZNIVANI[davno]
+                    : 0;
               return (
                 <g
                   key={v.lod.id}
@@ -566,8 +567,8 @@ export function NacrtMapy({
                     opacity={
                       v.stav === "nedostupna"
                         ? 0.45
-                        : silaStopy === 0 && (rezim !== "vse" || zaskrtnute.size)
-                          ? 0.55
+                        : silaStopy === 0
+                          ? 0.6
                           : 1
                     }
                   />
@@ -738,21 +739,10 @@ export function NacrtMapy({
           <label>
             stopy
             <select value={rezim} onChange={(e) => setRezim(e.target.value as typeof rezim)}>
-              <option value="vse">všechny</option>
+              <option value="nic">jen zaškrtnuté</option>
               <option value="posledni">poslední tři focusy</option>
-              <option value="tabule">tabule: po prohození</option>
+              <option value="tabule">tabule: kolotoč a souboje</option>
             </select>
-          </label>
-          <label hidden={rezim !== "vse"}>
-            průhlednost {pruhlednost.toFixed(2)}
-            <input
-              type="range"
-              min={0.05}
-              max={1}
-              step={0.05}
-              value={pruhlednost}
-              onChange={(e) => setPruhlednost(Number(e.target.value))}
-            />
           </label>
           <label className="nacrt-prepinac">
             <input
@@ -791,8 +781,20 @@ export function NacrtMapy({
           </button>
         )}
         <ol>
-          {poradi.map((v, i) => (
-            <li key={v.lod.id}>
+          {poradi.map((v, i) => {
+            // Lodě, které se právě prohodily, se v žebříčku obkrouží kolem
+            // sebe (Filip, 24. 10. 2026). Klíč nese čas prohození, takže
+            // React řádek vymění a animace se spustí i u dalšího souboje.
+            const jdeNahoru = posledniSwap && lode[posledniSwap.nahoru].id === v.lod.id;
+            const jdeDolu = posledniSwap && lode[posledniSwap.dolu].id === v.lod.id;
+            const vSouboji = jdeNahoru || jdeDolu;
+            return (
+            <li
+              key={vSouboji ? `${v.lod.id}-${posledniSwap!.cas}` : v.lod.id}
+              className={
+                jdeNahoru ? "nacrt-radek-nahoru" : jdeDolu ? "nacrt-radek-dolu" : undefined
+              }
+            >
               <input
                 type="checkbox"
                 aria-label={`sledovat ${v.lod.nazev}`}
@@ -812,7 +814,9 @@ export function NacrtMapy({
                 className={v.lod.id === vybrana ? "vybrana" : undefined}
                 onClick={() => vyber(v.lod.id)}
               >
-                <span className="nacrt-cislo">{v.stav === "nedostupna" ? "—" : i + 1}</span>
+                <span className="nacrt-cislo">
+                  {jdeNahoru ? "▲" : jdeDolu ? "▼" : v.stav === "nedostupna" ? "—" : i + 1}
+                </span>
                 <span className="nacrt-nazev">{v.lod.nazev}</span>
                 <span className="nacrt-kategorie">{v.lod.kategorie}</span>
                 <span className={`nacrt-stav nacrt-${v.stav}`}>
@@ -824,7 +828,8 @@ export function NacrtMapy({
                 </span>
               </button>
             </li>
-          ))}
+            );
+          })}
         </ol>
       </aside>
     </div>
