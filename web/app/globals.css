@@ -3040,6 +3040,48 @@ body:has(.tabule) { overflow: hidden; }
 .tabule .semafor .co span { font-size: 1.1vw; color: var(--tlumeny); }
 
 /* Mapka je doplněk, ne hlavní sdělení — proto strop na výšku. */
+/* Mapa je pozadí celé tabule a panely leží na ní (Filip, 24. 10. 2026).
+   V plné síle, ne jako vodoznak: je to hlavní obsah obrazovky, čitelnost
+   panelů řeší jejich vlastní podklad, ne ztlumená mapa. */
+.tabule-mapa {
+  position: absolute; inset: 0; z-index: 0;
+  display: grid; place-items: center; overflow: hidden;
+  pointer-events: none;
+}
+.tabule-mapa .mapka-trati { margin: 0; width: 100%; height: 100%; }
+.tabule-mapa .mapka { width: 100%; height: 100%; }
+.tabule-mapa figcaption { display: none; }
+/* Všechno ostatní leží nad mapou. */
+.tabule > :not(.tabule-mapa) { position: relative; z-index: 1; }
+
+/* Nad mapou musí mít text svůj podklad, jinak se ztratí v lese. Karty
+   jsou poloprůhledné, aby bylo vidět, že pod nimi mapa pokračuje. */
+.tabule:has(.tabule-mapa) .vrch,
+.tabule:has(.tabule-mapa) .stavovy-prouzek {
+  background: color-mix(in srgb, var(--pozadi) 82%, transparent);
+  backdrop-filter: blur(6px);
+  border-radius: 0.6vw;
+  padding-inline: 1vw;
+}
+
+.tabule:has(.tabule-mapa) .karusel,
+.tabule:has(.tabule-mapa) .sloupecek > * {
+  background: color-mix(in srgb, var(--papir) 86%, transparent);
+  backdrop-filter: blur(6px);
+  border-radius: 0.8vw;
+  padding: 0.9vw 1.1vw;
+  box-shadow: 0 0.3vw 1.5vw rgb(0 0 0 / 35%);
+}
+
+/* Sloupce nesmí vyplnit celou plochu, aby mapa zůstala vidět. Jediný
+   zbylý panel se proto drží vpravo a mapě nechá zbytek. */
+.tabule:has(.tabule-mapa) .sloupce {
+  align-content: start;
+  justify-content: end;
+  grid-template-columns: minmax(26vw, 32vw);
+  gap: 1vw;
+}
+
 .tabule .mapka-mala { max-width: 22vw; }
 .tabule .mapka-mala .mapka-trati { margin: 0; }
 /* Na televizi zůstane jen uvedení zdroje, návod ke čtení ne — souvislý

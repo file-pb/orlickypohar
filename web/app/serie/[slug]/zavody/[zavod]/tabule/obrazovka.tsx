@@ -165,22 +165,25 @@ export function Obrazovka({
         </p>
       )}
 
+      {/* <b>Mapa je pozadí celé tabule</b> (Filip, 24. 10. 2026: *„myslel
+          jsem, že to sloučíš s tou trackovací mapou, že ta tabule na telku
+          bude jen jedna"*). Dřív to byl malý widget v rohu vedle semaforu;
+          teď leží pod vším a panely jsou na ní. Lodě do ní přibydou, až
+          bude co kreslit — průběžné odesílání poloh je krok 1 trackeru
+          a zatím není. */}
+      {snimek.mapa.length > 0 && (
+        <div className="tabule-mapa" aria-hidden="true">
+          <MapkaTrati prvky={snimek.mapa} />
+        </div>
+      )}
+
       <div className="sloupce">
-        {/* Rozjížďky a lodě na startu se střídají v jednom sloupci
-            (Filip, 15. 10. 2026: *„na startu a rozjížďky se dá udělat
-            karuselem taky a přidat tam jenom stavy, tím se ušetří jedna
-            tabulka"*). Rozjížďka tu nese jen stav — kdo dojel, říká
-            widget vpravo a alert uprostřed. */}
-        <Karusel panely={polePanely(snimek)} />
+        {/* Zbývá jediný karusel: pořadí po třídách. Panel se stavy
+            rozjížděk odešel 24. 10. 2026 — totéž říká proužek nahoře,
+            a dvakrát totéž zabíralo půl obrazovky, na kterou patří mapa. */}
         <Karusel panely={tridyPanely(snimek)} />
 
-        <div className="sloupecek">
-          {snimek.mapa.length > 0 && (
-            <div className="mapka-mala">
-              <MapkaTrati prvky={snimek.mapa} />
-            </div>
-          )}
-        </div>
+
       </div>
     </div>
   );
@@ -263,41 +266,6 @@ const NADPISKY: Record<Udalost["druh"], string> = {
 };
 
 /** Panely levého sloupce: co se jede a kdo je na startu. */
-function polePanely(snimek: Snimek): Panel[] {
-  return [
-    {
-      klic: "rozjizdky",
-      nadpis: "Rozjížďky",
-      obsah:
-        snimek.rozjizdky.length === 0 ? (
-          <p className="prazdno">Zatím žádná.</p>
-        ) : (
-          <ul className="stavy">
-            {snimek.rozjizdky.map((r) => (
-              <li key={r.cislo}>
-                <b>{r.cislo}.</b>
-                <span className={`stitek stav-rozjizdky ${r.stav.toLowerCase()}`}>
-                  {STAVY_ROZJIZDEK[r.stav]}
-                </span>
-                {!r.doSerie && <span className="stitek">mimo pohár</span>}
-                {/* Jen u regaty s procesním dějem: jinde jsou venku pouze
-                    publikovaná čísla a „potvrzeno" u všech by byl šum. */}
-                {snimek.procesniDej && r.poradi.length > 0 && r.stavVysledku && (
-                  <span className={`stitek zapis-${r.stavVysledku.toLowerCase()}`}>
-                    {ZAPIS[r.stavVysledku]}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        ),
-    },
-    // <b>Startovní listina na tabuli není</b> (Filip, 24. 10. 2026:
-    // *„na startu nevím, jestli má smysl, když tam máme pořadí, tak je
-    // to jasný"*). Pořadí nese tytéž lodě a navíc říká, jak jim to jde;
-    // dva seznamy týchž jmen vedle sebe jsou jen víc čtení.
-  ];
-}
 
 /**
  * Jak se stav zápisu jmenuje na tabuli. <b>Divácká slova, ne úřední</b>:
