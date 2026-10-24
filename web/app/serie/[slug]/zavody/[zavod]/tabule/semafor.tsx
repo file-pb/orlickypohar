@@ -56,7 +56,9 @@ export function Semafor({ snimek, ted }: { snimek: Snimek; ted: number }) {
   // rozdíl je jen ve znaménku a v tom, co se o něm napíše.
   const odStartu = start !== null ? Math.floor((ted - start) / 1000) : null;
   const casomira =
-    svetlo === "jede" && odStartu !== null && odStartu >= 0
+    svetlo === "jede" && odStartu !== null && odStartu >= DLOUHO_S
+      ? { popis: "rozjížďka", hodnota: "neuzavřená" }
+      : svetlo === "jede" && odStartu !== null && odStartu >= 0
       ? { popis: "od startu", hodnota: hodiny(odStartu) }
       : svetlo === "ceka" && !prestavba && odStartu !== null && odStartu < 0
         ? { popis: "do startu", hodnota: hodiny(-odStartu) }
@@ -103,6 +105,16 @@ export function Semafor({ snimek, ted }: { snimek: Snimek; ted: number }) {
  * odpočtu před startem je to to jediné, co se hýbe, a bez nich by
  * obrazovka vypadala zaseknutě.
  */
+/**
+ * Odkdy je čas od startu nesmysl.
+ *
+ * <b>Rozjížďka, kterou nikdo neuzavřel, běží dál</b> — a stopky s ní.
+ * Na mocku z toho bylo „od startu 3020:59:39", tedy sto dvacet pět dní
+ * (24. 10. 2026). Divák z takového čísla nic nemá a pořadateli má říct
+ * něco jiného: že se zapomnělo zastavit čas.
+ */
+const DLOUHO_S = 24 * 3600;
+
 function hodiny(sekund: number) {
   const h = Math.floor(sekund / 3600);
   const m = Math.floor((sekund % 3600) / 60);
@@ -205,7 +217,9 @@ export function StavovyProuzek({
 
     const start = rozjizdka.startV ? Date.parse(rozjizdka.startV) : null;
     const odStartu = start !== null ? Math.floor((ted - start) / 1000) : null;
-    if (svetlo === "jede" && odStartu !== null && odStartu >= 0) {
+    if (svetlo === "jede" && odStartu !== null && odStartu >= DLOUHO_S) {
+      zpravy.push("rozjížďka neuzavřená");
+    } else if (svetlo === "jede" && odStartu !== null && odStartu >= 0) {
       zpravy.push(`od startu ${hodiny(odStartu)}`);
     } else if (svetlo === "ceka" && !prestavba && odStartu !== null && odStartu < 0) {
       zpravy.push(`do startu ${hodiny(-odStartu)}`);
