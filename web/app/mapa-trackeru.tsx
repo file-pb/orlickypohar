@@ -314,6 +314,7 @@ export function MapaTrackeru({
   trasa,
   spojnice,
   tabule,
+  zebricek,
 }: {
   znacky: Znacka[];
   lode: Lod[];
@@ -332,6 +333,15 @@ export function MapaTrackeru({
   trasa?: Poloha[];
   /** Spojnice trati z návrháře, pro každé přiblížení. Tahle se ukazovat smí. */
   spojnice?: Record<number, Poloha[][]>;
+  /**
+   * Náhradní žebříček, když polohy ještě nechodí.
+   *
+   * <b>Tabule ho plní pořadím ze zápisu</b>, aby panel nebyl prázdný,
+   * než se postaví průběžné odesílání. Je to tentýž seznam se stejnou
+   * grafikou i animacemi — mění se jen zdroj pořadí, takže až polohy
+   * přijdou, zmizí tenhle vstup a nic jiného.
+   */
+  zebricek?: { id: number; nazev: string; kategorie: Lod["kategorie"] }[];
 }) {
   const { sirka: SIRKA, vyska: VYSKA } = tabule ? VYREZ.tabule : VYREZ.stranka;
   const [z, setZ] = useState(() => vychoziZ(znacky, SIRKA, VYSKA));
@@ -545,13 +555,35 @@ export function MapaTrackeru({
    * Pomyslné pořadí. <b>Nedostupné propadnou nakonec</b>, stárnoucí si
    * pozici drží (PLAN.md, *Loď, která nehlásí*).
    */
-  const poradi = [...vStavu]
+  const zPoloh = [...vStavu]
     .filter((v) => !filtr || v.lod.kategorie === filtr)
     .sort((a, b) => {
-    const dolu = (x: typeof a) => (x.stav === "nedostupna" ? 1 : 0);
-    if (dolu(a) !== dolu(b)) return dolu(a) - dolu(b);
-    return b.postup - a.postup;
-  });
+      const dolu = (x: typeof a) => (x.stav === "nedostupna" ? 1 : 0);
+      if (dolu(a) !== dolu(b)) return dolu(a) - dolu(b);
+      return b.postup - a.postup;
+    });
+
+  // Dodaný žebříček se použije jen tehdy, když polohy nejsou vůbec —
+  // jakmile jedna loď hlásí, pořadí na vodě je pravdivější než zápis.
+  const poradi =
+    zPoloh.length > 0
+      ? zPoloh
+      : (zebricek ?? [])
+          .filter((r) => !filtr || r.kategorie === filtr)
+          .map((r, i) => ({
+            lod: { id: r.id, nazev: r.nazev, kategorie: r.kategorie, body: [], dosloDo: 0 } as Lod,
+            poloha: null,
+            kde: null,
+            stariS: null,
+            // Ne „nedostupná": loď o sobě nemlčí, jen ji nesleduje nikdo.
+            // S tím stavem by měla v žebříčku pomlčku místo čísla.
+            stav: "cerstva" as const,
+            postup: -i,
+            stopa: [],
+            rychlostUzlu: null,
+            kurz: null,
+            dojela: false,
+          }));
 
   // Dlaždice překrývající výřez.
   const levo = stredPx.x - SIRKA / 2;
@@ -1335,7 +1367,9 @@ export function MapaTrackeru({
                 {v.dojela && <span className="nacrt-stitek-cil">v cíli</span>}
                 <span className={`nacrt-stav nacrt-${v.stav}`}>
                   {v.stariS === null
-                    ? "nehlásí se"
+                    ? zPoloh.length === 0
+                      ? ""
+                      : "nehlásí se"
                     : v.stav === "cerstva"
                       ? `před ${v.stariS} s`
                       : `před ${Math.round(v.stariS / 60)} min`}

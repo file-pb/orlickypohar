@@ -174,7 +174,12 @@ export function Obrazovka({
           a zatím není. */}
       {snimek.mapa.length > 0 && (
         <div className="tabule-mapa" aria-hidden="true">
-          <MapaTrackeru znacky={znacky(snimek)} lode={[]} tabule />
+          <MapaTrackeru
+            znacky={znacky(snimek)}
+            lode={[]}
+            zebricek={zebricekZeZapisu(snimek)}
+            tabule
+          />
         </div>
       )}
 
@@ -215,6 +220,28 @@ function znacky(snimek: Snimek): Znacka[] {
       delka: konce.reduce((s, k) => s + k.delka, 0) / konce.length,
     };
   });
+}
+
+/**
+ * Žebříček ze zápisu, dokud nechodí polohy.
+ *
+ * <b>Pořadí poslední rozjížďky, která nějaké má</b> — tabule tím ukazuje
+ * to nejčerstvější, co o pořadí ví. Lodě bez místa jdou na konec: ještě
+ * nedojely, nebo mají kód.
+ */
+function zebricekZeZapisu(snimek: Snimek) {
+  const trida = new Map(snimek.lode.map((l) => [l.lod, l.kategorie]));
+  const rozjizdka = [...snimek.rozjizdky]
+    .reverse()
+    .find((r) => r.stav !== "Zrusena" && r.poradi.length > 0);
+  const radky = rozjizdka
+    ? [...rozjizdka.poradi].sort((a, b) => (a.misto ?? 999) - (b.misto ?? 999))
+    : snimek.lode.map((l) => ({ lod: l.lod }));
+  return radky.map((v, i) => ({
+    id: i,
+    nazev: v.lod,
+    kategorie: (trida.get(v.lod) ?? "Race") as "Race" | "Nad7m" | "Pod7m",
+  }));
 }
 
 /**
