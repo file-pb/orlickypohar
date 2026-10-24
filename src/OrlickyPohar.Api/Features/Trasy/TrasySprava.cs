@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Klice;
+using OrlickyPohar.Api.Features.Okna;
 
 namespace OrlickyPohar.Api.Features.Trasy;
 
@@ -26,6 +27,11 @@ public record BodVstup(
     bool Podvrzeny);
 
 /// <summary>Trasa tak, jak ji vidí ten, kdo ji nahrál.</summary>
+/// <param name="Regata">Jméno regaty, jak ho zadala posádka. Volný text.</param>
+/// <param name="ZavodId">
+/// Regata, ke které server trasu přiřadil podle běžícího okna. Tohle je ta
+/// vazba, která platí — jméno výš je jen to, co kdo napsal.
+/// </param>
 public record TrasaDto(
     string LokalniId,
     string Lod,
@@ -36,7 +42,8 @@ public record TrasaDto(
     int PocetBodu,
     long? PosunMs,
     bool Dokoncena,
-    long? PosledniBod);
+    long? PosledniBod,
+    int? ZavodId = null);
 
 /// <summary>
 /// Kolik bodů z dávky bylo nových. Telefon podle toho pozná, že se dávka
@@ -59,13 +66,29 @@ public record DavkaDto(int Prijato, int Preskoceno, long? PosledniBod);
 /// kdykoli, i po restartu appky — přejímací podmínka č. 4.
 /// </para>
 /// </summary>
-public class TrasySprava(AppDbContext db, TimeProvider cas)
+public class TrasySprava(AppDbContext db, TimeProvider cas, OknaSprava okna)
 {
+    /// <summary>
+    /// Co se řekne telefonu, který chce zaznamenávat mimo okno regaty.
+    /// Hláška je pro člověka na palubě, ne pro protokol.
+    /// </summary>
+    public const string MimoOkno =
+        "Teď neběží žádné okno regaty, ve které je tahle loď přihlášená. "
+        + "Záznam se smí nahrávat od rozpravy do uzavření závodního dne.";
+
     /// <summary>
     /// Založí trasu, nebo vrátí tu, která už pod tímtéž identifikátorem
     /// existuje. Volá se před první dávkou a smí se zavolat kolikrát chce.
+    /// <para>
+    /// <b>Bez běžícího okna regaty trasa nevznikne.</b> Záznam smí běžet,
+    /// jen když je loď v té regatě přihlášená a běží její okno — jinak by
+    /// z trackeru bylo sledovací zařízení, které zaznamená cestu přes
+    /// hospodu domů. Už založená trasa se tím neuzavírá: <b>doposílat jde
+    /// i po uzavření dne</b>, protože výpadek sítě na vodě je normál, ne
+    /// porucha.
+    /// </para>
     /// </summary>
-    public async Task<TrasaDto> ZalozAsync(
+    public async Task<(TrasaDto? Trasa, string? Chyba)> ZalozAsync(
         KlicLodi klic, ZalozTrasuVstup vstup, CancellationToken ct)
     {
         var trasa = await db.Trasy
@@ -74,27 +97,42 @@ public class TrasySprava(AppDbContext db, TimeProvider cas)
         if (trasa is null)
         {
             var ted = cas.GetUtcNow();
+            var zacatek = vstup.Zacatek.ToUniversalTime();
+
+            // Okno se hledá nejdřív k začátku záznamu, teprve pak k teď.
+            // Pořadí je schválně takové: záznam patří tomu dni, ve kterém
+            // začal, a telefon ho smí založit se zpožděním, až chytí signál.
+            // Hodiny telefonu se ale dají přestavit, takže „teď" je záchrana
+            // pro případ, kdy se rozešly — jinak by loď, která skutečně jede
+            // v okně, přišla o celý záznam kvůli špatně nastavenému času.
+            var okno = await okna.ProLodAsync(klic.LodId, zacatek, ct)
+                       ?? await okna.ProLodAsync(klic.LodId, ted, ct);
+
+            if (okno is null) return (null, MimoOkno);
+
             trasa = new Trasa
             {
+                ZavodId = okno.ZavodId,
+                OknoId = okno.Id,
                 LokalniId = vstup.LokalniId,
                 KlicId = klic.Id,
                 LodId = klic.LodId,
                 LodNazev = vstup.Lod.Trim(),
                 RegataNazev = string.IsNullOrWhiteSpace(vstup.Regata) ? null : vstup.Regata.Trim(),
                 Zdroj = vstup.Zdroj,
-                Zacatek = vstup.Zacatek.ToUniversalTime(),
+                Zacatek = zacatek,
                 NahranoV = ted,
                 PosledniDavkaV = ted,
                 // Posun se měří jednou, při založení: jak dalece se hodiny
                 // telefonu rozešly s našimi v okamžiku, kdy záznam začal.
                 // Ukládá se, nezahlazuje — viz Trasa.PosunMs.
-                PosunMs = (long)(ted - vstup.Zacatek.ToUniversalTime()).TotalMilliseconds,
+                PosunMs = (long)(ted - zacatek).TotalMilliseconds,
             };
             db.Trasy.Add(trasa);
             await db.SaveChangesAsync(ct);
         }
 
-        return await DtoAsync(trasa, ct);
+        return (await DtoAsync(trasa, ct), null);
     }
 
     /// <summary>
@@ -184,6 +222,6 @@ public class TrasySprava(AppDbContext db, TimeProvider cas)
 
         return new TrasaDto(
             t.LokalniId, t.LodNazev, t.RegataNazev, t.Zdroj, t.Zacatek, t.Konec,
-            pocet, t.PosunMs, t.Dokoncena, posledni);
+            pocet, t.PosunMs, t.Dokoncena, posledni, t.ZavodId);
     }
 }

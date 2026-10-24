@@ -786,6 +786,44 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("ZmenyRoli");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Okna.OknoRegaty", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Den")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("OtevrelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("OtevrenoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("TvrdyKonec")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ZavodId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("ZavrelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ZavrenoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TvrdyKonec");
+
+                    b.HasIndex("ZavodId", "OtevrenoV");
+
+                    b.ToTable("Okna");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Poradatele.Poradatel", b =>
                 {
                     b.Property<int>("Id")
@@ -1089,6 +1127,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<DateTimeOffset>("NahranoV")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("OknoId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTimeOffset>("PosledniDavkaV")
                         .HasColumnType("timestamp with time zone");
 
@@ -1111,6 +1152,8 @@ namespace OrlickyPohar.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("LodId");
+
+                    b.HasIndex("OknoId");
 
                     b.HasIndex("ZavodId");
 
@@ -1953,6 +1996,17 @@ namespace OrlickyPohar.Api.Migrations
                     b.Navigation("Zmenil");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Okna.OknoRegaty", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Zavody.Zavod", "Zavod")
+                        .WithMany()
+                        .HasForeignKey("ZavodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Zavod");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Poradatele.Poradatel", b =>
                 {
                     b.HasOne("OrlickyPohar.Api.Features.Fotky.Fotka", "Fotka")
@@ -2041,6 +2095,10 @@ namespace OrlickyPohar.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("OrlickyPohar.Api.Features.Okna.OknoRegaty", "Okno")
+                        .WithMany()
+                        .HasForeignKey("OknoId");
+
                     b.HasOne("OrlickyPohar.Api.Features.Zavody.Zavod", "Zavod")
                         .WithMany()
                         .HasForeignKey("ZavodId");
@@ -2048,6 +2106,8 @@ namespace OrlickyPohar.Api.Migrations
                     b.Navigation("Klic");
 
                     b.Navigation("Lod");
+
+                    b.Navigation("Okno");
 
                     b.Navigation("Zavod");
                 });
