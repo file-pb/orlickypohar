@@ -167,7 +167,16 @@ export function Dojezdy({ snimek }: { snimek: Snimek }) {
  * málo na to, aby se text musel posouvat: střídání se čte líp než
  * běžící pás.
  */
-export function StavovyProuzek({ snimek, ted }: { snimek: Snimek; ted: number }) {
+export function StavovyProuzek({
+  snimek,
+  ted,
+  ukazkovePolohy,
+}: {
+  snimek: Snimek;
+  ted: number;
+  /** Jedou po mapě vymyšlené plavby? Pak to musí být napsané. */
+  ukazkovePolohy?: boolean;
+}) {
   const [kde, setKde] = useState(0);
 
   const jede = snimek.rozjizdky.find((r) => r.stav === "Probiha");
@@ -214,6 +223,8 @@ export function StavovyProuzek({ snimek, ted }: { snimek: Snimek; ted: number })
     const tik = setInterval(() => setKde((k) => k + 1), 5000);
     return () => clearInterval(tik);
   }, [zpravy.length]);
+
+  if (ukazkovePolohy) zpravy.push("polohy lodí jsou ukázkové — tracker zatím neposílá");
 
   if (zpravy.length === 0) return null;
   const zprava = zpravy[kde % zpravy.length];

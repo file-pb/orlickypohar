@@ -9,7 +9,22 @@ import { Atributy } from "./atributy";
 import { Karusel, type Panel } from "./karusel";
 import { StavovyProuzek } from "./semafor";
 import { MapaTrackeru } from "@/app/mapa-trackeru";
-import type { Znacka } from "@/app/nacrt/mapa/plavba";
+import { pole } from "@/app/nacrt/mapa/plavba";
+
+/**
+ * Ukázková rozjížďka — tatáž, jakou ukazuje náčrt.
+ *
+ * <b>Dočasné, a tabule to u sebe píše.</b> Dokud appka neposílá polohy
+ * průběžně, nemá tracker co kreslit, a bez něj se nedá posoudit, co jsme
+ * navrhli (Filip, 24. 10. 2026: *„prostě tam ukaž ta data stejně, jako
+ * jsi mi pomohl vyladit zadání pro tu předchozí stránku"*). Je to
+ * i vlastní trať ukázky, ne trať závodu: po krátké trati o třech prvcích
+ * nemá pole kde plout a režie by neměla co střídat.
+ *
+ * Spočítá se jednou pro celý modul: je deterministická a na každé obnově
+ * dat by se jinak generovala znovu.
+ */
+const UKAZKA = pole();
 import { ZnakTridy } from "@/app/tridy";
 import { udalosti, type Udalost } from "@/lib/tabule-udalosti";
 
@@ -121,7 +136,7 @@ export function Obrazovka({
           cestu zpátky — bez ní by se z televize nedalo odejít jinak než
           adresou. */}
       <Alert udalost={fronta[0]} hotovo={() => setFronta((f) => f.slice(1))} />
-      <StavovyProuzek snimek={snimek} ted={ted} />
+      <StavovyProuzek snimek={snimek} ted={ted} ukazkovePolohy />
       {/* Logo vlevo, název uprostřed, stav vpravo (Filip, 15. 10. 2026).
           Jen kulatá značka: nápis „Orlická série" vedle ní by stál vedle
           názvu závodu v téže grafice a oba by se přebíjely. */}
@@ -172,16 +187,16 @@ export function Obrazovka({
           teď leží pod vším a panely jsou na ní. Lodě do ní přibydou, až
           bude co kreslit — průběžné odesílání poloh je krok 1 trackeru
           a zatím není. */}
-      {snimek.mapa.length > 0 && (
-        <div className="tabule-mapa" aria-hidden="true">
-          <MapaTrackeru
-            znacky={znacky(snimek)}
-            lode={[]}
-            zebricek={zebricekZeZapisu(snimek)}
-            tabule
-          />
-        </div>
-      )}
+      {/* <b>Dokud polohy nechodí, jedou po trati ukázkové plavby</b>
+          (Filip, 24. 10. 2026: *„navrhujeme to, tak to tam dej, ten
+          tracker, jak jsi mi pomohl ukázat ten webový"*). Je to návrh,
+          ne provoz — proto po skutečné trati a se jmény ze startovní
+          listiny, ale tabule to u sebe píše. Vydávat vymyšlené polohy za
+          skutečné by byla lež, ne ukázka; až přijdou první skutečné,
+          tenhle vstup zmizí. */}
+      <div className="tabule-mapa" aria-hidden="true">
+        <MapaTrackeru znacky={UKAZKA.znacky} lode={UKAZKA.lode} tabule />
+      </div>
 
       <div className="sloupce">
         {/* Zbývá jediný karusel: pořadí po třídách. Panel se stavy
@@ -195,54 +210,7 @@ export function Obrazovka({
   );
 }
 
-/**
- * Prvky trati ze snímku do tvaru, kterému rozumí mapa trackeru.
- *
- * <b>Uzel je bóje sama, nebo střed mezi konci</b> — u startovní a cílové
- * čáry vede dráha jejím středem, ne jedním z jejích konců.
- */
-function znacky(snimek: Snimek): Znacka[] {
-  return snimek.mapa.map((p) => {
-    const konce = p.konce.map((k) => ({
-      sirka: k.sirka,
-      delka: k.delka,
-      barva: k.barva ?? null,
-      tvar: k.tvar ?? null,
-      znaceni: k.znaceni ?? null,
-    }));
-    return {
-      poradi: p.poradi,
-      nazev: p.konce.map((k) => k.nazev).join(" – "),
-      typ: p.typ,
-      strana: p.strana ?? undefined,
-      konce,
-      sirka: konce.reduce((s, k) => s + k.sirka, 0) / konce.length,
-      delka: konce.reduce((s, k) => s + k.delka, 0) / konce.length,
-    };
-  });
-}
 
-/**
- * Žebříček ze zápisu, dokud nechodí polohy.
- *
- * <b>Pořadí poslední rozjížďky, která nějaké má</b> — tabule tím ukazuje
- * to nejčerstvější, co o pořadí ví. Lodě bez místa jdou na konec: ještě
- * nedojely, nebo mají kód.
- */
-function zebricekZeZapisu(snimek: Snimek) {
-  const trida = new Map(snimek.lode.map((l) => [l.lod, l.kategorie]));
-  const rozjizdka = [...snimek.rozjizdky]
-    .reverse()
-    .find((r) => r.stav !== "Zrusena" && r.poradi.length > 0);
-  const radky = rozjizdka
-    ? [...rozjizdka.poradi].sort((a, b) => (a.misto ?? 999) - (b.misto ?? 999))
-    : snimek.lode.map((l) => ({ lod: l.lod }));
-  return radky.map((v, i) => ({
-    id: i,
-    nazev: v.lod,
-    kategorie: (trida.get(v.lod) ?? "Race") as "Race" | "Nad7m" | "Pod7m",
-  }));
-}
 
 /**
  * Jména stavů. <b>Opsaná z výčtu, ne z hlavy</b> — napsal jsem nejdřív

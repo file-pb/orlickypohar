@@ -233,8 +233,21 @@ export function naVode(p: { sirka: number; delka: number }): boolean {
   return false;
 }
 
-export function pole(kolik = 24): { znacky: Znacka[]; lode: Lod[] } {
-  const znacky = trat();
+/**
+ * Pole lodí na trati.
+ *
+ * <b>Trať i jména se dají předat zvenku</b> (Filip, 24. 10. 2026): tabule
+ * tím ukáže ukázkové plavby po **skutečné** trati závodu a se jmény ze
+ * startovní listiny, dokud nikdo neposílá polohy. Je to návrh, ne provoz,
+ * a tabule to u sebe píše — vydávat vymyšlené polohy za skutečné by byla
+ * lež, ne ukázka.
+ */
+export function pole(
+  kolik = 24,
+  znackyZvenku?: Znacka[],
+  jmena?: string[],
+): { znacky: Znacka[]; lode: Lod[] } {
+  const znacky = znackyZvenku && znackyZvenku.length >= 2 ? znackyZvenku : trat();
   const r = nahoda(7);
   const lode: Lod[] = [];
 
@@ -246,7 +259,7 @@ export function pole(kolik = 24): { znacky: Znacka[]; lode: Lod[] } {
       los < 0.08 ? 0 : los < 0.2 ? Math.floor(body.length * (0.3 + r() * 0.4)) : body.length;
     lode.push({
       id: i,
-      nazev: JMENA[i % JMENA.length],
+      nazev: jmena?.[i] ?? JMENA[i % JMENA.length],
       kategorie: KATEGORIE[i % KATEGORIE.length],
       body,
       dosloDo,
