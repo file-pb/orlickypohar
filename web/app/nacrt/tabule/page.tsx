@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cestaProMereni, mrizkaVody, spojniceTrati, type Poloha, type UzelTrati } from "@/lib/voda";
 import { Z_NEJMENE, Z_NEJVIC } from "@/lib/mapa";
 import { pole } from "../mapa/plavba";
-import { NacrtMapy } from "../mapa/mapa";
+import { MapaTrackeru } from "@/app/mapa-trackeru";
 
 /**
  * O kolik se měřicí trasa drží dál od břehu.
@@ -82,7 +82,7 @@ export default function Stranka() {
       <p className="nacrt-pasek-tv">
         náhled tabule · falešná data · čas běží 2× rychleji než na ostro
       </p>
-      <NacrtMapy znacky={znacky} lode={lode} trasa={trasa} spojnice={spojnice} tabule />
+      <MapaTrackeru znacky={znacky} lode={lode} trasa={trasa} spojnice={spojnice} tabule />
     </main>
   );
 }

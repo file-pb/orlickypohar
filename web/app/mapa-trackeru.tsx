@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Náčrt živé mapy — klikatelná, s falešnou rozjížďkou.
+ * Mapa trackeru: trať, lodě a režie.
  *
  * <b>K čemu to je</b> (PLAN.md, *Jak se trackování zobrazuje*): rozprava
  * 24. 10. 2026 rozhodla, jak se tracking ukazuje, ale několik těch
@@ -21,7 +21,7 @@ import { DLAZDICE, Z_NEJMENE, Z_NEJVIC, doPixelu } from "@/lib/mapa";
 import { ZnakBoje } from "@/app/znak-boje";
 import { CELKEM, ZnakTridy } from "@/app/tridy";
 import type { Poloha } from "@/lib/voda";
-import type { Lod, Znacka } from "./plavba";
+import type { Lod, Znacka } from "@/app/nacrt/mapa/plavba";
 
 const KATEGORIE: Lod["kategorie"][] = ["Race", "Nad7m", "Pod7m"];
 
@@ -308,7 +308,7 @@ function Lodicka({
   );
 }
 
-export function NacrtMapy({
+export function MapaTrackeru({
   znacky,
   lode,
   trasa,
@@ -329,9 +329,9 @@ export function NacrtMapy({
    * pro výpočet"*) — ani v náčrtu, aby se na ni nedalo zvyknout. Slouží
    * jen k počítání postupu po trati.
    */
-  trasa: Poloha[];
+  trasa?: Poloha[];
   /** Spojnice trati z návrháře, pro každé přiblížení. Tahle se ukazovat smí. */
-  spojnice: Record<number, Poloha[][]>;
+  spojnice?: Record<number, Poloha[][]>;
 }) {
   const { sirka: SIRKA, vyska: VYSKA } = tabule ? VYREZ.tabule : VYREZ.stranka;
   const [z, setZ] = useState(() => vychoziZ(znacky, SIRKA, VYSKA));
@@ -401,7 +401,7 @@ export function NacrtMapy({
   // <b>Postup se měří po trase, ne po přímkách mezi značkami.</b> Přímka
   // mezi bójemi vede v zatopeném údolí přes kopec a loď, která ho objíždí,
   // by měla v pořadí propadnout za někoho, kdo ji nepředjel.
-  const uzly = trasa.map((p) => naPlatno(p.sirka, p.delka));
+  const uzly = (trasa ?? []).map((p) => naPlatno(p.sirka, p.delka));
   const delkyNoh = uzly.slice(0, -1).map((a, i) => Math.hypot(uzly[i + 1].x - a.x, uzly[i + 1].y - a.y));
   const celkovaDelka = delkyNoh.reduce((s, d) => s + d, 0) || 1;
 
@@ -936,7 +936,7 @@ export function NacrtMapy({
             Je to něco jiného než měřicí trasa pod ní.
           */}
           {tratVidet &&
-            (spojnice[z] ?? []).map((tah, i) => (
+            (spojnice?.[z] ?? []).map((tah, i) => (
               <polyline
                 key={i}
                 points={tah

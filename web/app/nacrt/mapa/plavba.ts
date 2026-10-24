@@ -47,7 +47,8 @@ export type Konec = {
 export type Znacka = {
   poradi: number;
   nazev: string;
-  typ: "Start" | "OtocnaBoje" | "Cil";
+  /** Tytéž hodnoty jako `TypPrvku` z API; mapa se ptá jen na pár z nich. */
+  typ: string;
   /** Bok, kterým se značka míjí. U čar chybí. */
   strana?: "PoLeve" | "PoPrave";
   konce: Konec[];
