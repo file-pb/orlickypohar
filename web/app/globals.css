@@ -3974,3 +3974,45 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .nacrt-na-tv .nacrt-souboj-pozice { font-size: 1rem; }
 .nacrt-na-tv .nacrt-zoom { display: none; }
 
+
+/* Loď v cíli to má napsané u sebe v pořadí, místo widgetu vedle. */
+.nacrt-stitek-cil {
+  grid-column: 2 / -1;
+  justify-self: start;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--voda);
+}
+
+/* Stav rozjížďky jako proužek nahoře, v barvě stavu. Tenký schválně:
+   je to kontext, ne sdělení. */
+.stavovy-prouzek {
+  margin: 0 0 0.4vw;
+  padding: 0.25vw 0;
+  text-align: center;
+  font-size: 1.05vw;
+  letter-spacing: 0.06em;
+  border-bottom: 2px solid currentColor;
+  color: var(--tlumeny);
+}
+
+.stavovy-prouzek.sviti-ceka { color: #e8900c; }
+.stavovy-prouzek.sviti-jede { color: var(--stav-vypsany); }
+.stavovy-prouzek.sviti-dojeto { color: var(--voda); }
+.stavovy-prouzek.sviti-zruseno { color: var(--stav-zruseny); }
+
+.stavovy-prouzek span {
+  display: inline-block;
+  animation: stavovy-prouzek-prijezd 0.4s ease-out;
+}
+
+@keyframes stavovy-prouzek-prijezd {
+  from { opacity: 0; transform: translateY(0.4vw); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stavovy-prouzek span { animation: none; }
+}
