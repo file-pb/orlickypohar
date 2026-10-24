@@ -2847,8 +2847,10 @@ body:has(.tabule) { overflow: hidden; }
      potřebuje 534, takže ho `overflow: hidden` uřízl.
      Strop je kvůli jménům, co by přetekla i celou obrazovku. */
   width: max-content; max-width: 86vw;
-  /* Nahoře víc místa na barevný pruh, který kartu drží pohromadě. */
-  padding: 2.6vw 5vw 2.4vw; border-radius: 1.2vw;
+  /* Nahoře víc místa na barevný pruh, který kartu drží pohromadě.
+     Od 24. 10. 2026 ještě o kus víc: nadpisek seděl pruhu na krku
+     (Filip: *„cílový modal nemá odsazení"*). */
+  padding: 3.4vw 5vw 2.8vw; border-radius: 1.2vw;
   background: var(--papir); border: 2px solid var(--voda);
   box-shadow: 0 1.5vw 5vw rgb(0 0 0 / 0.6), 0 0 0 0.6vw rgb(255 255 255 / 0.04);
   text-align: center; pointer-events: none; overflow: hidden;
@@ -2876,6 +2878,7 @@ body:has(.tabule) { overflow: hidden; }
 .tabule-alert .druh {
   font-style: normal; font-size: 1vw; letter-spacing: 0.18em;
   text-transform: uppercase; color: currentColor; font-weight: 700;
+  margin-bottom: 0.3vw;
 }
 .tabule-alert b { font-size: 4.5vw; line-height: 1; color: var(--text); }
 .tabule-alert span {
