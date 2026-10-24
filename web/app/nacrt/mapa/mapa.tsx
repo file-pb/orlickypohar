@@ -237,6 +237,41 @@ function vychoziZ(znacky: Znacka[], SIRKA: number, VYSKA: number) {
   return Math.max(Z_NEJMENE, Math.min(Z_NEJVIC, Math.floor(Math.min(podleX, podleY))));
 }
 
+/**
+ * Jmenovka u lodi. <b>Poloprůhledná a tmavá</b>, ne bílý štítek: leží na
+ * mapě, kde je pod ní jednou voda a jednou les, a musí být čitelná nad
+ * obojím, aniž by mapu zakryla.
+ *
+ * Šířka se odhaduje z počtu znaků — v SVG se text změřit nedá bez toho,
+ * aby se nejdřív vykreslil, a kvůli jmenovce nemá cenu překreslovat
+ * dvakrát.
+ */
+function Jmenovka({ x, y, text }: { x: number; y: number; text: string }) {
+  const sirka = text.length * 7.4 + 12;
+  return (
+    <g transform={`translate(${x} ${y})`} style={{ pointerEvents: "none" }}>
+      <rect
+        x={-sirka / 2}
+        y={-30}
+        width={sirka}
+        height={17}
+        rx={4}
+        fill="rgb(0 0 0 / 55%)"
+      />
+      <text
+        x={0}
+        y={-18}
+        textAnchor="middle"
+        fill="#fff"
+        fontSize={12}
+        fontWeight={600}
+      >
+        {text}
+      </text>
+    </g>
+  );
+}
+
 function Lodicka({
   x,
   y,
@@ -930,6 +965,10 @@ export function NacrtMapy({
             .filter((v) => v.lod.id !== vybrana && !(jenTuhle && vybrana !== null))
             .map((v) => {
               if (!v.poloha) return null;
+              // Při záběru na dojezd je lodí v obraze pár a je místo na
+              // jmenovky (Filip, 24. 10. 2026). V celkovém záběru by se
+              // čtyřiadvacet jmen slilo v jeden chuchvalec.
+              const blizko = tabule && zaber === "celo";
               const davno = historie.indexOf(v.lod.id);
               // Zaškrtnuté lodě vyhrávají nad vším ostatním: když si divák
               // vybral, koho sleduje, nemá mu to nic přebíjet.
@@ -964,10 +1003,13 @@ export function NacrtMapy({
                     x={v.poloha.x}
                     y={v.poloha.y}
                     kurz={v.kurz}
-                    velikost={zaskrtnute.has(v.lod.id) ? 8 : 6.5}
+                    velikost={blizko ? 11 : zaskrtnute.has(v.lod.id) ? 8 : 6.5}
                     barva={barva(v.lod.id)}
                     opacity={v.stav === "nedostupna" ? 0.45 : silaStopy === 0 ? 0.6 : 1}
                   />
+                  {blizko && (
+                    <Jmenovka x={v.poloha.x} y={v.poloha.y} text={v.lod.nazev} />
+                  )}
                 </g>
               );
             })}
