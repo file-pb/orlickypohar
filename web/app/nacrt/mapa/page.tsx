@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cestaProMereni, mrizkaVody, spojniceTrati, type Poloha, type UzelTrati } from "@/lib/voda";
 import { Z_NEJMENE, Z_NEJVIC } from "@/lib/mapa";
 import { pole } from "./plavba";
-import { NacrtMapy } from "./mapa";
+import { MapaTrackeru } from "@/app/mapa-trackeru";
 
 /**
  * O kolik se měřicí trasa drží dál od břehu.
@@ -89,7 +89,7 @@ export default function Stranka() {
         po vodě, {Math.round(delkaTrasy)} m proti {Math.round(delkaPrimo)} m
         přímo mezi značkami.
       </p>
-      <NacrtMapy znacky={znacky} lode={lode} trasa={trasa} spojnice={spojnice} />
+      <MapaTrackeru znacky={znacky} lode={lode} trasa={trasa} spojnice={spojnice} />
     </main>
   );
 }

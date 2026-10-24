@@ -3051,6 +3051,15 @@ body:has(.tabule) { overflow: hidden; }
 .tabule-mapa .mapka-trati { margin: 0; width: 100%; height: 100%; }
 .tabule-mapa .mapka { width: 100%; height: 100%; }
 .tabule-mapa figcaption { display: none; }
+/* Mapa trackeru vyplní plochu celá; její vlastní rozvržení (žebříček
+   vedle) tu nepoužíváme — pořadí nese karusel tabule. */
+.tabule-mapa .nacrt,
+.tabule-mapa .nacrt-mapa,
+.tabule-mapa .nacrt-platno-obal { height: 100%; display: block; }
+.tabule-mapa .nacrt-platno { width: 100%; height: 100%; border-radius: 0; }
+.tabule-mapa .nacrt-poradi,
+.tabule-mapa .nacrt-ovladani,
+.tabule-mapa .nacrt-zoom { display: none; }
 /* Všechno ostatní leží nad mapou. */
 .tabule > :not(.tabule-mapa) { position: relative; z-index: 1; }
 

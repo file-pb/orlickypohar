@@ -8,7 +8,8 @@ import { NazevZavodu } from "@/app/tabule-nazev";
 import { Atributy } from "./atributy";
 import { Karusel, type Panel } from "./karusel";
 import { StavovyProuzek } from "./semafor";
-import { MapkaTrati } from "@/app/mapka-trati";
+import { MapaTrackeru } from "@/app/mapa-trackeru";
+import type { Znacka } from "@/app/nacrt/mapa/plavba";
 import { ZnakTridy } from "@/app/tridy";
 import { udalosti, type Udalost } from "@/lib/tabule-udalosti";
 
@@ -173,7 +174,7 @@ export function Obrazovka({
           a zatím není. */}
       {snimek.mapa.length > 0 && (
         <div className="tabule-mapa" aria-hidden="true">
-          <MapkaTrati prvky={snimek.mapa} />
+          <MapaTrackeru znacky={znacky(snimek)} lode={[]} tabule />
         </div>
       )}
 
@@ -187,6 +188,33 @@ export function Obrazovka({
       </div>
     </div>
   );
+}
+
+/**
+ * Prvky trati ze snímku do tvaru, kterému rozumí mapa trackeru.
+ *
+ * <b>Uzel je bóje sama, nebo střed mezi konci</b> — u startovní a cílové
+ * čáry vede dráha jejím středem, ne jedním z jejích konců.
+ */
+function znacky(snimek: Snimek): Znacka[] {
+  return snimek.mapa.map((p) => {
+    const konce = p.konce.map((k) => ({
+      sirka: k.sirka,
+      delka: k.delka,
+      barva: k.barva ?? null,
+      tvar: k.tvar ?? null,
+      znaceni: k.znaceni ?? null,
+    }));
+    return {
+      poradi: p.poradi,
+      nazev: p.konce.map((k) => k.nazev).join(" – "),
+      typ: p.typ,
+      strana: p.strana ?? undefined,
+      konce,
+      sirka: konce.reduce((s, k) => s + k.sirka, 0) / konce.length,
+      delka: konce.reduce((s, k) => s + k.delka, 0) / konce.length,
+    };
+  });
 }
 
 /**
