@@ -21,9 +21,10 @@ public enum ZdrojTrasy
 /// <summary>
 /// Trasa lodi zaznamenaná telefonem na palubě.
 /// <para>
-/// <b>Nahrává se po dojezdu, ne za jízdy.</b> Pilot podle plánu nemá
-/// veřejnou živou mapu; hodnota je v tom, že trasy vůbec vzniknou a dá se
-/// na nich zjistit, co z téhle kapitoly stojí za dodělání.
+/// <b>Nahrává se průběžně za jízdy a doposílá po dojezdu.</b> Přenos je
+/// automatický: na posádce nesmí viset nic než spuštění záznamu, jinak by
+/// ten, kdo neťukne, chyběl v přehledu pro rozhodčího i v podkladu
+/// k protestu. Dávka chodí po minutě, fronta se doposílá, až bude signál.
 /// </para>
 /// <para>
 /// <b>Identifikátor z telefonu, ne náš.</b> <see cref="LokalniId"/> si

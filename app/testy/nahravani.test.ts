@@ -11,7 +11,9 @@ import * as Trezor from 'expo-secure-store';
 import {
   bezicZaznam, kolikCeka, prehled, smazZaznam, ukonciZaznam, zalozZaznam, zapisBody, zaznam,
 } from '../src/lib/tracker/zaznam.ts';
-import { dokonciNahraniAsync, nahrajAsync, stavNahravani } from '../src/lib/tracker/nahravani.ts';
+import {
+  dokonciNahraniAsync, nahrajAsync, stavNahravani, zkusZiveAsync, ZIVE_MS,
+} from '../src/lib/tracker/nahravani.ts';
 
 let prosly = 0;
 async function zkus(nazev: string, f: () => Promise<void> | void) {
@@ -26,6 +28,8 @@ function falesnyServer() {
   const trasy = new Map<string, Set<number>>();
   const stav = {
     zalozeni: 0, davky: 0, dokonceno: false, selziPo: Number.POSITIVE_INFINITY,
+    /** Server odmítá zakládat trasu, protože neběží okno regaty. */
+    mimoOkno: false,
     /** Čím se poslední požadavek prokázal. Tím se měří, že jde klíč, ne token. */
     klice: [] as (string | undefined)[],
   };
@@ -42,6 +46,13 @@ function falesnyServer() {
     if (cesta === '/trasy' && init?.method === 'POST') {
       const t = JSON.parse(init.body ?? '{}');
       stav.zalozeni += 1;
+      if (stav.mimoOkno) {
+        return {
+          ok: false,
+          status: 409,
+          json: async () => ({ error: 'Teď neběží žádné okno regaty.' }),
+        } as unknown as Response;
+      }
       if (!trasy.has(t.lokalniId)) trasy.set(t.lokalniId, new Set());
       const body = trasy.get(t.lokalniId)!;
       return odpoved({ lokalniId: t.lokalniId, posledniBod: body.size ? Math.max(...body) : null });
@@ -217,6 +228,80 @@ await zkus('ostříhané body se už neodesílají', async () => {
   // Co se podle plánu nemá uchovávat, se nemá ani nahrávat.
   assert.equal(trasy.get(id)!.size, 50);
   ukonciZaznam(id); smazZaznam(id);
+});
+
+await zkus('mimo okno regaty se nic nezahodí a fronta zůstane', async () => {
+  const id = trasaSBody(30);
+  const { trasy, stav } = falesnyServer();
+  stav.mimoOkno = true;
+
+  const v = await nahrajAsync(id);
+
+  // Rozprava ještě nebyla, takže server trasu nevezme. Je to stav závodu,
+  // ne porucha telefonu — body zůstávají zapsané a pošlou se potom.
+  assert.equal(v.potiz, 'mimo-okno');
+  assert.equal(v.odeslano, 0);
+  assert.equal(kolikCeka(id), 30);
+  assert.equal(trasy.size, 0, 'server trasu nezaložil');
+  assert.equal(stavNahravani(id)!.potiz, 'mimo-okno');
+
+  // Po rozpravě se doposílá bez dalšího zásahu posádky.
+  stav.mimoOkno = false;
+  const potom = await nahrajAsync(id);
+  assert.equal(potom.odeslano, 30);
+  assert.equal(stavNahravani(id)!.potiz, null);
+  ukonciZaznam(id); smazZaznam(id);
+});
+
+await zkus('živě se odesílá nejvýš jednou za minutu', async () => {
+  const id = trasaSBody(12);
+  const { stav } = falesnyServer();
+  const t0 = T0 + 10 * 60 * 1000;
+
+  const prvni = await zkusZiveAsync(id, t0);
+  assert.equal(prvni.odeslano, 12);
+
+  // Další bod přišel za pět sekund — rádio se kvůli němu zapínat nebude.
+  zapisBody(id, [{ sirka: 49.6, delka: 14.2, casGps: t0 + 5000 }]);
+  const hned = await zkusZiveAsync(id, t0 + 5000);
+  assert.equal(hned.preskoceno, true);
+  assert.equal(hned.odeslano, 0);
+  assert.equal(stav.davky, 1, 'druhá dávka se neposlala');
+
+  // Po minutě ano.
+  const pozdeji = await zkusZiveAsync(id, t0 + ZIVE_MS);
+  assert.equal(pozdeji.odeslano, 1);
+  assert.equal(stav.davky, 2);
+  ukonciZaznam(id); smazZaznam(id);
+});
+
+await zkus('živý kanál nepadá na výpadku sítě a fronta zůstane', async () => {
+  const id = trasaSBody(20);
+  const { stav } = falesnyServer();
+  stav.selziPo = 0;
+
+  // Výjimka z handleru úlohy na pozadí by znamenala, že systém úlohu
+  // odregistruje a záznam skončí bez varování v půlce závodu.
+  const v = await zkusZiveAsync(id, T0 + 20 * 60 * 1000);
+
+  assert.equal(v.potiz, 'sit');
+  assert.equal(kolikCeka(id), 20);
+  assert.equal(stavNahravani(id)!.potiz, 'sit');
+  ukonciZaznam(id); smazZaznam(id);
+});
+
+await zkus('ukončený záznam se živě už neodesílá', async () => {
+  const id = trasaSBody(10);
+  falesnyServer();
+  ukonciZaznam(id);
+
+  const v = await zkusZiveAsync(id, T0 + 30 * 60 * 1000);
+
+  // Po dojezdu se dokončuje ručně (a je u toho vidět, co se děje); živý
+  // kanál patří k jízdě.
+  assert.equal(v.odeslano, 0);
+  assert.equal(kolikCeka(id), 10);
+  smazZaznam(id);
 });
 
 console.log(`\n${prosly} kontrol prošlo`);
