@@ -4078,11 +4078,20 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   box-shadow: 0 4px 20px rgb(0 0 0 / 35%);
 }
 
+/* Nadpis je popisek sekce, ne další řádek seznamu (Filip, 24. 10. 2026).
+   Ve stejné velikosti a váze jako jména lodí splýval s prvním z nich,
+   tak je menší, prostrkaný a tlumený — oko ho přeskočí a jde rovnou na
+   čísla. */
 .nacrt-na-tv .nacrt-poradi h2 {
-  display: flex; align-items: center; gap: 0.5rem;
-  font-size: 1.5rem;
+  display: flex; align-items: center; gap: 0.45rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tlumeny);
 }
-.nacrt-na-tv .nacrt-poradi h2 .znak-tridy { height: 1.6rem; width: auto; }
+.nacrt-na-tv .nacrt-poradi h2 .znak-tridy { height: 1.2rem; width: auto; opacity: 0.8; }
 .nacrt-na-tv .nacrt-vysvetlivka { font-size: 0.85rem; }
 .nacrt-na-tv .nacrt-poradi ol { max-height: none; overflow: hidden; }
 
