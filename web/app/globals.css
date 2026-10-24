@@ -3569,9 +3569,11 @@ body:has(.tabule) { overflow: hidden; }
 .nacrt-poradi li button {
   display: grid;
   grid-template-columns: 1.6rem 1fr auto;
-  gap: 0.4rem;
+  gap: 0.1rem 0.4rem;
+  align-items: center;
   width: 100%;
-  padding: 0.3rem 0.4rem;
+  padding: 0.25rem 0.4rem;
+  line-height: 1.25;
   border: 0;
   border-radius: 4px;
   background: none;
@@ -3603,6 +3605,47 @@ body:has(.tabule) { overflow: hidden; }
 .nacrt-cislo { font-variant-numeric: tabular-nums; color: var(--tlumeny); }
 .nacrt-nazev { font-weight: 600; }
 .nacrt-kategorie { font-size: 0.75rem; color: var(--tlumeny); }
+
+/* Značka třídy místo slova — loď se pozná podle siluety rychleji. */
+.nacrt-trida {
+  height: 1.3rem;
+  width: auto;
+  align-self: center;
+  justify-self: end;
+}
+
+/* Taby tříd nad žebříčkem. Vybraný drží barvu, ostatní ustoupí. */
+.nacrt-taby {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.nacrt-taby button {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--linka);
+  border-radius: 999px;
+  background: none;
+  color: var(--tlumeny);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.nacrt-taby button img { height: 1.1rem; width: auto; opacity: 0.55; }
+.nacrt-taby button:hover { background: var(--zvyrazneni); }
+
+.nacrt-taby button.vybrany {
+  background: var(--zvyrazneni);
+  border-color: var(--voda);
+  color: var(--text);
+}
+
+.nacrt-taby button.vybrany img { opacity: 1; }
 
 .nacrt-stav {
   grid-column: 2 / -1;

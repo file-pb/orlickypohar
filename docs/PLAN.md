@@ -2123,7 +2123,9 @@ rozjížďce**; je to první věc, kterou na pomyslném pořadí ověřit.
 
 **Kategorie startují společně** (Filip, 24. 10. 2026), takže pomyslné pořadí
 je **jeden seznam za celé pole** — tak, jak to divák na vodě vidí. Kategorie
-je u lodi štítek a dá se jím filtrovat, protože boduje se po kategoriích.
+je u lodi štítek a dá se jím filtrovat, protože boduje se po kategoriích;
+štítkem je **značka třídy** z `web/public/tridy/`, ne slovo — loď se pozná
+podle siluety rychleji — a filtruje se taby nad žebříčkem.
 Pro režii to znamená, že souboj uvnitř kategorie má přednost, ale souboj
 napříč se nezahazuje: fyzicky se stal.
 
