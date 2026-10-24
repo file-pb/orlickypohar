@@ -24,8 +24,20 @@ import type { Lod, Znacka } from "./plavba";
 const STARNE_PO_S = 60;
 /** A kdy propadne nakonec. */
 const NEDOSTUPNA_PO_S = 300;
-/** Kolik stopy se kreslí ostatním lodím (PLAN.md: poslední ~2 min). */
-const OCAS_S = 120;
+/**
+ * Barva lodi. <b>Pevně podle pořadí v poli</b>, ne podle pozice v seznamu
+ * — jinak by loď při každém prohození změnila barvu a oko by ji ztratilo.
+ * Zlatý úhel rozhází odstíny tak, aby sousední lodě nebyly podobné.
+ */
+function barva(id: number) {
+  return `hsl(${(id * 137.508) % 360} 72% 45%)`;
+}
+
+/**
+ * Jak silně kreslit stopu lodi, o které byla řeč před `kolikDavno` focusy.
+ * Nula je ta právě vybraná a kreslí se jinde, plně.
+ */
+const DOZNIVANI = [1, 0.45, 0.22];
 
 type Stav = "cerstva" | "starnouci" | "nedostupna";
 
@@ -98,8 +110,22 @@ export function NacrtMapy({ znacky, lode }: { znacky: Znacka[]; lode: Lod[] }) {
     delka: znacky.reduce((s, m) => s + m.delka, 0) / znacky.length,
   });
   const [vybrana, setVybrana] = useState<number | null>(null);
+  /**
+   * Lodě, o kterých byla řeč, od nejnovější. <b>Stopa nemizí hned</b>
+   * (Filip, 24. 10. 2026): když se focus přesune jinam, předchozí loď
+   * ještě chvíli slábne, takže je vidět souboj, ne jen jeho vítěz.
+   */
+  const [historie, setHistorie] = useState<number[]>([]);
+  const [jenPosledni, setJenPosledni] = useState(false);
   const [cas, setCas] = useState(600);
   const [jenTuhle, setJenTuhle] = useState(false);
+
+  function vyber(id: number | null) {
+    setVybrana(id);
+    if (id !== null) setHistorie((h) => [id, ...h.filter((x) => x !== id)].slice(0, 3));
+  }
+  const [trasaVidet, setTrasaVidet] = useState(false);
+  const [pruhlednost, setPruhlednost] = useState(0.25);
   const tahne = useRef<{ x: number; y: number } | null>(null);
 
   const konec = useMemo(
@@ -238,7 +264,13 @@ export function NacrtMapy({ znacky, lode }: { znacky: Znacka[]; lode: Lod[] }) {
             <image key={d.klic} href={d.cesta} x={d.x} y={d.y} width={DLAZDICE} height={DLAZDICE} />
           ))}
 
-          {/* Trasa, podle které se počítá pořadí. Na ostro vede po vodě. */}
+          {/*
+            Trasa, podle které se počítá pořadí. <b>Divák ji nevidí</b>
+            (Filip, 24. 10. 2026) — je to podklad výpočtu, ne část trati,
+            a nakreslená by tvrdila, že se po ní jede. V náčrtu jde zapnout,
+            protože bez ní se nedá posoudit, jestli měří rozumně.
+          */}
+          {trasaVidet && (
           <polyline
             points={uzly.map((u) => `${u.x},${u.y}`).join(" ")}
             fill="none"
@@ -248,39 +280,45 @@ export function NacrtMapy({ znacky, lode }: { znacky: Znacka[]; lode: Lod[] }) {
             opacity={0.9}
             style={{ filter: "drop-shadow(0 0 2px rgb(0 0 0 / 60%))" }}
           />
+          )}
 
-          {/* Ostatní lodě: šedě, jen ocas. Pak vybraná, celá a barevně. */}
+          {/* Ostatní lodě: celá dráha, barevně a hodně průhledně. */}
           {vStavu
             .filter((v) => v.lod.id !== vybrana && !(jenTuhle && vybrana !== null))
             .map((v) => {
               if (!v.poloha) return null;
-              const odKdy = cas - OCAS_S;
-              const ocas = v.stopa.slice(
-                Math.max(0, v.lod.body.findIndex((b) => b.cas >= odKdy)),
-              );
+              const davno = historie.indexOf(v.lod.id);
+              // V režimu „jen poslední" dostane stopu jen loď z historie;
+              // ostatní zůstanou tečkou, ať je vidět, že tam pořád jsou.
+              const silaStopy = jenPosledni
+                ? davno > 0
+                  ? DOZNIVANI[davno]
+                  : 0
+                : pruhlednost;
               return (
                 <g
                   key={v.lod.id}
-                  onClick={() => setVybrana(v.lod.id)}
+                  onClick={() => vyber(v.lod.id)}
                   style={{ cursor: "pointer" }}
                 >
-                  {ocas.length > 1 && (
+                  {v.stopa.length > 1 && silaStopy > 0 && (
                     <polyline
-                      points={ocas.map((p) => `${p.x},${p.y}`).join(" ")}
+                      points={v.stopa.map((p) => `${p.x},${p.y}`).join(" ")}
                       fill="none"
-                      stroke="#444"
-                      strokeWidth={1.5}
-                      opacity={0.55}
+                      stroke={barva(v.lod.id)}
+                      strokeWidth={davno > 0 ? 2.5 : 2}
+                      opacity={silaStopy}
+                      strokeLinejoin="round"
                     />
                   )}
                   <circle
                     cx={v.poloha.x}
                     cy={v.poloha.y}
                     r={5}
-                    fill={v.stav === "nedostupna" ? "#999" : "#333"}
+                    fill={barva(v.lod.id)}
                     stroke="#fff"
                     strokeWidth={1.5}
-                    opacity={v.stav === "cerstva" ? 1 : 0.6}
+                    opacity={v.stav === "nedostupna" ? 0.45 : jenPosledni && davno < 0 ? 0.55 : 1}
                   />
                 </g>
               );
@@ -291,15 +329,16 @@ export function NacrtMapy({ znacky, lode }: { znacky: Znacka[]; lode: Lod[] }) {
               <polyline
                 points={vybranaLod.stopa.map((p) => `${p.x},${p.y}`).join(" ")}
                 fill="none"
-                stroke="#e8590c"
-                strokeWidth={3}
+                stroke={barva(vybranaLod.lod.id)}
+                strokeWidth={3.5}
                 strokeLinejoin="round"
+                style={{ filter: "drop-shadow(0 0 3px rgb(255 255 255 / 85%))" }}
               />
               <circle
                 cx={vybranaLod.poloha.x}
                 cy={vybranaLod.poloha.y}
                 r={8}
-                fill="#e8590c"
+                fill={barva(vybranaLod.lod.id)}
                 stroke="#fff"
                 strokeWidth={2.5}
               />
@@ -375,6 +414,33 @@ export function NacrtMapy({ znacky, lode }: { znacky: Znacka[]; lode: Lod[] }) {
               onChange={(e) => setCas(Number(e.target.value))}
             />
           </label>
+          <label className="nacrt-prepinac">
+            <input
+              type="checkbox"
+              checked={jenPosledni}
+              onChange={(e) => setJenPosledni(e.target.checked)}
+            />
+            jen poslední tři, ostatní tečkou
+          </label>
+          <label hidden={jenPosledni}>
+            průhlednost {pruhlednost.toFixed(2)}
+            <input
+              type="range"
+              min={0.05}
+              max={1}
+              step={0.05}
+              value={pruhlednost}
+              onChange={(e) => setPruhlednost(Number(e.target.value))}
+            />
+          </label>
+          <label className="nacrt-prepinac">
+            <input
+              type="checkbox"
+              checked={trasaVidet}
+              onChange={(e) => setTrasaVidet(e.target.checked)}
+            />
+            měřicí trasa (na ostro neviditelná)
+          </label>
           {vybrana !== null && (
             <label className="nacrt-prepinac">
               <input
@@ -400,7 +466,7 @@ export function NacrtMapy({ znacky, lode }: { znacky: Znacka[]; lode: Lod[] }) {
               <button
                 type="button"
                 className={v.lod.id === vybrana ? "vybrana" : undefined}
-                onClick={() => setVybrana(v.lod.id)}
+                onClick={() => vyber(v.lod.id)}
               >
                 <span className="nacrt-cislo">{v.stav === "nedostupna" ? "—" : i + 1}</span>
                 <span className="nacrt-nazev">{v.lod.nazev}</span>

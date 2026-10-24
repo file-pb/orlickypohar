@@ -2199,19 +2199,54 @@ krytí, tedy skoro plnou čáru — a sejdou se přesně u startovní linie a na
 bóji, kde se pole stahuje do stovky metrů. Zprůhledněním by se zamazalo to
 nejzajímavější.
 
-**Neztlumovat, ale zkracovat:**
+**Opraveno 24. 10. 2026 podle náčrtu.** Původně tu stálo *ostatní šedě
+a jen poslední dvě minuty*, s odůvodněním, že barva při čtyřiceti lodích
+nerozliší nic. Náčrt (`web/app/nacrt/mapa`) ukázal opak: šedé ocasy jsou
+na mapě nerozlišitelná kaše, kdežto **barevné dráhy se čtou**, protože oko
+sleduje barvu, ne tvar. Filip to řekl rovnou (*„dráhy lodí bych asi fakt
+měl různobarevné a velice transparentní"*) a na obrazovce to platí.
 
 | | Čára | Barva | Kolik stopy |
 |---|---|---|---|
-| **vybraná loď** | plná, silnější | barevná | celá, slábne do minulosti |
-| **ostatní** | tenká | **šedá** | poslední ~2 min + tečka s kurzem |
-| mimo filtr nebo kategorii | — | šedá | jen tečka |
+| **loď, na které je focus** | plná, silnější, s bílým lemem | vlastní | celá |
+| **poslední dvě předtím** | o něco slabší | vlastní | celá, **doznívá** |
+| **ostatní** | — | vlastní | jen tečka polohy |
 
-Při čtyřiceti lodích barva nerozliší nic — čtyřicet odstínů nikdo
-nerozezná. Ostatní jsou proto schválně bezbarvé a barva ať znamená něco,
-stejně jako u bójí. K tomu patří druhý stupeň, který plán má jako tlačítko
-*Jen tuhle stopu*: ostatní úplně pryč. Jedno je pro přehled, druhé pro
-„ukaž mi, co jsem jel".
+**Stopa nemizí hned, když focus odejde** (Filip, 24. 10. 2026: *„klidně
+můžeš zobrazit trošku transparentně jen ty lodě, o kterých byla poslední
+řeč — třeba 3 poslední a postupně je mizet"*). Tím je vidět **souboj, ne
+jen jeho vítěz** — a je to zároveň odpověď na to, co náčrt odhalil: pole
+čtyřiceti drah je i barevně hustý koberec, kdežto tři dráhy nad tečkami
+ostatních jsou čitelné.
+
+**Barva je vlastní, ne podle kategorie**, a drží se lodi napořád — jinak by
+loď při každém prohození v pořadí změnila barvu a oko by ji ztratilo.
+K tomu patří druhý stupeň, který plán má jako tlačítko *Jen tuhle stopu*:
+ostatní úplně pryč. Jedno je pro přehled, druhé pro „ukaž mi, co jsem jel".
+
+#### Měřicí trasa se nekreslí (Filip, 24. 10. 2026)
+
+*„Ta trať, podle které měříš pořadí, fakt určitě nesmí být vidět a nesmí
+jít mimo vodu a např. tam, kde z logiky věci je mělko."*
+
+**Neviditelná**, protože je to podklad výpočtu, ne část trati. Nakreslená
+by tvrdila, že se po ní jede — a závodník, který by se podle ní řídil, by
+jel hůř, než kdyby ji neviděl. V náčrtu jde zapnout, protože bez ní se nedá
+posoudit, jestli měří rozumně; na ostro ne.
+
+**Mimo vodu nejde už dnes.** `cestaPoVode` hledá nejdřív v masce `plavna`,
+což je voda zmenšená o `ODSTUP_OD_BREHU_M = 30` (`web/lib/voda.ts:67`),
+a teprve když to nejde — v úzké zátoce —, zkusí to těsně kolem břehu.
+
+**Mělčiny ale neumíme**, a je dobré to přiznat: batymetrii nádrže nemáme
+a z obrysu se nevyčte. Třicet metrů je odstup zvolený pro **kreslení**,
+ne pro ponor plachetnice; pro měřicí trasu bude malý. Pravou hodnotu
+nemáme z čeho odvodit.
+
+**Po první sezóně ji ale budeme mít zadarmo.** Kde za celou regatu neplula
+ani jedna ze čtyřiceti lodí, je mělčina nebo kopec — stopy samy nakreslí,
+kudy se dá jet. Měřicí trasa se tím dá po sezóně opravit podle skutečnosti,
+a je to další důvod, proč trasy sbírat i v roce, kdy je nikdo neuvidí.
 
 Na tabuli nikdo neklikne, takže „vybranou loď" tam vybírá **režie** —
 tentýž vizuální zákon obsluhuje i televizní záběr.
