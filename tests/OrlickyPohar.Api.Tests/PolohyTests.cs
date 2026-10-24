@@ -253,6 +253,74 @@ public class PolohyTests(PostgresFixture fixture)
     }
 
     /// <summary>
+    /// <b>Výchozí hodnota platí i tam, kde ji nikdo nenastavil.</b> Posádka
+    /// vidí sebe — ne nic. Zamrzá i to, co nikdo nenastavil, takže výchozí
+    /// hodnota musí být bezpečná, ale ne tak, aby tracker vypadal rozbitě.
+    /// <para>
+    /// Mimo běžící okno se nevydává nic: klíč říká kdo, okno říká kdy.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Posadka_vidi_vychozi_jen_sebe()
+    {
+        var (db, polohy, okna, cas) = Sluzby();
+        var regata = await RegataAsync(db, 2);
+
+        // Bez okna neplatí ani výchozí hodnota — není co ukazovat.
+        Assert.False((await polohy.ProPosadkuAsync(regata.Lode[0].LodId, default)).Vidi);
+
+        await okna.OtevriAsync(regata.ZavodId, regata.Kdo, null, default);
+        cas.Ted = Rozprava.AddMinutes(10);
+        await BodAsync(db, cas, okna, regata.Lode[0].Klic, cas.Ted);
+        await BodAsync(db, cas, okna, regata.Lode[1].Klic, cas.Ted, 49.52);
+        PolohySprava.Zapomen(regata.ZavodId);
+
+        var muj = await polohy.ProPosadkuAsync(regata.Lode[0].LodId, default);
+
+        Assert.True(muj.Vidi);
+        Assert.Equal(regata.Lode[0].LodId, Assert.Single(muj.Lode).LodId);
+    }
+
+    /// <summary>
+    /// <b>Přepínač *co vidí posádky* něco dělá.</b> Do oponentury 24. 10.
+    /// 2026 se zamykal, zapisoval do dokladu ke sporu *„vy jste nás viděli
+    /// a my vás ne"* — a nečetl ho žádný kód. Doklad, který tvrdí „posádky
+    /// viděly jen sebe", přitom neviděly nic, je horší než žádný.
+    /// </summary>
+    [Fact]
+    public async Task Posadka_vidi_ostatni_kdyz_to_rozhodci_pustil()
+    {
+        var (db, polohy, okna, cas) = Sluzby();
+        var regata = await RegataAsync(db, 2);
+        var nastaveni = new NastaveniSprava(db, cas);
+
+        // Rozšířit jde jen do rozpravy — ta nastavení zamyká.
+        await nastaveni.UlozAsync(
+            regata.ZavodId,
+            new NastaveniVstup(CoVidiPosadky.IOstatni, false, false, null),
+            regata.Kdo, default);
+
+        await okna.OtevriAsync(regata.ZavodId, regata.Kdo, null, default);
+        cas.Ted = Rozprava.AddMinutes(10);
+        await BodAsync(db, cas, okna, regata.Lode[0].Klic, cas.Ted);
+        await BodAsync(db, cas, okna, regata.Lode[1].Klic, cas.Ted, 49.52);
+        PolohySprava.Zapomen(regata.ZavodId);
+
+        Assert.Equal(2, (await polohy.ProPosadkuAsync(regata.Lode[0].LodId, default)).Lode.Count);
+
+        // Zpřísnit smí rozhodčí i po zámku — a tohle je nejpřísnější.
+        await nastaveni.UlozAsync(
+            regata.ZavodId,
+            new NastaveniVstup(CoVidiPosadky.Nic, false, false, "Posádky to řešily za jízdy."),
+            regata.Kdo, default);
+        PolohySprava.Zapomen(regata.ZavodId);
+
+        var po = await polohy.ProPosadkuAsync(regata.Lode[0].LodId, default);
+        Assert.False(po.Vidi);
+        Assert.Empty(po.Lode);
+    }
+
+    /// <summary>
     /// <b>Nezveřejněná regata veřejně neexistuje</b> — a na cestě, kterou
     /// jdou ven polohy lodí, to platí dvakrát.
     /// <para>

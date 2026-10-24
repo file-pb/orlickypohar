@@ -78,6 +78,27 @@ public record SnimekPoloh(
 public record VerejnyPohled(bool Vysila, DateTimeOffset Ted, IReadOnlyList<PolohaLodi> Lode);
 
 /// <summary>
+/// Co z poloh vidí posádka na vodě.
+/// <para>
+/// <b>Rozhoduje o tom přepínač <i>co vidí posádky</i></b>, který zamyká
+/// rozprava — nic, jen sebe, nebo i ostatní. Výchozí hodnota je *jen sebe*,
+/// a platí i pro regatu, kde nastavení nikdo nezaložil: zamrzá i to, co
+/// nikdo nenastavil, takže výchozí hodnota musí být bezpečná.
+/// </para>
+/// <para>
+/// <b>Mimo běžící okno se nevydává nic.</b> Je to tentýž řez jako
+/// u nahrávání: klíč říká kdo, okno říká kdy. Po regatě se posádka na mapu
+/// nedívá přes tuhle cestu.
+/// </para>
+/// </summary>
+/// <param name="Vidi">
+/// Je teď co ukazovat? <c>false</c> znamená „teď ne" — neběží okno, nebo to
+/// rozhodčí nepovolil. Rozdíl mezi obojím se posádce neříká, stejně jako
+/// u veřejného výdeje.
+/// </param>
+public record PohledPosadky(bool Vidi, DateTimeOffset Ted, IReadOnlyList<PolohaLodi> Lode);
+
+/// <summary>
 /// Poslední známá poloha každé lodi v regatě.
 /// <para>
 /// <b>Jeden dotaz do databáze bez ohledu na počet diváků.</b> Snímek se
@@ -174,6 +195,37 @@ public class PolohySprava(AppDbContext db, TimeProvider cas, OknaSprava okna)
         }
 
         return pohled;
+    }
+
+    /// <summary>
+    /// Co uvidí telefon na palubě. Řídí se tím, co rozhodčí povolil
+    /// (<see cref="CoVidiPosadky"/>), a běžícím oknem regaty.
+    /// </summary>
+    public async Task<PohledPosadky> ProPosadkuAsync(int lodId, CancellationToken ct)
+    {
+        var ted = cas.GetUtcNow();
+
+        var okno = await okna.ProLodAsync(lodId, ted, ct);
+        if (okno is null) return new PohledPosadky(false, ted, []);
+
+        // <b>Chybějící řádek nastavení znamená „jen sebe", ne „nic"</b> —
+        // tatáž výchozí hodnota, jakou vydává `NastaveniSprava.NactiAsync`.
+        // Bez přetypování na nullable by `FirstOrDefaultAsync` vrátilo
+        // `default`, tedy `Nic`, a dvě místa by o téže regatě tvrdila dvě
+        // různé věci.
+        var co = await db.NastaveniTrackeru
+            .Where(n => n.ZavodId == okno.ZavodId)
+            .Select(n => (CoVidiPosadky?)n.CoVidiPosadky)
+            .FirstOrDefaultAsync(ct) ?? CoVidiPosadky.JenSebe;
+
+        if (co == CoVidiPosadky.Nic) return new PohledPosadky(false, ted, []);
+
+        var snimek = await SnimekAsync(okno.ZavodId, ct);
+        var lode = co == CoVidiPosadky.IOstatni
+            ? snimek.Lode
+            : snimek.Lode.Where(l => l.LodId == lodId);
+
+        return new PohledPosadky(true, ted, [.. lode]);
     }
 
     private async Task<VerejnyPohled> SpoctiVenAsync(

@@ -945,6 +945,40 @@ def klic_z_hlavicky(self):
     return tajemstvi
 
 
+def klice_regaty(slug):
+    """Klíče všech lodí, které jedou tuhle regatu — pořadatelův pohled.
+
+    Loď bez jediného klíče se vrací taky: otázka zní „má celé pole zapnutý
+    tracker?", a na tu loď chybějící ve výpisu neodpovídá.
+    """
+    z = next((x for x in D["zavody"] if x["slug"] == slug), None)
+    if not z:
+        return None
+
+    lode = sorted({u["lod"] for u in z.get("ucasti", [])
+                   if u.get("stav", "Potvrzena") in ("Prihlasena", "Potvrzena")})
+    vysledek = []
+    for nazev in lode:
+        lod_id = PRIHLASKA_ID.get(nazev)
+        vysledek.append({
+            "lodId": lod_id,
+            "lod": LODE.get(nazev, {}).get("nazev", nazev),
+            "cisloPlachty": LODE.get(nazev, {}).get("cisloPlachty"),
+            "klice": [klic_dto(k) for k in sorted(
+                (k for k in KLICE.values() if k["lodId"] == lod_id),
+                key=lambda k: k["id"])],
+        })
+    return vysledek
+
+
+def klic_regaty(slug, klic_id):
+    """Klíč, na který pořadatel té regaty dosáhne — tedy klíč lodi, která ji jede."""
+    pole = klice_regaty(slug) or []
+    lodi = {l["lodId"] for l in pole}
+    k = next((k for k in KLICE.values() if k["id"] == klic_id), None)
+    return k if k and k["lodId"] in lodi else None
+
+
 def klic_pro_sebe(self):
     """
     Klíč, kterým se telefon hlásí <b>o sobě</b> — stačí, že existuje a není
@@ -1026,7 +1060,8 @@ def polohy_zastavky(slug, z):
             stari = 150.0
         if stari is None:
             vysledek.append({
-                "lodId": i + 1, "lod": nazev, "cisloPlachty": None,
+                "lodId": PRIHLASKA_ID.get(nazev, i + 1), "lod": nazev,
+                "cisloPlachty": None,
                 "kategorie": KAT.get(nazev), "sirka": None, "delka": None,
                 "kurz": None, "rychlostMS": None, "casGps": None,
                 "stariMs": None, "stav": "Nedostupna"})
@@ -1048,7 +1083,7 @@ def polohy_zastavky(slug, z):
 
         cas = ted - stari
         vysledek.append({
-            "lodId": i + 1, "lod": nazev, "cisloPlachty": None,
+            "lodId": PRIHLASKA_ID.get(nazev, i + 1), "lod": nazev, "cisloPlachty": None,
             "kategorie": KAT.get(nazev),
             "sirka": round(sirka, 6), "delka": round(delka, 6),
             "kurz": round(kurz, 1), "rychlostMS": 2.4,
@@ -2330,7 +2365,8 @@ def role_pro_cestu(metoda, cesta):
         # větve, tedy na otázku na celý ročník — a pořadatel jedné zastávky
         # tak z mocku dostal polohy cizí regaty, kterou mu API nevydá
         # (změřeno 24. 10. 2026: `milos` na `jarni-vitr` → 200, 11 lodí).
-        if "/polohy" in zbytek or "/okna" in zbytek or "/tracker" in zbytek:
+        if ("/polohy" in zbytek or "/okna" in zbytek or "/tracker" in zbytek
+                or "/klice" in zbytek):
             return (NAHLED, zavod)
         if "/trat" in zbytek:
             # Přijmout a vrátit smí jen rozhodčí — přijetí je to, co trať
@@ -3751,6 +3787,18 @@ class H(BaseHTTPRequestHandler):
             # Jediný endpoint bez přihlášení, a musí být: kdyby ho
             # vyžadoval, posádka by potřebovala účet a smysl QR by padl.
             return self.uplatni_pozvanku()
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                          r'/klice/(\d+)/sledovani$', cesta)):
+            k = klic_regaty(m.group(1), int(m.group(2)))
+            if not k:
+                return self.send_error(404)
+            if k.get("odebran"):
+                return self.send_error(404)
+            k["sleduje"] = bool((self.telo_zadosti() or {}).get("sleduje", True))
+            self.send_response(204)
+            self.end_headers()
+            return None
+
         if (m := re.match(r'^/ja/lode/(\d+)/klice/(\d+)/sledovani$', cesta)):
             if not self.headers.get("authorization"):
                 return self.send_error(401)
@@ -4646,6 +4694,16 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                           r'/trat/(\d+)$', urlparse(self.path).path)):
             return self.trat_zahod(m.group(1), int(m.group(2)))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                          r'/klice/(\d+)$', urlparse(self.path).path)):
+            k = klic_regaty(m.group(1), int(m.group(2)))
+            if not k:
+                return self.send_error(404)
+            k["odebran"] = True
+            k["sleduje"] = False
+            self.send_response(204)
+            self.end_headers()
+            return None
         if (m := re.match(r'^/ja/lode/(\d+)/klice/(\d+)$', urlparse(self.path).path)):
             if not self.headers.get("authorization"):
                 return self.send_error(401)
@@ -4885,6 +4943,18 @@ class H(BaseHTTPRequestHandler):
             if not k:
                 return self.send_error(401)
             return self.odpoved({"sleduje": bool(k.get("sleduje", True))})
+        elif cesta == "/polohy":
+            # Posádka na palubě. Mock nemá nastavení trackingu ani okna
+            # regaty, takže se chová jako regata s výchozím nastavením
+            # (**jen sebe**) a s otevřeným oknem. Skutečné API mimo okno
+            # vrací `vidi: false` — to se tu vyzkoušet nedá.
+            if not klic_z_hlavicky(self):
+                return self.send_error(401)
+            k = KLICE.get((self.headers.get("x-klic-lodi") or "").strip())
+            z = zavod_zkousky() or {}
+            snimek = polohy_zastavky(z.get("slug", ""), z)
+            moje = [l for l in snimek["lode"] if l["lodId"] == k["lodId"]]
+            return self.odpoved({"vidi": True, "ted": snimek["ted"], "lode": moje})
         elif (m := re.match(r'^/ja/lode/(\d+)/klice$', cesta)):
             if not self.headers.get("authorization"):
                 return self.send_error(401)
@@ -4947,6 +5017,16 @@ class H(BaseHTTPRequestHandler):
             if not z:
                 return self.send_error(404)
             telo = verejne_polohy(m.group(1), z)
+        elif (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/klice$', cesta)):
+            # Skutečné API má celou správu za RequireAuthorization; tahle
+            # větev dispatche běží dřív než společná kontrola, takže si
+            # o přihlášení musí říct sama.
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            telo = klice_regaty(m.group(1))
+            if telo is None:
+                return self.send_error(404)
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/polohy$', cesta)):
             z = self.zastavka(m.group(1))

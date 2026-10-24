@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http.HttpResults;
+using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Sprava;
 
 namespace OrlickyPohar.Api.Features.Klice;
@@ -86,6 +87,90 @@ public static class KliceEndpoints
             .Produces(StatusCodes.Status204NoContent)
             .WithSummary("Odebere klíč natrvalo")
             .WithDescription("Klíč zaniká a nedá se oživit. Pro odchod z posádky nadobro.");
+    }
+
+    /// <summary>
+    /// Klíče očima pořadatele regaty.
+    /// <para>
+    /// <b>Pořadatel je ten, kdo past vidí z vody</b> (Filip, 25. 10. 2026).
+    /// Telefon, který zůstal v autě, hlásí z parkoviště celý den a kapitán
+    /// o tom neví — a dosud s tím nesměl nic dělat nikdo než on. Rozsah je
+    /// tentýž jako u živých poloh a oken: pořadatel <b>té</b> regaty, nebo
+    /// rozhodčí ročníku; sáhne jen na klíče lodí, které ji jedou.
+    /// </para>
+    /// </summary>
+    public static void MapKliceRegaty(this IEndpointRouteBuilder app)
+    {
+        var g = app.MapSpravu("/sprava/serie/{serie}/zastavky/{zavod}/klice");
+
+        g.MapGet("/", ProRegatuAsync)
+            .Produces<List<KliceLodiDto>>()
+            .WithSummary("Vypíše spárované telefony celého pole")
+            .WithDescription(
+                "Pořadatel regaty, nebo rozhodčí ročníku. Otázka před procedurou zní " +
+                "„má celé pole zapnutý tracker?\", takže se vrací i loď, která nemá " +
+                "jediný klíč.");
+
+        g.MapPost("/{klic:int}/sledovani", SledovaniRegatyAsync)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Odepne telefon ze sledování, nebo ho zase připne")
+            .WithDescription(
+                "Pořadatel regaty, nebo rozhodčí. Pro telefon, který zůstal v autě — " +
+                "posádka v lodi zůstává.");
+
+        g.MapDelete("/{klic:int}", OdeberVRegateAsync)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Odebere klíč natrvalo")
+            .WithDescription("Pořadatel regaty, nebo rozhodčí. Klíč zaniká a nedá se oživit.");
+    }
+
+    /// <summary>Pořadatel té regaty, nebo rozhodčí ročníku — táž dvojice jako u poloh.</summary>
+    private static async Task<bool> SmiNaRegateAsync(
+        ClaimsPrincipal kdo, Rozsahy rozsahy, Rozsahy.Rozsah rozsah, CancellationToken ct) =>
+        await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Organizator, rozsah.SerieId, rozsah.ZavodId), ct)
+        || await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Rozhodci, rozsah.SerieId), ct);
+
+    private static async Task<IResult> ProRegatuAsync(
+        string serie, string zavod, ClaimsPrincipal kdo, Rozsahy rozsahy, KliceSprava klice,
+        CancellationToken ct)
+    {
+        if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
+            return Results.NotFound();
+        if (!await SmiNaRegateAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        return Results.Ok(await klice.ProRegatuAsync(rozsah.ZavodId.Value, ct));
+    }
+
+    private static async Task<IResult> SledovaniRegatyAsync(
+        string serie, string zavod, int klic, SledovaniVstup? vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, KliceSprava klice, CancellationToken ct)
+    {
+        if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
+            return Results.NotFound();
+        if (!await SmiNaRegateAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        if (await klice.NaRegateAsync(rozsah.ZavodId.Value, klic, ct) is not { } nalezeny)
+            return Results.NotFound();
+
+        return await klice.SledujAsync(nalezeny.LodId, klic, vstup?.Sleduje ?? true, ct)
+            ? Results.NoContent()
+            : Results.NotFound();
+    }
+
+    private static async Task<IResult> OdeberVRegateAsync(
+        string serie, string zavod, int klic, ClaimsPrincipal kdo, Rozsahy rozsahy,
+        KliceSprava klice, CancellationToken ct)
+    {
+        if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
+            return Results.NotFound();
+        if (!await SmiNaRegateAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        if (await klice.NaRegateAsync(rozsah.ZavodId.Value, klic, ct) is not { } nalezeny)
+            return Results.NotFound();
+
+        return await klice.OdeberAsync(nalezeny.LodId, klic, ct)
+            ? Results.NoContent()
+            : Results.NotFound();
     }
 
     private static async Task<Results<Ok<UplatneniDto>, BadRequest<string>>> UplatniAsync(

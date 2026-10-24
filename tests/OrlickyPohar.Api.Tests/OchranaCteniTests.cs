@@ -62,6 +62,10 @@ public class OchranaCteniTests(PostgresFixture fx)
     /// </summary>
     private static readonly Dictionary<string, string> VedomeVerejne = new()
     {
+        ["GET /polohy/"] =
+            "Polohy pro posádku na palubě. Prokazuje se klíčem k lodi, ne účtem — "
+            + "telefon žádný nemá. Co z toho uvidí, rozhoduje přepínač *co vidí "
+            + "posádky*, který zamyká rozprava; bez klíče je odpověď 401.",
         ["GET /klice/sledovani/"] =
             "Telefon se ptá sám na sebe a prokazuje se klíčem k lodi, ne účtem — "
             + "držitel klíče žádný nemá a mít nemusí. Ven nejde nic než to, jestli "

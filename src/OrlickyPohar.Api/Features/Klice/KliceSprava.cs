@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Lode;
+using OrlickyPohar.Api.Features.Zavody;
 
 namespace OrlickyPohar.Api.Features.Klice;
 
@@ -16,6 +17,9 @@ public record KlicDto(
     DateTimeOffset? PosledniPouzitiV,
     bool Sleduje,
     bool Odebran);
+
+/// <summary>Klíče jedné lodi, jak je vidí pořadatel regaty.</summary>
+public record KliceLodiDto(int LodId, string Lod, string? CisloPlachty, List<KlicDto> Klice);
 
 /// <summary>Co appka dostane po uplatnění pozvánky.</summary>
 public record UplatneniDto(string Klic, int LodId, string LodNazev, string? Jmeno);
@@ -210,6 +214,69 @@ public class KliceSprava(AppDbContext db, TimeProvider cas)
         k.Sleduje = sleduj;
         await db.SaveChangesAsync(ct);
         return true;
+    }
+
+    /// <summary>Stavy účasti, ve kterých loď na regatě závodí. Totéž co v `PolohySprava`.</summary>
+    private static readonly StavUcasti[] NaZavode = [StavUcasti.Prihlasena, StavUcasti.Potvrzena];
+
+    /// <summary>
+    /// Klíče všech lodí, které jedou tuhle regatu — <b>pořadatelův pohled</b>.
+    /// <para>
+    /// Je to tentýž výpis jako kapitánův, jen přes celé pole: otázka před
+    /// procedurou zní *„má celé pole zapnutý tracker?"*, a na tu odpověď
+    /// „zeptej se dvaadvaceti kapitánů" neodpovídá. Loď bez jediného klíče
+    /// se vrací taky, právě proto.
+    /// </para>
+    /// </summary>
+    public async Task<List<KliceLodiDto>> ProRegatuAsync(int zavodId, CancellationToken ct)
+    {
+        var lode = await db.Ucasti
+            .Where(u => u.ZavodId == zavodId && NaZavode.Contains(u.Stav))
+            .Select(u => new
+            {
+                u.Prihlaska!.LodId,
+                u.Prihlaska.Lod!.Nazev,
+                u.Prihlaska.Lod.CisloPlachty,
+            })
+            .ToListAsync(ct);
+
+        var klice = await db.Klice
+            .Where(k => lode.Select(l => l.LodId).Contains(k.LodId))
+            .OrderBy(k => k.VydanV)
+            .Select(k => new
+            {
+                k.LodId,
+                Dto = new KlicDto(
+                    k.Id, k.Jmeno, k.VydanV, k.PosledniPouzitiV, k.Sleduje, k.OdebranV != null),
+            })
+            .ToListAsync(ct);
+
+        return
+        [
+            .. lode
+                .DistinctBy(l => l.LodId)
+                .OrderBy(l => l.Nazev)
+                .Select(l => new KliceLodiDto(
+                    l.LodId, l.Nazev, l.CisloPlachty,
+                    [.. klice.Where(k => k.LodId == l.LodId).Select(k => k.Dto)])),
+        ];
+    }
+
+    /// <summary>
+    /// Klíč, na který pořadatel té regaty dosáhne — tedy klíč lodi, která ji
+    /// <b>jede</b>. Vrací <c>null</c> jinak, aby role na jedné regatě
+    /// neotvírala cizí lodě.
+    /// </summary>
+    public async Task<KlicLodi?> NaRegateAsync(int zavodId, int klicId, CancellationToken ct)
+    {
+        var klic = await db.Klice.FirstOrDefaultAsync(k => k.Id == klicId, ct);
+        if (klic is null) return null;
+
+        var jede = await db.Ucasti.AnyAsync(
+            u => u.ZavodId == zavodId && NaZavode.Contains(u.Stav)
+                 && u.Prihlaska!.LodId == klic.LodId, ct);
+
+        return jede ? klic : null;
     }
 
     /// <summary>Trvalé odebrání. Klíč zaniká a nedá se oživit.</summary>

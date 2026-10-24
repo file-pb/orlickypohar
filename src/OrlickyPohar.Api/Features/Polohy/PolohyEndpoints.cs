@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Identita;
+using OrlickyPohar.Api.Features.Klice;
 using OrlickyPohar.Api.Features.Sprava;
 
 namespace OrlickyPohar.Api.Features.Polohy;
@@ -30,6 +31,22 @@ public static class PolohyEndpoints
                 + "pak `Nedostupna`. Snímek se drží v cache pět sekund, takže počet "
                 + "diváků nerozhoduje o počtu dotazů do databáze.");
 
+        // Posádka na vodě. Prokazuje se klíčem k lodi, ne účtem — telefon
+        // žádný nemá —, a vidí to, co rozhodčí povolil přepínačem *co vidí
+        // posádky*. Zase vlastní cesta: tři různí diváci, tři různá
+        // rozhodnutí, a mísit je do jednoho handleru by znamenalo rozhodovat
+        // o nich uvnitř.
+        app.MapGet("/polohy", ProPosadkuAsync)
+            .WithTags("Polohy")
+            .Produces<PohledPosadky>()
+            .Produces(StatusCodes.Status401Unauthorized)
+            .WithSummary("Co vidí posádka na palubě")
+            .WithDescription(
+                "Prokazuje se klíčem k lodi. Řídí se přepínačem *co vidí posádky*, "
+                + "který zamyká rozprava: nic, jen sebe, nebo i ostatní — výchozí je "
+                + "**jen sebe**. Mimo běžící okno regaty se nevydává nic. "
+                + "`vidi: false` znamená „teď ne\"; proč, se neříká.");
+
         // Veřejný výdej. Vlastní cesta, ne parametr té výš: kdo smí co
         // vidět, se nemá rozhodovat uvnitř jednoho handleru.
         app.MapGet("/serie/{serie}/zavody/{zavod}/polohy", VerejneAsync)
@@ -44,6 +61,14 @@ public static class PolohyEndpoints
                 + "vůbec — to je údaj pro závodní výbor. **Nezveřejněná regata ani "
                 + "nezveřejněný ročník se nevydají vůbec**, stejně jako u ostatních "
                 + "veřejných cest: veřejně neexistují.");
+    }
+
+    private static async Task<IResult> ProPosadkuAsync(
+        HttpContext ctx, KliceSprava klice, PolohySprava sprava, CancellationToken ct)
+    {
+        if (await klice.ZHlavickyAsync(ctx, ct) is not { } klic) return Results.Unauthorized();
+
+        return Results.Ok(await sprava.ProPosadkuAsync(klic.LodId, ct));
     }
 
     private static async Task<IResult> SnimekAsync(

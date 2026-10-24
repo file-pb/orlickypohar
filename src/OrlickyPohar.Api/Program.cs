@@ -240,6 +240,7 @@ try
         app.MapPolohy();
         app.MapNastaveniTrackeru();
         app.MapKlice();
+        app.MapKliceRegaty();
         app.MapTrat();
         app.MapSpravaPoradatelu();
         app.MapNaklady();

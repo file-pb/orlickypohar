@@ -5,6 +5,8 @@ using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Klice;
 using OrlickyPohar.Api.Features.Lode;
+using OrlickyPohar.Api.Features.Serial;
+using OrlickyPohar.Api.Features.Zavody;
 
 namespace OrlickyPohar.Api.Tests;
 
@@ -50,6 +52,101 @@ public class KliceTests(PostgresFixture fixture)
         });
         await db.SaveChangesAsync();
         return (u.Id, lod.Id);
+    }
+
+    /// <summary>Regata s jednou přihlášenou lodí. Víc k pořadatelovu výpisu netřeba.</summary>
+    private static async Task<(int ZavodId, int LodId)> RegataSLodiAsync(
+        AppDbContext db, int lodId)
+    {
+        var znacka = Guid.NewGuid().ToString("N")[..8];
+        var serie = new Serie { Slug = $"klice-{znacka}", Nazev = "Klíčová série", Rok = 2027 };
+        db.Serie.Add(serie);
+        await db.SaveChangesAsync();
+
+        var kategorie = new Kategorie { SerieId = serie.Id, Nazev = "Kajutové" };
+        db.Kategorie.Add(kategorie);
+        var zavod = new Zavod
+        {
+            SerieId = serie.Id,
+            Slug = $"regata-{znacka}",
+            Nazev = "Klíčová regata",
+            Datum = new DateOnly(2027, 5, 15),
+        };
+        db.Zavody.Add(zavod);
+        await db.SaveChangesAsync();
+
+        db.Prihlasky.Add(new Prihlaska
+        {
+            SerieId = serie.Id, LodId = lodId, KategorieId = kategorie.Id,
+        });
+        await db.SaveChangesAsync();
+
+        var prihlaska = db.Prihlasky.Single(p => p.SerieId == serie.Id && p.LodId == lodId);
+        db.Ucasti.Add(new Ucast { ZavodId = zavod.Id, PrihlaskaId = prihlaska.Id });
+        await db.SaveChangesAsync();
+
+        return (zavod.Id, lodId);
+    }
+
+    /// <summary>
+    /// <b>Pořadatel vidí celé pole, ne jen lodě s klíčem.</b> Otázka před
+    /// procedurou zní „má celé pole zapnutý tracker?", a na tu loď chybějící
+    /// ve výpisu neodpovídá — stejný důvod, proč celé pole vrací i snímek
+    /// poloh.
+    /// </summary>
+    [Fact]
+    public async Task Poradatel_vidi_klice_celeho_pole()
+    {
+        var (db, klice) = Sluzby();
+        var (kapitan, lod) = await LodSKapitanemAsync(db);
+        var (zavod, _) = await RegataSLodiAsync(db, lod);
+
+        // Druhá loď na téže regatě, bez jediného klíče.
+        var (_, bezKlice) = await LodSKapitanemAsync(db);
+        var prihlaska = new Prihlaska
+        {
+            SerieId = db.Zavody.Single(z => z.Id == zavod).SerieId,
+            LodId = bezKlice,
+            KategorieId = db.Kategorie.First(k => k.SerieId == db.Zavody.Single(z => z.Id == zavod).SerieId).Id,
+        };
+        db.Prihlasky.Add(prihlaska);
+        await db.SaveChangesAsync();
+        db.Ucasti.Add(new Ucast { ZavodId = zavod, PrihlaskaId = prihlaska.Id });
+        await db.SaveChangesAsync();
+
+        var pozvanka = await klice.PozviAsync(lod, kapitan, "Tonda", default);
+        await klice.UplatniAsync(pozvanka.Kod, default);
+
+        var pole = await klice.ProRegatuAsync(zavod, default);
+
+        Assert.Equal(2, pole.Count);
+        Assert.Single(pole.Single(l => l.LodId == lod).Klice);
+        Assert.Empty(pole.Single(l => l.LodId == bezKlice).Klice);
+    }
+
+    /// <summary>
+    /// <b>Role na jedné regatě neotvírá cizí lodě.</b> Pořadatel sáhne jen
+    /// na klíč lodi, která tu regatu doopravdy jede — jinak by pověření
+    /// k jedné zastávce znamenalo přístup k telefonům celého seriálu.
+    /// </summary>
+    [Fact]
+    public async Task Na_cizi_lod_poradatel_nedosahne()
+    {
+        var (db, klice) = Sluzby();
+        var (kapitan, lod) = await LodSKapitanemAsync(db);
+        var (zavod, _) = await RegataSLodiAsync(db, lod);
+
+        var (cizikapitan, ciziLod) = await LodSKapitanemAsync(db);
+        var ciziPozvanka = await klice.PozviAsync(ciziLod, cizikapitan, "Cizí", default);
+        await klice.UplatniAsync(ciziPozvanka.Kod, default);
+        var ciziKlic = (await klice.SeznamAsync(ciziLod, default)).Single().Id;
+
+        var pozvanka = await klice.PozviAsync(lod, kapitan, "Tonda", default);
+        await klice.UplatniAsync(pozvanka.Kod, default);
+        var mujKlic = (await klice.SeznamAsync(lod, default)).Single().Id;
+
+        Assert.NotNull(await klice.NaRegateAsync(zavod, mujKlic, default));
+        Assert.Null(await klice.NaRegateAsync(zavod, ciziKlic, default));
     }
 
     /// <summary>Požadavek s klíčem v hlavičce — tak, jak ho posílá telefon.</summary>
