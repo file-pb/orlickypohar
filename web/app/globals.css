@@ -2901,12 +2901,15 @@ body:has(.tabule) { overflow: hidden; }
      potřebuje 534, takže ho `overflow: hidden` uřízl.
      Strop je kvůli jménům, co by přetekla i celou obrazovku. */
   width: max-content; max-width: 86vw;
-  /* Nahoře víc místa na barevný pruh, který kartu drží pohromadě.
-     Od 24. 10. 2026 ještě o kus víc: nadpisek seděl pruhu na krku
-     (Filip: *„cílový modal nemá odsazení"*). */
-  padding: 3.4vw 5vw 2.8vw; border-radius: 1.2vw;
-  background: var(--papir); border: 2px solid var(--voda);
-  box-shadow: 0 1.5vw 5vw rgb(0 0 0 / 0.6), 0 0 0 0.6vw rgb(255 255 255 / 0.04);
+  /* <b>Stejný tvar jako hláška o souboji</b> (Filip, 24. 10. 2026):
+     kompaktní tmavá karta, drobný nadpisek nahoře a jméno barevně. Velká
+     bílá cedule přes půl obrazovky překryla mapu zrovna ve chvíli, kdy se
+     na ní něco dělo. */
+  padding: 1vw 1.8vw 1.1vw; border-radius: 0.8vw;
+  background: color-mix(in srgb, #14171a 88%, transparent);
+  backdrop-filter: blur(8px);
+  border: 0;
+  box-shadow: 0 0.6vw 2.5vw rgb(0 0 0 / 0.55);
   text-align: center; pointer-events: none; overflow: hidden;
   /* Dlouhé jméno se zalomí, místo aby se uřízlo — přečíst „ČERVENÉ CA"
      je horší než mít kartu o řádek vyšší.
@@ -2918,10 +2921,9 @@ body:has(.tabule) { overflow: hidden; }
   overflow-wrap: break-word;
   animation: tabule-alert 4.5s ease-in-out forwards;
 }
-/* Pruh v barvě druhu přes celou šířku karty. Dědí barvu z rámečku,
-   takže nová barva stačí nastavit na jednom místě. */
+/* Tenký proužek v barvě druhu u horní hrany — tolik z rámečku zbylo. */
 .tabule-alert::before {
-  content: ""; position: absolute; inset: 0 0 auto; height: 0.5vw;
+  content: ""; position: absolute; inset: 0 0 auto; height: 0.22vw;
   background: currentColor; color: inherit;
   border-color: inherit; background-color: currentColor;
 }
@@ -2930,16 +2932,13 @@ body:has(.tabule) { overflow: hidden; }
 .tabule-alert.zavod { color: var(--stav-vypsany); }
 .tabule-alert.ceka, .tabule-alert.zrusena { color: var(--stav-zruseny); }
 .tabule-alert .druh {
-  font-style: normal; font-size: 1vw; letter-spacing: 0.18em;
-  text-transform: uppercase; color: currentColor; font-weight: 700;
-  margin-bottom: 0.3vw;
+  font-style: normal; font-size: 0.85vw; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--tlumeny); font-weight: 700;
+  margin-bottom: 0.15vw;
 }
-.tabule-alert b { font-size: 4.5vw; line-height: 1; color: var(--text); }
-.tabule-alert span {
-  font-size: 1.5vw; color: var(--tlumeny);
-  border: 1px solid var(--linka, #2a2a2a); border-radius: 2vw;
-  padding: 0.15vw 1vw;
-}
+/* Jméno nese barvu druhu — to je ta část, kterou si má divák odnést. */
+.tabule-alert b { font-size: 2.6vw; line-height: 1.05; color: currentColor; }
+.tabule-alert span { font-size: 1vw; color: var(--tlumeny); }
 /* Dojezd je ta nejsilnější zpráva, proto vodní modrá; konec rozjížďky
    a závodu zeleně jako „vypsáno" jinde na webu. */
 .tabule-alert.dojezd { border-color: var(--voda); }
@@ -3120,11 +3119,11 @@ body:has(.tabule) { overflow: hidden; }
 /* Specificita schválně vyšší: pravidlo pro náčrt (`.nacrt-na-tv`) stojí
    v souboru níž a jinak by ho přebilo. */
 .tabule-mapa .nacrt-na-tv .nacrt-swap {
-  /* Pod pásek (3 vw) i pruh s názvem (zhruba 11 vw). Změřeno: hlavička
-     končí na 227 px při šířce 1600. */
+  /* Pod pruhem a vpravo, hned vedle žebříčku (Filip, 24. 10. 2026):
+     ten drží pravou čtvrtinu, takže hláška končí před ním. */
   top: 5.8vw;
-  left: 1.2vw;
-  right: auto;
+  left: auto;
+  right: 25.5vw;
 }
 
 /* <b>Pomyslné pořadí je ten panel z náčrtu</b> (Filip, 24. 10. 2026:
@@ -4167,3 +4166,33 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 @media (prefers-reduced-motion: reduce) {
   .vlajka-vysek { animation: none; }
 }
+
+/* Pořadí po třídách dole: tři běžící pásy přes celou šířku, co třída
+   to řádek — tentýž tvar jako `PoradiRadky` na úvodní stránce (Filip,
+   24. 10. 2026). */
+.tabule .tabule-tridy {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  z-index: 2;
+  display: grid; gap: 0.25vw;
+  padding: 0.4vw 0.8vw;
+  background: color-mix(in srgb, var(--pozadi) 78%, transparent);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--linka);
+}
+
+.tabule-tridy .poradi-radek {
+  display: grid; grid-template-columns: 9vw minmax(0, 1fr);
+  align-items: center; gap: 0.8vw;
+}
+
+.tabule-tridy .poradi-radek-trida {
+  display: flex; align-items: center; gap: 0.4vw;
+  font-size: 1vw; font-weight: 700;
+}
+
+.tabule-tridy .poradi-radek-trida .znak-tridy { height: 1.5vw; width: auto; }
+.tabule-tridy .karusel-pas { display: flex; gap: 1.6vw; }
+.tabule-tridy .karusel-pas li { display: flex; gap: 0.35vw; align-items: baseline; white-space: nowrap; }
+.tabule-tridy .poradi-cislo { color: var(--tlumeny); font-size: 0.95vw; }
+.tabule-tridy .bok-lod { font-size: 1.1vw; font-weight: 600; }

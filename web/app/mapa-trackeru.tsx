@@ -315,6 +315,7 @@ export function MapaTrackeru({
   spojnice,
   tabule,
   zebricek,
+  onPoradi,
   onUdalost,
 }: {
   znacky: Znacka[];
@@ -349,6 +350,11 @@ export function MapaTrackeru({
    * pro dojezdy ze zápisu. Tudy se k ní dostanou i události z trackeru:
    * prohození v čele a loď, která právě dojela.
    */
+  /**
+   * Pořadí, jak ho mapa spočítala. Tabule z něj staví karusel kategorií
+   * dole — počítat postup podruhé by znamenalo dvě pravdy o tomtéž.
+   */
+  onPoradi?: (radky: { id: number; nazev: string; kategorie: Lod["kategorie"] }[]) => void;
   onUdalost?: (u: {
     klic: string;
     druh: "dojezd" | "souboj";
@@ -751,22 +757,10 @@ export function MapaTrackeru({
   }, [tabule, zaber, Math.floor(cas / 10), SIRKA, VYSKA]);
 
   /**
-   * Taby se na tabuli střídají samy — a <b>když se někde něco stane,
-   * přepne se na to</b> (Filip, 24. 10. 2026). Prohození uvnitř jedné
-   * třídy tedy přepne na ni; souboj napříč třídami patří celému poli,
-   * protože v žádné jedné by nedával smysl.
+   * <b>Na tabuli se třídy nestřídají</b> (Filip, 24. 10. 2026): vpravo
+   * je celé pole a kategorie mají vlastní karusel dole. Střídání tříd
+   * v jednom panelu znamenalo, že divák čekal, až přijde ta jeho.
    */
-  useEffect(() => {
-    if (!tabule) return;
-    const kolo: (Lod["kategorie"] | null)[] = [null, ...KATEGORIE];
-    const tik = setTimeout(() => {
-      setFiltr((f) => kolo[(kolo.indexOf(f ?? null) + 1) % kolo.length]);
-    }, 30_000);
-    return () => clearTimeout(tik);
-    // Závisí i na `filtr`, takže se odpočet po každém přepnutí — i tom
-    // vyvolaném soubojem — rozbíhá znovu. Jinak by tab vydržel chvíli
-    // a hned zmizel.
-  }, [tabule, filtr]);
 
 
   /** Co tabule ukazuje v zvoleném čase. */
@@ -831,6 +825,24 @@ export function MapaTrackeru({
       onUdalost({ klic, druh: "dojezd", titulek: v.lod.nazev, detail: "v cíli" });
     }
   }, [cas, prohozeni, vStavu, lode, onUdalost]);
+
+  /**
+   * Pořadí ven. <b>Jen při skutečné změně</b> — bez porovnání by každý
+   * tik času překreslil karusel dole a ten by nikdy nedojel panel.
+   */
+  const posledniPoradi = useRef("");
+  useEffect(() => {
+    if (!onPoradi) return;
+    const radky = poradi.map((v) => ({
+      id: v.lod.id,
+      nazev: v.lod.nazev,
+      kategorie: v.lod.kategorie,
+    }));
+    const otisk = radky.map((r) => r.id).join(",");
+    if (otisk === posledniPoradi.current) return;
+    posledniPoradi.current = otisk;
+    onPoradi(radky);
+  }, [poradi, onPoradi]);
 
   /** Poslední prohození, které ještě hoří — tabule o něm řekne slovy. */
   const posledniSwap = [...prohozeni]
@@ -998,17 +1010,6 @@ export function MapaTrackeru({
     );
     return () => clearTimeout(casovac);
   }, [posledniSwap?.cas, prohozeni]);
-
-  /**
-   * Souboj přepne tab na svou třídu. Stojí až tady, protože potřebuje
-   * `posledniSwap`.
-   */
-  useEffect(() => {
-    if (!tabule || !posledniSwap) return;
-    const a = lode[posledniSwap.nahoru].kategorie;
-    const b = lode[posledniSwap.dolu].kategorie;
-    setFiltr(a === b ? a : null);
-  }, [tabule, posledniSwap?.cas, lode]);
 
   const vybranaLod =
     vStavu.find((v) => v.lod.id === vybrana && (!filtr || v.lod.kategorie === filtr)) ?? null;
