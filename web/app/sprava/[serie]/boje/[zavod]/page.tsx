@@ -357,6 +357,21 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
             </p>
           )}
 
+          {/* <b>Lodě jsou na vlastní obrazovce, ne tady</b> (24. 10. 2026).
+              Plán chtěl vrstvu do téhle mapky, jenže ta se kreslí na
+              serveru a nedá se v ní posouvat ani rozkliknout loď — a to
+              rozhodčí potřebuje. Živá mapa je proto vedle, jako samostatná
+              obrazovka s toutéž tratí; sloučit se dají, až bude mapka
+              interaktivní. */}
+          {prvky.length >= 2 && (
+            <p className="poznamka">
+              <Link href={`/sprava/${serie}/tracker/${zavod}`}>
+                Živé polohy lodí na mapě
+              </Link>{" "}
+              — kdo se hlásí, jak je to staré a kde zrovna je.
+            </p>
+          )}
+
           {trat.length > 0 && (
             <p className="poznamka">
               {/* Zoomovat se dá ve vlastním nástroji, ne v naší mapce: víc bodů
