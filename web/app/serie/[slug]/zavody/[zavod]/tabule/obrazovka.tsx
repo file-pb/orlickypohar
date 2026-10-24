@@ -136,6 +136,12 @@ export function Obrazovka({
             {stari < 60 ? `data před ${stari} s` : `data stará ${Math.round(stari / 60)} min`}
           </p>
         </div>
+        {/* Atributy jedou v témž pruhu jako název (Filip, 24. 10. 2026:
+            *„toto všechno dej nějak do jednoho pruhu nahoře, aby nám to
+            nebralo tolik míst"*). Samostatný pás dlaždic pod hlavičkou
+            ukrajoval desetinu obrazovky na pět čísel, která se vejdou na
+            řádek. */}
+        <Atributy snimek={snimek} />
       </header>
 
       {/* <b>Nepodepsaná čísla se musí přiznat</b> (Filip, 9. 10. 2026:
@@ -157,8 +163,6 @@ export function Obrazovka({
           ukazuje jen to, co je venku — není to cesta okolo.
         </p>
       )}
-
-      <Atributy snimek={snimek} />
 
       <div className="sloupce">
         {/* Rozjížďky a lodě na startu se střídají v jednom sloupci

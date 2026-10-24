@@ -2732,9 +2732,20 @@ body:has(.tabule) > .nahoru { display: none; }
    přes hospodu celý den, takže je to ta nejlepší plocha, jakou pro ně
    pohár má — a zároveň to zaplní pruh, který byl předtím prázdný.
    Vyšší než na webu, ať je logo čitelné od vedlejšího stolu. */
-body:has(.tabule) { --paticka: 7vw; }
+/* Partneři na tabuli jsou proužek, ne pás špalků (Filip, 24. 10. 2026).
+   Sedm procent výšky obrazovky na loga je moc: patří tam, ale jsou to
+   kulisy, ne sdělení — a každý jejich centimetr jde z mapy. */
+body:has(.tabule) { --paticka: 3.6vw; }
 body:has(.tabule) > .partneri { border-top-color: var(--linka); }
-body:has(.tabule) > .partneri img { max-height: 4.4vw; }
+body:has(.tabule) > .partneri img { max-height: 2.2vw; }
+body:has(.tabule) > .partneri .partneri-pas a,
+body:has(.tabule) > .partneri .partneri-pas span {
+  height: calc(var(--paticka) - 0.7vw);
+  width: calc((var(--paticka) - 0.7vw) * 3);
+  padding: 0.2vw 0.45vw;
+  border-radius: 0.4vw;
+}
+body:has(.tabule) > .partneri .partneri-pas li { margin-right: 0.6vw; }
 /* Obal webu má kolem obsahu vzduch; panel si ho řídí sám. */
 body:has(.tabule) > .obal { padding: 0; max-width: none; }
 /* Žádné rolování: co se nevejde, se má střídat samo, ne čekat na palec,
@@ -2768,12 +2779,16 @@ body:has(.tabule) { overflow: hidden; }
 }
 /* Vrch tabule: logo vlevo, název uprostřed, stav vpravo (Filip, 15. 10.
    2026). Postranní sloupce mají stejnou šířku, takže název sedí na středu
-   obrazovky, ne na středu zbylého místa. */
+   obrazovky, ne na středu zbylého místa.
+
+   Od 24. 10. 2026 je v témž pruhu i řádek atributů, pod názvem — pás
+   dlaždic pod hlavičkou bral desetinu obrazovky na pět čísel. */
 .tabule .vrch {
   display: grid; grid-template-columns: 14vw 1fr 14vw; align-items: center;
-  gap: 1vw; margin-bottom: 1vw;
+  gap: 0.2vw 1vw; margin-bottom: 0.6vw;
 }
 .tabule .vrch h1 { margin: 0; min-width: 0; }
+.tabule .vrch .atributy { grid-column: 2; justify-content: center; }
 .tabule .vrch .stav { display: flex; flex-direction: column; align-items: flex-end; gap: 0.3vw; }
 .tabule .vrch .stav p { margin: 0; }
 /* Logo v rohu: jediná klikatelná věc. Je malé schválně — má být po ruce,
@@ -2948,17 +2963,22 @@ body:has(.tabule) { overflow: hidden; }
 .tabule .stari.zastarale { color: var(--stav-zruseny); }
 /* Pás atributů: velká čísla, malé popisky. Vejde se, co se vejde —
    dlaždice se zalomí, protože počet atributů závisí na závodě. */
+/* Atributy jsou řádek, ne pás dlaždic: hodnota a popis vedle sebe,
+   položky oddělené tečkou. Na pět čísel nepotřebujeme pět karet. */
 .tabule .atributy {
-  display: flex; flex-wrap: wrap; gap: 0.8vw; margin-bottom: 1.2vw;
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 0.2vw 1.1vw; margin: 0;
 }
 .tabule .dlazdice {
-  flex: 1 1 8vw; min-width: 8vw;
-  background: var(--panel, #1a1a1a); border-radius: 0.6vw;
-  padding: 0.7vw 0.9vw; display: flex; flex-direction: column; gap: 0.1vw;
+  display: flex; align-items: baseline; gap: 0.3vw;
+  flex: 0 0 auto; min-width: 0; background: none; padding: 0;
 }
-.tabule .dlazdice b { font-size: 2.1vw; line-height: 1.1; font-variant-numeric: tabular-nums; }
-.tabule .dlazdice span { font-size: 0.95vw; color: var(--tlumeny); }
-.tabule .dlazdice i { font-size: 0.85vw; color: var(--tlumeny); font-style: normal; opacity: 0.75; }
+.tabule .dlazdice + .dlazdice::before {
+  content: "·"; color: var(--tlumeny); opacity: 0.5; margin-right: 0.8vw;
+}
+.tabule .dlazdice b { font-size: 1.25vw; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tabule .dlazdice span { font-size: 0.9vw; color: var(--tlumeny); }
+.tabule .dlazdice i { font-size: 0.9vw; color: var(--tlumeny); font-style: normal; opacity: 0.7; }
 
 /* Karusel tříd. Tečky jen ukazují, kolik panelů se střídá — klepnout na
    ně nejde, na televizi není čím. */
@@ -3951,24 +3971,3 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .nacrt-na-tv .nacrt-souboj-pozice { font-size: 1rem; }
 .nacrt-na-tv .nacrt-zoom { display: none; }
 
-/* Panely stávající tabule nad mapou — ukázka, jak by do ní tracker
-   zapadl: mapa je pozadí, panely leží na ní. */
-.nacrt-panely-tv {
-  position: absolute;
-  left: 1.5rem;
-  bottom: 2.2rem;
-  z-index: 2;
-  width: clamp(280px, 26vw, 460px);
-  padding: 0.8rem 1rem;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--papir) 86%, transparent);
-  backdrop-filter: blur(6px);
-  box-shadow: 0 4px 20px rgb(0 0 0 / 35%);
-}
-
-.nacrt-panely-tv .karusel h2 { margin: 0 0 0.4rem; font-size: 1.3rem; }
-.nacrt-panely-tv .karusel h2 .znak-tridy { height: 1.5rem; width: auto; }
-.nacrt-panely-tv ol.poradi-tabule { list-style: none; margin: 0; padding: 0; font-size: 1.2rem; }
-.nacrt-panely-tv ol.poradi-tabule li { padding: 0.1rem 0; }
-.nacrt-panely-tv ul.stavy { list-style: none; margin: 0; padding: 0; font-size: 1.2rem; }
-.nacrt-panely-tv ul.stavy li { display: flex; gap: 0.5rem; align-items: center; padding: 0.1rem 0; }

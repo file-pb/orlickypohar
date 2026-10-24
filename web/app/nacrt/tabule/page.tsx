@@ -3,7 +3,6 @@ import { cestaProMereni, mrizkaVody, spojniceTrati, type Poloha, type UzelTrati 
 import { Z_NEJMENE, Z_NEJVIC } from "@/lib/mapa";
 import { pole } from "../mapa/plavba";
 import { NacrtMapy } from "../mapa/mapa";
-import { PanelyTabule } from "./panely";
 
 /**
  * O kolik se měřicí trasa drží dál od břehu.
@@ -84,7 +83,6 @@ export default function Stranka() {
         náhled tabule · falešná data · čas běží 2× rychleji než na ostro
       </p>
       <NacrtMapy znacky={znacky} lode={lode} trasa={trasa} spojnice={spojnice} tabule />
-      <PanelyTabule lode={lode} />
     </main>
   );
 }
