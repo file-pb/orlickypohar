@@ -19,19 +19,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { DLAZDICE, Z_NEJMENE, Z_NEJVIC, doPixelu } from "@/lib/mapa";
 import { ZnakBoje } from "@/app/znak-boje";
+import { CELKEM, ZnakTridy } from "@/app/tridy";
 import type { Poloha } from "@/lib/voda";
 import type { Lod, Znacka } from "./plavba";
-
-/**
- * Značka třídy. <b>Leží v `public/tridy/` od září</b> a dosud ji nic
- * nepoužívalo; v žebříčku nahrazuje text „Race / Nad7m / Pod7m", protože
- * loď se pozná podle siluety rychleji než podle slova.
- */
-const ZNACKA_TRIDY: Record<Lod["kategorie"], string> = {
-  Race: "/tridy/race.svg",
-  Nad7m: "/tridy/nad7m.svg",
-  Pod7m: "/tridy/pod7m.svg",
-};
 
 const KATEGORIE: Lod["kategorie"][] = ["Race", "Nad7m", "Pod7m"];
 
@@ -985,12 +975,11 @@ export function NacrtMapy({
             className={filtr === null ? "vybrany" : undefined}
             onClick={() => setFiltr(null)}
           >
-            {/* „Vše" má svou značku taky: všechny tři siluety vedle sebe. */}
-            <span className="nacrt-vse-znacky">
-              {KATEGORIE.map((k) => (
-                <img key={k} src={ZNACKA_TRIDY[k]} alt="" />
-              ))}
-            </span>
+            {/*
+              Celé pole není třída, a má proto starou značku poháru —
+              stejně jako v tabech výsledků (`CELKEM` v `app/tridy.tsx`).
+            */}
+            <ZnakTridy nazev={CELKEM} />
             vše
           </button>
           {KATEGORIE.map((k) => (
@@ -1002,7 +991,7 @@ export function NacrtMapy({
               className={filtr === k ? "vybrany" : undefined}
               onClick={() => setFiltr(filtr === k ? null : k)}
             >
-              <img src={ZNACKA_TRIDY[k]} alt="" />
+              <ZnakTridy nazev={k} />
               {k}
             </button>
           ))}
@@ -1079,12 +1068,14 @@ export function NacrtMapy({
                   </span>
                 </span>
                 <span className="nacrt-nazev">{v.lod.nazev}</span>
-                <img
-                  className="nacrt-trida"
-                  src={ZNACKA_TRIDY[v.lod.kategorie]}
-                  alt={v.lod.kategorie}
-                  title={v.lod.kategorie}
-                />
+                {/*
+                  Znak třídy z `app/tridy.tsx` — tentýž, jaký nosí výsledky
+                  a průběžné pořadí. Kreslí se inline, takže mu barvy dává
+                  CSS podle režimu; `<img>` by v tmavém svítil.
+                */}
+                <span className="nacrt-trida" title={v.lod.kategorie}>
+                  <ZnakTridy nazev={v.lod.kategorie} />
+                </span>
                 <span className={`nacrt-stav nacrt-${v.stav}`}>
                   {v.stariS === null
                     ? "nehlásí se"
