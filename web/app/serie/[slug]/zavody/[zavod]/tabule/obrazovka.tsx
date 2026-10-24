@@ -7,6 +7,7 @@ import { Znak } from "@/app/logo";
 import { NazevZavodu } from "@/app/tabule-nazev";
 import { Atributy } from "./atributy";
 import { Karusel, type Panel } from "./karusel";
+import { PoradiTrid } from "./poradi-tridy";
 import { StavovyProuzek } from "./semafor";
 import { MapaTrackeru } from "@/app/mapa-trackeru";
 import { pole } from "@/app/nacrt/mapa/plavba";
@@ -134,6 +135,10 @@ export function Obrazovka({
    * dojetí nebo swap pořadí"*). Duplicitu hlídá klíč, stejně jako
    * u dojezdů ze zápisu.
    */
+  const [poradiLodi, setPoradiLodi] = useState<
+    { id: number; nazev: string; kategorie: string }[]
+  >([]);
+
   const zarad = useCallback((u: Udalost) => {
     setFronta((f) => (f.some((x) => x.klic === u.klic) ? f : [...f, u]));
   }, []);
@@ -209,8 +214,15 @@ export function Obrazovka({
           skutečné by byla lež, ne ukázka; až přijdou první skutečné,
           tenhle vstup zmizí. */}
       <div className="tabule-mapa" aria-hidden="true">
-        <MapaTrackeru znacky={UKAZKA.znacky} lode={UKAZKA.lode} tabule onUdalost={zarad} />
+        <MapaTrackeru
+          znacky={UKAZKA.znacky}
+          lode={UKAZKA.lode}
+          tabule
+          onUdalost={zarad}
+          onPoradi={setPoradiLodi}
+        />
       </div>
+      <PoradiTrid radky={poradiLodi} />
 
       <div className="sloupce">
         {/* Zbývá jediný karusel: pořadí po třídách. Panel se stavy
