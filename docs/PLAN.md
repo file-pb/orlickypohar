@@ -2949,6 +2949,23 @@ hranicí, přijde typicky až v šesté.
 podmínka. Měřit ji jde jen na telefonu **odpojeném od nabíječky**, jinak
 měření neřekne nic.
 
+**Na dvacetičtyřhodinovku se stejně bude doporučovat powerbanka** (Filip,
+24. 10. 2026) — jeden telefon na lodi, zapojený. Žádná optimalizace
+nevyrobí z telefonu zařízení, co den a noc drží GPS ze svého. Tím se ale
+mění, co od měření chceme: ne *„vydrží to?"*, ale **kolik to bere za
+hodinu**, aby šlo posádce říct, jakou powerbanku si má vzít a kdy ji
+zapojit.
+
+Pro běžnou regatu — blok na vodě, šest až osm hodin — má úspora pořád
+smysl; tam jde o to, aby telefon dojel do večera použitelný.
+
+**A jeden omyl, kterého se musíme vyvarovat:** oprava vzorkování (*Na
+iOSu si vzorkování musíme hlídat sami*) **o spotřebě neříká nic**. Filtr
+je až při zápisu, takže iOS polohy posílá pořád stejně často a appka se
+budí stejně; ušetřilo se místo, data a práce s databází, ne baterie.
+Skutečný systémový šroub je `distanceInterval`, který dnes stojí na nule.
+Co udělá, se ale musí **změřit**, ne odhadnout.
+
 **Před opravou to vypadalo takhle: 75 % bodů přišlo do 1,5 sekundy od předchozího** — a to i
 v klidu, nejen za jízdy. Oprava z *Na iOSu si vzorkování musíme hlídat
 sami* na tom telefonu **ještě nebyla**: schéma stažené databáze nemá
