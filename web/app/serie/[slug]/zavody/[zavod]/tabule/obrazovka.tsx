@@ -289,12 +289,13 @@ export function Obrazovka({
           lode={zive.length > 0 ? zive : UKAZKA.lode}
           tabule
           zive={zive.length > 0}
+          ukazka={zive.length === 0}
           odsazeni={odsazeni}
           onUdalost={zarad}
           onPoradi={setPoradiLodi}
         />
       </div>
-      <PoradiTrid radky={poradiLodi} ref={tridy} />
+      <PoradiTrid radky={poradiLodi} ukazka={zive.length === 0} ref={tridy} />
 
       <div className="sloupce">
         {/* Zbývá jediný karusel: pořadí po třídách. Panel se stavy

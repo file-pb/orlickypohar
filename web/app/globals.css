@@ -4239,6 +4239,25 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .nacrt-na-tv .nacrt-zoom { display: none; }
 
 
+/**
+ * Štítek „ukázka" u pořadí. <b>Drobný, ale na místě, kam se divák dívá</b>
+ * (24. 10. 2026): jména v žebříčku jsou ze startovní listiny, takže bez
+ * něj vypadá vymyšlené pořadí jako výsledek. Proužek nahoře to říká taky,
+ * jenže ten je od pořadí přes celou obrazovku daleko.
+ */
+.nacrt-ukazka {
+  margin-left: 0.4em;
+  padding: 0 0.4em;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.72em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: var(--stav-zruseny);
+  white-space: nowrap;
+}
+
 /* Loď v cíli to má napsané u sebe v pořadí, místo widgetu vedle. */
 .nacrt-stitek-cil {
   justify-self: end;

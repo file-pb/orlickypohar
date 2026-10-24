@@ -332,6 +332,7 @@ export function MapaTrackeru({
   spojnice,
   tabule,
   zive,
+  ukazka,
   odsazeni,
   zebricek,
   onPoradi,
@@ -349,6 +350,13 @@ export function MapaTrackeru({
    * k tomu je záznam.
    */
   zive?: boolean;
+  /**
+   * Jedou po trati ukázkové plavby, ne skutečné lodě. <b>Musí to být
+   * vidět u pořadí</b>, ne jen v proužku nahoře: jména jsou ze startovní
+   * listiny, takže seznam vypadá jako výsledek, dokud u něj nestojí, že
+   * je vymyšlený.
+   */
+  ukazka?: boolean;
   /**
    * Rozložení pro televizi v hospodě. <b>Mizí celé ovládání</b> — na
    * tabuli není kam klepnout —, čas běží sám a třídy se střídají místo
@@ -1570,6 +1578,7 @@ export function MapaTrackeru({
         <h2>
           {tabule && <ZnakTridy nazev={filtr ?? CELKEM} />}
           {tabule ? `${filtr ?? "Celé pole"} — pořadí` : "Pomyslné pořadí"}
+          {ukazka && <span className="nacrt-ukazka">ukázka</span>}
         </h2>
         {tabule ? null : (
         <div className="nacrt-taby" role="tablist" aria-label="třída lodí">

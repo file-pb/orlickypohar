@@ -2759,6 +2759,12 @@ na náhradním výřezu 1600×900, který se do plochy jen doškáloval
 (naměřeno 1447×754). Měří se proto hned při připojení, ne až na první
 změnu.
 
+**Ukázka to říká i u pořadí.** Jména v žebříčku a v pásech tříd jsou ze
+startovní listiny, takže vymyšlené pořadí vypadá z hospody jako výsledek;
+proužek nahoře je od něj přes celou obrazovku daleko. Štítek *ukázka*
+proto stojí přímo u nadpisu pořadí a u každého pásu — a zmizí, jakmile
+začnou chodit skutečné polohy.
+
 **A tracker dostal šířku.** Obsahový sloupec je míra pro čtení textu;
 mapa, ve které rozhodčí hledá lodě, je ta výjimka — kolem ní zbývalo na
 ultrawide přes dva tisíce pixelů prázdna. Strop na 16 : 9 brání tomu, aby
