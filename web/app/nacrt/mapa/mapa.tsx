@@ -41,6 +41,33 @@ function barva(id: number) {
  */
 const DOZNIVANI = [1, 0.45, 0.22];
 
+/** Jak dlouho musí prohození vydržet, aby se uznalo. */
+const PRAH_PROHOZENI_S = 60;
+/**
+ * A o kolik musí nový vedoucí vést, v pixelech postupu po trase.
+ *
+ * <b>Čas sám nestačí.</b> Dvě lodě, které jedou bok po boku, se v pořadí
+ * přehazují o délku lodi a vydrží to klidně minutu — to není souboj, to je
+ * šum. Odstup je proti tomu robustní: filtruje podle toho, jestli se
+ * doopravdy něco stalo, ne jak dlouho se to nedělo.
+ */
+const ODSTUP_PROHOZENI_PX = 12;
+/** Jak dlouho pak dráhy obou lodí hoří, než vyhasnou. */
+const HORENI_S = 180;
+/**
+ * Do kolikáté pozice je prohození pro tabuli událost.
+ *
+ * <b>Změřeno na náčrtu:</b> bez tohohle filtru vyšlo za jednu rozjížďku
+ * 33 prohození a tabule hořela 93 % času — tedy pořád, takže nic.
+ * Filip to ostatně pojmenoval sám: *swapping for the **lead***. Souboj
+ * o devatenácté místo není souboj o nic.
+ */
+const SOUBOJ_DO_POZICE = 6;
+/** Jak dlouho drží focus dvojice, která se právě prohodila. */
+const FOCUS_SOUBOJE_S = 90;
+/** Jak dlouho se na tabuli drží jedna loď, když se nic neděje. */
+const KOLOTOC_S = 60;
+
 type Stav = "cerstva" | "starnouci" | "nedostupna";
 
 function stav(stariS: number | null): Stav {
@@ -135,7 +162,15 @@ export function NacrtMapy({
    * ještě chvíli slábne, takže je vidět souboj, ne jen jeho vítěz.
    */
   const [historie, setHistorie] = useState<number[]>([]);
-  const [jenPosledni, setJenPosledni] = useState(false);
+  const [rezim, setRezim] = useState<"vse" | "posledni" | "tabule">("vse");
+  /**
+   * Lodě, které si divák zaškrtl v žebříčku (Filip, 24. 10. 2026: *„co to
+   * udělat jako zaškrtávací body v ranku, tím si tam každý dá, co ho
+   * zajímá"*). <b>Je to volba, ne automatika</b> — a jakmile je někdo
+   * zaškrtnutý, přebíjí režim doznívání: ten je pro tabuli, kde zaškrtávat
+   * nemá kdo.
+   */
+  const [zaskrtnute, setZaskrtnute] = useState<Set<number>>(new Set());
   const [cas, setCas] = useState(600);
   const [jenTuhle, setJenTuhle] = useState(false);
 
@@ -176,8 +211,98 @@ export function NacrtMapy({
   const delkyNoh = uzly.slice(0, -1).map((a, i) => Math.hypot(uzly[i + 1].x - a.x, uzly[i + 1].y - a.y));
 
   /** Stav každé lodi k zvolenému času: poloha, stáří, postup, stopa. */
-  const vStavu = useMemo(() => {
+  /**
+   * Postup každé lodi ke každému jejímu hlášení. <b>Jeden průchod stopou</b>
+   * místo přepočtu při každém posunu času — a hlavně je z něj vidět, jak
+   * se pořadí vyvíjelo, což potřebuje režie tabule.
+   */
+  const postupy = useMemo(() => {
     return lode.map((lod) => {
+      let postup = 0;
+      return lod.body.map((b) => {
+        postup = postupPoTrase(uzly, delkyNoh, naPlatno(b.sirka, b.delka), postup);
+        return postup;
+      });
+    });
+  }, [lode, z, stred.sirka, stred.delka]);
+
+  /**
+   * Prohození dvojic v pomyslném pořadí, jak po sobě šla.
+   *
+   * <b>K čemu</b> (Filip, 24. 10. 2026): *„na tabuli, když bude swap lodí
+   * v pořadí, tak se takhle zobrazí jejich dráhy a pomalu budou
+   * vyhasínat."* Tabule se neovládá, takže si režii musí udělat sama —
+   * a prohození je ta událost, kterou má ukázat.
+   *
+   * <b>Jen prohození, která vydrží</b>: při křižování se pořadí mění
+   * každou chvíli a kdyby se zapalovalo každé zablikání, hořelo by pořád
+   * všechno. Dvojice se proto musí držet v novém pořadí po celé okno,
+   * než se prohození uzná (PLAN.md, *Pro režii potřebuje práh*).
+   */
+  const prohozeni = useMemo(() => {
+    const kroky: number[] = [];
+    for (let t = 0; t <= konec; t += 10) kroky.push(t);
+
+    /** Postup lodi v čase t, nebo null, dokud nemá hlášení. */
+    const postupV = (i: number, t: number) => {
+      const lod = lode[i];
+      let idx = -1;
+      for (let j = 0; j < lod.body.length; j++) {
+        if (lod.body[j].cas > t) break;
+        idx = j;
+      }
+      const vid = Math.min(idx, lod.dosloDo - 1);
+      return vid >= 0 ? postupy[i][vid] : null;
+    };
+
+    const vede = new Map<string, boolean>();
+    const ven: { cas: number; a: number; b: number; pozice: number }[] = [];
+    const cekani = new Map<string, { od: number; stav: boolean }>();
+
+    for (const t of kroky) {
+      for (let i = 0; i < lode.length; i++) {
+        for (let j = i + 1; j < lode.length; j++) {
+          const pa = postupV(i, t);
+          const pb = postupV(j, t);
+          if (pa === null || pb === null) continue;
+          const klic = `${i}-${j}`;
+          const teď = pa > pb;
+          const rozdil = Math.abs(pa - pb);
+          const drive = vede.get(klic);
+          if (drive === undefined) {
+            vede.set(klic, teď);
+            continue;
+          }
+          if (teď === drive) {
+            cekani.delete(klic);
+            continue;
+          }
+          // Pořadí se obrátilo — čeká se, jestli to vydrží a jestli se
+          // lodě opravdu rozjedou, ne jen míjejí o délku trupu.
+          const ceka = cekani.get(klic);
+          if (!ceka || ceka.stav !== teď) {
+            cekani.set(klic, { od: t, stav: teď });
+          } else if (t - ceka.od >= PRAH_PROHOZENI_S && rozdil >= ODSTUP_PROHOZENI_PX) {
+            // Na kolikáté pozici se to stalo — kolik lodí je před tou lepší
+            // z dvojice. Podle toho se pozná souboj o čelo od šumu vzadu.
+            const lepsi = Math.max(pa, pb);
+            let pred = 0;
+            for (let k = 0; k < lode.length; k++) {
+              const pk = postupV(k, t);
+              if (pk !== null && pk > lepsi) pred++;
+            }
+            ven.push({ cas: t, a: i, b: j, pozice: pred + 1 });
+            vede.set(klic, teď);
+            cekani.delete(klic);
+          }
+        }
+      }
+    }
+    return ven;
+  }, [lode, postupy, konec]);
+
+  const vStavu = useMemo(() => {
+    return lode.map((lod, i) => {
       const doIndexu = lod.body.findIndex((b) => b.cas > cas);
       const konecIndex = (doIndexu === -1 ? lod.body.length : doIndexu) - 1;
       // Server zná jen to, co došlo: min(čas, hranice doručení).
@@ -186,9 +311,8 @@ export function NacrtMapy({
       const stariS = posledni ? cas - posledni.cas : null;
 
       const stopa = videnoDo >= 0 ? lod.body.slice(0, videnoDo + 1) : [];
-      let postup = 0;
       const vPixelech = stopa.map((b) => naPlatno(b.sirka, b.delka));
-      for (const p of vPixelech) postup = postupPoTrase(uzly, delkyNoh, p, postup);
+      const postup = videnoDo >= 0 ? postupy[i][videnoDo] : 0;
 
       // Rychlost a kurz z posledních dvou hlášení. Z jednoho bodu se
       // spočítat nedají a vymýšlet se nebudou — karta pak řekne „neznámá".
@@ -215,7 +339,7 @@ export function NacrtMapy({
         kurz,
       };
     });
-  }, [lode, cas, z, stred.sirka, stred.delka]);
+  }, [lode, cas, z, stred.sirka, stred.delka, postupy]);
 
   /**
    * Pomyslné pořadí. <b>Nedostupné propadnou nakonec</b>, stárnoucí si
@@ -255,6 +379,85 @@ export function NacrtMapy({
       return { sirka: (radiany * 180) / Math.PI, delka };
     });
   }
+
+  /**
+   * Režie tabule (Filip, 24. 10. 2026): *„pokud se nic nebude dít na
+   * tabuli, tak budeme postupně přepínat focus pořadím, aby byly vidět
+   * dráhy a nebyl to guláš. Jakmile se někde změní pořadí, tak dostanou
+   * chvilku focus ty dvě lodě a pak to zase naváže na ten kolotoč."*
+   *
+   * <b>Počítá se dopředu pro celou rozjížďku</b>, ne krok po kroku —
+   * jednak je to deterministické (týž čas dá týž záběr), jednak kolotoč
+   * musí umět navázat tam, kde ho souboj přerušil. K tomu se počítá čas
+   * strávený mimo souboje, ne čas od startu.
+   */
+  const rezie = useMemo(() => {
+    const plan = new Map<number, { lode: number[]; duvod: "souboj" | "kolotoc" }>();
+    let mimoSouboje = 0;
+
+    const postupV = (i: number, t: number) => {
+      const lod = lode[i];
+      let idx = -1;
+      for (let j = 0; j < lod.body.length; j++) {
+        if (lod.body[j].cas > t) break;
+        idx = j;
+      }
+      const vid = Math.min(idx, lod.dosloDo - 1);
+      return vid >= 0 ? postupy[i][vid] : null;
+    };
+
+    for (let t = 0; t <= konec; t += 10) {
+      const souboj = [...prohozeni]
+        .reverse()
+        .find(
+          (p) => p.pozice <= SOUBOJ_DO_POZICE && t - p.cas >= 0 && t - p.cas < FOCUS_SOUBOJE_S,
+        );
+      if (souboj) {
+        plan.set(t, { lode: [lode[souboj.a].id, lode[souboj.b].id], duvod: "souboj" });
+        continue;
+      }
+
+      // Kolotoč: po pořadí shora, každá loď chvíli.
+      const vPoradi = lode
+        .map((l, i) => ({ id: l.id, postup: postupV(i, t) }))
+        .filter((x) => x.postup !== null)
+        .sort((a, b) => (b.postup as number) - (a.postup as number));
+      if (vPoradi.length === 0) continue;
+      const kolikata = Math.floor(mimoSouboje / KOLOTOC_S) % vPoradi.length;
+      plan.set(t, { lode: [vPoradi[kolikata].id], duvod: "kolotoc" });
+      mimoSouboje += 10;
+    }
+    return plan;
+  }, [lode, postupy, prohozeni, konec]);
+
+  /** Co tabule ukazuje v zvoleném čase. */
+  const zabery = rezie.get(Math.floor(cas / 10) * 10) ?? null;
+
+  /**
+   * Jak silně právě hoří dráha lodi po prohození. Hoření je lineární —
+   * ze stovky na nulu za `HORENI_S` — a loď, která se prohodila víckrát
+   * naráz, si nechá to nejčerstvější.
+   */
+  const hori = useMemo(() => {
+    const m = new Map<number, number>();
+    for (const p of prohozeni) {
+      if (p.pozice > SOUBOJ_DO_POZICE) continue;
+      const stari = cas - p.cas;
+      if (stari < 0 || stari > HORENI_S) continue;
+      const sila = 0.95 * (1 - stari / HORENI_S);
+      for (const i of [p.a, p.b]) {
+        m.set(lode[i].id, Math.max(m.get(lode[i].id) ?? 0, sila));
+      }
+    }
+    return m;
+  }, [prohozeni, cas, lode]);
+
+  /** Poslední prohození, které ještě hoří — tabule o něm řekne slovy. */
+  const posledniSwap = [...prohozeni]
+    .reverse()
+    .find(
+      (p) => p.pozice <= SOUBOJ_DO_POZICE && cas - p.cas >= 0 && cas - p.cas <= HORENI_S,
+    );
 
   const vybranaLod = vStavu.find((v) => v.lod.id === vybrana) ?? null;
 
@@ -317,13 +520,21 @@ export function NacrtMapy({
             .map((v) => {
               if (!v.poloha) return null;
               const davno = historie.indexOf(v.lod.id);
-              // V režimu „jen poslední" dostane stopu jen loď z historie;
-              // ostatní zůstanou tečkou, ať je vidět, že tam pořád jsou.
-              const silaStopy = jenPosledni
-                ? davno > 0
-                  ? DOZNIVANI[davno]
+              // Zaškrtnuté lodě vyhrávají nad vším ostatním: když si divák
+              // vybral, koho sleduje, nemá mu to nic přebíjet.
+              const silaStopy = zaskrtnute.size
+                ? zaskrtnute.has(v.lod.id)
+                  ? 0.9
                   : 0
-                : pruhlednost;
+                : rezim === "tabule"
+                  ? zabery?.lode.includes(v.lod.id)
+                    ? 0.95
+                    : hori.get(v.lod.id) ?? 0
+                  : rezim === "posledni"
+                    ? davno > 0
+                      ? DOZNIVANI[davno]
+                      : 0
+                    : pruhlednost;
               return (
                 <g
                   key={v.lod.id}
@@ -335,7 +546,7 @@ export function NacrtMapy({
                       points={v.stopa.map((p) => `${p.x},${p.y}`).join(" ")}
                       fill="none"
                       stroke={barva(v.lod.id)}
-                      strokeWidth={davno > 0 ? 2.5 : 2}
+                      strokeWidth={silaStopy > 0.5 ? 3 : 2}
                       opacity={silaStopy}
                       strokeLinejoin="round"
                     />
@@ -343,11 +554,17 @@ export function NacrtMapy({
                   <circle
                     cx={v.poloha.x}
                     cy={v.poloha.y}
-                    r={5}
+                    r={zaskrtnute.has(v.lod.id) ? 6.5 : 5}
                     fill={barva(v.lod.id)}
                     stroke="#fff"
                     strokeWidth={1.5}
-                    opacity={v.stav === "nedostupna" ? 0.45 : jenPosledni && davno < 0 ? 0.55 : 1}
+                    opacity={
+                      v.stav === "nedostupna"
+                        ? 0.45
+                        : silaStopy === 0 && (rezim !== "vse" || zaskrtnute.size)
+                          ? 0.55
+                          : 1
+                    }
                   />
                 </g>
               );
@@ -416,6 +633,32 @@ export function NacrtMapy({
             })}
         </svg>
 
+        {rezim === "tabule" && zabery && (
+          <div className="nacrt-swap">
+            {zabery.duvod === "souboj" && posledniSwap ? (
+              <>
+                <strong style={{ color: barva(lode[posledniSwap.a].id) }}>
+                  {lode[posledniSwap.a].nazev}
+                </strong>
+                {" a "}
+                <strong style={{ color: barva(lode[posledniSwap.b].id) }}>
+                  {lode[posledniSwap.b].nazev}
+                </strong>
+                {` si prohodily ${posledniSwap.pozice}. pozici`}
+              </>
+            ) : (
+              <>
+                {"na vodě: "}
+                {zabery.lode.map((id) => (
+                  <strong key={id} style={{ color: barva(id) }}>
+                    {lode.find((l) => l.id === id)?.nazev}
+                  </strong>
+                ))}
+              </>
+            )}
+          </div>
+        )}
+
         {vybranaLod && (
           <div className="nacrt-karta">
             <div className="nacrt-karta-hlava">
@@ -471,15 +714,15 @@ export function NacrtMapy({
               onChange={(e) => setCas(Number(e.target.value))}
             />
           </label>
-          <label className="nacrt-prepinac">
-            <input
-              type="checkbox"
-              checked={jenPosledni}
-              onChange={(e) => setJenPosledni(e.target.checked)}
-            />
-            jen poslední tři, ostatní tečkou
+          <label>
+            stopy
+            <select value={rezim} onChange={(e) => setRezim(e.target.value as typeof rezim)}>
+              <option value="vse">všechny</option>
+              <option value="posledni">poslední tři focusy</option>
+              <option value="tabule">tabule: po prohození</option>
+            </select>
           </label>
-          <label hidden={jenPosledni}>
+          <label hidden={rezim !== "vse"}>
             průhlednost {pruhlednost.toFixed(2)}
             <input
               type="range"
@@ -517,9 +760,32 @@ export function NacrtMapy({
           Pořadí mezi loděmi, které hlásí polohu — ne pořadí závodu. O výsledku
           rozhoduje cíl.
         </p>
+        {zaskrtnute.size > 0 && (
+          <button
+            type="button"
+            className="nacrt-zrusit"
+            onClick={() => setZaskrtnute(new Set())}
+          >
+            zrušit výběr ({zaskrtnute.size})
+          </button>
+        )}
         <ol>
           {poradi.map((v, i) => (
             <li key={v.lod.id}>
+              <input
+                type="checkbox"
+                aria-label={`sledovat ${v.lod.nazev}`}
+                checked={zaskrtnute.has(v.lod.id)}
+                style={{ accentColor: barva(v.lod.id) }}
+                onChange={(e) =>
+                  setZaskrtnute((p) => {
+                    const dal = new Set(p);
+                    if (e.target.checked) dal.add(v.lod.id);
+                    else dal.delete(v.lod.id);
+                    return dal;
+                  })
+                }
+              />
               <button
                 type="button"
                 className={v.lod.id === vybrana ? "vybrana" : undefined}
