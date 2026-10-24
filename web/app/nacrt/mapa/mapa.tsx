@@ -16,7 +16,7 @@
  * počítané v prohlížeči místo na serveru.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { DLAZDICE, Z_NEJMENE, Z_NEJVIC, doPixelu } from "@/lib/mapa";
 import { ZnakBoje } from "@/app/znak-boje";
 import type { Poloha } from "@/lib/voda";
@@ -547,6 +547,47 @@ export function NacrtMapy({
     return () => clearTimeout(casovac);
   }, [cilove.join(","), zobrazene.join(",")]);
 
+  /**
+   * Výměna míst, ne poskočení (Filip, 24. 10. 2026: *„nedá se to animovat
+   * tak, že to bude vypadat, jakoby se ty dva řádky vždy pozičně
+   * vyměnily?"*).
+   *
+   * <b>Technika je FLIP:</b> před překreslením se zapamatují polohy
+   * řádků, po něm se spočítá rozdíl, řádek se transformem vrátí na staré
+   * místo a odtud se nechá dojet na nové. Rozdíl proti předchozí podobě je
+   * podstatný — CSS animace hrála dekoraci *po* skoku, takže řádek
+   * poskočil a teprve pak se zavlnil. Takhle se dvojice míjí.
+   *
+   * Ustupující se při tom odkloní stranou a ztlumí, takže je vidět, kdo
+   * komu uhýbá.
+   */
+  const pozice = useRef(new Map<number, number>());
+  useLayoutEffect(() => {
+    const ol = seznam.current;
+    if (!ol) return;
+    const nove = new Map<number, number>();
+    ol.querySelectorAll<HTMLLIElement>("li[data-lod]").forEach((li) => {
+      const id = Number(li.dataset.lod);
+      const top = li.offsetTop;
+      nove.set(id, top);
+      const stare = pozice.current.get(id);
+      if (stare === undefined || stare === top) return;
+      const delta = stare - top;
+      const klesa = delta < 0;
+      li.animate(
+        klesa
+          ? [
+              { transform: `translateY(${delta}px)`, opacity: 1 },
+              { transform: `translate(14px, ${delta / 2}px)`, opacity: 0.5, offset: 0.5 },
+              { transform: "none", opacity: 1 },
+            ]
+          : [{ transform: `translateY(${delta}px)` }, { transform: "none" }],
+        { duration: 950, easing: "cubic-bezier(.4, 0, .2, 1)" },
+      );
+    });
+    pozice.current = nove;
+  }, [zobrazene.join(",")]);
+
   const poradiKZobrazeni = zobrazene
     .map((id) => poradi.find((v) => v.lod.id === id))
     .filter((v): v is (typeof poradi)[number] => Boolean(v));
@@ -900,6 +941,7 @@ export function NacrtMapy({
             return (
             <li
               key={v.lod.id}
+              data-lod={v.lod.id}
               className={
                 jdeNahoru ? "nacrt-radek-nahoru" : jdeDolu ? "nacrt-radek-dolu" : undefined
               }
