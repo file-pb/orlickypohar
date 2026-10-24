@@ -1,4 +1,5 @@
 import { tokenZeSezeni } from "@/lib/oidc";
+import type { components } from "./schema";
 
 /**
  * Živé polohy lodí pro pořadatelskou mapu.
@@ -19,34 +20,16 @@ export const CEKAT_MS = 15_000;
 /**
  * Jak je poloha stará. <b>Tři stavy, ne dva</b> — mezi „jede" a „nehlásí
  * se" je stav, kdy loď tam je, jen zrovna nemá signál.
- *
- * Typy se zatím píšou ručně, ne z `schema.d.ts`: generátor stahuje
- * dokument z běžícího API a endpoint ještě nebyl nasazený, když tohle
- * vznikalo. Až se nasadí, nahradí je `components["schemas"][…]`.
  */
-export type StavPolohy = "Cerstva" | "Starne" | "Nedostupna";
+export type StavPolohy = components["schemas"]["StavPolohy"];
 
-export type PolohaLodi = {
-  lodId: number;
-  lod: string;
-  cisloPlachty: string | null;
-  kategorie: string | null;
-  sirka: number | null;
-  delka: number | null;
-  kurz: number | null;
-  rychlostMS: number | null;
-  casGps: string | null;
-  stariMs: number | null;
-  stav: StavPolohy;
-};
+export type PolohaLodi = components["schemas"]["PolohaLodi"];
 
-export type SnimekPoloh = {
-  /** Čas serveru. Stáří se počítá proti němu, ne proti hodinám prohlížeče. */
-  ted: string;
-  oknoBezi: boolean;
-  oknoOd: string | null;
-  lode: PolohaLodi[];
-};
+/**
+ * Snímek pole v jednom okamžiku. Nese i <b>čas serveru</b>: stáří se
+ * počítá proti němu, ne proti hodinám prohlížeče.
+ */
+export type SnimekPoloh = components["schemas"]["SnimekPoloh"];
 
 /** Snímek poloh regaty, nebo `null`, když se nepodařilo zavolat API. */
 export async function nactiPolohy(

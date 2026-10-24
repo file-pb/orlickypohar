@@ -912,6 +912,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/okna": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše okna regat, ve kterých tahle loď závodí
+         * @description Prokazuje se klíčem k lodi. Telefon si je stáhne dopředu a řídí se jimi i bez signálu; změna od pořadatele se projeví, až signál chytí.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OknoRegatyDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/klice/uplatnit": {
         parameters: {
             query?: never;
@@ -4123,7 +4162,7 @@ export interface paths {
         put?: never;
         /**
          * Založí trasu, nebo vrátí tu existující
-         * @description Idempotentní podle `lokalniId`, které si vyrábí telefon. Opakované volání druhou trasu nezaloží — na vodě signál padá a nahrání se bude opakovat.
+         * @description Idempotentní podle `lokalniId`, které si vyrábí telefon. Opakované volání druhou trasu nezaloží — na vodě signál padá a nahrání se bude opakovat. **Bez běžícího okna regaty trasa nevznikne** a vrací se 409: záznam smí běžet jen od rozpravy do uzavření závodního dne a jen lodi, která je v té regatě přihlášená. Doposílat do už založené trasy jde i potom.
          */
         post: {
             parameters: {
@@ -4154,6 +4193,15 @@ export interface paths {
                     };
                     content: {
                         "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChybaTrasy"];
                     };
                 };
             };
@@ -4271,6 +4319,178 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/okna": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše okna závodních dnů
+         * @description Pořadatel regaty, nebo rozhodčí ročníku.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OknoDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/okna/rozprava": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rozpravou otevře okno závodního dne
+         * @description Pořadatel regaty, nebo rozhodčí. Od téhle chvíle smí trackery zaznamenávat. Opakované odkliknutí druhé okno nezaloží — vrátí to běžící. `trvaniHodin` je tvrdý konec, který platí, i když den nikdo neuzavře; bez něj je to 14 hodin, nejvíc 36.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["RozpravaVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OknoDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/okna/uzavrit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Uzavře závodní den
+         * @description Pořadatel regaty, nebo rozhodčí. Tím se přestává zaznamenávat — mezi dny se nesleduje. Uzavřít zavřené není chyba.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OknoDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/polohy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Poslední známá poloha každé lodi v regatě
+         * @description Pořadatel regaty, nebo rozhodčí ročníku. Vrací celé pole — i lodě, které se ještě neozvaly, protože otázka zní „trackuje nám celé pole?". Stav polohy je trojí: `Cerstva` do minuty, `Starne` do pěti, pak `Nedostupna`. Snímek se drží v cache pět sekund, takže počet diváků nerozhoduje o počtu dotazů do databáze.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SnimekPoloh"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5358,6 +5578,9 @@ export interface components {
             znaceni?: null | components["schemas"]["DruhZnaceni"];
             popis?: null | string;
         };
+        ChybaTrasy: {
+            error: string;
+        };
         ClanekDto: {
             slug: string;
             titulek: string;
@@ -5717,6 +5940,37 @@ export interface components {
             /** Format: uuid */
             id: string;
         };
+        OknoDto: {
+            /** Format: int32 */
+            id: number;
+            /** Format: int32 */
+            den: number;
+            /** Format: date-time */
+            otevrenoV: string;
+            /** Format: date-time */
+            tvrdyKonec: string;
+            /** Format: date-time */
+            zavrenoV: null | string;
+            bezi: boolean;
+        };
+        OknoRegatyDto: {
+            /** Format: int32 */
+            id: number;
+            /** Format: int32 */
+            zavodId: number;
+            serie: string;
+            zavod: string;
+            nazev: string;
+            /** Format: int32 */
+            den: number;
+            /** Format: date-time */
+            otevrenoV: string;
+            /** Format: date-time */
+            tvrdyKonec: string;
+            /** Format: date-time */
+            zavrenoV: null | string;
+            bezi: boolean;
+        };
         OpravneniDto: {
             role: components["schemas"]["Role"];
             serie: string;
@@ -5762,6 +6016,26 @@ export interface components {
          * @enum {unknown}
          */
         PlatformaZarizeni: "Android" | "Ios";
+        PolohaLodi: {
+            /** Format: int32 */
+            lodId: number;
+            lod: string;
+            cisloPlachty: null | string;
+            kategorie: null | string;
+            /** Format: double */
+            sirka: null | number;
+            /** Format: double */
+            delka: null | number;
+            /** Format: double */
+            kurz: null | number;
+            /** Format: double */
+            rychlostMS: null | number;
+            /** Format: date-time */
+            casGps: null | string;
+            /** Format: int64 */
+            stariMs: null | number;
+            stav: components["schemas"]["StavPolohy"];
+        };
         PoradatelDto: {
             slug: string;
             nazev: string;
@@ -6078,6 +6352,10 @@ export interface components {
             /** @default true */
             publikovano: boolean;
         };
+        RozpravaVstup: {
+            /** Format: int32 */
+            trvaniHodin: null | number;
+        };
         SerieDetailDto: {
             slug: string;
             nazev: string;
@@ -6157,6 +6435,14 @@ export interface components {
             cas: string;
             mista: components["schemas"]["TeplotaMistaDto"][];
         };
+        SnimekPoloh: {
+            /** Format: date-time */
+            ted: string;
+            oknoBezi: boolean;
+            /** Format: date-time */
+            oknoOd: null | string;
+            lode: components["schemas"]["PolohaLodi"][];
+        };
         StartovneVstup: {
             zaplaceno: boolean;
             poznamka?: null | string;
@@ -6167,6 +6453,8 @@ export interface components {
         };
         /** @enum {unknown} */
         StavClanku: "Draft" | "Publikovano" | "Skryty" | "Smazano";
+        /** @enum {unknown} */
+        StavPolohy: "Cerstva" | "Starne" | "Nedostupna";
         /** @enum {unknown} */
         StavRozjizdky: "Planovana" | "Probiha" | "Dokoncena" | "Zrusena";
         /** @enum {unknown} */
@@ -6228,6 +6516,8 @@ export interface components {
             dokoncena: boolean;
             /** Format: int64 */
             posledniBod: null | number;
+            /** Format: int32 */
+            zavodId?: null | number;
         };
         TratDto: {
             /** Format: int32 */

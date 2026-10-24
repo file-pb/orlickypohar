@@ -2665,6 +2665,12 @@ nelže.
 trati, část lodí schválně stárne a mlčí. Bez toho se obrazovka nedala
 vyzkoušet jinak než na vodě.
 
+**Past, která stála půl hodiny:** dev server webu otevřený přes
+`127.0.0.1` **nehydratuje klientské komponenty** — Next 16 blokuje
+cross-origin dev prostředky a v konzoli je z toho jen chyba HMR
+websocketu. Přes `localhost` to jede. Stránka přitom vypadala správně,
+protože serverový render proběhl; nefungovalo jen to, co se děje potom.
+
 ### Co z toho čeká na přihlášení
 
 Všechna tři pravidla výš (loď v regatě, telefon u posádky, okno regaty)
