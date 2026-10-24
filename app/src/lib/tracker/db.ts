@@ -66,7 +66,14 @@ function pripravSchema(d: SQLite.SQLiteDatabase) {
       -- kde se přestalo, a posílalo by se všechno znovu.
       potvrzeno_do INTEGER NOT NULL DEFAULT 0,
       -- Posádka označila nahrávání za dokončené.
-      nahravani_hotovo INTEGER NOT NULL DEFAULT 0
+      nahravani_hotovo INTEGER NOT NULL DEFAULT 0,
+      -- Kdy telefon naposledy zkusil odeslat. Živý kanál se jím řídí, a je
+      -- v databázi ze stejného důvodu jako zbytek: úloha na pozadí se budí
+      -- v novém JS kontextu, kde paměť předchozího běhu neexistuje.
+      posledni_pokus INTEGER NOT NULL DEFAULT 0,
+      -- Proč poslední pokus nevyšel: 'sit', 'bez-klice', 'mimo-okno'.
+      -- Posádka to má vidět, ne se to domýšlet z toho, že nic nevidí.
+      potiz TEXT
     );
     CREATE TABLE IF NOT EXISTS bod (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -87,6 +94,8 @@ function pripravSchema(d: SQLite.SQLiteDatabase) {
   // Trasy zapsané dřívější verzí appky tyhle sloupce nemají.
   doplnSloupec(d, 'zaznam', 'potvrzeno_do', 'INTEGER NOT NULL DEFAULT 0');
   doplnSloupec(d, 'zaznam', 'nahravani_hotovo', 'INTEGER NOT NULL DEFAULT 0');
+  doplnSloupec(d, 'zaznam', 'posledni_pokus', 'INTEGER NOT NULL DEFAULT 0');
+  doplnSloupec(d, 'zaznam', 'potiz', 'TEXT');
 }
 
 /**

@@ -110,8 +110,29 @@ export const nactiJa = () => nactiZaSebe<Ja>('/ja');
  * Na tom stojí celé nahrávání trasy: posádka účet mít nemusí.
  */
 export async function posliKlicem<T>(cesta: string, telo: unknown): Promise<T | null> {
+  const v = await posliKlicemPodrobne<T>(cesta, telo);
+  return v.stav === 'ok' ? v.data : null;
+}
+
+/**
+ * Totéž, ale s rozlišením, **proč** to nevyšlo.
+ *
+ * Zakládání trasy potřebuje odlišit dvě věci, které obě končí „neodeslalo
+ * se": telefon není spárovaný s lodí (posádka musí za kapitánem) a mimo
+ * okno regaty (server trasu nevezme, dokud nebyla rozprava). První je
+ * porucha, druhé je stav závodu — a posádka se podle toho zachová jinak.
+ */
+export type OdpovedKlicem<T> =
+  | { stav: 'ok'; data: T }
+  | { stav: 'bez-klice' }
+  | { stav: 'mimo-okno'; duvod: string };
+
+export async function posliKlicemPodrobne<T>(
+  cesta: string,
+  telo: unknown,
+): Promise<OdpovedKlicem<T>> {
   const k = await tajemstvi();
-  if (!k) return null;
+  if (!k) return { stav: 'bez-klice' };
 
   const odpoved = await fetch(`${API}${cesta}`, {
     method: 'POST',
@@ -123,9 +144,13 @@ export async function posliKlicem<T>(cesta: string, telo: unknown): Promise<T | 
     body: JSON.stringify(telo),
   });
 
-  if (odpoved.status === 401) return null;
+  if (odpoved.status === 401) return { stav: 'bez-klice' };
+  if (odpoved.status === 409) {
+    const telo = (await odpoved.json().catch(() => null)) as { error?: string } | null;
+    return { stav: 'mimo-okno', duvod: telo?.error ?? 'Teď se nesmí zaznamenávat.' };
+  }
   if (!odpoved.ok) throw new Error(`API ${cesta} vrátilo ${odpoved.status}`);
-  return (await odpoved.json()) as T;
+  return { stav: 'ok', data: (await odpoved.json()) as T };
 }
 
 // ---------------------------------------------------------------------------
