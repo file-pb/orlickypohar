@@ -909,7 +909,11 @@ export function MapaTrackeru({
 
   useEffect(() => {
     if (!tabule) return;
-    const zavodi = poradiRef.current.filter((v) => v.kde && !v.dojela);
+    // Dokud se závodí, do záběru patří ti, kdo ještě jedou. Když dojedou
+    // všichni, zabere se celé pole v cíli — jinak mapa zůstane tam, kde
+    // zrovna byla, a divák se kouká na prázdnou vodu (24. 10. 2026).
+    const jedou = poradiRef.current.filter((v) => v.kde && !v.dojela);
+    const zavodi = jedou.length > 0 ? jedou : poradiRef.current.filter((v) => v.kde);
     if (zavodi.length === 0) return;
 
     const celek = vyrezPro(zavodi.map((v) => v.kde!), OKNO.sirka, OKNO.vyska);

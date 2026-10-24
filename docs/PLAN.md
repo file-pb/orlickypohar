@@ -2765,12 +2765,53 @@ proužek nahoře je od něj přes celou obrazovku daleko. Štítek *ukázka*
 proto stojí přímo u nadpisu pořadí a u každého pásu — a zmizí, jakmile
 začnou chodit skutečné polohy.
 
+**Zapomenutá rozjížďka: napřed logická akce, teprve pak hodiny**
+(Filip, 24. 10. 2026: *„u 24h je to více než okno dne"*, *„maratony
+zavírej po 40 hodinách, pokud nedojde k nějaké jasné logické akci jako
+vyhodnocení nebo dojezdu všech lodí"*). Stopky na tabuli běžely
+donekonečna u rozjížďky, kterou nikdo neuzavřel — na mocku *„od startu
+3020:59:39"*. Pořadí otázek je teď tohle:
+
+| Pořadí | Co se ptá | Co tabule řekne |
+|---|---|---|
+| 1. | mají všechny lodě dojezd nebo kód? | *rozjížďka čeká na uzavření* |
+| 2. | je po tvrdém konci okna té regaty? | *rozjížďka neuzavřená* |
+| 3. | regata okno nemá (do první rozpravy) a běží to přes 40 h | *rozjížďka neuzavřená* |
+
+**Mez se nevymýšlí, bere se z okna.** Okno si pořadatel nastavuje při
+rozpravě, takže na dvacetičtyřhodinovce je dlouhé a na odpolední regatě
+krátké; za jeho tvrdým koncem tracker nic nezapisuje, a co „běží" i potom,
+neběží doopravdy. Kulaté číslo by jedné regatě lhalo vždycky — proto se
+`ZavodDetailDto` rozšířil o `OknoDo`.
+
 **A tracker dostal šířku.** Obsahový sloupec je míra pro čtení textu;
 mapa, ve které rozhodčí hledá lodě, je ta výjimka — kolem ní zbývalo na
 ultrawide přes dva tisíce pixelů prázdna. Strop na 16 : 9 brání tomu, aby
 z mapy byl pruh, ve kterém je pole bod uprostřed. Výchozí přiblížení se
 navíc přepočítá, až je plocha naměřená: do té doby se počítalo
 z náhradních rozměrů a mapa zůstala zbytečně odzoomovaná.
+
+### Pojistky proti zapomenutému stavu (Filip, 24. 10. 2026)
+
+*„Logické pojistky, aby nám tam nezůstávaly takové věci."* Vzor v systému
+už byl — **tvrdý konec okna** platí, i když pořadatel zapomene cokoli
+vypnout. Zobecněno: *co se otevře, musí se zavřít, a kde o zavření
+rozhoduje člověk, musí se systém ozvat.*
+
+| Co zůstane otevřené | Smí to zavřít automat? | Co s tím |
+|---|---|---|
+| **rozjížďka ve stavu „probíhá"** | ne — konec rozjížďky je rozhodnutí rozhodčího, ne dopočet | uzavření dne vypíše, které pořád běží |
+| **rozdělaná trasa** | po tvrdém konci okna už do ní nikdo nic nepošle | uzavření dne je spočítá |
+| **okno dne** | ano | tvrdý konec, platí už dřív |
+
+**Kontrola visí na uzavření dne**, protože ten úkon pořadatel dělá tak jako
+tak — stejně jako rozprava nese otevření okna i zámek nastavení. Odpověď
+nese `zbylo`: čísla běžících rozjížděk a počet nedokončených tras.
+**Nic se tím nezavírá**; systém jen řekne, co zbylo, a nechá to na
+člověku.
+
+**Co zbývá:** obrazovka pro okna ve správě. Dnes se rozprava i uzavření dne
+dají zavolat jen přes API, takže kontrola nemá kde promluvit k pořadateli.
 
 ### Co z toho čeká na přihlášení
 
