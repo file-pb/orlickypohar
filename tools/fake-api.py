@@ -946,6 +946,76 @@ def boje_dto(b):
             "fotky": b.get("fotky") or []}
 
 
+def polohy_zastavky(slug, z):
+    """Živé polohy lodí — <b>simulované</b>, protože mock nemá telefony.
+
+    Je to tentýž tvar, jaký vydává `PolohySprava.SnimekAsync`: celé pole
+    včetně lodí bez polohy, tři stavy podle stáří a čas serveru v odpovědi.
+    Lodě jedou dokola po prvcích trati, aby se na obrazovce dalo poznat,
+    že se hýbou; pár jich schválně stárne a mlčí, protože právě na ty se
+    pořadatel před procedurou ptá.
+    """
+    import math
+    import time
+
+    uzly = [(b["sirka"], b["delka"]) for b in sorted(
+        (b for b in BOJE.get(slug, []) if b["nahrazenaV"] is None and not b["sebrana"]),
+        key=lambda b: b["poradi"])]
+
+    lode = sorted({u["lod"] for u in z.get("ucasti", [])
+                   if u.get("stav", "Potvrzena") in ("Prihlasena", "Potvrzena")})
+
+    ted = time.time()
+    od = ted - 3600
+    vysledek = []
+    for i, nazev in enumerate(lode):
+        # Každá třetí loď stárne, každá pátá mlčí úplně — bez nich by
+        # obrazovka vypadala, jako že tracking nikdy nevypadne.
+        stari = 0.0 if i % 5 else None
+        if stari is not None and i % 3 == 0:
+            stari = 150.0
+        if stari is None:
+            vysledek.append({
+                "lodId": i + 1, "lod": nazev, "cisloPlachty": None,
+                "kategorie": KAT.get(nazev), "sirka": None, "delka": None,
+                "kurz": None, "rychlostMS": None, "casGps": None,
+                "stariMs": None, "stav": "Nedostupna"})
+            continue
+
+        if len(uzly) >= 2:
+            # Pozice po okruhu: fáze podle času a pořadí lodi.
+            krok = ((ted - od) / 240.0 + i * 0.11) % 1.0
+            kolik = len(uzly)
+            misto = krok * kolik
+            a = uzly[int(misto) % kolik]
+            b = uzly[(int(misto) + 1) % kolik]
+            t = misto - int(misto)
+            sirka = a[0] + (b[0] - a[0]) * t
+            delka = a[1] + (b[1] - a[1]) * t
+            kurz = (math.degrees(math.atan2(b[1] - a[1], b[0] - a[0])) + 360) % 360
+        else:
+            sirka, delka, kurz = 49.5163 + i * 0.0004, 14.1651 + i * 0.0004, 180.0
+
+        cas = ted - stari
+        vysledek.append({
+            "lodId": i + 1, "lod": nazev, "cisloPlachty": None,
+            "kategorie": KAT.get(nazev),
+            "sirka": round(sirka, 6), "delka": round(delka, 6),
+            "kurz": round(kurz, 1), "rychlostMS": 2.4,
+            "casGps": cas_iso(cas),
+            "stariMs": int(stari * 1000),
+            "stav": "Cerstva" if stari < 60 else ("Starne" if stari < 300 else "Nedostupna")})
+
+    return {"ted": cas_iso(ted), "oknoBezi": True, "oknoOd": cas_iso(od), "lode": vysledek}
+
+
+def cas_iso(sekundy):
+    """Unixový čas na ISO v UTC — tak, jak ho posílá API."""
+    from datetime import datetime, timezone
+
+    return datetime.fromtimestamp(sekundy, timezone.utc).isoformat().replace("+00:00", "Z")
+
+
 def trat_aktualni(slug):
     """Trať, na které se zrovna pracuje. Nejnovější vyhrává."""
     vse = TRATE.get(slug) or []
@@ -4701,6 +4771,12 @@ class H(BaseHTTPRequestHandler):
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/trat/prvky$', cesta)):
             return self.prvky_seznam(m.group(1))
+        elif (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/polohy$', cesta)):
+            z = self.zastavka(m.group(1))
+            if not z:
+                return None
+            telo = polohy_zastavky(m.group(1), z)
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/boje/uklid$', cesta)):
             return self.k_uklizeni(m.group(1))

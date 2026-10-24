@@ -2642,6 +2642,35 @@ nepotřebuje; přeťuknutí formuláře není zásah do pravidel.
 ven* existuje, ale snímek poloh se zatím vydává jen pořadateli a rozhodčímu
 — napojení veřejné mapy a tabule na něj je další krok.
 
+### Mapa jede na skutečných polohách (24. 10. 2026)
+
+Čtvrtý kus. `/sprava/{rocnik}/tracker/{regata}` je **živá mapa regaty pro
+pořadatele a rozhodčího**: tytéž bóje a tatáž komponenta jako v náčrtu, jen
+lodě jsou ze snímku poloh. Pod mapou je seznam celého pole s čerstvostí —
+to je ta odpověď na *„trackuje nám celé pole?"*.
+
+| Rozhodnutí | Proč |
+|---|---|
+| **vlastní obrazovka, ne vrstva do mapky u bójí** | plán chtěl vrstvu, jenže `MapkaTrati` se kreslí na serveru a nedá se v ní posouvat ani rozkliknout loď; sloučit se dají, až bude interaktivní |
+| **dráhy se skládají z došlých snímků** | server posílá poslední polohu, prohlížeč si z nich staví stopu sám — nepřenáší se nic navíc a mapa přesto kreslí, kudy loď jela |
+| **stopa drží posledních 240 bodů** | asi hodina provozu; na co se rozhodčí dívá, ne celý den. Po obnovení stránky začíná znovu — celá trasa je v záznamu |
+| **mapa dostala režim `zive`** | čas se drží na konci došlých dat a posuvník mizí: odskočit v živém přenosu dozadu znamená dívat se na starou polohu a nevědět o tom |
+
+**Tabule zůstává na ukázkových plavbách.** Vydávat polohy ven se smí jen
+při zapnutém *živém přenosu ven*, a ten výdej zatím neexistuje — snímek je
+pořád jen pro přihlášené. Proužek „Ukázková data" tím platí dál a tabule
+nelže.
+
+**Mock to umí taky** (`tools/fake-api.py`): simulované polohy po prvcích
+trati, část lodí schválně stárne a mlčí. Bez toho se obrazovka nedala
+vyzkoušet jinak než na vodě.
+
+**Past, která stála půl hodiny:** dev server webu otevřený přes
+`127.0.0.1` **nehydratuje klientské komponenty** — Next 16 blokuje
+cross-origin dev prostředky a v konzoli je z toho jen chyba HMR
+websocketu. Přes `localhost` to jede. Stránka přitom vypadala správně,
+protože serverový render proběhl; nefungovalo jen to, co se děje potom.
+
 ### Co z toho čeká na přihlášení
 
 Všechna tři pravidla výš (loď v regatě, telefon u posádky, okno regaty)

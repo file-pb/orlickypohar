@@ -314,6 +314,7 @@ export function MapaTrackeru({
   trasa,
   spojnice,
   tabule,
+  zive,
   odsazeni,
   zebricek,
   onPoradi,
@@ -321,6 +322,16 @@ export function MapaTrackeru({
 }: {
   znacky: Znacka[];
   lode: Lod[];
+  /**
+   * Živý provoz: čas se drží na konci došlých dat a posuvník mizí.
+   *
+   * <b>Rozdíl proti záznamu je jen v tom, kde stojí čas.</b> Mapa
+   * zůstává tatáž — jinak by vznikly dvě komponenty, které se musí
+   * opravovat obě. Posuvník se schovává proto, že odskočit v živém
+   * přenosu dozadu znamená dívat se na starou polohu a nevědět o tom;
+   * k tomu je záznam.
+   */
+  zive?: boolean;
   /**
    * Rozložení pro televizi v hospodě. <b>Mizí celé ovládání</b> — na
    * tabuli není kam klepnout —, čas běží sám a třídy se střídají místo
@@ -769,10 +780,19 @@ export function MapaTrackeru({
    * 1 : 1, protože tam se dívá na skutečný závod.
    */
   useEffect(() => {
-    if (!tabule) return;
+    if (!tabule || zive) return;
     const tik = setInterval(() => setCas((c) => (c + 10 > konec ? 0 : c + 10)), 5000);
     return () => clearInterval(tik);
-  }, [tabule, konec]);
+  }, [tabule, zive, konec]);
+
+  /**
+   * Živě se čas nepřehrává, drží se na konci. Každá došlá dávka posune
+   * `konec` a s ním i to, co je vidět — mapa tím ukazuje poslední známý
+   * stav a nic jiného.
+   */
+  useEffect(() => {
+    if (zive) setCas(konec);
+  }, [zive, konec]);
 
   /**
    * Záběr mapy na tabuli: střídá <b>celé pole</b> a <b>čelo</b>, a dojeté
@@ -1376,6 +1396,7 @@ export function MapaTrackeru({
 
         {!tabule && (
         <div className="nacrt-ovladani">
+          {zive ? null : (
           <label>
             čas {Math.floor(cas / 60)}:{String(cas % 60).padStart(2, "0")}
             <input
@@ -1387,6 +1408,7 @@ export function MapaTrackeru({
               onChange={(e) => setCas(Number(e.target.value))}
             />
           </label>
+          )}
           <label>
             stopy
             <select value={rezim} onChange={(e) => setRezim(e.target.value as typeof rezim)}>
