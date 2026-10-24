@@ -2943,6 +2943,7 @@ body:has(.tabule) { overflow: hidden; }
 /* Dojezd je ta nejsilnější zpráva, proto vodní modrá; konec rozjížďky
    a závodu zeleně jako „vypsáno" jinde na webu. */
 .tabule-alert.dojezd { border-color: var(--voda); }
+.tabule-alert.souboj { border-color: var(--stav-vypsany); color: var(--stav-vypsany); }
 .tabule-alert.start { border-color: var(--stav-vypsany); }
 .tabule-alert.dokonceno, .tabule-alert.zavod { border-color: var(--stav-vypsany); }
 /* Trať: schválení je povolení vyjet, přestavba je „počkej". Obojí nese
