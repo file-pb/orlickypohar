@@ -3747,3 +3747,30 @@ body:has(.tabule) { overflow: hidden; }
 .nacrt-zoom button + button { border-top: 1px solid var(--linka); }
 .nacrt-zoom button:hover:not(:disabled) { background: var(--zvyrazneni); }
 .nacrt-zoom button:disabled { color: var(--tlumeny); cursor: default; }
+
+/* Prohození v žebříčku: dvojice se kolem sebe obkrouží — ta postupující
+   obloukem vpravo nahoru, ta druhá vlevo dolů. Je to tentýž údaj jako
+   hláška na mapě, jen v místě, kde se pořadí čte. */
+.nacrt-radek-nahoru { animation: nacrt-obkrouzi-nahoru 1.1s ease-in-out; }
+.nacrt-radek-dolu { animation: nacrt-obkrouzi-dolu 1.1s ease-in-out; }
+
+.nacrt-radek-nahoru .nacrt-cislo { color: var(--stav-vypsany); }
+.nacrt-radek-dolu .nacrt-cislo { color: var(--stav-zruseny); }
+
+@keyframes nacrt-obkrouzi-nahoru {
+  0% { transform: none; }
+  30% { transform: translate(16px, 10px); }
+  65% { transform: translate(16px, -10px); }
+  100% { transform: none; }
+}
+
+@keyframes nacrt-obkrouzi-dolu {
+  0% { transform: none; }
+  30% { transform: translate(-16px, -10px); }
+  65% { transform: translate(-16px, 10px); }
+  100% { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nacrt-radek-nahoru, .nacrt-radek-dolu { animation: none; }
+}
