@@ -1301,13 +1301,16 @@ export function MapaTrackeru({
       </div>
 
       <aside className="nacrt-poradi">
-        <h2>Pomyslné pořadí</h2>
-        {tabule ? (
-          <p className="nacrt-trida-ted">
-            <ZnakTridy nazev={filtr ?? CELKEM} />
-            {filtr ?? "celé pole"}
-          </p>
-        ) : (
+        {/*
+          Jeden nadpis místo dvou (Filip, 24. 10. 2026: *„tohle do jednoho
+          nadpisu, např. Celé pole — pořadí"*). Dva řádky nad sebou říkaly
+          totéž dvakrát a braly panelu dva centimetry.
+        */}
+        <h2>
+          {tabule && <ZnakTridy nazev={filtr ?? CELKEM} />}
+          {tabule ? `${filtr ?? "Celé pole"} — pořadí` : "Pomyslné pořadí"}
+        </h2>
+        {tabule ? null : (
         <div className="nacrt-taby" role="tablist" aria-label="třída lodí">
           <button
             type="button"
@@ -1338,10 +1341,6 @@ export function MapaTrackeru({
           ))}
         </div>
         )}
-        <p className="nacrt-vysvetlivka">
-          Pořadí mezi loděmi, které hlásí polohu — ne pořadí závodu. O výsledku
-          rozhoduje cíl.
-        </p>
         {!tabule && zaskrtnute.size > 0 && (
           <button
             type="button"
@@ -1441,6 +1440,12 @@ export function MapaTrackeru({
             );
           })}
         </ol>
+        {/* Výhrada patří pod čísla, ne nad ně (Filip, 24. 10. 2026):
+            nahoře zabírala místo a strašila dřív, než bylo co číst. */}
+        <p className="nacrt-vysvetlivka">
+          Pořadí mezi loděmi, které hlásí polohu — ne pořadí závodu. O výsledku
+          rozhoduje cíl.
+        </p>
       </aside>
     </div>
   );
