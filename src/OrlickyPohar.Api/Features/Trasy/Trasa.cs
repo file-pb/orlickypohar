@@ -1,5 +1,6 @@
 using OrlickyPohar.Api.Features.Klice;
 using OrlickyPohar.Api.Features.Lode;
+using OrlickyPohar.Api.Features.Okna;
 using OrlickyPohar.Api.Features.Zavody;
 
 namespace OrlickyPohar.Api.Features.Trasy;
@@ -20,9 +21,10 @@ public enum ZdrojTrasy
 /// <summary>
 /// Trasa lodi zaznamenaná telefonem na palubě.
 /// <para>
-/// <b>Nahrává se po dojezdu, ne za jízdy.</b> Pilot podle plánu nemá
-/// veřejnou živou mapu; hodnota je v tom, že trasy vůbec vzniknou a dá se
-/// na nich zjistit, co z téhle kapitoly stojí za dodělání.
+/// <b>Nahrává se průběžně za jízdy a doposílá po dojezdu.</b> Přenos je
+/// automatický: na posádce nesmí viset nic než spuštění záznamu, jinak by
+/// ten, kdo neťukne, chyběl v přehledu pro rozhodčího i v podkladu
+/// k protestu. Dávka chodí po minutě, fronta se doposílá, až bude signál.
 /// </para>
 /// <para>
 /// <b>Identifikátor z telefonu, ne náš.</b> <see cref="LokalniId"/> si
@@ -68,8 +70,32 @@ public class Trasa
     /// </summary>
     public required string LodNazev { get; set; }
 
+    /// <summary>
+    /// Regata, ke které záznam patří.
+    /// <para>
+    /// <b>Vyplňuje ho server z klíče a z běžícího okna</b>, ne telefon:
+    /// jméno regaty níž je volný text, který posádka napsala, a podle něj
+    /// se nedá nic řadit ani ukázat. Bez vazby by trasa k závodu nevedla
+    /// vůbec — a pořadatelský přehled musí vědět, u které regaty ji ukázat.
+    /// </para>
+    /// <para>
+    /// <b>Drží se na trase, ne jen na úseku rozjížďky.</b> Záznam, který do
+    /// žádné rozjížďky nespadne — celý padl do čekání na vodě, rozjížďka se
+    /// zrušila, posádka vyplula a nevyjela —, pořád patří té regatě. Kdyby
+    /// viselo všechno na rozjížďce, zmizel by z přehledu zrovna ve dnech,
+    /// kdy se něco nepovedlo.
+    /// </para>
+    /// </summary>
     public int? ZavodId { get; set; }
     public Zavod? Zavod { get; set; }
+
+    /// <summary>
+    /// Okno závodního dne, ve kterém záznam začal. Říká, <b>kdy to smělo
+    /// vzniknout</b> — a jeho tvrdý konec je mez, za kterou se trasa
+    /// neuchovává.
+    /// </summary>
+    public int? OknoId { get; set; }
+    public OknoRegaty? Okno { get; set; }
 
     /// <summary>Jméno regaty, jak ho posádka zadala. Nepovinné.</summary>
     public string? RegataNazev { get; set; }

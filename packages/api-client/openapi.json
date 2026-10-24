@@ -749,6 +749,30 @@
                 }
             }
         },
+        "/okna": {
+            "get": {
+                "tags": [
+                    "Trasy"
+                ],
+                "summary": "Vyp\u00ed\u0161e okna regat, ve kter\u00fdch tahle lo\u010f z\u00e1vod\u00ed",
+                "description": "Prokazuje se kl\u00ed\u010dem k lodi. Telefon si je st\u00e1hne dop\u0159edu a \u0159\u00edd\u00ed se jimi i bez sign\u00e1lu; zm\u011bna od po\u0159adatele se projev\u00ed, a\u017e sign\u00e1l chyt\u00ed.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OknoRegatyDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/klice/uplatnit": {
             "post": {
                 "tags": [
@@ -4262,7 +4286,7 @@
                     "Trasy"
                 ],
                 "summary": "Zalo\u017e\u00ed trasu, nebo vr\u00e1t\u00ed tu existuj\u00edc\u00ed",
-                "description": "Idempotentn\u00ed podle `lokalniId`, kter\u00e9 si vyr\u00e1b\u00ed telefon. Opakovan\u00e9 vol\u00e1n\u00ed druhou trasu nezalo\u017e\u00ed \u2014 na vod\u011b sign\u00e1l pad\u00e1 a nahr\u00e1n\u00ed se bude opakovat.",
+                "description": "Idempotentn\u00ed podle `lokalniId`, kter\u00e9 si vyr\u00e1b\u00ed telefon. Opakovan\u00e9 vol\u00e1n\u00ed druhou trasu nezalo\u017e\u00ed \u2014 na vod\u011b sign\u00e1l pad\u00e1 a nahr\u00e1n\u00ed se bude opakovat. **Bez b\u011b\u017e\u00edc\u00edho okna regaty trasa nevznikne** a vrac\u00ed se 409: z\u00e1znam sm\u00ed b\u011b\u017eet jen od rozpravy do uzav\u0159en\u00ed z\u00e1vodn\u00edho dne a jen lodi, kter\u00e1 je v t\u00e9 regat\u011b p\u0159ihl\u00e1\u0161en\u00e1. Dopos\u00edlat do u\u017e zalo\u017een\u00e9 trasy jde i potom.",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -4290,6 +4314,16 @@
                             "application/problem+json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChybaTrasy"
                                 }
                             }
                         }
@@ -4403,6 +4437,181 @@
                     },
                     "404": {
                         "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/okna": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vyp\u00ed\u0161e okna z\u00e1vodn\u00edch dn\u016f",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OknoDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/okna/rozprava": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Rozpravou otev\u0159e okno z\u00e1vodn\u00edho dne",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. Od t\u00e9hle chv\u00edle sm\u00ed trackery zaznamen\u00e1vat. Opakovan\u00e9 odkliknut\u00ed druh\u00e9 okno nezalo\u017e\u00ed \u2014 vr\u00e1t\u00ed to b\u011b\u017e\u00edc\u00ed. `trvaniHodin` je tvrd\u00fd konec, kter\u00fd plat\u00ed, i kdy\u017e den nikdo neuzav\u0159e; bez n\u011bj je to 14 hodin, nejv\u00edc 36.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "null"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/RozpravaVstup"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OknoDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/okna/uzavrit": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Uzav\u0159e z\u00e1vodn\u00ed den",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. T\u00edm se p\u0159est\u00e1v\u00e1 zaznamen\u00e1vat \u2014 mezi dny se nesleduje. Uzav\u0159\u00edt zav\u0159en\u00e9 nen\u00ed chyba.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OknoDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/polohy": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Posledn\u00ed zn\u00e1m\u00e1 poloha ka\u017ed\u00e9 lodi v regat\u011b",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Vrac\u00ed cel\u00e9 pole \u2014 i lod\u011b, kter\u00e9 se je\u0161t\u011b neozvaly, proto\u017ee ot\u00e1zka zn\u00ed \u201etrackuje n\u00e1m cel\u00e9 pole?\". Stav polohy je troj\u00ed: `Cerstva` do minuty, `Starne` do p\u011bti, pak `Nedostupna`. Sn\u00edmek se dr\u017e\u00ed v cache p\u011bt sekund, tak\u017ee po\u010det div\u00e1k\u016f nerozhoduje o po\u010dtu dotaz\u016f do datab\u00e1ze.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SnimekPoloh"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -5831,6 +6040,17 @@
                     }
                 }
             },
+            "ChybaTrasy": {
+                "required": [
+                    "error"
+                ],
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                }
+            },
             "ClanekDto": {
                 "required": [
                     "slug",
@@ -7231,6 +7451,101 @@
                     }
                 }
             },
+            "OknoDto": {
+                "required": [
+                    "id",
+                    "den",
+                    "otevrenoV",
+                    "tvrdyKonec",
+                    "zavrenoV",
+                    "bezi"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "den": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "otevrenoV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "tvrdyKonec": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "zavrenoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "bezi": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "OknoRegatyDto": {
+                "required": [
+                    "id",
+                    "zavodId",
+                    "serie",
+                    "zavod",
+                    "nazev",
+                    "den",
+                    "otevrenoV",
+                    "tvrdyKonec",
+                    "zavrenoV",
+                    "bezi"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "zavodId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "serie": {
+                        "type": "string"
+                    },
+                    "zavod": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "den": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "otevrenoV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "tvrdyKonec": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "zavrenoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "bezi": {
+                        "type": "boolean"
+                    }
+                }
+            },
             "OpravneniDto": {
                 "required": [
                     "role",
@@ -7413,6 +7728,88 @@
                     "Ios"
                 ],
                 "default": "Android"
+            },
+            "PolohaLodi": {
+                "required": [
+                    "lodId",
+                    "lod",
+                    "cisloPlachty",
+                    "kategorie",
+                    "sirka",
+                    "delka",
+                    "kurz",
+                    "rychlostMS",
+                    "casGps",
+                    "stariMs",
+                    "stav"
+                ],
+                "type": "object",
+                "properties": {
+                    "lodId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "lod": {
+                        "type": "string"
+                    },
+                    "cisloPlachty": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "kategorie": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "sirka": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "delka": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "kurz": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "rychlostMS": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "casGps": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "stariMs": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int64"
+                    },
+                    "stav": {
+                        "$ref": "#/components/schemas/StavPolohy"
+                    }
+                }
             },
             "PoradatelDto": {
                 "required": [
@@ -8714,6 +9111,21 @@
                     }
                 }
             },
+            "RozpravaVstup": {
+                "required": [
+                    "trvaniHodin"
+                ],
+                "type": "object",
+                "properties": {
+                    "trvaniHodin": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    }
+                }
+            },
             "SerieDetailDto": {
                 "required": [
                     "slug",
@@ -8997,6 +9409,37 @@
                     }
                 }
             },
+            "SnimekPoloh": {
+                "required": [
+                    "ted",
+                    "oknoBezi",
+                    "oknoOd",
+                    "lode"
+                ],
+                "type": "object",
+                "properties": {
+                    "ted": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "oknoBezi": {
+                        "type": "boolean"
+                    },
+                    "oknoOd": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "lode": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PolohaLodi"
+                        }
+                    }
+                }
+            },
             "StartovneVstup": {
                 "required": [
                     "zaplaceno"
@@ -9032,6 +9475,13 @@
                     "Publikovano",
                     "Skryty",
                     "Smazano"
+                ]
+            },
+            "StavPolohy": {
+                "enum": [
+                    "Cerstva",
+                    "Starne",
+                    "Nedostupna"
                 ]
             },
             "StavRozjizdky": {
@@ -9272,6 +9722,13 @@
                             "integer"
                         ],
                         "format": "int64"
+                    },
+                    "zavodId": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
                     }
                 }
             },
@@ -11386,13 +11843,13 @@
             "name": "Spr\u00e1va"
         },
         {
+            "name": "Trasy"
+        },
+        {
             "name": "Kl\u00ed\u010de"
         },
         {
             "name": "B\u00f3je"
-        },
-        {
-            "name": "Trasy"
         }
     ]
 }

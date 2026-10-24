@@ -26,7 +26,20 @@ export type Zaznam = {
   potvrzeno_do: number;
   /** Posádka označila nahrávání za dokončené. */
   nahravani_hotovo: number;
+  /** Kdy telefon naposledy zkusil odeslat. Nula znamená „nikdy". */
+  posledni_pokus: number;
+  /** Proč poslední pokus nevyšel, nebo `null`, když vyšel. */
+  potiz: Potiz | null;
 };
+
+/**
+ * Proč se neodeslalo.
+ *
+ * `mimo-okno` není porucha telefonu: server trasu nepřijme, dokud neběží
+ * okno regaty. Posádka s tím nic nenadělá a nemá na to koukat jako na
+ * červenou — zapisuje se dál a odešle se, až pořadatel udělá rozpravu.
+ */
+export type Potiz = 'sit' | 'bez-klice' | 'mimo-okno';
 
 /** Bod tak, jak do zápisu přichází — z GPS i ze simulace stejně. */
 export type NovyBod = {
@@ -237,8 +250,24 @@ export function potvrzeno(zaznamId: string, doBodu: number) {
   );
 }
 
+/**
+ * Zapíše, že se právě zkoušelo odeslat, a jak to dopadlo.
+ *
+ * Čas pokusu se zapisuje **před** samotným odesíláním, ne po něm: kdyby se
+ * zapisoval až po, zabitý proces by ho ztratil a živý kanál by po probuzení
+ * poslal dávku hned znovu.
+ */
+export function zapisPokus(zaznamId: string, kdy: number) {
+  databaze().runSync('UPDATE zaznam SET posledni_pokus = ? WHERE id = ?', [kdy, zaznamId]);
+}
+
+export function zapisPotiz(zaznamId: string, potiz: Potiz | null) {
+  databaze().runSync('UPDATE zaznam SET potiz = ? WHERE id = ?', [potiz, zaznamId]);
+}
+
 export function nahravaniHotovo(zaznamId: string) {
-  databaze().runSync('UPDATE zaznam SET nahravani_hotovo = 1 WHERE id = ?', [zaznamId]);
+  databaze().runSync(
+    'UPDATE zaznam SET nahravani_hotovo = 1, potiz = NULL WHERE id = ?', [zaznamId]);
 }
 
 export type Bod = {

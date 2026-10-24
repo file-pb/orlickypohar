@@ -8,7 +8,8 @@
  * formálně všechno zapnuté.
  */
 import { databaze } from './db';
-import type { Zaznam } from './zaznam';
+import { ZIVE_MS } from './nahravani';
+import type { Potiz, Zaznam } from './zaznam';
 
 export type StavGps = {
   /** Kdy přišel poslední bod (čas z polohy), nebo null, když žádný není. */
@@ -62,6 +63,46 @@ export function svetloGps(z: Zaznam | null, s: StavGps): Svetlo {
   if (!z || z.stav !== 'bezi') return 'stoji';
   if (s.stariMs == null || s.stariMs > PODEZRELE_MS) return 'ceka';
   return 'jede';
+}
+
+/**
+ * Řádek o odesílání: co posádce říct a jakou barvou.
+ *
+ * <b>Tři různé důvody, ne jedna červená.</b> „Bez signálu" je stav vody,
+ * „čeká na rozpravu" je stav závodu a „bez klíče" je věc, se kterou musí
+ * posádka za kapitánem — jediný z těch tří, kde se dá něco udělat hned.
+ */
+export function stavOdesilani(
+  z: Zaznam | null,
+  n: { ceka: number; posledniPokus: number | null; potiz: Potiz | null; hotovo: boolean } | null,
+  ted = Date.now(),
+): { svetlo: Svetlo; hodnota: string } {
+  if (!z || !n) return { svetlo: 'stoji', hodnota: 'nic se neodesílá' };
+  if (z.stav === 'pozastaveny') {
+    return { svetlo: 'pozastaveno', hodnota: `pozastaveno · ${n.ceka} bodů čeká` };
+  }
+
+  const ceka = `${n.ceka} ${n.ceka === 1 ? 'bod čeká' : 'bodů čeká'}`;
+  if (n.potiz === 'bez-klice') {
+    return { svetlo: 'stoji', hodnota: `bez klíče k lodi · ${ceka}` };
+  }
+  if (n.potiz === 'mimo-okno') {
+    // Není to porucha telefonu: server trasu nevezme, dokud nebyla rozprava.
+    return { svetlo: 'ceka', hodnota: `čeká na rozpravu · ${ceka}` };
+  }
+  if (n.potiz === 'sit') return { svetlo: 'ceka', hodnota: `bez signálu · ${ceka}` };
+
+  if (n.posledniPokus == null) return { svetlo: 'ceka', hodnota: `zatím nic · ${ceka}` };
+
+  const stari = ted - n.posledniPokus;
+  return {
+    // Dvojnásobek odesílacího intervalu: jedno vynechané kolo se stane,
+    // dvě už znamenají, že se něco děje.
+    svetlo: stari > 2 * ZIVE_MS ? 'ceka' : 'jede',
+    hodnota: n.ceka === 0
+      ? `na serveru · ${predJakDlouho(stari)}`
+      : `${ceka} · naposledy ${predJakDlouho(stari)}`,
+  };
 }
 
 /** Lidsky „před 4 s" / „před 3 min". Vteřiny až do minuty, pak minuty. */

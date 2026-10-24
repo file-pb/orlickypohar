@@ -1,14 +1,33 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Snimek } from "@/lib/tabule";
 import { Znak } from "@/app/logo";
 import { NazevZavodu } from "@/app/tabule-nazev";
 import { Atributy } from "./atributy";
 import { Karusel, type Panel } from "./karusel";
-import { Dojezdy, Semafor } from "./semafor";
-import { MapkaTrati } from "@/app/mapka-trati";
+import { PoradiTrid } from "./poradi-tridy";
+import { StavovyProuzek } from "./semafor";
+import { MapaTrackeru } from "@/app/mapa-trackeru";
+import { pole } from "@/app/nacrt/mapa/plavba";
+import type { VerejnePolohy } from "@/lib/polohy";
+import { useStopy } from "@/lib/stopy";
+
+/**
+ * Ukázková rozjížďka — tatáž, jakou ukazuje náčrt.
+ *
+ * <b>Dočasné, a tabule to u sebe píše.</b> Dokud appka neposílá polohy
+ * průběžně, nemá tracker co kreslit, a bez něj se nedá posoudit, co jsme
+ * navrhli (Filip, 24. 10. 2026: *„prostě tam ukaž ta data stejně, jako
+ * jsi mi pomohl vyladit zadání pro tu předchozí stránku"*). Je to
+ * i vlastní trať ukázky, ne trať závodu: po krátké trati o třech prvcích
+ * nemá pole kde plout a režie by neměla co střídat.
+ *
+ * Spočítá se jednou pro celý modul: je deterministická a na každé obnově
+ * dat by se jinak generovala znovu.
+ */
+const UKAZKA = pole();
 import { ZnakTridy } from "@/app/tridy";
 import { udalosti, type Udalost } from "@/lib/tabule-udalosti";
 
@@ -50,6 +69,14 @@ export function Obrazovka({
 }) {
   const [snimek, setSnimek] = useState(prvni);
   const [ted, setTed] = useState(() => Date.now());
+  /**
+   * Živé polohy, když je regata pouští ven. <b>Dokud nechodí, jedou po
+   * trati ukázkové plavby</b> a tabule to u sebe píše — vydávat vymyšlené
+   * polohy za skutečné by byla lež, ne ukázka.
+   */
+  const [polohy, setPolohy] = useState<VerejnePolohy | null>(null);
+  /** Okamžik, od kterého mapa počítá čas. První došlá dávka ho určí. */
+  const [odkdy, setOdkdy] = useState<number | null>(null);
   /**
    * Fronta alertů doprostřed obrazovky. <b>Fronta, ne jeden</b>: v cíli
    * dojede několik lodí během jednoho obnovení, a překrýt je navzájem by
@@ -100,16 +127,91 @@ export function Obrazovka({
       }
     };
 
+    const adresaPoloh = `/serie/${encodeURIComponent(serie)}/zavody/${encodeURIComponent(zavod)}/tabule/polohy`;
+
+    // Polohy se tahají vedle snímku: mají vlastní cache na API a jiný
+    // důvod existence, takže výpadek jednoho nesmí shodit druhé.
+    const nactiPolohy = async () => {
+      try {
+        const odpoved = await fetch(adresaPoloh, { cache: "no-store" });
+        if (!odpoved.ok) return;
+        const nove = (await odpoved.json()) as VerejnePolohy;
+        if (!Array.isArray(nove?.lode)) return;
+        setPolohy(nove);
+        setOdkdy((o) => o ?? Date.parse(nove.ted));
+      } catch {
+        // Tabule drží, co má.
+      }
+    };
+
     const obnova = setInterval(nacti, OBNOVA_MS);
+    const obnovaPoloh = setInterval(() => void nactiPolohy(), OBNOVA_MS);
+    void nactiPolohy();
     // Vteřinový tik jen kvůli stáří; data se tahají dvacetkrát méně často.
     const tik = setInterval(() => setTed(Date.now()), 1000);
     return () => {
       clearInterval(obnova);
+      clearInterval(obnovaPoloh);
       clearInterval(tik);
     };
   }, [serie, zavod]);
 
+  const zivePolohy = useStopy(polohy?.vysila ? polohy.lode : null, odkdy);
+  /**
+   * Skutečné lodě se smějí kreslit jen nad skutečnou tratí. Ukázka má
+   * vlastní, delší trať — po krátké trati o třech prvcích nemá vymyšlené
+   * pole kde plout —, takže bez trati regaty se živé polohy neukazují.
+   */
+  const trat = snimek.znacky?.length >= 2 ? snimek.znacky : null;
+  const zive = trat ? zivePolohy : [];
+
   const stari = Math.max(0, Math.round((ted - Date.parse(snimek.kdy)) / 1000));
+
+  /**
+   * Události z trackeru do téže fronty jako ty ze zápisu — karta
+   * doprostřed obrazovky je jedna a nemá se o co přetahovat (Filip,
+   * 24. 10. 2026: *„začni tam zobrazovat ty modaly animované, např. po
+   * dojetí nebo swap pořadí"*). Duplicitu hlídá klíč, stejně jako
+   * u dojezdů ze zápisu.
+   */
+  const [poradiLodi, setPoradiLodi] = useState<
+    { id: number; nazev: string; kategorie: string; stariS: number | null; dojela: boolean }[]
+  >([]);
+
+  const zarad = useCallback((u: Udalost) => {
+    setFronta((f) => (f.some((x) => x.klic === u.klic) ? f : [...f, u]));
+  }, []);
+
+  /**
+   * Kolik z mapy zakrývají panely (Filip, 24. 10. 2026: *„podle mne je
+   * schovaná za ostatními komponenty"*).
+   *
+   * Mapa leží pod horním pruhem i pod karuselem tříd, aby měla tabule
+   * pozadí po celé ploše — pole lodí se ale musí vejít do toho, co z ní
+   * zbývá vidět. Výšku zná jen tahle obrazovka, protože ji určuje její
+   * vlastní CSS (clamp podle šířky televize), takže ji naměří a pošle
+   * mapě; natvrdo zapsané číslo by se rozešlo s rozvržením.
+   */
+  const vrch = useRef<HTMLElement>(null);
+  const tridy = useRef<HTMLElement>(null);
+  const [odsazeni, setOdsazeni] = useState({ nahore: 0, dole: 0 });
+  const maTridy = poradiLodi.length > 0;
+  useEffect(() => {
+    const mer = () => {
+      const nove = {
+        nahore: Math.round(vrch.current?.getBoundingClientRect().height ?? 0),
+        dole: Math.round(tridy.current?.getBoundingClientRect().height ?? 0),
+      };
+      setOdsazeni((p) =>
+        p.nahore === nove.nahore && p.dole === nove.dole ? p : nove,
+      );
+    };
+    mer();
+    const sleduj = new ResizeObserver(mer);
+    if (vrch.current) sleduj.observe(vrch.current);
+    if (tridy.current) sleduj.observe(tridy.current);
+    return () => sleduj.disconnect();
+  }, [maTridy]);
 
   return (
     <div className="tabule">
@@ -123,19 +225,29 @@ export function Obrazovka({
       {/* Logo vlevo, název uprostřed, stav vpravo (Filip, 15. 10. 2026).
           Jen kulatá značka: nápis „Orlická série" vedle ní by stál vedle
           názvu závodu v téže grafice a oba by se přebíjely. */}
-      <header className="vrch">
+      <header className="vrch" ref={vrch}>
         <Link className="odchod" href="/" aria-label="Zpět na Orlický pohár">
           <Znak />
         </Link>
         <h1>
           <NazevZavodu text={snimek.nazev} />
         </h1>
+        {/* Stav rozjížďky se vlajkou patří do téhož pruhu jako všechno
+            ostatní (Filip, 24. 10. 2026) — dva pásy nad sebou braly dvakrát
+            tolik místa než jeden. */}
+        <StavovyProuzek snimek={snimek} ted={ted} ukazkovePolohy={zive.length === 0} />
         <div className="stav">
           <p className={`stitek stav-${snimek.stav.toLowerCase()}`}>{STAVY[snimek.stav]}</p>
           <p className={stari > 120 ? "stari zastarale" : "stari"}>
             {stari < 60 ? `data před ${stari} s` : `data stará ${Math.round(stari / 60)} min`}
           </p>
         </div>
+        {/* Atributy jedou v témž pruhu jako název (Filip, 24. 10. 2026:
+            *„toto všechno dej nějak do jednoho pruhu nahoře, aby nám to
+            nebralo tolik míst"*). Samostatný pás dlaždic pod hlavičkou
+            ukrajoval desetinu obrazovky na pět čísel, která se vejdou na
+            řádek. */}
+        <Atributy snimek={snimek} />
       </header>
 
       {/* <b>Nepodepsaná čísla se musí přiznat</b> (Filip, 9. 10. 2026:
@@ -158,30 +270,46 @@ export function Obrazovka({
         </p>
       )}
 
-      <Atributy snimek={snimek} />
+      {/* <b>Mapa je pozadí celé tabule</b> (Filip, 24. 10. 2026: *„myslel
+          jsem, že to sloučíš s tou trackovací mapou, že ta tabule na telku
+          bude jen jedna"*). Dřív to byl malý widget v rohu vedle semaforu;
+          teď leží pod vším a panely jsou na ní. Lodě do ní přibydou, až
+          bude co kreslit — průběžné odesílání poloh je krok 1 trackeru
+          a zatím není. */}
+      {/* <b>Dokud polohy nechodí, jedou po trati ukázkové plavby</b>
+          (Filip, 24. 10. 2026: *„navrhujeme to, tak to tam dej, ten
+          tracker, jak jsi mi pomohl ukázat ten webový"*). Je to návrh,
+          ne provoz — proto po skutečné trati a se jmény ze startovní
+          listiny, ale tabule to u sebe píše. Vydávat vymyšlené polohy za
+          skutečné by byla lež, ne ukázka; až přijdou první skutečné,
+          tenhle vstup zmizí. */}
+      <div className="tabule-mapa" aria-hidden="true">
+        <MapaTrackeru
+          znacky={zive.length > 0 && trat ? trat : UKAZKA.znacky}
+          lode={zive.length > 0 ? zive : UKAZKA.lode}
+          tabule
+          zive={zive.length > 0}
+          ukazka={zive.length === 0}
+          odsazeni={odsazeni}
+          onUdalost={zarad}
+          onPoradi={setPoradiLodi}
+        />
+      </div>
+      <PoradiTrid radky={poradiLodi} ukazka={zive.length === 0} ref={tridy} />
 
       <div className="sloupce">
-        {/* Rozjížďky a lodě na startu se střídají v jednom sloupci
-            (Filip, 15. 10. 2026: *„na startu a rozjížďky se dá udělat
-            karuselem taky a přidat tam jenom stavy, tím se ušetří jedna
-            tabulka"*). Rozjížďka tu nese jen stav — kdo dojel, říká
-            widget vpravo a alert uprostřed. */}
-        <Karusel panely={polePanely(snimek)} />
+        {/* Zbývá jediný karusel: pořadí po třídách. Panel se stavy
+            rozjížděk odešel 24. 10. 2026 — totéž říká proužek nahoře,
+            a dvakrát totéž zabíralo půl obrazovky, na kterou patří mapa. */}
         <Karusel panely={tridyPanely(snimek)} />
 
-        <div className="sloupecek">
-          <Semafor snimek={snimek} ted={ted} />
-          {snimek.mapa.length > 0 && (
-            <div className="mapka-mala">
-              <MapkaTrati prvky={snimek.mapa} />
-            </div>
-          )}
-          <Dojezdy snimek={snimek} />
-        </div>
+
       </div>
     </div>
   );
 }
+
+
 
 /**
  * Jména stavů. <b>Opsaná z výčtu, ne z hlavy</b> — napsal jsem nejdřív
@@ -251,6 +379,7 @@ function Alert({ udalost, hotovo }: { udalost?: Udalost; hotovo: () => void }) {
 const NADPISKY: Record<Udalost["druh"], string> = {
   start: "Start",
   dojezd: "V cíli",
+  souboj: "Na vodě",
   dokonceno: "Rozjížďka",
   zrusena: "Zrušeno",
   zavod: "Regata",
@@ -260,57 +389,6 @@ const NADPISKY: Record<Udalost["druh"], string> = {
 };
 
 /** Panely levého sloupce: co se jede a kdo je na startu. */
-function polePanely(snimek: Snimek): Panel[] {
-  return [
-    {
-      klic: "rozjizdky",
-      nadpis: "Rozjížďky",
-      obsah:
-        snimek.rozjizdky.length === 0 ? (
-          <p className="prazdno">Zatím žádná.</p>
-        ) : (
-          <ul className="stavy">
-            {snimek.rozjizdky.map((r) => (
-              <li key={r.cislo}>
-                <b>{r.cislo}.</b>
-                <span className={`stitek stav-rozjizdky ${r.stav.toLowerCase()}`}>
-                  {STAVY_ROZJIZDEK[r.stav]}
-                </span>
-                {!r.doSerie && <span className="stitek">mimo pohár</span>}
-                {/* Jen u regaty s procesním dějem: jinde jsou venku pouze
-                    publikovaná čísla a „potvrzeno" u všech by byl šum. */}
-                {snimek.procesniDej && r.poradi.length > 0 && r.stavVysledku && (
-                  <span className={`stitek zapis-${r.stavVysledku.toLowerCase()}`}>
-                    {ZAPIS[r.stavVysledku]}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        ),
-    },
-    // <b>Startovní listina se stránkuje, neusekává</b> (17. 10. 2026).
-    // Všech dvaadvacet lodí najednou se na obrazovku vejde jen tak, že se
-    // řádky stlačí na patnáct pixelů — změřeno, text se z nich uřízl.
-    // „A ještě dvanáct dalších" tu přitom nedává smysl: před startem se
-    // člověk dívá, jestli tam je jeho loď. Karusel už se střídá, takže
-    // z nich prostě udělá víc panelů a tečky řeknou, že nejsou všechny
-    // naráz.
-    ...stranky(snimek.lode, NA_STRANKU).map((cast, i) => ({
-      klic: `start-${i}`,
-      nadpis: `Na startu (${snimek.lode.length})`,
-      obsah: (
-        <ul className="lode">
-          {cast.map((l) => (
-            <li key={l.lod}>
-              {l.lod} <span className="detail">{l.kormidelnik ?? l.kategorie}</span>
-            </li>
-          ))}
-        </ul>
-      ),
-    })),
-  ];
-}
 
 /**
  * Jak se stav zápisu jmenuje na tabuli. <b>Divácká slova, ne úřední</b>:

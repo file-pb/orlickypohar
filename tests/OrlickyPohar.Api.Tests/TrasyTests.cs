@@ -4,7 +4,11 @@ using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Identita;
 using OrlickyPohar.Api.Features.Klice;
 using OrlickyPohar.Api.Features.Lode;
+using OrlickyPohar.Api.Features.Okna;
+using OrlickyPohar.Api.Features.Serial;
+using OrlickyPohar.Api.Features.Tracker;
 using OrlickyPohar.Api.Features.Trasy;
+using OrlickyPohar.Api.Features.Zavody;
 
 namespace OrlickyPohar.Api.Tests;
 
@@ -24,9 +28,32 @@ public class TrasyTests(PostgresFixture fixture)
 
     private (AppDbContext Db, TrasySprava Trasy) Sluzby()
     {
+        var (db, trasy, _, _) = SluzbySCasem(TimeProvider.System);
+        return (db, trasy);
+    }
+
+    /// <summary>
+    /// Služby na daných hodinách. Okno závodního dne má tvrdý konec, takže
+    /// všechno kolem něj se měří posunem času, ne čekáním.
+    /// </summary>
+    private (AppDbContext Db, TrasySprava Trasy, OknaSprava Okna, TimeProvider Cas)
+        SluzbySCasem(TimeProvider cas)
+    {
         var scope = fixture.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        return (db, new TrasySprava(db, TimeProvider.System));
+        var okna = new OknaSprava(db, cas, new NastaveniSprava(db, cas));
+        return (db, new TrasySprava(db, cas, okna), okna, cas);
+    }
+
+    /// <summary>
+    /// Trasa, nebo výjimka s důvodem. Většina testů měří idempotenci
+    /// nahrávání, ne okna — ta mají vlastní třídu.
+    /// </summary>
+    private static async Task<TrasaDto> ZalozAsync(
+        TrasySprava trasy, KlicLodi klic, ZalozTrasuVstup vstup)
+    {
+        var (trasa, chyba) = await trasy.ZalozAsync(klic, vstup, default);
+        return trasa ?? throw new InvalidOperationException(chyba);
     }
 
     /// <summary>
@@ -34,6 +61,17 @@ public class TrasyTests(PostgresFixture fixture)
     /// takže testy pracují s klíčem, ne s přihlášeným uživatelem.
     /// </summary>
     private static async Task<KlicLodi> KlicAsync(AppDbContext db, string znacka)
+    {
+        var (klic, _) = await KlicVRegateAsync(db, znacka);
+        return klic;
+    }
+
+    /// <summary>
+    /// Klíč k lodi, která je v regatě přihlášená — <b>bez účasti a bez
+    /// běžícího okna trasa nevznikne</b>, takže setup musí být celý.
+    /// </summary>
+    private static async Task<(KlicLodi Klic, Zavod Zavod)> KlicVRegateAsync(
+        AppDbContext db, string znacka, DateTimeOffset? ted = null, bool sOknem = true)
     {
         var u = new Uzivatel { Id = Guid.NewGuid(), Zobrazovane = $"Kapitán {znacka}" };
         var osoba = new Osoba { Jmeno = "Majitel", Prijmeni = znacka };
@@ -55,8 +93,49 @@ public class TrasyTests(PostgresFixture fixture)
             VydanV = Ted,
         };
         db.Klice.Add(klic);
+
+        var serie = new Serie
+        {
+            Slug = $"trasy-{znacka}-{Guid.NewGuid():N}", Nazev = "Trasová série", Rok = 2027,
+        };
+        db.Serie.Add(serie);
         await db.SaveChangesAsync();
-        return klic;
+
+        var kategorie = new Kategorie { SerieId = serie.Id, Nazev = "Kajutové" };
+        db.Kategorie.Add(kategorie);
+        var zavod = new Zavod
+        {
+            SerieId = serie.Id,
+            Slug = $"regata-{Guid.NewGuid():N}",
+            Nazev = "Trasová regata",
+            Datum = new DateOnly(2027, 5, 15),
+        };
+        db.Zavody.Add(zavod);
+        await db.SaveChangesAsync();
+
+        var prihlaska = new Prihlaska { SerieId = serie.Id, LodId = lod.Id, KategorieId = kategorie.Id };
+        db.Prihlasky.Add(prihlaska);
+        await db.SaveChangesAsync();
+
+        db.Ucasti.Add(new Ucast { ZavodId = zavod.Id, PrihlaskaId = prihlaska.Id });
+
+        if (sOknem)
+        {
+            // Okno už hodinu běží: rozprava byla před startem, jak to chodí.
+            var kdy = ted ?? DateTimeOffset.UtcNow;
+            db.Okna.Add(new OknoRegaty
+            {
+                ZavodId = zavod.Id,
+                Den = 1,
+                OtevrenoV = kdy.AddHours(-1),
+                OtevrelId = u.Id,
+                TvrdyKonec = kdy.AddHours(12),
+            });
+        }
+
+        await db.SaveChangesAsync();
+
+        return (klic, zavod);
     }
 
     private static ZalozTrasuVstup Vstup(string lokalniId) =>
@@ -81,8 +160,8 @@ public class TrasyTests(PostgresFixture fixture)
         var kdo = await KlicAsync(db, "A");
         var lokalni = $"t-{Guid.NewGuid():N}";
 
-        var prvni = await trasy.ZalozAsync(kdo, Vstup(lokalni), default);
-        var druha = await trasy.ZalozAsync(kdo, Vstup(lokalni), default);
+        var prvni = await ZalozAsync(trasy, kdo, Vstup(lokalni));
+        var druha = await ZalozAsync(trasy, kdo, Vstup(lokalni));
 
         Assert.Equal(prvni.LokalniId, druha.LokalniId);
         Assert.Equal(1, await db.Trasy.CountAsync(t => t.KlicId == kdo.Id && t.LokalniId == lokalni));
@@ -94,7 +173,7 @@ public class TrasyTests(PostgresFixture fixture)
         var (db, trasy) = Sluzby();
         var kdo = await KlicAsync(db, "B");
         var lokalni = $"t-{Guid.NewGuid():N}";
-        await trasy.ZalozAsync(kdo, Vstup(lokalni), default);
+        await ZalozAsync(trasy, kdo, Vstup(lokalni));
 
         var prvni = await trasy.PridejAsync(kdo, lokalni, Davka(0, 50), default);
         var znovu = await trasy.PridejAsync(kdo, lokalni, Davka(0, 50), default);
@@ -113,7 +192,7 @@ public class TrasyTests(PostgresFixture fixture)
         var (db, trasy) = Sluzby();
         var kdo = await KlicAsync(db, "C");
         var lokalni = $"t-{Guid.NewGuid():N}";
-        await trasy.ZalozAsync(kdo, Vstup(lokalni), default);
+        await ZalozAsync(trasy, kdo, Vstup(lokalni));
 
         // Telefon poslal 0–29, potvrzení se ztratilo, tak posílá 20–49 znovu.
         await trasy.PridejAsync(kdo, lokalni, Davka(0, 30), default);
@@ -133,7 +212,7 @@ public class TrasyTests(PostgresFixture fixture)
         var (db, trasy) = Sluzby();
         var kdo = await KlicAsync(db, "D");
         var lokalni = $"t-{Guid.NewGuid():N}";
-        await trasy.ZalozAsync(kdo, Vstup(lokalni), default);
+        await ZalozAsync(trasy, kdo, Vstup(lokalni));
 
         var davka = Davka(0, 3);
         davka.Add(davka[1]);
@@ -151,7 +230,7 @@ public class TrasyTests(PostgresFixture fixture)
         var (db, trasy) = Sluzby();
         var kdo = await KlicAsync(db, "E");
         var lokalni = $"t-{Guid.NewGuid():N}";
-        await trasy.ZalozAsync(kdo, Vstup(lokalni), default);
+        await ZalozAsync(trasy, kdo, Vstup(lokalni));
         await trasy.PridejAsync(kdo, lokalni, Davka(0, 10), default);
 
         // Trasa zůstává rozdělaná, dokud ji posádka neuzavře — podmínka č. 4.
@@ -173,7 +252,7 @@ public class TrasyTests(PostgresFixture fixture)
         var moje = await KlicAsync(db, "F");
         var cizi = await KlicAsync(db, "G");
         var lokalni = $"t-{Guid.NewGuid():N}";
-        await trasy.ZalozAsync(moje, Vstup(lokalni), default);
+        await ZalozAsync(trasy, moje, Vstup(lokalni));
 
         var pokus = await trasy.PridejAsync(cizi, lokalni, Davka(0, 5), default);
 
@@ -189,8 +268,8 @@ public class TrasyTests(PostgresFixture fixture)
 
         // Telefon tvrdí, že záznam začal za dva dny — hodiny má rozjeté.
         var zbudoucnosti = DateTimeOffset.UtcNow.AddDays(2);
-        var zalozena = await trasy.ZalozAsync(
-            kdo, new ZalozTrasuVstup(lokalni, "LUNA", null, ZdrojTrasy.Gps, zbudoucnosti), default);
+        var zalozena = await ZalozAsync(
+            trasy, kdo, new ZalozTrasuVstup(lokalni, "LUNA", null, ZdrojTrasy.Gps, zbudoucnosti));
 
         // Posun se drží, aby se trasa dala vrátit na původní měření; příznak
         // „čas opraven" by řekl jen, že se něco stalo, ne o kolik.
@@ -206,14 +285,74 @@ public class TrasyTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task Bez_bezneho_okna_trasa_nevznikne()
+    {
+        var (db, trasy) = Sluzby();
+        var (kdo, _) = await KlicVRegateAsync(db, "J", sOknem: false);
+        var lokalni = $"t-{Guid.NewGuid():N}";
+
+        var (trasa, chyba) = await trasy.ZalozAsync(kdo, Vstup(lokalni), default);
+
+        // Záznam mimo okno regaty je sledovací zařízení, ne tracker —
+        // přesně ta cesta přes hospodu domů z přejímací podmínky č. 5.
+        Assert.Null(trasa);
+        Assert.Equal(TrasySprava.MimoOkno, chyba);
+        Assert.False(await db.Trasy.AnyAsync(t => t.LokalniId == lokalni));
+    }
+
+    [Fact]
+    public async Task Trasa_dostane_regatu_z_bezneho_okna()
+    {
+        var (db, trasy) = Sluzby();
+        var (kdo, zavod) = await KlicVRegateAsync(db, "K");
+        var lokalni = $"t-{Guid.NewGuid():N}";
+
+        // Jméno regaty z telefonu je volný text a nesmí rozhodovat o ničem;
+        // vazbu určuje server z klíče a z běžícího okna.
+        var zalozena = await ZalozAsync(
+            trasy, kdo, new ZalozTrasuVstup(lokalni, "LUNA", "Úplně jiná regata", ZdrojTrasy.Gps, Ted));
+
+        Assert.Equal(zavod.Id, zalozena.ZavodId);
+        var v_db = await db.Trasy.SingleAsync(t => t.KlicId == kdo.Id && t.LokalniId == lokalni);
+        Assert.Equal(zavod.Id, v_db.ZavodId);
+        Assert.NotNull(v_db.OknoId);
+    }
+
+    [Fact]
+    public async Task Po_uzavreni_dne_jde_zalozit_zaznam_ze_dne_i_doposlat()
+    {
+        var rozprava = new DateTimeOffset(2027, 5, 15, 7, 0, 0, TimeSpan.Zero);
+        var cas = new ZastavenyCas(rozprava.AddHours(1));
+        var (db, trasy, okna, _) = SluzbySCasem(cas);
+        var (kdo, zavod) = await KlicVRegateAsync(db, "L", cas.Ted);
+        var lokalni = $"t-{Guid.NewGuid():N}";
+
+        // Záznam začal za jízdy, nahrává se ale až večer v hospodě, kdy je
+        // signál — a to je po uzavření dne. Výpadek sítě na vodě je normál.
+        var zacatek = cas.Ted;
+        cas.Ted = rozprava.AddHours(11);
+        await okna.UzavriAsync(zavod.Id, Guid.CreateVersion7(), default);
+        cas.Ted = rozprava.AddHours(13);
+
+        var zalozena = await ZalozAsync(
+            trasy, kdo, new ZalozTrasuVstup(lokalni, "LUNA", null, ZdrojTrasy.Gps, zacatek));
+        var davka = await trasy.PridejAsync(kdo, lokalni, Davka(0, 10), default);
+        var hotova = await trasy.DokonciAsync(kdo, lokalni, cas.Ted, default);
+
+        Assert.Equal(zavod.Id, zalozena.ZavodId);
+        Assert.Equal(10, davka!.Prijato);
+        Assert.True(hotova!.Dokoncena);
+    }
+
+    [Fact]
     public async Task Simulovana_trasa_zustane_oznacena()
     {
         var (db, trasy) = Sluzby();
         var kdo = await KlicAsync(db, "I");
         var lokalni = $"t-{Guid.NewGuid():N}";
 
-        await trasy.ZalozAsync(
-            kdo, new ZalozTrasuVstup(lokalni, "LUNA", null, ZdrojTrasy.Simulace, Ted), default);
+        await ZalozAsync(
+            trasy, kdo, new ZalozTrasuVstup(lokalni, "LUNA", null, ZdrojTrasy.Simulace, Ted));
         var moje = (await trasy.MojeAsync(kdo, default)).Single(t => t.LokalniId == lokalni);
 
         Assert.Equal(ZdrojTrasy.Simulace, moje.Zdroj);

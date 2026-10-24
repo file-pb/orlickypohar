@@ -15,6 +15,7 @@ import * as Location from 'expo-location';
 import { Linking } from 'react-native';
 import * as TaskManager from 'expo-task-manager';
 
+import { zkusZiveAsync } from './nahravani';
 import { bezicZaznam, zapisBody } from './zaznam';
 
 export const ULOHA = 'orlickypohar-zaznam-trasy';
@@ -62,6 +63,16 @@ TaskManager.defineTask<DataPolohy>(ULOHA, async ({ data, error }) => {
     })),
     INTERVAL_MS,
   );
+
+  // Teprve tady, za zápisem, se odesílá — a jen jednou za minutu, o což se
+  // stará `zkusZiveAsync`. Přenos je automatický a průběžný, ne úkon
+  // posádky: na ní nesmí viset nic než spuštění záznamu. Výjimka se odsud
+  // nesmí dostat ven, jinak systém úlohu odregistruje.
+  try {
+    await zkusZiveAsync(z.id);
+  } catch (e) {
+    console.warn('[tracker] živé odeslání selhalo', e);
+  }
 });
 
 export type StavOpravneni = 'ok' | 'bez-popredi' | 'bez-pozadi';
@@ -81,8 +92,8 @@ export async function zadejOpravneni(): Promise<StavOpravneni> {
 
 /**
  * Vzorkování. Zápis do telefonu je zadarmo (GPS stejně běží), takže se
- * zapisuje po vteřinách; odesílání živě je ten druhý knoflík a pilot ho
- * nemá — veřejná živá mapa do něj nepatří.
+ * zapisuje po pěti sekundách; odesílání je ten druhý knoflík a jede po
+ * minutě (`ZIVE_MS`) — rádio žere víc než zápis.
  */
 export const INTERVAL_MS = 5000;
 

@@ -221,7 +221,16 @@ export default function DetailTrasy() {
                 dokonciNahraniAsync(id)
                   .then((v) => {
                     obnov();
-                    if (!v.hotovo && v.zbyva > 0) {
+                    if (v.potiz === 'mimo-okno') {
+                      // Není to chyba telefonu: server trasu nevezme, dokud
+                      // pořadatel neudělal rozpravu a neotevřel okno dne.
+                      Alert.alert(
+                        'Regata zatím nezačala',
+                        'Server trasu přijme, až pořadatel udělá rozpravu a otevře '
+                          + 'okno závodního dne. Zapsané body zůstávají v telefonu '
+                          + 'a odešlou se potom.',
+                      );
+                    } else if (!v.hotovo && v.zbyva > 0) {
                       Alert.alert('Zbývá doposlat', `${v.zbyva} bodů se nepodařilo odeslat.`);
                     } else if (!v.hotovo) {
                       Alert.alert(

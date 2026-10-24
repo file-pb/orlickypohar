@@ -1651,8 +1651,51 @@ Patří proto do pořadatelského přehledu u každé lodi — ne jako mapa, ale
 ale odpověď na otázku *„čekáme, nebo startujeme?"* musí být vidět hned.
 
 **Appka tím zůstává hloupá a tedy odolná:** zaznamenává a neřeší, co je
-závod a co čekání. Ořez přijde až při zpracování — v telefonu, před
-nahráním, aby se nenahrávalo nic, co se stejně má zahodit.
+závod a co čekání. ~~Ořez přijde až při zpracování — v telefonu, před
+nahráním, aby se nenahrávalo nic, co se stejně má zahodit.~~
+
+**Ořez v telefonu padl s průběžným přenosem** (24. 10. 2026). Obojí najednou
+nejde: ořez na okno rozjížďky potřebuje vědět, kdy rozjížďka skončila, a to
+se telefon dozví až po dojezdu — kdežto průběžně se odesílá dávno předtím.
+A odesílat se musí i mimo rozjížďku, protože *„kde je LUNA?"* a *„čekáme,
+nebo startujeme?"* jsou otázky z doby, kdy žádná rozjížďka neběží.
+
+Ořez se tím stěhuje **na server a mění se z nevysílání na mazání**: server
+dostane celý blok na vodě a po uzavření rozjížďky zahodí, co je mimo
+uchovávané okno. Appka zůstává hloupá, jen hloupější, než plán počítal.
+
+**Cena je v soukromí, ne v datech.** Mezi uzavřením rozjížďky a smazáním má
+server chvíli i to, co se má zahodit — tedy přesně to koupání v zátoce,
+kvůli kterému ořez vznikl. Dvě věci to drží: mazat **hned při uzavření
+rozjížďky** (ne nočním úklidem) a do té doby ta data nikomu nevydávat
+kromě rozhodčího, který je stejně vidí živě. Tvrdý konec okna platí dál
+a je poslední pojistkou pro den, který nikdo neuzavřel.
+
+**Ořezává se i při vydávání ven, ne jen při mazání** (Filip, 24. 10. 2026:
+*„to, do čeho nikomu nic není, nebudeme live vysílat veřejně, i když loď
+svoji pozici oznamovat bude"*). Oponentura 24. 10. 2026 ukázala, že bez
+toho odůvodnění ořezu nedrží: přepínač *živý přenos ven* by veřejnosti
+posílal průběžný tok z **celého bloku na vodě**, tedy přesně to, co se po
+uzavření rozjížďky maže, a mazání by z ochrany udělalo úklid archivu.
+
+| | Co vidí |
+|---|---|
+| **rozhodčí a pořadatel** | celý blok na vodě, průběžně |
+| **veřejnost** | jen to, co je uvnitř okna rozjížďky |
+| **telefon** | hlásí pořád, bez ohledu na obojí |
+
+**Loď hlásí dál i mimo okno** — jinak by zmizela z pořadatelského přehledu
+zrovna ve chvílích, kvůli kterým ten přehled vznikl (*„kde je LUNA?"*,
+*„čekáme, nebo startujeme?"*). Veřejný výdej se jen zavře.
+
+**Prakticky to znamená, že veřejný tok běží od začátku startovní procedury
+do dojezdu**, a pak se zastaví. Ořez zezadu se nedá udělat dopředu — kdy
+rozjížďka skončí, se server dozví až potom —, takže se vydávání vypíná,
+ne dodatečně maže.
+
+**Poslední známá poloha ven nepatří vůbec.** Je to bezpečnostní údaj pro
+závodní výbor a drží se mimo uchovávané okno schválně; veřejnosti by
+odpovídala na otázku, kterou si nemá klást.
 
 **Den se dělí na bloky, ne na jeden kus.** U Radavy se po třech rozjížďkách
 jde na oběd a odpoledne se pokračuje. **Přes oběd se tracker nevypíná**
@@ -1848,6 +1891,886 @@ plán odmítá u nočního běhu GPS.
   hledat — a když neběží nic, řádek tam není.
 - **Plný panel** je na obrazovce Trasa jako samostatný oddíl *Sledování*:
   trasa je výsledek, sledování je stav tady a teď.
+
+
+### Jak se trackování zobrazuje (Filip, 24. 10. 2026)
+
+Rozprava o tom, co se z trackeru komu ukáže. Vznikla nad hotovým záznamem,
+tedy ve chvíli, kdy polohy existují a není je kde vidět: **zobrazení polohy
+na mapě dnes není nikde** — ani ve webu, ani v appce. Trasa jde z telefonu
+ven jen jako GPX (`app/src/lib/tracker/gpx.ts`) a jako textový přehled.
+
+**Rozhodnutí: pro diváka se trackování zobrazuje jako stav, mapa je až
+záznam — pořadatel a výš ale mapu dostanou živě** (upřesněno Filipem
+24. 10. 2026, viz *Pořadatel chce mapu, a živě* níž).
+
+Důvod je v tom, co se kolem trackeru skutečně ptá:
+
+| Otázka | Kdo | Potřebuje mapu? |
+|---|---|---|
+| „trackuje nám celé pole?" | pořadatel před procedurou | ne — stačí čerstvost |
+| „čekáme, nebo startujeme?" | rozhodčí | ne — *„před 2 min, 1,2 km od linie"* |
+| „kde je LUNA?" | závodní výbor | skoro ne — bod, směr, stáří |
+| „kdo vede?" | divák | ne — pořadí, které bez trati nemáme |
+| „kde jsem ztratil čas?" | posádka po dojezdu | **ano** |
+
+Mapu si vynutí jediná z nich, a je to ta jediná, která se neptá živě.
+Druhý důvod je čitelnost: čtyřicet plachetnic při pěti uzlech je na zoomu 15
+**zhruba pixel za pět sekund**, takže živá mapa je čtyřicet teček, které se
+nehýbou.
+
+#### Pořadatel chce mapu, a živě (Filip, 24. 10. 2026)
+
+*„Pořadatel a výše musí mít k dispozici mapu, na které bude tracking, i moci
+zoomovat a koukat na lodě a jejich detaily."* Tabulka výš tedy platí pro
+diváka, ne pro závodní výbor: **tam, kde se podle polohy jedná, mapa je
+nutná.** Text *„1,2 km jihozápadně"* odpoví na *„startujeme?"*, ale
+neodpoví na *„je ještě na vodě, nebo už u břehu?"* — a to je otázka za šera
+a ve zhoršeném počasí, tedy ten bezpečnostní rozměr, kvůli kterému podle
+plánu celá kapitola existuje i bez jediné zveřejněné rozjížďky.
+
+**Je to jedna mapa, ne dvě** (Filip, 24. 10. 2026: *„resp. v případě, že to
+bude povolené i pro veřejnost, tak všichni"*). Staví se jednou a kdo ji
+vidí, rozhoduje přepínač *živý přenos ven*. Veřejná živá mapa tím přestává
+být samostatný kus práce a zůstává z ní rozhodnutí o přístupu.
+
+**Co to stojí: interaktivní mapa je nová komponenta.** Dnešní `MapkaTrati`
+(`web/app/mapka-trati.tsx:151`) bere jen prvky, nemá stav a nic v ní nejde
+posouvat ani rozkliknout — kreslí se na serveru a používá ji správa bójí
+a tabule. Zoom, posun, výběr lodi a karta s detailem jsou proto práce navíc.
+Použitelné zůstává všechno pod tím: dlaždice přes náš server, projekce
+z `web/lib/mapa.ts` i kreslení bójí.
+
+**V pořadí práce se tím mapa stěhuje z kroku 5 do kroku 2.** Pro diváka
+zůstává pozdě; pro rozhodčího je to součást přehledu, ne nadstavba nad ním.
+
+**Kam ji dát: divákovi další tab, pořadateli vrstva do mapky, kterou už
+má** (Filip, 24. 10. 2026: *„asi bych to dal jako další tab? To si nejsem
+jistý, ale pro začátek bychom mohli, ne?"*).
+
+Pro **diváka** ano, tab vedle trati — je to nejlevnější a nejmíň invazivní
+krok a od #386 je z tabů regaty na úzkém displeji akordeon, takže jeden
+navíc nic nerozbije. Patří k tomu ale výhrada: **trať a živá mapa jsou
+skoro tatáž obrazovka**, jedna s bójemi a druhá s bójemi a loděmi. Až bude
+mapa interaktivní, nejspíš se slijí do jedné s přepínačem vrstvy *ukázat
+lodě*. Jako tab se to kdykoli sloučit dá; rozmotat sloučenou obrazovku zpět
+je dražší, a proto tudy.
+
+Pro **pořadatele to není tab, ale vrstva**: mapku téhož závodu už má
+u stavby trati (`web/app/sprava/[serie]/boje/[zavod]/page.tsx`), takže tam
+lodě přibydou. Je to tentýž postup, jaký plán rozhodl u čerstvosti — nedělat
+novou obrazovku, přidat to tam, kam se stejně dívá.
+
+**Důvod, proč se ty dvě cesty liší:** divák mezi tabem *trať* a tabem *mapa*
+vybírá podle toho, co chce vidět. Rozhodčí si nevybírá — on **potřebuje
+obojí naráz**, bóje i lodě mezi nimi, protože se dívá na vztah mezi nimi.
+
+#### Mapa v appce je jiná disciplína (Filip, 24. 10. 2026)
+
+*„Na appce bude také potřeba nějaké kvalitní zobrazení, mají-li to vidět."*
+Platí, ale nejde o tutéž práci ještě jednou — v appce se mapa potká s třemi
+věcmi, které web nemá:
+
+**Na vodě není signál, takže dlaždice se musí předstáhnout.** Web si je tahá
+průběžně přes `/dlazdice`; v appce by stejná mapa byla uprostřed přehrady
+prázdná plocha. Závodní pole je ale pár desítek dlaždic (zoom 10–17, pár
+kilometrů čtverečních), takže se stáhnou dopředu — spolu s plánem regaty,
+který si telefon stahuje tak jako tak.
+
+**Mapa stojí víc baterky než celý tracking, a to je měřené.** Záznam se
+zhasnutým displejem baterkou za 12 minut nehnul; *„při běžném používání"*
+to bylo 12,6 % za hodinu, a v tom čísle je hlavně displej. Posádka, která
+bude půl dne koukat na mapu, si vybije telefon, který měl nahrávat. Mapa
+proto musí mít **úsporné chování** — tmavé pozadí, žádná animace, zhasínat
+a nedržet obrazovku rozsvícenou.
+
+**Kreslí se jinak než na webu.** Rozhodnutí *ostatní šedě a tence* je pro
+notebook na břehu; na telefonu na houpající se lodi a v ostrém slunci je
+tenká šedá čára neviditelná. V appce tedy silnější čáry, vyšší kontrast
+a větší terče k ťuknutí — tentýž zákon (vybraná loď vede), jiné hodnoty.
+
+**Co se sdílí, je matematika, ne komponenta.** `web/lib/mapa.ts` je čistý
+modul bez Reactu a DOM právě proto; jeho vlastní dokumentace říká, že až
+bude appka ukazovat trať, musí počítat totéž. Kreslení je v React Native
+vlastní, projekce a dlaždice společné.
+
+**Živě a záznam jsou dva sloupce u každé role, ne dvě fáze projektu**
+(Filip, 24. 10. 2026):
+
+| Kdo | Živě | Záznam |
+|---|---|---|
+| pořadatel, rozhodčí | čerstvost, vzdálenost a směr v seznamu lodí | podklad k protestu — kdo byl kde v okamžiku incidentu |
+| kapitán | totéž co posádka, navíc klíče k lodi | stopa lodi za celou regatu |
+| posádka | v appce vlastní poloha nad tratí a stav záznamu; cizí lodě podle nastavení | vlastní stopa, kde se ztratil čas |
+| divák na webu | přehled: kdo je na vodě, jak daleko, co se jede | stopy po regatě |
+| divák u telky | režie: souboj, celek, let po trati | tatáž režie, jen přehraná |
+
+**Přenos je automatický a průběžný, ne úkon posádky** (Filip, 24. 10. 2026:
+*„všechno se musí přenášet automaticky a průběžně. Organizátor, resp.
+rozhodčí musí mít přehled o tom, jak lodě jedou a kde jsou"*). Dnešní stav —
+nahrání spustí až ruka po dojezdu — je tím zrušený: kdo neťukne, toho stopa
+by neexistovala, takže by chyběl v sestřihu, v přehledu pro diváka
+i v podkladu k protestu. **Na posádce nesmí viset nic než spuštění
+záznamu.**
+
+Tím se mění pořadí práce proti prvnímu nástřelu z téhle rozpravy, kde stála
+stopa po dojezdu první. **Průběžné odesílání je podmínka všeho ostatního**,
+protože teprve z něj data na serveru vznikají:
+
+| | Krok | Proč tam |
+|---|---|---|
+| **1** | průběžné odesílání z úlohy na pozadí, kdykoli je signál | bez něj nemá server co ukazovat ani co archivovat |
+| **2** | přehled pro rozhodčího: **kde jsou** (čerstvost, vzdálenost, směr), **jak jedou** (postup po trati) a **mapa** se zoomem a detailem lodi | to, co si Filip vyžádal; obsluhuje tracker check, odklad startu i shánění lodi za šera |
+| **3** | stopa po dojezdu v appce a po regatě na webu | vzniká skoro zadarmo, data už na serveru jsou |
+| **4** | posty a sestřih regaty na tabuli | režie se nacvičí na záznamu |
+| **5** | živě pro diváka | až když se na 3 a 4 ukáže, že to stojí za dívání |
+
+**„Jak jedou" smí být pro rozhodčího dohad, pro diváka ne.** Plán právem
+odmítá vydávat vzdálenost k bóji za pořadí; u rozhodčího ale ten údaj čte
+člověk, který ví, co s ním, a nerozhoduje podle něj závod. Proto postup po
+trati v kroku 2 ano, veřejný žebříček pořád ne.
+
+#### Televize je režie, ne mapa
+
+*„U telky může být detail na souboj, když si dvě lodi prohodí místa (nějaký
+pomyslný post na trati), a pak celkový pohled, nebo jednotlivé přesunování
+po trati, jako když ukazují v Evropě počasí."*
+
+Tabule v hospodě se neovládá — když se neumí střihat sama, nikdo ji
+nespraví. Tím pádem pro ni neplatí námitka o čtyřiceti nehybných tečkách:
+divák se nedívá na mapu, dívá se na záběr.
+
+**Režie se ale nacvičí na záznamu, ne živě.** Souboj je dvojice lodí, která
+si mezi dvěma posty prohodila pořadí — a ten výpočet je ze záznamu
+**přesnější než živě**: živě se šetří baterka a dávky chodí po minutě,
+v záznamu je bod po pěti sekundách, takže průjezd postem se interpoluje na
+vteřinu. Navíc sedí na okamžik: lidi jsou v hospodě večer po závodě, ne
+během rozjížďky.
+
+#### Co je post (Filip, 24. 10. 2026)
+
+*„Post je pomyslné pořadí na trati počítané k nějakému bodu, např. cíli.
+Jasně, lodě křižují a volí různé dráhy, ale toto je prostě tolerovaná věc.
+Je to pro atraktivitu sledování. Lodě se mohou měnit v pořadí zrovna jak
+křižují a tato akce udrží diváky u sledování závodu."*
+
+**Je to spojitá veličina, ne měřicí čára.** První nástřel z téhle rozpravy
+mířil jinam — post jako čára uprostřed úseku, průjezd jako událost. Filipovo
+pojetí je jednodušší a pro diváka lepší: pořadí se přepočítává pořád a
+prohození je okamžik, kdy se dvě lodě v tom pořadí vymění.
+
+**Křižování pořadím hází, a je to obsah, ne chyba.** Loď na kříž se
+k návětrné značce vzdušnou čarou přibližuje pomalu, takže po každém obratu
+může v pomyslném pořadí přeskočit. Právě to je ta akce, která drží diváka
+u obrazovky. Tolerovat se to tedy nemá jen proto, že to jinak nejde — ono to
+tak **má** vypadat.
+
+**Měřit se ale nesmí k cíli vzdušnou čarou.** U trojúhelníku se loď na
+odvětrné noze od cíle vzdaluje, i když jede správně, a pomyslné pořadí by ji
+řadilo poslední.
+
+**Měří se podél trasy, kterou mapa už kreslí** (Filip, 24. 10. 2026: *„na
+mapě jsi stejně už navrhl trasu, a ta je pěkná, tak např. kolmicí k ní by se
+daly počítat ta pořadí, ne?"*). Loď se kolmo promítne na trasu a řadí se
+podle toho, **jak daleko po trase ten průmět leží**. Je to lepší než dvojice
+*zbývající prvky + vzdálenost k dalšímu*, kterou tenhle oddíl nesl první
+hodinu: ta má skok pokaždé, když loď odbyde prvek, takže pořadí dvou lodí
+u bóje blikalo podle toho, která už protnula poloměr. Průmět na trasu je
+spojitý a odvětrnou nohu zvládne sám — loď po trase postupuje, i když se od
+cíle vzdaluje.
+
+**Počítá se z `cestaPoVode`, ne ze `spojniceTrati`.** To je ta past: funkce,
+která kreslí hezkou čárkovanou trasu, bere `metruNaPixel`
+(`web/lib/voda.ts:712`) — podle měřítka zvětšuje obloučky obeplutí a
+`rozestupNoh` nohy navíc odsazuje stranou, ať se nepřekrývají. Pořadí
+počítané z ní by záviselo na zoomu mapy. Vrstva níž je ale tatáž trasa bez
+ozdob: nohy z `cestaPoVode`, v metrech. **Divák tedy vidí právě tu čáru,
+podle které se řadí**, jen v hezčí podobě.
+
+**Kola zůstávají na poloměrech prvků** (start 100 m, cíl 50 m, otočné bóje
+30 m — plán je rozhodl kvůli zhuštění vzorkování). Na okruhu je průmět
+dvojznačný, protože druhé kolo má tytéž souřadnice jako první; kolo se proto
+počítá zvlášť, z průjezdu poloměrem. Je to mnohem bezpečnější použití téže
+detekce než předtím: chyba stojí jednu událost za kolo, ne neustálé blikání
+pořadí.
+
+**Průmět musí být monotónní, ne absolutně nejbližší.** U bóje se trasa láme,
+takže loď blízko vrcholu má dvě skoro stejně dobré kolmice — jednu na
+příchozí nohu, jednu na odchozí — a pořadí by mezi nimi skákalo dopředu
+a zpět. Bere se proto ten průmět, který je nejblíž tomu předchozímu.
+
+**Zůstává se u kolmice k trase, i na návětrné noze** (Filip, 24. 10. 2026:
+*„musíme zůstat u kolmice a všichni to pochopí"*). V rozpravě se zvažovala
+**příčka kolmá ke směru větru** — v jachtařském vysílání *ladder rung* —,
+protože na kříži je vepředu ten, kdo je dál po větrné ose, bez ohledu na
+bok. Filip ji odmítl a rozhodující je ten druhý důvod: **kolmice k trase se
+vysvětlí jednou větou**, žebříček po větru ne. U čísla, které má bavit
+diváka a nic nerozhoduje, je srozumitelnost víc než přesnost.
+
+**Věcně by to navíc stálo na starém větru.** Vítr se neměl brát z lodí —
+mobily ho neměří a NMEA 2000 tu nikdo nemá — ale odvodit z trati, ze
+světové strany průjezdu startem, kterou rozhodčí zadává při stavbě. Jenže
+ta platí k okamžiku stavby trati, a vítr se v údolí Orlíku stáčí. Žebříček
+by tedy mezi dvěma přestavbami trati měřil podle větru, který už nefouká,
+a dělal by to tiše.
+
+**Cena rozhodnutí: křižování se vyhladí.** Průmět na trasu postupuje při
+obratech klidněji než měření po větrné ose, takže prohození budou méně
+divoká. Nezmizí — při obratu se průmět skoro nehýbe a na dlouhé noze se
+rozjede —, ale *plenty of swapping for the lead* bude mírnější, než kdyby
+se měřilo po větru. **Kolik toho zbude, se pozná až na první skutečné
+rozjížďce**; je to první věc, kterou na pomyslném pořadí ověřit.
+
+**Kategorie startují společně** (Filip, 24. 10. 2026), takže pomyslné pořadí
+je **jeden seznam za celé pole** — tak, jak to divák na vodě vidí. Kategorie
+je u lodi štítek a dá se jím filtrovat, protože boduje se po kategoriích;
+štítkem je **značka třídy** z `web/public/tridy/`, ne slovo — loď se pozná
+podle siluety rychleji — a filtruje se taby nad žebříčkem.
+Pro režii to znamená, že souboj uvnitř kategorie má přednost, ale souboj
+napříč se nezahazuje: fyzicky se stal.
+
+**Přepínač celkově / po kategoriích je filtr při zobrazení** (Filip,
+24. 10. 2026: *„to stačí počítat až při zobrazení jako filtr, ne?"*). Ano —
+a drží to proto, že **uloženou veličinou je postup po trati, ne pořadí.**
+Postup je jedno číslo na loď a okamžik a nezávisí na tom, kdo je zrovna
+v seznamu; pořadí celkové, pořadí v kategorii i prohození dvojice jsou nad
+ním dopočty. Uložené pořadí by se naopak muselo ukládat zvlášť pro každý
+filtr a při změně startovní listiny by zestárlo.
+
+**Postup se počítá při příjmu dávky a ukládá se k bodu.** Tím je zadarmo
+i historie, kterou režie potřebuje: *„na druhé bóji si to prohodily"* je
+otázka na postup v čase, ne na okamžitý stav. Jedno číslo navíc u bodu je
+proti souřadnicím zanedbatelné.
+
+**Loď, která nehlásí, se ukáže jako nedostupná a propadne nakonec** (Filip,
+24. 10. 2026: *„když na trackeru nebude, tak ji zobrazíme jako nedostupnou,
+to se zatím nedá nic dělat, a z pořadí vypadne nakonec. Jakmile se loď do
+trackeru přihlásí, tak jí zase na pozici zobrazíme"*). Je to lepší než ji
+vynechat: seznam, ze kterého loď tiše zmizí, tvrdí, že vede někdo jiný, a
+divák nepozná rozdíl mezi *„je třetí"* a *„nevíme, kde je"*.
+
+**Propadnout ale nesmí hned, jinak lže obráceně.** Loď, která vede a na
+minutu ztratí signál, by spadla na konec a za chvíli vyskočila zpět — to je
+horší než nic. Drží se proto **tři stavy podle stáří polohy**, ne dva:
+
+| Stav | Co se stane s pozicí |
+|---|---|
+| **čerstvá** | pořadí podle postupu |
+| **stárnoucí** | pozici si drží, ale je označená stářím (*„před 2 min"*) |
+| **nedostupná** | propadne nakonec |
+
+Je to tentýž údaj, jaký plán žádá u pořadatele (*„před 8 s", červeně „před
+6 minutami"*), jen použitý k řazení. Práh se vyladí na skutečných datech;
+na vodě signál padá běžně a sesouvat loď po každém výpadku by seznamem jen
+třáslo.
+
+**Návrat na pozici je zadarmo**, protože se ukládá postup, ne pořadí: nová
+poloha dá nový postup a loď se zařadí správně sama, i když mezitím ujela půl
+kola. **Jediné, co se z díry nezotaví, je počítadlo kol** — kolo se počítá
+z průjezdu poloměrem prvku a ten se během výpadku nestal. Loď se pak může
+vrátit zařazená o kolo níž. Odhadnout kolo ze skoku v postupu jde, ale je to
+dohad nad dohadem; čistější je nechat to opravit rozhodčímu, který stejně
+vidí, kolikáté kolo se jede.
+
+**Odstoupená loď je jiná věc než nedostupná.** Nedostupnost je stav
+trackeru — technika, dočasná, loď se vrátí. Odstoupení je závodní fakt ze
+zápisu rozhodčího a je trvalé. Vypadají podobně (obě jsou „mimo pořadí")
+a nesmějí se sloučit do jednoho řádku: *„nehlásí se"* je výzva shánět loď,
+*„odstoupila"* je uzavřená věc. Patří k tomu totéž, co plán rozhodl u tabule
+— **každý řádek nese svůj stav**, místo aby se zamlčel.
+
+**V začátcích nebude trackovat celé pole, a je to v pořádku** (Filip,
+24. 10. 2026: *„možná v začátcích se nebude zapínat zobrazení trackingu
+u všech, to je holt daň za ty začátky"*). Rozhodnutí zobrazovat nedostupné
+lodě tu daň unese samo: **seznam zůstane úplný, jen část řádků nemá
+pozici.** Divák vidí, že deset lodí hlásí a zbytek ne, a to je poctivé.
+
+**Pozor ale na pořadová čísla.** Když většina pole pozici nemá, nesmí se
+u trackujících psát *1., 2., 3.* jako pořadí závodu — je to pořadí mezi
+těmi, kdo hlásí, a musí to tak být napsané. Je to rozdíl ve slovech
+a velký rozdíl ve čtení.
+
+**Pro pořadí práce z toho plyne tvrdá hranice.** Přehled pro rozhodčího
+(krok 2) dává smysl i s polovinou pole — ten ví, kdo trackuje, a hledá
+konkrétní loď. **Sestřih a divácké pořadí (kroky 4 a 5) s polovinou pole
+nefungují**, protože zrovna vedoucí loď v nich nemusí být. Pokrytí tedy
+není jen provozní detail pilotu: je to podmínka, kdy se smí pustit divácká
+část.
+
+**Pro režii potřebuje práh, jinak to bliká.** Při křižování se pořadí mezi
+dvojicí lodí mění klidně každou minutu; kdyby sestřih stříhal každou výměnu,
+nestříhá nic. Souboj je tedy prohození, které **vydrží** — řádově půl minuty
+nebo rozdíl nad pár desítek metrů. Hodnota se vyladí na prvních skutečných
+datech, protože odhadnout ji bez nich je věštění.
+
+**Pomyslné pořadí je nejlevnější divácká obrazovka, jakou máme.** Je to
+seznam, ne mapa: žádné dlaždice, žádné stopy, čitelné na telefonu u vody.
+Tím se zařazuje dřív než sestřih, který potřebuje tentýž výpočet a navíc
+režii.
+
+**Musí se tvářit jako dohad, protože jím je.** Plán odmítá vydávat
+vzdálenost k bóji za pořadí a to platí dál — proto u čísla stojí, že je
+pomyslné a že o výsledku rozhoduje cíl. Filipovo rozhodnutí tu větu
+nepopírá, jen říká, že dohad se ukázat smí, když se jako dohad tváří.
+
+**Post není pořadí v závodě**, a to je jeho hodnota. Sestřih tak smí říct
+*„na druhé bóji si to LUNA s PEZI prohodily"*, aniž by kdy tvrdil, kdo vede.
+
+#### Režie tabule: kolotoč přerušovaný souboji (Filip, 24. 10. 2026)
+
+*„Pokud se nic nebude dít na tabuli, tak budeme postupně přepínat focus
+pořadím, aby byly vidět dráhy a nebyl to guláš. Jakmile se někde změní
+pořadí, tak dostanou chvilku focus ty dvě lodě a pak to zase naváže na ten
+kolotoč a pojede dál."*
+
+To je celá režie, a stojí na jedné myšlence: **tabule nikdy neukazuje
+všechno.** Dráhy čtyřiceti lodí jsou guláš, ať se kreslí jakkoli; smysl
+dává jedna loď, nebo dvojice, která se právě pere.
+
+| Co se děje | Co tabule ukazuje |
+|---|---|
+| nic zvláštního | **kolotoč** — jedna loď po pořadí shora, každá chvíli |
+| prohození v pořadí | **obě lodě**, na chvíli, pak dráhy vyhasnou |
+| po souboji | **kolotoč pokračuje tam, kde přestal** |
+
+**Navázat znamená navázat.** Kolotoč se nesmí řídit časem od startu, ale
+časem stráveným mimo souboje — jinak po každém souboji přeskočí několik
+lodí a některé se na tabuli nedostanou vůbec.
+
+**Zoom je taky režie** (Filip, 24. 10. 2026): tabule drží **celé pole**,
+ne trať, takže se záběr přizpůsobuje tomu, kde lodě zrovna jsou. Jakmile
+se pole roztáhne a začnou dojíždět první lodě, střídá se **celek a čelo**
+— pět prvních, pak na chvíli zase celek. **Lodě, které dojely, do záběru
+nepatří**; výřez počítaný i s nimi by se roztáhl na prázdnou vodu u cíle.
+Na čelo se přepíná jen tehdy, když se oba záběry liší aspoň o stupeň
+přiblížení — jinak je to týž obrázek a střídání by blikalo.
+
+**Pravý panel je jediné místo pro pořadí** a taby se v něm střídají samy.
+**Když se někde něco stane, přepne se na to:** prohození uvnitř jedné
+třídy přepne na tu třídu, souboj napříč třídami patří celému poli.
+Odpočet střídání se tím pokaždé rozbíhá znovu, aby tab, na který se právě
+přepnulo, hned nezmizel.
+
+**Tohle všechno patří do stávající tabule, ne vedle ní.** Tabule už
+existuje (`serie/[slug]/zavody/[zavod]/tabule/`) a náčrt na `/nacrt/tabule`
+je jen ukázka rozvržení — používá dokonce její `Karusel`. Zkloubit to
+znamená: mapa jako pozadí pod dosavadní panely, panely zmenšit a položit
+na ni, a karusel nechat jak je. Mapa ale musí být **stálá**, ne jeden
+z panelů: karusel střídá po devíti vteřinách, kdežto režie mapy má takty
+desítek vteřin a do devítisekundového okna by se nevešel ani jeden celý
+záběr.
+
+**Hláška o prohození říká směr, ne jen jména** (Filip, 24. 10. 2026):
+zelená šipka nahoru u lodi, která jde dopředu, červená dolů u té druhé,
+a celé to přijede, ať si toho divák všimne. Bez šipek je to jen dvojice
+jmen a musí se domýšlet, kdo koho.
+
+**Totéž se odehraje i v žebříčku** (Filip, 24. 10. 2026) — pořadí se čte
+v seznamu, takže tam ta událost patří stejně jako na mapu. Upřesněno týž
+večer do téhle podoby:
+
+- **vždycky jen dvě lodě vedle sebe.** Loď, která klesá o několik míst, to
+  odehraje jako **řadu výměn se sousedem**, dokud nedosedne — skokové
+  přeskládání seznamu vypadá jako porucha, kdežto tohle jde sledovat očima;
+- **postupující vyjede rovně vzhůru** a drží stopu, **ustupující uhne
+  stranou, zajede za ni a klesne**; na tu chvíli ztransparentní a po
+  dosednutí se zase rozsvítí;
+- **jména jedou rovně**, ať se dají číst;
+- **šipka svítí dvě vteřiny** a zhasne, zatímco se pod ní rozsvítí
+  pořadové číslo — obojí v téže buňce mřížky, takže řádek nepodskočí;
+- **seznam odroluje doprostřed mezi dvojici.** Bez toho se předjetí
+  odehraje mimo výřez: žebříček má čtyřiadvacet řádků a vidět je jich devět.
+
+**Hláška na mapě svítí osm vteřin, nebo dvě, když za ní jede další souboj.**
+Když se prohození řetězí, nemá cenu držet staré; když je klid, ať si to
+divák stihne přečíst.
+
+**Bez výběru se nekreslí žádná dráha** (Filip, 24. 10. 2026: *„když nebudu
+mít nic zaškrtnuto, tak nezobrazuj dráhy všech"*). Mapa začíná tečkami;
+dráhu dostane jen to, co si někdo zaškrtl, nebo na co ukázala režie. Náčrt
+předtím ukázal, že čtyřicet drah je koberec, ať se kreslí jakkoli
+průhledně — a při prvním pokusu o režii svítilo 23 drah z 24, protože
+doznívala všechna stará prohození naráz. Hoří proto jen to, co je právě
+v záběru.
+
+**Odsud plyne i to, jak se vybírá, co je souboj.** Náčrt
+(`web/app/nacrt/mapa`) to má postavené a hned ukázal, že bez filtrů je
+tabule k ničemu:
+
+| Pravidlo | Podíl času v souboji |
+|---|---|
+| každé prohození, které vydrží minutu | **93 %** — tabule hoří pořád, tedy nikdy |
+| + jen prohození do 6. pozice | 73 % |
+| + až když nový vedoucí vede o kus, ne o délku trupu | **73 %**, ale o čtvrtinu míň různých soubojů |
+
+**Dvě páky, a každá filtruje něco jiného:** čas (vydrželo to) a odstup
+(stalo se to doopravdy). Odstup je ten důležitější — dvě lodě bok po boku
+se přehazují o délku trupu a vydrží to klidně minutu, takže samotný čas je
+nepozná.
+
+**Čísla jsou ale z vymyšlené rozjížďky a nadsazují.** Generátor mění
+rychlost každých deset sekund nezávisle, kdežto skutečná loď má
+setrvačnost, takže prohození bude ve skutečnosti míň. Hodnoty prahů se
+proto vyladí až na prvních skutečných datech — jak u *Pro režii potřebuje
+práh*, tady to platí dvojnásob.
+
+#### Vybraná loď barevně, ostatní šedě a krátce
+
+*„Asi bych ukazoval track právě vybrané lodi víc a tracky ostatních lodí
+dost transparentně."* (Filip, 24. 10. 2026)
+
+Samotná průhlednost to ale neudělá: **alfa se při překryvu sčítá.** Stopa
+s krytím 15 % vypadá slabě, dokud je jedna; deset stop přes sebe dá 80 %
+krytí, tedy skoro plnou čáru — a sejdou se přesně u startovní linie a na
+bóji, kde se pole stahuje do stovky metrů. Zprůhledněním by se zamazalo to
+nejzajímavější.
+
+**Opraveno 24. 10. 2026 podle náčrtu.** Původně tu stálo *ostatní šedě
+a jen poslední dvě minuty*, s odůvodněním, že barva při čtyřiceti lodích
+nerozliší nic. Náčrt (`web/app/nacrt/mapa`) ukázal opak: šedé ocasy jsou
+na mapě nerozlišitelná kaše, kdežto **barevné dráhy se čtou**, protože oko
+sleduje barvu, ne tvar. Filip to řekl rovnou (*„dráhy lodí bych asi fakt
+měl různobarevné a velice transparentní"*) a na obrazovce to platí.
+
+| | Čára | Barva | Kolik stopy |
+|---|---|---|---|
+| **loď, na které je focus** | plná, silnější, s bílým lemem | vlastní | celá |
+| **poslední dvě předtím** | o něco slabší | vlastní | celá, **doznívá** |
+| **ostatní** | — | vlastní | jen tečka polohy |
+
+**Stopa nemizí hned, když focus odejde** (Filip, 24. 10. 2026: *„klidně
+můžeš zobrazit trošku transparentně jen ty lodě, o kterých byla poslední
+řeč — třeba 3 poslední a postupně je mizet"*). Tím je vidět **souboj, ne
+jen jeho vítěz** — a je to zároveň odpověď na to, co náčrt odhalil: pole
+čtyřiceti drah je i barevně hustý koberec, kdežto tři dráhy nad tečkami
+ostatních jsou čitelné.
+
+**Barva je vlastní, ne podle kategorie**, a drží se lodi napořád — jinak by
+loď při každém prohození v pořadí změnila barvu a oko by ji ztratilo.
+K tomu patří druhý stupeň, který plán má jako tlačítko *Jen tuhle stopu*:
+ostatní úplně pryč. Jedno je pro přehled, druhé pro „ukaž mi, co jsem jel".
+
+#### Měřicí trasa se nekreslí (Filip, 24. 10. 2026)
+
+*„Ta trať, podle které měříš pořadí, fakt určitě nesmí být vidět a nesmí
+jít mimo vodu a např. tam, kde z logiky věci je mělko."*
+
+**Neviditelná**, protože je to podklad výpočtu, ne část trati. Nakreslená
+by tvrdila, že se po ní jede — a závodník, který by se podle ní řídil, by
+jel hůř, než kdyby ji neviděl. V náčrtu jde zapnout, protože bez ní se nedá
+posoudit, jestli měří rozumně; na ostro ne.
+
+**Mimo vodu nejde už dnes.** `cestaPoVode` hledá nejdřív v masce `plavna`,
+což je voda zmenšená o `ODSTUP_OD_BREHU_M = 30` (`web/lib/voda.ts:67`),
+a teprve když to nejde — v úzké zátoce —, zkusí to těsně kolem břehu.
+
+**Mělčiny ale neumíme**, a je dobré to přiznat: batymetrii nádrže nemáme
+a z obrysu se nevyčte. Třicet metrů je odstup zvolený pro **kreslení**,
+ne pro ponor plachetnice; pro měřicí trasu bude malý. Pravou hodnotu
+nemáme z čeho odvodit.
+
+**Po první sezóně ji ale budeme mít zadarmo.** Kde za celou regatu neplula
+ani jedna ze čtyřiceti lodí, je mělčina nebo kopec — stopy samy nakreslí,
+kudy se dá jet. Měřicí trasa se tím dá po sezóně opravit podle skutečnosti,
+a je to další důvod, proč trasy sbírat i v roce, kdy je nikdo neuvidí.
+
+**Spojnice z návrháře je něco jiného a ukazovat se smí** (Filip, 24. 10.
+2026: *„trasa, co už v návrháři, a prvky na vodě to máme vyladěné, to tam
+může být optionally k zobrazení"*). Jsou to dvě různé čáry a je dobré je
+nemíchat:
+
+| | Co to je | Vidět? |
+|---|---|---|
+| **spojnice trati** (`spojniceTrati`) | kudy se jede, s obloučky obeplutí a rozestupem noh; vyladěná od 11. 10. 2026 | **volitelně ano** |
+| **prvky trati** (`ZnakBoje`) | bóje s barvou, tvarem a značením, čáry mezi konci startu a cíle | **volitelně ano** |
+| **měřicí trasa** (`cestaProMereni`) | podklad pro postup po trati | **nikdy, ani v náčrtu** |
+
+Spojnice a prvky říkají závodníkovi pravdu o trati, kterou stejně zná z GPX,
+a kreslí se tak, jak je kreslí návrhář — ne náhražkou. Měřicí trasa by
+tvrdila, že se jede po ní.
+
+**Zobrazit ji nejde nikde** (Filip, 24. 10. 2026: *„měřicí trasu bych vůbec
+neumožnil zobrazit, ta je jen pro výpočet"*). Náčrt ji nejdřív uměl zapnout
+jako ladicí pomůcku; i to je pryč, aby na ní nikdo nestavěl.
+
+**Hotové v náčrtu** (`web/app/nacrt/mapa`): měřicí trasa se počítá na
+serveru přes `cestaProMereni` s odstupem 60 m a pomyslné pořadí se měří
+podle ní, ne podle přímek mezi značkami. Na vymyšlené trati vyšla
+na 2 407 m po vodě proti 2 349 m přímo. Spojnice z návrháře se počítá pro
+každé přiblížení zvlášť, protože `spojniceTrati` bere metry na pixel.
+
+Na tabuli nikdo neklikne, takže „vybranou loď" tam vybírá **režie** —
+tentýž vizuální zákon obsluhuje i televizní záběr.
+
+#### Tři přepínače na regatu, ne matice režimů
+
+Plán měl dva režimy (*trať a vlastní poloha*, *jen mezi rozjížďkami*). Ty
+ale míchají **kdy** se smí dívat s **koho** je vidět; Filip 24. 10. 2026
+otevřel druhou osu (*„organizátor a výše rozhoduje o tom, zda mají vidět
+pouze sebe, nebo i ostatní lodě"*). Drží se zvlášť a stačí na to tři
+přepínače:
+
+| Přepínač | Hodnoty | Zamyká se? |
+|---|---|---|
+| co vidí posádky za jízdy | jen sebe / i ostatní / nic | **ano** |
+| živý přenos ven (web i telka) | ano / ne | **ano** |
+| jízdy po regatě veřejně | ano / ne | **ne** |
+
+Rozhodčí vidí vždycky všechno — to je rozhodnuté v *Kdo trasy vidí* a do
+nastavení nepatří. Kapitán vidí totéž co jeho posádka; kapitánství je
+o správě lodi, ne o lepším výhledu.
+
+#### Setup trackeru se zamyká rozpravou (Filip, 24. 10. 2026)
+
+*„Po odstartování první rozjížďky bych už nedovolil organizátorům měnit to
+nastavení zobrazení trackingu."* Po rozpravě se tedy nastavení **zamkne
+pro organizátora**.
+
+**Kotvou je rozprava, ne start.** Tracker běží od rozpravy, takže mezi
+rozpravou a startem už polohy chodí — a to je přesně okno, ve kterém by
+šlo nastavení překlopit podle toho, co je na mapě vidět. Zámek má zavírat
+dřív, než je z čeho vyvozovat.
+
+**Rozprava tím nese tři věci naráz:** otevře okno, zamkne nastavení, udělá
+check-in a prezenci. Je to dobře, protože se nedá udělat půlka — a když se
+neodklikne vůbec, neotevře se okno, tracker neběží a není co zobrazovat.
+Zůstane odemčené nastavení, které nemá na co působit. **Selže to na
+bezpečnou stranu.**
+
+**U vícedenní regaty zamyká ta první rozprava.** Druhý den otevírá nové
+okno, ale zámek už nelomí — jinak by se mezi dny dalo překlopit vidění
+ostatních podle toho, jak to komu vyšlo první den, a to je přesně ta změna
+pravidel, které má zámek bránit.
+
+**Zpřísnit smí rozhodčí pořád, rozšířit nikdo.** Vypnutí je v plánu
+rozhodnuté už dřív a má důvod: může se ukázat, že se živá data používají
+způsobem, který se nelíbí. Zapnout *„i ostatní"* uprostřed regaty ale nesmí
+ani on. Každý takový zásah se zapíše s důvodem, jinak se po regatě nedá
+rozhodnout, proč se to vypnulo.
+
+**Zamrzne i to, co nikdo nenastavil**, takže výchozí hodnota musí být
+bezpečná (posádky jen sebe, ven nic) a pořadatel ji musí vidět dřív, než
+zaklapne. Patří to na rozpravu, kde se stejně říká *„zapněte si trackery"*.
+
+**Zamčené nastavení je zároveň doklad.** Spor *„vy jste nás viděli a my vás
+ne"* dnes nemá podle čeho rozhodnout; zámek s časem a s tím, kdo ho
+nastavil, ho rozhoduje sám.
+
+**Důsledek pro pořadí práce:** zámek nejde postavit dřív než okna regaty,
+protože rozprava jako okamžik v systému neexistuje. Nevadí to — bez oken se
+tracking stejně nerozjede. Je to poslední řádek v tom, co postaví okna.
+
+#### Co k tomu ukázal kód (24. 10. 2026)
+
+| Zjištění | Kde |
+|---|---|
+| **Živý kanál neběží.** Nahrávání spouští jen ruka z obrazovky trasy; úloha na pozadí neodesílá nic — **to je ta věc, kterou ruší rozhodnutí o průběžném přenosu** | `app/src/lib/tracker/uloha.ts`, `tracker/[id].tsx` |
+| Dávka je **200 bodů ≈ čtvrt hodiny** — správně pro nahrání po dojezdu, špatně pro průběžný přenos; ten chce dávku po minutě, jak ji počítá *Co se odesílá živě* | `app/src/lib/tracker/nahravani.ts:35` |
+| Body trasy jsou **v Postgresu**, ne v R2, jak navrhuje *Kam trasy ukládat* | `AppDbContext.cs:49` |
+| `Trasa` visí na **`ZavodId`**, ne na rozjížďce | `Features/Trasy/Trasa.cs:71` |
+| `Rozjizdka.StartV` existuje, okno regaty ne — proto to pořadí práce výš | `Features/Zavody/Zavod.cs:421` |
+| Mapová matematika je hotová a bez Reactu schválně, aby ji mohla použít i appka | `web/lib/mapa.ts` |
+
+**Co stojí živá mapa, a co ne.** Na přenos je levná a je dobré to nesvádět
+na data: dávka jednou za minutu je ~120 kB/hod/loď, snapshot čtyřiceti poloh
+pro diváka je po gzipu kolem kilobajtu a se společnou cache stačí jeden
+dotaz do databáze bez ohledu na počet diváků. Dlaždice ji utáhnou taky —
+závodní pole je pár desítek dlaždic cachovaných na den. **Drahá je na
+rozhodnutí** (souhlas organizátora i rozhodčího, režim na palubě) a na
+baterku, o které zatím **nemáme měření**.
+
+**Lámání trasy po rozjížďkách dělá server, ne telefon** — telefon nemá
+vědět, která rozjížďka běží.
+
+**K závodu se ale trasa váže přes rozjížďku** (Filip, 24. 10. 2026). Oddíl
+tu do 24. 10. tvrdil, že *„dnešní `ZavodId` na `Trase` je správně"*;
+oponentura ukázala, že ten sloupec **nikdo nezapisuje** —
+`TrasySprava.ZalozAsync` plní klíč, loď, jméno lodi, jméno regaty, zdroj
+a začátek, `ZavodId` ne. Jméno regaty je přitom volný text, takže dnes
+trasa k závodu nevede vůbec.
+
+Co z Filipova rozhodnutí plyne pro tvar dat:
+
+| Vrstva | Co to je | Kdy vzniká |
+|---|---|---|
+| **`Trasa`** | záznam z jednoho telefonu, nahrávací jednotka | při prvním spojení, pozná se podle `LokalniId` |
+| **úsek rozjížďky** | kus trasy, který padá do okna jedné rozjížďky | při uzavření rozjížďky |
+| **závod** | odvozuje se z rozjížďky, nikde se neukládá podruhé | — |
+
+**Proč nerozřezat rovnou na víc Tras:** idempotentní nahrávání stojí na
+tom, že trasa má jedno `LokalniId` z telefonu a bod své pořadové číslo
+(*Nahrávání je hotové na obou stranách*). Rozdělení jedné nahrávky na čtyři
+záznamy by tu jedinečnost rozbilo a doposílání po výpadku by přestalo
+platit. Úsek je proto pohled na rozsah bodů, ne kopie dat.
+
+**Provozní vazbu na regatu ale potřebuje i samotná `Trasa`**, a hned při
+založení: pořadatelský přehled musí vědět, u které regaty záznam ukázat,
+a okno regaty rozhoduje, jestli se vůbec smí zapisovat. Vyplňuje se z klíče
+k lodi a z běžícího okna, ne z textu, který pošle telefon. Vazba na závod
+tím zůstává dvojí, ale každá na jinou otázku: **`Trasa` → regata** říká
+*čí to je a kdy to smělo vzniknout*, **úsek → rozjížďka → závod** říká
+*co z toho patří do závodu*.
+
+**Trasa bez rozjížďky nesmí ztratit regatu** (Filip, 24. 10. 2026).
+Záznam, který k žádné rozjížďce nepatří — celý padl do čekání na vodě,
+rozjížďka se zrušila, posádka spustila záznam a nevyjela —, **pořád patří
+té regatě** a pořadatel ho u ní musí vidět. Právě proto je ta vazba na
+`Trase`, a ne jen na úseku: kdyby viselo všechno na rozjížďce, tyhle
+záznamy by se staly sirotky a zmizely by z přehledu zrovna ve dnech, kdy
+se něco nepovedlo.
+
+**Mazání se tím má o co opřít.** Dokud není úsek, není co nechat; ořez
+a mazání z oddílu *Tracker běží celý blok na vodě* jsou právě rozdíl mezi
+trasou a jejími úseky. U trasy, která žádný úsek nedostane, to znamená, že
+se smaže celá — zůstane jen záznam, že vznikla.
+### Okno regaty je postavené (24. 10. 2026)
+
+První kus z pořadí práce výš. `OknoRegaty` visí na závodu, otevírá ho
+rozprava (`POST …/okna/rozprava`), zavírá konec dne (`POST …/okna/uzavrit`)
+a telefon si je čte klíčem k lodi (`GET /okna`). Rozhodnutí, která u toho
+padla:
+
+| Rozhodnutí | Proč |
+|---|---|
+| **tvrdý konec je 14 hodin od rozpravy, nejvíc 36** | běžný závodní den i s rezervou na pozdní dojezd; dvacetičtyřhodinovka si o delší řekne při rozpravě, nad 36 h už to není závod, ale zapomenuté okno |
+| **druhá rozprava nezaloží druhé okno** | na vodě se klikne dvakrát spíš než vůbec; vrátí se to běžící |
+| **uzavřít zavřené není chyba** | totéž z druhé strany; chybová hláška by pořadateli v tu chvíli nijak nepomohla |
+| **den se počítá z pořadí rozprav, ne z kalendáře** | dvacetičtyřhodinovka má jedno okno přes dva kalendářní dny |
+
+**Trasa se váže na regatu ze serveru.** `TrasySprava.ZalozAsync` dohledá
+okno, které v okamžiku začátku záznamu běželo u regaty, kde je **ta loď
+přihlášená** (stav zapsaná nebo potvrzená), a zapíše `ZavodId` i `OknoId`.
+Jméno regaty z telefonu zůstává volným textem a nerozhoduje o ničem.
+
+**Bez okna trasa nevznikne** — `POST /trasy` vrátí 409. To je ta hranice
+mezi trackerem a sledovacím zařízením; dosud nebyla nikde.
+
+**Doposílat jde i po uzavření dne.** Okno se ptá jen při zakládání trasy;
+dávky ani uzavření nahrávání už ho nekontrolují. Výpadek sítě na vodě je
+normál, ne porucha, a trasa nahraná večer v hospodě je pořád záznam z toho
+dne.
+
+**Okno se hledá nejdřív k začátku záznamu, teprve pak k „teď".** Pořadí je
+schválně takové: záznam patří dni, ve kterém začal. Záloha na „teď" je tam
+kvůli telefonu s přestavenými hodinami — jinak by loď, která skutečně jede
+v okně, přišla o celý záznam kvůli špatně nastavenému času.
+
+**Co tím ještě není:** ořez trasy na okno rozjížďky a mazání toho, co je
+mimo (to čeká na úseky rozjížděk), a zámek nastavení zobrazení, který na
+rozpravu patří taky — zámek je poslední řádek v tom, co okna postaví.
+
+### Živý kanál v appce je postavený (24. 10. 2026)
+
+Druhý kus pořadí práce. Odesílání už nevisí na ruce posádky: úloha na
+pozadí po každém zápisu zkusí odeslat, nejvýš jednou za minutu
+(`ZIVE_MS`). Dvě stě bodů v dávce zůstává jako strop jednoho volání —
+otázka nebyla velikost dávky, ale jak často se rádio zapne.
+
+| Rozhodnutí | Proč |
+|---|---|
+| **minuta, ne pět sekund** | zelená v seznamu trackerů je „poslední bod mladší než minuta", a co žere baterku, je zapínání rádia, ne velikost dávky |
+| **čas pokusu se zapisuje před odesláním** | zabitý proces by ho jinak ztratil a po probuzení by poslal dávku hned znovu |
+| **výpadek sítě se spolkne** | výjimka z handleru úlohy znamená, že systém úlohu odregistruje a záznam skončí bez varování v půlce závodu |
+| **ukončený záznam živý kanál neposílá** | po dojezdu se dokončuje ručně a je u toho vidět, co se děje |
+
+**Tři důvody, proč se neodesílá, ne jedna červená** (`zaznam.potiz`):
+`bez-klice` je věc, se kterou musí posádka za kapitánem, `sit` je stav vody
+a `mimo-okno` je stav závodu — server trasu nevezme, dokud nebyla rozprava.
+Stavový panel to říká slovy (*„čeká na rozpravu · 42 bodů čeká"*), protože
+appka musí ukazovat, že to jede, a stejně tak proč nejede.
+
+**Nahrávání po dojezdu zůstalo celé.** Fronta, hranice potvrzeného
+i dokončení nahrávání se nezměnily; živý kanál je jen druhý spouštěč téhož
+odesílání. Výpadek sítě na vodě je normál, ne porucha.
+
+### Snímek poloh pro mapu (24. 10. 2026)
+
+Třetí kus. `GET /sprava/serie/{serie}/zastavky/{zavod}/polohy` vrací
+poslední známou polohu **každé lodi v regatě**, i té, která se ještě
+neozvala — otázka před procedurou zní *„trackuje nám celé pole?"* a na tu
+loď chybějící ve výpisu neodpovídá.
+
+| | Hodnota |
+|---|---|
+| **čerstvá** | do minuty; tohle je zelená z *tracker checku* |
+| **stárne** | do pěti minut — loď tam je, rádio vynechalo |
+| **nedostupná** | přes pět minut, nebo vůbec nic |
+
+**Poloha nemizí ani u nedostupné lodi.** *„Kde byla naposledy"* je ta
+otázka, kvůli které celá kapitola existuje i bez jediné zveřejněné
+rozjížďky.
+
+**Jeden dotaz bez ohledu na počet diváků.** Snímek se drží ve společné
+cache pět sekund: telefony posílají po minutě, takže čerstvější data
+stejně neexistují, a čtyřicet otevřených obrazovek nesmí znamenat čtyřicet
+dotazů. Odpověď nese **čas serveru**, aby si stáří počítal klient proti
+němu — na tabuli v hospodě může běžet stroj s hodinami o minuty vedle.
+
+**Bere se jen od otevření běžícího okna.** Včerejší poloha není poslední
+známá, je to záznam z jiného dne.
+
+**Zatím jen pro pořadatele a rozhodčího.** Veřejný výdej patří
+k přepínači *živý přenos ven*, který zamyká rozprava; dokud ho systém
+nemá, platí bezpečná výchozí hodnota — ven nic.
+
+### Nastavení trackingu a zámek rozpravou (24. 10. 2026)
+
+Poslední řádek v tom, co postavila okna. `NastaveniTrackeru` drží tři
+přepínače z plánu a rozprava ho zamyká — `OknaSprava.OtevriAsync` volá
+`ZamkniAsync` hned po otevření okna, takže se nedá udělat půlka.
+
+| | Výchozí | Po zámku |
+|---|---|---|
+| co vidí posádky za jízdy | **jen sebe** | jen zpřísnit (`IOstatni` → `JenSebe` → `Nic`) |
+| živý přenos ven | **ne** | jen vypnout |
+| jízdy po regatě veřejně | **ne** | mění se dál, zámek se jich netýká |
+
+**Hodnoty `CoVidiPosadky` jdou od nejpřísnější k nejvolnější** (`Nic`=0,
+`JenSebe`=1, `IOstatni`=2) schválně: „zpřísnit" je pak porovnání čísel, ne
+tabulka výjimek.
+
+**Zamyká se i nastavení, které nikdo nezaložil.** Záznam vznikne až
+v okamžiku zámku, s výchozími hodnotami — a ty jsou proto bezpečné.
+
+**Po zámku je to věc rozhodčího**, ne organizátora regaty: ten nastavení
+dál vidí, ale nehýbe s ním. Každý zásah po zámku vyžaduje důvod a zapíše se
+do `ZmenaNastaveniTrackeru` s tím, kdo a kdy — to je ten doklad ke sporu
+*„vy jste nás viděli a my vás ne"*. Uložení beze změny hodnot důvod
+nepotřebuje; přeťuknutí formuláře není zásah do pravidel.
+
+**Co z toho ještě neplyne:** veřejný výdej poloh. Přepínač *živý přenos
+ven* existuje, ale snímek poloh se zatím vydává jen pořadateli a rozhodčímu
+— napojení veřejné mapy a tabule na něj je další krok.
+
+### Mapa jede na skutečných polohách (24. 10. 2026)
+
+Čtvrtý kus. `/sprava/{rocnik}/tracker/{regata}` je **živá mapa regaty pro
+pořadatele a rozhodčího**: tytéž bóje a tatáž komponenta jako v náčrtu, jen
+lodě jsou ze snímku poloh. Pod mapou je seznam celého pole s čerstvostí —
+to je ta odpověď na *„trackuje nám celé pole?"*.
+
+| Rozhodnutí | Proč |
+|---|---|
+| **vlastní obrazovka, ne vrstva do mapky u bójí** | plán chtěl vrstvu, jenže `MapkaTrati` se kreslí na serveru a nedá se v ní posouvat ani rozkliknout loď; sloučit se dají, až bude interaktivní |
+| **dráhy se skládají z došlých snímků** | server posílá poslední polohu, prohlížeč si z nich staví stopu sám — nepřenáší se nic navíc a mapa přesto kreslí, kudy loď jela |
+| **stopa drží posledních 240 bodů** | asi hodina provozu; na co se rozhodčí dívá, ne celý den. Po obnovení stránky začíná znovu — celá trasa je v záznamu |
+| **mapa dostala režim `zive`** | čas se drží na konci došlých dat a posuvník mizí: odskočit v živém přenosu dozadu znamená dívat se na starou polohu a nevědět o tom |
+
+**Tabule zůstává na ukázkových plavbách.** Vydávat polohy ven se smí jen
+při zapnutém *živém přenosu ven*, a ten výdej zatím neexistuje — snímek je
+pořád jen pro přihlášené. Proužek „Ukázková data" tím platí dál a tabule
+nelže.
+
+**Mock to umí taky** (`tools/fake-api.py`): simulované polohy po prvcích
+trati, část lodí schválně stárne a mlčí. Bez toho se obrazovka nedala
+vyzkoušet jinak než na vodě.
+
+**Past, která stála půl hodiny:** dev server webu otevřený přes
+`127.0.0.1` **nehydratuje klientské komponenty** — Next 16 blokuje
+cross-origin dev prostředky a v konzoli je z toho jen chyba HMR
+websocketu. Přes `localhost` to jede. Stránka přitom vypadala správně,
+protože serverový render proběhl; nefungovalo jen to, co se děje potom.
+
+### Veřejný výdej poloh a tabule na skutečných datech (24. 10. 2026)
+
+Pátý kus a poslední, který plán z téhle rozpravy popisoval. `GET
+/serie/{rocnik}/zavody/{regata}/polohy` je veřejná cesta vedle
+pořadatelské a vydává **jen za jízdy**:
+
+| Podmínka | Proč |
+|---|---|
+| rozhodčí povolil *živý přenos ven* | výchozí hodnota je „ne" a zamyká ji rozprava |
+| **zrovna běží rozjížďka** | ořez zezadu se nedá udělat dopředu, takže se vydávání vypíná, ne dodatečně maže |
+| začíná o pět minut dřív | startovní procedura patří do okna; ořez na výstřel by zahodil to takticky nejcennější |
+
+**Loď bez polohy a poslední známá poloha mimo rozjížďku ven nejdou
+vůbec.** Divák nepotřebuje seznam nehlásících se lodí — to je otázka pro
+závodní výbor, a právě na ni se poslední známá poloha drží.
+
+**`vysila: false` neříká proč.** Jestli to rozhodčí nepustil, nebo jen
+neběží rozjížďka, je rozdíl, po kterém divákovi nic není; tabuli stačí, že
+se nevysílá.
+
+**Tabule se tím napojila.** Když polohy chodí, kreslí skutečné lodě nad
+**skutečnou tratí regaty** a proužek „ukázková data" zmizí. Když ne,
+vrací se ukázkové plavby po vlastní delší trati a proužek se vrátí taky.
+Skutečné lodě se nikdy nekreslí nad tratí ukázky: to by byl obrázek, který
+nic neznamená.
+
+**Stopy si skládá prohlížeč** — `lib/stopy.ts` je sdílený mezi tabulí
+a pořadatelskou mapou, takže obě kreslí dráhy ze stejných dat stejně.
+
+### Kde loď je, slovy (24. 10. 2026)
+
+Doplněk k pořadatelské mapě: v seznamu lodí přibyl sloupec **Kde** —
+*„830 m na jihovýchod"*, měřeno od startovního prvku. Plán to žádá
+výslovně: odpověď na *„čekáme, nebo startujeme?"* musí být vidět hned,
+ne až po kliknutí do mapy.
+
+**Do padesáti metrů se píše „u startu".** Rozdíl pod přesností GPS je
+šum a směr by si vymýšlel stranu. **Bez startovního prvku se sloupec
+nevypisuje** — měřit od náhodné bóje by byl údaj, který nic neznamená.
+
+### Tabule na širokém monitoru (Filip, 24. 10. 2026)
+
+První pohled na nasazenou tabuli přes ultrawide ukázal čtyři věci naráz.
+Všechny mají společného jmenovatele: **rozměry byly v `vw`**, a to je na
+16:9 rozumné jen proto, že tam šířka s výškou souvisí.
+
+| Co se dělo | Proč | Co s tím |
+|---|---|---|
+| velká písmena a prvky „na úkor mapy" | při 3440×820 vyšel jeden `vw` na 34 px, pásy tříd zabraly 368 px z 820 a na mapu zbylo **25 px** (změřeno) | jednotka `--tv: min(1vw, 1.78vh)`; na 16:9 je to týž rozměr jako dřív, na širším monitoru drží velikosti výška |
+| pásy tříd přerostly mapu | tři řádky × `vw` | strop `max-height: 24vh` |
+| **první dvě pozice v pořadí nebyly vidět** | žebříček se „točil" CSS animací o posun odhadnutý z `vh`; při jiném poměru obrazovky schovala horní lodě a nechala nad nimi díru | točení dělá scroll v komponentě, který zná skutečné přetečení — a je to tentýž mechanismus, jakým se seznam posouvá na prohazovanou dvojici |
+| **při dojezdu se rozhodila mapa** | režie v tu chvíli přepíná záběr celek/čelo, takže se vymění **celá** sada dlaždic a nové se teprve stahují | hrubý podklad na pevné úrovni (`PODKLAD_Z = 13`), který se se zoomem nemění a drží se v cache: pod novými dlaždicemi je pořád mapa, jen rozmazaná |
+
+**Cílová karta dostala rámeček** (Filip: *„nemá okraje, takže vypadá
+amatérsky"*). Tenký proužek u horní hrany, který po ní zbyl z dřívějška,
+nahradil celý rámeček v barvě druhu.
+
+**A nebyla na ní dvakrát táž věta.** Karta má nadpisek „V cíli" a pod
+jménem nesla detail „v cíli"; detail teď nese třídu lodi.
+
+### Co ukázal průchod po nasazení (24. 10. 2026)
+
+Tři věci, které se našly, až když tabule a tracker běžely naostro
+a na širokém monitoru.
+
+**Rozsypaná mapa nebyla o zoomu, ale o dlaždicích.** Mapa si při otevření
+řekne o celý výřez — na ultrawide 68 dlaždic v jedné vlně. Prohlížeč je
+přes HTTP/2 pustí naráz, náš server je naráz přepošle a OpenStreetMap,
+jehož pravidla mluví o **dvou souběžných stahováních**, část odmítne:
+změřeno **16 z 68** na produkci. Na obrazovce z toho byla mozaika
+rozbitých obrázků. Proxy má proto frontu (dvě naráz, čekání se stropem),
+jedno opakování při odmítnutí a místo chyby vrací **průhlednou
+dlaždici** — pod ní leží hrubý podklad, takže z výpadku zbyde rozmazané
+místo, ne bílý čtverec s ikonou.
+
+**Plátno mapy rostlo samo.** Komponenta si plochu měří a podle ní nastaví
+`viewBox`; dokud měl obal výšku podle obsahu, byla ta výška daná zase
+`viewBox`em. Každé přeměření plátno natáhlo a po změně velikosti okna se
+smyčka rozjela — naměřeno 3 793 px na náčrtu a 15 397 px na trackeru,
+obojí na stránce vysoké 1 080. Obal má teď výšku z CSS.
+
+**Na tabuli se plocha neměřila vůbec.** Plátno tam vzniká rovnou
+v konečné velikosti, takže `ResizeObserver` poslal jediný záznam — a ten
+ještě s nulou, protože rodič v tu chvíli rozměry neměl. Mapa proto jela
+na náhradním výřezu 1600×900, který se do plochy jen doškáloval
+(naměřeno 1447×754). Měří se proto hned při připojení, ne až na první
+změnu.
+
+**Ukázka to říká i u pořadí.** Jména v žebříčku a v pásech tříd jsou ze
+startovní listiny, takže vymyšlené pořadí vypadá z hospody jako výsledek;
+proužek nahoře je od něj přes celou obrazovku daleko. Štítek *ukázka*
+proto stojí přímo u nadpisu pořadí a u každého pásu — a zmizí, jakmile
+začnou chodit skutečné polohy.
+
+**A tracker dostal šířku.** Obsahový sloupec je míra pro čtení textu;
+mapa, ve které rozhodčí hledá lodě, je ta výjimka — kolem ní zbývalo na
+ultrawide přes dva tisíce pixelů prázdna. Strop na 16 : 9 brání tomu, aby
+z mapy byl pruh, ve kterém je pole bod uprostřed. Výchozí přiblížení se
+navíc přepočítá, až je plocha naměřená: do té doby se počítalo
+z náhradních rozměrů a mapa zůstala zbytečně odzoomovaná.
 
 ### Co z toho čeká na přihlášení
 
@@ -2126,6 +3049,23 @@ hranicí, přijde typicky až v šesté.
 **Zbývá spotřeba se zhasnutým displejem** — jediná nesplněná přejímací
 podmínka. Měřit ji jde jen na telefonu **odpojeném od nabíječky**, jinak
 měření neřekne nic.
+
+**Na dvacetičtyřhodinovku se stejně bude doporučovat powerbanka** (Filip,
+24. 10. 2026) — jeden telefon na lodi, zapojený. Žádná optimalizace
+nevyrobí z telefonu zařízení, co den a noc drží GPS ze svého. Tím se ale
+mění, co od měření chceme: ne *„vydrží to?"*, ale **kolik to bere za
+hodinu**, aby šlo posádce říct, jakou powerbanku si má vzít a kdy ji
+zapojit.
+
+Pro běžnou regatu — blok na vodě, šest až osm hodin — má úspora pořád
+smysl; tam jde o to, aby telefon dojel do večera použitelný.
+
+**A jeden omyl, kterého se musíme vyvarovat:** oprava vzorkování (*Na
+iOSu si vzorkování musíme hlídat sami*) **o spotřebě neříká nic**. Filtr
+je až při zápisu, takže iOS polohy posílá pořád stejně často a appka se
+budí stejně; ušetřilo se místo, data a práce s databází, ne baterie.
+Skutečný systémový šroub je `distanceInterval`, který dnes stojí na nule.
+Co udělá, se ale musí **změřit**, ne odhadnout.
 
 **Před opravou to vypadalo takhle: 75 % bodů přišlo do 1,5 sekundy od předchozího** — a to i
 v klidu, nejen za jízdy. Oprava z *Na iOSu si vzorkování musíme hlídat
@@ -3750,13 +4690,18 @@ zastavilo zápis z vody:
 Web má vlastní stránku s polohami (Filip, 3. 10. 2026), ne jen appka —
 na břehu se lidi dívají na telefon i na notebook.
 
-**Návrhy k dořešení** (Filip je otevřel 3. 10. 2026, nejsou rozhodnuté):
+**Kdy vůbec přijde na řadu, rozhoduje oddíl *Jak se trackování zobrazuje***
+(24. 10. 2026): živá mapa je až čtvrtá v pořadí a první tři kroky mapu
+nepotřebují. Tam je i rozhodnutý vzhled stop — **zkracovat, ne ztlumovat**,
+protože alfa se při překryvu sčítá.
+
+**Návrhy k dořešení** (Filip je otevřel 3. 10. 2026):
 
 - **Po kliknutí na loď** karta zespodu: jméno a kategorie, stáří polohy,
   rychlost a kurz, tlačítka *Sledovat* a *Jen tuhle stopu*.
-- **Ostatní stopy ustupují ve třech úrovních**: vybraná plně, ostatní v téže
-  kategorii tence a průhledně, jiné kategorie jen jako tečka polohy. Stopa
-  navíc slábne do minulosti.
+- ~~**Ostatní stopy ustupují ve třech úrovních**~~ — **rozhodnuto 24. 10.
+  2026** na dva stupně: vybraná barevně a celá, ostatní šedě a jen poslední
+  dvě minuty. Viz *Vybraná loď barevně, ostatní šedě a krátce*.
 - **Řazení lodí**: dokud není trať, podle kategorie a průběžného pořadí
   v seriálu, s popiskem, že je to pořadí seriálu; po dojezdu podle výsledku.
 - **Historie plavby**: stopa s přehráváním (1×, 10×, 60×), graf rychlosti
