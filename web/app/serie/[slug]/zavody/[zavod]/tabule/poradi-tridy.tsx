@@ -28,12 +28,19 @@ type Radek = {
  * <b>Počítá se to jednou.</b> Pořadí sem posílá mapa trackeru — tatáž
  * čísla jako vpravo, jen rozdělená. Druhý výpočet by byl druhá pravda.
  */
-export function PoradiTrid({ radky }: { radky: Radek[] }) {
+export function PoradiTrid({
+  radky,
+  ref,
+}: {
+  radky: Radek[];
+  /** Mapa pod karuselem potřebuje znát jeho výšku, aby pole nekreslila pod něj. */
+  ref?: React.Ref<HTMLElement>;
+}) {
   const tridy = [...new Set(radky.map((r) => r.kategorie))].sort();
   if (tridy.length === 0) return null;
 
   return (
-    <section className="tabule-tridy">
+    <section className="tabule-tridy" ref={ref}>
       {tridy.map((t) => {
         const vTride = radky.filter((r) => r.kategorie === t);
         return (

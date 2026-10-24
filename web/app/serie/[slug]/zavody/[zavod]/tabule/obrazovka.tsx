@@ -143,6 +143,37 @@ export function Obrazovka({
     setFronta((f) => (f.some((x) => x.klic === u.klic) ? f : [...f, u]));
   }, []);
 
+  /**
+   * Kolik z mapy zakrývají panely (Filip, 24. 10. 2026: *„podle mne je
+   * schovaná za ostatními komponenty"*).
+   *
+   * Mapa leží pod horním pruhem i pod karuselem tříd, aby měla tabule
+   * pozadí po celé ploše — pole lodí se ale musí vejít do toho, co z ní
+   * zbývá vidět. Výšku zná jen tahle obrazovka, protože ji určuje její
+   * vlastní CSS (clamp podle šířky televize), takže ji naměří a pošle
+   * mapě; natvrdo zapsané číslo by se rozešlo s rozvržením.
+   */
+  const vrch = useRef<HTMLElement>(null);
+  const tridy = useRef<HTMLElement>(null);
+  const [odsazeni, setOdsazeni] = useState({ nahore: 0, dole: 0 });
+  const maTridy = poradiLodi.length > 0;
+  useEffect(() => {
+    const mer = () => {
+      const nove = {
+        nahore: Math.round(vrch.current?.getBoundingClientRect().height ?? 0),
+        dole: Math.round(tridy.current?.getBoundingClientRect().height ?? 0),
+      };
+      setOdsazeni((p) =>
+        p.nahore === nove.nahore && p.dole === nove.dole ? p : nove,
+      );
+    };
+    mer();
+    const sleduj = new ResizeObserver(mer);
+    if (vrch.current) sleduj.observe(vrch.current);
+    if (tridy.current) sleduj.observe(tridy.current);
+    return () => sleduj.disconnect();
+  }, [maTridy]);
+
   return (
     <div className="tabule">
       {/* <b>Jediná klikatelná věc na obrazovce</b> (Filip, 15. 10. 2026:
@@ -155,7 +186,7 @@ export function Obrazovka({
       {/* Logo vlevo, název uprostřed, stav vpravo (Filip, 15. 10. 2026).
           Jen kulatá značka: nápis „Orlická série" vedle ní by stál vedle
           názvu závodu v téže grafice a oba by se přebíjely. */}
-      <header className="vrch">
+      <header className="vrch" ref={vrch}>
         <Link className="odchod" href="/" aria-label="Zpět na Orlický pohár">
           <Znak />
         </Link>
@@ -218,11 +249,12 @@ export function Obrazovka({
           znacky={UKAZKA.znacky}
           lode={UKAZKA.lode}
           tabule
+          odsazeni={odsazeni}
           onUdalost={zarad}
           onPoradi={setPoradiLodi}
         />
       </div>
-      <PoradiTrid radky={poradiLodi} />
+      <PoradiTrid radky={poradiLodi} ref={tridy} />
 
       <div className="sloupce">
         {/* Zbývá jediný karusel: pořadí po třídách. Panel se stavy
