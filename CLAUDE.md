@@ -124,6 +124,8 @@ web/                          veřejné stránky (Next.js, renderuje server)
   lib/sprava.ts               volání administrace s tokenem; další lib/*.ts
                               po obrazovkách (kalendar, prihlasky, vysledky…)
   lib/oidc.ts                 přihlášení, sezení v cookie
+  lib/blesky.ts               blesky z družice (EUMETSAT, WMS); řádek
+                              v pruhu upozornění regaty, jen v den regaty
   app/sprava/obrazek.tsx      nahrání a odebrání obrázku, společné článku
                               i pořadateli; lib/fotky.ts volá API
   lib/schema.d.ts             generované typy — needituj, viz packages/api-client

@@ -6446,6 +6446,7 @@ v `web/app/boky.tsx`, každý zvlášť v `try`).
 | Vítr | `app/vitr.tsx`, `lib/vitr.ts` | opendata.chmi.cz `meteorology/climate/now/data`, 10min data | 10 min | zpoždění ~45 min; stanice Orlík a Kamýk měří jen srážky |
 | Výstrahy ČHMÚ | `app/vystrahy.tsx`, `lib/chmi.ts` | CAP na opendata.chmi.cz, obvody Milevsko a Písek | 15 min | kódy ORP ověřené, některé přehledy je mají posunuté o jedna |
 | Radar na hodinu | `app/vystrahy.tsx`, `lib/radar.ts` | opendata.chmi.cz `radar/composite`, extrapolace `fct_maxz` a měření `maxz` (PNG) | 5 min | předpověď jen posouvá, co už prší — novou bouřku neukáže; paleta a georeference z `radar_popis_cz.pdf` (oddíl *Radar na příští hodinu*) |
+| Blesky | `lib/blesky.ts` | WMS EUMETSATu, vrstva `mtg_fd:li_afa` (PNG) | 5 min | **není v boku** — je to řádek v pruhu upozornění na stránce regaty, a jen v den regaty (oddíl *Blesky z družice*) |
 | Počasí | `app/pocasi.tsx` | vložená mapa Windy, bod mezi Radavou a Velkým vírem | — | pás předpovědi jen 5 dní, `calendar` mapu neposune, tmavý režim nemá |
 
 **Vítr** (18. 9. 2026): nahoře Vráž (16 km, nejbližší stanice s větrem),
@@ -6467,6 +6468,62 @@ varuje stejně jako u stočení.
 režim nemá (skript vloženého okna žádný parametr vzhledu nečte) a do
 cizího iframe styl nesáhne; invertovat barvy nejde, přestaly by odpovídat
 stupnici.
+
+### Blesky z družice
+
+**Hotové a nasazené 24. 10. 2026** (`web/lib/blesky.ts`, PR #387). Zdroj je
+Lightning Imager na Meteosatu třetí generace — optický přístroj, který se na
+bouřky dívá shora. EUMETSAT ho vydává jako vrstvu `mtg_fd:li_afa` na svém
+WMS; kolekce `EO:EUM:DAT:0686` má v katalogu *free and unrestricted,
+CC-BY-4.0* a `GetCapabilities` služby uvádí `Fees: none` i
+`AccessConstraints: none`. **Registrace ani klíč nejsou potřeba** a výřez se
+žádá rovnou v EPSG:4326, takže reprojekci z geostacionární projekce dělá
+server — u nás zbývá stáhnout PNG a přečíst neprůhledné pixely, stejně jako
+u radaru.
+
+**Proč družice, a ne ČHMÚ.** ČHMÚ blesky **má** a kreslí je na
+`produkty.chmi.cz/radar/input_data/blesk/` v témže rastru `pacz2gmaps3`
+a rozměru 680 × 460, jaký už dekóduje `lib/radar.ts` — bylo by to levnější
+i přesnější (poloha pod 1 km). Jenže ČHMÚ sám uvádí, že *síť detekce
+neprovozuje a data bere na základě komerční smlouvy od externí společnosti*,
+a na opendata.chmi.cz je — na rozdíl od radaru — nedal. Licenční stránka
+ČHMÚ přitom výjimku neuvádí a mluví o CC-BY 4.0. **Ta nejasnost je jediný
+důvod, proč se nepoužily**; dotaz na `chmi@chmi.cz`, jestli se CC-BY
+vztahuje i na vrstvu blesků, zatím nikdo neposlal.
+
+**Co se netvrdí.** Přesnost je řádu deseti kilometrů, ne jednoho: ATBD
+přístroje žádá vzorkování 10 km na 45° šířky a Orlík je výš, mřížka 2 km je
+tedy jemnější než data sama. K tomu parallax — družice se na Orlík dívá pod
+zenitovým úhlem 58°, takže vrchol bouřky v 10 km leží na snímku o 16 km
+jinde; ATBD říká, že se korekce dělá na úrovni L2 (a tohle L2 je), ale jakou
+výškou, verze v6 neuvádí. Proto se **nedopočítává počet výbojů** zpětně
+z barvy pixelu, ačkoliv legenda vrstvy ho nese — byla by to falešná
+přesnost. Odpovídá se jen na to, jak daleko a kterým směrem je nejbližší
+aktivita, a plocha pod 2 km² se ignoruje, protože ATBD připouští falešné
+výboje.
+
+**Kde se to ukáže.** Řádek v pruhu upozornění na stránce regaty
+(`upozorneni.tsx`), **jen v den regaty** — mimo něj by to bylo volání ven
+u každé stránky otevřené kvůli loňským výsledkům. Pod 30 km je upozornění
+naléhavé, dál je to prostá věta. Při výpadku zdroje řádek chybí a pruh nikdy
+netvrdí, že je klid, takže z jeho mlčení nejde nic vyčíst — na rozdíl od
+widgetu výstrah, který to říct musí.
+
+**Dvě pasti.** Bez parametru `time` odpovídá WMS s `cache-control:
+max-age=604800`, takže by se týden vracel týž snímek; termín se proto zadává
+vždycky, zaokrouhlený dolů na pět minut a o deset minut dozadu (změřené
+zpoždění). A `unstable_cache` v dev přežívá i restart serveru — po změně
+`BLESKY_TERMIN` je potřeba smazat celé `web/.next`.
+
+**Archiv sahá k 30. 5. 2025** a chodí po pěti minutách, takže se dá ověřovat
+na skutečných bouřkách i mimo sezónu: `BLESKY_TERMIN` v `web/.env.local`
+(README, oddíl *Web*). Bez toho by to nešlo zobrazit osm měsíců v roce.
+
+**Co by šlo dál.** Z několika po sobě jdoucích snímků se dá spočítat, jak
+rychle se aktivita blíží („za hodinu z 90 km na 45 km"). Totéž ze stanic
+ČHMÚ nevyjde: desetiminutová data mají zpoždění ~45 minut, takže čelo bouřky
+urazí 16 km od Vráže dřív, než o něm přijde zpráva. Družice má zpoždění
+kolem deseti minut.
 
 **Windy API ne** (18. 9. 2026): upozornění z Windy jsou jen v appce pro
 jednoho uživatele, API na ně není. Point Forecast API zdarma vrací
@@ -8111,8 +8168,9 @@ Kdo sem přijde z jiného stroje, potřebuje vědět tohle:
    (`web/lib/vitr.ts`), výstrahy (`web/lib/chmi.ts`) a radar
    (`web/lib/radar.ts`, kreslí se uvnitř výstrah). Výstrahy od 6. 10. 2026
    nemlčí ani při výpadku zdroje. Zbývá push „déšť do hodiny" v appce,
-   a ten **čeká na Outbox**, který neexistuje. Blesky nemají volný zdroj
-   (ČHMÚ je nedává, Blitzortung zakazuje komerční použití).
+   a ten **čeká na Outbox**, který neexistuje. **Blesky volný zdroj mají**
+   (24. 10. 2026, oddíl *Blesky z družice*) — do 24. 10. tu stálo, že
+   nemají, což platilo jen o pozemních sítích.
 9. **Zátěž** (stav k 22. 9. 2026, oddíl *Mikrocache před webem*).
    Timeouty kontrol zdraví (#32) a nginx cache (#34) nasazené 22. 9.
    Na produkci ověřeno hlavičkou `X-Cache`: druhý požadavek HIT, tmavý
