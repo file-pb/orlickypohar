@@ -3773,13 +3773,16 @@ body:has(.tabule) { overflow: hidden; }
   animation: nacrt-rozsvit 2s ease-out forwards;
 }
 
+/* Šipka a číslo si buňku předávají, nepřekrývají se v ní. Dokud šipka
+   svítí, číslo je pryč; teprve když dohasne, číslo se vrátí (Filip,
+   24. 10. 2026). Překryv obou poloprůhledných by udělal nečitelnou změť. */
 @keyframes nacrt-zhasni {
-  0%, 45% { opacity: 1; }
-  100% { opacity: 0; }
+  0%, 62% { opacity: 1; }
+  78%, 100% { opacity: 0; }
 }
 
 @keyframes nacrt-rozsvit {
-  0%, 45% { opacity: 0; }
+  0%, 78% { opacity: 0; }
   100% { opacity: 1; }
 }
 
