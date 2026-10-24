@@ -3482,7 +3482,8 @@ body:has(.tabule) { overflow: hidden; }
 
 /* --- Náčrt živé mapy (web/app/nacrt/mapa) ----------------------------
    Dočasný podklad k rozhodnutí o zobrazení trackingu, ne funkce webu.
-   Až se živá mapa postaví doopravdy, tyhle třídy zmizí s ní.          */
+   Barvy jdou z proměnných motivu, aby náčrt nesvítil v tmavém režimu
+   bíle. Až se živá mapa postaví doopravdy, tyhle třídy zmizí s ní.   */
 
 .nacrt-stranka {
   max-width: 1400px;
@@ -3491,8 +3492,8 @@ body:has(.tabule) { overflow: hidden; }
 }
 
 .nacrt-varovani {
-  background: #fff4e6;
-  border-left: 4px solid #f08c00;
+  background: var(--zvyrazneni);
+  border-left: 4px solid var(--stav-zruseny);
   padding: 0.6rem 0.9rem;
   margin-bottom: 1rem;
   border-radius: 4px;
@@ -3505,10 +3506,12 @@ body:has(.tabule) { overflow: hidden; }
   align-items: start;
 }
 
+.nacrt-platno-obal { position: relative; display: block; }
+
 .nacrt-platno {
   width: 100%;
   height: auto;
-  background: #dfe9f3;
+  background: var(--zvyrazneni);
   border-radius: 6px;
   touch-action: none;
   cursor: grab;
@@ -3545,7 +3548,7 @@ body:has(.tabule) { overflow: hidden; }
 .nacrt-vysvetlivka {
   margin: 0 0 0.6rem;
   font-size: 0.8rem;
-  color: #666;
+  color: var(--tlumeny);
 }
 
 .nacrt-poradi ol {
@@ -3556,7 +3559,14 @@ body:has(.tabule) { overflow: hidden; }
   overflow-y: auto;
 }
 
-.nacrt-poradi button {
+.nacrt-poradi li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.nacrt-poradi li button {
   display: grid;
   grid-template-columns: 1.6rem 1fr auto;
   gap: 0.4rem;
@@ -3565,32 +3575,43 @@ body:has(.tabule) { overflow: hidden; }
   border: 0;
   border-radius: 4px;
   background: none;
+  color: inherit;
   text-align: left;
   cursor: pointer;
   font: inherit;
 }
 
-.nacrt-poradi button:hover { background: #f1f3f5; }
-.nacrt-poradi button.vybrana { background: #ffe8cc; }
+.nacrt-poradi li button:hover { background: var(--zvyrazneni); }
 
-.nacrt-cislo { font-variant-numeric: tabular-nums; color: #868e96; }
+.nacrt-poradi li button.vybrana {
+  background: var(--zvyrazneni);
+  box-shadow: inset 2px 0 0 var(--voda);
+}
+
+.nacrt-zrusit {
+  margin-bottom: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--linka);
+  border-radius: 4px;
+  background: var(--papir);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.nacrt-cislo { font-variant-numeric: tabular-nums; color: var(--tlumeny); }
 .nacrt-nazev { font-weight: 600; }
-.nacrt-kategorie { font-size: 0.75rem; color: #868e96; }
+.nacrt-kategorie { font-size: 0.75rem; color: var(--tlumeny); }
 
 .nacrt-stav {
   grid-column: 2 / -1;
   font-size: 0.75rem;
 }
 
-.nacrt-cerstva { color: #2b8a3e; }
-.nacrt-starnouci { color: #e8590c; }
-.nacrt-nedostupna { color: #c92a2a; }
-
-@media (width <= 900px) {
-  .nacrt { grid-template-columns: minmax(0, 1fr); }
-}
-
-.nacrt-platno-obal { position: relative; display: block; }
+.nacrt-cerstva { color: var(--stav-vypsany); }
+.nacrt-starnouci { color: #e8900c; }
+.nacrt-nedostupna { color: var(--stav-zruseny); }
 
 .nacrt-karta {
   position: absolute;
@@ -3599,8 +3620,10 @@ body:has(.tabule) { overflow: hidden; }
   min-width: 230px;
   padding: 0.6rem 0.75rem;
   border-radius: 6px;
-  background: rgb(255 255 255 / 94%);
-  box-shadow: 0 2px 10px rgb(0 0 0 / 25%);
+  background: var(--papir);
+  color: var(--text);
+  border: 1px solid var(--linka);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 35%);
 }
 
 .nacrt-karta-hlava {
@@ -3616,7 +3639,7 @@ body:has(.tabule) { overflow: hidden; }
   font-size: 1.1rem;
   line-height: 1;
   cursor: pointer;
-  color: #868e96;
+  color: var(--tlumeny);
 }
 
 .nacrt-karta dl {
@@ -3626,5 +3649,22 @@ body:has(.tabule) { overflow: hidden; }
   margin: 0.4rem 0 0;
 }
 
-.nacrt-karta dt { font-size: 0.7rem; color: #868e96; }
+.nacrt-karta dt { font-size: 0.7rem; color: var(--tlumeny); }
 .nacrt-karta dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+@media (width <= 900px) {
+  .nacrt { grid-template-columns: minmax(0, 1fr); }
+}
+
+.nacrt-swap {
+  position: absolute;
+  right: 0.75rem;
+  top: 0.75rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 6px;
+  background: var(--papir);
+  color: var(--text);
+  border: 1px solid var(--linka);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 35%);
+  font-size: 0.9rem;
+}
