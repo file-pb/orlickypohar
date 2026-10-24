@@ -3963,6 +3963,15 @@ body:has(.tracker-strana) main.obal { max-width: none; }
 
 @media (width <= 900px) {
   .nacrt { grid-template-columns: minmax(0, 1fr); }
+
+  /* <b>Na úzkém displeji se skládá i tracker regaty.</b> Ten má `.nacrt`
+     přepsaný na `flex` kvůli stropu 16 : 9 na ultrawide, takže mu pravidlo
+     o sloupcích výš nic neudělá — `grid-template-columns` flexbox ignoruje.
+     Žebříček si držel `flex: 0 0 300px` a na mapu zbylo **19 px** (změřeno
+     při 375 px). Tady se vrací na jeden sloupec pod sebou. */
+  .tracker-strana .nacrt { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .tracker-strana .nacrt-mapa,
+  .tracker-strana .nacrt-poradi { flex: initial; }
 }
 
 .nacrt-swap {

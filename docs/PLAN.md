@@ -1473,6 +1473,41 @@ a porovná. Tohle je funkce, kterou web neumí a nikdy umět nebude.
 Zároveň je to **samostatný projekt velikosti zbytku appky.** Mapa je ta
 snadná část, těžké je všechno kolem ní.
 
+### Živá mapa visí i pod výsledky (Filip, 24. 10. 2026)
+
+*„Řekl bych, že se hodí tracking dolů na stránku výsledků."* Sedí to:
+**kdo zapisuje cíl, je právě ten, koho zajímá, kdo je ještě na vodě** —
+tatáž osoba ve stejnou chvíli, takže ptát se o obrazovku vedle je zbytečná
+cesta. Mapa je proto panel (`tracker/[zavod]/panel.tsx`), který stojí na
+obou obrazovkách; načítání i geometrie jsou v něm, aby druhé místo nebylo
+druhá pravda.
+
+**Vlastní stránka trackeru zůstává.** Na telefonu u cíle je mapa přes celý
+displej něco jiného než mapa pod seznamem rozjížděk, a člověk tam jde kvůli
+ní — kreslí se proto vždycky. Pod výsledky se mimo závod ukáže jen řádek
+s odkazem: prázdná mapa by byla velká díra, která nic neříká, a klientská
+část by se každých pět vteřin ptala na nic.
+
+**Cestou se našly dvě vady na telefonu**, obě změřené při 375 px a obě
+starší než tahle změna:
+
+| Co | Změřeno | Oprava |
+|---|---|---|
+| tabulka lodí posouvala celou obrazovku | 574 px v 375 px, stránka ujížděla o 219 px do strany | `.tabulka-obal`, tedy domácí obal s vlastním posuvem |
+| na trackeru zbylo na mapu 19 px | žebříček držel `flex: 0 0 300px` | pod 900 px se skládá pod sebe |
+
+Ta druhá je poučná: `.nacrt` má pod 900 px pravidlo na jeden sloupec, jenže
+tracker si `.nacrt` přepisuje na `flex` kvůli stropu 16 : 9 na ultrawide —
+a **`grid-template-columns` flexbox ignoruje**. Pravidlo tedy existovalo
+a nedělalo nic.
+
+**Nedodělané zůstává:** stránka trackeru si nehlídá roli (jediná podmínka je
+`notFound()` u neexistující regaty). Data chráněná jsou — API chce
+organizátora té regaty nebo rozhodčího ročníku a `nactiPolohy` bez tokenu
+vrací `null` — takže cizí člověk uvidí prázdnou mapu, ne polohy. Není to
+únik, je to stránka, která se tváří, že existuje; ostatní obrazovky správy
+vracejí 404.
+
 ### Pilot do května 2027, ne celý tracker (Filip, 9. 10. 2026)
 
 Dvě nezávislé oponentury se shodly, že celý popsaný tracker se do sezóny
