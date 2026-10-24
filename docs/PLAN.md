@@ -1996,32 +1996,27 @@ takže loď blízko vrcholu má dvě skoro stejně dobré kolmice — jednu na
 příchozí nohu, jednu na odchozí — a pořadí by mezi nimi skákalo dopředu
 a zpět. Bere se proto ten průmět, který je nejblíž tomu předchozímu.
 
-**Na návětrné noze se ale neměří podél trasy, ale po větru** (Filip,
-24. 10. 2026). Nejdřív se zdálo, že je to volba mezi *víc akce* a
-*spravedlivější číslo*: projekce na trasu křižování vyhlazuje, kdežto
-vzdušná vzdálenost k bóji při každém obratu skáče. Filip navrhl to obejít
-**pomyslnou čárou, která se nekreslí a slouží jen výpočtu** — a je to
-správný směr, i když sám o sobě dilema neřeší. Problém totiž není, kudy ta
-čára vede, ale že průmět na jedinou čáru zahazuje, kde loď na kříži je.
+**Zůstává se u kolmice k trase, i na návětrné noze** (Filip, 24. 10. 2026:
+*„musíme zůstat u kolmice a všichni to pochopí"*). V rozpravě se zvažovala
+**příčka kolmá ke směru větru** — v jachtařském vysílání *ladder rung* —,
+protože na kříži je vepředu ten, kdo je dál po větrné ose, bez ohledu na
+bok. Filip ji odmítl a rozhodující je ten druhý důvod: **kolmice k trase se
+vysvětlí jednou větou**, žebříček po větru ne. U čísla, které má bavit
+diváka a nic nerozhoduje, je srozumitelnost víc než přesnost.
 
-Řeší to **příčka kolmá ke směru větru** (v jachtařském vysílání *ladder
-rung*). Na návětrné noze je vepředu ten, kdo je dál po větrné ose, bez
-ohledu na to, na kterém boku zrovna jede — a to je i to, co posádky samy
-považují za vedení. Na ostatních nohách zůstává průmět na trasu.
+**Věcně by to navíc stálo na starém větru.** Vítr se neměl brát z lodí —
+mobily ho neměří a NMEA 2000 tu nikdo nemá — ale odvodit z trati, ze
+světové strany průjezdu startem, kterou rozhodčí zadává při stavbě. Jenže
+ta platí k okamžiku stavby trati, a vítr se v údolí Orlíku stáčí. Žebříček
+by tedy mezi dvěma přestavbami trati měřil podle větru, který už nefouká,
+a dělal by to tiše.
 
-**Dilema tím zmizí, jen jinudy, než se čekalo:** příčky jsou zároveň
-spravedlivější *a* živější. Dvě lodě na opačných bocích se po žebříčku
-střídají průběžně, takže vzniká přesně to, co Filip od pořadí chce —
-*plenty of swapping for the lead*. **Je to zároveň kritérium přijetí
-pomyslného pořadí:** když se v něm vedení skoro nemění, je špatně
-spočítané; neznamená to, že se nic nedělo.
-
-**Směr větru se nikde nebere, plyne z trati.** Startovní čára se staví kolmo
-k větru a startuje se proti němu, takže směr průjezdu startem — v datech už
-je, jako světová strana u prvku `Start` — ukazuje, odkud fouká. Záloha je
-směr ze startu na první návětrný prvek. Přesnost je tím přesně taková, jak
-dobře rozhodčí trať postavil, a to je ta správná míra: pořadí nemá být
-přesnější než trať, podle které se jede.
+**Cena rozhodnutí: křižování se vyhladí.** Průmět na trasu postupuje při
+obratech klidněji než měření po větrné ose, takže prohození budou méně
+divoká. Nezmizí — při obratu se průmět skoro nehýbe a na dlouhé noze se
+rozjede —, ale *plenty of swapping for the lead* bude mírnější, než kdyby
+se měřilo po větru. **Kolik toho zbude, se pozná až na první skutečné
+rozjížďce**; je to první věc, kterou na pomyslném pořadí ověřit.
 
 **Kategorie startují společně** (Filip, 24. 10. 2026), takže pomyslné pořadí
 je **jeden seznam za celé pole** — tak, jak to divák na vodě vidí. Kategorie
