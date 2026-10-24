@@ -2188,6 +2188,53 @@ nepopírá, jen říká, že dohad se ukázat smí, když se jako dohad tváří
 **Post není pořadí v závodě**, a to je jeho hodnota. Sestřih tak smí říct
 *„na druhé bóji si to LUNA s PEZI prohodily"*, aniž by kdy tvrdil, kdo vede.
 
+#### Režie tabule: kolotoč přerušovaný souboji (Filip, 24. 10. 2026)
+
+*„Pokud se nic nebude dít na tabuli, tak budeme postupně přepínat focus
+pořadím, aby byly vidět dráhy a nebyl to guláš. Jakmile se někde změní
+pořadí, tak dostanou chvilku focus ty dvě lodě a pak to zase naváže na ten
+kolotoč a pojede dál."*
+
+To je celá režie, a stojí na jedné myšlence: **tabule nikdy neukazuje
+všechno.** Dráhy čtyřiceti lodí jsou guláš, ať se kreslí jakkoli; smysl
+dává jedna loď, nebo dvojice, která se právě pere.
+
+| Co se děje | Co tabule ukazuje |
+|---|---|
+| nic zvláštního | **kolotoč** — jedna loď po pořadí shora, každá chvíli |
+| prohození v pořadí | **obě lodě**, na chvíli, pak dráhy vyhasnou |
+| po souboji | **kolotoč pokračuje tam, kde přestal** |
+
+**Navázat znamená navázat.** Kolotoč se nesmí řídit časem od startu, ale
+časem stráveným mimo souboje — jinak po každém souboji přeskočí několik
+lodí a některé se na tabuli nedostanou vůbec.
+
+**Hláška o prohození říká směr, ne jen jména** (Filip, 24. 10. 2026):
+zelená šipka nahoru u lodi, která jde dopředu, červená dolů u té druhé,
+a celé to přijede, ať si toho divák všimne. Bez šipek je to jen dvojice
+jmen a musí se domýšlet, kdo koho.
+
+**Odsud plyne i to, jak se vybírá, co je souboj.** Náčrt
+(`web/app/nacrt/mapa`) to má postavené a hned ukázal, že bez filtrů je
+tabule k ničemu:
+
+| Pravidlo | Podíl času v souboji |
+|---|---|
+| každé prohození, které vydrží minutu | **93 %** — tabule hoří pořád, tedy nikdy |
+| + jen prohození do 6. pozice | 73 % |
+| + až když nový vedoucí vede o kus, ne o délku trupu | **73 %**, ale o čtvrtinu míň různých soubojů |
+
+**Dvě páky, a každá filtruje něco jiného:** čas (vydrželo to) a odstup
+(stalo se to doopravdy). Odstup je ten důležitější — dvě lodě bok po boku
+se přehazují o délku trupu a vydrží to klidně minutu, takže samotný čas je
+nepozná.
+
+**Čísla jsou ale z vymyšlené rozjížďky a nadsazují.** Generátor mění
+rychlost každých deset sekund nezávisle, kdežto skutečná loď má
+setrvačnost, takže prohození bude ve skutečnosti míň. Hodnoty prahů se
+proto vyladí až na prvních skutečných datech — jak u *Pro režii potřebuje
+práh*, tady to platí dvojnásob.
+
 #### Vybraná loď barevně, ostatní šedě a krátce
 
 *„Asi bych ukazoval track právě vybrané lodi víc a tracky ostatních lodí
