@@ -3154,10 +3154,15 @@ body:has(.tabule) { overflow: hidden; }
 /* Žebříček navazuje přímo na pruh a jde až ke kraji obrazovky — na
    televizi není důvod nechávat kolem panelu rám ani mezeru pod lištou
    (Filip, 24. 10. 2026). Pruh měří 72 px na 1485, tedy 4,85 vw. */
+/* Žebříček jde až k partnerům (Filip, 24. 10. 2026). Mapa nad ním končí
+   u pásů, ale panel je vedle nich, ne nad nimi — tak ať využije celou
+   výšku. Proto `fixed`: uvnitř zkrácené mapy by se zkrátil s ní.
+   Odsazení shora je pruh s ukázkovými daty plus horní lišta. */
 .tabule:has(.tabule-mapa) .tabule-mapa .nacrt-poradi {
-  top: 4.85vw;
+  position: fixed;
+  top: calc(4.85vw + 28px);
   right: 0;
-  bottom: 0;
+  bottom: var(--paticka);
   border-radius: 0;
 }
 
@@ -4102,12 +4107,36 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .nacrt-na-tv .nacrt-vysvetlivka { font-size: 0.85rem; }
 .nacrt-na-tv .nacrt-poradi ol { max-height: none; overflow: hidden; }
 
-/* Řádek žebříčku se čte přes místnost, ne z klína. */
-.nacrt-na-tv .nacrt-poradi li button { font-size: 1.35rem; padding: 0.3rem 0.5rem; }
-.nacrt-na-tv .nacrt-cislo { font-size: 1.35rem; }
+/* Řádek žebříčku se čte přes místnost, ne z klína — ale drží se při
+   zemi jako pásy dole (Filip, 24. 10. 2026), aby se jich vešlo víc. */
+.nacrt-na-tv .nacrt-poradi li button { font-size: 1.05rem; padding: 0.1rem 0.4rem; }
+.nacrt-na-tv .nacrt-cislo { font-size: 1.05rem; }
 .nacrt-na-tv .nacrt-kategorie,
-.nacrt-na-tv .nacrt-stav { font-size: 0.95rem; }
-.nacrt-na-tv .nacrt-trida .znak-tridy { height: 2rem; }
+.nacrt-na-tv .nacrt-stav { font-size: 0.8rem; }
+.nacrt-na-tv .nacrt-trida .znak-tridy { height: 1.3rem; }
+
+/* <b>Žebříček se točí</b>, aby se divák dostal i na zadní lodě: seznam
+   popojede nahoru, chvíli stojí a vrátí se. Posouvá se celý `ol`, ne
+   kopie pásu jako u partnerů — kopie by se bila s kaskádou přehazování,
+   která v něm běží. */
+.tabule-mapa .nacrt-poradi ol { overflow: hidden; }
+.tabule-mapa .nacrt-poradi ol > li { animation: none; }
+.tabule-mapa .nacrt-poradi ol {
+  /* Posun o to, co se nevejde. <b>`min` s nulou</b>, protože při kratším
+     seznamu by výraz vyšel kladně a pás by sjel dolů mimo okno. Procenta
+     se v `translateY` vztahují k výšce samotného seznamu, vh k oknu. */
+  --posun: min(0px, calc(-100% + 80vh));
+  animation: rank-toci 36s ease-in-out infinite alternate;
+}
+
+@keyframes rank-toci {
+  0%, 12% { transform: translateY(0); }
+  88%, 100% { transform: translateY(var(--posun)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabule-mapa .nacrt-poradi ol { animation: none; }
+}
 
 /* Která třída je zrovna na řadě — místo tabů, které by nikdo neklikl. */
 .nacrt-trida-ted {
