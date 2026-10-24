@@ -2,7 +2,13 @@
 
 import { ZnakTridy } from "@/app/tridy";
 
-type Radek = { id: number; nazev: string; kategorie: string };
+type Radek = {
+  id: number;
+  nazev: string;
+  kategorie: string;
+  stariS: number | null;
+  dojela: boolean;
+};
 
 /**
  * Pořadí po třídách dole na tabuli (Filip, 24. 10. 2026: *„dole udělej pro
@@ -57,6 +63,19 @@ function Lode({ lode, kopie }: { lode: Radek[]; kopie?: boolean }) {
     <li key={`${kopie ? "kopie-" : ""}${l.id}`} aria-hidden={kopie || undefined}>
       <span className="poradi-cislo">{i + 1}.</span>
       <span className="bok-lod">{l.nazev}</span>
+      {/* Tytéž údaje jako v pořadí vpravo (Filip, 24. 10. 2026) — pás,
+          který by jen jmenoval, by nutil dívat se jinam. */}
+      {l.dojela ? (
+        <span className="pas-stitek">v cíli</span>
+      ) : (
+        <span className="pas-stari">
+          {l.stariS === null
+            ? "nehlásí"
+            : l.stariS < 60
+              ? `${l.stariS} s`
+              : `${Math.round(l.stariS / 60)} min`}
+        </span>
+      )}
     </li>
   ));
 }

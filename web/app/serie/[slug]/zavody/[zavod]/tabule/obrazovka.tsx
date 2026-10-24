@@ -136,7 +136,7 @@ export function Obrazovka({
    * u dojezdů ze zápisu.
    */
   const [poradiLodi, setPoradiLodi] = useState<
-    { id: number; nazev: string; kategorie: string }[]
+    { id: number; nazev: string; kategorie: string; stariS: number | null; dojela: boolean }[]
   >([]);
 
   const zarad = useCallback((u: Udalost) => {

@@ -3097,8 +3097,10 @@ body:has(.tabule) { overflow: hidden; }
 /* Mapa je pozadí celé tabule a panely leží na ní (Filip, 24. 10. 2026).
    V plné síle, ne jako vodoznak: je to hlavní obsah obrazovky, čitelnost
    panelů řeší jejich vlastní podklad, ne ztlumená mapa. */
+/* Mapa končí nad pásy: pod nimi by zůstal schovaný cíl, tedy to
+   nejdůležitější místo trati (Filip, 24. 10. 2026). */
 .tabule-mapa {
-  position: absolute; inset: 0; z-index: 0;
+  position: absolute; inset: 0 0 12.6vw; z-index: 0;
   display: grid; place-items: center; overflow: hidden;
   pointer-events: none;
 }
@@ -3118,13 +3120,13 @@ body:has(.tabule) { overflow: hidden; }
    volno, na tabuli jsou nahoře pásek se stavem a pruh s názvem. */
 /* Specificita schválně vyšší: pravidlo pro náčrt (`.nacrt-na-tv`) stojí
    v souboru níž a jinak by ho přebilo. */
-.tabule-mapa .nacrt-na-tv .nacrt-swap {
-  /* Pod pruhem a vpravo, hned vedle žebříčku (Filip, 24. 10. 2026):
-     ten drží pravou čtvrtinu, takže hláška končí před ním. */
-  top: 5.8vw;
-  left: auto;
-  right: 25.5vw;
-}
+/* <b>Souboj vlevo, kolotoč vpravo</b> (Filip, 24. 10. 2026). Prohození
+   je zpráva sama o sobě a patří tam, kam padne oko; „na vodě: X" jen
+   říká, na co se zrovna díváme, a drží se u žebříčku, kde si tu loď
+   divák najde. */
+.tabule-mapa .nacrt-na-tv .nacrt-swap { top: 5.8vw; }
+.tabule-mapa .nacrt-na-tv .nacrt-swap-souboj { left: 1.2vw; right: auto; }
+.tabule-mapa .nacrt-na-tv .nacrt-swap-kolotoc { left: auto; right: 25.5vw; }
 
 /* <b>Pomyslné pořadí je ten panel z náčrtu</b> (Filip, 24. 10. 2026:
    *„dej tam tenhle rank, co jsme tu hodinu ladili"*) — se znaky tříd,
@@ -4170,29 +4172,54 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 /* Pořadí po třídách dole: tři běžící pásy přes celou šířku, co třída
    to řádek — tentýž tvar jako `PoradiRadky` na úvodní stránce (Filip,
    24. 10. 2026). */
+/* Nižší, s menšími okraji a tak, aby pásy nelezly pod žebříček vpravo
+   (Filip, 24. 10. 2026). */
 .tabule .tabule-tridy {
   position: absolute;
-  left: 0; right: 0; bottom: 0;
+  /* Pás sedí na patičce s partnery, ne na dolní hraně tabule: ta končí
+     o kus níž, protože nahoře ubírá pruh s ukázkovými daty, a pásy by
+     partnerům lezly pod nohy (Filip, 24. 10. 2026).
+     Vpravo končí přesně u žebříčku, aby mezi nimi nezůstal proužek. */
+  position: fixed;
+  left: 0; right: clamp(280px, 24vw, 460px); bottom: var(--paticka);
   z-index: 2;
-  display: grid; gap: 0.25vw;
-  padding: 0.4vw 0.8vw;
+  display: grid; gap: 0.1vw;
+  padding: 0.15vw 0.4vw;
   background: color-mix(in srgb, var(--pozadi) 78%, transparent);
   backdrop-filter: blur(8px);
   border-top: 1px solid var(--linka);
 }
 
+/* Nízký řádek: na úvodní stránce má karta polstrování a zaoblení, tady
+   je to pruh pod mapou a každý jeho pixel jde z vody (Filip, 24. 10.
+   2026: *„zmenšil jsi jen písmenka, nikoli výšku"*). */
 .tabule-tridy .poradi-radek {
-  display: grid; grid-template-columns: 9vw minmax(0, 1fr);
-  align-items: center; gap: 0.8vw;
+  display: grid; grid-template-columns: 7vw minmax(0, 1fr);
+  align-items: center; gap: 0.6vw;
+  padding: 0.12vw 0.5vw;
+  border: 0; border-radius: 0;
+  background: none;
+  font-size: 0.85vw;
 }
+
+.tabule-tridy .karusel-vodorovny li { padding-right: 0; }
+/* Okno karuselu má jinde pevnou výšku na několik řádků; tady je řádek
+   jeden, tak ať je vysoký jako on. */
+.tabule-tridy .karusel { height: auto; }
 
 .tabule-tridy .poradi-radek-trida {
-  display: flex; align-items: center; gap: 0.4vw;
-  font-size: 1vw; font-weight: 700;
+  display: flex; align-items: center; gap: 0.3vw;
+  font-size: 0.8vw; font-weight: 700;
 }
 
-.tabule-tridy .poradi-radek-trida .znak-tridy { height: 1.5vw; width: auto; }
-.tabule-tridy .karusel-pas { display: flex; gap: 1.6vw; }
-.tabule-tridy .karusel-pas li { display: flex; gap: 0.35vw; align-items: baseline; white-space: nowrap; }
-.tabule-tridy .poradi-cislo { color: var(--tlumeny); font-size: 0.95vw; }
-.tabule-tridy .bok-lod { font-size: 1.1vw; font-weight: 600; }
+.tabule-tridy .poradi-radek-trida .znak-tridy { height: 1.1vw !important; width: auto; }
+.tabule-tridy .karusel-pas { display: flex; gap: 1.3vw; }
+.tabule-tridy .karusel-pas li { display: flex; gap: 0.3vw; align-items: baseline; white-space: nowrap; }
+.tabule-tridy .poradi-cislo { color: var(--tlumeny); font-size: 0.75vw; }
+.tabule-tridy .bok-lod { font-size: 0.9vw; font-weight: 600; }
+.tabule-tridy .pas-stari { font-size: 0.7vw; color: var(--stav-vypsany); }
+.tabule-tridy .pas-stitek {
+  font-size: 0.65vw; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--voda); border: 1px solid currentColor; border-radius: 999px;
+  padding: 0 0.3vw;
+}

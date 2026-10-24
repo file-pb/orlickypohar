@@ -354,7 +354,15 @@ export function MapaTrackeru({
    * Pořadí, jak ho mapa spočítala. Tabule z něj staví karusel kategorií
    * dole — počítat postup podruhé by znamenalo dvě pravdy o tomtéž.
    */
-  onPoradi?: (radky: { id: number; nazev: string; kategorie: Lod["kategorie"] }[]) => void;
+  onPoradi?: (
+    radky: {
+      id: number;
+      nazev: string;
+      kategorie: Lod["kategorie"];
+      stariS: number | null;
+      dojela: boolean;
+    }[],
+  ) => void;
   onUdalost?: (u: {
     klic: string;
     druh: "dojezd" | "souboj";
@@ -837,8 +845,11 @@ export function MapaTrackeru({
       id: v.lod.id,
       nazev: v.lod.nazev,
       kategorie: v.lod.kategorie,
+      stariS: v.stariS,
+      dojela: v.dojela,
     }));
-    const otisk = radky.map((r) => r.id).join(",");
+    // Otisk nese i stav, jinak by se pás nedozvěděl, že loď dojela.
+    const otisk = radky.map((r) => `${r.id}:${r.dojela ? 1 : 0}`).join(",");
     if (otisk === posledniPoradi.current) return;
     posledniPoradi.current = otisk;
     onPoradi(radky);
@@ -1237,7 +1248,11 @@ export function MapaTrackeru({
           </div>
 
         {rezim === "tabule" && zabery && (zabery.duvod !== "souboj" || hlaskaVidet) && (
-          <div className="nacrt-swap">
+          <div
+            className={`nacrt-swap ${
+              zabery.duvod === "souboj" ? "nacrt-swap-souboj" : "nacrt-swap-kolotoc"
+            }`}
+          >
             {zabery.duvod === "souboj" && posledniSwap && hlaskaVidet ? (
               <div className="nacrt-souboj" key={posledniSwap.cas}>
                 <div className="nacrt-souboj-pozice">{posledniSwap.pozice}. pozice</div>
