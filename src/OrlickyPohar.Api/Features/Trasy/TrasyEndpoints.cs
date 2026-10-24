@@ -20,7 +20,7 @@ namespace OrlickyPohar.Api.Features.Trasy;
 public static class TrasyEndpoints
 {
     /// <summary>Hlavička, ve které telefon posílá svůj klíč.</summary>
-    public const string HlavickaKlice = "X-Klic-Lodi";
+    public const string HlavickaKlice = KliceSprava.Hlavicka;
 
     public static void MapTrasy(this IEndpointRouteBuilder app)
     {
@@ -33,11 +33,15 @@ public static class TrasyEndpoints
 
         g.MapPost("/", ZalozAsync)
             .Produces<TrasaDto>()
+            .Produces<ChybaTrasy>(StatusCodes.Status409Conflict)
             .WithSummary("Založí trasu, nebo vrátí tu existující")
             .WithDescription(
                 "Idempotentní podle `lokalniId`, které si vyrábí telefon. Opakované " +
                 "volání druhou trasu nezaloží — na vodě signál padá a nahrání se " +
-                "bude opakovat.");
+                "bude opakovat. **Bez běžícího okna regaty trasa nevznikne** a vrací " +
+                "se 409: záznam smí běžet jen od rozpravy do uzavření závodního dne " +
+                "a jen lodi, která je v té regatě přihlášená. Doposílat do už " +
+                "založené trasy jde i potom.");
 
         g.MapPost("/{lokalniId}/body", PridejAsync)
             // Tělo se v dokumentu pojmenuje ručně, protože handler ho bere
@@ -60,12 +64,9 @@ public static class TrasyEndpoints
     /// odepnutého i odebraného — <b>všechny případy dopadnou stejně</b>, aby
     /// se z odpovědi nedalo nic vyčíst.
     /// </summary>
-    private static async Task<KlicLodi?> KlicAsync(
-        HttpContext ctx, KliceSprava klice, CancellationToken ct)
-    {
-        var hodnota = ctx.Request.Headers[HlavickaKlice].ToString();
-        return string.IsNullOrWhiteSpace(hodnota) ? null : await klice.OverAsync(hodnota, ct);
-    }
+    private static Task<KlicLodi?> KlicAsync(
+        HttpContext ctx, KliceSprava klice, CancellationToken ct) =>
+        klice.ZHlavickyAsync(ctx, ct);
 
     private static async Task<Results<Ok<List<TrasaDto>>, UnauthorizedHttpResult>> MojeAsync(
         HttpContext ctx, KliceSprava klice, TrasySprava sprava, CancellationToken ct)
@@ -74,7 +75,8 @@ public static class TrasyEndpoints
         return TypedResults.Ok(await sprava.MojeAsync(klic, ct));
     }
 
-    private static async Task<Results<Ok<TrasaDto>, UnauthorizedHttpResult, ValidationProblem>>
+    private static async Task<Results<Ok<TrasaDto>, UnauthorizedHttpResult, ValidationProblem,
+            Conflict<ChybaTrasy>>>
         ZalozAsync(
             ZalozTrasuVstup vstup, HttpContext ctx, KliceSprava klice, TrasySprava sprava,
             CancellationToken ct)
@@ -97,7 +99,10 @@ public static class TrasyEndpoints
                 ["lod"] = ["Jméno lodi chybí."],
             });
 
-        return TypedResults.Ok(await sprava.ZalozAsync(klic, vstup, ct));
+        var (trasa, chyba) = await sprava.ZalozAsync(klic, vstup, ct);
+        return trasa is null
+            ? TypedResults.Conflict(new ChybaTrasy(chyba!))
+            : TypedResults.Ok(trasa);
     }
 
     /// <summary>
@@ -156,3 +161,6 @@ public static class TrasyEndpoints
 
 /// <summary>Kdy posádka záznam ukončila. Nepovinné — server si vystačí s tím, co má.</summary>
 public record DokonceniVstup(DateTimeOffset? Konec);
+
+/// <summary>Proč záznam nejde založit. Text je pro člověka na palubě.</summary>
+public record ChybaTrasy(string Error);

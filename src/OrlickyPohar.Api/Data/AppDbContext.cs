@@ -48,6 +48,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Features.Trasy.Trasa> Trasy => Set<Features.Trasy.Trasa>();
     public DbSet<Features.Trasy.TrasaBod> TrasaBody => Set<Features.Trasy.TrasaBod>();
     public DbSet<Features.Klice.KlicLodi> Klice => Set<Features.Klice.KlicLodi>();
+    public DbSet<Features.Okna.OknoRegaty> Okna => Set<Features.Okna.OknoRegaty>();
     public DbSet<Features.Klice.PozvankaKlice> Pozvanky => Set<Features.Klice.PozvankaKlice>();
 
     protected override void OnModelCreating(ModelBuilder b)
@@ -460,6 +461,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // pohodlí. Unikátní proto, že tentýž otisk znamená totéž tajemství.
         klic.HasIndex(x => x.Otisk).IsUnique();
         klic.HasIndex(x => x.LodId);
+
+        var okno = b.Entity<Features.Okna.OknoRegaty>();
+        okno.HasOne(x => x.Zavod).WithMany().HasForeignKey(x => x.ZavodId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Okno se hledá dvěma dotazy: „co běží u téhle regaty" a „co běží
+        // teď vůbec" (při zakládání trasy se neví, o kterou regatu jde).
+        okno.HasIndex(x => new { x.ZavodId, x.OtevrenoV });
+        okno.HasIndex(x => x.TvrdyKonec);
 
         var pozvanka = b.Entity<Features.Klice.PozvankaKlice>();
         pozvanka.Property(x => x.Otisk).HasMaxLength(64).IsRequired();

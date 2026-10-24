@@ -118,6 +118,20 @@ public class KliceSprava(AppDbContext db, TimeProvider cas)
         return new UplatneniDto(klic, pozvanka.LodId, pozvanka.Lod?.Nazev ?? "", pozvanka.Jmeno);
     }
 
+    /// <summary>Hlavička, ve které telefon posílá svůj klíč.</summary>
+    public const string Hlavicka = "X-Klic-Lodi";
+
+    /// <summary>
+    /// Najde klíč podle hlavičky požadavku. `null` u chybějícího, neznámého,
+    /// odepnutého i odebraného — <b>všechny případy dopadnou stejně</b>, aby
+    /// se z odpovědi nedalo nic vyčíst.
+    /// </summary>
+    public async Task<KlicLodi?> ZHlavickyAsync(HttpContext ctx, CancellationToken ct)
+    {
+        var hodnota = ctx.Request.Headers[Hlavicka].ToString();
+        return string.IsNullOrWhiteSpace(hodnota) ? null : await OverAsync(hodnota, ct);
+    }
+
     /// <summary>
     /// Najde klíč podle tajemství a zapíše, že se ozval. Vrací `null`
     /// u neznámého, odebraného i odepnutého — volající z toho nemá co číst.

@@ -2523,6 +2523,42 @@ se něco nepovedlo.
 a mazání z oddílu *Tracker běží celý blok na vodě* jsou právě rozdíl mezi
 trasou a jejími úseky. U trasy, která žádný úsek nedostane, to znamená, že
 se smaže celá — zůstane jen záznam, že vznikla.
+### Okno regaty je postavené (24. 10. 2026)
+
+První kus z pořadí práce výš. `OknoRegaty` visí na závodu, otevírá ho
+rozprava (`POST …/okna/rozprava`), zavírá konec dne (`POST …/okna/uzavrit`)
+a telefon si je čte klíčem k lodi (`GET /okna`). Rozhodnutí, která u toho
+padla:
+
+| Rozhodnutí | Proč |
+|---|---|
+| **tvrdý konec je 14 hodin od rozpravy, nejvíc 36** | běžný závodní den i s rezervou na pozdní dojezd; dvacetičtyřhodinovka si o delší řekne při rozpravě, nad 36 h už to není závod, ale zapomenuté okno |
+| **druhá rozprava nezaloží druhé okno** | na vodě se klikne dvakrát spíš než vůbec; vrátí se to běžící |
+| **uzavřít zavřené není chyba** | totéž z druhé strany; chybová hláška by pořadateli v tu chvíli nijak nepomohla |
+| **den se počítá z pořadí rozprav, ne z kalendáře** | dvacetičtyřhodinovka má jedno okno přes dva kalendářní dny |
+
+**Trasa se váže na regatu ze serveru.** `TrasySprava.ZalozAsync` dohledá
+okno, které v okamžiku začátku záznamu běželo u regaty, kde je **ta loď
+přihlášená** (stav zapsaná nebo potvrzená), a zapíše `ZavodId` i `OknoId`.
+Jméno regaty z telefonu zůstává volným textem a nerozhoduje o ničem.
+
+**Bez okna trasa nevznikne** — `POST /trasy` vrátí 409. To je ta hranice
+mezi trackerem a sledovacím zařízením; dosud nebyla nikde.
+
+**Doposílat jde i po uzavření dne.** Okno se ptá jen při zakládání trasy;
+dávky ani uzavření nahrávání už ho nekontrolují. Výpadek sítě na vodě je
+normál, ne porucha, a trasa nahraná večer v hospodě je pořád záznam z toho
+dne.
+
+**Okno se hledá nejdřív k začátku záznamu, teprve pak k „teď".** Pořadí je
+schválně takové: záznam patří dni, ve kterém začal. Záloha na „teď" je tam
+kvůli telefonu s přestavenými hodinami — jinak by loď, která skutečně jede
+v okně, přišla o celý záznam kvůli špatně nastavenému času.
+
+**Co tím ještě není:** ořez trasy na okno rozjížďky a mazání toho, co je
+mimo (to čeká na úseky rozjížděk), a zámek nastavení zobrazení, který na
+rozpravu patří taky — zámek je poslední řádek v tom, co okna postaví.
+
 ### Co z toho čeká na přihlášení
 
 Všechna tři pravidla výš (loď v regatě, telefon u posádky, okno regaty)
