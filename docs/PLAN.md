@@ -2248,6 +2248,25 @@ ani jedna ze čtyřiceti lodí, je mělčina nebo kopec — stopy samy nakreslí
 kudy se dá jet. Měřicí trasa se tím dá po sezóně opravit podle skutečnosti,
 a je to další důvod, proč trasy sbírat i v roce, kdy je nikdo neuvidí.
 
+**Spojnice z návrháře je něco jiného a ukazovat se smí** (Filip, 24. 10.
+2026: *„trasa, co už v návrháři, a prvky na vodě to máme vyladěné, to tam
+může být optionally k zobrazení"*). Jsou to dvě různé čáry a je dobré je
+nemíchat:
+
+| | Co to je | Vidět? |
+|---|---|---|
+| **spojnice trati** (`spojniceTrati`) | kudy se jede, s obloučky obeplutí a rozestupem noh; vyladěná od 11. 10. 2026 | **volitelně ano** |
+| **měřicí trasa** (`cestaProMereni`) | podklad pro postup po trati | **nikdy** |
+
+Spojnice říká závodníkovi pravdu o trati, kterou stejně zná z GPX. Měřicí
+trasa by tvrdila, že se jede po ní.
+
+**Hotové v náčrtu** (`web/app/nacrt/mapa`): měřicí trasa se počítá na
+serveru přes `cestaProMereni` s odstupem 60 m a pomyslné pořadí se měří
+podle ní, ne podle přímek mezi značkami. Na vymyšlené trati vyšla
+na 2 407 m po vodě proti 2 349 m přímo. Spojnice z návrháře se počítá pro
+každé přiblížení zvlášť, protože `spojniceTrati` bere metry na pixel.
+
 Na tabuli nikdo neklikne, takže „vybranou loď" tam vybírá **režie** —
 tentýž vizuální zákon obsluhuje i televizní záběr.
 
