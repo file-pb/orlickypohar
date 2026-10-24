@@ -1326,6 +1326,13 @@ export function NacrtMapy({
                 <span className="nacrt-trida" title={v.lod.kategorie}>
                   <ZnakTridy nazev={v.lod.kategorie} />
                 </span>
+                {/*
+                  Dojetá loď to má napsané u sebe (Filip, 24. 10. 2026:
+                  *„to se dá taky udělat nějakým tagem do ranku"*).
+                  Samostatný widget „Právě dojeli" vedle pořadí říkal
+                  totéž podruhé.
+                */}
+                {v.dojela && <span className="nacrt-stitek-cil">v cíli</span>}
                 <span className={`nacrt-stav nacrt-${v.stav}`}>
                   {v.stariS === null
                     ? "nehlásí se"

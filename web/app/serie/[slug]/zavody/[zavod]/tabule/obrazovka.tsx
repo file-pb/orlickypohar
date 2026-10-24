@@ -7,7 +7,7 @@ import { Znak } from "@/app/logo";
 import { NazevZavodu } from "@/app/tabule-nazev";
 import { Atributy } from "./atributy";
 import { Karusel, type Panel } from "./karusel";
-import { Dojezdy, Semafor } from "./semafor";
+import { StavovyProuzek } from "./semafor";
 import { MapkaTrati } from "@/app/mapka-trati";
 import { ZnakTridy } from "@/app/tridy";
 import { udalosti, type Udalost } from "@/lib/tabule-udalosti";
@@ -120,6 +120,7 @@ export function Obrazovka({
           cestu zpátky — bez ní by se z televize nedalo odejít jinak než
           adresou. */}
       <Alert udalost={fronta[0]} hotovo={() => setFronta((f) => f.slice(1))} />
+      <StavovyProuzek snimek={snimek} ted={ted} />
       {/* Logo vlevo, název uprostřed, stav vpravo (Filip, 15. 10. 2026).
           Jen kulatá značka: nápis „Orlická série" vedle ní by stál vedle
           názvu závodu v téže grafice a oba by se přebíjely. */}
@@ -174,13 +175,11 @@ export function Obrazovka({
         <Karusel panely={tridyPanely(snimek)} />
 
         <div className="sloupecek">
-          <Semafor snimek={snimek} ted={ted} />
           {snimek.mapa.length > 0 && (
             <div className="mapka-mala">
               <MapkaTrati prvky={snimek.mapa} />
             </div>
           )}
-          <Dojezdy snimek={snimek} />
         </div>
       </div>
     </div>
@@ -293,26 +292,10 @@ function polePanely(snimek: Snimek): Panel[] {
           </ul>
         ),
     },
-    // <b>Startovní listina se stránkuje, neusekává</b> (17. 10. 2026).
-    // Všech dvaadvacet lodí najednou se na obrazovku vejde jen tak, že se
-    // řádky stlačí na patnáct pixelů — změřeno, text se z nich uřízl.
-    // „A ještě dvanáct dalších" tu přitom nedává smysl: před startem se
-    // člověk dívá, jestli tam je jeho loď. Karusel už se střídá, takže
-    // z nich prostě udělá víc panelů a tečky řeknou, že nejsou všechny
-    // naráz.
-    ...stranky(snimek.lode, NA_STRANKU).map((cast, i) => ({
-      klic: `start-${i}`,
-      nadpis: `Na startu (${snimek.lode.length})`,
-      obsah: (
-        <ul className="lode">
-          {cast.map((l) => (
-            <li key={l.lod}>
-              {l.lod} <span className="detail">{l.kormidelnik ?? l.kategorie}</span>
-            </li>
-          ))}
-        </ul>
-      ),
-    })),
+    // <b>Startovní listina na tabuli není</b> (Filip, 24. 10. 2026:
+    // *„na startu nevím, jestli má smysl, když tam máme pořadí, tak je
+    // to jasný"*). Pořadí nese tytéž lodě a navíc říká, jak jim to jde;
+    // dva seznamy týchž jmen vedle sebe jsou jen víc čtení.
   ];
 }
 

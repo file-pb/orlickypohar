@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { Snimek } from "@/lib/tabule";
 
 /**
@@ -149,5 +150,79 @@ export function Dojezdy({ snimek }: { snimek: Snimek }) {
         ))}
       </ol>
     </section>
+  );
+}
+
+/**
+ * Stav jako tenký proužek nahoře (Filip, 24. 10. 2026: *„tu startovačku
+ * dej jen jako info popup, jinak stav můžeme nějakým tenkým proužkem
+ * s carrousel textem v barvě stavu nahoře"*).
+ *
+ * <b>Proč místo semaforu:</b> semafor zabíral roh obrazovky na údaj,
+ * který se dá říct větou — a každý jeho centimetr jde z mapy. Změnu
+ * stavu beztak oznamuje alert uprostřed, takže stálý widget říkal
+ * podruhé totéž.
+ *
+ * Zprávy se střídají, protože na jeden řádek se nevejdou, a je jich
+ * málo na to, aby se text musel posouvat: střídání se čte líp než
+ * běžící pás.
+ */
+export function StavovyProuzek({ snimek, ted }: { snimek: Snimek; ted: number }) {
+  const [kde, setKde] = useState(0);
+
+  const jede = snimek.rozjizdky.find((r) => r.stav === "Probiha");
+  const ceka = snimek.rozjizdky.find((r) => r.stav === "Planovana");
+  const posledni = [...snimek.rozjizdky].reverse().find((r) => r.stav === "Dokoncena");
+  const rozjizdka = jede ?? ceka ?? posledni;
+
+  const prestavba = snimek.trat?.prestavba === true;
+  const svetlo: Svetlo = !rozjizdka
+    ? "ceka"
+    : prestavba
+      ? "ceka"
+      : rozjizdka.stav === "Probiha"
+        ? "jede"
+        : rozjizdka.stav === "Dokoncena"
+          ? "dojeto"
+          : rozjizdka.stav === "Zrusena"
+            ? "zruseno"
+            : "ceka";
+
+  const zpravy: string[] = [];
+  if (rozjizdka) {
+    const co = prestavba ? "čeká se na trať" : POPIS[svetlo];
+    zpravy.push(`${rozjizdka.cislo}. rozjížďka — ${co}`);
+
+    const start = rozjizdka.startV ? Date.parse(rozjizdka.startV) : null;
+    const odStartu = start !== null ? Math.floor((ted - start) / 1000) : null;
+    if (svetlo === "jede" && odStartu !== null && odStartu >= 0) {
+      zpravy.push(`od startu ${hodiny(odStartu)}`);
+    } else if (svetlo === "ceka" && !prestavba && odStartu !== null && odStartu < 0) {
+      zpravy.push(`do startu ${hodiny(-odStartu)}`);
+    }
+
+    const vCili = rozjizdka.poradi.filter((v) => v.misto !== null).length;
+    const vyrizeno = rozjizdka.poradi.filter((v) => v.misto !== null || v.kod).length;
+    const cekaSe = Math.max(0, snimek.lode.length - vyrizeno);
+    if (svetlo !== "ceka" && (vCili > 0 || cekaSe > 0)) {
+      zpravy.push(cekaSe > 0 ? `${vCili} v cíli · čeká se na ${cekaSe}` : `${vCili} v cíli`);
+    }
+  }
+
+  useEffect(() => {
+    if (zpravy.length < 2) return;
+    const tik = setInterval(() => setKde((k) => k + 1), 5000);
+    return () => clearInterval(tik);
+  }, [zpravy.length]);
+
+  if (zpravy.length === 0) return null;
+  const zprava = zpravy[kde % zpravy.length];
+
+  return (
+    <p className={`stavovy-prouzek sviti-${svetlo}`} role="status">
+      {/* Klíč na textu: při střídání naběhne animace znovu, jinak by se
+          řádek jen přepsal a nikdo by si změny nevšiml. */}
+      <span key={zprava}>{zprava}</span>
+    </p>
   );
 }
