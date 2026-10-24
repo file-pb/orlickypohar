@@ -2711,6 +2711,26 @@ ne až po kliknutí do mapy.
 šum a směr by si vymýšlel stranu. **Bez startovního prvku se sloupec
 nevypisuje** — měřit od náhodné bóje by byl údaj, který nic neznamená.
 
+### Tabule na širokém monitoru (Filip, 24. 10. 2026)
+
+První pohled na nasazenou tabuli přes ultrawide ukázal čtyři věci naráz.
+Všechny mají společného jmenovatele: **rozměry byly v `vw`**, a to je na
+16:9 rozumné jen proto, že tam šířka s výškou souvisí.
+
+| Co se dělo | Proč | Co s tím |
+|---|---|---|
+| velká písmena a prvky „na úkor mapy" | při 3440×820 vyšel jeden `vw` na 34 px, pásy tříd zabraly 368 px z 820 a na mapu zbylo **25 px** (změřeno) | jednotka `--tv: min(1vw, 1.78vh)`; na 16:9 je to týž rozměr jako dřív, na širším monitoru drží velikosti výška |
+| pásy tříd přerostly mapu | tři řádky × `vw` | strop `max-height: 24vh` |
+| **první dvě pozice v pořadí nebyly vidět** | žebříček se „točil" CSS animací o posun odhadnutý z `vh`; při jiném poměru obrazovky schovala horní lodě a nechala nad nimi díru | točení dělá scroll v komponentě, který zná skutečné přetečení — a je to tentýž mechanismus, jakým se seznam posouvá na prohazovanou dvojici |
+| **při dojezdu se rozhodila mapa** | režie v tu chvíli přepíná záběr celek/čelo, takže se vymění **celá** sada dlaždic a nové se teprve stahují | hrubý podklad na pevné úrovni (`PODKLAD_Z = 13`), který se se zoomem nemění a drží se v cache: pod novými dlaždicemi je pořád mapa, jen rozmazaná |
+
+**Cílová karta dostala rámeček** (Filip: *„nemá okraje, takže vypadá
+amatérsky"*). Tenký proužek u horní hrany, který po ní zbyl z dřívějška,
+nahradil celý rámeček v barvě druhu.
+
+**A nebyla na ní dvakrát táž věta.** Karta má nadpisek „V cíli" a pod
+jménem nesla detail „v cíli"; detail teď nese třídu lodi.
+
 ### Co z toho čeká na přihlášení
 
 Všechna tři pravidla výš (loď v regatě, telefon u posádky, okno regaty)

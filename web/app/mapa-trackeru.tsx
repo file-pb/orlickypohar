@@ -37,6 +37,12 @@ const KATEGORIE: Lod["kategorie"][] = ["Race", "Nad7m", "Pod7m"];
 const LODICKA = "M 0,-1 L 0.62,0.62 L 0,0.28 L -0.62,0.62 Z";
 
 /** Jak staré smí být hlášení, než loď přestane být čerstvá. */
+/**
+ * Jak dlouho žebříček stojí, než popojede. Dost na přečtení přes
+ * místnost, ne tak dlouho, aby se na zadní lodě nedostalo.
+ */
+const TOCENI_MS = 18_000;
+
 const STARNE_PO_S = 60;
 /** A kdy propadne nakonec. */
 const NEDOSTUPNA_PO_S = 300;
@@ -117,6 +123,12 @@ const KOLOTOC_S = 60;
  * a pak zase na celé pole na chvíli."*
  */
 /** Jak dlouho drží celkový záběr. */
+/**
+ * Úroveň hrubého podkladu pod dlaždicemi. Na ní se celá přehrada vejde
+ * do hrstky dlaždic, takže je po prvním načtení pořád po ruce.
+ */
+const PODKLAD_Z = 13;
+
 const ZABER_CELEK_MS = 18_000;
 /** A jak dlouho záběr na čelo. */
 const ZABER_CELO_MS = 12_000;
@@ -695,19 +707,48 @@ export function MapaTrackeru({
   // Dlaždice překrývající výřez.
   const levo = stredPx.x - SIRKA / 2;
   const nahore = stredPx.y - VYSKA / 2;
-  const naSvete = 2 ** z;
-  const dlazdice = [];
-  for (let tx = Math.floor(levo / DLAZDICE); tx <= Math.floor((levo + SIRKA) / DLAZDICE); tx++) {
-    for (let ty = Math.floor(nahore / DLAZDICE); ty <= Math.floor((nahore + VYSKA) / DLAZDICE); ty++) {
-      if (tx < 0 || ty < 0 || tx >= naSvete || ty >= naSvete) continue;
-      dlazdice.push({
-        klic: `${z}-${tx}-${ty}`,
-        cesta: `/dlazdice/${z}/${tx}/${ty}`,
-        x: tx * DLAZDICE - levo,
-        y: ty * DLAZDICE - nahore,
-      });
+
+  /**
+   * Dlaždice jedné úrovně přes celý výřez. `krok` je, kolik pixelů
+   * téhle mapy jedna dlaždice zabere — u podkladu z nižšího zoomu je
+   * větší než sama dlaždice.
+   */
+  const vrstva = (uroven: number) => {
+    const krok = DLAZDICE * 2 ** (z - uroven);
+    const naSvete = 2 ** uroven;
+    const ven = [];
+    for (let tx = Math.floor(levo / krok); tx <= Math.floor((levo + SIRKA) / krok); tx++) {
+      for (let ty = Math.floor(nahore / krok); ty <= Math.floor((nahore + VYSKA) / krok); ty++) {
+        if (tx < 0 || ty < 0 || tx >= naSvete || ty >= naSvete) continue;
+        ven.push({
+          klic: `${uroven}-${tx}-${ty}`,
+          cesta: `/dlazdice/${uroven}/${tx}/${ty}`,
+          x: tx * krok - levo,
+          y: ty * krok - nahore,
+          krok,
+        });
+      }
     }
-  }
+    return ven;
+  };
+
+  /**
+   * <b>Hrubý podklad pod ostrými dlaždicemi.</b>
+   *
+   * Režie na tabuli střídá celek a čelo, takže se mění přiblížení — a při
+   * každé změně se vymění celá sada dlaždic naráz. Nové se teprve
+   * stahují, takže mapa na vteřinu zmizela a zbyly z ní obdélníky
+   * (Filip, 24. 10. 2026: *„při dojezdu lodi se rozhodí design"* — potkalo
+   * se to s okamžikem, kdy režie zaměřuje na dojíždějící loď).
+   *
+   * Podklad proto sedí na <b>pevné úrovni</b>, ne o dvě níž, než je
+   * zrovna přiblížení: kdyby se počítal ze `z`, měnil by se s ním a při
+   * přepnutí záběru by se překresloval taky. Takhle se nemění vůbec,
+   * drží se v cache prohlížeče a nad ním se jen vyměňují ostré dlaždice.
+   * Celé závodní pole na něm zabere jednotky dlaždic.
+   */
+  const podklad = vrstva(Math.max(Z_NEJMENE, Math.min(z - 1, PODKLAD_Z)));
+  const dlazdice = vrstva(z);
 
   function posunMapu(dx: number, dy: number) {
     const n = DLAZDICE * 2 ** z;
@@ -909,7 +950,10 @@ export function MapaTrackeru({
       const klic = `cil-${v.lod.id}`;
       if (ohlaseno.current.has(klic)) continue;
       ohlaseno.current.add(klic);
-      onUdalost({ klic, druh: "dojezd", titulek: v.lod.nazev, detail: "v cíli" });
+      // Detail nese třídu, ne znovu „v cíli": ta stojí jako nadpisek nad
+      // jménem a dvakrát totéž na jedné kartě vypadá jako chyba (Filip,
+      // 24. 10. 2026).
+      onUdalost({ klic, druh: "dojezd", titulek: v.lod.nazev, detail: v.lod.kategorie });
     }
   }, [cas, prohozeni, vStavu, lode, onUdalost]);
 
@@ -961,6 +1005,32 @@ export function MapaTrackeru({
     const stred = (ra.top + rb.bottom) / 2 - r.top + ol.scrollTop;
     ol.scrollTo({ top: stred - r.height / 2, behavior: "smooth" });
   }, [posledniSwap, cas]);
+
+  /**
+   * <b>Žebříček se točí, aby se divák dostal i na zadní lodě.</b>
+   *
+   * Dělá to scroll, ne CSS animace. Ta posouvala celý seznam o rozdíl
+   * odhadnutý z `vh`, takže při jiném poměru obrazovky schovala první
+   * dvě lodě a nad ně položila díru (Filip, 24. 10. 2026: *„první dvě
+   * pozice v ranku nejsou vidět"*). Scroll zná skutečné přetečení, takže
+   * se vrátí přesně na vrch — a nepere se s posunem na dvojici, která se
+   * zrovna prohazuje, protože je to tentýž mechanismus.
+   */
+  useEffect(() => {
+    if (!tabule) return;
+    const ol = seznam.current;
+    if (!ol) return;
+
+    let dolu = true;
+    const tik = setInterval(() => {
+      const preteceni = ol.scrollHeight - ol.clientHeight;
+      // Vejde-li se celý, není kam jezdit.
+      if (preteceni <= 1) return;
+      ol.scrollTo({ top: dolu ? preteceni : 0, behavior: "smooth" });
+      dolu = !dolu;
+    }, TOCENI_MS);
+    return () => clearInterval(tik);
+  }, [tabule]);
 
   /**
    * Pořadí, jak se zrovna ukazuje. <b>Není to rovnou to spočítané</b>
@@ -1127,8 +1197,11 @@ export function MapaTrackeru({
           onPointerUp={() => (tahne.current = null)}
           onPointerLeave={() => (tahne.current = null)}
         >
+          {podklad.map((d) => (
+            <image key={d.klic} href={d.cesta} x={d.x} y={d.y} width={d.krok} height={d.krok} />
+          ))}
           {dlazdice.map((d) => (
-            <image key={d.klic} href={d.cesta} x={d.x} y={d.y} width={DLAZDICE} height={DLAZDICE} />
+            <image key={d.klic} href={d.cesta} x={d.x} y={d.y} width={d.krok} height={d.krok} />
           ))}
 
           {/*

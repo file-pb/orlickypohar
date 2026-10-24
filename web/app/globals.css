@@ -2735,7 +2735,7 @@ body:has(.tabule) > .nahoru { display: none; }
 /* Partneři na tabuli jsou proužek, ne pás špalků (Filip, 24. 10. 2026).
    Sedm procent výšky obrazovky na loga je moc: patří tam, ale jsou to
    kulisy, ne sdělení — a každý jejich centimetr jde z mapy. */
-body:has(.tabule) { --paticka: 3.6vw; }
+body:has(.tabule) { --paticka: calc(3.6 * var(--tv)); }
 /* Tabule jde od kraje ke kraji: obal stránky má odsazení pro čtení, tady
    by ukrajoval pruh po stranách mapy i horní lišty. */
 body:has(.tabule) main.obal { max-width: none; padding: 0; }
@@ -2743,26 +2743,41 @@ body:has(.tabule) main.obal { max-width: none; padding: 0; }
    leží, ne plocha pod nimi. Horní pruh jinak začínal dva vw od kraje. */
 .tabule:has(.tabule-mapa) { padding: 0; }
 body:has(.tabule) > .partneri { border-top-color: var(--linka); }
-body:has(.tabule) > .partneri img { max-height: 2.2vw; }
+body:has(.tabule) > .partneri img { max-height: calc(2.2 * var(--tv)); }
 body:has(.tabule) > .partneri .partneri-pas a,
 body:has(.tabule) > .partneri .partneri-pas span {
-  height: calc(var(--paticka) - 0.7vw);
+  height: calc(var(--paticka) - calc(0.7 * var(--tv)));
   width: calc((var(--paticka) - 0.7vw) * 3);
-  padding: 0.2vw 0.45vw;
-  border-radius: 0.4vw;
+  padding: calc(0.2 * var(--tv)) calc(0.45 * var(--tv));
+  border-radius: calc(0.4 * var(--tv));
 }
-body:has(.tabule) > .partneri .partneri-pas li { margin-right: 0.6vw; }
+body:has(.tabule) > .partneri .partneri-pas li { margin-right: calc(0.6 * var(--tv)); }
 /* Obal webu má kolem obsahu vzduch; panel si ho řídí sám. */
 body:has(.tabule) > .obal { padding: 0; max-width: none; }
 /* Žádné rolování: co se nevejde, se má střídat samo, ne čekat na palec,
    který k televizi nikdo nenatáhne. */
 body:has(.tabule) { overflow: hidden; }
 
+/**
+ * <b>Jednotka tabule: menší z šířky a výšky</b> (Filip, 24. 10. 2026:
+ * *„pokud použiji široký monitor, tak velká písmena, zvětšené prvky na
+ * úkor mapy"*).
+ *
+ * Všechno na tabuli bylo v `vw`, což na 16:9 dává rozumné velikosti, ale
+ * na ultrawide ne: při 3440×820 vyšel jeden `vw` na 34 px, pásy tříd
+ * zabraly 368 px z 820 a na mapu zbylo pětadvacet pixelů (změřeno
+ * 24. 10. 2026). `1.78vh` je týž rozměr na obrazovce 16:9, takže na ní se
+ * nezmění nic; jakmile je monitor širší, drží velikosti výška.
+ *
+ * Sedí na `body`, ne na `.tabule`, protože pás partnerů leží mimo ni.
+ */
+body:has(.tabule) { --tv: min(1vw, 1.78vh); }
+
 .tabule {
   /* Místo na pás partnerů si odečítá `body` (`padding-bottom:
      var(--paticka)`), takže tady se přidávat nesmí — po dvojí rezervaci
      zůstalo nad logy sto osm pixelů prázdna (17. 10. 2026). */
-  padding: 1.5vw 2vw;
+  padding: calc(1.5 * var(--tv)) calc(2 * var(--tv));
   /* <b>Výška je obrazovka, ne obsah.</b> S pouhým `min-height` se
      stránka při delším pořadí roztáhla za spodní okraj a `overflow:
      hidden` na `body` zbytek tiše usekl — na 720px obrazovce byla
@@ -2799,10 +2814,10 @@ body:has(.tabule) { overflow: hidden; }
   display: grid;
   grid-template-columns: 3vw auto minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 0 1.2vw;
+  gap: 0 calc(1.2 * var(--tv));
   /* Až do krajů (Filip, 24. 10. 2026): pruh drží celou šířku a obsah
      v něm sedí u hran, ne uprostřed s okraji. */
-  margin: 0; padding: 0.15vw 0.6vw;
+  margin: 0; padding: calc(0.15 * var(--tv)) calc(0.6 * var(--tv));
   background: color-mix(in srgb, var(--pozadi) 72%, transparent);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--linka);
@@ -2815,20 +2830,20 @@ body:has(.tabule) { overflow: hidden; }
 .tabule .vrch .atributy { grid-column: 3; justify-content: start; }
 .tabule .vrch .stav {
   grid-column: 4;
-  display: flex; flex-direction: row; gap: 0.8vw; align-items: baseline;
+  display: flex; flex-direction: row; gap: calc(0.8 * var(--tv)); align-items: baseline;
 }
 
 /* Stav rozjížďky s vlajkou je úplně vpravo (Filip, 24. 10. 2026). */
 .stav-rozjizdky-tabule {
   grid-column: 5; grid-row: 1;
-  display: flex; align-items: center; gap: 0.5vw;
+  display: flex; align-items: center; gap: calc(0.5 * var(--tv));
   margin: 0;
-  font-size: 1vw; letter-spacing: 0.04em;
+  font-size: calc(1 * var(--tv)); letter-spacing: 0.04em;
   color: var(--tlumeny);
   white-space: nowrap;
 }
 .stav-rozjizdky-tabule span { display: inline-block; animation: stav-prijezd 0.4s ease-out; }
-.stav-rozjizdky-tabule .vlajka { height: 1.8vw; width: auto; flex: none; }
+.stav-rozjizdky-tabule .vlajka { height: calc(1.8 * var(--tv)); width: auto; flex: none; }
 .stav-rozjizdky-tabule.sviti-ceka { color: #e8900c; }
 .stav-rozjizdky-tabule.sviti-jede { color: var(--stav-vypsany); }
 .stav-rozjizdky-tabule.sviti-dojeto { color: var(--voda); }
@@ -2842,12 +2857,12 @@ body:has(.tabule) { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .stav-rozjizdky-tabule span { animation: none; }
 }
-.tabule .vrch .stav { display: flex; flex-direction: column; align-items: flex-end; gap: 0.3vw; }
+.tabule .vrch .stav { display: flex; flex-direction: column; align-items: flex-end; gap: calc(0.3 * var(--tv)); }
 .tabule .vrch .stav p { margin: 0; }
 /* Logo v rohu: jediná klikatelná věc. Je malé schválně — má být po ruce,
    ne součást sdělení. */
 .tabule .odchod {
-  display: block; width: 4.5vw; height: 4.5vw; opacity: 0.55;
+  display: block; width: 4.5vw; height: calc(4.5 * var(--tv)); opacity: 0.55;
 }
 .tabule .odchod:hover { opacity: 1; }
 .tabule .odchod svg { display: block; width: 100%; height: 100%; }
@@ -2862,10 +2877,10 @@ body:has(.tabule) { overflow: hidden; }
 }
 /* Název je menší a atributy stojí vedle něj, ne pod ním (Filip, 24. 10.
    2026) — na tabuli s mapou je každý vertikální pruh drahý. */
-.tabule-nazev { display: block; width: 100%; height: 3.4vw; }
+.tabule-nazev { display: block; width: 100%; height: calc(3.4 * var(--tv)); }
 .tabule-nazev text {
   font-family: "Nadpis tabule", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  font-weight: 900; font-size: 2.6vw; letter-spacing: 0.01em;
+  font-weight: 900; font-size: calc(2.6 * var(--tv)); letter-spacing: 0.01em;
 }
 /* Alert doprostřed televize: vyjede, chvíli visí a usadí se k tomu, čeho
    se týká (Filip, 15. 10. 2026). Je to to jediné, co se na pasivním panelu
@@ -2893,7 +2908,7 @@ body:has(.tabule) { overflow: hidden; }
 
 .tabule-alert {
   position: absolute; left: 50%; top: 50%; z-index: 5;
-  display: flex; flex-direction: column; align-items: center; gap: 0.5vw;
+  display: flex; flex-direction: column; align-items: center; gap: calc(0.5 * var(--tv));
   /* <b>Šířka podle obsahu, ne podle zbytku plochy</b> (Filip, 20. 10. 2026:
      *„dej mu prosím větší okraje, text se tam nevejde"*). Absolutně
      pozicovaná karta bez `width` se smrskne na „shrink-to-fit" v místě,
@@ -2906,11 +2921,15 @@ body:has(.tabule) { overflow: hidden; }
      kompaktní tmavá karta, drobný nadpisek nahoře a jméno barevně. Velká
      bílá cedule přes půl obrazovky překryla mapu zrovna ve chvíli, kdy se
      na ní něco dělo. */
-  padding: 1vw 1.8vw 1.1vw; border-radius: 0.8vw;
+  padding: calc(1 * var(--tv)) calc(1.8 * var(--tv)) calc(1.1 * var(--tv)); border-radius: calc(0.8 * var(--tv));
   background: color-mix(in srgb, #14171a 88%, transparent);
   backdrop-filter: blur(8px);
-  border: 0;
-  box-shadow: 0 0.6vw 2.5vw rgb(0 0 0 / 0.55);
+  /* <b>Celý rámeček, ne proužek u horní hrany</b> (Filip, 24. 10. 2026:
+     *„cílový modal nemá okraje, takže vypadá amatérsky"*). Barvu nese
+     `currentColor`, tedy druh zprávy — dojezd modře, konec rozjížďky
+     zeleně. */
+  border: max(2px, calc(0.14 * var(--tv))) solid currentColor;
+  box-shadow: 0 calc(0.6 * var(--tv)) calc(2.5 * var(--tv)) rgb(0 0 0 / 0.55);
   text-align: center; pointer-events: none; overflow: hidden;
   /* Dlouhé jméno se zalomí, místo aby se uřízlo — přečíst „ČERVENÉ CA"
      je horší než mít kartu o řádek vyšší.
@@ -2922,24 +2941,19 @@ body:has(.tabule) { overflow: hidden; }
   overflow-wrap: break-word;
   animation: tabule-alert 4.5s ease-in-out forwards;
 }
-/* Tenký proužek v barvě druhu u horní hrany — tolik z rámečku zbylo. */
-.tabule-alert::before {
-  content: ""; position: absolute; inset: 0 0 auto; height: 0.22vw;
-  background: currentColor; color: inherit;
-  border-color: inherit; background-color: currentColor;
-}
+/* Rámeček je teď celý, proužek u horní hrany odešel s ním. */
 .tabule-alert { color: var(--voda); }
 .tabule-alert.start, .tabule-alert.trat, .tabule-alert.dokonceno,
 .tabule-alert.zavod { color: var(--stav-vypsany); }
 .tabule-alert.ceka, .tabule-alert.zrusena { color: var(--stav-zruseny); }
 .tabule-alert .druh {
-  font-style: normal; font-size: 0.85vw; letter-spacing: 0.16em;
+  font-style: normal; font-size: calc(0.85 * var(--tv)); letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--tlumeny); font-weight: 700;
-  margin-bottom: 0.15vw;
+  margin-bottom: calc(0.15 * var(--tv));
 }
 /* Jméno nese barvu druhu — to je ta část, kterou si má divák odnést. */
-.tabule-alert b { font-size: 2.6vw; line-height: 1.05; color: currentColor; }
-.tabule-alert span { font-size: 1vw; color: var(--tlumeny); }
+.tabule-alert b { font-size: calc(2.6 * var(--tv)); line-height: 1.05; color: currentColor; }
+.tabule-alert span { font-size: calc(1 * var(--tv)); color: var(--tlumeny); }
 /* Dojezd je ta nejsilnější zpráva, proto vodní modrá; konec rozjížďky
    a závodu zeleně jako „vypsáno" jinde na webu. */
 .tabule-alert.dojezd { border-color: var(--voda); }
@@ -3016,8 +3030,8 @@ body:has(.tabule) { overflow: hidden; }
 
 /* Odsazení řídí blok `.tabule` výš — druhá deklarace tady ho přebíjela
    a brala s sebou i místo rezervované na pás partnerů (17. 10. 2026). */
-.tabule h2 { font-size: 1.7vw; margin: 0 0 0.6vw; }
-.tabule .stari { font-size: 1.1vw; color: var(--tlumeny); }
+.tabule h2 { font-size: calc(1.7 * var(--tv)); margin: 0 0 calc(0.6 * var(--tv)); }
+.tabule .stari { font-size: calc(1.1 * var(--tv)); color: var(--tlumeny); }
 .tabule .stari.zastarale { color: var(--stav-zruseny); }
 /* Pás atributů: velká čísla, malé popisky. Vejde se, co se vejde —
    dlaždice se zalomí, protože počet atributů závisí na závodě. */
@@ -3025,26 +3039,26 @@ body:has(.tabule) { overflow: hidden; }
    položky oddělené tečkou. Na pět čísel nepotřebujeme pět karet. */
 .tabule .atributy {
   display: flex; flex-wrap: wrap; justify-content: center;
-  gap: 0.2vw 1.1vw; margin: 0;
+  gap: calc(0.2 * var(--tv)) calc(1.1 * var(--tv)); margin: 0;
 }
 .tabule .dlazdice {
-  display: flex; align-items: baseline; gap: 0.3vw;
+  display: flex; align-items: baseline; gap: calc(0.3 * var(--tv));
   flex: 0 0 auto; min-width: 0; background: none; padding: 0;
 }
 .tabule .dlazdice + .dlazdice::before {
-  content: "·"; color: var(--tlumeny); opacity: 0.5; margin-right: 0.8vw;
+  content: "·"; color: var(--tlumeny); opacity: 0.5; margin-right: calc(0.8 * var(--tv));
 }
-.tabule .dlazdice b { font-size: 1.25vw; line-height: 1.1; font-variant-numeric: tabular-nums; }
-.tabule .dlazdice span { font-size: 0.9vw; color: var(--tlumeny); }
-.tabule .dlazdice i { font-size: 0.9vw; color: var(--tlumeny); font-style: normal; opacity: 0.7; }
+.tabule .dlazdice b { font-size: calc(1.25 * var(--tv)); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tabule .dlazdice span { font-size: calc(0.9 * var(--tv)); color: var(--tlumeny); }
+.tabule .dlazdice i { font-size: calc(0.9 * var(--tv)); color: var(--tlumeny); font-style: normal; opacity: 0.7; }
 
 /* Karusel tříd. Tečky jen ukazují, kolik panelů se střídá — klepnout na
    ně nejde, na televizi není čím. */
-.tabule .karusel h2 { display: flex; align-items: center; gap: 0.6vw; }
-.tabule .karusel h2 svg { height: 2.2vw; width: auto; flex: none; }
-.tabule .karusel .tecky { margin-left: auto; display: flex; gap: 0.35vw; }
+.tabule .karusel h2 { display: flex; align-items: center; gap: calc(0.6 * var(--tv)); }
+.tabule .karusel h2 svg { height: calc(2.2 * var(--tv)); width: auto; flex: none; }
+.tabule .karusel .tecky { margin-left: auto; display: flex; gap: calc(0.35 * var(--tv)); }
 .tabule .karusel .tecky i {
-  width: 0.5vw; height: 0.5vw; border-radius: 50%;
+  width: 0.5vw; height: calc(0.5 * var(--tv)); border-radius: 50%;
   background: var(--tlumeny); opacity: 0.35;
 }
 .tabule .karusel .tecky i.ted { opacity: 1; background: var(--logo-napis, currentColor); }
@@ -3060,39 +3074,39 @@ body:has(.tabule) { overflow: hidden; }
 }
 
 /* Pravý sloupeček: semafor, mapka a kdo právě dojel. */
-.tabule .sloupecek { display: flex; flex-direction: column; gap: 1vw; min-width: 0; }
+.tabule .sloupecek { display: flex; flex-direction: column; gap: calc(1 * var(--tv)); min-width: 0; }
 /* Semafor je hlavní sdělení pravého sloupce, ne ozdoba — proto velký
    (Filip, 15. 10. 2026: *„semaforek rozjížďky větší"*). */
 .tabule .semafor {
-  display: flex; flex-direction: column; gap: 0.7vw;
-  background: var(--panel, #1a1a1a); border-radius: 0.8vw; padding: 1vw 1.2vw;
+  display: flex; flex-direction: column; gap: calc(0.7 * var(--tv));
+  background: var(--panel, #1a1a1a); border-radius: calc(0.8 * var(--tv)); padding: calc(1 * var(--tv)) calc(1.2 * var(--tv));
 }
-.tabule .semafor .horni { display: flex; align-items: center; gap: 1.1vw; }
+.tabule .semafor .horni { display: flex; align-items: center; gap: calc(1.1 * var(--tv)); }
 .tabule .semafor .svetla {
-  display: flex; flex-direction: column; gap: 0.5vw;
-  padding: 0.7vw; border-radius: 1vw; background: #111; flex: none;
+  display: flex; flex-direction: column; gap: calc(0.5 * var(--tv));
+  padding: calc(0.7 * var(--tv)); border-radius: calc(1 * var(--tv)); background: #111; flex: none;
 }
 .tabule .semafor .svetla i {
-  width: 2.1vw; height: 2.1vw; border-radius: 50%;
+  width: 2.1vw; height: calc(2.1 * var(--tv)); border-radius: 50%;
   background: #2b2b2b; display: block;
 }
 /* Stopky a odpočet. Číslice stejně široké, jinak se text při každé
    vteřině posune a na televizi to poskakuje. */
-.tabule .semafor .casomira { display: flex; align-items: baseline; gap: 0.6vw; }
+.tabule .semafor .casomira { display: flex; align-items: baseline; gap: calc(0.6 * var(--tv)); }
 .tabule .semafor .casomira b {
-  font-size: 3.4vw; line-height: 1; font-variant-numeric: tabular-nums;
+  font-size: calc(3.4 * var(--tv)); line-height: 1; font-variant-numeric: tabular-nums;
 }
-.tabule .semafor .casomira span { font-size: 1vw; color: var(--tlumeny); }
-.tabule .semafor .pocty { margin: 0; font-size: 1.2vw; color: var(--tlumeny); }
-.tabule .semafor .pocty b { font-size: 1.6vw; color: var(--text); }
+.tabule .semafor .casomira span { font-size: calc(1 * var(--tv)); color: var(--tlumeny); }
+.tabule .semafor .pocty { margin: 0; font-size: calc(1.2 * var(--tv)); color: var(--tlumeny); }
+.tabule .semafor .pocty b { font-size: calc(1.6 * var(--tv)); color: var(--text); }
 /* Svítí jen to jedno; zhasnutá světla jsou taky informace. */
-.tabule .semafor.sviti-ceka .svetla i.ceka { background: #e8a33d; box-shadow: 0 0 1.2vw #e8a33d; }
-.tabule .semafor.sviti-jede .svetla i.jede { background: #3ba55d; box-shadow: 0 0 1.2vw #3ba55d; }
-.tabule .semafor.sviti-dojeto .svetla i.dojeto { background: #6fa8dc; box-shadow: 0 0 1.2vw #6fa8dc; }
-.tabule .semafor.sviti-zruseno .svetla i.ceka { background: var(--stav-zruseny); box-shadow: 0 0 1.2vw var(--stav-zruseny); }
+.tabule .semafor.sviti-ceka .svetla i.ceka { background: #e8a33d; box-shadow: 0 0 calc(1.2 * var(--tv)) #e8a33d; }
+.tabule .semafor.sviti-jede .svetla i.jede { background: #3ba55d; box-shadow: 0 0 calc(1.2 * var(--tv)) #3ba55d; }
+.tabule .semafor.sviti-dojeto .svetla i.dojeto { background: #6fa8dc; box-shadow: 0 0 calc(1.2 * var(--tv)) #6fa8dc; }
+.tabule .semafor.sviti-zruseno .svetla i.ceka { background: var(--stav-zruseny); box-shadow: 0 0 calc(1.2 * var(--tv)) var(--stav-zruseny); }
 .tabule .semafor .co { display: flex; flex-direction: column; min-width: 0; }
-.tabule .semafor .co b { font-size: 2.2vw; line-height: 1.15; }
-.tabule .semafor .co span { font-size: 1.1vw; color: var(--tlumeny); }
+.tabule .semafor .co b { font-size: calc(2.2 * var(--tv)); line-height: 1.15; }
+.tabule .semafor .co span { font-size: calc(1.1 * var(--tv)); color: var(--tlumeny); }
 
 /* Mapka je doplněk, ne hlavní sdělení — proto strop na výšku. */
 /* Mapa je pozadí celé tabule a panely leží na ní (Filip, 24. 10. 2026).
@@ -3104,7 +3118,7 @@ body:has(.tabule) { overflow: hidden; }
   /* Plocha mapy končí u žebříčku i u pásů, ne pod nimi: co je pod
      panelem, divák neuvidí, a mapa si podle téhle plochy počítá výřez. */
   position: absolute;
-  inset: 0 clamp(280px, 24vw, 460px) 12.6vw 0;
+  inset: 0 clamp(280px, calc(24 * var(--tv)), 460px) calc(12.6 * var(--tv)) 0;
   z-index: 0;
   display: grid; place-items: center; overflow: hidden;
   pointer-events: none;
@@ -3136,7 +3150,7 @@ body:has(.tabule) { overflow: hidden; }
    je zpráva sama o sobě a patří tam, kam padne oko; „na vodě: X" jen
    říká, na co se zrovna díváme, a drží se u žebříčku, kde si tu loď
    divák najde. */
-.tabule-mapa .nacrt-na-tv .nacrt-swap { top: 5.8vw; }
+.tabule-mapa .nacrt-na-tv .nacrt-swap { top: calc(5.8 * var(--tv)); }
 .tabule-mapa .nacrt-na-tv .nacrt-swap-souboj { left: 1.2vw; right: auto; }
 /* Těsně vedle žebříčku, ne někde uprostřed: odsazení je jeho šířka plus
    mezera, takže hláška sedí u jeho hrany při každé šířce obrazovky. */
@@ -3151,16 +3165,16 @@ body:has(.tabule) { overflow: hidden; }
    na mapě vpravo, pod hlavičkou. Dokud nikdo neposílá polohy, je prázdný. */
 .tabule-mapa .nacrt-poradi {
   position: absolute;
-  top: 1vw; right: 1vw; bottom: 1vw;
+  top: calc(1 * var(--tv)); right: 1vw; bottom: calc(1 * var(--tv));
   width: clamp(280px, 24vw, 460px);
   pointer-events: none;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  padding: 0.8vw 1vw;
-  border-radius: 0.8vw;
+  padding: calc(0.8 * var(--tv)) calc(1 * var(--tv));
+  border-radius: calc(0.8 * var(--tv));
   background: color-mix(in srgb, var(--papir) 86%, transparent);
   backdrop-filter: blur(6px);
-  box-shadow: 0 0.3vw 1.5vw rgb(0 0 0 / 35%);
+  box-shadow: 0 calc(0.3 * var(--tv)) calc(1.5 * var(--tv)) rgb(0 0 0 / 35%);
 }
 
 /* <b>Karusel s výsledky na mapové tabuli není</b> (Filip, 24. 10. 2026).
@@ -3203,9 +3217,9 @@ body:has(.tabule) { overflow: hidden; }
 .tabule:has(.tabule-mapa) .sloupecek > * {
   background: color-mix(in srgb, var(--papir) 86%, transparent);
   backdrop-filter: blur(6px);
-  border-radius: 0.8vw;
-  padding: 0.9vw 1.1vw;
-  box-shadow: 0 0.3vw 1.5vw rgb(0 0 0 / 35%);
+  border-radius: calc(0.8 * var(--tv));
+  padding: calc(0.9 * var(--tv)) calc(1.1 * var(--tv));
+  box-shadow: 0 calc(0.3 * var(--tv)) calc(1.5 * var(--tv)) rgb(0 0 0 / 35%);
 }
 
 
@@ -3214,17 +3228,17 @@ body:has(.tabule) { overflow: hidden; }
 .tabule .mapka-mala .mapka-trati { margin: 0; }
 /* Na televizi zůstane jen uvedení zdroje, návod ke čtení ne — souvislý
    text sem nepatří a odkaz u bóje stejně nikdo nerozklikne. */
-.tabule .mapka-mala figcaption { font-size: 0.75vw; }
+.tabule .mapka-mala figcaption { font-size: calc(0.75 * var(--tv)); }
 .tabule .mapka-mala figcaption .navod { display: none; }
 
 .tabule .dojeli ol { list-style: none; padding: 0; margin: 0; }
-.tabule .dojeli li { display: flex; align-items: baseline; gap: 0.5vw; padding: 0.3vw 0; }
-.tabule .dojeli li b { font-size: 1.8vw; font-variant-numeric: tabular-nums; }
+.tabule .dojeli li { display: flex; align-items: baseline; gap: calc(0.5 * var(--tv)); padding: calc(0.3 * var(--tv)) 0; }
+.tabule .dojeli li b { font-size: calc(1.8 * var(--tv)); font-variant-numeric: tabular-nums; }
 
 /* Rozjížďky nesou jen stav: kdo dojel, říká widget vpravo. */
 .tabule .stavy { list-style: none; padding: 0; margin: 0; }
-.tabule .stavy li { display: flex; align-items: baseline; gap: 0.6vw; padding: 0.35vw 0; }
-.tabule .stavy li b { font-size: 1.8vw; font-variant-numeric: tabular-nums; }
+.tabule .stavy li { display: flex; align-items: baseline; gap: calc(0.6 * var(--tv)); padding: calc(0.35 * var(--tv)) 0; }
+.tabule .stavy li b { font-size: calc(1.8 * var(--tv)); font-variant-numeric: tabular-nums; }
 .tabule .stav-rozjizdky.probiha { border-color: var(--stav-vypsany); color: var(--stav-vypsany); }
 .tabule .stav-rozjizdky.zrusena { border-color: var(--stav-zruseny); color: var(--stav-zruseny); }
 
@@ -3235,8 +3249,8 @@ body:has(.tabule) { overflow: hidden; }
      `minmax(0, 1fr)` je automatický a pravý sloupec s mapkou protáhl
      mřížku pod pás partnerů. */
   grid-template-rows: minmax(0, 1fr);
-  gap: 2vw;
-  margin-top: 1.5vw;
+  gap: calc(2 * var(--tv));
+  margin-top: calc(1.5 * var(--tv));
   /* <b>Zbytek obrazovky patří obsahu, ne prázdnu</b> (17. 10. 2026).
      Mřížka se dřív srovnala podle obsahu a u krátké regaty zůstala
      spodní polovina televize černá. Teď dobere, co zbývá, a řádky si to
@@ -3259,28 +3273,28 @@ body:has(.tabule) { overflow: hidden; }
 .tabule .karusel .panel li {
   flex: 1 1 0;
   min-height: 0;
-  max-height: 4.5vw;
+  max-height: calc(4.5 * var(--tv));
   display: flex;
   align-items: center;
-  gap: 0.6vw;
+  gap: calc(0.6 * var(--tv));
   overflow: hidden;
 }
-.tabule li { font-size: 1.4vw; line-height: 1.5; }
-.tabule .dojezd, .tabule .poradi, .tabule .lode { list-style: none; padding: 0; margin: 0.4vw 0 0; }
-.tabule .poradi li, .tabule .lode li { border-bottom: 1px solid var(--linka, #2a2a2a); padding: 0.25vw 0; }
+.tabule li { font-size: calc(1.4 * var(--tv)); line-height: 1.5; }
+.tabule .dojezd, .tabule .poradi, .tabule .lode { list-style: none; padding: 0; margin: calc(0.4 * var(--tv)) 0 0; }
+.tabule .poradi li, .tabule .lode li { border-bottom: 1px solid var(--linka, #2a2a2a); padding: calc(0.25 * var(--tv)) 0; }
 /* Body doprava. `float` tu stál od začátku, jenže od chvíle, kdy je řádek
    flexový (aby rostl do volného místa), plovoucí prvek z řádku vypadne a
    číslo se nalepí na jméno lodi. `margin-left: auto` dělá totéž a flexu
    rozumí. */
 .tabule .poradi .body { margin-left: auto; font-variant-numeric: tabular-nums; }
-.tabule .detail { font-size: 1.1vw; color: var(--tlumeny); }
+.tabule .detail { font-size: calc(1.1 * var(--tv)); color: var(--tlumeny); }
 
 /* „A ještě tři lodě" pod zkráceným pořadím: deset řádků je na telku strop,
    ale pole dvanácti lodí nesmí vypadat jako pole deseti. */
 /* „A ještě dvě lodě" se nesmí smrsknout — seznam nad ním bere `flex: 1`
    a tahle věta pak zůstala napůl za okrajem panelu (17. 10. 2026).
    Je to jediné místo, kde se divák dozví, že nevidí celé pole. */
-.tabule .dalsi { font-size: 1.1vw; color: var(--tlumeny); margin: 0.4vw 0 0; flex: none; }
+.tabule .dalsi { font-size: calc(1.1 * var(--tv)); color: var(--tlumeny); margin: calc(0.4 * var(--tv)) 0 0; flex: none; }
 
 /* Pípání na klik (Filip, 10. 10. 2026: stavitel se na motoráku tahá se
    závažím a lany). Cíle jsou velké schválně — na houpající se palubě se
@@ -3597,7 +3611,7 @@ body:has(.tabule) { overflow: hidden; }
 
 /* Věta o průběžných výsledcích na tabuli. Má být vidět přes místnost, ale
    nesmí přebít název závodu — proto barva a ne velikost. */
-.tabule .hlaska.dej { font-size: 1.2vw; padding: 0.5vw 1vw; margin: 0.8vw 0 0; }
+.tabule .hlaska.dej { font-size: calc(1.2 * var(--tv)); padding: calc(0.5 * var(--tv)) calc(1 * var(--tv)); margin: calc(0.8 * var(--tv)) 0 0; }
 .tabule .hlaska.dej b { color: var(--voda); }
 /* Štítky stavu zápisu u rozjížďky. Potvrzené se zazelená, čerstvé z vody
    je tlumené — divák má na první pohled poznat, čemu se dá věřit. */
@@ -4137,27 +4151,16 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .nacrt-na-tv .nacrt-stav { font-size: 0.8rem; }
 .nacrt-na-tv .nacrt-trida .znak-tridy { height: 1.3rem; }
 
-/* <b>Žebříček se točí</b>, aby se divák dostal i na zadní lodě: seznam
-   popojede nahoru, chvíli stojí a vrátí se. Posouvá se celý `ol`, ne
-   kopie pásu jako u partnerů — kopie by se bila s kaskádou přehazování,
-   která v něm běží. */
-.tabule-mapa .nacrt-poradi ol { overflow: hidden; }
+/* <b>Žebříček se točí</b>, aby se divák dostal i na zadní lodě — dělá to
+   ale scroll v komponentě, ne animace tady. Posun odhadnutý z `vh` při
+   jiném poměru obrazovky schoval první dvě lodě a nad ně položil díru
+   (Filip, 24. 10. 2026). Scroll zná skutečné přetečení a je to tentýž
+   mechanismus, jakým se seznam posouvá na prohazovanou dvojici. */
+.tabule-mapa .nacrt-poradi ol { overflow: hidden; scroll-behavior: smooth; }
 .tabule-mapa .nacrt-poradi ol > li { animation: none; }
-.tabule-mapa .nacrt-poradi ol {
-  /* Posun o to, co se nevejde. <b>`min` s nulou</b>, protože při kratším
-     seznamu by výraz vyšel kladně a pás by sjel dolů mimo okno. Procenta
-     se v `translateY` vztahují k výšce samotného seznamu, vh k oknu. */
-  --posun: min(0px, calc(-100% + 80vh));
-  animation: rank-toci 36s ease-in-out infinite alternate;
-}
-
-@keyframes rank-toci {
-  0%, 12% { transform: translateY(0); }
-  88%, 100% { transform: translateY(var(--posun)); }
-}
 
 @media (prefers-reduced-motion: reduce) {
-  .tabule-mapa .nacrt-poradi ol { animation: none; }
+  .tabule-mapa .nacrt-poradi ol { scroll-behavior: auto; }
 }
 
 /* Která třída je zrovna na řadě — místo tabů, které by nikdo neklikl. */
@@ -4234,8 +4237,12 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   position: fixed;
   left: 0; right: clamp(280px, 24vw, 460px); bottom: var(--paticka);
   z-index: 2;
-  display: grid; gap: 0.1vw;
-  padding: 0.15vw 0.4vw;
+  display: grid; gap: calc(0.1 * var(--tv));
+  /* <b>Strop výšky.</b> Pásy sedí nad mapou a každý jejich pixel jde
+     z vody; na širokém monitoru jich byly tři řádky za 368 px z 820
+     a na mapu zbylo pětadvacet (změřeno 24. 10. 2026). */
+  max-height: 24vh; overflow: hidden;
+  padding: calc(0.15 * var(--tv)) calc(0.4 * var(--tv));
   background: color-mix(in srgb, var(--pozadi) 78%, transparent);
   backdrop-filter: blur(8px);
   border-top: 1px solid var(--linka);
@@ -4246,11 +4253,11 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
    2026: *„zmenšil jsi jen písmenka, nikoli výšku"*). */
 .tabule-tridy .poradi-radek {
   display: grid; grid-template-columns: 7vw minmax(0, 1fr);
-  align-items: center; gap: 0.6vw;
-  padding: 0.12vw 0.5vw;
+  align-items: center; gap: calc(0.6 * var(--tv));
+  padding: calc(0.12 * var(--tv)) calc(0.5 * var(--tv));
   border: 0; border-radius: 0;
   background: none;
-  font-size: 0.85vw;
+  font-size: calc(0.85 * var(--tv));
 }
 
 .tabule-tridy .karusel-vodorovny li { padding-right: 0; }
@@ -4259,18 +4266,18 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .tabule-tridy .karusel { height: auto; }
 
 .tabule-tridy .poradi-radek-trida {
-  display: flex; align-items: center; gap: 0.3vw;
-  font-size: 0.8vw; font-weight: 700;
+  display: flex; align-items: center; gap: calc(0.3 * var(--tv));
+  font-size: calc(0.8 * var(--tv)); font-weight: 700;
 }
 
-.tabule-tridy .poradi-radek-trida .znak-tridy { height: 1.1vw !important; width: auto; }
-.tabule-tridy .karusel-pas { display: flex; gap: 1.3vw; }
-.tabule-tridy .karusel-pas li { display: flex; gap: 0.3vw; align-items: baseline; white-space: nowrap; }
-.tabule-tridy .poradi-cislo { color: var(--tlumeny); font-size: 0.75vw; }
-.tabule-tridy .bok-lod { font-size: 0.9vw; font-weight: 600; }
-.tabule-tridy .pas-stari { font-size: 0.7vw; color: var(--stav-vypsany); }
+.tabule-tridy .poradi-radek-trida .znak-tridy { height: calc(1.1 * var(--tv)) !important; width: auto; }
+.tabule-tridy .karusel-pas { display: flex; gap: calc(1.3 * var(--tv)); }
+.tabule-tridy .karusel-pas li { display: flex; gap: calc(0.3 * var(--tv)); align-items: baseline; white-space: nowrap; }
+.tabule-tridy .poradi-cislo { color: var(--tlumeny); font-size: calc(0.75 * var(--tv)); }
+.tabule-tridy .bok-lod { font-size: calc(0.9 * var(--tv)); font-weight: 600; }
+.tabule-tridy .pas-stari { font-size: calc(0.7 * var(--tv)); color: var(--stav-vypsany); }
 .tabule-tridy .pas-stitek {
-  font-size: 0.65vw; text-transform: uppercase; letter-spacing: 0.05em;
+  font-size: calc(0.65 * var(--tv)); text-transform: uppercase; letter-spacing: 0.05em;
   color: var(--voda); border: 1px solid currentColor; border-radius: 999px;
-  padding: 0 0.3vw;
+  padding: 0 calc(0.3 * var(--tv));
 }
