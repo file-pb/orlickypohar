@@ -3136,7 +3136,7 @@ body:has(.tabule) { overflow: hidden; }
   width: clamp(280px, 24vw, 460px);
   pointer-events: none;
   display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   padding: 0.8vw 1vw;
   border-radius: 0.8vw;
   background: color-mix(in srgb, var(--papir) 86%, transparent);
@@ -3708,7 +3708,7 @@ body:has(.tabule) { overflow: hidden; }
 .nacrt-poradi h2 { margin: 0 0 0.25rem; font-size: 1.05rem; }
 
 .nacrt-vysvetlivka {
-  margin: 0 0 0.6rem;
+  margin: 0.5rem 0 0;
   font-size: 0.8rem;
   color: var(--tlumeny);
 }
@@ -4077,7 +4077,11 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   box-shadow: 0 4px 20px rgb(0 0 0 / 35%);
 }
 
-.nacrt-na-tv .nacrt-poradi h2 { font-size: 1.5rem; }
+.nacrt-na-tv .nacrt-poradi h2 {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 1.5rem;
+}
+.nacrt-na-tv .nacrt-poradi h2 .znak-tridy { height: 1.6rem; width: auto; }
 .nacrt-na-tv .nacrt-vysvetlivka { font-size: 0.85rem; }
 .nacrt-na-tv .nacrt-poradi ol { max-height: none; overflow: hidden; }
 
