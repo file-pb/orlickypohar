@@ -3101,7 +3101,11 @@ body:has(.tabule) { overflow: hidden; }
 /* Mapa končí nad pásy: pod nimi by zůstal schovaný cíl, tedy to
    nejdůležitější místo trati (Filip, 24. 10. 2026). */
 .tabule-mapa {
-  position: absolute; inset: 0 0 12.6vw; z-index: 0;
+  /* Plocha mapy končí u žebříčku i u pásů, ne pod nimi: co je pod
+     panelem, divák neuvidí, a mapa si podle téhle plochy počítá výřez. */
+  position: absolute;
+  inset: 0 clamp(280px, 24vw, 460px) 12.6vw 0;
+  z-index: 0;
   display: grid; place-items: center; overflow: hidden;
   pointer-events: none;
 }
@@ -3112,10 +3116,14 @@ body:has(.tabule) { overflow: hidden; }
    vedle) tu nepoužíváme — pořadí nese karusel tabule. */
 /* Plochu vyplní celou, i na šířku: `.tabule-mapa` svůj obsah centruje,
    takže se obal sám zúžil na šířku vykreslené mapy — a prvky uvnitř,
-   které se pozicují zprava, pak končily o padesát pixelů dřív. */
+   které se pozicují zprava, pak končily o padesát pixelů dřív.
+
+   <b>Obal je přichycený k rodiči</b>, ne roztažený obsahem: mapa si ho
+   měří, aby znala svůj výřez, a kdyby jeho výška plynula z obsahu,
+   měření by hnalo samo sebe. */
 .tabule-mapa .nacrt,
-.tabule-mapa .nacrt-mapa,
-.tabule-mapa .nacrt-platno-obal { height: 100%; width: 100%; display: block; }
+.tabule-mapa .nacrt-mapa { height: 100%; width: 100%; display: block; position: relative; }
+.tabule-mapa .nacrt-platno-obal { position: absolute; inset: 0; display: block; }
 .tabule-mapa .nacrt-platno { width: 100%; height: 100%; border-radius: 0; }
 .tabule-mapa .nacrt-ovladani,
 .tabule-mapa .nacrt-zoom { display: none; }

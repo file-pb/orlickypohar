@@ -370,7 +370,31 @@ export function MapaTrackeru({
     detail?: string;
   }) => void;
 }) {
-  const { sirka: SIRKA, vyska: VYSKA } = tabule ? VYREZ.tabule : VYREZ.stranka;
+  /**
+   * <b>Výřez podle skutečné plochy</b> (Filip, 24. 10. 2026: *„kdyby šlo
+   * ještě zkrotit mapu, aby se neschovávala za ostatní komponenty a byla
+   * responzivní"*). Pevné rozměry znamenaly, že se SVG do plochy
+   * doškálovalo — a všechno, co se na mapě pozicuje, sedělo jinde, než
+   * kam divák kouká. Měřit kontejner je jediný způsob, jak to udržet
+   * pravdivé na každé obrazovce.
+   */
+  const platno = useRef<HTMLDivElement>(null);
+  const [zmereno, setZmereno] = useState<{ sirka: number; vyska: number } | null>(null);
+  useLayoutEffect(() => {
+    const el = platno.current;
+    if (!el) return;
+    const sleduj = new ResizeObserver(([zaznam]) => {
+      const r = zaznam.contentRect;
+      if (r.width > 0 && r.height > 0) {
+        setZmereno({ sirka: Math.round(r.width), vyska: Math.round(r.height) });
+      }
+    });
+    sleduj.observe(el);
+    return () => sleduj.disconnect();
+  }, []);
+
+  const vychozi = tabule ? VYREZ.tabule : VYREZ.stranka;
+  const { sirka: SIRKA, vyska: VYSKA } = zmereno ?? vychozi;
   const [z, setZ] = useState(() => vychoziZ(znacky, SIRKA, VYSKA));
   const [stred, setStred] = useState({
     sirka: znacky.reduce((s, m) => s + m.sirka, 0) / znacky.length,
@@ -1028,7 +1052,7 @@ export function MapaTrackeru({
   return (
     <div className={tabule ? "nacrt nacrt-na-tv" : "nacrt"}>
       <div className="nacrt-mapa">
-        <div className="nacrt-platno-obal">
+        <div className="nacrt-platno-obal" ref={platno}>
         <svg
           viewBox={`0 0 ${SIRKA} ${VYSKA}`}
           className="nacrt-platno"
