@@ -3057,9 +3057,40 @@ body:has(.tabule) { overflow: hidden; }
 .tabule-mapa .nacrt-mapa,
 .tabule-mapa .nacrt-platno-obal { height: 100%; display: block; }
 .tabule-mapa .nacrt-platno { width: 100%; height: 100%; border-radius: 0; }
-.tabule-mapa .nacrt-poradi,
 .tabule-mapa .nacrt-ovladani,
 .tabule-mapa .nacrt-zoom { display: none; }
+
+/* <b>Pomyslné pořadí je ten panel z náčrtu</b> (Filip, 24. 10. 2026:
+   *„dej tam tenhle rank, co jsme tu hodinu ladili"*) — se znaky tříd,
+   šipkami při prohození a kaskádou, kterou jsme ladili celou noc. Leží
+   na mapě vpravo, pod hlavičkou. Dokud nikdo neposílá polohy, je prázdný. */
+.tabule-mapa .nacrt-poradi {
+  position: absolute;
+  top: 1vw; right: 1vw; bottom: 1vw;
+  width: clamp(280px, 24vw, 460px);
+  pointer-events: none;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  padding: 0.8vw 1vw;
+  border-radius: 0.8vw;
+  background: color-mix(in srgb, var(--papir) 86%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0.3vw 1.5vw rgb(0 0 0 / 35%);
+}
+
+/* Karusel s výsledky ustupuje doleva dolů: pořadí na vodě je živé, tohle
+   je zápis. */
+.tabule:has(.tabule-mapa) .sloupce {
+  position: absolute;
+  left: 1vw; bottom: 1.2vw;
+  width: clamp(280px, 26vw, 460px);
+  justify-content: start;
+  grid-template-columns: minmax(0, 1fr);
+  /* Výška podle obsahu: mřížka tabule má řádek `minmax(0, 1fr)` kvůli
+     sloupcům přes celou plochu, a tady by panel stlačila do sebe. */
+  grid-template-rows: auto;
+  max-height: 40vh;
+}
 /* Všechno ostatní leží nad mapou. */
 .tabule > :not(.tabule-mapa) { position: relative; z-index: 1; }
 
@@ -3082,14 +3113,7 @@ body:has(.tabule) { overflow: hidden; }
   box-shadow: 0 0.3vw 1.5vw rgb(0 0 0 / 35%);
 }
 
-/* Sloupce nesmí vyplnit celou plochu, aby mapa zůstala vidět. Jediný
-   zbylý panel se proto drží vpravo a mapě nechá zbytek. */
-.tabule:has(.tabule-mapa) .sloupce {
-  align-content: start;
-  justify-content: end;
-  grid-template-columns: minmax(26vw, 32vw);
-  gap: 1vw;
-}
+
 
 .tabule .mapka-mala { max-width: 22vw; }
 .tabule .mapka-mala .mapka-trati { margin: 0; }
