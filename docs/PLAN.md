@@ -1918,6 +1918,27 @@ z `web/lib/mapa.ts` i kreslení bójí.
 **V pořadí práce se tím mapa stěhuje z kroku 5 do kroku 2.** Pro diváka
 zůstává pozdě; pro rozhodčího je to součást přehledu, ne nadstavba nad ním.
 
+**Kam ji dát: divákovi další tab, pořadateli vrstva do mapky, kterou už
+má** (Filip, 24. 10. 2026: *„asi bych to dal jako další tab? To si nejsem
+jistý, ale pro začátek bychom mohli, ne?"*).
+
+Pro **diváka** ano, tab vedle trati — je to nejlevnější a nejmíň invazivní
+krok a od #386 je z tabů regaty na úzkém displeji akordeon, takže jeden
+navíc nic nerozbije. Patří k tomu ale výhrada: **trať a živá mapa jsou
+skoro tatáž obrazovka**, jedna s bójemi a druhá s bójemi a loděmi. Až bude
+mapa interaktivní, nejspíš se slijí do jedné s přepínačem vrstvy *ukázat
+lodě*. Jako tab se to kdykoli sloučit dá; rozmotat sloučenou obrazovku zpět
+je dražší, a proto tudy.
+
+Pro **pořadatele to není tab, ale vrstva**: mapku téhož závodu už má
+u stavby trati (`web/app/sprava/[serie]/boje/[zavod]/page.tsx`), takže tam
+lodě přibydou. Je to tentýž postup, jaký plán rozhodl u čerstvosti — nedělat
+novou obrazovku, přidat to tam, kam se stejně dívá.
+
+**Důvod, proč se ty dvě cesty liší:** divák mezi tabem *trať* a tabem *mapa*
+vybírá podle toho, co chce vidět. Rozhodčí si nevybírá — on **potřebuje
+obojí naráz**, bóje i lodě mezi nimi, protože se dívá na vztah mezi nimi.
+
 **Živě a záznam jsou dva sloupce u každé role, ne dvě fáze projektu**
 (Filip, 24. 10. 2026):
 
