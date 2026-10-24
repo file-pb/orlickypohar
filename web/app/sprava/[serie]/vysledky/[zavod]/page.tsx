@@ -12,6 +12,7 @@ import {
   type StavVysledku,
 } from "@/lib/vysledky";
 import { NAZVY_STAVU, nactiTrate, type TratNaVyber } from "@/lib/trat";
+import { dataTrackeru, PanelTrackeru } from "../../tracker/[zavod]/panel";
 import {
   poharAkce,
   pridejRozjizdkuAkce,
@@ -54,9 +55,13 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
   // Tratě jen kvůli ukazateli u rozjížďky. Vlastní volání schválně: když
   // selže, ukazatel prostě nic netvrdí a zbytek obrazovky jede dál —
   // workflow výsledků na trati nestojí.
-  const [{ stav, data: prehled }, trate] = await Promise.all([
+  // Živé polohy pro panel dole. Taky vlastní volání: tracker je přídavek
+  // k zápisu, takže jeho výpadek nesmí vzít celou obrazovku (`dataTrackeru`
+  // vrací prázdno, ne výjimku).
+  const [{ stav, data: prehled }, trate, tracker] = await Promise.all([
     nactiRozjizdky(serie, zavod),
     nactiTrate(serie, zavod),
+    dataTrackeru(serie, zavod),
   ]);
   // `null` je výpadek čtení, ne „žádné tratě" (viz `nactiTrate`). Pro
   // odvozené seznamy se chová jako prázdno; u výběru trati se ale musí
@@ -241,6 +246,23 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
           </button>
         </form>
       )}
+
+      {/* <b>Kdo zapisuje cíl, chce vědět, kdo je ještě na vodě</b> (Filip,
+          24. 10. 2026). Je to tatáž osoba ve stejnou chvíli, takže mapa
+          patří sem, ne o obrazovku vedle. Stojí dole, protože zápis je
+          důvod, proč sem člověk přišel; mapa je k němu kontext.
+
+          Mimo závod se kreslí jen řádek s odkazem (`jenOdkazKdyzNic`):
+          prázdná mapa by byla velká díra, která nic neříká, a klientská
+          část by se každých pět vteřin ptala na nic. Mapa se objeví při
+          příštím načtení stránky — a při zápisu se stránka překresluje po
+          každé akci, takže v praxi hned.
+
+          Obal nepotřebuje: `.nacrt` je v obsahovém sloupci mřížka mapa +
+          žebříček a pod 900 px se skládá pod sebe. Celou šířku si bere jen
+          vlastní stránka trackeru (`.tracker-strana`). */}
+      <h2>Kdo je na vodě</h2>
+      <PanelTrackeru serie={serie} zavod={zavod} data={tracker} jenOdkazKdyzNic />
     </>
   );
 }

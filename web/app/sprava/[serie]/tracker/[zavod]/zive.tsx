@@ -153,22 +153,28 @@ export function ZiveLode({
       )}
 
       <h2>Lodě</h2>
-      <table className="tracker-lode">
-        <thead>
-          <tr>
-            <th>Loď</th>
-            <th>Třída</th>
-            <th>Kde</th>
-            <th>Poslední poloha</th>
-            <th>Stav</th>
-          </tr>
-        </thead>
-        <tbody>
-          {(snimek?.lode ?? []).map((l) => (
-            <Radek key={l.lodId} lod={l} ted={ted} start={start} />
-          ))}
-        </tbody>
-      </table>
+      {/* <b>Posouvá se tabulka, ne stránka.</b> Pět sloupců se na telefon
+          nevejde — změřeno 574 px v 375 px — a bez obalu se vodorovně
+          posouvala celá obrazovka. Pod výsledky je to horší než tady,
+          protože tam se u cíle zapisuje právě na telefonu. */}
+      <div className="tabulka-obal">
+        <table className="tracker-lode">
+          <thead>
+            <tr>
+              <th>Loď</th>
+              <th>Třída</th>
+              <th>Kde</th>
+              <th>Poslední poloha</th>
+              <th>Stav</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(snimek?.lode ?? []).map((l) => (
+              <Radek key={l.lodId} lod={l} ted={ted} start={start} />
+            ))}
+          </tbody>
+        </table>
+      </div>
     </>
   );
 }
