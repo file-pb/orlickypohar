@@ -980,6 +980,12 @@ export function NacrtMapy({
             className={filtr === null ? "vybrany" : undefined}
             onClick={() => setFiltr(null)}
           >
+            {/* „Vše" má svou značku taky: všechny tři siluety vedle sebe. */}
+            <span className="nacrt-vse-znacky">
+              {KATEGORIE.map((k) => (
+                <img key={k} src={ZNACKA_TRIDY[k]} alt="" />
+              ))}
+            </span>
             vše
           </button>
           {KATEGORIE.map((k) => (
