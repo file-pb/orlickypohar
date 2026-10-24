@@ -2074,6 +2074,24 @@ a nesmějí se sloučit do jednoho řádku: *„nehlásí se"* je výzva sháně
 *„odstoupila"* je uzavřená věc. Patří k tomu totéž, co plán rozhodl u tabule
 — **každý řádek nese svůj stav**, místo aby se zamlčel.
 
+**V začátcích nebude trackovat celé pole, a je to v pořádku** (Filip,
+24. 10. 2026: *„možná v začátcích se nebude zapínat zobrazení trackingu
+u všech, to je holt daň za ty začátky"*). Rozhodnutí zobrazovat nedostupné
+lodě tu daň unese samo: **seznam zůstane úplný, jen část řádků nemá
+pozici.** Divák vidí, že deset lodí hlásí a zbytek ne, a to je poctivé.
+
+**Pozor ale na pořadová čísla.** Když většina pole pozici nemá, nesmí se
+u trackujících psát *1., 2., 3.* jako pořadí závodu — je to pořadí mezi
+těmi, kdo hlásí, a musí to tak být napsané. Je to rozdíl ve slovech
+a velký rozdíl ve čtení.
+
+**Pro pořadí práce z toho plyne tvrdá hranice.** Přehled pro rozhodčího
+(krok 2) dává smysl i s polovinou pole — ten ví, kdo trackuje, a hledá
+konkrétní loď. **Sestřih a divácké pořadí (kroky 4 a 5) s polovinou pole
+nefungují**, protože zrovna vedoucí loď v nich nemusí být. Pokrytí tedy
+není jen provozní detail pilotu: je to podmínka, kdy se smí pustit divácká
+část.
+
 **Pro režii potřebuje práh, jinak to bliká.** Při křižování se pořadí mezi
 dvojicí lodí mění klidně každou minutu; kdyby sestřih stříhal každou výměnu,
 nestříhá nic. Souboj je tedy prohození, které **vydrží** — řádově půl minuty
