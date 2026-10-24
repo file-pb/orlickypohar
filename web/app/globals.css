@@ -3752,8 +3752,8 @@ body:has(.tabule) { overflow: hidden; }
    ta druhá uhne stranou, zajede za ni a klesne — a na tu chvíli
    ztransparentní, dokud nedosedne na své místo (Filip, 24. 10. 2026).
    Jména přitom jedou rovně, aby se dala číst. */
-.nacrt-radek-nahoru { animation: nacrt-vzhuru 0.45s ease-in-out; }
-.nacrt-radek-dolu { animation: nacrt-dolu-za 0.45s ease-in-out; }
+.nacrt-radek-nahoru { animation: nacrt-vzhuru 1s ease-in-out; }
+.nacrt-radek-dolu { animation: nacrt-dolu-za 1s ease-in-out; }
 
 .nacrt-radek-nahoru .nacrt-cislo { color: var(--stav-vypsany); }
 .nacrt-radek-dolu .nacrt-cislo { color: var(--stav-zruseny); }

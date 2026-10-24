@@ -74,8 +74,14 @@ const FOCUS_SOUBOJE_S = 90;
  * zkoušce na náčrtu nebyla vidět vůbec.
  */
 const ANIMACE_PROHOZENI_S = 20;
-/** Jak dlouho trvá jedno přehození dvou sousedů v žebříčku. */
-const KROK_PREHOZENI_MS = 450;
+/**
+ * Jak dlouho trvá jedno přehození dvou sousedů v žebříčku.
+ *
+ * <b>Spíš pomalu</b> (Filip, 24. 10. 2026): při 450 ms proletěla loď pěti
+ * místy za dvě vteřiny a nešlo rozeznat, koho vlastně předjela. Smyslem
+ * kaskády je, aby se to dalo sledovat očima, ne aby se seznam srovnal.
+ */
+const KROK_PREHOZENI_MS = 1100;
 /** Jak dlouho u řádku svítí šipka, než zhasne a odhalí číslo. */
 const SIPKA_MS = 2000;
 /** Hláška o souboji svítí dlouho, když za ní nic nejede, a krátce, když ano. */
