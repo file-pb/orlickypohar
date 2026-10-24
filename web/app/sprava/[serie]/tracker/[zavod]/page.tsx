@@ -72,7 +72,7 @@ export default async function TrackerRegaty({ params }: Parametry) {
   }
 
   return (
-    <main className="sprava">
+    <div className="tracker-strana">
       <Drobecky cesta={[...drobeckySpravy(serie), drobekRegaty(serie, zavod, nazev)]} />
       <h1>Tracker — {nazev}</h1>
 
@@ -91,7 +91,7 @@ export default async function TrackerRegaty({ params }: Parametry) {
           prvni={prvniSnimek}
         />
       )}
-    </main>
+    </div>
   );
 }
 
