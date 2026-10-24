@@ -112,9 +112,7 @@ export function snimekZavodu(
   trat?: VerejnaTrat | null,
 ): Snimek {
   return {
-    // `schema.d.ts` se generuje z běžícího API, takže se pole doplní, až
-    // se endpoint nasadí; do té doby je tady most, ne hádání typu.
-    oknoDo: (detail as ZavodDetail & { oknoDo?: string | null }).oknoDo ?? null,
+    oknoDo: detail.oknoDo ?? null,
     znacky: znackyZTrati(trat),
     trat: trat
       ? {

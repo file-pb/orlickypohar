@@ -773,6 +773,45 @@
                 }
             }
         },
+        "/serie/{serie}/zavody/{zavod}/polohy": {
+            "get": {
+                "tags": [
+                    "Polohy"
+                ],
+                "summary": "\u017div\u00e9 polohy pro div\u00e1ka",
+                "description": "Vys\u00edl\u00e1 se, jen kdy\u017e to rozhod\u010d\u00ed povolil **a zrovna b\u011b\u017e\u00ed rozj\u00ed\u017e\u010fka** \u2014 mimo ni se vyd\u00e1v\u00e1n\u00ed vyp\u00edn\u00e1, proto\u017ee o\u0159ez zezadu se ned\u00e1 ud\u011blat dop\u0159edu. `vysila: false` znamen\u00e1 \u201ete\u010f ne\"; pro\u010d, se ven ne\u0159\u00edk\u00e1. Lo\u010f bez polohy a posledn\u00ed zn\u00e1m\u00e1 poloha mimo rozj\u00ed\u017e\u010fku se nevyd\u00e1vaj\u00ed v\u016fbec \u2014 to je \u00fadaj pro z\u00e1vodn\u00ed v\u00fdbor.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VerejnyPohled"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/klice/uplatnit": {
             "post": {
                 "tags": [
@@ -4544,7 +4583,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "Uzav\u0159e z\u00e1vodn\u00ed den",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. T\u00edm se p\u0159est\u00e1v\u00e1 zaznamen\u00e1vat \u2014 mezi dny se nesleduje. Uzav\u0159\u00edt zav\u0159en\u00e9 nen\u00ed chyba.",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. T\u00edm se p\u0159est\u00e1v\u00e1 zaznamen\u00e1vat \u2014 mezi dny se nesleduje. Uzav\u0159\u00edt zav\u0159en\u00e9 nen\u00ed chyba.\n\nV odpov\u011bdi je `zbylo`: **co po dni z\u016fstalo otev\u0159en\u00e9** \u2014 rozj\u00ed\u017e\u010fky, kter\u00e9 po\u0159\u00e1d \u201eb\u011b\u017e\u00ed\", a trasy, kter\u00e9 telefon nedokon\u010dil. Nic se t\u00edm nezav\u00edr\u00e1; konec rozj\u00ed\u017e\u010fky je rozhodnut\u00ed rozhod\u010d\u00edho, ne dopo\u010det.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4609,6 +4648,144 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/SnimekPoloh"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/tracker/nastaveni": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Nastaven\u00ed zobrazen\u00ed trackingu",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. V\u00fdchoz\u00ed hodnota je bezpe\u010dn\u00e1: pos\u00e1dky vid\u00ed jen sebe, ven nejde nic.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NastaveniDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Zm\u011bn\u00ed nastaven\u00ed zobrazen\u00ed",
+                "description": "Do rozpravy po\u0159adatel regaty nebo rozhod\u010d\u00ed, po rozprav\u011b **jen rozhod\u010d\u00ed a jen zp\u0159\u00edsn\u011bn\u00ed** \u2014 roz\u0161\u00ed\u0159it nesm\u00ed nikdo. Z\u00e1sah do zam\u010den\u00e9ho nastaven\u00ed vy\u017eaduje `duvod`.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NastaveniVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NastaveniDto"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChybaNastaveni"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/tracker/nastaveni/zmeny": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Kdo nastaven\u00ed kdy m\u011bnil a pro\u010d",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. Je to doklad ke sporu \u201evy jste n\u00e1s vid\u011bli a my v\u00e1s ne\".",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ZmenaDto"
+                                    }
                                 }
                             }
                         }
@@ -6040,6 +6217,17 @@
                     }
                 }
             },
+            "ChybaNastaveni": {
+                "required": [
+                    "error"
+                ],
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                }
+            },
             "ChybaTrasy": {
                 "required": [
                     "error"
@@ -6333,6 +6521,13 @@
                         "default": false
                     }
                 }
+            },
+            "CoVidiPosadky": {
+                "enum": [
+                    "Nic",
+                    "JenSebe",
+                    "IOstatni"
+                ]
             },
             "DavkaDto": {
                 "required": [
@@ -7268,6 +7463,63 @@
                     }
                 }
             },
+            "NastaveniDto": {
+                "required": [
+                    "coVidiPosadky",
+                    "zivyPrenosVen",
+                    "jizdyPoRegateVerejne",
+                    "zamcenoV",
+                    "zamceno"
+                ],
+                "type": "object",
+                "properties": {
+                    "coVidiPosadky": {
+                        "$ref": "#/components/schemas/CoVidiPosadky"
+                    },
+                    "zivyPrenosVen": {
+                        "type": "boolean"
+                    },
+                    "jizdyPoRegateVerejne": {
+                        "type": "boolean"
+                    },
+                    "zamcenoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "zamceno": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "NastaveniVstup": {
+                "required": [
+                    "coVidiPosadky",
+                    "zivyPrenosVen",
+                    "jizdyPoRegateVerejne",
+                    "duvod"
+                ],
+                "type": "object",
+                "properties": {
+                    "coVidiPosadky": {
+                        "$ref": "#/components/schemas/CoVidiPosadky"
+                    },
+                    "zivyPrenosVen": {
+                        "type": "boolean"
+                    },
+                    "jizdyPoRegateVerejne": {
+                        "type": "boolean"
+                    },
+                    "duvod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
             "NavrhDto": {
                 "required": [
                     "uzivatelId",
@@ -7487,6 +7739,16 @@
                     },
                     "bezi": {
                         "type": "boolean"
+                    },
+                    "zbylo": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/ZustaloOtevrene"
+                            }
+                        ]
                     }
                 }
             },
@@ -10412,6 +10674,29 @@
                     }
                 }
             },
+            "VerejnyPohled": {
+                "required": [
+                    "vysila",
+                    "ted",
+                    "lode"
+                ],
+                "type": "object",
+                "properties": {
+                    "vysila": {
+                        "type": "boolean"
+                    },
+                    "ted": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "lode": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PolohaLodi"
+                        }
+                    }
+                }
+            },
             "VerejnyPrvekDto": {
                 "required": [
                     "id",
@@ -11492,6 +11777,13 @@
                     "procesniDej": {
                         "type": "boolean",
                         "default": false
+                    },
+                    "oknoDo": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
                     }
                 }
             },
@@ -11698,6 +11990,58 @@
                     }
                 }
             },
+            "ZmenaDto": {
+                "required": [
+                    "kdy",
+                    "uzivatelId",
+                    "zPosadky",
+                    "naPosadky",
+                    "zVen",
+                    "naVen",
+                    "zJizdy",
+                    "naJizdy",
+                    "duvod",
+                    "poZamku"
+                ],
+                "type": "object",
+                "properties": {
+                    "kdy": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "uzivatelId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "zPosadky": {
+                        "$ref": "#/components/schemas/CoVidiPosadky"
+                    },
+                    "naPosadky": {
+                        "$ref": "#/components/schemas/CoVidiPosadky"
+                    },
+                    "zVen": {
+                        "type": "boolean"
+                    },
+                    "naVen": {
+                        "type": "boolean"
+                    },
+                    "zJizdy": {
+                        "type": "boolean"
+                    },
+                    "naJizdy": {
+                        "type": "boolean"
+                    },
+                    "duvod": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "poZamku": {
+                        "type": "boolean"
+                    }
+                }
+            },
             "ZmenaRoleDto": {
                 "required": [
                     "kdo",
@@ -11808,6 +12152,29 @@
                         ]
                     }
                 }
+            },
+            "ZustaloOtevrene": {
+                "required": [
+                    "rozjizdky",
+                    "rozdelaneTrasy"
+                ],
+                "type": "object",
+                "properties": {
+                    "rozjizdky": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    "rozdelaneTrasy": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "neco": {
+                        "type": "boolean"
+                    }
+                }
             }
         }
     },
@@ -11844,6 +12211,9 @@
         },
         {
             "name": "Trasy"
+        },
+        {
+            "name": "Polohy"
         },
         {
             "name": "Kl\u00ed\u010de"
