@@ -3616,28 +3616,31 @@ body:has(.tabule) { overflow: hidden; }
 .nacrt-trida .znak-tridy { height: 1.05rem; width: auto; }
 
 /* Taby tříd nad žebříčkem. Vybraný drží barvu, ostatní ustoupí. */
+/* Taky se vejdou na jednu řádku: sloupec má 300 px a čtyři taby se do
+   něj dostanou jen těsně, tak jsou úsporné a nelámou se. */
 .nacrt-taby {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
+  flex-wrap: nowrap;
+  gap: 0.2rem;
   margin-bottom: 0.5rem;
 }
 
 .nacrt-taby button {
   display: flex;
-  gap: 0.3rem;
+  gap: 0.22rem;
   align-items: center;
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.45rem;
   border: 1px solid var(--linka);
   border-radius: 999px;
   background: none;
   color: var(--tlumeny);
   font: inherit;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
+  white-space: nowrap;
   cursor: pointer;
 }
 
-.nacrt-taby button .znak-tridy { height: 0.95rem; width: auto; opacity: 0.6; }
+.nacrt-taby button .znak-tridy { height: 0.85rem; width: auto; opacity: 0.6; }
 .nacrt-taby button.vybrany .znak-tridy { opacity: 1; }
 .nacrt-taby button:hover { background: var(--zvyrazneni); }
 
