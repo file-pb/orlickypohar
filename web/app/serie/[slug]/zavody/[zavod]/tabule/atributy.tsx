@@ -32,32 +32,22 @@ const DEN = new Intl.DateTimeFormat("cs", { day: "numeric", month: "numeric" });
 export function Atributy({ snimek }: { snimek: Snimek }) {
   const z = snimek.zavod;
   const odjete = snimek.rozjizdky.filter((r) => r.stav === "Dokoncena").length;
-  const dny =
-    z.datumKonce && z.datumKonce !== z.datum
-      ? `${DEN.format(new Date(z.datum))} – ${DEN.format(new Date(z.datumKonce))}`
-      : DEN.format(new Date(z.datum));
-
   return (
     <div className="atributy">
-      <Dlazdice popis="termín" hodnota={dny} pod={z.poradatel ?? undefined} />
-      {z.typ && <Dlazdice popis="typ závodu" hodnota={z.typ} />}
+      {/* <b>Termín ani typ závodu na tabuli nepatří</b> (Filip, 24. 10.
+          2026). Kdo stojí před televizí v hospodě, ví, jaké je datum
+          a na jaký závod se dívá — jméno má přímo vedle. Místo patří
+          číslům, která se během dne mění. */}
       <Dlazdice
         popis={snimek.rozjizdky.length === 1 ? "rozjížďka" : "rozjížďky"}
         hodnota={`${odjete}/${snimek.rozjizdky.length}`}
         pod={odjete === snimek.rozjizdky.length ? undefined : "odjeto"}
       />
       <Dlazdice popis="lodí na startu" hodnota={String(snimek.lode.length)} />
-      {z.pocetSkrtu > 0 && <Dlazdice popis="škrty" hodnota={String(z.pocetSkrtu)} />}
-      {z.koeficientDoSerie !== 1 && (
-        <Dlazdice popis="koeficient do poháru" hodnota={`×${z.koeficientDoSerie}`} />
-      )}
-      {z.prvkyTrati !== null && (
-        <Dlazdice
-          popis={z.prvkyTrati === 1 ? "prvek trati" : "prvky trati"}
-          hodnota={String(z.prvkyTrati)}
-          pod={snimek.trat?.cisloRozjizdky ? `pro ${snimek.trat.cisloRozjizdky}. rozjížďku` : undefined}
-        />
-      )}
+      {/* Počet prvků trati, škrty ani koeficient na televizi nepatří
+          (Filip, 24. 10. 2026): jsou to pravidla závodu, ne jeho dění.
+          Trať je navíc vidět celá na mapě pod tím. Zbývají dvě čísla,
+          která se během dne mění. */}
     </div>
   );
 }
