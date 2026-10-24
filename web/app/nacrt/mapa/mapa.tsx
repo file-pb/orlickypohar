@@ -594,7 +594,18 @@ export function NacrtMapy({
       );
     });
     pozice.current = nove;
-  }, [zobrazene.join(",")]);
+
+    // Šipka a číslo si mají předat buňku znovu při každém kroku kaskády.
+    // Restart bez remountu: vypnout animaci, vynutit přepočet, zapnout.
+    for (const sel of [".nacrt-radek-nahoru", ".nacrt-radek-dolu"]) {
+      ol.querySelectorAll<HTMLElement>(`${sel} .nacrt-sipka-radku, ${sel} .nacrt-cislo-pod`)
+        .forEach((el) => {
+          el.style.animation = "none";
+          void el.offsetWidth;
+          el.style.animation = "";
+        });
+    }
+  }, [zobrazene.join(","), krok]);
 
   const poradiKZobrazeni = zobrazene
     .map((id) => poradi.find((v) => v.lod.id === id))
@@ -978,21 +989,22 @@ export function NacrtMapy({
                     Šipka svítí pár vteřin a zhasne, číslo se pod ní
                     rozsvítí (Filip, 24. 10. 2026). Oba leží ve stejné
                     buňce mřížky, takže se nic neposouvá.
+
+                    <b>Oba prvky tu jsou vždycky</b> a mění se jim jen
+                    třída. Restart animace přes `key` se neosvědčil: React
+                    staré spany nechával v DOM, takže se v jedné buňce
+                    sešly tři šipky z předchozích kroků a pod nimi číslo.
+                    Animace se proto restartuje ručně, v `useLayoutEffect`
+                    u přehození.
                   */}
-                  {vSouboji && (
-                    <span
-                      key={`sipka-${krok}`}
-                      className={`nacrt-sipka-radku ${jdeNahoru ? "nacrt-nahoru" : "nacrt-dolu"}`}
-                    >
-                      {jdeNahoru ? "▲" : "▼"}
-                    </span>
-                  )}
-                  {/* Klíče musí být mezi sourozenci různé, jinak si React
-                      šipku s číslem plete a animace se připne na špatný. */}
                   <span
-                    key={vSouboji ? `cislo-${krok}` : "cislo"}
-                    className={vSouboji ? "nacrt-cislo-pod" : undefined}
+                    className={`nacrt-sipka-radku ${
+                      vSouboji ? (jdeNahoru ? "nacrt-nahoru" : "nacrt-dolu") : "nacrt-bez-sipky"
+                    }`}
                   >
+                    {jdeNahoru ? "▲" : jdeDolu ? "▼" : ""}
+                  </span>
+                  <span className={vSouboji ? "nacrt-cislo-pod" : undefined}>
                     {v.stav === "nedostupna" ? "—" : i + 1}
                   </span>
                 </span>
