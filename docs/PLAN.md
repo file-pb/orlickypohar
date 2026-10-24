@@ -2559,6 +2559,30 @@ v okně, přišla o celý záznam kvůli špatně nastavenému času.
 mimo (to čeká na úseky rozjížděk), a zámek nastavení zobrazení, který na
 rozpravu patří taky — zámek je poslední řádek v tom, co okna postaví.
 
+### Živý kanál v appce je postavený (24. 10. 2026)
+
+Druhý kus pořadí práce. Odesílání už nevisí na ruce posádky: úloha na
+pozadí po každém zápisu zkusí odeslat, nejvýš jednou za minutu
+(`ZIVE_MS`). Dvě stě bodů v dávce zůstává jako strop jednoho volání —
+otázka nebyla velikost dávky, ale jak často se rádio zapne.
+
+| Rozhodnutí | Proč |
+|---|---|
+| **minuta, ne pět sekund** | zelená v seznamu trackerů je „poslední bod mladší než minuta", a co žere baterku, je zapínání rádia, ne velikost dávky |
+| **čas pokusu se zapisuje před odesláním** | zabitý proces by ho jinak ztratil a po probuzení by poslal dávku hned znovu |
+| **výpadek sítě se spolkne** | výjimka z handleru úlohy znamená, že systém úlohu odregistruje a záznam skončí bez varování v půlce závodu |
+| **ukončený záznam živý kanál neposílá** | po dojezdu se dokončuje ručně a je u toho vidět, co se děje |
+
+**Tři důvody, proč se neodesílá, ne jedna červená** (`zaznam.potiz`):
+`bez-klice` je věc, se kterou musí posádka za kapitánem, `sit` je stav vody
+a `mimo-okno` je stav závodu — server trasu nevezme, dokud nebyla rozprava.
+Stavový panel to říká slovy (*„čeká na rozpravu · 42 bodů čeká"*), protože
+appka musí ukazovat, že to jede, a stejně tak proč nejede.
+
+**Nahrávání po dojezdu zůstalo celé.** Fronta, hranice potvrzeného
+i dokončení nahrávání se nezměnily; živý kanál je jen druhý spouštěč téhož
+odesílání. Výpadek sítě na vodě je normál, ne porucha.
+
 ### Co z toho čeká na přihlášení
 
 Všechna tři pravidla výš (loď v regatě, telefon u posádky, okno regaty)

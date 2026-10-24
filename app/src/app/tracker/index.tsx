@@ -18,6 +18,7 @@ import { stavNahravani } from '@/lib/tracker/nahravani';
 import {
   predJakDlouho,
   stavGps,
+  stavOdesilani,
   svetloGps,
   type StavGps,
   type Svetlo,
@@ -76,6 +77,7 @@ function Panel({
   const t = useTheme();
   const [propich, setPropich] = useState<string | null>(null);
   const [propichaSe, setPropichaSe] = useState(false);
+  const odesilani = stavOdesilani(bezi, stavNahravani(bezi.id));
 
   async function zkus() {
     setPropichaSe(true);
@@ -120,16 +122,10 @@ function Panel({
             : `${gps.pocetBodu} bodů · od ${casAMinuty(bezi.zacatek)}`
         }
       />
-      {/* Nahrávání pilot nemá, ale řádek tu je schválně: posádka má vidět, že
-          se nikam nic neposílá, a ne se to domýšlet z toho, že nic nevidí. */}
-      {/* Za závodu se neodesílá: pilot nemá živou mapu a nahrává se po
-          dojezdu. Řádek tu přesto je, aby posádka viděla, kolik se nasbíralo
-          a co ji čeká — ne aby si to domýšlela z toho, že nic nevidí. */}
-      <Radek
-        svetlo="stoji"
-        popis="Odesílání"
-        hodnota={`po dojezdu · ${stavNahravani(bezi.id)?.ceka ?? 0} bodů čeká`}
-      />
+      {/* Odesílá se průběžně, po minutě, a dělá to úloha na pozadí — na
+          posádce nesmí viset nic než spuštění záznamu. Řádek ukazuje, kdy
+          se naposledy ozvalo a proč případně ne. */}
+      <Radek {...odesilani} popis="Odesílání" />
 
       {/* Pozastavení je páka pro posádku, ne pro pořadatele: někdy je potřeba
           soukromí vynutit. V trase vznikne díra a to je záměr. */}
