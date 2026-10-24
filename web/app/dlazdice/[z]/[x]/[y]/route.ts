@@ -31,6 +31,73 @@
 
 type Podklad = "mapa" | "satelit";
 
+/**
+ * <b>Kolik dlaždic se smí tahat ze zdroje naráz.</b>
+ *
+ * Mapa si při otevření řekne o celý výřez — na tabuli přes ultrawide to
+ * bylo 68 dlaždic v jedné vlně. Prohlížeč je přes HTTP/2 pustí všechny
+ * najednou, náš server je všechny přepošle a OSM, jehož pravidla mluví
+ * o dvou souběžných stahováních, část odmítne: změřeno 16 z 68 na
+ * produkci (24. 10. 2026). Na obrazovce z toho byla mozaika rozbitých
+ * obrázků — ta „rozhozená mapa", které si Filip všiml u dojezdu.
+ *
+ * Fronta je proto tady, ne v prohlížeči: tím platí pro všechny, kdo si
+ * stránku otevřou, a drží pravidla zdroje i při deseti divácích.
+ */
+const NARAZ = 2;
+
+/** Jak dlouho smí dlaždice čekat ve frontě, než se to vzdá. */
+const CEKANI_MS = 8_000;
+
+let bezi = 0;
+const fronta: (() => void)[] = [];
+
+function pusti() {
+  bezi -= 1;
+  fronta.shift()?.();
+}
+
+/** Pustí práci, až bude volno. Čekání má strop — radši prázdná dlaždice než visící požadavek. */
+async function vRade<T>(prace: () => Promise<T>): Promise<T | null> {
+  if (bezi >= NARAZ) {
+    const dockal = await new Promise<boolean>((hotovo) => {
+      const casovac = setTimeout(() => hotovo(false), CEKANI_MS);
+      fronta.push(() => {
+        clearTimeout(casovac);
+        hotovo(true);
+      });
+    });
+    if (!dockal) return null;
+  } else {
+    bezi += 1;
+  }
+
+  try {
+    return await prace();
+  } finally {
+    pusti();
+  }
+}
+
+/**
+ * Průhledný pixel pro dlaždici, která nedorazila.
+ *
+ * <b>Lepší než 502.</b> Rozbitý obrázek je na mapě vidět jako bílý
+ * čtverec s ikonou; průhledná dlaždice nechá prosvítat hrubý podklad pod
+ * sebou, takže z výpadku zbyde jen rozmazané místo. Cache je krátká —
+ * za minutu to má smysl zkusit znovu.
+ */
+const PRAZDNA = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+  "base64",
+);
+
+function prazdnaDlazdice() {
+  return new Response(new Uint8Array(PRAZDNA), {
+    headers: { "content-type": "image/png", "cache-control": "public, max-age=60" },
+  });
+}
+
 const ZDROJE: Record<Podklad, (z: number, x: number, y: number) => string> = {
   mapa: (z, x, y) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`,
   satelit: (z, x, y) =>
@@ -66,18 +133,28 @@ export async function GET(
     return new Response("Mimo rozsah", { status: 400 });
   }
 
-  let odpoved: Response;
-  try {
-    odpoved = await fetch(ZDROJE[podklad](cz, cx, cy), {
-      headers: { "user-agent": KDO, accept: "image/png,image/jpeg" },
-      // Dlaždice se nemění; den je u OSM běžná doba, kterou drží i prohlížeč.
-      next: { revalidate: 86_400 },
-    });
-  } catch {
-    return new Response("Podklad se nepodařilo načíst", { status: 502 });
-  }
+  const odpoved = await vRade(async () => {
+    for (let pokus = 0; pokus < 2; pokus += 1) {
+      try {
+        const r = await fetch(ZDROJE[podklad](cz, cx, cy), {
+          headers: { "user-agent": KDO, accept: "image/png,image/jpeg" },
+          // Dlaždice se nemění; den je u OSM běžná doba, kterou drží i prohlížeč.
+          next: { revalidate: 86_400 },
+        });
+        if (r.ok) return r;
+        // Odmítnutí kvůli náporu má smysl zkusit znovu, chybnou adresu ne.
+        if (r.status !== 429 && r.status < 500) return null;
+      } catch {
+        // Síť selhala; druhý pokus za chvíli.
+      }
+      await new Promise((d) => setTimeout(d, 300));
+    }
+    return null;
+  });
 
-  if (!odpoved.ok) return new Response("Podklad se nepodařilo načíst", { status: 502 });
+  // Prázdná dlaždice místo chyby: pod ní leží hrubý podklad, takže z toho
+  // na mapě zbude rozmazané místo, ne bílý čtverec s ikonou.
+  if (!odpoved) return prazdnaDlazdice();
 
   return new Response(odpoved.body, {
     headers: {

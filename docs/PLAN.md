@@ -2731,6 +2731,47 @@ nahradil celý rámeček v barvě druhu.
 **A nebyla na ní dvakrát táž věta.** Karta má nadpisek „V cíli" a pod
 jménem nesla detail „v cíli"; detail teď nese třídu lodi.
 
+### Co ukázal průchod po nasazení (24. 10. 2026)
+
+Tři věci, které se našly, až když tabule a tracker běžely naostro
+a na širokém monitoru.
+
+**Rozsypaná mapa nebyla o zoomu, ale o dlaždicích.** Mapa si při otevření
+řekne o celý výřez — na ultrawide 68 dlaždic v jedné vlně. Prohlížeč je
+přes HTTP/2 pustí naráz, náš server je naráz přepošle a OpenStreetMap,
+jehož pravidla mluví o **dvou souběžných stahováních**, část odmítne:
+změřeno **16 z 68** na produkci. Na obrazovce z toho byla mozaika
+rozbitých obrázků. Proxy má proto frontu (dvě naráz, čekání se stropem),
+jedno opakování při odmítnutí a místo chyby vrací **průhlednou
+dlaždici** — pod ní leží hrubý podklad, takže z výpadku zbyde rozmazané
+místo, ne bílý čtverec s ikonou.
+
+**Plátno mapy rostlo samo.** Komponenta si plochu měří a podle ní nastaví
+`viewBox`; dokud měl obal výšku podle obsahu, byla ta výška daná zase
+`viewBox`em. Každé přeměření plátno natáhlo a po změně velikosti okna se
+smyčka rozjela — naměřeno 3 793 px na náčrtu a 15 397 px na trackeru,
+obojí na stránce vysoké 1 080. Obal má teď výšku z CSS.
+
+**Na tabuli se plocha neměřila vůbec.** Plátno tam vzniká rovnou
+v konečné velikosti, takže `ResizeObserver` poslal jediný záznam — a ten
+ještě s nulou, protože rodič v tu chvíli rozměry neměl. Mapa proto jela
+na náhradním výřezu 1600×900, který se do plochy jen doškáloval
+(naměřeno 1447×754). Měří se proto hned při připojení, ne až na první
+změnu.
+
+**Ukázka to říká i u pořadí.** Jména v žebříčku a v pásech tříd jsou ze
+startovní listiny, takže vymyšlené pořadí vypadá z hospody jako výsledek;
+proužek nahoře je od něj přes celou obrazovku daleko. Štítek *ukázka*
+proto stojí přímo u nadpisu pořadí a u každého pásu — a zmizí, jakmile
+začnou chodit skutečné polohy.
+
+**A tracker dostal šířku.** Obsahový sloupec je míra pro čtení textu;
+mapa, ve které rozhodčí hledá lodě, je ta výjimka — kolem ní zbývalo na
+ultrawide přes dva tisíce pixelů prázdna. Strop na 16 : 9 brání tomu, aby
+z mapy byl pruh, ve kterém je pole bod uprostřed. Výchozí přiblížení se
+navíc přepočítá, až je plocha naměřená: do té doby se počítalo
+z náhradních rozměrů a mapa zůstala zbytečně odzoomovaná.
+
 ### Co z toho čeká na přihlášení
 
 Všechna tři pravidla výš (loď v regatě, telefon u posádky, okno regaty)

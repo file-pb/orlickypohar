@@ -124,10 +124,15 @@ const KOLOTOC_S = 60;
  */
 /** Jak dlouho drží celkový záběr. */
 /**
- * Úroveň hrubého podkladu pod dlaždicemi. Na ní se celá přehrada vejde
- * do hrstky dlaždic, takže je po prvním načtení pořád po ruce.
+ * Úroveň hrubého podkladu pod dlaždicemi. Celé závodní pole se na ní
+ * vejde do hrstky dlaždic, takže je po prvním načtení pořád po ruce.
+ *
+ * <b>Čtrnáctka, ne třináctka:</b> při obvyklém přiblížení 16 je rozdíl
+ * dvě úrovně, tedy čtyřnásobné zvětšení. O úroveň níž byl podklad
+ * roztažený osmkrát a jeho popisky („402 m") přerostly do výšky prstu,
+ * což je přes půl obrazovky vidět, než dojedou ostré dlaždice.
  */
-const PODKLAD_Z = 13;
+const PODKLAD_Z = 14;
 
 const ZABER_CELEK_MS = 18_000;
 /** A jak dlouho záběr na čelo. */
@@ -327,6 +332,7 @@ export function MapaTrackeru({
   spojnice,
   tabule,
   zive,
+  ukazka,
   odsazeni,
   zebricek,
   onPoradi,
@@ -344,6 +350,13 @@ export function MapaTrackeru({
    * k tomu je záznam.
    */
   zive?: boolean;
+  /**
+   * Jedou po trati ukázkové plavby, ne skutečné lodě. <b>Musí to být
+   * vidět u pořadí</b>, ne jen v proužku nahoře: jména jsou ze startovní
+   * listiny, takže seznam vypadá jako výsledek, dokud u něj nestojí, že
+   * je vymyšlený.
+   */
+  ukazka?: boolean;
   /**
    * Rozložení pro televizi v hospodě. <b>Mizí celé ovládání</b> — na
    * tabuli není kam klepnout —, čas běží sám a třídy se střídají místo
@@ -421,11 +434,29 @@ export function MapaTrackeru({
   useLayoutEffect(() => {
     const el = platno.current;
     if (!el) return;
+
+    const uloz = (sirka: number, vyska: number) => {
+      if (sirka <= 0 || vyska <= 0) return;
+      setZmereno((p) =>
+        p && p.sirka === Math.round(sirka) && p.vyska === Math.round(vyska)
+          ? p
+          : { sirka: Math.round(sirka), vyska: Math.round(vyska) },
+      );
+    };
+
+    // <b>Změřit hned, ne čekat na první změnu.</b> Na tabuli plátno vzniká
+    // rovnou v konečné velikosti, takže `ResizeObserver` poslal jediný
+    // záznam — a ten ještě s nulou, protože rodič v tu chvíli neměl
+    // rozměry. Druhý už nepřišel (nic se nezměnilo) a mapa zůstala na
+    // náhradním výřezu 1600×900, který se do plochy jen doškáloval:
+    // naměřeno 1447×754 proti viewBoxu 1600×900 (24. 10. 2026). Všechno,
+    // co se pozicuje, pak sedí jinde, než kam se divák dívá.
+    const r = el.getBoundingClientRect();
+    uloz(r.width, r.height);
+
     const sleduj = new ResizeObserver(([zaznam]) => {
-      const r = zaznam.contentRect;
-      if (r.width > 0 && r.height > 0) {
-        setZmereno({ sirka: Math.round(r.width), vyska: Math.round(r.height) });
-      }
+      const c = zaznam.contentRect;
+      uloz(c.width, c.height);
     });
     sleduj.observe(el);
     return () => sleduj.disconnect();
@@ -443,6 +474,11 @@ export function MapaTrackeru({
   const posunX = (kryje.vlevo - kryje.vpravo) / 2;
   const posunY = (kryje.nahore - kryje.dole) / 2;
   const [z, setZ] = useState(() => vychoziZ(znacky, SIRKA, VYSKA));
+  /**
+   * Sáhl si na přiblížení člověk? Dokud ne, patří mapě — a ta si ho po
+   * naměření plochy přepočítá.
+   */
+  const zoomRucne = useRef(false);
   const [stred, setStred] = useState({
     sirka: znacky.reduce((s, m) => s + m.sirka, 0) / znacky.length,
     delka: znacky.reduce((s, m) => s + m.delka, 0) / znacky.length,
@@ -491,6 +527,21 @@ export function MapaTrackeru({
   }
   const [tratVidet, setTratVidet] = useState(true);
   const tahne = useRef<{ x: number; y: number } | null>(null);
+
+  /**
+   * <b>Výchozí přiblížení se přepočítá, až je plocha naměřená.</b>
+   *
+   * Při prvním renderu se počítá z náhradních rozměrů (880×560), protože
+   * plátno ještě nikdo nezměřil. Na širokém monitoru je skutečné plátno
+   * skoro dvakrát větší, takže zůstat u prvního výpočtu znamená mapu
+   * zbytečně odzoomovanou — závodní pole je pak bod uprostřed krajiny
+   * (změřeno na trackeru regaty 24. 10. 2026). Tabule si přiblížení řídí
+   * režií, tam se to neplete.
+   */
+  useEffect(() => {
+    if (tabule || zoomRucne.current || !zmereno || znacky.length === 0) return;
+    setZ(vychoziZ(znacky, zmereno.sirka, zmereno.vyska));
+  }, [tabule, zmereno, znacky]);
 
   const konec = useMemo(
     () => Math.max(...lode.map((l) => l.body.at(-1)?.cas ?? 0)),
@@ -1381,7 +1432,10 @@ export function MapaTrackeru({
           <div className="nacrt-zoom">
             <button
               type="button"
-              onClick={() => setZ((v) => Math.min(Z_NEJVIC, v + 1))}
+              onClick={() => {
+                zoomRucne.current = true;
+                setZ((v) => Math.min(Z_NEJVIC, v + 1));
+              }}
               disabled={z >= Z_NEJVIC}
               aria-label="přiblížit"
               title="přiblížit"
@@ -1390,7 +1444,10 @@ export function MapaTrackeru({
             </button>
             <button
               type="button"
-              onClick={() => setZ((v) => Math.max(Z_NEJMENE, v - 1))}
+              onClick={() => {
+                zoomRucne.current = true;
+                setZ((v) => Math.max(Z_NEJMENE, v - 1));
+              }}
               disabled={z <= Z_NEJMENE}
               aria-label="oddálit"
               title="oddálit"
@@ -1521,6 +1578,7 @@ export function MapaTrackeru({
         <h2>
           {tabule && <ZnakTridy nazev={filtr ?? CELKEM} />}
           {tabule ? `${filtr ?? "Celé pole"} — pořadí` : "Pomyslné pořadí"}
+          {ukazka && <span className="nacrt-ukazka">ukázka</span>}
         </h2>
         {tabule ? null : (
         <div className="nacrt-taby" role="tablist" aria-label="třída lodí">

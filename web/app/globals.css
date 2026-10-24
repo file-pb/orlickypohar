@@ -3713,16 +3713,66 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
   align-items: start;
 }
 
-.nacrt-platno-obal { position: relative; display: block; }
+/**
+ * <b>Živá mapa dostane celou šířku</b> (24. 10. 2026). Obsahový sloupec
+ * je míra pro čtení textu; mapa, na kterou se rozhodčí dívá a hledá v ní
+ * lodě, je přesně ta výjimka — na širokém monitoru zbývalo kolem ní přes
+ * dva tisíce pixelů prázdna. Totéž dělá tabule o kus níž.
+ */
+body:has(.tracker-strana) main.obal { max-width: none; }
+
+/* Tabulka lodí pod mapou si míru řádku drží: jména a časy se čtou po
+   řádcích a přes celou šířku ultrawide by se oko ztratilo. */
+.tracker-strana .tracker-lode { max-width: 70rem; }
+
+/**
+ * <b>Mapa se roztáhne, ale ne do pruhu.</b> Na ultrawide vyšel poměr
+ * plátna 3,4 : 1 a závodní pole z něj byl bod uprostřed, protože
+ * přiblížení musí držet trať i na výšku. Strop na 16 : 9 tomu zabrání;
+ * mapa a žebříček pak stojí vedle sebe uprostřed obrazovky, ne na
+ * krajích.
+ */
+.tracker-strana .nacrt {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.tracker-strana .nacrt-mapa {
+  flex: 0 1 calc(16 / 9 * clamp(360px, 62vh, 900px));
+  min-width: 0;
+}
+.tracker-strana .nacrt-poradi { flex: 0 0 300px; }
+
+/**
+ * <b>Plátno má výšku od CSS, ne od obsahu</b> (24. 10. 2026).
+ *
+ * Mapa si svou plochu měří (`ResizeObserver`) a podle ní nastaví
+ * `viewBox`. S `height: auto` je ale výška obalu daná výškou SVG, a ta
+ * zase `viewBox`em — tedy tím, co se naměřilo. Každé přeměření plátno
+ * o kus natáhlo a po změně velikosti okna se smyčka rozjela: 3 793 px
+ * na náčrtu, 15 397 px na trackeru regaty, obojí na stránce vysoké
+ * 1 080 (změřeno). Pevná výška ten kruh přetíná a dá mapě `viewBox`
+ * jedna ku jedné s pixely, takže se dlaždice ani neroztahují.
+ *
+ * Tabule si výšku řídí sama (`inset: 0` přes celou obrazovku).
+ */
+.nacrt-platno-obal {
+  position: relative;
+  display: block;
+  height: clamp(360px, 62vh, 900px);
+}
 
 .nacrt-platno {
   width: 100%;
-  height: auto;
+  height: 100%;
   background: var(--zvyrazneni);
   border-radius: 6px;
   touch-action: none;
   cursor: grab;
 }
+
+
 
 .nacrt-znacka {
   font-size: 13px;
@@ -4188,6 +4238,25 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .nacrt-na-tv .nacrt-souboj-pozice { font-size: 1rem; }
 .nacrt-na-tv .nacrt-zoom { display: none; }
 
+
+/**
+ * Štítek „ukázka" u pořadí. <b>Drobný, ale na místě, kam se divák dívá</b>
+ * (24. 10. 2026): jména v žebříčku jsou ze startovní listiny, takže bez
+ * něj vypadá vymyšlené pořadí jako výsledek. Proužek nahoře to říká taky,
+ * jenže ten je od pořadí přes celou obrazovku daleko.
+ */
+.nacrt-ukazka {
+  margin-left: 0.4em;
+  padding: 0 0.4em;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.72em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: var(--stav-zruseny);
+  white-space: nowrap;
+}
 
 /* Loď v cíli to má napsané u sebe v pořadí, místo widgetu vedle. */
 .nacrt-stitek-cil {

@@ -29,6 +29,15 @@ function Dlazdice({ popis, hodnota, pod }: { popis: string; hodnota: string; pod
 
 const DEN = new Intl.DateTimeFormat("cs", { day: "numeric", month: "numeric" });
 
+/**
+ * Skloňování lodí podle počtu. Tabule visí v hospodě a „2 lodí na startu"
+ * je první věc, které si tam někdo všimne (24. 10. 2026).
+ */
+function lodi(kolik: number): string {
+  if (kolik === 1) return "loď";
+  return kolik >= 2 && kolik <= 4 ? "lodě" : "lodí";
+}
+
 export function Atributy({ snimek }: { snimek: Snimek }) {
   const z = snimek.zavod;
   const odjete = snimek.rozjizdky.filter((r) => r.stav === "Dokoncena").length;
@@ -43,7 +52,7 @@ export function Atributy({ snimek }: { snimek: Snimek }) {
         hodnota={`${odjete}/${snimek.rozjizdky.length}`}
         pod={odjete === snimek.rozjizdky.length ? undefined : "odjeto"}
       />
-      <Dlazdice popis="lodí na startu" hodnota={String(snimek.lode.length)} />
+      <Dlazdice popis={`${lodi(snimek.lode.length)} na startu`} hodnota={String(snimek.lode.length)} />
       {/* Počet prvků trati, škrty ani koeficient na televizi nepatří
           (Filip, 24. 10. 2026): jsou to pravidla závodu, ne jeho dění.
           Trať je navíc vidět celá na mapě pod tím. Zbývají dvě čísla,
