@@ -3718,3 +3718,32 @@ body:has(.tabule) { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .nacrt-souboj, .nacrt-souboj-lod span { animation: none; }
 }
+
+/* Zoom patří na mapu, ne pod ni — a vypadá jako všude jinde, aby se
+   nemusel hledat. */
+.nacrt-zoom {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  display: grid;
+  border-radius: 7px;
+  overflow: hidden;
+  box-shadow: 0 1px 6px rgb(0 0 0 / 35%);
+}
+
+.nacrt-zoom button {
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  background: var(--papir);
+  color: var(--text);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.nacrt-zoom button + button { border-top: 1px solid var(--linka); }
+.nacrt-zoom button:hover:not(:disabled) { background: var(--zvyrazneni); }
+.nacrt-zoom button:disabled { color: var(--tlumeny); cursor: default; }
