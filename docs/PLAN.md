@@ -2037,6 +2037,43 @@ i historie, kterou režie potřebuje: *„na druhé bóji si to prohodily"* je
 otázka na postup v čase, ne na okamžitý stav. Jedno číslo navíc u bodu je
 proti souřadnicím zanedbatelné.
 
+**Loď, která nehlásí, se ukáže jako nedostupná a propadne nakonec** (Filip,
+24. 10. 2026: *„když na trackeru nebude, tak ji zobrazíme jako nedostupnou,
+to se zatím nedá nic dělat, a z pořadí vypadne nakonec. Jakmile se loď do
+trackeru přihlásí, tak jí zase na pozici zobrazíme"*). Je to lepší než ji
+vynechat: seznam, ze kterého loď tiše zmizí, tvrdí, že vede někdo jiný, a
+divák nepozná rozdíl mezi *„je třetí"* a *„nevíme, kde je"*.
+
+**Propadnout ale nesmí hned, jinak lže obráceně.** Loď, která vede a na
+minutu ztratí signál, by spadla na konec a za chvíli vyskočila zpět — to je
+horší než nic. Drží se proto **tři stavy podle stáří polohy**, ne dva:
+
+| Stav | Co se stane s pozicí |
+|---|---|
+| **čerstvá** | pořadí podle postupu |
+| **stárnoucí** | pozici si drží, ale je označená stářím (*„před 2 min"*) |
+| **nedostupná** | propadne nakonec |
+
+Je to tentýž údaj, jaký plán žádá u pořadatele (*„před 8 s", červeně „před
+6 minutami"*), jen použitý k řazení. Práh se vyladí na skutečných datech;
+na vodě signál padá běžně a sesouvat loď po každém výpadku by seznamem jen
+třáslo.
+
+**Návrat na pozici je zadarmo**, protože se ukládá postup, ne pořadí: nová
+poloha dá nový postup a loď se zařadí správně sama, i když mezitím ujela půl
+kola. **Jediné, co se z díry nezotaví, je počítadlo kol** — kolo se počítá
+z průjezdu poloměrem prvku a ten se během výpadku nestal. Loď se pak může
+vrátit zařazená o kolo níž. Odhadnout kolo ze skoku v postupu jde, ale je to
+dohad nad dohadem; čistější je nechat to opravit rozhodčímu, který stejně
+vidí, kolikáté kolo se jede.
+
+**Odstoupená loď je jiná věc než nedostupná.** Nedostupnost je stav
+trackeru — technika, dočasná, loď se vrátí. Odstoupení je závodní fakt ze
+zápisu rozhodčího a je trvalé. Vypadají podobně (obě jsou „mimo pořadí")
+a nesmějí se sloučit do jednoho řádku: *„nehlásí se"* je výzva shánět loď,
+*„odstoupila"* je uzavřená věc. Patří k tomu totéž, co plán rozhodl u tabule
+— **každý řádek nese svůj stav**, místo aby se zamlčel.
+
 **Pro režii potřebuje práh, jinak to bliká.** Při křižování se pořadí mezi
 dvojicí lodí mění klidně každou minutu; kdyby sestřih stříhal každou výměnu,
 nestříhá nic. Souboj je tedy prohození, které **vydrží** — řádově půl minuty
