@@ -2426,10 +2426,41 @@ závodní pole je pár desítek dlaždic cachovaných na den. **Drahá je na
 rozhodnutí** (souhlas organizátora i rozhodčího, režim na palubě) a na
 baterku, o které zatím **nemáme měření**.
 
-**Lámání trasy po rozjížďkách dělá server, ne telefon.** Dnešní `ZavodId`
-na `Trase` je správně — telefon nemá vědět, která rozjížďka běží. Znamená to
-ale, že „stopa rozjížďky" z oddílu *Trasa se láme startem rozjížďky* je
-**odvozený pohled**, který zatím nepočítá nikdo.
+**Lámání trasy po rozjížďkách dělá server, ne telefon** — telefon nemá
+vědět, která rozjížďka běží.
+
+**K závodu se ale trasa váže přes rozjížďku** (Filip, 24. 10. 2026). Oddíl
+tu do 24. 10. tvrdil, že *„dnešní `ZavodId` na `Trase` je správně"*;
+oponentura ukázala, že ten sloupec **nikdo nezapisuje** —
+`TrasySprava.ZalozAsync` plní klíč, loď, jméno lodi, jméno regaty, zdroj
+a začátek, `ZavodId` ne. Jméno regaty je přitom volný text, takže dnes
+trasa k závodu nevede vůbec.
+
+Co z Filipova rozhodnutí plyne pro tvar dat:
+
+| Vrstva | Co to je | Kdy vzniká |
+|---|---|---|
+| **`Trasa`** | záznam z jednoho telefonu, nahrávací jednotka | při prvním spojení, pozná se podle `LokalniId` |
+| **úsek rozjížďky** | kus trasy, který padá do okna jedné rozjížďky | při uzavření rozjížďky |
+| **závod** | odvozuje se z rozjížďky, nikde se neukládá podruhé | — |
+
+**Proč nerozřezat rovnou na víc Tras:** idempotentní nahrávání stojí na
+tom, že trasa má jedno `LokalniId` z telefonu a bod své pořadové číslo
+(*Nahrávání je hotové na obou stranách*). Rozdělení jedné nahrávky na čtyři
+záznamy by tu jedinečnost rozbilo a doposílání po výpadku by přestalo
+platit. Úsek je proto pohled na rozsah bodů, ne kopie dat.
+
+**Provozní vazbu na regatu ale potřebuje i samotná `Trasa`**, a hned při
+založení: pořadatelský přehled musí vědět, u které regaty záznam ukázat,
+a okno regaty rozhoduje, jestli se vůbec smí zapisovat. Vyplňuje se z klíče
+k lodi a z běžícího okna, ne z textu, který pošle telefon. Vazba na závod
+tím zůstává dvojí, ale každá na jinou otázku: **`Trasa` → regata** říká
+*čí to je a kdy to smělo vzniknout*, **úsek → rozjížďka → závod** říká
+*co z toho patří do závodu*.
+
+**Mazání se tím má o co opřít.** Dokud není úsek, není co nechat; ořez
+a mazání z oddílu *Tracker běží celý blok na vodě* jsou právě rozdíl mezi
+trasou a jejími úseky.
 ### Co z toho čeká na přihlášení
 
 Všechna tři pravidla výš (loď v regatě, telefon u posádky, okno regaty)
