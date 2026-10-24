@@ -256,7 +256,7 @@ export function NacrtMapy({
     };
 
     const vede = new Map<string, boolean>();
-    const ven: { cas: number; a: number; b: number; pozice: number }[] = [];
+    const ven: { cas: number; nahoru: number; dolu: number; pozice: number }[] = [];
     const cekani = new Map<string, { od: number; stav: boolean }>();
 
     for (const t of kroky) {
@@ -291,7 +291,9 @@ export function NacrtMapy({
               const pk = postupV(k, t);
               if (pk !== null && pk > lepsi) pred++;
             }
-            ven.push({ cas: t, a: i, b: j, pozice: pred + 1 });
+            // Kdo šel dopředu a kdo dozadu — hláška to má říct, ne nechat
+            // diváka hádat z pořadí jmen.
+            ven.push({ cas: t, nahoru: teď ? i : j, dolu: teď ? j : i, pozice: pred + 1 });
             vede.set(klic, teď);
             cekani.delete(klic);
           }
@@ -413,7 +415,10 @@ export function NacrtMapy({
           (p) => p.pozice <= SOUBOJ_DO_POZICE && t - p.cas >= 0 && t - p.cas < FOCUS_SOUBOJE_S,
         );
       if (souboj) {
-        plan.set(t, { lode: [lode[souboj.a].id, lode[souboj.b].id], duvod: "souboj" });
+        plan.set(t, {
+          lode: [lode[souboj.nahoru].id, lode[souboj.dolu].id],
+          duvod: "souboj",
+        });
         continue;
       }
 
@@ -445,7 +450,7 @@ export function NacrtMapy({
       const stari = cas - p.cas;
       if (stari < 0 || stari > HORENI_S) continue;
       const sila = 0.95 * (1 - stari / HORENI_S);
-      for (const i of [p.a, p.b]) {
+      for (const i of [p.nahoru, p.dolu]) {
         m.set(lode[i].id, Math.max(m.get(lode[i].id) ?? 0, sila));
       }
     }
@@ -636,16 +641,17 @@ export function NacrtMapy({
         {rezim === "tabule" && zabery && (
           <div className="nacrt-swap">
             {zabery.duvod === "souboj" && posledniSwap ? (
-              <>
-                <strong style={{ color: barva(lode[posledniSwap.a].id) }}>
-                  {lode[posledniSwap.a].nazev}
-                </strong>
-                {" a "}
-                <strong style={{ color: barva(lode[posledniSwap.b].id) }}>
-                  {lode[posledniSwap.b].nazev}
-                </strong>
-                {` si prohodily ${posledniSwap.pozice}. pozici`}
-              </>
+              <div className="nacrt-souboj" key={posledniSwap.cas}>
+                <div className="nacrt-souboj-pozice">{posledniSwap.pozice}. pozice</div>
+                <div className="nacrt-souboj-lod nacrt-nahoru">
+                  <span aria-hidden>▲</span>
+                  <strong>{lode[posledniSwap.nahoru].nazev}</strong>
+                </div>
+                <div className="nacrt-souboj-lod nacrt-dolu">
+                  <span aria-hidden>▼</span>
+                  <strong>{lode[posledniSwap.dolu].nazev}</strong>
+                </div>
+              </div>
             ) : (
               <>
                 {"na vodě: "}
