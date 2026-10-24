@@ -2671,6 +2671,35 @@ cross-origin dev prostředky a v konzoli je z toho jen chyba HMR
 websocketu. Přes `localhost` to jede. Stránka přitom vypadala správně,
 protože serverový render proběhl; nefungovalo jen to, co se děje potom.
 
+### Veřejný výdej poloh a tabule na skutečných datech (24. 10. 2026)
+
+Pátý kus a poslední, který plán z téhle rozpravy popisoval. `GET
+/serie/{rocnik}/zavody/{regata}/polohy` je veřejná cesta vedle
+pořadatelské a vydává **jen za jízdy**:
+
+| Podmínka | Proč |
+|---|---|
+| rozhodčí povolil *živý přenos ven* | výchozí hodnota je „ne" a zamyká ji rozprava |
+| **zrovna běží rozjížďka** | ořez zezadu se nedá udělat dopředu, takže se vydávání vypíná, ne dodatečně maže |
+| začíná o pět minut dřív | startovní procedura patří do okna; ořez na výstřel by zahodil to takticky nejcennější |
+
+**Loď bez polohy a poslední známá poloha mimo rozjížďku ven nejdou
+vůbec.** Divák nepotřebuje seznam nehlásících se lodí — to je otázka pro
+závodní výbor, a právě na ni se poslední známá poloha drží.
+
+**`vysila: false` neříká proč.** Jestli to rozhodčí nepustil, nebo jen
+neběží rozjížďka, je rozdíl, po kterém divákovi nic není; tabuli stačí, že
+se nevysílá.
+
+**Tabule se tím napojila.** Když polohy chodí, kreslí skutečné lodě nad
+**skutečnou tratí regaty** a proužek „ukázková data" zmizí. Když ne,
+vrací se ukázkové plavby po vlastní delší trati a proužek se vrátí taky.
+Skutečné lodě se nikdy nekreslí nad tratí ukázky: to by byl obrázek, který
+nic neznamená.
+
+**Stopy si skládá prohlížeč** — `lib/stopy.ts` je sdílený mezi tabulí
+a pořadatelskou mapou, takže obě kreslí dráhy ze stejných dat stejně.
+
 ### Co z toho čeká na přihlášení
 
 Všechna tři pravidla výš (loď v regatě, telefon u posádky, okno regaty)

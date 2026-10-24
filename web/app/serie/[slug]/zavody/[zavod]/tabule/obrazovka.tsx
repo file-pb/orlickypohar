@@ -11,6 +11,8 @@ import { PoradiTrid } from "./poradi-tridy";
 import { StavovyProuzek } from "./semafor";
 import { MapaTrackeru } from "@/app/mapa-trackeru";
 import { pole } from "@/app/nacrt/mapa/plavba";
+import type { VerejnePolohy } from "@/lib/polohy";
+import { useStopy } from "@/lib/stopy";
 
 /**
  * Ukázková rozjížďka — tatáž, jakou ukazuje náčrt.
@@ -68,6 +70,14 @@ export function Obrazovka({
   const [snimek, setSnimek] = useState(prvni);
   const [ted, setTed] = useState(() => Date.now());
   /**
+   * Živé polohy, když je regata pouští ven. <b>Dokud nechodí, jedou po
+   * trati ukázkové plavby</b> a tabule to u sebe píše — vydávat vymyšlené
+   * polohy za skutečné by byla lež, ne ukázka.
+   */
+  const [polohy, setPolohy] = useState<VerejnePolohy | null>(null);
+  /** Okamžik, od kterého mapa počítá čas. První došlá dávka ho určí. */
+  const [odkdy, setOdkdy] = useState<number | null>(null);
+  /**
    * Fronta alertů doprostřed obrazovky. <b>Fronta, ne jeden</b>: v cíli
    * dojede několik lodí během jednoho obnovení, a překrýt je navzájem by
    * znamenalo, že se dvě z nich na televizi vůbec neobjeví.
@@ -117,14 +127,43 @@ export function Obrazovka({
       }
     };
 
+    const adresaPoloh = `/serie/${encodeURIComponent(serie)}/zavody/${encodeURIComponent(zavod)}/tabule/polohy`;
+
+    // Polohy se tahají vedle snímku: mají vlastní cache na API a jiný
+    // důvod existence, takže výpadek jednoho nesmí shodit druhé.
+    const nactiPolohy = async () => {
+      try {
+        const odpoved = await fetch(adresaPoloh, { cache: "no-store" });
+        if (!odpoved.ok) return;
+        const nove = (await odpoved.json()) as VerejnePolohy;
+        if (!Array.isArray(nove?.lode)) return;
+        setPolohy(nove);
+        setOdkdy((o) => o ?? Date.parse(nove.ted));
+      } catch {
+        // Tabule drží, co má.
+      }
+    };
+
     const obnova = setInterval(nacti, OBNOVA_MS);
+    const obnovaPoloh = setInterval(() => void nactiPolohy(), OBNOVA_MS);
+    void nactiPolohy();
     // Vteřinový tik jen kvůli stáří; data se tahají dvacetkrát méně často.
     const tik = setInterval(() => setTed(Date.now()), 1000);
     return () => {
       clearInterval(obnova);
+      clearInterval(obnovaPoloh);
       clearInterval(tik);
     };
   }, [serie, zavod]);
+
+  const zivePolohy = useStopy(polohy?.vysila ? polohy.lode : null, odkdy);
+  /**
+   * Skutečné lodě se smějí kreslit jen nad skutečnou tratí. Ukázka má
+   * vlastní, delší trať — po krátké trati o třech prvcích nemá vymyšlené
+   * pole kde plout —, takže bez trati regaty se živé polohy neukazují.
+   */
+  const trat = snimek.znacky?.length >= 2 ? snimek.znacky : null;
+  const zive = trat ? zivePolohy : [];
 
   const stari = Math.max(0, Math.round((ted - Date.parse(snimek.kdy)) / 1000));
 
@@ -196,7 +235,7 @@ export function Obrazovka({
         {/* Stav rozjížďky se vlajkou patří do téhož pruhu jako všechno
             ostatní (Filip, 24. 10. 2026) — dva pásy nad sebou braly dvakrát
             tolik místa než jeden. */}
-        <StavovyProuzek snimek={snimek} ted={ted} ukazkovePolohy />
+        <StavovyProuzek snimek={snimek} ted={ted} ukazkovePolohy={zive.length === 0} />
         <div className="stav">
           <p className={`stitek stav-${snimek.stav.toLowerCase()}`}>{STAVY[snimek.stav]}</p>
           <p className={stari > 120 ? "stari zastarale" : "stari"}>
@@ -246,9 +285,10 @@ export function Obrazovka({
           tenhle vstup zmizí. */}
       <div className="tabule-mapa" aria-hidden="true">
         <MapaTrackeru
-          znacky={UKAZKA.znacky}
-          lode={UKAZKA.lode}
+          znacky={zive.length > 0 && trat ? trat : UKAZKA.znacky}
+          lode={zive.length > 0 ? zive : UKAZKA.lode}
           tabule
+          zive={zive.length > 0}
           odsazeni={odsazeni}
           onUdalost={zarad}
           onPoradi={setPoradiLodi}

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OrlickyPohar.Api.Data;
 using OrlickyPohar.Api.Features.Identita;
@@ -94,6 +95,22 @@ public class PolohyTests(PostgresFixture fixture)
         }
 
         return new Regata(zavod.Id, kdo.Id, vysledek);
+    }
+
+    /// <summary>Rozjížďka, která právě běží. Veřejný výdej na ní stojí.</summary>
+    private static async Task<Rozjizdka> RozjizdkaBeziAsync(
+        AppDbContext db, int zavodId, DateTimeOffset start)
+    {
+        var r = new Rozjizdka
+        {
+            ZavodId = zavodId,
+            Cislo = await db.Rozjizdky.CountAsync(x => x.ZavodId == zavodId) + 1,
+            StartV = start,
+            Stav = StavRozjizdky.Probiha,
+        };
+        db.Rozjizdky.Add(r);
+        await db.SaveChangesAsync();
+        return r;
     }
 
     /// <summary>Trasa s jedním bodem v daném čase — tolik stačí na „poslední poloha".</summary>
@@ -214,6 +231,92 @@ public class PolohyTests(PostgresFixture fixture)
 
         Assert.Equal(StavPolohy.Nedostupna, snimek.Lode[0].Stav);
         Assert.Null(snimek.Lode[0].CasGps);
+    }
+
+    [Fact]
+    public async Task Ven_se_nevysila_dokud_to_rozhodci_nepovoli()
+    {
+        var (db, polohy, okna, cas) = Sluzby();
+        var regata = await RegataAsync(db, 1);
+        await okna.OtevriAsync(regata.ZavodId, regata.Kdo, null, default);
+        cas.Ted = Rozprava.AddMinutes(10);
+        await BodAsync(db, cas, okna, regata.Lode[0].Klic, cas.Ted);
+        await RozjizdkaBeziAsync(db, regata.ZavodId, Rozprava.AddMinutes(5));
+        PolohySprava.Zapomen(regata.ZavodId);
+
+        var ven = await polohy.VerejnyAsync(regata.ZavodId, default);
+
+        // Výchozí hodnota je bezpečná: ven nejde nic, i když se jede.
+        Assert.False(ven.Vysila);
+        Assert.Empty(ven.Lode);
+    }
+
+    [Fact]
+    public async Task Ven_se_vysila_jen_kdyz_bezi_rozjizdka()
+    {
+        var (db, polohy, okna, cas) = Sluzby();
+        var regata = await RegataAsync(db, 1);
+        var nastaveni = new NastaveniSprava(db, cas);
+        await nastaveni.UlozAsync(
+            regata.ZavodId,
+            new NastaveniVstup(CoVidiPosadky.JenSebe, true, false, null),
+            regata.Kdo, default);
+        await okna.OtevriAsync(regata.ZavodId, regata.Kdo, null, default);
+
+        cas.Ted = Rozprava.AddMinutes(10);
+        await BodAsync(db, cas, okna, regata.Lode[0].Klic, cas.Ted);
+        PolohySprava.Zapomen(regata.ZavodId);
+
+        // Přenos je povolený, ale žádná rozjížďka neběží — ven se nevysílá.
+        // Tracker přitom hlásí dál, pořadatelský přehled na tom stojí.
+        var mimo = await polohy.VerejnyAsync(regata.ZavodId, default);
+        Assert.False(mimo.Vysila);
+
+        var rozjizdka = await RozjizdkaBeziAsync(db, regata.ZavodId, Rozprava.AddMinutes(8));
+        PolohySprava.Zapomen(regata.ZavodId);
+        var zajizdy = await polohy.VerejnyAsync(regata.ZavodId, default);
+
+        Assert.True(zajizdy.Vysila);
+        var lod = Assert.Single(zajizdy.Lode);
+        Assert.NotNull(lod.Sirka);
+
+        // Po dojezdu se vydávání zastaví. Ořez zezadu se nedá udělat
+        // dopředu, takže se vypíná, ne dodatečně maže.
+        rozjizdka.Stav = StavRozjizdky.Dokoncena;
+        await db.SaveChangesAsync();
+        PolohySprava.Zapomen(regata.ZavodId);
+
+        Assert.False((await polohy.VerejnyAsync(regata.ZavodId, default)).Vysila);
+    }
+
+    [Fact]
+    public async Task Ven_jdou_jen_polohy_z_rozjizdky_vcetne_procedury()
+    {
+        var (db, polohy, okna, cas) = Sluzby();
+        var regata = await RegataAsync(db, 2);
+        var nastaveni = new NastaveniSprava(db, cas);
+        await nastaveni.UlozAsync(
+            regata.ZavodId,
+            new NastaveniVstup(CoVidiPosadky.JenSebe, true, false, null),
+            regata.Kdo, default);
+        await okna.OtevriAsync(regata.ZavodId, regata.Kdo, null, default);
+
+        // První loď hlásila hodinu před startem — to je čekání na vodě
+        // a ven nepatří. Druhá při proceduře, čtyři minuty před výstřelem.
+        cas.Ted = Rozprava.AddMinutes(5);
+        await BodAsync(db, cas, okna, regata.Lode[0].Klic, cas.Ted);
+        cas.Ted = Rozprava.AddMinutes(61);
+        await BodAsync(db, cas, okna, regata.Lode[1].Klic, cas.Ted, 49.52);
+
+        await RozjizdkaBeziAsync(db, regata.ZavodId, Rozprava.AddMinutes(65));
+        cas.Ted = Rozprava.AddMinutes(66);
+        PolohySprava.Zapomen(regata.ZavodId);
+
+        var ven = await polohy.VerejnyAsync(regata.ZavodId, default);
+
+        Assert.True(ven.Vysila);
+        var lod = Assert.Single(ven.Lode);
+        Assert.Equal(regata.Lode[1].LodId, lod.LodId);
     }
 
     [Fact]

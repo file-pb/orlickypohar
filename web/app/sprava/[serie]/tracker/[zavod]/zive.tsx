@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { MapaTrackeru } from "@/app/mapa-trackeru";
-import type { Bod, Lod, Znacka } from "@/app/nacrt/mapa/plavba";
+import type { Znacka } from "@/app/nacrt/mapa/plavba";
 import type { Poloha } from "@/lib/voda";
 import type { PolohaLodi, SnimekPoloh } from "@/lib/polohy";
+import { useStopy } from "@/lib/stopy";
 
 /**
  * Jak často si obrazovka říká o nový snímek.
@@ -15,23 +16,6 @@ import type { PolohaLodi, SnimekPoloh } from "@/lib/polohy";
  * víc dotazů do databáze to neudělá.
  */
 const OBNOVA_MS = 5_000;
-
-/**
- * Jak dlouhou stopu si obrazovka pamatuje.
- *
- * Snímek nese jen poslední polohu; dráha vzniká tím, že se snímky skládají
- * za sebou. Je to levné (nic navíc se nepřenáší) a odpovídá tomu, nač se
- * rozhodčí dívá — co se dělo za poslední hodinu, ne celý den. Po obnovení
- * stránky stopa začíná znovu; celá trasa je v záznamu.
- */
-const STOPA_BODU = 240;
-
-/** Kategorie, které mapa zná. Ročník je má přesně takhle pojmenované. */
-const TRIDY: Lod["kategorie"][] = ["Race", "Nad7m", "Pod7m"];
-
-function trida(nazev: string | null): Lod["kategorie"] {
-  return TRIDY.find((t) => t === nazev) ?? "Race";
-}
 
 /** Lidsky „před 8 s" / „před 4 min". */
 function predJakDlouho(ms: number | null): string {
@@ -80,8 +64,7 @@ export function ZiveLode({
   const [od, setOd] = useState<number | null>(
     prvni ? Date.parse(prvni.oknoOd ?? prvni.ted) : null,
   );
-  /** Stopy podle lodi, jak se poskládaly z došlých snímků. */
-  const [stopy, setStopy] = useState<Map<number, Bod[]>>(new Map());
+  const lode = useStopy(snimek?.lode ?? null, od);
 
   useEffect(() => {
     let zivy = true;
@@ -109,44 +92,6 @@ export function ZiveLode({
       clearInterval(tik);
     };
   }, [serie, zavod]);
-
-  // Nový snímek přidá bod do stopy každé lodi, která se pohnula.
-  useEffect(() => {
-    if (!snimek || od === null) return;
-    setStopy((puvodni) => {
-      const nove = new Map(puvodni);
-      let zmena = false;
-      for (const l of snimek.lode) {
-        if (l.sirka === null || l.delka === null || l.casGps === null) continue;
-        // Mapa počítá čas v sekundách od začátku okna, proto ten odpočet.
-        const cas = Math.round((Date.parse(l.casGps) - od) / 1000);
-        const stopa = nove.get(l.lodId) ?? [];
-        if (stopa.at(-1)?.cas === cas) continue;
-        const dalsi = [...stopa, { sirka: l.sirka, delka: l.delka, cas }];
-        nove.set(l.lodId, dalsi.slice(-STOPA_BODU));
-        zmena = true;
-      }
-      return zmena ? nove : puvodni;
-    });
-  }, [snimek, od]);
-
-  const lode: Lod[] = useMemo(() => {
-    if (!snimek) return [];
-    return snimek.lode
-      .map((l) => {
-        const body = stopy.get(l.lodId) ?? [];
-        return {
-          id: l.lodId,
-          nazev: l.lod,
-          kategorie: trida(l.kategorie),
-          body,
-          dosloDo: body.length,
-        };
-      })
-      // Loď bez jediné polohy do mapy nepatří — kreslila by se na nule
-      // stupňů. V seznamu pod mapou zůstává, tam o ni právě jde.
-      .filter((l) => l.body.length > 0);
-  }, [snimek, stopy]);
 
   const ted = snimek ? Date.parse(snimek.ted) : Date.now();
 
