@@ -1939,6 +1939,35 @@ novou obrazovku, přidat to tam, kam se stejně dívá.
 vybírá podle toho, co chce vidět. Rozhodčí si nevybírá — on **potřebuje
 obojí naráz**, bóje i lodě mezi nimi, protože se dívá na vztah mezi nimi.
 
+#### Mapa v appce je jiná disciplína (Filip, 24. 10. 2026)
+
+*„Na appce bude také potřeba nějaké kvalitní zobrazení, mají-li to vidět."*
+Platí, ale nejde o tutéž práci ještě jednou — v appce se mapa potká s třemi
+věcmi, které web nemá:
+
+**Na vodě není signál, takže dlaždice se musí předstáhnout.** Web si je tahá
+průběžně přes `/dlazdice`; v appce by stejná mapa byla uprostřed přehrady
+prázdná plocha. Závodní pole je ale pár desítek dlaždic (zoom 10–17, pár
+kilometrů čtverečních), takže se stáhnou dopředu — spolu s plánem regaty,
+který si telefon stahuje tak jako tak.
+
+**Mapa stojí víc baterky než celý tracking, a to je měřené.** Záznam se
+zhasnutým displejem baterkou za 12 minut nehnul; *„při běžném používání"*
+to bylo 12,6 % za hodinu, a v tom čísle je hlavně displej. Posádka, která
+bude půl dne koukat na mapu, si vybije telefon, který měl nahrávat. Mapa
+proto musí mít **úsporné chování** — tmavé pozadí, žádná animace, zhasínat
+a nedržet obrazovku rozsvícenou.
+
+**Kreslí se jinak než na webu.** Rozhodnutí *ostatní šedě a tence* je pro
+notebook na břehu; na telefonu na houpající se lodi a v ostrém slunci je
+tenká šedá čára neviditelná. V appce tedy silnější čáry, vyšší kontrast
+a větší terče k ťuknutí — tentýž zákon (vybraná loď vede), jiné hodnoty.
+
+**Co se sdílí, je matematika, ne komponenta.** `web/lib/mapa.ts` je čistý
+modul bez Reactu a DOM právě proto; jeho vlastní dokumentace říká, že až
+bude appka ukazovat trať, musí počítat totéž. Kreslení je v React Native
+vlastní, projekce a dlaždice společné.
+
 **Živě a záznam jsou dva sloupce u každé role, ne dvě fáze projektu**
 (Filip, 24. 10. 2026):
 
