@@ -2765,6 +2765,14 @@ proužek nahoře je od něj přes celou obrazovku daleko. Štítek *ukázka*
 proto stojí přímo u nadpisu pořadí a u každého pásu — a zmizí, jakmile
 začnou chodit skutečné polohy.
 
+**Zapomenutá rozjížďka se pozná podle okna, ne podle kulatého čísla**
+(Filip, 24. 10. 2026: *„u 24h je to více než okno dne"*). Stopky na tabuli
+běžely donekonečna u rozjížďky, kterou nikdo neuzavřel — na mocku *„od
+startu 3020:59:39"*. Mez, od které tabule říká *rozjížďka neuzavřená*, je
+proto **nejdelší možné okno regaty** (36 h, `OknoRegaty.NejvicHodin`):
+dvacetičtyřhodinovka startuje večer a jede přes noc, takže by ji
+čtyřiadvacet hodin označily za zapomenutou zrovna v půlce závodu.
+
 **A tracker dostal šířku.** Obsahový sloupec je míra pro čtení textu;
 mapa, ve které rozhodčí hledá lodě, je ta výjimka — kolem ní zbývalo na
 ultrawide přes dva tisíce pixelů prázdna. Strop na 16 : 9 brání tomu, aby

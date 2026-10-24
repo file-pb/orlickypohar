@@ -112,8 +112,15 @@ export function Semafor({ snimek, ted }: { snimek: Snimek; ted: number }) {
  * Na mocku z toho bylo „od startu 3020:59:39", tedy sto dvacet pět dní
  * (24. 10. 2026). Divák z takového čísla nic nemá a pořadateli má říct
  * něco jiného: že se zapomnělo zastavit čas.
+ *
+ * <b>Mez je nejdelší možné okno regaty, ne kulatých čtyřiadvacet hodin</b>
+ * (Filip, 24. 10. 2026: *„u 24h je to více než okno dne"*). Dvacetičtyř-
+ * hodinovka startuje večer a jede přes noc, takže by ji dvacet čtyři
+ * hodin označily za zapomenutou zrovna v půlce závodu. Tracker se řídí
+ * oknem a to má tvrdý konec nejvýš šestatřicet hodin
+ * (`OknoRegaty.NejvicHodin`); co běží déle, neběží doopravdy.
  */
-const DLOUHO_S = 24 * 3600;
+const DLOUHO_S = 36 * 3600;
 
 function hodiny(sekund: number) {
   const h = Math.floor(sekund / 3600);
