@@ -74,6 +74,13 @@ const FOCUS_SOUBOJE_S = 90;
  * zkoušce na náčrtu nebyla vidět vůbec.
  */
 const ANIMACE_PROHOZENI_S = 20;
+/** Jak dlouho trvá jedno přehození dvou sousedů v žebříčku. */
+const KROK_PREHOZENI_MS = 450;
+/** Jak dlouho u řádku svítí šipka, než zhasne a odhalí číslo. */
+const SIPKA_MS = 2000;
+/** Hláška o souboji svítí dlouho, když za ní nic nejede, a krátce, když ano. */
+const HLASKA_DLOUHO_MS = 8000;
+const HLASKA_KRATCE_MS = 2000;
 /** Jak dlouho se na tabuli drží jedna loď, když se nic neděje. */
 const KOLOTOC_S = 60;
 
@@ -497,6 +504,73 @@ export function NacrtMapy({
     ol.scrollTo({ top: stred - r.height / 2, behavior: "smooth" });
   }, [posledniSwap, cas]);
 
+  /**
+   * Pořadí, jak se zrovna ukazuje. <b>Není to rovnou to spočítané</b>
+   * (Filip, 24. 10. 2026: *„pokud padá o více lodí, tak to jeď dál, zase
+   * dvě vedle sebe, dokud není pořadí správné"*) — loď, která klesá
+   * o několik míst, to odehraje jako řadu výměn se sousedem, aby šlo
+   * očima sledovat, co se stalo. Skokové přeskládání by vypadalo jako
+   * porucha.
+   */
+  const cilove = poradi.map((v) => v.lod.id);
+  const [zobrazene, setZobrazene] = useState<number[]>(cilove);
+  const [prehazuje, setPrehazuje] = useState<{ nahoru: number; dolu: number } | null>(null);
+
+  useEffect(() => {
+    // Nová loď v poli nebo první vykreslení: srovnat bez animace.
+    if (zobrazene.length !== cilove.length || cilove.some((id) => !zobrazene.includes(id))) {
+      setZobrazene(cilove);
+      setPrehazuje(null);
+      return;
+    }
+    const kam = new Map(cilove.map((id, i) => [id, i]));
+    const i = zobrazene.findIndex((id, j) => j + 1 < zobrazene.length && kam.get(id)! > kam.get(zobrazene[j + 1])!);
+    if (i === -1) {
+      if (prehazuje) setPrehazuje(null);
+      return;
+    }
+    const casovac = setTimeout(() => {
+      setZobrazene((p) => {
+        const dal = [...p];
+        [dal[i], dal[i + 1]] = [dal[i + 1], dal[i]];
+        return dal;
+      });
+    }, KROK_PREHOZENI_MS);
+    // Ten, co stoupá, je ten pod ním; ten, co klesá, je ten nad ním.
+    setPrehazuje({ nahoru: zobrazene[i + 1], dolu: zobrazene[i] });
+    return () => clearTimeout(casovac);
+  }, [cilove.join(","), zobrazene.join(",")]);
+
+  const poradiKZobrazeni = zobrazene
+    .map((id) => poradi.find((v) => v.lod.id === id))
+    .filter((v): v is (typeof poradi)[number] => Boolean(v));
+
+  /**
+   * Jak dlouho svítí hláška o souboji (Filip, 24. 10. 2026): *„ponechej to
+   * zobrazené 2 sekundy, pokud za tím jede další swap, jinak to nechej
+   * svítit třeba 8 sekund."* Když se souboje řetězí, nemá cenu držet
+   * starý — a když je klid, ať si ho divák stihne přečíst.
+   */
+  const [hlaskaVidet, setHlaskaVidet] = useState(false);
+  useEffect(() => {
+    if (!posledniSwap) {
+      setHlaskaVidet(false);
+      return;
+    }
+    const jedeDalsi = prohozeni.some(
+      (p) =>
+        p.pozice <= SOUBOJ_DO_POZICE &&
+        p.cas > posledniSwap.cas &&
+        p.cas - posledniSwap.cas <= FOCUS_SOUBOJE_S,
+    );
+    setHlaskaVidet(true);
+    const casovac = setTimeout(
+      () => setHlaskaVidet(false),
+      jedeDalsi ? HLASKA_KRATCE_MS : HLASKA_DLOUHO_MS,
+    );
+    return () => clearTimeout(casovac);
+  }, [posledniSwap?.cas, prohozeni]);
+
   const vybranaLod = vStavu.find((v) => v.lod.id === vybrana) ?? null;
 
   return (
@@ -690,9 +764,9 @@ export function NacrtMapy({
             </button>
           </div>
 
-        {rezim === "tabule" && zabery && (
+        {rezim === "tabule" && zabery && (zabery.duvod !== "souboj" || hlaskaVidet) && (
           <div className="nacrt-swap">
-            {zabery.duvod === "souboj" && posledniSwap ? (
+            {zabery.duvod === "souboj" && posledniSwap && hlaskaVidet ? (
               <div className="nacrt-souboj" key={posledniSwap.cas}>
                 <div className="nacrt-souboj-pozice">{posledniSwap.pozice}. pozice</div>
                 <div className="nacrt-souboj-lod nacrt-nahoru">
@@ -811,17 +885,15 @@ export function NacrtMapy({
           </button>
         )}
         <ol ref={seznam}>
-          {poradi.map((v, i) => {
-            // Lodě, které se právě prohodily, se v žebříčku obkrouží kolem
-            // sebe (Filip, 24. 10. 2026). Klíč nese čas prohození, takže
-            // React řádek vymění a animace se spustí i u dalšího souboje.
-            const cerstve = posledniSwap && cas - posledniSwap.cas <= ANIMACE_PROHOZENI_S;
-            const jdeNahoru = cerstve && lode[posledniSwap!.nahoru].id === v.lod.id;
-            const jdeDolu = cerstve && lode[posledniSwap!.dolu].id === v.lod.id;
+          {poradiKZobrazeni.map((v, i) => {
+            // Animuje se vždycky jen dvojice, která se právě vyměňuje —
+            // ne celý souboj po dobu focusu (Filip, 24. 10. 2026).
+            const jdeNahoru = prehazuje?.nahoru === v.lod.id;
+            const jdeDolu = prehazuje?.dolu === v.lod.id;
             const vSouboji = jdeNahoru || jdeDolu;
             return (
             <li
-              key={vSouboji ? `${v.lod.id}-${posledniSwap!.cas}` : v.lod.id}
+              key={v.lod.id}
               className={
                 jdeNahoru ? "nacrt-radek-nahoru" : jdeDolu ? "nacrt-radek-dolu" : undefined
               }

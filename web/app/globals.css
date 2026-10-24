@@ -3748,28 +3748,26 @@ body:has(.tabule) { overflow: hidden; }
 .nacrt-zoom button:hover:not(:disabled) { background: var(--zvyrazneni); }
 .nacrt-zoom button:disabled { color: var(--tlumeny); cursor: default; }
 
-/* Prohození v žebříčku: dvojice se kolem sebe obkrouží — ta postupující
-   obloukem vpravo nahoru, ta druhá vlevo dolů. Je to tentýž údaj jako
-   hláška na mapě, jen v místě, kde se pořadí čte. */
-.nacrt-radek-nahoru { animation: nacrt-obkrouzi-nahoru 1.1s ease-in-out; }
-.nacrt-radek-dolu { animation: nacrt-obkrouzi-dolu 1.1s ease-in-out; }
+/* Výměna dvou sousedů v žebříčku: ta postupující vyjede rovně vzhůru,
+   ta druhá uhne stranou, zajede za ni a klesne — a na tu chvíli
+   ztransparentní, dokud nedosedne na své místo (Filip, 24. 10. 2026).
+   Jména přitom jedou rovně, aby se dala číst. */
+.nacrt-radek-nahoru { animation: nacrt-vzhuru 0.45s ease-in-out; }
+.nacrt-radek-dolu { animation: nacrt-dolu-za 0.45s ease-in-out; }
 
 .nacrt-radek-nahoru .nacrt-cislo { color: var(--stav-vypsany); }
 .nacrt-radek-dolu .nacrt-cislo { color: var(--stav-zruseny); }
 
-/* Ta, co jde dopředu, vyjede rovnou vzhůru; ta druhá uhne stranou,
-   zajede za ni a klesne (Filip, 24. 10. 2026). Je to předjetí, ne tanec:
-   jeden drží stopu, druhý uvolňuje místo. */
-@keyframes nacrt-obkrouzi-nahoru {
+@keyframes nacrt-vzhuru {
   0% { transform: none; }
-  45% { transform: translateY(-15px); }
+  50% { transform: translateY(-16px); }
   100% { transform: none; }
 }
 
-@keyframes nacrt-obkrouzi-dolu {
+@keyframes nacrt-dolu-za {
   0% { transform: none; opacity: 1; }
-  25% { transform: translateX(12px) scale(0.97); opacity: 0.75; }
-  60% { transform: translate(12px, 15px) scale(0.97); opacity: 0.75; }
+  25% { transform: translateX(14px); opacity: 0.55; }
+  60% { transform: translate(14px, 16px); opacity: 0.55; }
   100% { transform: none; opacity: 1; }
 }
 
@@ -3783,11 +3781,11 @@ body:has(.tabule) { overflow: hidden; }
 .nacrt-cislo > * { grid-area: 1 / 1; }
 
 .nacrt-sipka-radku {
-  animation: nacrt-zhasni 4s ease-out forwards;
+  animation: nacrt-zhasni 2s ease-out forwards;
 }
 
 .nacrt-cislo-pod {
-  animation: nacrt-rozsvit 4s ease-out forwards;
+  animation: nacrt-rozsvit 2s ease-out forwards;
 }
 
 @keyframes nacrt-zhasni {

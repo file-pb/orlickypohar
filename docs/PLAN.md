@@ -2240,11 +2240,25 @@ zelená šipka nahoru u lodi, která jde dopředu, červená dolů u té druhé,
 a celé to přijede, ať si toho divák všimne. Bez šipek je to jen dvojice
 jmen a musí se domýšlet, kdo koho.
 
-**Totéž se odehraje i v žebříčku** (Filip, 24. 10. 2026: *„ta animace swap
-prosím i v ranku, a jako že okolo sebe obkrouží"*): dvojice se v seznamu
-obkrouží kolem sebe — postupující obloukem vpravo nahoru, druhá vlevo dolů
-— a čísla jim na tu chvíli nahradí šipky. Pořadí se čte v seznamu, takže
-tam ta událost patří stejně jako na mapu.
+**Totéž se odehraje i v žebříčku** (Filip, 24. 10. 2026) — pořadí se čte
+v seznamu, takže tam ta událost patří stejně jako na mapu. Upřesněno týž
+večer do téhle podoby:
+
+- **vždycky jen dvě lodě vedle sebe.** Loď, která klesá o několik míst, to
+  odehraje jako **řadu výměn se sousedem**, dokud nedosedne — skokové
+  přeskládání seznamu vypadá jako porucha, kdežto tohle jde sledovat očima;
+- **postupující vyjede rovně vzhůru** a drží stopu, **ustupující uhne
+  stranou, zajede za ni a klesne**; na tu chvíli ztransparentní a po
+  dosednutí se zase rozsvítí;
+- **jména jedou rovně**, ať se dají číst;
+- **šipka svítí dvě vteřiny** a zhasne, zatímco se pod ní rozsvítí
+  pořadové číslo — obojí v téže buňce mřížky, takže řádek nepodskočí;
+- **seznam odroluje doprostřed mezi dvojici.** Bez toho se předjetí
+  odehraje mimo výřez: žebříček má čtyřiadvacet řádků a vidět je jich devět.
+
+**Hláška na mapě svítí osm vteřin, nebo dvě, když za ní jede další souboj.**
+Když se prohození řetězí, nemá cenu držet staré; když je klid, ať si to
+divák stihne přečíst.
 
 **Bez výběru se nekreslí žádná dráha** (Filip, 24. 10. 2026: *„když nebudu
 mít nic zaškrtnuto, tak nezobrazuj dráhy všech"*). Mapa začíná tečkami;
