@@ -81,7 +81,7 @@ const ANIMACE_PROHOZENI_S = 20;
  * místy za dvě vteřiny a nešlo rozeznat, koho vlastně předjela. Smyslem
  * kaskády je, aby se to dalo sledovat očima, ne aby se seznam srovnal.
  */
-const KROK_PREHOZENI_MS = 1100;
+const KROK_PREHOZENI_MS = 1500;
 /** Jak dlouho u řádku svítí šipka, než zhasne a odhalí číslo. */
 const SIPKA_MS = 2000;
 /** Hláška o souboji svítí dlouho, když za ní nic nejede, a krátce, když ano. */
@@ -521,6 +521,13 @@ export function NacrtMapy({
   const cilove = poradi.map((v) => v.lod.id);
   const [zobrazene, setZobrazene] = useState<number[]>(cilove);
   const [prehazuje, setPrehazuje] = useState<{ nahoru: number; dolu: number } | null>(null);
+  /**
+   * Kolikátá výměna to je. <b>Nese ho `key` šipky</b>, takže se zhasínací
+   * animace spustí znovu u každého kroku kaskády — bez toho šipka u lodi,
+   * která stoupá přes pět míst, zhasla po dvou vteřinách a zbytek cesty
+   * urazila potmě.
+   */
+  const [krok, setKrok] = useState(0);
 
   useEffect(() => {
     // Nová loď v poli nebo první vykreslení: srovnat bez animace.
@@ -541,6 +548,7 @@ export function NacrtMapy({
         [dal[i], dal[i + 1]] = [dal[i + 1], dal[i]];
         return dal;
       });
+      setKrok((k) => k + 1);
     }, KROK_PREHOZENI_MS);
     // Ten, co stoupá, je ten pod ním; ten, co klesá, je ten nad ním.
     setPrehazuje({ nahoru: zobrazene[i + 1], dolu: zobrazene[i] });
@@ -582,7 +590,7 @@ export function NacrtMapy({
               { transform: "none", opacity: 1 },
             ]
           : [{ transform: `translateY(${delta}px)` }, { transform: "none" }],
-        { duration: 950, easing: "cubic-bezier(.4, 0, .2, 1)" },
+        { duration: 1300, easing: "cubic-bezier(.4, 0, .2, 1)" },
       );
     });
     pozice.current = nove;
@@ -972,11 +980,14 @@ export function NacrtMapy({
                     buňce mřížky, takže se nic neposouvá.
                   */}
                   {vSouboji && (
-                    <span className={`nacrt-sipka-radku ${jdeNahoru ? "nacrt-nahoru" : "nacrt-dolu"}`}>
+                    <span
+                      key={krok}
+                      className={`nacrt-sipka-radku ${jdeNahoru ? "nacrt-nahoru" : "nacrt-dolu"}`}
+                    >
                       {jdeNahoru ? "▲" : "▼"}
                     </span>
                   )}
-                  <span className={vSouboji ? "nacrt-cislo-pod" : undefined}>
+                  <span key={vSouboji ? krok : "cislo"} className={vSouboji ? "nacrt-cislo-pod" : undefined}>
                     {v.stav === "nedostupna" ? "—" : i + 1}
                   </span>
                 </span>
