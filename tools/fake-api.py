@@ -713,6 +713,27 @@ def smi_vystavit(lod_id, uzivatel_id):
     return bool(v and v["role"] in ("Majitel", "Kapitan"))
 
 
+def smi_vydat_klic(lod_id, uzivatel_id):
+    """
+    Kdo smí vydat mobilní klíč — majitel, kapitán, <b>i posádka s účtem</b>
+    (`KliceSprava.SmiVydavatAsync`, rozhodnutí Filipa z 23. 10. 2026).
+    Vlastní funkce schválně: u kódů připojení je okruh užší, a tady je to
+    širší rozhodnutí o tom, koho k lodi pustit.
+    """
+    v = vazba_uzivatele(lod_id, uzivatel_id)
+    return bool(v and v["role"] in ("Majitel", "Kapitan", "Posadka"))
+
+
+def smi_spravovat_klic(lod_id, uzivatel_id):
+    """
+    Kdo smí cizím klíčem hýbat — <b>jen majitel a kapitán</b>
+    (`KliceSprava.SmiSpravovatAsync`): odebrat klíč je zásah do cizího
+    telefonu a za posádku odpovídá kapitán.
+    """
+    v = vazba_uzivatele(lod_id, uzivatel_id)
+    return bool(v and v["role"] in ("Majitel", "Kapitan"))
+
+
 def lod_podle_id(lod_id):
     klic = next((k for k, v in PRIHLASKA_ID.items() if v == lod_id), None)
     return (klic, LODE[klic]) if klic else (None, None)
@@ -915,7 +936,26 @@ def klic_z_hlavicky(self):
     """Klíč z hlavičky `X-Klic-Lodi`, nebo None u chybějícího i odepnutého."""
     tajemstvi = (self.headers.get("x-klic-lodi") or "").strip()
     k = KLICE.get(tajemstvi)
-    return tajemstvi if k and k.get("sleduje", True) and not k.get("odebran") else None
+    if not (k and k.get("sleduje", True) and not k.get("odebran")):
+        return None
+    # Kdy se klíč naposledy ozval, je to jediné, co o telefonu kapitán
+    # uvidí (`KliceSprava.OverAsync` to zapisuje taky). Bez toho by výpis
+    # klíčů tvrdil „nepoužitý" o telefonu, který zrovna posílá.
+    k["posledniPouzitiV"] = ted_iso()
+    return tajemstvi
+
+
+def klic_dto(k):
+    """Klíč, jak ho vidí kapitán ve výpisu. Bez tajemství — to má jen telefon."""
+    return {"id": k["id"], "jmeno": k.get("jmeno"), "vydanV": k["vydanV"],
+            "posledniPouzitiV": k.get("posledniPouzitiV"),
+            "sleduje": bool(k.get("sleduje", True)),
+            "odebran": bool(k.get("odebran"))}
+
+
+def klic_podle_id(lod_id, klic_id):
+    return next((k for k in KLICE.values()
+                 if k["id"] == klic_id and k["lodId"] == lod_id), None)
 
 
 def trasa_dto(t):
@@ -2255,8 +2295,14 @@ def role_pro_cestu(metoda, cesta):
 
     if (m := re.match(r'^/vysledky(?:/([a-z0-9-]+))?', zbytek)):
         zavod = m.group(1)
+        # <b>Čtení je otázka na celý ročník</b>, ne na zastávku:
+        # `VysledkyEndpoints.PohledAsync` se ptá jen na `SerieId` a pouští
+        # rozhodčího i **pořadatele jediné zastávky** — na cizí zastávku ho
+        # pak omezují příznaky v řádcích, ne odmítnutí. Mock tu dřív chtěl
+        # roli k té zastávce, takže byl přísnější než API a schovával, co
+        # pořadatel na cizí regatě doopravdy vidí.
         if metoda == "GET":
-            return (NAHLED, zavod)
+            return (NAHLED, None)
         if zbytek.endswith("/publikace"):
             return ("Spravce", None)
         if zbytek.endswith("/stav") or zbytek.endswith("/pohar"):
@@ -2266,6 +2312,15 @@ def role_pro_cestu(metoda, cesta):
     if (m := re.match(r'^/zastavky(?:/([a-z0-9-]+))?', zbytek)):
         zavod = m.group(1)
         if "/smernice" in zbytek:
+            return (NAHLED, zavod)
+        # <b>Živé polohy, okna závodního dne a nastavení trackingu</b>:
+        # organizátor **té** regaty, nebo rozhodčí ročníku
+        # (`PolohyEndpoints.SmiAsync`, `OknaEndpoints.SmiAsync`,
+        # `NastaveniEndpoints.SmiCistAsync`). Dřív to propadlo do kalendářní
+        # větve, tedy na otázku na celý ročník — a pořadatel jedné zastávky
+        # tak z mocku dostal polohy cizí regaty, kterou mu API nevydá
+        # (změřeno 24. 10. 2026: `milos` na `jarni-vitr` → 200, 11 lodí).
+        if "/polohy" in zbytek or "/okna" in zbytek or "/tracker" in zbytek:
             return (NAHLED, zavod)
         if "/trat" in zbytek:
             # Přijmout a vrátit smí jen rozhodčí — přijetí je to, co trať
@@ -2465,11 +2520,72 @@ class H(BaseHTTPRequestHandler):
             t["konec"] = konec
         return self.odpoved(trasa_dto(t))
 
+    def klice_lodi(self, lod_id):
+        """
+        Výpis spárovaných telefonů. <b>Vidět je smí každý, kdo smí vydávat</b>
+        — majitel, kapitán i posádka (`KliceEndpoints.SeznamAsync` se ptá
+        `SmiVydavatAsync`).
+        """
+        kdo = self.prihlaseny()
+        if not kdo:
+            return self.send_error(401)
+        if not smi_vydat_klic(lod_id, kdo["id"]):
+            return self.send_error(403)
+
+        return self.odpoved([klic_dto(k) for k in sorted(
+            (k for k in KLICE.values() if k["lodId"] == lod_id),
+            key=lambda k: k["id"])])
+
+    def sledovani_klice(self, lod_id, klic_id):
+        """
+        Odepne nebo zase připne klíč. <b>Jen majitel a kapitán</b>
+        (`KliceSprava.SmiSpravovatAsync`) — vydat klíč smí víc lidí než ho
+        vzít.
+        """
+        kdo = self.prihlaseny()
+        if not kdo:
+            return self.send_error(401)
+        if not smi_spravovat_klic(lod_id, kdo["id"]):
+            return self.send_error(403)
+
+        k = klic_podle_id(lod_id, klic_id)
+        if not k or k.get("odebran"):
+            return self.send_error(404)
+
+        k["sleduje"] = bool((self.telo_zadosti() or {}).get("sleduje", True))
+        self.send_response(204)
+        self.end_headers()
+        return None
+
+    def odeber_klic(self, lod_id, klic_id):
+        """Trvalé odebrání. Klíč zaniká a nedá se oživit."""
+        kdo = self.prihlaseny()
+        if not kdo:
+            return self.send_error(401)
+        if not smi_spravovat_klic(lod_id, kdo["id"]):
+            return self.send_error(403)
+
+        k = klic_podle_id(lod_id, klic_id)
+        if not k:
+            return self.send_error(404)
+
+        k["odebran"] = True
+        k["sleduje"] = False
+        self.send_response(204)
+        self.end_headers()
+        return None
+
     def pozvi_klicem(self, lod_id):
         """Kapitán vytvoří pozvánku pro člena posádky. Kód vrátí jednou."""
         kdo = self.prihlaseny()
         if not kdo:
             return self.send_error(401)
+        # Klíč k lodi je oprávnění posílat její polohy. Mock ho dřív vydal
+        # komukoliv přihlášenému ke kterékoliv lodi (změřeno 24. 10. 2026:
+        # `jana` na cizí SENDY → 201), takže se na něm nedalo vyzkoušet to,
+        # co API hlídá v `SmiVydavatAsync`.
+        if not smi_vydat_klic(lod_id, kdo["id"]):
+            return self.send_error(403)
 
         from datetime import timedelta
 
@@ -2493,8 +2609,9 @@ class H(BaseHTTPRequestHandler):
 
         p["uplatnena"] = True
         tajemstvi = f"klic-{len(KLICE) + 1}"
-        KLICE[tajemstvi] = {"lodId": p["lodId"], "jmeno": p["jmeno"], "sleduje": True,
-                            "odebran": False}
+        KLICE[tajemstvi] = {"id": len(KLICE) + 1, "lodId": p["lodId"],
+                            "jmeno": p["jmeno"], "sleduje": True, "odebran": False,
+                            "vydanV": ted_iso(), "posledniPouzitiV": None}
         _klic, lod = lod_podle_id(p["lodId"])
         return self.odpoved({
             "klic": tajemstvi,
@@ -3614,6 +3731,11 @@ class H(BaseHTTPRequestHandler):
             # Jediný endpoint bez přihlášení, a musí být: kdyby ho
             # vyžadoval, posádka by potřebovala účet a smysl QR by padl.
             return self.uplatni_pozvanku()
+        if (m := re.match(r'^/ja/lode/(\d+)/klice/(\d+)/sledovani$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            return self.sledovani_klice(int(m.group(1)), int(m.group(2)))
+
         if (m := re.match(r'^/ja/lode/(\d+)/klice$', cesta)):
             if not self.headers.get("authorization"):
                 return self.send_error(401)
@@ -4504,6 +4626,10 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                           r'/trat/(\d+)$', urlparse(self.path).path)):
             return self.trat_zahod(m.group(1), int(m.group(2)))
+        if (m := re.match(r'^/ja/lode/(\d+)/klice/(\d+)$', urlparse(self.path).path)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            return self.odeber_klic(int(m.group(1)), int(m.group(2)))
         if (m := re.match(r'^/ja/lode/(\d+)/pripojeni/(\d+)$', urlparse(self.path).path)):
             if not self.headers.get("authorization"):
                 return self.send_error(401)
@@ -4734,6 +4860,10 @@ class H(BaseHTTPRequestHandler):
             if not self.headers.get("authorization"):
                 return self.send_error(401)
             return self.moje_naroky()
+        elif (m := re.match(r'^/ja/lode/(\d+)/klice$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            return self.klice_lodi(int(m.group(1)))
         elif (m := re.match(r'^/ja/lode/(\d+)/pripojeni$', cesta)):
             if not self.headers.get("authorization"):
                 return self.send_error(401)
