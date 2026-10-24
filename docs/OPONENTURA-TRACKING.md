@@ -40,6 +40,12 @@ session.
 
 ### N1 — Panel trackeru pod výsledky si o polohy neřekne vlastní podmínkou
 
+> **Opraveno 25. 10. 2026.** Stránka výsledků se ptá touž podmínkou jako
+> API a panel kreslí, jen když na polohy je; kdo na ně není, oddíl *Kdo je
+> na vodě* vůbec nevidí. Chybějící snímek už navíc neznamená prázdnou vodu:
+> při výpadku čtení se píše *„teď se je nedaří načíst"*. Obojí změřeno na
+> běžícím webu, výpadek přes prostředníka, který shodí jen cestu s polohami.
+
 **Změřeno na běžícím webu.** `petr` je pořadatel regaty *FxCK Cancer*
 a jiné role v ročníku nemá. Otevře výsledky **Izolepy**, která jemu nepatří:
 
@@ -79,6 +85,11 @@ místo panelu. Rozhodnutí zůstává na API; jde o to, aby obrazovka řekla
 pravdu místo prázdna.
 
 ### N2 — Veřejný výdej poloh nekontroluje, že je regata vůbec zveřejněná
+
+> **Opraveno 25. 10. 2026.** Cesta má tutéž dvojici podmínek jako sousedi.
+> Hlídá to test `Nezverejnena_regata_se_ven_nevyda`, a jde **přes HTTP**:
+> podmínku drží endpoint, takže test přes službu by prošel i bez ní.
+> Lokálně se nedá spustit (není Docker), běží v CI.
 
 **Změřeno na produkci, dvakrát, jen čtením:**
 

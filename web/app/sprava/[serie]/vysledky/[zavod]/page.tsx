@@ -12,6 +12,8 @@ import {
   type StavVysledku,
 } from "@/lib/vysledky";
 import { NAZVY_STAVU, nactiTrate, type TratNaVyber } from "@/lib/trat";
+import { nactiJa } from "@/lib/ja";
+import { prava, smi } from "@/lib/co-smim";
 import { dataTrackeru, PanelTrackeru } from "../../tracker/[zavod]/panel";
 import {
   poharAkce,
@@ -55,14 +57,34 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
   // Tratě jen kvůli ukazateli u rozjížďky. Vlastní volání schválně: když
   // selže, ukazatel prostě nic netvrdí a zbytek obrazovky jede dál —
   // workflow výsledků na trati nestojí.
-  // Živé polohy pro panel dole. Taky vlastní volání: tracker je přídavek
-  // k zápisu, takže jeho výpadek nesmí vzít celou obrazovku (`dataTrackeru`
-  // vrací prázdno, ne výjimku).
-  const [{ stav, data: prehled }, trate, tracker] = await Promise.all([
+  const [{ stav, data: prehled }, trate, { ja }] = await Promise.all([
     nactiRozjizdky(serie, zavod),
     nactiTrate(serie, zavod),
-    dataTrackeru(serie, zavod),
+    nactiJa(),
   ]);
+
+  // <b>Živé polohy mají vlastní podmínku, a užší</b> (oponentura, 24. 10.
+  // 2026). Čtení výsledků je otázka na celý ročník —
+  // `VysledkyEndpoints.PohledAsync` se ptá jen na `SerieId` a pouští
+  // i pořadatele jediné zastávky, kterého pak na cizí regatě omezují
+  // příznaky v řádcích. Polohy chtějí pořadatele **té** regaty, nebo
+  // rozhodčího (`PolohyEndpoints.SmiAsync`). Půjčit si sem podmínku od
+  // výsledků znamenalo nakreslit panel i tomu, komu API polohy odmítne —
+  // a protože `nactiPrvky` vrací na 403 prázdno, vyšlo odmítnutí jako věta
+  // „trať nemá dva prvky" u trati, která má tři (změřeno).
+  //
+  // Panel je přídavek k zápisu, takže se kdo na něj nemá rovnou nekreslí;
+  // věta by na téhle obrazovce odpovídala na otázku, kterou si nikdo
+  // nepoložil. Vlastní stránka trackeru odmítnutí říká slovy — tam se
+  // člověk na polohy ptal.
+  //
+  // Vlastní volání schválně: výpadek trackeru nesmí vzít celou obrazovku
+  // (`dataTrackeru` vrací prázdno, ne výjimku). `nactiJa` je v rámci
+  // požadavku cachované, takže tohle čekání nic nestojí.
+  const smiPolohy =
+    smi(prava(ja), { role: "Organizator", serie, zavod }) ||
+    smi(prava(ja), { role: "Rozhodci", serie });
+  const tracker = smiPolohy ? await dataTrackeru(serie, zavod) : null;
   // `null` je výpadek čtení, ne „žádné tratě" (viz `nactiTrate`). Pro
   // odvozené seznamy se chová jako prázdno; u výběru trati se ale musí
   // poznat, jinak by řádek tvrdil „bez trati" o rozjížďce, která ji má.
@@ -261,8 +283,12 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
           Obal nepotřebuje: `.nacrt` je v obsahovém sloupci mřížka mapa +
           žebříček a pod 900 px se skládá pod sebe. Celou šířku si bere jen
           vlastní stránka trackeru (`.tracker-strana`). */}
-      <h2>Kdo je na vodě</h2>
-      <PanelTrackeru serie={serie} zavod={zavod} data={tracker} jenOdkazKdyzNic />
+      {tracker && (
+        <>
+          <h2>Kdo je na vodě</h2>
+          <PanelTrackeru serie={serie} zavod={zavod} data={tracker} jenOdkazKdyzNic />
+        </>
+      )}
     </>
   );
 }

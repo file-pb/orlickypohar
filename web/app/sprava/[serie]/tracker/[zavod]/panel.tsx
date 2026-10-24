@@ -98,13 +98,28 @@ export function PanelTrackeru({
       </p>
     );
 
-  if (jenOdkazKdyzNic && (data.prvni?.lode.length ?? 0) === 0)
-    return (
-      <p className="poznamka">
-        <Link href={kam}>Živé polohy lodí na mapě</Link> — zatím se nehlásí
-        žádná loď. Jakmile se začnou hlásit, mapa se ukáže rovnou tady.
-      </p>
-    );
+  // <b>Chybějící snímek není prázdná voda</b> (oponentura, 24. 10. 2026).
+  // `prvni === null` znamená „nepodařilo se zeptat" — výpadek API nebo
+  // odmítnutí —, a tvrdit z toho, že se nikdo nehlásí, je výrok o vodě
+  // vyrobený z odpovědi serveru. Na téhle obrazovce na tom visí rozhodnutí
+  // o tom, jestli je někdo ještě venku.
+  if (jenOdkazKdyzNic) {
+    if (data.prvni === null)
+      return (
+        <p className="poznamka">
+          <Link href={kam}>Živé polohy lodí na mapě</Link> — teď se je nedaří
+          načíst.
+        </p>
+      );
+
+    if (data.prvni.lode.length === 0)
+      return (
+        <p className="poznamka">
+          <Link href={kam}>Živé polohy lodí na mapě</Link> — zatím se nehlásí
+          žádná loď. Jakmile se začnou hlásit, mapa se ukáže rovnou tady.
+        </p>
+      );
+  }
 
   return (
     <ZiveLode
