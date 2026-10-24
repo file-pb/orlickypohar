@@ -3065,6 +3065,16 @@ body:has(.tabule) { overflow: hidden; }
 .tabule-mapa .nacrt-ovladani,
 .tabule-mapa .nacrt-zoom { display: none; }
 
+/* Hláška o souboji patří pod hlavičku, ne přes ni: v náčrtu je nad mapou
+   volno, na tabuli jsou nahoře pásek se stavem a pruh s názvem. */
+/* Specificita schválně vyšší: pravidlo pro náčrt (`.nacrt-na-tv`) stojí
+   v souboru níž a jinak by ho přebilo. */
+.tabule-mapa .nacrt-na-tv .nacrt-swap {
+  top: 7.5vw;
+  left: 1.2vw;
+  right: auto;
+}
+
 /* <b>Pomyslné pořadí je ten panel z náčrtu</b> (Filip, 24. 10. 2026:
    *„dej tam tenhle rank, co jsme tu hodinu ladili"*) — se znaky tříd,
    šipkami při prohození a kaskádou, kterou jsme ladili celou noc. Leží

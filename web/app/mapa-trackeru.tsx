@@ -376,7 +376,15 @@ export function MapaTrackeru({
   const [zaskrtnute, setZaskrtnute] = useState<Set<number>>(new Set());
   /** Kterou třídu zrovna sledujeme; `null` je celé pole. */
   const [filtr, setFiltr] = useState<Lod["kategorie"] | null>(null);
-  const [cas, setCas] = useState(600);
+  /**
+   * Čas rozjížďky. <b>Začíná v její půlce</b>, ne na pevné vteřině:
+   * šest set vteřin bylo dobré číslo pro vymyšlenou trať z náčrtu, ale
+   * po krátké trati je pole v tu dobu dávno v cíli — a na tabuli se čas
+   * cyklí, takže se zastavil na nule a lodě stály na startu.
+   */
+  const [cas, setCas] = useState(() =>
+    Math.round(Math.max(0, ...lode.map((l) => l.body.at(-1)?.cas ?? 0)) / 2),
+  );
   const [jenTuhle, setJenTuhle] = useState(false);
 
   function vyber(id: number | null) {
