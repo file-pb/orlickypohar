@@ -3140,7 +3140,7 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
   /* Plocha mapy končí u žebříčku i u pásů, ne pod nimi: co je pod
      panelem, divák neuvidí, a mapa si podle téhle plochy počítá výřez. */
   position: absolute;
-  inset: 0 clamp(280px, calc(24 * var(--tv)), 460px) calc(12.6 * var(--tv)) 0;
+  inset: 0 clamp(280px, calc(24 * var(--tv)), 460px) var(--dolni-blok, calc(12.6 * var(--tv))) 0;
   z-index: 0;
   display: grid; place-items: center; overflow: hidden;
   pointer-events: none;
@@ -4480,3 +4480,17 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .tabule .tabule .panylek-zrusena { border-color: var(--stav-zruseny); }
 .tabule .panylek-zrusena b, .tabule .panylek-zrusena span { color: var(--stav-zruseny); }
 .tabule .tabule .panylek-planovana { opacity: 0.45; }
+
+/* Startovní procedura před čísly rozjížděk: moment dne, ne vlastnost
+   jedné rozjížďky. Červená jako výstraha, ale bez blikání — televize
+   pohyb zdvojuje. */
+.tabule .rozjizdka-procedura {
+  height: calc(2.4 * var(--tv));
+  display: flex; align-items: center; padding: 0 calc(0.9 * var(--tv));
+  border-radius: 8px; font-style: normal;
+  font-size: calc(0.78 * var(--tv)); letter-spacing: 0.06em;
+  text-transform: uppercase; font-variant-numeric: tabular-nums;
+  background: var(--pozadi); color: var(--stav-zruseny);
+  border: 2px solid var(--stav-zruseny);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+}

@@ -236,6 +236,11 @@ export function Obrazovka({
         {
           "--vrch-vyska": `${odsazeni.vrch}px`,
           "--horni-blok": `${odsazeni.nahore}px`,
+          // Kam až smí mapa dolů. Dřív tu stálo `12.6 * --tv` natvrdo,
+          // což je o dvacet pixelů víc, než pásy tříd doopravdy měří —
+          // a na televizi z toho byla pruh prázdna pod mapou (Filip,
+          // 25. 10. 2026). Výšku pásů stejně měříme kvůli výřezu.
+          "--dolni-blok": `${odsazeni.dole}px`,
         } as React.CSSProperties
       }
     >

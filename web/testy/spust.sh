@@ -6,3 +6,7 @@ cd "$(dirname "$0")"
 export NODE_NO_WARNINGS=1
 echo "== Pořadí na vodě =="
 node --experimental-strip-types ./poradi.test.ts
+
+echo
+echo "== Panýlky rozjížděk =="
+node --experimental-strip-types ./rozjizdky.test.ts
