@@ -7,7 +7,7 @@
  */
 import assert from 'node:assert/strict';
 
-import { popis, procedura } from '../lib/rozjizdky-tabule.ts';
+import { casomira, popis, procedura } from '../lib/rozjizdky-tabule.ts';
 
 let prosly = 0;
 function zkus(nazev: string, f: () => void) {
@@ -16,6 +16,7 @@ function zkus(nazev: string, f: () => void) {
 }
 
 const TED = Date.parse('2027-05-15T10:00:00Z');
+const ted0 = TED;
 const za = (vterin: number) => new Date(TED + vterin * 1000).toISOString();
 type R = Parameters<typeof popis>[0];
 const r = (stav: string, startV: string | null): R =>
@@ -65,6 +66,47 @@ zkus('z několika rozjížděk se chytí ta, která se zrovna startuje', () => {
     r('Planovana', za(7200)),
   ] };
   assert.equal(procedura(s, TED), 60);
+});
+
+console.log('\nČasomíra dne');
+
+zkus('daleko od startu řekne hodinu, ne odpočet', () => {
+  // Start v 12:30 pražského času, procedura tedy ve 12:25.
+  const s = { rozjizdky: [r('Planovana', '2027-05-15T12:30:00+02:00')] };
+  const ted = Date.parse('2027-05-15T11:40:00+02:00');
+  assert.deepEqual(casomira(s, ted), { druh: 'ceka', text: 'procedura ve 12:25' });
+});
+
+zkus('v posledních pěti minutách přepne na odpočet', () => {
+  const s = { rozjizdky: [r('Planovana', '2027-05-15T12:30:00+02:00')] };
+  const ted = Date.parse('2027-05-15T12:27:00+02:00');
+  assert.deepEqual(casomira(s, ted), { druh: 'procedura', text: 'startovní procedura 3:00' });
+});
+
+zkus('hodina je pražská, ne prohlížečova', () => {
+  // Kdyby se brala zóna běhu, tenhle test by na stroji v UTC spadl —
+  // a tabule by v hospodě ukazovala čas o dvě hodiny vedle.
+  const s = { rozjizdky: [r('Planovana', '2027-05-15T12:30:00Z')] };
+  const ted = Date.parse('2027-05-15T10:00:00Z');
+  assert.equal(casomira(s, ted)?.text, 'procedura ve 14:25');
+});
+
+zkus('po startu už není co odpočítávat', () => {
+  const s = { rozjizdky: [r('Probiha', za(-600))] };
+  assert.equal(casomira(s, ted0), null);
+});
+
+zkus('bez času startu se nedosazuje nic', () => {
+  assert.equal(casomira({ rozjizdky: [r('Planovana', null)] }, ted0), null);
+});
+
+zkus('ze dvou plánovaných se bere ta bližší', () => {
+  const s = { rozjizdky: [
+    r('Planovana', '2027-05-15T16:00:00+02:00'),
+    r('Planovana', '2027-05-15T12:30:00+02:00'),
+  ] };
+  const ted = Date.parse('2027-05-15T11:00:00+02:00');
+  assert.equal(casomira(s, ted)?.text, 'procedura ve 12:25');
 });
 
 console.log(`\n${prosly} kontrol prošlo.`);

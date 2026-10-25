@@ -59,3 +59,56 @@ export function procedura(snimek: Pick<Snimek, "rozjizdky">, ted: number): numbe
   }
   return null;
 }
+
+/**
+ * Kdy začne startovní procedura, v místním čase.
+ *
+ * Zóna je napevno pražská, ne prohlížečova: tabule visí v hospodě na
+ * Orlíku a má říkat tamní čas i tehdy, když ji někdo otevře z jiné
+ * zóny — a test pak dává stejný výsledek kdekoli.
+ */
+function vHodin(kdy: number): string {
+  return new Intl.DateTimeFormat("cs-CZ", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Prague",
+  }).format(new Date(kdy));
+}
+
+export type Casomira = { druh: "ceka" | "procedura"; text: string };
+
+/**
+ * <b>Malá časomíra k nejbližšímu startu</b> (Filip, 25. 10. 2026:
+ * *„přemýšlím, zda by nebyla vhodná nějaká forma malé časomíry
+ * (startovní procedura začne v, pak startovní procedura x do startu,
+ * rozjížďka probíhá). Ostatní máme."*).
+ *
+ * Má dvě fáze, protože dvě různé otázky:
+ * <ul>
+ *   <li><b>čeká</b> — „kdy se zase pojede?" Odpovědí je hodina, ne
+ *       odpočet: do odpoledního startu by odpočet běžel hodinu a nikdo
+ *       by ho nesledoval.</li>
+ *   <li><b>procedura</b> — „za jak dlouho?" Tady už odpočet smysl dává,
+ *       protože pět minut se dá odsedět.</li>
+ * </ul>
+ *
+ * Třetí fázi („jede se") nese panýlek té rozjížďky, viz {@link popis} —
+ * je to vlastnost jedné rozjížďky, kdežto časomíra mluví o dni.
+ *
+ * Bere <b>nejbližší</b> plánovanou rozjížďku se startovním časem. Když
+ * žádná taková není, vrací `null` a na tabuli po ní nezbyde ani stopa.
+ */
+export function casomira(snimek: Pick<Snimek, "rozjizdky">, ted: number): Casomira | null {
+  let nejblizsi: { do: number; start: number } | null = null;
+  for (const r of snimek.rozjizdky) {
+    if (r.stav !== "Planovana" || !r.startV) continue;
+    const od = odStartu(r.startV, ted);
+    if (od === null || od >= 0) continue;
+    if (!nejblizsi || -od < nejblizsi.do) nejblizsi = { do: -od, start: Date.parse(r.startV) };
+  }
+  if (!nejblizsi) return null;
+  if (nejblizsi.do <= PROCEDURA_S) {
+    return { druh: "procedura", text: `startovní procedura ${mmss(nejblizsi.do)}` };
+  }
+  return { druh: "ceka", text: `procedura ve ${vHodin(nejblizsi.start - PROCEDURA_S * 1000)}` };
+}

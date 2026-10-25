@@ -2779,7 +2779,16 @@ body:has(.tabule) { overflow: hidden; }
  *
  * Sedí na `body`, ne na `.tabule`, protože pás partnerů leží mimo ni.
  */
-body:has(.tabule) { --tv: min(1vw, 1.78vh); }
+body:has(.tabule) {
+  --tv: min(1vw, 1.78vh);
+  /* Indikátory (číslo rozjížďky, stáří dat) nejsou obsah ke čtení, jen
+     značky. Na větší obrazovce má růst to, co se čte z druhého konce
+     hospody — pořadí a jména lodí; značky se zastaví na velikosti, kterou
+     mají na Full HD, a zbytek plochy připadne mapě. Filip, 25. 10. 2026:
+     „když se televize zvětší, zvětšují se i tyto prvky, nevím jestli je
+     to nutné." */
+  --znacka: min(var(--tv), 19px);
+}
 
 .tabule {
   /* <b>Šířka sloupce s pořadím na jednom místě.</b> Dřív si ji každý
@@ -4535,13 +4544,13 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .tabule .tabule-stari-kolecko {
   position: absolute; z-index: 4;
   right: calc(var(--sloupec-poradi) + 1.8vw);
-  bottom: calc(var(--dolni-blok, 0px) + 0.8 * var(--tv));
+  bottom: calc(var(--dolni-blok, 0px) + 0.8 * var(--znacka));
   margin: 0;
   display: grid; place-items: center;
-  min-width: calc(2.6 * var(--tv)); height: calc(2.6 * var(--tv));
-  padding: 0 calc(0.5 * var(--tv));
+  min-width: calc(2.6 * var(--znacka)); height: calc(2.6 * var(--znacka));
+  padding: 0 calc(0.5 * var(--znacka));
   border-radius: 999px;
-  font-size: calc(0.75 * var(--tv)); font-variant-numeric: tabular-nums;
+  font-size: calc(0.75 * var(--znacka)); font-variant-numeric: tabular-nums;
   color: var(--tlumeny);
   background: color-mix(in srgb, var(--pozadi) 70%, transparent);
   border: 1px solid var(--linka);
@@ -4555,13 +4564,13 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
    napřed, aby je nepřebilo obecnější pravidlo pro potomky tabule. */
 .tabule .rozjizdky-panylky {
   position: absolute; z-index: 4;
-  top: calc(0.8 * var(--tv));
+  top: calc(0.8 * var(--znacka));
   right: calc(var(--sloupec-poradi) + 0.8vw);
-  display: flex; gap: calc(0.4 * var(--tv));
+  display: flex; gap: calc(0.4 * var(--znacka));
 }
 .tabule .rozjizdka-panylek {
-  height: calc(2.4 * var(--tv)); width: calc(2.4 * var(--tv));
-  display: flex; align-items: center; justify-content: center; gap: calc(0.5 * var(--tv));
+  height: calc(2.4 * var(--znacka)); width: calc(2.4 * var(--znacka));
+  display: flex; align-items: center; justify-content: center; gap: calc(0.5 * var(--znacka));
   border-radius: 8px; font-style: normal;
   background: var(--pozadi); color: var(--text);
   border: 2px solid transparent;
@@ -4569,31 +4578,54 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 }
 /* Ta s pozorností je širší a řekne co se děje — velikostí, ne blikáním. */
 .tabule .rozjizdka-panylek.panylek-siroky {
-  width: auto; padding: 0 calc(0.9 * var(--tv)) 0 calc(0.7 * var(--tv));
+  width: auto; padding: 0 calc(0.9 * var(--znacka)) 0 calc(0.7 * var(--znacka));
 }
-.tabule .rozjizdka-panylek b { font-weight: 700; font-size: calc(1.05 * var(--tv)); line-height: 1; }
+.tabule .rozjizdka-panylek b { font-weight: 700; font-size: calc(1.05 * var(--znacka)); line-height: 1; }
 .tabule .rozjizdka-panylek span {
-  font-size: calc(0.78 * var(--tv)); letter-spacing: 0.06em;
+  font-size: calc(0.78 * var(--znacka)); letter-spacing: 0.06em;
   text-transform: uppercase; font-variant-numeric: tabular-nums;
 }
-.tabule .tabule .panylek-dokoncena { border-color: var(--stav-vypsany); }
+/* Stavy se neliší jen odstínem, ale tím, co je vyplněné a co jen
+   obtažené — jinak se „odjetá" a „zrovna se jede" z druhého konce
+   hospody nerozeznají (Filip, 25. 10. 2026: „nejsou obě zelené?").
+   Probíhající **svítí výplní**, odjetá je jen obtažená, plánovaná
+   tlumená. Pozor na specificitu: `.rozjizdka-panylek` výš nastavuje
+   průhledný rámeček a je taky na dvou třídách, takže tahle pravidla
+   musí zůstat za ním. */
+.tabule .panylek-dokoncena { border-color: var(--stav-vypsany); }
 .tabule .panylek-dokoncena b { color: var(--stav-vypsany); }
-.tabule .tabule .panylek-probiha { border-color: #e8900c; }
-.tabule .panylek-probiha b, .tabule .panylek-probiha span { color: #e8900c; }
-.tabule .tabule .panylek-zrusena { border-color: var(--stav-zruseny); }
+.tabule .panylek-probiha {
+  background: #e8900c;
+  border-color: #e8900c;
+  box-shadow: 0 1px 10px color-mix(in srgb, #e8900c 45%, transparent);
+}
+.tabule .panylek-probiha b, .tabule .panylek-probiha span { color: #16233a; }
+.tabule .panylek-zrusena { border-color: var(--stav-zruseny); }
+.tabule .panylek-zrusena b { text-decoration: line-through; }
 .tabule .panylek-zrusena b, .tabule .panylek-zrusena span { color: var(--stav-zruseny); }
-.tabule .tabule .panylek-planovana { opacity: 0.45; }
+.tabule .panylek-planovana { opacity: 0.45; }
 
 /* Startovní procedura před čísly rozjížděk: moment dne, ne vlastnost
    jedné rozjížďky. Červená jako výstraha, ale bez blikání — televize
    pohyb zdvojuje. */
 .tabule .rozjizdka-procedura {
-  height: calc(2.4 * var(--tv));
-  display: flex; align-items: center; padding: 0 calc(0.9 * var(--tv));
+  height: calc(2.4 * var(--znacka));
+  display: flex; align-items: center; padding: 0 calc(0.9 * var(--znacka));
   border-radius: 8px; font-style: normal;
-  font-size: calc(0.78 * var(--tv)); letter-spacing: 0.06em;
+  font-size: calc(0.78 * var(--znacka)); letter-spacing: 0.06em;
   text-transform: uppercase; font-variant-numeric: tabular-nums;
-  background: var(--pozadi); color: var(--stav-zruseny);
-  border: 2px solid var(--stav-zruseny);
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  /* Odpočet je výzva, ne výtka (Filip, 25. 10. 2026: „aby to nevypadalo
+     jako restrikce, nebo fail, nebo invalid"). Červená na tabuli znamená
+     zrušeno a nesmí se plést; procedura proto svítí světlou výplní jako
+     časomíra na stadionu — všimneš si jí první a nic tím neobviňuje. */
+  background: var(--text); color: var(--pozadi);
+  border: 2px solid var(--text);
+  font-weight: 700;
+  box-shadow: 0 1px 10px color-mix(in srgb, var(--text) 30%, transparent);
+}
+/* Dokud je start daleko, je to rozvrh dne, ne výstraha — červená patří
+   až posledním pěti minutám, kdy se opravdu startuje. */
+.tabule .rozjizdka-procedura.procedura-ceka {
+  background: var(--pozadi); color: var(--tlumeny);
+  border-color: var(--linka); font-weight: 400; box-shadow: none;
 }
