@@ -10,3 +10,7 @@ node --experimental-strip-types ./poradi.test.ts
 echo
 echo "== Panýlky rozjížděk =="
 node --experimental-strip-types ./rozjizdky.test.ts
+
+echo
+echo "== Režie tabule =="
+node --experimental-strip-types ./rezie.test.ts

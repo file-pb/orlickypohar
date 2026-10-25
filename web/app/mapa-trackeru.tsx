@@ -23,6 +23,12 @@ import { CELKEM, ZnakTridy } from "@/app/tridy";
 import type { Poloha } from "@/lib/voda";
 import type { Lod, Znacka } from "@/app/nacrt/mapa/plavba";
 import { seradNaVode } from "@/lib/poradi-na-vode";
+import {
+  FOCUS_SOUBOJE_S,
+  KOLOTOC_S,
+  SOUBOJ_DO_POZICE,
+  planRezie,
+} from "@/lib/rezie-tabule";
 
 const KATEGORIE: Lod["kategorie"][] = ["Race", "Nad7m", "Pod7m"];
 
@@ -113,17 +119,6 @@ const ODSTUP_PROHOZENI_PX = 12;
 /** Jak dlouho pak dráhy obou lodí hoří, než vyhasnou. */
 const HORENI_S = 180;
 /**
- * Do kolikáté pozice je prohození pro tabuli událost.
- *
- * <b>Změřeno na náčrtu:</b> bez tohohle filtru vyšlo za jednu rozjížďku
- * 33 prohození a tabule hořela 93 % času — tedy pořád, takže nic.
- * Filip to ostatně pojmenoval sám: *swapping for the **lead***. Souboj
- * o devatenácté místo není souboj o nic.
- */
-const SOUBOJ_DO_POZICE = 6;
-/** Jak dlouho drží focus dvojice, která se právě prohodila. */
-const FOCUS_SOUBOJE_S = 90;
-/**
  * A jak dlouho se prohození hraje v žebříčku.
  *
  * <b>Mnohem kratší než focus</b>: šipky a předjetí doprovázejí okamžik,
@@ -152,7 +147,6 @@ const SIPKA_MS = 2000;
 const LEPIK_MS = 6000;
 
 /** Jak dlouho se na tabuli drží jedna loď, když se nic neděje. */
-const KOLOTOC_S = 60;
 
 /**
  * Režie zoomu na tabuli (Filip, 24. 10. 2026): *„musíme držet zoom celého
@@ -919,47 +913,10 @@ export function MapaTrackeru({
    * musí umět navázat tam, kde ho souboj přerušil. K tomu se počítá čas
    * strávený mimo souboje, ne čas od startu.
    */
-  const rezie = useMemo(() => {
-    const plan = new Map<number, { lode: number[]; duvod: "souboj" | "kolotoc" }>();
-    let mimoSouboje = 0;
-
-    const postupV = (i: number, t: number) => {
-      const lod = lode[i];
-      let idx = -1;
-      for (let j = 0; j < lod.body.length; j++) {
-        if (lod.body[j].cas > t) break;
-        idx = j;
-      }
-      const vid = Math.min(idx, lod.dosloDo - 1);
-      return vid >= 0 ? postupy[i][vid] : null;
-    };
-
-    for (let t = 0; t <= konec; t += 10) {
-      const souboj = [...prohozeni]
-        .reverse()
-        .find(
-          (p) => p.pozice <= SOUBOJ_DO_POZICE && t - p.cas >= 0 && t - p.cas < FOCUS_SOUBOJE_S,
-        );
-      if (souboj) {
-        plan.set(t, {
-          lode: [lode[souboj.nahoru].id, lode[souboj.dolu].id],
-          duvod: "souboj",
-        });
-        continue;
-      }
-
-      // Kolotoč: po pořadí shora, každá loď chvíli.
-      const vPoradi = lode
-        .map((l, i) => ({ id: l.id, postup: postupV(i, t) }))
-        .filter((x) => x.postup !== null)
-        .sort((a, b) => (b.postup as number) - (a.postup as number));
-      if (vPoradi.length === 0) continue;
-      const kolikata = Math.floor(mimoSouboje / KOLOTOC_S) % vPoradi.length;
-      plan.set(t, { lode: [vPoradi[kolikata].id], duvod: "kolotoc" });
-      mimoSouboje += 10;
-    }
-    return plan;
-  }, [lode, postupy, prohozeni, konec]);
+  const rezie = useMemo(
+    () => planRezie({ lode, postupy, prohozeni, znacky, konec }),
+    [lode, postupy, prohozeni, konec, znacky],
+  );
 
   /**
    * Na tabuli běží čas sám. <b>Dvojnásobnou rychlostí</b>, protože náčrt
@@ -992,6 +949,7 @@ export function MapaTrackeru({
   stavRef.current = vStavu;
   const poradiRef = useRef(poradi);
   poradiRef.current = poradi;
+  const zaberyRef = useRef<{ lode: number[]; duvod: string } | null>(null);
 
   useEffect(() => {
     if (!tabule) return;
@@ -1012,8 +970,19 @@ export function MapaTrackeru({
     if (zavodi.length === 0) return;
 
     const celek = vyrezPro(zavodi.map((v) => v.kde!), OKNO.sirka, OKNO.vyska);
+    /**
+     * <b>Když se někdo tlačí u bóje, je bližším záběrem ten dav</b>, ne
+     * čelo pole (Filip, 25. 10. 2026). Čelo je pořád totéž — kdo vede;
+     * tlačenice u značky je jediné místo, kde je vidět volba trasy, a ta
+     * se z celku nepozná.
+     */
+    const uBoje =
+      zaberyRef.current?.duvod === "boje"
+        ? zavodi.filter((v) => zaberyRef.current!.lode.includes(v.lod.id))
+        : [];
+    const blizsi = uBoje.length >= 2 ? uBoje : zavodi.slice(0, CELO_LODI);
     const celo = vyrezPro(
-      zavodi.slice(0, CELO_LODI).map((v) => v.kde!),
+      blizsi.map((v) => v.kde!),
       OKNO.sirka,
       OKNO.vyska,
     );
@@ -1043,6 +1012,7 @@ export function MapaTrackeru({
 
   /** Co tabule ukazuje v zvoleném čase. */
   const zabery = rezie.get(Math.floor(cas / 10) * 10) ?? null;
+  zaberyRef.current = zabery;
 
   /**
    * Jak silně svítí dráha toho, na co režie právě ukazuje.
