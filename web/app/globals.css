@@ -3218,12 +3218,16 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
    na mapě vpravo, pod hlavičkou. Dokud nikdo neposílá polohy, je prázdný. */
 .tabule-mapa .nacrt-poradi {
   position: absolute;
-  top: calc(1 * var(--tv)); right: 1vw; bottom: calc(1 * var(--tv));
+  /* <b>Nahoře natěsno</b> (Filip, 25. 10. 2026 — potřetí): panel měl
+     odsazení od hrany i vnitřní okraj, takže nad názvem zbývalo 41 px
+     prázdna. Shora tedy nic, po stranách a dole zůstává. */
+  top: 0; right: 1vw; bottom: calc(1 * var(--tv));
   width: clamp(280px, 24vw, 460px);
   pointer-events: none;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  padding: calc(0.8 * var(--tv)) calc(1 * var(--tv));
+  padding: calc(0.3 * var(--tv)) calc(1 * var(--tv)) calc(0.8 * var(--tv));
+  border-radius: 0 0 calc(0.8 * var(--tv)) calc(0.8 * var(--tv));
   border-radius: calc(0.8 * var(--tv));
   background: color-mix(in srgb, var(--papir) 86%, transparent);
   backdrop-filter: blur(6px);
@@ -4516,6 +4520,27 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 @keyframes lepik-prolnuti { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   .tabule .nacrt-lepik { animation: none; }
+}
+
+/* Stáří dat v rohu mapy: malé, tlumené, ať neruší. Zčervená, teprve
+   když data zestárnou — pak je to zpráva, ne ozdoba. */
+.tabule .tabule-stari-kolecko {
+  position: absolute; z-index: 4;
+  right: calc(clamp(280px, calc(24 * var(--tv)), 460px) + 1.8vw);
+  bottom: calc(var(--dolni-blok, 0px) + 0.8 * var(--tv));
+  margin: 0;
+  display: grid; place-items: center;
+  min-width: calc(2.6 * var(--tv)); height: calc(2.6 * var(--tv));
+  padding: 0 calc(0.5 * var(--tv));
+  border-radius: 999px;
+  font-size: calc(0.75 * var(--tv)); font-variant-numeric: tabular-nums;
+  color: var(--tlumeny);
+  background: color-mix(in srgb, var(--pozadi) 70%, transparent);
+  border: 1px solid var(--linka);
+  opacity: 0.75;
+}
+.tabule .tabule-stari-kolecko.zastarale {
+  color: var(--stav-zruseny); border-color: var(--stav-zruseny); opacity: 1;
 }
 
 /* Panýlky rozjížděk v pravém horním rohu mapy. Se selektorem `.tabule`

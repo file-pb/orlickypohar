@@ -8,7 +8,6 @@ import { NazevZavodu } from "@/app/tabule-nazev";
 import { Karusel, type Panel } from "./karusel";
 import { PoradiTrid } from "./poradi-tridy";
 import { PanylkyRozjizdek } from "./rozjizdky";
-import { StavovyProuzek } from "./semafor";
 import { MapaTrackeru } from "@/app/mapa-trackeru";
 import { pole } from "@/app/nacrt/mapa/plavba";
 import type { VerejnePolohy } from "@/lib/polohy";
@@ -324,22 +323,31 @@ export function Obrazovka({
           odsazeni={odsazeni}
           onUdalost={zarad}
           onPoradi={setPoradiLodi}
+          // <b>Nad pořadím zůstal jen název</b> (Filip, 25. 10. 2026:
+          // *„tyhle řádky odstraň"*). Stav rozjížďky nesou panýlky
+          // v rohu mapy a stáří dat se přestěhovalo do kolečka dole.
           hlavickaPoradi={
             <div className="poradi-hlava">
               <h1>
                 <NazevZavodu text={snimek.nazev} />
               </h1>
-              <StavovyProuzek snimek={snimek} ted={ted} ukazkovePolohy={zive.length === 0} />
-              {/* Stáří dat je jediný údaj, který nikde jinde není a podle
-                  kterého se pozná, že tabule žije, ne že zamrzla. */}
-              <p className={stari > 120 ? "stari zastarale" : "stari"}>
-                {stari < 60 ? `data před ${stari} s` : `data stará ${Math.round(stari / 60)} min`}
-              </p>
             </div>
           }
         />
       </div>
       <PanylkyRozjizdek snimek={snimek} ted={ted} />
+      {/* <b>Stáří dat jako kolečko v rohu mapy</b> (Filip: *„maximálně ten
+          odpočet dej třeba do nějakého kolečka doprava dolů v mapě, ale
+          citlivě, ať to neruší"*). Je to jediný údaj, podle kterého se
+          pozná, že tabule žije a ne že zamrzla — proto nezmizel docela,
+          jen slezl z očí. Zčervená, teprve když data zestárnou. */}
+      <p
+        className={`tabule-stari-kolecko${stari > 120 ? " zastarale" : ""}`}
+        aria-hidden="true"
+        title="stáří dat"
+      >
+        {stari < 60 ? `${stari} s` : `${Math.round(stari / 60)} min`}
+      </p>
       <PoradiTrid radky={poradiLodi} ukazka={zive.length === 0} ref={tridy} />
 
       <div className="sloupce">
