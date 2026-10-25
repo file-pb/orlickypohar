@@ -2826,6 +2826,9 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
   /* Až do krajů (Filip, 24. 10. 2026): pruh drží celou šířku a obsah
      v něm sedí u hran, ne uprostřed s okraji. */
   margin: 0; padding: calc(0.15 * var(--tv)) calc(0.6 * var(--tv));
+  /* Co se do pruhu nevejde, se ořízne — ořezaný konec je horší než nic,
+     ale pořád lepší než dva texty přes sebe. */
+  overflow: hidden;
   background: color-mix(in srgb, var(--pozadi) 72%, transparent);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--linka);
@@ -2839,6 +2842,7 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
 .tabule .vrch .stav {
   grid-column: 4;
   display: flex; flex-direction: row; gap: calc(0.8 * var(--tv)); align-items: baseline;
+  min-width: 0;
 }
 
 /* Stav rozjížďky s vlajkou je úplně vpravo (Filip, 24. 10. 2026). */
@@ -3048,9 +3052,17 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
    dlaždice se zalomí, protože počet atributů závisí na závodě. */
 /* Atributy jsou řádek, ne pás dlaždic: hodnota a popis vedle sebe,
    položky oddělené tečkou. Na pět čísel nepotřebujeme pět karet. */
+/* <b>Jeden řádek, a když se nevejde, radši ubrat než zalomit.</b>
+   Pruh nahoře je jednořádkový grid; dvouřádkový blok uvnitř něj je
+   přesně to, co na Filipově televizi skončilo textem přes text
+   (25. 10. 2026). V prohlížeči se mi ten překryv vyvolat nepodařilo —
+   ani při zalomení, ani při velkém písmu —, takže tohle není oprava
+   změřené příčiny, ale odstranění možnosti: bez zalomení a bez
+   přetékání se dva texty přes sebe dostat nemají jak. */
 .tabule .atributy {
-  display: flex; flex-wrap: wrap; justify-content: center;
+  display: flex; flex-wrap: nowrap; justify-content: center;
   gap: calc(0.2 * var(--tv)) calc(1.1 * var(--tv)); margin: 0;
+  min-width: 0; overflow: hidden;
 }
 .tabule .dlazdice {
   display: flex; align-items: baseline; gap: calc(0.3 * var(--tv));
@@ -3639,7 +3651,15 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
    nevylezl pod text. Prázdný nesmí zabrat ani řádek. */
 .tabule .tabule-hlasky { position: relative; z-index: 2; display: flex; flex-direction: column; }
 .tabule .tabule-hlasky:empty { display: none; }
-.tabule .hlaska { position: relative; z-index: 2; margin-top: calc(var(--vrch-vyska, 0px) + 0.4 * var(--tv)); }
+.tabule .hlaska {
+  position: relative; z-index: 2;
+  margin-top: calc(var(--vrch-vyska, 0px) + 0.4 * var(--tv));
+  /* Končí u žebříčku, stejně jako pruh nahoře. Jakmile se hláška
+     vyhrabala zpod hlavičky, zjistilo se, že jde přes celou šířku
+     a leží na pořadí vpravo — na televizi z něj ukrojila dva řádky
+     (Filip vyfotil 25. 10. 2026). */
+  margin-right: clamp(280px, 24vw, 460px);
+}
 .tabule .hlaska.dej { font-size: calc(1.2 * var(--tv)); padding: calc(0.5 * var(--tv)) calc(1 * var(--tv)); }
 .tabule .hlaska.dej b { color: var(--voda); }
 /* Štítky stavu zápisu u rozjížďky. Potvrzené se zazelená, čerstvé z vody
