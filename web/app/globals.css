@@ -2861,6 +2861,8 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
 .stav-rozjizdky-tabule.sviti-dojeto { color: var(--voda); }
 .stav-rozjizdky-tabule.sviti-zruseno { color: var(--stav-zruseny); }
 
+/* Na tabuli taky jen prolnutí (viz `tabule-alert`). */
+.tabule .stav-rozjizdky-tabule span { animation-name: nacrt-prolnuti; }
 @keyframes stav-prijezd {
   from { opacity: 0; transform: translateY(0.4vw); }
   to { opacity: 1; transform: none; }
@@ -2981,15 +2983,17 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
 .tabule-alert.ceka, .tabule-alert.zrusena { border-color: var(--stav-zruseny); }
 .tabule-alert.lod { border-color: var(--voda); }
 
+/* <b>Karta se prolne, nelétá.</b> Televize v obýváku dopočítávají
+   mezisnímky, a když se přes mapu žene škálující se cedule, obraz ji
+   rozdvojí — Filip vyfotil 25. 10. 2026 kartu, na které stálo
+   „POLARIS" dvakrát přes sebe. Pohyb je na tabuli stejně k ničemu:
+   kdo se na ni dívá přes místnost, nesleduje nálet, ale jméno. */
 @keyframes tabule-alert {
-  /* Nálet: zvětší se zpoza středu. */
-  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
-  8% { transform: translate(-50%, -50%) scale(1.04); opacity: 1; }
-  12% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  0% { transform: translate(-50%, -50%); opacity: 0; }
+  6% { transform: translate(-50%, -50%); opacity: 1; }
   /* Drží dost dlouho na přečtení přes místnost. */
-  78% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  /* Usazení: zmenší se a odjede dolů k výsledkům. */
-  100% { transform: translate(-50%, 55vh) scale(0.25); opacity: 0; }
+  88% { transform: translate(-50%, -50%); opacity: 1; }
+  100% { transform: translate(-50%, -50%); opacity: 0; }
 }
 /* Kdo si vypnul animace, dostane alert bez pohybu — ale pořád ho dostane. */
 @media (prefers-reduced-motion: reduce) {
@@ -4068,6 +4072,13 @@ body:has(.tracker-strana) main.obal { max-width: none; }
 @keyframes nacrt-prijezd {
   from { opacity: 0; transform: translateX(14px); }
   to { opacity: 1; transform: none; }
+}
+/* Na tabuli bez posunu — ze stejného důvodu jako u karty výš. */
+.tabule .nacrt-souboj { animation-name: nacrt-prolnuti; }
+.tabule .nacrt-souboj-lod span { animation: none; }
+@keyframes nacrt-prolnuti {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes nacrt-sipka {
