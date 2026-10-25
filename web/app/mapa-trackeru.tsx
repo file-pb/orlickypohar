@@ -593,16 +593,36 @@ export function MapaTrackeru({
    * nepočítá, tím přišla o celou režii. Náhradou jsou uzly značek
    * v pořadí: hrubší než cesta po vodě, ale měří.
    */
-  const uzly = (
+  const cesta =
     trasa?.length
       ? trasa
-      : [...znacky].sort((a, b) => a.poradi - b.poradi).map((m) => ({ sirka: m.sirka, delka: m.delka }))
-  ).map((p) => naPlatno(p.sirka, p.delka));
+      : [...znacky].sort((a, b) => a.poradi - b.poradi).map((m) => ({ sirka: m.sirka, delka: m.delka }));
+
+  /**
+   * Trať v metrech, ne v pixelech.
+   *
+   * <b>Postup nesmí záviset na přiblížení</b> (Filip, 26. 10. 2026:
+   * *„nevypadá to na dobře spočítané pořadí"*). Do 26. 10. se délky noh
+   * měřily na plátně, a protože režie přiblížením střídá celek a čelo,
+   * přepočítalo se při každém střihu celé pořadí s jinou jemností —
+   * i průjezdní body po trati vycházely pokaždé jinak husté. Tady je
+   * jeden metr pořád metr: rovinná aproximace kolem středu pole, která
+   * na vodní ploše o pár kilometrech stačí.
+   */
+  const stredTrati = cesta.reduce((s, p) => s + p.sirka, 0) / (cesta.length || 1);
+  const naMetry = useCallback(
+    (sirka: number, delka: number) => ({
+      x: delka * Math.cos((stredTrati * Math.PI) / 180) * 111_320,
+      y: sirka * 111_320,
+    }),
+    [stredTrati],
+  );
+  const uzly = cesta.map((p) => naMetry(p.sirka, p.delka));
   const delkyNoh = uzly.slice(0, -1).map((a, i) => Math.hypot(uzly[i + 1].x - a.x, uzly[i + 1].y - a.y));
   const celkovaDelka = delkyNoh.reduce((s, d) => s + d, 0) || 1;
 
   /** Uzly trati v pořadí — podklad pro přímou spojnici, když není cesta po vodě. */
-  const uzlyTrati = uzly;
+  const uzlyTrati = cesta.map((p) => naPlatno(p.sirka, p.delka));
 
   /** Stav každé lodi k zvolenému času: poloha, stáří, postup, stopa. */
   /**
@@ -629,13 +649,19 @@ export function MapaTrackeru({
       let predchoziCas: number | null = null;
       let nejdal = 0;
       return lod.body.map((b) => {
-        const kde = naPlatno(b.sirka, b.delka);
-        // Kolik průjezdních bodů loď od minulého hlášení nanejvýš stihla.
-        // U prvního není proti čemu měřit, tak se neomezuje nic.
-        const maxVpred =
-          predchoziCas === null
-            ? Infinity
-            : Math.ceil((Math.max(0, b.cas - predchoziCas) * NEJVIC_M_ZA_S) / KROK_M);
+        const kde = naMetry(b.sirka, b.delka);
+        /**
+         * Kolik průjezdních bodů loď od minulého hlášení nanejvýš stihla.
+         *
+         * <b>I první hlášení má strop</b>, totiž čas od startu rozjížďky
+         * — bez něj se kolmice hledala po celé trati, a protože cíl leží
+         * na startu, padla lodi rovnou do cíle. Tabule pak hlásila
+         * dojezd dřív, než loď minula první bóji (Filip, 26. 10. 2026:
+         * *„RACEK určitě nevede"*; změřeno: v cíli ve třicáté vteřině
+         * rozjížďky, po jedné značce ze čtyř).
+         */
+        const odKdy = predchoziCas ?? 0;
+        const maxVpred = Math.ceil((Math.max(0, b.cas - odKdy) * NEJVIC_M_ZA_S) / KROK_M);
         idx = kamPadneKolmice(body, kde, idx, maxVpred);
         predchoziCas = b.cas;
         // Dopočet mezi dvěma body smí kolísat o kousek zpátky, i když
@@ -644,7 +670,7 @@ export function MapaTrackeru({
         return nejdal;
       });
     });
-  }, [lode, z, stred.sirka, stred.delka]);
+  }, [lode, naMetry, stredTrati]);
 
   /**
    * Kdy loď dojela — první bod, kterým překročila práh.
