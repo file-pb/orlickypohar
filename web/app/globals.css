@@ -2888,8 +2888,23 @@ body:has(.tabule) {
    2026. Drží se tedy sloupce. */
 /* Značka: stín pod ní schválně není — Filip ho na televizi odmítl a bez
    pruhu pod sebou ho nepotřebuje. */
+/* <b>Na mapě musí být vidět</b> (Filip, 25. 10. 2026: „logo prosím více
+   kontrastní, když je na mapě"). Značka je světlá kresba a leží na
+   dlaždicích OSM, které jsou samy světlé — zelený les pod ní ji spolkl.
+   Dostala proto tmavý závoj, který do ztracena vyhasne dřív, než stačí
+   udělat hranu: karta se sem nehodí (tu Filip odmítl) a stín taky ne
+   (ten odmítl na televizi). */
 .tabule .odchod {
-  display: block; width: calc(4.6 * var(--tv)); height: calc(4.6 * var(--tv)); opacity: 0.9;
+  display: block; box-sizing: border-box;
+  width: calc(6.4 * var(--tv)); height: calc(6.4 * var(--tv));
+  padding: calc(0.9 * var(--tv));
+  opacity: 1;
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in srgb, var(--pozadi) 88%, transparent) 0%,
+    color-mix(in srgb, var(--pozadi) 74%, transparent) 48%,
+    transparent 70%
+  );
 }
 /* <b>Jednou za čas se otočí jako mince</b> (Filip, 25. 10. 2026). Ne
    nepřetržitě: televize dopočítává mezisnímky a cokoli, co se točí pořád,
