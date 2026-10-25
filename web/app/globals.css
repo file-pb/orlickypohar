@@ -2871,10 +2871,24 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
 /* Sloupec v hlavičce je `3vw` (viz `.tabule .vrch`), takže logo širší
    než on přetékalo do názvu závodu — na každé šířce, změřeno 25. 10.
    2026. Drží se tedy sloupce. */
-/* Odstíněné: je to značka, ne sdělení. Stín pod ní schválně není — Filip
-   ho na televizi odmítl a bez pruhu pod sebou ho značka nepotřebuje. */
+/* Značka: stín pod ní schválně není — Filip ho na televizi odmítl a bez
+   pruhu pod sebou ho nepotřebuje. */
 .tabule .odchod {
-  display: block; width: calc(4.2 * var(--tv)); height: calc(4.2 * var(--tv)); opacity: 0.7;
+  display: block; width: calc(4.6 * var(--tv)); height: calc(4.6 * var(--tv)); opacity: 0.9;
+}
+/* <b>Jednou za čas se otočí jako mince</b> (Filip, 25. 10. 2026). Ne
+   nepřetržitě: televize dopočítává mezisnímky a cokoli, co se točí pořád,
+   na ní zůstává rozmazané — tohle už jsme spravovali u karty dojezdu.
+   Takhle se otočka stane jednou za půl minuty, trvá vteřinu a půl a zbytek
+   času značka klidně stojí. */
+.tabule .odchod svg { animation: znacka-mince 30s ease-in-out infinite; transform-style: preserve-3d; }
+@keyframes znacka-mince {
+  0%, 92% { transform: rotateY(0deg); }
+  97% { transform: rotateY(180deg); }
+  100% { transform: rotateY(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tabule .odchod svg { animation: none; }
 }
 .tabule .odchod:hover { opacity: 1; }
 .tabule .odchod svg { display: block; width: 100%; height: 100%; }
@@ -2933,14 +2947,20 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
      kompaktní tmavá karta, drobný nadpisek nahoře a jméno barevně. Velká
      bílá cedule přes půl obrazovky překryla mapu zrovna ve chvíli, kdy se
      na ní něco dělo. */
-  padding: calc(1 * var(--tv)) calc(1.8 * var(--tv)) calc(1.1 * var(--tv)); border-radius: calc(0.8 * var(--tv));
+  /* <b>Vzduch po stranách</b> (Filip, 25. 10. 2026: *„to písmo nemá
+     okraje a je moc veliké"*). Jméno sahalo skoro k rámečku, takže
+     karta působila natěsno; postranní okraj je teď větší než svislý. */
+  padding: calc(1 * var(--tv)) calc(2.6 * var(--tv)) calc(1.1 * var(--tv));
+  border-radius: calc(0.9 * var(--tv));
   background: color-mix(in srgb, #14171a 88%, transparent);
   backdrop-filter: blur(8px);
   /* <b>Celý rámeček, ne proužek u horní hrany</b> (Filip, 24. 10. 2026:
      *„cílový modal nemá okraje, takže vypadá amatérsky"*). Barvu nese
      `currentColor`, tedy druh zprávy — dojezd modře, konec rozjížďky
      zeleně. */
-  border: max(2px, calc(0.14 * var(--tv))) solid currentColor;
+  /* Rámeček tenčí a trochu ustoupený do barvy pozadí — karta má být
+     čitelná, ne křiklavá. */
+  border: max(2px, calc(0.1 * var(--tv))) solid color-mix(in srgb, currentColor 75%, transparent);
   box-shadow: 0 calc(0.6 * var(--tv)) calc(2.5 * var(--tv)) rgb(0 0 0 / 0.55);
   text-align: center; pointer-events: none; overflow: hidden;
   /* Dlouhé jméno se zalomí, místo aby se uřízlo — přečíst „ČERVENÉ CA"
@@ -2964,8 +2984,13 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
   margin-bottom: calc(0.15 * var(--tv));
 }
 /* Jméno nese barvu druhu — to je ta část, kterou si má divák odnést. */
-.tabule-alert b { font-size: calc(2.6 * var(--tv)); line-height: 1.05; color: currentColor; }
-.tabule-alert span { font-size: calc(1 * var(--tv)); color: var(--tlumeny); }
+/* Jméno menší: přes místnost se čte i tak a karta pak nepřekrývá půl
+   mapy zrovna ve chvíli, kdy je na ní co vidět. */
+.tabule-alert b {
+  font-size: calc(2.1 * var(--tv)); line-height: 1.1; color: currentColor;
+  letter-spacing: 0.01em;
+}
+.tabule-alert span { font-size: calc(0.95 * var(--tv)); color: var(--tlumeny); }
 /* Dojezd je ta nejsilnější zpráva, proto vodní modrá; konec rozjížďky
    a závodu zeleně jako „vypsáno" jinde na webu. */
 .tabule-alert.dojezd { border-color: var(--voda); }
@@ -3875,7 +3900,10 @@ body:has(.tracker-strana) main.obal { max-width: none; }
    dvojnásobně dlouhý sloupec a na televizi se jich vešla polovina. */
 .nacrt-poradi li button {
   display: grid;
-  grid-template-columns: 1.6rem minmax(0, 1fr) auto auto auto;
+  /* Roztahuje se sloupec se jménem, ne ten druhý v pořadí: od 25. 10.
+     2026 stojí na druhém místě znak třídy a `1fr` na něm znamenalo, že
+     se celý řádek nakupil vlevo a časy nedošly k pravému okraji. */
+  grid-template-columns: 1.6rem auto minmax(0, 1fr) auto auto;
   gap: 0 0.5rem;
   align-items: center;
   width: 100%;
@@ -4437,16 +4465,20 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 }
 .tabule .poradi-hlava .stari { margin: calc(0.2 * var(--tv)) 0 0; font-size: calc(0.7 * var(--tv)); opacity: .55; }
 
-/* Loď, na kterou míří záběr, svítí v pořadí — místo cedule přes mapu. */
+/* Loď, na kterou míří záběr, svítí v pořadí — místo cedule přes mapu.
+   <b>Barvou té lodi</b>, tedy toutéž, jakou má její stopa na mapě
+   (Filip, 25. 10. 2026): oko pak spojí řádek se stopou bez hledání.
+   Modrá zůstala štítku „v cíli", aby znamenala jedinou věc. */
 .tabule .nacrt-poradi li > button.nacrt-v-zaberu {
-  background: color-mix(in srgb, var(--voda) 16%, transparent);
+  background: color-mix(in srgb, var(--barva-lodi, var(--voda)) 18%, transparent);
   border-radius: 8px;
-  box-shadow: inset 3px 0 0 var(--voda);
+  box-shadow: inset 3px 0 0 var(--barva-lodi, var(--voda));
 }
 
-/* Znak třídy před jménem a stáří u pravého okraje (Filip, 25. 10. 2026). */
-.tabule .nacrt-poradi .nacrt-trida { margin-right: calc(0.45 * var(--tv)); }
-.tabule .nacrt-poradi .nacrt-stav { margin-left: auto; text-align: right; }
+/* Znak třídy před jménem a stáří u pravého okraje (Filip, 25. 10. 2026).
+   V gridu to dělá `justify-self`, ne `margin-left: auto` — sloupce se
+   samy neroztahují, takže se tím nic nepohnulo. */
+.tabule .nacrt-poradi .nacrt-stav { justify-self: end; text-align: right; }
 
 /* Panýlky rozjížděk v pravém horním rohu mapy. Se selektorem `.tabule`
    napřed, aby je nepřebilo obecnější pravidlo pro potomky tabule. */
