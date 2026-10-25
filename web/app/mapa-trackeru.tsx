@@ -23,6 +23,7 @@ import { CELKEM, ZnakTridy } from "@/app/tridy";
 import type { Poloha } from "@/lib/voda";
 import type { Lod, Znacka } from "@/app/nacrt/mapa/plavba";
 import { seradNaVode } from "@/lib/poradi-na-vode";
+import { KROK_M, brankyTrati, minuteBranky, postupVMetrech } from "@/lib/postup-po-trase";
 import {
   FOCUS_SOUBOJE_S,
   KOLOTOC_S,
@@ -119,6 +120,14 @@ const ODSTUP_PROHOZENI_PX = 12;
 /** Jak dlouho pak dráhy obou lodí hoří, než vyhasnou. */
 const HORENI_S = 180;
 /**
+ * Nejvyšší rychlost, se kterou se počítá, kam až loď mohla doplout.
+ *
+ * Plachetnice na Orlíku jede sotva pět metrů za vteřinu; dvanáct je
+ * velkorysá mez, do které se vejde i zákmit GPS. Slouží jen k tomu, aby
+ * postup po trati nepřeskočil na kus, kam loď nedoplula.
+ */
+const NEJVIC_M_ZA_S = 12;
+/**
  * A jak dlouho se prohození hraje v žebříčku.
  *
  * <b>Mnohem kratší než focus</b>: šipky a předjetí doprovázejí okamžik,
@@ -187,45 +196,6 @@ type Stav = "cerstva" | "starnouci" | "nedostupna";
 function stav(stariS: number | null): Stav {
   if (stariS === null || stariS > NEDOSTUPNA_PO_S) return "nedostupna";
   return stariS > STARNE_PO_S ? "starnouci" : "cerstva";
-}
-
-/**
- * Postup po trase: kolmý průmět na lomenou čáru značek, v metrech od
- * startu. <b>Monotónní</b> — bere se průmět nejblíž tomu předchozímu, aby
- * pořadí u bóje neskákalo mezi příchozí a odchozí nohou (PLAN.md, *Co je
- * post*).
- */
-function postupPoTrase(
-  uzly: { x: number; y: number }[],
-  delkyNoh: number[],
-  bod: { x: number; y: number },
-  predchozi: number,
-): number {
-  let nej = predchozi;
-  let nejVzdalenost = Infinity;
-  let zaSebou = 0;
-
-  for (let i = 0; i < uzly.length - 1; i++) {
-    const a = uzly[i];
-    const b = uzly[i + 1];
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const delka2 = dx * dx + dy * dy || 1;
-    const t = Math.max(0, Math.min(1, ((bod.x - a.x) * dx + (bod.y - a.y) * dy) / delka2));
-    const px = a.x + t * dx;
-    const py = a.y + t * dy;
-    const vzdalenost = Math.hypot(bod.x - px, bod.y - py);
-    const postup = zaSebou + t * delkyNoh[i];
-
-    // Trest za couvání: průmět dozadu musí být zřetelně bližší, aby vyhrál.
-    const trest = postup < predchozi ? 60 : 0;
-    if (vzdalenost + trest < nejVzdalenost) {
-      nejVzdalenost = vzdalenost + trest;
-      nej = postup;
-    }
-    zaSebou += delkyNoh[i];
-  }
-  return nej;
 }
 
 /**
@@ -652,11 +622,26 @@ export function MapaTrackeru({
   );
 
   const postupy = useMemo(() => {
+    // Branky se rozestaví jednou pro celou trať a sdílí je všechny lodě.
+    const branky = brankyTrati(uzly, delkyNoh);
     return lode.map((lod) => {
-      let postup = 0;
+      let idx = 0;
+      let predchoziCas: number | null = null;
+      let nejdal = 0;
       return lod.body.map((b) => {
-        postup = postupPoTrase(uzly, delkyNoh, naPlatno(b.sirka, b.delka), postup);
-        return postup;
+        const kde = naPlatno(b.sirka, b.delka);
+        // Kolik branek loď od minulého hlášení nanejvýš stihla. U prvního
+        // bodu není proti čemu měřit, tak se neomezuje nic.
+        const maxVpred =
+          predchoziCas === null
+            ? Infinity
+            : Math.ceil((Math.max(0, b.cas - predchoziCas) * NEJVIC_M_ZA_S) / KROK_M);
+        idx = minuteBranky(branky, kde, idx, maxVpred);
+        predchoziCas = b.cas;
+        // Dopočet mezi dvěma body smí kolísat o kousek zpátky, i když
+        // průjezdní bod zůstal; pořadí z toho kmitat nemá.
+        nejdal = Math.max(nejdal, postupVMetrech(branky, kde, idx));
+        return nejdal;
       });
     });
   }, [lode, z, stred.sirka, stred.delka]);

@@ -14,3 +14,7 @@ node --experimental-strip-types ./rozjizdky.test.ts
 echo
 echo "== Režie tabule =="
 node --experimental-strip-types ./rezie.test.ts
+
+echo
+echo "== Postup po trati =="
+node --experimental-strip-types ./postup.test.ts
