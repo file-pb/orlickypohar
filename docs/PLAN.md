@@ -2794,6 +2794,53 @@ ne až po kliknutí do mapy.
 šum a směr by si vymýšlel stranu. **Bez startovního prvku se sloupec
 nevypisuje** — měřit od náhodné bóje by byl údaj, který nic neznamená.
 
+### Tabule se uklidila, a co dál (Filip, 25. 10. 2026)
+
+Po třech kolech fotek ze skutečné televize — ne ze simulace v prohlížeči —
+došlo na tři věci, které spolu souvisí víc, než se zdálo.
+
+**Co televize dělá jinak než monitor.** Dopočítává mezisnímky, takže co se
+na ní hýbe, to rozdvojí. Karta dojezdu, která naletěla ze `scale(0.6)`,
+ukázala jméno lodi **dvakrát přes sebe**. Na tabuli proto nic nelétá, jen
+prolíná. V prohlížeči se tohle nedá najít, protože ten nic nedopočítává;
+jediná cesta k nálezu vedla přes fotku z obýváku.
+
+**Pruh nahoře bude kratší** (Filip): *„vlastně nám stačí informace
+o aktuální regatě. Pak nějaká malá informace o rozjížďce a jejím stavu,
+nebo aktuálním statusu, např. Probíhá rozprava."*
+
+Je to obrat proti 24. 10., kdy se do pruhu naopak všechno slučovalo — a
+stojí za tím zkušenost: přeplněný pruh byl příčinou překryvů. Čím míň
+v něm je, tím míň se má co o co přetlačovat. Počet rozjížděk a lodí na
+startu se dá přečíst z pořadí pod tím; do pruhu patří **jméno regaty
+a co se zrovna děje**.
+
+**Před tratí teaser, ne prázdná mapa** (Filip): *„tracker a tabule nemusí
+být vidět jen po rozpravě, ale před tím, než dává smysl zobrazovat mapu
+s tratí, by se dala zobrazovat nějaká grafika nebo teaser probíhající
+regaty, aby všichni věděli, co bude následovat."*
+
+Dokud není trať postavená a nikdo nehlásí polohu, nemá mapa co ukazovat.
+Místo ní má tabule říct, **co se chystá**: která regata, kolik lodí je
+přihlášeno, kdy je rozprava, co se jede. Je to tentýž princip jako
+u ukázkových plaveb — raději přiznaný zástup než prázdno, které vypadá
+jako porucha.
+
+**Mezičasy po nohách trati** (nápad z F1, Filip: *„pokud máme data a je to
+levně vyrobitelné, tak proč ne"*). Televizní přenosy Formule dělí okruh na
+sektory a ukazují, kdo byl na kterém rychlejší; u nás je přirozený úsek
+**noha mezi dvěma prvky trati**. Data na to máme obě: trasu po bodech
+a trať rozdělenou na nohy.
+
+Na plachetnici to dává větší smysl než v autě — pořadí se láme na návětrné
+noze a z celkového času to není poznat. **Do pilotu to nepatří** (ten má
+jeden telefon na loď a žádné srovnávání), ale jakmile budou trasy
+z regaty, je to první věc, která se z nich dá postavit.
+
+Co F1 dělá navíc a my zatím ne: ukazuje **odstup** (+1.744), kdežto naše
+„před 3 s" je stáří dat, ne vzdálenost mezi loděmi. Odstup je zajímavější
+číslo, ale potřebuje postup po trati u obou lodí — tedy totéž, co mezičasy.
+
 ### Tabule na širokém monitoru (Filip, 24. 10. 2026)
 
 První pohled na nasazenou tabuli přes ultrawide ukázal čtyři věci naráz.

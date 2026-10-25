@@ -3185,7 +3185,6 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
 .tabule-mapa .nacrt-na-tv .nacrt-swap {
   top: calc(var(--horni-blok, calc(5.8 * var(--tv))) + 0.6 * var(--tv));
 }
-.tabule-mapa .nacrt-na-tv .nacrt-swap-souboj { left: 1.2vw; right: auto; }
 /* Těsně vedle žebříčku, ne někde uprostřed: odsazení je jeho šířka plus
    mezera, takže hláška sedí u jeho hrany při každé šířce obrazovky. */
 .tabule-mapa .nacrt-na-tv .nacrt-swap-kolotoc {

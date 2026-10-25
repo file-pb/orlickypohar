@@ -5,7 +5,6 @@ import Link from "next/link";
 import type { Snimek } from "@/lib/tabule";
 import { Znak } from "@/app/logo";
 import { NazevZavodu } from "@/app/tabule-nazev";
-import { Atributy } from "./atributy";
 import { Karusel, type Panel } from "./karusel";
 import { PoradiTrid } from "./poradi-tridy";
 import { StavovyProuzek } from "./semafor";
@@ -259,19 +258,22 @@ export function Obrazovka({
         {/* Stav rozjížďky se vlajkou patří do téhož pruhu jako všechno
             ostatní (Filip, 24. 10. 2026) — dva pásy nad sebou braly dvakrát
             tolik místa než jeden. */}
+        {/* <b>V pruhu zůstává jen regata a co se zrovna děje</b> (Filip,
+            25. 10. 2026: *„vlastně nám stačí informace o aktuální regatě.
+            Pak nějaká malá informace o rozjížďce a jejím stavu, nebo
+            aktuálním statusu"*).
+
+            Je to obrat proti 24. 10., kdy se do pruhu naopak všechno
+            slučovalo — a stojí za tím zkušenost z televize: přeplněný
+            pruh byl příčinou překryvů. Počet rozjížděk, lodí na startu
+            i stav ročníku se dají přečíst z pořadí a z výsledků pod tím;
+            nahoře by jen zabíraly místo, o které se pak perou. */}
         <StavovyProuzek snimek={snimek} ted={ted} ukazkovePolohy={zive.length === 0} />
-        <div className="stav">
-          <p className={`stitek stav-${snimek.stav.toLowerCase()}`}>{STAVY[snimek.stav]}</p>
-          <p className={stari > 120 ? "stari zastarale" : "stari"}>
-            {stari < 60 ? `data před ${stari} s` : `data stará ${Math.round(stari / 60)} min`}
-          </p>
-        </div>
-        {/* Atributy jedou v témž pruhu jako název (Filip, 24. 10. 2026:
-            *„toto všechno dej nějak do jednoho pruhu nahoře, aby nám to
-            nebralo tolik míst"*). Samostatný pás dlaždic pod hlavičkou
-            ukrajoval desetinu obrazovky na pět čísel, která se vejdou na
-            řádek. */}
-        <Atributy snimek={snimek} />
+        {/* Stáří dat zůstává: je to jediný údaj, který nikde jinde není
+            a podle kterého se pozná, že tabule žije, ne že zamrzla. */}
+        <p className={stari > 120 ? "stari zastarale" : "stari"}>
+          {stari < 60 ? `data před ${stari} s` : `data stará ${Math.round(stari / 60)} min`}
+        </p>
       </header>
 
       {/* <b>Nepodepsaná čísla se musí přiznat</b> (Filip, 9. 10. 2026:
@@ -337,18 +339,6 @@ export function Obrazovka({
 
 
 
-/**
- * Jména stavů. <b>Opsaná z výčtu, ne z hlavy</b> — napsal jsem nejdřív
- * „Dojeta" a na tabuli se vypsalo syrové „Dokoncena", protože takhle se
- * ta hodnota doopravdy jmenuje.
- */
-const STAVY: Record<Snimek["stav"], string> = {
-  Planovany: "plánováno",
-  Vypsany: "vypsáno",
-  Odjety: "odjeto",
-  Potvrzeny: "potvrzeno",
-  Zruseny: "zrušeno",
-};
 
 const STAVY_ROZJIZDEK: Record<Snimek["rozjizdky"][number]["stav"], string> = {
   Planovana: "čeká",

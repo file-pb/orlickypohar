@@ -111,9 +111,6 @@ const VYMENA_MS = 1100;
 const TAKT_MS = 1900;
 /** Jak dlouho u řádku svítí šipka, než zhasne a odhalí číslo. */
 const SIPKA_MS = 2000;
-/** Hláška o souboji svítí dlouho, když za ní nic nejede, a krátce, když ano. */
-const HLASKA_DLOUHO_MS = 8000;
-const HLASKA_KRATCE_MS = 2000;
 /** Jak dlouho se na tabuli drží jedna loď, když se nic neděje. */
 const KOLOTOC_S = 60;
 
@@ -1240,31 +1237,6 @@ export function MapaTrackeru({
     .map((id) => poradi.find((v) => v.lod.id === id))
     .filter((v): v is (typeof poradi)[number] => Boolean(v));
 
-  /**
-   * Jak dlouho svítí hláška o souboji (Filip, 24. 10. 2026): *„ponechej to
-   * zobrazené 2 sekundy, pokud za tím jede další swap, jinak to nechej
-   * svítit třeba 8 sekund."* Když se souboje řetězí, nemá cenu držet
-   * starý — a když je klid, ať si ho divák stihne přečíst.
-   */
-  const [hlaskaVidet, setHlaskaVidet] = useState(false);
-  useEffect(() => {
-    if (!posledniSwap) {
-      setHlaskaVidet(false);
-      return;
-    }
-    const jedeDalsi = prohozeni.some(
-      (p) =>
-        p.pozice <= SOUBOJ_DO_POZICE &&
-        p.cas > posledniSwap.cas &&
-        p.cas - posledniSwap.cas <= FOCUS_SOUBOJE_S,
-    );
-    setHlaskaVidet(true);
-    const casovac = setTimeout(
-      () => setHlaskaVidet(false),
-      jedeDalsi ? HLASKA_KRATCE_MS : HLASKA_DLOUHO_MS,
-    );
-    return () => clearTimeout(casovac);
-  }, [posledniSwap?.cas, prohozeni]);
 
   const vybranaLod =
     vStavu.find((v) => v.lod.id === vybrana && (!filtr || v.lod.kategorie === filtr)) ?? null;
@@ -1500,34 +1472,24 @@ export function MapaTrackeru({
             </button>
           </div>
 
-        {rezim === "tabule" && zabery && (zabery.duvod !== "souboj" || hlaskaVidet) && (
-          <div
-            className={`nacrt-swap ${
-              zabery.duvod === "souboj" ? "nacrt-swap-souboj" : "nacrt-swap-kolotoc"
-            }`}
-          >
-            {zabery.duvod === "souboj" && posledniSwap && hlaskaVidet ? (
-              <div className="nacrt-souboj" key={posledniSwap.cas}>
-                <div className="nacrt-souboj-pozice">{posledniSwap.pozice}. pozice</div>
-                <div className="nacrt-souboj-lod nacrt-nahoru">
-                  <span aria-hidden>▲</span>
-                  <strong>{lode[posledniSwap.nahoru].nazev}</strong>
-                </div>
-                <div className="nacrt-souboj-lod nacrt-dolu">
-                  <span aria-hidden>▼</span>
-                  <strong>{lode[posledniSwap.dolu].nazev}</strong>
-                </div>
-              </div>
-            ) : (
-              <>
-                {"na vodě: "}
-                {zabery.lode.map((id) => (
-                  <strong key={id} style={{ color: barva(id) }}>
-                    {lode.find((l) => l.id === id)?.nazev}
-                  </strong>
-                ))}
-              </>
-            )}
+        {/* <b>Prohození nedostane ceduli</b> (Filip, 25. 10. 2026: *„switch
+            lodí bych asi nezobrazoval v popupu, stačí to, že se to animuje
+            na ranku"*). Pořadí vpravo se při prohození přeskupí a to je
+            vidět samo; cedule přes mapu říkala totéž podruhé — a přitom
+            zrovna ona se na televizi prala o místo s hláškou pod
+            hlavičkou. Záběr se kvůli souboji mění dál, jen se o tom
+            nepíše.
+
+            Zůstává popisek kolotoče: ten říká, na koho se zrovna díváme,
+            což z mapy samotné poznat nejde. */}
+        {rezim === "tabule" && zabery && zabery.duvod !== "souboj" && (
+          <div className="nacrt-swap nacrt-swap-kolotoc">
+            {"na vodě: "}
+            {zabery.lode.map((id) => (
+              <strong key={id} style={{ color: barva(id) }}>
+                {lode.find((l) => l.id === id)?.nazev}
+              </strong>
+            ))}
           </div>
         )}
 
