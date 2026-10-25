@@ -16,7 +16,7 @@
  * počítané v prohlížeči místo na serveru.
  */
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } from "react";
 import { DLAZDICE, Z_NEJMENE, Z_NEJVIC, doPixelu, zPixelu } from "@/lib/mapa";
 import { ZnakBoje } from "@/app/znak-boje";
 import { CELKEM, ZnakTridy } from "@/app/tridy";
@@ -52,8 +52,45 @@ const NEDOSTUPNA_PO_S = 300;
  * — jinak by loď při každém prohození změnila barvu a oko by ji ztratilo.
  * Zlatý úhel rozhází odstíny tak, aby sousední lodě nebyly podobné.
  */
-function barva(id: number) {
-  return `hsl(${(id * 137.508) % 360} 72% 45%)`;
+/**
+ * Barvy stop na mapě.
+ *
+ * <b>Pevná paleta, ne spočítaný odstín</b> (Filip, 25. 10. 2026:
+ * *„pokus se zobrazovat barvy, aby nebyly podobné, špatně se to
+ * porovnává"*). Dřív se odstín počítal zlatým úhlem z `id` lodi, jenže
+ * `id` jsou z databáze: nejdou po jedné, takže se zlatý úhel rozsypal a
+ * vedle sebe skončily dvě růžové. A protože se měnil jen odstín, lišily
+ * se stopy i tak jen tónem.
+ *
+ * Tahle paleta střídá <b>odstín i jas</b> — sousední položky jsou vždy
+ * jedna tmavá a jedna světlá, takže se dají rozeznat i přes místnost a
+ * při pohledu na mapu plnou čar.
+ */
+const PALETA = [
+  "#e6194b", // červená
+  "#3cb44b", // zelená
+  "#ffa510", // oranžová
+  "#4363d8", // modrá
+  "#f032e6", // purpurová
+  "#1ecbe1", // tyrkysová
+  "#bfef45", // limetka
+  "#9a3ed7", // fialová
+  "#ff8f6b", // lososová
+  "#2e8b7a", // mořská
+  "#ffd21e", // žlutá
+  "#c46210", // skořicová
+  "#7fb4ff", // nebeská
+  "#d81b7a", // malinová
+  "#6cd97e", // mátová
+  "#a0522d", // hnědá
+];
+
+/**
+ * Barva podle <b>pořadí ve startovní listině</b>, ne podle `id`. Tím se
+ * paleta prochází po jedné a sousedé jsou si co nejvíc nepodobní.
+ */
+function barvaPodleIndexu(index: number) {
+  return PALETA[((index % PALETA.length) + PALETA.length) % PALETA.length];
 }
 
 /**
@@ -596,6 +633,17 @@ export function MapaTrackeru({
    * místo přepočtu při každém posunu času — a hlavně je z něj vidět, jak
    * se pořadí vyvíjelo, což potřebuje režie tabule.
    */
+  /** Barvy lodí: jednou spočítané podle pořadí, pak jen vyhledání. */
+  const barvy = useMemo(() => {
+    const m = new Map<number, string>();
+    lode.forEach((l, i) => m.set(l.id, barvaPodleIndexu(i)));
+    return m;
+  }, [lode]);
+  const barva = useCallback(
+    (id: number) => barvy.get(id) ?? PALETA[0],
+    [barvy],
+  );
+
   const postupy = useMemo(() => {
     return lode.map((lod) => {
       let postup = 0;
