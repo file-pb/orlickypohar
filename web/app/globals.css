@@ -2782,6 +2782,12 @@ body:has(.tabule) { overflow: hidden; }
 body:has(.tabule) { --tv: min(1vw, 1.78vh); }
 
 .tabule {
+  /* <b>Šířka sloupce s pořadím na jednom místě.</b> Dřív si ji každý
+     počítal po svém: mapa z `--tv`, panel z `vw`. Jenže `--tv` je
+     `min(1vw, 1.78vh)`, takže na nízkém okně vyjde míň než `1vw` —
+     mapa si nechala užší pruh, než panel zabral, a lezly do sebe.
+     Odtud to „rozhazování při změně rozměru" (Filip, 25. 10. 2026). */
+  --sloupec-poradi: clamp(280px, calc(24 * var(--tv)), 460px);
   /* Místo na pás partnerů si odečítá `body` (`padding-bottom:
      var(--paticka)`), takže tady se přidávat nesmí — po dvojí rezervaci
      zůstalo nad logy sto osm pixelů prázdna (17. 10. 2026). */
@@ -3165,7 +3171,7 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
   /* Plocha mapy končí u žebříčku i u pásů, ne pod nimi: co je pod
      panelem, divák neuvidí, a mapa si podle téhle plochy počítá výřez. */
   position: absolute;
-  inset: 0 clamp(280px, calc(24 * var(--tv)), 460px) var(--dolni-blok, calc(12.6 * var(--tv))) 0;
+  inset: 0 var(--sloupec-poradi) var(--dolni-blok, calc(12.6 * var(--tv))) 0;
   z-index: 0;
   display: grid; place-items: center; overflow: hidden;
   pointer-events: none;
@@ -3209,7 +3215,7 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
    mezera, takže hláška sedí u jeho hrany při každé šířce obrazovky. */
 .tabule-mapa .nacrt-na-tv .nacrt-swap-kolotoc {
   left: auto;
-  right: calc(clamp(280px, 24vw, 460px) + 0.8vw);
+  right: calc(var(--sloupec-poradi) + 0.8vw);
 }
 
 /* <b>Pomyslné pořadí je ten panel z náčrtu</b> (Filip, 24. 10. 2026:
@@ -3222,7 +3228,7 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
      odsazení od hrany i vnitřní okraj, takže nad názvem zbývalo 41 px
      prázdna. Shora tedy nic, po stranách a dole zůstává. */
   top: 0; right: 1vw; bottom: calc(1 * var(--tv));
-  width: clamp(280px, 24vw, 460px);
+  width: var(--sloupec-poradi);
   pointer-events: none;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
@@ -3248,9 +3254,11 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
    Odsazení shora je pruh s ukázkovými daty plus horní lišta. */
 .tabule:has(.tabule-mapa) .tabule-mapa .nacrt-poradi {
   position: fixed;
-  /* Až nahoru: pruh s názvem končí před žebříčkem, takže ho nepřekrývá
-     a panel může začít hned pod ukázkovou lištou (Filip, 24. 10. 2026). */
-  top: 28px;
+  /* <b>Až nahoru, bez odsazení.</b> Těch 28 px bylo místo na pruh
+     s ukázkovými daty a horní lištu — ani jedno už nad panelem není
+     (od #480), takže zbývalo jen prázdno nad názvem regaty. Filip ho
+     hlásil třikrát. */
+  top: 0;
   right: 0;
   bottom: var(--paticka);
   border-radius: 0;
@@ -3685,7 +3693,7 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
      vyhrabala zpod hlavičky, zjistilo se, že jde přes celou šířku
      a leží na pořadí vpravo — na televizi z něj ukrojila dva řádky
      (Filip vyfotil 25. 10. 2026). */
-  margin-right: clamp(280px, 24vw, 460px);
+  margin-right: var(--sloupec-poradi);
 }
 .tabule .hlaska.dej { font-size: calc(1.2 * var(--tv)); padding: calc(0.5 * var(--tv)) calc(1 * var(--tv)); }
 .tabule .hlaska.dej b { color: var(--voda); }
@@ -4260,7 +4268,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   top: 1rem;
   right: 1rem;
   bottom: 1rem;
-  width: clamp(280px, 24vw, 460px);
+  width: var(--sloupec-poradi);
   z-index: 2;
   display: grid;
   grid-template-rows: auto auto auto minmax(0, 1fr);
@@ -4399,7 +4407,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
      partnerům lezly pod nohy (Filip, 24. 10. 2026).
      Vpravo končí přesně u žebříčku, aby mezi nimi nezůstal proužek. */
   position: fixed;
-  left: 0; right: clamp(280px, 24vw, 460px); bottom: var(--paticka);
+  left: 0; right: var(--sloupec-poradi); bottom: var(--paticka);
   z-index: 2;
   display: grid; gap: calc(0.1 * var(--tv));
   /* <b>Strop výšky.</b> Pásy sedí nad mapou a každý jejich pixel jde
@@ -4526,7 +4534,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
    když data zestárnou — pak je to zpráva, ne ozdoba. */
 .tabule .tabule-stari-kolecko {
   position: absolute; z-index: 4;
-  right: calc(clamp(280px, calc(24 * var(--tv)), 460px) + 1.8vw);
+  right: calc(var(--sloupec-poradi) + 1.8vw);
   bottom: calc(var(--dolni-blok, 0px) + 0.8 * var(--tv));
   margin: 0;
   display: grid; place-items: center;
@@ -4548,7 +4556,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .tabule .rozjizdky-panylky {
   position: absolute; z-index: 4;
   top: calc(0.8 * var(--tv));
-  right: calc(clamp(280px, calc(24 * var(--tv)), 460px) + 0.8vw);
+  right: calc(var(--sloupec-poradi) + 0.8vw);
   display: flex; gap: calc(0.4 * var(--tv));
 }
 .tabule .rozjizdka-panylek {
