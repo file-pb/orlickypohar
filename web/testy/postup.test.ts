@@ -1,5 +1,5 @@
 /**
- * Kde je loď na trati — podle skrytých branek rozestavěných po trati.
+ * Kde je loď na trati — podle skrytých průjezdních bodů rozestavěných po trati.
  *
  * Tohle se z obrazovky neověří: je to výpočet, a když se splete, vypadá
  * to jen jako „divné pořadí". Filip na to narazil třikrát (naposledy
@@ -9,7 +9,7 @@
  */
 import assert from 'node:assert/strict';
 
-import { brankyTrati, minuteBranky, postupVMetrech } from '../lib/postup-po-trase.ts';
+import { bodyTrati, kamPadneKolmice, postupVMetrech } from '../lib/postup-po-trase.ts';
 
 let prosly = 0;
 function zkus(nazev: string, f: () => void) {
@@ -26,7 +26,7 @@ const UZLY = [
 ];
 const NOHY = [1000, 1000.8, 40];
 const CELKEM = NOHY.reduce((a, b) => a + b, 0);
-const BRANKY = brankyTrati(UZLY, NOHY);
+const BODY = bodyTrati(UZLY, NOHY);
 
 /**
  * Celá plavba po bodech, jak ji počítá komponenta — <b>i s oknem</b>,
@@ -39,8 +39,8 @@ const MAX_VPRED = 4;
 function plavba(body: { x: number; y: number }[]): number[] {
   let idx = 0;
   return body.map((b, i) => {
-    idx = minuteBranky(BRANKY, b, idx, i === 0 ? Infinity : MAX_VPRED);
-    return postupVMetrech(BRANKY, b, idx);
+    idx = kamPadneKolmice(BODY, b, idx, i === 0 ? Infinity : MAX_VPRED);
+    return postupVMetrech(BODY, b, idx);
   });
 }
 const nahoru = (x = 5) => Array.from({ length: 21 }, (_, i) => ({ x, y: 1000 - i * 50 }));
@@ -49,9 +49,9 @@ const doCile = () => Array.from({ length: 5 }, (_, i) => ({ x: 38 - i * 10, y: 1
 
 console.log('Postup po trati');
 
-zkus('branky pokrývají celou trať', () => {
-  assert.ok(BRANKY.length > CELKEM / 25 - 5, `branek je jen ${BRANKY.length}`);
-  assert.equal(Math.round(BRANKY.at(-1)!.postup), Math.round(CELKEM));
+zkus('průjezdní body pokrývají celou trať', () => {
+  assert.ok(BODY.length > CELKEM / 25 - 5, `bodů je jen ${BODY.length}`);
+  assert.equal(Math.round(BODY.at(-1)!.postup), Math.round(CELKEM));
 });
 
 zkus('loď na první noze nedostane postup z poslední', () => {
@@ -114,6 +114,31 @@ zkus('loď, která se vrátí k bóji, o postup nepřijde', () => {
   const zpet = [{ x: 5, y: 200 }, { x: 5, y: 400 }];
   const p = plavba([...tam, ...zpet]);
   assert.ok(p.at(-1)! >= p[tam.length - 1] - 0.001, 'postup po návratu klesl');
+});
+
+zkus('průjezdní bod v otočce leží na oblouku, ne na bóji', () => {
+  // Návětrná je druhý uzel (0, 0). Žádný bod tam nesmí zůstat ležet —
+  // loď bóji objíždí obloukem a protnula by ji jen na papíře.
+  const naBoji = BODY.filter((b) => Math.hypot(b.x, b.y) < 1);
+  assert.equal(naBoji.length, 0, 'bod zůstal ležet přesně na bóji');
+  const okolo = BODY.filter((b) => Math.hypot(b.x, b.y) < 40);
+  assert.ok(okolo.length > 0, 'u bóje nezbyl žádný bod');
+});
+
+zkus('loď, která bóji objede obloukem, postupuje plynule', () => {
+  // Přijede po návětrné, opíše kolem bóje půlkruh o 20 m a jede zpátky.
+  const tam = nahoru();
+  const oblouk = Array.from({ length: 9 }, (_, i) => {
+    const uhel = Math.PI - (i * Math.PI) / 8;
+    return { x: Math.cos(uhel) * -20, y: Math.sin(uhel) * 20 };
+  });
+  const p = plavba([...tam, ...oblouk, ...dolu()]);
+  for (let i = 1; i < p.length; i++) {
+    assert.ok(p[i] >= p[i - 1] - 0.001, `postup klesl v kroku ${i}`);
+  }
+  const vOblouku = p.slice(tam.length, tam.length + oblouk.length);
+  assert.ok(vOblouku.at(-1)! > vOblouku[0], 'v otočce se vůbec nepohnul');
+  assert.ok(p.at(-1)! > 1900, `po otočce má být na druhé noze, vyšlo ${p.at(-1)!.toFixed(0)}`);
 });
 
 console.log(`\n${prosly} kontrol prošlo.`);

@@ -212,6 +212,43 @@ function plavba(zrno: number, znacky: Znacka[], rychlostUzlu: number): Bod[] {
       cas += krok;
       body.push({ ...kde, cas });
     }
+
+    /**
+     * <b>Bóji je potřeba objet, ne se k ní jen přiblížit</b> (Filip,
+     * 26. 10. 2026: *„koukám, že ti ty lodičky v simulaci nedodrží ty
+     * objezdy bójek"*). Smyčka výš končí čtyřicet metrů před značkou
+     * a dřív se rovnou mířilo na další — stopy se tak lámaly před bójí
+     * a kolem ní nevedly vůbec. Loď teď opíše oblouk tím bokem, který
+     * trať předepisuje.
+     */
+    const dalsi = znacky[i + 1];
+    if (dalsi && cil.typ !== "Cil") {
+      const uhelK = (z: { sirka: number; delka: number }) => {
+        const kosinus = Math.cos((cil.sirka * Math.PI) / 180);
+        return Math.atan2(z.sirka - cil.sirka, (z.delka - cil.delka) * kosinus);
+      };
+      const od = uhelK(kde);
+      const k = uhelK(dalsi);
+      // Značka se míjí levobokem, nebo pravobokem — tím je dán i směr
+      // objezdu. Bez údaje se vybere kratší oblouk.
+      const smer = cil.strana === "PoLeve" ? 1 : cil.strana === "PoPrave" ? -1 : Math.sign(((k - od + 3 * Math.PI) % (2 * Math.PI)) - Math.PI) || 1;
+      let rozdil = (k - od) * smer;
+      while (rozdil < 0) rozdil += 2 * Math.PI;
+      const polomer = Math.max(25, metry(kde, cil));
+      const kroku = Math.max(3, Math.round((rozdil / Math.PI) * 6));
+      for (let q = 1; q <= kroku; q++) {
+        const uhel = od + smer * (rozdil * q) / kroku;
+        const kosinus = Math.cos((cil.sirka * Math.PI) / 180);
+        const naOblouku = {
+          sirka: cil.sirka + (Math.sin(uhel) * polomer) / METRU_NA_STUPEN,
+          delka: cil.delka + (Math.cos(uhel) * polomer) / (METRU_NA_STUPEN * kosinus),
+        };
+        if (!naVode(naOblouku)) continue;
+        kde = naOblouku;
+        cas += krok;
+        body.push({ ...kde, cas });
+      }
+    }
   }
   return body;
 }

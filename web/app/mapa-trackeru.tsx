@@ -23,7 +23,7 @@ import { CELKEM, ZnakTridy } from "@/app/tridy";
 import type { Poloha } from "@/lib/voda";
 import type { Lod, Znacka } from "@/app/nacrt/mapa/plavba";
 import { seradNaVode } from "@/lib/poradi-na-vode";
-import { KROK_M, brankyTrati, minuteBranky, postupVMetrech } from "@/lib/postup-po-trase";
+import { KROK_M, bodyTrati, kamPadneKolmice, postupVMetrech } from "@/lib/postup-po-trase";
 import {
   FOCUS_SOUBOJE_S,
   KOLOTOC_S,
@@ -622,25 +622,25 @@ export function MapaTrackeru({
   );
 
   const postupy = useMemo(() => {
-    // Branky se rozestaví jednou pro celou trať a sdílí je všechny lodě.
-    const branky = brankyTrati(uzly, delkyNoh);
+    // Body se rozestaví jednou pro celou trať a sdílí je všechny lodě.
+    const body = bodyTrati(uzly, delkyNoh);
     return lode.map((lod) => {
       let idx = 0;
       let predchoziCas: number | null = null;
       let nejdal = 0;
       return lod.body.map((b) => {
         const kde = naPlatno(b.sirka, b.delka);
-        // Kolik branek loď od minulého hlášení nanejvýš stihla. U prvního
-        // bodu není proti čemu měřit, tak se neomezuje nic.
+        // Kolik průjezdních bodů loď od minulého hlášení nanejvýš stihla.
+        // U prvního není proti čemu měřit, tak se neomezuje nic.
         const maxVpred =
           predchoziCas === null
             ? Infinity
             : Math.ceil((Math.max(0, b.cas - predchoziCas) * NEJVIC_M_ZA_S) / KROK_M);
-        idx = minuteBranky(branky, kde, idx, maxVpred);
+        idx = kamPadneKolmice(body, kde, idx, maxVpred);
         predchoziCas = b.cas;
         // Dopočet mezi dvěma body smí kolísat o kousek zpátky, i když
         // průjezdní bod zůstal; pořadí z toho kmitat nemá.
-        nejdal = Math.max(nejdal, postupVMetrech(branky, kde, idx));
+        nejdal = Math.max(nejdal, postupVMetrech(body, kde, idx));
         return nejdal;
       });
     });
