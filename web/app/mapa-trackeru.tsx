@@ -333,6 +333,7 @@ export function MapaTrackeru({
   ukazka,
   odsazeni,
   zebricek,
+  hlavickaPoradi,
   onPoradi,
   onUdalost,
 }: {
@@ -375,6 +376,12 @@ export function MapaTrackeru({
    * změně velikosti písma.
    */
   odsazeni?: { nahore?: number; dole?: number; vlevo?: number; vpravo?: number };
+  /**
+   * Co stojí nad pořadím — na tabuli název regaty a stav rozjížďky
+   * (Filip, 25. 10. 2026). Posílá to obrazovka, protože mapa o regatě
+   * nic neví a vědět nemá.
+   */
+  hlavickaPoradi?: React.ReactNode;
   /**
    * Měřicí trasa po vodě, ze serveru. <b>Nikdy se nekreslí</b> (Filip,
    * 24. 10. 2026: *„měřicí trasu bych vůbec neumožnil zobrazit, ta je jen
@@ -1472,6 +1479,12 @@ export function MapaTrackeru({
             </button>
           </div>
 
+        {/* <b>Záběr se pozná v pořadí, ne cedulí</b> (Filip, 25. 10. 2026:
+            *„na vodě předělat na zvýraznění lodě třeba v ranku"*). Divák
+            se tak dívá na jedno místo a vidí zároveň jméno i to, kolikátá
+            ta loď je. Cedule přes mapu říkala jméno podruhé a brala místo.
+
+            Zbytek komentáře o prohození platí dál: */}
         {/* <b>Prohození nedostane ceduli</b> (Filip, 25. 10. 2026: *„switch
             lodí bych asi nezobrazoval v popupu, stačí to, že se to animuje
             na ranku"*). Pořadí vpravo se při prohození přeskupí a to je
@@ -1482,16 +1495,7 @@ export function MapaTrackeru({
 
             Zůstává popisek kolotoče: ten říká, na koho se zrovna díváme,
             což z mapy samotné poznat nejde. */}
-        {rezim === "tabule" && zabery && zabery.duvod !== "souboj" && (
-          <div className="nacrt-swap nacrt-swap-kolotoc">
-            {"na vodě: "}
-            {zabery.lode.map((id) => (
-              <strong key={id} style={{ color: barva(id) }}>
-                {lode.find((l) => l.id === id)?.nazev}
-              </strong>
-            ))}
-          </div>
-        )}
+
 
         {vybranaLod && (
           <div className="nacrt-karta">
@@ -1576,6 +1580,7 @@ export function MapaTrackeru({
       </div>
 
       <aside className="nacrt-poradi">
+        {hlavickaPoradi}
         {/*
           Jeden nadpis místo dvou (Filip, 24. 10. 2026: *„tohle do jednoho
           nadpisu, např. Celé pole — pořadí"*). Dva řádky nad sebou říkaly
@@ -1659,7 +1664,14 @@ export function MapaTrackeru({
               )}
               <button
                 type="button"
-                className={v.lod.id === vybrana ? "vybrana" : undefined}
+                className={[
+                  v.lod.id === vybrana ? "vybrana" : "",
+                  // Kam míří záběr, to se rozsvítí tady — cedule přes
+                  // mapu říkala jméno podruhé (Filip, 25. 10. 2026).
+                  rezim === "tabule" && zabery?.lode.includes(v.lod.id) ? "nacrt-v-zaberu" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ") || undefined}
                 onClick={() => vyber(v.lod.id)}
               >
                 <span className="nacrt-cislo">
@@ -1686,15 +1698,18 @@ export function MapaTrackeru({
                     {v.stav === "nedostupna" ? "—" : i + 1}
                   </span>
                 </span>
-                <span className="nacrt-nazev">{v.lod.nazev}</span>
                 {/*
                   Znak třídy z `app/tridy.tsx` — tentýž, jaký nosí výsledky
                   a průběžné pořadí. Kreslí se inline, takže mu barvy dává
                   CSS podle režimu; `<img>` by v tmavém svítil.
+
+                  <b>Před jménem</b> (Filip, 25. 10. 2026): oko pak sjíždí
+                  sloupec znaků a jmen zvlášť, místo aby je přeskakovalo.
                 */}
                 <span className="nacrt-trida" title={v.lod.kategorie}>
                   <ZnakTridy nazev={v.lod.kategorie} />
                 </span>
+                <span className="nacrt-nazev">{v.lod.nazev}</span>
                 {/*
                   Dojetá loď to má napsané u sebe (Filip, 24. 10. 2026:
                   *„to se dá taky udělat nějakým tagem do ranku"*).

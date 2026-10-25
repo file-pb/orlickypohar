@@ -2816,22 +2816,15 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
    24. 10. 2026). Nese všechno naráz: značku, stav rozjížďky s vlajkou,
    název, čísla a stáří dat. Dva pásy nad sebou braly dvakrát tolik
    místa, které patří mapě. */
+/* <b>Pruh zmizel, zůstala značka</b> (Filip, 25. 10. 2026). Žádné pozadí,
+   žádná šířka přes obrazovku — jen odstíněné logo volně na mapě. Všechno
+   ostatní se přestěhovalo nad pořadí a do panýlků rozjížděk. */
 .tabule .vrch {
-  /* Pruh končí u žebříčku, ne na hraně obrazovky — jinak by ho překryl. */
-  position: absolute; left: 0; right: clamp(280px, 24vw, 460px); top: 0; z-index: 3;
-  display: grid;
-  grid-template-columns: 3vw auto minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: 0 calc(1.2 * var(--tv));
-  /* Až do krajů (Filip, 24. 10. 2026): pruh drží celou šířku a obsah
-     v něm sedí u hran, ne uprostřed s okraji. */
-  margin: 0; padding: calc(0.15 * var(--tv)) calc(0.6 * var(--tv));
-  /* Co se do pruhu nevejde, se ořízne — ořezaný konec je horší než nic,
-     ale pořád lepší než dva texty přes sebe. */
-  overflow: hidden;
-  background: color-mix(in srgb, var(--pozadi) 72%, transparent);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--linka);
+  position: absolute; left: 0; top: 0; z-index: 3;
+  width: max-content;
+  display: block;
+  margin: 0; padding: calc(0.6 * var(--tv));
+  background: none; border: none; backdrop-filter: none;
 }
 /* Všechno v jednom řádku. Bez explicitního `grid-row` si auto-placement
    zakládal nové řádky a pruh byl třikrát vyšší, než má být. */
@@ -2878,8 +2871,10 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
 /* Sloupec v hlavičce je `3vw` (viz `.tabule .vrch`), takže logo širší
    než on přetékalo do názvu závodu — na každé šířce, změřeno 25. 10.
    2026. Drží se tedy sloupce. */
+/* Odstíněné: je to značka, ne sdělení. Stín pod ní schválně není — Filip
+   ho na televizi odmítl a bez pruhu pod sebou ho značka nepotřebuje. */
 .tabule .odchod {
-  display: block; width: 3vw; height: calc(3 * var(--tv)); opacity: 0.55;
+  display: block; width: calc(4.2 * var(--tv)); height: calc(4.2 * var(--tv)); opacity: 0.7;
 }
 .tabule .odchod:hover { opacity: 1; }
 .tabule .odchod svg { display: block; width: 100%; height: 100%; }
@@ -4418,3 +4413,70 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   color: var(--voda); border: 1px solid currentColor; border-radius: 999px;
   padding: 0 calc(0.3 * var(--tv));
 }
+
+
+/* ---------------------------------------------------------------------
+   Tabule po přeskládání (Filip, 25. 10. 2026)
+   --------------------------------------------------------------------- */
+
+/* Nad pořadím stojí název regaty a pod ním stav rozjížďky. Nahoře
+   natěsno: mezera nad názvem byla to, co Filip na náčrtu přeškrtl. */
+.tabule .poradi-hlava {
+  /* Nesmí vyčuhovat ze žebříčku: název je SVG se `width: 100%`, takže
+     bez téhle pojistky přetáhl panel o pár pixelů doprava. */
+  min-width: 0; max-width: 100%; overflow: hidden;
+  padding: 0 0 calc(0.5 * var(--tv));
+  margin-bottom: calc(0.4 * var(--tv));
+  border-bottom: 1px solid var(--linka);
+}
+.tabule .poradi-hlava h1 { margin: 0; }
+.tabule .poradi-hlava .tabule-nazev { height: calc(2.4 * var(--tv)); width: auto; }
+.tabule .poradi-hlava .stav-rozjizdky-tabule {
+  margin-top: calc(0.25 * var(--tv));
+  font-size: calc(0.75 * var(--tv));
+}
+.tabule .poradi-hlava .stari { margin: calc(0.2 * var(--tv)) 0 0; font-size: calc(0.7 * var(--tv)); opacity: .55; }
+
+/* Loď, na kterou míří záběr, svítí v pořadí — místo cedule přes mapu. */
+.tabule .nacrt-poradi li > button.nacrt-v-zaberu {
+  background: color-mix(in srgb, var(--voda) 16%, transparent);
+  border-radius: 8px;
+  box-shadow: inset 3px 0 0 var(--voda);
+}
+
+/* Znak třídy před jménem a stáří u pravého okraje (Filip, 25. 10. 2026). */
+.tabule .nacrt-poradi .nacrt-trida { margin-right: calc(0.45 * var(--tv)); }
+.tabule .nacrt-poradi .nacrt-stav { margin-left: auto; text-align: right; }
+
+/* Panýlky rozjížděk v pravém horním rohu mapy. Se selektorem `.tabule`
+   napřed, aby je nepřebilo obecnější pravidlo pro potomky tabule. */
+.tabule .rozjizdky-panylky {
+  position: absolute; z-index: 4;
+  top: calc(0.8 * var(--tv));
+  right: calc(clamp(280px, calc(24 * var(--tv)), 460px) + 0.8vw);
+  display: flex; gap: calc(0.4 * var(--tv));
+}
+.tabule .rozjizdka-panylek {
+  height: calc(2.4 * var(--tv)); width: calc(2.4 * var(--tv));
+  display: flex; align-items: center; justify-content: center; gap: calc(0.5 * var(--tv));
+  border-radius: 8px; font-style: normal;
+  background: var(--pozadi); color: var(--text);
+  border: 2px solid transparent;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+}
+/* Ta s pozorností je širší a řekne co se děje — velikostí, ne blikáním. */
+.tabule .rozjizdka-panylek.panylek-siroky {
+  width: auto; padding: 0 calc(0.9 * var(--tv)) 0 calc(0.7 * var(--tv));
+}
+.tabule .rozjizdka-panylek b { font-weight: 700; font-size: calc(1.05 * var(--tv)); line-height: 1; }
+.tabule .rozjizdka-panylek span {
+  font-size: calc(0.78 * var(--tv)); letter-spacing: 0.06em;
+  text-transform: uppercase; font-variant-numeric: tabular-nums;
+}
+.tabule .tabule .panylek-dokoncena { border-color: var(--stav-vypsany); }
+.tabule .panylek-dokoncena b { color: var(--stav-vypsany); }
+.tabule .tabule .panylek-probiha { border-color: #e8900c; }
+.tabule .panylek-probiha b, .tabule .panylek-probiha span { color: #e8900c; }
+.tabule .tabule .panylek-zrusena { border-color: var(--stav-zruseny); }
+.tabule .panylek-zrusena b, .tabule .panylek-zrusena span { color: var(--stav-zruseny); }
+.tabule .tabule .panylek-planovana { opacity: 0.45; }
