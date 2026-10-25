@@ -148,6 +148,9 @@ const VYMENA_MS = 1100;
 const TAKT_MS = 1900;
 /** Jak dlouho u řádku svítí šipka, než zhasne a odhalí číslo. */
 const SIPKA_MS = 2000;
+/** Jak dlouho visí záložka u lodi, která právě dojela. */
+const LEPIK_MS = 6000;
+
 /** Jak dlouho se na tabuli drží jedna loď, když se nic neděje. */
 const KOLOTOC_S = 60;
 
@@ -1097,12 +1100,50 @@ export function MapaTrackeru({
       const klic = `cil-${v.lod.id}`;
       if (ohlaseno.current.has(klic)) continue;
       ohlaseno.current.add(klic);
-      // Detail nese třídu, ne znovu „v cíli": ta stojí jako nadpisek nad
-      // jménem a dvakrát totéž na jedné kartě vypadá jako chyba (Filip,
-      // 24. 10. 2026).
-      onUdalost({ klic, druh: "dojezd", titulek: v.lod.nazev, detail: v.lod.kategorie });
+      // <b>Dojezd nedostane kartu přes mapu</b> (Filip, 25. 10. 2026:
+      // *„prostě to je jen highlight na to, že ta loď právě dojela"*).
+      // Místo ní se u řádku té lodi na chvíli vysune záložka, jako lepík
+      // v knize — divák se dívá tam, kde stejně hledá jméno, a mapa
+      // zůstane celá vidět.
+      setLepik({ id: v.lod.id, kdy: Date.now() });
     }
   }, [cas, prohozeni, vStavu, lode, onUdalost]);
+
+  /**
+   * Záložka u lodi, která právě dojela. <b>Jen na chvíli</b> — je to
+   * zpráva, ne stav; „v cíli" u řádku zůstane tak jako tak.
+   */
+  const [lepik, setLepik] = useState<{ id: number; kdy: number } | null>(null);
+  const [lepikNahore, setLepikNahore] = useState<number | null>(null);
+  useEffect(() => {
+    if (!lepik) return;
+    const casovac = setTimeout(() => setLepik(null), LEPIK_MS);
+    return () => clearTimeout(casovac);
+  }, [lepik]);
+
+  /**
+   * Kde záložku nakreslit. <b>Mimo seznam</b>: ten roluje, takže má
+   * `overflow`, a cokoli uvnitř by se u levé hrany ořízlo. Pozice se
+   * proto měří a záložka visí vedle seznamu.
+   */
+  useLayoutEffect(() => {
+    if (!lepik || !seznam.current) {
+      setLepikNahore(null);
+      return;
+    }
+    const radek = seznam.current.querySelector(`li[data-lod="${lepik.id}"]`);
+    const panel = seznam.current.closest(".nacrt-poradi");
+    if (!radek || !panel) {
+      setLepikNahore(null);
+      return;
+    }
+    const r = radek.getBoundingClientRect();
+    const p = panel.getBoundingClientRect();
+    // Když řádek zrovna není vidět (seznam je odrolovaný), záložka se
+    // nekreslí — ukazovala by na prázdno.
+    const viditelny = r.top >= p.top && r.bottom <= p.bottom;
+    setLepikNahore(viditelny ? Math.round(r.top - p.top + r.height / 2) : null);
+  }, [lepik, cas]);
 
   /**
    * Pořadí ven. <b>Jen při skutečné změně</b> — bez porovnání by každý
@@ -1678,6 +1719,11 @@ export function MapaTrackeru({
           >
             zrušit výběr ({zaskrtnute.size})
           </button>
+        )}
+        {rezim === "tabule" && lepik && lepikNahore !== null && (
+          <span className="nacrt-lepik" style={{ top: `${lepikNahore}px` }} aria-hidden="true">
+            v cíli
+          </span>
         )}
         <ol ref={seznam}>
           {poradiKZobrazeni.map((v, i) => {
