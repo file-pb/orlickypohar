@@ -193,28 +193,52 @@ export function Obrazovka({
    * mapě; natvrdo zapsané číslo by se rozešlo s rozvržením.
    */
   const vrch = useRef<HTMLElement>(null);
+  const hlasky = useRef<HTMLDivElement>(null);
   const tridy = useRef<HTMLElement>(null);
-  const [odsazeni, setOdsazeni] = useState({ nahore: 0, dole: 0 });
+  const [odsazeni, setOdsazeni] = useState({ nahore: 0, dole: 0, vrch: 0 });
   const maTridy = poradiLodi.length > 0;
   useEffect(() => {
     const mer = () => {
+      // Dvě různá čísla, a plete se to: `vrch` je jen pruh nahoře a
+      // odsazuje se podle něj hláška. `nahore` je celý horní blok —
+      // pruh i hlášky dohromady — a podle toho se uklízí mapa, aby jí
+      // panel s prohozením nevylezl pod text (změřeno 25. 10. 2026).
+      const vyskaVrchu = Math.round(vrch.current?.getBoundingClientRect().height ?? 0);
+      // Když hláška není, obal se schová (`:empty`) a jeho spodek je
+      // nula — bez toho `Math.max` by panel s prohozením vyskočil zpátky
+      // pod hlavičku, tedy přesně tam, odkud jsme ho dostávali pryč.
+      const spodekHlasek = Math.round(hlasky.current?.getBoundingClientRect().bottom ?? 0);
       const nove = {
-        nahore: Math.round(vrch.current?.getBoundingClientRect().height ?? 0),
+        vrch: vyskaVrchu,
+        nahore: Math.max(vyskaVrchu, spodekHlasek),
         dole: Math.round(tridy.current?.getBoundingClientRect().height ?? 0),
       };
       setOdsazeni((p) =>
-        p.nahore === nove.nahore && p.dole === nove.dole ? p : nove,
+        p.nahore === nove.nahore && p.dole === nove.dole && p.vrch === nove.vrch ? p : nove,
       );
     };
     mer();
     const sleduj = new ResizeObserver(mer);
     if (vrch.current) sleduj.observe(vrch.current);
+    if (hlasky.current) sleduj.observe(hlasky.current);
     if (tridy.current) sleduj.observe(tridy.current);
     return () => sleduj.disconnect();
   }, [maTridy]);
 
   return (
-    <div className="tabule">
+    // Výška hlavičky ven jako proměnná: pruh je `position: absolute`,
+    // takže nic pod ním o něm neví. Bez tohohle ležela hláška
+    // „Průběžné výsledky…" celá pod ním a nebyla vidět (změřeno
+    // 25. 10. 2026 na skutečné televizi — překryv 52 px).
+    <div
+      className="tabule"
+      style={
+        {
+          "--vrch-vyska": `${odsazeni.vrch}px`,
+          "--horni-blok": `${odsazeni.nahore}px`,
+        } as React.CSSProperties
+      }
+    >
       {/* <b>Jediná klikatelná věc na obrazovce</b> (Filip, 15. 10. 2026:
           *„tam stačí jen hlavní logo, na které když se klepne, tak jsme
           zpět na hlavní stránce webu… jinak ať tam nic neotravuje"*).
@@ -255,6 +279,7 @@ export function Obrazovka({
           platnost potvrzuje, případně mění rozhodčí"*). Bez téhle věty
           vypadá předběžné pořadí jako hotové a hospoda si zapamatuje
           výsledek, který se ještě změní. */}
+      <div className="tabule-hlasky" ref={hlasky}>
       {snimek.procesniDej && !snimek.vysledkySkryte && (
         <p className="hlaska dej">
           <b>Průběžné výsledky.</b> Čísla jsou informativní — jejich
@@ -269,6 +294,7 @@ export function Obrazovka({
           ukazuje jen to, co je venku — není to cesta okolo.
         </p>
       )}
+      </div>
 
       {/* <b>Mapa je pozadí celé tabule</b> (Filip, 24. 10. 2026: *„myslel
           jsem, že to sloučíš s tou trackovací mapou, že ta tabule na telku

@@ -2309,6 +2309,14 @@ body:has(.paticka-pocasi) .nahoru {
 .poradi-radek-trida:hover { text-decoration: none; color: var(--voda); }
 .poradi-radek-trida .znak-tridy { height: 2rem; }
 .karusel-vodorovny { mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent); }
+/* <b>Na televizi vybledne dřív.</b> Pět procent stačí na monitoru, ale
+   přes místnost běžící jméno doteče až ke štítku třídy a čte se to jako
+   jedno slovo — „Nad7mNEPTUN" (Filip vyfotil 25. 10. 2026). Širší náběh
+   a větší mezera udělají z pevné části a z pásu dvě věci. */
+.tabule .karusel-vodorovny {
+  mask-image: linear-gradient(to right, transparent, #000 12%, #000 96%, transparent);
+}
+.tabule .poradi-radek { gap: calc(1.4 * var(--tv)); }
 .karusel-vodorovny .karusel-pas { display: flex; width: max-content; }
 .karusel-vodorovny li { display: flex; gap: 0.35rem; align-items: baseline; white-space: nowrap; padding-right: 1.6rem; }
 .karusel-vodorovny.jede .karusel-pas { animation: karusel-doleva calc(var(--pocet) * 3.2s) linear infinite; }
@@ -2861,8 +2869,11 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
 .tabule .vrch .stav p { margin: 0; }
 /* Logo v rohu: jediná klikatelná věc. Je malé schválně — má být po ruce,
    ne součást sdělení. */
+/* Sloupec v hlavičce je `3vw` (viz `.tabule .vrch`), takže logo širší
+   než on přetékalo do názvu závodu — na každé šířce, změřeno 25. 10.
+   2026. Drží se tedy sloupce. */
 .tabule .odchod {
-  display: block; width: 4.5vw; height: calc(4.5 * var(--tv)); opacity: 0.55;
+  display: block; width: 3vw; height: calc(3 * var(--tv)); opacity: 0.55;
 }
 .tabule .odchod:hover { opacity: 1; }
 .tabule .odchod svg { display: block; width: 100%; height: 100%; }
@@ -3150,7 +3161,14 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
    je zpráva sama o sobě a patří tam, kam padne oko; „na vodě: X" jen
    říká, na co se zrovna díváme, a drží se u žebříčku, kde si tu loď
    divák najde. */
-.tabule-mapa .nacrt-na-tv .nacrt-swap { top: calc(5.8 * var(--tv)); }
+/* <b>Pod vším, co je nahoře</b> — ne pod pevným číslem. Panel
+   s prohozením seděl na `5.8 * --tv`, což odpovídalo samotné hlavičce;
+   jakmile nad mapou visela i hláška „Průběžné výsledky…", schoval se
+   pod ni (Filip vyfotil 25. 10. 2026). Výšku celého horního bloku měří
+   obrazovka a posílá ji sem. */
+.tabule-mapa .nacrt-na-tv .nacrt-swap {
+  top: calc(var(--horni-blok, calc(5.8 * var(--tv))) + 0.6 * var(--tv));
+}
 .tabule-mapa .nacrt-na-tv .nacrt-swap-souboj { left: 1.2vw; right: auto; }
 /* Těsně vedle žebříčku, ne někde uprostřed: odsazení je jeho šířka plus
    mezera, takže hláška sedí u jeho hrany při každé šířce obrazovky. */
@@ -3611,7 +3629,18 @@ body:has(.tabule) { --tv: min(1vw, 1.78vh); }
 
 /* Věta o průběžných výsledcích na tabuli. Má být vidět přes místnost, ale
    nesmí přebít název závodu — proto barva a ne velikost. */
-.tabule .hlaska.dej { font-size: calc(1.2 * var(--tv)); padding: calc(0.5 * var(--tv)) calc(1 * var(--tv)); margin: calc(0.8 * var(--tv)) 0 0; }
+/* <b>Hláška začíná pod hlavičkou, ne za ní.</b> Pruh nahoře je
+   `position: absolute`, takže v toku nezabírá nic a hláška se kreslila
+   přesně pod něj — na televizi z ní zbyl konec věty vyčuhující zpod
+   stavu rozjížďky (Filip vyfotil 25. 10. 2026; změřeno 52 px překryvu).
+   Výšku pruhu dodává obrazovka, protože ji stejně měří kvůli mapě. */
+/* Obal hlášek: sám nic nekreslí, ale dá se změřit, kde horní blok
+   končí — mapa se podle toho uklidí, aby jí panel s prohozením
+   nevylezl pod text. Prázdný nesmí zabrat ani řádek. */
+.tabule .tabule-hlasky { position: relative; z-index: 2; display: flex; flex-direction: column; }
+.tabule .tabule-hlasky:empty { display: none; }
+.tabule .hlaska { position: relative; z-index: 2; margin-top: calc(var(--vrch-vyska, 0px) + 0.4 * var(--tv)); }
+.tabule .hlaska.dej { font-size: calc(1.2 * var(--tv)); padding: calc(0.5 * var(--tv)) calc(1 * var(--tv)); }
 .tabule .hlaska.dej b { color: var(--voda); }
 /* Štítky stavu zápisu u rozjížďky. Potvrzené se zazelená, čerstvé z vody
    je tlumené — divák má na první pohled poznat, čemu se dá věřit. */
