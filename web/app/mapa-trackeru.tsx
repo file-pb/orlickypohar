@@ -1672,6 +1672,9 @@ export function MapaTrackeru({
                 ]
                   .filter(Boolean)
                   .join(" ") || undefined}
+                // Zvýraznění nese barvu té lodi, tedy touž, jakou má její
+                // stopa na mapě — řádek a stopa se tím spojí bez hledání.
+                style={{ ["--barva-lodi" as string]: barva(v.lod.id) }}
                 onClick={() => vyber(v.lod.id)}
               >
                 <span className="nacrt-cislo">
