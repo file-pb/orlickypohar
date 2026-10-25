@@ -4450,15 +4450,22 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 /* Nad pořadím stojí název regaty a pod ním stav rozjížďky. Nahoře
    natěsno: mezera nad názvem byla to, co Filip na náčrtu přeškrtl. */
 .tabule .poradi-hlava {
-  /* Nesmí vyčuhovat ze žebříčku: název je SVG se `width: 100%`, takže
-     bez téhle pojistky přetáhl panel o pár pixelů doprava. */
-  min-width: 0; max-width: 100%; overflow: hidden;
+  /* <b>Ořezávat se nesmí</b>: `overflow: hidden` tu uřízlo názvu horní
+     polovinu písmen a zbyly z nich patičky (Filip vyfotil 25. 10. 2026).
+     Místo toho se název přizpůsobí šířce panelu — viz `.tabule-nazev`
+     níž — takže vyčuhovat nemá jak. */
+  min-width: 0; max-width: 100%;
   padding: 0 0 calc(0.5 * var(--tv));
   margin-bottom: calc(0.4 * var(--tv));
   border-bottom: 1px solid var(--linka);
 }
 .tabule .poradi-hlava h1 { margin: 0; }
-.tabule .poradi-hlava .tabule-nazev { height: calc(2.4 * var(--tv)); width: auto; }
+/* Název se vejde do panelu: šířka podle něj, výška dopočítaná z poměru.
+   S pevnou výškou a `width: auto` byl delší název širší než panel. Strop
+   výšky je kvůli krátkým jménům, aby „Izolepa" nebyla přes půl obrazovky. */
+.tabule .poradi-hlava .tabule-nazev {
+  width: 100%; height: auto; max-height: calc(2.8 * var(--tv));
+}
 .tabule .poradi-hlava .stav-rozjizdky-tabule {
   margin-top: calc(0.25 * var(--tv));
   font-size: calc(0.75 * var(--tv));
