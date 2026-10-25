@@ -222,19 +222,38 @@ function plavba(zrno: number, znacky: Znacka[], rychlostUzlu: number): Bod[] {
      * trať předepisuje.
      */
     const dalsi = znacky[i + 1];
-    if (dalsi && cil.typ !== "Cil") {
+    /**
+     * Objíždí se jen bóje, u které loď doopravdy je. Když k ní nedoplula
+     * — došly jí kroky nebo ji odrazil břeh —, opsala by kolem značky
+     * oblouk o poloměru stovek metrů, protože ten se bere z toho, kde
+     * zrovna skončila (Filip, 26. 10. 2026: *„žlutá ok, fialová je
+     * špatně"* — fialová kroužila daleko od bóje).
+     */
+    if (dalsi && cil.typ !== "Cil" && metry(kde, cil) <= 80) {
       const uhelK = (z: { sirka: number; delka: number }) => {
         const kosinus = Math.cos((cil.sirka * Math.PI) / 180);
         return Math.atan2(z.sirka - cil.sirka, (z.delka - cil.delka) * kosinus);
       };
-      const od = uhelK(kde);
+      /**
+       * Oblouk vede <b>od nohy, po které loď přijela, k té další</b> —
+       * ne od místa, kde zrovna je. Úhel k lodi se mezi plavbami liší,
+       * takže z něj vycházel pokaždé jiný oblouk a některé lodě opisovaly
+       * kolem bóje skoro celý kruh (Filip, 26. 10. 2026: *„fialová je
+       * špatně… měla asi objíždět bójku levobokem"*).
+       */
+      const od = uhelK(znacky[i - 1]);
       const k = uhelK(dalsi);
-      // Značka se míjí levobokem, nebo pravobokem — tím je dán i směr
-      // objezdu. Bez údaje se vybere kratší oblouk.
-      const smer = cil.strana === "PoLeve" ? 1 : cil.strana === "PoPrave" ? -1 : Math.sign(((k - od + 3 * Math.PI) % (2 * Math.PI)) - Math.PI) || 1;
+      /**
+       * <b>Levobok znamená, že loď má značku po levé ruce</b>, a tedy
+       * ji objíždí proti směru hodinových ručiček: loď jižně od bóje
+       * míří na východ a bóji má severně, po levé straně.
+       */
+      const smer = cil.strana === "PoPrave" ? -1 : 1;
       let rozdil = (k - od) * smer;
       while (rozdil < 0) rozdil += 2 * Math.PI;
-      const polomer = Math.max(25, metry(kde, cil));
+      while (rozdil > 2 * Math.PI) rozdil -= 2 * Math.PI;
+      // Obvyklý oblouk kolem bóje: pár délek trupu, ne víc.
+      const polomer = Math.min(60, Math.max(25, metry(kde, cil)));
       const kroku = Math.max(3, Math.round((rozdil / Math.PI) * 6));
       for (let q = 1; q <= kroku; q++) {
         const uhel = od + smer * (rozdil * q) / kroku;
