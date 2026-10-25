@@ -22,6 +22,7 @@ import { ZnakBoje } from "@/app/znak-boje";
 import { CELKEM, ZnakTridy } from "@/app/tridy";
 import type { Poloha } from "@/lib/voda";
 import type { Lod, Znacka } from "@/app/nacrt/mapa/plavba";
+import { seradNaVode } from "@/lib/poradi-na-vode";
 
 const KATEGORIE: Lod["kategorie"][] = ["Race", "Nad7m", "Pod7m"];
 
@@ -602,6 +603,28 @@ export function MapaTrackeru({
   }, [lode, z, stred.sirka, stred.delka]);
 
   /**
+   * Kdy loď dojela — první bod, kterým překročila práh.
+   *
+   * <b>Proč to potřebujeme</b> (Filip, 25. 10. 2026): *„po jetí do cíle se
+   * stále swapují lodě v ranku, to už by nemělo."* Postup po trase se totiž
+   * počítá z průmětu na trať a **může klesnout** — loď po dojezdu stáčí
+   * k přístavu, průmět jí sjede zpátky a v pořadí propadne. Divák pak vidí,
+   * jak se dojeté lodě pořád přehazují, přestože o nich je dávno rozhodnuto.
+   *
+   * Od dojezdu proto pořadí neurčuje postup, ale **čas, kdy loď dojela**.
+   * Opravit ho smí teprve skutečný výsledek z vody nebo ze zápisu
+   * rozhodčího — ten tahle mapa nezná a vědět nemá.
+   */
+  const dojezdy = useMemo(() => {
+    return lode.map((lod, i) => {
+      const prah = celkovaDelka * DOJELA_PODIL;
+      const kdy = postupy[i].findIndex((p) => p >= prah);
+      if (kdy === -1 || kdy >= lod.dosloDo) return null;
+      return { index: kdy, cas: lod.body[kdy].cas, postup: postupy[i][kdy] };
+    });
+  }, [lode, postupy, celkovaDelka]);
+
+  /**
    * Prohození dvojic v pomyslném pořadí, jak po sobě šla.
    *
    * <b>K čemu</b> (Filip, 24. 10. 2026): *„na tabuli, když bude swap lodí
@@ -640,6 +663,12 @@ export function MapaTrackeru({
           const pa = postupV(i, t);
           const pb = postupV(j, t);
           if (pa === null || pb === null) continue;
+          // Obě už dojely: o jejich pořadí rozhodl cíl, ne postup. Kdyby
+          // se tu dál porovnávaly, tabule by zapalovala souboje, které
+          // se nekonají.
+          const da = dojezdy[i];
+          const db = dojezdy[j];
+          if (da && db && da.cas <= t && db.cas <= t) continue;
           const klic = `${i}-${j}`;
           const teď = pa > pb;
           const rozdil = Math.abs(pa - pb);
@@ -676,7 +705,7 @@ export function MapaTrackeru({
       }
     }
     return ven;
-  }, [lode, postupy, konec]);
+  }, [lode, postupy, dojezdy, konec]);
 
   const vStavu = useMemo(() => {
     return lode.map((lod, i) => {
@@ -689,7 +718,15 @@ export function MapaTrackeru({
 
       const stopa = videnoDo >= 0 ? lod.body.slice(0, videnoDo + 1) : [];
       const vPixelech = stopa.map((b) => naPlatno(b.sirka, b.delka));
-      const postup = videnoDo >= 0 ? postupy[i][videnoDo] : 0;
+      // Po dojezdu se postup zmrazí na hodnotě, se kterou loď protla cíl.
+      // Dál už jen pluje k přístavu a živý průmět by s ní v pořadí házel.
+      const dojezd = dojezdy[i];
+      const dojela = dojezd !== null && videnoDo >= dojezd.index;
+      const postup = dojela
+        ? dojezd.postup
+        : videnoDo >= 0
+          ? postupy[i][videnoDo]
+          : 0;
 
       // Rychlost a kurz z posledních dvou hlášení. Z jednoho bodu se
       // spočítat nedají a vymýšlet se nebudou — karta pak řekne „neznámá".
@@ -716,22 +753,24 @@ export function MapaTrackeru({
         stopa: vPixelech,
         rychlostUzlu,
         kurz,
-        dojela: postup >= celkovaDelka * DOJELA_PODIL,
+        dojela,
+        /** Kdy protla cíl. Od té chvíle o jejím místě rozhoduje tohle. */
+        dojelaV: dojela ? dojezd.cas : null,
       };
     });
-  }, [lode, cas, z, stred.sirka, stred.delka, postupy]);
+  }, [lode, cas, z, stred.sirka, stred.delka, postupy, dojezdy]);
 
   /**
    * Pomyslné pořadí. <b>Nedostupné propadnou nakonec</b>, stárnoucí si
    * pozici drží (PLAN.md, *Loď, která nehlásí*).
    */
-  const zPoloh = [...vStavu]
-    .filter((v) => !filtr || v.lod.kategorie === filtr)
-    .sort((a, b) => {
-      const dolu = (x: typeof a) => (x.stav === "nedostupna" ? 1 : 0);
-      if (dolu(a) !== dolu(b)) return dolu(a) - dolu(b);
-      return b.postup - a.postup;
-    });
+  // Pravidlo pořadí sedí v `lib/poradi-na-vode.ts`, aby šlo ověřit bez
+  // prohlížeče — a aby existovalo jen jednou.
+  const zPoloh = seradNaVode(
+    vStavu
+      .filter((v) => !filtr || v.lod.kategorie === filtr)
+      .map((v) => ({ ...v, nedostupna: v.stav === "nedostupna" })),
+  );
 
   // Dodaný žebříček se použije jen tehdy, když polohy nejsou vůbec —
   // jakmile jedna loď hlásí, pořadí na vodě je pravdivější než zápis.
@@ -753,6 +792,7 @@ export function MapaTrackeru({
             rychlostUzlu: null,
             kurz: null,
             dojela: false,
+            dojelaV: null,
           }));
 
   // Dlaždice překrývající výřez.
