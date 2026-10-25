@@ -2841,6 +2841,46 @@ Co F1 dělá navíc a my zatím ne: ukazuje **odstup** (+1.744), kdežto naše
 „před 3 s" je stáří dat, ne vzdálenost mezi loděmi. Odstup je zajímavější
 číslo, ale potřebuje postup po trati u obou lodí — tedy totéž, co mezičasy.
 
+### Co se dovysvětlilo při fotkách z televize (25. 10. 2026)
+
+**Barva nerozliší velké pole, a nemusí.** Lodí bývá 35 i víc. Změřeno
+v OKLab: do prostoru, který je na mapě čitelný, se při prahu
+rozeznatelnosti 0,10 vejde **32 barev**, pohodlně 26 — takže 35 lodí
+barvou nerozliší žádné schéma, ani zlatý úhel (ten je při 24 lodích
+dokonce horší než paleta: 35 nerozeznatelných dvojic z 276 proti 13).
+Jenže porovnávají se **sousedi v pořadí**, ne libovolná dvojice (Filip:
+*„pro jachtaře je hezké srovnávat lodě, které jsou u sebe blízko na
+ranku"*), a tam je při 35 lodích jen 2 z 99 dvojic pod prahem. Paleta
+šestnácti proto stačí; pole o 35+ lodích by se stejně nezobrazovalo
+celé — *„byl by to guláš"*.
+
+**Režie dostala dva nové záběry.** Dosud byla jediným kritériem výměna
+pozic v první šestce; kolotoč mezitím ukazoval jednu loď samotnou. Nově
+bere **dvojici** — samotná loď na vodě nic neřekne, teprve soused dá
+odstupu měřítko — a zabírá **dav u bóje**: tři lodě do šedesáti metrů od
+téže obratové značky (start a cíl se nepočítají, tam stojí pole
+z definice). Mapa se na dav podívá místo na čelo pole, protože čelo je
+pořád totéž, kdežto volba trasy u značky se z celku nepozná. Plán režie
+proto přesídlil do `web/lib/rezie-tabule.ts` — okem se z běžící tabule
+nespočítá, čemu kolik času dá.
+
+**Časomíra dne** má dvě fáze, protože to jsou dvě otázky: „kdy se zase
+pojede" (hodina) a „za jak dlouho" (odpočet posledních pět minut).
+Červená na ni nepatří — ta na tabuli znamená zrušeno. Fáze jsou vedle
+sebe na `/nacrt/casomira`; na živé tabuli by se na ně čekalo hodiny.
+
+**Indikátory nerostou s obrazovkou** (`--znacka`): na větší ploše má
+růst to, co se čte z druhého konce hospody, ne značky. Změřeno na
+2560×1440 — kolečko 49,4 px místo 66,6, písmo pořadí roste dál.
+
+**Dvě chyby, které se tím našly.** Pravidla pro stavy panýlků měla
+v selektoru `.tabule .tabule`, takže nikdy nesedla: žádný panýlek neměl
+barevný rámeček a plánovaná se netlumila. A tlačítko v řádku pořadí
+sedělo jen v prvním sloupci mřížky, takže `width: 100 %` bylo sto
+procent úzké buňky a časy nedošly k pravému okraji — na to se Filip ptal
+pětkrát, než se změřilo, že se to neděje v tom prvku, na kterém se to
+opravovalo.
+
 ### Tabule na širokém monitoru (Filip, 24. 10. 2026)
 
 První pohled na nasazenou tabuli přes ultrawide ukázal čtyři věci naráz.
