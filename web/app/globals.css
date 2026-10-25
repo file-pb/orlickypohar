@@ -4550,10 +4550,12 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
    cokoli uvnitř by se u levé hrany ořízlo. */
 .tabule .nacrt-lepik {
   position: absolute; z-index: 6;
-  /* Tělo ustoupí o šířku hrotu, takže se panelu dotýká <b>jen špička</b>
-     (Filip, 25. 10. 2026) — jinak se záložka o sloupec opírá celou
-     hranou a vypadá jako jeho část, ne jako lepík v knize. */
-  right: calc(100% + 1 * var(--tv)); transform: translateY(-50%);
+  /* Tělo ustoupí o <b>půlku hrotu</b>, takže druhá půlka přesahuje do
+     sloupce (Filip, 25. 10. 2026: „dejme to tak napůl cesty mezi těmi
+     dvěma, půl šipečky přesahovat"). Celou hranou opřená vypadala jako
+     část sloupce, jen špičkou se ho dotýkající zas jako by k němu
+     nepatřila. */
+  right: calc(100% + 0.5 * var(--tv)); transform: translateY(-50%);
   display: flex; align-items: center;
   height: calc(2 * var(--tv)); padding: 0 calc(1 * var(--tv));
   background: var(--voda); color: #06121c;
