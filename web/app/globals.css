@@ -3946,6 +3946,14 @@ body:has(.tracker-strana) main.obal { max-width: none; }
   grid-template-columns: 1.6rem auto minmax(0, 1fr) auto auto;
   gap: 0 0.5rem;
   align-items: center;
+  /* <b>Přes celý řádek, ne přes první buňku.</b> `li` je taky grid a má
+     dva sloupce; tlačítko bez tohohle sedne do toho prvního (`auto`),
+     ten se smrskne na obsah a `width: 100 %` je pak sto procent té úzké
+     buňky — a časy skončí hned za jménem, každý řádek jinde. Proto
+     `justify-self: end` na štítku a čase samo nestačilo (Filip se ptal
+     na zarovnání časů doprava popáté). Změřeno 25. 10. 2026: tlačítko
+     225 px v řádku širokém 431. */
+  grid-column: 1 / -1;
   width: 100%;
   padding: 0.25rem 0.4rem;
   line-height: 1.25;
@@ -3957,6 +3965,12 @@ body:has(.tracker-strana) main.obal { max-width: none; }
   cursor: pointer;
   font: inherit;
 }
+
+/* <b>Stáří polohy sedí vždy v posledním sloupci</b>, i když řádek nemá
+   štítek „v cíli". Bez toho spadne do čtvrtého a zbyde za ním mezera
+   mřížky — změřeno 25. 10. 2026: lodě se štítkem končily na 1899,2 px,
+   lodě bez něj na 1891,2. */
+.nacrt-poradi li button .nacrt-stav { grid-column: 5; }
 
 .nacrt-poradi li button:hover { background: var(--zvyrazneni); }
 
@@ -4536,7 +4550,10 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
    cokoli uvnitř by se u levé hrany ořízlo. */
 .tabule .nacrt-lepik {
   position: absolute; z-index: 6;
-  right: 100%; transform: translateY(-50%);
+  /* Tělo ustoupí o šířku hrotu, takže se panelu dotýká <b>jen špička</b>
+     (Filip, 25. 10. 2026) — jinak se záložka o sloupec opírá celou
+     hranou a vypadá jako jeho část, ne jako lepík v knize. */
+  right: calc(100% + 1 * var(--tv)); transform: translateY(-50%);
   display: flex; align-items: center;
   height: calc(2 * var(--tv)); padding: 0 calc(1 * var(--tv));
   background: var(--voda); color: #06121c;

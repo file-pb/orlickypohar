@@ -267,7 +267,17 @@ function vyrezPro(
   const naPixelPriZ0 = 156_543.03 * kosinus;
   const podleX = Math.log2((naPixelPriZ0 * SIRKA) / (rozpetiX * rezerva));
   const podleY = Math.log2((naPixelPriZ0 * VYSKA) / (rozpetiY * rezerva));
-  const z = Math.max(Z_NEJMENE, Math.min(Z_NEJVIC, Math.floor(Math.min(podleX, podleY))));
+  /**
+   * <b>Zaokrouhluje se na nejbližší stupeň, ne dolů</b> (Filip, 25. 10.
+   * 2026: *„tohle zoomuj lépe, je tam spousta mapy navíc"*). Dlaždice
+   * jsou rastrové, takže `z` musí být celé — jenže `floor` zahazoval až
+   * celý stupeň, a jeden stupeň je dvojnásobek plochy: pole o pár set
+   * metrech se kreslilo přes půl Orlíku.
+   *
+   * Zaokrouhlení nahoru přiblíží nejvýš √2×, takže rezerva 1,6 pořád
+   * stačí (1,6 / 1,41 ≈ 1,13) a pole se vejde celé.
+   */
+  const z = Math.max(Z_NEJMENE, Math.min(Z_NEJVIC, Math.round(Math.min(podleX, podleY))));
   return { z, stred: { sirka: stredSirka, delka: stredDelka } };
 }
 
