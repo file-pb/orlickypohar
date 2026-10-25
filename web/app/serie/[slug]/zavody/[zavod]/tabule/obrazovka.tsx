@@ -7,6 +7,7 @@ import { Znak } from "@/app/logo";
 import { NazevZavodu } from "@/app/tabule-nazev";
 import { Karusel, type Panel } from "./karusel";
 import { PoradiTrid } from "./poradi-tridy";
+import { PanylkyRozjizdek } from "./rozjizdky";
 import { StavovyProuzek } from "./semafor";
 import { MapaTrackeru } from "@/app/mapa-trackeru";
 import { pole } from "@/app/nacrt/mapa/plavba";
@@ -248,13 +249,15 @@ export function Obrazovka({
       {/* Logo vlevo, název uprostřed, stav vpravo (Filip, 15. 10. 2026).
           Jen kulatá značka: nápis „Orlická série" vedle ní by stál vedle
           názvu závodu v téže grafice a oba by se přebíjely. */}
+      {/* <b>Nahoře zůstala jen značka</b> (Filip, 25. 10. 2026: *„logo bych
+          chtěl samotné vlevo přímo, možná trochu odstíněné. Název regaty na
+          úvod ranku a malý status pod ním"*). Pruh přes celou šířku zmizel
+          a s ním i poslední místo, kde se mohlo něco o něco přetlačovat;
+          mapa tím dostala plochu až k hornímu okraji. */}
       <header className="vrch" ref={vrch}>
         <Link className="odchod" href="/" aria-label="Zpět na Orlický pohár">
           <Znak />
         </Link>
-        <h1>
-          <NazevZavodu text={snimek.nazev} />
-        </h1>
         {/* Stav rozjížďky se vlajkou patří do téhož pruhu jako všechno
             ostatní (Filip, 24. 10. 2026) — dva pásy nad sebou braly dvakrát
             tolik místa než jeden. */}
@@ -268,12 +271,7 @@ export function Obrazovka({
             pruh byl příčinou překryvů. Počet rozjížděk, lodí na startu
             i stav ročníku se dají přečíst z pořadí a z výsledků pod tím;
             nahoře by jen zabíraly místo, o které se pak perou. */}
-        <StavovyProuzek snimek={snimek} ted={ted} ukazkovePolohy={zive.length === 0} />
-        {/* Stáří dat zůstává: je to jediný údaj, který nikde jinde není
-            a podle kterého se pozná, že tabule žije, ne že zamrzla. */}
-        <p className={stari > 120 ? "stari zastarale" : "stari"}>
-          {stari < 60 ? `data před ${stari} s` : `data stará ${Math.round(stari / 60)} min`}
-        </p>
+
       </header>
 
       {/* <b>Nepodepsaná čísla se musí přiznat</b> (Filip, 9. 10. 2026:
@@ -321,8 +319,22 @@ export function Obrazovka({
           odsazeni={odsazeni}
           onUdalost={zarad}
           onPoradi={setPoradiLodi}
+          hlavickaPoradi={
+            <div className="poradi-hlava">
+              <h1>
+                <NazevZavodu text={snimek.nazev} />
+              </h1>
+              <StavovyProuzek snimek={snimek} ted={ted} ukazkovePolohy={zive.length === 0} />
+              {/* Stáří dat je jediný údaj, který nikde jinde není a podle
+                  kterého se pozná, že tabule žije, ne že zamrzla. */}
+              <p className={stari > 120 ? "stari zastarale" : "stari"}>
+                {stari < 60 ? `data před ${stari} s` : `data stará ${Math.round(stari / 60)} min`}
+              </p>
+            </div>
+          }
         />
       </div>
+      <PanylkyRozjizdek snimek={snimek} ted={ted} />
       <PoradiTrid radky={poradiLodi} ukazka={zive.length === 0} ref={tridy} />
 
       <div className="sloupce">
