@@ -6767,6 +6767,7 @@ export interface components {
              * @default 0
              */
             telefonu: number;
+            baterie: (null | number)[] | null;
         };
         UcastVstup: {
             lod: string;

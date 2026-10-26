@@ -39,7 +39,7 @@ const NEJVIC_V_TRIDE = 12;
  * z ní nepřijde nic, jinak by vypadala stejně jako ta, u které se údaj
  * nenačetl.
  */
-function Telefony({ pocet }: { pocet: number }) {
+function Telefony({ pocet, baterie }: { pocet: number; baterie: (number | null)[] }) {
   if (pocet <= 0)
     return (
       <span className="bez-telefonu" title="nesleduje se">
@@ -48,10 +48,28 @@ function Telefony({ pocet }: { pocet: number }) {
     );
 
   return (
-    <span className="telefonu" title={`${pocet} ${pocet === 1 ? "telefon" : pocet < 5 ? "telefony" : "telefonů"} na palubě`}>
-      {Array.from({ length: Math.min(pocet, 4) }, (_, i) => (
-        <i key={i} className="telefon-kosticka" aria-hidden="true" />
-      ))}
+    <span
+      className="telefonu"
+      title={[
+        `${pocet} ${pocet === 1 ? "telefon" : pocet < 5 ? "telefony" : "telefonů"} na palubě`,
+        baterie.some((b) => b !== null)
+          ? `baterie ${baterie.map((b) => (b === null ? "?" : `${b} %`)).join(", ")}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" — ")}
+    >
+      {Array.from({ length: Math.min(pocet, 4) }, (_, i) => {
+        const stav = baterie[i] ?? null;
+        return (
+          <i
+            key={i}
+            className={`telefon-kosticka${stav === null ? " bez-stavu" : stav <= 15 ? " doslo" : stav <= 40 ? " dochazi" : ""}`}
+            style={stav === null ? undefined : ({ "--baterie": `${stav}%` } as React.CSSProperties)}
+            aria-hidden="true"
+          />
+        );
+      })}
       {pocet > 4 && <span className="detail">+{pocet - 4}</span>}
     </span>
   );
@@ -111,7 +129,7 @@ export function Teaser({ snimek, ted }: { snimek: Snimek; ted: number }) {
                             říká, že z téhle lodi nepřijde nic —, a proto je
                             vidět, kdežto jedničku nemá cenu hlásit: tak to má
                             být. Dvojka a víc znamená zálohu na palubě. */}
-                        <Telefony pocet={l.telefonu} />
+                        <Telefony pocet={l.telefonu} baterie={l.baterie} />
                       </li>
                     ))}
                     {dalsich > 0 && (

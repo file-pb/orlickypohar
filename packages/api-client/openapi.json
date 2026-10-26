@@ -10186,7 +10186,8 @@
                     "lod",
                     "kategorie",
                     "kormidelnik",
-                    "telefonu"
+                    "telefonu",
+                    "baterie"
                 ],
                 "type": "object",
                 "properties": {
@@ -10214,6 +10215,19 @@
                         "type": "integer",
                         "format": "int32",
                         "default": 0
+                    },
+                    "baterie": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "format": "int32"
+                        }
                     }
                 }
             },

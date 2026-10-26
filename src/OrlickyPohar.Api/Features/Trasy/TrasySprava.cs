@@ -24,7 +24,12 @@ public record BodVstup(
     double? VyskaM,
     DateTimeOffset CasGps,
     DateTimeOffset CasZarizeni,
-    bool Podvrzeny);
+    bool Podvrzeny,
+    /// <summary>
+    /// Stav baterie telefonu v procentech, když bod vznikl. Volitelné —
+    /// starší appka ho neposílá a změny API jsou jen aditivní.
+    /// </summary>
+    int? BaterieProcent = null);
 
 /// <summary>Trasa tak, jak ji vidí ten, kdo ji nahrál.</summary>
 /// <param name="Regata">Jméno regaty, jak ho zadala posádka. Volný text.</param>
@@ -176,6 +181,14 @@ public class TrasySprava(AppDbContext db, TimeProvider cas, OknaSprava okna)
 
         if (nove.Count > 0) db.TrasaBody.AddRange(nove);
         trasa.PosledniDavkaV = cas.GetUtcNow();
+
+        /* <b>Baterie se drží u klíče, ne u bodu.</b> Zajímá nás stav
+           telefonu teď, ne jak klesal — a otázka zní „vydrží do konce
+           rozjížďky?", ne „kdy byl na sedmdesáti". Bere se poslední bod
+           dávky, který ji hlásí; starší appka neposílá nic a pak se
+           nepřepisuje, protože `null` znamená „neříká", ne „vybitá". */
+        if (body.LastOrDefault(b => b.BaterieProcent is not null)?.BaterieProcent is { } stav)
+            klic.BaterieProcent = Math.Clamp(stav, 0, 100);
         await db.SaveChangesAsync(ct);
 
         var posledni = await db.TrasaBody

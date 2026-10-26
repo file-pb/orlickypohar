@@ -46,6 +46,12 @@ export type Snimek = {
      * lodi nepřijde nic, a to má být vidět dřív, než se odstartuje.
      */
     telefonu: number;
+    /**
+     * Stav baterie těch telefonů v procentech, v pořadí vydání.
+     * <c>null</c> u telefonu, který ho nehlásí — starší appka pole
+     * neposílá a nedosazuje se pravděpodobná hodnota.
+     */
+    baterie: (number | null)[];
   }[];
   /**
    * Pořadí rozdělené na panely karuselu (Filip, 15. 10. 2026: *„rozjeď ty
@@ -163,6 +169,7 @@ export function snimekZavodu(
       kormidelnik: u.kormidelnik,
       potvrzena: u.potvrzena,
       telefonu: u.telefonu ?? 0,
+      baterie: u.baterie ?? [],
     })),
     tabule: panely(detail),
     zavod: {

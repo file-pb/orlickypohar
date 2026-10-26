@@ -439,6 +439,9 @@ namespace OrlickyPohar.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("BaterieProcent")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Jmeno")
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");

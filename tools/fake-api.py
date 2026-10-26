@@ -128,6 +128,18 @@ def telefonu_lodi(lod):
     return 2 if h % 5 == 0 else 1
 
 
+def baterie_lodi(lod):
+    """Stav baterie těch telefonů, v procentech.
+
+    Deterministicky z názvu, ať je na tabuli vidět celá škála: plná,
+    poloprázdná, kriticky vybitá i telefon, který stav nehlásí (None) —
+    to je případ starší appky a nesmí vypadat jako plná baterie.
+    """
+    h = sum(ord(z) for z in lod)
+    stavy = [None, 12, 34, 58, 77, 96]
+    return [stavy[(h + i * 3) % len(stavy)] for i in range(telefonu_lodi(lod))]
+
+
 def prihlaseno_do_zavodu(z, rozjizdky):
     """Počet lodí přihlášených do závodu po kategoriích (účasti ∪ výsledky)."""
     lode = {(KAT[u["lod"]], u["lod"]) for u in z.get("ucasti", [])
@@ -5467,7 +5479,8 @@ class H(BaseHTTPRequestHandler):
                               # Kolik telefonů loď sleduje. Mock drží pevné
                               # rozdělení podle jména, ať je na tabuli vidět
                               # obojí: loď bez telefonu i loď se zálohou.
-                              "telefonu": telefonu_lodi(u["lod"])}
+                              "telefonu": telefonu_lodi(u["lod"]),
+                              "baterie": baterie_lodi(u["lod"])}
                              for u in sorted((u for u in z["ucasti"] if u["stav"] in VEREJNE_UCASTI),
                                              key=lambda u: (KAT_PORADI[KAT[u["lod"]]], nazvy(u["lod"])))],
                     # Vyvěšené směrnice, od nejnovější. Stažené se veřejně

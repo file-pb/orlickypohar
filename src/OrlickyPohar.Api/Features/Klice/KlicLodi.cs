@@ -59,6 +59,22 @@ public class KlicLodi
     public DateTimeOffset? PosledniPouzitiV { get; set; }
 
     /// <summary>
+    /// Kolik procent baterie měl telefon, když se naposledy ozval.
+    /// <para>
+    /// <b>„Vidíme všechny, ale jsou vybití"</b> (Filip, 26. 10. 2026) je
+    /// jiná zpráva než „nevidíme je", a na tabuli i pořadateli se hodí
+    /// dřív, než se to stane. Spotřeba je změřená — 1,96 % za hodinu se
+    /// zhasnutým displejem —, takže z posledního hlášení jde odhadnout,
+    /// jak dlouho telefon vydrží.
+    /// </para>
+    /// <para>
+    /// <c>null</c> znamená „neříká", ne „plná": starší appka pole
+    /// neposílá a nedosazuje se pravděpodobná hodnota.
+    /// </para>
+    /// </summary>
+    public int? BaterieProcent { get; set; }
+
+    /// <summary>
     /// <b>Dočasné odepnutí z trackingu</b> (Filip, 21. 10. 2026): člen
     /// posádky zůstává, jen tuhle regatu nejede nebo odjel po prvním dni
     /// domů. Telefon přestane posílat, ale příští závod se nemusí párovat
