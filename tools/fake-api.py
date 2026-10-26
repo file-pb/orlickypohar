@@ -1207,6 +1207,88 @@ def verejne_polohy(slug, z):
             "lode": [l for l in snimek["lode"] if l["sirka"] is not None]}
 
 
+# Obrys nádrže a odpovědi testu „leží to na vodě?". Načítá se z téhož
+# souboru, ze kterého ho bere web (`web/lib/orlik-obrys.ts`), aby mock a web
+# netvrdily o břehu dvě různé věci. Drží se v paměti: je to kilo a půl bodů
+# a test se volá tisíckrát na jednu rozjížďku.
+OBRYS = []
+VODA_ZNAMA = {}
+
+
+def _obrys():
+    """Prstence obrysu nádrže, načtené z generovaného souboru pro web."""
+    if OBRYS:
+        return OBRYS
+    import json
+    import pathlib
+    import re
+
+    kde = pathlib.Path(__file__).resolve().parent.parent / "web" / "lib" / "orlik-obrys.ts"
+    try:
+        text = kde.read_text(encoding="utf-8")
+        OBRYS.extend(json.loads(
+            re.search(r"=\s*(\[.*\])\s*;?\s*$", text, re.S).group(1).replace("\n", " ")))
+    except Exception:
+        # Bez obrysu se nic nepokazí, jen se stopy nesrovnají k vodě.
+        OBRYS.append([])
+    return OBRYS
+
+
+def na_vode(sirka, delka):
+    """Leží bod ve vodě? Týž test bodem v mnohoúhelníku jako `lib/voda.ts`.
+
+    Odpovědi se pamatují po metrové mřížce — bez toho stojí jedna simulovaná
+    rozjížďka miliony porovnání a mock je jednovláknový. Hrubší mřížka
+    (desetimetrová) nechávala u břehu projít bod, za který ručila sousední
+    buňka: z 3 258 bodů jich 23 skončilo na souši.
+    """
+    klic = (round(sirka, 5), round(delka, 5))
+    if klic in VODA_ZNAMA:
+        return VODA_ZNAMA[klic]
+
+    uvnitr = False
+    for prstenec in _obrys():
+        v = False
+        j = len(prstenec) - 1
+        for i in range(len(prstenec)):
+            xi, yi = prstenec[i]
+            xj, yj = prstenec[j]
+            if (yi > sirka) != (yj > sirka):
+                x = (xj - xi) * (sirka - yi) / (yj - yi) + xi
+                if delka < x:
+                    v = not v
+            j = i
+        if v:
+            uvnitr = True
+            break
+
+    VODA_ZNAMA[klic] = uvnitr
+    return uvnitr
+
+
+def k_vode(sirka, delka, smerX, smerY):
+    """Srovná bod na vodu kolmo ke směru jízdy.
+
+    <b>Přímka mezi dvěma bójemi vede přes kopec častěji, než by člověk
+    řekl</b> (změřeno v `lib/voda.ts`: noha 600–1 200 m v 65 % případů), a
+    simulovaná stopa po ní pak leze do lesa — Filip to vyfotil 26. 10. 2026
+    (*„proč je trasa mimo vodu?"*). Orlík je zatopené údolí, takže kolmo ke
+    směru jízdy je voda skoro vždycky blízko: stačí popojít stranou.
+    """
+    if na_vode(sirka, delka):
+        return sirka, delka
+
+    # Kolmice ke směru nohy, ve stupních na metr.
+    kx, ky = -smerY, smerX
+    for metru in range(40, 1200, 40):
+        for znamenko in (1, -1):
+            s2 = sirka + ky * metru * znamenko / 111320.0
+            d2 = delka + kx * metru * znamenko / (111320.0 * 0.65)
+            if na_vode(s2, d2):
+                return s2, d2
+    return None
+
+
 def zaznam_rozjizdky(slug, z, cislo):
     """Záznam dojeté rozjížďky — <b>simulovaný</b>, stejně jako živé polohy.
 
@@ -1261,11 +1343,18 @@ def zaznam_rozjizdky(slug, z, cislo):
             b = uzly[min(int(misto) + 1, len(uzly) - 1)]
             t = misto - int(misto)
             stranou = math.sin(k * 0.21 + i) * 0.00045
-            body.append({
-                "cas": cas.isoformat(),
-                "sirka": a[0] + (b[0] - a[0]) * t + stranou,
-                "delka": a[1] + (b[1] - a[1]) * t + stranou * 0.6,
-            })
+            sirka = a[0] + (b[0] - a[0]) * t + stranou
+            delka = a[1] + (b[1] - a[1]) * t + stranou * 0.6
+            # Směr nohy, kvůli srovnání na vodu kolmo k němu.
+            dx = (b[1] - a[1]) * 0.65
+            dy = b[0] - a[0]
+            dl = math.hypot(dx, dy) or 1.0
+            na = k_vode(sirka, delka, dx / dl, dy / dl)
+            if na is None:
+                # Voda se nenašla ani stovky metrů stranou: radši bod
+                # vynechat než loď postavit na kopec.
+                continue
+            body.append({"cas": cas.isoformat(), "sirka": na[0], "delka": na[1]})
         vysledek.append({
             "lodId": PRIHLASKA_ID.get(nazev, i + 1), "nazev": nazev,
             "kategorie": KAT.get(nazev), "body": body,

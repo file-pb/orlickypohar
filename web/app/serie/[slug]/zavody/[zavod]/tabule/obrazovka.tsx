@@ -13,7 +13,7 @@ import { PoradiTrid } from "./poradi-tridy";
 import { PanylkyRozjizdek } from "./rozjizdky";
 import { MapaTrackeru } from "@/app/mapa-trackeru";
 import type { VerejnePolohy } from "@/lib/polohy";
-import { trida, useStopy } from "@/lib/stopy";
+import { TRIDY, trida, useStopy } from "@/lib/stopy";
 import { JMENA, pole } from "@/app/nacrt/mapa/plavba";
 import type { ZaznamRozjizdky } from "@/lib/zaznam";
 
@@ -262,6 +262,29 @@ export function Obrazovka({
    * lodě na vodě přebijí všechno, pak rozhoduje, jestli je po regatě,
    * jestli se už jelo, a nakonec zbyde startovní listina.
    */
+  /**
+   * <b>Třídy, které demo ukáže</b> (Filip, 26. 10. 2026: *„simulovaná data
+   * postav i pro ostatní kategorie, je tam jen jedna… potřebuji, aby si
+   * lidi udělali představu, jak to bude vypadat v reálu"*). Regata, kam
+   * se zatím přihlásily dvě lodě jedné třídy, by jinak celé demo ukázala
+   * jednotřídní — a přesně to se stalo na jarním větru.
+   *
+   * Doplňuje se, jen když je známá nejvýš jedna: tam, kde se jede víc
+   * tříd, si demo nemá co vymýšlet.
+   */
+  const demoTridy = useMemo(() => {
+    const z = new Set<string>();
+    for (const k of poradiSerie ?? []) if (k.kategorie !== "Celkem") z.add(k.kategorie);
+    for (const l of snimek.lode) z.add(l.kategorie);
+    // Prázdný panel nese náhradní nadpis („Pořadí"), ne jméno třídy —
+    // bez téhle podmínky z něj demo udělalo kategorii a dopsalo do ní lodě.
+    for (const t of snimek.tabule) {
+      if (t.kategorie !== "Celkem" && t.lode.length > 0) z.add(t.kategorie);
+    }
+    if (z.size < 2) for (const t of TRIDY) z.add(t);
+    return [...z];
+  }, [poradiSerie, snimek.lode, snimek.tabule]);
+
   /** Poslední dojetá rozjížďka — ta, jejíž záznam má smysl přehrávat. */
   const posledniDojeta = useMemo(
     () =>
@@ -364,7 +387,10 @@ export function Obrazovka({
   }, [lzePrehrat, ukazujeZaznam]);
 
   /** Snímek, jak ho vidí demo — počítá se jednou pro celou obrazovku. */
-  const snimekDemo = useMemo(() => (demo ? sDemoDaty(snimek, rezim) : snimek), [demo, snimek, rezim]);
+  const snimekDemo = useMemo(
+    () => (demo ? sDemoDaty(snimek, rezim, demoTridy) : snimek),
+    [demo, snimek, rezim, demoTridy],
+  );
 
   /**
    * <b>I běžící pruhy dole jedou v demu na simulovaných datech</b>
@@ -875,8 +901,8 @@ type Rezim = "listina" | "mapa" | "mezi" | "po";
  * vlastní — demo není náhrada dat, ale způsob, jak projít režimy i na
  * tabuli, kde se zrovna nic neděje.
  */
-function sDemoDaty(snimek: Snimek, rezim?: Rezim): Snimek {
-  snimek = sPlnymPolem(snimek);
+function sDemoDaty(snimek: Snimek, rezim?: Rezim, tridy?: string[]): Snimek {
+  snimek = sPlnymPolem(snimek, tridy);
   /**
    * <b>Po dojetí je zajímavý právě ten nehotový stav</b> (Filip, 26. 10.
    * 2026: *„tam bude důležité oznamovat stavy výsledků a výsledků
@@ -946,17 +972,24 @@ function sDemoDaty(snimek: Snimek, rezim?: Rezim): Snimek {
  * Rozdělení je **pevné, ne náhodné** — počítá se z pořadí dopsané lodi,
  * takže se při každém překreslení vrátí tatáž tabule a nic neposkakuje.
  */
-function sPlnymPolem(snimek: Snimek): Snimek {
-  if (snimek.lode.length >= DEMO_LODI) return snimek;
+function sPlnymPolem(snimek: Snimek, tridyZvenku?: string[]): Snimek {
+  const tridy = tridyZvenku?.length
+    ? tridyZvenku
+    : snimek.lode.length > 0
+      ? [...new Set(snimek.lode.map((l) => l.kategorie))]
+      : ["Race", "Nad7m", "Pod7m"];
+
+  // <b>Doplňuje se i tehdy, když je lodí dost, ale tříd ne.</b> Pole dvaceti
+  // lodí jedné třídy vypadá jako jiná regata než pole dvaceti ve třech.
+  const chybiTrida = tridy.some((t) => !snimek.lode.some((l) => l.kategorie === t));
+  if (snimek.lode.length >= DEMO_LODI && !chybiTrida) return snimek;
 
   const uz = new Set(snimek.lode.map((l) => l.lod));
-  const tridy = snimek.lode.length > 0
-    ? [...new Set(snimek.lode.map((l) => l.kategorie))]
-    : ["Race", "Nad7m", "Pod7m"];
 
   const pribyle: Snimek["lode"] = [];
+  const kolik = Math.max(DEMO_LODI, tridy.length * 4);
   for (const jmeno of JMENA) {
-    if (snimek.lode.length + pribyle.length >= DEMO_LODI) break;
+    if (snimek.lode.length + pribyle.length >= kolik) break;
     if (uz.has(jmeno)) continue;
     const i = pribyle.length;
     // Většina lodí má dva telefony, pár jeden, jedna z šesti žádný —
@@ -977,7 +1010,25 @@ function sPlnymPolem(snimek: Snimek): Snimek {
   if (pribyle.length === 0) return snimek;
 
   const lode = [...snimek.lode, ...pribyle];
-  const tabule = snimek.tabule.map((panel) => {
+
+  /**
+   * Panel dostane i třída, která zatím žádný nemá — jinak by dopsané lodě
+   * nebyly v pořadí vidět vůbec a demo by zase ukázalo jednu kategorii.
+   * `Celkem` zůstává poslední, tak jak ho skládá `lib/tabule.ts`.
+   */
+  const bezCelkem = snimek.tabule.filter(
+    (t) => t.kategorie !== "Celkem" && (t.lode.length > 0 || tridy.includes(t.kategorie)),
+  );
+  const celkem = snimek.tabule.filter((t) => t.kategorie === "Celkem");
+  const doplnene = [
+    ...bezCelkem,
+    ...tridy
+      .filter((t) => !bezCelkem.some((p) => p.kategorie === t))
+      .map((t) => ({ kategorie: t, lode: [], dalsich: 0 })),
+    ...celkem,
+  ];
+
+  const tabule = doplnene.map((panel) => {
     const vPanelu = new Set(panel.lode.map((l) => l.lod));
     const doPanelu = pribyle.filter(
       (l) => !vPanelu.has(l.lod) && (panel.kategorie === "Celkem" || l.kategorie === panel.kategorie),
