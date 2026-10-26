@@ -212,6 +212,62 @@ function plavba(zrno: number, znacky: Znacka[], rychlostUzlu: number): Bod[] {
       cas += krok;
       body.push({ ...kde, cas });
     }
+
+    /**
+     * <b>Bóji je potřeba objet, ne se k ní jen přiblížit</b> (Filip,
+     * 26. 10. 2026: *„koukám, že ti ty lodičky v simulaci nedodrží ty
+     * objezdy bójek"*). Smyčka výš končí čtyřicet metrů před značkou
+     * a dřív se rovnou mířilo na další — stopy se tak lámaly před bójí
+     * a kolem ní nevedly vůbec. Loď teď opíše oblouk tím bokem, který
+     * trať předepisuje.
+     */
+    const dalsi = znacky[i + 1];
+    /**
+     * Objíždí se jen bóje, u které loď doopravdy je. Když k ní nedoplula
+     * — došly jí kroky nebo ji odrazil břeh —, opsala by kolem značky
+     * oblouk o poloměru stovek metrů, protože ten se bere z toho, kde
+     * zrovna skončila (Filip, 26. 10. 2026: *„žlutá ok, fialová je
+     * špatně"* — fialová kroužila daleko od bóje).
+     */
+    if (dalsi && cil.typ !== "Cil" && metry(kde, cil) <= 80) {
+      const uhelK = (z: { sirka: number; delka: number }) => {
+        const kosinus = Math.cos((cil.sirka * Math.PI) / 180);
+        return Math.atan2(z.sirka - cil.sirka, (z.delka - cil.delka) * kosinus);
+      };
+      /**
+       * Oblouk vede <b>od nohy, po které loď přijela, k té další</b> —
+       * ne od místa, kde zrovna je. Úhel k lodi se mezi plavbami liší,
+       * takže z něj vycházel pokaždé jiný oblouk a některé lodě opisovaly
+       * kolem bóje skoro celý kruh (Filip, 26. 10. 2026: *„fialová je
+       * špatně… měla asi objíždět bójku levobokem"*).
+       */
+      const od = uhelK(znacky[i - 1]);
+      const k = uhelK(dalsi);
+      /**
+       * <b>Levobok znamená, že loď má značku po levé ruce</b>, a tedy
+       * ji objíždí proti směru hodinových ručiček: loď jižně od bóje
+       * míří na východ a bóji má severně, po levé straně.
+       */
+      const smer = cil.strana === "PoPrave" ? -1 : 1;
+      let rozdil = (k - od) * smer;
+      while (rozdil < 0) rozdil += 2 * Math.PI;
+      while (rozdil > 2 * Math.PI) rozdil -= 2 * Math.PI;
+      // Obvyklý oblouk kolem bóje: pár délek trupu, ne víc.
+      const polomer = Math.min(60, Math.max(25, metry(kde, cil)));
+      const kroku = Math.max(3, Math.round((rozdil / Math.PI) * 6));
+      for (let q = 1; q <= kroku; q++) {
+        const uhel = od + smer * (rozdil * q) / kroku;
+        const kosinus = Math.cos((cil.sirka * Math.PI) / 180);
+        const naOblouku = {
+          sirka: cil.sirka + (Math.sin(uhel) * polomer) / METRU_NA_STUPEN,
+          delka: cil.delka + (Math.cos(uhel) * polomer) / (METRU_NA_STUPEN * kosinus),
+        };
+        if (!naVode(naOblouku)) continue;
+        kde = naOblouku;
+        cas += krok;
+        body.push({ ...kde, cas });
+      }
+    }
   }
   return body;
 }

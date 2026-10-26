@@ -1,5 +1,7 @@
 import type { BarvaBoje, DruhZnaceni, TvarBoje } from "@/lib/boje";
 import { dvaBody } from "@/lib/trat";
+import { vzdalenostM } from "@/lib/geo";
+export { vzdalenostM };
 import type { StranaPrvku, SvetovaStrana, TypPrvku } from "@/lib/trat";
 
 /**
@@ -416,19 +418,6 @@ export function nejblizsiStrana(stupnu: number): NonNullable<SvetovaStrana> {
  */
 export const NEJKRATSI_LINIE_M = 5;
 
-/**
- * Jak daleko od sebe ty dva body jsou, v metrech. Rovinná aproximace —
- * na linii dlouhé desítky až stovky metrů bohatě stačí.
- */
-export function vzdalenostM(
-  a: { sirka: number; delka: number },
-  b: { sirka: number; delka: number },
-): number {
-  const stred = ((a.sirka + b.sirka) / 2) * (Math.PI / 180);
-  const dx = (b.delka - a.delka) * Math.cos(stred) * 111_320;
-  const dy = (b.sirka - a.sirka) * 111_320;
-  return Math.hypot(dx, dy);
-}
 
 export function kolmice(
   a: { sirka: number; delka: number },

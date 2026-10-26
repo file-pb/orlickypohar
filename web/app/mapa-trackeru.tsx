@@ -23,6 +23,13 @@ import { CELKEM, ZnakTridy } from "@/app/tridy";
 import type { Poloha } from "@/lib/voda";
 import type { Lod, Znacka } from "@/app/nacrt/mapa/plavba";
 import { seradNaVode } from "@/lib/poradi-na-vode";
+import { KROK_M, bodyTrati, kamPadneKolmice, postupVMetrech } from "@/lib/postup-po-trase";
+import {
+  FOCUS_SOUBOJE_S,
+  KOLOTOC_S,
+  SOUBOJ_DO_POZICE,
+  planRezie,
+} from "@/lib/rezie-tabule";
 
 const KATEGORIE: Lod["kategorie"][] = ["Race", "Nad7m", "Pod7m"];
 
@@ -113,16 +120,13 @@ const ODSTUP_PROHOZENI_PX = 12;
 /** Jak dlouho pak dráhy obou lodí hoří, než vyhasnou. */
 const HORENI_S = 180;
 /**
- * Do kolikáté pozice je prohození pro tabuli událost.
+ * Nejvyšší rychlost, se kterou se počítá, kam až loď mohla doplout.
  *
- * <b>Změřeno na náčrtu:</b> bez tohohle filtru vyšlo za jednu rozjížďku
- * 33 prohození a tabule hořela 93 % času — tedy pořád, takže nic.
- * Filip to ostatně pojmenoval sám: *swapping for the **lead***. Souboj
- * o devatenácté místo není souboj o nic.
+ * Plachetnice na Orlíku jede sotva pět metrů za vteřinu; dvanáct je
+ * velkorysá mez, do které se vejde i zákmit GPS. Slouží jen k tomu, aby
+ * postup po trati nepřeskočil na kus, kam loď nedoplula.
  */
-const SOUBOJ_DO_POZICE = 6;
-/** Jak dlouho drží focus dvojice, která se právě prohodila. */
-const FOCUS_SOUBOJE_S = 90;
+const NEJVIC_M_ZA_S = 12;
 /**
  * A jak dlouho se prohození hraje v žebříčku.
  *
@@ -152,7 +156,6 @@ const SIPKA_MS = 2000;
 const LEPIK_MS = 6000;
 
 /** Jak dlouho se na tabuli drží jedna loď, když se nic neděje. */
-const KOLOTOC_S = 60;
 
 /**
  * Režie zoomu na tabuli (Filip, 24. 10. 2026): *„musíme držet zoom celého
@@ -196,45 +199,6 @@ function stav(stariS: number | null): Stav {
 }
 
 /**
- * Postup po trase: kolmý průmět na lomenou čáru značek, v metrech od
- * startu. <b>Monotónní</b> — bere se průmět nejblíž tomu předchozímu, aby
- * pořadí u bóje neskákalo mezi příchozí a odchozí nohou (PLAN.md, *Co je
- * post*).
- */
-function postupPoTrase(
-  uzly: { x: number; y: number }[],
-  delkyNoh: number[],
-  bod: { x: number; y: number },
-  predchozi: number,
-): number {
-  let nej = predchozi;
-  let nejVzdalenost = Infinity;
-  let zaSebou = 0;
-
-  for (let i = 0; i < uzly.length - 1; i++) {
-    const a = uzly[i];
-    const b = uzly[i + 1];
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const delka2 = dx * dx + dy * dy || 1;
-    const t = Math.max(0, Math.min(1, ((bod.x - a.x) * dx + (bod.y - a.y) * dy) / delka2));
-    const px = a.x + t * dx;
-    const py = a.y + t * dy;
-    const vzdalenost = Math.hypot(bod.x - px, bod.y - py);
-    const postup = zaSebou + t * delkyNoh[i];
-
-    // Trest za couvání: průmět dozadu musí být zřetelně bližší, aby vyhrál.
-    const trest = postup < predchozi ? 60 : 0;
-    if (vzdalenost + trest < nejVzdalenost) {
-      nejVzdalenost = vzdalenost + trest;
-      nej = postup;
-    }
-    zaSebou += delkyNoh[i];
-  }
-  return nej;
-}
-
-/**
  * Rozměry výřezu. <b>Na tabuli je mapa pozadím celé obrazovky</b>
  * (Filip, 24. 10. 2026) a ostatní se rozvrhne na ni, takže má poměr
  * televize. Protože se podle rozměrů počítá i výchozí přiblížení,
@@ -273,7 +237,17 @@ function vyrezPro(
   const naPixelPriZ0 = 156_543.03 * kosinus;
   const podleX = Math.log2((naPixelPriZ0 * SIRKA) / (rozpetiX * rezerva));
   const podleY = Math.log2((naPixelPriZ0 * VYSKA) / (rozpetiY * rezerva));
-  const z = Math.max(Z_NEJMENE, Math.min(Z_NEJVIC, Math.floor(Math.min(podleX, podleY))));
+  /**
+   * <b>Zaokrouhluje se na nejbližší stupeň, ne dolů</b> (Filip, 25. 10.
+   * 2026: *„tohle zoomuj lépe, je tam spousta mapy navíc"*). Dlaždice
+   * jsou rastrové, takže `z` musí být celé — jenže `floor` zahazoval až
+   * celý stupeň, a jeden stupeň je dvojnásobek plochy: pole o pár set
+   * metrech se kreslilo přes půl Orlíku.
+   *
+   * Zaokrouhlení nahoru přiblíží nejvýš √2×, takže rezerva 1,6 pořád
+   * stačí (1,6 / 1,41 ≈ 1,13) a pole se vejde celé.
+   */
+  const z = Math.max(Z_NEJMENE, Math.min(Z_NEJVIC, Math.round(Math.min(podleX, podleY))));
   return { z, stred: { sirka: stredSirka, delka: stredDelka } };
 }
 
@@ -619,16 +593,36 @@ export function MapaTrackeru({
    * nepočítá, tím přišla o celou režii. Náhradou jsou uzly značek
    * v pořadí: hrubší než cesta po vodě, ale měří.
    */
-  const uzly = (
+  const cesta =
     trasa?.length
       ? trasa
-      : [...znacky].sort((a, b) => a.poradi - b.poradi).map((m) => ({ sirka: m.sirka, delka: m.delka }))
-  ).map((p) => naPlatno(p.sirka, p.delka));
+      : [...znacky].sort((a, b) => a.poradi - b.poradi).map((m) => ({ sirka: m.sirka, delka: m.delka }));
+
+  /**
+   * Trať v metrech, ne v pixelech.
+   *
+   * <b>Postup nesmí záviset na přiblížení</b> (Filip, 26. 10. 2026:
+   * *„nevypadá to na dobře spočítané pořadí"*). Do 26. 10. se délky noh
+   * měřily na plátně, a protože režie přiblížením střídá celek a čelo,
+   * přepočítalo se při každém střihu celé pořadí s jinou jemností —
+   * i průjezdní body po trati vycházely pokaždé jinak husté. Tady je
+   * jeden metr pořád metr: rovinná aproximace kolem středu pole, která
+   * na vodní ploše o pár kilometrech stačí.
+   */
+  const stredTrati = cesta.reduce((s, p) => s + p.sirka, 0) / (cesta.length || 1);
+  const naMetry = useCallback(
+    (sirka: number, delka: number) => ({
+      x: delka * Math.cos((stredTrati * Math.PI) / 180) * 111_320,
+      y: sirka * 111_320,
+    }),
+    [stredTrati],
+  );
+  const uzly = cesta.map((p) => naMetry(p.sirka, p.delka));
   const delkyNoh = uzly.slice(0, -1).map((a, i) => Math.hypot(uzly[i + 1].x - a.x, uzly[i + 1].y - a.y));
   const celkovaDelka = delkyNoh.reduce((s, d) => s + d, 0) || 1;
 
   /** Uzly trati v pořadí — podklad pro přímou spojnici, když není cesta po vodě. */
-  const uzlyTrati = uzly;
+  const uzlyTrati = cesta.map((p) => naPlatno(p.sirka, p.delka));
 
   /** Stav každé lodi k zvolenému času: poloha, stáří, postup, stopa. */
   /**
@@ -648,14 +642,35 @@ export function MapaTrackeru({
   );
 
   const postupy = useMemo(() => {
+    // Body se rozestaví jednou pro celou trať a sdílí je všechny lodě.
+    const body = bodyTrati(uzly, delkyNoh);
     return lode.map((lod) => {
-      let postup = 0;
+      let idx = 0;
+      let predchoziCas: number | null = null;
+      let nejdal = 0;
       return lod.body.map((b) => {
-        postup = postupPoTrase(uzly, delkyNoh, naPlatno(b.sirka, b.delka), postup);
-        return postup;
+        const kde = naMetry(b.sirka, b.delka);
+        /**
+         * Kolik průjezdních bodů loď od minulého hlášení nanejvýš stihla.
+         *
+         * <b>I první hlášení má strop</b>, totiž čas od startu rozjížďky
+         * — bez něj se kolmice hledala po celé trati, a protože cíl leží
+         * na startu, padla lodi rovnou do cíle. Tabule pak hlásila
+         * dojezd dřív, než loď minula první bóji (Filip, 26. 10. 2026:
+         * *„RACEK určitě nevede"*; změřeno: v cíli ve třicáté vteřině
+         * rozjížďky, po jedné značce ze čtyř).
+         */
+        const odKdy = predchoziCas ?? 0;
+        const maxVpred = Math.ceil((Math.max(0, b.cas - odKdy) * NEJVIC_M_ZA_S) / KROK_M);
+        idx = kamPadneKolmice(body, kde, idx, maxVpred);
+        predchoziCas = b.cas;
+        // Dopočet mezi dvěma body smí kolísat o kousek zpátky, i když
+        // průjezdní bod zůstal; pořadí z toho kmitat nemá.
+        nejdal = Math.max(nejdal, postupVMetrech(body, kde, idx));
+        return nejdal;
       });
     });
-  }, [lode, z, stred.sirka, stred.delka]);
+  }, [lode, naMetry, stredTrati]);
 
   /**
    * Kdy loď dojela — první bod, kterým překročila práh.
@@ -919,47 +934,10 @@ export function MapaTrackeru({
    * musí umět navázat tam, kde ho souboj přerušil. K tomu se počítá čas
    * strávený mimo souboje, ne čas od startu.
    */
-  const rezie = useMemo(() => {
-    const plan = new Map<number, { lode: number[]; duvod: "souboj" | "kolotoc" }>();
-    let mimoSouboje = 0;
-
-    const postupV = (i: number, t: number) => {
-      const lod = lode[i];
-      let idx = -1;
-      for (let j = 0; j < lod.body.length; j++) {
-        if (lod.body[j].cas > t) break;
-        idx = j;
-      }
-      const vid = Math.min(idx, lod.dosloDo - 1);
-      return vid >= 0 ? postupy[i][vid] : null;
-    };
-
-    for (let t = 0; t <= konec; t += 10) {
-      const souboj = [...prohozeni]
-        .reverse()
-        .find(
-          (p) => p.pozice <= SOUBOJ_DO_POZICE && t - p.cas >= 0 && t - p.cas < FOCUS_SOUBOJE_S,
-        );
-      if (souboj) {
-        plan.set(t, {
-          lode: [lode[souboj.nahoru].id, lode[souboj.dolu].id],
-          duvod: "souboj",
-        });
-        continue;
-      }
-
-      // Kolotoč: po pořadí shora, každá loď chvíli.
-      const vPoradi = lode
-        .map((l, i) => ({ id: l.id, postup: postupV(i, t) }))
-        .filter((x) => x.postup !== null)
-        .sort((a, b) => (b.postup as number) - (a.postup as number));
-      if (vPoradi.length === 0) continue;
-      const kolikata = Math.floor(mimoSouboje / KOLOTOC_S) % vPoradi.length;
-      plan.set(t, { lode: [vPoradi[kolikata].id], duvod: "kolotoc" });
-      mimoSouboje += 10;
-    }
-    return plan;
-  }, [lode, postupy, prohozeni, konec]);
+  const rezie = useMemo(
+    () => planRezie({ lode, postupy, prohozeni, znacky, konec }),
+    [lode, postupy, prohozeni, konec, znacky],
+  );
 
   /**
    * Na tabuli běží čas sám. <b>Dvojnásobnou rychlostí</b>, protože náčrt
@@ -992,6 +970,7 @@ export function MapaTrackeru({
   stavRef.current = vStavu;
   const poradiRef = useRef(poradi);
   poradiRef.current = poradi;
+  const zaberyRef = useRef<{ lode: number[]; duvod: string } | null>(null);
 
   useEffect(() => {
     if (!tabule) return;
@@ -1012,8 +991,19 @@ export function MapaTrackeru({
     if (zavodi.length === 0) return;
 
     const celek = vyrezPro(zavodi.map((v) => v.kde!), OKNO.sirka, OKNO.vyska);
+    /**
+     * <b>Když se někdo tlačí u bóje, je bližším záběrem ten dav</b>, ne
+     * čelo pole (Filip, 25. 10. 2026). Čelo je pořád totéž — kdo vede;
+     * tlačenice u značky je jediné místo, kde je vidět volba trasy, a ta
+     * se z celku nepozná.
+     */
+    const uBoje =
+      zaberyRef.current?.duvod === "boje"
+        ? zavodi.filter((v) => zaberyRef.current!.lode.includes(v.lod.id))
+        : [];
+    const blizsi = uBoje.length >= 2 ? uBoje : zavodi.slice(0, CELO_LODI);
     const celo = vyrezPro(
-      zavodi.slice(0, CELO_LODI).map((v) => v.kde!),
+      blizsi.map((v) => v.kde!),
       OKNO.sirka,
       OKNO.vyska,
     );
@@ -1043,6 +1033,7 @@ export function MapaTrackeru({
 
   /** Co tabule ukazuje v zvoleném čase. */
   const zabery = rezie.get(Math.floor(cas / 10) * 10) ?? null;
+  zaberyRef.current = zabery;
 
   /**
    * Jak silně svítí dráha toho, na co režie právě ukazuje.

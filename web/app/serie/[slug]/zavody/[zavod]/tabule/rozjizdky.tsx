@@ -1,7 +1,7 @@
 "use client";
 
 import type { Snimek } from "@/lib/tabule";
-import { mmss, popis, procedura } from "@/lib/rozjizdky-tabule";
+import { casomira, popis } from "@/lib/rozjizdky-tabule";
 
 /**
  * Panýlky rozjížděk v rohu mapy (Filip, 25. 10. 2026: *„v pravém rohu mapy
@@ -17,18 +17,25 @@ import { mmss, popis, procedura } from "@/lib/rozjizdky-tabule";
  * pohyb.
  */
 
-export function PanylkyRozjizdek({ snimek, ted }: { snimek: Snimek; ted: number }) {
+export function PanylkyRozjizdek({
+  snimek,
+  ted,
+}: {
+  snimek: Pick<Snimek, "rozjizdky">;
+  ted: number;
+}) {
   if (snimek.rozjizdky.length === 0) return null;
 
-  const doStartu = procedura(snimek, ted);
+  const hodiny = casomira(snimek, ted);
 
   return (
     <div className="rozjizdky-panylky" aria-hidden="true">
-      {/* <b>Startovní procedura stojí před čísly</b> (Filip, 25. 10. 2026).
-          Je to moment dne, ne vlastnost jedné rozjížďky — a když neběží,
-          není tu po ní ani stopa. */}
-      {doStartu !== null && (
-        <i className="rozjizdka-procedura">startovní procedura {mmss(doStartu)}</i>
+      {/* <b>Časomíra stojí před čísly</b> (Filip, 25. 10. 2026). Je to
+          moment dne, ne vlastnost jedné rozjížďky: dokud je start daleko,
+          řekne hodinu, v posledních pěti minutách odpočet. Když není co
+          čekat, nezbyde tu po ní ani stopa. */}
+      {hodiny && (
+        <i className={`rozjizdka-procedura procedura-${hodiny.druh}`}>{hodiny.text}</i>
       )}
       {snimek.rozjizdky.map((r) => {
         const text = popis(r, ted);
