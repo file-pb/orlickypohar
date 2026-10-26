@@ -5031,7 +5031,13 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
     var(--pozadi);
 }
 .tabule .tabule-vysledky > header { display: grid; gap: calc(0.2 * var(--tv)); }
-.tabule .tabule-vysledky h1 { margin: 0; font-size: calc(2.2 * var(--tv)); }
+.tabule .tabule-vysledky h1 { margin: 0; min-width: 0; font-size: calc(2.2 * var(--tv)); }
+/* Jméno regaty se sází do SVG a šířku si plocha měří sama; než se změří,
+   drží se téhle, aby nebyla nulová — stejně jako na startovní listině. */
+.tabule .tabule-vysledky h1 .tabule-nazev {
+  width: calc(16 * var(--tv)); height: calc(3.4 * var(--tv));
+}
+.tabule .tabule-vysledky h1 .tabule-nazev text { font-size: calc(2.7 * var(--tv)); }
 .tabule .tabule-vysledky-stav {
   margin: 0; color: var(--tlumeny); font-size: calc(1 * var(--tv)); letter-spacing: 0.04em;
 }

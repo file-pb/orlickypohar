@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Znak } from "@/app/logo";
+import { NazevZavodu } from "@/app/tabule-nazev";
 import { ZnakTridy } from "@/app/tridy";
 import { Infopanel } from "./infopanel";
 import type { Snimek } from "@/lib/tabule";
@@ -78,13 +79,23 @@ export function Vysledky({
             <Znak />
           </Link>
           <div className="tabule-vysledky-popis">
-        <h1>{konec ? "Konečné pořadí" : "Průběžné pořadí"}</h1>
+        {/* <b>V nadpisu stojí jméno regaty</b> (Filip, 26. 10. 2026:
+            *„to má mít název regaty"*). Tabule visí celý den a divák, co
+            přijde v půlce, musí poznat, čí pořadí čte — „Průběžné pořadí"
+            samo o sobě neříká, jestli je to Izolepa, nebo jarní vítr.
+            Stejně to má startovní listina, takže se vršek mezi podobami
+            dne nepřeskládá. */}
+        <h1>
+          <NazevZavodu text={snimek.nazev} zarovnani="vlevo" />
+        </h1>
         <p className="tabule-vysledky-stav">
+          {konec ? "Konečné pořadí" : "Průběžné pořadí"}
+          {" · "}
           {snimek.vysledkySkryte ? (
-            <>Pořadí se počítá — rozhodčí ho zatím nezveřejnil.</>
+            <>pořadí se počítá, rozhodčí ho zatím nezveřejnil</>
           ) : (
             <>
-              Odjeto {odjete.length}{" "}
+              odjeto {odjete.length}{" "}
               {odjete.length === 1 ? "rozjížďka" : odjete.length < 5 ? "rozjížďky" : "rozjížděk"}
               {nejmene && <> · {JAK_JISTE[nejmene] ?? nejmene}</>}
               {hotovo < odjete.length && (
