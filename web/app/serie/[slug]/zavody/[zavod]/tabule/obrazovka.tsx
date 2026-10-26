@@ -14,7 +14,7 @@ import { PanylkyRozjizdek } from "./rozjizdky";
 import { MapaTrackeru } from "@/app/mapa-trackeru";
 import type { VerejnePolohy } from "@/lib/polohy";
 import { useStopy } from "@/lib/stopy";
-import { pole } from "@/app/nacrt/mapa/plavba";
+import { JMENA, pole } from "@/app/nacrt/mapa/plavba";
 
 /**
  * Ukázková rozjížďka — tatáž, jakou ukazuje náčrt.
@@ -270,6 +270,43 @@ export function Obrazovka({
         : snimek.rozjizdky.some((r) => r.stav === "Dokoncena")
           ? "mezi"
           : "listina");
+  /** Snímek, jak ho vidí demo — počítá se jednou pro celou obrazovku. */
+  const snimekDemo = useMemo(() => (demo ? sDemoDaty(snimek, rezim) : snimek), [demo, snimek, rezim]);
+
+  /**
+   * <b>I běžící pruhy dole jedou v demu na simulovaných datech</b>
+   * (Filip, 26. 10. 2026: *„na demodatech u tabule simuluj i ta data
+   * dole, to celkové pořadí v poháru, ty běžící řádky"*). Série po
+   * jednom odjetém závodě má v pruhu pár jmen, takže se nedá posoudit,
+   * jak se bude chovat plný pohár.
+   */
+  const radkyDole = useMemo(() => {
+    if (!demo) return serieRadky;
+    const uz = new Set(serieRadky.map((r) => r.nazev));
+    const vsechny = [
+      ...serieRadky.map((r) => ({ ...r, body: Number.parseInt(r.popisek ?? "", 10) || 0 })),
+      ...snimekDemo.lode
+        .filter((l) => !uz.has(l.lod))
+        .map((l, i) => ({
+          id: 900_000 + i,
+          nazev: l.lod,
+          kategorie: l.kategorie,
+          stariS: null,
+          dojela: false,
+          popisek: "",
+          // Pevné rozdělení bodů: táž tabulka při každém překreslení.
+          body: 4 + ((i * 13) % 57),
+        })),
+    ];
+    const tridy = [...new Set(vsechny.map((r) => r.kategorie))];
+    return tridy.flatMap((trida) =>
+      vsechny
+        .filter((r) => r.kategorie === trida)
+        .sort((a, b) => a.body - b.body)
+        .map(({ body, ...r }) => ({ ...r, popisek: `${body} b` })),
+    );
+  }, [demo, serieRadky, snimekDemo]);
+
 
   const stari = Math.max(0, Math.round((ted - Date.parse(snimek.kdy)) / 1000));
 
@@ -422,7 +459,7 @@ export function Obrazovka({
           než simulace cizí regaty, a hlavně je pravdivý. Ukázkové plavby
           zůstaly tam, kam patří: v náčrtu `/nacrt/tabule`. */}
       {rezim === "listina" ? (
-        <Teaser snimek={demo ? sDemoDaty(snimek) : snimek} ted={ted} />
+        <Teaser snimek={snimekDemo} ted={ted} />
       ) : rezim === "mezi" || rezim === "po" ? (
         /* <b>Žádná trať vzadu</b> (Filip, 26. 10. 2026: *„měla by mít
            stejné pozadí jak ta startovní listina; ten rank vpravo
@@ -431,7 +468,7 @@ export function Obrazovka({
            žebříček; pod seznamem pořadí je z ní jen šmouha. Pozadí si
            tyhle podoby berou totéž co startovní listina, aby se tabule
            mezi fázemi dne nepřevlékala. */
-        <Vysledky snimek={demo ? sDemoDaty(snimek, rezim) : snimek} ted={ted} konec={rezim === "po"} />
+        <Vysledky snimek={snimekDemo} ted={ted} konec={rezim === "po"} />
       ) : (
       <div className="tabule-mapa" aria-hidden="true">
         <MapaTrackeru
@@ -508,7 +545,7 @@ export function Obrazovka({
             sérii"*). Pořadí na vodě navíc plní sama mapa, takže bez ní
             žádné není. */}
         <PoradiTrid
-          radky={zive.length > 0 ? poradiLodi : serieRadky}
+          radky={zive.length > 0 ? poradiLodi : radkyDole}
           nadpis={zive.length > 0 ? undefined : (serieNazev ?? undefined)}
           ref={tridy}
         />
@@ -671,6 +708,27 @@ function jesteLodi(kolik: number) {
   return `a ještě ${kolik} ${kolik < 5 ? "lodě" : "lodí"}`;
 }
 
+/**
+ * Kolik lodí má mít pole v demu (Filip, 26. 10. 2026: *„do těch
+ * simulovaných dat mi dej víc lodí i do obrazů před, mezi rozjížďkami
+ * a po závodě"*). Na regatě se šesti přihlášenými ukazovaly všechny tři
+ * podoby šest řádků, a to se nedá posoudit: tabule se navrhuje na plné
+ * pole, kde se o místo perou.
+ */
+const DEMO_LODI = 22;
+
+/** Kolik řádků se vejde do panelu pořadí — totéž `NEJVIC` jako v `lib/tabule.ts`. */
+const NEJVIC_V_PANELU = 10;
+
+/** Kormidelníci k dopsaným lodím — vymyšlení, jako celé to pole. */
+const DEMO_KORMIDELNICI = [
+  "J. Hradil", "M. Vávrová", "P. Šimek", "L. Bartoš", "T. Nedvědová",
+  "R. Kalous", "O. Fiala", "V. Doležalová", "Z. Mareš", "K. Pospíšil",
+];
+
+/** Stavy baterie, aby šlo vidět i vybitý telefon. */
+const DEMO_BATERIE = [84, 61, 12, 97, 38, 7, 73, 25];
+
 /** Za jak dlouho se samo zavře otevřené demo menu. */
 const KEBAB_ZHASNE_MS = 20_000;
 
@@ -685,6 +743,7 @@ type Rezim = "listina" | "mapa" | "mezi" | "po";
  * tabuli, kde se zrovna nic neděje.
  */
 function sDemoDaty(snimek: Snimek, rezim?: Rezim): Snimek {
+  snimek = sPlnymPolem(snimek);
   /**
    * <b>Po dojetí je zajímavý právě ten nehotový stav</b> (Filip, 26. 10.
    * 2026: *„tam bude důležité oznamovat stavy výsledků a výsledků
@@ -740,4 +799,71 @@ function sDemoDaty(snimek: Snimek, rezim?: Rezim): Snimek {
       },
     ],
   };
+}
+
+/**
+ * <b>Demo dopíše pole do plného počtu.</b>
+ *
+ * Startovní listina i obě podoby s pořadím kreslí to, co regata má —
+ * a před závodem to bývá pár lodí. Na to se nedá navrhovat plocha, která
+ * má v květnu unést celé startovní pole. Doplňuje se **jen chybějící
+ * počet**: lodě, které se opravdu přihlásily, zůstávají první a tak, jak
+ * jsou. Přes obrazovku přitom běží pruh, že jsou data simulovaná.
+ *
+ * Rozdělení je **pevné, ne náhodné** — počítá se z pořadí dopsané lodi,
+ * takže se při každém překreslení vrátí tatáž tabule a nic neposkakuje.
+ */
+function sPlnymPolem(snimek: Snimek): Snimek {
+  if (snimek.lode.length >= DEMO_LODI) return snimek;
+
+  const uz = new Set(snimek.lode.map((l) => l.lod));
+  const tridy = snimek.lode.length > 0
+    ? [...new Set(snimek.lode.map((l) => l.kategorie))]
+    : ["Race", "Nad7m", "Pod7m"];
+
+  const pribyle: Snimek["lode"] = [];
+  for (const jmeno of JMENA) {
+    if (snimek.lode.length + pribyle.length >= DEMO_LODI) break;
+    if (uz.has(jmeno)) continue;
+    const i = pribyle.length;
+    // Většina lodí má dva telefony, pár jeden, jedna z šesti žádný —
+    // ať je na kostičkách vidět i loď, kterou neuvidíme.
+    const telefonu = [2, 1, 2, 0, 3, 1][i % 6];
+    pribyle.push({
+      lod: jmeno,
+      kategorie: tridy[i % tridy.length],
+      kormidelnik: DEMO_KORMIDELNICI[i % DEMO_KORMIDELNICI.length],
+      potvrzena: i % 7 !== 3,
+      telefonu,
+      baterie: Array.from(
+        { length: telefonu },
+        (_, j) => DEMO_BATERIE[(i * 2 + j) % DEMO_BATERIE.length],
+      ),
+    });
+  }
+  if (pribyle.length === 0) return snimek;
+
+  const lode = [...snimek.lode, ...pribyle];
+  const tabule = snimek.tabule.map((panel) => {
+    const vPanelu = new Set(panel.lode.map((l) => l.lod));
+    const doPanelu = pribyle.filter(
+      (l) => !vPanelu.has(l.lod) && (panel.kategorie === "Celkem" || l.kategorie === panel.kategorie),
+    );
+    const zbyva = Math.max(0, NEJVIC_V_PANELU - panel.lode.length);
+    const posledni = panel.lode.at(-1);
+    return {
+      ...panel,
+      lode: [
+        ...panel.lode,
+        ...doPanelu.slice(0, zbyva).map((l, i) => ({
+          lod: l.lod,
+          misto: (posledni?.misto ?? 0) + i + 1,
+          body: (posledni?.body ?? 0) + (i + 1) * 3,
+        })),
+      ],
+      dalsich: panel.dalsich + Math.max(0, doPanelu.length - zbyva),
+    };
+  });
+
+  return { ...snimek, lode, tabule };
 }

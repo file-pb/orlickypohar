@@ -132,7 +132,12 @@ export function trat(): Znacka[] {
   ];
 }
 
-const JMENA = [
+/**
+ * Jména pro ukázkové lodě. <b>Vydaná ven</b>, protože jimi tabule
+ * doplňuje i podoby bez mapy (startovní listina, pořadí) — regata se
+ * šesti přihlášenými jinak v demu ukáže šest řádků.
+ */
+export const JMENA = [
   "LUNA", "PEZI", "AVENIR", "ORKÁN", "SIRIUS", "VLNA", "KORMORÁN", "ALBATROS",
   "MERKUR", "TRAMP", "ŠÍPEK", "NAUTILUS", "RACEK", "BOREAS", "DELFÍN", "PASÁT",
   "TRITON", "VÁNEK", "KAJMAN", "POLARIS", "ZEFÝR", "ARGO", "NEPTUN", "KOMETA",
@@ -169,6 +174,18 @@ function plavba(zrno: number, znacky: Znacka[], rychlostUzlu: number): Bod[] {
   for (let i = 1; i < znacky.length; i++) {
     const cil = znacky[i];
     const navetrna = cil.typ === "OtocnaBoje" && cil.poradi === 2;
+    /**
+     * <b>Loď se drží koridoru kolem nohy</b> (Filip, 26. 10. 2026:
+     * *„mapa se závodem u simulace má nějakou úchylnou trasu"*, k tratí
+     * jarního větru). Dřív se křižovalo o 45° od přímého směru a bok se
+     * měnil na čas nebo až u břehu — na zatopeném údolí z toho vyšly
+     * obdélníky přes půl nádrže, které s tratí neměly nic společného.
+     * Obrat teď přijde, jakmile loď odbočí od spojnice dál než na
+     * pětinu její délky, takže zig-zag k bóji doopravdy konverguje.
+     */
+    const zacatek = kde;
+    const dlouha = Math.max(metry(zacatek, cil), 1);
+    const koridor = Math.min(KORIDOR_NEJVIC_M, Math.max(40, dlouha * 0.2));
     let dost = 0;
 
     while (metry(kde, cil) > 40 && dost < 400) {
@@ -180,37 +197,46 @@ function plavba(zrno: number, znacky: Znacka[], rychlostUzlu: number): Bod[] {
       let smerX = dx / delka;
       let smerY = dy / delka;
 
-      if (navetrna) {
-        // Křižování: odchylka 45° od přímého směru, bok se střídá.
-        const uhel = (bok * 45 * Math.PI) / 180;
-        const nx = smerX * Math.cos(uhel) - smerY * Math.sin(uhel);
-        const ny = smerX * Math.sin(uhel) + smerY * Math.cos(uhel);
-        smerX = nx;
-        smerY = ny;
-        doObratu -= krok;
-        if (doObratu <= 0) {
-          bok = -bok;
-          doObratu = 40 + r() * 80;
-        }
-      }
+      // Odchylka od spojnice start → cíl téhle nohy, kladná na jeden bok.
+      const odsazeni = odSpojnice(zacatek, cil, kde);
+      /**
+       * Křižování na návětrné noze, jinak jen mírné kličkování — stopa po
+       * přesné přímce vypadá jako vlak, ne jako závod. Oboje se vejde do
+       * téhož koridoru; liší se jen úhlem.
+       */
+      const uhel = ((navetrna ? 42 : 7) * bok * Math.PI) / 180;
+      // Čím blíž k bóji, tím míň se kličkuje: poslední metry se jede na ni.
+      const doKonce = Math.min(1, metry(kde, cil) / Math.max(120, dlouha * 0.25));
+      const u = uhel * doKonce;
+      smerX = (dx / delka) * Math.cos(u) - (dy / delka) * Math.sin(u);
+      smerY = (dx / delka) * Math.sin(u) + (dy / delka) * Math.cos(u);
 
       // Rychlost kolísá, aby se lodě nedržely v zástupu.
       const m = rychlostUzlu * 0.5144 * krok * (0.85 + r() * 0.3);
       const dal = posun(kde, smerX * m, smerY * m);
 
-      // <b>Od břehu se loď odrazí.</b> Křižování v zatopeném údolí končí
-      // u lesa dřív než u lay line, takže se obrátí a jede zpátky — a bez
-      // toho by stopy na náčrtu ležely na kopci, což je přesně ten druh
-      // lži, kvůli které `lib/voda.ts` vůbec vznikl.
+      // <b>Od břehu se loď odrazí</b> — bez toho by stopy na náčrtu
+      // ležely na kopci, což je přesně ten druh lži, kvůli které
+      // `lib/voda.ts` vůbec vznikl. Kdyby ani obrácený bok nebyl na vodě,
+      // noha končí tady: lepší kratší stopa než stopa v lese.
       if (!naVode(dal)) {
         bok = -bok;
-        doObratu = 40 + r() * 80;
+        const zpet = posun(kde, -smerX * m, -smerY * m);
+        if (!naVode(zpet)) break;
         continue;
       }
 
       kde = dal;
       cas += krok;
       body.push({ ...kde, cas });
+
+      // Obrat na kraji koridoru, nebo když dojde trpělivost.
+      doObratu -= krok;
+      if (Math.abs(odsazeni) > koridor || doObratu <= 0) {
+        // Obrací se jen k ose, ne od ní — jinak by loď z koridoru vypadla.
+        bok = odsazeni > 0 ? -1 : 1;
+        doObratu = 60 + r() * 80;
+      }
     }
 
     /**
@@ -270,6 +296,27 @@ function plavba(zrno: number, znacky: Znacka[], rychlostUzlu: number): Bod[] {
     }
   }
   return body;
+}
+
+/** Jak daleko od spojnice smí loď nejvýš odbočit, i na dlouhé noze. */
+const KORIDOR_NEJVIC_M = 220;
+
+/**
+ * Kolmá odchylka bodu od spojnice `od` → `k`, v metrech. Kladná na jeden
+ * bok, záporná na druhý — podle toho se pozná, kam obrátit.
+ */
+function odSpojnice(
+  od: { sirka: number; delka: number },
+  k: { sirka: number; delka: number },
+  bod: { sirka: number; delka: number },
+): number {
+  const kosinus = Math.cos((od.sirka * Math.PI) / 180);
+  const ax = (k.delka - od.delka) * METRU_NA_STUPEN * kosinus;
+  const ay = (k.sirka - od.sirka) * METRU_NA_STUPEN;
+  const bx = (bod.delka - od.delka) * METRU_NA_STUPEN * kosinus;
+  const by = (bod.sirka - od.sirka) * METRU_NA_STUPEN;
+  const d = Math.hypot(ax, ay) || 1;
+  return (ax * by - ay * bx) / d;
 }
 
 /** Leží bod ve vodě? Hrubý test bodem v mnohoúhelníku nad obrysem nádrže. */
