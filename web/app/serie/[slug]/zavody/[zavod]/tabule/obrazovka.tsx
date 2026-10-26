@@ -478,6 +478,8 @@ function Alert({ udalost, hotovo }: { udalost?: Udalost; hotovo: () => void }) {
 
 /** Nadpisek nad zprávou. Jedno slovo, verzálky, v barvě druhu. */
 const NADPISKY: Record<Udalost["druh"], string> = {
+  zprava: "Vydáno",
+  vystraha: "Pozor",
   start: "Start",
   dojezd: "V cíli",
   souboj: "Na vodě",

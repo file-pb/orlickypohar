@@ -14,6 +14,8 @@ import type { Snimek } from "@/lib/tabule";
  * falešný alert visel do rána.
  */
 export type DruhUdalosti =
+  | "zprava"
+  | "vystraha"
   | "start"
   | "dojezd"
   | "dokonceno"
@@ -44,6 +46,26 @@ export function udalosti(stary: Snimek | null, novy: Snimek): Udalost[] {
   if (!stary) return [];
 
   const ven: Udalost[] = [];
+
+  /**
+   * <b>Nová zpráva na vývěsce vyjede jako velká karta</b> a teprve pak
+   * zapadne do panelu (Filip, 26. 10. 2026: *„vyjede modal nějaké jumbo,
+   * které po pár sekundách zaparkuje do designu"*). Odklad startu, který
+   * se jen tiše objeví v rohu, si v hospodě nikdo nevšimne.
+   *
+   * Hlásí se jen **přírůstek**: zpráva, která tam byla už minule, se
+   * neopakuje, i když se snímek načetl znovu. Stažené se nehlásí vůbec —
+   * odvolání není novinka.
+   */
+  const znamé = new Set((stary.zpravy ?? []).map((z) => z.id));
+  for (const z of novy.zpravy ?? []) {
+    if (znamé.has(z.id)) continue;
+    ven.push({
+      klic: `zprava-${z.id}`,
+      druh: z.druh === "Vystraha" ? "vystraha" : "zprava",
+      titulek: z.text,
+    });
+  }
 
   // Trať. <b>Nehlásí se změna razítka, ale přechod „nejede se → jede se"</b>
   // (Filip, 15. 10. 2026: *„alerty, typicky schválení trati… čeká se,

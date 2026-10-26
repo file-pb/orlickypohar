@@ -3012,6 +3012,11 @@ body:has(.tabule) {
 .tabule-alert.start, .tabule-alert.trat, .tabule-alert.dokonceno,
 .tabule-alert.zavod { color: var(--stav-vypsany); }
 .tabule-alert.ceka, .tabule-alert.zrusena { color: var(--stav-zruseny); }
+/* Zpráva z vývěsky: oznámení bez barvy, výstraha červeně. Je to táž
+   karta jako u startu a dojezdu — vyjede, chvíli visí a usadí se do
+   panelu, kam informace patří (Filip, 26. 10. 2026). */
+.tabule-alert.zprava { color: var(--text); border-color: var(--linka); }
+.tabule-alert.vystraha { color: var(--stav-zruseny); border-color: var(--stav-zruseny); }
 .tabule-alert .druh {
   font-style: normal; font-size: calc(0.85 * var(--tv)); letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--tlumeny); font-weight: 700;
@@ -4920,3 +4925,12 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   padding: calc(0.7 * var(--tv)) 0 0;
   border-top: 1px solid var(--linka);
 }
+/* Tečky u nadpisu vývěsky: kolik stránek zpráv se střídá a která je
+   zrovna na řadě. Táž řeč jako u karuselu pořadí. */
+.tabule .tabule-info h2 { display: flex; align-items: center; gap: calc(0.5 * var(--tv)); }
+.tabule .tabule-info-tecky { display: inline-flex; gap: calc(0.25 * var(--tv)); }
+.tabule .tabule-info-tecky i {
+  width: calc(0.3 * var(--tv)); height: calc(0.3 * var(--tv));
+  border-radius: 999px; background: var(--tlumeny); opacity: 0.4;
+}
+.tabule .tabule-info-tecky i.ted { opacity: 1; }
