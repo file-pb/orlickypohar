@@ -2844,15 +2844,21 @@ Co F1 dělá navíc a my zatím ne: ukazuje **odstup** (+1.744), kdežto naše
 ### Tabule má čtyři fáze dne, ne jednu (Filip, 26. 10. 2026)
 
 Mapa je jen jedna z nich a **komponenta musí být vidět pořád** — prázdná
-plocha na televizi vypadá jako porucha. Hotové jsou dvě krajní, prostřední
-dvě čekají.
+plocha na televizi vypadá jako porucha. Všechny čtyři jsou hotové a dají
+se projít kebabem v demu.
 
 | kdy | co ukazuje | stav |
 |---|---|---|
 | před zahájením dne | kdo se přihlašuje, kolika telefony ho vidíme | hotovo |
-| po rozpravě | mapa s polohami | hotovo dřív |
-| mezi rozjížďkami | průběžné výsledky, za nimi mírně rozmazaná mapa trasy | **chybí** |
-| po dojetí regaty | jak to dopadlo — a v jakém je to stavu | **chybí** |
+| po rozpravě | mapa s polohami | hotovo |
+| mezi rozjížďkami | průběžné výsledky, za nimi mírně rozmazaná mapa trasy | hotovo |
+| po dojetí regaty | jak to dopadlo — a v jakém je to stavu | hotovo |
+
+Kterou podobu tabule ukáže, se rozhoduje **na jednom místě**
+(`obrazovka.tsx`, `rezim`) v pořadí dne: lodě na vodě přebijí všechno, pak
+rozhoduje, jestli je po regatě, jestli se už jelo, a nakonec zbyde
+startovní listina. Pruhy dole mezitím přepnou z pořadí regaty na **pořadí
+série** a dostanou nadpis, aby si to divák nepletl.
 
 **Po dojezdu je nejhorší chvíle, ne nejlepší** (Filip): *„když všichni
 dojedou, tak chtějí vidět, jak dopadli, ale v tu chvíli organizace maká
