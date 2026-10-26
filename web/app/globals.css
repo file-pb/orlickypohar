@@ -4667,3 +4667,87 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   background: var(--pozadi); color: var(--tlumeny);
   border-color: var(--linka); font-weight: 400; box-shadow: none;
 }
+
+/* ---------------------------------------------------------------------
+   Teaser: co tabule ukazuje, dokud nikdo nehlásí polohu.
+
+   Stojí na místě mapy a drží se téhož měřítka (`--tv`), protože se čte
+   z druhého konce hospody stejně jako pořadí. Jména lodí jsou to hlavní
+   — kdo je na startovní listině, je přesně ta otázka, na kterou se
+   v hospodě před startem čeká.
+   --------------------------------------------------------------------- */
+/* <b>Stojí v toku, nepřekrývá.</b> Mapa je pozadí a leží pod panely,
+   kdežto teaser je obsah: kdyby byl taky absolutní, schoval by pod sebou
+   karusel tříd, který pod ním běží dál (změřeno 26. 10. 2026 — karusel
+   měl 924 px a nebylo ho vidět). */
+.tabule .tabule-teaser {
+  position: relative; z-index: 2;
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column; gap: calc(1.2 * var(--tv));
+  /* Vlevo nahoře sedí značka, takže hlavička začíná pod ní. */
+  padding: calc(5.6 * var(--tv)) calc(3 * var(--tv)) 0;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 18% 0%, color-mix(in srgb, var(--voda) 26%, transparent), transparent 70%),
+    var(--pozadi);
+}
+.tabule .tabule-teaser > header { display: grid; gap: calc(0.5 * var(--tv)); }
+.tabule .tabule-teaser h1 { margin: 0; }
+.tabule .tabule-teaser-stav {
+  margin: 0; color: var(--tlumeny);
+  font-size: calc(1.1 * var(--tv)); letter-spacing: 0.04em;
+}
+.tabule .tabule-teaser-pocet {
+  margin: 0; color: var(--text); font-weight: 700;
+  font-size: calc(1.5 * var(--tv));
+}
+/* Třídy vedle sebe, každá svůj sloupec. Víc tříd = užší sloupce; na
+   televizi je lepší mít vše naráz než karusel, který se zrovna otočil
+   pryč od té, kterou divák hledá. */
+.tabule .tabule-teaser-tridy {
+  flex: 1; min-height: 0;
+  display: grid; gap: calc(1.4 * var(--tv));
+  grid-template-columns: repeat(auto-fit, minmax(calc(18 * var(--tv)), 1fr));
+}
+.tabule .tabule-teaser-trida { min-height: 0; display: grid; grid-template-rows: auto 1fr; gap: calc(0.6 * var(--tv)); }
+.tabule .tabule-teaser-trida h2 {
+  margin: 0; display: flex; align-items: center; gap: calc(0.5 * var(--tv));
+  font-size: calc(1.4 * var(--tv)); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--tlumeny); border-bottom: 1px solid var(--linka);
+  padding-bottom: calc(0.3 * var(--tv));
+}
+.tabule .tabule-teaser-trida h2 .detail {
+  margin-left: auto; font-variant-numeric: tabular-nums; color: var(--tlumeny);
+}
+.tabule .tabule-teaser-trida ul {
+  /* <b>Jeden sloupec, žádné zalamování.</b> Svislý `flex-wrap` tvoří
+     další sloupce, jenže bez pevné šířky se překryjí — na televizi
+     z toho bylo „MANWBA" přes „MAMBA" a „NABLB" (26. 10. 2026). Třídy
+     se dělí do sloupců mřížkou výš, uvnitř třídy se čte shora dolů. */
+  margin: 0; padding: 0; list-style: none; min-height: 0;
+  display: flex; flex-direction: column;
+}
+.tabule .tabule-teaser-trida li {
+  display: flex; align-items: baseline; gap: calc(0.5 * var(--tv));
+  padding: calc(0.2 * var(--tv)) 0;
+  font-size: calc(1.4 * var(--tv)); line-height: 1.25;
+}
+.tabule .tabule-teaser-trida li b { font-weight: 700; }
+.tabule .tabule-teaser-trida li .detail { color: var(--tlumeny); font-size: calc(1 * var(--tv)); }
+/* Nepotvrzená přihláška je pořád přihláška, jen se o ní ještě rozhoduje
+   — tlumí se, nemizí. */
+.tabule .tabule-teaser-trida li.nepotvrzena { opacity: 0.55; }
+.tabule .tabule-teaser .prazdno { font-size: calc(1.1 * var(--tv)); color: var(--tlumeny); }
+.tabule .tabule-teaser-trida li.dalsich { color: var(--tlumeny); font-style: italic; }
+
+/* S teaserem je hlavní plochou seznam lodí, ne karusel pořadí: ten
+   ukazuje výsledky odjetých rozjížděk, kterých je na začátku dne málo
+   nebo žádné. Dělí se proto o zbytek, ne napůl — jinak se seznam osmi
+   lodí usekne v půlce (změřeno 26. 10. 2026). */
+.tabule:has(.tabule-teaser) .sloupce {
+  /* Nebere podíl, bere co potřebuje — a ne víc než třetinu obrazovky.
+     S `flex: 0 1 auto` ho teaser stlačil na 93 px a řádky se slily. */
+  flex: 0 0 auto;
+  min-height: calc(9 * var(--tv));
+  max-height: 32vh;
+}

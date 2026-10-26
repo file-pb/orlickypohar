@@ -5,11 +5,11 @@ import Link from "next/link";
 import type { Snimek } from "@/lib/tabule";
 import { Znak } from "@/app/logo";
 import { NazevZavodu } from "@/app/tabule-nazev";
+import { Teaser } from "./teaser";
 import { Karusel, type Panel } from "./karusel";
 import { PoradiTrid } from "./poradi-tridy";
 import { PanylkyRozjizdek } from "./rozjizdky";
 import { MapaTrackeru } from "@/app/mapa-trackeru";
-import { pole } from "@/app/nacrt/mapa/plavba";
 import type { VerejnePolohy } from "@/lib/polohy";
 import { useStopy } from "@/lib/stopy";
 
@@ -26,7 +26,6 @@ import { useStopy } from "@/lib/stopy";
  * Spočítá se jednou pro celý modul: je deterministická a na každé obnově
  * dat by se jinak generovala znovu.
  */
-const UKAZKA = pole();
 import { ZnakTridy } from "@/app/tridy";
 import { udalosti, type Udalost } from "@/lib/tabule-udalosti";
 
@@ -313,13 +312,22 @@ export function Obrazovka({
           listiny, ale tabule to u sebe píše. Vydávat vymyšlené polohy za
           skutečné by byla lež, ne ukázka; až přijdou první skutečné,
           tenhle vstup zmizí. */}
+      {/* <b>Dokud nikdo nehlásí polohu, je na místě mapy teaser</b>
+          (Filip, 26. 10. 2026: *„pokud nemá být vidět mapa, tak alespoň
+          teaser se seznamem přihlášených lodí"*). Do té doby tu jezdily
+          ukázkové plavby — zástup s cedulkou, ale pořád zástup. Seznam
+          lodí, které se opravdu přihlásily, řekne divákovi v hospodě víc
+          než simulace cizí regaty, a hlavně je pravdivý. Ukázkové plavby
+          zůstaly tam, kam patří: v náčrtu `/nacrt/tabule`. */}
+      {zive.length === 0 ? (
+        <Teaser snimek={snimek} ted={ted} />
+      ) : (
       <div className="tabule-mapa" aria-hidden="true">
         <MapaTrackeru
-          znacky={zive.length > 0 && trat ? trat : UKAZKA.znacky}
-          lode={zive.length > 0 ? zive : UKAZKA.lode}
+          znacky={trat ?? []}
+          lode={zive}
           tabule
-          zive={zive.length > 0}
-          ukazka={zive.length === 0}
+          zive
           odsazeni={odsazeni}
           onUdalost={zarad}
           onPoradi={setPoradiLodi}
@@ -335,6 +343,7 @@ export function Obrazovka({
           }
         />
       </div>
+      )}
       <PanylkyRozjizdek snimek={snimek} ted={ted} />
       {/* <b>Stáří dat jako kolečko v rohu mapy</b> (Filip: *„maximálně ten
           odpočet dej třeba do nějakého kolečka doprava dolů v mapě, ale
@@ -348,7 +357,7 @@ export function Obrazovka({
       >
         {stari < 60 ? `${stari} s` : `${Math.round(stari / 60)} min`}
       </p>
-      <PoradiTrid radky={poradiLodi} ukazka={zive.length === 0} ref={tridy} />
+      <PoradiTrid radky={poradiLodi} ref={tridy} />
 
       <div className="sloupce">
         {/* Zbývá jediný karusel: pořadí po třídách. Panel se stavy

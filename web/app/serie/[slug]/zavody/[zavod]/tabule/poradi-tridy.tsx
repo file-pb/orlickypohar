@@ -30,12 +30,10 @@ type Radek = {
  */
 export function PoradiTrid({
   radky,
-  ukazka,
   ref,
 }: {
   radky: Radek[];
   /** Pořadí je z ukázkových plaveb — pás to musí říct u sebe. */
-  ukazka?: boolean;
   /** Mapa pod karuselem potřebuje znát jeho výšku, aby pole nekreslila pod něj. */
   ref?: React.Ref<HTMLElement>;
 }) {
@@ -49,7 +47,6 @@ export function PoradiTrid({
         return (
           <div key={t} className="poradi-radek">
             <span className="poradi-radek-trida">
-              {ukazka && <span className="nacrt-ukazka">ukázka</span>}
               <ZnakTridy nazev={t} />
               {t}
             </span>
