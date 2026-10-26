@@ -4779,7 +4779,24 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   border: 1px solid currentColor; border-radius: 999px;
   padding: 0 calc(0.45 * var(--tv)); white-space: nowrap;
 }
+/* Telefony jako kostičky: jedna na každý. Výplň odspodu drží
+   `--baterie` — zatím je plná, protože stav baterie appka ještě
+   neposílá; až ho pošle, změní se jen ta jedna proměnná. */
 .tabule .tabule-teaser-trida li .telefonu {
-  font-size: calc(0.9 * var(--tv)); color: var(--stav-vypsany);
-  font-variant-numeric: tabular-nums;
+  display: inline-flex; align-items: center; gap: calc(0.22 * var(--tv));
+  color: var(--stav-vypsany);
+}
+.tabule .telefon-kosticka {
+  --baterie: 100%;
+  display: block;
+  width: calc(0.52 * var(--tv)); height: calc(0.92 * var(--tv));
+  border: 1px solid currentColor; border-radius: calc(0.14 * var(--tv));
+  background: linear-gradient(
+    to top,
+    currentColor 0 var(--baterie),
+    transparent var(--baterie) 100%
+  );
+}
+.tabule .tabule-teaser-trida li .telefonu .detail {
+  font-size: calc(0.8 * var(--tv)); color: var(--stav-vypsany);
 }

@@ -28,6 +28,35 @@ import type { Snimek } from "@/lib/tabule";
  */
 const NEJVIC_V_TRIDE = 12;
 
+/**
+ * Telefony lodi jako <b>kostičky</b>, ne číslo (Filip, 26. 10. 2026:
+ * *„místo textu 2× bych zobrazil kostičky, s indikací stavu baterie"*).
+ * Jedna kostička na telefon se přes místnost přečte rychleji než číslovka
+ * — a je to místo, kam se vejde baterie, jakmile ji appka začne posílat:
+ * kostička se bude plnit odspodu.
+ *
+ * <b>Žádná kostička nestačí.</b> Loď bez telefonu musí říct nahlas, že
+ * z ní nepřijde nic, jinak by vypadala stejně jako ta, u které se údaj
+ * nenačetl.
+ */
+function Telefony({ pocet }: { pocet: number }) {
+  if (pocet <= 0)
+    return (
+      <span className="bez-telefonu" title="nesleduje se">
+        bez telefonu
+      </span>
+    );
+
+  return (
+    <span className="telefonu" title={`${pocet} ${pocet === 1 ? "telefon" : pocet < 5 ? "telefony" : "telefonů"} na palubě`}>
+      {Array.from({ length: Math.min(pocet, 4) }, (_, i) => (
+        <i key={i} className="telefon-kosticka" aria-hidden="true" />
+      ))}
+      {pocet > 4 && <span className="detail">+{pocet - 4}</span>}
+    </span>
+  );
+}
+
 export function Teaser({ snimek, ted }: { snimek: Snimek; ted: number }) {
   const hodiny = casomira(snimek, ted);
   const trid = [...new Set(snimek.lode.map((l) => l.kategorie))];
@@ -82,15 +111,7 @@ export function Teaser({ snimek, ted }: { snimek: Snimek; ted: number }) {
                             říká, že z téhle lodi nepřijde nic —, a proto je
                             vidět, kdežto jedničku nemá cenu hlásit: tak to má
                             být. Dvojka a víc znamená zálohu na palubě. */}
-                        {l.telefonu === 0 ? (
-                          <span className="bez-telefonu" title="nesleduje se">
-                            bez telefonu
-                          </span>
-                        ) : l.telefonu > 1 ? (
-                          <span className="telefonu" title="spárované telefony">
-                            {l.telefonu}×
-                          </span>
-                        ) : null}
+                        <Telefony pocet={l.telefonu} />
                       </li>
                     ))}
                     {dalsich > 0 && (
