@@ -123,7 +123,7 @@ export function Teaser({ snimek, ted }: { snimek: Snimek; ted: number }) {
       {snimek.lode.length === 0 ? (
         <p className="prazdno">Na tuhle regatu se zatím nikdo nepřihlásil.</p>
       ) : (
-        <>
+        <section className="tabule-teaser-listina">
           <p className="tabule-teaser-pocet">
             {snimek.lode.length}{" "}
             {snimek.lode.length === 1 ? "přihlášená loď" : snimek.lode.length < 5 ? "přihlášené lodě" : "přihlášených lodí"}
@@ -162,7 +162,7 @@ export function Teaser({ snimek, ted }: { snimek: Snimek; ted: number }) {
               );
             })}
           </div>
-        </>
+        </section>
       )}
     </section>
   );
