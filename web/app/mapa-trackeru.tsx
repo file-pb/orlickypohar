@@ -647,16 +647,20 @@ export function MapaTrackeru({
 
   /** Uzly trati v pořadí — podklad pro přímou spojnici, když není cesta po vodě. */
   /**
-   * <b>Čárkovaná spojnice se kreslí ze značek, ne z měřicí trasy</b>
-   * (Filip, 24. 10. 2026: *„měřicí trasu bych vůbec neumožnil zobrazit,
-   * ta je jen pro výpočet"*). Dokud tabule měřicí trasu nedostávala, byly
-   * to totéž a rozdíl nebylo vidět; od 26. 10. 2026 jí ji posílá server,
-   * takže by se divákovi kreslila cesta, která se drží šedesát metrů od
-   * břehu a nikdo po ní neplave.
+   * <b>Čárkovaná spojnice vede po vodě</b> (Filip, 26. 10. 2026: *„no
+   * jasně že po vodě"*).
+   *
+   * Je to obrat proti 24. 10., kdy padlo *„měřicí trasu bych vůbec
+   * neumožnil zobrazit, ta je jen pro výpočet"* — a stojí za ním, co se
+   * mezitím ukázalo na skutečné trati: přímka mezi dvěma značkami vede
+   * přes poloostrov v třetině až polovině vzorků (změřeno 26. 10. na
+   * jarním větru a na Izolepě), a čára přes kopec je na tabuli větší lež
+   * než čára, která se drží šedesát metrů od břehu. Spojnice není stopa
+   * ani vytyčená dráha — je čárkovaná právě proto, že říká jen „tudy se
+   * jede". Kde je k dispozici vyladěná spojnice z návrháře, kreslí se
+   * stejně ona (níž), a tahle je náhradou tam, kde není.
    */
-  const uzlyTrati = [...znacky]
-    .sort((a, b) => a.poradi - b.poradi)
-    .map((m) => naPlatno(m.sirka, m.delka));
+  const uzlyTrati = cesta.map((p) => naPlatno(p.sirka, p.delka));
 
   /** Stav každé lodi k zvolenému času: poloha, stáří, postup, stopa. */
   /**
