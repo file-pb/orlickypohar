@@ -1207,6 +1207,73 @@ def verejne_polohy(slug, z):
             "lode": [l for l in snimek["lode"] if l["sirka"] is not None]}
 
 
+def zaznam_rozjizdky(slug, z, cislo):
+    """Záznam dojeté rozjížďky — <b>simulovaný</b>, stejně jako živé polohy.
+
+    Tvar je tentýž, jaký vydává `PolohySprava.ZaznamAsync`, a podmínky taky:
+    přepínač *živý přenos ven* a dokončená rozjížďka se známým startem.
+    Mock nemá telefony, takže stopy dopočítá týmž okruhem po prvcích trati
+    jako `polohy_zastavky` — jen pro časy v minulosti, ne pro „teď".
+
+    Délka rozjížďky se v mocku nebere z `konecV` (bývá prázdné), ale
+    z pevných čtyřiceti minut: na podobu přehrávky to stačí a nevymýšlí se
+    tím údaj, který by se dal splést se zapsaným koncem.
+    """
+    import math
+
+    pusti = nastaveni_regaty(slug)["zivyPrenosVen"]
+    r = next((x for x in z.get("rozjizdky", []) if x.get("cislo") == cislo), None)
+    if not pusti or not r or r.get("stav") != "Dokoncena" or not r.get("startV"):
+        return {"vydava": False, "od": None, "do": None, "lode": []}
+
+    from datetime import datetime, timedelta
+
+    start = datetime.fromisoformat(r["startV"])
+    od = start - timedelta(minutes=5)
+    do = start + timedelta(minutes=40)
+
+    uzly = [(b["sirka"], b["delka"]) for b in sorted(
+        (b for b in BOJE.get(slug, []) if b["nahrazenaV"] is None and not b["sebrana"]),
+        key=lambda b: b["poradi"])]
+    if len(uzly) < 2:
+        return {"vydava": True, "od": od.isoformat(), "do": do.isoformat(), "lode": []}
+
+    lode = sorted({u["lod"] for u in z.get("ucasti", [])
+                   if u.get("stav", "Potvrzena") in ("Prihlasena", "Potvrzena")})
+
+    krok_s = 15
+    kroku = int((do - od).total_seconds() // krok_s)
+    vysledek = []
+    for i, nazev in enumerate(lode):
+        # Každá pátá loď záznam nemá — telefon nejel, a to se stává.
+        if i % 5 == 4:
+            continue
+        body = []
+        for k in range(kroku + 1):
+            cas = od + timedelta(seconds=k * krok_s)
+            # <b>Pole vyráží od startu pohromadě a teprve se roztahuje.</b>
+            # Fáze podle lodi by ho na začátku rozsypala po celé trati,
+            # takže by přehrávka začala tím, co má být její pointa — a
+            # mapa by se hned zkraje musela oddálit na celou nádrž.
+            postup = min(1.0, k / max(kroku, 1) * (1.0 + (i % 7) * 0.035))
+            misto = postup * (len(uzly) - 1)
+            a = uzly[min(int(misto), len(uzly) - 1)]
+            b = uzly[min(int(misto) + 1, len(uzly) - 1)]
+            t = misto - int(misto)
+            stranou = math.sin(k * 0.21 + i) * 0.00045
+            body.append({
+                "cas": cas.isoformat(),
+                "sirka": a[0] + (b[0] - a[0]) * t + stranou,
+                "delka": a[1] + (b[1] - a[1]) * t + stranou * 0.6,
+            })
+        vysledek.append({
+            "lodId": PRIHLASKA_ID.get(nazev, i + 1), "nazev": nazev,
+            "kategorie": KAT.get(nazev), "body": body,
+        })
+
+    return {"vydava": True, "od": od.isoformat(), "do": do.isoformat(), "lode": vysledek}
+
+
 def cas_iso(sekundy):
     """Unixový čas na ISO v UTC — tak, jak ho posílá API."""
     from datetime import datetime, timezone
@@ -5247,6 +5314,12 @@ class H(BaseHTTPRequestHandler):
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/trat/prvky$', cesta)):
             return self.prvky_seznam(m.group(1))
+        elif (m := re.match(
+                rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)/rozjizdky/(\d+)/zaznam$', cesta)):
+            z = next((x for x in D["zavody"] if x["slug"] == m.group(1)), None)
+            if not z:
+                return self.send_error(404)
+            telo = zaznam_rozjizdky(m.group(1), z, int(m.group(2)))
         elif (m := re.match(
                 rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)/polohy$', cesta)):
             z = next((x for x in D["zavody"] if x["slug"] == m.group(1)), None)

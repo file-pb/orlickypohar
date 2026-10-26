@@ -13,8 +13,9 @@ import { PoradiTrid } from "./poradi-tridy";
 import { PanylkyRozjizdek } from "./rozjizdky";
 import { MapaTrackeru } from "@/app/mapa-trackeru";
 import type { VerejnePolohy } from "@/lib/polohy";
-import { useStopy } from "@/lib/stopy";
+import { trida, useStopy } from "@/lib/stopy";
 import { JMENA, pole } from "@/app/nacrt/mapa/plavba";
+import type { ZaznamRozjizdky } from "@/lib/zaznam";
 
 /**
  * Ukázková rozjížďka — tatáž, jakou ukazuje náčrt.
@@ -239,7 +240,7 @@ export function Obrazovka({
    */
   const ukazka = useMemo(
     () =>
-      demo === "mapa"
+      demo
         ? pole(
             // <b>Aspoň osmnáct lodí</b> (Filip, 26. 10. 2026: *„do
             // simulace dej víc lodí"*). Regata se šesti přihlášenými
@@ -261,6 +262,16 @@ export function Obrazovka({
    * lodě na vodě přebijí všechno, pak rozhoduje, jestli je po regatě,
    * jestli se už jelo, a nakonec zbyde startovní listina.
    */
+  /** Poslední dojetá rozjížďka — ta, jejíž záznam má smysl přehrávat. */
+  const posledniDojeta = useMemo(
+    () =>
+      [...snimek.rozjizdky]
+        .filter((r) => r.stav === "Dokoncena")
+        .sort((a, b) => a.cislo - b.cislo)
+        .at(-1)?.cislo ?? null,
+    [snimek.rozjizdky],
+  );
+
   const rezim: Rezim =
     demo ??
     (zive.length > 0
@@ -270,6 +281,88 @@ export function Obrazovka({
         : snimek.rozjizdky.some((r) => r.stav === "Dokoncena")
           ? "mezi"
           : "listina");
+  /**
+   * <b>Záznam poslední dojeté rozjížďky.</b> Stahuje se jednou, až když je
+   * co přehrávat — je o dva řády větší než snímek, takže do něj nepatří.
+   * `vydava: false` je odpověď, kterou tabule poslechne: rozhodčí přenos
+   * ven nepustil, nebo z rozjížďky nic nepřišlo.
+   */
+  const [zaznam, setZaznam] = useState<ZaznamRozjizdky | null>(null);
+
+  /**
+   * Stáhne záznam, až když je co přehrávat. <b>Výpadek poslední dobrý
+   * záznam nemaže</b> — tabule ho přehrává dál a nikdo u ní nestojí, aby
+   * ji obnovil.
+   */
+  useEffect(() => {
+    if (demo) return;
+    if (rezim !== "mezi" && rezim !== "po") return;
+    if (posledniDojeta === null) return;
+
+    let platne = true;
+    const adresa =
+      `/serie/${encodeURIComponent(serie)}/zavody/${encodeURIComponent(zavod)}` +
+      `/tabule/zaznam/${posledniDojeta}`;
+    fetch(adresa, { cache: "no-store" })
+      .then((o) => (o.ok ? (o.json() as Promise<ZaznamRozjizdky>) : null))
+      .then((z) => {
+        if (platne && z) setZaznam(z);
+      })
+      .catch(() => {});
+    return () => {
+      platne = false;
+    };
+  }, [demo, rezim, posledniDojeta, serie, zavod]);
+
+  /**
+   * Záznam přepočtený na plavby, jak je kreslí mapa. Je to týž tvar, jaký
+   * jede po trati při rozjížďce — mapa o záznamu nemusí vědět nic, jen
+   * dostane jiný čas (`prehravkaMs`).
+   *
+   * V demu se přehrává ukázková plavba: na tabuli, kde se zrovna nejelo,
+   * by se jinak zrychlené review nedalo ukázat vůbec.
+   */
+  const prehravka = useMemo(() => {
+    if (demo) return ukazka?.lode ?? null;
+    if (!zaznam?.vydava || zaznam.lode.length === 0 || !zaznam.od) return null;
+
+    const od = Date.parse(zaznam.od);
+    if (!Number.isFinite(od)) return null;
+
+    return zaznam.lode.map((l, i) => ({
+      id: l.lodId || -(i + 1),
+      nazev: l.nazev,
+      kategorie: trida(l.kategorie),
+      body: l.body.map((b) => ({
+        sirka: b.sirka,
+        delka: b.delka,
+        cas: Math.max(0, (Date.parse(b.cas) - od) / 1000),
+      })),
+      // Záznam je hotový, žádná díra na konci: všechno, co přišlo, přišlo.
+      dosloDo: l.body.length,
+    }));
+  }, [demo, ukazka, zaznam]);
+
+  /**
+   * <b>Dlouho seznam, krátce přehrávka</b> (Filip, 26. 10. 2026). Střídání
+   * běží jen tam, kde je co střídat — a začíná seznamem, protože to je
+   * ten, kvůli komu se divák dívá.
+   */
+  const [ukazujeZaznam, setUkazujeZaznam] = useState(false);
+  const lzePrehrat =
+    (rezim === "mezi" || rezim === "po") && (prehravka?.length ?? 0) > 0;
+  useEffect(() => {
+    if (!lzePrehrat) {
+      setUkazujeZaznam(false);
+      return;
+    }
+    const kdy = setTimeout(
+      () => setUkazujeZaznam((v) => !v),
+      ukazujeZaznam ? PREHRAVKA_MS : SEZNAM_MS,
+    );
+    return () => clearTimeout(kdy);
+  }, [lzePrehrat, ukazujeZaznam]);
+
   /** Snímek, jak ho vidí demo — počítá se jednou pro celou obrazovku. */
   const snimekDemo = useMemo(() => (demo ? sDemoDaty(snimek, rezim) : snimek), [demo, snimek, rezim]);
 
@@ -468,7 +561,31 @@ export function Obrazovka({
            žebříček; pod seznamem pořadí je z ní jen šmouha. Pozadí si
            tyhle podoby berou totéž co startovní listina, aby se tabule
            mezi fázemi dne nepřevlékala. */
-        <Vysledky snimek={snimekDemo} ted={ted} konec={rezim === "po"} />
+        ukazujeZaznam && prehravka ? (
+          /* <b>Zrychlené review</b>: na půl minuty se místo pořadí ukáže,
+             jak se rozjížďka jela. Je to tatáž mapa jako při závodě, jen
+             jí běží jiný čas — dvě komponenty by se musely opravovat
+             obě. */
+          <div className="tabule-mapa tabule-prehravka" aria-hidden="true">
+            <MapaTrackeru
+              znacky={demo && ukazka ? ukazka.znacky : (trat ?? [])}
+              lode={prehravka}
+              trasa={demo && ukazka && ukazka.znacky !== trat ? undefined : snimek.trasa}
+              tabule
+              ukazka={!!demo}
+              prehravkaMs={PREHRAVKA_MS}
+              odsazeni={odsazeni}
+              hlavickaPoradi={
+                <p className="tabule-prehravka-popis">
+                  {posledniDojeta !== null ? `${posledniDojeta}. rozjížďka` : "Rozjížďka"}
+                  <span>záznam, zrychleně</span>
+                </p>
+              }
+            />
+          </div>
+        ) : (
+          <Vysledky snimek={snimekDemo} ted={ted} konec={rezim === "po"} />
+        )
       ) : (
       <div className="tabule-mapa" aria-hidden="true">
         <MapaTrackeru
@@ -733,6 +850,17 @@ const DEMO_KORMIDELNICI = [
 
 /** Stavy baterie, aby šlo vidět i vybitý telefon. */
 const DEMO_BATERIE = [84, 61, 12, 97, 38, 7, 73, 25];
+
+/**
+ * Jak dlouho stojí seznam a jak dlouho běží přehrávka záznamu (Filip,
+ * 26. 10. 2026: *„po dojetí rozjížděk by se tento infopanel mohl na
+ * chvíli prohodit s mapkou, která nám ukáže záznam závodu z trekru a jak
+ * se jel — takové zrychlené review — a pak zase delší dobu ten seznam"*).
+ * Poměr je schválně nerovný: výsledky jsou to, kvůli čemu se divák dívá,
+ * přehrávka je vsuvka.
+ */
+const SEZNAM_MS = 75_000;
+const PREHRAVKA_MS = 30_000;
 
 /** Za jak dlouho se samo zavře otevřené demo menu. */
 const KEBAB_ZHASNE_MS = 20_000;

@@ -61,6 +61,23 @@ public static class PolohyEndpoints
                 + "vůbec — to je údaj pro závodní výbor. **Nezveřejněná regata ani "
                 + "nezveřejněný ročník se nevydají vůbec**, stejně jako u ostatních "
                 + "veřejných cest: veřejně neexistují.");
+
+        // Záznam dojeté rozjížďky. Vlastní cesta ze stejného důvodu jako
+        // výš: co se smí vydat živě a co po dojetí, jsou dvě různá
+        // rozhodnutí a nemají se potkat v jednom handleru.
+        app.MapGet("/serie/{serie}/zavody/{zavod}/rozjizdky/{cislo:int}/zaznam", ZaznamAsync)
+            .WithTags("Polohy")
+            .Produces<ZaznamRozjizdky>()
+            .WithSummary("Záznam dojeté rozjížďky")
+            .WithDescription(
+                "Zrychlená přehrávka pro tabuli: kudy se jelo. Vydává se za **týchž "
+                + "podmínek jako živý přenos** (přepínač *živý přenos ven*) a navíc "
+                + "až po dojetí — dokud rozjížďka běží, byl by záznam živým přenosem "
+                + "zadními vrátky. `vydava: false` znamená „tenhle záznam ne\"; proč, "
+                + "se ven neříká. Body jsou prořídlé na patnáct vteřin a na čtyři sta "
+                + "na loď: přehrávka stlačuje rozjížďku na půl minuty, takže hustší "
+                + "stopa se na obrazovce neprojeví. **Nezveřejněná regata ani ročník "
+                + "se nevydají vůbec.**");
     }
 
     private static async Task<IResult> ProPosadkuAsync(
@@ -102,6 +119,22 @@ public static class PolohyEndpoints
         if (zavodId is null) return Results.NotFound();
 
         return Results.Ok(await sprava.VerejnyAsync(zavodId.Value, ct));
+    }
+
+    private static async Task<IResult> ZaznamAsync(
+        string serie, string zavod, int cislo, AppDbContext db, PolohySprava sprava,
+        CancellationToken ct)
+    {
+        // Tatáž podmínka zveřejnění jako u živého výdeje — nepublikovaná
+        // regata veřejně neexistuje, a tady jde ven stopa lodí.
+        var zavodId = await db.Zavody
+            .Where(z => z.Slug == zavod && z.Publikovano
+                        && z.Serie!.Slug == serie && z.Serie.Publikovano)
+            .Select(z => (int?)z.Id)
+            .FirstOrDefaultAsync(ct);
+        if (zavodId is null) return Results.NotFound();
+
+        return Results.Ok(await sprava.ZaznamAsync(zavodId.Value, cislo, ct));
     }
 
     private static async Task<bool> SmiAsync(

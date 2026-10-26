@@ -107,6 +107,27 @@ public record PohledPosadky(bool Vidi, DateTimeOffset Ted, IReadOnlyList<PolohaL
 /// znamenat čtyřicet dotazů.
 /// </para>
 /// </summary>
+/// <summary>Jeden bod záznamu. Jen kudy a kdy — rychlost ani kurz přehrávka nepotřebuje.</summary>
+public record BodZaznamu(DateTimeOffset Cas, double Sirka, double Delka);
+
+/// <summary>Stopa jedné lodi v dojeté rozjížďce.</summary>
+public record LodZaznamu(int LodId, string Nazev, string? Kategorie, IReadOnlyList<BodZaznamu> Body);
+
+/// <summary>
+/// Záznam dojeté rozjížďky pro zrychlenou přehrávku.
+/// <para>
+/// <b>Vydává se za týchž podmínek jako živý přenos</b>, a navíc až po
+/// dojetí: dokud rozjížďka běží, byl by záznam živým přenosem zadními
+/// vrátky. <c>Vydava: false</c> znamená „tenhle záznam ne"; proč, se ven
+/// neříká, stejně jako u živých poloh.
+/// </para>
+/// </summary>
+public record ZaznamRozjizdky(
+    bool Vydava,
+    DateTimeOffset? Od,
+    DateTimeOffset? Do,
+    IReadOnlyList<LodZaznamu> Lode);
+
 public class PolohySprava(AppDbContext db, TimeProvider cas, OknaSprava okna)
 {
     /// <summary>Do minuty je poloha čerstvá — to je zelená z „tracker checku".</summary>
@@ -127,6 +148,25 @@ public class PolohySprava(AppDbContext db, TimeProvider cas, OknaSprava okna)
     /// po minutě —, delší by se na tabuli projevil jako zadrhávání.
     /// </summary>
     public static readonly TimeSpan Platnost = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    /// Jak hustě se vydává záznam dojeté rozjížďky. Přehrávka zrychluje
+    /// čtyřicetiminutovou rozjížďku na půl minuty, takže jemnější krok by
+    /// se na obrazovce neprojevil a jen by natáhl odpověď.
+    /// </summary>
+    public static readonly TimeSpan KrokZaznamu = TimeSpan.FromSeconds(15);
+
+    /// <summary>
+    /// Strop bodů na loď. Dvacetičtyřhodinovka by jinak poslala desetitisíce
+    /// bodů na loď a tabule v hospodě visí na jedné lince.
+    /// </summary>
+    public const int NejvicBoduZaznamu = 400;
+
+    /// <summary>
+    /// Nejdelší okno regaty. Tvrdý strop pro dopočet konce rozjížďky,
+    /// která ho nemá zapsaný — táž mez, jakou má okno závodního dne.
+    /// </summary>
+    public static readonly TimeSpan NejdelsiOkno = TimeSpan.FromHours(36);
 
     /// <summary>Stavy účasti, ve kterých loď na regatě závodí.</summary>
     private static readonly StavUcasti[] NaZavode =
@@ -226,6 +266,127 @@ public class PolohySprava(AppDbContext db, TimeProvider cas, OknaSprava okna)
             : snimek.Lode.Where(l => l.LodId == lodId);
 
         return new PohledPosadky(true, ted, [.. lode]);
+    }
+
+    /// <summary>
+    /// Záznam dojeté rozjížďky pro zrychlenou přehrávku na tabuli.
+    /// <para>
+    /// Tři podmínky, všechny musí platit: rozhodčí povolil <i>živý přenos
+    /// ven</i>, rozjížďka je <b>dokončená</b> a má známý start. Běžící
+    /// rozjížďka se nevydává — byl by to živý přenos zadními vrátky, jen
+    /// o minutu zpožděný.
+    /// </para>
+    /// </summary>
+    public async Task<ZaznamRozjizdky> ZaznamAsync(int zavodId, int cislo, CancellationToken ct)
+    {
+        var pusti = await db.NastaveniTrackeru
+            .Where(n => n.ZavodId == zavodId)
+            .Select(n => n.ZivyPrenosVen)
+            .FirstOrDefaultAsync(ct);
+        if (!pusti) return new ZaznamRozjizdky(false, null, null, []);
+
+        var rozjizdka = await db.Rozjizdky
+            .Where(r => r.ZavodId == zavodId && r.Cislo == cislo)
+            .Select(r => new { r.Stav, r.StartV, r.KonecV })
+            .FirstOrDefaultAsync(ct);
+        if (rozjizdka is null
+            || rozjizdka.Stav != StavRozjizdky.Dokoncena
+            || rozjizdka.StartV is null)
+        {
+            return new ZaznamRozjizdky(false, null, null, []);
+        }
+
+        // Procedura patří do záznamu ze stejného důvodu jako do přenosu:
+        // je z ní takticky vidět víc než ze zbytku rozjížďky, a divák
+        // v hospodě chce vidět právě start.
+        var od = rozjizdka.StartV.Value - Procedura;
+        /**
+         * <b>Konec je rozhodnutí rozhodčího, a nemusí být zapsaný.</b>
+         * Dokončená rozjížďka bez `KonecV` není chyba — dokončí ji i
+         * zastavení času. Vzít místo něj „teď" by u červnové regaty
+         * otevřelo okno dlouhé měsíce, takže konec dopočítá poslední bod,
+         * co do něj přišel. Dál než tvrdý strop okna regaty se nedívá.
+         */
+        var doKdy = rozjizdka.KonecV;
+        if (doKdy is null)
+        {
+            var strop = od + NejdelsiOkno;
+            doKdy = await db.Trasy
+                .Where(t => t.ZavodId == zavodId)
+                .SelectMany(t => t.Body)
+                .Where(b => b.CasGps >= od && b.CasGps <= strop)
+                .MaxAsync(b => (DateTimeOffset?)b.CasGps, ct);
+        }
+
+        if (doKdy is null || doKdy <= od) return new ZaznamRozjizdky(false, null, null, []);
+
+        var jmena = await db.Ucasti
+            .Where(u => u.ZavodId == zavodId && NaZavode.Contains(u.Stav))
+            .Select(u => new
+            {
+                u.Prihlaska!.LodId,
+                u.Prihlaska.Lod!.Nazev,
+                Kategorie = u.Prihlaska.Kategorie!.Nazev,
+            })
+            .ToListAsync(ct);
+        var podleLodi = jmena
+            .GroupBy(j => j.LodId)
+            .ToDictionary(g => g.Key, g => g.First());
+
+        var stopy = await db.Trasy
+            .Where(t => t.ZavodId == zavodId)
+            .Select(t => new
+            {
+                t.LodId,
+                Body = t.Body
+                    .Where(b => b.CasGps >= od && b.CasGps <= doKdy.Value)
+                    .OrderBy(b => b.CasGps)
+                    .Select(b => new BodZaznamu(b.CasGps, b.Sirka, b.Delka))
+                    .ToList(),
+            })
+            .Where(x => x.Body.Count > 0)
+            .ToListAsync(ct);
+
+        var lode = stopy
+            // <b>Jedna loď, jeden telefon.</b> Když jich hlásilo víc, vezme
+            // se ta nejhustší stopa — slučovat dvě by znamenalo rozhodovat,
+            // která je pravdivější, a to z bodů poznat nejde.
+            .GroupBy(x => x.LodId)
+            .Select(g => g.MaxBy(x => x.Body.Count)!)
+            .Where(x => podleLodi.ContainsKey(x.LodId))
+            .Select(x => new LodZaznamu(
+                x.LodId,
+                podleLodi[x.LodId].Nazev,
+                podleLodi[x.LodId].Kategorie,
+                Prorid(x.Body)))
+            .OrderBy(l => l.Nazev, StringComparer.CurrentCulture)
+            .ToList();
+
+        return new ZaznamRozjizdky(true, od, doKdy.Value, lode);
+    }
+
+    /// <summary>
+    /// Prořídí stopu na <see cref="KrokZaznamu"/> a na strop bodů. Poslední
+    /// bod zůstává vždycky — na něm je vidět, kde loď dojela.
+    /// </summary>
+    private static List<BodZaznamu> Prorid(List<BodZaznamu> body)
+    {
+        if (body.Count == 0) return body;
+
+        var krok = KrokZaznamu;
+        // Dlouhá rozjížďka si krok roztáhne sama, aby se vešla pod strop.
+        var rozsah = body[^1].Cas - body[0].Cas;
+        if (rozsah > TimeSpan.Zero && rozsah / krok > NejvicBoduZaznamu)
+            krok = rozsah / NejvicBoduZaznamu;
+
+        var ven = new List<BodZaznamu> { body[0] };
+        foreach (var bod in body)
+        {
+            if (bod.Cas - ven[^1].Cas >= krok) ven.Add(bod);
+        }
+
+        if (ven[^1] != body[^1]) ven.Add(body[^1]);
+        return ven;
     }
 
     private async Task<VerejnyPohled> SpoctiVenAsync(
