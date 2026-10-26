@@ -413,6 +413,20 @@ export default function Napoveda() {
         obrazovka v telefonu na to čeká. Dokud nebude, je to nastavení pro
         tabuli a pro pořadatele.
       </p>
+      <p>
+        <b>Mapa umí živě i ze záznamu.</b> Nad ní je přepínač: <i>živě</i>{" "}
+        ukazuje, kde lodě <i>jsou</i>, <i>záznam N. rozjížďky</i> to, kudy
+        <i>jely</i>. Se záznamem přibude posuvník času, kterým se dá vrátit
+        k okamžiku, o kterém se vede spor; živě posuvník není, aby se nedalo
+        koukat na starou polohu a nevědět o tom.
+      </p>
+      <p className="poznamka">
+        <b>Na záznam nad vlastní regatou se přepínač <i>živý přenos ven</i>{" "}
+        nevztahuje</b> — ten rozhoduje o divákovi, ne o tom, co smí vidět
+        závodní výbor. Vydá se i rozjížďka, která zrovna běží. Značku na mapě
+        jde rozkliknout: řekne typ prvku, kterým bokem se míjí, barvu a tvar
+        bóje a její polohu.
+      </p>
 
       <h2 id="klice">Telefon jako klíč k lodi</h2>
       <p>
