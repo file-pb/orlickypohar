@@ -559,6 +559,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/serie/{serie}/zavody/{zavod}/zpravy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Zprávy vydané k regatě
+         * @description Bez přihlášení — tohle čte tabule. Vrací jen to, co platí: stažené a prošlé zprávy mezi nimi nejsou.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZpravaDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ja/lode/{lod}/kod": {
         parameters: {
             query?: never;
@@ -951,6 +993,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/polohy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Co vidí posádka na palubě
+         * @description Prokazuje se klíčem k lodi. Řídí se přepínačem *co vidí posádky*, který zamyká rozprava: nic, jen sebe, nebo i ostatní — výchozí je **jen sebe**. Mimo běžící okno regaty se nevydává nic. `vidi: false` znamená „teď ne"; proč, se neříká.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PohledPosadky"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/serie/{serie}/zavody/{zavod}/polohy": {
         parameters: {
             query?: never;
@@ -960,7 +1048,7 @@ export interface paths {
         };
         /**
          * Živé polohy pro diváka
-         * @description Vysílá se, jen když to rozhodčí povolil **a zrovna běží rozjížďka** — mimo ni se vydávání vypíná, protože ořez zezadu se nedá udělat dopředu. `vysila: false` znamená „teď ne"; proč, se ven neříká. Loď bez polohy a poslední známá poloha mimo rozjížďku se nevydávají vůbec — to je údaj pro závodní výbor.
+         * @description Vysílá se, jen když to rozhodčí povolil **a zrovna běží rozjížďka** — mimo ni se vydávání vypíná, protože ořez zezadu se nedá udělat dopředu. `vysila: false` znamená „teď ne"; proč, se ven neříká. Loď bez polohy a poslední známá poloha mimo rozjížďku se nevydávají vůbec — to je údaj pro závodní výbor. **Nezveřejněná regata ani nezveřejněný ročník se nevydají vůbec**, stejně jako u ostatních veřejných cest: veřejně neexistují.
          */
         get: {
             parameters: {
@@ -981,6 +1069,49 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["VerejnyPohled"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/serie/{serie}/zavody/{zavod}/rozjizdky/{cislo}/zaznam": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Záznam dojeté rozjížďky
+         * @description Zrychlená přehrávka pro tabuli: kudy se jelo. Vydává se za **týchž podmínek jako živý přenos** (přepínač *živý přenos ven*) a navíc až po dojetí — dokud rozjížďka běží, byl by záznam živým přenosem zadními vrátky. `vydava: false` znamená „tenhle záznam ne"; proč, se ven neříká. Body jsou prořídlé na patnáct vteřin a na čtyři sta na loď: přehrávka stlačuje rozjížďku na půl minuty, takže hustší stopa se na obrazovce neprojeví. **Nezveřejněná regata ani ročník se nevydají vůbec.**
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZaznamRozjizdky"];
                     };
                 };
             };
@@ -1030,6 +1161,95 @@ export interface paths {
                 };
                 /** @description Bad Request */
                 400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/klice/sledovani": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Řekne telefonu, jestli se z něj zaznamenává
+         * @description Prokazuje se klíčem k lodi. Odpovídá i odepnutému klíči — jinak by se telefon nedozvěděl, proč neposílá. Odebraný klíč nepozná od neexistujícího.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SledovaniDto"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Držitel klíče se odepne ze sledování, nebo se zase připne
+         * @description Prokazuje se klíčem k lodi, ne účtem. Je to tatáž změna, jakou dělá kapitán ve výpisu klíčů — *„tuhle regatu nejedu“* —, jen o ni říká telefon sám. **Odebrat se sám nemůže**: to je zásah do posádky a zůstává kapitánovi.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["JsonElement"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SledovaniDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3642,6 +3862,130 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/zpravy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše zprávy regaty včetně stažených
+         * @description Pořadatel regaty, nebo rozhodčí ročníku.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZpravaDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Vydá zprávu na vývěsku regaty
+         * @description Pořadatel regaty, nebo rozhodčí. Text má nejvýš 400 znaků — delší se na tabuli nepřečte. `platiHodin` je lhůta, po které zpráva dohoří sama; bez ní visí, dokud ji někdo nestáhne.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ZpravaVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZpravaDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/zpravy/{id}/stahnout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stáhne zprávu z vývěsky
+         * @description Pořadatel regaty, nebo rozhodčí. Záznam zůstává a jde dohledat, z tabule zpráva zmizí hned. Stáhnout staženou není chyba.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZpravaDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/lode": {
         parameters: {
             query?: never;
@@ -4818,6 +5162,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/klice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše spárované telefony celého pole
+         * @description Pořadatel regaty, nebo rozhodčí ročníku. Otázka před procedurou zní „má celé pole zapnutý tracker?", takže se vrací i loď, která nemá jediný klíč.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KliceLodiDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/klice/{klic}/sledovani": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Odepne telefon ze sledování, nebo ho zase připne
+         * @description Pořadatel regaty, nebo rozhodčí. Pro telefon, který zůstal v autě — posádka v lodi zůstává.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    klic: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["SledovaniVstup"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/klice/{klic}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Odebere klíč natrvalo
+         * @description Pořadatel regaty, nebo rozhodčí. Klíč zaniká a nedá se oživit.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    klic: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/zastavky/{zavod}/trat": {
         parameters: {
             query?: never;
@@ -5722,6 +6194,14 @@ export interface components {
             body: number;
             skrtnuto: boolean;
         };
+        BodZaznamu: {
+            /** Format: date-time */
+            cas: string;
+            /** Format: double */
+            sirka: number;
+            /** Format: double */
+            delka: number;
+        };
         BojeDto: {
             /** Format: int32 */
             id: number;
@@ -5848,6 +6328,8 @@ export interface components {
         DruhZastavky: "Pohar" | "Akce";
         /** @enum {unknown} */
         DruhZnaceni: "DrahaPrava" | "DrahaLeva" | "DrahaSport" | "DrahaZakaz" | "NaseBoje" | "Plavidlo" | "ObjektNaBrehu" | null;
+        /** @enum {unknown} */
+        DruhZpravy: "Informace" | "Program" | "Vystraha";
         /**
          * @default Text
          * @enum {unknown}
@@ -5902,6 +6384,13 @@ export interface components {
             posledniPouzitiV: null | string;
             sleduje: boolean;
             odebran: boolean;
+        };
+        KliceLodiDto: {
+            /** Format: int32 */
+            lodId: number;
+            lod: string;
+            cisloPlachty: null | string;
+            klice: components["schemas"]["KlicDto"][];
         };
         KlonTratiVstup: {
             /** Format: int32 */
@@ -5989,6 +6478,13 @@ export interface components {
             cisloPlachty: null | string;
             typ: null | string;
             majitel: string;
+        };
+        LodZaznamu: {
+            /** Format: int32 */
+            lodId: number;
+            nazev: string;
+            kategorie: null | string;
+            body: components["schemas"]["BodZaznamu"][];
         };
         MojeLodDto: {
             /** Format: int32 */
@@ -6203,6 +6699,12 @@ export interface components {
          * @enum {unknown}
          */
         PlatformaZarizeni: "Android" | "Ios";
+        PohledPosadky: {
+            vidi: boolean;
+            /** Format: date-time */
+            ted: string;
+            lode: components["schemas"]["PolohaLodi"][];
+        };
         PolohaLodi: {
             /** Format: int32 */
             lodId: number;
@@ -6597,6 +7099,9 @@ export interface components {
              */
             verzePravidel: number;
         };
+        SledovaniDto: {
+            sleduje: boolean;
+        };
         SledovaniVstup: {
             sleduje: boolean;
         };
@@ -6767,7 +7272,7 @@ export interface components {
              * @default 0
              */
             telefonu: number;
-            baterie: (null | number)[] | null;
+            baterie?: null | (null | number)[];
         };
         UcastVstup: {
             lod: string;
@@ -7231,6 +7736,14 @@ export interface components {
             /** @default false */
             procesniDej: boolean;
         };
+        ZaznamRozjizdky: {
+            vydava: boolean;
+            /** Format: date-time */
+            od: null | string;
+            /** Format: date-time */
+            do: null | string;
+            lode: components["schemas"]["LodZaznamu"][];
+        };
         /**
          * @default Telefon
          * @enum {unknown}
@@ -7277,6 +7790,24 @@ export interface components {
         };
         ZnakVstup: {
             znak: null | string;
+        };
+        ZpravaDto: {
+            /** Format: int32 */
+            id: number;
+            text: string;
+            druh: components["schemas"]["DruhZpravy"];
+            /** Format: date-time */
+            vydanoV: string;
+            /** Format: date-time */
+            platiDo: null | string;
+            /** Format: date-time */
+            stazenoV: null | string;
+        };
+        ZpravaVstup: {
+            text: string;
+            druh: components["schemas"]["DruhZpravy"];
+            /** Format: double */
+            platiHodin: null | number;
         };
         ZustaloOtevrene: {
             rozjizdky: number[];
