@@ -2,6 +2,7 @@ import Link from "@/app/sprava/odkaz";
 import { nactiTrat, type Boje } from "@/lib/boje";
 import { nactiPrvky, type Prvek } from "@/lib/trat";
 import { nactiPolohy, type SnimekPoloh } from "@/lib/polohy";
+import { nactiRozjizdky } from "@/lib/vysledky";
 import { cestaProMereni, mrizkaVody, spojniceTrati, type Poloha, type UzelTrati } from "@/lib/voda";
 import { Z_NEJMENE, Z_NEJVIC } from "@/lib/mapa";
 import type { Znacka } from "@/app/nacrt/mapa/plavba";
@@ -32,14 +33,30 @@ export type DataTrackeru = {
   trasa: Poloha[];
   spojnice: Record<number, Poloha[][]>;
   prvni: SnimekPoloh | null;
+  /**
+   * Rozjížďky regaty — kvůli výběru záznamu. <b>Ze správy, ne z veřejného
+   * detailu</b>: revize protestu se dělá i nad regatou, která ještě není
+   * zveřejněná.
+   */
+  rozjizdky: { cislo: number; stav: string; startV: string | null }[];
 };
 
 export async function dataTrackeru(serie: string, zavod: string): Promise<DataTrackeru> {
-  const [{ stav, trat }, prvky, prvni] = await Promise.all([
+  const [{ stav, trat }, prvky, prvni, prehled] = await Promise.all([
     nactiTrat(serie, zavod),
     nactiPrvky(serie, zavod),
     nactiPolohy(serie, zavod),
+    // Výpadek seznamu rozjížděk mapu neshodí, jen nebude co přehrát.
+    nactiRozjizdky(serie, zavod).catch(() => ({ stav: "vypadek" as const })),
   ]);
+  const rozjizdky =
+    prehled.stav === "ok" && prehled.data
+      ? prehled.data.rozjizdky.map((r) => ({
+          cislo: r.cislo,
+          stav: r.stav,
+          startV: r.startV,
+        }))
+      : [];
 
   const znacky = prvky.map((p) => naZnacku(p, trat ?? []));
 
@@ -66,7 +83,7 @@ export async function dataTrackeru(serie: string, zavod: string): Promise<DataTr
     }
   }
 
-  return { stav, znacky, trasa, spojnice, prvni };
+  return { stav, znacky, trasa, spojnice, prvni, rozjizdky };
 }
 
 export function PanelTrackeru({
@@ -129,6 +146,7 @@ export function PanelTrackeru({
       trasa={data.trasa}
       spojnice={data.spojnice}
       prvni={data.prvni}
+      rozjizdky={data.rozjizdky}
     />
   );
 }

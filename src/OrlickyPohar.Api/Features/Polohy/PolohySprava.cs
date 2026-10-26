@@ -285,12 +285,33 @@ public class PolohySprava(AppDbContext db, TimeProvider cas, OknaSprava okna)
             .FirstOrDefaultAsync(ct);
         if (!pusti) return new ZaznamRozjizdky(false, null, null, []);
 
+        return await SpoctiZaznamAsync(zavodId, cislo, jenDojete: true, ct);
+    }
+
+    /// <summary>
+    /// Záznam rozjížďky pro pořadatele a rozhodčího — <b>na revizi
+    /// protestu</b>.
+    /// <para>
+    /// Proti veřejnému výdeji chybí obě omezení, a obě schválně. Přepínač
+    /// <i>živý přenos ven</i> rozhoduje o tom, co vidí divák, ne o tom, co
+    /// smí vidět závodní výbor nad vlastními daty. A běžící rozjížďka se
+    /// vydá taky: kdo tohle čte, vidí živé polohy stejně, takže by ořez
+    /// nic nechránil a jen by bral možnost podívat se zpátky během jízdy.
+    /// </para>
+    /// </summary>
+    public Task<ZaznamRozjizdky> ZaznamProSpravuAsync(
+        int zavodId, int cislo, CancellationToken ct) =>
+        SpoctiZaznamAsync(zavodId, cislo, jenDojete: false, ct);
+
+    private async Task<ZaznamRozjizdky> SpoctiZaznamAsync(
+        int zavodId, int cislo, bool jenDojete, CancellationToken ct)
+    {
         var rozjizdka = await db.Rozjizdky
             .Where(r => r.ZavodId == zavodId && r.Cislo == cislo)
             .Select(r => new { r.Stav, r.StartV, r.KonecV })
             .FirstOrDefaultAsync(ct);
         if (rozjizdka is null
-            || rozjizdka.Stav != StavRozjizdky.Dokoncena
+            || (jenDojete && rozjizdka.Stav != StavRozjizdky.Dokoncena)
             || rozjizdka.StartV is null)
         {
             return new ZaznamRozjizdky(false, null, null, []);

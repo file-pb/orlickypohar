@@ -159,8 +159,21 @@ function metry(a: { sirka: number; delka: number }, b: { sirka: number; delka: n
  * křižuje — jede šikmo a každých pár desítek sekund změní bok. Po větru
  * míří rovnou.
  */
-function plavba(zrno: number, znacky: Znacka[], rychlostUzlu: number): Bod[] {
+function plavba(
+  zrno: number,
+  znacky: Znacka[],
+  rychlostUzlu: number,
+  cesta?: { sirka: number; delka: number }[],
+): Bod[] {
   const r = nahoda(zrno);
+  // <b>Když je cesta po vodě, jede se po ní</b> (Filip, 26. 10. 2026:
+  // *„v tabuli nemůže být taková trasa, nereálná, Miloš se mě na ni
+  // okamžitě zeptá — i když jsou to simulovaná data"*). Vymýšlet si
+  // geometrii vedle trati nemá smysl ve chvíli, kdy server počítá, kudy
+  // se po vodě k další značce dostat; loď se jí drží a liší se jen
+  // bočním rozestupem a rychlostí.
+  if (cesta && cesta.length >= 2) return poCeste(r, cesta, rychlostUzlu);
+
   const body: Bod[] = [];
   let kde = { sirka: znacky[0].sirka, delka: znacky[0].delka };
   // <b>Každá loď hlásí v jiný okamžik.</b> Bez téhle fáze by všechny body
@@ -213,18 +226,37 @@ function plavba(zrno: number, znacky: Znacka[], rychlostUzlu: number): Bod[] {
 
       // Rychlost kolísá, aby se lodě nedržely v zástupu.
       const m = rychlostUzlu * 0.5144 * krok * (0.85 + r() * 0.3);
-      const dal = posun(kde, smerX * m, smerY * m);
 
-      // <b>Od břehu se loď odrazí</b> — bez toho by stopy na náčrtu
-      // ležely na kopci, což je přesně ten druh lži, kvůli které
-      // `lib/voda.ts` vůbec vznikl. Kdyby ani obrácený bok nebyl na vodě,
-      // noha končí tady: lepší kratší stopa než stopa v lese.
-      if (!naVode(dal)) {
-        bok = -bok;
-        const zpet = posun(kde, -smerX * m, -smerY * m);
-        if (!naVode(zpet)) break;
-        continue;
+      /**
+       * <b>Břeh se obeplouvá, ne prorazí</b> (Filip, 26. 10. 2026:
+       * *„nereálné, leda že by plachetnice uměla létat"*). Přímá cesta
+       * k další značce vede v zatopeném údolí přes kopec v desítkách
+       * procent případů (změřeno v `lib/voda.ts`), a dřív z toho stopa
+       * buď skončila, nebo se přes ten kopec nakreslila.
+       *
+       * Loď proto zkouší postupně odkloněné kurzy, od přímého po kolmý
+       * na obě strany, a vezme <b>první, který je na vodě</b> — tedy ten
+       * nejbližší přímému směru. Tím se sama drží u břehu a obchází ho,
+       * místo aby přes něj letěla.
+       */
+      let dal: { sirka: number; delka: number } | null = null;
+      for (const odklon of ODKLONY) {
+        for (const znamenko of odklon === 0 ? [1] : [bok, -bok]) {
+          const u = (odklon * znamenko * Math.PI) / 180;
+          const nx = smerX * Math.cos(u) - smerY * Math.sin(u);
+          const ny = smerX * Math.sin(u) + smerY * Math.cos(u);
+          const zkus = posun(kde, nx * m, ny * m);
+          if (naVode(zkus)) {
+            dal = zkus;
+            break;
+          }
+        }
+        if (dal) break;
       }
+
+      // Voda se nenašla v žádném směru: noha končí tady. Lepší kratší
+      // stopa než stopa v lese.
+      if (!dal) break;
 
       kde = dal;
       cas += krok;
@@ -298,8 +330,76 @@ function plavba(zrno: number, znacky: Znacka[], rychlostUzlu: number): Bod[] {
   return body;
 }
 
+/**
+ * Plavba po spočítané cestě po vodě.
+ *
+ * Loď jede od bodu k bodu, <b>o kousek stranou</b> — rozestup se mění
+ * plynule, takže stopy neleží jedna na druhé a přitom žádná nevybočí
+ * z trati. Žádné křižování: kde vane vítr, data neříkají, a vymyšlený
+ * zig-zag na nesprávné noze je přesně to, čeho si jachtař všimne první.
+ */
+function poCeste(
+  r: () => number,
+  cesta: { sirka: number; delka: number }[],
+  rychlostUzlu: number,
+): Bod[] {
+  const body: Bod[] = [];
+  const krok = 10;
+  let cas = Math.floor(r() * 10);
+  // Rozestup od osy: každá loď svůj, a pomalu se mění.
+  const strana = r() > 0.5 ? 1 : -1;
+  const sirkaPole = 15 + r() * 45;
+  const perioda = 240 + r() * 240;
+  const tempo = rychlostUzlu * 0.5144 * (0.9 + r() * 0.2);
+
+  // Metry po cestě, aby se dalo plynule postupovat i mezi body.
+  let ujeto = 0;
+  const useky = cesta.slice(1).map((b, i) => metry(cesta[i], b));
+  const celkem = useky.reduce((s, d) => s + d, 0);
+
+  while (ujeto < celkem) {
+    ujeto = Math.min(celkem, ujeto + tempo * krok * (0.9 + r() * 0.2));
+    let zbyva = ujeto;
+    let i = 0;
+    while (i < useky.length - 1 && zbyva > useky[i]) {
+      zbyva -= useky[i];
+      i++;
+    }
+    const a = cesta[i];
+    const b = cesta[i + 1];
+    const t = useky[i] > 0 ? Math.min(1, zbyva / useky[i]) : 0;
+    const kosinus = Math.cos((a.sirka * Math.PI) / 180);
+    const dx = (b.delka - a.delka) * METRU_NA_STUPEN * kosinus;
+    const dy = (b.sirka - a.sirka) * METRU_NA_STUPEN;
+    const dl = Math.hypot(dx, dy) || 1;
+    // Kolmo k noze: tam se loď posune o svůj rozestup.
+    const bok = strana * sirkaPole * Math.sin((ujeto / perioda) * 2 * Math.PI);
+    const kde = posun(
+      { sirka: a.sirka + (b.sirka - a.sirka) * t, delka: a.delka + (b.delka - a.delka) * t },
+      (-dy / dl) * bok,
+      (dx / dl) * bok,
+    );
+    cas += krok;
+    // Rozestup nesmí loď vynést na břeh — tam se vrátí na osu.
+    body.push(naVode(kde) ? { ...kde, cas } : {
+      sirka: a.sirka + (b.sirka - a.sirka) * t,
+      delka: a.delka + (b.delka - a.delka) * t,
+      cas,
+    });
+  }
+
+  return body;
+}
+
 /** Jak daleko od spojnice smí loď nejvýš odbočit, i na dlouhé noze. */
 const KORIDOR_NEJVIC_M = 220;
+
+/**
+ * O kolik stupňů se loď smí odklonit od směru k značce, aby obeplula
+ * břeh. Zkouší se po řadě, takže vyhraje vždycky ten nejmenší odklon,
+ * který je na vodě; devadesát stupňů znamená „plout podél břehu".
+ */
+const ODKLONY = [0, 15, 30, 45, 60, 75, 90];
 
 /**
  * Kolmá odchylka bodu od spojnice `od` → `k`, v metrech. Kladná na jeden
@@ -349,13 +449,16 @@ export function pole(
   kolik = 24,
   znackyZvenku?: Znacka[],
   jmena?: string[],
+  cesta?: { sirka: number; delka: number }[],
 ): { znacky: Znacka[]; lode: Lod[] } {
   const znacky = znackyZvenku && znackyZvenku.length >= 2 ? znackyZvenku : trat();
   const r = nahoda(7);
   const lode: Lod[] = [];
+  // Cesta po vodě platí jen k té trati, ze které se počítala.
+  const poCeste = znackyZvenku === znacky && cesta && cesta.length >= 2 ? cesta : undefined;
 
   for (let i = 0; i < kolik; i++) {
-    const body = plavba(100 + i * 17, znacky, 4.2 + r() * 1.6);
+    const body = plavba(100 + i * 17, znacky, 4.2 + r() * 1.6, poCeste);
     // Většina lodí hlásí až do konce; pár jich má díru nebo mlčí úplně.
     const los = r();
     const dosloDo =

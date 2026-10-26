@@ -249,6 +249,10 @@ export function Obrazovka({
             Math.max(18, Math.min(snimek.lode.length || 24, 30)),
             trat ?? undefined,
             snimek.lode.length > 0 ? snimek.lode.map((l) => l.lod) : undefined,
+            // Po čem se jede: cesta po vodě ze serveru, když je k té
+            // trati. Bez ní si ukázka pomůže přímkami — na vymyšlené
+            // trati v otevřené vodě to stačí.
+            snimek.trasa,
           )
         : null,
     [demo, trat, snimek.lode],

@@ -520,6 +520,33 @@ public class PolohyTests(PostgresFixture fixture)
         Assert.Empty(zaznam.Lode);
     }
 
+    /// <summary>
+    /// <b>Závodnímu výboru se záznam vydá i bez přenosu ven a i z běžící
+    /// rozjížďky.</b> Přepínač rozhoduje o divákovi, ne o tom, co smí vidět
+    /// rozhodčí nad vlastními daty — a kdo tohle čte, vidí živé polohy
+    /// stejně, takže by ořez nic nechránil.
+    /// </summary>
+    [Fact]
+    public async Task Zaznam_pro_spravu_nezalezi_na_prenosu_ven()
+    {
+        var (db, polohy, okna, cas) = Sluzby();
+        var regata = await RegataAsync(db, 1);
+        await okna.OtevriAsync(regata.ZavodId, regata.Kdo, null, default);
+
+        var rozjizdka = await RozjizdkaBeziAsync(db, regata.ZavodId, Rozprava.AddMinutes(8));
+        cas.Ted = Rozprava.AddMinutes(10);
+        await BodAsync(db, cas, okna, regata.Lode[0].Klic, cas.Ted);
+
+        // Ven nic: přepínač je vypnutý a rozjížďka běží.
+        Assert.False((await polohy.ZaznamAsync(regata.ZavodId, rozjizdka.Cislo, default)).Vydava);
+
+        var proSpravu = await polohy.ZaznamProSpravuAsync(
+            regata.ZavodId, rozjizdka.Cislo, default);
+
+        Assert.True(proSpravu.Vydava);
+        Assert.Single(proSpravu.Lode);
+    }
+
     [Fact]
     public async Task Bez_okna_je_snimek_prazdny_ale_lode_v_nem_jsou()
     {

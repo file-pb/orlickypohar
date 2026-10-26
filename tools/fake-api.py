@@ -1289,7 +1289,7 @@ def k_vode(sirka, delka, smerX, smerY):
     return None
 
 
-def zaznam_rozjizdky(slug, z, cislo):
+def zaznam_rozjizdky(slug, z, cislo, pro_spravu=False):
     """Záznam dojeté rozjížďky — <b>simulovaný</b>, stejně jako živé polohy.
 
     Tvar je tentýž, jaký vydává `PolohySprava.ZaznamAsync`, a podmínky taky:
@@ -1303,9 +1303,13 @@ def zaznam_rozjizdky(slug, z, cislo):
     """
     import math
 
-    pusti = nastaveni_regaty(slug)["zivyPrenosVen"]
+    # Pořadatel a rozhodčí vidí záznam i bez *živého přenosu ven* a i z běžící
+    # rozjížďky: přepínač rozhoduje o divákovi, ne o závodním výboru, a kdo
+    # tohle čte, vidí živé polohy stejně. Totéž dělá `ZaznamProSpravuAsync`.
+    pusti = pro_spravu or nastaveni_regaty(slug)["zivyPrenosVen"]
     r = next((x for x in z.get("rozjizdky", []) if x.get("cislo") == cislo), None)
-    if not pusti or not r or r.get("stav") != "Dokoncena" or not r.get("startV"):
+    hotova = pro_spravu or (r or {}).get("stav") == "Dokoncena"
+    if not pusti or not r or not hotova or not r.get("startV"):
         return {"vydava": False, "od": None, "do": None, "lode": []}
 
     from datetime import datetime, timedelta
@@ -5448,6 +5452,15 @@ class H(BaseHTTPRequestHandler):
             telo = klice_regaty(m.group(1))
             if telo is None:
                 return self.send_error(404)
+        elif (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                r'/rozjizdky/(\d+)/zaznam$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            z = self.zastavka(m.group(1))
+            if not z:
+                return None
+            telo = zaznam_rozjizdky(m.group(1), z, int(m.group(2)), pro_spravu=True)
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/polohy$', cesta)):
             z = self.zastavka(m.group(1))
