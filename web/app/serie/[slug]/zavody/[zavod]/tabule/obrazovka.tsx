@@ -13,6 +13,7 @@ import { PanylkyRozjizdek } from "./rozjizdky";
 import { MapaTrackeru } from "@/app/mapa-trackeru";
 import type { VerejnePolohy } from "@/lib/polohy";
 import { useStopy } from "@/lib/stopy";
+import { pole } from "@/app/nacrt/mapa/plavba";
 
 /**
  * Ukázková rozjížďka — tatáž, jakou ukazuje náčrt.
@@ -196,7 +197,21 @@ export function Obrazovka({
    * pole kde plout —, takže bez trati regaty se živé polohy neukazují.
    */
   const trat = snimek.znacky?.length >= 2 ? snimek.znacky : null;
-  const zive = trat ? zivePolohy : [];
+  const skutecne = trat ? zivePolohy : [];
+
+  /**
+   * <b>Demo režim</b> (Filip, 26. 10. 2026: *„vpravo dole mít možnost
+   * přepnout ji na demo mód, který nám umožní zobrazit si všechny její
+   * režimy na simulovaných datech"*). Tabule visí v hospodě a čeká na
+   * regatu; aby šlo ukázat, co umí, musí jít její režimy vyvolat ručně.
+   *
+   * <b>Simulovaná data se nikdy nevydávají za skutečná.</b> Dokud demo
+   * běží, je přes obrazovku pruh, který to říká — je to tentýž důvod,
+   * proč z ostré tabule zmizely ukázkové plavby.
+   */
+  const [demo, setDemo] = useState<null | "listina" | "mapa">(null);
+  const ukazka = useMemo(() => (demo === "mapa" ? pole() : null), [demo]);
+  const zive = demo === "mapa" && ukazka ? ukazka.lode : demo === "listina" ? [] : skutecne;
 
   const stari = Math.max(0, Math.round((ted - Date.parse(snimek.kdy)) / 1000));
 
@@ -355,11 +370,11 @@ export function Obrazovka({
           než simulace cizí regaty, a hlavně je pravdivý. Ukázkové plavby
           zůstaly tam, kam patří: v náčrtu `/nacrt/tabule`. */}
       {zive.length === 0 ? (
-        <Teaser snimek={snimek} ted={ted} />
+        <Teaser snimek={demo ? sDemoDaty(snimek) : snimek} ted={ted} />
       ) : (
       <div className="tabule-mapa" aria-hidden="true">
         <MapaTrackeru
-          znacky={trat ?? []}
+          znacky={demo === "mapa" && ukazka ? ukazka.znacky : (trat ?? [])}
           lode={zive}
           tabule
           zive
@@ -380,6 +395,20 @@ export function Obrazovka({
       </div>
       )}
       <PanylkyRozjizdek snimek={snimek} ted={ted} />
+
+      {/* Přepínač režimů: nenápadný v rohu, aby na tabuli nepřekážel, ale
+          po ruce, když se má ukázat, co obrazovka umí. */}
+      <div className="tabule-demo-ovladani">
+        {demo && <span className="tabule-demo-znacka">Demo — simulovaná data</span>}
+        <button
+          type="button"
+          onClick={() =>
+            setDemo((d) => (d === null ? "listina" : d === "listina" ? "mapa" : null))
+          }
+        >
+          {demo === null ? "Demo" : demo === "listina" ? "Demo: mapa" : "Zpět naživo"}
+        </button>
+      </div>
       {/* <b>Stáří dat jako kolečko v rohu mapy</b> (Filip: *„maximálně ten
           odpočet dej třeba do nějakého kolečka doprava dolů v mapě, ale
           citlivě, ať to neruší"*). Je to jediný údaj, podle kterého se
@@ -559,4 +588,47 @@ function tridyPanely(snimek: Snimek): Panel[] {
 function jesteLodi(kolik: number) {
   if (kolik === 1) return "a ještě jedna loď";
   return `a ještě ${kolik} ${kolik < 5 ? "lodě" : "lodí"}`;
+}
+
+/**
+ * Snímek doplněný o to, co demo potřebuje ukázat.
+ *
+ * <b>Doplňuje se jen prázdné.</b> Když regata zprávy má, ukážou se její
+ * vlastní — demo není náhrada dat, ale způsob, jak projít režimy i na
+ * tabuli, kde se zrovna nic neděje.
+ */
+function sDemoDaty(snimek: Snimek): Snimek {
+  if (snimek.zpravy.length > 0) return snimek;
+
+  const ted = Date.now();
+  const kdy = (minut: number) => new Date(ted - minut * 60_000).toISOString();
+  return {
+    ...snimek,
+    zpravy: [
+      {
+        id: -1,
+        text: "Přechod bouřky — lodě zůstávají na břehu, čekáme na pokyn.",
+        druh: "Vystraha",
+        vydanoV: kdy(6),
+        platiDo: null,
+        stazenoV: null,
+      },
+      {
+        id: -2,
+        text: "Start první rozjížďky se odkládá o 45 minut.",
+        druh: "Program",
+        vydanoV: kdy(28),
+        platiDo: null,
+        stazenoV: null,
+      },
+      {
+        id: -3,
+        text: "Rozprava v 9:00 u klubovny, startovní procedura v 10:25.",
+        druh: "Informace",
+        vydanoV: kdy(150),
+        platiDo: null,
+        stazenoV: null,
+      },
+    ],
+  };
 }
