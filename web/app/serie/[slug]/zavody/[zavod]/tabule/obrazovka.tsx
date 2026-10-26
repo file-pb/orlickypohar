@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import type { PoradiKategorie } from "@/lib/api";
 import type { Snimek } from "@/lib/tabule";
 import { Znak } from "@/app/logo";
 import { NazevZavodu } from "@/app/tabule-nazev";
@@ -60,17 +61,30 @@ export function Obrazovka({
   serie,
   zavod,
   prvni,
+  poradiSerie,
 }: {
   serie: string;
   zavod: string;
   prvni: Snimek;
+  /** Průběžné pořadí celé série. Karusel ho točí, dokud tahle regata nemá odjeto. */
+  poradiSerie?: PoradiKategorie[] | null;
 }) {
   const [snimek, setSnimek] = useState(prvni);
+  /**
+   * Čím karusel točí. <b>Dokud tahle regata nemá odjeto, pořadím série</b>
+   * — prázdné panely „zatím se nejelo" zabírají tutéž plochu a neřeknou
+   * nic. Jakmile přijde první výsledek, přepne se na regatu: ta je teď
+   * ta zajímavější.
+   */
+  const panely = useMemo(() => {
+    const maVysledky = snimek.tabule.some((t) => t.lode.length > 0);
+    if (maVysledky || !poradiSerie?.length) return tridyPanely(snimek);
+    return seriePanely(poradiSerie);
+  }, [snimek, poradiSerie]);
   const [ted, setTed] = useState(() => Date.now());
   /**
-   * Živé polohy, když je regata pouští ven. <b>Dokud nechodí, jedou po
-   * trati ukázkové plavby</b> a tabule to u sebe píše — vydávat vymyšlené
-   * polohy za skutečné by byla lež, ne ukázka.
+   * Živé polohy, když je regata pouští ven. Dokud nechodí, je na místě
+   * mapy teaser se startovní listinou.
    */
   const [polohy, setPolohy] = useState<VerejnePolohy | null>(null);
   /** Okamžik, od kterého mapa počítá čas. První došlá dávka ho určí. */
@@ -363,7 +377,11 @@ export function Obrazovka({
         {/* Zbývá jediný karusel: pořadí po třídách. Panel se stavy
             rozjížděk odešel 24. 10. 2026 — totéž říká proužek nahoře,
             a dvakrát totéž zabíralo půl obrazovky, na kterou patří mapa. */}
-        <Karusel panely={tridyPanely(snimek)} />
+        {/* <b>Dokud regata nemá odjeto, točí karusel pořadí celé série</b>
+            (Filip, 26. 10. 2026). Jsou to tytéž kategorie ve stejném
+            rytmu, jen jiná tabulka — prázdné panely s „zatím se nejelo"
+            by na televizi zabraly tutéž plochu a neřekly nic. */}
+        <Karusel panely={panely} />
 
 
       </div>
@@ -469,6 +487,49 @@ function stranky<T>(vse: T[], kolik: number): T[][] {
   for (let i = 0; i < vse.length; i += kolik) ven.push(vse.slice(i, i + kolik));
   return ven;
 }
+
+/**
+ * Panely průběžného pořadí série — náhrada, dokud regata nemá odjeto.
+ *
+ * Ukazuje se pořadí <b>po škrtu</b>, tedy to, které platí, stejně jako na
+ * stránce série; body před škrtem by na dálku jen přidaly číslo navíc.
+ */
+function seriePanely(kategorie: PoradiKategorie[]): Panel[] {
+  return kategorie.map((k) => ({
+    klic: `serie-${k.kategorie}`,
+    nadpis: (
+      <>
+        <ZnakTridy nazev={k.kategorie} />
+        {k.kategorie === "Celkem" ? "Pohár celkem" : k.kategorie}
+        <span className="karusel-doplnek">průběžně v sérii</span>
+      </>
+    ),
+    obsah:
+      k.lode.length === 0 ? (
+        <p className="prazdno">V sérii se zatím nejelo.</p>
+      ) : (
+        <>
+          <ol className="poradi">
+            {[...k.lode]
+              .sort((a, b) => a.poradiPoSkrtu - b.poradiPoSkrtu)
+              .slice(0, NEJVIC_V_PANELU)
+              .map((l) => (
+                <li key={l.lod}>
+                  <b>{l.poradiPoSkrtu}.</b> {l.lod}
+                  <span className="body">{l.bodyPoSkrtu}</span>
+                </li>
+              ))}
+          </ol>
+          {k.lode.length > NEJVIC_V_PANELU && (
+            <p className="dalsi">{jesteLodi(k.lode.length - NEJVIC_V_PANELU)}</p>
+          )}
+        </>
+      ),
+  }));
+}
+
+/** Kolik řádků se vejde do panelu karuselu, než se musí zkrátit. */
+const NEJVIC_V_PANELU = 10;
 
 /** Panely pořadí: jeden na třídu, plus celkové, když se počítá. */
 function tridyPanely(snimek: Snimek): Panel[] {

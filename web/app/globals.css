@@ -4685,7 +4685,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   flex: 1; min-height: 0;
   display: flex; flex-direction: column; gap: calc(1.2 * var(--tv));
   /* Vlevo nahoře sedí značka, takže hlavička začíná pod ní. */
-  padding: calc(5.6 * var(--tv)) calc(3 * var(--tv)) 0;
+  padding: calc(4.4 * var(--tv)) calc(3 * var(--tv)) 0;
   overflow: hidden;
   background:
     radial-gradient(120% 90% at 18% 0%, color-mix(in srgb, var(--voda) 26%, transparent), transparent 70%),
@@ -4745,9 +4745,13 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
    nebo žádné. Dělí se proto o zbytek, ne napůl — jinak se seznam osmi
    lodí usekne v půlce (změřeno 26. 10. 2026). */
 .tabule:has(.tabule-teaser) .sloupce {
-  /* Nebere podíl, bere co potřebuje — a ne víc než třetinu obrazovky.
-     S `flex: 0 1 auto` ho teaser stlačil na 93 px a řádky se slily. */
-  flex: 0 0 auto;
-  min-height: calc(9 * var(--tv));
-  max-height: 32vh;
+  /* <b>Pevná čtvrtina obrazovky, ne podíl a ne výška obsahu.</b> Panely
+     karuselu leží přes sebe kvůli prolínání, takže jeho přirozená výška
+     je nula a `auto` ho srazí na jedenáctipixelové řádky (změřeno
+     26. 10. 2026). Podíl zas nefunguje opačně: s `flex: 1` si vzal
+     polovinu, kterou nepotřeboval, a startovní listině nad ním chyběla.
+     Jedenáct a půl `--tv` je nadpis a šest řádků pořadí; co zbude, je
+     startovní listiny, protože ta se nerotuje a musí být celá. */
+  flex: 0 0 calc(11.5 * var(--tv));
+  max-height: 42vh;
 }
