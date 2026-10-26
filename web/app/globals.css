@@ -4716,8 +4716,18 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   /* <b>Jeden blok: značka, vedle ní název a pod ním stav.</b> Značka se
      s textem srovnává na střed, název a stav lícují vlevo (Filip,
      26. 10. 2026). */
+  /* <b>Šířka podle obsahu, blok u pravého horního rohu</b> (Filip,
+     26. 10. 2026: *„udělej to jako blok i s logem a celé to zarovnej
+     doprava nahoru"*). Pevných 26 `--tv` ho drželo širší, než je
+     potřeba, takže mezi jménem regaty a krajem zbýval pruh prázdna. */
   display: flex; align-items: center; gap: calc(1.2 * var(--tv));
-  width: calc(26 * var(--tv));
+  align-self: flex-start;
+  width: auto; max-width: calc(34 * var(--tv));
+  /* <b>Horní hrana lícuje s první zprávou</b>, ne s nadpisem nad ní
+     (Filip, 26. 10. 2026: *„horní okraj ať začíná zároveň s alerty, aby
+     to bylo srovnané"*). Odsazení je přesně výška toho nadpisu i s jeho
+     mezerou. */
+  margin-top: calc(1.66 * var(--tv));
 }
 .tabule .tabule-teaser-znak {
   flex: none; display: block;
@@ -4725,7 +4735,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 }
 .tabule .tabule-teaser-znak svg { display: block; width: 100%; height: 100%; }
 .tabule .tabule-teaser-popis {
-  flex: 1 1 auto; min-width: 0;
+  flex: 0 1 auto; min-width: 0;
   display: grid; justify-items: start; gap: calc(0.2 * var(--tv));
 }
 /* <b>Název potřebuje celou zbylou šířku řádku.</b> Kreslí se do SVG bez
@@ -4733,12 +4743,14 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
    než on, ořízne se z obou stran, až z „Radavská regata" zbude
    „:davská rega" (Filip vyfotil 26. 10. 2026). Pružná položka se bez
    `flex: 1` smrskne na obsah, a ten SVG nezná. */
-.tabule .tabule-teaser h1 { margin: 0; width: 100%; min-width: 0; }
+.tabule .tabule-teaser h1 { margin: 0; min-width: 0; }
 /* <b>Blok je vysoký jako značka vedle něj</b> (Filip, 26. 10. 2026):
    název zabere, co zbude nad stavem, takže dvojice vypadá jako jeden
    celek a ne jako text přilepený k obrázku. */
 .tabule .tabule-teaser h1 .tabule-nazev {
-  width: 100%; height: calc(3.4 * var(--tv));
+  /* Šířku si plocha nastaví sama podle vysázeného jména — viz
+     `tabule-nazev.tsx`. Než se změří, drží se téhle, aby nebyla nulová. */
+  width: calc(16 * var(--tv)); height: calc(3.4 * var(--tv));
 }
 .tabule .tabule-teaser h1 .tabule-nazev text { font-size: calc(2.7 * var(--tv)); }
 .tabule .tabule-teaser-stav {

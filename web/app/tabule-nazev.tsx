@@ -44,6 +44,14 @@ export function NazevZavodu({
   // Perioda 0 = ještě neměřeno; do té doby se kreslí plnou barvou, což je
   // horší, ale čitelné. Proužky o nulové periodě by nenakreslily nic.
   const [perioda, setPeriodu] = useState(0);
+  /**
+   * Šířka vysázeného textu. <b>Jen pro zarovnání vlevo</b>: tam má být
+   * plocha přesně tak široká jako jméno, aby za ním nezůstal pruh
+   * prázdna a blok doopravdy končil tam, kde končí písmena (Filip,
+   * 26. 10. 2026). Na střed se nechává roztažená, protože se jí text
+   * drží uprostřed a okraje jsou tam žádoucí.
+   */
+  const [sirkaTextu, setSirkuTextu] = useState(0);
 
   useEffect(() => {
     let zivy = true;
@@ -52,6 +60,13 @@ export function NazevZavodu({
       if (!el || !zivy) return;
       const px = parseFloat(getComputedStyle(el).fontSize);
       setPeriodu((px * VERZALKY * LOGO.pruhy.perioda) / VERZALKA_PREDLOHY);
+      // `getComputedTextLength` je v uživatelských jednotkách SVG, které
+      // se tu rovnají pixelům: plocha nemá `viewBox`.
+      try {
+        setSirkuTextu(el.getComputedTextLength());
+      } catch {
+        // Bez vysázeného písma ještě měřit nejde; doměří se po `fonts.ready`.
+      }
     };
     zmer();
     // Písmo dorazí až po prvním vykreslení a mění výšku verzálek; bez
@@ -70,7 +85,12 @@ export function NazevZavodu({
     // Třída `logo` tu není kvůli vzhledu, ale kvůli paletě: `--logo-napis`
       // je definovaný na ní, včetně tmavé varianty. Bez něj by proužky
       // spadly na výchozí černou a na tmavé tabuli by nápis zmizel.
-      <svg className="logo tabule-nazev" role="img" aria-label={text}>
+      <svg
+        className="logo tabule-nazev"
+        role="img"
+        aria-label={text}
+        style={zarovnani === "vlevo" && sirkaTextu > 0 ? { width: sirkaTextu } : undefined}
+      >
       <defs>
         {perioda > 0 && (
           <pattern id={pruhy} patternUnits="userSpaceOnUse" width={perioda} height={perioda}>
