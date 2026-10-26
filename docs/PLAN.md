@@ -2854,6 +2854,20 @@ se projít kebabem v demu.
 | mezi rozjížďkami | průběžné výsledky, za nimi mírně rozmazaná mapa trasy | hotovo |
 | po dojetí regaty | jak to dopadlo — a v jakém je to stavu | hotovo |
 
+**Zrychlené review** (Filip, 26. 10. 2026: *„po dojetí rozjížděk by se tento
+infopanel mohl na chvíli prohodit s mapkou, která nám ukáže záznam závodu
+z trekru a jak se jel — takové zrychlené review — a pak zase delší dobu ten
+seznam"*). Mezi rozjížďkami i po regatě se na půl minuty místo pořadí ukáže,
+jak se poslední rozjížďka jela; pak se na pětasedmdesát vteřin vrátí seznam.
+Poměr je schválně nerovný — výsledky jsou to, kvůli čemu se divák dívá.
+
+Záznam vydává `GET /serie/{serie}/zavody/{zavod}/rozjizdky/{cislo}/zaznam` za
+**týchž podmínek jako živý přenos** (přepínač *živý přenos ven*) a navíc až po
+dojetí: dokud rozjížďka běží, byl by záznam živým přenosem zadními vrátky.
+Body jsou prořídlé na patnáct vteřin a na čtyři sta na loď. Mapa se nemění —
+dostane tytéž plavby a jiný čas (`prehravkaMs`), takže se neopravují dvě
+komponenty místo jedné.
+
 Kterou podobu tabule ukáže, se rozhoduje **na jednom místě**
 (`obrazovka.tsx`, `rezim`) v pořadí dne: lodě na vodě přebijí všechno, pak
 rozhoduje, jestli je po regatě, jestli se už jelo, a nakonec zbyde

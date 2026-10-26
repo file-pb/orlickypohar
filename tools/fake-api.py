@@ -1207,6 +1207,162 @@ def verejne_polohy(slug, z):
             "lode": [l for l in snimek["lode"] if l["sirka"] is not None]}
 
 
+# Obrys nádrže a odpovědi testu „leží to na vodě?". Načítá se z téhož
+# souboru, ze kterého ho bere web (`web/lib/orlik-obrys.ts`), aby mock a web
+# netvrdily o břehu dvě různé věci. Drží se v paměti: je to kilo a půl bodů
+# a test se volá tisíckrát na jednu rozjížďku.
+OBRYS = []
+VODA_ZNAMA = {}
+
+
+def _obrys():
+    """Prstence obrysu nádrže, načtené z generovaného souboru pro web."""
+    if OBRYS:
+        return OBRYS
+    import json
+    import pathlib
+    import re
+
+    kde = pathlib.Path(__file__).resolve().parent.parent / "web" / "lib" / "orlik-obrys.ts"
+    try:
+        text = kde.read_text(encoding="utf-8")
+        OBRYS.extend(json.loads(
+            re.search(r"=\s*(\[.*\])\s*;?\s*$", text, re.S).group(1).replace("\n", " ")))
+    except Exception:
+        # Bez obrysu se nic nepokazí, jen se stopy nesrovnají k vodě.
+        OBRYS.append([])
+    return OBRYS
+
+
+def na_vode(sirka, delka):
+    """Leží bod ve vodě? Týž test bodem v mnohoúhelníku jako `lib/voda.ts`.
+
+    Odpovědi se pamatují po metrové mřížce — bez toho stojí jedna simulovaná
+    rozjížďka miliony porovnání a mock je jednovláknový. Hrubší mřížka
+    (desetimetrová) nechávala u břehu projít bod, za který ručila sousední
+    buňka: z 3 258 bodů jich 23 skončilo na souši.
+    """
+    klic = (round(sirka, 5), round(delka, 5))
+    if klic in VODA_ZNAMA:
+        return VODA_ZNAMA[klic]
+
+    uvnitr = False
+    for prstenec in _obrys():
+        v = False
+        j = len(prstenec) - 1
+        for i in range(len(prstenec)):
+            xi, yi = prstenec[i]
+            xj, yj = prstenec[j]
+            if (yi > sirka) != (yj > sirka):
+                x = (xj - xi) * (sirka - yi) / (yj - yi) + xi
+                if delka < x:
+                    v = not v
+            j = i
+        if v:
+            uvnitr = True
+            break
+
+    VODA_ZNAMA[klic] = uvnitr
+    return uvnitr
+
+
+def k_vode(sirka, delka, smerX, smerY):
+    """Srovná bod na vodu kolmo ke směru jízdy.
+
+    <b>Přímka mezi dvěma bójemi vede přes kopec častěji, než by člověk
+    řekl</b> (změřeno v `lib/voda.ts`: noha 600–1 200 m v 65 % případů), a
+    simulovaná stopa po ní pak leze do lesa — Filip to vyfotil 26. 10. 2026
+    (*„proč je trasa mimo vodu?"*). Orlík je zatopené údolí, takže kolmo ke
+    směru jízdy je voda skoro vždycky blízko: stačí popojít stranou.
+    """
+    if na_vode(sirka, delka):
+        return sirka, delka
+
+    # Kolmice ke směru nohy, ve stupních na metr.
+    kx, ky = -smerY, smerX
+    for metru in range(40, 1200, 40):
+        for znamenko in (1, -1):
+            s2 = sirka + ky * metru * znamenko / 111320.0
+            d2 = delka + kx * metru * znamenko / (111320.0 * 0.65)
+            if na_vode(s2, d2):
+                return s2, d2
+    return None
+
+
+def zaznam_rozjizdky(slug, z, cislo):
+    """Záznam dojeté rozjížďky — <b>simulovaný</b>, stejně jako živé polohy.
+
+    Tvar je tentýž, jaký vydává `PolohySprava.ZaznamAsync`, a podmínky taky:
+    přepínač *živý přenos ven* a dokončená rozjížďka se známým startem.
+    Mock nemá telefony, takže stopy dopočítá týmž okruhem po prvcích trati
+    jako `polohy_zastavky` — jen pro časy v minulosti, ne pro „teď".
+
+    Délka rozjížďky se v mocku nebere z `konecV` (bývá prázdné), ale
+    z pevných čtyřiceti minut: na podobu přehrávky to stačí a nevymýšlí se
+    tím údaj, který by se dal splést se zapsaným koncem.
+    """
+    import math
+
+    pusti = nastaveni_regaty(slug)["zivyPrenosVen"]
+    r = next((x for x in z.get("rozjizdky", []) if x.get("cislo") == cislo), None)
+    if not pusti or not r or r.get("stav") != "Dokoncena" or not r.get("startV"):
+        return {"vydava": False, "od": None, "do": None, "lode": []}
+
+    from datetime import datetime, timedelta
+
+    start = datetime.fromisoformat(r["startV"])
+    od = start - timedelta(minutes=5)
+    do = start + timedelta(minutes=40)
+
+    uzly = [(b["sirka"], b["delka"]) for b in sorted(
+        (b for b in BOJE.get(slug, []) if b["nahrazenaV"] is None and not b["sebrana"]),
+        key=lambda b: b["poradi"])]
+    if len(uzly) < 2:
+        return {"vydava": True, "od": od.isoformat(), "do": do.isoformat(), "lode": []}
+
+    lode = sorted({u["lod"] for u in z.get("ucasti", [])
+                   if u.get("stav", "Potvrzena") in ("Prihlasena", "Potvrzena")})
+
+    krok_s = 15
+    kroku = int((do - od).total_seconds() // krok_s)
+    vysledek = []
+    for i, nazev in enumerate(lode):
+        # Každá pátá loď záznam nemá — telefon nejel, a to se stává.
+        if i % 5 == 4:
+            continue
+        body = []
+        for k in range(kroku + 1):
+            cas = od + timedelta(seconds=k * krok_s)
+            # <b>Pole vyráží od startu pohromadě a teprve se roztahuje.</b>
+            # Fáze podle lodi by ho na začátku rozsypala po celé trati,
+            # takže by přehrávka začala tím, co má být její pointa — a
+            # mapa by se hned zkraje musela oddálit na celou nádrž.
+            postup = min(1.0, k / max(kroku, 1) * (1.0 + (i % 7) * 0.035))
+            misto = postup * (len(uzly) - 1)
+            a = uzly[min(int(misto), len(uzly) - 1)]
+            b = uzly[min(int(misto) + 1, len(uzly) - 1)]
+            t = misto - int(misto)
+            stranou = math.sin(k * 0.21 + i) * 0.00045
+            sirka = a[0] + (b[0] - a[0]) * t + stranou
+            delka = a[1] + (b[1] - a[1]) * t + stranou * 0.6
+            # Směr nohy, kvůli srovnání na vodu kolmo k němu.
+            dx = (b[1] - a[1]) * 0.65
+            dy = b[0] - a[0]
+            dl = math.hypot(dx, dy) or 1.0
+            na = k_vode(sirka, delka, dx / dl, dy / dl)
+            if na is None:
+                # Voda se nenašla ani stovky metrů stranou: radši bod
+                # vynechat než loď postavit na kopec.
+                continue
+            body.append({"cas": cas.isoformat(), "sirka": na[0], "delka": na[1]})
+        vysledek.append({
+            "lodId": PRIHLASKA_ID.get(nazev, i + 1), "nazev": nazev,
+            "kategorie": KAT.get(nazev), "body": body,
+        })
+
+    return {"vydava": True, "od": od.isoformat(), "do": do.isoformat(), "lode": vysledek}
+
+
 def cas_iso(sekundy):
     """Unixový čas na ISO v UTC — tak, jak ho posílá API."""
     from datetime import datetime, timezone
@@ -5247,6 +5403,12 @@ class H(BaseHTTPRequestHandler):
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/trat/prvky$', cesta)):
             return self.prvky_seznam(m.group(1))
+        elif (m := re.match(
+                rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)/rozjizdky/(\d+)/zaznam$', cesta)):
+            z = next((x for x in D["zavody"] if x["slug"] == m.group(1)), None)
+            if not z:
+                return self.send_error(404)
+            telo = zaznam_rozjizdky(m.group(1), z, int(m.group(2)))
         elif (m := re.match(
                 rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)/polohy$', cesta)):
             z = next((x for x in D["zavody"] if x["slug"] == m.group(1)), None)

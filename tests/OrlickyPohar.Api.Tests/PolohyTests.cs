@@ -460,6 +460,66 @@ public class PolohyTests(PostgresFixture fixture)
         Assert.Equal(regata.Lode[1].LodId, lod.LodId);
     }
 
+    /// <summary>
+    /// <b>Záznam běžící rozjížďky se nevydává.</b> Byl by to živý přenos
+    /// zadními vrátky — o minutu zpožděný, ale pořád živý, a ořez „jen
+    /// když rozhodčí pustil a jen z běžící rozjížďky" by přišel vniveč.
+    /// </summary>
+    [Fact]
+    public async Task Zaznam_bezici_rozjizdky_se_nevyda()
+    {
+        var (db, polohy, okna, cas) = Sluzby();
+        var regata = await RegataAsync(db, 1);
+        var nastaveni = new NastaveniSprava(db, cas);
+        await nastaveni.UlozAsync(
+            regata.ZavodId,
+            new NastaveniVstup(CoVidiPosadky.JenSebe, true, false, null),
+            regata.Kdo, default);
+        await okna.OtevriAsync(regata.ZavodId, regata.Kdo, null, default);
+
+        var rozjizdka = await RozjizdkaBeziAsync(db, regata.ZavodId, Rozprava.AddMinutes(8));
+        cas.Ted = Rozprava.AddMinutes(10);
+        await BodAsync(db, cas, okna, regata.Lode[0].Klic, cas.Ted);
+
+        var bezici = await polohy.ZaznamAsync(regata.ZavodId, rozjizdka.Cislo, default);
+        Assert.False(bezici.Vydava);
+        Assert.Empty(bezici.Lode);
+
+        // Po dojetí už ano — tatáž rozjížďka, tytéž body.
+        rozjizdka.Stav = StavRozjizdky.Dokoncena;
+        rozjizdka.KonecV = Rozprava.AddMinutes(45);
+        await db.SaveChangesAsync();
+
+        var dojeta = await polohy.ZaznamAsync(regata.ZavodId, rozjizdka.Cislo, default);
+        Assert.True(dojeta.Vydava);
+        Assert.Single(dojeta.Lode);
+    }
+
+    /// <summary>
+    /// <b>Bez povoleného přenosu ven se nevydá ani záznam.</b> Je to týž
+    /// přepínač a totéž rozhodnutí rozhodčího: dokud nepustil polohy ven,
+    /// nepustil ani to, kudy kdo jel.
+    /// </summary>
+    [Fact]
+    public async Task Bez_prenosu_ven_neni_ani_zaznam()
+    {
+        var (db, polohy, okna, cas) = Sluzby();
+        var regata = await RegataAsync(db, 1);
+        await okna.OtevriAsync(regata.ZavodId, regata.Kdo, null, default);
+
+        var rozjizdka = await RozjizdkaBeziAsync(db, regata.ZavodId, Rozprava.AddMinutes(8));
+        cas.Ted = Rozprava.AddMinutes(10);
+        await BodAsync(db, cas, okna, regata.Lode[0].Klic, cas.Ted);
+        rozjizdka.Stav = StavRozjizdky.Dokoncena;
+        rozjizdka.KonecV = Rozprava.AddMinutes(45);
+        await db.SaveChangesAsync();
+
+        var zaznam = await polohy.ZaznamAsync(regata.ZavodId, rozjizdka.Cislo, default);
+
+        Assert.False(zaznam.Vydava);
+        Assert.Empty(zaznam.Lode);
+    }
+
     [Fact]
     public async Task Bez_okna_je_snimek_prazdny_ale_lode_v_nem_jsou()
     {

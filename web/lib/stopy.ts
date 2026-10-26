@@ -20,7 +20,7 @@ import type { PolohaLodi } from "@/lib/polohy";
 export const STOPA_BODU = 240;
 
 /** Kategorie, které mapa zná. Ročník je má přesně takhle pojmenované. */
-const TRIDY: Lod["kategorie"][] = ["Race", "Nad7m", "Pod7m"];
+export const TRIDY: Lod["kategorie"][] = ["Race", "Nad7m", "Pod7m"];
 
 export function trida(nazev: string | null | undefined): Lod["kategorie"] {
   return TRIDY.find((t) => t === nazev) ?? "Race";

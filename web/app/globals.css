@@ -5075,3 +5075,21 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .tabule:has(.tabule-vysledky) .rozjizdky-panylky { display: none; }
 .tabule:has(.tabule-vysledky) .tabule-stari-kolecko { right: calc(3 * var(--tv)); }
 .tabule:has(.tabule-vysledky) .tabule-tridy { right: 0; }
+
+/* ---------------------------------------------------------------------
+   Zrychlené review: na půl minuty se místo pořadí ukáže, jak se jelo.
+   Mapa si bere tutéž plochu jako výsledky, aby obrazovka neposkočila.
+   --------------------------------------------------------------------- */
+.tabule .tabule-prehravka { inset: 0 0 var(--dolni-blok, calc(12.6 * var(--tv))) 0; }
+.tabule .tabule-prehravka-popis {
+  margin: 0; display: flex; align-items: baseline; gap: calc(0.6 * var(--tv));
+  font-size: calc(1.4 * var(--tv));
+}
+/* „Záznam, zrychleně" musí být vidět pořád: bez toho vypadá přehrávka
+   jako živý přenos a divák by čekal, že vidí, kdo zrovna vede. */
+.tabule .tabule-prehravka-popis span {
+  font-size: calc(0.85 * var(--tv)); color: #e8900c;
+  border: 1px solid currentColor; border-radius: 999px;
+  padding: calc(0.1 * var(--tv)) calc(0.6 * var(--tv));
+  letter-spacing: 0.04em; text-transform: uppercase;
+}

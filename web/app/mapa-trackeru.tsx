@@ -351,6 +351,7 @@ export function MapaTrackeru({
   tabule,
   zive,
   ukazka,
+  prehravkaMs,
   odsazeni,
   zebricek,
   hlavickaPoradi,
@@ -411,6 +412,14 @@ export function MapaTrackeru({
   trasa?: Poloha[];
   /** Spojnice trati z návrháře, pro každé přiblížení. Tahle se ukazovat smí. */
   spojnice?: Record<number, Poloha[][]>;
+  /**
+   * Za jak dlouho přehrát celý záznam, v milisekundách. <b>Zrychlená
+   * přehrávka</b> po dojetí rozjížďky (Filip, 26. 10. 2026: *„takové
+   * zrychlené review"*): tabule se na chvíli prohodí s mapkou a ukáže,
+   * jak se jelo. Bez téhle hodnoty běží čas jako dosud, dvojnásobnou
+   * rychlostí po desetivteřinových krocích.
+   */
+  prehravkaMs?: number;
   /**
    * Náhradní žebříček, když polohy ještě nechodí.
    *
@@ -628,7 +637,17 @@ export function MapaTrackeru({
   const celkovaDelka = delkyNoh.reduce((s, d) => s + d, 0) || 1;
 
   /** Uzly trati v pořadí — podklad pro přímou spojnici, když není cesta po vodě. */
-  const uzlyTrati = cesta.map((p) => naPlatno(p.sirka, p.delka));
+  /**
+   * <b>Čárkovaná spojnice se kreslí ze značek, ne z měřicí trasy</b>
+   * (Filip, 24. 10. 2026: *„měřicí trasu bych vůbec neumožnil zobrazit,
+   * ta je jen pro výpočet"*). Dokud tabule měřicí trasu nedostávala, byly
+   * to totéž a rozdíl nebylo vidět; od 26. 10. 2026 jí ji posílá server,
+   * takže by se divákovi kreslila cesta, která se drží šedesát metrů od
+   * břehu a nikdo po ní neplave.
+   */
+  const uzlyTrati = [...znacky]
+    .sort((a, b) => a.poradi - b.poradi)
+    .map((m) => naPlatno(m.sirka, m.delka));
 
   /** Stav každé lodi k zvolenému času: poloha, stáří, postup, stopa. */
   /**
@@ -952,9 +971,31 @@ export function MapaTrackeru({
    */
   useEffect(() => {
     if (!tabule || zive) return;
+    /**
+     * <b>Zrychlená přehrávka má pevnou délku, ne pevný krok.</b> Rozjížďka
+     * trvá od dvaceti minut po čtyřiadvacet hodin, takže krok po deseti
+     * vteřinách by jednu stlačil na pár vteřin a druhou protáhl na
+     * hodiny. Tik po vteřině je kompromis: televize dopočítává mezisnímky
+     * a při čtyřech obrázcích za vteřinu z toho dělá duchy, kdežto jeden
+     * je pohyb, který ještě zvládne.
+     */
+    if (prehravkaMs && konec > 0) {
+      const tikMs = 1000;
+      const krok = (konec * tikMs) / prehravkaMs;
+      const tik = setInterval(
+        () => setCas((c) => (c + krok > konec ? 0 : c + krok)),
+        tikMs,
+      );
+      return () => clearInterval(tik);
+    }
     const tik = setInterval(() => setCas((c) => (c + 10 > konec ? 0 : c + 10)), 5000);
     return () => clearInterval(tik);
-  }, [tabule, zive, konec]);
+  }, [tabule, zive, konec, prehravkaMs]);
+
+  /** Přehrávka začíná od začátku, ne od půlky jako náčrt. */
+  useEffect(() => {
+    if (prehravkaMs) setCas(0);
+  }, [prehravkaMs]);
 
   /**
    * Živě se čas nepřehrává, drží se na konci. Každá došlá dávka posune
