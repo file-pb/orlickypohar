@@ -415,19 +415,35 @@ export function Obrazovka({
       )}
       <PanylkyRozjizdek snimek={snimek} ted={ted} />
 
-      {/* Přepínač režimů: nenápadný v rohu, aby na tabuli nepřekážel, ale
-          po ruce, když se má ukázat, co obrazovka umí. */}
-      <div className="tabule-demo-ovladani">
-        {demo && <span className="tabule-demo-znacka">Demo — simulovaná data</span>}
-        <button
-          type="button"
-          onClick={() =>
-            setDemo((d) => (d === null ? "listina" : d === "listina" ? "mapa" : null))
-          }
-        >
-          {demo === null ? "Demo" : demo === "listina" ? "Demo: mapa" : "Zpět naživo"}
-        </button>
-      </div>
+      {/* <b>Druhé kolečko vedle toho se stářím dat</b> (Filip, 26. 10.
+          2026). Na tabuli, kterou nikdo neobsluhuje, nemá co dělat
+          tlačítko — ale musí jít ukázat, co obrazovka umí, takže je to
+          tatáž nenápadná pecka jako odpočet vedle. */}
+      {demo && <span className="tabule-demo-znacka">Demo — simulovaná data</span>}
+      {/* <b>Kebab vedle odpočtu, a pod ním volby</b> (Filip, 26. 10.
+          2026). Proti cyklování jedním tlačítkem je vidět, co se dá
+          zvolit — a na tabuli, kterou nikdo neobsluhuje, je to jediné
+          ovládání, takže se nemá kde zeptat. */}
+      <details className="tabule-demo">
+        <summary aria-label="Ukázat, jak tabule vypadá">⋮</summary>
+        <ul>
+          <li>
+            <button type="button" onClick={() => setDemo("listina")} aria-current={demo === "listina"}>
+              Startovní listina
+            </button>
+          </li>
+          <li>
+            <button type="button" onClick={() => setDemo("mapa")} aria-current={demo === "mapa"}>
+              Mapa se závodem
+            </button>
+          </li>
+          <li>
+            <button type="button" onClick={() => setDemo(null)} aria-current={demo === null}>
+              Zpátky naživo
+            </button>
+          </li>
+        </ul>
+      </details>
       {/* <b>Stáří dat jako kolečko v rohu mapy</b> (Filip: *„maximálně ten
           odpočet dej třeba do nějakého kolečka doprava dolů v mapě, ale
           citlivě, ať to neruší"*). Je to jediný údaj, podle kterého se

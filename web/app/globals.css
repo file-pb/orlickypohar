@@ -4935,26 +4935,56 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 }
 .tabule .tabule-info-tecky i.ted { opacity: 1; }
 
-/* Přepínač demo režimu: v rohu, nenápadný, ale po ruce. Na tabuli, která
-   visí v hospodě, nemá co dělat velké tlačítko — a zároveň musí jít
-   ukázat, co obrazovka umí (Filip, 26. 10. 2026). */
-.tabule .tabule-demo-ovladani {
-  position: fixed; right: calc(0.8 * var(--tv)); bottom: calc(0.6 * var(--tv));
-  z-index: 6; display: flex; align-items: center; gap: calc(0.6 * var(--tv));
-}
-.tabule .tabule-demo-ovladani button {
-  font: inherit; font-size: calc(0.7 * var(--tv));
-  padding: calc(0.25 * var(--tv)) calc(0.7 * var(--tv));
-  border-radius: 999px; border: 1px solid var(--linka);
-  background: color-mix(in srgb, var(--pozadi) 75%, transparent);
-  color: var(--tlumeny); cursor: pointer; opacity: 0.55;
-}
-.tabule .tabule-demo-ovladani button:hover { opacity: 1; color: var(--text); }
 /* Dokud demo běží, musí to být vidět: simulovaná data se nikdy
    nevydávají za skutečná. */
 .tabule .tabule-demo-znacka {
+  position: absolute; z-index: 6;
+  right: calc(3 * var(--tv) + 6.4 * var(--znacka));
+  bottom: calc(var(--dolni-blok, 0px) + 0.8 * var(--znacka) + 0.6 * var(--znacka));
   font-size: calc(0.7 * var(--tv)); letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--stav-zruseny); border: 1px solid currentColor;
   border-radius: 999px; padding: calc(0.2 * var(--tv)) calc(0.6 * var(--tv));
   background: color-mix(in srgb, var(--pozadi) 80%, transparent);
 }
+
+
+/* Kebab s volbami demo režimu: táž pecka jako odpočet se stářím dat,
+   hned vedle něj (Filip, 26. 10. 2026). Tlumený, dokud na něj někdo
+   nesáhne — tabule se neobsluhuje, tohle je východ z ní. */
+.tabule .tabule-demo {
+  position: absolute; z-index: 5;
+  right: calc(3 * var(--tv) + 3.4 * var(--znacka));
+  bottom: calc(var(--dolni-blok, 0px) + 0.8 * var(--znacka));
+}
+.tabule .tabule-demo > summary {
+  list-style: none; cursor: pointer;
+  display: grid; place-items: center;
+  width: calc(2.6 * var(--znacka)); height: calc(2.6 * var(--znacka));
+  border-radius: 999px; border: 1px solid var(--linka);
+  background: color-mix(in srgb, var(--pozadi) 70%, transparent);
+  color: var(--tlumeny); font-size: calc(1.1 * var(--znacka)); line-height: 1;
+  opacity: 0.5;
+}
+.tabule .tabule-demo > summary::-webkit-details-marker { display: none; }
+.tabule .tabule-demo[open] > summary,
+.tabule .tabule-demo > summary:hover { opacity: 1; color: var(--text); }
+/* Nabídka vyjede nad kebab: dole je patička s partnery. */
+.tabule .tabule-demo > ul {
+  position: absolute; right: 0; bottom: calc(3 * var(--znacka));
+  margin: 0; padding: calc(0.3 * var(--znacka)); list-style: none;
+  display: grid; gap: calc(0.15 * var(--znacka)); min-width: calc(11 * var(--znacka));
+  border: 1px solid var(--linka); border-radius: calc(0.5 * var(--znacka));
+  background: var(--pozadi);
+  box-shadow: 0 2px 14px rgb(0 0 0 / 0.5);
+}
+.tabule .tabule-demo > ul button {
+  width: 100%; text-align: left; font: inherit;
+  font-size: calc(0.8 * var(--znacka));
+  padding: calc(0.3 * var(--znacka)) calc(0.5 * var(--znacka));
+  border: 0; border-radius: calc(0.3 * var(--znacka));
+  background: none; color: var(--text); cursor: pointer;
+}
+.tabule .tabule-demo > ul button:hover { background: var(--zvyrazneni); }
+/* Co zrovna běží, je vidět i bez barvy — na tabuli se kouká z dálky. */
+.tabule .tabule-demo > ul button[aria-current="true"]::before { content: "• "; }
+.tabule .tabule-demo > ul button[aria-current="false"]::before { content: "  "; }
