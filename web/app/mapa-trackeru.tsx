@@ -1358,10 +1358,10 @@ export function MapaTrackeru({
           onPointerLeave={() => (tahne.current = null)}
         >
           {podklad.map((d) => (
-            <image key={d.klic} href={d.cesta} x={d.x} y={d.y} width={d.krok} height={d.krok} />
+            <Dlazdice key={d.klic} cesta={d.cesta} x={d.x} y={d.y} krok={d.krok} />
           ))}
           {dlazdice.map((d) => (
-            <image key={d.klic} href={d.cesta} x={d.x} y={d.y} width={d.krok} height={d.krok} />
+            <Dlazdice key={d.klic} cesta={d.cesta} x={d.x} y={d.y} krok={d.krok} />
           ))}
 
           {/*
@@ -1833,5 +1833,67 @@ export function MapaTrackeru({
         </p>
       </aside>
     </div>
+  );
+}
+
+/**
+ * Kolikrát zkusit dlaždici znovu, než se vzdá. Pauza se zdvojnásobuje
+ * (0,5 → 8 s), takže pět pokusů pokryje i výměnu kontejneru při nasazení
+ * — ta trvá přes dvacet vteřin.
+ */
+const POKUSU_O_DLAZDICI = 5;
+
+/**
+ * <b>Dlaždice, která se neprozradí, když se nestáhne.</b>
+ *
+ * Při přepnutí záběru si mapa říká o celou sadu naráz — několik desítek
+ * požadavků v jedné vteřině. Když jeden z nich neprojde (výměna
+ * kontejneru při nasazení, zaškrcení), prohlížeč do `<image>` nakreslí
+ * svou ikonu rozbitého obrázku a **nechá ji tam napořád**: tabule na
+ * televizi se sama neobnoví a nikdo u ní nestojí. Filip vyfotil
+ * 26. 10. 2026 celou obrazovku pokrytou tou ikonou (*„je to
+ * rozsypaný"*).
+ *
+ * Spadlá dlaždice proto zmizí — pod ní je hrubý podklad, takže mapa
+ * zůstane celá, jen rozmazanější — a třikrát to zkusí znovu
+ * s prodlužující se pauzou. Dotaz navíc nese `?pokus=`, aby se
+ * nedotáhl z cache ten neúspěch.
+ */
+function Dlazdice({
+  cesta,
+  x,
+  y,
+  krok,
+}: {
+  cesta: string;
+  x: number;
+  y: number;
+  krok: number;
+}) {
+  const [pokus, setPokus] = useState(0);
+  const [spadla, setSpadla] = useState(false);
+
+  useEffect(() => {
+    if (!spadla || pokus >= POKUSU_O_DLAZDICI) return;
+    const za = setTimeout(
+      () => {
+        setSpadla(false);
+        setPokus((p) => p + 1);
+      },
+      500 * 2 ** pokus,
+    );
+    return () => clearTimeout(za);
+  }, [spadla, pokus]);
+
+  if (spadla) return null;
+  return (
+    <image
+      href={pokus === 0 ? cesta : `${cesta}?pokus=${pokus}`}
+      x={x}
+      y={y}
+      width={krok}
+      height={krok}
+      onError={() => setSpadla(true)}
+    />
   );
 }

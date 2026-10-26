@@ -211,6 +211,23 @@ export function Obrazovka({
    * proč z ostré tabule zmizely ukázkové plavby.
    */
   const [demo, setDemo] = useState<null | Rezim>(null);
+  const kebab = useRef<HTMLDetailsElement>(null);
+  const kebabZhasne = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const zavriKebab = useCallback(() => {
+    if (kebab.current) kebab.current.open = false;
+  }, []);
+  const zvolDemo = useCallback(
+    (volba: Rezim | null) => {
+      setDemo(volba);
+      zavriKebab();
+    },
+    [zavriKebab],
+  );
+  /** Otevřené menu na tabuli nikdo nezavře, tak se zavře samo. */
+  const hlidejKebab = useCallback(() => {
+    if (kebabZhasne.current) clearTimeout(kebabZhasne.current);
+    if (kebab.current?.open) kebabZhasne.current = setTimeout(zavriKebab, KEBAB_ZHASNE_MS);
+  }, [zavriKebab]);
   /**
    * <b>Demo jede po trati té regaty a s jejími loděmi</b> (Filip,
    * 26. 10. 2026: *„vezmi si do simulace třeba trasu jarního větru"*) —
@@ -224,7 +241,11 @@ export function Obrazovka({
     () =>
       demo === "mapa"
         ? pole(
-            Math.max(6, Math.min(snimek.lode.length || 24, 30)),
+            // <b>Aspoň osmnáct lodí</b> (Filip, 26. 10. 2026: *„do
+            // simulace dej víc lodí"*). Regata se šesti přihlášenými
+            // ukázala šest teček a režie neměla co porovnávat; zbytek
+            // pole si ukázka doplní vlastními jmény.
+            Math.max(18, Math.min(snimek.lode.length || 24, 30)),
             trat ?? undefined,
             snimek.lode.length > 0 ? snimek.lode.map((l) => l.lod) : undefined,
           )
@@ -364,20 +385,14 @@ export function Obrazovka({
 
       </header>
 
-      {/* <b>Nepodepsaná čísla se musí přiznat</b> (Filip, 9. 10. 2026:
-          *„tabule nahoře řekne, že hodnoty jsou informativní a jejich
-          platnost potvrzuje, případně mění rozhodčí"*). Bez téhle věty
-          vypadá předběžné pořadí jako hotové a hospoda si zapamatuje
-          výsledek, který se ještě změní. */}
+      {/* <b>Pruh „čísla jsou informativní" je pryč</b> (Filip, 26. 10.
+          2026: *„tohle schovej"*). Požadavek z 9. 10. — aby nepodepsaná
+          čísla nevypadala jako hotová — zůstává splněný, jen ho plní
+          obrazovka výsledků: u pořadí stojí, jak daleko je zápis
+          (`zapisuje se / ověřeno / schváleno / potvrzeno`), a dokud není
+          potvrzený, visí u nadpisu cedulka. Pruh přes celou šířku to
+          říkal potřetí, a na mapě navíc přes vodu. */}
       <div className="tabule-hlasky" ref={hlasky}>
-      {snimek.procesniDej && !snimek.vysledkySkryte && (
-        <p className="hlaska dej">
-          <b>Průběžné výsledky.</b> Čísla jsou informativní — jejich
-          platnost potvrzuje, případně mění rozhodčí. U každé rozjížďky je
-          vidět, jak daleko je zápis.
-        </p>
-      )}
-
       {snimek.vysledkySkryte && (
         <p className="hlaska">
           Ročník má výsledky zatím skryté, takže tady čísla nejsou. Tabule
@@ -451,34 +466,28 @@ export function Obrazovka({
           2026). Proti cyklování jedním tlačítkem je vidět, co se dá
           zvolit — a na tabuli, kterou nikdo neobsluhuje, je to jediné
           ovládání, takže se nemá kde zeptat. */}
-      <details className="tabule-demo">
+      {/* <b>Po volbě se zavře a sám zhasne</b> (Filip, 26. 10. 2026:
+          *„zůstává viset to kebab menu"*). Tabuli nikdo neobsluhuje,
+          takže otevřené menu by na ní zůstalo do rána a překrývalo by
+          pořadí. */}
+      <details className="tabule-demo" ref={kebab} onToggle={hlidejKebab}>
         <summary aria-label="Ukázat, jak tabule vypadá">⋮</summary>
         <ul>
-          <li>
-            <button type="button" onClick={() => setDemo("listina")} aria-current={demo === "listina"}>
-              Startovní listina
-            </button>
-          </li>
-          <li>
-            <button type="button" onClick={() => setDemo("mapa")} aria-current={demo === "mapa"}>
-              Mapa se závodem
-            </button>
-          </li>
-          <li>
-            <button type="button" onClick={() => setDemo("mezi")} aria-current={demo === "mezi"}>
-              Mezi rozjížďkami
-            </button>
-          </li>
-          <li>
-            <button type="button" onClick={() => setDemo("po")} aria-current={demo === "po"}>
-              Po dojetí regaty
-            </button>
-          </li>
-          <li>
-            <button type="button" onClick={() => setDemo(null)} aria-current={demo === null}>
-              Zpátky naživo
-            </button>
-          </li>
+          {(
+            [
+              ["listina", "Startovní listina"],
+              ["mapa", "Mapa se závodem"],
+              ["mezi", "Mezi rozjížďkami"],
+              ["po", "Po dojetí regaty"],
+              [null, "Zpátky naživo"],
+            ] as [Rezim | null, string][]
+          ).map(([volba, popis]) => (
+            <li key={popis}>
+              <button type="button" onClick={() => zvolDemo(volba)} aria-current={demo === volba}>
+                {popis}
+              </button>
+            </li>
+          ))}
         </ul>
       </details>
       {/* <b>Stáří dat jako kolečko v rohu mapy</b> (Filip: *„maximálně ten
@@ -661,6 +670,9 @@ function jesteLodi(kolik: number) {
   if (kolik === 1) return "a ještě jedna loď";
   return `a ještě ${kolik} ${kolik < 5 ? "lodě" : "lodí"}`;
 }
+
+/** Za jak dlouho se samo zavře otevřené demo menu. */
+const KEBAB_ZHASNE_MS = 20_000;
 
 /** Které podoby tabule umí. */
 type Rezim = "listina" | "mapa" | "mezi" | "po";
