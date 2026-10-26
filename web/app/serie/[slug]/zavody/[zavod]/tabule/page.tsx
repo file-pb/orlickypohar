@@ -39,7 +39,14 @@ export default async function Tabule({ params }: Parametry) {
     // pořadí, které existuje — a v hospodě je to zrovna to, o čem se
     // před startem mluví.
     const [detail, trat, serie, zpravy] = await Promise.all([
-      nactiZavod(slug, zavod),
+      // <b>Bez minutové cache, stejně jako obnovovací cesta</b>
+      // (`tabule/data/route.ts`). Dokud se tu četlo s `revalidate: 60`,
+      // mohl být první snímek až minutu starý — a protože se alerty
+      // počítají proti němu, první obnova pak vyjela kartu za každou
+      // změnu z té minuty. Změřeno 26. 10. 2026: načtení tabule po
+      // dojeté a publikované rozjížďce vyjelo „1. rozjížďka dojeta"
+      // a po ní dvanáct karet „V cíli", jako by se dojíždělo právě teď.
+      nactiZavod(slug, zavod, true),
       nactiVerejnouTrat(slug, zavod).catch(() => null),
       nactiPoradi(slug).catch(() => null),
       nactiZpravy(slug, zavod).catch(() => null),

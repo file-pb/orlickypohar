@@ -461,6 +461,20 @@ export function Obrazovka({
   const vrch = useRef<HTMLElement>(null);
   const hlasky = useRef<HTMLDivElement>(null);
   const tridy = useRef<HTMLElement>(null);
+  /**
+   * Co leží nad tabulí. <b>Tabule není vždycky od horního okraje</b>: nad
+   * ročníkem nanečisto visí pruh „Ukázková data" (`app/ukazka.tsx`), a ten
+   * ji posune o svou výšku dolů. Výška přitom zůstávala
+   * `100dvh − patička`, takže tabule končila pod pásem partnerů a obsah
+   * uvnitř se počítal do plochy, která na obrazovce není — ve startovní
+   * listině pak poslední dvě lodě třídy spadly pod běžící pásy a nic
+   * o nich neřeklo (změřeno 26. 10. 2026: THEA končí na 606 px, pásy
+   * začínají na 587). Pásy samotné jsou proti tomu přišpendlené k oknu
+   * (`position: fixed` v `globals.css`), tohle srovnává i to, co leží nad
+   * nimi.
+   */
+  const plocha = useRef<HTMLDivElement>(null);
+  const [nadTabuli, setNadTabuli] = useState(0);
   const [odsazeni, setOdsazeni] = useState({ nahore: 0, dole: 0, vrch: 0 });
   const maTridy = poradiLodi.length > 0;
   useEffect(() => {
@@ -482,12 +496,19 @@ export function Obrazovka({
       setOdsazeni((p) =>
         p.nahore === nove.nahore && p.dole === nove.dole && p.vrch === nove.vrch ? p : nove,
       );
+      // Horní okraj tabule proti oknu: co je nad ní, si musí odečíst
+      // z vlastní výšky, jinak jí spodek zmizí pod pásem partnerů.
+      const nad = Math.max(0, Math.round(plocha.current?.getBoundingClientRect().top ?? 0));
+      setNadTabuli((p) => (p === nad ? p : nad));
     };
     mer();
     const sleduj = new ResizeObserver(mer);
     if (vrch.current) sleduj.observe(vrch.current);
     if (hlasky.current) sleduj.observe(hlasky.current);
     if (tridy.current) sleduj.observe(tridy.current);
+    // Pruh nad tabulí roste při zúžení okna (text se zalomí), a ten se
+    // sem jinak nedostane: tabule o něm neví, jen o své poloze.
+    if (plocha.current) sleduj.observe(document.documentElement);
     return () => sleduj.disconnect();
   }, [maTridy]);
 
@@ -498,8 +519,10 @@ export function Obrazovka({
     // 25. 10. 2026 na skutečné televizi — překryv 52 px).
     <div
       className="tabule"
+      ref={plocha}
       style={
         {
+          "--nad-tabuli": `${nadTabuli}px`,
           "--vrch-vyska": `${odsazeni.vrch}px`,
           "--horni-blok": `${odsazeni.nahore}px`,
           // Kam až smí mapa dolů. Dřív tu stálo `12.6 * --tv` natvrdo,

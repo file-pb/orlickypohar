@@ -2817,7 +2817,15 @@ body:has(.tabule) {
      Zkoušel jsem to i tak, že výšku rozdělí `body` jako flex — dvakrát
      to shodilo šířku, protože z tabule udělalo flexovou položku a mřížka
      sloupců spadla do jednoho. Tohle je jednodušší a drží. */
-  height: calc(100dvh - var(--paticka));
+  /* <b>A ještě to, co leží nad tabulí</b> (`--nad-tabuli`, měří si ho sama
+     obrazovka): nad ročníkem nanečisto visí pruh „Ukázková data" a tabule
+     o něm z CSS neví. Bez něj končila o jeho výšku pod pásem partnerů
+     a obsah počítala do plochy, která na obrazovce není — ve startovní
+     listině tím spadly poslední lodě třídy pod běžící pásy (změřeno
+     26. 10. 2026: THEA končila na 606 px, pásy začínají na 587). Natvrdo
+     zapsaná výška pruhu by se rozešla s textem, který se na úzkém okně
+     zalomí. */
+  height: calc(100dvh - var(--paticka) - var(--nad-tabuli, 0px));
   display: flex; flex-direction: column;
   position: relative;
 }

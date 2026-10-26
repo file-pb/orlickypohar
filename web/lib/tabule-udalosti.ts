@@ -93,9 +93,15 @@ export function udalosti(stary: Snimek | null, novy: Snimek): Udalost[] {
       klic: `trat-ceka-${novy.trat.cisloRozjizdky ?? "x"}`,
       druh: "ceka",
       titulek: novy.trat.prestavba ? "Trať se přestavuje" : "Čeká se na trať",
-      detail: novy.trat.cisloRozjizdky
-        ? `před ${novy.trat.cisloRozjizdky}. rozjížďkou`
-        : "rozhodčí ji ještě nepřijal",
+      // <b>U přestavby se číslo rozjížďky nevydává</b> (veřejná trať nese
+      // při přestavbě jen příznak), takže se tu dřív doplnila věta
+      // „rozhodčí ji ještě nepřijal" — a ta říkala o přestavbě něco
+      // jiného, než co stálo v nadpisu (změřeno 26. 10. 2026).
+      detail: novy.trat.prestavba
+        ? "lodě čekají, značky se posouvají"
+        : novy.trat.cisloRozjizdky
+          ? `před ${novy.trat.cisloRozjizdky}. rozjížďkou`
+          : "rozhodčí ji ještě nepřijal",
     });
 
   // Stav celé regaty. Nejsilnější zpráva, proto první.

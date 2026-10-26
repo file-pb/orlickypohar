@@ -1,0 +1,307 @@
+# Tabule očima diváka: co dělá, když se mění stavy a pozice
+
+Zadání (Filip, 26. 10. 2026): *„koukni na tabuli z pohledu diváka, když se
+mění stavy a pozice lodí, zda je v ní vše v pořádku."*
+
+Tabule visí v hospodě a nikdo ji neobsluhuje. Měří se tedy jediná věc:
+**co se na ní stane samo, když se na druhé straně něco pohne** — pořadatel
+odstartuje, zapíše dojezd, rozhodčí vrátí čísla k revizi, správce je pustí
+ven, trať se přestavuje, lodě jedou po vodě. Nálezy jsou seřazené podle
+toho, co divák uvidí, ne podle souborů.
+
+## Mez poctivosti
+
+**Odjeto agentem proti mocku, ne s divákem u televize.** Co to dokládá:
+že cesta existuje, že se stav na obrazovce po změně skutečně změní a že
+čísla sednou. Co to nedokládá: jestli to někdo přes místnost přečte, jestli
+ho to zmate a co ho zajímá. Sezení s někým, kdo se na tabuli dívá kvůli
+závodu, to nenahrazuje.
+
+**Každý nález o oprávnění nebo o výdeji dat je ověřený i proti API**
+(`src/OrlickyPohar.Api`), ne jen proti mocku — mock se v dřívějších
+auditech ukázal jako lhář v obou směrech. Kde nález stojí jen na mocku, je
+to u něj napsané.
+
+## Čím se měřilo
+
+- vlastní mock na portu **8111** (`tools/fake-api.py` nad kopií
+  `data/2026-nanecisto.json`, kde má `izolepa` rozjížďky vrácené do
+  `Planovana`), web na **3111** — cizím session se na 8080/8099 nesahalo;
+- regata **`izolepa`** v ročníku `2026-nanecisto`: 22 přihlášených lodí,
+  tři třídy, trať o třech prvcích, přijatá k 1. a 2. rozjížďce;
+- celý závodní den odjetý příkazy do správy (rozprava → živý přenos ven →
+  start → dvanáct dojezdů → konec → ověřeno → schváleno → potvrzeno →
+  publikace → revize → eliminace → zastávka odjetá → skryté výsledky),
+  obrazovka u toho celou dobu otevřená;
+- stav obrazovky se **nečetl ze snímku, ale z DOM** (`getBoundingClientRect`,
+  text karet v půlsekundovém odečtu). Karta alertu se prolíná a na snímku
+  obrazovky se dá minout; odečet ji minout nemůže.
+- okno **1280 × 720**, tedy televize 16 : 9 s jednotkou `--tv` stejnou jako
+  na Full HD.
+
+Ovládací skripty (nepatří do repa) leží v `rizeni/` ve scratchpadu té
+session: `op.py` (volání do správy), `dojezdy.py` (zápis z cíle),
+`cely_den.py` (odjede den od rozpravy po publikaci).
+
+---
+
+## Opraveno
+
+### 1. První vykreslení bylo staré, a první obnova z toho udělala salvu
+**Kdy to divák vidí:** vždycky, když se stránka načte — televize po
+restartu, prohlížeč po probuzení, člověk, který na adresu přijde.
+
+Stránka tabule četla detail závodu s minutovou cache
+(`nacti` ve `web/lib/api.ts`, `revalidate: 60`), kdežto obnovovací cesta
+`tabule/data` bez ní. Alerty se počítají **proti poslednímu snímku**, takže
+první obnova porovnala čerstvý stav proti až minutu starému a vyjela kartu
+za každou změnu z té minuty.
+
+*Změřeno:* načtení tabule nad regatou, která měla rozjížďku dojetou
+a publikovanou, vyjelo `1. rozjížďka dojeta` a po ní dvanáct karet
+`V cíli · 1. MAMBA … 5. FAR STAR III …` — tedy celý závod znovu, jako by
+se dojíždělo právě teď.
+
+*Oprava:* `nactiZavod(slug, zavod, true)` v
+`web/app/serie/[slug]/zavody/[zavod]/tabule/page.tsx`. Mikrocache před
+webem drží odpověď deset vteřin pro celou hospodu, takže API to nezatíží.
+
+*Ověřeno po opravě:* totéž načtení, 28 vteřin odečtu, **ani jedna karta**.
+
+### 2. „Potvrzeno" u regaty, kde se jedna rozjížďka přepisuje
+**Kdy to divák vidí:** rozhodčí vrátí jednu rozjížďku k revizi a jiná je
+mezitím potvrzená — tedy běžná chvíle po závodě.
+
+`Vysledky` hledá **nejméně hotový stav** ze všech odjetých rozjížděk
+(`vysledky.tsx`). Počítalo se to `RADA.indexOf`, jenže `KRevizi` v řadě
+není a vrací −1; jakmile se −1 jednou uložilo, přebil ho **kterýkoliv
+pozdější** stav. Výsledek tedy záležel na pořadí rozjížděk, což je
+u „nejslabšího ze všech" samo o sobě špatně.
+
+*Změřeno:* 1. rozjížďka `KRevizi`, 2. `Potvrzeno` → hlavička hlásila
+`odjeto 2 rozjížďky · potvrzeno · 1 z 2 potvrzeno` a oranžové varování
+*„Předběžné pořadí; čísla se ještě mohou změnit"* **zmizelo** — přesně ve
+chvíli, kdy má být vidět.
+
+*Oprava:* revize stojí pod celou řadou, ne mimo ni.
+
+*Ověřeno po opravě:* `odjeto 2 rozjížďky · v revizi · 1 z 2 potvrzeno`
+a varování svítí.
+
+### 3. Mezi rozjížďkami nadpis „POŘADÍ" nad prázdnem
+**Kdy to divák vidí:** rozjížďka dojela, pořadatel ji zapsal, správce ji
+ještě nepustil ven. To je většina závodního dne.
+
+`panely` v `web/lib/tabule.ts` vrací i při prázdném pořadí **jeden náhradní
+panel**, aby karuselu nezmizel celý sloupec. Obrazovka výsledků se ale
+ptala `tabule.length === 0`, a to tím pádem nenastane nikdy.
+
+*Změřeno:* jediný panel s nadpisem `POŘADÍ`, nula řádků, výška 198 px,
+žádná věta. Půlka obrazovky černá a nic ji nevysvětlí.
+
+*Oprava:* rozhoduje, jestli má aspoň jeden panel lodě. Text navíc rozlišuje
+dvě různé věci: *„Zatím se nejelo."* a *„Odjeto je, čísla ještě nejsou
+venku. Jakmile je správce pustí, objeví se tady."*
+
+*Ověřeno po opravě:* věta je na obrazovce, panel zmizel.
+
+### 4. Karta o přestavbě trati si odporovala
+Nadpis `Trať se přestavuje`, pod ním *„rozhodčí ji ještě nepřijal"*.
+Veřejná trať při přestavbě nevydává číslo rozjížďky, takže detail spadl do
+větve pro nepřijatou trať.
+
+*Oprava:* přestavba má vlastní větu — *„lodě čekají, značky se posouvají"*.
+*Ověřeno po opravě:* `ČEKÁ SE | Trať se přestavuje | lodě čekají, značky
+se posouvají`.
+
+### 5. Tabule nepočítala s tím, co leží nad ní
+`.tabule` má výšku `100dvh − patička`, jenže nad ročníkem nanečisto visí
+pruh *„Ukázková data"* (`web/app/ukazka.tsx`) a ten ji posune o svou výšku
+dolů. Tabule tedy končila **28 px pod pásem partnerů** a těch 28 px si
+držela jako plochu, která na obrazovce není. Pásy tříd byly proti tomu
+přišpendlené k oknu (`position: fixed` v `globals.css`, s komentářem, který
+ten pruh jmenuje) — srovnalo se to u pásů, ne u tabule.
+
+*Oprava:* obrazovka si změří vlastní horní okraj a pošle ho do CSS jako
+`--nad-tabuli`; výška si ho odečte. Natvrdo zapsaná výška pruhu by se
+rozešla s textem, který se na úzkém okně zalomí.
+
+*Ověřeno po opravě:* `.tabule` končí na 674 px, pás partnerů začíná na
+674 px. **Nález 6 to ale neřeší** — viz níž.
+
+### Mock: dvě místa, která by se měřila místo aplikace
+- **Jména lodí v polohách a v záznamu byla klíče.** `polohy_zastavky`
+  a `zaznam_rozjizdky` braly `u["lod"]` z účastí, což je klíč, kdežto API
+  vydává `Lod.Nazev`. Na tabuli z toho bylo pořadí `cervene-cafe`,
+  `sea-mouse-iii`, `m-rtina` — vypadá to jako vada webu a není.
+- **Záznam rozjížďky padal na `ValueError`.** Čas startu nese „Z"
+  a `datetime.fromisoformat` ho do Pythonu 3.11 nepřijme; na tomhle stroji
+  běží mock pod **Pythonem 3.9**, takže zrychlené review nešlo lokálně
+  vyzkoušet vůbec — tabule dostávala prázdnou odpověď.
+
+Obojí je opravené. **Pozor:** obě opravy se svezly do cizího commitu
+`8dee4cc` (souběžná session auditu obsazení commitovala celý pracovní
+strom), takže v historii stojí pod jejím popisem, ne pod tímhle auditem.
+
+---
+
+## Otevřené — o těchhle rozhodne Filip
+
+### 6. Startovní listina nemá výškový rozpočet a lodě z ní tiše padají
+**Kdy to divák vidí:** před startem, tedy když se u tabule stojí nejvíc.
+
+Teaser krátí seznam na `NEJVIC_V_TRIDE = 12` lodí a zbytek přizná řádkem
+*„a další N"*. To číslo ale nic neví o tom, kolik místa na obrazovce je —
+sloupec s dvanácti loděmi se nevejde a **přeteče pod běžící pásy tříd**.
+Řádek „a další" se nevypíše, protože z pohledu kódu se vešly všechny.
+
+*Změřeno (okno 1280 × 720, pruh ukázkových dat nahoře):*
+- `NAD7M`, 12 lodí: poslední řádek `THEA` končí na **606 px**, pásy tříd
+  začínají na **587 px** → dvě lodě pod pásy, `a další` hlásí nulu;
+- s delší vývěskou (čtyři zprávy místo tří) se seznam posune níž a zmizí
+  **ROSE i THEA** — tedy 10 z 12 viditelných a nic o tom neřekne.
+
+Oprava výšky tabule (nález 5) tohle **nespraví**: obsah se kreslí odshora,
+takže zkrácení spodku ho nahoru nepostrčí. Spraví to jedině to, že si
+sloupec řekne o skutečně dostupnou výšku a „a další N" se počítá z toho, co
+se **vešlo**, ne z toho, co se uřízlo číslem 12. Měřit výšku obrazovka už
+umí (`odsazeni` v `obrazovka.tsx`), jen se to zatím nedostane do teaseru.
+
+**Proč to nechávám na rozhodnutí:** kolik lodí se má v jedné třídě ukázat
+a co se stane se zbytkem je návrh, ne chyba — ale dnešní stav je horší než
+obě možnosti: jméno je napůl schované a nikdo se nedozví, že chybí.
+
+### 7. Časomíra k nejbližšímu startu se nikdy neukáže
+`rozjizdky-tabule.ts` umí dvě fáze — *„procedura ve 10:25"* a odpočet
+*„startovní procedura 4:30"* — a obě chtějí rozjížďku ve stavu `Planovana`
+s vyplněným `startV`.
+
+**Takový stav nejde vyrobit.** `StartV` zapisuje v API jediné místo
+(`ZapisSprava.StartAsync`, řádek 474) a to ve stejném kroku přepne
+rozjížďku na `Probiha`; mimo něj ho plní už jen import ročníku. Plánovaný
+čas startu se tedy nikam zadat nedá a obě věty jsou mrtvé.
+
+*Změřeno:* `POST …/rozjizdky/1/start` s časem o 4,5 minuty v budoucnu →
+rozjížďka je okamžitě `Probiha`, na tabuli panýlek *„jede se"*, žádný
+odpočet. Komentář v `rozjizdky-tabule.ts` to ostatně sám říká: *„v mocku se
+to nedá zahlédnout, protože tam žádná rozjížďka nečeká na start"* — není to
+vlastnost mocku, je to vlastnost modelu.
+
+Divákova nejčastější otázka („kdy se zase pojede?") tím zůstává bez
+odpovědi. Chybí buď pole *plánovaný start* u rozjížďky, nebo to, aby
+`start` s budoucím časem nechal rozjížďku plánovanou až do něj.
+
+### 8. V cíli se za celý závod neobjeví nic, a při publikaci všechno naráz
+**Kdy to divák vidí:** na každé regatě, která nemá zapnutý *procesní děj* —
+a to je výchozí stav.
+
+Veřejný výdej pouští čísla jen z **publikovaných** rozjížděk, nebo ze všech
+u regaty s procesním dějem (`ZavodEndpoints.PohledAsync`: `v.Rozjizdka
+.Publikovano || (zavod.ProcesniDej && …)`; mock stejně, `venku()`). Dokud
+správce nepublikuje:
+
+- zapsané dojezdy **nejsou ve snímku**, takže se kvůli nim nespustí žádná
+  karta. Pětivteřinová obnova, kterou tabule kvůli kartám po dojezdu
+  dostala (20. 10. 2026), se nemá o co opřít;
+- v okamžiku publikace vyjede **karta za každou loď**, 4,5 s na kartu —
+  u dvanácti lodí ~54 vteřin, během kterých se přes pořadí převaluje závod,
+  který dojel před hodinou.
+
+*Změřeno:* zápis dvanácti dojezdů do nepublikované rozjížďky → snímek nese
+`vysledky: []`, žádná karta. Po `publikace: true` odečet DOM zachytil
+`V CÍLI 1. MAMBA` → … → `10. MICINY` v pravidelném rytmu, salva běžela přes
+padesát vteřin. **Totéž se opakuje při každém dalším publikování** —
+stažení čísel na opravu a jejich nové vypuštění přehraje celý cíl znovu.
+
+K rozhodnutí jsou tři věci, a jsou oddělitelné:
+1. má tabule ukazovat dojezdy živě? (= doporučit pořadatelům *procesní děj*,
+   nebo ho pro tabuli zapnout vždycky);
+2. má se salva při publikaci slučovat do jedné karty („1. rozjížďka je
+   venku · 12 lodí")?
+3. má se dojezd starší než pár minut hlásit vůbec?
+
+### 9. Skrytý ročník: odjetá regata vypadá jako regata před rozpravou
+Když ročník nevydává výsledky (`VysledkyZavoduVerejne = false`), API vrací
+detail **bez rozjížděk** (`ZavodEndpoints`, zkratka hned za načtením
+závodu — schválně, aby se čísla ani nenačetla). Tabule z toho spočítá, že
+žádná rozjížďka není dokončená, a spadne do startovní listiny.
+
+*Změřeno:* regata s dojetou, potvrzenou a publikovanou rozjížďkou po
+skrytí ročníku ukazuje `22 přihlášených lodí`, stav **„Čeká se na
+rozpravu"**, žádné panýlky rozjížděk — plus proužek *„Ročník má výsledky
+zatím skryté…"*. Dvě sdělení na jedné obrazovce si odporují.
+
+Vedlejší důsledek: obě věty, které `Vysledky` pro skrytý ročník má
+(*„pořadí se počítá, rozhodčí ho zatím nezveřejnil"* a *„Až to rozhodčí
+pustí ven, objeví se to tady."*), jsou **nedosažitelné** — do té podoby se
+tabule při skrytém ročníku nikdy nedostane.
+
+Je to tatáž otázka jako scénář A5 v `SCENARE-OVLADANI.md` („pozná, že se
+jelo, od toho, že se nejelo?"), jen na tabuli — a odpověď je zatím ne.
+
+### 10. Trať zrušené rozjížďky jde ven jako „trať na řadě"
+`NaRadeAsync` (`Features/Boje/TratSprava.cs`) hledá trať rozjížďky, která
+je na řadě, a když žádnou nenajde, vezme **poslední přijatou trať vůbec** —
+a ta poslední větev se zrušených rozjížděk neptá, ačkoliv o pár řádků níž
+je `VerejneRozjizdkyAsync`, která je vyřazuje. Mock je opsaný stejně.
+
+*Změřeno:* po eliminaci 2. rozjížďky a přestavbě trati vyjela karta
+`TRAŤ · Trať schválena · 2. rozjížďka` — o rozjížďce, která se nejede.
+
+### 11. Publikovaná a potom eliminovaná rozjížďka drží čísla venku
+Filtr je `Publikovano || (ProcesniDej && StavVysledku != Eliminovano)` —
+komentář nad ním tvrdí *„Eliminovaná ven nejde ani tak"*, ale to platí jen
+pro druhou větev. Jednou publikovaná a potom eliminovaná rozjížďka své
+řádky ve veřejném výdeji **podrží**.
+
+*Změřeno:* `(2, 'Zrusena', 'Eliminovano', 4 výsledky)` ve veřejném detailu.
+Na tabuli se to neprojeví (pořadí ji nepočítá a panýlek říká *zrušena*),
+na veřejné stránce regaty ano. **Je to mimo zadání tohohle auditu**, patří
+k veřejné stránce — zapsané, ať se na to nepřijde potřetí.
+
+### 12. Mrtvý kód v tabuli
+Tři soubory v `tabule/` neimportuje nikdo: **`semafor.tsx` (298 řádků)**,
+**`atributy.tsx` (62)** a **`vlajka.tsx` (92)**, kterou drží při životě jen
+semafor. V `obrazovka.tsx` zůstaly nepoužité `STAVY_ROZJIZDEK`, `ZAPIS`,
+`NA_STRANKU` a `stranky()`.
+
+Navíc: mapa dostává `onUdalost`, hlídá si ho (`if (!onUdalost) return`),
+ale od 25. 10. ho **nikdy nezavolá** — dojezd i prohození si řeší sama
+(`setLepik`). Druh karty `souboj` a jeho nadpisek *„Na vodě"* jsou tím
+nedosažitelné.
+
+Je to Filipovo rozhodnutí: vlajky stavu rozjížďky se do návrhu vrátit mohou,
+a pak je lepší mít je po ruce než je psát znovu. Ale dokud leží bez cesty,
+čte je každý, kdo tabuli otevře, jako živý kód — tenhle audit je taky nejdřív přečetl celé.
+
+### 13. Nález mimo tabuli: náhled fotky prvku přes celou obrazovku
+V `globals.css` je **slepená kopie** komentáře o výšce tabule i s jejím
+`height: calc(100dvh - var(--paticka))`, a to uvnitř pravidla
+`.seznam-prvku .ikona-detailu.foto img`. Náhled fotky u prvku trati je tím
+vysoký přes celou obrazovku (`object-fit: cover` to jen ořízne).
+Neopraveno schválně: je to obrazovka pořadatele, ne tabule, a může na ní
+pracovat jiná session.
+
+---
+
+## Pozorování, ze kterých návrh nevznikl
+
+Zapsaná zvlášť schválně: rozhodnout o nich patří k návrhu, ne k měření.
+
+- **Fronta karet je sériová a „Dojeto" čeká na konci.** Po dojetí regaty
+  přijde `Regata · Dojeto` až za všemi dojezdy, které se do fronty dostaly
+  dřív — u dvanácti lodí skoro minutu po tom, co se stalo.
+- **Pořadí při zrychleném review píše u všech lodí „před 0 s".** Je to
+  záznam, ne živá data; stáří polohy tam nic neznamená.
+- **Stažení čísel z veřejnosti je tiché.** Publikace zpátky na `false`
+  nevyvolá nic, řádky prostě zmizí. Opačný směr vyjede salvu (nález 8).
+- **Zpráva na vývěsku vyjede jako karta a zapadne do panelu** — tohle
+  funguje přesně tak, jak bylo zadáno, včetně toho, že se stará zpráva
+  neopakuje.
+- **Zrychlené review naskočí 75 vteřin po načtení** a běží 30, přesně podle
+  `SEZNAM_MS`/`PREHRAVKA_MS`. Ověřeno odečtem: `......PPPPPPPPPPPPPP`.
+- **Pás partnerů a pásy tříd se nepřetahují.** Poslední pás tříd končí 2 px
+  nad logy, i při třech třídách.
+- **Karta alertu se prolíná**, takže na snímku obrazovky ji jde minout —
+  kdo bude tabuli zkoušet po mně, ať čte DOM, ne screenshot. Tenhle audit
+  na to zprvu naletěl a málem zapsal „alerty nejezdí".

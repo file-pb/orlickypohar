@@ -51,16 +51,38 @@ export function Vysledky({
    * Nejméně hotový stav ze všech odjetých rozjížděk. <b>Platí ten
    * nejslabší</b>: dokud se jedna dopisuje, není potvrzené celé pořadí,
    * i když tři ostatní jsou.
+   *
+   * <b>Revize stojí pod celou řadou</b>, ne mimo ni. Dokud se to počítalo
+   * `RADA.indexOf`, vracela revize −1 a „neznámý" stav se pak nechal
+   * přebít kterýmkoliv pozdějším: regata s první rozjížďkou v revizi
+   * a druhou potvrzenou hlásila <i>potvrzeno</i> a schovala i varování,
+   * že se čísla ještě mohou změnit (změřeno 26. 10. 2026). Výsledek
+   * navíc záležel na pořadí rozjížděk, což je u „nejslabšího ze všech"
+   * samo o sobě špatně.
    */
+  const jistota = (stav: string) => {
+    const i = RADA.indexOf(stav as (typeof RADA)[number]);
+    // Eliminovaná se mezi odjeté nedostane (vydává se jako zrušená),
+    // ale kdyby se tam dostala, je to taky „hotové to není".
+    return i === -1 ? -1 : i;
+  };
+
   const nejmene = odjete.reduce<string | null>((nej, r) => {
     const s = r.stavVysledku;
     if (!s) return nej;
     if (!nej) return s;
-    const i = RADA.indexOf(s as (typeof RADA)[number]);
-    const j = RADA.indexOf(nej as (typeof RADA)[number]);
-    if (i === -1) return s;
-    return j === -1 || i < j ? s : nej;
+    return jistota(s) < jistota(nej) ? s : nej;
   }, null);
+
+  /**
+   * Je v pořadí vůbec co ukázat? <b>Počet panelů nestačí</b>: `panely`
+   * v `lib/tabule.ts` vrací i při prázdném pořadí jeden náhradní panel,
+   * aby karuselu nezmizel celý sloupec — takže `tabule.length === 0`
+   * nenastane nikdy a tahle obrazovka pak kreslila nadpis „Pořadí" nad
+   * prázdnem (změřeno 26. 10. 2026: panel 198 px vysoký, nula řádků,
+   * žádná věta). Rozhoduje tedy, jestli má aspoň jeden panel lodě.
+   */
+  const prazdno = snimek.tabule.every((t) => t.lode.length === 0);
 
   return (
     <section className="tabule-vysledky">
@@ -117,9 +139,13 @@ export function Vysledky({
         </header>
       </div>
 
-      {snimek.vysledkySkryte || snimek.tabule.length === 0 ? (
+      {snimek.vysledkySkryte || prazdno ? (
         <p className="prazdno">
-          {snimek.vysledkySkryte ? "Až to rozhodčí pustí ven, objeví se to tady." : "Zatím se nejelo."}
+          {snimek.vysledkySkryte
+            ? "Až to rozhodčí pustí ven, objeví se to tady."
+            : odjete.length > 0
+              ? "Odjeto je, čísla ještě nejsou venku. Jakmile je správce pustí, objeví se tady."
+              : "Zatím se nejelo."}
         </p>
       ) : (
         <div className="tabule-vysledky-tridy">
