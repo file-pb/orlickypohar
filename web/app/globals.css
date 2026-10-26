@@ -4895,10 +4895,10 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 /* S teaserem má značku v sobě hlavička, takže ta v rohu je navíc. */
 .tabule:has(.tabule-teaser) .vrch { display: none; }
 
-/* S teaserem sedí vpravo nahoře hlavička se značkou, takže panýlky
-   rozjížděk slezou pod ni — jinak leží číslo rozjížďky na logu
-   (změřeno 26. 10. 2026). */
-.tabule:has(.tabule-teaser) .rozjizdky-panylky {
-  top: calc(6.4 * var(--znacka));
-  right: calc(3 * var(--tv));
-}
+/* <b>S teaserem panýlky rozjížděk odpadají</b> (Filip, 26. 10. 2026:
+   *„v tomto případě asi nemusíme zobrazovat toto; na mapě je to super,
+   ale tady tu informaci už máme z alertu a stavu pod logem"*). Co která
+   rozjížďka dělá, stojí ve stavu pod jménem regaty — včetně odpočtu
+   startovní procedury —, a co se zrovna mění, je ve vývěsce vlevo. Na
+   mapě zůstávají: tam je stav pod jménem schovaný v pravém sloupci. */
+.tabule:has(.tabule-teaser) .rozjizdky-panylky { display: none; }
