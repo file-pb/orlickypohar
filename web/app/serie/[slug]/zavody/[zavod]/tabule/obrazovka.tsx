@@ -210,7 +210,26 @@ export function Obrazovka({
    * proč z ostré tabule zmizely ukázkové plavby.
    */
   const [demo, setDemo] = useState<null | "listina" | "mapa">(null);
-  const ukazka = useMemo(() => (demo === "mapa" ? pole() : null), [demo]);
+  /**
+   * <b>Demo jede po trati té regaty a s jejími loděmi</b> (Filip,
+   * 26. 10. 2026: *„vezmi si do simulace třeba trasu jarního větru"*) —
+   * jinak by ukazovalo cizí závod a na otázku „jak to bude vypadat u nás"
+   * by neodpovědělo.
+   *
+   * Vlastní trať si bere, jen když ta regatina nestačí: po trati
+   * o jednom prvku nemá vymyšlené pole kde plout.
+   */
+  const ukazka = useMemo(
+    () =>
+      demo === "mapa"
+        ? pole(
+            Math.max(6, Math.min(snimek.lode.length || 24, 30)),
+            trat ?? undefined,
+            snimek.lode.length > 0 ? snimek.lode.map((l) => l.lod) : undefined,
+          )
+        : null,
+    [demo, trat, snimek.lode],
+  );
   const zive = demo === "mapa" && ukazka ? ukazka.lode : demo === "listina" ? [] : skutecne;
 
   const stari = Math.max(0, Math.round((ted - Date.parse(snimek.kdy)) / 1000));
