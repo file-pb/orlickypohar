@@ -4902,3 +4902,9 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
    startovní procedury —, a co se zrovna mění, je ve vývěsce vlevo. Na
    mapě zůstávají: tam je stav pod jménem schovaný v pravém sloupci. */
 .tabule:has(.tabule-teaser) .rozjizdky-panylky { display: none; }
+
+/* Bez mapy není vpravo žebříček, od kterého by se kolečko se stářím dat
+   muselo držet dál — jde ke kraji (Filip, 26. 10. 2026). */
+.tabule:has(.tabule-teaser) .tabule-stari-kolecko {
+  right: calc(3 * var(--tv));
+}
