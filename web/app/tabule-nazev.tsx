@@ -25,7 +25,20 @@ const VERZALKY = 1490 / 2048;
  */
 const VERZALKA_PREDLOHY = 190;
 
-export function NazevZavodu({ text }: { text: string }) {
+export function NazevZavodu({
+  text,
+  /**
+   * Kde text v ploše začíná. <b>Výchozí je na střed</b>, protože tak
+   * stojí nad žebříčkem i na mapě; `start` je pro případy, kdy má
+   * lícovat s něčím pod sebou — na teaseru se stavem (Filip, 26. 10.
+   * 2026: *„ten nadpis a status zarovnej spolu doleva"*). Zarovnat to
+   * z CSS nejde: text je v SVG a drží se `x` a `text-anchor`.
+   */
+  zarovnani = "stred",
+}: {
+  text: string;
+  zarovnani?: "stred" | "vlevo";
+}) {
   const pismo = useRef<SVGTextElement>(null);
   const pruhy = `nazev-pruhy-${useId().replace(/:/g, "")}`;
   // Perioda 0 = ještě neměřeno; do té doby se kreslí plnou barvou, což je
@@ -67,10 +80,10 @@ export function NazevZavodu({ text }: { text: string }) {
       </defs>
       <text
         ref={pismo}
-        x="50%"
+        x={zarovnani === "vlevo" ? 0 : "50%"}
         y="50%"
         dominantBaseline="central"
-        textAnchor="middle"
+        textAnchor={zarovnani === "vlevo" ? "start" : "middle"}
         fill={perioda > 0 ? `url(#${pruhy})` : "var(--logo-napis)"}
       >
         {text}

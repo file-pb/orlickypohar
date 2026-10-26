@@ -4713,7 +4713,10 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 /* Hlavička vpravo, pod značkou: název a pod ním stav, oboje doprava. */
 .tabule .tabule-teaser > .tabule-teaser-vrch > header {
   flex: 0 0 auto;
-  display: grid; justify-items: end; gap: calc(0.2 * var(--tv));
+  /* Název a stav lícují vlevo (Filip, 26. 10. 2026) — blok jako celek
+     stojí vpravo pod značkou, ale uvnitř se čte odshora dolů od jedné
+     hrany. */
+  display: grid; justify-items: start; gap: calc(0.2 * var(--tv));
   width: calc(26 * var(--tv));
   padding-right: calc(5.4 * var(--tv));
 }
@@ -4729,7 +4732,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 }
 .tabule .tabule-teaser h1 .tabule-nazev text { font-size: calc(1.9 * var(--tv)); }
 .tabule .tabule-teaser-stav {
-  margin: 0; color: var(--tlumeny); text-align: right;
+  margin: 0; color: var(--tlumeny); text-align: left;
   font-size: calc(0.95 * var(--tv)); letter-spacing: 0.04em;
 }
 .tabule .tabule-teaser-pocet {

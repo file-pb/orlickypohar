@@ -95,7 +95,7 @@ export function Teaser({ snimek, ted }: { snimek: Snimek; ted: number }) {
 
         <header>
           <h1>
-            <NazevZavodu text={snimek.nazev} />
+            <NazevZavodu text={snimek.nazev} zarovnani="vlevo" />
           </h1>
           <p className="tabule-teaser-stav">
           {jede
