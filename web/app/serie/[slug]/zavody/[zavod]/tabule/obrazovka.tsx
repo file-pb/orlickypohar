@@ -7,6 +7,7 @@ import type { Snimek } from "@/lib/tabule";
 import { Znak } from "@/app/logo";
 import { NazevZavodu } from "@/app/tabule-nazev";
 import { Teaser } from "./teaser";
+import { Vysledky } from "./vysledky";
 import { Karusel, type Panel } from "./karusel";
 import { PoradiTrid } from "./poradi-tridy";
 import { PanylkyRozjizdek } from "./rozjizdky";
@@ -209,7 +210,7 @@ export function Obrazovka({
    * běží, je přes obrazovku pruh, který to říká — je to tentýž důvod,
    * proč z ostré tabule zmizely ukázkové plavby.
    */
-  const [demo, setDemo] = useState<null | "listina" | "mapa">(null);
+  const [demo, setDemo] = useState<null | Rezim>(null);
   /**
    * <b>Demo jede po trati té regaty a s jejími loděmi</b> (Filip,
    * 26. 10. 2026: *„vezmi si do simulace třeba trasu jarního větru"*) —
@@ -230,7 +231,24 @@ export function Obrazovka({
         : null,
     [demo, trat, snimek.lode],
   );
-  const zive = demo === "mapa" && ukazka ? ukazka.lode : demo === "listina" ? [] : skutecne;
+  const zive = demo === "mapa" && ukazka ? ukazka.lode : demo ? [] : skutecne;
+
+  /**
+   * <b>Co tabule zrovna ukazuje.</b> Rozhoduje se na jednom místě, aby
+   * se podoby nedaly zapnout dvě naráz — a aby šlo kteroukoli vyvolat
+   * v demu (Filip, 26. 10. 2026). Pořadí podmínek je pořadí dne:
+   * lodě na vodě přebijí všechno, pak rozhoduje, jestli je po regatě,
+   * jestli se už jelo, a nakonec zbyde startovní listina.
+   */
+  const rezim: Rezim =
+    demo ??
+    (zive.length > 0
+      ? "mapa"
+      : snimek.stav === "Odjety" && snimek.rozjizdky.some((r) => r.stav === "Dokoncena")
+        ? "po"
+        : snimek.rozjizdky.some((r) => r.stav === "Dokoncena")
+          ? "mezi"
+          : "listina");
 
   const stari = Math.max(0, Math.round((ted - Date.parse(snimek.kdy)) / 1000));
 
@@ -388,8 +406,17 @@ export function Obrazovka({
           lodí, které se opravdu přihlásily, řekne divákovi v hospodě víc
           než simulace cizí regaty, a hlavně je pravdivý. Ukázkové plavby
           zůstaly tam, kam patří: v náčrtu `/nacrt/tabule`. */}
-      {zive.length === 0 ? (
+      {rezim === "listina" ? (
         <Teaser snimek={demo ? sDemoDaty(snimek) : snimek} ted={ted} />
+      ) : rezim === "mezi" || rezim === "po" ? (
+        /* <b>Žádná trať vzadu</b> (Filip, 26. 10. 2026: *„měla by mít
+           stejné pozadí jak ta startovní listina; ten rank vpravo
+           u těchhle oken není, tak tam nemusí být to pozadí"*). Mapa je
+           pozadí jen tam, kde se po ní něco pohybuje a vpravo u ní stojí
+           žebříček; pod seznamem pořadí je z ní jen šmouha. Pozadí si
+           tyhle podoby berou totéž co startovní listina, aby se tabule
+           mezi fázemi dne nepřevlékala. */
+        <Vysledky snimek={demo ? sDemoDaty(snimek, rezim) : snimek} ted={ted} konec={rezim === "po"} />
       ) : (
       <div className="tabule-mapa" aria-hidden="true">
         <MapaTrackeru
@@ -435,6 +462,16 @@ export function Obrazovka({
           <li>
             <button type="button" onClick={() => setDemo("mapa")} aria-current={demo === "mapa"}>
               Mapa se závodem
+            </button>
+          </li>
+          <li>
+            <button type="button" onClick={() => setDemo("mezi")} aria-current={demo === "mezi"}>
+              Mezi rozjížďkami
+            </button>
+          </li>
+          <li>
+            <button type="button" onClick={() => setDemo("po")} aria-current={demo === "po"}>
+              Po dojetí regaty
             </button>
           </li>
           <li>
@@ -625,6 +662,9 @@ function jesteLodi(kolik: number) {
   return `a ještě ${kolik} ${kolik < 5 ? "lodě" : "lodí"}`;
 }
 
+/** Které podoby tabule umí. */
+type Rezim = "listina" | "mapa" | "mezi" | "po";
+
 /**
  * Snímek doplněný o to, co demo potřebuje ukázat.
  *
@@ -632,7 +672,29 @@ function jesteLodi(kolik: number) {
  * vlastní — demo není náhrada dat, ale způsob, jak projít režimy i na
  * tabuli, kde se zrovna nic neděje.
  */
-function sDemoDaty(snimek: Snimek): Snimek {
+function sDemoDaty(snimek: Snimek, rezim?: Rezim): Snimek {
+  /**
+   * <b>Po dojetí je zajímavý právě ten nehotový stav</b> (Filip, 26. 10.
+   * 2026: *„tam bude důležité oznamovat stavy výsledků a výsledků
+   * rozjížděk"*). Na regatě, kde je všechno dávno potvrzené, by demo
+   * ukázalo jen klidný seznam a na otázku „jak to vypadá, když se ještě
+   * zapisuje" by neodpovědělo. Hýbe se tím nejvýš o krok zpátky a jen
+   * když je všechno hotové — a přes obrazovku přitom běží pruh, že jsou
+   * data simulovaná.
+   */
+  if (
+    (rezim === "mezi" || rezim === "po") &&
+    snimek.rozjizdky.some((r) => r.stav === "Dokoncena") &&
+    snimek.rozjizdky.every((r) => r.stav !== "Dokoncena" || r.stavVysledku === "Potvrzeno")
+  ) {
+    const posledni = snimek.rozjizdky.filter((r) => r.stav === "Dokoncena").at(-1);
+    snimek = {
+      ...snimek,
+      rozjizdky: snimek.rozjizdky.map((r) =>
+        r === posledni ? { ...r, stavVysledku: "Navrzeno" } : r,
+      ),
+    };
+  }
   if (snimek.zpravy.length > 0) return snimek;
 
   const ted = Date.now();
