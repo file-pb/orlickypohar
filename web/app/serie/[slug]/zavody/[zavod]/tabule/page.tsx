@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { ApiNedostupne, nactiPoradi, nactiVerejnouTrat, nactiZavod, nactiZpravy } from "@/lib/api";
 import { snimekZavodu } from "@/lib/tabule";
+import { trasaMereni } from "@/lib/trasa-mereni";
 import { Vypadek } from "@/app/vypadek";
 import { Obrazovka } from "./obrazovka";
 
@@ -49,7 +50,7 @@ export default async function Tabule({ params }: Parametry) {
       <Obrazovka
         serie={slug}
         zavod={zavod}
-        prvni={snimekZavodu(detail, trat, zpravy)}
+        prvni={sTrasou(snimekZavodu(detail, trat, zpravy))}
         poradiSerie={serie?.kategorie ?? null}
         serieNazev={serie ? `${serie.nazev} — průběžné pořadí série` : null}
       />
@@ -58,4 +59,9 @@ export default async function Tabule({ params }: Parametry) {
     if (e instanceof ApiNedostupne) return <Vypadek co="Tabule" />;
     throw e;
   }
+}
+
+/** Doplní snímku měřicí trasu po vodě — stejně jako to dělá `data/route.ts`. */
+function sTrasou(snimek: ReturnType<typeof snimekZavodu>) {
+  return { ...snimek, trasa: trasaMereni(snimek.znacky) };
 }

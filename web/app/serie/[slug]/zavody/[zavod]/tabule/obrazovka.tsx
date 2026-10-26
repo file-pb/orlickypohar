@@ -473,6 +473,11 @@ export function Obrazovka({
       <div className="tabule-mapa" aria-hidden="true">
         <MapaTrackeru
           znacky={demo === "mapa" && ukazka ? ukazka.znacky : (trat ?? [])}
+          /* <b>Měřicí trasa po vodě patří i k ukázce</b> — ale jen když
+             jede po trati regaty. Když si ukázka vymyslela vlastní
+             (regata trať nezveřejnila), trasa ze snímku by měřila podle
+             úplně jiné vody. */
+          trasa={demo === "mapa" && ukazka && ukazka.znacky !== trat ? undefined : snimek.trasa}
           lode={zive}
           tabule
           zive

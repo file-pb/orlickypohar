@@ -93,6 +93,14 @@ export type Snimek = {
    * jede po trati ukázkové plavby a napíše to u sebe.
    */
   znacky: Znacka[];
+  /**
+   * Měřicí trasa po vodě, podle které se počítá postup na trati.
+   * <b>Nikdy se nekreslí</b> a dopisuje se až v serverové cestě
+   * (`lib/trasa-mereni.ts`) — mřížka nádrže nemá co dělat v prohlížeči,
+   * takže ji `snimekZavodu` samo neumí a snímek bez ní je v pořádku:
+   * mapa pak měří po přímkách mezi značkami.
+   */
+  trasa?: { sirka: number; delka: number }[];
   /** Atributy závodu do grafiky nad obsahem. */
   zavod: {
     typ: string | null;

@@ -96,8 +96,17 @@ export function bodyTrati(
     // Osa vnějšího úhlu: kam se loď v otáčce vyhoupne.
     const osa = { x: d1.x - d2.x, y: d1.y - d2.y };
     const dosa = Math.hypot(osa.x, osa.y);
-    // Rovná trať žádnou otočku nemá, tam není co posouvat.
-    if (dosa < 0.05) continue;
+    /**
+     * <b>Vysunuje se jen skutečná otočka, ne vlnka trasy.</b> Od 26. 10.
+     * 2026 je měřicí trasa cesta po vodě (`lib/trasa-mereni.ts`), a ta se
+     * kolem břehů láme po pár stupních — medián zlomu 5°, devadesátý
+     * percentil 14°, přes třicet stupňů jediný zlom z 64 (změřeno na
+     * trati Izolepy). S původním prahem by se každá taková vlnka
+     * považovala za bóji a bod by uskočil o celý poloměr otáčky stranou.
+     * `dosa` je 2·sin(θ/2), takže 0,5 je zhruba devětadvacet stupňů —
+     * pod tím se trať jen vlní, nad tím se doopravdy točí.
+     */
+    if (dosa < 0.5) continue;
     const mPx = (delkyNoh[i] ?? 0) > 0 ? n2 / delkyNoh[i] : n1 / (delkyNoh[i - 1] || 1);
     const r = RADIUS_OTOCKY_M * mPx;
     const tecna = { x: d1.x + d2.x, y: d1.y + d2.y };
