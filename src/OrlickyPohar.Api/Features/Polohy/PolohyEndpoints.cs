@@ -31,6 +31,21 @@ public static class PolohyEndpoints
                 + "pak `Nedostupna`. Snímek se drží v cache pět sekund, takže počet "
                 + "diváků nerozhoduje o počtu dotazů do databáze.");
 
+        // Záznam rozjížďky pro závodní výbor — na revizi protestu. Vlastní
+        // cesta vedle veřejné: ta se ptá, co smí vidět divák, tahle, kdo se
+        // ptá. Dvě různá rozhodnutí nepatří do jednoho handleru.
+        app.MapSpravu("/sprava/serie/{serie}/zastavky/{zavod}/rozjizdky/{cislo:int}/zaznam")
+            .MapGet("/", ZaznamProSpravuAsync)
+            .Produces<ZaznamRozjizdky>()
+            .WithSummary("Záznam rozjížďky na revizi protestu")
+            .WithDescription(
+                "Pořadatel regaty, nebo rozhodčí ročníku. Proti veřejnému výdeji "
+                + "**nezáleží na přepínači *živý přenos ven*** — ten rozhoduje o tom, "
+                + "co vidí divák, ne o tom, co smí vidět závodní výbor nad vlastními "
+                + "daty — a vydá se i **běžící** rozjížďka: kdo tohle čte, vidí živé "
+                + "polohy stejně. Body jsou prořídlé na patnáct vteřin a na čtyři sta "
+                + "na loď, jako u veřejného záznamu.");
+
         // Posádka na vodě. Prokazuje se klíčem k lodi, ne účtem — telefon
         // žádný nemá —, a vidí to, co rozhodčí povolil přepínačem *co vidí
         // posádky*. Zase vlastní cesta: tři různí diváci, tři různá
@@ -119,6 +134,17 @@ public static class PolohyEndpoints
         if (zavodId is null) return Results.NotFound();
 
         return Results.Ok(await sprava.VerejnyAsync(zavodId.Value, ct));
+    }
+
+    private static async Task<IResult> ZaznamProSpravuAsync(
+        string serie, string zavod, int cislo, ClaimsPrincipal kdo, Rozsahy rozsahy,
+        PolohySprava sprava, CancellationToken ct)
+    {
+        if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
+            return Results.NotFound();
+        if (!await SmiAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        return Results.Ok(await sprava.ZaznamProSpravuAsync(rozsah.ZavodId.Value, cislo, ct));
     }
 
     private static async Task<IResult> ZaznamAsync(

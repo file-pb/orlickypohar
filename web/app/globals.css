@@ -3836,6 +3836,18 @@ body:has(.tabule) {
  * lodě, je přesně ta výjimka — na širokém monitoru zbývalo kolem ní přes
  * dva tisíce pixelů prázdna. Totéž dělá tabule o kus níž.
  */
+/* Prvek trati se dá rozkliknout — kurzor to musí říct dřív, než se klepne. */
+.nacrt-prvek { cursor: pointer; }
+
+/* Přepínač živě/záznam nad mapou trackeru. Je to jeden řádek a stojí tam,
+   kde se o mapě rozhoduje — v mapě samé by soupeřil s jejím ovládáním. */
+.tracker-rezim {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.75rem;
+  margin: 0 0 0.5rem;
+}
+.tracker-rezim label { display: inline-flex; align-items: baseline; gap: 0.4rem; }
+.tracker-rezim-popis { color: var(--tlumeny); font-size: 0.9em; }
+
 body:has(.tracker-strana) main.obal { max-width: none; }
 
 /* Tabulka lodí pod mapou si míru řádku drží: jména a časy se čtou po
@@ -3957,8 +3969,15 @@ body:has(.tracker-strana) main.obal { max-width: none; }
      buňky — a časy skončí hned za jménem, každý řádek jinde. Proto
      `justify-self: end` na štítku a čase samo nestačilo (Filip se ptal
      na zarovnání časů doprava popáté). Změřeno 25. 10. 2026: tlačítko
-     225 px v řádku širokém 431. */
-  grid-column: 1 / -1;
+     225 px v řádku širokém 431.
+
+     <b>Druhý sloupec, ne přes oba.</b> Přes oba to tlačítko shodilo
+     zaškrtávátko na vlastní řádek — na tabuli to vidět nebylo, protože
+     tam žádné není, ale ve správě z každé lodi udělalo dva řádky (Filip
+     vyfotil 26. 10. 2026). Druhý sloupec je `1fr`, takže tlačítko pořád
+     vyplní celou zbylou šířku, a tam, kde zaškrtávátko není, se první
+     sloupec (`auto`) smrskne na nulu a vyjde to nastejno. */
+  grid-column: 2;
   width: 100%;
   padding: 0.25rem 0.4rem;
   line-height: 1.25;

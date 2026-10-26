@@ -18,7 +18,8 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } from "react";
 import { DLAZDICE, Z_NEJMENE, Z_NEJVIC, doPixelu, zPixelu } from "@/lib/mapa";
-import { ZnakBoje } from "@/app/znak-boje";
+import { NAZVY_BAREV, NAZVY_TVARU, ZnakBoje } from "@/app/znak-boje";
+import { NAZVY_STRAN, nazevTypu, type TypPrvku } from "@/lib/trat";
 import { CELKEM, ZnakTridy } from "@/app/tridy";
 import type { Poloha } from "@/lib/voda";
 import type { Lod, Znacka } from "@/app/nacrt/mapa/plavba";
@@ -554,6 +555,14 @@ export function MapaTrackeru({
     Math.round(Math.max(0, ...lode.map((l) => l.body.at(-1)?.cas ?? 0)) / 2),
   );
   const [jenTuhle, setJenTuhle] = useState(false);
+  /**
+   * <b>Prvek na vodě se dá rozkliknout</b> (Filip, 26. 10. 2026: *„taky
+   * zoomování a detaily lodí a prvků na vodě"*). Nad protestem je otázka
+   * „kterým bokem se měla ta bóje objet?" stejně častá jako „kde kdo byl",
+   * a odpověď na ni je v datech trati — jen ji doteď nebylo kde přečíst.
+   * Na tabuli se nerozklikává nic: tam nikdo neklepá.
+   */
+  const [vybranyPrvek, setVybranyPrvek] = useState<number | null>(null);
 
   function vyber(id: number | null) {
     setVybrana(id);
@@ -1548,7 +1557,15 @@ export function MapaTrackeru({
               const konce = m.konce.map((k) => ({ ...k, ...naPlatno(k.sirka, k.delka) }));
               const uzel = naPlatno(m.sirka, m.delka);
               return (
-                <g key={m.poradi}>
+                <g
+                  key={m.poradi}
+                  className={tabule ? undefined : "nacrt-prvek"}
+                  onClick={tabule ? undefined : () => setVybranyPrvek(m.poradi)}
+                >
+                  {!tabule && (
+                    /* Terč na klepnutí: samotná bójka je pro prst malá. */
+                    <circle cx={uzel.x} cy={uzel.y} r={16} fill="transparent" />
+                  )}
                   {konce.length === 2 && (
                     <line
                       x1={konce[0].x}
@@ -1623,6 +1640,54 @@ export function MapaTrackeru({
             Zůstává popisek kolotoče: ten říká, na koho se zrovna díváme,
             což z mapy samotné poznat nejde. */}
 
+
+        {vybranyPrvek !== null && !vybranaLod && (() => {
+          const m = znacky.find((x) => x.poradi === vybranyPrvek);
+          if (!m) return null;
+          return (
+            <div className="nacrt-karta">
+              <div className="nacrt-karta-hlava">
+                <strong>
+                  {m.poradi}. {m.nazev}
+                </strong>
+                <span className="nacrt-kategorie">{nazevTypu(m.typ as TypPrvku)}</span>
+                <button type="button" onClick={() => setVybranyPrvek(null)} aria-label="zavřít">
+                  ×
+                </button>
+              </div>
+              <dl>
+                {m.strana && (
+                  <div>
+                    <dt>míjí se</dt>
+                    <dd>{NAZVY_STRAN[m.strana]}</dd>
+                  </div>
+                )}
+                <div>
+                  <dt>{m.konce.length === 2 ? "konce" : "bóje"}</dt>
+                  <dd>
+                    {m.konce
+                      .map(
+                        (k) =>
+                          [
+                            k.barva && NAZVY_BAREV[k.barva],
+                            k.tvar && NAZVY_TVARU[k.tvar],
+                          ]
+                            .filter(Boolean)
+                            .join(" ") || "bez popisu",
+                      )
+                      .join(" · ")}
+                  </dd>
+                </div>
+                <div>
+                  <dt>poloha</dt>
+                  <dd>
+                    {m.sirka.toFixed(5)}, {m.delka.toFixed(5)}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          );
+        })()}
 
         {vybranaLod && (
           <div className="nacrt-karta">
