@@ -114,45 +114,119 @@ public class SberPrevzatych(
     }
 
     /// <summary>
+    /// Srovná, co u článků ukazujeme, s <b>dnešním</b> pravidlem zdroje
+    /// (<see cref="ZdrojKanalu.NeniFotka"/>). Běží i s vypnutým ukládáním
+    /// fotek: adresa u zdroje má být správná tak jako tak.
+    /// <para>
+    /// <b>Pravidlo se smí upřesnit v obou směrech</b> a uložené články se tím
+    /// mají srovnat samy. Dřív to uměl jen jeden směr — co se ukázalo jako
+    /// logo, šlo pryč — a opačný ne, protože se s adresou mazal i záznam
+    /// o tom, co zdroj dal. Článek, který o fotku přišel neprávem, tak zůstal
+    /// prázdný napořád: fotka se dohledává jen u nových článků. Od
+    /// <see cref="PrevzatyClanek.OdZdroje"/> se dá rozhodnout znovu ze
+    /// záznamu, bez jediného dotazu na cizí server (Filip, 26. 10. 2026).
+    /// </para>
+    /// <para>
+    /// Doptat se je potřeba jen u řádků z doby před tím sloupcem, takže
+    /// nejvýš jednou za článek a nejvýš <see cref="ZdrojKanalu.Kolik"/>
+    /// dotazů celkem. Článek, u kterého zdroj obrázek opravdu nemá, má
+    /// adresu vyplněnou a podruhé se na něj nikdo neptá.
+    /// </para>
+    /// <para>
+    /// Vrácená adresa se zkusí stáhnout znovu, i když se o ni dřív pokus
+    /// nezdařil kvůli malému obrázku. Je to jedno stažení za šest hodin
+    /// a za cizí server to stojí: na padesáti změřených fotkách svazu
+    /// (26. 10. 2026) nebyla pod prahem ani jedna.
+    /// </para>
+    /// </summary>
+    private async Task SrovnejSPravidlemAsync(
+        AppDbContext db, HttpClient klient, ZdrojKanalu zdroj, CancellationToken ct)
+    {
+        var neptano = await db.PrevzateClanky
+            .Where(c => c.Zdroj == zdroj.Nazev && c.OdZdroje == null)
+            .ToListAsync(ct);
+
+        foreach (var clanek in neptano)
+        {
+            try
+            {
+                clanek.OdZdroje = Kanal.Obrazek(await klient.GetStringAsync(clanek.Odkaz, ct));
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                // Příští takt to zkusí znovu; do té doby článek zůstane tak,
+                // jak je. Nedostupný cizí server není důvod něco měnit.
+                log.LogInformation(e, "Obrázek u článku {Odkaz} se nepovedlo zjistit", clanek.Odkaz);
+            }
+        }
+
+        if (neptano.Count > 0) await db.SaveChangesAsync(ct);
+
+        await SrovnejAsync(db, zdroj, cas.GetUtcNow(), ct);
+    }
+
+    /// <summary>
+    /// Rozhodne podle <b>dnešního</b> pravidla zdroje, co se u jeho článků
+    /// ukáže — ze záznamu <see cref="PrevzatyClanek.OdZdroje"/>, bez jediného
+    /// dotazu na cizí server. Logo jde pryč i s naší kopií, neprávem zahozená
+    /// fotka se vrátí.
+    /// </summary>
+    public static async Task SrovnejAsync(
+        AppDbContext db, ZdrojKanalu zdroj, DateTimeOffset nyni, CancellationToken ct)
+    {
+        var clanky = await db.PrevzateClanky
+            .Where(c => c.Zdroj == zdroj.Nazev)
+            .ToListAsync(ct);
+
+        foreach (var clanek in clanky)
+        {
+            var fotka = clanek.OdZdroje is { } adresa && zdroj.NeniFotka?.Invoke(adresa) != true;
+
+            if (!fotka && (clanek.Obrazek is not null || clanek.FotkaId is not null))
+            {
+                if (clanek.FotkaId is { } stara)
+                {
+                    Uklid.Zarad(db, PrevzateFotky.Klice(stara), nyni);
+                    clanek.FotkaId = null;
+                    clanek.Sirka = null;
+                    clanek.Vyska = null;
+                }
+
+                clanek.Obrazek = null;
+            }
+            else if (fotka && clanek.Obrazek is null && clanek.FotkaId is null)
+            {
+                clanek.Obrazek = clanek.OdZdroje;
+            }
+        }
+
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
     /// Dobere fotky k článkům, které už v databázi leží bez naší kopie.
     /// <para>
     /// <b>Proč to není jen u nových:</b> když se ukládání zapne, nebo když
     /// stažení poprvé nevyšlo, zbyly by staré články napořád na adrese
     /// u zdroje — a právě kvůli jejich výpadkům se fotky ukládají
     /// (Filip, 2. 10. 2026). Adresu z <c>og:image</c> už máme, takže je to
-    /// nejvýš osm stažení obrázku, žádné dotazy na stránky článků.
+    /// nejvýš osm stažení obrázku; na stránky článků sahá jen
+    /// <see cref="SrovnejSPravidlemAsync"/>, a to u řádku nejvýš jednou.
     /// </para>
     /// <para>
-    /// Článek, jehož obrázek je na kartu moc malý, přijde o adresu i tady —
-    /// podruhé se tím pádem nezkouší.
+    /// Článek, jehož obrázek je na kartu moc malý, přijde o adresu i tady.
+    /// Příští běh mu ji ze záznamu vrátí a zkusí to znovu — za jedno stažení
+    /// za šest hodin to stojí za to, aby se po výpadku zdroje fotka dobrala
+    /// sama.
     /// </para>
     /// </summary>
     private async Task<int> DoberFotkyAsync(
         AppDbContext db, IServiceScope scope, HttpClient klient, ZdrojKanalu zdroj,
         CancellationToken ct)
     {
+        await SrovnejSPravidlemAsync(db, klient, zdroj, ct);
+
         if (!FotkyKSobe) return 0;
-
-        // Nejdřív ven s tím, co se mezitím ukázalo jako logo: pravidlo zdroje
-        // se smí upřesnit a uložené kopie se tím mají uklidit samy.
-        var sLogem = await db.PrevzateClanky
-            .Where(c => c.Zdroj == zdroj.Nazev && c.Obrazek != null)
-            .ToListAsync(ct);
-        foreach (var clanek in sLogem.Where(c => zdroj.NeniFotka?.Invoke(c.Obrazek!) == true))
-        {
-            if (clanek.FotkaId is { } stara)
-            {
-                Uklid.Zarad(db, PrevzateFotky.Klice(stara), cas.GetUtcNow());
-                clanek.FotkaId = null;
-                clanek.Sirka = null;
-                clanek.Vyska = null;
-            }
-
-            clanek.Obrazek = null;
-            log.LogInformation("Obrázek u článku {Odkaz} je logo zdroje, jde pryč", clanek.Odkaz);
-        }
-
-        await db.SaveChangesAsync(ct);
 
         var bezFotky = await db.PrevzateClanky
             .Where(c => c.Zdroj == zdroj.Nazev && c.FotkaId == null && c.Obrazek != null)
@@ -233,16 +307,19 @@ public class SberPrevzatych(
                 ? new VysledekFotky(null, false)
                 : await stahovac.UlozAsync(klient, zdroj, ogImage, ct);
 
-            // Když zdroj místo fotky dal logo, zahodí se i jeho adresa —
-            // jinak by ho web ukázal přes celou kartu (Filip, 2. 10. 2026).
+            // Když zdroj místo fotky dal logo, zahodí se adresa, kterou by web
+            // ukázal — jinak by ho roztáhl přes celou kartu (Filip, 2. 10. 2026).
+            // Záznam o tom, co zdroj dal, zůstává: podle něj se dá rozhodnout
+            // znovu, až se pravidlo upřesní.
+            var kZobrazeni = ogImage;
             if (vysledek.Nepouzitelna)
             {
                 log.LogInformation(
                     "Obrázek u článku {Odkaz} je na kartu moc malý, použije se náhradní", p.Odkaz);
-                ogImage = null;
+                kZobrazeni = null;
             }
 
-            doplnene.Add(p with { Obrazek = ogImage, Fotka = vysledek.Fotka });
+            doplnene.Add(p with { Obrazek = kZobrazeni, OdZdroje = ogImage, Fotka = vysledek.Fotka });
         }
 
         return doplnene;
@@ -298,6 +375,7 @@ public class SberPrevzatych(
             // Fotka se dohledává jen u nových, takže u známého článku
             // přijde prázdná — a tou se nesmí přepsat ta, kterou už má.
             clanek.Obrazek = p.Obrazek ?? clanek.Obrazek;
+            clanek.OdZdroje = p.OdZdroje ?? clanek.OdZdroje;
             if (p.Fotka is { } f)
             {
                 clanek.FotkaId = f.Id;

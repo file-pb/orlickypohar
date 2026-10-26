@@ -67,11 +67,38 @@ public static partial class Zdroje
     }
 
     /// <summary>
-    /// sailing.cz má fotky k článkům pod <c>/uploads/clanky/</c>, zatímco
-    /// loga a ikonky pod <c>/uploads/ikony-loga/</c> — ověřeno 2. 10. 2026 na
-    /// všech osmi článcích v kanálu. Rozhoduje tedy cesta, ne velikost.
+    /// Knihovna log svazu. Loga leží v <b>podsložkách</b>
+    /// <c>/uploads/ikony-loga/</c> podle toho, čí jsou —
+    /// <c>loga_csj</c>, <c>kluby</c>, <c>lodni_tridy</c>, <c>ksj</c>,
+    /// <c>ostatni</c> — zatímco fotku ke konkrétnímu článku redakce hodí
+    /// do <c>ikony-loga</c> volně, bez podsložky.
     /// </summary>
-    public static bool SailingCzNeniFotka(string adresa) => adresa.Contains("/ikony-loga/");
+    [GeneratedRegex("/ikony-loga/[^/]+/")]
+    private static partial Regex KnihovnaLog();
+
+    /// <summary>
+    /// Pozná logo podle toho, že leží v <see cref="KnihovnaLog">knihovně log</see>.
+    /// <para>
+    /// <b>Dřív stačila složka <c>ikony-loga</c> celá</b> (2. 10. 2026, podle osmi
+    /// článků v kanálu) a bylo to špatně: redakce do ní ukládá i obyčejné fotky
+    /// k článkům. Na 292 článcích, které kanálem prošly od února 2025 do října
+    /// 2026, jich v té složce leží 128 — a 17 z nich je fotka, o kterou karta
+    /// přišla. Od srpna 2026 toho navíc přibývá: v říjnu to bylo 8 z 20 článků
+    /// (změřeno 26. 10. 2026).
+    /// </para>
+    /// <para>
+    /// Podsložka rozhoduje, protože rozhoduje u zdroje: ze 106 obrázků
+    /// v podsložkách je 105 logo nebo grafika, z 22 volně položených je 16 fotka.
+    /// Zbývá tedy sedm chyb z 292 místo sedmnácti — a ta jedna chybějící fotka
+    /// (<c>ostatni/</c>) bolí míň než logo přes celou kartu.
+    /// </para>
+    /// <para>
+    /// <b>Velikost by to nerozhodla</b> a obsah obrázku taky ne: ve změřeném
+    /// vzorku mají loga 12 až 652 barevných kbelíků a fotky 102 až 888, takže
+    /// žádný práh je neodděluje. Logo svazu má v originále 711 × 800 px.
+    /// </para>
+    /// </summary>
+    public static bool SailingCzNeniFotka(string adresa) => KnihovnaLog().IsMatch(adresa);
 
     /// <summary>Zdroje, ze kterých se přebírá. Dnes jeden.</summary>
     public static readonly IReadOnlyList<ZdrojKanalu> Vsechny =

@@ -32,16 +32,67 @@ public class PrevzateFotkyTests
         Assert.Null(Zdroje.SailingCzVetsi("https://www.sailing.cz/img/foto.jpg"));
     }
 
-    [Fact]
-    public void Logo_zdroje_se_pozna_podle_cesty_ne_podle_velikosti()
+    /// <summary>
+    /// Skutečné stránky svazu, stažené 26. 10. 2026 do
+    /// <c>data/csj/stranky-2026-10-26/</c>.
+    /// </summary>
+    private static string Stranka(string soubor) =>
+        File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Data", "csj-stranky", soubor));
+
+    /// <summary>
+    /// Co zdroj dal ke článku, to se k němu u nás ukáže — a logo ne.
+    /// <para>
+    /// <b>Test se ptá na výsledek, ne na pomocnou funkci.</b> Dokud se ptal,
+    /// jestli <c>SailingCzNeniFotka</c> vrátí <c>true</c> pro řetězec
+    /// s <c>ikony-loga</c>, procházel celou dobu — zatímco karty přicházely
+    /// o fotku, protože svaz do té složky ukládá i obyčejné fotky k článkům
+    /// (Filip, 26. 10. 2026). Proto jdou do testu celé stránky tak, jak je
+    /// zdroj vydává.
+    /// </para>
+    /// <para>
+    /// <see cref="PadajiciHandler"/> hodí výjimku při jakémkoliv dotazu, takže
+    /// <c>Nepouzitelna</c> znamená „rozhodlo se bez dotazu, že to fotka není".
+    /// U fotky se stahovač na cizí server teprve vypraví.
+    /// </para>
+    /// </summary>
+    [Theory]
+    // Fotka ve složce článku — běžný případ, přes polovinu kanálu.
+    [InlineData("fotka-ve-slozce-clanku.html", true)]
+    // Fotka volně v `ikony-loga`, bez podsložky. Přesně ten článek, u kterého
+    // Filip ztrátu fotky nahlásil; od srpna 2026 jich takhle chodí nejvíc.
+    [InlineData("fotka-volne-v-ikony-loga.html", true)]
+    // Logo svazu v `loga_csj` — článek, ke kterému zdroj fotku nemá.
+    [InlineData("logo-svazu.html", false)]
+    // Logo klubu v `kluby`. Podsložka rozhoduje, ne jméno souboru.
+    [InlineData("logo-klubu.html", false)]
+    public async Task Fotku_ze_stranky_karta_dostane_a_logo_ne(string stranka, bool maFotku)
     {
-        // Logo svazu má v originále 711 × 800 px, takže prahem na nejmenší
-        // šířku projde. Rozhoduje proto cesta: fotky k článkům leží
-        // pod /uploads/clanky/, loga pod /uploads/ikony-loga/.
-        Assert.True(Zdroje.SailingCzNeniFotka(
-            "https://www.sailing.cz/uploads/ikony-loga/loga_csj/logo.jpg"));
-        Assert.False(Zdroje.SailingCzNeniFotka(
-            "https://www.sailing.cz/uploads/clanky/6abe/mcr.jpg"));
+        var ogImage = Kanal.Obrazek(Stranka(stranka));
+        Assert.NotNull(ogImage);
+
+        var stahovac = new StahovacFotek(new PametoveUloziste(), NullLogger<StahovacFotek>.Instance);
+        var vysledek = await stahovac.UlozAsync(
+            new HttpClient(new PadajiciHandler()), Svaz, ogImage, default);
+
+        Assert.Equal(maFotku, !vysledek.Nepouzitelna);
+    }
+
+    [Fact]
+    public async Task Banner_volne_v_ikony_loga_projde_a_je_to_levnejsi_chyba()
+    {
+        // Svaz dává volně do `ikony-loga` i nápisy a plakáty — ve změřeném
+        // vzorku 6 z 22. Pravidlo je nerozezná a karta dostane nápis
+        // „Mistrovství na moři 2027", tedy přesně to, co u článku ukazuje
+        // zdroj sám. Opačná chyba — zahodit fotku — bolí víc, a obsah
+        // obrázku je neodděluje: loga mají 12 až 652 barevných kbelíků,
+        // fotky 102 až 888 (změřeno 26. 10. 2026).
+        var ogImage = Kanal.Obrazek(Stranka("banner-volne-v-ikony-loga.html"));
+
+        var stahovac = new StahovacFotek(new PametoveUloziste(), NullLogger<StahovacFotek>.Instance);
+        var vysledek = await stahovac.UlozAsync(
+            new HttpClient(new PadajiciHandler()), Svaz, ogImage!, default);
+
+        Assert.False(vysledek.Nepouzitelna);
     }
 
     [Fact]

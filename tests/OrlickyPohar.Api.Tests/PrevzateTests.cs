@@ -181,4 +181,55 @@ public class PrevzateTests(PostgresFixture fixture)
         var nase = await klient.GetFromJsonAsync<List<ClanekShrnutiDto>>("/clanky", Json);
         Assert.DoesNotContain(nase!, c => c.Titulek == "Článek 1");
     }
+
+    /// <summary>Fotka u zdroje, kterou staré pravidlo pokládalo za logo.</summary>
+    private const string FotkaVIkonach =
+        "https://www.sailing.cz/uploads_thumbs/ikony-loga/27.jpg";
+
+    /// <summary>Skutečné logo svazu: leží v knihovně log, v podsložce.</summary>
+    private const string LogoSvazu =
+        "https://www.sailing.cz/uploads_thumbs/ikony-loga/loga_csj/logo.jpg";
+
+    [Fact]
+    public async Task Clanek_ktery_fotku_ztratil_ji_po_upresneni_pravidla_dostane_zpet()
+    {
+        var db = await CistaDbAsync();
+
+        // Takhle vypadá článek, kterému ji vzalo staré pravidlo: ukázat se
+        // nemá co, ale záznam o tom, co zdroj dal, zůstal.
+        await SberPrevzatych.UlozAsync(
+            db, Svaz, [Polozka(1) with { OdZdroje = FotkaVIkonach }], Ted, default);
+        Assert.Null((await db.PrevzateClanky.SingleAsync()).Obrazek);
+
+        await SberPrevzatych.SrovnejAsync(db, Svaz, Ted.AddHours(6), default);
+
+        // Bez jediného dotazu na cizí server — rozhoduje se ze záznamu.
+        Assert.Equal(FotkaVIkonach, (await db.PrevzateClanky.SingleAsync()).Obrazek);
+    }
+
+    [Fact]
+    public async Task Logo_jde_pryc_i_s_nasi_kopii_kdyz_uz_clanek_lezi_v_databazi()
+    {
+        var db = await CistaDbAsync();
+        var fotka = new UlozenaFotka(Guid.CreateVersion7(), 711, 800);
+
+        // Opačný směr: pravidlo se smí upřesnit i tak, že obrázek napříště
+        // neprojde. Uložená kopie se má uklidit sama.
+        await SberPrevzatych.UlozAsync(
+            db, Svaz,
+            [Polozka(1) with { Obrazek = LogoSvazu, OdZdroje = LogoSvazu, Fotka = fotka }],
+            Ted, default);
+
+        await SberPrevzatych.SrovnejAsync(db, Svaz, Ted.AddHours(6), default);
+
+        var clanek = await db.PrevzateClanky.SingleAsync();
+        Assert.Null(clanek.Obrazek);
+        Assert.Null(clanek.FotkaId);
+        var fronta = await db.SouboryKeSmazani.Select(f => f.Klic).ToListAsync();
+        Assert.Equal([.. PrevzateFotky.Klice(fotka.Id).Order()], [.. fronta.Order()]);
+
+        // Záznam o tom, co zdroj dal, zůstává — jinak by další upřesnění
+        // pravidla zase nemělo z čeho rozhodnout.
+        Assert.Equal(LogoSvazu, clanek.OdZdroje);
+    }
 }

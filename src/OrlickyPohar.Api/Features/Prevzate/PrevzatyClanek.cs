@@ -57,6 +57,28 @@ public class PrevzatyClanek
     public string? Obrazek { get; set; }
 
     /// <summary>
+    /// Co zdroj ke článku dal, <b>syrově a nenávratně</b> — <c>og:image</c>
+    /// z jeho stránky, jak stálo tam. Na rozdíl od <see cref="Obrazek"/> se
+    /// nikdy nemaže (Filip, 26. 10. 2026).
+    /// <para>
+    /// <b>Proč dva sloupce:</b> <see cref="Obrazek"/> je rozhodnutí („tohle
+    /// se smí ukázat"), tohle je pozorování („tohle tam bylo"). Když se
+    /// pravidlo zdroje (<see cref="ZdrojKanalu.NeniFotka"/>) upřesní — a už
+    /// se to stalo dvakrát — dá se rozhodnout znovu ze záznamu, bez jediného
+    /// dotazu na cizí server. Dokud se mazalo obojí, byla oprava pravidla
+    /// k ničemu: článek, který fotku ztratil, zůstal prázdný, protože se
+    /// fotka dohledává jen u nových článků.
+    /// </para>
+    /// <para>
+    /// Prázdné znamená <b>neptali jsme se</b> — řádek z doby před tímhle
+    /// sloupcem, nebo článek, u kterého stažení stránky nevyšlo. Takový se
+    /// smí doptat; článek, u kterého zdroj obrázek opravdu nemá, má tu
+    /// adresu vyplněnou a nikdo se na něj neptá znovu.
+    /// </para>
+    /// </summary>
+    public string? OdZdroje { get; set; }
+
+    /// <summary>
     /// Naše kopie té fotky, přepočítaná na naše velikosti (Filip, 2. 10. 2026).
     /// Soubory leží v úložišti pod <see cref="PrevzateFotky.Klic"/>, v databázi
     /// je jen tohle id a rozměry velké varianty.

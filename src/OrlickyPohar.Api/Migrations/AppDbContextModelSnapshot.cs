@@ -903,6 +903,10 @@ namespace OrlickyPohar.Api.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<string>("OdZdroje")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("Odkaz")
                         .IsRequired()
                         .HasMaxLength(500)

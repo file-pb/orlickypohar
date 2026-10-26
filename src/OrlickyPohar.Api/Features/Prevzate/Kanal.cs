@@ -10,6 +10,9 @@ public record PolozkaKanalu(
     string Odkaz, string Titulek, string? Perex, DateTimeOffset PublikovanoV,
     // Doplňuje se až ze stránky článku — RSS obrázky nevydává.
     string? Obrazek = null,
+    // Totéž syrově, jak to stálo u zdroje: `Obrazek` je rozhodnutí,
+    // tohle pozorování. Viz `PrevzatyClanek.OdZdroje`.
+    string? OdZdroje = null,
     // Naše kopie té fotky, když se povedla. Doplňuje ji sběr, ne rozbor
     // kanálu: rozbor je čistá funkce nad textem a na síť nesahá.
     UlozenaFotka? Fotka = null);

@@ -1796,6 +1796,8 @@ PREVZATE = [
               "ročníku legendárního transatlantického závodu sólových jachtařů.",
      "publikovanoV": "2026-09-23T10:16:47+02:00",
      "odkaz": "https://www.sailing.cz/clanky/kolacek-route-du-rhum",
+     # Fotka volně v `ikony-loga` — svaz tam fotky ke článkům ukládá taky,
+     # ne jen loga. Do 26. 10. 2026 ji API podle složky zahazovalo.
      "obrazek": "https://www.sailing.cz/uploads_thumbs/ikony-loga/kolacek_4.jpg"},
     {"titulek": "Filip Otta se stal vicemistrem Polska!",
      "perex": "K medailovým pozicím připsala ještě Tereza Ottová 5. místo v dívkách.",
