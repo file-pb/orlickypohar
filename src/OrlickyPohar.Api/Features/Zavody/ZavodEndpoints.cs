@@ -41,7 +41,21 @@ public record UcastDto(
     // aditivní a appka na telefonu o poli neví.
     bool Potvrzena = true,
     // Vyloučená rozhodčím. Na stránce zůstává, protože má výsledky.
-    bool Vyloucena = false);
+    bool Vyloucena = false,
+    /// <summary>
+    /// Kolik telefonů má loď spárovaných a zapnutých ke sledování.
+    /// <para>
+    /// <b>Je to odpověď na „trackujeme tu loď dobře?"</b> (Filip,
+    /// 26. 10. 2026), ne na „kde je" — vydává se tedy i mimo rozjížďku,
+    /// kdy se polohy ven nepouštějí vůbec. Nula znamená, že z téhle lodi
+    /// nepřijde nic, a to je vidět na tabuli dřív, než se odstartuje.
+    /// </para>
+    /// <para>
+    /// Odebrané klíče a odepnuté telefony se nepočítají: telefon, který
+    /// zůstal v autě, loď nesleduje, i když je spárovaný.
+    /// </para>
+    /// </summary>
+    int Telefonu = 0);
 
 /// <summary>Body lodi v jedné rozjížďce, už jako pořadí v její kategorii.</summary>
 public record BodyVRozjizdceDto(int Cislo, int Body, bool Skrtnuto);
@@ -143,7 +157,9 @@ public static class ZavodEndpoints
                 u.Prihlaska.Kategorie!.Nazev,
                 u.Kormidelnik == null ? null : u.Kormidelnik.Jmeno + " " + u.Kormidelnik.Prijmeni,
                 u.Stav != StavUcasti.Prihlasena,
-                u.Stav == StavUcasti.Vyloucena))
+                u.Stav == StavUcasti.Vyloucena,
+                db.Klice.Count(k =>
+                    k.LodId == u.Prihlaska.LodId && k.OdebranV == null && k.Sleduje)))
             .ToListAsync(ct);
 
     /// <summary>

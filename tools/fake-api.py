@@ -116,6 +116,18 @@ def body_rozjizdky(vysledky, prihlaseno=None):
 PRIHLASENA = {"Prihlasena", "Potvrzena", "Nedostavila", "Vyloucena"}
 
 
+def telefonu_lodi(lod):
+    """Kolik telefonů loď sleduje.
+
+    Deterministicky z názvu: každá sedmá loď nemá žádný (to je ten případ,
+    kvůli kterému se údaj vůbec ukazuje), každá pátá má dva.
+    """
+    h = sum(ord(z) for z in lod)
+    if h % 7 == 0:
+        return 0
+    return 2 if h % 5 == 0 else 1
+
+
 def prihlaseno_do_zavodu(z, rozjizdky):
     """Počet lodí přihlášených do závodu po kategoriích (účasti ∪ výsledky)."""
     lode = {(KAT[u["lod"]], u["lod"]) for u in z.get("ucasti", [])
@@ -5451,7 +5463,11 @@ class H(BaseHTTPRequestHandler):
                     "lode": [{"lod": nazvy(u["lod"]), "kategorie": KAT[u["lod"]],
                               "kormidelnik": jmeno(u["kormidelnik"]) if u.get("kormidelnik") else None,
                               "potvrzena": u["stav"] != "Prihlasena",
-                              "vyloucena": u["stav"] == "Vyloucena"}
+                              "vyloucena": u["stav"] == "Vyloucena",
+                              # Kolik telefonů loď sleduje. Mock drží pevné
+                              # rozdělení podle jména, ať je na tabuli vidět
+                              # obojí: loď bez telefonu i loď se zálohou.
+                              "telefonu": telefonu_lodi(u["lod"])}
                              for u in sorted((u for u in z["ucasti"] if u["stav"] in VEREJNE_UCASTI),
                                              key=lambda u: (KAT_PORADI[KAT[u["lod"]]], nazvy(u["lod"])))],
                     # Vyvěšené směrnice, od nejnovější. Stažené se veřejně

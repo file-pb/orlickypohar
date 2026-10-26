@@ -76,6 +76,21 @@ export function Teaser({ snimek, ted }: { snimek: Snimek; ted: number }) {
                       <li key={l.lod} className={l.potvrzena ? undefined : "nepotvrzena"}>
                         <b>{l.lod}</b>
                         {l.kormidelnik && <span className="detail">{l.kormidelnik}</span>}
+                        {/* <b>Kolik telefonů loď sleduje</b> (Filip, 26. 10.
+                            2026: *„chtěl jsem, aby bylo vidět, jestli tu loď
+                            dobře trackujeme"*). Nula je to důležité číslo —
+                            říká, že z téhle lodi nepřijde nic —, a proto je
+                            vidět, kdežto jedničku nemá cenu hlásit: tak to má
+                            být. Dvojka a víc znamená zálohu na palubě. */}
+                        {l.telefonu === 0 ? (
+                          <span className="bez-telefonu" title="nesleduje se">
+                            bez telefonu
+                          </span>
+                        ) : l.telefonu > 1 ? (
+                          <span className="telefonu" title="spárované telefony">
+                            {l.telefonu}×
+                          </span>
+                        ) : null}
                       </li>
                     ))}
                     {dalsich > 0 && (

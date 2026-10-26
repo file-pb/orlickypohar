@@ -35,7 +35,18 @@ export type Snimek = {
     doSerie: boolean;
     poradi: { lod: string; kategorie: string; misto: number | null; kod: string | null }[];
   }[];
-  lode: { lod: string; kategorie: string; kormidelnik: string | null; potvrzena: boolean }[];
+  lode: {
+    lod: string;
+    kategorie: string;
+    kormidelnik: string | null;
+    potvrzena: boolean;
+    /**
+     * Kolik telefonů loď sleduje. <b>Odpověď na „trackujeme ji dobře?"</b>
+     * (Filip, 26. 10. 2026), ne na „kde je" — nula znamená, že z téhle
+     * lodi nepřijde nic, a to má být vidět dřív, než se odstartuje.
+     */
+    telefonu: number;
+  }[];
   /**
    * Pořadí rozdělené na panely karuselu (Filip, 15. 10. 2026: *„rozjeď ty
    * třídy lodí v karuselech, je to podle toho, kolik tříd se jede a když
@@ -151,6 +162,7 @@ export function snimekZavodu(
       kategorie: u.kategorie,
       kormidelnik: u.kormidelnik,
       potvrzena: u.potvrzena,
+      telefonu: u.telefonu ?? 0,
     })),
     tabule: panely(detail),
     zavod: {
