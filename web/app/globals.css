@@ -3012,6 +3012,11 @@ body:has(.tabule) {
 .tabule-alert.start, .tabule-alert.trat, .tabule-alert.dokonceno,
 .tabule-alert.zavod { color: var(--stav-vypsany); }
 .tabule-alert.ceka, .tabule-alert.zrusena { color: var(--stav-zruseny); }
+/* Zpráva z vývěsky: oznámení bez barvy, výstraha červeně. Je to táž
+   karta jako u startu a dojezdu — vyjede, chvíli visí a usadí se do
+   panelu, kam informace patří (Filip, 26. 10. 2026). */
+.tabule-alert.zprava { color: var(--text); border-color: var(--linka); }
+.tabule-alert.vystraha { color: var(--stav-zruseny); border-color: var(--stav-zruseny); }
 .tabule-alert .druh {
   font-style: normal; font-size: calc(0.85 * var(--tv)); letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--tlumeny); font-weight: 700;
@@ -4920,3 +4925,66 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   padding: calc(0.7 * var(--tv)) 0 0;
   border-top: 1px solid var(--linka);
 }
+/* Tečky u nadpisu vývěsky: kolik stránek zpráv se střídá a která je
+   zrovna na řadě. Táž řeč jako u karuselu pořadí. */
+.tabule .tabule-info h2 { display: flex; align-items: center; gap: calc(0.5 * var(--tv)); }
+.tabule .tabule-info-tecky { display: inline-flex; gap: calc(0.25 * var(--tv)); }
+.tabule .tabule-info-tecky i {
+  width: calc(0.3 * var(--tv)); height: calc(0.3 * var(--tv));
+  border-radius: 999px; background: var(--tlumeny); opacity: 0.4;
+}
+.tabule .tabule-info-tecky i.ted { opacity: 1; }
+
+/* Dokud demo běží, musí to být vidět: simulovaná data se nikdy
+   nevydávají za skutečná. */
+.tabule .tabule-demo-znacka {
+  position: absolute; z-index: 6;
+  right: calc(3 * var(--tv) + 6.4 * var(--znacka));
+  bottom: calc(var(--dolni-blok, 0px) + 0.8 * var(--znacka) + 0.6 * var(--znacka));
+  font-size: calc(0.7 * var(--tv)); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--stav-zruseny); border: 1px solid currentColor;
+  border-radius: 999px; padding: calc(0.2 * var(--tv)) calc(0.6 * var(--tv));
+  background: color-mix(in srgb, var(--pozadi) 80%, transparent);
+}
+
+
+/* Kebab s volbami demo režimu: táž pecka jako odpočet se stářím dat,
+   hned vedle něj (Filip, 26. 10. 2026). Tlumený, dokud na něj někdo
+   nesáhne — tabule se neobsluhuje, tohle je východ z ní. */
+.tabule .tabule-demo {
+  position: absolute; z-index: 5;
+  right: calc(3 * var(--tv) + 3.4 * var(--znacka));
+  bottom: calc(var(--dolni-blok, 0px) + 0.8 * var(--znacka));
+}
+.tabule .tabule-demo > summary {
+  list-style: none; cursor: pointer;
+  display: grid; place-items: center;
+  width: calc(2.6 * var(--znacka)); height: calc(2.6 * var(--znacka));
+  border-radius: 999px; border: 1px solid var(--linka);
+  background: color-mix(in srgb, var(--pozadi) 70%, transparent);
+  color: var(--tlumeny); font-size: calc(1.1 * var(--znacka)); line-height: 1;
+  opacity: 0.5;
+}
+.tabule .tabule-demo > summary::-webkit-details-marker { display: none; }
+.tabule .tabule-demo[open] > summary,
+.tabule .tabule-demo > summary:hover { opacity: 1; color: var(--text); }
+/* Nabídka vyjede nad kebab: dole je patička s partnery. */
+.tabule .tabule-demo > ul {
+  position: absolute; right: 0; bottom: calc(3 * var(--znacka));
+  margin: 0; padding: calc(0.3 * var(--znacka)); list-style: none;
+  display: grid; gap: calc(0.15 * var(--znacka)); min-width: calc(11 * var(--znacka));
+  border: 1px solid var(--linka); border-radius: calc(0.5 * var(--znacka));
+  background: var(--pozadi);
+  box-shadow: 0 2px 14px rgb(0 0 0 / 0.5);
+}
+.tabule .tabule-demo > ul button {
+  width: 100%; text-align: left; font: inherit;
+  font-size: calc(0.8 * var(--znacka));
+  padding: calc(0.3 * var(--znacka)) calc(0.5 * var(--znacka));
+  border: 0; border-radius: calc(0.3 * var(--znacka));
+  background: none; color: var(--text); cursor: pointer;
+}
+.tabule .tabule-demo > ul button:hover { background: var(--zvyrazneni); }
+/* Co zrovna běží, je vidět i bez barvy — na tabuli se kouká z dálky. */
+.tabule .tabule-demo > ul button[aria-current="true"]::before { content: "• "; }
+.tabule .tabule-demo > ul button[aria-current="false"]::before { content: "  "; }

@@ -28,6 +28,15 @@
         "data/2027-kalendar.json"
       ],
       "port": 8080
+    },
+    {
+      "name": "web-prihlaseny",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd web && API_URL=http://localhost:8099 IDENTITA_AUTHORITY=http://localhost:9999 IDENTITA_CLIENT_ID=zkouska WEB_URL=http://localhost:3099 npx next dev -p 3099"
+      ],
+      "port": 3099
     }
   ]
 }

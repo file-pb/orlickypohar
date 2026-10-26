@@ -6,10 +6,12 @@ import { nazevZastavky } from "@/lib/kalendar";
 import { nactiJa } from "@/lib/ja";
 import { prava, smi } from "@/lib/co-smim";
 import { datumClanku } from "@/app/datum";
+import type { ZpravaRegaty } from "@/lib/api";
 import {
   nactiKliceRegaty,
   nactiNastaveni,
   nactiOkna,
+  nactiZpravySpravy,
   NAZVY_VIDENI,
   type CoVidiPosadky,
   type KliceLodi,
@@ -17,7 +19,15 @@ import {
   type Okno,
 } from "@/lib/tracker";
 import { dataTrackeru, PanelTrackeru } from "./panel";
-import { nastaveniAkce, odeberKlicAkce, rozpravaAkce, sledovaniAkce, uzavriAkce } from "./akce";
+import {
+  nastaveniAkce,
+  odeberKlicAkce,
+  rozpravaAkce,
+  sledovaniAkce,
+  stahniZpravuAkce,
+  uzavriAkce,
+  vydejZpravuAkce,
+} from "./akce";
 
 type Parametry = {
   params: Promise<{ serie: string; zavod: string }>;
@@ -94,11 +104,12 @@ export default async function TrackerRegaty({ params, searchParams }: Parametry)
 
   // Teprve za kontrolou. Čtyři volání, která by u neoprávněného stejně
   // skončila odmítnutím, nemá smysl posílat.
-  const [data, okna, nastaveni, pole] = await Promise.all([
+  const [data, okna, nastaveni, pole, vyveska] = await Promise.all([
     dataTrackeru(serie, zavod),
     nactiOkna(serie, zavod),
     nactiNastaveni(serie, zavod),
     nactiKliceRegaty(serie, zavod),
+    nactiZpravySpravy(serie, zavod),
   ]);
   if (data.stav === "neni") notFound();
 
@@ -124,6 +135,7 @@ export default async function TrackerRegaty({ params, searchParams }: Parametry)
       )}
 
       <ZavodniDen serie={serie} zavod={zavod} okna={okna.data ?? []} />
+      <Vyveska serie={serie} zavod={zavod} zpravy={vyveska.data} />
       <CoJeVidet serie={serie} zavod={zavod} nastaveni={nastaveni.data} />
       <TelefonyNaPalube serie={serie} zavod={zavod} pole={pole.data} />
     </div>
@@ -139,6 +151,10 @@ function hotovo(stav: string) {
       return "Závodní den uzavřený. Mezi dny se nesleduje.";
     case "nastaveno":
       return "Nastavení uloženo.";
+    case "vydano":
+      return "Zpráva visí na tabuli.";
+    case "stazeno":
+      return "Zpráva stažená. Z tabule zmizela, v historii zůstává.";
     case "odepnuto":
       return "Telefon je odepnutý. Posádka v lodi zůstává.";
     case "pripnuto":
@@ -421,3 +437,126 @@ function TelefonyNaPalube({
     </section>
   );
 }
+
+/**
+ * Vývěska regaty: krátké zprávy, které během dne vidí tabule v hospodě.
+ *
+ * <b>Píše se to za chodu, často na vodě</b>, takže formulář nic nevymýšlí
+ * — text, druh a volitelná lhůta. Delší text by se na televizi stejně
+ * nepřečetl, proto má strop.
+ *
+ * <b>Zpráva se nemaže, stahuje</b> (jako směrnice): co bylo vyvěšeno, má
+ * jít doložit. Z tabule zmizí hned, ze seznamu ne — jen zešedne.
+ */
+function Vyveska({
+  serie,
+  zavod,
+  zpravy,
+}: {
+  serie: string;
+  zavod: string;
+  zpravy?: ZpravaRegaty[];
+}) {
+  if (!zpravy)
+    return (
+      <section className="tracker-vyveska">
+        <h2>Vývěska regaty</h2>
+        <p className="prazdno">Zprávy se teď nedaří načíst.</p>
+      </section>
+    );
+
+  const plati = zpravy.filter((z) => !z.stazenoV && (!z.platiDo || Date.parse(z.platiDo) > Date.now()));
+  const pryc = zpravy.filter((z) => !plati.includes(z));
+
+  return (
+    <section className="tracker-vyveska">
+      <h2>Vývěska regaty</h2>
+      <p className="poznamka">
+        Co sem napíšeš, <b>uvidí tabule v hospodě</b> — kdy je rozprava, že se start
+        odkládá, že se čeká na bouřku. Zpráva se nemaže, jen stahuje: co bylo vyvěšeno,
+        má jít doložit.
+      </p>
+
+      <form action={vydejZpravuAkce} className="formular">
+        <input type="hidden" name="serie" value={serie} />
+        <input type="hidden" name="zavod" value={zavod} />
+        <label>
+          Zpráva
+          <input
+            name="text"
+            maxLength={400}
+            required
+            placeholder="Start první rozjížďky se odkládá o 45 minut."
+          />
+        </label>
+        <div className="radkove">
+          <label>
+            Druh
+            <select name="druh" defaultValue="Informace">
+              <option value="Informace">oznámení</option>
+              <option value="Program">změna programu</option>
+              <option value="Vystraha">výstraha</option>
+            </select>
+          </label>
+          <label>
+            Platí hodin
+            <input name="platiHodin" type="number" min={1} max={72} inputMode="numeric" placeholder="bez lhůty" />
+          </label>
+          <button type="submit">Vyvěsit</button>
+        </div>
+        <p className="poznamka">
+          Bez lhůty visí, dokud ji nestáhneš. Lhůta je pojistka proti zapomenuté
+          vývěsce — „rozprava v 9:00“ nemá na tabuli viset večer.
+        </p>
+      </form>
+
+      {plati.length > 0 && (
+        <ul className="seznam">
+          {plati.map((z) => (
+            <li key={z.id}>
+              <span className={`stitek zprava-${z.druh.toLowerCase()}`}>{NAZVY_ZPRAV[z.druh]}</span>{" "}
+              {z.text}
+              <span className="detail">
+                {" "}
+                vyvěšeno {datumClanku(z.vydanoV)}
+                {z.platiDo && ` · platí do ${datumClanku(z.platiDo)}`}
+              </span>
+              <form action={stahniZpravuAkce} className="radkove">
+                <input type="hidden" name="serie" value={serie} />
+                <input type="hidden" name="zavod" value={zavod} />
+                <input type="hidden" name="id" value={z.id} />
+                <button type="submit" className="tlacitko-tenke">
+                  Stáhnout
+                </button>
+              </form>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {pryc.length > 0 && (
+        <>
+          <h3>Co už neplatí</h3>
+          <ul className="seznam tenky">
+            {pryc.map((z) => (
+              <li key={z.id} className="stazena">
+                {z.text}
+                <span className="detail">
+                  {" "}
+                  {z.stazenoV ? `staženo ${datumClanku(z.stazenoV)}` : "lhůta vypršela"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
+  );
+}
+
+/** Jak se druhům zpráv říká v češtině. */
+const NAZVY_ZPRAV: Record<ZpravaRegaty["druh"], string> = {
+  Informace: "oznámení",
+  Program: "program",
+  Vystraha: "výstraha",
+};

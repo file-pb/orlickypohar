@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Znak } from "@/app/logo";
 import { NazevZavodu } from "@/app/tabule-nazev";
 import { ZnakTridy } from "@/app/tridy";
@@ -100,9 +101,18 @@ export function Teaser({ snimek, ted }: { snimek: Snimek; ted: number }) {
             název srovnávat přes absolutní souřadnice a při každé změně
             velikosti znovu. */}
         <header>
-          <span className="tabule-teaser-znak" aria-hidden="true">
+          {/* <b>Značka je cesta zpátky na web</b> (Filip, 15. 10. 2026:
+              *„tam stačí jen hlavní logo, na které když se klepne, tak
+              jsme na stránkách"*). Když se hlavička přestěhovala sem,
+              zůstal odkaz v původním rohovém pruhu, který je skrytý —
+              a klepnutí přestalo fungovat (Filip, 26. 10. 2026). */}
+          <Link
+            href="/"
+            className="tabule-teaser-znak"
+            aria-label="Zpět na Orlický pohár"
+          >
             <Znak />
-          </span>
+          </Link>
           <div className="tabule-teaser-popis">
           <h1>
             <NazevZavodu text={snimek.nazev} zarovnani="vlevo" />

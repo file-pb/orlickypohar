@@ -13,6 +13,7 @@ import { PanylkyRozjizdek } from "./rozjizdky";
 import { MapaTrackeru } from "@/app/mapa-trackeru";
 import type { VerejnePolohy } from "@/lib/polohy";
 import { useStopy } from "@/lib/stopy";
+import { pole } from "@/app/nacrt/mapa/plavba";
 
 /**
  * Ukázková rozjížďka — tatáž, jakou ukazuje náčrt.
@@ -196,7 +197,40 @@ export function Obrazovka({
    * pole kde plout —, takže bez trati regaty se živé polohy neukazují.
    */
   const trat = snimek.znacky?.length >= 2 ? snimek.znacky : null;
-  const zive = trat ? zivePolohy : [];
+  const skutecne = trat ? zivePolohy : [];
+
+  /**
+   * <b>Demo režim</b> (Filip, 26. 10. 2026: *„vpravo dole mít možnost
+   * přepnout ji na demo mód, který nám umožní zobrazit si všechny její
+   * režimy na simulovaných datech"*). Tabule visí v hospodě a čeká na
+   * regatu; aby šlo ukázat, co umí, musí jít její režimy vyvolat ručně.
+   *
+   * <b>Simulovaná data se nikdy nevydávají za skutečná.</b> Dokud demo
+   * běží, je přes obrazovku pruh, který to říká — je to tentýž důvod,
+   * proč z ostré tabule zmizely ukázkové plavby.
+   */
+  const [demo, setDemo] = useState<null | "listina" | "mapa">(null);
+  /**
+   * <b>Demo jede po trati té regaty a s jejími loděmi</b> (Filip,
+   * 26. 10. 2026: *„vezmi si do simulace třeba trasu jarního větru"*) —
+   * jinak by ukazovalo cizí závod a na otázku „jak to bude vypadat u nás"
+   * by neodpovědělo.
+   *
+   * Vlastní trať si bere, jen když ta regatina nestačí: po trati
+   * o jednom prvku nemá vymyšlené pole kde plout.
+   */
+  const ukazka = useMemo(
+    () =>
+      demo === "mapa"
+        ? pole(
+            Math.max(6, Math.min(snimek.lode.length || 24, 30)),
+            trat ?? undefined,
+            snimek.lode.length > 0 ? snimek.lode.map((l) => l.lod) : undefined,
+          )
+        : null,
+    [demo, trat, snimek.lode],
+  );
+  const zive = demo === "mapa" && ukazka ? ukazka.lode : demo === "listina" ? [] : skutecne;
 
   const stari = Math.max(0, Math.round((ted - Date.parse(snimek.kdy)) / 1000));
 
@@ -355,11 +389,11 @@ export function Obrazovka({
           než simulace cizí regaty, a hlavně je pravdivý. Ukázkové plavby
           zůstaly tam, kam patří: v náčrtu `/nacrt/tabule`. */}
       {zive.length === 0 ? (
-        <Teaser snimek={snimek} ted={ted} />
+        <Teaser snimek={demo ? sDemoDaty(snimek) : snimek} ted={ted} />
       ) : (
       <div className="tabule-mapa" aria-hidden="true">
         <MapaTrackeru
-          znacky={trat ?? []}
+          znacky={demo === "mapa" && ukazka ? ukazka.znacky : (trat ?? [])}
           lode={zive}
           tabule
           zive
@@ -380,6 +414,36 @@ export function Obrazovka({
       </div>
       )}
       <PanylkyRozjizdek snimek={snimek} ted={ted} />
+
+      {/* <b>Druhé kolečko vedle toho se stářím dat</b> (Filip, 26. 10.
+          2026). Na tabuli, kterou nikdo neobsluhuje, nemá co dělat
+          tlačítko — ale musí jít ukázat, co obrazovka umí, takže je to
+          tatáž nenápadná pecka jako odpočet vedle. */}
+      {demo && <span className="tabule-demo-znacka">Demo — simulovaná data</span>}
+      {/* <b>Kebab vedle odpočtu, a pod ním volby</b> (Filip, 26. 10.
+          2026). Proti cyklování jedním tlačítkem je vidět, co se dá
+          zvolit — a na tabuli, kterou nikdo neobsluhuje, je to jediné
+          ovládání, takže se nemá kde zeptat. */}
+      <details className="tabule-demo">
+        <summary aria-label="Ukázat, jak tabule vypadá">⋮</summary>
+        <ul>
+          <li>
+            <button type="button" onClick={() => setDemo("listina")} aria-current={demo === "listina"}>
+              Startovní listina
+            </button>
+          </li>
+          <li>
+            <button type="button" onClick={() => setDemo("mapa")} aria-current={demo === "mapa"}>
+              Mapa se závodem
+            </button>
+          </li>
+          <li>
+            <button type="button" onClick={() => setDemo(null)} aria-current={demo === null}>
+              Zpátky naživo
+            </button>
+          </li>
+        </ul>
+      </details>
       {/* <b>Stáří dat jako kolečko v rohu mapy</b> (Filip: *„maximálně ten
           odpočet dej třeba do nějakého kolečka doprava dolů v mapě, ale
           citlivě, ať to neruší"*). Je to jediný údaj, podle kterého se
@@ -478,6 +542,8 @@ function Alert({ udalost, hotovo }: { udalost?: Udalost; hotovo: () => void }) {
 
 /** Nadpisek nad zprávou. Jedno slovo, verzálky, v barvě druhu. */
 const NADPISKY: Record<Udalost["druh"], string> = {
+  zprava: "Vydáno",
+  vystraha: "Pozor",
   start: "Start",
   dojezd: "V cíli",
   souboj: "Na vodě",
@@ -557,4 +623,47 @@ function tridyPanely(snimek: Snimek): Panel[] {
 function jesteLodi(kolik: number) {
   if (kolik === 1) return "a ještě jedna loď";
   return `a ještě ${kolik} ${kolik < 5 ? "lodě" : "lodí"}`;
+}
+
+/**
+ * Snímek doplněný o to, co demo potřebuje ukázat.
+ *
+ * <b>Doplňuje se jen prázdné.</b> Když regata zprávy má, ukážou se její
+ * vlastní — demo není náhrada dat, ale způsob, jak projít režimy i na
+ * tabuli, kde se zrovna nic neděje.
+ */
+function sDemoDaty(snimek: Snimek): Snimek {
+  if (snimek.zpravy.length > 0) return snimek;
+
+  const ted = Date.now();
+  const kdy = (minut: number) => new Date(ted - minut * 60_000).toISOString();
+  return {
+    ...snimek,
+    zpravy: [
+      {
+        id: -1,
+        text: "Přechod bouřky — lodě zůstávají na břehu, čekáme na pokyn.",
+        druh: "Vystraha",
+        vydanoV: kdy(6),
+        platiDo: null,
+        stazenoV: null,
+      },
+      {
+        id: -2,
+        text: "Start první rozjížďky se odkládá o 45 minut.",
+        druh: "Program",
+        vydanoV: kdy(28),
+        platiDo: null,
+        stazenoV: null,
+      },
+      {
+        id: -3,
+        text: "Rozprava v 9:00 u klubovny, startovní procedura v 10:25.",
+        druh: "Informace",
+        vydanoV: kdy(150),
+        platiDo: null,
+        stazenoV: null,
+      },
+    ],
+  };
 }

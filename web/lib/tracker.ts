@@ -1,6 +1,7 @@
 import { tokenZeSezeni } from "@/lib/oidc";
 import type { Stav } from "@/lib/sprava";
 import type { components } from "./schema";
+import type { ZpravaRegaty } from "@/lib/api";
 
 /**
  * Co pořadatel a rozhodčí nastavují kolem trackingu: <b>okno závodního dne,
@@ -23,6 +24,8 @@ export type Okno = components["schemas"]["OknoDto"];
 export type Nastaveni = components["schemas"]["NastaveniDto"];
 export type CoVidiPosadky = components["schemas"]["CoVidiPosadky"];
 export type Klic = components["schemas"]["KlicDto"];
+/** Druh zprávy na vývěsce — podle něj se liší barva na tabuli. */
+export type DruhZpravy = ZpravaRegaty["druh"];
 
 /**
  * Klíče jedné lodi v poli. Píše se ručně, protože v nasazeném API ještě
@@ -99,6 +102,28 @@ export const rozprava = (serie: string, zavod: string, trvaniHodin: number | nul
 /** Konec závodního dne. Mezi dny se nesleduje. */
 export const uzavri = (serie: string, zavod: string) =>
   zavolej<Okno>(`${cesta(serie, zavod)}/okna/uzavrit`, { method: "POST" });
+
+/**
+ * Vývěska regaty ve správě — <b>včetně stažených</b>, aby šlo dohledat,
+ * co na tabuli stálo. Tabule si bere jen platné, vlastní veřejnou cestou.
+ */
+export const nactiZpravySpravy = (serie: string, zavod: string) =>
+  zavolej<ZpravaRegaty[]>(`${cesta(serie, zavod)}/zpravy`);
+
+export const vydejZpravu = (
+  serie: string,
+  zavod: string,
+  vstup: { text: string; druh: DruhZpravy; platiHodin: number | null },
+) =>
+  zavolej<ZpravaRegaty>(`${cesta(serie, zavod)}/zpravy`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(vstup),
+  });
+
+/** Stažení je odvolání, ne smazání: řádek i historie zůstávají. */
+export const stahniZpravu = (serie: string, zavod: string, id: number) =>
+  zavolej<ZpravaRegaty>(`${cesta(serie, zavod)}/zpravy/${id}/stahnout`, { method: "POST" });
 
 export const nactiNastaveni = (serie: string, zavod: string) =>
   zavolej<Nastaveni>(`${cesta(serie, zavod)}/tracker/nastaveni`);
