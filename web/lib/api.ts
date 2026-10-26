@@ -161,6 +161,22 @@ export async function nactiVerejnouTrat(
 export const nactiSerii = (slug: string) => nacti<SerieDetail>(`/serie/${slug}`);
 export const nactiZavod = (serie: string, zavod: string, cerstve = false) =>
   nacti<ZavodDetail>(`/serie/${serie}/zavody/${zavod}`, cerstve);
+/**
+ * Zprávy vydané k regatě — vývěska, kterou plní pořadatel během dne.
+ * Veřejné, bez tokenu: čte je tabule v hospodě, kde není přihlášený nikdo.
+ */
+export type ZpravaRegaty = {
+  id: number;
+  text: string;
+  druh: "Informace" | "Program" | "Vystraha";
+  vydanoV: string;
+  platiDo: string | null;
+  stazenoV: string | null;
+};
+
+export const nactiZpravy = (serie: string, zavod: string) =>
+  nacti<ZpravaRegaty[]>(`/serie/${serie}/zavody/${zavod}/zpravy`);
+
 export const nactiPoradi = (slug: string) => nacti<PoradiSerie>(`/serie/${slug}/poradi`);
 
 /**

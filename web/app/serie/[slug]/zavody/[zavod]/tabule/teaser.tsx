@@ -2,6 +2,7 @@
 
 import { NazevZavodu } from "@/app/tabule-nazev";
 import { ZnakTridy } from "@/app/tridy";
+import { Infopanel } from "./infopanel";
 import { casomira } from "@/lib/rozjizdky-tabule";
 import type { Snimek } from "@/lib/tabule";
 
@@ -97,6 +98,8 @@ export function Teaser({ snimek, ted }: { snimek: Snimek; ted: number }) {
                 : "Čeká se na rozpravu"}
         </p>
       </header>
+
+      <Infopanel zpravy={snimek.zpravy} ted={ted} />
 
       {snimek.lode.length === 0 ? (
         <p className="prazdno">Na tuhle regatu se zatím nikdo nepřihlásil.</p>

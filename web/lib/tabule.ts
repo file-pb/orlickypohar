@@ -1,4 +1,4 @@
-import type { VerejnaTrat, ZavodDetail } from "@/lib/api";
+import type { VerejnaTrat, ZavodDetail, ZpravaRegaty } from "@/lib/api";
 import type { Znacka } from "@/app/nacrt/mapa/plavba";
 import { znackyZTrati } from "@/lib/znacky";
 import { naMapu, type PrvekNaMape } from "@/app/mapka-trati";
@@ -13,6 +13,14 @@ import { naMapu, type PrvekNaMape } from "@/app/mapka-trati";
 export type Snimek = {
   /** Čas zdroje. Stáří si spočítá prohlížeč — viz `tabule/data/route.ts`. */
   kdy: string;
+  /**
+   * Vývěska regaty: co pořadatel vydal a co teď platí.
+   *
+   * <b>Jede ve snímku, ne zvlášť</b>, protože se mění během dne a tabule
+   * se obnovuje právě snímkem — odklad startu, o kterém by se divák
+   * dozvěděl až po obnovení stránky, je k ničemu.
+   */
+  zpravy: ZpravaRegaty[];
   nazev: string;
   stav: ZavodDetail["stav"];
   vysledkySkryte: boolean;
@@ -127,8 +135,11 @@ export function snimekZavodu(
   detail: ZavodDetail,
   /** Veřejná trať. Nepovinná: výpadek jejího čtení nesmí shodit celý snímek. */
   trat?: VerejnaTrat | null,
+  /** Vývěska regaty. Nepovinná ze stejného důvodu jako trať. */
+  zpravy?: ZpravaRegaty[] | null,
 ): Snimek {
   return {
+    zpravy: zpravy ?? [],
     oknoDo: detail.oknoDo ?? null,
     znacky: znackyZTrati(trat),
     trat: trat

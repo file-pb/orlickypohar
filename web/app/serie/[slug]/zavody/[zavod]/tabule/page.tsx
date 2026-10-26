@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ApiNedostupne, nactiPoradi, nactiVerejnouTrat, nactiZavod } from "@/lib/api";
+import { ApiNedostupne, nactiPoradi, nactiVerejnouTrat, nactiZavod, nactiZpravy } from "@/lib/api";
 import { snimekZavodu } from "@/lib/tabule";
 import { Vypadek } from "@/app/vypadek";
 import { Obrazovka } from "./obrazovka";
@@ -37,10 +37,11 @@ export default async function Tabule({ params }: Parametry) {
     // v celkové sérii"*). Dokud tahle regata nemá odjeto, je to jediné
     // pořadí, které existuje — a v hospodě je to zrovna to, o čem se
     // před startem mluví.
-    const [detail, trat, serie] = await Promise.all([
+    const [detail, trat, serie, zpravy] = await Promise.all([
       nactiZavod(slug, zavod),
       nactiVerejnouTrat(slug, zavod).catch(() => null),
       nactiPoradi(slug).catch(() => null),
+      nactiZpravy(slug, zavod).catch(() => null),
     ]);
     if (!detail) notFound();
 
@@ -48,7 +49,7 @@ export default async function Tabule({ params }: Parametry) {
       <Obrazovka
         serie={slug}
         zavod={zavod}
-        prvni={snimekZavodu(detail, trat)}
+        prvni={snimekZavodu(detail, trat, zpravy)}
         poradiSerie={serie?.kategorie ?? null}
         serieNazev={serie ? `${serie.nazev} — průběžné pořadí série` : null}
       />

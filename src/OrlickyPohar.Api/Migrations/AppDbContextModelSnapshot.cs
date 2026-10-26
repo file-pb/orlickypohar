@@ -1746,6 +1746,43 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("ZmenyUcasti", (string)null);
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zpravy.ZpravaRegaty", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Druh")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("PlatiDo")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("StazenoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("VydalId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("VydanoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ZavodId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ZavodId");
+
+                    b.ToTable("Zpravy");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Boje.Boje", b =>
                 {
                     b.HasOne("OrlickyPohar.Api.Features.Boje.Boje", "Nahrazuje")
@@ -2373,6 +2410,17 @@ namespace OrlickyPohar.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Ucast");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zpravy.ZpravaRegaty", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Zavody.Zavod", "Zavod")
+                        .WithMany()
+                        .HasForeignKey("ZavodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Zavod");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Boje.Boje", b =>

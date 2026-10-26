@@ -116,6 +116,29 @@ def body_rozjizdky(vysledky, prihlaseno=None):
 PRIHLASENA = {"Prihlasena", "Potvrzena", "Nedostavila", "Vyloucena"}
 
 
+def zpravy_regaty(slug):
+    """Vývěska regaty, jak ji vydal pořadatel.
+
+    Mock drží pevnou sadu, ať je na tabuli vidět každý druh: oznámení
+    o rozpravě, změna programu a výstraha. Časy jsou relativní k teď,
+    aby zprávy nevypadaly po půlnoci jako včerejší.
+    """
+    import time
+
+    ted = time.time()
+    return [
+        {"id": 3, "text": "Přechod bouřky — lodě zůstávají na břehu, čekáme na pokyn.",
+         "druh": "Vystraha", "vydanoV": cas_iso(ted - 8 * 60),
+         "platiDo": cas_iso(ted + 2 * 3600), "stazenoV": None},
+        {"id": 2, "text": "Start první rozjížďky se odkládá o 45 minut.",
+         "druh": "Program", "vydanoV": cas_iso(ted - 35 * 60),
+         "platiDo": None, "stazenoV": None},
+        {"id": 1, "text": "Rozprava v 9:00 u klubovny, startovní procedura v 10:25.",
+         "druh": "Informace", "vydanoV": cas_iso(ted - 3 * 3600),
+         "platiDo": None, "stazenoV": None},
+    ]
+
+
 def telefonu_lodi(lod):
     """Kolik telefonů loď sleduje.
 
@@ -5407,6 +5430,12 @@ class H(BaseHTTPRequestHandler):
                 return self.send_error(404)
             telo = {**clanek_shrnuti(c), "telo": c["telo"],
                     "format": c.get("format", "Text")}
+        elif (m := re.match(rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)/zpravy$', cesta)):
+            # Vývěska regaty — veřejná, čte ji tabule. Vrací jen to, co
+            # platí: stažené a prošlé zprávy mezi nimi nejsou.
+            if not any(z["slug"] == m.group(1) for z in D["zavody"]):
+                return self.send_error(404)
+            return self.odpoved(zpravy_regaty(m.group(1)))
         elif (m := re.match(rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)/trat$', cesta)):
             # Veřejná cesta, takže **ne** `self.zastavka` — ta vymáhá
             # přihlášení, protože je psaná pro správu.

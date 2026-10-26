@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { nactiVerejnouTrat, nactiZavod } from "@/lib/api";
+import { nactiVerejnouTrat, nactiZavod, nactiZpravy } from "@/lib/api";
 import { snimekZavodu } from "@/lib/tabule";
 
 /**
@@ -31,12 +31,15 @@ export async function GET(
     // „v cíli" vyskočil klidně o minutu později, a při smůle až po konci
     // rozjížďky (Filip, 20. 10. 2026). Mikrocache nginxu před webem tutéž
     // odpověď deset vteřin rozdá celé hospodě, takže API to nezatíží.
-    const [detail, trat] = await Promise.all([
+    const [detail, trat, zpravy] = await Promise.all([
       nactiZavod(slug, zavod, true),
       nactiVerejnouTrat(slug, zavod).catch(() => null),
+      // Vývěska padá stranou stejně jako trať: tabule bez zpráv pořád
+      // ukazuje pořadí, kdežto „nedaří se načíst" by byla prázdná telka.
+      nactiZpravy(slug, zavod).catch(() => null),
     ]);
     if (!detail) return NextResponse.json({ error: "Regata není." }, { status: 404 });
-    return NextResponse.json(snimekZavodu(detail, trat));
+    return NextResponse.json(snimekZavodu(detail, trat, zpravy));
   } catch {
     return NextResponse.json({ error: "API nedostupné." }, { status: 503 });
   }

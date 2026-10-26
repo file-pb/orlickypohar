@@ -48,6 +48,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Features.Trasy.Trasa> Trasy => Set<Features.Trasy.Trasa>();
     public DbSet<Features.Trasy.TrasaBod> TrasaBody => Set<Features.Trasy.TrasaBod>();
     public DbSet<Features.Klice.KlicLodi> Klice => Set<Features.Klice.KlicLodi>();
+
+    /// <summary>Vývěska regaty: krátké zprávy, které pořadatel vydává během dne.</summary>
+    public DbSet<Features.Zpravy.ZpravaRegaty> Zpravy => Set<Features.Zpravy.ZpravaRegaty>();
     public DbSet<Features.Okna.OknoRegaty> Okna => Set<Features.Okna.OknoRegaty>();
     public DbSet<Features.Tracker.NastaveniTrackeru> NastaveniTrackeru =>
         Set<Features.Tracker.NastaveniTrackeru>();
