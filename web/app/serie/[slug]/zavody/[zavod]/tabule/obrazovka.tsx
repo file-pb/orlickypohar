@@ -62,12 +62,15 @@ export function Obrazovka({
   zavod,
   prvni,
   poradiSerie,
+  serieNazev,
 }: {
   serie: string;
   zavod: string;
   prvni: Snimek;
-  /** Průběžné pořadí celé série. Karusel ho točí, dokud tahle regata nemá odjeto. */
+  /** Průběžné pořadí celé série. Pásy ho vezou, dokud neběží mapa. */
   poradiSerie?: PoradiKategorie[] | null;
+  /** Jak se jmenuje série — nadpis nad pásy, aby se pořadí nepletla. */
+  serieNazev?: string | null;
 }) {
   const [snimek, setSnimek] = useState(prvni);
   /**
@@ -76,11 +79,29 @@ export function Obrazovka({
    * nic. Jakmile přijde první výsledek, přepne se na regatu: ta je teď
    * ta zajímavější.
    */
-  const panely = useMemo(() => {
-    const maVysledky = snimek.tabule.some((t) => t.lode.length > 0);
-    if (maVysledky || !poradiSerie?.length) return tridyPanely(snimek);
-    return seriePanely(poradiSerie);
-  }, [snimek, poradiSerie]);
+  /**
+   * Pořadí série jako řádky pro běžící pásy — <b>tytéž pásy, jaké jedou
+   * při rozjížďkách</b> (Filip, 26. 10. 2026: *„ten spodní carousel bych
+   * udělal podobný jako máme teď na tabuli, to bych neměnil"*). Mění se
+   * jen to, co stojí za jménem: v sérii body, na vodě stáří polohy.
+   */
+  const serieRadky = useMemo(() => {
+    if (!poradiSerie?.length) return [];
+    return poradiSerie
+      .filter((k) => k.kategorie !== "Celkem")
+      .flatMap((k, ki) =>
+        [...k.lode]
+          .sort((a, b) => a.poradiPoSkrtu - b.poradiPoSkrtu)
+          .map((l, i) => ({
+            id: ki * 1000 + i,
+            nazev: l.lod,
+            kategorie: k.kategorie,
+            stariS: null,
+            dojela: false,
+            popisek: `${l.bodyPoSkrtu} b`,
+          })),
+      );
+  }, [poradiSerie]);
   const [ted, setTed] = useState(() => Date.now());
   /**
    * Živé polohy, když je regata pouští ven. Dokud nechodí, je na místě
@@ -371,7 +392,16 @@ export function Obrazovka({
       >
         {stari < 60 ? `${stari} s` : `${Math.round(stari / 60)} min`}
       </p>
-      <PoradiTrid radky={poradiLodi} ref={tridy} />
+      {/* <b>Rozhoduje mapa, ne výsledky</b> (Filip, 26. 10. 2026: *„v režimu
+            mapa bude ukazovat pořadí v regatě, ale pokud bude mapa bez
+            zobrazování, tak tyhle pruhy budou ukazovat pořadí v celé
+            sérii"*). Pořadí na vodě navíc plní sama mapa, takže bez ní
+            žádné není. */}
+        <PoradiTrid
+          radky={zive.length > 0 ? poradiLodi : serieRadky}
+          nadpis={zive.length > 0 ? undefined : (serieNazev ?? undefined)}
+          ref={tridy}
+        />
 
       <div className="sloupce">
         {/* Zbývá jediný karusel: pořadí po třídách. Panel se stavy
@@ -381,7 +411,10 @@ export function Obrazovka({
             (Filip, 26. 10. 2026). Jsou to tytéž kategorie ve stejném
             rytmu, jen jiná tabulka — prázdné panely s „zatím se nejelo"
             by na televizi zabraly tutéž plochu a neřekly nic. */}
-        <Karusel panely={panely} />
+        {/* Panelový karusel patří regatě. Dokud nemá odjeto, nese
+            spodek tabule běžící pásy s pořadím série — a dvě tabulky
+            téhož pod sebou by si jen braly místo. */}
+        {zive.length > 0 && <Karusel panely={tridyPanely(snimek)} />}
 
 
       </div>
@@ -487,49 +520,6 @@ function stranky<T>(vse: T[], kolik: number): T[][] {
   for (let i = 0; i < vse.length; i += kolik) ven.push(vse.slice(i, i + kolik));
   return ven;
 }
-
-/**
- * Panely průběžného pořadí série — náhrada, dokud regata nemá odjeto.
- *
- * Ukazuje se pořadí <b>po škrtu</b>, tedy to, které platí, stejně jako na
- * stránce série; body před škrtem by na dálku jen přidaly číslo navíc.
- */
-function seriePanely(kategorie: PoradiKategorie[]): Panel[] {
-  return kategorie.map((k) => ({
-    klic: `serie-${k.kategorie}`,
-    nadpis: (
-      <>
-        <ZnakTridy nazev={k.kategorie} />
-        {k.kategorie === "Celkem" ? "Pohár celkem" : k.kategorie}
-        <span className="karusel-doplnek">průběžně v sérii</span>
-      </>
-    ),
-    obsah:
-      k.lode.length === 0 ? (
-        <p className="prazdno">V sérii se zatím nejelo.</p>
-      ) : (
-        <>
-          <ol className="poradi">
-            {[...k.lode]
-              .sort((a, b) => a.poradiPoSkrtu - b.poradiPoSkrtu)
-              .slice(0, NEJVIC_V_PANELU)
-              .map((l) => (
-                <li key={l.lod}>
-                  <b>{l.poradiPoSkrtu}.</b> {l.lod}
-                  <span className="body">{l.bodyPoSkrtu}</span>
-                </li>
-              ))}
-          </ol>
-          {k.lode.length > NEJVIC_V_PANELU && (
-            <p className="dalsi">{jesteLodi(k.lode.length - NEJVIC_V_PANELU)}</p>
-          )}
-        </>
-      ),
-  }));
-}
-
-/** Kolik řádků se vejde do panelu karuselu, než se musí zkrátit. */
-const NEJVIC_V_PANELU = 10;
 
 /** Panely pořadí: jeden na třídu, plus celkové, když se počítá. */
 function tridyPanely(snimek: Snimek): Panel[] {

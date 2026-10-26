@@ -8,6 +8,12 @@ type Radek = {
   kategorie: string;
   stariS: number | null;
   dojela: boolean;
+  /**
+   * Co stojí za jménem místo stáří polohy. Používá se, když pás neveze
+   * pořadí z vody, ale ze série — tam je údajem počet bodů, ne to, jak
+   * dávno se loď ozvala.
+   */
+  popisek?: string | null;
 };
 
 /**
@@ -30,18 +36,29 @@ type Radek = {
  */
 export function PoradiTrid({
   radky,
+  nadpis,
   ref,
 }: {
   radky: Radek[];
+  /**
+   * Co pásy vezou, když to není pořadí z vody. <b>Bez něj si to divák
+   * splete</b> (Filip, 26. 10. 2026) — tytéž pruhy na tomtéž místě jednou
+   * ukazují pořadí v regatě a podruhé v celé sérii.
+   */
+  nadpis?: string;
   /** Pořadí je z ukázkových plaveb — pás to musí říct u sebe. */
   /** Mapa pod karuselem potřebuje znát jeho výšku, aby pole nekreslila pod něj. */
   ref?: React.Ref<HTMLElement>;
 }) {
+  // Pořadí v pásu drží to, v jakém jsou řádky poslané — na vodě je to
+  // pořadí na trati, v sérii pořadí po škrtu. Třídit se smí jen seznam
+  // tříd, ne lodě v něm.
   const tridy = [...new Set(radky.map((r) => r.kategorie))].sort();
   if (tridy.length === 0) return null;
 
   return (
     <section className="tabule-tridy" ref={ref}>
+      {nadpis && <p className="tabule-tridy-nadpis">{nadpis}</p>}
       {tridy.map((t) => {
         const vTride = radky.filter((r) => r.kategorie === t);
         return (
@@ -73,7 +90,9 @@ function Lode({ lode, kopie }: { lode: Radek[]; kopie?: boolean }) {
       <span className="bok-lod">{l.nazev}</span>
       {/* Tytéž údaje jako v pořadí vpravo (Filip, 24. 10. 2026) — pás,
           který by jen jmenoval, by nutil dívat se jinam. */}
-      {l.dojela ? (
+      {l.popisek != null ? (
+        <span className="pas-stari">{l.popisek}</span>
+      ) : l.dojela ? (
         <span className="pas-stitek">v cíli</span>
       ) : (
         <span className="pas-stari">

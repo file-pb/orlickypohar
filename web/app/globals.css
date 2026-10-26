@@ -4682,7 +4682,13 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
    měl 924 px a nebylo ho vidět). */
 .tabule .tabule-teaser {
   position: relative; z-index: 2;
-  flex: 1; min-height: 0;
+  /* <b>Karusel pod ním zůstává, jaký byl</b> (Filip, 26. 10. 2026:
+     *„ten spodní carousel bych udělal podobný jako máme teď na tabuli,
+     to bych neměnil"*). Sahat mu na výšku se nevyplatilo: pevná míra
+     mu rozhodila prolínání a vedle panelu se objevila jeho useknutá
+     kopie. Teaser si proto bere jen půlku plochy a zbytek nechává
+     karuselu přesně tak, jak to běží při rozjížďkách. */
+  flex: 1 1 50%; min-height: 0;
   display: flex; flex-direction: column; gap: calc(1.2 * var(--tv));
   /* Vlevo nahoře sedí značka, takže hlavička začíná pod ní. */
   padding: calc(4.4 * var(--tv)) calc(3 * var(--tv)) 0;
@@ -4740,18 +4746,15 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .tabule .tabule-teaser .prazdno { font-size: calc(1.1 * var(--tv)); color: var(--tlumeny); }
 .tabule .tabule-teaser-trida li.dalsich { color: var(--tlumeny); font-style: italic; }
 
-/* S teaserem je hlavní plochou seznam lodí, ne karusel pořadí: ten
-   ukazuje výsledky odjetých rozjížděk, kterých je na začátku dne málo
-   nebo žádné. Dělí se proto o zbytek, ne napůl — jinak se seznam osmi
-   lodí usekne v půlce (změřeno 26. 10. 2026). */
-.tabule:has(.tabule-teaser) .sloupce {
-  /* <b>Pevná čtvrtina obrazovky, ne podíl a ne výška obsahu.</b> Panely
-     karuselu leží přes sebe kvůli prolínání, takže jeho přirozená výška
-     je nula a `auto` ho srazí na jedenáctipixelové řádky (změřeno
-     26. 10. 2026). Podíl zas nefunguje opačně: s `flex: 1` si vzal
-     polovinu, kterou nepotřeboval, a startovní listině nad ním chyběla.
-     Jedenáct a půl `--tv` je nadpis a šest řádků pořadí; co zbude, je
-     startovní listiny, protože ta se nerotuje a musí být celá. */
-  flex: 0 0 calc(11.5 * var(--tv));
-  max-height: 42vh;
+
+/* Bez mapy není vpravo žádný žebříček, u kterého by pásy musely končit —
+   roztáhnou se tedy přes celou šířku (Filip, 26. 10. 2026: „jen ho třeba
+   můžeme roztáhnout na celou šířku"). */
+.tabule:has(.tabule-teaser) .tabule-tridy { right: 0; }
+/* Nadpis nad pásy: malý, tlumený, přes celou šířku — má říct, co se
+   veze, ne přetahovat se o pozornost s lodě­mi pod ním. */
+.tabule .tabule-tridy-nadpis {
+  margin: 0 0 calc(0.1 * var(--tv));
+  font-size: calc(0.78 * var(--tv)); letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--tlumeny);
 }

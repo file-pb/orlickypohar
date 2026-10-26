@@ -50,6 +50,7 @@ export default async function Tabule({ params }: Parametry) {
         zavod={zavod}
         prvni={snimekZavodu(detail, trat)}
         poradiSerie={serie?.kategorie ?? null}
+        serieNazev={serie ? `${serie.nazev} — průběžné pořadí série` : null}
       />
     );
   } catch (e) {
