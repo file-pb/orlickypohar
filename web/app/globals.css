@@ -4704,24 +4704,33 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
     radial-gradient(120% 90% at 18% 0%, color-mix(in srgb, var(--voda) 26%, transparent), transparent 70%),
     var(--pozadi);
 }
-.tabule .tabule-teaser > header {
-  display: flex; align-items: baseline; gap: calc(1.4 * var(--tv));
-  /* Místo pro značku, která leží nad tím absolutně. */
-  padding-left: calc(5.4 * var(--tv));
-  min-height: calc(4.4 * var(--tv));
+.tabule .tabule-teaser-vrch {
+  display: flex; align-items: flex-start; gap: calc(2 * var(--tv));
+}
+/* Vývěska si bere celou levou stranu a začíná úplně nahoře — na ni se
+   na tabuli čeká, ne na jméno regaty. */
+.tabule .tabule-teaser-vrch .tabule-info { flex: 1 1 auto; min-width: 0; }
+/* Hlavička vpravo, pod značkou: název a pod ním stav, oboje doprava. */
+.tabule .tabule-teaser > .tabule-teaser-vrch > header {
+  flex: 0 0 auto;
+  display: grid; justify-items: end; gap: calc(0.2 * var(--tv));
+  width: calc(26 * var(--tv));
+  padding-right: calc(5.4 * var(--tv));
 }
 /* <b>Název potřebuje celou zbylou šířku řádku.</b> Kreslí se do SVG bez
    `viewBox` a text v něm stojí na padesáti procentech — když je SVG užší
    než on, ořízne se z obou stran, až z „Radavská regata" zbude
    „:davská rega" (Filip vyfotil 26. 10. 2026). Pružná položka se bez
    `flex: 1` smrskne na obsah, a ten SVG nezná. */
-.tabule .tabule-teaser h1 { margin: 0; flex: 1 1 auto; min-width: 0; }
+.tabule .tabule-teaser h1 { margin: 0; width: 100%; min-width: 0; }
+/* Menší než na mapě: tady nese plochu seznam lodí, ne jméno regaty. */
 .tabule .tabule-teaser h1 .tabule-nazev {
-  width: 100%; height: calc(3.2 * var(--tv));
+  width: 100%; height: calc(2.4 * var(--tv));
 }
+.tabule .tabule-teaser h1 .tabule-nazev text { font-size: calc(1.9 * var(--tv)); }
 .tabule .tabule-teaser-stav {
-  margin: 0 0 0 auto; color: var(--tlumeny);
-  font-size: calc(1.1 * var(--tv)); letter-spacing: 0.04em;
+  margin: 0; color: var(--tlumeny); text-align: right;
+  font-size: calc(0.95 * var(--tv)); letter-spacing: 0.04em;
 }
 .tabule .tabule-teaser-pocet {
   margin: 0; color: var(--text); font-weight: 700;
@@ -4857,3 +4866,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   background: color-mix(in srgb, var(--stav-zruseny) 14%, transparent);
 }
 .tabule .tabule-info .zprava-program { border-left-color: #e8900c; }
+
+/* Se teaserem jde značka doprava ke jménu regaty; levý horní roh patří
+   vývěsce (Filip, 26. 10. 2026). */
+.tabule:has(.tabule-teaser) .vrch { left: auto; right: calc(2.4 * var(--tv)); }

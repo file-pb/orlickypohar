@@ -84,11 +84,20 @@ export function Teaser({ snimek, ted }: { snimek: Snimek; ted: number }) {
 
   return (
     <section className="tabule-teaser">
-      <header>
-        <h1>
-          <NazevZavodu text={snimek.nazev} />
-        </h1>
-        <p className="tabule-teaser-stav">
+      {/* <b>Vývěska vlevo odshora, hlavička se značkou vpravo</b> (Filip,
+          26. 10. 2026: *„nadpis doprava, trochu ho zmenšit a pod něj
+          status, logo pošli k tomu — tím by se uvolnil hořejšek pro
+          Vydáno k regatě už odshora a netlačil by na seznam
+          přihlášených lodí"*). Jméno regaty je na tabuli to nejméně
+          překvapivé: kdo se dívá, ví, kde je. */}
+      <div className="tabule-teaser-vrch">
+        <Infopanel zpravy={snimek.zpravy} ted={ted} />
+
+        <header>
+          <h1>
+            <NazevZavodu text={snimek.nazev} />
+          </h1>
+          <p className="tabule-teaser-stav">
           {jede
             ? "Rozjížďka běží — na mapu se lodě objeví, jakmile začnou hlásit polohu."
             : hodiny
@@ -96,10 +105,9 @@ export function Teaser({ snimek, ted }: { snimek: Snimek; ted: number }) {
               : odjeto > 0
                 ? `Odjeto ${odjeto} ${odjeto === 1 ? "rozjížďka" : odjeto < 5 ? "rozjížďky" : "rozjížděk"}`
                 : "Čeká se na rozpravu"}
-        </p>
-      </header>
-
-      <Infopanel zpravy={snimek.zpravy} ted={ted} />
+          </p>
+        </header>
+      </div>
 
       {snimek.lode.length === 0 ? (
         <p className="prazdno">Na tuhle regatu se zatím nikdo nepřihlásil.</p>
