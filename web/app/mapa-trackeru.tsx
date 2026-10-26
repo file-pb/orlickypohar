@@ -109,14 +109,20 @@ const DOZNIVANI = [1, 0.45, 0.22];
 /** Jak dlouho musí prohození vydržet, aby se uznalo. */
 const PRAH_PROHOZENI_S = 60;
 /**
- * A o kolik musí nový vedoucí vést, v pixelech postupu po trase.
+ * A o kolik musí nový vedoucí vést, v metrech postupu po trati.
  *
  * <b>Čas sám nestačí.</b> Dvě lodě, které jedou bok po boku, se v pořadí
  * přehazují o délku lodi a vydrží to klidně minutu — to není souboj, to je
  * šum. Odstup je proti tomu robustní: filtruje podle toho, jestli se
  * doopravdy něco stalo, ne jak dlouho se to nedělo.
+ *
+ * <b>Sto dvacet metrů, ne dvanáct.</b> Práh byl původně v pixelech
+ * plátna a při obvyklém přiblížení vycházel kolem sto padesáti metrů;
+ * když postup přešel na metry (26. 10. 2026), zůstalo z něj dvanáct —
+ * tedy délka lodi, přesně ten šum, kterému se vyhýbá. Změřeno: 274
+ * prohození za jednu rozjížďku místo 97.
  */
-const ODSTUP_PROHOZENI_PX = 12;
+const ODSTUP_PROHOZENI_M = 120;
 /** Jak dlouho pak dráhy obou lodí hoří, než vyhasnou. */
 const HORENI_S = 180;
 /**
@@ -756,7 +762,7 @@ export function MapaTrackeru({
           const ceka = cekani.get(klic);
           if (!ceka || ceka.stav !== teď) {
             cekani.set(klic, { od: t, stav: teď });
-          } else if (t - ceka.od >= PRAH_PROHOZENI_S && rozdil >= ODSTUP_PROHOZENI_PX) {
+          } else if (t - ceka.od >= PRAH_PROHOZENI_S && rozdil >= ODSTUP_PROHOZENI_M) {
             // Na kolikáté pozici se to stalo — kolik lodí je před tou lepší
             // z dvojice. Podle toho se pozná souboj o čelo od šumu vzadu.
             const lepsi = Math.max(pa, pb);
@@ -935,8 +941,8 @@ export function MapaTrackeru({
    * strávený mimo souboje, ne čas od startu.
    */
   const rezie = useMemo(
-    () => planRezie({ lode, postupy, prohozeni, znacky, konec }),
-    [lode, postupy, prohozeni, konec, znacky],
+    () => planRezie({ lode, postupy, prohozeni, znacky, konec, dojezdy }),
+    [lode, postupy, prohozeni, konec, znacky, dojezdy],
   );
 
   /**

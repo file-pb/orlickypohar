@@ -6,7 +6,7 @@
  */
 import assert from 'node:assert/strict';
 
-import { DAV_LODI, planRezie, type Prohozeni } from '../lib/rezie-tabule.ts';
+import { DAV_LODI, DAV_NEJVIC, planRezie, type Prohozeni } from '../lib/rezie-tabule.ts';
 import type { Lod, Znacka } from '../app/nacrt/mapa/plavba.ts';
 
 let prosly = 0;
@@ -41,7 +41,16 @@ zkus('tři lodě u obratové bóje jsou dav', () => {
   // Všechny tři na značce č. 2 (49.51).
   const p = plan([stojici(1, 49.5101), stojici(2, 49.5102), stojici(3, 49.5103)]);
   assert.equal(duvody(p).boje, p.size, 'u bóje má být dav po celou dobu');
-  assert.deepEqual(p.get(0)?.lode, [1, 2, 3]);
+  assert.deepEqual([...(p.get(0)?.lode ?? [])].sort(), [1, 2, 3]);
+});
+
+zkus('z velkého davu se ukáže jen špička, ne půl pole', () => {
+  // Devět lodí u téže bóje — v ranku by se rozsvítila skoro celá.
+  const p = plan(Array.from({ length: 9 }, (_, i) => stojici(i + 1, 49.51 + i * 0.00002)));
+  for (const [t, z] of p) {
+    assert.equal(z.duvod, 'boje', `v čase ${t} měl být dav`);
+    assert.ok(z.lode.length <= DAV_NEJVIC, `v čase ${t} svítí ${z.lode.length} lodí`);
+  }
 });
 
 zkus('dvě lodě u bóje dav nejsou — od toho je souboj', () => {
