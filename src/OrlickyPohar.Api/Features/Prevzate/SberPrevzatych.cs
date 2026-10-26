@@ -127,10 +127,12 @@ public class SberPrevzatych(
     /// záznamu, bez jediného dotazu na cizí server (Filip, 26. 10. 2026).
     /// </para>
     /// <para>
-    /// Doptat se je potřeba jen u řádků z doby před tím sloupcem, takže
+    /// Doptat se je potřeba jen u řádků, u kterých se nikdy neptalo, takže
     /// nejvýš jednou za článek a nejvýš <see cref="ZdrojKanalu.Kolik"/>
     /// dotazů celkem. Článek, u kterého zdroj obrázek opravdu nemá, má
-    /// adresu vyplněnou a podruhé se na něj nikdo neptá.
+    /// adresu vyplněnou a podruhé se na něj nikdo neptá. Doptání projde
+    /// <see cref="ZeStrankyAsync"/>, tedy touž úvahou jako nový článek —
+    /// včetně toho, že plochý nápis ustoupí obrázku ze složky článku.
     /// </para>
     /// <para>
     /// Vrácená adresa se zkusí stáhnout znovu, i když se o ni dřív pokus
@@ -140,7 +142,8 @@ public class SberPrevzatych(
     /// </para>
     /// </summary>
     private async Task SrovnejSPravidlemAsync(
-        AppDbContext db, HttpClient klient, ZdrojKanalu zdroj, CancellationToken ct)
+        AppDbContext db, StahovacFotek? stahovac, HttpClient klient, ZdrojKanalu zdroj,
+        CancellationToken ct)
     {
         var neptano = await db.PrevzateClanky
             .Where(c => c.Zdroj == zdroj.Nazev && c.OdZdroje == null)
@@ -148,16 +151,27 @@ public class SberPrevzatych(
 
         foreach (var clanek in neptano)
         {
-            try
+            var (odZdroje, obrazek, fotka) =
+                await ZeStrankyAsync(klient, stahovac, zdroj, clanek.Odkaz, ct);
+
+            // Zdroj neodpověděl. Článek zůstane tak, jak je, a příští takt to
+            // zkusí znovu — nedostupný cizí server není důvod něco měnit.
+            if (odZdroje is null) continue;
+
+            // Stará kopie jde pryč, i když se nová nepovedla: rozhodnutí se
+            // právě přepsalo a soubor, ke kterému nevede žádný záznam, by
+            // v bucketu zůstal napořád.
+            if (clanek.FotkaId is { } stara && stara != fotka?.Id)
             {
-                clanek.OdZdroje = Kanal.Obrazek(await klient.GetStringAsync(clanek.Odkaz, ct));
+                Uklid.Zarad(db, PrevzateFotky.Klice(stara), cas.GetUtcNow());
+                clanek.FotkaId = null;
+                clanek.Sirka = null;
+                clanek.Vyska = null;
             }
-            catch (Exception e) when (e is not OperationCanceledException)
-            {
-                // Příští takt to zkusí znovu; do té doby článek zůstane tak,
-                // jak je. Nedostupný cizí server není důvod něco měnit.
-                log.LogInformation(e, "Obrázek u článku {Odkaz} se nepovedlo zjistit", clanek.Odkaz);
-            }
+
+            clanek.OdZdroje = odZdroje;
+            clanek.Obrazek = obrazek;
+            if (fotka is { } f) (clanek.FotkaId, clanek.Sirka, clanek.Vyska) = (f.Id, f.Sirka, f.Vyska);
         }
 
         if (neptano.Count > 0) await db.SaveChangesAsync(ct);
@@ -224,20 +238,23 @@ public class SberPrevzatych(
         AppDbContext db, IServiceScope scope, HttpClient klient, ZdrojKanalu zdroj,
         CancellationToken ct)
     {
-        await SrovnejSPravidlemAsync(db, klient, zdroj, ct);
+        var stahovac = FotkyKSobe ? scope.ServiceProvider.GetRequiredService<StahovacFotek>() : null;
+        await SrovnejSPravidlemAsync(db, stahovac, klient, zdroj, ct);
 
-        if (!FotkyKSobe) return 0;
+        if (stahovac is null) return 0;
 
         var bezFotky = await db.PrevzateClanky
             .Where(c => c.Zdroj == zdroj.Nazev && c.FotkaId == null && c.Obrazek != null)
             .ToListAsync(ct);
         if (bezFotky.Count == 0) return 0;
 
-        var stahovac = scope.ServiceProvider.GetRequiredService<StahovacFotek>();
         var dobrane = 0;
         foreach (var clanek in bezFotky)
         {
-            var vysledek = await stahovac.UlozAsync(klient, zdroj, clanek.Obrazek!, ct);
+            // Vlastní obrázek článku se tu nepředává: ten je vidět jen na jeho
+            // stránce a ta se v tomhle kroku nestahuje. Adresu k zobrazení
+            // vybral `ZeStrankyAsync`, tady se k ní jen dodělává naše kopie.
+            var vysledek = await stahovac.UlozAsync(klient, zdroj, clanek.Obrazek!, null, ct);
             if (vysledek.Fotka is { } f)
             {
                 clanek.FotkaId = f.Id;
@@ -292,37 +309,68 @@ public class SberPrevzatych(
                 continue;
             }
 
-            string? ogImage = null;
-            try
-            {
-                var html = await klient.GetStringAsync(p.Odkaz, ct);
-                ogImage = Kanal.Obrazek(html);
-            }
-            catch (Exception e) when (e is not OperationCanceledException)
-            {
-                log.LogInformation(e, "Fotku k článku {Odkaz} se nepovedlo zjistit", p.Odkaz);
-            }
-
-            var vysledek = ogImage is null || stahovac is null
-                ? new VysledekFotky(null, false)
-                : await stahovac.UlozAsync(klient, zdroj, ogImage, ct);
-
-            // Když zdroj místo fotky dal logo, zahodí se adresa, kterou by web
-            // ukázal — jinak by ho roztáhl přes celou kartu (Filip, 2. 10. 2026).
-            // Záznam o tom, co zdroj dal, zůstává: podle něj se dá rozhodnout
-            // znovu, až se pravidlo upřesní.
-            var kZobrazeni = ogImage;
-            if (vysledek.Nepouzitelna)
-            {
-                log.LogInformation(
-                    "Obrázek u článku {Odkaz} je na kartu moc malý, použije se náhradní", p.Odkaz);
-                kZobrazeni = null;
-            }
-
-            doplnene.Add(p with { Obrazek = kZobrazeni, OdZdroje = ogImage, Fotka = vysledek.Fotka });
+            var (odZdroje, obrazek, fotka) = await ZeStrankyAsync(klient, stahovac, zdroj, p.Odkaz, ct);
+            doplnene.Add(p with { Obrazek = obrazek, OdZdroje = odZdroje, Fotka = fotka });
         }
 
         return doplnene;
+    }
+
+    /// <summary>
+    /// Rozhodne ze stránky článku, co se k němu ukáže: co zdroj dal
+    /// (<see cref="PrevzatyClanek.OdZdroje"/>), co z toho smí na kartu
+    /// a naše kopie.
+    /// <para>
+    /// <b>Jediné místo, kde se to rozhoduje</b> — pro nový článek i pro ten,
+    /// na který se sběr doptává zpětně. Dvě kopie téhle úvahy by se dřív
+    /// nebo později rozešly a karta by vypadala jinak podle toho, kdy článek
+    /// přišel.
+    /// </para>
+    /// <para>
+    /// Nepovedené stažení článek nezahodí — zůstane bez fotky a web sáhne
+    /// po náhradní. Cizí server, který zrovna neodpovídá, nemá být důvod,
+    /// proč se novinka neukáže.
+    /// </para>
+    /// </summary>
+    private async Task<(string? OdZdroje, string? Obrazek, UlozenaFotka? Fotka)> ZeStrankyAsync(
+        HttpClient klient, StahovacFotek? stahovac, ZdrojKanalu zdroj, string odkaz,
+        CancellationToken ct)
+    {
+        string? ogImage;
+        string? vlastni;
+        try
+        {
+            var html = await klient.GetStringAsync(odkaz, ct);
+            ogImage = Kanal.Obrazek(html);
+            vlastni = zdroj.VlastniObrazek?.Invoke(html);
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            log.LogInformation(e, "Fotku k článku {Odkaz} se nepovedlo zjistit", odkaz);
+            return (null, null, null);
+        }
+
+        if (ogImage is null) return (null, null, null);
+
+        // Bez ukládání k sobě se obrázek nestahuje, takže se nedá změřit, jestli
+        // je to nápis — rozhodne jen pravidlo nad adresou.
+        if (stahovac is null)
+            return (ogImage, zdroj.NeniFotka?.Invoke(ogImage) == true ? null : ogImage, null);
+
+        var vysledek = await stahovac.UlozAsync(klient, zdroj, ogImage, vlastni, ct);
+
+        // Když zdroj místo fotky dal logo, zahodí se adresa, kterou by web
+        // ukázal — jinak by ho roztáhl přes celou kartu (Filip, 2. 10. 2026).
+        // Záznam o tom, co zdroj dal, zůstává: podle něj se dá rozhodnout
+        // znovu, až se pravidlo upřesní.
+        if (vysledek.Nepouzitelna)
+        {
+            log.LogInformation(
+                "Obrázek u článku {Odkaz} se na kartu nehodí, použije se náhradní", odkaz);
+            return (ogImage, null, null);
+        }
+
+        return (ogImage, vysledek.Adresa ?? ogImage, vysledek.Fotka);
     }
 
     /// <summary>

@@ -72,7 +72,7 @@ public class PrevzateFotkyTests
 
         var stahovac = new StahovacFotek(new PametoveUloziste(), NullLogger<StahovacFotek>.Instance);
         var vysledek = await stahovac.UlozAsync(
-            new HttpClient(new PadajiciHandler()), Svaz, ogImage, default);
+            new HttpClient(new PadajiciHandler()), Svaz, ogImage, null, default);
 
         Assert.Equal(maFotku, !vysledek.Nepouzitelna);
     }
@@ -90,7 +90,7 @@ public class PrevzateFotkyTests
 
         var stahovac = new StahovacFotek(new PametoveUloziste(), NullLogger<StahovacFotek>.Instance);
         var vysledek = await stahovac.UlozAsync(
-            new HttpClient(new PadajiciHandler()), Svaz, ogImage!, default);
+            new HttpClient(new PadajiciHandler()), Svaz, ogImage!, null, default);
 
         Assert.False(vysledek.Nepouzitelna);
     }
@@ -104,7 +104,7 @@ public class PrevzateFotkyTests
 
         var vysledek = await stahovac.UlozAsync(
             new HttpClient(new PadajiciHandler()), Svaz,
-            "https://www.sailing.cz/uploads_thumbs/ikony-loga/loga_csj/logo.jpg", default);
+            "https://www.sailing.cz/uploads_thumbs/ikony-loga/loga_csj/logo.jpg", null, default);
 
         Assert.Null(vysledek.Fotka);
         Assert.True(vysledek.Nepouzitelna);
@@ -154,7 +154,7 @@ public class PrevzateFotkyTests
             new NenastaveneUloziste(new FotkyNastaveni()), NullLogger<StahovacFotek>.Instance);
 
         var vysledek = await stahovac.UlozAsync(
-            new HttpClient(new PadajiciHandler()), Svaz, "https://www.sailing.cz/foto.jpg", default);
+            new HttpClient(new PadajiciHandler()), Svaz, "https://www.sailing.cz/foto.jpg", null, default);
 
         Assert.Null(vysledek.Fotka);
         Assert.False(vysledek.Nepouzitelna);
@@ -170,7 +170,7 @@ public class PrevzateFotkyTests
 
         var vysledek = await stahovac.UlozAsync(
             new HttpClient(new ObrazkovyHandler(177, 200)), Svaz,
-            "https://www.sailing.cz/uploads_thumbs/ikony-loga/logo.jpg", default);
+            "https://www.sailing.cz/uploads_thumbs/ikony-loga/logo.jpg", null, default);
 
         Assert.Null(vysledek.Fotka);
         Assert.True(vysledek.Nepouzitelna);
@@ -185,7 +185,7 @@ public class PrevzateFotkyTests
 
         var vysledek = await stahovac.UlozAsync(
             new HttpClient(new ObrazkovyHandler(1920, 1280)), Svaz,
-            "https://www.sailing.cz/uploads_thumbs/clanky/foto.jpg", default);
+            "https://www.sailing.cz/uploads_thumbs/clanky/foto.jpg", null, default);
 
         Assert.NotNull(vysledek.Fotka);
         var fotka = vysledek.Fotka;
@@ -203,12 +203,93 @@ public class PrevzateFotkyTests
 
         var vysledek = await stahovac.UlozAsync(
             new HttpClient(new PadajiciHandler()), Svaz,
-            "https://www.sailing.cz/uploads_thumbs/clanky/foto.jpg", default);
+            "https://www.sailing.cz/uploads_thumbs/clanky/foto.jpg", null, default);
 
         // Nic neukládáme, ale adresa u zdroje platí dál — výpadek není důvod
         // sahat po náhradní fotce napořád.
         Assert.Null(vysledek.Fotka);
         Assert.False(vysledek.Nepouzitelna);
+    }
+
+    /// <summary>
+    /// Nápis z knihovny zdroje ustoupí obrázku, který redakce nahrála
+    /// k článku. <b>Ten případ Filip nahlásil</b> (26. 10. 2026): svaz dal do
+    /// <c>og:image</c> samotný nápis „Mistrovství na moři", zatímco ve složce
+    /// článku leží celý plakát s lodí. Nápis roztažený přes velkou kartu
+    /// vypadá jako chyba webu.
+    /// </summary>
+    [Fact]
+    public async Task Plochy_napis_ustoupi_obrazku_ze_slozky_clanku()
+    {
+        var html = Stranka("banner-volne-v-ikony-loga.html");
+        var ogImage = Kanal.Obrazek(html)!;
+        var vlastni = Zdroje.SailingCzVlastni(html)!;
+
+        // Adresy jde vzít ze stránky tak, jak je zdroj vydává — obojí se
+        // skládá vůči kořeni webu, protože stránka má <base href="/">.
+        Assert.Equal("https://www.sailing.cz/uploads_thumbs/ikony-loga/mcrmore.jpg", ogImage);
+        Assert.Equal(
+            "https://www.sailing.cz/uploads/clanky/6add1dc9ea7fb5884/mcr-more-od_04__1.jpg",
+            vlastni);
+
+        var uloziste = new PametoveUloziste();
+        var stahovac = new StahovacFotek(uloziste, NullLogger<StahovacFotek>.Instance);
+        var klient = new HttpClient(new ObrazkySvazu(new()
+        {
+            ["https://www.sailing.cz/uploads/ikony-loga/mcrmore.jpg"] = "og-napis-mcr-na-mori.jpg",
+            [vlastni] = "vlastni-plakat-mcr-na-mori.jpg",
+        }));
+
+        var vysledek = await stahovac.UlozAsync(klient, Svaz, ogImage, vlastni, default);
+
+        // Uloží se plakát, ne nápis — a web se o té adrese musí dozvědět,
+        // aby po výpadku našeho úložiště ukázal tutéž věc.
+        Assert.Equal(vlastni, vysledek.Adresa);
+        Assert.NotNull(vysledek.Fotka);
+
+        // A v bucketu leží jen jedna fotka: po nápisu, který se taky stáhl
+        // a přepočítal, nesmí zbýt soubor bez záznamu.
+        Assert.Equal(
+            [.. PrevzateFotky.Klice(vysledek.Fotka.Id).Order()], [.. uloziste.Soubory.Keys.Order()]);
+    }
+
+    /// <summary>
+    /// Opačný směr: když je v hlavičce fotka, zůstane. Obrázek ze složky
+    /// článku je v těchhle případech skoro vždycky tatáž fotka (13 z 22
+    /// změřených článků), takže by se tím nic nezískalo a u dvou článků by
+    /// karta dostala horší záběr.
+    /// </summary>
+    [Fact]
+    public async Task Fotka_v_hlavicce_zustane_a_ze_slozky_se_nesaha()
+    {
+        var html = Stranka("fotka-volne-v-ikony-loga.html");
+        var ogImage = Kanal.Obrazek(html)!;
+
+        var stahovac = new StahovacFotek(new PametoveUloziste(), NullLogger<StahovacFotek>.Instance);
+        var klient = new HttpClient(new ObrazkySvazu(new()
+        {
+            ["https://www.sailing.cz/uploads/ikony-loga/snimek_obrazovky_2026-10-21_v143641.png"] =
+                "og-fotka-deti.jpg",
+        }));
+
+        // Vlastní obrázek se nabízí, ale mapa ho nezná: kdyby po něm stahovač
+        // sáhl, dostane 404 a bylo by to vidět na výsledku.
+        var vysledek = await stahovac.UlozAsync(
+            klient, Svaz, ogImage, Zdroje.SailingCzVlastni(html), default);
+
+        Assert.Equal(ogImage, vysledek.Adresa);
+        Assert.NotNull(vysledek.Fotka);
+    }
+
+    [Fact]
+    public void Obrazky_mimo_slozku_clanku_se_neberou()
+    {
+        // Na stránce článku visí i logo v hlavičce, ikonka PDF a náhledy
+        // odkazovaných článků v postranním panelu. Vlastní složka článku je
+        // od nich odděluje bez toho, aby se test musel chytat jejich tříd.
+        var vlastni = Zdroje.SailingCzVlastni(Stranka("logo-svazu.html"));
+
+        Assert.True(vlastni is null || vlastni.StartsWith("https://www.sailing.cz/uploads/clanky/"));
     }
 
     /// <summary>Úložiště v paměti: test se dívá na to, co by v bucketu leželo.</summary>
@@ -245,6 +326,27 @@ public class PrevzateFotkyTests
             {
                 Content = new ByteArrayContent(pamet.ToArray()),
             };
+        }
+    }
+
+    /// <summary>
+    /// Vzorové obrázky svazu podle adresy. Co v mapě není, vrátí 404 — test
+    /// tak pozná, kdyby stahovač sáhl jinam, než má.
+    /// </summary>
+    private sealed class ObrazkySvazu(Dictionary<string, string> mapa) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (!mapa.TryGetValue(request.RequestUri!.AbsoluteUri, out var soubor))
+                return Task.FromResult(
+                    new HttpResponseMessage(System.Net.HttpStatusCode.NotFound));
+
+            var cesta = Path.Combine(AppContext.BaseDirectory, "Data", "csj-obrazky", soubor);
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent(File.ReadAllBytes(cesta)),
+            });
         }
     }
 

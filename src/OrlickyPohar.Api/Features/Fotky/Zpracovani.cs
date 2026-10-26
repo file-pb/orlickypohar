@@ -3,12 +3,19 @@ using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
 namespace OrlickyPohar.Api.Features.Fotky;
 
 /// <summary>Varianty jedné fotky, připravené k uložení.</summary>
-public record Varianty(byte[] Nahled, byte[] Velky, int Sirka, int Vyska);
+/// <param name="Plochost">
+/// Jak málo barev obrázek má: podíl plochy, který zabírá deset nejčastějších
+/// barev. Fotka má barvy rozprostřené, nápis nebo logo jich má pár a velké
+/// jednolité plochy. Co s tím číslem dělat, ví volající — tady je to jen
+/// změřená vlastnost obrázku.
+/// </param>
+public record Varianty(byte[] Nahled, byte[] Velky, int Sirka, int Vyska, double Plochost);
 
 /// <summary>
 /// Z nahraného souboru udělá dvě varianty ve WebP.
@@ -100,8 +107,44 @@ public static class Zpracovani
             var (velky, sirka, vyska) = await VariantaAsync(obrazek, Nahravani.SirkaVelke, ct);
             var (nahled, _, _) = await VariantaAsync(obrazek, Nahravani.SirkaNahledu, ct);
 
-            return (new Varianty(nahled, velky, sirka, vyska), null);
+            return (new Varianty(nahled, velky, sirka, vyska, Plochost(obrazek)), null);
         }
+    }
+
+    /// <summary>
+    /// Na téhle šířce se plochost měří. Víc pixelů odpověď nezmění a míň už
+    /// začne barvy slévat; zmenšenina navíc setře zrno fotografie, které by
+    /// jinak rozdíl mezi fotkou a nápisem zbytečně nafouklo.
+    /// </summary>
+    private const int SirkaMereni = 160;
+
+    /// <summary>
+    /// Podíl plochy, který zabírá deset nejčastějších barev. Barvy se
+    /// zhrubnou na čtyři bity na kanál, aby komprese a přechody nedělaly
+    /// z jednoho odstínu deset.
+    /// <para>
+    /// Měří se na <b>dekódovaném originálu</b>, ne na našem náhledu: ztrátová
+    /// komprese do barev vnese šum a plochý nápis by se tím naředil.
+    /// </para>
+    /// </summary>
+    private static double Plochost(Image obrazek)
+    {
+        using var maly = obrazek.CloneAs<Rgb24>();
+        if (maly.Width > SirkaMereni) maly.Mutate(x => x.Resize(SirkaMereni, 0));
+
+        var kbelky = new Dictionary<int, int>();
+        maly.ProcessPixelRows(pristup =>
+        {
+            for (var y = 0; y < pristup.Height; y++)
+                foreach (var b in pristup.GetRowSpan(y))
+                {
+                    var kbelik = (b.R >> 4) << 8 | (b.G >> 4) << 4 | b.B >> 4;
+                    kbelky[kbelik] = kbelky.GetValueOrDefault(kbelik) + 1;
+                }
+        });
+
+        var celkem = (double)maly.Width * maly.Height;
+        return celkem == 0 ? 0 : kbelky.Values.OrderDescending().Take(10).Sum() / celkem;
     }
 
     /// <summary>Zmenšená kopie. <b>Nezvětšuje</b> — malá fotka zůstane malá, jen převedená.</summary>

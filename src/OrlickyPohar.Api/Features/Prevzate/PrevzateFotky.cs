@@ -31,6 +31,25 @@ public static class PrevzateFotky
     public const int NejmensiSirka = 600;
 
     /// <summary>
+    /// Od téhle plochosti (<see cref="Fotky.Varianty.Plochost"/>) se obrázek
+    /// bere jako nápis nebo logo, ne jako fotka.
+    /// <para>
+    /// <b>Práh je změřený, ne odhadnutý.</b> Na 22 článcích svazu, kde
+    /// <c>og:image</c> leží volně v knihovně (26. 10. 2026), mají nápisy
+    /// 0,82 až 0,94 a fotky nejvýš 0,66 — mezi tím je mezera a práh sedí
+    /// v ní. Jediný nápis pod prahem je banner <c>2000x700px.jpg</c> (0,31),
+    /// který fotku obsahuje, takže na kartě vypadá dobře.
+    /// </para>
+    /// <para>
+    /// <b>Neplatí to obecně</b>, jen tady: mezi fotkami od zdroje samého se
+    /// nad práh dostanou tři ze šedesáti (fotka na bílém pozadí). Proto se
+    /// podle plochosti nikdy nezahazuje — jen se dá přednost obrázku ze
+    /// složky článku, a ten je v takovém případě skoro vždycky tatáž fotka.
+    /// </para>
+    /// </summary>
+    public const double NejvicPlochy = 0.75;
+
+    /// <summary>
     /// Strop na stažený soubor. Fotka z článku bývá do 500 kB; osm MB je
     /// nad tím s rezervou a zároveň to nepustí dovnitř nic, co by položilo
     /// kontejner s 512 MB.
@@ -74,7 +93,12 @@ public record UlozenaFotka(Guid Id, int Sirka, int Vyska);
 /// Obrázek se podařilo stáhnout, ale na kartu se nehodí — je menší než
 /// <see cref="PrevzateFotky.NejmensiSirka"/>, nebo to není obrázek.
 /// </param>
-public record VysledekFotky(UlozenaFotka? Fotka, bool Nepouzitelna);
+/// <param name="Adresa">
+/// Adresa, ze které kopie opravdu je. Liší se od <c>og:image</c>, když zdroj
+/// dal do hlavičky plochou grafiku a fotka k článku ležela v jeho složce —
+/// a web ji musí znát, aby po výpadku našeho úložiště ukázal tutéž věc.
+/// </param>
+public record VysledekFotky(UlozenaFotka? Fotka, bool Nepouzitelna, string? Adresa = null);
 
 /// <summary>
 /// Stáhne fotku od zdroje, přepočítá ji na naše varianty a uloží.
@@ -87,7 +111,8 @@ public record VysledekFotky(UlozenaFotka? Fotka, bool Nepouzitelna);
 public class StahovacFotek(IUloziste uloziste, ILogger<StahovacFotek> log)
 {
     public async Task<VysledekFotky> UlozAsync(
-        HttpClient klient, ZdrojKanalu zdroj, string ogImage, CancellationToken ct)
+        HttpClient klient, ZdrojKanalu zdroj, string ogImage, string? vlastni,
+        CancellationToken ct)
     {
         if (!uloziste.Pripraveno) return new VysledekFotky(null, false);
 
@@ -100,13 +125,60 @@ public class StahovacFotek(IUloziste uloziste, ILogger<StahovacFotek> log)
             return new VysledekFotky(null, true);
         }
 
-        // Malá nebo nečitelná byla aspoň jedna varianta — rozhoduje poslední
-        // zkoušená, tedy původní `og:image`, protože ta je ta, kterou by web
-        // jinak ukázal.
-        var nepouzitelna = false;
-        foreach (var adresa in PrevzateFotky.Kandidati(zdroj, ogImage))
+        var (varianty, nepouzitelna) = await NejlepsiAsync(klient, zdroj, ogImage, ct);
+        var adresa = ogImage;
+
+        // Nápis místo fotky: zdroj dal do hlavičky plochou grafiku ze své
+        // knihovny, ale k článku nahrál vlastní obrázek. Ten je skoro vždycky
+        // to, co čtenář na kartě čeká — u „Mistrovství ČR na moři" je
+        // v hlavičce samotný nápis, kdežto ve složce článku celý plakát
+        // s lodí (Filip, 26. 10. 2026).
+        if (varianty is { } grafika && grafika.Plochost >= PrevzateFotky.NejvicPlochy
+            && vlastni is not null && vlastni != ogImage)
         {
-            var varianty = await ZkusAsync(klient, adresa, ct);
+            var (zeSlozky, _) = await NejlepsiAsync(klient, zdroj, vlastni, ct);
+            if (zeSlozky is not null)
+            {
+                log.LogInformation(
+                    "Obrázek {Adresa} je plochý ({Plochost:P0}), beru obrázek ze složky článku {Vlastni}",
+                    ogImage, grafika.Plochost, vlastni);
+                (varianty, adresa) = (zeSlozky, vlastni);
+            }
+        }
+
+        if (varianty is null) return new VysledekFotky(null, nepouzitelna);
+
+        var id = Guid.CreateVersion7();
+        await uloziste.UlozAsync(
+            PrevzateFotky.Klic(id, Nahravani.SirkaNahledu), varianty.Nahled, "image/webp", ct);
+        await uloziste.UlozAsync(
+            PrevzateFotky.Klic(id, Nahravani.SirkaVelke), varianty.Velky, "image/webp", ct);
+
+        return new VysledekFotky(
+            new UlozenaFotka(id, varianty.Sirka, varianty.Vyska), false, adresa);
+    }
+
+    /// <summary>
+    /// Nejlepší varianta jedné fotky u zdroje, <b>ještě neuložená</b>:
+    /// zkusí se větší podle zvyklosti zdroje a po ní původní adresa.
+    /// <para>
+    /// Ukládá se až potom a jen jednou. Dokud se ukládalo rovnou tady,
+    /// nešlo si to rozmyslet a sáhnout po jiném obrázku — v bucketu by
+    /// zbyl soubor, ke kterému nevede žádný záznam.
+    /// </para>
+    /// <para>
+    /// <c>Nepouzitelna</c> znamená, že poslední zkoušená varianta — tedy
+    /// původní <c>og:image</c>, ta, kterou by web jinak ukázal — byla malá
+    /// nebo nečitelná.
+    /// </para>
+    /// </summary>
+    private async Task<(Varianty? Varianty, bool Nepouzitelna)> NejlepsiAsync(
+        HttpClient klient, ZdrojKanalu zdroj, string adresa, CancellationToken ct)
+    {
+        var nepouzitelna = false;
+        foreach (var kandidat in PrevzateFotky.Kandidati(zdroj, adresa))
+        {
+            var varianty = await ZkusAsync(klient, kandidat, ct);
             if (varianty is null)
             {
                 nepouzitelna = false;
@@ -119,21 +191,15 @@ public class StahovacFotek(IUloziste uloziste, ILogger<StahovacFotek> log)
             if (varianty.Sirka < PrevzateFotky.NejmensiSirka)
             {
                 log.LogInformation(
-                    "Fotka {Adresa} má jen {Sirka} px, nechávám ji být", adresa, varianty.Sirka);
+                    "Fotka {Adresa} má jen {Sirka} px, nechávám ji být", kandidat, varianty.Sirka);
                 nepouzitelna = true;
                 continue;
             }
 
-            var id = Guid.CreateVersion7();
-            await uloziste.UlozAsync(
-                PrevzateFotky.Klic(id, Nahravani.SirkaNahledu), varianty.Nahled, "image/webp", ct);
-            await uloziste.UlozAsync(
-                PrevzateFotky.Klic(id, Nahravani.SirkaVelke), varianty.Velky, "image/webp", ct);
-
-            return new VysledekFotky(new UlozenaFotka(id, varianty.Sirka, varianty.Vyska), false);
+            return (varianty, false);
         }
 
-        return new VysledekFotky(null, nepouzitelna);
+        return (null, nepouzitelna);
     }
 
     /// <summary>Stáhne jednu adresu a přepočítá ji, nebo vrátí <c>null</c>.</summary>

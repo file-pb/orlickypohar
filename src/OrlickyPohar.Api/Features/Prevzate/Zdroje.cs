@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.RegularExpressions;
 
 namespace OrlickyPohar.Api.Features.Prevzate;
@@ -32,6 +33,12 @@ namespace OrlickyPohar.Api.Features.Prevzate;
 /// vypadají hůř než naše náhradní fotka (Filip, 2. 10. 2026). Pouhá velikost
 /// nestačí: logo svazu má v originále 711 × 800 px.
 /// </param>
+/// <param name="VlastniObrazek">
+/// Najde na stránce článku obrázek, který k němu redakce nahrála — tedy ten,
+/// který patří <b>tomuhle</b> článku, ne obrázek ze sdílené knihovny zdroje.
+/// Použije se, když je v <c>og:image</c> plochá grafika. Je to zvyklost
+/// konkrétního webu, proto patří ke zdroji.
+/// </param>
 /// <param name="VetsiObrazek">
 /// Z adresy náhledu udělá adresu větší varianty téhož obrázku, nebo
 /// <c>null</c>, když to u zdroje nejde. Je to <b>zvyklost konkrétního webu</b>,
@@ -46,7 +53,8 @@ public record ZdrojKanalu(
     string Souhlas,
     string? Logo = null,
     Func<string, string?>? VetsiObrazek = null,
-    Func<string, bool>? NeniFotka = null);
+    Func<string, bool>? NeniFotka = null,
+    Func<string, string?>? VlastniObrazek = null);
 
 public static partial class Zdroje
 {
@@ -100,6 +108,42 @@ public static partial class Zdroje
     /// </summary>
     public static bool SailingCzNeniFotka(string adresa) => KnihovnaLog().IsMatch(adresa);
 
+    [GeneratedRegex("""<img[^>]+src=["']([^"']+)["']""", RegexOptions.IgnoreCase)]
+    private static partial Regex Obrazky();
+
+    /// <summary>Kořen webu zdroje. Stránka má <c>&lt;base href="/"&gt;</c>, takže se
+    /// relativní adresy skládají vůči němu, ne vůči adrese článku.</summary>
+    private static readonly Uri Koren = new("https://www.sailing.cz/");
+
+    /// <summary>Složka, kterou redakce zakládá každému článku zvlášť.</summary>
+    private const string SlozkaClanku = "https://www.sailing.cz/uploads/clanky/";
+
+    /// <summary>
+    /// První obrázek, který redakce nahrála přímo k tomuhle článku. Pozná se
+    /// podle <see cref="SlozkaClanku">vlastní složky článku</see>: redakce jí
+    /// zakládá každému článku svou, zatímco <c>ikony-loga</c> je knihovna
+    /// sdílená přes všechny.
+    /// <para>
+    /// Tím odpadnou i obrázky, které na stránce jsou, ale k článku nepatří:
+    /// logo v hlavičce a ikonka PDF leží pod <c>/layout/</c>, odkazy na další
+    /// články v postranním panelu pod <c>/uploads_thumbs/</c>. Ověřeno na
+    /// padesáti stránkách (26. 10. 2026): stejný výběr jako podle třídy
+    /// <c>mce</c>, kterou do značek dává jejich editor, a bez závislosti na ní.
+    /// </para>
+    /// </summary>
+    public static string? SailingCzVlastni(string html)
+    {
+        foreach (Match nalez in Obrazky().Matches(html))
+        {
+            var adresa = WebUtility.HtmlDecode(nalez.Groups[1].Value).Trim();
+            if (Uri.TryCreate(Koren, adresa, out var uri)
+                && uri.AbsoluteUri.StartsWith(SlozkaClanku, StringComparison.Ordinal))
+                return uri.AbsoluteUri;
+        }
+
+        return null;
+    }
+
     /// <summary>Zdroje, ze kterých se přebírá. Dnes jeden.</summary>
     public static readonly IReadOnlyList<ZdrojKanalu> Vsechny =
     [
@@ -112,6 +156,7 @@ public static partial class Zdroje
                      + "zdroje s odkazem. Rozšířeno 2. 10. 2026 o uložení fotky u nás.",
             Logo: "/zdroje/csj.webp",
             VetsiObrazek: SailingCzVetsi,
-            NeniFotka: SailingCzNeniFotka),
+            NeniFotka: SailingCzNeniFotka,
+            VlastniObrazek: SailingCzVlastni),
     ];
 }

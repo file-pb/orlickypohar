@@ -40,6 +40,8 @@
     <Content Include="..\..\data\csj\clanky-2026-09-23.xml" Link="Data\csj-clanky.xml" CopyToOutputDirectory="PreserveNewest" />
     <!-- Skutečné stránky článků svazu: podle nich se rozhoduje, co je fotka a co logo. -->
     <Content Include="..\..\data\csj\stranky-2026-10-26\*.html" Link="Data\csj-stranky\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Obrázky od svazu, zmenšené na 700 px, aby soubory nebyly zbytečně velké. -->
+    <Content Include="..\..\data\csj\obrazky-2026-10-26\*" Link="Data\csj-obrazky\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <!-- Termínová listina 2027 od rozhodčího: kalendář k nahrání, hlídá ho KontraktTests. -->
     <Content Include="..\..\data\2027-kalendar.json" Link="Data\2027-kalendar.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
