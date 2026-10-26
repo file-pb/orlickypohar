@@ -601,6 +601,7 @@ export function Obrazovka({
               znacky={demo && ukazka ? ukazka.znacky : (trat ?? [])}
               lode={prehravka}
               trasa={demo && ukazka && ukazka.znacky !== trat ? undefined : snimek.trasa}
+              spojnice={demo && ukazka && ukazka.znacky !== trat ? undefined : snimek.spojnice}
               tabule
               ukazka={!!demo}
               prehravkaMs={PREHRAVKA_MS}
@@ -625,6 +626,8 @@ export function Obrazovka({
              (regata trať nezveřejnila), trasa ze snímku by měřila podle
              úplně jiné vody. */
           trasa={demo === "mapa" && ukazka && ukazka.znacky !== trat ? undefined : snimek.trasa}
+          /* Spojnice s obeplutím patří k téže trati jako měřicí trasa. */
+          spojnice={demo === "mapa" && ukazka && ukazka.znacky !== trat ? undefined : snimek.spojnice}
           lode={zive}
           tabule
           zive

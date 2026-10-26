@@ -1,4 +1,11 @@
-import { cestaProMereni, mrizkaVody, type Poloha } from "./voda";
+import {
+  cestaProMereni,
+  mrizkaVody,
+  spojniceTrati,
+  type Poloha,
+  type UzelTrati,
+} from "./voda";
+import { Z_NEJMENE, Z_NEJVIC } from "./mapa";
 
 /**
  * Měřicí trasa trati — <b>po vodě, ne přes kopec</b>.
@@ -61,4 +68,55 @@ export function trasaMereni(znacky: { poradi: number; sirka: number; delka: numb
   if (spocitane.size >= PAMET) spocitane.delete(spocitane.keys().next().value!);
   spocitane.set(klic, trasa);
   return trasa;
+}
+
+/** Spočítaná spojnice pro jednu trať, pro všechna přiblížení. */
+const spojnice = new Map<string, Record<number, Poloha[][]>>();
+
+/**
+ * <b>Spojnice trati z návrháře — ta s obeplutím správným bokem</b>
+ * (Filip, 26. 10. 2026: *„pošli na tabuli i spojnici z návrháře, ať je
+ * v ní vidět obeplutí správným bokem"*).
+ *
+ * Měřicí trasa vede značkou, ne kolem ní, takže na otázku „kterým bokem"
+ * neodpoví. Tahle ano: má obloučky obeplutí a rozestup noh, a je to táž
+ * čára, jakou kreslí návrhář i správa trackeru.
+ *
+ * <b>Pro každé přiblížení zvlášť</b>, protože velikost obloučku i
+ * rozestup se počítají z metrů na pixel — na oddáleném záběru by jinak
+ * obeplutí splynulo s čárou a na přiblíženém by přerostlo bóji.
+ */
+export function spojniceProTabuli(
+  znacky: { poradi: number; sirka: number; delka: number; typ: string; strana?: string | null }[],
+): Record<number, Poloha[][]> {
+  if (znacky.length < 2) return {};
+
+  const serazene = [...znacky].sort((a, b) => a.poradi - b.poradi);
+  const klic = serazene
+    .map((m) => `${m.sirka.toFixed(6)},${m.delka.toFixed(6)},${m.typ},${m.strana ?? ""}`)
+    .join(";");
+  const hotova = spojnice.get(klic);
+  if (hotova) return hotova;
+
+  const uzly: UzelTrati[] = serazene.map((m) => ({
+    poloha: { sirka: m.sirka, delka: m.delka },
+    bok: (m.strana as UzelTrati["bok"]) ?? null,
+    otaci: m.typ === "OtocnaBoje",
+  }));
+
+  const stred = uzly.reduce((s, u) => s + u.poloha.sirka, 0) / uzly.length;
+  const naPixelPriZ0 = 156_543.03 * Math.cos((stred * Math.PI) / 180);
+
+  const ven: Record<number, Poloha[][]> = {};
+  for (let z = Z_NEJMENE + 2; z <= Z_NEJVIC; z++) {
+    // Souřadnice se zaokrouhlují na šest míst (desetina metru): snímek
+    // chodí po dvaceti vteřinách a na čáře to není poznat.
+    ven[z] = spojniceTrati(uzly, naPixelPriZ0 / 2 ** z).map((tah) =>
+      tah.map((b) => ({ sirka: +b.sirka.toFixed(6), delka: +b.delka.toFixed(6) })),
+    );
+  }
+
+  if (spojnice.size >= PAMET) spojnice.delete(spojnice.keys().next().value!);
+  spojnice.set(klic, ven);
+  return ven;
 }
