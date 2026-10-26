@@ -79,7 +79,16 @@ export async function nactiStavTrati(
   return { stav: "ok", trat: (await odpoved.json()) as Trat };
 }
 
-/** Posune stav trati. Vrací chybu k zobrazení, nebo `null`. */
+/**
+ * Posune stav trati. Vrací chybu k zobrazení, nebo `null` — a k tomu
+ * <b>id trati, kterou server vrátil</b>.
+ *
+ * <b>Proč i to id.</b> Přestavba odjeté trati starou nepřepisuje, ale
+ * zakládá novou (`TratSprava.PrestavbaAsync`). Obrazovka to dřív nevěděla
+ * a zůstávala stát na té staré — ta se pořád tvářila jako „přijatá
+ * a zamčená" i s tlačítkem *Odemknout na přestavbu*, takže druhé klepnutí
+ * založilo další trať. Změřeno 26. 10. 2026: dvě klepnutí, dvě trati navíc.
+ */
 export async function posunTrat(
   serie: string,
   zavod: string,
@@ -91,9 +100,9 @@ export async function posunTrat(
    * na kterou se nikdo nedíval (Filip, 15. 10. 2026).
    */
   trat?: number,
-): Promise<string | null> {
+): Promise<{ chyba: string | null; trat?: number }> {
   const t = await tokenZeSezeni();
-  if (!t) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+  if (!t) return { chyba: "Přihlášení vypršelo. Přihlas se prosím znovu." };
 
   let odpoved: Response;
   try {
@@ -112,24 +121,37 @@ export async function posunTrat(
       },
     );
   } catch {
-    return "Nedaří se spojit s API. Zkus to za chvíli.";
+    return { chyba: "Nedaří se spojit s API. Zkus to za chvíli." };
   }
 
-  if (odpoved.ok) return null;
-
-  try {
-    const telo = (await odpoved.json()) as { error?: string };
-    if (telo?.error) return telo.error;
-  } catch {
-    // Tělo nemusí být JSON — 401 z ověřování ho nemá vůbec.
+  if (odpoved.ok) {
+    try {
+      const telo = (await odpoved.json()) as Trat;
+      return { chyba: null, trat: telo?.id };
+    } catch {
+      // Tělo není povinné: kdyby chybělo, krok proběhl a obrazovka zůstane
+      // tam, kde byla. To je horší, ne rozbité.
+      return { chyba: null };
+    }
   }
 
-  if (odpoved.status === 401) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
-  if (odpoved.status === 403)
-    return krok === "prijeti" || krok === "vraceni"
-      ? "Přijmout nebo vrátit trať smí jen rozhodčí ročníku."
-      : "Do trati smí sáhnout pořadatel téhle regaty nebo rozhodčí ročníku.";
-  return `API odpovědělo ${odpoved.status}.`;
+  const chyba = async (): Promise<string> => {
+    try {
+      const telo = (await odpoved.json()) as { error?: string };
+      if (telo?.error) return telo.error;
+    } catch {
+      // Tělo nemusí být JSON — 401 z ověřování ho nemá vůbec.
+    }
+
+    if (odpoved.status === 401) return "Přihlášení vypršelo. Přihlas se prosím znovu.";
+    if (odpoved.status === 403)
+      return krok === "prijeti" || krok === "vraceni"
+        ? "Přijmout nebo vrátit trať smí jen rozhodčí ročníku."
+        : "Do trati smí sáhnout pořadatel téhle regaty nebo rozhodčí ročníku.";
+    return `API odpovědělo ${odpoved.status}.`;
+  };
+
+  return { chyba: await chyba() };
 }
 
 export type Prvek = components["schemas"]["PrvekDto"];

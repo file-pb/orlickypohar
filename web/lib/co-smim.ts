@@ -124,7 +124,23 @@ export type Polozka = {
  * Jedna podoba položky — táž obrazovka, ale jiná role a jiná věta o tom,
  * co se tam dělá.
  */
-type Varianta = Polozka & { pozadavek: Pozadavek };
+type Varianta = Polozka & {
+  pozadavek: Pozadavek;
+  /**
+   * Doplňující podmínka pro otázku, na kterou se jedním `Pozadavek`em
+   * zeptat nejde — totiž „má roli aspoň na jedné regatě ročníku".
+   * Požadavek míří na jeden rozsah a otázka na celý ročník pověření
+   * k jedné zastávce schválně nepokrývá (`smi`).
+   */
+  kdyz?: (udelena: Udelena[]) => boolean;
+};
+
+/** Je pořadatelem aspoň jedné regaty tohohle ročníku? */
+function poradatelemVRocniku(udelena: Udelena[], serie: string): boolean {
+  return udelena.some(
+    (u) => (u.serie === null || u.serie === serie) && pokryva(u.role, "Organizator"),
+  );
+}
 
 /**
  * Z několika podob položky ta, na kterou člověk doopravdy má.
@@ -138,7 +154,9 @@ type Varianta = Polozka & { pozadavek: Pozadavek };
  * první, a popis má odpovídat tomu, co ten člověk na obrazovce dělá.
  */
 function prvniPlatna(udelena: Udelena[], varianty: Varianta[]): Polozka | null {
-  const platna = varianty.find((v) => smi(udelena, v.pozadavek));
+  const platna = varianty.find((v) =>
+    v.kdyz ? v.kdyz(udelena) : smi(udelena, v.pozadavek),
+  );
   if (!platna) return null;
 
   const { pozadavek: _pozadavek, ...polozka } = platna;
@@ -153,13 +171,28 @@ export function polozkyRocniku(udelena: Udelena[], serie: string): Polozka[] {
   const kam = (cesta: string) => `/sprava/${encodeURIComponent(serie)}${cesta}`;
 
   const vse: Varianta[][] = [
+    // <b>Vypsat závod není práce rozhodčího</b>, ačkoliv tu tak dlouho
+    // stálo: `Kalendar.KdoSmi` dává `Vypsany` a `Odjety` pořadateli té
+    // regaty a zbytek řady rozhodčímu. Pořadatel jedné zastávky přitom
+    // na kalendář odkaz neměl vůbec, i když ho tam server pouští
+    // (`KalendarEndpoints.PohledAsync`) a vypsání vlastního závodu je
+    // jen tam — tatáž vada jako u trackeru 24. 10.: funkce bez cesty
+    // (audit obsazení, 26. 10. 2026).
     [
       {
         nazev: "Kalendář ročníku",
-        popis: "Vypsat regatu, posunout termín, zrušit.",
+        popis: "Založit regatu, potvrdit a posunout termín, zrušit.",
         kam: kam("/kalendar"),
         role: "Rozhodci",
         pozadavek: { role: "Rozhodci", serie },
+      },
+      {
+        nazev: "Kalendář ročníku",
+        popis: "Vypsat svou regatu a nahlásit, že se odjela.",
+        kam: kam("/kalendar"),
+        role: "Organizator",
+        pozadavek: { role: "Organizator", serie },
+        kdyz: (u) => poradatelemVRocniku(u, serie),
       },
     ],
     [
@@ -172,7 +205,11 @@ export function polozkyRocniku(udelena: Udelena[], serie: string): Polozka[] {
       },
       {
         nazev: "Výsledky",
-        popis: "Ověřit rozjížďky, vrátit k revizi a pustit ven.",
+        // Pustit ven rozhodčí nesmí: publikace je správcovská
+        // (`VysledkyEndpoints.PublikaceAsync`), a *Potvrzeno* taky
+        // (`Workflow.KdoSmi`). Správce sem nedojde — chytí ho pořadatelská
+        // podoba nad tímhle, která vypuštění ven jmenuje správně.
+        popis: "Ověřit rozjížďky a vrátit je k revizi.",
         kam: kam("/vysledky"),
         role: "Rozhodci",
         pozadavek: { role: "Rozhodci", serie },
@@ -192,13 +229,26 @@ export function polozkyRocniku(udelena: Udelena[], serie: string): Polozka[] {
       role: "Editor",
       pozadavek: { role: "Editor", serie },
     }],
-    [{
-      nazev: "Oprávnění",
-      popis: "Komu udělit roli pořadatele, rozhodčího, správce.",
-      kam: kam("/opravneni"),
-      role: "Rozhodci",
-      pozadavek: { role: "Rozhodci", serie },
-    }],
+    // Rozhodčí přiřazuje pořadatele a editora jedné regatě; roli na celý
+    // ročník a rozhodčího dává jen správce (`Udeleni.RozhodciSmiUdelit`).
+    // Jeden popis pro oba sliboval rozhodčímu dvě role, které mu obrazovka
+    // ani nenabídne (audit obsazení, 26. 10. 2026).
+    [
+      {
+        nazev: "Oprávnění",
+        popis: "Komu udělit roli pořadatele, rozhodčího, správce.",
+        kam: kam("/opravneni"),
+        role: "Spravce",
+        pozadavek: { role: "Spravce", serie },
+      },
+      {
+        nazev: "Oprávnění",
+        popis: "Komu z regat přiřadit pořadatele nebo editora.",
+        kam: kam("/opravneni"),
+        role: "Rozhodci",
+        pozadavek: { role: "Rozhodci", serie },
+      },
+    ],
   ];
 
   return vse
@@ -231,7 +281,11 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
       {
         nazev: "Výsledky",
         kratky: "výsledky",
-        popis: "Ověřit rozjížďky, vrátit k revizi a pustit ven.",
+        // Pustit ven rozhodčí nesmí: publikace je správcovská
+        // (`VysledkyEndpoints.PublikaceAsync`), a *Potvrzeno* taky
+        // (`Workflow.KdoSmi`). Správce sem nedojde — chytí ho pořadatelská
+        // podoba nad tímhle, která vypuštění ven jmenuje správně.
+        popis: "Ověřit rozjížďky a vrátit je k revizi.",
         kam: kam("/vysledky"),
         role: "Rozhodci",
         pozadavek: { role: "Rozhodci", serie },

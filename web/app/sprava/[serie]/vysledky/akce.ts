@@ -207,6 +207,7 @@ export async function stavTratiURozjizdkyAkce(formular: FormData) {
   if (krok !== "prijeti" && krok !== "vraceni")
     redirect(kam(serie, zavod, { chyba: "Neznámý krok se stavem trati." }));
 
-  const chyba = await posunTrat(serie, zavod, krok, duvod || undefined, trat);
+  // Novou trať tudy založit nejde: odsud se jen přijímá a vrací.
+  const { chyba } = await posunTrat(serie, zavod, krok, duvod || undefined, trat);
   redirect(kam(serie, zavod, chyba ? { chyba } : { stav: `trat-${krok}` }));
 }

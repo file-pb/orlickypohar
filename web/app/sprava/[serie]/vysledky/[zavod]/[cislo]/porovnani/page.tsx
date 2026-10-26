@@ -241,6 +241,17 @@ const lod = (radek?: NavrhRadek) =>
     "—"
   );
 
-/** Kdy zapisovatel naposledy uložil, v místním čase Orlíku. */
+/**
+ * Kdy zapisovatel naposledy uložil, v místním čase Orlíku.
+ *
+ * <b>Včetně sekund.</b> Ve výsledcích je ta verze, která se uložila jako
+ * poslední — a dva zapisovatelé v cíli ukládají pár sekund po sobě, takže
+ * na minuty zaokrouhlený čas je u obou stejný a nejde z něj poznat, čí
+ * čísla rozjížďka právě má (audit obsazení, 26. 10. 2026).
+ */
 const cas = (iso: string) =>
-  new Date(iso).toLocaleString("cs-CZ", { timeZone: "Europe/Prague", timeStyle: "short", dateStyle: "short" });
+  new Date(iso).toLocaleString("cs-CZ", {
+    timeZone: "Europe/Prague",
+    timeStyle: "medium",
+    dateStyle: "short",
+  });

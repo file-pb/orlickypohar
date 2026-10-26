@@ -37,6 +37,12 @@ for _z in D["zavody"]:
         _r.setdefault("publikovano", True)
     # Mock zná jen kola poháru; akce se zakládají v kalendáři.
     _z.setdefault("druh", "Pohar")
+    # Nasazený ročník se tváří jako publikovaný — tak ho vydávají i veřejné
+    # cesty mocku. V souboru je `publikovano: false`, protože se nahrává
+    # nepublikovaný (`gen-mock.py --publikovat`), jenže uvnitř mocku by
+    # nepublikovaná regata znamenala, že správa tvrdí opak veřejného webu.
+    # Nově **založená** regata zůstává nepublikovaná, a to je na ní vidět.
+    _z["publikovano"] = True
     # Účast z mocku je ze sešitu rozhodčího, tedy potvrzená — jako po migraci.
     for _u in _z["ucasti"]:
         _u.setdefault("stav", "Potvrzena")
@@ -1142,7 +1148,7 @@ def polohy_zastavky(slug, z):
     ted = time.time()
     od = ted - 3600
     vysledek = []
-    for i, nazev in enumerate(lode):
+    for i, klic in enumerate(lode):
         # Každá třetí loď stárne, každá pátá mlčí úplně — bez nich by
         # obrazovka vypadala, jako že tracking nikdy nevypadne.
         stari = 0.0 if i % 5 else None
@@ -1150,9 +1156,9 @@ def polohy_zastavky(slug, z):
             stari = 150.0
         if stari is None:
             vysledek.append({
-                "lodId": PRIHLASKA_ID.get(nazev, i + 1), "lod": nazev,
-                "cisloPlachty": None,
-                "kategorie": KAT.get(nazev), "sirka": None, "delka": None,
+                "lodId": PRIHLASKA_ID.get(klic, i + 1), "lod": nazev_lodi(klic),
+                "cisloPlachty": LODE.get(klic, {}).get("cisloPlachty"),
+                "kategorie": KAT.get(klic), "sirka": None, "delka": None,
                 "kurz": None, "rychlostMS": None, "casGps": None,
                 "stariMs": None, "stav": "Nedostupna"})
             continue
@@ -1173,8 +1179,9 @@ def polohy_zastavky(slug, z):
 
         cas = ted - stari
         vysledek.append({
-            "lodId": PRIHLASKA_ID.get(nazev, i + 1), "lod": nazev, "cisloPlachty": None,
-            "kategorie": KAT.get(nazev),
+            "lodId": PRIHLASKA_ID.get(klic, i + 1), "lod": nazev_lodi(klic),
+            "cisloPlachty": LODE.get(klic, {}).get("cisloPlachty"),
+            "kategorie": KAT.get(klic),
             "sirka": round(sirka, 6), "delka": round(delka, 6),
             "kurz": round(kurz, 1), "rychlostMS": 2.4,
             "casGps": cas_iso(cas),
@@ -1314,7 +1321,10 @@ def zaznam_rozjizdky(slug, z, cislo, pro_spravu=False):
 
     from datetime import datetime, timedelta
 
-    start = datetime.fromisoformat(r["startV"])
+    # Čas startu nese „Z", a `fromisoformat` ho do Pythonu 3.11 nepřijme —
+    # na stroji s 3.9 pak záznam padal na `ValueError` a tabule místo
+    # zrychleného review dostávala prázdnou odpověď (nalezeno 26. 10. 2026).
+    start = datetime.fromisoformat(r["startV"].replace("Z", "+00:00"))
     od = start - timedelta(minutes=5)
     do = start + timedelta(minutes=40)
 
@@ -1330,7 +1340,7 @@ def zaznam_rozjizdky(slug, z, cislo, pro_spravu=False):
     krok_s = 15
     kroku = int((do - od).total_seconds() // krok_s)
     vysledek = []
-    for i, nazev in enumerate(lode):
+    for i, klic in enumerate(lode):
         # Každá pátá loď záznam nemá — telefon nejel, a to se stává.
         if i % 5 == 4:
             continue
@@ -1360,11 +1370,22 @@ def zaznam_rozjizdky(slug, z, cislo, pro_spravu=False):
                 continue
             body.append({"cas": cas.isoformat(), "sirka": na[0], "delka": na[1]})
         vysledek.append({
-            "lodId": PRIHLASKA_ID.get(nazev, i + 1), "nazev": nazev,
-            "kategorie": KAT.get(nazev), "body": body,
+            "lodId": PRIHLASKA_ID.get(klic, i + 1), "nazev": nazev_lodi(klic),
+            "kategorie": KAT.get(klic), "body": body,
         })
 
     return {"vydava": True, "od": od.isoformat(), "do": do.isoformat(), "lode": vysledek}
+
+
+def nazev_lodi(klic):
+    """Jméno lodi, jak ho vydává API (`Lod.Nazev`), ne klíč z dat.
+
+    Účasti i přihlášky nesou **klíč**, kdežto `PolohaLodi.Lod` a
+    `LodZaznamu.Nazev` v API nesou jméno. Dokud to mock nerozlišoval,
+    jely živé polohy i záznam pod jmény jako `cervene-cafe` — a na tabuli
+    to vypadalo jako vada webu, ne mocku.
+    """
+    return LODE.get(klic, {}).get("nazev", klic)
 
 
 def cas_iso(sekundy):
@@ -2326,7 +2347,9 @@ def zastavka_radek(z):
     return {**{k: z.get(k) for k in
                ("slug", "nazev", "datum", "datumKonce", "typ", "poradatel", "poradi",
                 "stav", "puvodniDatum", "publikovano")},
-            "smiUpravit": rozhodci, "smiPublikovat": rozhodci, "druh": z["druh"],
+            # Publikace zastávky je správcovská, ne rozhodčího
+            # (`KalendarEndpoints.PublikaceAsync`, `Pozadavek(Role.Spravce)`).
+            "smiUpravit": rozhodci, "smiPublikovat": smi_ted("Spravce"), "druh": z["druh"],
             "poradatelSlug": poradatel_zastavky(z)["slug"] if poradatel_zastavky(z) else None,
             "smiMedailonek": bool(poradatel_zastavky(z)) and (rozhodci or organizator),
             "vyhodnoceni": z.get("vyhodnoceni", "PoKategoriich"),
@@ -4345,6 +4368,13 @@ class H(BaseHTTPRequestHandler):
             return self.chyba(400, "Čtenář se neuděluje: je to každý, i nepřihlášený.")
         if role in JEN_ROCNIK and zavod:
             return self.chyba(400, f"Role {role} platí pro celý ročník, ne pro jednu zastávku.")
+        # Rozhodčí přiřazuje pořadatele a editora jedné zastávce, nic víc
+        # (`Udeleni.RozhodciSmiUdelit`). Mock tu dřív nekontroloval nic a
+        # bránu stačilo projít rozhodčím, takže si rozhodčí mohl udělit
+        # správce ročníku — a měřil by se mock, ne aplikace (audit obsazení,
+        # 26. 10. 2026).
+        if not smi_ted("Spravce") and not (zavod and role in ("Organizator", "Editor")):
+            return self.send_error(403)
         if email not in UCTY:
             return self.chyba(404, f"Na e-mail {email} se zatím nikdo nepřihlásil. "
                                    "Účet vzniká až prvním přihlášením, rolí se pozvat nedá.")
@@ -4354,7 +4384,7 @@ class H(BaseHTTPRequestHandler):
         if stavajici:
             return self.odpoved(stavajici)
 
-        novy = {"id": max((o["id"] for o in OPRAVNENI), default=0) + 1,
+        novy = {"id": novy_id(),
                 "uzivatelId": UCTY[email]["id"], "zobrazovane": UCTY[email]["zobrazovane"],
                 "email": email,
                 "role": role, "zavod": zavod, "udelenoV": "2026-01-01T00:00:00+00:00"}
@@ -5012,6 +5042,16 @@ class H(BaseHTTPRequestHandler):
         if (chyba := proc_nejde(z["stav"], na)):
             return self.chyba(400, chyba)
 
+        # <b>Vypsat a odjet patří pořadateli té regaty</b>, zbytek řady
+        # rozhodčímu (`Kalendar.KdoSmi`). Brána pouští celou kalendářní
+        # cestu na rozhodčího, takže bez tohohle řádku mock dovolil
+        # rozhodčímu vypsat regatu, ke které pořadatelem není — a obrazovka
+        # mu to přitom správně nenabídla (`mozneStavy`). Audit obsazení,
+        # 26. 10. 2026.
+        if not smi_ted("Organizator" if na in ("Vypsany", "Odjety") else "Rozhodci",
+                       z["slug"]):
+            return self.send_error(403)
+
         z["stav"] = na
         return self.odpoved(zastavka_radek(z))
 
@@ -5019,6 +5059,10 @@ class H(BaseHTTPRequestHandler):
         z = self.zastavka(slug)
         if not z:
             return None
+
+        # Správce ročníku, ne rozhodčí (`KalendarEndpoints.PublikaceAsync`).
+        if not smi_ted("Spravce"):
+            return self.send_error(403)
 
         z["publikovano"] = bool(self.telo_zadosti().get("publikovano"))
         return self.odpoved(zastavka_radek(z))
@@ -5172,6 +5216,10 @@ class H(BaseHTTPRequestHandler):
         o = next((o for o in OPRAVNENI if o["id"] == int(m.group(1))), None)
         if not o:
             return self.send_error(404)
+        # Odebrat smí rozhodčí jen to, co smí i udělit — jinak by jedním
+        # klepnutím sundal správce nebo sám sebe (`OdeberAsync`).
+        if not smi_ted("Spravce") and not (o["zavod"] and o["role"] in ("Organizator", "Editor")):
+            return self.send_error(403)
         if o["role"] == "Spravce" and sum(1 for x in OPRAVNENI if x["role"] == "Spravce") <= 1:
             return self.chyba(409, "Poslední správce ročníku se odebrat nedá. "
                                    "Nejdřív udělte roli někomu jinému.")
@@ -5393,11 +5441,16 @@ class H(BaseHTTPRequestHandler):
                 # jsou venku.
                 "zastavky": [{"slug": z["slug"], "nazev": z["nazev"]} for z in D["zavody"]],
                 "opravneni": OPRAVNENI,
-                # Přihlášený vývojář je správce, takže smí i na celý ročník
-                # a vidí i seznam účtů. Naposledy přihlášení nahoře.
-                "smiNaRocnik": True,
+                # <b>Na celý ročník a na seznam účtů jen správce.</b> Rozhodčí
+                # přiřazuje pořadatele a editora zastávkám, nic víc
+                # (`OpravneniEndpoints.PrehledAsync`: `SmiNaRocnik = spravce`,
+                # `Ucty = spravce ? … : null`). Natvrdo zapsaná pravda tu
+                # rozhodčímu nabízela role Rozhodčí a Správce i tlačítko
+                # Odebrat u řádků, které mu API odmítne — obrazovka přitom
+                # na tu hodnotu umí reagovat sama (audit obsazení, 26. 10. 2026).
+                "smiNaRocnik": smi_ted("Spravce"),
                 "ucty": sorted(UCTY.values(), key=lambda u: u["naposledyPrihlasenV"],
-                               reverse=True),
+                               reverse=True) if smi_ted("Spravce") else None,
             }
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/boje$', cesta)):
@@ -5544,7 +5597,12 @@ class H(BaseHTTPRequestHandler):
                 return self.send_error(404)
             telo = {"serie": D["slug"], "serieNazev": D["nazev"],
                     "zavod": z["slug"], "zavodNazev": z["nazev"],
-                    "stavZavodu": z["stav"], "zavodPublikovan": True,
+                    # Skutečná hodnota, ne natvrdo: API posílá `z.Publikovano`
+                    # (`VysledkyEndpoints.cs:195`) a obrazovka na ní staví větu
+                    # „regata sama není zveřejněná". Natvrdo zapsaná pravda ji
+                    # schovávala u každé nově založené regaty (audit obsazení,
+                    # 26. 10. 2026).
+                    "stavZavodu": z["stav"], "zavodPublikovan": z["publikovano"],
                     "rozjizdky": [rozjizdka_radek(r, z["slug"])
                                   for r in z["rozjizdky"]],
                     "smiPridatRozjizdku": proc_nejde_na_zavod(z["stav"], z["druh"]) is None

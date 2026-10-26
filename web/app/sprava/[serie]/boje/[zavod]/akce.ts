@@ -253,9 +253,14 @@ export async function stavTratiAkce(formular: FormData) {
   // na kterou se nedíval (Filip, 15. 10. 2026).
   const trat = Number(formular.get("trat") ?? 0) || undefined;
   const duvod = String(formular.get("duvod") ?? "").trim();
-  const chyba = await posunTrat(serie, zavod, krok, duvod || undefined, trat);
+  const { chyba, trat: vracena } = await posunTrat(serie, zavod, krok, duvod || undefined, trat);
 
-  const kdeZustat: Record<string, string> = trat ? { trat: String(trat) } : {};
+  // <b>Přestavba je jediný krok, po kterém se zůstat nemá.</b> Odjetá trať
+  // se nepřepisuje, nahrazuje se novou — a kdo zůstal na té staré, viděl
+  // pořád „přijatá a zamčená" i s tlačítkem *Odemknout na přestavbu*,
+  // takže druhé klepnutí založilo další trať (audit obsazení, 26. 10. 2026).
+  const kde = krok === "prestavba" && vracena ? vracena : trat;
+  const kdeZustat: Record<string, string> = kde ? { trat: String(kde) } : {};
   redirect(kam(chyba ? { ...kdeZustat, chyba } : { ...kdeZustat, stav: `trat-${krok}` }));
 }
 
