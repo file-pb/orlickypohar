@@ -27,6 +27,21 @@ export const metadata = {
  * <b>Co aplikace neumí, je tu taky</b>, a schválně. Nejdražší je hledání
  * funkce, která není; krátký seznam na konci ušetří víc času než
  * kterýkoliv návod výš.
+ *
+ * <b>Nápověda se měří, ne odhaduje</b> (Filip, 26. 10. 2026: *„mohli
+ * bychom udělat nápovědu tak, aby byla strukturovaná?"*). Struktura tu byla
+ * — rozcestník, oddíly, stabilní `id` — jenže **text končil 8. října**.
+ * Změřeno: slova *klíč*, *tracking*, *polohy*, *sledování*, *okno*,
+ * *rozprava*, *upozornění*, *tabule*, *prvek trati* a *úvodník* se v celém
+ * souboru nevyskytovala ani jednou, *trať* dvakrát a *appka* jednou. Šest
+ * oddílů proto přibylo (trať, sledování, klíče, tabule, upozornění, appka)
+ * a mají pevný tvar: co to je → kdo smí → v jakém pořadí → když to nejde.
+ *
+ * <b>Opsané odkud:</b> stavy trati z `StavTrati` a `TypPrvku`, pořadí
+ * závodního dne z `OknaEndpoints` a `NastaveniSprava`, kdo smí na klíče
+ * z `KliceSprava.SmiVydavatAsync` a `SmiSpravovatAsync` a z cesty regaty
+ * v `KliceEndpoints`, co vidí posádky z `CoVidiPosadky`, podmínka vysílání
+ * ven ze `SpoctiVenAsync`. Kde se tvrzení rozešlo s kódem, platí kód.
  */
 export default function Napoveda() {
   return (
@@ -51,6 +66,12 @@ export default function Napoveda() {
             <a href="#prihlasky">přihlášky</a> · <a href="#smernice">směrnice</a> ·{" "}
             <a href="#boje">bóje</a> · <a href="#vysledky">výsledky</a> ·{" "}
             <a href="#role">kdo co smí</a>
+          </li>
+          <li>
+            <b>Na vodě a v telefonu:</b> <a href="#trat">trať z bójí</a> ·{" "}
+            <a href="#tracking">sledování lodí</a> · <a href="#klice">klíč k lodi</a> ·{" "}
+            <a href="#tabule">tabule</a> · <a href="#upozorneni">upozornění</a> ·{" "}
+            <a href="#appka">co umí appka</a>
           </li>
           <li>
             <b>Když něco nejde:</b> <a href="#proc-neni-venku">proč to není venku</a> ·{" "}
@@ -279,6 +300,167 @@ export default function Napoveda() {
         doklad.
       </p>
 
+      <h2 id="trat">Trať: z bójí se skládají prvky</h2>
+      <p>
+        <b>Bóje je věc ve vodě, prvek je úkol pro loď.</b> Z jedné bóje je
+        otočná bóje nebo průjezdní, ze dvou brána, start nebo cíl. Prvky se
+        řadí za sebou a jejich pořadí je trať. Tatáž bóje může být ve dvou
+        prvcích — dvakrát objetý trojúhelník je dvakrát tentýž prvek nad
+        týmiž bójemi, ne jedna bóje se dvěma průjezdy.
+      </p>
+      <p>
+        Trať prochází čtyřmi stavy a <b>veřejně je vidět až od třetího</b>:
+      </p>
+      <div className="tabulka-obal">
+        <table>
+          <thead>
+            <tr>
+              <th>Stav</th>
+              <th>Kdo ho nastaví</th>
+              <th>Co znamená</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Rozestaveno</td>
+              <td>pořadatel regaty</td>
+              <td>Staví se, bóje se ještě hýbou.</td>
+            </tr>
+            <tr>
+              <td>Hotovo</td>
+              <td>pořadatel regaty</td>
+              <td>Postaveno, čeká na rozhodčího.</td>
+            </tr>
+            <tr>
+              <td>Přijato</td>
+              <td><b>rozhodčí</b></td>
+              <td>Platí a je venku. Od téhle chvíle s ní nikdo nehýbe.</td>
+            </tr>
+            <tr>
+              <td>Přestavba</td>
+              <td>rozhodčí</td>
+              <td>Mění se. Venku se místo trati píše „počkej".</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p className="poznamka">
+        <b>Při přestavbě se stará trať schválně neukazuje.</b> Kdo by podle ní
+        vyrazil, pluje k bóji, která už stojí jinde — a to je horší než
+        prázdná stránka. Jedna regata může mít tratí víc a každá rozjížďka si
+        jednu vezme; dvě rozjížďky nad toutéž tratí to u sebe píšou.
+      </p>
+
+      <h2 id="tracking">Sledování lodí na vodě</h2>
+      <p>
+        Telefon na palubě zaznamenává trasu a pořadatel vidí pole na mapě.
+        Všechno se ovládá na jedné obrazovce — ve správě regaty{" "}
+        <i>Živé polohy lodí</i> — a dělá ji <b>pořadatel té regaty nebo
+        rozhodčí ročníku</b>. Má tři sekce, protože je to jeden den a tři
+        otázky téhož člověka: <i>jede se?</i>, <i>kdo to uvidí?</i>,{" "}
+        <i>hlásí se všichni?</i>
+      </p>
+      <p>
+        <b>Pořadí je závazné</b> — každý krok odemyká ten další:
+      </p>
+      <ol className="seznam">
+        <li>
+          <b>Zapnout, co je vidět.</b> Jestli smí polohy ven na tabuli a co
+          z nich uvidí posádky. Dokud se tohle nenastaví, ven nejde nic.
+        </li>
+        <li>
+          <b>Rozprava otevře závodní den.</b> Teprve tím začne server brát
+          trasy z telefonů. Dá se u ní rovnou říct, na kolik hodin.
+        </li>
+        <li>
+          <b>Odstartovat rozjížďku.</b> Na tabuli jdou polohy jen tehdy, když
+          se zrovna jede.
+        </li>
+        <li>
+          <b>Uzavřít den.</b> Okno se zavře a vysílání ven s ním přestane.
+        </li>
+      </ol>
+      <p className="poznamka">
+        <b>Po rozpravě se nastavení zamyká</b> a od té chvíle do něj smí jen
+        rozhodčí, jen směrem k přísnějšímu a jen s důvodem — ten se ukládá
+        jako doklad ke sporu „vy jste nás viděli a my vás ne". Pořadatel už
+        na ně nesmí vůbec. <b>Mimo otevřené okno trasa nevznikne</b>; telefon
+        si body nechá a pošle je, až se den otevře.
+      </p>
+      <p className="poznamka">
+        <b>Uzavřít den je potřeba i tehdy, když se zapomnělo ukončit
+        rozjížďku.</b> Konec rozjížďky je rozhodnutí rozhodčího, ne dopočet,
+        takže bez uzavření dne by tabule vysílala i večer, kdy se pole vrací
+        k molu.
+      </p>
+      <p>
+        Co uvidí posádky, jsou tři možnosti: <b>nic</b>, <b>jen sebe</b> nebo{" "}
+        <b>i ostatní</b>. Když se nenastaví nic, platí <i>jen sebe</i>.
+        Mimo otevřené okno posádka nevidí ani sebe.
+      </p>
+      <p className="poznamka">
+        <b>Appka to zatím neukazuje</b> — server už podle toho odpovídá, ale
+        obrazovka v telefonu na to čeká. Dokud nebude, je to nastavení pro
+        tabuli a pro pořadatele.
+      </p>
+
+      <h2 id="klice">Telefon jako klíč k lodi</h2>
+      <p>
+        Aby telefon směl posílat polohy, musí být spárovaný s lodí. Dělá se to{" "}
+        <b>mobilním klíčem</b>, a je to oprávnění, ne přihlášení: kdo klíč má,
+        smí za tu loď nahrávat trasu. Za to, kdo ten člověk je, ručí ten, kdo
+        mu klíč dal — stejně jako když někdo půjčí klíč od loděnice.{" "}
+        <b>O posádce se nic nevede</b>, nanejvýš jméno, aby se vědělo, kdo je
+        kdo.
+      </p>
+      <div className="tabulka-obal">
+        <table>
+          <thead>
+            <tr>
+              <th>Co</th>
+              <th>Kdo smí</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>vydat pozvánku ke klíči</td>
+              <td>majitel, kapitán, <b>i posádka</b> — ale jen ta s účtem</td>
+            </tr>
+            <tr>
+              <td>vidět spárované telefony</td>
+              <td>majitel, kapitán; u své regaty i pořadatel a rozhodčí</td>
+            </tr>
+            <tr>
+              <td>vypnout sledování cizímu telefonu</td>
+              <td>majitel, kapitán; u své regaty i pořadatel a rozhodčí</td>
+            </tr>
+            <tr>
+              <td>vypnout a zase zapnout sledování <b>svému</b> telefonu</td>
+              <td>sám držitel klíče, i bez účtu</td>
+            </tr>
+            <tr>
+              <td>odebrat klíč</td>
+              <td>majitel, kapitán; u své regaty i pořadatel a rozhodčí</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p className="poznamka">
+        <b>Vydat klíč smí víc lidí než ho vzít</b>, protože odebrání je zásah
+        do cizího telefonu a za posádku odpovídá kapitán. <b>Pořadatel na něj
+        dosáhne u své regaty</b> kvůli pasti „telefon zůstal v autě" — tu
+        vidí z vody právě on a kapitán o ní neví. Sáhne jen na klíče lodí,
+        které tu regatu jedou.
+      </p>
+      <p className="poznamka">
+        <b>Odepnout sledování není totéž co zapomenout klíč.</b> Zapomenutí
+        maže tajemství z telefonu a nikdo jiný se to nedozví; odepnutí je
+        stav na serveru, který uvidí i kapitán. Kdo odjíždí po prvním dni
+        domů, odepne se — a druhý den se zase připne. <b>Odebrání je
+        nevratné</b> a telefonu zavře cestu i k vlastní rozdělané trase, takže
+        co nestihl poslat, už nepošle.
+      </p>
+
       <h2 id="vysledky">Výsledky: od zápisu po web</h2>
       <p>
         Nejdřív musí mít regata <b>rozjížďku</b>; zakládá ji pořadatel. Pak se
@@ -331,6 +513,54 @@ export default function Napoveda() {
         <b>Zapisovali dva?</b> Druhé uložení skončí konfliktem a nabídne
         porovnání obou zápisů. Nic se nepřepíše samo — společný výsledek
         sestavíš ručně a uložíš jako jeden.
+      </p>
+
+      <h2 id="tabule">Tabule na telku</h2>
+      <p>
+        Tabule je obrazovka pro hospodu a klubovnu: střídá pořadí, dojezdy a
+        mapu s loděmi. <b>Nic se na ni nepřihlašuje</b> a má vlastní adresu
+        u každé regaty; v nabídce je pod <i>Tabule na telku</i> rozcestník,
+        který vede na tu, co se zrovna jede.
+      </p>
+      <p className="poznamka">
+        <b>Lodě na mapě se objeví, jen když regata vysílá</b> — tedy když je
+        to zapnuté v nastavení, běží závodní den a jede se rozjížďka (viz{" "}
+        <a href="#tracking">sledování lodí</a>). Dokud žádná regata nevysílá,
+        ukazuje tabule <b>ukázkovou rozjížďku a píše to u sebe</b>: vymyšlené
+        lodě na skutečné trati, aby se dalo posoudit, jak to bude vypadat.
+      </p>
+
+      <h2 id="upozorneni">Upozornění do telefonu</h2>
+      <p>
+        V appce se dá na obrazovce ročníku zapnout <i>Upozornění</i>. Telefon
+        se tím přihlásí k odběru a <b>účet k tomu není potřeba</b> — divák
+        nemá kvůli termínu závodu nic zakládat.
+      </p>
+      <p>
+        <b>Dnes chodí jediná zpráva: výsledky rozjížďky, jakmile je pořadatel
+        pustí ven.</b> Ne při zápisu a ne při ověření — teprve když jdou na
+        web. Opakované puštění téže rozjížďky zprávu podruhé nepošle.
+      </p>
+      <p className="poznamka">
+        <b>Upozornění pro účastníky zatím nejsou</b> — odložený start ani
+        změna trati nikam nechodí. Vědět, komu je poslat, už aplikace umí
+        (telefon je k lodi spárovaný <a href="#klice">klíčem</a>), ale zprávy
+        samy ještě ne.
+      </p>
+
+      <h2 id="appka">Co umí appka</h2>
+      <p>
+        Appka je nástroj na vodu, ne druhý web. Umí čtyři věci:{" "}
+        <b>nahrát trasu lodi</b> (živě i po dojezdu),{" "}
+        <b>spárovat se s lodí klíčem</b>, <b>odebírat upozornění</b> a{" "}
+        <b>přihlásit se účtem</b>, když ho člověk má.
+      </p>
+      <p className="poznamka">
+        <b>Výpadek signálu na vodě je normál, ne porucha.</b> Body se hromadí
+        v telefonu a odesílají se, až je sít. Když se neodesílá, appka řekne
+        proč: <i>bez klíče</i> je věc pro kapitána, <i>bez sítě</i> je stav
+        vody a <i>čeká na rozpravu</i> znamená, že pořadatel ještě neotevřel
+        závodní den.
       </p>
 
       <h2 id="role">Kdo co smí</h2>

@@ -237,8 +237,20 @@ public class VysledkySprava(AppDbContext db)
                 .Select(z => new { z.Slug, z.Nazev, Serie = z.Serie!.Slug })
                 .FirstAsync(ct);
 
+            // <b>Posílá se na odběr ročníku, ne regaty.</b> Appka se hlásí
+            // k ročníku (`serie:<slug>`) — divák chce vědět o sezóně, ne
+            // vypisovat devět regat zvlášť, a nově vypsaná regata by mu
+            // jinak utekla. Odběr regaty (`Odbery.Zavod`) zůstává
+            // připravený pro chvíli, kdy si o jednu regatu někdo řekne;
+            // dokud se k němu nikdo nehlásí, zpráva na něj nikam nedojde.
+            //
+            // Změřeno 26. 10. 2026: tohle tu bylo obráceně, takže se
+            // zařazovalo na `zavod:<slug>`, kdežto telefony se hlásily na
+            // `serie:<slug>` — a `TokenyAsync` hledá odběr jako celou
+            // položku, takže zpráva neodešla **nikomu**. Celý řetěz byl
+            // hotový a nespojený.
             upozorneni.Zarad(
-                Upozorneni.Odbery.Zavod(zavod.Slug),
+                Upozorneni.Odbery.Serie(zavod.Serie),
                 zavod.Nazev,
                 $"Výsledky {rozjizdka.Cislo}. rozjížďky jsou venku.",
                 $"/serie/{zavod.Serie}/zavody/{zavod.Slug}/vysledky");
