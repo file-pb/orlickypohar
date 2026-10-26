@@ -2749,11 +2749,7 @@ body:has(.tabule) { --paticka: calc(3.6 * var(--tv)); }
 body:has(.tabule) main.obal { max-width: none; padding: 0; }
 /* A sama tabule s mapou taky: odsazení si řeší panely, které na mapě
    leží, ne plocha pod nimi. Horní pruh jinak začínal dva vw od kraje. */
-/* <b>Rozvržení pro mapu platí jen pro tu živou.</b> Rozmazaná trať za
-   výsledky nosí tytéž třídy kvůli kreslení, ale tabuli nepřepíná: bez
-   téhle výjimky si `padding: 0` vzalo okraje i výsledkům a nadpis
-   skončil nalepený na levém kraji pod značkou (změřeno 26. 10. 2026). */
-.tabule:has(.tabule-mapa:not(.tabule-mapa-vzadu)) { padding: 0; }
+.tabule:has(.tabule-mapa) { padding: 0; }
 body:has(.tabule) > .partneri { border-top-color: var(--linka); }
 body:has(.tabule) > .partneri img { max-height: calc(2.2 * var(--tv)); }
 body:has(.tabule) > .partneri .partneri-pas a,
@@ -3281,7 +3277,7 @@ body:has(.tabule) {
    V úzké kartě vlevo dole se řádky slily přes sebe a vedle živého pořadí
    říkal totéž podruhé — jen ze zápisu místo z vody. Kde mapa chybí (závod
    bez zadané trati), zůstává: tam je to jediné pořadí, které tabule má. */
-.tabule:has(.tabule-mapa:not(.tabule-mapa-vzadu)) .sloupce { display: none; }
+.tabule:has(.tabule-mapa) .sloupce { display: none; }
 /* Žebříček navazuje přímo na pruh a jde až ke kraji obrazovky — na
    televizi není důvod nechávat kolem panelu rám ani mezeru pod lištou
    (Filip, 24. 10. 2026). Pruh měří 72 px na 1485, tedy 4,85 vw. */
@@ -3289,7 +3285,7 @@ body:has(.tabule) {
    u pásů, ale panel je vedle nich, ne nad nimi — tak ať využije celou
    výšku. Proto `fixed`: uvnitř zkrácené mapy by se zkrátil s ní.
    Odsazení shora je pruh s ukázkovými daty plus horní lišta. */
-.tabule:has(.tabule-mapa:not(.tabule-mapa-vzadu)) .tabule-mapa .nacrt-poradi {
+.tabule:has(.tabule-mapa) .tabule-mapa .nacrt-poradi {
   position: fixed;
   /* <b>Až nahoru, bez odsazení.</b> Těch 28 px bylo místo na pruh
      s ukázkovými daty a horní lištu — ani jedno už nad panelem není
@@ -3315,8 +3311,8 @@ body:has(.tabule) {
    ani vnitřní odsazení karty (Filip, 24. 10. 2026). Podklad a rozměry
    si řídí `.tabule .vrch` výš. */
 
-.tabule:has(.tabule-mapa:not(.tabule-mapa-vzadu)) .karusel,
-.tabule:has(.tabule-mapa:not(.tabule-mapa-vzadu)) .sloupecek > * {
+.tabule:has(.tabule-mapa) .karusel,
+.tabule:has(.tabule-mapa) .sloupecek > * {
   background: color-mix(in srgb, var(--papir) 86%, transparent);
   backdrop-filter: blur(6px);
   border-radius: calc(0.8 * var(--tv));
@@ -4994,8 +4990,9 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .tabule .tabule-demo > ul button[aria-current="false"]::before { content: "  "; }
 
 /* ---------------------------------------------------------------------
-   Výsledky: mezi rozjížďkami a po dojetí regaty. Stojí na místě mapy,
-   za nimi prosvítá rozmazaná trať.
+   Výsledky: mezi rozjížďkami a po dojetí regaty. Stojí na místě mapy
+   a berou si pozadí startovní listiny — mapa pod seznamem pořadí není
+   co ukázat.
    --------------------------------------------------------------------- */
 .tabule .tabule-vysledky {
   position: relative; z-index: 2;
@@ -5007,6 +5004,12 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
      jsou vyšší než za jízdy a usekly jich ještě víc. */
   padding: calc(0.9 * var(--tv)) calc(3 * var(--tv)) var(--dolni-blok, 0px);
   overflow: hidden;
+  /* <b>Totéž pozadí co startovní listina</b> (Filip, 26. 10. 2026).
+     Tabule během dne mění obsah, ne vzhled — kdyby se každá fáze lišila
+     i podkladem, vypadala by každá jako jiná obrazovka. */
+  background:
+    radial-gradient(120% 90% at 18% 0%, color-mix(in srgb, var(--voda) 26%, transparent), transparent 70%),
+    var(--pozadi);
 }
 .tabule .tabule-vysledky > header { display: grid; gap: calc(0.2 * var(--tv)); }
 .tabule .tabule-vysledky h1 { margin: 0; font-size: calc(2.2 * var(--tv)); }
@@ -5041,7 +5044,7 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .tabule .tabule-vysledky-trida li b { min-width: calc(1.6 * var(--tv)); color: var(--tlumeny); }
 .tabule .tabule-vysledky-trida li .lod { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tabule .tabule-vysledky-trida li .body { margin-left: auto; font-variant-numeric: tabular-nums; }
-.tabule .tabule-vysledky-trida .dalsi { margin: 0; color: var(--tlumeny); font-size: calc(0.9 * var(--tv)); }
+.tabule .tabule-vysledky-trida li.dalsi { color: var(--tlumeny); font-style: italic; font-size: calc(1 * var(--tv)); }
 /* Vršek: vývěska vlevo, vpravo blok se značkou a nadpisem — táž sestava
    jako na startovní listině, aby se podoby dne daly číst beze změny. */
 .tabule .tabule-vysledky-vrch {
@@ -5071,14 +5074,4 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
    jen zopakovaly a vzaly výsledkům řádek. */
 .tabule:has(.tabule-vysledky) .rozjizdky-panylky { display: none; }
 .tabule:has(.tabule-vysledky) .tabule-stari-kolecko { right: calc(3 * var(--tv)); }
-/* <b>Trať vzadu: jen tolik, aby bylo poznat, kde se jelo.</b> Je to
-   ozdoba, ne informace, takže si bere celou plochu (vpravo už nestojí
-   žebříček) a ke krajům vybledne — s tvrdou hranou vypadala jako šmouha
-   přilepená přes půl obrazovky. */
-.tabule .tabule-mapa-vzadu {
-  inset: 0 0 var(--dolni-blok, calc(12.6 * var(--tv))) 0;
-  filter: blur(calc(0.45 * var(--tv))) saturate(0.6); opacity: 0.2;
-  -webkit-mask-image: radial-gradient(ellipse at 50% 55%, #000 35%, transparent 80%);
-  mask-image: radial-gradient(ellipse at 50% 55%, #000 35%, transparent 80%);
-}
 .tabule:has(.tabule-vysledky) .tabule-tridy { right: 0; }

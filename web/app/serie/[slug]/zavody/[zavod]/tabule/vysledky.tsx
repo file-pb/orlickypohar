@@ -126,8 +126,11 @@ export function Vysledky({
                     <span className="body">{l.body}</span>
                   </li>
                 ))}
+                {/* Zbytek pole patří pod poslední loď, ne na konec
+                    sloupce — jako `<p>` za seznamem ho `1fr` odsunulo
+                    dolů a text visel sám uprostřed prázdna. */}
+                {t.dalsich > 0 && <li className="dalsi">a další {t.dalsich}</li>}
               </ol>
-              {t.dalsich > 0 && <p className="dalsi">a další {t.dalsich}</p>}
             </div>
           ))}
         </div>

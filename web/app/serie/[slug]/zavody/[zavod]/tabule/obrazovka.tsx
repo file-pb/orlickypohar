@@ -222,7 +222,7 @@ export function Obrazovka({
    */
   const ukazka = useMemo(
     () =>
-      demo
+      demo === "mapa"
         ? pole(
             Math.max(6, Math.min(snimek.lode.length || 24, 30)),
             trat ?? undefined,
@@ -232,13 +232,6 @@ export function Obrazovka({
     [demo, trat, snimek.lode],
   );
   const zive = demo === "mapa" && ukazka ? ukazka.lode : demo ? [] : skutecne;
-  /**
-   * <b>Trať za výsledky.</b> Ostrá tabule kreslí tu regatinu, a když ji
-   * regata nemá zveřejněnou, nekreslí nic — rozmazaný podklad je ozdoba,
-   * ne informace, takže si ho nemá čím vymyslet. V demu ale smysl ztrácí
-   * prázdno: tam ukáže trať ukázky, aby bylo vidět, jak podoba vypadá.
-   */
-  const tratVzadu = demo && ukazka ? ukazka.znacky : trat;
 
   /**
    * <b>Co tabule zrovna ukazuje.</b> Rozhoduje se na jednom místě, aby
@@ -416,17 +409,14 @@ export function Obrazovka({
       {rezim === "listina" ? (
         <Teaser snimek={demo ? sDemoDaty(snimek) : snimek} ted={ted} />
       ) : rezim === "mezi" || rezim === "po" ? (
-        <>
-          {/* <b>Za výsledky mírně rozmazaná trať</b> (Filip, 26. 10.
-              2026). Ukáže, kde se jelo, a přitom neprozradí, kdo kde je
-              — mezi rozjížďkami se polohy ven nepouštějí. */}
-          {tratVzadu && tratVzadu.length >= 2 && (
-            <div className="tabule-mapa tabule-mapa-vzadu" aria-hidden="true">
-              <MapaTrackeru znacky={tratVzadu} lode={[]} tabule zive={false} odsazeni={odsazeni} />
-            </div>
-          )}
-          <Vysledky snimek={demo ? sDemoDaty(snimek, rezim) : snimek} ted={ted} konec={rezim === "po"} />
-        </>
+        /* <b>Žádná trať vzadu</b> (Filip, 26. 10. 2026: *„měla by mít
+           stejné pozadí jak ta startovní listina; ten rank vpravo
+           u těchhle oken není, tak tam nemusí být to pozadí"*). Mapa je
+           pozadí jen tam, kde se po ní něco pohybuje a vpravo u ní stojí
+           žebříček; pod seznamem pořadí je z ní jen šmouha. Pozadí si
+           tyhle podoby berou totéž co startovní listina, aby se tabule
+           mezi fázemi dne nepřevlékala. */
+        <Vysledky snimek={demo ? sDemoDaty(snimek, rezim) : snimek} ted={ted} konec={rezim === "po"} />
       ) : (
       <div className="tabule-mapa" aria-hidden="true">
         <MapaTrackeru
