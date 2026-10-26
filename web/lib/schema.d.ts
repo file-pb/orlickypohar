@@ -6762,6 +6762,12 @@ export interface components {
             potvrzena: boolean;
             /** @default false */
             vyloucena: boolean;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            telefonu: number;
+            baterie: (null | number)[] | null;
         };
         UcastVstup: {
             lod: string;

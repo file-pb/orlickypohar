@@ -13,9 +13,9 @@
         "/serie/{slug}/poradi": {
             "get": {
                 "tags": [
-                    "S\u00e9rie"
+                    "Série"
                 ],
-                "summary": "Vr\u00e1t\u00ed pr\u016fb\u011b\u017en\u00e9 po\u0159ad\u00ed seri\u00e1lu po kategori\u00edch",
+                "summary": "Vrátí průběžné pořadí seriálu po kategoriích",
                 "parameters": [
                     {
                         "name": "slug",
@@ -46,9 +46,9 @@
         "/serie/{serieSlug}/zavody/{slug}": {
             "get": {
                 "tags": [
-                    "Z\u00e1vody"
+                    "Závody"
                 ],
-                "summary": "Vr\u00e1t\u00ed regatu s rozj\u00ed\u017e\u010fkami a v\u00fdsledky",
+                "summary": "Vrátí regatu s rozjížďkami a výsledky",
                 "parameters": [
                     {
                         "name": "serieSlug",
@@ -87,10 +87,10 @@
         "/zarizeni": {
             "put": {
                 "tags": [
-                    "Upozorn\u011bn\u00ed"
+                    "Upozornění"
                 ],
-                "summary": "Zap\u00ed\u0161e za\u0159\u00edzen\u00ed k odb\u011bru upozorn\u011bn\u00ed",
-                "description": "Bez p\u0159ihl\u00e1\u0161en\u00ed. Appka vol\u00e1 p\u0159i ka\u017ed\u00e9m spu\u0161t\u011bn\u00ed, proto\u017ee Expo token po p\u0159einstalaci m\u011bn\u00ed; druh\u00fd z\u00e1pis t\u00e9ho\u017e tokenu jen p\u0159ep\u00ed\u0161e odb\u011bry. Odb\u011br m\u00e1 tvar `serie:{slug}` nebo `zavod:{slug}`.",
+                "summary": "Zapíše zařízení k odběru upozornění",
+                "description": "Bez přihlášení. Appka volá při každém spuštění, protože Expo token po přeinstalaci mění; druhý zápis téhož tokenu jen přepíše odběry. Odběr má tvar `serie:{slug}` nebo `zavod:{slug}`.",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -113,8 +113,8 @@
                 "tags": [
                     "Import"
                 ],
-                "summary": "Nahraje cel\u00fd ro\u010dn\u00edk z jednoho souboru",
-                "description": "Idempotentn\u00ed: druh\u00e9 odesl\u00e1n\u00ed t\u00e9ho\u017e souboru nic nezduplikuje. Bu\u010f projde cel\u00e1 d\u00e1vka, nebo se neulo\u017e\u00ed nic.\n\n`rezim=nahled` nic neulo\u017e\u00ed a vr\u00e1t\u00ed, co by se stalo, i s otiskem ro\u010dn\u00edku. `rezim=bezpecny` (v\u00fdchoz\u00ed) ulo\u017e\u00ed, ale odm\u00edtne d\u00e1vku, kter\u00e1 by p\u0159epsala v\u00fdsledky zapsan\u00e9 v aplikaci nebo st\u00e1hla publikaci. `rezim=oprava` p\u0159ep\u00ed\u0161e i je a vy\u017eaduje `otisk` z n\u00e1hledu \u2014 idempotence chr\u00e1n\u00ed p\u0159ed opakov\u00e1n\u00edm souboru, ne p\u0159ed jeho zastaralost\u00ed.",
+                "summary": "Nahraje celý ročník z jednoho souboru",
+                "description": "Idempotentní: druhé odeslání téhož souboru nic nezduplikuje. Buď projde celá dávka, nebo se neuloží nic.\n\n`rezim=nahled` nic neuloží a vrátí, co by se stalo, i s otiskem ročníku. `rezim=bezpecny` (výchozí) uloží, ale odmítne dávku, která by přepsala výsledky zapsané v aplikaci nebo stáhla publikaci. `rezim=oprava` přepíše i je a vyžaduje `otisk` z náhledu — idempotence chrání před opakováním souboru, ne před jeho zastaralostí.",
                 "parameters": [
                     {
                         "name": "rezim",
@@ -151,10 +151,10 @@
         "/vodocet/orlik/rada": {
             "get": {
                 "tags": [
-                    "Vodo\u010det"
+                    "Vodočet"
                 ],
-                "summary": "Hladina Orl\u00edku za zvolen\u00fd rozsah",
-                "description": "Rozsah je jeden z kl\u00ed\u010d\u016f, kter\u00e9 `/vodocet/orlik` vrac\u00ed v `dostupneRozsahy`. Body jsou pro\u0159\u00eddl\u00e9 podle st\u00e1\u0159\u00ed u\u017e v datab\u00e1zi a odpov\u011b\u010f je nav\u00edc zastropovan\u00e1, tak\u017ee ani ro\u010dn\u00ed graf nep\u0159es\u00e1hne p\u00e1r set bod\u016f. 400 na nezn\u00e1m\u00fd rozsah, 404, dokud nen\u00ed ulo\u017een\u00e9 \u017e\u00e1dn\u00e9 m\u011b\u0159en\u00ed.",
+                "summary": "Hladina Orlíku za zvolený rozsah",
+                "description": "Rozsah je jeden z klíčů, které `/vodocet/orlik` vrací v `dostupneRozsahy`. Body jsou prořídlé podle stáří už v databázi a odpověď je navíc zastropovaná, takže ani roční graf nepřesáhne pár set bodů. 400 na neznámý rozsah, 404, dokud není uložené žádné měření.",
                 "parameters": [
                     {
                         "name": "rozsah",
@@ -195,10 +195,10 @@
         "/vodocet/orlik": {
             "get": {
                 "tags": [
-                    "Vodo\u010det"
+                    "Vodočet"
                 ],
-                "summary": "Stav n\u00e1dr\u017ee Orl\u00edk a p\u0159\u00edtok a odtok za posledn\u00edch 24 h",
-                "description": "Z m\u011b\u0159en\u00ed, kter\u00e1 aplikace ka\u017ed\u00fdch deset minut sb\u00edr\u00e1 z port\u00e1lu Povod\u00ed Vltavy. 404, dokud nen\u00ed ulo\u017een\u00e9 \u017e\u00e1dn\u00e9 m\u011b\u0159en\u00ed.",
+                "summary": "Stav nádrže Orlík a přítok a odtok za posledních 24 h",
+                "description": "Z měření, která aplikace každých deset minut sbírá z portálu Povodí Vltavy. 404, dokud není uložené žádné měření.",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -219,10 +219,10 @@
         "/prevzate-clanky": {
             "get": {
                 "tags": [
-                    "\u010cl\u00e1nky"
+                    "Články"
                 ],
-                "summary": "Vr\u00e1t\u00ed novinky p\u0159ejat\u00e9 z ciz\u00edch kan\u00e1l\u016f, od nejnov\u011bj\u0161\u00ed",
-                "description": "Titulek, perex a odkaz na origin\u00e1l \u2014 pln\u00fd text se nep\u0159eb\u00edr\u00e1. Dr\u017e\u00ed se nejv\u00fd\u0161 osm; nov\u011bj\u0161\u00ed vytla\u010duj\u00ed star\u0161\u00ed.",
+                "summary": "Vrátí novinky přejaté z cizích kanálů, od nejnovější",
+                "description": "Titulek, perex a odkaz na originál — plný text se nepřebírá. Drží se nejvýš osm; novější vytlačují starší.",
                 "parameters": [
                     {
                         "name": "limit",
@@ -253,10 +253,10 @@
         "/vodocet/teplota-hladiny": {
             "get": {
                 "tags": [
-                    "Vodo\u010det"
+                    "Vodočet"
                 ],
-                "summary": "Povrchov\u00e1 teplota Orl\u00edku ze satelitu Landsat",
-                "description": "Sn\u00edmky za `dni` dn\u00ed p\u0159ed t\u00edm nejnov\u011bj\u0161\u00edm (v\u00fdchoz\u00ed 14), od nejnov\u011bj\u0161\u00edho. Odhad horn\u00ed vrstvy kolem poledne, zat\u00edm neov\u011b\u0159en\u00fd teplom\u011brem.",
+                "summary": "Povrchová teplota Orlíku ze satelitu Landsat",
+                "description": "Snímky za `dni` dní před tím nejnovějším (výchozí 14), od nejnovějšího. Odhad horní vrstvy kolem poledne, zatím neověřený teploměrem.",
                 "parameters": [
                     {
                         "name": "dni",
@@ -282,10 +282,10 @@
             },
             "post": {
                 "tags": [
-                    "Vodo\u010det"
+                    "Vodočet"
                 ],
-                "summary": "Z\u00e1pis teplot z pl\u00e1novan\u00e9 \u00falohy",
-                "description": "Chr\u00e1n\u011bno tokenem v hlavi\u010dce X-Landsat-Token. Idempotentn\u00ed podle sn\u00edmku a m\u00edsta: opakovan\u00e9 odesl\u00e1n\u00ed hodnotu p\u0159ep\u00ed\u0161e, nic nep\u0159ibude.",
+                "summary": "Zápis teplot z plánované úlohy",
+                "description": "Chráněno tokenem v hlavičce X-Landsat-Token. Idempotentní podle snímku a místa: opakované odeslání hodnotu přepíše, nic nepřibude.",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -306,10 +306,10 @@
         "/lode/napoveda": {
             "get": {
                 "tags": [
-                    "Lod\u011b"
+                    "Lodě"
                 ],
-                "summary": "Napov\u00ed lod\u011b podle jm\u00e9na nebo \u010d\u00edsla plachty",
-                "description": "Pro formul\u00e1\u0159 p\u0159ihl\u00e1\u0161ky. Parametr serie \u0159\u00edk\u00e1, ke kter\u00e9mu ro\u010dn\u00edku se vztahuje p\u0159\u00edznak vRocniku a kategorie. Krat\u0161\u00ed dotaz ne\u017e dva znaky vrac\u00ed pr\u00e1zdno; vse=true vyd\u00e1 cel\u00fd seznam pro nab\u00eddku prohl\u00ed\u017ee\u010de.",
+                "summary": "Napoví lodě podle jména nebo čísla plachty",
+                "description": "Pro formulář přihlášky. Parametr serie říká, ke kterému ročníku se vztahuje příznak vRocniku a kategorie. Kratší dotaz než dva znaky vrací prázdno; vse=true vydá celý seznam pro nabídku prohlížeče.",
                 "parameters": [
                     {
                         "name": "q",
@@ -354,10 +354,10 @@
         "/serie/{serie}/zavody/{zavod}/prihlasky": {
             "post": {
                 "tags": [
-                    "P\u0159ihl\u00e1\u0161ky"
+                    "Přihlášky"
                 ],
-                "summary": "P\u0159ihl\u00e1s\u00ed lo\u010f na regatu z ve\u0159ejn\u00e9ho formul\u00e1\u0159e",
-                "description": "Bez p\u0159ihl\u00e1\u0161en\u00ed. Vznik\u00e1 po\u017eadavek, kter\u00fd po\u0159adatel zap\u00ed\u0161e, vr\u00e1t\u00ed k dopln\u011bn\u00ed, nebo odm\u00edtne; na webu lo\u010f do t\u00e9 doby nen\u00ed. Vy\u017eaduje kontakt a souhlas.",
+                "summary": "Přihlásí loď na regatu z veřejného formuláře",
+                "description": "Bez přihlášení. Vzniká požadavek, který pořadatel zapíše, vrátí k doplnění, nebo odmítne; na webu loď do té doby není. Vyžaduje kontakt a souhlas.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -405,8 +405,8 @@
                 "tags": [
                     "Identita"
                 ],
-                "summary": "Vr\u00e1t\u00ed p\u0159ihl\u00e1\u0161en\u00e9ho u\u017eivatele a jeho opr\u00e1vn\u011bn\u00ed",
-                "description": "P\u0159i prvn\u00edm p\u0159ihl\u00e1\u0161en\u00ed u\u017eivatele zalo\u017e\u00ed. Nov\u011b zalo\u017een\u00fd nem\u00e1 \u017e\u00e1dn\u00e1 opr\u00e1vn\u011bn\u00ed \u2014 pozvat \u010dlov\u011bka znamen\u00e1 d\u00e1t mu roli. Z\u00e1rove\u0148 \u00fa\u010det sp\u00e1ruje s lod\u011bmi, kde jeho e-mail sed\u00ed s kontaktem.",
+                "summary": "Vrátí přihlášeného uživatele a jeho oprávnění",
+                "description": "Při prvním přihlášení uživatele založí. Nově založený nemá žádná oprávnění — pozvat člověka znamená dát mu roli. Zároveň účet spáruje s loděmi, kde jeho e-mail sedí s kontaktem.",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -426,8 +426,8 @@
                 "tags": [
                     "Identita"
                 ],
-                "summary": "Vr\u00e1t\u00ed lod\u011b, ke kter\u00fdm p\u0159ihl\u00e1\u0161en\u00fd pat\u0159\u00ed, i s rol\u00ed",
-                "description": "Majitel, kapit\u00e1n, pos\u00e1dka, fanou\u0161ek. Vazba vznik\u00e1 shodou e-mailu s kontaktem na p\u0159ihl\u00e1\u0161ce, k\u00f3dem od po\u0159adatele, nebo n\u00e1rokem, kter\u00fd potvrd\u00ed kapit\u00e1n.",
+                "summary": "Vrátí lodě, ke kterým přihlášený patří, i s rolí",
+                "description": "Majitel, kapitán, posádka, fanoušek. Vazba vzniká shodou e-mailu s kontaktem na přihlášce, kódem od pořadatele, nebo nárokem, který potvrdí kapitán.",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -450,8 +450,8 @@
                 "tags": [
                     "Identita"
                 ],
-                "summary": "Vystav\u00ed p\u0159ipojovac\u00ed k\u00f3d k lodi, kde jsem kapit\u00e1n nebo majitel",
-                "description": "K\u00f3d plat\u00ed \u010dtvrt hodiny a sm\u00ed ho pou\u017e\u00edt v\u00edc lid\u00ed \u2014 pos\u00e1dka se p\u0159ipojuje po jednom z jednoho pap\u00edru. QR si z k\u00f3du poskl\u00e1d\u00e1 klient.",
+                "summary": "Vystaví připojovací kód k lodi, kde jsem kapitán nebo majitel",
+                "description": "Kód platí čtvrt hodiny a smí ho použít víc lidí — posádka se připojuje po jednom z jednoho papíru. QR si z kódu poskládá klient.",
                 "parameters": [
                     {
                         "name": "lod",
@@ -483,8 +483,8 @@
                 "tags": [
                     "Identita"
                 ],
-                "summary": "Vyp\u00ed\u0161e, kdo je k m\u00e9 lodi p\u0159ipojen\u00fd",
-                "description": "Kapit\u00e1n nebo majitel lodi.",
+                "summary": "Vypíše, kdo je k mé lodi připojený",
+                "description": "Kapitán nebo majitel lodi.",
                 "parameters": [
                     {
                         "name": "lod",
@@ -519,8 +519,8 @@
                 "tags": [
                     "Identita"
                 ],
-                "summary": "Odebere p\u0159ipojen\u00ed k m\u00e9 lodi",
-                "description": "Kapit\u00e1n nebo majitel lodi. Posledn\u00ed kapit\u00e1n se odebrat ned\u00e1 \u2014 lo\u010f by z\u016fstala bez n\u011bkoho odpov\u011bdn\u00e9ho.",
+                "summary": "Odebere připojení k mé lodi",
+                "description": "Kapitán nebo majitel lodi. Poslední kapitán se odebrat nedá — loď by zůstala bez někoho odpovědného.",
                 "parameters": [
                     {
                         "name": "lod",
@@ -555,8 +555,8 @@
                 "tags": [
                     "Identita"
                 ],
-                "summary": "P\u0159ipoj\u00ed p\u0159ihl\u00e1\u0161en\u00fd \u00fa\u010det k lodi podle k\u00f3du",
-                "description": "P\u0159ipojen\u00fd je v\u017edycky pos\u00e1dka \u2014 kapit\u00e1nem d\u011bl\u00e1 jen spr\u00e1vce ro\u010dn\u00edku. Kdo u\u017e u lodi roli m\u00e1, o ni zad\u00e1n\u00edm k\u00f3du nep\u0159ijde.",
+                "summary": "Připojí přihlášený účet k lodi podle kódu",
+                "description": "Připojený je vždycky posádka — kapitánem dělá jen správce ročníku. Kdo už u lodi roli má, o ni zadáním kódu nepřijde.",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -586,8 +586,8 @@
                 "tags": [
                     "Identita"
                 ],
-                "summary": "Po\u017e\u00e1d\u00e1 o p\u0159ipojen\u00ed k lodi, kterou potvrd\u00ed kapit\u00e1n",
-                "description": "T\u0159et\u00ed cesta, kdy\u017e e-mail nesedl a k\u00f3d nikdo nedal. N\u00e1rok s\u00e1m o sob\u011b ned\u00e1v\u00e1 nic \u2014 dokud ho kapit\u00e1n nepotvrd\u00ed, je to jen \u017e\u00e1dost.",
+                "summary": "Požádá o připojení k lodi, kterou potvrdí kapitán",
+                "description": "Třetí cesta, když e-mail nesedl a kód nikdo nedal. Nárok sám o sobě nedává nic — dokud ho kapitán nepotvrdí, je to jen žádost.",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -608,7 +608,7 @@
                 "tags": [
                     "Identita"
                 ],
-                "summary": "Vyp\u00ed\u0161e moje \u017e\u00e1dosti o lod\u011b a jak dopadly",
+                "summary": "Vypíše moje žádosti o lodě a jak dopadly",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -631,8 +631,8 @@
                 "tags": [
                     "Identita"
                 ],
-                "summary": "Vyp\u00ed\u0161e \u017e\u00e1dosti \u010dekaj\u00edc\u00ed u m\u00e9 lodi",
-                "description": "Kapit\u00e1n nebo majitel lodi.",
+                "summary": "Vypíše žádosti čekající u mé lodi",
+                "description": "Kapitán nebo majitel lodi.",
                 "parameters": [
                     {
                         "name": "lod",
@@ -667,8 +667,8 @@
                 "tags": [
                     "Identita"
                 ],
-                "summary": "P\u0159ijme nebo zam\u00edtne \u017e\u00e1dost o p\u0159ipojen\u00ed k m\u00e9 lodi",
-                "description": "Kapit\u00e1n nebo majitel. P\u0159ijet\u00ed d\u011bl\u00e1 z \u017eadatele pos\u00e1dku; kapit\u00e1nem se st\u00e1v\u00e1 ten, kdo lo\u010f p\u0159evzal jako prvn\u00ed, ne ten, koho n\u011bkdo potvrd\u00ed.",
+                "summary": "Přijme nebo zamítne žádost o připojení k mé lodi",
+                "description": "Kapitán nebo majitel. Přijetí dělá z žadatele posádku; kapitánem se stává ten, kdo loď převzal jako první, ne ten, koho někdo potvrdí.",
                 "parameters": [
                     {
                         "name": "lod",
@@ -711,10 +711,10 @@
         "/sprava/serie/{serie}/lode/{lod}/kod": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vystav\u00ed p\u0159ipojovac\u00ed k\u00f3d k lodi ro\u010dn\u00edku",
-                "description": "Organiz\u00e1tor nebo rozhod\u010d\u00ed ro\u010dn\u00edku \u2014 u registrace, kdy lo\u010f je\u0161t\u011b \u017e\u00e1dn\u00e9ho kapit\u00e1na nem\u00e1.",
+                "summary": "Vystaví připojovací kód k lodi ročníku",
+                "description": "Organizátor nebo rozhodčí ročníku — u registrace, kdy loď ještě žádného kapitána nemá.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -754,8 +754,8 @@
                 "tags": [
                     "Trasy"
                 ],
-                "summary": "Vyp\u00ed\u0161e okna regat, ve kter\u00fdch tahle lo\u010f z\u00e1vod\u00ed",
-                "description": "Prokazuje se kl\u00ed\u010dem k lodi. Telefon si je st\u00e1hne dop\u0159edu a \u0159\u00edd\u00ed se jimi i bez sign\u00e1lu; zm\u011bna od po\u0159adatele se projev\u00ed, a\u017e sign\u00e1l chyt\u00ed.",
+                "summary": "Vypíše okna regat, ve kterých tahle loď závodí",
+                "description": "Prokazuje se klíčem k lodi. Telefon si je stáhne dopředu a řídí se jimi i bez signálu; změna od pořadatele se projeví, až signál chytí.",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -778,8 +778,8 @@
                 "tags": [
                     "Polohy"
                 ],
-                "summary": "\u017div\u00e9 polohy pro div\u00e1ka",
-                "description": "Vys\u00edl\u00e1 se, jen kdy\u017e to rozhod\u010d\u00ed povolil **a zrovna b\u011b\u017e\u00ed rozj\u00ed\u017e\u010fka** \u2014 mimo ni se vyd\u00e1v\u00e1n\u00ed vyp\u00edn\u00e1, proto\u017ee o\u0159ez zezadu se ned\u00e1 ud\u011blat dop\u0159edu. `vysila: false` znamen\u00e1 \u201ete\u010f ne\"; pro\u010d, se ven ne\u0159\u00edk\u00e1. Lo\u010f bez polohy a posledn\u00ed zn\u00e1m\u00e1 poloha mimo rozj\u00ed\u017e\u010fku se nevyd\u00e1vaj\u00ed v\u016fbec \u2014 to je \u00fadaj pro z\u00e1vodn\u00ed v\u00fdbor.",
+                "summary": "Živé polohy pro diváka",
+                "description": "Vysílá se, jen když to rozhodčí povolil **a zrovna běží rozjížďka** — mimo ni se vydávání vypíná, protože ořez zezadu se nedá udělat dopředu. `vysila: false` znamená „teď ne\"; proč, se ven neříká. Loď bez polohy a poslední známá poloha mimo rozjížďku se nevydávají vůbec — to je údaj pro závodní výbor.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -815,10 +815,10 @@
         "/klice/uplatnit": {
             "post": {
                 "tags": [
-                    "Kl\u00ed\u010de"
+                    "Klíče"
                 ],
-                "summary": "Vym\u011bn\u00ed pozv\u00e1nku z QR za mobiln\u00ed kl\u00ed\u010d k lodi",
-                "description": "Bez p\u0159ihl\u00e1\u0161en\u00ed \u2014 to je cel\u00fd smysl. Pozv\u00e1nka je jednor\u00e1zov\u00e1 a plat\u00ed 48 hodin. Vymy\u0161len\u00e1, propadl\u00e1 i u\u017e uplatn\u011bn\u00e1 d\u00e1vaj\u00ed tut\u00e9\u017e odpov\u011b\u010f, aby se z n\u00ed nedalo nic vy\u010d\u00edst.",
+                "summary": "Vymění pozvánku z QR za mobilní klíč k lodi",
+                "description": "Bez přihlášení — to je celý smysl. Pozvánka je jednorázová a platí 48 hodin. Vymyšlená, propadlá i už uplatněná dávají tutéž odpověď, aby se z ní nedalo nic vyčíst.",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -849,10 +849,10 @@
         "/serie/{serie}/zavody/{zavod}/trat": {
             "get": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "Tra\u0165 regaty, jakmile ji rozhod\u010d\u00ed p\u0159ijal",
-                "description": "Bez p\u0159ihl\u00e1\u0161en\u00ed. Nep\u0159ijat\u00e1 tra\u0165 se nevyd\u00e1v\u00e1 v\u016fbec; u p\u0159estavby se vrac\u00ed jen p\u0159\u00edznak, \u017ee se tra\u0165 p\u0159estavuje, a b\u00f3je se zaml\u010d\u00ed. Bez parametru vyd\u00e1v\u00e1 tra\u0165 rozj\u00ed\u017e\u010fky na \u0159ad\u011b; `?rozjizdka=N` vybere konkr\u00e9tn\u00ed. \u010c\u00edsla rozj\u00ed\u017ed\u011bk, kter\u00e9 ve\u0159ejnou tra\u0165 maj\u00ed, vrac\u00ed v poli `rozjizdky`.",
+                "summary": "Trať regaty, jakmile ji rozhodčí přijal",
+                "description": "Bez přihlášení. Nepřijatá trať se nevydává vůbec; u přestavby se vrací jen příznak, že se trať přestavuje, a bóje se zamlčí. Bez parametru vydává trať rozjížďky na řadě; `?rozjizdka=N` vybere konkrétní. Čísla rozjížděk, které veřejnou trať mají, vrací v poli `rozjizdky`.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -896,10 +896,10 @@
         "/sprava/naklady": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vr\u00e1t\u00ed n\u00e1klady na provoz a servis poh\u00e1ru, m\u011bs\u00ed\u010dn\u011b i ro\u010dn\u011b",
-                "description": "Vy\u017eaduje roli spr\u00e1vce cel\u00e9ho webu. \u010c\u00edsla po\u010d\u00edt\u00e1 p\u0159ehled stavu platformy a aplikace k nim p\u0159id\u00e1v\u00e1 p\u0159ir\u00e1\u017eku (v\u00fdchoz\u00edch 5 %), kterou vrac\u00ed v poli prirazkaProcent. Kdy\u017e zdroj chyb\u00ed nebo nen\u00ed nastaven\u00fd, vrac\u00ed 503 s vysv\u011btlen\u00edm.",
+                "summary": "Vrátí náklady na provoz a servis poháru, měsíčně i ročně",
+                "description": "Vyžaduje roli správce celého webu. Čísla počítá přehled stavu platformy a aplikace k nim přidává přirážku (výchozích 5 %), kterou vrací v poli prirazkaProcent. Když zdroj chybí nebo není nastavený, vrací 503 s vysvětlením.",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -917,9 +917,9 @@
         "/serie": {
             "get": {
                 "tags": [
-                    "S\u00e9rie"
+                    "Série"
                 ],
-                "summary": "Vr\u00e1t\u00ed publikovan\u00e9 ro\u010dn\u00edky",
+                "summary": "Vrátí publikované ročníky",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -940,9 +940,9 @@
         "/serie/{slug}": {
             "get": {
                 "tags": [
-                    "S\u00e9rie"
+                    "Série"
                 ],
-                "summary": "Vr\u00e1t\u00ed ro\u010dn\u00edk s kategoriemi, regatami a p\u0159ihl\u00e1\u0161kami",
+                "summary": "Vrátí ročník s kategoriemi, regatami a přihláškami",
                 "parameters": [
                     {
                         "name": "slug",
@@ -973,10 +973,10 @@
         "/serie/{slug}/lode": {
             "get": {
                 "tags": [
-                    "S\u00e9rie"
+                    "Série"
                 ],
-                "summary": "Vr\u00e1t\u00ed lod\u011b p\u0159ihl\u00e1\u0161en\u00e9 do ro\u010dn\u00edku, i s jejich id",
-                "description": "Pro v\u00fdb\u011br lodi, ke kter\u00e9 se n\u011bkdo hl\u00e1s\u00ed (\u017e\u00e1dost o p\u0159ipojen\u00ed). Jm\u00e9na lod\u00ed jsou ve\u0159ejn\u00e1 i dnes \u2014 ve v\u00fdpisu \u00fa\u010dastn\u00edk\u016f regaty.",
+                "summary": "Vrátí lodě přihlášené do ročníku, i s jejich id",
+                "description": "Pro výběr lodi, ke které se někdo hlásí (žádost o připojení). Jména lodí jsou veřejná i dnes — ve výpisu účastníků regaty.",
                 "parameters": [
                     {
                         "name": "slug",
@@ -1007,10 +1007,10 @@
         "/serie/{slug}/clanky": {
             "get": {
                 "tags": [
-                    "\u010cl\u00e1nky"
+                    "Články"
                 ],
-                "summary": "Vr\u00e1t\u00ed publikovan\u00e9 \u010dl\u00e1nky ro\u010dn\u00edku, od nejnov\u011bj\u0161\u00edho",
-                "description": "Parametrem zavod se v\u00fdpis z\u00fa\u017e\u00ed na jednu regatu, parametrem limit na dan\u00fd po\u010det nejnov\u011bj\u0161\u00edch.",
+                "summary": "Vrátí publikované články ročníku, od nejnovějšího",
+                "description": "Parametrem zavod se výpis zúží na jednu regatu, parametrem limit na daný počet nejnovějších.",
                 "parameters": [
                     {
                         "name": "slug",
@@ -1059,9 +1059,9 @@
         "/serie/{slug}/clanky/{clanek}": {
             "get": {
                 "tags": [
-                    "\u010cl\u00e1nky"
+                    "Články"
                 ],
-                "summary": "Vr\u00e1t\u00ed jeden \u010dl\u00e1nek i s t\u011blem",
+                "summary": "Vrátí jeden článek i s tělem",
                 "parameters": [
                     {
                         "name": "slug",
@@ -1100,10 +1100,10 @@
         "/clanky": {
             "get": {
                 "tags": [
-                    "\u010cl\u00e1nky"
+                    "Články"
                 ],
-                "summary": "Vr\u00e1t\u00ed publikovan\u00e9 obecn\u00e9 \u010dl\u00e1nky mimo ro\u010dn\u00edk, od nejnov\u011bj\u0161\u00edho",
-                "description": "Parametrem limit se v\u00fdpis z\u00fa\u017e\u00ed na dan\u00fd po\u010det nejnov\u011bj\u0161\u00edch.",
+                "summary": "Vrátí publikované obecné články mimo ročník, od nejnovějšího",
+                "description": "Parametrem limit se výpis zúží na daný počet nejnovějších.",
                 "parameters": [
                     {
                         "name": "limit",
@@ -1134,9 +1134,9 @@
         "/clanky/{clanek}": {
             "get": {
                 "tags": [
-                    "\u010cl\u00e1nky"
+                    "Články"
                 ],
-                "summary": "Vr\u00e1t\u00ed jeden obecn\u00fd \u010dl\u00e1nek i s t\u011blem",
+                "summary": "Vrátí jeden obecný článek i s tělem",
                 "parameters": [
                     {
                         "name": "clanek",
@@ -1167,10 +1167,10 @@
         "/sprava/serie/{serie}/opravneni": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vyp\u00ed\u0161e opr\u00e1vn\u011bn\u00ed ro\u010dn\u00edku i regaty, na kter\u00e9 jdou ud\u011blit",
-                "description": "Vy\u017eaduje roli spr\u00e1vce, nebo rozhod\u010d\u00edho v tom ro\u010dn\u00edku. Co sm\u00ed ud\u011blit, \u0159\u00edk\u00e1 SmiNaRocnik. Ucty \u2014 \u00fa\u010dty, kter\u00e9 se kdy p\u0159ihl\u00e1sily \u2014 dostane jen spr\u00e1vce; rozhod\u010d\u00edmu je null.",
+                "summary": "Vypíše oprávnění ročníku i regaty, na které jdou udělit",
+                "description": "Vyžaduje roli správce, nebo rozhodčího v tom ročníku. Co smí udělit, říká SmiNaRocnik. Ucty — účty, které se kdy přihlásily — dostane jen správce; rozhodčímu je null.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1196,10 +1196,10 @@
             },
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Ud\u011bl\u00ed roli podle e-mailu",
-                "description": "Vy\u017eaduje roli spr\u00e1vce v tom ro\u010dn\u00edku; rozhod\u010d\u00ed sm\u00ed ud\u011blit po\u0159adatele a editora jedn\u00e9 zast\u00e1vce. V\u00fdjimka: ud\u011blen\u00ed prvn\u00edho spr\u00e1vce projde i na hlavi\u010dku X-Import-Token, dokud v ro\u010dn\u00edku \u017e\u00e1dn\u00fd spr\u00e1vce nen\u00ed. \u00da\u010det mus\u00ed existovat \u2014 vznik\u00e1 a\u017e prvn\u00edm p\u0159ihl\u00e1\u0161en\u00edm.",
+                "summary": "Udělí roli podle e-mailu",
+                "description": "Vyžaduje roli správce v tom ročníku; rozhodčí smí udělit pořadatele a editora jedné zastávce. Výjimka: udělení prvního správce projde i na hlavičku X-Import-Token, dokud v ročníku žádný správce není. Účet musí existovat — vzniká až prvním přihlášením.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1247,10 +1247,10 @@
         "/sprava/serie/{serie}/opravneni/{id}": {
             "delete": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Odebere jedno opr\u00e1vn\u011bn\u00ed",
-                "description": "Vy\u017eaduje roli spr\u00e1vce; rozhod\u010d\u00ed sm\u00ed odebrat, co sm\u00ed ud\u011blit. Posledn\u00edho spr\u00e1vce ro\u010dn\u00edku odebrat nelze.",
+                "summary": "Odebere jedno oprávnění",
+                "description": "Vyžaduje roli správce; rozhodčí smí odebrat, co smí udělit. Posledního správce ročníku odebrat nelze.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1281,10 +1281,10 @@
         "/sprava/web/opravneni": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vyp\u00ed\u0161e opr\u00e1vn\u011bn\u00ed na cel\u00fd web a \u00fa\u010dty, kter\u00fdm jde roli d\u00e1t",
-                "description": "Vy\u017eaduje roli spr\u00e1vce cel\u00e9ho webu.",
+                "summary": "Vypíše oprávnění na celý web a účty, kterým jde roli dát",
+                "description": "Vyžaduje roli správce celého webu.",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1300,10 +1300,10 @@
             },
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Ud\u011bl\u00ed roli na cel\u00fd web podle e-mailu",
-                "description": "Jen editor nebo spr\u00e1vce. Vy\u017eaduje roli spr\u00e1vce webu; prvn\u00edho spr\u00e1vce webu pust\u00ed i hlavi\u010dka X-Import-Token, dokud \u017e\u00e1dn\u00fd nen\u00ed.",
+                "summary": "Udělí roli na celý web podle e-mailu",
+                "description": "Jen editor nebo správce. Vyžaduje roli správce webu; prvního správce webu pustí i hlavička X-Import-Token, dokud žádný není.",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -1341,10 +1341,10 @@
         "/sprava/web/opravneni/{id}": {
             "delete": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Odebere jedno opr\u00e1vn\u011bn\u00ed na cel\u00fd web",
-                "description": "Vy\u017eaduje roli spr\u00e1vce webu. Posledn\u00edho spr\u00e1vce webu odebrat nelze.",
+                "summary": "Odebere jedno oprávnění na celý web",
+                "description": "Vyžaduje roli správce webu. Posledního správce webu odebrat nelze.",
                 "parameters": [
                     {
                         "name": "id",
@@ -1367,10 +1367,10 @@
         "/sprava/serie/{serie}/clanky": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vyp\u00ed\u0161e \u010dl\u00e1nky, na kter\u00e9 p\u0159ihl\u00e1\u0161en\u00fd dos\u00e1hne",
-                "description": "Vy\u017eaduje roli editora v ro\u010dn\u00edku nebo aspo\u0148 na jedn\u00e9 zast\u00e1vce. Smazan\u00e9 se nevypisuj\u00ed.",
+                "summary": "Vypíše články, na které přihlášený dosáhne",
+                "description": "Vyžaduje roli editora v ročníku nebo aspoň na jedné zastávce. Smazané se nevypisují.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1396,10 +1396,10 @@
             },
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Zalo\u017e\u00ed \u010dl\u00e1nek jako koncept",
-                "description": "Adresa se odvod\u00ed z titulku. Nov\u00fd \u010dl\u00e1nek je v\u017edycky koncept \u2014 publikuje se zvl\u00e1\u0161\u0165.",
+                "summary": "Založí článek jako koncept",
+                "description": "Adresa se odvodí z titulku. Nový článek je vždycky koncept — publikuje se zvlášť.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1437,9 +1437,9 @@
         "/sprava/serie/{serie}/clanky/{clanek}": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vr\u00e1t\u00ed \u010dl\u00e1nek k \u00faprav\u011b, v\u010detn\u011b konceptu a skryt\u00e9ho",
+                "summary": "Vrátí článek k úpravě, včetně konceptu a skrytého",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1473,10 +1473,10 @@
             },
             "put": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Ulo\u017e\u00ed \u00fapravu \u010dl\u00e1nku",
-                "description": "Adresa se nem\u011bn\u00ed, ani kdy\u017e se zm\u011bn\u00ed titulek.",
+                "summary": "Uloží úpravu článku",
+                "description": "Adresa se nemění, ani když se změní titulek.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1522,10 +1522,10 @@
         "/sprava/serie/{serie}/clanky/{clanek}/stav": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "P\u0159epne stav \u010dl\u00e1nku",
-                "description": "Koncept, publikov\u00e1no, skryt\u00e9, smazan\u00e9. Smazan\u00fd se ned\u00e1 publikovat rovnou \u2014 nejd\u0159\u00edv se vr\u00e1t\u00ed jako koncept.",
+                "summary": "Přepne stav článku",
+                "description": "Koncept, publikováno, skryté, smazané. Smazaný se nedá publikovat rovnou — nejdřív se vrátí jako koncept.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1571,10 +1571,10 @@
         "/sprava/serie/{serie}/clanky/{clanek}/obrazek": {
             "put": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Nahraje hlavn\u00ed obr\u00e1zek \u010dl\u00e1nku a nahrad\u00ed p\u0159edchoz\u00ed",
-                "description": "JPEG, PNG nebo WebP do 15 MB. Autor a potvrzen\u00fd souhlas se zve\u0159ejn\u011bn\u00edm jsou povinn\u00e9. Bez nastaven\u00e9ho \u00falo\u017ei\u0161t\u011b vrac\u00ed 503.",
+                "summary": "Nahraje hlavní obrázek článku a nahradí předchozí",
+                "description": "JPEG, PNG nebo WebP do 15 MB. Autor a potvrzený souhlas se zveřejněním jsou povinné. Bez nastaveného úložiště vrací 503.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1652,9 +1652,9 @@
             },
             "delete": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Odebere hlavn\u00ed obr\u00e1zek \u010dl\u00e1nku a sma\u017ee jeho soubory",
+                "summary": "Odebere hlavní obrázek článku a smaže jeho soubory",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1683,10 +1683,10 @@
         "/sprava/serie/{serie}/clanky/{clanek}/obrazky": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Nahraje obr\u00e1zek do t\u011bla \u010dl\u00e1nku a vr\u00e1t\u00ed jeho adresu",
-                "description": "Proch\u00e1z\u00ed stejn\u00fdm p\u0159epo\u010dtem jako hlavn\u00ed obr\u00e1zek, tak\u017ee skon\u010d\u00ed jako WebP nejv\u00fd\u0161 1600 px. V t\u011ble \u010dl\u00e1nku sm\u00ed b\u00fdt jen obr\u00e1zek nahran\u00fd takhle \u2014 ciz\u00ed adresa se p\u0159i ulo\u017een\u00ed textu zahod\u00ed.",
+                "summary": "Nahraje obrázek do těla článku a vrátí jeho adresu",
+                "description": "Prochází stejným přepočtem jako hlavní obrázek, takže skončí jako WebP nejvýš 1600 px. V těle článku smí být jen obrázek nahraný takhle — cizí adresa se při uložení textu zahodí.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1764,9 +1764,9 @@
             },
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vr\u00e1t\u00ed obr\u00e1zky nahran\u00e9 do t\u011bla \u010dl\u00e1nku",
+                "summary": "Vrátí obrázky nahrané do těla článku",
                 "parameters": [
                     {
                         "name": "serie",
@@ -1805,10 +1805,10 @@
         "/sprava/web/clanky": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vyp\u00ed\u0161e obecn\u00e9 \u010dl\u00e1nky mimo ro\u010dn\u00edk",
-                "description": "Vy\u017eaduje roli editora cel\u00e9ho webu. Smazan\u00e9 se nevypisuj\u00ed.",
+                "summary": "Vypíše obecné články mimo ročník",
+                "description": "Vyžaduje roli editora celého webu. Smazané se nevypisují.",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1824,9 +1824,9 @@
             },
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Zalo\u017e\u00ed obecn\u00fd \u010dl\u00e1nek jako koncept",
+                "summary": "Založí obecný článek jako koncept",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -1854,9 +1854,9 @@
         "/sprava/web/clanky/{clanek}": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vr\u00e1t\u00ed obecn\u00fd \u010dl\u00e1nek k \u00faprav\u011b, v\u010detn\u011b konceptu a skryt\u00e9ho",
+                "summary": "Vrátí obecný článek k úpravě, včetně konceptu a skrytého",
                 "parameters": [
                     {
                         "name": "clanek",
@@ -1882,9 +1882,9 @@
             },
             "put": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Ulo\u017e\u00ed \u00fapravu obecn\u00e9ho \u010dl\u00e1nku",
+                "summary": "Uloží úpravu obecného článku",
                 "parameters": [
                     {
                         "name": "clanek",
@@ -1922,9 +1922,9 @@
         "/sprava/web/clanky/{clanek}/stav": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "P\u0159epne stav obecn\u00e9ho \u010dl\u00e1nku",
+                "summary": "Přepne stav obecného článku",
                 "parameters": [
                     {
                         "name": "clanek",
@@ -1962,9 +1962,9 @@
         "/sprava/web/clanky/{clanek}/obrazek": {
             "put": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Nahraje hlavn\u00ed obr\u00e1zek obecn\u00e9ho \u010dl\u00e1nku a nahrad\u00ed p\u0159edchoz\u00ed",
+                "summary": "Nahraje hlavní obrázek obecného článku a nahradí předchozí",
                 "parameters": [
                     {
                         "name": "clanek",
@@ -2034,9 +2034,9 @@
             },
             "delete": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Odebere hlavn\u00ed obr\u00e1zek obecn\u00e9ho \u010dl\u00e1nku a sma\u017ee jeho soubory",
+                "summary": "Odebere hlavní obrázek obecného článku a smaže jeho soubory",
                 "parameters": [
                     {
                         "name": "clanek",
@@ -2057,9 +2057,9 @@
         "/sprava/web/clanky/{clanek}/obrazky": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Nahraje obr\u00e1zek do t\u011bla obecn\u00e9ho \u010dl\u00e1nku a vr\u00e1t\u00ed jeho adresu",
+                "summary": "Nahraje obrázek do těla obecného článku a vrátí jeho adresu",
                 "parameters": [
                     {
                         "name": "clanek",
@@ -2129,9 +2129,9 @@
             },
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vr\u00e1t\u00ed obr\u00e1zky nahran\u00e9 do t\u011bla obecn\u00e9ho \u010dl\u00e1nku",
+                "summary": "Vrátí obrázky nahrané do těla obecného článku",
                 "parameters": [
                     {
                         "name": "clanek",
@@ -2162,10 +2162,10 @@
         "/sprava/serie/{serie}": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vr\u00e1t\u00ed ro\u010dn\u00edk i s t\u00edm, jestli je venku",
-                "description": "Vy\u017eaduje roli rozhod\u010d\u00edho v ro\u010dn\u00edku, nebo organiz\u00e1tora aspo\u0148 na jedn\u00e9 regat\u011b. P\u0159epnout publikaci sm\u00ed spr\u00e1vce ro\u010dn\u00edku.",
+                "summary": "Vrátí ročník i s tím, jestli je venku",
+                "description": "Vyžaduje roli rozhodčího v ročníku, nebo organizátora aspoň na jedné regatě. Přepnout publikaci smí správce ročníku.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2193,10 +2193,10 @@
         "/sprava/serie/{serie}/publikace": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Pust\u00ed ro\u010dn\u00edk ven, nebo ho st\u00e1hne",
-                "description": "Spr\u00e1vce ro\u010dn\u00edku. Nepublikovan\u00fd ro\u010dn\u00edk ve\u0159ejn\u00e9 \u010dten\u00ed nevyd\u00e1v\u00e1 v\u016fbec \u2014 ani jeho regaty a v\u00fdsledky.",
+                "summary": "Pustí ročník ven, nebo ho stáhne",
+                "description": "Správce ročníku. Nepublikovaný ročník veřejné čtení nevydává vůbec — ani jeho regaty a výsledky.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2234,10 +2234,10 @@
         "/sprava/serie/{serie}/vysledky-zavodu": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Zapne nebo vypne ve\u0159ejn\u00e9 v\u00fdsledky jednotliv\u00fdch regat",
-                "description": "Spr\u00e1vce ro\u010dn\u00edku. Vypnut\u00e9 znamen\u00e1, \u017ee kalend\u00e1\u0159 i po\u0159ad\u00ed seri\u00e1lu z\u016fst\u00e1vaj\u00ed venku, ale str\u00e1nka regaty nevyd\u00e1 rozj\u00ed\u017e\u010fky ani v\u00fdsledky. Spr\u00e1vci je vid\u00ed d\u00e1l.",
+                "summary": "Zapne nebo vypne veřejné výsledky jednotlivých regat",
+                "description": "Správce ročníku. Vypnuté znamená, že kalendář i pořadí seriálu zůstávají venku, ale stránka regaty nevydá rozjížďky ani výsledky. Správci je vidí dál.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2275,10 +2275,10 @@
         "/sprava/serie/{serie}/zastavky": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vyp\u00ed\u0161e kalend\u00e1\u0159 ro\u010dn\u00edku i s t\u00edm, co s n\u00edm p\u0159ihl\u00e1\u0161en\u00fd sm\u00ed",
-                "description": "Vy\u017eaduje roli rozhod\u010d\u00edho v ro\u010dn\u00edku, nebo organiz\u00e1tora aspo\u0148 na jedn\u00e9 zast\u00e1vce. Vypisuje cel\u00fd ro\u010dn\u00edk; co sm\u00ed kdo zm\u011bnit, nese ka\u017ed\u00fd \u0159\u00e1dek.",
+                "summary": "Vypíše kalendář ročníku i s tím, co s ním přihlášený smí",
+                "description": "Vyžaduje roli rozhodčího v ročníku, nebo organizátora aspoň na jedné zastávce. Vypisuje celý ročník; co smí kdo změnit, nese každý řádek.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2304,10 +2304,10 @@
             },
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Zalo\u017e\u00ed regatu v p\u0159edb\u011b\u017en\u00e9m kalend\u00e1\u0159i",
-                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku. Adresa se odvod\u00ed z n\u00e1zvu. Nov\u00e1 regata je v\u017edycky pl\u00e1novan\u00e1 a nepublikovan\u00e1.",
+                "summary": "Založí regatu v předběžném kalendáři",
+                "description": "Rozhodčí ročníku. Adresa se odvodí z názvu. Nová regata je vždycky plánovaná a nepublikovaná.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2345,10 +2345,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}": {
             "put": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Ulo\u017e\u00ed term\u00edn a \u00fadaje regaty",
-                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku. Adresa se nem\u011bn\u00ed, ani kdy\u017e se zm\u011bn\u00ed n\u00e1zev. Posun term\u00ednu u potvrzen\u00e9 a d\u00e1l zap\u00ed\u0161e p\u016fvodn\u00ed datum.",
+                "summary": "Uloží termín a údaje regaty",
+                "description": "Rozhodčí ročníku. Adresa se nemění, ani když se změní název. Posun termínu u potvrzené a dál zapíše původní datum.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2394,10 +2394,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/stav": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Posune regatu v jej\u00edm \u017eivotn\u00edm cyklu",
-                "description": "Pl\u00e1novan\u00fd \u2192 potvrzen\u00fd (rozhod\u010d\u00ed) \u2192 vypsan\u00fd \u2192 odjet\u00fd (organiz\u00e1tor), nebo zru\u0161en\u00fd. Po jednom kroku, ob\u011bma sm\u011bry.",
+                "summary": "Posune regatu v jejím životním cyklu",
+                "description": "Plánovaný → potvrzený (rozhodčí) → vypsaný → odjetý (organizátor), nebo zrušený. Po jednom kroku, oběma směry.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2443,10 +2443,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/publikace": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Pust\u00ed regatu na ve\u0159ejn\u00fd web, nebo ji st\u00e1hne",
-                "description": "Spr\u00e1vce ro\u010dn\u00edku. Publikace nen\u00ed stav, je to vlastn\u00ed p\u0159\u00edznak.",
+                "summary": "Pustí regatu na veřejný web, nebo ji stáhne",
+                "description": "Správce ročníku. Publikace není stav, je to vlastní příznak.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2492,10 +2492,10 @@
         "/sprava/serie/{serie}/vysledky": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vyp\u00ed\u0161e regaty ro\u010dn\u00edku i s t\u00edm, kolik v\u00fdsledk\u016f je venku",
-                "description": "Rozcestn\u00edk. Vy\u017eaduje roli rozhod\u010d\u00edho v ro\u010dn\u00edku, nebo organiz\u00e1tora aspo\u0148 na jedn\u00e9 zast\u00e1vce.",
+                "summary": "Vypíše regaty ročníku i s tím, kolik výsledků je venku",
+                "description": "Rozcestník. Vyžaduje roli rozhodčího v ročníku, nebo organizátora aspoň na jedné zastávce.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2526,9 +2526,9 @@
         "/sprava/serie/{serie}/vysledky/{zavod}": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vyp\u00ed\u0161e rozj\u00ed\u017e\u010fky regaty i s t\u00edm, co s nimi p\u0159ihl\u00e1\u0161en\u00fd sm\u00ed",
+                "summary": "Vypíše rozjížďky regaty i s tím, co s nimi přihlášený smí",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2564,10 +2564,10 @@
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "P\u0159id\u00e1 zast\u00e1vce dal\u0161\u00ed rozj\u00ed\u017e\u010fku",
-                "description": "Po\u0159adatel regaty, od vyps\u00e1n\u00ed z\u00e1vodu. Nov\u00e1 rozj\u00ed\u017e\u010fka je n\u00e1vrh a na webu nen\u00ed.",
+                "summary": "Přidá zastávce další rozjížďku",
+                "description": "Pořadatel regaty, od vypsání závodu. Nová rozjížďka je návrh a na webu není.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2619,10 +2619,10 @@
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/start": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Zap\u00ed\u0161e start rozj\u00ed\u017e\u010fky",
-                "description": "C\u00edlov\u00e1 obrazovka. Bez \u010dasu v t\u011ble se vezme okam\u017eik po\u017eadavku. Jde p\u0159epsat, dokud je z\u00e1pis otev\u0159en\u00fd; \u010dasy dojet\u00fdch lod\u00ed se p\u0159epo\u010d\u00edtaj\u00ed. Nov\u00fd start zru\u0161\u00ed zastavenou \u010dasom\u00edru \u2014 je to opakov\u00e1n\u00ed startu.",
+                "summary": "Zapíše start rozjížďky",
+                "description": "Cílová obrazovka. Bez času v těle se vezme okamžik požadavku. Jde přepsat, dokud je zápis otevřený; časy dojetých lodí se přepočítají. Nový start zruší zastavenou časomíru — je to opakování startu.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2684,10 +2684,10 @@
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/konec": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Zastav\u00ed \u010dasom\u00edru rozj\u00ed\u017e\u010fky, nebo ji pust\u00ed znovu",
-                "description": "C\u00edlov\u00e1 obrazovka. Zastaven\u00edm je rozj\u00ed\u017e\u010fka dojet\u00e1, i kdy\u017e lod\u011b je\u0161t\u011b nemaj\u00ed dojezd ani k\u00f3d \u2014 ty se dopisuj\u00ed d\u00e1l, z\u00e1pis z\u016fst\u00e1v\u00e1 otev\u0159en\u00fd. Bez \u010dasu v t\u011ble se vezme okam\u017eik po\u017eadavku; `pustit: true` zastaven\u00ed zru\u0161\u00ed a stav se dopo\u010d\u00edt\u00e1 ze z\u00e1pisu jako d\u0159\u00edv. Zastavit jde jen odstartovanou rozj\u00ed\u017e\u010fku.",
+                "summary": "Zastaví časomíru rozjížďky, nebo ji pustí znovu",
+                "description": "Cílová obrazovka. Zastavením je rozjížďka dojetá, i když lodě ještě nemají dojezd ani kód — ty se dopisují dál, zápis zůstává otevřený. Bez času v těle se vezme okamžik požadavku; `pustit: true` zastavení zruší a stav se dopočítá ze zápisu jako dřív. Zastavit jde jen odstartovanou rozjížďku.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2749,10 +2749,10 @@
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/papir": {
             "put": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Nahraje fotku pap\u00edrov\u00e9ho z\u00e1pisu rozj\u00ed\u017e\u010fky",
-                "description": "Po\u0159adatel regaty, i u podepsan\u00fdch \u010d\u00edsel \u2014 je to doklad k z\u00e1pisu, ne z\u00e1sah do n\u011bj. JPEG, PNG nebo WebP do 15 MB. Ve\u0159ejn\u011b se nevyd\u00e1v\u00e1. Bez nastaven\u00e9ho \u00falo\u017ei\u0161t\u011b vrac\u00ed 503.",
+                "summary": "Nahraje fotku papírového zápisu rozjížďky",
+                "description": "Pořadatel regaty, i u podepsaných čísel — je to doklad k zápisu, ne zásah do něj. JPEG, PNG nebo WebP do 15 MB. Veřejně se nevydává. Bez nastaveného úložiště vrací 503.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2811,9 +2811,9 @@
             },
             "delete": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Odebere fotku pap\u00edrov\u00e9ho z\u00e1pisu a sma\u017ee jej\u00ed soubory",
+                "summary": "Odebere fotku papírového zápisu a smaže její soubory",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2852,10 +2852,10 @@
         "/sprava/serie/{serie}/vysledky/{zavod}/lode/{prihlaska}/znak": {
             "put": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Nastav\u00ed pozn\u00e1vac\u00ed znak lodi na regat\u011b",
-                "description": "C\u00edlov\u00e1 obrazovka. Po\u0159adatel regaty, od vyps\u00e1n\u00ed. Jen lo\u010f, kter\u00e1 na regat\u011b je (p\u0159ihl\u00e1\u0161en\u00e1, potvrzen\u00e1 nebo vylou\u010den\u00e1). Pr\u00e1zdn\u00fd znak ho sma\u017ee.",
+                "summary": "Nastaví poznávací znak lodi na regatě",
+                "description": "Cílová obrazovka. Pořadatel regaty, od vypsání. Jen loď, která na regatě je (přihlášená, potvrzená nebo vyloučená). Prázdný znak ho smaže.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2904,10 +2904,10 @@
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/navrhy": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vyp\u00ed\u0161e sn\u00edmky z\u00e1pisu od jednotliv\u00fdch zapisovatel\u016f",
-                "description": "Po\u0159adatel regaty. Na vod\u011b zapisuj\u00ed dva a ka\u017ed\u00fd na sv\u00e9m telefonu; tohle jsou jejich verze k porovn\u00e1n\u00ed. S jedn\u00edm zapisovatelem je sn\u00edmek jeden.",
+                "summary": "Vypíše snímky zápisu od jednotlivých zapisovatelů",
+                "description": "Pořadatel regaty. Na vodě zapisují dva a každý na svém telefonu; tohle jsou jejich verze k porovnání. S jedním zapisovatelem je snímek jeden.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -2953,10 +2953,10 @@
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/navrhy/{autor}/pouzit": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "P\u0159ep\u00ed\u0161e v\u00fdsledky rozj\u00ed\u017e\u010fky sn\u00edmkem jednoho zapisovatele",
-                "description": "Po\u0159adatel regaty, dokud je z\u00e1pis otev\u0159en\u00fd. Ostatn\u00ed sn\u00edmky z\u016fst\u00e1vaj\u00ed.",
+                "summary": "Přepíše výsledky rozjížďky snímkem jednoho zapisovatele",
+                "description": "Pořadatel regaty, dokud je zápis otevřený. Ostatní snímky zůstávají.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3011,10 +3011,10 @@
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vyp\u00ed\u0161e z\u00e1pis rozj\u00ed\u017e\u010fky: v\u0161echny lod\u011b ro\u010dn\u00edku a jejich v\u00fdsledky",
-                "description": "Vid\u00ed ho ka\u017ed\u00fd, kdo sm\u00ed na v\u00fdsledky ro\u010dn\u00edku. M\u011bnit ho sm\u00ed jen po\u0159adatel regaty, a jen v n\u00e1vrhu nebo po vr\u00e1cen\u00ed k revizi.",
+                "summary": "Vypíše zápis rozjížďky: všechny lodě ročníku a jejich výsledky",
+                "description": "Vidí ho každý, kdo smí na výsledky ročníku. Měnit ho smí jen pořadatel regaty, a jen v návrhu nebo po vrácení k revizi.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3060,10 +3060,10 @@
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/vysledky": {
             "put": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Ulo\u017e\u00ed celou sadu v\u00fdsledk\u016f rozj\u00ed\u017e\u010fky",
-                "description": "Lo\u010f, kter\u00e1 v sad\u011b nem\u00e1 po\u0159ad\u00ed ani k\u00f3d, v\u00fdsledek nem\u00e1. Po\u0159ad\u00ed, nebo k\u00f3d, ne oboj\u00ed; stejn\u00e9 po\u0159ad\u00ed v jedn\u00e9 kategorii neprojde. \u010cas se nem\u011bn\u00ed. Povinn\u00e9 `revize` je podoba sady, ze kter\u00e9 klient vych\u00e1zel \u2014 p\u0159i nesouladu vrac\u00ed 409 a svou sadu si klient nech\u00e1v\u00e1.",
+                "summary": "Uloží celou sadu výsledků rozjížďky",
+                "description": "Loď, která v sadě nemá pořadí ani kód, výsledek nemá. Pořadí, nebo kód, ne obojí; stejné pořadí v jedné kategorii neprojde. Čas se nemění. Povinné `revize` je podoba sady, ze které klient vycházel — při nesouladu vrací 409 a svou sadu si klient nechává.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3119,10 +3119,10 @@
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/stav": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Posune v\u00fdsledky rozj\u00ed\u017e\u010fky ve workflow",
-                "description": "\u0158adou po jednom kroku; spr\u00e1vce sm\u00ed p\u0159esko\u010dit. Zp\u00e1tky se chod\u00ed vr\u00e1cen\u00edm k revizi, a to m\u00e1 povinn\u00fd d\u016fvod.",
+                "summary": "Posune výsledky rozjížďky ve workflow",
+                "description": "Řadou po jednom kroku; správce smí přeskočit. Zpátky se chodí vrácením k revizi, a to má povinný důvod.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3178,10 +3178,10 @@
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/pohar": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Za\u0159ad\u00ed rozj\u00ed\u017e\u010fku do poh\u00e1ru, nebo ji z n\u011bj vynd\u00e1",
-                "description": "Dokud je z\u00e1pis rozepsan\u00fd, sm\u00ed po\u0159adatel regaty; u podepsan\u00fdch \u010d\u00edsel rozhod\u010d\u00ed ro\u010dn\u00edku. V\u00fdsledek regaty se nem\u011bn\u00ed \u2014 ten se po\u010d\u00edt\u00e1 ze v\u0161ech odjet\u00fdch rozj\u00ed\u017ed\u011bk.",
+                "summary": "Zařadí rozjížďku do poháru, nebo ji z něj vyndá",
+                "description": "Dokud je zápis rozepsaný, smí pořadatel regaty; u podepsaných čísel rozhodčí ročníku. Výsledek regaty se nemění — ten se počítá ze všech odjetých rozjížděk.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3237,10 +3237,10 @@
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/publikace": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Pust\u00ed v\u00fdsledky rozj\u00ed\u017e\u010fky na ve\u0159ejn\u00fd web, nebo je st\u00e1hne",
-                "description": "Spr\u00e1vce ro\u010dn\u00edku. Publikace nen\u00ed stav: potvrzen\u00fd v\u00fdsledek sm\u00ed z\u016fstat neve\u0159ejn\u00fd a publikovan\u00fd se sm\u00ed vr\u00e1tit k revizi.",
+                "summary": "Pustí výsledky rozjížďky na veřejný web, nebo je stáhne",
+                "description": "Správce ročníku. Publikace není stav: potvrzený výsledek smí zůstat neveřejný a publikovaný se smí vrátit k revizi.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3296,10 +3296,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/lode": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vyp\u00ed\u0161e lod\u011b ro\u010dn\u00edku i s t\u00edm, jak jsou p\u0159ihl\u00e1\u0161en\u00e9 na regatu",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. M\u011bnit sm\u00ed jen po\u0159adatel.",
+                "summary": "Vypíše lodě ročníku i s tím, jak jsou přihlášené na regatu",
+                "description": "Pořadatel regaty, nebo rozhodčí ročníku. Měnit smí jen pořadatel.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3333,10 +3333,10 @@
             },
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "P\u0159ihl\u00e1s\u00ed lo\u010f na regatu \u2014 z ro\u010dn\u00edku, nebo novou",
-                "description": "Po\u0159adatel regaty, od vyps\u00e1n\u00ed z\u00e1vodu. Nov\u00e1 lo\u010f se st\u00e1v\u00e1 \u00fa\u010dastn\u00edkem ro\u010dn\u00edku v zadan\u00e9 kategorii. Druh\u00e9 p\u0159ihl\u00e1\u0161en\u00ed t\u00e9\u017ee lodi vrac\u00ed 200.",
+                "summary": "Přihlásí loď na regatu — z ročníku, nebo novou",
+                "description": "Pořadatel regaty, od vypsání závodu. Nová loď se stává účastníkem ročníku v zadané kategorii. Druhé přihlášení téže lodi vrací 200.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3392,10 +3392,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/lode/{prihlaska}/startovne": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Zap\u00ed\u0161e startovn\u00e9 lodi na zast\u00e1vce",
-                "description": "Po\u0159adatel regaty. Nic neblokuje \u2014 kdo p\u0159ijede pozd\u011b, zaplat\u00ed pozd\u011bji.",
+                "summary": "Zapíše startovné lodi na zastávce",
+                "description": "Pořadatel regaty. Nic neblokuje — kdo přijede pozdě, zaplatí později.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3451,10 +3451,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/lode/{prihlaska}": {
             "delete": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Sma\u017ee nesmyslnou p\u0159ihl\u00e1\u0161ku z webu",
-                "description": "Jen po\u017eadavek, vr\u00e1cenou nebo odm\u00edtnutou p\u0159ihl\u00e1\u0161ku bez v\u00fdsledk\u016f. Uklid\u00ed i lo\u010f a osoby, kter\u00e9 vznikly jen kv\u016fli n\u00ed.",
+                "summary": "Smaže nesmyslnou přihlášku z webu",
+                "description": "Jen požadavek, vrácenou nebo odmítnutou přihlášku bez výsledků. Uklidí i loď a osoby, které vznikly jen kvůli ní.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3493,10 +3493,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/lode/{prihlaska}/stav": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "P\u0159epne stav p\u0159ihl\u00e1\u0161ky lodi",
-                "description": "Po\u0159adatel zapisuje, potvrzuje, vrac\u00ed k dopln\u011bn\u00ed, odm\u00edt\u00e1, odhla\u0161uje a zna\u010d\u00ed nedostaven\u00ed; rozhod\u010d\u00ed vylu\u010duje. Vr\u00e1cen\u00ed, odm\u00edtnut\u00ed a vylou\u010den\u00ed cht\u011bj\u00ed d\u016fvod. Lo\u010f s v\u00fdsledky odhl\u00e1sit ani odm\u00edtnout nejde.",
+                "summary": "Přepne stav přihlášky lodi",
+                "description": "Pořadatel zapisuje, potvrzuje, vrací k doplnění, odmítá, odhlašuje a značí nedostavení; rozhodčí vylučuje. Vrácení, odmítnutí a vyloučení chtějí důvod. Loď s výsledky odhlásit ani odmítnout nejde.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3552,10 +3552,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/smernice": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vyp\u00ed\u0161e vyv\u011b\u0161en\u00e9 sm\u011brnice zast\u00e1vky, od nejnov\u011bj\u0161\u00ed",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku.",
+                "summary": "Vypíše vyvěšené směrnice zastávky, od nejnovější",
+                "description": "Pořadatel regaty, nebo rozhodčí ročníku.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3592,10 +3592,10 @@
             },
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vyv\u011bs\u00ed novou verzi plachetn\u00ed sm\u011brnice",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Jen PDF do 20 MB. Vyv\u011b\u0161en\u00e9 verze z\u016fst\u00e1vaj\u00ed \u2014 oprava je nov\u00e1 verze, ne p\u0159epis.",
+                "summary": "Vyvěsí novou verzi plachetní směrnice",
+                "description": "Pořadatel regaty, nebo rozhodčí ročníku. Jen PDF do 20 MB. Vyvěšené verze zůstávají — oprava je nová verze, ne přepis.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3659,10 +3659,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/smernice/{verze}/stazeni": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "St\u00e1hne verzi sm\u011brnice z v\u00fdv\u011bsky",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Z\u00e1znam o vyv\u011b\u0161en\u00ed z\u016fst\u00e1v\u00e1, ale soubor se sma\u017ee z \u00falo\u017ei\u0161t\u011b a ve\u0159ejn\u00e9 \u010dten\u00ed verzi nevyd\u00e1. D\u016fvod je povinn\u00fd. Kopie, kter\u00e9 si u\u017e n\u011bkdo st\u00e1hl, vz\u00edt zp\u011bt nejde.",
+                "summary": "Stáhne verzi směrnice z vývěsky",
+                "description": "Pořadatel regaty, nebo rozhodčí ročníku. Záznam o vyvěšení zůstává, ale soubor se smaže z úložiště a veřejné čtení verzi nevydá. Důvod je povinný. Kopie, které si už někdo stáhl, vzít zpět nejde.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3711,10 +3711,10 @@
         "/sprava/serie/{serie}/lode": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vyp\u00ed\u0161e lod\u011b ro\u010dn\u00edku i s t\u00edm, kdo k nim pat\u0159\u00ed",
-                "description": "Spr\u00e1vce ro\u010dn\u00edku. Lod\u011b bez kapit\u00e1na jsou prvn\u00ed, pak ty s kapit\u00e1nem od p\u0159ipojovac\u00edho k\u00f3du \u2014 to je pr\u00e1ce, kter\u00e1 na spr\u00e1vce \u010dek\u00e1.",
+                "summary": "Vypíše lodě ročníku i s tím, kdo k nim patří",
+                "description": "Správce ročníku. Lodě bez kapitána jsou první, pak ty s kapitánem od připojovacího kódu — to je práce, která na správce čeká.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3745,10 +3745,10 @@
         "/sprava/serie/{serie}/lode/{lod}": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vyp\u00ed\u0161e vazby jedn\u00e9 lodi i historii zm\u011bn rol\u00ed",
-                "description": "Spr\u00e1vce ro\u010dn\u00edku.",
+                "summary": "Vypíše vazby jedné lodi i historii změn rolí",
+                "description": "Správce ročníku.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3786,10 +3786,10 @@
         "/sprava/serie/{serie}/lode/{lod}/kapitan": {
             "put": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Ur\u010d\u00ed kapit\u00e1na lodi",
-                "description": "Spr\u00e1vce ro\u010dn\u00edku. Pov\u00fd\u0161en\u00ed nov\u00e9ho a sn\u00ed\u017een\u00ed dosavadn\u00edho kapit\u00e1na je jeden \u00fakon v jedn\u00e9 transakci. Majitel z\u016fst\u00e1v\u00e1 majitelem. Opakovan\u00e9 ur\u010den\u00ed t\u00e9ho\u017e \u010dlov\u011bka jen potvrd\u00ed roli, kterou u\u017e m\u00e1.",
+                "summary": "Určí kapitána lodi",
+                "description": "Správce ročníku. Povýšení nového a snížení dosavadního kapitána je jeden úkon v jedné transakci. Majitel zůstává majitelem. Opakované určení téhož člověka jen potvrdí roli, kterou už má.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3830,10 +3830,10 @@
         "/sprava/serie/{serie}/lode/{lod}/vazby/{vazba}/role": {
             "put": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Zm\u011bn\u00ed roli jedn\u00e9 vazby k lodi",
-                "description": "Spr\u00e1vce ro\u010dn\u00edku. Posledn\u00edho kapit\u00e1na sn\u00ed\u017eit nejde \u2014 nejd\u0159\u00edv ur\u010di jin\u00e9ho. Majitele tudy nastavit nejde, ten pat\u0159\u00ed k vlastnictv\u00ed lodi.",
+                "summary": "Změní roli jedné vazby k lodi",
+                "description": "Správce ročníku. Posledního kapitána snížit nejde — nejdřív urči jiného. Majitele tudy nastavit nejde, ten patří k vlastnictví lodi.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3884,10 +3884,10 @@
         "/sprava/serie/{serie}/lode/{lod}/vazby/{vazba}": {
             "delete": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
                 "summary": "Odebere vazbu k lodi",
-                "description": "Spr\u00e1vce ro\u010dn\u00edku. Posledn\u00edho kapit\u00e1na odebrat nejde. Odebranou vazbu p\u00e1rov\u00e1n\u00ed podle e-mailu nevrac\u00ed.",
+                "description": "Správce ročníku. Posledního kapitána odebrat nejde. Odebranou vazbu párování podle e-mailu nevrací.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3928,10 +3928,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/boje": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vyp\u00ed\u0161e b\u00f3je regaty",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. S `historie=true` i p\u0159enastaven\u00e9 a sebran\u00e9 \u2014 trasa se k trati vztahuje tak, jak st\u00e1la tehdy.",
+                "summary": "Vypíše bóje regaty",
+                "description": "Pořadatel regaty, nebo rozhodčí ročníku. S `historie=true` i přenastavené a sebrané — trasa se k trati vztahuje tak, jak stála tehdy.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3976,10 +3976,10 @@
             },
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Zap\u00ed\u0161e polohu postaven\u00e9 nebo p\u0159enastaven\u00e9 b\u00f3je",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. P\u0159enastaven\u00ed je nov\u00fd z\u00e1znam \u2014 star\u00fd z\u016fst\u00e1v\u00e1. Poloha mimo Orl\u00edk nebo p\u0159esnost hor\u0161\u00ed ne\u017e 100 m se odm\u00edtne. `zdroj` \u0159\u00edk\u00e1, odkud poloha je: `Telefon` ji zm\u011b\u0159il u b\u00f3je a hl\u00e1s\u00ed p\u0159esnost, `Mapa` a `Qr` ji maj\u00ed ode\u010dtenou a p\u0159esnost u nich nesm\u00ed p\u0159ij\u00edt. Chyb\u011bj\u00edc\u00ed `zdroj` znamen\u00e1 `Telefon`.",
+                "summary": "Zapíše polohu postavené nebo přenastavené bóje",
+                "description": "Pořadatel regaty, nebo rozhodčí. Přenastavení je nový záznam — starý zůstává. Poloha mimo Orlík nebo přesnost horší než 100 m se odmítne. `zdroj` říká, odkud poloha je: `Telefon` ji změřil u bóje a hlásí přesnost, `Mapa` a `Qr` ji mají odečtenou a přesnost u nich nesmí přijít. Chybějící `zdroj` znamená `Telefon`.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4025,10 +4025,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/boje/{boje}/sebrana": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Ozna\u010d\u00ed b\u00f3ji za sebranou z vody",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. Ze z\u00e1pisu b\u00f3je nemiz\u00ed.",
+                "summary": "Označí bóji za sebranou z vody",
+                "description": "Pořadatel regaty, nebo rozhodčí. Ze zápisu bóje nemizí.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4067,10 +4067,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/boje/{boje}/fotky": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "P\u0159ilo\u017e\u00ed k b\u00f3ji fotku z okam\u017eiku postaven\u00ed",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. Je to doklad k poloze: ze sou\u0159adnic se nepozn\u00e1 barva b\u00f3je ani co je za n\u00ed na b\u0159ehu. **Fotek m\u016f\u017ee b\u00fdt v\u00edc** \u2014 jedna zbl\u00edzka neuk\u00e1\u017ee z\u00e1rove\u0148 b\u00f3ji i b\u0159eh za n\u00ed. JPEG, PNG nebo WebP do 15 MB; ukl\u00e1d\u00e1 se p\u0159epo\u010dten\u00e9 na WebP, origin\u00e1l nikam. Ve\u0159ejn\u011b se nevyd\u00e1vaj\u00ed, stejn\u011b jako cel\u00e1 tra\u0165. Bez nastaven\u00e9ho \u00falo\u017ei\u0161t\u011b vrac\u00ed 503.",
+                "summary": "Přiloží k bóji fotku z okamžiku postavení",
+                "description": "Pořadatel regaty, nebo rozhodčí. Je to doklad k poloze: ze souřadnic se nepozná barva bóje ani co je za ní na břehu. **Fotek může být víc** — jedna zblízka neukáže zároveň bóji i břeh za ní. JPEG, PNG nebo WebP do 15 MB; ukládá se přepočtené na WebP, originál nikam. Veřejně se nevydávají, stejně jako celá trať. Bez nastaveného úložiště vrací 503.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4131,10 +4131,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/boje/uklid": {
             "get": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "Kolik z\u00e1znam\u016f v historii je k zahozen\u00ed",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. Nic nema\u017ee \u2014 obrazovka to mus\u00ed \u0159\u00edct d\u0159\u00edv, ne\u017e se na n\u011bco klikne.",
+                "summary": "Kolik záznamů v historii je k zahození",
+                "description": "Pořadatel regaty, nebo rozhodčí. Nic nemaže — obrazovka to musí říct dřív, než se na něco klikne.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4168,10 +4168,10 @@
             },
             "post": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "Zahod\u00ed z\u00e1znamy historie, na kter\u00fdch nic nevis\u00ed",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. Ma\u017ee doopravdy a nejde to vz\u00edt zp\u00e1tky. Dr\u017e\u00ed se z\u00e1znam, na kter\u00fd ukazuje prvek trati, a ten, kter\u00fd st\u00e1l ve vod\u011b p\u0159i p\u0159ijet\u00ed n\u011bjak\u00e9 trati \u2014 ten u\u017e byl ve\u0159ejn\u00fd.",
+                "summary": "Zahodí záznamy historie, na kterých nic nevisí",
+                "description": "Pořadatel regaty, nebo rozhodčí. Maže doopravdy a nejde to vzít zpátky. Drží se záznam, na který ukazuje prvek trati, a ten, který stál ve vodě při přijetí nějaké trati — ten už byl veřejný.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4207,10 +4207,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/boje/{boje}": {
             "delete": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "Zahod\u00ed jeden z\u00e1znam z historie b\u00f3j\u00ed",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. Ma\u017ee doopravdy a nejde to vz\u00edt zp\u00e1tky. Plat\u00ed tent\u00fd\u017e rozsudek jako u hromadn\u00e9ho \u00faklidu: dr\u017e\u00ed se z\u00e1znam, na kter\u00fd ukazuje prvek trati, a ten, kter\u00fd st\u00e1l ve vod\u011b p\u0159i p\u0159ijet\u00ed n\u011bjak\u00e9 trati \u2014 ten u\u017e byl ve\u0159ejn\u00fd. **B\u00f3ji, kter\u00e1 na trati stoj\u00ed, to nesma\u017ee**; na tu je sebr\u00e1n\u00ed nebo p\u0159enastaven\u00ed.",
+                "summary": "Zahodí jeden záznam z historie bójí",
+                "description": "Pořadatel regaty, nebo rozhodčí. Maže doopravdy a nejde to vzít zpátky. Platí tentýž rozsudek jako u hromadného úklidu: drží se záznam, na který ukazuje prvek trati, a ten, který stál ve vodě při přijetí nějaké trati — ten už byl veřejný. **Bóji, která na trati stojí, to nesmaže**; na tu je sebrání nebo přenastavení.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4249,10 +4249,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/boje/{boje}/fotky/{fotka}": {
             "delete": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Odebere jednu fotku b\u00f3je a sma\u017ee jej\u00ed soubory",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. Sebr\u00e1n\u00ed b\u00f3je fotky nema\u017ee \u2014 z\u00e1znam o poloze z\u016fst\u00e1v\u00e1 a fotka je jeho doklad.",
+                "summary": "Odebere jednu fotku bóje a smaže její soubory",
+                "description": "Pořadatel regaty, nebo rozhodčí. Sebrání bóje fotky nemaže — záznam o poloze zůstává a fotka je jeho doklad.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4302,8 +4302,8 @@
                 "tags": [
                     "Trasy"
                 ],
-                "summary": "Vyp\u00ed\u0161e trasy nahran\u00e9 t\u00edmhle telefonem",
-                "description": "V\u010detn\u011b rozd\u011blan\u00fdch \u2014 podle `dokoncena` se pozn\u00e1, co se je\u0161t\u011b dopos\u00edl\u00e1.",
+                "summary": "Vypíše trasy nahrané tímhle telefonem",
+                "description": "Včetně rozdělaných — podle `dokoncena` se pozná, co se ještě doposílá.",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4324,8 +4324,8 @@
                 "tags": [
                     "Trasy"
                 ],
-                "summary": "Zalo\u017e\u00ed trasu, nebo vr\u00e1t\u00ed tu existuj\u00edc\u00ed",
-                "description": "Idempotentn\u00ed podle `lokalniId`, kter\u00e9 si vyr\u00e1b\u00ed telefon. Opakovan\u00e9 vol\u00e1n\u00ed druhou trasu nezalo\u017e\u00ed \u2014 na vod\u011b sign\u00e1l pad\u00e1 a nahr\u00e1n\u00ed se bude opakovat. **Bez b\u011b\u017e\u00edc\u00edho okna regaty trasa nevznikne** a vrac\u00ed se 409: z\u00e1znam sm\u00ed b\u011b\u017eet jen od rozpravy do uzav\u0159en\u00ed z\u00e1vodn\u00edho dne a jen lodi, kter\u00e1 je v t\u00e9 regat\u011b p\u0159ihl\u00e1\u0161en\u00e1. Dopos\u00edlat do u\u017e zalo\u017een\u00e9 trasy jde i potom.",
+                "summary": "Založí trasu, nebo vrátí tu existující",
+                "description": "Idempotentní podle `lokalniId`, které si vyrábí telefon. Opakované volání druhou trasu nezaloží — na vodě signál padá a nahrání se bude opakovat. **Bez běžícího okna regaty trasa nevznikne** a vrací se 409: záznam smí běžet jen od rozpravy do uzavření závodního dne a jen lodi, která je v té regatě přihlášená. Doposílat do už založené trasy jde i potom.",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -4375,8 +4375,8 @@
                 "tags": [
                     "Trasy"
                 ],
-                "summary": "P\u0159ijme d\u00e1vku bod\u016f",
-                "description": "Idempotentn\u00ed podle po\u0159adov\u00e9ho \u010d\u00edsla bodu v telefonu: body, kter\u00e9 u\u017e do\u0161ly, se p\u0159esko\u010d\u00ed a zapo\u010d\u00edtaj\u00ed jako `preskoceno`.",
+                "summary": "Přijme dávku bodů",
+                "description": "Idempotentní podle pořadového čísla bodu v telefonu: body, které už došly, se přeskočí a započítají jako `preskoceno`.",
                 "parameters": [
                     {
                         "name": "lokalniId",
@@ -4435,8 +4435,8 @@
                 "tags": [
                     "Trasy"
                 ],
-                "summary": "Uzav\u0159e nahr\u00e1v\u00e1n\u00ed trasy",
-                "description": "Do t\u00e9 doby je trasa rozd\u011blan\u00e1 a sm\u00ed se do n\u00ed dopos\u00edlat.",
+                "summary": "Uzavře nahrávání trasy",
+                "description": "Do té doby je trasa rozdělaná a smí se do ní doposílat.",
                 "parameters": [
                     {
                         "name": "lokalniId",
@@ -4483,10 +4483,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/okna": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Vyp\u00ed\u0161e okna z\u00e1vodn\u00edch dn\u016f",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku.",
+                "summary": "Vypíše okna závodních dnů",
+                "description": "Pořadatel regaty, nebo rozhodčí ročníku.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4525,10 +4525,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/okna/rozprava": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Rozpravou otev\u0159e okno z\u00e1vodn\u00edho dne",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. Od t\u00e9hle chv\u00edle sm\u00ed trackery zaznamen\u00e1vat. Opakovan\u00e9 odkliknut\u00ed druh\u00e9 okno nezalo\u017e\u00ed \u2014 vr\u00e1t\u00ed to b\u011b\u017e\u00edc\u00ed. `trvaniHodin` je tvrd\u00fd konec, kter\u00fd plat\u00ed, i kdy\u017e den nikdo neuzav\u0159e; bez n\u011bj je to 14 hodin, nejv\u00edc 36.",
+                "summary": "Rozpravou otevře okno závodního dne",
+                "description": "Pořadatel regaty, nebo rozhodčí. Od téhle chvíle smí trackery zaznamenávat. Opakované odkliknutí druhé okno nezaloží — vrátí to běžící. `trvaniHodin` je tvrdý konec, který platí, i když den nikdo neuzavře; bez něj je to 14 hodin, nejvíc 36.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4580,10 +4580,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/okna/uzavrit": {
             "post": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Uzav\u0159e z\u00e1vodn\u00ed den",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. T\u00edm se p\u0159est\u00e1v\u00e1 zaznamen\u00e1vat \u2014 mezi dny se nesleduje. Uzav\u0159\u00edt zav\u0159en\u00e9 nen\u00ed chyba.\n\nV odpov\u011bdi je `zbylo`: **co po dni z\u016fstalo otev\u0159en\u00e9** \u2014 rozj\u00ed\u017e\u010fky, kter\u00e9 po\u0159\u00e1d \u201eb\u011b\u017e\u00ed\", a trasy, kter\u00e9 telefon nedokon\u010dil. Nic se t\u00edm nezav\u00edr\u00e1; konec rozj\u00ed\u017e\u010fky je rozhodnut\u00ed rozhod\u010d\u00edho, ne dopo\u010det.",
+                "summary": "Uzavře závodní den",
+                "description": "Pořadatel regaty, nebo rozhodčí. Tím se přestává zaznamenávat — mezi dny se nesleduje. Uzavřít zavřené není chyba.\n\nV odpovědi je `zbylo`: **co po dni zůstalo otevřené** — rozjížďky, které pořád „běží\", a trasy, které telefon nedokončil. Nic se tím nezavírá; konec rozjížďky je rozhodnutí rozhodčího, ne dopočet.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4619,10 +4619,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/polohy": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Posledn\u00ed zn\u00e1m\u00e1 poloha ka\u017ed\u00e9 lodi v regat\u011b",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Vrac\u00ed cel\u00e9 pole \u2014 i lod\u011b, kter\u00e9 se je\u0161t\u011b neozvaly, proto\u017ee ot\u00e1zka zn\u00ed \u201etrackuje n\u00e1m cel\u00e9 pole?\". Stav polohy je troj\u00ed: `Cerstva` do minuty, `Starne` do p\u011bti, pak `Nedostupna`. Sn\u00edmek se dr\u017e\u00ed v cache p\u011bt sekund, tak\u017ee po\u010det div\u00e1k\u016f nerozhoduje o po\u010dtu dotaz\u016f do datab\u00e1ze.",
+                "summary": "Poslední známá poloha každé lodi v regatě",
+                "description": "Pořadatel regaty, nebo rozhodčí ročníku. Vrací celé pole — i lodě, které se ještě neozvaly, protože otázka zní „trackuje nám celé pole?\". Stav polohy je trojí: `Cerstva` do minuty, `Starne` do pěti, pak `Nedostupna`. Snímek se drží v cache pět sekund, takže počet diváků nerozhoduje o počtu dotazů do databáze.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4658,10 +4658,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/tracker/nastaveni": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Nastaven\u00ed zobrazen\u00ed trackingu",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. V\u00fdchoz\u00ed hodnota je bezpe\u010dn\u00e1: pos\u00e1dky vid\u00ed jen sebe, ven nejde nic.",
+                "summary": "Nastavení zobrazení trackingu",
+                "description": "Pořadatel regaty, nebo rozhodčí ročníku. Výchozí hodnota je bezpečná: posádky vidí jen sebe, ven nejde nic.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4695,10 +4695,10 @@
             },
             "put": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Zm\u011bn\u00ed nastaven\u00ed zobrazen\u00ed",
-                "description": "Do rozpravy po\u0159adatel regaty nebo rozhod\u010d\u00ed, po rozprav\u011b **jen rozhod\u010d\u00ed a jen zp\u0159\u00edsn\u011bn\u00ed** \u2014 roz\u0161\u00ed\u0159it nesm\u00ed nikdo. Z\u00e1sah do zam\u010den\u00e9ho nastaven\u00ed vy\u017eaduje `duvod`.",
+                "summary": "Změní nastavení zobrazení",
+                "description": "Do rozpravy pořadatel regaty nebo rozhodčí, po rozpravě **jen rozhodčí a jen zpřísnění** — rozšířit nesmí nikdo. Zásah do zamčeného nastavení vyžaduje `duvod`.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4754,10 +4754,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/tracker/nastaveni/zmeny": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Kdo nastaven\u00ed kdy m\u011bnil a pro\u010d",
-                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed. Je to doklad ke sporu \u201evy jste n\u00e1s vid\u011bli a my v\u00e1s ne\".",
+                "summary": "Kdo nastavení kdy měnil a proč",
+                "description": "Pořadatel regaty, nebo rozhodčí. Je to doklad ke sporu „vy jste nás viděli a my vás ne\".",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4796,10 +4796,10 @@
         "/ja/lode/{lod}/klice": {
             "get": {
                 "tags": [
-                    "Kl\u00ed\u010de"
+                    "Klíče"
                 ],
-                "summary": "Vyp\u00ed\u0161e kl\u00ed\u010de k lodi",
-                "description": "Majitel nebo kapit\u00e1n. U ka\u017ed\u00e9ho je vid\u011bt, kdy se naposledy ozval.",
+                "summary": "Vypíše klíče k lodi",
+                "description": "Majitel nebo kapitán. U každého je vidět, kdy se naposledy ozval.",
                 "parameters": [
                     {
                         "name": "lod",
@@ -4830,10 +4830,10 @@
             },
             "post": {
                 "tags": [
-                    "Kl\u00ed\u010de"
+                    "Klíče"
                 ],
-                "summary": "Vytvo\u0159\u00ed pozv\u00e1nku pro \u010dlena pos\u00e1dky",
-                "description": "Vr\u00e1t\u00ed k\u00f3d pro QR. \u010citeln\u00fd je jen tady a u\u017e nikdy \u2014 ukl\u00e1d\u00e1 se otisk.",
+                "summary": "Vytvoří pozvánku pro člena posádky",
+                "description": "Vrátí kód pro QR. Čitelný je jen tady a už nikdy — ukládá se otisk.",
                 "parameters": [
                     {
                         "name": "lod",
@@ -4879,10 +4879,10 @@
         "/ja/lode/{lod}/klice/{klic}/sledovani": {
             "post": {
                 "tags": [
-                    "Kl\u00ed\u010de"
+                    "Klíče"
                 ],
-                "summary": "Odepne nebo zase p\u0159ipne kl\u00ed\u010d ze sledov\u00e1n\u00ed",
-                "description": "Do\u010dasn\u00e9: \u010dlen pos\u00e1dky z\u016fst\u00e1v\u00e1, jen tuhle regatu nejede nebo odjel po prvn\u00edm dni dom\u016f. P\u0159\u00ed\u0161t\u00ed z\u00e1vod se nemus\u00ed p\u00e1rovat znovu.",
+                "summary": "Odepne nebo zase připne klíč ze sledování",
+                "description": "Dočasné: člen posádky zůstává, jen tuhle regatu nejede nebo odjel po prvním dni domů. Příští závod se nemusí párovat znovu.",
                 "parameters": [
                     {
                         "name": "lod",
@@ -4931,10 +4931,10 @@
         "/ja/lode/{lod}/klice/{klic}": {
             "delete": {
                 "tags": [
-                    "Kl\u00ed\u010de"
+                    "Klíče"
                 ],
-                "summary": "Odebere kl\u00ed\u010d natrvalo",
-                "description": "Kl\u00ed\u010d zanik\u00e1 a ned\u00e1 se o\u017eivit. Pro odchod z pos\u00e1dky nadobro.",
+                "summary": "Odebere klíč natrvalo",
+                "description": "Klíč zaniká a nedá se oživit. Pro odchod z posádky nadobro.",
                 "parameters": [
                     {
                         "name": "lod",
@@ -4967,10 +4967,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/trat": {
             "get": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
                 "summary": "Stav trati regaty",
-                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Vrac\u00ed 404, dokud regata nem\u00e1 ani jednu b\u00f3ji \u2014 stavba za\u010d\u00edn\u00e1 prvn\u00edm p\u00edpnut\u00edm, ne zvl\u00e1\u0161tn\u00edm knofl\u00edkem.",
+                "description": "Organizátor regaty, nebo rozhodčí ročníku. Vrací 404, dokud regata nemá ani jednu bóji — stavba začíná prvním pípnutím, ne zvláštním knoflíkem.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5014,10 +5014,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/trat/hotovo": {
             "post": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "Stavitel\u00e9 hl\u00e1s\u00ed, \u017ee tra\u0165 stoj\u00ed",
-                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku.",
+                "summary": "Stavitelé hlásí, že trať stojí",
+                "description": "Organizátor regaty, nebo rozhodčí ročníku.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5061,10 +5061,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/trat/prijeti": {
             "post": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "Rozhod\u010d\u00ed tra\u0165 p\u0159ijme, t\u00edm se zamkne a je ve\u0159ejn\u00e1",
-                "description": "Jen rozhod\u010d\u00ed ro\u010dn\u00edku. Zam\u010denou tra\u0165 nejde p\u0159estavovat ani do n\u00ed p\u00edpat.",
+                "summary": "Rozhodčí trať přijme, tím se zamkne a je veřejná",
+                "description": "Jen rozhodčí ročníku. Zamčenou trať nejde přestavovat ani do ní pípat.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5108,10 +5108,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/trat/vraceni": {
             "post": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "Rozhod\u010d\u00ed vr\u00e1t\u00ed tra\u0165 stavitel\u016fm",
-                "description": "Jen rozhod\u010d\u00ed ro\u010dn\u00edku. D\u016fvod je povinn\u00fd.",
+                "summary": "Rozhodčí vrátí trať stavitelům",
+                "description": "Jen rozhodčí ročníku. Důvod je povinný.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5165,10 +5165,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/trat/prvky": {
             "get": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "Prvky trati v po\u0159ad\u00ed",
-                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku.",
+                "summary": "Prvky trati v pořadí",
+                "description": "Organizátor regaty, nebo rozhodčí ročníku.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5213,10 +5213,10 @@
             },
             "post": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "Zalo\u017e\u00ed prvek trati",
-                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Do p\u0159ijat\u00e9 trati nejde \u2014 prvek je rozhodnut\u00ed o trati, tak\u017ee plat\u00ed tent\u00fd\u017e z\u00e1mek jako u p\u00edpnut\u00ed.",
+                "summary": "Založí prvek trati",
+                "description": "Organizátor regaty, nebo rozhodčí ročníku. Do přijaté trati nejde — prvek je rozhodnutí o trati, takže platí tentýž zámek jako u pípnutí.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5270,10 +5270,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/trat/prvky/{prvek}": {
             "put": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "P\u0159ep\u00ed\u0161e prvek trati",
-                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Do p\u0159ijat\u00e9 trati nejde.",
+                "summary": "Přepíše prvek trati",
+                "description": "Organizátor regaty, nebo rozhodčí ročníku. Do přijaté trati nejde.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5335,10 +5335,10 @@
             },
             "delete": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "Sma\u017ee prvek trati",
-                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Prvek se ma\u017ee doopravdy, na rozd\u00edl od b\u00f3je: nen\u00ed to m\u011b\u0159en\u00ed, je to rozhodnut\u00ed.",
+                "summary": "Smaže prvek trati",
+                "description": "Organizátor regaty, nebo rozhodčí ročníku. Prvek se maže doopravdy, na rozdíl od bóje: není to měření, je to rozhodnutí.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5385,10 +5385,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/trat/seznam": {
             "get": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "Trat\u011b regaty na v\u00fdb\u011br",
-                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Od nejnov\u011bj\u0161\u00ed. `jdePriradit` \u0159\u00edk\u00e1, jestli je tra\u0165 voln\u00e1 \u2014 voln\u00e1 se p\u0159i\u0159ad\u00ed, obsazen\u00e1 naklonuje.",
+                "summary": "Tratě regaty na výběr",
+                "description": "Organizátor regaty, nebo rozhodčí ročníku. Od nejnovější. `jdePriradit` říká, jestli je trať volná — volná se přiřadí, obsazená naklonuje.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5427,10 +5427,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/trat/rozjizdky": {
             "get": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "Rozj\u00ed\u017e\u010fky regaty na v\u00fdb\u011br",
-                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Podle \u010d\u00edsla. `tratId` \u0159\u00edk\u00e1, kter\u00e1 tra\u0165 rozj\u00ed\u017e\u010fce pat\u0159\u00ed; `odstartovana` to, \u017ee se podle n\u00ed u\u017e jelo a tra\u0165 se j\u00ed nebere.",
+                "summary": "Rozjížďky regaty na výběr",
+                "description": "Organizátor regaty, nebo rozhodčí ročníku. Podle čísla. `tratId` říká, která trať rozjížďce patří; `odstartovana` to, že se podle ní už jelo a trať se jí nebere.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5469,10 +5469,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/trat/{trat}/rozjizdka": {
             "delete": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "V t\u00e9hle rozj\u00ed\u017e\u010fce se ta tra\u0165 nejede",
-                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Instance zmiz\u00ed jen tehdy, kdy\u017e stejn\u00fd p\u0159edpis zbyde u jin\u00e9 rozj\u00ed\u017e\u010fky; posledn\u00ed se od rozj\u00ed\u017e\u010fky jen odv\u00e1\u017ee a z\u016fstane na stole, aby bylo co upravit. U odjet\u00e9 trati vr\u00e1t\u00ed 409 a chce `?potvrzeno=true` \u2014 m\u016f\u017ee to rozkopat v\u00fdsledky.",
+                "summary": "V téhle rozjížďce se ta trať nejede",
+                "description": "Organizátor regaty, nebo rozhodčí ročníku. Instance zmizí jen tehdy, když stejný předpis zbyde u jiné rozjížďky; poslední se od rozjížďky jen odváže a zůstane na stole, aby bylo co upravit. U odjeté trati vrátí 409 a chce `?potvrzeno=true` — může to rozkopat výsledky.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5516,10 +5516,10 @@
             },
             "post": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "P\u0159i\u0159ad\u00ed volnou tra\u0165 rozj\u00ed\u017e\u010fce",
-                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Obvykl\u00fd postup: nejd\u0159\u00edv se stav\u00ed tra\u0165, pak se na ni zalo\u017e\u00ed rozj\u00ed\u017e\u010fka. Tra\u0165, kter\u00e1 u\u017e rozj\u00ed\u017e\u010fce pat\u0159\u00ed, se p\u0159i\u0159adit ned\u00e1 \u2014 ta se klonuje.",
+                "summary": "Přiřadí volnou trať rozjížďce",
+                "description": "Organizátor regaty, nebo rozhodčí ročníku. Obvyklý postup: nejdřív se staví trať, pak se na ni založí rozjížďka. Trať, která už rozjížďce patří, se přiřadit nedá — ta se klonuje.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5575,10 +5575,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/trat/{trat}": {
             "delete": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "Zahod\u00ed tra\u0165",
-                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. P\u0159ijatou tra\u0165 zahodit nejde, nap\u0159ed ji mus\u00ed vr\u00e1tit rozhod\u010d\u00ed. U odjet\u00e9 vr\u00e1t\u00ed 409 a chce `?potvrzeno=true`. Z\u00e1znamy b\u00f3j\u00ed z\u016fst\u00e1vaj\u00ed \u2014 po\u0159\u00e1d stoj\u00ed ve vod\u011b.",
+                "summary": "Zahodí trať",
+                "description": "Organizátor regaty, nebo rozhodčí ročníku. Přijatou trať zahodit nejde, napřed ji musí vrátit rozhodčí. U odjeté vrátí 409 a chce `?potvrzeno=true`. Záznamy bójí zůstávají — pořád stojí ve vodě.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5624,10 +5624,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/trat/{trat}/klon": {
             "post": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "Naklonuje tra\u0165 pro dal\u0161\u00ed rozj\u00ed\u017e\u010fku",
-                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Kop\u00edruje prvky na tyt\u00e9\u017e b\u00f3je \u2014 \u017e\u00e1dn\u00e1 nov\u00e1 p\u00edpnut\u00ed. V\u00fdchoz\u00ed stav klonu je `Hotovo`; `Prijato` sm\u00ed zvolit jen rozhod\u010d\u00ed.",
+                "summary": "Naklonuje trať pro další rozjížďku",
+                "description": "Organizátor regaty, nebo rozhodčí ročníku. Kopíruje prvky na tytéž bóje — žádná nová pípnutí. Výchozí stav klonu je `Hotovo`; `Prijato` smí zvolit jen rozhodčí.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5683,10 +5683,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/trat/dalsi": {
             "post": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "Zalo\u017e\u00ed dal\u0161\u00ed, pr\u00e1zdnou tra\u0165 regaty",
-                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Pro dal\u0161\u00ed rozj\u00ed\u017e\u010fku, kter\u00e1 se pojede jinudy \u2014 klon je od toho, kdy\u017e se jede stejn\u011b. Rozj\u00ed\u017e\u010fka se nep\u0159i\u0159azuje: d\u00e1 se postavit nap\u0159ed tra\u0165, nebo nap\u0159ed vyhl\u00e1sit rozj\u00ed\u017e\u010fku a stav\u011bt, zat\u00edmco lod\u011b \u010dekaj\u00ed. Opakovan\u00e9 vol\u00e1n\u00ed vrac\u00ed tut\u00e9\u017e pr\u00e1zdnou tra\u0165, ne dal\u0161\u00ed.",
+                "summary": "Založí další, prázdnou trať regaty",
+                "description": "Organizátor regaty, nebo rozhodčí ročníku. Pro další rozjížďku, která se pojede jinudy — klon je od toho, když se jede stejně. Rozjížďka se nepřiřazuje: dá se postavit napřed trať, nebo napřed vyhlásit rozjížďku a stavět, zatímco lodě čekají. Opakované volání vrací tutéž prázdnou trať, ne další.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5722,10 +5722,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/trat/{trat}/zkraceni": {
             "post": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "Rozhod\u010d\u00ed zkr\u00e1t\u00ed tra\u0165 \u2014 c\u00edl je od te\u010f u zadan\u00e9ho prvku",
-                "description": "Jen rozhod\u010d\u00ed ro\u010dn\u00edku a jen u rozj\u00ed\u017e\u010fky, kter\u00e1 se jede. Jde to i na p\u0159ijat\u00e9 trati: ve vod\u011b se nic nem\u011bn\u00ed, jen se \u010d\u00e1st p\u0159estane plout. Po\u0159ad\u00ed se po\u010d\u00edt\u00e1 norm\u00e1ln\u011b.",
+                "summary": "Rozhodčí zkrátí trať — cíl je od teď u zadaného prvku",
+                "description": "Jen rozhodčí ročníku a jen u rozjížďky, která se jede. Jde to i na přijaté trati: ve vodě se nic nemění, jen se část přestane plout. Pořadí se počítá normálně.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5772,10 +5772,10 @@
             },
             "delete": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "Rozhod\u010d\u00ed zkr\u00e1cen\u00ed zru\u0161\u00ed \u2014 jede se zase cel\u00e1 tra\u0165",
-                "description": "Jen rozhod\u010d\u00ed ro\u010dn\u00edku a jen dokud se rozj\u00ed\u017e\u010fka jede.",
+                "summary": "Rozhodčí zkrácení zruší — jede se zase celá trať",
+                "description": "Jen rozhodčí ročníku a jen dokud se rozjížďka jede.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5814,10 +5814,10 @@
         "/sprava/serie/{serie}/zastavky/{zavod}/trat/prestavba": {
             "post": {
                 "tags": [
-                    "B\u00f3je"
+                    "Bóje"
                 ],
-                "summary": "Odemkne p\u0159ijatou tra\u0165 na p\u0159estavbu",
-                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Ve\u0159ejn\u011b to znamen\u00e1 \u201etra\u0165 se p\u0159estavuje, po\u010dkej\". Podle odjet\u00e9 trati se u\u017e jelo, tak\u017ee se nep\u0159ep\u00ed\u0161e \u2014 vznikne nov\u00e1 a star\u00e1 z\u016fstane p\u0159ijat\u00e1.",
+                "summary": "Odemkne přijatou trať na přestavbu",
+                "description": "Organizátor regaty, nebo rozhodčí ročníku. Veřejně to znamená „trať se přestavuje, počkej\". Podle odjeté trati se už jelo, takže se nepřepíše — vznikne nová a stará zůstane přijatá.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5861,10 +5861,10 @@
         "/sprava/serie/{serie}/poradatele/{poradatel}": {
             "get": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Medailonek po\u0159adatele i s t\u00edm, jestli ho p\u0159ihl\u00e1\u0161en\u00fd sm\u00ed upravit",
-                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku, nebo organiz\u00e1tor aspo\u0148 jedn\u00e9 regaty v ro\u010dn\u00edku. Po\u0159adatel mus\u00ed v ro\u010dn\u00edku po\u0159\u00e1dat aspo\u0148 jednu regatu.",
+                "summary": "Medailonek pořadatele i s tím, jestli ho přihlášený smí upravit",
+                "description": "Rozhodčí ročníku, nebo organizátor aspoň jedné regaty v ročníku. Pořadatel musí v ročníku pořádat aspoň jednu regatu.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5898,10 +5898,10 @@
             },
             "put": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Ulo\u017e\u00ed medailonek po\u0159adatele",
-                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku, nebo organiz\u00e1tor regaty, kterou po\u0159adatel po\u0159\u00e1d\u00e1. Z\u00e1znam je spole\u010dn\u00fd v\u0161em ro\u010dn\u00edk\u016fm; p\u0159ejmenov\u00e1n\u00ed p\u0159ep\u00ed\u0161e jm\u00e9no na v\u0161ech jeho regat\u00e1ch.",
+                "summary": "Uloží medailonek pořadatele",
+                "description": "Rozhodčí ročníku, nebo organizátor regaty, kterou pořadatel pořádá. Záznam je společný všem ročníkům; přejmenování přepíše jméno na všech jeho regatách.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -5947,10 +5947,10 @@
         "/sprava/serie/{serie}/poradatele/{poradatel}/obrazek": {
             "put": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Nahraje vlastn\u00ed obr\u00e1zek po\u0159adatele a nahrad\u00ed p\u0159edchoz\u00ed",
-                "description": "JPEG, PNG nebo WebP do 15 MB. Autor a potvrzen\u00fd souhlas se zve\u0159ejn\u011bn\u00edm jsou povinn\u00e9. Bez nastaven\u00e9ho \u00falo\u017ei\u0161t\u011b vrac\u00ed 503.",
+                "summary": "Nahraje vlastní obrázek pořadatele a nahradí předchozí",
+                "description": "JPEG, PNG nebo WebP do 15 MB. Autor a potvrzený souhlas se zveřejněním jsou povinné. Bez nastaveného úložiště vrací 503.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -6028,9 +6028,9 @@
             },
             "delete": {
                 "tags": [
-                    "Spr\u00e1va"
+                    "Správa"
                 ],
-                "summary": "Odebere vlastn\u00ed obr\u00e1zek po\u0159adatele a sma\u017ee jeho soubory",
+                "summary": "Odebere vlastní obrázek pořadatele a smaže jeho soubory",
                 "parameters": [
                     {
                         "name": "serie",
@@ -10185,7 +10185,9 @@
                 "required": [
                     "lod",
                     "kategorie",
-                    "kormidelnik"
+                    "kormidelnik",
+                    "telefonu",
+                    "baterie"
                 ],
                 "type": "object",
                 "properties": {
@@ -10208,6 +10210,24 @@
                     "vyloucena": {
                         "type": "boolean",
                         "default": false
+                    },
+                    "telefonu": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 0
+                    },
+                    "baterie": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "format": "int32"
+                        }
                     }
                 }
             },
@@ -12180,34 +12200,34 @@
     },
     "tags": [
         {
-            "name": "S\u00e9rie"
+            "name": "Série"
         },
         {
-            "name": "Z\u00e1vody"
+            "name": "Závody"
         },
         {
-            "name": "Upozorn\u011bn\u00ed"
+            "name": "Upozornění"
         },
         {
             "name": "Import"
         },
         {
-            "name": "Vodo\u010det"
+            "name": "Vodočet"
         },
         {
-            "name": "\u010cl\u00e1nky"
+            "name": "Články"
         },
         {
-            "name": "Lod\u011b"
+            "name": "Lodě"
         },
         {
-            "name": "P\u0159ihl\u00e1\u0161ky"
+            "name": "Přihlášky"
         },
         {
             "name": "Identita"
         },
         {
-            "name": "Spr\u00e1va"
+            "name": "Správa"
         },
         {
             "name": "Trasy"
@@ -12216,10 +12236,10 @@
             "name": "Polohy"
         },
         {
-            "name": "Kl\u00ed\u010de"
+            "name": "Klíče"
         },
         {
-            "name": "B\u00f3je"
+            "name": "Bóje"
         }
     ]
 }

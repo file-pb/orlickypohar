@@ -2841,6 +2841,37 @@ Co F1 dělá navíc a my zatím ne: ukazuje **odstup** (+1.744), kdežto naše
 „před 3 s" je stáří dat, ne vzdálenost mezi loděmi. Odstup je zajímavější
 číslo, ale potřebuje postup po trati u obou lodí — tedy totéž, co mezičasy.
 
+### Tabule má čtyři fáze dne, ne jednu (Filip, 26. 10. 2026)
+
+Mapa je jen jedna z nich a **komponenta musí být vidět pořád** — prázdná
+plocha na televizi vypadá jako porucha. Hotové jsou dvě krajní, prostřední
+dvě čekají.
+
+| kdy | co ukazuje | stav |
+|---|---|---|
+| před zahájením dne | kdo se přihlašuje, kolika telefony ho vidíme | hotovo |
+| po rozpravě | mapa s polohami | hotovo dřív |
+| mezi rozjížďkami | průběžné výsledky, za nimi mírně rozmazaná mapa trasy | **chybí** |
+| po dojetí regaty | jak to dopadlo — a v jakém je to stavu | **chybí** |
+
+**Po dojezdu je nejhorší chvíle, ne nejlepší** (Filip): *„když všichni
+dojedou, tak chtějí vidět, jak dopadli, ale v tu chvíli organizace maká
+naplno a upravují se dojezdy, schvalují a uzavírají a počítají se
+výsledky."* Tabule v tu chvíli nesmí ukazovat čísla, jako by platila —
+ale nesmí ani mlčet, protože právě tehdy se na ni dívá celá hospoda.
+
+Řešením je **oznamovat stav, ne jen výsledek**: zápis prochází řadou
+`Navrzeno → Overeno → Schvaleno → Potvrzeno` (`Workflow.Rada`) a ta řada
+už ve snímku je, u každé rozjížďky zvlášť (`stavVysledku`). Divák tím
+dostane odpověď na obě otázky naráz: *kdo vyhrál* a *jak moc je to
+jisté*. Nehotové pořadí s poctivou cedulkou je lepší než prázdná tabule
+i než hotově vypadající čísla, která se za deset minut změní — je to
+tentýž princip jako u ukázkových plaveb, jen obrácený: tehdy chyběla
+data, teď chybí jejich platnost.
+
+Pruhy dole se v žádné fázi nemění, mění se jen jejich náplň: **běží mapa
+→ pořadí v regatě, mapa neběží → pořadí v celé sérii**.
+
 ### Co se dovysvětlilo při fotkách z televize (25. 10. 2026)
 
 **Barva nerozliší velké pole, a nemusí.** Lodí bývá 35 i víc. Změřeno

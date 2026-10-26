@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ApiNedostupne, nactiVerejnouTrat, nactiZavod } from "@/lib/api";
+import { ApiNedostupne, nactiPoradi, nactiVerejnouTrat, nactiZavod, nactiZpravy } from "@/lib/api";
 import { snimekZavodu } from "@/lib/tabule";
 import { Vypadek } from "@/app/vypadek";
 import { Obrazovka } from "./obrazovka";
@@ -31,13 +31,29 @@ export default async function Tabule({ params }: Parametry) {
   const { slug, zavod } = await params;
 
   try {
-    const [detail, trat] = await Promise.all([
+    // <b>Pořadí celé série se načítá i sem</b> (Filip, 26. 10. 2026:
+    // *„před otevřením rozpravy bych dole v karuselu rotoval kategorie
+    // úplně stejně jako na tabuli při rozjížďkách, ale tentokrát pořadí
+    // v celkové sérii"*). Dokud tahle regata nemá odjeto, je to jediné
+    // pořadí, které existuje — a v hospodě je to zrovna to, o čem se
+    // před startem mluví.
+    const [detail, trat, serie, zpravy] = await Promise.all([
       nactiZavod(slug, zavod),
       nactiVerejnouTrat(slug, zavod).catch(() => null),
+      nactiPoradi(slug).catch(() => null),
+      nactiZpravy(slug, zavod).catch(() => null),
     ]);
     if (!detail) notFound();
 
-    return <Obrazovka serie={slug} zavod={zavod} prvni={snimekZavodu(detail, trat)} />;
+    return (
+      <Obrazovka
+        serie={slug}
+        zavod={zavod}
+        prvni={snimekZavodu(detail, trat, zpravy)}
+        poradiSerie={serie?.kategorie ?? null}
+        serieNazev={serie ? `${serie.nazev} — průběžné pořadí série` : null}
+      />
+    );
   } catch (e) {
     if (e instanceof ApiNedostupne) return <Vypadek co="Tabule" />;
     throw e;

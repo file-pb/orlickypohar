@@ -25,12 +25,33 @@ const VERZALKY = 1490 / 2048;
  */
 const VERZALKA_PREDLOHY = 190;
 
-export function NazevZavodu({ text }: { text: string }) {
+export function NazevZavodu({
+  text,
+  /**
+   * Kde text v ploše začíná. <b>Výchozí je na střed</b>, protože tak
+   * stojí nad žebříčkem i na mapě; `start` je pro případy, kdy má
+   * lícovat s něčím pod sebou — na teaseru se stavem (Filip, 26. 10.
+   * 2026: *„ten nadpis a status zarovnej spolu doleva"*). Zarovnat to
+   * z CSS nejde: text je v SVG a drží se `x` a `text-anchor`.
+   */
+  zarovnani = "stred",
+}: {
+  text: string;
+  zarovnani?: "stred" | "vlevo";
+}) {
   const pismo = useRef<SVGTextElement>(null);
   const pruhy = `nazev-pruhy-${useId().replace(/:/g, "")}`;
   // Perioda 0 = ještě neměřeno; do té doby se kreslí plnou barvou, což je
   // horší, ale čitelné. Proužky o nulové periodě by nenakreslily nic.
   const [perioda, setPeriodu] = useState(0);
+  /**
+   * Šířka vysázeného textu. <b>Jen pro zarovnání vlevo</b>: tam má být
+   * plocha přesně tak široká jako jméno, aby za ním nezůstal pruh
+   * prázdna a blok doopravdy končil tam, kde končí písmena (Filip,
+   * 26. 10. 2026). Na střed se nechává roztažená, protože se jí text
+   * drží uprostřed a okraje jsou tam žádoucí.
+   */
+  const [sirkaTextu, setSirkuTextu] = useState(0);
 
   useEffect(() => {
     let zivy = true;
@@ -39,6 +60,13 @@ export function NazevZavodu({ text }: { text: string }) {
       if (!el || !zivy) return;
       const px = parseFloat(getComputedStyle(el).fontSize);
       setPeriodu((px * VERZALKY * LOGO.pruhy.perioda) / VERZALKA_PREDLOHY);
+      // `getComputedTextLength` je v uživatelských jednotkách SVG, které
+      // se tu rovnají pixelům: plocha nemá `viewBox`.
+      try {
+        setSirkuTextu(el.getComputedTextLength());
+      } catch {
+        // Bez vysázeného písma ještě měřit nejde; doměří se po `fonts.ready`.
+      }
     };
     zmer();
     // Písmo dorazí až po prvním vykreslení a mění výšku verzálek; bez
@@ -57,7 +85,12 @@ export function NazevZavodu({ text }: { text: string }) {
     // Třída `logo` tu není kvůli vzhledu, ale kvůli paletě: `--logo-napis`
       // je definovaný na ní, včetně tmavé varianty. Bez něj by proužky
       // spadly na výchozí černou a na tmavé tabuli by nápis zmizel.
-      <svg className="logo tabule-nazev" role="img" aria-label={text}>
+      <svg
+        className="logo tabule-nazev"
+        role="img"
+        aria-label={text}
+        style={zarovnani === "vlevo" && sirkaTextu > 0 ? { width: sirkaTextu } : undefined}
+      >
       <defs>
         {perioda > 0 && (
           <pattern id={pruhy} patternUnits="userSpaceOnUse" width={perioda} height={perioda}>
@@ -67,10 +100,10 @@ export function NazevZavodu({ text }: { text: string }) {
       </defs>
       <text
         ref={pismo}
-        x="50%"
+        x={zarovnani === "vlevo" ? 0 : "50%"}
         y="50%"
         dominantBaseline="central"
-        textAnchor="middle"
+        textAnchor={zarovnani === "vlevo" ? "start" : "middle"}
         fill={perioda > 0 ? `url(#${pruhy})` : "var(--logo-napis)"}
       >
         {text}

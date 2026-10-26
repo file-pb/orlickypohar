@@ -1,15 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import type { PoradiKategorie } from "@/lib/api";
 import type { Snimek } from "@/lib/tabule";
 import { Znak } from "@/app/logo";
 import { NazevZavodu } from "@/app/tabule-nazev";
+import { Teaser } from "./teaser";
 import { Karusel, type Panel } from "./karusel";
 import { PoradiTrid } from "./poradi-tridy";
 import { PanylkyRozjizdek } from "./rozjizdky";
 import { MapaTrackeru } from "@/app/mapa-trackeru";
-import { pole } from "@/app/nacrt/mapa/plavba";
 import type { VerejnePolohy } from "@/lib/polohy";
 import { useStopy } from "@/lib/stopy";
 
@@ -26,7 +27,6 @@ import { useStopy } from "@/lib/stopy";
  * Spočítá se jednou pro celý modul: je deterministická a na každé obnově
  * dat by se jinak generovala znovu.
  */
-const UKAZKA = pole();
 import { ZnakTridy } from "@/app/tridy";
 import { udalosti, type Udalost } from "@/lib/tabule-udalosti";
 
@@ -61,17 +61,51 @@ export function Obrazovka({
   serie,
   zavod,
   prvni,
+  poradiSerie,
+  serieNazev,
 }: {
   serie: string;
   zavod: string;
   prvni: Snimek;
+  /** Průběžné pořadí celé série. Pásy ho vezou, dokud neběží mapa. */
+  poradiSerie?: PoradiKategorie[] | null;
+  /** Jak se jmenuje série — nadpis nad pásy, aby se pořadí nepletla. */
+  serieNazev?: string | null;
 }) {
   const [snimek, setSnimek] = useState(prvni);
+  /**
+   * Čím karusel točí. <b>Dokud tahle regata nemá odjeto, pořadím série</b>
+   * — prázdné panely „zatím se nejelo" zabírají tutéž plochu a neřeknou
+   * nic. Jakmile přijde první výsledek, přepne se na regatu: ta je teď
+   * ta zajímavější.
+   */
+  /**
+   * Pořadí série jako řádky pro běžící pásy — <b>tytéž pásy, jaké jedou
+   * při rozjížďkách</b> (Filip, 26. 10. 2026: *„ten spodní carousel bych
+   * udělal podobný jako máme teď na tabuli, to bych neměnil"*). Mění se
+   * jen to, co stojí za jménem: v sérii body, na vodě stáří polohy.
+   */
+  const serieRadky = useMemo(() => {
+    if (!poradiSerie?.length) return [];
+    return poradiSerie
+      .filter((k) => k.kategorie !== "Celkem")
+      .flatMap((k, ki) =>
+        [...k.lode]
+          .sort((a, b) => a.poradiPoSkrtu - b.poradiPoSkrtu)
+          .map((l, i) => ({
+            id: ki * 1000 + i,
+            nazev: l.lod,
+            kategorie: k.kategorie,
+            stariS: null,
+            dojela: false,
+            popisek: `${l.bodyPoSkrtu} b`,
+          })),
+      );
+  }, [poradiSerie]);
   const [ted, setTed] = useState(() => Date.now());
   /**
-   * Živé polohy, když je regata pouští ven. <b>Dokud nechodí, jedou po
-   * trati ukázkové plavby</b> a tabule to u sebe píše — vydávat vymyšlené
-   * polohy za skutečné by byla lež, ne ukázka.
+   * Živé polohy, když je regata pouští ven. Dokud nechodí, je na místě
+   * mapy teaser se startovní listinou.
    */
   const [polohy, setPolohy] = useState<VerejnePolohy | null>(null);
   /** Okamžik, od kterého mapa počítá čas. První došlá dávka ho určí. */
@@ -313,13 +347,22 @@ export function Obrazovka({
           listiny, ale tabule to u sebe píše. Vydávat vymyšlené polohy za
           skutečné by byla lež, ne ukázka; až přijdou první skutečné,
           tenhle vstup zmizí. */}
+      {/* <b>Dokud nikdo nehlásí polohu, je na místě mapy teaser</b>
+          (Filip, 26. 10. 2026: *„pokud nemá být vidět mapa, tak alespoň
+          teaser se seznamem přihlášených lodí"*). Do té doby tu jezdily
+          ukázkové plavby — zástup s cedulkou, ale pořád zástup. Seznam
+          lodí, které se opravdu přihlásily, řekne divákovi v hospodě víc
+          než simulace cizí regaty, a hlavně je pravdivý. Ukázkové plavby
+          zůstaly tam, kam patří: v náčrtu `/nacrt/tabule`. */}
+      {zive.length === 0 ? (
+        <Teaser snimek={snimek} ted={ted} />
+      ) : (
       <div className="tabule-mapa" aria-hidden="true">
         <MapaTrackeru
-          znacky={zive.length > 0 && trat ? trat : UKAZKA.znacky}
-          lode={zive.length > 0 ? zive : UKAZKA.lode}
+          znacky={trat ?? []}
+          lode={zive}
           tabule
-          zive={zive.length > 0}
-          ukazka={zive.length === 0}
+          zive
           odsazeni={odsazeni}
           onUdalost={zarad}
           onPoradi={setPoradiLodi}
@@ -335,6 +378,7 @@ export function Obrazovka({
           }
         />
       </div>
+      )}
       <PanylkyRozjizdek snimek={snimek} ted={ted} />
       {/* <b>Stáří dat jako kolečko v rohu mapy</b> (Filip: *„maximálně ten
           odpočet dej třeba do nějakého kolečka doprava dolů v mapě, ale
@@ -348,13 +392,29 @@ export function Obrazovka({
       >
         {stari < 60 ? `${stari} s` : `${Math.round(stari / 60)} min`}
       </p>
-      <PoradiTrid radky={poradiLodi} ukazka={zive.length === 0} ref={tridy} />
+      {/* <b>Rozhoduje mapa, ne výsledky</b> (Filip, 26. 10. 2026: *„v režimu
+            mapa bude ukazovat pořadí v regatě, ale pokud bude mapa bez
+            zobrazování, tak tyhle pruhy budou ukazovat pořadí v celé
+            sérii"*). Pořadí na vodě navíc plní sama mapa, takže bez ní
+            žádné není. */}
+        <PoradiTrid
+          radky={zive.length > 0 ? poradiLodi : serieRadky}
+          nadpis={zive.length > 0 ? undefined : (serieNazev ?? undefined)}
+          ref={tridy}
+        />
 
       <div className="sloupce">
         {/* Zbývá jediný karusel: pořadí po třídách. Panel se stavy
             rozjížděk odešel 24. 10. 2026 — totéž říká proužek nahoře,
             a dvakrát totéž zabíralo půl obrazovky, na kterou patří mapa. */}
-        <Karusel panely={tridyPanely(snimek)} />
+        {/* <b>Dokud regata nemá odjeto, točí karusel pořadí celé série</b>
+            (Filip, 26. 10. 2026). Jsou to tytéž kategorie ve stejném
+            rytmu, jen jiná tabulka — prázdné panely s „zatím se nejelo"
+            by na televizi zabraly tutéž plochu a neřekly nic. */}
+        {/* Panelový karusel patří regatě. Dokud nemá odjeto, nese
+            spodek tabule běžící pásy s pořadím série — a dvě tabulky
+            téhož pod sebou by si jen braly místo. */}
+        {zive.length > 0 && <Karusel panely={tridyPanely(snimek)} />}
 
 
       </div>

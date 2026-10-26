@@ -116,6 +116,53 @@ def body_rozjizdky(vysledky, prihlaseno=None):
 PRIHLASENA = {"Prihlasena", "Potvrzena", "Nedostavila", "Vyloucena"}
 
 
+def zpravy_regaty(slug):
+    """Vývěska regaty, jak ji vydal pořadatel.
+
+    Mock drží pevnou sadu, ať je na tabuli vidět každý druh: oznámení
+    o rozpravě, změna programu a výstraha. Časy jsou relativní k teď,
+    aby zprávy nevypadaly po půlnoci jako včerejší.
+    """
+    import time
+
+    ted = time.time()
+    return [
+        {"id": 3, "text": "Přechod bouřky — lodě zůstávají na břehu, čekáme na pokyn.",
+         "druh": "Vystraha", "vydanoV": cas_iso(ted - 8 * 60),
+         "platiDo": cas_iso(ted + 2 * 3600), "stazenoV": None},
+        {"id": 2, "text": "Start první rozjížďky se odkládá o 45 minut.",
+         "druh": "Program", "vydanoV": cas_iso(ted - 35 * 60),
+         "platiDo": None, "stazenoV": None},
+        {"id": 1, "text": "Rozprava v 9:00 u klubovny, startovní procedura v 10:25.",
+         "druh": "Informace", "vydanoV": cas_iso(ted - 3 * 3600),
+         "platiDo": None, "stazenoV": None},
+    ]
+
+
+def telefonu_lodi(lod):
+    """Kolik telefonů loď sleduje.
+
+    Deterministicky z názvu: každá sedmá loď nemá žádný (to je ten případ,
+    kvůli kterému se údaj vůbec ukazuje), každá pátá má dva.
+    """
+    h = sum(ord(z) for z in lod)
+    if h % 7 == 0:
+        return 0
+    return 2 if h % 5 == 0 else 1
+
+
+def baterie_lodi(lod):
+    """Stav baterie těch telefonů, v procentech.
+
+    Deterministicky z názvu, ať je na tabuli vidět celá škála: plná,
+    poloprázdná, kriticky vybitá i telefon, který stav nehlásí (None) —
+    to je případ starší appky a nesmí vypadat jako plná baterie.
+    """
+    h = sum(ord(z) for z in lod)
+    stavy = [None, 12, 34, 58, 77, 96]
+    return [stavy[(h + i * 3) % len(stavy)] for i in range(telefonu_lodi(lod))]
+
+
 def prihlaseno_do_zavodu(z, rozjizdky):
     """Počet lodí přihlášených do závodu po kategoriích (účasti ∪ výsledky)."""
     lode = {(KAT[u["lod"]], u["lod"]) for u in z.get("ucasti", [])
@@ -5383,6 +5430,12 @@ class H(BaseHTTPRequestHandler):
                 return self.send_error(404)
             telo = {**clanek_shrnuti(c), "telo": c["telo"],
                     "format": c.get("format", "Text")}
+        elif (m := re.match(rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)/zpravy$', cesta)):
+            # Vývěska regaty — veřejná, čte ji tabule. Vrací jen to, co
+            # platí: stažené a prošlé zprávy mezi nimi nejsou.
+            if not any(z["slug"] == m.group(1) for z in D["zavody"]):
+                return self.send_error(404)
+            return self.odpoved(zpravy_regaty(m.group(1)))
         elif (m := re.match(rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)/trat$', cesta)):
             # Veřejná cesta, takže **ne** `self.zastavka` — ta vymáhá
             # přihlášení, protože je psaná pro správu.
@@ -5451,7 +5504,12 @@ class H(BaseHTTPRequestHandler):
                     "lode": [{"lod": nazvy(u["lod"]), "kategorie": KAT[u["lod"]],
                               "kormidelnik": jmeno(u["kormidelnik"]) if u.get("kormidelnik") else None,
                               "potvrzena": u["stav"] != "Prihlasena",
-                              "vyloucena": u["stav"] == "Vyloucena"}
+                              "vyloucena": u["stav"] == "Vyloucena",
+                              # Kolik telefonů loď sleduje. Mock drží pevné
+                              # rozdělení podle jména, ať je na tabuli vidět
+                              # obojí: loď bez telefonu i loď se zálohou.
+                              "telefonu": telefonu_lodi(u["lod"]),
+                              "baterie": baterie_lodi(u["lod"])}
                              for u in sorted((u for u in z["ucasti"] if u["stav"] in VEREJNE_UCASTI),
                                              key=lambda u: (KAT_PORADI[KAT[u["lod"]]], nazvy(u["lod"])))],
                     # Vyvěšené směrnice, od nejnovější. Stažené se veřejně

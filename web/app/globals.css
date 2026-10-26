@@ -4667,3 +4667,256 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   background: var(--pozadi); color: var(--tlumeny);
   border-color: var(--linka); font-weight: 400; box-shadow: none;
 }
+
+/* ---------------------------------------------------------------------
+   Teaser: co tabule ukazuje, dokud nikdo nehlásí polohu.
+
+   Stojí na místě mapy a drží se téhož měřítka (`--tv`), protože se čte
+   z druhého konce hospody stejně jako pořadí. Jména lodí jsou to hlavní
+   — kdo je na startovní listině, je přesně ta otázka, na kterou se
+   v hospodě před startem čeká.
+   --------------------------------------------------------------------- */
+/* <b>Stojí v toku, nepřekrývá.</b> Mapa je pozadí a leží pod panely,
+   kdežto teaser je obsah: kdyby byl taky absolutní, schoval by pod sebou
+   karusel tříd, který pod ním běží dál (změřeno 26. 10. 2026 — karusel
+   měl 924 px a nebylo ho vidět). */
+.tabule .tabule-teaser {
+  position: relative; z-index: 2;
+  /* <b>Karusel pod ním zůstává, jaký byl</b> (Filip, 26. 10. 2026:
+     *„ten spodní carousel bych udělal podobný jako máme teď na tabuli,
+     to bych neměnil"*). Sahat mu na výšku se nevyplatilo: pevná míra
+     mu rozhodila prolínání a vedle panelu se objevila jeho useknutá
+     kopie. Teaser si proto bere jen půlku plochy a zbytek nechává
+     karuselu přesně tak, jak to běží při rozjížďkách. */
+  /* Dvě třetiny plochy, ne polovina: nad listinou stojí ještě vývěska
+     a lodě se jinak usekávaly (pět z jedenácti, změřeno 26. 10. 2026).
+     Pruhům pod tím zbývá dost — rotují, takže se na každou loď dostane. */
+  flex: 1 1 74%; min-height: 0;
+  display: flex; flex-direction: column; gap: calc(0.8 * var(--tv));
+  /* <b>Nahoře se nesmí plýtvat</b> (Filip, 26. 10. 2026: *„tady
+     potřebujeme co nejlépe využít prostor"*). Značka sedí vlevo nahoře,
+     tak jde název vedle ní do téhož řádku a odsazení je jen tolik, aby
+     se o ni neotíral — dřív byl pod ní a plocha mezi nimi zůstávala
+     prázdná. */
+  padding: calc(0.9 * var(--tv)) calc(3 * var(--tv)) 0;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 18% 0%, color-mix(in srgb, var(--voda) 26%, transparent), transparent 70%),
+    var(--pozadi);
+}
+.tabule .tabule-teaser-vrch {
+  display: flex; align-items: flex-start; gap: calc(2 * var(--tv));
+}
+/* Vývěska si bere celou levou stranu a začíná úplně nahoře — na ni se
+   na tabuli čeká, ne na jméno regaty. */
+.tabule .tabule-teaser-vrch .tabule-info { flex: 1 1 auto; min-width: 0; }
+/* Hlavička vpravo, pod značkou: název a pod ním stav, oboje doprava. */
+.tabule .tabule-teaser > .tabule-teaser-vrch > header {
+  flex: 0 0 auto;
+  /* <b>Jeden blok: značka, vedle ní název a pod ním stav.</b> Značka se
+     s textem srovnává na střed, název a stav lícují vlevo (Filip,
+     26. 10. 2026). */
+  /* <b>Šířka podle obsahu, blok u pravého horního rohu</b> (Filip,
+     26. 10. 2026: *„udělej to jako blok i s logem a celé to zarovnej
+     doprava nahoru"*). Pevných 26 `--tv` ho drželo širší, než je
+     potřeba, takže mezi jménem regaty a krajem zbýval pruh prázdna. */
+  display: flex; align-items: center; gap: calc(1.2 * var(--tv));
+  align-self: flex-start;
+  width: auto; max-width: calc(34 * var(--tv));
+  /* <b>Horní hrana lícuje s první zprávou</b>, ne s nadpisem nad ní
+     (Filip, 26. 10. 2026: *„horní okraj ať začíná zároveň s alerty, aby
+     to bylo srovnané"*). Odsazení je přesně výška toho nadpisu i s jeho
+     mezerou. */
+  margin-top: calc(1.66 * var(--tv));
+}
+.tabule .tabule-teaser-znak {
+  flex: none; display: block;
+  width: calc(5 * var(--tv)); height: calc(5 * var(--tv));
+}
+.tabule .tabule-teaser-znak svg { display: block; width: 100%; height: 100%; }
+.tabule .tabule-teaser-popis {
+  flex: 0 1 auto; min-width: 0;
+  display: grid; justify-items: start; gap: calc(0.2 * var(--tv));
+}
+/* <b>Název potřebuje celou zbylou šířku řádku.</b> Kreslí se do SVG bez
+   `viewBox` a text v něm stojí na padesáti procentech — když je SVG užší
+   než on, ořízne se z obou stran, až z „Radavská regata" zbude
+   „:davská rega" (Filip vyfotil 26. 10. 2026). Pružná položka se bez
+   `flex: 1` smrskne na obsah, a ten SVG nezná. */
+.tabule .tabule-teaser h1 { margin: 0; min-width: 0; }
+/* <b>Blok je vysoký jako značka vedle něj</b> (Filip, 26. 10. 2026):
+   název zabere, co zbude nad stavem, takže dvojice vypadá jako jeden
+   celek a ne jako text přilepený k obrázku. */
+.tabule .tabule-teaser h1 .tabule-nazev {
+  /* Šířku si plocha nastaví sama podle vysázeného jména — viz
+     `tabule-nazev.tsx`. Než se změří, drží se téhle, aby nebyla nulová. */
+  width: calc(16 * var(--tv)); height: calc(3.4 * var(--tv));
+}
+.tabule .tabule-teaser h1 .tabule-nazev text { font-size: calc(2.7 * var(--tv)); }
+.tabule .tabule-teaser-stav {
+  margin: 0; color: var(--tlumeny); text-align: left;
+  font-size: calc(0.95 * var(--tv)); letter-spacing: 0.04em;
+}
+.tabule .tabule-teaser-pocet {
+  margin: 0; color: var(--text); font-weight: 700;
+  font-size: calc(1.5 * var(--tv));
+}
+/* Třídy vedle sebe, každá svůj sloupec. Víc tříd = užší sloupce; na
+   televizi je lepší mít vše naráz než karusel, který se zrovna otočil
+   pryč od té, kterou divák hledá. */
+.tabule .tabule-teaser-tridy {
+  flex: 1; min-height: 0;
+  display: grid; gap: calc(1.4 * var(--tv));
+  grid-template-columns: repeat(auto-fit, minmax(calc(18 * var(--tv)), 1fr));
+}
+.tabule .tabule-teaser-trida { min-height: 0; display: grid; grid-template-rows: auto 1fr; gap: calc(0.6 * var(--tv)); }
+.tabule .tabule-teaser-trida h2 {
+  margin: 0; display: flex; align-items: center; gap: calc(0.5 * var(--tv));
+  font-size: calc(1.4 * var(--tv)); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--tlumeny); border-bottom: 1px solid var(--linka);
+  padding-bottom: calc(0.3 * var(--tv));
+}
+.tabule .tabule-teaser-trida h2 .detail {
+  margin-left: auto; font-variant-numeric: tabular-nums; color: var(--tlumeny);
+}
+.tabule .tabule-teaser-trida ul {
+  /* <b>Jeden sloupec, žádné zalamování.</b> Svislý `flex-wrap` tvoří
+     další sloupce, jenže bez pevné šířky se překryjí — na televizi
+     z toho bylo „MANWBA" přes „MAMBA" a „NABLB" (26. 10. 2026). Třídy
+     se dělí do sloupců mřížkou výš, uvnitř třídy se čte shora dolů. */
+  margin: 0; padding: 0; list-style: none; min-height: 0;
+  display: flex; flex-direction: column;
+}
+/* <b>Jedna loď, jeden řádek</b> (Filip, 26. 10. 2026): jméno a kormidelník
+   vlevo, stav vždy vpravo u kraje sloupce. Dlouhé jméno se radši ořízne,
+   než aby řádek zalomilo — v seznamu, který se čte přes místnost, je
+   svislá pravidelnost důležitější než poslední písmeno. */
+.tabule .tabule-teaser-trida li {
+  display: flex; align-items: baseline; gap: calc(0.5 * var(--tv));
+  flex-wrap: nowrap;
+  padding: calc(0.2 * var(--tv)) 0;
+  font-size: calc(1.4 * var(--tv)); line-height: 1.25;
+}
+.tabule .tabule-teaser-trida li > b,
+.tabule .tabule-teaser-trida li > .detail {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* Jméno ustupuje až po kormidelníkovi: bez jména lodi je řádek k ničemu. */
+.tabule .tabule-teaser-trida li > b { flex: 0 1 auto; min-width: 0; }
+.tabule .tabule-teaser-trida li > .detail { flex: 0 2 auto; min-width: 0; }
+.tabule .tabule-teaser-trida li > .bez-telefonu,
+.tabule .tabule-teaser-trida li > .telefonu { margin-left: auto; flex: none; }
+.tabule .tabule-teaser-trida li b { font-weight: 700; }
+.tabule .tabule-teaser-trida li .detail { color: var(--tlumeny); font-size: calc(1 * var(--tv)); }
+/* Nepotvrzená přihláška je pořád přihláška, jen se o ní ještě rozhoduje
+   — tlumí se, nemizí. */
+.tabule .tabule-teaser-trida li.nepotvrzena { opacity: 0.55; }
+.tabule .tabule-teaser .prazdno { font-size: calc(1.1 * var(--tv)); color: var(--tlumeny); }
+.tabule .tabule-teaser-trida li.dalsich { color: var(--tlumeny); font-style: italic; }
+
+
+/* Bez mapy není vpravo žádný žebříček, u kterého by pásy musely končit —
+   roztáhnou se tedy přes celou šířku (Filip, 26. 10. 2026: „jen ho třeba
+   můžeme roztáhnout na celou šířku"). */
+.tabule:has(.tabule-teaser) .tabule-tridy { right: 0; }
+/* Nadpis nad pásy: malý, tlumený, přes celou šířku — má říct, co se
+   veze, ne přetahovat se o pozornost s lodě­mi pod ním. */
+.tabule .tabule-tridy-nadpis {
+  margin: 0 0 calc(0.1 * var(--tv));
+  font-size: calc(0.78 * var(--tv)); letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--tlumeny);
+}
+/* Loď bez telefonu je výstraha, ne ozdoba: z ní nepřijde nic. Dvojka
+   a víc je naopak dobrá zpráva (záloha na palubě), tak je jen tlumená. */
+.tabule .tabule-teaser-trida li .bez-telefonu {
+  font-size: calc(0.78 * var(--tv)); color: var(--stav-zruseny);
+  border: 1px solid currentColor; border-radius: 999px;
+  padding: 0 calc(0.45 * var(--tv)); white-space: nowrap;
+}
+/* Telefony jako kostičky: jedna na každý, výplň odspodu podle baterie.
+   <b>Barva se mění, teprve když je důvod</b> — plná a poloplná vypadají
+   stejně (zeleně), pod čtyřiceti procenty oranžová a pod patnácti
+   červená. Telefon, který stav nehlásí, má jen obrys: „neříká" není
+   totéž co „plná". */
+.tabule .tabule-teaser-trida li .telefonu {
+  display: inline-flex; align-items: center; gap: calc(0.22 * var(--tv));
+  color: var(--stav-vypsany);
+}
+.tabule .telefon-kosticka {
+  --baterie: 100%;
+  display: block;
+  width: calc(0.52 * var(--tv)); height: calc(0.92 * var(--tv));
+  border: 1px solid currentColor; border-radius: calc(0.14 * var(--tv));
+  background: linear-gradient(
+    to top,
+    currentColor 0 var(--baterie),
+    transparent var(--baterie) 100%
+  );
+}
+.tabule .tabule-teaser-trida li .telefonu .detail {
+  font-size: calc(0.8 * var(--tv)); color: var(--stav-vypsany);
+}
+
+.tabule .telefon-kosticka.dochazi { color: #e8900c; }
+.tabule .telefon-kosticka.doslo { color: var(--stav-zruseny); }
+.tabule .telefon-kosticka.bez-stavu { --baterie: 0%; opacity: 0.7; }
+
+/* ---------------------------------------------------------------------
+   Vývěska regaty: co pořadatel vydal a co platí. Stojí nad startovní
+   listinou, protože odklad startu je důležitější než jména lodí.
+   --------------------------------------------------------------------- */
+.tabule .tabule-info { display: grid; gap: calc(0.4 * var(--tv)); }
+.tabule .tabule-info h2 {
+  margin: 0; font-size: calc(0.78 * var(--tv)); letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--tlumeny);
+}
+.tabule .tabule-info ul { margin: 0; padding: 0; list-style: none; display: grid; gap: calc(0.3 * var(--tv)); }
+.tabule .tabule-info .zprava {
+  display: flex; align-items: baseline; gap: calc(0.8 * var(--tv));
+  padding: calc(0.22 * var(--tv)) calc(0.8 * var(--tv));
+  border-left: calc(0.25 * var(--tv)) solid var(--linka);
+  border-radius: calc(0.2 * var(--tv));
+  background: color-mix(in srgb, var(--pozadi) 60%, transparent);
+  font-size: calc(1.15 * var(--tv)); line-height: 1.3;
+}
+.tabule .tabule-info .zprava-text { flex: 1; min-width: 0; }
+.tabule .tabule-info .zprava-kdy {
+  flex: none; color: var(--tlumeny); font-size: calc(0.85 * var(--tv));
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+/* Barva podle druhu — výstraha červeně, změna programu oranžově,
+   oznámení bez barvy: kdyby svítilo všechno, nesvítí nic. */
+.tabule .tabule-info .zprava-vystraha {
+  border-left-color: var(--stav-zruseny);
+  background: color-mix(in srgb, var(--stav-zruseny) 14%, transparent);
+}
+.tabule .tabule-info .zprava-program { border-left-color: #e8900c; }
+
+/* S teaserem má značku v sobě hlavička, takže ta v rohu je navíc. */
+.tabule:has(.tabule-teaser) .vrch { display: none; }
+
+/* <b>S teaserem panýlky rozjížděk odpadají</b> (Filip, 26. 10. 2026:
+   *„v tomto případě asi nemusíme zobrazovat toto; na mapě je to super,
+   ale tady tu informaci už máme z alertu a stavu pod logem"*). Co která
+   rozjížďka dělá, stojí ve stavu pod jménem regaty — včetně odpočtu
+   startovní procedury —, a co se zrovna mění, je ve vývěsce vlevo. Na
+   mapě zůstávají: tam je stav pod jménem schovaný v pravém sloupci. */
+.tabule:has(.tabule-teaser) .rozjizdky-panylky { display: none; }
+
+/* Bez mapy není vpravo žebříček, od kterého by se kolečko se stářím dat
+   muselo držet dál — jde ke kraji (Filip, 26. 10. 2026). */
+.tabule:has(.tabule-teaser) .tabule-stari-kolecko {
+  right: calc(3 * var(--tv));
+}
+
+/* <b>Listinu odděluje linka, ne karta</b> (Filip, 26. 10. 2026: *„zmenšilo
+   nám to užitnou plochu, musíme vymyslet něco elegantnějšího, nějaký hr
+   možná"*). Rámeček dokola ukrojil plochu ze všech čtyř stran, a na
+   televizi je každý pixel seznamu drahý. Linka nahoře oddělí vývěsku od
+   listiny stejně dobře a nevezme nic než svou výšku. */
+.tabule .tabule-teaser-listina {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column; gap: calc(0.6 * var(--tv));
+  padding: calc(0.7 * var(--tv)) 0 0;
+  border-top: 1px solid var(--linka);
+}

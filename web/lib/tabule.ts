@@ -1,4 +1,4 @@
-import type { VerejnaTrat, ZavodDetail } from "@/lib/api";
+import type { VerejnaTrat, ZavodDetail, ZpravaRegaty } from "@/lib/api";
 import type { Znacka } from "@/app/nacrt/mapa/plavba";
 import { znackyZTrati } from "@/lib/znacky";
 import { naMapu, type PrvekNaMape } from "@/app/mapka-trati";
@@ -13,6 +13,14 @@ import { naMapu, type PrvekNaMape } from "@/app/mapka-trati";
 export type Snimek = {
   /** Čas zdroje. Stáří si spočítá prohlížeč — viz `tabule/data/route.ts`. */
   kdy: string;
+  /**
+   * Vývěska regaty: co pořadatel vydal a co teď platí.
+   *
+   * <b>Jede ve snímku, ne zvlášť</b>, protože se mění během dne a tabule
+   * se obnovuje právě snímkem — odklad startu, o kterém by se divák
+   * dozvěděl až po obnovení stránky, je k ničemu.
+   */
+  zpravy: ZpravaRegaty[];
   nazev: string;
   stav: ZavodDetail["stav"];
   vysledkySkryte: boolean;
@@ -35,7 +43,24 @@ export type Snimek = {
     doSerie: boolean;
     poradi: { lod: string; kategorie: string; misto: number | null; kod: string | null }[];
   }[];
-  lode: { lod: string; kategorie: string; kormidelnik: string | null; potvrzena: boolean }[];
+  lode: {
+    lod: string;
+    kategorie: string;
+    kormidelnik: string | null;
+    potvrzena: boolean;
+    /**
+     * Kolik telefonů loď sleduje. <b>Odpověď na „trackujeme ji dobře?"</b>
+     * (Filip, 26. 10. 2026), ne na „kde je" — nula znamená, že z téhle
+     * lodi nepřijde nic, a to má být vidět dřív, než se odstartuje.
+     */
+    telefonu: number;
+    /**
+     * Stav baterie těch telefonů v procentech, v pořadí vydání.
+     * <c>null</c> u telefonu, který ho nehlásí — starší appka pole
+     * neposílá a nedosazuje se pravděpodobná hodnota.
+     */
+    baterie: (number | null)[];
+  }[];
   /**
    * Pořadí rozdělené na panely karuselu (Filip, 15. 10. 2026: *„rozjeď ty
    * třídy lodí v karuselech, je to podle toho, kolik tříd se jede a když
@@ -110,8 +135,11 @@ export function snimekZavodu(
   detail: ZavodDetail,
   /** Veřejná trať. Nepovinná: výpadek jejího čtení nesmí shodit celý snímek. */
   trat?: VerejnaTrat | null,
+  /** Vývěska regaty. Nepovinná ze stejného důvodu jako trať. */
+  zpravy?: ZpravaRegaty[] | null,
 ): Snimek {
   return {
+    zpravy: zpravy ?? [],
     oknoDo: detail.oknoDo ?? null,
     znacky: znackyZTrati(trat),
     trat: trat
@@ -151,6 +179,8 @@ export function snimekZavodu(
       kategorie: u.kategorie,
       kormidelnik: u.kormidelnik,
       potvrzena: u.potvrzena,
+      telefonu: u.telefonu ?? 0,
+      baterie: u.baterie ?? [],
     })),
     tabule: panely(detail),
     zavod: {

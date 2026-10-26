@@ -17,6 +17,7 @@ using OrlickyPohar.Api.Features.Polohy;
 using OrlickyPohar.Api.Features.Poradatele;
 using OrlickyPohar.Api.Features.Prevzate;
 using OrlickyPohar.Api.Features.Smernice;
+using OrlickyPohar.Api.Features.Zpravy;
 using OrlickyPohar.Api.Features.Tracker;
 using OrlickyPohar.Api.Features.Serial;
 using OrlickyPohar.Api.Features.Sprava;
@@ -94,6 +95,7 @@ try
     builder.Services.AddScoped<StahovacFotek>();
     // Plachetní směrnice u zastávky: vyvěšení a seznam verzí.
     builder.Services.AddScoped<SmerniceSprava>();
+    builder.Services.AddScoped<ZpravySprava>();
     // Vazba účtu k lodi: párování podle e-mailu při přihlášení.
     builder.Services.AddScoped<Parovani>();
     // Připojení k lodi kódem nebo QR.
@@ -232,6 +234,7 @@ try
         app.MapSpravaVysledku();
         app.MapPrihlasky();
         app.MapSmernice();
+        app.MapZpravy();
         app.MapKody();
         app.MapKapitanstvi();
         app.MapBoje();
