@@ -4713,12 +4713,20 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 /* Hlavička vpravo, pod značkou: název a pod ním stav, oboje doprava. */
 .tabule .tabule-teaser > .tabule-teaser-vrch > header {
   flex: 0 0 auto;
-  /* Název a stav lícují vlevo (Filip, 26. 10. 2026) — blok jako celek
-     stojí vpravo pod značkou, ale uvnitř se čte odshora dolů od jedné
-     hrany. */
-  display: grid; justify-items: start; gap: calc(0.2 * var(--tv));
+  /* <b>Jeden blok: značka, vedle ní název a pod ním stav.</b> Značka se
+     s textem srovnává na střed, název a stav lícují vlevo (Filip,
+     26. 10. 2026). */
+  display: flex; align-items: center; gap: calc(1.2 * var(--tv));
   width: calc(26 * var(--tv));
-  padding-right: calc(5.4 * var(--tv));
+}
+.tabule .tabule-teaser-znak {
+  flex: none; display: block;
+  width: calc(5 * var(--tv)); height: calc(5 * var(--tv));
+}
+.tabule .tabule-teaser-znak svg { display: block; width: 100%; height: 100%; }
+.tabule .tabule-teaser-popis {
+  flex: 1 1 auto; min-width: 0;
+  display: grid; justify-items: start; gap: calc(0.2 * var(--tv));
 }
 /* <b>Název potřebuje celou zbylou šířku řádku.</b> Kreslí se do SVG bez
    `viewBox` a text v něm stojí na padesáti procentech — když je SVG užší
@@ -4726,11 +4734,13 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
    „:davská rega" (Filip vyfotil 26. 10. 2026). Pružná položka se bez
    `flex: 1` smrskne na obsah, a ten SVG nezná. */
 .tabule .tabule-teaser h1 { margin: 0; width: 100%; min-width: 0; }
-/* Menší než na mapě: tady nese plochu seznam lodí, ne jméno regaty. */
+/* <b>Blok je vysoký jako značka vedle něj</b> (Filip, 26. 10. 2026):
+   název zabere, co zbude nad stavem, takže dvojice vypadá jako jeden
+   celek a ne jako text přilepený k obrázku. */
 .tabule .tabule-teaser h1 .tabule-nazev {
-  width: 100%; height: calc(2.4 * var(--tv));
+  width: 100%; height: calc(3.4 * var(--tv));
 }
-.tabule .tabule-teaser h1 .tabule-nazev text { font-size: calc(1.9 * var(--tv)); }
+.tabule .tabule-teaser h1 .tabule-nazev text { font-size: calc(2.7 * var(--tv)); }
 .tabule .tabule-teaser-stav {
   margin: 0; color: var(--tlumeny); text-align: left;
   font-size: calc(0.95 * var(--tv)); letter-spacing: 0.04em;
@@ -4870,6 +4880,13 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 }
 .tabule .tabule-info .zprava-program { border-left-color: #e8900c; }
 
-/* Se teaserem jde značka doprava ke jménu regaty; levý horní roh patří
-   vývěsce (Filip, 26. 10. 2026). */
-.tabule:has(.tabule-teaser) .vrch { left: auto; right: calc(2.4 * var(--tv)); }
+/* S teaserem má značku v sobě hlavička, takže ta v rohu je navíc. */
+.tabule:has(.tabule-teaser) .vrch { display: none; }
+
+/* S teaserem sedí vpravo nahoře hlavička se značkou, takže panýlky
+   rozjížděk slezou pod ni — jinak leží číslo rozjížďky na logu
+   (změřeno 26. 10. 2026). */
+.tabule:has(.tabule-teaser) .rozjizdky-panylky {
+  top: calc(6.4 * var(--znacka));
+  right: calc(3 * var(--tv));
+}

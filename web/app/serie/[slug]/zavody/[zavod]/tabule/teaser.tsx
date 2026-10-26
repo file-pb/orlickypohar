@@ -1,5 +1,6 @@
 "use client";
 
+import { Znak } from "@/app/logo";
 import { NazevZavodu } from "@/app/tabule-nazev";
 import { ZnakTridy } from "@/app/tridy";
 import { Infopanel } from "./infopanel";
@@ -93,7 +94,16 @@ export function Teaser({ snimek, ted }: { snimek: Snimek; ted: number }) {
       <div className="tabule-teaser-vrch">
         <Infopanel zpravy={snimek.zpravy} ted={ted} />
 
+        {/* <b>Značka patří k nadpisu, ne do rohu</b> (Filip, 26. 10.
+            2026: *„ber to jako blok a zleva k tomu dej to logo a vystřeď
+            to"*). Je proto uvnitř hlavičky — v rohu by se s ní musel
+            název srovnávat přes absolutní souřadnice a při každé změně
+            velikosti znovu. */}
         <header>
+          <span className="tabule-teaser-znak" aria-hidden="true">
+            <Znak />
+          </span>
+          <div className="tabule-teaser-popis">
           <h1>
             <NazevZavodu text={snimek.nazev} zarovnani="vlevo" />
           </h1>
@@ -106,6 +116,7 @@ export function Teaser({ snimek, ted }: { snimek: Snimek; ted: number }) {
                 ? `Odjeto ${odjeto} ${odjeto === 1 ? "rozjížďka" : odjeto < 5 ? "rozjížďky" : "rozjížděk"}`
                 : "Čeká se na rozpravu"}
           </p>
+          </div>
         </header>
       </div>
 
