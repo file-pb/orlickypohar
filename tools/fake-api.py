@@ -116,6 +116,11 @@ def body_rozjizdky(vysledky, prihlaseno=None):
 PRIHLASENA = {"Prihlasena", "Potvrzena", "Nedostavila", "Vyloucena"}
 
 
+# Vývěska, kterou pořadatel naplní za běhu. Mock ji drží v paměti: po
+# restartu zbydou jen ty pevné, aby bylo na tabuli pořád co ukázat.
+VYVESKA = {}
+
+
 def zpravy_regaty(slug):
     """Vývěska regaty, jak ji vydal pořadatel.
 
@@ -126,7 +131,8 @@ def zpravy_regaty(slug):
     import time
 
     ted = time.time()
-    return [
+    vydane = VYVESKA.get(slug, [])
+    return vydane + [
         {"id": 3, "text": "Přechod bouřky — lodě zůstávají na břehu, čekáme na pokyn.",
          "druh": "Vystraha", "vydanoV": cas_iso(ted - 8 * 60),
          "platiDo": cas_iso(ted + 2 * 3600), "stazenoV": None},
@@ -2661,6 +2667,41 @@ class H(BaseHTTPRequestHandler):
     def okna_regaty(self, slug):
         return self.odpoved([okno_dto(o) for o in OKNA.get(slug, [])])
 
+    def vydej_zpravu(self, slug):
+        """Vydá zprávu na vývěsku. Pravidla jako v API: text povinný a
+        s mezí, lhůta v hodinách a taky s mezí."""
+        import time
+
+        vstup = self.telo_zadosti() or {}
+        text = (vstup.get("text") or "").strip()
+        if not text or len(text) > 400:
+            return self.send_error(400)
+        hodin = vstup.get("platiHodin")
+        if hodin is not None and (not isinstance(hodin, (int, float)) or hodin <= 0 or hodin > 72):
+            return self.send_error(400)
+
+        ted = time.time()
+        zprava = {
+            "id": int(ted * 1000) % 1000000,
+            "text": text,
+            "druh": vstup.get("druh") or "Informace",
+            "vydanoV": cas_iso(ted),
+            "platiDo": cas_iso(ted + hodin * 3600) if hodin else None,
+            "stazenoV": None,
+        }
+        VYVESKA.setdefault(slug, []).insert(0, zprava)
+        return self.odpoved(zprava)
+
+    def stahni_zpravu(self, slug, id_zpravy):
+        """Stažení je odvolání, ne smazání — řádek zůstává."""
+        import time
+
+        for z in VYVESKA.get(slug, []):
+            if z["id"] == id_zpravy:
+                z["stazenoV"] = z["stazenoV"] or cas_iso(time.time())
+                return self.odpoved(z)
+        return self.send_error(404)
+
     def rozprava(self, slug):
         """
         Rozpravou se otevře okno závodního dne a <b>zaklapne nastavení</b>.
@@ -3961,6 +4002,12 @@ class H(BaseHTTPRequestHandler):
             # vyžadoval, posádka by potřebovala účet a smysl QR by padl.
             return self.uplatni_pozvanku()
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                          r'/zpravy/(\d+)/stahnout$', cesta)):
+            return self.stahni_zpravu(m.group(1), int(m.group(2)))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                          r'/zpravy$', cesta)):
+            return self.vydej_zpravu(m.group(1))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                           r'/okna/rozprava$', cesta)):
             return self.rozprava(m.group(1))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
@@ -5204,6 +5251,13 @@ class H(BaseHTTPRequestHandler):
             if not z:
                 return self.send_error(404)
             telo = verejne_polohy(m.group(1), z)
+        elif (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/zpravy$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            # Správa vidí i stažené — podle nich se dohledává, co na tabuli
+            # stálo.
+            return self.odpoved(VYVESKA.get(m.group(1), []) + zpravy_regaty(m.group(1))[len(VYVESKA.get(m.group(1), [])):])
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/okna$', cesta)):
             if not self.headers.get("authorization"):

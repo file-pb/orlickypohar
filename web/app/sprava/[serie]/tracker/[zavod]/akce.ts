@@ -3,6 +3,9 @@
 import { redirect } from "next/navigation";
 import {
   odeberKlicVRegate,
+  stahniZpravu,
+  vydejZpravu,
+  type DruhZpravy,
   prepniSledovaniVRegate,
   procNejde,
   rozprava,
@@ -115,5 +118,46 @@ export async function odeberKlicAkce(formular: FormData) {
 
   redirect(
     kam(serie, zavod, stav === "ok" ? { stav: "odebrano" } : { chyba: procNejde(stav, chyba) }),
+  );
+}
+
+/**
+ * Vydání zprávy na vývěsku regaty.
+ *
+ * <b>Pořadatel ji píše za chodu, často na vodě</b>, takže formulář nic
+ * nevymýšlí: text, druh a volitelná lhůta. Rozhodnutí, co je ještě
+ * platné, drží API — tady se jen posílá, co člověk napsal, a vrací se
+ * jeho odpověď.
+ */
+export async function vydejZpravuAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const text = String(formular.get("text") ?? "").trim();
+  const druh = String(formular.get("druh") ?? "Informace") as DruhZpravy;
+  const zadane = String(formular.get("platiHodin") ?? "").trim();
+
+  if (!text) redirect(kam(serie, zavod, { chyba: "Zpráva bez textu nedává smysl." }));
+
+  const platiHodin = zadane ? Number(zadane) : null;
+  if (platiHodin !== null && (!Number.isFinite(platiHodin) || platiHodin <= 0))
+    redirect(kam(serie, zavod, { chyba: "Platnost se zadává v hodinách, číslem." }));
+
+  const { stav, chyba } = await vydejZpravu(serie, zavod, { text, druh, platiHodin });
+
+  redirect(
+    kam(serie, zavod, stav === "ok" ? { stav: "vydano" } : { chyba: procNejde(stav, chyba) }),
+  );
+}
+
+/** Stažení je odvolání, ne smazání — řádek i historie zůstávají. */
+export async function stahniZpravuAkce(formular: FormData) {
+  const serie = String(formular.get("serie") ?? "");
+  const zavod = String(formular.get("zavod") ?? "");
+  const id = Number(formular.get("id") ?? 0);
+
+  const { stav, chyba } = await stahniZpravu(serie, zavod, id);
+
+  redirect(
+    kam(serie, zavod, stav === "ok" ? { stav: "stazeno" } : { chyba: procNejde(stav, chyba) }),
   );
 }
