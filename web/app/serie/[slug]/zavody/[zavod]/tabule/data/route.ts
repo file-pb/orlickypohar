@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { nactiVerejnouTrat, nactiZavod, nactiZpravy } from "@/lib/api";
 import { snimekZavodu } from "@/lib/tabule";
-import { trasaMereni } from "@/lib/trasa-mereni";
+import { spojniceProTabuli, trasaMereni } from "@/lib/trasa-mereni";
 
 /**
  * Snímek pro tabuli, který si obrazovka sama obnovuje.
@@ -43,7 +43,11 @@ export async function GET(
     const snimek = snimekZavodu(detail, trat, zpravy);
     // Měřicí trasa se počítá tady, na serveru, a pro jednu trať jen
     // jednou — viz `lib/trasa-mereni.ts`.
-    return NextResponse.json({ ...snimek, trasa: trasaMereni(snimek.znacky) });
+    return NextResponse.json({
+      ...snimek,
+      trasa: trasaMereni(snimek.znacky),
+      spojnice: spojniceProTabuli(snimek.znacky),
+    });
   } catch {
     return NextResponse.json({ error: "API nedostupné." }, { status: 503 });
   }

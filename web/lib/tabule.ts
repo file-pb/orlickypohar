@@ -101,6 +101,12 @@ export type Snimek = {
    * mapa pak měří po přímkách mezi značkami.
    */
   trasa?: { sirka: number; delka: number }[];
+  /**
+   * Spojnice trati z návrháře, pro každé přiblížení — <b>ta s obeplutím
+   * správným bokem</b>. Na rozdíl od `trasa` se kreslit smí: měřicí
+   * trasa vede značkou, tahle kolem ní.
+   */
+  spojnice?: Record<number, { sirka: number; delka: number }[][]>;
   /** Atributy závodu do grafiky nad obsahem. */
   zavod: {
     typ: string | null;
