@@ -742,6 +742,8 @@ zkrátí.
 | stahování, rotace na osm | `Features/Prevzate/SberPrevzatych.cs` |
 | veřejné čtení | `GET /prevzate-clanky` |
 | snímek kanálu k testům | `data/csj/clanky-2026-09-23.xml` |
+| skutečné stránky a obrázky k testům | `data/csj/stranky-2026-10-26/`, `data/csj/obrazky-2026-10-26/` |
+| plochost obrázku | `Varianty.Plochost` ve `Features/Fotky/Zpracovani.cs` |
 | zdroje jako data | `Features/Prevzate/Zdroje.cs` |
 | fotky u nás | `Features/Prevzate/PrevzateFotky.cs`, fronta `Features/Fotky/SouborKeSmazani.cs` |
 
@@ -772,9 +774,48 @@ server — to zápis níž popisuje jako stav do 2. 10.
 | strop | 8 MB na soubor, hlídá se i bez `Content-Length` |
 | přepočet | tentýž jako u nahraných fotek: WebP 480 a 1600 px, pryč s metadaty včetně polohy |
 | dolní mez | pod 600 px se fotka nebere — bývá to logo, a to vypadá hůř než naše náhradní fotka |
-| loga | pozná je zvyklost zdroje (`NeniFotka`), ne velikost: logo ČSJ má v originále 711 × 800 px a prahem projde. U sailing.cz leží loga pod `/uploads/ikony-loga/`, fotky pod `/uploads/clanky/` |
+| loga | pozná je zvyklost zdroje (`NeniFotka`), ne velikost: logo ČSJ má v originále 711 × 800 px a prahem projde. U sailing.cz je knihovna log `/uploads/ikony-loga/`, ale rozhoduje až **podsložka** v ní (`loga_csj`, `kluby`, `lodni_tridy`, `ksj`, `ostatni`) — volně položený soubor je zpravidla fotka k článku |
+| nápis místo fotky | když je `og:image` **plochý** (deset nejčastějších barev zabírá ≥ 75 % plochy) a zdroj má k článku vlastní obrázek ve složce `/uploads/clanky/<hash>/`, vezme se ten. Podle plochosti se nikdy nic nezahazuje, jen se dá přednost |
 | selhání | článek vyjde bez fotky; cizí server, který neodpovídá, není důvod novinku neukázat |
 | mazání | při vytlačení z rotace jdou klíče do fronty `SouboryKeSmazani` **v téže transakci**, ve které mizí řádek |
+
+**Pravidlo pro loga se 26. 10. 2026 upřesnilo podle měření.** Do té doby
+zahazovalo obrázek podle složky, ve které u zdroje leží — jenže svaz do
+`ikony-loga` ukládá i obyčejné fotky k článkům. Na 292 článcích, které
+kanálem prošly od února 2025 do října 2026 (populace se poskládala
+z 21 zachycení RSS ve Wayback plus aktuálního kanálu), jich v té složce leží
+128 a **17 z nich byla fotka, o kterou karta přišla**; od srpna 2026 toho
+přibývá, v říjnu to bylo 8 z 20 článků. Ze 106 obrázků v podsložkách je
+105 logo nebo grafika, z 22 volně položených je 16 fotka — proto rozhoduje
+podsložka a chyb zbývá sedm z 292 místo sedmnácti.
+
+**Zálohu z těla článku to měření naopak vyvrátilo.** Nabízelo se vzít první
+obrázek z textu, když zdroj fotku nedal. Z 58 takových obrázků je ale 33
+tabulka rozpočtu, plakát nebo parte, a právě tam, kde by byla potřeba (zdroj
+dal logo), je to 26 z 38. Zápis z jednání výkonného výboru by tak dostal na
+kartu snímek tabulky. Logem zdroj říká „fotku nemám" a má se mu věřit.
+
+**Plochost rozhoduje jen tam, kde `og:image` leží volně v knihovně.** Zdroj
+tam občas dá samotný nápis, zatímco celý plakát i s fotkou nahraje do složky
+článku — tak vypadalo „Mistrovství ČR na moři 2027" (Filip, 26. 10. 2026).
+Na 22 takových článcích mají nápisy plochost 0,82 až 0,94 a fotky nejvýš
+0,66, takže práh 0,75 padne do mezery mezi ně. **Obecně to neplatí**: mezi
+fotkami od zdroje se nad práh dostanou tři ze šedesáti (fotka na bílém
+pozadí). Proto se podle plochosti nikdy nezahazuje — jen se sáhne po obrázku
+ze složky článku, a ten je ve 13 z 22 případů tatáž fotka, takže ani omyl nic
+nezkazí. Vlastní složku zdroj zakládá každému článku, kdežto `ikony-loga` je
+sdílená přes všechny; tím zároveň odpadne logo v hlavičce, ikonka PDF
+i náhledy v postranním panelu.
+
+**Co zdroj dal, se nemaže** (`PrevzatyClanek.OdZdroje`, od 26. 10. 2026).
+`Obrazek` je rozhodnutí „tohle se smí ukázat", `OdZdroje` pozorování „tohle
+tam bylo". Dokud se mazalo obojí, byla oprava pravidla k ničemu: článek,
+který fotku ztratil neprávem, zůstal prázdný, protože se fotka dohledává jen
+u nových. Teď se dá rozhodnout znovu ze záznamu, bez jediného dotazu na cizí
+server (`SberPrevzatych.SrovnejAsync`). Prázdné `OdZdroje` znamená „neptali
+jsme se" a je to jediný důvod, proč sběr sáhne na stránku staršího článku;
+proto si upřesnění pravidla umí jedno přehodnocení vyžádat migrací, která ho
+dotčeným článkům vynuluje.
 
 **Fronta, ne okamžité mazání.** Řádek v databázi a soubor v R2 se nedají
 smazat jednou transakcí; kdyby se mazalo rovnou, stačí jedno zaškobrtnutí
@@ -789,7 +830,10 @@ lodi u článku o windsurfingu.
 
 **Fotky se dobírají i zpětně.** Při každém běhu se zkusí stáhnout obrázek
 k článkům, které kopii nemají a adresu u zdroje ano — jinak by po zapnutí
-vypínače zůstaly staré články navždy na cizím serveru.
+vypínače zůstaly staré články navždy na cizím serveru. Článek, u kterého se
+sběr zdroje nikdy neptal, projde touž úvahou jako nový
+(`SberPrevzatych.ZeStrankyAsync`), aby karta nevypadala jinak podle toho,
+kdy článek přišel.
 
 **Štítek zdroje nese jeho malé logo** (`ZdrojKanalu.Logo`, soubory ve
 `web/public/zdroje/`). S víc zdroji je na první pohled vidět, odkud článek
