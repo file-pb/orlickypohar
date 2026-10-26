@@ -4733,11 +4733,25 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   margin: 0; padding: 0; list-style: none; min-height: 0;
   display: flex; flex-direction: column;
 }
+/* <b>Jedna loď, jeden řádek</b> (Filip, 26. 10. 2026): jméno a kormidelník
+   vlevo, stav vždy vpravo u kraje sloupce. Dlouhé jméno se radši ořízne,
+   než aby řádek zalomilo — v seznamu, který se čte přes místnost, je
+   svislá pravidelnost důležitější než poslední písmeno. */
 .tabule .tabule-teaser-trida li {
   display: flex; align-items: baseline; gap: calc(0.5 * var(--tv));
+  flex-wrap: nowrap;
   padding: calc(0.2 * var(--tv)) 0;
   font-size: calc(1.4 * var(--tv)); line-height: 1.25;
 }
+.tabule .tabule-teaser-trida li > b,
+.tabule .tabule-teaser-trida li > .detail {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* Jméno ustupuje až po kormidelníkovi: bez jména lodi je řádek k ničemu. */
+.tabule .tabule-teaser-trida li > b { flex: 0 1 auto; min-width: 0; }
+.tabule .tabule-teaser-trida li > .detail { flex: 0 2 auto; min-width: 0; }
+.tabule .tabule-teaser-trida li > .bez-telefonu,
+.tabule .tabule-teaser-trida li > .telefonu { margin-left: auto; flex: none; }
 .tabule .tabule-teaser-trida li b { font-weight: 700; }
 .tabule .tabule-teaser-trida li .detail { color: var(--tlumeny); font-size: calc(1 * var(--tv)); }
 /* Nepotvrzená přihláška je pořád přihláška, jen se o ní ještě rozhoduje
