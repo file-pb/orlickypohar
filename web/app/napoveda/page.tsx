@@ -41,7 +41,17 @@ export const metadata = {
  * závodního dne z `OknaEndpoints` a `NastaveniSprava`, kdo smí na klíče
  * z `KliceSprava.SmiVydavatAsync` a `SmiSpravovatAsync` a z cesty regaty
  * v `KliceEndpoints`, co vidí posádky z `CoVidiPosadky`, podmínka vysílání
- * ven ze `SpoctiVenAsync`. Kde se tvrzení rozešlo s kódem, platí kód.
+ * ven ze `SpoctiVenAsync`, podoby tabule z `Rezim` v
+ * `serie/[slug]/zavody/[zavod]/tabule/obrazovka.tsx`. Kde se tvrzení
+ * rozešlo s kódem, platí kód.
+ *
+ * <b>Oddíl o tabuli zastaral za jediný den</b> (26. 10. 2026). Stálo
+ * v něm, že tabule bez vysílání jezdí „ukázkovou rozjížďku" — jenže ty
+ * ukázkové plavby z ostré tabule téhož dne zmizely a je na jejich místě
+ * startovní listina. Text se mezitím dostal i do tištěného návodu pro
+ * rozhodčího, takže nepravda v nápovědě neplatí jen tady: <b>opisuje se
+ * z ní dál</b>. Proto je tu teď i to, co se přepíná samo, a demo pod
+ * třemi tečkami.
  */
 export default function Napoveda() {
   return (
@@ -517,17 +527,65 @@ export default function Napoveda() {
 
       <h2 id="tabule">Tabule na telku</h2>
       <p>
-        Tabule je obrazovka pro hospodu a klubovnu: střídá pořadí, dojezdy a
-        mapu s loděmi. <b>Nic se na ni nepřihlašuje</b> a má vlastní adresu
-        u každé regaty; v nabídce je pod <i>Tabule na telku</i> rozcestník,
-        který vede na tu, co se zrovna jede.
+        Tabule je obrazovka pro hospodu a klubovnu. <b>Nic se na ni
+        nepřihlašuje</b> a má vlastní adresu u každé regaty; v nabídce je pod{" "}
+        <i>Tabule na telku</i> rozcestník, který vede na tu, co se zrovna jede.
+      </p>
+      <p>
+        <b>Přepíná se sama podle toho, kde je den.</b> Nejsou to čtyři
+        obrazovky k přepínání, je to jedna, která ví, co se zrovna děje:
+      </p>
+      <div className="tabulka-obal">
+        <table>
+          <thead>
+            <tr>
+              <th>Kdy</th>
+              <th>Co ukazuje</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Než se jelo</td>
+              <td>startovní listinu po třídách, vývěsku a čas do startu</td>
+            </tr>
+            <tr>
+              <td>Když se jede</td>
+              <td>mapu s loděmi a pořadí na vodě</td>
+            </tr>
+            <tr>
+              <td>Mezi rozjížďkami</td>
+              <td>
+                pořadí po poslední rozjížďce a střídavě s ním{" "}
+                <b>zrychlený záznam</b>, jak se jela
+              </td>
+            </tr>
+            <tr>
+              <td>Po regatě</td>
+              <td>výsledky a jak daleko je jejich schvalování</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p className="poznamka">
+        <b>Mapa s loděmi chce čtyři věci naráz:</b> postavenou a přijatou
+        trať, zapnuté vysílání ven, běžící závodní den a jedoucí rozjížďku
+        (viz <a href="#tracking">sledování lodí</a>). Když některá chybí,
+        tabule <b>nekreslí vymyšlené lodě</b> — ukáže startovní listinu
+        s vývěskou a dole pořadí v celé sérii. Seznam lodí, které se opravdu
+        přihlásily, řekne divákovi v hospodě víc než simulace cizí regaty.
       </p>
       <p className="poznamka">
-        <b>Lodě na mapě se objeví, jen když regata vysílá</b> — tedy když je
-        to zapnuté v nastavení, běží závodní den a jede se rozjížďka (viz{" "}
-        <a href="#tracking">sledování lodí</a>). Dokud žádná regata nevysílá,
-        ukazuje tabule <b>ukázkovou rozjížďku a píše to u sebe</b>: vymyšlené
-        lodě na skutečné trati, aby se dalo posoudit, jak to bude vypadat.
+        <b>Jak to bude vypadat, jde pustit i mimo závod.</b> Vpravo dole jsou
+        tři tečky a pod nimi se dá vyvolat kterákoli ze čtyř podob na
+        simulovaných datech. Dokud takové <i>demo</i> běží, je přes obrazovku
+        pruh <i>Demo — simulovaná data</i>: vymyšlená data se nikdy nevydávají
+        za skutečná.
+      </p>
+      <p className="poznamka">
+        <b>U každé lodi je vidět, kolika telefony ji sledujeme</b> — jedna
+        kostička na <a href="#klice">spárovaný telefon</a>, a loď, ze které
+        nepřijde nic, to má napsané. Odebrané klíče a odepnuté telefony se
+        nepočítají: telefon, který zůstal v autě, loď nesleduje.
       </p>
 
       <h2 id="upozorneni">Upozornění do telefonu</h2>
