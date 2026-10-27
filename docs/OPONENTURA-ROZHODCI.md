@@ -234,6 +234,16 @@ Vzpomínka na konkrétní situaci, s přímým dotazem do pravidel. Odvozený n�
 je **R13** — a pravidla na to mají **tři různé odpovědi** podle toho, kdo je
 původcem.
 
+### Střípek 9 — Miloš odpovídá na otázku 10 (27. 10. 2026, 21:08)
+
+> **[27.10.2026 21:08:43] Miloš Zvonař:** Alternativni trest
+>
+> **[27.10.2026 21:09:35] Miloš Zvonař:** Pri startu s minutovym pravidlem pri
+> jeho poruseni- lod je v posledni minute pres caru nebo odstartuje predcasne
+
+Odpověď na to, nač se Filip ptal v otázce 10. **Dvě řádky, a opravují nález R11**
+— „minutové pravidlo" je ZPJ 30, ne otáčky podle 44. Odvozený nález je **R14**.
+
 ---
 
 ## Nálezy R — z diskuse s rozhodčím
@@ -834,6 +844,14 @@ pravidel"*). Doloženo: ZPJ 44.1, 44.2, 44.3, 43, 29.1, 30.1, A10,
 `docs/PLAN.md:5469–5472`. Stav: **odpověď, ne nález** — ale mění, co by ta
 tlačítka měla dělat.*
 
+> ### ⚠︎ Tenhle nález odpovídá na jinou otázku, než jakou Miloš myslel
+>
+> R11 vykládá **pravidlo 44 (otáčky)** a to, co o nich říká, platí dál. Jenže
+> Miloš „alternativním trestem" myslel **startovní trest podle pravidla 30**,
+> a tam se trest doopravdy dává, identifikuje a zapisuje. Viz **R14**, který
+> tohle opravuje. Text zůstává, protože o otáčkách je správně — jen nebyl
+> odpovědí na položenou otázku.
+
 **Krátce: „alternativní trest" není termín ZPJ a ten úkon není rozhodčího.**
 Tři věci, každá jinak, než jak zní návrh.
 
@@ -968,6 +986,86 @@ podmínkami provozu (jedna ruka, slunce, motorák), ne přáním.
 > **Místo na citát z diskuse:** _(„setneme kdy asi bude" — je to odhad, nebo
 > závazný čas, od kterého se počítá? A co se stane, když se do něj nestihne
 > vyjet?)_
+
+### R14 — Miloš odpověděl: „alternativní trest" je startovní trest podle pravidla 30, a ten se identifikuje
+
+*Původ: střípek 9 — **odpověď Miloše na otázku 10**. Doloženo: ZPJ 30.1–30.4,
+29.1, 44.3(c), A10, `Features/Zavody/Zavod.cs:184–207`. Stav: **zapsáno —
+opravuje R11**.*
+
+> **[27.10.2026 21:08:43] Miloš Zvonař:** Alternativni trest
+>
+> **[27.10.2026 21:09:35] Miloš Zvonař:** Pri startu s minutovym pravidlem pri
+> jeho poruseni- lod je v posledni minute pres caru nebo odstartuje predcasne
+
+**Tahle odpověď mění výklad R11, a je to oprava v můj neprospěch.** R11 řeší
+pravidlo 44 — otáčky — a došla k tomu, že se neukládají, nehlásí a není co
+klepat. To **platí dál a je to správně**, jenže **Miloš o otáčkách nikdy
+nemluvil.** „Minutové pravidlo" je **ZPJ 30** a to je něco úplně jiného: tam se
+trest dává, identifikuje a zapisuje. R11 tedy odpověděla správně na otázku,
+kterou nikdo nepoložil.
+
+**Co je „minutové pravidlo".** Čtyři vlajky, všechny vázané na **poslední minutu
+před startovním znamením** — odtud ten název:
+
+| ZPJ | Vlajka | Co loď poruší | Následek | Kód A10 |
+|---|---|---|---|---|
+| 30.1 | **I** | je na dráhové straně čáry nebo prodloužení | musí objet prodloužení, než odstartuje | **OCS**, když to neudělá |
+| 30.2 | **Z** | je v trojúhelníku čára–první značka | **20% bodový trest bez projednávání** | **ZFP** |
+| 30.3 | **U** | totéž | diskvalifikace bez projednávání | **UFD** |
+| 30.4 | **černá** | totéž | diskvalifikace bez projednávání | **BFD** |
+
+A druhá polovina Milošovy věty — *„nebo odstartuje předčasně"* — je **OCS** podle
+29.1, tedy individuální odvolání vlajkou X.
+
+**„Alternativní trest" v jeho ústech je tedy nejspíš vlajka Z**: jediný ze
+čtyř, který je skutečně *alternativou k diskvalifikaci* — loď jede dál a dostane
+20 % místo vyhazovu. Potvrdit to umí jen on sám, ale sedí to na všechno, co
+řekl: *„kdy se dává"* (ano, dává se), *„když se loď dostane přes čáru"* (ano,
+v poslední minutě), i to, proč chce tlačítka.
+
+**A teď to podstatné: tohle úkon komise JE.** Pravidla 30.2–30.4 říkají shodně:
+
+> *„Jestliže loď poruší toto pravidlo **a je identifikována**, musí **bez
+> projednávání** dostat…"*
+
+**Identifikace je přesně to tlačítko, o které Miloš žádá** — a *„bez
+projednávání"* znamená, že to startér smí udělat sám na vodě, bez protestu a bez
+komise. Milošův návrh ze střípku 7 tedy není proti pravidlům; je přesně podle
+nich, jen se ten úkon jmenuje jinak, než jsme si mysleli.
+
+**Co z toho pro aplikaci plyne — a je to tvrdé.** Z těch pěti kódů aplikace zná
+**jediný, OCS**. `KodVysledku` nemá **ZFP, UFD ani BFD** (K1). Startér tedy může
+loď identifikovat, ale **výsledek té práce nemá kam zapsat** — a u vlajky Z je to
+nejhorší, protože ZFP není diskvalifikace: je to 20 % z bodů za nedokončila
+(44.3(c)), tedy **číslo, které se musí spočítat a vejít do výsledkové listiny**.
+Bez kódu ZFP by se musel ručně přepsat výsledek, což je zásah do zápisu, co
+rozhodčí dělat nemá.
+
+**Dvě netriviální věci, které musí návrh ze střípku 7 vědět.**
+
+**(1) Trest přežívá nový start — ale každá vlajka jinak.** Tohle je přímá vazba
+na přerušení procedury (R12):
+
+| Vlajka | Při novém startu téže rozjížďky | Při odložení/zrušení před startem |
+|---|---|---|
+| **Z** | **platí dál**, a opakovaná identifikace = **další 20 %** | padá |
+| **U** | **padá** | padá |
+| **černá** | **platí** a loď se nového startu **nesmí účastnit** | padá |
+
+Aplikace tedy musí vědět, **která vlajka visela**, jinak neví, co s trestem při
+opakování. Dnes nevede ani vlajku, ani opakování startu (R12).
+
+**(2) Černá vlajka ukládá komisi oznámit číslo plachty.** ZPJ 30.4: *„Jestliže
+je signalizováno všeobecné odvolání nebo je rozjížďka zrušena po startovním
+znamení, závodní komise **musí zobrazit její číslo plachty před dalším
+vyzývacím znamením** této rozjížďky."* To je úkon pro **vývěsku nebo tabuli** —
+a aplikace obojí má (vývěska regaty, bod 12 návodu). Je to další místo, kde
+tabule plní pravidlovou funkci, kterou jí nikdo nepřipsal (jako záznam trasy
+v R13).
+
+> **Místo na citát z diskuse:** _(kterou vlajku na poháru vyvěšuješ — I, Z, U,
+> nebo černou? A mění se to podle rozjížďky, nebo je to pro celý závod stejné?)_
 
 ### R13 — Vytlačená loď a rozjížďka zrušená pro bezpečnost: tři různé cesty, aplikace nezná ani jednu
 
@@ -1320,7 +1418,8 @@ potvrdil to rozhodčí 22. 9. 2026 a podle něj se počítá.
 | 27.3 | odložit (AP) nebo zrušit (N) před startem | **ne** (R5) |
 | 29.1 | individuální odvolání (X) | **ne** — jen jeho následek OCS |
 | 29.2 | všeobecné odvolání (první opakovač) | **ne** |
-| 30.1–4 | startovní tresty podle vlajky (I, Z, U, černá) | **ne** — kódy ZFP/UFD/BFD chybí |
+| 30.1–4 | startovní tresty podle vlajky (I, Z, U, černá) — **„minutové pravidlo"** | **ne** — z pěti kódů zná jen OCS; ZFP, UFD, BFD chybí, a je to úkon, který startér dělá (R14) |
+| 30.4 | oznámit číslo plachty lodi s černou vlajkou před dalším startem | vývěska a tabule **jsou**, povinnost nepojmenovaná (R14) |
 | 32.1 | **zkrácení** dráhy po startu | **ne** |
 | 32.1 | **zrušení** rozjížďky po startu | zpola — jen oklikou přes eliminaci výsledků, a **bez důvodu** (R13) |
 | 33 | změna následujícího úseku dráhy | částečně: přestavba trati (jiný pojem) |
@@ -1483,6 +1582,12 @@ nejsou (šest otázek z návodu je na s. 23 a ty platí dál):
 
     Rozlišit to jde jednou doplňující otázkou: **dělá ta loď otáčky, nebo se
     vrací za čáru?** To jsou dvě úplně různé věci na vodě i v zápisu.
+
+    **Zodpovězeno 27. 10. 2026 ve 21:09** (střípek 9): ani jedno z toho —
+    je to **startovní trest podle pravidla 30**, „minutové pravidlo". Viz R14.
+    Z obou mých domněnek výš byla blíž ta druhá (že nejde o otáčky), ale ani
+    ta netrefila: nejde ani o návrat za čáru podle 29.1, nýbrž o samostatnou
+    skupinu trestů, kterou jsem v R11 odbyl jedním řádkem tabulky.
 
     *Pro úplnost: návrh znění z téhle session (ptal se na práci místo na pojem
     a rozpojoval odvolání od otáček) poslán nebyl. Filipova verze má proti němu
