@@ -317,6 +317,37 @@ doložit:
 kdy se rozdíl popisoval nahlas. Jestli si ho všimne někdo, kdo ji vidí poprvé,
 a jestli mu vadí, by změřilo teprve sezení s čerstvým člověkem.
 
+### K čemu má grafika sloužit (27. 10. 2026)
+
+Filip na konci té série, jeho vlastními slovy: *„super škála toho, jak emotivně
+zobrazit **stavy, priority, stáří, validitu**, nebo **naléhavost, či dikci**…
+nebo **aktuálnost**, nebo **na něco navést**."* Záměr k tomu řekl dřív:
+*„co nejvíce využít možnosti grafiky pro zpřehlednění stavu a ergonomie."*
+
+**Je to osm os, a projekt dnes nese dvě.** Zapsané proto, že tři z nich jsme
+vůbec neotevřeli a bude se k nim chtít vrátit:
+
+| Osa | Čím se nese dnes |
+|---|---|
+| **stav** | barva (zastávka i trať, výčtově) — jediná plně obsazená |
+| **navedení** | prstenec u výstražné tečky, *„tohle si všimni"*; a textem „Co teď" |
+| **stáří** | jen text (*„hlásí se · stárne · nehlásí se"*, *„naposledy před X"*), v appce dokonce dvoustupňově — **návrh obrysem je v artifactu** |
+| **naléhavost** | nic; kandidát je tloušťka okraje |
+| **priorita** | nic; dnes ji nese pořadí v seznamu a nic víc |
+| **aktuálnost** | nic — a není to totéž co stáří: stará poloha pořád platí, neaktuální ne |
+| **validita** | nic; nejblíž je k ní šrafa u nezveřejněné regaty, ale ta je o něčem jiném |
+| **dikce** | nic v grafice, ale **v datech už je**: vývěska regaty rozlišuje *oznámení · změna programu · výstraha* a vizuálně se to neprojevuje |
+
+**Ta poslední řádka je nejlevnější z celé tabulky.** Druh zprávy se u vývěsky
+zadává a ukládá, takže rozdíl mezi klidným oznámením a výstrahou už v datech
+leží — jen se nikde neukazuje. Sdělení *„start se odkládá o tři čtvrtě hodiny"*
+a *„čeká se, až přejde bouřka"* dnes vypadají na tabuli stejně.
+
+**Pravidlo, které z té série vyšlo** a platí na kteroukoli z os: každá informace
+dvěma kanály, aspoň jeden musí přežít ostré světlo i barvoslepé oko, a hodnoty
+pro tmavý režim se mají vidět, ne spočítat. Čtyři pokusy o jeden stín jsou toho
+doklad.
+
 ### Stíny v tmavém režimu nejsou vidět (27. 10. 2026)
 
 Filip: *„asi potřebuji stíny i pro dark režim."* Zní to jako poznámka na okraj,
