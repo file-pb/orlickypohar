@@ -478,6 +478,41 @@ Dva chybějící díly ze šesti; zbylé čtyři na cílové obrazovce už jsou:
    To je výrazně levnější než stavět OCR do serveru — a u věci, která se použije
    několikrát za sezónu, nejspíš i správnější.
 
+   **Filip to upřesnil do postupu** (27. 10. 2026):
+
+   > *„prostě to někdo načmárá na papír, a vyfotí na mobil. Pak ti to nasype až
+   > se probereš. Ty se mrkneš a pokusíš se to zapsat. Pak už standardní revize,
+   > oprava revize, schválení a jedem."*
+
+   **Pro tenhle postup existuje v aplikaci přesně padnoucí mechanismus a nikdo
+   ho tak nepojmenoval.** Zápis z vody má **snímky zapisovatelů**
+   (`ZapisNavrh.cs`): *„Snímek zápisu jednoho zapisovatele… **Není to výsledek,
+   je to doklad o tom, co kdo viděl.** Do bodování nevstupuje; slouží
+   k porovnání, ze kterého zapisovatelé vyberou správné pořadí."* Drží se
+   k dvojici **rozjížďka × uživatel** a je na něj endpoint
+   `POST …/rozjizdky/{cislo}/navrhy/{autor}/pouzit`.
+
+   **Rozpoznaný papír je přesně takový snímek** — třetí zapisovatel vedle dvou
+   lidských, nezávazný, k porovnání. Tedy ne nová funkce, ale nový *autor*
+   existující. A navazuje to na revizi tak, jak Filip píše, protože snímky už
+   dnes do revize ústí.
+
+   > ### ⚠︎ Kde je moje mez — ten krok „pokusíš se to zapsat" nejde doslova
+   >
+   > **Do produkce zapsat neumím.** Produkční databázi ani konfiguraci nečtu
+   > a přihlášení do aplikace nemám, takže snímek za sebe nezaložím a výsledky
+   > neuložím. Import se na to navíc nehodí — `POST /import/serie` *„nahraje
+   > celý ročník z jednoho souboru"*, ne jednu rozjížďku.
+   >
+   > **Co udělat můžu:** přečíst fotku a vrátit čísla v podobě, která se dá
+   > rovnou přepsat nebo vložit — loď, pořadí, kód, čas, a u každého řádku
+   > říct, jak jistý si tím jsem a co na fotce nejde přečíst. Zapsat to pak
+   > musí někdo s přihlášením, a podle `Workflow.KdoSmi` to stejně musí být
+   > **pořadatel**, ne rozhodčí.
+   >
+   > Kdyby to mělo běžet bez člověka uprostřed, znamenalo by to dát mi cestu
+   > dovnitř — a to je rozhodnutí o přístupu, ne o funkci. Nenavrhuju ho.
+
 **Jak se ti dva spárují — zodpovězeno 27. 10. 2026.** Filip: *„oni se párují
 přes server, oba mají roli pořadatel rozhodčí a více."* Tedy žádné přímé
 spojení mezi telefony; server je prostředník a přístup jim dávají role, které
