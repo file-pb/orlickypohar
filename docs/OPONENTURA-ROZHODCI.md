@@ -27,6 +27,10 @@ to hlavní, co tenhle dokument dělá:
 | **R** | **Řekl to živý rozhodčí** na schůzce s Filipem | **doklad zvenčí** |
 | **K** | odvozeno z přečteného řádku kódu a textu pravidel | hypotéza |
 
+Stav u nálezu je **zapsáno** (čeká na rozhodnutí), **opraveno**, **padlo**
+(střípek ho vyvrátil, text zůstává), nebo **k dodělání** — to poslední znamená,
+že Filip řekl, že se to dělat bude. Shrnutí těch je hned za oddílem střípků.
+
 **Nález R váží víc než nález K, i když je K lépe doložený.** K říká, co kód
 dělá; R říká, co má dělat. Kde jdou proti sobě, platí R a kód je ten, co je
 špatně.
@@ -304,6 +308,34 @@ je **R15**.
 
 Odpověď na to, nač se Filip ptal v otázce 10. **Dvě řádky, a opravují nález R11**
 — „minutové pravidlo" je ZPJ 30, ne otáčky podle 44. Odvozený nález je **R14**.
+
+---
+
+## Co je potvrzené k dodělání
+
+**Tenhle oddíl není plán** — plán vzniká po diskusi, mezi Filipem a hlavní
+session. Je to jen seznam toho, u čeho Filip během diskuse řekl, že se to dělat
+bude, aby se to nemuselo hledat po nálezech. Všechno ostatní čeká na rozhodnutí.
+
+### Velitelský čas (R19) — potvrzeno 27. 10. 2026
+
+> *„super tak si to zapiš že to budeme chtít dodělat"*
+
+Dva chybějící díly ze šesti; zbylé čtyři na cílové obrazovce už jsou:
+
+1. **Start musí přežít výpadek.** Dát ho do `Koncept` v `koncept.ts` vedle
+   dojezdů a kódů. Dnes se klepnutí při selhání odeslání zahodí
+   (`setStart(puvodni)`), a *„zkus to znovu"* u startu nejde splnit, protože ten
+   okamžik uplynul. **Tohle je ta vada, která jim pokazila start.**
+2. **Pojmenovat, čí hodiny platí.** Jeden velitelský čas v rukou hlavního
+   startéra, nezávislý na spojení; po připojení se rozešle ven a srovná ostatní.
+   Mechanismus pro dva **rovnocenné** zapisovatele projekt má (porovnání dvou
+   snímků, scénář C7), ale tady je jeden **nadřízený** — platí čas hlavního, bez
+   vybírání. Filip uvedl, že se to už řešilo; v dokumentaci to není a z C7 se to
+   odvodit nedá, takže to chce zapsat dřív, než se to začne stavět.
+
+*Mimo rozsah tohohle dokumentu zůstává, jak se ti dva startéři spárují a co se
+stane, když se nepropojí vůbec.*
 
 ---
 
@@ -1511,7 +1543,8 @@ pěti sekundách, vzorec se stahováním pravidel) je hotový.
 *Původ: střípek 14. Doloženo:
 `web/app/sprava/[serie]/vysledky/[zavod]/[cislo]/cil/cil.tsx:271–290`,
 `koncept.ts:23–28`, `Features/Zavody/VysledkyEndpoints.cs:211`. Stav:
-**zapsáno — doložená příčina skutečné události**.*
+**K DODĚLÁNÍ — potvrzeno Filipem 27. 10. 2026** (*„super tak si to zapiš že to
+budeme chtít dodělat"*). Doložená příčina skutečné události.*
 
 Filip: *„Stalo se nám, že při startu z webovými hodinami došlo k přerušení
 spojení a to pokazilo start a renomé."*
