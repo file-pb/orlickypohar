@@ -395,6 +395,44 @@ referenční bod, a dva starty se sloučit nedají. **Takže právo zapsat start
 mít jen hlavní** — a to je vlastně nejpřesnější odpověď na to, co „velitelský
 čas" znamená: ne že hlavní má lepší hodiny, ale že **start je jeho úkon**.
 
+**Co smí slave, když velitelský čas má (Filip, 27. 10. 2026):**
+
+> *„no když bude slave mit dobry velitelsky cas tak muze treba dat alternativni
+> trest, nebo upozornit hlavniho na (neregulérnost? nevim jak to nazvat, když se
+> u jeho pozice něco stane a hlavni by to měl vědět)"*
+
+**To slovo pravidla mají a je to zrovna to, co tě napadlo.** *Regulérnost* je
+termín ZPJ — stojí v **32.1(d)** mezi důvody, proč smí komise zrušit rozjížďku:
+*„z jakýchkoli jiných příčin, které mají přímý vliv na bezpečnost nebo
+**regulérnost** závodění"* (a ještě jednou v N2 u mezinárodní jury). Takže
+„ohrožená regulérnost" je přesné.
+
+**Přesnější než jedno slovo je ale pojmenovat to podle následku**, protože jsou
+to tři různé věci a každá vede jinam:
+
+| Co slave u svého konce vidí | ZPJ | Co z toho plyne |
+|---|---|---|
+| loď byla v poslední minutě v trojúhelníku | 30.2–30.4 | **identifikace** → trest bez projednávání |
+| loď je po startovním znamení přes čáru | 29.1 | **individuální odvolání**, vlajka X |
+| je jich moc / nejdou rozeznat | **29.2** | **všeobecné odvolání** — a pravidlo to říká doslova: *„Když závodní komise **není schopna identifikovat lodě**… může signalizovat všeobecné odvolání"* |
+| kolize, nebezpečí, nebo jiná vada regulérnosti | 32.1(d) | **zrušení** rozjížďky |
+
+**A teď to podstatné: pravidla hlavního a slave nerozlišují.** Pravidla 29, 30
+i 32 mluví výhradně o **závodní komisi** jako celku, ne o startérovi. Takže
+identifikovat loď smí **oba** a je to v souladu s pravidly — druhý startér
+u druhého konce čáry je přesně to, čím komise vidí tam, kam hlavní nedohlédne.
+Tím se potvrzuje, co stojí výš: **asymetrie hlavní/slave je organizační, ne
+pravidlová.** Z pravidel plyne jediné omezení, a to u startu — ten je jeden
+a nese ho velitelský čas.
+
+**Filipova podmínka *„když bude mít dobrý velitelský čas"* je věcně nutná, ne
+opatrnost.** Identifikace podle pravidla 30 stojí a padá s časem: všechny tři
+vlajky (Z, U, černá) mluví o *„poslední minutě před startovním znamením"*
+a 30.1 taky. Slave, který nemá srovnané hodiny, tedy **nemůže spolehlivě říct,
+jestli ta loď byla v trojúhelníku v poslední minutě, nebo o patnáct vteřin
+dřív** — a je to trest bez projednávání, takže se to po závodě nemá o co opřít.
+U dojezdů to tak tvrdé není (přepočítají se, viz výš), u startovních trestů ano.
+
 *Mimo rozsah zůstává, co se stane, když si oba myslí, že jsou hlavní.*
 
 ---
