@@ -334,8 +334,30 @@ Dva chybějící díly ze šesti; zbylé čtyři na cílové obrazovce už jsou:
    vybírání. Filip uvedl, že se to už řešilo; v dokumentaci to není a z C7 se to
    odvodit nedá, takže to chce zapsat dřív, než se to začne stavět.
 
-*Mimo rozsah tohohle dokumentu zůstává, jak se ti dva startéři spárují a co se
-stane, když se nepropojí vůbec.*
+**Jak se ti dva spárují — zodpovězeno 27. 10. 2026.** Filip: *„oni se párují
+přes server, oba mají roli pořadatel rozhodčí a více."* Tedy žádné přímé
+spojení mezi telefony; server je prostředník a přístup jim dávají role, které
+už existují.
+
+**Z toho ale plyne třetí díl, který v seznamu výš chyběl: asymetrie.** Oba mají
+táž práva — a velitelský čas potřebuje, aby **jeden z nich byl hlavní**. V rolích
+to není a (podle mě) ani být nemá: `Role` říká, **co kdo smí**, ne **kdo velí**,
+a nic v `Identita` ani ve `Sprava` pojem „hlavní" nezná. Je to funkce v jednom
+okamžiku jedné rozjížďky, ne oprávnění — tedy totéž rozlišení, jaké projekt už
+jednou udělal u rozhodčího (`Prava.cs`: *„Rozhodčí je funkce v procesu, ne
+stupeň"*), jen ještě užší.
+
+Kam tu asymetrii dát, je otázka na návrh. Dvě cesty, které z dnešního stavu
+plynou samy: **hlavní je ten, kdo proceduru spustil** (nic se nenastavuje, ale
+po výpadku se neví, kdo to byl), nebo **hlavní se určí u regaty dopředu** (dá se
+doložit, ale je to jedno nastavení navíc). Nerozhoduju to.
+
+*Jestli jde jednomu účtu udělit pořadatele i rozhodčího zároveň, zkoumá
+`docs/AUDIT-OBSAZENI.md` (nález O1: `Rozhodci` jde udělit jen na celý ročník,
+`Organizator` na zastávku) — tady se to nezjišťuje podruhé.*
+
+*Mimo rozsah tohohle dokumentu zůstává, co se stane, když se ti dva nepropojí
+vůbec.*
 
 ---
 
