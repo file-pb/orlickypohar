@@ -1364,6 +1364,34 @@ byla v nevýhodě. Na poháru, kde se signalizuje megafonem, je push **navíc, n
 místo** — a má stejnou cenu jako vlajka na tabuli: dosah tam, kam megafon
 nedoletí, a **doklad, co bylo oznámeno a kdy**.
 
+**Doplněno týž den — latence je funkcí fáze, ne konstanta.** Filip:
+
+> *„v okolí startu a cíle je potřeba mít aktuální a rychlé info. Pak při jízdě
+> uprostřed rozjížďky je minuta naprosto velkorysá."*
+
+Tím se požadavek z „doručovat rychle" mění na něco mnohem levnějšího:
+**rychle jen tam, kde se něco děje.** Minutový takt se nemusí zahodit, musí se
+k němu přidat pobídka pro dvě okna:
+
+| Fáze | Co se v ní děje | Potřebná latence |
+|---|---|---|
+| **kolem startu** | procedura, odvolání, odložení, identifikace podle pravidla 30 | **vteřiny** |
+| uprostřed rozjížďky | jede se; zkrácení a změna úseku se signalizují na vodě | minuta stačí |
+| **kolem cíle** | dojezdy, konec rozjížďky, protestní lhůta | **vteřiny** |
+| mezi rozjížďkami a po závodě | příprava další, publikace | minuta je velkorysá |
+
+**A aplikace ty fáze už rozlišuje** — nemusí se vymýšlet, čím je poznat:
+`StavRozjizdky` (`Planovana` / `Probiha` / `Dokoncena`), `Procedura` pěti minut
+kolem startu (`PolohySprava.cs:144`) a čtyři podoby tabule podle toho, kde je
+den. Chybí jen to, aby se podle nich řídil takt.
+
+**Tentýž princip platí i obráceně, dovnitř.** Audit čerstvosti dat
+v `docs/SCENARE-OVLADANI.md` (*Čerstvost dat tam, kde se rozhoduje*) došel
+k tomu, že po cizí změně se neobnoví nic. Filipovo kritérium to zjemňuje stejně
+užitečně: **nemusí se obnovovat všechno pořád** — stačí, aby cíl a okolí startu
+byly čerstvé, a zbytek dne snese minutu. Je to jedno rozhodnutí pro oba směry,
+ne dvě.
+
 > **Místo na citát z diskuse:** _(které změny mají chodit do telefonů — jen
 > odložení a zrušení, nebo i zkrácení trati a změna úseku? A má to chodit všem,
 > nebo jen posádkám té regaty?)_

@@ -488,6 +488,13 @@ spárovaných telefonů jsou **čtení** a obnovovat se můžou bez rizika. Nakl
 časy v cíli jsou **rozepsaný zápis** a ty se přepsat nesmí. Dnešní snímkový režim
 chrání obojí najednou, protože to nerozlišuje.
 
+**Zpřesněno Filipem (27. 10. 2026):** *„v okolí startu a cíle je potřeba mít
+aktuální a rychlé info. Pak při jízdě uprostřed rozjížďky je minuta naprosto
+velkorysá."* Tedy **nemusí se obnovovat všechno pořád** — kritérium je fáze
+závodu, ne obrazovka. Cíl a okolí startu čerstvě, zbytek dne snese minutu.
+Totéž platí pro opačný směr (upozornění do telefonů), rozepsané
+v `docs/OPONENTURA-ROZHODCI.md`, R18 — je to jedno rozhodnutí pro oba směry.
+
 **Neověřeno:** jak dlouho ta nepřesnost v provozu trvá a jestli si jí někdo
 všiml jinde než u přihlášené lodi. To je otázka na Miloše a na závodní den, ne na
 zdroják.
