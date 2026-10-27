@@ -334,6 +334,13 @@ Dva chybějící díly ze šesti; zbylé čtyři na cílové obrazovce už jsou:
    vybírání. Filip uvedl, že se to už řešilo; v dokumentaci to není a z C7 se to
    odvodit nedá, takže to chce zapsat dřív, než se to začne stavět.
 
+3. **Kdo je hlavní, se stáhne dopředu a drží celý den.** *(Odsouhlaseno
+   Filipem 27. 10. 2026: „naprosto souhlas".)* Rozhodne server při propojení —
+   ale **ne v okamžiku startu**, protože pak by výpadek sebral startéru právo
+   odstartovat, a to je horší než dnešní stav, kde se ztratí jen zápis. Údaj
+   „jsem hlavní startér téhle regaty" se chová jako okna závodních dnů: stáhne
+   se u mola, platí celý den, výpadek s ním nehne. Rozbor je u R19.
+
 **Jak se ti dva spárují — zodpovězeno 27. 10. 2026.** Filip: *„oni se párují
 přes server, oba mají roli pořadatel rozhodčí a více."* Tedy žádné přímé
 spojení mezi telefony; server je prostředník a přístup jim dávají role, které
@@ -449,7 +456,9 @@ start pokazila (R19). Dvě věci by se tím vylučovaly: *start musí přežít 
 a *hlavního určuje server*.
 
 Řeší se to tím, **kdy** se to rozhodne: ne v okamžiku startu, ale **dopředu —
-a pak to telefon drží i bez signálu.** Vzorec na to projekt má, a je to tentýž,
+a pak to telefon drží i bez signálu.** *(Filip to 27. 10. 2026 odsouhlasil:
+„naprosto souhlas", takže to je rozhodnuté, ne návrh — viz bod 3 v oddílu
+**Co je potvrzené k dodělání**.)* Vzorec na to projekt má, a je to tentýž,
 na který ukazoval už R18: okna závodních dnů si telefon *„stáhne dopředu a řídí
 se jimi i bez signálu; změna od pořadatele se projeví, až signál chytí"*
 (`OknaEndpoints`). „Jsem hlavní startér téhle regaty" je údaj přesně toho
