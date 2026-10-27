@@ -411,6 +411,35 @@ Dva chybějící díly ze šesti; zbylé čtyři na cílové obrazovce už jsou:
    zápisu z cíle"* (s. 14). Takže totální krize **není dnes bez východiska**, jen
    se platí přepisováním večer. Body 1 až 4 to nenahrazují, zkracují.
 
+   **Jak má krize doběhnout** (Filip, 27. 10. 2026):
+
+   > *„co se ji povede napsat, to udela, odjede se zbytek zapise na papir
+   > a vyfoti. Jak se bude propojeni probouzet, dojde k synchronizaci a rekognici
+   > co bude v nasich silach, a zbytek se bude muset doeditovat na webu, stejne
+   > jako pri revizi vysledku."*
+
+   **Tohle je degradace po krocích, ne havarijní režim** — a nejlepší na tom je,
+   že **každý z těch kroků už v aplikaci je.** Žádný nový mechanismus:
+
+   | Krok | Čím to dnes je |
+   |---|---|
+   | *„co se jí povede napsat, to udělá"* | **koncept v prohlížeči** — částečný zápis přežije a odešle se, až signál chytí |
+   | *„zbytek zapíše na papír a vyfotí"* | **oddíl Papírový zápis** u rozjížďky; *„zůstává dokladem k číslům"* |
+   | *„synchronizace a rekognice, co bude v našich silách"* | **`podleRizika`** — rozděluje rozdíly na *„tohle uložený zápis vůbec nemá"* a *„tady má něco jiného"*, a nabízí dvě tlačítka: **Doplnit chybějící** a **Přepsat rozdílná čísly z telefonu** |
+   | *„zbytek doeditovat na webu"* | **formulář zápisu** |
+   | *„stejně jako při revizi výsledků"* | **vrácení k revizi s povinným důvodem** a cesta zpátky přes návrh |
+
+   **Ta poslední věta je ze všech nejdůležitější.** Krizový doběh se nenapojuje
+   na nic nového — **je to tentýž proces jako revize**, který rozhodčí stejně
+   umí a dělá u každé opravy. Tím odpadá otázka, kdo a jak krizový zápis
+   schvaluje: schvaluje se jako každý jiný, a stav *K revizi* už nese důvod,
+   takže se dá napsat „odjeto při výpadku, dopsáno z papíru".
+
+   Mimochodem `podleRizika` vzniklo z úplně jiného důvodu — z nálezu, že koncept
+   z telefonu vydával cizí opravu za ztracenou práci (`docs/SCENARE-OVLADANI.md`,
+   C12). Pro „rekognici po krizi" je to ale přesně ten nástroj a nikdo ho tak
+   nepojmenoval.
+
 **Jak se ti dva spárují — zodpovězeno 27. 10. 2026.** Filip: *„oni se párují
 přes server, oba mají roli pořadatel rozhodčí a více."* Tedy žádné přímé
 spojení mezi telefony; server je prostředník a přístup jim dávají role, které
