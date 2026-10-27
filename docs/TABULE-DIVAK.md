@@ -147,9 +147,10 @@ strom), takže v historii stojí pod jejím popisem, ne pod tímhle auditem.
 
 ## Otevřené — o těchhle rozhodne Filip
 
-**Nálezy 6 a 8 jsou od 27. 10. 2026 přeškrtnuté**, ale zůstávají tady:
-u šestky kvůli číslům, proti kterým se oprava dá přeměřit, u osmičky
-proto, že poslední rozhodnutí v ní nebylo technické.
+**Nálezy 6 a 8 jsou od 27. 10. 2026 přeškrtnuté** a **nález 7 od
+28. 10. 2026**, ale zůstávají tady: u šestky kvůli číslům, proti kterým se
+oprava dá přeměřit, u osmičky proto, že poslední rozhodnutí v ní nebylo
+technické, a u sedmičky proto, že se na ni odkazuje oponentura rozhodčího.
 
 ### 6. ~~Startovní listina nemá výškový rozpočet a lodě z ní tiše padají~~
 **Opraveno 27. 10. 2026.**
@@ -197,7 +198,26 @@ měly totéž — React pak hlásil dva potomky se stejným klíčem a vývěska
 o jednu zprávu přijít mohla. V API je to identita z databáze. Mock má
 teď počítadlo.
 
-### 7. Časomíra k nejbližšímu startu se nikdy neukáže
+### 7. ~~Časomíra k nejbližšímu startu se nikdy neukáže~~
+**Padlo 28. 10. 2026** — plánovaný start jde zapsat a odpočet ožil. Co se
+změnilo a čím se to měřilo, je u nálezu **K6** v
+`docs/OPONENTURA-ROZHODCI.md` (fáze 1.1 jeho plánu); sem patří jen to, co
+z toho vidí divák:
+
+> *Změřeno na mocku:* `POST …/rozjizdky/1/start` s časem o 4,5 minuty
+> v budoucnu → rozjížďka zůstane **`Planovana` se `startV`** a tytéž
+> rozjížďky protažené `rozjizdky-tabule.ts` daly **„startovní procedura
+> 2:04"**; u vzdálenějšího startu **„procedura ve 00:58"**. Tedy obě fáze,
+> které sem dole byly popsané jako mrtvé. Běžící rozjížďka má dál panýlek
+> *„jede se 0:10"*.
+
+**Co zbývá:** Filipův návrh na vlajku a odpočty na mapě je dál jen
+zapsaný, bez rozhodnutí — i s těmi třemi výhradami na konci nálezu. A to
+podstatné z nich platí dál: mapa se rozsvítí jen u **běžící** rozjížďky,
+takže prvek *na mapě* před startem pořád nemá kam sednout.
+
+**Původní znění nálezu** (text zůstává, jak byl zapsán):
+
 `rozjizdky-tabule.ts` umí dvě fáze — *„procedura ve 10:25"* a odpočet
 *„startovní procedura 4:30"* — a obě chtějí rozjížďku ve stavu `Planovana`
 s vyplněným `startV`.

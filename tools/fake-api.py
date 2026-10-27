@@ -724,6 +724,18 @@ def _iso(kdy):
     return kdy.isoformat().replace("+00:00", "Z")
 
 
+def odstartovala(start_v):
+    """
+    Odstartovala už rozjížďka? Opsané z `Zapis.Odstartovala` — zapsaný čas
+    startu sám nestačí, od 28. 10. 2026 smí nést i **plánovaný** start
+    (nález K6 oponentury rozhodčího, nález 7 v `docs/TABULE-DIVAK.md`).
+    """
+    if not start_v:
+        return False
+    from datetime import datetime
+    return datetime.fromisoformat(start_v.replace("Z", "+00:00")) <= _ted()
+
+
 # Abeceda bez nul, jedniček, I a O: kód se opisuje z papíru u vody, kde se
 # „0" a „O" plete každému. Opsané z `Kody.Abeceda`.
 KOD_ABECEDA = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
@@ -2076,7 +2088,7 @@ def stav_po_zapisu(z, r):
     if jedou and jedou <= maji:
         return "Dokoncena"
     if r.get("stav") == "Dokoncena":
-        return "Probiha" if r.get("startV") else "Planovana"
+        return "Probiha" if odstartovala(r.get("startV")) else "Planovana"
     return r["stav"]
 
 
@@ -4786,10 +4798,15 @@ class H(BaseHTTPRequestHandler):
         from datetime import datetime, timezone
         r["startV"] = self.telo_zadosti().get("startV") or \
             datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        # <b>Čas v budoucnu je plánovaný start a rozjížďku nerozjede</b>
+        # (nález K6 oponentury rozhodčího, 28. 10. 2026) — opsané z
+        # `ZapisSprava.StartAsync`. U běžící rozjížďky se čas jen přepíše:
+        # tam je oprava dopředu „klepl jsem pozdě", ne „dnes nestartujeme".
+        planovany = r.get("stav") == "Planovana" and not odstartovala(r["startV"])
         # Nový start je opakování startu: zastavený čas se zruší, jinak by
         # rozjížďka vypadala jako dojetá, zatímco se zrovna rozjela znovu.
         r["konecV"] = None
-        if r.get("stav") != "Zrusena":
+        if not planovany and r.get("stav") != "Zrusena":
             r["stav"] = "Probiha"
         # Časy dojetých se přepočítají k novému startu, jako v API.
         for v in r["vysledky"]:

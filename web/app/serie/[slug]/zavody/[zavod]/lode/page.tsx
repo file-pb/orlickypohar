@@ -14,18 +14,22 @@ type Parametry = {
   searchParams: Promise<{ trida?: string }>;
 };
 
-export const metadata = { title: "Přihlášené lodě" };
+export const metadata = { title: "Startovní listina" };
 
 /**
  * Kdo jede. Vlastní sekce, ne přívažek pod prázdnou tabulkou výsledků —
  * u regaty, která se teprve pojede, je to jediné, co je o ní známo.
+ *
+ * <b>Jmenuje se Startovní listina</b> (Filip, 27. 10. 2026, podle
+ * rozhodčího — nález R10). Adresa zůstala `/lode`: odkazy na ni už jsou
+ * rozeseté po webu i v návodu a slug nic netvrdí.
  */
 export default async function Lode({ params, searchParams }: Parametry) {
   const { slug, zavod: slugZavodu } = await params;
   const { trida } = await searchParams;
 
   const zastavka = await nactiZastavku(slug, slugZavodu);
-  if (!zastavka) return <Vypadek co="Přihlášené lodě" />;
+  if (!zastavka) return <Vypadek co="Startovní listina" />;
 
   const { detail, trat } = zastavka;
   // Komunitní akce se nejede a nikdo se na ni nehlásí.
@@ -47,7 +51,7 @@ export default async function Lode({ params, searchParams }: Parametry) {
       />
       {detail.lode.length === 0 ? (
         <>
-          <h2>Přihlášené lodě</h2>
+          <h2>Startovní listina</h2>
           <p className="prazdno">{prazdnySeznam(detail.stav, prihlasuje)}</p>
           {prihlasuje && (
             <p className="poznamka">

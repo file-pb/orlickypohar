@@ -314,7 +314,7 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
 
         rozjizdka.Stav = Zapis.StavPoZapisu(
             rozjizdka.Stav,
-            rozjizdka.StartV is not null,
+            Zapis.Odstartovala(rozjizdka.StartV, cas.GetUtcNow()),
             ucasti.Values.Select(u => (u.Stav, sVysledkem.Contains(u.PrihlaskaId))),
             rozjizdka.KonecV is not null);
 
@@ -450,11 +450,34 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
     /// Zapíše start rozjížďky (cílová obrazovka). Vrací text chyby, nebo
     /// <c>null</c>. Start jde přepsat, dokud je zápis otevřený — tlačítko
     /// se na vodě snadno zmáčkne o znamení dřív.
+    ///
+    /// <para>
+    /// <b>Čas v budoucnu je plánovaný start a rozjížďku nerozjede</b>
+    /// (nález K6 oponentury rozhodčího, 28. 10. 2026; totéž je nález 7
+    /// v <c>docs/TABULE-DIVAK.md</c>). Do té doby zapsat čas startu
+    /// znamenalo <b>odstartovat</b>, takže stav *plánovaná s časem* nešel
+    /// vyrobit vůbec — a s ním byly mrtvé i věci, které už napsané jsou:
+    /// odpočet na tabuli a panýlek <i>„procedura ve 10:25"</i>
+    /// (<c>web/lib/rozjizdky-tabule.ts</c>), protože oba ten stav chtějí.
+    /// Miloš Zvonař k tomu 27. 10. 2026: *„v rozpravě na konci setneme,
+    /// kdy asi bude startovní procedura"* — plánovaný čas tedy vzniká na
+    /// rozpravě tak jako tak, jen ho nebylo kam zapsat.
+    /// </para>
+    /// <para>
+    /// <b>Platí to jen pro rozjížďku, která ještě nejede.</b> U běžící se
+    /// čas přepíše a stav zůstane — oprava startu dopředu je u ní „klepl
+    /// jsem pozdě", ne „dnes ještě nestartujeme", a vrátit ji mezi
+    /// plánované by lišta i tabule hlásily jako konec jízdy.
+    /// </para>
     /// </summary>
     public async Task<string?> StartAsync(Rozjizdka rozjizdka, DateTimeOffset kdy, CancellationToken ct)
     {
         var zavod = await db.Zavody.FirstAsync(z => z.Id == rozjizdka.ZavodId, ct);
         if (Zapis.ProcNejdePrepsat(zavod.Stav, rozjizdka.StavVysledku) is { } zamceno) return zamceno;
+
+        // Plánovaný start: čas, kdy se jet **má**. Rozjížďka zůstane
+        // plánovaná, dokud ten okamžik nepřijde — viz dokumentace metody.
+        var planovany = rozjizdka.Stav == StavRozjizdky.Planovana && kdy > cas.GetUtcNow();
 
         // <b>Bez přijaté trati se nestartuje</b> (Filip, 15. 10. 2026:
         // *„to, co nemá trať, nejde odstartovat"* — a na doptání: musí být
@@ -466,7 +489,13 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
         // <b>Jen první start.</b> Přepsat čas běžící rozjížďky musí jít
         // pořád — tlačítko se na vodě snadno zmáčkne o znamení dřív a mezitím
         // mohla trať odejít do přestavby.
-        if (rozjizdka.Stav == StavRozjizdky.Planovana
+        //
+        // <b>Plánovaný start trať nežádá</b> (28. 10. 2026, nález K6):
+        // Filipovo pravidlo mluví o odstartování a plánovaný čas žádnou
+        // loď na trať nepouští. Na rozpravě, kde ten čas vzniká, navíc
+        // trať přijatá být nemusí — ZPJ 27.1 ji dávají až k vyzývacímu
+        // znamení. Na skutečný start se kontrola uplatní nezměněná.
+        if (rozjizdka.Stav == StavRozjizdky.Planovana && !planovany
             && !await db.Trate.AnyAsync(
                 t => t.RozjizdkaId == rozjizdka.Id && t.Stav == StavTrati.Prijato, ct))
             return "Rozjížďka nemá přijatou trať. Přiřaď jí trať a nech ji rozhodčím přijmout.";
@@ -479,7 +508,8 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
         // a ta by vypadala jako dojetá.
         rozjizdka.KonecV = null;
 
-        if (rozjizdka.Stav != StavRozjizdky.Zrusena) rozjizdka.Stav = StavRozjizdky.Probiha;
+        if (!planovany && rozjizdka.Stav != StavRozjizdky.Zrusena)
+            rozjizdka.Stav = StavRozjizdky.Probiha;
 
         // Časy už dojetých lodí se přepočítají k novému startu.
         var vysledky = await db.Vysledky.Where(v => v.RozjizdkaId == rozjizdka.Id && v.DojezdV != null).ToListAsync(ct);
@@ -537,7 +567,7 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
 
         rozjizdka.Stav = Zapis.StavPoZapisu(
             rozjizdka.Stav,
-            rozjizdka.StartV is not null,
+            Zapis.Odstartovala(rozjizdka.StartV, cas.GetUtcNow()),
             ucasti.Select(u => (u.Stav, sVysledkem.Contains(u.Id))),
             rozjizdka.KonecV is not null);
 

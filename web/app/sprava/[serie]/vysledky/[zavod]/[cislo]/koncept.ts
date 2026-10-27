@@ -30,6 +30,57 @@ export type Koncept = {
 export const klicKonceptu = (serie: string, zavod: string, cislo: number) =>
   `cil:${serie}:${zavod}:${cislo}`;
 
+/**
+ * <b>Neodeslaný start</b> (nález R19 oponentury rozhodčího, 28. 10. 2026).
+ * Filip, 27. 10. 2026: *„Stalo se nám, že při startu z webovými hodinami
+ * došlo k přerušení spojení a to pokazilo start a renomé."* Do té doby
+ * cílová obrazovka klepnutí na start při selhání odeslání <b>zahodila</b>
+ * a řekla *„zkus to znovu"* — u startu rada, kterou nejde splnit, protože
+ * ten okamžik už uplynul a druhé klepnutí zapíše pozdější čas. Dojezdy
+ * přitom výpadek přežívaly od 23. 9. 2026, a start z toho vypadl, ačkoliv
+ * je to jediné klepnutí dne, které se nedá zopakovat.
+ *
+ * <b>Proč vlastní záznam, a ne pole v {@link Koncept}.</b> Koncept je
+ * <b>rozdíl proti serverovému zápisu</b> a drží si k tomu `otisk`: když se
+ * otisk neshoduje, sada se nesmí použít sama od sebe, protože mezitím
+ * uložil druhý telefon. Start je ale jedno pole, ne sada — a kdyby jel
+ * v konceptu, zahodilo by ho buď smazání konceptu po úspěšném uložení
+ * sady, nebo neshoda otisku, do kterého `startV` samo vstupuje
+ * (`cil/page.tsx`, funkce `otisk`). Oddělený záznam přežije obojí.
+ */
+export type CekajiciStart = { v: string; kdy: number };
+
+export const klicStartu = (serie: string, zavod: string, cislo: number) =>
+  `cil-start:${serie}:${zavod}:${cislo}`;
+
+export function zapamatujStart(klic: string, start: CekajiciStart) {
+  try {
+    window.localStorage.setItem(klic, JSON.stringify(start));
+  } catch {
+    // Bez zálohy se startuje dál, jen bez pojistky.
+  }
+}
+
+export function prectiStart(klic: string): CekajiciStart | null {
+  try {
+    const ulozene = window.localStorage.getItem(klic);
+    if (!ulozene) return null;
+
+    const start = JSON.parse(ulozene) as CekajiciStart;
+    return typeof start?.v === "string" && Number.isFinite(Date.parse(start.v)) ? start : null;
+  } catch {
+    return null;
+  }
+}
+
+export function zahodStart(klic: string) {
+  try {
+    window.localStorage.removeItem(klic);
+  } catch {
+    // Nevadí: odeslaný start se pozná podle času v zápisu ze serveru.
+  }
+}
+
 export function zapamatuj(klic: string, koncept: Koncept) {
   try {
     window.localStorage.setItem(klic, JSON.stringify(koncept));

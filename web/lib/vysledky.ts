@@ -67,10 +67,20 @@ export const STAVY: Record<StavVysledku, { stitek: string; tlacitko: string; pop
     tlacitko: "Ověřit",
     popis: "Čísla sedí s papírem z vody.",
   },
+  // <b>Protesty v téhle větě nemají co dělat</b> (nález K2 oponentury
+  // rozhodčího, 28. 10. 2026). Stávalo tu *„Protesty vyřízené, pořadí
+  // platí"*, zatímco aplikace o protestech neví nic: nemá tabulku protestů,
+  // nezná protestní časový limit (ZPJ 60.3(b)) ani kam zapsat, že se
+  // jeden projednává. Byla to tedy věta, kterou si nemá čím ověřit — a
+  // klepne ji rozhodčí, který třeba o protestu ví a nemá kde ho zapsat.
+  // Nová věta říká jen to, co rozhodčí doopravdy podepisuje. Protesty
+  // zůstávají venku přiznaně, jako celek s vlastním rozhodnutím.
+  // Tentýž text je u `StavVysledku.Schvaleno` v `Zavod.cs` — ať se
+  // nerozejdou.
   Schvaleno: {
     stitek: "schváleno",
     tlacitko: "Schválit",
-    popis: "Protesty vyřízené, pořadí platí.",
+    popis: "Pořadí v cíli sedí, rozhodčí ho podepsal.",
   },
   Potvrzeno: {
     stitek: "potvrzeno",

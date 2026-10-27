@@ -42,11 +42,24 @@ import { ZavriMimo } from "@/app/zavri-mimo";
 
  export type Sekce = "uvod" | "smernice" | "trat" | "lode" | "vysledky";
 
+/**
+ * <b>Pojmenované podle rozhodčího</b> (Filip, 27. 10. 2026: *„Podívej
+ * jestli se nám to nejmenuje jinak a pojmenuj to podle Miloše"*, a k tabu
+ * `lode` rovnou: *„To bude startovní listina"*). Miloš Zvonař jmenoval,
+ * co je na stránce regaty potřeba vidět před závodem, a sekce lodí se
+ * jmenovala `Lodě` — slovo, které neříká, jestli jde o proces přihlášek,
+ * nebo o hotový dokument k danému dni. Nález R10 v
+ * `docs/OPONENTURA-ROZHODCI.md`.
+ *
+ * <b>Přejmenování samo nestačilo</b>, protože sekce vypisovala i lodě
+ * čekající na potvrzení a vyloučené — proto se s názvem změnil i obsah,
+ * viz `sekce-lode.tsx`.
+ */
 const NAZVY: Record<Sekce, string> = {
   uvod: "Úvod",
   smernice: "Směrnice",
   trat: "Trať",
-  lode: "Lodě",
+  lode: "Startovní listina",
   vysledky: "Výsledky",
 };
 

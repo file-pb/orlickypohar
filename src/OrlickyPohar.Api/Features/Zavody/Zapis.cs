@@ -113,6 +113,21 @@ public static class Zapis
         stav is StavUcasti.Prihlasena or StavUcasti.Potvrzena or StavUcasti.Vyloucena;
 
     /// <summary>
+    /// <b>Odstartovala už rozjížďka?</b> Zapsaný čas startu sám nestačí —
+    /// od 28. 10. 2026 smí nést i <b>plánovaný</b> start, tedy okamžik,
+    /// kdy se jet <b>má</b> (nález K6 oponentury rozhodčího; nález 7
+    /// v <c>docs/TABULE-DIVAK.md</c>).
+    /// <para>
+    /// Rozdíl je podstatný tam, kde se z toho odvozuje stav: rozjížďka
+    /// s časem v budoucnu se nejede, i když <c>StartV</c> vyplněný má.
+    /// Dřív to byl prostý test na <c>null</c> a plánovaný start by z ní
+    /// udělal probíhající.
+    /// </para>
+    /// </summary>
+    public static bool Odstartovala(DateTimeOffset? startV, DateTimeOffset ted) =>
+        startV is { } s && s <= ted;
+
+    /// <summary>
     /// <b>Jaký stav má rozjížďka po uložení sady.</b> Dojetá je ta, kde má
     /// každá loď na vodě dojezd nebo kód; loď bez výsledku ji drží otevřenou,
     /// protože se na ni čeká.

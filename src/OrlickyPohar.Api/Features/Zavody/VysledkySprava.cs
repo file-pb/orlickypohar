@@ -98,7 +98,7 @@ public record StavVysledkuVstup(StavVysledku Stav, string? Duvod = null);
 /// a uložení tiše neudělá nic.
 /// </para>
 /// </summary>
-public class VysledkySprava(AppDbContext db)
+public class VysledkySprava(AppDbContext db, TimeProvider cas)
 {
     /// <summary>Zastávky ročníku s počty. Řadí se jako kalendář. Komunitní akce výsledky nemají.</summary>
     public Task<List<ZastavkaVysledkyDto>> ZastavkyAsync(int serieId, CancellationToken ct) =>
@@ -204,7 +204,7 @@ public class VysledkySprava(AppDbContext db)
 
         return Zapis.StavPoZapisu(
             StavRozjizdky.Planovana,
-            rozjizdka.StartV is not null,
+            Zapis.Odstartovala(rozjizdka.StartV, cas.GetUtcNow()),
             lode.Select(u => (u.Stav, sVysledkem.Contains(u.Id))),
             rozjizdka.KonecV is not null);
     }

@@ -157,7 +157,17 @@ public enum StavVysledku
     /// <summary>Čísla sedí s papírem z vody.</summary>
     Overeno = 1,
 
-    /// <summary>Protesty vyřízené, pořadí platí.</summary>
+    /// <summary>
+    /// Pořadí v cíli sedí, rozhodčí ho podepsal.
+    /// <para>
+    /// <b>O protestech aplikace nic neví</b> (nález K2 oponentury
+    /// rozhodčího, 28. 10. 2026). Stávalo tu *„Protesty vyřízené, pořadí
+    /// platí"* — tvrzení, které si aplikace nemá čím ověřit: nezná
+    /// protestní časový limit (ZPJ 60.3(b)), projednávání ani kam zapsat,
+    /// že nějaký protest visí. Tentýž text je u <c>Schvaleno</c>
+    /// v <c>web/lib/vysledky.ts</c>, ať se nerozejdou.
+    /// </para>
+    /// </summary>
     Schvaleno = 2,
 
     /// <summary>Konečné. Dál se needituje.</summary>

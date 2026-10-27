@@ -8584,6 +8584,58 @@ existují, dojetí teď taky; pozastavení by byl pátý stav.
 *„pozastavení zatím dělat nebudem, je to sporné a musí se to
 promyslet"*). Kdo sem přijde později: tohle není nedodělek k dokončení.
 
+## Z oponentury rozhodčího: fáze 1 (28. 10. 2026)
+
+První tři věci z plánu v `docs/OPONENTURA-ROZHODCI.md`, který vznikl ze
+schůzky s rozhodčím Milošem Zvonařem. **Mění chování, proto sem.** Co se
+u každé rozhodlo a čím se to měřilo, je u jejích nálezů; tady je jen to,
+co se od teď chová jinak.
+
+**Plánovaný čas startu** *(nález K6; nález 7 v `docs/TABULE-DIVAK.md`)*.
+`POST …/rozjizdky/{cislo}/start` s časem **v budoucnu** rozjížďku
+**nerozjede** — zapíše jí `StartV` a nechá ji `Planovana`. Do té doby
+znamenalo zapsat čas startu totéž co odstartovat, takže stav *plánovaná
+s časem* nešel vyrobit a odpočet na tabuli, který ho vyžaduje, byl mrtvý.
+Čas v minulosti i start bez času se chovají jako dřív. U **běžící**
+rozjížďky se čas jen přepíše; tam je oprava dopředu „klepl jsem pozdě".
+Cílová obrazovka má proto tři stavy: bez startu (tlačítko *Start* a pole
+*plánovaný čas*), plánovaný start s odpočtem, a běžící jako dřív.
+
+Dvě věci k tomu, protože se jich dotkne každý, kdo bude sahat na stav
+rozjížďky:
+
+- **„má zapsaný start" už neznamená „jede"**. Na to je nová čistá funkce
+  `Zapis.Odstartovala(startV, ted)` a používá ji všechno, co stav
+  dopočítává (`StavPoZapisu` a jeho tři volající). `VysledkySprava` kvůli
+  tomu dostala `TimeProvider`.
+- **Plánovaný start nežádá přijatou trať**, skutečný dál ano. Plánovaný
+  čas žádnou loď na trať nepouští a na rozpravě, kde vzniká, trať podle
+  ZPJ 27.1 přijatá být nemusí.
+
+**Start přežije výpadek spojení** *(nález R19, bod 1 — ta vada, která
+podle Filipa pokazila skutečný start)*. Klepnutí na *Start* se už
+nezahazuje: čas jde nejdřív do úložiště prohlížeče a odesílá se po půl
+minutě a při události `online`, dokud neprojde — stejně jako dojezdy od
+23. 9. 2026. Opakuje se i po odmítnutí ze serveru, protože pak se uloží
+**původní** čas klepnutí. Leží vedle konceptu zápisu, ne v něm: koncept je
+rozdíl proti serverovému zápisu a jeho `otisk` se počítá i ze `startV`,
+takže by si start měnil vlastní podmínku použitelnosti. Jiný start na
+serveru se nepřepisuje potichu — obrazovka nabídne volbu, protože **čí
+hodiny platí, projekt ještě nerozhodl** (fáze 3.2 téhož plánu).
+
+**Dvě věty, které tvrdily víc, než aplikace ví** *(nálezy K2 a R10)*. Stav
+*Schváleno* se už neohání protesty, o kterých aplikace nic neví; zní
+*„Pořadí v cíli sedí, rozhodčí ho podepsal."* a je to změněné na obou
+místech naráz (`web/lib/vysledky.ts`, `StavVysledku` v `Zavod.cs`). Tab
+`Lodě` na stránce regaty se jmenuje **Startovní listina** a **změnil se
+s ním i obsah**: nahoře potvrzené lodě, pod nimi *Přihlášené, ještě ne na
+listině* (čekající na potvrzení a vyloučené). Nadpis nad seznamem, kde
+stojí „čeká na potvrzení", by byl slib naprázdno. Adresa zůstala `/lode`
+a ve správě zůstaly *Přihlášky*.
+
+**Fáze 2 až 4 jsou nezačaté** — vypsání závodu jako dokument, startovní
+procedura a zbytek. Pořadí a rozsah drží plán v oponentuře.
+
 ## Přijaté riziko: dvě zranitelnosti v appce (23. 10. 2026)
 
 Dependabot hlásí v `app/package-lock.json` dvě zranitelnosti, které **nejde

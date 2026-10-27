@@ -90,9 +90,11 @@ Jedno po druhém a počkat, až `/verze` obou služeb sedí s `main`.
 ## Zápis z vody, když web leží
 
 Rozdělaný zápis **přežije** — leží v `localStorage` prohlížeče
-(`koncept.ts` u zápisu výsledků). Co nepřežije, je **načtení stránky bez
-signálu**: web nemá service worker ani manifest, takže jedno obnovení
-cílovou obrazovku sebere.
+(`koncept.ts` u zápisu výsledků), a **od 28. 10. 2026 i klepnutí na
+start**: dřív se zahodilo a obrazovka poradila *„zkus to znovu"*, což
+u startu splnit nejde (nález R19 v `docs/OPONENTURA-ROZHODCI.md`). Co
+nepřežije, je **načtení stránky bez signálu**: web nemá service worker ani
+manifest, takže jedno obnovení cílovou obrazovku sebere.
 
 Takže u vody: **kartu nezavírat a neobnovovat.** Když signál spadne,
 nechat ji být a zapisovat dál; odešle se, až se připojení vrátí.

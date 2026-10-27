@@ -36,7 +36,7 @@ public class UpozorneniDoruceniTests(PostgresFixture fixture)
     {
         var scope = fixture.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        return (db, new UpozorneniSprava(db, new ZastavenyCas(Ted)), new VysledkySprava(db));
+        return (db, new UpozorneniSprava(db, new ZastavenyCas(Ted)), new VysledkySprava(db, new ZastavenyCas(Ted)));
     }
 
     private static async Task<(string SerieSlug, Rozjizdka Rozjizdka)> RegataAsync(AppDbContext db)

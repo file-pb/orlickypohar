@@ -276,6 +276,28 @@ public class ZapisTests
     }
 
     /// <summary>
+    /// <b>Plánovaný start neznamená, že rozjížďka jede</b> (nález K6
+    /// oponentury rozhodčího, 28. 10. 2026). Od té doby smí
+    /// <c>StartV</c> nést i čas, kdy se jet <b>má</b> — Miloš Zvonař:
+    /// *„v rozpravě na konci setneme, kdy asi bude startovní procedura"*.
+    /// Test na <c>null</c>, který tu byl dřív, by z takové rozjížďky
+    /// udělal probíhající.
+    /// </summary>
+    [Fact]
+    public void Odstartovala_az_cas_startu_nastal()
+    {
+        var ted = new DateTimeOffset(2027, 5, 15, 10, 25, 0, TimeSpan.FromHours(2));
+
+        Assert.False(Zapis.Odstartovala(null, ted));
+        Assert.False(Zapis.Odstartovala(ted.AddMinutes(4.5), ted));
+        Assert.True(Zapis.Odstartovala(ted, ted));
+        Assert.True(Zapis.Odstartovala(ted.AddSeconds(-1), ted));
+
+        // Posun zóny nesmí rozhodovat: tentýž okamžik v UTC je tentýž start.
+        Assert.True(Zapis.Odstartovala(ted.ToUniversalTime(), ted));
+    }
+
+    /// <summary>
     /// Oprava vrací rozjížďku zpátky: smazaný dojezd nesmí nechat dojetou
     /// rozjížďku s dírou. Bez startu se vrací mezi plánované — do rozjížďky
     /// přepisované z papíru se nikdy nestartovalo.

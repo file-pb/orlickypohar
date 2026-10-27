@@ -323,10 +323,11 @@ bude, aby se to nemuselo hledat po nálezech. Všechno ostatní čeká na rozhod
 
 Dva chybějící díly ze šesti; zbylé čtyři na cílové obrazovce už jsou:
 
-1. **Start musí přežít výpadek.** Dát ho do `Koncept` v `koncept.ts` vedle
-   dojezdů a kódů. Dnes se klepnutí při selhání odeslání zahodí
-   (`setStart(puvodni)`), a *„zkus to znovu"* u startu nejde splnit, protože ten
-   okamžik uplynul. **Tohle je ta vada, která jim pokazila start.**
+1. ~~**Start musí přežít výpadek.**~~ **Hotovo 28. 10. 2026** (fáze 1.2).
+   Klepnutí se nezahazuje: čas leží v telefonu vedle rozdělaného zápisu
+   (`koncept.ts`, `CekajiciStart`) a odesílá se, dokud neprojde. Nakonec
+   ne jako pole v `Koncept`, ale vedle něj — důvod je u R19.
+   **Tohle byla ta vada, která jim pokazila start.**
 2. **Pojmenovat, čí hodiny platí.** Jeden velitelský čas v rukou hlavního
    startéra, nezávislý na spojení; po připojení se rozešle ven a srovná ostatní.
    Mechanismus pro dva **rovnocenné** zapisovatele projekt má (porovnání dvou
@@ -661,6 +662,11 @@ ostatní; dole to, co na odemčeném staví.
 
 ### Fáze 1 — tři levné věci, které odemykají zbytek
 
+> **Hotová 28. 10. 2026.** Všechny tři položky jsou v kódu a změřené proti
+> mocku; co se u každé rozhodlo a čím se to ověřilo, stojí u jejích nálezů
+> (K6, R19 bod 1, K2, R10). Odpočet na tabuli ožil — nález 7
+> v `docs/TABULE-DIVAK.md` tím padl.
+
 **1.1 Plánovaný čas startu** *(K6, R4, R12, a nález 7 v `TABULE-DIVAK.md`)*
 Nejlevnější položka s nejdelším dosahem v celé oponentuře. Dnes `StartV` zapisuje
 jediné místo (`ZapisSprava.StartAsync`) a ve stejném kroku přepne rozjížďku na
@@ -668,14 +674,16 @@ jediné místo (`ZapisSprava.StartAsync`) a ve stejném kroku přepne rozjížď
 odpočet na tabuli (`rozjizdky-tabule.ts` obě fáze umí), panýlek *„procedura
 v 10:25"*, přepnutí tabule na mapu před startem, i odpočet v ruce startéra.
 *Hotovo:* rozjížďka může mít čas startu a zůstat `Planovana`; odpočet na tabuli
-ožije bez dalšího zásahu.
+ožije bez dalšího zásahu. **Uděláno 28. 10. 2026** — čas v budoucnu rozjížďku
+nerozjede, cílová obrazovka k tomu má pole.
 
 **1.2 Start do konceptu** *(R19, bod 1 — potvrzeno k dodělání)*
 **Tohle je ta vada, která jim pokazila start.** `odstartuj` bere čas lokálně
 (dobře), ale při selhání odeslání ho `catch` zahodí (`setStart(puvodni)`) a řekne
 *„zkus to znovu"* — u startu rada, kterou nejde splnit. `Koncept` v `koncept.ts`
 přitom nese `dojeti` a `kody`, ne start. *Hotovo:* start přežije výpadek stejně
-jako dojezdy a odešle se, až se signál vrátí.
+jako dojezdy a odešle se, až se signál vrátí. **Uděláno 28. 10. 2026** — leží
+vedle konceptu, ne v něm (důvod u R19), a opakuje se, dokud neprojde.
 
 **1.3 Věty, které tvrdí víc, než aplikace ví** *(K2, R10)*
 Jen text, žádná logika. Stav *Schváleno* má popis **„Protesty vyřízené, pořadí
@@ -684,6 +692,10 @@ platí"**, a aplikace o protestech neví nic (`web/lib/vysledky.ts:73`,
 Zároveň: tab `Lodě` se má jmenovat **Startovní listina** (Filip rozhodl), ale
 dnes vypisuje i lodě *„čeká na potvrzení"* a vyloučené — buď s názvem změnit
 filtr, nebo nechat dvojici *Přihlášky* / *Startovní listina*.
+**Uděláno 28. 10. 2026**: věta u *Schváleno* zní *„Pořadí v cíli sedí,
+rozhodčí ho podepsal."* na obou místech, a tab je jedna sekce se dvěma
+seznamy — listina a pod ní nepotvrzené přihlášky. Dvojice tabů zůstává
+otevřená, rozhoduje o ní Filip (R10).
 
 ### Fáze 2 — vypsání závodu
 
@@ -1342,8 +1354,9 @@ jinému než mně.*
 *Původ: střípek 6. Doloženo:
 `web/app/serie/[slug]/zavody/[zavod]/hlava.tsx:68–83` (funkce `sekce`),
 `Features/Zavody/Prihlasky.cs:121` (`VerejneViditelna`),
-`NAVOD-ROZHODCI.pdf` s. 18. Stav: **zapsáno** — polovina patří do
-`SCENARE-OVLADANI.md`, viz konec nálezu.*
+`NAVOD-ROZHODCI.pdf` s. 18. Stav: **tab přejmenovaný a obsah srovnaný
+28. 10. 2026** (fáze 1.3, viz konec nálezu); zbytek **zapsáno** — polovina
+patří do `SCENARE-OVLADANI.md`.*
 
 Dnešní taby stránky regaty skládá jedna funkce a jsou **pro všechny stejné**:
 
@@ -1460,8 +1473,43 @@ a ve správě *Bóje na trati*.
 > `nazev` i `kratky` (*„směrnice", „bóje", „přihlášky"*), takže **plný název
 > v nadpisu a krátký v tabu** je cesta, kterou už jednou zvolil. Nerozhoduju to.
 
-*Změnu v kódu jsem neudělal — tahle session nic neimplementuje (viz hlavička).
-Je to připravené tak, aby šlo přepsat `NAZVY` a dopsat dvě položky.*
+### Hotovo 28. 10. 2026 — tab `Lodě` (fáze 1.3)
+
+Tab se jmenuje **Startovní listina** (`NAZVY` v `hlava.tsx`), a protože
+samotné přejmenování by lhalo, **změnil se s ním i obsah**.
+
+**Rozhodnutí, které si zaslouží být dohledatelné:** nález nechával dvě
+cesty — buď s názvem změnit filtr, nebo nechat dvojici *Přihlášky* (vše)
+a *Startovní listina* (jen potvrzené), jak je Miloš vyjmenoval. Zvolena
+byla **jedna sekce a v ní dva seznamy**: nahoře *Startovní listina*
+(potvrzené lodě, s taby tříd jako dnes), pod ní *Přihlášené, ještě ne na
+listině* (lodě *„čeká na potvrzení"* a *„vyloučená ze závodu"*, s třídou
+v řádku).
+
+Důvody, pro které to takhle padlo:
+
+- **nic se neztratilo** — kapitán, který přihlášku podal, na stránce dál
+  vidí, že dorazila. Prostý filtr by ji smazal z veřejného webu;
+- **nadpis nelže** — na listině stojí jen ti, kdo startují, což je přesně
+  to, proti čemu stála výhrada v nálezu;
+- **fáze 1 má být levná** — dva taby znamenají novou adresu a nový obsah,
+  a to je rozhodnutí o návrhu stránky, ne o názvu.
+
+**Dvojice tabů tím není zamítnutá**, jen odložená: patří k R10 bodům (2)
+až (4), tedy do `SCENARE-OVLADANI.md`, a rozhodnout o ní má Filip —
+hlavně spolu s tím, jestli se stránka bude dělit na publikum přihlášené
+a nepřihlášené (otázka 9).
+
+Co se **nezměnilo**: adresa zůstala `/lode` (odkazy na ni jsou po webu
+i v návodu a slug nic netvrdí), ve správě zůstaly *Přihlášky* (tam je to
+proces, a to sedí), a názvy *Směrnice* a *Trať* se nesahaly — ty jsou
+součástí námitky o šířce, kterou nerozhoduju. Na telefonu (375 px) jsou
+taby stejně akordeon, takže delší název se vešel.
+
+*Změřeno proti mocku (28. 10. 2026):* regata `izolepa` s 22 loděmi, z toho
+dvě *Prihlasena* a jedna *Vyloucena* → listina hlásí **19 lodí** a tři
+zbylé stojí pod ní s důvodem. Ve světlém i tmavém režimu, na 1280 px
+i 375 px.
 
 > **Místo na citát z diskuse:** _(co se v tom seznamu nejmenuje: kam patří
 > výsledky a úvodní stránka? Je to tím, že jsi vyjmenovával, co je potřeba
@@ -2080,7 +2128,8 @@ pěti sekundách, vzorec se stahováním pravidel) je hotový.
 *Původ: střípek 14. Doloženo:
 `web/app/sprava/[serie]/vysledky/[zavod]/[cislo]/cil/cil.tsx:271–290`,
 `koncept.ts:23–28`, `Features/Zavody/VysledkyEndpoints.cs:211`. Stav:
-**K DODĚLÁNÍ — potvrzeno Filipem 27. 10. 2026** (*„super tak si to zapiš že to
+**bod 1 hotový 28. 10. 2026** (fáze 1.2, viz konec nálezu); **body 2–4
+k dodělání — potvrzeno Filipem 27. 10. 2026** (*„super tak si to zapiš že to
 budeme chtít dodělat"*). Doložená příčina skutečné události.*
 
 Filip: *„Stalo se nám, že při startu z webovými hodinami došlo k přerušení
@@ -2134,14 +2183,15 @@ Z toho, co aplikace má:
 | Díl | Stav |
 |---|---|
 | čas z klienta, ne ze serveru | **je** — `odstartuj` posílá vlastní ISO čas a server ho přebírá (`vstup?.StartV ?? cas.GetUtcNow()`) |
-| přežití výpadku v prohlížeči | **je, ale jen pro dojezdy** — `koncept.ts`; start do něj patří taky |
+| přežití výpadku v prohlížeči | **je** — od 28. 10. 2026 i pro start (`koncept.ts`, `CekajiciStart`) |
 | displej, který nezhasne | **je** — `useDisplejSviti` |
 | porovnání dvou zápisů při rozporu | **je** — `podleRizika` a dvě tlačítka *Doplnit chybějící* / *Přepsat rozdílná* |
 | opakované odeslání, až se signál vrátí | **je** — `setInterval(zkus, 30_000)` a událost `online` |
 | jeden autoritativní čas mezi dvěma startéry | **není** |
 
 Takže **pět ze šesti dílů existuje** a čtyři z nich přímo na cílové obrazovce.
-Chybí dvě věci: dát start do konceptu, a pojmenovat, čí hodiny platí.
+Chyběly dvě věci: dát start do konceptu (**hotovo 28. 10. 2026**, viz konec
+nálezu) a pojmenovat, čí hodiny platí (**zbývá**, fáze 3.2 plánu).
 
 **Hlavní a „slave" startér.** Filip: *„Startér může být jeden hlavní a druhý
 slave u druhého bodu startovní čáry… Velitelský čas je ale jeden, je v rukách
@@ -2150,6 +2200,41 @@ projekt má (scénář C7 v `docs/SCENARE-OVLADANI.md`, snímek na zapisovatele
 a porovnání) — jenže ten řeší **dva rovnocenné zápisy**, kdežto tady je jeden
 nadřízený. To je jiné pravidlo: ne „ukaž rozdíl a nech vybrat", ale „platí čas
 hlavního".
+
+### Hotovo 28. 10. 2026 — bod 1 (fáze 1.2)
+
+**Klepnutí na start se už nezahazuje.** Čas jde nejdřív do telefonu
+a odesílá se, dokud neprojde — stejně jako dojezdy od 23. 9. 2026. Dřív se
+při selhání vrátil předchozí stav a obrazovka řekla *„zkus to znovu"*,
+radu, kterou u startu nejde splnit.
+
+**Proč vlastní záznam, a ne pole v `Koncept`.** Plán mluvil o tom, dát
+start do konceptu; při psaní se ukázalo, že tam nepatří. Koncept je
+**rozdíl proti serverovému zápisu** a drží si k tomu `otisk` — jenže
+`otisk` se počítá i ze `startV` (`cil/page.tsx`), takže by si start měnil
+vlastní podmínku použitelnosti. A smazání konceptu po úspěšném uložení sady
+by ho vzalo s sebou. Start proto leží vedle, pod klíčem
+`cil-start:{serie}:{zavod}:{cislo}`, ve stejném modulu `koncept.ts` —
+jedno místo pro obojí, jak si ten modul v hlavičce vymiňuje.
+
+Jak se chová:
+
+- **odeslání se opakuje** po půl minutě a při události `online`, dokud
+  neprojde. Opakuje se i při odmítnutí ze serveru (rozjížďka bez přijaté
+  trati), protože po přijetí trati uloží ten **původní** čas — kdežto
+  zahodit ho znamená vymyslet si nový;
+- **jiný start na serveru nepřepisuje potichu**: obrazovka řekne, že
+  v telefonu leží neodeslaný start, a nechá vybrat. Čí hodiny platí, je
+  rozhodnutí, které projekt ještě neudělal (body 2–4, fáze 3.2);
+- **zavřít kartu varuje** i kvůli startu, nejen kvůli neuloženým dojezdům.
+
+*Změřeno v prohlížeči proti mocku (28. 10. 2026):* mock zabitý → klepnutí
+na *Start* → lišta drží `0:31:13` a běží, hláška *„Start 0:31:13 čeká
+v telefonu"*, v úložišti prohlížeče leží
+`cil-start:2026-nanecisto:izolepa:2`. Po zapnutí mocku a události `online`
+hláška zmizela, úložiště se vyčistilo a na serveru stojí
+**`2026-10-27T23:31:13.273Z`** — tedy čas **klepnutí**, ne čas doručení
+(o ~40 s později). To je ten rozdíl, o který u startu jde.
 
 > ### ✗ Moje poznámka o iPhonu byla chyba v uvažování — opraveno
 >
@@ -2314,8 +2399,9 @@ nebyla k čemu.
 ### K2 — Protesty: aplikace neví, že nějaký visí, a přesto nabídne podpis
 
 *Doloženo: `web/lib/vysledky.ts:73`, `Features/Zavody/Zavod.cs:160`,
-`Features/Zavody/Workflow.cs`, ZPJ 60.3(b) a 90.3(e). Stav: **zapsáno,
-nejvyšší priorita podle řezu**.*
+`Features/Zavody/Workflow.cs`, ZPJ 60.3(b) a 90.3(e). Stav: **věta opravena
+28. 10. 2026** (fáze 1.3); protesty jako celek dál **zapsáno, nejvyšší
+priorita podle řezu**.*
 
 Tohle je přesně ten případ, kvůli kterému tahle oponentura vznikla: **chyba
 není v tom, že aplikace protesty neumí. Chyba je ve větě, kterou u toho říká.**
@@ -2355,6 +2441,18 @@ případně u rozjížďky hlídat protestní limit, protože na to aplikace dat
 Souvisí s nálezem **O4** v `docs/AUDIT-OBSAZENI.md` (rozhodčí řekne „čísla
 neplatí" a nemá jak je stáhnout z webu) — tam jde o publikaci, tady o větu.
 Neduplikovat, řešit spolu.
+
+### Hotovo 28. 10. 2026 — ta věta (fáze 1.3)
+
+Stav *Schváleno* má nově popis **„Pořadí v cíli sedí, rozhodčí ho
+podepsal."**, a to na obou místech naráz (`web/lib/vysledky.ts`
+a `StavVysledku.Schvaleno` v `Zavod.cs`), aby se nerozešla. Protestní limit
+se **nepočítá** a protesty zůstávají venku přiznaně — to je ta velká věc
+s vlastním rozhodnutím, která do plánu nepatří.
+
+Rozdíl proti *Ověřeno* (*„Čísla sedí s papírem z vody."*) zůstává čitelný:
+ověření je o přepisu z papíru, schválení o podpisu pořadí. Že jsou to dvě
+klepnutí téhož člověka, je dál nález **K3** a tohle ho neřeší.
 
 ### K3 — Ověřeno a Schváleno jsou dvě klepnutí téhož člověka
 
@@ -2439,7 +2537,7 @@ závodu"*. Dokud vypsání jako dokument není, nemá se termín s čím rozejí
 
 *Doloženo: `Features/Zavody/ZapisSprava.cs:454–482`,
 `web/app/nacrt/casomira/page.tsx:16–30`, `web/app/.../tabule/semafor.tsx:55`.
-Stav: **zapsáno**.*
+Stav: **hotovo 28. 10. 2026** — fáze 1.1 plánu, viz konec nálezu.*
 
 Rozhodčí mluví o *„předpokladu startu"* ujasněném na rozpravě (R4). Tabule
 umí odpočítávat do startu (`semafor.tsx`: *„Stopky běží od startu, odpočet do
@@ -2466,6 +2564,41 @@ existuje jen v náčrtu a v importu.
 všechno ostatní z diskuse: mapa 10 minut předem (R4), odpočet na tabuli,
 startovní procedura (R5) i „časy z rozpisu", na které se ptá návod (otázka 6).
 Dokud není kam zapsat, kdy se **má** jet, nemá se od čeho odpočítávat.
+
+### Hotovo 28. 10. 2026 (fáze 1.1)
+
+**Čas v budoucnu je plánovaný start a rozjížďku nerozjede.** `StartAsync`
+nově rozlišuje: rozjížďka, která ještě nejede, dostane čas a **zůstane
+`Planovana`**; u běžící se čas jen přepíše, protože tam je oprava dopředu
+„klepl jsem pozdě", ne „dnes nestartujeme". Z možností, které nález nechával
+otevřené (nové pole × budoucí čas), padla volba na druhou — tabule, náčrt
+časomíry i panýlky ten stav **už umějí** a nové pole by znamenalo vést
+dvakrát totéž.
+
+Co se k tomu muselo srovnat:
+
+- `Zapis.Odstartovala(startV, ted)` — nová čistá funkce. Na třech místech
+  se dřív z `StartV is not null` odvozovalo, jestli rozjížďka jede, což by
+  z plánovaného startu udělalo probíhající. Test je v `ZapisTests`.
+- `VysledkySprava` dostala `TimeProvider` — ze stejného důvodu.
+- **Plánovaný start nežádá přijatou trať.** Filipovo pravidlo z 15. 10.
+  (*„to, co nemá trať, nejde odstartovat"*) mluví o odstartování a plánovaný
+  čas žádnou loď na trať nepouští; na rozpravě, kde ten čas vzniká, navíc
+  trať podle ZPJ 27.1 přijatá být nemusí. Na skutečný start platí kontrola
+  nezměněná.
+- **Cílová obrazovka má tři stavy místo dvou**: bez startu (tlačítko *Start*
+  plus pole *plánovaný čas*), plánovaný start (*„Plánovaný start 10:25 ·
+  za 4:30"* a tlačítko *Start*), a běžící jako dřív. Čas v minulosti pole
+  odmítne — na „startuj teď" je tlačítko.
+
+*Změřeno proti mocku (`tools/fake-api.py` nad kopií `2026-nanecisto`,
+regata `izolepa`, 28. 10. 2026):* `POST …/rozjizdky/1/start` s časem o 4,5
+minuty v budoucnu → rozjížďka **`Planovana` se `startV`** (dřív okamžitě
+`Probiha`); tytéž rozjížďky protažené funkcemi tabule
+(`rozjizdky-tabule.ts`, mapování 1:1 jako v `snimekZavodu`) daly
+*„startovní procedura 2:04"* a u vzdálenějšího startu *„procedura ve
+00:58"*. Start bez času dál rozjede rozjížďku na `Probiha`. V prohlížeči
+na telefonu (375 px) pole i odpočet sedí a čas v minulosti vrátí hlášku.
 
 ### K7 — Shodu v cíli aplikace odmítne
 

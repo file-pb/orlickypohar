@@ -6,10 +6,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { KodVysledku, ZapisLod, ZapisRadek, ZapisRozjizdky } from "@/lib/vysledky";
 import {
   klicKonceptu,
+  klicStartu,
   precti,
+  prectiStart,
   rozdily,
   zahod,
+  zahodStart,
   zapamatuj,
+  zapamatujStart,
+  type CekajiciStart,
   type Koncept,
 } from "../koncept";
 import { konecAkce, odstartujAkce, pridejLodAkce, ulozCilAkce, znakAkce } from "./akce";
@@ -103,8 +108,14 @@ export function Cil({
   const [konflikt, setKonflikt] = useState(false);
   // Koncept z telefonu, který se k tomuhle zápisu nehodí — viz `../koncept`.
   const [cizi, setCizi] = useState<Koncept | null>(null);
+  // Start, který se neodeslal, a zkouší to dál sám (nález R19, 28. 10. 2026).
+  const [cekaStart, setCekaStart] = useState<CekajiciStart | null>(null);
+  // Neodeslaný start z telefonu, který se neshoduje s tím na serveru:
+  // přepsat cizí čas potichu se nesmí, rozhoduje o tom člověk.
+  const [ciziStart, setCiziStart] = useState<CekajiciStart | null>(null);
 
   const klic = klicKonceptu(serie, zavod, zapis.cislo);
+  const klicS = klicStartu(serie, zavod, zapis.cislo);
 
   // Nejnovější stav pro ukládání. Stav Reactu by ve smyčce níž byl ten
   // z doby, kdy ukládání začalo.
@@ -203,11 +214,11 @@ export function Cil({
 
   // Neuložené klepnutí nesmí zmizet s omylem zavřenou kartou.
   useEffect(() => {
-    if (ukladani === "ulozeno") return;
+    if (ukladani === "ulozeno" && !cekaStart) return;
     const varuj = (e: BeforeUnloadEvent) => e.preventDefault();
     window.addEventListener("beforeunload", varuj);
     return () => window.removeEventListener("beforeunload", varuj);
-  }, [ukladani]);
+  }, [ukladani, cekaStart]);
 
   // Stav se bere z vlastností jen při připojení. Tlačítko Zpět ale umí
   // stránku obnovit z mezipaměti routeru, se zápisem z doby, kdy se odešlo
@@ -221,6 +232,14 @@ export function Cil({
   // Tiká jen dokud čas běží. Po zastavení se drží naměřený — hodiny, co
   // běží dál, by říkaly, že se pořád jede.
   const ted = useTed(start != null && konec == null);
+
+  /**
+   * <b>Plánovaný start: čas, kdy se jet má</b> (nález K6, 28. 10. 2026).
+   * Stav ze serveru i čas musí sedět — u běžící rozjížďky je oprava
+   * dopředu „klepl jsem pozdě", ne „dnes ještě nestartujeme", a vrátit ji
+   * mezi plánované by lišta hlásila jako konec jízdy.
+   */
+  const planovany = start != null && zapis.stav === "Planovana" && Date.parse(start) > ted;
 
   // Čím se koncept z telefonu liší od toho, co leží na serveru. Počítá se
   // z podoby, se kterou se stránka otevřela — `key` stránky se při změně
@@ -259,36 +278,116 @@ export function Cil({
   };
 
   /**
+   * Odešle start, který leží v telefonu. Vrací se k tomu sám, dokud
+   * neprojde — viz {@link odstartuj}.
+   */
+  const posliStart = useCallback(async (cekajici: CekajiciStart) => {
+    try {
+      const { chyba } = await odstartujAkce(serie, zavod, zapis.cislo, cekajici.v);
+      if (chyba) {
+        setChyba(`Start ${hodiny(cekajici.v)} čeká v telefonu: ${chyba}`);
+        return;
+      }
+      setCekaStart(null);
+      setChyba(null);
+      zahodStart(klicS);
+    } catch {
+      setChyba(
+        `Start ${hodiny(cekajici.v)} je zapsaný v telefonu a odešle se sám, `
+          + "až bude signál. Kartu nezavírej.");
+    }
+  }, [serie, zavod, zapis.cislo, klicS]);
+
+  /**
    * Zapíše start. <b>Bez času znamená „teď"</b>, s časem ten zadaný —
    * oprava startu je skoro vždycky „startovalo se před minutou a já
    * klepl pozdě" a přepsat ho na teď ji zhoršuje: posune start dopředu
    * a lodím, co už dojely, čas zkrátí nebo zahodí (testovací session,
    * 16. 10. 2026). Server konkrétní čas přijímá a dojezdy přepočítá.
+   *
+   * <b>Klepnutí se nezahazuje</b> (nález R19 oponentury rozhodčího,
+   * 28. 10. 2026). Filip, 27. 10. 2026: *„Stalo se nám, že při startu
+   * z webovými hodinami došlo k přerušení spojení a to pokazilo start
+   * a renomé."* Dřív se tu při selhání vrátil předchozí stav a obrazovka
+   * řekla *„zkus to znovu"* — jenže ten okamžik už uplynul. Teď čas jde
+   * nejdřív do telefonu a odesílá se, dokud neprojde; stejně jako dojezdy
+   * od 23. 9. 2026.
+   *
+   * <b>Vrací se i odmítnutí ze serveru</b>, ne jen výpadek: když rozjížďka
+   * nemá přijatou trať, opakování po jejím přijetí uloží ten původní čas —
+   * kdežto zahodit ho znamená vymyslet si nový.
    */
   const odstartuj = async (kdy?: string) => {
-    if (start && !kdy
+    if (start && !planovany && !kdy
         && !window.confirm("Start už je zapsaný. Přepsat ho na teď? Časy dojetých se přepočítají."))
       return;
     const v = kdy ?? new Date().toISOString();
-    const puvodni = start;
-    const puvodniKonec = konec;
+    const cekajici = { v, kdy: Date.now() };
     setStart(v);
     // Nový start je opakování startu: zastavený čas padá i tady, aby lišta
     // nezůstala viset na „dojeto" u rozjížďky, co se zrovna rozjela znovu.
     setKonec(null);
-    try {
-      const { chyba } = await odstartujAkce(serie, zavod, zapis.cislo, v);
-      if (chyba) {
-        setStart(puvodni);
-        setKonec(puvodniKonec);
-        setChyba(chyba);
-      }
-    } catch {
-      setStart(puvodni);
-      setKonec(puvodniKonec);
-      setChyba("Start se nepodařilo uložit. Zkus to znovu.");
-    }
+    // Nejdřív do telefonu, pak na server — jako u klepnutí v cíli.
+    setCekaStart(cekajici);
+    zapamatujStart(klicS, cekajici);
+    await posliStart(cekajici);
   };
+
+  /**
+   * Plánovaný čas startu (nález K6, 28. 10. 2026; nález 7
+   * v `docs/TABULE-DIVAK.md`). Miloš Zvonař, 27. 10. 2026: *„v rozpravě
+   * na konci setneme, kdy asi bude startovní procedura"*. Server z času
+   * v budoucnu rozjížďku nerozjede, takže tabule od něj umí odpočítávat.
+   */
+  const naplanuj = (hhmmss: string) => {
+    const [h, m, se] = hhmmss.split(":").map(Number);
+    if (Number.isNaN(h) || Number.isNaN(m)) return;
+    const kdy = new Date(start ?? Date.now());
+    kdy.setHours(h, m, se || 0, 0);
+    if (kdy.getTime() <= Date.now())
+      return setChyba("Plánovaný start musí být v budoucnu. Startuje se tlačítkem Start.");
+    setChyba(null);
+    void odstartuj(kdy.toISOString());
+  };
+
+  /**
+   * <b>Neodeslaný start se vrací sám</b> (nález R19, 28. 10. 2026) —
+   * stejným taktem jako sada dojezdů: hned, jak se telefon chytí sítě,
+   * a jinak co půl minuty. Bez toho by čekal na další klepnutí, a to po
+   * startu nepřijde: startér dál drží jen stopky.
+   */
+  useEffect(() => {
+    if (!cekaStart) return;
+
+    const zkus = () => void posliStart(cekaStart);
+    window.addEventListener("online", zkus);
+    const casovac = window.setInterval(zkus, 30_000);
+
+    return () => {
+      window.removeEventListener("online", zkus);
+      window.clearInterval(casovac);
+    };
+  }, [cekaStart, posliStart]);
+
+  /**
+   * Start, který v telefonu zůstal z minula. Když server žádný nemá,
+   * obrazovka ho vezme za svůj a odešle; když má tentýž, je to doručená
+   * kopie a padá. Jiný čas na serveru <b>nepřepisuje</b> — mezitím mohl
+   * startovat druhý telefon a rozhodnout o tom má člověk.
+   */
+  useEffect(() => {
+    const ulozeny = prectiStart(klicS);
+    if (!ulozeny) return;
+
+    if (zapis.startV === ulozeny.v) return zahodStart(klicS);
+    if (zapis.startV) return setCiziStart(ulozeny);
+
+    setStart(ulozeny.v);
+    setCekaStart(ulozeny);
+    // Jen při připojení, jako u konceptu sady: `key` stránky se při změně
+    // zápisu vymění a obrazovka začne znovu z čerstvého stavu.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /**
    * Zastaví časomíru, nebo ji pustí znovu.
@@ -364,7 +463,31 @@ export function Cil({
     <div className="cil">
       <div className="cil-lista" role="status" aria-live="polite">
         <div className="cil-start">
-          {start ? (
+          {/* <b>Tři stavy, ne dva</b> (nález K6, 28. 10. 2026): dokud byl
+              zapsaný čas startu totéž co odstartování, stačilo „má start,
+              nebo nemá". Plánovaný start je mezi tím — čas je zapsaný,
+              ale rozjížďka se ještě nejede, a lišta má odpočítávat, ne
+              hlásit uplynulý čas jízdy. */}
+          {planovany && start ? (
+            <>
+              <span>
+                Plánovaný start {hodiny(start)} ·{" "}
+                <b className="cil-cas">za {doStartu(start, ted)}</b>
+              </span>
+              <button type="button" className="cil-startuj" onClick={() => odstartuj()}>
+                Start
+              </button>
+              <label className="cil-cas-startu">
+                <span className="skryte">Plánovaný čas startu</span>
+                <input
+                  type="time"
+                  step={1}
+                  defaultValue={hodiny(start)}
+                  onChange={(e) => naplanuj(e.target.value)}
+                />
+              </label>
+            </>
+          ) : start ? (
             <>
               <span>
                 Start {hodiny(start)} ·{" "}
@@ -416,15 +539,62 @@ export function Cil({
               </label>
             </>
           ) : (
-            <button type="button" className="cil-startuj" onClick={() => odstartuj()}>
-              Start
-            </button>
+            <>
+              <button type="button" className="cil-startuj" onClick={() => odstartuj()}>
+                Start
+              </button>
+              {/* Čas z rozpravy, kdy se jet **má** (nález K6; Miloš
+                  Zvonař, 27. 10. 2026: *„v rozpravě na konci setneme,
+                  kdy asi bude startovní procedura"*). Tabule z něj
+                  odpočítává — `web/lib/rozjizdky-tabule.ts`. */}
+              <label className="cil-cas-startu">
+                <span className="skryte">Plánovaný čas startu</span>
+                <input type="time" step={1} onChange={(e) => naplanuj(e.target.value)} />
+              </label>
+            </>
           )}
         </div>
         <span className={`cil-ulozeno ${ukladani}`}>
           {ukladani === "ukladam" ? "ukládám…" : ukladani === "chyba" ? "neuloženo" : "uloženo"}
         </span>
       </div>
+
+      {/* <b>Neodeslaný start z minula, na který server nepřistoupil</b>
+          (nález R19, 28. 10. 2026). Server už čas startu má a je jiný —
+          mohl startovat druhý telefon. Přepsat ho potichu by znamenalo
+          vzít startérovi jeho čas bez zmínky; velitelský čas (čí hodiny
+          platí) je rozhodnutí, které projekt ještě neudělal
+          (`docs/OPONENTURA-ROZHODCI.md`, R19, fáze 3.2). */}
+      {ciziStart && (
+        <div className="hlaska chyba" role="alert">
+          <p>
+            V telefonu leží neodeslaný start {hodiny(ciziStart.v)}, ale v zápisu je už start{" "}
+            {start ? hodiny(start) : "jiný"} — mohl ho zapsat druhý telefon.
+          </p>
+          <p>
+            <button
+              type="button"
+              className="maly"
+              onClick={() => {
+                setCiziStart(null);
+                void odstartuj(ciziStart.v);
+              }}
+            >
+              Odeslat start z telefonu a přepsat zapsaný
+            </button>{" "}
+            <button
+              type="button"
+              className="maly"
+              onClick={() => {
+                zahodStart(klicS);
+                setCiziStart(null);
+              }}
+            >
+              Nechat zapsaný start
+            </button>
+          </p>
+        </div>
+      )}
 
       {/* Co by odeslání konceptu udělalo, se musí dát přečíst předtím, než
           se na to klepne. „Přesto odeslat" samo o sobě neříká, že přepíše
@@ -805,6 +975,16 @@ function trvani(start: string, konec: number) {
   const m = Math.floor((sekundy % 3600) / 60);
   const s = sekundy % 60;
   return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+/**
+ * Kolik zbývá do plánovaného startu, jako h:mm:ss (nález K6, 28. 10.
+ * 2026). Rozjížďku rozjíždí klepnutí startéra, ne hodiny — po uplynutí
+ * plánovaného času už lišta plánovaný start neukazuje vůbec, protože
+ * odpovídá na jinou otázku než „kolik se jede".
+ */
+function doStartu(start: string, ted: number) {
+  return trvani(new Date(ted).toISOString(), Date.parse(start));
 }
 
 /** Aktuální čas po sekundách, jen když je co odpočítávat. */
