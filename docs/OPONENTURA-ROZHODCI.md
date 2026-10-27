@@ -117,6 +117,30 @@ Odpověď na otázku, kterou otevřel střípek 3. **Část nálezu R7 tím pad�
 nejpraktičtější věc v celém dokumentu. Jak se se střípkem naloženo, je u obou
 nálezů.
 
+### Střípek 5 — jedeme podle ZPJ, ale pořadatelsky ofiko nejsme (27. 10. 2026)
+
+> My podle ZPJ jedem, ale nejsme ofiko ve smyslu pořadatelství kvůli pojistkám
+> apod. Jede se to na vlastní nebezpečí.
+>
+> Jen ty pravidla dodržujem. A s ČSJ komunikujeme.
+
+**Tohle zavírá otázku 0** a zavírá ji přesně tak, jak se ptala — ne na ČTL, ale
+na pořadatelství. Tři věci v jedné odpovědi, a každá míří jinam:
+
+1. **„Podle ZPJ jedem" / „jen ty pravidla dodržujem"** — pravidla jsou přijatá
+   jako pravidla hry. Potvrzuje jádro R8: ZPJ platí, protože si je pohár vzal.
+2. **„Nejsme ofiko ve smyslu pořaditelství kvůli pojistkám"** — pořadatel
+   tedy **není** členský klub podle ZPJ 89.1, a je to **záměr, ne nedopatření**.
+   Tím padá celá větev předpisů ČSJ (licence, pojištění): podle ZPJ 88.1 se
+   řídí členstvím pořadatele. Viz opravené R7.
+3. **„Jede se to na vlastní nebezpečí"** — a tohle je ta věta, ze které vyšel
+   nový nález **R9**. Je to právní konstrukce, která stojí a padá s tím, že si
+   ji každý účastník přečte a odsouhlasí — a to se děje v jediném okamžiku,
+   který aplikace má: při přihlášení.
+
+*„S ČSJ komunikujeme"* beru jako vztah, ne jako pramen pravidel — do nálezů
+z toho nic neodvozuju.
+
 ---
 
 ## Nálezy R — z diskuse s rozhodčím
@@ -432,40 +456,48 @@ tedy ve vrstvě (g) v nejlepším případě, a spíš nikde.
 
 **Druhý dopad: co z předpisů ČSJ aplikace nezná.**
 
-> ### ⚠︎ Tahle část nálezu byla střípkem 4 zpochybněna — text zůstává schválně
+> ### ✗ Tahle část nálezu PADLA — střípek 5. Text zůstává schválně.
 >
-> Pohár **není oficiální závod ČSJ** („není zahrnut do ČTL"), takže povinnost
-> licence a pojištění z národních předpisů nejspíš neplatí a tabulka níž
-> nejspíš není nález.
+> **Pořadatel poháru není členský klub podle ZPJ 89.1, a je to záměr** („nejsme
+> ofiko ve smyslu pořadatelství kvůli pojistkám"). Podle ZPJ 88.1 se platnost
+> předpisů národního svazu řídí právě členstvím pořadatele, takže **předpisy
+> ČSJ pro pohár neplatí** a licence ani pojištění v přihlášce nechybí —
+> **nepatří tam**. Otázka 0 je tím zavřená.
 >
-> **Nejspíš.** Neškrtám ji, protože „není v ČTL" tu povinnost nevyvrací:
-> **ČTL je termínová listina, ne členství.** Co rozhoduje, je ZPJ 88.1 —
-> *„Předpisy, které platí pro závod, jsou předpisy národního svazu, kterého je
-> **pořadatel** členem podle pravidla 89.1."* Pokud pohár pořádá klub, který
-> v ČSJ je (89.1(c)), nebo subjekt ve spojení s členským klubem (89.1(g)),
-> předpisy ČSJ platí **bez ohledu na to, že závod v ČTL není**. Zápis v ČTL a
-> členství pořadatele jsou dvě různé věci a střípek 4 odpovídá jen na tu první.
->
-> Otázka 0 se tím tedy nezodpověděla, jen zpřesnila — viz její nové znění na
-> konci dokumentu. A *„úzká spolupráce s ČSJ"* ji nerozsoudí ani jedním směrem.
+> Mezikrok za zaznamenání: po střípku 4 („není v ČTL") jsem nález neškrtl,
+> protože ČTL je termínová listina, ne členství, a na členství pořadatele
+> neodpovídá. To byl správný krok — odpověď přišla až střípkem 5 a je to
+> odpověď na jinou otázku, než jakou ČTL řeší.
 
-Národní předpisy ukládají dvě věci, které patří do přihlášky, a `Ucast` o nich
-neví ani jednu:
+**A druhá věc, kterou jsem v původním znění tvrdil špatně.** Stálo tu, že
+o licenci ani pojištění aplikace neví *„ani jednu"*, a doložil jsem to tím, že
+hledání `licenc|pojist` nevrací nic o jachtingu. **To hledání měřilo samo
+sebe.** Pole na členské číslo ČSJ v aplikaci je — jmenuje se `CisloCsj`:
 
-| Předpis ČSJ | Co žádá | V aplikaci |
-|---|---|---|
-| preambule k ZPJ Části 6 | čeští závodníci se musí prokázat **platnou závodní licencí ČSJ** | **nic** |
-| ZPJ 65.4(a) (doplněk ČSJ) | **pojištění odpovědnosti**, min. 9 000 000 Kč na zdraví a 2 000 000 Kč na věci | **nic** |
+```csharp
+// Lode/Lod.cs — na osobě
+public string? CisloCsj { get; set; }
+// VerejnaPrihlaska.cs:79 — a validuje se
+if (v.Kapitan.CisloCsj?.Trim().Length > 20) return "Číslo člena ČSJ má nejvýš 20 znaků.";
+// PrihlaskySprava.cs:354 — a ukládá
+osoba.CisloCsj ??= Prazdne(vstup.CisloCsj);
+```
 
-Přihláška (`Ucast`) nese kormidelníka, posádku jako text, kontakt a poznámku.
-Hledání `licenc|pojist` ve zdrojáku a v `PLAN.md` nevrací nic o jachtingu —
-jen softwarové licence a metaforické „pojistky". Rozhodčí přitom podle ZPJ
-76.1 smí přihlášku odmítnout, když nevyhoví požadavkům — ale nemá podle čeho
-kontrolovat.
+Je to přesně ta chyba, před kterou varuje zadání téhle oponentury: **grep na
+slovo, které jsem si vymyslel, místo na věc.** Pole se nejmenuje „licence",
+tak ho hledání minulo, a já z prázdného výsledku usoudil na prázdnou databázi.
 
-*U preambule Části 6 stojí za poznámku, že porušení **nemůže být obsahem
-protestu ani žádosti o nápravu** — je to tedy věc kanceláře závodu, ne
-projednávání. Tím spíš patří do přihlášky.*
+Jak to tedy je, po opravě a po střípku 5: **API číslo ČSJ přijímá, validuje
+a ukládá — a žádný formulář na webu ho nenabízí** (`web/app/serie`,
+`web/app/sprava` ani `web/lib` slovo ČSJ neobsahují). Dostane se do něj jen
+import nebo přímé volání API. Není to vada, kterou by bylo potřeba opravit —
+po střípku 5 je to **sloupec, který pohár nepotřebuje**, pozůstatek doby, kdy
+se počítalo s oficiálním závodem. Stojí za zmínku jen proto, aby ho někdo za
+rok nezačal plnit s pocitem, že musí.
+
+Pro úplnost, co předpisy ČSJ žádají a co se poháru **netýká**: závodní licenci
+ČSJ (preambule k ZPJ Části 6) a pojištění odpovědnosti min. 9 000 000 Kč na
+zdraví a 2 000 000 Kč na věci (doplněk k ZPJ 65.4).
 
 ### R8 — Když pohár není pod svazem, drží celou stavbu vypsání závodu — a to chybí
 
@@ -542,6 +574,89 @@ neplyne nic.
 > **Místo na citát z diskuse:** _(vydáváš dnes vypsání poháru jako jeden
 > dokument na ročník, nebo zvlášť na každou regatu? A co v něm o bodování
 > stojí?)_
+
+### R9 — „Vlastní nebezpečí" a souhlas s pravidly: jediná vazba, kterou pohár má, se nesbírá a neukládá
+
+*Původ: střípek 5. Doloženo: `Features/Zavody/VerejnaPrihlaska.cs:16`, `:29`,
+`:87`, `web/app/serie/[slug]/zavody/[zavod]/prihlaska/page.tsx:278–283`,
+ZPJ 4.1(a), 4.3, J1.2(12). Stav: **zapsáno, podle mě nejvážnější nález
+dokumentu**.*
+
+Miloš: *„Jede se to na vlastní nebezpečí."* A protože pohár **není oficiální
+pořadatel** (střípek 5), je tahle věta spolu se souhlasem s pravidly **jediná
+vazba mezi závodníkem a tím, podle čeho se jede.** U závodu pod svazem je
+závodník vázán členstvím a licencí; tady není vázán ničím než tím, co odklikl
+při přihlášení.
+
+ZPJ s tím počítají a J1.2(12) říká i jak:
+
+> *„přihlašovací formulář, který má podepsat vlastník lodě nebo zástupce
+> vlastníka, který obsahuje sousloví jako například **„Souhlasím s tím, že budu
+> vázán Závodními pravidly jachtingu a všemi dalšími pravidly, které řídí tento
+> závod"**."*
+
+**Co přihláška doopravdy sbírá.** Souhlas ve formuláři je, je povinný a server
+ho vynucuje — jenže je **o něčem jiném**:
+
+```tsx
+<input name="souhlas" type="checkbox" required … />
+<span>
+  Loď smí být ve startovní listině a pořadatel se mi může ozvat na uvedený kontakt.
+  <Link href="/osobni-udaje">Co se s údaji děje</Link>.
+</span>
+```
+
+Je to souhlas se **zveřejněním a kontaktováním**, tedy věc osobních údajů.
+O pravidlech ani o vlastním nebezpečí v něm **není ani slovo**, a serverová
+hláška to potvrzuje: *„Potvrď, že loď smí být ve startovní listině a že se
+pořadatel může ozvat."*
+
+**Kód si přitom o sobě myslí, že souhlas s pravidly sbírá.** V dokumentaci toho
+parametru stojí:
+
+```csharp
+/// <param name="Souhlas">Kapitán potvrdil pravidla a zveřejnění lodi ve startovní listině.</param>
+```
+
+„Potvrdil **pravidla** a zveřejnění". Obrazovka ale pravidla nezmiňuje. Je to
+rozpor **uvnitř aplikace** — ne mezi aplikací a pravidly — a je to ten druh
+rozporu, kvůli kterému se na chybějící věc nepřijde: kdo čte kód, vidí, že
+souhlas s pravidly se sbírá.
+
+**Druhá polovina: i kdyby to znění bylo správné, nezůstane po něm nic.**
+`Souhlas` se ve `VerejnaPrihlaska.ProcNejde` zkontroluje a tím končí. Není
+sloupec na `Ucast` ani na `Prihlaska`, žádná migrace ho nezakládá, žádné
+`osoba.Souhlas =` nikde není. **Je to branka ve formuláři, ne záznam.**
+
+U poháru, kde je souhlas jediná vazba na pravidla, by u něj měl zůstat doklad —
+kdy byl dán, kým, a **jaké znění tehdy platilo**. Aplikace to umí jinde a dělá
+to dobře: směrnice se nemažou, jen stahují, bóje se sbírá z vody a záznam
+zůstává, změna nastavení trackeru se zapíše s důvodem *„je to doklad pro spor"*.
+Tady ta úvaha chybí, a přitom je to místo, kde doklad potřebuje víc než
+kdekoliv jinde.
+
+**Třetí věc, bez které je to celé jedno:** veřejný formulář je jen jedna cesta,
+jak se loď dostane na zastávku. Pořadatel ji může zapsat sám a import jich
+naveze stovky — a **ani jedna z těch cest se na souhlas neptá**, protože
+`Souhlas` žije jen ve `VerejnaPrihlaskaVstup`. Kolik lodí přijde kterou cestou,
+nevím a neměřil jsem to; je to ale otázka, která rozhoduje, jestli se souhlas
+nesbírá od části pole, nebo skoro od nikoho.
+
+**Co s tím — a není to velká práce.** Tohle je ze všech nálezů nejlevnější na
+opravu a nejdražší na opomenutí: rozšířit znění souhlasu o pravidla a vlastní
+nebezpečí, uložit k přihlášce příznak s časem a verzí znění, a mít na to jednu
+stránku, na kterou souhlas odkazuje (`/osobni-udaje` už existuje, takže vzor
+pro to v projektu je). Smysl to ale dává teprve spolu s R8 — souhlas má
+odkazovat na vypsání závodu, a to je ten dokument, který chybí.
+
+*Mez: nejsem právník a netvrdím, co je nebo není právně platné. Tvrdím jen
+tohle a nic víc: pravidla pro ten souhlas mají vlastní bod (J1.2(12)), Miloš
+řekl, že se jede na vlastní nebezpečí, obrazovka sbírá souhlas se zveřejněním
+a kontaktem, a nic z toho se neukládá. Jestli to stačí nebo ne, patří někomu
+jinému než mně.*
+
+> **Místo na citát z diskuse:** _(co dnes účastník podepisuje — je někde papír,
+> nebo se spoléhá na to, že se ví? A kdo je u poháru „pořadatel", když ne klub?)_
 
 ---
 
@@ -785,8 +900,9 @@ ne z oka.
 Přehled pro schůzku. **Sloupec „má to místo"** mluví o aplikaci, ne o tom,
 jestli to rozhodčí dělat musí — to mu ukládají pravidla tak jako tak.
 
-**Rámec po střípku 4:** pohár není oficiální závod ČSJ, takže ZPJ pro něj
-nejsou závazné zvenčí — platí jen tak, jak si je vezme vypsání závodu (R8).
+**Rámec po střípcích 4 a 5:** pohár jede podle ZPJ, ale **pořadatelsky ofiko
+není** — ZPJ pro něj tedy nejsou závazné zvenčí a platí jen tak, jak si je
+vezme vypsání závodu (R8) a jak je odsouhlasí závodník (R9).
 Sloupec „má to místo" proto nečti jako *„tohle aplikace porušuje"*, ale jako
 *„tohle by rozhodčí v aplikaci neměl kam zapsat, kdyby to pohár přijal"*.
 Výjimka je spodek tabulky: bodování podle Dodatku A pohár **přijaté má** —
@@ -816,8 +932,8 @@ potvrdil to rozhodčí 22. 9. 2026 a podle něj se počítá.
 | 76.1 | odmítnout / zrušit přihlášku, vyloučit závodníka | ano, bez meze 76.1(a) (K4) |
 | 80 | informovat lodě o přeloženém termínu | **ne** (K5) |
 | 89.2 + J1 | **vypsání závodu** se vším, co J1 žádá | **ne** (R8) |
-| 88 + předpis ČSJ | závodní licence ČSJ u českých závodníků | **ne**, ale nejspíš se poháru netýká (R7) |
-| 88 + předpis ČSJ | pojištění odpovědnosti 9 mil. / 2 mil. Kč | **ne**, totéž (R7) |
+| 4.1 + J1.2(12) | **souhlas závodníka s pravidly** při přihlášení | **ne** — sbírá se souhlas se zveřejněním, a neukládá se (R9) |
+| ~~88 + předpis ČSJ~~ | ~~licence ČSJ, pojištění odpovědnosti~~ | **netýká se poháru** — pořadatelsky ofiko není (střípek 5, R7) |
 | 90.3(a) | bodovat podle Dodatku A | **ano, a dobře** — A2.1, A5.2, A8.1, A8.2 |
 | 90.3(b) | DNE se nesmí vyškrtnout | **ne** (K1) |
 | 90.3(c) | opravit vlastní chybu v bodování a zveřejnit | ano — revize s důvodem |
@@ -916,11 +1032,11 @@ rozhodčího začíná dřív, než kam dosáhne aplikace.**
 **Otevřené otázky na rozhodčího**, které z téhle oponentury vyšly a v návodu
 nejsou (šest otázek z návodu je na s. 23 a ty platí dál):
 
-0. **Kdo je pořadatel poháru podle ZPJ 89.1 — je to klub, který je členem
-   ČSJ?** *(Zpřesněno po střípku 4: že závod není v ČTL, už víme, a na tuhle
-   otázku to neodpovídá. Platnost předpisů ČSJ se podle ZPJ 88.1 řídí
-   **členstvím pořadatele**, ne zápisem závodu v termínové listině. Rozhoduje
-   to, jestli licence a pojištění v přihlášce chybí, nebo tam nepatří.)* (R7)
+0. ~~**Kdo je pořadatel poháru podle ZPJ 89.1 — je to klub, který je členem
+   ČSJ?**~~ **Zodpovězeno střípkem 5:** pořadatelsky ofiko pohár není, a je to
+   záměr kvůli pojistkám; jedou se jen pravidla. Předpisy ČSJ tedy neplatí,
+   licence ani pojištění do přihlášky nepatří (R7 opraveno). **Místo toho
+   vyšla ven otázka 7** níž — kdo tedy pořadatel je.
 1. Co přesně na vypsání závodu *uznáváš* — dokument, termín, obojí? A co se
    stane, když ho neuznáš? (R1)
 2. „Zapínali trasování" ve fázi přihlášek — telefony smí nahrávat, nebo se
@@ -932,3 +1048,10 @@ nejsou (šest otázek z návodu je na s. 23 a ty platí dál):
 5. Stalo se ti, že jsi nedokázal rozhodnout pořadí dvou lodí v cíli? (K7)
 6. Protestní limit jsou dvě hodiny po dojezdu poslední lodi. Má ti ho aplikace
    hlídat a nepustit podpis dřív — nebo ti to má jen napsat? (K2)
+7. **Co dnes účastník na „vlastní nebezpečí" podepisuje?** Je někde papír nebo
+   věta ve vypsání, nebo se spoléhá na to, že se to ví? A **kdo je u poháru
+   „pořadatel"**, když to není klub — spolek, parta lidí, Miloš? Z toho plyne,
+   čí jméno má v tom prohlášení stát. (R9, R8) ***Nová po střípku 5.***
+8. **Kolik lodí se přihlašuje veřejným formulářem a kolik jich zapíše pořadatel
+   nebo import?** Rozhoduje to, jestli se souhlas nesbírá od části pole, nebo
+   skoro od nikoho. Tohle si můžu změřit sám v datech, až bude na čem. (R9)
