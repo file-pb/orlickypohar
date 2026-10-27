@@ -440,6 +440,44 @@ Dva chybějící díly ze šesti; zbylé čtyři na cílové obrazovce už jsou:
    C12). Pro „rekognici po krizi" je to ale přesně ten nástroj a nikdo ho tak
    nepojmenoval.
 
+   **Přečíst ten papír strojově — Filipův návrh (27. 10. 2026):**
+
+   > *„na začátku jsme vycházeli z rekognice vyfocených výsledků vzpomínáš? Podle
+   > toho jsme dělali první pokusy s počítáním výsledků. No tak proč něco
+   > takového nepoužít i po výpadcích?"*
+
+   **V repu to po sobě nechalo stopu — ne jako kód, ale jako data.** `data/`
+   obsahuje `2026-fxck-cancer.json`, `2026-poradi-rozhodci.json` a
+   `2026-nanecisto.json`, kde *„jména, kategorie a pořadí v kategoriích jsou ze
+   sešitu rozhodčího"*, a celé bodování je *„ověřeno proti výsledkové listině
+   FxCK Cancer regaty 2026"* (`PLAN.md:174`). Takže ta rekognice proběhla a
+   odvedla práci; zůstala po ní strukturovaná data, ne funkce. *(Tu konverzaci
+   si nepamatuju — vidím jen její výsledek v souborech.)*
+
+   **Nápad je dobrý a tohle je ta správná chvíle na něj**, protože papír z cíle
+   se stejně fotí a fotka v aplikaci už leží. Dva rozdíly proti tehdejšku, které
+   by se neměly přehlédnout:
+
+   - **Tehdy to byla tištěná listina, teď je to ruční zápis na mokrém papíru.**
+     To je jiná úloha: čísla psaná v cíli v chvatu, možná přeškrtaná, možná
+     s šipkami. Spolehlivost bude nižší a u výsledků je chyba drahá.
+   - **Proto to nesmí být import, ale návrh k potvrzení.** A tady je ta hezká
+     část: vzorec na to projekt má hotový. `podleRizika` ukazuje dva seznamy a
+     dvě tlačítka — *Doplnit chybějící* a *Přepsat rozdílná*. Rozpoznaná čísla
+     z fotky jsou přesně takový druhý zdroj jako koncept z telefonu, takže by
+     šla pověsit na tentýž mechanismus, který už zná odpověď na otázku „čemu
+     věřit".
+
+   Pozor na past, kterou tenhle projekt pojmenoval vícekrát: **kontrola, která
+   měří nástroj místo světa.** Kdyby se rozpoznaný zápis zobrazil jako hotový,
+   rozhodčí ho odklepne a nezkontroluje — a chyba OCR se stane výsledkem. Musí
+   se tedy potvrzovat **po řádcích proti fotce**, ne jedním tlačítkem.
+
+   A nemusí to být v API: rozpoznání může zůstat krokem, který udělá člověk
+   s modelem (jako tehdy), a aplikace jen přijme výsledek jako druhý zdroj.
+   To je výrazně levnější než stavět OCR do serveru — a u věci, která se použije
+   několikrát za sezónu, nejspíš i správnější.
+
 **Jak se ti dva spárují — zodpovězeno 27. 10. 2026.** Filip: *„oni se párují
 přes server, oba mají roli pořadatel rozhodčí a více."* Tedy žádné přímé
 spojení mezi telefony; server je prostředník a přístup jim dávají role, které
