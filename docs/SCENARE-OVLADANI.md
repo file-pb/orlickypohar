@@ -317,6 +317,53 @@ doložit:
 kdy se rozdíl popisoval nahlas. Jestli si ho všimne někdo, kdo ji vidí poprvé,
 a jestli mu vadí, by změřilo teprve sezení s čerstvým člověkem.
 
+### Návrh zrušit rozcestník ročníku (27. 10. 2026)
+
+Filip, nad snímkem obrazovky `/sprava/2027`: *„tohle je asi zbytečná obrazovka
+když použijeme tu /serie/2027/zavody/jarni-vitr a při přihlášení tam doplníme
+všechny linky v tomto režimu. Stačí asi hezky ta lišta a je to ne?"*
+
+**Kus pravdy v tom je:** karty regat na rozcestníku vypisují tytéž odkazy, které
+dává lišta `DoSpravy` i řádek v kalendáři — z `polozkyZastavky`, tedy třetí
+opis téhož (viz pozorování výš). Kdyby se zrušily, nic se neztratí.
+
+**Tři věci ale lišta nahradit nemůže**, a jedna z nich ten návrh dnes rovnou
+blokuje:
+
+**(1) Stránka nezveřejněné regaty neexistuje.** `ZavodEndpoints.cs:207–208`
+vydává detail jen při `z.Publikovano && z.Serie.Publikovano`, jinak 404.
+A **publikaci dělá správce**, ne pořadatel. Takže dokud regatu někdo nezveřejní,
+nemá kam lištu pověsit — a to je přesně doba, kdy se na ní nejvíc pracuje:
+vypsání, přihlášky, směrnice, stavba trati. Na snímku je to vidět: *Jarní vítr*
+má štítek **vypsáno**, ostatních sedm **plánováno**. Pro pořadatele plánované
+regaty by cesta do práce nebyla žádná.
+
+**(2) „Co teď" je přehled napříč regatami.** Vydává úkoly, které na stránce
+jedné regaty položit nejde — *„Opravit vrácené výsledky — {regata}"*
+pořadateli, *„Zapsat dojezdy / Chystá se {regata}"*, a rozhodčímu
+*„Ověřit výsledky — {regata}: 3 ze 4 rozjížděk čeká na tvůj podpis."*
+Rozhodčí ročníku má **osm regat** a tohle je jediné místo, které mu řekne,
+u které z nich něco visí. Bez něj by otevíral osm stránek.
+
+A hlavně: **„Co teď" vzniklo jako oprava nálezu.** Předání opraveného zápisu
+zpátky rozhodčímu bylo tiché (viz *Co už víme z auditu kódu*, oprava
+z 8. 10. 2026) a tohle je ta oprava. Zrušit ho znamená vrátit tu tichost.
+
+**(3) Věci celého ročníku nepatří žádné regatě** — kalendář ročníku, oprávnění,
+výsledky za ročník. Na stránce jedné regaty pro ně místo není.
+
+**Čím se Filipův dojem naplní, aniž by se něco ztratilo:** zeštíhlit rozcestník
+na **„Co teď" + Celý ročník** a karty regat z něj vyhodit. Zbude krátká
+stránka, na kterou se chodí jednou za den pro odpověď „kde mě něco čeká",
+a odkazy na jednotlivé regaty se berou z kalendáře nebo z lišty. Tím zmizí
+i ten třetí opis `polozkyZastavky`.
+
+**Zapsáno bez rozhodnutí.** Pokud by se mělo jít cestou „jen lišta", musí
+napřed vzniknout to, co dnes není: **stránka regaty dostupná i nezveřejněná
+tomu, kdo na ni má práva**. Vzorec na to projekt má (mikrocache nekešuje
+požadavek s cookie sezení, takže se lišta nemůže vydat cizímu), ale je to změna
+v API, ne v rozvržení.
+
 ### Zadání na ovládání od startéra
 
 Z téže diskuse, a je to **nejtvrdší ergonomické zadání, jaké projekt zatím
