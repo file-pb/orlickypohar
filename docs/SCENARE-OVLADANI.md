@@ -317,6 +317,36 @@ doložit:
 kdy se rozdíl popisoval nahlas. Jestli si ho všimne někdo, kdo ji vidí poprvé,
 a jestli mu vadí, by změřilo teprve sezení s čerstvým člověkem.
 
+### Stíny v tmavém režimu nejsou vidět (27. 10. 2026)
+
+Filip: *„asi potřebuji stíny i pro dark režim."* Zní to jako poznámka na okraj,
+ale je to doložitelné: **stíny nejsou v tokenech a v tmavém bloku se nepřebíjí
+ani jeden** (`box-shadow` se v `@media (prefers-color-scheme: dark)` nevyskytuje
+vůbec, zatímco `rgb(0 0 0 / …)` je v souboru šestnáctkrát).
+
+Čeho se to týká:
+
+| Prvek | Stín | V tmavém |
+|---|---|---|
+| `.profil .nabidka` — nabídka pod ikonkou účtu | `0 8px 24px rgb(0 0 0 / 0.14)` | **neviditelný** |
+| `.menu .nabidka` | totéž | **neviditelný** |
+| `.paticka-pocasi` — lišta počasí | `0 -4px 16px rgb(0 0 0 / 0.12)` | **neviditelný** |
+
+U lišty počasí je u toho i důvod, proč tam stín je: *„Stín vzhůru, ať je poznat,
+že lišta leží na obsahu, a ne v něm."* Právě to se v tmavém režimu ztratí —
+a ztratí se to i u obou nabídek, které se pak neoddělí od obsahu pod sebou.
+
+**A projekt na to už jednou narazil a vyřešil to ad hoc.** Karta na tabuli má
+`box-shadow: … rgb(0 0 0 / 0.55)` — **čtyřnásobek** proti nabídkám. Tabule je
+přitom vždycky tmavá, takže někdo tu hodnotu musel zvednout, aby byl stín vidět.
+Je to tedy hotový důkaz, že na tmavém pozadí je potřeba jiné číslo; jen zůstal
+u jediného místa a nezobecnil se.
+
+**Zapsáno bez návrhu**, jen s poznámkou, že vzorec na to v projektu je: barvy
+jsou tokeny přebíjené ve dvou tmavých blocích, takže stín by se choval stejně.
+Hodnotu pro tmavý režim bych ale neodhadoval od stolu — na tmavém pozadí
+funguje líp světlý obrys než silnější černá, a to se musí vidět, ne spočítat.
+
 ### Pruh partnerů ve správě (27. 10. 2026)
 
 Filip za Miloše: *„rozhodčí, pořadatel a výše nepotřebuje vidět ten spodní pruh
