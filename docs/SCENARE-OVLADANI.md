@@ -317,6 +317,41 @@ doložit:
 kdy se rozdíl popisoval nahlas. Jestli si ho všimne někdo, kdo ji vidí poprvé,
 a jestli mu vadí, by změřilo teprve sezení s čerstvým člověkem.
 
+### Zadání na ovládání od startéra
+
+Z téže diskuse, a je to **nejtvrdší ergonomické zadání, jaké projekt zatím
+dostal** — protože není formulované přáním, ale podmínkami provozu. Miloš
+o startovní proceduře:
+
+> *„Hele ale já spustím startovní proceduru. Musí to být jednoduše a jedním
+> tlačítkem, mobil mi nesmí usnout a musím na něj dobře vidět. Nemůžu v jedné
+> ruce držet megafon, dalekohled a řídit motorák, koukat kdo je přes čáru a do
+> toho vyplňovat formulář v appce."*
+
+Filip k tomu: *„To byla samozřejmě nadsázka, ale vcelku trefná."* Co z toho
+plyne na ovládání, bez návrhu řešení:
+
+- **Jedna ruka, a ta druhá drží něco jiného.** Nejde o počet klepnutí celkem,
+  ale o počet klepnutí **za jedné ruky a v pohybu na vodě**.
+- **Obrazovka nesmí zhasnout** po dobu procedury. Dnes to neřeší nic — appka
+  je na nahrávání trasy, kde na probuzené obrazovce nezáleží.
+- **Čitelnost na přímém slunci** na vodě, ne v klubovně. Zkouška u stolu tohle
+  nezměří; měřit se to dá jen venku.
+- **Žádné formuláře za jízdy.** Vyplňování patří před proceduru (čas startu
+  z rozpravy) nebo za ni (cíl), ne doprostřed.
+- **Odpočet musí být čitelný na dálku** — Filip: *„veliký odpočet… něco jako
+  count down"*.
+
+Pravidlová část téhož střípku (co se v proceduře děje, jaké jsou lhůty a co
+pravidla říkají o trestech) je v `docs/OPONENTURA-ROZHODCI.md`, nálezy R11
+a R12. **Pozor při zkoušce:** co tam stojí o deseti minutách a o tlačítkách
+s loděmi, se podle pravidel dělí na dvě různé věci s různými lhůtami — scénář
+se podle toho návrhu psát nemá, dokud to není rozhodnuté.
+
+**Pro tohle zkouška u stolu nestačí.** Zbylé skupiny se dají odjet reprodukcí
+nebo v klubovně; tohle ne — měří se jedna ruka, slunce a houpající se motorák.
+Dokud se to nezkusí na vodě, zůstává to zadání, ne ověřená vlastnost.
+
 ## Role, se kterými se zkouší
 
 Role se udělují na `/sprava/{ročník}/opravneni`. Pro zkoušku je potřeba

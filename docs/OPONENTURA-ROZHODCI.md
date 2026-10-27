@@ -188,6 +188,40 @@ schválně na hranici popsané výš: je to požadavek na **strukturu stránky**
 ergonomie — ale **první položka obou seznamů je dokument, který neexistuje**,
 a to už pravidlová věc je.
 
+### Střípek 7 — startovní procedura očima startéra (27. 10. 2026)
+
+Nejobsáhlejší střípek zatím. Přišel ve dvou částech, mezi nimi Filipovo *„zatím
+nereaguj, budu psát dál"*. Odvozený nález je **R12**, a odpověď na Filipův dotaz
+do pravidel je hned za citací.
+
+**První část — jak den běží:**
+
+> On popisoval start rozjížďky: (my v rozpravě na konci setneme kdy asi bude
+> startovní procedura). Také se na rozpravě zkontroluje startovní listina
+> a potvrdí trasy. Pak se všichni odeberou na lodě a vyrazí do oblasti startu.
+> Např 15 minut před startem se telka přepne ze startovní listiny na tracker.
+>
+> Nyní Miloš hovořil ze svého pohledu, ale jak víme, startovat může i jeden
+> z pořadatelů. Mluvil tedy Miloš jako rozhodčí/startér. **Od této chvíle je
+> zdroj pravdy mobilní aplikace startéra.**
+
+**Druhá část — jak má nástroj vypadat.** Filipův návrh a v něm Milošova slova:
+
+> Myslím, že by měl běžet veliký odpočet do termínu dohodnutém na rozpravě, ale
+> to by mělo být něco jako count down, ale proceduru spustí startér. Cituji
+> Miloše: *„Hele ale já spustím startovní proceduru. Musí to být jednoduše
+> a jedním tlačítkem, mobil mi nesmí usnout a musím na něj dobře vidět. Nemůžu
+> v jedné ruce držet megafon, dalekohled a řídit motorák, koukat kdo je přes
+> čáru a do toho vyplňovat formulář v appce."* To byla samozřejmě nadsázka, ale
+> vcelku trefná. Z toho pohledu pojďme zkusit jít trochu Milošovi naproti.
+>
+> Kdykoli uprostřed startovní procedury je možné ji přerušit. Pak je možné
+> zadat nový čas a znovu odpočet. Dále po startu bychom potřebovali 10 minut
+> zobrazovat seznam tlačítek s názvy lodí, aby se mohlo stisknout že mají
+> alternativní trest. A poté, že ho absolvovali? (nevím jak je to správně,
+> koukni do pravidel). Po 10ti minutách se obrazovka přepne na cílovou (to ještě
+> doladíme).
+
 ---
 
 ## Nálezy R — z diskuse s rozhodčím
@@ -781,6 +815,138 @@ ne k řešení. **Pravidlový je jen bod (1)**, a ten už nález má.
 > výsledky a úvodní stránka? Je to tím, že jsi vyjmenovával, co je potřeba
 > **před** závodem?)_
 
+### R11 — Co pravidla říkají o „alternativním trestu" (odpověď na dotaz)
+
+*Původ: střípek 7, přímý dotaz Filipa (*„nevím jak je to správně, koukni do
+pravidel"*). Doloženo: ZPJ 44.1, 44.2, 44.3, 43, 29.1, 30.1, A10,
+`docs/PLAN.md:5469–5472`. Stav: **odpověď, ne nález** — ale mění, co by ta
+tlačítka měla dělat.*
+
+**Krátce: „alternativní trest" není termín ZPJ a ten úkon není rozhodčího.**
+Tři věci, každá jinak, než jak zní návrh.
+
+**(1) Pravidla znají tři tresty a žádný se tak nejmenuje.**
+
+| ZPJ | Trest | Za co |
+|---|---|---|
+| 44.2 | **jednootáčkový** (jeden obrat + jedna halza) | pravidlo 31 — dotek značky |
+| 44.2 | **dvouotáčkový** | pravidla Části 2 — potkávání lodí |
+| 44.3 | **bodový trest** | jen pokud ho stanoví **vypsání nebo směrnice**; loď ho přijme vyvěšením **žluté vlajky** |
+
+„Alternativní trest" je hovorové označení pro otáčky — alternativa
+k diskvalifikaci. V `PLAN.md:5469` ho projekt používá taky, takže si ho
+v mluvě klidně nechte; v kódu a na obrazovce by ale měl stát název z pravidel,
+protože na něm visí, **který** trest to je.
+
+**(2) Trest si loď bere sama. Rozhodčí ho neukládá.** ZPJ 44.1:
+*„Loď, která mohla porušit jedno nebo více pravidel části 2, když závodila,
+**může přijmout** dvouotáčkový trest."* Nikdo jí ho nedává a není co odsouhlasit
+— loď se odpoutá od ostatních, udělá otáčky a tím je věc vyřízená. **Nikde se to
+nehlásí a nikam nezapisuje.** Tlačítko *„má alternativní trest"* by tedy bylo
+úkonem, který v pravidlech nikdo nedělá.
+
+Výjimka je právě **bodový trest** (44.3(b)): ten se hlásit musí — loď má žlutou
+vlajku vyvěšenou **do dokončení** a *„musí na ni upozornit závodní komisi na
+cílové čáře"*, spolu s totožností druhé lodi. To je ovšem zápis **u cíle**, ne
+u startu, a v listině se objeví jako **SCP** (A10). Body: *„20 % z bodového
+hodnocení pro nedokončila, zaokrouhleno na nejbližší desetinu"*, a loď *„nesmí
+být hodnocena hůře, než kdyby nedokončila"*.
+
+**(3) „A poté, že ho absolvovali?" — u otáček se to nepotvrzuje.** Není koho
+informovat a pravidla žádný záznam nežádají. **Ale pohár si zavedl víc:**
+`PLAN.md:5469` mluví o diskvalifikaci za *„nesplnění alternativního trestu nebo
+**splnění bez svědka**"*. To v ZPJ není — je to vlastní pravidlo poháru, a jako
+každé vlastní pravidlo patří do vypsání nebo směrnic (R8). Teprve **s ním**
+dává „absolvoval" smysl: svědek je ten, kdo to odklepne.
+
+**Co startér v prvních minutách po startu doopravdy řeší — a jsou to jiné
+lhůty.** Tady je ta nejpoužitelnější část odpovědi:
+
+| Co | ZPJ | Lhůta |
+|---|---|---|
+| **kdo je přes čáru** → individuální odvolání, vlajka X | 29.1 | X visí **nejdéle 4 minuty** po startovním znamení (nebo do minuty před dalším startem) |
+| s vlajkou I musí loď objet prodloužení čáry, než odstartuje | 30.1 | během té doby |
+| kdo se nevrátil | A10 | **OCS** |
+| otáčky za incident | 44.2 | **kdykoli během rozjížďky**, žádné okno |
+
+**Takže deset minut míchá dvě různé věci.** To, co Miloš po startu sleduje
+(*„koukat kdo je přes čáru"*), je **odvolání**, a jeho pravidlová lhůta jsou
+**čtyři minuty**. Otáčky naproti tomu žádné okno nemají — loď je může vzít
+u poslední bóje. Deset minut by tedy bylo moc na jedno a málo na druhé.
+
+*Mez: tohle je čtení pravidel, ne provozní zkušenost. Jestli se na Orlíku
+otáčky řeší u startu proto, že se tam dějí kontakty, je to legitimní vlastní
+praxe — jen je potřeba vědět, že se tím zapisuje něco jiného než odvolání.*
+
+> **Místo na citát z diskuse:** _(je „svědek" u otáček pravidlo poháru, nebo
+> zvyk? A kdo svědčí — startér, nebo druhá loď?)_
+
+### R12 — Startovní procedura jako nástroj v ruce: co z toho aplikace má
+
+*Původ: střípek 7. Doloženo: `Features/Zavody/ZapisSprava.cs:454–482`,
+`Features/Polohy/PolohySprava.cs:144`, `Features/Okna/OknaEndpoints.cs`,
+ZPJ 26, 27.3, 29.2. Stav: **zapsáno** — navazuje na R4, R5 a K6, které tím
+dostávají tvar.*
+
+Střípek 7 je **odpověď na otázku 1 z návodu** (*„Kde chceš mít odstartování
+rozjížďky? Chceš mít startovní proceduru jako vlastní nástroj?"*) a odpovídá
+i na to, kdo ji drží: **startér**, což může být rozhodčí i pořadatel.
+
+**Nejdůležitější věta celého střípku** je přitom jednořádková poznámka:
+
+> *„Od této chvíle je zdroj pravdy mobilní aplikace startéra."*
+
+To je posun v tom, čím appka je. Dnes je podle návodu (s. 20) *„na nahrávání
+trasy lodi, klíč a upozornění"* — nástroj závodníka. Startovní procedura z ní
+dělá **nástroj pořadatele**, a to na zařízení, které je dnes **jen pro Android**.
+
+**Co z požadavku aplikace má, a co ne:**
+
+| Požadavek ze střípku | Stav |
+|---|---|
+| čas startu dohodnutý na rozpravě („setneme kdy asi bude") | **ne** — `StartV` nejde zapsat dopředu, zápis času rozjížďku rovnou rozjede (K6) |
+| velký odpočet do toho času | **zpola** — tabule odpočítává (`semafor.tsx`), ale z času, který ještě nejde nastavit; v telefonu startéra nic |
+| kontrola startovní listiny na rozpravě | **zpola** — listina je, rozprava je, propojené to není (R6) |
+| potvrzení tras na rozpravě | **ano** — přijetí trati rozhodčím (`TratEndpoints.PrijmiAsync`), a je to jeho výhradní úkon |
+| telka se 15 minut před startem přepne na tracker | **ne** — mapa naskočí až startem, a `Procedura` je natvrdo 5 minut (R4) |
+| proceduru spustí startér jedním tlačítkem | **ne** — procedura neexistuje (R5) |
+| přerušit kdykoli uprostřed | **ne**, a pravidla to dělí na dvě věci — viz níž |
+| zadat nový čas a odpočítávat znovu | **ne** |
+| 10 minut tlačítka s loděmi | **ne** — a mělo by to být jinak, viz R11 |
+| přepnutí na cílovou obrazovku | cílová obrazovka **je** (*„jediné místo aplikace, kde se klepe na čas"*), přepnutí ne |
+
+**Dvě věci, které by návrh měl vědět, než se podle něj něco postaví.**
+
+*Přerušení není jedna věc, ale dvě, a dělí je startovní znamení:*
+
+- **před startem** — odložení (vlajka AP, dvě zvuková znamení) nebo zrušení
+  (N, tři) podle **ZPJ 27.3**, *„z jakékoli příčiny"*. Po odložení se nový čas
+  volí volně, přesně jak Filip píše.
+- **po startu** — **všeobecné odvolání** podle **ZPJ 29.2** (první opakovač,
+  dvě znamení), a tady nový čas volný **není**: *„Vyzývací znamení nového startu
+  odvolané třídy musí být dáno jednu minutu poté, co je první opakovač spuštěn."*
+  Tedy T+1 minuta od spuštění, ne co startér zadá.
+
+Jsou to navíc různé důvody: odložit jde kvůli počasí, odvolat kvůli tomu, že
+lodě nejdou rozpoznat nebo se stala chyba v proceduře. Aplikace by ten rozdíl
+měla znát, protože rozhoduje o tom, co se nabídne.
+
+*A pět minut v pravidle 26 má hvězdičku:* *„nebo tak, jak je stanoveno ve
+vypsání závodu nebo v plachetních směrnicích"*. Délka procedury je tedy
+parametr, ne konstanta — a dnes je zadrátovaná na dvou místech
+(`PolohySprava.Procedura`, a Miloš u mapy řekl 10 minut, Filip 15, viz R4).
+
+**Co z tohohle nálezu je ergonomie a nepatří sem.** Celá Milošova věta o tom,
+jak se to drží v ruce — *jedno tlačítko, mobil nesmí usnout, musí být dobře
+vidět, žádné vyplňování formuláře* — je požadavek na ovládání, ne na pravidla.
+Patří do `docs/SCENARE-OVLADANI.md`; sem zapisuju jen to, že **je to nejtvrdší
+ergonomické zadání, jaké projekt zatím dostal**, protože je formulované
+podmínkami provozu (jedna ruka, slunce, motorák), ne přáním.
+
+> **Místo na citát z diskuse:** _(„setneme kdy asi bude" — je to odhad, nebo
+> závazný čas, od kterého se počítá? A co se stane, když se do něj nestihne
+> vyjet?)_
+
 ---
 
 ## Nálezy K — odvozené z kódu a pravidel
@@ -1131,12 +1297,12 @@ zaškrtne:
 
 | Otázka z návodu (s. 23) | Bod | Odpovězeno? |
 |---|---|---|
-| 1. Kde chceš mít odstartování rozjížďky? | 14 | **ano, zčásti** — procedura podle ZPJ 26 (R5); kdo ji drží, zůstává otevřené |
+| 1. Kde chceš mít odstartování rozjížďky? | 14 | **ano** — procedura podle ZPJ 26 (R5), drží ji **startér** (rozhodčí i pořadatel), zdrojem pravdy je jeho mobil (R12) |
 | 2. Kde a jak chceš revidovat trať? | 5 | ne |
 | 3. Kde chceš mít přehled o lodích za jízdy? | 10 | ne |
 | 4. Co potřebuješ vidět, než uznáš výsledky? | 16 | ne |
 | 5. Kde a jak se má regata uzavřít? | 17 | ne |
-| 6. Jaké má být flow rozpravy? | 8 | **zčásti** — co se rozpravou zapíná (R3, R4, R6); začátek a konec rozpravy pořád ne |
+| 6. Jaké má být flow rozpravy? | 8 | **zčásti** — co se rozpravou zapíná (R3, R4, R6) a že se na ní domlouvá čas startu, kontroluje listina a potvrzují trasy (R12); začátek a konec rozpravy pořád ne |
 
 Tři nálezy navíc (R1, R2, R7/R8) jsou z oblastí, na které se návod neptal
 vůbec — **papíry před závodem**. Návod začíná přihlášením do aplikace, kdežto
