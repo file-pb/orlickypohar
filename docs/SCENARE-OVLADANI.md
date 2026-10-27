@@ -317,6 +317,44 @@ doložit:
 kdy se rozdíl popisoval nahlas. Jestli si ho všimne někdo, kdo ji vidí poprvé,
 a jestli mu vadí, by změřilo teprve sezení s čerstvým člověkem.
 
+### Pruh partnerů ve správě (27. 10. 2026)
+
+Filip za Miloše: *„rozhodčí, pořadatel a výše nepotřebuje vidět ten spodní pruh
+s těmi partnery. Nikde."*
+
+**Proč to nejspíš říká, a je to silnější důvod než estetika:** pruh je **pevný
+u spodku okna** a zabírá `--paticka`, tedy **4,75 rem** (na užším okně 4 rem) —
+zhruba 76 px. Na telefonu na výšku je to přes desetinu obrazovky, trvale,
+a rozhodčí u vody pracuje právě na telefonu. Komentář u komponenty to ostatně
+říká sám: *„Je na očích pořád, proto je nízký."*
+
+**Kde se bere:** `<Partneri />` stojí v **kořenovém layoutu**
+(`web/app/layout.tsx:115`), takže je na každé stránce webu včetně celé správy.
+
+**Vzorec na to existuje a je použitý.** `--paticka` se už jednou přepisuje podle
+kontextu: `body:has(.tabule) { --paticka: calc(3.6 * var(--tv)); }`
+(`globals.css:2746`). Totéž by šlo pro správu — pruh skrýt a `--paticka`
+vynulovat, aby po něm nezbyla díra.
+
+**Jedna vazba navíc, kterou je potřeba ohlídat:** na `--paticka` nesedí jen
+odsazení stránky, ale i **lišta počasí** (`.paticka-pocasi { bottom:
+var(--paticka) }`, `globals.css:2034`) a jeden pevný prvek vpravo dole
+(`bottom: calc(var(--paticka) + 0.75rem)`). Po vynulování oboje sjede k hraně
+okna — správně, ale je to druhý efekt, ne vedlejšák.
+
+**A jedna věc, která není technická.** Loga partnerů bývají závazek, ne
+dekorace; mezi nimi je i ČSJ, se kterým pohár *„komunikuje"*
+(`docs/OPONENTURA-ROZHODCI.md`, střípek 5). Skrytí se týká jen přihlášených
+s rolí — **veřejnost, závodníci i tabule je vidí dál**, takže slib drží. Stojí
+za vyslovení jen proto, aby to bylo rozhodnutí, a ne vedlejší účinek úklidu
+obrazovky.
+
+**Zapsáno bez návrhu**, s jedinou otázkou k rozhodnutí: týká se to **jen
+`/sprava/**`**, nebo i veřejných stránek, když se na ně dívá přihlášený
+pořadatel? Miloš řekl *„nikde"*, což zní na druhou možnost — a ta je širší, než
+na kterou stačí `body:has()`, protože veřejná stránka regaty je tatáž pro
+všechny.
+
 ### Návrh zrušit rozcestník ročníku (27. 10. 2026)
 
 Filip, nad snímkem obrazovky `/sprava/2027`: *„tohle je asi zbytečná obrazovka
