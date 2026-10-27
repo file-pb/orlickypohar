@@ -1400,8 +1400,30 @@ ne dvě.
 
 | Okno | Od | Do |
 |---|---|---|
-| **start** | 5 minut **před procedurou** | „Start vyřízen" |
+| **start** | 5 minut **před procedurou** | „Start vyřízen" **nebo 500 m od startu** |
 | **cíl** | loď vjede do oblasti cíle | 5 minut po projetí |
+
+Tu druhou podmínku u startu doplnil Filip jako pojistku: *„po startu to může být
+ten Start vyřízen a nebo když odjedou 500m od startu, tím to pojistíme."*
+**Dvě nezávislé cesty, a jedna z nich nepotřebuje nikoho** — „Start vyřízen"
+klepne startér, pětistovku si telefon spočítá sám, takže detailní režim skončí
+i tehdy, když se na tlačítko zapomene nebo když telefon zrovna nemá signál. Je
+to tentýž princip jako tvrdý konec okna závodního dne (*„logické pojistky, aby
+nám tam nezůstávaly takové věci"*, Filip 24. 10. 2026).
+
+> ### ⚠︎ Na Orlíku leží cíl na startu — tahle pojistka s tím koliduje
+>
+> Není to teorie, je to změřeno a stojí to v `web/lib/postup-po-trase.ts`:
+> *„cesta po vodě se sama k sobě vrací — u Orlíku dokonce tak, že **cíl leží na
+> startu (změřeno 0 m mezi nimi)** a noha nahoru vede skoro souběžně s nohou
+> zpátky."*
+>
+> Pokud tedy start a cíl splývají, pak **„500 m od startu" a „v oblasti cíle"
+> měří od téhož bodu**, jen opačně. Je-li oblast cíle větší než 500 m, obě
+> podmínky platí naráz a detailní režim se nevypne nikdy; je-li menší, vznikne
+> mezi nimi pásmo, kde neplatí ani jedna. Obě hranice se tedy musí zvolit
+> společně, ne každá zvlášť — a nejspíš se musí vázat na **projetí startovní
+> branky** (to `postup-po-trase` umí), ne na vzdálenost od bodu.
 
 Všimni si, že *„pět minut před procedurou"* plus pětiminutová procedura dává
 **T−10** — tedy přesně to, co Miloš řekl o mapě (*„10 minut před startem zapnem
