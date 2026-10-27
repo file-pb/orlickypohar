@@ -98,14 +98,24 @@ Není to jen URL. Říká to dvě věci:
   neodkazuje; `rules.sailing.cz` má celý text v HTML, tedy odkazovatelný po
   jednotlivých pravidlech (nedoloženo, že má stabilní kotvy — neověřoval jsem).
 
+### Střípek 3 — co je čemu nadřazené (27. 10. 2026)
+
+> Závodní pravidla jachtingu jsou prý nadřazené pravidlům ČSJ (postřeh od
+> rozhodčího).
+
+Krátká věta, ale je to **jediný střípek, který mluví o pramenech práva**, a tím
+o tom, kde v celém projektu smí bydlet vlastní pravidlo Orlického poháru.
+Odvozený nález je R7.
+
 ---
 
 ## Nálezy R — z diskuse s rozhodčím
 
 ### R1 — Vypsání závodu je dokument, a aplikace žádný nezná
 
-*Původ: střípek 1. Doloženo: `Features/Zavody/Kalendar.cs:43`, celý
-`Features/Smernice/`, ZPJ 25.1. Stav: **zapsáno**.*
+*Původ: střípek 1, **potvrzeno střípkem 3**. Doloženo:
+`Features/Zavody/Kalendar.cs:43`, celý `Features/Smernice/`, ZPJ 25.1.
+Stav: **zapsáno, po střípku 3 vyšší priorita**.*
 
 Rozhodčí: *„Vypsání závodu … Forma je dokument."*
 
@@ -138,6 +148,14 @@ v aplikaci neexistuje. Co rozhodčí dnes má:
 
 Má tedy veto, ale ne podpis. Rozdíl není kosmetický: veto se uplatní, jen když
 si rozhodčí všimne, kdežto podpis se musí vyžádat.
+
+**Co k tomu přidal střípek 3.** Vypsání závodu není jen chybějící dokument —
+podle hierarchie pramenů (R7) je to **jediné místo spolu se směrnicemi, kde
+smí být napsané vlastní pravidlo poháru.** Dvacet bodů za diskvalifikaci,
+koeficienty do seriálu, počty škrtů, bonus za 24hodinovku: všechno to jsou
+odchylky od Dodatku A, které v aplikaci dnes žijí jako čísla ve sloupcích
+regaty a jako text v `PLAN.md`. Platit mohou, ale jen když jsou v dokumentu,
+který na to má pravomoc. Ten dokument v aplikaci není.
 
 > **Místo na citát z diskuse:** _(co přesně rozhodčí „uznává" — dokument,
 > termín, nebo obojí? A co se stane, když to neuzná?)_
@@ -345,6 +363,85 @@ Dvě poloviny, a každá je jinde:
 
 > **Místo na citát z diskuse:** _(co se na listině po rozpravě ještě mění —
 > přibyla loď, odhlásila se, změnila třídu? A kdo to klepne?)_
+
+### R7 — Hierarchie pramenů: rozhodčí má pravdu, a plyne z toho, kde smí žít vlastní pravidlo poháru
+
+*Původ: střípek 3. Doloženo: definice **Pravidlo** v ZPJ, ZPJ 88.1 a 88.2,
+Národní předpisy ČSJ k pravidlu 88, `Features/Zavody/Zavod.cs:317`
+(`Ucast`), `docs/PLAN.md:5469–5472`. Stav: **zapsáno**.*
+
+**Potvrzeno, a text to říká doslova.** Definice *Pravidlo* v ZPJ vypisuje
+prameny v pořadí:
+
+> (a) Pravidla v této knize, včetně Definic, Znamení závodu, Úvodu, preambulí
+> a pravidel příslušných dodatků …
+> (b) World Sailing Směrnice, kterým World Sailing určil status pravidla …
+> **(c) předpisy národního svazu**, pokud nejsou změněny vypsáním závodu nebo
+> plachetními směrnicemi v souladu s předpisy národního svazu … podle pravidla
+> 88.2;
+> (d) pravidla tříd; **(e) vypsání závodu; (f) plachetní směrnice;**
+> (g) jakékoli další dokumenty, které řídí závod.
+
+Kniha ZPJ je (a), předpisy ČSJ (c). **Rozhodčí má pravdu** — a je to pořadí
+v textu, ne výklad.
+
+**Jedna nuance navíc, kterou v té větě nejspíš nemá na mysli.** Základní ZPJ
+88.2 dovoluje, aby *„vypsání závodu nebo plachetní směrnice … předpis
+změnily"*. ČSJ si to ale u sebe zakázal:
+
+> *„Nahraď pravidlo ZPJ 88.2 následujícím: Vypsání závodu ani plachetní
+> směrnice nemohou předpis změnit bez předchozího schválení Českým svazem
+> jachtingu."* (Národní předpisy ČSJ, ZPJ 88)
+
+Pro rozhodčího Orlického poháru je tedy vrstva (c) **tvrdá**: směrnicí ji
+obejít nemůže, na rozdíl od toho, co by samotné ZPJ dovolilo. „Nadřazené"
+tu neznamená „můžu je ignorovat" — znamená „ČSJ smí doplňovat jen tam, kde ho
+ZPJ zmocňuje, a to doplnění pak platí napevno".
+
+**Proč je tenhle střípek důležitější, než vypadá.** Teprve hierarchie
+odpovídá na otázku, kterou projekt otevřel už 22. 9. 2026 a nechal viset:
+
+> **Diskvalifikace v regatě 20 bodů** … Miloš k tomu: tresty dávají ZPJ,
+> **body si „nějak vymyslel" a může to být špatně.** Filip: varianty si
+> necháme navrhnout později. Do té doby platí 20.
+> — `docs/PLAN.md:5469`
+
+Dvacet bodů za diskvalifikaci v seriálu je odchylka od ZPJ A5.2 (kde má DSQ
+„přihlášených + 1"). Podle hierarchie **to není automaticky špatně** — pohár
+jako série závodů v rámci ZPJ vůbec nestojí a vlastní bodování seriálu je
+legitimní. Ale smí žít jen v (e) nebo (f): **ve vypsání závodu, nebo
+v plachetních směrnicích.** Nikde jinde.
+
+A tím tenhle střípek **potvrzuje R1 a dává mu novou váhu**: vypsání závodu
+není jen chybějící dokument, je to jediné místo, kde smí být napsané vlastní
+pravidlo poháru. Dnes žije v konstantě `PravidlaBodovani` a v `PLAN.md` —
+tedy ve vrstvě (g) v nejlepším případě, a spíš nikde.
+
+**Druhý dopad: co z předpisů ČSJ aplikace nezná.** Národní předpisy ukládají
+dvě věci, které patří do přihlášky, a `Ucast` o nich neví ani jednu:
+
+| Předpis ČSJ | Co žádá | V aplikaci |
+|---|---|---|
+| preambule k ZPJ Části 6 | čeští závodníci se musí prokázat **platnou závodní licencí ČSJ** | **nic** |
+| ZPJ 65.4(a) (doplněk ČSJ) | **pojištění odpovědnosti**, min. 9 000 000 Kč na zdraví a 2 000 000 Kč na věci | **nic** |
+
+Přihláška (`Ucast`) nese kormidelníka, posádku jako text, kontakt a poznámku.
+Hledání `licenc|pojist` ve zdrojáku a v `PLAN.md` nevrací nic o jachtingu —
+jen softwarové licence a metaforické „pojistky". Rozhodčí přitom podle ZPJ
+76.1 smí přihlášku odmítnout, když nevyhoví požadavkům — ale nemá podle čeho
+kontrolovat.
+
+*U preambule Části 6 stojí za poznámku, že porušení **nemůže být obsahem
+protestu ani žádosti o nápravu** — je to tedy věc kanceláře závodu, ne
+projednávání. Tím spíš patří do přihlášky.*
+
+> **Otázka na rozhodčího — a je to otázka před všemi ostatními:** je Orlický
+> pohár závod **pod ČSJ**? Jede se pod klubem začleněným do svazu (ZPJ 89.1,
+> 75), nebo je to vlastní seriál, kde se ZPJ berou jako konvence, protože jsou
+> dobře napsané? Odpověď rozhoduje, jestli tabulka výš je nález, nebo nic:
+> licence a pojištění jsou povinné jen v prvním případě. **Neodhaduju to** —
+> z kódu se to zjistit nedá a hádat to by bylo přesně to, před čím tenhle
+> dokument v *Mezi poctivosti* varuje.
 
 ---
 
@@ -611,6 +708,8 @@ jestli to rozhodčí dělat musí — to mu ukládají pravidla tak jako tak.
 | 69 | nepřípustné jednání | **ne** (DNE chybí, K1) |
 | 76.1 | odmítnout / zrušit přihlášku, vyloučit závodníka | ano, bez meze 76.1(a) (K4) |
 | 80 | informovat lodě o přeloženém termínu | **ne** (K5) |
+| 88 + předpis ČSJ | závodní licence ČSJ u českých závodníků | **ne** (R7) |
+| 88 + předpis ČSJ | pojištění odpovědnosti 9 mil. / 2 mil. Kč | **ne** (R7) |
 | 90.3(a) | bodovat podle Dodatku A | **ano, a dobře** — A2.1, A5.2, A8.1, A8.2 |
 | 90.3(b) | DNE se nesmí vyškrtnout | **ne** (K1) |
 | 90.3(c) | opravit vlastní chybu v bodování a zveřejnit | ano — revize s důvodem |
@@ -623,9 +722,9 @@ způsoby (`StavRozjizdky.Zrusena` a `StavVysledku.Eliminovano`) a rozdíl mezi
 nimi nikde nevysvětluje. Nezkoumal jsem to — patří to spíš k řezu výsledků.
 
 **Co z toho stojí za vyslovení:** sloupec vpravo je plný „ne", ale skoro
-všechna „ne" visí na **dvou věcech** — startovní proceduře (R5) a protestech
-(K2). Nejsou to dvacet dva chybějících funkcí, jsou to dvě chybějící místa,
-do kterých by se dvacet úkonů zapisovalo.
+všechna „ne" visí na **třech věcech** — startovní proceduře (R5), protestech
+(K2) a vypsání závodu (R1). Nejsou to dvě desítky chybějících funkcí, jsou to
+tři chybějící místa, do kterých by se dvacet úkonů zapisovalo.
 
 A naproti tomu: **bodování je hotové a sedí s pravidly**, včetně nuancí jako
 A8.2 (*„i škrtnuté"*) a A5.2 (*„přihlášené do závodu + 1"*). Je to jediná část
@@ -688,6 +787,10 @@ Plán vznikne až potom.
 **Otevřené otázky na rozhodčího**, které z téhle oponentury vyšly a v návodu
 nejsou (šest otázek z návodu je na s. 23 a ty platí dál):
 
+0. **Je Orlický pohár závod pod ČSJ?** Jede se pod klubem začleněným do svazu,
+   nebo je to vlastní seriál, kde se ZPJ berou jako dobře napsaná konvence?
+   Předchází všem ostatním otázkám: rozhoduje, jestli licence a pojištění
+   v přihlášce chybí, nebo tam nepatří. (R7)
 1. Co přesně na vypsání závodu *uznáváš* — dokument, termín, obojí? A co se
    stane, když ho neuznáš? (R1)
 2. „Zapínali trasování" ve fázi přihlášek — telefony smí nahrávat, nebo se
