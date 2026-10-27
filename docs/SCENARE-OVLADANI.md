@@ -277,6 +277,46 @@ telefon v letovém režimu.
   Tatáž past při F1 na chvíli vypadala jako chybějící oddíl se směrnicí —
   stránka byla z mezipaměti z doby, kdy mock neběžel.
 
+## Co přineslo ukazování rozhodčímu (27. 10. 2026)
+
+Jiný druh vstupu než skupiny výš: **nikdo neodjížděl scénář.** Filip ukazoval
+aplikaci Milošovi (rozhodčí ročníku) a tohle je postřeh, který při tom vznikl
+jemu samotnému — tedy pozorování člověka, který aplikaci zná, ne čerstvého
+účastníka. Co z téže diskuse vyšlo na pravidla, je
+v `docs/OPONENTURA-ROZHODCI.md`; sem patří jen ovládání.
+
+### Pozorování, ze kterých návrh nevznikl
+
+Filip, 27. 10. 2026: *„když jsem Milošovi ukazoval rozdíl mezi správou pod
+přihlášeným uživatelem a detailem regaty, kde se zobrazí lišta pro správu, mi
+přišlo, že by stačilo jedno místo. Nevím."* Doplněno jako **podnět k rozvaze,
+výslovně ne jako pokyn ke změně**, takže návrh tu stát nemá. Co se k tomu dá
+doložit:
+
+- **Vstupy do práce na regatě jsou tři, ne dva.** Rozcestník ročníku
+  (`web/app/sprava/[serie]/page.tsx:166`), řádek regaty v kalendáři
+  (`web/app/sprava/[serie]/kalendar/page.tsx:380`) a lišta `DoSpravy` na
+  veřejné stránce regaty (`web/app/serie/[slug]/zavody/[zavod]/hlava.tsx:111`).
+- **Všechny tři vypisují tentýž seznam** z `polozkyZastavky`
+  (`web/lib/co-smim.ts:267`), takže obsahem se rozejít nemůžou. Komentář
+  v kalendáři říká, proč to tak je: *„dvě ruční kopie se rozešly hned při
+  prvním přírůstku — bóje se přidaly na rozcestník a v kalendáři na ně odkaz
+  nebyl"*.
+- **Každý z těch tří vznikl z jiného nálezu**, dva z nich z téhle zkoušky:
+  rozcestník 6. 10. 2026 (správa neměla žádnou navigaci), odkazy v kalendáři
+  9. 10. 2026 (*„do editace bójí nejde vlézt z kalendáře"*, viz *Co našlo první
+  sezení*), lišta 9. 10. 2026 na vlastní žádost — v `hlavicka.tsx` je u ní
+  citát *„klidně ať do správy mohu ze zastávky, když na to mám práva"*.
+- **Lišta se sama označuje za zkratku, kalendář ne.** `DoSpravy` končí
+  odkazem *„vše k regatě →"* na `/sprava/{ročník}#{regata}` a má dvě podoby
+  podle toho, jestli člověk má práva na tu regatu, nebo jen roli v ročníku.
+  Řádek v kalendáři vypisuje tytéž odkazy bez jakéhokoliv rámce okolo.
+
+**Co se tímhle nezměřilo:** jestli ta tři místa někoho matou. Postřeh je od
+člověka, který aplikaci postavil, a vznikl při vysvětlování — tedy ve chvíli,
+kdy se rozdíl popisoval nahlas. Jestli si ho všimne někdo, kdo ji vidí poprvé,
+a jestli mu vadí, by změřilo teprve sezení s čerstvým člověkem.
+
 ## Role, se kterými se zkouší
 
 Role se udělují na `/sprava/{ročník}/opravneni`. Pro zkoušku je potřeba
