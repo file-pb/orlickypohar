@@ -234,6 +234,23 @@ Vzpomínka na konkrétní situaci, s přímým dotazem do pravidel. Odvozený n�
 je **R13** — a pravidla na to mají **tři různé odpovědi** podle toho, kdo je
 původcem.
 
+### Střípek 14 — velitelský čas: start se jim už jednou pokazil výpadkem (27. 10. 2026)
+
+> Stalo se nám, že při startu z webovými hodinami došlo k přerušení spojení a to
+> pokazilo start a renomé. Takže startovní procedura musí držet čas a kontinuitu
+> tam, kde je fyzicky hlavní startér. Pak při spojení předá data ven a srovná
+> všem hodiny na svůj „Velitelský čas". To samé s Cílem.
+>
+> No a pak nevím proč by Startér s iPhonem by proceduru neměl mít? Startér může
+> být jeden hlavní a druhý slave u druhého bodu startovní čáry a při propojení
+> si mohou srovnat čas a zasahovat do startu a cíle oba. Mechanizmus rozhodování
+> při odlišnostech už jsme řešili. Velitelský čas je ale jeden, je v rukách
+> hlavního startéra a nesmí být závislý.
+
+**Nejcennější střípek zatím** — je to jediná věc v celé diskusi, která se
+**doopravdy stala a něco stála**. Nález **R19**, a je v něm i oprava mého omylu
+o iPhonu.
+
 ### Střípek 13 — pushky na appky posádek musí chodit rychle (27. 10. 2026)
 
 > až budeme řešit pushky na appky posádek, a změny stavů rozjížděk, tak bude
@@ -1488,6 +1505,100 @@ pěti sekundách, vzorec se stahováním pravidel) je hotový.
 > **Místo na citát z diskuse:** _(které změny mají chodit do telefonů — jen
 > odložení a zrušení, nebo i zkrácení trati a změna úseku? A má to chodit všem,
 > nebo jen posádkám té regaty?)_
+
+### R19 — Velitelský čas: start se při výpadku ztratí, dojezdy ne
+
+*Původ: střípek 14. Doloženo:
+`web/app/sprava/[serie]/vysledky/[zavod]/[cislo]/cil/cil.tsx:271–290`,
+`koncept.ts:23–28`, `Features/Zavody/VysledkyEndpoints.cs:211`. Stav:
+**zapsáno — doložená příčina skutečné události**.*
+
+Filip: *„Stalo se nám, že při startu z webovými hodinami došlo k přerušení
+spojení a to pokazilo start a renomé."*
+
+**Příčina je v kódu a dá se ukázat na třech řádcích.** Čas se bere **lokálně**,
+to je v pořádku:
+
+```tsx
+const v = kdy ?? new Date().toISOString();
+```
+
+Ale když odeslání selže, **klepnutí se zahodí**:
+
+```tsx
+} catch {
+  setStart(puvodni);          // ← stav se vrátí, jako by se neklepalo
+  setKonec(puvodniKonec);
+  setChyba("Start se nepodařilo uložit. Zkus to znovu.");
+}
+```
+
+A *„zkus to znovu"* je u startu rada, která nejde splnit: **ten okamžik už
+uplynul** a druhé klepnutí zapíše pozdější čas.
+
+**Nejhorší na tom je, že projekt tenhle problém jinde vyřešil — a start z toho
+vypadl.** Rozdělaný zápis z cíle přežívá v úložišti prohlížeče
+(`koncept.ts`, *„u zápisu z vody často jediná kopie klepnutí, která neprošla na
+server"*). Jenže koncept nese jen tohle:
+
+```ts
+export type Koncept = {
+  otisk: string;
+  kdy: number;
+  dojeti: DojezdKonceptu[];
+  kody: Record<number, string>;
+};
+```
+
+**Žádný `start`.** Dojezdy tedy výpadek přežijí a start ne — ačkoliv je to
+jediné klepnutí dne, které se nedá zopakovat. A `DEN-ZAVODU.md` k tomu radí
+*„kartu nezavírat a neobnovovat"*, což startéra po neúspěšném startu nechá
+stát nad obrazovkou, která tvrdí, že se nejede.
+
+**Co z požadavku plyne, a co už pro něj stojí.**
+
+Filipův *velitelský čas* je **jeden autoritativní čas, držený lokálně
+a nezávislý na spojení**, který se po připojení rozešle ven a srovná ostatní.
+Z toho, co aplikace má:
+
+| Díl | Stav |
+|---|---|
+| čas z klienta, ne ze serveru | **je** — `odstartuj` posílá vlastní ISO čas a server ho přebírá (`vstup?.StartV ?? cas.GetUtcNow()`) |
+| přežití výpadku v prohlížeči | **je, ale jen pro dojezdy** — `koncept.ts`; start do něj patří taky |
+| displej, který nezhasne | **je** — `useDisplejSviti` |
+| porovnání dvou zápisů při rozporu | **je** — `podleRizika` a dvě tlačítka *Doplnit chybějící* / *Přepsat rozdílná* |
+| opakované odeslání, až se signál vrátí | **je** — `setInterval(zkus, 30_000)` a událost `online` |
+| jeden autoritativní čas mezi dvěma startéry | **není** |
+
+Takže **pět ze šesti dílů existuje** a čtyři z nich přímo na cílové obrazovce.
+Chybí dvě věci: dát start do konceptu, a pojmenovat, čí hodiny platí.
+
+**Hlavní a „slave" startér.** Filip: *„Startér může být jeden hlavní a druhý
+slave u druhého bodu startovní čáry… Velitelský čas je ale jeden, je v rukách
+hlavního startéra a nesmí být závislý."* Mechanismus pro rozpor dvou zapisovatelů
+projekt má (scénář C7 v `docs/SCENARE-OVLADANI.md`, snímek na zapisovatele
+a porovnání) — jenže ten řeší **dva rovnocenné zápisy**, kdežto tady je jeden
+nadřízený. To je jiné pravidlo: ne „ukaž rozdíl a nech vybrat", ale „platí čas
+hlavního".
+
+> ### ✗ Moje poznámka o iPhonu byla chyba v uvažování — opraveno
+>
+> Napsal jsem, že *„startér s iPhonem by proceduru neměl"*, protože appka je jen
+> pro Android. **Filip se právem ptá, proč by ji mít neměl** — a odpověď je, že
+> měl. Chyba byla moje: z jeho slov *„mobilní aplikace startéra"* jsem usoudil
+> na **nativní appku**, ačkoliv všechno, co dnes rozhodčí dělá, běží **ve webu
+> v telefonu** — správa, cíl i trať (návod s. 20). Cílová obrazovka tam už dnes
+> drží displej rozsvícený i rozdělaný zápis v prohlížeči, tedy přesně to, co
+> procedura potřebuje. **Na iPhonu to poběží stejně jako na Androidu.**
+>
+> Jediné, co z té poznámky zbývá, je drobnost k ověření: Wake Lock API má Safari
+> na iOS až od novějších verzí, takže na starém iPhonu může displej zhasnout.
+> Neověřoval jsem od které — a na rozdíl od appky je to vlastnost zařízení, ne
+> překážka v návrhu.
+
+> **Místo na citát z diskuse:** _(jak se poznalo, že je start pokažený — všiml
+> si toho startér hned, nebo se to zjistilo až u výsledků? A co se s tím pak
+> udělalo?)_
 
 ### R13 — Vytlačená loď a rozjížďka zrušená pro bezpečnost: tři různé cesty, aplikace nezná ani jednu
 
