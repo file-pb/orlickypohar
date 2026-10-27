@@ -853,11 +853,21 @@ hodnocení pro nedokončila, zaokrouhleno na nejbližší desetinu"*, a loď *�
 být hodnocena hůře, než kdyby nedokončila"*.
 
 **(3) „A poté, že ho absolvovali?" — u otáček se to nepotvrzuje.** Není koho
-informovat a pravidla žádný záznam nežádají. **Ale pohár si zavedl víc:**
-`PLAN.md:5469` mluví o diskvalifikaci za *„nesplnění alternativního trestu nebo
-**splnění bez svědka**"*. To v ZPJ není — je to vlastní pravidlo poháru, a jako
-každé vlastní pravidlo patří do vypsání nebo směrnic (R8). Teprve **s ním**
-dává „absolvoval" smysl: svědek je ten, kdo to odklepne.
+informovat a pravidla žádný záznam nežádají.
+
+Napřed jsem k tomu napsal, že pohár si zavedl víc, protože `PLAN.md:5469` mluví
+o diskvalifikaci za *„nesplnění alternativního trestu nebo **splnění bez
+svědka**"* — a domyslel jsem si, že svědek je ten, kdo to odklepne. **Filip to
+vyvrátil (27. 10. 2026):**
+
+> *„Svědek je pouze druhá loď, nebo rozhodčí. Je to pouze o důvěře
+> a džentlmanství, nikdo to nemusí potvrzovat."*
+
+**Tím padá i poslední cesta k tomu tlačítku.** Svědek není úkon, je to
+společenská norma — a norma se do aplikace nezapisuje. Ani v pravidlech, ani ve
+vlastní praxi poháru tedy **není nic, co by se u otáček klepalo**. Zůstává
+jediné: zapsat výsledek, když trest splněn nebyl (DSQ podle pohárového pravidla,
+`PLAN.md:5469`), a to je úkon **po rozjížďce**, ne za jízdy.
 
 **Co startér v prvních minutách po startu doopravdy řeší — a jsou to jiné
 lhůty.** Tady je ta nejpoužitelnější část odpovědi:
@@ -1347,3 +1357,19 @@ nejsou (šest otázek z návodu je na s. 23 a ty platí dál):
 9. **Co znamená „pro přihlášené" — loď v regatě, nebo účet na webu?** Nejsou to
    totéž a liší se v obou směrech. Bez téhle odpovědi se ta stránka postavit
    nedá. (R10) ***Nová po střípku 6.***
+10. **Co si startér po startu potřebuje pamatovat a jak dlouho?** Položená
+    Milošovi 27. 10. 2026 v tomhle znění, schválně bez zmínky o aplikaci:
+
+    > K té obrazovce po startu — abychom ji postavili dobře, potřebujeme vědět,
+    > co se ti v těch minutách po výstřelu honí hlavou.
+    >
+    > Zkus popsat jednu situaci: **někdo je přes čáru.** Co uděláš a co si u toho
+    > potřebuješ pamatovat, než je to vyřízené? Kdy ti ta loď z hlavy spadne?
+    >
+    > A druhá věc: **otáčky.** Když někdo zatočí, potřebuješ si to někam
+    > poznamenat, nebo to jde úplně mimo tebe a vyřídí si to lodě mezi sebou?
+
+    Ptá se na práci, ne na nastavení, protože „jak dlouho má obrazovka svítit"
+    je z odpovědi odvoditelné, kdežto obráceně to nejde. A rozpojuje ty dvě věci
+    zvlášť, aniž by Milošovi říkala, že se liší — to on ví líp. (R11, R12)
+    ***Nová po střípku 7.***
