@@ -24,6 +24,8 @@ export type DruhUdalosti =
   | "ceka"
   | "lod"
   | "zrusena"
+  /** Hotová rozjížďka, kterou správce právě pustil ven (26. 10. 2026). */
+  | "venku"
   /** Prohození v čele, hlásí ho tracker (24. 10. 2026). */
   | "souboj";
 
@@ -38,6 +40,40 @@ export type Udalost = {
 };
 
 /**
+ * Do kdy je dojezd novinka.
+ *
+ * <b>Karta „V cíli" je o tom, co se právě stalo</b>, ne o tom, že se řádek
+ * objevil. Veřejně jdou čísla ven buď průběžně (regata se zapnutým
+ * *procesním dějem*), nebo až publikací — a při publikaci se objeví celá
+ * sada naráz. Dokud se karta vázala na řádek, vyjela při publikaci karta
+ * za každou loď, čtyři a půl vteřiny na kartu: u dvanácti lodí skoro
+ * minuta převalujícího se závodu, který dojel před hodinou (změřeno
+ * 26. 10. 2026).
+ *
+ * Devadesát vteřin je se slušnou rezervou víc, než kolik trvá cesta
+ * z cíle na obrazovku: zápis se ukládá po každém klepnutí a tabule se ptá
+ * po pěti vteřinách.
+ */
+export const CERSTVY_DOJEZD_S = 90;
+
+/**
+ * Kdy loď protla cíl, v milisekundách — nebo `null`, když se to z dat
+ * nedá říct. <b>Nedosazuje se pravděpodobná hodnota</b>: loď bez času
+ * (dopsaná z papíru, kód místo pořadí) se bere jako stará, ne jako
+ * čerstvá.
+ */
+function vCili(startV: string | null, cas: number | null): number | null {
+  if (!startV || cas === null) return null;
+  const start = Date.parse(startV);
+  return Number.isFinite(start) ? start + cas * 1000 : null;
+}
+
+/** „dvě lodě", „pět lodí" — do věty pod nadpisem. */
+function lodi(kolik: number): string {
+  return `${kolik} ${kolik < 5 ? "lodě" : "lodí"}`;
+}
+
+/**
  * Porovná dva snímky. <b>Bez předchozího snímku nevrací nic</b>: první
  * načtení není změna, a kdo přijde k televizi v půlce závodu, nemá dostat
  * salvu alertů o všem, co se stalo před ním.
@@ -46,6 +82,9 @@ export function udalosti(stary: Snimek | null, novy: Snimek): Udalost[] {
   if (!stary) return [];
 
   const ven: Udalost[] = [];
+  // Čas snímku, ne hodiny prohlížeče: televize v hospodě může jít jinak
+  // a stáří dojezdu se počítá proti tomu, co řekl server.
+  const ted = Date.parse(novy.kdy);
 
   /**
    * <b>Nová zpráva na vývěsce vyjede jako velká karta</b> a teprve pak
@@ -152,11 +191,27 @@ export function udalosti(stary: Snimek | null, novy: Snimek): Udalost[] {
       });
 
     // Dojezdy: lodě, které v předchozím snímku ještě neměly místo.
+    //
+    // <b>Dvě různé události, ne jedna.</b> Loď, která právě projela cílem,
+    // je novinka a patří jí karta. Řádek, který se objevil proto, že
+    // správce pustil ven hotovou rozjížďku, novinka není — novinka je, že
+    // jsou výsledky venku, a to se dá říct jednou větou místo dvanácti
+    // kartami.
     const meloMisto = new Set(
       (pred?.poradi ?? []).filter((x) => x.misto !== null).map((x) => x.lod),
     );
+    let zDavky = 0;
     for (const x of r.poradi) {
       if (x.misto === null || meloMisto.has(x.lod)) continue;
+
+      const kdy = vCili(r.startV, x.cas);
+      const cerstvy =
+        kdy !== null && Number.isFinite(ted) && ted - kdy <= CERSTVY_DOJEZD_S * 1000;
+      if (!cerstvy) {
+        zDavky += 1;
+        continue;
+      }
+
       ven.push({
         klic: `dojezd-${r.cislo}-${x.lod}`,
         druh: "dojezd",
@@ -164,6 +219,16 @@ export function udalosti(stary: Snimek | null, novy: Snimek): Udalost[] {
         detail: `${r.cislo}. rozjížďka · ${x.kategorie}${x.kod ? ` · ${x.kod}` : ""}`,
       });
     }
+
+    // Jedna loď dopsaná dodatečně kartu nedostane: je to oprava zápisu,
+    // ne zpráva pro hospodu. Od dvou výš je to sada, která šla ven.
+    if (zDavky >= 2)
+      ven.push({
+        klic: `venku-${r.cislo}-${zDavky}`,
+        druh: "venku",
+        titulek: `${r.cislo}. rozjížďka je venku`,
+        detail: `${lodi(zDavky)} v cíli`,
+      });
   }
 
   return ven;

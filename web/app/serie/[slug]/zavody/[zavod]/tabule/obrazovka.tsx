@@ -809,6 +809,7 @@ const NADPISKY: Record<Udalost["druh"], string> = {
   dojezd: "V cíli",
   souboj: "Na vodě",
   dokonceno: "Rozjížďka",
+  venku: "Výsledky",
   zrusena: "Zrušeno",
   zavod: "Regata",
   trat: "Trať",

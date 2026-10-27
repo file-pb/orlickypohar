@@ -3018,7 +3018,7 @@ body:has(.tabule) {
 /* Rámeček je teď celý, proužek u horní hrany odešel s ním. */
 .tabule-alert { color: var(--voda); }
 .tabule-alert.start, .tabule-alert.trat, .tabule-alert.dokonceno,
-.tabule-alert.zavod { color: var(--stav-vypsany); }
+.tabule-alert.venku, .tabule-alert.zavod { color: var(--stav-vypsany); }
 .tabule-alert.ceka, .tabule-alert.zrusena { color: var(--stav-zruseny); }
 /* Zpráva z vývěsky: oznámení bez barvy, výstraha červeně. Je to táž
    karta jako u startu a dojezdu — vyjede, chvíli visí a usadí se do
@@ -3043,7 +3043,8 @@ body:has(.tabule) {
 .tabule-alert.dojezd { border-color: var(--voda); }
 .tabule-alert.souboj { border-color: var(--stav-vypsany); color: var(--stav-vypsany); }
 .tabule-alert.start { border-color: var(--stav-vypsany); }
-.tabule-alert.dokonceno, .tabule-alert.zavod { border-color: var(--stav-vypsany); }
+.tabule-alert.dokonceno, .tabule-alert.venku,
+.tabule-alert.zavod { border-color: var(--stav-vypsany); }
 /* Trať: schválení je povolení vyjet, přestavba je „počkej". Obojí nese
    tentýž druh, barvu rozlišuje až stav — zeleně se jede, červeně se stojí. */
 .tabule-alert.trat { border-color: var(--stav-vypsany); }
@@ -3084,7 +3085,8 @@ body:has(.tabule) {
 .tabule-alert.start, .tabule-alert.trat, .tabule-alert.ceka {
   animation-name: tabule-alert-vpravo-nahoru;
 }
-.tabule-alert.dokonceno, .tabule-alert.zrusena, .tabule-alert.lod {
+.tabule-alert.dokonceno, .tabule-alert.venku,
+.tabule-alert.zrusena, .tabule-alert.lod {
   animation-name: tabule-alert-vlevo;
 }
 .tabule-alert.zavod { animation-name: tabule-alert-nahoru; }

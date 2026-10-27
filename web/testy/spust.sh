@@ -18,3 +18,7 @@ node --experimental-strip-types ./rezie.test.ts
 echo
 echo "== Postup po trati =="
 node --experimental-strip-types ./postup.test.ts
+
+echo
+echo "== Události tabule =="
+node --experimental-strip-types ./udalosti.test.ts

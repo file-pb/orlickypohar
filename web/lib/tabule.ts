@@ -41,7 +41,21 @@ export type Snimek = {
     stavVysledku: ZavodDetail["rozjizdky"][number]["stavVysledku"] | null;
     startV: string | null;
     doSerie: boolean;
-    poradi: { lod: string; kategorie: string; misto: number | null; kod: string | null }[];
+    poradi: {
+      lod: string;
+      kategorie: string;
+      misto: number | null;
+      kod: string | null;
+      /**
+       * Kolik vteřin po startu loď protla cíl. <b>Kvůli tomu, aby se
+       * poznal čerstvý dojezd od starého</b> — tabule hlásí „V cíli" jen
+       * o tom, co se právě stalo, ne o řádku, který se objevil tím, že
+       * správce pustil hotovou rozjížďku ven (`lib/tabule-udalosti.ts`).
+       * `null` u lodi, které se čas nezapsal (dopsaná z papíru, kód místo
+       * pořadí) — pravděpodobná hodnota se nedosazuje.
+       */
+      cas: number | null;
+    }[];
   }[];
   lode: {
     lod: string;
@@ -186,6 +200,7 @@ export function snimekZavodu(
           kategorie: v.kategorie,
           misto: v.poradiVCili ?? null,
           kod: v.kod ?? null,
+          cas: v.casSekundy ?? null,
         })),
     })),
     lode: detail.lode.map((u) => ({

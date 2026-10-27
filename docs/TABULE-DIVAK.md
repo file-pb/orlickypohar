@@ -147,6 +147,9 @@ strom), takže v historii stojí pod jejím popisem, ne pod tímhle auditem.
 
 ## Otevřené — o těchhle rozhodne Filip
 
+**Nález 8 je od 27. 10. 2026 přeškrtnutý**, ale zůstává tady: kód je
+opravený, poslední rozhodnutí v něm ale není technické.
+
 ### 6. Startovní listina nemá výškový rozpočet a lodě z ní tiše padají
 **Kdy to divák vidí:** před startem, tedy když se u tabule stojí nejvíc.
 
@@ -191,34 +194,63 @@ Divákova nejčastější otázka („kdy se zase pojede?") tím zůstává bez
 odpovědi. Chybí buď pole *plánovaný start* u rozjížďky, nebo to, aby
 `start` s budoucím časem nechal rozjížďku plánovanou až do něj.
 
-### 8. V cíli se za celý závod neobjeví nic, a při publikaci všechno naráz
-**Kdy to divák vidí:** na každé regatě, která nemá zapnutý *procesní děj* —
-a to je výchozí stav.
+### 8. ~~V cíli se za celý závod neobjeví nic, a při publikaci všechno naráz~~
+**Opraveno 27. 10. 2026 — zčásti. Druhá půlka je rozhodnutí pořadatele,
+ne kód**, viz konec nálezu.
 
 Veřejný výdej pouští čísla jen z **publikovaných** rozjížděk, nebo ze všech
-u regaty s procesním dějem (`ZavodEndpoints.PohledAsync`: `v.Rozjizdka
-.Publikovano || (zavod.ProcesniDej && …)`; mock stejně, `venku()`). Dokud
-správce nepublikuje:
+u regaty s *procesním dějem* (`ZavodEndpoints.PohledAsync`: `v.Rozjizdka
+.Publikovano || (zavod.ProcesniDej && …)`; mock stejně, `venku()`).
+Karta „V cíli" se přitom vázala na **řádek, který v minulém snímku
+nebyl** — a to je v datech totéž, ať loď právě projela cílem, nebo se
+jen objevila celá hotová sada.
 
-- zapsané dojezdy **nejsou ve snímku**, takže se kvůli nim nespustí žádná
-  karta. Pětivteřinová obnova, kterou tabule kvůli kartám po dojezdu
-  dostala (20. 10. 2026), se nemá o co opřít;
-- v okamžiku publikace vyjede **karta za každou loď**, 4,5 s na kartu —
-  u dvanácti lodí ~54 vteřin, během kterých se přes pořadí převaluje závod,
-  který dojel před hodinou.
+*Změřeno před opravou:* zápis dvanácti dojezdů do nepublikované rozjížďky →
+snímek nese `vysledky: []`, žádná karta. Po `publikace: true` odečet DOM
+zachytil `V CÍLI 1. MAMBA` → … → `10. MICINY` v pravidelném rytmu, salva
+běžela **přes padesát vteřin** — a opakovala se při každém dalším
+publikování, tedy i po stažení čísel na opravu.
 
-*Změřeno:* zápis dvanácti dojezdů do nepublikované rozjížďky → snímek nese
-`vysledky: []`, žádná karta. Po `publikace: true` odečet DOM zachytil
-`V CÍLI 1. MAMBA` → … → `10. MICINY` v pravidelném rytmu, salva běžela přes
-padesát vteřin. **Totéž se opakuje při každém dalším publikování** —
-stažení čísel na opravu a jejich nové vypuštění přehraje celý cíl znovu.
+**Rozhodnutí: karta je o tom, co se právě stalo, ne o tom, že se objevil
+řádek.** Dojezd a publikace jsou dvě různé zprávy a tabule je od sebe
+odděluje:
 
-K rozhodnutí jsou tři věci, a jsou oddělitelné:
-1. má tabule ukazovat dojezdy živě? (= doporučit pořadatelům *procesní děj*,
-   nebo ho pro tabuli zapnout vždycky);
-2. má se salva při publikaci slučovat do jedné karty („1. rozjížďka je
-   venku · 12 lodí")?
-3. má se dojezd starší než pár minut hlásit vůbec?
+| Co se stalo | Co divák uvidí |
+|---|---|
+| loď projela cílem a zápis ji poslal ven | karta `V cíli · 3. SOCKA` |
+| hotová rozjížďka šla ven (dvě lodě a víc najednou) | **jedna** karta `Výsledky · 1. rozjížďka je venku · 12 lodí v cíli` |
+| jedna loď dopsaná dodatečně | nic — je to oprava zápisu, ne zpráva do hospody |
+| táž sada znovu (opakovaná publikace, obnovení stránky) | nic |
+
+Čerstvost se počítá z **času dojezdu**, ne z toho, kdy řádek dorazil:
+`startV + casSekundy` proti času snímku, okno **90 vteřin**
+(`CERSTVY_DOJEZD_S` v `lib/tabule-udalosti.ts`). Zápis se ukládá po každém
+klepnutí a tabule se ptá po pěti vteřinách, takže devadesát je rezerva
+s velkým náskokem. Loď **bez zapsaného času** (dopsaná z papíru, kód místo
+pořadí) se bere jako stará — pravděpodobná hodnota se nedosazuje.
+
+Kvůli tomu nese snímek u každého řádku pořadí i `cas` (`lib/tabule.ts`);
+API ho vydávalo odjakživa (`VysledekDto.casSekundy`), jen se zahazoval.
+
+*Ověřeno po opravě, obě cesty:*
+- rozjížďka odjetá před dvaceti minutami, publikace při otevřené tabuli →
+  **jedna karta** `VÝSLEDKY | 1. rozjížďka je venku | 12 lodí v cíli`;
+- regata se zapnutým procesním dějem, tři dojezdy zapsané po osmi
+  vteřinách → `V CÍLI | 1. LUNA`, `2. SOCKA`, `3. JOY`, každá do dvou
+  vteřin od zápisu.
+
+Na pravidlo jsou testy (`web/testy/udalosti.test.ts`, osm případů) —
+rozdíl mezi čerstvým dojezdem a sadou se v prohlížeči hledá špatně.
+
+**Co zůstává, a není to kód:** jestli se dojezdy objeví živě, rozhoduje
+přepínač *procesní děj* u regaty. Výchozí je vypnutý schválně — publikace
+je rozhodnutí správce a bez toho přepínače by nepodepsané pořadí viselo
+i na veřejné stránce regaty, ne jen na tabuli. **Tabule ho neobchází
+a obcházet nemá.** Pro regatu, u které tabule visí v hospodě, je tedy
+doporučení jednoduché: *procesní děj zapnout*, jinak se v cíli celý den
+nic nestane a přijde jen jedna karta na konci. Jestli to má být
+doporučení v nápovědě, výchozí hodnota pro nové regaty, nebo se to má
+nechat na pořadateli, je na Filipovi.
 
 ### 9. Skrytý ročník: odjetá regata vypadá jako regata před rozpravou
 Když ročník nevydává výsledky (`VysledkyZavoduVerejne = false`), API vrací
