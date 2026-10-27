@@ -1392,6 +1392,59 @@ užitečně: **nemusí se obnovovat všechno pořád** — stačí, aby cíl a o
 byly čerstvé, a zbytek dne snese minutu. Je to jedno rozhodnutí pro oba směry,
 ne dvě.
 
+**Kdy přesně má být detailní režim (Filip, 27. 10. 2026):**
+
+> *„jakmile bude 5 minut do startovní procedury a „Start vyřízen" tak je potřeba
+> být v detailním režimu. Jakmile se loď dostane do oblasti cíle tak také. Po
+> projetí cíle je potřeba např 5 minut a pak to může čekat na další periodu."*
+
+| Okno | Od | Do |
+|---|---|---|
+| **start** | 5 minut **před procedurou** | „Start vyřízen" |
+| **cíl** | loď vjede do oblasti cíle | 5 minut po projetí |
+
+Všimni si, že *„pět minut před procedurou"* plus pětiminutová procedura dává
+**T−10** — tedy přesně to, co Miloš řekl o mapě (*„10 minut před startem zapnem
+mapu"*, R4). Dvě různé věty o dvou různých věcech vyšly na totéž číslo, což je
+slušná kontrola, že to číslo sedí.
+
+**A okno cíle je per loď, ne per regatu.** To je podstatný rozdíl: u startu jede
+celé pole naráz, u cíle dojíždí každý jindy — vedoucí loď může být v cíli, když
+poslední teprve obrací.
+
+**Čím se pozná „oblast cíle" — a tady Filip dodal to podstatné:**
+
+> *„no i loď ví kde je cíl"*
+
+To obrací celý návrh a zlevňuje ho. **Detailní režim nemusí nikdo řídit
+centrálně**: telefon zná svou polohu i trať, takže si sám spočítá, že se blíží
+k cíli, a sám začne posílat častěji. Vzorec *„telefon si stáhne pravidla a řídí
+se jimi sám"* projekt už má — přesně tak fungují okna závodních dnů
+(`OknaEndpoints.ProTelefonAsync`: *„Telefon si je stáhne dopředu a řídí se jimi
+i bez signálu; změna od pořadatele se projeví, až signál chytí."*).
+
+**Kde je úzké hrdlo, a není tam, kde by se čekalo.** Změřeno v appce:
+
+| Co | Jak často | Proč |
+|---|---|---|
+| **zápis polohy do telefonu** | `INTERVAL_MS` = **5 s** | *„Zápis do telefonu je zadarmo (GPS stejně běží)"* |
+| **odeslání z telefonu** | `ZIVE_MS` = **60 s** | *„rádio žere víc než zápis"* |
+| výdej poloh ze serveru | bez cache | — |
+| obnova tabule | 5 s | — |
+| odeslání upozornění ven | takt 60 s | viz výš |
+
+**Telefon tedy má data už dnes po pěti sekundách a jen je nedoručuje.** Detailní
+režim u cíle tedy neznamená měřit častěji, ale **poslat dřív, co už leží
+v telefonu** — a to je rozdíl v ceně i v baterii. Ať se server a tabule zrychlí
+jakkoliv, bez téhle změny dorazí poloha lodi u cíle až za minutu.
+
+**Co k tomu v appce chybí: trať.** Endpoint `/serie/{serie}/zavody/{zavod}/trat`
+i typ `VerejnaTratDto` jsou v `app/src/lib/schema.d.ts`, takže **appka trať
+stáhnout umí** — jen to zatím nedělá; v `app/src/lib/tracker/` o trati není nic.
+Bez ní telefon neví, kde cíl je, a Filipova věta platí jako potenciál, ne jako
+fakt. Je to ale jediný chybějící díl: zbytek (vlastní poloha, lokální data po
+pěti sekundách, vzorec se stahováním pravidel) je hotový.
+
 > **Místo na citát z diskuse:** _(které změny mají chodit do telefonů — jen
 > odložení a zrušení, nebo i zkrácení trati a změna úseku? A má to chodit všem,
 > nebo jen posádkám té regaty?)_
