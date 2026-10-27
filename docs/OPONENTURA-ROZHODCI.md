@@ -341,6 +341,31 @@ Dva chybějící díly ze šesti; zbylé čtyři na cílové obrazovce už jsou:
    „jsem hlavní startér téhle regaty" se chová jako okna závodních dnů: stáhne
    se u mola, platí celý den, výpadek s ním nehne. Rozbor je u R19.
 
+4. **Převzetí velení musí jít.** *(Filip, 27. 10. 2026: „a spadnutí do vody je
+   jasné a musí být řešitelné, je to docela možné".)* Tedy ne otevřená otázka,
+   ale požadavek.
+
+   **Co ho komplikuje** — a je to dobré vědět předem: *„oba by to měli
+   akceptovat"* znamená, že se slave hlavním **udělat sám nesmí**. Jenže
+   potvrdit to má ten, kdo je ve vodě. Z toho plynou tři cesty a každá má svou
+   daň:
+
+   - **převede to server** — jenže to jde jen při signálu, a výpadek signálu
+     u funkčního telefonu vypadá stejně jako telefon ve vodě. Hrozí dva hlavní,
+     tedy přesně to, co se zakázalo;
+   - **převede to třetí strana** (rozhodčí ročníku nebo správce na břehu) —
+     neptá se telefonů na nic a má přehled; za cenu toho, že u vody musí být
+     někdo třetí dostupný;
+   - **časová pojistka** — kdo se neozval X minut, přestává být hlavní. Vzorec
+     na to projekt má (tvrdý konec okna, stáří hlášení, `2 * ZIVE_MS`), ale
+     u startu je to nejriskantnější: hlavní může stát na startovní lodi
+     s funkčním telefonem a jen bez signálu.
+
+   **Ať se zvolí cokoliv, po převzetí musí zůstat doklad, kdo a kdy velení
+   převzal.** To projekt už umí a dělá to na správném místě — změna nastavení
+   trackeru po rozpravě vyžaduje důvod, protože *„je to doklad pro spor"*. Start
+   je spornější než viditelnost poloh.
+
 **Jak se ti dva spárují — zodpovězeno 27. 10. 2026.** Filip: *„oni se párují
 přes server, oba mají roli pořadatel rozhodčí a více."* Tedy žádné přímé
 spojení mezi telefony; server je prostředník a přístup jim dávají role, které
@@ -469,10 +494,11 @@ Proti tomu *„rozhodnout se na signálu"* ve smyslu „až v okamžiku startu" 
 znamenalo, že výpadek sebere startéru právo odstartovat. To by bylo horší než
 dnešní stav, kde se ztratí jen zápis.
 
-*Otevřené zůstává jediné: co když hlavnímu spadne telefon do vody. Z „oba by to
-měli akceptovat" plyne, že se slave hlavním sám neudělá — ale pak se ten den
-nedostartuje. Jestli má existovat převzetí velení, a čím se potvrzuje, Filip
-neřekl a neodhaduju to.*
+**Telefon ve vodě — zodpovězeno 27. 10. 2026.** Filip: *„a spadnutí do vody je
+jasné a musí být řešitelné, je to docela možné."* Takže převzetí velení **musí
+existovat**; jak se potvrzuje, je v bodu 4 oddílu *Co je potvrzené k dodělání*,
+i s tím, proč to není triviální — výpadek signálu u funkčního telefonu vypadá
+zvenčí stejně jako telefon na dně.
 
 ---
 
