@@ -337,8 +337,22 @@ vůbec neotevřeli a bude se k nim chtít vrátit:
 | **aktuálnost** | nic — a není to totéž co stáří: stará poloha pořád platí, neaktuální ne |
 | **validita** | nic; nejblíž je k ní šrafa u nezveřejněné regaty, ale ta je o něčem jiném |
 | **dikce** | nic v grafice, ale **v datech už je**: vývěska regaty rozlišuje *oznámení · změna programu · výstraha* a vizuálně se to neprojevuje |
+| **průběh a výsledek** (*„že něco probíhá a jak to dopadlo"*) | **na tabuli ano, ve správě ne** — viz níž |
 
-**Ta poslední řádka je nejlevnější z celé tabulky.** Druh zprávy se u vývěsky
+**Poslední řádku Filip doplnil jako devátou** a je jediná, kde projekt kus
+práce už odvedl — jen na jednom místě. Na tabuli ji nesou **dva kanály
+najednou**: panýlek rozjížďky *„svítí výplní, ne jen barvou číslice — odjetá
+vedle něj je jen obtažená"* (tedy **výplň = probíhá**), a k tomu semafor, kde
+`sviti-ceka` je žlutá a `sviti-jede` zelená, obojí se září. „Jak to dopadlo"
+pak nese barva: zrušená rozjížďka si drží přeškrtnuté číslo, *„ať je po ní
+stopa"*.
+
+Ve správě z toho není nic. `StavRozjizdky` má *plánovaná · probíhá · dokončená
+· zrušená*, ale v seznamu rozjížděk se to pozná jen ze štítku — tedy čtením.
+**Je to tedy devátá osa, která má hotový vzor uvnitř projektu a stačí ho
+přenést**, na rozdíl od priority nebo aktuálnosti, kde se začíná od nuly.
+
+**Nejlevnější z celé tabulky je ale dikce.** Druh zprávy se u vývěsky
 zadává a ukládá, takže rozdíl mezi klidným oznámením a výstrahou už v datech
 leží — jen se nikde neukazuje. Sdělení *„start se odkládá o tři čtvrtě hodiny"*
 a *„čeká se, až přejde bouřka"* dnes vypadají na tabuli stejně.
