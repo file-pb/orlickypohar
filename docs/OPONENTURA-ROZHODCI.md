@@ -107,6 +107,16 @@ Krátká věta, ale je to **jediný střípek, který mluví o pramenech práva*
 o tom, kde v celém projektu smí bydlet vlastní pravidlo Orlického poháru.
 Odvozený nález je R7.
 
+### Střípek 4 — pohár není oficiální závod ČSJ (27. 10. 2026)
+
+> Není to ofiko závod ČSJ. Miloš říká: *„není zahrnut do ČTL."* Ale máme úzkou
+> spolupráci s ČSJ.
+
+Odpověď na otázku, kterou otevřel střípek 3. **Část nálezu R7 tím padá a jiná
+část naopak zesiluje** — a hlavně z toho vyšel nález R8, který je po R1
+nejpraktičtější věc v celém dokumentu. Jak se se střípkem naloženo, je u obou
+nálezů.
+
 ---
 
 ## Nálezy R — z diskuse s rozhodčím
@@ -149,13 +159,16 @@ v aplikaci neexistuje. Co rozhodčí dnes má:
 Má tedy veto, ale ne podpis. Rozdíl není kosmetický: veto se uplatní, jen když
 si rozhodčí všimne, kdežto podpis se musí vyžádat.
 
-**Co k tomu přidal střípek 3.** Vypsání závodu není jen chybějící dokument —
-podle hierarchie pramenů (R7) je to **jediné místo spolu se směrnicemi, kde
-smí být napsané vlastní pravidlo poháru.** Dvacet bodů za diskvalifikaci,
-koeficienty do seriálu, počty škrtů, bonus za 24hodinovku: všechno to jsou
-odchylky od Dodatku A, které v aplikaci dnes žijí jako čísla ve sloupcích
-regaty a jako text v `PLAN.md`. Platit mohou, ale jen když jsou v dokumentu,
-který na to má pravomoc. Ten dokument v aplikaci není.
+**Co k tomu přidaly střípky 3 a 4.** Vypsání závodu není jen chybějící
+dokument — podle hierarchie pramenů (R7) je to **jediné místo spolu se
+směrnicemi, kde smí být napsané vlastní pravidlo poháru.** Dvacet bodů za
+diskvalifikaci, koeficienty do seriálu, počty škrtů, bonus za 24hodinovku:
+všechno to jsou odchylky od Dodatku A, které v aplikaci dnes žijí jako čísla
+ve sloupcích regaty a jako text v `PLAN.md`.
+
+A protože pohár **není oficiální závod ČSJ** (střípek 4), nestojí na vypsání
+jen odchylky — stojí na něm i to, že ZPJ vůbec platí. **Osnova toho dokumentu
+a co z ní aplikace má, je v R8.**
 
 > **Místo na citát z diskuse:** _(co přesně rozhodčí „uznává" — dokument,
 > termín, nebo obojí? A co se stane, když to neuzná?)_
@@ -417,8 +430,27 @@ není jen chybějící dokument, je to jediné místo, kde smí být napsané vl
 pravidlo poháru. Dnes žije v konstantě `PravidlaBodovani` a v `PLAN.md` —
 tedy ve vrstvě (g) v nejlepším případě, a spíš nikde.
 
-**Druhý dopad: co z předpisů ČSJ aplikace nezná.** Národní předpisy ukládají
-dvě věci, které patří do přihlášky, a `Ucast` o nich neví ani jednu:
+**Druhý dopad: co z předpisů ČSJ aplikace nezná.**
+
+> ### ⚠︎ Tahle část nálezu byla střípkem 4 zpochybněna — text zůstává schválně
+>
+> Pohár **není oficiální závod ČSJ** („není zahrnut do ČTL"), takže povinnost
+> licence a pojištění z národních předpisů nejspíš neplatí a tabulka níž
+> nejspíš není nález.
+>
+> **Nejspíš.** Neškrtám ji, protože „není v ČTL" tu povinnost nevyvrací:
+> **ČTL je termínová listina, ne členství.** Co rozhoduje, je ZPJ 88.1 —
+> *„Předpisy, které platí pro závod, jsou předpisy národního svazu, kterého je
+> **pořadatel** členem podle pravidla 89.1."* Pokud pohár pořádá klub, který
+> v ČSJ je (89.1(c)), nebo subjekt ve spojení s členským klubem (89.1(g)),
+> předpisy ČSJ platí **bez ohledu na to, že závod v ČTL není**. Zápis v ČTL a
+> členství pořadatele jsou dvě různé věci a střípek 4 odpovídá jen na tu první.
+>
+> Otázka 0 se tím tedy nezodpověděla, jen zpřesnila — viz její nové znění na
+> konci dokumentu. A *„úzká spolupráce s ČSJ"* ji nerozsoudí ani jedním směrem.
+
+Národní předpisy ukládají dvě věci, které patří do přihlášky, a `Ucast` o nich
+neví ani jednu:
 
 | Předpis ČSJ | Co žádá | V aplikaci |
 |---|---|---|
@@ -435,13 +467,81 @@ kontrolovat.
 protestu ani žádosti o nápravu** — je to tedy věc kanceláře závodu, ne
 projednávání. Tím spíš patří do přihlášky.*
 
-> **Otázka na rozhodčího — a je to otázka před všemi ostatními:** je Orlický
-> pohár závod **pod ČSJ**? Jede se pod klubem začleněným do svazu (ZPJ 89.1,
-> 75), nebo je to vlastní seriál, kde se ZPJ berou jako konvence, protože jsou
-> dobře napsané? Odpověď rozhoduje, jestli tabulka výš je nález, nebo nic:
-> licence a pojištění jsou povinné jen v prvním případě. **Neodhaduju to** —
-> z kódu se to zjistit nedá a hádat to by bylo přesně to, před čím tenhle
-> dokument v *Mezi poctivosti* varuje.
+### R8 — Když pohár není pod svazem, drží celou stavbu vypsání závodu — a to chybí
+
+*Původ: střípek 4, navazuje na R7. Doloženo: ZPJ 4.1(a), 89.2(a), **Dodatek
+J1**, `Features/Zavody/Zavod.cs:219–309` (`Zavod`), `Features/Bodovani/
+PravidlaBodovani.cs`, `docs/PLAN.md:5455–5478`. Stav: **zapsáno, nejvyšší
+praktická priorita**.*
+
+Střípek 4 obrátil východisko. Dosud jsem počítal s tím, že ZPJ platí a pohár se
+od nich ve vypsání odchyluje. **Je to naopak:** pohár není oficiální závod ČSJ,
+takže ZPJ neplatí z titulu členství — platí jen proto, že si je závod vezme.
+Pravidlo 4.1(a) to říká podmínkou:
+
+> *„Každý závodník a majitel lodě tím, že se účastní … závodu, **který se řídí
+> podle těchto pravidel**, souhlasí s přijetím těchto pravidel."*
+
+A kde se to „řídí podle těchto pravidel" prohlašuje, určuje ZPJ 89.2(a) spolu
+s Dodatkem J1 — **vypsání závodu**, a je to jeho **první povinná položka hned
+po jménu a datu**:
+
+> **J1.1(2)** *„že závod bude řízen podle pravidel, jak je definováno
+> v Závodních pravidlech jachtingu"*
+
+**Tím se celý řez obrací a zjednodušuje.** Aplikace nebodovala „podle závazných
+pravidel, od kterých se někde odchyluje". Bodovala podle pravidel, která
+rozhodčí v září potvrdil ústně a která **nemají v žádném dokumentu oporu** —
+protože dokument, do kterého patří, v aplikaci není (R1).
+
+Dobrá zpráva v tom je, že **20 bodů za diskvalifikaci není chyba.** Pohár si
+vlastní bodování zvolit smí a J1.3(5) pro to má vlastní řádek
+(*„bodovací systém, je-li odlišný od systému v Dodatku A … uvedený v celém
+znění"*). Jen to musí být napsané tam, a ne v konstantě.
+
+**Co J1 žádá × co aplikace má.** Tahle tabulka je podle mě nejpoužitelnější
+věc, co z celé oponentury vyšla — je to vlastně **rovnou osnova toho
+chybějícího dokumentu**, a víc než půlka jeho obsahu už v databázi leží:
+
+| J1 | Co musí být ve vypsání | Má to aplikace? |
+|---|---|---|
+| 1.1(1) | název, místo, datum, jméno pořadatele | **ano** — `Zavod.Nazev`, `Datum`, `DatumKonce`, `Poradatel` |
+| 1.1(2) | **že se závod řídí podle ZPJ** | **ne** — a je to ta věta, kvůli které pravidla vůbec platí |
+| 1.1(3) | seznam dalších dokumentů, které závod řídí, a kde je vzít | **ne** |
+| 1.1(4) | závodící třídy, handicap, podmínky a omezení přihlášení | **zpola** — kategorie ano (do 7 m / nad 7 m / Race), podmínky ne |
+| 1.1(5) | postupy a časy přihlášení, **poplatky, termín uzávěrky** | **ne** — `Zavod` nemá uzávěrku ani výši startovného; `Ucast` má jen `Zaplaceno` a `StartovnePoznamka`, tedy evidenci platby, ne její předpis |
+| 1.1(6) | **časy vyzývacích znamení** první a dalších rozjížděk | **ne** (K6) — a všimni si, že J1 chce čas **vyzývacího znamení**, tedy T−5, ne čas startu |
+| 1.3(4) | obecný popis dráhy nebo typů drah | **zpola** — trať se staví až v den závodu, dopředu o ní není nic |
+| 1.3(5) | **bodovací systém, je-li odlišný od Dodatku A** | **ne** — žije v `PocetSkrtu`, `KoeficientDoSerie`, `PosunDoSerie`, `Vyhodnoceni` a v konstantě `PravidlaBodovani` |
+| 1.3(7) | čas, po kterém se poslední den už nestartuje | **ne** |
+| 1.2(6) | že platí 90.3(e), a případná změna lhůty 24 hodin | **ne** |
+| 1.3(8) | odepření práva na odvolání podle 70.3 | **ne**, a viz pozn. |
+
+*Pozn. k 1.3(8) a odvolání:* napřed jsem sem napsal, že odvolání k národnímu
+svazu (ZPJ 70, Dodatek R) nemá u poháru kam jít. **Pravidlo 70.1 to takhle
+neříká** — zní *„Strana projednávání má právo odvolat se k národnímu svazu"*
+a případy nepřípustnosti v 70.3 na tenhle nemíří. Ta úvaha stojí až na řetězu
+88.1 → 89.1: svaz, ke kterému se odvolává, je svaz pořadatele, takže
+**visí na téže nezodpovězené otázce 0 jako licence**. Pro nález K2 z toho dnes
+neplyne nic.
+
+**Dvě věci z toho plynou pro aplikaci, a ani jedna není „postavit editor".**
+
+1. **Vypsání nemusí být psané od nuly.** Osm z jedenácti řádků výš jsou údaje,
+   které už v databázi leží nebo by do `Zavod` přibyly jako dvě tři kolonky
+   (uzávěrka, startovné, čas vyzývacího znamení). Dokument se z nich dá
+   **vygenerovat** — a to je přesně to, co rozhodčí chce od směrnic opačným
+   směrem (R2: *„pokud bychom měli editor směrnic, tak bychom mohli urychlit
+   předem i vydání samotného dokumentu"*).
+2. **Bodovací pravidla poháru se mají tisknout z týchž čísel, podle kterých se
+   počítá.** Dnes jsou v `Zavod` a v `PravidlaBodovani`, a text o nich je
+   v `PLAN.md`. Kdyby se vypsání generovalo z nich, nemohlo by se s výpočtem
+   rozejít — což je jediná vada, která by se u takového dokumentu opravdu
+   stala.
+
+> **Místo na citát z diskuse:** _(vydáváš dnes vypsání poháru jako jeden
+> dokument na ročník, nebo zvlášť na každou regatu? A co v něm o bodování
+> stojí?)_
 
 ---
 
@@ -685,6 +785,13 @@ ne z oka.
 Přehled pro schůzku. **Sloupec „má to místo"** mluví o aplikaci, ne o tom,
 jestli to rozhodčí dělat musí — to mu ukládají pravidla tak jako tak.
 
+**Rámec po střípku 4:** pohár není oficiální závod ČSJ, takže ZPJ pro něj
+nejsou závazné zvenčí — platí jen tak, jak si je vezme vypsání závodu (R8).
+Sloupec „má to místo" proto nečti jako *„tohle aplikace porušuje"*, ale jako
+*„tohle by rozhodčí v aplikaci neměl kam zapsat, kdyby to pohár přijal"*.
+Výjimka je spodek tabulky: bodování podle Dodatku A pohár **přijaté má** —
+potvrdil to rozhodčí 22. 9. 2026 a podle něj se počítá.
+
 | ZPJ | Úkon závodní / protestní komise | Má to v aplikaci místo? |
 |---|---|---|
 | 25.1 | vypsání závodu dostupné před přihlášením | **ne** (R1) |
@@ -708,8 +815,9 @@ jestli to rozhodčí dělat musí — to mu ukládají pravidla tak jako tak.
 | 69 | nepřípustné jednání | **ne** (DNE chybí, K1) |
 | 76.1 | odmítnout / zrušit přihlášku, vyloučit závodníka | ano, bez meze 76.1(a) (K4) |
 | 80 | informovat lodě o přeloženém termínu | **ne** (K5) |
-| 88 + předpis ČSJ | závodní licence ČSJ u českých závodníků | **ne** (R7) |
-| 88 + předpis ČSJ | pojištění odpovědnosti 9 mil. / 2 mil. Kč | **ne** (R7) |
+| 89.2 + J1 | **vypsání závodu** se vším, co J1 žádá | **ne** (R8) |
+| 88 + předpis ČSJ | závodní licence ČSJ u českých závodníků | **ne**, ale nejspíš se poháru netýká (R7) |
+| 88 + předpis ČSJ | pojištění odpovědnosti 9 mil. / 2 mil. Kč | **ne**, totéž (R7) |
 | 90.3(a) | bodovat podle Dodatku A | **ano, a dobře** — A2.1, A5.2, A8.1, A8.2 |
 | 90.3(b) | DNE se nesmí vyškrtnout | **ne** (K1) |
 | 90.3(c) | opravit vlastní chybu v bodování a zveřejnit | ano — revize s důvodem |
@@ -775,6 +883,27 @@ schůzka konala.
 zasadí jako nový střípek a nálezy, které potvrdí nebo vyvrátí, se tady označí.
 Plán vznikne až potom.
 
+**Střípky chodí postupně, jak Miloš prochází návodem** (Filip, 27. 10. 2026:
+*„budeme doplňovat další, jak tím Miloš projde postupně"*). Má v ruce
+`NAVOD-ROZHODCI.pdf`, takže budou **vázané na jeho body** — a návod má
+vlastní číslování, kterého se vyplatí držet. Kde se dá, je u střípku napsané,
+kterému bodu návodu odpovídá; otázka z návodu, na kterou odpověděl, se u něj
+zaškrtne:
+
+| Otázka z návodu (s. 23) | Bod | Odpovězeno? |
+|---|---|---|
+| 1. Kde chceš mít odstartování rozjížďky? | 14 | **ano, zčásti** — procedura podle ZPJ 26 (R5); kdo ji drží, zůstává otevřené |
+| 2. Kde a jak chceš revidovat trať? | 5 | ne |
+| 3. Kde chceš mít přehled o lodích za jízdy? | 10 | ne |
+| 4. Co potřebuješ vidět, než uznáš výsledky? | 16 | ne |
+| 5. Kde a jak se má regata uzavřít? | 17 | ne |
+| 6. Jaké má být flow rozpravy? | 8 | **zčásti** — co se rozpravou zapíná (R3, R4, R6); začátek a konec rozpravy pořád ne |
+
+Tři nálezy navíc (R1, R2, R7/R8) jsou z oblastí, na které se návod neptal
+vůbec — **papíry před závodem**. Návod začíná přihlášením do aplikace, kdežto
+rozhodčí začal vypsáním závodu. To samo o sobě stojí za poznámku: **řetěz
+rozhodčího začíná dřív, než kam dosáhne aplikace.**
+
 **Jak se střípek zasazuje:**
 
 1. Doslovný zápis do oddílu *Střípky z diskuse*, s datem. Nepřepisovat.
@@ -787,10 +916,11 @@ Plán vznikne až potom.
 **Otevřené otázky na rozhodčího**, které z téhle oponentury vyšly a v návodu
 nejsou (šest otázek z návodu je na s. 23 a ty platí dál):
 
-0. **Je Orlický pohár závod pod ČSJ?** Jede se pod klubem začleněným do svazu,
-   nebo je to vlastní seriál, kde se ZPJ berou jako dobře napsaná konvence?
-   Předchází všem ostatním otázkám: rozhoduje, jestli licence a pojištění
-   v přihlášce chybí, nebo tam nepatří. (R7)
+0. **Kdo je pořadatel poháru podle ZPJ 89.1 — je to klub, který je členem
+   ČSJ?** *(Zpřesněno po střípku 4: že závod není v ČTL, už víme, a na tuhle
+   otázku to neodpovídá. Platnost předpisů ČSJ se podle ZPJ 88.1 řídí
+   **členstvím pořadatele**, ne zápisem závodu v termínové listině. Rozhoduje
+   to, jestli licence a pojištění v přihlášce chybí, nebo tam nepatří.)* (R7)
 1. Co přesně na vypsání závodu *uznáváš* — dokument, termín, obojí? A co se
    stane, když ho neuznáš? (R1)
 2. „Zapínali trasování" ve fázi přihlášek — telefony smí nahrávat, nebo se
