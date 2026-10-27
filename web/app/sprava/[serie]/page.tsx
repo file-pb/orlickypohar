@@ -1,6 +1,6 @@
 import Link from "@/app/sprava/odkaz";
 import { Drobecky, drobeckySpravy } from "@/app/drobecky";
-import { Stav } from "@/app/stav";
+import { StavVRamu, tridaRamu } from "@/app/stav";
 import { Vypadek } from "@/app/vypadek";
 import { datum } from "@/app/datum";
 import { nactiJa } from "@/lib/ja";
@@ -147,10 +147,15 @@ export default async function RozcestnikRocniku({
                  ona, takže na ni míří drobeček regaty i „zpátky na regatu"
                  z bójí a směrnic (`drobekRegaty`). */
               <li key={z.zavod} id={z.zavod}>
-                <div className="karta">
+                <div className={`karta ${tridaRamu(z.stav)}`}>
+                  {/* <b>Stav nese rámeček celé karty</b> (Filip, 27. 10.
+                      2026), ne štítek vedle názvu. Štítek se musí přečíst;
+                      barevný rámeček se vidí, a v řádku s názvem tím zbylo
+                      místo na to, co se čte doopravdy — kolik zápisů čeká
+                      na opravu. */}
+                  <StavVRamu stav={z.stav} />
                   <div className="nazev">
                     {z.nazev}
-                    <Stav stav={z.stav} />
                     {z.kRevizi.length > 0 && (
                       <span className="stitek vysledek-krevizi">
                         {z.kRevizi.length}× k revizi

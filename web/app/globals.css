@@ -10,6 +10,26 @@
      (dá se hlásit), plánovaná tlumená (jen termín), zrušená červená. */
   --stav-vypsany: #1c7d4d;
   --stav-zruseny: #a8433a;
+  /* <b>Oranžová „právě teď"</b>. Není v původní trojici stavů, ale projekt
+     ji už používá na třech místech natvrdo: panýlek `jede se` na tabuli,
+     změna programu na vývěsce a stárnoucí poloha v náčrtu. Všechny tři
+     znamenají totéž — něco se zrovna děje, podívej se. Tady dostává jméno,
+     aby dikce zpráv ve správě nezavedla čtvrtou odrudu oranžové. */
+  --pozor: #e8900c;
+  /* Proužek šrafy u nezveřejněné karty. <b>Vlastní token, ne `--zvyrazneni`</b>:
+     s ním byla šrafa v tmavém režimu prakticky neviditelná (`#232830` na
+     `#1b1f23`), takže kanál, který měl nést publikaci, nenesl nic. Obě
+     hodnoty jsou vybrané pohledem na čtyři síly vedle sebe, ne spočítané
+     — tichá, ale čitelná. */
+  --srafa: #e6e2da;
+  /* <b>Oranžová jako písmo, ne jako plocha.</b> `--pozor` je laděná na
+     výplň a drobné písmo v ní je na bílé sotva čitelné; tohle je tatáž
+     barva stažená do čitelna. V tmavém režimu se rozcházet nemusí —
+     tam je `--pozor` světlejší než podklad a čte se sama. */
+  --pozor-pismo: #a05d00;
+  /* Text na oranžové výplni. Tmavý v obou režimech, protože výplň je
+     světlá vždycky — oranžová nese význam plochou, ne barvou písmen. */
+  --na-pozoru: #16233a;
   /* Šířka obsahu. Roste ve dvou krocích, ne plynule — mezikroky by na
      každém displeji vypadaly trochu jinak a nikde dobře. */
   --sirka: 62rem;
@@ -44,6 +64,11 @@
     --zvyrazneni: #232830;
     --stav-vypsany: #58c98c;
     --stav-zruseny: #e2726a;
+    /* Na tmavém podkladu světlejší, stejně jako ostatní stavy. Je to týž
+       jantar, jakým na tabuli svítí semafor. */
+    --pozor: #e8a33d;
+    --srafa: #343b43;
+    --pozor-pismo: var(--pozor);
   }
 }
 :root[data-rezim="tmavy"] {
@@ -57,6 +82,64 @@
   --zvyrazneni: #232830;
   --stav-vypsany: #58c98c;
   --stav-zruseny: #e2726a;
+  --pozor: #e8a33d;
+  --srafa: #343b43;
+  --pozor-pismo: var(--pozor);
+}
+
+/**
+ * <b>Stíny jsou tokeny a v tmavém režimu se obracejí</b> (Filip, 27. 10.
+ * 2026: *„asi potřebuji stíny i pro dark režim"* a *„obrys asi není
+ * problém, spíš ten stín na dark asi nebude moc být tmavý ale bílý"*).
+ *
+ * Předtím stál `box-shadow` v souboru šestnáctkrát s černou natvrdo
+ * a v žádném tmavém bloku se nepřebíjel, takže v tmavém režimu nebyl
+ * vidět stín ani u jedné rozbalovací nabídky, ani u lišty počasí.
+ *
+ * <b>Je v tom obrácená logika, ne jiné číslo.</b> Ve světlém režimu prvek
+ * vrhá stín, protože zaclání světlo; na tmavém podkladu naopak vyzařuje,
+ * protože co je výš, zachytí víc světla. Černá rozmazaná vrstva tam proto
+ * nemá co dělat — nepřidá nic.
+ *
+ * <b>Co se tím nemění:</b> stíny panelů, které leží na mapě (`.karusel`,
+ * `.nacrt-karta`, panýlky rozjížděk) zůstávají černé. Tam má stín kam
+ * dopadnout — na snímek nádrže, ne na plochou barvu stránky — a právě to
+ * je důvod, proč u nich nikdo nikdy nic nehlásil.
+ */
+:root {
+  /* Síla bílého rozptylu na tmavém podkladu. Jedno číslo na všech místech:
+     Filip ji schválil mezi variantami 3 (0.06) a 4 (0.13) z ukázky
+     (27. 10. 2026), takže je to jedno rozhodnutí, ne tři. Čtyři pokusy
+     o jediný stín stály na tom, že se počítal; tenhle je viděný. */
+  --sila-vyzareni: 0.09;
+  /* Nabídka visící pod ikonkou účtu a pod kebabem. */
+  --stin-nabidky: 0 8px 24px rgb(0 0 0 / 0.14);
+  /* Lišta počasí u spodku okna. Stín vzhůru, ať je poznat, že lišta leží
+     na obsahu, a ne v něm. */
+  --stin-listy: 0 -4px 16px rgb(0 0 0 / 0.12);
+  /* Třetí stín, `--stin-karty-tabule`, stojí u `--tv` v oddílu tabule —
+     je v něm a tady by se nevyhodnotil. */
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-rezim="svetly"]) {
+    /* Obrys odděluje, rozptyl zvedá. U nabídky obrys nahrazuje její vlastní
+       okraj (viz pravidlo u `.nabidka` níž), jinak by se s ním slil
+       a nebylo by ho poznat. */
+    --stin-nabidky: 0 0 0 1px rgb(255 255 255 / 0.30),
+      0 8px 24px rgb(255 255 255 / var(--sila-vyzareni));
+    /* Lišta počasí má obrys taky, a ze stejného důvodu: samotný rozptyl
+       se na jejím úzkém pruhu ztratil a nebylo poznat, že lišta leží na
+       obsahu — kvůli čemuž ten stín vůbec existuje. Svůj `border-top`
+       proto v tmavém režimu zhasíná, viz pravidlo u `.paticka-pocasi`. */
+    --stin-listy: 0 0 0 1px rgb(255 255 255 / 0.30),
+      0 -4px 16px rgb(255 255 255 / var(--sila-vyzareni));
+  }
+}
+:root[data-rezim="tmavy"] {
+  --stin-nabidky: 0 0 0 1px rgb(255 255 255 / 0.30),
+    0 8px 24px rgb(255 255 255 / var(--sila-vyzareni));
+  --stin-listy: 0 0 0 1px rgb(255 255 255 / 0.30),
+    0 -4px 16px rgb(255 255 255 / var(--sila-vyzareni));
 }
 
 * { box-sizing: border-box; }
@@ -472,6 +555,119 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 
 .karta.zrusena { background: transparent; }
 .karta.zrusena .detail { color: var(--tlumeny); }
+
+/* ---------------------------------------------------------------------
+   Stav v rámečku karty (Filip, 27. 10. 2026).
+
+   <b>Barva jde do okraje a popis se posadí do jeho horní hrany.</b> Štítek
+   vedle názvu se musí přečíst; rámeček se vidí. Barvy jsou tytéž, co nesou
+   štítky stavů i stavy trati, schválně — jinak by se dvě obrazovky o témž
+   stavu rozcházely.
+
+   <b>Popis zůstává textem</b> a není to zdvojení: rozdíl „tlumená versus
+   základní barva textu" (plánováno versus potvrzeno) je jemný i pro zdravé
+   oko, barvoslepost se týká osmi procent mužů a rozhodčí tyhle obrazovky
+   čte na telefonu u vody. Pravidlo z té série: každá informace dvěma
+   kanály, a aspoň jeden musí přežít ostré světlo.
+   --------------------------------------------------------------------- */
+/* Dvě třídy, aby to přebilo `.karta:hover` — ten je taky na dvou a stál by
+   v souboru dřív. */
+.karta.ram-stavu { position: relative; border-color: var(--barva-stavu); }
+.karta.ram-stavu .stav-v-ramu {
+  position: absolute; top: 0; left: 1rem; transform: translateY(-50%);
+  /* Zákrys v rámečku: popis má mít za sebou barvu karty, ať vypadá jako
+     vyříznutý z linky, ne jako nalepený na ni. */
+  background: var(--papir); padding: 0 0.4rem;
+  font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--barva-stavu);
+}
+/* Zrušená karta má pozadí průhledné (viz výš), takže popis potřebuje barvu
+   stránky, jinak by přes něj prosvítala linka rámečku. */
+.karta.ram-stavu.zrusena .stav-v-ramu { background: var(--pozadi); }
+.karta.ram-stavu.stav-planovany { --barva-stavu: var(--tlumeny); }
+/* Potvrzený termín je jistota, ale ne pozvánka — proto barva textu, ne
+   zelená vypsaného závodu. Táž úvaha jako u štítku. */
+.karta.ram-stavu.stav-potvrzeny { --barva-stavu: var(--text); }
+.karta.ram-stavu.stav-vypsany { --barva-stavu: var(--stav-vypsany); }
+.karta.ram-stavu.stav-odjety { --barva-stavu: var(--voda); }
+.karta.ram-stavu.stav-zruseny { --barva-stavu: var(--stav-zruseny); }
+
+/* <b>Publikace je druhá osa, ne další barva.</b> Stav a zveřejnění jsou
+   nezávislé: hotová vypsaná regata může a nemusí být venku. Kdyby
+   zveřejnění dostalo barvu, přebilo by se se stavem — šrafa žádnou nemá,
+   takže se vedle něj vejde. Druhý kanál k ní je štítek „nezveřejněno",
+   který u karty zůstává. */
+.karta.karta-neverejna {
+  background-image: repeating-linear-gradient(
+    135deg, transparent 0 7px, var(--srafa) 7px 14px);
+}
+
+/* ---------------------------------------------------------------------
+   Stav rozjížďky na číslici ve správě — vzor přenesený z tabule
+   (27. 10. 2026, devátá osa: „že něco probíhá a jak to dopadlo").
+
+   Tabule to umí dvěma kanály: panýlek „svítí výplní, ne jen barvou
+   číslice — odjetá vedle něj je jen obtažená". Ve správě se stav rozjížďky
+   nekreslil vůbec; seznam mlčel i o tom, že se zrovna jedna jede.
+   --------------------------------------------------------------------- */
+.rozjizdka-stav { --barva-stavu: var(--tlumeny); }
+.rozjizdka-dokoncena { --barva-stavu: var(--stav-vypsany); }
+.rozjizdka-probiha { --barva-stavu: var(--pozor); }
+.rozjizdka-zrusena { --barva-stavu: var(--stav-zruseny); }
+.rozjizdka-stav .panylek-stavu {
+  display: inline-grid; place-items: center;
+  min-width: 1.75rem; height: 1.75rem; padding: 0 0.3rem;
+  border-radius: 7px; border: 2px solid var(--barva-stavu);
+  font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--barva-stavu); vertical-align: -0.4em; margin-right: 0.35rem;
+}
+/* Plánovaná jen obtažená a tlumená: nic se neděje a nemá na sebe tahat
+   pozornost ze seznamu, ve kterém jich takových stojí většina. */
+.rozjizdka-planovana .panylek-stavu { opacity: 0.7; }
+/* <b>Probíhající svítí výplní.</b> Plná plocha je zároveň ten kanál, který
+   přežije ostré slunce na vodě — rozhodčí se na tohle kouká na telefonu
+   u břehu, ne u stolu. */
+.rozjizdka-probiha .panylek-stavu {
+  background: var(--barva-stavu); color: var(--na-pozoru);
+}
+/* Zrušená si drží přeškrtnuté číslo, „ať je po ní stopa". */
+.rozjizdka-zrusena .panylek-stavu { text-decoration: line-through; }
+/* Slovo „jede se" je drobné a oranžová plocha ho nenese — na bílé by se
+   v něm barva ztratila. Plochu drží panýlek, písmo bere čitelnou odrůdu. */
+.rozjizdka-probiha .slovy { color: var(--pozor-pismo); }
+.rozjizdka-stav .slovy {
+  color: var(--barva-stavu); font-weight: 400; font-size: 0.78rem;
+  letter-spacing: 0.06em; text-transform: uppercase; margin-left: 0.4rem;
+}
+
+/* ---------------------------------------------------------------------
+   Dikce zprávy na vývěsce ve správě (27. 10. 2026).
+
+   Druh zprávy se zadával a ukládal, ale ve správě se neprojevoval nijak:
+   „start se odkládá o tři čtvrtě hodiny" vypadalo stejně jako „čeká se, až
+   přejde bouřka". Tabule barvu měla, správa ne — a vyvěšuje se právě tady.
+
+   Oznámení schválně bez barvy: kdyby svítilo všechno, nesvítí nic.
+   --------------------------------------------------------------------- */
+.tracker-vyveska .seznam > li[class*="zprava-"] {
+  border-left: 3px solid var(--barva-zpravy, transparent);
+  padding-left: 0.6rem;
+}
+.tracker-vyveska .seznam > li.zprava-program { --barva-zpravy: var(--pozor); }
+.tracker-vyveska .seznam > li.zprava-vystraha { --barva-zpravy: var(--stav-zruseny); }
+/* Štítek druhu nese barvu a výplň, slovo v něm zůstává třetím kanálem.
+   Specificita na dvou třídách, jinak to přebije obecný `.stitek`. */
+.stitek.zprava-program {
+  color: var(--pozor-pismo); border-color: color-mix(in srgb, var(--pozor) 45%, transparent);
+  background: color-mix(in srgb, var(--pozor) 14%, transparent);
+}
+/* <b>Výstraha je jediná vyplněná naplno.</b> Je to ta jedna věc, kterou
+   nikdo nesmí přehlédnout, a výplň je tu týž kanál jako u probíhající
+   rozjížďky — přežije slunce i barvoslepé oko. */
+.stitek.zprava-vystraha {
+  color: var(--papir); background: var(--stav-zruseny);
+  border-color: var(--stav-zruseny); font-weight: 600;
+}
 .skrtnute { text-decoration: line-through; text-decoration-color: var(--tlumeny); }
 .presun { color: var(--tlumeny); }
 
@@ -702,7 +898,7 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
   display: grid; gap: 0.15rem;
   background: var(--papir);
   border: 1px solid var(--linka); border-radius: 10px;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.14);
+  box-shadow: var(--stin-nabidky);
 }
 .profil .nabidka .hlava {
   display: grid; gap: 0.15rem; justify-items: center; text-align: center;
@@ -757,7 +953,7 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
   display: grid; gap: 0.15rem;
   background: var(--papir);
   border: 1px solid var(--linka); border-radius: 10px;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.14);
+  box-shadow: var(--stin-nabidky);
 }
 .menu .nabidka a {
   padding: 0.45rem 0.6rem; border-radius: 7px;
@@ -771,6 +967,18 @@ button.tlacitko { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
   background: none; border: 0; border-radius: 7px; padding: 0.45rem 0.6rem; color: var(--tlumeny);
 }
 .menu .nabidka button:hover { background: var(--zvyrazneni); color: var(--text); }
+
+/* <b>V tmavém režimu obrys ze stínu nahrazuje okraj nabídky</b>, nestojí
+   vedle něj. Bílá linka ze `--stin-nabidky` je silnější než `--linka`
+   (`#2c3238`), takže kdyby zůstaly obě, kreslí se dvojitý okraj: světlá
+   linka a pod ní tmavší. Na tom zhasla první verze ukázky — obrys se
+   s vlastním okrajem slil a nepřidával nic. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-rezim="svetly"]) .profil .nabidka,
+  :root:not([data-rezim="svetly"]) .menu .nabidka { border-color: transparent; }
+}
+:root[data-rezim="tmavy"] .profil .nabidka,
+:root[data-rezim="tmavy"] .menu .nabidka { border-color: transparent; }
 
 /* Přepínač vzhledu (Filip, 16. 9. 2026). Vykreslené jsou obě ikony a vidět
    je ta, která vede k opačnému vzhledu, než je na obrazovce: měsíc ve
@@ -2037,10 +2245,19 @@ th.vlevo, td.vlevo { text-align: left; }
   z-index: 14;
   background: var(--papir);
   border-top: 1px solid var(--linka);
-  /* Stín vzhůru, ať je poznat, že lišta leží na obsahu, a ne v něm. */
-  box-shadow: 0 -4px 16px rgb(0 0 0 / 0.12);
+  /* Stín vzhůru, ať je poznat, že lišta leží na obsahu, a ne v něm.
+     V tmavém režimu je ten rozptyl bílý, viz `--stin-listy`. */
+  box-shadow: var(--stin-listy);
   transition: transform 0.22s ease;
 }
+/* <b>V tmavém režimu obrys ze stínu nahrazuje horní linku lišty</b>, ze
+   stejného důvodu jako u nabídek: dvě linky nad sebou kreslí dvojitý okraj
+   a světlejší z nich tu dělá celou práci. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-rezim="svetly"]) .paticka-pocasi { border-top-color: transparent; }
+}
+:root[data-rezim="tmavy"] .paticka-pocasi { border-top-color: transparent; }
+
 /* Zajetá při rolování dolů: posune se přesně o svou výšku, čímž skončí
    za pruhem partnerů. Proužek z ní nezůstane. */
 .paticka-pocasi.schovana { transform: translateY(100%); }
@@ -2788,6 +3005,23 @@ body:has(.tabule) {
      „když se televize zvětší, zvětšují se i tyto prvky, nevím jestli je
      to nutné." */
   --znacka: min(var(--tv), 19px);
+  /* Stín karty dojezdu. <b>Bydlí tady, ne u ostatních stínů na `:root`</b>:
+     rozměry má v `--tv` a to je definované až o dva řádky výš. Na `:root`
+     by se `var(--tv)` nevyhodnotilo, celá hodnota by byla neplatná a karta
+     by zůstala úplně bez stínu — vyzkoušeno 28. 10. 2026, `box-shadow`
+     spočítaný prohlížečem hlásil `none`.
+
+     <b>Tmavý tvar bez ohledu na režim stránky</b>: karta má pozadí natvrdo
+     `#14171a` a leží na ztmavené mapě, takže světlý režim se jí netýká.
+     Dřív tu byl `rgb(0 0 0 / 0.55)`, čtyřnásobek proti nabídkám — někdo tu
+     hodnotu zvedl, aby byl stín na tmavém vůbec vidět, ale zůstalo to
+     u jednoho místa a nezobecnilo se.
+
+     Obrys tu není schválně: kartu odděluje vlastní barevný rámeček (druh
+     zprávy — dojezd modře, konec rozjížďky zeleně) a dvě linky nad sebou
+     by se bily. */
+  --stin-karty-tabule:
+    0 calc(0.6 * var(--tv)) calc(2.5 * var(--tv)) rgb(255 255 255 / var(--sila-vyzareni));
 }
 
 .tabule {
@@ -2872,7 +3106,7 @@ body:has(.tabule) {
 }
 .stav-rozjizdky-tabule span { display: inline-block; animation: stav-prijezd 0.4s ease-out; }
 .stav-rozjizdky-tabule .vlajka { height: calc(1.8 * var(--tv)); width: auto; flex: none; }
-.stav-rozjizdky-tabule.sviti-ceka { color: #e8900c; }
+.stav-rozjizdky-tabule.sviti-ceka { color: var(--pozor); }
 .stav-rozjizdky-tabule.sviti-jede { color: var(--stav-vypsany); }
 .stav-rozjizdky-tabule.sviti-dojeto { color: var(--voda); }
 .stav-rozjizdky-tabule.sviti-zruseno { color: var(--stav-zruseny); }
@@ -3003,7 +3237,7 @@ body:has(.tabule) {
   /* Rámeček tenčí a trochu ustoupený do barvy pozadí — karta má být
      čitelná, ne křiklavá. */
   border: max(2px, calc(0.1 * var(--tv))) solid color-mix(in srgb, currentColor 75%, transparent);
-  box-shadow: 0 calc(0.6 * var(--tv)) calc(2.5 * var(--tv)) rgb(0 0 0 / 0.55);
+  box-shadow: var(--stin-karty-tabule);
   text-align: center; pointer-events: none; overflow: hidden;
   /* Dlouhé jméno se zalomí, místo aby se uřízlo — přečíst „ČERVENÉ CA"
      je horší než mít kartu o řádek vyšší.
@@ -4082,7 +4316,7 @@ body:has(.tracker-strana) main.obal { max-width: none; }
 }
 
 .nacrt-cerstva { color: var(--stav-vypsany); }
-.nacrt-starnouci { color: #e8900c; }
+.nacrt-starnouci { color: var(--pozor); }
 .nacrt-nedostupna { color: var(--stav-zruseny); }
 
 .nacrt-karta {
@@ -4667,11 +4901,11 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
 .tabule .panylek-dokoncena { border-color: var(--stav-vypsany); }
 .tabule .panylek-dokoncena b { color: var(--stav-vypsany); }
 .tabule .panylek-probiha {
-  background: #e8900c;
-  border-color: #e8900c;
-  box-shadow: 0 1px 10px color-mix(in srgb, #e8900c 45%, transparent);
+  background: var(--pozor);
+  border-color: var(--pozor);
+  box-shadow: 0 1px 10px color-mix(in srgb, var(--pozor) 45%, transparent);
 }
-.tabule .panylek-probiha b, .tabule .panylek-probiha span { color: #16233a; }
+.tabule .panylek-probiha b, .tabule .panylek-probiha span { color: var(--na-pozoru); }
 .tabule .panylek-zrusena { border-color: var(--stav-zruseny); }
 .tabule .panylek-zrusena b { text-decoration: line-through; }
 .tabule .panylek-zrusena b, .tabule .panylek-zrusena span { color: var(--stav-zruseny); }
@@ -4924,7 +5158,15 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   border-left-color: var(--stav-zruseny);
   background: color-mix(in srgb, var(--stav-zruseny) 14%, transparent);
 }
-.tabule .tabule-info .zprava-program { border-left-color: #e8900c; }
+/* <b>Změna programu dostala i výplň</b> (27. 10. 2026). Výstraha měla
+   dva kanály — barvu linky a podbarvení — a změna programu jen barvu
+   linky, takže se od klidného oznámení lišila jediným oranžovým proužkem
+   přes půl hospody. Pravidlo z té série říká „každá informace dvěma
+   kanály"; tady chyběl ten druhý. */
+.tabule .tabule-info .zprava-program {
+  border-left-color: var(--pozor);
+  background: color-mix(in srgb, var(--pozor) 12%, transparent);
+}
 
 /* S teaserem má značku v sobě hlavička, takže ta v rohu je navíc. */
 .tabule:has(.tabule-teaser) .vrch { display: none; }

@@ -1,7 +1,7 @@
 import Link from "@/app/sprava/odkaz";
 import { notFound } from "next/navigation";
 import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
-import { Stav } from "@/app/stav";
+import { CisloRozjizdky, Stav } from "@/app/stav";
 import { Vypadek } from "@/app/vypadek";
 import {
   krokZe,
@@ -318,7 +318,11 @@ function Rozjizdka({
   return (
     <div className="karta">
       <div className="nazev">
-        {rozjizdka.cislo}. rozjížďka
+        {/* <b>Číslo nese stav rozjížďky</b>, štítek za ním stav zápisu —
+            dvě různé otázky. „Jede se" je o vodě, „ověřeno" o tom, kdo za
+            čísla ručí. Na tabuli se první z nich pozná z druhého konce
+            hospody, ve správě se do 27. 10. 2026 nepoznala vůbec. */}
+        <CisloRozjizdky cislo={rozjizdka.cislo} stav={rozjizdka.stav} />
         <span className={`stitek vysledek-${rozjizdka.stavVysledku.toLowerCase()}`}>
           {nazevStavu(rozjizdka.stavVysledku)}
         </span>

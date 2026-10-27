@@ -513,7 +513,13 @@ function Vyveska({
       {plati.length > 0 && (
         <ul className="seznam">
           {plati.map((z) => (
-            <li key={z.id}>
+            /* <b>Dikce zprávy je vidět, ne jen napsaná</b> (27. 10. 2026).
+               Druh se zadával a ukládal, ale ve správě se neprojevoval
+               nijak: „start se odkládá o tři čtvrtě hodiny" vypadalo
+               stejně jako „čeká se, až přejde bouřka". Třída na řádku
+               nese pruh u levé hrany, štítek k tomu barvu a výplň —
+               a vlastní slovo zůstává, protože barva sama nestačí. */
+            <li key={z.id} className={`zprava-${z.druh.toLowerCase()}`}>
               <span className={`stitek zprava-${z.druh.toLowerCase()}`}>{NAZVY_ZPRAV[z.druh]}</span>{" "}
               {z.text}
               <span className="detail">

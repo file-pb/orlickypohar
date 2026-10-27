@@ -20,6 +20,7 @@ export type SerieDetail = S["SerieDetailDto"];
 export type KodVysledku = S["KodVysledku"];
 export type Vysledek = S["VysledekDto"];
 export type Rozjizdka = S["RozjizdkaDto"];
+export type StavRozjizdky = S["StavRozjizdky"];
 export type BodyVRozjizdce = S["BodyVRozjizdceDto"];
 export type VysledekZavodu = S["VysledekZavoduDto"];
 export type UcastLodi = S["UcastDto"];

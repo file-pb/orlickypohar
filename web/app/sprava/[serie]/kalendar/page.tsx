@@ -1,7 +1,7 @@
 import Link from "@/app/sprava/odkaz";
 import { notFound } from "next/navigation";
 import { Drobecky, drobeckySpravy } from "@/app/drobecky";
-import { Stav } from "@/app/stav";
+import { StavVRamu, tridaRamu } from "@/app/stav";
 import { Vypadek } from "@/app/vypadek";
 import { datum } from "@/app/datum";
 import {
@@ -380,13 +380,23 @@ function Zastavka({
   const prace = akce || zrusena ? [] : polozkyZastavky(udelena, serie, zastavka.slug);
 
   return (
-    <div className={`karta ${zrusena ? "zrusena" : ""}`}>
+    <div
+      className={`karta ${tridaRamu(zastavka.stav)} ${zrusena ? "zrusena" : ""} ${
+        zastavka.publikovano ? "" : "karta-neverejna"
+      }`}
+    >
+      {/* <b>Stav do rámečku, publikace šrafou</b> (Filip, 27. 10. 2026).
+          Jsou to dvě nezávislé věci — vypsaná regata může a nemusí být
+          venku — takže publikace nesmí dostat barvu: tu už má obsazenou
+          stav a přebily by se. Šrafa žádnou barvu nemá, proto se vejde
+          vedle. */}
+      <StavVRamu stav={zastavka.stav} akce={akce} />
       <div className="nazev">
         <span className={zrusena ? "skrtnute" : undefined}>{zastavka.nazev}</span>
-        <Stav stav={zastavka.stav} akce={akce} />
         {zastavka.typ && <span className="stitek">{zastavka.typ}</span>}
         {/* Nezveřejněná regata není chyba, ale musí být vidět na první
-            pohled: v kalendáři na webu prostě není. */}
+            pohled: v kalendáři na webu prostě není. Štítek zůstává
+            i u šrafy — šrafa říká „něčím se to liší", slovo říká čím. */}
         {!zastavka.publikovano && <span className="stitek neverejne">nezveřejněno</span>}
       </div>
 
