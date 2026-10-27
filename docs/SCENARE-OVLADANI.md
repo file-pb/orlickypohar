@@ -345,13 +345,23 @@ u jediného místa a nezobecnil se.
 **Směr rozhodl Filip (27. 10. 2026): „myslel jsem, světlý stín."** Tedy ne
 zesilovat černou jako na tabuli, ale v tmavém režimu **oddělovat světlem**.
 
-Dvě věci k tomu, až na to dojde. **Světlý stín se nedělá jako stín, ale jako
-obrys** — světlo světlé stíny nevrhá, takže samotná světlá rozmazaná skvrna pod
-prvkem vypadá jako svit. V tmavých rozhraních se to řeší **dvěma vrstvami**:
-jemný světlý obrys (`0 0 0 1px rgb(255 255 255 / ~0.06)`), který prvek oddělí od
-pozadí, a pod ním zachovaná tmavá rozmazaná vrstva, která dává hloubku. A platí
-to i obráceně: ve světlém režimu světlý obrys nedělá nic, takže to opravdu musí
-být token přebíjený v obou tmavých blocích, ne jedna hodnota pro obojí.
+**Na tmavém podkladu je světlý celý stín, ne jen obrys** (Filip, 27. 10. 2026:
+*„obrys asi není problém, spíš ten stín na dark asi nebude moc být tmavý ale
+bílý"*). Je v tom obrácená logika, ne jiné číslo: ve světlém režimu prvek **vrhá
+stín**, protože zaclání světlo; na tmavém podkladu naopak **vyzařuje**, protože
+co je výš, zachytí víc světla. Černá rozmazaná vrstva tam tedy nemá co dělat —
+nepřidá nic a jen visí v kódu.
+
+Tvar, na kterém to po čtyřech pokusech stojí: **bílý obrys, který odděluje
+(`0 0 0 1px rgb(255 255 255 / 0.30)`), a bílý rozptyl pod ním, jehož síla se
+ladí**. A platí to i obráceně: ve světlém režimu je bílý obrys k ničemu a zbyde
+jen tmavá vrstva, takže to opravdu musí být token přebíjený v obou tmavých
+blocích, ne jedna hodnota pro obojí.
+
+*Mezikrok za zaznamenání: napřed jsem tvrdil, že se pod světlým obrysem nechá
+tmavá vrstva „pro hloubku". To bylo špatně a Filip to vytkl nad ukázkou. Je to
+tentýž omyl jako u hodnot — odvozoval jsem ze světlého režimu místo abych se
+podíval na tmavý.*
 
 Vzorec na přebíjení projekt má — barvy jsou tokeny přebíjené ve dvou tmavých
 blocích, stín by se choval stejně. Konkrétní čísla ale patří k vidění, ne
