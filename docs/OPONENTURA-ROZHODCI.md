@@ -1357,19 +1357,30 @@ nejsou (šest otázek z návodu je na s. 23 a ty platí dál):
 9. **Co znamená „pro přihlášené" — loď v regatě, nebo účet na webu?** Nejsou to
    totéž a liší se v obou směrech. Bez téhle odpovědi se ta stránka postavit
    nedá. (R10) ***Nová po střípku 6.***
-10. **Co si startér po startu potřebuje pamatovat a jak dlouho?** Položená
-    Milošovi 27. 10. 2026 v tomhle znění, schválně bez zmínky o aplikaci:
+10. **Co si startér po startu potřebuje pamatovat a jak dlouho?** (R11, R12)
+    ***Nová po střípku 7.*** **Položeno Milošovi 27. 10. 2026 takto** (Filipovo
+    znění, ne návrh z téhle session):
 
-    > K té obrazovce po startu — abychom ji postavili dobře, potřebujeme vědět,
-    > co se ti v těch minutách po výstřelu honí hlavou.
-    >
-    > Zkus popsat jednu situaci: **někdo je přes čáru.** Co uděláš a co si u toho
-    > potřebuješ pamatovat, než je to vyřízené? Kdy ti ta loď z hlavy spadne?
-    >
-    > A druhá věc: **otáčky.** Když někdo zatočí, potřebuješ si to někam
-    > poznamenat, nebo to jde úplně mimo tebe a vyřídí si to lodě mezi sebou?
+    > Jak jsi to po/při startu říkal? Alternativní trest? A kdy se dává? (když
+    > se loď dostane přes čáru?) a kdy ještě? Popisoval jsi mi ten proces, ale
+    > už si vše nepamatuju…
 
-    Ptá se na práci, ne na nastavení, protože „jak dlouho má obrazovka svítit"
-    je z odpovědi odvoditelné, kdežto obráceně to nejde. A rozpojuje ty dvě věci
-    zvlášť, aniž by Milošovi říkala, že se liší — to on ví líp. (R11, R12)
-    ***Nová po střípku 7.***
+    **Jak odpověď číst.** Otázka se ptá, *„kdy se dává"* — tedy předpokládá, že
+    trest někdo uděluje. Podle ZPJ 44.1 si ho loď **bere sama** a nikdo jí ho
+    nedává (R11). Když to tedy Miloš potvrdí, neznamená to, že se R11 mýlí:
+    pravděpodobnější je jedna ze dvou jiných věcí, a obě stojí za zapsání —
+
+    - **vlastní pravidlo poháru**: místo tvrdého OCS za předčasný start dostane
+      loď možnost chybu odčinit otáčkami. U neoficiálního závodu je to běžná
+      úleva a byla by to **odchylka od 29.1/30.1**, která podle R8 patří do
+      vypsání závodu;
+    - **nebo jiné slovo pro návrat přes čáru** podle 29.1 a 30.1 — tedy ne
+      trest, ale náprava startovní chyby. Lodě si tomu tak můžou říkat.
+
+    Rozlišit to jde jednou doplňující otázkou: **dělá ta loď otáčky, nebo se
+    vrací za čáru?** To jsou dvě úplně různé věci na vodě i v zápisu.
+
+    *Pro úplnost: návrh znění z téhle session (ptal se na práci místo na pojem
+    a rozpojoval odvolání od otáček) poslán nebyl. Filipova verze má proti němu
+    výhodu, že navazuje na to, co Miloš sám vyprávěl — „popisoval jsi mi ten
+    proces" vyvolá vzpomínku, kdežto abstraktní otázka vyvolá úvahu.*
