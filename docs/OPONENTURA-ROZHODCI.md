@@ -772,13 +772,50 @@ minuta stačí — a fáze aplikace už rozlišuje. Úzké hrdlo je ale v telefo
 | **protesty jako celek** (K2 část) | velká věc s vlastním rozhodnutím: pohár není pod svazem, takže odvolání k ČSJ odpadá a protestní komise by byla poslední instancí. **Do plánu patří jen ta věta na obrazovce** (1.3) |
 | ergonomie a grafika | jiný dokument — `docs/SCENARE-OVLADANI.md`, a devět os se už dělá ve vlastní session |
 
-### Co se při tom musí psát do dokumentace
+### Dokumentace: tři patra, a žádné se nesmí vynechat
 
-Projekt má zvyk, který tohle drží pohromadě, a plán ho nemá porušit:
-**komentáře nesou důvody, ne popisy** — u netriviálního rozhodnutí se píše, kdo
-ho udělal, kdy a proč, často s citací a datem. U každé položky výš proto patří
-do kódu odkaz na nález (R-číslo) a věta, co ho vyvolalo; a do `docs/PLAN.md`
-patří po dokončení to, co mění chování, ne seznam commitů.
+Filip, 28. 10. 2026: *„pak je potřeba aktualizovat dokumentaci poháru, aby se
+vědělo… a ještě dokumentaci obecnou, abys měl info o projektu."* Je to součást
+každé fáze, ne úklid na konci — a projekt má na to, proč, vlastní doklad
+(viz past níž).
+
+**1 · Pro lidi** — `web/app/napoveda/page.tsx` a `docs/NAVOD-*.pdf`.
+
+> **Past, kterou si projekt zapsal sám do nápovědy:** *„Oddíl o tabuli zastaral
+> za jediný den (26. 10. 2026)… Text se mezitím dostal i do tištěného návodu pro
+> rozhodčího, takže **nepravda v nápovědě neplatí jen tady: opisuje se z ní
+> dál.**"* Řetěz je tedy **kód → nápověda → tištěný návod → rozhodčí u vody**,
+> a vynechané patro se propíše až na konec. V téže hlavičce stojí i pravidlo
+> pro spor: *„Kde se tvrzení rozešlo s kódem, platí kód."*
+
+Co konkrétně **zneplatní už fáze 1**:
+- nápověda, tabulka stavů: *„Ověřeno · Schváleno → čísla platí"*
+  (`napoveda/page.tsx:510`) — a tatáž tabulka je v návodu rozhodčího (bod 16);
+- `docs/NAVOD-ROZHODCI.pdf`, oddíl *Co aplikace zatím neumí* (s. 22) a **Šest
+  otázek** (s. 23) — po fázi 3 bude otázka 1 zodpovězená;
+- bod 18 o tabuli: *„čas do startu"* dnes nejde, po položce 1.1 půjde.
+
+**2 · Obecná, ze které čte každá další session** — `docs/PLAN.md` a `CLAUDE.md`.
+
+- **Hlavička `PLAN.md` nese stav k datu** (*„Stav k 20. 10. 2026: fáze 0 až 4
+  a fáze 6 hotové; ve fázi 5 zbývají protesty a penalizace…"*). Je to **první,
+  co přečte každý, kdo na projektu začne**, takže se aktualizuje po každé fázi,
+  ne až na konci. Spolu s oddílem *Co ještě chybí* je to oficiální místo pro
+  stav — a oponentura k fázi 5 právě dodala, co přesně u protestů chybí.
+- `CLAUDE.md` jen tehdy, když se změní **konvence nebo přibude past**
+  (oddíly *Pravidla, která nejsou na výběr* a *Pasti, na které jsme už šlápli*).
+  Čtyři pokusy o jeden stín nebo to, že `revalidatePath` se v projektu nevolá
+  nikde, jsou přesně ten druh věci, co tam patří.
+
+**3 · Nálezy** — `docs/OPONENTURA-ROZHODCI.md`, `SCENARE-OVLADANI.md`,
+`TABULE-DIVAK.md`. U hotového nálezu se dopíše **čím** je hotový; **text se
+neškrtá**, protože vyvrácený i vyřešený nález je doklad, jak se k závěru došlo.
+
+**A napříč všemi třemi: komentáře v kódu nesou důvody, ne popisy.** U každé
+změny patří odkaz na nález (`R19`, `K6`…), věta, co ho vyvolalo, a datum —
+často s citací rozhodčího nebo Filipa. Je to zvyk celého repa, ne ozdoba, a je
+to zároveň jediná dokumentace, která se nemůže rozejít s kódem, protože stojí
+vedle něj.
 
 **Co je tenhle plán a co ne:** je to pořadí a rozsah, ne rozhodnutí o návrhu.
 Kde oponentura říká *„nerozhoduju to"*, platí to dál — plán tím nic neschvaluje.
