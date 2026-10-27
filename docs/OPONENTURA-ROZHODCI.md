@@ -393,6 +393,24 @@ Dva chybějící díly ze šesti; zbylé čtyři na cílové obrazovce už jsou:
    při shodném otisku"*). U rozjížďky založené dopředu a prázdné to vadit nemá —
    prázdný zápis je taky otisk. Nezkoušel jsem to, je to hypotéza k ověření.*
 
+   **A proč to vůbec musí jít** (Filip, 27. 10. 2026): *„rozhodčí dodnečka
+   jezdil regaty jen na papír, proč by to nemohlo jít."*
+
+   **To je ta správná laťka, a appka ji u startu podlezla.** Startér s papírem
+   a stopkami si čas zapíše a nic mu ho nevezme — papír nikdy nebyl online,
+   takže výpadek pro něj neexistuje. Aplikace ten čas ztratila právě proto, že
+   se spolehla na server. Papír je tedy **spodní laťka, ne vzor**: cílem není
+   dělat z appky papír, protože její smysl je v tom, co papír neumí — tabule,
+   tracking, přepočet časů, doklad. Ale **v krizi nesmí být horší než papír**,
+   a u startu byla.
+
+   **Dnes má krize řešení a jmenuje se papír.** Aplikace s ním počítá: u každé
+   rozjížďky je oddíl *Papírový zápis*, kam se nahraje fotka a *„zůstává
+   dokladem k číslům"* (`vysledky/[zavod]/[cislo]/page.tsx:270–280`), a návod to
+   rozhodčímu říká rovnou — *„Zapsat se dá i doma z papíru a přiložit fotku
+   zápisu z cíle"* (s. 14). Takže totální krize **není dnes bez východiska**, jen
+   se platí přepisováním večer. Body 1 až 4 to nenahrazují, zkracují.
+
 **Jak se ti dva spárují — zodpovězeno 27. 10. 2026.** Filip: *„oni se párují
 přes server, oba mají roli pořadatel rozhodčí a více."* Tedy žádné přímé
 spojení mezi telefony; server je prostředník a přístup jim dávají role, které
