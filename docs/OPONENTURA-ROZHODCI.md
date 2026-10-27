@@ -649,6 +649,142 @@ zvenčí stejně jako telefon na dně.
 
 ---
 
+## Plán implementace (28. 10. 2026)
+
+Sepsaný na Filipovu žádost: *„ohledně oponentury udělej plán pro implementaci,
+aby nám ta oponentura k něčemu byla."* Oponentura našla dvacet šest nálezů, ale
+**plán z nich nemá dvacet šest položek** — většina se sbíhá na čtyři věci a dvě
+z nich jsou levné.
+
+**Pořadí je podle závislostí, ne podle vážnosti.** Nahoře stojí to, co odemyká
+ostatní; dole to, co na odemčeném staví.
+
+### Fáze 1 — tři levné věci, které odemykají zbytek
+
+**1.1 Plánovaný čas startu** *(K6, R4, R12, a nález 7 v `TABULE-DIVAK.md`)*
+Nejlevnější položka s nejdelším dosahem v celé oponentuře. Dnes `StartV` zapisuje
+jediné místo (`ZapisSprava.StartAsync`) a ve stejném kroku přepne rozjížďku na
+`Probiha`, takže **plánovaný start nejde zapsat vůbec**. Tím jsou mrtvé:
+odpočet na tabuli (`rozjizdky-tabule.ts` obě fáze umí), panýlek *„procedura
+v 10:25"*, přepnutí tabule na mapu před startem, i odpočet v ruce startéra.
+*Hotovo:* rozjížďka může mít čas startu a zůstat `Planovana`; odpočet na tabuli
+ožije bez dalšího zásahu.
+
+**1.2 Start do konceptu** *(R19, bod 1 — potvrzeno k dodělání)*
+**Tohle je ta vada, která jim pokazila start.** `odstartuj` bere čas lokálně
+(dobře), ale při selhání odeslání ho `catch` zahodí (`setStart(puvodni)`) a řekne
+*„zkus to znovu"* — u startu rada, kterou nejde splnit. `Koncept` v `koncept.ts`
+přitom nese `dojeti` a `kody`, ne start. *Hotovo:* start přežije výpadek stejně
+jako dojezdy a odešle se, až se signál vrátí.
+
+**1.3 Věty, které tvrdí víc, než aplikace ví** *(K2, R10)*
+Jen text, žádná logika. Stav *Schváleno* má popis **„Protesty vyřízené, pořadí
+platí"**, a aplikace o protestech neví nic (`web/lib/vysledky.ts:73`,
+`Zavod.cs:160`). Přeformulovat na to, co rozhodčí doopravdy podepisuje.
+Zároveň: tab `Lodě` se má jmenovat **Startovní listina** (Filip rozhodl), ale
+dnes vypisuje i lodě *„čeká na potvrzení"* a vyloučené — buď s názvem změnit
+filtr, nebo nechat dvojici *Přihlášky* / *Startovní listina*.
+
+### Fáze 2 — vypsání závodu
+
+**2.1 Vypsání závodu jako dokument** *(R1, R8, R10)*
+Stojí na něm nejvíc: ZPJ platí pro pohár **jen proto, že si je vezme** (pohár
+pořadatelsky ofiko není), a prohlašuje se to v J1.1(2). Žijí v něm i vlastní
+pravidla poháru — dvacet bodů za diskvalifikaci, koeficienty, škrty, bonus za
+24hodinovku — která dnes bydlí v konstantě a v `PLAN.md`.
+**Osnova je v R8 jako tabulka Dodatku J1** a osm z jedenácti řádků už v databázi
+leží; chybí uzávěrka přihlášek, výše startovného a čas vyzývacího znamení.
+*Hotovo:* vypsání se **generuje** z týchž čísel, podle kterých se počítá, takže
+se s výpočtem nemůže rozejít. A je to první položka stránky regaty i pro
+nepřihlášené (ZPJ 25.1).
+
+**2.2 Souhlas s pravidly a vlastní nebezpečí** *(R9)*
+Navazuje na 2.1, protože souhlas má na co odkazovat. Dnes se sbírá souhlas se
+zveřejněním ve startovní listině, zatímco dokumentační komentář u toho parametru
+tvrdí *„Kapitán potvrdil pravidla"* — a ať zní jakkoliv, **neukládá se**:
+`Souhlas` se zkontroluje a zahodí. U závodu, kde pohár *„pořadatelsky ofiko
+není"*, je to jediná vazba závodníka na pravidla.
+*Hotovo:* znění pokrývá pravidla i vlastní nebezpečí, ukládá se příznak s časem
+a verzí znění, a ptá se na něj i cesta přes pořadatele a import — ne jen veřejný
+formulář.
+
+### Fáze 3 — startovní procedura
+
+Největší kus a staví na 1.1. **Role aplikace je „drží čas a paměť, znamení dává
+člověk"** (R15): vizuální znamení pro pole z obrazovky nebude, protože závodníci
+nevidí startérův telefon.
+
+**3.1 Procedura podle ZPJ 26** *(R5, R12)* — 5 / 4 / 1 / 0, spouští startér
+jedním tlačítkem, délka je parametr ze směrnic (hvězdička u pravidla 26), ne
+konstanta. Přerušení se dělí: **odložení před startem** (27.3, nový čas volný)
+a **všeobecné odvolání po startu** (29.2, nový start minutu po spuštění
+opakovače).
+
+**3.2 Velitelský čas** *(R19, body 2–4 — potvrzeno k dodělání)* — jeden
+autoritativní čas u hlavního startéra, nezávislý na spojení; kdo je hlavní, se
+**stáhne dopředu a drží celý den** (odsouhlaseno); převzetí velení musí jít
+a po něm zůstane doklad. Pět dílů ze šesti už na cílové obrazovce je.
+
+**3.3 Startovní tresty a identifikace** *(R14, K1)* — z pěti kódů, které
+z pravidla 30 a 29.1 plynou, zná `KodVysledku` jediný, **OCS**. Chybí **ZFP,
+UFD, BFD** — a ZFP není diskvalifikace, ale 20 % z bodů za nedokončila podle
+44.3(c), tedy číslo do listiny. Identifikace lodi je podle 30.2–30.4 úkon
+komise *„bez projednávání"*, takže patří startérovi, a smí ji dělat i slave
+(pravidla hlavního a slave nerozlišují). **Pozor:** trest přežívá nový start
+u každé vlajky jinak, takže aplikace musí vědět, která visela.
+**A otevřená otázka před tím vším:** megafon není vizuální znamení, takže
+*„minutové pravidlo"* je na poháru dohoda z rozpravy — a jako vlastní pravidlo
+patří do vypsání (2.1).
+
+**3.4 DNE a škrt** *(K1)* — nevylučitelná diskvalifikace podle ZPJ 90.3(b)
+**nesmí jít vyškrtnout**, a `VysledkyZavodu` škrtá podle výše bodů bez ohledu na
+druh kódu. DNE má přitom nejvyšší body, takže je vždycky první na ráně. Je to
+jediný nález z celé oponentury, kde se **špatně počítají body**.
+
+### Fáze 4 — na odemčeném
+
+**4.1 Trasování od fáze přihlášek** *(R3)* — přímý rozpor s rozhodnutím
+z 24. 10. Rozprava dnes nese tři nesouvisející věci (brána na data, zámek
+viditelnosti, bod programu); posunout se má **jen ta první**. Pozor na tvrdý
+konec okna, který je počítaný od otevření.
+
+**4.2 Činnosti za jízdy** *(R17)* — ZPJ je vyjmenovávají a aplikace umí dvě:
+**zkrácení** (plně, úkon rozhodčího) a **zrušení** (jen oklikou přes eliminaci
+výsledků a **bez důvodu** — a 32.1 má čtyři různé příčiny). Chybí změna úseku
+(33) a chybějící značka (34).
+
+**4.3 Doručení ven** *(R18)* — takt je minuta a probudit ho zvenčí nejde;
+odběr na regatu (`Odbery.Zavod`) je připravený a nepoužitý, takže stačí připojit.
+**Latence je funkcí fáze**: rychle jen kolem startu a kolem cíle, uprostřed
+minuta stačí — a fáze aplikace už rozlišuje. Úzké hrdlo je ale v telefonu
+(`ZIVE_MS` = 60 s při zápisu po 5 s), ne na serveru.
+
+### Co do plánu nepatří, a proč
+
+| Nález | Proč ne |
+|---|---|
+| **R7** (licence, pojištění ČSJ) | **padlo** — pohár pořadatelsky ofiko není, předpisy ČSJ se ho netýkají |
+| **R11** (otáčky podle pravidla 44) | odpověď do diskuse, ne úkol; u otáček není co klepat ani podle pravidel, ani podle praxe poháru |
+| **R2** (editor směrnic), **R6** (startovní listina z tabule) | směry, ne nálezy — rozhodnout před zadáním |
+| **K3** (Ověřeno a Schváleno jsou dvě klepnutí) | smysl dostane teprve s protesty; do té doby je to vědomá redundance |
+| **K4** (mez pravidla 76.1(a)) | nevyjasněné: *„vyloučení"* může v poháru plnit i roli diskvalifikace, která chybí |
+| **K7** (shoda v cíli, ZPJ A7) | nízká priorita, a napřed otázka, jestli se to na Orlíku stává |
+| **protesty jako celek** (K2 část) | velká věc s vlastním rozhodnutím: pohár není pod svazem, takže odvolání k ČSJ odpadá a protestní komise by byla poslední instancí. **Do plánu patří jen ta věta na obrazovce** (1.3) |
+| ergonomie a grafika | jiný dokument — `docs/SCENARE-OVLADANI.md`, a devět os se už dělá ve vlastní session |
+
+### Co se při tom musí psát do dokumentace
+
+Projekt má zvyk, který tohle drží pohromadě, a plán ho nemá porušit:
+**komentáře nesou důvody, ne popisy** — u netriviálního rozhodnutí se píše, kdo
+ho udělal, kdy a proč, často s citací a datem. U každé položky výš proto patří
+do kódu odkaz na nález (R-číslo) a věta, co ho vyvolalo; a do `docs/PLAN.md`
+patří po dokončení to, co mění chování, ne seznam commitů.
+
+**Co je tenhle plán a co ne:** je to pořadí a rozsah, ne rozhodnutí o návrhu.
+Kde oponentura říká *„nerozhoduju to"*, platí to dál — plán tím nic neschvaluje.
+
+---
+
 ## Nálezy R — z diskuse s rozhodčím
 
 ### R1 — Vypsání závodu je dokument, a aplikace žádný nezná
