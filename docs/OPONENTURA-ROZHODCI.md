@@ -234,6 +234,15 @@ Vzpomínka na konkrétní situaci, s přímým dotazem do pravidel. Odvozený n�
 je **R13** — a pravidla na to mají **tři různé odpovědi** podle toho, kdo je
 původcem.
 
+### Střípek 10 — u Miloše nejsou vidět vlajky (27. 10. 2026)
+
+> U miloše jsem nikdy vlajky neviděl
+
+Filipovo pozorování, ne Milošovo slovo. Krátké, ale sahá pod všechno, co bylo
+o startu řečeno: pravidlo 30 i odvolání podle 29.1 jsou **podmíněná vyvěšenou
+vlajkou**, a procedura podle 26 stojí na vizuálních znameních. Odvozený nález
+je **R15**.
+
 ### Střípek 9 — Miloš odpovídá na otázku 10 (27. 10. 2026, 21:08)
 
 > **[27.10.2026 21:08:43] Miloš Zvonař:** Alternativni trest
@@ -1067,6 +1076,79 @@ v R13).
 > **Místo na citát z diskuse:** _(kterou vlajku na poháru vyvěšuješ — I, Z, U,
 > nebo černou? A mění se to podle rozjížďky, nebo je to pro celý závod stejné?)_
 
+**Hned po zápisu tohohle nálezu přišla odpověď, která ho zpochybnila:** Filip
+*„u Miloše jsem nikdy vlajky neviděl"* (střípek 10). Každý ze čtyř trestů výš je
+přitom podmíněný vyvěšenou vlajkou. **Text R14 zůstává** — výklad pravidla je
+správný a kódy v aplikaci chybí tak jako tak — ale jestli se ty tresty na poháru
+vůbec dají uplatnit, řeší **R15**.
+
+### R15 — Bez vizuálního znamení neplatí ani „minutové pravidlo", ani odvolání
+
+*Původ: střípek 10 (Filip, 27. 10. 2026). Doloženo: ZPJ 26, 25.2, 25.3,
+30.1–30.4, 29.1, `web/app/vlajky.tsx`. Stav: **zapsáno — otázka, která stojí
+před celým návrhem procedury**.*
+
+Filip: *„U Miloše jsem nikdy vlajky neviděl."*
+
+**Každé z pravidel, o kterých byla řeč, začíná vyvěšenou vlajkou.** Doslova:
+
+> *„Jestliže **byla vztyčena vlajka I** a jakákoli část trupu…"* (30.1)
+> *„Jestliže **byla vztyčena vlajka Z**…"* (30.2), totéž U (30.3) a černá (30.4)
+> *„Závodní komise musí neprodleně **vyvěsit vlajku X**…"* (29.1)
+
+A celá procedura podle **ZPJ 26** stojí na vizuálních znameních, ne na zvuku ani
+na slovech: *„Časy musejí být brány podle **vizuálních znamení**; na nepřítomnost
+zvukového znamení nesmí být brán zřetel."*
+
+**Důsledek, pokud se doopravdy nic nevyvěšuje:** startér nemá k dispozici ani
+jeden ze čtyř startovních trestů z R14 — vlajka je jejich podmínka, ne jejich
+oznámení — a formálně nemá ani individuální odvolání, protože to je vlajka X.
+Zůstalo by jen to, co si lodě odnesou z rozpravy.
+
+**Tři možnosti, a rozhodnout mezi nimi umí jen Miloš:**
+
+1. **Signalizuje něčím jiným než vlajkou.** Pravidla to výslovně dovolují —
+   ZPJ 25.3: *„Když je požadováno, aby závodní komise používala vlajku jako
+   vizuální znamení, může použít **buď vlajku nebo jiný objekt podobného
+   vzhledu**."* Kus látky, deska, cokoliv dohodnutého. Pak je všechno v pořádku
+   a jen to nevypadá jako vlajka.
+2. **Oznamuje to megafonem.** Pak to podle pravidel vizuální znamení není
+   (25.2 dovoluje měnit význam znamení jen podle 86.1(b), ústní sdělení zná
+   pravidlo 90.2(c) jen pro změny směrnic na vodě a jen když to směrnice
+   připouštějí). Na neoficiálním závodě to funguje z dohody, ne z pravidel.
+3. **„Minutové pravidlo" je na poháru dohoda z rozpravy**, ne ZPJ 30. To je
+   u závodu, který *„pořadatelsky ofiko není"* (střípek 5), úplně legitimní —
+   ale je to **vlastní pravidlo**, a jako každé vlastní pravidlo patří podle R8
+   do vypsání závodu nebo směrnic. Dnes není nikde.
+
+**Co z toho plyne pro návrh ze střípku 7, a je to nepříjemné.** Návrh počítá
+s tím, že procedurou provede aplikace. Jenže **aplikace vizuální znamení vydat
+nemůže**: závodníci na vodě nevidí startérův telefon a tabule v klubovně je pro
+diváky na břehu. Ať se obrazovka udělá jakkoliv velká a čitelná, **znamení pro
+pole z ní nebude** — to zůstane na tom, co startér vyvěsí nebo zakřičí.
+
+Co aplikace naopak umí a co z téhle úvahy vychází jako její skutečná role:
+
+- **odpočítávat** a říkat startérovi, co má kdy udělat (T−5, T−4, T−1, start);
+- **zaznamenat, co platilo** — která vlajka nebo dohoda visela, protože na tom
+  podle R14 visí, jaký trest se dává a jestli přežije nový start;
+- **zapsat identifikaci** lodě, která pravidlo porušila (to je ten úkon
+  z R14).
+
+Tedy ne „aplikace řídí start", ale „aplikace drží čas a paměť, znamení dává
+člověk".
+
+**Drobnost, která by jednou kolidovala.** Aplikace vlajky zná — jako ikonky
+u tabů regaty (`web/app/vlajky.tsx`, od 11. 10. 2026), a vybrané schválně podle
+významu v ZPJ. Jenže mezi nimi je **vlajka P**, u sekce *Lodě*, s popiskem
+*„přípravný signál před startem"*. Kdyby aplikace někdy začala ukazovat skutečná
+startovní znamení, znamenala by P dvě různé věci na téže obrazovce. Dnes to
+nevadí a opravovat to není proč — jen to nemá zapadnout.
+
+> **Místo na citát z diskuse:** _(jak dáváš polí najevo, že platí minutové
+> pravidlo a že je někdo přes čáru — vlajka, deska, megafon, nebo se to řekne
+> na rozpravě a dál se spoléhá na čestnost?)_
+
 ### R13 — Vytlačená loď a rozjížďka zrušená pro bezpečnost: tři různé cesty, aplikace nezná ani jednu
 
 *Původ: střípek 8 (Filip, 27. 10. 2026). Doloženo: ZPJ 32.1, 43.1, 61.4(b),
@@ -1413,7 +1495,8 @@ potvrdil to rozhodčí 22. 9. 2026 a podle něj se počítá.
 | 25.1 | vypsání závodu dostupné před přihlášením | **ne** (R1) |
 | 90.2 | zveřejnit psané plachetní směrnice podle J2 | ano — PDF s verzemi a vyvěšením |
 | 90.2(c) | **změna** směrnic, písemně a na nástěnce | částečně: nová verze + stažení staré s důvodem |
-| 26 | startovní procedura 5 / 4 / 1 / 0 | **ne** (R5) |
+| 26 | startovní procedura 5 / 4 / 1 / 0, **podle vizuálních znamení** | **ne** (R5); a znamení aplikace vydat nemůže (R15) |
+| 25.3 | vlajku smí nahradit „objekt podobného vzhledu" | neřeší se — u Miloše vlajky vidět nejsou (R15) |
 | 27.1 | určit dráhu nejpozději s vyzývacím znamením | ano, jinak: trať se staví a rozhodčí ji přijímá |
 | 27.3 | odložit (AP) nebo zrušit (N) před startem | **ne** (R5) |
 | 29.1 | individuální odvolání (X) | **ne** — jen jeho následek OCS |
