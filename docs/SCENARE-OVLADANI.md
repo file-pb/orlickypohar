@@ -396,9 +396,42 @@ kvůli které vznikl. Rozhodnout, jestli se má obnovovat jen *seznam lodí na v
 (ne zapsané časy), nebo přibýt ruční *„načíst znovu"*, patří k návrhu, ne
 k měření.
 
-**Neověřeno:** jestli se totéž děje na dalších obrazovkách, které seznam lodí
-ukazují (tracker, startovní listina, přihlášky). Měřilo se jen to, co Filip
-potkal.
+**Prověřeno na dalších dvou obrazovkách (27. 10. 2026).** Čtením zdrojáku, ne za
+běhu — API ani mock na tomhle stroji neběží, takže je to doložené mechanismem,
+ne pozorováním. Výsledek **není stejný**:
+
+| Obrazovka | Obnovuje se? | Objeví se nová loď? |
+|---|---|---|
+| **cílovka** | `router.refresh()` **jednou** při připojení (`cil.tsx:218`) | **ne** |
+| **tracker** | polling po `OBNOVA_MS`, ale **jen polohy** | **ne** |
+| **tabule** | celý snímek **každých 5 s**, včetně seznamu lodí | **ano** |
+
+**Tracker má tutéž vadu, a z jiného důvodu než cílovka.** Jeho stránka je
+serverová komponenta a načítá pět věcí najednou — mezi nimi `nactiKliceRegaty`,
+tedy **seznam lodí a jejich telefonů**, ten z bodu 11 návodu („X z 22 lodí má
+spárovaný aspoň jeden telefon"). To se načte **jednou při otevření stránky**.
+Průběžně se obnovuje jen `/snimek`, a ten vrací `nactiPolohy`, tedy **pouze
+polohy** — ne pole:
+
+```ts
+// snimek/route.ts — co se obnovuje každých pár vteřin
+const snimek = await nactiPolohy(serie, zavod);
+```
+
+Takže otázka z bodu 11 — *„hlásí se celé pole?"* — se po přihlášení nové lodi
+zodpoví ze zastaralého seznamu, a loď, která zrovna dorazila, v něm chybí. Je to
+tišší případ než u cílovky: tam loď nejde zapsat, tady jen není vidět, že nemá
+telefon.
+
+**Tabule je naopak v pořádku.** `obrazovka.tsx` obnovuje celý snímek každých
+5 vteřin (`OBNOVA_MS`), snímek nese `lode` (`web/lib/tabule.ts:206`) a route má
+`force-dynamic` s `nactiZavod(slug, zavod, true)`, tedy bez minutové cache. Nová
+loď se na startovní listině objeví do pěti vteřin.
+
+**Drobnost nalezená při tom:** komentář v `tabule/data/route.ts` tvrdí
+*„Obrazovka si o snímek říká po dvaceti vteřinách"*, zatímco `OBNOVA_MS` je
+**5 000 ms**. Komentář zůstal z doby před zkrácením intervalu (důvod zkrácení je
+popsaný u samotné konstanty). Nic to neláme, jen to při čtení plete.
 
 ## Role, se kterými se zkouší
 
