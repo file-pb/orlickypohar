@@ -356,8 +356,46 @@ doložit, ale je to jedno nastavení navíc). Nerozhoduju to.
 `docs/AUDIT-OBSAZENI.md` (nález O1: `Rozhodci` jde udělit jen na celý ročník,
 `Organizator` na zastávku) — tady se to nezjišťuje podruhé.*
 
-*Mimo rozsah tohohle dokumentu zůstává, co se stane, když se ti dva nepropojí
-vůbec.*
+**Když se nepropojí — Filipův návrh (27. 10. 2026), zapsaný jako návrh:**
+
+> *„pokud se nepropojí, vidí to slave, že nemá velitelský čas? nevim, navrhuji"*
+
+**Ano, a projekt pro to má odladěný vzorec** — appka u trasování neukazuje
+„posílá / neposílá", ale **stáří**: `svetlo: stari > 2 * ZIVE_MS ? 'ceka' :
+'jede'`, s odůvodněním *„jedno vynechané kolo se stane, dvě už znamenají, že se
+něco děje"*, a k tomu větu *„naposledy před X"*. Totéž dělá mapa u poloh
+(*hlásí se · stárne · nehlásí se*).
+
+**Jedno zpřesnění k tomu návrhu.** „Nemá velitelský čas" má dvě různé příčiny
+a pro slave jsou úplně jinak zlé:
+
+- **nepropojil se vůbec** — nemá žádný, jede na vlastních hodinách;
+- **měl ho a spojení spadlo** — má **starý** velitelský čas, a to je pořád
+  *jeden* čas pro oba.
+
+To druhé je mnohem lepší než první a zahodit ten rozdíl by byla škoda. Proto
+bych neukazoval „mám / nemám", ale **jak starý ten velitelský čas je** — přesně
+jako u poloh.
+
+**A důležitější otázka, kterou ten návrh otevírá: co slave mezitím smí dělat?**
+Ukázat stav je nutné, ale nerozhoduje. Můj názor: **má zapisovat dál podle
+svých hodin**, protože odmítnout zápis u vody je horší než nepřesný čas — a
+hlavně se to srovná samo:
+
+> `foreach (var v in vysledky) v.NamerenyCas = Zapis.NamerenyCas(rozjizdka.StartV, v.DojezdV!.Value);`
+> — `ZapisSprava.cs:486`
+
+**Dojezdy se ukládají jako absolutní okamžiky** (`DojezdV`) a naměřený čas je
+dopočet ze startu, takže **změna startu přepočítá všechny**. Slave tedy nemusí
+čekat na velitelský čas; zapisuje, a až dorazí, časy se srovnají samy. Ten díl
+už je hotový.
+
+**Jenže platí jen pro dojezdy.** U startu to neplatí a nemůže: start je ten
+referenční bod, a dva starty se sloučit nedají. **Takže právo zapsat start má
+mít jen hlavní** — a to je vlastně nejpřesnější odpověď na to, co „velitelský
+čas" znamená: ne že hlavní má lepší hodiny, ale že **start je jeho úkon**.
+
+*Mimo rozsah zůstává, co se stane, když si oba myslí, že jsou hlavní.*
 
 ---
 
