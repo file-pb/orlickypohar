@@ -57,6 +57,37 @@ Doslovný zápis toho, co přišlo od Filipa ze schůzky. **Nepřepisovat** — 
 jediný vstup zvenčí, který projekt má, a jeho hodnota je v tom, že je
 nepřebarvený. Nálezy z něj odvozené jsou níž pod značkou R.
 
+**Forma je dohodnutá a je různá** (Filip, 27. 10. 2026): *„někdy to budou texty
+z WhatsApp, někdy hlasový záznam a někdy fotka a podobně. Miloš nám začal
+koukat na appku a abychom se někam pohnuli a zlepšili jsme ergonomii, tak jsme
+domluveni na této formě."* Z toho plynou tři pravidla pro zasazování:
+
+- **Přepis hlasu je mluvená řeč.** Nedokončená věta, přeřeknutí nebo opravená
+  myšlenka nejsou nález. Kde si nejsem jistý, jestli je to požadavek nebo
+  přemýšlení nahlas, napíšu to k tomu — a nedělám z toho R.
+- **U fotky patří k zápisu, co dokládá.** Screenshot obrazovky, fotka papíru
+  a fotka situace na vodě jsou tři různé druhy důkazu. Střípek 2 byl screenshot
+  telefonu a dokládal jen to, odkud si Miloš pravidla otevřel — nic víc se
+  z něj vyvozovat nedá.
+- **Útržek z WhatsAppu nemá kontext.** Může navazovat na něco, co jsem neviděl.
+  Radši otázka v dokumentu než domyšlená souvislost.
+
+> ### ⚠︎ Past, které se tenhle dokument musí bránit
+>
+> Miloš kouká na appku kvůli **ergonomii**. Tenhle dokument je oponentura
+> **proti pravidlům**. To nejsou tytéž otázky, a většina toho, co Miloš při
+> procházení appky řekne, bude nejspíš o ovládání — *„tohle jsem nenašel",
+> „tady bych čekal něco jiného"*. **Takový střípek do tohohle dokumentu
+> nepatří** a ohýbat ho do pravidlového nálezu by znehodnotilo obojí.
+>
+> Kam s ním: `docs/SCENARE-OVLADANI.md` (scénáře ovládání, skupina D je
+> rozhodčího) nebo `docs/AUDIT-OBSAZENI.md`. Sem se zapíše jen odkaz.
+>
+> Hranice vede takhle: **je ten střípek o tom, co se má dít, nebo o tom, jak se
+> to ovládá?** „Vypsání závodu je dokument" je první, „tlačítko Přijmout trať
+> jsem hledal pět minut" je druhé. Střípek 7 leží na hranici schválně — je
+> o struktuře stránky, tedy o ergonomii, ale jeho první položka je pravidlová.
+
 ### Střípek 1 — workflow z pohledu rozhodčího (27. 10. 2026)
 
 > Workflow z pohledu rozhodčího:
@@ -140,6 +171,22 @@ na pořadatelství. Tři věci v jedné odpovědi, a každá míří jinam:
 
 *„S ČSJ komunikujeme"* beru jako vztah, ne jako pramen pravidel — do nálezů
 z toho nic neodvozuju.
+
+### Střípek 6 — co má být na stránce regaty a v jakém pořadí (27. 10. 2026)
+
+Doslova z WhatsAppu, včetně časů — je to **první střípek psaný samotným
+Milošem**, ne přeposlaný Filipem:
+
+> **[27.10.2026 16:59:54] Miloš Zvonař:** Jarni vitr pro prihlasene: Vypsani
+> zavodu - plachetni smernice - zavodni trat - prihlasky - startovni listina
+>
+> **[27.10.2026 17:01:02] Miloš Zvonař:** Neprihlaseni: vypsani zavodu-
+> plachetni smernice - zavodni trat
+
+Dvě minuty po sobě, dvě publika, dva seznamy. Odvozený nález je **R10** a leží
+schválně na hranici popsané výš: je to požadavek na **strukturu stránky**, tedy
+ergonomie — ale **první položka obou seznamů je dokument, který neexistuje**,
+a to už pravidlová věc je.
 
 ---
 
@@ -658,6 +705,82 @@ jinému než mně.*
 > **Místo na citát z diskuse:** _(co dnes účastník podepisuje — je někde papír,
 > nebo se spoléhá na to, že se ví? A kdo je u poháru „pořadatel", když ne klub?)_
 
+### R10 — Stránka regaty: Miloš jmenuje pět položek, aplikace má pět jiných
+
+*Původ: střípek 6. Doloženo:
+`web/app/serie/[slug]/zavody/[zavod]/hlava.tsx:68–83` (funkce `sekce`),
+`Features/Zavody/Prihlasky.cs:121` (`VerejneViditelna`),
+`NAVOD-ROZHODCI.pdf` s. 18. Stav: **zapsáno** — polovina patří do
+`SCENARE-OVLADANI.md`, viz konec nálezu.*
+
+Dnešní taby stránky regaty skládá jedna funkce a jsou **pro všechny stejné**:
+
+```tsx
+/** Které sekce ta která regata má. Pořadí je pořadí tabů. */
+return [
+  "uvod",
+  ...((zavod.smernice?.length ?? 0) > 0 ? (["smernice"] as const) : []),
+  ...(trat ? (["trat"] as const) : []),
+  "lode",
+  "vysledky",
+];
+```
+
+Srovnání s tím, co jmenoval Miloš:
+
+| # | Miloš — přihlášení | Miloš — nepřihlášení | Dnes |
+|---|---|---|---|
+| 1 | **Vypsání závodu** | **Vypsání závodu** | **neexistuje** (R1, R8) |
+| 2 | plachetní směrnice | plachetní směrnice | `smernice` — **ano**, ale tab je jen když je něco vyvěšené |
+| 3 | závodní trať | závodní trať | `trat` — **ano**, ale jen když ji rozhodčí přijal |
+| 4 | přihlášky | — | `lode` — **ano, ale pro všechny** |
+| 5 | startovní listina | — | **není sekcí** — je na tabuli, a ta je bez přihlášení |
+| — | (nejmenuje) | (nejmenuje) | `uvod`, `vysledky` |
+
+**Čtyři věci z toho, a každá jinam.**
+
+**(1) Vypsání závodu je první u obou publik — a dvakrát.** To je nezávislé
+potvrzení R1 a R8 z úplně jiné strany než střípek 1: tam šlo o workflow, tady
+o strukturu stránky. Miloš ho navíc dává **i nepřihlášeným**, což přesně sedí
+na ZPJ 25.1 (*„dostupné každé lodi … dříve, než se přihlásí"*) — a sedí to
+i logicky, protože podle vypsání se člověk rozhoduje, jestli pojede.
+
+**(2) Rozlišení „přihlášený / nepřihlášený" stránka regaty vůbec nedělá.**
+Dnes vidí všichni totéž. A je u toho **dvojznačnost, kterou je potřeba vyjasnit
+dřív, než se podle toho něco postaví**: *přihlášený* může znamenat
+
+- **loď přihlášenou do téhle regaty** (`Ucast`, stavy zapsaná/potvrzená) — tak
+  to Miloš v kontextu „Jarní vítr pro přihlášené" nejspíš myslí;
+- **nebo uživatele přihlášeného na web** (účet, `nactiJa`) — tak tomu bude
+  rozumět kód, protože to je jediné „přihlášení", které web dnes zná.
+
+Nejsou to totéž a liší se v obou směrech: kapitán přihlášené lodi nemusí mít
+na webu účet (přihlášku může podat kdokoliv s kontaktem) a naopak přihlášený
+uživatel nemusí mít v regatě loď. **Neodhaduju to** — je to otázka 9.
+
+**(3) „Přihlášky" a „startovní listina" jsou u Miloše dvě různé věci**, kdežto
+v aplikaci je to jedna sekce `lode`. To rozlišení dává smysl a pravidla ho
+dělají taky: *přihlášky* jsou proces (kdo se hlásí, komu se co schvaluje),
+*startovní listina* je hotový dokument k danému dni. Že je má v seznamu obojí
+a na různých místech, mluví spíš pro dvě obrazovky než pro jednu.
+
+**(4) Startovní listina je dnes veřejná, a Miloš ji chce jen pro přihlášené.**
+Tabule ji ukazuje ve fázi „než se jelo" a **nikdo se na ni nepřihlašuje**
+(návod s. 18); seznam přihlášených je veřejný i na webu
+(`Prihlasky.VerejneViditelna` pouští zapsané, potvrzené i vyloučené). Je to
+tedy **rozpor s dnešním stavem**, ne chybějící funkce — a pozor, dotýká se
+tabule, kterou Filip srovnával 24.–25. 10. a která má vlastní dokument
+(`docs/TABULE-DIVAK.md`). Sem patří jen poznámka, že požadavek existuje.
+
+**Co z tohohle nálezu je čí.** Body (2), (3) a (4) jsou o struktuře a
+viditelnosti, tedy **ergonomie** — patří do `docs/SCENARE-OVLADANI.md`, a bod
+(4) navíc k tabuli. V tomhle dokumentu zůstávají jako odkaz, aby se neztratily,
+ne k řešení. **Pravidlový je jen bod (1)**, a ten už nález má.
+
+> **Místo na citát z diskuse:** _(co se v tom seznamu nejmenuje: kam patří
+> výsledky a úvodní stránka? Je to tím, že jsi vyjmenovával, co je potřeba
+> **před** závodem?)_
+
 ---
 
 ## Nálezy K — odvozené z kódu a pravidel
@@ -1055,3 +1178,6 @@ nejsou (šest otázek z návodu je na s. 23 a ty platí dál):
 8. **Kolik lodí se přihlašuje veřejným formulářem a kolik jich zapíše pořadatel
    nebo import?** Rozhoduje to, jestli se souhlas nesbírá od části pole, nebo
    skoro od nikoho. Tohle si můžu změřit sám v datech, až bude na čem. (R9)
+9. **Co znamená „pro přihlášené" — loď v regatě, nebo účet na webu?** Nejsou to
+   totéž a liší se v obou směrech. Bez téhle odpovědi se ta stránka postavit
+   nedá. (R10) ***Nová po střípku 6.***
