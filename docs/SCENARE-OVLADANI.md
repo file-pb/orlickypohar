@@ -419,9 +419,12 @@ const snimek = await nactiPolohy(serie, zavod);
 ```
 
 Takže otázka z bodu 11 — *„hlásí se celé pole?"* — se po přihlášení nové lodi
-zodpoví ze zastaralého seznamu, a loď, která zrovna dorazila, v něm chybí. Je to
-tišší případ než u cílovky: tam loď nejde zapsat, tady jen není vidět, že nemá
-telefon.
+zodpoví ze zastaralého seznamu, a loď, která zrovna dorazila, v něm chybí.
+
+*(Napřed jsem to odbyl jako „tišší případ než u cílovky, tam loď nejde zapsat,
+tady jen není vidět, že nemá telefon". **Filip to vytkl a má pravdu:** bod 11 je
+otázka, podle které se rozhoduje, jestli se smí startovat. Není to kosmetika,
+je to vstup do rozhodnutí — viz oddíl níž, který z toho dělá kritérium.)*
 
 **Tabule je naopak v pořádku.** `obrazovka.tsx` obnovuje celý snímek každých
 5 vteřin (`OBNOVA_MS`), snímek nese `lode` (`web/lib/tabule.ts:206`) a route má
@@ -432,6 +435,62 @@ loď se na startovní listině objeví do pěti vteřin.
 *„Obrazovka si o snímek říká po dvaceti vteřinách"*, zatímco `OBNOVA_MS` je
 **5 000 ms**. Komentář zůstal z doby před zkrácením intervalu (důvod zkrácení je
 popsaný u samotné konstanty). Nic to neláme, jen to při čtení plete.
+
+### Čerstvost dat tam, kde se rozhoduje
+
+Filip, 27. 10. 2026: *„u startovní funkce, cílové funkce a dalších zásadních
+kroků organizace a rozhodování je potřeba ty informace mít přesné."*
+
+**To je kritérium, a je ostřejší než „jak moc to vadí".** Neptá se, jak nepříjemný
+je důsledek, ale **jestli na té informaci stojí rozhodnutí**. Podle něj je
+zastaralý seznam lodí u bodu 11 stejně vážný jako na cílovce, protože odpovídá na
+otázku *„smíme startovat?"*.
+
+Prošel jsem podle toho všech devatenáct obrazovek správy. **Doloženo zdrojákem,
+ne během.** Vzorec je jednoduchý a platí bez výjimky:
+
+> **Po vlastní akci se obrazovka obnoví. Po cizí akci nikdy.**
+
+Serverová akce v Next.js vrátí nový stav tomu, kdo ji vyvolal, takže vlastní
+zápis je vidět hned. Změna od někoho jiného — nebo z jiného zařízení téhož
+člověka — se nepromítne, dokud se stránka nenačte znovu. `revalidatePath` se
+v projektu nevolá nikde a polling mají jen dvě obrazovky.
+
+| Obrazovka | O čem se tam rozhoduje | Obnova po cizí změně |
+|---|---|---|
+| **cíl** | start rozjížďky, pořadí v cíli | **ne** — `router.refresh()` jen při připojení; oba `setInterval` jsou na hodiny (1 s) a na opakované **odeslání** (30 s), ne na čtení |
+| **rozjížďka / výsledky** | ověření, schválení, vrácení k revizi | **ne** |
+| **přehled rozjížděk** | stavy, eliminace | **ne** |
+| **tracker** | rozprava, uzavření dne, viditelnost, *„hlásí se celé pole?"* | **jen polohy**; pole, okna, nastavení a vývěska jednorázově |
+| **bóje a trať** | stavba prvků, **přijetí trati** | **ne** po cizí; po vlastní ano (`router.refresh()` 8×) |
+| **přihlášky** | přijetí, vrácení k doplnění, **vyloučení** | **ne** |
+| **kalendář** | potvrzení termínu, vypsání, zrušení | **ne** (mimo závodní den, menší dopad) |
+| **směrnice** | vyvěšení, stažení s důvodem | **ne** (totéž) |
+| tabule *(ne správa)* | nic — jen zobrazuje | **ano, 5 s** |
+
+**Proč to vadí právě o závodním víkendu.** Celý zbytek roku pracuje v aplikaci
+jeden člověk a vzorec „po vlastní akci ano" stačí. Závodní den je jediná doba,
+kdy jich pracuje několik naráz — pořadatel zapisuje cíl, rozhodčí ověřuje, někdo
+u stolu přihlašuje loď, která dorazila pozdě, a na vodě se staví trať. Přesně
+tehdy je každá obrazovka obrazem minulosti, a nikdo to nepozná.
+
+**Dvě věci, které to zhoršují, a obě jsou jinde popsané jako správné:**
+
+- **U vody se nemá obnovovat** (`docs/DEN-ZAVODU.md`: *„kartu nezavírat
+  a neobnovovat"*), protože načtení bez signálu cílovou obrazovku sebere. Rada,
+  jak si čerstvá data vynutit, tedy u vody platit nemá.
+- **Cílovka je snímek schválně**, aby nepřepsala cizí práci. Obnovovat ji
+  průběžně by vrátilo chybu, kvůli které ten snímek vznikl.
+
+**Zapsáno bez návrhu**, ale s jedním rozlišením, které by návrh měl mít: *čtení*
+a *rozepsaný zápis* nejsou totéž. Seznam lodí na vodě, stav rozjížďky nebo počet
+spárovaných telefonů jsou **čtení** a obnovovat se můžou bez rizika. Naklepané
+časy v cíli jsou **rozepsaný zápis** a ty se přepsat nesmí. Dnešní snímkový režim
+chrání obojí najednou, protože to nerozlišuje.
+
+**Neověřeno:** jak dlouho ta nepřesnost v provozu trvá a jestli si jí někdo
+všiml jinde než u přihlášené lodi. To je otázka na Miloše a na závodní den, ne na
+zdroják.
 
 ## Role, se kterými se zkouší
 
