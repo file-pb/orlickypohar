@@ -352,6 +352,54 @@ se podle toho návrhu psát nemá, dokud to není rozhodnuté.
 nebo v klubovně; tohle ne — měří se jedna ruka, slunce a houpající se motorák.
 Dokud se to nezkusí na vodě, zůstává to zadání, ne ověřená vlastnost.
 
+**Jedna věc z toho už hotová je:** `useDisplejSviti`
+(`web/app/sprava/[serie]/vysledky/[zavod]/[cislo]/cil/cil.tsx:826`) drží Wake
+Lock po celou dobu, co je cílová obrazovka otevřená, a po přepnutí aplikace si
+ho vezme znovu. Požadavek *„mobil mi nesmí usnout"* je tedy vyřešený — jen na
+jediné obrazovce.
+
+### Vada z provozu: nově přihlášená loď se v seznamu neobjeví
+
+**První střípek, který hlásí, že něco nefunguje** — a je z provozu, ne
+z reprodukce. Filip, 27. 10. 2026:
+
+> *„Mj všml jsem si, že když jsme po startu rozjížďky přihlásili novou loď, tak
+> se hned nezobrazila v seznamu v apce. A web jsme museli obnovit."*
+
+**Čím to je, doloženo zdrojákem.** Cílová obrazovka je **schválně** postavená
+jako snímek k okamžiku otevření, a vlastní komentář to říká:
+
+> *„Stav se bere z vlastností **jen při připojení**. Tlačítko Zpět ale umí
+> stránku obnovit z mezipaměti routeru, se zápisem z doby, kdy se odešlo — a
+> první klepnutí by pak odeslalo celou starou sadu a novější výsledky smazalo."*
+> — `cil.tsx:212–216`
+
+Proto se při připojení volá `router.refresh()` **jednou** (`cil.tsx:218`,
+závislost `[router]`) a dál už se nic nenačítá. Rozdíly proti serveru se počítají
+*„z podoby, se kterou se stránka otevřela — `key` stránky se při změně zápisu
+vymění, takže čerstvější už nebude"*.
+
+Čtení samo cache nemá (`web/lib/prihlasky.ts` čte s `cache: "no-store"`) a
+`revalidatePath` se v projektu nevolá nikde, takže to není minutová cache ani
+mikrocache — **je to návrh té obrazovky**.
+
+**Proč to není jen kosmetika.** Loď, která dorazí na regatu později a přihlásí
+se mezi rozjížďkami, se na otevřené cílovce neobjeví — a **nejde jí zapsat
+dojezd**, dokud se stránka neobnoví. Na vodě přitom platí opačné pravidlo:
+*„kartu nezavírat a neobnovovat"* (`docs/DEN-ZAVODU.md`, oddíl *Zápis z vody,
+když web leží*), protože obnovení bez signálu cílovou obrazovku sebere. Dvě
+správné rady si tu jdou proti sobě.
+
+**Zapsáno bez návrhu.** Ten snímkový režim má dobrý důvod — chrání před
+přepsáním cizí práce — takže „prostě to obnovovat průběžně" by vrátilo chybu,
+kvůli které vznikl. Rozhodnout, jestli se má obnovovat jen *seznam lodí na vodě*
+(ne zapsané časy), nebo přibýt ruční *„načíst znovu"*, patří k návrhu, ne
+k měření.
+
+**Neověřeno:** jestli se totéž děje na dalších obrazovkách, které seznam lodí
+ukazují (tracker, startovní listina, přihlášky). Měřilo se jen to, co Filip
+potkal.
+
 ## Role, se kterými se zkouší
 
 Role se udělují na `/sprava/{ročník}/opravneni`. Pro zkoušku je potřeba

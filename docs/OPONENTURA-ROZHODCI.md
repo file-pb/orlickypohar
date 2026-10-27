@@ -234,6 +234,24 @@ Vzpomínka na konkrétní situaci, s přímým dotazem do pravidel. Odvozený n�
 je **R13** — a pravidla na to mají **tři různé odpovědi** podle toho, kdo je
 původcem.
 
+### Střípek 12 — co následuje po startu, a jedna vada z provozu (27. 10. 2026)
+
+> Bavíme se stále z pohledu apky pro rozhodčího (protože jsme se bavili
+> s Milošem): Po povedenem startu a uplynutí času pro alternativní tresty (nebo
+> přepnutí na „Start vyřízen"). Máme klidnou chvíli na cokoli. Následuje
+> zobrazení cílové obrazovky, nebo obrazovky pro činnosti (většinou krizové,
+> nebo zkrácení, nebo .... to ještě vymyslíme), Cílovka je ale běžný krok co by
+> měl následovat. Po dojetí a ukončení rozjížťky bude následovat příprava na
+> další.
+>
+> Mj všml jsem si, že když jsme po startu rozjížďky přihlásili novou loď, tak
+> se hned nezobrazila v seznamu v apce. A web jsme museli obnovit.
+
+Dvě věci v jednom: **tok obrazovek** (nález R17) a **vada pozorovaná
+v provozu** — a ta druhá je cennější, protože je to jediný střípek zatím, který
+hlásí, že něco nefunguje. Rozebraná je v `docs/SCENARE-OVLADANI.md`; sem patří
+jen to, že se našla.
+
 ### Střípek 11 — megafon, a návrh ukázat vlajku na tabuli (27. 10. 2026)
 
 > Většinou na ně pořvává megafonem. Vlajku (vlající 3d) můžeme ukázat třeba na
@@ -1212,6 +1230,69 @@ z celé téhle diskuse vyšla — odemyká odpočet na tabuli, odpočet startér
 *Rozvržení tabule — kam přesně ten prvek dát a jak má vypadat — je věc
 `docs/TABULE-DIVAK.md`, kde je k nálezu 7 doplněné. Sem patří jen to, co z toho
 plyne na pravidla.*
+
+### R17 — Tok obrazovek po startu: „Start vyřízen" je krok, který pravidla neznají, a je to dobře
+
+*Původ: střípek 12. Doloženo: ZPJ 29.1, 30.2, 32.1, 33, 34,
+`web/app/sprava/[serie]/vysledky/[zavod]/[cislo]/cil/cil.tsx:218–220`, `:826`.
+Stav: **zapsáno**.*
+
+Filip popisuje sled: **start → čas pro tresty („Start vyřízen") → klidná chvíle
+→ cílovka nebo obrazovka pro činnosti → dojetí a ukončení → příprava na další.**
+
+**„Start vyřízen" je dobrý nápad právě proto, že ho pravidla neznají.** ZPJ
+žádný takový okamžik nemají — mají jen lhůty, které běží nezávisle (vlajka X
+nejdéle 4 minuty podle 29.1, identifikace podle 30.2 kdykoli, než se uzavře
+zápis). Jenže **startér potřebuje vědět, kdy má hotovo**, a to pravidla neřeší,
+protože neřeší jeho pozornost. Je to tedy legitimní vlastní krok aplikace —
+dokud se netváří jako pravidlová lhůta. Co by k němu podle R14 mělo patřit: do
+toho okamžiku se ještě dá dopsat identifikovaná loď, po něm už ne bez vysvětlení.
+
+**„Obrazovka pro činnosti" má v pravidlech konkrétní obsah.** Filip píše
+*„většinou krizové, nebo zkrácení, nebo .... to ještě vymyslíme"* — vymýšlet se
+to nemusí, ZPJ to vyjmenovávají a všechno jsou to úkony **za jízdy**:
+
+| ZPJ | Činnost | Vlajka |
+|---|---|---|
+| **32.1** | **zkrácení** dráhy | S |
+| 32.1 | **zrušení** probíhající rozjížďky (i pro bezpečnost — R13) | N / N nad H / N nad A |
+| **33** | změna následujícího úseku dráhy (směr nebo délka) | C + kurz, nebo trojúhelník / obdélník, nebo + / − |
+| **34** | chybějící nebo posunutá značka — nahradit objektem s vlajkou M | M |
+| 27.1 | vyžádat osobní vztlakové prostředky | Y |
+| 37 | pokyny pro pátrání a záchranu | V |
+
+Z nich aplikace umí **jediné: zrušení** (a to jen oklikou přes eliminaci
+výsledků a bez důvodu, R13). **Zkrácení dráhy nezná vůbec** — a přitom je to
+podle Filipova vlastního výčtu to druhé nejčastější po krizích. Zkrácená dráha
+navíc mění, **kde je cíl** (32.2: u obeplouvané značky, na čáře, nebo u brány),
+takže se to dotýká trati i cílové obrazovky.
+
+**Dvě věci, které aplikace k tomuhle toku už má, a jedna chybí.**
+
+**Má: displej, co nezhasne.** `useDisplejSviti` v `cil.tsx:826` drží Wake Lock
+po celou dobu, co je cílovka otevřená, a po přepnutí aplikace si ho vezme znovu:
+
+```tsx
+/**
+ * Displej nezhasne, dokud je obrazovka otevřená. Na vodě se na telefon
+ * mezi dojezdy nesahá a odemykat ho, když se blíží loď, je pozdě.
+ */
+```
+
+**To je Milošův požadavek *„mobil mi nesmí usnout"* — už hotový a odladěný**,
+jen použitý na jediné obrazovce. Startovní procedura ho zdědí, až vznikne.
+
+**Má: cílovku jako běžný krok.** Filip píše, že *„cílovka je běžný krok, co by
+měl následovat"* — a to sedí, protože cílová obrazovka je podle návodu (s. 14)
+*„jediné místo aplikace, kde se klepe na čas"*.
+
+**Chybí: přechod mezi nimi.** Dnes je start **na cílové obrazovce** — zapisuje
+se tam a tamtéž se chytá cíl. V navrhovaném toku jsou to dvě různé obrazovky
+za sebou, mezi nimiž se přepíná. To není konflikt, jen upozornění, že
+„přepnutí na cílovku" znamená rozdělit obrazovku, která je dnes jedna.
+
+> **Místo na citát z diskuse:** _(zkracuješ na poháru dráhu? A když ano, jak se
+> to pozná — kde je pak cíl?)_
 
 ### R13 — Vytlačená loď a rozjížďka zrušená pro bezpečnost: tři různé cesty, aplikace nezná ani jednu
 
