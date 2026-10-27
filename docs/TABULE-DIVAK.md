@@ -217,6 +217,40 @@ Divákova nejčastější otázka („kdy se zase pojede?") tím zůstává bez
 odpovědi. Chybí buď pole *plánovaný start* u rozjížďky, nebo to, aby
 `start` s budoucím časem nechal rozjížďku plánovanou až do něj.
 
+**Potvrzeno z druhé strany (27. 10. 2026).** Z diskuse s rozhodčím vyšlo
+totéž trojím nezávislým způsobem — tenhle nález, `K6`
+v `docs/OPONENTURA-ROZHODCI.md`, a dva střípky od Miloše a Filipa. Miloš
+popisuje, že *„v rozpravě na konci setneme, kdy asi bude startovní procedura"*,
+a Filip k tomu: *„měl by běžet veliký odpočet do termínu dohodnutém na
+rozpravě"*. Plánovaný čas startu je tedy **vstup, který na rozpravě vzniká
+tak jako tak** — jen ho dnes není kam zapsat.
+
+**Co by se tím odemklo naráz:** odpočet na tabuli (tenhle nález), odpočet
+v ruce startéra, přepnutí tabule z listiny na mapu 15 minut před startem,
+i panýlek *„procedura v 10:25"*, který je dnes mrtvý. Všechno ostatní kolem
+startovní procedury je nad tím postavené
+(`docs/OPONENTURA-ROZHODCI.md`, R12).
+
+**Filipův návrh na rozvržení (27. 10. 2026), zapsaný bez rozhodnutí:**
+
+> *„Vlajku (vlající 3d) můžeme ukázat třeba na telce vlevo na mapě dole nad
+> běžícími pořadími spolu s odpočty a informacemi startovní procedury."*
+
+Tři věci k tomu, než se o tom rozhodne:
+
+- **Rozvržení tabule je zafixované** stavem z 25. 10. (`9c816ba`, PR #487)
+  a drží ho pravidlo, že sloupec zůstává na jednom místě a nic se nehýbe.
+  Nový prvek *nad běžícími pořadími* ten pruh posouvá — je potřeba ověřit,
+  co to udělá s výškovým rozpočtem, na který už jednou narazil nález 5
+  (*Tabule nepočítala s tím, co leží nad ní*) a nález 6 u startovní listiny.
+- **Vlajka na tabuli není znamení pro pole** — tabule je na břehu, lodě na
+  vodě. Pro diváka je to naopak cenné: právě on neví, co se na vodě děje.
+  Rozbor je v `docs/OPONENTURA-ROZHODCI.md`, R16.
+- **Mapa se rozsvítí, jen když sedí všechno čtvero** (trať, povolený přenos,
+  běžící den, běžící rozjížďka). Prvek *na mapě* by tedy před startem neměl
+  kam sednout — a startovní procedura je přesně doba, kdy se ještě nejede.
+  To je nejspíš podstatnější překážka než samotné rozvržení.
+
 ### 8. ~~V cíli se za celý závod neobjeví nic, a při publikaci všechno naráz~~
 **Opraveno 27. 10. 2026 — zčásti. Druhá půlka je rozhodnutí pořadatele,
 ne kód**, viz konec nálezu.

@@ -234,6 +234,15 @@ Vzpomínka na konkrétní situaci, s přímým dotazem do pravidel. Odvozený n�
 je **R13** — a pravidla na to mají **tři různé odpovědi** podle toho, kdo je
 původcem.
 
+### Střípek 11 — megafon, a návrh ukázat vlajku na tabuli (27. 10. 2026)
+
+> Většinou na ně pořvává megafonem. Vlajku (vlající 3d) můžeme ukázat třeba na
+> telce vlevo na mapě dole nad běžícími pořadími spolu s odpočty a informacemi
+> startovní procedury.
+
+**Odpověď na R15: je to možnost 2.** Megafon. A druhá věta je návrh, co s tím —
+rozebraný v R16.
+
 ### Střípek 10 — u Miloše nejsou vidět vlajky (27. 10. 2026)
 
 > U miloše jsem nikdy vlajky neviděl
@@ -1148,6 +1157,61 @@ nevadí a opravovat to není proč — jen to nemá zapadnout.
 > **Místo na citát z diskuse:** _(jak dáváš polí najevo, že platí minutové
 > pravidlo a že je někdo přes čáru — vlajka, deska, megafon, nebo se to řekne
 > na rozpravě a dál se spoléhá na čestnost?)_
+
+### R16 — Megafon: tresty podle pravidla 30 na poháru formálně neplatí, a tabule to nespraví
+
+*Původ: střípek 11 — **odpověď na R15**. Doloženo: ZPJ 25.2, 25.3, 26, 30,
+`docs/TABULE-DIVAK.md` nález 7, `web/lib/rozjizdky-tabule.ts`. Stav:
+**zapsáno**.*
+
+**Z možností v R15 platí ta druhá: megafon.** Tím je zodpovězeno, proč nejsou
+vidět vlajky — žádné nejsou.
+
+**Co z toho plyne, bez obcházení:** startovní tresty podle pravidla 30 (R14) se
+na poháru **formálně uplatnit nedají**. Každý z nich je podmíněný vyvěšenou
+vlajkou a křik megafonem vizuální znamení podle 25.2 není. To neznamená, že
+Miloš dělá něco špatně — pohár *„pořadatelsky ofiko není"* (střípek 5) a mezi
+lidmi, kteří se znají, funguje dohoda líp než vlajka. **Znamená to jen tohle:**
+*„minutové pravidlo"* je na poháru **vlastní pravidlo z dohody**, ne ZPJ 30,
+a jako každé vlastní pravidlo patří podle R8 do vypsání závodu nebo směrnic.
+Tam dnes není, takže jediné, oč se opírá, je to, že si to lidé pamatují
+z rozpravy.
+
+Praktický důsledek, který stojí za zvážení nezávisle na aplikaci: **megafon
+doletí míň daleko než je vidět vlajka.** Loď na druhém konci čáry nemusí slyšet,
+a u trestu bez projednávání je to rozdíl mezi „věděl a riskoval" a „nevěděl".
+Deska nebo kus látky na startovní lodi je levná pojistka — ZPJ 25.3 je výslovně
+dovoluje (*„buď vlajku nebo jiný objekt podobného vzhledu"*). Zda to je problém,
+ví jen Miloš; dosah megafonu jsem neměřil a neodhaduju ho.
+
+**K návrhu ukázat vlajku na tabuli.** Je to dobrý nápad, jen je potřeba být
+přesný v tom, **čím je a čím není**:
+
+- **Není to znamení pro pole.** Tabule visí v klubovně, lodě jsou na vodě.
+  Pravidlo 26 tím splněné nebude a vlajka na obrazovce nezaloží platnost
+  pravidla 30 o nic víc než megafon.
+- **Je to ale dobré pro diváka** — a právě na břehu je ten, kdo neví, co se na
+  vodě děje. „Visí Z, takže kdo v poslední minutě přejede, dostane dvacet
+  procent" je přesně ten druh věty, kterou tabule divákovi dlužila.
+- **A je to doklad.** R15 jmenoval jako skutečnou roli aplikace *„zaznamenat,
+  co platilo"*. Vlajka na tabuli je ten záznam vidět — a po závodě se dá
+  doložit, co bylo oznámeno.
+
+**Dobrá zpráva k odpočtům: půlka už je napsaná.** `rozjizdky-tabule.ts` umí obě
+fáze, které Filip chce — *„procedura ve 10:25"* i odpočet *„startovní procedura
+4:30"*. Jsou ale mrtvé, protože obě chtějí rozjížďku ve stavu `Planovana`
+s vyplněným `startV`, a ten stav **nejde vyrobit** (nález 7
+v `docs/TABULE-DIVAK.md`, změřeno nezávisle; totéž je K6 tady).
+
+**Tři nezávislé cesty tedy ukazují na jedno chybějící pole:** oponentura
+rozhodčího (K6), oponentura tabule (nález 7) a teď dva střípky od Miloše
+a Filipa. Plánovaný čas startu je ta nejlevnější věc s nejdelším dosahem, co
+z celé téhle diskuse vyšla — odemyká odpočet na tabuli, odpočet startérovi
+(R12) i přepnutí tabule 15 minut před startem (R4).
+
+*Rozvržení tabule — kam přesně ten prvek dát a jak má vypadat — je věc
+`docs/TABULE-DIVAK.md`, kde je k nálezu 7 doplněné. Sem patří jen to, co z toho
+plyne na pravidla.*
 
 ### R13 — Vytlačená loď a rozjížďka zrušená pro bezpečnost: tři různé cesty, aplikace nezná ani jednu
 
