@@ -1248,12 +1248,22 @@ stránky skládá `NAZVY` v `hlava.tsx:45`:
 | **přihlášky** | `Lodě` | `Přihlášky` | **jiné slovo** |
 | **startovní listina** | — | — | není tab, je jen na tabuli |
 
-**Ověřil jsem, že „Lodě" a „přihlášky" jsou doopravdy totéž**, než jsem to
-navrhl přejmenovat: sekce má uvnitř nadpis *„Přihlášené lodě"* a komentář
-*„Seznam lodí místo výsledků. Regata, která se teprve pojede, jinak nemá co
-ukázat"* (`sekce-lode.tsx:6`), a vypisuje i přihlášené nepotvrzené. Je to tedy
-**přihlášky, ne startovní listina** — Milošovo slovo sedí obsahu líp než
-dnešní, a startovní listina je skutečně až ta další věc, jak ji jmenuje zvlášť.
+**O tabu `Lodě` rozhodl Filip (27. 10. 2026): „To bude startovní listina."**
+Takže ne *Přihlášky*, jak jsem napřed navrhoval — veřejně diváka i závodníka
+zajímá, kdo startuje, kdežto přihlášky jako proces patří do správy.
+
+> **⚠︎ Přejmenování samo nestačí: obsah tomu dnes neodpovídá.** Sekce vypisuje
+> **přihlášené včetně nepotvrzených** a sama to u nich píše — *„čeká na
+> potvrzení"*, a u vyloučených *„vyloučená ze závodu"* (`sekce-lode.tsx:64–70`;
+> veřejně se ukazují stavy `Prihlasena`, `Potvrzena` i `Vyloucena`,
+> `Prihlasky.VerejneViditelna`). **Startovní listina je přitom ten, kdo
+> startuje** — loď čekající na potvrzení a loď vyloučená na ní nemají co dělat.
+>
+> Nadpis *Startovní listina* nad seznamem, kde stojí „čeká na potvrzení", by
+> byl přesně ten *„slib naprázdno"*, proti kterému stojí hlavička `co-smim.ts`.
+> Buď se tedy s názvem změní i filtr, nebo zůstane dvojice: **Přihlášky** (vše,
+> jak to je dnes) a **Startovní listina** (jen potvrzené) — což je mimochodem
+> přesně to, co Miloš vyjmenoval jako **dvě** položky.
 
 **Navržené znění podle Miloše:**
 
