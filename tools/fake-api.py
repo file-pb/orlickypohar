@@ -125,6 +125,12 @@ PRIHLASENA = {"Prihlasena", "Potvrzena", "Nedostavila", "Vyloucena"}
 # Vývěska, kterou pořadatel naplní za běhu. Mock ji drží v paměti: po
 # restartu zbydou jen ty pevné, aby bylo na tabuli pořád co ukázat.
 VYVESKA = {}
+# Čísla vydaných zpráv. <b>Počítadlo, ne čas:</b> `int(ted * 1000) % 1000000`
+# dalo dvěma zprávám vydaným v téže milisekundě totéž číslo, React pak
+# hlásil dva potomky se stejným klíčem a vývěska o jednu zprávu přijít
+# mohla. V API je to identita z databáze (nalezeno 27. 10. 2026).
+# Pevné zprávy v `zpravy_regaty` mají 1 až 3, tohle navazuje za nimi.
+ZPRAVA_ID = [3]
 
 
 def zpravy_regaty(slug):
@@ -2872,8 +2878,9 @@ class H(BaseHTTPRequestHandler):
             return self.send_error(400)
 
         ted = time.time()
+        ZPRAVA_ID[0] += 1
         zprava = {
-            "id": int(ted * 1000) % 1000000,
+            "id": ZPRAVA_ID[0],
             "text": text,
             "druh": vstup.get("druh") or "Informace",
             "vydanoV": cas_iso(ted),

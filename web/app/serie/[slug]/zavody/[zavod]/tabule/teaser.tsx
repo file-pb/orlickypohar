@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Znak } from "@/app/logo";
 import { NazevZavodu } from "@/app/tabule-nazev";
@@ -23,13 +24,57 @@ import type { Snimek } from "@/lib/tabule";
  * v hospodě víc než simulace cizí regaty.
  */
 /**
- * Kolik lodí se vejde do sloupce třídy.
+ * Kolik lodí se do sloupce třídy vejde, než se změří doopravdy.
  *
- * Tabule je plocha na dálku, takže seznam má strop — ale divák musí
- * vědět, že pokračuje, jinak pole patnácti lodí vypadá jako pole dvanácti
- * (totéž poučení jako u karuselu pořadí, 15. 10. 2026).
+ * <b>Číslo neví nic o tom, kolik je na obrazovce místa</b> — a právě to
+ * byla vada: dvanáct řádků se při delší vývěsce nevešlo, sloupec přetekl
+ * pod běžící pásy tříd a řádek „a další N" se nevypsal, protože z pohledu
+ * kódu se vešly všechny. Změřeno 26. 10. 2026 na okně 1280 × 720: poslední
+ * loď třídy Nad7m končila na 606 px, pásy začínají na 587, a při čtyřech
+ * zprávách na vývěsce zmizely dvě lodě z dvanácti úplně.
+ *
+ * Zůstává tu jen jako hodnota pro první vykreslení, než se změří skutečná
+ * výška řádku; od té chvíle rozhoduje místo, ne číslo.
  */
 const NEJVIC_V_TRIDE = 12;
+
+/**
+ * Kolik řádků se vejde mezi seznam a pásy tříd.
+ *
+ * <b>Měří se řádek, ne odhaduje</b>: výška řádku jde z `--tv`, tedy
+ * z menšího rozměru obrazovky, a text se na úzkém okně zalomí. `mez` je
+ * vrch pásů, které jsou přišpendlené k oknu — tu zná jen `Obrazovka`
+ * a posílá ji sem.
+ */
+function useKolikSeVejde(mez: number, zavisle: unknown) {
+  const mrizka = useRef<HTMLDivElement>(null);
+  const [kolik, setKolik] = useState<number | null>(null);
+
+  useEffect(() => {
+    const mer = () => {
+      const seznam = mrizka.current?.querySelector("ul");
+      const radek = seznam?.querySelector("li");
+      if (!seznam || !radek || mez <= 0) return;
+
+      const vyskaRadku = radek.getBoundingClientRect().height;
+      if (vyskaRadku <= 0) return;
+
+      const misto = mez - seznam.getBoundingClientRect().top;
+      const vejde = Math.max(1, Math.floor(misto / vyskaRadku));
+      setKolik((p) => (p === vejde ? p : vejde));
+    };
+
+    mer();
+    // Sloupce se nemusí změnit velikostí, ale posunout — vývěska nad nimi
+    // roste během dne. Proto se měří i při každé nové podobě snímku.
+    const sleduj = new ResizeObserver(mer);
+    if (mrizka.current) sleduj.observe(mrizka.current);
+    sleduj.observe(document.documentElement);
+    return () => sleduj.disconnect();
+  }, [mez, zavisle]);
+
+  return { kolik, mrizka };
+}
 
 /**
  * Telefony lodi jako <b>kostičky</b>, ne číslo (Filip, 26. 10. 2026:
@@ -78,9 +123,28 @@ function Telefony({ pocet, baterie }: { pocet: number; baterie: (number | null)[
   );
 }
 
-export function Teaser({ snimek, ted }: { snimek: Snimek; ted: number }) {
+export function Teaser({
+  snimek,
+  ted,
+  mez,
+}: {
+  snimek: Snimek;
+  ted: number;
+  /**
+   * Kde končí plocha pro obsah — vrch běžících pásů tříd. Měří ji
+   * `Obrazovka`: pásy jsou přišpendlené k oknu, takže z toho, co je nad
+   * nimi, jejich poloha neplyne.
+   */
+  mez: number;
+}) {
   const hodiny = casomira(snimek, ted);
   const trid = [...new Set(snimek.lode.map((l) => l.kategorie))];
+  const { kolik, mrizka } = useKolikSeVejde(mez, snimek);
+  /**
+   * <b>Dokud se neměřilo, platí odhad.</b> První vykreslení žádné
+   * rozměry nemá a prázdný sloupec by na vteřinu probliknul.
+   */
+  const strop = kolik ?? NEJVIC_V_TRIDE;
   const jede = snimek.rozjizdky.some((r) => r.stav === "Probiha");
   const odjeto = snimek.rozjizdky.filter((r) => r.stav === "Dokoncena").length;
 
@@ -138,10 +202,14 @@ export function Teaser({ snimek, ted }: { snimek: Snimek; ted: number }) {
             {snimek.lode.length}{" "}
             {snimek.lode.length === 1 ? "přihlášená loď" : snimek.lode.length < 5 ? "přihlášené lodě" : "přihlášených lodí"}
           </p>
-          <div className="tabule-teaser-tridy">
+          <div className="tabule-teaser-tridy" ref={mrizka}>
             {trid.map((t) => {
               const lode = snimek.lode.filter((l) => l.kategorie === t);
-              const vejde = lode.slice(0, NEJVIC_V_TRIDE);
+              // <b>Řádek „a další N" taky zabírá řádek.</b> Když se pole
+              // nevejde celé, ubere se jedno místo na něj — jinak by ho
+              // vytlačil ven právě ten výpis, který má o přetečení říct.
+              const vejde =
+                lode.length > strop ? lode.slice(0, Math.max(1, strop - 1)) : lode;
               const dalsich = lode.length - vejde.length;
               return (
                 <div key={t} className="tabule-teaser-trida">

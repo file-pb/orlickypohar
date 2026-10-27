@@ -147,32 +147,55 @@ strom), takže v historii stojí pod jejím popisem, ne pod tímhle auditem.
 
 ## Otevřené — o těchhle rozhodne Filip
 
-**Nález 8 je od 27. 10. 2026 přeškrtnutý**, ale zůstává tady: kód je
-opravený, poslední rozhodnutí v něm ale není technické.
+**Nálezy 6 a 8 jsou od 27. 10. 2026 přeškrtnuté**, ale zůstávají tady:
+u šestky kvůli číslům, proti kterým se oprava dá přeměřit, u osmičky
+proto, že poslední rozhodnutí v ní nebylo technické.
 
-### 6. Startovní listina nemá výškový rozpočet a lodě z ní tiše padají
-**Kdy to divák vidí:** před startem, tedy když se u tabule stojí nejvíc.
+### 6. ~~Startovní listina nemá výškový rozpočet a lodě z ní tiše padají~~
+**Opraveno 27. 10. 2026.**
 
-Teaser krátí seznam na `NEJVIC_V_TRIDE = 12` lodí a zbytek přizná řádkem
-*„a další N"*. To číslo ale nic neví o tom, kolik místa na obrazovce je —
-sloupec s dvanácti loděmi se nevejde a **přeteče pod běžící pásy tříd**.
-Řádek „a další" se nevypíše, protože z pohledu kódu se vešly všechny.
+**Kdy to divák viděl:** před startem, tedy když se u tabule stojí nejvíc.
 
-*Změřeno (okno 1280 × 720, pruh ukázkových dat nahoře):*
-- `NAD7M`, 12 lodí: poslední řádek `THEA` končí na **606 px**, pásy tříd
-  začínají na **587 px** → dvě lodě pod pásy, `a další` hlásí nulu;
-- s delší vývěskou (čtyři zprávy místo tří) se seznam posune níž a zmizí
-  **ROSE i THEA** — tedy 10 z 12 viditelných a nic o tom neřekne.
+Teaser krátil seznam na `NEJVIC_V_TRIDE = 12` lodí a zbytek přiznal řádkem
+*„a další N"*. To číslo ale nic nevědělo o tom, kolik místa na obrazovce
+je — sloupec s dvanácti loděmi se nevešel a **přetekl pod běžící pásy
+tříd**. Řádek „a další" se nevypsal, protože z pohledu kódu se vešly
+všechny.
 
-Oprava výšky tabule (nález 5) tohle **nespraví**: obsah se kreslí odshora,
-takže zkrácení spodku ho nahoru nepostrčí. Spraví to jedině to, že si
-sloupec řekne o skutečně dostupnou výšku a „a další N" se počítá z toho, co
-se **vešlo**, ne z toho, co se uřízlo číslem 12. Měřit výšku obrazovka už
-umí (`odsazeni` v `obrazovka.tsx`), jen se to zatím nedostane do teaseru.
+*Změřeno před opravou (okno 1280 × 720, pruh ukázkových dat nahoře):*
+- `NAD7M`, 12 lodí: poslední řádek `THEA` končil na **606 px**, pásy tříd
+  začínají na **587 px** → dvě lodě pod pásy, `a další` hlásilo nulu;
+- s delší vývěskou (pět zpráv místo tří) se seznam posunul níž a zmizely
+  **dvě z dvanácti** úplně.
 
-**Proč to nechávám na rozhodnutí:** kolik lodí se má v jedné třídě ukázat
-a co se stane se zbytkem je návrh, ne chyba — ale dnešní stav je horší než
-obě možnosti: jméno je napůl schované a nikdo se nedozví, že chybí.
+*Oprava:* místo čísla rozhoduje **místo**. `Obrazovka` měří, kde začínají
+pásy tříd (ty jsou přišpendlené k oknu, takže jejich poloha neplyne
+z toho, co je nad nimi), a posílá tu mez teaseru; ten si změří **výšku
+jednoho řádku** a spočítá, kolik se jich mezi seznam a pásy vejde.
+Nevejde-li se pole celé, ubere se jedno místo na řádek „a další N" —
+jinak by ho vytlačil ven právě ten výpis, který má o přetečení říct.
+`NEJVIC_V_TRIDE` zůstává jen jako hodnota pro první vykreslení, než se
+změří doopravdy.
+
+*Ověřeno po opravě, čtyřikrát:*
+
+| Stav | Co se ukáže |
+|---|---|
+| 1280 × 720, tři zprávy na vývěsce | `NAD7M` 10 řádků, poslední „a další 3" |
+| táž tabule, vývěska naroste za běhu | přepočítá se na 7 lodí a „a další 5" |
+| 1280 × 560 | 6 lodí a „a další 6" |
+| 1600 × 900 | 7 lodí a „a další 5" |
+
+Ve všech čtyřech **nic nekončí pod pásy** a „a další N" sedí s tím, co se
+neukázalo. Na pravidlo nejsou jednotkové testy schválně: celé stojí na
+změřeném rozvržení, takže důkaz je měření v prohlížeči, ne přepočet
+v Node.
+
+**Jedna lež mocku u toho:** vydané zprávy dostávaly číslo
+`int(čas * 1000) % 1000000`, takže dvě zprávy vydané v téže milisekundě
+měly totéž — React pak hlásil dva potomky se stejným klíčem a vývěska
+o jednu zprávu přijít mohla. V API je to identita z databáze. Mock má
+teď počítadlo.
 
 ### 7. Časomíra k nejbližšímu startu se nikdy neukáže
 `rozjizdky-tabule.ts` umí dvě fáze — *„procedura ve 10:25"* a odpočet

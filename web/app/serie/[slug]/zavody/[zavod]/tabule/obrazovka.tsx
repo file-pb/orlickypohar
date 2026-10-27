@@ -475,6 +475,14 @@ export function Obrazovka({
    */
   const plocha = useRef<HTMLDivElement>(null);
   const [nadTabuli, setNadTabuli] = useState(0);
+  /**
+   * Kde končí plocha pro obsah — vrch běžících pásů tříd, a když pásy
+   * nejsou, spodek tabule. <b>Měří to tahle obrazovka</b>, stejně jako
+   * výšky pro mapu: pásy jsou přišpendlené k oknu (`position: fixed`),
+   * takže jejich poloha neplyne z toho, co je nad nimi, a komponenta,
+   * která do nich přetéká, si ji sama nespočítá.
+   */
+  const [mezObsahu, setMezObsahu] = useState(0);
   const [odsazeni, setOdsazeni] = useState({ nahore: 0, dole: 0, vrch: 0 });
   const maTridy = poradiLodi.length > 0;
   useEffect(() => {
@@ -500,6 +508,14 @@ export function Obrazovka({
       // z vlastní výšky, jinak jí spodek zmizí pod pásem partnerů.
       const nad = Math.max(0, Math.round(plocha.current?.getBoundingClientRect().top ?? 0));
       setNadTabuli((p) => (p === nad ? p : nad));
+      // Pásy tříd se nevykreslí, dokud není co v nich vézt; pak je mezí
+      // spodek tabule.
+      const mez = Math.round(
+        tridy.current?.getBoundingClientRect().top ??
+          plocha.current?.getBoundingClientRect().bottom ??
+          0,
+      );
+      setMezObsahu((p) => (p === mez ? p : mez));
     };
     mer();
     const sleduj = new ResizeObserver(mer);
@@ -605,7 +621,7 @@ export function Obrazovka({
           než simulace cizí regaty, a hlavně je pravdivý. Ukázkové plavby
           zůstaly tam, kam patří: v náčrtu `/nacrt/tabule`. */}
       {rezim === "listina" ? (
-        <Teaser snimek={snimekDemo} ted={ted} />
+        <Teaser snimek={snimekDemo} ted={ted} mez={mezObsahu} />
       ) : rezim === "mezi" || rezim === "po" ? (
         /* <b>Žádná trať vzadu</b> (Filip, 26. 10. 2026: *„měla by mít
            stejné pozadí jak ta startovní listina; ten rank vpravo
