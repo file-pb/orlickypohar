@@ -433,7 +433,37 @@ jestli ta loď byla v trojúhelníku v poslední minutě, nebo o patnáct vteři
 dřív** — a je to trest bez projednávání, takže se to po závodě nemá o co opřít.
 U dojezdů to tak tvrdé není (přepočítají se, viz výš), u startovních trestů ano.
 
-*Mimo rozsah zůstává, co se stane, když si oba myslí, že jsou hlavní.*
+**Kdo je hlavní — zodpovězeno 27. 10. 2026.** Filip:
+
+> *„oba by si neměli myslet že jsou hlavni, to by se mělo rozhodnout na signalu,
+> a oba by to měli akceptovat"*
+
+Tedy **server je arbitr** a rozhoduje se při propojení; žádná dohoda mezi
+telefony, žádné přebírání velení za provozu. To je jednodušší než cokoliv
+distribuovaného a sedí to na to, že se oba párují přes server tak jako tak.
+
+**Jeden důsledek, který jde proti bodu 1 výš, a je lepší ho vyřešit teď než
+u vody.** Když se hlavní určuje *„na signálu"* a bez signálu není nikdo, pak
+**start bez spojení nezapíše nikdo** — a to je přesně ta situace, která jim
+start pokazila (R19). Dvě věci by se tím vylučovaly: *start musí přežít výpadek*
+a *hlavního určuje server*.
+
+Řeší se to tím, **kdy** se to rozhodne: ne v okamžiku startu, ale **dopředu —
+a pak to telefon drží i bez signálu.** Vzorec na to projekt má, a je to tentýž,
+na který ukazoval už R18: okna závodních dnů si telefon *„stáhne dopředu a řídí
+se jimi i bez signálu; změna od pořadatele se projeví, až signál chytí"*
+(`OknaEndpoints`). „Jsem hlavní startér téhle regaty" je údaj přesně toho
+druhu — stáhne se u mola, platí celý den, a když spojení spadne, nic se tím
+nemění.
+
+Proti tomu *„rozhodnout se na signálu"* ve smyslu „až v okamžiku startu" by
+znamenalo, že výpadek sebere startéru právo odstartovat. To by bylo horší než
+dnešní stav, kde se ztratí jen zápis.
+
+*Otevřené zůstává jediné: co když hlavnímu spadne telefon do vody. Z „oba by to
+měli akceptovat" plyne, že se slave hlavním sám neudělá — ale pak se ten den
+nedostartuje. Jestli má existovat převzetí velení, a čím se potvrzuje, Filip
+neřekl a neodhaduju to.*
 
 ---
 
