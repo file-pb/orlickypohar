@@ -1269,11 +1269,29 @@ to nemusí, ZPJ to vyjmenovávají a všechno jsou to úkony **za jízdy**:
 | 27.1 | vyžádat osobní vztlakové prostředky | Y |
 | 37 | pokyny pro pátrání a záchranu | V |
 
-Z nich aplikace umí **jediné: zrušení** (a to jen oklikou přes eliminaci
-výsledků a bez důvodu, R13). **Zkrácení dráhy nezná vůbec** — a přitom je to
-podle Filipova vlastního výčtu to druhé nejčastější po krizích. Zkrácená dráha
-navíc mění, **kde je cíl** (32.2: u obeplouvané značky, na čáře, nebo u brány),
-takže se to dotýká trati i cílové obrazovky.
+> ### ✗ Tenhle odstavec byl špatně — opraveno 27. 10. 2026
+>
+> Stálo tu, že *„zkrácení dráhy aplikace nezná vůbec"*. **Zná.** Našel jsem to
+> až při ověřování jiné věci: `Trat` má `ZkracenoUPrvkuId`, `ZkracenoV`,
+> `ZkratilId` i `Zkracena`, endpoint je `POST …/trate/{trat}/zkraceni`
+> (`TratEndpoints.cs:186`) a `SmiZkratit` to pouští **jen rozhodčímu, a jen
+> když rozjížďka jede** (`TratSprava.cs:958`: `jeRozhodci && t.RozjizdkaId is
+> not null && jede`). Veřejná trať zkrácení vydává ven, aby si ho klient uměl
+> spárovat s prvkem.
+>
+> Tvrdil jsem chybějící funkci, která je hotová — a hotová dobře, včetně
+> omezení na rozhodčího a na běžící rozjížďku. Nechávám to tu, protože je to
+> doklad, že odvozovat z nepřítomnosti slova v kódu nestačí: hledal jsem
+> „zkrácení" mezi kódy výsledků a stavy rozjížďky, kdežto ono to žije na trati.
+
+Z téhle tabulky aplikace umí **dvě věci**: **zkrácení** (plně, jako úkon
+rozhodčího za jízdy) a **zrušení** (jen oklikou přes eliminaci výsledků a bez
+důvodu, R13). Zbytek — změna úseku, chybějící značka, vztlakové prostředky,
+pátrání — v ní není.
+
+Zkrácená dráha navíc mění, **kde je cíl** (32.2: u obeplouvané značky, na čáře,
+nebo u brány), takže se dotýká trati i cílové obrazovky. Jestli to dnes vydaná
+trať celé pokrývá, jsem neověřoval.
 
 **Dvě věci, které aplikace k tomuhle toku už má, a jedna chybí.**
 
@@ -1825,7 +1843,7 @@ potvrdil to rozhodčí 22. 9. 2026 a podle něj se počítá.
 | 29.2 | všeobecné odvolání (první opakovač) | **ne** |
 | 30.1–4 | startovní tresty podle vlajky (I, Z, U, černá) — **„minutové pravidlo"** | **ne** — z pěti kódů zná jen OCS; ZFP, UFD, BFD chybí, a je to úkon, který startér dělá (R14) |
 | 30.4 | oznámit číslo plachty lodi s černou vlajkou před dalším startem | vývěska a tabule **jsou**, povinnost nepojmenovaná (R14) |
-| 32.1 | **zkrácení** dráhy po startu | **ne** |
+| 32.1 | **zkrácení** dráhy po startu | **ano** — úkon rozhodčího za jízdy, `SmiZkratit` (R17, opraveno) |
 | 32.1 | **zrušení** rozjížďky po startu | zpola — jen oklikou přes eliminaci výsledků, a **bez důvodu** (R13) |
 | 33 | změna následujícího úseku dráhy | částečně: přestavba trati (jiný pojem) |
 | 34 | chybějící značka | **ne** — bóje se „sbírá z vody", ne nahrazuje |
