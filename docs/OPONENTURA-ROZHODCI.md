@@ -366,6 +366,33 @@ Dva chybějící díly ze šesti; zbylé čtyři na cílové obrazovce už jsou:
    trackeru po rozpravě vyžaduje důvod, protože *„je to doklad pro spor"*. Start
    je spornější než viditelnost poloh.
 
+   **Totální krize má ale jednodušší odpověď než převzetí velení** (Filip,
+   27. 10. 2026): *„V totální krizi by se rozjížďka odjela jen jea mobil, prostě
+   dokud nebude na pripojeni tak si to apka odměří… jakmile se připojí, dojde
+   k nastavení nového velitele, převzetí času a jedeme standard."*
+
+   Krizový režim tedy není zvláštní stav, ale **dočasný, který se při připojení
+   sám rozpustí** — a velitel se po připojení nastaví znovu, takže se vůbec
+   nemusí řešit, kdo jím byl před výpadkem. **Z toho, co k tomu dnes stojí:**
+
+   | Krok | Zvládne to mobil sám? |
+   |---|---|
+   | **zapsat dojezdy bez startu** | **ano** — `NamerenyCas` vrací `null`, když start chybí (`Zapis.cs:169`), takže se uloží absolutní okamžik a čas se dopočítá; po doplnění startu se přepočítá (`ZapisSprava.cs:486`) |
+   | **přežít výpadek s rozepsaným zápisem** | **ano** — `koncept.ts`, a odesílá se znovu po návratu signálu |
+   | **zapsat start** | **ne** — ztratí se (bod 1 výš) |
+   | **založit rozjížďku** | **ne** — `pridejRozjizdkuAkce` je serverová akce |
+
+   Takže z Filipova *„apka si to odměří"* dnes chybí **dvě věci, a jen jedna
+   z nich je práce**: start do konceptu (bod 1) a **rozjížďky založené
+   dopředu**. To druhé je provozní zvyk, ne kód — program dne se zná z rozpravy,
+   takže se rozjížďky dají založit u mola, dokud je signál. S tím a s bodem 1 se
+   **celá rozjížďka odjede offline už dneškem**.
+
+   *Jedna poznámka k `otisk`u: koncept je dnes **rozdíl proti serverovému
+   zápisu** (*„`otisk` je podoba zápisu na serveru v době…"*, a použije se *„jen
+   při shodném otisku"*). U rozjížďky založené dopředu a prázdné to vadit nemá —
+   prázdný zápis je taky otisk. Nezkoušel jsem to, je to hypotéza k ověření.*
+
 **Jak se ti dva spárují — zodpovězeno 27. 10. 2026.** Filip: *„oni se párují
 přes server, oba mají roli pořadatel rozhodčí a více."* Tedy žádné přímé
 spojení mezi telefony; server je prostředník a přístup jim dávají role, které
