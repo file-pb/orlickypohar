@@ -329,15 +329,18 @@ vůbec neotevřeli a bude se k nim chtít vrátit:
 
 | Osa | Čím se nese dnes |
 |---|---|
-| **stav** | barva (zastávka i trať, výčtově) — jediná plně obsazená |
+| **stav** | barva (zastávka i trať, výčtově), **od 28. 10. 2026 i rámeček karty** s popisem v horní hraně |
 | **navedení** | prstenec u výstražné tečky, *„tohle si všimni"*; a textem „Co teď" |
-| **stáří** | jen text (*„hlásí se · stárne · nehlásí se"*, *„naposledy před X"*), v appce dokonce dvoustupňově — **návrh obrysem je v artifactu** |
+| **dikce** | **od 28. 10. 2026 barva pruhu a výplň štítku** na vývěsce ve správě i na tabuli |
+| **průběh a výsledek** (*„že něco probíhá a jak to dopadlo"*) | **od 28. 10. 2026 i ve správě**: číslo rozjížďky svítí výplní, odjetá je obtažená, zrušená přeškrtnutá |
+| **stáří** | jen text (*„hlásí se · stárne · nehlásí se"*, *„naposledy před X"*), v appce dokonce dvoustupňově — **návrh obrysem je v artifactu, nezavedený** |
 | **naléhavost** | nic; kandidát je tloušťka okraje |
 | **priorita** | nic; dnes ji nese pořadí v seznamu a nic víc |
 | **aktuálnost** | nic — a není to totéž co stáří: stará poloha pořád platí, neaktuální ne |
 | **validita** | nic; nejblíž je k ní šrafa u nezveřejněné regaty, ale ta je o něčem jiném |
-| **dikce** | nic v grafice, ale **v datech už je**: vývěska regaty rozlišuje *oznámení · změna programu · výstraha* a vizuálně se to neprojevuje |
-| **průběh a výsledek** (*„že něco probíhá a jak to dopadlo"*) | **na tabuli ano, ve správě ne** — viz níž |
+
+*Řádky nad čarou (stav, navedení, dikce, průběh) jsou obsazené; čtyři spodní
+začínají od nuly a nemá je kdo rozhodnout, viz „Co zůstalo otevřené" níž.*
 
 **Poslední řádku Filip doplnil jako devátou** a je jediná, kde projekt kus
 práce už odvedl — jen na jednom místě. Na tabuli ji nesou **dva kanály
@@ -411,6 +414,105 @@ podíval na tmavý.*
 Vzorec na přebíjení projekt má — barvy jsou tokeny přebíjené ve dvou tmavých
 blocích, stín by se choval stejně. Konkrétní čísla ale patří k vidění, ne
 k počítání.
+
+**Zavedeno 28. 10. 2026**, viz oddíl níž — včetně toho, že obrys vlastní
+okraj prvku nahrazuje, a včetně jedné pasti, na které token nefungoval
+vůbec.
+
+### Devět os: co se zavedlo (28. 10. 2026)
+
+Zavedené jako **systém, ne jako úpravy stránek** — barva i stín jsou token
+na `:root` přebíjený v obou tmavých blocích, takže se příště nemusí
+rozhodovat znovu.
+
+**1 · Stíny jsou tokeny a v tmavém režimu se obracejí.** `--sila-vyzareni`
+(0,09, mezi variantami 3 a 4 z ukázky), `--stin-nabidky`, `--stin-listy`
+a `--stin-karty-tabule`. Na tmavém podkladu je světlý **celý** stín: bílý
+obrys `0 0 0 1px rgb(255 255 255 / 0.30)` odděluje, bílý rozptyl zvedá,
+černá vrstva tam není vůbec. Obrys přitom **nahrazuje** vlastní okraj prvku
+— u obou nabídek i u lišty počasí jde `border-color` v tmavém režimu na
+`transparent`, jinak se kreslí dvojitá linka a světlejší z ní dělá celou
+práci stejně. Karta dojezdu na tabuli přestala být výjimkou s
+`rgb(0 0 0 / 0.55)`; má týž tvar, jen v `--tv`.
+
+*Co se při tom našlo:* `--stin-karty-tabule` napřed stál na `:root`
+a nefungoval vůbec. Hodnota má rozměry v `--tv`, které je definované až na
+`body:has(.tabule)`, takže se `var(--tv)` na `:root` nevyhodnotilo, celá
+vlastní vlastnost byla neplatná a `box-shadow` spočítaný prohlížečem hlásil
+`none`. Token proto bydlí u `--tv`, ne u ostatních stínů. Bez pohledu do
+spočítaného stylu by to prošlo jako hotové.
+
+**2 · „Probíhá a jak to dopadlo" je i ve správě.** Číslo rozjížďky nese
+stav tak, jak to umí tabule: probíhající **svítí výplní** (oranžová
+`--pozor`), odjetá je obtažená zeleně, zrušená si drží přeškrtnuté číslo.
+Vedle čísla stojí slovo — *jede se · odjetá · zrušená* — a plánovaná je
+schválně beze slova, protože je to výchozí stav většiny řádků v seznamu.
+
+*Upřesnění proti zadání:* v seznamu se `StavRozjizdky` nepoznal „jen ze
+štítku", **nevykresloval se vůbec**. `RozjizdkaSpravaRadek` ho v řádku
+posílal, ale stránka sahala jen na `stavVysledku`, a to je jiná otázka —
+stav zápisu říká, kdo za čísla ručí, stav rozjížďky, co se děje na vodě.
+Štítek proto zůstal a číslo dostalo svoje.
+
+**3 · Dikce zprávy je vidět.** Ve správě nese druh zprávy pruh u levé hrany
+řádku a štítek: výstraha je **vyplněná naplno** (jediná taková — je to ta
+jedna věc, kterou nikdo nesmí přehlédnout), změna programu má oranžový
+obrys a podbarvení, oznámení zůstává bez barvy, protože kdyby svítilo
+všechno, nesvítí nic. Na tabuli dikce byla, ale změna programu měla jen
+barvu linky proti výstraze se dvěma kanály — dostala podbarvení taky.
+
+**4 · Stav regaty je v rámečku karty, publikace šrafou.** Barva jde do
+okraje, popis se posadí do jeho horní hrany, a jsou to **dvě nezávislé
+osy**: publikace nesmí dostat barvu, tu už má obsazenou stav. Šrafa žádnou
+nemá, takže se vedle něj vejde. Platí na rozcestníku ročníku i v kalendáři
+správy; štítek *„nezveřejněno"* u karty zůstává, protože šrafa říká „něčím
+se to liší" a slovo říká čím.
+
+*Co se při tom našlo:* šrafa z `--zvyrazneni` byla v tmavém režimu
+prakticky neviditelná (`#232830` na `#1b1f23`) — kanál, který měl nést
+publikaci, nenesl nic. Má teď vlastní token `--srafa`, obě hodnoty vybrané
+pohledem na čtyři síly vedle sebe.
+
+**Dvě barvy navíc, obě pojmenované podle významu.** `--pozor` je oranžová
+„právě teď" — projekt ji používal natvrdo na třech místech (panýlek *jede
+se*, změna programu, stárnoucí poloha v náčrtu) a všechna tři znamenají
+totéž. `--pozor-pismo` je tatáž barva stažená do čitelna: `--pozor` je
+laděná na výplň a drobné písmo v ní je na bílé sotva čitelné. V tmavém
+režimu se ty dvě rozcházet nemusí.
+
+**Ověřeno** v obou režimech a na šířce telefonu (375 px): rozcestník,
+kalendář správy, seznam rozjížděk se všemi čtyřmi stavy, vývěska ve správě,
+obě nabídky v hlavičce, lišta počasí a tabule. Stav rozjížďky *Probiha*
+v mocku nestojí, musel se do dat dosadit.
+
+### Co zůstalo otevřené
+
+**Čtyři osy, které nemá kdo rozhodnout.** Priorita, naléhavost, aktuálnost
+a validita v tabulce výš začínají od nuly — není to práce na vizuálu, ale
+rozhodnutí, co která z nich vlastně znamená:
+
+- **priorita** — podle čeho se řadí, když ne podle času? Dnes ji nese
+  pořadí v seznamu a nic víc.
+- **naléhavost** — kandidát je tloušťka okraje, ale ta kartu opticky
+  zmenší, takže jeden stupeň, ne škála.
+- **aktuálnost** — není to totéž co stáří: stará poloha pořád platí,
+  neaktuální ne. Nejdřív je potřeba říct, co v téhle aplikaci zastará.
+- **validita** — nejblíž je k ní šrafa u nezveřejněné regaty, ale ta je
+  o něčem jiném, a šrafa je teď obsazená publikací.
+
+**Obrys jako stáří informace** (Filipův nápad, 27. 10. 2026, artifact
+sekce 6) **zavedený není**, a schválně. Líbil se, ale nasadit ho znamená
+rozhodnout o **škále**, ne o barvě: stáří dnes nese text (*„hlásí se ·
+stárne · nehlásí se"*, *„naposledy před X"*) a v appce je dvoustupňové
+(`stari > 2 * ZIVE_MS`). Kolik stupňů má mít obrys, kde se lámou a co se
+stane s tím textem, je otázka na Filipa, ne na CSS. Ve světlém režimu
+navíc musí jít obráceně — čerstvé tmavší, staré bledší.
+
+**Publikace regaty na rozcestníku ročníku** se nedá ukázat: `ZastavkaVysledkyDto`
+ten příznak nevydává (`VysledkySprava.cs`), kdežto v kalendáři správy ano.
+Šrafa je proto zatím jen v kalendáři. Dotáhnout to znamená přidat pole do
+API a přegenerovat klienta (`packages/api-client/generuj.sh` potřebuje
+běžící API), ne změnit stránku.
 
 ### Pruh partnerů ve správě (27. 10. 2026)
 
