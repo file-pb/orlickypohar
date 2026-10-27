@@ -234,6 +234,14 @@ Vzpomínka na konkrétní situaci, s přímým dotazem do pravidel. Odvozený n�
 je **R13** — a pravidla na to mají **tři různé odpovědi** podle toho, kdo je
 původcem.
 
+### Střípek 13 — pushky na appky posádek musí chodit rychle (27. 10. 2026)
+
+> až budeme řešit pushky na appky posádek, a změny stavů rozjížděk, tak bude
+> taky potřeba doručit je fofrem
+
+Budoucí požadavek, ne nález — ale vztahuje se k rozhodnutím rozhodčího, protože
+právě jeho změny stavů se mají doručovat. Nález **R18**.
+
 ### Střípek 12 — co následuje po startu, a jedna vada z provozu (27. 10. 2026)
 
 > Bavíme se stále z pohledu apky pro rozhodčího (protože jsme se bavili
@@ -1293,6 +1301,72 @@ za sebou, mezi nimiž se přepíná. To není konflikt, jen upozornění, že
 
 > **Místo na citát z diskuse:** _(zkracuješ na poháru dráhu? A když ano, jak se
 > to pozná — kde je pak cíl?)_
+
+### R18 — Doručení ven: takt je minuta, a kód s tímhle požadavkem předem počítá
+
+*Původ: střípek 13. Doloženo:
+`Features/Upozorneni/OdesilaniUloha.cs:18–28`, `Zarizeni.cs:58–66`,
+`Features/Zavody/VysledkySprava.cs:240–256`, `NAVOD-ROZHODCI.pdf` s. 22.
+Stav: **zapsáno — budoucí požadavek, podklad pro rozhodnutí**.*
+
+Filip: *„až budeme řešit pushky na appky posádek, a změny stavů rozjížděk, tak
+bude taky potřeba doručit je fofrem."*
+
+**Ten požadavek je v kódu předvídaný, i s důvodem, proč dnes platí opak.**
+`OdesilaniUloha` to říká sama:
+
+> *„**Proč takt po minutě.** Upozornění nejsou čas závodu: „výsledky zveřejněny"
+> snese minutu, a kratší takt by při prázdné frontě jen budil databázi. **Zprávy,
+> které minutu nesnesou — odložený start — půjdou zařadit s vlastní pobídkou, až
+> vzniknou.**"*
+
+Takže to není opomenutí, je to **vědomě odložené rozhodnutí** — a Filipova věta
+je přesně ta chvíle, kdy se odkládat přestává.
+
+**Co dnes platí, změřeno ve zdrojáku:**
+
+| Co | Jak |
+|---|---|
+| **takt odesílání** | `PeriodicTimer(TimeSpan.FromMinutes(1))` — latence až minuta, a **probudit zvenčí ho nejde** |
+| **dávka** | 50 úkolů na jedno probuzení (`Odbery.DavkaOdeslani`) |
+| **pokusů** | 5, pak se úkol vzdá |
+| **replik** | jedna, schválně — výběr fronty není zamčený |
+| **kolik zpráv se posílá** | **jedna jediná**: „Výsledky N. rozjížďky jsou venku", a to při publikaci, tedy po závodě |
+| **komu** | odběr **ročníku** (`serie:<slug>`) |
+
+**Tři věci, které by rozhodnutí mělo vzít v potaz.**
+
+**(1) Odběr na regatu je připravený a nepoužitý.** `Odbery.Zavod(slug)` existuje,
+ale nikdo se na něj nehlásí — komentář u publikace to říká: *„zůstává připravený
+pro chvíli, kdy si o jednu regatu někdo řekne; dokud se k němu nikdo nehlásí,
+zpráva na něj nikam nedojde."* Pro **změny stavů rozjížděk** je to ale ten
+správný kanál: odložený start na Jarním větru nemá budit telefony lidí, kteří
+jedou jinou regatu. Tedy ne nová infrastruktura — **jen připojit, co je.**
+
+**(2) Tenhle řetěz už jednou byl hotový a nefungoval.** A je to zapsané
+u publikace, změřeno 26. 10. 2026: zařazovalo se na `zavod:<slug>`, kdežto
+telefony se hlásily na `serie:<slug>`, a `TokenyAsync` hledá odběr jako celou
+položku — takže zpráva **neodešla nikomu**. *„Celý řetěz byl hotový
+a nespojený."* U rychlého doručování je to varování k zapamatování: **kontrola
+musí měřit, že zpráva dorazila, ne že se zařadila.** Prázdná fronta vypadá jako
+úspěch.
+
+**(3) „Fofrem" je u push notifikací zčásti mimo kontrolu aplikace.** I po
+pobídce jde zpráva přes Expo a dál přes FCM nebo APNS; na Androidu v úsporném
+režimu může dorazit se zpožděním a doručení není garantované. Aplikace tedy umí
+slíbit *„odesláno bez prodlevy"*, ne *„doručeno včas"* — a u odloženého startu
+je ten rozdíl podstatný.
+
+**A pravidlová mez, tatáž jako u tabule (R15, R16):** push **nenahrazuje
+signál**. Odložení se podle ZPJ 27.3 signalizuje vlajkou AP, ne zprávou do
+telefonu, a loď bez telefonu (nebo s iPhonem — appka je jen pro Android) by jinak
+byla v nevýhodě. Na poháru, kde se signalizuje megafonem, je push **navíc, ne
+místo** — a má stejnou cenu jako vlajka na tabuli: dosah tam, kam megafon
+nedoletí, a **doklad, co bylo oznámeno a kdy**.
+
+> **Místo na citát z diskuse:** _(které změny mají chodit do telefonů — jen
+> odložení a zrušení, nebo i zkrácení trati a změna úseku? A má to chodit všem,
+> nebo jen posádkám té regaty?)_
 
 ### R13 — Vytlačená loď a rozjížďka zrušená pro bezpečnost: tři různé cesty, aplikace nezná ani jednu
 
