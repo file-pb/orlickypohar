@@ -222,6 +222,18 @@ do pravidel je hned za citací.
 > koukni do pravidel). Po 10ti minutách se obrazovka přepne na cílovou (to ještě
 > doladíme).
 
+### Střípek 8 — vytlačení od bojky a rozjížďka přerušená pro bezpečnost (27. 10. 2026)
+
+> pak si pamatuju, že může nastat i situace, že se přerušila rozjížďka z důvodu
+> bezpečnosti. Všechny lodě najedou na návětrnou a vytlačí několik lodí mimo
+> bojku a ty z důvodu bezpečnosti uhnou mimo start i když jsou v právu
+>
+> koukni na to jak tohle řešit
+
+Vzpomínka na konkrétní situaci, s přímým dotazem do pravidel. Odvozený nález
+je **R13** — a pravidla na to mají **tři různé odpovědi** podle toho, kdo je
+původcem.
+
 ---
 
 ## Nálezy R — z diskuse s rozhodčím
@@ -957,6 +969,97 @@ podmínkami provozu (jedna ruka, slunce, motorák), ne přáním.
 > závazný čas, od kterého se počítá? A co se stane, když se do něj nestihne
 > vyjet?)_
 
+### R13 — Vytlačená loď a rozjížďka zrušená pro bezpečnost: tři různé cesty, aplikace nezná ani jednu
+
+*Původ: střípek 8 (Filip, 27. 10. 2026). Doloženo: ZPJ 32.1, 43.1, 61.4(b),
+61.4(c), 61.4(d), `Features/Zavody/VysledkySprava.cs:156–177`,
+`Features/Zavody/Workflow.cs` (`ProcNejdeBezDuvodu`). Stav: **zapsáno**.*
+
+Filip: *„může nastat i situace, že se přerušila rozjížďka z důvodu bezpečnosti.
+Všechny lodě najedou na návětrnou a vytlačí několik lodí mimo bojku a ty
+z důvodu bezpečnosti uhnou mimo start, i když jsou v právu."*
+
+**Pravidla na to mají tři různé odpovědi a liší se v tom, kdo je původcem.**
+Rozlišit je je půl práce:
+
+**(1) Komise zruší nebo odloží — a tohle je ta „přerušená rozjížďka".**
+ZPJ 32.1 vyjmenovává příčiny zrušení po startu a jedna z nich padne přesně:
+
+> *„(d) z jakýchkoli jiných příčin, které mají přímý vliv na **bezpečnost** nebo
+> regulérnost závodění."*
+
+Před startovním znamením je to místo toho odložení nebo zrušení podle 27.3.
+Rozhodnutí je komise, nikdo o ně nežádá, a nese se vlajkou (N, N nad H, N nad A
+se třemi zvuky).
+
+**(2) Vytlačená loď protestuje na toho, kdo ji vytlačil.** Běžný protest podle
+60 na porušení pravidla Části 2. Tahle cesta je v aplikaci celá mimo (K2).
+
+**(3) Náprava — a tady je ta nepříjemná odpověď: vytlačená loď na ni nárok
+nemá.** ZPJ 61.4(b) má pět důvodů a žádný na tu situaci nesedí:
+
+| 61.4(b) | Co žádá | Vytlačená loď |
+|---|---|---|
+| (1) | nesprávné jednání **komise nebo pořadatele** | ne — vytlačily ji jiné lodě |
+| (2) | **zranění nebo fyzická škoda** od lodi, která porušila Část 2 a byla potrestána | ne, když uhnula včas a bez doteku |
+| (3) | zranění nebo škoda od nezávodícího plavidla | ne |
+| (4) | poskytování **pomoci** podle 1.1 | ne |
+| (5) | jednání lodi, které byl uložen trest podle **pravidla 2 nebo 69** | jen kdyby šlo o nečestné plachtění a proběhlo projednání |
+
+Tedy: **uhnout správně a bez doteku se podle pravidel „nevyplatí"** — loď přijde
+o start a nárok na nápravu nemá, protože ji nepoškodila komise. Zůstává jí
+protest (2) a to, že je podle **43.1(a)** zproštěna viny, kdyby sama kvůli tomu
+porušila pravidlo (*„Když loď v důsledku porušení pravidla donutí druhou loď
+porušit pravidlo, potom je druhá loď za toto porušení zproštěna viny"*).
+
+Praktický důsledek pro startéra: když je takových lodí několik, je cesta (1)
+jediná, která to srovná pro všechny najednou — a proto se nejspíš pamatuje
+právě ta.
+
+**Co z toho aplikace neumí, a je to konkrétní.**
+
+**Zrušit rozjížďku jde jen oklikou přes výsledky.** Samostatný úkon „zrušit
+rozjížďku" neexistuje; `StavRozjizdky.Zrusena` nastaví jediné místo, a to
+eliminace výsledků:
+
+```csharp
+if (na == StavVysledku.Eliminovano)
+    rozjizdka.Stav = StavRozjizdky.Zrusena;
+```
+
+Je to tentýž rozpor pojmů jako u startu (K6, kde zápis času rozjížďku rozjede):
+rozhodnutí **na vodě uprostřed jízdy** se musí vyjádřit jako zásah do
+**výsledků**, které v tu chvíli ještě neexistují.
+
+**A hlavně: důvod se nikam nezapíše.** `PrepniStavAsync` parametr `duvod`
+přijímá, ale uloží ho jen u revize:
+
+```csharp
+if (na == StavVysledku.KRevizi) rozjizdka.DuvodRevize = duvod!.Trim();
+```
+
+a `Workflow.ProcNejdeBezDuvodu` ho vyžaduje **taky jen u revize** — s odůvodněním
+*„Jinde by byl formulářové pole navíc u úkonu, který se dělá jedním
+kliknutím."* U zrušení rozjížďky to neplatí: pravidlo 32.1 má čtyři různé
+příčiny, zrušená rozjížďka mizí z poháru a bude se vysvětlovat. „Nefouká,
+rušíme" a „vytlačili je z čáry, rušíme" vypadají v aplikaci stejně.
+
+**Co naopak aplikace umí, a nikdo to zatím nepojmenoval.** ZPJ 61.4(d):
+
+> *„Když je pochybnost o skutečnostech nebo o pravděpodobných výsledcích
+> jakékoliv úpravy rozjížďky nebo závodu, musí protestní komise přijmout důkazy
+> z vhodných zdrojů, **obzvláště před zrušením rozjížďky**."*
+
+Záznam trasy s posuvníkem času (bod 10 návodu, přidáno 26. 10. 2026) je přesně
+takový důkaz — a na tuhle situaci je ideální, protože vytlačení od bojky je
+přesně to, co se z trasy pozná a z paluby ne. **Tracking tedy už dnes plní
+pravidlovou funkci, kterou mu nikdo nepřipsal**, a 61.4(c) k tomu dodává, že
+náprava smí znamenat i zrušení rozjížďky — tedy totéž rozhodnutí, jen cestou
+přes projednání.
+
+> **Místo na citát z diskuse:** _(stalo se to, nebo si na to vzpomínáš z jiných
+> závodů? A zrušili jste celou rozjížďku, nebo se startovalo znovu?)_
+
 ---
 
 ## Nálezy K — odvozené z kódu a pravidel
@@ -1219,13 +1322,14 @@ potvrdil to rozhodčí 22. 9. 2026 a podle něj se počítá.
 | 29.2 | všeobecné odvolání (první opakovač) | **ne** |
 | 30.1–4 | startovní tresty podle vlajky (I, Z, U, černá) | **ne** — kódy ZFP/UFD/BFD chybí |
 | 32.1 | **zkrácení** dráhy po startu | **ne** |
-| 32.1 | **zrušení** rozjížďky po startu | ano — `Zrusena` / eliminace, viz pozn. |
+| 32.1 | **zrušení** rozjížďky po startu | zpola — jen oklikou přes eliminaci výsledků, a **bez důvodu** (R13) |
 | 33 | změna následujícího úseku dráhy | částečně: přestavba trati (jiný pojem) |
 | 34 | chybějící značka | **ne** — bóje se „sbírá z vody", ne nahrazuje |
 | 35 | časový limit rozjížďky | **ne** |
 | 36 | rozjížďka znovu startovaná / znovu plutá | částečně (R5) |
 | 60–63 | protesty, projednávání, rozhodnutí | **ne** (K2) |
-| 61 | náprava | kód RDG ano, projednání ne |
+| 61 | náprava | kód RDG ano, projednání ne; na vytlačení od bojky ji 61.4(b) stejně nedává (R13) |
+| 61.4(d) | důkazy z vhodných zdrojů před zrušením rozjížďky | **ano** — záznam trasy s posuvníkem času (R13) |
 | 64 | diskreční tresty | **ne** (DPI chybí) |
 | 69 | nepřípustné jednání | **ne** (DNE chybí, K1) |
 | 76.1 | odmítnout / zrušit přihlášku, vyloučit závodníka | ano, bez meze 76.1(a) (K4) |
