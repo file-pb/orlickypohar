@@ -342,10 +342,20 @@ přitom vždycky tmavá, takže někdo tu hodnotu musel zvednout, aby byl stín 
 Je to tedy hotový důkaz, že na tmavém pozadí je potřeba jiné číslo; jen zůstal
 u jediného místa a nezobecnil se.
 
-**Zapsáno bez návrhu**, jen s poznámkou, že vzorec na to v projektu je: barvy
-jsou tokeny přebíjené ve dvou tmavých blocích, takže stín by se choval stejně.
-Hodnotu pro tmavý režim bych ale neodhadoval od stolu — na tmavém pozadí
-funguje líp světlý obrys než silnější černá, a to se musí vidět, ne spočítat.
+**Směr rozhodl Filip (27. 10. 2026): „myslel jsem, světlý stín."** Tedy ne
+zesilovat černou jako na tabuli, ale v tmavém režimu **oddělovat světlem**.
+
+Dvě věci k tomu, až na to dojde. **Světlý stín se nedělá jako stín, ale jako
+obrys** — světlo světlé stíny nevrhá, takže samotná světlá rozmazaná skvrna pod
+prvkem vypadá jako svit. V tmavých rozhraních se to řeší **dvěma vrstvami**:
+jemný světlý obrys (`0 0 0 1px rgb(255 255 255 / ~0.06)`), který prvek oddělí od
+pozadí, a pod ním zachovaná tmavá rozmazaná vrstva, která dává hloubku. A platí
+to i obráceně: ve světlém režimu světlý obrys nedělá nic, takže to opravdu musí
+být token přebíjený v obou tmavých blocích, ne jedna hodnota pro obojí.
+
+Vzorec na přebíjení projekt má — barvy jsou tokeny přebíjené ve dvou tmavých
+blocích, stín by se choval stejně. Konkrétní čísla ale patří k vidění, ne
+k počítání.
 
 ### Pruh partnerů ve správě (27. 10. 2026)
 
