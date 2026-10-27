@@ -2357,6 +2357,12 @@ def zastavka_radek(z):
             "pocetSkrtu": z.get("pocetSkrtu", 0),
             "koeficientDoSerie": z.get("koeficientDoSerie", 1.0),
             "posunDoSerie": z.get("posunDoSerie", 0),
+            # <b>Procesní děj řádek nese</b> (`ZastavkaRadek` v API,
+            # `z.ProcesniDej`). Dokud ho mock vynechával, formulář úpravy
+            # regaty ho měl lokálně vždycky na „ne" — a uložení termínu
+            # by ho tím potichu vypnulo, ačkoliv proti API se to nestane
+            # (nalezeno 27. 10. 2026).
+            "procesniDej": bool(z.get("procesniDej")),
             # Vypsat a odjet patří pořadateli, zbytek řady rozhodčímu
             # (`Kalendar.KdoSmi`).
             "mozneStavy": [s for s in VSECHNY_STAVY

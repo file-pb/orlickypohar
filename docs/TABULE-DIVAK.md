@@ -242,15 +242,31 @@ API ho vydávalo odjakživa (`VysledekDto.casSekundy`), jen se zahazoval.
 Na pravidlo jsou testy (`web/testy/udalosti.test.ts`, osm případů) —
 rozdíl mezi čerstvým dojezdem a sadou se v prohlížeči hledá špatně.
 
-**Co zůstává, a není to kód:** jestli se dojezdy objeví živě, rozhoduje
-přepínač *procesní děj* u regaty. Výchozí je vypnutý schválně — publikace
-je rozhodnutí správce a bez toho přepínače by nepodepsané pořadí viselo
-i na veřejné stránce regaty, ne jen na tabuli. **Tabule ho neobchází
-a obcházet nemá.** Pro regatu, u které tabule visí v hospodě, je tedy
-doporučení jednoduché: *procesní děj zapnout*, jinak se v cíli celý den
-nic nestane a přijde jen jedna karta na konci. Jestli to má být
-doporučení v nápovědě, výchozí hodnota pro nové regaty, nebo se to má
-nechat na pořadateli, je na Filipovi.
+**Druhá půlka: kdy se dojezdy objeví živě.** Rozhoduje o tom přepínač
+*procesní děj* u regaty — ve správě *„Ukazovat průběžné výsledky"*
+v úpravě regaty v kalendáři ročníku. Bez něj jdou čísla ven až publikací,
+takže se v cíli celý den nestane nic a přijde jen ta jedna karta na konci.
+**Tabule ten přepínač neobchází a obcházet nemá:** neplatí jen pro tabuli,
+ale i pro veřejnou stránku regaty, a to, že nepodepsané pořadí nejde ven
+samo, je rozhodnutí z 9. 10. 2026.
+
+**Rozhodnuto 27. 10. 2026 (Filip): nová regata se zakládá se zapnutým.**
+Formulář má u nové regaty předvolené *„Ano, i nepodepsané"*; existující
+regata si drží, co má — přepsat pořadateli nastavení při úpravě termínu by
+bylo horší než konzervativní výchozí hodnota. Je to **předvolba ve
+formuláři, ne skrytá vlastnost**: pořadatel ji vidí a může ji přepnout
+dřív, než regatu založí.
+
+*Ověřeno:* v kalendáři ročníku má formulář nové regaty `ano`, Izolepa
+(zapnuto) `ano` a zbylých sedm regat ročníku `ne`.
+
+**A ještě jedna lež mocku, nalezená u toho:** `zastavka_radek`
+`procesniDej` vůbec nevydával, ačkoliv `ZastavkaRadek` v API ho nese
+(`KalendarEndpoints.Radek`, `z.ProcesniDej`). Lokálně tím formulář úpravy
+regaty ukazoval vždycky *„Ne"* — a uložení termínu by přepínač potichu
+vyplo. Proti API se to nestane (`ZastavkaVstup.ProcesniDej` je `bool?`
+a `KalendarSprava` dělá `vstup.ProcesniDej ?? zastavka.ProcesniDej`),
+takže je to vada mocku, ne aplikace. Opraveno.
 
 ### 9. Skrytý ročník: odjetá regata vypadá jako regata před rozpravou
 Když ročník nevydává výsledky (`VysledkyZavoduVerejne = false`), API vrací

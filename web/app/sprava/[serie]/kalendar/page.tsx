@@ -324,9 +324,19 @@ function Pole({ zastavka, akce }: { zastavka?: ZastavkaRadek; akce?: boolean }) 
           {/* <b>Výběr, ne zaškrtávátko.</b> Nezaškrtnuté políčko se
               neodešle vůbec a tenhle formulář má prázdno znamenat
               „neměnit" — vypnutí procesního děje by tedy nešlo uložit. */}
+          {/* <b>Nová regata začíná se zapnutým</b> (Filip, 27. 10. 2026).
+              Tabule v hospodě jinak celý závod v cíli nic neukáže a na
+              konci přijde jediná karta, že jsou výsledky venku — a to je
+              přesně ta chvíle, kvůli které se na tabuli kouká. Existující
+              regata si drží, co má: přepsat pořadateli nastavení při
+              úpravě termínu by bylo horší než konzervativní výchozí
+              hodnota. */}
           <label>
             Ukazovat průběžné výsledky
-            <select name="procesniDej" defaultValue={zastavka?.procesniDej ? "ano" : "ne"}>
+            <select
+              name="procesniDej"
+              defaultValue={(zastavka ? zastavka.procesniDej : true) ? "ano" : "ne"}
+            >
               <option value="ne">Ne — až po publikaci</option>
               <option value="ano">Ano, i nepodepsané</option>
             </select>
