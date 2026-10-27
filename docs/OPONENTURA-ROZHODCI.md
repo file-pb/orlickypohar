@@ -1236,6 +1236,50 @@ viditelnosti, tedy **ergonomie** — patří do `docs/SCENARE-OVLADANI.md`, a bo
 (4) navíc k tabuli. V tomhle dokumentu zůstávají jako odkaz, aby se neztratily,
 ne k řešení. **Pravidlový je jen bod (1)**, a ten už nález má.
 
+**Jak se to jmenuje dnes a jak podle Miloše** (Filip 27. 10. 2026: *„Podívej
+jestli se nám to nejmenuje jinak a pojmenuj to podle Miloše"*). Taby veřejné
+stránky skládá `NAZVY` v `hlava.tsx:45`:
+
+| Miloš říká | dnes tab | dnes ve správě | sedí? |
+|---|---|---|---|
+| **Vypsání závodu** | — | — | neexistuje (R1, R8) |
+| **plachetní směrnice** | `Směrnice` | `Plachetní směrnice` (krátce „směrnice") | **zkráceno** |
+| **závodní trať** | `Trať` | `Bóje na trati` (krátce „bóje") | **tři různá jména** |
+| **přihlášky** | `Lodě` | `Přihlášky` | **jiné slovo** |
+| **startovní listina** | — | — | není tab, je jen na tabuli |
+
+**Ověřil jsem, že „Lodě" a „přihlášky" jsou doopravdy totéž**, než jsem to
+navrhl přejmenovat: sekce má uvnitř nadpis *„Přihlášené lodě"* a komentář
+*„Seznam lodí místo výsledků. Regata, která se teprve pojede, jinak nemá co
+ukázat"* (`sekce-lode.tsx:6`), a vypisuje i přihlášené nepotvrzené. Je to tedy
+**přihlášky, ne startovní listina** — Milošovo slovo sedí obsahu líp než
+dnešní, a startovní listina je skutečně až ta další věc, jak ji jmenuje zvlášť.
+
+**Navržené znění podle Miloše:**
+
+```
+Úvod · Vypsání závodu · Plachetní směrnice · Závodní trať · Přihlášky ·
+Startovní listina · Výsledky
+```
+
+*Úvod* a *Výsledky* Miloš nejmenoval — vypisoval, co je potřeba vidět **před
+závodem**, takže z toho nic o nich neplyne a zůstávají.
+
+**Ve správě bych `Bóje na trati` nechal.** Veřejně se na trať dívám, ve správě
+ji stavím z bójí a prvků, takže jiný název je tam na místě. Je to ale věc
+k rozhodnutí: Miloš chodí do obojího a může ho plést, že venku je *Závodní trať*
+a ve správě *Bóje na trati*.
+
+> **⚠︎ Jedna věcná námitka: šířka.** Dnes je tabů pět a jsou krátké. Podle
+> Miloše jich bude **sedm a dvakrát delší** — *Plachetní směrnice* a *Závodní
+> trať* místo *Směrnice* a *Trať*. Na telefonu, kde rozhodčí u vody pracuje,
+> se to nemusí vejít. Vzorec na to projekt má: položky správy mají vedle
+> `nazev` i `kratky` (*„směrnice", „bóje", „přihlášky"*), takže **plný název
+> v nadpisu a krátký v tabu** je cesta, kterou už jednou zvolil. Nerozhoduju to.
+
+*Změnu v kódu jsem neudělal — tahle session nic neimplementuje (viz hlavička).
+Je to připravené tak, aby šlo přepsat `NAZVY` a dopsat dvě položky.*
+
 > **Místo na citát z diskuse:** _(co se v tom seznamu nejmenuje: kam patří
 > výsledky a úvodní stránka? Je to tím, že jsi vyjmenovával, co je potřeba
 > **před** závodem?)_
