@@ -42,8 +42,14 @@ export default async function Appka() {
               </a>
             </p>
             <p className="poznamka" style={{ marginTop: "0.75rem" }}>
-              Na počítači načti QR kód telefonem. Android se při první instalaci mimo
-              obchod jednou zeptá, jestli tomuhle zdroji věříš — pak už se neptá.
+              Na počítači načti QR kód telefonem. Android se při první instalaci
+              mimo obchod zeptá, jestli tomuhle zdroji věříš.
+            </p>
+            <p className="poznamka">
+              <strong>Na Samsungu se nezeptá, rovnou to zakáže.</strong> Hlásí
+              „Neznámá aplikace je blokována" a instalace neproběhne, dokud se v{" "}
+              <em>Nastavení → Zabezpečení a soukromí → Automatické blokování</em>{" "}
+              tahle ochrana nevypne. Po instalaci se dá zapnout zpátky.
             </p>
           </div>
         </div>
