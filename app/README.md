@@ -81,6 +81,21 @@ doby se APK aktualizovalo jedině tak, že si ho člověk znovu stáhl —
 a stránka `/appka` tiše nabízela sedm týdnů starý build, aniž by to
 někdo poznal.
 
+**Že bude potřeba ruční instalace, řekne CI.** Úloha `appka` spočítá
+otisk nativní části a porovná ho s `app/vydane-apk.json`; když se liší,
+napíše do souhrnu běhu, že se appka v telefonech přestane aktualizovat,
+dokud si lidé nenainstalují nové APK. Hlídá i to, že `APK_URL`
+v `deploy/docker-compose.yml` odpovídá zapsanému souboru — právě na to se
+mezi 8. 9. a 28. 10. 2026 zapomnělo a stránka tiše nabízela starý build.
+
+Krok **nebrzdí nasazení** (`continue-on-error`): `nasazeni` na úloze
+`appka` visí a nativní změna v appce nemá co zdržovat web s API. Je to
+zpráva, ne vrátný.
+
+**Po každém novém APK se přepisuje `app/vydane-apk.json`** — otisk, číslo
+buildu, `versionCode`, adresa a datum. Bez toho kontrola porovnává proti
+starému stavu a hlásí rozdíl, který už neplatí.
+
 **Tři věci, které to nevyřeší, a je potřeba je vědět dopředu:**
 
 1. **Jen JavaScript a assety.** Nová nativní knihovna nebo oprávnění

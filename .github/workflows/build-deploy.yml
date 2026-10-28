@@ -277,6 +277,69 @@ jobs:
         run: npm run testy
         working-directory: app
 
+      # <b>Žádá tahle verze ruční instalaci?</b> (Filip, 28. 10. 2026:
+      # *„pokud bude potreba apku znovu instalovat, tak to potrebuji
+      # rict"*.) Aktualizace přes `expo-updates` vezou jen JavaScript;
+      # nativní změna posune `runtimeVersion` a update se starému APK
+      # **nedoručí** — a nic přitom neselže. Appka v telefonu se prostě
+      # přestane aktualizovat a nikdo to nepozná.
+      #
+      # Hlídá se i adresa v compose: mezi 8. 9. a 28. 10. 2026 nabízela
+      # stránka `/appka` sedm týdnů starý build, protože se po buildu
+      # zapomněla přepsat.
+      #
+      # <b>Nebrzdí nasazení</b> (`continue-on-error`): `nasazeni` čeká na
+      # tuhle úlohu, a nativní změna v appce nemá co zdržovat web s API.
+      # Je to zpráva, ne vrátný.
+      - name: Žádá appka ruční instalaci?
+        id: instalace
+        continue-on-error: true
+        working-directory: app
+        run: |
+          otisk=$(npx expo-updates fingerprint:generate --platform android \
+            | python3 -c "import json,sys; print(json.load(sys.stdin)['hash'])")
+          vydane=$(python3 -c "import json; print(json.load(open('vydane-apk.json'))['runtimeVersion'])")
+          url=$(python3 -c "import json; print(json.load(open('vydane-apk.json'))['url'])")
+          kdy=$(python3 -c "import json; print(json.load(open('vydane-apk.json'))['vydano'])")
+
+          chyba=0
+
+          if ! grep -qF "$url" ../deploy/docker-compose.yml; then
+            echo "::warning::Adresa APK ve vydane-apk.json nesedí s APK_URL v docker-compose.yml."
+            {
+              echo "### Stránka /appka nabízí jiné APK, než které je zapsané"
+              echo ""
+              echo "V \`app/vydane-apk.json\` je \`$url\`, ale \`deploy/docker-compose.yml\` má jinou."
+              echo "Jedno z nich je zastaralé — a stahovat půjde dál, takže si toho nikdo nevšimne."
+            } >> "$GITHUB_STEP_SUMMARY"
+            chyba=1
+          fi
+
+          if [ "$otisk" != "$vydane" ]; then
+            echo "::warning::Appku je potřeba znovu postavit a ručně nainstalovat — změnila se nativní část."
+            {
+              echo "### ⚠️ Appku bude potřeba znovu nainstalovat"
+              echo ""
+              echo "Změnila se nativní část appky, takže **aktualizace přes síť na tohle nestačí**."
+              echo "Kdo má APK v telefonu, přestane dostávat novinky, dokud si nenainstaluje nové."
+              echo ""
+              echo "| | |"
+              echo "|---|---|"
+              echo "| otisk teď | \`$otisk\` |"
+              echo "| otisk vydaného APK | \`$vydane\` (z $kdy) |"
+              echo ""
+              echo "**Co s tím:** \`cd app && npm run apk\`, pak přepsat \`APK_URL\`"
+              echo "v \`deploy/docker-compose.yml\` i údaje v \`app/vydane-apk.json\`"
+              echo "a poslat lidem příručku \`docs/NAVOD-APPKA-AKTUALIZACE.md\`."
+            } >> "$GITHUB_STEP_SUMMARY"
+            chyba=1
+          fi
+
+          if [ "$chyba" = "0" ]; then
+            echo "Appka se aktualizuje přes síť; ruční instalace není potřeba." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$chyba"
+
       # Pořadí na vodě je pravidlo, ne vykreslování: dojetá loď se nesmí
       # hýbat, i když jí průmět na trať po cíli sjede. Test běží na čisté
       # funkci, takže nepotřebuje prohlížeč ani závislosti webu.
