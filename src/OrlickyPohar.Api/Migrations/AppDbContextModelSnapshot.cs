@@ -17,7 +17,7 @@ namespace OrlickyPohar.Api.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -1590,6 +1590,56 @@ namespace OrlickyPohar.Api.Migrations
                     b.ToTable("Ucasti");
                 });
 
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.UkonZaJizdy", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Delka")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Druh")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Kurz")
+                        .HasColumnType("integer");
+
+                    b.Property<double?>("NahradniDelka")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("NahradniSirka")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Poznamka")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("PrvekId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RozjizdkaId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("VyhlasenoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("VyhlasilId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrvekId");
+
+                    b.HasIndex("VyhlasilId");
+
+                    b.HasIndex("RozjizdkaId", "VyhlasenoV");
+
+                    b.ToTable("UkonyZaJizdy");
+                });
+
             modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Velitel", b =>
                 {
                     b.Property<int>("Id")
@@ -2373,6 +2423,33 @@ namespace OrlickyPohar.Api.Migrations
                     b.Navigation("Prihlaska");
 
                     b.Navigation("Zavod");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.UkonZaJizdy", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Boje.PrvekTrati", "Prvek")
+                        .WithMany()
+                        .HasForeignKey("PrvekId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OrlickyPohar.Api.Features.Zavody.Rozjizdka", "Rozjizdka")
+                        .WithMany()
+                        .HasForeignKey("RozjizdkaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OrlickyPohar.Api.Features.Identita.Uzivatel", "Vyhlasil")
+                        .WithMany()
+                        .HasForeignKey("VyhlasilId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Prvek");
+
+                    b.Navigation("Rozjizdka");
+
+                    b.Navigation("Vyhlasil");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Velitel", b =>

@@ -107,6 +107,7 @@ try
     // Bóje na trati: pípnutí polohy pořadatelem z webu i z appky.
     builder.Services.AddScoped<BojeSprava>();
     builder.Services.AddScoped<TratSprava>();
+    builder.Services.AddScoped<UkonyZaJizdySprava>();
     builder.Services.AddScoped<PrvkySprava>();
     if (builder.Configuration.GetValue<bool>("Prevzate:Sber"))
         builder.Services.AddHostedService<SberPrevzatych>();
@@ -237,6 +238,7 @@ try
         app.MapSpravaSerie();
         app.MapKalendar();
         app.MapSpravaVysledku();
+        app.MapUkonyZaJizdy();
         app.MapPrihlasky();
         app.MapSmernice();
         app.MapZpravy();
