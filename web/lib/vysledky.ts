@@ -16,49 +16,18 @@ const API = process.env.API_URL ?? "http://localhost:8080";
 type S = components["schemas"];
 
 export type PrehledVysledku = S["PrehledVysledkuDto"];
-/**
- * Řádek rozjížďky ve správě. `duvodZruseni` je dopsané ručně (28. 10.
- * 2026) ze stejného důvodu jako u {@link KodVysledku}: typy se generují
- * z běžícího API a to bez databáze nenaběhne.
- */
-export type RozjizdkaRadek = S["RozjizdkaSpravaRadek"] & {
-  /** Proč se rozjížďka zrušila; `null`, dokud zrušená není. */
-  duvodZruseni?: string | null;
-};
+export type RozjizdkaRadek = S["RozjizdkaSpravaRadek"];
 export type ZastavkaVysledky = S["ZastavkaVysledkyDto"];
 export type StavVysledku = S["StavVysledku"];
-/**
- * Zápis rozjížďky. <b>`delkaProceduryMin` a `opakovanychStartu` jsou
- * dopsané ručně</b> (28. 10. 2026) — typy se generují z běžícího API a to
- * bez databáze nenaběhne; viz {@link KodVysledku}.
- */
-export type ZapisRozjizdky = S["ZapisRozjizdkyDto"] & {
-  delkaProceduryMin?: number;
-  opakovanychStartu?: number;
-  /** Kdo velí startu regaty; `null`, když nikdo (nález R19). */
-  velitel?: string | null;
-  /** Velí ten, kdo se dívá? */
-  veliS?: boolean;
-};
+export type ZapisRozjizdky = S["ZapisRozjizdkyDto"];
 export type ZapisLod = S["ZapisLodDto"];
-/** Řádek zápisu. `kod` je rozšířený o nové hodnoty — viz {@link KodVysledku}. */
-export type ZapisRadek = Omit<S["ZapisRadekVstup"], "kod"> & {
-  kod?: KodVysledku | null;
-};
+export type ZapisRadek = S["ZapisRadekVstup"];
 export type Navrhy = S["NavrhyDto"];
 export type Navrh = S["NavrhDto"];
 export type NavrhRadek = S["NavrhRadekDto"];
 // Dokument popisuje kód včetně `null`, protože u výsledku je nepovinný.
 // Jako klíč slovníku a hodnota v nabídce ale prázdný být nesmí.
-/**
- * Kód výsledku. <b>Čtyři hodnoty jsou dopsané ručně</b> (`Zfp`, `Ufd`,
- * `Bfd`, `Dne` z 28. 10. 2026) a je to výjimka s důvodem: typy se generují
- * z OpenAPI **běžícího** API, jenže to při startu pouští migrace a bez
- * databáze nenaběhne — a na pracovním stroji databáze nejede (README,
- * *Klient API*). Při příštím generování se objeví ve `schema.d.ts`
- * a tenhle průnik se smaže.
- */
-export type KodVysledku = NonNullable<S["KodVysledku"]> | "Zfp" | "Ufd" | "Bfd" | "Dne";
+export type KodVysledku = NonNullable<S["KodVysledku"]>;
 
 /**
  * Kódy závodních pravidel tak, jak je čte pořadatel. Zkratka se nepřekládá

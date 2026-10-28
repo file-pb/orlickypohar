@@ -162,29 +162,9 @@ export async function nactiVerejnouTrat(
 /**
  * Vypsání závodu — dokument podle Dodatku J1 ZPJ (nálezy R1 a R8
  * oponentury rozhodčího, 28. 10. 2026).
- *
- * <b>Typ je tu psaný ručně, ne ze `schema.d.ts`</b>, a je to výjimka
- * s důvodem: generátor (`packages/api-client/generuj.sh`) stahuje OpenAPI
- * z **běžícího** API, jenže to při startu pouští migrace a bez databáze
- * nenaběhne — a na pracovním stroji databáze nejede (README, *Klient
- * API*). Při příštím generování se typ objeví ve `schema.d.ts` a tenhle
- * se smaže.
  */
-export type BodVypsani = {
-  /** Odkaz do Dodatku J1, třeba `J1.1(2)`. */
-  bod: string;
-  nadpis: string;
-  /** `null` znamená, že to aplikace neví — nedosazuje se pravděpodobná hodnota. */
-  text: string | null;
-};
-
-export type VypsaniZavodu = {
-  nazev: string;
-  serieNazev: string;
-  body: BodVypsani[];
-  /** Nadpisy bodů bez textu. Dokument tím o sobě říká, co mu schází. */
-  chybi: string[];
-};
+export type BodVypsani = S["BodVypsani"];
+export type VypsaniZavodu = S["VypsaniDto"];
 
 /**
  * Vypsání jedné regaty. `null` u komunitní akce a u regaty, která není

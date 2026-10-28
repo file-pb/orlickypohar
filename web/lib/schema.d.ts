@@ -95,6 +95,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/serie/{serieSlug}/zavody/{slug}/vypsani": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Vrátí vypsání závodu sestavené podle Dodatku J1 */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serieSlug: string;
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VypsaniDto"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/zarizeni": {
         parameters: {
             query?: never;
@@ -2997,6 +3043,112 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/vysledky/{zavod}/velitel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kdo velí startu téhle regaty
+         * @description Vrací hlavního startéra, jestli jím je ten, kdo se ptá, a doklad o tom, jak se velení předávalo. Telefon se ptá při každém připojení.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Převezme velení startu
+         * @description Slave o velení aktivně požádá; nikdy si ho nevezme sám. Jde to kdykoliv, i uprostřed odpočtu — hlavní spadlý do vody tři minuty před startem je ten případ, kvůli kterému to vzniklo. Zapíše se kdo a kdy a zůstane z toho doklad.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/procedura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Spustí startovní proceduru, odloží start, nebo ho odvolá */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ProceduraVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/start": {
         parameters: {
             query?: never;
@@ -3489,7 +3641,7 @@ export interface paths {
         put?: never;
         /**
          * Pustí výsledky rozjížďky na veřejný web, nebo je stáhne
-         * @description Správce ročníku. Publikace není stav: potvrzený výsledek smí zůstat neveřejný a publikovaný se smí vrátit k revizi.
+         * @description Rozhodčí ročníku. Publikace není stav: potvrzený výsledek smí zůstat neveřejný a publikovaný se smí vrátit k revizi. Zveřejnění samotné regaty je jiná cesta a patří správci — u nezveřejněné regaty veřejnost neuvidí ani puštěné výsledky.
          */
         post: {
             parameters: {
@@ -4885,6 +5037,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/rozjizdky/{cislo}/zaznam": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Záznam rozjížďky na revizi protestu
+         * @description Pořadatel regaty, nebo rozhodčí ročníku. Proti veřejnému výdeji **nezáleží na přepínači *živý přenos ven*** — ten rozhoduje o tom, co vidí divák, ne o tom, co smí vidět závodní výbor nad vlastními daty — a vydá se i **běžící** rozjížďka: kdo tohle čte, vidí živé polohy stejně. Body jsou prořídlé na patnáct vteřin a na čtyři sta na loď, jako u veřejného záznamu.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZaznamRozjizdky"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/zastavky/{zavod}/tracker/nastaveni": {
         parameters: {
             query?: never;
@@ -6187,6 +6382,11 @@ export interface components {
             /** Format: double */
             objem?: null | number;
         };
+        BodVypsani: {
+            bod: string;
+            nadpis: string;
+            text: null | string;
+        };
         BodyVRozjizdceDto: {
             /** Format: int32 */
             cislo: number;
@@ -6320,6 +6520,8 @@ export interface components {
             doSerie: boolean;
         };
         /** @enum {unknown} */
+        DruhProcedury: "Spustit" | "Odlozit" | "Odvolat";
+        /** @enum {unknown} */
         DruhStartu: "PevnaLinie" | "OtevirajiciSeBrana" | null;
         /**
          * @default Pohar
@@ -6403,7 +6605,7 @@ export interface components {
             platiDo: string;
         };
         /** @enum {unknown} */
-        KodVysledku: "Dnf" | "Dns" | "Dnc" | "Ocs" | "Dsq" | "Ret" | "Rdg" | null;
+        KodVysledku: "Dnf" | "Dns" | "Dnc" | "Ocs" | "Dsq" | "Ret" | "Rdg" | "Zfp" | "Ufd" | "Bfd" | "Dne" | null;
         KonecBojeDto: {
             /** Format: int32 */
             id: number;
@@ -6454,6 +6656,8 @@ export interface components {
              * @default 0
              */
             lodId: number;
+            /** Format: date-time */
+            souhlasV?: null | string;
         };
         LodSpravaDto: {
             /** Format: int32 */
@@ -6873,6 +7077,8 @@ export interface components {
             novaLod?: null | components["schemas"]["NovaLodVstup"];
             /** @default false */
             potvrzeno: boolean;
+            /** @default false */
+            souhlas: boolean;
         };
         PrihlaskaDto: {
             lod: string;
@@ -6923,6 +7129,9 @@ export interface components {
         PriradTratVstup: {
             /** Format: int32 */
             rozjizdka: number;
+        };
+        ProceduraVstup: {
+            druh: components["schemas"]["DruhProcedury"];
         };
         PrvekDto: {
             /** Format: int32 */
@@ -7027,6 +7236,7 @@ export interface components {
             smiDoPoharu: boolean;
             /** @default false */
             maPapir: boolean;
+            duvodZruseni?: null | string;
         };
         RozjizdkaVstup: {
             /** Format: int32 */
@@ -7278,6 +7488,8 @@ export interface components {
             lod: string;
             kormidelnik: null | string;
             posadka: null | string;
+            /** Format: date-time */
+            souhlas?: null | string;
         };
         UcetDto: {
             /** Format: uuid */
@@ -7427,6 +7639,12 @@ export interface components {
         };
         /** @enum {unknown} */
         Vyhodnoceni: "CelePole" | "PoKategoriich" | "Oboje";
+        VypsaniDto: {
+            nazev: string;
+            serieNazev: string;
+            body: components["schemas"]["BodVypsani"][];
+            chybi: string[];
+        };
         VysledekDto: {
             lod: string;
             kategorie: string;
@@ -7526,6 +7744,19 @@ export interface components {
             /** Format: date-time */
             konecV?: null | string;
             stav?: components["schemas"]["StavRozjizdky"];
+            /**
+             * Format: int32
+             * @default 5
+             */
+            delkaProceduryMin: number;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            opakovanychStartu: number;
+            velitel?: null | string;
+            /** @default false */
+            veliS: boolean;
         };
         ZapisTeplotyRadek: {
             snimek: string;
@@ -7605,6 +7836,16 @@ export interface components {
             posunDoSerie: number;
             /** @default false */
             procesniDej: boolean;
+            /** Format: date */
+            uzaverkaPrihlasek?: null | string;
+            startovne?: null | string;
+            /** Format: date-time */
+            prvniVyzyvaciZnameni?: null | string;
+            /**
+             * Format: int32
+             * @default 5
+             */
+            delkaProceduryMin: number;
         };
         ZastavkaVolbaDto: {
             slug: string;
@@ -7627,6 +7868,13 @@ export interface components {
             /** Format: int32 */
             posunDoSerie?: null | number;
             procesniDej?: null | boolean;
+            /** Format: date */
+            uzaverkaPrihlasek?: null | string;
+            startovne?: null | string;
+            /** Format: date-time */
+            prvniVyzyvaciZnameni?: null | string;
+            /** Format: int32 */
+            delkaProceduryMin?: null | number;
         };
         ZastavkaVysledkyDto: {
             zavod: string;

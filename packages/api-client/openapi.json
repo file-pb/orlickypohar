@@ -84,6 +84,47 @@
                 }
             }
         },
+        "/serie/{serieSlug}/zavody/{slug}/vypsani": {
+            "get": {
+                "tags": [
+                    "Z\u00e1vody"
+                ],
+                "summary": "Vr\u00e1t\u00ed vyps\u00e1n\u00ed z\u00e1vodu sestaven\u00e9 podle Dodatku J1",
+                "parameters": [
+                    {
+                        "name": "serieSlug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VypsaniDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
         "/zarizeni": {
             "put": {
                 "tags": [
@@ -2803,6 +2844,119 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/vysledky/{zavod}/velitel": {
+            "get": {
+                "tags": [
+                    "V\u00fdsledky"
+                ],
+                "summary": "Kdo vel\u00ed startu t\u00e9hle regaty",
+                "description": "Vrac\u00ed hlavn\u00edho start\u00e9ra, jestli j\u00edm je ten, kdo se pt\u00e1, a doklad o tom, jak se velen\u00ed p\u0159ed\u00e1valo. Telefon se pt\u00e1 p\u0159i ka\u017ed\u00e9m p\u0159ipojen\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "V\u00fdsledky"
+                ],
+                "summary": "P\u0159evezme velen\u00ed startu",
+                "description": "Slave o velen\u00ed aktivn\u011b po\u017e\u00e1d\u00e1; nikdy si ho nevezme s\u00e1m. Jde to kdykoliv, i uprost\u0159ed odpo\u010dtu \u2014 hlavn\u00ed spadl\u00fd do vody t\u0159i minuty p\u0159ed startem je ten p\u0159\u00edpad, kv\u016fli kter\u00e9mu to vzniklo. Zap\u00ed\u0161e se kdo a kdy a z\u016fstane z toho doklad.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/procedura": {
+            "post": {
+                "tags": [
+                    "V\u00fdsledky"
+                ],
+                "summary": "Spust\u00ed startovn\u00ed proceduru, odlo\u017e\u00ed start, nebo ho odvol\u00e1",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProceduraVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/start": {
             "post": {
                 "tags": [
@@ -3427,7 +3581,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "Pust\u00ed v\u00fdsledky rozj\u00ed\u017e\u010fky na ve\u0159ejn\u00fd web, nebo je st\u00e1hne",
-                "description": "Spr\u00e1vce ro\u010dn\u00edku. Publikace nen\u00ed stav: potvrzen\u00fd v\u00fdsledek sm\u00ed z\u016fstat neve\u0159ejn\u00fd a publikovan\u00fd se sm\u00ed vr\u00e1tit k revizi.",
+                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku. Publikace nen\u00ed stav: potvrzen\u00fd v\u00fdsledek sm\u00ed z\u016fstat neve\u0159ejn\u00fd a publikovan\u00fd se sm\u00ed vr\u00e1tit k revizi. Zve\u0159ejn\u011bn\u00ed samotn\u00e9 regaty je jin\u00e1 cesta a pat\u0159\u00ed spr\u00e1vci \u2014 u nezve\u0159ejn\u011bn\u00e9 regaty ve\u0159ejnost neuvid\u00ed ani pu\u0161t\u011bn\u00e9 v\u00fdsledky.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4983,6 +5137,55 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/SnimekPoloh"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/rozjizdky/{cislo}/zaznam": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Z\u00e1znam rozj\u00ed\u017e\u010fky na revizi protestu",
+                "description": "Po\u0159adatel regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. Proti ve\u0159ejn\u00e9mu v\u00fddeji **nez\u00e1le\u017e\u00ed na p\u0159ep\u00edna\u010di *\u017eiv\u00fd p\u0159enos ven*** \u2014 ten rozhoduje o tom, co vid\u00ed div\u00e1k, ne o tom, co sm\u00ed vid\u011bt z\u00e1vodn\u00ed v\u00fdbor nad vlastn\u00edmi daty \u2014 a vyd\u00e1 se i **b\u011b\u017e\u00edc\u00ed** rozj\u00ed\u017e\u010fka: kdo tohle \u010dte, vid\u00ed \u017eiv\u00e9 polohy stejn\u011b. Body jsou pro\u0159\u00eddl\u00e9 na patn\u00e1ct vte\u0159in a na \u010dty\u0159i sta na lo\u010f, jako u ve\u0159ejn\u00e9ho z\u00e1znamu.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZaznamRozjizdky"
                                 }
                             }
                         }
@@ -6572,6 +6775,28 @@
                     }
                 }
             },
+            "BodVypsani": {
+                "required": [
+                    "bod",
+                    "nadpis",
+                    "text"
+                ],
+                "type": "object",
+                "properties": {
+                    "bod": {
+                        "type": "string"
+                    },
+                    "nadpis": {
+                        "type": "string"
+                    },
+                    "text": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
             "BodyVRozjizdceDto": {
                 "required": [
                     "cislo",
@@ -7095,6 +7320,13 @@
                     }
                 }
             },
+            "DruhProcedury": {
+                "enum": [
+                    "Spustit",
+                    "Odlozit",
+                    "Odvolat"
+                ]
+            },
             "DruhStartu": {
                 "enum": [
                     "PevnaLinie",
@@ -7411,6 +7643,10 @@
                     "Dsq",
                     "Ret",
                     "Rdg",
+                    "Zfp",
+                    "Ufd",
+                    "Bfd",
+                    "Dne",
                     null
                 ]
             },
@@ -7612,6 +7848,13 @@
                         "type": "integer",
                         "format": "int32",
                         "default": 0
+                    },
+                    "souhlasV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
                     }
                 }
             },
@@ -9289,6 +9532,10 @@
                     "potvrzeno": {
                         "type": "boolean",
                         "default": false
+                    },
+                    "souhlas": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -9487,6 +9734,17 @@
                     "rozjizdka": {
                         "type": "integer",
                         "format": "int32"
+                    }
+                }
+            },
+            "ProceduraVstup": {
+                "required": [
+                    "druh"
+                ],
+                "type": "object",
+                "properties": {
+                    "druh": {
+                        "$ref": "#/components/schemas/DruhProcedury"
                     }
                 }
             },
@@ -9917,6 +10175,12 @@
                     "maPapir": {
                         "type": "boolean",
                         "default": false
+                    },
+                    "duvodZruseni": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     }
                 }
             },
@@ -10851,6 +11115,13 @@
                             "null",
                             "string"
                         ]
+                    },
+                    "souhlas": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
                     }
                 }
             },
@@ -11493,6 +11764,35 @@
                     "Oboje"
                 ]
             },
+            "VypsaniDto": {
+                "required": [
+                    "nazev",
+                    "serieNazev",
+                    "body",
+                    "chybi"
+                ],
+                "type": "object",
+                "properties": {
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "serieNazev": {
+                        "type": "string"
+                    },
+                    "body": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/BodVypsani"
+                        }
+                    },
+                    "chybi": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "VysledekDto": {
                 "required": [
                     "lod",
@@ -11868,6 +12168,26 @@
                     },
                     "stav": {
                         "$ref": "#/components/schemas/StavRozjizdky"
+                    },
+                    "delkaProceduryMin": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 5
+                    },
+                    "opakovanychStartu": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 0
+                    },
+                    "velitel": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "veliS": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -12121,6 +12441,31 @@
                     "procesniDej": {
                         "type": "boolean",
                         "default": false
+                    },
+                    "uzaverkaPrihlasek": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date"
+                    },
+                    "startovne": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "prvniVyzyvaciZnameni": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "delkaProceduryMin": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 5
                     }
                 }
             },
@@ -12204,6 +12549,33 @@
                             "null",
                             "boolean"
                         ]
+                    },
+                    "uzaverkaPrihlasek": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date"
+                    },
+                    "startovne": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "prvniVyzyvaciZnameni": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "delkaProceduryMin": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
                     }
                 }
             },
@@ -12939,6 +13311,9 @@
         },
         {
             "name": "B\u00f3je"
+        },
+        {
+            "name": "V\u00fdsledky"
         }
     ]
 }

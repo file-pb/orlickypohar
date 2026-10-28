@@ -133,19 +133,40 @@ function Lod({ vysledek, zavod }: { vysledek: VysledekZavodu; zavod: ZavodDetail
 }
 
 /** U regaty, která se teprve pojede, je seznam lodí jediné, co je známo. */
+/**
+ * Kdo na regatě startuje, a kdo je zatím jen přihlášený.
+ *
+ * <b>Startovní listina je ten, kdo startuje</b> (nález R10 oponentury
+ * rozhodčího; Filip 27. 10. 2026: *„To bude startovní listina"*). Web to
+ * má takhle od 28. 10. 2026 a appka je **tytéž dveře do téhož produktu**,
+ * takže se to nesmí rozejít: do té doby tu stál jeden seznam všech lodí,
+ * ve kterém vyloučená loď vypadala stejně jako ta, co za chvíli
+ * odstartuje.
+ *
+ * Loď *„čeká na potvrzení"* ani *„vyloučená ze závodu"* na listině nemá co
+ * dělat — ale zmizet nesmí, jinak kapitán nepozná, že jeho přihláška
+ * dorazila. Proto dva seznamy pod sebou, stejně jako na webu.
+ */
 function PrihlaseneLode({ lode }: { lode: UcastLodi[] }) {
   const t = useTheme();
   if (lode.length === 0) return null;
 
-  const kategorie = [...new Set(lode.map((l) => l.kategorie))];
+  // Starší API pole `potvrzena` nemá; tam loď platí, jako dřív.
+  const startuje = (l: UcastLodi) => !l.vyloucena && l.potvrzena !== false;
+  const listina = lode.filter(startuje);
+  const prihlasky = lode.filter((l) => !startuje(l));
+
+  // Třídy jen z listiny: třída, ve které nikdo nestartuje, by jinak dala
+  // prázdný nadpis a loď by zůstala jen v seznamu pod ním.
+  const kategorie = [...new Set(listina.map((l) => l.kategorie))];
 
   return (
     <>
-      <Sekce>Přihlášené lodě ({lode.length})</Sekce>
+      <Sekce>Startovní listina ({listina.length})</Sekce>
       {kategorie.map((k) => (
         <View key={k} style={{ marginBottom: 12 }}>
           <Text style={{ color: t.tlumeny, fontSize: 13, marginBottom: 6 }}>{k}</Text>
-          {lode
+          {listina
             .filter((l) => l.kategorie === k)
             .map((l) => (
               <View key={l.lod} style={{ flexDirection: 'row', paddingVertical: 4 }}>
@@ -155,6 +176,20 @@ function PrihlaseneLode({ lode }: { lode: UcastLodi[] }) {
             ))}
         </View>
       ))}
+
+      {prihlasky.length > 0 ? (
+        <>
+          <Sekce>Přihlášené, ještě ne na listině ({prihlasky.length})</Sekce>
+          {prihlasky.map((l) => (
+            <View key={l.lod} style={{ flexDirection: 'row', paddingVertical: 4 }}>
+              <Text style={{ color: t.text, flex: 1 }}>{l.lod}</Text>
+              <Text style={{ color: t.tlumeny, fontSize: 13 }}>
+                {l.vyloucena ? 'vyloučená ze závodu' : 'čeká na potvrzení'}
+              </Text>
+            </View>
+          ))}
+        </>
+      ) : null}
     </>
   );
 }
