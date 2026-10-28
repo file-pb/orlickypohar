@@ -1,8 +1,13 @@
 # Příručka: jak si Miloš přeinstaluje appku
 
-**Platí pro APK vydané 28. 10. 2026** (build `d343c6d2`, otisk
-`3995edc5…`, zapsané v `app/vydane-apk.json`). Až vyjde další, projdi
-text znovu — zestárne hlavně ta věta o tom, kdy se instaluje naposledy.
+**Platí pro APK vydané 28. 10. 2026 odpoledne** (build `4b579f9b`, otisk
+`c4d54801…`, zapsané v `app/vydane-apk.json`). Až vyjde další, projdi
+text znovu — a zkontroluj hlavně to, co appce slibuje.
+
+Předchozí vydání (`d343c6d2`, otisk `3995edc5…`) umělo aktualizace taky,
+jenže mu chyběla `expo-battery`, která do appky přišla pár minut po něm.
+Miloš si ho podle tohohle návodu stáhl — a tohle je ta jedna verze navíc,
+o kterou ho pak musel Filip požádat.
 
 Text níž je **pro rozhodčího, ne pro vývojáře** — píše se tak, aby šel
 poslat do WhatsAppu beze změny. Vzniknul proto, že od 28. 10. 2026 se
@@ -62,10 +67,11 @@ skončí u druhého kroku.
   knihovny. Když přijde taková změna, bude potřeba nové APK znovu —
   appka si o něj ale neřekne sama, takže to pozná jen ten, kdo to staví.
 - **Miloš přeinstaloval 28. 10. 2026** a podle návodu to zvládl sám
-  (potvrdil Filipovi). Má tedy verzi, která se umí aktualizovat — ale
-  aktualizace k němu nedojde, dokud otisk nativní části sedí s jeho APK,
-  a ten už sedí jen do commitu před baterií. Jinými slovy: appku umí
-  aktualizovat, jenže zrovna teď není co jí poslat.
+  (potvrdil Filipovi). Dostal ale build `d343c6d2`, kterému chyběla
+  `expo-battery` — přišla do appky v 09:37, pět minut po jeho dokončení.
+  Proto ho Filip musel požádat ještě jednou, o build `4b579f9b`.
+  **Od něj už by měly stačit aktualizace přes síť**, dokud se zase
+  nezmění nativní část; to ohlásí CI.
 
 - **Že bude potřeba nová ruční instalace, hlásí CI** (úloha `appka`,
   od 28. 10. 2026). Nikdo si na to nemusí vzpomenout — ale taky to nikomu
