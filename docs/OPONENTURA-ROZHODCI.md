@@ -4211,6 +4211,19 @@ schůzka konala.
 
 ---
 
+## Soupis a plán ovládání startu
+
+Od 28. 10. 2026 má ovládání startu **vlastní dokument**:
+`docs/SOUPIS-A-PLAN-START.md`. Vznikl na Filipův pokyn *„než budeme překopávat
+cokoli, udělat nějaký soupis a plán, abychom si to nerozbili a rozhodli se
+správně"* — a vznikl **místo stavby, ne po ní**.
+
+Je v něm, co už běží, co z Milošova zadání aplikace neumí (patnáct kroků),
+**mapa dotyků** (co se čím dá rozbít a jak se to pozná dopředu), čtyři
+rozhodnutí, která musí padnout dřív než kód, a pořadí pěti kroků od toho
+nejmenšího. Tenhle dokument zůstává zdrojem nálezů; ten druhý je záchytný bod,
+ke kterému se vrací.
+
 ## Co se s tímhle dokumentem dělá dál
 
 **Plán z něj nevzniká.** Filip bude přidávat další střípky z diskuse; každý se
