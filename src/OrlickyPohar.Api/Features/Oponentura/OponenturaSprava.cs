@@ -272,8 +272,24 @@ public class OponenturaSprava(
         if (nahravka is null) return null;
         if (!uloziste.Pripraveno) return null;
 
-        var obsah = await uloziste.CtiAsync(Dotazovani.Klic(nahravka.Id, nahravka.Typ), ct);
-        return obsah is null ? null : (obsah, nahravka.Typ);
+        var klic = Dotazovani.Klic(nahravka.Id, nahravka.Typ);
+        try
+        {
+            var obsah = await uloziste.CtiAsync(klic, ct);
+            return obsah is null ? null : (obsah, nahravka.Typ);
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            // <b>Čtení z úložiště je nová operace.</b> Nahrávání a mazání
+            // tudy chodí od začátku, ale `GetObject` ne — a token k R2 se
+            // dá vyrobit i bez práva číst. Bez téhle věty by se to
+            // projevilo jen tím, že přehrávač mlčí.
+            log.LogError(e,
+                "Nahrávku {Klic} se nepodařilo přečíst z úložiště. Když je to odmítnutý "
+                + "přístup, chybí tokenu k R2 právo číst objekty — nahrávání a mazání "
+                + "funguje i bez něj.", klic);
+            throw;
+        }
     }
 
     /// <summary>

@@ -108,7 +108,7 @@ public class OponenturaSpravaTests(PostgresFixture fixture)
     /// a text, byla by sada po třinácti nahrávkách pořád „neodpovězená“.
     /// </summary>
     [Fact]
-    public async Task Nahravka_doteče_do_uloziste_a_prečte_se_zpatky()
+    public async Task Nahravka_doteka_do_uloziste_a_cte_se_zpatky()
     {
         var (db, sprava, uloziste) = Sluzby();
         var (serie, kdo) = await RocnikAsync(db);
