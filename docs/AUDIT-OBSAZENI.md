@@ -205,7 +205,8 @@ a kudy se přiřazuje. Dnes není ani jedno.
 > i *Potvrzeno*, které nejsou venku. Správce to má na obrazovce výsledků,
 > ne v „co teď". **Tohle je ta část změny, kterou Filip nezadal a já ji
 > udělal, aby byla ta první vidět** — bez ní by se rozhodčí o publikaci
-> z rozcestníku nedozvěděl vůbec.
+> z rozcestníku nedozvěděl vůbec. **Posouzeno a ponecháno** (Filip,
+> 28. 10. 2026): potvrzení je archivní zámek a upomínku mít nemusí.
 
 Celá řada v obsazení 1, jedním člověkem, na Izolepě:
 

@@ -471,7 +471,9 @@ nedostane — jen už to není otázka každého závodního dne.
 **Co se tím ztratilo:** schválenou rozjížďku, která už venku je a čeká jen na
 správcovo `Potvrzeno`, nikdo nepřipomíná. Je to archivní zámek, ne práce,
 kvůli které se spěchá, a na obrazovce výsledků ji správce vidí — ale v „co
-teď" na ni řádek není.
+teď" na ni řádek není. **Tak to má zůstat** (Filip, 28. 10. 2026): je to
+rozhodnutí, ne nedodělek, takže se k němu nemá vracet ani dopisovat
+správci vlastní dlaždici.
 
 Pravidlo i s důvodem bydlí v `Workflow.KdoSmiPublikovat`, takže se na ně dá
 zeptat bez databáze a obrazovka ho počítá z téhož místa jako endpoint.
