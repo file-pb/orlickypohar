@@ -30,6 +30,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     /// </summary>
     public DbSet<Velitel> Velitele => Set<Velitel>();
     public DbSet<Rozjizdka> Rozjizdky => Set<Rozjizdka>();
+
+    /// <summary>
+    /// Co komise vyhlásila za jízdy — změna úseku a chybějící značka
+    /// (ZPJ 33 a 34). Vede se stranou, trať zůstane přijatá
+    /// (Filip, 28. 10. 2026).
+    /// </summary>
+    public DbSet<UkonZaJizdy> UkonyZaJizdy => Set<UkonZaJizdy>();
     public DbSet<Vysledek> Vysledky => Set<Vysledek>();
     public DbSet<ZapisNavrh> ZapisyNavrhu => Set<ZapisNavrh>();
     public DbSet<Clanek> Clanky => Set<Clanek>();
@@ -360,6 +367,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .OnDelete(DeleteBehavior.Cascade);
         rozjizdka.Property(x => x.DuvodRevize).HasMaxLength(400);
         rozjizdka.HasIndex(x => new { x.ZavodId, x.Cislo }).IsUnique();
+
+        var ukon = b.Entity<UkonZaJizdy>();
+        ukon.HasOne(x => x.Rozjizdka).WithMany().HasForeignKey(x => x.RozjizdkaId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Prvek se maže jen s tratí, a úkon na něj ukazuje jako na doklad
+        // „čeho se to týkalo". Kdyby ho smazání prvku odneslo, zmizel by
+        // zrovna ten záznam, kvůli kterému se o tom vede spor — proto
+        // omezení, ne kaskáda.
+        ukon.HasOne(x => x.Prvek).WithMany().HasForeignKey(x => x.PrvekId)
+            .OnDelete(DeleteBehavior.Restrict);
+        ukon.HasOne(x => x.Vyhlasil).WithMany().HasForeignKey(x => x.VyhlasilId)
+            .OnDelete(DeleteBehavior.Restrict);
+        ukon.Property(x => x.Poznamka).HasMaxLength(200);
+        // Čte se vždycky „co platí pro tuhle rozjížďku, v pořadí vyhlášení".
+        ukon.HasIndex(x => new { x.RozjizdkaId, x.VyhlasenoV });
 
         var vysledek = b.Entity<Vysledek>();
         vysledek.HasOne(x => x.Rozjizdka).WithMany().HasForeignKey(x => x.RozjizdkaId)

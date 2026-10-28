@@ -1014,6 +1014,13 @@ TRAT_ID = [0]
 PRVKY = {}
 PRVEK_ID = [0]
 
+# Co komise vyhlásila za jízdy — změna úseku (ZPJ 33) a chybějící značka
+# (34). Drží se podle (zastávka, číslo rozjížďky), protože úkon platí pro tu
+# rozjížďku, co se zrovna jede, ne pro celý závod. Trať se tím **nemění**:
+# je to doklad o rozhodnutí, ne nová verze předpisu (Filip, 28. 10. 2026).
+UKONY = {}
+UKON_ID = [0]
+
 # Opsané z `Pipnuti` — mock musí odmítat totéž a týmiž slovy, jinak se
 # na něm hlášky nedají zkoušet.
 NAZEV_NEJVIC = 60
@@ -1546,6 +1553,17 @@ def trat_vybrana(slug, trat_id):
     if trat_id is None:
         return trat_aktualni(slug)
     return next((x for x in TRATE.get(slug) or [] if x["id"] == trat_id), None)
+
+
+def ukon_dto(u):
+    return {k: u[k] for k in (
+        "id", "druh", "vlajka", "prvekId", "prvekPoradi", "prvekTyp",
+        "kurz", "delka", "nahradniSirka", "nahradniDelka", "poznamka", "vyhlasenoV")}
+
+
+def ukony_rozjizdky(slug, cislo):
+    """Co platí pro rozjížďku, v pořadí vyhlášení."""
+    return [ukon_dto(u) for u in UKONY.get((slug, cislo), [])]
 
 
 def prvky_trati(slug, trat_id=None):
@@ -3806,6 +3824,75 @@ class H(BaseHTTPRequestHandler):
         s["duvodStazeni"] = duvod.strip()
         return self._prazdna_odpoved()
 
+    def ukony_seznam(self, slug, cislo):
+        if not self.zastavka(slug):
+            return None
+        return self.odpoved(ukony_rozjizdky(slug, cislo))
+
+    def ukon_vyhlas(self, slug, cislo):
+        """Vyhlásí úkon za jízdy. Tytéž meze jako `UkonyZaJizdySprava`."""
+        z = self.zastavka(slug)
+        if not z:
+            return None
+
+        r = next((x for x in z.get("rozjizdky", []) if x.get("cislo") == cislo), None)
+        if not r:
+            return self.chyba(400, "Taková rozjížďka u téhle regaty není.")
+        if r.get("stav") != "Probiha":
+            return self.chyba(400, "Rozjížďka je dojetá. Co se za jízdy vyhlásilo, se zpětně nedoplňuje."
+                              if r.get("stav") == "Dokoncena"
+                              else "Rozjížďka se nejede. Dokud se nevyjelo, stav rovnou jinou trať.")
+
+        v = self.telo_zadosti() or {}
+        druh = v.get("druh") or "ZmenaUseku"
+        if druh not in ("ZmenaUseku", "ChybejiciZnacka"):
+            return self.chyba(400, f"Neznámý druh úkonu {druh}.")
+
+        prvek = next((p for t in TRATE.get(slug, []) for p in PRVKY.get(t["id"], [])
+                      if p["id"] == v.get("prvek") and t.get("rozjizdkaId") == cislo), None)
+        if not prvek:
+            return self.chyba(400, "Takový prvek na trati téhle rozjížďky není.")
+
+        kurz = v.get("kurz")
+        delka = v.get("delka") or "Beze"
+        if druh == "ZmenaUseku" and kurz is None and delka == "Beze":
+            return self.chyba(400, "Změna úseku musí říct kurz, délku, nebo obojí.")
+        if kurz is not None and not (0 <= int(kurz) <= 359):
+            return self.chyba(400, "Kurz je ve stupních, tedy 0 až 359.")
+
+        UKON_ID[0] += 1
+        UKONY.setdefault((slug, cislo), []).append({
+            "id": UKON_ID[0],
+            "druh": druh,
+            "vlajka": "M" if druh == "ChybejiciZnacka" else "C",
+            "prvekId": prvek["id"],
+            "prvekPoradi": prvek["poradi"],
+            "prvekTyp": prvek["typ"],
+            # U chybějící značky se kurz ani délka nevyhlašují, i kdyby je
+            # klient poslal — stejně jako na serveru.
+            "kurz": kurz if druh == "ZmenaUseku" else None,
+            "delka": delka if druh == "ZmenaUseku" else "Beze",
+            "nahradniSirka": v.get("nahradniSirka") if druh == "ChybejiciZnacka" else None,
+            "nahradniDelka": v.get("nahradniDelka") if druh == "ChybejiciZnacka" else None,
+            "poznamka": (v.get("poznamka") or "").strip() or None,
+            "vyhlasenoV": ted_iso(),
+        })
+        return self.odpoved(None, 204)
+
+    def ukon_odvolej(self, slug, cislo, ukon_id):
+        z = self.zastavka(slug)
+        if not z:
+            return None
+        r = next((x for x in z.get("rozjizdky", []) if x.get("cislo") == cislo), None)
+        seznam = UKONY.get((slug, cislo), [])
+        u = next((x for x in seznam if x["id"] == ukon_id), None)
+        if not u:
+            return self.chyba(400, "Takový úkon u téhle rozjížďky není.")
+        if not r or r.get("stav") != "Probiha":
+            return self.chyba(400, "Rozjížďka se nejede. Co viselo na stěžni, se zpětně nemaže.")
+        seznam.remove(u)
+        return self.odpoved(None, 204)
+
     def prvky_seznam(self, slug):
         if not self.zastavka(slug):
             return None
@@ -4407,6 +4494,12 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                           r'/okna/rozprava$', cesta)):
             return self.rozprava(m.group(1))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                          r'/rozjizdky/(\d+)/ukony$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            return self.ukon_vyhlas(m.group(1), int(m.group(2)))
+
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                           r'/okna/uzavrit$', cesta)):
             return self.uzavri_den(m.group(1))
@@ -5452,6 +5545,9 @@ class H(BaseHTTPRequestHandler):
                           r'/trat/prvky/(\d+)$', urlparse(self.path).path)):
             return self.prvek_smaz(m.group(1), int(m.group(2)))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                          r'/rozjizdky/(\d+)/ukony/(\d+)$', urlparse(self.path).path)):
+            return self.ukon_odvolej(m.group(1), int(m.group(2)), int(m.group(3)))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                           r'/trat/(\d+)/zkraceni$', urlparse(self.path).path)):
             return self.trat_zrus_zkraceni(m.group(1), int(m.group(2)))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
@@ -5838,6 +5934,12 @@ class H(BaseHTTPRequestHandler):
             telo = klice_regaty(m.group(1))
             if telo is None:
                 return self.send_error(404)
+        elif (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
+                r'/rozjizdky/(\d+)/ukony$', cesta)):
+            if not self.headers.get("authorization"):
+                return self.send_error(401)
+            return self.ukony_seznam(m.group(1), int(m.group(2)))
         elif (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                 r'/rozjizdky/(\d+)/zaznam$', cesta)):
