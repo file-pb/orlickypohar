@@ -4221,8 +4221,16 @@ správně"* — a vznikl **místo stavby, ne po ní**.
 Je v něm, co už běží, co z Milošova zadání aplikace neumí (patnáct kroků),
 **mapa dotyků** (co se čím dá rozbít a jak se to pozná dopředu), čtyři
 rozhodnutí, která musí padnout dřív než kód, a pořadí pěti kroků od toho
-nejmenšího. Tenhle dokument zůstává zdrojem nálezů; ten druhý je záchytný bod,
-ke kterému se vrací.
+nejmenšího.
+
+Téhož dne k tomu přibyl oddíl **Celá fronta**: všech 41 nálezů z tohohle
+dokumentu rozdělených tak, aby se daly odbavovat po dávkách — dvanáct, z nichž
+něco stojí, devatenáct čekajících na devět otázek, tři ke stavbě hned, šest,
+které nejsou práce ale poznání, a jeden, který Miloš rozhodl. Rozdělení je
+ověřené strojově: každý nález je přesně v jedné skupině a žádný nechybí.
+
+Tenhle dokument zůstává zdrojem nálezů; ten druhý je záchytný bod, ke kterému
+se vrací, a **stav fronty se čte z něj**.
 
 ## Co se s tímhle dokumentem dělá dál
 

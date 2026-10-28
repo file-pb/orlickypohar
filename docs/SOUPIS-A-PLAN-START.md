@@ -10,8 +10,14 @@ Filip, 28. 10. 2026, než odjel:
 Co je hotové, je v oddílu *Co už běží*; co by se stavělo, je v *Plánu* a čeká
 na rozhodnutí z oddílu *Čtyři rozhodnutí*.
 
-Zdroje: `docs/OPONENTURA-ROZHODCI.md` (nálezy R1–R34, pyramida autority),
-jedenáct hlasových nahrávek rozhodčího z 28. 10. 2026 a dva vzory jeho listin.
+Zdroje: `docs/OPONENTURA-ROZHODCI.md` (nálezy R1–R34 a K1–K7, pyramida
+autority), jedenáct hlasových nahrávek rozhodčího z 28. 10. 2026 a dva vzory
+jeho listin.
+
+**Co kde je.** Horní polovina dokumentu je o **ovládání startu** — to je ta
+věc, kterou Miloš potřebuje mít v ruce nejdřív. Dolní polovina
+(*Celá fronta*) je soupis **všech 41 nálezů** rozdělený tak, aby se dal
+odbavovat po dávkách.
 
 ---
 
@@ -184,6 +190,114 @@ obrazovce, nestavět.
 - **Odpovídat na jeho otázky** a pokládat ty, které jsou v dokumentu označené
   jako nezapsané.
 - **Nestavět nic v `app/`**, dokud session stavící APK nedokončí vydání.
+
+---
+
+## Celá fronta: 41 nálezů a co s nimi
+
+Tohle je ta „hromada", ze které se máme postupně dostat. Nálezů je **41**
+(R1–R34, K1–K7) a bez rozdělení se v nich pracovat nedá, protože **nejsou to
+všechno úkoly**. Každý nález je níž přesně v jedné skupině:
+
+| Kolik | Co to je |
+| --- | --- |
+| 12 | něco už z nich stojí (u sedmi zbývá zbytek) |
+| 19 | **čeká na rozhodnutí** — nejde stavět, dokud nepadne |
+| 3 | **dá se stavět hned**, nic nedrží |
+| 6 | **poznání, ne práce** — nestaví nic, ale vysvětlují ostatní |
+| 1 | rozhodnuto Milošem, nic se nestaví |
+
+Z toho plyne věc, kvůli které ten soupis vznikl: **fronta na stavbu má dnes
+tři položky**, ne čtyřicet jednu. Všechno ostatní je hotové, čeká na jednu
+z devíti otázek, nebo to úkol nikdy nebyl.
+
+### A) Něco z nich stojí — a co u nich zbývá (12)
+
+| # | Hotovo | Co z toho zbývá |
+| --- | --- | --- |
+| R1, R8 | Vypsání jako dokument z dat (fáze 2.1) | Čtyři body J1 jsou `null` a místo konání je zadrátované „neuvedené"; dva z těch čtyř Miloš skutečně vydává |
+| R5, R12 | Procedura: čas, délka, odložení, odvolání (fáze 3.1) | Obrazovka startéra a intervaly — jádro plánu výš |
+| R9 | Souhlas závodníka, verze 2 včetně polohy (fáze 2.2) | Nezletilý závodník (otázka 7) |
+| R10 | Tab `Lodě` na stránce regaty (fáze 1.3) | Miloš pak jmenoval **jiný** seznam dlaždic (otázka 1) |
+| R17 | Zrušení rozjížďky s povinným důvodem (fáze 4.2) | — |
+| R18 | Doručení ven v taktu minuty (fáze 4.3) | Že push dojde na telefon posádky do minuty, neověřeno |
+| R19 | Velitelský čas, převzetí, doklad (fáze 1.2 + 3.2) | **Fronta nezaslaného startu je jen na webu**, v appce ne |
+| K1 | Čtyři chybějící kódy, DNE se nedá škrtnout | — |
+| K2 | Věta o visícím protestu u podpisu (fáze 1.3) | Protesty samotné = fáze 5 |
+| K6 | Plánovaný start bez rozjetí rozjížďky (fáze 1.1) | — |
+
+### B) Čeká na rozhodnutí — devatenáct nálezů na devíti otázkách (19)
+
+Tohle je skutečná zácpa, a je menší, než vypadá: **osmnáct z devatenácti
+nálezů stojí na devíti otázkách a osm z nich může Miloš odpovědět jednou
+zprávou.** Proto jsou seřazené podle toho, kolik nálezů jedna odpověď uvolní,
+ne podle čísla.
+
+| Otázka | Uvolní | Komu patří |
+| --- | --- | --- |
+| 1. Jak se jmenují dva různé „alternativní tresty" na obrazovce — před startem (pravidlo 30) a u cíle (otáčky ZPJ 44)? A je dlaždic pro nepřihlášeného pět, nebo ten druhý seznam? | R31, R28 | Miloš |
+| 2. Je „přerušit interval / přerušit start / zrušit start" dvě věci, nebo tři? Aplikace má dvě (ZPJ 27.3, 29.2) a liší se tím, co udělají s časem | R23, R13, R4 | Miloš |
+| 3. Čtyři třídy: podle čeho lehký a těžký, a přeřadí se ročník 2027? Vypsání dnes říká délka trupu dle technického průkazu plus čelen | R29, R24 | Miloš |
+| 4. Kdo smí po rozpravě sáhnout do startovní listiny a do tříd, a odkud? Dnes vede přihlášky pořadatel a rozhodčí jen vylučuje | R32, R6 | Miloš |
+| 5. Odkdy se posádky „hlásí" — od přihlášky, nebo od rozpravy? | R3 | Miloš |
+| 6. Je vypsání platné bez podpisu rozhodčího? Které z třinácti oddílů se mezi ročníky mění — a psal by směrnici v appce? | R20, R21, R22 | Miloš |
+| 7. Vede nezletilého podpis za kormidelníka, nebo za kteréhokoli člena posádky? | R26 | Miloš |
+| 8. Vynucovat průkaz VMP a technický průkaz při přihlášce, když je vypsání žádá a appka vede místo nich číslo ČSJ, které vypsání nežádá? A čas vyzývacího znamení, který neuvádí ani jeden jeho dokument? | R25, R27 | Miloš |
+| 9. Cíl: ruční průjezd **i** přepsání toho, co určilo trasování, v jedné obrazovce | R33, R34 | Filip (je to velká věc) |
+
+Devatenáctý je **K4** — mez z pravidla 76.1(a) u vyloučení. Je to otázka na
+Miloše, ale nic nedrží; připojí se k té zprávě jako poslední řádek.
+
+### C) Dá se stavět hned — nic nedrží (3)
+
+| # | Co | Velikost |
+| --- | --- | --- |
+| K5 | Přeložený termín: ZPJ 80 žádá informovat **všechny přihlášené lodě**; aplikace termín přesune pečlivě a nikomu nic neřekne | malá, samostatná |
+| K7 | Shoda v cíli: ZPJ A7 ji počítá rovným dílem, aplikace ji odmítne zapsat | malá |
+| K3 | Ověřeno a Schváleno jsou dvě klepnutí téhož člověka — kandidát na „jde to, ale zbytečně" | malá, jen ubrat |
+
+K tomu dva **zbytky z hotových**, které taky nic nedrží: ověřit na telefonu, že
+push dojde do minuty (R18), a fronta nezaslaného startu i v appce (R19) — to
+druhé je zároveň krok 2 plánu výš.
+
+### D) Poznání, ne práce (6)
+
+Tyhle se nemají odbavovat, mají se **znát**, protože vysvětlují ostatní:
+
+- **R7** — hierarchie pramenů: rozhodčí má pravdu nad aplikací, a plyne z toho,
+  kde smí žít vlastní pravidlo poháru.
+- **R15 + R16** — **vlajky na poháru nejsou, jede se megafonem.** Z toho plyne
+  věc, která musí být na očích při každé stavbě trestů: tresty podle
+  pravidla 30 na poháru formálně neplatí, protože každé z těch pravidel začíná
+  vyvěšenou vlajkou. Tabule to nespraví.
+- **R11 + R14** — jeden Milošův výraz pro dva různé úkony; co se z toho má
+  stavět, je otázka 1.
+- **R30** — celý tok od rozpravy po odstartování jeho vlastními slovy. Je to
+  **zdroj** patnáctikrokové tabulky výš, ne další úkol.
+
+### E) Rozhodnuto Milošem, nic se nestaví (1)
+
+**R2** — směrnice jako zdroj dat místo PDF. Jeho slova: *„do budoucna uděláme
+prekognici … Teď stačí zdroj jak máme."* PDF tedy zůstává.
+
+### Jak se z toho dostáváme postupně
+
+Dávky jsou navržené tak, že **žádná nečeká na tu před sebou**, kromě té, kde je
+to napsané. Dá se začít kteroukoli.
+
+| Dávka | Co se v ní dělá | Na čem to stojí |
+| --- | --- | --- |
+| **1** | Devět otázek ze skupiny B pošleme Milošovi jako **jeden seznam**, ne po jedné | na ničem — a uvolní osmnáct nálezů |
+| **2** | Krok 1 plánu: odpočet v appce jen ke čtení | na ničem (otisk se nemění, jde po síti) |
+| **3** | K5, K7, K3 — tři malé samostatné věci | na ničem |
+| **4** | Krok 2 plánu: spuštění procedury z appky + fronta | po dávce 2 |
+| **5** | Kroky 3 až 5 plánu | na odpovědích na otázky 1 a 2 |
+| **6** | Vypsání: doplnit čtyři `null` body a místo konání | na odpovědi na otázku 6 |
+| **7** | Cíl a přepsání trasování | otázka 9, vlastní velká věc |
+
+**Čím se měří, že se z hromady dostáváme:** ne počtem zavřených nálezů, ale
+tím, kolik zbývá ve skupině B. Dnes devatenáct. Po jedné zprávě Milošovi může
+být jeden.
 
 ## Kde se pokračuje
 
