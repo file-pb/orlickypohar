@@ -147,7 +147,7 @@ strom), takže v historii stojí pod jejím popisem, ne pod tímhle auditem.
 
 ## Otevřené — o těchhle rozhodne Filip
 
-**Otevřené zůstávají jen dva: 11 a 12.** Zbytek je přeškrtnutý —
+**Otevřené zůstávají tři: 11, 12 a 14.** Zbytek je přeškrtnutý —
 6 a 8 (27. 10. 2026), 7, 9, 10 a 13 (28. 10. 2026) —, ale nálezy tu
 zůstávají i tak: u šestky kvůli číslům, proti kterým se oprava dá
 přeměřit, u osmičky proto, že poslední rozhodnutí v ní nebylo technické,
@@ -516,6 +516,47 @@ v ruce, ať to potvrdí.
 ---
 
 ---
+
+### 14. Když umlkne celé pole, tabule to nepozná
+**Otevřené, nalezeno 28. 10. 2026** — vylezlo to z rozboru nálezu výš.
+
+Tabule si stáří polohy **nepočítá proti hodinám, ale proti nejčerstvějšímu
+bodu celého pole** (`cas` živě drží `konec`, a `konec` je `Math.max`
+posledních bodů všech lodí — `mapa-trackeru.tsx:1019` a `:589`). Dokud
+aspoň někdo hlásí, je to užitečné: číslo říká, jak je loď pozadu za polem.
+Jakmile ale **přestanou hlásit všichni naráz**, `konec` zamrzne — a s ním
+každé `stariS`. Loď, která ohlásila jako poslední, zůstane na `před 0 s`
+navždy.
+
+**API přitom pravdu zná.** `PolohaLodi.stav` počítá server proti svému
+`TimeProvider` (`PolohySprava`: `Cerstva` do minuty, `Starne` do pěti,
+pak `Nedostupna`). Jenže `web/lib/stopy.ts` to pole **vůbec nepřebírá**
+(slovo `stav` v něm není ani jednou) a obrazovka si stav počítá znovu
+a jinak (`mapa-trackeru.tsx:203`).
+
+*Změřeno:* kanál poloh zmrazený na čtyřicet vteřin (tatáž odpověď pořád
+dokola — jako když telefony umlknou, ale API odpovídá dál). Ze sedmnácti
+řádků ranku se za tu dobu nezměnil **ani jeden**, lodě dál hlásí
+`před 0 s` ve třídě `nacrt-cerstva`. Čtyřicet vteřin je jen doba měření —
+mechanismus výš říká, že to tak zůstane napořád.
+
+**A druhý kanál to nezachytí.** Kolečko stáří v rohu drží stáří
+**snímku** (`ted − snimek.kdy`), ne poloh, a to chodí dál: po celou dobu
+měření stálo na `1 s` a nezčervenalo. Divák tedy nemá na obrazovce nic,
+co by řeklo, že mapa zamrzla.
+
+**Proč to nechávám k rozhodnutí.** Opravit to jde dvěma cestami a liší
+se významem, ne obtížností:
+
+- **přebírat `stav` z API** — tabule by říkala totéž co správa, ale
+  ztratila by to, co dnes říká navíc (kdo je pozadu *za polem*);
+- **nechat relativní stáří a přidat jeden příznak o celém poli** —
+  například kolečko, které zčervená, když nejčerstvější bod zestárne;
+  u čísel u lodí by se nezměnilo nic.
+
+Souvisí to s otázkou polarity obrysu (session devíti os): **„stáří"
+znamená na tabuli a ve správě dvě různé věci**, a obrys by ten rozdíl
+zdědil, ať se nakreslí jakkoliv.
 
 ## Pozorování, ze kterých návrh nevznikl
 
