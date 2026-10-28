@@ -71,6 +71,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         Set<Features.Tracker.ZmenaNastaveniTrackeru>();
     public DbSet<Features.Klice.PozvankaKlice> Pozvanky => Set<Features.Klice.PozvankaKlice>();
 
+    /// <summary>Sady otázek pro oponenturu s rozhodčím a odpovědi na ně.</summary>
+    public DbSet<Features.Oponentura.SadaOtazek> Sady => Set<Features.Oponentura.SadaOtazek>();
+    public DbSet<Features.Oponentura.OtazkaSady> Otazky => Set<Features.Oponentura.OtazkaSady>();
+    public DbSet<Features.Oponentura.OdpovedNaOtazku> OponenturaOdpovedi =>
+        Set<Features.Oponentura.OdpovedNaOtazku>();
+    public DbSet<Features.Oponentura.HlasovaOdpoved> HlasoveOdpovedi =>
+        Set<Features.Oponentura.HlasovaOdpoved>();
+    public DbSet<Features.Oponentura.VyplneniSady> Vyplneni =>
+        Set<Features.Oponentura.VyplneniSady>();
+
     protected override void OnModelCreating(ModelBuilder b)
     {
         var serie = b.Entity<Serie>();
@@ -534,5 +544,62 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         pozvanka.Property(x => x.Otisk).HasMaxLength(64).IsRequired();
         pozvanka.Property(x => x.Jmeno).HasMaxLength(120);
         pozvanka.HasIndex(x => x.Otisk).IsUnique();
+
+        var sada = b.Entity<Features.Oponentura.SadaOtazek>();
+        sada.Property(x => x.Slug).HasMaxLength(Features.Oponentura.Dotazovani.SlugNejvic)
+            .IsRequired();
+        sada.Property(x => x.Nazev).HasMaxLength(Features.Oponentura.Dotazovani.NazevNejvic)
+            .IsRequired();
+        sada.Property(x => x.Uvod).HasMaxLength(Features.Oponentura.Dotazovani.UvodNejvic)
+            .IsRequired();
+        sada.HasOne(x => x.Serie).WithMany().HasForeignKey(x => x.SerieId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Slug je adresa sady v ročníku, takže dvakrát týž nejde.
+        sada.HasIndex(x => new { x.SerieId, x.Slug }).IsUnique();
+
+        var otazka = b.Entity<Features.Oponentura.OtazkaSady>();
+        otazka.Property(x => x.Kod).HasMaxLength(Features.Oponentura.Dotazovani.KodNejvic)
+            .IsRequired();
+        otazka.Property(x => x.Text).HasMaxLength(Features.Oponentura.Dotazovani.OtazkaNejvic)
+            .IsRequired();
+        otazka.Property(x => x.Vysvetleni)
+            .HasMaxLength(Features.Oponentura.Dotazovani.VysvetleniNejvic);
+        otazka.Property(x => x.Uvolni).HasMaxLength(200);
+        otazka.HasOne(x => x.Sada).WithMany(x => x.Otazky).HasForeignKey(x => x.SadaId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Kód je přirozený klíč v sadě: doplnění sady podle něj pozná
+        // stávající otázku od nové.
+        otazka.HasIndex(x => new { x.SadaId, x.Kod }).IsUnique();
+        // Volby leží v JSONu u řádku otázky, protože mimo ni nemají význam
+        // a nikdo se na ně samostatně neptá.
+        otazka.OwnsMany(x => x.Volby, v => v.ToJson());
+
+        var odpoved = b.Entity<Features.Oponentura.OdpovedNaOtazku>();
+        odpoved.ToTable("OponenturaOdpovedi");
+        odpoved.Property(x => x.Text).HasMaxLength(Features.Oponentura.Dotazovani.TextNejvic);
+        odpoved.HasOne(x => x.Otazka).WithMany().HasForeignKey(x => x.OtazkaId)
+            .OnDelete(DeleteBehavior.Cascade);
+        odpoved.HasOne(x => x.Kdo).WithMany().HasForeignKey(x => x.KdoId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Jeden člověk, jedna otázka, jedna odpověď — zaškrtnutí a text jsou
+        // poslední stav, ne historie. Hlas je naopak aditivní.
+        odpoved.HasIndex(x => new { x.OtazkaId, x.KdoId }).IsUnique();
+
+        var hlas = b.Entity<Features.Oponentura.HlasovaOdpoved>();
+        hlas.Property(x => x.Typ).HasMaxLength(60).IsRequired();
+        hlas.HasOne(x => x.Otazka).WithMany().HasForeignKey(x => x.OtazkaId)
+            .OnDelete(DeleteBehavior.Cascade);
+        hlas.HasOne(x => x.Kdo).WithMany().HasForeignKey(x => x.KdoId)
+            .OnDelete(DeleteBehavior.Cascade);
+        hlas.HasIndex(x => x.OtazkaId);
+
+        var vyplneni = b.Entity<Features.Oponentura.VyplneniSady>();
+        vyplneni.ToTable("VyplneniSad");
+        vyplneni.HasOne(x => x.Sada).WithMany().HasForeignKey(x => x.SadaId)
+            .OnDelete(DeleteBehavior.Cascade);
+        vyplneni.HasOne(x => x.Kdo).WithMany().HasForeignKey(x => x.KdoId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // „Mám to“ jednoho nesmí uzavřít sadu druhému.
+        vyplneni.HasIndex(x => new { x.SadaId, x.KdoId }).IsUnique();
     }
 }

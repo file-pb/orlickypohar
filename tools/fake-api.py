@@ -987,6 +987,122 @@ def _nasad_smernice():
     ]
 
 
+
+# --- Otázky k aplikaci (oponentura s rozhodčím) -----------------------------
+# Opsané z `Features/Oponentura/`. Mock to potřebuje proto, že bez něj se
+# obrazovka nedá zkoušet vůbec — a hlavně **mikrofon**: nahrávání z prohlížeče
+# je jediné místo té obrazovky s javascriptem a bez běžícího API se nedá
+# ověřit, že nahrávka doopravdy dojde až do úložiště.
+#
+# <b>Texty otázek se tu neopisují.</b> Čtou se z téhož souboru, který vkládá
+# do assembly API (`Features/Oponentura/prvni-sada.json`) — jinak by sada
+# v mocku byla jiná než ta, kterou pak rozhodčí doopravdy dostane, a zkouška
+# by měřila něco jiného, než co se posílá.
+PRVNI_SADA = json.load(open(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                 "..", "src", "OrlickyPohar.Api", "Features", "Oponentura",
+                 "prvni-sada.json"),
+    encoding="utf-8"))
+
+# Sady podle slugu. Jedna, stejně jako po nasazení.
+SADY = {PRVNI_SADA["slug"]: PRVNI_SADA}
+# Odpovědi: (slug sady, kód otázky, id účtu) -> {"volby": [...], "text": ...}.
+ODPOVEDI = {}
+# Nahrávky: (slug, kód) -> seznam záznamů. Jedna otázka jich může mít víc.
+NAHRAVKY = {}
+# Obsah nahrávek, jako `SMERNICE_SOUBORY`. Mock nemá úložiště.
+NAHRAVKY_OBSAH = {}
+# „Mám to" podle (slug, id účtu). Vedené po lidech, jako `VyplneniSad`.
+HOTOVO = {}
+
+# Poznání zvuku z obsahu, opsané z `Dotazovani.PoznejZvuk`. Pravda je tam
+# a hlídají ji testy; tenhle přepis existuje jen proto, aby mock odmítl totéž,
+# co odmítne API — jinak by nahrávání v prohlížeči prošlo lokálně a spadlo
+# až na produkci.
+def poznej_zvuk(data):
+    if data.startswith(b"\x1a\x45\xdf\xa3"):
+        return "audio/webm"
+    if data.startswith(b"OggS"):
+        return "audio/ogg"
+    if len(data) >= 12 and data[4:8] == b"ftyp":
+        return "audio/mp4"
+    if len(data) >= 12 and data.startswith(b"RIFF") and data[8:12] == b"WAVE":
+        return "audio/wav"
+    if data.startswith(b"ID3") or (len(data) >= 2 and data[0] == 0xFF
+                                   and data[1] & 0xE0 == 0xE0):
+        return "audio/mpeg"
+    return None
+
+
+def otazka_sady(slug, kod):
+    sada = SADY.get(slug)
+    if not sada:
+        return None
+    return next((o for o in sada["otazky"] if o["kod"] == kod), None)
+
+
+def _odpovezeno(slug):
+    """Na kolika otázkách je aspoň něco — volba, text, nebo nahrávka."""
+    sada = SADY[slug]
+    kody = set()
+    for (s, kod, _), o in ODPOVEDI.items():
+        if s == slug and (o["volby"] or (o["text"] or "").strip()):
+            kody.add(kod)
+    for (s, kod), n in NAHRAVKY.items():
+        if s == slug and n:
+            kody.add(kod)
+    return len([k for k in kody if any(o["kod"] == k for o in sada["otazky"])])
+
+
+def _zmeneno(slug):
+    casy = [o["zmenenoV"] for (s, _, _), o in ODPOVEDI.items() if s == slug]
+    casy += [z["nahranoV"] for (s, _), n in NAHRAVKY.items() if s == slug for z in n]
+    return max(casy) if casy else None
+
+
+def sada_shrnuti(slug, kdo):
+    sada = SADY[slug]
+    odpovezeno = _odpovezeno(slug)
+    dokonceneV = HOTOVO.get((slug, kdo))
+    stav = ("Odpovezeno" if dokonceneV
+            else "Rozpracovano" if odpovezeno else "Neodpovezeno")
+    return {
+        "slug": slug, "nazev": sada["nazev"], "uvod": sada["uvod"],
+        "pocetOtazek": len(sada["otazky"]),
+        "odpovezeno": odpovezeno,
+        "pocetNahravek": sum(len(n) for (s, _), n in NAHRAVKY.items() if s == slug),
+        "stav": stav, "dokonceneV": dokonceneV, "zmenenoV": _zmeneno(slug),
+    }
+
+
+def sada_detail(slug, kdo):
+    sada = SADY[slug]
+    otazky = []
+    for o in sada["otazky"]:
+        # Nejnovější odpověď, bez ohledu na to, kdo ji dal: pořadatel čte,
+        # co odpověděl rozhodčí.
+        moje = sorted(
+            [x for (s, kod, _), x in ODPOVEDI.items() if s == slug and kod == o["kod"]],
+            key=lambda x: x["zmenenoV"], reverse=True)
+        odpoved = moje[0] if moje else None
+        otazky.append({
+            "kod": o["kod"], "text": o["text"],
+            "vysvetleni": o.get("vysvetleni"), "uvolni": o.get("uvolni"),
+            "volby": o.get("volby") or [], "volbyVice": bool(o.get("volbyVice")),
+            "zaskrtnuto": (odpoved or {}).get("volby") or [],
+            "odpoved": ((odpoved or {}).get("text") or None),
+            "odpovezenoV": (odpoved or {}).get("zmenenoV"),
+            "nahravky": NAHRAVKY.get((slug, o["kod"]), []),
+        })
+
+    shrnuti = sada_shrnuti(slug, kdo)
+    return {
+        "slug": slug, "nazev": sada["nazev"], "uvod": sada["uvod"],
+        "stav": shrnuti["stav"], "dokonceneV": shrnuti["dokonceneV"],
+        "otazky": otazky,
+    }
+
+
 # --- Bóje na trati ----------------------------------------------------------
 # Opsané z `Features/Boje/`. Mock je potřebuje proto, že bez nich se
 # obrazovka bójí nedá zkoušet vůbec — a polohu z telefonu stejně nic
@@ -2822,6 +2938,14 @@ def role_pro_cestu(metoda, cesta):
         return ("Spravce", None)
     if zbytek.startswith("/opravneni"):
         return ("Rozhodci", None)
+    # <b>Otázky k aplikaci</b>: čte rozhodčí i pořadatel ročníku, odpovídá
+    # jen rozhodčí (`OponenturaEndpoints.SmiCistAsync` / `SmiOdpovidatAsync`).
+    # Zakládání sady je správce, ale to obrazovka nedělá — chodí tam curl.
+    if zbytek.startswith("/oponentura"):
+        if metoda == "GET":
+            return (NAHLED, None)
+        return ("Spravce", None) if zbytek in ("/oponentura", "/oponentura/") \
+            else ("Rozhodci", None)
     if zbytek.startswith("/clanky"):
         return ("Editor", None)
     if zbytek.startswith("/lode"):
@@ -3495,6 +3619,11 @@ class H(BaseHTTPRequestHandler):
 
         if self.token_nesedi() or self.prava_nesedi():
             return None
+
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/oponentura/([a-z0-9-]+)'
+                r'/otazky/([A-Za-z0-9-]+)$', cesta)):
+            return self.otazka_odpovez(m.group(1), m.group(2))
 
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                           r'/trat/prvky/(\d+)$', cesta)):
@@ -4618,6 +4747,16 @@ class H(BaseHTTPRequestHandler):
                 cesta)):
             return self.stahni_smernici(m.group(1), int(m.group(2)))
         if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/oponentura/([a-z0-9-]+)'
+                r'/otazky/([A-Za-z0-9-]+)/nahravky$', cesta)):
+            return self.hlas_nahraj(m.group(1), m.group(2))
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/oponentura/([a-z0-9-]+)/dokonceni$', cesta)):
+            return self.sada_dokonci(m.group(1))
+        if cesta == f'/sprava/serie/{D["slug"]}/oponentura':
+            return self.sada_zaloz()
+
+        if (m := re.match(
                 rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/smernice$', cesta)):
             return self.vyves_smernici(m.group(1))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)/lode$', cesta)):
@@ -5541,6 +5680,10 @@ class H(BaseHTTPRequestHandler):
     def do_DELETE(self):
         if self.token_nesedi() or self.prava_nesedi():
             return None
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/oponentura/([a-z0-9-]+)'
+                r'/nahravky/([0-9a-f]+)$', urlparse(self.path).path)):
+            return self.hlas_smaz(m.group(1), m.group(2))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/zastavky/([a-z0-9-]+)'
                           r'/trat/prvky/(\d+)$', urlparse(self.path).path)):
             return self.prvek_smaz(m.group(1), int(m.group(2)))
@@ -5690,6 +5833,16 @@ class H(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(data)
             return
+
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/oponentura/([a-z0-9-]+)'
+                r'/nahravky/([0-9a-f]+)$', cesta)):
+            return self.hlas_vydej(m.group(1), m.group(2))
+        if (m := re.match(
+                rf'^/sprava/serie/{D["slug"]}/oponentura/([a-z0-9-]+)$', cesta)):
+            return self.sada_vydej(m.group(1))
+        if cesta == f'/sprava/serie/{D["slug"]}/oponentura':
+            return self.sady_seznam()
 
         if cesta == "/lode/napoveda":
             # Našeptávač lodí: bez diakritiky, od dvou znaků; vse=true vydá
@@ -6283,6 +6436,159 @@ class H(BaseHTTPRequestHandler):
             return self.send_error(404)
 
         return self.odpoved(telo)
+
+    # --- Otázky k aplikaci -------------------------------------------------
+
+    def sady_seznam(self):
+        """Sady ročníku se stavem. Opsané z `OponenturaSprava.SeznamAsync`."""
+        kdo = self.prihlaseny()["id"]
+        return self.odpoved([sada_shrnuti(s, kdo) for s in SADY])
+
+    def sada_vydej(self, slug):
+        if slug not in SADY:
+            return self.send_error(404)
+        return self.odpoved(sada_detail(slug, self.prihlaseny()["id"]))
+
+    def sada_zaloz(self):
+        """Založí sadu, nebo doplní tu stávající — podle slugu a kódu otázky,
+        jako `ZalozAsync`. Nic nemaže: otázka, která ve vstupu chybí, zůstává."""
+        vstup = self.telo_zadosti()
+        slug = (vstup.get("slug") or "").strip()
+        if not slug:
+            return self.chyba(400, "Sada musí mít slug.")
+        if not vstup.get("otazky"):
+            return self.chyba(400, "Sada bez otázek nemá co posílat.")
+
+        sada = SADY.setdefault(slug, {"slug": slug, "otazky": []})
+        sada["nazev"] = (vstup.get("nazev") or "").strip()
+        sada["uvod"] = (vstup.get("uvod") or "").strip()
+        sada["poradi"] = vstup.get("poradi") or 0
+
+        pridano = zmeneno = 0
+        for o in vstup["otazky"]:
+            kod = (o.get("kod") or "").strip()
+            stara = next((x for x in sada["otazky"] if x["kod"] == kod), None)
+            if stara is None:
+                sada["otazky"].append(dict(o, kod=kod))
+                pridano += 1
+            else:
+                stara.update(dict(o, kod=kod))
+                zmeneno += 1
+
+        return self.odpoved({"slug": slug, "pridano": pridano, "zmeneno": zmeneno})
+
+    def otazka_odpovez(self, slug, kod):
+        """Zápis zaškrtnutí a textu. Nic není povinné; neznámý kód volby se
+        odmítá, protože tiše zahodit by znamenalo tvrdit, že je uložený."""
+        otazka = otazka_sady(slug, kod)
+        if otazka is None:
+            return self.chyba(400, "Takovou otázku tahle sada nemá.")
+
+        vstup = self.telo_zadosti()
+        volby = [str(v) for v in (vstup.get("volby") or [])]
+        text = (vstup.get("text") or "").strip()
+
+        if len(text) > 4000:
+            return self.chyba(400, "Odpověď může mít nejvýš 4000 znaků.")
+        if len(volby) > 1 and not otazka.get("volbyVice"):
+            return self.chyba(400, "U téhle otázky se dá zaškrtnout jen jedna volba.")
+        for v in volby:
+            if not any(x["kod"] == v for x in (otazka.get("volby") or [])):
+                return self.chyba(400, f"Volba \u201e{v}\u201c u téhle otázky není.")
+
+        kdo = self.prihlaseny()["id"]
+        ODPOVEDI[(slug, kod, kdo)] = {
+            "volby": volby, "text": text or None, "zmenenoV": ted_iso(),
+        }
+        # Odpověď po uzavření sadu zase otevře — jako v API.
+        HOTOVO.pop((slug, kdo), None)
+        self.send_response(204)
+        self.end_headers()
+
+    def hlas_nahraj(self, slug, kod):
+        """Nahrávka hlasem. Formát se pozná z **obsahu**, ne z hlavičky —
+        jako `Dotazovani.PoznejZvuk`."""
+        if otazka_sady(slug, kod) is None:
+            return self.chyba(400, "Takovou otázku tahle sada nemá.")
+
+        delka = int(self.headers.get("Content-Length", "0") or 0)
+        zprava = BytesParser(policy=HTTP).parsebytes(
+            b"Content-Type: " + self.headers["Content-Type"].encode() + b"\r\n\r\n"
+            + self.rfile.read(delka))
+        pole = {c.get_param("name", header="content-disposition"): c
+                for c in zprava.iter_parts()}
+
+        soubor = pole.get("nahravka")
+        data = soubor.get_payload(decode=True) if soubor else b""
+        if not data:
+            return self.chyba(400, "Nahrávka je prázdná. Zkus to prosím znovu.")
+        if len(data) > 20 * 1024 * 1024:
+            return self.chyba(400, "Nahrávka může mít nejvýš 20 MB.")
+
+        typ = poznej_zvuk(data)
+        if not typ:
+            return self.chyba(400, "Nahrávka nemá rozpoznatelný zvukový formát. "
+                                   "Nahraj ji znovu, nebo odpověz textem.")
+
+        sekund = 0
+        if pole.get("sekund"):
+            try:
+                sekund = int(pole["sekund"].get_payload(decode=True).decode())
+            except ValueError:
+                sekund = 0
+
+        kdo = self.prihlaseny()
+        nahravka_id = uuid.uuid4().hex
+        NAHRAVKY_OBSAH[nahravka_id] = (data, typ)
+        zapis = {
+            "id": nahravka_id,
+            "adresa": f'/sprava/serie/{D["slug"]}/oponentura/{slug}/nahravky/{nahravka_id}',
+            "typ": typ, "velikost": len(data),
+            "sekund": sekund if sekund > 0 else None,
+            "nahranoV": ted_iso(), "kdo": kdo["zobrazovane"],
+        }
+        NAHRAVKY.setdefault((slug, kod), []).append(zapis)
+        HOTOVO.pop((slug, kdo["id"]), None)
+        return self.odpoved(zapis, 201)
+
+    def hlas_vydej(self, slug, nahravka_id):
+        """Obsah nahrávky. V API se čte z úložiště s tokenem, ne z veřejné
+        adresy — hlas k neuzavřenému rozhodnutí není určený ven."""
+        if nahravka_id not in NAHRAVKY_OBSAH:
+            return self.send_error(404)
+        if not any(s == slug for (s, _) in NAHRAVKY):
+            return self.send_error(404)
+
+        data, typ = NAHRAVKY_OBSAH[nahravka_id]
+        self.send_response(200)
+        self.send_header("Content-Type", typ)
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Accept-Ranges", "bytes")
+        self.end_headers()
+        self.wfile.write(data)
+
+    def hlas_smaz(self, slug, nahravka_id):
+        for klic, seznam in list(NAHRAVKY.items()):
+            if klic[0] != slug:
+                continue
+            zbyle = [n for n in seznam if n["id"] != nahravka_id]
+            if len(zbyle) != len(seznam):
+                NAHRAVKY[klic] = zbyle
+                NAHRAVKY_OBSAH.pop(nahravka_id, None)
+                self.send_response(204)
+                return self.end_headers()
+        return self.chyba(400, "Takovou nahrávku tahle sada nemá.")
+
+    def sada_dokonci(self, slug):
+        if slug not in SADY:
+            return self.chyba(400, "Takovou sadu tenhle ročník nemá.")
+        kdo = self.prihlaseny()["id"]
+        if self.telo_zadosti().get("hotovo"):
+            HOTOVO[(slug, kdo)] = ted_iso()
+        else:
+            HOTOVO.pop((slug, kdo), None)
+        self.send_response(204)
+        self.end_headers()
 
     def odpoved(self, telo, kod=200):
         data = json.dumps(telo, ensure_ascii=False).encode()

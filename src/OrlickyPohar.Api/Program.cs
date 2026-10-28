@@ -13,6 +13,7 @@ using OrlickyPohar.Api.Features.Lode;
 using OrlickyPohar.Api.Features.Upozorneni;
 using OrlickyPohar.Api.Features.Naklady;
 using OrlickyPohar.Api.Features.Okna;
+using OrlickyPohar.Api.Features.Oponentura;
 using OrlickyPohar.Api.Features.Polohy;
 using OrlickyPohar.Api.Features.Poradatele;
 using OrlickyPohar.Api.Features.Prevzate;
@@ -97,6 +98,8 @@ try
     // Plachetní směrnice u zastávky: vyvěšení a seznam verzí.
     builder.Services.AddScoped<SmerniceSprava>();
     builder.Services.AddScoped<ZpravySprava>();
+    // Sady otázek pro oponenturu s rozhodčím: odpovídá hlasem z telefonu.
+    builder.Services.AddScoped<OponenturaSprava>();
     // Vazba účtu k lodi: párování podle e-mailu při přihlášení.
     builder.Services.AddScoped<Parovani>();
     // Připojení k lodi kódem nebo QR.
@@ -241,6 +244,7 @@ try
         app.MapUkonyZaJizdy();
         app.MapPrihlasky();
         app.MapSmernice();
+        app.MapOponenturu();
         app.MapZpravy();
         app.MapKody();
         app.MapKapitanstvi();
@@ -262,6 +266,14 @@ try
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.MigrateAsync();
+
+        // První sada otázek pro oponenturu s rozhodčím. Další se zakládají
+        // koncovým bodem, bez nasazení — tahle jedna musí po nasazení
+        // existovat, aby šel odkaz poslat hned. Zasetí nic nepřepisuje.
+        await PrvniSada.ZasejAsync(
+            db,
+            scope.ServiceProvider.GetRequiredService<OponenturaSprava>(),
+            scope.ServiceProvider.GetRequiredService<ILogger<Program>>());
     }
 
     await app.RunAsync();

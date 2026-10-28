@@ -228,6 +228,26 @@ export function polozkyRocniku(udelena: Udelena[], serie: string): Polozka[] {
       role: "Editor",
       pozadavek: { role: "Editor", serie },
     }],
+    // <b>Otázky k aplikaci</b> (28. 10. 2026). Sadu dostává rozhodčí
+    // a odpovídá na ni; pořadatel ji čte. Server pouští na čtení obojí
+    // a na zápis jen rozhodčího (`OponenturaEndpoints`), takže podoby jsou
+    // dvě a popis odpovídá tomu, co ten člověk na obrazovce dělá.
+    [
+      {
+        nazev: "Otázky k aplikaci",
+        popis: "Odpovědět na otevřené otázky — zaškrtnutím, textem, nebo hlasem.",
+        kam: kam("/oponentura"),
+        role: "Rozhodci",
+        pozadavek: { role: "Rozhodci", serie },
+      },
+      {
+        nazev: "Otázky k aplikaci",
+        popis: "Co rozhodčí odpověděl a na co ještě ne.",
+        kam: kam("/oponentura"),
+        role: "Organizator",
+        pozadavek: { role: "Organizator", serie },
+      },
+    ],
     // Rozhodčí přiřazuje pořadatele a editora jedné regatě; roli na celý
     // ročník a rozhodčího dává jen správce (`Udeleni.RozhodciSmiUdelit`).
     // Jeden popis pro oba sliboval rozhodčímu dvě role, které mu obrazovka

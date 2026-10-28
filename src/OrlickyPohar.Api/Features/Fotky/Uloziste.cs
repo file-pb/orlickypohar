@@ -24,6 +24,18 @@ public interface IUloziste
     /// </summary>
     Task UlozAsync(string klic, byte[] data, string typ, CancellationToken ct, string? cache = null);
 
+    /// <summary>
+    /// Přečte soubor, nebo vrátí <c>null</c>, když tam není.
+    /// <para>
+    /// <b>K čemu je čtení, když mají soubory veřejnou adresu.</b> Fotky
+    /// a směrnice jsou určené ven, takže si je prohlížeč stáhne z úložiště
+    /// sám a aplikace je nikdy nečte. Hlasová odpověď rozhodčího
+    /// z oponentury určená ven není a vydává ji API za přihlášením — veřejná
+    /// adresa by platila napořád, i kdyby odkaz unikl z transkriptu.
+    /// </para>
+    /// </summary>
+    Task<Stream?> CtiAsync(string klic, CancellationToken ct);
+
     /// <summary>Smaže soubor. Chybějící soubor není chyba.</summary>
     Task SmazAsync(string klic, CancellationToken ct);
 }
@@ -101,6 +113,24 @@ public sealed class S3Uloziste(IAmazonS3 s3, FotkyNastaveni nastaveni) : IUlozis
         await s3.PutObjectAsync(pozadavek, ct);
     }
 
+    /// <summary>
+    /// Chybějící soubor vrací <c>null</c>, ne výjimku: záznam v databázi
+    /// a soubor v cizí službě se nedají držet v jedné transakci, takže
+    /// „záznam je a soubor ne" je stav, který nastat může.
+    /// </summary>
+    public async Task<Stream?> CtiAsync(string klic, CancellationToken ct)
+    {
+        try
+        {
+            var odpoved = await s3.GetObjectAsync(nastaveni.Bucket, klic, ct);
+            return odpoved.ResponseStream;
+        }
+        catch (AmazonS3Exception e) when (e.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+    }
+
     public async Task SmazAsync(string klic, CancellationToken ct) =>
         await s3.DeleteObjectAsync(nastaveni.Bucket, klic, ct);
 }
@@ -119,6 +149,13 @@ public sealed class NenastaveneUloziste(FotkyNastaveni nastaveni) : IUloziste
     public Task UlozAsync(
         string klic, byte[] data, string typ, CancellationToken ct, string? cache = null) =>
         throw new InvalidOperationException("Úložiště fotek není nastavené.");
+
+    /// <summary>
+    /// Bez nastaveného úložiště tam soubor není. <b>Nepadá</b>, na rozdíl od
+    /// zápisu: čtení se ptá, jestli soubor je, a odpověď „není" je platná.
+    /// </summary>
+    public Task<Stream?> CtiAsync(string klic, CancellationToken ct) =>
+        Task.FromResult<Stream?>(null);
 
     public Task SmazAsync(string klic, CancellationToken ct) =>
         throw new InvalidOperationException("Úložiště fotek není nastavené.");

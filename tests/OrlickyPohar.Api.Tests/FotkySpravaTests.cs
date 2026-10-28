@@ -26,6 +26,11 @@ public class FotkySpravaTests(PostgresFixture fixture)
         public Dictionary<string, byte[]> Soubory { get; } = [];
         public bool Pripraveno => true;
         public string? VerejnaAdresa => "https://foto.example";
+        /// <summary>Čtení je tu kvůli hlasovým odpovědím oponentury.</summary>
+        public Task<Stream?> CtiAsync(string klic, CancellationToken ct) =>
+            Task.FromResult<Stream?>(
+                Soubory.TryGetValue(klic, out var data) ? new MemoryStream(data) : null);
+
 
         public Task UlozAsync(
             string klic, byte[] data, string typ, CancellationToken ct, string? cache = null)

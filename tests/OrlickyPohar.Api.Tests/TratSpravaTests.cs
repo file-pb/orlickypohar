@@ -27,6 +27,10 @@ public class TratSpravaTests(PostgresFixture fixture)
     {
         public bool Pripraveno => true;
         public string? VerejnaAdresa => "https://foto.example";
+        /// <summary>Čtení tenhle test nepotřebuje; čte se jen u oponentury.</summary>
+        public Task<Stream?> CtiAsync(string klic, CancellationToken ct) =>
+            Task.FromResult<Stream?>(null);
+
 
         public Task UlozAsync(
             string klic, byte[] data, string typ, CancellationToken ct, string? cache = null) =>

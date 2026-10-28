@@ -11,6 +11,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- První sada otázek pro oponenturu. Vložená do assembly, ne kopírovaná
+         vedle binárky: zapomenutý `COPY` v Dockerfile by se projevil až tím,
+         že se sada po nasazení nezasela, a to nikdo nehlídá. Tentýž soubor
+         čte i mock (`tools/fake-api.py`), aby texty nebyly na dvou místech. -->
+    <EmbeddedResource Include="Features/Oponentura/prvni-sada.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="4.0.104.6" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.14" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.14" />

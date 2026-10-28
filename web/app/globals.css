@@ -5450,3 +5450,91 @@ body:has(.nacrt-stranka-tv) main.obal { max-width: none; padding: 0; }
   padding: calc(0.1 * var(--tv)) calc(0.6 * var(--tv));
   letter-spacing: 0.04em; text-transform: uppercase;
 }
+
+/* ---------------------------------------------------------------------
+   Otázky k aplikaci (oponentura s rozhodčím, 28. 10. 2026).
+
+   Dělané na telefon v ruce: rozhodčí si sadu otevře z odkazu a odpovídá
+   hlasem. Nic se nepřebarvuje — stav je napsaný slovy a barva je druhý
+   kanál, ne jediný. Barvy jsou tokeny přebíjené v obou tmavých blocích,
+   protože vlastní odrůda zelené by se v tmavém režimu ztratila stejně,
+   jako se ztrácela šrafa u nezveřejněné karty.
+   --------------------------------------------------------------------- */
+:root {
+  /* Stav sady. Odpovězeno zelená jako vypsaná zastávka, rozpracováno
+     jantar jako „právě teď" na tabuli, neodpovězeno tlumené. */
+  --sada-hotovo: var(--stav-vypsany);
+  --sada-rozdelane: var(--pozor-pismo);
+  /* Nahrávání je stav, ve kterém mikrofon doopravdy bere — a to musí být
+     poznat dřív, než člověk domluví do něčeho, co neposlouchá. */
+  --hlas-bezi: var(--stav-zruseny);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-rezim="svetly"]) {
+    --sada-rozdelane: var(--pozor);
+  }
+}
+:root[data-rezim="tmavy"] {
+  --sada-rozdelane: var(--pozor);
+}
+
+.sada-otazek-karta h2 { margin: 0; font-size: 1.05rem; }
+.sada-otazek-karta .poznamka { margin-top: 0.4rem; }
+.sada-stav { margin: 0.6rem 0 0; font-size: 0.9rem; }
+.sada-stav-odpovezeno { color: var(--sada-hotovo); }
+.sada-stav-rozpracovano { color: var(--sada-rozdelane); }
+.sada-stav-neodpovezeno { color: var(--tlumeny); }
+
+.uvod-sady { max-width: 46rem; line-height: 1.65; }
+
+/* Otázky pod sebou, každá jako vlastní blok. Číslo zůstává v seznamu,
+   protože se o otázkách mluví pořadím („ta druhá"), ale kód otázky nese
+   až štítek u nálezů — ten je pro Filipa, ne pro rozhodčího. */
+.otazky { list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; gap: 1.5rem; }
+.otazka {
+  background: var(--papir); border: 1px solid var(--linka); border-radius: 10px;
+  padding: 1rem 1.15rem;
+}
+.otazka-text { margin: 0; font-weight: 600; line-height: 1.5; }
+.otazka .formular {
+  margin: 0.9rem 0 0; padding: 0; background: none; border: 0; max-width: none;
+}
+.otazka-volby { background: var(--pozadi); }
+.otazka-volby .zaskrtnuti { display: flex; }
+.otazka-uvolni { font-size: 0.78rem; }
+
+/* Mikrofon. Vedle textu, ne pod ním — hlas je u téhle obrazovky hlavní
+   cesta, ne náhradní (Miloš: osm otázek třinácti nahrávkami). */
+.hlas {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem;
+  margin-top: 0.9rem;
+}
+.hlas button {
+  font: inherit; font-weight: 600; cursor: pointer;
+  padding: 0.6rem 1.1rem; border-radius: 8px; border: 1px solid var(--linka);
+  background: var(--pozadi); color: var(--text);
+}
+.hlas button:hover:not(:disabled) { border-color: var(--voda); color: var(--voda); }
+.hlas button:disabled { cursor: progress; color: var(--tlumeny); }
+.hlas .hlas-stop { border-color: var(--hlas-bezi); color: var(--hlas-bezi); }
+.hlas-bezi { font-size: 0.85rem; color: var(--hlas-bezi); }
+.hlas-chyba { font-size: 0.85rem; color: var(--stav-zruseny); }
+
+.nahravky { list-style: none; padding: 0; margin: 0.9rem 0 0; display: grid; gap: 0.8rem; }
+.nahravky li {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem;
+  padding-top: 0.8rem; border-top: 1px solid var(--linka);
+}
+.nahravky audio { height: 2.2rem; max-width: 100%; }
+.nahravky .poznamka { margin: 0; }
+
+.dokonceni { margin-top: 1.5rem; }
+.dokonceni .poznamka { margin: 0; }
+
+/* Telefon. Přehrávač si bere celý řádek, ať se tlačítko „smazat" nemačká
+   vedle ovládání, a tlačítka jsou na celou šířku jako u udělení role. */
+@media (max-width: 560px) {
+  .nahravky li { align-items: flex-start; }
+  .nahravky audio { width: 100%; }
+  .hlas button { width: 100%; }
+}

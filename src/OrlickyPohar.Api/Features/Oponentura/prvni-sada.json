@@ -1,0 +1,197 @@
+{
+  "slug": "b-ceka-na-rozhodnuti",
+  "nazev": "Devět otázek, které drží zbytek",
+  "uvod": "Tohle je devět míst, kde se neví, co se má stavět — a dokud se neví, stojí osmnáct dalších věcí. U každé otázky můžeš zaškrtnout, napsat, nebo nahrát odpověď hlasem; nejrychlejší je hlas. Nic není povinné a dá se to vyplňovat po částech. Až budeš mít dost, dole dej „mám to“.",
+  "poradi": 1,
+  "otazky": [
+    {
+      "kod": "B1",
+      "text": "Jak se mají na obrazovce jmenovat dva různé „alternativní tresty“ — ten před startem (pravidlo 30) a ten za dotek na trati (otáčky podle ZPJ 44)? A je dlaždic pro loď, která nestartovala správně, pět, nebo ten druhý seznam, který jsi jmenoval podruhé?",
+      "vysvetleni": "Při prvním průchodu jsi jmenoval jednu pětici dlaždic, při druhém jinou, a „alternativní trest“ použil pro obojí. Potřebuju jména, pod kterými to u vody najdeš bez přemýšlení — dvě různé věci nesmí mít jedno jméno.",
+      "uvolni": "R31, R28",
+      "volby": [
+        {
+          "kod": "pet",
+          "text": "Dlaždic je pět, jak jsem řekl poprvé"
+        },
+        {
+          "kod": "druhy",
+          "text": "Platí ten druhý seznam"
+        },
+        {
+          "kod": "jinak",
+          "text": "Jinak — řeknu to v nahrávce"
+        }
+      ],
+      "volbyVice": false
+    },
+    {
+      "kod": "B2",
+      "text": "Je „přerušit interval“, „přerušit start“ a „zrušit start“ dvě věci, nebo tři?",
+      "vysvetleni": "Aplikace má dvě a liší se tím, co udělají s časem: odklad (ZPJ 27.3) start posune na nový čas, odvolání (ZPJ 29.2) přidá minutu a jede se znovu. Jestli jsou tři, chybí jedna dlaždice a je potřeba vědět, co dělá s časem.",
+      "uvolni": "R23, R13, R4",
+      "volby": [
+        {
+          "kod": "dve",
+          "text": "Dvě"
+        },
+        {
+          "kod": "tri",
+          "text": "Tři"
+        },
+        {
+          "kod": "jinak",
+          "text": "Jinak — vysvětlím"
+        }
+      ],
+      "volbyVice": false
+    },
+    {
+      "kod": "B3",
+      "text": "Čtyři třídy: podle čeho je loď „lehký“ a podle čeho „těžký“? A přeřadí se ročník 2027, nebo ten pojede ve starém rozdělení?",
+      "vysvetleni": "Vypsání dnes říká délku trupu podle technického průkazu plus čelen. V aplikaci je třída jen jméno — pravidlo, podle kterého do ní loď patří, nikde není, takže ji nikdo kromě tebe nezařadí.",
+      "uvolni": "R29, R24",
+      "volby": [
+        {
+          "kod": "preradit",
+          "text": "Ročník 2027 se přeřadí"
+        },
+        {
+          "kod": "nechat",
+          "text": "Ročník 2027 zůstává, jak je"
+        }
+      ],
+      "volbyVice": false
+    },
+    {
+      "kod": "B4",
+      "text": "Kdo smí po rozpravě sáhnout do startovní listiny a do tříd — a odkud, z telefonu u vody, nebo z webu v klubovně?",
+      "vysvetleni": "Dnes vede přihlášky pořadatel a rozhodčí z nich smí jen vyloučit ze závodu. Jestli po rozpravě do listiny sahá jen rozhodčí, je to obrácené proti tomu, co dnes dovolí kód.",
+      "uvolni": "R32, R6",
+      "volby": [
+        {
+          "kod": "rozhodci",
+          "text": "Jen rozhodčí"
+        },
+        {
+          "kod": "oba",
+          "text": "Rozhodčí i pořadatel"
+        },
+        {
+          "kod": "poradatel",
+          "text": "Pořadatel, jak je to dnes"
+        }
+      ],
+      "volbyVice": false
+    },
+    {
+      "kod": "B5",
+      "text": "Odkdy se posádkám telefon „hlásí“ — od přihlášky, nebo až od rozpravy?",
+      "vysvetleni": "Jde o to, odkdy se smí posádce na telefon posílat a odkdy se sleduje poloha. Dnes to začíná rozpravou.",
+      "uvolni": "R3",
+      "volby": [
+        {
+          "kod": "prihlaska",
+          "text": "Od přihlášky"
+        },
+        {
+          "kod": "rozprava",
+          "text": "Od rozpravy"
+        },
+        {
+          "kod": "jinak",
+          "text": "Jinak — řeknu to"
+        }
+      ],
+      "volbyVice": false
+    },
+    {
+      "kod": "B6",
+      "text": "Je vypsání závodu platné i bez tvého podpisu? Které z třinácti oddílů skutečného vypsání se mezi ročníky mění? A psal bys plachetní směrnici přímo v appce, aby z ní trať, časy a režim startu natekly do aplikace?",
+      "vysvetleni": "Ve vypsání jsou čtyři body prázdné a místo konání je „neuvedené“ — a dva z nich i oba chybějící údaje o startu leží právě ve směrnici. Předvyplnění ze směrnice jsi navrhl sám; nerozhodnuté je kdy, ne jestli.",
+      "uvolni": "R20, R21, R22",
+      "volby": [
+        {
+          "kod": "platne",
+          "text": "Vypsání je platné i bez mého podpisu"
+        },
+        {
+          "kod": "smernice-appka",
+          "text": "Směrnici bych psal v appce"
+        },
+        {
+          "kod": "smernice-pdf",
+          "text": "Směrnice zůstává PDF, data zadám jinde"
+        }
+      ],
+      "volbyVice": true
+    },
+    {
+      "kod": "B7",
+      "text": "Vede u nezletilého závodníka podpis dospělé osoby za kormidelníka, nebo za kteréhokoli člena posádky?",
+      "vysvetleni": "Vypsání žádá podpis dospělé osoby, ale souhlas, který aplikace sbírá, ten případ nezná vůbec.",
+      "uvolni": "R26",
+      "volby": [
+        {
+          "kod": "kormidelnik",
+          "text": "Za kormidelníka"
+        },
+        {
+          "kod": "kdokoli",
+          "text": "Za kteréhokoli člena posádky"
+        },
+        {
+          "kod": "netreba",
+          "text": "Netřeba — nezletilý kapitán u nás není"
+        }
+      ],
+      "volbyVice": false
+    },
+    {
+      "kod": "B8",
+      "text": "Má aplikace při přihlášce vynucovat číslo průkazu VMP a technického průkazu? A má se ptát na čas vyzývacího znamení, který neuvádí ani vypsání, ani směrnice?",
+      "vysvetleni": "Vypsání oba průkazy žádá, aplikace místo nich vede číslo ČSJ, které vypsání nežádá. Čas vyzývacího znamení aplikace chce, ale není odkud ho vzít — žádný z obou dokumentů ho neuvádí.",
+      "uvolni": "R25, R27",
+      "volby": [
+        {
+          "kod": "vmp",
+          "text": "Vynucovat průkaz VMP"
+        },
+        {
+          "kod": "technicky",
+          "text": "Vynucovat technický průkaz"
+        },
+        {
+          "kod": "csj",
+          "text": "Číslo ČSJ nechat tak, jak je"
+        },
+        {
+          "kod": "vyzyvaci",
+          "text": "Na čas vyzývacího znamení se aplikace ptát nemá"
+        }
+      ],
+      "volbyVice": true
+    },
+    {
+      "kod": "B9",
+      "text": "Cíl: má být ruční zápis průjezdu a přepsání toho, co určilo trasování, na jedné obrazovce, nebo odděleně?",
+      "vysvetleni": "Je to velká věc a rozhoduje o ní Filip — ptám se proto, jak to chceš mít u vody v ruce. Dnes jde ruční zápis z webu a přepsat trasování nejde nijak.",
+      "uvolni": "R33, R34",
+      "volby": [
+        {
+          "kod": "jedna",
+          "text": "Na jedné obrazovce"
+        },
+        {
+          "kod": "oddelene",
+          "text": "Odděleně"
+        },
+        {
+          "kod": "jinak",
+          "text": "Jinak — řeknu to"
+        }
+      ],
+      "volbyVice": false
+    }
+  ]
+}

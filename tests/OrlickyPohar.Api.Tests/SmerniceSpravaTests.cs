@@ -34,6 +34,11 @@ public class SmerniceSpravaTests(PostgresFixture fixture)
         public bool Pada { get; set; }
         public bool Pripraveno => true;
         public string? VerejnaAdresa => "https://foto.example";
+        /// <summary>Čtení je tu kvůli hlasovým odpovědím oponentury.</summary>
+        public Task<Stream?> CtiAsync(string klic, CancellationToken ct) =>
+            Task.FromResult<Stream?>(
+                Soubory.TryGetValue(klic, out var data) ? new MemoryStream(data) : null);
+
 
         public Task UlozAsync(
             string klic, byte[] data, string typ, CancellationToken ct, string? cache = null)
