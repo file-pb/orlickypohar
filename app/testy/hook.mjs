@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const KOREN = new URL('nahrady/', import.meta.url);
 const NAHRADY = new Set([
   'expo-sqlite', 'expo-file-system', 'expo-sharing',
-  'expo-auth-session', 'expo-secure-store',
+  'expo-auth-session', 'expo-secure-store', 'expo-battery',
 ]);
 
 export function resolve(spec, ctx, next) {
