@@ -1263,6 +1263,42 @@ tedy i změna návodu.
 > > „hlásím se" tu hodnotu **přinese poprvé**. Ale znamená to, že se musí doplnit
 > > i na straně appky, ne jen vymyslet endpoint — a že dnešní prázdná procenta
 > > nejsou vada nového režimu, nýbrž stav, ze kterého se vychází.
+>
+> ### Nic z toho nesmí posádka zapínat na vodě
+>
+> Filip, 28. 10. 2026 — a tohle mění tvar celého požadavku:
+>
+> > *„my potřebujeme ale aby to nemuseli posádky zapínat manuálně na vodě. Zápis
+> > v klubovně, pak se mu nastaví a zkontroluje tracking (klidně slepý, ale tak
+> > abychom věděli že běží a stav baterie a hlavně pak už na to nemusí posádky
+> > sahat). Rozprava udá čas startu a pak už se samo začne trekovat až bude ta
+> > chvíle."*
+>
+> Celý den tedy vypadá takhle, a **posádka klepne naposledy na břehu**:
+>
+> | Kdy | Kdo | Co |
+> |---|---|---|
+> | **zápis v klubovně** | pořadatel s posádkou | nastaví tracking a **zkontroluje, že běží** — slepě, jen handshake a baterie |
+> | **rozprava** | rozhodčí | **udá čas startu** |
+> | **T minus něco** | nikdo | telefon **sám** přepne na nahrávání |
+>
+> **Z toho plyne jedna věc, která nebyla v žádném z dřívějších nálezů:**
+> přepnutí z „hlásím se" na „nahrávám" **nesmí být příkaz ze serveru**. Na vodě
+> není signál jistý, a kdyby přepnutí chodilo jako povel, loď bez signálu by
+> nezačala nahrávat vůbec. Musí to tedy být **stažený čas, podle kterého se
+> telefon řídí sám** — a ten vzorec projekt má: `OknaEndpoints.ProTelefonAsync`
+> *„telefon si je stáhne dopředu a řídí se jimi i bez signálu; změna od
+> pořadatele se projeví, až signál chytí."*
+>
+> **A ten čas už jde zapsat** — je to `StartV` na plánované rozjížďce, kterou
+> odemkla fáze 1.1 (K6). Takže řetěz je celý: *rozprava zapíše plánovaný start →
+> telefon si ho stáhne → v T−něco si sám zapne nahrávání*, bez serveru, bez
+> signálu a bez posádky. Tři nálezy, které vypadaly samostatně (**K6** plánovaný
+> start, **R3** trasování, **R4** mapa před startem), jsou tím jeden mechanismus.
+>
+> **A kontrola „hlásí se celé pole?" se tím stěhuje z vody do klubovny** — což je
+> jediné místo, kde se vybitý nebo nespárovaný telefon dá ještě spravit. Bod 11
+> návodu tu otázku dnes klade rozhodčímu na vodě, kde už s odpovědí nic nenadělá.
 
 ### R4 — Mapa 10 minut před startem. Dnes naskočí až výstřelem
 
