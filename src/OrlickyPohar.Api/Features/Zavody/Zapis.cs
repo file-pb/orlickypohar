@@ -213,9 +213,21 @@ public static class Zapis
             if (r.Vstup.PoradiVCili is < 1)
                 return $"{r.Lod}: pořadí v cíli začíná jedničkou.";
 
-            // Bodování by pořadí vedle kódu stejně nevzalo, takže by tu
-            // zůstalo číslo, které nic neznamená a vypadá, že platí.
-            if (r.Vstup.PoradiVCili is not null && r.Vstup.Kod is not null)
+            // <b>Bodový trest je výjimka, a jediná</b> (nález R14,
+            // 28. 10. 2026). ZFP se podle ZPJ 44.3(c) k dosaženému pořadí
+            // **přičítá**, kdežto ostatní kódy pořadí nahrazují — loď s Z
+            // dojela a jede dál, jen dostane dvacet procent navíc.
+            //
+            // Bez pořadí ZFP nedává smysl: loď, která dostala Z a pak
+            // nedokončila, má DNF, ne ZFP. A naopak pořadí vedle jiného
+            // kódu by bodování stejně nevzalo, takže by tu zůstalo číslo,
+            // které nic neznamená a vypadá, že platí.
+            if (r.Vstup.Kod == KodVysledku.Zfp && r.Vstup.PoradiVCili is null)
+                return $"{r.Lod} má bodový trest ZFP, ale ne pořadí v cíli. "
+                       + "Trest se k pořadí přičítá; loď, která nedokončila, má DNF.";
+
+            if (r.Vstup.PoradiVCili is not null
+                && r.Vstup.Kod is not null and not KodVysledku.Zfp)
                 return $"{r.Lod} má pořadí i kód. Buď dojela, nebo platí kód.";
         }
 

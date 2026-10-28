@@ -763,23 +763,39 @@ vidět, které lodě souhlas nemají.
 
 ### Fáze 3 — startovní procedura
 
+> **Tři položky ze čtyř hotové 28. 10. 2026** — 3.1, 3.3 a 3.4. Procedura
+> se spouští, odkládá i odvolává podle pravidel, přibyly čtyři kódy
+> a **nevylučitelná diskvalifikace se už neškrtá** (to byl jediný nález
+> celé oponentury, kde se špatně počítaly body).
+>
+> **3.2 velitelský čas se nestavěl, a je to rozhodnutí, ne opomenutí.**
+> Bod 1 (start přežije výpadek) padl už ve fázi 1.2. Zbylé tři ale stojí
+> na tom, **kdo je hlavní startér a jak se velení předává** — a tam má
+> R19 tři cesty, z nichž každá má svou daň, a žádnou z nich nerozhodl.
+> Postavit kteroukoliv by znamenalo rozhodnout za Filipa o věci, u které
+> sám napsal *„oba by to měli akceptovat"*. Potřebuje to větu od něj, ne
+> další kód.
+
 Největší kus a staví na 1.1. **Role aplikace je „drží čas a paměť, znamení dává
 člověk"** (R15): vizuální znamení pro pole z obrazovky nebude, protože závodníci
 nevidí startérův telefon.
 
-**3.1 Procedura podle ZPJ 26** *(R5, R12)* — 5 / 4 / 1 / 0, spouští startér
+**3.1 Procedura podle ZPJ 26** *(R5, R12)* — **hotovo 28. 10. 2026.**
+5 / 4 / 1 / 0, spouští startér
 jedním tlačítkem, délka je parametr ze směrnic (hvězdička u pravidla 26), ne
 konstanta. Přerušení se dělí: **odložení před startem** (27.3, nový čas volný)
 a **všeobecné odvolání po startu** (29.2, nový start minutu po spuštění
 opakovače).
 
-**3.2 Velitelský čas** *(R19, body 2–4 — potvrzeno k dodělání)* — jeden
+**3.2 Velitelský čas** *(R19, body 2–4 — potvrzeno k dodělání;
+**nestavěno, čeká na rozhodnutí o předávání velení**)* — jeden
 autoritativní čas u hlavního startéra, nezávislý na spojení; kdo je hlavní, se
 **stáhne dopředu a drží celý den** (odsouhlaseno); převzetí velení musí jít
 a po něm zůstane doklad. Pět dílů ze šesti už na cílové obrazovce je.
 
-**3.3 Startovní tresty a identifikace** *(R14, K1)* — z pěti kódů, které
-z pravidla 30 a 29.1 plynou, zná `KodVysledku` jediný, **OCS**. Chybí **ZFP,
+**3.3 Startovní tresty a identifikace** *(R14, K1)* — **kódy hotové
+28. 10. 2026**, paměť vlajky ne. Z pěti kódů, které
+z pravidla 30 a 29.1 plynou, znal `KodVysledku` jediný, **OCS**. Chybí **ZFP,
 UFD, BFD** — a ZFP není diskvalifikace, ale 20 % z bodů za nedokončila podle
 44.3(c), tedy číslo do listiny. Identifikace lodi je podle 30.2–30.4 úkon
 komise *„bez projednávání"*, takže patří startérovi, a smí ji dělat i slave
@@ -789,8 +805,9 @@ u každé vlajky jinak, takže aplikace musí vědět, která visela.
 *„minutové pravidlo"* je na poháru dohoda z rozpravy — a jako vlastní pravidlo
 patří do vypsání (2.1).
 
-**3.4 DNE a škrt** *(K1)* — nevylučitelná diskvalifikace podle ZPJ 90.3(b)
-**nesmí jít vyškrtnout**, a `VysledkyZavodu` škrtá podle výše bodů bez ohledu na
+**3.4 DNE a škrt** *(K1)* — **hotovo 28. 10. 2026.**
+Nevylučitelná diskvalifikace podle ZPJ 90.3(b)
+**nesmí jít vyškrtnout**, a `VysledkyZavodu` škrtala podle výše bodů bez ohledu na
 druh kódu. DNE má přitom nejvyšší body, takže je vždycky první na ráně. Je to
 jediný nález z celé oponentury, kde se **špatně počítají body**.
 
@@ -1096,7 +1113,8 @@ Dvě věci navíc:
 
 *Původ: střípek 1, a je to **odpověď na otázku 1 z návodu**. Doloženo:
 `VysledkyEndpoints.cs:14`, `ZapisSprava.cs:454–482`, ZPJ 26–30. Stav:
-**zapsáno, vysoká priorita**.*
+**zčásti hotovo 28. 10. 2026** (fáze 3.1, viz konec nálezu) — procedura,
+odložení, odvolání a záznam opakování; vlajky a jejich meze ne.*
 
 Rozhodčí vyjmenoval: *„5 minut výzva · 4 minuty Přípravné znamení · 1 minuta do
 startu · Start"*. To je doslova **ZPJ 26**:
@@ -1141,6 +1159,49 @@ Zvlášť stojí za pozornost dvojice **29.1 → OCS**: aplikace umí zapsat
 Rozhodčí tedy zapíše OCS, aniž by kde stálo, že bylo vyvěšeno X — a vlajka X
 má podle 29.1 tvrdou lhůtu (*„ne déle než 4 minuty po startovním znamení"*),
 kterou by aplikace uměla hlídat jediná.
+
+### Hotovo 28. 10. 2026 — čas a paměť (fáze 3.1)
+
+**Role aplikace je ta, kterou pojmenoval R15:** *„drží čas a paměť, znamení
+dává člověk"*. Vizuální znamení pro pole z obrazovky nebude, takže se
+nestavělo; co šlo postavit, je místo, kam se zapíše, co se stalo.
+
+| ZPJ | Úkon | Dnes |
+|---|---|---|
+| 26 | spuštění procedury jedním tlačítkem | **ano** — `POST …/rozjizdky/{cislo}/procedura` s `Spustit`; start padne za tolik minut, kolik má regata |
+| 27.3 | **odložení** před startem | **ano** — `Odlozit`, a **nový čas zůstane volný**, jak pravidlo žádá |
+| 29.2 | **všeobecné odvolání** po startu | **ano** — `Odvolat`, nový start spočítá pravidlo: minuta po opakovači plus celá procedura |
+| 36 | rozjížďka **znovu startovaná** | **ano** — `Rozjizdka.OpakovanychStartu`, a na cílové obrazovce štítek *„2× odvolaný start"* |
+| 29.1 | individuální odvolání (X) a jeho lhůta | **ne** — zůstává jen následek, kód OCS |
+| 30.1–30.4 | startovní tresty podle vlajky | **kódy ano** (fáze 3.3), vlajka a její paměť ne |
+
+**Tři rozhodnutí, která si zaslouží být dohledatelná:**
+
+1. **Jedna cesta pro tři úkony**, na rozdíl od `/start` a `/konec`. Patří
+   k sobě pravidlově a hlavně se mezi nimi **vybírá podle toho, co se
+   právě stalo** — tři samostatné cesty by vypadaly jako tři nezávislé
+   možnosti, a to je přesně ten omyl, kterému se tu brání.
+2. **Čas se neposílá z klienta.** Spuštění i odvolání si ho počítají
+   z pravidla a z délky procedury regaty; poslat vlastní čas by u odvolání
+   znamenalo obejít ZPJ 29.2, kde ten čas závazný je.
+3. **Délka procedury je parametr regaty** (`Zavod.DelkaProceduryMin`,
+   výchozí 5), protože pětka v pravidle 26 má hvězdičku. Do té doby byla
+   zadrátovaná na **dvou místech naráz** — `PolohySprava.Procedura` a
+   `PROCEDURA_S` na tabuli — a obě se teď berou z regaty. Tiskne se i do
+   vypsání závodu (R8), protože je to odchylka, kterou si závod volí.
+
+**Co se vědomě nestavělo:** velká obrazovka startéra s odpočtem v ruce.
+To je ergonomie, a R12 ji sám posílá do `docs/SCENARE-OVLADANI.md` —
+*„nejtvrdší ergonomické zadání, jaké projekt zatím dostal"*. Tlačítka
+sedí na cílové obrazovce, kterou startér stejně drží.
+
+*Změřeno proti mocku (28. 10. 2026):* spuštění v 00:39:55 → plánovaný start
+**00:44:55** a rozjížďka zůstala `Planovana`; odložení → **čas se smazal**;
+odvolání plánované rozjížďky → odmítnuto větou *„ještě nestartovala … před
+startem se odkládá"*; po skutečném startu odvolání → nový start
+**00:45:55**, tedy minuta plus pět, a počítadlo opakování na jedničce.
+Totéž projeté obrazovkou: *„Plánovaný start · za 0:04:57"*, po odvolání
+*„za 0:05:57"*.
 
 ### R6 — Startovní listina na tabuli, editovatelná za běhu
 
@@ -1770,8 +1831,9 @@ praxe — jen je potřeba vědět, že se tím zapisuje něco jiného než odvol
 
 *Původ: střípek 7. Doloženo: `Features/Zavody/ZapisSprava.cs:454–482`,
 `Features/Polohy/PolohySprava.cs:144`, `Features/Okna/OknaEndpoints.cs`,
-ZPJ 26, 27.3, 29.2. Stav: **zapsáno** — navazuje na R4, R5 a K6, které tím
-dostávají tvar.*
+ZPJ 26, 27.3, 29.2. Stav: **zčásti hotovo 28. 10. 2026** (fáze 3.1, podrobně
+u R5): procedura, odložení, odvolání a délka jako parametr. Velitelský čas
+(R19, body 2–4) a obrazovka startéra ne.*
 
 Střípek 7 je **odpověď na otázku 1 z návodu** (*„Kde chceš mít odstartování
 rozjížďky? Chceš mít startovní proceduru jako vlastní nástroj?"*) a odpovídá
@@ -1790,13 +1852,13 @@ dělá **nástroj pořadatele**, a to na zařízení, které je dnes **jen pro A
 | Požadavek ze střípku | Stav |
 |---|---|
 | čas startu dohodnutý na rozpravě („setneme kdy asi bude") | **ne** — `StartV` nejde zapsat dopředu, zápis času rozjížďku rovnou rozjede (K6) |
-| velký odpočet do toho času | **zpola** — tabule odpočítává (`semafor.tsx`), ale z času, který ještě nejde nastavit; v telefonu startéra nic |
+| velký odpočet do toho času | **zpola** — tabule odpočítává a čas už jde nastavit (K6); velká obrazovka v telefonu startéra ne, je to ergonomie |
 | kontrola startovní listiny na rozpravě | **zpola** — listina je, rozprava je, propojené to není (R6) |
 | potvrzení tras na rozpravě | **ano** — přijetí trati rozhodčím (`TratEndpoints.PrijmiAsync`), a je to jeho výhradní úkon |
 | telka se 15 minut před startem přepne na tracker | **ne** — mapa naskočí až startem, a `Procedura` je natvrdo 5 minut (R4) |
-| proceduru spustí startér jedním tlačítkem | **ne** — procedura neexistuje (R5) |
-| přerušit kdykoli uprostřed | **ne**, a pravidla to dělí na dvě věci — viz níž |
-| zadat nový čas a odpočítávat znovu | **ne** |
+| proceduru spustí startér jedním tlačítkem | **ano od 28. 10. 2026** — tlačítko *Spustit proceduru* na cílové obrazovce |
+| přerušit kdykoli uprostřed | **ano od 28. 10. 2026**, a to jako dvě věci: *Odložit* (27.3) a *Odvolat start* (29.2) |
+| zadat nový čas a odpočítávat znovu | **ano od 28. 10. 2026** — po odložení se čas zadává volně, po odvolání ho spočítá pravidlo |
 | 10 minut tlačítka s loděmi | **ne** — a mělo by to být jinak, viz R11 |
 | přepnutí na cílovou obrazovku | cílová obrazovka **je** (*„jediné místo aplikace, kde se klepe na čas"*), přepnutí ne |
 
@@ -1821,6 +1883,12 @@ vypsání závodu nebo v plachetních směrnicích"*. Délka procedury je tedy
 parametr, ne konstanta — a dnes je zadrátovaná na dvou místech
 (`PolohySprava.Procedura`, a Miloš u mapy řekl 10 minut, Filip 15, viz R4).
 
+> **Hotovo 28. 10. 2026:** délka je `Zavod.DelkaProceduryMin` (výchozí 5)
+> a berou ji z regaty obě ta místa i tabule. Tiskne se do vypsání závodu,
+> protože je to odchylka, kterou si závod volí (R8). **Kolik minut má mít
+> přepnutí tabule na mapu, tím rozhodnuté není** — to je R4 a ten dál
+> nerozhoduju.
+
 **Co z tohohle nálezu je ergonomie a nepatří sem.** Celá Milošova věta o tom,
 jak se to drží v ruce — *jedno tlačítko, mobil nesmí usnout, musí být dobře
 vidět, žádné vyplňování formuláře* — je požadavek na ovládání, ne na pravidla.
@@ -1835,8 +1903,9 @@ podmínkami provozu (jedna ruka, slunce, motorák), ne přáním.
 ### R14 — Miloš odpověděl: „alternativní trest" je startovní trest podle pravidla 30, a ten se identifikuje
 
 *Původ: střípek 9 — **odpověď Miloše na otázku 10**. Doloženo: ZPJ 30.1–30.4,
-29.1, 44.3(c), A10, `Features/Zavody/Zavod.cs:184–207`. Stav: **zapsáno —
-opravuje R11**.*
+29.1, 44.3(c), A10, `Features/Zavody/Zavod.cs:184–207`. Stav: **kódy hotové
+28. 10. 2026** (fáze 3.3, u K1); **paměť vlajky a opakovaná identifikace
+ne**. Opravuje R11.*
 
 > **[27.10.2026 21:08:43] Miloš Zvonař:** Alternativni trest
 >
@@ -2523,7 +2592,8 @@ takže než se podle nich něco postaví, mají projít diskusí.
 ### K1 — Sedm kódů ze čtrnácti, a mezi chybějícími je DNE
 
 *Doloženo: `Features/Zavody/Zavod.cs:184–207`, ZPJ A10 a 90.3(b),
-`Features/Bodovani/Bodovani.cs:152–160`. Stav: **zapsáno**.*
+`Features/Bodovani/Bodovani.cs:152–160`. Stav: **opraveno 28. 10. 2026**
+(fáze 3.3 a 3.4) — DNE se neškrtá a čtyři kódy přibyly.*
 
 Aplikace zná sedm kódů výsledku: `Dnf`, `Dns`, `Dnc`, `Ocs`, `Dsq`, `Ret`,
 `Rdg`. ZPJ A10 jich předepisuje čtrnáct. Chybí **ZFP, UFD, BFD, SCP, NSC,
@@ -2562,6 +2632,41 @@ nastane hned při prvním použití.
 SCP podle 44.3, DPI podle 64) a startovní diskvalifikace (UFD, BFD). Ty visí
 na R5 a na protestech — bez procedury a bez projednávání by samotná kolonka
 nebyla k čemu.
+
+### Opraveno 28. 10. 2026 (fáze 3.3 a 3.4)
+
+**Nevylučitelná diskvalifikace se neškrtá** (ZPJ 90.3(b)). Škrt nově
+vynechá rozjížďky, kde má loď `DNE`, a **počet škrtů se tím nesnižuje** —
+místo ní padne další nejhorší. Loď tedy o škrt nepřijde, jen ho nemůže
+použít na tohle. Drží to tři testy: že se DNE neškrtne, že se **obyčejná
+DSQ škrtá dál** (jinak by to byl tichý zásah do bodování všech odjetých
+ročníků) a že lodi se samými DNE nic nespadne.
+
+**Přibyly čtyři kódy**: `Zfp`, `Ufd`, `Bfd`, `Dne`. Aditivně, s novými
+čísly na konci — appka na telefonech je zná jako čísla.
+
+**ZFP není diskvalifikace a chová se jinak než všechny ostatní kódy.**
+Podle ZPJ 44.3(c) se k **dosaženému pořadí přičítá** 20 % bodů za
+nedokončila, zaokrouhleno s půlkou nahoru, a nikdy nevyjde hůř než
+nedokončila. Z toho plyne:
+
+- loď se ZFP **dokončila**, takže zabírá své místo v pořadí a ostatním se
+  nic neposouvá;
+- jako **jediný kód se zapisuje spolu s pořadím** — `Zapis.ProcNejdeUlozit`
+  má na to výjimku a naopak ZFP **bez** pořadí odmítne, protože loď, která
+  dostala Z a pak nedokončila, má DNF;
+- dvacet procent je parametr (`PravidlaBodovani.TrestZfpProcent`), ne
+  výraz: 44.3(c) dovolují *„jinou hodnotu uvedenou ve vypsání závodu"*.
+
+**Mez, kterou si musí přečíst každý, kdo na to sáhne** (R16): startovní
+tresty jsou podle pravidel podmíněné **vyvěšenou vlajkou**, a na poháru se
+vlajky nevyvěšují. *„Minutové pravidlo"* je tam vlastní pravidlo z dohody,
+ne ZPJ 30 — kódy existují proto, aby se výsledek té dohody dal zapsat; co
+znamenají a kdy se dávají, rozhoduje vypsání závodu.
+
+*Co dál chybí z A10:* `SCP`, `NSC`, `DPI` a `DGM`. První tři visí na
+protestech a na pravidle 64, čtvrtý je druhá nevyškrtnutelná diskvalifikace
+— `Bodovani.NelzeSkrtnout` je proto funkce, ne test na rovnost.
 
 ### K2 — Protesty: aplikace neví, že nějaký visí, a přesto nabídne podpis
 

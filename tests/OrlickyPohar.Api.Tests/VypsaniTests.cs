@@ -30,6 +30,7 @@ public class VypsaniTests
             "Jarní vítr", new DateOnly(2027, 5, 15), null,
             "YC Orlík", "okruhový",
             uzaverka, startovne, znameni,
+            Procedura.DelkaVychozi,
             kategorie ?? ["Race", "Nad7m", "Pod7m"],
             skrtyRegaty, koeficient, posun, vyhodnoceni,
             skrtySerie,

@@ -38,6 +38,12 @@ public record VypsaniVstup(
     DateOnly? UzaverkaPrihlasek,
     string? Startovne,
     DateTimeOffset? PrvniVyzyvaciZnameni,
+    /// <summary>
+    /// Délka startovní procedury v minutách — hvězdička u ZPJ 26
+    /// (*„nebo tak, jak je stanoveno ve vypsání závodu"*). Patří do
+    /// vypsání právě proto, že je to odchylka, kterou si závod volí.
+    /// </summary>
+    int DelkaProceduryMin,
     IReadOnlyList<string> Kategorie,
     int PocetSkrtu,
     decimal KoeficientDoSerie,
@@ -216,6 +222,8 @@ public static class Vypsani
         v.PrvniVyzyvaciZnameni is not { } kdy
             ? null
             : $"Vyzývací znamení první rozjížďky: {Cas(kdy)}, {Den(DateOnly.FromDateTime(VPraze(kdy).DateTime))}.\n"
+              + $"Startovní procedura trvá {Minut(v.DelkaProceduryMin)} od vyzývacího "
+              + "znamení do startu (ZPJ 26).\n"
               + "Časy dalších rozjížděk oznámí závodní komise na rozpravě.";
 
     /// <summary>
@@ -282,6 +290,9 @@ public static class Vypsani
         TimeZoneInfo.FindSystemTimeZoneById("Europe/Prague");
 
     private static string Cas(DateTimeOffset kdy) => VPraze(kdy).ToString("H:mm");
+
+    private static string Minut(int kolik) =>
+        kolik == 1 ? "jednu minutu" : kolik < 5 ? $"{kolik} minuty" : $"{kolik} minut";
 
     private static string Bodu(int kolik) =>
         kolik == 1 ? "1 bod" : kolik < 5 ? $"{kolik} body" : $"{kolik} bodů";

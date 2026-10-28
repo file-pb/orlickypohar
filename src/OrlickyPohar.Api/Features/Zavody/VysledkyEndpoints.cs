@@ -14,6 +14,13 @@ public record PublikaceVysledkuVstup(bool Publikovano);
 public record StartVstup(DateTimeOffset? StartV = null);
 
 /// <summary>
+/// Který úkon startovní procedury se provádí. Čas se nepředává: spuštění
+/// i odvolání ho počítají z pravidel (ZPJ 26 a 29.2) a z délky procedury
+/// regaty, takže poslat vlastní čas by znamenalo obejít to pravidlo.
+/// </summary>
+public record ProceduraVstup(DruhProcedury Druh);
+
+/// <summary>
 /// Zastavení časomíry. Bez času se vezme okamžik požadavku;
 /// <c>Pustit: true</c> zastavení zruší a čas běží dál.
 /// </summary>
@@ -71,6 +78,14 @@ public static class VysledkyEndpoints
             .WithDescription(
                 "Pořadatel regaty, od vypsání závodu. Nová rozjížďka je návrh " +
                 "a na webu není.");
+
+        // <b>Startovní procedura</b> (nálezy R5 a R12, 28. 10. 2026):
+        // spuštění odpočtu, odložení podle ZPJ 27.3 a všeobecné odvolání
+        // podle ZPJ 29.2. Jedna cesta pro tři úkony, které k sobě patří —
+        // viz `ZapisSprava.ProceduraAsync`.
+        g.MapPost("/{zavod}/rozjizdky/{cislo:int}/procedura", ProceduraAsync)
+            .WithTags("Výsledky")
+            .WithSummary("Spustí startovní proceduru, odloží start, nebo ho odvolá");
 
         g.MapPost("/{zavod}/rozjizdky/{cislo:int}/start", StartAsync)
             .Produces<ZapisRozjizdkyDto>()
@@ -198,6 +213,22 @@ public static class VysledkyEndpoints
             [.. rozjizdky.Select(r => pohled.Radek(rozsah.ZavodId.Value, r.Rozjizdka, r.PocetVysledku))],
             SmiPridatRozjizdku: pohled.Poradatel(rozsah.ZavodId.Value)
                                 && Zapis.ProcNejdeNaZavod(hlavicka.Stav) is null));
+    }
+
+    private static async Task<IResult> ProceduraAsync(
+        string serie, string zavod, int cislo, [FromBody] ProceduraVstup vstup, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, VysledkySprava sprava, ZapisSprava zapis, CancellationToken ct)
+    {
+        if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
+            return Results.NotFound();
+
+        var (rozsah, rozjizdka) = nalezena;
+        if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        if (await zapis.ProceduraAsync(rozjizdka, vstup.Druh, ct) is { } chyba)
+            return Results.BadRequest(new { error = chyba });
+
+        return Results.Ok(await zapis.NactiAsync(rozjizdka, poradatel: true, ct));
     }
 
     private static async Task<IResult> StartAsync(

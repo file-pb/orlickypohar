@@ -19,15 +19,34 @@ export type PrehledVysledku = S["PrehledVysledkuDto"];
 export type RozjizdkaRadek = S["RozjizdkaSpravaRadek"];
 export type ZastavkaVysledky = S["ZastavkaVysledkyDto"];
 export type StavVysledku = S["StavVysledku"];
-export type ZapisRozjizdky = S["ZapisRozjizdkyDto"];
+/**
+ * Zápis rozjížďky. <b>`delkaProceduryMin` a `opakovanychStartu` jsou
+ * dopsané ručně</b> (28. 10. 2026) — typy se generují z běžícího API a to
+ * bez databáze nenaběhne; viz {@link KodVysledku}.
+ */
+export type ZapisRozjizdky = S["ZapisRozjizdkyDto"] & {
+  delkaProceduryMin?: number;
+  opakovanychStartu?: number;
+};
 export type ZapisLod = S["ZapisLodDto"];
-export type ZapisRadek = S["ZapisRadekVstup"];
+/** Řádek zápisu. `kod` je rozšířený o nové hodnoty — viz {@link KodVysledku}. */
+export type ZapisRadek = Omit<S["ZapisRadekVstup"], "kod"> & {
+  kod?: KodVysledku | null;
+};
 export type Navrhy = S["NavrhyDto"];
 export type Navrh = S["NavrhDto"];
 export type NavrhRadek = S["NavrhRadekDto"];
 // Dokument popisuje kód včetně `null`, protože u výsledku je nepovinný.
 // Jako klíč slovníku a hodnota v nabídce ale prázdný být nesmí.
-export type KodVysledku = NonNullable<S["KodVysledku"]>;
+/**
+ * Kód výsledku. <b>Čtyři hodnoty jsou dopsané ručně</b> (`Zfp`, `Ufd`,
+ * `Bfd`, `Dne` z 28. 10. 2026) a je to výjimka s důvodem: typy se generují
+ * z OpenAPI **běžícího** API, jenže to při startu pouští migrace a bez
+ * databáze nenaběhne — a na pracovním stroji databáze nejede (README,
+ * *Klient API*). Při příštím generování se objeví ve `schema.d.ts`
+ * a tenhle průnik se smaže.
+ */
+export type KodVysledku = NonNullable<S["KodVysledku"]> | "Zfp" | "Ufd" | "Bfd" | "Dne";
 
 /**
  * Kódy závodních pravidel tak, jak je čte pořadatel. Zkratka se nepřekládá
@@ -44,6 +63,14 @@ export const KODY: Record<KodVysledku, string> = {
   Dsq: "diskvalifikace",
   Dnc: "nezúčastnila se",
   Rdg: "náprava",
+  // Čtyři kódy z 28. 10. 2026 (nálezy K1 a R14). Popisek říká, co kód
+  // znamená pro loď — ne číslo pravidla: ten, kdo zapisuje, hledá „co se
+  // té lodi stalo", a ZPJ si přečte ve vypsání. Pozor: startovní tresty
+  // jsou na poháru dohoda z rozpravy, ne ZPJ 30 (nález R16).
+  Zfp: "bodový trest 20 %",
+  Ufd: "diskvalifikace od startu",
+  Bfd: "diskvalifikace černou vlajkou",
+  Dne: "diskvalifikace, nelze vyškrtnout",
 };
 
 /**
@@ -274,6 +301,31 @@ export async function ulozCil(
  * telefonu rozcházejí se serverem. Bez času platí okamžik, kdy požadavek
  * dojde na server.
  */
+/**
+ * Úkony startovní procedury (nálezy R5 a R12, 28. 10. 2026).
+ *
+ * <b>Čas se neposílá</b>: spuštění i odvolání si ho počítají z pravidel
+ * (ZPJ 26 a 29.2) a z délky procedury regaty. Poslat vlastní čas by
+ * znamenalo obejít to pravidlo — a u odvolání je ten čas závazný.
+ */
+export type DruhProcedury = "Spustit" | "Odlozit" | "Odvolat";
+
+export async function procedura(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  druh: DruhProcedury,
+): Promise<{ chyba: string } | { zapis: ZapisRozjizdky }> {
+  const odpoved = await posli(
+    kam(serie, `/${encodeURIComponent(zavod)}/rozjizdky/${cislo}/procedura`),
+    { druh },
+    "POST",
+  );
+  if (typeof odpoved === "string") return { chyba: odpoved };
+  if (!odpoved.ok) return { chyba: await hlaska(odpoved) };
+  return { zapis: (await odpoved.json()) as ZapisRozjizdky };
+}
+
 export async function odstartuj(
   serie: string,
   zavod: string,

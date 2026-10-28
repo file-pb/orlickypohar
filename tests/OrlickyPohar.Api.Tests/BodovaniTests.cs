@@ -640,4 +640,157 @@ public class BodovaniTests
         // A5.2: kód má přihlášených + 1.
         Assert.Equal(6, bez.Single(x => x.Lod == "Bóra").Body);
     }
+
+    // --- Startovní tresty a nevylučitelná diskvalifikace (28. 10. 2026) ---
+    // Nálezy K1 a R14 oponentury rozhodčího. Pozor na mez z R16: startovní
+    // tresty jsou na poháru dohoda z rozpravy, ne ZPJ 30 — tyhle testy
+    // hlídají výpočet, ne to, kdy se trest smí dát.
+
+    /// <summary>
+    /// <b>ZFP se k pořadí přičítá, nenahrazuje ho</b> (ZPJ 44.3(c)). Loď
+    /// s bodovým trestem dojela a jede dál; dostane dvacet procent z bodů
+    /// za nedokončila navíc. Ostatní lodě se nemění.
+    /// </summary>
+    [Fact]
+    public void Bodovy_trest_se_pricita_k_dosazenemu_poradi()
+    {
+        // Deset přihlášených → nedokončila je 11 bodů, trest 20 % = 2,2 → 2.
+        var body = Bodovani.BodyRozjizdky(
+            [
+                Dojel("první", "Race", 1),
+                new VysledekVstup("druhá", "Race", 2, KodVysledku.Zfp),
+                Dojel("třetí", "Race", 3),
+            ],
+            prihlaseno: 10).ToDictionary(b => b.Lod, b => b.Body);
+
+        Assert.Equal(1, body["první"]);
+        Assert.Equal(2 + 2, body["druhá"]);
+        // Sousedům se nemění nic — trest je přirážka, ne posun pořadí.
+        Assert.Equal(3, body["třetí"]);
+    }
+
+    /// <summary>
+    /// <b>Trest nikdy nevyjde hůř než nedokončit</b> (ZPJ 44.3(c): *„Jestliže
+    /// by loď dostala víc bodů, než kolik by dostala za Nedokončila, musí
+    /// místo toho dostat body za Nedokončila."*). Bez stropu by loď na
+    /// chvostu pole vydělala na tom, že odstoupí.
+    /// </summary>
+    [Fact]
+    public void Bodovy_trest_nikdy_neprekroci_body_za_nedokoncila()
+    {
+        // Pět přihlášených → nedokončila je 6; poslední má 5 + trest 1 = 6.
+        var body = Bodovani.BodyRozjizdky(
+            [
+                Dojel("první", "Race", 1),
+                Dojel("druhá", "Race", 2),
+                Dojel("třetí", "Race", 3),
+                Dojel("čtvrtá", "Race", 4),
+                new VysledekVstup("pátá", "Race", 5, KodVysledku.Zfp),
+            ],
+            prihlaseno: 5).ToDictionary(b => b.Lod, b => b.Body);
+
+        Assert.Equal(6, body["pátá"]);
+        Assert.Equal(6, Bodovani.BodySTrestem(zaMisto: 20, zaNedokoncila: 6));
+    }
+
+    /// <summary>
+    /// Zaokrouhlení je *„na nejbližší celé číslo, 0,5 nahoru"*. Výchozí
+    /// <c>Math.Round</c> zaokrouhluje k sudému, takže 2,5 by dalo 2 —
+    /// a to pravidlo neříká.
+    /// </summary>
+    [Theory]
+    [InlineData(11, 2)]   // 2,2 → 2
+    [InlineData(13, 3)]   // 2,6 → 3
+    [InlineData(23, 5)]   // 4,6 → 5
+    [InlineData(5, 1)]    // 1,0 → 1
+    public void Trest_se_zaokrouhluje_na_nejblizsi_cele_a_pul_nahoru(int zaNedokoncila, int cekam)
+    {
+        // Místo 1 je nejlepší možné, takže strop se neuplatní a zbyde trest.
+        Assert.Equal(1 + cekam, Bodovani.BodySTrestem(zaMisto: 1, zaNedokoncila: zaNedokoncila));
+    }
+
+    /// <summary>
+    /// UFD, BFD a DNE jsou diskvalifikace a bodují se jako ostatní kódy:
+    /// počet přihlášených plus jedna (ZPJ A5.2). Liší se tím, co s nimi
+    /// jde dál udělat, ne tím, kolik dají bodů.
+    /// </summary>
+    [Theory]
+    [InlineData(KodVysledku.Ufd)]
+    [InlineData(KodVysledku.Bfd)]
+    [InlineData(KodVysledku.Dne)]
+    public void Startovni_diskvalifikace_boduji_jako_ostatni_kody(KodVysledku kod)
+    {
+        var body = Bodovani.BodyRozjizdky(
+            [Dojel("první", "Race", 1), Kod("potrestaná", "Race", kod)],
+            prihlaseno: 8).ToDictionary(b => b.Lod, b => b.Body);
+
+        Assert.Equal(9, body["potrestaná"]);
+    }
+
+    /// <summary>
+    /// <b>Nevylučitelnou diskvalifikaci nejde vyškrtnout</b> — ZPJ 90.3(b).
+    /// <para>
+    /// Tohle byl jediný nález celé oponentury, kde se špatně počítaly body
+    /// (K1): škrtá se podle výše bodů a diskvalifikace jich má nejvíc,
+    /// takže DNE byla vždycky první na ráně. Rozhodčí, který ji udělil,
+    /// ji neměl jak zapsat tak, aby přežila.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public void Nevylucitelna_diskvalifikace_se_neskrta()
+    {
+        var vysledky = Bodovani.VysledkyZavodu(
+            [
+                new RozjizdkaVstup(1, [Dojel("a", "Race", 1), Dojel("b", "Race", 2)]),
+                new RozjizdkaVstup(2, [Kod("a", "Race", KodVysledku.Dne), Dojel("b", "Race", 1)]),
+                new RozjizdkaVstup(3, [Dojel("a", "Race", 2), Dojel("b", "Race", 1)]),
+            ],
+            pocetSkrtu: 1);
+
+        var a = vysledky.Single(v => v.Lod == "a");
+        var dne = a.Rozjizdky.Single(r => r.Cislo == 2);
+
+        Assert.False(dne.Skrtnuto);
+        // Škrt se tím neztrácí: místo DNE padne další nejhorší rozjížďka.
+        Assert.Single(a.Rozjizdky.Where(r => r.Skrtnuto));
+        Assert.Equal(3, a.Rozjizdky.Single(r => r.Skrtnuto).Cislo);
+    }
+
+    /// <summary>
+    /// Obyčejná diskvalifikace se škrtá dál — rozdíl je jen u nevylučitelné.
+    /// Kdyby se přestalo škrtat DSQ, byl by to tichý zásah do bodování
+    /// všech odjetých ročníků.
+    /// </summary>
+    [Fact]
+    public void Obycejna_diskvalifikace_se_skrta_dal()
+    {
+        var vysledky = Bodovani.VysledkyZavodu(
+            [
+                new RozjizdkaVstup(1, [Dojel("a", "Race", 1), Dojel("b", "Race", 2)]),
+                new RozjizdkaVstup(2, [Kod("a", "Race", KodVysledku.Dsq), Dojel("b", "Race", 1)]),
+                new RozjizdkaVstup(3, [Dojel("a", "Race", 2), Dojel("b", "Race", 1)]),
+            ],
+            pocetSkrtu: 1);
+
+        var a = vysledky.Single(v => v.Lod == "a");
+        Assert.True(a.Rozjizdky.Single(r => r.Cislo == 2).Skrtnuto);
+    }
+
+    /// <summary>
+    /// Když má loď samé nevyškrtnutelné výsledky, nemá se co škrtnout —
+    /// a výpočet nesmí spadnout ani škrtnout něco jiného natruc.
+    /// </summary>
+    [Fact]
+    public void Same_nevylucitelne_diskvalifikace_nechaji_skrt_prazdny()
+    {
+        var vysledky = Bodovani.VysledkyZavodu(
+            [
+                new RozjizdkaVstup(1, [Kod("a", "Race", KodVysledku.Dne), Dojel("b", "Race", 1)]),
+                new RozjizdkaVstup(2, [Kod("a", "Race", KodVysledku.Dne), Dojel("b", "Race", 1)]),
+            ],
+            pocetSkrtu: 1);
+
+        var a = vysledky.Single(v => v.Lod == "a");
+        Assert.All(a.Rozjizdky, r => Assert.False(r.Skrtnuto));
+    }
 }

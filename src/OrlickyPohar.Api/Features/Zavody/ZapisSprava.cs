@@ -63,7 +63,14 @@ public record ZapisRozjizdkyDto(
     DateTimeOffset? KonecV = null,
     // Stav rozjížďky. Cílová obrazovka ho potřebuje, aby mohla říct
     // „dojeto" a nenabízet zastavení tomu, co se nejede.
-    StavRozjizdky Stav = StavRozjizdky.Planovana);
+    StavRozjizdky Stav = StavRozjizdky.Planovana,
+    // Startovní procedura (28. 10. 2026, nálezy R5 a R12). Délka je
+    // parametr regaty — pětka v ZPJ 26 má hvězdičku — a obrazovka ji
+    // potřebuje, aby řekla, za jak dlouho se bude startovat.
+    int DelkaProceduryMin = Procedura.DelkaVychozi,
+    // Kolikrát se start opakoval po všeobecném odvolání (ZPJ 29.2).
+    // Dřív po předchozím pokusu nezbylo nic.
+    int OpakovanychStartu = 0);
 
 /// <summary>Jeden řádek snímku i s tím, co o lodi ví ročník.</summary>
 public record NavrhRadekDto(
@@ -129,7 +136,8 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
     {
         var zavod = await db.Zavody
             .Where(z => z.Id == rozjizdka.ZavodId)
-            .Select(z => new { z.Slug, z.Nazev, z.Stav, z.SerieId, Serie = z.Serie!.Slug, SerieNazev = z.Serie.Nazev })
+            .Select(z => new { z.Slug, z.Nazev, z.Stav, z.SerieId, Serie = z.Serie!.Slug,
+                               SerieNazev = z.Serie.Nazev, z.DelkaProceduryMin })
             .FirstAsync(ct);
 
         var prihlasky = await db.Prihlasky
@@ -183,7 +191,8 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
             rozjizdka.Cislo, rozjizdka.StavVysledku, rozjizdka.DuvodRevize,
             procNelze is null, procNelze, lode, rozjizdka.StartV, rozjizdka.DoSerie,
             Fotky.Nahravani.Dto(papir, uloziste.VerejnaAdresa), poradatel, pocetNavrhu,
-            rozjizdka.Revize, rozjizdka.KonecV, rozjizdka.Stav);
+            rozjizdka.Revize, rozjizdka.KonecV, rozjizdka.Stav,
+            zavod.DelkaProceduryMin, rozjizdka.OpakovanychStartu);
     }
 
     /// <summary>
@@ -513,6 +522,54 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
 
         // Časy už dojetých lodí se přepočítají k novému startu.
         var vysledky = await db.Vysledky.Where(v => v.RozjizdkaId == rozjizdka.Id && v.DojezdV != null).ToListAsync(ct);
+        foreach (var v in vysledky) v.NamerenyCas = Zapis.NamerenyCas(rozjizdka.StartV, v.DojezdV!.Value);
+
+        await db.SaveChangesAsync(ct);
+        return null;
+    }
+
+    /// <summary>
+    /// <b>Startovní procedura a její přerušení</b> (nálezy R5 a R12,
+    /// 28. 10. 2026). Spustí odpočet, odloží start podle ZPJ 27.3, nebo
+    /// všeobecně odvolá podle ZPJ 29.2. Vrací text chyby, nebo <c>null</c>.
+    ///
+    /// <para>
+    /// <b>Jedna cesta pro tři úkony schválně</b>, na rozdíl od
+    /// <c>/start</c> a <c>/konec</c>: patří k sobě pravidlově, sdílejí
+    /// jednu kontrolu a hlavně se mezi nimi <b>vybírá podle toho, co se
+    /// právě stalo</b>. Tři samostatné cesty by vypadaly jako tři
+    /// nezávislé možnosti, a to je přesně ten omyl, kterému se tu brání:
+    /// odložení platí před startem, odvolání po něm.
+    /// </para>
+    /// <para>
+    /// Znamení pro pole z toho nevyjde — to dává člověk (R15). Aplikace
+    /// drží čas a paměť.
+    /// </para>
+    /// </summary>
+    public async Task<string?> ProceduraAsync(
+        Rozjizdka rozjizdka, DruhProcedury druh, CancellationToken ct)
+    {
+        var zavod = await db.Zavody.FirstAsync(z => z.Id == rozjizdka.ZavodId, ct);
+        if (Zapis.ProcNejdePrepsat(zavod.Stav, rozjizdka.StavVysledku) is { } zamceno) return zamceno;
+
+        if (Procedura.ProcNejde(druh, rozjizdka.Stav, rozjizdka.StartV) is { } nejde) return nejde;
+
+        var ted = cas.GetUtcNow();
+        rozjizdka.StartV = Procedura.NovyStart(druh, ted, zavod.DelkaProceduryMin)?.ToUniversalTime();
+        rozjizdka.Stav = Procedura.StavPo(druh);
+
+        // Odvolaná rozjížďka se jede znovu, takže zastavený čas padá —
+        // stejně jako u nového startu.
+        rozjizdka.KonecV = null;
+
+        if (Procedura.JeOpakovanyStart(druh)) rozjizdka.OpakovanychStartu++;
+
+        // Naměřené časy se vážou ke startu, který právě přestal platit.
+        // Nechat je spočítané ke starému času by u odvolané rozjížďky
+        // znamenalo čísla, která nikdy nikdo neplul.
+        var vysledky = await db.Vysledky
+            .Where(v => v.RozjizdkaId == rozjizdka.Id && v.DojezdV != null)
+            .ToListAsync(ct);
         foreach (var v in vysledky) v.NamerenyCas = Zapis.NamerenyCas(rozjizdka.StartV, v.DojezdV!.Value);
 
         await db.SaveChangesAsync(ct);

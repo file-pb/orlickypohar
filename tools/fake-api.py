@@ -106,16 +106,33 @@ def body_rozjizdky(vysledky, prihlaseno=None):
 
     Kódy podle ZPJ A5.2 jako v API: přihlášených do závodu + 1, všechny
     stejně; RDG hned za posledním dokončivším.
+
+    **ZFP je výjimka** (nález R14, 28. 10. 2026): bodový trest se podle
+    ZPJ 44.3(c) k dosaženému pořadí **přičítá**, loď tedy dokončila a
+    zabírá své místo. Opsané z `Bodovani.BodyRozjizdky`; pravda je tam.
     """
     dokoncily = sorted(
-        (v for v in vysledky if not v.get("kod") and v.get("poradiVCili") is not None),
+        (v for v in vysledky
+         if v.get("kod") in (None, "", "Zfp") and v.get("poradiVCili") is not None),
         key=lambda v: v["poradiVCili"])
     body = {v["lod"]: i + 1 for i, v in enumerate(dokoncily)}
     za_trest = (prihlaseno if prihlaseno is not None else len(vysledky)) + 1
     for v in vysledky:
-        if v.get("kod"):
+        if not v.get("kod"):
+            continue
+        if v["kod"] == "Zfp":
+            # 20 % z bodů za nedokončila, 0,5 nahoru, a nikdy hůř než
+            # nedokončila (ZPJ 44.3(c)).
+            trest = int(za_trest * 0.2 + 0.5)
+            body[v["lod"]] = min(body.get(v["lod"], za_trest) + trest, za_trest)
+        else:
             body[v["lod"]] = len(dokoncily) + 1 if v["kod"] == "Rdg" else za_trest
     return body
+
+
+def nelze_skrtnout(kod):
+    """Kód, který se nesmí vyškrtnout — ZPJ 90.3(b). Opsané z `Bodovani`."""
+    return kod == "Dne"
 
 
 # Stavy účasti, se kterými je loď přihlášená do závodu — jako v API.
@@ -207,18 +224,25 @@ def vysledky_zavodu(rozjizdky, pocet_skrtu=0, prihlaseno_zvenku=None, napric=Fal
     for r in rozjizdky:
         for kategorie in {kat(v["lod"]) for v in r["vysledky"]}:
             vysledky = [v for v in r["vysledky"] if kat(v["lod"]) == kategorie]
+            kody = {v["lod"]: v.get("kod") for v in vysledky}
             for lod, body in body_rozjizdky(vysledky, prihlaseno[kategorie]).items():
                 lode.setdefault(lod, (kategorie, []))[1].append(
-                    {"cislo": r["cislo"], "body": body, "skrtnuto": False})
+                    {"cislo": r["cislo"], "body": body, "skrtnuto": False,
+                     # Kód si nese jen škrt níž, do odpovědi nejde.
+                     "_kod": kody.get(lod)})
 
     spocteno = []
     for lod, (kategorie, body) in lode.items():
         skrtnout = min(pocet_skrtu, max(len(body) - 1, 0))
-        for b in sorted(body, key=lambda b: (-b["body"], b["cislo"]))[:skrtnout]:
+        # Nevylučitelná diskvalifikace se neškrtá (ZPJ 90.3(b), nález K1).
+        lze = [b for b in body if not nelze_skrtnout(b.get("_kod"))]
+        for b in sorted(lze, key=lambda b: (-b["body"], b["cislo"]))[:skrtnout]:
             b["skrtnuto"] = True
         zbylo = [b["body"] for b in body if not b["skrtnuto"]]
         spocteno.append({"lod": lod, "kategorie": kategorie, "body": sum(zbylo),
-                         "poradi": 0, "rozjizdky": sorted(body, key=lambda b: b["cislo"]),
+                         "poradi": 0,
+                         "rozjizdky": [{k: v for k, v in b.items() if k != "_kod"}
+                                       for b in sorted(body, key=lambda b: b["cislo"])],
                          "_nej": min(zbylo, default=10 ** 6)})
 
     vysledek = []
@@ -2262,7 +2286,12 @@ def proc_nejde_ulozit(radky):
         videne.add(lod)
         if poradi is not None and poradi < 1:
             return f"{nazvy(lod)}: pořadí v cíli začíná jedničkou."
-        if poradi is not None and kod:
+        # Bodový trest je jediná výjimka: ZFP se k pořadí přičítá
+        # (ZPJ 44.3(c), nález R14) — opsané z `Zapis.ProcNejdeUlozit`.
+        if kod == "Zfp" and poradi is None:
+            return (f"{nazvy(lod)} má bodový trest ZFP, ale ne pořadí v cíli. "
+                    "Trest se k pořadí přičítá; loď, která nedokončila, má DNF.")
+        if poradi is not None and kod and kod != "Zfp":
             return f"{nazvy(lod)} má pořadí i kód. Buď dojela, nebo platí kód."
 
     shody = {}
@@ -2400,7 +2429,11 @@ def zapis_dto(z, r):
             "smiPapir": smi_ted("Organizator", z["slug"]), "pocetNavrhu": len(r.get("navrhy", [])),
             # Podoba sady, ze které klient vychází. Posílá ji zpátky při
             # uložení a server tím pozná starší data (nález B).
-            "revize": r.get("revize", 0)}
+            "revize": r.get("revize", 0),
+            # Startovní procedura (nálezy R5 a R12, 28. 10. 2026). Délka je
+            # parametr regaty — pětka v ZPJ 26 má hvězdičku.
+            "delkaProceduryMin": z.get("delkaProceduryMin", 5),
+            "opakovanychStartu": r.get("opakovanychStartu", 0)}
 
 
 def cas_od_startu(start, dojezd):
@@ -4384,6 +4417,9 @@ class H(BaseHTTPRequestHandler):
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)/rozjizdky$', cesta)):
             return self.pridej_rozjizdku(m.group(1))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
+                          r'/rozjizdky/(\d+)/procedura$', cesta)):
+            return self.procedura(m.group(1), int(m.group(2)))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                           r'/rozjizdky/(\d+)/start$', cesta)):
             return self.odstartuj(m.group(1), int(m.group(2)))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
@@ -4925,6 +4961,60 @@ class H(BaseHTTPRequestHandler):
         if not planovany and r.get("stav") != "Zrusena":
             r["stav"] = "Probiha"
         # Časy dojetých se přepočítají k novému startu, jako v API.
+        for v in r["vysledky"]:
+            if v.get("dojezdV"):
+                v["casSekundy"] = cas_od_startu(r["startV"], v["dojezdV"])
+        return self.odpoved(zapis_dto(z, r))
+
+    def procedura(self, zavod, cislo):
+        """
+        Startovní procedura a její přerušení — opsané z
+        `ZapisSprava.ProceduraAsync` a `Procedura` (nálezy R5 a R12,
+        28. 10. 2026). Pravda o pravidlech je v API.
+        """
+        z, r = self.rozjizdka(zavod, cislo)
+        if not r:
+            return None
+        if (chyba := proc_nejde_prepsat(z, r)):
+            return self.chyba(400, chyba)
+
+        druh = (self.telo_zadosti() or {}).get("druh")
+        if druh not in ("Spustit", "Odlozit", "Odvolat"):
+            return self.chyba(400, "Neznámý úkon procedury.")
+
+        stav = r.get("stav")
+        if stav == "Zrusena":
+            return self.chyba(400, "Rozjížďka je zrušená, takže se nestartuje. "
+                                   "Vrať ji do hry.")
+        if stav == "Dokoncena":
+            return self.chyba(400, "Rozjížďka je dojetá. Nový start je opakování "
+                                   "startu — pusť nejdřív časomíru znovu.")
+        if druh == "Spustit" and stav == "Probiha":
+            return self.chyba(400, "Rozjížďka už jede. Na nový start je všeobecné odvolání.")
+        if druh == "Odlozit" and stav == "Probiha":
+            return self.chyba(400, "Rozjížďka už odstartovala, takže se neodkládá "
+                                   "(ZPJ 27.3 platí před startem). Po startu je na to "
+                                   "všeobecné odvolání.")
+        if druh == "Odlozit" and not r.get("startV"):
+            return self.chyba(400, "Rozjížďka nemá nastavený čas startu, takže není co odložit.")
+        if druh == "Odvolat" and stav == "Planovana":
+            return self.chyba(400, "Rozjížďka ještě nestartovala, takže není co odvolat "
+                                   "(ZPJ 29.2 platí po startu). Před startem se odkládá.")
+
+        from datetime import timedelta
+        delka = z.get("delkaProceduryMin", 5)
+        if druh == "Spustit":
+            r["startV"] = _iso(_ted() + timedelta(minutes=delka))
+        elif druh == "Odlozit":
+            # ZPJ 27.3: nový čas je volný, takže se smaže.
+            r["startV"] = None
+        else:
+            # ZPJ 29.2: minuta po opakovači, pak celá procedura.
+            r["startV"] = _iso(_ted() + timedelta(minutes=1 + delka))
+            r["opakovanychStartu"] = r.get("opakovanychStartu", 0) + 1
+
+        r["stav"] = "Planovana"
+        r["konecV"] = None
         for v in r["vysledky"]:
             if v.get("dojezdV"):
                 v["casSekundy"] = cas_od_startu(r["startV"], v["dojezdV"])

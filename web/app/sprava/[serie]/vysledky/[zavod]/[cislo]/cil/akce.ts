@@ -5,7 +5,9 @@ import {
   konecRozjizdky,
   nastavZnak,
   odstartuj,
+  procedura,
   ulozCil,
+  type DruhProcedury,
   type ZapisLod,
   type ZapisRadek,
 } from "@/lib/vysledky";
@@ -74,6 +76,25 @@ export async function odstartujAkce(
   if (Number.isNaN(Date.parse(startV))) return { chyba: "Neplatný čas startu." };
 
   const vysledek = await odstartuj(serie, zavod, cislo, startV);
+  return { chyba: "chyba" in vysledek ? vysledek.chyba : null };
+}
+
+/**
+ * Startovní procedura: spustit odpočet, odložit start (ZPJ 27.3), nebo
+ * všeobecně odvolat (ZPJ 29.2). Nálezy R5 a R12, 28. 10. 2026.
+ *
+ * <b>Čas se neposílá</b> — počítá si ho server z pravidel a z délky
+ * procedury regaty.
+ */
+export async function proceduraAkce(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  druh: DruhProcedury,
+): Promise<{ chyba: string | null }> {
+  if (!platne(cislo)) return { chyba: "Neplatné číslo rozjížďky." };
+
+  const vysledek = await procedura(serie, zavod, cislo, druh);
   return { chyba: "chyba" in vysledek ? vysledek.chyba : null };
 }
 

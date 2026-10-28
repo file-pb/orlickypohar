@@ -46,6 +46,16 @@ public sealed record PravidlaBodovani
     public required int PrirazkaZaNapravu { get; init; }
 
     /// <summary>
+    /// Kolik procent z bodů za nedokončila přidá bodový trest (<c>ZFP</c>).
+    /// ZPJ 44.3(c) říká dvacet; je to tu proto, že ZPJ 44.3(c) dovolují
+    /// *„jinou hodnotu uvedenou ve vypsání závodu nebo v plachetních
+    /// směrnicích"*, a u poháru je *„minutové pravidlo"* stejně vlastní
+    /// pravidlo z dohody (R16), takže číslo patří k ostatním parametrům
+    /// bodování, ne do výrazu.
+    /// </summary>
+    public required int TrestZfpProcent { get; init; }
+
+    /// <summary>
     /// Pravidla, podle kterých se bodoval ročník 2026 a 2027: doložená
     /// podklady rozhodčího z 22. 9. 2026 a listinou FxCK Cancer.
     /// <b>Nemění se nikdy</b> — čím se jednou vyhlásilo, tím zůstane.
@@ -56,6 +66,10 @@ public sealed record PravidlaBodovani
         BodyZaDiskvalifikaci = 20,
         PrirazkaZaKod = 1,
         PrirazkaZaNapravu = 1,
+        // Dvacet procent podle ZPJ 44.3(c). Doplněno 28. 10. 2026 spolu
+        // s kódem ZFP; **nemění žádný dřív spočítaný výsledek**, protože
+        // do té doby ten kód nešlo zapsat.
+        TrestZfpProcent = 20,
     };
 
     /// <summary>Verze, kterou dostane nový ročník.</summary>

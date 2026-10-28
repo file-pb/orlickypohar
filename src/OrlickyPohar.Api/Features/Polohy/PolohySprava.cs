@@ -138,10 +138,17 @@ public class PolohySprava(AppDbContext db, TimeProvider cas, OknaSprava okna)
 
     /// <summary>
     /// O kolik začíná veřejný přenos dřív než rozjížďka. Startovní
-    /// procedura je pět minut a patří do okna — je z ní takticky vidět
-    /// víc než z celého zbytku rozjížďky.
+    /// procedura patří do okna — je z ní takticky vidět víc než z celého
+    /// zbytku rozjížďky.
+    /// <para>
+    /// <b>Délka je parametr regaty, ne konstanta</b> (od 28. 10. 2026,
+    /// nález R12): pětka v ZPJ 26 má hvězdičku *„nebo tak, jak je
+    /// stanoveno ve vypsání závodu nebo v plachetních směrnicích"*.
+    /// Do té doby tu stálo napevno pět minut a totéž číslo zvlášť na
+    /// tabuli — dvě kopie jednoho pravidla, které se jednou rozejdou.
+    /// </para>
     /// </summary>
-    public static readonly TimeSpan Procedura = TimeSpan.FromMinutes(5);
+    public static TimeSpan Procedura(int delkaMinut) => TimeSpan.FromMinutes(delkaMinut);
 
     /// <summary>
     /// Jak dlouho platí snímek. Kratší by nic nepřineslo — telefony posílají
@@ -320,7 +327,9 @@ public class PolohySprava(AppDbContext db, TimeProvider cas, OknaSprava okna)
         // Procedura patří do záznamu ze stejného důvodu jako do přenosu:
         // je z ní takticky vidět víc než ze zbytku rozjížďky, a divák
         // v hospodě chce vidět právě start.
-        var od = rozjizdka.StartV.Value - Procedura;
+        var delka = await db.Zavody.Where(z => z.Id == zavodId)
+            .Select(z => z.DelkaProceduryMin).FirstAsync(ct);
+        var od = rozjizdka.StartV.Value - Procedura(delka);
         /**
          * <b>Konec je rozhodnutí rozhodčího, a nemusí být zapsaný.</b>
          * Dokončená rozjížďka bez `KonecV` není chyba — dokončí ji i
@@ -440,7 +449,9 @@ public class PolohySprava(AppDbContext db, TimeProvider cas, OknaSprava okna)
         // Procedura je součást okna: pět minut varování, manévrování
         // u linie, hledání místa. Takticky je z toho vidět víc než ze
         // zbytku rozjížďky, takže ořez na výstřel by zahodil to nejcennější.
-        var od = (jede.StartV ?? ted) - Procedura;
+        var delka = await db.Zavody.Where(z => z.Id == zavodId)
+            .Select(z => z.DelkaProceduryMin).FirstAsync(ct);
+        var od = (jede.StartV ?? ted) - Procedura(delka);
 
         var lode = await LodeAsync(zavodId, od, ted, ct);
         // Loď bez polohy se ven neposílá: divák nepotřebuje seznam

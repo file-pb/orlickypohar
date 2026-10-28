@@ -17,7 +17,15 @@ import {
   type CekajiciStart,
   type Koncept,
 } from "../koncept";
-import { konecAkce, odstartujAkce, pridejLodAkce, ulozCilAkce, znakAkce } from "./akce";
+import {
+  konecAkce,
+  odstartujAkce,
+  proceduraAkce,
+  pridejLodAkce,
+  ulozCilAkce,
+  znakAkce,
+} from "./akce";
+import type { DruhProcedury } from "@/lib/vysledky";
 
 /**
  * Klepací část cílové obrazovky.
@@ -241,6 +249,10 @@ export function Cil({
    */
   const planovany = start != null && zapis.stav === "Planovana" && Date.parse(start) > ted;
 
+  // Délka procedury té regaty; pětka v ZPJ 26 má hvězdičku (nález R12).
+  // Starší API pole neposílá — pak platí pět, jako dřív.
+  const delkaProcedury = zapis.delkaProceduryMin ?? 5;
+
   // Čím se koncept z telefonu liší od toho, co leží na serveru. Počítá se
   // z podoby, se kterou se stránka otevřela — `key` stránky se při změně
   // zápisu vymění, takže čerstvější už nebude.
@@ -348,6 +360,35 @@ export function Cil({
       return setChyba("Plánovaný start musí být v budoucnu. Startuje se tlačítkem Start.");
     setChyba(null);
     void odstartuj(kdy.toISOString());
+  };
+
+  /**
+   * <b>Startovní procedura</b> (nálezy R5 a R12, 28. 10. 2026). Rozhodčí
+   * ji vyjmenoval jako *„5 minut výzva · 4 minuty Přípravné znamení ·
+   * 1 minuta do startu · Start"* — doslova ZPJ 26 — a aplikace z té
+   * tabulky znala jediný řádek, ten poslední.
+   *
+   * <b>Znamení dává člověk, aplikace drží čas</b> (nález R15): závodníci
+   * na vodě nevidí startérův telefon, takže vizuální znamení z obrazovky
+   * nebude. Tlačítka tu jsou proto, aby bylo kam zapsat, co se stalo.
+   *
+   * <b>Odložit a odvolat nejsou totéž</b> a server to hlídá: před startem
+   * se odkládá (ZPJ 27.3, nový čas volný), po startu se všeobecně odvolává
+   * (ZPJ 29.2, nový start minutu po opakovači plus procedura).
+   */
+  const proved = async (druh: DruhProcedury, otazka?: string) => {
+    if (otazka && !window.confirm(otazka)) return;
+    try {
+      const { chyba } = await proceduraAkce(serie, zavod, zapis.cislo, druh);
+      if (chyba) return setChyba(chyba);
+      setChyba(null);
+      // Nový čas počítá server z pravidel, takže ho obrazovka musí
+      // přečíst, ne si ho domyslet — jinak by u odvolání ukazovala jiný
+      // čas než ten, který platí.
+      router.refresh();
+    } catch {
+      setChyba("Nepodařilo se to uložit. Zkus to znovu.");
+    }
   };
 
   /**
@@ -477,6 +518,18 @@ export function Cil({
               <button type="button" className="cil-startuj" onClick={() => odstartuj()}>
                 Start
               </button>
+              {/* <b>Odložení před startem</b> — ZPJ 27.3, vlajka AP:
+                  odkládá se *„z jakékoli příčiny"* a nový čas je volný,
+                  takže se po něm zadává znovu. */}
+              <button
+                type="button"
+                className="maly"
+                onClick={() =>
+                  void proved("Odlozit", "Odložit start? Čas se smaže a zadáš nový.")
+                }
+              >
+                Odložit
+              </button>
               <label className="cil-cas-startu">
                 <span className="skryte">Plánovaný čas startu</span>
                 <input
@@ -494,6 +547,14 @@ export function Cil({
                 {/* Po zastavení drží lišta naměřený čas, ne běžící. */}
                 <b className="cil-cas">{trvani(start, konec ? Date.parse(konec) : ted)}</b>
                 {konec && <span className="stitek dojeto"> dojeto {hodiny(konec)}</span>}
+                {/* Že se start opakoval, bylo do 28. 10. 2026 nikde —
+                    nový start jen přepsal čas (nález R5, ZPJ 36). */}
+                {(zapis.opakovanychStartu ?? 0) > 0 && (
+                  <>
+                    {" "}
+                    <span className="stitek">{zapis.opakovanychStartu}× odvolaný start</span>
+                  </>
+                )}
               </span>
               {/* <b>Zastavit čas, než je papír dopsaný</b> (Filip, 20. 10.
                   2026: *„hodilo by se mít možnost zastavit časomíru a říci,
@@ -520,6 +581,24 @@ export function Cil({
               <button type="button" className="maly" onClick={() => odstartuj()}>
                 Přepsat na teď
               </button>
+              {/* <b>Všeobecné odvolání po startu</b> — ZPJ 29.2, první
+                  opakovač. Na rozdíl od odložení tu <b>nový čas volný
+                  není</b>: vyzývací znamení padne minutu po spuštění
+                  opakovače a od něj běží celá procedura. Pod potvrzením,
+                  protože to vrací celé pole zpátky na start. */}
+              <button
+                type="button"
+                className="maly"
+                onClick={() =>
+                  void proved(
+                    "Odvolat",
+                    "Všeobecné odvolání? Rozjížďka se vrátí na start a nový čas "
+                      + `spočítá pravidlo: minuta po opakovači a ${delkaProcedury} min procedura.`,
+                  )
+                }
+              >
+                Odvolat start
+              </button>
               {/* Pole s časem vedle tlačítka: celá cesta na serveru už
                   existuje, chybělo jen kam ten čas napsat. */}
               <label className="cil-cas-startu">
@@ -542,6 +621,13 @@ export function Cil({
             <>
               <button type="button" className="cil-startuj" onClick={() => odstartuj()}>
                 Start
+              </button>
+              {/* <b>Jedno tlačítko, jak si rozhodčí přál</b> (nález R12).
+                  Spuštěním se zapíše plánovaný start za tolik minut,
+                  kolik má regata nastaveno — pětka v ZPJ 26 má
+                  hvězdičku, takže je to parametr, ne konstanta. */}
+              <button type="button" className="maly" onClick={() => void proved("Spustit")}>
+                Spustit proceduru ({delkaProcedury} min)
               </button>
               {/* Čas z rozpravy, kdy se jet **má** (nález K6; Miloš
                   Zvonař, 27. 10. 2026: *„v rozpravě na konci setneme,

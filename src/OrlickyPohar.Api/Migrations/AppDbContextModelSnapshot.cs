@@ -1482,6 +1482,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<DateTimeOffset?>("KonecV")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("OpakovanychStartu")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("Publikovano")
                         .HasColumnType("boolean");
 
@@ -1654,6 +1657,9 @@ namespace OrlickyPohar.Api.Migrations
 
                     b.Property<DateOnly?>("DatumKonce")
                         .HasColumnType("date");
+
+                    b.Property<int>("DelkaProceduryMin")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Druh")
                         .HasColumnType("integer");
