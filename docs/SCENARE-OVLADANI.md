@@ -519,18 +519,29 @@ který nic neznamená, na obrazovkách, jejichž pravidla znějí *„nic se
 nehýbe"* a *„blikající prvek v jedné ruce na motoráku je šum"*. **Proto
 stupně, a první musí být plochý a aspoň minutu široký.**
 
-**Navržené čtyři stupně**, všechny prahy z kódu, žádný vymyšlený:
+**Stupeň to sám o sobě ale neřeší, a první verze návrhu na tom stála.**
+Lámala škálu na jedné minutě — jenže minuta je *horní hranice* toho cyklu,
+takže ji zdravá loď překročí jednou za minutu, každá ve své fázi. Při
+pětatřiceti lodích vyjde změna někde na obrazovce **zhruba každých 1,7 s**,
+pořád, i když je všechno v pořádku. Týž pohyb, jen o stupeň hrubší.
+Upozornila na to session auditu rolí (28. 10. 2026) a má pravdu;
+**práh musí ležet nad odesílacím oknem, ne na něm**.
+
+**Navržené tři stupně**, všechny prahy z kódu, žádný vymyšlený:
 
 | Obrys | Práh | Odkud to číslo je |
 |---|---|---|
-| plný, se září | ≤ 1 min | `PolohySprava.Cerstva` — a je to jedno okno odeslání |
-| slabší | 1–2 min | jeden výpadek; appka ten práh má (`stari > 2 * ZIVE_MS`) |
-| slabý | 2–5 min | zbytek `PolohySprava.Starne` |
+| plný, se září | ≤ 2 min | nad odesílacím oknem; appka ten práh má (`stari > 2 * ZIVE_MS`) |
+| slabý | 2–5 min | konec `PolohySprava.Starne` |
 | žádný, řádek ustoupí | > 5 min | `Nedostupna` |
 
-Čtvrtý stupeň navíc proti API je tam proto, že pásmo `Starne` je **čtyři
-minuty široké** a sedmdesát vteřin je jiná odpověď na *„trackuje nám celé
-pole?"* než čtyři a půl minuty.
+**Na tabuli je to jiná obrazovka.** Tabule si pořadí přerovnává sama:
+`seradNaVode` (`web/lib/poradi-na-vode.ts`) propadne nedostupnou loď pod
+všechny, co ještě jedou, takže na pěti minutách řádek **skáče v seznamu**.
+Kdyby se ve stejnou chvíli měnil i obrys, je to jedna událost a dvě změny
+a loď kmitající kolem pěti minut by lezla nahoru a dolů *a* blikala. Obrys
+tam proto musí skončit **přesně v tom okamžiku, kdy se řádek propadá**, ne
+o stupeň dřív.
 
 **Obrys nese jas, ne barvu.** Barva je obsazená — stáří ji dnes má na textu
 (`.nacrt-cerstva` zelená, `.nacrt-starnouci` oranžová, `.nacrt-nedostupna`
@@ -543,11 +554,32 @@ přehled o poli, text číslo o jedné lodi.
 tracker-nedostupna` na řádku, ale **v CSS k nim není nic** — stáří je tam
 čistě text ve dvou sloupcích.
 
-**Čtyři věci k rozhodnutí**, všechny v ukázce rozepsané: čtyři stupně, nebo
-tři (tedy přesně to, co vydává API)? Jen ve správě, nebo i na tabuli, kde
-pětatřicet lodí přeskakuje mezi stupni každá ve svůj okamžik? Bere obrys
-barvu textu, nebo stojí vedle ní? A platí to i jinde než na polohách —
-u zápisu čekajícího na podpis, u tratě čekající na přijetí?
+**Tři věci k rozhodnutí**, všechny v ukázce rozepsané:
+
+- **Svítí čerstvé, nebo se značí staré?** Návrh drží Filipovu metaforu —
+  čerstvé svítí, staré vychládá. Ze strany tabule přišel opačný návrh: nic
+  neznačit, dokud je všechno v pořádku, a obrys dát *až* lodi, která se
+  dlouho neozvala. Je obhajitelný (*„kdyby svítilo všechno, nesvítí nic"*),
+  ale **obrátí význam**: ve správě by obrys znamenal „čerstvé", na tabuli
+  „zastaralé". Projekt přitom schválně drží, aby se tatáž věc četla na obou
+  obrazovkách stejně — tak jako barvy stavů. Buď se obrátí obojí, nebo
+  tabule obrys nedostane.
+- **Láme se barva textu tam, kde obrys?** Dnes se text přebarvuje na minutě
+  (`STARNE_PO_S = 60`), tedy uvnitř odesílacího cyklu. Je to **tentýž
+  problém, který posunul obrys na dvě minuty**, jen u textu žije v kódu
+  dávno a nikdo ho nenahlásil: na tabuli s pětatřiceti loděmi se někde na
+  obrazovce přebarvuje text každých pár vteřin. Posunout i text, nebo nechat
+  dva prahy, protože odpovídají na dvě různé otázky?
+- **Platí to i jinde než na polohách?** Stejně spojité je stáří u zápisu
+  čekajícího na podpis nebo u tratě čekající na přijetí.
+
+**A jedna věc k udělání předem, ne k rozhodnutí.** Práh pěti minut je v repu
+**dvakrát**, pokaždé jako vlastní konstanta — `NEDOSTUPNA_PO_S`
+v `web/lib/rezie-tabule.ts` a totéž číslo v `web/app/mapa-trackeru.tsx` —
+a k tomu je autoritativní hodnota v C# (`PolohySprava.Starne`), ze které
+server počítá stav, který posílá. Dokud se o to číslo nikdo neopře, nevadí
+to; jakmile se o něj opře škála, opře se o tři kopie, které se můžou
+rozejít. Sloučit je je předpoklad, ne úklid.
 
 **Publikace regaty na rozcestníku ročníku** se nedá ukázat: `ZastavkaVysledkyDto`
 ten příznak nevydává (`VysledkySprava.cs`), kdežto v kalendáři správy ano.
