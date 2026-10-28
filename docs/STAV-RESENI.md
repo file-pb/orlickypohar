@@ -31,15 +31,15 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | --- | --- | --- |
 | Vypsání závodu jako dokument | **Běží** | Web, dokument z dat. Čtyři body J1 jsou prázdné a místo konání je „neuvedené" (R21, R23) |
 | Plachetní směrnice ke stažení | **Běží** | Jako PDF. Formu zdroje odložil sám: *„teď stačí zdroj jak máme"* (R2) |
-| Směrnice **předvyplní** trať, časy a režim startu | **Čeká** | R22. Navrhl to sám; nerozhodnuté je **kdy**, ne jestli. Leží v ní dva ze čtyř prázdných bodů vypsání a oba chybějící údaje o startu |
+| Směrnice **předvyplní** trať, časy a režim startu | **Zavřené** | R22. Filip 28. 10.: *„zatím stačí to co je, do budoucna editor, ale teď je to předčasné."* |
 | Vypsání platné bez jeho podpisu | **Zavřené** | *„Je platné i bez mého podpisu"*. Elektronický podpis jen jako nabídka (R20, R32 v nahrávce 32) |
 | Přihlašování po zveřejnění vypsání | **Běží** | Přihlášky vede pořadatel |
-| Přihlašování se zavře rozpravou | **Zadané** | R39. Dnes se nezavírá nikdy |
-| Číslo VMP a technického průkazu v přihlášce | **Zadané** | R25. Dnes se místo nich sbírá číslo ČSJ, které vypsání nežádá |
+| Přihlašování se zavře rozpravou | **Zadané** | R39. Se zadními vrátky pro mimořádné zapsání, která se nenabízejí jako běžná cesta |
+| Číslo VMP a technického průkazu v přihlášce | **Čeká** | R25. Miloš je zadal, Filip je sbírat nechce a přenáší to do souhlasu — kolize 2, a znamená to verzi 3 souhlasu |
 | Souhlas se závodními pravidly u přihlášky | **Běží** | `Souhlas.cs`, verze 2 včetně polohy |
 | Nezletilý závodník | **Zavřené** | *„Žádný z kapitánů není nezletilý"* (R26) |
 | Čtyři třídy (do 7 m, nad 7 m lehký, těžký, RACE) | **Zavřené** | *„Neřeš, do tříd si je zařadíme sami"* — dva nové záznamy v nastavení, zařadí ručně (R40) |
-| Platba startovného u kapitána | **V API** | `Ucast.Zaplaceno` a `StartovnePoznamka` existují i s endpointem; **kde se to klepne, jsem neověřil** |
+| Platba startovného u kapitána | **Zavřené** | Platí se u zápisu v klubovně; kapitán to vidí jen na webu, v appce nadbytečné |
 
 ## Rozprava
 
@@ -47,9 +47,9 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | --- | --- | --- |
 | Po rozpravě nastavit předpokládaný čas startu | **Jen web** | K6, nasazeno. V appce to nejde |
 | Tabule se startovní listinou | **Běží** | Přepíná se sama podle fáze dne, nezapíná se ručně |
-| Do startovní listiny smí jen rozhodčí | **Čeká** | R38. Kód dnes říká opak: *„Přihlášky vede pořadatel"* — a je potřeba rozhodnout, co „zásah do listiny" znamená |
-| Mapa 10 minut před startem | **Čeká** | R4. Dnes naskočí až výstřelem |
-| Odkdy se posádkám hlásí telefon | **Čeká** | R3 — jediná otázka, na kterou Miloš neodpověděl |
+| Do startovní listiny smí jen rozhodčí | **Zadané** | R38. Rozhodnuto: po rozpravě mění jen rozhodčí, pořadatel smí **navrhovat** a rozhodčí schvaluje; příznak pomocníka se rozšíří i na listinu |
+| Mapa 10 minut před startem | **Zadané** | R4. Rozhodnuto: zapne se sama podle plánovaného startu |
+| Odkdy se posádkám hlásí telefon | **Zadané** | R3. Rozhodnuto: 15 minut před startovní procedurou, a appka si sledování zapne sama |
 
 ## Start
 
@@ -59,17 +59,17 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Odpočet s intervaly 5 / 4 / 1 / 0 na obrazovce | **Zadané** | **Nikde.** Je to krok 1 plánu a hlavní věc, kterou chce mít v ruce (*„abych nemusel držet stopky"*) |
 | Dlaždice **Odklad startu** s novým časem | **Zadané** | R37. API to umí ve dvou krocích (odložit + zapsat plánovaný start), appka nijak |
 | Dlaždice **Zrušit rozjížďku / neplatný start** | **V API** | `Odvolat` (ZPJ 29.2) — přidá minutu a jede znovu |
-| Dlaždice **OCS** → loď → odčinila / neodčinila | **Zadané** | R35. Kód `Ocs` existuje, postup ne. Jedna otázka zbývá: zapsat `OCS`, nebo `DSQ`? |
+| Dlaždice **OCS** → loď → odčinila / neodčinila | **Zadané** | R35. Postup rozhodnutý: klepnutí za běhu, vyhodnocení po dojezdu. Který kód se zapíše (OCS/DSQ) čeká na Miloše — kolize 3 |
 | Velitelský čas na mobilu hlavního startéra | **Běží** | `Velitel`, převzetí na žádost, doklad |
 | Start přežije výpadek | **Jen web** | Fronta nezaslaného startu je na webu; v appce se musí postavit znovu |
-| Posádka vidí tutéž sekvenci jen ke čtení | **Zadané** | R34. Nikde |
+| Posádka vidí tutéž sekvenci jen ke čtení | **Čeká** | R34. Kolize 1: Miloš ji chce vidět, Filip by posádkám čas ani sekvenci nedával a nechal jen barvu stavu |
 | Posádka hlásí komisi (trest, neregulérnost) | **Zavřené** | R41. *„Alespoň v prvních verzích ne."* Miloš došel k témuž: *„abychom jim nekomplikovali život"* |
 
 ## Za jízdy
 
 | Co chce | Stav | Kde to je / co zbývá |
 | --- | --- | --- |
-| Úprava tratě za jízdy | **Jen web** | Změna úseku a chybějící značka (ZPJ 33, 34) |
+| Úprava tratě za jízdy | **Jen web** | Změna úseku a chybějící značka. Nově zadáno: pípání a focení bójí z appky v módu stavby, trať ale schvaluje rozhodčí |
 | Dlaždice **360°** za dotek bóje | **Zadané** | R36, ZPJ 31 |
 | Dlaždice **720°** za dotek s lodí soupeře | **Zadané** | R36, ZPJ 44 |
 | Trest dostupný **celou** rozjížďku, ne jako krok | **Zadané** | Z nahrávky 23: dlaždice se má *„průběžně posouvat"* |
@@ -82,8 +82,8 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Co chce | Stav | Kde to je / co zbývá |
 | --- | --- | --- |
 | Ruční zápis průjezdu cílem | **Jen web** | Běží |
-| Přepsat to, co určilo trasování | **Zadané** | R33. Nikde — a je to vlastní velká věc |
-| Shoda v cíli (dvě lodě stejně) | **Zadané** | K7. Aplikace ji dnes odmítne zapsat, ZPJ A7 ji dělí rovným dílem |
+| Přepsat to, co určilo trasování | **Zadané** | R33. Rozhodnuto: trasování dá **návrh dojezdu** (ghost řádek), rozhodčí ho potvrdí, zamítne, nebo posune v pořadí |
+| Shoda v cíli (dvě lodě stejně) | **Zadané** | K7. Rozhodnuto: v cílovém listu se zaškrtne stejný dojezd u dvou lodí, pak se body rozdělí podle pravidel |
 
 ## Po rozjížďce
 
@@ -92,35 +92,43 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Odsouhlasení pořadí | **Jen web** | Stavy výsledků, běží |
 | Úpravu výsledků smí jen rozhodčí | **Čeká** | R38, tatáž otázka jako u listiny |
 | Zásah do pořadí při protestu | **Zadané** | Protesty jsou celá nepostavená fáze; dnes je jen věta, že protest visí (K2) |
-| Ověřeno a Schváleno jako dva kroky | **Čeká** | K3. Dnes jsou to dvě klepnutí téhož člověka — kandidát na ubrání |
+| Ověřeno a Schváleno jako dva kroky | **Zadané** | K3. Rozhodnuto sloučit, dokud protesty nejsou; stavy *zapisuje se → zapsáno / v revizi → potvrzeno* |
 | Pomocník u cíle a slave startér | **Zadané** | K8. Rozhodnuto 28. 10.: **příznak u regaty**, který rozhodčí zaškrtne v klubovně u zápisu u lidí, kteří už pořadateli jsou. Otevře velení a zápis průjezdu, **ne** startovní listinu. Žádná nová role |
 | Zahájit další rozjížďku | **V API** | `POST …/rozjizdky` |
 | Kódy výsledků včetně DNE | **Běží** | Jedenáct kódů, čtyři z nich doplněné 28. 10.; DNE se nedá vyškrtnout (K1) |
-| Zrušení rozjížďky s povinným důvodem | **Běží** | Fáze 4.2 |
+| Zrušení rozjížďky s povinným důvodem | **Zadané** | R17. Běží, ale rozhodnuto doplnit nejčastější důvody na výběr, aby to nemusel psát |
 
 ## Mimo den závodu
 
 | Co chce | Stav | Kde to je / co zbývá |
 | --- | --- | --- |
-| Appka řekne, že se sama aktualizovala | **Běží** | Banner a sekce *Verze appky* v Účtu, od 28. 10. **Jak to vypadá na telefonu, nikdo neviděl** |
+| Appka řekne, že se sama aktualizovala | **Běží** | Banner a sekce *Verze appky* v Účtu. Nově zadáno: ukázat verzi i na webové stránce `/appka` |
 | Aktualizace po síti bez instalace | **Běží** | První aktualizace publikovaná 28. 10.; do té doby v kanálu neležela **žádná** |
-| Publikace automaticky z CI | **Čeká** | Úloha je v mainu, ale `EXPO_TOKEN` v secrets chybí → jen varování |
+| Publikace automaticky z CI | **Zadané** | Filip doplní `EXPO_TOKEN` do secrets; úloha v mainu čeká |
 | Přeložený termín dá vědět přihlášeným | **Zadané** | K5. ZPJ 80 to žádá, aplikace termín přesune a nikomu nic neřekne |
 
 ---
 
-## Co čeká na Filipa
+## Co zbývá rozhodnout
 
-Pět věcí, a žádnou z nich nerozhodne nikdo jiný:
+Po Filipových odpovědích z 28. 10. večer zbývají **tři** věci, a dvě z nich
+patří Milošovi:
 
-1. **Co znamená „do startovní listiny smí jen rozhodčí"** (R38) — přejdou
-   přihlášky celé na rozhodčího, nebo smí jen měnit, kdo v rozjížďce startuje?
-2. **OCS, nebo DSQ** u lodě, která start neodčinila (R35) — dotaz na Miloše,
-   ale rozhodnutí o výsledkové listině.
-3. **`EXPO_TOKEN` do secrets**, nebo zůstane publikace ruční.
-4. **Cíl a přepsání trasování** (R33) — vlastní velká věc, kdy se do ní jde.
-5. **Mez z pravidla 76.1(a)** u vyloučení (K4) — jediná otázka, kterou Miloš
-   nedostal.
+1. **Posádka: odpočet, nebo jen barva stavu** (R34, kolize 1). Miloš chce, aby
+   kapitán viděl tutéž sekvenci; Filip by mu čas ani sekvenci nedával, protože
+   zpožděný odpočet na lodi je zdroj hádek. Barva stavu se zpožděním nelže,
+   odpočet ano.
+2. **OCS, nebo DSQ** u lodě, která předčasný start neodčinila (R35, kolize 3).
+   Postup se staví tak či tak; rozhoduje se jen, co padne do výsledkové listiny.
+3. **VMP a technický průkaz** (R25, kolize 2). Miloš je zadal, Filip je sbírat
+   nechce a přenáší to do textu souhlasu — což znamená **verzi 3 souhlasu** a
+   Miloš o tom zatím neví.
+
+Zbytek rozhodnutý je: mapa se zapne sama, telefony se hlásí 15 minut před
+procedurou, Ověřeno a Schváleno se sloučí, trasování dává jen návrh dojezdu,
+startovní listinu po rozpravě mění rozhodčí a pořadatel ji smí navrhovat,
+směrnice jako předloha se odkládá, mez z pravidla 76 se neřeší, startovné
+zůstává na webu a token do secrets doplní Filip.
 
 ## Jak se tenhle dokument udržuje
 

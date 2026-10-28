@@ -4076,6 +4076,163 @@ vstup do závodu před ním.
 
 ---
 
+## Odpovědi Filipa z kontrolního listu (28. 10. 2026, večer)
+
+Filip prošel kontrolní list (soukromá stránka se 47 požadavky) a nechal v něm
+**osm rozhodnutí a dvacet poznámek**. Tohle je jejich zápis. Tři z nich jdou
+proti tomu, co řekl Miloš, a jsou vyznačené jako **kolize** — ne proto, aby se
+Filip opravoval, ale protože se o nich musí vědět, než se to postaví.
+
+**Jak čtu jeho zaškrtnutí.** Sloupce *Web / Appka / API* se ptaly, **kde to
+dnes je**, ale Filip jimi odpovídal, **kam to patří** — u věcí, které v appce
+nejsou (procedura, odklad, velitel, ruční zápis cíle), zaškrtl *Appka*, a
+u nepostavených trestů, shody a protestů *API*. Beru to tedy jako jeho
+rozvržení, ne jako popis stavu; stav drží `docs/STAV-RESENI.md`.
+
+### Rozhodnutí, která padla
+
+| Co | Rozhodnuto |
+| --- | --- |
+| **Mapa 10 minut před startem** (R4) | Zapne se **sama**, podle plánovaného startu |
+| **Odkdy se hlásí telefony posádek** (R3) | **15 minut před startovní procedurou** — a appka o tom musí vědět a sledování si zapnout |
+| **Ověřeno a Schváleno** (K3) | **Sloučit**, dokud protesty nejsou. Stavy pak: *zapisuje se → zapsáno / v revizi → potvrzeno* |
+| **Směrnice jako předloha** (R22) | *„Zatím stačí to co je, do budoucna budeme dělat editor, ale teď je to předčasné."* |
+| **Mez z pravidla 76.1(a)** (K4) | *„Neřešit, vyloučení zatím neřešit (je to hobby regata).“* Zavřeno |
+| **Publikace aktualizací z CI** | Filip doplní `EXPO_TOKEN` do secrets |
+| **Platba startovného** | Platí se u zápisu v klubovně, kapitán to vidí **jen na webu**; v appce by to bylo nadbytečné |
+| **Zámek přihlašování rozpravou** (R39) | Zavře se rozpravou, ale **zadní vrátka pro mimořádné zapsání zůstanou** — jen se nenabídnou jako běžná cesta |
+
+### Nová zadání, která z poznámek vyplynula
+
+**Cílová obrazovka má dva módy, a přepíná se mezi nimi** (k R33, R36):
+
+> *„Po startu by se měla automaticky zobrazovat trest mód a na cílovou by si to
+> měl pak přepnout Miloš sám. Obě by měly dlaždice jedoucích lodí a seznam
+> cílový/trestů. U trestů by pak po stisku lodi vyběhla sestava dlaždic
+> s možnými tresty.“*
+
+Tedy ne dvě dlaždice trestů vedle sebe, ale **jedna cesta: loď → sestava
+trestů**. To zjednodušuje R36 a zároveň vysvětluje, proč má být trest dostupný
+celou rozjížďku: je to mód obrazovky, ne krok v postupu.
+
+**Dojezd z trasování jako návrh, ne jako zápis** (k R33):
+
+> *„Jakmile tracker zaznamená průjezd cílem a nebude loď zapsaná že dojela, tak
+> dojde k jakémusi ghost řádku (návrhu dojezdu trackerem) … Rozhodčí nebo
+> zapisovatel to uvidí a bude to moci potvrdit anebo zamítnout, popř. posunout
+> v pořadí a pak potvrdit.“*
+
+Tím je zodpovězené, co znamenalo Milošovo *„kdybych tam s něčím nesouhlasil“*:
+trasování nikdy nezapisuje, jen navrhuje. **Je to návrh, který nestojí a padá
+na tom, jak dobře trasování měří** — a to je jeho hlavní přednost.
+
+**Shoda v cíli** (K7): v cílovém listu půjde zaškrtnout stejný dojezd u dvou
+lodí — prvek mezi dvěma řádky. Pak se body rozdělí podle pravidel.
+
+**Startovní listina po rozpravě** (R38): *„Jakmile je po rozpravě, už to může
+měnit jen rozhodčí. Pořadatel může změny ale navrhovat a rozhodčí to musí
+schválit. Nebo můžeme využít roli Pomocník a ten by pak mohl měnit i startovní
+listinu.“* Je to tedy **návrh a schválení**, ne odebrání práva — a příznak
+pomocníka z K8 se tím rozšiřuje i na listinu.
+
+**Stavba trati z appky** (nové): *„Pípání a focení bójí z appky v módu stavby
+by asi mělo jít, trať ale schvaluje rozhodčí.“*
+
+**Zrušení rozjížďky** (R17): nabídnout **nejčastější důvody** a volný text až
+pro případ, že si nevybere — *„aby to nemusel klofat“*.
+
+**Verze na stránce `/appka`** (nové): ukázat, jaká verze je venku, aby se dalo
+zkontrolovat, co má člověk v telefonu.
+
+---
+
+### Kolize 1 — Posádka nemá vidět ani čas, ani sekvenci
+
+*Filip proti R34 a proti Milošovým vlastním slovům. Nerozhodnuto — rozhodnout
+to musí oni dva.*
+
+Filip:
+
+> *„Pokud bude mít server velitelský čas … ale je to potenciální zdroj chyb
+> a hádek, že startovali podle appky. Může to posádku při neaktuálním čase
+> zmást. Já bych čas ani sekvenci posádkám nedával, jen signalizoval stav
+> startovní procedury a rozjížďky nějakou barvou.“*
+
+Miloš (nahrávka 25):
+
+> *„V podstatě by mohl vidět stejnou startovní sekvenci, kterou vidím já,
+> akorát do ní nemůže zasahovat.“*
+
+**Oba mají pravdu z jiné strany.** Miloš mluví o tom, co posádka potřebuje
+vědět; Filip o tom, co se stane, když se telefonu na lodi nedovolá síť a odpočet
+na něm půjde pozadu — loď odstartuje podle appky a bude se hádat. Pyramida
+autority dává za pravdu Filipovi: posádka je stupeň, který jen odebírá, a čas
+ze stupně 2 se k ní nemusí dostat včas.
+
+**Co z toho plyne pro návrh:** barva stavu (*čeká / procedura běží / jedeme /
+zrušeno*) je **bezpečná**, protože se zpožděním nic nelže — zpožděná barva
+pořád říká pravdu o minulém okamžiku. Odpočet lže. Takže kdyby se čas posádkám
+někdy dával, musí se vedle něj psát, **jak starý údaj to je**.
+
+Nezapsaná otázka pro Miloše: *stačilo by posádce barevné světlo místo odpočtu?*
+
+### Kolize 2 — VMP a technický průkaz se sbírat nebudou
+
+*Filip proti Milošově nahrávce 34. Rozhodnuto Filipem, Miloš o tom neví.*
+
+Miloš: *„Do přihlášky budeme požadovat číslo VMP a číslo technického průkazu,
+pokud ho loď má.“*
+
+Filip: *„Zatím nic takového nesbíráme, a závodník by měl v podmínkách, na které
+dává souhlas, mít, že toto splňuje a že je to jeho odpovědnost.“*
+
+**Je to legitimní volba, ale není zdarma.** Vypsání dnes ty doklady žádá
+(R25), takže kdyby se nesbíraly, musí to říct **text souhlasu** — a ten se tím
+mění, tedy vznikne **verze 3** (`Souhlas.cs`, dnes `Verze = 2`). To je ta
+práce, která se tím nešetří, jen přesouvá. A Miloš to zadal **výslovně**, takže
+mu to patří říct.
+
+### Kolize 3 — OCS, nebo DSQ
+
+*Filip rozhodl DSQ a sám chce Miloše ověřit.*
+
+> *„Loď Miloš klepne, že je přes čáru, a start normálně běží. Když skončí
+> rozjížďka anebo loď dojede: pokud neodčiní, tak DSQ (ale zaznamenej, že se na
+> to zeptáme Miloše při nejbližší příležitosti).“*
+
+**Zapsáno, a tady je ta otázka přesně:** podle pravidel se loď, která byla na
+závodní straně a nevrátila se, **boduje jako OCS**; `DSQ` je výsledek jednání
+o protestu. Pro Miloše je to totéž („nemá platný start“), pro výsledkovou
+listinu ne. Postup, který Filip popsal, je ale nezávislý na tom, který kód se
+nakonec zapíše — klepnutí za běhu, vyhodnocení po dojezdu — takže se **může
+stavět teď** a kód se dorovná podle Milošovy odpovědi.
+
+---
+
+### Dvě otázky, které Filip položil mně
+
+**„Do appky to chtěl Miloš? Nebo sis to tam dosadil sám?“** (u přihlašování) —
+**chtěl.** Nahrávka 25, první věta o kapitánovi: *„Aplikace z pohledu kapitána.
+Měl by tam vidět seriál závodu, měl by mít možnost přihlásit se do závodu, mělo
+by se to projevit ve startovní listině.“* Přihlášení v appce tedy není můj
+dosazený požadavek — a appka to od 21. 10. umí.
+
+**„Nevím, proč minuta, to je nějak málo.“** (u zrušení rozjížďky / neplatného
+startu) — ta minuta **není náš nápad, je z pravidel**: po všeobecném odvolání
+padne nové vyzývací znamení minutu po znamení o odvolání a od něj běží celá
+procedura znovu. V kódu to drží `Procedura.PoOdvolani` a komentář to říká
+doslova. **Ale Filip popsal něco jiného**, a to je důležité rozlišení:
+
+> *„Zrušení rozjížďky je prostě, že je zrušená, a pak zda se bude opakovat start
+> a kdy začne procedura. Pak jedeme znovu podle flow.“*
+
+To je **odložení** (ZPJ 27.3): čas je volný a startér řekne, kdy se pojede.
+Odvolání je ta jednominutová varianta. Takže v aplikaci **existují oba** a
+Milošova otázka 2 („dvě věci, nebo tři?“) se právě ukázala jako podstatná: on
+mluvil o jedné dlaždici, ale potřebuje obě.
+
+---
+
 ## Nálezy K — odvozené z kódu a pravidel
 
 Hypotézy. Každá má doložený řádek, ale **žádnou z nich rozhodčí neřekl** —
