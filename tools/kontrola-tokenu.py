@@ -230,6 +230,34 @@ def kontrola_shoda(css: str, ts: str) -> tuple[list[str], list[str], int]:
             f"{TMAVY_PREPINAC} = {sady[TMAVY_PREPINAC].get(token, '—')}"
         )
 
+    # Obě sady appky musí mít tytéž klíče. `theme.ts` si to u sebe slibuje
+    # komentářem, ale **nic to nevynucuje**: typ `Barvy` se odvozuje jen ze
+    # světlé sady, takže ubraná barva v té tmavé projde i typovou kontrolou
+    # a `t.linka` je za běhu `undefined` — jen v tmavém vzhledu.
+    #
+    # Bez tohohle se dá celá kontrola 1 utišit ubráním: smyčka níž jde od
+    # appky k webu, takže na klíč, který v appce není, se nikdo nezeptá
+    # (doloženo sabotáží 28. 10. 2026 — smazání `linka` prošlo se zelenou).
+    #
+    # Zbývá případ „ubráno z obou sad", a ten **hlídá typová kontrola**:
+    # klíč zmizí z `Barvy` a všech 107 míst, kde appka na barvu sahá,
+    # přestane kompilovat. Změřeno na smazané `linka`: 7 → 16 chyb `tsc`,
+    # devět nových a každá `Property 'linka' does not exist on type 'Barvy'`.
+    # CI `tsc --noEmit` v appce pouští, takže sem to doplňovat nepatří.
+    klice = {rezim: set(sada) for rezim, sada in appka.items()}
+    if len(klice) == 2:
+        for rezim, druhy in (("light", "dark"), ("dark", "light")):
+            for klic in sorted(klice[rezim] - klice[druhy]):
+                chyby.append(
+                    f"appka má {rezim}.{klic}, ale v sadě {druhy} ta barva "
+                    f"chybí — sady se rozešly v klíčích, ne v hodnotách"
+                )
+    elif len(klice) == 1:
+        chyby.append(
+            "appka má jen sadu " + next(iter(klice))
+            + " — druhá se nenašla, a tím se kontrola dá obejít"
+        )
+
     porovnano = 0
     for rezim, protejsek in (("light", [SVETLY]), ("dark", [TMAVY_SYSTEM, TMAVY_PREPINAC])):
         for klic, hodnota in sorted(appka.get(rezim, {}).items()):
