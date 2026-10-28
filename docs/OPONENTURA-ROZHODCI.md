@@ -342,14 +342,40 @@ Dva chybějící díly ze šesti; zbylé čtyři na cílové obrazovce už jsou:
    „jsem hlavní startér téhle regaty" se chová jako okna závodních dnů: stáhne
    se u mola, platí celý den, výpadek s ním nehne. Rozbor je u R19.
 
-4. **Převzetí velení musí jít.** *(Filip, 27. 10. 2026: „a spadnutí do vody je
-   jasné a musí být řešitelné, je to docela možné".)* Tedy ne otevřená otázka,
-   ale požadavek.
+4. **Převzetí velení: slave požádá, server udělí.** *(Filip, 27. 10. 2026:
+   „a spadnutí do vody je jasné a musí být řešitelné, je to docela možné";
+   **rozhodnuto 28. 10. 2026**.)*
 
-   **Co ho komplikuje** — a je to dobré vědět předem: *„oba by to měli
-   akceptovat"* znamená, že se slave hlavním **udělat sám nesmí**. Jenže
-   potvrdit to má ten, kdo je ve vodě. Z toho plynou tři cesty a každá má svou
-   daň:
+   **Jak to má fungovat:**
+   - **Slave o velení aktivně požádá** — klepne „přebírám velení". Nedostane ho
+     automaticky a nikdy si ho nevezme sám.
+   - **Server žádost zapíše a stává se autoritou.** Starý hlavní se to dozví při
+     připojení a přestane být hlavní; do té doby stejně nic neodešle, takže
+     **dva hlavní v datech nevzniknou** — jen v hlavách, a tomu brání právě to,
+     že se o velení musí požádat.
+   - **Jde to kdykoliv, i uprostřed odpočtu**, a zapíše se kdo a kdy. Když hlavní
+     spadne do vody tři minuty před startem, je to přesně ta chvíle, kdy to musí
+     jít — zakázat převzetí během procedury by znamenalo zakázat záchranu tam,
+     kde je potřeba nejvíc.
+
+   **Proč tahle cesta a ne zbylé dvě** (obě jsou v archivu úvahy níž): *třetí
+   strana z břehu* naráží na to, že u poháru dělá rozhodčího všech osmi regat
+   jeden člověk, takže ten, kdo má velení předat, může být právě ten spadlý;
+   *časová pojistka* je u startu nejriskantnější, protože hlavní může stát na
+   startovní lodi s funkčním telefonem a jen bez signálu. Tahle varianta navíc
+   sedí na dvě Filipovy dřívější věty, které to vlastně už rozhodly:
+   *„rozhodne se na signalu, a oba by to měli akceptovat"* a *„jakmile se
+   připojí, dojde k nastavení nového velitele, převzetí času a jedeme standard"*.
+
+   *Zbývá k tomu dořešit jedinou věc, a není to rozhodnutí: telefon si musí při
+   každém připojení ověřit, jestli je pořád hlavní — bez toho by se starý hlavní
+   o ztrátě velení nedozvěděl.*
+
+   **Archiv úvahy, ze které to rozhodnutí vzešlo** *(ponecháno, protože dvě
+   zamítnuté cesty vysvětlují, proč ta třetí vypadá, jak vypadá)*: *„oba by to
+   měli akceptovat"* znamená, že se slave hlavním **udělat sám nesmí**. Jenže
+   potvrdit to má ten, kdo je ve vodě. Z toho plynuly tři cesty a každá měla
+   svou daň:
 
    - **převede to server** — jenže to jde jen při signálu, a výpadek signálu
      u funkčního telefonu vypadá stejně jako telefon ve vodě. Hrozí dva hlavní,
