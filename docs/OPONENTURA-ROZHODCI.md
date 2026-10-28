@@ -1228,6 +1228,41 @@ tedy i změna návodu.
 > pravda a stojí za vědomí. Jen se ukázalo, že **R3 nevyžaduje je oddělovat** —
 > brána na data může zůstat na rozpravě, protože Miloš nepotřebuje data, nýbrž
 > informaci o zařízení.
+>
+> **A Filip to dotáhl do dvou režimů** (28. 10. 2026): *„můžeme tam udělat klidně
+> nějaký trochu jiný režim, který nám bude předávat jen handshake a stav
+> baterky"* — a k tomu: *„polohy se mohou fakt zapnout až s mapou."*
+>
+> | Režim | Co telefon posílá | Odkdy |
+> |---|---|---|
+> | **hlásím se** | handshake a procenta baterie, **žádné souřadnice** | od rozpravy (k potvrzení Milošem) |
+> | **nahrávám** | polohy, jako dnes | **až s mapou**, tedy kolem rozjížďky |
+>
+> **Tohle je zpřísnění, ne rozvolnění — a to je na tom to nejlepší.** R3 vypadal
+> jako požadavek sledovat **dřív**, a skončil u toho, že se bude sledovat
+> **míň**: dnes se polohy berou od rozpravy do uzavření dne, tedy klidně
+> čtrnáct hodin (`OknoRegaty.VychoziHodin`). Po téhle změně by se braly jen tam,
+> kde je k nim důvod. **Přejímací podmínka č. 5 se tím plní lépe než dnes**, ne
+> hůř, a tvrdého konce okna se to nedotkne vůbec.
+>
+> Zároveň to **slučuje R3 s R4**: „polohy až s mapou" je přesně ten okamžik,
+> o kterém Miloš mluvil jako o *„10 minut před startem zapnem mapu"*. Jsou to
+> tedy dvě strany jedné věci, ne dva nezávislé nálezy — mapa a polohy se zapínají
+> spolu, protože bez poloh nemá mapa co kreslit a bez mapy nemají polohy komu
+> sloužit.
+>
+> > **⚠︎ Jenže stav baterie dnes na server nechodí vůbec.** `BaterieProcent` se
+> > plní **jedině z dávky bodů trasy** (`TrasySprava.cs:190`: vezme se poslední
+> > bod, který baterii nese) — a **appka ji neposílá**: v dávce jsou `sirka`,
+> > `delka`, `presnost`, `vyska`, `rychlost`, `kurz` a `casGps`, baterie mezi
+> > nimi není a v `app/src/` se o ní nikde nemluví. Takže **bod 11 návodu slibuje
+> > přehled, který je zpola prázdný** — počet spárovaných telefonů sedí, procenta
+> > jsou `null`.
+> >
+> > Pro Filipův návrh je to dobrá zpráva v tom, že se nic nerozbíjí: režim
+> > „hlásím se" tu hodnotu **přinese poprvé**. Ale znamená to, že se musí doplnit
+> > i na straně appky, ne jen vymyslet endpoint — a že dnešní prázdná procenta
+> > nejsou vada nového režimu, nýbrž stav, ze kterého se vychází.
 
 ### R4 — Mapa 10 minut před startem. Dnes naskočí až výstřelem
 
