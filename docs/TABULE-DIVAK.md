@@ -606,6 +606,19 @@ Zapsaná zvlášť schválně: rozhodnout o nich patří k návrhu, ne k měřen
   podmínek je ta, která platí nejčastěji, a nejmíň se kontroluje.
 - **Tentýž nález našly dvě session nezávisle** (11 a O4). Stálo to dvakrát
   práci; proto u sporných věcí napřed `docs/` prohledat, pak měřit.
+- **Měření, které nemůže selhat, není doklad.** Tenhle audit si to vyrobil
+  dvakrát: odečet stáří proti mocku *musel* vyjít „nic se neděje", protože
+  mock drží stáří napevno — kdežto zmrazený kanál poloh selhat mohl, a
+  teprve proto z něj je nález 14. Dobrá otázka před měřením zní **„jak by
+  to dopadlo, kdybych se mýlil"**; když na ni není odpověď, měří se
+  nástroj.
+- **Nejhůř se hledá špatný spoj mezi dvěma správnými půlkami.** U nálezu 8
+  bylo číslo správné a předpoklad pod ním ne (počítal jsem stáří proti
+  hodinám u údaje, který se počítá proti poli); u sousední session byla
+  správná formulace a provedení ji popíralo. Obojí při čtení vypadá
+  v pořádku, protože každá půlka zvlášť sedí — a ani jedno si nevšiml ten,
+  kdo to psal, nýbrž ten druhý. **Je to argument pro to nechat si nález
+  přečíst**, ne pro pečlivější čtení vlastního.
 
 ### Stáří polohy v ranku: podezření, které měření nepotvrdilo (28. 10. 2026)
 
