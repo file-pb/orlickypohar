@@ -543,3 +543,35 @@ Zapsaná zvlášť schválně: rozhodnout o nich patří k návrhu, ne k měřen
   podmínek je ta, která platí nejčastěji, a nejmíň se kontroluje.
 - **Tentýž nález našly dvě session nezávisle** (11 a O4). Stálo to dvakrát
   práci; proto u sporných věcí napřed `docs/` prohledat, pak měřit.
+
+### Stáří polohy v ranku: podezření, které měření nepotvrdilo (28. 10. 2026)
+
+Session devíti os poslala podnět: *„pokud má můj práh na minutě tenhle
+problém, má ho i barva textu — `STARNE_PO_S = 60`, tedy uvnitř téhož
+cyklu odesílání."* Vypadalo to na nález: sloupec pořadí vedle mapy má
+u každé lodi text `před N s` / `před N min` a třídu `nacrt-cerstva` /
+`nacrt-starnouci`, a práh mezi nimi je přesně minuta
+(`web/app/mapa-trackeru.tsx:55` a `:205`).
+
+**Změřeno, a nesedí to:** odečet sedmnácti řádků dvakrát po třech
+vteřinách dal **nula změn** — všechny lodě stály na `před 0 s`, jedna
+skupina na `před 3 min`. Žádné přebarvování.
+
+**Proč:** živě se čas mapy nepřehrává, drží se na konci došlých dat
+(`if (zive) setCas(konec)`, `mapa-trackeru.tsx:1019`), takže
+`stariS = cas - posledni.cas` neměří stáří proti hodinám, ale **proti
+nejčerstvějšímu bodu celého pole**. Loď, která zrovna ohlásila polohu,
+má tedy nulu bez ohledu na to, kolik je hodin.
+
+**Co tím pádem platí a co ne.** Moje vlastní rada u obrysu stála na tom,
+že stáří zdravé lodi přejíždí 0 → 60 s proti hodinám; tady se měří proti
+poli, takže tvar je jiný: údaj se mění **po dávkách (~5 s), ne po
+vteřinách**, a zdravá loď se k minutě blíží jen tehdy, když mezitím
+ohlásily ostatní. Práh uvnitř odesílacího cyklu je pořád rizikové místo,
+ale „přebarvuje se to každých pár vteřin" se **nepotvrdilo**.
+
+**Změřit to tady nejde** a je to tentýž tvar jako ostatní pasti: mock dává
+každé hlásící lodi `stariMs = 0` a stárnoucím pevných 150 s, takže pole
+je vždycky dokonale čerstvé a sweep se v něm nemůže objevit. Rozhodne to
+teprve první skutečný provoz telefonů — do té doby je to **podezření
+s přečteným mechanismem, ne nález**.
