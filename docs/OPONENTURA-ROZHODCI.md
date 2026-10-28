@@ -451,6 +451,44 @@ Odpověď na to, nač se Filip ptal v otázce 10. **Dvě řádky, a opravují n�
 session. Je to jen seznam toho, u čeho Filip během diskuse řekl, že se to dělat
 bude, aby se to nemuselo hledat po nálezech. Všechno ostatní čeká na rozhodnutí.
 
+### Pyramida autority — rozhodnuto Filipem 28. 10. 2026
+
+> *„pozor, včera jsme se bavili o důležitosti »velitelského času« na mobilu
+> hlavního startéra. To skalopevně platí. Ostatní z něj musí vycházet a např. se
+> aktualizovat, ale platí to, že v krizi bude startér a jeho papír jediné, co
+> nám zbyde a řídí závod. To bude spodek pyramidy. Pak jeho mobil. Pak slave
+> startéři a pak teprve systém a ostatní apky."*
+
+**Tohle je pořadí, ve kterém se věří**, od toho, co drží vždycky, k tomu, co
+odpadne první:
+
+| # | Kdo řídí závod | Čím je neporazitelný |
+| --- | --- | --- |
+| 1 | **Startér a jeho papír** | Nepotřebuje elektřinu, síť ani nás. Rozhodčí tak jezdil regaty dodnes. |
+| 2 | **Mobil hlavního startéra** | Vlastní hodiny. Velitelský čas vzniká tady, i bez spojení. |
+| 3 | **Slave startéři** | Mají čas od hlavního; bez něj neurčují, jen hlásí a mohou o velení požádat. |
+| 4 | **Systém a ostatní appky** | Odběratelé. Dozví se to, co jim hlavní pošle, až se to pošle. |
+
+**Co to mění v myšlení.** Obvyklý reflex je postavit server jako jedinou pravdu
+a klienty jako okna do něj. Tady je to **naopak**: server je čtvrtý a jeho role
+je *rozeslat*, ne *rozhodnout*. Když se rozejdou, platí mobil hlavního startéra
+— a když odpadne i ten, platí papír a systém se dozví výsledek až potom
+(prekognice vyfocených výsledků, kterou projekt umí od začátku).
+
+**Tři důsledky, které z toho plynou pro každou stavbu okolo startu:**
+
+1. **Odpočet nikdy nesmí čekat na odpověď serveru.** Běží z hodin telefonu
+   a odesílá se vedle toho. Prodleva sítě nesmí posunout start ani o sekundu.
+2. **Nic se nesmí zablokovat kvůli nedostupnosti systému.** Žádná obrazovka
+   startéra nemá mít stav „nelze, nejsem online" — nejvýš „zatím neodeslané".
+3. **„Nesouhlasí to" se řeší přepsáním shora**, ne slučováním. Mechanismus pro
+   dva rovnocenné zapisovatele projekt má (scénář C7), ale tady rovnocennost
+   neplatí: velitelův čas přebije čí koliv (`Veleni.ProcNesmiPrepsatStart`).
+
+**Co to nemění.** Nic z toho nepopírá, že posádky mají odpočet vidět (nález
+R34) — jen to říká, **odkud** ho vidí: dostávají kopii toho, co hlavní startér
+rozeslal, ne samostatný výpočet na serveru.
+
 ### Velitelský čas (R19) — potvrzeno 27. 10. 2026
 
 > *„super tak si to zapiš že to budeme chtít dodělat"*
@@ -3700,12 +3738,18 @@ je jedna věta, která mění návrh startu z R30:
 > „V podstatě by mohl vidět **stejnou startovní sekvenci, kterou vidím já**,
 > akorát do ní nemůže zasahovat."
 
-**Proč to je zásah do návrhu.** Kdyby odpočet běžel jako věc v telefonu
-rozhodčího, posádky by ho neviděly a tahle věta by nešla splnit. Odpočet tedy
-není obrazovka, je to **stav regaty**, který appka rozhodčího *ovládá* a appka
-posádky *čte* — a tabule taky (ta už ho čte, `/nacrt/casomira`). Z toho plyne,
-že `StartV` musí být na serveru i během procedury, ne až po startu, a telefon
-rozhodčího je jen ten, kdo smí vydávat příkazy.
+**Proč to je zásah do návrhu.** Kdyby odpočet běžel jako věc *uzavřená*
+v telefonu rozhodčího, posádky by ho neviděly a tahle věta by nešla splnit.
+Odpočet se tedy musí **rozesílat**: appka rozhodčího ho vydává, appka posádky
+a tabule ho čtou (tabule už ho čte, `/nacrt/casomira`). Prakticky to znamená, že
+`StartV` se musí dostat ven **už během procedury**, ne až po startu.
+
+> **Pozor na to, jak snadno se z toho stane obrácená věta** (Filip,
+> 28. 10. 2026). Napsal jsem tu původně, že odpočet „je stav regaty" a že
+> `StartV` „musí být na serveru" — a to je tiché přesunutí autority na server.
+> Tak to není a nesmí být: **zdroj je mobil hlavního startéra**, server je jeho
+> odběratel. Celé pořadí je v oddílu *Pyramida autority* výš; rozesílání
+> odpočtu je důsledek, ne změna toho, čí hodiny platí.
 
 **Zároveň to nesmí popřít R19 a R30.** Odpočet musí držet i bez sítě (*„dokud
 nebude na připojení, tak si to apka odměří"*), takže to je obojí: **velitelský
