@@ -27,6 +27,21 @@
      barva stažená do čitelna. V tmavém režimu se rozcházet nemusí —
      tam je `--pozor` světlejší než podklad a čte se sama. */
   --pozor-pismo: #a05d00;
+  /* <b>Obrys jako stáří polohy</b> (Filip, 27. 10. 2026: *„obrys může taky
+     demonstrovat stáří informace"*). Nese <b>jas, ne barvu</b> — barvu má
+     stáří obsazenou na textu (zelená · oranžová · červená) a podruhé by to
+     nebyl druhý kanál. Obě hodnoty jsou vybrané pohledem na škálu vedle
+     sebe, ne spočítané: na tmavém podkladu čerstvé vyzařuje, na světlém je
+     to obráceně — čerstvé má nejtmavší obrys a staré bledne.
+
+     <b>Nesdílí `--sila-vyzareni` se stíny nabídek</b> schválně: tam jde
+     o výšku nad podkladem, tady o stupeň na škále, a slabší stupeň musí
+     zůstat vidět. */
+  --obrys-hlasi: inset 0 0 0 1px rgb(0 0 0 / 0.34);
+  --obrys-dlouho: inset 0 0 0 1px rgb(0 0 0 / 0.14);
+  /* Podbarvení nejčerstvějšího řádku. Druhý kanál k obrysu a ten, který se
+     čte přes celé pole naráz. */
+  --plocha-hlasi: rgb(0 0 0 / 0.045);
   /* Text na oranžové výplni. Tmavý v obou režimech, protože výplň je
      světlá vždycky — oranžová nese význam plochou, ne barvou písmen. */
   --na-pozoru: #16233a;
@@ -69,6 +84,9 @@
     --pozor: #e8a33d;
     --srafa: #343b43;
     --pozor-pismo: var(--pozor);
+    --obrys-hlasi: inset 0 0 0 1px rgb(255 255 255 / 0.36);
+    --obrys-dlouho: inset 0 0 0 1px rgb(255 255 255 / 0.16);
+    --plocha-hlasi: rgb(255 255 255 / 0.05);
   }
 }
 :root[data-rezim="tmavy"] {
@@ -85,6 +103,9 @@
   --pozor: #e8a33d;
   --srafa: #343b43;
   --pozor-pismo: var(--pozor);
+  --obrys-hlasi: inset 0 0 0 1px rgb(255 255 255 / 0.36);
+  --obrys-dlouho: inset 0 0 0 1px rgb(255 255 255 / 0.16);
+  --plocha-hlasi: rgb(255 255 255 / 0.05);
 }
 
 /**
@@ -4093,6 +4114,46 @@ body:has(.tracker-strana) main.obal { max-width: none; }
 /* Tabulka lodí pod mapou si míru řádku drží: jména a časy se čtou po
    řádcích a přes celou šířku ultrawide by se oko ztratilo. */
 .tracker-strana .tracker-lode { max-width: 70rem; }
+
+/* ---------------------------------------------------------------------
+   Stáří polohy obrysem řádku (zavedeno 28. 10. 2026).
+
+   <b>Proč zrovna tady.</b> Přehled odpovídá na otázku „trackuje nám celé
+   pole?" a do téhle chvíle ji říkal <b>jen textem ve dvou sloupcích</b> —
+   třídy `tracker-cerstva · tracker-starne · tracker-nedostupna` na řádku
+   sice byly, ale v CSS k nim nebylo nic. Obrys dává přehled o poli naráz,
+   text dál dává číslo o jedné lodi; text zůstává, protože barva sama
+   nestačí a on jediný přežije ostré slunce na vodě.
+
+   <b>Proč ne na tabuli.</b> Tam se stáří měří proti nejčerstvější lodi
+   v poli, ne proti hodinám (`mapa-trackeru.tsx`, `stariS = cas -
+   posledni.cas`), takže při umlklém poli zůstanou všechny lodě na „před
+   0 s" — změřeno jako nález 14 v `docs/TABULE-DIVAK.md`. Obrys postavený
+   na tom by svítil „čerstvé" přesně v případě, kvůli kterému existuje.
+   Tady se měří proti hodinám: `ted` je `snimek.ted`, tedy čas serveru.
+
+   <b>Obrys je `inset`, ne kolem řádku.</b> Tabulka sedí v `.tabulka-obal`
+   s `overflow-x: auto`, takže cokoli nakresleného vně řádku se ořízne.
+
+   <b>Vlastní třídy, ne `tracker-*`.</b> Ty se lámou na minutě
+   (`PolohySprava.Cerstva`), a minuta leží uvnitř odesílacího okna telefonu
+   (`ZIVE_MS`), takže zdravá loď ten práh překračuje pořád dokola. Obrys má
+   první práh nad tím oknem — viz `zive.tsx`.
+   --------------------------------------------------------------------- */
+.tracker-lode { border-collapse: separate; border-spacing: 0; }
+.tracker-lode tbody tr.stari-hlasi > td { box-shadow: var(--obrys-hlasi); background: var(--plocha-hlasi); }
+.tracker-lode tbody tr.stari-dlouho > td { box-shadow: var(--obrys-dlouho); }
+/* Loď, o které nic nevíme, ustoupí — ale nemizí: „nehlásí se" je ta
+   nejdůležitější řádka celé tabulky. Proto jen ztlumení, ne skrytí. */
+.tracker-lode tbody tr.stari-nehlasi > td { opacity: 0.6; }
+/* Obrys se kreslí po buňkách, takže svislé linky uvnitř řádku by ho
+   rozsekaly na pět rámečků. Vnitřní hrany se proto zhasínají. */
+.tracker-lode tbody tr.stari-hlasi > td:not(:first-child),
+.tracker-lode tbody tr.stari-dlouho > td:not(:first-child) { clip-path: inset(0 0 0 1px); }
+.tracker-lode tbody tr.stari-hlasi > td:not(:last-child),
+.tracker-lode tbody tr.stari-dlouho > td:not(:last-child) { clip-path: inset(0 1px 0 0); }
+.tracker-lode tbody tr.stari-hlasi > td:not(:first-child):not(:last-child),
+.tracker-lode tbody tr.stari-dlouho > td:not(:first-child):not(:last-child) { clip-path: inset(0 1px 0 1px); }
 
 /**
  * <b>Mapa se roztáhne, ale ne do pruhu.</b> Na ultrawide vyšel poměr

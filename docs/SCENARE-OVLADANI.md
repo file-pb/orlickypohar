@@ -506,9 +506,11 @@ rozhodnutí, co která z nich vlastně znamená:
 - **validita** — nejblíž je k ní šrafa u nezveřejněné regaty, ale ta je
   o něčem jiném, a šrafa je teď obsazená publikací.
 
-**Obrys jako stáří informace** (Filipův nápad, 27. 10. 2026) **zavedený
-není**, ale **návrh škály stojí** — ukázka:
-<https://claude.ai/artifact/RrCtSFm35JvqbsQKbXES83> (28. 10. 2026).
+**Obrys jako stáří informace** (Filipův nápad, 27. 10. 2026) je
+**zavedený v přehledu živých poloh ve správě** (28. 10. 2026, „jen správa" —
+Filip). Ukázka, ze které se rozhodovalo:
+<https://claude.ai/artifact/RrCtSFm35JvqbsQKbXES83>. Na tabuli nejde, a je to
+vysvětlené u první otázky níž.
 
 **Proč to nemůže být plynulé, ačkoli nápad stál právě na spojitosti.**
 Telefon odesílá nejvýš jednou za minutu (`ZIVE_MS = 60_000`,
@@ -575,10 +577,24 @@ o stupeň dřív.
 Jas navíc projde barvoslepým okem beze zbytku. Text zůstává: obrys dává
 přehled o poli, text číslo o jedné lodi.
 
-**Kde to chybí nejvíc:** přehled živých poloh ve správě
-(`tracker/[zavod]/zive.tsx`) má třídy `tracker-cerstva · tracker-starne ·
-tracker-nedostupna` na řádku, ale **v CSS k nim není nic** — stáří je tam
-čistě text ve dvou sloupcích.
+**Kde to chybělo nejvíc, a kde je to teď:** přehled živých poloh ve správě
+(`tracker/[zavod]/zive.tsx`). Měl na řádku třídy `tracker-cerstva ·
+tracker-starne · tracker-nedostupna`, ale **v CSS k nim nebylo nic** — stáří
+tam bylo čistě text ve dvou sloupcích. Obrys má vlastní třídy
+(`stari-hlasi · stari-dlouho · stari-nehlasi`), protože ty původní se lámou
+na minutě, tedy uvnitř odesílacího okna.
+
+Dvě věci, které si z provedení zaslouží zápis:
+
+- **Obrys je `inset` a kreslí se po buňkách.** Tabulka sedí v `.tabulka-obal`
+  s `overflow-x: auto`, takže cokoli nakresleného vně řádku se ořízne;
+  a `box-shadow` na `<tr>` se při `border-collapse: collapse` nekreslí vůbec.
+  Vnitřní svislé hrany se zhasínají `clip-path`, jinak by z obrysu bylo pět
+  rámečků vedle sebe místo jednoho kolem řádku.
+- **Horní hranici neurčuje číslo v kódu obrazovky, ale `stav` z API.** Pět
+  minut leží v repu na třech místech, takže čtvrtá kopie by byla čtvrté
+  místo, kde se to může rozejít. Tím se zároveň splnil ten předpoklad níž,
+  aniž by se do té trojice muselo sáhnout.
 
 **Tři věci k rozhodnutí**, všechny v ukázce rozepsané:
 
@@ -614,13 +630,15 @@ tracker-nedostupna` na řádku, ale **v CSS k nim není nic** — stáří je ta
 - **Platí to i jinde než na polohách?** Stejně spojité je stáří u zápisu
   čekajícího na podpis nebo u tratě čekající na přijetí.
 
-**A jedna věc k udělání předem, ne k rozhodnutí.** Práh pěti minut je v repu
+**A jedna věc, která zůstává.** Práh pěti minut je v repu
 **dvakrát**, pokaždé jako vlastní konstanta — `NEDOSTUPNA_PO_S`
 v `web/lib/rezie-tabule.ts` a totéž číslo v `web/app/mapa-trackeru.tsx` —
 a k tomu je autoritativní hodnota v C# (`PolohySprava.Starne`), ze které
 server počítá stav, který posílá. Dokud se o to číslo nikdo neopře, nevadí
 to; jakmile se o něj opře škála, opře se o tři kopie, které se můžou
-rozejít. Sloučit je je předpoklad, ne úklid.
+rozejít. Zavedený obrys se o to číslo **neopírá** — bere `stav` z API —,
+takže to není blokace; sloučit je zůstává úklid, který se dřív nebo později
+vyplatí.
 
 **Publikace regaty na rozcestníku ročníku** se nedá ukázat: `ZastavkaVysledkyDto`
 ten příznak nevydává (`VysledkySprava.cs`), kdežto v kalendáři správy ano.

@@ -59,6 +59,38 @@ const NAZVY_STAVU = {
 } as const;
 
 /**
+ * Kdy obrys řádku přestane znamenat „hlásí se".
+ *
+ * <b>Práh musí ležet nad odesílacím oknem telefonu</b>, ne na něm. Appka
+ * posílá nejvýš jednou za minutu (`ZIVE_MS`), takže stáří i u lodi, kde
+ * všechno funguje, přejede od nuly k minutě a zase spadne. Kdyby se obrys
+ * lámal na minutě — tedy tam, kde se láme `PolohySprava.Cerstva` a barva
+ * textu —, překročila by ten práh každá zdravá loď jednou za minutu, každá
+ * ve své fázi: při pětatřiceti lodích se někde v tabulce mění obrys zhruba
+ * každých 1,7 s, pořád, i když je všechno v pořádku.
+ *
+ * Dvě minuty jsou tentýž práh, jaký má appka (`stari > 2 * ZIVE_MS`). Přes
+ * něj se zdravá loď nedostane a obrys se změní, teprve když se doopravdy
+ * něco děje.
+ */
+const DLOUHO_MS = 2 * 60_000;
+
+/**
+ * Stupeň obrysu podle stáří polohy. <b>Tři, ne čtyři</b> — čtvrtý stupeň
+ * padl i s minutovým prahem.
+ *
+ * <b>Horní hranici neurčuje číslo tady, ale `stav` z API.</b> Pět minut
+ * leží v repu na třech místech (`PolohySprava.Starne` a dvakrát
+ * `NEDOSTUPNA_PO_S` ve webu), takže čtvrtá kopie by byla čtvrté místo, kde
+ * se to může rozejít. Server ten stav počítá proti svým hodinám a posílá
+ * ho v každém řádku; tahle funkce se o něj opře a nepočítá si ho znovu.
+ */
+function stupenStari(stari: number | null, stav: PolohaLodi["stav"]): string {
+  if (stari === null || stav === "Nedostupna") return "stari-nehlasi";
+  return stari <= DLOUHO_MS ? "stari-hlasi" : "stari-dlouho";
+}
+
+/**
  * Živá mapa regaty pro pořadatele a rozhodčího.
  *
  * <b>Drží poslední dobrý snímek.</b> Když se obnovení nepovede, zůstane
@@ -298,7 +330,12 @@ function Radek({
 }) {
   const stari = lod.casGps === null ? null : ted - Date.parse(lod.casGps);
   return (
-    <tr className={`tracker-${lod.stav.toLowerCase()}`}>
+    /* <b>Stáří nese i obrys řádku</b> (Filip, 27. 10. 2026: *„obrys může
+       taky demonstrovat stáří informace"*). Je to druhý kanál k textu, ne
+       jeho náhrada: obrys dá přehled o celém poli jedním pohledem, text dá
+       číslo o jedné lodi — a text jediný přežije ostré slunce na vodě
+       i barvoslepé oko. */
+    <tr className={`tracker-${lod.stav.toLowerCase()} ${stupenStari(stari, lod.stav)}`}>
       <td>
         {lod.lod}
         {lod.cisloPlachty ? <span className="stitek"> {lod.cisloPlachty}</span> : null}
