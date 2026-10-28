@@ -497,6 +497,12 @@ rozhodnutí, co která z nich vlastně znamená:
   zmenší, takže jeden stupeň, ne škála.
 - **aktuálnost** — není to totéž co stáří: stará poloha pořád platí,
   neaktuální ne. Nejdřív je potřeba říct, co v téhle aplikaci zastará.
+  **Jeden změřený případ už je:** tabule uměla říct *„Čeká se na rozpravu"*
+  i hodinu po rozpravě, protože ta věta stála jako poslední možnost v řadě
+  podmínek a platila vždycky, když neplatilo nic jiného (nález 9
+  v `docs/TABULE-DIVAK.md`, opraveno 28. 10. 2026). Věta byla pravdivá, jen
+  přestala být aktuální — a nic na obrazovce to nepoznalo. Kde ta věta
+  vzniká, rozhoduje teď `stavDne` v `web/lib/rozjizdky-tabule.ts`.
 - **validita** — nejblíž je k ní šrafa u nezveřejněné regaty, ale ta je
   o něčem jiném, a šrafa je teď obsazená publikací.
 
