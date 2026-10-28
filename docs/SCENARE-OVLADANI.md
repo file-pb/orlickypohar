@@ -500,13 +500,48 @@ rozhodnutí, co která z nich vlastně znamená:
 - **validita** — nejblíž je k ní šrafa u nezveřejněné regaty, ale ta je
   o něčem jiném, a šrafa je teď obsazená publikací.
 
-**Obrys jako stáří informace** (Filipův nápad, 27. 10. 2026, artifact
-sekce 6) **zavedený není**, a schválně. Líbil se, ale nasadit ho znamená
-rozhodnout o **škále**, ne o barvě: stáří dnes nese text (*„hlásí se ·
-stárne · nehlásí se"*, *„naposledy před X"*) a v appce je dvoustupňové
-(`stari > 2 * ZIVE_MS`). Kolik stupňů má mít obrys, kde se lámou a co se
-stane s tím textem, je otázka na Filipa, ne na CSS. Ve světlém režimu
-navíc musí jít obráceně — čerstvé tmavší, staré bledší.
+**Obrys jako stáří informace** (Filipův nápad, 27. 10. 2026) **zavedený
+není**, ale **návrh škály stojí** — ukázka:
+<https://claude.ai/artifact/RrCtSFm35JvqbsQKbXES83> (28. 10. 2026).
+
+**Proč to nemůže být plynulé, ačkoli nápad stál právě na spojitosti.**
+Telefon odesílá nejvýš jednou za minutu (`ZIVE_MS = 60_000`,
+`app/src/lib/tracker/nahravani.ts`), takže i lodi, u které všechno funguje,
+stáří pokaždé přejede od nuly k minutě a zase spadne. Plynulý obrys by
+z toho udělal pole, kde pětatřicet řádků dýchá každý ve svém rytmu — pohyb,
+který nic neznamená, na obrazovkách, jejichž pravidla znějí *„nic se
+nehýbe"* a *„blikající prvek v jedné ruce na motoráku je šum"*. **Proto
+stupně, a první musí být plochý a aspoň minutu široký.**
+
+**Navržené čtyři stupně**, všechny prahy z kódu, žádný vymyšlený:
+
+| Obrys | Práh | Odkud to číslo je |
+|---|---|---|
+| plný, se září | ≤ 1 min | `PolohySprava.Cerstva` — a je to jedno okno odeslání |
+| slabší | 1–2 min | jeden výpadek; appka ten práh má (`stari > 2 * ZIVE_MS`) |
+| slabý | 2–5 min | zbytek `PolohySprava.Starne` |
+| žádný, řádek ustoupí | > 5 min | `Nedostupna` |
+
+Čtvrtý stupeň navíc proti API je tam proto, že pásmo `Starne` je **čtyři
+minuty široké** a sedmdesát vteřin je jiná odpověď na *„trackuje nám celé
+pole?"* než čtyři a půl minuty.
+
+**Obrys nese jas, ne barvu.** Barva je obsazená — stáří ji dnes má na textu
+(`.nacrt-cerstva` zelená, `.nacrt-starnouci` oranžová, `.nacrt-nedostupna`
+červená). Kdyby ji dostal i obrys, je to totéž podruhé, ne druhý kanál.
+Jas navíc projde barvoslepým okem beze zbytku. Text zůstává: obrys dává
+přehled o poli, text číslo o jedné lodi.
+
+**Kde to chybí nejvíc:** přehled živých poloh ve správě
+(`tracker/[zavod]/zive.tsx`) má třídy `tracker-cerstva · tracker-starne ·
+tracker-nedostupna` na řádku, ale **v CSS k nim není nic** — stáří je tam
+čistě text ve dvou sloupcích.
+
+**Čtyři věci k rozhodnutí**, všechny v ukázce rozepsané: čtyři stupně, nebo
+tři (tedy přesně to, co vydává API)? Jen ve správě, nebo i na tabuli, kde
+pětatřicet lodí přeskakuje mezi stupni každá ve svůj okamžik? Bere obrys
+barvu textu, nebo stojí vedle ní? A platí to i jinde než na polohách —
+u zápisu čekajícího na podpis, u tratě čekající na přijetí?
 
 **Publikace regaty na rozcestníku ročníku** se nedá ukázat: `ZastavkaVysledkyDto`
 ten příznak nevydává (`VysledkySprava.cs`), kdežto v kalendáři správy ano.
