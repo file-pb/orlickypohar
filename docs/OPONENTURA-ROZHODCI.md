@@ -1187,6 +1187,48 @@ tedy i změna návodu.
 > nahrávat, nebo že se polohy už ukazují? A komu se ukazují — posádkám, nebo
 > jen do systému?)_
 
+> ### ✓ Rozřešeno Filipem 28. 10. 2026 — a podmínky č. 5 se to netýká
+>
+> > *„myslím že to je opravdu důležité vidět už komunikaci trackeru v den regaty
+> > v nějakém okamžiku, kdy řekneme »začni se zobrazovat ve startovní listině«.
+> > Tím uvidíme, že je vidíme (nemusíme je sledovat na mapě a ani nemusíme
+> > přebírat souřadnice, kde jsou, ale potřebujeme vidět, že jim trakování
+> > funguje a stav baterky) a můžeme případně řešit technické problémy. Rozprava
+> > je pro všechny a po ní se mastí na molo na lodě."*
+>
+> **Celý ten spor stál na záměně dvou různých věcí.** Miloš nechtěl **polohy** od
+> přihlášek — chtěl vědět, **že tracking jede**. A to jsou dva různé údaje:
+>
+> | Co | Co to prozradí | Podmínka č. 5 |
+> |---|---|---|
+> | **poloha** | kde loď (a tedy člověk) je | **týká se** — tohle je „lezení po hospodě" |
+> | **že se telefon hlásí + baterie** | že zařízení žije | **netýká se** — o pohybu neříká nic |
+>
+> **A ta data už existují, mimo okno poloh.** `KlicLodi` nese
+> `PosledniPouzitiV` (*„kdy se telefon naposledy ozval"*), `BaterieProcent`
+> (*„kolik procent baterie měl telefon, když se naposledy ozval"*) a `Sleduje`.
+> Klíč k lodi je vlastní entita, **nezávislá na `OknoRegaty`** — takže se k těmhle
+> údajům dá dostat, aniž by se sáhlo na bránu poloh, na tvrdý konec nebo na
+> zámek nastavení. **Všechny tři námitky z rozboru tím padají**, protože žádná
+> z nich se netýká klíčů, nýbrž okna.
+>
+> Dnes to vidí jen rozhodčí ve správě (bod 11 návodu: *„X z 22 lodí má spárovaný
+> aspoň jeden telefon"*) a tabule to má jako kostičky u lodí. **Chybí tedy jen
+> dvě věci**, obě malé: ukázat to **ve startovní listině**, a určit **okamžik,
+> odkdy se to zobrazuje**.
+>
+> **K tomu okamžiku:** Filipova věta *„rozprava je pro všechny a po ní se mastí
+> na molo"* ho vlastně pojmenovává — rozprava je poslední chvíle, kdy jsou
+> všichni pohromadě a dá se technický problém ještě řešit na břehu. To by
+> znamenalo, že **rozprava zůstává tam, kde je**, a nic se neposouvá; jen se od
+> ní navíc začne zobrazovat stav telefonů. Potvrdit to má ale Miloš, protože
+> „kdy nejpozději se dá ještě spravit vybitý telefon" ví on.
+>
+> **Co z původního nálezu platí dál:** že rozprava nese tři významy naráz, je
+> pravda a stojí za vědomí. Jen se ukázalo, že **R3 nevyžaduje je oddělovat** —
+> brána na data může zůstat na rozpravě, protože Miloš nepotřebuje data, nýbrž
+> informaci o zařízení.
+
 ### R4 — Mapa 10 minut před startem. Dnes naskočí až výstřelem
 
 *Původ: střípek 1. Doloženo: `Features/Polohy/PolohySprava.cs:144` a `:435`.
