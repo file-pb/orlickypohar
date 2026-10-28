@@ -317,6 +317,32 @@ doložit:
 kdy se rozdíl popisoval nahlas. Jestli si ho všimne někdo, kdo ji vidí poprvé,
 a jestli mu vadí, by změřilo teprve sezení s čerstvým člověkem.
 
+### Instalace appky mimo obchod: návod obstál (28. 10. 2026)
+
+**První věc v tomhle projektu, kterou podle napsaného návodu provedl člověk
+zvenčí — a prošla.** Filip: *„Miloš potvrdil, že podle návodu si umí stáhnout
+novou verzi apky, ale automatická aktualizace by byla fajn."*
+
+Stojí to za zápis, protože `docs/NAVOD-APPKA-AKTUALIZACE.md` vznikl
+s předpokladem, že je to **past na třech místech** (prohlížeč se zeptá, systém
+se zeptá, Samsung to rovnou zakáže hláškou, která zní jako virová výstraha) a že
+*„kdo to nečeká, skončí u druhého kroku"*. Miloš u druhého kroku neskončil.
+Buď byl návod dost podrobný, nebo byl ten předpoklad pesimistický — rozlišit to
+z jednoho průchodu nejde a **netvrdím, které to bylo**. Doložené je jen, že to
+zvládl.
+
+**Druhá polovina té věty je ale zadání**, a lehčí, než vypadá: *„automatická
+aktualizace by byla fajn"*. Ta je postavená od 28. 10. 2026 (`expo-updates`,
+kanály, otisk nativní části) — jenže appka, kterou si Miloš nainstaluje, ji
+umí jedině tehdy, když je to **nové APK postavené po té změně**. Dnešní soubor
+na `/appka` je z 09:42 a nativní část se od té doby rozešla, takže si Miloš
+nainstaluje verzi, která se aktualizovat nebude. Je to tedy jedno nasazení, ne
+nová funkce — a dokud se nestane, slibuje mu návod něco, co nenastane.
+
+**Poučení, které přežije tenhle případ:** návod, který učí ruční postup, má
+u sebe dát datum a verzi, pro kterou platí. Tenhle říká *„tohle je naposled, co
+ji musíš instalovat ručně"* — a to je pravda jen o APK, které ještě nevzniklo.
+
 ### K čemu má grafika sloužit (27. 10. 2026)
 
 Filip na konci té série, jeho vlastními slovy: *„super škála toho, jak emotivně
