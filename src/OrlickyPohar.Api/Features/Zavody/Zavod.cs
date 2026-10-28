@@ -190,6 +190,28 @@ public enum StavVysledku
 /// <summary>
 /// Kódy závodních pravidel. Bez nich se výsledky nedají zadat — loď, která
 /// nedokončila, není loď bez výsledku.
+/// <para>
+/// <b>Čtyři kódy přibyly 28. 10. 2026</b> z nálezů K1 a R14 oponentury
+/// rozhodčího. Dodatek A10 ZPJ jich předepisuje čtrnáct a aplikace znala
+/// sedm; z těch chybějících jsou tyhle čtyři ty, na které se v diskusi
+/// přišlo: startovní tresty podle pravidla 30 (ZFP, UFD, BFD) a
+/// nevylučitelná diskvalifikace (DNE).
+/// </para>
+/// <para>
+/// <b>Mez, kterou si u startovních trestů musí každý přečíst</b>
+/// (nález R16): každý z nich je podle pravidel podmíněný <b>vyvěšenou
+/// vlajkou</b>, a na poháru se vlajky nevyvěšují — Filip 27. 10. 2026:
+/// *„U Miloše jsem nikdy vlajky neviděl"*, signalizuje se megafonem.
+/// Křik vizuální znamení podle ZPJ 25.2 není, takže *„minutové pravidlo"*
+/// je na poháru <b>vlastní pravidlo z dohody</b>, ne ZPJ 30 — a jako
+/// každé vlastní pravidlo patří do vypsání závodu nebo směrnic (R8).
+/// Kódy tu jsou proto, aby se výsledek té dohody dal zapsat; co znamenají
+/// a kdy se dávají, rozhoduje vypsání, ne tenhle výčet.
+/// </para>
+/// <para>
+/// <b>Nové hodnoty jdou na konec</b> a stávající čísla se nemění: appka
+/// na telefonech kódy zná jako čísla a změna API smí být jen aditivní.
+/// </para>
 /// </summary>
 public enum KodVysledku
 {
@@ -213,6 +235,58 @@ public enum KodVysledku
 
     /// <summary>Náprava.</summary>
     Rdg = 7,
+
+    /// <summary>
+    /// <b>Bodový trest za porušení v poslední minutě</b> — vlajka Z,
+    /// ZPJ 30.2. Jediný ze startovních trestů, který <b>není
+    /// diskvalifikace</b>: loď jede dál a dostane podle ZPJ 44.3(c)
+    /// přirážku 20 % bodů za nedokončila, nejvýš však body za nedokončila.
+    /// <para>
+    /// <b>Jako jediný kód se píše spolu s pořadím v cíli</b>, protože se
+    /// k dosaženému pořadí <b>přičítá</b>. Ostatní kódy pořadí nahrazují.
+    /// Loď, která dostala Z a pak nedokončila, má DNF — ne ZFP.
+    /// </para>
+    /// <para>
+    /// Opakovaná identifikace téže lodi v téže rozjížďce znamená <b>další
+    /// 20 %</b> (ZPJ 30.2); to aplikace zatím neumí, protože vede jeden
+    /// kód na výsledek. Trest navíc přežije nový start téže rozjížďky,
+    /// kdežto U a černá se chovají jinak — k tomu aplikace potřebuje
+    /// vědět, která vlajka visela, a to zatím nevede (R14, fáze 3.1).
+    /// </para>
+    /// </summary>
+    Zfp = 8,
+
+    /// <summary>
+    /// Diskvalifikace bez projednávání podle vlajky U — ZPJ 30.3. Padá
+    /// s odložením i zrušením startu a <b>nepřežije</b> nový start téže
+    /// rozjížďky.
+    /// </summary>
+    Ufd = 9,
+
+    /// <summary>
+    /// Diskvalifikace bez projednávání podle černé vlajky — ZPJ 30.4.
+    /// Na rozdíl od U <b>přežije nový start</b> a loď se ho nesmí
+    /// zúčastnit; komise navíc musí její číslo plachty oznámit před dalším
+    /// vyzývacím znamením (to je úkon pro vývěsku, R14).
+    /// </summary>
+    Bfd = 10,
+
+    /// <summary>
+    /// <b>Diskvalifikace, kterou nelze vyškrtnout</b> — ZPJ 90.3(b):
+    /// *„všechna bodování za diskvalifikaci, která je nevylučitelná (DNE),
+    /// musí být zahrnuta do bodování lodě v závodu"*. Dává ji rozhodčí
+    /// podle pravidla 2 (čestné plachtění) nebo 69 (nepřípustné jednání).
+    /// <para>
+    /// <b>Tohle byl jediný nález celé oponentury, kde se špatně počítaly
+    /// body</b> (K1, opraveno 28. 10. 2026). Škrtá se podle výše bodů, a
+    /// diskvalifikace má podle A5.2 nejvyšší možné body — takže byla
+    /// vždycky prvním kandidátem na škrt. Rozhodčí, který ji udělil,
+    /// ji neměl jak zapsat tak, aby přežila: zapsal DSQ a nejbližší škrt
+    /// ji smazal. Na okruhové regatě se škrtá jedna rozjížďka, takže by
+    /// to nastalo hned při prvním použití.
+    /// </para>
+    /// </summary>
+    Dne = 11,
 }
 
 /// <summary>
@@ -321,6 +395,21 @@ public class Zavod
     /// </para>
     /// </summary>
     public DateTimeOffset? PrvniVyzyvaciZnameni { get; set; }
+
+    /// <summary>
+    /// Jak dlouho trvá startovní procedura, v minutách — od vyzývacího
+    /// znamení do startu.
+    /// <para>
+    /// <b>Pět minut má v pravidle 26 hvězdičku</b> (*„nebo tak, jak je
+    /// stanoveno ve vypsání závodu nebo v plachetních směrnicích"*), takže
+    /// je to parametr regaty, ne konstanta — a jako vlastní pravidlo patří
+    /// do vypsání, kam se taky tiskne (nálezy R12 a R8, 28. 10. 2026).
+    /// Do té doby byla zadrátovaná na dvou místech naráz
+    /// (<c>PolohySprava.Procedura</c> a <c>PROCEDURA_S</c> na tabuli), což
+    /// je přesně ten druh čísla, které se jednou rozejde.
+    /// </para>
+    /// </summary>
+    public int DelkaProceduryMin { get; set; } = Procedura.DelkaVychozi;
 
     // --- Rozjížďky → výsledek závodu ---
 
@@ -502,6 +591,24 @@ public class Rozjizdka : Fotky.IMaFotku
     public int Cislo { get; set; }
 
     public DateTimeOffset? StartV { get; set; }
+
+    /// <summary>
+    /// Kolikrát se start téhle rozjížďky opakoval po <b>všeobecném
+    /// odvolání</b> (ZPJ 29.2). Nula znamená, že se startovalo napoprvé.
+    /// <para>
+    /// <b>Dřív po předchozím pokusu nezbylo nic</b> (nález R5,
+    /// 28. 10. 2026): nový start jen přepsal <see cref="StartV"/>, takže
+    /// „rozjížďka znovu startovaná" podle ZPJ 36 nebyla nikde vidět —
+    /// ani v zápisu, ani na tabuli. A na tom přitom visí, co se stane
+    /// s uloženými starty a s tresty, které nový start přežívají jinak
+    /// podle toho, která vlajka visela (R14).
+    /// </para>
+    /// <para>
+    /// Odložení (27.3) se sem nepočítá: odložená rozjížďka se
+    /// nestartovala, takže se ani neopakuje.
+    /// </para>
+    /// </summary>
+    public int OpakovanychStartu { get; set; }
 
     /// <summary>
     /// Kdy pořadatel zastavil časomíru. <c>null</c>, dokud běží.

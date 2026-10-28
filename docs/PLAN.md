@@ -471,7 +471,9 @@ nedostane — jen už to není otázka každého závodního dne.
 **Co se tím ztratilo:** schválenou rozjížďku, která už venku je a čeká jen na
 správcovo `Potvrzeno`, nikdo nepřipomíná. Je to archivní zámek, ne práce,
 kvůli které se spěchá, a na obrazovce výsledků ji správce vidí — ale v „co
-teď" na ni řádek není.
+teď" na ni řádek není. **Tak to má zůstat** (Filip, 28. 10. 2026): je to
+rozhodnutí, ne nedodělek, takže se k němu nemá vracet ani dopisovat
+správci vlastní dlaždici.
 
 Pravidlo i s důvodem bydlí v `Workflow.KdoSmiPublikovat`, takže se na ně dá
 zeptat bez databáze a obrazovka ho počítá z téhož místa jako endpoint.
@@ -8849,6 +8851,68 @@ nechytí jediný rozchod, nehlídá nic a patří zrušit — ne nechat běžet 
 pocit. Je to tu napsané proto, aby to za rok nebyl odhad: **první běh je
 28. 10. 2026**, takže ten rok končí **28. 10. 2027**, a do té doby stačí
 jeden skutečný nález od každé z nich.
+## Z oponentury rozhodčího: fáze 3 (28. 10. 2026)
+
+Startovní procedura a startovní tresty. **Mění chování, proto sem**;
+rozhodnutí o návrhu jsou u nálezů R5, R12, R14 a K1.
+
+**Nevylučitelnou diskvalifikaci už nejde vyškrtnout** *(K1, ZPJ 90.3(b))*.
+Tohle byl **jediný nález celé oponentury, kde se špatně počítaly body**.
+Škrtá se podle výše bodů a diskvalifikace jich má podle A5.2 nejvíc, takže
+DNE byla vždycky prvním kandidátem na škrt — rozhodčí, který ji udělil,
+ji neměl jak zapsat tak, aby přežila. Na okruhové regatě se škrtá jedna
+rozjížďka, takže by to nastalo hned při prvním použití. Škrt teď takovou
+rozjížďku vynechá a **počet škrtů se nesnižuje**: místo ní padne další
+nejhorší. Obyčejná DSQ se škrtá dál.
+
+**Přibyly čtyři kódy výsledku** *(K1, R14)*: `ZFP`, `UFD`, `BFD`, `DNE`.
+Aditivně, s čísly na konci. **ZFP se chová jinak než všechny ostatní**:
+podle ZPJ 44.3(c) se k dosaženému pořadí **přičítá** 20 % bodů za
+nedokončila (zaokrouhleno, 0,5 nahoru) a nikdy nevyjde hůř než nedokončila.
+Loď se ZFP tedy dokončila, zabírá své místo v pořadí a **jako jediná se
+zapisuje s pořadím i kódem**; bez pořadí ji zápis odmítne, protože loď,
+která dostala Z a pak nedokončila, má DNF.
+
+> **Mez, kterou si musí přečíst každý, kdo na startovní tresty sáhne**
+> (nález R16): podle pravidel jsou podmíněné **vyvěšenou vlajkou**, a na
+> poháru se vlajky nevyvěšují — signalizuje se megafonem, a to vizuální
+> znamení podle ZPJ 25.2 není. *„Minutové pravidlo"* je tam **vlastní
+> pravidlo z dohody**, ne ZPJ 30, a jako takové patří do vypsání závodu.
+> Kódy jsou v aplikaci proto, aby se výsledek té dohody dal zapsat.
+
+**Startovní procedura má místo, kam se zapíše, co se stalo** *(R5, R12)*.
+Jedna cesta `POST …/rozjizdky/{cislo}/procedura` se třemi úkony:
+
+- **Spustit** — start padne za tolik minut, kolik má regata nastaveno;
+- **Odložit** (ZPJ 27.3) — čas se smaže a **nový je volný**, jak pravidlo
+  žádá;
+- **Odvolat start** (ZPJ 29.2) — nový start spočítá pravidlo: minuta po
+  spuštění opakovače plus celá procedura. Volný tu není.
+
+Server hlídá, že se ty dva nezaměňují: odkládá se **před** startem,
+odvolává **po** něm. A že se start opakoval, je nově vidět —
+`Rozjizdka.OpakovanychStartu` a štítek *„2× odvolaný start"*; do té doby
+po předchozím pokusu nezbylo nic (ZPJ 36).
+
+**Délka procedury je parametr regaty**, `Zavod.DelkaProceduryMin`
+s výchozí pětkou, protože pětka v pravidle 26 má hvězdičku. Byla
+zadrátovaná na **dvou místech naráz** (okno přenosu poloh a tabule); obě
+ji teď berou z regaty a tiskne se do vypsání závodu.
+
+**Čas se neposílá z klienta**: spuštění i odvolání si ho počítají
+z pravidla, takže vlastní čas by u odvolání znamenal obejít ZPJ 29.2.
+
+**Co se vědomě nestavělo.** Velká obrazovka startéra s odpočtem v ruce je
+ergonomie a patří do `docs/SCENARE-OVLADANI.md`. A **velitelský čas**
+(fáze 3.2) stojí na tom, kdo je hlavní startér a jak se velení předává —
+R19 k tomu má tři cesty, z nichž každá má svou daň, a žádnou nerozhodl.
+Bod 1 z něj (start přežije výpadek) je hotový už z fáze 1.2.
+
+**Migrace `ProceduraAStartovniTresty`** přidává dva sloupce. `DelkaProceduryMin`
+má v migraci ručně dopsanou **výchozí pětku** — EF by dosadil nulu, protože
+inicializátor v C# platí jen pro nové entity, a nulová procedura by u všech
+existujících regat znamenala, že odpočet nemá co odpočítávat. Na stroji
+neběžela (není tu Docker ani Postgres).
 
 ## Přijaté riziko: dvě zranitelnosti v appce (23. 10. 2026)
 

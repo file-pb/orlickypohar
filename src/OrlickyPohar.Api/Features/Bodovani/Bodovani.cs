@@ -71,8 +71,12 @@ public static class Bodovani
 
         var vsechny = vysledkyKategorie.ToList();
 
+        // <b>Loď s bodovým trestem dokončila</b> (ZPJ 44.3(c), nález R14):
+        // zabírá své místo v pořadí a ostatním se nic neposouvá. Trest se
+        // k tomu místu připočte níž. Je to jediný kód, který tu patří —
+        // ostatní znamenají, že loď v cíli není.
         var dokoncily = vsechny
-            .Where(v => v.Kod is null && v.PoradiVCili is not null)
+            .Where(v => (v.Kod is null || v.Kod == KodVysledku.Zfp) && v.PoradiVCili is not null)
             .OrderBy(v => v.PoradiVCili)
             .Select((v, i) => (v.Lod, Body: i + 1))
             .ToList();
@@ -80,13 +84,56 @@ public static class Bodovani
         var body = new List<(string Lod, int Body)>(dokoncily);
         var zaTrest = (prihlaseno ?? vsechny.Count) + pravidla.PrirazkaZaKod;
 
-        foreach (var v in vsechny.Where(v => v.Kod is not null))
+        // <b>ZFP se k pořadí přičítá, nenahrazuje ho</b> (nález R14,
+        // 28. 10. 2026; ZPJ 44.3(c)). Je to jediný kód, který loď dostane
+        // k dojetému pořadí — proto se počítá zvlášť a dokončivší s ním
+        // zůstává v `dokoncily`, odkud má své místo.
+        var podleLodi = dokoncily.ToDictionary(d => d.Lod, d => d.Body);
+        for (var i = 0; i < body.Count; i++)
+        {
+            var kod = vsechny.FirstOrDefault(v => v.Lod == body[i].Lod)?.Kod;
+            if (kod == KodVysledku.Zfp)
+                body[i] = (body[i].Lod, BodySTrestem(podleLodi[body[i].Lod], zaTrest, pravidla));
+        }
+
+        foreach (var v in vsechny.Where(v => v.Kod is not null && v.Kod != KodVysledku.Zfp))
             body.Add((v.Lod, v.Kod == KodVysledku.Rdg
                 ? dokoncily.Count + pravidla.PrirazkaZaNapravu
                 : zaTrest));
 
         return body;
     }
+
+    /// <summary>
+    /// Body lodi s bodovým trestem (ZFP) — <b>ZPJ 44.3(c)</b>:
+    /// *„20 % bodů za Nedokončila, zaokrouhleno na nejbližší celé číslo
+    /// (0,5 se zaokrouhluje nahoru) … Jestliže by loď dostala víc bodů,
+    /// než kolik by dostala za Nedokončila, musí místo toho dostat body
+    /// za Nedokončila."*
+    /// <para>
+    /// Strop je podstatný: bez něj by trest u lodi na chvostu pole vyšel
+    /// hůř než nedokončit, a to pravidlo výslovně zakazuje.
+    /// </para>
+    /// </summary>
+    public static int BodySTrestem(int zaMisto, int zaNedokoncila, PravidlaBodovani? pravidla = null)
+    {
+        pravidla ??= PravidlaBodovani.Posledni;
+
+        // Zaokrouhlení „0,5 nahoru" je `MidpointRounding.AwayFromZero`;
+        // výchozí `Math.Round` zaokrouhluje k sudému a 2,5 by dalo 2.
+        var trest = (int)Math.Round(
+            zaNedokoncila * pravidla.TrestZfpProcent / 100.0, MidpointRounding.AwayFromZero);
+
+        return Math.Min(zaMisto + trest, zaNedokoncila);
+    }
+
+    /// <summary>
+    /// <b>Kód, který se nesmí vyškrtnout</b> — ZPJ 90.3(b). Dnes jediný:
+    /// nevylučitelná diskvalifikace. Je to funkce, ne test na rovnost,
+    /// protože dalších kódů s touhle vlastností může přibýt (DGM podle
+    /// A10 je druhý takový) a škrt je jediné místo, které je musí znát.
+    /// </summary>
+    public static bool NelzeSkrtnout(KodVysledku? kod) => kod == KodVysledku.Dne;
 
     /// <summary>
     /// Výsledek celého závodu po kategoriích: součet bodů z rozjížděk,
@@ -111,6 +158,14 @@ public static class Bodovani
 
         // Body po lodích: (loď → rozjížďka → body)
         var podleLodi = new Dictionary<string, (string Kategorie, List<BodyVRozjizdce> Body)>();
+
+        // Kód lodi v rozjížďce. Potřebuje ho škrt: `BodyVRozjizdce` nese
+        // jen číslo, a podle čísla nejde poznat nevylučitelnou
+        // diskvalifikaci (ZPJ 90.3(b)).
+        var kody = rozjizdky
+            .SelectMany(r => r.Vysledky.Select(v => (Klic: (v.Lod, r.Cislo), v.Kod)))
+            .Where(x => x.Kod is not null)
+            .ToDictionary(x => x.Klic, x => x.Kod);
 
         // Přihlášené do závodu po kategoriích. Loď, která má v některé
         // rozjížďce výsledek nebo kód, přihlášená je, i kdyby o tom účast
@@ -150,7 +205,18 @@ public static class Bodovani
             // Škrtají se nejhorší výsledky, ale jen když je z čeho — závod
             // se třemi rozjížďkami a dvěma škrty by jinak hodnotil jednu.
             var skrtnout = Math.Min(pocetSkrtu, Math.Max(body.Count - 1, 0));
+
+            // <b>Nevylučitelná diskvalifikace se neškrtá</b> (ZPJ 90.3(b),
+            // nález K1 opravený 28. 10. 2026). Škrtá se podle výše bodů a
+            // diskvalifikace má podle A5.2 nejvyšší možné body, takže DNE
+            // byla vždycky prvním kandidátem na škrt — rozhodčí, který ji
+            // udělil, ji neměl jak zapsat tak, aby přežila.
+            //
+            // <b>Počet škrtů se tím nesnižuje</b>: rozjížďka s DNE se
+            // z nabídky vyřadí a škrtne se místo ní další nejhorší. Loď
+            // tedy nepřijde o škrt, jen ho nemůže použít na tohle.
             var kSkrtnuti = body
+                .Where(b => !NelzeSkrtnout(kody.GetValueOrDefault((lod, b.Cislo))))
                 .OrderByDescending(b => b.Body)
                 // Při shodě se škrtá dřívější rozjížďka (ZPJ A2.1).
                 .ThenBy(b => b.Cislo)

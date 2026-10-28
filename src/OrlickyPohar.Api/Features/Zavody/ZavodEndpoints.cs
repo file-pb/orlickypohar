@@ -227,7 +227,7 @@ public static class ZavodEndpoints
             .Select(z => new
             {
                 z.Id, z.SerieId, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel, z.Druh,
-                z.UzaverkaPrihlasek, z.Startovne, z.PrvniVyzyvaciZnameni,
+                z.UzaverkaPrihlasek, z.Startovne, z.PrvniVyzyvaciZnameni, z.DelkaProceduryMin,
                 z.PocetSkrtu, z.KoeficientDoSerie, z.PosunDoSerie, z.Vyhodnoceni,
                 SerieNazev = z.Serie!.Nazev, z.Serie.Rok,
                 SkrtySerie = z.Serie.PocetSkrtu, z.Serie.VerzePravidel,
@@ -250,6 +250,7 @@ public static class ZavodEndpoints
             zavod.SerieNazev, zavod.Rok, zavod.Nazev, zavod.Datum, zavod.DatumKonce,
             zavod.Poradatel, zavod.Typ,
             zavod.UzaverkaPrihlasek, zavod.Startovne, zavod.PrvniVyzyvaciZnameni,
+            zavod.DelkaProceduryMin,
             kategorie,
             zavod.PocetSkrtu, zavod.KoeficientDoSerie, zavod.PosunDoSerie, zavod.Vyhodnoceni,
             zavod.SkrtySerie,

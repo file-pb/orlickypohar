@@ -188,7 +188,8 @@ public static class KalendarEndpoints
                 z.PoradatelZaznam is not null && (SmiKalendar || organizator),
                 z.Vyhodnoceni,
                 z.PocetSkrtu, z.KoeficientDoSerie, z.PosunDoSerie, z.ProcesniDej,
-                z.UzaverkaPrihlasek, z.Startovne, z.PrvniVyzyvaciZnameni);
+                z.UzaverkaPrihlasek, z.Startovne, z.PrvniVyzyvaciZnameni,
+                z.DelkaProceduryMin);
         }
     }
 

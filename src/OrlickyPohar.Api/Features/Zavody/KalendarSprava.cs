@@ -50,7 +50,8 @@ public record ZastavkaRadek(
     // by úprava termínu ukazovala prázdno tam, kde hodnota platí.
     DateOnly? UzaverkaPrihlasek = null,
     string? Startovne = null,
-    DateTimeOffset? PrvniVyzyvaciZnameni = null);
+    DateTimeOffset? PrvniVyzyvaciZnameni = null,
+    int DelkaProceduryMin = Procedura.DelkaVychozi);
 
 public record PrehledZastavekDto(
     string Serie,
@@ -114,7 +115,13 @@ public record ZastavkaVstup(
     /// <summary>Výše startovného a za co se platí — J1.1(5). Volný text.</summary>
     string? Startovne = null,
     /// <summary>Čas vyzývacího znamení první rozjížďky — J1.1(6), tedy T−5.</summary>
-    DateTimeOffset? PrvniVyzyvaciZnameni = null);
+    DateTimeOffset? PrvniVyzyvaciZnameni = null,
+    /// <summary>
+    /// Délka startovní procedury v minutách. Pětka má v ZPJ 26 hvězdičku,
+    /// takže je to parametr regaty (nález R12, 28. 10. 2026). Nepovinné
+    /// jako škrty: co nepřijde, se nemění.
+    /// </summary>
+    int? DelkaProceduryMin = null);
 
 public record StavZastavkyVstup(StavZavodu Stav);
 
@@ -184,6 +191,8 @@ public class KalendarSprava(AppDbContext db)
         if (Kalendar.ProcNejdouPocty(vstup.PocetSkrtu, vstup.KoeficientDoSerie) is { } pocty)
             return (null, pocty);
 
+        if (Procedura.ProcNejdeDelka(vstup.DelkaProceduryMin) is { } delka) return (null, delka);
+
         if (await db.Zavody.AnyAsync(z => z.SerieId == serieId && z.Slug == slug, ct))
             return (null, $"Regata s adresou „{slug}“ už v ročníku je. Změň název.");
 
@@ -204,6 +213,7 @@ public class KalendarSprava(AppDbContext db)
             UzaverkaPrihlasek = vstup.UzaverkaPrihlasek,
             Startovne = Prazdne(vstup.Startovne),
             PrvniVyzyvaciZnameni = vstup.PrvniVyzyvaciZnameni?.ToUniversalTime(),
+            DelkaProceduryMin = vstup.DelkaProceduryMin ?? Procedura.DelkaVychozi,
             Stav = StavZavodu.Planovany,
             Publikovano = false,
             // Pořadí se hned přepočítá podle data; tohle je jen než dostane
@@ -235,6 +245,8 @@ public class KalendarSprava(AppDbContext db)
         if (Kalendar.ProcNejdouPocty(vstup.PocetSkrtu, vstup.KoeficientDoSerie) is { } pocty)
             return pocty;
 
+        if (Procedura.ProcNejdeDelka(vstup.DelkaProceduryMin) is { } delka) return delka;
+
         zastavka.PuvodniDatum = Kalendar.PuvodniPoPresunu(
             zastavka.Stav, zastavka.Datum, vstup.Datum, zastavka.PuvodniDatum);
 
@@ -252,6 +264,7 @@ public class KalendarSprava(AppDbContext db)
         zastavka.Startovne = Prazdne(vstup.Startovne) ?? zastavka.Startovne;
         zastavka.PrvniVyzyvaciZnameni =
             vstup.PrvniVyzyvaciZnameni?.ToUniversalTime() ?? zastavka.PrvniVyzyvaciZnameni;
+        zastavka.DelkaProceduryMin = vstup.DelkaProceduryMin ?? zastavka.DelkaProceduryMin;
         // Jiné jméno přiřadí jiného pořadatele; přejmenovat klub se dá jen
         // v jeho medailonku, jinak by jeden překlep v kalendáři přepsal
         // jméno na všech jeho zastávkách.

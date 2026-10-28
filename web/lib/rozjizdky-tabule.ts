@@ -39,9 +39,15 @@ export function popis(r: Rozjizdka, ted: number): string | null {
 }
 
 /**
- * Jak dlouho před startem běží startovní procedura.
+ * Jak dlouho před startem běží startovní procedura, ve vteřinách.
  *
- * Pět minut je obvyklý začátek (návěst třídy), takže tolik tabule hlídá.
+ * Pět minut je obvyklý začátek (návěst třídy). <b>Je to ale jen výchozí
+ * hodnota</b>: pětka má v ZPJ 26 hvězdičku *„nebo tak, jak je stanoveno
+ * ve vypsání závodu nebo v plachetních směrnicích"*, takže délka je
+ * parametr regaty (`Zavod.DelkaProceduryMin`) — nález R12 oponentury
+ * rozhodčího, 28. 10. 2026. Funkce níž ji berou jako volitelný argument;
+ * tabule předá hodnotu ze snímku, jakmile ji vydá API.
+ *
  * Přesné vlajky a jejich časy si řídí rozhodčí; tabule říká jen, že
  * procedura běží a kolik zbývá.
  */
@@ -51,11 +57,16 @@ export const PROCEDURA_S = 5 * 60;
  * Běží startovní procedura? Vrací, kolik vteřin do startu zbývá — nebo
  * `null`, když se zrovna nestartuje.
  */
-export function procedura(snimek: Pick<Snimek, "rozjizdky">, ted: number): number | null {
+export function procedura(
+  snimek: Pick<Snimek, "rozjizdky">,
+  ted: number,
+  /** Délka procedury té regaty ve vteřinách; bez ní platí pět minut. */
+  delkaS: number = PROCEDURA_S,
+): number | null {
   for (const r of snimek.rozjizdky) {
     if (r.stav !== "Planovana") continue;
     const od = odStartu(r.startV, ted);
-    if (od !== null && od < 0 && od >= -PROCEDURA_S) return -od;
+    if (od !== null && od < 0 && od >= -delkaS) return -od;
   }
   return null;
 }
@@ -152,7 +163,12 @@ export type Casomira = { druh: "ceka" | "procedura"; text: string };
  * Bere <b>nejbližší</b> plánovanou rozjížďku se startovním časem. Když
  * žádná taková není, vrací `null` a na tabuli po ní nezbyde ani stopa.
  */
-export function casomira(snimek: Pick<Snimek, "rozjizdky">, ted: number): Casomira | null {
+export function casomira(
+  snimek: Pick<Snimek, "rozjizdky">,
+  ted: number,
+  /** Délka procedury té regaty ve vteřinách; bez ní platí pět minut. */
+  delkaS: number = PROCEDURA_S,
+): Casomira | null {
   let nejblizsi: { do: number; start: number } | null = null;
   for (const r of snimek.rozjizdky) {
     if (r.stav !== "Planovana" || !r.startV) continue;
@@ -161,8 +177,8 @@ export function casomira(snimek: Pick<Snimek, "rozjizdky">, ted: number): Casomi
     if (!nejblizsi || -od < nejblizsi.do) nejblizsi = { do: -od, start: Date.parse(r.startV) };
   }
   if (!nejblizsi) return null;
-  if (nejblizsi.do <= PROCEDURA_S) {
+  if (nejblizsi.do <= delkaS) {
     return { druh: "procedura", text: `startovní procedura ${mmss(nejblizsi.do)}` };
   }
-  return { druh: "ceka", text: `procedura ve ${vHodin(nejblizsi.start - PROCEDURA_S * 1000)}` };
+  return { druh: "ceka", text: `procedura ve ${vHodin(nejblizsi.start - delkaS * 1000)}` };
 }
