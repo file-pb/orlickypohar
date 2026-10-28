@@ -2912,6 +2912,29 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
 .formular.radkove.zkratit button { padding: 0.1rem 0.6rem; font-size: 0.9rem; }
 .stitek.zkraceno { border-color: var(--stav-zruseny); color: var(--stav-zruseny); }
 
+/* Úkony komise za jízdy u prvku — změna úseku (C) a chybějící značka (M).
+   Stojí vedle zkrácení, protože mají tytéž meze a týž okamžik, a odsazují
+   se stejně, aby se v detailu prvku poznalo, že patří k sobě. */
+.ukony-prvku { margin: 0 0 0.4rem 2.5rem; display: grid; gap: 0.3rem; }
+.ukony-prvku .formular.radkove { margin: 0; padding: 0; background: none; border: none; }
+.ukony-prvku .formular.radkove button { padding: 0.1rem 0.6rem; font-size: 0.9rem; }
+.ukony-prvku label { display: inline-flex; align-items: baseline; gap: 0.3rem; font-size: 0.9rem; }
+.ukony-prvku input[type="number"] { width: 4.5rem; }
+.ukony-prvku input[type="text"] { width: 11rem; }
+
+.ukony-vyhlasene { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.2rem; }
+.ukony-vyhlasene li {
+  display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;
+  font-size: 0.9rem;
+}
+/* Vlajka je písmeno, ne obrázek: na vodě se o ní mluví jménem a v zápisu
+   se tak i čte. Rámeček z ní dělá znamení, ne iniciálu ve větě. */
+.ukon-vlajka {
+  font-weight: 700; line-height: 1;
+  border: 1px solid currentColor; border-radius: 3px;
+  padding: 0.05rem 0.35rem;
+}
+
 /* Pole s časem startu u cílové lišty. Malé, vedle „Přepsat na teď" —
    je to oprava, ne hlavní tlačítko. */
 .cil-cas-startu input {
