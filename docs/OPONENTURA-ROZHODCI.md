@@ -3409,6 +3409,31 @@ rozejít."* U směrnice totéž řešené není.
 - **PDF zůstane**, a aplikace u vyvěšení ukáže, co o týchž údajích ví sama, aby
   si rozhodčí všiml rozdílu. Levnější, dvojí zdroj ale zůstává.
 
+> **Upřesnění 28. 10. 2026 večer — a je to oprava mé vlastní nepravdy.**
+> V přehledu stavu jsem napsal, že *„Miloš to odložil"*. **Neodložil.** Filip se
+> zeptal, co přesně odložil, a odpověď je: odložil **formu ke stažení** (R2,
+> *„teď stačí zdroj jak máme"* — tedy PDF versus zdrojový text), nikoliv
+> směrnici jako předlohu pro data. O té neřekl ani slovo proti — naopak ji
+> **sám navrhl**: *„V plachetních směrnicích je veškeré info k závodu, takže
+> i časy a trať … a dá se využít přeset časů rozpravy a jiných bodů
+> organizace."* Správný stav tedy není „zavřené", ale **nerozhodnuté kdy**.
+>
+> **Co konkrétně by předvyplnila.** Ve vzoru z roku 2026 stojí šest údajů,
+> které aplikace dnes **neumí vůbec, nebo je vypisuje jako prázdné**:
+>
+> | Ve směrnici stojí | V aplikaci dnes |
+> | --- | --- |
+> | „16:00 Poslední možný start rozjížďky" | bod J1.3(7) je `null` (`Vypsani.cs:139`) |
+> | „start a cíl u koupacího mola … točnou bóji levobokem" | bod J1.3(4) *Dráha* je `null` (`Vypsani.cs:137`) |
+> | „start s minutovým pravidlem s obeplouváním konců" | nikde (R23) |
+> | „Zrušení rozjížďky: dva dlouhé zvuky" | nikde (R23) |
+> | „Protesty … do 1 hod … s vkladem 200,- Kč" | nikde |
+> | „Místo konání: Orlická přehrada – Marina Orlík" | zadrátované *„Místo konání: neuvedené"* (`Vypsani.cs:172`) |
+>
+> Takže ano: **dvě ze čtyř prázdných položek vypsání a oba chybějící údaje
+> o startu leží v listině, kterou Miloš každý rok sám píše.** To není „nice to
+> have", to je zdroj pro věci, které dnes v dokumentu chybí.
+
 **Nezapsaná otázka pro Miloše:** psal by směrnici v aplikaci, kdyby z ní vypadlo
 PDF se stejnou hlavičkou, nebo je Word podmínka?
 
@@ -4013,6 +4038,41 @@ změnu modelu. Zařazení lodí udělá rozhodčí ručně.
 Jediné, co zbývá rozhodnout, je ročník: 2027 je naimportovaný a lodě v něm
 kategorii už mají. **Přeřazení existujících přihlášek je ruční práce, kterou
 dělá on**, ne migrace.
+
+---
+
+### R41 — Posádka v prvních verzích komisi nic nehlásí
+
+*Původ: Filip, 28. 10. 2026 večer, **potvrzeno Milošovým vlastním zaváháním**
+v nahrávce 25. Stav: **rozhodnuto — hranice návrhu, ne odložená funkce**.*
+
+Filip: *„Nevím, jestli lodě na startu by měly přes apku nějak něco oznamovat
+komisi. Alespoň v prvních verzích ne."*
+
+**Totéž řekl Miloš sám**, a na témže místě — u potvrzení vykonaného trestu:
+
+> „Možná by i mohl potvrdit po jeho vykonání, že ho vykonal, **ale abychom jim
+> nekomplikovali život**."
+
+Dva lidé nezávisle na sobě došli ke stejné hranici, takže to není kompromis,
+ale rozhodnutí: **appka posádky je odběratel, ne vstup.** Vidí startovní
+sekvenci, svůj trest, svoje pořadí — a nemá kudy poslat komisi nic.
+
+**Co to ruší.** Padá tím můj vlastní návrh z diskuse o R13 („jedny dveře
+zvenčí, kterými loď nahlásí, že se jí stala neregulérnost, a rozhodčí to
+zařadí"). Jako myšlenka drží, ale do prvních verzí nepatří — a je dobře, že to
+Filip zastavil, protože hlášení od lodí je přesně ta věc, která by rozhodčímu
+přidala práci na vodě místo aby mu ji ubrala.
+
+**Co to nemění.** Potvrzení vykonaného trestu podle ZPJ 44 nikdy nebylo na
+lodi: trest si loď odbyde na vodě a rozhodčí ho zapíše, až mu to u cíle
+nahlásí (nahrávka 23). Pravidla tedy žádný vstup od lodě nevyžadují a aplikace
+tím nic nedluží.
+
+**Kde to platí v kódu.** Je to pravidlo pro posuzování návrhů, ne řádek: každá
+obrazovka v `app/` pro kapitána smí **číst**. Jediná dnešní výjimka je
+přihlášení do závodu a souhlas se ZPJ, což není hlášení komisi za jízdy, ale
+vstup do závodu před ním.
 
 ---
 

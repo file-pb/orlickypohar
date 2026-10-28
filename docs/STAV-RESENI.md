@@ -26,7 +26,8 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Co chce | Stav | Kde to je / co zbývá |
 | --- | --- | --- |
 | Vypsání závodu jako dokument | **Běží** | Web, dokument z dat. Čtyři body J1 jsou prázdné a místo konání je „neuvedené" (R21, R23) |
-| Plachetní směrnice | **Běží** | Jako PDF. *„Teď stačí zdroj jak máme"* — R2, zavřel to sám |
+| Plachetní směrnice ke stažení | **Běží** | Jako PDF. Formu zdroje odložil sám: *„teď stačí zdroj jak máme"* (R2) |
+| Směrnice **předvyplní** trať, časy a režim startu | **Čeká** | R22. Navrhl to sám; nerozhodnuté je **kdy**, ne jestli. Leží v ní dva ze čtyř prázdných bodů vypsání a oba chybějící údaje o startu |
 | Vypsání platné bez jeho podpisu | **Zavřené** | *„Je platné i bez mého podpisu"*. Elektronický podpis jen jako nabídka (R20, R32 v nahrávce 32) |
 | Přihlašování po zveřejnění vypsání | **Běží** | Přihlášky vede pořadatel |
 | Přihlašování se zavře rozpravou | **Zadané** | R39. Dnes se nezavírá nikdy |
@@ -58,6 +59,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Velitelský čas na mobilu hlavního startéra | **Běží** | `Velitel`, převzetí na žádost, doklad |
 | Start přežije výpadek | **Jen web** | Fronta nezaslaného startu je na webu; v appce se musí postavit znovu |
 | Posádka vidí tutéž sekvenci jen ke čtení | **Zadané** | R34. Nikde |
+| Posádka hlásí komisi (trest, neregulérnost) | **Zavřené** | R41. *„Alespoň v prvních verzích ne."* Miloš došel k témuž: *„abychom jim nekomplikovali život"* |
 
 ## Za jízdy
 
@@ -67,6 +69,8 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Dlaždice **360°** za dotek bóje | **Zadané** | R36, ZPJ 31 |
 | Dlaždice **720°** za dotek s lodí soupeře | **Zadané** | R36, ZPJ 44 |
 | Trest dostupný **celou** rozjížďku, ne jako krok | **Zadané** | Z nahrávky 23: dlaždice se má *„průběžně posouvat"* |
+| Vytlačená loď a rozjížďka přerušená pro bezpečnost | **Zadané** | R13. Pravidla mají čtyři různé cesty podle toho, kdo je původce, a aplikace nezná ani jednu; zrušit rozjížďku jde dnes jen oklikou přes eliminaci výsledků |
+| Startovní tresty bez vlajek | **Zavřené** | R15, R16. Na poháru se vlajky nevyvěšují, jede se megafonem, takže tresty podle pravidla 30 formálně neplatí. Nosné pro dlaždici OCS |
 | Polohy lodí na mapě | **Běží** | Tracking nasazený 24. 10.; **z telefonu to nikdo neověřil** |
 
 ## Cíl
@@ -84,6 +88,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Odsouhlasení pořadí | **Jen web** | Stavy výsledků, běží |
 | Úpravu výsledků smí jen rozhodčí | **Čeká** | R38, tatáž otázka jako u listiny |
 | Zásah do pořadí při protestu | **Zadané** | Protesty jsou celá nepostavená fáze; dnes je jen věta, že protest visí (K2) |
+| Ověřeno a Schváleno jako dva kroky | **Čeká** | K3. Dnes jsou to dvě klepnutí téhož člověka — kandidát na ubrání |
 | Zahájit další rozjížďku | **V API** | `POST …/rozjizdky` |
 | Kódy výsledků včetně DNE | **Běží** | Jedenáct kódů, čtyři z nich doplněné 28. 10.; DNE se nedá vyškrtnout (K1) |
 | Zrušení rozjížďky s povinným důvodem | **Běží** | Fáze 4.2 |

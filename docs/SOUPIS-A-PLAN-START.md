@@ -281,8 +281,14 @@ Tyhle se nemají odbavovat, mají se **znát**, protože vysvětlují ostatní:
 
 ### E) Rozhodnuto Milošem, nic se nestaví (1)
 
-**R2** — směrnice jako zdroj dat místo PDF. Jeho slova: *„do budoucna uděláme
-prekognici … Teď stačí zdroj jak máme."* PDF tedy zůstává.
+**R2** — **forma** směrnice ke stažení: PDF versus zdrojový text. Jeho slova:
+*„do budoucna uděláme prekognici … Teď stačí zdroj jak máme."* PDF tedy
+zůstává.
+
+> **Opraveno 28. 10. večer.** Původně tu stálo, že Miloš odložil *směrnici jako
+> zdroj dat*. To byla moje nepravda: odložil formu ke stažení, a předvyplnění
+> dat ze směrnice **sám navrhl**. Ten nález je **R22** a patří do skupiny B —
+> nerozhodnuté je kdy, ne jestli.
 
 ### Jak se z toho dostáváme postupně
 
@@ -299,9 +305,13 @@ to napsané. Dá se začít kteroukoli.
 | **6** | Vypsání: doplnit čtyři `null` body a místo konání | na odpovědi na otázku 6 |
 | **7** | Cíl a přepsání trasování | otázka 9, vlastní velká věc |
 
+> **Hranice návrhu, rozhodnutá 28. 10. večer.** Posádka v prvních verzích
+> komisi **nic nehlásí** (R41) — appka kapitána je odběratel, ne vstup. Každý
+> návrh, který by lodi dal kudy něco poslat komisi za jízdy, se tím zamítá.
+
 > **Změna 28. 10. večer.** Miloš odpověděl na sedm z osmi otázek jednou dávkou
-> třinácti nahrávek. Skupina B tím spadla z devatenácti na **sedm** (R3, R4,
-> R6, R13, R21, R22, R33 a R38 jako nová), tři nálezy jsou zavřené jeho
+> třinácti nahrávek. Skupina B tím spadla z devatenácti na **deset**: R2, R3,
+> R4, R6, R13, R21, R22, R33, K4 a R38 jako nová. Tři nálezy jsou zavřené jeho
 > rozhodnutím (R26, R40, a R20 jako „neblokuje") a přibyly čtyři zadané věci
 > ke stavbě: R35 (OCS), R36 (dvě otáčky), R37 (odklad s časem), R39 (zámek
 > u rozpravy). Podrobně v oponentuře, oddíl *Odpovědi na osm otázek*.
