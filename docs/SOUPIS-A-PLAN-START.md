@@ -14,6 +14,10 @@ Zdroje: `docs/OPONENTURA-ROZHODCI.md` (nálezy R1–R34 a K1–K7, pyramida
 autority), jedenáct hlasových nahrávek rozhodčího z 28. 10. 2026 a dva vzory
 jeho listin.
 
+**Přehled stavu je jinde.** Co z Milošových požadavků stojí a co ne, se čte
+z `docs/STAV-RESENI.md` — jeden řádek na požadavek, seřazené podle dne závodu.
+Tenhle dokument je o **pořadí stavby**, ne o stavu.
+
 **Co kde je.** Horní polovina dokumentu je o **ovládání startu** — to je ta
 věc, kterou Miloš potřebuje mít v ruce nejdřív. Dolní polovina
 (*Celá fronta*) je soupis **všech 41 nálezů** rozdělený tak, aby se dal
@@ -110,7 +114,7 @@ Tohle je ta část, kvůli které soupis vznikl.
 | **Odpočet počítaný na serveru** | Poruší pyramidu: prodleva sítě posune start | Test: vypni síť v poslední minutě. Musí doběhnout. |
 | **Změna `StartV` za jízdy** | Tabule a appky posádek čtou totéž; rozpor je vidět všem | Zrušení startu je dnes *opakovaný start* (`Procedura.JeOpakovanyStart`) |
 | **Změna tříd na čtyři** (R29) | Ročník 2027 je naimportovaný a lodě v něm kategorii mají → přeřazení existujících přihlášek | Konfigurace, ne kód, ale **ne bez rozhodnutí rozhodčího** |
-| **Zamknutí startovní listiny** (R32) | Popře nález R6: nově přihlášená loď se musí objevit **i po startu** | R6 říká, že zamknout nejde |
+| **Zamknutí startovní listiny** | Nic — Miloš to 28. 10. večer rozhodl: *„po rozpravě už nesmí"*. Zámek patří k **rozpravě**, ne ke startu | R39. R6 platí dál pro změny, které nejsou přihlášením (vyloučení, odhlášení, oprava třídy) |
 | **Dvě dlaždice „alternativní trest"** | Jedno jméno pro dva různé úkony (R31): před startem pravidlo 30, u cíle ZPJ 44.2 | Musí být vidět, **co** se zapisuje |
 | **Práce v `app/`** souběžně s jinou session | Kolize v `package.json` a buildech APK | `app/` drží session, která staví APK |
 
@@ -294,6 +298,13 @@ to napsané. Dá se začít kteroukoli.
 | **5** | Kroky 3 až 5 plánu | na odpovědích na otázky 1 a 2 |
 | **6** | Vypsání: doplnit čtyři `null` body a místo konání | na odpovědi na otázku 6 |
 | **7** | Cíl a přepsání trasování | otázka 9, vlastní velká věc |
+
+> **Změna 28. 10. večer.** Miloš odpověděl na sedm z osmi otázek jednou dávkou
+> třinácti nahrávek. Skupina B tím spadla z devatenácti na **sedm** (R3, R4,
+> R6, R13, R21, R22, R33 a R38 jako nová), tři nálezy jsou zavřené jeho
+> rozhodnutím (R26, R40, a R20 jako „neblokuje") a přibyly čtyři zadané věci
+> ke stavbě: R35 (OCS), R36 (dvě otáčky), R37 (odklad s časem), R39 (zámek
+> u rozpravy). Podrobně v oponentuře, oddíl *Odpovědi na osm otázek*.
 
 **Čím se měří, že se z hromady dostáváme:** ne počtem zavřených nálezů, ale
 tím, kolik zbývá ve skupině B. Dnes devatenáct. Po jedné zprávě Milošovi může

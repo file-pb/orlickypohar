@@ -346,6 +346,77 @@ Bez obsahu, ponechané kvůli pořadí.
 > alternativní trest 360 stupňů a druhou dlaždici alternativní trest 720 stupňů
 > v případě, že se dopustí chyby."
 
+### Střípky 26 až 38 — třináct hlasových nahrávek (28. 10. 2026, 18:01–18:14)
+
+**Tohle je odpověď na osm otázek**, které mu Filip poslal odpoledne (dávka 1
+ze soupisu). Třináct zpráv, celkem 3 minuty 14 sekund, a **sedm z osmi otázek
+je zodpovězených**. Přepis stejnou cestou jako u předchozích: `large-v3`
+lokálně na Filipově Macu, česky, nic se neodesílalo; v hranatých závorkách je
+správné znění tam, kde rozpoznávání zřejmě přeslechlo, a **nález se z přeslechu
+nedělá**.
+
+**Nahrávka 26** (18:01:19, 12 s) — první dlaždice trestu:
+
+> „Jedna dlaždice bude alternativní trest podle pravidla 31, otáčka 360 stupňů
+> za dotyk z[ bójí]."
+
+**Nahrávka 27** (18:01:51, 15 s) — druhá:
+
+> „Druhá dlaždice bude podle pravidla 44.1 otáčky 720 za dotek z lodí soupeře."
+
+**Nahrávka 28** (18:02:44, 19 s) — dlaždice u startu:
+
+> „U startu bude dlaždice s možností zrušit rozjížďku, nebo nějak nazveme
+> zrušit rozjížďku, neplatný start, podle pravidla s minutovým [pravidlem]."
+
+**Nahrávka 29** (18:03:05, 14 s) — třídy, a je to pokyn „nestav":
+
+> „Třída lehká, těžká, neřeš, pouze vytvoř dvě dlaždice tohoto typu, do tříd si
+> je zařadíme sami."
+
+**Nahrávka 30** (18:03:27, 12 s) — práva, dvě věty:
+
+> „Zásah do startovní listiny smí provést pouze rozhod[č]í. Úpravu výsledků smí
+> provést pouze rozhod[č]í."
+
+**Nahrávka 31** (18:03:45, 10 s) — kdy se přihlašuje:
+
+> „Posádky se přihlašují po vypsání závodu. Po vypsání závodu. **Po rozpravě už
+> nesmí.**"
+
+**Nahrávka 32** (18:04:08, 12 s) — podpis vypsání:
+
+> „Pokud se veřejní [= zveřejní] vypsání závodu, je platné i bez mého podpisu,
+> nebo můžeme vytvořit elektronický podpis."
+
+**Nahrávka 33** (18:04:25, 8 s) — nezletilý:
+
+> „Žádný z kapitánů není nezletilý."
+
+**Nahrávka 34** (18:04:39, 12 s) — co chce do přihlášky:
+
+> „Do přihlášky budeme požadovat číslo VMP a číslo technického průkazu, pokud
+> ho loď má."
+
+**Nahrávka 35** (18:12:12, 36 s) — **oprava, kterou poslal sám**:
+
+> „**Oprava.** U startu chci mít dlaždici odklad startu, na kterou když kliknu,
+> tak bych potřebuji mít možnost nastavit, v kolik bude start. Když kliknu na
+> dlaždici odklad startu, měl bych tam mít možnost, nebo **musím** tam mít
+> možnost, napsat, v kolik bude start, posunutý start."
+
+**Nahrávka 36** (18:14:04, 11 s) — a druhá dlaždice u startu:
+
+> „Druhá dlaždice u startu bude OCS podle závodních pravidel jachtingu."
+
+**Nahrávky 37 a 38** (18:14:38 a 18:14:43, 31 + 3 s) — celý úkon OCS, včetně
+opravy v poslední větě:
+
+> „Měl bych mít možnost po stisknutí dlaždice OCS napsat loď, která p[r]avidlo
+> porušila, a když loď napíšu, měl bych mít možnost napsat, že chybu odčinila
+> anebo neodčinila, tím pádem je diskvalifikovaná ze závodu … **nebo
+> z rozjížďky.**"
+
 ### Střípek 15 — vzory mailem: vypsání i plachetní směrnice z ročníku 2026 (28. 10. 2026)
 
 Miloš poslal **dva skutečné dokumenty** a sám je rozdělil podle toho, kdo je vydává:
@@ -3791,6 +3862,160 @@ je veřejná a kódy výsledků taky.
 
 ---
 
+## Odpovědi na osm otázek — a co z nich plyne (28. 10. 2026, večer)
+
+Miloš odpověděl na **sedm z osmi** otázek a ke dvěma věcem poslal zadání, na
+které se nikdo neptal. Tohle je zápis odpovědí; nálezy, které se tím zavírají,
+jsou u každé jmenované.
+
+| Otázka | Jeho odpověď | Co se tím zavírá |
+| --- | --- | --- |
+| 1. Dva „alternativní tresty" | **Dvě dlaždice**, pojmenované podle příčiny: 360° za dotek bóje, 720° za dotek s lodí soupeře | R11, R14, R31 — a R11 byl celou dobu správně |
+| 2. Přerušit / zrušit start | **Tři dlaždice u startu**: odklad startu (s novým časem), zrušit rozjížďku / neplatný start, OCS | R23 zčásti; otevírá R35 a R37 |
+| 3. Lehký a těžký | *„Třída lehká, těžká, neřeš, pouze vytvoř dvě dlaždice tohoto typu, do tříd si je zařadíme sami."* | R29, R24 — **kritérium se nestaví** |
+| 4. Kdo smí do listiny | *„Zásah do startovní listiny smí provést pouze rozhodčí. Úpravu výsledků smí provést pouze rozhodčí."* | R32 — a popírá dnešní kód, viz R38 |
+| 5. Odkdy se posádky hlásí | Odpověděl na **přihlašování**, ne na trasování: *„Posádky se přihlašují po vypsání závodu. Po rozpravě už nesmí."* | mění R6, viz R39; **R3 zůstává otevřený** |
+| 6. Vypsání bez podpisu | *„Pokud se zveřejní vypsání závodu, je platné i bez mého podpisu, nebo můžeme vytvořit elektronický podpis."* | R20 — nic neblokuje |
+| 7. Nezletilý | *„Žádný z kapitánů není nezletilý."* | R26 — případ nenastává |
+| 8. VMP a technický průkaz | *„Do přihlášky budeme požadovat číslo VMP a číslo technického průkazu, pokud ho loď má."* | R25 — a je to **změna formuláře přihlášky** |
+
+Nezodpovězené zůstává jediné: **mez z pravidla 76.1(a)** u vyloučení (K4),
+a z otázky 5 ta polovina o trasování (R3).
+
+---
+
+### R35 — OCS jako úkon: kód aplikace má, postup ne, a jedno slovo je potřeba doladit
+
+*Původ: nahrávky 36, 37, 38. Doloženo: `Features/Zavody/Zavod.cs:228`
+(`Ocs = 4`, *„Předčasný start"*), `:231` (`Dsq = 5`). Stav: **zadáno, nestavěno**.*
+
+Miloš chce u startu dlaždici **OCS** a za ní celý úkon: napsat loď, která
+pravidlo porušila, a pak zapsat, **že chybu odčinila, anebo neodčinila** — a
+v druhém případě *„je diskvalifikovaná … nebo z rozjížďky"*.
+
+**Co aplikace má:** kód `Ocs` existuje od začátku, i `Dsq`. Co nemá, je ten
+postup — dlaždice, výběr lodě a ta jedna otázka „odčinila?".
+
+**Jedno slovo je potřeba doladit, a je to otázka na Miloše, ne nález proti
+němu.** Sám se v poslední nahrávce opravil z *„ze závodu"* na *„z rozjížďky"*,
+takže rozsah má jasný. Zbývá název následku: loď, která byla na závodní straně
+a nevrátila se, se **boduje jako OCS** — diskvalifikace (`Dsq`) je v pravidlech
+jiná věc, výsledek jednání o protestu. Pro obrazovku to znamená jedinou otázku:
+**má to zapsat `OCS`, nebo `DSQ`?** Na postup to nemá vliv, na výsledkovou
+listinu ano.
+
+---
+
+### R36 — Dvě dlaždice otáček, a tím je R11 potvrzený
+
+*Původ: nahrávky 26, 27, potvrzeno nahrávkou 25 (kapitán vidí totéž).
+Doloženo: ZPJ 31, ZPJ 44.1 a 44.2. Stav: **zadáno, nestavěno**.*
+
+- **360°** — *„podle pravidla 31, otáčka 360 stupňů za dotyk s bójí"*
+- **720°** — *„podle pravidla 44.1 otáčky 720 za dotek s lodí soupeře"*
+
+**Obsahově to souhlasí s pravidly**: jedna otáčka je trest za dotek značky,
+dvě otáčky za porušení pravidla z části 2, tedy za dotek s jinou lodí.
+Čísla, která jmenuje, míří jedno na **příčinu** (31) a druhé na **článek
+o trestu** (44.1); samotné otáčky jsou 44.2. Na obrazovce je to rozdíl jen
+v tom, co se napíše pod název dlaždice.
+
+**A tím je uzavřená moje chyba z R14:** R11 vyložil „alternativní trest" jako
+otáčky podle ZPJ 44 a bylo to **správně**; R31 to už napravil a tyhle dvě
+nahrávky to potvrzují jmenovitě. Startovní tresty podle pravidla 30 (R14) jsou
+**třetí věc** a Miloš pro ni teď má vlastní dlaždici: OCS.
+
+---
+
+### R37 — „Odklad startu" chce nový čas v jednom kroku; API to umí ve dvou a appka nijak
+
+*Původ: nahrávka 35, poslaná jako **oprava** vlastního zadání. Doloženo:
+`Features/Zavody/Procedura.cs:138` (`Odlozit => null`) a komentář na `:135–137`,
+`DruhProcedury.Odlozit` na `:17`, plánovaný start z K6. Stav: **zadáno,
+nestavěno**.*
+
+Miloš: *„musím tam mít možnost napsat, v kolik bude start, posunutý start."*
+
+**Tohle je dobrá zpráva, ne vada v rozhodnutí.** API odložení záměrně nechává
+nový čas prázdný (ZPJ 27.3: odkládá se *„z jakékoli příčiny"* a kdy se pojede,
+řekne startér) a zapsat ten čas umí od 28. 10. jako **plánovaný start** (K6).
+Takže schopnost existuje — rozdělená na dva úkony.
+
+**Co z toho zbývá:** aby to v appce bylo **jedno klepnutí a jedno políčko**.
+Žádná nová schopnost, jen aby dlaždice *Odklad startu* sama nabídla čas.
+
+---
+
+### R38 — „Do startovní listiny smí jen rozhodčí" je proti tomu, co kód dnes říká
+
+*Původ: nahrávka 30. Doloženo: `Features/Zavody/Prihlasky.cs:64–65`. Stav:
+**zadáno, nestavěno — a je to změna práv, ne obrazovky**.*
+
+Dnes stojí v kódu obojí, a druhá věta je přesně naopak:
+
+```csharp
+if (vylouceni && kdo != Kdo.Rozhodci) return "O vyloučení ze závodu rozhoduje rozhodčí.";
+if (!vylouceni && kdo == Kdo.Rozhodci) return "Přihlášky vede pořadatel. Rozhodčí jen vylučuje.";
+```
+
+Miloš říká, že **do startovní listiny i do výsledků smí jen rozhodčí**. To je
+odpověď na otázku 4 a zavírá R32, ale **otevírá jinou**: startovní listina je
+výpis přihlášek a ty dnes vede pořadatel. Takže se musí rozhodnout, jestli
+„zásah do startovní listiny" znamená
+
+1. **přihlášky celé** přejdou na rozhodčího (pořadatel je jen eviduje), nebo
+2. přihlášky zůstanou pořadateli a rozhodčí smí **měnit, kdo v rozjížďce
+   startuje** — což je jiná věc než přihláška do závodu.
+
+Na poháru je Miloš hlavní rozhodčí a Filip pořadatel, takže rozdíl je dnes
+akademický. **V kódu ale ne**, a `Prava.cs` je jediná pravda o právech.
+
+---
+
+### R39 — Přihlašování se zavírá rozpravou, a to mění R6
+
+*Původ: nahrávka 31. Doloženo: nález R6 (startovní listina editovatelná za
+běhu), `docs/SOUPIS-A-PLAN-START.md` (mapa dotyků). Stav: **zadáno, nestavěno
+— a opravuje dřívější závěr**.*
+
+Miloš: *„Posádky se přihlašují po vypsání závodu. **Po rozpravě už nesmí.**"*
+
+**V soupisu stálo, že zamknout startovní listinu nejde**, protože R6 žádá, aby
+se nově přihlášená loď objevila i po startu. Tahle věta to obrací: zámek **je**
+na místě, jen nestojí u startu, ale **u rozpravy**. R6 platí dál pro to, co se
+na listině mění *jinak* než přihlášením (vyloučení, odhlášení, oprava třídy) —
+ty po rozpravě jít musí.
+
+Dvě věci jsou tím pádem jisté a jedna otevřená:
+
+- **Jisté:** přihlašování se otevírá zveřejněním vypsání a zavírá rozpravou.
+- **Jisté:** zámek se váže na **rozpravu**, kterou aplikace zná.
+- **Otevřené:** co s loděmi, které přijdou po rozpravě — odmítnout, nebo pustit
+  se souhlasem rozhodčího? Pravidla to řeší v ZPJ 76.1, a to je nezodpovězený
+  nález K4.
+
+---
+
+### R40 — Čtyři třídy: „neřeš, zařadíme si je sami" je pokyn nestavět kritérium
+
+*Původ: nahrávka 29. Doloženo: `Features/Serial/Serie.cs:70` (`Kategorie` nese
+jen jméno a pořadí). Stav: **zavřeno jeho rozhodnutím — konfigurace, žádný
+kód**.*
+
+Miloš: *„Třída lehká, těžká, neřeš, pouze vytvoř dvě dlaždice tohoto typu, do
+tříd si je zařadíme sami."*
+
+Tím padá otázka 3 i celý R24: pravidlo zařazení (délka trupu z technického
+průkazu plus čelen) **zůstane ve vypsání** a do kódu nejde. Kategorie jsou
+dnes jen jméno a pořadí, takže čtyři třídy znamenají **dva nové záznamy**, ne
+změnu modelu. Zařazení lodí udělá rozhodčí ručně.
+
+Jediné, co zbývá rozhodnout, je ročník: 2027 je naimportovaný a lodě v něm
+kategorii už mají. **Přeřazení existujících přihlášek je ruční práce, kterou
+dělá on**, ne migrace.
+
+---
+
 ## Nálezy K — odvozené z kódu a pravidel
 
 Hypotézy. Každá má doložený řádek, ale **žádnou z nich rozhodčí neřekl** —
@@ -4231,6 +4456,15 @@ ověřené strojově: každý nález je přesně v jedné skupině a žádný ne
 
 Tenhle dokument zůstává zdrojem nálezů; ten druhý je záchytný bod, ke kterému
 se vrací, a **stav fronty se čte z něj**.
+
+## Přehled stavu řešení
+
+Od 28. 10. 2026 je **stav** v samostatném dokumentu: `docs/STAV-RESENI.md`.
+Jeden řádek na každý Milošův požadavek, seřazené podle dne závodu, u každého
+stav (*Běží / Jen web / V API / Zadané / Čeká / Zavřené*) a kde se to dá vidět.
+Vznikl na Filipův pokyn: *„potřebuji mít kontrolu nad stavem řešení, ten přehled
+teď nemám."* Tenhle dokument zůstává zdrojem nálezů, soupis řídí pořadí stavby,
+přehled drží stav.
 
 ## Co se s tímhle dokumentem dělá dál
 
