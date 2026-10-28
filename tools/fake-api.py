@@ -2103,6 +2103,88 @@ def kdo_smi_do_serie(stav):
     return "Organizator" if stav in OTEVRENY else "Rozhodci"
 
 
+MESICE_CESKY = ["ledna", "února", "března", "dubna", "května", "června",
+                "července", "srpna", "září", "října", "listopadu", "prosince"]
+
+
+def den_cesky(iso):
+    """`2026-06-20` → `20. června 2026`, jako `Vypsani.Den` v API."""
+    if not iso:
+        return None
+    from datetime import date
+    d = date.fromisoformat(iso[:10])
+    return f"{d.day}. {MESICE_CESKY[d.month - 1]} {d.year}"
+
+
+def cas_cesky(iso):
+    """Hodina v pražské zóně, jako `Vypsani.Cas` v API."""
+    if not iso:
+        return None
+    from datetime import datetime, timezone, timedelta
+    kdy = datetime.fromisoformat(iso.replace("Z", "+00:00"))
+    # Mock zónu neřeší přesně: stačí posun, který platí přes léto.
+    praha = kdy.astimezone(timezone(timedelta(hours=2)))
+    return f"{praha.hour}:{praha.minute:02d}"
+
+
+def vypsani_dto(z):
+    """
+    Vypsání závodu — opsaná struktura z `Vypsani.Sestav`. Texty jsou
+    zkrácené; **autoritativní znění je v API**, tady jde o to, aby
+    obrazovka měla co vykreslit a aby bylo vidět, co dokumentu chybí.
+    """
+    kategorie = [k["nazev"] for k in D.get("kategorie") or []]
+    skrty = z.get("pocetSkrtu", 0)
+    body = [
+        ("J1.1(1)", "Název, místo, datum a pořadatel",
+         f"{z['nazev']}, {D['nazev']}\nTermín: {den_cesky(z['datum'])}\n"
+         f"Pořadatel: {z.get('poradatel') or 'neuvedený'}\nMísto konání: neuvedené"),
+        ("J1.1(2)", "Podle kterých pravidel se jede",
+         "Závod bude řízen podle pravidel, jak jsou definována v Závodních "
+         "pravidlech jachtingu (ZPJ) 2025–2028."),
+        ("J1.1(3)", "Další dokumenty, které závod řídí",
+         "Plachetní směrnice k této regatě jsou vyvěšené v aplikaci na stránce "
+         "regaty, v sekci Směrnice, a platí jejich poslední vyvěšená verze."
+         if SMERNICE.get(z["slug"]) else
+         "Plachetní směrnice vydává pořadatel před závodem a vyvěšují se "
+         "v aplikaci na stránce regaty. Zatím vyvěšené nejsou."),
+        ("J1.1(4)", "Závodící třídy a podmínky přihlášení",
+         f"Závodí se v těchto třídách: {', '.join(kategorie)}. "
+         "Loď jede celý ročník v jedné třídě." if kategorie else None),
+        ("J1.1(5)", "Přihlášky, uzávěrka a startovné",
+         None if not (z.get("uzaverkaPrihlasek") or z.get("startovne")) else
+         "Lodě se přihlašují formulářem na stránce regaty, a to od chvíle, "
+         "kdy je regata vypsaná.\n"
+         f"Uzávěrka přihlášek: {den_cesky(z.get('uzaverkaPrihlasek')) or 'neuvedená'}.\n"
+         f"Startovné: {z.get('startovne') or 'neuvedené'}."),
+        ("J1.1(6)", "Časy vyzývacích znamení",
+         None if not z.get("prvniVyzyvaciZnameni") else
+         f"Vyzývací znamení první rozjížďky: {cas_cesky(z['prvniVyzyvaciZnameni'])}, "
+         f"{den_cesky(z['prvniVyzyvaciZnameni'])}.\n"
+         "Časy dalších rozjížděk oznámí závodní komise na rozpravě."),
+        ("J1.3(4)", "Dráha", None),
+        ("J1.3(5)", "Bodování",
+         "Boduje se podle Dodatku A Závodních pravidel jachtingu (nízkobodový "
+         "systém), s těmito odchylkami a doplňky poháru:\n"
+         + ("• V této regatě se žádná rozjížďka neškrtá." if skrty == 0
+            else f"• V této regatě se škrtá jedna nejhorší rozjížďka." if skrty == 1
+            else f"• V této regatě se škrtají {skrty} nejhorší rozjížďky.") + "\n"
+         "• Diskvalifikace v regatě znamená do poháru pevných 20 bodů, bez "
+         "ohledu na počet lodí.\n"
+         f"• Do celkového pořadí poháru jde výsledek této regaty s koeficientem "
+         f"{str(z.get('koeficientDoSerie', 1)).replace('.', ',')}."),
+        ("J1.3(7)", "Kdy se poslední den už nestartuje", None),
+        ("J1.2(6)", "Lhůta pro změny bodování (ZPJ 90.3(e))", None),
+        ("J1.3(8)", "Odepření práva na odvolání (ZPJ 70.3)", None),
+    ]
+    return {
+        "nazev": z["nazev"],
+        "serieNazev": D["nazev"],
+        "body": [{"bod": b, "nadpis": n, "text": t} for b, n, t in body],
+        "chybi": [n for _, n, t in body if t is None],
+    }
+
+
 def rozjizdka_radek(r, zavod=None):
     """
     Řádek rozjížďky pro správu, podle práv toho, kdo se ptá.
@@ -2257,6 +2339,11 @@ def lod_na_zastavce(z, lod, smi=True):
             "telefon": (u or {}).get("telefon"), "posadka": (u or {}).get("posadka"),
             "poznamka": (u or {}).get("poznamka"), "podanoV": (u or {}).get("podanoV"),
             "zaplaceno": (u or {}).get("zaplaceno", False),
+            # Souhlas s pravidly a vlastním nebezpečím (nález R9,
+            # 28. 10. 2026). Prázdno znamená „nemá ho", ne „nevíme" —
+            # u poháru, který pořadatelsky ofiko není, je to jediná vazba
+            # závodníka na pravidla.
+            "souhlasV": (u or {}).get("souhlasV"),
             "startovnePoznamka": (u or {}).get("startovnePoznamka"),
             "historie": (u or {}).get("historie", []),
             "smiSmazat": bool(u) and smi and not vysledky
@@ -3427,9 +3514,13 @@ class H(BaseHTTPRequestHandler):
             return self.chyba(400, "Vyplň jméno i příjmení kapitána.")
         if not (kapitan.get("email") or "").strip() and not (kapitan.get("telefon") or "").strip():
             return self.chyba(400, "Vyplň e-mail nebo telefon, ať se ti pořadatel může ozvat.")
+        # Znění souhlasu je od 28. 10. 2026 o pravidlech a vlastním
+        # nebezpečí, ne jen o zveřejnění (nález R9). Pravda je v
+        # `Features/Zavody/Souhlas.cs`.
         if not v.get("souhlas"):
-            return self.chyba(400, "Potvrď, že loď smí být ve startovní listině "
-                                   "a že se pořadatel může ozvat.")
+            return self.chyba(400, "Potvrď souhlas s pravidly závodu, s účastí na "
+                                   "vlastní nebezpečí a se zveřejněním lodi ve "
+                                   "startovní listině.")
 
         nazev = v["lod"].strip()
         klic = bez_diakritiky_slug(nazev)
@@ -3454,7 +3545,8 @@ class H(BaseHTTPRequestHandler):
         u.update({"stav": "Pozadavek", "duvod": None, "posadka": v.get("posadka"),
                   "kapitan": f'{kapitan["jmeno"].strip()} {kapitan["prijmeni"].strip()}',
                   "email": kapitan.get("email"), "telefon": kapitan.get("telefon"),
-                  "poznamka": v.get("poznamka"), "podanoV": ted})
+                  "poznamka": v.get("poznamka"), "podanoV": ted,
+                  "souhlasV": ted, "souhlasVerze": 1})
         u.setdefault("historie", []).append(
             {"ze": None, "na": "Pozadavek", "kdy": ted, "kdo": None, "duvod": None})
 
@@ -4685,12 +4777,23 @@ class H(BaseHTTPRequestHandler):
                 PRIHLASKA_ID[lod] = max(PRIHLASKA_ID.values()) + 1
                 LOD_PODLE_ID[PRIHLASKA_ID[lod]] = lod
 
+        # Souhlas se jen **přidává** a nevynucuje: tady ho pořadatel
+        # zaznamenává za kapitána, ne dává za něj (nález R9, 28. 10. 2026).
+        def zapis_souhlas(ucast):
+            if vstup.get("souhlas") and not ucast.get("souhlasV"):
+                ucast["souhlasV"] = _iso(_ted())
+                ucast["souhlasVerze"] = 1
+
         if u and u["stav"] in VEREJNE_UCASTI:
+            zapis_souhlas(u)
             return self.odpoved(lod_na_zastavce(z, lod))
         if u:
             u["stav"], u["duvod"] = "Prihlasena", None
+            zapis_souhlas(u)
         else:
-            z["ucasti"].append({"lod": lod, "kormidelnik": None, "posadka": None, "stav": "Prihlasena"})
+            u = {"lod": lod, "kormidelnik": None, "posadka": None, "stav": "Prihlasena"}
+            zapis_souhlas(u)
+            z["ucasti"].append(u)
         return self.odpoved(lod_na_zastavce(z, lod), 201)
 
     def prepni_lod(self, zavod, prihlaska):
@@ -5761,6 +5864,19 @@ class H(BaseHTTPRequestHandler):
             if not any(z["slug"] == m.group(1) for z in D["zavody"]):
                 return self.send_error(404)
             return self.odpoved(zpravy_regaty(m.group(1)))
+        elif (m := re.match(rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)/vypsani$', cesta)):
+            # Vypsání závodu podle Dodatku J1 (nálezy R1 a R8 oponentury
+            # rozhodčího, 28. 10. 2026). Veřejné a bez přihlášení: ZPJ 25.1
+            # je chtějí dostupné dřív, než se loď přihlásí.
+            #
+            # <b>Pravda o obsahu je v `Features/Zavody/Vypsani.cs`</b> a
+            # hlídají ji `VypsaniTests`. Tohle je zkratka pro obrazovky —
+            # stejná struktura, zkrácené texty. Kdo podle mocku soudí, co
+            # v dokumentu stojí, soudí podle kopie.
+            z = next((z for z in D["zavody"] if z["slug"] == m.group(1)), None)
+            if not z or z.get("druh") == "Akce":
+                return self.send_error(404)
+            return self.odpoved(vypsani_dto(z))
         elif (m := re.match(rf'^/serie/{D["slug"]}/zavody/([a-z0-9-]+)/trat$', cesta)):
             # Veřejná cesta, takže **ne** `self.zastavka` — ta vymáhá
             # přihlášení, protože je psaná pro správu.

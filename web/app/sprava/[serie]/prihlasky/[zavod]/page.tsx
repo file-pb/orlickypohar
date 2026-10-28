@@ -38,6 +38,8 @@ type Parametry = {
      * <c>nova</c> u lodi, která v ročníku ještě není a id tedy nemá.
      */
     potvrdit?: string;
+    /** Souhlas zaškrtnutý před otázkou na pozdní přihlášku — nese se dál. */
+    souhlas?: string;
     stav?: string;
     lod?: string;
     nastav?: StavUcasti;
@@ -141,6 +143,9 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
   // mezi zapsanými.
   const cekaji = prehled.lode.filter((l) => l.stav && skupinaStavu(l.stav) === "ceka");
   const prihlasene = prehled.lode.filter((l) => l.stav && skupinaStavu(l.stav) === "jede");
+  // Jen z lodí, které na regatě jedou: u čekající přihlášky souhlas ještě
+  // chybět smí, protože se teprve vyřizuje.
+  const bezSouhlasu = prihlasene.filter((l) => !l.souhlasV);
   const zrusene = prehled.lode.filter((l) => l.stav && skupinaStavu(l.stav) === "mimo");
   const volne = prehled.lode.filter((l) => !l.stav);
 
@@ -181,6 +186,11 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
             <input type="hidden" name="cisloPlachty" value={zpravy.cisloPlachty ?? ""} />
             <input type="hidden" name="typ" value={zpravy.typ ?? ""} />
             <input type="hidden" name="potvrzeno" value="ano" />
+            {/* Souhlas zaškrtnutý v prvním pokusu se nesmí ztratit cestou
+                přes otázku (nález R9, 28. 10. 2026). */}
+            {zpravy.souhlas === "ano" && (
+              <input type="hidden" name="souhlas" value="ano" />
+            )}
             <button type="submit">Založit a přihlásit i tak</button>
           </form>
         ) : (
@@ -189,6 +199,9 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
             <input type="hidden" name="zavod" value={zavod} />
             <input type="hidden" name="prihlaskaId" value={zpravy.potvrdit} />
             <input type="hidden" name="potvrzeno" value="ano" />
+            {zpravy.souhlas === "ano" && (
+              <input type="hidden" name="souhlas" value="ano" />
+            )}
             <button type="submit">Přihlásit i tak</button>
           </form>
         ))}
@@ -213,6 +226,30 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
         {prihlasene.filter((l) => l.stav === "Potvrzena").length} potvrzených.{" "}
         <Link href={`/sprava/${serie}/vysledky/${zavod}`}>Výsledky regaty →</Link>
       </p>
+
+      {/* <b>Které lodě nemají souhlas s pravidly</b> (nález R9 oponentury
+          rozhodčího, 28. 10. 2026). U poháru, který pořadatelsky ofiko
+          není, je souhlas jediná vazba závodníka na pravidla — a loď
+          zapsaná pořadatelem nebo navezená importem ho nemá žádnou,
+          protože se u těch cest nevynucuje (zapsat loď domluvenou
+          telefonem na startu musí jít i tak).
+          <b>Prázdno je tedy informace, ne chybějící údaj</b>, a rozhodčí
+          ji má vidět na jednom místě, ne po lodích. Je to tatáž otázka
+          jako u telefonů v bodu 11 návodu — *„hlásí se celé pole?"* — jen
+          o patro níž, a sedí na ni tentýž vzorec: vypsat dole ty, u kterých
+          něco chybí. */}
+      {bezSouhlasu.length > 0 && (
+        <p className="poznamka">
+          <b>
+            Bez souhlasu s pravidly: {bezSouhlasu.length} z {prihlasene.length}
+          </b>{" "}
+          — {bezSouhlasu.map((l) => l.lod).join(", ")}
+          {". "}
+          Souhlas dává kapitán ve veřejné přihlášce; u lodí zapsaných
+          pořadatelem nebo navezených importem se nevynucuje a zaznamenat ho
+          jde při přihlášení.
+        </p>
+      )}
 
       {cekaji.length > 0 && (
         <>
@@ -275,6 +312,18 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
                   })}
                 </select>
               </label>
+              {/* <b>Souhlas s pravidly, který kapitán dal mimo web</b>
+                  (nález R9 oponentury rozhodčího, 28. 10. 2026). Veřejný
+                  formulář bez souhlasu neprojde, protože tam ho dává
+                  kapitán sám; tady ho pořadatel jen zaznamenává za něj,
+                  takže se <b>nevynucuje</b> — loď domluvená telefonem na
+                  startu se zapsat musí i bez něj, a prázdno je pravda,
+                  kdežto dosazený souhlas by byl doklad o něčem, co se
+                  nestalo. Jednou daný se už nemaže. */}
+              <label>
+                <input type="checkbox" name="souhlas" value="ano" /> Kapitán mi
+                potvrdil souhlas s pravidly závodu a s účastí na vlastní nebezpečí
+              </label>
               <button type="submit">Přihlásit</button>
             </form>
           )}
@@ -323,6 +372,18 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
               <label>
                 Příjmení majitele
                 <input name="prijmeni" required maxLength={80} defaultValue={zpravy.prijmeni} />
+              </label>
+              {/* <b>Souhlas s pravidly, který kapitán dal mimo web</b>
+                  (nález R9 oponentury rozhodčího, 28. 10. 2026). Veřejný
+                  formulář bez souhlasu neprojde, protože tam ho dává
+                  kapitán sám; tady ho pořadatel jen zaznamenává za něj,
+                  takže se <b>nevynucuje</b> — loď domluvená telefonem na
+                  startu se zapsat musí i bez něj, a prázdno je pravda,
+                  kdežto dosazený souhlas by byl doklad o něčem, co se
+                  nestalo. Jednou daný se už nemaže. */}
+              <label>
+                <input type="checkbox" name="souhlas" value="ano" /> Kapitán mi
+                potvrdil souhlas s pravidly závodu a s účastí na vlastní nebezpečí
               </label>
               <button type="submit">Založit a přihlásit</button>
               <p className="poznamka">
@@ -573,6 +634,19 @@ function Podrobnosti({ serie, zavod, lod }: { serie: string; zavod: string; lod:
             <dd>z webu {cas(lod.podanoV)}</dd>
           </>
         )}
+        {/* <b>Píše se i to, že souhlas není</b> (nález R9, 28. 10. 2026).
+            Prázdná kolonka by vypadala jako „nic zvláštního", jenže tady
+            je prázdno zpráva: u poháru, který pořadatelsky ofiko není, je
+            souhlas jediná vazba závodníka na pravidla — a lodě navezené
+            importem ho nemají skoro žádné. */}
+        <dt>Souhlas s pravidly</dt>
+        <dd>
+          {lod.souhlasV ? (
+            `potvrzený ${cas(lod.souhlasV)}`
+          ) : (
+            <em>nezaznamenaný</em>
+          )}
+        </dd>
       </dl>
 
       <form action={startovneAkce} className="startovne">

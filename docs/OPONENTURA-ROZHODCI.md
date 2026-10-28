@@ -730,6 +730,12 @@ otevřená, rozhoduje o ní Filip (R10).
 
 ### Fáze 2 — vypsání závodu
 
+> **Hotová 28. 10. 2026.** Obě položky jsou v kódu a změřené proti mocku;
+> co se u každé rozhodlo, stojí u jejích nálezů (R1, R8, R9). Vypsání je
+> druhý tab stránky regaty a souhlas se ukládá se zněním i časem.
+> **Úkon uznání vypsání rozhodčím se nestavěl** — R1 u něj má
+> nezodpovězenou otázku.
+
 **2.1 Vypsání závodu jako dokument** *(R1, R8, R10)*
 Stojí na něm nejvíc: ZPJ platí pro pohár **jen proto, že si je vezme** (pohár
 pořadatelsky ofiko není), a prohlašuje se to v J1.1(2). Žijí v něm i vlastní
@@ -739,7 +745,9 @@ pravidla poháru — dvacet bodů za diskvalifikaci, koeficienty, škrty, bonus 
 leží; chybí uzávěrka přihlášek, výše startovného a čas vyzývacího znamení.
 *Hotovo:* vypsání se **generuje** z týchž čísel, podle kterých se počítá, takže
 se s výpočtem nemůže rozejít. A je to první položka stránky regaty i pro
-nepřihlášené (ZPJ 25.1).
+nepřihlášené (ZPJ 25.1). **Uděláno 28. 10. 2026** — `Vypsani.cs` a veřejná
+cesta `…/zavody/{slug}/vypsani`; tři chybějící kolonky přibyly do `Zavod`
+a co aplikace neví, dokument přizná.
 
 **2.2 Souhlas s pravidly a vlastní nebezpečí** *(R9)*
 Navazuje na 2.1, protože souhlas má na co odkazovat. Dnes se sbírá souhlas se
@@ -749,7 +757,9 @@ tvrdí *„Kapitán potvrdil pravidla"* — a ať zní jakkoliv, **neukládá se
 není"*, je to jediná vazba závodníka na pravidla.
 *Hotovo:* znění pokrývá pravidla i vlastní nebezpečí, ukládá se příznak s časem
 a verzí znění, a ptá se na něj i cesta přes pořadatele a import — ne jen veřejný
-formulář.
+formulář. **Uděláno 28. 10. 2026** — `Souhlas.cs` s verzovaným zněním,
+`Ucast.SouhlasV` a `SouhlasVerze`; u pořadatele a importu se nevynucuje a je
+vidět, které lodě souhlas nemají.
 
 ### Fáze 3 — startovní procedura
 
@@ -871,7 +881,8 @@ Kde oponentura říká *„nerozhoduju to"*, platí to dál — plán tím nic n
 
 *Původ: střípek 1, **potvrzeno střípkem 3**. Doloženo:
 `Features/Zavody/Kalendar.cs:43`, celý `Features/Smernice/`, ZPJ 25.1.
-Stav: **zapsáno, po střípku 3 vyšší priorita**.*
+Stav: **dokument hotový 28. 10. 2026** (fáze 2.1, viz konec nálezu);
+**uznání vypsání rozhodčím dál chybí**.*
 
 Rozhodčí: *„Vypsání závodu … Forma je dokument."*
 
@@ -918,6 +929,40 @@ a co z ní aplikace má, je v R8.**
 
 > **Místo na citát z diskuse:** _(co přesně rozhodčí „uznává" — dokument,
 > termín, nebo obojí? A co se stane, když to neuzná?)_
+
+### Hotovo 28. 10. 2026 — dokument (fáze 2.1)
+
+**Vypsání závodu je od teď dokument, ne jen stav v kalendáři.** Sestavuje
+ho `Features/Zavody/Vypsani.cs` podle osnovy Dodatku J1 (ta tabulka z R8),
+vydává se veřejně na `GET …/zavody/{slug}/vypsani` a na stránce regaty je
+**druhým tabem hned za Úvodem** — pro přihlášené i nepřihlášené, jak žádá
+ZPJ 25.1 a jak to vyjmenoval Miloš.
+
+**Tři rozhodnutí, která si zaslouží být dohledatelná** (a dají se
+přehodnotit, všechna jsou levná):
+
+1. **Dokument je vygenerovaný návrh a říká to o sobě.** Pod ním stojí
+   *„Tohle vypsání sestavila aplikace z údajů o regatě. Vydává ho pořadatel
+   a uznává rozhodčí."* **Úkon uznání nestavím** — druhá polovina tohohle
+   nálezu má nezodpovězenou otázku (*co přesně rozhodčí uznává*), a podpis,
+   jehož obsah není vyjasněný, by byl slib naprázdno. Rozhodčí má dál jen
+   veto přes stažení vypsání na potvrzený termín.
+2. **Co aplikace neví, dokument nedosazuje.** Bod bez údaje nemá text,
+   objeví se v seznamu *„Vypsání zatím není úplné"* a ten seznam stojí
+   **nahoře**, ne v patičce: dokument jinak vypadá hotově, i když v něm
+   chybí uzávěrka. Pro pořadatele je to zároveň seznam práce před
+   otevřením přihlášek. **Místo konání chybí vždycky** — `Zavod` ho nevede
+   nikde a sídlo pořadatele je něco jiného, takže „Orlická přehrada" by
+   bylo vymyšlené, ne vygenerované. Doplnit se dá jedině údajem v datech.
+3. **V tabu stojí „Vypsání", v nadpisu „Vypsání závodu".** Miloš ho jmenuje
+   celé, jenže tabů je po jeho seznamu sedm a dvakrát delších a šířka je
+   věcná námitka v R10. Plný název v nadpisu a krátký v tabu je cesta,
+   kterou projekt už jednou zvolil (`nazev` a `kratky` u položek správy).
+   Na 1280 px se pět tabů vejde na řádek, na 375 px je z nich akordeon.
+
+Vypsání **vlajku nedostalo**, ze stejného důvodu jako Úvod: žádný závodní
+signál neznamená „tady se vypisuje závod", a vymyslet mu jednu by rozbilo
+právě tu znalost, kvůli které vlajky u tabů jsou.
 
 ### R2 — Směrnice jako zdroj dat, ne jako příloha
 
@@ -1225,8 +1270,9 @@ zdraví a 2 000 000 Kč na věci (doplněk k ZPJ 65.4).
 
 *Původ: střípek 4, navazuje na R7. Doloženo: ZPJ 4.1(a), 89.2(a), **Dodatek
 J1**, `Features/Zavody/Zavod.cs:219–309` (`Zavod`), `Features/Bodovani/
-PravidlaBodovani.cs`, `docs/PLAN.md:5455–5478`. Stav: **zapsáno, nejvyšší
-praktická priorita**.*
+PravidlaBodovani.cs`, `docs/PLAN.md:5455–5478`. Stav: **hotovo
+28. 10. 2026** (fáze 2.1, viz konec nálezu) — dokument se generuje z týchž
+čísel, podle kterých se počítá.*
 
 Střípek 4 obrátil východisko. Dosud jsem počítal s tím, že ZPJ platí a pohár se
 od nich ve vypsání odchyluje. **Je to naopak:** pohár není oficiální závod ČSJ,
@@ -1260,13 +1306,13 @@ chybějícího dokumentu**, a víc než půlka jeho obsahu už v databázi lež�
 | J1 | Co musí být ve vypsání | Má to aplikace? |
 |---|---|---|
 | 1.1(1) | název, místo, datum, jméno pořadatele | **ano** — `Zavod.Nazev`, `Datum`, `DatumKonce`, `Poradatel` |
-| 1.1(2) | **že se závod řídí podle ZPJ** | **ne** — a je to ta věta, kvůli které pravidla vůbec platí |
-| 1.1(3) | seznam dalších dokumentů, které závod řídí, a kde je vzít | **ne** |
+| 1.1(2) | **že se závod řídí podle ZPJ** | **ano od 28. 10. 2026** — `Vypsani.PodleZpj`, věta, kvůli které pravidla vůbec platí |
+| 1.1(3) | seznam dalších dokumentů, které závod řídí, a kde je vzít | **ano od 28. 10. 2026** — plachetní směrnice a kde visí |
 | 1.1(4) | závodící třídy, handicap, podmínky a omezení přihlášení | **zpola** — kategorie ano (do 7 m / nad 7 m / Race), podmínky ne |
-| 1.1(5) | postupy a časy přihlášení, **poplatky, termín uzávěrky** | **ne** — `Zavod` nemá uzávěrku ani výši startovného; `Ucast` má jen `Zaplaceno` a `StartovnePoznamka`, tedy evidenci platby, ne její předpis |
-| 1.1(6) | **časy vyzývacích znamení** první a dalších rozjížděk | **ne** (K6) — a všimni si, že J1 chce čas **vyzývacího znamení**, tedy T−5, ne čas startu |
+| 1.1(5) | postupy a časy přihlášení, **poplatky, termín uzávěrky** | **ano od 28. 10. 2026** — `Zavod.UzaverkaPrihlasek` a `Zavod.Startovne` (text, protože startovné bývá předpis a aplikace z něj nic nepočítá) |
+| 1.1(6) | **časy vyzývacích znamení** první a dalších rozjížděk | **zpola od 28. 10. 2026** — `Zavod.PrvniVyzyvaciZnameni` (T−5, ne čas startu); časy dalších rozjížděk se setnou na rozpravě (K6) a dokument to říká |
 | 1.3(4) | obecný popis dráhy nebo typů drah | **zpola** — trať se staví až v den závodu, dopředu o ní není nic |
-| 1.3(5) | **bodovací systém, je-li odlišný od Dodatku A** | **ne** — žije v `PocetSkrtu`, `KoeficientDoSerie`, `PosunDoSerie`, `Vyhodnoceni` a v konstantě `PravidlaBodovani` |
+| 1.3(5) | **bodovací systém, je-li odlišný od Dodatku A** | **ano od 28. 10. 2026** — tiskne se z `PocetSkrtu`, `KoeficientDoSerie`, `PosunDoSerie`, `Vyhodnoceni` a `PravidlaBodovani`, tedy z týchž čísel, podle kterých se počítá |
 | 1.3(7) | čas, po kterém se poslední den už nestartuje | **ne** |
 | 1.2(6) | že platí 90.3(e), a případná změna lhůty 24 hodin | **ne** |
 | 1.3(8) | odepření práva na odvolání podle 70.3 | **ne**, a viz pozn. |
@@ -1297,12 +1343,52 @@ neplyne nic.
 > dokument na ročník, nebo zvlášť na každou regatu? A co v něm o bodování
 > stojí?)_
 
+### Hotovo 28. 10. 2026 (fáze 2.1)
+
+**Obě věci z tohohle nálezu jsou udělané tak, jak je nález popsal.**
+
+**Vypsání se nepíše, generuje.** `Vypsani.Sestav` je čistá funkce bez
+databáze — dokument se dá vyrobit a zkontrolovat bez Dockeru, stejně jako
+`Workflow`, `Prava` nebo `Kalendar`, a drží ho čtrnáct testů
+(`VypsaniTests`). Do `Zavod` přibyly tři kolonky: `UzaverkaPrihlasek`,
+`Startovne` a `PrvniVyzyvaciZnameni`, všechny nepovinné.
+
+**Bodování se tiskne z týchž čísel, podle kterých se počítá.** Dvacet bodů
+za diskvalifikaci, přirážky, škrty regaty i ročníku, koeficient a bonus —
+všechno z `Zavod` a `PravidlaBodovani.Podle(verze)`, nic opsaného. Test
+`Bodovani_se_tiskne_z_tychz_cisel_podle_kterych_se_pocita` sahá přímo na
+konstanty z `PravidlaBodovani.V1`, takže změna pravidel shodí test, ne až
+rozpor mezi listinou a dokumentem. **To byla jediná vada, která by se
+u takového dokumentu opravdu stala.**
+
+Dvě drobnosti, které z psaní vyplynuly:
+
+- **Čeština se skloňuje i v generovaném textu.** *„škrtá se jedna nejhorší
+  rozjížďka"* × *„škrtají 2 nejhorší rozjížďky"* × *„škrtá 5 nejhorších
+  rozjížděk"* — v dokumentu, který vydává pořadatel, je špatný tvar vidět
+  na první pohled. Má to vlastní test.
+- **Datum i čas se formátují nezávisle na kultuře stroje**, a čas v pražské
+  zóně, ne v zóně serveru: *„9:55, 20. června 2026"*. Tatáž úvaha jako
+  u tabule — regata se jede na Orlíku a „9:55" musí znamenat devět padesát
+  pět tam.
+
+**Startovné je text, ne číslo**, a je to rozhodnutí: bývá to předpis
+(*„300 Kč za loď, 100 Kč každý člen posádky"*), ne jedna částka, a aplikace
+z něj nic nepočítá — `Ucast.Zaplaceno` je evidence platby, ne její výpočet.
+Číslo by předstíralo přesnost, kterou nikde nevyužije.
+
+*Změřeno proti mocku (28. 10. 2026):* regata `izolepa` s vyplněnou
+uzávěrkou, startovným a vyzývacím znamením → dokument má jedenáct bodů,
+čtyři z nich přiznaně prázdné (dráha, konec startů, lhůta 90.3(e),
+odvolání), a stránka je vypisuje nahoře jako *„Vypsání zatím není úplné"*.
+Taby se na 1280 px vejdou na řádek, na 375 px jsou akordeon.
+
 ### R9 — „Vlastní nebezpečí" a souhlas s pravidly: jediná vazba, kterou pohár má, se nesbírá a neukládá
 
 *Původ: střípek 5. Doloženo: `Features/Zavody/VerejnaPrihlaska.cs:16`, `:29`,
 `:87`, `web/app/serie/[slug]/zavody/[zavod]/prihlaska/page.tsx:278–283`,
-ZPJ 4.1(a), 4.3, J1.2(12). Stav: **zapsáno, podle mě nejvážnější nález
-dokumentu**.*
+ZPJ 4.1(a), 4.3, J1.2(12). Stav: **hotovo 28. 10. 2026** (fáze 2.2, viz
+konec nálezu) — znění i záznam. Byl to podle mě nejvážnější nález dokumentu.*
 
 Miloš: *„Jede se to na vlastní nebezpečí."* A protože pohár **není oficiální
 pořadatel** (střípek 5), je tahle věta spolu se souhlasem s pravidly **jediná
@@ -1379,6 +1465,56 @@ jinému než mně.*
 
 > **Místo na citát z diskuse:** _(co dnes účastník podepisuje — je někde papír,
 > nebo se spoléhá na to, že se ví? A kdo je u poháru „pořadatel", když ne klub?)_
+
+### Hotovo 28. 10. 2026 (fáze 2.2)
+
+Všechny tři části nálezu, tedy znění, záznam i ostatní cesty.
+
+**Znění je o tom, o čem má být.** `Features/Zavody/Souhlas.cs`, verze 1:
+*„Souhlasím s tím, že budu vázán Závodními pravidly jachtingu a všemi
+dalšími pravidly, která řídí tento závod, a že se závodu účastním na
+vlastní nebezpečí. Beru na vědomí, že loď bude ve startovní listině a že se
+pořadatel může ozvat na uvedený kontakt."* Pokrývá tedy pravidla (J1.2(12)
+na ně má jmenovitě sousloví), vlastní nebezpečí (Milošovo *„jede se to na
+vlastní nebezpečí"*) i to jediné, na co se formulář ptal dřív. Zaškrtávátko
+odkazuje **na vypsání závodu** té regaty — a to už existuje (R1), takže
+souhlas má na co odkazovat.
+
+**Znění se verzuje a starší se nemění**, stejně jako `PravidlaBodovani`:
+k přihlášce se ukládá `Ucast.SouhlasV` (kdy) a `Ucast.SouhlasVerze` (s čím).
+*„Souhlasil"* bez toho, s čím souhlasil, nedokládá nic.
+
+**Ptají se na něj všechny tři cesty, každá po svém:**
+
+| Cesta | Jak | Proč tak |
+|---|---|---|
+| veřejný formulář | **povinný**, bez něj přihláška neprojde | souhlas dává kapitán sám |
+| pořadatel zapisuje loď | zaškrtávátko *„Kapitán mi potvrdil…"*, **nepovinné** | pořadatel ho zaznamenává za kapitána; loď domluvená telefonem na startu se musí dát zapsat i tak |
+| import ročníku | volitelné pole `souhlas` (čas) na účasti | sešit rozhodčího souhlasy nevede, takže navezené lodě ho skoro všechny nemají — a to je pravda, ne chybějící údaj |
+
+**Souhlas se jen přidává, nikdy nemaže.** Odškrtnutí políčka ani opakované
+nahrání ročníku doklad nesmažou — stejně jako se nemaže vyvěšená směrnice,
+jen se stáhne.
+
+**A je vidět, které lodě ho nemají.** Na obrazovce přihlášek stojí
+*„Bez souhlasu s pravidly: 22 z 23 — …"* a u lodi *„nezaznamenaný"*. Tohle
+do nálezu dopsala peer session: nevynucovat souhlas u pořadatelské cesty
+znamená, že loď zapsaná pořadatelem nemá žádnou vazbu na pravidla, a
+rozhodčí by to měl umět zjistit na jednom místě. Je to **tatáž otázka jako
+u telefonů v bodu 11 návodu** (*„hlásí se celé pole?"*), jen o patro níž, a
+sedí na ni tentýž vzorec: vypsat dole ty, u kterých něco chybí.
+
+*Změřeno proti mocku (28. 10. 2026):* přihláška z veřejného formuláře →
+`souhlasV` uložené s časem; loď zapsaná pořadatelem se zaškrtnutým
+souhlasem → uložené taky, **a to i když se server cestou zeptal na pozdní
+přihlášku do vyhlášené regaty**. Ta otázka byla skutečná díra: potvrzovací
+formulář zadání posílá znovu a souhlas v něm nebyl, takže by padl pod stůl
+pokaždé, když se server zeptá. Našlo se to až průchodem obrazovkou, ne
+čtením kódu.
+
+*Mez zůstává, jak ji nález napsal:* jestli takový souhlas něco právně
+znamená, tenhle kód neřeší a tvrdit to nemůže. Řeší jen to, že znění
+odpovídá tomu, co se po něm chce, a že po něm zůstane doklad.
 
 ### R10 — Stránka regaty: Miloš jmenuje pět položek, aplikace má pět jiných
 

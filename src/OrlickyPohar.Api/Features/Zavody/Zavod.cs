@@ -277,6 +277,51 @@ public class Zavod
     /// </summary>
     public DateOnly? PuvodniDatum { get; set; }
 
+    // --- Vypsání závodu (Dodatek J1) ---------------------------------------
+    // Tři kolonky, které Dodatek J1 žádá do vypsání závodu a aplikace je
+    // neměla (nález R8 oponentury rozhodčího, 28. 10. 2026). Osm z jedenácti
+    // řádků té osnovy už v datech leží; tyhle tři chyběly, takže se vypsání
+    // nedalo vygenerovat celé.
+    //
+    // <b>Všechny jsou nepovinné</b>, a prázdná kolonka se ve vypsání
+    // <b>přizná jako chybějící</b>, nedosadí se pravděpodobná hodnota:
+    // dokument, který si domyslí startovné, je horší než dokument, který
+    // řekne, že ho nezná.
+
+    /// <summary>
+    /// Termín uzávěrky přihlášek — J1.1(5). <c>null</c> znamená, že se
+    /// uzávěrka nevyhlašuje; přihlášky pak končí s vypsáním regaty, jako
+    /// dnes. <b>Nic neblokuje</b>: je to údaj do vypsání, ne mez
+    /// v přihlašování (loď se podle Filipa, 17. 9. 2026, běžně domluví
+    /// telefonem až na startu).
+    /// </summary>
+    public DateOnly? UzaverkaPrihlasek { get; set; }
+
+    /// <summary>
+    /// Výše startovného a za co se platí — J1.1(5).
+    /// <para>
+    /// <b>Text, ne číslo</b>, a schválně: startovné bývá předpis
+    /// (*„300 Kč loď, 100 Kč každý člen posádky"*), ne jedna částka, a
+    /// aplikace z něj nic nepočítá — <see cref="Ucast.Zaplaceno"/> je
+    /// evidence platby, ne její výpočet. Číslo by tedy předstíralo
+    /// přesnost, kterou nikde nevyužije. Stejná úvaha jako u
+    /// <see cref="Typ"/>: seznam je data, ne model.
+    /// </para>
+    /// </summary>
+    public string? Startovne { get; set; }
+
+    /// <summary>
+    /// Čas vyzývacího znamení první rozjížďky — J1.1(6).
+    /// <para>
+    /// <b>Není to čas startu</b>: J1 chce vyzývací znamení, tedy T−5
+    /// (ZPJ 26). Plánovaný start jednotlivé rozjížďky je
+    /// <see cref="Rozjizdka.StartV"/> a vzniká až na rozpravě v den závodu
+    /// (nález K6); tohle je údaj, který se vyhlašuje dopředu a podle
+    /// kterého se lidi chystají.
+    /// </para>
+    /// </summary>
+    public DateTimeOffset? PrvniVyzyvaciZnameni { get; set; }
+
     // --- Rozjížďky → výsledek závodu ---
 
     /// <summary>Kolik nejhorších rozjížděk se škrtá. Okruhový závod typicky 1, vytrvalostní 0.</summary>
@@ -357,6 +402,34 @@ public class Ucast
 
     /// <summary>Kdy přišla přihláška. Prázdné u účastí z importu a zápisu výsledků.</summary>
     public DateTimeOffset? PodanoV { get; set; }
+
+    /// <summary>
+    /// Kdy kapitán potvrdil souhlas s pravidly a vlastním nebezpečím.
+    /// <c>null</c> znamená, že u téhle lodi souhlas <b>není</b> — ani
+    /// starý, ani domnělý.
+    /// <para>
+    /// <b>Proč to musí být záznam, a ne branka ve formuláři</b> (nález R9
+    /// oponentury rozhodčího, 28. 10. 2026). Pohár pořadatelsky ofiko není,
+    /// takže závodníka neváže členství ani licence — váže ho jen to, co
+    /// odklikl při přihlášení (ZPJ 4.1(a), J1.2(12)). Do 28. 10. 2026 se
+    /// souhlas ve <c>VerejnaPrihlaska.ProcNejde</c> zkontroloval a zahodil:
+    /// žádný sloupec, žádná migrace, nikde <c>Souhlas =</c>. Projekt to
+    /// přitom jinde dělá dobře — směrnice se nemažou, jen stahují, bóje se
+    /// sbírá z vody a záznam zůstává.
+    /// </para>
+    /// </summary>
+    public DateTimeOffset? SouhlasV { get; set; }
+
+    /// <summary>
+    /// Verze znění, se kterým kapitán souhlasil — <see cref="Souhlas.Verze"/>.
+    /// <para>
+    /// <b>Bez verze je doklad k ničemu.</b> Znění se bude upřesňovat a
+    /// *„souhlasil"* bez toho, s čím souhlasil, nedokládá nic. Ukládá se
+    /// číslo verze, ne celý text: text té verze drží kód a nemění se
+    /// (stejné pravidlo jako u <c>PravidlaBodovani</c>).
+    /// </para>
+    /// </summary>
+    public int? SouhlasVerze { get; set; }
 
     /// <summary>
     /// Kontakt, jak ho kapitán zadal do této přihlášky. <b>Kopie</b>, ne

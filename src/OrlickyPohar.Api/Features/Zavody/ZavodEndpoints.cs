@@ -144,6 +144,15 @@ public static class ZavodEndpoints
         app.MapGet("/serie/{serieSlug}/zavody/{slug}", DetailAsync)
             .WithTags("Závody")
             .WithSummary("Vrátí regatu s rozjížďkami a výsledky");
+
+        // <b>Veřejně a bez přihlášení</b> (nález R1, 28. 10. 2026): ZPJ 25.1
+        // žádají, aby vypsání bylo dostupné každé lodi <b>dřív, než se
+        // přihlásí</b> — a podle něj se člověk rozhoduje, jestli pojede.
+        // Vlastní cesta, ne pole v detailu: detail si tahá tabule každých
+        // dvacet vteřin a vypsání se mezitím nemění.
+        app.MapGet("/serie/{serieSlug}/zavody/{slug}/vypsani", VypsaniAsync)
+            .WithTags("Závody")
+            .WithSummary("Vrátí vypsání závodu sestavené podle Dodatku J1");
     }
 
     /// <summary>
@@ -198,6 +207,54 @@ public static class ZavodEndpoints
             .ToListAsync(ct);
 
         return [.. smernice.Select(s => Vyveseni.Dto(s, uloziste.VerejnaAdresa)).OfType<SmerniceDto>()];
+    }
+
+    /// <summary>
+    /// Vypsání závodu jako dokument (nálezy R1 a R8, 28. 10. 2026).
+    /// Sestavuje ho <see cref="Vypsani.Sestav"/> z dat regaty a ročníku —
+    /// tady se jen posbírají.
+    /// <para>
+    /// <b>Komunitní akce vypsání nemá</b>, stejně jako nemá výsledky: nejede
+    /// se podle závodních pravidel, takže není co vypisovat.
+    /// </para>
+    /// </summary>
+    private static async Task<Results<Ok<VypsaniDto>, NotFound>> VypsaniAsync(
+        string serieSlug, string slug, AppDbContext db, CancellationToken ct)
+    {
+        var zavod = await db.Zavody
+            .Where(z => z.Slug == slug && z.Publikovano
+                        && z.Serie!.Slug == serieSlug && z.Serie.Publikovano)
+            .Select(z => new
+            {
+                z.Id, z.SerieId, z.Nazev, z.Datum, z.DatumKonce, z.Typ, z.Poradatel, z.Druh,
+                z.UzaverkaPrihlasek, z.Startovne, z.PrvniVyzyvaciZnameni,
+                z.PocetSkrtu, z.KoeficientDoSerie, z.PosunDoSerie, z.Vyhodnoceni,
+                SerieNazev = z.Serie!.Nazev, z.Serie.Rok,
+                SkrtySerie = z.Serie.PocetSkrtu, z.Serie.VerzePravidel,
+            })
+            .FirstOrDefaultAsync(ct);
+
+        if (zavod is null || Kalendar.ProcNejdePoharove(zavod.Druh) is not null)
+            return TypedResults.NotFound();
+
+        var kategorie = await db.Kategorie
+            .Where(k => k.SerieId == zavod.SerieId)
+            .OrderBy(k => k.Poradi)
+            .Select(k => k.Nazev)
+            .ToListAsync(ct);
+
+        var maSmernice = await db.Smernice.AnyAsync(
+            sm => sm.ZavodId == zavod.Id && sm.StazenoV == null, ct);
+
+        return TypedResults.Ok(Vypsani.Sestav(new VypsaniVstup(
+            zavod.SerieNazev, zavod.Rok, zavod.Nazev, zavod.Datum, zavod.DatumKonce,
+            zavod.Poradatel, zavod.Typ,
+            zavod.UzaverkaPrihlasek, zavod.Startovne, zavod.PrvniVyzyvaciZnameni,
+            kategorie,
+            zavod.PocetSkrtu, zavod.KoeficientDoSerie, zavod.PosunDoSerie, zavod.Vyhodnoceni,
+            zavod.SkrtySerie,
+            PravidlaBodovani.Podle(zavod.VerzePravidel),
+            maSmernice)));
     }
 
     private static async Task<Results<Ok<ZavodDetailDto>, NotFound>> DetailAsync(

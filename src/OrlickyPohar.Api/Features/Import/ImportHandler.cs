@@ -432,6 +432,16 @@ internal static class ImportHandler
             // Soubor je sešit rozhodčího: loď v něm přijela, ať ji pořadatel
             // předtím přihlásil, nebo ne.
             u.Stav = StavUcasti.Potvrzena;
+            // <b>Souhlas se jen přidává</b> (nález R9, 28. 10. 2026). Soubor,
+            // který ho nenese, o něm nic netvrdí — a přepsat kvůli tomu
+            // souhlas daný přes web by opakované nahrání ročníku smazalo
+            // doklad, který už existuje. Stejné pravidlo jako u přihlášky
+            // od pořadatele.
+            if (v.Souhlas is { } kdy && u.SouhlasV is null)
+            {
+                u.SouhlasV = kdy.ToUniversalTime();
+                u.SouhlasVerze = Souhlas.Verze;
+            }
             mapa[v.Lod] = u;
         }
 

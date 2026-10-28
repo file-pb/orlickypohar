@@ -15,7 +15,22 @@ public record KategorieVstup(string Nazev, int Poradi);
 
 public record PrihlaskaVstup(string Lod, string Kategorie);
 
-public record UcastVstup(string Lod, string? Kormidelnik, string? Posadka);
+/// <param name="Souhlas">
+/// Kdy kapitán potvrdil souhlas s pravidly a vlastním nebezpečím
+/// (nález R9 oponentury rozhodčího, 28. 10. 2026).
+/// <para>
+/// <b>Nepovinné, a chybějící hodnota znamená „souhlas není"</b> — ne
+/// „nevíme". Sešit rozhodčího souhlasy nevede, takže navezené lodě ho
+/// skoro všechny mít nebudou, a to je pravda, kterou má pořadatel vidět.
+/// Dosadit čas importu by byl doklad o něčem, co se nestalo.
+/// </para>
+/// <para>
+/// Je to <b>čas</b>, ne příznak: u ostatních cest se ukládá okamžik, kdy
+/// kapitán odklikl, a import by jinak jako jediný nesl souhlas bez data.
+/// </para>
+/// </param>
+public record UcastVstup(
+    string Lod, string? Kormidelnik, string? Posadka, DateTimeOffset? Souhlas = null);
 
 /// <summary>
 /// Čas se posílá v sekundách, ne jako TimeSpan. Zápis doby trvání v JSONu není

@@ -187,7 +187,8 @@ public static class KalendarEndpoints
                 // zastávku: na ní samotné je organizátor, nebo ne.
                 z.PoradatelZaznam is not null && (SmiKalendar || organizator),
                 z.Vyhodnoceni,
-                z.PocetSkrtu, z.KoeficientDoSerie, z.PosunDoSerie, z.ProcesniDej);
+                z.PocetSkrtu, z.KoeficientDoSerie, z.PosunDoSerie, z.ProcesniDej,
+                z.UzaverkaPrihlasek, z.Startovne, z.PrvniVyzyvaciZnameni);
         }
     }
 

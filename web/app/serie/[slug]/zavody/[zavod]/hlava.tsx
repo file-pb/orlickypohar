@@ -40,7 +40,7 @@ import { ZavriMimo } from "@/app/zavri-mimo";
  * akce výsledky a lodě, které nikdy nebudou.
  */
 
- export type Sekce = "uvod" | "smernice" | "trat" | "lode" | "vysledky";
+ export type Sekce = "uvod" | "vypsani" | "smernice" | "trat" | "lode" | "vysledky";
 
 /**
  * <b>Pojmenované podle rozhodčího</b> (Filip, 27. 10. 2026: *„Podívej
@@ -57,6 +57,13 @@ import { ZavriMimo } from "@/app/zavri-mimo";
  */
 const NAZVY: Record<Sekce, string> = {
   uvod: "Úvod",
+  // <b>V tabu „Vypsání", v nadpisu „Vypsání závodu"</b> (nález R8,
+  // 28. 10. 2026). Miloš ho jmenuje celé, jenže tabů je po jeho seznamu
+  // sedm a dvakrát delších, a šířka je věcná námitka u R10. Plný název
+  // v nadpisu a krátký v tabu je cesta, kterou projekt už jednou zvolil
+  // (`nazev` a `kratky` u položek správy). Rozhodnout jinak se dá kdykoliv,
+  // je to jedno slovo.
+  vypsani: "Vypsání",
   smernice: "Směrnice",
   trat: "Trať",
   lode: "Startovní listina",
@@ -72,6 +79,11 @@ const NAZVY: Record<Sekce, string> = {
  */
 const VLAJKY: Record<Sekce, Vlajka | null> = {
   uvod: null,
+  // <b>Vypsání vlajku nemá</b>, a ze stejného důvodu jako Úvod: žádný
+  // závodní signál neznamená „tady se vypisuje závod" — vypsání se vydává
+  // týdny předem na břehu. Vymyslet mu vlajku by rozbilo přesně tu
+  // znalost, kvůli které vlajky u tabů jsou (`app/vlajky.tsx`).
+  vypsani: null,
   smernice: "L",
   trat: "M",
   lode: "P",
@@ -84,6 +96,13 @@ function sekce(zavod: ZavodDetail, trat: VerejnaTrat | null, akce: boolean): Sek
 
   return [
     "uvod",
+    // <b>Vypsání má regata vždycky, i neúplné</b> (nálezy R1 a R8,
+    // 28. 10. 2026). ZPJ 25.1 je chtějí dostupné každé lodi dřív, než se
+    // přihlásí, a Miloš je jmenuje jako první položku pro obě publika —
+    // přihlášené i nepřihlášené. Dokument, kterému něco chybí, to o sobě
+    // řekne, a to je taky odpověď; sekce schovaná do té doby, než bude
+    // úplná, by neřekla nic.
+    "vypsani",
     ...((zavod.smernice?.length ?? 0) > 0 ? (["smernice"] as const) : []),
     ...(trat ? (["trat"] as const) : []),
     "lode",

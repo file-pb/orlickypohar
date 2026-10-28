@@ -42,7 +42,18 @@ public record LodNaZastavceDto(
     // Id lodi, ne přihlášky: připojovací kód se vystavuje lodi, která žije
     // napříč ročníky. Obrazovka přihlášek je jediné místo, kde má pořadatel
     // loď před sebou (Filip, 4. 10. 2026). Aditivně, na konci.
-    int LodId = 0);
+    int LodId = 0,
+    /// <summary>
+    /// Kdy kapitán potvrdil souhlas s pravidly a vlastním nebezpečím —
+    /// <c>null</c>, když ho tahle loď <b>nemá</b> (nález R9, 28. 10. 2026).
+    /// <para>
+    /// Vydává se pořadateli a rozhodčímu, ne veřejně: u poháru, který
+    /// pořadatelsky ofiko není, je to jediná vazba závodníka na pravidla,
+    /// takže ten, kdo regatu vede, má vidět, které lodě ji nemají — a lodě
+    /// z importu ji nemají skoro všechny.
+    /// </para>
+    /// </summary>
+    DateTimeOffset? SouhlasV = null);
 
 /// <summary>Jedna změna stavu pro obrazovku. <c>Kdo</c> prázdný znamená „z webu".</summary>
 public record ZmenaUcastiDto(StavUcasti? Ze, StavUcasti Na, DateTimeOffset Kdy, string? Kdo, string? Duvod);
@@ -77,7 +88,20 @@ public record PrihlaseniVstup(
     /// bez jediného zásahu do zápisu, který je přitom zamčený.
     /// </para>
     /// </summary>
-    bool Potvrzeno = false);
+    bool Potvrzeno = false,
+    /// <summary>
+    /// Kapitán pořadateli potvrdil souhlas s pravidly a vlastním nebezpečím
+    /// (<see cref="Souhlas.ZaKapitana"/>).
+    /// <para>
+    /// <b>Nepovinné, a nevynucuje se</b> (nález R9, 28. 10. 2026). Veřejný
+    /// formulář bez souhlasu neprojde, protože tam ho dává kapitán sám;
+    /// tady ho zaznamenává pořadatel za něj, a loď, která se domluví
+    /// telefonem na startu, se zapsat musí i tak. Co se nepotvrdí, zůstane
+    /// nezaznamenané — prázdno je pravda, kdežto dosazený souhlas je
+    /// doklad o něčem, co se nestalo.
+    /// </para>
+    /// </summary>
+    bool Souhlas = false);
 
 public record StavUcastiVstup(StavUcasti Stav, string? Duvod = null);
 
@@ -212,6 +236,16 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
         else
             nova = false;
 
+        // Souhlas se jen <b>přidává</b>: jednou daný se odebráním
+        // zaškrtávátka nemaže (nález R9, 28. 10. 2026). Je to doklad, a
+        // doklad se nemaže úpravou formuláře — stejně jako se nemaže
+        // vyvěšená směrnice, jen se stáhne.
+        if (vstup.Souhlas && ucast.SouhlasV is null)
+        {
+            ucast.SouhlasV = cas.GetUtcNow();
+            ucast.SouhlasVerze = Souhlas.Verze;
+        }
+
         await db.SaveChangesAsync(ct);
 
         var lod = (await LodeAsync(zavod.SerieId, zavodId, Prihlasky.Kdo.Poradatel, jenPrihlaska: prihlaska.Id, ct)).Single();
@@ -323,6 +357,13 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
         ucast.KontaktEmail = Prazdne(vstup.Kapitan.Email);
         ucast.KontaktTelefon = Prazdne(vstup.Kapitan.Telefon);
         ucast.PodanoV = ted;
+        // <b>Souhlas je doklad, ne branka</b> (nález R9, 28. 10. 2026): do té
+        // doby se ve `VerejnaPrihlaska.ProcNejde` zkontroloval a zahodil.
+        // U poháru, který pořadatelsky ofiko není, je přitom jediná vazba
+        // závodníka na pravidla — a bez verze znění by se nedalo říct, s čím
+        // vlastně souhlasil.
+        ucast.SouhlasV = ted;
+        ucast.SouhlasVerze = Souhlas.Verze;
 
         await db.SaveChangesAsync(ct);
 
@@ -540,7 +581,7 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
                 Telefon = u.KontaktTelefon ?? db.Set<KontaktOsoby>()
                     .Where(k => k.OsobaId == u.KormidelnikId)
                     .OrderByDescending(k => k.ZadanoV).Select(k => k.Telefon).FirstOrDefault(),
-                u.Posadka, u.Poznamka, u.PodanoV, u.Zaplaceno, u.StartovnePoznamka,
+                u.Posadka, u.Poznamka, u.PodanoV, u.Zaplaceno, u.StartovnePoznamka, u.SouhlasV,
                 Historie = u.Zmeny.OrderBy(z => z.Id).Select(z => new
                 {
                     z.Ze, z.Na, z.Kdy, z.Duvod,
@@ -568,7 +609,8 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
                     u?.Zaplaceno ?? false, u?.StartovnePoznamka,
                     u is null ? null : [.. u.Historie.Select(z => new ZmenaUcastiDto(z.Ze, z.Na, z.Kdy, z.Kdo, z.Duvod))],
                     u is not null && kdo == Prihlasky.Kdo.Poradatel && Prihlasky.SmiSmazat(u.Stav, u.MaVysledky),
-                    p.LodId);
+                    p.LodId,
+                    u?.SouhlasV);
             })
             .ToList();
     }

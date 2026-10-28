@@ -14,8 +14,26 @@ const API = process.env.API_URL ?? "http://localhost:8080";
 
 type S = components["schemas"];
 
-export type PrihlaskyZastavky = S["PrihlaskyZastavkyDto"];
-export type LodNaZastavce = S["LodNaZastavceDto"];
+export type PrihlaskyZastavky = Omit<S["PrihlaskyZastavkyDto"], "lode"> & {
+  /** Viz {@link LodNaZastavce} — `souhlasV` je dopsané ručně. */
+  lode: LodNaZastavce[];
+};
+/**
+ * Loď na zastávce, jak ji vidí pořadatel.
+ *
+ * <b>`souhlasV` je dopsané ručně</b>, a je to výjimka s důvodem: typy se
+ * generují z OpenAPI **běžícího** API (`packages/api-client/generuj.sh`),
+ * jenže to při startu pouští migrace a bez databáze nenaběhne — na
+ * pracovním stroji databáze nejede (README, *Klient API*). Při příštím
+ * generování se pole objeví ve `schema.d.ts` a tenhle průnik se smaže.
+ */
+export type LodNaZastavce = S["LodNaZastavceDto"] & {
+  /**
+   * Kdy kapitán potvrdil souhlas s pravidly a vlastním nebezpečím.
+   * `null` znamená, že ho tahle loď <b>nemá</b> (nález R9, 28. 10. 2026).
+   */
+  souhlasV?: string | null;
+};
 export type NovaLod = S["NovaLodVstup"];
 // Stav lodi je v dokumentu nepovinný — loď ročníku na regatě být nemusí.
 // Jako klíč slovníku ale prázdný být nesmí.
@@ -153,8 +171,15 @@ export async function prihlas(
    * se počítají body za kódy a za neúčast.
    */
   potvrzeno = false,
+  /**
+   * Kapitán pořadateli potvrdil souhlas s pravidly a vlastním nebezpečím
+   * (nález R9, 28. 10. 2026). <b>Nevynucuje se</b>: na veřejném formuláři
+   * ho dává kapitán sám, tady ho pořadatel jen zaznamenává za něj — a loď,
+   * která se domluví telefonem na startu, se zapsat musí i bez něj.
+   */
+  souhlas = false,
 ): Promise<{ chyba: string; potvrdit?: boolean } | { lod: LodNaZastavce; nova: boolean }> {
-  const odpoved = await posli(kam(serie, zavod), { ...vstup, potvrzeno });
+  const odpoved = await posli(kam(serie, zavod), { ...vstup, potvrzeno, souhlas });
   if (typeof odpoved === "string") return { chyba: odpoved };
   if (!odpoved.ok)
     return { chyba: await hlaska(odpoved), potvrdit: odpoved.status === 409 };

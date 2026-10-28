@@ -13,7 +13,12 @@ public record KapitanVstup(
 /// <summary>
 /// Přihláška lodi z veřejného formuláře.
 /// </summary>
-/// <param name="Souhlas">Kapitán potvrdil pravidla a zveřejnění lodi ve startovní listině.</param>
+/// <param name="Souhlas">
+/// Kapitán odklikl znění <see cref="Zavody.Souhlas.Zneni"/> — pravidla,
+/// vlastní nebezpečí a zveřejnění lodi. <b>Od 28. 10. 2026 se ukládá</b>
+/// (nález R9): do té doby se tu zkontroloval a zahodil, a dokumentace tvrdila,
+/// že se sbírá souhlas s pravidly, zatímco obrazovka mluvila jen o zveřejnění.
+/// </param>
 /// <param name="Past">Skryté pole pro roboty. Člověk ho nevyplní, protože ho nevidí.</param>
 /// <param name="ZobrazenoV">Kdy se formulář otevřel. Robot ho odešle hned.</param>
 public record VerejnaPrihlaskaVstup(
@@ -84,8 +89,7 @@ public static class VerejnaPrihlaska
         if (v.Posadka?.Trim().Length > PosadkaNejvic) return $"Posádka má nejvýš {PosadkaNejvic} znaků.";
         if (v.Poznamka?.Trim().Length > PoznamkaNejvic) return $"Poznámka má nejvýš {PoznamkaNejvic} znaků.";
 
-        if (!v.Souhlas)
-            return "Potvrď, že loď smí být ve startovní listině a že se pořadatel může ozvat.";
+        if (!v.Souhlas) return Zavody.Souhlas.Chybi;
 
         return null;
     }

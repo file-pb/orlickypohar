@@ -275,11 +275,27 @@ function Formular({
         <textarea name="poznamka" rows={3} maxLength={1000} placeholder="Přijedeme až v pátek večer…" />
       </label>
 
+      {/* <b>Souhlas je u tohohle poháru jediná vazba závodníka na
+          pravidla</b> (nález R9 oponentury rozhodčího, 28. 10. 2026). Pohár
+          pořadatelsky ofiko není, takže závodníka neváže členství ani
+          licence — váže ho jen tohle zaškrtnutí (ZPJ 4.1(a); J1.2(12) na
+          to má jmenovitě sousloví). Do 28. 10. 2026 tu stálo jen, že loď
+          smí být ve startovní listině a že se pořadatel může ozvat, tedy
+          souhlas se zveřejněním a kontaktem — o pravidlech ani o vlastním
+          nebezpečí ani slovo, zatímco kód o sobě tvrdil, že souhlas
+          s pravidly sbírá. Znění drží `Features/Zavody/Souhlas.cs` a
+          k přihlášce se ukládá i s číslem verze. */}
       <label style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
         <input name="souhlas" type="checkbox" required style={{ width: "auto", marginTop: "0.2rem" }} />
         <span>
-          Loď smí být ve startovní listině a pořadatel se mi může ozvat na uvedený kontakt.{" "}
-          <Link href="/osobni-udaje">Co se s údaji děje</Link>.
+          Souhlasím s tím, že budu vázán Závodními pravidly jachtingu a všemi
+          dalšími pravidly, která řídí tento závod, a že se závodu účastním{" "}
+          <b>na vlastní nebezpečí</b>. Beru na vědomí, že loď bude ve startovní
+          listině a že se pořadatel může ozvat na uvedený kontakt.{" "}
+          <Link href={`/serie/${serie}/zavody/${zavod}/vypsani`}>
+            Vypsání závodu
+          </Link>{" "}
+          · <Link href="/osobni-udaje">co se s údaji děje</Link>.
         </span>
       </label>
 

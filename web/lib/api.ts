@@ -159,6 +159,41 @@ export async function nactiVerejnouTrat(
   if (!odpoved.ok) throw new ApiNedostupne(`API ${cesta} vrátilo ${odpoved.status}`);
   return (await odpoved.json()) as VerejnaTrat;
 }
+/**
+ * Vypsání závodu — dokument podle Dodatku J1 ZPJ (nálezy R1 a R8
+ * oponentury rozhodčího, 28. 10. 2026).
+ *
+ * <b>Typ je tu psaný ručně, ne ze `schema.d.ts`</b>, a je to výjimka
+ * s důvodem: generátor (`packages/api-client/generuj.sh`) stahuje OpenAPI
+ * z **běžícího** API, jenže to při startu pouští migrace a bez databáze
+ * nenaběhne — a na pracovním stroji databáze nejede (README, *Klient
+ * API*). Při příštím generování se typ objeví ve `schema.d.ts` a tenhle
+ * se smaže.
+ */
+export type BodVypsani = {
+  /** Odkaz do Dodatku J1, třeba `J1.1(2)`. */
+  bod: string;
+  nadpis: string;
+  /** `null` znamená, že to aplikace neví — nedosazuje se pravděpodobná hodnota. */
+  text: string | null;
+};
+
+export type VypsaniZavodu = {
+  nazev: string;
+  serieNazev: string;
+  body: BodVypsani[];
+  /** Nadpisy bodů bez textu. Dokument tím o sobě říká, co mu schází. */
+  chybi: string[];
+};
+
+/**
+ * Vypsání jedné regaty. `null` u komunitní akce a u regaty, která není
+ * veřejná — jako ostatní veřejná čtení.
+ */
+export const nactiVypsani = (serie: string, zavod: string) =>
+  nacti<VypsaniZavodu>(
+    `/serie/${encodeURIComponent(serie)}/zavody/${encodeURIComponent(zavod)}/vypsani`);
+
 export const nactiSerii = (slug: string) => nacti<SerieDetail>(`/serie/${slug}`);
 export const nactiZavod = (serie: string, zavod: string, cerstve = false) =>
   nacti<ZavodDetail>(`/serie/${serie}/zavody/${zavod}`, cerstve);

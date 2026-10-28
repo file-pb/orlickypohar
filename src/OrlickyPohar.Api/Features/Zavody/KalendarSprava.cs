@@ -45,7 +45,12 @@ public record ZastavkaRadek(
     int PosunDoSerie = 0,
     // Procesní děj regaty. Formulář ho předvyplňuje jako ostatní počty;
     // aditivně, na konci. Viz `Zavod.ProcesniDej`.
-    bool ProcesniDej = false);
+    bool ProcesniDej = false,
+    // Kolonky vypsání závodu — formulář je předvyplňuje jako počty, jinak
+    // by úprava termínu ukazovala prázdno tam, kde hodnota platí.
+    DateOnly? UzaverkaPrihlasek = null,
+    string? Startovne = null,
+    DateTimeOffset? PrvniVyzyvaciZnameni = null);
 
 public record PrehledZastavekDto(
     string Serie,
@@ -99,7 +104,17 @@ public record ZastavkaVstup(
     /// </summary>
     int? PosunDoSerie = null,
     /// <summary>Procesní děj u regaty. Nepovinné jako škrty.</summary>
-    bool? ProcesniDej = null);
+    bool? ProcesniDej = null,
+    // --- Vypsání závodu (Dodatek J1, nález R8 z 28. 10. 2026) -------------
+    // Tři kolonky, které J1 žádá do vypsání a aplikace je neměla. Nepovinné
+    // jako škrty a ze stejného důvodu: starý klient je neposílá a úprava
+    // termínu by je jinak vymazala.
+    /// <summary>Termín uzávěrky přihlášek — J1.1(5).</summary>
+    DateOnly? UzaverkaPrihlasek = null,
+    /// <summary>Výše startovného a za co se platí — J1.1(5). Volný text.</summary>
+    string? Startovne = null,
+    /// <summary>Čas vyzývacího znamení první rozjížďky — J1.1(6), tedy T−5.</summary>
+    DateTimeOffset? PrvniVyzyvaciZnameni = null);
 
 public record StavZastavkyVstup(StavZavodu Stav);
 
@@ -186,6 +201,9 @@ public class KalendarSprava(AppDbContext db)
             KoeficientDoSerie = vstup.KoeficientDoSerie ?? 1.0m,
             PosunDoSerie = vstup.PosunDoSerie ?? 0,
             ProcesniDej = vstup.ProcesniDej ?? false,
+            UzaverkaPrihlasek = vstup.UzaverkaPrihlasek,
+            Startovne = Prazdne(vstup.Startovne),
+            PrvniVyzyvaciZnameni = vstup.PrvniVyzyvaciZnameni?.ToUniversalTime(),
             Stav = StavZavodu.Planovany,
             Publikovano = false,
             // Pořadí se hned přepočítá podle data; tohle je jen než dostane
@@ -230,6 +248,10 @@ public class KalendarSprava(AppDbContext db)
         zastavka.KoeficientDoSerie = vstup.KoeficientDoSerie ?? zastavka.KoeficientDoSerie;
         zastavka.PosunDoSerie = vstup.PosunDoSerie ?? zastavka.PosunDoSerie;
         zastavka.ProcesniDej = vstup.ProcesniDej ?? zastavka.ProcesniDej;
+        zastavka.UzaverkaPrihlasek = vstup.UzaverkaPrihlasek ?? zastavka.UzaverkaPrihlasek;
+        zastavka.Startovne = Prazdne(vstup.Startovne) ?? zastavka.Startovne;
+        zastavka.PrvniVyzyvaciZnameni =
+            vstup.PrvniVyzyvaciZnameni?.ToUniversalTime() ?? zastavka.PrvniVyzyvaciZnameni;
         // Jiné jméno přiřadí jiného pořadatele; přejmenovat klub se dá jen
         // v jeho medailonku, jinak by jeden překlep v kalendáři přepsal
         // jméno na všech jeho zastávkách.

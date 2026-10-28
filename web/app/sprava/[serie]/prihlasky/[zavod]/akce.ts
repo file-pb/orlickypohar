@@ -40,7 +40,9 @@ export async function prihlasAkce(formular: FormData) {
   // Potvrzení pozdní přihlášky u vyhlášené regaty: server se ptá 409
   // a obrazovka nabídne tlačítko, které se zeptá podruhé s `potvrzeno`.
   const potvrzeno = text(formular, "potvrzeno") === "ano";
-  const vysledek = await prihlas(serie, zavod, { prihlaskaId }, potvrzeno);
+  // Souhlas s pravidly, který kapitán dal pořadateli mimo web (nález R9).
+  const souhlas = text(formular, "souhlas") === "ano";
+  const vysledek = await prihlas(serie, zavod, { prihlaskaId }, potvrzeno, souhlas);
 
   redirect(
     kam(
@@ -48,7 +50,12 @@ export async function prihlasAkce(formular: FormData) {
       zavod,
       "chyba" in vysledek
         ? vysledek.potvrdit
-          ? { chyba: vysledek.chyba, potvrdit: String(prihlaskaId) }
+          ? // <b>Souhlas se nese do otázky s sebou</b> (nález R9,
+            // 28. 10. 2026). Bez toho by zaškrtnutý souhlas padl pod
+            // stůl pokaždé, když se server zeptá na pozdní přihlášku —
+            // a pořadatel by o něm nevěděl, protože druhé klepnutí je
+            // „Přihlásit i tak", ne nový formulář.
+            { chyba: vysledek.chyba, potvrdit: String(prihlaskaId), souhlas: souhlas ? "ano" : undefined }
           : { chyba: vysledek.chyba }
         : { stav: vysledek.nova ? "prihlasena" : "jiz", lod: vysledek.lod.lod },
     ),
@@ -73,13 +80,16 @@ export async function novaLodAkce(formular: FormData) {
   // ještě není. Bez tohohle ji do vyhlášené regaty nešlo přidat vůbec:
   // otázka přišla, odpovědět na ni nebylo kde (16. 10. 2026).
   const potvrzeno = text(formular, "potvrzeno") === "ano";
-  const vysledek = await prihlas(serie, zavod, { novaLod }, potvrzeno);
+  const souhlas = text(formular, "souhlas") === "ano";
+  const vysledek = await prihlas(serie, zavod, { novaLod }, potvrzeno, souhlas);
 
   if ("chyba" in vysledek)
     redirect(
       kam(serie, zavod, {
         chyba: vysledek.chyba,
         potvrdit: vysledek.potvrdit ? NOVA : undefined,
+        // Souhlas se nese do otázky stejně jako zbytek zadání — viz výš.
+        souhlas: souhlas ? "ano" : undefined,
         nova: "1",
         nazev: novaLod.nazev,
         kategorie: novaLod.kategorie,

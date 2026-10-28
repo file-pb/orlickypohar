@@ -8636,6 +8636,70 @@ a ve správě zůstaly *Přihlášky*.
 **Fáze 2 až 4 jsou nezačaté** — vypsání závodu jako dokument, startovní
 procedura a zbytek. Pořadí a rozsah drží plán v oponentuře.
 
+## Z oponentury rozhodčího: fáze 2 (28. 10. 2026)
+
+Vypsání závodu a souhlas závodníka — druhá fáze plánu v
+`docs/OPONENTURA-ROZHODCI.md`. **Mění chování, proto sem.** Rozhodnutí
+o návrhu jsou u nálezů R1, R8 a R9, tady je jen to, co se od teď chová
+jinak.
+
+**Vypsání závodu je dokument, ne stav v kalendáři** *(nálezy R1 a R8)*.
+Rozhodčí: *„Vypsání závodu … Forma je dokument."* Veřejná cesta
+`GET /serie/{serie}/zavody/{zavod}/vypsani` vydá dokument sestavený podle
+osnovy Dodatku J1 ZPJ, a na stránce regaty je druhým tabem hned za Úvodem —
+pro přihlášené i nepřihlášené, protože podle vypsání se člověk rozhoduje,
+jestli pojede (ZPJ 25.1).
+
+**U tohohle poháru to drží víc než formu.** Pohár pořadatelsky ofiko není,
+takže ZPJ pro něj neplatí z titulu členství ve svazu — platí jen proto, že
+si je závod vezme, a prohlašuje se to podle ZPJ 89.2(a) právě ve vypsání,
+bodem J1.1(2). Dvacet bodů za diskvalifikaci, škrty a koeficienty jsou
+vlastní pravidla poháru a jediné místo, kde smějí být napsaná, je vypsání
+a plachetní směrnice.
+
+Co z toho plyne pro kód:
+
+- **dokument se generuje, nepíše** — `Features/Zavody/Vypsani.cs`, čistá
+  funkce bez databáze se čtrnácti testy. Bodování se tiskne z **týchž
+  čísel, podle kterých se počítá** (`PocetSkrtu`, `KoeficientDoSerie`,
+  `PosunDoSerie`, `Vyhodnoceni`, `PravidlaBodovani`), takže se s výpočtem
+  nemůže rozejít;
+- **tři nové kolonky regaty**, všechny nepovinné: `UzaverkaPrihlasek`,
+  `Startovne` (text — bývá to předpis, ne jedna částka) a
+  `PrvniVyzyvaciZnameni` (T−5 podle ZPJ 26, **ne** čas startu; plánovaný
+  start rozjížďky je pořád `Rozjizdka.StartV` z fáze 1);
+- **co aplikace neví, dokument nedosazuje** a vypíše to nahoře jako
+  *„Vypsání zatím není úplné"*. Místo konání tam bude vždycky: `Zavod` ho
+  nevede nikde;
+- **úkon „uznání vypsání" rozhodčím se nestavěl.** Dokument se hlásí jako
+  vygenerovaný návrh, protože co přesně rozhodčí uznává, je v R1
+  nezodpovězená otázka.
+
+**Souhlas závodníka je doklad, ne branka** *(nález R9)*. Miloš: *„Jede se to
+na vlastní nebezpečí."* Formulář dřív sbíral souhlas se **zveřejněním
+a kontaktem**, zatímco dokumentace toho parametru tvrdila, že sbírá souhlas
+s pravidly — a ať znělo jakkoliv, **neukládalo se nic**. Teď:
+
+- znění je v `Features/Zavody/Souhlas.cs`, **verzuje se** a starší verze se
+  nemění (stejné pravidlo jako u `PravidlaBodovani`);
+- k přihlášce se ukládá `Ucast.SouhlasV` a `SouhlasVerze`, a zaškrtávátko
+  odkazuje na **vypsání** té regaty;
+- ptají se na něj všechny tři cesty: veřejný formulář **povinně**, pořadatel
+  a import **nepovinně** — tam ho zaznamenávají za kapitána a loď domluvenou
+  telefonem na startu musí jít zapsat i bez něj;
+- souhlas se jen **přidává**, nikdy nemaže: odškrtnutí ani opakovaný import
+  doklad nesmažou;
+- na obrazovce přihlášek je vidět, **které lodě ho nemají** — tatáž otázka
+  jako u telefonů v bodu 11 návodu, jen o patro níž.
+
+**Migrace `VypsaniZavoduASouhlas`** přidává pět nullable sloupců a nic
+nepřepisuje. **Na stroji neběžela** — Docker ani Postgres tu nejsou, takže
+testy proti databázi (335 z 938) se nepustily; prošlo 603 testů bez
+databáze a oba buildy.
+
+**Fáze 3 a 4 jsou nezačaté** — startovní procedura a zbytek. Pořadí drží
+plán v oponentuře.
+
 ## Přijaté riziko: dvě zranitelnosti v appce (23. 10. 2026)
 
 Dependabot hlásí v `app/package-lock.json` dvě zranitelnosti, které **nejde

@@ -1547,6 +1547,12 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int>("PrihlaskaId")
                         .HasColumnType("integer");
 
+                    b.Property<DateTimeOffset?>("SouhlasV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("SouhlasVerze")
+                        .HasColumnType("integer");
+
                     b.Property<string>("StartovnePoznamka")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
@@ -1680,6 +1686,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<bool>("ProcesniDej")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTimeOffset?>("PrvniVyzyvaciZnameni")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("Publikovano")
                         .HasColumnType("boolean");
 
@@ -1694,12 +1703,18 @@ namespace OrlickyPohar.Api.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("character varying(80)");
 
+                    b.Property<string>("Startovne")
+                        .HasColumnType("text");
+
                     b.Property<int>("Stav")
                         .HasColumnType("integer");
 
                     b.Property<string>("Typ")
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
+
+                    b.Property<DateOnly?>("UzaverkaPrihlasek")
+                        .HasColumnType("date");
 
                     b.Property<int>("Vyhodnoceni")
                         .HasColumnType("integer");
