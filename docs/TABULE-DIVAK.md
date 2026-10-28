@@ -564,8 +564,16 @@ sedět na stáří měřeném proti hodinám**, a tím pádem i tohle: druhá ce
 jsou**, takže po ní tabule obrys dostat nemůže. Kdo chce na tabuli
 někdy obrys, musí vybrat tu první.
 
-Otázka polarity obrysu (tatáž session) je tím **odložená, ne otevřená**:
-dokud se nerozhodne, odkud na tabuli stáří pochází, nemá se co obracet.
+**Rozhodnuto 28. 10. 2026 (Filip): obrys jen ve správě** (zavedený
+v `51ac576`, přehled živých poloh). Na tabuli nepůjde, dokud se
+nerozhodne, odkud na ní stáří pochází — a otázka polarity tím padá
+celá: dvě obrazovky se stejnou značkou v opačném významu nehrozí,
+protože druhá ji nemá.
+
+Pro tenhle nález to znamená dvě věci. **Netlačí ho nic zvenčí** —
+obrysu se nic nekrátí tím, že se nerozhodne. A **nedá se o něm
+rozhodnout mimochodem**: zůstala jediná otázka a je o tom, k čemu
+tabule je, ne o tom, jak se co nakreslí.
 
 Zůstává tedy jediné rozhodnutí, a je o tom, k čemu tabule je: **má říkat
 totéž co správa (stáří proti hodinám), nebo to, co dnes říká navíc (kdo
