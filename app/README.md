@@ -69,6 +69,19 @@ fronta večer klidně půl hodiny — čas nejde na kompilaci, ale na volný str
 (`APK_URL`), jinak stránka `/appka` nabízí předchozí build. Nic přitom
 neselže, takže si toho nikdo nevšimne — skript to proto připomíná sám.
 
+**`versionCode` se zvyšuje sám** (`autoIncrement` v profilu `preview`,
+od 28. 10. 2026). Číslo drží EAS, ne `app.json` — `eas.json` má
+`appVersionSource: "remote"`, takže `eas build:version:get` řekne, kde
+zrovna je.
+
+Do té doby měly všechny buildy `versionCode 1`, protože `autoIncrement`
+byl jen v profilu `production`. Instalaci to nebránilo (Android odmítne
+jen **nižší** číslo, stejné projde jako přeinstalace), ale mělo to tři
+důsledky: telefon nepoznal, že je APK novější, v *Nastavení → Aplikace*
+stálo před i po totéž číslo — takže **nešlo ověřit, že se aktualizace
+povedla** —, a kdyby se někdy zapnuly automatické aktualizace, neměly by
+podle čeho poznat, že je co stahovat.
+
 Dvě věci, které se zapisují natrvalo a mění se draho:
 
 - `android.package` je `cz.klihovka.orlickypohar`. Jiný balíček je pro
