@@ -97,11 +97,8 @@ export async function prihlas(): Promise<string | null> {
     const vysledek = await zadost.promptAsync(d);
     if (vysledek.type === "cancel" || vysledek.type === "dismiss") return null;
     if (vysledek.type !== "success") {
-      // `description` místo `message`: od expo 57.0.31 `AuthError` dědí
-      // z `CodedError`, který `message` ve svých typech nevydává. Text pro
-      // člověka je stejně v `description` — RFC 6749 ho tak pojmenovává.
       return vysledek.type === "error"
-        ? (vysledek.error?.description ?? "Poskytovatel přihlášení odmítl.")
+        ? (vysledek.error?.message ?? "Poskytovatel přihlášení odmítl.")
         : "Přihlášení se nepovedlo.";
     }
 
