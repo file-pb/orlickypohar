@@ -15,6 +15,7 @@ import * as Location from 'expo-location';
 import { Linking } from 'react-native';
 import * as TaskManager from 'expo-task-manager';
 
+import { baterieProcent, obnovBaterii } from './baterie';
 import { zkusZiveAsync } from './nahravani';
 import { bezicZaznam, zapisBody } from './zaznam';
 
@@ -60,9 +61,15 @@ TaskManager.defineTask<DataPolohy>(ULOHA, async ({ data, error }) => {
       kurz: p.coords.heading,
       casGps: p.timestamp,
       podvrzeny: p.mocked === true,
+      // Z posledního čtení — nové se vyžádá až za zápisem, aby zápis
+      // zůstal před prvním `await`. Viz `baterie.ts`.
+      baterie: baterieProcent(),
     })),
     INTERVAL_MS,
   );
+
+  // Až teď, když je dávka na disku.
+  obnovBaterii();
 
   // Teprve tady, za zápisem, se odesílá — a jen jednou za minutu, o což se
   // stará `zkusZiveAsync`. Přenos je automatický a průběžný, ne úkon

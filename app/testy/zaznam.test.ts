@@ -28,6 +28,21 @@ zkus('druhý záznam se nezaloží, dokud první běží', () => {
   ukonciZaznam(id); smazZaznam(id);
 });
 
+console.log('Baterie');
+zkus('stav baterie se zapíše k bodu a chybějící zůstane prázdný', () => {
+  uklid();
+  const id = zalozZaznam({ lod: 'LUNA', zdroj: 'gps' });
+  zapisBody(id, [
+    { sirka: 49.51, delka: 14.16, casGps: T0, baterie: 64 },
+    { sirka: 49.52, delka: 14.17, casGps: T0 + 60_000 },
+  ]);
+  const b = body(id);
+  // Druhý bod baterii nenese; `null` je správná odpověď, ne nula —
+  // z nuly by tabule udělala „vybitý telefon".
+  assert.deepEqual(b.map((x) => x.baterie), [64, null]);
+  ukonciZaznam(id); smazZaznam(id);
+});
+
 console.log('Ostříhání na okno závodu (podmínka 5)');
 zkus('body po hranici se smažou, dřívější zůstanou', () => {
   uklid();
