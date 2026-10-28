@@ -1299,6 +1299,31 @@ tedy i změna návodu.
 > **A kontrola „hlásí se celé pole?" se tím stěhuje z vody do klubovny** — což je
 > jediné místo, kde se vybitý nebo nespárovaný telefon dá ještě spravit. Bod 11
 > návodu tu otázku dnes klade rozhodčímu na vodě, kde už s odpovědí nic nenadělá.
+>
+> **Když se loď v T−něco nerozhlásí** (Filip: *„pak budeme vymýšlet nějaké
+> propíchnutí"*), je dobré vědět, že **mechanismus na to od 28. 10. existuje** —
+> fáze 4.3 přinesla `Pobidka` a `Odeslani.Spesne`, tedy způsob, jak telefonu
+> poslat zprávu bez čekání na minutový takt, na odběr regaty.
+>
+> **Pokryje ale jen jeden ze tří důvodů, proč loď mlčí**, a to je potřeba říct
+> rovnou:
+>
+> | Proč mlčí | Pomůže propíchnutí? |
+> |---|---|
+> | **appka se uspala** (Android doze), signál má | **ano** — tohle je přesně ten případ, kvůli kterému push existuje |
+> | **nemá signál** | ne — push nedorazí ze stejného důvodu, z jakého nedorazila poloha |
+> | **vybitý nebo vypnutý telefon** | ne, a je to nejčastější |
+>
+> Takže propíchnutí stojí za to postavit, ale **nenahrazuje tu kontrolu
+> v klubovně** — naopak ji dělá důležitější, protože dva ze tří případů jde
+> ošetřit jedině na břehu. A u třetího, vybité baterie, je jediné technické
+> opatření **vidět procenta předem**, což je zrovna ta hodnota, která dnes na
+> server nechodí (viz past výš).
+>
+> *Jedna věc k tomu zbývá nedořešená, a není to rozhodnutí: aby šlo poznat, že se
+> loď „nerozhlásila", musí být **známo, že měla** — tedy seznam lodí, které jsou
+> ve startovní listině a nehlásí se. To je tentýž přehled, co má vzniknout podle
+> rozřešení výš; propíchnutí je jen tlačítko u jeho řádků.*
 
 ### R4 — Mapa 10 minut před startem. Dnes naskočí až výstřelem
 
