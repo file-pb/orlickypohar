@@ -554,9 +554,23 @@ se významem, ne obtížností:
   například kolečko, které zčervená, když nejčerstvější bod zestárne;
   u čísel u lodí by se nezměnilo nic.
 
-Souvisí to s otázkou polarity obrysu (session devíti os): **„stáří"
-znamená na tabuli a ve správě dvě různé věci**, a obrys by ten rozdíl
-zdědil, ať se nakreslí jakkoliv.
+**Ty dvě cesty nejsou rovnocenné, a rozhodlo o tom až to, co z nálezu
+vyplynulo jinde** (session devíti os, 28. 10. 2026). Obrys jako stáří
+informace by na tabuli postavený na relativním stáří svítil *„čerstvé"*
+u všech lodí právě v zamrzlém poli — tedy by lhal přesně v tom jediném
+případě, kvůli kterému by tam byl. Z toho jim vyšlo pravidlo **obrys musí
+sedět na stáří měřeném proti hodinám**, a tím pádem i tohle: druhá cesta
+(příznak o celém poli) spraví kolečko, ale **čísla u lodí nechá, jaká
+jsou**, takže po ní tabule obrys dostat nemůže. Kdo chce na tabuli
+někdy obrys, musí vybrat tu první.
+
+Otázka polarity obrysu (tatáž session) je tím **odložená, ne otevřená**:
+dokud se nerozhodne, odkud na tabuli stáří pochází, nemá se co obracet.
+
+Zůstává tedy jediné rozhodnutí, a je o tom, k čemu tabule je: **má říkat
+totéž co správa (stáří proti hodinám), nebo to, co dnes říká navíc (kdo
+je pozadu za polem)?** Obojí je obhajitelné; dnešní stav je ten druhý
+a jeho cenou je tenhle nález.
 
 ## Pozorování, ze kterých návrh nevznikl
 
