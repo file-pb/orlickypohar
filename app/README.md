@@ -69,6 +69,32 @@ fronta večer klidně půl hodiny — čas nejde na kompilaci, ale na volný str
 (`APK_URL`), jinak stránka `/appka` nabízí předchozí build. Nic přitom
 neselže, takže si toho nikdo nevšimne — skript to proto připomíná sám.
 
+## Aktualizace bez nové instalace (OTA)
+
+```bash
+npx eas-cli update --branch preview --message "co se mění"
+```
+
+Appka si při startu řekne o aktualizaci a stáhne ji; projeví se při
+dalším spuštění. Zavedeno 28. 10. 2026 (`expo-updates`), protože do té
+doby se APK aktualizovalo jedině tak, že si ho člověk znovu stáhl —
+a stránka `/appka` tiše nabízela sedm týdnů starý build, aniž by to
+někdo poznal.
+
+**Tři věci, které to nevyřeší, a je potřeba je vědět dopředu:**
+
+1. **Jen JavaScript a assety.** Nová nativní knihovna nebo oprávnění
+   znamená nové APK tak jako tak. Hlídá to `runtimeVersion` s politikou
+   `fingerprint`: ten se počítá z nativních závislostí, takže build se
+   starým nativním kódem update, který ho potřebuje, **nedostane** — radši
+   nepřijde nic než aplikace, která spadne při startu.
+2. **Stávající APK v telefonech OTA nedostanou.** Kdo má build z dřívějška,
+   nemá v sobě `expo-updates`; musí jednou stáhnout nové APK a od té doby
+   už se aktualizuje sám.
+3. **Kanál musí souhlasit.** Build z profilu `preview` poslouchá větev
+   `preview`; update poslaný jinam k němu nedojde — a nic přitom neselže,
+   jen se nic nestane.
+
 **`versionCode` se zvyšuje sám** (`autoIncrement` v profilu `preview`,
 od 28. 10. 2026). Číslo drží EAS, ne `app.json` — `eas.json` má
 `appVersionSource: "remote"`, takže `eas build:version:get` řekne, kde
