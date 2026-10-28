@@ -46,6 +46,35 @@ public static class Workflow
         Zapis.Otevreny(stav) ? Role.Organizator : Role.Rozhodci;
 
     /// <summary>
+    /// Kdo pustí výsledky rozjížďky ven, nebo je stáhne zpátky.
+    /// <para>
+    /// <b>Rozhodčí ročníku</b> (Filip, 27. 10. 2026). Dřív to byl správce
+    /// a plán to odvozoval takhle: rozhodčí říká „čísla platí“, správce
+    /// „ať to vidí veřejnost“, a to jsou dvě různá rozhodnutí. Jenže audit
+    /// obsazení ukázal, co z toho je v provozu: správce není ani v jedné
+    /// z pěti sestav, které k vodě doopravdy jezdí
+    /// (<c>docs/AUDIT-OBSAZENI.md</c>, nález O3), takže poslední krok po
+    /// každé regatě dělal někdo, kdo u ní nebyl — a veřejnost čekala, až si
+    /// doma otevře notebook.
+    /// </para>
+    /// <para>
+    /// <b>Dvojice očí se neztrácí, posouvá se o stupeň:</b> čísla pořád
+    /// zapisuje pořadatel a ven je pouští někdo jiný. Správci zůstává
+    /// <c>Potvrzeno</c>, tedy „konečné, dál se needituje“, publikace celého
+    /// ročníku a zveřejnění regaty. Jediné obsazení, kde na čísla nesáhne
+    /// nikdo druhý, je to, kde je jeden člověk pořadatel i rozhodčí
+    /// zároveň — a tam ho aplikace nemá jak nahradit.
+    /// </para>
+    /// <para>
+    /// Platí to na obě strany a to <b>stažení</b> je ta důležitější
+    /// polovina: kdo smí říct „čísla neplatí“ a vrátit je k revizi, musí je
+    /// umět i sundat z webu. Jinak tam visí čísla, o kterých sám prohlásil,
+    /// že jsou špatně.
+    /// </para>
+    /// </summary>
+    public static readonly Role KdoSmiPublikovat = Role.Rozhodci;
+
+    /// <summary>
     /// Kdo smí posunout výsledky <paramref name="ze"/> na <paramref name="na"/>.
     /// <para>
     /// <b>Eliminace je zrušení rozjížďky a rozhoduje o ní stav zápisu</b>

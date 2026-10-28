@@ -54,8 +54,8 @@ public record PrehledVysledkuDto(
 /// </para>
 /// <para>
 /// <b>Proč tu jsou čtyři počty a ne dva.</b> Rozcestník z nich skládá
-/// „co teď", a práce rozhodčího je jiná než práce správce: rozhodčí
-/// podepisuje stav zápisu, správce pouští ven. Dokud se počítalo jen
+/// „co teď", a podepsat čísla je jiná práce než pustit je ven — i když
+/// od 27. 10. 2026 dělá obojí rozhodčí. Dokud se počítalo jen
 /// nepublikované, rozjížďka, která <b>už venku byla</b> a jen prošla
 /// revizí, rozhodčímu nikde nenaskočila — pořadatel mu ji předal a on se
 /// to nedozvěděl (průchod scénářem D3, 8. 10. 2026).
@@ -65,12 +65,27 @@ public record PrehledVysledkuDto(
 /// Čísla rozjížděk, které čekají na pořadatele: vrácené s důvodem.
 /// </param>
 /// <param name="KPodpisu">
-/// Čísla těch, co čekají na rozhodčího: zapsané, ale ještě ne potvrzené.
+/// Čísla těch, co čekají na podpis rozhodčího: zapsané nebo ověřené.
 /// Publikace do toho nemluví — veřejná rozjížďka může na podpis čekat
 /// zrovna tak.
+/// <para>
+/// <b>Schválené sem od 27. 10. 2026 nepatří.</b> Dokud pouštěl ven správce,
+/// znamenalo „ještě ne potvrzené“ taky „ještě nehotové“ a schválená
+/// rozjížďka tu seděla správně. Jenže větu o ní četl rozhodčí — „čeká na
+/// tvůj podpis“ u čísel, která sám před chvílí podepsal. Teď je schválená
+/// rozjížďka v <paramref name="KPublikaci"/>, kde na něj doopravdy čeká.
+/// </para>
 /// </param>
 /// <param name="KPublikaci">
-/// Čísla těch, co čekají na správce: potvrzené, a přesto ne venku.
+/// Čísla podepsaných, které přesto nejsou venku: schválené nebo potvrzené.
+/// Od 27. 10. 2026 je pouští <b>rozhodčí</b>
+/// (<see cref="Workflow.KdoSmiPublikovat"/>).
+/// <para>
+/// <b>Co tím zůstalo bez upomínky:</b> schválená rozjížďka, která už venku
+/// je a čeká jen na správcovo <c>Potvrzeno</c>. Je to archivní zámek
+/// („konečné, dál se needituje“), ne práce, kvůli které se někam spěchá —
+/// a správce ji na obrazovce výsledků vidí.
+/// </para>
 /// </param>
 public record ZastavkaVysledkyDto(
     string Zavod,
@@ -116,11 +131,12 @@ public class VysledkySprava(AppDbContext db, TimeProvider cas)
                     .OrderBy(r => r.Cislo).Select(r => r.Cislo).ToList(),
                 z.Rozjizdky
                     .Where(r => r.StavVysledku == StavVysledku.Navrzeno
-                                || r.StavVysledku == StavVysledku.Overeno
-                                || r.StavVysledku == StavVysledku.Schvaleno)
+                                || r.StavVysledku == StavVysledku.Overeno)
                     .OrderBy(r => r.Cislo).Select(r => r.Cislo).ToList(),
                 z.Rozjizdky
-                    .Where(r => r.StavVysledku == StavVysledku.Potvrzeno && !r.Publikovano)
+                    .Where(r => (r.StavVysledku == StavVysledku.Schvaleno
+                                 || r.StavVysledku == StavVysledku.Potvrzeno)
+                                && !r.Publikovano)
                     .OrderBy(r => r.Cislo).Select(r => r.Cislo).ToList()))
             .ToListAsync(ct);
 

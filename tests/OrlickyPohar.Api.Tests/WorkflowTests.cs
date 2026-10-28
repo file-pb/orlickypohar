@@ -197,6 +197,39 @@ public class WorkflowTests
         Assert.True(Prava.Smi(rozhodci, zPotvrzeneho));
     }
 
+    /// <summary>
+    /// <b>Ven pouští rozhodčí, ne ten, kdo čísla napsal</b> (Filip,
+    /// 27. 10. 2026; dřív to byl správce — proč se to změnilo, stojí
+    /// u <see cref="Workflow.KdoSmiPublikovat"/> a v nálezu O3
+    /// v <c>docs/AUDIT-OBSAZENI.md</c>).
+    /// <para>
+    /// Nehlídá se tu ta role sama, ale vztah, kvůli kterému pravidlo
+    /// existuje: <b>pořadatel, který zápis pořídil, ho ven nepustí.</b>
+    /// Kdyby se publikace někdy posunula na organizátora, tenhle test
+    /// spadne — a to je přesně ta chvíle, kdy se má někdo ozvat.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public void Ven_pousti_rozhodci_ne_zapisovatel()
+    {
+        var organizator = new[] { new UdeleneRole(Role.Organizator, 1, 7) };
+        var rozhodci = new[] { new UdeleneRole(Role.Rozhodci, 1) };
+        var spravce = new[] { new UdeleneRole(Role.Spravce, 1) };
+        var publikace = new Pozadavek(Workflow.KdoSmiPublikovat, 1, 7);
+
+        Assert.False(Prava.Smi(organizator, publikace));
+        Assert.True(Prava.Smi(rozhodci, publikace));
+
+        // Správce rozhodčího pokrývá, takže o publikaci nepřišel.
+        Assert.True(Prava.Smi(spravce, publikace));
+
+        // Potvrzení ale zůstalo jeho: publikace není poslední stupeň řady.
+        var potvrzeni = new Pozadavek(
+            Workflow.KdoSmi(StavVysledku.Schvaleno, StavVysledku.Potvrzeno), 1, 7);
+        Assert.False(Prava.Smi(rozhodci, potvrzeni));
+        Assert.True(Prava.Smi(spravce, potvrzeni));
+    }
+
     [Fact]
     public void Eliminovana_rozjizdka_neplati_nikde()
     {

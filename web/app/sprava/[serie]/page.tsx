@@ -305,20 +305,22 @@ function coTeď(udelena: Udelena[], serie: string, zastavky: ZastavkaVysledky[])
     });
   }
 
-  // 4. Podepsané, a přesto ne venku. Publikace není stav a není to podpis:
-  //    „čísla platí" říká rozhodčí, „ať to vidí veřejnost" správce.
+  // 4. Podepsané, a přesto ne venku. Publikace pořád není stav — ale od
+  //    27. 10. 2026 ji dělá rozhodčí (`Workflow.KdoSmiPublikovat`), protože
+  //    správce u vody nebývá a čísla pak čekala, až si někdo doma otevře
+  //    notebook (`docs/AUDIT-OBSAZENI.md`, nález O3).
   for (const z of zastavky.filter((z) => z.kPublikaci.length > 0)) {
-    if (!smi(udelena, { role: "Spravce", serie })) continue;
+    if (!smi(udelena, { role: "Rozhodci", serie })) continue;
     ukoly.push({
       nazev: `Pustit ven — ${z.nazev}`,
       popis:
         z.kPublikaci.length === 1
-          ? `${z.kPublikaci[0]}. rozjížďka je potvrzená, a nikdo ji neuvidí.`
-          : `${z.kPublikaci.length} potvrzených rozjížděk nikdo neuvidí.`,
+          ? `${z.kPublikaci[0]}. rozjížďka je podepsaná, a nikdo ji neuvidí.`
+          : `${z.kPublikaci.length} podepsaných rozjížděk nikdo neuvidí.`,
       // Tahle jediná zůstává na seznamu i u jedné: pouští se po dávkách
       // a tlačítko „Pustit ven" je právě tam.
       kam: kam(z.zavod),
-      role: "Spravce",
+      role: "Rozhodci",
     });
   }
 

@@ -136,7 +136,7 @@ Tyhle věci není potřeba objevovat znovu — je potřeba změřit, **jak moc v
 | ~~**Správa nemá rozcestník.** Neexistuje `/sprava` ani `/sprava/{ročník}`; jediná navigace je rozbalovací nabídka pod ikonkou účtu~~ | **hotovo 6. 10. 2026** (70cb074) — `web/app/sprava/page.tsx`, `web/app/sprava/[serie]/page.tsx`; nabídka na rozcestník vede, `maSpravu` ve `web/app/profil.tsx` |
 | **Posádku nejde zadat ve správě.** Pořadatel ji jen vidí; zapsat ji umí kapitán ve veřejné přihlášce nebo import. Kormidelník totéž | `Podrobnosti` v `prihlasky/[zavod]/page.tsx` |
 | ~~**Koncept z telefonu se vydává za ztracenou práci, i když je to vlastní přepsaný zápis.** `rozdily` hází do jedné hromady řádek, který v uloženém zápisu vůbec není, a řádek, kde uložené má jiné. Obojí se vypíše pod „Proti uloženému zápisu má navíc tohle" a „počítej i s nimi", ve formuláři dokonce jako zápis, „který uložená čísla nemají" — a *Doplnit do formuláře* jedním klepnutím vrátí cizí opravu zpátky~~ | **nalezeno reprodukcí C12 a opraveno 8. 10. 2026** — `podleRizika` (`koncept.ts`) rozdíly rozděluje a obě obrazovky mají **dva seznamy**: „tohle uložený zápis vůbec nemá, bez doplnění se to ztratí" a „tady má uložený zápis něco jiného… mohl to být druhý zapisovatel, který tvůj zápis opravil". Ve formuláři jsou místo jednoho tlačítka dvě — *Doplnit chybějící* a *Přepsat rozdílná čísly z telefonu* |
-| ~~**Předání opraveného zápisu zpátky rozhodčímu je tiché.** Úkol „Ověřit a pustit ven" se počítal jen pro zastávky, kde není venku všechno, takže rozjížďka, která už venku je a jen prošla revizí, rozhodčímu nenaskočila — a přitom čekala na jeho podpis~~ | **hotovo 8. 10. 2026** — přehled zastávek vydává `kPodpisu` (zapsané, ještě ne potvrzené) a `kPublikaci` (potvrzené a přesto ne venku), a „Co teď" z nich dělá **dva různé úkoly**: *Ověřit výsledky* rozhodčímu podle **stavu zápisu**, *Pustit ven* správci podle publikace. Publikace není podpis — „čísla platí" říká rozhodčí, „ať to vidí veřejnost" správce |
+| ~~**Předání opraveného zápisu zpátky rozhodčímu je tiché.** Úkol „Ověřit a pustit ven" se počítal jen pro zastávky, kde není venku všechno, takže rozjížďka, která už venku je a jen prošla revizí, rozhodčímu nenaskočila — a přitom čekala na jeho podpis~~ | **hotovo 8. 10. 2026** — přehled zastávek vydává `kPodpisu` (zapsané, ještě ne potvrzené) a `kPublikaci` (potvrzené a přesto ne venku), a „Co teď" z nich dělá **dva různé úkoly**: *Ověřit výsledky* rozhodčímu podle **stavu zápisu**, *Pustit ven* správci podle publikace. Publikace není podpis — „čísla platí" říká rozhodčí, „ať to vidí veřejnost" správce. **Od 27. 10. 2026 pouští výsledky ven rozhodčí** a *Pustit ven* je jeho dlaždice; správci zůstalo *Potvrzeno* a zveřejnění regaty (viz D2) |
 | ~~**Rozhodčí se k výsledkům dostane jen přes „Co teď".** V „Celém ročníku" má Kalendář a Oprávnění, ne Výsledky, a odkazy u jednotlivých regat chtějí organizátora všechny tři. Zbývá úkol „Ověřit a pustit ven", a ten se počítá jen pro rozjížďky, které nejsou k revizi — dokud je něco k revizi, rozhodčí na tu regatu odkaz nemá~~ | **hotovo 8. 10. 2026** — položka smí mít víc podob a vybere se ta, na kterou člověk má (`prvniPlatna` v `web/lib/co-smim.ts`). Rozhodčí teď vidí Výsledky v celém ročníku i všechny tři odkazy u každé regaty, se svými popisy („Ověřit rozjížďky, vrátit k revizi a pustit ven", „Kdo přijel a koho vyloučit ze závodu"). Opsané ze serveru, který ho u všech tří pouští (`VysledkyEndpoints.PohledAsync`, `PrihlaskyEndpoints.PrehledAsync`, `SmerniceEndpoints.SmiAsync`). **„Co teď" se nechalo být**: regata vrácená k revizi čeká na pořadatele, ne na rozhodčího — ten na ni teď má odkaz, i když ho to nenutí |
 | **Medailonek pořadatele je jen z kalendáře.** ~~Směrnice taky~~ — ty jsou od 6. 10. 2026 na rozcestníku ročníku | `Zastavka` v `kalendar/page.tsx`, odkaz pod `smiMedailonek`; směrnice jsou položka *Plachetní směrnice* v `polozkyZastavky` (`web/lib/co-smim.ts`) |
 
@@ -1279,13 +1279,19 @@ rozhodnutí mezi dvěma platnými čísly — ne hledání cesty.
 **D1 — Založit regatu.**
 *Zadání:* Založ regatu a dej jí termín.
 
-**D2 — Ověřit výsledky.** Rozhodčí to sám nedotáhne, a to je zjištění.
+**D2 — Ověřit výsledky.** ~~Rozhodčí to sám nedotáhne, a to je zjištění.~~
+**Od 27. 10. 2026 dotáhne.**
 *Zadání:* Ověř výsledky jedné rozjížďky a pusť je ven.
-*Pro moderátora:* **„pustit ven" není jeho.** `Workflow.KdoSmi` dává
-rozhodčímu *Ověřeno*, *Schváleno* a *K revizi*; *Potvrzeno* a publikaci
-dělá správce. Zadání je proto schválně napsané tak, jak ho člověk dostane
-ústně — a měří se, jestli pozná, kde jeho část končí, a najde, kdo
-pokračuje. Nedokončení tu **není selhání účastníka.**
+*Pro moderátora:* ~~**„pustit ven" není jeho.**~~ **Jeho.** Publikaci
+výsledků dělá rozhodčí (`Workflow.KdoSmiPublikovat`; důvod v `docs/PLAN.md`,
+*Pouští ven rozhodčí*, a v nálezu O3 v `docs/AUDIT-OBSAZENI.md`).
+`Workflow.KdoSmi` mu dává *Ověřeno*, *Schváleno* a *K revizi*, publikaci
+k tomu; správci zůstalo *Potvrzeno*, tedy archivní zámek.
+**Scénář tím měří něco jiného než dřív:** ne „pozná, kde jeho část končí",
+ale **jestli ho po schválení napadne čísla taky pustit ven.** Jsou to dvě
+klepnutí na dvou místech a nic ho ke druhému nenutí — v „co teď" na to
+řádek je (*Pustit ven*), na obrazovce výsledků tlačítko. Zadání zůstává
+napsané tak, jak ho člověk dostane ústně.
 *Projito 8. 10. 2026 jako `zdenek`:* celá řada navrženo → ověřeno →
 schváleno → potvrzeno → venku, každý krok s větou, co znamená („Čísla sedí
 s papírem z vody", „Protesty vyřízené, pořadí platí", „Konečné. Dál se

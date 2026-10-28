@@ -430,7 +430,7 @@ k revizi, publikovat nebo eliminovat**. Stavy tedy nejsou volba, jsou zadané.
 | `Overeno` | rozhodčí | čísla sedí s papírem z vody |
 | `Schvaleno` | rozhodčí | protesty vyřízené, pořadí platí |
 | `Potvrzeno` | správce | konečné, dál se needituje |
-| `Publikovano` | správce | vidí veřejnost |
+| `Publikovano` | **rozhodčí** (od 27. 10. 2026, dřív správce — viz níž) | vidí veřejnost |
 | `KRevizi` | rozhodčí i správce | vráceno zpátky s důvodem |
 | `Eliminovano` | správce | rozjížďka se nepočítá (zrušená, neplatná) |
 
@@ -447,6 +447,34 @@ publikace ztratila. Kdyby to byl jeden sloupec, jedno by přepisovalo druhé.
 
 Přechody hlídá jedna funkce s testy, ne rozeseté podmínky po endpointech.
 Správce smí přeskočit dopředu — to už v plánu bylo a platí dál.
+
+### Pouští ven rozhodčí (Filip, 27. 10. 2026)
+
+**Změna proti odvození níž** (*Odvozeno: publikuje správce*), a proti tomu, co
+tu stálo od začátku. Důvod je z provozu, ne z úvahy: audit obsazení prošel
+regatu v pěti sestavách lidí, které k vodě doopravdy jezdí, a **v žádné
+z nich není správce** (`docs/AUDIT-OBSAZENI.md`, nález O3). Poslední krok po
+každé regatě tedy dělal někdo, kdo u ní nebyl, a veřejnost čekala, až si
+doma otevře notebook.
+
+**Dvojice očí se tím neztrácí, posouvá se o stupeň.** Čísla pořád zapisuje
+pořadatel a ven je pouští někdo jiný — ověřeno testem
+`Ven_pousti_rozhodci_ne_zapisovatel`: pořadatel regaty na publikaci nedosáhne
+ani po tom, co ji sám zapsal.
+
+**Co zůstává správci:** `Potvrzeno` („konečné, dál se needituje"),
+`Eliminovano` u podepsaných čísel, zveřejnění samotné regaty v kalendáři,
+publikace celého ročníku, udělování rolí a lodě s kapitány. Nezveřejněná
+regata pořád schová i puštěné výsledky, takže nový závod se bez správce ven
+nedostane — jen už to není otázka každého závodního dne.
+
+**Co se tím ztratilo:** schválenou rozjížďku, která už venku je a čeká jen na
+správcovo `Potvrzeno`, nikdo nepřipomíná. Je to archivní zámek, ne práce,
+kvůli které se spěchá, a na obrazovce výsledků ji správce vidí — ale v „co
+teď" na ni řádek není.
+
+Pravidlo i s důvodem bydlí v `Workflow.KdoSmiPublikovat`, takže se na ně dá
+zeptat bez databáze a obrazovka ho počítá z téhož místa jako endpoint.
 
 ## Role a oprávnění
 
@@ -491,9 +519,14 @@ organizátor „zapisuje výsledky"; z dřívějšího plánu rozhodčí „ově
 a schvaluje". Sedí to na sebe: zapsat a schválit nemá dělat tentýž člověk,
 jinak je schválení jen druhé kliknutí téhož.
 
-**Odvozeno: publikuje správce.** Zůstává z dřívějšího plánu. Rozhodčí říká
+~~**Odvozeno: publikuje správce.** Zůstává z dřívějšího plánu. Rozhodčí říká
 „čísla platí", správce „ať to vidí veřejnost" — a to je jiné rozhodnutí,
-zejména u ročníku s vymyšlenými daty.
+zejména u ročníku s vymyšlenými daty.~~ **Přepsáno 27. 10. 2026: výsledky
+rozjížďky pouští ven rozhodčí** — ta úvaha platila, dokud se nezměřilo, že
+správce není v žádné sestavě lidí, která k vodě jezdí. Celé zdůvodnění je
+výš v *Pouští ven rozhodčí*; zveřejnění **regaty** a **ročníku** zůstalo
+správci, takže jeho „ať to vidí veřejnost" nezmizelo, jen se posunulo
+o patro výš.
 
 **Odvozeno: role udělují správci.** Rozhodčí přiřazuje organizátora a editora
 **konkrétní zastávce** *(zadáno)*; udělit někomu právo na celý ročník, nebo
@@ -6259,11 +6292,13 @@ v kalendáři.
 | Čtení a zápis | `Features/Zavody/VysledkySprava.cs` |
 | Endpointy a rozhodnutí, kdo smí | `Features/Zavody/VysledkyEndpoints.cs` |
 
-**Zapisuje pořadatel, ověřuje a schvaluje rozhodčí, potvrzuje správce.**
-Tabulka workflow výš má u `Navrzeno` napsáno „editor" — je to starší zápis
-téhož. Podle novějšího zadání rolí píše editor **jen na blog**, kdežto
-rozjížďky a výsledky spravuje organizátor, takže platí ten. Hlídá to
-`WorkflowTests`.
+**Zapisuje pořadatel, ověřuje, schvaluje a pouští ven rozhodčí, potvrzuje
+správce.** Tabulka workflow výš má u `Navrzeno` napsáno „editor" — je to
+starší zápis téhož. Podle novějšího zadání rolí píše editor **jen na blog**,
+kdežto rozjížďky a výsledky spravuje organizátor, takže platí ten. Hlídá to
+`WorkflowTests`. Publikace přešla na rozhodčího 27. 10. 2026 (*Pouští ven
+rozhodčí* výš); test `Ven_pousti_rozhodci_ne_zapisovatel` hlídá to
+podstatné — pořadatel, který čísla napsal, je ven nepustí.
 
 **Zpátky se chodí přes revizi, ne krokem vedle.** Couvnout o stupeň nejde
 ani správci: vrácení má povinný důvod a ten by se dal potichu obejít.

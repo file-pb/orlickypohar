@@ -94,11 +94,12 @@ Co **ustoupit má**, je tohle — a jsou to tři různé věci:
   a *„Vrátit stavitelům — vidí to ten, kdo trať staví"* (O11). To není
   obřad, to je nedorozumění: aplikace ví, že je to tentýž člověk, a dělá,
   že ne.
-- **Zeď na konci, kterou zkrátit nejde.** `Potvrzeno` a publikace patří
+- **Zeď na konci, kterou zkrátit nejde.** `Potvrzeno` a publikace patřily
   **správci** a správce **není v žádném z pěti obsazení** (O3). Ať je
-  u vody jeden člověk nebo pět, poslední dvě klepnutí za ně udělá někdo,
-  kdo tam není. **Tohle je jediné místo, kde nestačí ergonomie a musí se
-  rozhodnout o pravidle** — a to rozhodnutí je Filipovo, ne tohohle auditu.
+  u vody jeden člověk nebo pět, poslední dvě klepnutí za ně udělal někdo,
+  kdo tam není. **Tohle bylo jediné místo, kde nestačí ergonomie a musí se
+  rozhodnout o pravidle.** Filip rozhodl 27. 10. 2026: **výsledky pouští
+  ven rozhodčí.** Podrobnosti a co se tím ztratilo jsou v O3.
 
 ---
 
@@ -173,7 +174,38 @@ a kudy se přiřazuje. Dnes není ani jedno.
 
 ### O3 — Konec řady patří správci, a správce není v žádném z pěti obsazení
 
-*Všechna obsazení. Změřeno: dvě odpovědi mocku, pravidlo v API. Stav: **zapsáno**. **Hlavní nález auditu.***
+*Všechna obsazení. Změřeno: dvě odpovědi mocku, pravidlo v API. Stav: **rozhodnuto a opraveno 27. 10. 2026**. **Hlavní nález auditu.***
+
+> **Filipovo rozhodnutí: výsledky pouští ven rozhodčí.** Z možnosti (c) níž,
+> a s vědomím, že „čísla platí" a „ať to vidí veřejnost" tím u rozjížďky
+> říká týž člověk. Pravidlo i s důvodem je `Workflow.KdoSmiPublikovat`,
+> v plánu oddíl *Pouští ven rozhodčí*.
+>
+> **Co se tím povedlo.** Celá řada od zápisu po veřejná čísla se dá odjet
+> lidmi, kteří u vody jsou — měřeno znovu za Miloše: vrátit k revizi,
+> stáhnout z webu, zpátky do návrhu, ověřit, schválit, pustit ven, všechno
+> 200. Spolu s tím padl i nález **O4**: kdo smí říct „čísla neplatí", je
+> teď smí i sundat.
+>
+> **Co drží dál.** Dvojice očí: pořadatelka Jana, která čísla zapsala,
+> dostane na publikaci 403 a `smiPublikovat: false` — test
+> `Ven_pousti_rozhodci_ne_zapisovatel`. Jediné obsazení bez druhého páru
+> očí zůstává to první, kde je jeden člověk obojí; tam ho aplikace nemá
+> jak nahradit.
+>
+> **Co zůstalo správci.** `Potvrzeno` (archivní zámek), zveřejnění
+> **regaty** v kalendáři a publikace ročníku. Nově založená regata se tedy
+> bez správce ven pořád nedostane (O2) — jen už to není otázka každého
+> závodního dne, protože regata bývá zveřejněná dávno před startem.
+>
+> **Co se tím ztratilo.** Schválenou rozjížďku, která už venku je a čeká
+> jen na `Potvrzeno`, nikdo nepřipomíná: `kPodpisu` se zúžilo na
+> *Navrzeno* a *Overeno* (jinak by rozhodčí četl „čeká na tvůj podpis"
+> u čísel, která sám podepsal) a `kPublikaci` se rozšířilo na *Schváleno*
+> i *Potvrzeno*, které nejsou venku. Správce to má na obrazovce výsledků,
+> ne v „co teď". **Tohle je ta část změny, kterou Filip nezadal a já ji
+> udělal, aby byla ta první vidět** — bez ní by se rozhodčí o publikaci
+> z rozcestníku nedozvěděl vůbec.
 
 Celá řada v obsazení 1, jedním člověkem, na Izolepě:
 
@@ -206,7 +238,7 @@ plán argumentuje.
 
 ### O4 — Rozhodčí řekne „čísla neplatí" a nemá jak je stáhnout z webu
 
-*Obsazení 1–5. Změřeno na veřejné stránce. Stav: **zapsáno**.*
+*Obsazení 1–5. Změřeno na veřejné stránce. Stav: **opraveno 27. 10. 2026** spolu s O3 — rozhodčí teď má u rozjížďky tlačítko *Stáhnout z webu* (ověřeno na obrazovce i přes API). Otevřená zůstává jen druhá polovina návrhu níž: označit na veřejné stránce čísla, která se právě přepočítávají.*
 
 Publikace je vlastní příznak, ne stupeň řady — to je v plánu schválně.
 Důsledek v provozu: když rozhodčí vrátí rozjížďku k revizi, **zůstane
@@ -259,7 +291,8 @@ Rozcestník u rozhodčího psal:
   Rozhodčího ani správce udělit nesmí (`Udeleni.RozhodciSmiUdelit`), a sama
   obrazovka oprávnění mu ty dvě role v nabídce ani neukáže.
 - *Výsledky — „Ověřit rozjížďky, vrátit k revizi a pustit ven."* Pustit ven
-  nesmí (O3).
+  tehdy nesměl (O3). Od 27. 10. 2026 smí, takže se tahle věta vrátila
+  zpátky — ale už je pravdivá.
 
 Je to přesně to, proti čemu stojí hlavička `co-smim.ts`: *„slib naprázdno je
 horší než chybějící odkaz"*. **Opraveno**: všechny tři položky mají teď
@@ -536,4 +569,7 @@ položení:
    po vlastním zápisu je jeho další krok, ne cizí?
 2. **Co udělá v kalendáři s regatou, kterou právě založil?** Tlačítko
    *Vypsat* tam není a nic neříká proč (O2).
-3. **Komu zavolá, když má výsledky schválené a nejsou venku?** (O3)
+3. ~~**Komu zavolá, když má výsledky schválené a nejsou venku?**~~
+   Zavřeno rozhodnutím z 27. 10. — místo toho: **napadne ho po schválení
+   čísla taky pustit ven?** Jsou to dvě klepnutí na dvou místech a nic ho
+   ke druhému nenutí (viz D2 v `docs/SCENARE-OVLADANI.md`).

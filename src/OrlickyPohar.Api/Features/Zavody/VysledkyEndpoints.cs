@@ -155,8 +155,10 @@ public static class VysledkyEndpoints
             .Produces<RozjizdkaSpravaRadek>()
             .WithSummary("Pustí výsledky rozjížďky na veřejný web, nebo je stáhne")
             .WithDescription(
-                "Správce ročníku. Publikace není stav: potvrzený výsledek smí " +
-                "zůstat neveřejný a publikovaný se smí vrátit k revizi.");
+                "Rozhodčí ročníku. Publikace není stav: potvrzený výsledek smí " +
+                "zůstat neveřejný a publikovaný se smí vrátit k revizi. " +
+                "Zveřejnění samotné regaty je jiná cesta a patří správci — " +
+                "u nezveřejněné regaty veřejnost neuvidí ani puštěné výsledky.");
     }
 
     private static async Task<IResult> ZastavkyAsync(
@@ -439,8 +441,11 @@ public static class VysledkyEndpoints
 
         var (rozsah, rozjizdka) = nalezena;
 
-        // Rozhodčí říká „čísla platí", správce „ať to vidí veřejnost".
-        if (!await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Spravce, rozsah.SerieId), ct))
+        // Rozhodčí ročníku. Pravidlo i s důvodem bydlí ve `Workflow`, aby
+        // se na ně dalo zeptat bez databáze — a aby ho obrazovka počítala
+        // z téhož místa jako endpoint.
+        if (!await rozsahy.SmiAsync(
+                kdo, new Pozadavek(Workflow.KdoSmiPublikovat, rozsah.SerieId), ct))
             return Results.Forbid();
 
         await sprava.PublikujAsync(rozjizdka, vstup.Publikovano, ct, upozorneni);
@@ -495,7 +500,16 @@ public static class VysledkyEndpoints
             // a obrazovka zápisu řekne sama, proč je jen ke čtení.
             return new RozjizdkaSpravaRadek(
                 r.Cislo, r.StartV, r.Stav, r.DoSerie, r.StavVysledku, r.Publikovano,
-                r.DuvodRevize, pocetVysledku, Spravce, mozne,
+                // Pouští ven rozhodčí (`Workflow.KdoSmiPublikovat`); správce
+                // ho pokrývá, takže se na něj ptát zvlášť nemusíme.
+                r.DuvodRevize, pocetVysledku,
+                SmiPublikovat: Workflow.KdoSmiPublikovat switch
+                {
+                    Role.Organizator => organizator,
+                    Role.Spravce => Spravce,
+                    _ => Rozhodci,
+                },
+                MozneStavy: mozne,
                 SmiZapisovat: organizator && Zapis.Otevreny(r.StavVysledku),
                 SmiDoPoharu: Workflow.KdoSmiDoSerie(r.StavVysledku) switch
                 {

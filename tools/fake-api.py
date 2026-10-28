@@ -2202,7 +2202,10 @@ def rozjizdka_radek(r, zavod=None):
             "konecV": r.get("konecV"), "stav": r["stav"],
             "doSerie": r["doSerie"], "stavVysledku": r["stavVysledku"],
             "publikovano": r["publikovano"], "duvodRevize": r.get("duvodRevize"),
-            "pocetVysledku": len(r.get("vysledky", [])), "smiPublikovat": spravce,
+            # Ven pouští rozhodčí ročníku (`Workflow.KdoSmiPublikovat`,
+            # Filip 27. 10. 2026); správce ho pokrývá, tak se neptáme zvlášť.
+            "pocetVysledku": len(r.get("vysledky", [])),
+            "smiPublikovat": smi("Rozhodci"),
             # Přeskakovat smí jen správce — proto se mu posílá i do `proc_nejde`.
             "mozneStavy": [s for s in VSECHNY_VYSLEDKY
                            if s != r["stavVysledku"]
@@ -2748,8 +2751,11 @@ def role_pro_cestu(metoda, cesta):
         # pořadatel na cizí regatě doopravdy vidí.
         if metoda == "GET":
             return (NAHLED, None)
+        # Výsledky ven pouští **rozhodčí** ročníku, ne správce
+        # (`Workflow.KdoSmiPublikovat`, Filip 27. 10. 2026). Zveřejnění
+        # samotné regaty je jiná cesta a zůstalo správci.
         if zbytek.endswith("/publikace"):
-            return ("Spravce", None)
+            return ("Rozhodci", None)
         if zbytek.endswith("/stav") or zbytek.endswith("/pohar"):
             return None
         return ("Organizator", zavod)
@@ -4595,9 +4601,10 @@ class H(BaseHTTPRequestHandler):
         muze = smi_ted
 
         if co == "publikace":
-            # „Čísla platí" říká rozhodčí, „ať to vidí veřejnost" správce.
-            if not muze("Spravce"):
-                return self.chyba(403, "Pouštět výsledky ven smí správce ročníku.")
+            # Ven pouští rozhodčí ročníku (`Workflow.KdoSmiPublikovat`,
+            # Filip 27. 10. 2026); správce ho pokrývá.
+            if not muze("Rozhodci"):
+                return self.chyba(403, "Pouštět výsledky ven smí rozhodčí ročníku.")
             r["publikovano"] = bool(vstup.get("publikovano"))
             return self.odpoved(rozjizdka_radek(r, zavod))
 
@@ -5719,11 +5726,12 @@ class H(BaseHTTPRequestHandler):
                                        if r["stavVysledku"] == "KRevizi"),
                      # Na koho se čeká. Podpis rozhodčího je na stavu zápisu,
                      # ne na publikaci: veřejná rozjížďka může čekat zrovna tak.
+                     # Schválená sem od 27. 10. 2026 nepatří — podepsaná je
+                     # a čeká na vypuštění ven, tedy o řádek níž.
                      "kPodpisu": sorted(r["cislo"] for r in z["rozjizdky"]
-                                        if r["stavVysledku"] in ("Navrzeno", "Overeno",
-                                                                 "Schvaleno")),
+                                        if r["stavVysledku"] in ("Navrzeno", "Overeno")),
                      "kPublikaci": sorted(r["cislo"] for r in z["rozjizdky"]
-                                          if r["stavVysledku"] == "Potvrzeno"
+                                          if r["stavVysledku"] in ("Schvaleno", "Potvrzeno")
                                           and not r["publikovano"])}
                     for z in sorted((z for z in D["zavody"] if z["druh"] == "Pohar"),
                                     key=lambda z: z["poradi"])]

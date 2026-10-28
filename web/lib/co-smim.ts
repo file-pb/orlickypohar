@@ -205,11 +205,10 @@ export function polozkyRocniku(udelena: Udelena[], serie: string): Polozka[] {
       },
       {
         nazev: "Výsledky",
-        // Pustit ven rozhodčí nesmí: publikace je správcovská
-        // (`VysledkyEndpoints.PublikaceAsync`), a *Potvrzeno* taky
-        // (`Workflow.KdoSmi`). Správce sem nedojde — chytí ho pořadatelská
-        // podoba nad tímhle, která vypuštění ven jmenuje správně.
-        popis: "Ověřit rozjížďky a vrátit je k revizi.",
+        // Pustit ven od 27. 10. 2026 rozhodčí smí (`Workflow.KdoSmiPublikovat`);
+        // *Potvrzeno* zůstalo správci (`Workflow.KdoSmi`), a to se sem nepíše —
+        // je to archivní zámek, ne krok, kvůli kterému se na obrazovku chodí.
+        popis: "Ověřit rozjížďky, vrátit k revizi a pustit ven.",
         kam: kam("/vysledky"),
         role: "Rozhodci",
         pozadavek: { role: "Rozhodci", serie },
@@ -281,11 +280,10 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
       {
         nazev: "Výsledky",
         kratky: "výsledky",
-        // Pustit ven rozhodčí nesmí: publikace je správcovská
-        // (`VysledkyEndpoints.PublikaceAsync`), a *Potvrzeno* taky
-        // (`Workflow.KdoSmi`). Správce sem nedojde — chytí ho pořadatelská
-        // podoba nad tímhle, která vypuštění ven jmenuje správně.
-        popis: "Ověřit rozjížďky a vrátit je k revizi.",
+        // Pustit ven od 27. 10. 2026 rozhodčí smí (`Workflow.KdoSmiPublikovat`);
+        // *Potvrzeno* zůstalo správci (`Workflow.KdoSmi`), a to se sem nepíše —
+        // je to archivní zámek, ne krok, kvůli kterému se na obrazovku chodí.
+        popis: "Ověřit rozjížďky, vrátit k revizi a pustit ven.",
         kam: kam("/vysledky"),
         role: "Rozhodci",
         pozadavek: { role: "Rozhodci", serie },
