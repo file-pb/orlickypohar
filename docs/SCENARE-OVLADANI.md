@@ -596,31 +596,29 @@ Dvě věci, které si z provedení zaslouží zápis:
   místo, kde se to může rozejít. Tím se zároveň splnil ten předpoklad níž,
   aniž by se do té trojice muselo sáhnout.
 
-**Tři věci k rozhodnutí**, všechny v ukázce rozepsané:
+**Rozhodnuto: svítí čerstvé, a jen ve správě** (Filip, 28. 10. 2026).
+Obrys drží původní metaforu — čerstvé svítí, staré vychládá. Opačná
+možnost byla neznačit nic, dokud je všechno v pořádku, a obrys dát *až*
+lodi, která se dlouho neozvala; je obhajitelná (*„kdyby svítilo všechno,
+nesvítí nic"*), ale obrátila by význam a projekt schválně drží, aby se
+tatáž věc četla na obou obrazovkách stejně.
 
-- **Svítí čerstvé, nebo se značí staré?** Návrh drží Filipovu metaforu —
-  čerstvé svítí, staré vychládá. Ze strany tabule přišel opačný návrh: nic
-  neznačit, dokud je všechno v pořádku, a obrys dát *až* lodi, která se
-  dlouho neozvala. Je obhajitelný (*„kdyby svítilo všechno, nesvítí nic"*),
-  ale **obrátí význam**: ve správě by obrys znamenal „čerstvé", na tabuli
-  „zastaralé". Projekt přitom schválně drží, aby se tatáž věc četla na obou
-  obrazovkách stejně — tak jako barvy stavů.
+**Volit mezi nimi ale nakonec nebylo potřeba, a je to zapsané jako nález
+14 v `docs/TABULE-DIVAK.md`.** Zmrazený kanál poloh — tedy „telefony
+umlkly, API odpovídá dál" — nechal na tabuli všech sedmnáct řádků na
+`před 0 s` jako čerstvé, a kolečko stáří to nezachytilo, protože drží
+stáří **snímku**, ne poloh. Obrys postavený na tom relativním stáří by
+v zamrzlém poli **svítil „čerstvé" u všech lodí**, tedy lhal by přesně
+v tom jediném případě, kvůli kterému existuje. Z toho plyne pravidlo
+jednodušší než volba polarity: **obrys musí sedět na stáří měřeném proti
+hodinám.** Správa takové má, tabule ne — `web/lib/stopy.ts` pole `stav`
+z API vůbec nepřebírá a obrazovka si ho počítá znovu a jinak. Dvě
+obrazovky s touž značkou v opačném významu proto nehrozí: druhá ji nemá.
+Kdyby ji jednou dostat měla, musí napřed přestat to pole zahazovat —
+a vzor, jak se o `stav` ze serveru opřít, je odzkoušený tady.
 
-  **Tahle otázka ale zatím ani nenastává**, a rozhodl to nález 14
-  v `docs/TABULE-DIVAK.md` (28. 10. 2026). Zmrazený kanál poloh — tedy
-  „telefony umlkly, API odpovídá dál" — nechal na tabuli všech sedmnáct
-  řádků na `před 0 s` ve třídě `nacrt-cerstva`, a kolečko stáří to
-  nezachytilo, protože drží stáří **snímku**, ne poloh. Obrys postavený na
-  tom relativním stáří by v zamrzlém poli **svítil „čerstvé" u všech lodí**,
-  tedy lhal by přesně v tom jediném případě, kvůli kterému existuje.
+**Zbývají dvě věci k rozhodnutí:**
 
-  **Z toho plyne pravidlo, které je jednodušší než volba polarity: obrys
-  musí sedět na stáří měřeném proti hodinám, ať jde kamkoli.** Správa takové
-  má (server posílá `stav`, obrazovka bere `snimek.ted`). Tabule ne —
-  `web/lib/stopy.ts` pole `stav` z API vůbec nepřebírá (slovo `stav` v něm
-  není ani jednou) a obrazovka si ho počítá znovu a jinak. **Takže tabule
-  obrys nedostane, dokud se nerozhodne, odkud na ní stáří pochází**, a to
-  je rozhodnutí o tabuli, ne o téhle škále.
 - **Láme se barva textu tam, kde obrys?** Dnes se text přebarvuje na minutě
   (`STARNE_PO_S = 60`), tedy uvnitř odesílacího cyklu. Je to **tentýž
   problém, který posunul obrys na dvě minuty**, jen u textu žije v kódu
