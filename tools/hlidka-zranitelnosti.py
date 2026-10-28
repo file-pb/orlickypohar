@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Hlídka dvou odmítnutých zranitelností v appce.
+"""Hlídka odmítnutých zranitelností v appce.
 
-**Proč to existuje:** 23. 10. 2026 byly dvě hlášení Dependabota odmítnuty
-jako `tolerable_risk` (`zod` #25, `decode-uri-component` #2). Odmítnuté
+**Proč to existuje:** 23. 10. 2026 byla dvě hlášení Dependabota odmítnuta
+jako `tolerable_risk` (`zod` #25, `decode-uri-component` #2), 28. 10. 2026
+přibylo třetí (`deepmerge` #26). Odmítnuté
 hlášení už GitHub **sám neotevře**, i když mezitím vyjde záplata nebo se
 riziko zhorší. Bez hlídky by „přijali jsme riziko" tiše přešlo v „nevíme,
 co se s tím stalo".
@@ -13,6 +14,7 @@ Odmítnutí stálo na dvou tvrzeních. Každé má podmínku, která se dá změ
 |---|---|---|
 | `zod` | `@expo/cli` chce `^3.25.76`, záplata je až ve 4.6.6 | pustí expo zod 4? |
 | `decode-uri-component` | `query-string@7` volá opravenou ESM-only 0.5 přes `require` | odešel expo-router od `query-string@7`? |
+| `deepmerge` | **záplata neexistuje** a balíček se tahá jen přes `@expo/config`, tedy stavěcí nástroje | vyšla záplata? je `deepmerge` pořád jen pod `@expo/config`? |
 
 A obě stála na tom, že je to **vyčerpání paměti**, tedy dopad jen na
 dostupnost. Proto se hlídá i třetí věc: nepřišlo na tyhle balíčky hlášení,
@@ -40,6 +42,11 @@ import urllib.request
 ZAPLATY = {"zod": (4, 6, 6), "decode-uri-component": (0, 5, 0)}
 
 ADVISORY = "https://api.github.com/advisories?ecosystem=npm&per_page=100&affects="
+
+# Hlášení, kvůli kterému vzniklo #26. Sahá na integritu a přijali jsme to
+# i s tím, takže se na něj hlídka dopadu neptá — ptá se, jestli nepřišlo
+# něco dalšího.
+PRIJATE_DEEPMERGE = "GHSA-gcqx-w48m-w2h4"
 
 
 def verze(text):
@@ -166,11 +173,72 @@ def hlidej_duc(lock):
     return []
 
 
-def hlidej_dopad(balicek, nase):
+def hlidej_deepmerge(lock):
+    """`deepmerge` #26: odmítnuto, protože **záplata neexistuje**.
+
+    Tenhle případ je jiný než ty dva starší — tam šlo o to, jestli závislý
+    balíček pustí novější verzi. Tady není co pustit, takže se hlídá, jestli
+    záplata vůbec vyšla, a jestli balíček pořád visí jen na stavěcích
+    nástrojích (`@expo/config`), ne na kódu appky.
+    """
+    dm = zapis(lock, "deepmerge")
+    if dm is None:
+        return ["`deepmerge` v lockfilu není. Buď odešel — a pak se dá hlášení #26 zavřít — nebo se přejmenoval."]
+
+    nase = verze(dm.get("version", ""))
+    if nase is None:
+        return [f"Verzi `deepmerge` z lockfilu nepřečtu (`{dm.get('version')}`)."]
+
+    # Kdo si ho žádá. Odmítnutí stálo na tom, že jen `@expo/config` —
+    # kdyby přibyl někdo jiný, může to být kód, který jede v telefonu.
+    zadatele = sorted({
+        cesta.rsplit("node_modules/", 1)[-1]
+        for cesta, zapis_ in (lock.get("packages") or {}).items()
+        if "deepmerge" in (zapis_.get("dependencies") or {})
+    })
+    cizi = [z for z in zadatele if z not in ("@expo/config",)]
+    nalezy = []
+    if cizi:
+        nalezy.append(
+            "`deepmerge` si žádá i " + ", ".join(f"`{z}`" for z in cizi)
+            + " — odmítnutí stálo na tom, že ho tahá jen `@expo/config` "
+            "(stavěcí nástroje). Ověř, jestli se nedostal do běhu appky.")
+
+    # Vyšla záplata? Advisory ji vydává jako `first_patched_version`.
+    try:
+        with urllib.request.urlopen(ADVISORY + "deepmerge", timeout=30) as o:
+            data = json.load(o)
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
+        return nalezy + [f"Hlášení pro `deepmerge` se nepodařilo načíst ({e}). Nevím, jestli už nevyšla záplata."]
+
+    for a in data:
+        for v in a.get("vulnerabilities") or []:
+            if (v.get("package") or {}).get("name") != "deepmerge":
+                continue
+            if pousti(v.get("vulnerable_version_range"), nase) is False:
+                continue
+            zaplata = (v.get("first_patched_version") or {}).get("identifier")
+            if zaplata:
+                nalezy.append(
+                    f"`deepmerge` {dm.get('version')}: {a.get('ghsa_id')} už má záplatu "
+                    f"`{zaplata}`. **Důvod odmítnutí padl** — zvedni ji a otevři hlášení #26.")
+
+    # To jedno hlášení, kvůli kterému #26 vzniklo, sahá na integritu
+    # (`I:L`) — a přijali jsme ho i s tím. Hlídá se proto, jestli nepřijde
+    # něco dalšího a těžšího, ne tohle pořád dokola.
+    return nalezy + hlidej_dopad("deepmerge", nase, krome=(PRIJATE_DEEPMERGE,))
+
+
+def hlidej_dopad(balicek, nase, krome=()):
     """Nepřišlo hlášení, které sahá dál než na dostupnost?
 
-    Odmítli jsme obojí s tím, že je to vyčerpání paměti. Jakmile se objeví
-    hlášení s dopadem na důvěrnost nebo integritu, ten důvod neplatí.
+    Odmítli jsme `zod` i `decode-uri-component` s tím, že je to vyčerpání
+    paměti. Jakmile se objeví hlášení s dopadem na důvěrnost nebo integritu,
+    ten důvod neplatí.
+
+    `krome` jsou hlášení, u kterých **už víme**, že dál sahají, a přijali
+    jsme to vědomě — u `deepmerge` je to zrovna to jedno. Bez téhle výjimky
+    by hlídka hlásila pokaždé totéž a za měsíc by si jí nikdo nevšímal.
     """
     try:
         with urllib.request.urlopen(ADVISORY + balicek, timeout=30) as o:
@@ -180,6 +248,8 @@ def hlidej_dopad(balicek, nase):
 
     nalezy = []
     for a in data:
+        if a.get("ghsa_id") in krome:
+            continue
         vektor = (a.get("cvss") or {}).get("vector_string") or ""
         tezke = a.get("severity") == "critical"
         siri = re.search(r"/(C|I):(L|H)", vektor) is not None
@@ -208,7 +278,7 @@ def main():
     with open(cesta, encoding="utf-8") as f:
         lock = json.load(f)
 
-    nalezy = hlidej_zod(lock) + hlidej_duc(lock)
+    nalezy = hlidej_zod(lock) + hlidej_duc(lock) + hlidej_deepmerge(lock)
 
     for balicek in ZAPLATY:
         z = zapis(lock, balicek)
@@ -225,7 +295,7 @@ def main():
         nalezy += hlidej_dopad(balicek, v)
 
     if not nalezy:
-        print("Klid: oba důvody odmítnutí pořád platí a nic těžšího nepřišlo.")
+        print("Klid: všechny důvody odmítnutí pořád platí a nic těžšího nepřišlo.")
         return 0
     print("Podívej se na odmítnutá hlášení, něco se změnilo:\n")
     for n in nalezy:
