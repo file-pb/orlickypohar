@@ -333,11 +333,15 @@ zvládl.
 
 **Druhá polovina té věty je ale zadání**, a lehčí, než vypadá: *„automatická
 aktualizace by byla fajn"*. Ta je postavená od 28. 10. 2026 (`expo-updates`,
-kanály, otisk nativní části) — jenže appka, kterou si Miloš nainstaluje, ji
-umí jedině tehdy, když je to **nové APK postavené po té změně**. Dnešní soubor
-na `/appka` je z 09:42 a nativní část se od té doby rozešla, takže si Miloš
-nainstaluje verzi, která se aktualizovat nebude. Je to tedy jedno nasazení, ne
-nová funkce — a dokud se nestane, slibuje mu návod něco, co nenastane.
+kanály, otisk nativní části), a Miloš už verzi, která ji **umí**, nainstalovanou
+má. Chybí druhá strana: **není jí co poslat.** Otisk nativní části se od toho
+buildu rozešel (`expo-battery` v 09:37, pak sedm bumpů v #511), takže se mu
+žádná aktualizace nenabídne — ne proto, že by jeho appka neumí přijímat, ale
+protože server nemá co by prošlo. Spraví to jedno nové APK, ne nová funkce.
+
+*(Přesnější formulaci dodala 28. 10. 2026 session, která to stavěla; původně tu
+stálo, že si Miloš „nainstaluje verzi, která se aktualizovat nebude" — a to
+nebylo pravda ve dvou věcech: on už nainstaloval, a ta verze to umí.)*
 
 **Poučení, které přežije tenhle případ:** návod, který učí ruční postup, má
 u sebe dát datum a verzi, pro kterou platí. Tenhle říká *„tohle je naposled, co
