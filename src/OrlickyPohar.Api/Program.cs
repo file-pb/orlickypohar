@@ -66,6 +66,7 @@ try
     builder.Services.AddScoped<KalendarSprava>();
     builder.Services.AddScoped<VysledkySprava>();
     builder.Services.AddScoped<ZapisSprava>();
+    builder.Services.AddScoped<VeleniSprava>();
     builder.Services.AddScoped<PrihlaskySprava>();
     builder.Services.AddScoped<PoradateleSprava>();
     builder.Services.AddScoped<FotkySprava>();

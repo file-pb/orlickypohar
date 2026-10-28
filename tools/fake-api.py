@@ -135,6 +135,28 @@ def nelze_skrtnout(kod):
     return kod == "Dne"
 
 
+# Velitelský čas: kdo velí startu které regaty, a doklad o předávání
+# (nález R19, rozhodnuto 28. 10. 2026). Řada záznamů, ne přepisovaný
+# sloupec — po převzetí musí zůstat doklad. Žije v paměti procesu.
+VELITELE = {}
+
+
+def veleni_dto(slug, ja=None):
+    """Kdo velí a doklad o předávání — opsané z `VeleniSprava.PohledAsync`."""
+    rada = list(reversed(VELITELE.get(slug, [])))
+    ted = next((v for v in rada if v["doV"] is None), None)
+    return {"uzivatelId": ted and ted["id"], "jmeno": ted and ted["jmeno"],
+            "odV": ted and ted["odV"],
+            "jsemTo": bool(ted and ja and ted["id"] == ja["id"]),
+            "historie": [{"kdo": v["jmeno"], "odV": v["odV"], "doV": v["doV"],
+                          "prevzal": v["prevzal"]} for v in rada]}
+
+
+def velitel_ted(slug):
+    """Kdo velí teď, nebo `None`. Opsané z `VeleniSprava.NajdiAsync`."""
+    return next((v for v in reversed(VELITELE.get(slug, [])) if v["doV"] is None), None)
+
+
 # Stavy účasti, se kterými je loď přihlášená do závodu — jako v API.
 PRIHLASENA = {"Prihlasena", "Potvrzena", "Nedostavila", "Vyloucena"}
 
@@ -2433,7 +2455,11 @@ def zapis_dto(z, r):
             # Startovní procedura (nálezy R5 a R12, 28. 10. 2026). Délka je
             # parametr regaty — pětka v ZPJ 26 má hvězdičku.
             "delkaProceduryMin": z.get("delkaProceduryMin", 5),
-            "opakovanychStartu": r.get("opakovanychStartu", 0)}
+            "opakovanychStartu": r.get("opakovanychStartu", 0),
+            # Velitelský čas (nález R19). Kdo velí a jestli to je ten,
+            # kdo se ptá — obrazovka podle toho nabídne „přebírám velení".
+            "velitel": (v := velitel_ted(z["slug"])) and v["jmeno"],
+            "veliS": bool(v and KDO_JSEM[0] and v["id"] == KDO_JSEM[0]["id"])}
 
 
 def cas_od_startu(start, dojezd):
@@ -2730,6 +2756,9 @@ def smi_role(prava, role, zavod=None):
 # `ThreadingHTTPServer`), takže jeden požadavek nikdy nepřepíše druhý —
 # a DTO se díky tomu nemusí plnit právy skrz pět vrstev argumentů.
 KDO_SE_PTA = [[]]
+# Kdo se ptá — účet, ne jen práva. Potřebuje to velitelský čas: obrazovka
+# musí vědět, jestli velí právě ten, kdo se dívá (nález R19).
+KDO_JSEM = [None]
 
 
 def smi_ted(role, zavod=None):
@@ -3351,6 +3380,7 @@ class H(BaseHTTPRequestHandler):
         „nepřihlášen" hlásilo jako „nemáš práva".
         """
         KDO_SE_PTA[0] = prava_uctu(self.prihlaseny())
+        KDO_JSEM[0] = self.prihlaseny()
 
         if not self.headers.get("authorization"):
             return False
@@ -4416,6 +4446,8 @@ class H(BaseHTTPRequestHandler):
             return self.workflow(m.group(1), int(m.group(2)), m.group(3))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)/rozjizdky$', cesta)):
             return self.pridej_rozjizdku(m.group(1))
+        if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)/velitel$', cesta)):
+            return self.prevezmi_veleni(m.group(1))
         if (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                           r'/rozjizdky/(\d+)/procedura$', cesta)):
             return self.procedura(m.group(1), int(m.group(2)))
@@ -4947,9 +4979,18 @@ class H(BaseHTTPRequestHandler):
         if (chyba := proc_nejde_prepsat(z, r)):
             return self.chyba(400, chyba)
 
+        # <b>Velitelský čas</b> (nález R19, 28. 10. 2026): start zapsaný
+        # hlavním startérem nesmí přepsat nikdo jiný. Opsané z `Veleni`.
+        velitel = velitel_ted(z["slug"])
+        ja = self.prihlaseny()
+        if (velitel and ja and velitel["id"] != ja["id"] and r.get("startOdVelitele")):
+            return self.chyba(400, "Velitelský čas drží hlavní startér. "
+                                   "Chceš-li startovat, převezmi velení.")
+
         from datetime import datetime, timezone
         r["startV"] = self.telo_zadosti().get("startV") or \
             datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        r["startOdVelitele"] = bool(velitel and ja and velitel["id"] == ja["id"])
         # <b>Čas v budoucnu je plánovaný start a rozjížďku nerozjede</b>
         # (nález K6 oponentury rozhodčího, 28. 10. 2026) — opsané z
         # `ZapisSprava.StartAsync`. U běžící rozjížďky se čas jen přepíše:
@@ -4965,6 +5006,30 @@ class H(BaseHTTPRequestHandler):
             if v.get("dojezdV"):
                 v["casSekundy"] = cas_od_startu(r["startV"], v["dojezdV"])
         return self.odpoved(zapis_dto(z, r))
+
+    def prevezmi_veleni(self, zavod):
+        """
+        Převzetí velení startu — opsané z `VeleniSprava.PrevezmiAsync`
+        (nález R19, rozhodnuto 28. 10. 2026). Slave požádá, server udělí;
+        po převzetí zůstane doklad, kdo a kdy.
+        """
+        z = self.zastavka(zavod)
+        if not z:
+            return None
+
+        ja = self.prihlaseny()
+        stavajici = velitel_ted(z["slug"])
+        if stavajici and stavajici["id"] == ja["id"]:
+            return self.chyba(400, "Velení už máš.")
+
+        ted = _iso(_ted())
+        if stavajici:
+            stavajici["doV"] = ted
+            stavajici["prevzal"] = ja["zobrazovane"]
+        VELITELE.setdefault(z["slug"], []).append(
+            {"id": ja["id"], "jmeno": ja["zobrazovane"], "odV": ted,
+             "doV": None, "prevzal": None})
+        return self.odpoved(veleni_dto(z["slug"], ja))
 
     def procedura(self, zavod, cislo):
         """
@@ -5015,6 +5080,8 @@ class H(BaseHTTPRequestHandler):
 
         r["stav"] = "Planovana"
         r["konecV"] = None
+        # Nový čas vzešel z pravidla, ne z velitelových hodin.
+        r["startOdVelitele"] = False
         for v in r["vysledky"]:
             if v.get("dojezdV"):
                 v["casSekundy"] = cas_od_startu(r["startV"], v["dojezdV"])
@@ -5844,6 +5911,14 @@ class H(BaseHTTPRequestHandler):
                                   for r in z["rozjizdky"]],
                     "smiPridatRozjizdku": proc_nejde_na_zavod(z["stav"], z["druh"]) is None
                     and smi_ted("Organizator", z["slug"])}
+        elif (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)/velitel$', cesta)):
+            # Kdo velí startu — telefon se na to ptá při každém připojení
+            # (nález R19). Bez toho by se startér, kterému velení někdo
+            # převzal, o ztrátě nedozvěděl.
+            z = self.zastavka(m.group(1))
+            if not z:
+                return None
+            telo = veleni_dto(z["slug"], self.prihlaseny())
         elif (m := re.match(rf'^/sprava/serie/{D["slug"]}/vysledky/([a-z0-9-]+)'
                             r'/rozjizdky/(\d+)/navrhy$', cesta)):
             return self.navrhy(m.group(1), int(m.group(2)))

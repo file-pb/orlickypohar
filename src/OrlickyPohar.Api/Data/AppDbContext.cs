@@ -23,6 +23,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Zavod> Zavody => Set<Zavod>();
     public DbSet<Poradatel> Poradatele => Set<Poradatel>();
     public DbSet<Ucast> Ucasti => Set<Ucast>();
+
+    /// <summary>
+    /// Kdo kdy velel startu které regaty — řada záznamů, ne přepisovaný
+    /// sloupec. Je to doklad (nález R19, 28. 10. 2026).
+    /// </summary>
+    public DbSet<Velitel> Velitele => Set<Velitel>();
     public DbSet<Rozjizdka> Rozjizdky => Set<Rozjizdka>();
     public DbSet<Vysledek> Vysledky => Set<Vysledek>();
     public DbSet<ZapisNavrh> ZapisyNavrhu => Set<ZapisNavrh>();
@@ -477,6 +483,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // teď vůbec" (při zakládání trasy se neví, o kterou regatu jde).
         okno.HasIndex(x => new { x.ZavodId, x.OtevrenoV });
         okno.HasIndex(x => x.TvrdyKonec);
+
+        var velitel = b.Entity<Features.Zavody.Velitel>();
+        velitel.HasOne(x => x.Zavod).WithMany().HasForeignKey(x => x.ZavodId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Hledá se jediná věc: „kdo velí téhle regatě teď" — tedy záznam
+        // bez konce. Řada ostatních je doklad, do kterého se nekouká
+        // jinak než celým výpisem.
+        velitel.HasIndex(x => new { x.ZavodId, x.DoV });
 
         var nastaveni = b.Entity<Features.Tracker.NastaveniTrackeru>();
         nastaveni.HasOne(x => x.Zavod).WithMany().HasForeignKey(x => x.ZavodId)

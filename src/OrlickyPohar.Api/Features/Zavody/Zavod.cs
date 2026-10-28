@@ -611,6 +611,24 @@ public class Rozjizdka : Fotky.IMaFotku
     public int OpakovanychStartu { get; set; }
 
     /// <summary>
+    /// Zapsal čas startu <b>velitel</b>, tedy hlavní startér regaty?
+    /// <para>
+    /// Na tom stojí celý velitelský čas (nález R19, rozhodnuto
+    /// 28. 10. 2026): slave u druhého bodu čáry smí zapisovat dojezdy
+    /// i všechno ostatní, ale <b>nesmí přepsat start, který už velitel
+    /// zapsal</b>. Opačně to jde — velitel smí přepsat start kohokoliv,
+    /// a je to i cesta ven z krize (*„jakmile se připojí, dojde
+    /// k nastavení nového velitele, převzetí času a jedeme standard"*).
+    /// </para>
+    /// <para>
+    /// Je to příznak, ne id: kdo velel, drží řada <see cref="Velitel"/>,
+    /// a ta je dokladem. Tady jde jen o to, jestli zapsaný čas má
+    /// přednost.
+    /// </para>
+    /// </summary>
+    public bool StartOdVelitele { get; set; }
+
+    /// <summary>
     /// Kdy pořadatel zastavil časomíru. <c>null</c>, dokud běží.
     ///
     /// <para>

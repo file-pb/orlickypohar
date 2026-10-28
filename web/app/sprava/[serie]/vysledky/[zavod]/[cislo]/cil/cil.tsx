@@ -20,6 +20,7 @@ import {
 import {
   konecAkce,
   odstartujAkce,
+  prevezmiVeleniAkce,
   proceduraAkce,
   pridejLodAkce,
   ulozCilAkce,
@@ -363,6 +364,31 @@ export function Cil({
   };
 
   /**
+   * <b>Převzetí velení startu</b> (nález R19, rozhodnuto Filipem
+   * 28. 10. 2026). Slave o velení **aktivně požádá** a nikdy si ho
+   * nevezme sám; server je autorita a starý hlavní se o ztrátě dozví při
+   * připojení, takže dva hlavní v datech nevzniknou.
+   *
+   * <b>Jde to kdykoliv, i uprostřed odpočtu.</b> Hlavní spadlý do vody
+   * tři minuty před startem je přesně ten případ, kvůli kterému to
+   * vzniklo — zakázat převzetí během procedury by znamenalo zakázat
+   * záchranu tam, kde je potřeba nejvíc.
+   */
+  const prevezmiVeleni = async () => {
+    if (!window.confirm(
+      "Převzít velení startu? Dosavadní hlavní startér ho ztratí a zůstane "
+        + "z toho zápis, kdo a kdy ho převzal.")) return;
+    try {
+      const { chyba } = await prevezmiVeleniAkce(serie, zavod);
+      if (chyba) return setChyba(chyba);
+      setChyba(null);
+      router.refresh();
+    } catch {
+      setChyba("Velení se nepodařilo převzít. Zkus to znovu.");
+    }
+  };
+
+  /**
    * <b>Startovní procedura</b> (nálezy R5 a R12, 28. 10. 2026). Rozhodčí
    * ji vyjmenoval jako *„5 minut výzva · 4 minuty Přípravné znamení ·
    * 1 minuta do startu · Start"* — doslova ZPJ 26 — a aplikace z té
@@ -502,6 +528,38 @@ export function Cil({
 
   return (
     <div className="cil">
+      {/* <b>Čí hodiny platí</b> (nález R19, rozhodnuto 28. 10. 2026).
+          Filip: *„Velitelský čas je ale jeden, je v rukách hlavního
+          startéra a nesmí být závislý."* Startér u druhého bodu čáry
+          zapisuje dojezdy dál — co nesmí, je přepsat start, který už
+          velitel zapsal. Stojí to nad lištou, protože než se na start
+          klepne, musí být jasné, jestli ten čas bude platit. */}
+      <p className="poznamka" role="status">
+        {zapis.veliS ? (
+          <>
+            <b>Velíš startu</b> téhle regaty — tvůj čas platí.
+          </>
+        ) : zapis.velitel != null ? (
+          <>
+            Velení startu má <b>{zapis.velitel}</b>, takže jeho start nepřepíšeš.{" "}
+            <button type="button" className="maly" onClick={() => void prevezmiVeleni()}>
+              Přebírám velení
+            </button>
+          </>
+        ) : (
+          <>
+            {/* <b>Bez velitele se regata chová jako dřív</b>: start zapíše
+                každý, kdo smí zapisovat. Velení je nástroj pro den, kdy
+                jsou startéři dva — a vzít si ho musí jít i prvnímu, jinak
+                by se k němu nikdo nedostal. Bere se u mola, ne v okamžiku
+                startu (odsouhlaseno Filipem 27. 10. 2026). */}
+            Startu zatím nikdo nevelí, takže čas smí zapsat každý, kdo zapisuje.{" "}
+            <button type="button" className="maly" onClick={() => void prevezmiVeleni()}>
+              Převzít velení
+            </button>
+          </>
+        )}
+      </p>
       <div className="cil-lista" role="status" aria-live="polite">
         <div className="cil-start">
           {/* <b>Tři stavy, ne dva</b> (nález K6, 28. 10. 2026): dokud byl

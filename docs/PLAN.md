@@ -8788,13 +8788,38 @@ ji teď berou z regaty a tiskne se do vypsání závodu.
 **Čas se neposílá z klienta**: spuštění i odvolání si ho počítají
 z pravidla, takže vlastní čas by u odvolání znamenal obejít ZPJ 29.2.
 
-**Co se vědomě nestavělo.** Velká obrazovka startéra s odpočtem v ruce je
-ergonomie a patří do `docs/SCENARE-OVLADANI.md`. A **velitelský čas**
-(fáze 3.2) stojí na tom, kdo je hlavní startér a jak se velení předává —
-R19 k tomu má tři cesty, z nichž každá má svou daň, a žádnou nerozhodl.
-Bod 1 z něj (start přežije výpadek) je hotový už z fáze 1.2.
+**Velitelský čas: jeden, a drží ho hlavní startér** *(R19, body 2–4;
+předávání rozhodl Filip 28. 10. 2026)*. Filip: *„Startér může být jeden
+hlavní a druhý slave u druhého bodu startovní čáry… Velitelský čas je ale
+jeden, je v rukách hlavního startéra a nesmí být závislý."*
 
-**Migrace `ProceduraAStartovniTresty`** přidává dva sloupce. `DelkaProceduryMin`
+V kódu je to jedna věta: **start zapsaný velitelem nesmí přepsat nikdo
+jiný**. Slave u druhého bodu čáry zapisuje dojezdy, kódy i všechno ostatní
+dál; chrání se ten jeden čas, kterým se měří pole. Opačně to jde — velitel
+přepíše start kohokoliv, a je to i cesta ven z krize. **Regata bez
+velitele se chová jako dřív**, protože velení je nástroj pro den, kdy jsou
+startéři dva.
+
+Jak se předává:
+
+- **slave o velení požádá**, nikdy si ho nevezme sám;
+- **server je autorita**, takže dva hlavní v datech nevzniknou — starý
+  hlavní se o ztrátě dozví při připojení a do té doby stejně nic neodešle;
+- **jde to kdykoliv, i uprostřed odpočtu** (hlavní spadlý do vody tři
+  minuty před startem je ten případ, kvůli kterému to vzniklo);
+- **zůstane doklad**: `Velitel` je řada záznamů s `OdV`, `DoV` a tím, kdo
+  velení převzal — ne přepisovaný sloupec. Start je spornější než
+  viditelnost poloh, u které projekt doklad vyžaduje už dnes.
+
+**Telefon se ptá při každém připojení** (`GET …/vysledky/{zavod}/velitel`).
+Bez toho by se startér, kterému velení někdo převzal, o ztrátě nedozvěděl.
+Tentýž vzorec jako u oken závodních dnů.
+
+**Co se vědomě nestavělo.** Velká obrazovka startéra s odpočtem v ruce je
+ergonomie a patří do `docs/SCENARE-OVLADANI.md`.
+
+**Migrace `ProceduraAStartovniTresty` a `VelitelskyCas`** přidávají tři
+sloupce a tabulku `Velitele`; druhá z nich je čistě aditivní. `DelkaProceduryMin`
 má v migraci ručně dopsanou **výchozí pětku** — EF by dosadil nulu, protože
 inicializátor v C# platí jen pro nové entity, a nulová procedura by u všech
 existujících regat znamenala, že odpočet nemá co odpočítávat. Na stroji

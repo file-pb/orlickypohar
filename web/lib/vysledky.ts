@@ -27,6 +27,10 @@ export type StavVysledku = S["StavVysledku"];
 export type ZapisRozjizdky = S["ZapisRozjizdkyDto"] & {
   delkaProceduryMin?: number;
   opakovanychStartu?: number;
+  /** Kdo velí startu regaty; `null`, když nikdo (nález R19). */
+  velitel?: string | null;
+  /** Velí ten, kdo se dívá? */
+  veliS?: boolean;
 };
 export type ZapisLod = S["ZapisLodDto"];
 /** Řádek zápisu. `kod` je rozšířený o nové hodnoty — viz {@link KodVysledku}. */
@@ -309,6 +313,23 @@ export async function ulozCil(
  * znamenalo obejít to pravidlo — a u odvolání je ten čas závazný.
  */
 export type DruhProcedury = "Spustit" | "Odlozit" | "Odvolat";
+
+/**
+ * Převezme velení startu regaty (nález R19, rozhodnuto 28. 10. 2026).
+ *
+ * <b>Slave o velení aktivně požádá</b> a nikdy si ho nevezme sám. Jde to
+ * kdykoliv, i uprostřed odpočtu — hlavní spadlý do vody tři minuty před
+ * startem je ten případ, kvůli kterému to vzniklo.
+ */
+export async function prevezmiVeleni(
+  serie: string,
+  zavod: string,
+): Promise<{ chyba: string } | { ok: true }> {
+  const odpoved = await posli(kam(serie, `/${encodeURIComponent(zavod)}/velitel`), {}, "POST");
+  if (typeof odpoved === "string") return { chyba: odpoved };
+  if (!odpoved.ok) return { chyba: await hlaska(odpoved) };
+  return { ok: true };
+}
 
 export async function procedura(
   serie: string,

@@ -5,6 +5,7 @@ import {
   konecRozjizdky,
   nastavZnak,
   odstartuj,
+  prevezmiVeleni,
   procedura,
   ulozCil,
   type DruhProcedury,
@@ -95,6 +96,19 @@ export async function proceduraAkce(
   if (!platne(cislo)) return { chyba: "Neplatné číslo rozjížďky." };
 
   const vysledek = await procedura(serie, zavod, cislo, druh);
+  return { chyba: "chyba" in vysledek ? vysledek.chyba : null };
+}
+
+/**
+ * Převzetí velení startu (nález R19, rozhodnuto 28. 10. 2026). Slave
+ * o něj požádá; server je autorita a starý hlavní se to dozví při
+ * připojení, takže dva hlavní v datech nevzniknou.
+ */
+export async function prevezmiVeleniAkce(
+  serie: string,
+  zavod: string,
+): Promise<{ chyba: string | null }> {
+  const vysledek = await prevezmiVeleni(serie, zavod);
   return { chyba: "chyba" in vysledek ? vysledek.chyba : null };
 }
 

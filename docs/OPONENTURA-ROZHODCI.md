@@ -328,21 +328,27 @@ Dva chybějící díly ze šesti; zbylé čtyři na cílové obrazovce už jsou:
    (`koncept.ts`, `CekajiciStart`) a odesílá se, dokud neprojde. Nakonec
    ne jako pole v `Koncept`, ale vedle něj — důvod je u R19.
    **Tohle byla ta vada, která jim pokazila start.**
-2. **Pojmenovat, čí hodiny platí.** Jeden velitelský čas v rukou hlavního
+2. ~~**Pojmenovat, čí hodiny platí.**~~ **Hotovo 28. 10. 2026** (fáze 3.2):
+   `Veleni.ProcNesmiPrepsatStart` — velitelův start nikdo jiný nepřepíše,
+   velitel přepíše čí koliv. Jeden velitelský čas v rukou hlavního
    startéra, nezávislý na spojení; po připojení se rozešle ven a srovná ostatní.
    Mechanismus pro dva **rovnocenné** zapisovatele projekt má (porovnání dvou
    snímků, scénář C7), ale tady je jeden **nadřízený** — platí čas hlavního, bez
    vybírání. Filip uvedl, že se to už řešilo; v dokumentaci to není a z C7 se to
    odvodit nedá, takže to chce zapsat dřív, než se to začne stavět.
 
-3. **Kdo je hlavní, se stáhne dopředu a drží celý den.** *(Odsouhlaseno
+3. ~~**Kdo je hlavní, se stáhne dopředu a drží celý den.**~~ **Hotovo
+   28. 10. 2026** (fáze 3.2): `Velitel` je řada záznamů u regaty, bere se
+   u mola a výpadek s ním nehne. *(Odsouhlaseno
    Filipem 27. 10. 2026: „naprosto souhlas".)* Rozhodne server při propojení —
    ale **ne v okamžiku startu**, protože pak by výpadek sebral startéru právo
    odstartovat, a to je horší než dnešní stav, kde se ztratí jen zápis. Údaj
    „jsem hlavní startér téhle regaty" se chová jako okna závodních dnů: stáhne
    se u mola, platí celý den, výpadek s ním nehne. Rozbor je u R19.
 
-4. **Převzetí velení: slave požádá, server udělí.** *(Filip, 27. 10. 2026:
+4. ~~**Převzetí velení: slave požádá, server udělí.**~~ **Hotovo
+   28. 10. 2026** (fáze 3.2) — přesně takhle, i s dokladem; telefon se ptá
+   při každém připojení. *(Filip, 27. 10. 2026:
    „a spadnutí do vody je jasné a musí být řešitelné, je to docela možné";
    **rozhodnuto 28. 10. 2026**.)*
 
@@ -789,18 +795,15 @@ vidět, které lodě souhlas nemají.
 
 ### Fáze 3 — startovní procedura
 
-> **Tři položky ze čtyř hotové 28. 10. 2026** — 3.1, 3.3 a 3.4. Procedura
-> se spouští, odkládá i odvolává podle pravidel, přibyly čtyři kódy
-> a **nevylučitelná diskvalifikace se už neškrtá** (to byl jediný nález
-> celé oponentury, kde se špatně počítaly body).
+> **Hotová 28. 10. 2026, všechny čtyři položky.** Procedura se spouští,
+> odkládá i odvolává podle pravidel, přibyly čtyři kódy a
+> **nevylučitelná diskvalifikace se už neškrtá** (to byl jediný nález celé
+> oponentury, kde se špatně počítaly body).
 >
-> **3.2 velitelský čas se nestavěl, a je to rozhodnutí, ne opomenutí.**
-> Bod 1 (start přežije výpadek) padl už ve fázi 1.2. Zbylé tři ale stojí
-> na tom, **kdo je hlavní startér a jak se velení předává** — a tam má
-> R19 tři cesty, z nichž každá má svou daň, a žádnou z nich nerozhodl.
-> Postavit kteroukoliv by znamenalo rozhodnout za Filipa o věci, u které
-> sám napsal *„oba by to měli akceptovat"*. Potřebuje to větu od něj, ne
-> další kód.
+> **3.2 velitelský čas** čekal na rozhodnutí o tom, jak se velení předává
+> — R19 měl tři cesty a postavit kteroukoliv by znamenalo rozhodnout za
+> Filipa. Rozhodl 28. 10. 2026 (slave požádá, server udělí, zůstane
+> doklad) a téhož dne se to postavilo.
 
 Největší kus a staví na 1.1. **Role aplikace je „drží čas a paměť, znamení dává
 člověk"** (R15): vizuální znamení pro pole z obrazovky nebude, protože závodníci
@@ -813,8 +816,7 @@ konstanta. Přerušení se dělí: **odložení před startem** (27.3, nový ča
 a **všeobecné odvolání po startu** (29.2, nový start minutu po spuštění
 opakovače).
 
-**3.2 Velitelský čas** *(R19, body 2–4 — potvrzeno k dodělání;
-**nestavěno, čeká na rozhodnutí o předávání velení**)* — jeden
+**3.2 Velitelský čas** *(R19, body 2–4 — **hotovo 28. 10. 2026**)* — jeden
 autoritativní čas u hlavního startéra, nezávislý na spojení; kdo je hlavní, se
 **stáhne dopředu a drží celý den** (odsouhlaseno); převzetí velení musí jít
 a po něm zůstane doklad. Pět dílů ze šesti už na cílové obrazovce je.
@@ -2390,9 +2392,10 @@ pěti sekundách, vzorec se stahováním pravidel) je hotový.
 *Původ: střípek 14. Doloženo:
 `web/app/sprava/[serie]/vysledky/[zavod]/[cislo]/cil/cil.tsx:271–290`,
 `koncept.ts:23–28`, `Features/Zavody/VysledkyEndpoints.cs:211`. Stav:
-**bod 1 hotový 28. 10. 2026** (fáze 1.2, viz konec nálezu); **body 2–4
-k dodělání — potvrzeno Filipem 27. 10. 2026** (*„super tak si to zapiš že to
-budeme chtít dodělat"*). Doložená příčina skutečné události.*
+**hotovo 28. 10. 2026** — bod 1 ve fázi 1.2, body 2 až 4 ve fázi 3.2
+(viz konec nálezu). Potvrzeno Filipem 27. 10. 2026 (*„super tak si to zapiš
+že to budeme chtít dodělat"*), předávání velení rozhodnuto 28. 10. 2026.
+Doložená příčina skutečné události.*
 
 Filip: *„Stalo se nám, že při startu z webovými hodinami došlo k přerušení
 spojení a to pokazilo start a renomé."*
@@ -2449,11 +2452,11 @@ Z toho, co aplikace má:
 | displej, který nezhasne | **je** — `useDisplejSviti` |
 | porovnání dvou zápisů při rozporu | **je** — `podleRizika` a dvě tlačítka *Doplnit chybějící* / *Přepsat rozdílná* |
 | opakované odeslání, až se signál vrátí | **je** — `setInterval(zkus, 30_000)` a událost `online` |
-| jeden autoritativní čas mezi dvěma startéry | **není** |
+| jeden autoritativní čas mezi dvěma startéry | **je od 28. 10. 2026** — `Velitel` a `Veleni`; velitelův start nikdo jiný nepřepíše |
 
 Takže **pět ze šesti dílů existuje** a čtyři z nich přímo na cílové obrazovce.
-Chyběly dvě věci: dát start do konceptu (**hotovo 28. 10. 2026**, viz konec
-nálezu) a pojmenovat, čí hodiny platí (**zbývá**, fáze 3.2 plánu).
+Chyběly dvě věci a **obě jsou od 28. 10. 2026 hotové**: dát start do konceptu
+(fáze 1.2) a pojmenovat, čí hodiny platí (fáze 3.2) — obojí na konci nálezu.
 
 **Hlavní a „slave" startér.** Filip: *„Startér může být jeden hlavní a druhý
 slave u druhého bodu startovní čáry… Velitelský čas je ale jeden, je v rukách
@@ -2497,6 +2500,62 @@ v telefonu"*, v úložišti prohlížeče leží
 hláška zmizela, úložiště se vyčistilo a na serveru stojí
 **`2026-10-27T23:31:13.273Z`** — tedy čas **klepnutí**, ne čas doručení
 (o ~40 s později). To je ten rozdíl, o který u startu jde.
+
+### Hotovo 28. 10. 2026 — body 2 až 4 (fáze 3.2)
+
+**Velitelský čas je jeden a drží ho hlavní startér.** Filip, 27. 10. 2026:
+*„Startér může být jeden hlavní a druhý slave u druhého bodu startovní
+čáry… Velitelský čas je ale jeden, je v rukách hlavního startéra a nesmí
+být závislý."*
+
+**Co to v kódu znamená, a je to jedna věta:** start, který zapsal velitel,
+**nesmí přepsat nikdo jiný** (`Veleni.ProcNesmiPrepsatStart`). Slave
+u druhého bodu čáry zapisuje dojezdy, kódy i všechno ostatní dál — chrání
+se právě ten jeden čas, kterým se měří celé pole. Opačně to jde: velitel
+smí přepsat start kohokoliv, a je to i cesta ven z krize
+(*„jakmile se připojí, dojde k nastavení nového velitele, převzetí času
+a jedeme standard"*).
+
+**Regata bez velitele se chová jako dřív.** Velení je nástroj pro den, kdy
+jsou startéři dva; vynucovat ho tam, kde je startér jeden, by znamenalo
+klepnutí navíc bez užitku. Vzít si ho ale musí jít i prvnímu, jinak by se
+k němu nikdo nedostal — proto obrazovka nabízí *„Převzít velení"* i tehdy,
+když nevelí nikdo.
+
+**Předávání podle rozhodnutí z 28. 10. 2026** (bod 4 v oddílu *Co je
+potvrzené k dodělání*):
+
+- **slave o velení požádá** — klepne *„Přebírám velení"*, nikdy si ho
+  nevezme sám;
+- **server je autorita**, takže dva hlavní v datech nevzniknou. Starý
+  hlavní se o ztrátě dozví při připojení; do té doby stejně nic neodešle;
+- **jde to kdykoliv, i uprostřed odpočtu** — `Veleni.ProcNejdePrevzit`
+  brání jedinému případu, totiž brát velení sám sobě;
+- **po převzetí zůstane doklad.** `Velitel` je **řada záznamů, ne
+  přepisovaný sloupec**: každý má `OdV`, `DoV` a `PrevzalId`. Přepsat jméno
+  v jednom sloupci by doklad smazalo přesně tehdy, kdy je potřeba — a start
+  je spornější než viditelnost poloh, u které projekt doklad vyžaduje už
+  dnes.
+
+**Telefon se ptá při každém připojení.** `GET …/vysledky/{zavod}/velitel`
+vrací, kdo velí, jestli jsem to já, a celou historii. Bez toho by se
+startér, kterému velení někdo převzal, o ztrátě nedozvěděl — a vznikli by
+dva hlavní přesně tam, kde je rozhodnutí chtělo vyloučit. Je to tentýž
+vzorec jako u oken závodních dnů (`OknaEndpoints.ProTelefonAsync`).
+
+**Drobnost, která z psaní vyplynula:** po odložení i po všeobecném
+odvolání se příznak *„start je od velitele"* **ruší**. Ten čas vzešel
+z pravidla (ZPJ 27.3 a 29.2), ne z velitelových hodin, a starý přestal
+platit — nechat příznak viset by znamenalo, že čas spočítaný serverem
+nemůže opravit nikdo kromě velitele.
+
+*Změřeno proti mocku a obrazovkou (28. 10. 2026):* Filip převzal velení
+a zapsal start; Miloš jako druhý startér dostal **„Velitelský čas drží
+hlavní startér"**; po jeho převzetí start přepsal a **Filip dostal tutéž
+hlášku**. Doklad nese všechny tři záznamy i s tím, kdo komu velení vzal.
+V prohlížeči stojí nad lištou *„Velení startu má Miloš Zvonař, takže jeho
+start nepřepíšeš"*, a po klepnutí *„Velíš startu téhle regaty — tvůj čas
+platí."*
 
 > ### ✗ Moje poznámka o iPhonu byla chyba v uvažování — opraveno
 >

@@ -70,7 +70,13 @@ public record ZapisRozjizdkyDto(
     int DelkaProceduryMin = Procedura.DelkaVychozi,
     // Kolikrát se start opakoval po všeobecném odvolání (ZPJ 29.2).
     // Dřív po předchozím pokusu nezbylo nic.
-    int OpakovanychStartu = 0);
+    int OpakovanychStartu = 0,
+    // Velitelský čas (28. 10. 2026, nález R19). Kdo velí startu téhle
+    // regaty a jestli to je ten, kdo se ptá — obrazovka podle toho
+    // nabídne „přebírám velení", a telefon se na to ptá při každém
+    // připojení, aby se o ztrátě velení dozvěděl.
+    string? Velitel = null,
+    bool VeliS = false);
 
 /// <summary>Jeden řádek snímku i s tím, co o lodi ví ročník.</summary>
 public record NavrhRadekDto(
@@ -132,7 +138,9 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
         "Výsledky zapisuje pořadatel regaty. Rozhodčí je ověřuje, ale nemění.";
 
     public async Task<ZapisRozjizdkyDto> NactiAsync(
-        Rozjizdka rozjizdka, bool poradatel, CancellationToken ct)
+        Rozjizdka rozjizdka, bool poradatel, CancellationToken ct,
+        /// <summary>Kdo se dívá — kvůli tomu, jestli velí (nález R19).</summary>
+        Guid? kdo = null)
     {
         var zavod = await db.Zavody
             .Where(z => z.Id == rozjizdka.ZavodId)
@@ -186,13 +194,27 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
             })
             .ToList();
 
+        // Kdo velí startu téhle regaty (nález R19, 28. 10. 2026). Jedno
+        // čtení navíc na obrazovku, která se otevírá jednou za rozjížďku.
+        var velitel = await db.Velitele
+            .Where(v => v.ZavodId == rozjizdka.ZavodId && v.DoV == null)
+            .OrderByDescending(v => v.OdV)
+            .Select(v => new
+            {
+                Id = v.UzivatelId,
+                Jmeno = db.Uzivatele.Where(u => u.Id == v.UzivatelId)
+                    .Select(u => u.Zobrazovane).FirstOrDefault(),
+            })
+            .FirstOrDefaultAsync(ct);
+
         return new ZapisRozjizdkyDto(
             zavod.Serie, zavod.SerieNazev, zavod.Slug, zavod.Nazev, zavod.Stav,
             rozjizdka.Cislo, rozjizdka.StavVysledku, rozjizdka.DuvodRevize,
             procNelze is null, procNelze, lode, rozjizdka.StartV, rozjizdka.DoSerie,
             Fotky.Nahravani.Dto(papir, uloziste.VerejnaAdresa), poradatel, pocetNavrhu,
             rozjizdka.Revize, rozjizdka.KonecV, rozjizdka.Stav,
-            zavod.DelkaProceduryMin, rozjizdka.OpakovanychStartu);
+            zavod.DelkaProceduryMin, rozjizdka.OpakovanychStartu,
+            velitel?.Jmeno, velitel is not null && kdo is { } ja && velitel.Id == ja);
     }
 
     /// <summary>
@@ -479,10 +501,24 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
     /// plánované by lišta i tabule hlásily jako konec jízdy.
     /// </para>
     /// </summary>
-    public async Task<string?> StartAsync(Rozjizdka rozjizdka, DateTimeOffset kdy, CancellationToken ct)
+    public async Task<string?> StartAsync(
+        Rozjizdka rozjizdka, DateTimeOffset kdy, CancellationToken ct,
+        /// <summary>
+        /// Kdo start zapisuje, a kdo velí. <c>null</c> znamená „neřeší se" —
+        /// tak se chová regata bez velitele i starší klient.
+        /// </summary>
+        Guid? kdo = null, Guid? velitel = null)
     {
         var zavod = await db.Zavody.FirstAsync(z => z.Id == rozjizdka.ZavodId, ct);
         if (Zapis.ProcNejdePrepsat(zavod.Stav, rozjizdka.StavVysledku) is { } zamceno) return zamceno;
+
+        // <b>Velitelský čas</b> (nález R19, rozhodnuto 28. 10. 2026): start,
+        // který zapsal hlavní startér, nesmí přepsat nikdo jiný. Slave
+        // u druhého bodu čáry zapisuje dojezdy dál; co nesmí, je sáhnout
+        // na čas, kterým se měří celé pole.
+        if (kdo is { } zapisuje
+            && Veleni.ProcNesmiPrepsatStart(velitel, zapisuje, rozjizdka.StartOdVelitele) is { } cizi)
+            return cizi;
 
         // Plánovaný start: čas, kdy se jet **má**. Rozjížďka zůstane
         // plánovaná, dokud ten okamžik nepřijde — viz dokumentace metody.
@@ -510,6 +546,9 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
             return "Rozjížďka nemá přijatou trať. Přiřaď jí trať a nech ji rozhodčím přijmout.";
 
         rozjizdka.StartV = kdy.ToUniversalTime();
+        // Čí čas to je. Bez velitele zůstává `false` — regata s jedním
+        // startérem se chová jako dřív.
+        rozjizdka.StartOdVelitele = kdo is { } k && velitel == k;
 
         // <b>Nový start pustí časomíru znovu</b> (Filip, 20. 10. 2026
         // jmenoval mezi stavy i *„opakování startu"*). Zastavený čas by
@@ -563,6 +602,11 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
         rozjizdka.KonecV = null;
 
         if (Procedura.JeOpakovanyStart(druh)) rozjizdka.OpakovanychStartu++;
+
+        // Nový čas vzešel z pravidla, ne z velitelových hodin — a starý
+        // přestal platit. Nechat příznak viset by znamenalo, že čas
+        // spočítaný serverem by nešlo opravit nikomu než veliteli.
+        rozjizdka.StartOdVelitele = false;
 
         // Naměřené časy se vážou ke startu, který právě přestal platit.
         // Nechat je spočítané ke starému času by u odvolané rozjížďky

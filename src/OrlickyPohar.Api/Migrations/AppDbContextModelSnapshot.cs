@@ -1491,6 +1491,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int>("Revize")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("StartOdVelitele")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTimeOffset?>("StartV")
                         .HasColumnType("timestamp with time zone");
 
@@ -1579,6 +1582,36 @@ namespace OrlickyPohar.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("Ucasti");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Velitel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset?>("DoV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("OdV")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("PrevzalId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UzivatelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ZavodId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ZavodId", "DoV");
+
+                    b.ToTable("Velitele");
                 });
 
             modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Vysledek", b =>
@@ -2332,6 +2365,17 @@ namespace OrlickyPohar.Api.Migrations
                     b.Navigation("Kormidelnik");
 
                     b.Navigation("Prihlaska");
+
+                    b.Navigation("Zavod");
+                });
+
+            modelBuilder.Entity("OrlickyPohar.Api.Features.Zavody.Velitel", b =>
+                {
+                    b.HasOne("OrlickyPohar.Api.Features.Zavody.Zavod", "Zavod")
+                        .WithMany()
+                        .HasForeignKey("ZavodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Zavod");
                 });
