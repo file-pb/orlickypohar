@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'react-native';
 
+import { BannerAktualizace } from '@/components/banner-aktualizace';
 import { Colors } from '@/constants/theme';
 // Jen kvůli vedlejšímu efektu: `TaskManager.defineTask` musí být
 // vyhodnocené při startu bundle. Když systém appku zabije a probudí ji
@@ -30,6 +31,9 @@ export default function Layout() {
         <Stack.Screen name="tracker/index" options={{ title: 'Trasa' }} />
         <Stack.Screen name="tracker/[id]" options={{ title: 'Trasa' }} />
       </Stack>
+      {/* Až za `Stack`, aby ležel nad obsahem; sám se stará o to, kdy a jak
+          dlouho je vidět. */}
+      <BannerAktualizace />
     </>
   );
 }

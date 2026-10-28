@@ -20,6 +20,12 @@ echo
 echo "== Odesílání na server =="
 TEST_DB=":memory:" "${NODE[@]}" ./nahravani.test.ts
 
+# `TZ` je tu schválně: čas aktualizace se skládá z místních složek a
+# v UTC by test prošel i s chybnou implementací.
+echo
+echo "== Verze appky =="
+TZ="Europe/Prague" "${NODE[@]}" ./verze.test.ts
+
 # Zapsaná část musí přežít konec procesu — přejímací podmínka č. 2. Proto
 # dva samostatné procesy nad jedním souborem, ne jeden se dvěma spojeními.
 echo

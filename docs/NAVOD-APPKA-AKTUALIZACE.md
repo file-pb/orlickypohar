@@ -32,6 +32,11 @@ skončí u druhého kroku.
 > něco, co sahá hlouběji do telefonu; pak ti napíšu, že je potřeba stáhnout
 > novou verzi jako teď. Ozvu se sám, ty to hlídat nemusíš.
 >
+> **Poznáš to.** Když se appka sama aktualizuje, při otevření se dole krátce
+> ukáže oznámení, že jedeš na nové verzi, a samo zhasne. A kdykoliv se chceš
+> podívat, na čem jedeš, je to v **Účtu** dole pod *Verze appky* — je tam
+> i tlačítko, kterým se dá hledání novinek vyvolat ručně.
+>
 > Co udělat:
 >
 > 1. V telefonu otevři **orlickypohar.klihovka.cz/appka**
@@ -63,6 +68,15 @@ skončí u druhého kroku.
 
 - **Aktualizace se stahují při startu appky** a projeví se při dalším
   otevření — ne okamžitě uprostřed používání.
+- **Oznámení o aktualizaci a sekce *Verze appky*** přišly 28. 10. 2026
+  večer (Filip: *„Jak Milos pozná ze se mu to samo aktualizovalo?"*).
+  Dostanou se k němu **samy**, přes síť: otisk zůstal `c4d54801…`, takže
+  build `4b579f9b` je přijme bez instalace. Do APK zabalené nejsou —
+  v hlavičce proto zůstává ten build, ne nový.
+- **Oznámení se pro tutéž aktualizaci ukáže jen jednou.** Appka si pamatuje
+  poslední ohlášené ID v souboru; kdo appku zavře během těch osmi sekund,
+  se o té aktualizaci nedozví. Je to vědomé: dvakrát ukázané oznámení
+  vypadá jako další novinka.
 - **Samy se přenesou jen změny v appce**, ne nová oprávnění nebo
   knihovny. Když přijde taková změna, bude potřeba nové APK znovu —
   appka si o něj ale neřekne sama, takže to pozná jen ten, kdo to staví.

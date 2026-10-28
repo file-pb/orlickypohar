@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Karta, Nacitani, Nadpis, Sekce } from '@/components/ui';
+import { VerzeAppky } from '@/components/verze-appky';
 import { useTheme } from '@/hooks/use-theme';
 import { nactiJa, type Ja } from '@/lib/api';
 import { navratovaAdresa, odhlas, prihlas, prihlasovaniJde } from '@/lib/identita';
@@ -136,6 +137,9 @@ export default function Ucet() {
       {chyba ? (
         <Text style={{ color: t.text, marginTop: 16 }}>{chyba}</Text>
       ) : null}
+
+      {/* Mimo `ja`: na čem appka jede, je otázka nezávislá na přihlášení. */}
+      <VerzeAppky />
     </ScrollView>
   );
 }

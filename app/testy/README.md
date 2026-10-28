@@ -16,6 +16,7 @@ tím **naše** SQL, dotazy a výpočty — ne knihovna.
 | 5 — posádka zapomene záznam ukončit | ostříhání smaže body po hranici a dřívější nechá; smazané jsou fyzicky pryč |
 | čas je z telefonu a dá se přestavit | skok hodin se pozná a **žádný bod se nezahodí** |
 | „musí být způsob, jak se na výsledek podívat" | přehled dá počet, rozsah, délku, vzorkování; GPX nic nedomýšlí |
+| „jak Miloš pozná, že se mu to samo aktualizovalo" | banner se neukáže podruhé pro tutéž aktualizaci a u další se ukáže znovu; čas aktualizace je v místním pásmu |
 
 ## Co neprokazují
 
@@ -26,6 +27,11 @@ tím **naše** SQL, dotazy a výpočty — ne knihovna.
   nahrávání nemá, takže není co testovat.
 - Chování `expo-sqlite`. Časy z testu dlouhého záznamu vypovídají o našem
   SQL, ne o výkonu na telefonu.
+- **Že banner je vidět a že zhasne.** Testuje se rozhodnutí *má se ohlásit?*,
+  ne vykreslení — animace, pozice nad obsahem ani osm sekund si Node
+  nevyzkouší. To musí projít oko na telefonu.
+- **Že aktualizace po síti opravdu dojde.** `expo-updates` je v testu
+  nahrazený, takže se měří naše rozhodování nad jeho hodnotami, ne doručení.
 
 ## Co ověřit na telefonu
 

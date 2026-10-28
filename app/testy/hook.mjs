@@ -7,6 +7,7 @@ const KOREN = new URL('nahrady/', import.meta.url);
 const NAHRADY = new Set([
   'expo-sqlite', 'expo-file-system', 'expo-sharing',
   'expo-auth-session', 'expo-secure-store', 'expo-battery',
+  'expo-updates',
 ]);
 
 export function resolve(spec, ctx, next) {
