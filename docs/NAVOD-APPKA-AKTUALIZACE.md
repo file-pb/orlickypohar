@@ -90,6 +90,24 @@ skončí u druhého kroku.
 - **Že bude potřeba nová ruční instalace, hlásí CI** (úloha `appka`,
   od 28. 10. 2026). Nikdo si na to nemusí vzpomenout — ale taky to nikomu
   nepřijde do telefonu, je to zpráva v souhrnu běhu.
+
+- **Aktualizace musí někdo publikovat; samo se to nestane.** Do 28. 10. 2026
+  leželo v kanálu `preview` **nula** aktualizací: appka je umí přijmout, jen
+  jí je nikdo neposílal. Od té doby to dělá úloha `aktualizace-appky` po
+  nasazení, ale **jen když se `app/` změnilo** — jinak by se banner
+  rozsvítil po každém commitu do mainu a lidé by si ho vypnuli.
+
+- **Úloha potřebuje `EXPO_TOKEN` v secrets repozitáře** a ten tam
+  k 28. 10. 2026 **není** (jsou jen `DEPLOY_TOKEN` a `SIXLABORS_LICENSE_KEY`).
+  Dokud nebude, úloha jen napíše varování do souhrnu a novinky zůstanou
+  v gitu. Token se vyrábí na <https://expo.dev/settings/access-tokens>.
+
+- **`EXPO_PUBLIC_*` se zapékají do bundle, a `eas update` je ze shellu
+  nepřevezme** — bere je z EAS environmentu, který je prázdný. Proto se
+  bundle staví zvlášť (`expo export`) a publikuje přes `--input-dir`.
+  Stalo se to doopravdy: první publikovaná aktualizace 28. 10. 2026 tím
+  **vypnula přihlašování** (`prihlasovaniJde` vyšlo `false`) a musela se
+  přebít druhou. Hodnoty se v CI čtou z `eas.json`, aby nebyly dvakrát.
 - Stránka `/appka` nabízí vždycky poslední postavené APK; adresa se do ní
   zapisuje ručně (`deploy/docker-compose.yml`, `APK_URL`), takže když se
   na to zapomene, nabízí tiše starý build. Stalo se to mezi 8. 9. a

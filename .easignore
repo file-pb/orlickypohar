@@ -1,0 +1,57 @@
+# Co se nenahrává na servery Expa při `npm run apk`.
+#
+# **Proč to existuje.** Buildy nahrávaly 475 MB a trvalo to přes minutu.
+# Appka má přitom 2 MB zdrojů — balast je `.claude/worktrees` s 1,6 GB,
+# o kterém `.gitignore` neví, protože se ignoruje jen lokálně
+# v `.git/info/exclude`, a ten do repozitáře nepatří. EAS tedy nemá jak
+# poznat, že to tam nemá cpát.
+#
+# **Pozor: tenhle soubor NAHRAZUJE `.gitignore`**, nedoplňuje ho. Co tu
+# nestojí, se nahraje — i `node_modules`. Proto je tu i to, co by jinak
+# obstaral `app/.gitignore`.
+#
+# **Vyjmenovává se, co ven, ne co dovnitř.** První pokus (28. 10. 2026)
+# zkusil opak — `/*` a pak `!/app/` zpátky — a build spadl za třináct
+# vteřin na „Unknown error". Příčina se z logu vyčíst nedala (EAS je
+# vydává v nečitelném formátu), takže tohle je ta opatrná varianta:
+# vyhazuje jen to, o čem je jisté, že do buildu appky nepatří.
+#
+# <b>Otisk se tím nezměnil</b>, a to byla ta obava: 117 ze 128 zdrojů
+# otisku leží v `node_modules`, které se tu vyhazují. EAS si je ale na
+# serveru obnoví z `package-lock.json` ještě před výpočtem, takže build
+# `c33a6837` (28. 10. 2026) vyšel s `c4d54801…` — totožným s vydaným APK.
+# Kdyby se otisk posunul, přestala by se vydaná appka aktualizovat a
+# ušetřená minuta by stála to, kvůli čemu se APK vydávalo.
+#
+# Měřeno: nahrávka spadla z 475 MB na 29,3 MB, nahrávání z minuty na 5 s.
+
+# Ten skutečný balast: pracovní stromy jiných sezení.
+.claude/
+
+# Závislosti se na serveru instalují z package-lock.json.
+**/node_modules/
+
+# Historie repozitáře do archivu nepatří.
+.git/
+
+# Build artefakty a stavové adresáře — jinak by je obstaral .gitignore.
+**/.expo/
+**/dist/
+**/web-build/
+**/.next/
+**/bin/
+**/obj/
+
+# Klíče a certifikáty za žádných okolností: podepisovací klíč drží EAS,
+# ne repozitář (README appky).
+**/*.jks
+**/*.p8
+**/*.p12
+**/*.key
+**/*.mobileprovision
+**/*.pem
+
+# Smetí.
+**/.DS_Store
+**/*.tsbuildinfo
+**/.env*.local

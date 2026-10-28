@@ -549,3 +549,114 @@ jobs:
           [ -z "$web" ] || [ "$web" = "$ocekavano" ] \
             || { echo "::error::Web běží na jiné verzi."; chyba=1; }
           exit $chyba
+
+  # <b>Doručení aktualizace do telefonů.</b> Appka má `expo-updates` zapnuté
+  # od 28. 10. 2026, ale do toho dne v kanálu `preview` leželo **nula**
+  # publikovaných aktualizací: telefon umí novinku přijmout, jen mu ji nikdo
+  # neposílal. „Appka se aktualizuje sama" tedy platilo o schopnosti, ne
+  # o provozu — a příručka přitom Milošovi slibovala, že stahovat nebude.
+  #
+  # <b>Běží až po nasazení</b>, ne vedle něj: appka mluví s API a vézt do
+  # telefonu kód, který čeká na endpoint, jenž ještě není venku, by znamenalo
+  # rozbít ji na dobu nasazení.
+  aktualizace-appky:
+    needs: [nasazeni]
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Dva commity stačí ke zjištění, jestli se appka změnila.
+          fetch-depth: 2
+
+      # <b>Bez změny v appce se nepublikuje.</b> Každá publikace je pro
+      # telefon nová verze, takže by se po každém commitu do mainu rozsvítil
+      # banner „appka se sama aktualizovala" — i když se na ní nic nezměnilo.
+      # Otravné oznámení si lidé vypnou a pak jim unikne to pravé.
+      - name: Změnila se appka?
+        id: zmena
+        run: |
+          pred='${{ github.event.before }}'
+          # Prázdný nebo nulový hash (první push do větve, ruční spuštění):
+          # porovná se s rodičem.
+          case "$pred" in
+            ''|0000000000000000000000000000000000000000) pred="${{ github.sha }}^" ;;
+          esac
+          if git diff --quiet "$pred" '${{ github.sha }}' -- app/ 2>/dev/null; then
+            echo "publikovat=ne" >> "$GITHUB_OUTPUT"
+            echo "Appka se nezměnila, aktualizace se nepublikuje." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "publikovat=ano" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: ${{ steps.zmena.outputs.publikovat == 'ano' }}
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Závislosti appky
+        if: ${{ steps.zmena.outputs.publikovat == 'ano' }}
+        run: npm ci
+        working-directory: app
+
+      # <b>Proč se bundle staví zvlášť a `eas update` dostane `--input-dir`.</b>
+      # `eas update` si umí zabundlovat sám, ale proměnné `EXPO_PUBLIC_*` mu
+      # ze shellu neprojdou — bere je z EAS environmentu, a ten je prázdný.
+      # Metro přitom `process.env.EXPO_PUBLIC_*` **zapéká do bundle** při
+      # transformaci, takže bez nich je v `identita.ts` prázdný řetězec
+      # a `prihlasovaniJde` vyjde `false`. Změřeno 28. 10. 2026: čistý export
+      # bez proměnných adresu poskytovatele v bundle nemá, s nimi ano.
+      # Stalo se to doopravdy — první publikovaná aktualizace tím vypnula
+      # přihlašování a musela se přebít druhou.
+      #
+      # Hodnoty se čtou z `eas.json`, aby nebyly zapsané na dvou místech
+      # a nerozešly se.
+      #
+      # <b>Per platformu, ne `--platform all`.</b> `all` pustí i webový
+      # export, a ten padá na `expo-sqlite`, které na webu chce WASM.
+      - name: Publikovat aktualizaci appky
+        if: ${{ steps.zmena.outputs.publikovat == 'ano' }}
+        continue-on-error: true
+        working-directory: app
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "${EXPO_TOKEN:-}" ]; then
+            echo "::warning::Chybí EXPO_TOKEN, aktualizace appky se nepublikovala."
+            {
+              echo "### ⚠️ Aktualizace appky se nepublikovala"
+              echo ""
+              echo "V secrets repozitáře chybí \`EXPO_TOKEN\`, takže novinky v appce"
+              echo "zůstaly jen v gitu. Kdo má APK v telefonu, je nedostane."
+              echo ""
+              echo "**Co s tím:** vyrobit token na"
+              echo "<https://expo.dev/settings/access-tokens> a vložit ho jako"
+              echo "\`EXPO_TOKEN\` do Settings → Secrets → Actions."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # Jedna pravda o konfiguraci: profil `preview` v eas.json.
+          eval "$(python3 -c 'import json; e=json.load(open("eas.json"))["build"]["preview"]["env"]; print("\n".join(f"export {k}={json.dumps(v)}" for k, v in e.items()))')"
+
+          chyba=0
+          for p in android ios; do
+            rm -rf dist
+            npx expo export --clear --platform "$p" --output-dir dist || { chyba=1; continue; }
+            npx eas-cli@latest update --channel preview --platform "$p" \
+              --input-dir dist --skip-bundler --non-interactive \
+              --environment preview \
+              --message "${{ github.event.head_commit.message || 'Aktualizace appky' }}" \
+              || chyba=1
+          done
+
+          if [ "$chyba" = "0" ]; then
+            echo "Aktualizace appky publikována do kanálu \`preview\`." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::Publikace aktualizace appky selhala; novinky zůstaly jen v gitu."
+          fi
+          exit "$chyba"
