@@ -8735,6 +8735,121 @@ databáze a oba buildy.
 **Fáze 3 a 4 jsou nezačaté** — startovní procedura a zbytek. Pořadí drží
 plán v oponentuře.
 
+## Barvy a kontrast mají kontrolu (28. 10. 2026)
+
+Platforma rozhodla polemiku o designu, ergonomii a přístupnosti
+(`platform/docs/KRAJINA-2026.md`, oddíl *Design, ergonomie a přístupnost*):
+**závazný standard se nebere, dvě kontroly ano.** Odmítnuté zůstává
+odmítnuté — design systém (shadcn a spol. chce Tailwind, web má šest
+závislostí a žádný CSS framework), Storybook v CI (minuty Actions jsou
+nejbližší zeď) a příručka jako pravidla pro agenty (dokument nic neměří).
+Provedení patří sem.
+
+Obě kontroly jsou v jednom souboru, `tools/kontrola-tokenu.py`, bez
+závislostí. **Jeden soubor schválně:** obě čtou tytéž tři bloky
+z `globals.css`, takže dva skripty by ten parser kopírovaly — a kopie bez
+kontroly je právě to, co první z nich hlídá.
+
+    python3 tools/kontrola-tokenu.py              # obojí
+    python3 tools/kontrola-tokenu.py --shoda      # jen první
+    python3 tools/kontrola-tokenu.py --kontrast   # jen druhá
+
+V CI je to **krok v jobu `build`**, hned za testem cache a před buildem
+image. Ne vlastní úloha: nový job by platil celý svůj start kvůli pár
+desítkám milisekund počítání, a běh před buildem znamená, že se rozchod
+barev pozná dřív, než se postaví čtyři obrazy.
+
+### Co hlídá první: hodnoty, které existují dvakrát
+
+Appka drží v `app/src/constants/theme.ts` vlastní kopii devíti barev webu.
+Dosud to držel komentář *„zdroj je `web/app/globals.css`; když se změní tam,
+patří změnit i tady"* — tedy pravidlo bez kontroly.
+
+Kontrola **čte skutečné hodnoty z obou souborů** a porovnává je; žádný
+seznam očekávaných barev uprostřed není, ten by byl třetí kopií téhož
+problému. Jediné, co o jménech ví, je převod `stavVypsany` → `--stav-vypsany`,
+a to je pravidlo, ne tabulka.
+
+**Kterému bloku appka odpovídá, je přečtené, ne odhadnuté:** appka má obě
+sady, takže `light` se porovnává se světlým blokem a `dark` s **oběma**
+tmavými — ty jsou v `globals.css` dva (jeden v `@media (prefers-color-scheme:
+dark)` s `:not([data-rezim="svetly"])`, druhý pod `[data-rezim="tmavy"]`)
+a jejich vzájemný rozchod kontrola hlásí taky, protože si to ten soubor
+u nich sám říká. Nic se nepáruje napůl.
+
+Tmavé kontexty se čtou **jako kaskáda**, ne jako samostatný seznam: do obou
+se nejdřív nakopíruje světlý blok. Bez toho by `--na-pozoru`, který se
+v tmavých blocích schválně nepřebíjí, v tmavém kontextu chyběl.
+
+Dnes to porovná **27 hodnot** a sedí. Čtyři barevné tokeny má jen web
+(`--pozor`, `--pozor-pismo`, `--srafa`, `--na-pozoru`) a kontrola to vypíše
+jako poznámku, ne jako chybu — appka je nemá a nemusí.
+
+### Co hlídá druhá: kontrast spočítaný z tokenů
+
+WCAG 2.2 AA chce 4,5:1 pro běžný text. Poměr kontrastu je číslo spočitatelné
+z barev, takže na tohle **není potřeba prohlížeč, axe, Storybook ani minuta
+CI** — vstupem jsou ty custom properties, výstupem číslo.
+
+Páry se **odvozují z CSS**: pravidlo, které má ve stejném bloku
+`color: var(--X)` a `background: var(--Y)`. Bere jen pozadí zapsané jako
+**plná** barva — `color-mix` ani gradient skutečnou barvu pozadí neurčují,
+takže poměr spočítaný z jejich argumentu by byl číslo o ničem. K tomu šest
+párů doplněných ručně, u kterých pozadí leží za aliasem nebo se dědí od
+rodiče (oranžové písmo na kartě a na stránce, odkaz na kartě, potlačený
+text, text na oranžové výplni přes `--barva-stavu`). U každého doplněného
+páru se ověřuje, že oba tokeny v CSS pořád jsou — jinak by ho přejmenování
+tiše vyřadilo z měření.
+
+Počítá se ve **všech třech blocích**, a v každém je **13 neprůhledných
+barev** (`--pozadi`, `--papir`, `--text`, `--tlumeny`, `--linka`, `--voda`,
+`--zvyrazneni`, `--stav-vypsany`, `--stav-zruseny`, `--pozor`,
+`--pozor-pismo`, `--srafa`, `--na-pozoru`). Dalších pět tokenů barvu nese
+s alfou (`--obrys-hlasi`, `--obrys-dlouho`, `--plocha-hlasi` a dva stíny)
+a do kontrastu nejdou: poměr nad průhlednou vrstvou záleží na tom, co je
+pod ní, a to z tokenu nevyčteš. Dnes to je **48 párů** a všechny jsou
+nad mezí; nejblíž je oranžové písmo na pozadí stránky se **4,96:1**, tedy
+desetiprocentní rezerva. Kontrola tedy není formalita — příští úprava
+oranžové ji sejme.
+
+**Mez téhle kontroly, a je napsaná i ve výstupu:** seznam párů je
+**částečný**. Páry nad průhledným pozadím spočítat nejde a velikost písma
+z tokenu nevyčteš, takže se všechno měří proti 4,5:1, i kde by WCAG připustil
+3:1. A kontrast je **jedna vlastnost přístupnosti** — zelený kontrast
+neznamená, že appka funguje se čtečkou. Výskytů `aria-` je v repu
+**163**, `role=` **128** a `<label>` **122** (změřeno 28. 10. 2026
+`git grep -o` nad `*.tsx *.ts *.cs *.css`) — to je pořád jen indicie, že
+se na to myslelo, ne doklad, že to komukoliv funguje.
+
+### Čím se pozná, že kontrola je porušená
+
+Tohle je u obojího ta podstatná část, protože v téhle rodině repozitářů je
+opakovaná chyba **kontrola, která měří nástroj místo světa**
+(`platform/docs/POUCENI.md`, poučení 53, 55, 56, 61, 68). Dokazuje se to
+sabotáží, ne přečtením kódu. Odjeto 28. 10. 2026, pět scénářů:
+
+| Sabotáž | Výsledek |
+|---|---|
+| `dark.voda` v appce o jeden bit vedle | spadne a vypíše kterou hodnotu a v kterém bloku; po vrácení projde |
+| `theme.ts` bez jediné barvy | **kód 2**, „nebylo co porovnat" — ne tichá nula |
+| `--tlumeny` ve světlém zesvětlený | spadne, tři páry s čísly (3,16 · 3,03 · 2,78) a jmény; po vrácení projde |
+| `globals.css` bez barevných tokenů | **kód 2** a u všech šesti doplněných párů „nemá v CSS oporu" |
+| `--voda` změněná jen v media bloku | ohlásí rozchod obou tmavých bloků |
+
+Návratové kódy jsou proto tři: 0 projde, 1 rozchod nebo podkročený kontrast,
+**2 nemá co měřit**. Ten třetí je tu schválně — bez něj by se kontrola dala
+utišit smazáním vstupu a prázdný výsledek by vypadal jako zelená. Překlep
+v přepínači vrací dvojku ze stejného důvodu.
+
+### Kdy obě zrušit
+
+Kritérium je z rozhodnutí platformy a je obrácené proti běžnému čtení:
+**kontrola má cenu jen tehdy, když někdy spadne.** Když ani jedna za rok
+nechytí jediný rozchod, nehlídá nic a patří zrušit — ne nechat běžet pro
+pocit. Je to tu napsané proto, aby to za rok nebyl odhad: **první běh je
+28. 10. 2026**, takže ten rok končí **28. 10. 2027**, a do té doby stačí
+jeden skutečný nález od každé z nich.
+
 ## Přijaté riziko: dvě zranitelnosti v appce (23. 10. 2026)
 
 Dependabot hlásí v `app/package-lock.json` dvě zranitelnosti, které **nejde
