@@ -9013,6 +9013,53 @@ o soukromí**. Rozhoduje Filip.
 **Migrace `ZruseniSDuvodemASpesneZpravy`** přidává dva sloupce, aditivně.
 Na stroji neběžela — Docker ani Postgres tu nejsou.
 
+## `overrides` v appce drží `expo-modules-core` nahoře (28. 10. 2026)
+
+Dependabotův PR #491 (`expo` 57.0.30 → 57.0.31) padal v CI na
+`npm ci`: *„Missing: react-native-worklets@0.10.4 from lock file"*. Lokální
+`npm ci` to neodhalil, protože Node 24 nese npm 11, zatímco CI jede na
+Node 22, tedy npm 10. Hláška je ale jen příznak, ne příčina.
+
+Příčina: `expo-modules-core` má peer `react-native-worklets`
+`^0.7.4 || ^0.8.0 || ^0.9.0 || ^0.10.0`, ale v korunu stromu sedí
+**0.13.0**, protože ho tam vyžaduje `react-native-reanimated` (peer
+`0.13.x`). npm ten rozpor vyřeší tím, že `expo-modules-core` **zanoří**
+pod `node_modules/expo/`. A tam ho nikdo nenajde:
+
+```
+expo-location  -> expo-modules-core: MODULE_NOT_FOUND
+expo-battery   -> expo-modules-core: MODULE_NOT_FOUND
+```
+
+Těch balíčků, které `expo-modules-core` importují a mají ho najít
+vyhoistovaný, je v appce víc než dvacet — `expo-battery`, `expo-location`,
+`expo-sqlite`, `expo-router`, `expo-auth-session` a dál. Zanořený strom
+tedy není formalita v zámku, ale rozbitá appka; `npx tsc --noEmit` to
+odhalí jako `Property 'message' does not exist on type 'AuthError'`, což
+je `AuthError`, kterému se rozpadla základní třída.
+
+Zanořuje **obojí npm**, 10 i 11 — dependabotův zámek má `expo-modules-core`
+zanořený taky. Verze npm rozhoduje jen o tom, jestli se to pozná na
+`npm ci`, nebo až na rozbitém běhu.
+
+Řešení je `overrides` v `app/package.json`:
+
+```json
+"overrides": { "expo-modules-core": { "react-native-worklets": "0.13.x" } }
+```
+
+Říká npm, že `expo-modules-core` dostane ty worklety, které ve stromu
+**už jsou** — nemění ani jeden nainstalovaný balíček (892 před i po), jen
+bere npm důvod zanořovat. `expo-modules-core` se vrátil nahoru, všech
+dvacet balíčků ho vidí, `npm ci` prochází pod npm 10 i 11, `tsc` i testy
+appky jsou na nule.
+
+Rozsah je `0.13.x`, ne `0.13.0` schválně: pin na patch by při bumpu
+workletů vyrobil v podstromě druhou kopii a zanoření by se vrátilo.
+Zámek `overrides` nezaznamenává, takže se neuplatní při `npm ci`, ale při
+každém dalším přegenerování — tedy i u dependabota. A kdyby rozsah
+zestaral, pozná se to hlasitě: `tsc` v CI spadne na tomtéž `AuthError`.
+
 ## Přijaté riziko: tři zranitelnosti v appce (23. a 28. 10. 2026)
 
 Dependabot hlásí v `app/package-lock.json` tři zranitelnosti, které **nejde

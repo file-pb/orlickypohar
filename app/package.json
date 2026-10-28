@@ -3,7 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
-    "expo": "~57.0.30",
+    "expo": "~57.0.31",
     "expo-auth-session": "~57.0.16",
     "expo-battery": "~57.0.3",
     "expo-build-properties": "~57.0.22",
@@ -49,5 +49,10 @@
     "apk": "bash scripts/apk.sh",
     "testy": "bash testy/spust.sh"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "expo-modules-core": {
+      "react-native-worklets": "0.13.x"
+    }
+  }
 }
