@@ -3634,6 +3634,160 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/zastavky/{zavod}/rozjizdky/{cislo}/ukony": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Co komise v t\u00e9hle rozj\u00ed\u017e\u010fce vyhl\u00e1sila za j\u00edzdy",
+                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. V po\u0159ad\u00ed vyhl\u00e1\u0161en\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/UkonDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Rozhod\u010d\u00ed vyhl\u00e1s\u00ed zm\u011bnu \u00faseku, nebo chyb\u011bj\u00edc\u00ed zna\u010dku",
+                "description": "Jen rozhod\u010d\u00ed ro\u010dn\u00edku a **jen u rozj\u00ed\u017e\u010fky, kter\u00e1 se jede** \u2014 tat\u00e1\u017e mez jako u zkr\u00e1cen\u00ed dr\u00e1hy. P\u0159ed startem se stav\u00ed rovnou jin\u00e1 tra\u0165, po dojet\u00ed se zp\u011btn\u011b nedopl\u0148uje, kudy se jelo.\n\n**Tra\u0165 to nem\u011bn\u00ed.** \u00dakon se vede stranou, u rozj\u00ed\u017e\u010fky: p\u0159ijat\u00e1 tra\u0165 z\u016fst\u00e1v\u00e1 t\u00edm, co rozhod\u010d\u00ed vyv\u011bsil. Zm\u011bna \u00faseku (ZPJ 33, vlajka `C`) mus\u00ed \u0159\u00edct kurz, d\u00e9lku, nebo oboj\u00ed \u2014 jinak nenese \u017e\u00e1dnou informaci. U chyb\u011bj\u00edc\u00ed zna\u010dky (34, vlajka `M`) je poloha n\u00e1hradn\u00edho objektu nepovinn\u00e1: \u017ee zna\u010dka chyb\u00ed, pot\u0159ebuj\u00ed pos\u00e1dky v\u011bd\u011bt hned, a doplnit se d\u00e1 pozd\u011bji.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UkonVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/rozjizdky/{cislo}/ukony/{ukon}": {
+            "delete": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Rozhod\u010d\u00ed \u00fakon odvol\u00e1",
+                "description": "Jen dokud se rozj\u00ed\u017e\u010fka jede. Co viselo na st\u011b\u017eni, se zp\u011btn\u011b nema\u017ee \u2014 po dojet\u00ed je to doklad.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "ukon",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/zastavky/{zavod}/lode": {
             "get": {
                 "tags": [
@@ -7332,6 +7486,12 @@
                     "PevnaLinie",
                     "OtevirajiciSeBrana",
                     null
+                ]
+            },
+            "DruhUkonu": {
+                "enum": [
+                    "ZmenaUseku",
+                    "ChybejiciZnacka"
                 ]
             },
             "DruhZastavky": {
@@ -11194,6 +11354,126 @@
                     }
                 }
             },
+            "UkonDto": {
+                "required": [
+                    "id",
+                    "druh",
+                    "vlajka",
+                    "prvekId",
+                    "prvekPoradi",
+                    "prvekTyp",
+                    "kurz",
+                    "delka",
+                    "nahradniSirka",
+                    "nahradniDelka",
+                    "poznamka",
+                    "vyhlasenoV"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "druh": {
+                        "$ref": "#/components/schemas/DruhUkonu"
+                    },
+                    "vlajka": {
+                        "type": "string"
+                    },
+                    "prvekId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "prvekPoradi": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "prvekTyp": {
+                        "$ref": "#/components/schemas/TypPrvku"
+                    },
+                    "kurz": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "delka": {
+                        "$ref": "#/components/schemas/ZmenaDelky"
+                    },
+                    "nahradniSirka": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "nahradniDelka": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "poznamka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "vyhlasenoV": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "UkonVstup": {
+                "required": [
+                    "druh",
+                    "prvek"
+                ],
+                "type": "object",
+                "properties": {
+                    "druh": {
+                        "$ref": "#/components/schemas/DruhUkonu"
+                    },
+                    "prvek": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "kurz": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "delka": {
+                        "$ref": "#/components/schemas/ZmenaDelky"
+                    },
+                    "nahradniSirka": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "nahradniDelka": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "poznamka": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
             "UplatneniDto": {
                 "required": [
                     "klic",
@@ -13013,6 +13293,13 @@
                         "format": "int32"
                     }
                 }
+            },
+            "ZmenaDelky": {
+                "enum": [
+                    "Beze",
+                    "Prodlouzeno",
+                    "Zkraceno"
+                ]
             },
             "ZmenaDto": {
                 "required": [

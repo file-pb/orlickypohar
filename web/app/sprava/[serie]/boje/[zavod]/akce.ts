@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { odvolejUkon, vyhlasUkon } from "@/lib/ukony";
 import {
   FOTKA_NEJVIC_MB,
   NEJHORSI_PRESNOST_M,
@@ -540,6 +541,56 @@ export async function zkratTratAkce(formular: FormData) {
 
   const chyba = await zkratTrat(serie, zavod, trat, prvek);
   redirect(kam(chyba ? { chyba, trat: String(trat) } : { trat: String(trat), stav: "zkraceno" }));
+}
+
+/**
+ * Vyhlásí úkon za jízdy — změnu úseku (ZPJ 33), nebo chybějící značku (34).
+ *
+ * <b>Trať se tím nemění.</b> Je to rozhodnutí nad ní, které platí pro
+ * rozjížďku, co se zrovna jede (Filip, 28. 10. 2026). Co jde a co ne,
+ * hlídá server; tady se jen posbírá formulář.
+ */
+export async function vyhlasUkonAkce(formular: FormData) {
+  const { serie, zavod, kam } = zaklad(formular);
+  const cislo = Number(formular.get("rozjizdka") ?? 0);
+  const prvek = Number(formular.get("prvek") ?? 0);
+  const druh = String(formular.get("druh") ?? "");
+  if (!cislo || !prvek) redirect(kam({ chyba: "U kterého prvku se to vyhlašuje?" }));
+  if (druh !== "ZmenaUseku" && druh !== "ChybejiciZnacka")
+    redirect(kam({ chyba: "Neznámý úkon." }));
+
+  const kurzText = String(formular.get("kurz") ?? "").trim();
+  const kurz = kurzText === "" ? null : Number(kurzText);
+  if (kurz !== null && !Number.isFinite(kurz))
+    redirect(kam({ chyba: "Kurz je číslo ve stupních, 0 až 359." }));
+
+  const delka = String(formular.get("delka") ?? "Beze");
+  const poznamka = String(formular.get("poznamka") ?? "").trim() || null;
+
+  const chyba = await vyhlasUkon(serie, zavod, cislo, {
+    druh,
+    prvek,
+    kurz,
+    delka: delka === "Prodlouzeno" || delka === "Zkraceno" ? delka : "Beze",
+    poznamka,
+  });
+
+  // Trať se nese zpátky, aby obrazovka zůstala u té, nad kterou se
+  // vyhlašovalo — jinak odskočí na výchozí a stavitel hledá, kde byl.
+  const trat = String(formular.get("trat") ?? "");
+  redirect(kam({ ...(trat ? { trat } : {}), ...(chyba ? { chyba } : { stav: "vyhlaseno" }) }));
+}
+
+/** Odvolá vyhlášený úkon. Jde to, dokud se rozjížďka jede. */
+export async function odvolejUkonAkce(formular: FormData) {
+  const { serie, zavod, kam } = zaklad(formular);
+  const cislo = Number(formular.get("rozjizdka") ?? 0);
+  const ukon = Number(formular.get("ukon") ?? 0);
+  if (!cislo || !ukon) redirect(kam({ chyba: "Který úkon se odvolává?" }));
+
+  const chyba = await odvolejUkon(serie, zavod, cislo, ukon);
+  const trat = String(formular.get("trat") ?? "");
+  redirect(kam({ ...(trat ? { trat } : {}), ...(chyba ? { chyba } : { stav: "odvolano" }) }));
 }
 
 /** Zruší zkrácení — jede se zase celá trať. */

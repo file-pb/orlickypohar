@@ -885,9 +885,12 @@ z 24. 10. Rozprava dnes nese tři nesouvisející věci (brána na data, zámek
 viditelnosti, bod programu); posunout se má **jen ta první**. Pozor na tvrdý
 konec okna, který je počítaný od otevření.
 
-**4.2 Činnosti za jízdy** *(R17)* — **zrušení s důvodem hotové
-28. 10. 2026**; změna úseku a chybějící značka ne (kolize se souběžnou
-prací na trati, viz R17). ZPJ je vyjmenovávají a aplikace umí dvě:
+**4.2 Činnosti za jízdy** *(R17)* — **hotová 28. 10. 2026.** Zrušení
+s důvodem přibylo ráno, změna úseku (33) a chybějící značka (34) večer:
+vedou se **stranou, u rozjížďky**, trať zůstává přijatá (Filip: *„veď to
+stranou"*). Prvek je povinný, aby na to šlo jednou navázat hendikepem,
+který zatím není. Vyhlašuje se u prvku na obrazovce trati, vedle
+zkrácení — tytéž meze, týž okamžik, týž člověk. ZPJ je vyjmenovávají a aplikace umí dvě:
 **zkrácení** (plně, úkon rozhodčího) a **zrušení** (jen oklikou přes eliminaci
 výsledků a **bez důvodu** — a 32.1 má čtyři různé příčiny). Chybí změna úseku
 (33) a chybějící značka (34).
@@ -2441,8 +2444,9 @@ plyne na pravidla.*
 
 *Původ: střípek 12. Doloženo: ZPJ 29.1, 30.2, 32.1, 33, 34,
 `web/app/sprava/[serie]/vysledky/[zavod]/[cislo]/cil/cil.tsx:218–220`, `:826`.
-Stav: **zrušení s důvodem hotové 28. 10. 2026** (fáze 4.2); změna úseku
-(33) a chybějící značka (34) **nestavěny**, viz konec nálezu.*
+Stav: **opraveno 28. 10. 2026** (fáze 4.2) — zrušení s důvodem, změna
+úseku (33) i chybějící značka (34). Vede se stranou u rozjížďky, trať se
+nepřestavuje.*
 
 Filip popisuje sled: **start → čas pro tresty („Start vyřízen") → klidná chvíle
 → cílovka nebo obrazovka pro činnosti → dojetí a ukončení → příprava na další.**
@@ -2483,10 +2487,12 @@ to nemusí, ZPJ to vyjmenovávají a všechno jsou to úkony **za jízdy**:
 > doklad, že odvozovat z nepřítomnosti slova v kódu nestačí: hledal jsem
 > „zkrácení" mezi kódy výsledků a stavy rozjížďky, kdežto ono to žije na trati.
 
-Z téhle tabulky aplikace umí **dvě věci**: **zkrácení** (plně, jako úkon
+Z téhle tabulky aplikace uměla **dvě věci**: **zkrácení** (plně, jako úkon
 rozhodčího za jízdy) a **zrušení** (jen oklikou přes eliminaci výsledků a bez
-důvodu, R13). Zbytek — změna úseku, chybějící značka, vztlakové prostředky,
-pátrání — v ní není.
+důvodu, R13). **Od 28. 10. 2026 umí čtyři**: přibylo zrušení s důvodem
+a dvojice **změna úseku** (33) a **chybějící značka** (34). Chybí
+vztlakové prostředky (27.1) a pátrání (37) — obojí je pokyn pro
+bezpečnost, ne úkon nad tratí, a patří k jinému rozhodnutí.
 
 Zkrácená dráha navíc mění, **kde je cíl** (32.2: u obeplouvané značky, na čáře,
 nebo u brány), takže se dotýká trati i cílové obrazovky. Jestli to dnes vydaná

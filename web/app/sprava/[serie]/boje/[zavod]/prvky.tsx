@@ -1,4 +1,5 @@
 import type { Boje } from "@/lib/boje";
+import type { Ukon } from "@/lib/ukony";
 import {
   NAZVY_DRUHU_STARTU,
   NAZVY_SMERU,
@@ -22,6 +23,8 @@ import {
   odeberPrvekAkce,
   presunPrvekAkce,
   upravPrvekAkce,
+  odvolejUkonAkce,
+  vyhlasUkonAkce,
   zkratTratAkce,
   zopakujPrvekAkce,
   zrusZkraceniAkce,
@@ -62,6 +65,8 @@ export function PrvkyTrati({
   smiZkratit,
   zkraceniU,
   otevrit,
+  rozjizdka,
+  ukony,
 }: {
   serie: string;
   zavod: string;
@@ -76,7 +81,17 @@ export function PrvkyTrati({
   zkraceniU?: number | null;
   /** Který detail má být po návratu z akce rozbalený. */
   otevrit?: number;
+  /**
+   * Číslo rozjížďky, které trať patří. Bez něj se úkony za jízdy
+   * nevyhlašují — platí pro rozjížďku, ne pro závod.
+   */
+  rozjizdka?: number | null;
+  /** Co už komise v téhle rozjížďce vyhlásila. `null` je výpadek. */
+  ukony?: Ukon[] | null;
 }) {
+  // Vyhlašovat se smí za týchž podmínek jako zkracovat: rozhodčí a běžící
+  // rozjížďka. Obrazovka to jen nenabízí; rozhoduje server.
+  const smiVyhlasit = Boolean(smiZkratit && rozjizdka);
   return (
     <section className="prvky-trati" aria-labelledby="prvky-nadpis">
       <h2 id="prvky-nadpis">Prvky trati</h2>
@@ -168,6 +183,17 @@ export function PrvkyTrati({
                     předpisu — proto je <b>mimo</b> panel úprav a nabízí
                     se i na zamčené trati. Tlačítko na prvku, u kterého
                     má být cíl; u posledního ne, tam cíl je. */}
+                {smiVyhlasit && (
+                  <UkonyPrvku
+                    serie={serie}
+                    zavod={zavod}
+                    rozjizdka={rozjizdka!}
+                    tratId={tratId}
+                    prvek={p.id}
+                    ukony={(ukony ?? []).filter((u) => u.prvekId === p.id)}
+                  />
+                )}
+
                 {smiZkratit && tratId && i < prvky.length - 1 && (
                   <form action={zkratTratAkce} className="formular radkove zkratit">
                     <input type="hidden" name="serie" value={serie} />
@@ -200,6 +226,13 @@ export function PrvkyTrati({
           <input type="hidden" name="trat" value={tratId} />
           <button type="submit">Zrušit zkrácení — jede se celá</button>
         </form>
+      )}
+
+      {ukony === null && (
+        <p className="poznamka">
+          Co komise vyhlásila za jízdy, se teď nedaří načíst — co je níž u prvků,
+          nemusí být všechno.
+        </p>
       )}
 
       {zamceno && (
@@ -703,5 +736,107 @@ function NahledFotky({ prvek, boje }: { prvek: Prvek; boje: Boje[] }) {
       height={24}
       loading="lazy"
     />
+  );
+}
+
+/** Jak se o úkonu mluví v zápisu. */
+const NAZVY_UKONU: Record<string, string> = {
+  ZmenaUseku: "změna úseku",
+  ChybejiciZnacka: "chybějící značka",
+};
+
+const NAZVY_DELKY: Record<string, string> = {
+  Prodlouzeno: "delší",
+  Zkraceno: "kratší",
+};
+
+/**
+ * Co komise vyhlašuje u jednoho prvku za jízdy — a co už vyhlásila.
+ *
+ * <b>Trať se tím nemění</b> (Filip, 28. 10. 2026). Je to rozhodnutí nad
+ * přijatou tratí, které platí pro rozjížďku, co se zrovna jede, a proto
+ * stojí vedle zkrácení: tytéž meze, týž okamžik, týž člověk.
+ */
+function UkonyPrvku({
+  serie,
+  zavod,
+  rozjizdka,
+  tratId,
+  prvek,
+  ukony,
+}: {
+  serie: string;
+  zavod: string;
+  rozjizdka: number;
+  tratId?: number;
+  prvek: number;
+  ukony: Ukon[];
+}) {
+  return (
+    <div className="ukony-prvku">
+      {ukony.length > 0 && (
+        <ul className="ukony-vyhlasene">
+          {ukony.map((u) => (
+            <li key={u.id}>
+              <span className="ukon-vlajka" aria-hidden="true">
+                {u.vlajka}
+              </span>
+              <span>
+                {NAZVY_UKONU[u.druh] ?? u.druh}
+                {u.kurz !== null && u.kurz !== undefined && <> — kurz {u.kurz}°</>}
+                {u.delka !== "Beze" && <> — {NAZVY_DELKY[u.delka] ?? u.delka}</>}
+                {u.poznamka && <> — {u.poznamka}</>}
+              </span>
+              <form action={odvolejUkonAkce} className="formular radkove">
+                <input type="hidden" name="serie" value={serie} />
+                <input type="hidden" name="zavod" value={zavod} />
+                <input type="hidden" name="rozjizdka" value={rozjizdka} />
+                {tratId && <input type="hidden" name="trat" value={tratId} />}
+                <input type="hidden" name="ukon" value={u.id} />
+                <button type="submit">Odvolat</button>
+              </form>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Dva formuláře, ne jeden s přepínačem: každý úkon se vyhlašuje
+          jiným znamením a chce jiné údaje, a na vodě se klepe jednou. */}
+      <form action={vyhlasUkonAkce} className="formular radkove ukon-zmena">
+        <input type="hidden" name="serie" value={serie} />
+        <input type="hidden" name="zavod" value={zavod} />
+        <input type="hidden" name="rozjizdka" value={rozjizdka} />
+        <input type="hidden" name="prvek" value={prvek} />
+        {tratId && <input type="hidden" name="trat" value={tratId} />}
+        <input type="hidden" name="druh" value="ZmenaUseku" />
+        <label>
+          kurz
+          <input type="number" name="kurz" min={0} max={359} inputMode="numeric" />
+        </label>
+        <label>
+          délka
+          <select name="delka" defaultValue="Beze">
+            <option value="Beze">beze změny</option>
+            <option value="Prodlouzeno">delší</option>
+            <option value="Zkraceno">kratší</option>
+          </select>
+        </label>
+        <button type="submit">Změnit úsek (C)</button>
+      </form>
+
+      <form action={vyhlasUkonAkce} className="formular radkove ukon-znacka">
+        <input type="hidden" name="serie" value={serie} />
+        <input type="hidden" name="zavod" value={zavod} />
+        <input type="hidden" name="rozjizdka" value={rozjizdka} />
+        <input type="hidden" name="prvek" value={prvek} />
+        {tratId && <input type="hidden" name="trat" value={tratId} />}
+        <input type="hidden" name="druh" value="ChybejiciZnacka" />
+        <label>
+          čím
+          <input type="text" name="poznamka" maxLength={200} placeholder="doprovodný člun" />
+        </label>
+        <button type="submit">Značka chybí (M)</button>
+      </form>
+    </div>
   );
 }

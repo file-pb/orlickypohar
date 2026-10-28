@@ -21,6 +21,7 @@ import { Puvod, ZnackaNaTrati } from "./znacka-na-trati";
 import { StavTrati } from "./stav-trati";
 import { Stavba } from "./stavba";
 import { nactiRozjizdky } from "@/lib/vysledky";
+import { nactiUkony } from "@/lib/ukony";
 import { VyberTrati } from "./vyber-trati";
 import { uklidAkce, zahodZaznamAkce } from "./akce";
 
@@ -88,6 +89,14 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
   ]);
   const rozjizdky = (prehled.data?.rozjizdky ?? []).map((r) => r.cislo);
   if (stav === "neni") notFound();
+
+  // Co komise vyhlásila za jízdy. Čte se až po stavu trati, protože bez
+  // přiřazené rozjížďky není co číst — a výpadek tohohle nesmí shodit
+  // stavbu, proto `null` místo výjimky (rozlišuje se od prázdna).
+  const cisloRozjizdky = stavTrati.trat?.cisloRozjizdky ?? null;
+  const ukony = cisloRozjizdky
+    ? await nactiUkony(serie, zavod, cisloRozjizdky).catch(() => null)
+    : [];
 
   // Přenastavuje se jen bóje, která na trati doopravdy stojí. Podvržené id
   // tím nemá co nabídnout a formulář zůstane na „pípnout novou".
@@ -347,6 +356,8 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
             smiZkratit={stavTrati.trat?.smiZkratit ?? false}
             zkraceniU={stavTrati.trat?.zkracenoUPrvkuId ?? null}
             otevrit={otevreny}
+            rozjizdka={stavTrati.trat?.cisloRozjizdky ?? null}
+            ukony={ukony}
           />
 
           <MapkaTrati prvky={prvky.map((p) => naMapu(p, trat))} />

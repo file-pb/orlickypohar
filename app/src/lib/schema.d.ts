@@ -3677,6 +3677,122 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/rozjizdky/{cislo}/ukony": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Co komise v téhle rozjížďce vyhlásila za jízdy
+         * @description Organizátor regaty, nebo rozhodčí ročníku. V pořadí vyhlášení.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UkonDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Rozhodčí vyhlásí změnu úseku, nebo chybějící značku
+         * @description Jen rozhodčí ročníku a **jen u rozjížďky, která se jede** — tatáž mez jako u zkrácení dráhy. Před startem se staví rovnou jiná trať, po dojetí se zpětně nedoplňuje, kudy se jelo.
+         *
+         *     **Trať to nemění.** Úkon se vede stranou, u rozjížďky: přijatá trať zůstává tím, co rozhodčí vyvěsil. Změna úseku (ZPJ 33, vlajka `C`) musí říct kurz, délku, nebo obojí — jinak nenese žádnou informaci. U chybějící značky (34, vlajka `M`) je poloha náhradního objektu nepovinná: že značka chybí, potřebují posádky vědět hned, a doplnit se dá později.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UkonVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/rozjizdky/{cislo}/ukony/{ukon}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Rozhodčí úkon odvolá
+         * @description Jen dokud se rozjížďka jede. Co viselo na stěžni, se zpětně nemaže — po dojetí je to doklad.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                    ukon: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/zastavky/{zavod}/lode": {
         parameters: {
             query?: never;
@@ -6523,6 +6639,8 @@ export interface components {
         DruhProcedury: "Spustit" | "Odlozit" | "Odvolat";
         /** @enum {unknown} */
         DruhStartu: "PevnaLinie" | "OtevirajiciSeBrana" | null;
+        /** @enum {unknown} */
+        DruhUkonu: "ZmenaUseku" | "ChybejiciZnacka";
         /**
          * @default Pohar
          * @enum {unknown}
@@ -7510,6 +7628,40 @@ export interface components {
             /** Format: int32 */
             pocet: number;
         };
+        UkonDto: {
+            /** Format: int32 */
+            id: number;
+            druh: components["schemas"]["DruhUkonu"];
+            vlajka: string;
+            /** Format: int32 */
+            prvekId: number;
+            /** Format: int32 */
+            prvekPoradi: number;
+            prvekTyp: components["schemas"]["TypPrvku"];
+            /** Format: int32 */
+            kurz: null | number;
+            delka: components["schemas"]["ZmenaDelky"];
+            /** Format: double */
+            nahradniSirka: null | number;
+            /** Format: double */
+            nahradniDelka: null | number;
+            poznamka: null | string;
+            /** Format: date-time */
+            vyhlasenoV: string;
+        };
+        UkonVstup: {
+            druh: components["schemas"]["DruhUkonu"];
+            /** Format: int32 */
+            prvek: number;
+            /** Format: int32 */
+            kurz?: null | number;
+            delka?: components["schemas"]["ZmenaDelky"];
+            /** Format: double */
+            nahradniSirka?: null | number;
+            /** Format: double */
+            nahradniDelka?: null | number;
+            poznamka?: null | string;
+        };
         UplatneniDto: {
             klic: string;
             /** Format: int32 */
@@ -8003,6 +8155,8 @@ export interface components {
             /** Format: int32 */
             prvek: number;
         };
+        /** @enum {unknown} */
+        ZmenaDelky: "Beze" | "Prodlouzeno" | "Zkraceno";
         ZmenaDto: {
             /** Format: date-time */
             kdy: string;
