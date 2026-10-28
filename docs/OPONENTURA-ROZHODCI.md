@@ -48,6 +48,12 @@ skutečný vstup zvenčí za celý projekt.
   řádek; kde ho nemá, je to označené jako nedoložené.
 - **Návod:** text vytažený z `docs/NAVOD-ROZHODCI.pdf` (24 stran, verze
   z 26. 10. 2026).
+- **Skutečné listiny** (od 28. 10. 2026): vypsání závodu a plachetní směrnice
+  Jarního větru 2026, které poslal rozhodčí mailem (střípek 15). Nálezy R20
+  až R27 jsou z nich. Je to **jediný zdroj v tomhle auditu, který říká, co
+  pořadatel a rozhodčí opravdu vydávají** — zbytek říká, co pravidla žádají
+  nebo co kód dělá. Soubory v repozitáři nejsou a nebudou (osobní údaje
+  a cizí listiny).
 - **Nezkoušelo se** chování za běhu. Mock v tomhle repu už dvakrát lhal
   v obou směrech (`docs/AUDIT-OBSAZENI.md`, *Nálezy v mocku*), takže tvrzení
   „obrazovka se chová takhle" by bez běžícího API bylo měření nástroje, ne
@@ -237,6 +243,32 @@ do pravidel je hned za citací.
 Vzpomínka na konkrétní situaci, s přímým dotazem do pravidel. Odvozený nález
 je **R13** — a pravidla na to mají **tři různé odpovědi** podle toho, kdo je
 původcem.
+
+### Střípek 15 — vzory mailem: vypsání i plachetní směrnice z ročníku 2026 (28. 10. 2026)
+
+Miloš poslal **dva skutečné dokumenty** a sám je rozdělil podle toho, kdo je vydává:
+
+> „Mas v mailu vzory vypsani zavodu (od poradatele jako by) a plachetni smernici
+> (detailni info k zavodu od rozhodciho)"
+
+`Vypsání závodu Jarní vítr 2026.doc` (3 strany, 574 slov) a `plachetní směrnice
+Jarní vítr 2026.doc` (1 strana, 286 slov); oba uložené 14. 5. 2026, závod
+16. 5. 2026, Marina Orlík. Podepsaní jsou na obou **oba**: ředitel závodu
+i hlavní rozhodčí.
+
+**Proč je to nejcennější střípek za celou diskusi.** R1 a R8 se dosud opíraly
+o Dodatek J1 ZPJ — tedy o to, co pravidla *předepisují*. Tohle je, co pořadatel
+a rozhodčí na Orlíku **opravdu vydávají**. Dvě položky, které jsem ve
+`Vypsani.Sestav` nechal jako `null` s poznámkou „aplikace neví", Miloš ve svých
+dokumentech má, takže vím i to, jak je formuluje. Nálezy odtud jsou R20 až R27.
+
+**Vzory nejsou v repozitáři** a ani tam nepatří: nesou jméno a telefon
+rozhodčího, jméno ředitele závodu a jsou to listiny Mariny Orlík, ne naše.
+Cituje se z nich jen to, co nález potřebuje.
+
+**Jedno upozornění ke čtení.** Vypsání 2026 říká *„Předregistrace není"* a
+přihlášky se podávají papírově v kanceláři závodu. To appka vědomě mění — vzor
+je tedy **předloha obsahu, ne předloha procesu**. Nálezy níž se drží obsahu.
 
 ### Střípek 14 — velitelský čas: start se jim už jednou pokazil výpadkem (27. 10. 2026)
 
@@ -1004,6 +1036,13 @@ přehodnotit, všechna jsou levná):
    nálezu má nezodpovězenou otázku (*co přesně rozhodčí uznává*), a podpis,
    jehož obsah není vyjasněný, by byl slib naprázdno. Rozhodčí má dál jen
    veto přes stažení vypsání na potvrzený termín.
+
+   > **Odpověď přišla 28. 10. 2026 a je v nálezu R20.** Vzor skutečného
+   > vypsání jmenuje v záhlaví ředitele závodu i hlavního rozhodčího a
+   > směrnice je podepsaná oběma — uznání je tedy **spolupodpis listiny
+   > jmenovitě**, ne klepnutí na stav. Rozhodnutí „úkon uznání nestavím"
+   > tím padá jako nedostatek informace; co zbývá, jsou dvě kolonky
+   > u regaty a dva podpisy.
 2. **Co aplikace neví, dokument nedosazuje.** Bod bez údaje nemá text,
    objeví se v seznamu *„Vypsání zatím není úplné"* a ten seznam stojí
    **nahoře**, ne v patičce: dokument jinak vypadá hotově, i když v něm
@@ -3003,6 +3042,326 @@ přes projednání.
 
 > **Místo na citát z diskuse:** _(stalo se to, nebo si na to vzpomínáš z jiných
 > závodů? A zrušili jste celou rozjížďku, nebo se startovalo znovu?)_
+
+---
+
+### R20 — Oba dokumenty podepisují dva lidé, a aplikace nevede ani jednu z těch rolí
+
+**Co dokládá vzor.** Vypsání má hned v záhlaví, na třetím a čtvrtém řádku:
+
+> Ředitel závodu: Vladimír Janouš
+> Hlavní rozhodčí: Miloslav Zvonař
+
+a plachetní směrnice je **podepsaná oběma** na konci, ve dvou sloupcích
+(*„Hlavní rozhodčí: … Ředitel závodu: …"*). Žádný z obou dokumentů nevydává
+jeden člověk sám.
+
+**Čím to je důležité.** U R1 zůstala otevřená otázka, kterou jsem si nedovedl
+zodpovědět z pravidel: *„co přesně rozhodčí uznává — dokument, termín, nebo
+obojí?"* Vzor na ni odpovídá tím, co je na papíře: **rozhodčí se u obou
+dokumentů podepisuje jmenovitě**, a je u toho jmenovaný i ředitel závodu. Uznání
+tedy není klepnutí na stav v kalendáři, je to **spolupodpis listiny**.
+
+**Co má aplikace.** `Zavod` (`Features/Zavody/Zavod.cs:303`–`453`) vede
+`Poradatel` jako text a `PoradatelId` jako záznam organizace. Nevede **žádnou
+osobu** — ani ředitele závodu, ani hlavního rozhodčího. Role `rozhodci` v
+`co-smim.ts` je oprávnění uživatele, ne funkce u konkrétní regaty: kdokoli s tou
+rolí smí u kterékoli regaty všechno, co rozhodčí.
+
+A `Vypsani.Navrh` dnes přiznává, že dokument je jen návrh:
+
+> „Tohle vypsání sestavila aplikace z údajů o regatě. Vydává ho pořadatel
+> a uznává rozhodčí; co v něm chybí, se musí doplnit, než se otevřou přihlášky."
+
+Ta věta je správná, ale vyhýbá se jménům — a právě jména jsou to, co ze
+vygenerovaného textu dělá vydaný dokument.
+
+**Co z toho plyne.** Dvě kolonky u regaty (ředitel závodu, hlavní rozhodčí) a dva
+úkony podpisu. Dokud tam nejsou, je vygenerované vypsání nepodepsaný koncept,
+i kdyby mělo všechny ostatní body.
+
+**Nezapsaná otázka pro Miloše:** je vypsání platné bez podpisu rozhodčího, nebo
+stačí ředitel závodu a rozhodčí podepisuje jen směrnici? Vzor ukazuje obojí
+podepsané oběma, ale to nemusí znamenat, že je to podmínka.
+
+---
+
+### R21 — Skutečné vypsání má třináct oddílů, které moje osnova J1 nemá, a dva z mých chybějících Miloš má
+
+**Co osnova umí.** `Vypsani.Sestav` (`Vypsani.cs:126`) staví jedenáct bodů podle
+Dodatku J1 a čtyři z nich nechává prázdné (`Vypsani.cs:136`, `138`, `139`, `140`):
+Dráha, Kdy se poslední den už nestartuje, Lhůta pro změny bodování a Odepření
+práva na odvolání.
+
+**Dva ze těch čtyř Miloš skutečně vydává**, a vím teď i jak:
+
+| Prázdný bod | Jak to stojí ve vzoru | Kde |
+| --- | --- | --- |
+| J1.3(7) *Kdy se poslední den už nestartuje* | „Žádná rozjížďka nebude startována po 16:00 hod." | vypsání, Časový plán |
+| J1.3(4) *Dráha* | „start a cíl u koupacího mola Mariny Orlík, čára je tvořená zelenou bójí a lodí rozhodčích … po startu směr Husárna ‚dráty', obeplout točnou bóji levobokem a zpět do cíle" | směrnice, Trať dráhy |
+
+Dva zbylé (lhůta pro změny bodování, odepření práva na odvolání) **ve vzoru
+nejsou ani v jednom dokumentu** — to je doklad, že je pohár nevyhlašuje, ne že by
+se zapomněly.
+
+**Třináct oddílů, které osnova nezná vůbec.** Po oddílech, jak jdou ve vypsání:
+
+1. **Místo konání** — a to **třikrát, ve tří úrovních podrobnosti**: v záhlaví
+   („Marina Orlík - Vltava - Orlická přehrada"), jako vlastní oddíl, a jako
+   *Závodní plocha* („start v prostoru koupacího mola a zelené bóje před Marinou
+   Orlík"). `Zahlavi()` přitom píše natvrdo „Místo konání: neuvedené"
+   (`Vypsani.cs:172`) a v komentáři to hájí tím, že `Zavod` ten údaj nevede.
+   Nevede — a vzor ukazuje, že je to povinná položka, ne volitelná.
+2. **Kategorie reklamy** — World Sailing „Reklamní kodex", boční čísla a reklama
+   sponzora po stranách trupu, akreditace médií u ředitele závodu.
+3. **Účast** — požadavky na posádku a loď; vlastní nález R25.
+4. **Startovné jako číslo** („450,- Kč/loď") a *kdy se platí* („při registraci").
+   Aplikace má `Startovne` jako volný text, okamžik platby nevede.
+5. **Časový plán celého dne** — registrace 9:00–10:00, zahájení a rozprava 10:30,
+   start 11:00, poslední start 16:00, ukončení 19:00. Aplikace zná jeden čas
+   (`PrvniVyzyvaciZnameni`); vlastní nález R27.
+6. **Kde budou směrnice k dispozici** („při registraci na vývěsní tabuli").
+7. **Bodovací systém** jmenovitě („nízkobodový systém podle pravidla A2") — tenhle
+   osnova má a generuje ho dobře.
+8. **Protestní komise** — místo („vyhrazená místnost Mariny Orlík") a **protestné
+   200 Kč**; směrnice k tomu dodává **lhůtu: do 1 hodiny po ukončení rozjížďky**.
+   Obě čísla jsou vstup pro fázi 5, která protesty nezná (K2).
+9. **Ceny a kategorie** + **podmínka platnosti závodu**; vlastní nález R24.
+10. **Televize a média** — právo pořadatele na záznam bez náhrady.
+11. **Odpovědnost a pojištění** — „na vlastní nebezpečí", „za neomezeného lodního
+    provozu v prostoru závodní dráhy", povinné pojištění, zřeknutí se
+    odpovědnosti pořadatele. Souhlas verze 2 (`Souhlas.cs:93`) první dvě věci
+    pokrývá, zbytek je text pořadatele a do souhlasu nepatří.
+12. **Ubytování a občerstvení** — ve směrnici i „vlastní na lodích".
+13. **Kontakty** — mail a telefon rozhodčího.
+
+**Co z toho plyne.** Osnova J1 je správná jako *minimum podle pravidel*, ale
+Milošovo vypsání je **dvakrát delší** a ten přebytek není ozdoba: reklamní kodex,
+pojištění a právo na záznam jsou právě ty věty, kvůli kterým se vypsání vydává.
+Aplikace z třinácti oddílů neumí vygenerovat ani jeden.
+
+**Nezapsaná otázka pro Miloše:** které z těch třinácti se mezi ročníky mění, a
+které jsou pořád stejné? Co je stejné, patří k seriálu (jednou napsat), ne ke
+každé regatě.
+
+---
+
+### R22 — Směrnice nese tatáž data, která aplikace vede sama, a nic je nedrží v souladu
+
+**Co jsem v kódu tvrdil.** `PlachetniSmernice` hájí, proč je směrnice **soubor**:
+
+> „Soubor, ne text v databázi. Směrnici píše pořadatel ve Wordu a vydává jako
+> PDF. Převádět ji na bloky by znamenalo přepisovat cizí úřední text a riskovat,
+> že se naše verze rozejde s tou, podle které se jede."
+
+**Co vzor ukazuje.** Ta jednostránková směrnice je **z větší části seznam údajů,
+které aplikace vede taky**:
+
+| Údaj ve směrnici | Kde týž údaj žije v aplikaci |
+| --- | --- |
+| „5 minut vyzývací znamení / 4 minuty přípravné / 1 minuta / 0 start" | `Zavod.DelkaProceduryMin` (`Zavod.cs:412`), `Procedura` |
+| „start a cíl … zelenou bójí a lodí rozhodčích" | `DruhZnaceni.Plavidlo` (`Boje.cs:260`), `TypPrvku.Start` / `Cil` |
+| „obeplout točnou bóji levobokem" | `TypPrvku.OtocnaBoje` + `StranaPrvku.PoLeve` (`PrvekTrati.cs:100`) |
+| „znaky plavební dráhy platí a obeplouváme je správným směrem" | `DruhZnaceni.DrahaPrava` / `DrahaLeva` (`Boje.cs:241`) |
+| „Bodování: Nízkobodový systém" | `PravidlaBodovani` |
+| „Protesty … do 1 hod … s vkladem 200,- Kč" | nikde |
+| „Startovné 450,- Kč za loď" | `Zavod.Startovne` |
+| časový program dne | `PrvniVyzyvaciZnameni` (jen jeden čas) |
+
+**Čím to je vada.** Argument v komentáři („nerozejít se s tou, podle které se
+jede") platí pro **text** — pro věty o odpovědnosti, ubytování a pořadateli. Pro
+**čísla a trať** říká přesný opak: dnes jsou v aplikaci dvakrát, jednou v datech
+a jednou v neprůhledném PDF, a **nic nekontroluje, že se shodují**. Když se na
+rozpravě změní trať v aplikaci, PDF zůstane s původní.
+
+U vypsání jsem tuhle vadu vyřešil a napsal to tam jako hlavní zisk: *„bodování
+se vypisuje z týchž čísel, podle kterých se počítá, takže se s výpočtem nemůže
+rozejít."* U směrnice totéž řešené není.
+
+**Co z toho plyne.** Dvě možnosti a vybírat nemám já:
+
+- **Směrnice se taky generuje** z dat (jako vypsání) a nahrané PDF je příloha
+  navíc. Konec dvojího zdroje, ale rozhodčí ztrácí Word.
+- **PDF zůstane**, a aplikace u vyvěšení ukáže, co o týchž údajích ví sama, aby
+  si rozhodčí všiml rozdílu. Levnější, dvojí zdroj ale zůstává.
+
+**Nezapsaná otázka pro Miloše:** psal by směrnici v aplikaci, kdyby z ní vypadlo
+PDF se stejnou hlavičkou, nebo je Word podmínka?
+
+---
+
+### R23 — Dva údaje o startu ze směrnice aplikace neumí vůbec, a oba rozhodují, co se smí zapsat
+
+**Co stojí ve směrnici.** Dva řádky, každý o jedné větě:
+
+> Start: start s minutovým pravidlem s obeplouváním konců.
+
+> Zrušení rozjížďky: !!dva dlouhé zvuky!!
+
+**První řádek je režim startu.** Tedy to, co Miloš ve střípku 9 jmenoval jako
+„alternativní trest" a co se v aplikaci po R14 projevilo jako kódy `Zfp`, `Ufd`
+a `Bfd` v `KodVysledku`. Jenže komentář u toho výčtu (`Zavod.cs:205`) sám říká,
+že *„co znamenají a kdy se dávají, rozhoduje vypsání, ne tenhle výčet"* — a
+**aplikace nikde nevede, který režim pro tuhle regatu platí**. Rozhodčí u startu
+tedy dostane na výběr tři kódy bez vodítka, který z nich je ten dnešní.
+
+A „s obeplouváním konců" je **druhá polovina téhož pravidla**: loď, která
+odstartovala předčasně, se musí vracet kolem konce startovní čáry, ne přes ni.
+Aplikace tohle nezná v žádné podobě.
+
+**Druhý řádek je signalizace zvukem.** Dva dlouhé zvuky, ne vlajka. Je to
+**první písemný doklad** k R16 a ke střípku 10 („U Miloše jsem nikdy vlajky
+neviděl"): signalizace není improvizace megafonem navzdory směrnici — **tak je to
+ve směrnici napsané**. To R16 nevyvrací, zpevňuje: formální mez (bez vizuálního
+znamení nejsou tresty podle ZPJ 30) platí dál, ale pohár si zvukovou signalizaci
+**vyhlašuje**, a to je přesně ta cesta, kterou R7 označil za jedinou možnou pro
+vlastní pravidlo.
+
+**Co z toho plyne.** Jedna kolonka u regaty — režim startu — a směrnice i vypsání
+ji vypisují. Zápis výsledku pak nabídne jen kódy, které k tomu režimu patří.
+Zvuková znamení patří do stejné kolonky jako text.
+
+---
+
+### R24 — Kategorie je v aplikaci jen jméno; pravidlo, podle kterého do ní loď patří, je ve vypsání a nikde jinde
+
+**Co stojí ve vypsání.** Tři kategorie a **pravidlo zařazení**:
+
+> - Lodě s délkou trupu do 7 m
+> - Lodě s délkou trupu nad 7 m
+> - RACE
+
+> Délka trupu se bere podle technického průkazu lodě, ke které se přičítá délka
+> čelenu /pokud je použit pro kotvení přední plachty/
+
+A **podmínka platnosti**, kterou jsem dosud neviděl nikde:
+
+> Podmínkou pro platnost závodu je dokončení alespoň 1 platné rozjížďky, účast
+> alespoň 2 posádek v dané kategorii.
+
+**Co má aplikace.** Kategorie je **název a pořadí** a nic jiného
+(`tools/gen-mock.py:520`: `{"nazev": "Race", "poradi": 1}`). Zařazení lodi do
+kategorie zadává člověk. Délku trupu ani čelen aplikace nevede — grep po
+`delkaTrupu`, `technickyPrukaz` a `pojisteni` ve `Features/` nevrací nic.
+
+Podmínku platnosti nezná taky nic: grep po `platnaRozjizdka`, `minimalniPocet`
+a `PlatnostZavodu` je prázdný. Aplikace tedy **vyhlásí pořadí v kategorii
+s jednou lodí**, i když to podle vypsání není platná kategorie.
+
+**Čím je to horší, než to vypadá.** „Nad 7 m" a „do 7 m" nejsou třídy v jachtařském
+smyslu, jsou to **měřitelné rozsahy**, a čelen je právě ten sporný detail, kvůli
+kterému se u papírové přejímky loď přeřadí. Dokud aplikace délku nevede, nemá
+jak ukázat, že je zařazení správné — a u výsledků se o kategorii hraje.
+
+**Co z toho plyne.** Dvě věci, které jdou po sobě: délka trupu a čelen jako údaj
+lodi (zařazení se pak spočítá a jde ukázat, z čeho vyšlo), a podmínka platnosti
+jako kontrola před vyhlášením. Druhá se dá udělat i bez první.
+
+---
+
+### R25 — Požadavky na loď a posádku: aplikace z nich nevede ani jeden, a vede místo nich číslo ČSJ, které vypsání nežádá
+
+**Co stojí ve vypsání**, v oddílu Účast:
+
+> Alespoň jeden člen posádky lodě musí být držitelem platného **Průkazu
+> způsobilosti vůdce malého plavidla** … Loď musí mít **platný technický
+> průkaz**.
+
+a v Přihláškách:
+
+> Přihlášené lodě mohou být požádány o předložení platného technického průkazu
+> a **platného pojištění**
+
+a v Odpovědnosti: *„Každá loď musí mít platné pojištění."* Totéž potvrzuje
+směrnice (*„V případě poškození lodě pořadatel neposkytuje náhradu"*).
+
+**Co má aplikace.** Ani jedno z těch tří. Zato vede `CisloCsj` — a ve vypsání
+**není ČSJ zmíněné ani jednou**. Požaduje se World Sailing (pravidla a reklamní
+kodex) a státní průkaz VMP, ne členství ve svazu.
+
+To není nové, ale je to **první doklad v listině**: potvrzuje střípek 4 a 5
+(*„není zahrnut do CTL", „jen ty pravidla dodržujem a s ČSJ komunikujeme"*) a
+staví `CisloCsj` do podivné pozice — je to jediné pole o způsobilosti, které
+aplikace vede, a je z těch čtyř to jediné, které vypsání nežádá.
+
+**Co z toho plyne.** Tři příznaky u lodi (VMP u posádky, technický průkaz,
+pojištění) a rozhodnutí, co s `CisloCsj`: nechat jako dobrovolný údaj pro ty,
+kdo členství mají, nebo zrušit. Zrušit bych nenavrhoval — závodníci ho dávají
+rádi a jinde se hodí.
+
+**Pozor na záměnu.** Nic z toho neznamená vybírat doklady do aplikace. Vypsání
+říká *„mohou být požádány o předložení"* — kontrola je fyzická u registrace. Co
+aplikace potřebuje, je **zaznamenat, že se to zkontrolovalo**, ne skladovat
+skeny.
+
+---
+
+### R26 — Nezletilý závodník: vypsání žádá podpis dospělé osoby, souhlas verze 2 ten případ nezná
+
+**Co stojí ve vypsání:**
+
+> Přihláška musí být podepsána kormidelníkem. Podpisem se zavazuje, že bude
+> dodržovat ustanovení Závodních pravidel jachtingu.
+> **U závodníka mladšího 18 let musí být přihláška podepsána dospělou osobou,
+> která přebírá odpovědnost za závodníka.**
+
+**První větu máme a sedí.** `Souhlas.ZneniV1` (`Souhlas.cs:59`) začíná
+*„Souhlasím s tím, že budu vázán Závodními pravidly jachtingu…"* — to je přesně
+ten závazek, který vypsání od podpisu čeká. Ověřeno proti listině, ne proti
+pravidlům.
+
+**Druhou větu nemáme vůbec.** Souhlas v aplikaci odklikává přihlášená loď sama
+za sebe; `Ucast` nevede datum narození kormidelníka ani odpovědnou osobu, takže
+aplikace nemá jak poznat, že je případ jiný, ani kde by druhý podpis uložila.
+
+**Jak velký případ to je.** Nevím, a nemám z čeho odvodit — u kajutových
+plachetnic bude nezletilý kormidelník vzácný, ale VMP se vydává od 18 let, takže
+nezletilý **kormidelník** je asi vyloučený už tím. Pravděpodobně se to týká
+nezletilého **člena posádky**, a tam vypsání mluví o „závodníkovi", ne
+o kormidelníkovi. To je rozdíl, který se nedá dočíst.
+
+**Nezapsaná otázka pro Miloše:** týká se ten odstavec kormidelníka, nebo
+kteréhokoli člena posádky? A stalo se to někdy?
+
+**Vazba na R9.** Tahle otázka visí u téže věci jako ta otevřená z R9 (co
+s loděmi, které stihly odkliknout souhlas verze 1) — obě jsou o tom, že souhlas
+dnes zná jen jeden případ.
+
+---
+
+### R27 — Aplikace chce čas vyzývacího znamení; ani jeden ze dvou skutečných dokumentů ho neuvádí
+
+**Co aplikace žádá.** `PrvniVyzyvaciZnameni` (`Zavod.cs:397`) je čas T−5 a
+`VyzyvaciZnameni()` ho vypisuje jako položku J1.1(6) s odůvodněním v komentáři:
+*„J1 chce čas vyzývacího znamení, tedy T−5 podle ZPJ 26, ne čas startu."*
+
+**Co dokument píše.** Vypsání:
+
+> 11:00 Start rozjížďky
+
+a směrnice:
+
+> 11:00 předpokládaný start 1. rozjížďky
+
+**Ani jeden neuvádí vyzývací znamení.** Oba uvádějí **čas startu**, a směrnice ho
+ještě označuje za *předpokládaný*. Čas vyzývacího znamení (10:55) by si rozhodčí
+musel dopočítat, aby vyplnil kolonku, kterou aplikace žádá — a pak ho aplikace
+zobrazí jako údaj dokumentu, který v dokumentu nikdy nestál.
+
+**Čím to je přesně ta vada, kterou tahle oponentura hledá.** Ze tří otázek, se
+kterými začala, je to odpověď na druhou: *„co po rozhodčím aplikace chce, co
+chtít nemusí?"* Pravidla mají pravdu, že závazný je okamžik vyzývacího znamení —
+ale **lidé plánují den podle startu** a oba dokumenty to tak píšou. Aplikace si
+může dopočítat T−5 z `DelkaProceduryMin` sama; obráceně nutí rozhodčího počítat
+ručně to, co umí sama.
+
+A ještě: „předpokládaný" není opatrnost, je to **pravdivý popis** — poslední
+možný start je 16:00 a mezi tím se jede, kolik se dá. Kolonka, která chce jeden
+přesný čas, tohle neumí vyjádřit.
+
+**Co z toho plyne.** Zadávat **čas startu** a vyzývací znamení dopočítat, s tím,
+že v dokumentu stojí obojí a je vidět, které je které. Změna jedné kolonky
+a jedné nápovědy; obsah vypsání se tím zpřesní, ne zhrubne.
 
 ---
 
