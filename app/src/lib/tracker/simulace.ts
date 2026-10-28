@@ -14,6 +14,7 @@
  * Každý bod ze simulace je v databázi označený jako podvržený a celý
  * záznam má `zdroj = 'simulace'` — nemá jak se vydávat za skutečnou trasu.
  */
+import { baterieProcent, obnovBaterii } from './baterie';
 import { zapisBody, type NovyBod } from './zaznam';
 
 /** Trať z ukázkových dat: start, bóje 1, cíl. Trojúhelník na Orlíku. */
@@ -67,9 +68,13 @@ export function spustSimulaci(zaznamId: string, n: Nastaveni = VYCHOZI): Beh {
         rychlost: RYCHLOST_MS + (Math.random() - 0.5),
         casGps,
         podvrzeny: true,
+        // I simulace nese baterii — jinak by se cesta z telefonu na tabuli
+        // dala projet jen se skutečnou plavbou.
+        baterie: baterieProcent(),
       });
     }
     zapisBody(zaznamId, davka);
+    obnovBaterii();
   }, n.krokMs);
 
   return { stop: () => clearInterval(timer) };

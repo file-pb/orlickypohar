@@ -53,6 +53,8 @@ export type NovyBod = {
   casGps: number;
   /** Příznak `mocked` z Androidu, nebo bod ze simulace. */
   podvrzeny?: boolean;
+  /** Stav baterie v procentech, když dávka vznikla. Viz `baterie.ts`. */
+  baterie?: number | null;
 };
 
 export function bezicZaznam(): Zaznam | null {
@@ -138,9 +140,9 @@ export function zapisBody(zaznamId: string, body: NovyBod[], intervalMs = 0): nu
   d.withTransactionSync(() => {
     const vlozit = d.prepareSync(
       `INSERT INTO bod (zaznam_id, sirka, delka, presnost, vyska, rychlost, kurz,
-                        cas_gps, cas_zarizeni, podvrzeny)
+                        cas_gps, cas_zarizeni, podvrzeny, baterie)
        VALUES ($zaznam, $sirka, $delka, $presnost, $vyska, $rychlost, $kurz,
-               $casGps, $casZarizeni, $podvrzeny)`,
+               $casGps, $casZarizeni, $podvrzeny, $baterie)`,
     );
     try {
       for (const b of kZapisu) {
@@ -155,6 +157,7 @@ export function zapisBody(zaznamId: string, body: NovyBod[], intervalMs = 0): nu
           $casGps: b.casGps,
           $casZarizeni: nyni,
           $podvrzeny: b.podvrzeny ? 1 : 0,
+          $baterie: b.baterie ?? null,
         });
         // Kurzor se musí vrátit, než se stejný dotaz použije podruhé.
         r.resetSync();
@@ -280,6 +283,7 @@ export type Bod = {
   cas_gps: number;
   cas_zarizeni: number;
   podvrzeny: number;
+  baterie: number | null;
 };
 
 export function body(zaznamId: string): Bod[] {

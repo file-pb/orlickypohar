@@ -96,6 +96,9 @@ function pripravSchema(d: SQLite.SQLiteDatabase) {
   doplnSloupec(d, 'zaznam', 'nahravani_hotovo', 'INTEGER NOT NULL DEFAULT 0');
   doplnSloupec(d, 'zaznam', 'posledni_pokus', 'INTEGER NOT NULL DEFAULT 0');
   doplnSloupec(d, 'zaznam', 'potiz', 'TEXT');
+  // Baterie přibyla 28. 10. 2026; trasy zapsané dřív ji nemají a null je
+  // správná odpověď — server si drží poslední nenulovou.
+  doplnSloupec(d, 'bod', 'baterie', 'INTEGER');
 }
 
 /**

@@ -214,6 +214,7 @@ function toVstup(b: {
   cas_gps: number;
   cas_zarizeni: number;
   podvrzeny: number;
+  baterie: number | null;
 }) {
   return {
     lokalniId: b.id,
@@ -226,5 +227,6 @@ function toVstup(b: {
     casGps: new Date(b.cas_gps).toISOString(),
     casZarizeni: new Date(b.cas_zarizeni).toISOString(),
     podvrzeny: b.podvrzeny === 1,
+    baterieProcent: b.baterie,
   };
 }

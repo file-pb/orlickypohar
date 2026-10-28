@@ -167,6 +167,35 @@ public class TrasyTests(PostgresFixture fixture)
         Assert.Equal(1, await db.Trasy.CountAsync(t => t.KlicId == kdo.Id && t.LokalniId == lokalni));
     }
 
+    /// <summary>
+    /// <b>Baterie se drží u klíče, ne u bodu.</b> Otázka zní „dojedou jim
+    /// telefony dřív, než se odstartuje?", a ta je o telefonu teď — ne
+    /// o historii nabíjení. Z dávky se proto bere poslední hodnota, která
+    /// nějakou nese, a body bez ní tu předchozí nepřepíšou.
+    /// </summary>
+    [Fact]
+    public async Task Baterie_z_davky_skonci_u_klice()
+    {
+        var (db, trasy) = Sluzby();
+        var kdo = await KlicAsync(db, "BAT");
+        var lokalni = $"t-{Guid.NewGuid():N}";
+        await ZalozAsync(trasy, kdo, Vstup(lokalni));
+
+        var davka = Davka(0, 3);
+        davka[0] = davka[0] with { BaterieProcent = 80 };
+        davka[2] = davka[2] with { BaterieProcent = 61 };
+        await trasy.PridejAsync(kdo, lokalni, davka, default);
+
+        Assert.Equal(61, (await db.Klice.FindAsync(kdo.Id))!.BaterieProcent);
+
+        // Starší appka baterii neposílá; poslední známý stav se tím nesmí
+        // smazat, jinak by tabule tvrdila „nevíme" o telefonu, co hlásí.
+        db.ChangeTracker.Clear();
+        await trasy.PridejAsync(kdo, lokalni, Davka(10, 2), default);
+
+        Assert.Equal(61, (await db.Klice.FindAsync(kdo.Id))!.BaterieProcent);
+    }
+
     [Fact]
     public async Task Tataz_davka_podruhe_nic_nezdvoji()
     {

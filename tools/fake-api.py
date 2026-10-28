@@ -217,7 +217,16 @@ def baterie_lodi(lod):
     """
     h = sum(ord(z) for z in lod)
     stavy = [None, 12, 34, 58, 77, 96]
-    return [stavy[(h + i * 3) % len(stavy)] for i in range(telefonu_lodi(lod))]
+    ven = [stavy[(h + i * 3) % len(stavy)] for i in range(telefonu_lodi(lod))]
+
+    # Co doopravdy přišlo z appky, přebíjí vymyšlené — jinak by se cesta
+    # „telefon → server → tabule" na mocku nedala projet.
+    lod_id = PRIHLASKA_ID.get(lod)
+    skutecne = [k["baterieProcent"] for k in KLICE.values()
+                if k.get("lodId") == lod_id and k.get("baterieProcent") is not None]
+    for i, procent in enumerate(skutecne[:len(ven)]):
+        ven[i] = procent
+    return ven
 
 
 def prihlaseno_do_zavodu(z, rozjizdky):
@@ -3013,6 +3022,15 @@ class H(BaseHTTPRequestHandler):
                 continue
             t["body"][cislo] = b
             prijato += 1
+
+        # <b>Baterie se drží u klíče, ne u bodu</b> — tak jako
+        # `TrasySprava`. Bere se poslední nenulová z dávky: zajímá nás stav
+        # telefonu, ne historie nabíjení. Bez tohohle by mock vracel na
+        # tabuli jen vymyšlená čísla a cesta z appky by se nedala ověřit.
+        stav = next((b.get("baterieProcent") for b in reversed(prichozi)
+                     if b.get("baterieProcent") is not None), None)
+        if stav is not None:
+            KLICE[kdo]["baterieProcent"] = max(0, min(100, int(stav)))
 
         return self.odpoved({
             "prijato": prijato,
