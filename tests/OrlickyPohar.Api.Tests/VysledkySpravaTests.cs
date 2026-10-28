@@ -222,8 +222,10 @@ public class VysledkySpravaTests(PostgresFixture fixture)
             var zavodId = await db.Zavody.Where(z => z.Serie!.Slug == slug).Select(z => z.Id).FirstAsync();
             var rozjizdka = (await sprava.NajdiAsync(zavodId, 1, default))!;
 
+            // Důvod je u zrušení povinný od 28. 10. 2026 (nálezy R13 a R17):
+            // rozjížďka mizí z poháru a bude se to vysvětlovat.
             Assert.Null(await sprava.PrepniStavAsync(
-                rozjizdka, StavVysledku.Eliminovano, null, spravce: true, default));
+                rozjizdka, StavVysledku.Eliminovano, "Nefoukalo.", spravce: true, default));
         }
 
         var po = await ZavodAsync(slug);
@@ -258,8 +260,10 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         var puvodni = rozjizdka.Stav;
 
         Assert.Null(await sprava.PrepniStavAsync(
-            rozjizdka, StavVysledku.Eliminovano, null, spravce: true, default));
+            rozjizdka, StavVysledku.Eliminovano, "Nefoukalo.", spravce: true, default));
         Assert.Equal(StavRozjizdky.Zrusena, rozjizdka.Stav);
+        // Důvod zůstává u rozjížďky — je to to, co se bude vysvětlovat.
+        Assert.Equal("Nefoukalo.", rozjizdka.DuvodZruseni);
 
         // Zpátky se z eliminace chodí jako návrh a rozjížďka se vrací tam,
         // kam patří podle zápisu — ne natvrdo na „plánovaná".
