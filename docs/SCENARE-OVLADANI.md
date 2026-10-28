@@ -524,8 +524,34 @@ Lámala škálu na jedné minutě — jenže minuta je *horní hranice* toho cyk
 takže ji zdravá loď překročí jednou za minutu, každá ve své fázi. Při
 pětatřiceti lodích vyjde změna někde na obrazovce **zhruba každých 1,7 s**,
 pořád, i když je všechno v pořádku. Týž pohyb, jen o stupeň hrubší.
-Upozornila na to session auditu rolí (28. 10. 2026) a má pravdu;
+Upozornila na to session auditu rolí (28. 10. 2026);
 **práh musí ležet nad odesílacím oknem, ne na něm**.
+
+**Ta čísla ale platí jen tam, kde se stáří měří proti hodinám — a to jsou
+zrovna dvě různé obrazovky.** Táž session to vzápětí sama zpochybnila;
+dohledáno v kódu vychází takhle:
+
+| Kde | Čím se měří | Co z toho plyne |
+|---|---|---|
+| **správa** (`tracker/[zavod]/zive.tsx:129,299`) | `ted` je `snimek.ted`, tedy **čas serveru**, a `lod.stav` počítá `PolohySprava` proti `TimeProvider` | stáří zdravé lodi doopravdy přejíždí 0 → 60 s a padá zpátky; **sweep je skutečný** |
+| **tabule a mapa** (`mapa-trackeru.tsx:825` + `589` + `1019`) | `stariS = cas - posledni.cas`, kde `cas` živě drží `konec`, a `konec` je **nejčerstvější bod celého pole** | stáří je relativní vůči nejčerstvější lodi, ne vůči hodinám; mění se po dávkách, jak data docházejí |
+
+Obrys se navrhuje **do správy**, takže pro něj ten důvod platí beze změny.
+Na tabuli má totéž číslo jiný tvar — a tam je to stejně bezpředmětné,
+dokud se nerozhodne první otázka níž.
+
+**Dvě obrazovky si přitom neříkají totéž slovem „stáří".** Na tabuli má
+loď, která zrovna ohlásila polohu, nulu bez ohledu na to, kolik je hodin —
+takže kdyby umlklo celé pole naráz, čísla u jednotlivých lodí se nehnou.
+Proto má tabule na stáří dat vlastní ukazatel (`tabule-stari-kolecko`).
+Obrys by ten význam zdědil, a je to jiný význam než ve správě.
+
+**Změřit to tady nejde ani v jednom případě.** Mock nastavuje `stari`
+napevno podle pořadí lodi — `0.0`, každá třetí `150.0`, každá pátá mlčí
+(`tools/fake-api.py:1171–1173`) — a s časem se to nemění vůbec. Žádný
+sweep v něm nemůže vzniknout, takže měření v mocku nemůže selhat, a tím
+pádem nic nedokládá. Rozhodne až první skutečný provoz telefonů; do té doby
+je to **přečtený mechanismus, ne změřený nález**.
 
 **Navržené tři stupně**, všechny prahy z kódu, žádný vymyšlený:
 
