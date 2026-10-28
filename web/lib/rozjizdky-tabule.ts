@@ -116,6 +116,13 @@ export function stavDne(
 
   // Okno otevírá rozprava, takže už proběhla. Po jeho tvrdém konci se
   // netvrdí nic: mohlo se zavřít dřív a tabule o tom neví.
+  //
+  // <b>Tenhle předpoklad má datum spotřeby.</b> Nález R3 v
+  // `docs/OPONENTURA-ROZHODCI.md` chce brát trasy už od fáze přihlášek,
+  // ne od rozpravy — až se to udělá, okno přestane být tím, co o začátku
+  // dne rozhoduje, a tahle větev bude tvrdit „po rozpravě" o dni, který
+  // rozprava neotevřela. Čím ji nahradit, se pozná teprve tam; do té doby
+  // je `oknoDo` jediný údaj o začátku dne, který jde ven.
   const konec = snimek.oknoDo ? Date.parse(snimek.oknoDo) : NaN;
   if (Number.isFinite(konec) && ted < konec) return "Po rozpravě — čeká se na start";
 
