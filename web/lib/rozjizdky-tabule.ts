@@ -75,6 +75,53 @@ function vHodin(kdy: number): string {
   }).format(new Date(kdy));
 }
 
+/** „jedna rozjížďka", „pět rozjížděk" — do věty o tom, co se odjelo. */
+function rozjizdek(kolik: number): string {
+  return `${kolik} ${kolik === 1 ? "rozjížďka" : kolik < 5 ? "rozjížďky" : "rozjížděk"}`;
+}
+
+/**
+ * Jedna věta o tom, kde je závodní den. <b>Pravidlo, ne vykreslování</b>,
+ * ze stejného důvodu jako zbytek tohohle souboru.
+ *
+ * Dvě věci, které to říkalo špatně (změřeno 28. 10. 2026):
+ *
+ * <ul>
+ *   <li><b>„Čeká se na rozpravu" po rozpravě.</b> Věta byla poslední
+ *       možnost v řadě, takže platila vždycky, když žádná rozjížďka nemá
+ *       čas startu — tedy i hodinu po rozpravě. Že den začal, se pozná
+ *       podle okna: to otevírá rozprava.</li>
+ *   <li><b>„Čeká se na rozpravu" u odjeté regaty.</b> Ročník se skrytými
+ *       výsledky nevydá rozjížďky vůbec (`ZavodEndpoints`, zkratka hned
+ *       za načtením závodu), takže tabule nemá co počítat a odjetá regata
+ *       vypadala jako regata před startem. Stav zastávky ale ven jde.</li>
+ * </ul>
+ */
+export function stavDne(
+  snimek: Pick<Snimek, "rozjizdky" | "stav" | "vysledkySkryte" | "oknoDo">,
+  ted: number,
+): string {
+  if (snimek.rozjizdky.some((r) => r.stav === "Probiha"))
+    return "Rozjížďka běží — na mapu se lodě objeví, jakmile začnou hlásit polohu.";
+
+  const hodiny = casomira(snimek, ted);
+  if (hodiny) return hodiny.text;
+
+  const odjeto = snimek.rozjizdky.filter((r) => r.stav === "Dokoncena").length;
+  if (odjeto > 0) return `Odjeto ${rozjizdek(odjeto)}`;
+
+  // Čísla nejsou venku, ale že se jelo, tabule ví ze stavu zastávky.
+  if (snimek.vysledkySkryte && snimek.stav === "Odjety")
+    return "Odjeto — výsledky ročník zatím nezveřejnil.";
+
+  // Okno otevírá rozprava, takže už proběhla. Po jeho tvrdém konci se
+  // netvrdí nic: mohlo se zavřít dřív a tabule o tom neví.
+  const konec = snimek.oknoDo ? Date.parse(snimek.oknoDo) : NaN;
+  if (Number.isFinite(konec) && ted < konec) return "Po rozpravě — čeká se na start";
+
+  return "Čeká se na rozpravu";
+}
+
 export type Casomira = { druh: "ceka" | "procedura"; text: string };
 
 /**

@@ -1621,7 +1621,13 @@ def trat_na_rade(slug):
         if jeji:
             return jeji[-1]
 
-    return next((x for x in reversed(TRATE.get(slug) or []) if x["stav"] == "Prijato"), None)
+    # Záloha se taky ptá, jestli se ta rozjížďka jede — jinak by vydala
+    # trať zrušené rozjížďky a tabule by o ní hlásila „Trať schválena".
+    # Opsané z `NaRadeAsync`; trať bez rozjížďky zůstává, ta se neruší.
+    zrusene = {r["cislo"] for r in (z or {}).get("rozjizdky", [])
+               if r.get("stav") == "Zrusena"}
+    return next((x for x in reversed(TRATE.get(slug) or [])
+                 if x["stav"] == "Prijato" and x.get("rozjizdkaId") not in zrusene), None)
 
 
 def verejne_rozjizdky(slug):
@@ -5778,10 +5784,16 @@ class H(BaseHTTPRequestHandler):
                         "koeficientDoSerie")},
                     # Divák musí vědět, že kouká na nepodepsaná čísla.
                     "procesniDej": bool(z.get("procesniDej")),
-                    # Tvrdý konec okna závodního dne. Mock okna nevede,
-                    # takže ho bere ze zastávky, když si ho někdo dopsal —
-                    # tabule podle něj pozná neuzavřenou rozjížďku.
-                    "oknoDo": z.get("oknoDo"),
+                    # Tvrdý konec okna závodního dne — z posledního
+                    # otevřeného okna, jako `OknoDoAsync` v API. <b>Mock okna
+                    # vede</b> (`OKNA`) od trackingu, jen tahle cesta o nich
+                    # nevěděla a vydávala `null`: tabule pak po rozpravě
+                    # tvrdila, že se na rozpravu čeká (nalezeno 28. 10. 2026).
+                    # Hodnota ze zastávky zůstává jako záloha pro data ze
+                    # souboru, kde okno nikdo neotvíral.
+                    "oknoDo": (okna[-1]["tvrdyKonec"]
+                               if (okna := OKNA.get(z["slug"]))
+                               else z.get("oknoDo")),
                     "druh": z["druh"],
                     "medailonek": poradatel_zastavky(z),
                     "rozjizdky": [{

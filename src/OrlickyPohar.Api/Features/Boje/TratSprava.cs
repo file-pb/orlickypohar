@@ -401,8 +401,18 @@ public class TratSprava(AppDbContext db, TimeProvider cas, Fotky.IUloziste ulozi
             if (jeji is not null) return jeji;
         }
 
+        // <b>Záloha se taky ptá, jestli se ta rozjížďka jede.</b> Bez toho
+        // vydala poslední přijatou trať i tehdy, když patřila zrušené
+        // rozjížďce — a tabule pak hlásila „Trať schválena — 2. rozjížďka"
+        // o rozjížďce, která se nejede (nalezeno 26. 10. 2026, nález 10
+        // v `docs/TABULE-DIVAK.md`). O pár řádků níž to
+        // `VerejneRozjizdkyAsync` dělá správně, takže se výčet rozjížděk
+        // s vydanou tratí rozcházel. Trať bez rozjížďky zůstává: ta se
+        // nejede ani neruší, je to trať regaty.
         return await db.Trate
-            .Where(t => t.ZavodId == zavodId && t.Stav == StavTrati.Prijato)
+            .Where(t => t.ZavodId == zavodId && t.Stav == StavTrati.Prijato
+                        && (t.RozjizdkaId == null
+                            || t.Rozjizdka!.Stav != StavRozjizdky.Zrusena))
             .OrderByDescending(t => t.Id)
             .FirstOrDefaultAsync(ct);
     }

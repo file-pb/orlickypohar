@@ -3860,17 +3860,13 @@ body:has(.tabule) {
 .seznam-prvku .ikona-detailu.nakres figcaption { display: none; }
 .seznam-prvku .ikona-detailu.foto img {
   width: 100%;
-  /* <b>Obrazovka bez pásu partnerů.</b> Pouhé `min-height: 100vh` nechalo
-     stránku narůst podle obsahu a `overflow: hidden` na `body` zbytek
-     tiše usekl — na 720px obrazovce byla tabule vysoká 1056 px, takže
-     čtyři řádky pořadí nikdo neviděl a nic o nich neřeklo. A samotná
-     obrazovka nestačí: pás partnerů je `position: fixed`, takže spodních
-     `--paticka` nepatří obsahu (obojí změřeno 17. 10. 2026).
-
-     Zkoušel jsem to i tak, že výšku rozdělí `body` jako flex — dvakrát
-     to shodilo šířku, protože z tabule udělalo flexovou položku a mřížka
-     sloupců spadla do jednoho. Tohle je jednodušší a drží. */
-  height: calc(100dvh - var(--paticka));
+  /* <b>Náhled, ne obrazovka.</b> Dřív tu stála slepená kopie komentáře
+     a výšky tabule (`100dvh - var(--paticka)`). Přes obrazovku se nic
+     neroztáhlo — kontejner má 44 × 32 px a `overflow: hidden` —, ale
+     obrázek se kreslil 44 px široký a 100 dvh vysoký, takže
+     `object-fit: cover` z něj ukazoval svislý proužek odshora místo
+     středového výřezu. Výšku dává mřížka seznamu, obrázek ji jen vyplní. */
+  height: 100%;
   object-fit: cover;
 }
 

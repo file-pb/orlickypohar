@@ -7,7 +7,7 @@
  */
 import assert from 'node:assert/strict';
 
-import { casomira, popis, procedura } from '../lib/rozjizdky-tabule.ts';
+import { casomira, popis, procedura, stavDne } from '../lib/rozjizdky-tabule.ts';
 
 let prosly = 0;
 function zkus(nazev: string, f: () => void) {
@@ -107,6 +107,69 @@ zkus('ze dvou plánovaných se bere ta bližší', () => {
   ] };
   const ted = Date.parse('2027-05-15T11:00:00+02:00');
   assert.equal(casomira(s, ted)?.text, 'procedura ve 12:25');
+});
+
+// ---------------------------------------------------------------------------
+// Věta o tom, kde je závodní den.
+// ---------------------------------------------------------------------------
+
+type Den = Parameters<typeof stavDne>[0];
+const den = (
+  rozjizdky: { stav: string; startV: string | null }[],
+  extra: Partial<Den> = {},
+): Den =>
+  ({
+    rozjizdky: rozjizdky.map((r, i) => ({ cislo: i + 1, ...r })),
+    stav: 'Vypsany',
+    vysledkySkryte: false,
+    oknoDo: null,
+    ...extra,
+  }) as unknown as Den;
+
+console.log('\nVěta o závodním dni');
+
+zkus('před rozpravou se čeká na rozpravu', () => {
+  assert.equal(stavDne(den([{ stav: 'Planovana', startV: null }]), TED), 'Čeká se na rozpravu');
+});
+
+zkus('po rozpravě už se na ni nečeká', () => {
+  const po = den([{ stav: 'Planovana', startV: null }], { oknoDo: za(10 * 3600) });
+  assert.equal(stavDne(po, TED), 'Po rozpravě — čeká se na start');
+});
+
+zkus('po tvrdém konci okna se netvrdí nic navíc', () => {
+  const pozde = den([{ stav: 'Planovana', startV: null }], { oknoDo: za(-60) });
+  assert.equal(stavDne(pozde, TED), 'Čeká se na rozpravu');
+});
+
+zkus('běžící rozjížďka přebije všechno', () => {
+  const jede = den(
+    [{ stav: 'Probiha', startV: za(-300) }, { stav: 'Planovana', startV: za(120) }],
+    { oknoDo: za(3600) },
+  );
+  assert.match(stavDne(jede, TED), /^Rozjížďka běží/);
+});
+
+zkus('blížící se start má přednost před počtem odjetých', () => {
+  const pred = den(
+    [{ stav: 'Dokoncena', startV: za(-3600) }, { stav: 'Planovana', startV: za(120) }],
+    { oknoDo: za(3600) },
+  );
+  assert.equal(stavDne(pred, TED), 'startovní procedura 2:00');
+});
+
+zkus('jinak se řekne, kolik se odjelo', () => {
+  const po = den(
+    [{ stav: 'Dokoncena', startV: za(-7200) }, { stav: 'Dokoncena', startV: za(-3600) }],
+    { oknoDo: za(3600) },
+  );
+  assert.equal(stavDne(po, TED), 'Odjeto 2 rozjížďky');
+});
+
+zkus('skrytý ročník: odjetá regata se netváří jako regata před startem', () => {
+  // Ročník se skrytými výsledky nevydá rozjížďky vůbec.
+  const skryto = den([], { stav: 'Odjety', vysledkySkryte: true, oknoDo: za(-3600) });
+  assert.equal(stavDne(skryto, TED), 'Odjeto — výsledky ročník zatím nezveřejnil.');
 });
 
 console.log(`\n${prosly} kontrol prošlo.`);

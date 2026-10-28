@@ -6,7 +6,7 @@ import { Znak } from "@/app/logo";
 import { NazevZavodu } from "@/app/tabule-nazev";
 import { ZnakTridy } from "@/app/tridy";
 import { Infopanel } from "./infopanel";
-import { casomira } from "@/lib/rozjizdky-tabule";
+import { stavDne } from "@/lib/rozjizdky-tabule";
 import type { Snimek } from "@/lib/tabule";
 
 /**
@@ -137,7 +137,6 @@ export function Teaser({
    */
   mez: number;
 }) {
-  const hodiny = casomira(snimek, ted);
   const trid = [...new Set(snimek.lode.map((l) => l.kategorie))];
   const { kolik, mrizka } = useKolikSeVejde(mez, snimek);
   /**
@@ -145,8 +144,6 @@ export function Teaser({
    * rozměry nemá a prázdný sloupec by na vteřinu probliknul.
    */
   const strop = kolik ?? NEJVIC_V_TRIDE;
-  const jede = snimek.rozjizdky.some((r) => r.stav === "Probiha");
-  const odjeto = snimek.rozjizdky.filter((r) => r.stav === "Dokoncena").length;
 
   return (
     <section className="tabule-teaser">
@@ -181,15 +178,10 @@ export function Teaser({
           <h1>
             <NazevZavodu text={snimek.nazev} zarovnani="vlevo" />
           </h1>
-          <p className="tabule-teaser-stav">
-          {jede
-            ? "Rozjížďka běží — na mapu se lodě objeví, jakmile začnou hlásit polohu."
-            : hodiny
-              ? hodiny.text
-              : odjeto > 0
-                ? `Odjeto ${odjeto} ${odjeto === 1 ? "rozjížďka" : odjeto < 5 ? "rozjížďky" : "rozjížděk"}`
-                : "Čeká se na rozpravu"}
-          </p>
+          {/* <b>Jedna věta o tom, kde je den</b> — pravidlo sedí
+              v `lib/rozjizdky-tabule.ts`, aby se dalo ověřit bez
+              prohlížeče. */}
+          <p className="tabule-teaser-stav">{stavDne(snimek, ted)}</p>
           </div>
         </header>
       </div>

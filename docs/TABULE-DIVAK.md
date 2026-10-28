@@ -147,10 +147,17 @@ strom), takže v historii stojí pod jejím popisem, ne pod tímhle auditem.
 
 ## Otevřené — o těchhle rozhodne Filip
 
-**Nálezy 6 a 8 jsou od 27. 10. 2026 přeškrtnuté** a **nález 7 od
-28. 10. 2026**, ale zůstávají tady: u šestky kvůli číslům, proti kterým se
-oprava dá přeměřit, u osmičky proto, že poslední rozhodnutí v ní nebylo
-technické, a u sedmičky proto, že se na ni odkazuje oponentura rozhodčího.
+**Otevřené zůstávají jen dva: 11 a 12.** Zbytek je přeškrtnutý —
+6 a 8 (27. 10. 2026), 7, 9, 10 a 13 (28. 10. 2026) —, ale nálezy tu
+zůstávají i tak: u šestky kvůli číslům, proti kterým se oprava dá
+přeměřit, u osmičky proto, že poslední rozhodnutí v ní nebylo technické,
+u sedmičky proto, že se na ni odkazuje oponentura rozhodčího, a u třináctky
+proto, že je u ní opravené i moje vlastní přehnané tvrzení.
+
+**Jedenáctka a dvanáctka se tu nerozhodují**: jedenáctka je totéž co
+nález O4 v `docs/AUDIT-OBSAZENI.md` a patří tam, dvanáctka čeká na to,
+jestli se vlajka a semafor vrátí se startovní procedurou (fáze 3 plánu
+v `docs/OPONENTURA-ROZHODCI.md`).
 
 ### 6. ~~Startovní listina nemá výškový rozpočet a lodě z ní tiše padají~~
 **Opraveno 27. 10. 2026.**
@@ -345,33 +352,83 @@ vyplo. Proti API se to nestane (`ZastavkaVstup.ProcesniDej` je `bool?`
 a `KalendarSprava` dělá `vstup.ProcesniDej ?? zastavka.ProcesniDej`),
 takže je to vada mocku, ne aplikace. Opraveno.
 
-### 9. Skrytý ročník: odjetá regata vypadá jako regata před rozpravou
+### 9. ~~Skrytý ročník: odjetá regata vypadá jako regata před rozpravou~~
+**Opraveno 28. 10. 2026.**
+
 Když ročník nevydává výsledky (`VysledkyZavoduVerejne = false`), API vrací
 detail **bez rozjížděk** (`ZavodEndpoints`, zkratka hned za načtením
-závodu — schválně, aby se čísla ani nenačetla). Tabule z toho spočítá, že
-žádná rozjížďka není dokončená, a spadne do startovní listiny.
+závodu — schválně, aby se čísla ani nenačetla). Tabule z toho spočítala,
+že žádná rozjížďka není dokončená, a spadla do startovní listiny s větou
+*„Čeká se na rozpravu"*.
 
-*Změřeno:* regata s dojetou, potvrzenou a publikovanou rozjížďkou po
-skrytí ročníku ukazuje `22 přihlášených lodí`, stav **„Čeká se na
-rozpravu"**, žádné panýlky rozjížděk — plus proužek *„Ročník má výsledky
-zatím skryté…"*. Dvě sdělení na jedné obrazovce si odporují.
+*Změřeno před opravou:* regata s dojetou, potvrzenou a publikovanou
+rozjížďkou po skrytí ročníku ukazovala `22 přihlášených lodí`, stav
+**„Čeká se na rozpravu"** a proužek *„Ročník má výsledky zatím skryté…"* —
+dvě sdělení na jedné obrazovce, která si odporují.
 
-Vedlejší důsledek: obě věty, které `Vysledky` pro skrytý ročník má
-(*„pořadí se počítá, rozhodčí ho zatím nezveřejnil"* a *„Až to rozhodčí
-pustí ven, objeví se to tady."*), jsou **nedosažitelné** — do té podoby se
-tabule při skrytém ročníku nikdy nedostane.
+**Při opravě vyšla najevo druhá, obecnější vada téže věty:** *„Čeká se na
+rozpravu"* byla poslední možnost v řadě, takže platila **vždycky**, když
+žádná rozjížďka nemá čas startu — tedy i hodinu po rozpravě. Že den začal,
+přitom tabule vědět může: okno závodního dne otevírá právě rozprava
+a `oknoDo` jde ven (`ZavodEndpoints.OknoDoAsync`).
 
-Je to tatáž otázka jako scénář A5 v `SCENARE-OVLADANI.md` („pozná, že se
-jelo, od toho, že se nejelo?"), jen na tabuli — a odpověď je zatím ne.
+*Oprava:* jedna čistá funkce `stavDne` (`lib/rozjizdky-tabule.ts`), která
+rozhoduje v tomhle pořadí — běžící rozjížďka, odpočet k nejbližšímu
+startu, počet odjetých, **odjetá regata se skrytými výsledky**, **otevřené
+okno dne**, a teprve nakonec rozprava. Po tvrdém konci okna se netvrdí
+nic: mohlo se zavřít dřív a tabule o tom neví.
 
-### 10. Trať zrušené rozjížďky jde ven jako „trať na řadě"
+*Ověřeno po opravě:*
+
+| Stav | Co tabule řekne |
+|---|---|
+| před rozpravou | `Čeká se na rozpravu` |
+| po rozpravě, žádný start | `Po rozpravě — čeká se na start` |
+| odjetá regata, ročník skrývá výsledky | `Odjeto — výsledky ročník zatím nezveřejnil.` |
+
+Sedm případů má testy (`web/testy/rozjizdky.test.ts`, oddíl *Věta
+o závodním dni*), obojí nahoře navíc projito v prohlížeči proti mocku.
+
+**Startovní listina zůstává** i u skrytého ročníku: kdo přijel, je to
+jediné, co se o regatě říct dá, a je to pravda. Tím pádem jsou dvě věty,
+které `Vysledky` pro skrytý ročník má (*„pořadí se počítá, rozhodčí ho
+zatím nezveřejnil"* a *„Až to rozhodčí pustí ven, objeví se to tady."*),
+dál **nedosažitelné** — do té podoby se tabule při skrytém ročníku
+nedostane. Zapsáno u nálezu 12 mezi mrtvý kód, ne smazáno.
+
+**Třetí lež mocku u toho:** veřejný detail vydával `oknoDo` ze zastávky
+(*„mock okna nevede"*), jenže od trackingu je vede (`OKNA`) — takže
+lokálně bylo `oknoDo` po rozpravě pořád `null` a oprava by se na mocku
+nedala změřit. Teď bere tvrdý konec posledního otevřeného okna, jako
+`OknoDoAsync`.
+
+### 10. ~~Trať zrušené rozjížďky jde ven jako „trať na řadě"~~
+**Opraveno 28. 10. 2026.**
+
 `NaRadeAsync` (`Features/Boje/TratSprava.cs`) hledá trať rozjížďky, která
-je na řadě, a když žádnou nenajde, vezme **poslední přijatou trať vůbec** —
-a ta poslední větev se zrušených rozjížděk neptá, ačkoliv o pár řádků níž
-je `VerejneRozjizdkyAsync`, která je vyřazuje. Mock je opsaný stejně.
+je na řadě, a když žádnou nenajde, vezme **poslední přijatou trať
+vůbec** — a ta poslední větev se zrušených rozjížděk neptala, ačkoliv
+o pár řádků níž je `VerejneRozjizdkyAsync`, která je vyřazuje. Výčet
+rozjížděk s vydanou tratí se tak rozcházel s tratí, která se vydala.
 
-*Změřeno:* po eliminaci 2. rozjížďky a přestavbě trati vyjela karta
-`TRAŤ · Trať schválena · 2. rozjížďka` — o rozjížďce, která se nejede.
+*Změřeno před opravou:* po eliminaci 2. rozjížďky a přestavbě trati vyjela
+na tabuli karta `TRAŤ · Trať schválena · 2. rozjížďka` — o rozjížďce,
+která se nejede.
+
+*Oprava:* záloha se taky ptá, jestli se ta rozjížďka jede. Trať **bez**
+rozjížďky zůstává: ta se nejede ani neruší, je to trať regaty. Opsáno do
+mocku (`trat_na_rade`), aby se obojí nerozešlo.
+
+*Ověřeno:* sestava 1. dojetá, 2. eliminovaná, 3. plánovaná bez trati —
+veřejná trať teď hlásí `cisloRozjizdky: 1` a `rozjizdky: [1]`, dřív
+`2`. Změřeno proti mocku; **na běžícím API neověřeno** (lokálně se
+nerozjede, viz `README.md`), takže stojí na tom, že je mock opsaný
+řádek po řádku a oba filtry jsou teď stejné.
+
+**Sousedství, ne kolize** (session oponentury rozhodčího, 28. 10. 2026):
+jejich nález **R13** říká, že zrušit rozjížďku jde dnes jen oklikou přes
+eliminaci výsledků a **důvod se nikam neuloží**. Tahle oprava čistí
+výdej, R13 řeší zápis; potkají se ve fázi 4.2 jejich plánu.
 
 ### 11. Publikovaná a potom eliminovaná rozjížďka drží čísla venku
 Filtr je `Publikovano || (ProcesniDej && StavVysledku != Eliminovano)` —
@@ -384,28 +441,79 @@ Na tabuli se to neprojeví (pořadí ji nepočítá a panýlek říká *zrušena
 na veřejné stránce regaty ano. **Je to mimo zadání tohohle auditu**, patří
 k veřejné stránce — zapsané, ať se na to nepřijde potřetí.
 
-### 12. Mrtvý kód v tabuli
+**Přišlo se na to dvakrát nezávisle** (28. 10. 2026): totéž je nález **O4
+v `docs/AUDIT-OBSAZENI.md`** — *„Rozhodčí řekne »čísla neplatí« a nemá jak
+je stáhnout z webu."* Tam je k tomu změřený postup, rozbor toho, že
+publikace je vlastní příznak a ne stupeň řady, a dva návrhy řešení.
+**Rozhoduje se to tam, ne tady**, aby se to nepočítalo potřetí.
+
+### 12. Kód bez cesty — a `vlajka.tsx` se mazat nesmí
+**Z „mrtvého kódu" je od 28. 10. 2026 objednávka.** Nález zůstává
+otevřený, ale otočil se mu smysl; o zbytku rozhodne Filip.
+
 Tři soubory v `tabule/` neimportuje nikdo: **`semafor.tsx` (298 řádků)**,
 **`atributy.tsx` (62)** a **`vlajka.tsx` (92)**, kterou drží při životě jen
 semafor. V `obrazovka.tsx` zůstaly nepoužité `STAVY_ROZJIZDEK`, `ZAPIS`,
-`NA_STRANKU` a `stranky()`.
+`NA_STRANKU` a `stranky()`; v `vysledky.tsx` dvě věty pro skrytý ročník,
+do kterých se tabule nedostane (viz nález 9). V CSS k tomu patří pravidla
+`.stav-rozjizdky-tabule`.
 
 Navíc: mapa dostává `onUdalost`, hlídá si ho (`if (!onUdalost) return`),
 ale od 25. 10. ho **nikdy nezavolá** — dojezd i prohození si řeší sama
 (`setLepik`). Druh karty `souboj` a jeho nadpisek *„Na vodě"* jsou tím
 nedosažitelné.
 
-Je to Filipovo rozhodnutí: vlajky stavu rozjížďky se do návrhu vrátit mohou,
-a pak je lepší mít je po ruce než je psát znovu. Ale dokud leží bez cesty,
-čte je každý, kdo tabuli otevře, jako živý kód — tenhle audit je taky nejdřív přečetl celé.
+**Co se změnilo:** session oponentury rozhodčího dohledala, že
+`vlajka.tsx` není opuštěná, ale odpojená omylem — vznikla v #443 a #444
+a odpojila se v **#486** (*„Nad pořadím zůstal jen název"*) jako vedlejší
+účinek přerovnání rozvržení, ne jako rozhodnutí o vlajce. A **Filip si ji
+27. 10. 2026 objednal znovu**, aniž by věděl, že ji má: *„Vlajku (vlající
+3d) můžeme ukázat třeba na telce vlevo na mapě dole nad běžícími pořadími
+spolu s odpočty a informacemi startovní procedury."* Její stavy
+`ceka / jede / dojeto / zruseno` jsou přitom přesně **devátá osa**
+z `docs/SCENARE-OVLADANI.md`. Smazat ji by tedy znamenalo zahodit hotovou
+věc a za týden ji psát znovu.
 
-### 13. Nález mimo tabuli: náhled fotky prvku přes celou obrazovku
-V `globals.css` je **slepená kopie** komentáře o výšce tabule i s jejím
+**Co z toho plyne pro úklid:**
+
+| Co | Jak s tím naložit |
+|---|---|
+| `vlajka.tsx` | **nemazat** — je objednaná zpátky, patří ke startovní proceduře (fáze 3 plánu oponentury) |
+| `semafor.tsx`, `atributy.tsx` | rozhodnout až s vlajkou: semafor je její jediný dnešní nosič |
+| `.stav-rozjizdky-tabule` v CSS | smí pryč, ale **token `--pozor` ne** — ten používají živé `.panylek-probiha` a `.zprava-program` (session devíti os, 28. 10. 2026; `sviti-ceka` v tom pravidle na ten token zrovna převedla, takže ta změna je zatím bez účinku) |
+| `STAVY_ROZJIZDEK`, `ZAPIS`, `NA_STRANKU`, `stranky()` | bez majitele, smazat se dá kdykoliv |
+| `onUdalost` u mapy | buď odpojit, nebo mu vrátit smysl; dnes je to slib, který se neplní |
+
+Obě session se shodly, že **majitele mají jen vlajka a semafor, a toho
+majitele představuje oponentura rozhodčího**, ne devět os — ty si z tabule
+vzaly slovník, ne soubory.
+
+### 13. ~~Nález mimo tabuli: náhled fotky prvku přes celou obrazovku~~
+**Opraveno 28. 10. 2026, a s opravou vlastního přehnaného tvrzení.**
+
+V `globals.css` byla **slepená kopie** komentáře o výšce tabule i s jejím
 `height: calc(100dvh - var(--paticka))`, a to uvnitř pravidla
-`.seznam-prvku .ikona-detailu.foto img`. Náhled fotky u prvku trati je tím
-vysoký přes celou obrazovku (`object-fit: cover` to jen ořízne).
-Neopraveno schválně: je to obrazovka pořadatele, ne tabule, a může na ní
-pracovat jiná session.
+`.seznam-prvku .ikona-detailu.foto img`.
+
+**Co jsem o tom tvrdil 26. 10. a co je pravda:** psal jsem, že „náhled
+fotky je vysoký přes celou obrazovku". To je pravda o CSS, ne o tom, co
+člověk uvidí: nadřazený `.ikona-detailu` je **44 × 32 px s `overflow:
+hidden`**, takže se nic přes obrazovku neroztáhlo. Skutečný následek byl
+jiný a menší — obrázek se vykreslil jako 44 px široký a 100 dvh vysoký
+a `object-fit: cover` z něj ukázal **svislý proužek odshora** místo
+středového výřezu. Tvrdit víc než to bylo přehánění z přečteného pravidla,
+ne z obrazovky.
+
+*Oprava:* `height: 100%`, tedy výšku dává mřížka seznamu a obrázek ji
+vyplní.
+
+*Ověření:* **jen čtením.** Mock u prvků trati žádné fotky nenasazuje
+(nahrávají se), takže na tabuli ani ve správě nebylo co vykreslit; oprava
+stojí na tom, že kontejner má pevných 44 × 32 px a `overflow: hidden`.
+Je to obrazovka pořadatele, ne tabule — kdo se tam dostane s fotkou
+v ruce, ať to potvrdí.
+
+---
 
 ---
 
@@ -430,3 +538,8 @@ Zapsaná zvlášť schválně: rozhodnout o nich patří k návrhu, ne k měřen
 - **Karta alertu se prolíná**, takže na snímku obrazovky ji jde minout —
   kdo bude tabuli zkoušet po mně, ať čte DOM, ne screenshot. Tenhle audit
   na to zprvu naletěl a málem zapsal „alerty nejezdí".
+- **„Čeká se na rozpravu" uměla tabule říct i hodinu po rozpravě** — viz
+  nález 9; opravené, ale stojí za zapamatování, že poslední možnost v řadě
+  podmínek je ta, která platí nejčastěji, a nejmíň se kontroluje.
+- **Tentýž nález našly dvě session nezávisle** (11 a O4). Stálo to dvakrát
+  práci; proto u sporných věcí napřed `docs/` prohledat, pak měřit.
