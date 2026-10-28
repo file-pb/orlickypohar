@@ -5,6 +5,10 @@ měl kontrolu nad stavem: každý Milošův požadavek na jednom řádku, u něj
 je stavu, **kde se to dá vidět** a co zbývá. Je seřazený **podle dne závodu**,
 protože tak o tom Miloš mluví — od vypsání po výsledky.
 
+**Co v něm není.** Je to řez **dnem rozhodčího**. Web a články, editor trati,
+bóje, tabule pro diváky, náklady, zálohy a kalendář v něm nejsou — ty vede
+`PLAN.md`. Kdo u vody stojí a s jakými právy, vede `AUDIT-OBSAZENI.md`.
+
 Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 `SOUPIS-A-PLAN-START.md` (plán ovládání startu a celá fronta).
 
@@ -89,6 +93,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Úpravu výsledků smí jen rozhodčí | **Čeká** | R38, tatáž otázka jako u listiny |
 | Zásah do pořadí při protestu | **Zadané** | Protesty jsou celá nepostavená fáze; dnes je jen věta, že protest visí (K2) |
 | Ověřeno a Schváleno jako dva kroky | **Čeká** | K3. Dnes jsou to dvě klepnutí téhož člověka — kandidát na ubrání |
+| Pomocník u cíle a slave startér bez plných práv | **Čeká** | K8. Dnes dostane celého pořadatele včetně startovní listiny, což je proti *„do listiny smí jen rozhodčí"*. Souvisí s R38 |
 | Zahájit další rozjížďku | **V API** | `POST …/rozjizdky` |
 | Kódy výsledků včetně DNE | **Běží** | Jedenáct kódů, čtyři z nich doplněné 28. 10.; DNE se nedá vyškrtnout (K1) |
 | Zrušení rozjížďky s povinným důvodem | **Běží** | Fáze 4.2 |

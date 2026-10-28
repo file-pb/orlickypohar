@@ -4243,6 +4243,63 @@ Pravidla dvoustupňový podpis rozhodčího nežádají. ZPJ 90.3 mluví o jedno
 > **Otázka na rozhodčího:** podepisuješ u vody dvakrát? Je „čísla sedí"
 > a „protesty jsou vyřízené" jeden okamžik, nebo dva různé dny?
 
+> **Upřesnění 28. 10. 2026 večer.** Filip k tomu namítl, že *„mnohdy např. u
+> cíle a startu nestojí pouze rozhodčí"*. Má pravdu, ale míří na **jiný nález**:
+> K3 je o tom, že *Ověřeno* a *Schváleno* klepne **týž** člověk a mezi nimi se
+> nic nestane. To, kdo u vody stojí, je `docs/AUDIT-OBSAZENI.md` nález **O13**,
+> a ten už to říká doslova: *„Kdo má v cíli jen zapisovat, dostane
+> `Organizator` na tu regatu."* Nový je až důsledek — viz **K8**.
+
+### K8 — Kdo u startu a u cíle stojí s rozhodčím, dostane celého pořadatele — a to je od dneška v rozporu s Milošovým zadáním
+
+*Původ: Filip, 28. 10. 2026 večer. Doloženo: `docs/AUDIT-OBSAZENI.md` nález O13,
+`Features/Identita/Uzivatel.cs:71–96` (celý výčet `Role`),
+`Features/Zavody/VysledkyEndpoints.cs:293` a `:549–553`
+(`SmiZapisovatAsync` → `Workflow.KdoSmi(Navrzeno, Navrzeno)`). Stav: **nový
+rozpor, nestavěno**.*
+
+Filip: *„Mnohdy např. u cíle a startu nestojí pouze rozhodčí."*
+
+**Je to doložené a bylo to zapsané — jako vědomá hrana.** Audit obsazení z
+26. 10. to má jako O13: *„Kdo má v cíli jen zapisovat, dostane `Organizator` na
+tu regatu — a s ním i vypsání závodu, nahlášení odjeto, přihlášky, vyloučení
+lodi, směrnice, stavbu trati."* Mezistupeň mezi editorem a pořadatelem
+neexistuje; výčet `Role` má pět položek a žádná z nich není „zapisovatel" ani
+„startér".
+
+**Co se změnilo dneska večer.** Miloš řekl (nahrávka 30): *„Zásah do startovní
+listiny smí provést pouze rozhodčí. Úpravu výsledků smí provést pouze
+rozhodčí."* Tím se O13 přestává být vědomou hranou a stává se **rozporem**:
+pomocník, který má u cíle jen zapisovat průjezdy, dnes dostane přístup ke
+startovní listině — tedy přesně k tomu, co má být podle rozhodčího jen jeho.
+
+**A je tu druhá polovina, kterou nikdo nezapsal: slave startéři.** Pyramida
+autority s nimi počítá jako se stupněm 3. Převzetí velení je ale v API za
+tímtéž sítem jako zápis výsledku:
+
+```csharp
+if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+```
+
+Takže **slave startér musí mít roli pořadatele nebo rozhodčího**, aby si mohl
+o velení říct. Pyramida tedy dnes stojí na rolích, které jí dávají mnohem víc,
+než potřebuje — a u lidí, kteří přijdou k vodě jednou za rok, je to ta nejmenší
+žádoucí důvěra.
+
+**Co z toho plyne, a rozhodnout to nemám já.** Buď
+
+1. **přibyde role** pro toho, kdo u vody zapisuje (zápis průjezdů, převzetí
+   velení — nic jiného), nebo
+2. **zůstane to jak je** a Milošova věta se bude chápat úzce: *„do startovní
+   listiny smí jen rozhodčí"* jako pravidlo o obrazovce, ne o účtech.
+
+Druhá cesta je zdarma a na poháru, kde je štáb z jednoho klubu, obstojí
+(přesně tak to O13 zapsal). První je čistší a bude potřeba ve chvíli, kdy
+k vodě přijde někdo, komu se nedá dát celá regata. **Rozhoduje to Filip
+s Milošem, ne kód** — a souvisí to s R38, protože je to tatáž věta čtená dvakrát.
+
+---
+
 ### K4 — Vyloučení nehlídá mez z pravidla 76.1(a)
 
 *Doloženo: `Features/Zavody/Prihlasky.cs:56–101`, ZPJ 76.1. Stav: **zapsáno,
