@@ -93,7 +93,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Úpravu výsledků smí jen rozhodčí | **Čeká** | R38, tatáž otázka jako u listiny |
 | Zásah do pořadí při protestu | **Zadané** | Protesty jsou celá nepostavená fáze; dnes je jen věta, že protest visí (K2) |
 | Ověřeno a Schváleno jako dva kroky | **Čeká** | K3. Dnes jsou to dvě klepnutí téhož člověka — kandidát na ubrání |
-| Pomocník u cíle a slave startér bez plných práv | **Čeká** | K8. Dnes dostane celého pořadatele včetně startovní listiny, což je proti *„do listiny smí jen rozhodčí"*. Souvisí s R38 |
+| Pomocník u cíle a slave startér | **Zadané** | K8. Rozhodnuto 28. 10.: **příznak u regaty**, který rozhodčí zaškrtne v klubovně u zápisu u lidí, kteří už pořadateli jsou. Otevře velení a zápis průjezdu, **ne** startovní listinu. Žádná nová role |
 | Zahájit další rozjížďku | **V API** | `POST …/rozjizdky` |
 | Kódy výsledků včetně DNE | **Běží** | Jedenáct kódů, čtyři z nich doplněné 28. 10.; DNE se nedá vyškrtnout (K1) |
 | Zrušení rozjížďky s povinným důvodem | **Běží** | Fáze 4.2 |

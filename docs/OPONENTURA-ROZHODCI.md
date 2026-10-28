@@ -4295,8 +4295,34 @@ než potřebuje — a u lidí, kteří přijdou k vodě jednou za rok, je to ta 
 
 Druhá cesta je zdarma a na poháru, kde je štáb z jednoho klubu, obstojí
 (přesně tak to O13 zapsal). První je čistší a bude potřeba ve chvíli, kdy
-k vodě přijde někdo, komu se nedá dát celá regata. **Rozhoduje to Filip
-s Milošem, ne kód** — a souvisí to s R38, protože je to tatáž věta čtená dvakrát.
+k vodě přijde někdo, komu se nedá dát celá regata.
+
+> **Rozhodnuto Filipem 28. 10. 2026 večer — a je to třetí cesta, kterou jsem
+> nenavrhl.** *„Chci, aby to měl Miloš co nejjednodušší … asi v klubovně
+> u zápisu bude na webu moct zaškrtnout, kdo z pořadatelů bude moci pomáhat
+> i u startu a cíle."*
+>
+> **Proč je to lepší než obě moje cesty.** Nepřidává roli do výčtu: ti lidé
+> **už pořadateli jsou**. Je to **příznak u regaty**, který jim navíc otevře
+> start a cíl — tedy převzetí velení (`Veleni.ProcNejdePrevzit`) a ruční zápis
+> průjezdu. Nic jiného. Milošova věta *„do startovní listiny a do výsledků smí
+> jen rozhodčí"* tím zůstává v platnosti, protože zaškrtnutí listinu neotevírá.
+>
+> **A okamžik sedí na časový program.** Podle jeho vlastní směrnice je
+> registrace 9:00–10:00, rozprava 10:30 a start 11:00. Zaškrtává se tedy
+> v klubovně, kde ti lidé fyzicky stojí, **před rozpravou** — stejnou hranicí,
+> kterou právě dostalo přihlašování (R39). Rozprava zavře obojí: kdo jede a kdo
+> pomáhá. Tím zároveň padá starost, že obrazovka Oprávnění je jen na webu:
+> u zápisu je notebook, ne loď.
+>
+> **Co z toho zbývá postavit.** Příznak u regaty, zaškrtávátko na obrazovce
+> rozhodčího a dvě místa, která se ho zeptají (velení, zápis průjezdu). Rozšířit
+> `Udeleni.RozhodciSmiUdelit` není potřeba, protože se neudílí role.
+>
+> **Dvě věci k doladění, ne k rozhodnutí.** Zůstane po tom **doklad**, kdo byl
+> toho dne zaškrtnutý (stejný vzorec jako u velitele, kde doklad už je), a
+> příznak se váže **na jednu regatu**, ne na ročník — jinak by platil i tam,
+> kde ten člověk není.
 
 ---
 
