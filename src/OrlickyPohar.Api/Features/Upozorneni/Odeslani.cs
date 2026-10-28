@@ -80,4 +80,31 @@ public class Odeslani
 
     /// <summary>Vzdáno — vyčerpané pokusy. Zůstává v tabulce jako doklad.</summary>
     public bool Vzdano { get; set; }
+
+    /// <summary>
+    /// <b>Zpráva, která nesnese minutu.</b> Odesílací úloha se kvůli ní
+    /// probudí hned, místo aby čekala na svůj takt.
+    ///
+    /// <para>
+    /// Nález R18 oponentury rozhodčího (28. 10. 2026). Komentář
+    /// u <c>OdesilaniUloha</c> s tímhle počítal dopředu: *„Zprávy, které
+    /// minutu nesnesou — odložený start — půjdou zařadit s vlastní
+    /// pobídkou, až vzniknou."* Teď vznikly.
+    /// </para>
+    /// <para>
+    /// <b>Latence je funkcí fáze, ne konstanta</b> (Filip, 27. 10. 2026:
+    /// *„v okolí startu a cíle je potřeba mít aktuální a rychlé info. Pak
+    /// při jízdě uprostřed rozjížďky je minuta naprosto velkorysá."*).
+    /// Minutový takt se proto nezahazuje — jen se k němu přidala pobídka
+    /// pro to, co se děje kolem startu.
+    /// </para>
+    /// <para>
+    /// <b>Co aplikace slíbit umí, je „odesláno bez prodlevy", ne
+    /// „doručeno včas"</b>: zpráva jde dál přes Expo a FCM nebo APNS a na
+    /// Androidu v úsporném režimu může dorazit později. A **push
+    /// nenahrazuje signál** — odložení se podle ZPJ 27.3 signalizuje
+    /// vlajkou, ne telefonem; tohle je navíc, ne místo.
+    /// </para>
+    /// </summary>
+    public bool Spesne { get; set; }
 }

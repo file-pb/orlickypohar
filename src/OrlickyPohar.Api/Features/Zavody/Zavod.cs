@@ -512,6 +512,12 @@ public class Ucast
     /// <summary>
     /// Verze znění, se kterým kapitán souhlasil — <see cref="Souhlas.Verze"/>.
     /// <para>
+    /// <b>Rozdíl mezi verzemi je věcný, ne kosmetický</b>: verze 1
+    /// (28. 10. 2026, platná pár hodin) o <b>sledování nemluvila</b>,
+    /// verze 2 ano. U lodi s jedničkou se proto nesmí předpokládat, že se
+    /// sledováním souhlasila.
+    /// </para>
+    /// <para>
     /// <b>Bez verze je doklad k ničemu.</b> Znění se bude upřesňovat a
     /// *„souhlasil"* bez toho, s čím souhlasil, nedokládá nic. Ukládá se
     /// číslo verze, ne celý text: text té verze drží kód a nemění se
@@ -690,6 +696,25 @@ public class Rozjizdka : Fotky.IMaFotku
     /// „něco je špatně" a ten, kdo to má opravit, začíná hledáním.
     /// </summary>
     public string? DuvodRevize { get; set; }
+
+    /// <summary>
+    /// Proč se rozjížďka zrušila. Povinný od 28. 10. 2026 (nálezy R13
+    /// a R17).
+    /// <para>
+    /// <b>Vlastní pole, ne sdílené s revizí.</b> Obojí může platit
+    /// najednou — rozjížďka vrácená k revizi a potom zrušená — a sdílený
+    /// sloupec by jeden důvod přepsal druhým zrovna ve chvíli, kdy jsou
+    /// potřeba oba.
+    /// </para>
+    /// <para>
+    /// <b>Proč se vyžaduje:</b> zrušená rozjížďka mizí z poháru, takže se
+    /// bude vysvětlovat, a ZPJ 32.1 má pro zrušení po startu čtyři různé
+    /// příčiny. *„Nefouká"* a *„vytlačili je z čáry"* vypadaly v zápisu
+    /// stejně, přitom druhé z toho je náprava, o které se vede spor
+    /// (R13).
+    /// </para>
+    /// </summary>
+    public string? DuvodZruseni { get; set; }
 
     /// <summary>
     /// Kolikátá podoba sady výsledků to je. Roste s každým uložením.

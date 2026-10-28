@@ -169,13 +169,32 @@ public static class Workflow
         Enum.GetValues<StavVysledku>().Where(na => na != ze && ProcNejde(ze, na, spravce) is null);
 
     /// <summary>
-    /// Důvod je povinný jen u vrácení k revizi. Jinde by byl formulářové
-    /// pole navíc u úkonu, který se dělá jedním kliknutím.
+    /// Důvod je povinný u <b>vrácení k revizi</b> a u <b>zrušení</b>.
+    /// Jinde by byl formulářové pole navíc u úkonu, který se dělá jedním
+    /// kliknutím.
+    ///
+    /// <para>
+    /// <b>Zrušení přibylo 28. 10. 2026</b> (nálezy R13 a R17 oponentury
+    /// rozhodčího). Zrušená rozjížďka <b>mizí z poháru</b>, takže se bude
+    /// vysvětlovat — a ZPJ 32.1 má pro zrušení po startu **čtyři různé
+    /// příčiny**: chybu v proceduře, počasí ohrožující bezpečnost,
+    /// posunutou nebo chybějící značku a jiný důvod, který přímo ovlivní
+    /// regulérnost. *„Nefouká, rušíme"* a *„vytlačili je z čáry, rušíme"*
+    /// vypadaly v zápisu stejně, přitom druhé z toho je náprava, o které
+    /// se vede spor.
+    /// </para>
     /// </summary>
     public static string? ProcNejdeBezDuvodu(StavVysledku na, string? duvod) =>
-        na == StavVysledku.KRevizi && string.IsNullOrWhiteSpace(duvod)
-            ? "Napiš, co je špatně. Bez důvodu začne ten, kdo to má opravit, hledáním."
-            : null;
+        (na, string.IsNullOrWhiteSpace(duvod)) switch
+        {
+            (StavVysledku.KRevizi, true) =>
+                "Napiš, co je špatně. Bez důvodu začne ten, kdo to má opravit, hledáním.",
+            (StavVysledku.Eliminovano, true) =>
+                "Napiš, proč se rozjížďka ruší. Mizí tím z poháru a bude se to vysvětlovat "
+                + "— ZPJ 32.1 rozlišuje chybu v proceduře, počasí, posunutou značku "
+                + "a jiný důvod, který ovlivnil regulérnost.",
+            _ => null,
+        };
 
     /// <summary>
     /// Počítá se rozjížďka do výsledku závodu a do poháru?

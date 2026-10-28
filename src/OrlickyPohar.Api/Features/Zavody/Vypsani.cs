@@ -289,7 +289,18 @@ public static class Vypsani
     private static readonly TimeZoneInfo Praha =
         TimeZoneInfo.FindSystemTimeZoneById("Europe/Prague");
 
-    private static string Cas(DateTimeOffset kdy) => VPraze(kdy).ToString("H:mm");
+    private static string Cas(DateTimeOffset kdy) => CasVPraze(kdy);
+
+    /// <summary>
+    /// Hodina v pražské zóně, ne v zóně serveru — regata se jede na Orlíku
+    /// a „9:55" musí znamenat devět padesát pět tam.
+    /// <para>
+    /// <b>Veřejné, protože to pravidlo potřebuje i někdo jiný</b>: zpráva
+    /// o odloženém startu nese čas, a dvě kopie téhož formátování by se
+    /// rozešly (nález R18, 28. 10. 2026).
+    /// </para>
+    /// </summary>
+    public static string CasVPraze(DateTimeOffset kdy) => VPraze(kdy).ToString("H:mm");
 
     private static string Minut(int kolik) =>
         kolik == 1 ? "jednu minutu" : kolik < 5 ? $"{kolik} minuty" : $"{kolik} minut";

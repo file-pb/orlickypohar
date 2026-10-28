@@ -16,7 +16,15 @@ const API = process.env.API_URL ?? "http://localhost:8080";
 type S = components["schemas"];
 
 export type PrehledVysledku = S["PrehledVysledkuDto"];
-export type RozjizdkaRadek = S["RozjizdkaSpravaRadek"];
+/**
+ * Řádek rozjížďky ve správě. `duvodZruseni` je dopsané ručně (28. 10.
+ * 2026) ze stejného důvodu jako u {@link KodVysledku}: typy se generují
+ * z běžícího API a to bez databáze nenaběhne.
+ */
+export type RozjizdkaRadek = S["RozjizdkaSpravaRadek"] & {
+  /** Proč se rozjížďka zrušila; `null`, dokud zrušená není. */
+  duvodZruseni?: string | null;
+};
 export type ZastavkaVysledky = S["ZastavkaVysledkyDto"];
 export type StavVysledku = S["StavVysledku"];
 /**

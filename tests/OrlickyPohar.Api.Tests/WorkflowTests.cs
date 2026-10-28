@@ -240,4 +240,48 @@ public class WorkflowTests
         foreach (var stav in Enum.GetValues<StavVysledku>().Where(s => s != StavVysledku.Eliminovano))
             Assert.True(Workflow.Plati(stav));
     }
+
+    /// <summary>
+    /// <b>Zrušení se nesmí stát bez důvodu</b> (nálezy R13 a R17
+    /// oponentury rozhodčího, 28. 10. 2026). Zrušená rozjížďka mizí
+    /// z poháru, takže se bude vysvětlovat — a ZPJ 32.1 má pro zrušení po
+    /// startu čtyři různé příčiny. *„Nefouká, rušíme"* a *„vytlačili je
+    /// z čáry, rušíme"* vypadaly v zápisu stejně, přitom druhé z toho je
+    /// náprava, o které se vede spor.
+    /// </summary>
+    [Fact]
+    public void Zruseni_vyzaduje_duvod()
+    {
+        Assert.NotNull(Workflow.ProcNejdeBezDuvodu(StavVysledku.Eliminovano, null));
+        Assert.NotNull(Workflow.ProcNejdeBezDuvodu(StavVysledku.Eliminovano, "   "));
+        Assert.Null(Workflow.ProcNejdeBezDuvodu(StavVysledku.Eliminovano, "Nefoukalo, zrušeno."));
+    }
+
+    /// <summary>
+    /// Hláška u zrušení má připomenout, že příčiny jsou čtyři — jinak se
+    /// napíše „zrušeno" a rozdíl mezi počasím a nápravou zmizí stejně
+    /// jako dřív.
+    /// </summary>
+    [Fact]
+    public void Hlaska_u_zruseni_pripomina_ctyri_priciny()
+    {
+        var hlaska = Workflow.ProcNejdeBezDuvodu(StavVysledku.Eliminovano, null);
+
+        Assert.Contains("32.1", hlaska);
+        Assert.Contains("mizí tím z poháru", hlaska, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Ostatní stupně důvod nechtějí — byl by to formulářový krok navíc
+    /// u úkonu, který se dělá jedním kliknutím.
+    /// </summary>
+    [Theory]
+    [InlineData(StavVysledku.Overeno)]
+    [InlineData(StavVysledku.Schvaleno)]
+    [InlineData(StavVysledku.Potvrzeno)]
+    [InlineData(StavVysledku.Navrzeno)]
+    public void Ostatni_stupne_duvod_nechteji(StavVysledku na)
+    {
+        Assert.Null(Workflow.ProcNejdeBezDuvodu(na, null));
+    }
 }

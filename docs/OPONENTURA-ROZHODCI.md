@@ -841,17 +841,29 @@ jediný nález z celé oponentury, kde se **špatně počítají body**.
 
 ### Fáze 4 — na odemčeném
 
-**4.1 Trasování od fáze přihlášek** *(R3)* — přímý rozpor s rozhodnutím
+> **Stav k 28. 10. 2026:** 4.2 a 4.3 zčásti hotové, **4.1 předložena
+> k rozhodnutí a nestavěna**. Jako jediná položka celého plánu mění
+> vědomé rozhodnutí (*„Zamyká rozprava, ne start"*) i slib z návodu,
+> takže k ní je u R3 rozbor — tři cesty, co každá stojí, a otázka, která
+> stojí před nimi. Rozhodnutí patří Filipovi.
+
+**4.1 Trasování od fáze přihlášek** *(R3)* — **rozbor předložen
+28. 10. 2026, nestavěno.** Přímý rozpor s rozhodnutím
 z 24. 10. Rozprava dnes nese tři nesouvisející věci (brána na data, zámek
 viditelnosti, bod programu); posunout se má **jen ta první**. Pozor na tvrdý
 konec okna, který je počítaný od otevření.
 
-**4.2 Činnosti za jízdy** *(R17)* — ZPJ je vyjmenovávají a aplikace umí dvě:
+**4.2 Činnosti za jízdy** *(R17)* — **zrušení s důvodem hotové
+28. 10. 2026**; změna úseku a chybějící značka ne (kolize se souběžnou
+prací na trati, viz R17). ZPJ je vyjmenovávají a aplikace umí dvě:
 **zkrácení** (plně, úkon rozhodčího) a **zrušení** (jen oklikou přes eliminaci
 výsledků a **bez důvodu** — a 32.1 má čtyři různé příčiny). Chybí změna úseku
 (33) a chybějící značka (34).
 
-**4.3 Doručení ven** *(R18)* — takt je minuta a probudit ho zvenčí nejde;
+**4.3 Doručení ven** *(R18)* — **zčásti hotové 28. 10. 2026**: pobídka,
+spěšné zprávy a odběr regaty u odložení a odvolání; kolem cíle se dál
+nespěchá, protože napřed je potřeba rozhodnout, co by se posílalo.
+Takt byl minuta a probudit ho zvenčí nešlo;
 odběr na regatu (`Odbery.Zavod`) je připravený a nepoužitý, takže stačí připojit.
 **Latence je funkcí fáze**: rychle jen kolem startu a kolem cíle, uprostřed
 minuta stačí — a fáze aplikace už rozlišuje. Úzké hrdlo je ale v telefonu
@@ -1095,6 +1107,81 @@ i oken pouští pořadatele regaty i rozhodčího ročníku bez ohledu na okno. 
 rozpadne, je **tvrdý konec okna**: `TrvaniHodin` (výchozí 14, nejvíc 36,
 `OknoRegaty`) je počítaný od otevření. Trasování od přihlášek, tedy klidně
 týdny předem, by do téhle konstrukce nešlo bez druhého pojmu.
+
+### Rozbor k rozhodnutí (28. 10. 2026) — fáze 4.1, **nestavěno**
+
+Tahle položka jako jediná v celém plánu **mění vědomé rozhodnutí** a slib
+z návodu, takže se nestavěla. Co následuje, je podklad; **jméno nového
+pojmu ani to, kde přesně brána leží, nerozhoduju** — to patří Filipovi.
+
+#### Co drží okno pohromadě dnes
+
+`OknoRegaty` nese **tři role naráz**, a teprve když se vypíšou, je vidět,
+proč posun brány není jednořádková změna:
+
+| Role | Čím je nesená | Kdo na ní visí |
+|---|---|---|
+| **brána na data** | `Bezi(kdy)`, `OtevrenoV` | `TrasySprava.ZalozAsync` — mimo okno telefon nenahraje nic |
+| **mez uchování** | `TvrdyKonec` = otevření + `TrvaniHodin` | tentýž kód, a je to **slib o soukromí**, ne technická konstanta |
+| **identita dne** | `Trasa.OknoId` | každá trasa patří jednomu oknu; `ProLodAsync` proto hledá **jedno** běžící |
+
+**Ta prostřední role je ta, o kterou jde.** Tvrdý konec nevznikl kvůli
+výkonu — vznikl kvůli přejímací podmínce č. 5, a `OknoRegaty` to říká
+doslova: *„Nechceme sledovat závodníky, jak nám lezou po hospodě a areálu
+mariny ve svém volném čase."* Okno otevřené od přihlášek, tedy klidně
+týdny předem, ten slib **ruší**, ať se jmenuje jakkoliv.
+
+#### Z toho plyne otázka, která stojí před návrhem
+
+Milošovo *„tam bychom už zapínali trasování"* má dvě možná čtení a každé
+vede jinam:
+
+- **„telefony smí nahrávat"** — brána se posune a mez uchování se musí
+  pojmenovat znovu, protože ta dnešní je na ni navázaná;
+- **„polohy už se ukazují"** — brána zůstane a posune se jen viditelnost,
+  což je nastavení trackeru, ne okno.
+
+Je to otázka 2 na konci tohohle nálezu a **pořád nezodpovězená**. Bez ní
+se nedá vybrat ani z variant níž.
+
+#### Tři cesty, a co každá stojí
+
+**(a) Druhé, delší okno vedle okna dne.** Brána je nové okno od přihlášek,
+mez uchování zůstává u okna dne. *Daň:* `Trasa.OknoId` ukazuje na jedno
+okno, takže by se muselo rozhodnout, na které — a `ProLodAsync` vrací
+jedno běžící okno, takže by dvě překrývající se znamenala nový výběr.
+
+**(b) Brána mimo okno.** Nahrávání pustí jiný příznak (třeba stav regaty
+`Vypsany`), okno zůstane jen mezí uchování a identitou dne. *Daň:* trasa
+nahraná před otevřením okna nemá `OknoId` — buď se pole uvolní, nebo
+vznikne okno, které se neotevřelo rozpravou. To druhé je přesně to, před
+čím varuje poznámka níž.
+
+**(c) Okno se otevírá dřív, ale v jiném režimu.** Jedno okno, dvě fáze:
+„sbírá se" a „jede se". *Daň:* tvrdý konec se počítá od otevření, takže
+by se musel počítat od něčeho jiného — a režim by musel znát i telefon,
+který si okna stahuje dopředu.
+
+#### Co se rozpadne mimo trasy, ať se zvolí cokoliv
+
+**Tabule mluví o okně jako o dni.** `stavDne` staví větu *„Po rozpravě"*
+na tom, že okno otevřela rozprava. Jakmile okno přestane rozhodovat
+o začátku dne, bude ta věta tvrdit něco o dni, který rozprava neotevřela.
+Upozornila na to souběžná session u své větve; **je to důsledek téhle
+položky, ne vada tabule** — a znamená to, že se spolu s bránou musí
+pojmenovat, co je „začátek závodního dne" pro diváka.
+
+**Zámek nastavení trackeru zůstane na rozpravě** (`NastaveniSprava.Zamkni`),
+protože to je význam (2) a ten Miloš posouvat nechce. Po oddělení ale
+přestane platit věta z `NastaveniTrackeru.cs`: *„Tracker běží od rozpravy,
+takže mezi rozpravou a startem už polohy chodí — a to je přesně okno, ve
+kterém by šlo nastavení překlopit podle toho, co je na mapě vidět."*
+To okno bude delší, takže **zámek bude zavírat později než dřív**, přesně
+proti tomu, proč vznikl. Je to k dořešení spolu s bránou, ne potom.
+
+**Návod s. 8 slibuje opak** (*„Teprve rozpravou začne aplikace brát trasy
+z telefonů"*) a je to PDF, které rozhodčí drží v ruce. Změna brány je
+tedy i změna návodu.
 
 > **Místo na citát z diskuse:** _(„zapínali trasování" = telefony smí
 > nahrávat, nebo že se polohy už ukazují? A komu se ukazují — posádkám, nebo
@@ -1604,6 +1691,42 @@ pokaždé, když se server zeptá. Našlo se to až průchodem obrazovkou, ne
 *Mez zůstává, jak ji nález napsal:* jestli takový souhlas něco právně
 znamená, tenhle kód neřeší a tvrdit to nemůže. Řeší jen to, že znění
 odpovídá tomu, co se po něm chce, a že po něm zůstane doklad.
+
+### Doplněno týž den — sledování, a verze 2 (28. 10. 2026)
+
+Filip se při ověřování fáze 2 nad souhlasem zarazil: *„souhlas závodníka
+se sledovanim"*. **Měl pravdu a chybělo to.** Verze 1 nesla pravidla,
+vlastní nebezpečí a zveřejnění lodi — o trasování v ní nebylo ani slovo,
+přestože appka nahrává polohu každých pět vteřin a `NastaveniTrackeru`
+rozhoduje, kdo ji uvidí. Souvisí to s nálezy **N3 a N5**
+v `docs/OPONENTURA-TRACKING.md` (*„Kdo odjíždí, vypnout si to nemůže"*
+a *„Nastavení, které nikdo nečte"*).
+
+**Nová je jedna věta**, a je to text v **témže zaškrtávátku** — druhé
+zaškrtávátko by bylo klepnutí navíc bez užitku (rozhodl Filip):
+
+> Beru na vědomí, že poloha lodi se během závodního dne zaznamenává, že ji
+> vidí pořadatel a rozhodčí, a že podle nastavení regaty může být vidět
+> i ostatním lodím, na webu a na tabuli.
+
+**`Verze` jde z 1 na 2 a znění verze 1 zůstává v kódu** (`Souhlas.ZneniV1`
+vedle `ZneniV2`, `Podle(verze)` zná obě). Verzuje se právě proto, aby šlo
+dohledat, s čím kdo souhlasil; přepsat starý text novým by ten smysl
+zrušilo. **Rozdíl je navíc věcný: lodě s verzí 1 se sledováním
+nesouhlasily**, a předpokládat to u nich nejde.
+
+Dvě věci ve formulaci jsou schválně. *„Během závodního dne"* odpovídá
+tomu, že se trasy dnes berou od rozpravy do uzavření dne — **kdyby prošel
+nález R3** a brána se posunula k přihláškám, musí se ta věta změnit spolu
+s ní (další důvod pro verzování). A *„vidí pořadatel a rozhodčí"* je
+oddělené od *„podle nastavení regaty"*, protože první platí vždycky,
+kdežto druhé řídí `CoVidiPosadky` a `ZivyPrenosVen`.
+
+> **Otázka pro Filipa, nerozhoduju ji:** co s loděmi, které stihly
+> odkliknout verzi 1? Doptat se jich zvlášť, nebo stačí doplnit při
+> příštím přihlášení? Prakticky to nejspíš netrefí nikoho — fáze 2 se
+> nasadila v noci a na květnovou regatu se v tu dobu nikdo nehlásí —, ale
+> ověřit to odsud nejde, produkční databázi nečtu.
 
 ### R10 — Stránka regaty: Miloš jmenuje pět položek, aplikace má pět jiných
 
@@ -2141,7 +2264,8 @@ plyne na pravidla.*
 
 *Původ: střípek 12. Doloženo: ZPJ 29.1, 30.2, 32.1, 33, 34,
 `web/app/sprava/[serie]/vysledky/[zavod]/[cislo]/cil/cil.tsx:218–220`, `:826`.
-Stav: **zapsáno**.*
+Stav: **zrušení s důvodem hotové 28. 10. 2026** (fáze 4.2); změna úseku
+(33) a chybějící značka (34) **nestavěny**, viz konec nálezu.*
 
 Filip popisuje sled: **start → čas pro tresty („Start vyřízen") → klidná chvíle
 → cílovka nebo obrazovka pro činnosti → dojetí a ukončení → příprava na další.**
@@ -2218,12 +2342,51 @@ za sebou, mezi nimiž se přepíná. To není konflikt, jen upozornění, že
 > **Místo na citát z diskuse:** _(zkracuješ na poháru dráhu? A když ano, jak se
 > to pozná — kde je pak cíl?)_
 
+### Hotovo 28. 10. 2026 — zrušení s důvodem (fáze 4.2)
+
+**Zrušení rozjížďky teď vyžaduje důvod** (`Workflow.ProcNejdeBezDuvodu`
+zná vedle revize i `Eliminovano`, ukládá se do `Rozjizdka.DuvodZruseni`).
+Zrušená rozjížďka **mizí z poháru**, takže se bude vysvětlovat — a ZPJ
+32.1 má po startu **čtyři různé příčiny**. *„Nefouká, rušíme"* a
+*„vytlačili je z čáry, rušíme"* vypadaly v zápisu stejně, přitom druhé
+z toho je náprava, o které se vede spor (R13).
+
+**Vlastní pole, ne sdílené s revizí:** obojí může u rozjížďky platit
+najednou a sdílený sloupec by jeden důvod přepsal druhým zrovna ve
+chvíli, kdy jsou potřeba oba. Ve správě se zrušení proto přesunulo mezi
+rozbalovací formuláře (vedle vrácení k revizi), protože s povinným
+důvodem to už není úkon na jedno klepnutí — a **proč byla zrušená, je
+vidět i potom**.
+
+Hláška jmenuje ty čtyři příčiny, aby se nenapsalo jen *„zrušeno"* a rozdíl
+nezmizel stejně jako dřív. **Číselník příčin se nestavěl**: byl by to
+návrh obrazovky a ten patří Filipovi.
+
+*Změřeno proti mocku a obrazovkou (28. 10. 2026):* zrušení bez důvodu
+odmítnuto hláškou s odkazem na 32.1; se zrušením se uloží i text a ve
+správě pak stojí *„Zrušeno: Přešla bouřka, zrušeno pro bezpečnost"*.
+
+### Co se nestavělo a proč (fáze 4.2)
+
+**Změna úseku dráhy (ZPJ 33) a chybějící značka (34)** jsou úkony **na
+trati**, tedy v `Features/Boje` — a tam v tutéž dobu pracovala souběžná
+session (nálezy 11 a 12 jiného dokumentu). Sahat do stejných souborů ze
+dvou stran je nejjistější způsob, jak si navzájem přepsat práci, takže
+obojí zůstává na později.
+
+**A je u nich víc než jen kolize.** U pravidla 34 dnes aplikace bóji
+*„sbírá z vody"*, což je něco jiného než ji **nahradit objektem s vlajkou
+M** — první je úklid, druhé je úkon za jízdy, po kterém se pluje dál.
+Rozlišit to znamená rozhodnout, co je na trati prvek a co jeho náhrada,
+a to je návrh, ne doplnění.
+
 ### R18 — Doručení ven: takt je minuta, a kód s tímhle požadavkem předem počítá
 
 *Původ: střípek 13. Doloženo:
 `Features/Upozorneni/OdesilaniUloha.cs:18–28`, `Zarizeni.cs:58–66`,
 `Features/Zavody/VysledkySprava.cs:240–256`, `NAVOD-ROZHODCI.pdf` s. 22.
-Stav: **zapsáno — budoucí požadavek, podklad pro rozhodnutí**.*
+Stav: **zčásti hotovo 28. 10. 2026** (fáze 4.3, viz konec nálezu) —
+pobídka, spěšné zprávy a odběr regaty; latence podle fáze jen u startu.*
 
 Filip: *„až budeme řešit pushky na appky posádek, a změny stavů rozjížděk, tak
 bude taky potřeba doručit je fofrem."*
@@ -2386,6 +2549,42 @@ pěti sekundách, vzorec se stahováním pravidel) je hotový.
 > **Místo na citát z diskuse:** _(které změny mají chodit do telefonů — jen
 > odložení a zrušení, nebo i zkrácení trati a změna úseku? A má to chodit všem,
 > nebo jen posádkám té regaty?)_
+
+### Hotovo 28. 10. 2026 (fáze 4.3)
+
+**Pobídka vznikla**, přesně jak si ji `OdesilaniUloha` předem
+pojmenovala. Minutový takt zůstal, protože **latence je funkcí fáze** —
+spěšná zpráva úlohu probudí (`Pobidka`), místo aby se takt zkracoval
+všem.
+
+Co se připojilo:
+
+- **`Odeslani.Spesne`** — příznak na úkolu. Zprávy, které minutu
+  nesnesou, ho mají;
+- **odložení a odvolání startu posílají zprávu** na `Odbery.Zavod`, tedy
+  na odběr **regaty**, ne ročníku: odložený start na Jarním větru nemá
+  budit telefony lidí, kteří jedou jinou regatu. Ten odběr byl
+  připravený a nepoužitý — tohle je ta chvíle, pro kterou čekal;
+- **probouzí se až po uložení**, ne při zařazení: zařazení je součást
+  cizí transakce a ta může spadnout.
+
+**Kontrola měří doručení, ne zařazení.** Když odběr nemá žádné zařízení,
+napíše se to do logu — tentýž řetěz už jednou byl hotový a nefungoval
+(26. 10. 2026), a prázdná fronta přitom vypadala jako úspěch.
+
+**Co zůstalo stát, a vědomě:**
+
+- **kolem cíle se nespěchá.** Dojezdy a konec rozjížďky jsou druhá
+  rychlá fáze podle tabulky výš, ale dnes z nich žádná zpráva ven
+  nechodí. Připojit je znamená napřed rozhodnout, **co by se posílalo**
+  — „loď dojela" každému, nebo jen vlastní posádce? To je návrh, ne
+  doplnění;
+- **úzké hrdlo je v telefonu, ne na serveru** (`ZIVE_MS` = 60 s při
+  zápisu po 5 s). Rychlejší server zprávě nepomůže, když ji appka
+  vyzvedne až za minutu — ale appka je samostatná věc;
+- **push nenahrazuje signál.** Odložení se podle ZPJ 27.3 signalizuje
+  vlajkou, ne telefonem. Tohle je navíc: dosah tam, kam megafon
+  nedoletí, a doklad, co bylo oznámeno a kdy.
 
 ### R19 — Velitelský čas: start se při výpadku ztratí, dojezdy ne
 

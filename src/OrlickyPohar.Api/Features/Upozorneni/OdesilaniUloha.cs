@@ -21,9 +21,16 @@ namespace OrlickyPohar.Api.Features.Upozorneni;
 /// databázi. Zprávy, které minutu nesnesou — odložený start — půjdou
 /// zařadit s vlastní pobídkou, až vzniknou.
 /// </para>
+/// <para>
+/// <b>Vznikly 28. 10. 2026</b> (nález R18). Takt zůstal, protože
+/// <b>latence je funkcí fáze</b>: rychle jen kolem startu a cíle, jinde
+/// je minuta velkorysá. Spěšná zpráva proto úlohu probudí
+/// <see cref="Pobidka"/>, místo aby se zkracoval takt všem.
+/// </para>
 /// </summary>
 public class OdesilaniUloha(
-    IServiceScopeFactory sluzby, TimeProvider cas, ILogger<OdesilaniUloha> log) : BackgroundService
+    IServiceScopeFactory sluzby, TimeProvider cas, Pobidka pobidka,
+    ILogger<OdesilaniUloha> log) : BackgroundService
 {
     public static readonly TimeSpan Takt = TimeSpan.FromMinutes(1);
 
@@ -46,7 +53,30 @@ public class OdesilaniUloha(
             {
                 log.LogWarning(e, "Kolo odesílání upozornění se nepovedlo");
             }
-        } while (await takt.WaitForNextTickAsync(stop));
+            // <b>Probudí takt, nebo pobídka — co přijde dřív.</b> Bez
+            // pobídky by odložený start čekal na minutu, která právě
+            // u startu chybí; bez taktu by se na frontu nikdo nepodíval,
+            // když pobídka nepřijde (opakovaný pokus po chybě).
+        } while (await DalsiKoloAsync(takt, stop));
+    }
+
+    /// <summary>
+    /// Čeká na další kolo: na takt, nebo na pobídku. <c>false</c> znamená
+    /// „končíme".
+    /// </summary>
+    private async Task<bool> DalsiKoloAsync(PeriodicTimer takt, CancellationToken stop)
+    {
+        var tik = takt.WaitForNextTickAsync(stop).AsTask();
+        var pobidnuto = pobidka.CekejAsync(stop);
+
+        try
+        {
+            return await Task.WhenAny(tik, pobidnuto) == pobidnuto || await tik;
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
     }
 
     /// <summary>
@@ -69,6 +99,15 @@ public class OdesilaniUloha(
             // prostě neměla komu dojít.
             if (tokeny.Count == 0)
             {
+                // <b>Tohle se musí dát poznat v logu</b> (nález R18,
+                // 28. 10. 2026). Tentýž řetěz už jednou byl hotový
+                // a nefungoval: zařazovalo se na `zavod:`, telefony se
+                // hlásily na `serie:` a zpráva neodešla nikomu — přitom
+                // fronta se vyprázdnila a vypadalo to jako úspěch.
+                // **Kontrola musí měřit doručení, ne zařazení.**
+                log.LogInformation(
+                    "Upozornění {Id}: odběr {Odber} nemá žádné zařízení, zpráva nikam nejde",
+                    ukol.Id, ukol.Odber);
                 await sprava.HotovoAsync(ukol, ct);
                 odeslano++;
                 continue;

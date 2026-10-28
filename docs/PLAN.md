@@ -8825,6 +8825,55 @@ inicializátor v C# platí jen pro nové entity, a nulová procedura by u všech
 existujících regat znamenala, že odpočet nemá co odpočítávat. Na stroji
 neběžela (není tu Docker ani Postgres).
 
+## Z oponentury rozhodčího: fáze 4 a souhlas se sledováním (28. 10. 2026)
+
+**Mění chování, proto sem**; rozhodnutí o návrhu jsou u nálezů R3, R9,
+R17 a R18.
+
+**Souhlas závodníka nově zmiňuje sledování** *(R9; Filip při ověřování
+fáze 2: „souhlas závodníka se sledovanim")*. Verze 1 nesla pravidla,
+vlastní nebezpečí a zveřejnění lodi — o trasování v ní nebylo nic,
+přestože appka nahrává polohu každých pět vteřin. Přibyla **jedna věta
+v témže zaškrtávátku** (druhé by bylo klepnutí navíc) a **`Verze` jde
+z 1 na 2**. Znění verze 1 **zůstává v kódu**: souhlas se verzuje právě
+proto, aby šlo dohledat, s čím kdo souhlasil, a rozdíl je věcný — **lodě
+s verzí 1 se sledováním nesouhlasily**. Co s nimi, je otázka u R9.
+
+**Zrušení rozjížďky vyžaduje důvod** *(R17, R13)*. Zrušená mizí z poháru,
+takže se bude vysvětlovat, a ZPJ 32.1 má po startu čtyři různé příčiny:
+*„nefouká"* a *„vytlačili je z čáry"* vypadaly v zápisu stejně, přitom
+druhé z toho je náprava, o které se vede spor. Důvod má vlastní pole
+(`DuvodZruseni`), protože s důvodem revize může platit najednou. Ve
+správě se zrušení přesunulo mezi rozbalovací formuláře — s povinným
+důvodem to už není úkon na jedno klepnutí.
+
+**Zprávy, které minutu nesnesou, ji nečekají** *(R18)*. `OdesilaniUloha`
+s tím počítala dopředu a jmenovala i příklad (*„odložený start"*). Teď:
+`Odeslani.Spesne`, `Pobidka` probouzející úlohu mimo takt, a **odložení
+i všeobecné odvolání posílají zprávu na odběr regaty** (`Odbery.Zavod`) —
+ten byl připravený a nepoužitý. Minutový takt zůstal, protože **latence
+je funkcí fáze**: uprostřed rozjížďky je minuta velkorysá.
+
+Tři meze, které k tomu patří:
+
+- **kontrola měří doručení, ne zařazení.** Odběr bez zařízení se píše do
+  logu; tentýž řetěz už jednou byl hotový a nefungoval, a prázdná fronta
+  vypadala jako úspěch;
+- **push nenahrazuje signál.** Odložení se podle ZPJ 27.3 signalizuje
+  vlajkou, ne telefonem — tohle je navíc, ne místo;
+- **kolem cíle se zatím nespěchá**, protože napřed je potřeba rozhodnout,
+  co by se posílalo.
+
+**Trasování od přihlášek se nestavělo** *(R3)*. Je to jediná položka
+plánu, která mění **vědomé rozhodnutí** (*„Zamyká rozprava, ne start"*,
+24. 10. 2026) i slib z návodu rozhodčímu. Rozbor tří cest a toho, co
+každá stojí, je u R3 — včetně toho, že `OknoRegaty` dnes nese tři role
+naráz a že jeho tvrdý konec není technická konstanta, ale **slib
+o soukromí**. Rozhoduje Filip.
+
+**Migrace `ZruseniSDuvodemASpesneZpravy`** přidává dva sloupce, aditivně.
+Na stroji neběžela — Docker ani Postgres tu nejsou.
+
 ## Přijaté riziko: dvě zranitelnosti v appce (23. 10. 2026)
 
 Dependabot hlásí v `app/package-lock.json` dvě zranitelnosti, které **nejde

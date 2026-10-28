@@ -1333,6 +1333,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<int>("Pokusu")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("Spesne")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasMaxLength(400)
@@ -1475,6 +1478,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<string>("DuvodRevize")
                         .HasMaxLength(400)
                         .HasColumnType("character varying(400)");
+
+                    b.Property<string>("DuvodZruseni")
+                        .HasColumnType("text");
 
                     b.Property<Guid?>("FotkaId")
                         .HasColumnType("uuid");

@@ -132,7 +132,9 @@ public record VysledekUlozeni(string? Chyba, bool Konflikt = false)
 /// požadavku</b> — stejně jako u <see cref="VysledkySprava"/>.
 /// </para>
 /// </summary>
-public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider cas)
+public class ZapisSprava(
+    AppDbContext db, Fotky.IUloziste uloziste, TimeProvider cas,
+    Upozorneni.UpozorneniSprava upozorneni, Upozorneni.Pobidka pobidka)
 {
     private const string NeniPoradatel =
         "Výsledky zapisuje pořadatel regaty. Rozhodčí je ověřuje, ale nemění.";
@@ -603,6 +605,42 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
 
         if (Procedura.JeOpakovanyStart(druh)) rozjizdka.OpakovanychStartu++;
 
+        // <b>Odložení a odvolání jsou ty zprávy, které minutu nesnesou</b>
+        // (nález R18, 28. 10. 2026 — `OdesilaniUloha` je jmenovala přesně
+        // takhle, ještě než vznikly). Zařazuje se do **téže transakce**
+        // jako změna, protože o to v outboxu jde; probouzí se až po
+        // uložení, viz níž.
+        //
+        // <b>Na odběr regaty, ne ročníku</b> (`Odbery.Zavod`): odložený
+        // start na Jarním větru nemá budit telefony lidí, kteří jedou
+        // jinou regatu. Odběr byl připravený a nepoužitý — tohle je ta
+        // chvíle, pro kterou čekal.
+        //
+        // <b>A push nenahrazuje signál.</b> Odložení se podle ZPJ 27.3
+        // signalizuje vlajkou, ne telefonem; tohle je navíc — dosah tam,
+        // kam megafon nedoletí, a doklad, co bylo oznámeno a kdy (R18).
+        var spesna = druh is DruhProcedury.Odlozit or DruhProcedury.Odvolat;
+        if (spesna)
+        {
+            var kdy = rozjizdka.StartV is { } s
+                ? $" Nový start {Vypsani.CasVPraze(s)}."
+                : " Nový čas oznámí závodní komise.";
+
+            var serie = await db.Serie.Where(x => x.Id == zavod.SerieId)
+                .Select(x => x.Slug).FirstAsync(ct);
+
+            upozorneni.Zarad(
+                Upozorneni.Odbery.Zavod(zavod.Slug),
+                druh == DruhProcedury.Odlozit
+                    ? $"{rozjizdka.Cislo}. rozjížďka: start odložen"
+                    : $"{rozjizdka.Cislo}. rozjížďka: všeobecné odvolání",
+                (druh == DruhProcedury.Odlozit
+                    ? "Start se odkládá."
+                    : "Start byl odvolán, jede se znovu.") + kdy,
+                $"/serie/{serie}/zavody/{zavod.Slug}",
+                spesne: true);
+        }
+
         // Nový čas vzešel z pravidla, ne z velitelových hodin — a starý
         // přestal platit. Nechat příznak viset by znamenalo, že čas
         // spočítaný serverem by nešlo opravit nikomu než veliteli.
@@ -617,6 +655,12 @@ public class ZapisSprava(AppDbContext db, Fotky.IUloziste uloziste, TimeProvider
         foreach (var v in vysledky) v.NamerenyCas = Zapis.NamerenyCas(rozjizdka.StartV, v.DojezdV!.Value);
 
         await db.SaveChangesAsync(ct);
+
+        // <b>Až po uložení.</b> Zařazení je součást transakce a ta může
+        // spadnout — probuzení nad nepotvrzenou frontou by úlohu poslalo
+        // pro něco, co neexistuje.
+        if (spesna) pobidka.Vzbud();
+
         return null;
     }
 

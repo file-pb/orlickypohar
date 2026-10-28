@@ -606,7 +606,8 @@ public static class VysledkyEndpoints
                     Role.Organizator => organizator,
                     _ => Rozhodci,
                 },
-                MaPapir: r.FotkaId is not null);
+                MaPapir: r.FotkaId is not null,
+                DuvodZruseni: r.DuvodZruseni);
         }
     }
 

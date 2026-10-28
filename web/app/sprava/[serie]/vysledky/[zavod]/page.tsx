@@ -395,7 +395,10 @@ function Rozjizdka({
 
       <div className="stavy">
         {rozjizdka.mozneStavy
-          .filter((na) => na !== "KRevizi")
+          // <b>Zrušení má od 28. 10. 2026 povinný důvod</b> (nálezy R13
+          // a R17), takže se stejně jako revize nevejde mezi tlačítka na
+          // jedno kliknutí — má vlastní rozbalovací formulář níž.
+          .filter((na) => na !== "KRevizi" && na !== "Eliminovano")
           .map((na) => {
             // Text podle toho, odkud se jde — „Vrátit do návrhu" je
             // z revize krok vpřed, ne couvnutí (viz `krokZe`).
@@ -486,6 +489,47 @@ function Rozjizdka({
             </p>
           </form>
         </details>
+      )}
+
+      {/* <b>Zrušení s důvodem</b> (nálezy R13 a R17, 28. 10. 2026).
+          Zrušená rozjížďka mizí z poháru, takže se bude vysvětlovat —
+          a ZPJ 32.1 má po startu čtyři různé příčiny, které v zápisu
+          vypadaly stejně. „Nefouká" a „vytlačili je z čáry" jsou přitom
+          dvě různé věci: druhé z toho je náprava, o které se vede spor. */}
+      {rozjizdka.mozneStavy.includes("Eliminovano") && (
+        <details className="uprava">
+          <summary>Zrušit rozjížďku</summary>
+          <form action={stavAkce} className="formular">
+            <input type="hidden" name="serie" value={serie} />
+            <input type="hidden" name="zavod" value={zavod} />
+            <input type="hidden" name="cislo" value={rozjizdka.cislo} />
+            <input type="hidden" name="stav" value="Eliminovano" />
+            <label>
+              Proč se ruší
+              <textarea
+                name="duvod"
+                required
+                rows={2}
+                maxLength={400}
+                placeholder="Přešla bouřka, zrušeno pro bezpečnost."
+              />
+            </label>
+            <button type="submit">Zrušit rozjížďku</button>
+            <p className="poznamka">
+              Rozjížďka přestane platit v závodě i v poháru. ZPJ 32.1
+              rozlišují chybu v proceduře, počasí, posunutou značku a jiný
+              důvod, který ovlivnil regulérnost — napiš, který to byl.
+            </p>
+          </form>
+        </details>
+      )}
+
+      {/* Proč byla zrušená, musí být vidět i potom — je to to, co se bude
+          vysvětlovat. */}
+      {rozjizdka.duvodZruseni && (
+        <p className="poznamka">
+          <b>Zrušeno:</b> {rozjizdka.duvodZruseni}
+        </p>
       )}
 
       {skryta.includes(rozjizdka.stavVysledku as (typeof skryta)[number]) &&

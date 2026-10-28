@@ -124,6 +124,10 @@ try
         c.Timeout = TimeSpan.FromSeconds(20);
         c.DefaultRequestHeaders.UserAgent.ParseAdd("OrlickyPohar/1.0 (+https://orlickypohar.klihovka.cz)");
     });
+    // Pobídka je singleton i bez zapnutého odesílání: zařazování zpráv
+    // ji volá vždycky a chybějící služba by shodila uložení, které se
+    // zrovna povedlo (nález R18, 28. 10. 2026).
+    builder.Services.AddSingleton<Pobidka>();
     if (builder.Configuration.GetValue<bool>("Upozorneni:Odesilat"))
         builder.Services.AddHostedService<OdesilaniUloha>();
     // .NET popisuje čísla jako ["integer","string"], protože je při čtení

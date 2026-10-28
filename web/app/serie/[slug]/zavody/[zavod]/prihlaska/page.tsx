@@ -292,6 +292,17 @@ function Formular({
           dalšími pravidly, která řídí tento závod, a že se závodu účastním{" "}
           <b>na vlastní nebezpečí</b>. Beru na vědomí, že loď bude ve startovní
           listině a že se pořadatel může ozvat na uvedený kontakt.{" "}
+          {/* <b>Sledování přibylo 28. 10. 2026</b> (Filip při ověřování
+              fáze 2: *„souhlas závodníka se sledovanim"*). Verze 1 o něm
+              nemluvila, přestože appka nahrává polohu každých pět vteřin
+              — a je to text v témže zaškrtávátku, ne druhé zaškrtávátko:
+              další klepnutí by nic nepřidalo. Znění drží
+              `Souhlas.ZneniV2`; verze 1 zůstává v kódu, aby šlo dohledat,
+              s čím souhlasil, kdo se přihlásil dřív. */}
+          Beru na vědomí, že <b>poloha lodi se během závodního dne
+          zaznamenává</b>, že ji vidí pořadatel a rozhodčí, a že podle
+          nastavení regaty může být vidět i ostatním lodím, na webu a na
+          tabuli.{" "}
           <Link href={`/serie/${serie}/zavody/${zavod}/vypsani`}>
             Vypsání závodu
           </Link>{" "}

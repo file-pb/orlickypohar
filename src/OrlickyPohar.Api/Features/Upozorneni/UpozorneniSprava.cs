@@ -18,7 +18,13 @@ public class UpozorneniSprava(AppDbContext db, TimeProvider cas)
     /// <summary>
     /// Přidá úkol k odeslání. <b>Neukládá</b> — viz poznámka u třídy.
     /// </summary>
-    public Odeslani Zarad(string odber, string titulek, string text, string? cesta = null)
+    public Odeslani Zarad(
+        string odber, string titulek, string text, string? cesta = null,
+        /// <summary>
+        /// Zpráva, která nesnese minutu — odesílací úloha se kvůli ní
+        /// probudí hned (nález R18, 28. 10. 2026). Viz <see cref="Odeslani.Spesne"/>.
+        /// </summary>
+        bool spesne = false)
     {
         var ukol = new Odeslani
         {
@@ -27,6 +33,7 @@ public class UpozorneniSprava(AppDbContext db, TimeProvider cas)
             Text = text,
             Cesta = cesta,
             VzniklV = cas.GetUtcNow(),
+            Spesne = spesne,
         };
         db.Odeslani.Add(ukol);
         return ukol;

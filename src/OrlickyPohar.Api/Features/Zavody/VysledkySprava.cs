@@ -30,7 +30,11 @@ public record RozjizdkaSpravaRadek(
     // vyndat? Závisí na roli i na tom, jestli jsou čísla podepsaná.
     bool SmiDoPoharu = false,
     // Má rozjížďka fotku papírového zápisu? Samotná fotka je až v zápisu.
-    bool MaPapir = false);
+    bool MaPapir = false,
+    // Proč se rozjížďka zrušila (28. 10. 2026, nálezy R13 a R17). Zrušená
+    // mizí z poháru, takže se bude vysvětlovat — a ZPJ 32.1 rozlišuje
+    // čtyři příčiny, které v zápisu vypadaly stejně.
+    string? DuvodZruseni = null);
 
 public record PrehledVysledkuDto(
     string Serie,
@@ -176,6 +180,9 @@ public class VysledkySprava(AppDbContext db, TimeProvider cas)
         if (Workflow.ProcNejdeBezDuvodu(na, duvod) is { } bezDuvodu) return bezDuvodu;
 
         if (na == StavVysledku.KRevizi) rozjizdka.DuvodRevize = duvod!.Trim();
+        // Důvod zrušení se ukládá zvlášť od důvodu revize — obojí může
+        // u rozjížďky platit najednou (nález R13, 28. 10. 2026).
+        if (na == StavVysledku.Eliminovano) rozjizdka.DuvodZruseni = duvod!.Trim();
 
         // <b>Zrušená rozjížďka se musí poznat i na vodě, ne jen v zápisu.</b>
         // Eliminace a zrušení jsou dvě strany téhož: rozjížďka, která

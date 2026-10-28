@@ -2248,6 +2248,7 @@ def rozjizdka_radek(r, zavod=None):
             "konecV": r.get("konecV"), "stav": r["stav"],
             "doSerie": r["doSerie"], "stavVysledku": r["stavVysledku"],
             "publikovano": r["publikovano"], "duvodRevize": r.get("duvodRevize"),
+            "duvodZruseni": r.get("duvodZruseni"),
             # Ven pouští rozhodčí ročníku (`Workflow.KdoSmiPublikovat`,
             # Filip 27. 10. 2026); správce ho pokrývá, tak se neptáme zvlášť.
             "pocetVysledku": len(r.get("vysledky", [])),
@@ -3588,8 +3589,9 @@ class H(BaseHTTPRequestHandler):
         # `Features/Zavody/Souhlas.cs`.
         if not v.get("souhlas"):
             return self.chyba(400, "Potvrď souhlas s pravidly závodu, s účastí na "
-                                   "vlastní nebezpečí a se zveřejněním lodi ve "
-                                   "startovní listině.")
+                                   "vlastní nebezpečí, se zveřejněním lodi ve "
+                                   "startovní listině a se zaznamenáváním polohy "
+                                   "během závodního dne.")
 
         nazev = v["lod"].strip()
         klic = bez_diakritiky_slug(nazev)
@@ -3615,7 +3617,7 @@ class H(BaseHTTPRequestHandler):
                   "kapitan": f'{kapitan["jmeno"].strip()} {kapitan["prijmeni"].strip()}',
                   "email": kapitan.get("email"), "telefon": kapitan.get("telefon"),
                   "poznamka": v.get("poznamka"), "podanoV": ted,
-                  "souhlasV": ted, "souhlasVerze": 1})
+                  "souhlasV": ted, "souhlasVerze": 2})
         u.setdefault("historie", []).append(
             {"ze": None, "na": "Pozadavek", "kdy": ted, "kdo": None, "duvod": None})
 
@@ -4691,9 +4693,19 @@ class H(BaseHTTPRequestHandler):
         if na == "KRevizi" and not duvod:
             return self.chyba(400, "Napiš, co je špatně. Bez důvodu začne ten, "
                                    "kdo to má opravit, hledáním.")
+        # Zrušení potřebuje důvod od 28. 10. 2026 (nálezy R13 a R17):
+        # rozjížďka mizí z poháru a ZPJ 32.1 má čtyři různé příčiny.
+        # Opsané z `Workflow.ProcNejdeBezDuvodu`.
+        if na == "Eliminovano" and not duvod:
+            return self.chyba(400, "Napiš, proč se rozjížďka ruší. Mizí tím z poháru "
+                                   "a bude se to vysvětlovat — ZPJ 32.1 rozlišuje chybu "
+                                   "v proceduře, počasí, posunutou značku a jiný důvod, "
+                                   "který ovlivnil regulérnost.")
 
         if na == "KRevizi":
             r["duvodRevize"] = duvod
+        if na == "Eliminovano":
+            r["duvodZruseni"] = duvod
 
         # Zrušená rozjížďka se nejede — `stav` jde s eliminací, jinak by
         # `Zrusena` nenastalo nikdy a semafor na tabuli by o zrušení
@@ -4857,7 +4869,7 @@ class H(BaseHTTPRequestHandler):
         def zapis_souhlas(ucast):
             if vstup.get("souhlas") and not ucast.get("souhlasV"):
                 ucast["souhlasV"] = _iso(_ted())
-                ucast["souhlasVerze"] = 1
+                ucast["souhlasVerze"] = 2
 
         if u and u["stav"] in VEREJNE_UCASTI:
             zapis_souhlas(u)
