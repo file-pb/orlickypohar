@@ -54,6 +54,10 @@ skutečný vstup zvenčí za celý projekt.
   pořadatel a rozhodčí opravdu vydávají** — zbytek říká, co pravidla žádají
   nebo co kód dělá. Soubory v repozitáři nejsou a nebudou (osobní údaje
   a cizí listiny).
+- **Hlasové nahrávky** (od 28. 10. 2026): jedenáct zpráv z WhatsAppu, 6 minut
+  50 sekund, přepsané lokálně modelem `large-v3` (nic se neodesílalo). Přepisy
+  jsou doslovné; zřejmý přeslech rozpoznávání je označený hranatou závorkou
+  a **nález se z přeslechu nedělá**. Zvuk ani přepisy v repozitáři nejsou.
 - **Nezkoušelo se** chování za běhu. Mock v tomhle repu už dvakrát lhal
   v obou směrech (`docs/AUDIT-OBSAZENI.md`, *Nálezy v mocku*), takže tvrzení
   „obrazovka se chová takhle" by bez běžícího API bylo měření nástroje, ne
@@ -243,6 +247,104 @@ do pravidel je hned za citací.
 Vzpomínka na konkrétní situaci, s přímým dotazem do pravidel. Odvozený nález
 je **R13** — a pravidla na to mají **tři různé odpovědi** podle toho, kdo je
 původcem.
+
+### Střípky 16 až 24 — devět hlasových nahrávek (28. 10. 2026, 10:43–10:55)
+
+Miloš nahrál do WhatsAppu devět zpráv, celkem 5 minut 11 sekund. **Je to
+nejpodrobnější vstup za celou diskusi** — ve zprávě 21 (124 s) popsal celý tok
+ovládání od rozpravy po odstartování, a v dalších čtyřech pokračoval až k další
+rozjížďce.
+
+**Jak se to přepisovalo.** Model `large-v3` (faster-whisper) lokálně na Filipově
+Macu, česky, nic se neodesílalo. Přepisy jsou doslovné; kde rozpoznávání zřejmě
+přeslechlo slovo, stojí správné znění v hranatých závorkách a **nález se z
+přeslechu nedělá**. Zvuk je u Filipa, přepisy mimo repozitář.
+
+**Nahrávka 16** (10:43:07, 4 s) — *„Tak ještě jednou zkusím ti to namlouvat."*
+Bez obsahu, ponechané kvůli pořadí.
+
+**Nahrávka 17** (10:43:29, 21 s) — dlaždice pro nepřihlášeného:
+
+> „Jarní vítr, jako nepřihlášenej, bych viděl dlaždice, vypsání závodu,
+> plachetní směrnice, předpokládaná trať, startovní listina, výsledky."
+
+**Nahrávka 18** (10:43:56, 22 s) — a pro přihlášeného:
+
+> „Jako přihlášenej bych za předpokládanou trať doplnil dlaždice přihláška
+> k závodu a to je asi všechno."
+
+**Nahrávka 19** (10:44:43, 22 s) — přístupy:
+
+> „Předtím otázkou, asi byste měl nějak nastavit přístupy, priority, kdy my jako
+> pořadatele nebo hlavní rozho[d]čí budeme potom moc[t] nějak zasahovat do
+> startovní listiny, do upřesnění tříd a všech těchto věcí."
+
+**Nahrávka 20** (10:45:12, 26 s) — čtyři třídy:
+
+> „Jinak prosím tě, od nový sezony uprav třídy na do sedmi metrů, nad sedm metrů
+> lehký, nad sedm metrů těžký a race. Názvy, když tak ještě pak upřesníme, ale
+> budou čtyři kategorie, třídu nad sedm metrů chci rozhodit, aby měly větší
+> motivaci závodit."
+
+**Nahrávka 21** (10:52:54, 124 s) — **celý tok startu**:
+
+> „Jinak aplikace rozhodčího by měla podle mě umět. V okamžiku, kdy uděláme
+> rozpravu ze závodníky a odsouhlasíme si předpokládanej čas startu, tak bych
+> tam měl umět ten předpokládanej čas startu nastavit s tím, že startovní
+> procedura je teda minus pět minut a začíná pět minut před startem, to jsme si
+> včera říkali, v okamžiku, kdy budu na lodi a budu připravený a zmáčknu začátek
+> startovní procedury, tak by se to mělo rozběhnout, včetně těch intervalů, jak
+> jsme říkali, vyzývací znamení v pátý minutě, ve čtvrtý minutě, přípravní
+> znamení, minuta do startu a minuta [start]. **To by bylo fajn, kdybych na té
+> aplikaci viděl, abych nemusel držet stopky a současně aplikaci ještě
+> hu[o]kačku a megafon.** Další věc. V poslední minutě bych měl v té aplikaci
+> vidět možnost přerušit startovní interval, nebo přerušit start, zrušit start.
+> Druhá dlaždice by měla být alternativní trest. A tu, když máčknu, tak bych tam
+> měl vidět jména všech přihlášených lodí. Pokud ty dlaždice nevyužiju, tak by
+> se měla objevit kolonka start nebo odstartováno, nebo nápis start odstartováno.
+> A tam by měla být ikona po startu zrušení startu, alternativní trest by tam
+> stále měla být možnost, a pokud je nepoužiju, tak by se startovní sekvence
+> mohla ukončit a závod je odstartovaný, roz[jíž]ďka je odstartovaná."
+
+**Nahrávka 22** (10:53:48, 43 s) — za jízdy a u cíle:
+
+> „Roz[jížď]ka běží. Měl bych tam mít možnost úpravy tratě, tak jak jsme se o ní
+> bavili, když doufám, že ta se nebude často využívat. A pokud poběží
+> tra[c]kování, tak jak to máš vymyšlený, tak bychom se měli posunout směrem
+> k cíli, kde bych měl mít možnost zadávat zase lodě ručně průjezd cílem. A pokud
+> to bude dělat tra[c]kování, tak bych tam měl mít možnost si to sám upravit,
+> kdybych tam s něčím nesouhlasil."
+
+**Nahrávka 23** (10:54:13, 17 s) — alternativní trest průběžně:
+
+> „Měl bych tam mít někde dlaždici, která by se asi průběžně posouvala stále
+> alternativní trest, protože pokud mi přijde loď k cíli a nahlásí rozhodčímu,
+> že dělala alternativní trest, tak bych měl možnost to tam jít zaznamenat."
+
+**Nahrávka 24** (10:54:45 a 10:55:10, 17 + 16 s) — ukončení a další rozjížďka:
+
+> „A pro ukončení roz[jížď]ky bych měl mít možnost odsouhlasení pořadí
+> a eventuálně možnost v případě přidání nebo dání protestů ze strany závodníka
+> do toho pořadí ještě šáhnout."
+
+> „Dál by to mělo umět, pokud odsouhlasíme konečný pořadí a jedeme o[kruhový]
+> jachting, tak bych měl mít možnost zahájit nebo zadat druhou rozjížďku, nebo
+> další následnou rozjížďku."
+
+**Nahrávka 25** (11:05:17, 99 s) — **appka z pohledu kapitána**, nový řez:
+
+> „Aplikace z pohledu kapitána. Měl by tam vidět seriál závodu, měl by mít
+> možnost přihlásit se do závodu, mě[lo] by se to mělo projevit ve startovní
+> listině, s tím, že bych tam měl mít někde kolonku platba startovného, kde já
+> potvrdím, že zaplatil. Pokud se přihlásí po[řádně] do závodu, tak by mu tam
+> měli nabíhat v ap[c]e aktualizace závodní komise. Měl by tam vidět, že byl
+> potvrzený čas startu a zaháje[ní] startovní sekvence. **V podstatě by mohl
+> vidět stejnou startovní sekvenci, kterou vidím já, akorát do ní nemůže
+> zasahovat.** V případě, že udělá chybu na startu, tak by měl vidět, že jsem mu
+> dal alternativní trest. Možná by i mohl potvrdit po jeho vykonání, že ho
+> vykonal, ale abychom jim nekomplikovali život. Měl by tam mít dlaždici
+> alternativní trest 360 stupňů a druhou dlaždici alternativní trest 720 stupňů
+> v případě, že se dopustí chyby."
 
 ### Střípek 15 — vzory mailem: vypsání i plachetní směrnice z ročníku 2026 (28. 10. 2026)
 
@@ -2233,6 +2335,13 @@ podmínkami provozu (jedna ruka, slunce, motorák), ne přáním.
 
 ### R14 — Miloš odpověděl: „alternativní trest" je startovní trest podle pravidla 30, a ten se identifikuje
 
+> **Upřesněno 28. 10. 2026 hlasem — tahle oprava šla dál, než měla.** Miloš
+> používá „alternativní trest" pro **dva různé úkony**: před startem je to
+> pravidlo 30 (jak stojí níž), u cíle je to otáčka podle ZPJ 44.2, a v appce
+> posádky to pojmenoval sám jako *„alternativní trest 360 stupňů"* a *„720
+> stupňů"*. R11 byl tedy věcně správný, jen nemířil na to, na co se Filip
+> tehdy ptal. Celé srovnání je v nálezech R31 a R34.
+
 *Původ: střípek 9 — **odpověď Miloše na otázku 10**. Doloženo: ZPJ 30.1–30.4,
 29.1, 44.3(c), A10, `Features/Zavody/Zavod.cs:184–207`. Stav: **kódy hotové
 28. 10. 2026** (fáze 3.3, u K1); **paměť vlajky a opakovaná identifikace
@@ -3368,6 +3477,273 @@ přesný čas, tohle neumí vyjádřit.
 **Co z toho plyne.** Zadávat **čas startu** a vyzývací znamení dopočítat, s tím,
 že v dokumentu stojí obojí a je vidět, které je které. Změna jedné kolonky
 a jedné nápovědy; obsah vypsání se tím zpřesní, ne zhrubne.
+
+---
+
+### R28 — Dlaždice: Miloš je vyjmenoval podruhé, jinak než poprvé, a jeden název je významový posun
+
+**Co řekl teď** (nahrávky 17 a 18), pro nepřihlášeného v tomhle pořadí:
+
+1. vypsání závodu
+2. plachetní směrnice
+3. **předpokládaná trať**
+4. startovní listina
+5. výsledky
+
+a pro přihlášeného se **za předpokládanou trať** vloží *přihláška k závodu*,
+tedy na třetí místo z šesti. *„A to je asi všechno."*
+
+**Co řekl 27. 10. 2026** (střípek 6, WhatsApp): *„Vypsani zavodu - plachetni
+smernice - zavodni trat - prihlasky - startovni listina"*.
+
+**Dvě změny mezi tím, a ani jedna není přeřeknutí:**
+
+| | 27. 10. | 28. 10. |
+| --- | --- | --- |
+| třetí položka | „závodní trať" | **„předpokládaná trať"** |
+| výsledky | nebyly | **jsou, jako poslední** |
+| přihláška | na čtvrtém místě | na třetím, výslovně „za předpokládanou trať" |
+
+**Ten přívlastek je nález sám.** „Závodní trať" zní jako hotová věc, kdežto
+**„předpokládaná trať"** říká, že to, co je před závodem vyvěšené, je návrh —
+a to sedí s tím, co aplikace dělá: trať se **přijímá** (`Zapis`,
+*„Bez přijaté trati se nestartuje"*, Filip 15. 10. 2026) a za jízdy se smí
+změnit (nahrávka 22). Veřejná dlaždice se tedy nemá jmenovat „trať", má se
+jmenovat „předpokládaná trať", jinak slibuje víc, než je pravda.
+
+**Co z toho plyne pro R10.** Ten nález tvrdil, že Miloš jmenuje pět položek
+a aplikace má pět jiných. Výčet je teď **šest** položek s pevným pořadím
+a jedním přejmenováním — a je to druhé nezávislé vyjmenování téhož, což je
+u požadavku vzácné. Dvakrát jmenované a stejně seřazené položky jsou to nejlepší
+zadání, jaké se dá dostat; rozdíly výš nejsou nejistota, ale upřesnění.
+
+---
+
+### R29 — Čtyři třídy od nové sezóny: zadání, které je konfigurace, ne kód
+
+**Co řekl** (nahrávka 20):
+
+> „od nový sezony uprav třídy na do sedmi metrů, nad sedm metrů lehký, nad sedm
+> metrů těžký a race … budou čtyři kategorie, třídu nad sedm metrů chci
+> rozhodit, aby měly větší motivaci závodit."
+
+**Důvod je sportovní, ne technický:** dnešní „nad 7 m" míchá lodě, které se
+nemají jak porovnat, takže se jim nechce závodit. Rozdělením na lehký a těžký se
+zvedne motivace. To je přesně ten druh rozhodnutí, které smí udělat jen rozhodčí.
+
+**Dobrá zpráva: aplikace to umí dnes.** `Kategorie`
+(`Features/Serial/Serie.cs:70`) patří **sérii**, ne závodu, nese jen `Nazev`
+a `Poradi` a komentář u ní říká: *„Dá se přidat i přejmenovat."* Pro ročník 2027
+to tedy znamená jednu změnu v číselníku ročníku, žádnou migraci a žádné nasazení.
+
+**Špatná zpráva: pravidlo zařazení pořád nikde není.** To je nález R24 — délku
+trupu ani čelen aplikace nevede, takže loď do kategorie zařadí člověk. A teď to
+bude o jednu úvahu horší: *„nad sedm metrů lehký"* a *„těžký"* se nerozhodnou
+podle délky, ale podle **hmotnosti nebo typu lodi**, což aplikace nevede už vůbec
+a vypsání 2026 to jako kritérium nezná. Bez toho se do dvou nových tříd bude
+zařazovat ručně a nepřezkoumatelně.
+
+**Nezapsaná otázka pro Miloše:** podle čeho se pozná lehký a těžký? Hmotnost
+z technického průkazu, konstrukce, nebo to rozhodnete případ od případu? A má
+„do sedmi metrů" zůstat jedna třída?
+
+**Pozor na okamžik.** *„Od nový sezony"* — ročník 2027 je už naimportovaný
+(2. 10. 2026) a lodě v něm mají kategorii. Změna tedy není jen přidání dvou
+řádků, ale i přeřazení přihlášek, které už existují. To je úkon, který musí
+udělat rozhodčí, ne kód.
+
+---
+
+### R30 — Celý tok ovládání od rozpravy po odstartování, jak ho Miloš popsal sám
+
+Nahrávka 21 je **dvě minuty nepřerušeného zadání** a je to první věc za celou
+diskusi, kde Miloš nepopisuje, co mu chybí, ale **co má appka dělat**, krok za
+krokem. Tohle je přepsané do kroků, ne převyprávěné:
+
+| # | Krok | Co k tomu aplikace má |
+| --- | --- | --- |
+| 1 | Po rozpravě **nastavit předpokládaný čas startu** | Postaveno 28. 10. (fáze 1.1, nález K6) — ale jen na webu |
+| 2 | Procedura je **T−5**, začíná pět minut před startem | `DelkaProceduryMin`, výchozí 5 |
+| 3 | *„budu na lodi a budu připravený a zmáčknu začátek"* → **jedno tlačítko** | `POST …/procedura` se `Spustit`; v appce není |
+| 4 | **Odpočet s intervaly**: vyzývací v 5., přípravné ve 4., minuta, start | Nikde — ani web, ani appka |
+| 5 | V **poslední minutě**: přerušit interval / přerušit start / zrušit start | `Odlozit` a `Odvolat` v API jsou; v appce ne |
+| 6 | **Druhá dlaždice: alternativní trest** → seznam jmen všech přihlášených | Kódy `Zfp`/`Ufd`/`Bfd` jsou; obrazovka ne |
+| 7 | Když dlaždice nepoužije → **„start / odstartováno"** | `POST …/start` je |
+| 8 | Po startu **zůstává** zrušení startu i alternativní trest | — |
+| 9 | Když je nepoužije, **sekvence se ukončí** a rozjížďka jede | `StavRozjizdky.Probiha` |
+
+**Jádro celého zadání je jedna věta** a není o funkci, je o rukách:
+
+> „To by bylo fajn, kdybych na té aplikaci viděl, **abych nemusel držet stopky
+> a současně aplikaci ještě houkačku a megafon**."
+
+Startér má dvě ruce a v nich houkačku a megafon. Appka tedy nesmí být třetí věc,
+kterou drží a obsluhuje — **musí odpočet odměřit a ukázat sama**, aby stopky
+mohly zmizet. To je ta pravá míra úspěchu, ne počet obrazovek: *odejdou mu
+z ruky stopky?*
+
+**Proti tomu, co je dnes v appce:** ze devíti kroků výš neumí appka ani jeden.
+Procedura je v `app/src/lib/schema.d.ts` jen jako typ z API a žádná z jedenácti
+obrazovek start neovládá. `expo-keep-awake` v závislostech appky **není**, zatímco
+Miloš 27. 10. řekl *„mobil mi nesmí usnout"* — bez toho telefon uprostřed
+odpočtu zhasne.
+
+**Dvě věci, které Miloš nezmínil a v appce stejně musí být:**
+
+1. **Odpočet nesmí záviset na síti** (nález R19 a Filip 27. 10.: *„dokud nebude
+   na připojení, tak si to apka odměří"*). Telefon musí odpočítávat z vlastních
+   hodin a stav posílat, až to půjde.
+2. **Čitelnost na slunci.** Z Milošových tří požadavků *„jednoduše a jedním
+   tlačítkem, nesmí usnout, musím na něj dobře vidět"* je tenhle ten, který se
+   u stolu nezměří vůbec — a proto má být v appce brzo, aby ho mohl ladit sám
+   (Filip, 28. 10.).
+
+---
+
+### R31 — „Alternativní trest" znamená v Milošově slovníku dvě různé věci, a moje oprava R11 byla přestřelená
+
+**Co se stalo dřív.** V R11 jsem „alternativní trest" vyložil jako otáčky podle
+ZPJ 44. Miloš pak upřesnil, že myslel **startovní tresty podle pravidla 30**, a
+R14 to zapsal jako opravu — R11 označený za odpověď na špatnou otázku.
+
+**Co říkají nahrávky.** Výraz použil **dvakrát, ve dvou různých okamžicích**:
+
+- **před startem** (nahrávka 21): *„V poslední minutě … Druhá dlaždice by měla
+  být alternativní trest"* → to je pravidlo 30, jak řekl v střípku 9;
+- **u cíle** (nahrávka 23): *„pokud mi přijde loď k cíli a nahlásí rozhodčímu, že
+  dělala alternativní trest, tak bych měl možnost to tam jít zaznamenat"* → to
+  je **otáčka podle ZPJ 44**, tedy přesně to, co jsem napsal v R11.
+
+**Takže R11 nebyl špatně, byl neúplný** — a moje oprava přestřelila. Miloš má pro
+oba úkony jedno slovo, protože z jeho strany je to tentýž děj: *loď si odbyla
+trest sama, a já to zapíšu*. Rozdíl je, **kdy** a **co se zapíše**: před startem
+kód výsledku, za jízdy odkroucené otáčky.
+
+**Proč na tom záleží při stavbě.** Kdybych postavil jednu dlaždici
+„alternativní trest", bude dělat dvě různé věci podle okamžiku — a to je ta
+kategorie vady, kterou tahle oponentura hledá. Buď dvě dlaždice s různými názvy,
+nebo jedna, která podle fáze ví, co zapisuje, a říká to na obrazovce.
+
+**A ještě jedna věc z nahrávky 23:** dlaždice se má *„průběžně posouvat"* a být
+**stále dostupná**. Zápis trestu tedy není krok v postupu, je to **trvale
+přístupná věc** po celou rozjížďku. To je o rozvržení, ne o funkci.
+
+---
+
+### R32 — Miloš se ptá na přístupy sám, a je to otázka o jedné konkrétní obrazovce
+
+**Co řekl** (nahrávka 19):
+
+> „asi byste měl nějak nastavit přístupy, priority, kdy my jako pořadatelé nebo
+> hlavní rozhodčí budeme potom moct nějak zasahovat do **startovní listiny**, do
+> **upřesnění tříd** a všech těchto věcí."
+
+**Co aplikace má.** Role (`Features/Identita/Uzivatel.cs:71`) jsou hierarchické
+a `co-smim.ts` je jediná pravda o tom, kdo co smí. Oprávnění tedy existují —
+jenže se udělují **na ročník nebo na zastávku**, ne na úkon. Kdokoli s rolí
+`rozhodci` u téhle regaty smí všechno, co rozhodčí.
+
+**Co se tedy opravdu ptá.** Ne „kdo má jakou roli" (to je vyřešené), ale **odkdy
+dokdy** se do startovní listiny a do tříd smí sahat. To je otázka o **fázi**, ne
+o roli: po uzávěrce přihlášek, po rozpravě a po startu je startovní listina
+pořád editovatelná stejně, a nález R6 už říká, že editovatelná za běhu **být
+musí** (nově přihlášená loď po startu). Takže to nejde zamknout — jde to jen
+**ukázat**: kdo a kdy zasáhl.
+
+**Vazba na R29:** „upřesnění tříd" je právě ta změna čtyř kategorií. Když se
+třídy mění uprostřed ročníku, kde už lodě body mají, je otázka přístupu
+podstatná — a aplikace dnes nevede ani to, kdo kategorii přihlášky změnil.
+
+**Nezapsaná otázka pro Miloše:** má se dát startovní listina po startu zamknout,
+nebo stačí, že bude vidět, kdo co změnil? Nález R6 říká, že zamknout nejde;
+tohle je příležitost ověřit, že to tak chce.
+
+---
+
+### R33 — Cíl: ruční zápis i oprava toho, co určilo trasování, a oboje v jedné obrazovce
+
+**Co řekl** (nahrávka 22):
+
+> „pokud poběží trackování, tak jak to máš vymyšlený, tak bychom se měli posunout
+> směrem k cíli, kde bych měl mít možnost zadávat zase lodě ručně průjezd cílem.
+> A pokud to bude dělat trackování, tak bych tam měl mít možnost si to sám
+> upravit, kdybych tam s něčím nesouhlasil."
+
+**Dvě věci, a druhá je ta důležitá.** Ruční zápis dojezdů aplikace má (cílová
+obrazovka, `POST …/konec`). Co nemá, je **přepsání toho, co určilo trasování** —
+a Miloš to žádá výslovně a se správným důvodem: *„kdybych tam s něčím
+nesouhlasil"*. Trasování počítá pořadí ze průjezdních bodů
+(`docs/…`, nález *Pořadí na trati*), ale **rozhoduje rozhodčí**, ne výpočet.
+
+**Čím je to vážné.** Výpočet, který nejde přebít, je u rozhodování horší než
+žádný: rozhodčí pak buď vypne trasování celé, nebo podepíše pořadí, se kterým
+nesouhlasí. Obojí je horší než tlačítko „tady to bylo jinak".
+
+**Co dál v té nahrávce je.** *„Měl bych tam mít možnost úpravy tratě … doufám, že
+ta se nebude často využívat."* To je **ZPJ 33** (změna úseku dráhy) — nález, který
+v tomhle dokumentu dosud chyběl, protože `Features/Boje` drží jiná session. Miloš
+k tomu sám dodává, jak často to čeká: zřídka.
+
+**A nahrávka 24** zavírá kruh dvěma kroky, které aplikace zná jen zčásti:
+odsouhlasení pořadí *„a eventuálně možnost v případě … protestů ze strany
+závodníka do toho pořadí ještě šáhnout"* (protesty = fáze 5, nález K2), a pak
+*„možnost zahájit nebo zadat druhou rozjížďku, nebo další následnou rozjížďku"*
+(`POST …/rozjizdky` existuje, v appce ne).
+
+---
+
+### R34 — Appka kapitána: odpočet je sdílený stav, ne obrazovka rozhodčího
+
+Nahrávka 25 otevírá **nový řez** — dosud šlo všechno o rozhodčího. A hned v něm
+je jedna věta, která mění návrh startu z R30:
+
+> „V podstatě by mohl vidět **stejnou startovní sekvenci, kterou vidím já**,
+> akorát do ní nemůže zasahovat."
+
+**Proč to je zásah do návrhu.** Kdyby odpočet běžel jako věc v telefonu
+rozhodčího, posádky by ho neviděly a tahle věta by nešla splnit. Odpočet tedy
+není obrazovka, je to **stav regaty**, který appka rozhodčího *ovládá* a appka
+posádky *čte* — a tabule taky (ta už ho čte, `/nacrt/casomira`). Z toho plyne,
+že `StartV` musí být na serveru i během procedury, ne až po startu, a telefon
+rozhodčího je jen ten, kdo smí vydávat příkazy.
+
+**Zároveň to nesmí popřít R19 a R30.** Odpočet musí držet i bez sítě (*„dokud
+nebude na připojení, tak si to apka odměří"*), takže to je obojí: **velitelský
+čas vzniká v telefonu rozhodčího a rozesílá se**, a když spojení chybí, telefon
+běží sám a dorovná se, až to půjde. To už je zařízené (`StartOdVelitele`,
+`Velitel`) — jen to musí umět i appka.
+
+**Pět dalších věcí z téže nahrávky:**
+
+| Co chce | Co aplikace má |
+| --- | --- |
+| Kapitán vidí seriál a **přihlásí se do závodu** | Má web i appka (přihlášení ověřeno 21. 10.) |
+| Přihlášení **se projeví ve startovní listině** | Má — a nález R6 to hlídá i za běhu |
+| **Kolonka platby startovného**, kde *„já potvrdím, že zaplatil"* | `Ucast.Zaplaceno` + `StartovnePoznamka` existují |
+| **Aktualizace závodní komise** přicházejí do appky | Pushky jsou (nález R18, takt minuta) |
+| Vidí **potvrzený čas startu a zahájení sekvence** | Plánovaný start je od fáze 1.1; sekvence nikde |
+
+**A teď to, co zpevňuje R31 nad vší pochybnost:**
+
+> „Měl by tam mít dlaždici alternativní trest **360 stupňů** a druhou dlaždici
+> alternativní trest **720 stupňů**."
+
+To jsou **otáčky podle ZPJ 44.2** — jedna otáčka a dvě otáčky — tedy přesně to
+pravidlo, které jsem vyložil v R11 a které R14 označil za špatnou odpověď.
+Miloš tím potvrzuje, že R11 byl věcně správný; jen nemířil na to, na co se Filip
+tehdy ptal. **Oprava v R14 šla dál, než měla**, a R31 to srovnává: jedno jméno,
+dva úkony, obojí z pravidel.
+
+**Jedna věc, kterou Miloš sám omezil.** Potvrzení vykonaného trestu posádkou:
+*„Možná by i mohl potvrdit po jeho vykonání, že ho vykonal, **ale abychom jim
+nekomplikovali život**."* To je rozhodnutí proti vlastnímu návrhu a patří ho
+respektovat: zápis trestu zůstává u rozhodčího, posádka ho jen **vidí**.
+Souvisí to se střípkem o svědcích (*„je to pouze o důvěře a džentlmanství, nikdo
+to nemusí potvrzovat"*).
+
+**Nezapsaná otázka pro Miloše:** má kapitán vidět tresty ostatních lodí, nebo jen
+svůj? Z nahrávky plyne jen *„že jsem mu dal"*, tedy svůj — ale startovní listina
+je veřejná a kódy výsledků taky.
 
 ---
 
