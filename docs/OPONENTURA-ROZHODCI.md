@@ -650,6 +650,37 @@ zvenčí stejně jako telefon na dně.
 
 ---
 
+## Pasti v mocku, které by zneplatnily měření
+
+**Tahle oponentura na mocku neměřila** (viz *Jak se měřilo*) — ale kdokoliv, kdo
+půjde nálezy ověřovat, na něj narazí. Následující seznam poslala 28. 10. 2026
+session *„Audit rolí: Miloš ve všech kombinacích"*, která ty rozdíly našla
+a opravila při práci na `docs/TABULE-DIVAK.md`. **Všechny jsou opravené**;
+zapsané jsou proto, že každá z nich dokáže vyrobit falešný nález.
+
+| Co mock dělal | Co by to zneplatnilo |
+|---|---|
+| **`oknoDo` se nevydávalo** — veřejný detail ho bral ze zastávky s komentářem *„mock okna nevede"*, ačkoliv je od trackingu vede (`OKNA`). Po rozpravě tedy zůstávalo `null`. | **R3 a R4.** Oba stojí na tom, že rozprava otevírá den a mapa se zapíná před startem — měřilo by se zapínání mapy **proti nule**, tedy nástroj místo světa. |
+| **`trat_na_rade` nefiltrovala zrušené rozjížďky**, tatáž mezera jako v `NaRadeAsync` | R13 a cokoliv kolem zrušení rozjížďky |
+| **jména lodí v polohách a v záznamu byla klíče** (`cervene-cafe` místo `ČERVENÉ CAFE`) | identifikaci lodi u R14 a čtení záznamu trasy u R13 |
+| **`zastavka_radek` nevydával `procesniDej`**, takže formulář úpravy regaty ho lokálně vždycky ukazoval vypnutý a uložení termínu by ho potichu vyplo | kalendářové úkony rozhodčího (R1) |
+| **zprávy na vývěsce dostávaly duplicitní čísla** z `int(čas*1000) % 1000000` | vývěsku u R14 (oznámení čísla plachty) a R16 |
+
+**To nejcennější z toho je první řádka**, a je to doklad k pravidlu, které tenhle
+projekt platí opakovaně: *prázdná hodnota z nástroje vypadá jako zjištění o
+světě*. Kdyby se R4 šlo ověřovat před tou opravou, vyšlo by, že se mapa
+nezapíná — a byla by to pravda o mocku, ne o aplikaci.
+
+**A jedna mez navíc, kterou si táž session dala sama k dobru:** nová funkce
+`stavDne` (`web/lib/rozjizdky-tabule.ts`), kterou zavřela nález 9, **není hotový
+popis závodního dne**. Umí šest stavů a *„žádný z nich není »deset minut před
+startem« z Milošova střípku 1 — ten řetěz odemkne teprve fáze 3"*. Dvě měkké
+hranice jsou v komentáři u funkce: po tvrdém konci okna netvrdí nic (okno se
+mohlo zavřít dřív) a *„Po rozpravě"* neodliší otevřený den od zavřeného.
+**Fáze 3 z ní tedy má vycházet, ne psát druhou** — ale ani ji brát za hotovou.
+
+---
+
 ## Plán implementace (28. 10. 2026)
 
 Sepsaný na Filipovu žádost: *„ohledně oponentury udělej plán pro implementaci,
