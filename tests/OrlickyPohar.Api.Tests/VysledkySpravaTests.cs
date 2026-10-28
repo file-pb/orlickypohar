@@ -1074,5 +1074,18 @@ public class VysledkySpravaTests(PostgresFixture fixture)
         var po = Assert.Single(await sprava.ZastavkyAsync(serieId, default));
         Assert.Equal([1], po.KRevizi);
         Assert.Equal([2], po.KPodpisu);
+
+        // <b>Schválená čeká na vypuštění ven, ne na podpis</b> — od
+        // 27. 10. 2026, kdy publikaci převzal rozhodčí. Dokud byla
+        // v `KPodpisu`, četl u ní rozhodčí „čeká na tvůj podpis", ačkoliv
+        // ta čísla sám před chvílí podepsal.
+        prvni.StavVysledku = StavVysledku.Schvaleno;
+        prvni.Publikovano = false;
+        await db.SaveChangesAsync();
+
+        var podepsana = Assert.Single(await sprava.ZastavkyAsync(serieId, default));
+        Assert.Equal([1], podepsana.KPublikaci);
+        Assert.Equal([2], podepsana.KPodpisu);
+        Assert.Empty(podepsana.KRevizi);
     }
 }
