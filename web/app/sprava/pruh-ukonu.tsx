@@ -66,6 +66,12 @@ export async function PruhUkonuRegaty({
   return (
     <DlazdiceSekci
       aktivni={aktivni}
+      /* Vlajky v dlaždici vystřídal barevný proužek u levé hrany (Filip,
+         29. 10. 2026). Pět vlajek vedle sebe nad pracovní obrazovkou byla
+         pětice obrázků, kterou je potřeba přečíst; proužek drží řádek
+         pohromadě a nic po čtenáři nechce. Veřejné sekce vlajky nesou dál —
+         tam jsou obsahem stránky, ne navigací nad ní. */
+      znacky={false}
       polozky={ukony.map((u) => {
         const klic = usekZAdresy(u.kam);
         const znak = ZNAKY[klic];

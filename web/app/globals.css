@@ -1864,7 +1864,19 @@ th.vlevo, td.vlevo { text-align: left; }
 .dlazdice-sekci { gap: 0.4rem; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); }
 /* Dlaždice drží výšku celé buňky, aby řádek nebyl zubatý. */
 .dlazdice-sekci > li { display: grid; }
-.dlazdice-sekci .karta { padding: 0.45rem 0.7rem; border-radius: 8px; }
+.dlazdice-sekci .karta { padding: 0.3rem 0.7rem 0.3rem 0.85rem; border-radius: 7px; }
+/* <b>Barevný proužek místo vlajky</b> (Filip, 29. 10. 2026: „zkus místo
+   vlajky dát doleva do dlaždice jen nějakou barvičku" — a „včetně těch
+   radiusů"). Je to <b>levý okraj karty</b>, ne proužek položený na ni:
+   okraj se zaoblí spolu s rohy a plynule přejde do tenké linky rámečku,
+   kdežto obdélník na hraně by se o kulaté rohy otíral a musel by si je
+   kopírovat sám.
+
+   Barva je u všech táž. Podle sekce ji nedávám schválně — signální vlajky
+   úkonů jsou ze tří pětin modré (modrá, P, M), takže by se proužky
+   nerozlišily a tvářily by se, že nesou význam, který nenesou. */
+.dlazdice-sekci .karta { border-left: 3px solid var(--voda); }
+
 .dlazdice-sekci .nazev {
   display: flex; align-items: center; gap: 0.45rem;
   font-size: 0.95rem; line-height: 1.35; white-space: nowrap;
