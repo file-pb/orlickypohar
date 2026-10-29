@@ -60,11 +60,17 @@ export function Odpocet({
   naStartu,
   naUkon,
   chyba,
+  nedoslano,
 }: {
   rozjizdky: readonly RozjizdkaProOdpocet[];
   delkaProceduryMin?: number;
-  /** Co se nepovedlo při posledním pokusu o spuštění, nebo `null`. */
+  /** Čím server poslední úkon odmítl, nebo `null`. */
   chyba?: string | null;
+  /**
+   * Drží appka úkon, který se ještě nepodařilo odeslat? Panel to musí
+   * říct: mlčící fronta vypadá jako hotová věc.
+   */
+  nedoslano?: boolean;
   /**
    * Co udělat, když rozhodčí spustí proceduru. Chybí-li, tlačítko se
    * neukáže — obrazovku regaty čte i ten, kdo nevelí.
@@ -134,7 +140,7 @@ export function Odpocet({
 
   const panel =
     stav.druh === 'ceka' || stav.druh === 'bezCasu' ? (
-      <Ceka stav={stav} delkaS={delkaS} t={t} naSpusteni={naSpusteni} chyba={chyba} />
+      <Ceka stav={stav} delkaS={delkaS} t={t} naSpusteni={naSpusteni} />
     ) : stav.druh === 'jede' ? (
       <Jede stav={stav} t={t} />
     ) : stav.druh === 'odstartovano' ? (
@@ -149,6 +155,20 @@ export function Odpocet({
   return (
     <>
       {panel}
+
+      {/* <b>Fronta se nesmí tvářit jako hotovo.</b> Odpočet běží z hodin
+          telefonu, takže na obrazovce vypadá všechno v pořádku i tehdy,
+          když o startu nikdo jiný neví. */}
+      {nedoslano ? (
+        <Text style={[s.radekPodPanelem, { color: t.pozor }]}>
+          Zatím neodesláno — odpočet běží z hodin telefonu a zkouším dál.
+        </Text>
+      ) : null}
+
+      {chyba ? (
+        <Text style={[s.radekPodPanelem, { color: t.stavZruseny }]}>{chyba}</Text>
+      ) : null}
+
       {naUkon ? <Zastaveni stav={stav} t={t} naUkon={naUkon} /> : null}
     </>
   );
@@ -266,13 +286,11 @@ function Ceka({
   delkaS,
   t,
   naSpusteni,
-  chyba,
 }: {
   stav: Extract<StavStartu, { druh: 'ceka' | 'bezCasu' }>;
   delkaS: number;
   t: Barvy;
   naSpusteni?: (cislo: number) => void | Promise<void>;
-  chyba?: string | null;
 }) {
   const [spousti, setSpousti] = useState(false);
 
@@ -330,12 +348,6 @@ function Ceka({
           <Text style={[s.pripominka, { color: t.pozor }]}>
             Zapni si Nerušit — hovor přeruší hlášení.
           </Text>
-
-          {chyba ? (
-            <Text style={[s.pripominka, { color: t.stavZruseny, fontWeight: '600' }]}>
-              {chyba}
-            </Text>
-          ) : null}
         </>
       ) : null}
     </View>
@@ -477,6 +489,7 @@ const s = StyleSheet.create({
   // Volby sedí hned pod panelem — proto se záporným okrajem vracejí
   // zpátky k němu a odstup drží až pod sebou.
   volby: { flexDirection: 'row', gap: 8, marginTop: -8, marginBottom: 16 },
+  radekPodPanelem: { fontSize: 13, fontWeight: '600', marginTop: -8, marginBottom: 12, lineHeight: 18 },
   volba: {
     flex: 1,
     borderWidth: 1,

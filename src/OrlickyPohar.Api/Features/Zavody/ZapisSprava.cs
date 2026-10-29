@@ -593,15 +593,24 @@ public class ZapisSprava(
     /// drží čas a paměť.
     /// </para>
     /// </summary>
+    /// <param name="zapsanoV">
+    /// Kdy startér zmáčkl, podle hodin jeho telefonu. Bez něj platí
+    /// serverový čas; mimo rozumné okno taky (<see cref="Spolecne.CasKlienta"/>).
+    /// </param>
     public async Task<string?> ProceduraAsync(
-        Rozjizdka rozjizdka, DruhProcedury druh, CancellationToken ct)
+        Rozjizdka rozjizdka, DruhProcedury druh, DateTimeOffset? zapsanoV, CancellationToken ct)
     {
         var zavod = await db.Zavody.FirstAsync(z => z.Id == rozjizdka.ZavodId, ct);
         if (Zapis.ProcNejdePrepsat(zavod.Stav, rozjizdka.StavVysledku) is { } zamceno) return zamceno;
 
         if (Procedura.ProcNejde(druh, rozjizdka.Stav, rozjizdka.StartV) is { } nejde) return nejde;
 
-        var ted = cas.GetUtcNow();
+        // <b>„Teď" je chvíle stisku, ne chvíle doručení.</b> Odpočet běží
+        // na telefonu startéra a ten úkon podrží, dokud nemá signál; se
+        // serverovým časem by start padl o celý výpadek později, než ho
+        // posádky slyšely. Pravidlo se tím neobchází — z téhle chvíle se
+        // čas pořád počítá podle ZPJ 26, resp. 29.2.
+        var (ted, _) = Spolecne.CasKlienta.Kdy(zapsanoV, cas.GetUtcNow());
         rozjizdka.StartV = Procedura.NovyStart(druh, ted, zavod.DelkaProceduryMin)?.ToUniversalTime();
         rozjizdka.Stav = Procedura.StavPo(druh);
 
@@ -647,9 +656,11 @@ public class ZapisSprava(
                 spesne: true);
         }
 
-        // Nový čas vzešel z pravidla, ne z velitelových hodin — a starý
-        // přestal platit. Nechat příznak viset by znamenalo, že čas
-        // spočítaný serverem by nešlo opravit nikomu než veliteli.
+        // Nový čas vzešel z pravidla, ne z ručně zapsaného velitelského
+        // času — a starý přestal platit. Nechat příznak viset by znamenalo,
+        // že čas spočítaný z pravidla by nešlo opravit nikomu než veliteli.
+        // (Příznak hlídá přepsání ručně zapsaného startu, ne to, čí hodiny
+        // daly ten okamžik; proto ho `zapsanoV` nerozsvěcí.)
         rozjizdka.StartOdVelitele = false;
 
         // Naměřené časy se vážou ke startu, který právě přestal platit.

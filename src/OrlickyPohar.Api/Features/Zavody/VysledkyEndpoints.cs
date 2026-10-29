@@ -14,11 +14,24 @@ public record PublikaceVysledkuVstup(bool Publikovano);
 public record StartVstup(DateTimeOffset? StartV = null);
 
 /// <summary>
-/// Který úkon startovní procedury se provádí. Čas se nepředává: spuštění
+/// Který úkon startovní procedury se provádí a <b>kdy ho startér zmáčkl</b>.
+/// <para>
+/// <b>Čas startu se pořád nepředává</b> a předávat nesmí: spuštění
 /// i odvolání ho počítají z pravidel (ZPJ 26 a 29.2) a z délky procedury
-/// regaty, takže poslat vlastní čas by znamenalo obejít to pravidlo.
+/// regaty. <see cref="ZapsanoV"/> je něco jiného — je to okamžik stisku,
+/// tedy ten „teď", na který se pravidlo použije.
+/// </para>
+/// <para>
+/// <b>Bez něj by výpadek sítě posunul start.</b> Appka u vody odpočítává
+/// z vlastních hodin a úkon podrží, dokud nemá kam ho odeslat; serverový
+/// čas zápisu je pak chvíle, kdy telefon chytil síť. Start by tím padl
+/// později, než ho posádky slyšely — a to je přesně ten rozpor, kterému
+/// pyramida autority brání (velitelský čas vzniká na telefonu hlavního
+/// startéra). Cizí hodiny se neberou naslepo, mez hlídá
+/// <see cref="Spolecne.CasKlienta"/>.
+/// </para>
 /// </summary>
-public record ProceduraVstup(DruhProcedury Druh);
+public record ProceduraVstup(DruhProcedury Druh, DateTimeOffset? ZapsanoV = null);
 
 /// <summary>
 /// Zastavení časomíry. Bez času se vezme okamžik požadavku;
@@ -112,7 +125,12 @@ public static class VysledkyEndpoints
         // viz `ZapisSprava.ProceduraAsync`.
         g.MapPost("/{zavod}/rozjizdky/{cislo:int}/procedura", ProceduraAsync)
             .WithTags("Výsledky")
-            .WithSummary("Spustí startovní proceduru, odloží start, nebo ho odvolá");
+            .WithSummary("Spustí startovní proceduru, odloží start, nebo ho odvolá")
+            .WithDescription(
+                "Čas startu se nepředává — počítá se z pravidla a z délky procedury regaty. "
+                + "`zapsanoV` je okamžik stisku: appka odpočítává z vlastních hodin a úkon "
+                + "podrží, dokud nemá kam ho odeslat, takže bez něj by start padl až ve "
+                + "chvíli, kdy telefon chytil síť.");
 
         g.MapPost("/{zavod}/rozjizdky/{cislo:int}/start", StartAsync)
             .Produces<ZapisRozjizdkyDto>()
@@ -279,7 +297,7 @@ public static class VysledkyEndpoints
         var (rozsah, rozjizdka) = nalezena;
         if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
 
-        if (await zapis.ProceduraAsync(rozjizdka, vstup.Druh, ct) is { } chyba)
+        if (await zapis.ProceduraAsync(rozjizdka, vstup.Druh, vstup.ZapsanoV, ct) is { } chyba)
             return Results.BadRequest(new { error = chyba });
 
         return Results.Ok(await zapis.NactiAsync(

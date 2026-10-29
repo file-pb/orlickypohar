@@ -77,6 +77,29 @@ export async function nactiZaSebe<T>(cesta: string): Promise<T | null> {
  * „nepovedlo se" a „nic tam není" podstatný. Odesílání trasy na něm stojí —
  * co se nepotvrdí, musí zůstat ve frontě.
  */
+/**
+ * <b>Server odpověděl a odmítl.</b> Rozdíl proti „nedoletělo" není
+ * kosmetický: podržený úkon se zkouší znovu, dokud neprojde, kdežto
+ * odmítnutý by bušil donekonečna. A důvod bývá věta pravidla
+ * („Rozjížďka už jede. Na nový start je všeobecné odvolání."), kterou
+ * rozhodčí potřebuje vidět.
+ *
+ * Vlastnosti se přiřazují v těle, ne parametrem konstruktoru: testy
+ * jedou na Node, který TypeScript jen odstraňuje a `readonly` parametr
+ * neumí.
+ */
+export class OdmitnutoServerem extends Error {
+  readonly stav: number;
+  readonly duvod: string | null;
+
+  constructor(stav: number, duvod: string | null, cesta: string) {
+    super(duvod ?? `API ${cesta} vrátilo ${stav}`);
+    this.name = 'OdmitnutoServerem';
+    this.stav = stav;
+    this.duvod = duvod;
+  }
+}
+
 export async function posliZaSebe<T>(cesta: string, telo: unknown): Promise<T | null> {
   const t = await token();
   if (!t) return null;
@@ -92,12 +115,31 @@ export async function posliZaSebe<T>(cesta: string, telo: unknown): Promise<T | 
   });
 
   if (odpoved.status === 401) return null;
-  if (!odpoved.ok) throw new Error(`API ${cesta} vrátilo ${odpoved.status}`);
+  if (!odpoved.ok) {
+    // Tělo nese větu pravidla („Rozjížďka už jede. Na nový start je
+    // všeobecné odvolání."), a ta je rozhodčímu u vody k užitku —
+    // na rozdíl od čísla stavu, které mu neřekne nic.
+    let duvod: string | null = null;
+    try {
+      const chyba = (await odpoved.json()) as { error?: unknown };
+      duvod = typeof chyba?.error === 'string' ? chyba.error : null;
+    } catch {
+      duvod = null;
+    }
+    throw new OdmitnutoServerem(odpoved.status, duvod, cesta);
+  }
   return (await odpoved.json()) as T;
 }
 
 /**
  * Startovní procedura: spustit, odložit, odvolat.
+ *
+ * <b>Čas startu se neposílá, posílá se okamžik stisku.</b> Čas z něj
+ * počítá server podle pravidla (ZPJ 26, resp. 29.2) a z délky procedury
+ * regaty — kdyby ho vybírala appka, obcházelo by se pravidlo. Bez
+ * `zapsanoV` by ale podržený úkon padl až ve chvíli, kdy telefon chytil
+ * síť, a to je ten rozpor, kterému pyramida autority brání: odpočet už
+ * mezitím běžel z hodin startéra a posádky slyšely jeho.
  *
  * <b>Jen za přihlášeného a jen pro toho, kdo velí</b> — práva hlídá
  * server, appka tlačítko jen neukazuje tomu, komu nepatří. Vrací `null`,
@@ -112,10 +154,15 @@ export async function provedProceduru(
   zavod: string,
   cislo: number,
   druh: 'Spustit' | 'Odlozit' | 'Odvolat',
+  /**
+   * Kdy to startér zmáčkl (ISO). Bez něj platí čas, kdy požadavek dorazil
+   * — a podržený úkon by tím posunul start o celý výpadek sítě.
+   */
+  zapsanoV?: string,
 ) {
   const v = await posliZaSebe<unknown>(
     `/sprava/serie/${serie}/vysledky/${zavod}/rozjizdky/${cislo}/procedura`,
-    { druh },
+    { druh, zapsanoV },
   );
   // `null` z `posliZaSebe` znamená „nikdo přihlášený" nebo „token už
   // neplatí" — a to se u startu nesmí spolknout. Změřeno 29. 10. 2026
@@ -136,13 +183,20 @@ export async function provedProceduru(
  * startu — úkon, který na vodě neexistuje (Filip, 29. 10. 2026: *„no
  * potvrzení startu nevím co je"*).
  *
- * Bez času serveru stačí okamžik požadavku; čas z telefonu se posílá jen
- * tehdy, když se ohlašuje se zpožděním (příště, až to bude umět fronta).
+ * <b>Posílá se čas, na který odpočet došel</b>, ne okamžik požadavku.
+ * Mezi nulou na displeji a doručením je latence a u vody i výpadek —
+ * a start zapsaný o ně později je jiný start, než jaký posádky slyšely.
+ * Bez času platí okamžik požadavku, jako dřív.
  */
-export async function ohlasStart(serie: string, zavod: string, cislo: number) {
+export async function ohlasStart(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  startV?: string,
+) {
   const v = await posliZaSebe<unknown>(
     `/sprava/serie/${serie}/vysledky/${zavod}/rozjizdky/${cislo}/start`,
-    {},
+    { startV },
   );
   // Totéž jako u procedury: nepřihlášenému se start neohlásí a `useEffect`
   // v panelu si to musí vrátit do fronty, ne to zahodit jako hotové.

@@ -34,6 +34,10 @@ echo
 echo "== Startovní procedura =="
 TZ="Europe/Prague" "${NODE[@]}" ./start.test.ts
 
+echo
+echo "== Nedoručený start =="
+"${NODE[@]}" ./cekajici-start.test.ts
+
 # `TZ` je tu schválně: čas aktualizace se skládá z místních složek a
 # v UTC by test prošel i s chybnou implementací.
 echo

@@ -1,3 +1,4 @@
+using OrlickyPohar.Api.Features.Spolecne;
 using OrlickyPohar.Api.Features.Zavody;
 
 namespace OrlickyPohar.Api.Tests;
@@ -156,5 +157,44 @@ public class ProceduraTests
     public void Delka_procedury_ma_meze(int? minut, bool projde)
     {
         Assert.Equal(projde, Procedura.ProcNejdeDelka(minut) is null);
+    }
+
+    /// <summary>
+    /// <b>Podržený úkon startuje od chvíle stisku, ne od doručení.</b>
+    /// Appka u vody odpočítává z vlastních hodin a úkon podrží, dokud
+    /// nemá kam ho odeslat. Kdyby se pravidlo použilo na čas doručení,
+    /// padl by start o celý výpadek později, než ho posádky slyšely.
+    /// </summary>
+    [Fact]
+    public void Podrzeny_ukon_pocita_od_stisku()
+    {
+        var stisk = Ted;
+        var doruceno = Ted.AddMinutes(3); // telefon chytil síť až teď
+
+        var (kdy, proc) = CasKlienta.Kdy(stisk, doruceno);
+
+        Assert.Equal(CasKlienta.Posun.Prijat, proc);
+        Assert.Equal(stisk.AddMinutes(5), Procedura.NovyStart(DruhProcedury.Spustit, kdy, 5));
+    }
+
+    /// <summary>
+    /// <b>Cizí hodiny se neberou naslepo.</b> Telefon s přenastaveným
+    /// datem by jinak tiše posunul start a nikdo by si toho nevšiml;
+    /// mimo okno platí server.
+    /// </summary>
+    [Fact]
+    public void Rozhozene_hodiny_telefonu_start_neposunou()
+    {
+        var doruceno = Ted;
+
+        var (zbudoucnosti, proc) = CasKlienta.Kdy(Ted.AddMinutes(10), doruceno);
+        Assert.Equal(CasKlienta.Posun.ZBudoucnosti, proc);
+        Assert.Equal(
+            doruceno.AddMinutes(5),
+            Procedura.NovyStart(DruhProcedury.Spustit, zbudoucnosti, 5));
+
+        var (bezCasu, neuveden) = CasKlienta.Kdy(null, doruceno);
+        Assert.Equal(CasKlienta.Posun.Neuveden, neuveden);
+        Assert.Equal(doruceno, bezCasu);
     }
 }

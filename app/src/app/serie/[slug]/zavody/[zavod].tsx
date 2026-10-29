@@ -1,5 +1,5 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { Odpocet } from '@/components/odpocet';
@@ -19,14 +19,30 @@ import {
   nactiJa,
   nactiZavod,
   ohlasStart,
+  OdmitnutoServerem,
   provedProceduru,
   type UcastLodi,
   type VysledekZavodu,
   type ZavodDetail,
 } from '@/lib/api';
 import { veliNekde } from '@/lib/role';
-import type { UkonStartu } from '@/lib/start';
+import {
+  nactiCekajici,
+  platnyUkon,
+  sCekajicim,
+  ulozCekajici,
+  type CekajiciUkon,
+  type UkonProcedury,
+} from '@/lib/cekajici-start';
+import { PROCEDURA_S } from '@/lib/start';
 import { rozsah } from '@/lib/datum';
+
+/**
+ * Jak často se zkouší odeslat podržený úkon. Deset vteřin: na vodě signál
+ * přichází a odchází po chvílích, a častější dotazy by jen vybíjely
+ * telefon, který musí vydržet celý závodní den.
+ */
+const POKUS_MS = 10_000;
 
 export default function Zastavka() {
   const { slug, zavod } = useLocalSearchParams<{ slug: string; zavod: string }>();
@@ -34,45 +50,98 @@ export default function Zastavka() {
   const { data, chyba, nacita, obnov } = useData(() => nactiZavod(slug, zavod), [slug, zavod]);
   const { data: ja } = useData(nactiJa);
 
-  // Když se spuštění nepovede, musí to appka říct — ne spadnout.
-  // Změřeno 29. 10. 2026 na telefonu: server vrátil 501 a `posliZaSebe`
-  // vyhodil chybu, kterou nikdo nechytal, takže celou obrazovku překryl
-  // červený výpis. U vody by to znamenalo, že rozhodčí uprostřed
-  // procedury kouká na hlášku pro vývojáře.
+  // Čím server poslední úkon <b>odmítl</b>. Není to „nepovedlo se
+  // odeslat" — to si appka podrží a zkouší dál; tohle je věta pravidla
+  // („Rozjížďka už jede. Na nový start je všeobecné odvolání."), a tu
+  // musí rozhodčí vidět, protože opakování by nepomohlo.
   const [chybaStartu, setChybaStartu] = useState<string | null>(null);
+
+  // <b>Co appka drží, dokud to neprojde.</b> Čte se ze souboru, takže to
+  // přežije i konec appky: start, který se nedoručil, se nesmí ztratit
+  // s procesem.
+  const [ceka, setCeka] = useState<CekajiciUkon | null>(() =>
+    platnyUkon(nactiCekajici(), slug, zavod, Date.now()),
+  );
+
+  const delkaS = (data?.delkaProceduryMin ?? PROCEDURA_S / 60) * 60;
+
+  // Rozjížďky, jak je vidí odpočet: s dosazeným čekajícím úkonem. Tím
+  // odpočet běží z hodin telefonu, ne z toho, co stihl potvrdit server
+  // — první pravidlo pyramidy autority.
+  const rozjizdky = sCekajicim(data?.rozjizdky ?? [], ceka, delkaS);
+
+  // <b>Zadání úkonu nečeká na odpověď.</b> Zapíše se do fronty a odpočet
+  // se rozjede hned; odesílá se vedle (efekt níž). Dřív se čekalo na
+  // server a bez signálu se po zmáčknutí neobjevilo nic.
+  const zadej = (cislo: number, druh: UkonProcedury) => {
+    const u: CekajiciUkon = { serie: slug, zavod, cislo, druh, kdy: Date.now() };
+    ulozCekajici(u);
+    setCeka(u);
+    setChybaStartu(null);
+  };
+
+  // Odesílání fronty. Zkusí hned a pak každých pár vteřin, dokud to
+  // neprojde — na vodě signál přichází a odchází.
+  useEffect(() => {
+    if (!ceka) return;
+    let zivy = true;
+
+    const zkus = async () => {
+      try {
+        await provedProceduru(
+          ceka.serie,
+          ceka.zavod,
+          ceka.cislo,
+          ceka.druh,
+          new Date(ceka.kdy).toISOString(),
+        );
+        if (!zivy) return;
+        ulozCekajici(null);
+        setCeka(null);
+        obnov();
+      } catch (e) {
+        // <b>Server odpověděl a odmítl.</b> Opakování by nepomohlo a
+        // fronta by bušila donekonečna; úkon se zahodí a důvod jde na
+        // obrazovku. Cokoliv jiného znamená, že to nedoletělo — zůstává
+        // ve frontě a zkusí to další tik.
+        if (!zivy || !(e instanceof OdmitnutoServerem)) return;
+        ulozCekajici(null);
+        setCeka(null);
+        setChybaStartu(e.duvod ?? 'Server úkon odmítl.');
+        obnov();
+      }
+    };
+
+    void zkus();
+    const id = setInterval(() => void zkus(), POKUS_MS);
+    return () => {
+      zivy = false;
+      clearInterval(id);
+    };
+  }, [ceka, obnov]);
 
   // Proceduru spouští jen ten, kdo velí. Práva hlídá server; tohle jen
   // neukazuje tlačítko tomu, komu nepatří — obrazovku regaty čte každý.
   const spustit = veliNekde(ja ?? null)
-    ? async (cislo: number) => {
-        setChybaStartu(null);
-        try {
-          await provedProceduru(slug, zavod, cislo, 'Spustit');
-          obnov();
-        } catch {
-          // Důvod se neukazuje: „vrátilo 501" rozhodčímu nepomůže a na
-          // vodě je jediná užitečná rada zkusit to znovu.
-          setChybaStartu('Nepovedlo se spustit. Zkus to prosím znovu.');
-        }
-      }
+    ? (cislo: number) => zadej(cislo, 'Spustit')
     : undefined;
 
   // <b>Start se neohlašuje rukou.</b> Odpočet doběhl, tím rozjížďka
   // odstartovala — appka to serveru řekne sama (viz `ohlasStart`).
   const ohlas = veliNekde(ja ?? null)
     ? async (cislo: number) => {
-        await ohlasStart(slug, zavod, cislo);
+        // Posílá se čas, na který odpočet došel, ne „teď": mezi nulou
+        // a doručením je latence a u vody i výpadek, a bez něj by se
+        // start zapsal později, než ho posádky slyšely.
+        const startV = rozjizdky.find((r) => r.cislo === cislo)?.startV;
+        await ohlasStart(slug, zavod, cislo, startV ?? undefined);
         obnov();
       }
     : undefined;
 
-  // Odložení a odvolání. Chybu si ukazuje dialog sám, protože na rozdíl
-  // od spuštění se mačká z potvrzení a obrazovka pod ním zůstává.
+  // Odložení a odvolání jdou do téže fronty jako spuštění.
   const ukon = veliNekde(ja ?? null)
-    ? async (cislo: number, druh: UkonStartu) => {
-        await provedProceduru(slug, zavod, cislo, druh);
-        obnov();
-      }
+    ? (cislo: number, druh: UkonProcedury) => zadej(cislo, druh)
     : undefined;
 
   const kategorie = [...new Set(data?.poradi.map((v) => v.kategorie) ?? [])];
@@ -103,12 +172,13 @@ export default function Zastavka() {
           {/* Panel startu se ukáže sám, jen když se zrovna startuje nebo jede.
               Jindy nevykreslí nic — stránka regaty tím zůstává tím, čím je. */}
           <Odpocet
-            rozjizdky={data.rozjizdky}
+            rozjizdky={rozjizdky}
             delkaProceduryMin={data.delkaProceduryMin}
             naSpusteni={spustit}
             naStartu={ohlas}
             naUkon={ukon}
             chyba={chybaStartu}
+            nedoslano={ceka !== null}
           />
 
           {data.vysledkySkryte ? (

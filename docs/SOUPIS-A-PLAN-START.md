@@ -6,9 +6,11 @@ Filip, 28. 10. 2026, než odjel:
 > si to nerozbili a rozhodli se správně. Toto je místo, ke kterému se kdyžtak
 > vrátíme."*
 
-**Nic z toho níž není postavené.** Dokument vznikl **místo** stavby, ne po ní.
-Co je hotové, je v oddílu *Co už běží*; co by se stavělo, je v *Plánu* a čeká
-na rozhodnutí z oddílu *Čtyři rozhodnutí*.
+**Dokument vznikl místo stavby, ne po ní** — a 29. 10. 2026 se podle něj
+postavily **kroky 1 až 3** (odpočet, spuštění z appky i obě přerušení; viz
+*Plán* níž, kde je u každého, čím skončil). Zbytek platí dál: co je hotové,
+je v oddílu *Co už běží*, co by se stavělo, je v *Plánu* a čeká na rozhodnutí
+z oddílu *Čtyři rozhodnutí*.
 
 Zdroje: `docs/OPONENTURA-ROZHODCI.md` (nálezy R1–R34 a K1–K7, pyramida
 autority), jedenáct hlasových nahrávek rozhodčího z 28. 10. 2026 a dva vzory
@@ -80,11 +82,11 @@ Z nahrávky 21 (dvě minuty nepřerušeného zadání), doplněné 22 až 25:
 | --- | --- | --- |
 | 1 | Po rozpravě nastavit předpokládaný čas startu | **je**, ale jen web |
 | 2 | Procedura T−5, pět minut před startem | **je** (`DelkaProceduryMin`) |
-| 3 | Jedním tlačítkem spustit, až je na lodi připravený | API je, appka ne |
-| 4 | Odpočet s intervaly: vyzývací, přípravné, minuta, start | **nikde** |
-| 5 | V poslední minutě přerušit / zrušit start | API je, appka ne |
+| 3 | Jedním tlačítkem spustit, až je na lodi připravený | **je** (29. 10.) |
+| 4 | Odpočet s intervaly: vyzývací, přípravné, minuta, start | **je** (29. 10.) |
+| 5 | V poslední minutě přerušit / zrušit start | **je** (29. 10.) |
 | 6 | Dlaždice *alternativní trest* → jména přihlášených lodí | kódy jsou, obrazovka ne |
-| 7 | Pak „start / odstartováno" | API je, appka ne |
+| 7 | Pak „start / odstartováno" | **je** — ohlásí se samo, viz krok 2 |
 | 8 | Po startu zrušení i trest zůstávají dostupné | — |
 | 9 | Sekvence se ukončí, rozjížďka jede | **je** |
 | 10 | Za jízdy úprava tratě | #513, jen web |
@@ -146,7 +148,7 @@ Tohle je ta část, kvůli které soupis vznikl.
 Navržené pořadí vychází z toho, co je **nejmenší a nejdřív ověřitelné**, ne
 z toho, co je nejdůležitější.
 
-### Krok 1 — odpočet v appce, jen ke čtení (nízké riziko)
+### Krok 1 — odpočet v appce, jen ke čtení — **hotovo 29. 10. 2026**
 
 Obrazovka, která **ukazuje** odpočet a fáze podle plánovaného startu, který už
 dnes jde zapsat na webu. Nic neovládá, nic neposílá.
@@ -156,7 +158,7 @@ dnes jde zapsat na webu. Nic neovládá, nic neposílá.
 - Riziko: žádné. Čtení existujícího `startV`, JS změna, projde OTA.
 - Hotovo znamená: Miloš se na to na vodě podívá a řekne, jestli vidí.
 
-### Krok 2 — spuštění procedury z appky (střední riziko)
+### Krok 2 — spuštění procedury z appky — **hotovo 29. 10. 2026**
 
 Jedno tlačítko → `POST …/procedura` se `Spustit`. Odpočet běží **z hodin
 telefonu**, odeslání vedle a opakovaně, jako fronta zápisu z fáze 1.2.
@@ -164,10 +166,24 @@ telefonu**, odeslání vedle a opakovaně, jako fronta zápisu z fáze 1.2.
 - Riziko: fronta se musí postavit v appce znovu (na webu je, v appce ne).
 - Hotovo znamená: s vypnutou sítí doběhne odpočet do nuly a start se odešle,
   až se síť vrátí.
+- **Jak to dopadlo:** fronta je `app/src/lib/cekajici-start.ts` — drží okamžik
+  stisku v souboru, takže přežije i konec appky, a odpočet se odvíjí z něj, ne
+  z toho, co stihl potvrdit server. Server dostane ten okamžik jako `zapsanoV`
+  a čas startu z něj počítá pravidlem (`CasKlienta` + `Procedura.NovyStart`),
+  takže se po doručení nic nepřepočítá. Ověřeno na simulátoru s vypnutým
+  serverem: odpočet se rozjel okamžitě, panel hlásil „Zatím neodesláno",
+  a po návratu serveru číslo nepřeskočilo.
 
-### Krok 3 — přerušení a odvolání (čeká na rozhodnutí 2)
+### Krok 3 — přerušení a odvolání — **hotovo 29. 10. 2026**
 
-Teprve až bude jasné, jestli jsou to dvě věci, nebo tři.
+Mělo čekat na rozhodnutí 2 (jsou to z Milošovy strany dvě věci, nebo tři?).
+Postavily se **dvě**, protože tak je zná pravidlo i server, a každá se nabízí
+jen tam, kde platí: odložení před startem (ZPJ 27.3), všeobecné odvolání po
+něm (ZPJ 29.2). Kdyby z toho Miloš chtěl tři, je to změna jmen a nabídky, ne
+mechanismu — proto se na odpověď nečekalo.
+
+Po odložení zůstane panel „Bez času startu" s tímtéž tlačítkem jako před
+startem: nový čas se nedopočítává, vybírá ho startér tím, že zmáčkne.
 
 ### Krok 4 — posádka vidí tutéž sekvenci (po kroku 2)
 
