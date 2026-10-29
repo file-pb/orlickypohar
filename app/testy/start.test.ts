@@ -1,0 +1,143 @@
+/**
+ * Startovní procedura, jak ji appka počítá.
+ *
+ * Měří se tu pravidlo, ne vykreslení: co je na startu na řadě, odkdy běží
+ * odpočet a co se stane, když čas startu zestárne. Na vodě je rozdíl mezi
+ * „odpočet běží" a „nic se neděje" ta nejdražší informace v appce, a
+ * zahlédnout ji v mocku nejde — žádná rozjížďka tam na start nečeká.
+ */
+import assert from 'node:assert/strict';
+
+import {
+  mmss,
+  odStartu,
+  popisStartu,
+  stavStartu,
+  zacatekProcedury,
+  type RozjizdkaProOdpocet,
+} from '../src/lib/start.ts';
+
+let prosly = 0;
+function zkus(nazev: string, f: () => void) {
+  try {
+    f();
+    prosly += 1;
+    console.log('  ok   ' + nazev);
+  } catch (e) {
+    console.log('  CHYBA ' + nazev + ': ' + (e as Error).message);
+    process.exitCode = 1;
+  }
+}
+
+/** Start ve 14:00 pražského času, tedy 12:00 UTC (letní čas). */
+const START = '2027-05-15T12:00:00Z';
+const V = (hhmmss: string) => Date.parse(`2027-05-15T${hhmmss}Z`);
+
+const planovana = (cislo: number, startV: string | null): RozjizdkaProOdpocet => ({
+  cislo,
+  startV,
+  stav: 'Planovana',
+});
+
+zkus('odStartu je záporné před startem a kladné po něm', () => {
+  assert.equal(odStartu(START, V('11:55:00')), -300);
+  assert.equal(odStartu(START, V('12:00:00')), 0);
+  assert.equal(odStartu(START, V('12:03:20')), 200);
+});
+
+zkus('odStartu bez času nebo s nesmyslem vrací null', () => {
+  assert.equal(odStartu(null, V('11:55:00')), null);
+  assert.equal(odStartu('zítra odpoledne', V('11:55:00')), null);
+});
+
+zkus('mmss doplňuje vteřiny na dvě místa a znaménko zahazuje', () => {
+  assert.equal(mmss(300), '5:00');
+  assert.equal(mmss(7), '0:07');
+  assert.equal(mmss(-65), '1:05');
+});
+
+zkus('bez rozjížděk se na startu neděje nic', () => {
+  assert.equal(stavStartu([], V('11:55:00')), null);
+  assert.equal(stavStartu([planovana(1, null)], V('11:55:00')), null);
+});
+
+zkus('deset minut před startem se čeká, pět minut už běží procedura', () => {
+  const r = [planovana(1, START)];
+  assert.deepEqual(stavStartu(r, V('11:50:00')), {
+    druh: 'ceka',
+    cislo: 1,
+    startV: START,
+  });
+  assert.deepEqual(stavStartu(r, V('11:55:00')), {
+    druh: 'procedura',
+    cislo: 1,
+    startV: START,
+    doStartuS: 300,
+  });
+});
+
+zkus('delší procedura začíná dřív', () => {
+  const r = [planovana(1, START)];
+  // Deset minut před startem: s pětkou se ještě čeká, s desítkou už jede odpočet.
+  assert.equal(stavStartu(r, V('11:50:00'))?.druh, 'ceka');
+  assert.equal(stavStartu(r, V('11:50:00'), 10 * 60)?.druh, 'procedura');
+});
+
+zkus('běžící rozjížďka přebíjí odpočet té další', () => {
+  const stav = stavStartu(
+    [
+      { cislo: 1, startV: '2027-05-15T11:30:00Z', stav: 'Probiha' },
+      planovana(2, START),
+    ],
+    V('11:56:00'),
+  );
+  // Jede se 26 minut, ne „do startu zbývají 4".
+  assert.deepEqual(stav, { druh: 'jede', cislo: 1, odStartuS: 26 * 60 });
+});
+
+zkus('z plánovaných se bere nejbližší v čase, ne první v seznamu', () => {
+  // Trojka byla odložena až za čtyřku — pořadí v poli je podle čísla.
+  const stav = stavStartu(
+    [planovana(3, '2027-05-15T12:30:00Z'), planovana(4, START)],
+    V('11:58:00'),
+  );
+  assert.equal(stav?.cislo, 4);
+  assert.equal(stav?.druh, 'procedura');
+});
+
+zkus('plánovaná rozjížďka se startem v minulosti odpočet nerozsvítí', () => {
+  // Nikdo ji nespustil, nebo se zapomněl přepsat čas. Odpočet do záporu by lhal.
+  assert.equal(stavStartu([planovana(1, START)], V('12:05:00')), null);
+});
+
+zkus('dokončená ani zrušená rozjížďka na start nepatří', () => {
+  const r: RozjizdkaProOdpocet[] = [
+    { cislo: 1, startV: START, stav: 'Dokoncena' },
+    { cislo: 2, startV: START, stav: 'Zrusena' },
+  ];
+  assert.equal(stavStartu(r, V('11:55:00')), null);
+});
+
+zkus('začátek procedury se říká pražským časem', () => {
+  // Start 12:00 UTC = 14:00 v Praze (letní čas), procedura tedy od 13:55.
+  assert.equal(zacatekProcedury(START), '13:55');
+  assert.equal(zacatekProcedury(START, 15 * 60), '13:45');
+});
+
+zkus('popis říká, co se děje, a mlčí, když se neděje nic', () => {
+  assert.equal(popisStartu(null), null);
+  assert.equal(
+    popisStartu(stavStartu([planovana(2, START)], V('11:50:00'))),
+    'Rozjížďka 2 — procedura začne ve 13:55',
+  );
+  assert.equal(
+    popisStartu(stavStartu([planovana(2, START)], V('11:56:00'))),
+    'Rozjížďka 2 startuje',
+  );
+  assert.equal(
+    popisStartu(stavStartu([{ cislo: 1, startV: START, stav: 'Probiha' }], V('12:02:30'))),
+    'Rozjížďka 1 jede 2:30',
+  );
+});
+
+console.log(`  ${prosly} prošlo`);
