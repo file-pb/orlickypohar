@@ -35,6 +35,16 @@
 # Závislosti se na serveru instalují z package-lock.json.
 **/node_modules/
 
+# <b>Nativní projekty, které si EAS generuje sám.</b> V repozitáři nikdy
+# nebyly (`app/.gitignore:42`), takže je EAS vždycky dělal prebuildem
+# z `app.json` — a dokud neexistovaly na disku, nebylo co vyhazovat.
+# Lokální build appky na iPhone (29. 10. 2026) ale `app/ios` vyrobil
+# včetně Podů: 628 MB. Nahrávka tím vyskočila z 29,3 MB na 437 MB, aniž
+# by se v appce cokoli změnilo. Kdo si jednou pustí `npm run ios`, platí
+# to na každém dalším buildu.
+app/ios/
+app/android/
+
 # Historie repozitáře do archivu nepatří.
 .git/
 
