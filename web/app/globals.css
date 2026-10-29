@@ -1897,7 +1897,7 @@ th.vlevo, td.vlevo { text-align: left; }
    ukáže vedle, je horší než hranice, která neukazuje nikam. */
 .hranice-vyberu {
   position: relative;
-  height: 8px;
+  height: 7px;
   margin: 0.15rem 0 1.25rem;
   border: 0;
   /* Slábnutí ke krajům sedí na `hr`, prameny na jeho pseudoprvcích —
@@ -1907,35 +1907,33 @@ th.vlevo, td.vlevo { text-align: left; }
   mask-image: linear-gradient(
     90deg, transparent 0, #000 12%, #000 88%, transparent 100%);
 }
-/* Oplet ze dvou pramenů. <b>Jeden tah na dlaždici, ne šrafa</b>: šrafa
-   s roztečí dávala v každém poli několik krátkých čárek a výsledek se četl
-   jako rybí kost. Dlaždice je sedm na osm pixelů a vede jí jediný pás od
-   rohu k rohu, takže tahy na sebe v místě styku navazují a drží klikatou
-   linku — to je ten cop.
+/* <b>Bordura z Filipovy lodi</b> (fotka, 29. 10. 2026): souvislá linka
+   a pod ní husté šikmé rysky jedním směrem. Vyměřeno ze zvětšeniny boku —
+   rysky jsou strmější než na šrafě, kolem 65°, a rozteč mají zhruba
+   dvaapůlkrát větší než vlastní šířku.
 
-   Pramen má slabší kraje, aby vypadal kulatě, a pole se o pixel překrývají,
-   takže se v průsečíku zdá, že jeden vede pod druhým. */
-.hranice-vyberu::before,
+   Linka nese předěl, rysky mu dávají ten jachtařský původ. Proti spletenému
+   lanu je to plošší a v osmi pixelech čitelnější: cop se pozná až ve
+   zvětšení, tohle v původní velikosti. */
+.hranice-vyberu::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: var(--voda);
+  opacity: 0.55;
+}
 .hranice-vyberu::after {
   content: "";
   position: absolute;
-  inset: 0;
-  --sklon: 45deg;
-  background-image: linear-gradient(
-    var(--sklon),
-    transparent 38%,
-    color-mix(in srgb, var(--voda) 45%, transparent) 42%,
-    var(--voda) 47% 53%,
-    color-mix(in srgb, var(--voda) 45%, transparent) 58%,
-    transparent 62%);
-  background-size: 7px 8px;
-  opacity: 0.55;
-  /* Perioda masky je dvojnásobek dlaždice, aby každé viditelné pole padlo
-     přesně na jeden tah. S jinou periodou se fáze rozchází a z pramenů
-     zbudou useknuté kusy — zkoušeno a vypadalo to jako zubatá páska. */
-  -webkit-mask-image: repeating-linear-gradient(90deg, #000 0 7px, transparent 7px 14px);
-  mask-image: repeating-linear-gradient(90deg, #000 0 7px, transparent 7px 14px);
+  inset: 2px 0 0;
+  /* 155° kreslí rysky skloněné jako na lodi — horním koncem k zádi. Při
+     25° se naklonily opačně. */
+  background: repeating-linear-gradient(
+    155deg, var(--voda) 0 2px, transparent 2px 5px);
+  opacity: 0.5;
 }
+
 .hranice-vyberu::after {
   --sklon: -45deg;
   -webkit-mask-position: 7px 0;
