@@ -39,10 +39,10 @@ skončí u druhého kroku.
 > telefonu doinstalovat, takže po síti by k tobě nedošly — od ní už by
 > většina novinek měla chodit sama.
 >
-> **Od téhle verze se appka umí aktualizovat sama** — většinu novinek už
-> stahovat nebudeš, jen ji otevřeš a bude nová. Občas se stane, že přibude
-> něco, co sahá hlouběji do telefonu; pak ti napíšu, že je potřeba stáhnout
-> novou verzi jako teď. Ozvu se sám, ty to hlídat nemusíš.
+> Appka se umí aktualizovat sama — většinu novinek jen otevřeš a bude
+> nová, stahovat je nebudeš. Co se takhle přenést nedá, je to, co sahá
+> hlouběji do telefonu; pak ti napíšu, že je potřeba stáhnout novou verzi
+> jako teď. Ozvu se sám, ty to hlídat nemusíš.
 >
 > **Poznáš to.** Když se appka sama aktualizuje, při otevření se dole krátce
 > ukáže oznámení, že jedeš na nové verzi, a samo zhasne. A kdykoliv se chceš
@@ -109,10 +109,13 @@ skončí u druhého kroku.
   nasazení, ale **jen když se `app/` změnilo** — jinak by se banner
   rozsvítil po každém commitu do mainu a lidé by si ho vypnuli.
 
-- **Úloha potřebuje `EXPO_TOKEN` v secrets repozitáře** a ten tam
-  k 28. 10. 2026 **není** (jsou jen `DEPLOY_TOKEN` a `SIXLABORS_LICENSE_KEY`).
-  Dokud nebude, úloha jen napíše varování do souhrnu a novinky zůstanou
-  v gitu. Token se vyrábí na <https://expo.dev/settings/access-tokens>.
+- **`EXPO_TOKEN` v secrets repozitáře je** od 29. 10. 2026 10:44, vedle
+  `DEPLOY_TOKEN` a `SIXLABORS_LICENSE_KEY`, takže publikace běží. Kdyby
+  vypršel nebo zmizel, úloha nespadne — jen napíše varování do souhrnu
+  běhu a novinky zůstanou v gitu. Nový se vyrábí na
+  <https://expo.dev/settings/access-tokens> a vkládá příkazem
+  `gh secret set EXPO_TOKEN -R file-pb/orlickypohar`, který hodnotu
+  nevypíše.
 
 - **Build se změněným otiskem zneplatní aktualizace pro ten starý.**
   Změřeno 29. 10. 2026 dotazem na `u.expo.dev` s hlavičkami, které posílá
@@ -139,7 +142,19 @@ skončí u druhého kroku.
   Stalo se to doopravdy: první publikovaná aktualizace 28. 10. 2026 tím
   **vypnula přihlašování** (`prihlasovaniJde` vyšlo `false`) a musela se
   přebít druhou. Hodnoty se v CI čtou z `eas.json`, aby nebyly dvakrát.
-- Stránka `/appka` nabízí vždycky poslední postavené APK; adresa se do ní
-  zapisuje ručně (`deploy/docker-compose.yml`, `APK_URL`), takže když se
-  na to zapomene, nabízí tiše starý build. Stalo se to mezi 8. 9. a
-  28. 10. 2026.
+- Stránka `/appka` rozdává to APK, které stojí v `APK_URL`
+  (`deploy/docker-compose.yml`), a zapisuje se tam pořád ručně. **Tiché to
+  už ale není:** krok *Žádá appka ruční instalaci?* porovnává tu adresu
+  proti `app/vydane-apk.json` a při rozdílu napíše varování do souhrnu
+  běhu. Dokud ta kontrola nebyla, nabízela stránka starý build od 8. 9. do
+  28. 10. 2026, a nikdo o tom nevěděl. Ověřeno 29. 10. 2026: produkce
+  rozdává `kqe5AoMTEs….apk`, tedy build 5.
+
+- **Zvýrazněný slib „od téhle verze se appka umí aktualizovat sama" z textu
+  zmizel schválně.** V téhle podobě zazněl dvakrát a dvakrát nevyšel —
+  28. 10. kvůli `expo-battery`, 29. 10. kvůli bumpu `expo` a novým
+  `overrides`. Potřetí by to pro Miloše byl slib, který se neplní, takže
+  v textu zůstala jen věcná informace bez zvýraznění a bez „od téhle
+  verze". Až nastane vydání, po kterém se opravdu nebude instalovat ručně,
+  pozná se to tím, že se nativní otisk nezmění — ne tím, že to tak bylo
+  myšleno.
