@@ -4093,8 +4093,14 @@ rozvržení, ne jako popis stavu; stav drží `docs/STAV-RESENI.md`.
 
 | Co | Rozhodnuto |
 | --- | --- |
-| **Mapa 10 minut před startem** (R4) | Zapne se **sama**, podle plánovaného startu |
-| **Odkdy se hlásí telefony posádek** (R3) | **15 minut před startovní procedurou** — a appka o tom musí vědět a sledování si zapnout |
+| **Mapa** (R4) | Zapne se **sama 10 minut před procedurou**, tedy T−15. Miloš mluvil o deseti minutách před startem; Filip to 29. 10. upřesnil na deset minut před procedurou |
+| **Odkdy se hlásí telefony posádek** (R3) | **15 minut před procedurou**, tedy T−20 — a appka o tom musí vědět a sledování si zapnout |
+
+**Tři časy, a to pořadí je důležité.** Telefony se rozběhnou první (procedura
+−15), pak naskočí mapa (procedura −10) a pak začne odpočet (procedura, tedy
+start −5). Má to vnitřní logiku: sledování musí žít dřív, než se mapa ukáže,
+jinak se otevře prázdná. Miloš mluvil o *„10 minut před startem"*, Filip to
+posunul k proceduře, takže mapa je ve skutečnosti T−15 a telefony T−20.
 | **Ověřeno a Schváleno** (K3) | **Sloučit**, dokud protesty nejsou. Stavy pak: *zapisuje se → zapsáno / v revizi → potvrzeno* |
 | **Směrnice jako předloha** (R22) | *„Zatím stačí to co je, do budoucna budeme dělat editor, ale teď je to předčasné."* |
 | **Mez z pravidla 76.1(a)** (K4) | *„Neřešit, vyloučení zatím neřešit (je to hobby regata).“* Zavřeno |

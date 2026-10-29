@@ -48,8 +48,8 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Po rozpravě nastavit předpokládaný čas startu | **Jen web** | K6, nasazeno. V appce to nejde |
 | Tabule se startovní listinou | **Běží** | Přepíná se sama podle fáze dne, nezapíná se ručně |
 | Do startovní listiny smí jen rozhodčí | **Zadané** | R38. Rozhodnuto: po rozpravě mění jen rozhodčí, pořadatel smí **navrhovat** a rozhodčí schvaluje; příznak pomocníka se rozšíří i na listinu |
-| Mapa 10 minut před startem | **Zadané** | R4. Rozhodnuto: zapne se sama podle plánovaného startu |
-| Odkdy se posádkám hlásí telefon | **Zadané** | R3. Rozhodnuto: 15 minut před startovní procedurou, a appka si sledování zapne sama |
+| Mapa před startem | **Zadané** | R4. Rozhodnuto: zapne se sama **10 minut před procedurou** (T−15). Dnes naskočí až výstřelem |
+| Odkdy se posádkám hlásí telefon | **Zadané** | R3. Rozhodnuto: **15 minut před procedurou** (T−20), appka si sledování zapne sama — musí žít dřív než mapa |
 
 ## Start
 
