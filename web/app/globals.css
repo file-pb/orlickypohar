@@ -2133,6 +2133,11 @@ body:has(.bez-partneru) h1::after {
   content: "";
   flex: 1;
   height: 10px;
+  /* Na optický střed písmen, ne na střed řádku. Změřeno přes metriky
+     písma: čepička má 13,5 px a účaří leží 19,5 px od vrchu řádku, takže
+     střed velkých písmen je na 12,7 px, kdežto střed boxu na 12,0.
+     Těch sedm desetin je na retině skoro půldruhého pixelu. */
+  margin-top: 0.7px;
   background: var(--ukon-strany, var(--voda));
   opacity: 0.6;
   /* Dvě masky přes sebe: tvar pramene a dobíhání na konci řádku. Bez
