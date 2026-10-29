@@ -1,7 +1,7 @@
 import Link from "@/app/sprava/odkaz";
 import { notFound } from "next/navigation";
 import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
-import { PruhUkonuRegaty } from "@/app/sprava/pruh-ukonu";
+import { NadpisUkonu, PruhUkonuRegaty } from "@/app/sprava/pruh-ukonu";
 import { Vypadek } from "@/app/vypadek";
 import { okamzik } from "@/app/datum";
 import {
@@ -129,8 +129,7 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
         ])}
       />
       <PruhUkonuRegaty serie={serie} zavod={zavod} aktivni="boje" />
-      <h1>Závodní trať</h1>
-      {nazev && <p className="podtitulek">{nazev}</p>}
+      <NadpisUkonu serie={serie} zavod={zavod} ukon="boje" regata={nazev} />
 
       {zpravy.chyba && (
         <p className="hlaska chyba" role="alert">

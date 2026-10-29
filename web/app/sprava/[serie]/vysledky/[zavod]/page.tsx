@@ -26,7 +26,7 @@ import {
   tratRozjizdceAkce,
 } from "../akce";
 import { StejnaTrat } from "@/app/sprava/stejna-trat";
-import { PruhUkonuRegaty } from "@/app/sprava/pruh-ukonu";
+import { NadpisUkonu, PruhUkonuRegaty } from "@/app/sprava/pruh-ukonu";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -199,7 +199,7 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
           Odkaz „přihlášené lodě →" z podtitulku odešel: pruh na ně vede taky
           a dvě cesty k témuž na jedné obrazovce se čtou jako dvě různé věci. */}
       <PruhUkonuRegaty serie={serie} zavod={zavod} aktivni="vysledky" />
-      <h1>{prehled.zavodNazev}</h1>
+      <NadpisUkonu serie={serie} zavod={zavod} ukon="vysledky" regata={prehled.zavodNazev} />
       <p className="podtitulek">
         {prehled.serieNazev} <Stav stav={prehled.stavZavodu} />
       </p>

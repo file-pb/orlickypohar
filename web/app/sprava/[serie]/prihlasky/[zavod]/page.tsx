@@ -1,7 +1,7 @@
 import Link from "@/app/sprava/odkaz";
 import { notFound } from "next/navigation";
 import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
-import { PruhUkonuRegaty } from "@/app/sprava/pruh-ukonu";
+import { NadpisUkonu, PruhUkonuRegaty } from "@/app/sprava/pruh-ukonu";
 import { Lodka } from "@/app/lodka";
 import { Stav } from "@/app/stav";
 import { Vypadek } from "@/app/vypadek";
@@ -159,10 +159,11 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
         ])}
       />
       <PruhUkonuRegaty serie={serie} zavod={zavod} aktivni="prihlasky" />
-      <h1>{prehled.zavodNazev}</h1>
-      <p className="podtitulek">
-        Přihlášené lodě <Stav stav={prehled.stavZavodu} />
-      </p>
+      {/* „Přihlášené lodě" odešlo z podtitulku do nadpisu a stav se posunul
+          za něj — samotný štítek na vlastním řádku vypadal jako zbytek. */}
+      <NadpisUkonu serie={serie} zavod={zavod} ukon="prihlasky" regata={prehled.zavodNazev}>
+        <Stav stav={prehled.stavZavodu} />
+      </NadpisUkonu>
 
       {zpravy.chyba && (
         <p className="hlaska chyba" role="alert">

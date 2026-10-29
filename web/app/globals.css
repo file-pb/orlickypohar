@@ -2116,6 +2116,15 @@ body:has(.bez-partneru) h1 {
 }
 /* Štítek stavu vedle názvu regaty se nesmí roztáhnout spolu s řádkem. */
 body:has(.bez-partneru) h1 > * { flex: none; }
+/* <b>Regata silně, agenda normálně</b>: „Jarní vítr — Závodní trať" se tím
+   čte jako jedna věta se dvěma důrazy, ne jako dva nadpisy vedle sebe.
+   Nadpis dědí tučné písmo z prohlížeče, takže se agenda musí odlehčit. */
+.nadpis-ukonu { font-weight: 400; min-width: 0; }
+.nadpis-ukonu strong { font-weight: 700; }
+/* Agenda je o kousek menší než jméno regaty (Filip, 29. 10. 2026: „agenda
+   menší maličko"). V `em`, ne v `rem`, aby držela krok, kdyby se velikost
+   nadpisu ještě hýbala. */
+.nadpis-ukonu .agenda { font-size: 0.88em; }
 body:has(.bez-partneru) h1::after {
   content: "";
   flex: 1;

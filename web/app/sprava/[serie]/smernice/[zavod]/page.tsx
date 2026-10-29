@@ -1,7 +1,7 @@
 import Link from "@/app/sprava/odkaz";
 import { notFound } from "next/navigation";
 import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
-import { PruhUkonuRegaty } from "@/app/sprava/pruh-ukonu";
+import { NadpisUkonu, PruhUkonuRegaty } from "@/app/sprava/pruh-ukonu";
 import { Vypadek } from "@/app/vypadek";
 import { datumClanku } from "@/app/datum";
 import { NEJVIC_MB, nactiSmernice, visi, type Smernice } from "@/lib/smernice";
@@ -58,8 +58,7 @@ export default async function SmerniceZastavky({ params, searchParams }: Paramet
         ])}
       />
       <PruhUkonuRegaty serie={serie} zavod={zavod} aktivni="smernice" />
-      <h1>Plachetní směrnice</h1>
-      {nazev && <p className="podtitulek">{nazev}</p>}
+      <NadpisUkonu serie={serie} zavod={zavod} ukon="smernice" regata={nazev} />
 
       {zpravy.chyba && (
         <p className="hlaska chyba" role="alert">

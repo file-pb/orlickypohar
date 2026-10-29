@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { nactiJa } from "@/lib/ja";
 import { polozkyZastavky, prava } from "@/lib/co-smim";
 import { DlazdiceSekci } from "@/app/prepinac-sekci";
@@ -85,5 +86,50 @@ export async function PruhUkonuRegaty({
         };
       })}
     />
+  );
+}
+
+/**
+ * Nadpis pracovní obrazovky: <b>regata tučně, agenda za pomlčkou normálně</b>
+ * (Filip, 29. 10. 2026: *„jak tam máme Jarní vítr, tak to spojme přes
+ * pomlčku do nadpisu — ten název regaty silně, ten název agendy normálně"*).
+ *
+ * <b>Jméno agendy si bere z týchž položek jako dlaždice</b>, ne z řetězce
+ * na stránce. Kdyby si ho každá obrazovka psala sama, rozešlo by se
+ * s dlaždicí nad ní — a přesně tomu se tu celou dobu vyhýbáme. Když právo
+ * na ten úkon chybí (na obrazovku by se ale člověk vůbec nedostal), zbude
+ * samotný název regaty.
+ */
+export async function NadpisUkonu({
+  serie,
+  zavod,
+  ukon,
+  regata,
+  children,
+}: {
+  serie: string;
+  zavod: string;
+  /** Úsek v adrese: `vysledky`, `prihlasky`, `smernice`, `boje`, `tracker`. */
+  ukon: string;
+  regata: string | null;
+  /** Co patří za nadpis — třeba štítek stavu. */
+  children?: ReactNode;
+}) {
+  const { ja } = await nactiJa();
+  const nazev = ja
+    ? polozkyZastavky(prava(ja), serie, zavod).find((u) => usekZAdresy(u.kam) === ukon)?.nazev
+    : undefined;
+
+  return (
+    <h1>
+      {/* Všechno v jednom prvku: `h1` je ve správě mřížka s lanem, takže
+          každý samostatný kus textu by se stal vlastním sloupcem a mezery
+          kolem pomlčky by se roztáhly na `gap`. */}
+      <span className="nadpis-ukonu">
+        <strong>{regata ?? "Regata"}</strong>
+        {nazev && <span className="agenda"> — {nazev}</span>}
+      </span>
+      {children}
+    </h1>
   );
 }

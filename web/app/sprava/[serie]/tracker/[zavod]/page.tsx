@@ -5,7 +5,7 @@ import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
 import { nazevZastavky } from "@/lib/kalendar";
 import { nactiJa } from "@/lib/ja";
 import { prava, smi } from "@/lib/co-smim";
-import { PruhUkonuRegaty } from "@/app/sprava/pruh-ukonu";
+import { NadpisUkonu, PruhUkonuRegaty } from "@/app/sprava/pruh-ukonu";
 import { datumClanku } from "@/app/datum";
 import type { ZpravaRegaty } from "@/lib/api";
 import {
@@ -82,7 +82,7 @@ export default async function TrackerRegaty({ params, searchParams }: Parametry)
       {/* Pruh se sám schová nepřihlášenému i tomu, kdo na regatě nemá úkon,
           takže smí stát i v hlavě, kterou vidí obě odmítnutí. */}
       <PruhUkonuRegaty serie={serie} zavod={zavod} aktivni="tracker" />
-      <h1>Tracker — {nazev}</h1>
+      <NadpisUkonu serie={serie} zavod={zavod} ukon="tracker" regata={nazev} />
     </>
   );
 
