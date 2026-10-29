@@ -2019,79 +2019,6 @@ th.vlevo, td.vlevo { text-align: left; }
   background: var(--zvyrazneni);
 }
 
-/* <b>Hranice vybraného</b> (Filip, 29. 10. 2026: „aby to vypadalo jako
-   boundary toho, co jsem v dlaždici vybral, ale nebralo to tolik prostoru,
-   jako kdyby to byl nějaký panel nebo karta"). Pět pixelů šrafy proti
-   rámečku kolem celé obrazovky.
-
-   <b>Sklon je opačný než u nezveřejněného</b> (`.karta-neverejna`, 135°
-   a `--srafa`): kdyby to byla táž šrafa, čtená by byla stejně — „tohle
-   není venku" —, a to tu neznamená nic. Vodní barva a 45° ji drží jako
-   jiné sdělení.
-
-   <b>Slábne ke krajům</b>, aby to byl předěl, a ne linka pod tabulkou. Dalo
-   by se ji zesílit přímo pod vybranou dlaždicí, ale po zalomení do dvou řad
-   (telefon) by ukazovala jinam, než kde vybraná leží — a hranice, která
-   ukáže vedle, je horší než hranice, která neukazuje nikam. */
-.hranice-vyberu {
-  position: relative;
-  height: 10px;
-  margin: 0.15rem 0 1.25rem;
-  border: 0;
-  /* Slábnutí ke krajům sedí na `hr`, prameny na jeho pseudoprvcích —
-     maska rodiče ořízne i je. */
-  -webkit-mask-image: linear-gradient(
-    90deg, transparent 0, #000 12%, #000 88%, transparent 100%);
-  mask-image: linear-gradient(
-    90deg, transparent 0, #000 12%, #000 88%, transparent 100%);
-}
-/* <b>Bordura z boku Filipovy lodi</b> (fotky, 29. 10. 2026). Vyměřeno ze
-   zvětšeniny: pramen je tlustá šikmá čárka se zaoblenými konci, sklon kolem
-   70° a <b>perioda zhruba poloviční proti výšce</b> — proto předchozí
-   pokusy vycházely jako šrafa nebo rybí kost, měly rozteč příliš velkou
-   a konce uťaté.
-
-   Tvar proto kreslí maska z SVG, ne gradient: `repeating-linear-gradient`
-   kulaté konce neumí a bez nich to není pramen, ale čárka. Barva zůstává
-   v `background`, takže se bere z motivu a sedí v obou režimech — v SVG
-   zapečená by to nedokázala. */
-.hranice-vyberu::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--voda);
-  opacity: 0.5;
-  /* Pramen je mírně esovitý, jak na předloze: nahoře se stáčí, uprostřed
-     narovná, dole zase. Rovná úsečka vycházela tvrdě — lano se takhle
-     nestáčí. Křivka je důvod, proč je to `path`, a ne `line`. */
-  --pramen: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 20'%3E%3Cpath d='M2.9 1.5 C4.2 5 4 7.8 5 10 C6 12.2 5.9 15 7.1 18.5' fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E");
-  -webkit-mask-image: var(--pramen);
-  mask-image: var(--pramen);
-  -webkit-mask-size: 5px 10px;
-  mask-size: 5px 10px;
-  -webkit-mask-repeat: repeat-x;
-  mask-repeat: repeat-x;
-}
-
-
-.hranice-vyberu::after {
-  --sklon: -45deg;
-  -webkit-mask-position: 7px 0;
-  mask-position: 7px 0;
-}
-
-.hranice-vyberu::after {
-  --sklon: -45deg;
-  -webkit-mask-position: 7px 0;
-  mask-position: 7px 0;
-}
-
-.hranice-vyberu::after {
-  background-image: repeating-linear-gradient(
-    -45deg, var(--voda) 0 2px, transparent 2px 5px);
-  -webkit-mask-position: 9px 0;
-  mask-position: 9px 0;
-}
 .taby-sekci .vlajka,
 .dlazdice-sekci .vlajka {
   height: 0.95rem;
@@ -2156,7 +2083,59 @@ body:has(.bez-partneru) header.hlavicka .obal {
   padding-bottom: 0.45rem;
 }
 body:has(.bez-partneru) header.hlavicka { margin-bottom: 0.6rem; }
-body:has(.bez-partneru) h1 { font-size: 1.35rem; }
+/* <b>Barva vybraného úkonu platí pro celou hlavičku stránky</b> (Filip,
+   29. 10. 2026: „co to lano udělat v barvě vybrané dlaždice a nadpis taky").
+   Klíč vybrané položky nese `data-ukon` na lanu, odkud si ho `body`
+   vyzvedne — proměnná se pak dědí do lana i do nadpisu, které jsou jinak
+   každý v jiné části stránky a o sobě nevědí.
+
+   Fallback je schválně: na rozcestníku regaty se teprve vybírá, lano tam
+   není a nadpis zůstává v barvě textu. */
+body:has(.vybrany-ukon[data-ukon="vysledky"]) { --ukon-strany: var(--ukon-vysledky); }
+body:has(.vybrany-ukon[data-ukon="prihlasky"]) { --ukon-strany: var(--ukon-prihlasky); }
+body:has(.vybrany-ukon[data-ukon="smernice"]) { --ukon-strany: var(--ukon-smernice); }
+body:has(.vybrany-ukon[data-ukon="boje"]) { --ukon-strany: var(--ukon-trat); }
+body:has(.vybrany-ukon[data-ukon="tracker"]) { --ukon-strany: var(--ukon-polohy); }
+/* <b>Nadpis a lano v jednom řádku</b> (Filip, 29. 10. 2026: „ještě ten
+   nadpis menší a v té kombinaci s lanem"). Lano vychází z textu a vyplní
+   zbytek řádku, ať je nadpis jakkoli dlouhý.
+
+   Na střed řádku nadpis nejde schválně: změřeno, že nejdelší („Tracker —
+   Jarní vítr") zabere 185 px, takže na monitoru by po stranách zbyly dva
+   pahýly po 396 px, ale na telefonu po 59 — a z hranice by se stala ozdoba
+   kolem textu. Takhle se lano jen zkrátí.
+
+   Nadpis je menší, protože barvu a lano už má: nemusí velikostí dokazovat,
+   že je nadpis. */
+body:has(.bez-partneru) h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 1.2rem;
+  color: var(--ukon-strany, inherit);
+}
+/* Štítek stavu vedle názvu regaty se nesmí roztáhnout spolu s řádkem. */
+body:has(.bez-partneru) h1 > * { flex: none; }
+body:has(.bez-partneru) h1::after {
+  content: "";
+  flex: 1;
+  height: 10px;
+  background: var(--ukon-strany, var(--voda));
+  opacity: 0.6;
+  /* Dvě masky přes sebe: tvar pramene a dobíhání na konci řádku. Bez
+     `mask-composite` (starší prohlížeč) zůstane jen pramen — lano pak
+     nedobíhá do ztracena, ale vidět je, a to je ta bezpečnější strana. */
+  --pramen: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 20'%3E%3Cpath d='M2.9 1.5 C4.2 5 4 7.8 5 10 C6 12.2 5.9 15 7.1 18.5' fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E");
+  --dobeh: linear-gradient(90deg, transparent 0, #000 3%, #000 82%, transparent 100%);
+  -webkit-mask-image: var(--pramen), var(--dobeh);
+  mask-image: var(--pramen), var(--dobeh);
+  -webkit-mask-size: 5px 10px, 100% 100%;
+  mask-size: 5px 10px, 100% 100%;
+  -webkit-mask-repeat: repeat-x, no-repeat;
+  mask-repeat: repeat-x, no-repeat;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
 body:has(.bez-partneru) .podtitulek:not(.tesne) { margin-bottom: 0.6rem; }
 
 /* Výběr sekce na úzkém displeji (Filip, 24. 10. 2026). Pruh tabů se tam

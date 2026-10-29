@@ -177,15 +177,15 @@ export function DlazdiceSekci({
         ))}
       </ul>
 
-      {/* Hranice vybraného (Filip, 29. 10. 2026): šrafa pod pruhem místo
-          panelu nebo karty kolem obsahu — „aby to vypadalo jako boundary
-          toho, co jsem v dlaždici vybral, ale nebralo to tolik prostoru".
-          Jen tam, kde je co vybráno; na rozcestníku pod dlaždicemi nic
-          nezačíná, takže by ohraničovala prázdno.
+      {/* <b>Klíč vybrané položky ven z pruhu.</b> Podle něj si `body`
+          vyzvedne její barvu (`--ukon-strany` v `globals.css`) a obarví
+          se jí nadpis i lano, které z nadpisu pokračuje doprava — obojí
+          je jinde na stránce a samo o sobě by o vybrané položce nevědělo.
 
-          `aria-hidden`, protože oddělení už říká `aria-current` na dlaždici
-          — čtečce by `hr` navíc jen oznámila předěl bez obsahu. */}
-      {aktivni && <hr className="hranice-vyberu" aria-hidden />}
+          Je to prázdný `span`, ne `hr`: lano už není samostatný předěl pod
+          pruhem (jak vzniklo 29. 10. 2026), ale součást nadpisu, takže by
+          `hr` oznamovala čtečce předěl, který v obsahu není. */}
+      {aktivni && <span className="vybrany-ukon" data-ukon={aktivni} hidden />}
     </>
   );
 }
