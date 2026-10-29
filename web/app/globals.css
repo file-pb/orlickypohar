@@ -1864,41 +1864,6 @@ th.vlevo, td.vlevo { text-align: left; }
 /* Aspoň dvakrát proti původním 1,2 em (asi 19 px): v tabu 2,6 rem. */
 .taby-trid a { padding-top: 0.3rem; padding-bottom: 0.3rem; gap: 0.55rem; }
 
-/* Taby sekcí regaty. Na telefonu se nezalamují do dvou řad, ale posouvají
-   se do strany — zalomené by při každém přepnutí přeskládaly obsah pod
-   sebou a stránka by poskočila. */
-/* <b>Zalomí se do dvou řádků, neposouvá.</b> Sekce nesou od 29. 10. 2026
-   celá jména podle rozhodčího a těch šest potřebuje 935 px. Střed stránky
-   tolik místa má až od okna 1560 px (nad `.s-boky` ho ubírají boky po
-   16 rem), takže na 13" a 15" notebooku jsou to dva řádky a na velkém
-   monitoru jeden. Změřeno: 1280 → 656 px, 1440 → 816, 1560 → 936 (odtud
-   jeden řádek), 1920 → 1296.
-   Posuvník to řešil hůř než nijak: `scrollbar-width: none` ho skrýval, a kdo
-   nezkusil táhnout, o dvou sekcích nevěděl — to je původní námitka u R10,
-   kvůli které vznikl akordeon. Zalomení nikoho o sekci nepřipraví. */
-.taby-sekci { flex-wrap: wrap; }
-.taby-sekci a { white-space: nowrap; display: inline-flex; align-items: center; gap: 0.45rem; }
-/* <b>Vybraná sekce je vybarvená záložka</b> (Filip, 29. 10. 2026: „udělat
-   tu selected jinak, aby bylo poznat co máme vybráno"). Platí jen pro pruh
-   sekcí regaty, ne pro všechny taby: napoprvé to bylo plošně na `.taby`
-   a chytly se i taby lodních tříd, kde Filip 29. 10. 2026 hlásil „nějak
-   drsné zvýraznění".
-
-   Tady ta síla smysl má, protože každý tab nese ještě vlajku a samotná
-   dvoupixelová linka se vedle nich ztrácí; tlumený podklad (`--zvyrazneni`)
-   se zkoušel první a na světlém papíru nebyl poznat.
-
-   <b>Text bere barvu pozadí stránky</b>, ne papíru: `--voda` je ve světlém
-   režimu tmavá (#1f6f8b) a v tmavém světlá (#6bb3cc), takže jedno pravidlo
-   dá kontrast 5,5 : 1 i 7,7 : 1 — obojí nad hranicí WCAG AA. */
-.taby-sekci a[aria-current="page"] {
-  background: var(--voda);
-  color: var(--pozadi);
-  border-radius: 8px 8px 0 0;
-  border-bottom-color: var(--voda);
-}
-/* Odkaz uvnitř tabu nesmí při najetí zešednout do vody, na které leží. */
-.taby-sekci a[aria-current="page"]:hover { color: var(--pozadi); }
 /* Signální vlajka u sekce. Pevné barvy mezinárodního kódu, z motivu jen
    rámeček — bez něj by bílá v bílé vlajce splynula s pozadím. */
 /* Dlaždice nesou tytéž značky ve stejné velikosti jako pruh — je to jeden
@@ -2054,7 +2019,6 @@ body:has(.bez-partneru) .dlazdice-sekci { --min-dlazdice: 7.25rem; }
   background: var(--zvyrazneni);
 }
 
-.taby-sekci .vlajka,
 .dlazdice-sekci .vlajka {
   height: 0.95rem;
   width: 1.425rem;
@@ -2063,7 +2027,6 @@ body:has(.bez-partneru) .dlazdice-sekci { --min-dlazdice: 7.25rem; }
   border-radius: 1px;
 }
 /* Úvod nese značku poháru místo vlajky; srovnat ji do stejné výšky. */
-.taby-sekci .znak-celkem,
 .dlazdice-sekci .znak-celkem { height: 1.3rem; width: auto; }
 
 /* ---------------------------------------------------------------------
@@ -2215,70 +2178,13 @@ body:has(.bez-partneru) h1::after {
 }
 body:has(.bez-partneru) .podtitulek:not(.tesne) { margin-bottom: 0.6rem; }
 
-/* Výběr sekce na úzkém displeji (Filip, 24. 10. 2026). Pruh tabů se tam
-   nevejde: změřeno na `jarni-vitr` při 375 px — 551 px obsahu v 335 px
-   místa, tři sekce z pěti vidět a posuvník schovaný, takže na zbytek
-   nevede cesta. Mez je 40 rem, protože při 640 px se pruh ještě vejde
-   (při 576 px přetéká o 15 px); nad ní zůstávají taby.
-
-   Rozbalené položky jsou vidět **všechny včetně otevřené** — tab je podle
-   hlavičky `hlava.tsx` obsah stránky, ne nabídka odkazů, a kde člověk
-   zrovna je, patří k celku. */
-.sekce-rozbal { display: none; }
-
-@media (max-width: 40rem) {
-  .taby-sekci { display: none; }
-
-  .sekce-rozbal {
-    display: block; position: relative; margin: 0 0 1.25rem;
-    border: 1px solid var(--linka); border-radius: 10px;
-  }
-  .sekce-rozbal > summary {
-    list-style: none; cursor: pointer;
-    display: flex; align-items: center; gap: 0.5rem;
-    padding: 0.6rem 0.75rem;
-    font-weight: 600; color: var(--text);
-  }
-  .sekce-rozbal > summary::-webkit-details-marker { display: none; }
-  .sekce-rozbal > summary:focus { outline: none; }
-  .sekce-rozbal > summary:focus-visible { outline: 2px solid var(--voda); outline-offset: 2px; }
-  .sekce-rozbal[open] > summary { border-bottom: 1px solid var(--linka); }
-
-  .sekce-rozbal-tady { display: inline-flex; align-items: center; gap: 0.45rem; }
-  .sekce-rozbal-tady .vlajka { height: 0.85rem; width: auto; border-radius: 1px; }
-  .sekce-rozbal-tady .znak-celkem { height: 1.3rem; width: auto; }
-
-  /* Zbytek a šipka vpravo. Šipka je `::after`, aby ji čtečka nečetla jako
-     text — co dělá, říká už `summary` samo. */
-  .sekce-rozbal-zbytek {
-    margin-left: auto; color: var(--tlumeny); font-weight: 400; font-size: 0.85rem;
-  }
-  .sekce-rozbal > summary::after {
-    content: ""; flex: 0 0 auto; width: 0.5rem; height: 0.5rem;
-    border-right: 2px solid var(--tlumeny); border-bottom: 2px solid var(--tlumeny);
-    transform: rotate(45deg) translate(-0.1rem, -0.1rem);
-  }
-  .sekce-rozbal[open] > summary::after { transform: rotate(-135deg) translate(-0.2rem, -0.2rem); }
-
-  .sekce-rozbal nav { display: grid; padding: 0.3rem; }
-  .sekce-rozbal nav a {
-    display: flex; align-items: center; gap: 0.55rem;
-    padding: 0.55rem 0.5rem; border-radius: 7px;
-    color: var(--text); font-weight: 500;
-  }
-  .sekce-rozbal nav a:hover { background: var(--zvyrazneni); text-decoration: none; }
-  .sekce-rozbal nav a[aria-current="page"] { color: var(--voda); font-weight: 600; }
-  .sekce-rozbal nav .vlajka { height: 0.85rem; width: auto; border-radius: 1px; }
-  .sekce-rozbal nav .znak-celkem { height: 1.3rem; width: auto; }
-  .sekce-rozbal nav a:not([aria-current="page"]) .vlajka,
-  .sekce-rozbal nav a:not([aria-current="page"]) .znak-celkem { opacity: 0.55; }
-}
-/* Neotevřená sekce má vlajku tlumenější, ať nepřetahuje pozornost
-   z té otevřené. */
-.taby-sekci a:not([aria-current="page"]) .vlajka,
-.taby-sekci a:not([aria-current="page"]) .znak-celkem { opacity: 0.55; }
-.taby-sekci a:hover .vlajka,
-.taby-sekci a:hover .znak-celkem { opacity: 1; }
+/* Neotevřená sekce má vlajku tlumenější, ať nepřetahuje pozornost z té
+   otevřené. Platilo pro pruh tabů, platí dál pro dlaždice, které ho
+   vystřídaly. */
+.dlazdice-sekci a:not([aria-current="page"]) .vlajka,
+.dlazdice-sekci a:not([aria-current="page"]) .znak-celkem { opacity: 0.55; }
+.dlazdice-sekci a:hover .vlajka,
+.dlazdice-sekci a:hover .znak-celkem { opacity: 1; }
 
 /* Pruh upozornění nad taby: co se u regaty zrovna děje. Naléhavé nese
    barvu, ostatní jsou klidné řádky — kdyby svítilo všechno, nesvítí nic. */

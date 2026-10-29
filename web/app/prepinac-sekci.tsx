@@ -1,22 +1,18 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ZavriMimo } from "@/app/zavri-mimo";
 
 /**
- * Přepínač sekcí jedné věci — pruh na širokém displeji, rozbalovací řádek
- * na úzkém. Vytažený z hlavy regaty (Filip, 29. 10. 2026), aby správa měla
- * <b>totéž ovládání, ne vlastní</b>: *„uživatelsky na oko je to to samé
- * a uživatel to tak vnímá a učí se to ovládat. Nepochopí, proč to nevypadá
- * stejně, jen s jinou funkcionalitou."*
- *
- * <b>Obě podoby jsou v HTML zároveň</b> a přepíná je CSS (`.taby-sekci`
- * a `.sekce-rozbal` v `globals.css`), takže na to není potřeba javascript
- * ani zjišťování šířky na serveru. Jedna z nich je vždy `display: none`,
- * a tím i mimo strom pro čtečky.
+ * Dlaždice sekcí jedné věci. Vznikly ve správě (Filip, 29. 10. 2026), aby
+ * měla <b>totéž ovládání jako veřejná stránka, ne vlastní</b>: *„uživatelsky
+ * na oko je to to samé a uživatel to tak vnímá a učí se to ovládat.
+ * Nepochopí, proč to nevypadá stejně, jen s jinou funkcionalitou."* Týž den
+ * je dostala i veřejná stránka regaty („veřejný může taky jít do stejného
+ * designu") a pruh tabů, který tam stál předtím, skončil i s akordeonem,
+ * co se pod 40 rem skládal místo něj — mřížka se zalomí sama.
  *
  * <b>Položky jsou vstup, ne obsah komponenty.</b> Veřejná stránka sem posílá
  * sekce regaty se signálními vlajkami, správa svoje úkony — a každá si nese
- * vlastní adresy. Komponenta jen rozhoduje, jak se mezi nimi přepíná.
+ * vlastní adresy.
  */
 export type PolozkaPrepinace = {
   /** Jednoznačný klíč, obvykle slug sekce. */
@@ -43,54 +39,6 @@ export type PolozkaPrepinace = {
    */
   popis?: string;
 };
-
-export function PrepinacSekci({
-  polozky,
-  aktivni,
-  popisek,
-}: {
-  polozky: PolozkaPrepinace[];
-  /** Klíč otevřené sekce. */
-  aktivni: string;
-  /** Co to je za výběr, pro čtečku obrazovky. */
-  popisek: string;
-}) {
-  // Jedna sekce není co přepínat — pruh by jen tvrdil, že je kam jít.
-  if (polozky.length < 2) return null;
-
-  const otevrena = polozky.find((p) => p.klic === aktivni) ?? polozky[0];
-
-  const odkazy = polozky.map((p) => (
-    <Link key={p.klic} href={p.kam} aria-current={p.klic === aktivni ? "page" : undefined}>
-      {p.znacka}
-      {p.nazev}
-    </Link>
-  ));
-
-  return (
-    <>
-      <nav className="taby taby-sekci" aria-label={popisek}>
-        {odkazy}
-      </nav>
-
-      <details className="sekce-rozbal">
-        <ZavriMimo />
-        <summary>
-          <span className="sekce-rozbal-tady">
-            {otevrena.znacka}
-            {otevrena.nazev}
-          </span>
-          {/* Zbytek sekcí se počítá, ne vypisuje: „a 4 další" říká, že je kam
-              klepnout, i když je seznam zavřený. */}
-          <span className="sekce-rozbal-zbytek">
-            a {polozky.length - 1} {polozky.length - 1 < 5 ? "další" : "dalších"}
-          </span>
-        </summary>
-        <nav aria-label={popisek}>{odkazy}</nav>
-      </details>
-    </>
-  );
-}
 
 /**
  * <b>Tytéž položky jako pruh, jen jako dlaždice</b> (Filip, 29. 10. 2026:
