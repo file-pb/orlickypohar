@@ -1,13 +1,21 @@
 # Příručka: jak si Miloš přeinstaluje appku
 
-**Platí pro APK vydané 28. 10. 2026 odpoledne** (build `4b579f9b`, otisk
-`c4d54801…`, zapsané v `app/vydane-apk.json`). Až vyjde další, projdi
+**Platí pro APK vydané 29. 10. 2026** (build `1e869aa0`, versionCode 5,
+otisk `9dfabf3c…`, zapsané v `app/vydane-apk.json`). Až vyjde další, projdi
 text znovu — a zkontroluj hlavně to, co appce slibuje.
 
 Předchozí vydání (`d343c6d2`, otisk `3995edc5…`) umělo aktualizace taky,
 jenže mu chyběla `expo-battery`, která do appky přišla pár minut po něm.
 Miloš si ho podle tohohle návodu stáhl — a tohle je ta jedna verze navíc,
 o kterou ho pak musel Filip požádat.
+
+A build po něm (`4b579f9b`, otisk `c4d54801…`) vydržel jediný den: 29. 10.
+šlo `expo` z `~57.0.30` na `~57.0.31` a přibyly `overrides` v
+`app/package.json` (`expo-modules-core` → `react-native-worklets`), čímž se
+otisk posunul na `9dfabf3c…`. **Miloš tak instaluje potřetí během dvou dnů**
+— přesně to, o čem text níž slibuje, že se dít nebude. Slib platí pro
+novinky v appce, ne pro bumpy nativních závislostí, a ten rozdíl laik
+neudělá; než se pošle znovu, stojí za to si přečíst, co se mu slibuje.
 
 Text níž je **pro rozhodčího, ne pro vývojáře** — píše se tak, aby šel
 poslat do WhatsAppu beze změny. Vzniknul proto, že od 28. 10. 2026 se
@@ -26,6 +34,10 @@ skončí u druhého kroku.
 
 > Ahoj Miloši, mám pro tebe novou verzi appky. Je v ní všechno, co jsme
 > spolu minulý týden probírali.
+>
+> Vím, že je to krátce po sobě. Tahle verze veze i věci, které se musí do
+> telefonu doinstalovat, takže po síti by k tobě nedošly — od ní už by
+> většina novinek měla chodit sama.
 >
 > **Od téhle verze se appka umí aktualizovat sama** — většinu novinek už
 > stahovat nebudeš, jen ji otevřeš a bude nová. Občas se stane, že přibude
@@ -101,6 +113,25 @@ skončí u druhého kroku.
   k 28. 10. 2026 **není** (jsou jen `DEPLOY_TOKEN` a `SIXLABORS_LICENSE_KEY`).
   Dokud nebude, úloha jen napíše varování do souhrnu a novinky zůstanou
   v gitu. Token se vyrábí na <https://expo.dev/settings/access-tokens>.
+
+- **Build se změněným otiskem zneplatní aktualizace pro ten starý.**
+  Změřeno 29. 10. 2026 dotazem na `u.expo.dev` s hlavičkami, které posílá
+  telefon (`expo-channel-name: preview`, `expo-runtime-version: <otisk>`,
+  `expo-platform: android`): otisk `c4d54801` (build 4) → HTTP 200 a
+  aktualizace `01a182a6`, otisk `9dfabf3c` (build 5) → HTTP 204, prázdno.
+  Telefon, který zůstane na starém APK, tedy dostane jen to, co se
+  publikovalo do změny otisku, a **nic dalšího už nepřijde** — a nijak se
+  to na něm nepozná, protože pro svůj otisk doopravdy nic nového nemá.
+  Tohle je ten důvod, proč se o novém APK musí ozvat Filip.
+
+- **Otisk se počítá nástrojem z `node_modules`, ne `@latest`.**
+  `npx expo-updates fingerprint:generate --platform android` dá
+  `9dfabf3c…` ze 128 zdrojů a souhlasí s EAS i s CI krokem *Žádá appka
+  ruční instalaci?*. `npx @expo/fingerprint@latest` dal 29. 10. 2026
+  `955436b2…` z 59 zdrojů, a v sousední session ještě třetí číslo — jiná
+  verze počítá jinak a jinak hluboko. V projektu je `@expo/fingerprint`
+  0.20.14, zveřejněná je 0.21.7. Číslo z `@latest` neodpovídá ničemu,
+  proti čemu se srovnává, takže ani nedokazuje, že se otisk změnil.
 
 - **`EXPO_PUBLIC_*` se zapékají do bundle, a `eas update` je ze shellu
   nepřevezme** — bere je z EAS environmentu, který je prázdný. Proto se

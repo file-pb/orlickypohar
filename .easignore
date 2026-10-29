@@ -19,9 +19,13 @@
 # <b>Otisk se tím nezměnil</b>, a to byla ta obava: 117 ze 128 zdrojů
 # otisku leží v `node_modules`, které se tu vyhazují. EAS si je ale na
 # serveru obnoví z `package-lock.json` ještě před výpočtem, takže build
-# `c33a6837` (28. 10. 2026) vyšel s `c4d54801…` — totožným s vydaným APK.
-# Kdyby se otisk posunul, přestala by se vydaná appka aktualizovat a
-# ušetřená minuta by stála to, kvůli čemu se APK vydávalo.
+# `c33a6837` (28. 10. 2026) vyšel s `c4d54801…` — totožným s APK vydaným
+# tehdy (build 4). Kdyby se otisk posunul, přestala by se vydaná appka
+# aktualizovat a ušetřená minuta by stála to, kvůli čemu se APK vydávalo.
+#
+# Pozor, `c4d54801…` už není aktuální otisk: 29. 10. 2026 ho posunul bump
+# `expo` a nové `overrides` na `9dfabf3c…` (build 5). Číslo tu zůstává jako
+# doklad toho měření, ne jako platná hodnota — tu drží `app/vydane-apk.json`.
 #
 # Měřeno: nahrávka spadla z 475 MB na 29,3 MB, nahrávání z minuty na 5 s.
 
