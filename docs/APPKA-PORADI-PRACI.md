@@ -135,6 +135,32 @@ To je levné a je to to jediné, co ten případ doopravdy odstraní.
 pomocníkem, který drží takt; houkačka v ruce je záloha pro případ, kdy
 telefon mlčí z důvodu, na který appka nedosáhne.
 
+#### Může si appka zapnout Nerušit sama?
+
+Filip, 29. 10. 2026: *„to by bylo dobrý, kdyby se to uprostřed startovní
+procedury přeplo do nerušit a tím na chvíli krylo Milošovi nervy."*
+
+**Na Androidu ano, na iPhonu ne** — a protože Miloš má Android a Filip
+iPhone, je to rozdíl, který se projeví přesně u toho člověka, o kterého
+jde.
+
+| | Jde to? | Čím |
+| --- | --- | --- |
+| **Android** (Miloš) | **ano** | `NotificationManager.setInterruptionFilter` s oprávněním `ACCESS_NOTIFICATION_POLICY`; uživatel ho jednou povolí v nastavení |
+| **iPhone** (Filip) | **ne** | Focus je systémové nastavení, které aplikace nepřepíná; privátní URL do Nastavení Apple zamítá |
+
+**Co na iPhonu zbývá:** automatizace ve Zkratkách — *při otevření
+aplikace zapni Nerušit, při zavření vypni*. Nastaví si ji uživatel sám,
+jednou, a pak funguje bez appky. Appka na ni může odkázat, udělat ji za
+něj nemůže.
+
+**Co to obnáší na Androidu.** `expo-notifications` v závislostech je, ale
+tohle neumí — je o přijímání upozornění, ne o režimu telefonu. Chce to
+vlastní nativní modul nebo config plugin, tedy další nativní závislost
+do fronty výš. A chce to rozmyslet dvě věci, které se snadno zapomenou:
+**vrátit režim zpátky** po skončení procedury (i když appka spadne), a co
+dělat, když oprávnění uživatel nedá — procedura kvůli tomu nesmí stát.
+
 Partitura, kterou ty dva poslední balíčky budou přehrávat, je už
 postavená a otestovaná: `app/src/lib/hlaseni.ts`.
 
