@@ -22,6 +22,30 @@
      hodnoty jsou vybrané pohledem na čtyři síly vedle sebe, ne spočítané
      — tichá, ale čitelná. */
   --srafa: #e6e2da;
+  /* <b>Barvy úkonů regaty</b> (Filip, 29. 10. 2026: „ty barvy nahrazují ty
+     vlajky kvůli šířce, takže klidně různé"). Nesou to, co nesla vlajka:
+     rozlišení na první pohled, aby pořadatel poznal dlaždici dřív, než
+     přečte jméno — a to je potřeba hlavně na úzkém displeji, kde se jméno
+     zkrátí na „Z. trať".
+
+     <b>Nekódují stav.</b> Zelená, červená a oranžová jsou v projektu
+     obsazené (vypsaný, zrušený, právě teď) a sem se proto nesmějí dostat,
+     jinak by levá hrana dlaždice tvrdila něco o průběhu regaty. Výsledky si
+     modrou nechávají, protože modrá u stavů i u vlajky na cíli znamená
+     „je to venku".
+
+     <b>Tlumené, ne syté</b> (Filip: „nemusí být tak výrazné a neměly by se
+     bít se systémovými"). Pět sytých ploch vedle sebe by přetáhlo pozornost
+     z obsahu a hádalo by se s oranžovou a se stavy; tyhle drží tón stránky
+     a rozliší se stejně, protože leží vedle sebe v jedné řadě.
+
+     Modrá, indigo a tyrkys jsou příbuzné a barvoslepému splynou — jméno
+     vedle nich proto zůstává vždycky. */
+  --ukon-vysledky: #4a7f91;
+  --ukon-prihlasky: #6a70a8;
+  --ukon-smernice: #a18a4a;
+  --ukon-trat: #4a8a80;
+  --ukon-polohy: #8a6080;
   /* <b>Oranžová jako písmo, ne jako plocha.</b> `--pozor` je laděná na
      výplň a drobné písmo v ní je na bílé sotva čitelné; tohle je tatáž
      barva stažená do čitelna. V tmavém režimu se rozcházet nemusí —
@@ -83,6 +107,12 @@
        jantar, jakým na tabuli svítí semafor. */
     --pozor: #e8a33d;
     --srafa: #343b43;
+    /* Světlejší odrudy týchž barev — syté by na tmavém podkladu zhasly. */
+    --ukon-vysledky: #7fa7c9;
+    --ukon-prihlasky: #9098c9;
+    --ukon-smernice: #c9b377;
+    --ukon-trat: #74b3a8;
+    --ukon-polohy: #b98fae;
     --pozor-pismo: var(--pozor);
     --obrys-hlasi: inset 0 0 0 1px rgb(255 255 255 / 0.36);
     --obrys-dlouho: inset 0 0 0 1px rgb(255 255 255 / 0.16);
@@ -102,6 +132,11 @@
   --stav-zruseny: #e2726a;
   --pozor: #e8a33d;
   --srafa: #343b43;
+  --ukon-vysledky: #7fa7c9;
+  --ukon-prihlasky: #9098c9;
+  --ukon-smernice: #c9b377;
+  --ukon-trat: #74b3a8;
+  --ukon-polohy: #b98fae;
   --pozor-pismo: var(--pozor);
   --obrys-hlasi: inset 0 0 0 1px rgb(255 255 255 / 0.36);
   --obrys-dlouho: inset 0 0 0 1px rgb(255 255 255 / 0.16);
@@ -1851,20 +1886,26 @@ th.vlevo, td.vlevo { text-align: left; }
    má obsah k dispozici, se nedá z okna spolehlivě odvodit (na veřejných
    stránkách z ní ukrajují boky).
 
-   Minimum je OBSAHOVÉ, ne kulaté: změřeno přes `max-content`, že nejdelší
-   dlaždice („Plachetní směrnice" s vlajkou L) potřebuje 193 px s celým
-   jménem a 138 px se zkratkou. Minimum proto drží ta zkrácená podoba
-   (9 rem = 144 px) a dlouhé jméno ustoupí samo, jakmile se do dlaždice
-   nevejde — viz `.jmeno-uzke` níž. Jméno se nezalamuje (`nowrap`), takže
-   bez toho přepínání by z rámečku vyteklo.
+   Minimum je OBSAHOVÉ, ne kulaté: změřeno, že nejdelší jméno („Plachetní
+   směrnice") potřebuje i s okraji 169 px a jeho zkratka 114. Minimum proto
+   drží ta zkrácená podoba (7,25 rem) a dlouhé jméno ustoupí samo, jakmile
+   se do dlaždice nevejde — viz `.jmeno-uzke` níž. Jméno se nezalamuje
+   (`nowrap`), takže bez toho přepínání by z rámečku vyteklo.
+
+   <b>Větší minimum dlaždice zbytečně roztahuje</b> (Filip, 29. 10. 2026:
+   „v tomto rozměru není potřeba ještě tvořit nový řádek, texty jsou
+   zkrácené, místa je dost"): `auto-fit` počítá počet sloupců z minima, a to
+   bylo nastavené podle jmen s vlajkou. Při 737 px obsahu z toho vyšly čtyři
+   sloupce po 175 px a pátá dlaždice spadla na druhý řádek, přestože se jich
+   tam vejde pět.
 
    Dlaždice nese jen jméno a značku, takže je vysoká jako řádek, ne jako
    karta: popis odešel do bubliny a role se nevypisuje vůbec.
    --------------------------------------------------------------------- */
-.dlazdice-sekci { gap: 0.4rem; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); }
+.dlazdice-sekci { gap: 0.4rem; grid-template-columns: repeat(auto-fit, minmax(7.25rem, 1fr)); }
 /* Dlaždice drží výšku celé buňky, aby řádek nebyl zubatý. */
 .dlazdice-sekci > li { display: grid; }
-.dlazdice-sekci .karta { padding: 0.3rem 0.7rem 0.3rem 0.85rem; border-radius: 7px; }
+.dlazdice-sekci .karta { padding: 0.3rem 0.7rem 0.3rem 0.8rem; border-radius: 7px; }
 /* <b>Barevný proužek místo vlajky</b> (Filip, 29. 10. 2026: „zkus místo
    vlajky dát doleva do dlaždice jen nějakou barvičku" — a „včetně těch
    radiusů"). Je to <b>levý okraj karty</b>, ne proužek položený na ni:
@@ -1875,7 +1916,20 @@ th.vlevo, td.vlevo { text-align: left; }
    Barva je u všech táž. Podle sekce ji nedávám schválně — signální vlajky
    úkonů jsou ze tří pětin modré (modrá, P, M), takže by se proužky
    nerozlišily a tvářily by se, že nesou význam, který nenesou. */
-.dlazdice-sekci .karta { border-left: 3px solid var(--voda); }
+/* <b>Mírný podklad v téže barvě</b> (Filip, 29. 10. 2026): hrana sama je
+   pět pixelů a v řadě pěti dlaždic se ztrácí. Osm procent barvy v papíru
+   stačí, aby se dlaždice odlišily plochou, a je to pořád tak málo, že text
+   na nich drží kontrast papíru. */
+.dlazdice-sekci .karta {
+  border-left: 5px solid var(--ukon, var(--voda));
+  background: color-mix(in srgb, var(--ukon, var(--voda)) 8%, var(--papir));
+}
+.dlazdice-sekci > li[data-polozka="vysledky"] { --ukon: var(--ukon-vysledky); }
+.dlazdice-sekci > li[data-polozka="prihlasky"] { --ukon: var(--ukon-prihlasky); }
+.dlazdice-sekci > li[data-polozka="smernice"] { --ukon: var(--ukon-smernice); }
+.dlazdice-sekci > li[data-polozka="boje"] { --ukon: var(--ukon-trat); }
+.dlazdice-sekci > li[data-polozka="tracker"] { --ukon: var(--ukon-polohy); }
+
 
 .dlazdice-sekci .nazev {
   display: flex; align-items: center; gap: 0.45rem;
@@ -1887,13 +1941,15 @@ th.vlevo, td.vlevo { text-align: left; }
    podle místa a na veřejných stránkách ubírají z šířky ještě boky. Dlaždice
    je proto vlastní kontejner a ptá se sama sebe.
 
-   Mez je těch změřených 193 px, co potřebuje nejdelší jméno; pod ní nastoupí
-   „P. směrnice", „Z. trať" a „Lodě živě". Obě podoby jsou v HTML a vybírá
+   Mez je těch změřených 169 px, co potřebuje nejdelší jméno, plus drobná
+   rezerva (10,75 rem); pod ní nastoupí „P. směrnice", „Z. trať" a „Lodě
+   živě". Rezerva je tu schválně: text se nezalamuje, takže o pixel pozdě
+   znamená jméno vyteklé z rámečku. Obě podoby jsou v HTML a vybírá
    mezi nimi CSS: javascript by jméno po načtení stránky přepsal před očima.
    --------------------------------------------------------------------- */
 .dlazdice-sekci > li { container-type: inline-size; }
 .jmeno-uzke { display: none; }
-@container (max-width: 12.1rem) {
+@container (max-width: 10.75rem) {
   .jmeno-dlouhe { display: none; }
   .jmeno-uzke { display: inline; }
 }
@@ -1906,8 +1962,13 @@ th.vlevo, td.vlevo { text-align: left; }
    Dvěma kanály, ne jedním: linka sama zmizí v ostrém slunci u vody, podklad
    a barevný rámeček zůstanou. Podtržení je `inset`, aby rámeček dlaždice
    zůstal celý — spodní okraj by ji proti ostatním o dva pixely posunul. */
+/* Levou hranu si vybraná dlaždice nechává svoji — jinak by zrovna ta, na
+   které člověk stojí, přišla o barvu, podle které ji hledal. Musí stát za
+   `border-color`, jinak ho nepřebije: obě pravidla mají stejnou specifitu
+   a rozhoduje pořadí v souboru (zkoušeno obráceně a barva se ztratila). */
 .dlazdice-sekci a[aria-current="page"] {
   border-color: var(--voda);
+  border-left-color: var(--ukon, var(--voda));
   box-shadow: inset 0 -2px 0 var(--voda);
   background: var(--zvyrazneni);
 }

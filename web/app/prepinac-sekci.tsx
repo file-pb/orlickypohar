@@ -121,6 +121,8 @@ export function PrepinacSekci({
  *
  * Příbuznost dělá značka: táž vlajka v téže velikosti jako v pruhu
  * (`.taby-sekci .vlajka` a `.dlazdice-sekci .vlajka` jsou jeden předpis).
+ * Kde se vlajky vypnou, nastupuje barva na levé hraně — klíč položky jde
+ * proto i do `data-polozka`, odkud si ji CSS bere (`--ukon-*`).
  */
 export function DlazdiceSekci({
   polozky,
@@ -138,7 +140,7 @@ export function DlazdiceSekci({
     <>
       <ul className="seznam dlazdice-sekci">
         {polozky.map((p) => (
-          <li key={p.klic}>
+          <li key={p.klic} data-polozka={p.klic}>
             {/* `title` je bublina pro myš a zároveň to jediné, co se z popisu
                 dostane ke čtečce obrazovky — na dotykovém displeji ho nikdo
                 neuvidí, a tak to Filip chce. */}
