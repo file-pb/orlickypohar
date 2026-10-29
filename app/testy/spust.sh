@@ -21,6 +21,10 @@ echo "== Odesílání na server =="
 TEST_DB=":memory:" "${NODE[@]}" ./nahravani.test.ts
 
 echo
+echo "== Kdo zapíná aplikaci =="
+"${NODE[@]}" ./role.test.ts
+
+echo
 echo "== Hlášení a troubení =="
 "${NODE[@]}" ./hlaseni.test.ts
 

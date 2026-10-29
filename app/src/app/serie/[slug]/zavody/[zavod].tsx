@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
+import { Odpocet } from '@/components/odpocet';
 import {
   Chyba,
   Karta,
@@ -45,6 +46,10 @@ export default function Zastavka() {
             {rozsah(data.datum, data.datumKonce)}
             {data.poradatel ? ` · pořádá ${data.poradatel}` : ''}
           </Text>
+
+          {/* Panel startu se ukáže sám, jen když se zrovna startuje nebo jede.
+              Jindy nevykreslí nic — stránka regaty tím zůstává tím, čím je. */}
+          <Odpocet rozjizdky={data.rozjizdky} delkaProceduryMin={data.delkaProceduryMin} />
 
           {data.vysledkySkryte ? (
             // Ročník, u kterého se výsledky jednotlivých regat veřejně

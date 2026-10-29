@@ -6,7 +6,8 @@ import { useEffect, useState } from 'react';
 import { Chyba, Karta, Nacitani, Nadpis, Prazdno } from '@/components/ui';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
-import { nactiSerie } from '@/lib/api';
+import { nactiJa, nactiMojeLode, nactiSerie } from '@/lib/api';
+import { kdeVeli, postava } from '@/lib/role';
 import { predJakDlouho, stavGps, type StavGps } from '@/lib/tracker/stav';
 import { otevrenyZaznam, type Zaznam } from '@/lib/tracker/zaznam';
 
@@ -55,10 +56,42 @@ function Sledovani() {
   );
 }
 
+/**
+ * Co má ten člověk nahoře. <b>Rozhodčí přijel velet</b>, a kdyby musel
+ * start hledat pod seznamem ročníků, bylo by to špatně postavené.
+ */
+function Velení({ ja }: { ja: Parameters<typeof kdeVeli>[0] }) {
+  const t = useTheme();
+  const router = useRouter();
+  const kde = kdeVeli(ja);
+  if (!kde) return null;
+
+  return (
+    <Karta
+      onPress={() =>
+        router.push(kde.zavod ? `/serie/${kde.serie}/zavody/${kde.zavod}` : `/serie/${kde.serie}`)
+      }>
+      <Text style={{ color: t.tlumeny, fontSize: 12, fontWeight: '700', letterSpacing: 0.6 }}>
+        VELÍŠ
+      </Text>
+      <Text style={{ color: t.text, fontWeight: '700', fontSize: 17, marginTop: 2 }}>
+        {kde.zavod ?? kde.serie}
+      </Text>
+      <Text style={{ color: t.tlumeny, marginTop: 2 }}>
+        {kde.zavod ? 'start a cíl' : 'vyber regatu, které velíš'}
+      </Text>
+    </Karta>
+  );
+}
+
 export default function Rocniky() {
   const t = useTheme();
   const router = useRouter();
   const { data, chyba, nacita, obnov } = useData(nactiSerie);
+  const { data: ja } = useData(nactiJa);
+  const { data: mojeLode } = useData(nactiMojeLode);
+
+  const kdo = postava(ja ?? null, (mojeLode?.length ?? 0) > 0);
 
   return (
     <ScrollView
@@ -66,6 +99,10 @@ export default function Rocniky() {
       refreshControl={<RefreshControl refreshing={false} onRefresh={obnov} tintColor={t.voda} />}>
       <Nadpis tlumene="Seriál závodů plachetnic na Orlické přehradě">Ročníky</Nadpis>
 
+      {/* Nahoře stojí to, kvůli čemu ten člověk aplikaci zapnul. Rozhodčí
+          velení, kapitán běžící sledování; čtenář nemá ani jedno, a tak
+          mu rovnou začínají ročníky. */}
+      {kdo === 'rozhodci' ? <Velení ja={ja ?? null} /> : null}
       <Sledovani />
 
       {nacita ? <Nacitani /> : null}
@@ -82,33 +119,23 @@ export default function Rocniky() {
         </Karta>
       ))}
 
-      {/* Účet až pod ročníky: appka je pro většinu lidí čtečka a
-          přihlášení potřebuje jen ten, kdo zadává. */}
-      <View style={{ marginTop: 24 }}>
+      {/* Kapitánovi se vlastní lodě nabízejí rovnou: odsud vydává klíče
+          posádce a bez nich se nikdo nepřipojí. Ostatním by to byl další
+          odkaz, který nikam nevede. */}
+      {kdo === 'kapitan' ? (
+        <View style={{ marginTop: 24 }}>
+          <Link href="/lode" style={{ color: t.voda }}>
+            Moje lodě
+          </Link>
+        </View>
+      ) : null}
+
+      {/* Účet, klíč a záznam trasy bývaly na rozcestníku vedle sebe se
+          vším ostatním. Hledal se v tom start i sledování, takže odešly
+          pod účet — tam je najde ten, kdo je potřebuje. */}
+      <View style={{ marginTop: kdo === 'kapitan' ? 12 : 24 }}>
         <Link href="/ucet" style={{ color: t.voda }}>
-          Účet a přihlášení
-        </Link>
-      </View>
-
-      {/* Kapitánova cesta: odsud vydává klíče posádce. */}
-      <View style={{ marginTop: 12 }}>
-        <Link href="/lode" style={{ color: t.voda }}>
-          Moje lodě
-        </Link>
-      </View>
-
-      {/* Klíč k lodi kousek od účtu, ale výš než trasa: bez spárování
-          nemá záznam kam odejít. */}
-      <View style={{ marginTop: 12 }}>
-        <Link href="/klic" style={{ color: t.voda }}>
-          Klíč k lodi
-        </Link>
-      </View>
-
-      {/* Zkouška záznamu trasy. */}
-      <View style={{ marginTop: 12 }}>
-        <Link href="/tracker" style={{ color: t.voda }}>
-          Záznam trasy (zkouška)
+          {ja ? 'Účet a nastavení' : 'Účet a přihlášení'}
         </Link>
       </View>
 

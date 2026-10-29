@@ -1,3 +1,4 @@
+import { Link } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
@@ -137,6 +138,33 @@ export default function Ucet() {
       {chyba ? (
         <Text style={{ color: t.text, marginTop: 16 }}>{chyba}</Text>
       ) : null}
+
+      {/* Cesty, které odešly z rozcestníku (29. 10. 2026). Tam se v nich
+          hledal start i sledování; sem za nimi jde ten, kdo je potřebuje —
+          a klíč potřebuje i člověk bez účtu, proto stojí mimo `ja`. */}
+      <View style={{ marginTop: 24 }}>
+        <Link href="/lode" style={{ color: t.voda }}>
+          Moje lodě
+        </Link>
+      </View>
+
+      <View style={{ marginTop: 12 }}>
+        <Link href="/klic" style={{ color: t.voda }}>
+          Klíč k lodi
+        </Link>
+      </View>
+
+      <View style={{ marginTop: 12 }}>
+        <Link href="/tracker" style={{ color: t.voda }}>
+          Záznam trasy (zkouška)
+        </Link>
+      </View>
+
+      <View style={{ marginTop: 16 }}>
+        <Link href="https://orlickypohar.klihovka.cz" style={{ color: t.voda }}>
+          orlickypohar.klihovka.cz
+        </Link>
+      </View>
 
       {/* Mimo `ja`: na čem appka jede, je otázka nezávislá na přihlášení. */}
       <VerzeAppky />
