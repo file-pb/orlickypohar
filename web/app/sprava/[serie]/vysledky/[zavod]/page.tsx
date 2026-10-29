@@ -26,6 +26,7 @@ import {
   tratRozjizdceAkce,
 } from "../akce";
 import { StejnaTrat } from "@/app/sprava/stejna-trat";
+import { PruhUkonuRegaty } from "@/app/sprava/pruh-ukonu";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -195,9 +196,10 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
       <h1>{prehled.zavodNazev}</h1>
       <p className="podtitulek">
         {prehled.serieNazev} <Stav stav={prehled.stavZavodu} />
-        {" · "}
-        <Link href={`/sprava/${serie}/prihlasky/${zavod}`}>přihlášené lodě →</Link>
       </p>
+      {/* Odkaz „přihlášené lodě →" z podtitulku odešel: pruh na ně vede taky
+          a dvě cesty k témuž na jedné obrazovce se čtou jako dvě různé věci. */}
+      <PruhUkonuRegaty serie={serie} zavod={zavod} aktivni="vysledky" />
 
       {/* Nepublikovaná regata schová i publikovanou rozjížďku — veřejně
           neexistuje. Bez téhle věty by správce pouštěl čísla ven a divil se,

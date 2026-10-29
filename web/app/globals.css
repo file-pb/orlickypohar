@@ -1867,6 +1867,19 @@ th.vlevo, td.vlevo { text-align: left; }
   display: flex; align-items: center; gap: 0.45rem;
   font-size: 0.95rem; line-height: 1.35; white-space: nowrap;
 }
+/* <b>Vybraná dlaždice se podtrhne</b> (Filip, 29. 10. 2026: „dlaždice třeba
+   podtržením, nebo nějakým decentním zvýrazněním té selected ukáží, kde
+   jsme"). Vodní výplň jako u tabu by na pruhu nad pracovní obrazovkou
+   přetáhla pozornost z toho, kvůli čemu tam pořadatel přišel.
+
+   Dvěma kanály, ne jedním: linka sama zmizí v ostrém slunci u vody, podklad
+   a barevný rámeček zůstanou. Podtržení je `inset`, aby rámeček dlaždice
+   zůstal celý — spodní okraj by ji proti ostatním o dva pixely posunul. */
+.dlazdice-sekci a[aria-current="page"] {
+  border-color: var(--voda);
+  box-shadow: inset 0 -2px 0 var(--voda);
+  background: var(--zvyrazneni);
+}
 .taby-sekci .vlajka,
 .dlazdice-sekci .vlajka {
   height: 0.95rem;

@@ -1,6 +1,7 @@
 import Link from "@/app/sprava/odkaz";
 import { notFound } from "next/navigation";
 import { Drobecky, drobeckySpravy, drobekRegaty } from "@/app/drobecky";
+import { PruhUkonuRegaty } from "@/app/sprava/pruh-ukonu";
 import { Lodka } from "@/app/lodka";
 import { Stav } from "@/app/stav";
 import { Vypadek } from "@/app/vypadek";
@@ -161,6 +162,7 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
       <p className="podtitulek">
         Přihlášené lodě <Stav stav={prehled.stavZavodu} />
       </p>
+      <PruhUkonuRegaty serie={serie} zavod={zavod} aktivni="prihlasky" />
 
       {zpravy.chyba && (
         <p className="hlaska chyba" role="alert">

@@ -100,9 +100,11 @@ export function PrepinacSekci({
  * seznam, rozešla by se jména nebo ikony a uživatel by se učil dvoje
  * ovládání téhož — což je přesně to, oč tu jde.
  *
- * <b>Dlaždice je vstup, pruh navigace.</b> Dlaždice se vypisují tam, kde se
- * teprve vybírá. Uvnitř vybrané sekce je pak pruh: šest karet nad každou
- * pracovní obrazovkou by obsah odtlačilo o dva řádky.
+ * <b>Dlaždice jsou vstup i navigace.</b> Od 29. 10. 2026 stojí i nad
+ * otevřenou obrazovkou a vybranou označují podtržením — Filip: *„když budou
+ * opravdu fungovat podobně jako tab, že se pod nimi přepne ten cíl…"*.
+ * Odtlačit obsah si můžou dovolit, protože po zrušení popisu jsou vysoké
+ * jako řádek, ne jako karta.
  *
  * <b>Dlaždice nese jméno a značku, nic víc.</b> Popis je bublina pod myší
  * a role se nevypisuje vůbec — co se smí, rozhoduje `polozkyZastavky`
@@ -115,9 +117,12 @@ export function PrepinacSekci({
  */
 export function DlazdiceSekci({
   polozky,
+  aktivni,
   znacky = true,
 }: {
   polozky: PolozkaPrepinace[];
+  /** Klíč otevřené položky. Prázdný tam, kde se teprve vybírá. */
+  aktivni?: string;
   znacky?: boolean;
 }) {
   if (polozky.length === 0) return null;
@@ -129,7 +134,12 @@ export function DlazdiceSekci({
           {/* `title` je bublina pro myš a zároveň to jediné, co se z popisu
               dostane ke čtečce obrazovky — na dotykovém displeji ho nikdo
               neuvidí, a tak to Filip chce. */}
-          <Link className="karta" href={p.kam} title={p.popis}>
+          <Link
+            className="karta"
+            href={p.kam}
+            title={p.popis}
+            aria-current={p.klic === aktivni ? "page" : undefined}
+          >
             <div className="nazev">
               {znacky && p.znacka}
               {p.nazev}
