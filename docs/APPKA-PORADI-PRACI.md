@@ -16,8 +16,8 @@ takt, zatímco rozhodčí dělá to své.
 
 | | Co | Pro koho | Stav |
 | --- | --- | --- | --- |
-| 1 | **Rozhraní startu** | rozhodčí | návrh hotový, pravidla postavená |
-| 2 | **Rozhraní cíle** | rozhodčí | návrh hotový |
+| 1 | **Rozhraní startu** | rozhodčí | **postavené** (29. 10. večer) |
+| 2 | **Rozhraní cíle** | rozhodčí | **klepání a ukončení postavené**, viz níž |
 | 3 | **Rozhraní závodníka** | posádka | návrh vstřelený, bude se ladit |
 | 4 | **Stavitel tratě** | pořadatel | *„na to bude ale klid"* |
 
@@ -25,6 +25,21 @@ takt, zatímco rozhodčí dělá to své.
 informace pro veřejnost a diváky je marginální a kdoví jestli ji budeme
 potřebovat. Na to máme web."* Čtení výsledků v appce zůstává, ale nikdo
 kvůli němu nic nepředělává.
+
+### Cíl: co stojí a co ne (29. 10. 2026)
+
+Postavené v appce: karta *Cíl* na obrazovce regaty (ukáže se, jen když
+rozjížďka jede), klepání na lodě s časem z hodin telefonu, průběžné
+pořadí přes všechny kategorie, oprava posledního klepnutí i jednotlivého
+místa (smazat, prohodit s předchozí), ukládání celé sady po každé změně
+s revizí a *Ukončit rozjížďku*, které zbylým lodím zapíše DNF a zastaví
+časomíru. Rozepsaný zápis leží v souboru, takže přežije i konec appky.
+
+**Co ještě ne.** Ghost řádky z trasování a přepsání toho, co určilo
+(R33) — to je vlastní velká věc. Kódy kromě DNF (OCS, DSQ, odstoupila)
+se zapisují na webu; v appce zatím nejsou. Lodě mimo regatu („Další
+lodě") taky ne — appka nabízí ty přihlášené, a když přihlášky nikdo
+nevede, celý ročník.
 
 ### Co drží rozhraní rozhodčího pohromadě
 

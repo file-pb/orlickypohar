@@ -35,6 +35,10 @@ echo "== Startovní procedura =="
 TZ="Europe/Prague" "${NODE[@]}" ./start.test.ts
 
 echo
+echo "== Cíl =="
+"${NODE[@]}" ./cil.test.ts
+
+echo
 echo "== Nedoručený start =="
 "${NODE[@]}" ./cekajici-start.test.ts
 

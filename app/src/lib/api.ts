@@ -31,6 +31,9 @@ export type PoradiLodi = S["PoradiLodiDto"];
 export type PoradiKategorie = S["PoradiKategorieDto"];
 export type PoradiSerie = S["PoradiSerieDto"];
 export type Ja = S["JaDto"];
+export type ZapisRozjizdky = S["ZapisRozjizdkyDto"];
+export type ZapisLod = S["ZapisLodDto"];
+export type ZapisRadekVstup = S["ZapisRadekVstup"];
 
 /** Vrací null u 404 — nepublikovaný ročník se chová, jako by neexistoval. */
 export async function nacti<T>(cesta: string): Promise<T | null> {
@@ -91,21 +94,33 @@ export async function nactiZaSebe<T>(cesta: string): Promise<T | null> {
 export class OdmitnutoServerem extends Error {
   readonly stav: number;
   readonly duvod: string | null;
+  /**
+   * Celé tělo odpovědi. U konfliktu (409) v něm server posílá současný
+   * zápis, aby si klient měl svou sadu s čím srovnat — a nemusel se na
+   * něj ptát znovu.
+   */
+  readonly telo: unknown;
 
-  constructor(stav: number, duvod: string | null, cesta: string) {
+  constructor(stav: number, duvod: string | null, cesta: string, telo: unknown = null) {
     super(duvod ?? `API ${cesta} vrátilo ${stav}`);
     this.name = 'OdmitnutoServerem';
     this.stav = stav;
     this.duvod = duvod;
+    this.telo = telo;
   }
 }
 
-export async function posliZaSebe<T>(cesta: string, telo: unknown): Promise<T | null> {
+export async function posliZaSebe<T>(
+  cesta: string,
+  telo: unknown,
+  /** `PUT` u sad, které se přepisují celé — jinak `POST`. */
+  metoda: 'POST' | 'PUT' = 'POST',
+): Promise<T | null> {
   const t = await token();
   if (!t) return null;
 
   const odpoved = await fetch(`${API}${cesta}`, {
-    method: 'POST',
+    method: metoda,
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
@@ -120,13 +135,15 @@ export async function posliZaSebe<T>(cesta: string, telo: unknown): Promise<T | 
     // všeobecné odvolání."), a ta je rozhodčímu u vody k užitku —
     // na rozdíl od čísla stavu, které mu neřekne nic.
     let duvod: string | null = null;
+    let telo: unknown = null;
     try {
-      const chyba = (await odpoved.json()) as { error?: unknown };
+      telo = await odpoved.json();
+      const chyba = telo as { error?: unknown };
       duvod = typeof chyba?.error === 'string' ? chyba.error : null;
     } catch {
       duvod = null;
     }
-    throw new OdmitnutoServerem(odpoved.status, duvod, cesta);
+    throw new OdmitnutoServerem(odpoved.status, duvod, cesta, telo);
   }
   return (await odpoved.json()) as T;
 }
@@ -200,6 +217,66 @@ export async function ohlasStart(
   );
   // Totéž jako u procedury: nepřihlášenému se start neohlásí a `useEffect`
   // v panelu si to musí vrátit do fronty, ne to zahodit jako hotové.
+  if (v === null) throw new Error('neprihlasen');
+  return v;
+}
+
+/**
+ * Zápis rozjížďky pro cílovou obrazovku: lodě, jejich pořadí a kódy,
+ * čas startu a revize sady.
+ *
+ * Jde přes správu, ne přes veřejné čtení — rozepsaný zápis z vody není
+ * výsledek, dokud ho rozhodčí neuzavře.
+ */
+export const nactiZapis = (serie: string, zavod: string, cislo: number) =>
+  nactiZaSebe<ZapisRozjizdky>(
+    `/sprava/serie/${serie}/vysledky/${zavod}/rozjizdky/${cislo}`,
+  );
+
+/**
+ * Uloží <b>celou sadu</b> výsledků rozjížďky. Co v ní není, výsledek
+ * nemá — uložení takovou loď smaže, takže se posílají i lodě bez pořadí.
+ *
+ * <b>`revize` je podoba sady, ze které obrazovka vyšla.</b> Bez ní by
+ * zápis z telefonu uměl smazat opravu, o které nevěděl; server proto
+ * starší revizi odmítne stavem 409 a přiloží současný zápis.
+ */
+export async function ulozVysledky(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  radky: ZapisRadekVstup[],
+  revize: number,
+) {
+  // Vrací se celý zápis po uložení — hlavně <b>nová revize</b>, se kterou
+  // se posílá další klepnutí. Dopočítávat ji (+1) by byl odhad o cizím
+  // počítadle.
+  const v = await posliZaSebe<ZapisRozjizdky>(
+    `/sprava/serie/${serie}/vysledky/${zavod}/rozjizdky/${cislo}/vysledky`,
+    { radky, revize },
+    'PUT',
+  );
+  // Totéž jako u procedury: nepřihlášenému se nic neuloží a volající to
+  // nesmí spolknout jako hotovou věc.
+  if (v === null) throw new Error('neprihlasen');
+  return v;
+}
+
+/**
+ * <b>Ukončí rozjížďku</b> — zastaví časomíru.
+ *
+ * Ukončuje rozhodčí, ne hodiny: *„v prvních verzích prostě ukončí ofiko
+ * rozhodčí"* (Filip, 29. 10. 2026). Časový limit podle ZPJ 35 appka
+ * nehlídá a plachetní směrnice poháru žádný nevypisuje.
+ *
+ * Bez času v těle platí okamžik požadavku. Zbylé lodě dostanou DNF už
+ * tím, co se uloží před tímhle voláním.
+ */
+export async function ukonciRozjizdku(serie: string, zavod: string, cislo: number) {
+  const v = await posliZaSebe<unknown>(
+    `/sprava/serie/${serie}/vysledky/${zavod}/rozjizdky/${cislo}/konec`,
+    {},
+  );
   if (v === null) throw new Error('neprihlasen');
   return v;
 }

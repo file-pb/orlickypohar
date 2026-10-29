@@ -59,6 +59,7 @@ export function Odpocet({
   naSpusteni,
   naStartu,
   naUkon,
+  naCil,
   chyba,
   nedoslano,
 }: {
@@ -86,6 +87,14 @@ export function Odpocet({
    * se neukážou — obrazovku regaty čte i ten, kdo nevelí.
    */
   naUkon?: (cislo: number, ukon: UkonStartu) => void | Promise<void>;
+  /**
+   * Kam na cíl. Karta se ukáže, jen když rozjížďka doopravdy jede —
+   * <b>start a cíl jsou dvě karty pod jménem regaty</b>, ne položky
+   * v nabídce (Filip, 29. 10. 2026: *„start i cíl musí být po zapnutí
+   * telefonu hned"*). Panel je tím, kdo ví, co je na vodě, takže kartu
+   * drží on.
+   */
+  naCil?: () => void;
 }) {
   const t = useTheme();
   const [ted, setTed] = useState(() => Date.now());
@@ -167,6 +176,17 @@ export function Odpocet({
 
       {chyba ? (
         <Text style={[s.radekPodPanelem, { color: t.stavZruseny }]}>{chyba}</Text>
+      ) : null}
+
+      {naCil && (stav.druh === 'jede' || stav.druh === 'odstartovano') ? (
+        <Pressable
+          onPress={naCil}
+          style={({ pressed }) => [
+            s.cil,
+            { borderColor: t.jede, backgroundColor: t.papir, opacity: pressed ? 0.6 : 1 },
+          ]}>
+          <Text style={[s.cilText, { color: t.jede }]}>Cíl — zapisovat dojezdy</Text>
+        </Pressable>
       ) : null}
 
       {naUkon ? <Zastaveni stav={stav} t={t} naUkon={naUkon} /> : null}
@@ -489,6 +509,8 @@ const s = StyleSheet.create({
   // Volby sedí hned pod panelem — proto se záporným okrajem vracejí
   // zpátky k němu a odstup drží až pod sebou.
   volby: { flexDirection: 'row', gap: 8, marginTop: -8, marginBottom: 16 },
+  cil: { borderWidth: 2, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: -8, marginBottom: 16 },
+  cilText: { fontSize: 16, fontWeight: '700' },
   radekPodPanelem: { fontSize: 13, fontWeight: '600', marginTop: -8, marginBottom: 12, lineHeight: 18 },
   volba: {
     flex: 1,

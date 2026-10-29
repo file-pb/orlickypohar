@@ -1,4 +1,4 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
@@ -47,6 +47,7 @@ const POKUS_MS = 10_000;
 export default function Zastavka() {
   const { slug, zavod } = useLocalSearchParams<{ slug: string; zavod: string }>();
   const t = useTheme();
+  const router = useRouter();
   const { data, chyba, nacita, obnov } = useData(() => nactiZavod(slug, zavod), [slug, zavod]);
   const { data: ja } = useData(nactiJa);
 
@@ -177,6 +178,11 @@ export default function Zastavka() {
             naSpusteni={spustit}
             naStartu={ohlas}
             naUkon={ukon}
+            naCil={
+              veliNekde(ja ?? null)
+                ? () => router.push(`/serie/${slug}/zavody/${zavod}/cil`)
+                : undefined
+            }
             chyba={chybaStartu}
             nedoslano={ceka !== null}
           />
