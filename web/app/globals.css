@@ -641,6 +641,28 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
 .karta.zrusena .detail { color: var(--tlumeny); }
 
 /* ---------------------------------------------------------------------
+   Regaty ročníku jako řádky (Filip, 29. 10. 2026: „tady asi můžeme udělat
+   jen seznam, kterým se proklikneme do sjednoceného okna regaty").
+
+   Celý řádek je odkaz na stránku regaty, kde jsou úkony jako dlaždice.
+   Dvousloupcová mřížka `.seznam` na něj nesahá — ptá se na `> li > .karta`
+   a řádek karta není; jeden sloupec je tu správně, protože se čte shora
+   dolů podle termínu.
+   --------------------------------------------------------------------- */
+.seznam-regat { gap: 0; }
+.seznam-regat > li { border-bottom: 1px solid var(--linka); }
+.seznam-regat > li:last-child { border-bottom: 0; }
+.radek-regaty {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.15rem 0.6rem;
+  padding: 0.5rem 0.4rem; color: inherit;
+}
+.radek-regaty:hover { background: var(--zvyrazneni); text-decoration: none; }
+.radek-regaty .nazev { font-weight: 600; color: var(--voda); }
+/* Termín doprava, ale `margin-left: auto` jen dokud se vejde na řádek —
+   po zalomení by odsazoval sám sebe od levého okraje. */
+.radek-regaty .termin { margin-left: auto; color: var(--tlumeny); font-size: 0.875rem; }
+
+/* ---------------------------------------------------------------------
    Stav v rámečku karty (Filip, 27. 10. 2026).
 
    <b>Barva jde do okraje a popis se posadí do jeho horní hrany.</b> Štítek

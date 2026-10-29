@@ -1,6 +1,6 @@
 import Link from "@/app/sprava/odkaz";
 import { Drobecky, drobeckySpravy } from "@/app/drobecky";
-import { StavVRamu, tridaRamu } from "@/app/stav";
+import { Stav } from "@/app/stav";
 import { Vypadek } from "@/app/vypadek";
 import { datum } from "@/app/datum";
 import { nactiJa } from "@/lib/ja";
@@ -10,7 +10,6 @@ import {
   NAZVY_ROLI,
   polozkyRocniku,
   polozkyWebu,
-  polozkyZastavky,
   prava,
   roleVRocniku,
   smi,
@@ -137,50 +136,41 @@ export default async function RozcestnikRocniku({
           <h2>{jenSve ? "Moje regaty" : "Regaty ročníku"}</h2>
           <p className="poznamka">
             U každé je zápis výsledků, přihlášky, směrnice i bóje na trati —
-            všechno, co se k jedné regatě dělá, pohromadě. Jméno vede na
-            stránku regaty, řádek pod ním rovnou do jednotlivých úkonů.
+            všechno, co se k jedné regatě dělá, pohromadě na její stránce.
           </p>
-          <ul className="seznam">
+          {/* <b>Řádky, ne karty</b> (Filip, 29. 10. 2026: *„tady asi můžeme
+              udělat jen seznam, kterým se proklikneme do sjednoceného okna
+              regaty"*). Karta vznikla v době, kdy regata ve správě vlastní
+              stránku neměla — nesla proto krom jména a termínu i řádek odkazů
+              na jednotlivé úkony, tedy druhou podobu téhož rozcestníku. Od
+              chvíle, kdy nad každým úkonem stojí pruh dlaždic, je ten řádek
+              třetí cesta k téže věci.
+
+              <b>Stav se vrací do štítku.</b> Rámeček karty ho nese proto, že
+              karta je plocha (Filip, 27. 10. 2026) — řádek plocha není a barevná
+              linka kolem něj by se četla jako předěl mezi regatami. Barva
+              i slovo zůstávají tytéž, mění se jen nosič. */}
+          <ul className="seznam seznam-regat">
             {mojeZastavky.map((z) => (
-              /* Kotva zůstává kvůli starým odkazům; cíl „regata ve správě"
-                 má od 29. 10. 2026 vlastní stránku a míří na ni drobeček
-                 i jméno na téhle kartě. */
+              /* Kotva zůstává kvůli starším odkazům: mířily sem v době, kdy
+                 cíl „regata ve správě" nebyl stránkou, ale právě tímhle
+                 řádkem. */
               <li key={z.zavod} id={z.zavod}>
-                <div className={`karta ${tridaRamu(z.stav)}`}>
-                  {/* <b>Stav nese rámeček celé karty</b> (Filip, 27. 10.
-                      2026), ne štítek vedle názvu. Štítek se musí přečíst;
-                      barevný rámeček se vidí, a v řádku s názvem tím zbylo
-                      místo na to, co se čte doopravdy — kolik zápisů čeká
-                      na opravu. */}
-                  <StavVRamu stav={z.stav} />
-                  <div className="nazev">
-                    {/* Jméno vede na stránku regaty, řádek pod ním rovnou do
-                        jednotlivých úkonů. Obojí schválně: z rozcestníku se
-                        chodí přímo do práce, kdežto stránka regaty je místo,
-                        kam vede cesta zpátky z každého úkonu. */}
-                    <Link href={`/sprava/${encodeURIComponent(serie)}/zavod/${encodeURIComponent(z.zavod)}`}>
-                      {z.nazev}
-                    </Link>
-                    {z.kRevizi.length > 0 && (
-                      <span className="stitek vysledek-krevizi">
-                        {z.kRevizi.length}× k revizi
-                      </span>
-                    )}
-                  </div>
-                  <div className="detail">{datum(z.datum)}</div>
-                  {/* Zrušená zastávka nemá výsledky ani přihlášky a API je
-                      odmítne — odkaz na ni by byl slib naprázdno. */}
-                  <p className="poznamka">
-                    {z.stav === "Zruseny"
-                      ? "Zrušeno. Nic se tu nezapisuje."
-                      : polozkyZastavky(udelena, serie, z.zavod).map((p, i) => (
-                          <span key={p.kam}>
-                            {i > 0 && " · "}
-                            <Link href={p.kam}>{p.nazev}</Link>
-                          </span>
-                        ))}
-                  </p>
-                </div>
+                <Link
+                  className="radek-regaty"
+                  href={`/sprava/${encodeURIComponent(serie)}/zavod/${encodeURIComponent(z.zavod)}`}
+                >
+                  <span className={`nazev${z.stav === "Zruseny" ? " skrtnute" : ""}`}>
+                    {z.nazev}
+                  </span>
+                  <Stav stav={z.stav} />
+                  {z.kRevizi.length > 0 && (
+                    <span className="stitek vysledek-krevizi">
+                      {z.kRevizi.length}× k revizi
+                    </span>
+                  )}
+                  <span className="termin">{datum(z.datum)}</span>
+                </Link>
               </li>
             ))}
           </ul>
