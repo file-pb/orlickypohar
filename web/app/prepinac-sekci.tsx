@@ -30,7 +30,10 @@ export type PolozkaPrepinace = {
    * stránky poskočilo.
    */
   nazevKratky?: string;
-  /** Vlajka nebo značka vlevo od názvu. Nepovinná — viz `znacky`. */
+  /**
+   * Vlajka nebo značka vlevo od názvu. Nese ji pruh sekcí na veřejné
+   * stránce; dlaždice ve správě mají místo ní barvu u levé hrany.
+   */
   znacka?: ReactNode;
   /**
    * Věta, co se tam dělá. <b>Jen jako bublina pod myší</b> (Filip, 29. 10.
@@ -45,23 +48,12 @@ export function PrepinacSekci({
   polozky,
   aktivni,
   popisek,
-  znacky = true,
 }: {
   polozky: PolozkaPrepinace[];
   /** Klíč otevřené sekce. */
   aktivni: string;
   /** Co to je za výběr, pro čtečku obrazovky. */
   popisek: string;
-  /**
-   * <b>Vypnuté značky šetří 188 px</b> (změřeno 29. 10. 2026 na šesti
-   * sekcích: 935 px s nimi, 747 bez). Hranice, od které se pruh vejde na
-   * jeden řádek, tím klesne z 1560 px okna na zhruba 1371 — na 13" to
-   * nestačí, na 14" a 15" ano. Proto je to volba volajícího: veřejná
-   * stránka vlajky nese, protože jsou to závodní signály a nesou význam,
-   * kdežto ve správě by jen zabíraly místo (Filip: „tak to ve správě dej
-   * bez obrázků, jestli to pomůže").
-   */
-  znacky?: boolean;
 }) {
   // Jedna sekce není co přepínat — pruh by jen tvrdil, že je kam jít.
   if (polozky.length < 2) return null;
@@ -70,7 +62,7 @@ export function PrepinacSekci({
 
   const odkazy = polozky.map((p) => (
     <Link key={p.klic} href={p.kam} aria-current={p.klic === aktivni ? "page" : undefined}>
-      {znacky && p.znacka}
+      {p.znacka}
       {p.nazev}
     </Link>
   ));
@@ -85,7 +77,7 @@ export function PrepinacSekci({
         <ZavriMimo />
         <summary>
           <span className="sekce-rozbal-tady">
-            {znacky && otevrena.znacka}
+            {otevrena.znacka}
             {otevrena.nazev}
           </span>
           {/* Zbytek sekcí se počítá, ne vypisuje: „a 4 další" říká, že je kam
@@ -113,26 +105,23 @@ export function PrepinacSekci({
  * Odtlačit obsah si můžou dovolit, protože po zrušení popisu jsou vysoké
  * jako řádek, ne jako karta.
  *
- * <b>Dlaždice nese jméno a značku, nic víc.</b> Popis je bublina pod myší
+ * <b>Dlaždice nese jméno, nic víc.</b> Popis je bublina pod myší
  * a role se nevypisuje vůbec — co se smí, rozhoduje `polozkyZastavky`
  * podle udělených práv, takže štítek „rozhodčí" u každé z nich jen
  * opakoval totéž (Filip, 29. 10. 2026: *„ten tab kdo to může bych taky
  * nedával… mají se zobrazit dlaždice podle toho, kdo na ně má práva"*).
  *
- * Příbuznost dělá značka: táž vlajka v téže velikosti jako v pruhu
- * (`.taby-sekci .vlajka` a `.dlazdice-sekci .vlajka` jsou jeden předpis).
- * Kde se vlajky vypnou, nastupuje barva na levé hraně — klíč položky jde
- * proto i do `data-polozka`, odkud si ji CSS bere (`--ukon-*`).
+ * Příbuznost s pruhem drží barva: klíč položky jde do `data-polozka`,
+ * odkud si ji CSS vyzvedne (`--ukon-*` v `globals.css`) na levou hranu
+ * dlaždice, na nadpis i na lano za ním.
  */
 export function DlazdiceSekci({
   polozky,
   aktivni,
-  znacky = true,
 }: {
   polozky: PolozkaPrepinace[];
   /** Klíč otevřené položky. Prázdný tam, kde se teprve vybírá. */
   aktivni?: string;
-  znacky?: boolean;
 }) {
   if (polozky.length === 0) return null;
 
@@ -148,7 +137,7 @@ export function DlazdiceSekci({
               aria-current={p.klic === aktivni ? "page" : undefined}
             >
               <div className="nazev">
-                {znacky && p.znacka}
+                {p.znacka}
                 {p.nazevKratky ? (
                   <>
                     <span className="jmeno-dlouhe">{p.nazev}</span>

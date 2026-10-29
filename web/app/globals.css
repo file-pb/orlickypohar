@@ -2028,8 +2028,7 @@ th.vlevo, td.vlevo { text-align: left; }
   background: var(--zvyrazneni);
 }
 
-.taby-sekci .vlajka,
-.dlazdice-sekci .vlajka {
+.taby-sekci .vlajka {
   height: 0.95rem;
   width: 1.425rem;
   flex: none;
@@ -2037,8 +2036,7 @@ th.vlevo, td.vlevo { text-align: left; }
   border-radius: 1px;
 }
 /* Úvod nese značku poháru místo vlajky; srovnat ji do stejné výšky. */
-.taby-sekci .znak-celkem,
-.dlazdice-sekci .znak-celkem { height: 1.3rem; width: auto; }
+.taby-sekci .znak-celkem { height: 1.3rem; width: auto; }
 
 /* ---------------------------------------------------------------------
    Obrazovky správy stojí těsněji (Filip, 29. 10. 2026: „docela dost
