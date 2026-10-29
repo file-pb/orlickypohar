@@ -9,10 +9,12 @@
 import assert from 'node:assert/strict';
 
 import {
+  fazeProcedury,
   mmss,
   odStartu,
   popisStartu,
   stavStartu,
+  usekyProcedury,
   zacatekProcedury,
   type RozjizdkaProOdpocet,
 } from '../src/lib/start.ts';
@@ -138,6 +140,53 @@ zkus('popis říká, co se děje, a mlčí, když se neděje nic', () => {
     popisStartu(stavStartu([{ cislo: 1, startV: START, stav: 'Probiha' }], V('12:02:30'))),
     'Rozjížďka 1 jede 2:30',
   );
+});
+
+// --- Fáze podle ZPJ 26 ---
+
+zkus('fáze se lámou na čtyřech a jedné minutě, ne každou minutu', () => {
+  assert.equal(fazeProcedury(300), 'vyzva');
+  assert.equal(fazeProcedury(241), 'vyzva');
+  // Přípravné znamení padá čtyři minuty před startem.
+  assert.equal(fazeProcedury(240), 'priprava');
+  assert.equal(fazeProcedury(61), 'priprava');
+  // Přípravná vlajka dolů minutu před startem.
+  assert.equal(fazeProcedury(60), 'minuta');
+  assert.equal(fazeProcedury(1), 'minuta');
+});
+
+zkus('pětiminutovka má úseky v poměru 1 : 3 : 1', () => {
+  const u = usekyProcedury(300);
+  assert.deepEqual(u.map((x) => x.faze), ['vyzva', 'priprava', 'minuta']);
+  assert.deepEqual(u.map((x) => x.delkaS), [60, 180, 60]);
+});
+
+zkus('delší procedura prodlužuje jen vyzývací úsek', () => {
+  // Příprava i poslední minuta jsou v pravidlech přibité ke startu.
+  const u = usekyProcedury(600, 600);
+  assert.deepEqual(u.map((x) => x.delkaS), [360, 180, 60]);
+});
+
+zkus('u krátké procedury vyzývací úsek zmizí', () => {
+  // Tříminutovka: přípravné znamení by padlo dřív než vyzývací.
+  const u = usekyProcedury(180, 180);
+  assert.deepEqual(u.map((x) => x.faze), ['priprava', 'minuta']);
+  assert.deepEqual(u.map((x) => x.delkaS), [120, 60]);
+});
+
+zkus('uběhlá část se počítá po úsecích, ne přes celek', () => {
+  // Minutu po zahájení pětiminutovky: vyzývací hotový, příprava začíná.
+  const u = usekyProcedury(240);
+  assert.equal(u[0].hotovo, 1);
+  assert.equal(u[1].hotovo, 0);
+  assert.equal(u[2].hotovo, 0);
+});
+
+zkus('v poslední minutě jsou první dva úseky hotové', () => {
+  const u = usekyProcedury(30);
+  assert.equal(u[0].hotovo, 1);
+  assert.equal(u[1].hotovo, 1);
+  assert.equal(u[2].hotovo, 0.5);
 });
 
 console.log(`  ${prosly} prošlo`);

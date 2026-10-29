@@ -120,6 +120,79 @@ export function zacatekProcedury(startV: string, delkaS: number = PROCEDURA_S): 
 }
 
 /**
+ * Fáze startovní procedury podle ZPJ 26.
+ *
+ * <b>Signály nejsou každou minutu.</b> Pravidlo zná čtyři okamžiky —
+ * vyzývací znamení, přípravné znamení, jedna minuta a start — a mezi
+ * přípravným znamením a poslední minutou jsou **tři minuty ticha**.
+ * Odpočet rozdělený na stejné minuty by tedy sliboval kroky, které se
+ * nekonají.
+ *
+ * <ul>
+ *   <li><b>vyzva</b> — od začátku procedury do přípravného znamení.
+ *       U pětiminutovky trvá minutu, u delší procedury víc: variabilní
+ *       je jen začátek, zbytek pravidlo přibíjí ke startu.</li>
+ *   <li><b>priprava</b> — od čtvrté minuty do konce druhé.</li>
+ *   <li><b>minuta</b> — poslední minuta, od spuštění přípravné vlajky.</li>
+ * </ul>
+ */
+export type FazeProcedury = 'vyzva' | 'priprava' | 'minuta';
+
+/** Přípravné znamení padne čtyři minuty před startem (ZPJ 26). */
+export const PRIPRAVNE_S = 4 * 60;
+
+/** Přípravná vlajka se spouští minutu před startem (ZPJ 26). */
+export const MINUTA_S = 60;
+
+/** Ve které fázi procedura je, když do startu zbývá `doStartuS` vteřin. */
+export function fazeProcedury(doStartuS: number): FazeProcedury {
+  if (doStartuS <= MINUTA_S) return 'minuta';
+  if (doStartuS <= PRIPRAVNE_S) return 'priprava';
+  return 'vyzva';
+}
+
+/** Jeden úsek procedury k vykreslení: jak je dlouhý a kolik z něj uběhlo. */
+export type UsekProcedury = {
+  faze: FazeProcedury;
+  /** Délka úseku ve vteřinách; podle ní se dělí šířka na obrazovce. */
+  delkaS: number;
+  /** Kolik z úseku uběhlo, 0 až 1. */
+  hotovo: number;
+};
+
+/**
+ * Úseky procedury pro pruh odpočtu — <b>nestejně dlouhé</b>, protože
+ * takové jsou i v pravidlech.
+ *
+ * U pětiminutovky vyjde poměr 1 : 3 : 1. U delší procedury roste jen
+ * první úsek; u kratší než čtyři minuty vyzývací fáze zmizí úplně,
+ * protože přípravné znamení by padlo dřív než ona.
+ */
+export function usekyProcedury(
+  doStartuS: number,
+  delkaS: number = PROCEDURA_S,
+): UsekProcedury[] {
+  const vyzvaS = Math.max(0, delkaS - PRIPRAVNE_S);
+  const pripravaS = Math.max(0, Math.min(delkaS, PRIPRAVNE_S) - MINUTA_S);
+  const minutaS = Math.min(delkaS, MINUTA_S);
+
+  const ubehlo = delkaS - doStartuS;
+  let zacatek = 0;
+
+  return ([
+    { faze: 'vyzva' as const, delkaS: vyzvaS },
+    { faze: 'priprava' as const, delkaS: pripravaS },
+    { faze: 'minuta' as const, delkaS: minutaS },
+  ])
+    .filter((u) => u.delkaS > 0)
+    .map((u) => {
+      const hotovo = Math.max(0, Math.min(1, (ubehlo - zacatek) / u.delkaS));
+      zacatek += u.delkaS;
+      return { ...u, hotovo };
+    });
+}
+
+/**
  * Jedna věta pod odpočet. <b>Prázdné znamená „jen číslo"</b> — dokud se
  * nestartuje, nemá co dodat.
  */
