@@ -85,7 +85,27 @@ až bude jasné, co všechno rozhraní potřebuje.
 | --- | --- | --- |
 | `expo-keep-awake` | aby telefon uprostřed odpočtu nezhasl | Miloš, 27. 10.: *„mobil mi nesmí usnout"* |
 | `expo-speech` | mluvená hlášení | nahrávka 21: *„abych nemusel držet … megafon"* |
-| `expo-audio` | klakson | tatáž věta: *„houkačku"* |
+| `expo-audio` | klakson, **a zvuk i na pozadí** | tatáž věta: *„houkačku"*; Filip, 29. 10. |
+
+### Odpočet nesmí uhnout
+
+Filip, 29. 10. 2026: *„když jede závod a startovní procedura nesmí uhýbat
+— když někdo zavolá, nebo naskočí jiná appka, nebo telefon usne, tak se
+nesmí zastavit, nebo vypnout, nebo přestat měřit."*
+
+Rozpadá se to na tři věci a každá má jiné řešení:
+
+| Co se stane | Co to udělá | Jak je to vyřešené |
+| --- | --- | --- |
+| hovor, přepnutí appky | `setInterval` stojí | **hotovo** — čas se nepočítá přičítáním, ale pokaždé znovu z hodin, a návrat z pozadí překreslí hned (`AppState`) |
+| zhasnutý displej | po probuzení totéž | totéž; navíc `expo-keep-awake`, aby k tomu nedošlo |
+| appka na pozadí | zvuk nezazní | **nevyřešené** — chce `UIBackgroundModes: audio` a zvukovou relaci, která přežije hovor |
+
+**Co z toho plyne pro zvuk.** Hlášení a troubení na pozadí není totéž co
+přehrát zvuk: iOS zvukovou relaci při hovoru přeruší a appce ji musí
+vrátit, jinak klakson po hovoru mlčí. Je to nativní nastavení, ne kód —
+patří k balíčkům výš a vyzkouší se až na telefonu, protože simulátor
+hovor neumí.
 
 Partitura, kterou ty dva poslední balíčky budou přehrávat, je už
 postavená a otestovaná: `app/src/lib/hlaseni.ts`.

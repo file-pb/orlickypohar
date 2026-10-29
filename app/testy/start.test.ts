@@ -224,4 +224,28 @@ zkus('běžící rozjížďka bez času startu se nedomýšlí', () => {
   assert.deepEqual(stav, { druh: 'jede', cislo: 1, odStartuS: 0 });
 });
 
+// --- Odpočet nesmí uhnout ---
+
+zkus('po hovoru odpočet navazuje, ne pokračuje tam, kde stál', () => {
+  // Procedura začne ve 13:55, start ve 14:00. Rozhodčímu někdo zavolá
+  // ve 13:56 a hovor trvá dvě minuty; po návratu musí odpočet ukazovat
+  // 2:00, ne 4:00, kde ho hovor zastavil.
+  const r = [planovana(2, START)];
+  assert.equal(stavStartu(r, V('11:56:00'))?.druh, 'procedura');
+  assert.equal(
+    (stavStartu(r, V('11:56:00')) as { doStartuS: number }).doStartuS,
+    4 * 60,
+  );
+  assert.equal(
+    (stavStartu(r, V('11:58:00')) as { doStartuS: number }).doStartuS,
+    2 * 60,
+  );
+});
+
+zkus('start, který padl, dokud byla appka na pozadí, se nepřeskočí', () => {
+  // Appka spala přes start. Po probuzení už není co odpočítávat —
+  // a plánovaná rozjížďka se startem v minulosti se netváří, že jede.
+  assert.equal(stavStartu([planovana(2, START)], V('12:01:00')), null);
+});
+
 console.log(`  ${prosly} prošlo`);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { AppState, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '@/hooks/use-theme';
 import type { Barvy } from '@/constants/theme';
@@ -22,6 +22,16 @@ import {
  * jediná věc, která vypadnout nesmí (nález R19; Filip, 27. 10. 2026:
  * *„dokud nebude na připojení, tak si to apka odměří"*).
  *
+ * <b>A nesmí uhnout, ani když přijde hovor nebo se přepne jiná appka</b>
+ * (Filip, 29. 10. 2026). Proto se čas <b>nepočítá přičítáním</b>, ale
+ * pokaždé znovu z hodin: na pozadí `setInterval` stojí, takže čítač by se
+ * po návratu opozdil přesně o tu dobu, co appka nebyla vidět — a opozdil
+ * by se tím víc, čím delší byl hovor. Takhle je po návratu správný bez
+ * ohledu na to, co se mezitím dělo.
+ *
+ * Návrat z pozadí navíc překreslí hned, ne až s dalším tikem: vteřina
+ * čekání na starý údaj je u odpočtu vteřina, kdy obrazovka lže.
+ *
  * Pravidla, kdy co platí, jsou v `lib/start.ts` a mají vlastní testy; tahle
  * komponenta je jen kreslí.
  */
@@ -41,7 +51,15 @@ export function Odpocet({
 
   useEffect(() => {
     const id = setInterval(() => setTed(Date.now()), TIK_MS);
-    return () => clearInterval(id);
+    // Hovor, přepnutí appky, uspaný displej: `setInterval` mezitím stojí.
+    // Při návratu se čas vezme z hodin dřív, než stihne tiknout.
+    const posluchac = AppState.addEventListener('change', (stav) => {
+      if (stav === 'active') setTed(Date.now());
+    });
+    return () => {
+      clearInterval(id);
+      posluchac.remove();
+    };
   }, []);
 
   const delkaS = (delkaProceduryMin ?? PROCEDURA_S / 60) * 60;
