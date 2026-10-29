@@ -118,6 +118,17 @@ export type Polozka = {
    * ho jen to, co se takhle vypisuje; jinde se bere `nazev`.
    */
   kratky?: string;
+  /**
+   * Jméno pro úzkou dlaždici — zkrácené, ale pořád titulek, ne slovo do
+   * věty jako `kratky`. Tvary jsou Filipovy (29. 10. 2026) a vycházejí
+   * z Milošova slovníku: „Plachetní směrnice" unese „P. směrnice",
+   * „Závodní trať" unese „Z. trať", „Živé polohy lodí" unesou „Lodě živě".
+   *
+   * <b>Zapne se, až když je potřeba</b> — rozhoduje o tom šířka dlaždice
+   * (`@container` v `globals.css`), ne velikost okna. Kde se dlouhé jméno
+   * vejde, zkratka se nikdy neukáže, a proto ji nese jen to, co je dlouhé.
+   */
+  uzky?: string;
 };
 
 /**
@@ -330,6 +341,7 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
     [
       {
         nazev: "Plachetní směrnice",
+        uzky: "P. směrnice",
         kratky: "směrnice",
         popis: "Vyvěsit PDF, stáhnout odvolanou verzi.",
         kam: kam("/smernice"),
@@ -338,6 +350,7 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
       },
       {
         nazev: "Plachetní směrnice",
+        uzky: "P. směrnice",
         kratky: "směrnice",
         popis: "Vyvěsit PDF, stáhnout odvolanou verzi.",
         kam: kam("/smernice"),
@@ -360,6 +373,7 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
     [
       {
         nazev: "Závodní trať",
+        uzky: "Z. trať",
         kratky: "trať",
         popis: "Pípnout polohu bóje, přenastavit, sebrat z vody.",
         kam: kam("/boje"),
@@ -368,6 +382,7 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
       },
       {
         nazev: "Závodní trať",
+        uzky: "Z. trať",
         kratky: "trať",
         popis: "Pípnout polohu bóje, přenastavit, sebrat z vody.",
         kam: kam("/boje"),
@@ -383,6 +398,7 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
     [
       {
         nazev: "Živé polohy lodí",
+        uzky: "Lodě živě",
         kratky: "polohy",
         popis: "Kdo je na vodě, kde zrovna je a jak staré to hlášení je.",
         kam: kam("/tracker"),
@@ -391,6 +407,7 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
       },
       {
         nazev: "Živé polohy lodí",
+        uzky: "Lodě živě",
         kratky: "polohy",
         popis: "Kdo je na vodě, kde zrovna je a jak staré to hlášení je.",
         kam: kam("/tracker"),

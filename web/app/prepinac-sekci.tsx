@@ -23,6 +23,13 @@ export type PolozkaPrepinace = {
   klic: string;
   nazev: string;
   kam: string;
+  /**
+   * Zkrácené jméno pro úzkou dlaždici. Vykreslují se obě podoby a vybírá
+   * mezi nimi CSS podle šířky dlaždice — na serveru se šířka zjistit nedá
+   * a javascript by to uměl až po načtení, takže by jméno po otevření
+   * stránky poskočilo.
+   */
+  nazevKratky?: string;
   /** Vlajka nebo značka vlevo od názvu. Nepovinná — viz `znacky`. */
   znacka?: ReactNode;
   /**
@@ -143,7 +150,14 @@ export function DlazdiceSekci({
             >
               <div className="nazev">
                 {znacky && p.znacka}
-                {p.nazev}
+                {p.nazevKratky ? (
+                  <>
+                    <span className="jmeno-dlouhe">{p.nazev}</span>
+                    <span className="jmeno-uzke">{p.nazevKratky}</span>
+                  </>
+                ) : (
+                  p.nazev
+                )}
               </div>
             </Link>
           </li>

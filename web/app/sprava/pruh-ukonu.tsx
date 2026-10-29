@@ -72,6 +72,7 @@ export async function PruhUkonuRegaty({
         return {
           klic,
           nazev: u.nazev,
+          nazevKratky: u.uzky,
           kam: u.kam,
           popis: u.popis,
           znacka: znak ? <VlajkaIkona vlajka={znak} /> : <ZnackaPuvodni />,

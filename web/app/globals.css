@@ -1852,14 +1852,16 @@ th.vlevo, td.vlevo { text-align: left; }
    stránkách z ní ukrajují boky).
 
    Minimum je OBSAHOVÉ, ne kulaté: změřeno přes `max-content`, že nejdelší
-   dlaždice („Plachetní směrnice" s vlajkou L) potřebuje 193 px — 12,5 rem
-   je o sedm pixelů víc. Jméno se nezalamuje (`nowrap`), takže kdyby bylo
-   minimum menší, vyteklo by z rámečku místo aby se zúžil řádek.
+   dlaždice („Plachetní směrnice" s vlajkou L) potřebuje 193 px s celým
+   jménem a 138 px se zkratkou. Minimum proto drží ta zkrácená podoba
+   (9 rem = 144 px) a dlouhé jméno ustoupí samo, jakmile se do dlaždice
+   nevejde — viz `.jmeno-uzke` níž. Jméno se nezalamuje (`nowrap`), takže
+   bez toho přepínání by z rámečku vyteklo.
 
    Dlaždice nese jen jméno a značku, takže je vysoká jako řádek, ne jako
    karta: popis odešel do bubliny a role se nevypisuje vůbec.
    --------------------------------------------------------------------- */
-.dlazdice-sekci { gap: 0.4rem; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); }
+.dlazdice-sekci { gap: 0.4rem; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); }
 /* Dlaždice drží výšku celé buňky, aby řádek nebyl zubatý. */
 .dlazdice-sekci > li { display: grid; }
 .dlazdice-sekci .karta { padding: 0.45rem 0.7rem; border-radius: 8px; }
@@ -1867,6 +1869,23 @@ th.vlevo, td.vlevo { text-align: left; }
   display: flex; align-items: center; gap: 0.45rem;
   font-size: 0.95rem; line-height: 1.35; white-space: nowrap;
 }
+/* <b>Zkratka naskočí, až když je potřeba</b> (Filip, 29. 10. 2026: „zkratky
+   zapnout, jakmile bude potřeba kvůli šířce"). Rozhoduje šířka dlaždice,
+   ne velikost okna — ta o ní nic neříká, protože dlaždic se na řádek vejde
+   podle místa a na veřejných stránkách ubírají z šířky ještě boky. Dlaždice
+   je proto vlastní kontejner a ptá se sama sebe.
+
+   Mez je těch změřených 193 px, co potřebuje nejdelší jméno; pod ní nastoupí
+   „P. směrnice", „Z. trať" a „Lodě živě". Obě podoby jsou v HTML a vybírá
+   mezi nimi CSS: javascript by jméno po načtení stránky přepsal před očima.
+   --------------------------------------------------------------------- */
+.dlazdice-sekci > li { container-type: inline-size; }
+.jmeno-uzke { display: none; }
+@container (max-width: 12.1rem) {
+  .jmeno-dlouhe { display: none; }
+  .jmeno-uzke { display: inline; }
+}
+
 /* <b>Vybraná dlaždice se podtrhne</b> (Filip, 29. 10. 2026: „dlaždice třeba
    podtržením, nebo nějakým decentním zvýrazněním té selected ukáží, kde
    jsme"). Vodní výplň jako u tabu by na pruhu nad pracovní obrazovkou
