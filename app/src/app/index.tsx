@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { Chyba, Karta, Nacitani, Nadpis, Prazdno } from '@/components/ui';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
-import { nactiJa, nactiMojeLode, nactiSerie } from '@/lib/api';
+import { nactiJa, nactiMojeLode, nactiSerie, nactiZavod, type ZavodDetail } from '@/lib/api';
 import { kdeVeli, postava } from '@/lib/role';
 import { predJakDlouho, stavGps, type StavGps } from '@/lib/tracker/stav';
 import { otevrenyZaznam, type Zaznam } from '@/lib/tracker/zaznam';
@@ -64,6 +64,16 @@ function Velení({ ja }: { ja: Parameters<typeof kdeVeli>[0] }) {
   const t = useTheme();
   const router = useRouter();
   const kde = kdeVeli(ja);
+
+  // Jméno regaty, ne její adresa. `kdeVeli` zná jen slug — a „jarni-vitr"
+  // na rozcestníku vypadá jako chyba, ne jako název (zjištěno na telefonu
+  // 29. 10. 2026). Detail se proto dotáhne; než dorazí, stojí tam slug,
+  // protože prázdná karta by byla horší než ošklivé jméno.
+  const { data: detail } = useData<ZavodDetail | null>(
+    () => (kde?.zavod ? nactiZavod(kde.serie, kde.zavod) : Promise.resolve(null)),
+    [kde?.serie, kde?.zavod],
+  );
+
   if (!kde) return null;
 
   return (
@@ -75,7 +85,7 @@ function Velení({ ja }: { ja: Parameters<typeof kdeVeli>[0] }) {
         VELÍŠ
       </Text>
       <Text style={{ color: t.text, fontWeight: '700', fontSize: 17, marginTop: 2 }}>
-        {kde.zavod ?? kde.serie}
+        {detail?.nazev ?? kde.zavod ?? kde.serie}
       </Text>
       <Text style={{ color: t.tlumeny, marginTop: 2 }}>
         {kde.zavod ? 'start a cíl' : 'vyber regatu, které velíš'}
