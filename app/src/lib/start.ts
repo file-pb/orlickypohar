@@ -134,13 +134,14 @@ export function stavStartu(
     const od = odStartu(r.startV, ted);
     if (od === null) continue;
 
-    // Start padl, ale rozjížďka je pořád „plánovaná" — nikdo nepotvrdil,
-    // že se jede. Miloš (nahrávka 21): *„pokud ty dlaždice nevyužiju, tak
-    // by se měla objevit kolonka start nebo odstartováno."* Dokud na to
-    // neklepne, panel to drží; po `NEPOTVRZENY_START_S` to přestává být
-    // čerstvý start a stává se zapomenutým časem, na který se nečeká.
+    // Start padl, ale rozjížďka je v datech pořád „plánovaná" — appka
+    // serveru teprve říká, že se jede, nebo se to zrovna nepovedlo
+    // odeslat. Miloš (nahrávka 21): *„pokud ty dlaždice nevyužiju, tak
+    // by se měla objevit kolonka start nebo odstartováno."* Panel to
+    // drží; po `NEOHLASENY_START_S` to přestává být čerstvý start
+    // a stává se zapomenutým časem, na který se nečeká.
     if (od >= 0) {
-      if (od <= NEPOTVRZENY_START_S) {
+      if (od <= NEOHLASENY_START_S) {
         return { druh: 'odstartovano', cislo: r.cislo, odStartuS: od };
       }
       continue;
@@ -266,13 +267,13 @@ export const PO_STARTU_NERUSIT_S = 5 * 60;
 export const PREDEHRA_KLIDU_S = 60;
 
 /**
- * Jak dlouho se po startu čeká na potvrzení, že se jede.
+ * Jak dlouho po padnutí startu platí, že se rozjížďka zrovna rozjela.
  *
- * Patnáct minut. Kratší by panel sebralo rozhodčímu, který zrovna řeší
- * předčasný start; delší by z něj udělalo pomník nad rozjížďkou, kterou
- * nikdo nikdy nerozjel.
+ * Patnáct minut. Kratší by panel sebralo rozhodčímu, kterému se ohlášení
+ * startu nepovedlo odeslat (na vodě vypadlý signál); delší by z něj
+ * udělalo pomník nad rozjížďkou, kterou nikdo nikdy nerozjel.
  */
-export const NEPOTVRZENY_START_S = 15 * 60;
+export const NEOHLASENY_START_S = 15 * 60;
 
 /**
  * Má teď telefon mlčet?
@@ -318,4 +319,54 @@ export function popisStartu(stav: StavStartu | null): string | null {
     return `Rozjížďka ${stav.cislo} — start padl před ${trvani(stav.odStartuS)}`;
   if (stav.druh === 'procedura') return `Rozjížďka ${stav.cislo} startuje`;
   return `Rozjížďka ${stav.cislo} — procedura začne ve ${zacatekProcedury(stav.startV)}`;
+}
+
+/**
+ * <b>Čím se rozjížďka zastaví.</b> Filip, 29. 10. 2026: *„a jak se to
+ * zastaví?"* — a odpověď dosud byla „nijak": appka umí jen
+ * `Spustit`, takže rozhodčí, kterému se na startovní linii něco pokazí,
+ * neměl v telefonu nic než odpočet, který mu běží dál.
+ *
+ * <b>Dva různé úkony, ne jedno „zrušit".</b> Pravidla je rozlišují podle
+ * toho, zda už padl start, a liší se i tím, jaký čas z nich vyjde:
+ * <ul>
+ *   <li><b>Odložení</b> (ZPJ 27.3, vlajka AP) jde jen <i>před</i> startem
+ *       a čas se po něm volí znovu — nedopočítává se.</li>
+ *   <li><b>Všeobecné odvolání</b> (ZPJ 29.2, vlajka Prvního zástupce) jde
+ *       jen <i>po</i> startu a je to opakování startu podle ZPJ 36.</li>
+ * </ul>
+ * Kdyby appka nabízela obojí vždycky, startér by si v tlačítkách vybíral
+ * podle jména, ne podle toho, co se stalo. Totéž pravidlo hlídá server
+ * (`Procedura.ProcNejde`); tady je proto, aby se nenabízelo tlačítko,
+ * které server odmítne.
+ */
+export type UkonStartu = 'Odlozit' | 'Odvolat';
+
+/** Co se dá s tímhle stavem udělat. Prázdné znamená „nic se nestartuje". */
+export function ukonyStartu(stav: StavStartu | null): UkonStartu[] {
+  if (!stav) return [];
+  // Před startem se odkládá — i když procedura ještě nezačala, čas startu
+  // už existuje a lodě se k němu chystají.
+  if (stav.druh === 'ceka' || stav.druh === 'procedura') return ['Odlozit'];
+  // Po startu se odvolává. Zapomenutý čas (stav `jede` po mnoha hodinách)
+  // sem patří taky: i takovou rozjížďku je čím vrátit na start.
+  return ['Odvolat'];
+}
+
+/** Jak se ten úkon jmenuje na tlačítku — termínem, který rozhodčí zná. */
+export function nazevUkonu(ukon: UkonStartu): string {
+  return ukon === 'Odlozit' ? 'Odložit start' : 'Všeobecné odvolání';
+}
+
+/**
+ * Co se stane, až to zmáčkne. <b>Věta do potvrzení</b>, ne nápověda:
+ * Filip, 28. 10. 2026 o nevratných úkonech — *„dej to nějak, aby se do
+ * toho nahodou nekleplo a dej tam potvrzení."*
+ */
+export function dusledekUkonu(ukon: UkonStartu): string {
+  return ukon === 'Odlozit'
+    ? 'Odpočet se zruší a rozjížďka zůstane bez času startu. Nový čas nastavíš sám, '
+      + 'až bude jasno (ZPJ 27.3).'
+    : 'Start se ruší a celá rozjížďka pojede znovu od začátku procedury. '
+      + 'Počítá se jako opakovaný start (ZPJ 36).';
 }

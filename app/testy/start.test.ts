@@ -9,6 +9,7 @@
 import assert from 'node:assert/strict';
 
 import {
+  dusledekUkonu,
   fazeProcedury,
   maBytKlid,
   mmss,
@@ -16,6 +17,7 @@ import {
   popisStartu,
   stavStartu,
   trvani,
+  ukonyStartu,
   usekyProcedury,
   zacatekProcedury,
   type RozjizdkaProOdpocet,
@@ -292,6 +294,35 @@ zkus('klid začíná minutu před procedurou, ne s ní', () => {
   // Procedura začne ve 13:55 (11:55 UTC). Klid tedy od 11:54.
   assert.equal(maBytKlid(stavStartu(r, V('11:53:30')), V('11:53:30')), false);
   assert.equal(maBytKlid(stavStartu(r, V('11:54:10')), V('11:54:10')), true);
+});
+
+zkus('před startem se odkládá, po startu odvolává', () => {
+  // ZPJ 27.3 platí před startem, 29.2 po něm — a nabídnout obojí vždycky
+  // by znamenalo, že startér vybírá podle jména tlačítka, ne podle toho,
+  // co se stalo. Totéž pravidlo hlídá server (`Procedura.ProcNejde`).
+  const r = [planovana(1, START)];
+  assert.deepEqual(ukonyStartu(stavStartu(r, V('11:50:00'))), ['Odlozit']);
+  assert.deepEqual(ukonyStartu(stavStartu(r, V('11:57:00'))), ['Odlozit']);
+  assert.deepEqual(ukonyStartu(stavStartu(r, V('12:03:00'))), ['Odvolat']);
+});
+
+zkus('bez startu není co zastavovat', () => {
+  assert.deepEqual(ukonyStartu(null), []);
+  assert.deepEqual(ukonyStartu(stavStartu([planovana(1, null)], V('11:50:00'))), []);
+});
+
+zkus('rozjížďka, která jede, se taky dá odvolat', () => {
+  // Zapomenutý čas sem patří: i rozjížďku, co „jede" od včerejška, je
+  // čím vrátit na start.
+  const bezici: RozjizdkaProOdpocet = { cislo: 2, startV: START, stav: 'Probiha' };
+  assert.deepEqual(ukonyStartu(stavStartu([bezici], V('12:30:00'))), ['Odvolat']);
+});
+
+zkus('důsledek úkonu mluví o čase, ne o vlajce', () => {
+  // Věta jde do potvrzení, aby se do nevratného úkonu neklepnulo omylem
+  // (Filip, 28. 10. 2026). Rozhodčí z ní musí poznat, co bude dál.
+  assert.ok(dusledekUkonu('Odlozit').includes('bez času startu'));
+  assert.ok(dusledekUkonu('Odvolat').includes('znovu'));
 });
 
 console.log(`  ${prosly} prošlo`);

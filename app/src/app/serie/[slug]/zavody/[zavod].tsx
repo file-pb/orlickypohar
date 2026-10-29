@@ -18,12 +18,14 @@ import { useTheme } from '@/hooks/use-theme';
 import {
   nactiJa,
   nactiZavod,
+  ohlasStart,
   provedProceduru,
   type UcastLodi,
   type VysledekZavodu,
   type ZavodDetail,
 } from '@/lib/api';
 import { veliNekde } from '@/lib/role';
+import type { UkonStartu } from '@/lib/start';
 import { rozsah } from '@/lib/datum';
 
 export default function Zastavka() {
@@ -52,6 +54,24 @@ export default function Zastavka() {
           // vodě je jediná užitečná rada zkusit to znovu.
           setChybaStartu('Nepovedlo se spustit. Zkus to prosím znovu.');
         }
+      }
+    : undefined;
+
+  // <b>Start se neohlašuje rukou.</b> Odpočet doběhl, tím rozjížďka
+  // odstartovala — appka to serveru řekne sama (viz `ohlasStart`).
+  const ohlas = veliNekde(ja ?? null)
+    ? async (cislo: number) => {
+        await ohlasStart(slug, zavod, cislo);
+        obnov();
+      }
+    : undefined;
+
+  // Odložení a odvolání. Chybu si ukazuje dialog sám, protože na rozdíl
+  // od spuštění se mačká z potvrzení a obrazovka pod ním zůstává.
+  const ukon = veliNekde(ja ?? null)
+    ? async (cislo: number, druh: UkonStartu) => {
+        await provedProceduru(slug, zavod, cislo, druh);
+        obnov();
       }
     : undefined;
 
@@ -86,6 +106,8 @@ export default function Zastavka() {
             rozjizdky={data.rozjizdky}
             delkaProceduryMin={data.delkaProceduryMin}
             naSpusteni={spustit}
+            naStartu={ohlas}
+            naUkon={ukon}
             chyba={chybaStartu}
           />
 

@@ -107,16 +107,47 @@ export async function posliZaSebe<T>(cesta: string, telo: unknown): Promise<T | 
  * Cesta jde přes správu, ne přes veřejné čtení: veřejně se procedura
  * nespouští.
  */
-export function provedProceduru(
+export async function provedProceduru(
   serie: string,
   zavod: string,
   cislo: number,
   druh: 'Spustit' | 'Odlozit' | 'Odvolat',
 ) {
-  return posliZaSebe<unknown>(
+  const v = await posliZaSebe<unknown>(
     `/sprava/serie/${serie}/vysledky/${zavod}/rozjizdky/${cislo}/procedura`,
     { druh },
   );
+  // `null` z `posliZaSebe` znamená „nikdo přihlášený" nebo „token už
+  // neplatí" — a to se u startu nesmí spolknout. Změřeno 29. 10. 2026
+  // na simulátoru: dialog se zavřel, jako by se odložilo, a na server
+  // přitom nešel žádný požadavek. U vody by to byl rozhodčí, který
+  // odvolává start naprázdno.
+  if (v === null) throw new Error('neprihlasen');
+  return v;
+}
+
+/**
+ * <b>Ohlášení startu.</b> Posílá to appka sama, jakmile odpočet dojde na
+ * nulu — teprve tím se z „plánované" rozjížďky stane „probíhá", a bez
+ * toho nejede trať, úkony za jízdy ani polohy.
+ *
+ * Rozhodčí nic nemačká: start padl tím, že doběhla procedura, kterou
+ * spustil. Dřív tu bylo tlačítko „Jede se" a panel čekal na potvrzení
+ * startu — úkon, který na vodě neexistuje (Filip, 29. 10. 2026: *„no
+ * potvrzení startu nevím co je"*).
+ *
+ * Bez času serveru stačí okamžik požadavku; čas z telefonu se posílá jen
+ * tehdy, když se ohlašuje se zpožděním (příště, až to bude umět fronta).
+ */
+export async function ohlasStart(serie: string, zavod: string, cislo: number) {
+  const v = await posliZaSebe<unknown>(
+    `/sprava/serie/${serie}/vysledky/${zavod}/rozjizdky/${cislo}/start`,
+    {},
+  );
+  // Totéž jako u procedury: nepřihlášenému se start neohlásí a `useEffect`
+  // v panelu si to musí vrátit do fronty, ne to zahodit jako hotové.
+  if (v === null) throw new Error('neprihlasen');
+  return v;
 }
 
 /** Kdo jsem podle našeho API — včetně oprávnění. Tím se pozná, že token

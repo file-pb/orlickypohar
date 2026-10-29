@@ -19,7 +19,7 @@ export const Colors = {
     jede: '#2f6b4f',
     vyzvaZnameni: '#ffffff',
     pripravaZnameni: '#f2c14e',
-    minutaZnameni: '#ffb3a7',
+    minutaZnameni: '#ffffff',
   },
   dark: {
     pozadi: '#14171a',
@@ -36,7 +36,7 @@ export const Colors = {
     jede: '#58c98c',
     vyzvaZnameni: '#ffffff',
     pripravaZnameni: '#f2c14e',
-    minutaZnameni: '#ffb3a7',
+    minutaZnameni: '#ffffff',
   },
 } as const;
 

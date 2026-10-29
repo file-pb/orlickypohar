@@ -1,19 +1,31 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, AppState, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Animated,
+  AppState,
+  Modal,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import { Pressable } from 'react-native';
 
 import { useTheme } from '@/hooks/use-theme';
 import type { Barvy } from '@/constants/theme';
 import {
+  dusledekUkonu,
   mmss,
+  nazevUkonu,
   PROCEDURA_S,
   trvani,
   stavStartu,
+  ukonyStartu,
   usekyProcedury,
   zacatekProcedury,
   type RozjizdkaProOdpocet,
   type StavStartu,
+  type UkonStartu,
 } from '@/lib/start';
 
 /**
@@ -45,6 +57,8 @@ export function Odpocet({
   rozjizdky,
   delkaProceduryMin,
   naSpusteni,
+  naStartu,
+  naUkon,
   chyba,
 }: {
   rozjizdky: readonly RozjizdkaProOdpocet[];
@@ -56,6 +70,16 @@ export function Odpocet({
    * neukáže — obrazovku regaty čte i ten, kdo nevelí.
    */
   naSpusteni?: (cislo: number) => void | Promise<void>;
+  /**
+   * Co udělat ve chvíli, kdy odpočet dojde na nulu — appka to pošle sama.
+   * Chybí-li, panel jen ukazuje, že start padl.
+   */
+  naStartu?: (cislo: number) => void | Promise<void>;
+  /**
+   * Co udělat, když rozhodčí start odloží nebo odvolá. Chybí-li, volby
+   * se neukážou — obrazovku regaty čte i ten, kdo nevelí.
+   */
+  naUkon?: (cislo: number, ukon: UkonStartu) => void | Promise<void>;
 }) {
   const t = useTheme();
   const [ted, setTed] = useState(() => Date.now());
@@ -76,15 +100,145 @@ export function Odpocet({
   const delkaS = (delkaProceduryMin ?? PROCEDURA_S / 60) * 60;
   const stav = stavStartu(rozjizdky, ted, delkaS);
 
+  // <b>Start se neklepe, start padne.</b> Rozhodčí spustil proceduru,
+  // odpočet doběhl — tím rozjížďka odstartovala a appka to serveru řekne
+  // sama. Dřív tu bylo tlačítko „Jede se" a panel o sobě tvrdil, že čeká
+  // na potvrzení startu; Filip (29. 10. 2026): *„no potvrzení startu nevím
+  // co je."* Neví to nikdo, protože takový úkon na vodě není — po startu
+  // se podle ZPJ 29 odvolává, nepotvrzuje.
+  //
+  // Posílá to appka, která odpočet drží, protože server sám nic v čase
+  // nespouští: `Procedura.StavPo` nechává rozjížďku `Planovana` a bez
+  // přechodu na `Probiha` nejede trať, úkony za jízdy ani polohy.
+  const ohlaseno = useRef<number | null>(null);
+  useEffect(() => {
+    if (!naStartu || stav?.druh !== 'odstartovano') return;
+    if (ohlaseno.current === stav.cislo) return;
+    ohlaseno.current = stav.cislo;
+    // Nepovede-li se to, zkusí to další tik — proto se číslo vrátí zpátky.
+    Promise.resolve(naStartu(stav.cislo)).catch(() => {
+      if (ohlaseno.current === stav.cislo) ohlaseno.current = null;
+    });
+  }, [naStartu, stav?.druh, stav?.druh === 'odstartovano' ? stav.cislo : null]);
+
   // Dokud se na startu nic neděje, panel není. Prázdný rámeček by jen
   // zabíral místo a tvrdil, že se něco chystá.
   if (!stav) return null;
 
-  if (stav.druh === 'ceka')
-    return <Ceka stav={stav} delkaS={delkaS} t={t} naSpusteni={naSpusteni} chyba={chyba} />;
-  if (stav.druh === 'jede') return <Jede stav={stav} t={t} />;
-  if (stav.druh === 'odstartovano') return <Odstartovano stav={stav} t={t} />;
-  return <Bezi stav={stav} delkaS={delkaS} t={t} />;
+  const panel =
+    stav.druh === 'ceka' ? (
+      <Ceka stav={stav} delkaS={delkaS} t={t} naSpusteni={naSpusteni} chyba={chyba} />
+    ) : stav.druh === 'jede' ? (
+      <Jede stav={stav} t={t} />
+    ) : stav.druh === 'odstartovano' ? (
+      <Odstartovano stav={stav} t={t} />
+    ) : (
+      <Bezi stav={stav} delkaS={delkaS} t={t} />
+    );
+
+  // <b>Volby hned pod odpočtem</b> (Filip, 29. 10. 2026: *„hned pod
+  // odpočet chceme tlačítka rychlých voleb odložení a zrušení"*) — ne
+  // schované v nabídce. Na startovní linii se nehledá.
+  return (
+    <>
+      {panel}
+      {naUkon ? <Zastaveni stav={stav} t={t} naUkon={naUkon} /> : null}
+    </>
+  );
+}
+
+/**
+ * Čím se běžící start zastaví.
+ *
+ * <b>Potvrzení, ne přímé klepnutí</b> (Filip, 28. 10. 2026 o nevratných
+ * úkonech: *„dej to nějak, aby se do toho nahodou nekleplo a dej tam
+ * potvrzení offcanvas nebo modal."*) — odvolání startu vrací celé
+ * soutěžní pole na začátek procedury a omylem se to stát nesmí.
+ */
+function Zastaveni({
+  stav,
+  t,
+  naUkon,
+}: {
+  stav: StavStartu;
+  t: Barvy;
+  naUkon: (cislo: number, ukon: UkonStartu) => void | Promise<void>;
+}) {
+  const [potvrzuje, setPotvrzuje] = useState<UkonStartu | null>(null);
+  const [posila, setPosila] = useState(false);
+  const [chyba, setChyba] = useState<string | null>(null);
+  const ukony = ukonyStartu(stav);
+  if (ukony.length === 0) return null;
+
+  const posli = async (ukon: UkonStartu) => {
+    if (posila) return;
+    setPosila(true);
+    setChyba(null);
+    try {
+      await naUkon(stav.cislo, ukon);
+      setPotvrzuje(null);
+    } catch {
+      setChyba('Nepovedlo se odeslat. Zkus to prosím znovu.');
+    } finally {
+      setPosila(false);
+    }
+  };
+
+  return (
+    <View style={s.volby}>
+      {ukony.map((u) => (
+        <Pressable
+          key={u}
+          onPress={() => setPotvrzuje(u)}
+          style={({ pressed }) => [
+            s.volba,
+            { borderColor: t.linka, backgroundColor: t.papir, opacity: pressed ? 0.6 : 1 },
+          ]}>
+          <Text style={[s.volbaText, { color: t.text }]}>{nazevUkonu(u)}</Text>
+        </Pressable>
+      ))}
+
+      <Modal
+        visible={potvrzuje !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPotvrzuje(null)}>
+        <View style={s.stin}>
+          <View style={[s.dialog, { backgroundColor: t.papir }]}>
+            <Text style={[s.dialogNadpis, { color: t.text }]}>
+              {potvrzuje ? nazevUkonu(potvrzuje) : ''} — rozjížďka {stav.cislo}
+            </Text>
+            <Text style={[s.dialogVeta, { color: t.tlumeny }]}>
+              {potvrzuje ? dusledekUkonu(potvrzuje) : ''}
+            </Text>
+            {chyba ? <Text style={[s.dialogVeta, { color: t.pozor }]}>{chyba}</Text> : null}
+
+            <View style={s.dialogTlacitka}>
+              <Pressable
+                onPress={() => setPotvrzuje(null)}
+                disabled={posila}
+                style={({ pressed }) => [s.volba, { borderColor: t.linka, opacity: pressed ? 0.6 : 1 }]}>
+                <Text style={[s.volbaText, { color: t.text }]}>Zpátky</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => potvrzuje && posli(potvrzuje)}
+                disabled={posila}
+                style={({ pressed }) => [
+                  s.volba,
+                  s.volbaHlavni,
+                  { backgroundColor: t.pozor, opacity: pressed || posila ? 0.6 : 1 },
+                ]}>
+                <View style={s.spustitObsah}>
+                  {posila ? <ActivityIndicator color="#ffffff" /> : null}
+                  <Text style={[s.volbaText, s.naBarve]}>{posila ? 'Posílám…' : 'Provést'}</Text>
+                </View>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
 }
 
 /** Procedura ještě neběží: jen kdy začne. Žádný odpočet — nemá co odpočítávat. */
@@ -158,13 +312,15 @@ function Ceka({
 }
 
 /**
- * Odpočet doběhl, ale rozjížďka je pořád „plánovaná" — nikdo nepotvrdil,
- * že se jede.
+ * Odpočet doběhl: start padl a běží čas rozjížďky.
  *
  * <b>Panel nesmí zmizet.</b> Změřeno 29. 10. 2026 na telefonu: po startu
  * se obrazovka vyprázdnila a rozhodčí neměl co zmáčknout. Miloš to přitom
  * řekl rovnou (nahrávka 21): *„pokud ty dlaždice nevyužiju, tak by se měla
  * objevit kolonka start nebo odstartováno."*
+ *
+ * <b>Nic se tu neklepe.</b> Panel drží jen tu chvíli, než server potvrdí
+ * přechod rozjížďky na „probíhá"; pak ji vystřídá `Jede`.
  */
 function Odstartovano({
   stav,
@@ -180,9 +336,6 @@ function Odstartovano({
         <Text style={[s.casVelky, s.naBarve]}>{mmss(stav.odStartuS)}</Text>
         <Text style={[s.doStartu, s.naBarveTlumene]}>od startu</Text>
       </View>
-      <Text style={[s.pripominka, s.naBarveTlumene]}>
-        Potvrď, že se jede — nebo start odvolej.
-      </Text>
     </View>
   );
 }
@@ -262,7 +415,7 @@ function Bezi({
       <View style={s.useky}>
         {useky.map((u) => (
           <View key={u.faze} style={{ flex: u.delkaS }}>
-            <View style={s.zlab}>
+            <View style={[s.zlab, u.faze === 'minuta' && minuta ? s.zlabMinuta : null]}>
               <View
                 style={{
                   width: `${Math.round(u.hotovo * 100)}%`,
@@ -289,6 +442,31 @@ function Bezi({
 
 const s = StyleSheet.create({
   panel: { borderRadius: 14, padding: 16, marginBottom: 16 },
+
+  // Volby sedí hned pod panelem — proto se záporným okrajem vracejí
+  // zpátky k němu a odstup drží až pod sebou.
+  volby: { flexDirection: 'row', gap: 8, marginTop: -8, marginBottom: 16 },
+  volba: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+  },
+  volbaHlavni: { borderColor: 'transparent' },
+  volbaText: { fontWeight: '700', fontSize: 15 },
+
+  stin: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  dialog: { borderRadius: 14, padding: 20, gap: 12 },
+  dialogNadpis: { fontSize: 18, fontWeight: '800' },
+  dialogVeta: { fontSize: 15, lineHeight: 21 },
+  dialogTlacitka: { flexDirection: 'row', gap: 8, marginTop: 4 },
   jede: { borderWidth: 2, flexDirection: 'row', alignItems: 'center', gap: 12 },
   hlava: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   radek: { fontSize: 14, fontWeight: '600' },
@@ -300,8 +478,17 @@ const s = StyleSheet.create({
   doStartu: { fontSize: 15 },
   naBarve: { color: '#ffffff' },
   naBarveTlumene: { color: 'rgba(255,255,255,0.85)' },
-  useky: { flexDirection: 'row', gap: 5, marginTop: 12 },
+  useky: { flexDirection: 'row', alignItems: 'flex-end', gap: 5, marginTop: 12 },
   zlab: { height: 7, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.3)', overflow: 'hidden' },
+
+  // <b>Poslední minuta se pozná tvarem, ne barvou.</b> Filip chtěl na ní
+  // červenou (29. 10. 2026) a lososová, která z toho vyšla, mu neseděla
+  // — *„lososová nic moc ale tepání je fajn."* Měřeno na jantarovém
+  // panelu `#8a5000`: žádná červená se nedostane nad 2.33:1, a grafický
+  // prvek chce podle WCAG 3:1. Místo odstínu, který nejde, proto roste
+  // výška — a hraje to s tím, co se povedlo: tep si taky všimne oko
+  // koutkem, když se rozhodčí dívá na vodu.
+  zlabMinuta: { height: 14, borderRadius: 5 },
   popisekUseku: { fontSize: 9, marginTop: 3 },
   spustit: { marginTop: 14, minHeight: 56, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   spustitObsah: { flexDirection: 'row', alignItems: 'center', gap: 10 },
