@@ -2146,10 +2146,6 @@ body:has(.vybrany-ukon) h1 {
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  /* Opravdu jen vlas od dlaždic (Filip, 29. 10. 2026: „lehoučce odsadit od
-     dlaždic, ale pozor, opravdu malinko"): pruh a nadpis mají držet při
-     sobě, jen se nesmějí dotýkat. */
-  margin-top: 0.3rem;
   font-size: 1.2rem;
   color: var(--ukon-strany, inherit);
 }
@@ -2161,9 +2157,32 @@ body:has(.vybrany-ukon) h1 > * { flex: none; }
    v řádku roste (`flex: 1`), takže lano uvnitř něj dotáhne až k datu;
    `flex-wrap` pak na úzkém displeji datum položí pod nadpis samo, bez meze
    v pixelech — délka názvu regaty se dopředu neví. */
-.radek-nadpisu { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.9rem; }
-.radek-nadpisu > h1 { flex: 1 1 14rem; }
-.radek-nadpisu > .podtitulek { flex: 0 1 auto; margin: 0; }
+/* Vlas od dlaždic (Filip, 29. 10. 2026: „lehoučce odsadit od dlaždic, ale
+   pozor, opravdu malinko"). Okraj drží řádek, ne nadpis v něm — na nadpisu
+   by ho v mřížce posunul dolů a datum vedle by zůstalo nahoře (změřeno:
+   rozešly se o celých 4,8 px). */
+.radek-nadpisu {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: 0 0.9rem; margin: 0.3rem 0 0.35rem;
+}
+/* Spodní okraj nadpisu patří taky řádku: v mřížce by jinak zvětšil jeho
+   vnější box a `align-items: center` by nadpis s datem rozešlo (změřeno
+   2,4 px). */
+.radek-nadpisu > h1 { flex: 1 1 14rem; margin-bottom: 0; }
+.radek-nadpisu > .podtitulek {
+  flex: 0 1 auto;
+  margin: 0;
+  font-size: 0.85rem;
+  /* <b>Barva lana stažená do čitelna.</b> Sama o sobě dává na drobném písmu
+     4,02 : 1, což je pod hranicí 4,5 pro malý text — třetina barvy textu ji
+     zvedne, a pořád je to táž barva. Týž postup jako u `--pozor-pismo`:
+     odstín na plochu a odstín na písmo nejsou totéž. */
+  color: color-mix(in srgb, var(--ukon-strany, var(--tlumeny)) 62%, var(--text));
+  /* Na střed lana, ne na střed řádku — táž korekce jako u lana samotného
+     (viz `h1::after`): střed velkých písmen nadpisu leží o sedm desetin
+     pixelu níž než geometrický střed jeho boxu. */
+  margin-top: 0.7px;
+}
 /* <b>Regata silně, agenda normálně</b>: „Jarní vítr — Závodní trať" se tím
    čte jako jedna věta se dvěma důrazy, ne jako dva nadpisy vedle sebe.
    Nadpis dědí tučné písmo z prohlížeče, takže se agenda musí odlehčit. */
@@ -2199,6 +2218,11 @@ body:has(.vybrany-ukon) h1::after {
   mask-composite: intersect;
 }
 body:has(.vybrany-ukon) .podtitulek:not(.tesne) { margin-bottom: 0.6rem; }
+/* ...ale ne tomu, co stojí na konci lana: v mřížce by jeho vnější box
+   přerostl nadpis a `align-items: center` by datum zvedlo o 4,8 px nad
+   střed lana (změřeno). Pravidlo výš má vyšší specifitu než samotný
+   `.radek-nadpisu`, proto se ruší takhle adresně. */
+body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
 
 /* Neotevřená sekce má vlajku tlumenější, ať nepřetahuje pozornost z té
    otevřené. Platilo pro pruh tabů, platí dál pro dlaždice, které ho
