@@ -64,26 +64,20 @@ export function DoSpravy({
   /** Co s touhle regatou smí, podle `lib/co-smim.ts`. Prázdné: jen role v ročníku. */
   prace: Polozka[];
 }) {
+  // <b>Štítek, ne pruh s výčtem</b> (Filip, 29. 10. 2026: „tohle je po
+  // sjednocení designu asi zbytečné, maximálně tag za drobečky"). Do té doby
+  // tu stál celý řádek „Tuhle regatu spravuješ: výsledky → přihlášky →
+  // směrnice → trať → polohy → vše k regatě" — sedm odkazů, které vznikly
+  // proto, že se jinudy do správy regaty nedalo dostat. Od chvíle, kdy mají
+  // obě strany webu tytéž dlaždice a stránka regaty ve správě je nese taky,
+  // stačí jediná cesta tam a zbytek si pořadatel najde na ní.
+  const kam = prace.length > 0 ? `/sprava/${serie}/zavod/${zavod}` : `/sprava/${serie}`;
+
   return (
     <p className="do-spravy">
-      {prace.length > 0 ? (
-        <>
-          <b>Tuhle regatu spravuješ.</b>{" "}
-          {prace.map((p, i) => (
-            <span key={p.kam}>
-              {i > 0 && " · "}
-              <Link href={p.kam}>{p.kratky ?? p.nazev} →</Link>
-            </span>
-          ))}
-          {" · "}
-          <Link href={`/sprava/${serie}#${zavod}`}>vše k regatě →</Link>
-        </>
-      ) : (
-        <>
-          <b>V tomhle ročníku máš roli.</b>{" "}
-          <Link href={`/sprava/${serie}`}>Správa ročníku →</Link>
-        </>
-      )}
+      <Link className="stitek" href={kam}>
+        {prace.length > 0 ? "Spravuješ tuhle regatu" : "Máš roli v ročníku"} →
+      </Link>
     </p>
   );
 }

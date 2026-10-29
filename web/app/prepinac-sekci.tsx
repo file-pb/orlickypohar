@@ -118,15 +118,29 @@ export function PrepinacSekci({
 export function DlazdiceSekci({
   polozky,
   aktivni,
+  popisek,
 }: {
   polozky: PolozkaPrepinace[];
   /** Klíč otevřené položky. Prázdný tam, kde se teprve vybírá. */
   aktivni?: string;
+  /**
+   * Co to je za výběr, pro čtečku obrazovky. Kde se vyplní, obalí se
+   * dlaždice do `nav` — na rozcestníku jsou obsahem stránky, kdežto nad
+   * pracovní obrazovkou nebo sekcí jsou navigací a patří do orientačního
+   * bodu, kterým čtečka umí skákat.
+   */
+  popisek?: string;
 }) {
   if (polozky.length === 0) return null;
 
+  const Obal = popisek
+    ? ({ children }: { children: React.ReactNode }) => (
+        <nav aria-label={popisek}>{children}</nav>
+      )
+    : ({ children }: { children: React.ReactNode }) => <>{children}</>;
+
   return (
-    <>
+    <Obal>
       <ul className="seznam dlazdice-sekci">
         {polozky.map((p) => (
           <li key={p.klic} data-polozka={p.klic}>
@@ -175,6 +189,6 @@ export function DlazdiceSekci({
           pruhem (jak vzniklo 29. 10. 2026), ale součást nadpisu, takže by
           `hr` oznamovala čtečce předěl, který v obsahu není. */}
       {aktivni && <span className="vybrany-ukon" data-ukon={aktivni} hidden />}
-    </>
+    </Obal>
   );
 }

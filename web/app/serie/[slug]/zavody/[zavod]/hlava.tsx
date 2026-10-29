@@ -8,7 +8,7 @@ import { polozkyZastavky, prava, roleVRocniku } from "@/lib/co-smim";
 import { nactiBlesky } from "@/lib/blesky";
 import { DoSpravy, Hlavicka } from "./hlavicka";
 import { jedeSeDnes, Upozorneni, upozorneniZastavky } from "./upozorneni";
-import { PrepinacSekci } from "@/app/prepinac-sekci";
+import { DlazdiceSekci } from "@/app/prepinac-sekci";
 
 /**
  * Hlava stránky regaty: cesta, název, co je nového a taby sekcí.
@@ -186,13 +186,23 @@ export async function HlavaZastavky({
           ...(aktivni === "uvod" ? [] : [{ text: NAZVY[aktivni] }]),
         ]}
       />
-      <Hlavicka zavod={detail} akce={akce} />
-
+      {/* Štítek do správy stojí hned u drobečků, protože je to cesta, ne
+          sdělení o regatě — a po sjednocení designu je to jediný odkaz,
+          který veřejná stránka pořadateli dluží. */}
       {maRoli && <DoSpravy serie={serie} zavod={zavod} prace={prace} />}
+
+      <Hlavicka zavod={detail} akce={akce} />
 
       <Upozorneni upozorneni={upozorneni} />
 
-      <PrepinacSekci
+      {/* <b>Tytéž dlaždice jako ve správě</b> (Filip, 29. 10. 2026:
+          „veřejný může taky jít do stejného designu"). Vystřídaly pruh tabů
+          s akordeonem na úzkém displeji — mřížka se zalomí sama, takže
+          akordeon, který vznikl kvůli nálezu R10, přestal být potřeba.
+
+          Vlajky zůstávají: tady jsou obsahem stránky, ne navigací nad ní,
+          a nesou význam ze Závodních signálů. */}
+      <DlazdiceSekci
         popisek="Části regaty"
         aktivni={aktivni}
         polozky={moje.map((sekce) => ({

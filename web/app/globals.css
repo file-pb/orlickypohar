@@ -46,6 +46,11 @@
   --ukon-smernice: #a18a4a;
   --ukon-trat: #4a8a80;
   --ukon-polohy: #8a6080;
+  /* Úvod a Vypsání závodu jsou sekce, které ve správě protějšek nemají
+     (29. 10. 2026) — proto vlastní odrudy. Šeď pro Úvod schválně: je to
+     celek regaty, ne jedna z jejích věcí. */
+  --ukon-uvod: #6b7280;
+  --ukon-vypsani: #7a6a52;
   /* <b>Síla podkladu pod obsahem.</b> V tmavém režimu vyšší (5 % proti 3),
      a schválně ne podle výpočtu: barevná odchylka i poměr jasu vycházejí
      v obou režimech stejně (1,49 proti 1,73 ΔE), ale na tmavém podkladu je
@@ -124,6 +129,8 @@
     --ukon-smernice: #9c8a59;
     --ukon-trat: #578880;
     --ukon-polohy: #8f6c86;
+    --ukon-uvod: #8b949e;
+    --ukon-vypsani: #9c8a72;
     --sytost-agendy: 5%;
     --pozor-pismo: var(--pozor);
     --obrys-hlasi: inset 0 0 0 1px rgb(255 255 255 / 0.36);
@@ -149,6 +156,8 @@
   --ukon-smernice: #9c8a59;
   --ukon-trat: #578880;
   --ukon-polohy: #8f6c86;
+  --ukon-uvod: #8b949e;
+  --ukon-vypsani: #9c8a72;
   --sytost-agendy: 5%;
   --pozor-pismo: var(--pozor);
   --obrys-hlasi: inset 0 0 0 1px rgb(255 255 255 / 0.36);
@@ -1105,12 +1114,12 @@ header.hlavicka .jen-uzke { display: none; }
 /* Cesta do správy z veřejné stránky. Čárkovaně jako `.prazdno`, protože to
    není část té stránky — je to rámeček, který vidí jen ten, kdo tu má roli,
    a nemá se plést s obsahem pro čtenáře. */
-.do-spravy {
-  border: 1px dashed var(--linka); border-radius: 10px;
-  background: var(--papir); color: var(--tlumeny);
-  padding: 0.7rem 0.9rem; margin: 0 0 1.5rem; font-size: 0.9rem;
-}
-.do-spravy b { color: var(--text); }
+/* Cesta do správy je štítek u drobečků, ne rámeček s výčtem odkazů (Filip,
+   29. 10. 2026). Záporný horní okraj ho přitáhne k cestě nad ním, aby se
+   četl jako její pokračování, a ne jako první řádek obsahu. */
+.do-spravy { margin: -0.6rem 0 1rem; }
+.do-spravy .stitek { color: var(--voda); border-color: var(--voda); }
+.do-spravy .stitek:hover { background: color-mix(in srgb, var(--voda) 10%, transparent); }
 
 /* Poloha odjinud než z GPS. Složené schválně: z mobilu se pípá, tohle je
    cesta pro nestandardní případ (Filip, 9. 10. 2026). */
@@ -1921,7 +1930,18 @@ th.vlevo, td.vlevo { text-align: left; }
    Dlaždice nese jen jméno a značku, takže je vysoká jako řádek, ne jako
    karta: popis odešel do bubliny a role se nevypisuje vůbec.
    --------------------------------------------------------------------- */
-.dlazdice-sekci { gap: 0.4rem; grid-template-columns: repeat(auto-fit, minmax(7.25rem, 1fr)); }
+/* <b>Minimum dlaždice je u každého pruhu jiné</b>, protože nesou jiný
+   obsah: veřejné sekce mají vlajku a celá jména (nejdelší „Plachetní
+   směrnice" potřebuje i s vlajkou 199 px, změřeno), kdežto ve správě jsou
+   bez značky a od úzkého sloupce se jména sama zkracují, takže tam stačí
+   114 px. Jedna hodnota pro obojí by buď usekla jména venku, nebo zbytečně
+   roztáhla dlaždice uvnitř. */
+.dlazdice-sekci {
+  gap: 0.4rem;
+  --min-dlazdice: 13rem;
+  grid-template-columns: repeat(auto-fit, minmax(var(--min-dlazdice), 1fr));
+}
+body:has(.bez-partneru) .dlazdice-sekci { --min-dlazdice: 7.25rem; }
 /* Dlaždice drží výšku celé buňky, aby řádek nebyl zubatý. */
 .dlazdice-sekci > li { display: grid; }
 .dlazdice-sekci .karta { padding: 0.3rem 0.7rem 0.3rem 0.8rem; border-radius: 7px; }
@@ -2034,7 +2054,8 @@ th.vlevo, td.vlevo { text-align: left; }
   background: var(--zvyrazneni);
 }
 
-.taby-sekci .vlajka {
+.taby-sekci .vlajka,
+.dlazdice-sekci .vlajka {
   height: 0.95rem;
   width: 1.425rem;
   flex: none;
@@ -2042,7 +2063,8 @@ th.vlevo, td.vlevo { text-align: left; }
   border-radius: 1px;
 }
 /* Úvod nese značku poháru místo vlajky; srovnat ji do stejné výšky. */
-.taby-sekci .znak-celkem { height: 1.3rem; width: auto; }
+.taby-sekci .znak-celkem,
+.dlazdice-sekci .znak-celkem { height: 1.3rem; width: auto; }
 
 /* ---------------------------------------------------------------------
    Obrazovky správy stojí těsněji (Filip, 29. 10. 2026: „docela dost
@@ -2096,6 +2118,15 @@ body:has(.bez-partneru) header.hlavicka .obal {
   padding-bottom: 0.45rem;
 }
 body:has(.bez-partneru) header.hlavicka { margin-bottom: 0.6rem; }
+/* Veřejné sekce mají jiné klíče než úkony ve správě, ale jde o tytéž věci:
+   startovní listina vyrůstá z přihlášek a trať je trať, jen se jí ve správě
+   říká `boje`. Barvu proto sdílejí — na obou stranách webu je „Plachetní
+   směrnice" okrová. */
+.dlazdice-sekci > li[data-polozka="uvod"] { --ukon: var(--ukon-uvod); }
+.dlazdice-sekci > li[data-polozka="vypsani"] { --ukon: var(--ukon-vypsani); }
+.dlazdice-sekci > li[data-polozka="trat"] { --ukon: var(--ukon-trat); }
+.dlazdice-sekci > li[data-polozka="lode"] { --ukon: var(--ukon-prihlasky); }
+
 /* <b>Barva vybraného úkonu platí pro celou hlavičku stránky</b> (Filip,
    29. 10. 2026: „co to lano udělat v barvě vybrané dlaždice a nadpis taky").
    Klíč vybrané položky nese `data-ukon` na lanu, odkud si ho `body`
@@ -2109,6 +2140,10 @@ body:has(.vybrany-ukon[data-ukon="prihlasky"]) { --ukon-strany: var(--ukon-prihl
 body:has(.vybrany-ukon[data-ukon="smernice"]) { --ukon-strany: var(--ukon-smernice); }
 body:has(.vybrany-ukon[data-ukon="boje"]) { --ukon-strany: var(--ukon-trat); }
 body:has(.vybrany-ukon[data-ukon="tracker"]) { --ukon-strany: var(--ukon-polohy); }
+body:has(.vybrany-ukon[data-ukon="uvod"]) { --ukon-strany: var(--ukon-uvod); }
+body:has(.vybrany-ukon[data-ukon="vypsani"]) { --ukon-strany: var(--ukon-vypsani); }
+body:has(.vybrany-ukon[data-ukon="trat"]) { --ukon-strany: var(--ukon-trat); }
+body:has(.vybrany-ukon[data-ukon="lode"]) { --ukon-strany: var(--ukon-prihlasky); }
 /* <b>Plocha obsahu v nádechu barvy agendy</b> (Filip, 29. 10. 2026).
    Spojuje obsah s hlavičkou, aniž by si bral pozornost: ve světlém režimu
    tři procenta, v tmavém pět (viz `--sytost-agendy`).
