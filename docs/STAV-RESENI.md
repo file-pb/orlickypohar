@@ -104,7 +104,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | --- | --- | --- |
 | Appka řekne, že se sama aktualizovala | **Běží** | Banner a sekce *Verze appky* v Účtu. Nově zadáno: ukázat verzi i na webové stránce `/appka` |
 | Aktualizace po síti bez instalace | **Běží** | První aktualizace publikovaná 28. 10.; do té doby v kanálu neležela **žádná** |
-| Publikace automaticky z CI | **Zadané** | Filip doplní `EXPO_TOKEN` do secrets; úloha v mainu čeká |
+| Publikace automaticky z CI | **Běží** | `EXPO_TOKEN` je v secrets od 29. 10. 10:44. Publikuje se do kanálu `preview` při každém nasazení, kde se změnilo `app/` — ale dosedne jen na APK se shodným otiskem |
 | Přeložený termín dá vědět přihlášeným | **Zadané** | K5. ZPJ 80 to žádá, aplikace termín přesune a nikomu nic neřekne |
 
 ---
