@@ -46,18 +46,22 @@ export function VypisNovinek({
         <li key={c.slug} className={hlavni && i === 0 ? "hlavni" : undefined}>
           <Karta>
             {/* Náhled je dekorace, ne informace — proto nenese popisek
-                a nesmí se tvářit, že je z toho závodu. */}
+                a nesmí se tvářit, že je z toho závodu. U přejatého článku
+                se bez fotky vykreslí vodoznak loga zdroje, ne náhradní
+                fotka: `logoZdroje` je ten přepínač. */}
             {hlavni && i === 0 ? (
               <NahledVelky
                 slug={c.slug}
                 obrazek={c.obrazek}
                 adresa={"fotkaZdroje" in c ? c.fotkaZdroje : undefined}
+                logoZdroje={"zdrojLogo" in c ? c.zdrojLogo : undefined}
               />
             ) : (
               <Nahled
                 slug={c.slug}
                 obrazek={c.obrazek}
                 adresa={"fotkaZdroje" in c ? c.fotkaZdroje : undefined}
+                logoZdroje={"zdrojLogo" in c ? c.zdrojLogo : undefined}
               />
             )}
             {/* Text v obalu, aby ležel vedle fotky. Dalo by se to poskládat

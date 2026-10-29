@@ -2793,6 +2793,43 @@ details.uprava-samostatna > summary:hover { color: var(--voda); }
   .nahled img { width: 100%; height: 8rem; }
 }
 
+/* ---------------------------------------------------------------------
+   Vodoznak zdroje místo chybějící fotky (Filip, 29. 10. 2026: „když se
+   z ČSJ nepodaří vůbec žádná fotka, tak prosím o formu vodoznaku jejich
+   loga v módu Dark/White jako fallback, aby tam nebylo prázdno").
+
+   <b>Rozměry si bere z `.nahled img` výš</b> — malý náhled, velký na úvodu
+   i ten přes celou šířku na telefonu —, takže se tu žádná velikost
+   neopakuje a nemůže se s fotkou rozejít. Logo se dovnitř vepíše
+   (`contain`) a odsadí od hrany, aby to byl vodoznak, a ne dlaždice.
+
+   <b>Silueta, ne barevné logo.</b> Vybledlá modrá je na světlém podkladu
+   špinavá a na tmavém nečitelná; silueta se obrátí s režimem a drží tón
+   stránky. Průhlednost sedí na obrázku, podklad na `picture` — na jednom
+   prvku by `opacity` ztlumila i podklad a zbyla by díra.
+   --------------------------------------------------------------------- */
+.nahled-vodoznak { display: block; background: var(--zvyrazneni); border-radius: 8px; }
+.nahled-vodoznak img {
+  background: none;
+  object-fit: contain;
+  padding: 0.55rem;
+  filter: brightness(0);
+  opacity: 0.3;
+}
+/* Na velké kartě úvodu je plochy mnohonásobně víc, takže logo odsazené
+   o půl centimetru by se roztáhlo přes celou fotku. */
+.novinky-uvod .hlavni .nahled-vodoznak img { padding: 2.5rem; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-rezim="svetly"]) .nahled-vodoznak img {
+    filter: brightness(0) invert(1);
+    opacity: 0.3;
+  }
+}
+:root[data-rezim="tmavy"] .nahled-vodoznak img {
+  filter: brightness(0) invert(1);
+  opacity: 0.3;
+}
+
 /* Novinky na úvodu: jeden velký článek a tři menší.
 
    Podle šířky bloku, ne okna — vedle boků je střed na 13" displeji úzký

@@ -1,3 +1,5 @@
+import { NahledPrevzateho } from "@/app/nahled-prevzateho";
+
 /**
  * Fotky k článkům.
  *
@@ -48,6 +50,7 @@ export function Nahled({
   slug,
   obrazek,
   adresa,
+  logoZdroje,
 }: {
   slug: string;
   obrazek?: Obrazek | null;
@@ -57,7 +60,16 @@ export function Nahled({
    * kolem 500 px, takže na kartu stačí.
    */
   adresa?: string;
+  /**
+   * Logo zdroje u přejatého článku. <b>Mění, co se stane bez fotky</b>:
+   * místo náhradního setu nastoupí vodoznak loga, protože plachetnice
+   * z Orlíku nad cizím článkem je tvrzení, ne dekorace.
+   */
+  logoZdroje?: string;
 }) {
+  if (logoZdroje)
+    return <NahledPrevzateho adresa={obrazek?.nahled ?? adresa} logo={logoZdroje} />;
+
   if (adresa)
     return (
       <picture className="nahled">
@@ -95,6 +107,7 @@ export function NahledVelky({
   slug,
   obrazek,
   adresa,
+  logoZdroje,
 }: {
   slug: string;
   obrazek?: Obrazek | null;
@@ -104,7 +117,20 @@ export function NahledVelky({
    * fotka lodi u cizího článku (Filip, 2. 10. 2026).
    */
   adresa?: string;
+  /** Viz `Nahled`. */
+  logoZdroje?: string;
 }) {
+  if (logoZdroje)
+    return (
+      <NahledPrevzateho
+        velky
+        logo={logoZdroje}
+        adresa={obrazek?.velky ?? adresa}
+        srcSet={obrazek ? `${obrazek.nahled} 480w, ${obrazek.velky} 1600w` : undefined}
+        sizes={obrazek ? "(min-width: 48rem) 40rem, 100vw" : undefined}
+      />
+    );
+
   if (adresa && !obrazek)
     return (
       <picture className="nahled nahled-velky">

@@ -2202,13 +2202,26 @@ PREVZATE = [
      "perex": "Na start se postavili závodníci z 39 zemí a nechyběla ani česká "
               "reprezentace, kterou tvořilo celkem sedm závodníků.",
      "publikovanoV": "2026-09-18T09:00:00+02:00",
-     # Bez fotky schválně: web na ni musí sáhnout do náhradní sady.
+     # Bez fotky schválně: web na ni musí sáhnout po vodoznaku zdroje.
      "odkaz": "https://www.sailing.cz/clanky/ms-iqfoil-weymouth", "obrazek": None},
+    {"titulek": "ZÁPIS Z ŘÍJNOVÉHO JEDNÁNÍ VV ČSJ 2026",
+     "perex": "Čtvrtek, 22. října 2026, 12:00, elektronickou konferencí "
+              "prostřednictvím online schůzky přes Microsoft Teams.",
+     "publikovanoV": "2026-10-23T09:00:00+02:00",
+     # Adresa v datech je, ale soubor za ní není — stav, který Filip viděl
+     # na produkci 29. 10. 2026: v kartě zbyla rozbitá ikona obrázku.
+     # Server o tom neví, pozná to až prohlížeč, takže bez tohohle vzorku
+     # by se větev s `onError` nedala vyzkoušet.
+     "odkaz": "https://www.sailing.cz/clanky/zapis-z-rijnoveho-jednani-vv-csj-2026",
+     "obrazek": "https://www.sailing.cz/uploads_thumbs/clanky/neni-tam/zapis.jpg"},
 ]
 for _p in PREVZATE:
     _p.setdefault("obrazek", None)
     _p["zdroj"] = "Český svaz jachtingu"
     _p["zdrojOdkaz"] = "https://www.sailing.cz/clanky"
+    # Logo zdroje ke štítku i k vodoznaku. Je to soubor ve webu, ne u svazu —
+    # produkční API vydává touž adresu (`/zdroje/csj.webp`).
+    _p["zdrojLogo"] = "/zdroje/csj.webp"
 
 
 def bez_diakritiky_slug(text):
