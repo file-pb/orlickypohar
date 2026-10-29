@@ -132,6 +132,21 @@ public static class VysledkyEndpoints
                 + "podrží, dokud nemá kam ho odeslat, takže bez něj by start padl až ve "
                 + "chvíli, kdy telefon chytil síť.");
 
+        // <b>Co trasování vidí u cíle</b> (nález R33). Jen návrh: zapisuje
+        // pořád rozhodčí, stopa umí dodat přesnější čas, než na jaký
+        // stačí palec.
+        g.MapGet("/{zavod}/rozjizdky/{cislo:int}/cil-z-trasovani", CilZTrasovaniAsync)
+            .WithTags("Výsledky")
+            .Produces<CilZTrasovaniDto>()
+            .WithSummary("Dojezdy, jak je vidí trasování")
+            .WithDescription(
+                "Pro cílovou obrazovku: u kterých lodí stopa z telefonu protla cílovou "
+                + "čáru ve směru do cíle. Hledá se jen v posledních dvaceti minutách a "
+                + "až od startu — průjezd zpřed hodiny už je zapsaný a celá stopa "
+                + "třicetihodinové jízdy by byla desítky tisíc bodů na loď. "
+                + "`procNe` je věta pro rozhodčího (trať bez cíle, rozjížďka bez "
+                + "startu), ne chyba.");
+
         g.MapPost("/{zavod}/rozjizdky/{cislo:int}/start", StartAsync)
             .Produces<ZapisRozjizdkyDto>()
             .WithSummary("Zapíše start rozjížďky")
@@ -302,6 +317,22 @@ public static class VysledkyEndpoints
 
         return Results.Ok(await zapis.NactiAsync(
             rozjizdka, poradatel: true, ct, await rozsahy.UzivatelIdAsync(kdo, ct)));
+    }
+
+    private static async Task<IResult> CilZTrasovaniAsync(
+        string serie, string zavod, int cislo, ClaimsPrincipal kdo,
+        Rozsahy rozsahy, VysledkySprava sprava, CilZTrasovaniSprava trasovani,
+        CancellationToken ct)
+    {
+        if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
+            return Results.NotFound();
+
+        var (rozsah, rozjizdka) = nalezena;
+        // Kde je která loď, je údaj pro závodní výbor — čte to tedy jen
+        // ten, kdo smí zapisovat výsledky.
+        if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+
+        return Results.Ok(await trasovani.ProRozjizdkuAsync(rozjizdka, ct));
     }
 
     private static async Task<IResult> StartAsync(
