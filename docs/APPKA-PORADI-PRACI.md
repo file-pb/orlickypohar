@@ -93,6 +93,15 @@ Filip, 29. 10. 2026: *„Houkat musí Miloš stejně, ale telefon bude houkat
 s ním. Díky tomu se nemusí Miloš koukat na displej, protože uslyší
 dirigenta, co má dělat."*
 
+**Pozor při čtení Milošových odpovědí.** PDF *Aplikace u startu a v cíli*
+mu Filip poslal **29. 10. 2026 odpoledne, ještě před tímhle upřesněním**.
+Stojí v něm, že aplikace má Milošovi sundat z ruky stopky, houkačku
+i megafon — a to už neplatí: houkačku drží dál. Další verzi mu Filip
+posílat nebude (*„nebudu mu posílat 5 verzi"*), takže **jeho odpovědi
+budou reagovat na ten starší text**. Když v nich bude něco o tom, že
+nechce přijít o houkačku, není to nesouhlas s návrhem — je to odpověď
+na větu, která se mezitím opravila.
+
 **Tím se mění, k čemu ten hlas je.** Není to hlášení posádkám místo
 megafonu — je to <b>vodítko pro rozhodčího</b>. Odpočet *„za pět, čtyři,
 tři, dva, jedna"* je signál, kdy zmáčknout houkačku; hlášení po něm
