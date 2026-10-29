@@ -63,14 +63,14 @@ export function drobeckySpravy(serie: string | null, dal: Drobek[] = []): Drobek
 }
 
 /**
- * Drobeček jedné regaty. Míří na <b>její kartu na rozcestníku ročníku</b>,
- * kde jsou všechny čtyři věci k ní pohromadě (výsledky, přihlášky, směrnice,
- * bóje) — a odtud se na tyhle obrazovky doopravdy chodí. Vlastní stránka
- * „regata ve správě" neexistuje a nepotřebuje být: ta karta je ona.
+ * Drobeček jedné regaty. Míří na <b>její vlastní stránku ve správě</b>
+ * (od 29. 10. 2026). Do té doby vedl na kotvu její karty na rozcestníku
+ * ročníku, protože regata vlastní stránku neměla — kdo se z výsledků chtěl
+ * dostat do přihlášek, musel přes seznam všech regat.
  */
 export function drobekRegaty(serie: string, zavod: string, nazev?: string | null): Drobek {
   return {
     text: nazev ?? "Regata",
-    kam: `/sprava/${encodeURIComponent(serie)}#${encodeURIComponent(zavod)}`,
+    kam: `/sprava/${encodeURIComponent(serie)}/zavod/${encodeURIComponent(zavod)}`,
   };
 }

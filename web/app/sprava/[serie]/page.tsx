@@ -137,15 +137,14 @@ export default async function RozcestnikRocniku({
           <h2>{jenSve ? "Moje regaty" : "Regaty ročníku"}</h2>
           <p className="poznamka">
             U každé je zápis výsledků, přihlášky, směrnice i bóje na trati —
-            všechno, co se k jedné regatě dělá, pohromadě. Odsud se na to
-            chodí a drobečky na těch obrazovkách sem vedou zpátky.
+            všechno, co se k jedné regatě dělá, pohromadě. Jméno vede na
+            stránku regaty, řádek pod ním rovnou do jednotlivých úkonů.
           </p>
           <ul className="seznam">
             {mojeZastavky.map((z) => (
-              /* Kotva na kartu regaty. Je to adresa toho, co jinde chybí —
-                 „regata ve správě" vlastní stránku nemá a tahle karta je
-                 ona, takže na ni míří drobeček regaty i „zpátky na regatu"
-                 z bójí a směrnic (`drobekRegaty`). */
+              /* Kotva zůstává kvůli starým odkazům; cíl „regata ve správě"
+                 má od 29. 10. 2026 vlastní stránku a míří na ni drobeček
+                 i jméno na téhle kartě. */
               <li key={z.zavod} id={z.zavod}>
                 <div className={`karta ${tridaRamu(z.stav)}`}>
                   {/* <b>Stav nese rámeček celé karty</b> (Filip, 27. 10.
@@ -155,7 +154,13 @@ export default async function RozcestnikRocniku({
                       na opravu. */}
                   <StavVRamu stav={z.stav} />
                   <div className="nazev">
-                    {z.nazev}
+                    {/* Jméno vede na stránku regaty, řádek pod ním rovnou do
+                        jednotlivých úkonů. Obojí schválně: z rozcestníku se
+                        chodí přímo do práce, kdežto stránka regaty je místo,
+                        kam vede cesta zpátky z každého úkonu. */}
+                    <Link href={`/sprava/${encodeURIComponent(serie)}/zavod/${encodeURIComponent(z.zavod)}`}>
+                      {z.nazev}
+                    </Link>
                     {z.kRevizi.length > 0 && (
                       <span className="stitek vysledek-krevizi">
                         {z.kRevizi.length}× k revizi
