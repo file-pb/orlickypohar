@@ -107,12 +107,16 @@
        jantar, jakým na tabuli svítí semafor. */
     --pozor: #e8a33d;
     --srafa: #343b43;
-    /* Světlejší odrudy týchž barev — syté by na tmavém podkladu zhasly. */
-    --ukon-vysledky: #7fa7c9;
-    --ukon-prihlasky: #9098c9;
-    --ukon-smernice: #c9b377;
-    --ukon-trat: #74b3a8;
-    --ukon-polohy: #b98fae;
+    /* Světlejší odrudy týchž barev — syté by na tmavém podkladu zhasly.
+       Zároveň o stupeň tlumenější než napoprvé (Filip, 29. 10. 2026:
+       „tu barvičku vlevo na dlaždici ještě lehce přitlum na dark módu"):
+       na tmavém papíru svítí barva víc než na světlém, takže stejná sytost
+       tam působí křiklavěji. */
+    --ukon-vysledky: #5e7f99;
+    --ukon-prihlasky: #6e759c;
+    --ukon-smernice: #9c8a59;
+    --ukon-trat: #578880;
+    --ukon-polohy: #8f6c86;
     --pozor-pismo: var(--pozor);
     --obrys-hlasi: inset 0 0 0 1px rgb(255 255 255 / 0.36);
     --obrys-dlouho: inset 0 0 0 1px rgb(255 255 255 / 0.16);
@@ -132,11 +136,11 @@
   --stav-zruseny: #e2726a;
   --pozor: #e8a33d;
   --srafa: #343b43;
-  --ukon-vysledky: #7fa7c9;
-  --ukon-prihlasky: #9098c9;
-  --ukon-smernice: #c9b377;
-  --ukon-trat: #74b3a8;
-  --ukon-polohy: #b98fae;
+  --ukon-vysledky: #5e7f99;
+  --ukon-prihlasky: #6e759c;
+  --ukon-smernice: #9c8a59;
+  --ukon-trat: #578880;
+  --ukon-polohy: #8f6c86;
   --pozor-pismo: var(--pozor);
   --obrys-hlasi: inset 0 0 0 1px rgb(255 255 255 / 0.36);
   --obrys-dlouho: inset 0 0 0 1px rgb(255 255 255 / 0.16);
