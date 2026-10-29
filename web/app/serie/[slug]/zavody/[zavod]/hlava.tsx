@@ -8,7 +8,7 @@ import { polozkyZastavky, prava, roleVRocniku } from "@/lib/co-smim";
 import { nactiBlesky } from "@/lib/blesky";
 import { DoSpravy, Hlavicka } from "./hlavicka";
 import { jedeSeDnes, Upozorneni, upozorneniZastavky } from "./upozorneni";
-import { ZavriMimo } from "@/app/zavri-mimo";
+import { PrepinacSekci } from "@/app/prepinac-sekci";
 
 /**
  * Hlava stránky regaty: cesta, název, co je nového a taby sekcí.
@@ -192,56 +192,16 @@ export async function HlavaZastavky({
 
       <Upozorneni upozorneni={upozorneni} />
 
-      {moje.length > 1 && (
-        <>
-          <nav className="taby taby-sekci" aria-label="Části regaty">
-            {moje.map((s) => (
-              <Link
-                key={s}
-                href={adresaSekce(serie, zavod, s)}
-                aria-current={s === aktivni ? "page" : undefined}
-              >
-                {VLAJKY[s] ? <VlajkaIkona vlajka={VLAJKY[s]} /> : <ZnackaPuvodni />}
-                {NAZVY[s]}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Týž výběr pro úzký displej. Značka je dvakrát, protože na
-              přepnutí stačí CSS — jedna z obou je vždy `display: none`,
-              a tím i mimo strom pro čtečky. */}
-          <details className="sekce-rozbal">
-            <ZavriMimo />
-            <summary>
-              <span className="sekce-rozbal-tady">
-                {VLAJKY[aktivni] ? (
-                  <VlajkaIkona vlajka={VLAJKY[aktivni]} />
-                ) : (
-                  <ZnackaPuvodni />
-                )}
-                {NAZVY[aktivni]}
-              </span>
-              {/* Zbytek sekcí se počítá, ne vypisuje: „a 4 další" říká, že
-                  je kam klepnout, i když je seznam zavřený. */}
-              <span className="sekce-rozbal-zbytek">
-                a {moje.length - 1} {moje.length - 1 < 5 ? "další" : "dalších"}
-              </span>
-            </summary>
-            <nav aria-label="Části regaty">
-              {moje.map((s) => (
-                <Link
-                  key={s}
-                  href={adresaSekce(serie, zavod, s)}
-                  aria-current={s === aktivni ? "page" : undefined}
-                >
-                  {VLAJKY[s] ? <VlajkaIkona vlajka={VLAJKY[s]} /> : <ZnackaPuvodni />}
-                  {NAZVY[s]}
-                </Link>
-              ))}
-            </nav>
-          </details>
-        </>
-      )}
+      <PrepinacSekci
+        popisek="Části regaty"
+        aktivni={aktivni}
+        polozky={moje.map((sekce) => ({
+          klic: sekce,
+          nazev: NAZVY[sekce],
+          kam: adresaSekce(serie, zavod, sekce),
+          znacka: VLAJKY[sekce] ? <VlajkaIkona vlajka={VLAJKY[sekce]} /> : <ZnackaPuvodni />,
+        }))}
+      />
     </>
   );
 }
