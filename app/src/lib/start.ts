@@ -68,13 +68,16 @@ export function trvani(vterin: number): string {
  *   <li><b>ceka</b> — rozjížďka má čas startu, ale procedura ještě neběží.</li>
  *   <li><b>procedura</b> — odpočet běží, `doStartuS` je kladné.</li>
  *   <li><b>jede</b> — po startu; `odStartuS` říká, jak dlouho se jede.</li>
+ *   <li><b>bezCasu</b> — rozjížďka je na programu, ale čas startu nemá.
+ *       Takhle v datech vypadá odložená rozjížďka (ZPJ 27.3).</li>
  * </ul>
  */
 export type StavStartu =
   | { druh: 'ceka'; cislo: number; startV: string }
   | { druh: 'procedura'; cislo: number; startV: string; doStartuS: number }
   | { druh: 'odstartovano'; cislo: number; odStartuS: number }
-  | { druh: 'jede'; cislo: number; odStartuS: number };
+  | { druh: 'jede'; cislo: number; odStartuS: number }
+  | { druh: 'bezCasu'; cislo: number };
 
 /**
  * Nejdelší jízda, která ještě dává smysl.
@@ -148,7 +151,24 @@ export function stavStartu(
     }
     if (!nejblizsi || od > nejblizsi.od) nejblizsi = { r, od };
   }
-  if (!nejblizsi) return null;
+  if (!nejblizsi) {
+    // <b>Rozjížďka bez času startu — tím končí odložení.</b> ZPJ 27.3 nový
+    // čas nedopočítává, takže `Procedura.NovyStart` vrací u odložení
+    // `null` a rozjížďka zůstane plánovaná bez času. Dokud tenhle stav
+    // nebyl, panel po odložení <b>zmizel celý</b> a rozhodčí neměl čím
+    // pokračovat (Filip, 29. 10. 2026).
+    //
+    // <b>Neříká se tomu „odložená".</b> V datech je odložená rozjížďka
+    // nerozeznatelná od té, které čas nikdo nenastavil: obě jsou
+    // `Planovana` se `startV: null` a server si odložení nikam nepíše —
+    // `Rozjizdka` má jen `OpakovanychStartu`, a to roste při odvolání.
+    // Tvrdit „odložená" by tedy bylo domýšlení.
+    //
+    // Je to <b>poslední možnost</b>, až když žádná rozjížďka nemá
+    // použitelný čas: čas v ruce je vždycky ta bližší zpráva.
+    const bezCasu = rozjizdky.find((r) => r.stav === 'Planovana' && !r.startV);
+    return bezCasu ? { druh: 'bezCasu', cislo: bezCasu.cislo } : null;
+  }
 
   const doStartu = -nejblizsi.od;
   const startV = nejblizsi.r.startV!;
@@ -295,6 +315,9 @@ export function maBytKlid(
   delkaS: number = PROCEDURA_S,
 ): boolean {
   if (!stav) return false;
+  // Bez času startu není kdy ztichnout: procedura nemá začátek, od
+  // kterého by se okno klidu odměřilo.
+  if (stav.druh === 'bezCasu') return false;
   if (stav.druh === 'procedura') return true;
   if (stav.druh === 'jede' || stav.druh === 'odstartovano')
     return stav.odStartuS <= PO_STARTU_NERUSIT_S;
@@ -318,6 +341,7 @@ export function popisStartu(stav: StavStartu | null): string | null {
   if (stav.druh === 'odstartovano')
     return `Rozjížďka ${stav.cislo} — start padl před ${trvani(stav.odStartuS)}`;
   if (stav.druh === 'procedura') return `Rozjížďka ${stav.cislo} startuje`;
+  if (stav.druh === 'bezCasu') return `Rozjížďka ${stav.cislo} — bez času startu`;
   return `Rozjížďka ${stav.cislo} — procedura začne ve ${zacatekProcedury(stav.startV)}`;
 }
 
@@ -345,6 +369,10 @@ export type UkonStartu = 'Odlozit' | 'Odvolat';
 /** Co se dá s tímhle stavem udělat. Prázdné znamená „nic se nestartuje". */
 export function ukonyStartu(stav: StavStartu | null): UkonStartu[] {
   if (!stav) return [];
+  // Bez času startu není co odložit ani co odvolat; totéž odpoví server
+  // (`Procedura.ProcNejde`: *„Rozjížďka nemá nastavený čas startu, takže
+  // není co odložit."*). Odtud se startuje tlačítkem, ne úkonem.
+  if (stav.druh === 'bezCasu') return [];
   // Před startem se odkládá — i když procedura ještě nezačala, čas startu
   // už existuje a lodě se k němu chystají.
   if (stav.druh === 'ceka' || stav.druh === 'procedura') return ['Odlozit'];

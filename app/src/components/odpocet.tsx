@@ -125,8 +125,15 @@ export function Odpocet({
   // zabíral místo a tvrdil, že se něco chystá.
   if (!stav) return null;
 
+  // <b>Rozjížďka bez času startu je nástroj velitele, ne zpráva pro
+  // čtenáře.</b> Takhle totiž vypadá i každá regata, které ještě nikdo
+  // časy nenastavil — tedy celý ročník dopředu. Čtenář by četl „bez času
+  // startu" u závodu, který se jede za půl roku; velitel je ten, kdo
+  // s tím něco udělá.
+  if (stav.druh === 'bezCasu' && !naSpusteni) return null;
+
   const panel =
-    stav.druh === 'ceka' ? (
+    stav.druh === 'ceka' || stav.druh === 'bezCasu' ? (
       <Ceka stav={stav} delkaS={delkaS} t={t} naSpusteni={naSpusteni} chyba={chyba} />
     ) : stav.druh === 'jede' ? (
       <Jede stav={stav} t={t} />
@@ -241,7 +248,19 @@ function Zastaveni({
   );
 }
 
-/** Procedura ještě neběží: jen kdy začne. Žádný odpočet — nemá co odpočítávat. */
+/**
+ * Čeká se. Žádný odpočet — nemá co odpočítávat. Dva důvody, jeden panel:
+ * <ul>
+ *   <li>čas startu je nastavený a procedura ještě nezačala — ukáže se,
+ *       kdy začne;</li>
+ *   <li>čas startu žádný není, což je stav po odložení (ZPJ 27.3) —
+ *       ukáže se, že se na něj čeká.</li>
+ * </ul>
+ *
+ * <b>Tlačítko je v obou případech totéž, protože i úkon je tentýž:</b>
+ * spustit proceduru. Tím se po odložení volí nový čas — pravidlo ho
+ * nedopočítává, takže ho určuje chvíle, kdy startér zmáčkne.
+ */
 function Ceka({
   stav,
   delkaS,
@@ -249,7 +268,7 @@ function Ceka({
   naSpusteni,
   chyba,
 }: {
-  stav: Extract<StavStartu, { druh: 'ceka' }>;
+  stav: Extract<StavStartu, { druh: 'ceka' | 'bezCasu' }>;
   delkaS: number;
   t: Barvy;
   naSpusteni?: (cislo: number) => void | Promise<void>;
@@ -261,8 +280,20 @@ function Ceka({
     <View style={[s.panel, { backgroundColor: t.zvyrazneni, borderColor: t.linka, borderWidth: 1 }]}>
       <Text style={[s.radek, { color: t.tlumeny }]}>Rozjížďka {stav.cislo}</Text>
       <Text style={[s.vetaVelka, { color: t.text }]}>
-        Procedura začne ve {zacatekProcedury(stav.startV, delkaS)}
+        {stav.druh === 'bezCasu'
+          ? 'Bez času startu'
+          : `Procedura začne ve ${zacatekProcedury(stav.startV, delkaS)}`}
       </Text>
+
+      {/* Po odložení musí být z obrazovky poznat, odkud se vezme nový
+          čas — jinak rozhodčí hledá, kde se zadává, a zadat se nikde
+          nedá: vezme se z chvíle, kdy zmáčkne. */}
+      {stav.druh === 'bezCasu' ? (
+        <Text style={[s.pripominka, { color: t.tlumeny }]}>
+          Nový čas se nedopočítává (ZPJ 27.3) — start padne na konci procedury,
+          tedy {delkaS / 60} min po spuštění.
+        </Text>
+      ) : null}
 
       {naSpusteni ? (
         <>

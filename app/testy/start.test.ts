@@ -64,7 +64,36 @@ zkus('mmss doplňuje vteřiny na dvě místa a znaménko zahazuje', () => {
 
 zkus('bez rozjížděk se na startu neděje nic', () => {
   assert.equal(stavStartu([], V('11:55:00')), null);
-  assert.equal(stavStartu([planovana(1, null)], V('11:55:00')), null);
+});
+
+zkus('rozjížďka bez času startu čeká na čas, ne na nic', () => {
+  // Takhle v datech vypadá odložená rozjížďka: ZPJ 27.3 nový čas
+  // nedopočítává. Dokud tenhle stav nebyl, panel po odložení zmizel celý
+  // a rozhodčí neměl čím pokračovat (Filip, 29. 10. 2026).
+  assert.deepEqual(stavStartu([planovana(1, null)], V('11:55:00')), {
+    druh: 'bezCasu',
+    cislo: 1,
+  });
+});
+
+zkus('čas v ruce přebíjí rozjížďku bez času', () => {
+  // Odložená trojka nesmí sebrat panel čtyřce, která má odpočet.
+  const r = [planovana(3, null), planovana(4, START)];
+  assert.equal(stavStartu(r, V('11:50:00'))?.cislo, 4);
+  assert.equal(stavStartu(r, V('11:56:00'))?.druh, 'procedura');
+});
+
+zkus('bez času startu telefon neztichne', () => {
+  // Okno klidu se odměřuje od začátku procedury — a ten bez času startu
+  // neexistuje.
+  assert.equal(maBytKlid(stavStartu([planovana(1, null)], V('11:50:00'))), false);
+});
+
+zkus('popis bez času startu žádný čas neslibuje', () => {
+  assert.equal(
+    popisStartu(stavStartu([planovana(1, null)], V('11:50:00'))),
+    'Rozjížďka 1 — bez času startu',
+  );
 });
 
 zkus('deset minut před startem se čeká, pět minut už běží procedura', () => {
