@@ -64,17 +64,19 @@ export default async function RegataVeSprave({
         <PruhUkonuRegaty serie={serie} zavod={zavod} />
       )}
 
-      <h1>
-        <span className={radek.stav === "Zruseny" ? "skrtnute" : undefined}>{radek.nazev}</span>{" "}
-        <Stav stav={radek.stav} />
-      </h1>
-      <p className="podtitulek">
-        {datum(radek.datum, radek.datumKonce)}
-        {radek.poradatel && ` · pořádá ${radek.poradatel}`}
-        {radek.puvodniDatum && (
-          <span className="presun"> · přesunuto z {datum(radek.puvodniDatum)}</span>
-        )}
-      </p>
+      <div className="radek-nadpisu">
+        <h1>
+          <span className={radek.stav === "Zruseny" ? "skrtnute" : undefined}>{radek.nazev}</span>{" "}
+          <Stav stav={radek.stav} />
+        </h1>
+        <p className="podtitulek">
+          {datum(radek.datum, radek.datumKonce)}
+          {radek.poradatel && ` · pořádá ${radek.poradatel}`}
+          {radek.puvodniDatum && (
+            <span className="presun"> · přesunuto z {datum(radek.puvodniDatum)}</span>
+          )}
+        </p>
+      </div>
 
       {radek.stav === "Zruseny" ? (
         <p className="prazdno">Zrušeno. Nic se tu nezapisuje.</p>

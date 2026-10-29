@@ -199,10 +199,17 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
           Odkaz „přihlášené lodě →" z podtitulku odešel: pruh na ně vede taky
           a dvě cesty k témuž na jedné obrazovce se čtou jako dvě různé věci. */}
       <PruhUkonuRegaty serie={serie} zavod={zavod} aktivni="vysledky" />
-      <NadpisUkonu serie={serie} zavod={zavod} ukon="vysledky" regata={prehled.zavodNazev} />
-      <p className="podtitulek">
-        {prehled.serieNazev} <Stav stav={prehled.stavZavodu} />
-      </p>
+      <NadpisUkonu
+        serie={serie}
+        zavod={zavod}
+        ukon="vysledky"
+        regata={prehled.zavodNazev}
+        podtitulek={
+          <>
+            {prehled.serieNazev} <Stav stav={prehled.stavZavodu} />
+          </>
+        }
+      />
 
       {/* Nepublikovaná regata schová i publikovanou rozjížďku — veřejně
           neexistuje. Bez téhle věty by správce pouštěl čísla ven a divil se,

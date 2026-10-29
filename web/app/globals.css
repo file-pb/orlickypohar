@@ -2155,6 +2155,15 @@ body:has(.vybrany-ukon) h1 {
 }
 /* Štítek stavu vedle názvu regaty se nesmí roztáhnout spolu s řádkem. */
 body:has(.vybrany-ukon) h1 > * { flex: none; }
+
+/* <b>Termín visí na konci lana</b> (Filip, 29. 10. 2026: „to datum konání
+   můžeš dát do lana doprava, pod jen na mini, kde se nevejde"). Nadpis
+   v řádku roste (`flex: 1`), takže lano uvnitř něj dotáhne až k datu;
+   `flex-wrap` pak na úzkém displeji datum položí pod nadpis samo, bez meze
+   v pixelech — délka názvu regaty se dopředu neví. */
+.radek-nadpisu { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.9rem; }
+.radek-nadpisu > h1 { flex: 1 1 14rem; }
+.radek-nadpisu > .podtitulek { flex: 0 1 auto; margin: 0; }
 /* <b>Regata silně, agenda normálně</b>: „Jarní vítr — Závodní trať" se tím
    čte jako jedna věta se dvěma důrazy, ne jako dva nadpisy vedle sebe.
    Nadpis dědí tučné písmo z prohlížeče, takže se agenda musí odlehčit. */

@@ -15,7 +15,7 @@ export function Hlavicka({
   akce: boolean;
 }) {
   return (
-    <>
+    <div className="radek-nadpisu">
       <h1>
         <span className={zavod.stav === "Zruseny" ? "skrtnute" : undefined}>{zavod.nazev}</span>{" "}
         <Stav stav={zavod.stav} akce={akce} />
@@ -40,7 +40,7 @@ export function Hlavicka({
           <span className="presun"> · přesunuto z {datum(zavod.puvodniDatum)}</span>
         )}
       </p>
-    </>
+    </div>
   );
 }
 

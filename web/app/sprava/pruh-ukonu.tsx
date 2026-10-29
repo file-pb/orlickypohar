@@ -77,6 +77,7 @@ export async function NadpisUkonu({
   zavod,
   ukon,
   regata,
+  podtitulek,
   children,
 }: {
   serie: string;
@@ -84,6 +85,11 @@ export async function NadpisUkonu({
   /** Úsek v adrese: `vysledky`, `prihlasky`, `smernice`, `boje`, `tracker`. */
   ukon: string;
   regata: string | null;
+  /**
+   * Co stojí na konci lana — termín, ročník, stav. Je to součást řádku
+   * s nadpisem, ne odstavec pod ním, takže patří sem a ne na stránku.
+   */
+  podtitulek?: ReactNode;
   /** Co patří za nadpis — třeba štítek stavu. */
   children?: ReactNode;
 }) {
@@ -93,15 +99,18 @@ export async function NadpisUkonu({
     : undefined;
 
   return (
-    <h1>
-      {/* Všechno v jednom prvku: `h1` je ve správě mřížka s lanem, takže
-          každý samostatný kus textu by se stal vlastním sloupcem a mezery
-          kolem pomlčky by se roztáhly na `gap`. */}
-      <span className="nadpis-ukonu">
-        <strong>{regata ?? "Regata"}</strong>
-        {nazev && <span className="agenda"> — {nazev}</span>}
-      </span>
-      {children}
-    </h1>
+    <div className="radek-nadpisu">
+      <h1>
+        {/* Všechno v jednom prvku: `h1` je ve správě mřížka s lanem, takže
+            každý samostatný kus textu by se stal vlastním sloupcem a mezery
+            kolem pomlčky by se roztáhly na `gap`. */}
+        <span className="nadpis-ukonu">
+          <strong>{regata ?? "Regata"}</strong>
+          {nazev && <span className="agenda"> — {nazev}</span>}
+        </span>
+        {children}
+      </h1>
+      {podtitulek && <p className="podtitulek">{podtitulek}</p>}
+    </div>
   );
 }
