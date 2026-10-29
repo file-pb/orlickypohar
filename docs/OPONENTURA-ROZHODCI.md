@@ -4174,7 +4174,13 @@ zrušeno*) je **bezpečná**, protože se zpožděním nic nelže — zpožděn�
 pořád říká pravdu o minulém okamžiku. Odpočet lže. Takže kdyby se čas posádkám
 někdy dával, musí se vedle něj psát, **jak starý údaj to je**.
 
-Nezapsaná otázka pro Miloše: *stačilo by posádce barevné světlo místo odpočtu?*
+**Rozhodnuto Filipem 29. 10. 2026:** *„Klidně barevné světlo. Odpočet
+u posádek není v prvních verzích potřeba, navíc je to zdroj problémů."*
+
+Posádka tedy v prvních verzích dostane **barvu stavu, ne odpočet**. Milošovi se
+to **neposílá jako otázka, ale jako informace** — požádal o sekvenci a má právo
+vědět, že ji zatím nedostane a proč. Kdyby na odpočtu trval, platí to, co stojí
+výš: musí u něj být vidět, jak je ten údaj starý.
 
 ### Kolize 2 — VMP a technický průkaz se sbírat nebudou
 
@@ -4185,6 +4191,10 @@ pokud ho loď má.“*
 
 Filip: *„Zatím nic takového nesbíráme, a závodník by měl v podmínkách, na které
 dává souhlas, mít, že toto splňuje a že je to jeho odpovědnost.“*
+
+**Rozhodnuto Filipem 29. 10. 2026:** *„2 stačí"* — čísla se sbírat nebudou,
+stačí potvrzení v souhlasu. Milošovi se to posílá jako informace, ne jako
+otázka.
 
 **Je to legitimní volba, ale není zdarma.** Vypsání dnes ty doklady žádá
 (R25), takže kdyby se nesbíraly, musí to říct **text souhlasu** — a ten se tím

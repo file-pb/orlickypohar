@@ -35,7 +35,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Vypsání platné bez jeho podpisu | **Zavřené** | *„Je platné i bez mého podpisu"*. Elektronický podpis jen jako nabídka (R20, R32 v nahrávce 32) |
 | Přihlašování po zveřejnění vypsání | **Běží** | Přihlášky vede pořadatel |
 | Přihlašování se zavře rozpravou | **Zadané** | R39. Se zadními vrátky pro mimořádné zapsání, která se nenabízejí jako běžná cesta |
-| Číslo VMP a technického průkazu v přihlášce | **Čeká** | R25. Miloš je zadal, Filip je sbírat nechce a přenáší to do souhlasu — kolize 2, a znamená to verzi 3 souhlasu |
+| Číslo VMP a technického průkazu v přihlášce | **Zavřené** | R25. Rozhodnuto 29. 10.: nesbírat, závodník to potvrdí v souhlasu — a kvůli tomu vznikne **verze 3 souhlasu** |
 | Souhlas se závodními pravidly u přihlášky | **Běží** | `Souhlas.cs`, verze 2 včetně polohy |
 | Nezletilý závodník | **Zavřené** | *„Žádný z kapitánů není nezletilý"* (R26) |
 | Čtyři třídy (do 7 m, nad 7 m lehký, těžký, RACE) | **Zavřené** | *„Neřeš, do tříd si je zařadíme sami"* — dva nové záznamy v nastavení, zařadí ručně (R40) |
@@ -62,7 +62,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Dlaždice **OCS** → loď → odčinila / neodčinila | **Zadané** | R35. Postup rozhodnutý: klepnutí za běhu, vyhodnocení po dojezdu. Který kód se zapíše (OCS/DSQ) čeká na Miloše — kolize 3 |
 | Velitelský čas na mobilu hlavního startéra | **Běží** | `Velitel`, převzetí na žádost, doklad |
 | Start přežije výpadek | **Jen web** | Fronta nezaslaného startu je na webu; v appce se musí postavit znovu |
-| Posádka vidí tutéž sekvenci jen ke čtení | **Čeká** | R34. Kolize 1: Miloš ji chce vidět, Filip by posádkám čas ani sekvenci nedával a nechal jen barvu stavu |
+| Posádka vidí stav startu | **Zadané** | R34. Rozhodnuto 29. 10.: **barva stavu, ne odpočet** — zpožděný odpočet na lodi je zdroj hádek, barva se zpožděním nelže. Miloš chtěl celou sekvenci, dostane informaci, ne otázku |
 | Posádka hlásí komisi (trest, neregulérnost) | **Zavřené** | R41. *„Alespoň v prvních verzích ne."* Miloš došel k témuž: *„abychom jim nekomplikovali život"* |
 
 ## Za jízdy
@@ -111,18 +111,21 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 
 ## Co zbývá rozhodnout
 
-Po Filipových odpovědích z 28. 10. večer zbývají **tři** věci, a dvě z nich
-patří Milošovi:
+Po Filipových odpovědích z 28. a 29. 10. zbývá **jedna** věc, a patří Milošovi:
 
-1. **Posádka: odpočet, nebo jen barva stavu** (R34, kolize 1). Miloš chce, aby
-   kapitán viděl tutéž sekvenci; Filip by mu čas ani sekvenci nedával, protože
-   zpožděný odpočet na lodi je zdroj hádek. Barva stavu se zpožděním nelže,
-   odpočet ano.
-2. **OCS, nebo DSQ** u lodě, která předčasný start neodčinila (R35, kolize 3).
-   Postup se staví tak či tak; rozhoduje se jen, co padne do výsledkové listiny.
-3. **VMP a technický průkaz** (R25, kolize 2). Miloš je zadal, Filip je sbírat
-   nechce a přenáší to do textu souhlasu — což znamená **verzi 3 souhlasu** a
-   Miloš o tom zatím neví.
+**OCS, nebo DSQ** u lodě, která předčasný start neodčinila (R35). Postup se
+staví tak či tak — klepnutí za běhu, vyhodnocení po dojezdu — rozhoduje se jen,
+co padne do výsledkové listiny.
+
+**Dvě věci rozhodl Filip proti Milošovu zadání** a Miloš je dostane jako
+informaci, ne jako otázku:
+
+- **Posádka dostane barvu stavu, ne odpočet** (R34, 29. 10.): *„odpočet
+  u posádek není v prvních verzích potřeba, navíc je to zdroj problémů."*
+  Zpožděný odpočet na lodi lže, barva ne.
+- **VMP a technický průkaz se sbírat nebudou** (R25, 29. 10.): závodník
+  v souhlasu potvrdí, že je má a že je to jeho odpovědnost. Znamená to
+  **verzi 3 souhlasu**, protože dnešní text tohle neříká.
 
 Zbytek rozhodnutý je: mapa se zapne sama, telefony se hlásí 15 minut před
 procedurou, Ověřeno a Schváleno se sloučí, trasování dává jen návrh dojezdu,
