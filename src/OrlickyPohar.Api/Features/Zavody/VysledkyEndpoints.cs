@@ -434,7 +434,8 @@ public static class VysledkyEndpoints
 
     private static async Task<IResult> UlozAsync(
         string serie, string zavod, int cislo, ZapisVstup vstup, ClaimsPrincipal kdo,
-        Rozsahy rozsahy, VysledkySprava sprava, ZapisSprava zapis, CancellationToken ct)
+        Rozsahy rozsahy, VysledkySprava sprava, ZapisSprava zapis,
+        Spolecne.OkolnostiSprava okolnosti, AppDbContext db, CancellationToken ct)
     {
         if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
             return Results.NotFound();
@@ -443,8 +444,20 @@ public static class VysledkyEndpoints
 
         if (!await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
 
+        var ktery = await rozsahy.UzivatelIdAsync(kdo, ct);
         var vysledek = await zapis.UlozAsync(
-            rozjizdka, vstup.Radky, ct, await rozsahy.UzivatelIdAsync(kdo, ct), vstup.Revize);
+            rozjizdka, vstup.Radky, ct, ktery, vstup.Revize);
+
+        // Doklad k zápisu. Až po úspěchu a jen tehdy, když appka okolnosti
+        // poslala — web je neposílá a dokládat „někdo u počítače" nemá cenu.
+        if (!vysledek.Konflikt && vysledek.Chyba is null
+            && vstup.Okolnosti is { } kde && ktery is { } tenKdo)
+        {
+            okolnosti.Pripoj(
+                rozjizdka.ZavodId, Spolecne.DruhRozhodnuti.ZapisDojezdu, tenKdo, kde,
+                rozjizdkaId: rozjizdka.Id);
+            await db.SaveChangesAsync(ct);
+        }
 
         // Konflikt má vlastní kód, ne 400: klient na něj musí reagovat jinak
         // než na chybu v datech — svou sadu si nechat a nabídnout porovnání.

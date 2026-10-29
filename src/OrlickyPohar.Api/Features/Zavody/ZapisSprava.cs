@@ -103,7 +103,13 @@ public record NavrhyDto(
 /// umí smazat opravu, o které klient nevěděl.
 /// </para>
 /// </summary>
-public record ZapisVstup(IReadOnlyList<ZapisRadekVstup> Radky, int? Revize = null);
+public record ZapisVstup(
+    IReadOnlyList<ZapisRadekVstup> Radky,
+    int? Revize = null,
+    // Kde byl rozhodčí, když dojezd zapsal. Appka to nezobrazuje; doloží
+    // to zápis, který někdo později zpochybní — a poloha lodi se k tomu
+    // dohledá z její trasy podle času.
+    Spolecne.OkolnostiVstup? Okolnosti = null);
 
 /// <summary>
 /// Jak dopadlo uložení sady. <c>Konflikt</c> znamená, že se mezitím uložilo
