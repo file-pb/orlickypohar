@@ -6,6 +6,7 @@ import type { Barvy } from '@/constants/theme';
 import {
   mmss,
   PROCEDURA_S,
+  trvani,
   stavStartu,
   usekyProcedury,
   zacatekProcedury,
@@ -84,7 +85,7 @@ function Jede({ stav, t }: { stav: Extract<StavStartu, { druh: 'jede' }>; t: Bar
           Rozjížďka {stav.cislo} jede
         </Text>
       </View>
-      <Text style={[s.casStredni, { color: t.text }]}>{mmss(stav.odStartuS)}</Text>
+      <Text style={[s.casStredni, { color: t.text }]}>{trvani(stav.odStartuS)}</Text>
     </View>
   );
 }

@@ -47,6 +47,21 @@ export function mmss(vterin: number): string {
 }
 
 /**
+ * Jak dlouho se jede: `12:38`, a nad hodinu `1:04:11`.
+ *
+ * <b>Odpočet a trvání nejsou totéž.</b> Odpočet je vždycky krátký, kdežto
+ * rozjížďka může jet hodiny — a `mmss` by z toho udělalo `2845:13`, což
+ * je číslo, které se ani nevejde do rámečku, ani se nedá přečíst.
+ */
+export function trvani(vterin: number): string {
+  const s = Math.abs(Math.round(vterin));
+  const hodin = Math.floor(s / 3600);
+  if (hodin === 0) return mmss(s);
+  const minut = Math.floor((s % 3600) / 60);
+  return `${hodin}:${String(minut).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+}
+
+/**
  * Co se zrovna děje na startu.
  *
  * <ul>
@@ -59,6 +74,31 @@ export type StavStartu =
   | { druh: 'ceka'; cislo: number; startV: string }
   | { druh: 'procedura'; cislo: number; startV: string; doStartuS: number }
   | { druh: 'jede'; cislo: number; odStartuS: number };
+
+/**
+ * Nejdelší jízda, která ještě dává smysl.
+ *
+ * Dvacetičtyřhodinovka se jede *„klidně 30 h i s tou přípravou a dojezdy"*
+ * (Filip, 24. 10. 2026), takže mez musí být velkorysá. Co běží déle,
+ * není jízda — je to <b>rozjížďka, kterou nikdo neuzavřel</b>.
+ */
+export const NEJDELSI_JIZDA_S = 30 * 3600;
+
+/**
+ * Běží ta rozjížďka tak dlouho, že to není jízda, ale zapomenutý záznam?
+ *
+ * <b>Změřeno 29. 10. 2026 na skutečných datech:</b> regata Jarní vítr měla
+ * rozjížďku ve stavu „probíhá" od 27. 10., tedy 47 hodin. Odpočet další
+ * rozjížďky by se kvůli ní <b>nikdy neukázal</b> — běžící přebíjí
+ * plánovanou — a panel místo něj hlásil „Rozjížďka 4 jede 2845:13".
+ *
+ * Rozjížďka bez času startu se za zapomenutou nepovažuje: o jejím stáří
+ * nic nevíme a tvrdit, že je zapomenutá, by bylo domýšlení.
+ */
+function jeZapomenuta(r: RozjizdkaProOdpocet, ted: number): boolean {
+  const od = odStartu(r.startV, ted);
+  return od !== null && od > NEJDELSI_JIZDA_S;
+}
 
 /**
  * Která rozjížďka je právě na řadě a v jakém je stavu — nebo `null`, když
@@ -79,7 +119,9 @@ export function stavStartu(
   /** Délka procedury té regaty ve vteřinách; bez ní platí pětka. */
   delkaS: number = PROCEDURA_S,
 ): StavStartu | null {
-  const bezi = rozjizdky.find((r) => r.stav === 'Probiha');
+  const bezi = rozjizdky.find(
+    (r) => r.stav === 'Probiha' && !jeZapomenuta(r, ted),
+  );
   if (bezi) {
     const od = odStartu(bezi.startV, ted);
     return { druh: 'jede', cislo: bezi.cislo, odStartuS: od !== null && od > 0 ? od : 0 };
@@ -198,7 +240,7 @@ export function usekyProcedury(
  */
 export function popisStartu(stav: StavStartu | null): string | null {
   if (!stav) return null;
-  if (stav.druh === 'jede') return `Rozjížďka ${stav.cislo} jede ${mmss(stav.odStartuS)}`;
+  if (stav.druh === 'jede') return `Rozjížďka ${stav.cislo} jede ${trvani(stav.odStartuS)}`;
   if (stav.druh === 'procedura') return `Rozjížďka ${stav.cislo} startuje`;
   return `Rozjížďka ${stav.cislo} — procedura začne ve ${zacatekProcedury(stav.startV)}`;
 }

@@ -14,6 +14,7 @@ import {
   odStartu,
   popisStartu,
   stavStartu,
+  trvani,
   usekyProcedury,
   zacatekProcedury,
   type RozjizdkaProOdpocet,
@@ -187,6 +188,40 @@ zkus('v poslední minutě jsou první dva úseky hotové', () => {
   assert.equal(u[0].hotovo, 1);
   assert.equal(u[1].hotovo, 1);
   assert.equal(u[2].hotovo, 0.5);
+});
+
+// --- Zapomenutá rozjížďka ---
+
+zkus('trvání nad hodinu ukazuje hodiny, ne stovky minut', () => {
+  assert.equal(trvani(758), '12:38');
+  assert.equal(trvani(3851), '1:04:11');
+  // Změřeno na produkci: rozjížďka „běžela" 47 hodin a `mmss` z toho
+  // udělalo 2845:13, což se nevešlo ani do rámečku.
+  assert.equal(trvani(170713), '47:25:13');
+});
+
+zkus('rozjížďka běžící přes den a noc odpočet nepřebije', () => {
+  // Skutečný stav z 29. 10. 2026: čtyřka ve stavu „probíhá" od 27. 10.
+  const r: RozjizdkaProOdpocet[] = [
+    { cislo: 4, startV: '2027-05-13T12:00:00Z', stav: 'Probiha' },
+    planovana(5, START),
+  ];
+  const stav = stavStartu(r, V('11:56:00'));
+  assert.equal(stav?.druh, 'procedura');
+  assert.equal(stav?.cislo, 5);
+});
+
+zkus('dvacetičtyřhodinovka se za zapomenutou nepovažuje', () => {
+  // „24 se jede klidně 30 h i s tou přípravou a dojezdy."
+  const pred29h = new Date(Date.parse(START) - 29 * 3600 * 1000).toISOString();
+  const stav = stavStartu([{ cislo: 1, startV: pred29h, stav: 'Probiha' }], V('12:00:00'));
+  assert.equal(stav?.druh, 'jede');
+});
+
+zkus('běžící rozjížďka bez času startu se nedomýšlí', () => {
+  // O jejím stáří nic nevíme, takže tvrdit „zapomenutá" by bylo hádání.
+  const stav = stavStartu([{ cislo: 1, startV: null, stav: 'Probiha' }], V('12:00:00'));
+  assert.deepEqual(stav, { druh: 'jede', cislo: 1, odStartuS: 0 });
 });
 
 console.log(`  ${prosly} prošlo`);
