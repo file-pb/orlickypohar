@@ -59,7 +59,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Odpočet s intervaly 5 / 4 / 1 / 0 na obrazovce | **Zadané** | **Nikde.** Je to krok 1 plánu a hlavní věc, kterou chce mít v ruce (*„abych nemusel držet stopky"*) |
 | Dlaždice **Odklad startu** s novým časem | **Zadané** | R37. API to umí ve dvou krocích (odložit + zapsat plánovaný start), appka nijak |
 | Dlaždice **Zrušit rozjížďku / neplatný start** | **V API** | `Odvolat` (ZPJ 29.2) — přidá minutu a jede znovu |
-| Dlaždice **OCS** → loď → odčinila / neodčinila | **Zadané** | R35. Postup rozhodnutý: klepnutí za běhu, vyhodnocení po dojezdu. Který kód se zapíše (OCS/DSQ) čeká na Miloše — kolize 3 |
+| Dlaždice **OCS** → loď → odčinila / neodčinila | **Zadané** | R35. Rozhodnuto 29. 10.: zapisuje se **OCS**, tedy to, co žádají pravidla; na Miloše se nečeká a změna na DSQ by byla jednořádková |
 | Velitelský čas na mobilu hlavního startéra | **Běží** | `Velitel`, převzetí na žádost, doklad |
 | Start přežije výpadek | **Jen web** | Fronta nezaslaného startu je na webu; v appce se musí postavit znovu |
 | Posádka vidí stav startu | **Zadané** | R34. Rozhodnuto 29. 10.: **barva stavu, ne odpočet** — zpožděný odpočet na lodi je zdroj hádek, barva se zpožděním nelže. Miloš chtěl celou sekvenci, dostane informaci, ne otázku |
@@ -111,27 +111,27 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 
 ## Co zbývá rozhodnout
 
-Po Filipových odpovědích z 28. a 29. 10. zbývá **jedna** věc, a patří Milošovi:
+**Nic.** Po Filipových odpovědích z 28. a 29. 10. je rozhodnuté všechno, co
+stálo na rozhodnutí. Tři věci rozhodl **jinak, než Miloš zadal**, a ten je
+dostane jako informaci, ne jako otázku:
 
-**OCS, nebo DSQ** u lodě, která předčasný start neodčinila (R35). Postup se
-staví tak či tak — klepnutí za běhu, vyhodnocení po dojezdu — rozhoduje se jen,
-co padne do výsledkové listiny.
-
-**Dvě věci rozhodl Filip proti Milošovu zadání** a Miloš je dostane jako
-informaci, ne jako otázku:
-
-- **Posádka dostane barvu stavu, ne odpočet** (R34, 29. 10.): *„odpočet
-  u posádek není v prvních verzích potřeba, navíc je to zdroj problémů."*
-  Zpožděný odpočet na lodi lže, barva ne.
-- **VMP a technický průkaz se sbírat nebudou** (R25, 29. 10.): závodník
-  v souhlasu potvrdí, že je má a že je to jeho odpovědnost. Znamená to
-  **verzi 3 souhlasu**, protože dnešní text tohle neříká.
+- **Posádka dostane barvu stavu, ne odpočet** (R34): *„odpočet u posádek není
+  v prvních verzích potřeba, navíc je to zdroj problémů."* Zpožděný odpočet na
+  lodi lže, barva ne.
+- **VMP a technický průkaz se sbírat nebudou** (R25): závodník v souhlasu
+  potvrdí, že je má a že je to jeho odpovědnost. Znamená to **verzi 3
+  souhlasu**, protože dnešní text tohle neříká.
+- **Předčasný start se zapíše jako OCS**, ne DSQ (R35) — tedy jak to žádají
+  pravidla. *„Kdyžtak se to změní."*
 
 Zbytek rozhodnutý je: mapa se zapne sama, telefony se hlásí 15 minut před
 procedurou, Ověřeno a Schváleno se sloučí, trasování dává jen návrh dojezdu,
 startovní listinu po rozpravě mění rozhodčí a pořadatel ji smí navrhovat,
 směrnice jako předloha se odkládá, mez z pravidla 76 se neřeší, startovné
 zůstává na webu a token do secrets doplní Filip.
+
+**Co tím pádem drží frontu:** už ne rozhodnutí, ale stavba. Pořadí je
+v `SOUPIS-A-PLAN-START.md`.
 
 ## Jak se tenhle dokument udržuje
 

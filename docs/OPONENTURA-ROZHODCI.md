@@ -4210,7 +4210,13 @@ mu to patří říct.
 > rozjížďka anebo loď dojede: pokud neodčiní, tak DSQ (ale zaznamenej, že se na
 > to zeptáme Miloše při nejbližší příležitosti).“*
 
-**Zapsáno, a tady je ta otázka přesně:** podle pravidel se loď, která byla na
+**Rozhodnuto Filipem 29. 10. 2026:** *„OCS, kdyžtak se to změní."* A na Miloše
+se s tím nečeká. Je to zároveň to, co říkají pravidla, takže aplikace a pravidla
+zůstávají v souladu a Milošovo slovo *„diskvalifikovaná"* zůstává jeho popisem
+téhož děje. Změnit kód na `DSQ` by později byla jednořádková věc — postup se
+staví nezávisle na tom.
+
+**Proč to vůbec byla otázka:** podle pravidel se loď, která byla na
 závodní straně a nevrátila se, **boduje jako OCS**; `DSQ` je výsledek jednání
 o protestu. Pro Miloše je to totéž („nemá platný start“), pro výsledkovou
 listinu ne. Postup, který Filip popsal, je ale nezávislý na tom, který kód se
