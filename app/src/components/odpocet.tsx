@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, AppState, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, AppState, StyleSheet, Text, View } from 'react-native';
 
 import { Pressable } from 'react-native';
 
@@ -206,6 +206,14 @@ function Jede({ stav, t }: { stav: Extract<StavStartu, { druh: 'jede' }>; t: Bar
  * ve kterém se nejvíc chybuje, a pozná se tak i koutkem oka. Červená je
  * v appce vyhrazená zrušení rozjížďky, tedy jediné nevratné věci.
  */
+/**
+ * Posledních deset vteřin. Tady už se nečte čas, jen se čeká na výstřel —
+ * a panel to dává najevo tepem, ne další barvou. Barev je v appce tak
+ * akorát a další odstín by se pletl; pohyb zahlédne oko i tehdy, když
+ * se rozhodčí dívá na vodu.
+ */
+const TEP_OD_S = 10;
+
 function Bezi({
   stav,
   delkaS,
@@ -218,9 +226,28 @@ function Bezi({
   const useky = usekyProcedury(stav.doStartuS, delkaS);
   const minuta = stav.doStartuS <= 60;
   const pozadi = minuta ? t.pozor : t.procedura;
+  const tep = useRef(new Animated.Value(1)).current;
+  const tepe = stav.doStartuS <= TEP_OD_S;
+
+  useEffect(() => {
+    if (!tepe) {
+      tep.setValue(1);
+      return;
+    }
+    // Jedna vteřina na tep: sedne si to na odpočet, takže puls a číslo
+    // jdou spolu, ne proti sobě.
+    const smycka = Animated.loop(
+      Animated.sequence([
+        Animated.timing(tep, { toValue: 0.72, duration: 500, useNativeDriver: true }),
+        Animated.timing(tep, { toValue: 1, duration: 500, useNativeDriver: true }),
+      ]),
+    );
+    smycka.start();
+    return () => smycka.stop();
+  }, [tepe, tep]);
 
   return (
-    <View style={[s.panel, { backgroundColor: pozadi }]}>
+    <Animated.View style={[s.panel, { backgroundColor: pozadi, opacity: tep }]}>
       <View style={s.hlava}>
         <Text style={[s.radek, s.naBarve]}>
           Rozjížďka {stav.cislo} {minuta ? '— poslední minuta' : 'startuje'}
@@ -256,7 +283,7 @@ function Bezi({
           </View>
         ))}
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
