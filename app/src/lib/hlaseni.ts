@@ -7,6 +7,14 @@
  * nepřítomnost zvukového znamení nesmí být brán zřetel."*) a u poháru
  * plachetní směrnice, která si zvukovou signalizaci vyhlašuje zvlášť.
  *
+ * <b>Houká s rozhodčím, ne místo něj</b> (Filip tamtéž: *„Houkat musí Miloš
+ * stejně, ale telefon bude houkat s ním. Díky tomu se nemusí koukat na
+ * displej, protože uslyší dirigenta, co má dělat."*). Hlášený odpočet je
+ * proto <b>signál pro rozhodčího, kdy zmáčknout houkačku</b> — hlášení po
+ * něm slyší posádky jako vedlejší účinek, ne jako hlavní účel. Odtud plyne
+ * i délka <see cref="ODPOCET_S"/>: musí stačit na reakci ruky, ne jen na
+ * přečtení věty.
+ *
  * <b>Proto je to tabulka, ne natvrdo zapsaný sled.</b> Směrnice dnes vypisuje
  * jediný zvuk — *„Zrušení rozjížďky: dva dlouhé zvuky"* — a ten se od ZPJ
  * (tři zvuky u vlajky N) liší. Co se troubí, je tedy vlastnost regaty a musí
@@ -35,8 +43,11 @@ export type Znameni = {
  * Odpočet, který hlas odříká před každým znamením.
  *
  * <b>Začíná pět vteřin předem a končí přesně na znamení</b> — „za pět,
- * čtyři, tři, dva, jedna" a v tu vteřinu klakson. Posádky tak vědí, že
- * znamení přichází, a nepřekvapí je.
+ * čtyři, tři, dva, jedna" a v tu vteřinu klakson.
+ *
+ * <b>Pět vteřin je minimum, ne ozdoba:</b> rozhodčí podle toho mačká
+ * houkačku a ruka potřebuje čas na reakci. Kratší odpočet by ho nechal
+ * zatroubit pozdě, delší by odvedl pozornost od vody.
  */
 export const ODPOCET_S = 5;
 

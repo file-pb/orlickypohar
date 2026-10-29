@@ -87,6 +87,29 @@ až bude jasné, co všechno rozhraní potřebuje.
 | `expo-speech` | mluvená hlášení | nahrávka 21: *„abych nemusel držet … megafon"* |
 | `expo-audio` | klakson, **a zvuk i na pozadí** | tatáž věta: *„houkačku"*; Filip, 29. 10. |
 
+### Appka houká s Milošem, ne místo něj
+
+Filip, 29. 10. 2026: *„Houkat musí Miloš stejně, ale telefon bude houkat
+s ním. Díky tomu se nemusí Miloš koukat na displej, protože uslyší
+dirigenta, co má dělat."*
+
+**Tím se mění, k čemu ten hlas je.** Není to hlášení posádkám místo
+megafonu — je to <b>vodítko pro rozhodčího</b>. Odpočet *„za pět, čtyři,
+tři, dva, jedna"* je signál, kdy zmáčknout houkačku; hlášení po něm
+*„pět minut do startu"* slyší posádky jako vedlejší účinek, ne jako
+hlavní účel.
+
+Tři věci, které z toho plynou a jinak by se postavily špatně:
+
+- **Odpočet musí jít dost dopředu**, aby rozhodčí stihl zareagovat. Pět
+  vteřin je proto minimum, ne ozdoba.
+- **Klakson appky má splynout s houkačkou**, ne s ní soupeřit. Krátký
+  a čistý; dvě houkačky v rozfázi znějí jako chyba, ne jako důraz.
+- **Telefon nemusí být na očích.** Právě proto, že Miloš poslouchá místo
+  dívání, může ležet v kapse nebo pod pláštěnkou — a tím se zvuk na
+  pozadí mění z pohodlí na podmínku. Odpočet na zamčené obrazovce musí
+  hrát, jinak ten celý nápad nefunguje.
+
 ### Odpočet nesmí uhnout
 
 Filip, 29. 10. 2026: *„když jede závod a startovní procedura nesmí uhýbat
@@ -148,6 +171,14 @@ jde.
 | --- | --- | --- |
 | **Android** (Miloš) | **ano** | `NotificationManager.setInterruptionFilter` s oprávněním `ACCESS_NOTIFICATION_POLICY`; uživatel ho jednou povolí v nastavení |
 | **iPhone** (Filip) | **ne** | Focus je systémové nastavení, které aplikace nepřepíná; privátní URL do Nastavení Apple zamítá |
+
+**Kdy má klid platit.** Od zahájení procedury do <b>pěti minut po
+startu</b> (Filip, 29. 10. 2026) — tedy přesně to okno, kde každá vteřina
+něco znamená: po startu se řeší předčasné starty a případné odvolání,
+a teprve pak se dá zvednout telefon. Mimo ně se režim nemění; vypnout
+rozhodčímu vyzvánění na celý den by byla medvědí služba. Pravidlo je
+postavené a otestované jako `maBytKlid` v `app/src/lib/start.ts` — chybí
+k němu jen ta nativní část, která ho provede.
 
 **Co na iPhonu zbývá:** automatizace ve Zkratkách — *při otevření
 aplikace zapni Nerušit, při zavření vypni*. Nastaví si ji uživatel sám,

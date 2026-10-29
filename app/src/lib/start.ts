@@ -235,6 +235,38 @@ export function usekyProcedury(
 }
 
 /**
+ * Jak dlouho po startu ještě platí klid na práci.
+ *
+ * Pět minut (Filip, 29. 10. 2026). Není to konec rozhodčího práce, ale
+ * konec té části, kde každá vteřina něco znamená: po startu se řeší
+ * předčasné starty a případné odvolání, a teprve pak se dá zvednout
+ * telefon.
+ */
+export const PO_STARTU_NERUSIT_S = 5 * 60;
+
+/**
+ * Má teď telefon mlčet?
+ *
+ * <b>Okno od zahájení procedury do pěti minut po startu</b> — tedy přesně
+ * ta chvíle, kdy *„Milošovi zavolá manželka a udělá to z něj blbce před
+ * celým soutěžním polem"* (Filip, 29. 10. 2026). Mimo ně se režim telefonu
+ * nemění: vypnout rozhodčímu vyzvánění na celý den by byla medvědí služba.
+ *
+ * <b>Je to pravidlo, ne přepínač.</b> Zapnout *Nerušit* umí jen Android;
+ * na iPhonu je to systémové nastavení, do kterého aplikace nesmí. Tahle
+ * funkce říká jen, kdy by to mělo platit — kdo a jak to provede, je věc
+ * platformy (viz `docs/APPKA-PORADI-PRACI.md`).
+ */
+export function maBytKlid(stav: StavStartu | null): boolean {
+  if (!stav) return false;
+  if (stav.druh === 'procedura') return true;
+  if (stav.druh === 'jede') return stav.odStartuS <= PO_STARTU_NERUSIT_S;
+  // Dokud se čeká, může telefon vyzvánět: do startu je daleko a rozhodčí
+  // zrovna domlouvá s pořadatelem, kdy se pojede.
+  return false;
+}
+
+/**
  * Jedna věta pod odpočet. <b>Prázdné znamená „jen číslo"</b> — dokud se
  * nestartuje, nemá co dodat.
  */

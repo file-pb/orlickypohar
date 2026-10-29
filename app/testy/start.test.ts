@@ -10,6 +10,7 @@ import assert from 'node:assert/strict';
 
 import {
   fazeProcedury,
+  maBytKlid,
   mmss,
   odStartu,
   popisStartu,
@@ -246,6 +247,33 @@ zkus('start, který padl, dokud byla appka na pozadí, se nepřeskočí', () => 
   // Appka spala přes start. Po probuzení už není co odpočítávat —
   // a plánovaná rozjížďka se startem v minulosti se netváří, že jede.
   assert.equal(stavStartu([planovana(2, START)], V('12:01:00')), null);
+});
+
+// --- Kdy má telefon mlčet ---
+
+zkus('klid platí od zahájení procedury', () => {
+  const r = [planovana(2, START)];
+  // Deset minut před startem se ještě čeká — telefon smí vyzvánět.
+  assert.equal(maBytKlid(stavStartu(r, V('11:50:00'))), false);
+  // Jakmile procedura běží, klid.
+  assert.equal(maBytKlid(stavStartu(r, V('11:55:30'))), true);
+  assert.equal(maBytKlid(stavStartu(r, V('11:59:50'))), true);
+});
+
+zkus('klid trvá ještě pět minut po startu', () => {
+  const jede = (odStartuS: number) =>
+    maBytKlid({ druh: 'jede', cislo: 2, odStartuS });
+  assert.equal(jede(0), true);
+  assert.equal(jede(4 * 60), true);
+  assert.equal(jede(5 * 60), true);
+  // Po páté minutě se předčasné starty už neřeší a telefon smí zvonit.
+  assert.equal(jede(5 * 60 + 1), false);
+  assert.equal(jede(20 * 60), false);
+});
+
+zkus('když se na startu nic neděje, klid se nevynucuje', () => {
+  // Vypnout rozhodčímu vyzvánění na celý den by byla medvědí služba.
+  assert.equal(maBytKlid(null), false);
 });
 
 console.log(`  ${prosly} prošlo`);
