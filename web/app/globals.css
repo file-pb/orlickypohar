@@ -1951,7 +1951,49 @@ th.vlevo, td.vlevo { text-align: left; }
    znamená jméno vyteklé z rámečku. Obě podoby jsou v HTML a vybírá
    mezi nimi CSS: javascript by jméno po načtení stránky přepsal před očima.
    --------------------------------------------------------------------- */
-.dlazdice-sekci > li { container-type: inline-size; }
+.dlazdice-sekci > li { container-type: inline-size; position: relative; }
+
+/* ---------------------------------------------------------------------
+   Bublina s popisem úkonu (Filip, 29. 10. 2026: „doklepni tam ty tooltipy
+   pro myš"). Nahradila nativní `title`, který se skoro nikdy neukázal:
+   naskakuje po vteřině, nejde ho stylovat a neobjeví se vůbec, když myš
+   na dlaždici dojede a zůstane stát — prohlížeč ho váže na pohyb kurzoru.
+
+   <b>Tři desetiny zpoždění</b>, aby nevyskakovala při přejíždění pruhu;
+   `pointer-events: none`, aby sama nebránila kliknutí na dlaždici pod ní.
+
+   <b>Poslední dlaždice ji má zarovnanou doprava</b> — při výpisu doleva by
+   u pravého okraje středu vyjela ze stránky. Zjišťuje se to `:last-child`,
+   protože kolik dlaždic je na řádku rozhoduje `auto-fit` a CSS to nezná;
+   ta poslední je ale vždycky nejvíc vpravo.
+   --------------------------------------------------------------------- */
+.dlazdice-sekci .bublina {
+  position: absolute;
+  top: calc(100% + 0.3rem);
+  left: 0;
+  z-index: 3;
+  width: max-content;
+  max-width: 17rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--linka);
+  border-radius: 7px;
+  background: var(--papir);
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.14);
+  color: var(--tlumeny);
+  font-size: 0.8rem;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease 0.3s;
+}
+.dlazdice-sekci > li:last-child .bublina { left: auto; right: 0; }
+.dlazdice-sekci > li:hover .bublina,
+.dlazdice-sekci > li:focus-within .bublina { opacity: 1; }
+/* Na dotykovém displeji není kurzor, kterým by se bublina vyvolala, a hover
+   by na něm zůstal viset po klepnutí. */
+@media (hover: none) {
+  .dlazdice-sekci .bublina { display: none; }
+}
 .jmeno-uzke { display: none; }
 @container (max-width: 10.75rem) {
   .jmeno-dlouhe { display: none; }

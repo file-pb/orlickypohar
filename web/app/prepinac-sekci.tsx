@@ -141,13 +141,10 @@ export function DlazdiceSekci({
       <ul className="seznam dlazdice-sekci">
         {polozky.map((p) => (
           <li key={p.klic} data-polozka={p.klic}>
-            {/* `title` je bublina pro myš a zároveň to jediné, co se z popisu
-                dostane ke čtečce obrazovky — na dotykovém displeji ho nikdo
-                neuvidí, a tak to Filip chce. */}
             <Link
               className="karta"
               href={p.kam}
-              title={p.popis}
+              aria-describedby={p.popis ? `popis-${p.klic}` : undefined}
               aria-current={p.klic === aktivni ? "page" : undefined}
             >
               <div className="nazev">
@@ -162,6 +159,20 @@ export function DlazdiceSekci({
                 )}
               </div>
             </Link>
+            {/* <b>Vlastní bublina místo `title`.</b> Nativní má tři vady,
+                kvůli kterým se popis skoro nikdy neukázal: naskakuje až po
+                vteřině, nejde ji stylovat, a hlavně se vůbec neobjeví, když
+                myš dojede na dlaždici a stojí — prohlížeč ji váže na pohyb.
+                Tahle drží tón webu a je vidět po třech desetinách.
+
+                Stojí mimo odkaz schválně: uvnitř by ji čtečka přečetla jako
+                část jeho jména. Takhle na ni ukazuje `aria-describedby`,
+                tedy jako na popis, kterým ve skutečnosti je. */}
+            {p.popis && (
+              <span className="bublina" id={`popis-${p.klic}`} role="tooltip">
+                {p.popis}
+              </span>
+            )}
           </li>
         ))}
       </ul>
