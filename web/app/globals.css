@@ -2625,6 +2625,14 @@ body:has(.paticka-pocasi) .nahoru {
   :root { --paticka: 4rem; }
 }
 body { padding-bottom: var(--paticka); }
+/* Pracovní obrazovky pás nemají (Filip, 29. 10. 2026) — správa není
+   výkladní skříň a pevný pruh překáží u spodního okraje, kde se potvrzuje.
+   Kotvu `.bez-partneru` staví `app/sprava/layout.tsx`; kořenový layout, kde
+   pás visí, o cestě nic neví. Odsazení stránky padá s pásem, jinak by dole
+   zůstala mezera po něčem, co tam není — a na `--paticka` visí i tlačítko
+   „nahoru" a lišta počasí, takže se posunou samy. */
+body:has(.bez-partneru) { --paticka: 0rem; }
+body:has(.bez-partneru) .partneri { display: none; }
 .partneri {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 15;
   height: var(--paticka); display: flex; align-items: center; overflow: hidden;
