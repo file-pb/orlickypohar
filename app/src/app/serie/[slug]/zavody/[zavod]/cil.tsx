@@ -15,6 +15,7 @@ import { Chyba, Nacitani, Nadpis, Prazdno } from '@/components/ui';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
 import {
+  nactiCilZTrasovani,
   nactiZapis,
   nactiZavod,
   ukonciRozjizdku,
@@ -26,9 +27,12 @@ import {
 import {
   klepni,
   nactiRozepsany,
+  navrhyKZobrazeni,
   odeber,
-  plula,
   prehod,
+  plula,
+  prepisCas,
+  presnejsiCas,
   radky,
   radkyPriUkonceni,
   ulozRozepsany,
@@ -37,6 +41,7 @@ import {
   zeZapisu,
   type LodVCili,
   type Misto,
+  type PrujezdZTrasovani,
 } from '@/lib/cil';
 import { odStartu, stavStartu, trvani, PROCEDURA_S } from '@/lib/start';
 
@@ -65,6 +70,17 @@ const ULOZIT_PO_MS = 400;
 
 /** Za jak dlouho se zkouší uložení, které nedoletělo. */
 const ZKUSIT_ZNOVU_MS = 8000;
+
+/**
+ * Jak často se obrazovka ptá trasování, co vidí u cíle.
+ *
+ * Deset vteřin. Návrh je k užitku jen ve chvíli, kdy loď projíždí, a
+ * častější dotazy by stály baterii, která musí vydržet závodní den.
+ */
+const NAVRHY_MS = 10_000;
+
+/** Jak často se překresluje stáří návrhů. */
+const STARI_MS = 5000;
 
 /**
  * Kolikrát po sobě se smí sada uložit přes konflikt.
@@ -165,6 +181,31 @@ function Zapisovani({
   // Zastavené ukládání drží ref, ne stav: kdyby ho efekt četl ze stavu,
   // měnil by si vlastní závislost a pouštěl by se dokola.
   const stoji = useRef(false);
+
+  // <b>Co u cíle vidí trasování</b> (nález R33). Je to návrh: když se
+  // dotaz nepovede, obrazovka o nic nepřijde — zapisuje se dál klepáním.
+  const [navrhy, setNavrhy] = useState<PrujezdZTrasovani[]>([]);
+  const [tedProNavrhy, setTedProNavrhy] = useState(() => Date.now());
+
+  useEffect(() => {
+    let zivy = true;
+    const nacti = async () => {
+      try {
+        const v = await nactiCilZTrasovani(serie, zavod, zapis.cislo);
+        if (zivy && v) setNavrhy((v.prujezdy ?? []) as PrujezdZTrasovani[]);
+      } catch {
+        // Trasování je pomůcka, ne podmínka. Mlčky dál.
+      }
+    };
+    void nacti();
+    const id = setInterval(() => void nacti(), NAVRHY_MS);
+    const stari = setInterval(() => setTedProNavrhy(Date.now()), STARI_MS);
+    return () => {
+      zivy = false;
+      clearInterval(id);
+      clearInterval(stari);
+    };
+  }, [serie, zavod, zapis.cislo]);
 
   const zmen = useCallback(
     (dalsi: Misto[]) => {
@@ -272,6 +313,26 @@ function Zapisovani({
         </View>
       ) : null}
 
+      {navrhyKZobrazeni(navrhy, mista, tedProNavrhy).map((n) => (
+        /* <b>Návrh vypadá jako návrh.</b> Čárkovaný okraj a tlumená
+           barva: dokud na něj rozhodčí neklepne, nic zapsaného není. */
+        <Pressable
+          key={n.prihlaskaId}
+          onPress={() => zmen(klepni(mista, n.prihlaskaId, Date.parse(n.kdy)))}
+          style={({ pressed }) => [
+            s.navrh,
+            { borderColor: t.jede, backgroundColor: t.zvyrazneni, opacity: pressed ? 0.6 : 1 },
+          ]}>
+          <View style={{ flex: 1 }}>
+            <Text style={[s.navrhLod, { color: t.text }]} numberOfLines={1}>{n.lod}</Text>
+            <Text style={[s.navrhVeta, { color: t.tlumeny }]}>
+              trasování vidí průjezd v {hodiny(n.kdy)}
+            </Text>
+          </View>
+          <Text style={[s.navrhZapsat, { color: t.jede }]}>Zapsat</Text>
+        </Pressable>
+      ))}
+
       {zbyvajici.length === 0 ? (
         <Prazdno text="Všechny lodě mají dojezd. Rozjížďku ukonči, až budeš chtít." />
       ) : (
@@ -328,6 +389,11 @@ function Zapisovani({
         misto={vybrane}
         lode={lode}
         t={t}
+        zTrasovani={vybrane ? presnejsiCas(vybrane, navrhy) : null}
+        vezmiCas={(m, kdy) => {
+          zmen(prepisCas(mista, m.poradi, kdy));
+          setVybrane(null);
+        }}
         zavri={() => setVybrane(null)}
         smaz={(m) => {
           zmen(odeber(mista, m.poradi));
@@ -387,6 +453,8 @@ function OpravaMista({
   misto,
   lode,
   t,
+  zTrasovani,
+  vezmiCas,
   zavri,
   smaz,
   prohod,
@@ -394,6 +462,9 @@ function OpravaMista({
   misto: Misto | null;
   lode: readonly LodVCili[];
   t: Barvy;
+  /** Přesnější čas ze stopy, nebo `null`, když žádný nesedí. */
+  zTrasovani: string | null;
+  vezmiCas: (m: Misto, kdy: string) => void;
   zavri: () => void;
   smaz: (m: Misto) => void;
   prohod: (m: Misto) => void;
@@ -409,6 +480,18 @@ function OpravaMista({
             Čas patří místu, ne lodi: prohozením se vymění jména, časy zůstanou tam,
             kde cílem něco projelo.
           </Text>
+
+          {/* <b>Druhá půlka nálezu R33.</b> Rozhodčí určil, kdo dojel;
+              stopa nabídne, kdy — na desetiny přesněji, než stihl palec. */}
+          {misto && zTrasovani ? (
+            <Pressable
+              onPress={() => misto && vezmiCas(misto, zTrasovani)}
+              style={({ pressed }) => [s.volba, { borderColor: t.jede, opacity: pressed ? 0.6 : 1 }]}>
+              <Text style={[s.volbaText, { color: t.jede }]}>
+                Vzít čas z trasování ({hodiny(zTrasovani)})
+              </Text>
+            </Pressable>
+          ) : null}
 
           {misto && misto.poradi > 1 ? (
             <Pressable
@@ -470,7 +553,11 @@ function Ukonceni({
             <Pressable
               onPress={zavri}
               disabled={posila}
-              style={({ pressed }) => [s.volba, { borderColor: t.linka, opacity: pressed ? 0.6 : 1 }]}>
+              style={({ pressed }) => [
+                s.volba,
+                s.volbaVedle,
+                { borderColor: t.linka, opacity: pressed ? 0.6 : 1 },
+              ]}>
               <Text style={[s.volbaText, { color: t.text }]}>Zpátky</Text>
             </Pressable>
             <Pressable
@@ -492,6 +579,7 @@ function Ukonceni({
               }}
               style={({ pressed }) => [
                 s.volba,
+                s.volbaVedle,
                 { backgroundColor: t.vystraha, borderColor: 'transparent', opacity: pressed || posila ? 0.6 : 1 },
               ]}>
               <View style={s.obsahTlacitka}>
@@ -524,6 +612,14 @@ function jmeno(lode: readonly LodVCili[], prihlaskaId: number): string {
   return lode.find((l) => l.prihlaskaId === prihlaskaId)?.lod ?? '—';
 }
 
+/** Hodina s vteřinami, v pásmu telefonu — čas, kdy něco projelo cílem. */
+function hodiny(iso: string): string {
+  const d = new Date(iso);
+  return [d.getHours(), d.getMinutes(), d.getSeconds()]
+    .map((c, i) => (i === 0 ? String(c) : String(c).padStart(2, '0')))
+    .join(':');
+}
+
 /** Čas, který loď plula; bez času startu aspoň hodina dojezdu. */
 function casMista(startV: string | null, dojezdV: string | null): string {
   const s = plula(startV, dojezdV);
@@ -554,6 +650,15 @@ const s = StyleSheet.create({
   lodJmeno: { color: '#ffffff', fontSize: 19, fontWeight: '800' },
   lodPodtitul: { color: 'rgba(255,255,255,0.85)', fontSize: 13, marginTop: 2 },
 
+  navrh: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    borderWidth: 2, borderStyle: 'dashed', borderRadius: 12,
+    paddingVertical: 12, paddingHorizontal: 14, marginBottom: 10,
+  },
+  navrhLod: { fontSize: 17, fontWeight: '700' },
+  navrhVeta: { fontSize: 13, marginTop: 2 },
+  navrhZapsat: { fontSize: 15, fontWeight: '800' },
+
   poradi: { marginTop: 18, gap: 6 },
   mistoRadek: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
@@ -571,10 +676,15 @@ const s = StyleSheet.create({
   dialogNadpis: { fontSize: 18, fontWeight: '800' },
   dialogVeta: { fontSize: 15, lineHeight: 21 },
   dialogTlacitka: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  // <b>Bez `flex`.</b> Tlačítka dialogu stojí pod sebou a `flex: 1` jim
+  // ve sloupci srazí základnu na nulu — změřeno na simulátoru 29. 10.
+  // 2026: rámečky se vykreslily, ale text v nich nebyl vidět vůbec.
+  // Dělit prostor mají jen tlačítka vedle sebe, a ta mají `volbaVedle`.
   volba: {
-    flex: 1, borderWidth: 1, borderRadius: 10,
+    borderWidth: 1, borderRadius: 10,
     paddingVertical: 12, paddingHorizontal: 12, alignItems: 'center',
   },
+  volbaVedle: { flex: 1 },
   volbaText: { fontWeight: '700', fontSize: 15 },
   obsahTlacitka: { flexDirection: 'row', alignItems: 'center', gap: 10 },
 });

@@ -13,7 +13,10 @@ import assert from 'node:assert/strict';
 
 import {
   klepni,
+  navrhyKZobrazeni,
   odeber,
+  prepisCas,
+  presnejsiCas,
   plula,
   prehod,
   radky,
@@ -23,6 +26,7 @@ import {
   zeZapisu,
   type LodVCili,
   type Misto,
+  type PrujezdZTrasovani,
 } from '../src/lib/cil.ts';
 
 let prosly = 0;
@@ -174,6 +178,71 @@ zkus('naměřený čas se počítá od startu rozjížďky', () => {
   assert.equal(plula('2027-05-15T12:00:00Z', '2027-05-15T12:30:12Z'), 30 * 60 + 12);
   assert.equal(plula(null, '2027-05-15T12:30:12Z'), null);
   assert.equal(plula('2027-05-15T12:00:00Z', null), null);
+});
+
+/* ---------- návrhy z trasování (R33) ---------- */
+
+const prujezd = (id: number, lod: string, kdy: string): PrujezdZTrasovani => ({
+  prihlaskaId: id,
+  lod,
+  kdy,
+});
+
+zkus('navrhne se jen čerstvý průjezd lodi, která ještě nemá místo', () => {
+  const ted = Date.parse('2027-05-15T12:30:00Z');
+  const navrhy = navrhyKZobrazeni(
+    [
+      prujezd(1, 'LUNA', '2027-05-15T12:29:40Z'), // před dvaceti vteřinami
+      prujezd(2, 'RELAX', '2027-05-15T12:20:00Z'), // deset minut zpátky
+      prujezd(3, 'AVENIR', '2027-05-15T12:29:50Z'),
+    ],
+    klepni([], 3, ted), // AVENIR už je zapsaná
+    ted,
+  );
+
+  assert.deepEqual(navrhy.map((n) => n.prihlaskaId), [1]);
+});
+
+zkus('návrhy jdou v pořadí, v jakém projely', () => {
+  const ted = Date.parse('2027-05-15T12:30:00Z');
+  const navrhy = navrhyKZobrazeni(
+    [
+      prujezd(1, 'LUNA', '2027-05-15T12:29:50Z'),
+      prujezd(2, 'RELAX', '2027-05-15T12:29:30Z'),
+    ],
+    [],
+    ted,
+  );
+
+  assert.deepEqual(navrhy.map((n) => n.prihlaskaId), [2, 1]);
+});
+
+zkus('trasování nabídne přesnější čas k zapsanému klepnutí', () => {
+  // R33 naopak: rozhodčí určil, kdo dojel, stopa dodá kdy.
+  const kleplo = Date.parse('2027-05-15T12:30:05Z');
+  const m = klepni([], 1, kleplo)[0];
+
+  assert.equal(
+    presnejsiCas(m, [prujezd(1, 'LUNA', '2027-05-15T12:30:02Z')]),
+    '2027-05-15T12:30:02Z',
+  );
+
+  // Přes minutu je to jiná událost, ne zpožděný palec.
+  assert.equal(presnejsiCas(m, [prujezd(1, 'LUNA', '2027-05-15T12:28:00Z')]), null);
+  // Jiná loď se nenabízí ani v čase.
+  assert.equal(presnejsiCas(m, [prujezd(2, 'RELAX', '2027-05-15T12:30:02Z')]), null);
+  // Totožný čas není co přepisovat.
+  assert.equal(presnejsiCas(m, [prujezd(1, 'LUNA', m.dojezdV!)]), null);
+});
+
+zkus('přepsání času nechá pořadí i loď na pokoji', () => {
+  const m = klepni(klepni([], 1, T), 2, T + 10_000);
+  const po = prepisCas(m, 2, '2027-05-15T12:30:09Z');
+
+  assert.deepEqual(po[0], m[0]);
+  assert.equal(po[1].prihlaskaId, 2);
+  assert.equal(po[1].poradi, 2);
+  assert.equal(po[1].dojezdV, '2027-05-15T12:30:09Z');
 });
 
 console.log(`  ${prosly} prošlo`);

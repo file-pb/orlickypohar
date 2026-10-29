@@ -34,6 +34,7 @@ export type Ja = S["JaDto"];
 export type ZapisRozjizdky = S["ZapisRozjizdkyDto"];
 export type ZapisLod = S["ZapisLodDto"];
 export type ZapisRadekVstup = S["ZapisRadekVstup"];
+export type CilZTrasovaniOdpoved = S["CilZTrasovaniDto"];
 
 /** Vrací null u 404 — nepublikovaný ročník se chová, jako by neexistoval. */
 export async function nacti<T>(cesta: string): Promise<T | null> {
@@ -261,6 +262,20 @@ export async function ulozVysledky(
   if (v === null) throw new Error('neprihlasen');
   return v;
 }
+
+/**
+ * <b>Co u cíle vidí trasování</b> (nález R33): u kterých lodí stopa
+ * z telefonu protla cílovou čáru ve směru do cíle.
+ *
+ * Je to <b>návrh, ne zápis</b>. Která loď to byla a jestli dojela, ví
+ * jen rozhodčí; stopa umí dodat čas přesnější, než na jaký stačí palec.
+ * Když se dotaz nepovede, obrazovka o nic nepřijde — zapisuje se dál
+ * klepáním.
+ */
+export const nactiCilZTrasovani = (serie: string, zavod: string, cislo: number) =>
+  nactiZaSebe<CilZTrasovaniOdpoved>(
+    `/sprava/serie/${serie}/vysledky/${zavod}/rozjizdky/${cislo}/cil-z-trasovani`,
+  );
 
 /**
  * <b>Ukončí rozjížďku</b> — zastaví časomíru.

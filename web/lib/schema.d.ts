@@ -3152,6 +3152,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/cil-z-trasovani": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dojezdy, jak je vidí trasování
+         * @description Pro cílovou obrazovku: u kterých lodí stopa z telefonu protla cílovou čáru ve směru do cíle. Hledá se jen v posledních dvaceti minutách a až od startu — průjezd zpřed hodiny už je zapsaný a celá stopa třicetihodinové jízdy by byla desítky tisíc bodů na loď. `procNe` je věta pro rozhodčího (trať bez cíle, rozjížďka bez startu), ne chyba.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CilZTrasovaniDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/start": {
         parameters: {
             query?: never;
@@ -6867,6 +6910,10 @@ export interface components {
         ChybaTrasy: {
             error: string;
         };
+        CilZTrasovaniDto: {
+            procNe: null | string;
+            prujezdy: components["schemas"]["PrujezdCilemDto"][];
+        };
         ClanekDto: {
             slug: string;
             titulek: string;
@@ -7622,6 +7669,13 @@ export interface components {
             druh: components["schemas"]["DruhProcedury"];
             /** Format: date-time */
             zapsanoV?: null | string;
+        };
+        PrujezdCilemDto: {
+            /** Format: int32 */
+            prihlaskaId: number;
+            lod: string;
+            /** Format: date-time */
+            kdy: string;
         };
         PrvekDto: {
             /** Format: int32 */

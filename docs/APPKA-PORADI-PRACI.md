@@ -35,11 +35,21 @@ místa (smazat, prohodit s předchozí), ukládání celé sady po každé změn
 s revizí a *Ukončit rozjížďku*, které zbylým lodím zapíše DNF a zastaví
 časomíru. Rozepsaný zápis leží v souboru, takže přežije i konec appky.
 
-**Co ještě ne.** Ghost řádky z trasování a přepsání toho, co určilo
-(R33) — to je vlastní velká věc. Kódy kromě DNF (OCS, DSQ, odstoupila)
-se zapisují na webu; v appce zatím nejsou. Lodě mimo regatu („Další
-lodě") taky ne — appka nabízí ty přihlášené, a když přihlášky nikdo
-nevede, celý ročník.
+**Trasování navrhuje, nerozhoduje** (nález R33, postaveno tentýž večer).
+Server počítá ze stopy, kdy která loď protla cílovou čáru *ve směru do
+cíle* — bez směru by u Orlíku, kde cíl leží na startu, hlásil dojezd
+celému poli ve chvíli startu. Z toho jsou v appce dvě věci:
+
+- **čerstvý průjezd lodi, která ještě nemá místo**, se ukáže jako návrh
+  s čárkovaným okrajem; klepnutím se zapíše — i s tím přesným časem;
+- **k zapsanému klepnutí** nabídne obrazovka čas ze stopy, když leží do
+  minuty od něj. Rozhodčí určil, *kdo* dojel, trasování dodá *kdy*.
+
+Nic se nezapisuje samo a nic se nemaže.
+
+**Co ještě ne.** Kódy kromě DNF (OCS, DSQ, odstoupila) se zapisují na
+webu; v appce zatím nejsou. Lodě mimo regatu („Další lodě") taky ne —
+appka nabízí ty přihlášené, a když přihlášky nikdo nevede, celý ročník.
 
 ### Co drží rozhraní rozhodčího pohromadě
 

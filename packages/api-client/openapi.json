@@ -2958,6 +2958,55 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/cil-z-trasovani": {
+            "get": {
+                "tags": [
+                    "V\u00fdsledky"
+                ],
+                "summary": "Dojezdy, jak je vid\u00ed trasov\u00e1n\u00ed",
+                "description": "Pro c\u00edlovou obrazovku: u kter\u00fdch lod\u00ed stopa z telefonu protla c\u00edlovou \u010d\u00e1ru ve sm\u011bru do c\u00edle. Hled\u00e1 se jen v posledn\u00edch dvaceti minut\u00e1ch a a\u017e od startu \u2014 pr\u016fjezd zp\u0159ed hodiny u\u017e je zapsan\u00fd a cel\u00e1 stopa t\u0159icetihodinov\u00e9 j\u00edzdy by byla des\u00edtky tis\u00edc bod\u016f na lo\u010f. `procNe` je v\u011bta pro rozhod\u010d\u00edho (tra\u0165 bez c\u00edle, rozj\u00ed\u017e\u010fka bez startu), ne chyba.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CilZTrasovaniDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/vysledky/{zavod}/rozjizdky/{cislo}/start": {
             "post": {
                 "tags": [
@@ -7471,6 +7520,27 @@
                     }
                 }
             },
+            "CilZTrasovaniDto": {
+                "required": [
+                    "procNe",
+                    "prujezdy"
+                ],
+                "type": "object",
+                "properties": {
+                    "procNe": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "prujezdy": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PrujezdCilemDto"
+                        }
+                    }
+                }
+            },
             "ClanekDto": {
                 "required": [
                     "slug",
@@ -10492,6 +10562,27 @@
                             "null",
                             "string"
                         ],
+                        "format": "date-time"
+                    }
+                }
+            },
+            "PrujezdCilemDto": {
+                "required": [
+                    "prihlaskaId",
+                    "lod",
+                    "kdy"
+                ],
+                "type": "object",
+                "properties": {
+                    "prihlaskaId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "lod": {
+                        "type": "string"
+                    },
+                    "kdy": {
+                        "type": "string",
                         "format": "date-time"
                     }
                 }

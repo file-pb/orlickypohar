@@ -211,6 +211,94 @@ export function plula(startV: string | null, dojezdV: string | null): number | n
   return Math.round((d - s) / 1000);
 }
 
+/* ---------- co k tomu říká trasování (nález R33) ---------- */
+
+/**
+ * Průjezd cílem, jak ho vidí stopa z telefonu lodi. Počítá ho server
+ * (`CilZTrasovani`), protože má stopy i trať.
+ */
+export type PrujezdZTrasovani = {
+  prihlaskaId: number;
+  lod: string;
+  /** Okamžik protnutí cílové čáry (ISO). */
+  kdy: string;
+};
+
+/**
+ * Jak čerstvý musí být průjezd, aby se nabídl jako návrh.
+ *
+ * <b>Tři minuty.</b> Návrh má smysl ve chvíli, kdy loď projíždí — tehdy
+ * se rozhodčí dívá na vodu a potřebuje jen potvrdit. Starší průjezd by
+ * byl buď zapsaný, nebo to nebyl dojezd, ale průjezd brankou: trať se
+ * k cíli vrací a server vydává ten poslední.
+ */
+export const OKNO_NAVRHU_S = 180;
+
+/**
+ * Návrhy, které se mají ukázat: loď ještě nemá místo a průjezd je
+ * čerstvý. Od nejstaršího, protože v tom pořadí projely cílem.
+ */
+export function navrhyKZobrazeni(
+  prujezdy: readonly PrujezdZTrasovani[],
+  mista: readonly Misto[],
+  ted: number,
+  oknoS: number = OKNO_NAVRHU_S,
+): PrujezdZTrasovani[] {
+  const zapsane = new Set(mista.map((m) => m.prihlaskaId));
+  return prujezdy
+    .filter((p) => {
+      if (zapsane.has(p.prihlaskaId)) return false;
+      const kdy = Date.parse(p.kdy);
+      return Number.isFinite(kdy) && ted - kdy <= oknoS * 1000 && kdy <= ted;
+    })
+    .sort((a, b) => Date.parse(a.kdy) - Date.parse(b.kdy));
+}
+
+/**
+ * Jak daleko od zapsaného klepnutí smí ležet průjezd, aby šlo o tentýž
+ * dojezd.
+ *
+ * <b>Minuta.</b> Palec přijde pozdě, obzvlášť když projíždí víc lodí za
+ * sebou; dál než minutu už je to jiná událost. Loď se přitom shoduje
+ * podle přihlášky, takže se nemůže zaměnit za jinou.
+ */
+export const TOLERANCE_NAVRHU_S = 60;
+
+/**
+ * Přesnější čas pro zapsané místo, nebo `null`.
+ *
+ * <b>Tohle je to „přepsání toho, co určilo trasování"</b> z nálezu R33,
+ * jen naopak: rozhodčí určil, <i>kdo</i> dojel, a trasování nabídne
+ * <i>kdy</i>. Nabídne se jen čas, který se od zapsaného liší — jinak
+ * by obrazovka nabízela změnu, která nic nezmění.
+ */
+export function presnejsiCas(
+  misto: Misto,
+  prujezdy: readonly PrujezdZTrasovani[],
+  toleranceS: number = TOLERANCE_NAVRHU_S,
+): string | null {
+  if (!misto.dojezdV) return null;
+  const zapsano = Date.parse(misto.dojezdV);
+  if (!Number.isFinite(zapsano)) return null;
+
+  const p = prujezdy.find((x) => x.prihlaskaId === misto.prihlaskaId);
+  if (!p) return null;
+
+  const kdy = Date.parse(p.kdy);
+  if (!Number.isFinite(kdy)) return null;
+  if (Math.abs(kdy - zapsano) > toleranceS * 1000) return null;
+  return kdy === zapsano ? null : p.kdy;
+}
+
+/** Zapíše místu jiný čas — beze změny pořadí i lodi. */
+export function prepisCas(
+  mista: readonly Misto[],
+  poradi: number,
+  dojezdV: string,
+): Misto[] {
+  return mista.map((m) => (m.poradi === poradi ? { ...m, dojezdV } : m));
+}
+
 /* ---------- rozepsaný zápis: přežije i konec appky ---------- */
 
 /**
