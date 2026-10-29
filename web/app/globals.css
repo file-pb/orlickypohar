@@ -531,9 +531,15 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.01em; }
    dostává i z komponenty (`Zastavka` v kalendáři, `Rozjizdka` ve
    výsledcích), takže podle souboru by to nešlo spolehlivě rozhodnout —
    `Radek` v lodích naopak vrací holé `li` bez karty. A kdyby prohlížeč
-   `:has` neuměl, zůstane jeden sloupec: to je ta bezpečnější strana. */
+   `:has` neuměl, zůstane jeden sloupec: to je ta bezpečnější strana.
+
+   Dlaždice sekcí jsou z toho vyňaté — mají vlastní mřížku o třech
+   sloupcích (viz `.dlazdice-sekci` níž), a dvousloupcové pravidlo by ji
+   specifitou přebilo. */
 @media (min-width: 1180px) {
-  .seznam:has(> li > .karta) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .seznam:not(.dlazdice-sekci):has(> li > .karta) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .karta {
   display: block; padding: 1rem 1.15rem; background: var(--papir);
@@ -1820,7 +1826,45 @@ th.vlevo, td.vlevo { text-align: left; }
 /* Dlaždice nesou tytéž značky ve stejné velikosti jako pruh — je to jeden
    předpis schválně, aby se obě podoby nemohly rozejít (Filip, 29. 10. 2026:
    „dlaždice, co budou vypadat podobně jako tab"). */
-.dlazdice-sekci .nazev { display: inline-flex; align-items: center; gap: 0.45rem; }
+/* ---------------------------------------------------------------------
+   Dlaždice sekcí — tři na řádek (Filip, 29. 10. 2026: „co udělat ty
+   dlaždice menší/nižší, s efektivnějším využitím prostoru a dat je na
+   řádek 3").
+
+   Tři, dva, jeden podle místa. <b>Nelomí se jméno, ale popis</b>: změřeno
+   roztahováním mřížky, že od šířky sloupce 348 px se vejde na jeden řádek
+   i ta nejdelší věta („Kdo je na vodě, kde zrovna je a jak staré to hlášení
+   je."), kdežto při 341 px se zalomí a řádek vyroste z 59 na 77 px. Tři
+   sloupce proto začínají až na 1180 px, kde sloupec vychází na 375 px;
+   dva na 48 rem, kde vychází na 360 px. Níž zůstává jeden a popis se
+   lámat smí — pod sebou to nikoho neposune.
+
+   Mez 1180 px je tatáž, od které se seznamy karet dělí na dva sloupce —
+   ať se obrazovka nepřeskládává dvakrát.
+
+   Dlaždice je nižší než běžná karta: obsah je dvě krátká sdělení, ne
+   odstavec, takže vnitřní okraj karty kalendáře by tu dělal vzduch.
+   <b>Pět úkonů zabere 127 px místo 287</b> (změřeno na `jarni-vitr` při
+   1280 px): dva řádky po 59 px proti třem po 87–90.
+   --------------------------------------------------------------------- */
+.dlazdice-sekci { gap: 0.5rem; }
+@media (min-width: 48rem) {
+  .dlazdice-sekci { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1180px) {
+  .dlazdice-sekci { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+/* Dlaždice drží výšku celé buňky, aby řádek nebyl zubatý, když jeden popis
+   zalomí a druhý ne. */
+.dlazdice-sekci > li { display: grid; }
+.dlazdice-sekci .karta { padding: 0.6rem 0.75rem; border-radius: 8px; }
+/* Štítek role smí zalomit pod název; mačkat se mu nedovolí, protože by se
+   z „Pořadatel" stalo „Pořada…". */
+.dlazdice-sekci .nazev {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem;
+  font-size: 0.95rem; line-height: 1.3;
+}
+.dlazdice-sekci .detail { font-size: 0.8rem; line-height: 1.3; margin-top: 0.1rem; }
 .taby-sekci .vlajka,
 .dlazdice-sekci .vlajka {
   height: 0.95rem;
