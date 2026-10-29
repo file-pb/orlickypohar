@@ -1,4 +1,3 @@
-import Link from "@/app/sprava/odkaz";
 import { notFound, redirect } from "next/navigation";
 import { Drobecky, drobeckySpravy } from "@/app/drobecky";
 import { Vypadek } from "@/app/vypadek";
@@ -7,6 +6,33 @@ import { datum } from "@/app/datum";
 import { nactiJa } from "@/lib/ja";
 import { nactiKalendar } from "@/lib/kalendar";
 import { NAZVY_ROLI, polozkyZastavky, prava } from "@/lib/co-smim";
+import { DlazdiceSekci } from "@/app/prepinac-sekci";
+import { VlajkaIkona, type Vlajka } from "@/app/vlajky";
+import { ZnackaPuvodni } from "@/app/logo-puvodni";
+
+/**
+ * Signální vlajka u úkonu — <b>tatáž, jakou nese veřejná sekce téže věci</b>,
+ * aby pořadatel poznal směrnice podle vlajky L stejně na obou stranách.
+ *
+ * <b>Vymýšlet chybějící se nesmí</b>: vlajka je vybraná podle toho, co
+ * doopravdy znamená v Závodních signálech (`app/vlajky.tsx`), a vymyšlená by
+ * rozbila přesně tu znalost, kvůli které tu vlajky jsou. Živé polohy proto
+ * dostanou značku poháru, stejně jako ji veřejně nesou Úvod a Vypsání —
+ * žádný signál neznamená „kdo je zrovna na vodě".
+ */
+const ZNAKY: Record<string, Vlajka | null> = {
+  vysledky: "modra",
+  // Přihlášky vyústí ve startovní listinu a tu veřejně značí P. Miloš drží
+  // obojí zvlášť (střípek 6), takže se tu P neopakuje nad dvěma věcmi —
+  // ve správě je z té dvojice jen jedna.
+  prihlasky: "P",
+  smernice: "L",
+  boje: "M",
+  tracker: null,
+};
+
+/** Úsek z adresy úkonu: `/sprava/{ročník}/{úsek}/{regata}`. */
+const usek = (kam: string) => kam.split("/")[3] ?? "";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
@@ -75,19 +101,19 @@ export default async function RegataVeSprave({
       ) : ukony.length === 0 ? (
         <p className="prazdno">U téhle regaty nemáš žádný úkon.</p>
       ) : (
-        <ul className="seznam">
-          {ukony.map((u) => (
-            <li key={u.kam}>
-              <Link className="karta" href={u.kam}>
-                <div className="nazev">
-                  {u.nazev}
-                  <span className="stitek">{NAZVY_ROLI[u.role]}</span>
-                </div>
-                <div className="detail">{u.popis}</div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <DlazdiceSekci
+          polozky={ukony.map((u) => {
+            const znak = ZNAKY[usek(u.kam)];
+            return {
+              klic: usek(u.kam),
+              nazev: u.nazev,
+              kam: u.kam,
+              popis: u.popis,
+              stitek: NAZVY_ROLI[u.role],
+              znacka: znak ? <VlajkaIkona vlajka={znak} /> : <ZnackaPuvodni />,
+            };
+          })}
+        />
       )}
     </>
   );

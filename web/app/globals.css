@@ -1817,7 +1817,12 @@ th.vlevo, td.vlevo { text-align: left; }
 .taby-sekci a { white-space: nowrap; display: inline-flex; align-items: center; gap: 0.45rem; }
 /* Signální vlajka u sekce. Pevné barvy mezinárodního kódu, z motivu jen
    rámeček — bez něj by bílá v bílé vlajce splynula s pozadím. */
-.taby-sekci .vlajka {
+/* Dlaždice nesou tytéž značky ve stejné velikosti jako pruh — je to jeden
+   předpis schválně, aby se obě podoby nemohly rozejít (Filip, 29. 10. 2026:
+   „dlaždice, co budou vypadat podobně jako tab"). */
+.dlazdice-sekci .nazev { display: inline-flex; align-items: center; gap: 0.45rem; }
+.taby-sekci .vlajka,
+.dlazdice-sekci .vlajka {
   height: 0.95rem;
   width: 1.425rem;
   flex: none;
@@ -1825,7 +1830,8 @@ th.vlevo, td.vlevo { text-align: left; }
   border-radius: 1px;
 }
 /* Úvod nese značku poháru místo vlajky; srovnat ji do stejné výšky. */
-.taby-sekci .znak-celkem { height: 1.3rem; width: auto; }
+.taby-sekci .znak-celkem,
+.dlazdice-sekci .znak-celkem { height: 1.3rem; width: auto; }
 
 /* Výběr sekce na úzkém displeji (Filip, 24. 10. 2026). Pruh tabů se tam
    nevejde: změřeno na `jarni-vitr` při 375 px — 551 px obsahu v 335 px

@@ -25,6 +25,10 @@ export type PolozkaPrepinace = {
   kam: string;
   /** Vlajka nebo značka vlevo od názvu. Nepovinná — viz `znacky`. */
   znacka?: ReactNode;
+  /** Věta, co se tam dělá. Ukáže ji dlaždice; do pruhu se nevejde. */
+  popis?: string;
+  /** Štítek za názvem, třeba role, ze které právo plyne. */
+  stitek?: string;
 };
 
 export function PrepinacSekci({
@@ -83,5 +87,47 @@ export function PrepinacSekci({
         <nav aria-label={popisek}>{odkazy}</nav>
       </details>
     </>
+  );
+}
+
+/**
+ * <b>Tytéž položky jako pruh, jen jako dlaždice</b> (Filip, 29. 10. 2026:
+ * *„co udělat dlaždice, co budou vypadat podobně jako tab?"*). Proto je to
+ * ve stejném souboru a na stejném typu: kdyby si dlaždice nesly vlastní
+ * seznam, rozešla by se jména nebo ikony a uživatel by se učil dvoje
+ * ovládání téhož — což je přesně to, oč tu jde.
+ *
+ * <b>Dlaždice je vstup, pruh navigace.</b> Dlaždice se vypisují tam, kde se
+ * teprve vybírá, a unesou `popis` — větu, co se na té obrazovce dělá.
+ * Uvnitř vybrané sekce je pak pruh: šest karet nad každou pracovní
+ * obrazovkou by obsah odtlačilo o tři řádky.
+ *
+ * Příbuznost dělá značka: táž vlajka v téže velikosti jako v pruhu
+ * (`.taby-sekci .vlajka` a `.dlazdice-sekci .vlajka` jsou jeden předpis).
+ */
+export function DlazdiceSekci({
+  polozky,
+  znacky = true,
+}: {
+  polozky: PolozkaPrepinace[];
+  znacky?: boolean;
+}) {
+  if (polozky.length === 0) return null;
+
+  return (
+    <ul className="seznam dlazdice-sekci">
+      {polozky.map((p) => (
+        <li key={p.klic}>
+          <Link className="karta" href={p.kam}>
+            <div className="nazev">
+              {znacky && p.znacka}
+              {p.nazev}
+              {p.stitek && <span className="stitek">{p.stitek}</span>}
+            </div>
+            {p.popis && <div className="detail">{p.popis}</div>}
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
