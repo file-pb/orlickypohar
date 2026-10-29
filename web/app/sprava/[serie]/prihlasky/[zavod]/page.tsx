@@ -158,11 +158,11 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
           { text: "Přihlášky" },
         ])}
       />
+      <PruhUkonuRegaty serie={serie} zavod={zavod} aktivni="prihlasky" />
       <h1>{prehled.zavodNazev}</h1>
       <p className="podtitulek">
         Přihlášené lodě <Stav stav={prehled.stavZavodu} />
       </p>
-      <PruhUkonuRegaty serie={serie} zavod={zavod} aktivni="prihlasky" />
 
       {zpravy.chyba && (
         <p className="hlaska chyba" role="alert">

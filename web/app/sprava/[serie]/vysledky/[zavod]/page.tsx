@@ -193,13 +193,16 @@ export default async function VysledkyZastavky({ params, searchParams }: Paramet
           { text: "Výsledky" },
         ])}
       />
+      {/* Pruh stojí hned pod drobečky, nadpis až za ním (Filip, 29. 10.
+          2026). Je to navigace, ne obsah — a drobeček s dlaždicí tak drží
+          při sobě to, co obojí říká: kde jsem.
+          Odkaz „přihlášené lodě →" z podtitulku odešel: pruh na ně vede taky
+          a dvě cesty k témuž na jedné obrazovce se čtou jako dvě různé věci. */}
+      <PruhUkonuRegaty serie={serie} zavod={zavod} aktivni="vysledky" />
       <h1>{prehled.zavodNazev}</h1>
       <p className="podtitulek">
         {prehled.serieNazev} <Stav stav={prehled.stavZavodu} />
       </p>
-      {/* Odkaz „přihlášené lodě →" z podtitulku odešel: pruh na ně vede taky
-          a dvě cesty k témuž na jedné obrazovce se čtou jako dvě různé věci. */}
-      <PruhUkonuRegaty serie={serie} zavod={zavod} aktivni="vysledky" />
 
       {/* Nepublikovaná regata schová i publikovanou rozjížďku — veřejně
           neexistuje. Bez téhle věty by správce pouštěl čísla ven a divil se,

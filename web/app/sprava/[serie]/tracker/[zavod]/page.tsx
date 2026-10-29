@@ -79,10 +79,10 @@ export default async function TrackerRegaty({ params, searchParams }: Parametry)
   const hlava = (
     <>
       <Drobecky cesta={[...drobeckySpravy(serie), drobekRegaty(serie, zavod, nazev)]} />
-      <h1>Tracker — {nazev}</h1>
       {/* Pruh se sám schová nepřihlášenému i tomu, kdo na regatě nemá úkon,
           takže smí stát i v hlavě, kterou vidí obě odmítnutí. */}
       <PruhUkonuRegaty serie={serie} zavod={zavod} aktivni="tracker" />
+      <h1>Tracker — {nazev}</h1>
     </>
   );
 

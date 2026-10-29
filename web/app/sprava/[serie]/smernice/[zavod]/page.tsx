@@ -57,9 +57,9 @@ export default async function SmerniceZastavky({ params, searchParams }: Paramet
           { text: "Plachetní směrnice" },
         ])}
       />
+      <PruhUkonuRegaty serie={serie} zavod={zavod} aktivni="smernice" />
       <h1>Plachetní směrnice</h1>
       {nazev && <p className="podtitulek">{nazev}</p>}
-      <PruhUkonuRegaty serie={serie} zavod={zavod} aktivni="smernice" />
 
       {zpravy.chyba && (
         <p className="hlaska chyba" role="alert">

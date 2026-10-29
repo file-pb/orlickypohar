@@ -56,6 +56,14 @@ export default async function RegataVeSprave({
   return (
     <>
       <Drobecky cesta={drobeckySpravy(serie, [{ text: radek.nazev }])} />
+
+      {/* I tady stojí pruh hned pod drobečky, ať je na všech obrazovkách
+          regaty na témže místě. Zrušená regata nemá výsledky ani přihlášky
+          a API je odmítne — dlaždice na ně by byly slib naprázdno. */}
+      {radek.stav === "Zruseny" ? null : ukony.length === 0 ? null : (
+        <PruhUkonuRegaty serie={serie} zavod={zavod} />
+      )}
+
       <h1>
         <span className={radek.stav === "Zruseny" ? "skrtnute" : undefined}>{radek.nazev}</span>{" "}
         <Stav stav={radek.stav} />
@@ -68,14 +76,10 @@ export default async function RegataVeSprave({
         )}
       </p>
 
-      {/* Zrušená regata nemá výsledky ani přihlášky a API je odmítne —
-          dlaždice na ně by byly slib naprázdno. */}
       {radek.stav === "Zruseny" ? (
         <p className="prazdno">Zrušeno. Nic se tu nezapisuje.</p>
-      ) : ukony.length === 0 ? (
-        <p className="prazdno">U téhle regaty nemáš žádný úkon.</p>
       ) : (
-        <PruhUkonuRegaty serie={serie} zavod={zavod} />
+        ukony.length === 0 && <p className="prazdno">U téhle regaty nemáš žádný úkon.</p>
       )}
     </>
   );

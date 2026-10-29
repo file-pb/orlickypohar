@@ -128,9 +128,9 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
           { text: "Závodní trať" },
         ])}
       />
+      <PruhUkonuRegaty serie={serie} zavod={zavod} aktivni="boje" />
       <h1>Závodní trať</h1>
       {nazev && <p className="podtitulek">{nazev}</p>}
-      <PruhUkonuRegaty serie={serie} zavod={zavod} aktivni="boje" />
 
       {zpravy.chyba && (
         <p className="hlaska chyba" role="alert">
