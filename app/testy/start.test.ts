@@ -109,9 +109,19 @@ zkus('z plánovaných se bere nejbližší v čase, ne první v seznamu', () => 
   assert.equal(stav?.druh, 'procedura');
 });
 
-zkus('plánovaná rozjížďka se startem v minulosti odpočet nerozsvítí', () => {
-  // Nikdo ji nespustil, nebo se zapomněl přepsat čas. Odpočet do záporu by lhal.
-  assert.equal(stavStartu([planovana(1, START)], V('12:05:00')), null);
+zkus('po startu panel drží, dokud se nepotvrdí, že se jede', () => {
+  // Odpočet doběhl, rozjížďka je pořád „plánovaná". Rozhodčí musí mít
+  // co zmáčknout — prázdná obrazovka mu nepomůže.
+  assert.deepEqual(stavStartu([planovana(1, START)], V('12:05:00')), {
+    druh: 'odstartovano',
+    cislo: 1,
+    odStartuS: 5 * 60,
+  });
+});
+
+zkus('po čtvrthodině přestává být start čerstvý', () => {
+  // Pak už to není start, na který se čeká, ale zapomenutý čas.
+  assert.equal(stavStartu([planovana(1, START)], V('12:16:00')), null);
 });
 
 zkus('dokončená ani zrušená rozjížďka na start nepatří', () => {
@@ -244,9 +254,10 @@ zkus('po hovoru odpočet navazuje, ne pokračuje tam, kde stál', () => {
 });
 
 zkus('start, který padl, dokud byla appka na pozadí, se nepřeskočí', () => {
-  // Appka spala přes start. Po probuzení už není co odpočítávat —
-  // a plánovaná rozjížďka se startem v minulosti se netváří, že jede.
-  assert.equal(stavStartu([planovana(2, START)], V('12:01:00')), null);
+  // Appka spala přes start. Po probuzení neodpočítává, ale ani nemlčí —
+  // ukáže, že start padl a čeká na potvrzení.
+  const stav = stavStartu([planovana(2, START)], V('12:01:00'));
+  assert.equal(stav?.druh, 'odstartovano');
 });
 
 // --- Kdy má telefon mlčet ---

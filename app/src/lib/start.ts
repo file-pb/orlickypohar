@@ -73,6 +73,7 @@ export function trvani(vterin: number): string {
 export type StavStartu =
   | { druh: 'ceka'; cislo: number; startV: string }
   | { druh: 'procedura'; cislo: number; startV: string; doStartuS: number }
+  | { druh: 'odstartovano'; cislo: number; odStartuS: number }
   | { druh: 'jede'; cislo: number; odStartuS: number };
 
 /**
@@ -131,9 +132,19 @@ export function stavStartu(
   for (const r of rozjizdky) {
     if (r.stav !== 'Planovana') continue;
     const od = odStartu(r.startV, ted);
-    // Start v minulosti u plánované rozjížďky není odpočet: buď ji nikdo
-    // nespustil, nebo se čas zapomněl přepsat. Odpočet do záporu by lhal.
-    if (od === null || od >= 0) continue;
+    if (od === null) continue;
+
+    // Start padl, ale rozjížďka je pořád „plánovaná" — nikdo nepotvrdil,
+    // že se jede. Miloš (nahrávka 21): *„pokud ty dlaždice nevyužiju, tak
+    // by se měla objevit kolonka start nebo odstartováno."* Dokud na to
+    // neklepne, panel to drží; po `NEPOTVRZENY_START_S` to přestává být
+    // čerstvý start a stává se zapomenutým časem, na který se nečeká.
+    if (od >= 0) {
+      if (od <= NEPOTVRZENY_START_S) {
+        return { druh: 'odstartovano', cislo: r.cislo, odStartuS: od };
+      }
+      continue;
+    }
     if (!nejblizsi || od > nejblizsi.od) nejblizsi = { r, od };
   }
   if (!nejblizsi) return null;
@@ -255,6 +266,15 @@ export const PO_STARTU_NERUSIT_S = 5 * 60;
 export const PREDEHRA_KLIDU_S = 60;
 
 /**
+ * Jak dlouho se po startu čeká na potvrzení, že se jede.
+ *
+ * Patnáct minut. Kratší by panel sebralo rozhodčímu, který zrovna řeší
+ * předčasný start; delší by z něj udělalo pomník nad rozjížďkou, kterou
+ * nikdo nikdy nerozjel.
+ */
+export const NEPOTVRZENY_START_S = 15 * 60;
+
+/**
  * Má teď telefon mlčet?
  *
  * <b>Okno od zahájení procedury do pěti minut po startu</b> — tedy přesně
@@ -275,7 +295,8 @@ export function maBytKlid(
 ): boolean {
   if (!stav) return false;
   if (stav.druh === 'procedura') return true;
-  if (stav.druh === 'jede') return stav.odStartuS <= PO_STARTU_NERUSIT_S;
+  if (stav.druh === 'jede' || stav.druh === 'odstartovano')
+    return stav.odStartuS <= PO_STARTU_NERUSIT_S;
 
   // Čeká se. Klid začíná o minutu dřív než procedura, aby appka stihla
   // ohlásit, že se přepíná (Filip, 29. 10. 2026) — rozhodčí tak ví, že
@@ -293,6 +314,8 @@ export function maBytKlid(
 export function popisStartu(stav: StavStartu | null): string | null {
   if (!stav) return null;
   if (stav.druh === 'jede') return `Rozjížďka ${stav.cislo} jede ${trvani(stav.odStartuS)}`;
+  if (stav.druh === 'odstartovano')
+    return `Rozjížďka ${stav.cislo} — start padl před ${trvani(stav.odStartuS)}`;
   if (stav.druh === 'procedura') return `Rozjížďka ${stav.cislo} startuje`;
   return `Rozjížďka ${stav.cislo} — procedura začne ve ${zacatekProcedury(stav.startV)}`;
 }

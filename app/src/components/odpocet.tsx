@@ -83,6 +83,7 @@ export function Odpocet({
   if (stav.druh === 'ceka')
     return <Ceka stav={stav} delkaS={delkaS} t={t} naSpusteni={naSpusteni} chyba={chyba} />;
   if (stav.druh === 'jede') return <Jede stav={stav} t={t} />;
+  if (stav.druh === 'odstartovano') return <Odstartovano stav={stav} t={t} />;
   return <Bezi stav={stav} delkaS={delkaS} t={t} />;
 }
 
@@ -152,6 +153,36 @@ function Ceka({
           ) : null}
         </>
       ) : null}
+    </View>
+  );
+}
+
+/**
+ * Odpočet doběhl, ale rozjížďka je pořád „plánovaná" — nikdo nepotvrdil,
+ * že se jede.
+ *
+ * <b>Panel nesmí zmizet.</b> Změřeno 29. 10. 2026 na telefonu: po startu
+ * se obrazovka vyprázdnila a rozhodčí neměl co zmáčknout. Miloš to přitom
+ * řekl rovnou (nahrávka 21): *„pokud ty dlaždice nevyužiju, tak by se měla
+ * objevit kolonka start nebo odstartováno."*
+ */
+function Odstartovano({
+  stav,
+  t,
+}: {
+  stav: Extract<StavStartu, { druh: 'odstartovano' }>;
+  t: Barvy;
+}) {
+  return (
+    <View style={[s.panel, { backgroundColor: t.jede }]}>
+      <Text style={[s.radek, s.naBarve]}>Rozjížďka {stav.cislo} — start padl</Text>
+      <View style={s.casRadek}>
+        <Text style={[s.casVelky, s.naBarve]}>{mmss(stav.odStartuS)}</Text>
+        <Text style={[s.doStartu, s.naBarveTlumene]}>od startu</Text>
+      </View>
+      <Text style={[s.pripominka, s.naBarveTlumene]}>
+        Potvrď, že se jede — nebo start odvolej.
+      </Text>
     </View>
   );
 }
