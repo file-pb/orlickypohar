@@ -20,6 +20,10 @@ echo
 echo "== Odesílání na server =="
 TEST_DB=":memory:" "${NODE[@]}" ./nahravani.test.ts
 
+echo
+echo "== Hlášení a troubení =="
+"${NODE[@]}" ./hlaseni.test.ts
+
 # `TZ` je tu schválně i u startu: odpočet říká pražský čas, ne telefonův,
 # a v UTC by test prošel i s implementací, která zónu ignoruje.
 echo
