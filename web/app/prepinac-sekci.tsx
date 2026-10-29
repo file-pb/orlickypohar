@@ -128,25 +128,37 @@ export function DlazdiceSekci({
   if (polozky.length === 0) return null;
 
   return (
-    <ul className="seznam dlazdice-sekci">
-      {polozky.map((p) => (
-        <li key={p.klic}>
-          {/* `title` je bublina pro myš a zároveň to jediné, co se z popisu
-              dostane ke čtečce obrazovky — na dotykovém displeji ho nikdo
-              neuvidí, a tak to Filip chce. */}
-          <Link
-            className="karta"
-            href={p.kam}
-            title={p.popis}
-            aria-current={p.klic === aktivni ? "page" : undefined}
-          >
-            <div className="nazev">
-              {znacky && p.znacka}
-              {p.nazev}
-            </div>
-          </Link>
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul className="seznam dlazdice-sekci">
+        {polozky.map((p) => (
+          <li key={p.klic}>
+            {/* `title` je bublina pro myš a zároveň to jediné, co se z popisu
+                dostane ke čtečce obrazovky — na dotykovém displeji ho nikdo
+                neuvidí, a tak to Filip chce. */}
+            <Link
+              className="karta"
+              href={p.kam}
+              title={p.popis}
+              aria-current={p.klic === aktivni ? "page" : undefined}
+            >
+              <div className="nazev">
+                {znacky && p.znacka}
+                {p.nazev}
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      {/* Hranice vybraného (Filip, 29. 10. 2026): šrafa pod pruhem místo
+          panelu nebo karty kolem obsahu — „aby to vypadalo jako boundary
+          toho, co jsem v dlaždici vybral, ale nebralo to tolik prostoru".
+          Jen tam, kde je co vybráno; na rozcestníku pod dlaždicemi nic
+          nezačíná, takže by ohraničovala prázdno.
+
+          `aria-hidden`, protože oddělení už říká `aria-current` na dlaždici
+          — čtečce by `hr` navíc jen oznámila předěl bez obsahu. */}
+      {aktivni && <hr className="hranice-vyberu" aria-hidden />}
+    </>
   );
 }

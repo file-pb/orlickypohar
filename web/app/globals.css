@@ -1880,6 +1880,33 @@ th.vlevo, td.vlevo { text-align: left; }
   box-shadow: inset 0 -2px 0 var(--voda);
   background: var(--zvyrazneni);
 }
+
+/* <b>Hranice vybraného</b> (Filip, 29. 10. 2026: „aby to vypadalo jako
+   boundary toho, co jsem v dlaždici vybral, ale nebralo to tolik prostoru,
+   jako kdyby to byl nějaký panel nebo karta"). Pět pixelů šrafy proti
+   rámečku kolem celé obrazovky.
+
+   <b>Sklon je opačný než u nezveřejněného</b> (`.karta-neverejna`, 135°
+   a `--srafa`): kdyby to byla táž šrafa, čtená by byla stejně — „tohle
+   není venku" —, a to tu neznamená nic. Vodní barva a 45° ji drží jako
+   jiné sdělení.
+
+   <b>Slábne ke krajům</b>, aby to byl předěl, a ne linka pod tabulkou. Dalo
+   by se ji zesílit přímo pod vybranou dlaždicí, ale po zalomení do dvou řad
+   (telefon) by ukazovala jinam, než kde vybraná leží — a hranice, která
+   ukáže vedle, je horší než hranice, která neukazuje nikam. */
+.hranice-vyberu {
+  height: 5px;
+  margin: 0.15rem 0 1.25rem;
+  border: 0;
+  background: repeating-linear-gradient(
+    45deg, var(--voda) 0 2px, transparent 2px 5px);
+  opacity: 0.45;
+  -webkit-mask-image: linear-gradient(
+    90deg, transparent 0, #000 12%, #000 88%, transparent 100%);
+  mask-image: linear-gradient(
+    90deg, transparent 0, #000 12%, #000 88%, transparent 100%);
+}
 .taby-sekci .vlajka,
 .dlazdice-sekci .vlajka {
   height: 0.95rem;
