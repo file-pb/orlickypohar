@@ -105,7 +105,30 @@ public class Boje
     /// </summary>
     public ZdrojPolohy Zdroj { get; set; }
 
+    /// <summary>
+    /// Kdy ji někdo postavil. <b>Čas z telefonu</b>, když ho appka poslala
+    /// a prošel oknem v <see cref="Spolecne.CasKlienta"/>; jinak čas zápisu.
+    /// <para>
+    /// Starší záznamy mají čas zápisu, a je to pravda: dokud se nepípalo
+    /// bez signálu, oba časy se rovnaly.
+    /// </para>
+    /// </summary>
     public DateTimeOffset PostavenaV { get; set; }
+
+    /// <summary>
+    /// Kdy pípnutí došlo na server. Liší se od <see cref="PostavenaV"/>
+    /// jen u pípnutí, které appka podržela bez signálu — a ten rozdíl musí
+    /// zůstat doložený, ne přepsaný. <c>null</c> u záznamů z doby, kdy se
+    /// zapisoval jen jeden čas.
+    /// </summary>
+    public DateTimeOffset? ZapsanaV { get; set; }
+
+    /// <summary>
+    /// Co se stalo s časem, který poslal telefon. Bez tohohle pole by
+    /// nešlo poznat rozchod hodin od podrženého pípnutí — obojí vypadá
+    /// jako čas, který serveru nesedí.
+    /// </summary>
+    public Spolecne.CasKlienta.Posun PosunCasu { get; set; }
 
     public Guid PostavilId { get; set; }
     public Uzivatel? Postavil { get; set; }
@@ -312,7 +335,12 @@ public record PipnutiVstup(
     BarvaBoje? Barva = null,
     TvarBoje? Tvar = null,
     DruhZnaceni? Znaceni = null,
-    string? Popis = null);
+    string? Popis = null,
+    // Kdy rozhodčí klepl, podle hodin telefonu. Bez signálu appka pípnutí
+    // podrží a odešle později; serverový čas zápisu by pak byl čas, kdy
+    // telefon chytil síť. Mimo okno v `CasKlienta` se nepřijme a platí
+    // server — cizí hodiny se nesmí brát naslepo.
+    DateTimeOffset? PostavenaV = null);
 
 /// <summary>Pravidla pípnutí. Čisté funkce, bez databáze.</summary>
 public static class Pipnuti

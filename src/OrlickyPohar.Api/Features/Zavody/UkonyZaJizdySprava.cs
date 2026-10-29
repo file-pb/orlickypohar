@@ -27,7 +27,11 @@ public record UkonVstup(
     ZmenaDelky Delka = ZmenaDelky.Beze,
     double? NahradniSirka = null,
     double? NahradniDelka = null,
-    string? Poznamka = null);
+    string? Poznamka = null,
+    // Kdy komise úkon vyhlásila, podle hodin telefonu. Bez signálu ho
+    // appka podrží; serverový čas zápisu by byl čas, kdy telefon chytil
+    // síť. Mimo okno v `CasKlienta` se nepřijme a platí server.
+    DateTimeOffset? VyhlasenoV = null);
 
 /// <summary>
 /// Úkony komise za jízdy — změna úseku (ZPJ 33) a chybějící značka (34).
@@ -80,6 +84,9 @@ public class UkonyZaJizdySprava(AppDbContext db, TimeProvider cas)
         if (vstup.Kurz is { } kurz && (kurz < 0 || kurz > 359))
             return "Kurz je ve stupních, tedy 0 až 359.";
 
+        var ted = cas.GetUtcNow();
+        var (vyhlaseno, posun) = Spolecne.CasKlienta.Kdy(vstup.VyhlasenoV, ted);
+
         db.UkonyZaJizdy.Add(new UkonZaJizdy
         {
             RozjizdkaId = rozjizdka.Id,
@@ -92,7 +99,9 @@ public class UkonyZaJizdySprava(AppDbContext db, TimeProvider cas)
             NahradniSirka = vstup.Druh == DruhUkonu.ChybejiciZnacka ? vstup.NahradniSirka : null,
             NahradniDelka = vstup.Druh == DruhUkonu.ChybejiciZnacka ? vstup.NahradniDelka : null,
             Poznamka = string.IsNullOrWhiteSpace(vstup.Poznamka) ? null : vstup.Poznamka.Trim(),
-            VyhlasenoV = cas.GetUtcNow(),
+            VyhlasenoV = vyhlaseno,
+            ZapsanoV = ted,
+            PosunCasu = posun,
             VyhlasilId = kdo,
         });
         await db.SaveChangesAsync(ct);

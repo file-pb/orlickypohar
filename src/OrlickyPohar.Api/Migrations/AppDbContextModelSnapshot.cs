@@ -61,6 +61,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<Guid>("PostavilId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("PosunCasu")
+                        .HasColumnType("integer");
+
                     b.Property<double?>("PresnostM")
                         .HasColumnType("double precision");
 
@@ -72,6 +75,9 @@ namespace OrlickyPohar.Api.Migrations
 
                     b.Property<int?>("Tvar")
                         .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("ZapsanaV")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("ZavodId")
                         .HasColumnType("integer");
@@ -1797,6 +1803,9 @@ namespace OrlickyPohar.Api.Migrations
                     b.Property<double?>("NahradniSirka")
                         .HasColumnType("double precision");
 
+                    b.Property<int>("PosunCasu")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Poznamka")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
@@ -1812,6 +1821,9 @@ namespace OrlickyPohar.Api.Migrations
 
                     b.Property<Guid>("VyhlasilId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ZapsanoV")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 

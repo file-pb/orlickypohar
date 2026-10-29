@@ -119,7 +119,25 @@ public class UkonZaJizdy
     /// </summary>
     public string? Poznamka { get; set; }
 
+    /// <summary>
+    /// Kdy to komise vyhlásila. <b>Čas z telefonu</b>, když ho appka
+    /// poslala a prošel oknem v <see cref="Spolecne.CasKlienta"/>; jinak
+    /// čas zápisu. Na vodě se úkon vyhlásí hned, ale odeslat se dá až
+    /// v signálu — a na trati rozhoduje, kdy platil.
+    /// </summary>
     public DateTimeOffset VyhlasenoV { get; set; }
+
+    /// <summary>
+    /// Kdy úkon došel na server. Liší se od <see cref="VyhlasenoV"/> jen
+    /// u úkonu podrženého bez signálu; rozdíl zůstane doložený, ne
+    /// přepsaný. <c>null</c> u záznamů z doby, kdy se zapisoval jen jeden čas.
+    /// </summary>
+    public DateTimeOffset? ZapsanoV { get; set; }
+
+    /// <summary>
+    /// Co se stalo s časem z telefonu — viz <see cref="Spolecne.CasKlienta.Posun"/>.
+    /// </summary>
+    public Spolecne.CasKlienta.Posun PosunCasu { get; set; }
 
     public Guid VyhlasilId { get; set; }
     public Uzivatel? Vyhlasil { get; set; }

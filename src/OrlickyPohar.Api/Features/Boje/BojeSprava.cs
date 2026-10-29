@@ -65,6 +65,10 @@ public class BojeSprava(
         await trate.ZalozPokudChybiAsync(zavodId, ct);
 
         var ted = cas.GetUtcNow();
+        // Kdy se bóje postavila, ne kdy to doputovalo: bez signálu appka
+        // pípnutí podrží a odešle později. Cizí hodiny se ale neberou
+        // naslepo — `CasKlienta` řekne, jestli čas prošel, a čím to je.
+        var (postaveno, posun) = Spolecne.CasKlienta.Kdy(vstup.PostavenaV, ted);
         Boje? stara = null;
 
         if (vstup.NahrazujeId is { } nahrazuje)
@@ -112,13 +116,15 @@ public class BojeSprava(
             // je práce, kterou stavitel na vodě nemá dělat.
             Znaceni = vstup.Znaceni ?? stara?.Znaceni,
             Popis = string.IsNullOrWhiteSpace(vstup.Popis) ? stara?.Popis : vstup.Popis.Trim(),
-            PostavenaV = ted,
+            PostavenaV = postaveno,
+            ZapsanaV = ted,
+            PosunCasu = posun,
             PostavilId = kdo,
             NahrazujeId = stara?.Id,
         };
 
         db.Boje.Add(nova);
-        if (stara is not null) stara.NahrazenaV = ted;
+        if (stara is not null) stara.NahrazenaV = postaveno;
         await db.SaveChangesAsync(ct);
 
         // <b>Prvky trati jdou s bójí.</b> Přenastavení je tentýž kus plastu
