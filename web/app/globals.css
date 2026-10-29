@@ -2147,6 +2147,14 @@ body:has(.bez-partneru) header.hlavicka a.znacka svg.logo-napis-mobil {
   margin-bottom: 0;
 }
 body:has(.bez-partneru) header.hlavicka a.znacka:has(svg.logo-oys) { gap: 0.9rem; }
+/* Malý okraj kolem značky, ať nesedí na lince (Filip, 29. 10. 2026). Nahoře
+   i dole stejný: kruh by s okrajem jen dole vypadal posunutý. Veřejná
+   hlavička si vystačí s 0,2 rem, protože tam logo linku přerůstá a dotýkat
+   se jí nemůže. */
+body:has(.bez-partneru) header.hlavicka .obal {
+  padding-top: 0.45rem;
+  padding-bottom: 0.45rem;
+}
 body:has(.bez-partneru) header.hlavicka { margin-bottom: 0.6rem; }
 body:has(.bez-partneru) h1 { font-size: 1.35rem; }
 body:has(.bez-partneru) .podtitulek:not(.tesne) { margin-bottom: 0.6rem; }
