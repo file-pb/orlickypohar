@@ -90,7 +90,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Co chce | Stav | Kde to je / co zbývá |
 | --- | --- | --- |
 | Odsouhlasení pořadí | **Jen web** | Stavy výsledků, běží |
-| Úpravu výsledků smí jen rozhodčí | **Čeká** | R38, tatáž otázka jako u listiny |
+| Úpravu výsledků smí jen rozhodčí | **Zadané** | R38. Tatáž věta jako u listiny, tedy totéž rozhodnutí: pořadatel smí navrhovat, rozhodčí schvaluje |
 | Zásah do pořadí při protestu | **Zadané** | Protesty jsou celá nepostavená fáze; dnes je jen věta, že protest visí (K2) |
 | Ověřeno a Schváleno jako dva kroky | **Zadané** | K3. Rozhodnuto sloučit, dokud protesty nejsou; stavy *zapisuje se → zapsáno / v revizi → potvrzeno* |
 | Pomocník u cíle a slave startér | **Zadané** | K8. Rozhodnuto 28. 10.: **příznak u regaty**, který rozhodčí zaškrtne v klubovně u zápisu u lidí, kteří už pořadateli jsou. Otevře velení a zápis průjezdu, **ne** startovní listinu. Žádná nová role |
