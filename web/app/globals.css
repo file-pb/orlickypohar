@@ -1807,22 +1807,7 @@ th.vlevo, td.vlevo { text-align: left; }
   border-bottom: 2px solid transparent; text-decoration: none;
 }
 .taby a:hover { color: var(--voda); text-decoration: none; }
-/* <b>Vybraný tab je vybarvená záložka</b>, ne jen tučné písmo s linkou
-   (Filip, 29. 10. 2026: „udělat tu selected jinak, aby bylo poznat co máme
-   vybráno"). Dvoupixelová linka dole se vedle tučného názvu ztratí, zvlášť
-   na pruhu sekcí, kde má každý tab ještě vlajku; tlumený podklad
-   (`--zvyrazneni`) se zkoušel první a na světlém papíru nebyl poznat.
-
-   <b>Text bere barvu pozadí stránky</b>, ne papíru: `--voda` je ve světlém
-   režimu tmavá (#1f6f8b) a v tmavém světlá (#6bb3cc), takže jedno pravidlo
-   dá kontrast 5,5 : 1 i 7,7 : 1 — obojí nad hranicí WCAG AA. */
-.taby a[aria-current="page"] {
-  background: var(--voda); color: var(--pozadi); font-weight: 600;
-  border-radius: 8px 8px 0 0;
-  border-bottom-color: var(--voda);
-}
-/* Odkaz uvnitř tabu nesmí při najetí zešednout do vody, na které leží. */
-.taby a[aria-current="page"]:hover { color: var(--pozadi); }
+.taby a[aria-current="page"] { color: var(--text); border-bottom-color: var(--voda); font-weight: 600; }
 
 /* Znak lodní třídy. Tvary kreslí app/scripts/ikona.py z hlavního loga, web
    je vkládá přímo do stránky. Pozadí je průhledné a barvy jdou z CSS, takže
@@ -1884,6 +1869,27 @@ th.vlevo, td.vlevo { text-align: left; }
    kvůli které vznikl akordeon. Zalomení nikoho o sekci nepřipraví. */
 .taby-sekci { flex-wrap: wrap; }
 .taby-sekci a { white-space: nowrap; display: inline-flex; align-items: center; gap: 0.45rem; }
+/* <b>Vybraná sekce je vybarvená záložka</b> (Filip, 29. 10. 2026: „udělat
+   tu selected jinak, aby bylo poznat co máme vybráno"). Platí jen pro pruh
+   sekcí regaty, ne pro všechny taby: napoprvé to bylo plošně na `.taby`
+   a chytly se i taby lodních tříd, kde Filip 29. 10. 2026 hlásil „nějak
+   drsné zvýraznění".
+
+   Tady ta síla smysl má, protože každý tab nese ještě vlajku a samotná
+   dvoupixelová linka se vedle nich ztrácí; tlumený podklad (`--zvyrazneni`)
+   se zkoušel první a na světlém papíru nebyl poznat.
+
+   <b>Text bere barvu pozadí stránky</b>, ne papíru: `--voda` je ve světlém
+   režimu tmavá (#1f6f8b) a v tmavém světlá (#6bb3cc), takže jedno pravidlo
+   dá kontrast 5,5 : 1 i 7,7 : 1 — obojí nad hranicí WCAG AA. */
+.taby-sekci a[aria-current="page"] {
+  background: var(--voda);
+  color: var(--pozadi);
+  border-radius: 8px 8px 0 0;
+  border-bottom-color: var(--voda);
+}
+/* Odkaz uvnitř tabu nesmí při najetí zešednout do vody, na které leží. */
+.taby-sekci a[aria-current="page"]:hover { color: var(--pozadi); }
 /* Signální vlajka u sekce. Pevné barvy mezinárodního kódu, z motivu jen
    rámeček — bez něj by bílá v bílé vlajce splynula s pozadím. */
 /* Dlaždice nesou tytéž značky ve stejné velikosti jako pruh — je to jeden
