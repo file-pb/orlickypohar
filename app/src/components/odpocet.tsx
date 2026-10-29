@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AppState, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, AppState, StyleSheet, Text, View } from 'react-native';
 
 import { Pressable } from 'react-native';
 
@@ -55,7 +55,7 @@ export function Odpocet({
    * Co udělat, když rozhodčí spustí proceduru. Chybí-li, tlačítko se
    * neukáže — obrazovku regaty čte i ten, kdo nevelí.
    */
-  naSpusteni?: (cislo: number) => void;
+  naSpusteni?: (cislo: number) => void | Promise<void>;
 }) {
   const t = useTheme();
   const [ted, setTed] = useState(() => Date.now());
@@ -97,9 +97,11 @@ function Ceka({
   stav: Extract<StavStartu, { druh: 'ceka' }>;
   delkaS: number;
   t: Barvy;
-  naSpusteni?: (cislo: number) => void;
+  naSpusteni?: (cislo: number) => void | Promise<void>;
   chyba?: string | null;
 }) {
+  const [spousti, setSpousti] = useState(false);
+
   return (
     <View style={[s.panel, { backgroundColor: t.zvyrazneni, borderColor: t.linka, borderWidth: 1 }]}>
       <Text style={[s.radek, { color: t.tlumeny }]}>Rozjížďka {stav.cislo}</Text>
@@ -109,10 +111,31 @@ function Ceka({
 
       {naSpusteni ? (
         <>
+          {/* <b>Stisk musí být vidět a čekání taky.</b> Bez toho tlačítko
+              „vypadalo jako nefunkční" (Filip na telefonu, 29. 10. 2026):
+              po klepnutí se chvíli nic neděje, protože se čeká na server,
+              a rozhodčí to zmáčkne podruhé. */}
           <Pressable
-            onPress={() => naSpusteni(stav.cislo)}
-            style={[s.spustit, { backgroundColor: t.procedura }]}>
-            <Text style={s.spustitText}>Spustit startovní proceduru</Text>
+            onPress={async () => {
+              if (spousti) return;
+              setSpousti(true);
+              try {
+                await naSpusteni(stav.cislo);
+              } finally {
+                setSpousti(false);
+              }
+            }}
+            disabled={spousti}
+            style={({ pressed }) => [
+              s.spustit,
+              { backgroundColor: t.procedura, opacity: pressed || spousti ? 0.6 : 1 },
+            ]}>
+            <View style={s.spustitObsah}>
+              {spousti ? <ActivityIndicator color="#ffffff" /> : null}
+              <Text style={s.spustitText}>
+                {spousti ? 'Spouštím…' : 'Spustit startovní proceduru'}
+              </Text>
+            </View>
           </Pressable>
 
           {/* Jediná pojistka, kterou appka sama nezařídí: hovor přeruší
@@ -223,6 +246,7 @@ const s = StyleSheet.create({
   zlab: { height: 7, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.3)', overflow: 'hidden' },
   popisekUseku: { fontSize: 9, marginTop: 3 },
   spustit: { marginTop: 14, minHeight: 56, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  spustitObsah: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   spustitText: { color: '#ffffff', fontSize: 17, fontWeight: '700' },
   pripominka: { fontSize: 12, marginTop: 8, lineHeight: 16 },
 });
