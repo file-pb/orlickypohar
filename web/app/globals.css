@@ -46,6 +46,13 @@
   --ukon-smernice: #a18a4a;
   --ukon-trat: #4a8a80;
   --ukon-polohy: #8a6080;
+  /* <b>Síla podkladu pod obsahem.</b> V tmavém režimu vyšší (5 % proti 3),
+     a schválně ne podle výpočtu: barevná odchylka i poměr jasu vycházejí
+     v obou režimech stejně (1,49 proti 1,73 ΔE), ale na tmavém podkladu je
+     týž nádech vidět míň — ΔE je kalibrované na střední jas a tmavé tóny
+     přeceňuje. Tohle je jedno z míst, kde rozhoduje oko, ne číslo: osm
+     procent bylo moc, tři málo. */
+  --sytost-agendy: 3%;
   /* <b>Oranžová jako písmo, ne jako plocha.</b> `--pozor` je laděná na
      výplň a drobné písmo v ní je na bílé sotva čitelné; tohle je tatáž
      barva stažená do čitelna. V tmavém režimu se rozcházet nemusí —
@@ -117,6 +124,7 @@
     --ukon-smernice: #9c8a59;
     --ukon-trat: #578880;
     --ukon-polohy: #8f6c86;
+    --sytost-agendy: 5%;
     --pozor-pismo: var(--pozor);
     --obrys-hlasi: inset 0 0 0 1px rgb(255 255 255 / 0.36);
     --obrys-dlouho: inset 0 0 0 1px rgb(255 255 255 / 0.16);
@@ -141,6 +149,7 @@
   --ukon-smernice: #9c8a59;
   --ukon-trat: #578880;
   --ukon-polohy: #8f6c86;
+  --sytost-agendy: 5%;
   --pozor-pismo: var(--pozor);
   --obrys-hlasi: inset 0 0 0 1px rgb(255 255 255 / 0.36);
   --obrys-dlouho: inset 0 0 0 1px rgb(255 255 255 / 0.16);
@@ -2096,6 +2105,17 @@ body:has(.vybrany-ukon[data-ukon="prihlasky"]) { --ukon-strany: var(--ukon-prihl
 body:has(.vybrany-ukon[data-ukon="smernice"]) { --ukon-strany: var(--ukon-smernice); }
 body:has(.vybrany-ukon[data-ukon="boje"]) { --ukon-strany: var(--ukon-trat); }
 body:has(.vybrany-ukon[data-ukon="tracker"]) { --ukon-strany: var(--ukon-polohy); }
+/* <b>Plocha obsahu v nádechu barvy agendy</b> (Filip, 29. 10. 2026).
+   Spojuje obsah s hlavičkou, aniž by si bral pozornost: ve světlém režimu
+   tři procenta, v tmavém pět (viz `--sytost-agendy`).
+
+   Barví se plocha obsahu, ne jednotlivé karty — ty už nesou barvu stavu
+   v rámečku a šrafu nezveřejněného, takže třetí barevný kanál na nich by
+   přebil právě ty dva, které něco znamenají. */
+body:has(.bez-partneru) main.obal {
+  background: color-mix(in srgb, var(--ukon-strany, transparent) var(--sytost-agendy), transparent);
+}
+
 /* <b>Nadpis a lano v jednom řádku</b> (Filip, 29. 10. 2026: „ještě ten
    nadpis menší a v té kombinaci s lanem"). Lano vychází z textu a vyplní
    zbytek řádku, ať je nadpis jakkoli dlouhý.
