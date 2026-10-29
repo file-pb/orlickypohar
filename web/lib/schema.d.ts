@@ -4130,6 +4130,323 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/oponentura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vypíše sady otázek ročníku se stavem odpovědí
+         * @description Rozhodčí nebo pořadatel ročníku.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SadaShrnutiDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Založí sadu otázek, nebo doplní tu stávající
+         * @description Správce ročníku. Idempotentní podle slugu sady a kódu otázky: druhé odeslání téhož JSONu nic nezduplikuje a nic nemaže.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SadaVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/oponentura/{sada}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sada i s tím, co na kterou otázku kdo odpověděl
+         * @description Rozhodčí nebo pořadatel ročníku. Tudy se odpovědi čtou i k pozdějšímu probrání — adresy nahrávek vedou na API.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    sada: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SadaDetailDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/oponentura/{sada}/otazky/{kod}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Zapíše zaškrtnuté volby a text u jedné otázky
+         * @description Rozhodčí ročníku. Přepisuje poslední stav; nic není povinné. Odpověď po uzavření sady ji zase otevře.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    sada: string;
+                    kod: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["OdpovedVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/oponentura/{sada}/otazky/{kod}/nahravky": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Nahraje hlasovou odpověď k jedné otázce
+         * @description Rozhodčí ročníku. Nejvýš 20 MB; formát se poznává z obsahu (WebM, Ogg, MP4/AAC, WAV, MP3), protože každý telefon nahrává jinak. Nahrávek u jedné otázky může být víc.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    sada: string;
+                    kod: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        nahravka?: components["schemas"]["IFormFile"];
+                    } & {
+                        /** Format: int32 */
+                        sekund?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NahravkaDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/oponentura/{sada}/nahravky/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vydá obsah hlasové odpovědi
+         * @description Rozhodčí nebo pořadatel ročníku.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    sada: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /**
+         * Smaže hlasovou odpověď
+         * @description Rozhodčí ročníku. Zmáčknutý mikrofon omylem se musí dát vzít zpět.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    sada: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/oponentura/{sada}/dokonceni": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Řekne „mám to“, nebo to vezme zpátky
+         * @description Rozhodčí ročníku. Spočítat to nejde — nic v sadě není povinné, takže hotovou sadu od rozpracované odliší jen ten, kdo odpovídá.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    sada: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DokonceniVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/zastavky/{zavod}/zpravy": {
         parameters: {
             query?: never;
@@ -6629,8 +6946,7 @@ export interface components {
             provozKcMesicne: number;
         };
         DokonceniVstup: {
-            /** Format: date-time */
-            konec: null | string;
+            hotovo: boolean;
         };
         DoSerieVstup: {
             doSerie: boolean;
@@ -6827,6 +7143,19 @@ export interface components {
             ceka: boolean;
             prijat: boolean;
         };
+        NahravkaDto: {
+            /** Format: uuid */
+            id: string;
+            adresa: string;
+            typ: string;
+            /** Format: int64 */
+            velikost: number;
+            /** Format: int32 */
+            sekund: null | number;
+            /** Format: date-time */
+            nahranoV: string;
+            kdo: null | string;
+        };
         NakladovaPolozka: {
             polozka: string;
             /** Format: double */
@@ -6944,6 +7273,10 @@ export interface components {
             /** Format: uuid */
             id: string;
         };
+        OdpovedVstup: {
+            volby: null | string[];
+            text: null | string;
+        };
         OknoDto: {
             /** Format: int32 */
             id: number;
@@ -6998,6 +7331,27 @@ export interface components {
             jmeno: string;
             prijmeni: string;
         };
+        OtazkaDto: {
+            kod: string;
+            text: string;
+            vysvetleni: null | string;
+            uvolni: null | string;
+            volby: components["schemas"]["Volba"][];
+            volbyVice: boolean;
+            zaskrtnuto: string[];
+            odpoved: null | string;
+            /** Format: date-time */
+            odpovezenoV: null | string;
+            nahravky: components["schemas"]["NahravkaDto"][];
+        };
+        OtazkaVstup: {
+            kod: string;
+            text: string;
+            vysvetleni: null | string;
+            uvolni: null | string;
+            volby: null | components["schemas"]["Volba"][];
+            volbyVice: boolean;
+        };
         PipnutiVstup: {
             nazev: null | string;
             /** Format: int32 */
@@ -7015,6 +7369,8 @@ export interface components {
             tvar?: null | components["schemas"]["TvarBoje"];
             znaceni?: null | components["schemas"]["DruhZnaceni"];
             popis?: null | string;
+            /** Format: date-time */
+            postavenaV?: null | string;
         };
         /**
          * @default Android
@@ -7373,6 +7729,39 @@ export interface components {
             /** Format: int32 */
             trvaniHodin: null | number;
         };
+        SadaDetailDto: {
+            slug: string;
+            nazev: string;
+            uvod: string;
+            stav: components["schemas"]["StavSady"];
+            /** Format: date-time */
+            dokonceneV: null | string;
+            otazky: components["schemas"]["OtazkaDto"][];
+        };
+        SadaShrnutiDto: {
+            slug: string;
+            nazev: string;
+            uvod: string;
+            /** Format: int32 */
+            pocetOtazek: number;
+            /** Format: int32 */
+            odpovezeno: number;
+            /** Format: int32 */
+            pocetNahravek: number;
+            stav: components["schemas"]["StavSady"];
+            /** Format: date-time */
+            dokonceneV: null | string;
+            /** Format: date-time */
+            zmenenoV: null | string;
+        };
+        SadaVstup: {
+            slug: string;
+            nazev: string;
+            uvod: string;
+            /** Format: int32 */
+            poradi: number;
+            otazky: components["schemas"]["OtazkaVstup"][];
+        };
         SerieDetailDto: {
             slug: string;
             nazev: string;
@@ -7477,6 +7866,8 @@ export interface components {
         StavPolohy: "Cerstva" | "Starne" | "Nedostupna";
         /** @enum {unknown} */
         StavRozjizdky: "Planovana" | "Probiha" | "Dokoncena" | "Zrusena";
+        /** @enum {unknown} */
+        StavSady: "Neodpovezeno" | "Rozpracovano" | "Odpovezeno";
         /** @enum {unknown} */
         StavTrati: "Rozestaveno" | "Hotovo" | "Prijato" | "Prestavba";
         /** @enum {unknown} */
@@ -7661,6 +8052,8 @@ export interface components {
             /** Format: double */
             nahradniDelka?: null | number;
             poznamka?: null | string;
+            /** Format: date-time */
+            vyhlasenoV?: null | string;
         };
         UplatneniDto: {
             klic: string;
@@ -7785,6 +8178,10 @@ export interface components {
             historie: components["schemas"]["BodHladinyDto"][];
             zdroj: string;
             dostupneRozsahy: string[];
+        };
+        Volba: {
+            kod: string;
+            text: string;
         };
         VraceniTratiVstup: {
             duvod: null | string;
@@ -8077,6 +8474,11 @@ export interface components {
             procesniDej: boolean;
             /** Format: date-time */
             oknoDo?: null | string;
+            /**
+             * Format: int32
+             * @default 5
+             */
+            delkaProceduryMin: number;
         };
         ZavodShrnutiDto: {
             slug: string;

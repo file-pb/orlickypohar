@@ -38,6 +38,18 @@ kvůli němu nic nepředělává.
   A tu, když máčknu, tak bych tam měl vidět jména všech přihlášených lodí."*
 - **Trestná lavice** drží běžící tresty na dně obrazovky; klepnutím na loď
   se trest odčiní.
+- **Rozjížďku ukončuje rozhodčí, ne hodiny.** Tlačítko *Ukončit rozjížďku*
+  je na cíli vždycky a zbylým lodím zapíše DNF; appka sama neukončí nic,
+  ani když mají dojezd všichni — jen nabídne. Časový limit podle ZPJ 35
+  se v prvních verzích nehlídá (Filip, 29. 10. 2026: *„v prvních verzích
+  prostě ukončí ofiko rozhodčí"*). Pravidlo 35 ostatně aplikace nezná
+  vůbec a plachetní směrnice poháru žádný limit nevypisuje, takže by
+  nebylo co hlídat.
+  <br>**A hlídat to ani netřeba, protože ukončení je brána:** dokud
+  rozjížďka není uzavřená, nejde zahájit další ani podepsat výsledky
+  (Filip tamtéž: *„jinak se nedostane k další a nebo ho to nepustí
+  k uzavření výsledků"*). Rozhodčí tedy na ukončení nemusí být
+  upozorňován — narazí na něj sám ve chvíli, kdy chce pokračovat.
 
 ### Co má vidět posádka
 

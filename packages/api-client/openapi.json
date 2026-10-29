@@ -4203,6 +4203,359 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/oponentura": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vyp\u00ed\u0161e sady ot\u00e1zek ro\u010dn\u00edku se stavem odpov\u011bd\u00ed",
+                "description": "Rozhod\u010d\u00ed nebo po\u0159adatel ro\u010dn\u00edku.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SadaShrnutiDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Zalo\u017e\u00ed sadu ot\u00e1zek, nebo dopln\u00ed tu st\u00e1vaj\u00edc\u00ed",
+                "description": "Spr\u00e1vce ro\u010dn\u00edku. Idempotentn\u00ed podle slugu sady a k\u00f3du ot\u00e1zky: druh\u00e9 odesl\u00e1n\u00ed t\u00e9ho\u017e JSONu nic nezduplikuje a nic nema\u017ee.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SadaVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/oponentura/{sada}": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Sada i s t\u00edm, co na kterou ot\u00e1zku kdo odpov\u011bd\u011bl",
+                "description": "Rozhod\u010d\u00ed nebo po\u0159adatel ro\u010dn\u00edku. Tudy se odpov\u011bdi \u010dtou i k pozd\u011bj\u0161\u00edmu probr\u00e1n\u00ed \u2014 adresy nahr\u00e1vek vedou na API.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sada",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SadaDetailDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/oponentura/{sada}/otazky/{kod}": {
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Zap\u00ed\u0161e za\u0161krtnut\u00e9 volby a text u jedn\u00e9 ot\u00e1zky",
+                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku. P\u0159episuje posledn\u00ed stav; nic nen\u00ed povinn\u00e9. Odpov\u011b\u010f po uzav\u0159en\u00ed sady ji zase otev\u0159e.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sada",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "kod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OdpovedVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/oponentura/{sada}/otazky/{kod}/nahravky": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Nahraje hlasovou odpov\u011b\u010f k jedn\u00e9 ot\u00e1zce",
+                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku. Nejv\u00fd\u0161 20 MB; form\u00e1t se pozn\u00e1v\u00e1 z obsahu (WebM, Ogg, MP4/AAC, WAV, MP3), proto\u017ee ka\u017ed\u00fd telefon nahr\u00e1v\u00e1 jinak. Nahr\u00e1vek u jedn\u00e9 ot\u00e1zky m\u016f\u017ee b\u00fdt v\u00edc.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sada",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "kod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "allOf": [
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "nahravka": {
+                                                "$ref": "#/components/schemas/IFormFile"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "sekund": {
+                                                "type": "integer",
+                                                "format": "int32"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NahravkaDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/oponentura/{sada}/nahravky/{id}": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Vyd\u00e1 obsah hlasov\u00e9 odpov\u011bdi",
+                "description": "Rozhod\u010d\u00ed nebo po\u0159adatel ro\u010dn\u00edku.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sada",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Sma\u017ee hlasovou odpov\u011b\u010f",
+                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku. Zm\u00e1\u010dknut\u00fd mikrofon omylem se mus\u00ed d\u00e1t vz\u00edt zp\u011bt.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sada",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/oponentura/{sada}/dokonceni": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "\u0158ekne \u201em\u00e1m to\u201c, nebo to vezme zp\u00e1tky",
+                "description": "Rozhod\u010d\u00ed ro\u010dn\u00edku. Spo\u010d\u00edtat to nejde \u2014 nic v sad\u011b nen\u00ed povinn\u00e9, tak\u017ee hotovou sadu od rozpracovan\u00e9 odli\u0161\u00ed jen ten, kdo odpov\u00edd\u00e1.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sada",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DokonceniVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/zastavky/{zavod}/zpravy": {
             "get": {
                 "tags": [
@@ -7450,16 +7803,12 @@
             },
             "DokonceniVstup": {
                 "required": [
-                    "konec"
+                    "hotovo"
                 ],
                 "type": "object",
                 "properties": {
-                    "konec": {
-                        "type": [
-                            "null",
-                            "string"
-                        ],
-                        "format": "date-time"
+                    "hotovo": {
+                        "type": "boolean"
                     }
                 }
             },
@@ -8218,6 +8567,51 @@
                     }
                 }
             },
+            "NahravkaDto": {
+                "required": [
+                    "id",
+                    "adresa",
+                    "typ",
+                    "velikost",
+                    "sekund",
+                    "nahranoV",
+                    "kdo"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "adresa": {
+                        "type": "string"
+                    },
+                    "typ": {
+                        "type": "string"
+                    },
+                    "velikost": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "sekund": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "nahranoV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "kdo": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
             "NakladovaPolozka": {
                 "required": [
                     "polozka",
@@ -8672,6 +9066,30 @@
                     }
                 }
             },
+            "OdpovedVstup": {
+                "required": [
+                    "volby",
+                    "text"
+                ],
+                "type": "object",
+                "properties": {
+                    "volby": {
+                        "type": [
+                            "null",
+                            "array"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "text": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
             "OknoDto": {
                 "required": [
                     "id",
@@ -8862,6 +9280,118 @@
                     }
                 }
             },
+            "OtazkaDto": {
+                "required": [
+                    "kod",
+                    "text",
+                    "vysvetleni",
+                    "uvolni",
+                    "volby",
+                    "volbyVice",
+                    "zaskrtnuto",
+                    "odpoved",
+                    "odpovezenoV",
+                    "nahravky"
+                ],
+                "type": "object",
+                "properties": {
+                    "kod": {
+                        "type": "string"
+                    },
+                    "text": {
+                        "type": "string"
+                    },
+                    "vysvetleni": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "uvolni": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "volby": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Volba"
+                        }
+                    },
+                    "volbyVice": {
+                        "type": "boolean"
+                    },
+                    "zaskrtnuto": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "odpoved": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "odpovezenoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "nahravky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/NahravkaDto"
+                        }
+                    }
+                }
+            },
+            "OtazkaVstup": {
+                "required": [
+                    "kod",
+                    "text",
+                    "vysvetleni",
+                    "uvolni",
+                    "volby",
+                    "volbyVice"
+                ],
+                "type": "object",
+                "properties": {
+                    "kod": {
+                        "type": "string"
+                    },
+                    "text": {
+                        "type": "string"
+                    },
+                    "vysvetleni": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "uvolni": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "volby": {
+                        "type": [
+                            "null",
+                            "array"
+                        ],
+                        "items": {
+                            "$ref": "#/components/schemas/Volba"
+                        }
+                    },
+                    "volbyVice": {
+                        "type": "boolean"
+                    }
+                }
+            },
             "PipnutiVstup": {
                 "required": [
                     "nazev",
@@ -8950,6 +9480,13 @@
                             "null",
                             "string"
                         ]
+                    },
+                    "postavenaV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
                     }
                 }
             },
@@ -10401,6 +10938,129 @@
                     }
                 }
             },
+            "SadaDetailDto": {
+                "required": [
+                    "slug",
+                    "nazev",
+                    "uvod",
+                    "stav",
+                    "dokonceneV",
+                    "otazky"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "uvod": {
+                        "type": "string"
+                    },
+                    "stav": {
+                        "$ref": "#/components/schemas/StavSady"
+                    },
+                    "dokonceneV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "otazky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OtazkaDto"
+                        }
+                    }
+                }
+            },
+            "SadaShrnutiDto": {
+                "required": [
+                    "slug",
+                    "nazev",
+                    "uvod",
+                    "pocetOtazek",
+                    "odpovezeno",
+                    "pocetNahravek",
+                    "stav",
+                    "dokonceneV",
+                    "zmenenoV"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "uvod": {
+                        "type": "string"
+                    },
+                    "pocetOtazek": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "odpovezeno": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "pocetNahravek": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "stav": {
+                        "$ref": "#/components/schemas/StavSady"
+                    },
+                    "dokonceneV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "zmenenoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    }
+                }
+            },
+            "SadaVstup": {
+                "required": [
+                    "slug",
+                    "nazev",
+                    "uvod",
+                    "poradi",
+                    "otazky"
+                ],
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "nazev": {
+                        "type": "string"
+                    },
+                    "uvod": {
+                        "type": "string"
+                    },
+                    "poradi": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "otazky": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OtazkaVstup"
+                        }
+                    }
+                }
+            },
             "SerieDetailDto": {
                 "required": [
                     "slug",
@@ -10776,6 +11436,13 @@
                     "Probiha",
                     "Dokoncena",
                     "Zrusena"
+                ]
+            },
+            "StavSady": {
+                "enum": [
+                    "Neodpovezeno",
+                    "Rozpracovano",
+                    "Odpovezeno"
                 ]
             },
             "StavTrati": {
@@ -11471,6 +12138,13 @@
                             "null",
                             "string"
                         ]
+                    },
+                    "vyhlasenoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
                     }
                 }
             },
@@ -12020,6 +12694,21 @@
                         "items": {
                             "type": "string"
                         }
+                    }
+                }
+            },
+            "Volba": {
+                "required": [
+                    "kod",
+                    "text"
+                ],
+                "type": "object",
+                "properties": {
+                    "kod": {
+                        "type": "string"
+                    },
+                    "text": {
+                        "type": "string"
                     }
                 }
             },
@@ -13054,6 +13743,11 @@
                             "string"
                         ],
                         "format": "date-time"
+                    },
+                    "delkaProceduryMin": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 5
                     }
                 }
             },

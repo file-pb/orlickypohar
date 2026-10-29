@@ -14,6 +14,12 @@ export const Colors = {
     zvyrazneni: '#f3f0ea',
     stavVypsany: '#1c7d4d',
     stavZruseny: '#a8433a',
+    procedura: '#1f6f8b',
+    pozor: '#8a5000',
+    jede: '#2f6b4f',
+    vyzvaZnameni: '#ffffff',
+    pripravaZnameni: '#f2c14e',
+    minutaZnameni: '#ffd27d',
   },
   dark: {
     pozadi: '#14171a',
@@ -25,6 +31,12 @@ export const Colors = {
     zvyrazneni: '#232830',
     stavVypsany: '#58c98c',
     stavZruseny: '#e2726a',
+    procedura: '#16495c',
+    pozor: '#c9922f',
+    jede: '#58c98c',
+    vyzvaZnameni: '#ffffff',
+    pripravaZnameni: '#f2c14e',
+    minutaZnameni: '#ffd27d',
   },
 } as const;
 
