@@ -107,6 +107,34 @@ vrátit, jinak klakson po hovoru mlčí. Je to nativní nastavení, ne kód —
 patří k balíčkům výš a vyzkouší se až na telefonu, protože simulátor
 hovor neumí.
 
+### Co se stane, když Milošovi uprostřed procedury zavolá manželka
+
+Filip, 29. 10. 2026: *„nechci se dostat do situace, kdy Milošovi zavolá
+manželka uprostřed startovní procedury a udělá to z něj blbce před celým
+soutěžním polem."*
+
+**Čtyři věci, a jen tři z nich jdou vyřešit v appce:**
+
+| | Co se stane | Jde s tím něco udělat? |
+| --- | --- | --- |
+| měření | běží dál | **ano, hotovo** — čas se bere z hodin, ne z čítače |
+| obrazovka | překryje ji hovor | **ne** — appka cizí obrazovku neodsune |
+| zvuk **během** hovoru | iOS ho přeruší | **ne** — tohle neobejde žádná appka |
+| zvuk **po** hovoru | sám se nevrátí | **ano** — relaci je potřeba obnovit po přerušení |
+
+**Takže slib „appka troubí i během hovoru" se splnit nedá** a nemá se
+slibovat. Co se splnit dá: aby po zavěšení hlášení okamžitě navázalo tam,
+kde procedura doopravdy je — ne tam, kde zvuk skončil.
+
+**A proto je jediná skutečná pojistka mimo appku:** rozhodčí si před
+procedurou zapne *Nerušit*. Appka to za něj udělat nemůže (iOS to
+nedovolí), ale může to připomenout ve chvíli, kdy proceduru spouští.
+To je levné a je to to jediné, co ten případ doopravdy odstraní.
+
+**Nepočítat ani s tím, že appka nahradí houkačku úplně.** Zůstává
+pomocníkem, který drží takt; houkačka v ruce je záloha pro případ, kdy
+telefon mlčí z důvodu, na který appka nedosáhne.
+
 Partitura, kterou ty dva poslední balíčky budou přehrávat, je už
 postavená a otestovaná: `app/src/lib/hlaseni.ts`.
 
