@@ -3116,7 +3116,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Spustí startovní proceduru, odloží start, nebo ho odvolá */
+        /**
+         * Spustí startovní proceduru, odloží start, nebo ho odvolá
+         * @description Čas startu se nepředává — počítá se z pravidla a z délky procedury regaty. `zapsanoV` je okamžik stisku: appka odpočítává z vlastních hodin a úkon podrží, dokud nemá kam ho odeslat, takže bez něj by start padl až ve chvíli, kdy telefon chytil síť.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -7055,6 +7058,7 @@ export interface components {
             konecV?: null | string;
             /** @default false */
             pustit: boolean;
+            okolnosti?: null | components["schemas"]["OkolnostiVstup"];
         };
         LodDetailSpravaDto: {
             lod: components["schemas"]["LodSpravaDto"];
@@ -7308,6 +7312,16 @@ export interface components {
             /** Format: date-time */
             zavrenoV: null | string;
             bezi: boolean;
+        };
+        OkolnostiVstup: {
+            /** Format: date-time */
+            kdyRozhodl?: null | string;
+            /** Format: double */
+            sirka?: null | number;
+            /** Format: double */
+            delka?: null | number;
+            /** Format: double */
+            presnostM?: null | number;
         };
         OpravneniDto: {
             role: components["schemas"]["Role"];
@@ -7606,6 +7620,8 @@ export interface components {
         };
         ProceduraVstup: {
             druh: components["schemas"]["DruhProcedury"];
+            /** Format: date-time */
+            zapsanoV?: null | string;
         };
         PrvekDto: {
             /** Format: int32 */
@@ -8324,6 +8340,7 @@ export interface components {
             radky: components["schemas"]["ZapisRadekVstup"][];
             /** Format: int32 */
             revize?: null | number;
+            okolnosti?: null | components["schemas"]["OkolnostiVstup"];
         };
         ZarizeniVstup: {
             token: null | string;

@@ -2912,6 +2912,7 @@
                     "V\u00fdsledky"
                 ],
                 "summary": "Spust\u00ed startovn\u00ed proceduru, odlo\u017e\u00ed start, nebo ho odvol\u00e1",
+                "description": "\u010cas startu se nep\u0159ed\u00e1v\u00e1 \u2014 po\u010d\u00edt\u00e1 se z pravidla a z d\u00e9lky procedury regaty. `zapsanoV` je okam\u017eik stisku: appka odpo\u010d\u00edt\u00e1v\u00e1 z vlastn\u00edch hodin a \u00fakon podr\u017e\u00ed, dokud nem\u00e1 kam ho odeslat, tak\u017ee bez n\u011bj by start padl a\u017e ve chv\u00edli, kdy telefon chytil s\u00ed\u0165.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -8208,6 +8209,16 @@
                     "pustit": {
                         "type": "boolean",
                         "default": false
+                    },
+                    "okolnosti": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/OkolnostiVstup"
+                            }
+                        ]
                     }
                 }
             },
@@ -9192,6 +9203,39 @@
                     },
                     "bezi": {
                         "type": "boolean"
+                    }
+                }
+            },
+            "OkolnostiVstup": {
+                "type": "object",
+                "properties": {
+                    "kdyRozhodl": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "sirka": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "delka": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
+                    },
+                    "presnostM": {
+                        "type": [
+                            "null",
+                            "number"
+                        ],
+                        "format": "double"
                     }
                 }
             },
@@ -10442,6 +10486,13 @@
                 "properties": {
                     "druh": {
                         "$ref": "#/components/schemas/DruhProcedury"
+                    },
+                    "zapsanoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
                     }
                 }
             },
@@ -13222,6 +13273,16 @@
                             "integer"
                         ],
                         "format": "int32"
+                    },
+                    "okolnosti": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/OkolnostiVstup"
+                            }
+                        ]
                     }
                 }
             },
