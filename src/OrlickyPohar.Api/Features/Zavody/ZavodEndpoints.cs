@@ -119,7 +119,16 @@ public record ZavodDetailDto(
     // stejně dobře jako u odpolední regaty (Filip, 24. 10. 2026: *„24 se
     // jede klidně 30 h i s tou přípravou a dojezdy"*). Polohy to
     // neprozrazuje, je to provozní čas regaty.
-    DateTimeOffset? OknoDo = null);
+    DateTimeOffset? OknoDo = null,
+    // Délka startovní procedury téhle regaty v minutách. Bez ní neumí
+    // klient spočítat odpočet: ví, kdy je start, ale ne odkdy procedura
+    // běží — a pětiminutovka z ZPJ 26 je jen výchozí hodnota, pravidlo
+    // k ní má hvězdičku *„nebo tak, jak je stanoveno ve vypsání závodu
+    // nebo v plachetních směrnicích"* (nález R12 oponentury rozhodčího).
+    // Bez tohohle pole by appka i tabule počítaly pětku i u regaty, která
+    // startuje jinak, a lhaly by tím hlasitěji, čím blíž je start.
+    // Aditivně, výchozí je ta pětka — starší klient o poli neví.
+    int DelkaProceduryMin = Procedura.DelkaVychozi);
 
 /// <summary>
 /// Veřejné čtení jedné zastávky. Pravidla závodu (škrty, vyhodnocení,
@@ -272,6 +281,7 @@ public static class ZavodEndpoints
                 z.Druh, z.PoradatelZaznam, FotkaPoradatele = z.PoradatelZaznam!.Fotka,
                 VysledkyVerejne = z.Serie!.VysledkyZavoduVerejne,
                 z.Serie.VerzePravidel,
+                z.DelkaProceduryMin,
             })
             .FirstOrDefaultAsync(ct);
 
@@ -296,7 +306,8 @@ public static class ZavodEndpoints
                 VysledkySkryte: true,
                 Smernice: smerniceSkryte,
                 VerzePravidel: zavod.VerzePravidel,
-                OknoDo: await OknoDoAsync(db, zavod.Id, ct)));
+                OknoDo: await OknoDoAsync(db, zavod.Id, ct),
+                DelkaProceduryMin: zavod.DelkaProceduryMin));
         }
 
         // Jeden dotaz na všechny výsledky závodu, ne dotaz na rozjížďku.
@@ -449,7 +460,8 @@ public static class ZavodEndpoints
             Smernice: await SmerniceAsync(db, uloziste, zavod.Id, ct),
             VerzePravidel: zavod.VerzePravidel,
             ProcesniDej: zavod.ProcesniDej,
-            OknoDo: await OknoDoAsync(db, zavod.Id, ct)));
+            OknoDo: await OknoDoAsync(db, zavod.Id, ct),
+            DelkaProceduryMin: zavod.DelkaProceduryMin));
     }
 
     /// <summary>
