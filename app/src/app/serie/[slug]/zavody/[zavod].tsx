@@ -1,4 +1,5 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { Odpocet } from '@/components/odpocet';
@@ -31,12 +32,26 @@ export default function Zastavka() {
   const { data, chyba, nacita, obnov } = useData(() => nactiZavod(slug, zavod), [slug, zavod]);
   const { data: ja } = useData(nactiJa);
 
+  // Když se spuštění nepovede, musí to appka říct — ne spadnout.
+  // Změřeno 29. 10. 2026 na telefonu: server vrátil 501 a `posliZaSebe`
+  // vyhodil chybu, kterou nikdo nechytal, takže celou obrazovku překryl
+  // červený výpis. U vody by to znamenalo, že rozhodčí uprostřed
+  // procedury kouká na hlášku pro vývojáře.
+  const [chybaStartu, setChybaStartu] = useState<string | null>(null);
+
   // Proceduru spouští jen ten, kdo velí. Práva hlídá server; tohle jen
   // neukazuje tlačítko tomu, komu nepatří — obrazovku regaty čte každý.
   const spustit = veliNekde(ja ?? null)
     ? async (cislo: number) => {
-        await provedProceduru(slug, zavod, cislo, 'Spustit');
-        obnov();
+        setChybaStartu(null);
+        try {
+          await provedProceduru(slug, zavod, cislo, 'Spustit');
+          obnov();
+        } catch {
+          // Důvod se neukazuje: „vrátilo 501" rozhodčímu nepomůže a na
+          // vodě je jediná užitečná rada zkusit to znovu.
+          setChybaStartu('Nepovedlo se spustit. Zkus to prosím znovu.');
+        }
       }
     : undefined;
 
@@ -71,6 +86,7 @@ export default function Zastavka() {
             rozjizdky={data.rozjizdky}
             delkaProceduryMin={data.delkaProceduryMin}
             naSpusteni={spustit}
+            chyba={chybaStartu}
           />
 
           {data.vysledkySkryte ? (

@@ -45,9 +45,12 @@ export function Odpocet({
   rozjizdky,
   delkaProceduryMin,
   naSpusteni,
+  chyba,
 }: {
   rozjizdky: readonly RozjizdkaProOdpocet[];
   delkaProceduryMin?: number;
+  /** Co se nepovedlo při posledním pokusu o spuštění, nebo `null`. */
+  chyba?: string | null;
   /**
    * Co udělat, když rozhodčí spustí proceduru. Chybí-li, tlačítko se
    * neukáže — obrazovku regaty čte i ten, kdo nevelí.
@@ -78,7 +81,7 @@ export function Odpocet({
   if (!stav) return null;
 
   if (stav.druh === 'ceka')
-    return <Ceka stav={stav} delkaS={delkaS} t={t} naSpusteni={naSpusteni} />;
+    return <Ceka stav={stav} delkaS={delkaS} t={t} naSpusteni={naSpusteni} chyba={chyba} />;
   if (stav.druh === 'jede') return <Jede stav={stav} t={t} />;
   return <Bezi stav={stav} delkaS={delkaS} t={t} />;
 }
@@ -89,11 +92,13 @@ function Ceka({
   delkaS,
   t,
   naSpusteni,
+  chyba,
 }: {
   stav: Extract<StavStartu, { druh: 'ceka' }>;
   delkaS: number;
   t: Barvy;
   naSpusteni?: (cislo: number) => void;
+  chyba?: string | null;
 }) {
   return (
     <View style={[s.panel, { backgroundColor: t.zvyrazneni, borderColor: t.linka, borderWidth: 1 }]}>
@@ -116,6 +121,12 @@ function Ceka({
           <Text style={[s.pripominka, { color: t.pozor }]}>
             Zapni si Nerušit — hovor přeruší hlášení.
           </Text>
+
+          {chyba ? (
+            <Text style={[s.pripominka, { color: t.stavZruseny, fontWeight: '600' }]}>
+              {chyba}
+            </Text>
+          ) : null}
         </>
       ) : null}
     </View>
