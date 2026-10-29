@@ -104,8 +104,49 @@ zkus('nic se neztratí, když appka chvíli spala', () => {
 });
 
 zkus('mimo proceduru se nehraje nic', () => {
-  assert.deepEqual(coPrehrat(400, 350), []);
+  // Před předehrou (ta začíná 360 vteřin před startem) a mezi startem
+  // a koncem okna klidu se mlčí.
+  assert.deepEqual(coPrehrat(500, 450), []);
   assert.deepEqual(coPrehrat(-5, -30), []);
+});
+
+// --- Předehra a konec okna ---
+
+zkus('minutu před procedurou appka ohlásí, že se ztišuje', () => {
+  const p = partitura();
+  const predehra = p.find((z) => z.vterinDoStartu === 360);
+  assert.equal(predehra?.rekni, 'Přepínám se do režimu Nerušit');
+  assert.equal(predehra?.troubi, null);
+});
+
+zkus('půl minuty před procedurou řekne, že se začíná', () => {
+  const p = partitura();
+  const ohlaseni = p.find((z) => z.vterinDoStartu === 330);
+  assert.equal(ohlaseni?.rekni, 'Za třicet vteřin bude zahájena startovní procedura');
+});
+
+zkus('v předehře se netroubí', () => {
+  // Procedura ještě neběží; zvuk by poslal posádky ke startu dřív, než má.
+  // Nad pětiminutovkou leží tři věty: dvě z předehry a odpočet do zahájení.
+  const predehra = partitura().filter((z) => z.vterinDoStartu > 300);
+  assert.deepEqual(
+    predehra.map((z) => z.vterinDoStartu),
+    [360, 330, 305],
+  );
+  assert.ok(predehra.every((z) => z.troubi === null));
+});
+
+zkus('pět minut po startu se ohlásí konec klidu', () => {
+  const konec = partitura().find((z) => z.vterinDoStartu === -300);
+  assert.equal(konec?.rekni, 'Vypínám režim Nerušit');
+  assert.equal(konec?.troubi, null);
+});
+
+zkus('konec klidu padne do okna i po startu', () => {
+  // Po startu jdou vteřiny do záporu: −299 je pět minut a vteřina po něm.
+  const co = coPrehrat(-299, -301);
+  assert.equal(co.length, 1);
+  assert.equal(co[0].rekni, 'Vypínám režim Nerušit');
 });
 
 console.log(`  ${prosly} prošlo`);

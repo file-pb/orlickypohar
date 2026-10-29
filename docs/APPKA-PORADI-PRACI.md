@@ -181,13 +181,21 @@ jde.
 | **Android** (Miloš) | **ano** | `NotificationManager.setInterruptionFilter` s oprávněním `ACCESS_NOTIFICATION_POLICY`; uživatel ho jednou povolí v nastavení |
 | **iPhone** (Filip) | **ne** | Focus je systémové nastavení, které aplikace nepřepíná; privátní URL do Nastavení Apple zamítá |
 
-**Kdy má klid platit.** Od zahájení procedury do <b>pěti minut po
-startu</b> (Filip, 29. 10. 2026) — tedy přesně to okno, kde každá vteřina
+**Kdy má klid platit.** Od <b>minuty před zahájením procedury</b> do
+<b>pěti minut po startu</b> (Filip, 29. 10. 2026) — tedy přesně to okno, kde každá vteřina
 něco znamená: po startu se řeší předčasné starty a případné odvolání,
 a teprve pak se dá zvednout telefon. Mimo ně se režim nemění; vypnout
 rozhodčímu vyzvánění na celý den by byla medvědí služba. Pravidlo je
 postavené a otestované jako `maBytKlid` v `app/src/lib/start.ts` — chybí
 k němu jen ta nativní část, která ho provede.
+
+**Appka o tom mluví na obou koncích.** Minutu před procedurou řekne
+*„Přepínám se do režimu Nerušit"*, o půl minuty později *„Za třicet vteřin
+bude zahájena startovní procedura"*, a teprve pak jede partitura. Pět
+minut po startu ohlásí *„Vypínám režim Nerušit"*. V předehře se schválně
+netroubí: procedura ještě neběží a zvuk by poslal posádky ke startu dřív,
+než má. A konec se ohlašuje proto, že tichý návrat do normálu by znamenal,
+že rozhodčí nepozná zmeškaný hovor od vypnutého telefonu.
 
 **Co na iPhonu zbývá:** automatizace ve Zkratkách — *při otevření
 aplikace zapni Nerušit, při zavření vypni*. Nastaví si ji uživatel sám,

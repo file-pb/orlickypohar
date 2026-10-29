@@ -245,6 +245,16 @@ export function usekyProcedury(
 export const PO_STARTU_NERUSIT_S = 5 * 60;
 
 /**
+ * O kolik dřív než procedura začíná klid na telefonu.
+ *
+ * Minutu (Filip, 29. 10. 2026): appka v ní ohlásí, že se přepíná do
+ * *Nerušit*, a pak že procedura za chvíli začne. Totéž číslo má partitura
+ * jako `PREDEHRA_S` — kdyby se rozešla, telefon by ztichl dřív nebo
+ * později, než o tom řekne.
+ */
+export const PREDEHRA_KLIDU_S = 60;
+
+/**
  * Má teď telefon mlčet?
  *
  * <b>Okno od zahájení procedury do pěti minut po startu</b> — tedy přesně
@@ -257,13 +267,23 @@ export const PO_STARTU_NERUSIT_S = 5 * 60;
  * funkce říká jen, kdy by to mělo platit — kdo a jak to provede, je věc
  * platformy (viz `docs/APPKA-PORADI-PRACI.md`).
  */
-export function maBytKlid(stav: StavStartu | null): boolean {
+export function maBytKlid(
+  stav: StavStartu | null,
+  ted: number = Date.now(),
+  /** Délka procedury té regaty ve vteřinách; bez ní platí pětka. */
+  delkaS: number = PROCEDURA_S,
+): boolean {
   if (!stav) return false;
   if (stav.druh === 'procedura') return true;
   if (stav.druh === 'jede') return stav.odStartuS <= PO_STARTU_NERUSIT_S;
-  // Dokud se čeká, může telefon vyzvánět: do startu je daleko a rozhodčí
-  // zrovna domlouvá s pořadatelem, kdy se pojede.
-  return false;
+
+  // Čeká se. Klid začíná o minutu dřív než procedura, aby appka stihla
+  // ohlásit, že se přepíná (Filip, 29. 10. 2026) — rozhodčí tak ví, že
+  // telefon ztichne, a nepřekvapí ho to uprostřed hovoru.
+  const od = odStartu(stav.startV, ted);
+  if (od === null) return false;
+  const doZahajeni = -od - delkaS;
+  return doZahajeni <= PREDEHRA_KLIDU_S;
 }
 
 /**

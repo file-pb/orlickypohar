@@ -276,4 +276,11 @@ zkus('když se na startu nic neděje, klid se nevynucuje', () => {
   assert.equal(maBytKlid(null), false);
 });
 
+zkus('klid začíná minutu před procedurou, ne s ní', () => {
+  const r = [planovana(2, START)];
+  // Procedura začne ve 13:55 (11:55 UTC). Klid tedy od 11:54.
+  assert.equal(maBytKlid(stavStartu(r, V('11:53:30')), V('11:53:30')), false);
+  assert.equal(maBytKlid(stavStartu(r, V('11:54:10')), V('11:54:10')), true);
+});
+
 console.log(`  ${prosly} prošlo`);

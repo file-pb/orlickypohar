@@ -96,6 +96,29 @@ export async function posliZaSebe<T>(cesta: string, telo: unknown): Promise<T | 
   return (await odpoved.json()) as T;
 }
 
+/**
+ * Startovní procedura: spustit, odložit, odvolat.
+ *
+ * <b>Jen za přihlášeného a jen pro toho, kdo velí</b> — práva hlídá
+ * server, appka tlačítko jen neukazuje tomu, komu nepatří. Vrací `null`,
+ * když nikdo není přihlášený; chybu vyhodí, protože u zásahu do procedury
+ * je rozdíl mezi „nepovedlo se" a „nic tam není" podstatný.
+ *
+ * Cesta jde přes správu, ne přes veřejné čtení: veřejně se procedura
+ * nespouští.
+ */
+export function provedProceduru(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  druh: 'Spustit' | 'Odlozit' | 'Odvolat',
+) {
+  return posliZaSebe<unknown>(
+    `/sprava/serie/${serie}/vysledky/${zavod}/rozjizdky/${cislo}/procedura`,
+    { druh },
+  );
+}
+
 /** Kdo jsem podle našeho API — včetně oprávnění. Tím se pozná, že token
  *  neplatí jen u poskytovatele, ale i u nás. */
 export const nactiJa = () => nactiZaSebe<Ja>('/ja');

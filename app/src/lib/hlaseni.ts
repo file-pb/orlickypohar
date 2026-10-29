@@ -24,7 +24,7 @@
  * i bez reproduktoru (`app/testy/hlaseni.test.ts`).
  */
 
-import { MINUTA_S, PRIPRAVNE_S, PROCEDURA_S } from './start';
+import { MINUTA_S, PO_STARTU_NERUSIT_S, PRIPRAVNE_S, PROCEDURA_S } from './start';
 
 /** Jak se troubí. Délky drží přehrávač, tady je jen druh. */
 export type Troubeni = 'kratce' | 'dlouze';
@@ -76,6 +76,18 @@ function minut(kolik: number): string {
 }
 
 /**
+ * Jak dlouho před zahájením procedury si appka řekne o klid.
+ *
+ * Minutu (Filip, 29. 10. 2026). Ohlásí, že se přepíná do *Nerušit*, pak
+ * že procedura začne — a teprve potom jede partitura. Rozhodčí tak ví,
+ * že se telefon chystá ztichnout, a nepřekvapí ho to uprostřed hovoru.
+ */
+export const PREDEHRA_S = 60;
+
+/** Kdy v předehře padne upozornění, že procedura za chvíli začne. */
+export const OHLASENI_ZAHAJENI_S = 30;
+
+/**
  * Celá partitura startovní procedury, od zahájení po start.
  *
  * Vrací znamení seřazená od nejranějšího; `vterinDoStartu` klesá k nule.
@@ -84,6 +96,20 @@ function minut(kolik: number): string {
  */
 export function partitura(delkaS: number = PROCEDURA_S): Znameni[] {
   const znameni: Znameni[] = [];
+
+  // Předehra: telefon řekne, že se chystá ztichnout, a pak že se začíná.
+  // Troubí se v ní schválně nic — procedura ještě neběží a zvuk by
+  // posádky poslal ke startu dřív, než má.
+  znameni.push({
+    vterinDoStartu: delkaS + PREDEHRA_S,
+    rekni: 'Přepínám se do režimu Nerušit',
+    troubi: null,
+  });
+  znameni.push({
+    vterinDoStartu: delkaS + OHLASENI_ZAHAJENI_S,
+    rekni: 'Za třicet vteřin bude zahájena startovní procedura',
+    troubi: null,
+  });
 
   const pridej = (vterin: number, veta: string, troubi: Troubeni) => {
     // Hlášený odpočet se vejde jen tam, kde před znamením je volno.
@@ -130,6 +156,16 @@ export function partitura(delkaS: number = PROCEDURA_S): Znameni[] {
   // Startovní znamení.
   pridej(0, 'Start', 'kratce');
   znameni.push({ vterinDoStartu: 0, rekni: 'Start', troubi: null });
+
+  // Konec okna klidu. Záporný čas znamená „po startu" — a tohle je jediné
+  // znamení, které tam leží. Rozhodčí musí vědět, že telefon zase zvoní;
+  // tichý návrat do normálu by znamenal, že nepozná zmeškaný hovor od
+  // vypnutého telefonu.
+  znameni.push({
+    vterinDoStartu: -PO_STARTU_NERUSIT_S,
+    rekni: 'Vypínám režim Nerušit',
+    troubi: null,
+  });
 
   return znameni.sort((a, b) => b.vterinDoStartu - a.vterinDoStartu);
 }

@@ -14,13 +14,31 @@ import {
 } from '@/components/ui';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
-import { nactiZavod, type UcastLodi, type VysledekZavodu, type ZavodDetail } from '@/lib/api';
+import {
+  nactiJa,
+  nactiZavod,
+  provedProceduru,
+  type UcastLodi,
+  type VysledekZavodu,
+  type ZavodDetail,
+} from '@/lib/api';
+import { veliNekde } from '@/lib/role';
 import { rozsah } from '@/lib/datum';
 
 export default function Zastavka() {
   const { slug, zavod } = useLocalSearchParams<{ slug: string; zavod: string }>();
   const t = useTheme();
   const { data, chyba, nacita, obnov } = useData(() => nactiZavod(slug, zavod), [slug, zavod]);
+  const { data: ja } = useData(nactiJa);
+
+  // Proceduru spouští jen ten, kdo velí. Práva hlídá server; tohle jen
+  // neukazuje tlačítko tomu, komu nepatří — obrazovku regaty čte každý.
+  const spustit = veliNekde(ja ?? null)
+    ? async (cislo: number) => {
+        await provedProceduru(slug, zavod, cislo, 'Spustit');
+        obnov();
+      }
+    : undefined;
 
   const kategorie = [...new Set(data?.poradi.map((v) => v.kategorie) ?? [])];
 
@@ -49,7 +67,11 @@ export default function Zastavka() {
 
           {/* Panel startu se ukáže sám, jen když se zrovna startuje nebo jede.
               Jindy nevykreslí nic — stránka regaty tím zůstává tím, čím je. */}
-          <Odpocet rozjizdky={data.rozjizdky} delkaProceduryMin={data.delkaProceduryMin} />
+          <Odpocet
+            rozjizdky={data.rozjizdky}
+            delkaProceduryMin={data.delkaProceduryMin}
+            naSpusteni={spustit}
+          />
 
           {data.vysledkySkryte ? (
             // Ročník, u kterého se výsledky jednotlivých regat veřejně

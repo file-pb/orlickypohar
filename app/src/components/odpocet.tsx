@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { AppState, StyleSheet, Text, View } from 'react-native';
 
+import { Pressable } from 'react-native';
+
 import { useTheme } from '@/hooks/use-theme';
 import type { Barvy } from '@/constants/theme';
 import {
@@ -42,9 +44,15 @@ const TIK_MS = 1000;
 export function Odpocet({
   rozjizdky,
   delkaProceduryMin,
+  naSpusteni,
 }: {
   rozjizdky: readonly RozjizdkaProOdpocet[];
   delkaProceduryMin?: number;
+  /**
+   * Co udělat, když rozhodčí spustí proceduru. Chybí-li, tlačítko se
+   * neukáže — obrazovku regaty čte i ten, kdo nevelí.
+   */
+  naSpusteni?: (cislo: number) => void;
 }) {
   const t = useTheme();
   const [ted, setTed] = useState(() => Date.now());
@@ -69,7 +77,8 @@ export function Odpocet({
   // zabíral místo a tvrdil, že se něco chystá.
   if (!stav) return null;
 
-  if (stav.druh === 'ceka') return <Ceka stav={stav} delkaS={delkaS} t={t} />;
+  if (stav.druh === 'ceka')
+    return <Ceka stav={stav} delkaS={delkaS} t={t} naSpusteni={naSpusteni} />;
   if (stav.druh === 'jede') return <Jede stav={stav} t={t} />;
   return <Bezi stav={stav} delkaS={delkaS} t={t} />;
 }
@@ -79,10 +88,12 @@ function Ceka({
   stav,
   delkaS,
   t,
+  naSpusteni,
 }: {
   stav: Extract<StavStartu, { druh: 'ceka' }>;
   delkaS: number;
   t: Barvy;
+  naSpusteni?: (cislo: number) => void;
 }) {
   return (
     <View style={[s.panel, { backgroundColor: t.zvyrazneni, borderColor: t.linka, borderWidth: 1 }]}>
@@ -90,6 +101,23 @@ function Ceka({
       <Text style={[s.vetaVelka, { color: t.text }]}>
         Procedura začne ve {zacatekProcedury(stav.startV, delkaS)}
       </Text>
+
+      {naSpusteni ? (
+        <>
+          <Pressable
+            onPress={() => naSpusteni(stav.cislo)}
+            style={[s.spustit, { backgroundColor: t.procedura }]}>
+            <Text style={s.spustitText}>Spustit startovní proceduru</Text>
+          </Pressable>
+
+          {/* Jediná pojistka, kterou appka sama nezařídí: hovor přeruší
+              hlášení a iOS to neobejde. Připomíná se tady, protože tohle
+              je poslední klidná chvíle před procedurou. */}
+          <Text style={[s.pripominka, { color: t.pozor }]}>
+            Zapni si Nerušit — hovor přeruší hlášení.
+          </Text>
+        </>
+      ) : null}
     </View>
   );
 }
@@ -183,4 +211,7 @@ const s = StyleSheet.create({
   useky: { flexDirection: 'row', gap: 5, marginTop: 12 },
   zlab: { height: 7, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.3)', overflow: 'hidden' },
   popisekUseku: { fontSize: 9, marginTop: 3 },
+  spustit: { marginTop: 14, minHeight: 56, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  spustitText: { color: '#ffffff', fontSize: 17, fontWeight: '700' },
+  pripominka: { fontSize: 12, marginTop: 8, lineHeight: 16 },
 });
