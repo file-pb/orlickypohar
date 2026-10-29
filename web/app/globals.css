@@ -1115,9 +1115,18 @@ header.hlavicka .jen-uzke { display: none; }
    není část té stránky — je to rámeček, který vidí jen ten, kdo tu má roli,
    a nemá se plést s obsahem pro čtenáře. */
 /* Cesta do správy je štítek u drobečků, ne rámeček s výčtem odkazů (Filip,
-   29. 10. 2026). Záporný horní okraj ho přitáhne k cestě nad ním, aby se
-   četl jako její pokračování, a ne jako první řádek obsahu. */
-.do-spravy { margin: -0.6rem 0 1rem; }
+   29. 10. 2026), a stojí s nimi na jednom řádku vpravo.
+
+   <b>Zalomení dělá `flex-wrap`, ne mez v pixelech</b>: kde se drobečky
+   a štítek vedle sebe nevejdou, sklouzne štítek pod ně sám — a je jedno,
+   jak je cesta dlouhá, což u názvu regaty v drobečku předem nevíme. */
+.radek-cesty {
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; gap: 0.4rem 1rem;
+  margin: 0 0 0.85rem;
+}
+.radek-cesty .drobecky { margin-bottom: 0; }
+.do-spravy { margin: 0; }
 .do-spravy .stitek { color: var(--voda); border-color: var(--voda); }
 .do-spravy .stitek:hover { background: color-mix(in srgb, var(--voda) 10%, transparent); }
 

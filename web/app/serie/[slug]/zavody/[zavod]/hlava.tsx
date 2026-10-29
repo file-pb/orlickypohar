@@ -174,22 +174,26 @@ export async function HlavaZastavky({
 
   return (
     <>
-      <Drobecky
-        cesta={[
-          { text: "Domů", kam: "/" },
-          { text: "Ročník", kam: `/serie/${serie}` },
-          // Název regaty je odkaz na její úvod — kromě úvodu samotného,
-          // kde by vedl sám na sebe. Poslední drobeček odkaz nikdy není.
-          aktivni === "uvod"
-            ? { text: detail.nazev }
-            : { text: detail.nazev, kam: adresaSekce(serie, zavod, "uvod") },
-          ...(aktivni === "uvod" ? [] : [{ text: NAZVY[aktivni] }]),
-        ]}
-      />
-      {/* Štítek do správy stojí hned u drobečků, protože je to cesta, ne
-          sdělení o regatě — a po sjednocení designu je to jediný odkaz,
-          který veřejná stránka pořadateli dluží. */}
-      {maRoli && <DoSpravy serie={serie} zavod={zavod} prace={prace} />}
+      {/* <b>Cesta a štítek do správy na jednom řádku</b> (Filip, 29. 10.
+          2026), štítek vpravo. Je to cesta, ne sdělení o regatě — a po
+          sjednocení designu je to jediný odkaz, který veřejná stránka
+          pořadateli dluží. Řádek se zalomí sám, takže na úzkém displeji,
+          kam se drobečky nevejdou, sklouzne štítek pod ně. */}
+      <div className="radek-cesty">
+        <Drobecky
+          cesta={[
+            { text: "Domů", kam: "/" },
+            { text: "Ročník", kam: `/serie/${serie}` },
+            // Název regaty je odkaz na její úvod — kromě úvodu samotného,
+            // kde by vedl sám na sebe. Poslední drobeček odkaz nikdy není.
+            aktivni === "uvod"
+              ? { text: detail.nazev }
+              : { text: detail.nazev, kam: adresaSekce(serie, zavod, "uvod") },
+            ...(aktivni === "uvod" ? [] : [{ text: NAZVY[aktivni] }]),
+          ]}
+        />
+        {maRoli && <DoSpravy serie={serie} zavod={zavod} prace={prace} />}
+      </div>
 
       <Hlavicka zavod={detail} akce={akce} />
 
