@@ -51,6 +51,20 @@ kvůli němu nic nepředělává.
   k uzavření výsledků"*). Rozhodčí tedy na ukončení nemusí být
   upozorňován — narazí na něj sám ve chvíli, kdy chce pokračovat.
 
+### Názvosloví, na kterém záleží
+
+- **Ohlásit rozjížďku**, ne *zahájit*. Zahájení zní, jako by se tím
+  startovalo; ohlášení je to, co rozhodčí doopravdy dělá — řekne, že se
+  pojede další, a teprve pak se nastaví čas a spustí procedura
+  (Filip, 29. 10. 2026).
+- **Jedeme do přístavu** ukončuje závodní den: další signály budou na
+  břehu. Je to vedle ohlášení další rozjížďky, protože v tu chvíli se
+  rozhoduje mezi těmi dvěma.
+
+**Co zbývá probrat:** návrat do přístavu *jen na oběd*. Není to konec
+dne ani odložení před startem — den pokračuje, ale jinde, a pravidla pro
+to mají vlastní signál (AP nad H). Zatím se s tím nepočítá.
+
 ### Co má vidět posádka
 
 Barvu stavu, pokyn závodní komise, svou loď s posádkou, spojení a jestli

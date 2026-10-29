@@ -24,7 +24,12 @@ public record ProceduraVstup(DruhProcedury Druh);
 /// Zastavení časomíry. Bez času se vezme okamžik požadavku;
 /// <c>Pustit: true</c> zastavení zruší a čas běží dál.
 /// </summary>
-public record KonecVstup(DateTimeOffset? KonecV = null, bool Pustit = false);
+public record KonecVstup(
+    DateTimeOffset? KonecV = null,
+    bool Pustit = false,
+    // Kde byl rozhodčí, když rozjížďku uzavřel. Appka to nezobrazuje;
+    // doloží to rozhodnutí, které někdo později zpochybní.
+    Spolecne.OkolnostiVstup? Okolnosti = null);
 
 /// <summary>Nová rozjížďka. Bez těla jde do poháru, jako dřív.</summary>
 public record NovaRozjizdkaVstup(bool DoSerie = true);
@@ -306,7 +311,7 @@ public static class VysledkyEndpoints
     private static async Task<IResult> KonecAsync(
         string serie, string zavod, int cislo, [FromBody] KonecVstup? vstup, ClaimsPrincipal kdo,
         Rozsahy rozsahy, VysledkySprava sprava, ZapisSprava zapis, TimeProvider cas,
-        CancellationToken ct)
+        Spolecne.OkolnostiSprava okolnosti, AppDbContext db, CancellationToken ct)
     {
         if (await NajdiAsync(serie, zavod, cislo, rozsahy, sprava, ct) is not { } nalezena)
             return Results.NotFound();
@@ -317,6 +322,18 @@ public static class VysledkyEndpoints
         var kdy = vstup?.Pustit == true ? (DateTimeOffset?)null : vstup?.KonecV ?? cas.GetUtcNow();
         if (await zapis.KonecAsync(rozjizdka, kdy, ct) is { } chyba)
             return Results.BadRequest(new { error = chyba });
+
+        // Doklad k rozhodnutí: uzavřením rozjížďky dostanou lodě bez dojezdu
+        // DNF, a to je přesně ten druh zásahu, který se zpětně zpochybňuje.
+        // Zapisuje se až po úspěchu a jen u uzavření — puštění časomíry zpět
+        // nic lodím nebere.
+        if (vstup?.Pustit != true && await rozsahy.UzivatelIdAsync(kdo, ct) is { } ktery)
+        {
+            okolnosti.Pripoj(
+                rozjizdka.ZavodId, Spolecne.DruhRozhodnuti.UkonceniRozjizdky, ktery,
+                vstup?.Okolnosti, rozjizdkaId: rozjizdka.Id);
+            await db.SaveChangesAsync(ct);
+        }
 
         return Results.Ok(await zapis.NactiAsync(rozjizdka, poradatel: true, ct));
     }

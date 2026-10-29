@@ -65,6 +65,7 @@ try
     builder.Services.AddScoped<NastaveniSprava>();
     builder.Services.AddScoped<KliceSprava>();
     builder.Services.AddScoped<KalendarSprava>();
+    builder.Services.AddScoped<OrlickyPohar.Api.Features.Spolecne.OkolnostiSprava>();
     builder.Services.AddScoped<VysledkySprava>();
     builder.Services.AddScoped<ZapisSprava>();
     builder.Services.AddScoped<VeleniSprava>();

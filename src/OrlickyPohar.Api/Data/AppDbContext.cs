@@ -72,6 +72,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Features.Klice.PozvankaKlice> Pozvanky => Set<Features.Klice.PozvankaKlice>();
 
     /// <summary>Sady otázek pro oponenturu s rozhodčím a odpovědi na ně.</summary>
+    public DbSet<Features.Spolecne.OkolnostRozhodnuti> OkolnostiRozhodnuti =>
+        Set<Features.Spolecne.OkolnostRozhodnuti>();
+
     public DbSet<Features.Oponentura.SadaOtazek> Sady => Set<Features.Oponentura.SadaOtazek>();
     public DbSet<Features.Oponentura.OtazkaSady> Otazky => Set<Features.Oponentura.OtazkaSady>();
     public DbSet<Features.Oponentura.OdpovedNaOtazku> OponenturaOdpovedi =>
