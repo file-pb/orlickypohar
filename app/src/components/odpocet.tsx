@@ -160,7 +160,7 @@ export function Odpocet({
           telefonu, takže na obrazovce vypadá všechno v pořádku i tehdy,
           když o startu nikdo jiný neví. */}
       {nedoslano ? (
-        <Text style={[s.radekPodPanelem, { color: t.pozor }]}>
+        <Text style={[s.radekPodPanelem, { color: t.vystraha }]}>
           Zatím neodesláno — odpočet běží z hodin telefonu a zkouším dál.
         </Text>
       ) : null}
@@ -238,7 +238,7 @@ function Zastaveni({
             <Text style={[s.dialogVeta, { color: t.tlumeny }]}>
               {potvrzuje ? dusledekUkonu(potvrzuje) : ''}
             </Text>
-            {chyba ? <Text style={[s.dialogVeta, { color: t.pozor }]}>{chyba}</Text> : null}
+            {chyba ? <Text style={[s.dialogVeta, { color: t.vystraha }]}>{chyba}</Text> : null}
 
             <View style={s.dialogTlacitka}>
               <Pressable
@@ -253,7 +253,7 @@ function Zastaveni({
                 style={({ pressed }) => [
                   s.volba,
                   s.volbaHlavni,
-                  { backgroundColor: t.pozor, opacity: pressed || posila ? 0.6 : 1 },
+                  { backgroundColor: t.vystraha, opacity: pressed || posila ? 0.6 : 1 },
                 ]}>
                 <View style={s.spustitObsah}>
                   {posila ? <ActivityIndicator color="#ffffff" /> : null}
@@ -345,7 +345,7 @@ function Ceka({
           {/* Jediná pojistka, kterou appka sama nezařídí: hovor přeruší
               hlášení a iOS to neobejde. Připomíná se tady, protože tohle
               je poslední klidná chvíle před procedurou. */}
-          <Text style={[s.pripominka, { color: t.pozor }]}>
+          <Text style={[s.pripominka, { color: t.vystraha }]}>
             Zapni si Nerušit — hovor přeruší hlášení.
           </Text>
         </>
@@ -421,7 +421,7 @@ function Bezi({
 }) {
   const useky = usekyProcedury(stav.doStartuS, delkaS);
   const minuta = stav.doStartuS <= 60;
-  const pozadi = minuta ? t.pozor : t.procedura;
+  const pozadi = minuta ? t.vystraha : t.procedura;
   const tep = useRef(new Animated.Value(1)).current;
   const tepe = stav.doStartuS <= TEP_OD_S;
 

@@ -16,6 +16,23 @@
      znamenají totéž — něco se zrovna děje, podívej se. Tady dostává jméno,
      aby dikce zpráv ve správě nezavedla čtvrtou odrudu oranžové. */
   --pozor: #e8900c;
+
+  /* <b>Panel startovní procedury v appce.</b> Appka kreslí odpočet, web
+     ne — tabule má pro proceduru vlastní řeč (bílá výplň jako časomíra na
+     stadionu, viz `.tabule .rozjizdka-procedura`). Barvy přesto patří sem:
+     paleta je jedna pro oboje dveře a `tools/kontrola-tokenu.py` to v CI
+     hlídá, takže token, který je jen v appce, zastaví nasazení.
+
+     `--vystraha` není `--pozor`: webový jantar je výplň pod tmavým písmem,
+     tenhle nese bílé písmo poslední minuty a zároveň se čte sám na papíře
+     (měřeno 29. 10. 2026). Jedno jméno pro dvě role byl ten rozchod,
+     kvůli kterému kontrola spadla. */
+  --procedura: #1f6f8b;
+  --vystraha: #8a5000;
+  --jede: #2f6b4f;
+  --vyzva-znameni: #ffffff;
+  --priprava-znameni: #f2c14e;
+  --minuta-znameni: #ffffff;
   /* Proužek šrafy u nezveřejněné karty. <b>Vlastní token, ne `--zvyrazneni`</b>:
      s ním byla šrafa v tmavém režimu prakticky neviditelná (`#232830` na
      `#1b1f23`), takže kanál, který měl nést publikaci, nenesl nic. Obě
@@ -118,6 +135,14 @@
     /* Na tmavém podkladu světlejší, stejně jako ostatní stavy. Je to týž
        jantar, jakým na tabuli svítí semafor. */
     --pozor: #e8a33d;
+    /* Panel odpočtu v appce — viz světlý blok. Modrá tmavne, aby na ní
+       bílé písmo neoslňovalo; znamení zůstávají, ta svítí v obou. */
+    --procedura: #16495c;
+    --vystraha: #c9922f;
+    --jede: #58c98c;
+    --vyzva-znameni: #ffffff;
+    --priprava-znameni: #f2c14e;
+    --minuta-znameni: #ffffff;
     --srafa: #343b43;
     /* Světlejší odrudy týchž barev — syté by na tmavém podkladu zhasly.
        Zároveň o stupeň tlumenější než napoprvé (Filip, 29. 10. 2026:
@@ -150,6 +175,13 @@
   --stav-vypsany: #58c98c;
   --stav-zruseny: #e2726a;
   --pozor: #e8a33d;
+  /* Panel odpočtu v appce — viz světlý blok. */
+  --procedura: #16495c;
+  --vystraha: #c9922f;
+  --jede: #58c98c;
+  --vyzva-znameni: #ffffff;
+  --priprava-znameni: #f2c14e;
+  --minuta-znameni: #ffffff;
   --srafa: #343b43;
   --ukon-vysledky: #5e7f99;
   --ukon-prihlasky: #6e759c;
