@@ -161,8 +161,8 @@ const s = StyleSheet.create({
   casStredni: { fontSize: 32, fontWeight: '700', fontVariant: ['tabular-nums'] },
   doStartu: { fontSize: 15 },
   naBarve: { color: '#ffffff' },
-  naBarveTlumene: { color: 'rgba(255,255,255,0.78)' },
+  naBarveTlumene: { color: 'rgba(255,255,255,0.85)' },
   useky: { flexDirection: 'row', gap: 5, marginTop: 12 },
-  zlab: { height: 7, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.22)', overflow: 'hidden' },
+  zlab: { height: 7, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.3)', overflow: 'hidden' },
   popisekUseku: { fontSize: 9, marginTop: 3 },
 });
