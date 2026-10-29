@@ -57,15 +57,25 @@ import { ZavriMimo } from "@/app/zavri-mimo";
  */
 const NAZVY: Record<Sekce, string> = {
   uvod: "Úvod",
-  // <b>V tabu „Vypsání", v nadpisu „Vypsání závodu"</b> (nález R8,
-  // 28. 10. 2026). Miloš ho jmenuje celé, jenže tabů je po jeho seznamu
-  // sedm a dvakrát delších, a šířka je věcná námitka u R10. Plný název
-  // v nadpisu a krátký v tabu je cesta, kterou projekt už jednou zvolil
-  // (`nazev` a `kratky` u položek správy). Rozhodnout jinak se dá kdykoliv,
-  // je to jedno slovo.
-  vypsani: "Vypsání",
-  smernice: "Směrnice",
-  trat: "Trať",
+  // <b>Celým jménem, jak je říká Miloš</b> (Filip, 29. 10. 2026: „to je
+  // pravda a tak to pojmenuj, když to tak chce"). Do 28. 10. tu stály
+  // zkratky „Vypsání", „Směrnice" a „Trať" s plným názvem až v nadpisu
+  // sekce (nález R8) — kvůli šířce pruhu, což byla věcná námitka u R10.
+  //
+  // <b>Na užším monitoru se pruh zalomí</b>, a je to tak správně. Šest celých
+  // jmen potřebuje 935 px a střed stránky tolik má až od okna 1560 px, protože
+  // boky jsou grid `16rem | 1fr | 16rem` — pod tím jsou dva řádky, viz
+  // `.taby-sekci` v `globals.css`. Zkratka by ušetřila řádek a stála jméno.
+  // Pod 40 rem se místo něj skládá akordeon, tam je jméno na vlastním řádku.
+  //
+  // Zkrácení Filip připustil („nějakou zkrácenou formu asi můžeš, když budeš
+  // muset, ale vychází to z Miloše"), ale potřeba není a stálo by dvojí
+  // jméno pro tutéž sekci — a jednotné pojmenování je zrovna to, oč šlo.
+  // Zkratka taky stála jednu nesrovnalost: v tabu bylo jiné slovo než
+  // v nadpisu, na který vedl.
+  vypsani: "Vypsání závodu",
+  smernice: "Plachetní směrnice",
+  trat: "Závodní trať",
   lode: "Startovní listina",
   vysledky: "Výsledky",
 };

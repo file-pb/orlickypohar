@@ -1146,7 +1146,7 @@ stránku ročníku, takže krok nahoru vedl ze správy ven, a u bójí a směrni
 | `/sprava` | Domů » Správa |
 | `/sprava/{ročník}` | Domů » Správa » Ročník |
 | `/sprava/{ročník}/kalendar` (a `vysledky`, `lode`, `opravneni`, `clanky`) | … » Ročník » Kalendář |
-| `/sprava/{ročník}/boje/{regata}` (a `prihlasky`, `smernice`) | … » Ročník » **{regata}** » Bóje na trati |
+| `/sprava/{ročník}/boje/{regata}` (a `prihlasky`, `smernice`) | … » Ročník » **{regata}** » Závodní trať |
 | `/sprava/{ročník}/vysledky/{regata}/{n}/cil` | … » Ročník » **{regata}** » Výsledky » {n}. rozjížďka » Cíl |
 
 **Drobeček regaty míří na její kartu na rozcestníku ročníku**

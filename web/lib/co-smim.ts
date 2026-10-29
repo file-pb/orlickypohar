@@ -347,18 +347,28 @@ export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string
     ],
     // Táž dvě práva jako u směrnice, protože je tak kontroluje i API
     // (`BojeEndpoints.SmiAsync`): organizátor té regaty, nebo rozhodčí ročníku.
+    // <b>Pojmenované podle rozhodčího</b> (Filip, 29. 10. 2026: „tohle by se
+    // mělo sjednotit podle Miloše, to první bylo naše pracovní"). Miloš
+    // Zvonař vypsal 27. 10. 2026 sekce regaty vlastními slovy — „vypsani
+    // zavodu - plachetni smernice - zavodni trat - prihlasky - startovni
+    // listina" (střípek 6 v `docs/OPONENTURA-ROZHODCI.md`, nález R10).
+    // „Bóje na trati" byla jediná položka, která tomu slovníku odporovala;
+    // „Přihlášky" i „Plachetní směrnice" jsou naopak jeho slova, ne naše.
+    //
+    // Bóje z názvu zmizely schválně: jsou to <b>prostředky</b>, kterými se
+    // trať staví, kdežto závodník i rozhodčí mluví o trati.
     [
       {
-        nazev: "Bóje na trati",
-        kratky: "bóje",
+        nazev: "Závodní trať",
+        kratky: "trať",
         popis: "Pípnout polohu bóje, přenastavit, sebrat z vody.",
         kam: kam("/boje"),
         role: "Organizator",
         pozadavek: { role: "Organizator", serie, zavod },
       },
       {
-        nazev: "Bóje na trati",
-        kratky: "bóje",
+        nazev: "Závodní trať",
+        kratky: "trať",
         popis: "Pípnout polohu bóje, přenastavit, sebrat z vody.",
         kam: kam("/boje"),
         role: "Rozhodci",

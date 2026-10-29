@@ -1804,8 +1804,16 @@ th.vlevo, td.vlevo { text-align: left; }
 /* Taby sekcí regaty. Na telefonu se nezalamují do dvou řad, ale posouvají
    se do strany — zalomené by při každém přepnutí přeskládaly obsah pod
    sebou a stránka by poskočila. */
-.taby-sekci { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-.taby-sekci::-webkit-scrollbar { display: none; }
+/* <b>Zalomí se do dvou řádků, neposouvá.</b> Sekce nesou od 29. 10. 2026
+   celá jména podle rozhodčího a těch šest potřebuje 935 px. Střed stránky
+   tolik místa má až od okna 1560 px (nad `.s-boky` ho ubírají boky po
+   16 rem), takže na 13" a 15" notebooku jsou to dva řádky a na velkém
+   monitoru jeden. Změřeno: 1280 → 656 px, 1440 → 816, 1560 → 936 (odtud
+   jeden řádek), 1920 → 1296.
+   Posuvník to řešil hůř než nijak: `scrollbar-width: none` ho skrýval, a kdo
+   nezkusil táhnout, o dvou sekcích nevěděl — to je původní námitka u R10,
+   kvůli které vznikl akordeon. Zalomení nikoho o sekci nepřipraví. */
+.taby-sekci { flex-wrap: wrap; }
 .taby-sekci a { white-space: nowrap; display: inline-flex; align-items: center; gap: 0.45rem; }
 /* Signální vlajka u sekce. Pevné barvy mezinárodního kódu, z motivu jen
    rámeček — bez něj by bílá v bílé vlajce splynula s pozadím. */

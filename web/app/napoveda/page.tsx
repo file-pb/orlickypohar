@@ -282,7 +282,7 @@ export default function Napoveda() {
         o vyvěšení a důvod zůstanou. Důvod je povinný.
       </p>
 
-      <h2 id="boje">Bóje na trati</h2>
+      <h2 id="boje">Závodní trať</h2>
       <p>
         Trať staví <b>pořadatel regaty nebo rozhodčí</b> přímo u vody:
         u každé bóje klepne <i>Pípnout</i> a telefon pošle polohu. Přesnost je

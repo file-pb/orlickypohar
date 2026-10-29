@@ -28,7 +28,7 @@ import { uklidAkce, zahodZaznamAkce } from "./akce";
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Bóje na trati — správa" };
+export const metadata = { title: "Závodní trať — správa" };
 
 type Parametry = {
   params: Promise<{ serie: string; zavod: string }>;
@@ -124,10 +124,10 @@ export default async function BojeZastavky({ params, searchParams }: Parametry) 
       <Drobecky
         cesta={drobeckySpravy(serie, [
           drobekRegaty(serie, zavod, nazev),
-          { text: "Bóje na trati" },
+          { text: "Závodní trať" },
         ])}
       />
-      <h1>Bóje na trati</h1>
+      <h1>Závodní trať</h1>
       {nazev && <p className="podtitulek">{nazev}</p>}
 
       {zpravy.chyba && (
