@@ -5,7 +5,7 @@ import { Stav } from "@/app/stav";
 import { datum } from "@/app/datum";
 import { nactiJa } from "@/lib/ja";
 import { nactiKalendar } from "@/lib/kalendar";
-import { NAZVY_ROLI, polozkyZastavky, prava } from "@/lib/co-smim";
+import { polozkyZastavky, prava } from "@/lib/co-smim";
 import { DlazdiceSekci } from "@/app/prepinac-sekci";
 import { VlajkaIkona, type Vlajka } from "@/app/vlajky";
 import { ZnackaPuvodni } from "@/app/logo-puvodni";
@@ -109,7 +109,6 @@ export default async function RegataVeSprave({
               nazev: u.nazev,
               kam: u.kam,
               popis: u.popis,
-              stitek: NAZVY_ROLI[u.role],
               znacka: znak ? <VlajkaIkona vlajka={znak} /> : <ZnackaPuvodni />,
             };
           })}

@@ -25,10 +25,13 @@ export type PolozkaPrepinace = {
   kam: string;
   /** Vlajka nebo značka vlevo od názvu. Nepovinná — viz `znacky`. */
   znacka?: ReactNode;
-  /** Věta, co se tam dělá. Ukáže ji dlaždice; do pruhu se nevejde. */
+  /**
+   * Věta, co se tam dělá. <b>Jen jako bublina pod myší</b> (Filip, 29. 10.
+   * 2026: *„ten popis je asi nadbytečný u tohoto typu komponenty, můžeš ho
+   * dát jako tooltip pro «myšaře»"*) — v dlaždici zabírala druhý řádek
+   * a řádek dlaždic se tím zkrátil na tři.
+   */
   popis?: string;
-  /** Štítek za názvem, třeba role, ze které právo plyne. */
-  stitek?: string;
 };
 
 export function PrepinacSekci({
@@ -98,9 +101,14 @@ export function PrepinacSekci({
  * ovládání téhož — což je přesně to, oč tu jde.
  *
  * <b>Dlaždice je vstup, pruh navigace.</b> Dlaždice se vypisují tam, kde se
- * teprve vybírá, a unesou `popis` — větu, co se na té obrazovce dělá.
- * Uvnitř vybrané sekce je pak pruh: šest karet nad každou pracovní
- * obrazovkou by obsah odtlačilo o tři řádky.
+ * teprve vybírá. Uvnitř vybrané sekce je pak pruh: šest karet nad každou
+ * pracovní obrazovkou by obsah odtlačilo o dva řádky.
+ *
+ * <b>Dlaždice nese jméno a značku, nic víc.</b> Popis je bublina pod myší
+ * a role se nevypisuje vůbec — co se smí, rozhoduje `polozkyZastavky`
+ * podle udělených práv, takže štítek „rozhodčí" u každé z nich jen
+ * opakoval totéž (Filip, 29. 10. 2026: *„ten tab kdo to může bych taky
+ * nedával… mají se zobrazit dlaždice podle toho, kdo na ně má práva"*).
  *
  * Příbuznost dělá značka: táž vlajka v téže velikosti jako v pruhu
  * (`.taby-sekci .vlajka` a `.dlazdice-sekci .vlajka` jsou jeden předpis).
@@ -118,13 +126,14 @@ export function DlazdiceSekci({
     <ul className="seznam dlazdice-sekci">
       {polozky.map((p) => (
         <li key={p.klic}>
-          <Link className="karta" href={p.kam}>
+          {/* `title` je bublina pro myš a zároveň to jediné, co se z popisu
+              dostane ke čtečce obrazovky — na dotykovém displeji ho nikdo
+              neuvidí, a tak to Filip chce. */}
+          <Link className="karta" href={p.kam} title={p.popis}>
             <div className="nazev">
               {znacky && p.znacka}
               {p.nazev}
-              {p.stitek && <span className="stitek">{p.stitek}</span>}
             </div>
-            {p.popis && <div className="detail">{p.popis}</div>}
           </Link>
         </li>
       ))}

@@ -1759,7 +1759,22 @@ th.vlevo, td.vlevo { text-align: left; }
   border-bottom: 2px solid transparent; text-decoration: none;
 }
 .taby a:hover { color: var(--voda); text-decoration: none; }
-.taby a[aria-current="page"] { color: var(--text); border-bottom-color: var(--voda); font-weight: 600; }
+/* <b>Vybraný tab je vybarvená záložka</b>, ne jen tučné písmo s linkou
+   (Filip, 29. 10. 2026: „udělat tu selected jinak, aby bylo poznat co máme
+   vybráno"). Dvoupixelová linka dole se vedle tučného názvu ztratí, zvlášť
+   na pruhu sekcí, kde má každý tab ještě vlajku; tlumený podklad
+   (`--zvyrazneni`) se zkoušel první a na světlém papíru nebyl poznat.
+
+   <b>Text bere barvu pozadí stránky</b>, ne papíru: `--voda` je ve světlém
+   režimu tmavá (#1f6f8b) a v tmavém světlá (#6bb3cc), takže jedno pravidlo
+   dá kontrast 5,5 : 1 i 7,7 : 1 — obojí nad hranicí WCAG AA. */
+.taby a[aria-current="page"] {
+  background: var(--voda); color: var(--pozadi); font-weight: 600;
+  border-radius: 8px 8px 0 0;
+  border-bottom-color: var(--voda);
+}
+/* Odkaz uvnitř tabu nesmí při najetí zešednout do vody, na které leží. */
+.taby a[aria-current="page"]:hover { color: var(--pozadi); }
 
 /* Znak lodní třídy. Tvary kreslí app/scripts/ikona.py z hlavního loga, web
    je vkládá přímo do stránky. Pozadí je průhledné a barvy jdou z CSS, takže
@@ -1827,44 +1842,31 @@ th.vlevo, td.vlevo { text-align: left; }
    předpis schválně, aby se obě podoby nemohly rozejít (Filip, 29. 10. 2026:
    „dlaždice, co budou vypadat podobně jako tab"). */
 /* ---------------------------------------------------------------------
-   Dlaždice sekcí — tři na řádek (Filip, 29. 10. 2026: „co udělat ty
-   dlaždice menší/nižší, s efektivnějším využitím prostoru a dat je na
-   řádek 3").
+   Dlaždice sekcí — kolik se jich na řádek vejde (Filip, 29. 10. 2026:
+   „jestě bychom je mohli zmenšit a dostat na řádek kolik se jich vejde").
 
-   Tři, dva, jeden podle místa. <b>Nelomí se jméno, ale popis</b>: změřeno
-   roztahováním mřížky, že od šířky sloupce 348 px se vejde na jeden řádek
-   i ta nejdelší věta („Kdo je na vodě, kde zrovna je a jak staré to hlášení
-   je."), kdežto při 341 px se zalomí a řádek vyroste z 59 na 77 px. Tři
-   sloupce proto začínají až na 1180 px, kde sloupec vychází na 375 px;
-   dva na 48 rem, kde vychází na 360 px. Níž zůstává jeden a popis se
-   lámat smí — pod sebou to nikoho neposune.
+   Není to mřížka o pevném počtu sloupců: `auto-fit` naskládá na řádek
+   tolik dlaždic, kolik se jich vejde při minimální šířce, a zbytek místa
+   mezi ně rozdělí rovným dílem. Tím odpadly meze podle okna — šířka, kterou
+   má obsah k dispozici, se nedá z okna spolehlivě odvodit (na veřejných
+   stránkách z ní ukrajují boky).
 
-   Mez 1180 px je tatáž, od které se seznamy karet dělí na dva sloupce —
-   ať se obrazovka nepřeskládává dvakrát.
+   Minimum je OBSAHOVÉ, ne kulaté: změřeno přes `max-content`, že nejdelší
+   dlaždice („Plachetní směrnice" s vlajkou L) potřebuje 193 px — 12,5 rem
+   je o sedm pixelů víc. Jméno se nezalamuje (`nowrap`), takže kdyby bylo
+   minimum menší, vyteklo by z rámečku místo aby se zúžil řádek.
 
-   Dlaždice je nižší než běžná karta: obsah je dvě krátká sdělení, ne
-   odstavec, takže vnitřní okraj karty kalendáře by tu dělal vzduch.
-   <b>Pět úkonů zabere 127 px místo 287</b> (změřeno na `jarni-vitr` při
-   1280 px): dva řádky po 59 px proti třem po 87–90.
+   Dlaždice nese jen jméno a značku, takže je vysoká jako řádek, ne jako
+   karta: popis odešel do bubliny a role se nevypisuje vůbec.
    --------------------------------------------------------------------- */
-.dlazdice-sekci { gap: 0.5rem; }
-@media (min-width: 48rem) {
-  .dlazdice-sekci { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (min-width: 1180px) {
-  .dlazdice-sekci { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-/* Dlaždice drží výšku celé buňky, aby řádek nebyl zubatý, když jeden popis
-   zalomí a druhý ne. */
+.dlazdice-sekci { gap: 0.4rem; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); }
+/* Dlaždice drží výšku celé buňky, aby řádek nebyl zubatý. */
 .dlazdice-sekci > li { display: grid; }
-.dlazdice-sekci .karta { padding: 0.6rem 0.75rem; border-radius: 8px; }
-/* Štítek role smí zalomit pod název; mačkat se mu nedovolí, protože by se
-   z „Pořadatel" stalo „Pořada…". */
+.dlazdice-sekci .karta { padding: 0.45rem 0.7rem; border-radius: 8px; }
 .dlazdice-sekci .nazev {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem;
-  font-size: 0.95rem; line-height: 1.3;
+  display: flex; align-items: center; gap: 0.45rem;
+  font-size: 0.95rem; line-height: 1.35; white-space: nowrap;
 }
-.dlazdice-sekci .detail { font-size: 0.8rem; line-height: 1.3; margin-top: 0.1rem; }
 .taby-sekci .vlajka,
 .dlazdice-sekci .vlajka {
   height: 0.95rem;
