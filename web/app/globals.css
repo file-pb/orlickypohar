@@ -2123,7 +2123,31 @@ th.vlevo, td.vlevo { text-align: left; }
    Platí to jen pro správu, a pozná se to podle kotvy, kterou tam stejně
    vyvěšuje layout kvůli partnerům.
    --------------------------------------------------------------------- */
-body:has(.bez-partneru) header.hlavicka { margin-bottom: 1.25rem; }
+/* <b>Ve správě se logo vzdává přesahu</b> (Filip, 29. 10. 2026: „začínám
+   uvažovat, že se vzdám i toho efektního přesahu loga, aby se to srovnalo").
+   Jen tady: na veřejných stránkách je značka výkladní skříň a velká plachta
+   za to místo stojí, kdežto tohle je nástroj, kde se pracuje.
+
+   Přesah byl koupený za vyšší hlavičku — kruh měl 92 px a záporným spodním
+   okrajem z nich 18 vracel, takže v rozvržení zabíral 74. Padesátidvojka
+   bez přesahu zabere 52 a mezeru pod hlavičkou už nemusí nikdo hlídat:
+   rezerva na drobečky přestala být potřeba, protože pod linku nic nečouhá.
+
+   Nápis dostal okraje taky na nulu — držely ho na středu kruhu, který
+   přesahoval; bez přesahu by ho posadily mimo řádek. */
+body:has(.bez-partneru) header.hlavicka a.znacka svg.logo-oys {
+  width: 52px;
+  height: 52px;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+body:has(.bez-partneru) header.hlavicka a.znacka svg.logo-napis-monitor,
+body:has(.bez-partneru) header.hlavicka a.znacka svg.logo-napis-mobil {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+body:has(.bez-partneru) header.hlavicka a.znacka:has(svg.logo-oys) { gap: 0.9rem; }
+body:has(.bez-partneru) header.hlavicka { margin-bottom: 0.6rem; }
 body:has(.bez-partneru) h1 { font-size: 1.35rem; }
 body:has(.bez-partneru) .podtitulek:not(.tesne) { margin-bottom: 0.6rem; }
 
