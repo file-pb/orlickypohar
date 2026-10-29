@@ -2288,8 +2288,15 @@ body:has(.vybrany-ukon) .radek-nadpisu > .podtitulek { margin: 0.7px 0 0; }
   /* Karty ve středu vyplní celou jeho šířku: sloupců je tolik, kolik se
      jich vejde po 30 rem. Mezi boky na 13" displeji je to jeden široký
      sloupec, na 1920 px dva, na 2560 px tři. Pevný počet sloupců nechával
-     buď úzký pruh uprostřed, nebo stísněné karty. */
-  .s-boky-stred .seznam { grid-template-columns: repeat(auto-fill, minmax(min(100%, 30rem), 1fr)); }
+     buď úzký pruh uprostřed, nebo stísněné karty.
+
+     <b>Dlaždice sekcí z toho vyňaté</b>: nejsou to karty s obsahem, ale
+     navigace, a třicetirem minimum z nich mezi boky udělalo sloupec pod
+     sebou — čtyři řádky tam, kde se jich vejdou tři vedle sebe (změřeno
+     na produkci 29. 10. 2026: pruh 656 px, sloupec taky 656). */
+  .s-boky-stred .seznam:not(.dlazdice-sekci) {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 30rem), 1fr));
+  }
   .s-boky {
     display: grid; gap: 2.25rem; align-items: start;
     grid-template-columns: 16rem minmax(0, 1fr) 16rem;
