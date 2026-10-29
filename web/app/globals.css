@@ -2111,6 +2111,10 @@ body:has(.bez-partneru) h1 {
   display: flex;
   align-items: center;
   gap: 0.65rem;
+  /* Opravdu jen vlas od dlaždic (Filip, 29. 10. 2026: „lehoučce odsadit od
+     dlaždic, ale pozor, opravdu malinko"): pruh a nadpis mají držet při
+     sobě, jen se nesmějí dotýkat. */
+  margin-top: 0.3rem;
   font-size: 1.2rem;
   color: var(--ukon-strany, inherit);
 }
