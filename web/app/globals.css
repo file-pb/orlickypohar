@@ -2054,8 +2054,12 @@ body:has(.bez-partneru) .dlazdice-sekci { --min-dlazdice: 7.25rem; }
      — ten patří k hlavičce stránky, ne k obsahu. Těsný podtitulek
      (`.tesne`) si svůj odstup nechává, tam pod ním stojí taby tříd.
 
-   Platí to jen pro správu, a pozná se to podle kotvy, kterou tam stejně
-   vyvěšuje layout kvůli partnerům.
+   <b>Hlavička a logo jen ve správě</b> (pozná se to podle kotvy, kterou tam
+   stejně vyvěšuje layout kvůli partnerům); nadpis, podtitulek a podklad
+   obsahu se od 29. 10. 2026 řídí tím, jestli je vybraná sekce — Filip:
+   „nadpis a lano stejně jako na správě a pozadí obsahu taky, ať je vše
+   jednotné". Vybranou sekci má veřejná stránka regaty taky, takže si
+   hlavičku stránky nese stejně.
    --------------------------------------------------------------------- */
 /* <b>Ve správě se logo vzdává přesahu</b> (Filip, 29. 10. 2026: „začínám
    uvažovat, že se vzdám i toho efektního přesahu loga, aby se to srovnalo").
@@ -2123,7 +2127,7 @@ body:has(.vybrany-ukon[data-ukon="lode"]) { --ukon-strany: var(--ukon-prihlasky)
    Barví se plocha obsahu, ne jednotlivé karty — ty už nesou barvu stavu
    v rámečku a šrafu nezveřejněného, takže třetí barevný kanál na nich by
    přebil právě ty dva, které něco znamenají. */
-body:has(.bez-partneru) main.obal {
+body:has(.vybrany-ukon) main.obal {
   background: color-mix(in srgb, var(--ukon-strany, transparent) var(--sytost-agendy), transparent);
 }
 
@@ -2138,7 +2142,7 @@ body:has(.bez-partneru) main.obal {
 
    Nadpis je menší, protože barvu a lano už má: nemusí velikostí dokazovat,
    že je nadpis. */
-body:has(.bez-partneru) h1 {
+body:has(.vybrany-ukon) h1 {
   display: flex;
   align-items: center;
   gap: 0.65rem;
@@ -2150,7 +2154,7 @@ body:has(.bez-partneru) h1 {
   color: var(--ukon-strany, inherit);
 }
 /* Štítek stavu vedle názvu regaty se nesmí roztáhnout spolu s řádkem. */
-body:has(.bez-partneru) h1 > * { flex: none; }
+body:has(.vybrany-ukon) h1 > * { flex: none; }
 /* <b>Regata silně, agenda normálně</b>: „Jarní vítr — Závodní trať" se tím
    čte jako jedna věta se dvěma důrazy, ne jako dva nadpisy vedle sebe.
    Nadpis dědí tučné písmo z prohlížeče, takže se agenda musí odlehčit. */
@@ -2160,7 +2164,7 @@ body:has(.bez-partneru) h1 > * { flex: none; }
    menší maličko"). V `em`, ne v `rem`, aby držela krok, kdyby se velikost
    nadpisu ještě hýbala. */
 .nadpis-ukonu .agenda { font-size: 0.88em; }
-body:has(.bez-partneru) h1::after {
+body:has(.vybrany-ukon) h1::after {
   content: "";
   flex: 1;
   height: 10px;
@@ -2185,7 +2189,7 @@ body:has(.bez-partneru) h1::after {
   -webkit-mask-composite: source-in;
   mask-composite: intersect;
 }
-body:has(.bez-partneru) .podtitulek:not(.tesne) { margin-bottom: 0.6rem; }
+body:has(.vybrany-ukon) .podtitulek:not(.tesne) { margin-bottom: 0.6rem; }
 
 /* Neotevřená sekce má vlajku tlumenější, ať nepřetahuje pozornost z té
    otevřené. Platilo pro pruh tabů, platí dál pro dlaždice, které ho

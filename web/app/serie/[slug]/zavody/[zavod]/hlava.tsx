@@ -195,10 +195,6 @@ export async function HlavaZastavky({
         {maRoli && <DoSpravy serie={serie} zavod={zavod} prace={prace} />}
       </div>
 
-      <Hlavicka zavod={detail} akce={akce} />
-
-      <Upozorneni upozorneni={upozorneni} />
-
       {/* <b>Tytéž dlaždice jako ve správě</b> (Filip, 29. 10. 2026:
           „veřejný může taky jít do stejného designu"). Vystřídaly pruh tabů
           s akordeonem na úzkém displeji — mřížka se zalomí sama, takže
@@ -216,6 +212,11 @@ export async function HlavaZastavky({
           znacka: VLAJKY[sekce] ? <VlajkaIkona vlajka={VLAJKY[sekce]} /> : <ZnackaPuvodni />,
         }))}
       />
+
+      <Hlavicka zavod={detail} akce={akce} />
+
+      <Upozorneni upozorneni={upozorneni} />
+
     </>
   );
 }
