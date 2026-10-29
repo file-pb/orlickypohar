@@ -2104,6 +2104,29 @@ th.vlevo, td.vlevo { text-align: left; }
 .taby-sekci .znak-celkem,
 .dlazdice-sekci .znak-celkem { height: 1.3rem; width: auto; }
 
+/* ---------------------------------------------------------------------
+   Obrazovky správy stojí těsněji (Filip, 29. 10. 2026: „docela dost
+   plýtváme prostorem"). Změřeno na výsledcích regaty, že než začne obsah,
+   padne 166 px nad pruhem dlaždic — při okně 900 px pětina obrazovky.
+
+   Tři největší kusy a co se s nimi dá dělat:
+   · <b>Mezera pod hlavičkou</b> byla 2 rem, ale 14 px z ní spotřebuje logo,
+     které přesahuje pod linku (záporný spodní okraj, viz `header.hlavicka`).
+     1,25 rem nechává 6 px rezervy, pod ni už by značka lezla na drobečky.
+   · <b>Nadpis</b> ve správě nemusí křičet jako na veřejné stránce: člověk
+     sem přišel cíleně a co to je za obrazovku, stojí i v drobečku a ve
+     vybrané dlaždici. 1,35 rem místo 1,75.
+   · <b>Pod podtitulkem</b> byly 2 rem, přestože hned následuje pruh dlaždic
+     — ten patří k hlavičce stránky, ne k obsahu. Těsný podtitulek
+     (`.tesne`) si svůj odstup nechává, tam pod ním stojí taby tříd.
+
+   Platí to jen pro správu, a pozná se to podle kotvy, kterou tam stejně
+   vyvěšuje layout kvůli partnerům.
+   --------------------------------------------------------------------- */
+body:has(.bez-partneru) header.hlavicka { margin-bottom: 1.25rem; }
+body:has(.bez-partneru) h1 { font-size: 1.35rem; }
+body:has(.bez-partneru) .podtitulek:not(.tesne) { margin-bottom: 0.6rem; }
+
 /* Výběr sekce na úzkém displeji (Filip, 24. 10. 2026). Pruh tabů se tam
    nevejde: změřeno na `jarni-vitr` při 375 px — 551 px obsahu v 335 px
    místa, tři sekce z pěti vidět a posuvník schovaný, takže na zbytek
