@@ -416,3 +416,24 @@ async function posliBezOdpovedi(
   if (!odpoved.ok) throw new Error(`API ${cesta} vrátilo ${odpoved.status}`);
   return true;
 }
+
+/**
+ * Ohlásí další rozjížďku — založí ji, nic nespouští.
+ *
+ * <b>„Ohlásit", ne „zahájit"</b> (Filip, 29. 10. 2026): zahájení zní,
+ * jako by se tím startovalo. Rozhodčí tímhle říká, že se pojede další;
+ * čas a procedura přijdou až potom, druhým klepnutím.
+ *
+ * <b>Číslo určuje server</b>, ne appka, a proto tohle jediné z úkonů
+ * startu nejde podržet ve frontě jako `cekajici-start.ts`: bez odpovědi
+ * není co očíslovat. Když se to nepovede, rozhodčí to pozná hned —
+ * tiché selhání by znamenalo, že čeká na odpočet, který nikdy nezačne.
+ */
+export async function ohlasRozjizdku(serie: string, zavod: string) {
+  const v = await posliZaSebe<{ cislo?: number }>(
+    `/sprava/serie/${serie}/vysledky/${zavod}/rozjizdky`,
+    { doSerie: true },
+  );
+  if (v === null) throw new Error('neprihlasen');
+  return v;
+}

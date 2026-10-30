@@ -18,6 +18,7 @@ import { useTheme } from '@/hooks/use-theme';
 import {
   nactiJa,
   nactiZavod,
+  ohlasRozjizdku,
   ohlasStart,
   OdmitnutoServerem,
   provedProceduru,
@@ -140,6 +141,26 @@ export default function Zastavka() {
       }
     : undefined;
 
+  // <b>Ohlášení další rozjížďky.</b> Jediný úkon startu, který nejde
+  // podržet ve frontě: číslo rozjížďky určuje server, takže bez odpovědi
+  // není co očíslovat. Proto se odmítnutí i nedoručení ukazují stejně —
+  // obojí znamená „nestalo se, zkus to znovu".
+  const ohlasit = veliNekde(ja ?? null)
+    ? async () => {
+        setChybaStartu(null);
+        try {
+          await ohlasRozjizdku(slug, zavod);
+          obnov();
+        } catch (e) {
+          setChybaStartu(
+            e instanceof OdmitnutoServerem
+              ? (e.duvod ?? 'Server rozjížďku odmítl založit.')
+              : 'Nepovedlo se ohlásit — zkus to znovu.',
+          );
+        }
+      }
+    : undefined;
+
   // Odložení a odvolání jdou do téže fronty jako spuštění.
   const ukon = veliNekde(ja ?? null)
     ? (cislo: number, druh: UkonProcedury) => zadej(cislo, druh)
@@ -178,6 +199,7 @@ export default function Zastavka() {
             naSpusteni={spustit}
             naStartu={ohlas}
             naUkon={ukon}
+            naOhlaseni={ohlasit}
             naCil={
               veliNekde(ja ?? null)
                 ? () => router.push(`/serie/${slug}/zavody/${zavod}/cil`)

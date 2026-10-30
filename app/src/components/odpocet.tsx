@@ -61,6 +61,7 @@ export function Odpocet({
   naStartu,
   naUkon,
   naCil,
+  naOhlaseni,
   chyba,
   nedoslano,
 }: {
@@ -96,6 +97,11 @@ export function Odpocet({
    * drží on.
    */
   naCil?: () => void;
+  /**
+   * Co udělat, když rozhodčí ohlásí další rozjížďku. Chybí-li, nabídka
+   * se neukáže — obrazovku regaty čte i ten, kdo nevelí.
+   */
+  naOhlaseni?: () => void | Promise<void>;
 }) {
   const t = useTheme();
   const [ted, setTed] = useState(() => Date.now());
@@ -144,9 +150,14 @@ export function Odpocet({
     });
   }, [naStartu, stav?.druh, stav?.druh === 'odstartovano' ? stav.cislo : null]);
 
-  // Dokud se na startu nic neděje, panel není. Prázdný rámeček by jen
-  // zabíral místo a tvrdil, že se něco chystá.
-  if (!stav) return null;
+  // <b>Dokud se na startu nic neděje, panel není</b> — ale veliteli se
+  // místo něj nabídne ohlášení další rozjížďky. Bez toho by se na vodě
+  // k další rozjížďce nedostal: appka uměla proceduru spustit, ale
+  // rozjížďku, kterou by spustil, zakládal jen web (Filip, 30. 10. 2026:
+  // *„a jak si tam vklepnu novou rozjížďku?"*).
+  if (!stav) {
+    return naOhlaseni ? <Ohlaseni t={t} naOhlaseni={naOhlaseni} chyba={chyba} /> : null;
+  }
 
   // <b>Rozjížďka bez času startu je nástroj velitele, ne zpráva pro
   // čtenáře.</b> Takhle totiž vypadá i každá regata, které ještě nikdo
@@ -237,6 +248,66 @@ export function Odpocet({
 
       {naUkon ? <Zastaveni stav={stav} t={t} naUkon={naUkon} /> : null}
     </>
+  );
+}
+
+/**
+ * Nabídka, která stojí na místě panelu, dokud není co odpočítávat.
+ *
+ * <b>„Ohlásit", ne „zahájit"</b> (Filip, 29. 10. 2026): zahájení zní,
+ * jako by se tím startovalo. Ohlášení je to, co rozhodčí doopravdy dělá
+ * — řekne, že se pojede další, a teprve pak se spustí procedura. Proto
+ * jsou to dvě klepnutí, a mezi nimi je chvíle na rozhlédnutí po poli.
+ */
+function Ohlaseni({
+  t,
+  naOhlaseni,
+  chyba,
+}: {
+  t: Barvy;
+  naOhlaseni: () => void | Promise<void>;
+  chyba?: string | null;
+}) {
+  const [ohlasuje, setOhlasuje] = useState(false);
+
+  return (
+    <View style={[s.panel, { backgroundColor: t.zvyrazneni, borderColor: t.linka, borderWidth: 1 }]}>
+      <Text style={[s.radek, { color: t.tlumeny }]}>Žádná rozjížďka nečeká</Text>
+      <Text style={[s.vetaVelka, { color: t.text }]}>Pojede se další?</Text>
+      <Text style={[s.pripominka, { color: t.tlumeny }]}>
+        Ohlášením se rozjížďka jen založí. Čas startu padne až na konci
+        procedury, kterou spustíš potom.
+      </Text>
+
+      <Pressable
+        onPress={async () => {
+          if (ohlasuje) return;
+          setOhlasuje(true);
+          try {
+            await naOhlaseni();
+          } finally {
+            setOhlasuje(false);
+          }
+        }}
+        style={({ pressed }) => [
+          s.spustit,
+          { backgroundColor: t.voda, opacity: pressed || ohlasuje ? 0.6 : 1 },
+        ]}>
+        {ohlasuje ? (
+          <ActivityIndicator color={t.papir} />
+        ) : (
+          <Text style={[s.spustitText, { color: t.papir }]}>Ohlásit rozjížďku</Text>
+        )}
+      </Pressable>
+
+      {/* <b>Tohle jediné z úkonů startu se nedá podržet ve frontě.</b>
+          Číslo rozjížďky určuje server, takže bez odpovědi není co
+          očíslovat — a rozhodčí to musí poznat hned, ne až tím, že
+          odpočet nikdy nezačne. */}
+      {chyba ? (
+        <Text style={[s.pripominka, { color: t.stavZruseny }]}>{chyba}</Text>
+      ) : null}
+    </View>
   );
 }
 

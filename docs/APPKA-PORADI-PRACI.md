@@ -53,6 +53,28 @@ Nic se nezapisuje samo a nic se nemaže.
 webu; v appce zatím nejsou. Lodě mimo regatu („Další lodě") taky ne —
 appka nabízí ty přihlášené, a když přihlášky nikdo nevede, celý ročník.
 
+### Ohlásit rozjížďku (30. 10. 2026)
+
+Filip při první zkoušce na telefonu: *„a jak si tam vklepnu novou
+rozjížďku?"* — a neměl kam. Appka uměla spustit proceduru, ale
+rozjížďku, kterou by spustila, zakládal **jen web**. Na vodě se
+rozhodčí k webu nedostane, takže rozhraní startu bylo použitelné jen
+pro rozjížďky nachystané dopředu.
+
+Panel proto na místě odpočtu nabídne **Ohlásit rozjížďku**, kdykoli
+žádná nečeká. Jsou to **dvě klepnutí, ne jedno**: ohlášení rozjížďku
+jen založí (bez času), proceduru spouští až druhé — *„řekne, že se
+pojede další, a teprve pak se nastaví čas a spustí procedura"*. Mezi
+nimi je chvíle na rozhlédnutí po poli.
+
+**Co se tím nevyřešilo.** Tohle je jediný úkon startu, který nejde
+podržet ve frontě jako `cekajici-start.ts`: číslo rozjížďky určuje
+server, takže bez odpovědi není co očíslovat. Bez signálu se rozjížďka
+ohlásit nedá — a je to díra v pyramidě autority, protože odpočet má
+běžet i bez systému. Obejít se dá tím, že rozhodčí ohlásí rozjížďky
+dopředu na břehu; pořádné řešení (dočasné číslo, které server potvrdí)
+čeká.
+
 ### Co drží rozhraní rozhodčího pohromadě
 
 - **Start i cíl musí být po zapnutí telefonu hned**, bez proklikávání
