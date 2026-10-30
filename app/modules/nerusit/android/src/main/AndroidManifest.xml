@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Bez tohohle oprávnění Android režim telefonu měnit nedá. Uživatel
+       ho navíc povoluje zvlášť v nastavení, takže v seznamu u instalace
+       samo nic neznamená. -->
+  <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+</manifest>

@@ -15,10 +15,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "cz.klihovka.orlickypohar",
-      "permissions": [
-        "android.permission.ACCESS_NOTIFICATION_POLICY"
-      ]
+      "package": "cz.klihovka.orlickypohar"
     },
     "web": {
       "output": "static",
