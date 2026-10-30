@@ -5,7 +5,8 @@ import { Stav } from "@/app/stav";
 import { datum } from "@/app/datum";
 import { nactiJa } from "@/lib/ja";
 import { nactiKalendar } from "@/lib/kalendar";
-import { polozkyZastavky, prava } from "@/lib/co-smim";
+import { kamNaRegate, polozkyZastavky, prava } from "@/lib/co-smim";
+import { nactiRozjizdky } from "@/lib/vysledky";
 import { PruhUkonuRegaty } from "@/app/sprava/pruh-ukonu";
 
 // Odpověď závisí na tom, kdo se ptá. Statická být nesmí ani omylem.
@@ -52,6 +53,28 @@ export default async function RegataVeSprave({
 
   const udelena = prava(ja);
   const ukony = polozkyZastavky(udelena, serie, zavod);
+
+  // <b>Rozcestník regaty nemá na co koukat.</b> Dlaždice se mezitím staly
+  // pruhem nad obsahem a pod ním nezbyl než nadpis a datum (Filip, 30. 10.
+  // 2026: *„tady jsi mluvil o prázdné landing obrazovce u správce"*).
+  // Stránka proto vede rovnou tam, kde se na té regatě zrovna pracuje.
+  //
+  // <b>Zrušená regata a pořadatel bez jediného úkonu zůstávají tady</b> —
+  // není kam je poslat a věta pod nadpisem je celá odpověď.
+  if (radek.stav !== "Zruseny" && ukony.length > 0) {
+    const kam = await kamNaRegate(ukony, serie, zavod, async () => {
+      // <b>„Odjetá" se čte i z rozjížďky, která zrovna jede.</b> Jakmile
+      // se jednou odstartovalo, těžiště práce je ve výsledcích — a
+      // přihlášky, na které by obrazovka vedla mezi startem a cílem, by
+      // byly krok zpátky. Když se rozjížďky nepodaří načíst, nejblíž
+      // pravdě zůstává, že se ještě nejelo.
+      const { data } = await nactiRozjizdky(serie, zavod);
+      return (data?.rozjizdky ?? []).some(
+        (r) => r.stav === "Probiha" || r.stav === "Dokoncena",
+      );
+    });
+    if (kam) redirect(kam);
+  }
 
   return (
     <>

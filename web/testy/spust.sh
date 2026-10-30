@@ -22,3 +22,7 @@ node --experimental-strip-types ./postup.test.ts
 echo
 echo "== Události tabule =="
 node --experimental-strip-types ./udalosti.test.ts
+
+echo
+echo "== Rozcestník regaty =="
+node --experimental-strip-types ./rozcestnik.test.ts

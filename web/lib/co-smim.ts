@@ -294,6 +294,35 @@ export function polozkyRocniku(udelena: Udelena[], serie: string): Polozka[] {
  * je ven, a vyloučit loď ze závodu (`Prihlasky.cs`: „O vyloučení ze závodu
  * rozhoduje rozhodčí"). Dokud tu stál jen pořadatel, neměl na ně odkaz.
  */
+/**
+ * <b>Kam vede regata ve správě, když na ni pořadatel přijde bez dalšího
+ * určení.</b> Stránka regaty sama nenese obsah — úkony jsou v pruhu nad
+ * ním — a bez tohohle by pod nadpisem zůstalo prázdno (Filip, 30. 10.
+ * 2026: *„tady jsi mluvil o prázdné landing obrazovce u správce"*).
+ *
+ * Pravidlo je jeho: dokud se nejelo, jsou to přihlášky; jakmile vyjela
+ * první rozjížďka, výsledky. Kdo má jen jeden z těch dvou úkonů, jde na
+ * něj rovnou — a `jeloSe` se proto ptá líně, aby se kvůli rozhodnutí,
+ * které je už hotové, nečetly rozjížďky.
+ *
+ * Vrací `null` jen tomu, kdo na regatě nemá vůbec nic; takový zůstává na
+ * stránce s větou, že tu pro něj úkon není.
+ */
+export async function kamNaRegate(
+  ukony: Polozka[],
+  serie: string,
+  zavod: string,
+  jeloSe: () => Promise<boolean>,
+): Promise<string | null> {
+  const cesta = (co: string) =>
+    `/sprava/${encodeURIComponent(serie)}/${co}/${encodeURIComponent(zavod)}`;
+  const vysledky = ukony.find((u) => u.kam === cesta("vysledky"))?.kam;
+  const prihlasky = ukony.find((u) => u.kam === cesta("prihlasky"))?.kam;
+
+  if (vysledky && prihlasky) return (await jeloSe()) ? vysledky : prihlasky;
+  return vysledky ?? prihlasky ?? ukony[0]?.kam ?? null;
+}
+
 export function polozkyZastavky(udelena: Udelena[], serie: string, zavod: string): Polozka[] {
   const kam = (cesta: string) =>
     `/sprava/${encodeURIComponent(serie)}${cesta}/${encodeURIComponent(zavod)}`;
