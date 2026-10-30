@@ -624,6 +624,13 @@ jobs:
         working-directory: app
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          # <b>Zpráva jde prostředím, ne do příkazu.</b> Dosazená rovnou
+          # do `run:` by se rozbila na první uvozovce v commitu — stalo se
+          # 30. 10. 2026 u commitu s citací a `eas update` si slova z ní
+          # vzal jako argumenty („Unexpected arguments: jak, si, tam"),
+          # takže aktualizace tiše nevyšla a úloha svítila zeleně.
+          # Shell by z ní navíc spustil `$(…)`, co by v ní stálo.
+          ZPRAVA_COMMITU: ${{ github.event.head_commit.message || 'Aktualizace appky' }}
         run: |
           if [ -z "${EXPO_TOKEN:-}" ]; then
             echo "::warning::Chybí EXPO_TOKEN, aktualizace appky se nepublikovala."
@@ -643,6 +650,9 @@ jobs:
           # Jedna pravda o konfiguraci: profil `preview` v eas.json.
           eval "$(python3 -c 'import json; e=json.load(open("eas.json"))["build"]["preview"]["env"]; print("\n".join(f"export {k}={json.dumps(v)}" for k, v in e.items()))')"
 
+          # Jen první řádek: `--message` je popisek, ne celý commit.
+          zprava="${ZPRAVA_COMMITU%%$'\n'*}"
+
           chyba=0
           for p in android ios; do
             rm -rf dist
@@ -650,7 +660,7 @@ jobs:
             npx eas-cli@latest update --channel preview --platform "$p" \
               --input-dir dist --skip-bundler --non-interactive \
               --environment preview \
-              --message "${{ github.event.head_commit.message || 'Aktualizace appky' }}" \
+              --message "$zprava" \
               || chyba=1
           done
 
