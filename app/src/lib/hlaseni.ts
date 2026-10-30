@@ -26,8 +26,21 @@
 
 import { MINUTA_S, PO_STARTU_NERUSIT_S, PRIPRAVNE_S, PROCEDURA_S } from './start';
 
-/** Jak se troubí. Délky drží přehrávač, tady je jen druh. */
+/** Jak se troubí. */
 export type Troubeni = 'kratce' | 'dlouze';
+
+/**
+ * Jak dlouho který klakson troubí, v milisekundách.
+ *
+ * <b>Musí sedět se zvuky v `assets/zvuky/`</b>, protože hlášení po
+ * troubení čeká přesně tuhle dobu — kratší číslo pustí větu pod klakson,
+ * kde ji nikdo neuslyší. Hlídá to `app/testy/zvuky.test.ts`, který čte
+ * délku rovnou ze souborů.
+ */
+export const DELKA_TROUBENI_MS: Record<Troubeni, number> = {
+  kratce: 1720,
+  dlouze: 4120,
+};
 
 /** Jedna věc, která se má stát v určitý čas před startem. */
 export type Znameni = {

@@ -120,19 +120,29 @@ bylo.
 dřív a má testy bez telefonu; nové je to, co ji přehrává
 (`app/src/lib/dirigent.ts`).
 
-**Klakson je syntéza z naměřených čísel, ne nahrávka** — a ten rozdíl je
-licenční: zvuk, který appka rozdává rozhodčímu a posádkám, musí být
-čistý, a nahrávka z videa čistá není. Vyrábí ho
-`app/scripts/klakson.py` do `app/assets/zvuky/`, krátký 1 s a dlouhý 4 s.
+**Klakson je nahrávka, ne syntéza** — a stála za to oklika. První pokus
+skládal čisté sinusovky a Filip o něm řekl, že je to *„taková houkačka
+pro děti"*. Měření jeho nahrávky skutečné Lalizasky ukázalo proč:
+**základ 574 Hz během troubení klesá k 556 Hz a druhá harmonická
+převezme vedení nad základem**, jak ubývá tlak. Syntéza, která stojí
+na místě, tohle nemá — a dohnat to vzorcem šlo jen zčásti.
 
-Čísla jsou z nahrávky skutečné houkačky, kterou se na poháru troubí
-(Lalizas 380 ml; nahrál Filip 30. 10. 2026, změřeno Goertzelem po
-půlvteřinových úsecích): **základ 574 Hz klesá k 556 Hz** a **druhá
-harmonická během troubení převezme vedení nad základem**. Obojí dělá
-tlak, který ubývá — a právě ta nehybnost shodila první pokus, o kterém
-Filip řekl, že je to *„taková houkačka pro děti"*. Jeho odhad „o dva
-tóny výš" se přitom trefil: ze starých 520 Hz dávají dva půltóny 583,
-naměřeno 574.
+Zvuky proto vyrábí `app/scripts/klakson.py` z nahrávky *airhorn.wav*
+od `guitarguy1985` z Freesoundu (CC0, tedy volné dílo; původ se uvádí
+kvůli dohledatelnosti, ne kvůli licenci). Oba jsou **začátek nahrávky
+uříznutý na potřebnou délku a zakončený jejím vlastním doběhem**
+(Filip, 30. 10. 2026: *„ber jejich od začátku a zakonči ho tím jejich
+koncem, tím to bude vypadat věrně"*) — umělý fade-out zněl jako
+vypnutí, tenhle doběh jako puštěné tlačítko. Krátký má 1,72 s, dlouhý
+4,12 s.
+
+**Z YouTube se nestahovalo** a nebude: zvuk, který appka rozdává
+rozhodčímu a posádkám, musí mít čistou licenci.
+
+Hlášení po troubení čeká, až klakson dozní (`DELKA_TROUBENI_MS`
+v `hlaseni.ts`) — jinak by věta zazněla pod ním. Že to číslo sedí se
+soubory, hlídá `app/testy/zvuky.test.ts`, který délku čte rovnou
+z WAV hlavičky.
 
 Délky „krátce" a „dlouze" ZPJ v sekundách neurčuje — je to volba podle
 toho, jak se troubí na vodě, ne citace pravidla.

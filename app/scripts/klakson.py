@@ -1,63 +1,84 @@
-"""Vyrobí oba klaksony u startu z naměřených hodnot.
+"""Vyrobí oba klaksony u startu ze zdrojové nahrávky.
 
-    python3 scripts/klakson.py assets/zvuky/klakson-kratky.wav 1.0
-    python3 scripts/klakson.py assets/zvuky/klakson-dlouhy.wav 4.0
+    python3 scripts/klakson.py
 
-<b>Proč syntéza a ne nahrávka.</b> Zvuk, který appka rozdává rozhodčímu
-a posádkám, musí mít čistou licenci. Nahrávka z internetu ji většinou
-nemá a u videa ji nemá nikdy. Tenhle soubor bere ze skutečné houkačky
-jen *čísla* — výšku tónu nikdo nevlastní.
+<b>Odkud zvuk je.</b> `scripts/zdroje/airhorn-freesound-64476-cc0.wav` je
+*airhorn.wav* od uživatele `guitarguy1985` z Freesoundu
+(<https://freesound.org/people/guitarguy1985/sounds/64476/>), licence
+**Creative Commons 0** — volné dílo: kopírovat, upravovat i šířit
+komerčně, bez svolení a bez uvádění autora. Uvádíme ho přesto, protože
+původ zvuku, který appka rozdává dál, má být dohledatelný. Soubor tady
+je převod náhledu na mono 22,05 kHz; originál je 44,1 kHz stereo.
 
-Předloha: ruční plynová houkačka Lalizas 380 ml, kterou se na poháru
-troubí; nahrávku pořídil Filip 30. 10. 2026 a čísla níž jsou změřená
-z ní (Goertzel po půlvteřinových úsecích).
+<b>Proč nahrávka a ne syntéza.</b> První pokus skládal čisté sinusovky
+a Filip o něm řekl, že je to *„taková houkačka pro děti"*. Rozdíl nedělá
+výška tónu — změřeno, že skutečná houkačka během troubení klesá
+a překlápí se do dvojnásobku — ale to, že se zvuk pořád hýbe. Nahrávka
+to má zadarmo.
+
+<b>Jak se z třinácti vteřin dělá klakson.</b> Oba zvuky jsou
+<b>začátek nahrávky uříznutý na potřebnou délku a zakončený jejím
+vlastním doběhem</b> (Filip, 30. 10. 2026: *„ber jejich od začátku
+a zakonči ho tím jejich koncem, tím to bude vypadat věrně"*). Umělý
+fade-out zněl jako vypnutí, tenhle doběh jako puštěné tlačítko.
 
 <b>Délky „krátce" a „dlouze" ZPJ v sekundách neurčuje</b> — pravidlo 26
-mluví o zvukových znameních, ne o jejich délce. Vteřina a čtyři jsou
-volba podle toho, jak se troubí na vodě.
-
-Naměřeno (Goertzel na 0,5 s úsecích): základ 574 Hz klesá k ~556 Hz,
-druhá harmonická 1144 Hz během troubení převezme vedení nad základem,
-třetí je slabá. Obojí je vlastnost membránové píšťaly, jak ubývá tlak —
-a právě ta nehybnost chyběla dřívější syntéze.
+mluví o zvukových znameních, ne o jejich délce. Čísla níž jsou volba
+podle toho, jak se troubí na vodě, a dají se změnit bez dalšího zásahu;
+pak je ale potřeba srovnat `DELKA_TROUBENI_MS` v `src/lib/hlaseni.ts`,
+což hlídá `testy/zvuky.test.ts`.
 """
-import math, random, struct, sys, wave
+import pathlib
+import struct
+import wave
 
-VZ = 22050
-F0, F1 = 574.0, 556.0          # výška na začátku a na konci
-SUM = 0.015                     # proud plynu
-PRECHOD_S = 1.0                 # za jak dlouho převezme vedení dvojnásobek
+APP = pathlib.Path(__file__).resolve().parent.parent
+ZDROJ = APP / 'scripts' / 'zdroje' / 'airhorn-freesound-64476-cc0.wav'
+ZVUKY = APP / 'assets' / 'zvuky'
 
+# Kolik se bere od začátku. Výsledek je o doběh delší.
+ZACATEK_S = {'kratky': 0.80, 'dlouhy': 3.20}
 
-def uloz(cesta, delka):
-    nabeh, dobeh = int(VZ * 0.015), int(VZ * 0.05)
-    celkem = int(VZ * delka)
-    nahoda = random.Random(574)
-    faze = [0.0, 0.0, 0.0]
-    data = []
-    for i in range(celkem):
-        p = i / celkem
-        hz = F0 + (F1 - F0) * p   # tlak ubývá po celou dobu troubení
-        # <b>Těžiště přechází ze základu do dvojnásobku zhruba za vteřinu</b>
-        # — tak je to v nahrávce vidět. Vázat to na podíl délky by dlouhý
-        # klakson přelomilo až na konci, což skutečná houkačka nedělá.
-        q = min(1.0, i / VZ / PRECHOD_S)
-        a = [max(0.0, 1.0 - 1.1 * q), 0.5 + 0.5 * min(1.0, 1.4 * q), 0.12 + 0.08 * q]
-        s = 0.0
-        for k in range(3):
-            faze[k] += 2 * math.pi * hz * (k + 1) / VZ
-            s += a[k] * math.sin(faze[k])
-        s = s / 1.6 + nahoda.uniform(-SUM, SUM)
-        if i < nabeh:
-            o = i / nabeh
-        elif i > celkem - dobeh:
-            o = (celkem - i) / dobeh
-        else:
-            o = 1.0
-        data.append(int(max(-1, min(1, s * o)) * 0.82 * 32767))
-    with wave.open(cesta, 'wb') as f:
-        f.setnchannels(1); f.setsampwidth(2); f.setframerate(VZ)
-        f.writeframes(b''.join(struct.pack('<h', v) for v in data))
+# Doběh: kde v nahrávce troubení slábne a dozní (změřeno po čtvrtvteřinách).
+KONEC_OD_S, KONEC_DO_S = 8.40, 9.40
+
+# Na spoji se krátce prolíná, jinak cvakne.
+PREKRYTI_S = 0.08
 
 
-uloz(sys.argv[1], float(sys.argv[2]))
+def nacti(cesta):
+    with wave.open(str(cesta), 'rb') as f:
+        n = f.getnframes()
+        return f.getframerate(), list(struct.unpack(f'<{n}h', f.readframes(n)))
+
+
+def zapis(cesta, vz, vzorky):
+    with wave.open(str(cesta), 'wb') as f:
+        f.setnchannels(1)
+        f.setsampwidth(2)
+        f.setframerate(vz)
+        f.writeframes(b''.join(
+            struct.pack('<h', max(-32768, min(32767, v))) for v in vzorky))
+
+
+def sloz(vz, zdroj, zacatek_s):
+    zacatek = zdroj[:int(zacatek_s * vz)]
+    konec = zdroj[int(KONEC_OD_S * vz):int(KONEC_DO_S * vz)]
+    p = int(PREKRYTI_S * vz)
+
+    out = zacatek[:-p]
+    for i in range(p):
+        q = i / p
+        out.append(int(zacatek[len(zacatek) - p + i] * (1 - q) + konec[i] * q))
+    return out + konec[p:]
+
+
+def main():
+    vz, zdroj = nacti(ZDROJ)
+    for jmeno, zacatek_s in ZACATEK_S.items():
+        vzorky = sloz(vz, zdroj, zacatek_s)
+        zapis(ZVUKY / f'klakson-{jmeno}.wav', vz, vzorky)
+        print(f'klakson-{jmeno}.wav: {len(vzorky) / vz:.2f} s')
+
+
+main()

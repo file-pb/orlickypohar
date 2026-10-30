@@ -42,7 +42,7 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import * as Speech from 'expo-speech';
 import { File, Paths } from 'expo-file-system';
 
-import { coOkamzik, type Troubeni, type Znameni } from './hlaseni';
+import { coOkamzik, DELKA_TROUBENI_MS, type Troubeni, type Znameni } from './hlaseni';
 import { jdeTo as klidJdeTo, nastav as nastavKlid, otevriNastaveni, smime } from './nerusit';
 import { kolikDoStartu, maBytKlid, PROCEDURA_S, type StavStartu } from './start';
 
@@ -302,9 +302,6 @@ export function useDirigent(
 /** Značka, pod kterou si panel drží displej. Vlastní, aby ji neuvolnil
  *  někdo jiný — cílová obrazovka má svou. */
 const ZNACKA_DISPLEJ = 'start-procedura';
-
-/** Jak dlouho který klakson troubí. Drží délku zvukových souborů. */
-const DELKA_TROUBENI_MS: Record<Troubeni, number> = { kratce: 1000, dlouze: 4000 };
 
 /** Přehrávač jednoho zvuku. Jen ta část, kterou dirigent potřebuje. */
 type Prehravac = { seekTo: (s: number) => Promise<void>; play: () => void };
