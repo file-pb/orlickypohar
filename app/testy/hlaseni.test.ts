@@ -41,13 +41,38 @@ zkus('jedna minuta se troubí dlouze, ostatní krátce', () => {
   assert.equal(dlouhe[0].vterinDoStartu, 60);
 });
 
-zkus('před každým znamením se odpočítá pět vteřin předem', () => {
+zkus('před každým znamením se odpočítá po vteřinách', () => {
+  // Každá číslovka má vlastní okamžik, aby padla na svou vteřinu —
+  // jedna věta by dozněla, kdy dozní, podle rychlosti telefonu.
   const p = partitura();
   for (const [kdy] of troubeni(p)) {
-    const odpocet = p.find((z) => z.vterinDoStartu === (kdy as number) + 5);
-    assert.ok(odpocet, `chybí odpočet před ${kdy}`);
-    assert.match(odpocet!.rekni, /za pět, čtyři, tři, dva, jedna$/);
+    const t = kdy as number;
+    assert.deepEqual(
+      [5, 4, 3, 2, 1].map((i) => p.find((z) => z.vterinDoStartu === t + i)?.rekni),
+      ['pět', 'čtyři', 'tři', 'dva', 'jedna'],
+      `odpočet před ${kdy} nesedí`,
+    );
   }
+});
+
+zkus('deset vteřin předem se řekne, co přijde a jakým tónem', () => {
+  // Filip, 30. 10. 2026: rozhodčí musí vědět, co mačká, dřív než začne
+  // odpočet — jinak je hlas metronom, ne instrukce pro ruku.
+  const p = partitura();
+  const rekne = (kdy: number) => p.find((z) => z.vterinDoStartu === kdy + 10)?.rekni;
+
+  assert.equal(rekne(300), 'Vyzývací znamení, krátký tón');
+  assert.equal(rekne(240), 'Přípravné znamení, krátký tón');
+  assert.equal(rekne(60), 'Jedna minuta, dlouhý tón');
+  assert.equal(rekne(0), 'Start, krátký tón');
+});
+
+zkus('dlouhý tón se ohlásí jen tam, kde se troubí dlouze', () => {
+  // ZPJ 26: dlouze se troubí jedině u jedné minuty, kdy jde přípravná
+  // vlajka dolů. Kdyby to hlas spletl, rozhodčí zatroubí špatně.
+  const p = partitura();
+  const sDlouhym = p.filter((z) => z.rekni.endsWith('dlouhý tón'));
+  assert.deepEqual(sDlouhym.map((z) => z.vterinDoStartu), [70]);
 });
 
 zkus('po zahájení procedury se řekne, kolik zbývá, a zopakuje se to', () => {
@@ -82,7 +107,7 @@ zkus('partitura jde odshora dolů, od zahájení ke startu', () => {
 zkus('mezi dvěma tiky se vybere to, co do okna spadlo', () => {
   // Hodiny tiknou z 61 na 59. Na šedesáté vteřině leží dvojice: nejdřív
   // se zatroubí, pak se řekne co — a v tom pořadí to musí i vyjít.
-  const co = coPrehrat(61, 59);
+  const co = coPrehrat(60.5, 59);
   assert.deepEqual(
     co.map((z) => [z.vterinDoStartu, z.troubi]),
     [
@@ -94,12 +119,13 @@ zkus('mezi dvěma tiky se vybere to, co do okna spadlo', () => {
 });
 
 zkus('nic se neztratí, když appka chvíli spala', () => {
-  // Telefon se probudí o deset vteřin později: dostane obojí najednou
-  // a vybrat si musí přehrávač, ne tahle tabulka.
+  // Telefon se probudí o dvanáct vteřin později: dostane celé okno
+  // najednou — ohlášení, všech pět číslovek i znamení — a vybrat si
+  // musí přehrávač, ne tahle tabulka.
   const co = coPrehrat(70, 58);
   assert.deepEqual(
     co.map((z) => z.vterinDoStartu),
-    [65, 60, 60],
+    [70, 65, 64, 63, 62, 61, 60, 60],
   );
 });
 
@@ -131,7 +157,7 @@ zkus('v předehře se netroubí', () => {
   const predehra = partitura().filter((z) => z.vterinDoStartu > 300);
   assert.deepEqual(
     predehra.map((z) => z.vterinDoStartu),
-    [360, 330, 305],
+    [360, 330, 310, 305, 304, 303, 302, 301],
   );
   assert.ok(predehra.every((z) => z.troubi === null));
 });
@@ -162,10 +188,17 @@ zkus('znamení, které propadlo o minutu, se už neozve', () => {
 });
 
 zkus('z fronty po probuzení se neozve nic, co už propadlo', () => {
-  // Telefon spal od páté minuty do minuty před startem. Nejpozdější
-  // znamení v tom okně je odpočet k minutě (T−65) a i ten je o čtyři
-  // vteřiny po čase — takže se mlčí a čeká se na to, co doopravdy platí.
-  assert.deepEqual(coOkamzik(300, 61), []);
+  // Telefon spal od páté minuty do stodvacáté vteřiny. Nejpozdější
+  // znamení v tom okně je přípravné (T−240) a je dávno po něm — takže
+  // se mlčí a čeká se na to, co doopravdy platí.
+  assert.deepEqual(coOkamzik(300, 120), []);
+});
+
+zkus('po krátkém výpadku se ozve ta číslovka, která právě platí', () => {
+  // Probuzení vteřinu před jednou minutou: propadlé ohlášení i starší
+  // číslovky se nedohánějí, ozve se jen „dva".
+  const o = coOkamzik(300, 61);
+  assert.deepEqual(o.map((z) => z.rekni), ['dva']);
 });
 
 zkus('probuzení přesně na startu zatroubí a řekne start', () => {

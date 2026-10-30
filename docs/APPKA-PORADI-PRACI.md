@@ -175,10 +175,26 @@ nechce přijít o houkačku, není to nesouhlas s návrhem — je to odpověď
 na větu, která se mezitím opravila.
 
 **Tím se mění, k čemu ten hlas je.** Není to hlášení posádkám místo
-megafonu — je to <b>vodítko pro rozhodčího</b>. Odpočet *„za pět, čtyři,
+megafonu — je to <b>vodítko pro rozhodčího</b>. Odpočet *„pět, čtyři,
 tři, dva, jedna"* je signál, kdy zmáčknout houkačku; hlášení po něm
 *„pět minut do startu"* slyší posádky jako vedlejší účinek, ne jako
 hlavní účel.
+
+**A proto se deset vteřin předem řekne i jaký tón přijde** (Filip,
+30. 10. 2026: *„jak upozorňuješ, co se bude hlásit, tak tam dodej, když
+bude tón, tak jaký bude. Tím zajistíš, že Miloš bude vědět, co se hlásí
+a jakým tónem, a pak 5 4 3 2 1"*). U jedné minuty tedy zazní *„Jedna
+minuta, dlouhý tón"*, po třech vteřinách ticha *„pět, čtyři, tři, dva,
+jedna"* a na nule zvuk. Dřív se obojí mačkalo do jedné věty puštěné pět
+vteřin předem — ta se tam nevešla a odpočet se o ni opozdil.
+
+**Číslovky jsou pět samostatných hlášení, každé na svou vteřinu.** Jedna
+věta dozní, kdy dozní, podle toho, jak rychle telefon mluví; takhle
+poslední číslo padne na vteřinu, po které se troubí. Zbývá v tom jedna
+nepřesnost, kterou se vyplatí znát: panel tiká po vteřině, takže zvuk
+může zaznít až vteřinu po svém okamžiku. Spravit to jde plánováním
+dopředu (`setTimeout` na přesný zlomek vteřiny) a na vodě se to má
+změřit dřív, než se na odpočet někdo spolehne.
 
 Tři věci, které z toho plynou a jinak by se postavily špatně:
 

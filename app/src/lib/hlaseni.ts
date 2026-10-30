@@ -55,7 +55,7 @@ export type Znameni = {
 /**
  * Odpočet, který hlas odříká před každým znamením.
  *
- * <b>Začíná pět vteřin předem a končí přesně na znamení</b> — „za pět,
+ * <b>Začíná pět vteřin předem a končí přesně na znamení</b> — „pět,
  * čtyři, tři, dva, jedna" a v tu vteřinu klakson.
  *
  * <b>Pět vteřin je minimum, ne ozdoba:</b> rozhodčí podle toho mačká
@@ -64,9 +64,33 @@ export type Znameni = {
  */
 export const ODPOCET_S = 5;
 
-/** Co se řekne pět vteřin před znamením. */
-function odpocetPred(co: string): string {
-  return `${co} za pět, čtyři, tři, dva, jedna`;
+/**
+ * Číslovky odpočtu, každá na svou vteřinu.
+ *
+ * <b>Pět samostatných hlášení, ne jedna věta.</b> Jedna věta se pustí
+ * pět vteřin předem a dozní, kdy dozní — podle toho, jak rychle telefon
+ * mluví. Takhle padne každé číslo na svou vteřinu a poslední z nich na
+ * tu, po které se troubí. To je rozdíl mezi metronomem a odhadem.
+ */
+const CISLOVKY = ['pět', 'čtyři', 'tři', 'dva', 'jedna'];
+
+/**
+ * Jak dlouho před znamením se ohlásí, co přijde a jakým tónem.
+ *
+ * Filip, 30. 10. 2026: *„jak upozorňuješ, co se bude hlásit, tak tam dodej,
+ * když bude tón, tak jaký bude. Tím zajistíš, že Miloš bude vědět, co se
+ * hlásí a jakým tónem, a pak 5 4 3 2 1."*
+ *
+ * <b>Proto je to zvlášť od odpočtu.</b> *„Jedna minuta, dlouhý tón"*
+ * a hned nato *„pět, čtyři…"* by se do pěti vteřin nevešlo a odpočet by
+ * se opozdil o celou větu. Deset vteřin dá hlasu čas domluvit a rozhodčímu
+ * čas chytit houkačku dřív, než začne odpočet.
+ */
+export const OZNAMENI_S = 10;
+
+/** Jak se v hlášení jmenuje ten který zvuk. */
+function jakyTon(troubi: Troubeni): string {
+  return troubi === 'dlouze' ? 'dlouhý tón' : 'krátký tón';
 }
 
 /** „Pět minut do startu, opakuji, pět minut do startu." */
@@ -125,11 +149,19 @@ export function partitura(delkaS: number = PROCEDURA_S): Znameni[] {
   });
 
   const pridej = (vterin: number, veta: string, troubi: Troubeni) => {
-    // Hlášený odpočet se vejde jen tam, kde před znamením je volno.
+    // Nejdřív co a jakým tónem, aby rozhodčí věděl, co bude mačkat…
     znameni.push({
-      vterinDoStartu: vterin + ODPOCET_S,
-      rekni: odpocetPred(veta),
+      vterinDoStartu: vterin + OZNAMENI_S,
+      rekni: `${veta}, ${jakyTon(troubi)}`,
       troubi: null,
+    });
+    // …pak odpočet po vteřinách, a na nule zvuk.
+    CISLOVKY.forEach((cislovka, i) => {
+      znameni.push({
+        vterinDoStartu: vterin + CISLOVKY.length - i,
+        rekni: cislovka,
+        troubi: null,
+      });
     });
     znameni.push({ vterinDoStartu: vterin, rekni: '', troubi });
   };
@@ -137,7 +169,7 @@ export function partitura(delkaS: number = PROCEDURA_S): Znameni[] {
   // Vyzývací znamení. Začátek procedury — jediný okamžik, který se posouvá
   // s délkou; proto se do odpočtu hlásí jako „startovní procedura", ne
   // jako konkrétní počet minut.
-  pridej(delkaS, 'Budeme zahajovat startovní proceduru', 'kratce');
+  pridej(delkaS, 'Vyzývací znamení', 'kratce');
   znameni.push({
     vterinDoStartu: delkaS,
     rekni: opakovane(`${minut(Math.round(delkaS / 60))} do startu`),
