@@ -16,13 +16,34 @@ je ze všech nejčerstvější. Co přesně chybí, rozepisuje *Co ještě chyb�
 (audit 8. 10. 2026)*; v jakém pořadí to dělat, *Pořadí po 11. 10. 2026*
 na jeho konci.
 
+**Stav k 30. 10. 2026:** za deset dní se posunula hlavně **appka** — z čtecího
+klienta se stala nástrojem rozhodčího. Stojí rozhraní startu i cíle, appka
+u startu mluví a troubí, ohlásí další rozjížďku a aktualizuje se po síti sama.
+Na **webu** se přestavěla stránka regaty (dlaždice místo tabů, nadpis spojující
+regatu s agendou, rozcestník jako řádky) a přibyly ghost řádky dojezdu
+z trasování. Tahle hlavička zůstává jinak ke 20. 10.: fáze se od té doby
+nepřerovnávaly, přibývalo uvnitř nich.
+
+**Čtyři dokumenty, které jsou čerstvější než tenhle plán** a berou si každý svůj
+řez; tenhle oddíl je nepřepisuje:
+
+| Dokument | Co vede |
+|---|---|
+| `STAV-RESENI.md` | co chce Miloš × co z toho stojí, seřazené podle dne závodu |
+| `SOUPIS-A-PLAN-START.md` | ovládání startu: pyramida autority, pořadí kroků, celá fronta 41 nálezů |
+| `APPKA-PORADI-PRACI.md` | v jakém pořadí se appka staví, co u startu a cíle **ne**stojí, nativní dávka |
+| `OPONENTURA-ROZHODCI.md` | nálezy R1–R40 a K1–K7 ze sezení s rozhodčím |
+
+Oddíl *Co přišlo 28.–30. 10. 2026* na konci tohohle souboru je z oddílů plánu
+nejčerstvější; *Fronta k 20. 10. 2026* nad ním platí pro všechno ostatní.
+
 | | |
 |---|---|
 | `orlickypohar.klihovka.cz` | veřejný web (Next.js), běží |
 | `orlickypohar-api.klihovka.cz` | API, běží |
 | V databázi | dva ročníky: **2026 (nanečisto)** — 37 lodí, 8 zastávek (7 odjetých, 1 zrušená), 13 rozjížděk, 226 výsledků; jména, kategorie a pořadí v kategoriích jsou ze sešitu rozhodčího, rozjížďky vymyšlené (`data/2026-nanecisto.json`); **2027** — 9 plánovaných zastávek z termínové listiny rozhodčího, bez lodí a bez výsledků |
 | Publikováno | **oba ročníky** (ověřeno na produkci 8. 10. 2026) — `/serie` vrací jen publikované (`SeznamAsync` ve `Features/Serial/SerieEndpoints.cs`) a vrací oba. Dřív tu stálo „ne, proto web hlásí zatím žádný ročník"; prázdný stav v kódu zůstává (`web/app/page.tsx`), jen ho produkce nepotkává. Soubor `data/2026-nanecisto.json` je nepublikovaný schválně, na produkci se nahrává `tools/gen-mock.py --publikovat` |
-| Appka | čtecí, bez přihlášení — ročníky, zastávka, výsledky, pořadí (`app/src/app/`); v CI se jen kontrolují typy proti API, `npx tsc --noEmit` (úloha `appka` v `.github/workflows/build-deploy.yml`) |
+| Appka | **nástroj rozhodčího i čtecí klient.** Přihlášení, sledování polohy, rozhraní startu (odpočet podle ZPJ 26, hlas, klakson, odložení, odvolání), rozhraní cíle (klepání na lodě, návrh dojezdu z trasování, ukončení rozjížďky), ohlášení rozjížďky, bóje, ročníky a výsledky (`app/src/app/`, `app/src/lib/`). V CI se kontrolují typy proti API, běží testy záznamu trasy a verze a hlásí se změna nativního otisku (úloha `appka`); aktualizace se publikují po síti (úloha `aktualizace-appky`). Vydané APK drží `app/vydane-apk.json`. Dřív tu stálo „čtecí, bez přihlášení" — to platilo do 20. 10. 2026 |
 | Nasazení | automatické: push do `main` → build → háček → server |
 | Verze na produkci | API i web běží na tom, co je v `main`. Soudí se to podle `/verze` **obou** služeb, ne podle barvy běhu — konkrétní SHA se sem nepíše, zastará každým nasazením |
 
@@ -9255,3 +9276,70 @@ závodu, a pozná se to až tím, že se appka otevře po delší době.
 1. Odsazení tabule na demo ročnících.
 2. Kategorie lodi, když ji loď přece jen změní (viz *Zbývá doladit*,
    bod 4).
+
+---
+
+## Co přišlo 28.–30. 10. 2026
+
+Zapsáno 30. 10. 2026, aby plán nekončil u fronty k 20. 10. Doloženo kódem
+v `main`, ne plánem; co čeká nebo nestojí, je u toho napsané.
+
+### Appka u startu (29.–30. 10.)
+
+Odpočet s fázemi podle **ZPJ 26**, ne po minutách (`app/src/lib/start.ts`,
+`app/src/components/odpocet.tsx`). Posledních deset vteřin panel tepe, proužek
+poslední minuty je nejčervenější, co na jantarové obstojí, a po doběhnutí panel
+nezmizí — čeká na potvrzení. Start se **neklepe**: zastavuje se odložením nebo
+odvoláním, a po odložení zůstane panel, ze kterého jde spustit znovu.
+
+**Odpočet nečeká na server** (`app/src/lib/cekajici-start.ts`): drží se
+a odešle, až je kam. Výjimka je **ohlášení rozjížďky** — číslo určuje server,
+takže bez signálu to nejde, a je to vědomá díra v pyramidě autority.
+
+**Dirigent** (`app/src/lib/dirigent.ts`, 30. 10.): appka u startu mluví
+a troubí — hlas řekne i to, jakým tónem se bude troubit, klakson je nahrávka
+skutečné houkačky, ne sinusovka, a zvuk se plánuje dopředu, aby padl na svou
+vteřinu. **Klid na telefonu** od procedury do pěti minut po startu zapne vlastní
+nativní modul (`app/modules/nerusit/`) — na Androidu z appky, **na iPhonu ne**.
+Odpočet přežije hovor i pozadí; zvuk na pozadí je zapsaný jako nedořešený.
+
+### Appka u cíle (29. 10.)
+
+Karta *Cíl* na obrazovce regaty: klepání na lodě s časem z telefonu, průběžné
+pořadí přes kategorie, oprava posledního klepnutí i jednotlivého místa,
+*Ukončit rozjížďku* se zápisem DNF zbylým (`app/src/lib/cil.ts`). Rozepsaný
+zápis leží v souboru, takže přežije konec appky.
+
+**Trasování navrhuje, nerozhoduje** (nález R33): server počítá, kdy loď protla
+čáru **ve směru do cíle** — bez směru by u Orlíku, kde cíl leží na startu,
+hlásil dojezd celému poli při startu. Návrh má čárkovaný okraj a klepnutím se
+zapíše; k zapsanému klepnutí obrazovka nabídne čas ze stopy, leží-li do minuty.
+**Co ještě ne:** kódy kromě DNF (OCS, DSQ, odstoupila) se zapisují na webu.
+
+### Web (28.–29. 10.)
+
+Stránka regaty má tytéž dlaždice ve správě i veřejně, pruh tabů sekcí
+a akordeon odešly, nadpis spojuje regatu a agendu („Jarní vítr — Výsledky")
+a nese barvu vybraného úkonu; termín visí na konci lana. Rozcestník ukazuje
+regaty jako **řádky, ne karty**, a jménem, ne adresou. Ghost řádky dojezdu mají
+vlastní jméno pro jantarovou, aby se paleta nerozešla.
+
+### Aktualizace appky (28.–30. 10.)
+
+Appka řekne, že se sama aktualizovala (banner a sekce *Verze appky* v Účtu),
+a aktualizace se publikují z CI do kanálu `preview` při každém nasazení, kde se
+změnilo `app/`. **Dosedne jen na APK se shodným otiskem** a ten se za tři dny
+posunul dvakrát: build 4 `c4d54801…`, build 5 `9dfabf3c…`, build 8
+`afbd9b0c…`. Nativní dávka se proto přidávala **najednou**
+(`APPKA-PORADI-PRACI.md`) a je nainstalovaná od 30. 10. Postup pro rozhodčího
+vede `NAVOD-APPKA-AKTUALIZACE.md`.
+
+### Co z tohohle oddílu ještě nestojí
+
+1. **Rozhraní závodníka** — návrh vstřelený, bude se ladit. Posádka má vidět
+   barvu stavu, pokyn komise, svou loď, spojení a jestli se vysílá poloha;
+   **odpočet ne** (nález R34).
+2. **Ohlášení rozjížďky bez signálu** — dočasné číslo, které server potvrdí.
+3. **Zvuk na pozadí** a **Nerušit na iPhonu**.
+4. **Kódy výsledků v appce** mimo DNF.
+5. **Návrat do přístavu jen na oběd** (AP nad H) — zatím se s tím nepočítá.

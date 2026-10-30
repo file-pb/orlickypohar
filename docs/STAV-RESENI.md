@@ -1,9 +1,16 @@
 # Stav řešení: co chce Miloš × co z toho stojí
 
-**Stav k 28. 10. 2026, večer.** Tenhle dokument je **přehled pro Filipa**, aby
+**Stav k 30. 10. 2026.** Tenhle dokument je **přehled pro Filipa**, aby
 měl kontrolu nad stavem: každý Milošův požadavek na jednom řádku, u něj v jakém
 je stavu, **kde se to dá vidět** a co zbývá. Je seřazený **podle dne závodu**,
 protože tak o tom Miloš mluví — od vypsání po výsledky.
+
+**Co se změnilo od 28. 10.** Rozhraní rozhodčího u startu a u cíle, které tu
+tehdy stálo jako *Zadané* a *Nikde*, od 29.–30. 10. **stojí v appce**: odpočet
+podle ZPJ 26 s hlasem a klaksonem, odložení i odvolání, zápis dojezdu klepáním
+na lodě, návrh dojezdu z trasování a ohlášení další rozjížďky. Jedenáct řádků
+níž tím změnilo stav. Jak se to staví a co u toho ještě nestojí, vede
+`APPKA-PORADI-PRACI.md`; pořadí kroků `SOUPIS-A-PLAN-START.md`.
 
 **Co v něm není.** Je to řez **dnem rozhodčího**. Web a články, editor trati,
 bóje, tabule pro diváky, náklady, zálohy a kalendář v něm nejsou — ty vede
@@ -48,20 +55,20 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Po rozpravě nastavit předpokládaný čas startu | **Jen web** | K6, nasazeno. V appce to nejde |
 | Tabule se startovní listinou | **Běží** | Přepíná se sama podle fáze dne, nezapíná se ručně |
 | Do startovní listiny smí jen rozhodčí | **Zadané** | R38. Rozhodnuto: po rozpravě mění jen rozhodčí, pořadatel smí **navrhovat** a rozhodčí schvaluje; příznak pomocníka se rozšíří i na listinu |
-| Mapa před startem | **Zadané** | R4. Rozhodnuto: zapne se sama **10 minut před procedurou** (T−15). Dnes naskočí až výstřelem |
+| Mapa před startem | **Běží** | R4. Naskočí sama 10 minut před procedurou, ne až výstřelem (29. 10.) |
 | Odkdy se posádkám hlásí telefon | **Zadané** | R3. Rozhodnuto: **15 minut před procedurou** (T−20), appka si sledování zapne sama — musí žít dřív než mapa |
 
 ## Start
 
 | Co chce | Stav | Kde to je / co zbývá |
 | --- | --- | --- |
-| Spustit startovní proceduru jedním tlačítkem | **V API** | `POST …/procedura`. Appka neumí nic z procedury |
-| Odpočet s intervaly 5 / 4 / 1 / 0 na obrazovce | **Zadané** | **Nikde.** Je to krok 1 plánu a hlavní věc, kterou chce mít v ruce (*„abych nemusel držet stopky"*) |
-| Dlaždice **Odklad startu** s novým časem | **Zadané** | R37. API to umí ve dvou krocích (odložit + zapsat plánovaný start), appka nijak |
-| Dlaždice **Zrušit rozjížďku / neplatný start** | **V API** | `Odvolat` (ZPJ 29.2) — přidá minutu a jede znovu |
-| Dlaždice **OCS** → loď → odčinila / neodčinila | **Zadané** | R35. Rozhodnuto 29. 10.: zapisuje se **OCS**, tedy to, co žádají pravidla; na Miloše se nečeká a změna na DSQ by byla jednořádková |
+| Spustit startovní proceduru jedním tlačítkem | **Běží** | Panel na obrazovce regaty (`app/src/app/serie/[slug]/zavody/[zavod]/index.tsx`, `app/src/lib/start.ts`), postaveno 29. 10. Tlačítko ukáže stisk i čekání a nepovedené spuštění appku neshodí |
+| Odpočet s intervaly 5 / 4 / 1 / 0 na obrazovce | **Běží** | `app/src/components/odpocet.tsx` (29. 10.). Fáze se lámou podle ZPJ 26, ne po minutách; posledních deset vteřin panel tepe. Od 30. 10. k tomu **mluví a troubí** (`app/src/lib/dirigent.ts`) a umí si vyžádat Nerušit — na Androidu z appky, na iPhonu ne |
+| Dlaždice **Odklad startu** s novým časem | **Běží** | R37. Start se neklepe — zastavuje se odložením nebo odvoláním, a po odložení zůstane panel, ze kterého jde spustit znovu (29. 10.) |
+| Dlaždice **Zrušit rozjížďku / neplatný start** | **Běží** | `Odvolat` (ZPJ 29.2) — přidá minutu a jede znovu; v appce od 29. 10. vedle odložení |
+| Dlaždice **OCS** → loď → odčinila / neodčinila | **Zadané** | R35. Rozhodnuto 29. 10.: zapisuje se **OCS**, tedy to, co žádají pravidla; na Miloše se nečeká a změna na DSQ by byla jednořádková. Appka kód zatím jen **čte** (`app/src/lib/cil.ts`), zapisuje se na webu |
 | Velitelský čas na mobilu hlavního startéra | **Běží** | `Velitel`, převzetí na žádost, doklad |
-| Start přežije výpadek | **Jen web** | Fronta nezaslaného startu je na webu; v appce se musí postavit znovu |
+| Start přežije výpadek | **Běží** | `app/src/lib/cekajici-start.ts`: odpočet nečeká na server, start se podrží a odešle, až je kam (29. 10.). **Jedna výjimka:** ohlásit rozjížďku bez signálu nejde, číslo dává server — popsáno v `APPKA-PORADI-PRACI.md` |
 | Posádka vidí stav startu | **Zadané** | R34. Rozhodnuto 29. 10.: **barva stavu, ne odpočet** — zpožděný odpočet na lodi je zdroj hádek, barva se zpožděním nelže. Miloš chtěl celou sekvenci, dostane informaci, ne otázku |
 | Posádka hlásí komisi (trest, neregulérnost) | **Zavřené** | R41. *„Alespoň v prvních verzích ne."* Miloš došel k témuž: *„abychom jim nekomplikovali život"* |
 
@@ -81,8 +88,8 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 
 | Co chce | Stav | Kde to je / co zbývá |
 | --- | --- | --- |
-| Ruční zápis průjezdu cílem | **Jen web** | Běží |
-| Přepsat to, co určilo trasování | **Zadané** | R33. Rozhodnuto: trasování dá **návrh dojezdu** (ghost řádek), rozhodčí ho potvrdí, zamítne, nebo posune v pořadí |
+| Ruční zápis průjezdu cílem | **Běží** | Od 29. 10. **i v appce**: karta *Cíl* na obrazovce regaty, klepání na lodě s časem z telefonu, oprava posledního klepnutí i jednotlivého místa, *Ukončit rozjížďku* se zápisem DNF zbylým (`app/src/lib/cil.ts`, `app/src/app/serie/[slug]/zavody/[zavod]/cil.tsx`). Rozepsaný zápis leží v souboru, takže přežije konec appky |
+| Přepsat to, co určilo trasování | **Běží** | R33, postaveno 29. 10. Čerstvý průjezd lodi bez místa se ukáže jako návrh s čárkovaným okrajem a klepnutím se zapíše; k zapsanému klepnutí obrazovka nabídne čas ze stopy, leží-li do minuty. Nic se nezapisuje samo a nic se nemaže |
 | Shoda v cíli (dvě lodě stejně) | **Zadané** | K7. Rozhodnuto: v cílovém listu se zaškrtne stejný dojezd u dvou lodí, pak se body rozdělí podle pravidel |
 
 ## Po rozjížďce
@@ -94,7 +101,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Zásah do pořadí při protestu | **Zadané** | Protesty jsou celá nepostavená fáze; dnes je jen věta, že protest visí (K2) |
 | Ověřeno a Schváleno jako dva kroky | **Zadané** | K3. Rozhodnuto sloučit, dokud protesty nejsou; stavy *zapisuje se → zapsáno / v revizi → potvrzeno* |
 | Pomocník u cíle a slave startér | **Zadané** | K8. Rozhodnuto 28. 10.: **příznak u regaty**, který rozhodčí zaškrtne v klubovně u zápisu u lidí, kteří už pořadateli jsou. Otevře velení a zápis průjezdu, **ne** startovní listinu. Žádná nová role |
-| Zahájit další rozjížďku | **V API** | `POST …/rozjizdky` |
+| Zahájit další rozjížďku | **Běží** | V appce od 30. 10. jako *Ohlásit rozjížďku* — **dvě klepnutí**, ohlášení jen založí rozjížďku bez času, proceduru spouští až druhé. Bez signálu to nejde, číslo určuje server |
 | Kódy výsledků včetně DNE | **Běží** | Jedenáct kódů, čtyři z nich doplněné 28. 10.; DNE se nedá vyškrtnout (K1) |
 | Zrušení rozjížďky s povinným důvodem | **Zadané** | R17. Běží, ale rozhodnuto doplnit nejčastější důvody na výběr, aby to nemusel psát |
 
@@ -102,9 +109,9 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 
 | Co chce | Stav | Kde to je / co zbývá |
 | --- | --- | --- |
-| Appka řekne, že se sama aktualizovala | **Běží** | Banner a sekce *Verze appky* v Účtu. Nově zadáno: ukázat verzi i na webové stránce `/appka` |
+| Appka řekne, že se sama aktualizovala | **Běží** | Banner a sekce *Verze appky* v Účtu, od buildu 5. Nově zadáno: ukázat verzi i na webové stránce `/appka` |
 | Aktualizace po síti bez instalace | **Běží** | První aktualizace publikovaná 28. 10.; do té doby v kanálu neležela **žádná** |
-| Publikace automaticky z CI | **Běží** | `EXPO_TOKEN` je v secrets od 29. 10. 10:44. Publikuje se do kanálu `preview` při každém nasazení, kde se změnilo `app/` — ale dosedne jen na APK se shodným otiskem |
+| Publikace automaticky z CI | **Běží** | `EXPO_TOKEN` je v secrets od 29. 10. 10:44. Publikuje se do kanálu `preview` při každém nasazení, kde se změnilo `app/` — ale dosedne jen na APK se shodným otiskem, a ten se od 28. 10. posunul **dvakrát** (build 5, pak build 8 s nativní dávkou). Vydané APK drží `app/vydane-apk.json` |
 | Přeložený termín dá vědět přihlášeným | **Zadané** | K5. ZPJ 80 to žádá, aplikace termín přesune a nikomu nic neřekne |
 
 ---

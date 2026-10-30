@@ -1,26 +1,30 @@
 # Příručka: jak si Miloš přeinstaluje appku
 
-**Platí pro APK vydané 29. 10. 2026** (build `1e869aa0`, versionCode 5,
-otisk `9dfabf3c…`, zapsané v `app/vydane-apk.json`). Až vyjde další, projdi
-text znovu — a zkontroluj hlavně to, co appce slibuje.
+**Platí pro APK vydané 30. 10. 2026** (build `cd907b77`, versionCode 8,
+otisk `afbd9b0c…`, zapsané v `app/vydane-apk.json`; produkce na `/appka`
+ho rozdává, ověřeno 30. 10.). Až vyjde další, projdi text znovu — a zkontroluj
+hlavně to, co appce slibuje.
 
-Předchozí vydání (`d343c6d2`, otisk `3995edc5…`) umělo aktualizace taky,
-jenže mu chyběla `expo-battery`, která do appky přišla pár minut po něm.
-Miloš si ho podle tohohle návodu stáhl — a tohle je ta jedna verze navíc,
-o kterou ho pak musel Filip požádat.
+**Čtyři instalace za tři dny**, a za každou stojí posunutý nativní otisk — ne
+novinka v appce:
 
-A build po něm (`4b579f9b`, otisk `c4d54801…`) vydržel jediný den: 29. 10.
-šlo `expo` z `~57.0.30` na `~57.0.31` a přibyly `overrides` v
-`app/package.json` (`expo-modules-core` → `react-native-worklets`), čímž se
-otisk posunul na `9dfabf3c…`. **Miloš tak instaluje potřetí během dvou dnů**
-— přesně to, o čem text níž slibuje, že se dít nebude. Slib platí pro
-novinky v appce, ne pro bumpy nativních závislostí, a ten rozdíl laik
-neudělá; než se pošle znovu, stojí za to si přečíst, co se mu slibuje.
+| Vydáno | Build | Otisk | Co ho posunulo |
+|---|---|---|---|
+| 28. 10. ráno | `d343c6d2` | `3995edc5…` | — |
+| 28. 10. odpoledne | `4b579f9b` | `c4d54801…` | `expo-battery`, přišla pár minut po předchozím buildu |
+| 29. 10. | `1e869aa0` | `9dfabf3c…` | `expo` `~57.0.30` → `~57.0.31` a nové `overrides` (`expo-modules-core` → `react-native-worklets`) |
+| 30. 10. | `cd907b77` | `afbd9b0c…` | nativní dávka: hlas, klakson a modul *Nerušit* (`app/modules/nerusit/`) |
+
+Dávka ve čtvrtém řádku se schválně přidávala **najednou** právě proto, aby
+instalací nebylo pět (`APPKA-PORADI-PRACI.md`). Slib „většinu novinek už
+stahovat nebudeš" platí pro novinky v appce, ne pro nativní závislosti,
+a ten rozdíl laik neudělá — **než se pošle znovu, přečti si, co se mu
+slibuje.** Miloš si první z těch buildů podle tohohle návodu stáhl sám.
 
 Text níž je **pro rozhodčího, ne pro vývojáře** — píše se tak, aby šel
 poslat do WhatsAppu beze změny. Vzniknul proto, že od 28. 10. 2026 se
-appka umí aktualizovat sama, ale **jednou se musí přeinstalovat ručně**:
-stará verze v telefonu tu schopnost v sobě nemá.
+appka umí aktualizovat sama, ale ruční instalace se vrací s každou nativní
+změnou, takže je potřeba text, který se dá poslat kdykoliv.
 
 Proč to nejde říct jen „stáhni si novou verzi": instalace mimo obchod
 Androidu je pro laika past na třech místech — prohlížeč se zeptá, jestli
@@ -117,7 +121,8 @@ skončí u druhého kroku.
   `gh secret set EXPO_TOKEN -R file-pb/orlickypohar`, který hodnotu
   nevypíše.
 
-- **Build se změněným otiskem zneplatní aktualizace pro ten starý.**
+- **Každý build s novým otiskem zneplatní aktualizace pro ten starý**, takže
+  tohle platí při každém vydání, ne jen u toho jednoho z 29. 10.
   Změřeno 29. 10. 2026 dotazem na `u.expo.dev` s hlavičkami, které posílá
   telefon (`expo-channel-name: preview`, `expo-runtime-version: <otisk>`,
   `expo-platform: android`): otisk `c4d54801` (build 4) → HTTP 200 a
@@ -125,7 +130,9 @@ skončí u druhého kroku.
   Telefon, který zůstane na starém APK, tedy dostane jen to, co se
   publikovalo do změny otisku, a **nic dalšího už nepřijde** — a nijak se
   to na něm nepozná, protože pro svůj otisk doopravdy nic nového nemá.
-  Tohle je ten důvod, proč se o novém APK musí ozvat Filip.
+  Tohle je ten důvod, proč se o novém APK musí ozvat Filip. Pro otisk buildu 8
+  (`afbd9b0c…`) už v kanálu aktualizace leží, z 30. 10. 02:31 — ověřeno týmž
+  dotazem.
 
 - **Otisk se počítá nástrojem z `node_modules`, ne `@latest`.**
   `npx expo-updates fingerprint:generate --platform android` dá
