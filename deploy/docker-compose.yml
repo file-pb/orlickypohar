@@ -181,7 +181,7 @@ services:
       UKAZKOVE_SERIE: "2026-nanecisto"
       # Poslední build appky. Každý build má jinou adresu, takže se to mění
       # tady, ne v kódu — `npm run apk` v app/ vypíše novou.
-      APK_URL: "https://expo.dev/artifacts/eas/kqe5AoMTEsNy4Rs-g1zquTUXTlyZjRmCGxFDfgLYEVc.apk"
+      APK_URL: "https://expo.dev/artifacts/eas/8Da_tkEnAlmb5KP5Sz1EwlfvYh-PzRUFRS2uN_Jqz0E.apk"
       # Přihlašování. Tytéž dvě hodnoty jako u API a k tomu veřejná adresa
       # webu, ze které se skládá návratová cesta — ta musí přesně souhlasit
       # s tím, co je zapsané u aplikace v Zitadelu, jinak poskytovatel kód
