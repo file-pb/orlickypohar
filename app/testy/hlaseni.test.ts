@@ -8,7 +8,14 @@
  */
 import assert from 'node:assert/strict';
 
-import { coOkamzik, coPrehrat, partitura, stiha, type Znameni } from '../src/lib/hlaseni.ts';
+import {
+  coOkamzik,
+  coPrehrat,
+  nejblizsiOkamzik,
+  partitura,
+  stiha,
+  type Znameni,
+} from '../src/lib/hlaseni.ts';
 
 let prosly = 0;
 function zkus(nazev: string, f: () => void) {
@@ -229,6 +236,38 @@ zkus('z jednoho okamžiku se nevrací znamení jiného', () => {
   // Okno (239,5; 300,5] drží vyzývací i přípravné; platí to pozdější.
   const o = coOkamzik(300.5, 239.5);
   assert.deepEqual([...new Set(o.map((z) => z.vterinDoStartu))], [240]);
+});
+
+
+/* ---------- plánování dopředu ---------- */
+
+zkus('zvuk se najde dřív, než má zaznít', () => {
+  // Tik padne kdykoli; hledá se, co přijde do příští vteřiny, aby se to
+  // dalo naplánovat na přesný okamžik místo čekání na další tik.
+  const o = nejblizsiOkamzik(61.4, 1.5);
+  assert.deepEqual(o.map((z) => z.rekni), ['jedna']);
+});
+
+zkus('okamžik se dvěma znameními se vrací celý', () => {
+  // Na nule leží klakson i slovo „Start"; naplánovat se musí obojí.
+  const o = nejblizsiOkamzik(0.6, 1.5);
+  assert.equal(o.length, 2);
+  assert.equal(o.find((z) => z.troubi)?.troubi, 'kratce');
+  assert.equal(o.find((z) => z.rekni)?.rekni, 'Start');
+});
+
+zkus('co je dál než okno, se ještě neplánuje', () => {
+  // Jinak by se do fronty dostala celá partitura a odpočet by se
+  // odvíjel z plánu, ne z hodin.
+  assert.deepEqual(nejblizsiOkamzik(100, 1.5), []);
+});
+
+zkus('to, co právě nastalo, se dopředu nenajde', () => {
+  // V 60,0 leží znamení přesně teď, ne v budoucnu — a další je až
+  // u startu. Dohnat to, co nastalo, je věc `coOkamzik`, ne plánování;
+  // kdyby to uměly obě, zaznělo by to dvakrát.
+  assert.deepEqual(nejblizsiOkamzik(60, 1.5), []);
+  assert.deepEqual(coOkamzik(60.4, 59.9).map((z) => z.vterinDoStartu), [60, 60]);
 });
 
 console.log(`  ${prosly} prošlo`);

@@ -190,11 +190,18 @@ vteřin předem — ta se tam nevešla a odpočet se o ni opozdil.
 
 **Číslovky jsou pět samostatných hlášení, každé na svou vteřinu.** Jedna
 věta dozní, kdy dozní, podle toho, jak rychle telefon mluví; takhle
-poslední číslo padne na vteřinu, po které se troubí. Zbývá v tom jedna
-nepřesnost, kterou se vyplatí znát: panel tiká po vteřině, takže zvuk
-může zaznít až vteřinu po svém okamžiku. Spravit to jde plánováním
-dopředu (`setTimeout` na přesný zlomek vteřiny) a na vodě se to má
-změřit dřív, než se na odpočet někdo spolehne.
+poslední číslo padne na vteřinu, po které se troubí.
+
+**A zvuk se plánuje dopředu, nedohání se zpětně.** Panel tiká po
+vteřině, takže znamení puštěné „až s tikem" by zaznělo až vteřinu po
+svém okamžiku — a u odpočtu, podle kterého se mačká houkačka, je to
+vteřina, o kterou rozhodčí zatroubí pozdě. Tik proto jen zjistí, co
+přijde do příští vteřiny, a naplánuje to na přesný zlomek
+(`nejblizsiOkamzik` v `hlaseni.ts`). Dohánění zůstává pro jediný
+případ, kdy plán nestačí: appka byla na pozadí a tik nepřišel vůbec.
+
+Zbývá to změřit na telefonu: kolik z toho sežere rozjezd syntézy
+a přehrávače, se u stolu nezjistí.
 
 Tři věci, které z toho plynou a jinak by se postavily špatně:
 

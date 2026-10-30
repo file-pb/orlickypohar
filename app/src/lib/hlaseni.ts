@@ -280,3 +280,31 @@ export function coOkamzik(
   const kdy = stihaji[stihaji.length - 1].vterinDoStartu;
   return stihaji.filter((z) => z.vterinDoStartu === kdy);
 }
+
+/**
+ * Nejbližší okamžik partitury, který teprve přijde — pokud je do
+ * `oknoS` vteřin.
+ *
+ * <b>Proč se hledá dopředu a ne zpětně.</b> Panel tiká po vteřině, takže
+ * znamení nalezené zpětně („co od minulého tiku propadlo") zazní až
+ * s tím tikem, tedy až o vteřinu později. U odpočtu, podle kterého
+ * rozhodčí mačká houkačku, je to vteřina, o kterou zatroubí pozdě.
+ * Takhle se zvuk naplánuje <b>na svůj zlomek vteřiny</b>.
+ *
+ * Vrací celý okamžik, ne jedno znamení: na startu i v páté minutě leží
+ * klakson a věta na témže čase.
+ */
+export function nejblizsiOkamzik(
+  doStartuS: number,
+  oknoS: number,
+  delkaS: number = PROCEDURA_S,
+): Znameni[] {
+  // Čas klesá, takže „teprve přijde" znamená menší `vterinDoStartu`.
+  const budouci = partitura(delkaS).filter(
+    (z) => z.vterinDoStartu < doStartuS && z.vterinDoStartu >= doStartuS - oknoS,
+  );
+  if (budouci.length === 0) return [];
+
+  const kdy = Math.max(...budouci.map((z) => z.vterinDoStartu));
+  return budouci.filter((z) => z.vterinDoStartu === kdy);
+}

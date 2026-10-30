@@ -42,7 +42,13 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import * as Speech from 'expo-speech';
 import { File, Paths } from 'expo-file-system';
 
-import { coOkamzik, DELKA_TROUBENI_MS, type Troubeni, type Znameni } from './hlaseni';
+import {
+  coOkamzik,
+  DELKA_TROUBENI_MS,
+  nejblizsiOkamzik,
+  type Troubeni,
+  type Znameni,
+} from './hlaseni';
 import { jdeTo as klidJdeTo, nastav as nastavKlid, otevriNastaveni, smime } from './nerusit';
 import { kolikDoStartu, maBytKlid, PROCEDURA_S, type StavStartu } from './start';
 
@@ -66,6 +72,15 @@ const TEMPO = 0.95;
 
 /** Soubor, ve kterém si appka pamatuje, jestli má hlásit. */
 const PAMET = 'dirigent.json';
+
+/**
+ * Jak daleko dopředu se zvuk plánuje.
+ *
+ * Musí být delší než tik panelu (vteřina), jinak by mezi dvěma tiky
+ * znamení propadlo. Delší okno nic nezlepší — plán se stejně přepíše
+ * dalším tikem.
+ */
+const OKNO_PLANU_S = 1.5;
 
 /** Co si o hlasu appka pamatuje mezi spuštěními. */
 export function nactiHlas(): boolean | null {
@@ -211,24 +226,70 @@ export function useDirigent(
     };
   }, [hlasi, vOkne, kratky]);
 
-  // Partitura. Tiká se zvenčí (`ted` z panelu), tady se jen rozhoduje,
-  // co z toho ještě stíhá — a přehrává.
+  // <b>Partitura se plánuje dopředu, nedohání se zpětně.</b> Panel tiká
+  // po vteřině, takže zvuk puštěný „až s tikem" zazní až vteřinu po svém
+  // okamžiku — a u odpočtu, podle kterého se mačká houkačka, je to
+  // vteřina, o kterou rozhodčí zatroubí pozdě. Tik proto jen zjistí, co
+  // přijde do příští vteřiny, a naplánuje to na přesný zlomek.
+  //
+  // Dohánění zůstává pro jediný případ, kdy plán nestačí: appka byla na
+  // pozadí a tik nepřišel vůbec. Obojí drží tentýž seznam vyřízených
+  // okamžiků, aby jedno znamení nezaznělo dvakrát.
   const predchozi = useRef<number | null>(null);
+  const vyrizeno = useRef(new Set<number>());
+  const casovace = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const hlasiTed = useRef(hlasi);
+  hlasiTed.current = hlasi;
+
   useEffect(() => {
     if (doStartu === null) {
       predchozi.current = null;
+      vyrizeno.current.clear();
       return;
     }
     const minule = predchozi.current;
     predchozi.current = doStartu;
 
+    // Čas do startu vzrostl: je to jiná procedura (odložení, odvolání,
+    // další rozjížďka) a co bylo vyřízené v té minulé, tady neplatí.
+    if (minule !== null && doStartu > minule) vyrizeno.current.clear();
+
     // První tik jen zapamatuje, kde jsme; jinak by se po otevření
     // obrazovky přehrálo všechno, co už dávno platilo.
     if (minule === null || !hlasi) return;
 
-    const okamzik = coOkamzik(minule, doStartu, delkaS);
-    if (okamzik.length > 0) prehraj(okamzik, kratky, dlouhy);
+    const vyriz = (okamzik: Znameni[], zaMs: number) => {
+      const kdy = okamzik[0].vterinDoStartu;
+      if (vyrizeno.current.has(kdy)) return;
+      vyrizeno.current.add(kdy);
+
+      if (zaMs <= 0) {
+        prehraj(okamzik, kratky, dlouhy);
+        return;
+      }
+      casovace.current.push(
+        setTimeout(() => {
+          // Mezi naplánováním a zazněním mohl rozhodčí hlas vypnout.
+          if (hlasiTed.current) prehraj(okamzik, kratky, dlouhy);
+        }, zaMs),
+      );
+    };
+
+    const prijde = nejblizsiOkamzik(doStartu, OKNO_PLANU_S, delkaS);
+    if (prijde.length > 0) vyriz(prijde, (doStartu - prijde[0].vterinDoStartu) * 1000);
+
+    const propadlo = coOkamzik(minule, doStartu, delkaS);
+    if (propadlo.length > 0) vyriz(propadlo, 0);
   }, [doStartu, hlasi, delkaS, kratky, dlouhy]);
+
+  // Naplánovaný zvuk nesmí přežít odchod z obrazovky.
+  useEffect(
+    () => () => {
+      casovace.current.forEach(clearTimeout);
+      casovace.current = [];
+    },
+    [],
+  );
 
   // <b>Nerušit na dobu procedury.</b> Zapíná se podle `maBytKlid`, tedy
   // od minuty před zahájením do pěti minut po startu — a appka o obou
