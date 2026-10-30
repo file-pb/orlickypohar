@@ -118,10 +118,24 @@ bylo.
 
 **Co se k tomu postavilo.** Partitura (`app/src/lib/hlaseni.ts`) stála už
 dřív a má testy bez telefonu; nové je to, co ji přehrává
-(`app/src/lib/dirigent.ts`). Zvuky klaksonu jsou v `app/assets/zvuky/`:
-základ 520 Hz s harmonickými, krátký 1 s a dlouhý 4 s. Délky „krátce"
-a „dlouze" ZPJ v sekundách neurčuje — je to volba podle toho, jak se
-troubí na vodě, ne citace pravidla.
+(`app/src/lib/dirigent.ts`).
+
+**Klakson je syntéza z naměřených čísel, ne nahrávka** — a ten rozdíl je
+licenční: zvuk, který appka rozdává rozhodčímu a posádkám, musí být
+čistý, a nahrávka z videa čistá není. Vyrábí ho
+`app/scripts/klakson.py` do `app/assets/zvuky/`, krátký 1 s a dlouhý 4 s.
+
+Čísla jsou z nahrávky skutečné houkačky, kterou se na poháru troubí
+(Lalizas 380 ml; nahrál Filip 30. 10. 2026, změřeno Goertzelem po
+půlvteřinových úsecích): **základ 574 Hz klesá k 556 Hz** a **druhá
+harmonická během troubení převezme vedení nad základem**. Obojí dělá
+tlak, který ubývá — a právě ta nehybnost shodila první pokus, o kterém
+Filip řekl, že je to *„taková houkačka pro děti"*. Jeho odhad „o dva
+tóny výš" se přitom trefil: ze starých 520 Hz dávají dva půltóny 583,
+naměřeno 574.
+
+Délky „krátce" a „dlouze" ZPJ v sekundách neurčuje — je to volba podle
+toho, jak se troubí na vodě, ne citace pravidla.
 
 **Hlas má přepínač a ten se musí ozvat.** Panel startu má řádek *Hlásí
 a troubí / Mlčí*, volba se pamatuje mezi spuštěními, a při zapnutí appka
