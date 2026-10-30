@@ -8,4 +8,13 @@ version = '1.0.0'
 
 android {
   namespace "cz.klihovka.orlickypohar.nerusit"
+
+  // Bez `defaultConfig` autolinking modul nenakonfiguruje a celý build
+  // spadne na `'android.defaultConfig.versionName' is not defined` —
+  // hláška, která ukazuje na `:expo`, ne sem. Hotové moduly v
+  // node_modules to mají taky.
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
 }
