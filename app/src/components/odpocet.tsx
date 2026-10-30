@@ -11,6 +11,7 @@ import {
 
 import { Pressable } from 'react-native';
 
+import { useDirigent } from '@/lib/dirigent';
 import { useTheme } from '@/hooks/use-theme';
 import type { Barvy } from '@/constants/theme';
 import {
@@ -115,6 +116,13 @@ export function Odpocet({
   const delkaS = (delkaProceduryMin ?? PROCEDURA_S / 60) * 60;
   const stav = stavStartu(rozjizdky, ted, delkaS);
 
+  // <b>Dirigent: hlas, klakson a svítící displej.</b> Jen tomu, kdo velí —
+  // obrazovku regaty čte i závodník a divák, a těm by telefon začal
+  // troubit bez vyzvání. Co a kdy se ozve, je partitura (`lib/hlaseni.ts`);
+  // tady se jen pozná, kdo je u toho.
+  const veli = Boolean(naSpusteni || naUkon);
+  const dirigent = useDirigent(stav, ted, delkaS, veli);
+
   // <b>Start se neklepe, start padne.</b> Rozhodčí spustil proceduru,
   // odpočet doběhl — tím rozjížďka odstartovala a appka to serveru řekne
   // sama. Dřív tu bylo tlačítko „Jede se" a panel o sobě tvrdil, že čeká
@@ -168,6 +176,44 @@ export function Odpocet({
       {/* <b>Fronta se nesmí tvářit jako hotovo.</b> Odpočet běží z hodin
           telefonu, takže na obrazovce vypadá všechno v pořádku i tehdy,
           když o startu nikdo jiný neví. */}
+      {/* <b>Hlas se dá vypnout, ale musí být vidět, že je zapnutý.</b>
+          Rozhodčí si telefon strká do kapsy a potřebuje vědět, jestli
+          z ní něco uslyší — a na vodě může chtít ticho, aniž by kvůli
+          tomu zavíral obrazovku. */}
+      {veli ? (
+        <Pressable
+          onPress={dirigent.prepni}
+          style={({ pressed }) => [s.hlas, { opacity: pressed ? 0.6 : 1 }]}>
+          <Text style={[s.hlasText, { color: dirigent.zapnuto ? t.jede : t.tlumeny }]}>
+            {dirigent.zapnuto ? 'Hlásí a troubí — vypnout' : 'Mlčí — zapnout hlas'}
+          </Text>
+        </Pressable>
+      ) : null}
+
+      {/* <b>Nerušit se povoluje jednou a pak platí.</b> Nabízí se proto
+          rovnou na startovní obrazovce — v nastavení appky by to rozhodčí
+          nenašel a hodilo by se mu to právě tady. Klepnutí otevře
+          nastavení systému; povolit to za uživatele nesmí nikdo. */}
+      {dirigent.klidChybiPovoleni ? (
+        <Pressable
+          onPress={dirigent.povolKlid}
+          style={({ pressed }) => [s.hlas, { opacity: pressed ? 0.6 : 1 }]}>
+          <Text style={[s.hlasText, { color: t.vystraha }]}>
+            Povolit „Nerušit" na dobu procedury — telefon by teď zazvonil
+          </Text>
+        </Pressable>
+      ) : null}
+
+      {/* Doinstalovat hlas umí jen uživatel v nastavení telefonu, takže
+          jediné, co appka může, je říct to dřív, než na to přijde na
+          vodě. */}
+      {dirigent.bezCestiny ? (
+        <Text style={[s.radekPodPanelem, { color: t.vystraha }]}>
+          Telefon nemá český hlas — hlášení bude k nepoznání. Doinstaluje se
+          v nastavení telefonu (řeč, jazyky).
+        </Text>
+      ) : null}
+
       {nedoslano ? (
         <Text style={[s.radekPodPanelem, { color: t.vystraha }]}>
           Zatím neodesláno — odpočet běží z hodin telefonu a zkouším dál.
@@ -512,6 +558,11 @@ const s = StyleSheet.create({
   cil: { borderWidth: 2, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: -8, marginBottom: 16 },
   cilText: { fontSize: 16, fontWeight: '700' },
   radekPodPanelem: { fontSize: 13, fontWeight: '600', marginTop: -8, marginBottom: 12, lineHeight: 18 },
+
+  // Přepínač hlasu je řádek, ne tlačítko: mačká se jednou za den, kdežto
+  // volby pod ním rozhodují o startu a musí být větší terč.
+  hlas: { alignSelf: 'flex-start', paddingVertical: 6, marginTop: -8, marginBottom: 10 },
+  hlasText: { fontSize: 13, fontWeight: '700' },
   volba: {
     flex: 1,
     borderWidth: 1,

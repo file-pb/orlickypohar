@@ -42,7 +42,15 @@ src/app/          obrazovky, cesty podle souborů (expo-router)
 src/components/   sdílené kousky UI
 src/lib/          klient API a formátování
 src/hooks/        načítání dat a barvy
+assets/zvuky/     klakson u startu (krátký a dlouhý)
+modules/nerusit/  vlastní nativní modul: Nerušit na dobu procedury (Android)
 ```
+
+**Co v Expo Go nejde.** `modules/nerusit` je vlastní nativní modul, a ten
+je jen v APK — v Expo Go se prostě neohlásí (`requireOptionalNativeModule`
+vrátí `null`) a režim telefonu se nepřepne. Všechno ostatní, hlas i klakson,
+tam funguje: jsou to balíčky z SDK. Na ladění rozhraní startu to tedy
+stačí; na vyzkoušení *Nerušit* ne.
 
 Typy v `src/lib/schema.d.ts` **negeneruj ručně** — vyrábí je
 `packages/api-client/generuj.sh` z OpenAPI dokumentu API, stejný soubor

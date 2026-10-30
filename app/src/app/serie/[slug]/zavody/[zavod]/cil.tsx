@@ -1,3 +1,4 @@
+import { useKeepAwake } from 'expo-keep-awake';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -96,6 +97,13 @@ type Ukladani = 'ulozeno' | 'ukladam' | 'ceka' | 'konflikt';
 export default function CilovaObrazovka() {
   const { slug, zavod } = useLocalSearchParams<{ slug: string; zavod: string }>();
   const t = useTheme();
+
+  // <b>Displej nezhasne, dokud je cílovka otevřená.</b> Mezi dojezdy bývá
+  // minuty klidu a telefon by se mezitím uspal; probudit ho a odemknout
+  // trvá vteřiny, které u cíle nejsou. Panel startu má vlastní okno
+  // (`lib/dirigent.ts`), tady je to po celou dobu — obrazovka je sama
+  // dokladem, že se zapisuje.
+  useKeepAwake('cil');
 
   const { data: zapis, chyba, nacita, obnov } = useData(
     () => nactiZapisBeziciRozjizdky(slug, zavod),

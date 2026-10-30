@@ -11,6 +11,7 @@ import assert from 'node:assert/strict';
 import {
   dusledekUkonu,
   fazeProcedury,
+  kolikDoStartu,
   maBytKlid,
   mmss,
   odStartu,
@@ -352,6 +353,33 @@ zkus('důsledek úkonu mluví o čase, ne o vlajce', () => {
   // (Filip, 28. 10. 2026). Rozhodčí z ní musí poznat, co bude dál.
   assert.ok(dusledekUkonu('Odlozit').includes('bez času startu'));
   assert.ok(dusledekUkonu('Odvolat').includes('znovu'));
+});
+
+/* ---------- čas do startu pro partituru ---------- */
+
+zkus('čas do startu vyjde ve všech stavech, které hlas potřebuje', () => {
+  // Hlas hraje od minuty před procedurou do pěti minut po startu, tedy
+  // ve stavech, které žádný odpočet nekreslí — a potřebuje z nich jedno
+  // číslo, kde záporné znamená „po startu".
+  const T = Date.parse('2027-05-15T12:00:00Z');
+
+  assert.equal(
+    kolikDoStartu({ druh: 'ceka', cislo: 1, startV: '2027-05-15T12:06:00Z' }, T),
+    360,
+  );
+  assert.equal(
+    kolikDoStartu({ druh: 'procedura', cislo: 1, startV: '...', doStartuS: 240 }, T),
+    240,
+  );
+  assert.equal(kolikDoStartu({ druh: 'odstartovano', cislo: 1, odStartuS: 12 }, T), -12);
+  assert.equal(kolikDoStartu({ druh: 'jede', cislo: 1, odStartuS: 600 }, T), -600);
+});
+
+zkus('bez času startu není od čeho měřit', () => {
+  // Po odložení podle ZPJ 27.3 žádný start naplánovaný není, takže ani
+  // partitura nemá kde začít.
+  assert.equal(kolikDoStartu({ druh: 'bezCasu', cislo: 2 }), null);
+  assert.equal(kolikDoStartu(null), null);
 });
 
 console.log(`  ${prosly} prošlo`);

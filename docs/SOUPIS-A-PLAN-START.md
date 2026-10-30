@@ -185,6 +185,25 @@ mechanismu — proto se na odpověď nečekalo.
 Po odložení zůstane panel „Bez času startu" s tímtéž tlačítkem jako před
 startem: nový čas se nedopočítává, vybírá ho startér tím, že zmáčkne.
 
+### Krok 3b — dirigent: hlas, klakson, displej a klid — **hotovo 30. 10. 2026**
+
+V plánu to nebyl samostatný krok, protože se čekalo na **jednu instalaci**
+nativních balíčků (`docs/APPKA-PORADI-PRACI.md`). Po dokončení startu i cíle
+bylo jasné, co rozhraní potřebuje, a dávka se přidala celá: `expo-keep-awake`,
+`expo-speech`, `expo-audio` a vlastní modul `modules/nerusit`.
+
+Partitura (`app/src/lib/hlaseni.ts`) stála už dřív; nové je to, co ji
+přehrává (`app/src/lib/dirigent.ts`). Hlásí **jen tomu, kdo velí**, dá se
+vypnout, a při zapnutí se ozve, aby si rozhodčí ověřil hlasitost dřív, než
+na tom bude záležet.
+
+- **Čím to posunulo otisk:** tahle dávka je přesně ten případ, kvůli kterému
+  se čekalo — aktualizace vzduchem na ni nestačí a Miloš bude instalovat
+  nové APK. CI to u každého běhu hlásí samo (*„Žádá appka ruční instalaci?"*).
+- **Co z toho není ověřené:** že se *Nerušit* na Milošově Androidu doopravdy
+  přepne a vrátí, a že zvuk naváže po hovoru. Ani jedno tady změřit nejde —
+  simulátor hovor neumí a Android není.
+
 ### Krok 4 — posádka vidí tutéž sekvenci (po kroku 2)
 
 Čtení téhož stavu v appce kapitána. Žádné ovládání.

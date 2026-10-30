@@ -8,7 +8,7 @@
  */
 import assert from 'node:assert/strict';
 
-import { coPrehrat, partitura, type Znameni } from '../src/lib/hlaseni.ts';
+import { coOkamzik, coPrehrat, partitura, stiha, type Znameni } from '../src/lib/hlaseni.ts';
 
 let prosly = 0;
 function zkus(nazev: string, f: () => void) {
@@ -147,6 +147,55 @@ zkus('konec klidu padne do okna i po startu', () => {
   const co = coPrehrat(-299, -301);
   assert.equal(co.length, 1);
   assert.equal(co[0].rekni, 'Vypínám režim Nerušit');
+});
+
+/* ---------- co se smí ozvat pozdě ---------- */
+
+zkus('znamení, které propadlo o minutu, se už neozve', () => {
+  // Příčina je obyčejná: appka byla na pozadí, hovor trval. Odříkat
+  // „pět minut do startu", když zbývají čtyři, pošle rozhodčího
+  // zatroubit do prázdna.
+  const vyzva = partitura().find((z) => z.rekni.startsWith('Pět minut'))!;
+  assert.equal(stiha(vyzva, 300), true);
+  assert.equal(stiha(vyzva, 298), true); // dvě vteřiny po něm: tik hodin
+  assert.equal(stiha(vyzva, 240), false);
+});
+
+zkus('z fronty po probuzení se neozve nic, co už propadlo', () => {
+  // Telefon spal od páté minuty do minuty před startem. Nejpozdější
+  // znamení v tom okně je odpočet k minutě (T−65) a i ten je o čtyři
+  // vteřiny po čase — takže se mlčí a čeká se na to, co doopravdy platí.
+  assert.deepEqual(coOkamzik(300, 61), []);
+});
+
+zkus('probuzení přesně na startu zatroubí a řekne start', () => {
+  // Nejhorší případ: appka se vrátí z pozadí půl vteřiny po startu.
+  // Propadlý odpočet „za pět, čtyři…" se nedohání, startovní znamení ano.
+  const o = coOkamzik(300, -0.5);
+  assert.deepEqual(o.map((z) => [z.vterinDoStartu, z.troubi, z.rekni]), [
+    [0, 'kratce', ''],
+    [0, null, 'Start'],
+  ]);
+});
+
+zkus('nic neprobíhá, nic se neozve', () => {
+  assert.deepEqual(coOkamzik(400, 390), []);
+});
+
+zkus('v jednom okamžiku se troubí i mluví', () => {
+  // Tohle je ten defekt, kvůli kterému funkce nevrací jedno znamení:
+  // na minutu patří dlouhý zvuk <b>a</b> hlášení, a kdyby se vrátilo jen
+  // jedno, při běžném tiku by se netroubilo.
+  const o = coOkamzik(60.4, 59.4);
+  assert.equal(o.length, 2);
+  assert.equal(o.find((z) => z.troubi)?.troubi, 'dlouze');
+  assert.equal(o.find((z) => z.rekni)?.rekni, 'Jedna minuta do startu, opakuji, Jedna minuta do startu');
+});
+
+zkus('z jednoho okamžiku se nevrací znamení jiného', () => {
+  // Okno (239,5; 300,5] drží vyzývací i přípravné; platí to pozdější.
+  const o = coOkamzik(300.5, 239.5);
+  assert.deepEqual([...new Set(o.map((z) => z.vterinDoStartu))], [240]);
 });
 
 console.log(`  ${prosly} prošlo`);

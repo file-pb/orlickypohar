@@ -398,3 +398,30 @@ export function dusledekUkonu(ukon: UkonStartu): string {
     : 'Start se ruší a celá rozjížďka pojede znovu od začátku procedury. '
       + 'Počítá se jako opakovaný start (ZPJ 36).';
 }
+
+/**
+ * Kolik vteřin zbývá do startu podle stavu panelu; záporné je po startu.
+ *
+ * <b>Jedno číslo pro celé okno, nejen pro proceduru.</b> Partitura začíná
+ * minutu před zahájením procedury a končí pět minut po startu
+ * (`PREDEHRA_KLIDU_S`, `PO_STARTU_NERUSIT_S`), takže hlas potřebuje čas
+ * i ve stavech, které žádný odpočet nekreslí — `ceka` ho má ve `startV`,
+ * `odstartovano` a `jede` v `odStartuS` s opačným znaménkem.
+ *
+ * `bezCasu` nemá od čeho měřit a vrací `null`: po odložení podle ZPJ 27.3
+ * žádný start naplánovaný není.
+ */
+export function kolikDoStartu(stav: StavStartu | null, ted: number = Date.now()): number | null {
+  if (!stav) return null;
+  switch (stav.druh) {
+    case 'ceka':
+      return (Date.parse(stav.startV) - ted) / 1000;
+    case 'procedura':
+      return stav.doStartuS;
+    case 'odstartovano':
+    case 'jede':
+      return -stav.odStartuS;
+    case 'bezCasu':
+      return null;
+  }
+}

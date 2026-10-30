@@ -187,3 +187,51 @@ export function coPrehrat(
     (z) => z.vterinDoStartu <= doStartuPredchoziS && z.vterinDoStartu > doStartuTedS,
   );
 }
+
+/**
+ * Jak pozdě se znamení ještě smí ozvat.
+ *
+ * <b>Pozdní hlášení je lež, ne zpoždění.</b> Appka může být na pozadí,
+ * telefon uspaný, hovor dlouhý — a po návratu by `coPrehrat` vrátila
+ * všechno, co se mezitím mělo říct. Odříkat „pět minut do startu" ve
+ * chvíli, kdy zbývají tři, by rozhodčího poslalo zatroubit do prázdna.
+ *
+ * Tři vteřiny jsou tolerance na tik hodin a na rozjezd přehrávače, ne
+ * lhůta na doběhnutí: co propadlo víc, propadlo.
+ */
+export const NEJVIC_POZDE_S = 3;
+
+/** Smí se tohle znamení ozvat, když do startu zbývá `doStartuTedS`? */
+export function stiha(
+  z: Znameni,
+  doStartuTedS: number,
+  nejvicPozdeS: number = NEJVIC_POZDE_S,
+): boolean {
+  return z.vterinDoStartu - doStartuTedS <= nejvicPozdeS;
+}
+
+/**
+ * Co se má doopravdy ozvat mezi dvěma tiky — `coPrehrat` prosité časem.
+ *
+ * Vrací znamení <b>jednoho okamžiku</b>: toho nejpozdějšího, který ještě
+ * stíhá. Když se appka vrátí z pozadí doprostřed procedury, platí to, co
+ * platí teď — dohánět propadlá hlášení by rozhodčího poslalo troubit do
+ * prázdna.
+ *
+ * <b>Jeden okamžik, ne jedno znamení,</b> a není to detail: v pátou minutu
+ * i na startu má partitura dvě věci zároveň — klakson a větu. Vrátit jen
+ * jednu by znamenalo, že se při běžném tiku buď netroubí, nebo nemluví.
+ */
+export function coOkamzik(
+  doStartuPredchoziS: number,
+  doStartuTedS: number,
+  delkaS: number = PROCEDURA_S,
+): Znameni[] {
+  const stihaji = coPrehrat(doStartuPredchoziS, doStartuTedS, delkaS).filter((z) =>
+    stiha(z, doStartuTedS),
+  );
+  if (stihaji.length === 0) return [];
+  // `coPrehrat` řadí od nejranějšího; poslední je ten nejbližší teď.
+  const kdy = stihaji[stihaji.length - 1].vterinDoStartu;
+  return stihaji.filter((z) => z.vterinDoStartu === kdy);
+}

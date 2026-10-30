@@ -1,0 +1,7 @@
+{
+  "name": "nerusit",
+  "version": "1.0.0",
+  "description": "Režim Nerušit na dobu startovní procedury (jen Android).",
+  "private": true,
+  "platforms": ["android"]
+}

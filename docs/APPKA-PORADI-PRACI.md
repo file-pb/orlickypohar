@@ -1,8 +1,10 @@
 # Appka: v jakém pořadí se staví a co čeká na jednu instalaci
 
-**Stav k 29. 10. 2026.** Dva seznamy, oba krátké. První říká, co se staví
-a v jakém pořadí. Druhý vede nativní závislosti, které se musí přidat
-**najednou** — každá z nich posune otisk a Miloš kvůli ní instaluje znovu.
+**Stav k 30. 10. 2026.** Dva seznamy, oba krátké. První říká, co se staví
+a v jakém pořadí. Druhý vedl nativní závislosti, které se musely přidat
+**najednou**, protože každá z nich posune otisk a Miloš kvůli ní instaluje
+znovu — **ta dávka je od 30. 10. 2026 nainstalovaná** a seznam se změnil
+v soupis toho, co z ní plyne.
 
 Návrh obrazovek je na plátně **Start v appce — návrh**
 (<https://claude.ai/artifact/F3bpQH1cX6VSjAGTuFc9bC>).
@@ -16,7 +18,7 @@ takt, zatímco rozhodčí dělá to své.
 
 | | Co | Pro koho | Stav |
 | --- | --- | --- | --- |
-| 1 | **Rozhraní startu** | rozhodčí | **postavené** (29. 10. večer) |
+| 1 | **Rozhraní startu** | rozhodčí | **postavené** (29. 10. večer), s hlasem a klaksonem od 30. 10. |
 | 2 | **Rozhraní cíle** | rozhodčí | **klepání a ukončení postavené**, viz níž |
 | 3 | **Rozhraní závodníka** | posádka | návrh vstřelený, bude se ladit |
 | 4 | **Stavitel tratě** | pořadatel | *„na to bude ale klid"* |
@@ -99,18 +101,39 @@ sváděl řídit se jím místo znamení od komise. Barva zpožděním nelže
 
 ---
 
-## Nativní závislosti, které čekají na jednu instalaci
+## Nativní dávka: nainstalovaná 30. 10. 2026
 
-**Proč se čeká.** Každý nativní balíček posune otisk (`runtimeVersion`
+**Proč se čekalo.** Každý nativní balíček posune otisk (`runtimeVersion`
 z fingerprintu), a tím přestanou na vydané APK dosedat aktualizace
-vzduchem. Miloš by instaloval ručně po každém. Proto se přidají najednou,
-až bude jasné, co všechno rozhraní potřebuje.
+vzduchem — Miloš by instaloval ručně po každém. Proto se přidaly najednou,
+až bylo jasné, co rozhraní potřebuje; po dokončení startu i cíle to jasné
+bylo.
 
 | Balíček | Na co | Doložení |
 | --- | --- | --- |
 | `expo-keep-awake` | aby telefon uprostřed odpočtu nezhasl | Miloš, 27. 10.: *„mobil mi nesmí usnout"* |
 | `expo-speech` | mluvená hlášení | nahrávka 21: *„abych nemusel držet … megafon"* |
 | `expo-audio` | klakson, **a zvuk i na pozadí** | tatáž věta: *„houkačku"*; Filip, 29. 10. |
+| `modules/nerusit` | *Nerušit* na dobu procedury (jen Android) | Filip, 29. 10.: *„krylo Milošovi nervy"* |
+
+**Co se k tomu postavilo.** Partitura (`app/src/lib/hlaseni.ts`) stála už
+dřív a má testy bez telefonu; nové je to, co ji přehrává
+(`app/src/lib/dirigent.ts`). Zvuky klaksonu jsou v `app/assets/zvuky/`:
+základ 520 Hz s harmonickými, krátký 1 s a dlouhý 4 s. Délky „krátce"
+a „dlouze" ZPJ v sekundách neurčuje — je to volba podle toho, jak se
+troubí na vodě, ne citace pravidla.
+
+**Hlas má přepínač a ten se musí ozvat.** Panel startu má řádek *Hlásí
+a troubí / Mlčí*, volba se pamatuje mezi spuštěními, a při zapnutí appka
+krátce zatroubí a řekne *„Dirigent hlásí"* — rozhodčí tím zjistí, jestli
+z kapsy něco uslyší a jak nahlas. Hlásí se **jen tomu, kdo velí**;
+obrazovku regaty čte i závodník a divák.
+
+**Jedna věc, která se postavila jinak, než zněla v plánu.** Hlášení
+a troubení v témže okamžiku se nedají přehrát přes sebe — klakson by
+hlášení přehlušil. Věta proto jde až po doznění zvuku. Vyšlo to z testu,
+který odhalil, že původní podoba vracela z jednoho okamžiku jen jednu
+věc, takže by se při běžném tiku **buď netroubilo, nebo nemluvilo**.
 
 ### Appka houká s Milošem, ne místo něj
 
@@ -156,13 +179,18 @@ Rozpadá se to na tři věci a každá má jiné řešení:
 | --- | --- | --- |
 | hovor, přepnutí appky | `setInterval` stojí | **hotovo** — čas se nepočítá přičítáním, ale pokaždé znovu z hodin, a návrat z pozadí překreslí hned (`AppState`) |
 | zhasnutý displej | po probuzení totéž | totéž; navíc `expo-keep-awake`, aby k tomu nedošlo |
-| appka na pozadí | zvuk nezazní | **nevyřešené** — chce `UIBackgroundModes: audio` a zvukovou relaci, která přežije hovor |
+| appka na pozadí | zvuk nezazní | **hotovo** — `UIBackgroundModes: audio` z config pluginu `expo-audio`, na Androidu přehrávací služba a zámek (bez něj systém po ~3 minutách ztiší) |
 
 **Co z toho plyne pro zvuk.** Hlášení a troubení na pozadí není totéž co
 přehrát zvuk: iOS zvukovou relaci při hovoru přeruší a appce ji musí
-vrátit, jinak klakson po hovoru mlčí. Je to nativní nastavení, ne kód —
-patří k balíčkům výš a vyzkouší se až na telefonu, protože simulátor
-hovor neumí.
+vrátit, jinak klakson po hovoru mlčí.
+
+**Jak je to vyřešené, a proč takhle.** `expo-audio` událost o přerušení
+nevydává — v jeho typech na to žádný posluchač není. Appka proto na konec
+hovoru nečeká: **relaci si vyžádá znovu před každým znamením**
+(`probudRelaci` v `dirigent.ts`). Partitura hraje aspoň každou minutu,
+takže se po zavěšení naváže sama. Vyzkoušet to jde jen na telefonu;
+simulátor hovor neumí.
 
 ### Co se stane, když Milošovi uprostřed procedury zavolá manželka
 
@@ -203,7 +231,7 @@ jde.
 
 | | Jde to? | Čím |
 | --- | --- | --- |
-| **Android** (Miloš) | **ano** | `NotificationManager.setInterruptionFilter` s oprávněním `ACCESS_NOTIFICATION_POLICY`; uživatel ho jednou povolí v nastavení |
+| **Android** (Miloš) | **ano, postaveno 30. 10.** | `NotificationManager.setInterruptionFilter` s oprávněním `ACCESS_NOTIFICATION_POLICY`; uživatel ho jednou povolí v nastavení, a panel startu mu to nabídne |
 | **iPhone** (Filip) | **ne** | Focus je systémové nastavení, které aplikace nepřepíná; privátní URL do Nastavení Apple zamítá |
 
 **Kdy má klid platit.** Od <b>minuty před zahájením procedury</b> do
@@ -227,12 +255,27 @@ aplikace zapni Nerušit, při zavření vypni*. Nastaví si ji uživatel sám,
 jednou, a pak funguje bez appky. Appka na ni může odkázat, udělat ji za
 něj nemůže.
 
-**Co to obnáší na Androidu.** `expo-notifications` v závislostech je, ale
-tohle neumí — je o přijímání upozornění, ne o režimu telefonu. Chce to
-vlastní nativní modul nebo config plugin, tedy další nativní závislost
-do fronty výš. A chce to rozmyslet dvě věci, které se snadno zapomenou:
-**vrátit režim zpátky** po skončení procedury (i když appka spadne), a co
-dělat, když oprávnění uživatel nedá — procedura kvůli tomu nesmí stát.
+**Co to obnášelo na Androidu.** `expo-notifications` v závislostech je, ale
+tohle neumí — je o přijímání upozornění, ne o režimu telefonu. Musel na to
+vzniknout vlastní nativní modul: `app/modules/nerusit`, Kotlin, autolinkem
+nalezený jako lokální modul (výchozí `./modules`).
+
+Obě věci, které se u toho snadno zapomenou, jsou v něm vyřešené:
+
+- **Režim se vrátí, i když appka spadne.** Předchozí nastavení se ukládá
+  do `SharedPreferences` a modul ho vrací při každém svém vytvoření, tedy
+  i po pádu nebo po vypnutí appky uprostřed procedury. Běžná cesta —
+  vypnutí na konci okna — je jen ta první ze dvou.
+- **Bez oprávnění se nic nezastaví.** Všechno vrací `false`, nic
+  nevyhazuje; a panel na startu nabídne řádek *Povolit „Nerušit"*, který
+  otevře nastavení systému. Povolit to za uživatele nesmí nikdo.
+
+Zapíná se **Nerušit s prioritou**, ne úplné ticho: úplné ticho vypne
+i budík a o tom, co je pro rozhodčího naléhavé, aplikace rozhodovat nemá.
+
+**Co na tom není ověřené.** Kotlin se zkompiluje v buildu APK, ale že se
+režim na Milošově telefonu doopravdy přepne a vrátí, neví nikdo — tady
+není Android. Je to první věc, na kterou se u příští instalace podívat.
 
 Partitura, kterou ty dva poslední balíčky budou přehrávat, je už
 postavená a otestovaná: `app/src/lib/hlaseni.ts`.
