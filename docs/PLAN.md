@@ -8809,8 +8809,11 @@ barev pozná dřív, než se postaví čtyři obrazy.
 
 ### Co hlídá první: hodnoty, které existují dvakrát
 
-Appka drží v `app/src/constants/theme.ts` vlastní kopii devíti barev webu.
-Dosud to držel komentář *„zdroj je `web/app/globals.css`; když se změní tam,
+Appka drží v `app/src/constants/theme.ts` vlastní kopii části barev webu —
+**15 k 31. 10. 2026**, a to číslo roste (28. 10. jich bylo devět, pak přibyly
+barvy startovní procedury). Čísla v tomhle oddílu jsou proto u data a
+**aktuální stav říká výstup skriptu, ne tenhle odstavec**; první zápis je
+zastaral za tři dny. Dosud to držel komentář *„zdroj je `web/app/globals.css`; když se změní tam,
 patří změnit i tady"* — tedy pravidlo bez kontroly.
 
 Kontrola **čte skutečné hodnoty z obou souborů** a porovnává je; žádný
@@ -8829,9 +8832,16 @@ Tmavé kontexty se čtou **jako kaskáda**, ne jako samostatný seznam: do obou
 se nejdřív nakopíruje světlý blok. Bez toho by `--na-pozoru`, který se
 v tmavých blocích schválně nepřebíjí, v tmavém kontextu chyběl.
 
-Dnes to porovná **27 hodnot** a sedí. Čtyři barevné tokeny má jen web
-(`--pozor`, `--pozor-pismo`, `--srafa`, `--na-pozoru`) a kontrola to vypíše
-jako poznámku, ne jako chybu — appka je nemá a nemusí.
+K 31. 10. 2026 to porovná **45 hodnot** (15 barev: `light` jednou, `dark`
+proti oběma tmavým blokům) a sedí. **Čtrnáct** barevných tokenů má jen web
+(oranžová ve třech odrudách, šrafa, ikony úkonů, stavy sad, běžící hlas)
+a kontrola to vypíše jako poznámku, ne jako chybu — appka je nemá a nemusí.
+
+**Obě sady appky musí mít tytéž klíče**, a to je pravidlo, které sem přišlo
+až po sabotáži (viz níž). `theme.ts` si ho u sebe slibuje komentářem, ale
+nic ho nevynucovalo: typ `Barvy` se odvozuje jen ze světlé sady, takže
+barva ubraná v té tmavé projde i typovou kontrolou a je za běhu `undefined`
+— **jen v tmavém vzhledu**, tedy tam, kde si toho nikdo nevšimne.
 
 ### Co hlídá druhá: kontrast spočítaný z tokenů
 
@@ -8849,15 +8859,20 @@ text, text na oranžové výplni přes `--barva-stavu`). U každého doplněnéh
 páru se ověřuje, že oba tokeny v CSS pořád jsou — jinak by ho přejmenování
 tiše vyřadilo z měření.
 
-Počítá se ve **všech třech blocích**, a v každém je **13 neprůhledných
-barev** (`--pozadi`, `--papir`, `--text`, `--tlumeny`, `--linka`, `--voda`,
-`--zvyrazneni`, `--stav-vypsany`, `--stav-zruseny`, `--pozor`,
-`--pozor-pismo`, `--srafa`, `--na-pozoru`). Dalších pět tokenů barvu nese
-s alfou (`--obrys-hlasi`, `--obrys-dlouho`, `--plocha-hlasi` a dva stíny)
-a do kontrastu nejdou: poměr nad průhlednou vrstvou záleží na tom, co je
-pod ní, a to z tokenu nevyčteš. Dnes to je **48 párů** a všechny jsou
+Počítá se ve **všech třech blocích**, a v každém je k 31. 10. 2026
+**29 neprůhledných barev** (28. 10. jich bylo třináct). Dalších pět tokenů
+nese barvu s alfou (`--obrys-hlasi`, `--obrys-dlouho`, `--plocha-hlasi`
+a dva stíny) a do kontrastu nejdou: poměr nad průhlednou vrstvou záleží na
+tom, co je pod ní, a to z tokenu nevyčteš. Párů je **48** a všechny jsou
 nad mezí; nejblíž je oranžové písmo na pozadí stránky se **4,96:1**, tedy
-desetiprocentní rezerva. Kontrola tedy není formalita — příští úprava
+desetiprocentní rezerva.
+
+Že barev přibylo šestnáct a párů ani jeden, je **vlastní mez té kontroly**:
+páry se odvozují z pravidel, která mají `color` i plné `background`
+pohromadě, a nové barvy takhle zapsané nejsou — ikony úkonů jsou výplň SVG,
+stavy sad leží na průhledném `color-mix`. Kontrola tedy neroste s paletou
+sama a při přibrání barvy je potřeba se podívat, jestli se nějaký pár
+nepřidal. Kontrola tedy není formalita — příští úprava
 oranžové ji sejme.
 
 **Mez téhle kontroly, a je napsaná i ve výstupu:** seznam párů je
@@ -8874,7 +8889,8 @@ se na to myslelo, ne doklad, že to komukoliv funguje.
 Tohle je u obojího ta podstatná část, protože v téhle rodině repozitářů je
 opakovaná chyba **kontrola, která měří nástroj místo světa**
 (`platform/docs/POUCENI.md`, poučení 53, 55, 56, 61, 68). Dokazuje se to
-sabotáží, ne přečtením kódu. Odjeto 28. 10. 2026, pět scénářů:
+sabotáží, ne přečtením kódu. Odjeto 28. 10. 2026 (pět scénářů) a znovu
+28. a 31. 10. (ubírání, viz druhá tabulka):
 
 | Sabotáž | Výsledek |
 |---|---|
@@ -8883,6 +8899,27 @@ sabotáží, ne přečtením kódu. Odjeto 28. 10. 2026, pět scénářů:
 | `--tlumeny` ve světlém zesvětlený | spadne, tři páry s čísly (3,16 · 3,03 · 2,78) a jmény; po vrácení projde |
 | `globals.css` bez barevných tokenů | **kód 2** a u všech šesti doplněných párů „nemá v CSS oporu" |
 | `--voda` změněná jen v media bloku | ohlásí rozchod obou tmavých bloků |
+
+**Pak se ukázalo, že pět scénářů nestačilo.** Všechny měnily hodnotu nebo
+mazaly vstup celý; mezi „všechno" a „nic" je ale **„o jednu méně"**, a tam
+měla kontrola díru: smazání jedné barvy z appky prošlo se zelenou. Příčina
+je ve **směru smyčky** — jde od appky k webu, takže na klíč, který v appce
+není, se nikdo nezeptá a rozdíl se vypíše jako nevinná poznámka „appka je
+nemá a nemusí". Opraveno 28. 10. pravidlem o shodě klíčů obou sad.
+
+| Sabotáž ubráním | Výsledek (ověřeno 31. 10. 2026 na čisté kopii `main`) |
+|---|---|
+| `dark.linka` smazaná | spadne: „appka má light.linka, ale v sadě dark ta barva chybí" |
+| celá tmavá sada smazaná | spadne: „appka má jen sadu light — druhá se nenašla" |
+| `linka` smazaná z **obou** sad | **projde se zelenou** — a je to vědomé, viz níž |
+
+Ten třetí případ zůstává kontrole 1 skrytý schválně, protože ho **chytá
+typová kontrola**: klíč zmizí z typu `Barvy` a appka přestane kompilovat.
+Změřeno 31. 10. 2026 na smazané `linka` — `npx tsc --noEmit` v `app/` jde
+z **nuly chyb na 21** a všech 21 je `Property 'linka' does not exist on
+type 'Barvy'`. CI to pouští v jobu `appka`, takže do skriptu to patřit
+nemusí. (Commit, který díru opravoval, uvedl 7 → 16; to číslo bylo z jiného
+stavu stromu, na čistém `main` je výchozí počet chyb nula.)
 
 Návratové kódy jsou proto tři: 0 projde, 1 rozchod nebo podkročený kontrast,
 **2 nemá co měřit**. Ten třetí je tu schválně — bez něj by se kontrola dala
@@ -8897,6 +8934,13 @@ nechytí jediný rozchod, nehlídá nic a patří zrušit — ne nechat běžet 
 pocit. Je to tu napsané proto, aby to za rok nebyl odhad: **první běh je
 28. 10. 2026**, takže ten rok končí **28. 10. 2027**, a do té doby stačí
 jeden skutečný nález od každé z nich.
+
+**Kontrola 1 svůj nález má, a hned první den:** sabotáž ubráním ji přistihla,
+jak mlčí, a vynutila pravidlo o shodě klíčů. Není to rozchod barev v provozu,
+takže kritérium z rozhodnutí tím splněné není — ale je to doklad, že ta
+kontrola na něco sahá. **Kontrola 2 nemá nic** a má to těžší: aby spadla,
+musel by někdo posunout barvu na jednom ze 48 párů, a nejblíž mezi je
+4,96:1. Jestli do 28. 10. 2027 nespadne, je otázka na ni, ne na paletu.
 ## Z oponentury rozhodčího: fáze 3 (28. 10. 2026)
 
 Startovní procedura a startovní tresty. **Mění chování, proto sem**;
