@@ -143,6 +143,11 @@ tools/fake-api.py             mock ročník jako API, pro vývoj webu bez datab�
                               identita podle tokenu a osobní cesty /ja/*
                               (jména a pravidla v README, oddíl Web)
 tools/gen-mock.py             vyrábí ten mock; skutečná fakta o ročníku patří sem
+tools/stroj.sh                postaví vývojový stroj od nuly (Debian/Ubuntu):
+                              docker, .NET, node, tailscale, claude, code-server.
+                              Ten stroj se smí zahodit — proto je recept tady
+                              a ne v hlavě. Přesune se do platformy, až ho
+                              bude potřebovat druhý projekt.
 ```
 
 **Typy klientů se negenerují ručně.** `packages/api-client/generuj.sh` stáhne
