@@ -13,7 +13,7 @@ a co obětuje.
 | 3 | kontrola terčů v CI | **zapojena** vedle kontroly tokenů |
 | 4 | proužky fází na jantarovém panelu | **postaveno**, viz níž |
 | 5 | rozhraní závodníka | návrh |
-| 6 | systémový proužek se spojením | návrh |
+| 6 | systémový proužek se spojením | **postaveno**, `lib/tracker/prouzek.ts` + test |
 | 7 | rozcestník do tří pásů | návrh |
 
 Plátno s obrazovkami: **Appka závodníka — návrh**
@@ -285,6 +285,10 @@ rozdíl proti panelu rozhodčího, a schválně: posádce by jantarová řekla
 
 ## Systémový proužek: spojení, a na každé obrazovce
 
+**Postaveno 7. 11. 2026.** Pravidlo je `app/src/lib/tracker/prouzek.ts`
+s jedenácti testy bez telefonu, kreslení `components/prouzek-spojeni.tsx`,
+zapojení v `app/_layout.tsx`.
+
 Filip, 6. 11. 2026, a je to jeho nápad, ne můj: spojení patří **úplně
 nahoru, do systémového proužku** — pod hodiny a baterii. (Napřed jsem to
 pochopil tak, že se má podle dat barvit pruh stavu, a přebarvil ho; to
@@ -302,7 +306,19 @@ na vodě, slyší od komise.
 | **Vysílá se** | zapisuje a odeslalo do minuty | `jede` | server má všechno |
 | **Drží se v telefonu** | zapisuje, neodeslalo | `vystraha` | bez signálu, body čekají — **není to ztráta** |
 | **Nenahrává se** | nezapisuje vůbec | `stavZruseny` | **jediný stav, který se musí řešit** |
-| *(žádný proužek)* | nic se nezaznamenává | — | není co hlásit |
+| **Bez klíče k lodi** | zapisuje, ale nemá kam | `stavZruseny` | jde vyřešit u kapitána |
+| **Sledování pozastaveno** | posádka ho vypnula | `zvyrazneni` | záměr, ne porucha |
+| *(žádný proužek)* | žádný otevřený záznam | — | není co hlásit |
+
+**Dva stavy navíc oproti návrhu, a oba z kódu.** *Bez klíče* je zvlášť,
+protože je to jediná ze tří potíží s odesíláním, kterou posádka vyřeší
+sama. *Pozastaveno* je zvlášť, protože zapomenutá pauza je přesně ta
+chyba, kterou by jinak nikdo nezahlédl — a červená by na ni byla lež.
+
+**Pořadí podmínek je pořadí naléhavosti.** Když nechodí poloha, je jedno,
+jak je na tom odesílání; mrtvá GPS proto přebíjí i potíž s klíčem. Má to
+vlastní test, protože je to přesně ten druh pravidla, který se při příští
+úpravě obrátí.
 
 **Rozlišit druhý stav od třetího je to podstatné:** v jednom nemá posádka
 dělat nic a v druhém musí. Jedna červená pro obojí by ji hnala řešit
@@ -319,10 +335,24 @@ i odesílání už appka počítá (`svetloGps`, `stavOdesilani`
 v `tracker/stav.ts`) a rozcestník je dnes čte každé tři vteřiny — zdroj
 tedy existuje, chybí jen to místo nahoře.
 
-**Co to obnáší.** Na Androidu i na iPhonu se barevné pozadí systémové
-lišty dělá tak, že si ji appka podloží vlastním pásem o výšce horního
-bezpečného okraje; `expo-status-bar` k tomu přepne světlost písma hodin.
-Není to nativní závislost navíc, takže to Miloše nestojí instalaci.
+**Jak je to udělané.** Appka si systémovou lištu podloží vlastním pásem
+o výšce horního bezpečného okraje, takže hodiny a baterie sedí na barvě
+a je to jeden pruh, ne linka pod lištou. Psát se dá až pod ně — střed
+horního okraje zabírá na novějších iPhonech výřez. Světlost hodin se řídí
+**výplní proužku**, ne režimem telefonu: `pismoNaVyplni` vybere písmo
+a `expo-status-bar` podle jeho jasu přepne lištu. Nativní závislost to
+nepřidává, takže to Miloše nestojí instalaci.
+
+**Pod proužkem je mezera 3 px** (Filip, 7. 11. 2026: *„jen bych to od stavu
+oddělil malinko"*). Bez ní splyne se vším, co má pod sebou tutéž barvu —
+a *„vysílá se"* nad jedoucí rozjížďkou je přesně ten případ, obojí zelené.
+
+**Co na tom není ověřené.** Proužek si bere horní bezpečný okraj a leží nad
+navigací. iOS i Android počítají bezpečnou oblast podle skutečné polohy
+pohledu, takže hlavička pod ním už žádný okraj přičítat nemá — ale
+`headerStatusBarHeight`, kterým by se to dalo vynutit, tahle verze navigace
+nezná. **Jestli pod proužkem nevznikne prázdný pruh, se u stolu nezjistí**;
+je to první věc na podívání při příští instalaci.
 
 ### Kde to leží a kdy se to ukáže
 

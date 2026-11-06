@@ -25,6 +25,10 @@ echo "== Písmo na barevné výplni =="
 "${NODE[@]}" ./kontrast.test.ts
 
 echo
+echo "== Proužek spojení =="
+"${NODE[@]}" ./prouzek.test.ts
+
+echo
 echo "== Kdo zapíná aplikaci =="
 "${NODE[@]}" ./role.test.ts
 
