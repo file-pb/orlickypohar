@@ -4,7 +4,6 @@ import { Image, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { Kebab } from '@/components/kebab';
 import { Karta } from '@/components/ui';
-import { Vodocet } from '@/components/vodocet';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
 import { nactiJa, nactiZavod, type ZavodDetail } from '@/lib/api';
@@ -21,9 +20,12 @@ import { otevrenyZaznam, type Zaznam } from '@/lib/tracker/zaznam';
  * *„ten rozcestník tam máme jen abychom simulovali regatu"* a *„na
  * rozcestník zatím jen vodočet a logo … to bude takový landing."*
  *
- * Takže: nahoře logo, pod ním hladina Orlíku — první věc, na kterou se
- * u vody kouká každý. Pod tím <b>co teď</b>, když nějaké je: rozhodčí
+ * Takže: nahoře logo a pod ním <b>co teď</b>, když nějaké je: rozhodčí
  * velení, posádka běžící sledování. Všechno ostatní je pod třemi tečkami.
+ *
+ * <b>Vodočet tu byl a není</b> (Filip, 7. 11. 2026: *„ten vodočet v apce
+ * je blbost, to vyhoď"*). Hladina je věc webu; v appce by to byl údaj,
+ * kvůli kterému nikdo appku nezapne.
  *
  * <b>Co sem teprve přijde.</b> Na soutěžní den stavová obrazovka
  * závodníka, mimo něj kalendář (Filip: *„ale teď ne"*).
@@ -146,8 +148,6 @@ export default function Domu() {
         </View>
         <Kebab />
       </View>
-
-      <Vodocet obnovSignal={signal} />
 
       <Velení ja={ja ?? null} />
       <Sledovani />

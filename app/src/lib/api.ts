@@ -5,8 +5,11 @@
 import type { components } from "./schema";
 import { token } from './identita';
 import { tajemstvi } from './klic';
+import { API, sit } from './sit';
+import { ukazkaBezi } from './ukazka';
 
-const API = process.env.EXPO_PUBLIC_API_URL ?? 'https://orlickypohar-api.klihovka.cz';
+/** V ukázce se nikdo nepřihlašuje, a přesto musí projít i cesty za sebe. */
+const klicNeboUkazka = async () => (ukazkaBezi() ? 'ukazka' : await token());
 
 // Typy nejsou psané rukou — generuje je `packages/api-client/generuj.sh`
 // z OpenAPI dokumentu API do `schema.d.ts`. Tady se jen pojmenují, aby se
@@ -38,7 +41,7 @@ export type CilZTrasovaniOdpoved = S["CilZTrasovaniDto"];
 
 /** Vrací null u 404 — nepublikovaný ročník se chová, jako by neexistoval. */
 export async function nacti<T>(cesta: string): Promise<T | null> {
-  const odpoved = await fetch(`${API}${cesta}`, { headers: { accept: 'application/json' } });
+  const odpoved = await sit(cesta, { headers: { accept: 'application/json' } });
 
   if (odpoved.status === 404) return null;
   if (!odpoved.ok) throw new Error(`API ${cesta} vrátilo ${odpoved.status}`);
@@ -60,10 +63,10 @@ export const nactiZavod = (serie: string, zavod: string) =>
  * vědět, kdy vyprší.
  */
 export async function nactiZaSebe<T>(cesta: string): Promise<T | null> {
-  const t = await token();
+  const t = await klicNeboUkazka();
   if (!t) return null;
 
-  const odpoved = await fetch(`${API}${cesta}`, {
+  const odpoved = await sit(cesta, {
     headers: { accept: 'application/json', authorization: `Bearer ${t}` },
   });
 
@@ -117,10 +120,10 @@ export async function posliZaSebe<T>(
   /** `PUT` u sad, které se přepisují celé — jinak `POST`. */
   metoda: 'POST' | 'PUT' = 'POST',
 ): Promise<T | null> {
-  const t = await token();
+  const t = await klicNeboUkazka();
   if (!t) return null;
 
-  const odpoved = await fetch(`${API}${cesta}`, {
+  const odpoved = await sit(cesta, {
     method: metoda,
     headers: {
       accept: 'application/json',
@@ -334,7 +337,7 @@ export async function posliKlicemPodrobne<T>(
   const k = await tajemstvi();
   if (!k) return { stav: 'bez-klice' };
 
-  const odpoved = await fetch(`${API}${cesta}`, {
+  const odpoved = await sit(cesta, {
     method: 'POST',
     headers: {
       accept: 'application/json',
@@ -399,10 +402,10 @@ async function posliBezOdpovedi(
   metoda: 'POST' | 'DELETE',
   telo?: unknown,
 ): Promise<boolean> {
-  const t = await token();
+  const t = await klicNeboUkazka();
   if (!t) return false;
 
-  const odpoved = await fetch(`${API}${cesta}`, {
+  const odpoved = await sit(cesta, {
     method: metoda,
     headers: {
       accept: 'application/json',

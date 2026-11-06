@@ -1,0 +1,182 @@
+/**
+ * Ukázkový režim: nesmí sáhnout ven a musí ukázat něco živého.
+ *
+ * <b>Proč na to je test.</b> Celý ten režim stojí na jediném slibu —
+ * *„nechci mu to pouštět na serveru po telefonu"*. Slib, u kterého není
+ * vidět, čím se pozná, že je porušený, je komentář. Test proto jede přes
+ * čtení i zápis a nakonec se podívá, že v appce nezůstalo místo, které
+ * sahá na síť mimo jediný šev.
+ */
+import assert from 'node:assert/strict';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import {
+  ukazkaBezi,
+  ukazkaOdpovez,
+  vypniUkazku,
+  zapniUkazku,
+} from '../src/lib/ukazka.ts';
+
+let prosly = 0;
+function zkus(nazev: string, f: () => void | Promise<void>) {
+  try {
+    const v = f();
+    if (v instanceof Promise) throw new Error('test musí být synchronní');
+    prosly += 1;
+    console.log('  ok   ' + nazev);
+  } catch (e) {
+    console.log('  CHYBA ' + nazev + ': ' + (e as Error).message);
+    process.exitCode = 1;
+  }
+}
+
+async function odpoved(cesta: string, init?: { method?: string; body?: string }) {
+  const o = await ukazkaOdpovez(cesta, init);
+  return { stav: o.status, telo: (await o.json()) as any };
+}
+
+// --- přepínač ----------------------------------------------------------
+
+zkus('vypnutá ukázka neběží', () => {
+  vypniUkazku();
+  assert.equal(ukazkaBezi(), false);
+});
+
+zkus('zapnutá běží a vypnutá zase ne', () => {
+  zapniUkazku();
+  assert.equal(ukazkaBezi(), true);
+  vypniUkazku();
+  assert.equal(ukazkaBezi(), false);
+});
+
+// --- čtení -------------------------------------------------------------
+
+const testyAsync: [string, () => Promise<void>][] = [
+  ['ročníky se čtou ze snímku', async () => {
+    zapniUkazku();
+    const { stav, telo } = await odpoved('/serie');
+    assert.equal(stav, 200);
+    assert.ok(Array.isArray(telo) && telo.length > 0, 'žádný ročník');
+  }],
+
+  ['v ukázce je někdo, kdo velí', async () => {
+    zapniUkazku();
+    const { telo } = await odpoved('/ja');
+    const veli = (telo.opravneni ?? []).filter((o: any) => o.zavod);
+    assert.ok(veli.length > 0, 'nikdo nikde nevelí — ukázka by neukázala start');
+  }],
+
+  ['neznámá cesta vrací 404, ne vymyšlenou odpověď', async () => {
+    zapniUkazku();
+    assert.equal((await odpoved('/takova-cesta-neni')).stav, 404);
+  }],
+
+  ['klíč k lodi se v ukázce tváří jako nevydaný', async () => {
+    zapniUkazku();
+    assert.equal((await odpoved('/klice/sledovani', { method: 'POST', body: '{}' })).stav, 401);
+    assert.equal((await odpoved('/zarizeni', { method: 'POST', body: '{}' })).stav, 401);
+  }],
+
+  ['vypnutá ukázka neodpovídá', async () => {
+    vypniUkazku();
+    assert.equal((await odpoved('/serie')).stav, 503);
+  }],
+
+  // --- zápis mění snímek v paměti -------------------------------------
+
+  ['ohlášení rozjížďky přibude a dostane další číslo', async () => {
+    zapniUkazku();
+    const cesta = '/sprava/serie/2026-nanecisto/vysledky/izolepa/rozjizdky';
+    const pred = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo.rozjizdky.length;
+    const { telo } = await odpoved(cesta, { method: 'POST', body: '{}' });
+    const po = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo.rozjizdky;
+    assert.equal(po.length, pred + 1);
+    assert.equal(po[po.length - 1].cislo, telo.cislo);
+  }],
+
+  ['spuštěná procedura nastaví čas startu podle délky procedury', async () => {
+    zapniUkazku();
+    const z = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo;
+    const cislo = z.rozjizdky[0].cislo;
+    const zapsanoV = '2027-05-15T09:00:00.000Z';
+    await odpoved(
+      `/sprava/serie/2026-nanecisto/vysledky/izolepa/rozjizdky/${cislo}/procedura`,
+      { method: 'POST', body: JSON.stringify({ druh: 'Spustit', zapsanoV }) },
+    );
+    const po = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo;
+    const r = po.rozjizdky.find((x: any) => x.cislo === cislo);
+    const cekany = Date.parse(zapsanoV) + (z.delkaProceduryMin ?? 5) * 60_000;
+    assert.equal(Date.parse(r.startV), cekany);
+  }],
+
+  ['odvolání čas startu zahodí', async () => {
+    zapniUkazku();
+    const cislo = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo.rozjizdky[0].cislo;
+    await odpoved(`/sprava/serie/2026-nanecisto/vysledky/izolepa/rozjizdky/${cislo}/procedura`,
+      { method: 'POST', body: JSON.stringify({ druh: 'Odvolat' }) });
+    const r = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo
+      .rozjizdky.find((x: any) => x.cislo === cislo);
+    assert.equal(r.startV, null);
+  }],
+
+  ['nová ukázka začíná znovu, ne tam, kde skončila ta minulá', async () => {
+    zapniUkazku();
+    const cesta = '/sprava/serie/2026-nanecisto/vysledky/izolepa/rozjizdky';
+    const pred = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo.rozjizdky.length;
+    await odpoved(cesta, { method: 'POST', body: '{}' });
+    zapniUkazku();
+    const po = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo.rozjizdky.length;
+    assert.equal(po, pred);
+  }],
+
+  ['cílová obrazovka dostane zápis složený z detailu', async () => {
+    zapniUkazku();
+    const cislo = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo.rozjizdky[0].cislo;
+    const { stav, telo } = await odpoved(
+      `/sprava/serie/2026-nanecisto/vysledky/izolepa/rozjizdky/${cislo}`,
+    );
+    assert.equal(stav, 200);
+    assert.ok(telo.lode.length > 0, 'zápis bez lodí');
+    assert.ok(telo.lode.every((l: any) => typeof l.prihlaskaId === 'number'));
+  }],
+];
+
+// --- a nakonec: nesahá appka na síť mimo šev? --------------------------
+
+function soubory(korenr: string): string[] {
+  return readdirSync(korenr).flatMap((j) => {
+    const c = join(korenr, j);
+    if (statSync(c).isDirectory()) return soubory(c);
+    return c.endsWith('.ts') || c.endsWith('.tsx') ? [c] : [];
+  });
+}
+
+zkus('fetch je jen v `lib/sit.ts` a v přihlašování', () => {
+  // Ukázka slibuje, že se na server nejde vůbec. Ten slib drží jediný šev;
+  // nový `fetch` jinde by ho tiše prorazil, a nepoznalo by se to, dokud by
+  // někomu na vodě neodešla data z ukázky.
+  const povolene = ['src/lib/sit.ts', 'src/lib/identita.ts'];
+  // Cesta od souboru s testem, ne od adresáře, ze kterého se spustil.
+  const koren = fileURLToPath(new URL('../src', import.meta.url));
+  const hrisnici = soubory(koren)
+    .filter((c) => /\bfetch\s*\(/.test(readFileSync(c, 'utf8')))
+    .map((c) => c.replace(/\\/g, '/'))
+    .filter((c) => !povolene.some((p) => c.endsWith(p)));
+  assert.deepEqual(hrisnici, [], `fetch mimo šev: ${hrisnici.join(', ')}`);
+});
+
+void (async () => {
+  for (const [nazev, f] of testyAsync) {
+    try {
+      await f();
+      prosly += 1;
+      console.log('  ok   ' + nazev);
+    } catch (e) {
+      console.log('  CHYBA ' + nazev + ': ' + (e as Error).message);
+      process.exitCode = 1;
+    }
+  }
+  console.log(`  ${prosly} prošlo`);
+})();

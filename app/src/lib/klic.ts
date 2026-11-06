@@ -16,6 +16,8 @@
  */
 import * as SecureStore from 'expo-secure-store';
 
+import { sit } from './sit';
+
 const KLIC = 'op_klic_lodi';
 const KLIC_LOD = 'op_klic_lod';
 const KLIC_LOD_NAZEV = 'op_klic_lod_nazev';
@@ -77,7 +79,7 @@ export type Uplatneni = { klic: string; lodId: number; lodNazev: string; jmeno: 
  * <b>Jediný endpoint bez přihlášení</b> — pozvánka sama je tím oprávněním.
  */
 export async function uplatni(kod: string): Promise<Klic | null> {
-  const odpoved = await fetch(`${API}/klice/uplatnit`, {
+  const odpoved = await sit('/klice/uplatnit', {
     method: 'POST',
     headers: { accept: 'application/json', 'content-type': 'application/json' },
     body: JSON.stringify({ kod: kod.trim() }),
@@ -110,7 +112,7 @@ export async function sledovani(): Promise<boolean | null> {
   const tajne = await tajemstvi();
   if (!tajne) return null;
 
-  const odpoved = await fetch(`${API}/klice/sledovani`, {
+  const odpoved = await sit('/klice/sledovani', {
     headers: { accept: 'application/json', 'x-klic-lodi': tajne },
   });
   if (!odpoved.ok) return null;
@@ -132,7 +134,7 @@ export async function nastavSledovani(sleduje: boolean): Promise<boolean | null>
   const tajne = await tajemstvi();
   if (!tajne) return null;
 
-  const odpoved = await fetch(`${API}/klice/sledovani`, {
+  const odpoved = await sit('/klice/sledovani', {
     method: 'POST',
     headers: {
       accept: 'application/json',

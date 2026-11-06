@@ -14,6 +14,16 @@ export function resolve(spec, ctx, next) {
   if (NAHRADY.has(spec)) {
     return { url: new URL(`${spec}.mjs`, KOREN).href, shortCircuit: true };
   }
+  // Metro importuje JSON prostým `import x from './x.json'`; Node na to
+  // chce atribut. Doplní se tady, aby ho appka nemusela mít v kódu —
+  // s atributem by si zase neporadil Metro.
+  if (spec.endsWith('.json') && ctx.parentURL) {
+    return {
+      url: new URL(spec, ctx.parentURL).href,
+      importAttributes: { type: 'json' },
+      shortCircuit: true,
+    };
+  }
   if (spec.startsWith('.') && !/\.[cm]?[jt]s$/.test(spec) && ctx.parentURL) {
     const kandidat = new URL(`${spec}.ts`, ctx.parentURL);
     if (existsSync(fileURLToPath(kandidat))) {

@@ -29,8 +29,9 @@ echo "== Proužek spojení =="
 "${NODE[@]}" ./prouzek.test.ts
 
 echo
-echo "== Vodočet =="
-"${NODE[@]}" ./vodocet.test.ts
+echo "== Ukázkový režim =="
+"${NODE[@]}" ./ukazka.test.ts
+
 
 echo
 echo "== Kdo zapíná aplikaci =="

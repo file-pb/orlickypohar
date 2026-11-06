@@ -1,0 +1,187 @@
+/**
+ * Ukázkový režim: appka bez serveru.
+ *
+ * <b>Proč.</b> Filip, 7. 11. 2026: *„když si to bude někdo chtít
+ * prohlídnout, tam mu to nechci pouštět na serveru po telefonu a musíme
+ * mít nějaký demo mód."* Z možností, jak to udělat, splní tu větu
+ * doopravdy jen přibalený snímek — v ukázce appka <b>na síť nesáhne
+ * vůbec</b>, ani kdyby byla online.
+ *
+ * <b>Data se nevymýšlejí.</b> `ukazka/snimek.json` pořizuje
+ * `app/scripts/ukazka.py` z mocku (`tools/fake-api.py`), tedy z týchž
+ * dat, na kterých se zkouší web. Ručně psaný snímek by se tvarem rozešel
+ * se schématem a poznalo by se to, až by v appce zůstalo prázdno.
+ *
+ * <b>Zápisy se nezahazují, mění snímek v paměti.</b> Kdyby se jen
+ * spolkly, ukázka by po klepnutí na *Ohlásit rozjížďku* neudělala nic
+ * a vypadala by rozbitě. Mění se jen kopie v paměti; po vypnutí režimu
+ * se zahodí a soubor zůstává, jaký byl.
+ *
+ * <b>Režim se nepamatuje mezi spuštěními.</b> Zapnout ho jde jen klepnutím
+ * v nabídce; po zabití appky je zase pryč. Je to pojistka proti tomu
+ * nejhoršímu, co tahle věc umí — aby někdo u vody startoval rozjížďku
+ * v ukázce a čekal, že se to stalo.
+ *
+ * Pravidla jsou oddělená od vykreslování a mají testy bez telefonu
+ * (`app/testy/ukazka.test.ts`).
+ */
+
+import snimek from '../ukazka/snimek.json';
+import type { components } from './schema';
+
+type S = components['schemas'];
+
+/** Co z odpovědi appka potřebuje. `Response` tomu vyhovuje tvarem. */
+export type OdpovedSite = {
+  status: number;
+  ok: boolean;
+  json: () => Promise<unknown>;
+  /** Některá volání čtou tělo jako text (chybová hláška od serveru). */
+  text: () => Promise<string>;
+};
+
+/** Snímek rozbalený do paměti; `null`, dokud režim neběží. */
+let stav: Record<string, unknown> | null = null;
+
+export function ukazkaBezi(): boolean {
+  return stav !== null;
+}
+
+export function zapniUkazku(): void {
+  // Pokaždé čerstvá kopie: druhá ukázka nemá začínat tam, kde skončila
+  // ta první.
+  stav = JSON.parse(JSON.stringify(snimek)) as Record<string, unknown>;
+}
+
+export function vypniUkazku(): void {
+  stav = null;
+}
+
+const odpoved = (status: number, telo: unknown = null): OdpovedSite => ({
+  status,
+  ok: status >= 200 && status < 300,
+  json: () => Promise.resolve(telo),
+  text: () => Promise.resolve(telo === null ? '' : JSON.stringify(telo)),
+});
+
+/** Cesta bez dotazu — snímek je klíčovaný cestou, ne celou adresou. */
+const bezDotazu = (cesta: string) => cesta.split('?')[0];
+
+/**
+ * Regata, do které cesta míří. Zápisy chodí přes správu
+ * (`/sprava/serie/{s}/vysledky/{z}/…`), ale měnit se musí to, co appka
+ * čte veřejně — jinak by se obrazovka po uložení překreslila do starého.
+ */
+function regata(cesta: string): S['ZavodDetailDto'] | null {
+  const m = /^\/sprava\/serie\/([^/]+)\/vysledky\/([^/]+)\//.exec(cesta);
+  if (!m || !stav) return null;
+  return (stav[`/serie/${m[1]}/zavody/${m[2]}`] as S['ZavodDetailDto'] | undefined) ?? null;
+}
+
+/** Lodě na startovní listině, očíslované — snímek `prihlaskaId` nenese. */
+function listina(z: S['ZavodDetailDto']): S['ZapisLodDto'][] {
+  return z.lode
+    .filter((l) => !l.vyloucena && l.potvrzena !== false)
+    .map((l, i) => ({
+      prihlaskaId: i + 1,
+      lod: l.lod,
+      cisloPlachty: null,
+      kategorie: l.kategorie,
+      poradiVCili: null,
+      kod: null,
+      casSekundy: null,
+      naRegate: true,
+    }));
+}
+
+/** Rozepsaný zápis cílové obrazovky, složený z veřejného detailu. */
+function zapis(z: S['ZavodDetailDto'], cislo: number): unknown {
+  const r = z.rozjizdky.find((x) => x.cislo === cislo);
+  return {
+    serie: '',
+    serieNazev: '',
+    zavod: z.slug,
+    zavodNazev: z.nazev,
+    stavZavodu: z.stav,
+    cislo,
+    stavVysledku: 'Koncept',
+    duvodRevize: null,
+    smiZapisovat: true,
+    procNelze: null,
+    lode: listina(z),
+    startV: r?.startV ?? null,
+    doSerie: r?.doSerie ?? true,
+    smiPapir: false,
+    revize: 1,
+  };
+}
+
+/**
+ * Odpověď ukázky. Čtení bere ze snímku, zápis ho mění.
+ *
+ * <b>Neznámá cesta vrací 404, ne prázdno.</b> Appka 404 umí (nepublikovaný
+ * ročník se chová, jako by nebyl) a prázdná obrazovka je čitelnější než
+ * vymyšlená odpověď, která by v ukázce tvrdila něco, co v ní není.
+ */
+export function ukazkaOdpovez(cesta: string, init?: { method?: string; body?: string }): Promise<OdpovedSite> {
+  if (!stav) return Promise.resolve(odpoved(503));
+
+  const c = bezDotazu(cesta);
+  const metoda = (init?.method ?? 'GET').toUpperCase();
+  const telo = init?.body ? (JSON.parse(init.body) as Record<string, unknown>) : {};
+
+  // Klíč k lodi ani registrace zařízení v ukázce nedávají smysl: prohlíží
+  // si ji pořadatel bez vlastní lodi a upozornění by chodila z ukázky.
+  // Odpovídá se jako bez klíče, ne chybou — appka ten stav umí.
+  if (c.startsWith('/klice/') || c === '/zarizeni') return Promise.resolve(odpoved(401));
+
+  if (metoda === 'GET') {
+    if (c in stav) return Promise.resolve(odpoved(200, stav[c]));
+    // Rozepsaný zápis se v snímku nedrží — skládá se z veřejného detailu,
+    // aby ukázka uměla i cíl.
+    const mz = /\/rozjizdky\/(\d+)$/.exec(c);
+    const z = regata(c);
+    if (mz && z) return Promise.resolve(odpoved(200, zapis(z, Number(mz[1]))));
+    return Promise.resolve(odpoved(404));
+  }
+
+  const z = regata(c);
+  if (!z) return Promise.resolve(odpoved(200, {}));
+
+  // Ohlášení rozjížďky: číslo určuje server, tady tedy ukázka.
+  if (/\/rozjizdky$/.test(c)) {
+    const cislo = Math.max(0, ...z.rozjizdky.map((r) => r.cislo)) + 1;
+    const nova = { cislo, startV: null, stav: 'Planovana', doSerie: true, vysledky: [] };
+    z.rozjizdky.push(nova as S['RozjizdkaDto']);
+    return Promise.resolve(odpoved(200, nova));
+  }
+
+  const mr = /\/rozjizdky\/(\d+)(\/[a-z-]+)?$/.exec(c);
+  const r = mr ? z.rozjizdky.find((x) => x.cislo === Number(mr[1])) : undefined;
+  if (!mr || !r) return Promise.resolve(odpoved(200, {}));
+
+  switch (mr[2]) {
+    case '/procedura': {
+      // Čas startu počítá server z okamžiku stisku a délky procedury
+      // (ZPJ 26). Ukázka to dělá stejně, jinak by odpočet začal jinde,
+      // než kam ho panel nakreslí.
+      const zapsanoV = typeof telo.zapsanoV === 'string' ? Date.parse(telo.zapsanoV) : Date.now();
+      const delka = (z.delkaProceduryMin ?? 5) * 60_000;
+      r.startV = telo.druh === 'Spustit' ? new Date(zapsanoV + delka).toISOString() : null;
+      break;
+    }
+    case '/start':
+      r.stav = 'Probiha';
+      if (typeof telo.startV === 'string') r.startV = telo.startV;
+      break;
+    case '/konec':
+      r.stav = 'Dokoncena';
+      break;
+    case '/vysledky':
+      return Promise.resolve(odpoved(200, { ...(zapis(z, r.cislo) as object), revize: 2 }));
+    default:
+      break;
+  }
+
+  return Promise.resolve(odpoved(200, {}));
+}

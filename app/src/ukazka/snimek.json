@@ -1,0 +1,9233 @@
+{
+ "/ja": {
+  "email": "milos@priklad.cz",
+  "id": "01927f4e-0000-7000-8000-000000000004",
+  "opravneni": [
+   {
+    "role": "Organizator",
+    "serie": "2026-nanecisto",
+    "zavod": "izolepa"
+   }
+  ],
+  "web": [],
+  "zobrazovane": "Miloš Zvonař"
+ },
+ "/ja/lode": [],
+ "/serie": [
+  {
+   "nazev": "Orlický pohár 2026 (nanečisto)",
+   "pocetZavodu": 8,
+   "rok": 2026,
+   "slug": "2026-nanecisto"
+  }
+ ],
+ "/serie/2026-nanecisto": {
+  "akce": [],
+  "kategorie": [
+   {
+    "nazev": "Race",
+    "poradi": 1
+   },
+   {
+    "nazev": "Nad7m",
+    "poradi": 2
+   },
+   {
+    "nazev": "Pod7m",
+    "poradi": 3
+   }
+  ],
+  "nazev": "Orlický pohár 2026 (nanečisto)",
+  "prihlasky": [
+   {
+    "cisloPlachty": "CZE 430",
+    "kategorie": "Pod7m",
+    "lod": "LUNA",
+    "majitel": "Jan Novák",
+    "typLodi": "Pirát"
+   },
+   {
+    "cisloPlachty": "CZE 204",
+    "kategorie": "Pod7m",
+    "lod": "SENDY",
+    "majitel": "Petr Svoboda",
+    "typLodi": "Laser"
+   },
+   {
+    "cisloPlachty": "CZE 457",
+    "kategorie": "Pod7m",
+    "lod": "JOY",
+    "majitel": "Martin Dvořák",
+    "typLodi": "Vaurien"
+   },
+   {
+    "cisloPlachty": "CZE 947",
+    "kategorie": "Pod7m",
+    "lod": "Andante",
+    "majitel": "Tomáš Černý",
+    "typLodi": "Star"
+   },
+   {
+    "cisloPlachty": "CZE 268",
+    "kategorie": "Pod7m",
+    "lod": "Varianta",
+    "majitel": "Jakub Procházka",
+    "typLodi": "Finn"
+   },
+   {
+    "cisloPlachty": "CZE 274",
+    "kategorie": "Pod7m",
+    "lod": "Charlotte III",
+    "majitel": "Lucie Kučera",
+    "typLodi": "Beneteau First"
+   },
+   {
+    "cisloPlachty": "CZE 195",
+    "kategorie": "Nad7m",
+    "lod": "PEZI",
+    "majitel": "Eva Veselý",
+    "typLodi": "Dyas"
+   },
+   {
+    "cisloPlachty": "CZE 222",
+    "kategorie": "Nad7m",
+    "lod": "MAMBA",
+    "majitel": "Michal Horák",
+    "typLodi": "Beneteau First"
+   },
+   {
+    "cisloPlachty": "CZE 576",
+    "kategorie": "Nad7m",
+    "lod": "M1",
+    "majitel": "Ondřej Němec",
+    "typLodi": "Laser"
+   },
+   {
+    "cisloPlachty": "CZE 568",
+    "kategorie": "Nad7m",
+    "lod": "DEPRESSO",
+    "majitel": "Pavel Marek",
+    "typLodi": "Fireball"
+   },
+   {
+    "cisloPlachty": "CZE 926",
+    "kategorie": "Nad7m",
+    "lod": "CASSIOPEIA",
+    "majitel": "Kateřina Pokorný",
+    "typLodi": "Beneteau First"
+   },
+   {
+    "cisloPlachty": "CZE 886",
+    "kategorie": "Nad7m",
+    "lod": "SULA",
+    "majitel": "Jiří Král",
+    "typLodi": "Pirát"
+   },
+   {
+    "cisloPlachty": "CZE 193",
+    "kategorie": "Nad7m",
+    "lod": "NABLB",
+    "majitel": "Zdeněk Beneš",
+    "typLodi": "Pirát"
+   },
+   {
+    "cisloPlachty": "CZE 503",
+    "kategorie": "Nad7m",
+    "lod": "FILOZEP",
+    "majitel": "Markéta Fiala",
+    "typLodi": "Pirát"
+   },
+   {
+    "cisloPlachty": "CZE 601",
+    "kategorie": "Nad7m",
+    "lod": "SPRUNZEL",
+    "majitel": "Radek Sedláček",
+    "typLodi": "Dyas"
+   },
+   {
+    "cisloPlachty": "CZE 452",
+    "kategorie": "Nad7m",
+    "lod": "THEA",
+    "majitel": "Hana Urban",
+    "typLodi": "Fireball"
+   },
+   {
+    "cisloPlachty": "CZE 955",
+    "kategorie": "Nad7m",
+    "lod": "MICHELLE",
+    "majitel": "Vojtěch Kolář",
+    "typLodi": "Pirát"
+   },
+   {
+    "cisloPlachty": "CZE 294",
+    "kategorie": "Nad7m",
+    "lod": "DIVNA",
+    "majitel": "Lukáš Ryba",
+    "typLodi": "Laser"
+   },
+   {
+    "cisloPlachty": "CZE 138",
+    "kategorie": "Nad7m",
+    "lod": "FAMILY LADY",
+    "majitel": "Alena Vaněk",
+    "typLodi": "Vaurien"
+   },
+   {
+    "cisloPlachty": "CZE 474",
+    "kategorie": "Nad7m",
+    "lod": "M@rtina",
+    "majitel": "Marek Bláha",
+    "typLodi": "Fireball"
+   },
+   {
+    "cisloPlachty": "CZE 513",
+    "kategorie": "Nad7m",
+    "lod": "ROSE",
+    "majitel": "Tereza Hájek",
+    "typLodi": "Fireball"
+   },
+   {
+    "cisloPlachty": "CZE 515",
+    "kategorie": "Nad7m",
+    "lod": "MICINY",
+    "majitel": "Ivan Kříž",
+    "typLodi": "Beneteau First"
+   },
+   {
+    "cisloPlachty": "CZE 426",
+    "kategorie": "Nad7m",
+    "lod": "AVENIR",
+    "majitel": "Dana Jelínek",
+    "typLodi": "Fireball"
+   },
+   {
+    "cisloPlachty": "CZE 948",
+    "kategorie": "Nad7m",
+    "lod": "HOGAN",
+    "majitel": "Filip Malý",
+    "typLodi": "Pirát"
+   },
+   {
+    "cisloPlachty": "CZE 266",
+    "kategorie": "Nad7m",
+    "lod": "LIBERTÉ",
+    "majitel": "Roman Šimek",
+    "typLodi": "Pirát"
+   },
+   {
+    "cisloPlachty": "CZE 979",
+    "kategorie": "Nad7m",
+    "lod": "Rio",
+    "majitel": "Jana Konečný",
+    "typLodi": "Beneteau First"
+   },
+   {
+    "cisloPlachty": "CZE 244",
+    "kategorie": "Nad7m",
+    "lod": "Claudie",
+    "majitel": "Karel Vlček",
+    "typLodi": "Vaurien"
+   },
+   {
+    "cisloPlachty": "CZE 117",
+    "kategorie": "Nad7m",
+    "lod": "Mabye",
+    "majitel": "Věra Sýkora",
+    "typLodi": "Fireball"
+   },
+   {
+    "cisloPlachty": "CZE 385",
+    "kategorie": "Nad7m",
+    "lod": "Caprice",
+    "majitel": "Milan Zeman",
+    "typLodi": "Finn"
+   },
+   {
+    "cisloPlachty": "CZE 216",
+    "kategorie": "Nad7m",
+    "lod": "Valhalla",
+    "majitel": "Olga Kolman",
+    "typLodi": "Vaurien"
+   },
+   {
+    "cisloPlachty": "CZE 269",
+    "kategorie": "Nad7m",
+    "lod": "Perun",
+    "majitel": "Josef Bartoš",
+    "typLodi": "Vaurien"
+   },
+   {
+    "cisloPlachty": "CZE 359",
+    "kategorie": "Race",
+    "lod": "ČERVENÉ CAFE",
+    "majitel": "Šárka Doležal",
+    "typLodi": "Beneteau First"
+   },
+   {
+    "cisloPlachty": "CZE 125",
+    "kategorie": "Race",
+    "lod": "MODRÉ CAFE",
+    "majitel": "David Štěpánek",
+    "typLodi": "Fireball"
+   },
+   {
+    "cisloPlachty": "CZE 836",
+    "kategorie": "Race",
+    "lod": "SEA MOUSE III",
+    "majitel": "Blanka Havel",
+    "typLodi": "Pirát"
+   },
+   {
+    "cisloPlachty": "CZE 783",
+    "kategorie": "Race",
+    "lod": "SOCKA",
+    "majitel": "Aleš Souček",
+    "typLodi": "Star"
+   },
+   {
+    "cisloPlachty": "CZE 434",
+    "kategorie": "Race",
+    "lod": "FAR  STAR III",
+    "majitel": "Nikola Bureš",
+    "typLodi": "Vaurien"
+   },
+   {
+    "cisloPlachty": "CZE 255",
+    "kategorie": "Race",
+    "lod": "Zephyr",
+    "majitel": "Vít Toman",
+    "typLodi": "Vaurien"
+   }
+  ],
+  "rok": 2026,
+  "slug": "2026-nanecisto",
+  "zavody": [
+   {
+    "datum": "2026-04-25",
+    "datumKonce": null,
+    "nazev": "Jarní vítr",
+    "poradatel": "YC Orlík",
+    "poradi": 1,
+    "puvodniDatum": null,
+    "slug": "jarni-vitr",
+    "stav": "Odjety",
+    "typ": "dálková plavba"
+   },
+   {
+    "datum": "2026-05-09",
+    "datumKonce": null,
+    "nazev": "Radavská regata",
+    "poradatel": "LK Radava",
+    "poradi": 2,
+    "puvodniDatum": null,
+    "slug": "radavska-regata",
+    "stav": "Zruseny",
+    "typ": "okruhový"
+   },
+   {
+    "datum": "2026-05-23",
+    "datumKonce": "2026-05-24",
+    "nazev": "24hodinovka",
+    "poradatel": "YC Orlík",
+    "poradi": 3,
+    "puvodniDatum": null,
+    "slug": "24hodinovka",
+    "stav": "Odjety",
+    "typ": "24 hodin"
+   },
+   {
+    "datum": "2026-06-20",
+    "datumKonce": null,
+    "nazev": "Izolepa",
+    "poradatel": "YC Orlík",
+    "poradi": 4,
+    "puvodniDatum": null,
+    "slug": "izolepa",
+    "stav": "Odjety",
+    "typ": "Izolepa"
+   },
+   {
+    "datum": "2026-07-11",
+    "datumKonce": null,
+    "nazev": "FxCK Cancer",
+    "poradatel": "Marina Orlík",
+    "poradi": 5,
+    "puvodniDatum": null,
+    "slug": "fxck-cancer",
+    "stav": "Odjety",
+    "typ": "okruhový"
+   },
+   {
+    "datum": "2026-08-29",
+    "datumKonce": null,
+    "nazev": "Radavský pohár",
+    "poradatel": "Yacht Club Písek",
+    "poradi": 6,
+    "puvodniDatum": null,
+    "slug": "radavsky-pohar",
+    "stav": "Odjety",
+    "typ": "okruhový"
+   },
+   {
+    "datum": "2026-09-05",
+    "datumKonce": null,
+    "nazev": "O pohár Vltavy",
+    "poradatel": "Plachtič z Vltavy",
+    "poradi": 7,
+    "puvodniDatum": null,
+    "slug": "o-pohar-vltavy",
+    "stav": "Odjety",
+    "typ": "dálková plavba"
+   },
+   {
+    "datum": "2026-09-19",
+    "datumKonce": null,
+    "nazev": "Pohár Slunce",
+    "poradatel": "SK Popovice",
+    "poradi": 8,
+    "puvodniDatum": null,
+    "slug": "pohar-slunce",
+    "stav": "Odjety",
+    "typ": "maraton 8 h"
+   }
+  ]
+ },
+ "/serie/2026-nanecisto/poradi": {
+  "kategorie": [
+   {
+    "kategorie": "Race",
+    "lode": [
+     {
+      "body": 6,
+      "bodyPoSkrtu": 1,
+      "kody": [
+       "DNC",
+       null,
+       null,
+       null,
+       null,
+       null,
+       "DNC"
+      ],
+      "lod": "SEA MOUSE III",
+      "majitel": "Blanka Havel",
+      "poradi": 1,
+      "poradiPoSkrtu": 1,
+      "skrtnute": [
+       0,
+       6
+      ],
+      "skrtnuto": 5,
+      "zastavky": [
+       2,
+       -1,
+       1,
+       0,
+       1,
+       0,
+       3
+      ]
+     },
+     {
+      "body": 10,
+      "bodyPoSkrtu": 5,
+      "kody": [
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ],
+      "lod": "MODRÉ CAFE",
+      "majitel": "David Štěpánek",
+      "poradi": 2,
+      "poradiPoSkrtu": 2,
+      "skrtnute": [
+       1,
+       2
+      ],
+      "skrtnuto": 5,
+      "zastavky": [
+       1,
+       2,
+       3,
+       1,
+       2,
+       1,
+       0
+      ]
+     },
+     {
+      "body": 15,
+      "bodyPoSkrtu": 9,
+      "kody": [
+       "DNC",
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ],
+      "lod": "FAR  STAR III",
+      "majitel": "Nikola Bureš",
+      "poradi": 3,
+      "poradiPoSkrtu": 3,
+      "skrtnute": [
+       3,
+       4
+      ],
+      "skrtnuto": 6,
+      "zastavky": [
+       2,
+       1,
+       2,
+       3,
+       3,
+       2,
+       2
+      ]
+     },
+     {
+      "body": 18,
+      "bodyPoSkrtu": 10,
+      "kody": [
+       "DNC",
+       null,
+       null,
+       null,
+       "DNC",
+       null,
+       "DNC"
+      ],
+      "lod": "SOCKA",
+      "majitel": "Aleš Souček",
+      "poradi": 4,
+      "poradiPoSkrtu": 4,
+      "skrtnute": [
+       2,
+       4
+      ],
+      "skrtnuto": 8,
+      "zastavky": [
+       2,
+       0,
+       4,
+       2,
+       4,
+       3,
+       3
+      ]
+     },
+     {
+      "body": 35,
+      "bodyPoSkrtu": 11,
+      "kody": [
+       null,
+       "DSQ",
+       null,
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC"
+      ],
+      "lod": "ČERVENÉ CAFE",
+      "majitel": "Šárka Doležal",
+      "poradi": 6,
+      "poradiPoSkrtu": 5,
+      "skrtnute": [
+       1,
+       3
+      ],
+      "skrtnuto": 24,
+      "zastavky": [
+       0,
+       20,
+       0,
+       4,
+       4,
+       4,
+       3
+      ]
+     },
+     {
+      "body": 21,
+      "bodyPoSkrtu": 11,
+      "kody": [
+       "DNC",
+       "DNC",
+       null,
+       "DNC",
+       null,
+       "DNC",
+       null
+      ],
+      "lod": "Zephyr",
+      "majitel": "Vít Toman",
+      "poradi": 5,
+      "poradiPoSkrtu": 6,
+      "skrtnute": [
+       1,
+       2
+      ],
+      "skrtnuto": 10,
+      "zastavky": [
+       2,
+       5,
+       5,
+       4,
+       0,
+       4,
+       1
+      ]
+     }
+    ]
+   },
+   {
+    "kategorie": "Nad7m",
+    "lode": [
+     {
+      "body": 17,
+      "bodyPoSkrtu": 1,
+      "kody": [
+       null,
+       null,
+       "DNC",
+       null,
+       null,
+       null,
+       null
+      ],
+      "lod": "PEZI",
+      "majitel": "Eva Veselý",
+      "poradi": 2,
+      "poradiPoSkrtu": 1,
+      "skrtnute": [
+       2,
+       5
+      ],
+      "skrtnuto": 16,
+      "zastavky": [
+       0,
+       0,
+       12,
+       1,
+       0,
+       4,
+       0
+      ]
+     },
+     {
+      "body": 6,
+      "bodyPoSkrtu": 1,
+      "kody": [
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ],
+      "lod": "MAMBA",
+      "majitel": "Michal Horák",
+      "poradi": 1,
+      "poradiPoSkrtu": 2,
+      "skrtnute": [
+       2,
+       4
+      ],
+      "skrtnuto": 5,
+      "zastavky": [
+       1,
+       -1,
+       2,
+       0,
+       3,
+       0,
+       1
+      ]
+     },
+     {
+      "body": 23,
+      "bodyPoSkrtu": 10,
+      "kody": [
+       null,
+       "DNC",
+       null,
+       null,
+       null,
+       null,
+       null
+      ],
+      "lod": "DEPRESSO",
+      "majitel": "Pavel Marek",
+      "poradi": 3,
+      "poradiPoSkrtu": 3,
+      "skrtnute": [
+       1,
+       3
+      ],
+      "skrtnuto": 13,
+      "zastavky": [
+       3,
+       8,
+       1,
+       5,
+       1,
+       1,
+       4
+      ]
+     },
+     {
+      "body": 29,
+      "bodyPoSkrtu": 13,
+      "kody": [
+       "DNC",
+       "DNC",
+       null,
+       null,
+       null,
+       null,
+       null
+      ],
+      "lod": "M@rtina",
+      "majitel": "Marek Bláha",
+      "poradi": 4,
+      "poradiPoSkrtu": 4,
+      "skrtnute": [
+       0,
+       1
+      ],
+      "skrtnuto": 16,
+      "zastavky": [
+       8,
+       8,
+       3,
+       2,
+       2,
+       3,
+       3
+      ]
+     },
+     {
+      "body": 47,
+      "bodyPoSkrtu": 25,
+      "kody": [
+       "DNC",
+       "DNC",
+       null,
+       "DNC",
+       "DNC",
+       "DNC",
+       null
+      ],
+      "lod": "FAMILY LADY",
+      "majitel": "Alena Vaněk",
+      "poradi": 6,
+      "poradiPoSkrtu": 5,
+      "skrtnute": [
+       3,
+       4
+      ],
+      "skrtnuto": 22,
+      "zastavky": [
+       8,
+       8,
+       0,
+       13,
+       9,
+       7,
+       2
+      ]
+     },
+     {
+      "body": 53,
+      "bodyPoSkrtu": 28,
+      "kody": [
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC",
+       null,
+       null,
+       null
+      ],
+      "lod": "Valhalla",
+      "majitel": "Olga Kolman",
+      "poradi": 9,
+      "poradiPoSkrtu": 6,
+      "skrtnute": [
+       2,
+       3
+      ],
+      "skrtnuto": 25,
+      "zastavky": [
+       8,
+       8,
+       12,
+       13,
+       4,
+       2,
+       6
+      ]
+     },
+     {
+      "body": 46,
+      "bodyPoSkrtu": 29,
+      "kody": [
+       null,
+       "DNC",
+       null,
+       null,
+       "DNC",
+       null,
+       null
+      ],
+      "lod": "FILOZEP",
+      "majitel": "Markéta Fiala",
+      "poradi": 5,
+      "poradiPoSkrtu": 7,
+      "skrtnute": [
+       1,
+       4
+      ],
+      "skrtnuto": 17,
+      "zastavky": [
+       7,
+       8,
+       4,
+       4,
+       9,
+       6,
+       8
+      ]
+     },
+     {
+      "body": 55,
+      "bodyPoSkrtu": 30,
+      "kody": [
+       null,
+       null,
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC",
+       null
+      ],
+      "lod": "NABLB",
+      "majitel": "Zdeněk Beneš",
+      "poradi": 10,
+      "poradiPoSkrtu": 8,
+      "skrtnute": [
+       2,
+       3
+      ],
+      "skrtnuto": 25,
+      "zastavky": [
+       6,
+       3,
+       12,
+       13,
+       9,
+       7,
+       5
+      ]
+     },
+     {
+      "body": 52,
+      "bodyPoSkrtu": 31,
+      "kody": [
+       "DNC",
+       "DNC",
+       null,
+       null,
+       null,
+       "DNC",
+       "DNC"
+      ],
+      "lod": "AVENIR",
+      "majitel": "Dana Jelínek",
+      "poradi": 8,
+      "poradiPoSkrtu": 9,
+      "skrtnute": [
+       0,
+       6
+      ],
+      "skrtnuto": 21,
+      "zastavky": [
+       8,
+       8,
+       8,
+       3,
+       5,
+       7,
+       13
+      ]
+     },
+     {
+      "body": 51,
+      "bodyPoSkrtu": 32,
+      "kody": [
+       "DNC",
+       null,
+       null,
+       null,
+       null,
+       "DNC",
+       null
+      ],
+      "lod": "MICHELLE",
+      "majitel": "Vojtěch Kolář",
+      "poradi": 7,
+      "poradiPoSkrtu": 10,
+      "skrtnute": [
+       0,
+       6
+      ],
+      "skrtnuto": 19,
+      "zastavky": [
+       8,
+       5,
+       6,
+       7,
+       7,
+       7,
+       11
+      ]
+     },
+     {
+      "body": 59,
+      "bodyPoSkrtu": 33,
+      "kody": [
+       null,
+       null,
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC"
+      ],
+      "lod": "CASSIOPEIA",
+      "majitel": "Kateřina Pokorný",
+      "poradi": 11,
+      "poradiPoSkrtu": 11,
+      "skrtnute": [
+       3,
+       6
+      ],
+      "skrtnuto": 26,
+      "zastavky": [
+       4,
+       1,
+       12,
+       13,
+       9,
+       7,
+       13
+      ]
+     },
+     {
+      "body": 66,
+      "bodyPoSkrtu": 34,
+      "kody": [
+       "DNC",
+       null,
+       "DNC",
+       null,
+       null,
+       "DNC",
+       "DSQ"
+      ],
+      "lod": "SPRUNZEL",
+      "majitel": "Radek Sedláček",
+      "poradi": 21,
+      "poradiPoSkrtu": 12,
+      "skrtnute": [
+       2,
+       6
+      ],
+      "skrtnuto": 32,
+      "zastavky": [
+       8,
+       2,
+       12,
+       9,
+       8,
+       7,
+       20
+      ]
+     },
+     {
+      "body": 61,
+      "bodyPoSkrtu": 36,
+      "kody": [
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC",
+       null,
+       "DNC",
+       null
+      ],
+      "lod": "Perun",
+      "majitel": "Josef Bartoš",
+      "poradi": 12,
+      "poradiPoSkrtu": 13,
+      "skrtnute": [
+       2,
+       3
+      ],
+      "skrtnuto": 25,
+      "zastavky": [
+       8,
+       8,
+       12,
+       13,
+       6,
+       7,
+       7
+      ]
+     },
+     {
+      "body": 62,
+      "bodyPoSkrtu": 37,
+      "kody": [
+       "DNC",
+       null,
+       "DNC",
+       "DNC",
+       "DNC",
+       null,
+       null
+      ],
+      "lod": "DIVNA",
+      "majitel": "Lukáš Ryba",
+      "poradi": 13,
+      "poradiPoSkrtu": 14,
+      "skrtnute": [
+       2,
+       3
+      ],
+      "skrtnuto": 25,
+      "zastavky": [
+       8,
+       6,
+       12,
+       13,
+       9,
+       5,
+       9
+      ]
+     },
+     {
+      "body": 63,
+      "bodyPoSkrtu": 37,
+      "kody": [
+       "DNC",
+       "DNC",
+       null,
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC"
+      ],
+      "lod": "ROSE",
+      "majitel": "Tereza Hájek",
+      "poradi": 15,
+      "poradiPoSkrtu": 15,
+      "skrtnute": [
+       3,
+       6
+      ],
+      "skrtnuto": 26,
+      "zastavky": [
+       8,
+       8,
+       5,
+       13,
+       9,
+       7,
+       13
+      ]
+     },
+     {
+      "body": 64,
+      "bodyPoSkrtu": 38,
+      "kody": [
+       null,
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC"
+      ],
+      "lod": "M1",
+      "majitel": "Ondřej Němec",
+      "poradi": 17,
+      "poradiPoSkrtu": 16,
+      "skrtnute": [
+       3,
+       6
+      ],
+      "skrtnuto": 26,
+      "zastavky": [
+       2,
+       8,
+       12,
+       13,
+       9,
+       7,
+       13
+      ]
+     },
+     {
+      "body": 63,
+      "bodyPoSkrtu": 38,
+      "kody": [
+       "DNC",
+       null,
+       null,
+       null,
+       "DNC",
+       "DNC",
+       "DNC"
+      ],
+      "lod": "THEA",
+      "majitel": "Hana Urban",
+      "poradi": 14,
+      "poradiPoSkrtu": 17,
+      "skrtnute": [
+       3,
+       6
+      ],
+      "skrtnuto": 25,
+      "zastavky": [
+       8,
+       4,
+       10,
+       12,
+       9,
+       7,
+       13
+      ]
+     },
+     {
+      "body": 63,
+      "bodyPoSkrtu": 38,
+      "kody": [
+       "DNC",
+       "DNC",
+       "DNC",
+       null,
+       "DNC",
+       "DNC",
+       "DNC"
+      ],
+      "lod": "Rio",
+      "majitel": "Jana Konečný",
+      "poradi": 16,
+      "poradiPoSkrtu": 18,
+      "skrtnute": [
+       2,
+       6
+      ],
+      "skrtnuto": 25,
+      "zastavky": [
+       8,
+       8,
+       12,
+       6,
+       9,
+       7,
+       13
+      ]
+     },
+     {
+      "body": 65,
+      "bodyPoSkrtu": 39,
+      "kody": [
+       "DNC",
+       "DNC",
+       null,
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC"
+      ],
+      "lod": "MICINY",
+      "majitel": "Ivan Kříž",
+      "poradi": 18,
+      "poradiPoSkrtu": 19,
+      "skrtnute": [
+       3,
+       6
+      ],
+      "skrtnuto": 26,
+      "zastavky": [
+       8,
+       8,
+       7,
+       13,
+       9,
+       7,
+       13
+      ]
+     },
+     {
+      "body": 65,
+      "bodyPoSkrtu": 40,
+      "kody": [
+       "DNC",
+       "DNC",
+       "DNC",
+       null,
+       "DNC",
+       "DNC",
+       "DNC"
+      ],
+      "lod": "Claudie",
+      "majitel": "Karel Vlček",
+      "poradi": 19,
+      "poradiPoSkrtu": 20,
+      "skrtnute": [
+       2,
+       6
+      ],
+      "skrtnuto": 25,
+      "zastavky": [
+       8,
+       8,
+       12,
+       8,
+       9,
+       7,
+       13
+      ]
+     },
+     {
+      "body": 67,
+      "bodyPoSkrtu": 41,
+      "kody": [
+       null,
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC"
+      ],
+      "lod": "SULA",
+      "majitel": "Jiří Král",
+      "poradi": 22,
+      "poradiPoSkrtu": 21,
+      "skrtnute": [
+       3,
+       6
+      ],
+      "skrtnuto": 26,
+      "zastavky": [
+       5,
+       8,
+       12,
+       13,
+       9,
+       7,
+       13
+      ]
+     },
+     {
+      "body": 67,
+      "bodyPoSkrtu": 41,
+      "kody": [
+       "DNC",
+       "DNC",
+       null,
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC"
+      ],
+      "lod": "HOGAN",
+      "majitel": "Filip Malý",
+      "poradi": 23,
+      "poradiPoSkrtu": 22,
+      "skrtnute": [
+       3,
+       6
+      ],
+      "skrtnuto": 26,
+      "zastavky": [
+       8,
+       8,
+       9,
+       13,
+       9,
+       7,
+       13
+      ]
+     },
+     {
+      "body": 65,
+      "bodyPoSkrtu": 42,
+      "kody": [
+       "DNC",
+       "DNC",
+       "DNC",
+       null,
+       "DNC",
+       "DNC",
+       null
+      ],
+      "lod": "Caprice",
+      "majitel": "Milan Zeman",
+      "poradi": 20,
+      "poradiPoSkrtu": 23,
+      "skrtnute": [
+       2,
+       3
+      ],
+      "skrtnuto": 23,
+      "zastavky": [
+       8,
+       8,
+       12,
+       11,
+       9,
+       7,
+       10
+      ]
+     },
+     {
+      "body": 67,
+      "bodyPoSkrtu": 42,
+      "kody": [
+       "DNC",
+       "DNC",
+       "DNC",
+       null,
+       "DNC",
+       "DNC",
+       "DNC"
+      ],
+      "lod": "Mabye",
+      "majitel": "Věra Sýkora",
+      "poradi": 24,
+      "poradiPoSkrtu": 24,
+      "skrtnute": [
+       2,
+       6
+      ],
+      "skrtnuto": 25,
+      "zastavky": [
+       8,
+       8,
+       12,
+       10,
+       9,
+       7,
+       13
+      ]
+     },
+     {
+      "body": 69,
+      "bodyPoSkrtu": 43,
+      "kody": [
+       "DNC",
+       "DNC",
+       null,
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC"
+      ],
+      "lod": "LIBERTÉ",
+      "majitel": "Roman Šimek",
+      "poradi": 25,
+      "poradiPoSkrtu": 25,
+      "skrtnute": [
+       3,
+       6
+      ],
+      "skrtnuto": 26,
+      "zastavky": [
+       8,
+       8,
+       11,
+       13,
+       9,
+       7,
+       13
+      ]
+     }
+    ]
+   },
+   {
+    "kategorie": "Pod7m",
+    "lode": [
+     {
+      "body": 0,
+      "bodyPoSkrtu": -1,
+      "kody": [
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ],
+      "lod": "LUNA",
+      "majitel": "Jan Novák",
+      "poradi": 1,
+      "poradiPoSkrtu": 1,
+      "skrtnute": [
+       0,
+       4
+      ],
+      "skrtnuto": 1,
+      "zastavky": [
+       0,
+       -1,
+       0,
+       0,
+       1,
+       0,
+       0
+      ]
+     },
+     {
+      "body": 9,
+      "bodyPoSkrtu": 5,
+      "kody": [
+       "DNC",
+       null,
+       null,
+       "DNC",
+       null,
+       null,
+       null
+      ],
+      "lod": "SENDY",
+      "majitel": "Petr Svoboda",
+      "poradi": 2,
+      "poradiPoSkrtu": 2,
+      "skrtnute": [
+       2,
+       3
+      ],
+      "skrtnuto": 4,
+      "zastavky": [
+       1,
+       0,
+       2,
+       2,
+       2,
+       1,
+       1
+      ]
+     },
+     {
+      "body": 14,
+      "bodyPoSkrtu": 7,
+      "kody": [
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC",
+       null,
+       "DNC",
+       "DNC"
+      ],
+      "lod": "Charlotte III",
+      "majitel": "Lucie Kučera",
+      "poradi": 4,
+      "poradiPoSkrtu": 3,
+      "skrtnute": [
+       1,
+       2
+      ],
+      "skrtnuto": 7,
+      "zastavky": [
+       1,
+       3,
+       4,
+       2,
+       0,
+       2,
+       2
+      ]
+     },
+     {
+      "body": 12,
+      "bodyPoSkrtu": 7,
+      "kody": [
+       "DNC",
+       null,
+       null,
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC"
+      ],
+      "lod": "JOY",
+      "majitel": "Martin Dvořák",
+      "poradi": 3,
+      "poradiPoSkrtu": 4,
+      "skrtnute": [
+       3,
+       4
+      ],
+      "skrtnuto": 5,
+      "zastavky": [
+       1,
+       1,
+       1,
+       2,
+       3,
+       2,
+       2
+      ]
+     },
+     {
+      "body": 16,
+      "bodyPoSkrtu": 9,
+      "kody": [
+       "DNC",
+       "DNC",
+       "DNC",
+       null,
+       "DNC",
+       "DNC",
+       "DNC"
+      ],
+      "lod": "Varianta",
+      "majitel": "Jakub Procházka",
+      "poradi": 5,
+      "poradiPoSkrtu": 5,
+      "skrtnute": [
+       1,
+       2
+      ],
+      "skrtnuto": 7,
+      "zastavky": [
+       1,
+       3,
+       4,
+       1,
+       3,
+       2,
+       2
+      ]
+     },
+     {
+      "body": 16,
+      "bodyPoSkrtu": 10,
+      "kody": [
+       "DNC",
+       "DNC",
+       null,
+       "DNC",
+       "DNC",
+       "DNC",
+       "DNC"
+      ],
+      "lod": "Andante",
+      "majitel": "Tomáš Černý",
+      "poradi": 6,
+      "poradiPoSkrtu": 6,
+      "skrtnute": [
+       1,
+       2
+      ],
+      "skrtnuto": 6,
+      "zastavky": [
+       1,
+       3,
+       3,
+       2,
+       3,
+       2,
+       2
+      ]
+     }
+    ]
+   }
+  ],
+  "nazev": "Orlický pohár 2026 (nanečisto)",
+  "rok": 2026,
+  "slug": "2026-nanecisto",
+  "zastavky": [
+   {
+    "datum": "2026-04-25",
+    "nazev": "Jarní vítr",
+    "poradi": 1,
+    "slug": "jarni-vitr"
+   },
+   {
+    "datum": "2026-05-23",
+    "nazev": "24hodinovka",
+    "poradi": 3,
+    "slug": "24hodinovka"
+   },
+   {
+    "datum": "2026-06-20",
+    "nazev": "Izolepa",
+    "poradi": 4,
+    "slug": "izolepa"
+   },
+   {
+    "datum": "2026-07-11",
+    "nazev": "FxCK Cancer",
+    "poradi": 5,
+    "slug": "fxck-cancer"
+   },
+   {
+    "datum": "2026-08-29",
+    "nazev": "Radavský pohár",
+    "poradi": 6,
+    "slug": "radavsky-pohar"
+   },
+   {
+    "datum": "2026-09-05",
+    "nazev": "O pohár Vltavy",
+    "poradi": 7,
+    "slug": "o-pohar-vltavy"
+   },
+   {
+    "datum": "2026-09-19",
+    "nazev": "Pohár Slunce",
+    "poradi": 8,
+    "slug": "pohar-slunce"
+   }
+  ]
+ },
+ "/serie/2026-nanecisto/zavody/24hodinovka": {
+  "datum": "2026-05-23",
+  "datumKonce": "2026-05-24",
+  "druh": "Pohar",
+  "koeficientDoSerie": 1.0,
+  "lode": [
+   {
+    "baterie": [
+     34,
+     96
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Josef Bartoš",
+    "lod": "FAR  STAR III",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "David Štěpánek",
+    "lod": "MODRÉ CAFE",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Hana Urban",
+    "lod": "SEA MOUSE III",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Aleš Souček",
+    "lod": "SOCKA",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Šárka Doležal",
+    "lod": "ČERVENÉ CAFE",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Kateřina Pokorný",
+    "lod": "CASSIOPEIA",
+    "potvrzena": true,
+    "telefonu": 0,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     34,
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Lukáš Ryba",
+    "lod": "DIVNA",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null,
+     58
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Michal Horák",
+    "lod": "MAMBA",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12,
+     77
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Vojtěch Kolář",
+    "lod": "MICHELLE",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Zdeněk Beneš",
+    "lod": "NABLB",
+    "potvrzena": true,
+    "telefonu": 0,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     34,
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Eva Veselý",
+    "lod": "PEZI",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Radek Sedláček",
+    "lod": "SPRUNZEL",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     77
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Hana Urban",
+    "lod": "THEA",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     34
+    ],
+    "kategorie": "Pod7m",
+    "kormidelnik": "Martin Dvořák",
+    "lod": "JOY",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null
+    ],
+    "kategorie": "Pod7m",
+    "kormidelnik": "Jan Novák",
+    "lod": "LUNA",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Pod7m",
+    "kormidelnik": "Petr Svoboda",
+    "lod": "SENDY",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   }
+  ],
+  "medailonek": {
+   "adresa": null,
+   "delka": null,
+   "email": null,
+   "kontaktniOsoba": null,
+   "nazev": "YC Orlík",
+   "obrazek": null,
+   "popis": null,
+   "sirka": null,
+   "slug": "yc-orlik",
+   "telefon": null,
+   "web": null
+  },
+  "nazev": "24hodinovka",
+  "oknoDo": null,
+  "pocetSkrtu": 0,
+  "poradatel": "YC Orlík",
+  "poradi": [
+   {
+    "body": 1,
+    "kategorie": "Race",
+    "lod": "SEA MOUSE III",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 2,
+    "kategorie": "Race",
+    "lod": "SOCKA",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 3,
+    "kategorie": "Race",
+    "lod": "FAR  STAR III",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 4,
+    "kategorie": "Race",
+    "lod": "MODRÉ CAFE",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 6,
+    "kategorie": "Race",
+    "lod": "ČERVENÉ CAFE",
+    "poradi": 5,
+    "rozjizdky": [
+     {
+      "body": 6,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 1,
+    "kategorie": "Nad7m",
+    "lod": "MAMBA",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 2,
+    "kategorie": "Nad7m",
+    "lod": "PEZI",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 3,
+    "kategorie": "Nad7m",
+    "lod": "CASSIOPEIA",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 4,
+    "kategorie": "Nad7m",
+    "lod": "SPRUNZEL",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 5,
+    "kategorie": "Nad7m",
+    "lod": "NABLB",
+    "poradi": 5,
+    "rozjizdky": [
+     {
+      "body": 5,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 6,
+    "kategorie": "Nad7m",
+    "lod": "THEA",
+    "poradi": 6,
+    "rozjizdky": [
+     {
+      "body": 6,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 7,
+    "kategorie": "Nad7m",
+    "lod": "MICHELLE",
+    "poradi": 7,
+    "rozjizdky": [
+     {
+      "body": 7,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 8,
+    "kategorie": "Nad7m",
+    "lod": "DIVNA",
+    "poradi": 8,
+    "rozjizdky": [
+     {
+      "body": 8,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 1,
+    "kategorie": "Pod7m",
+    "lod": "LUNA",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 2,
+    "kategorie": "Pod7m",
+    "lod": "SENDY",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 3,
+    "kategorie": "Pod7m",
+    "lod": "JOY",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   }
+  ],
+  "poradiCelkem": [
+   {
+    "body": 1,
+    "kategorie": "Pod7m",
+    "lod": "LUNA",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 2,
+    "kategorie": "Nad7m",
+    "lod": "MAMBA",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 3,
+    "kategorie": "Race",
+    "lod": "SEA MOUSE III",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 4,
+    "kategorie": "Pod7m",
+    "lod": "SENDY",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 5,
+    "kategorie": "Nad7m",
+    "lod": "PEZI",
+    "poradi": 5,
+    "rozjizdky": [
+     {
+      "body": 5,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 6,
+    "kategorie": "Race",
+    "lod": "SOCKA",
+    "poradi": 6,
+    "rozjizdky": [
+     {
+      "body": 6,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 7,
+    "kategorie": "Pod7m",
+    "lod": "JOY",
+    "poradi": 7,
+    "rozjizdky": [
+     {
+      "body": 7,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 8,
+    "kategorie": "Nad7m",
+    "lod": "CASSIOPEIA",
+    "poradi": 8,
+    "rozjizdky": [
+     {
+      "body": 8,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 9,
+    "kategorie": "Race",
+    "lod": "FAR  STAR III",
+    "poradi": 9,
+    "rozjizdky": [
+     {
+      "body": 9,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 10,
+    "kategorie": "Nad7m",
+    "lod": "SPRUNZEL",
+    "poradi": 10,
+    "rozjizdky": [
+     {
+      "body": 10,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 11,
+    "kategorie": "Race",
+    "lod": "MODRÉ CAFE",
+    "poradi": 11,
+    "rozjizdky": [
+     {
+      "body": 11,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 12,
+    "kategorie": "Nad7m",
+    "lod": "NABLB",
+    "poradi": 12,
+    "rozjizdky": [
+     {
+      "body": 12,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 13,
+    "kategorie": "Nad7m",
+    "lod": "THEA",
+    "poradi": 13,
+    "rozjizdky": [
+     {
+      "body": 13,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 14,
+    "kategorie": "Nad7m",
+    "lod": "MICHELLE",
+    "poradi": 14,
+    "rozjizdky": [
+     {
+      "body": 14,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 15,
+    "kategorie": "Nad7m",
+    "lod": "DIVNA",
+    "poradi": 15,
+    "rozjizdky": [
+     {
+      "body": 15,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 17,
+    "kategorie": "Race",
+    "lod": "ČERVENÉ CAFE",
+    "poradi": 16,
+    "rozjizdky": [
+     {
+      "body": 17,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   }
+  ],
+  "procesniDej": false,
+  "puvodniDatum": null,
+  "rozjizdky": [
+   {
+    "cislo": 1,
+    "doSerie": true,
+    "startV": "2026-05-23T10:00:00+02:00",
+    "stav": "Dokoncena",
+    "stavVysledku": "Potvrzeno",
+    "vysledky": [
+     {
+      "casSekundy": 87664,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Jan Novák",
+      "lod": "LUNA",
+      "poradiVCili": 1
+     },
+     {
+      "casSekundy": 89399,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Michal Horák",
+      "lod": "MAMBA",
+      "poradiVCili": 2
+     },
+     {
+      "casSekundy": 91095,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Hana Urban",
+      "lod": "SEA MOUSE III",
+      "poradiVCili": 3
+     },
+     {
+      "casSekundy": 92911,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Petr Svoboda",
+      "lod": "SENDY",
+      "poradiVCili": 4
+     },
+     {
+      "casSekundy": 94686,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Eva Veselý",
+      "lod": "PEZI",
+      "poradiVCili": 5
+     },
+     {
+      "casSekundy": 96344,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Aleš Souček",
+      "lod": "SOCKA",
+      "poradiVCili": 6
+     },
+     {
+      "casSekundy": 98068,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Martin Dvořák",
+      "lod": "JOY",
+      "poradiVCili": 7
+     },
+     {
+      "casSekundy": 99839,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Kateřina Pokorný",
+      "lod": "CASSIOPEIA",
+      "poradiVCili": 8
+     },
+     {
+      "casSekundy": 101520,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Josef Bartoš",
+      "lod": "FAR  STAR III",
+      "poradiVCili": 9
+     },
+     {
+      "casSekundy": 103290,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Radek Sedláček",
+      "lod": "SPRUNZEL",
+      "poradiVCili": 10
+     },
+     {
+      "casSekundy": 104923,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "David Štěpánek",
+      "lod": "MODRÉ CAFE",
+      "poradiVCili": 11
+     },
+     {
+      "casSekundy": 106567,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Zdeněk Beneš",
+      "lod": "NABLB",
+      "poradiVCili": 12
+     },
+     {
+      "casSekundy": 108435,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Hana Urban",
+      "lod": "THEA",
+      "poradiVCili": 13
+     },
+     {
+      "casSekundy": 110096,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Vojtěch Kolář",
+      "lod": "MICHELLE",
+      "poradiVCili": 14
+     },
+     {
+      "casSekundy": 111769,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Lukáš Ryba",
+      "lod": "DIVNA",
+      "poradiVCili": 15
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Race",
+      "kod": "Dsq",
+      "kormidelnik": "Šárka Doležal",
+      "lod": "ČERVENÉ CAFE",
+      "poradiVCili": null
+     }
+    ]
+   }
+  ],
+  "slug": "24hodinovka",
+  "smernice": [],
+  "stav": "Odjety",
+  "typ": "24 hodin",
+  "vyhodnoceni": "Oboje"
+ },
+ "/serie/2026-nanecisto/zavody/fxck-cancer": {
+  "datum": "2026-07-11",
+  "datumKonce": null,
+  "druh": "Pohar",
+  "koeficientDoSerie": 1.0,
+  "lode": [
+   {
+    "baterie": [
+     34,
+     96
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Nikola Bureš",
+    "lod": "FAR  STAR III",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Nikola Bureš",
+    "lod": "MODRÉ CAFE",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Blanka Havel",
+    "lod": "SEA MOUSE III",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Aleš Souček",
+    "lod": "SOCKA",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     58,
+     null
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Dana Jelínek",
+    "lod": "AVENIR",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Blanka Havel",
+    "lod": "Caprice",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Karel Vlček",
+    "lod": "Claudie",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Pavel Marek",
+    "lod": "DEPRESSO",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Markéta Fiala",
+    "lod": "FILOZEP",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Marek Bláha",
+    "lod": "M@rtina",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null,
+     58
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Kateřina Pokorný",
+    "lod": "MAMBA",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12,
+     77
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Vojtěch Kolář",
+    "lod": "MICHELLE",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     77
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Věra Sýkora",
+    "lod": "Mabye",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     34,
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Eva Veselý",
+    "lod": "PEZI",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null,
+     58
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Jana Konečný",
+    "lod": "Rio",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Radek Sedláček",
+    "lod": "SPRUNZEL",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     77
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Hana Urban",
+    "lod": "THEA",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null
+    ],
+    "kategorie": "Pod7m",
+    "kormidelnik": "Jan Novák",
+    "lod": "LUNA",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [],
+    "kategorie": "Pod7m",
+    "kormidelnik": "Karel Vlček",
+    "lod": "Varianta",
+    "potvrzena": true,
+    "telefonu": 0,
+    "vyloucena": false
+   }
+  ],
+  "medailonek": {
+   "adresa": null,
+   "delka": null,
+   "email": null,
+   "kontaktniOsoba": null,
+   "nazev": "Marina Orlík",
+   "obrazek": null,
+   "popis": null,
+   "sirka": null,
+   "slug": "marina-orlik",
+   "telefon": null,
+   "web": null
+  },
+  "nazev": "FxCK Cancer",
+  "oknoDo": null,
+  "pocetSkrtu": 0,
+  "poradatel": "Marina Orlík",
+  "poradi": [
+   {
+    "body": 2,
+    "kategorie": "Race",
+    "lod": "SEA MOUSE III",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 4,
+    "kategorie": "Race",
+    "lod": "MODRÉ CAFE",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 7,
+    "kategorie": "Race",
+    "lod": "SOCKA",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 7,
+    "kategorie": "Race",
+    "lod": "FAR  STAR III",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 4,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 4,
+    "kategorie": "Nad7m",
+    "lod": "MAMBA",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 4,
+    "kategorie": "Nad7m",
+    "lod": "PEZI",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 7,
+    "kategorie": "Nad7m",
+    "lod": "M@rtina",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 5,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 9,
+    "kategorie": "Nad7m",
+    "lod": "AVENIR",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 5,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 10,
+    "kategorie": "Nad7m",
+    "lod": "FILOZEP",
+    "poradi": 5,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 8,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 10,
+    "kategorie": "Nad7m",
+    "lod": "DEPRESSO",
+    "poradi": 6,
+    "rozjizdky": [
+     {
+      "body": 6,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 4,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 13,
+    "kategorie": "Nad7m",
+    "lod": "Rio",
+    "poradi": 7,
+    "rozjizdky": [
+     {
+      "body": 7,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 6,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 15,
+    "kategorie": "Nad7m",
+    "lod": "MICHELLE",
+    "poradi": 8,
+    "rozjizdky": [
+     {
+      "body": 8,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 7,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 18,
+    "kategorie": "Nad7m",
+    "lod": "Claudie",
+    "poradi": 9,
+    "rozjizdky": [
+     {
+      "body": 9,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 9,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 21,
+    "kategorie": "Nad7m",
+    "lod": "SPRUNZEL",
+    "poradi": 10,
+    "rozjizdky": [
+     {
+      "body": 11,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 10,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 24,
+    "kategorie": "Nad7m",
+    "lod": "Mabye",
+    "poradi": 11,
+    "rozjizdky": [
+     {
+      "body": 10,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 14,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 28,
+    "kategorie": "Nad7m",
+    "lod": "Caprice",
+    "poradi": 12,
+    "rozjizdky": [
+     {
+      "body": 14,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 14,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 28,
+    "kategorie": "Nad7m",
+    "lod": "THEA",
+    "poradi": 13,
+    "rozjizdky": [
+     {
+      "body": 14,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 14,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 2,
+    "kategorie": "Pod7m",
+    "lod": "LUNA",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 4,
+    "kategorie": "Pod7m",
+    "lod": "Varianta",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   }
+  ],
+  "poradiCelkem": [
+   {
+    "body": 2,
+    "kategorie": "Race",
+    "lod": "SEA MOUSE III",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 7,
+    "kategorie": "Pod7m",
+    "lod": "LUNA",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 5,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 7,
+    "kategorie": "Nad7m",
+    "lod": "MAMBA",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 8,
+    "kategorie": "Nad7m",
+    "lod": "PEZI",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 6,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 11,
+    "kategorie": "Race",
+    "lod": "MODRÉ CAFE",
+    "poradi": 5,
+    "rozjizdky": [
+     {
+      "body": 6,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 5,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 12,
+    "kategorie": "Nad7m",
+    "lod": "M@rtina",
+    "poradi": 6,
+    "rozjizdky": [
+     {
+      "body": 8,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 4,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 16,
+    "kategorie": "Nad7m",
+    "lod": "FILOZEP",
+    "poradi": 7,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 13,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 16,
+    "kategorie": "Nad7m",
+    "lod": "DEPRESSO",
+    "poradi": 8,
+    "rozjizdky": [
+     {
+      "body": 9,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 7,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 16,
+    "kategorie": "Nad7m",
+    "lod": "AVENIR",
+    "poradi": 9,
+    "rozjizdky": [
+     {
+      "body": 7,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 9,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 21,
+    "kategorie": "Nad7m",
+    "lod": "Rio",
+    "poradi": 10,
+    "rozjizdky": [
+     {
+      "body": 11,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 10,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 21,
+    "kategorie": "Race",
+    "lod": "FAR  STAR III",
+    "poradi": 11,
+    "rozjizdky": [
+     {
+      "body": 10,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 11,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 23,
+    "kategorie": "Race",
+    "lod": "SOCKA",
+    "poradi": 12,
+    "rozjizdky": [
+     {
+      "body": 15,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 8,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 24,
+    "kategorie": "Nad7m",
+    "lod": "MICHELLE",
+    "poradi": 13,
+    "rozjizdky": [
+     {
+      "body": 12,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 12,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 27,
+    "kategorie": "Nad7m",
+    "lod": "Claudie",
+    "poradi": 14,
+    "rozjizdky": [
+     {
+      "body": 13,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 14,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 31,
+    "kategorie": "Pod7m",
+    "lod": "Varianta",
+    "poradi": 15,
+    "rozjizdky": [
+     {
+      "body": 16,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 15,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 33,
+    "kategorie": "Nad7m",
+    "lod": "SPRUNZEL",
+    "poradi": 16,
+    "rozjizdky": [
+     {
+      "body": 17,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 16,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 34,
+    "kategorie": "Nad7m",
+    "lod": "Mabye",
+    "poradi": 17,
+    "rozjizdky": [
+     {
+      "body": 14,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 20,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 40,
+    "kategorie": "Nad7m",
+    "lod": "Caprice",
+    "poradi": 18,
+    "rozjizdky": [
+     {
+      "body": 20,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 20,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 40,
+    "kategorie": "Nad7m",
+    "lod": "THEA",
+    "poradi": 19,
+    "rozjizdky": [
+     {
+      "body": 20,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 20,
+      "cislo": 2,
+      "skrtnuto": false
+     }
+    ]
+   }
+  ],
+  "procesniDej": false,
+  "puvodniDatum": null,
+  "rozjizdky": [
+   {
+    "cislo": 1,
+    "doSerie": true,
+    "startV": "2026-07-11T10:00:00+02:00",
+    "stav": "Dokoncena",
+    "stavVysledku": "Potvrzeno",
+    "vysledky": [
+     {
+      "casSekundy": null,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Blanka Havel",
+      "lod": "SEA MOUSE III",
+      "poradiVCili": 1
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Nikola Bureš",
+      "lod": "MODRÉ CAFE",
+      "poradiVCili": 6
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Aleš Souček",
+      "lod": "SOCKA",
+      "poradiVCili": 15
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Nikola Bureš",
+      "lod": "FAR  STAR III",
+      "poradiVCili": 10
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Karel Vlček",
+      "lod": "Varianta",
+      "poradiVCili": 16
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Jan Novák",
+      "lod": "LUNA",
+      "poradiVCili": 5
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Kateřina Pokorný",
+      "lod": "MAMBA",
+      "poradiVCili": 4
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Eva Veselý",
+      "lod": "PEZI",
+      "poradiVCili": 2
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Marek Bláha",
+      "lod": "M@rtina",
+      "poradiVCili": 8
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Dana Jelínek",
+      "lod": "AVENIR",
+      "poradiVCili": 7
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Markéta Fiala",
+      "lod": "FILOZEP",
+      "poradiVCili": 3
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Pavel Marek",
+      "lod": "DEPRESSO",
+      "poradiVCili": 9
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Jana Konečný",
+      "lod": "Rio",
+      "poradiVCili": 11
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Vojtěch Kolář",
+      "lod": "MICHELLE",
+      "poradiVCili": 12
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Karel Vlček",
+      "lod": "Claudie",
+      "poradiVCili": 13
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Radek Sedláček",
+      "lod": "SPRUNZEL",
+      "poradiVCili": 17
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Věra Sýkora",
+      "lod": "Mabye",
+      "poradiVCili": 14
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": "Dnf",
+      "kormidelnik": "Blanka Havel",
+      "lod": "Caprice",
+      "poradiVCili": null
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": "Dns",
+      "kormidelnik": "Hana Urban",
+      "lod": "THEA",
+      "poradiVCili": null
+     }
+    ]
+   },
+   {
+    "cislo": 2,
+    "doSerie": true,
+    "startV": "2026-07-11T12:00:00+02:00",
+    "stav": "Dokoncena",
+    "stavVysledku": "Potvrzeno",
+    "vysledky": [
+     {
+      "casSekundy": null,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Blanka Havel",
+      "lod": "SEA MOUSE III",
+      "poradiVCili": 1
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Nikola Bureš",
+      "lod": "MODRÉ CAFE",
+      "poradiVCili": 5
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Aleš Souček",
+      "lod": "SOCKA",
+      "poradiVCili": 8
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Nikola Bureš",
+      "lod": "FAR  STAR III",
+      "poradiVCili": 11
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Karel Vlček",
+      "lod": "Varianta",
+      "poradiVCili": 15
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Jan Novák",
+      "lod": "LUNA",
+      "poradiVCili": 2
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Kateřina Pokorný",
+      "lod": "MAMBA",
+      "poradiVCili": 3
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Eva Veselý",
+      "lod": "PEZI",
+      "poradiVCili": 6
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Marek Bláha",
+      "lod": "M@rtina",
+      "poradiVCili": 4
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Dana Jelínek",
+      "lod": "AVENIR",
+      "poradiVCili": 9
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Markéta Fiala",
+      "lod": "FILOZEP",
+      "poradiVCili": 13
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Pavel Marek",
+      "lod": "DEPRESSO",
+      "poradiVCili": 7
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Jana Konečný",
+      "lod": "Rio",
+      "poradiVCili": 10
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Vojtěch Kolář",
+      "lod": "MICHELLE",
+      "poradiVCili": 12
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Karel Vlček",
+      "lod": "Claudie",
+      "poradiVCili": 14
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Radek Sedláček",
+      "lod": "SPRUNZEL",
+      "poradiVCili": 16
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": "Dns",
+      "kormidelnik": "Věra Sýkora",
+      "lod": "Mabye",
+      "poradiVCili": null
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": "Dns",
+      "kormidelnik": "Blanka Havel",
+      "lod": "Caprice",
+      "poradiVCili": null
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": "Dns",
+      "kormidelnik": "Hana Urban",
+      "lod": "THEA",
+      "poradiVCili": null
+     }
+    ]
+   }
+  ],
+  "slug": "fxck-cancer",
+  "smernice": [],
+  "stav": "Odjety",
+  "typ": "okruhový",
+  "vyhodnoceni": "PoKategoriich"
+ },
+ "/serie/2026-nanecisto/zavody/izolepa": {
+  "datum": "2026-06-20",
+  "datumKonce": null,
+  "druh": "Pohar",
+  "koeficientDoSerie": 1.0,
+  "lode": [
+   {
+    "baterie": [
+     34,
+     96
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Kateřina Pokorný",
+    "lod": "FAR  STAR III",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Tomáš Černý",
+    "lod": "MODRÉ CAFE",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Blanka Havel",
+    "lod": "SEA MOUSE III",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Vojtěch Kolář",
+    "lod": "SOCKA",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     34
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Jana Konečný",
+    "lod": "Zephyr",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Šárka Doležal",
+    "lod": "ČERVENÉ CAFE",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     58,
+     null
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Dana Jelínek",
+    "lod": "AVENIR",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Pavel Marek",
+    "lod": "DEPRESSO",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Marek Bláha",
+    "lod": "FAMILY LADY",
+    "potvrzena": true,
+    "telefonu": 0,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Markéta Fiala",
+    "lod": "FILOZEP",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Hana Urban",
+    "lod": "HOGAN",
+    "potvrzena": true,
+    "telefonu": 0,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Roman Šimek",
+    "lod": "LIBERTÉ",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Marek Bláha",
+    "lod": "M@rtina",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null,
+     58
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Michal Horák",
+    "lod": "MAMBA",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12,
+     77
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Vojtěch Kolář",
+    "lod": "MICHELLE",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Ivan Kříž",
+    "lod": "MICINY",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Tereza Hájek",
+    "lod": "ROSE",
+    "potvrzena": true,
+    "telefonu": 0,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     77
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Jiří Král",
+    "lod": "THEA",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Pod7m",
+    "kormidelnik": "Tomáš Černý",
+    "lod": "Andante",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     34
+    ],
+    "kategorie": "Pod7m",
+    "kormidelnik": "Martin Dvořák",
+    "lod": "JOY",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null
+    ],
+    "kategorie": "Pod7m",
+    "kormidelnik": "Jan Novák",
+    "lod": "LUNA",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Pod7m",
+    "kormidelnik": "Petr Svoboda",
+    "lod": "SENDY",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   }
+  ],
+  "medailonek": {
+   "adresa": null,
+   "delka": null,
+   "email": null,
+   "kontaktniOsoba": null,
+   "nazev": "YC Orlík",
+   "obrazek": null,
+   "popis": null,
+   "sirka": null,
+   "slug": "yc-orlik",
+   "telefon": null,
+   "web": null
+  },
+  "nazev": "Izolepa",
+  "oknoDo": null,
+  "pocetSkrtu": 0,
+  "poradatel": "YC Orlík",
+  "poradi": [
+   {
+    "body": 8,
+    "kategorie": "Race",
+    "lod": "ČERVENÉ CAFE",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 9,
+    "kategorie": "Race",
+    "lod": "SOCKA",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 5,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 10,
+    "kategorie": "Race",
+    "lod": "FAR  STAR III",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 5,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 11,
+    "kategorie": "Race",
+    "lod": "Zephyr",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 6,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 4,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 11,
+    "kategorie": "Race",
+    "lod": "MODRÉ CAFE",
+    "poradi": 5,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 4,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 5,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 14,
+    "kategorie": "Race",
+    "lod": "SEA MOUSE III",
+    "poradi": 6,
+    "rozjizdky": [
+     {
+      "body": 6,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 6,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 12,
+    "kategorie": "Nad7m",
+    "lod": "FAMILY LADY",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 9,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 13,
+    "kategorie": "Nad7m",
+    "lod": "DEPRESSO",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 9,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 16,
+    "kategorie": "Nad7m",
+    "lod": "HOGAN",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 5,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 10,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 17,
+    "kategorie": "Nad7m",
+    "lod": "AVENIR",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 9,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 5,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 17,
+    "kategorie": "Nad7m",
+    "lod": "MICHELLE",
+    "poradi": 5,
+    "rozjizdky": [
+     {
+      "body": 6,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 7,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 4,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 19,
+    "kategorie": "Nad7m",
+    "lod": "MICINY",
+    "poradi": 6,
+    "rozjizdky": [
+     {
+      "body": 8,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 8,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 20,
+    "kategorie": "Nad7m",
+    "lod": "ROSE",
+    "poradi": 7,
+    "rozjizdky": [
+     {
+      "body": 7,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 6,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 7,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 21,
+    "kategorie": "Nad7m",
+    "lod": "MAMBA",
+    "poradi": 8,
+    "rozjizdky": [
+     {
+      "body": 10,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 8,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 21,
+    "kategorie": "Nad7m",
+    "lod": "M@rtina",
+    "poradi": 9,
+    "rozjizdky": [
+     {
+      "body": 11,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 4,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 6,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 25,
+    "kategorie": "Nad7m",
+    "lod": "LIBERTÉ",
+    "poradi": 10,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 12,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 12,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 25,
+    "kategorie": "Nad7m",
+    "lod": "THEA",
+    "poradi": 11,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 11,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 10,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 28,
+    "kategorie": "Nad7m",
+    "lod": "FILOZEP",
+    "poradi": 12,
+    "rozjizdky": [
+     {
+      "body": 12,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 5,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 11,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 5,
+    "kategorie": "Pod7m",
+    "lod": "JOY",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 7,
+    "kategorie": "Pod7m",
+    "lod": "Andante",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 4,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 8,
+    "kategorie": "Pod7m",
+    "lod": "LUNA",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 10,
+    "kategorie": "Pod7m",
+    "lod": "SENDY",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 4,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   }
+  ],
+  "poradiCelkem": [
+   {
+    "body": 20,
+    "kategorie": "Pod7m",
+    "lod": "JOY",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 4,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 15,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 22,
+    "kategorie": "Pod7m",
+    "lod": "Andante",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 10,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 9,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 23,
+    "kategorie": "Race",
+    "lod": "SOCKA",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 8,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 14,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 24,
+    "kategorie": "Race",
+    "lod": "ČERVENÉ CAFE",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 13,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 8,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 25,
+    "kategorie": "Nad7m",
+    "lod": "DEPRESSO",
+    "poradi": 5,
+    "rozjizdky": [
+     {
+      "body": 16,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 5,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 4,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 26,
+    "kategorie": "Nad7m",
+    "lod": "FAMILY LADY",
+    "poradi": 6,
+    "rozjizdky": [
+     {
+      "body": 6,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 18,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 28,
+    "kategorie": "Race",
+    "lod": "Zephyr",
+    "poradi": 7,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 16,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 10,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 28,
+    "kategorie": "Race",
+    "lod": "MODRÉ CAFE",
+    "poradi": 8,
+    "rozjizdky": [
+     {
+      "body": 5,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 12,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 11,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 32,
+    "kategorie": "Nad7m",
+    "lod": "HOGAN",
+    "poradi": 9,
+    "rozjizdky": [
+     {
+      "body": 10,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 20,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 32,
+    "kategorie": "Race",
+    "lod": "FAR  STAR III",
+    "poradi": 10,
+    "rozjizdky": [
+     {
+      "body": 20,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 9,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 33,
+    "kategorie": "Nad7m",
+    "lod": "AVENIR",
+    "poradi": 11,
+    "rozjizdky": [
+     {
+      "body": 7,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 19,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 7,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 34,
+    "kategorie": "Pod7m",
+    "lod": "LUNA",
+    "poradi": 12,
+    "rozjizdky": [
+     {
+      "body": 17,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 16,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 34,
+    "kategorie": "Nad7m",
+    "lod": "MICHELLE",
+    "poradi": 13,
+    "rozjizdky": [
+     {
+      "body": 11,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 17,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 6,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 37,
+    "kategorie": "Nad7m",
+    "lod": "MICINY",
+    "poradi": 14,
+    "rozjizdky": [
+     {
+      "body": 14,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 18,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 5,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 39,
+    "kategorie": "Pod7m",
+    "lod": "SENDY",
+    "poradi": 15,
+    "rozjizdky": [
+     {
+      "body": 15,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 7,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 17,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 40,
+    "kategorie": "Nad7m",
+    "lod": "MAMBA",
+    "poradi": 16,
+    "rozjizdky": [
+     {
+      "body": 18,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 8,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 14,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 40,
+    "kategorie": "Nad7m",
+    "lod": "ROSE",
+    "poradi": 17,
+    "rozjizdky": [
+     {
+      "body": 12,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 15,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 13,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 42,
+    "kategorie": "Nad7m",
+    "lod": "M@rtina",
+    "poradi": 18,
+    "rozjizdky": [
+     {
+      "body": 19,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 11,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 12,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 48,
+    "kategorie": "Nad7m",
+    "lod": "LIBERTÉ",
+    "poradi": 19,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 22,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 22,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 48,
+    "kategorie": "Race",
+    "lod": "SEA MOUSE III",
+    "poradi": 20,
+    "rozjizdky": [
+     {
+      "body": 22,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 6,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 20,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 49,
+    "kategorie": "Nad7m",
+    "lod": "THEA",
+    "poradi": 21,
+    "rozjizdky": [
+     {
+      "body": 9,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 21,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 19,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 55,
+    "kategorie": "Nad7m",
+    "lod": "FILOZEP",
+    "poradi": 22,
+    "rozjizdky": [
+     {
+      "body": 21,
+      "cislo": 1,
+      "skrtnuto": false
+     },
+     {
+      "body": 13,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 21,
+      "cislo": 3,
+      "skrtnuto": false
+     }
+    ]
+   }
+  ],
+  "procesniDej": false,
+  "puvodniDatum": null,
+  "rozjizdky": [
+   {
+    "cislo": 1,
+    "doSerie": false,
+    "startV": "2026-06-20T10:00:00+02:00",
+    "stav": "Dokoncena",
+    "stavVysledku": "Potvrzeno",
+    "vysledky": [
+     {
+      "casSekundy": 3691,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Martin Dvořák",
+      "lod": "JOY",
+      "poradiVCili": 1
+     },
+     {
+      "casSekundy": 3815,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Jana Konečný",
+      "lod": "Zephyr",
+      "poradiVCili": 2
+     },
+     {
+      "casSekundy": 3862,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Tomáš Černý",
+      "lod": "Andante",
+      "poradiVCili": 3
+     },
+     {
+      "casSekundy": 3842,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Roman Šimek",
+      "lod": "LIBERTÉ",
+      "poradiVCili": 4
+     },
+     {
+      "casSekundy": 3893,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Tomáš Černý",
+      "lod": "MODRÉ CAFE",
+      "poradiVCili": 5
+     },
+     {
+      "casSekundy": 4122,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Marek Bláha",
+      "lod": "FAMILY LADY",
+      "poradiVCili": 6
+     },
+     {
+      "casSekundy": 4117,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Dana Jelínek",
+      "lod": "AVENIR",
+      "poradiVCili": 7
+     },
+     {
+      "casSekundy": 4119,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Vojtěch Kolář",
+      "lod": "SOCKA",
+      "poradiVCili": 8
+     },
+     {
+      "casSekundy": 4270,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Jiří Král",
+      "lod": "THEA",
+      "poradiVCili": 9
+     },
+     {
+      "casSekundy": 4244,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Hana Urban",
+      "lod": "HOGAN",
+      "poradiVCili": 10
+     },
+     {
+      "casSekundy": 4422,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Vojtěch Kolář",
+      "lod": "MICHELLE",
+      "poradiVCili": 11
+     },
+     {
+      "casSekundy": 4543,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Tereza Hájek",
+      "lod": "ROSE",
+      "poradiVCili": 12
+     },
+     {
+      "casSekundy": 4452,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Šárka Doležal",
+      "lod": "ČERVENÉ CAFE",
+      "poradiVCili": 13
+     },
+     {
+      "casSekundy": 4533,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Ivan Kříž",
+      "lod": "MICINY",
+      "poradiVCili": 14
+     },
+     {
+      "casSekundy": 4661,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Petr Svoboda",
+      "lod": "SENDY",
+      "poradiVCili": 15
+     },
+     {
+      "casSekundy": 4809,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Pavel Marek",
+      "lod": "DEPRESSO",
+      "poradiVCili": 16
+     },
+     {
+      "casSekundy": 4777,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Jan Novák",
+      "lod": "LUNA",
+      "poradiVCili": 17
+     },
+     {
+      "casSekundy": 4838,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Michal Horák",
+      "lod": "MAMBA",
+      "poradiVCili": 18
+     },
+     {
+      "casSekundy": 5034,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Marek Bláha",
+      "lod": "M@rtina",
+      "poradiVCili": 19
+     },
+     {
+      "casSekundy": 5048,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Kateřina Pokorný",
+      "lod": "FAR  STAR III",
+      "poradiVCili": 20
+     },
+     {
+      "casSekundy": 5073,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Markéta Fiala",
+      "lod": "FILOZEP",
+      "poradiVCili": 21
+     },
+     {
+      "casSekundy": 5171,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Blanka Havel",
+      "lod": "SEA MOUSE III",
+      "poradiVCili": 22
+     }
+    ]
+   },
+   {
+    "cislo": 2,
+    "doSerie": true,
+    "startV": "2026-06-20T12:00:00+02:00",
+    "stav": "Dokoncena",
+    "stavVysledku": "Potvrzeno",
+    "vysledky": [
+     {
+      "casSekundy": 3733,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Jan Novák",
+      "lod": "LUNA",
+      "poradiVCili": 1
+     },
+     {
+      "casSekundy": 3713,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Marek Bláha",
+      "lod": "FAMILY LADY",
+      "poradiVCili": 2
+     },
+     {
+      "casSekundy": 3824,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Šárka Doležal",
+      "lod": "ČERVENÉ CAFE",
+      "poradiVCili": 3
+     },
+     {
+      "casSekundy": 3859,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Martin Dvořák",
+      "lod": "JOY",
+      "poradiVCili": 4
+     },
+     {
+      "casSekundy": 3938,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Pavel Marek",
+      "lod": "DEPRESSO",
+      "poradiVCili": 5
+     },
+     {
+      "casSekundy": 4118,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Blanka Havel",
+      "lod": "SEA MOUSE III",
+      "poradiVCili": 6
+     },
+     {
+      "casSekundy": 4106,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Petr Svoboda",
+      "lod": "SENDY",
+      "poradiVCili": 7
+     },
+     {
+      "casSekundy": 4263,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Michal Horák",
+      "lod": "MAMBA",
+      "poradiVCili": 8
+     },
+     {
+      "casSekundy": 4172,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Kateřina Pokorný",
+      "lod": "FAR  STAR III",
+      "poradiVCili": 9
+     },
+     {
+      "casSekundy": 4295,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Tomáš Černý",
+      "lod": "Andante",
+      "poradiVCili": 10
+     },
+     {
+      "casSekundy": 4371,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Marek Bláha",
+      "lod": "M@rtina",
+      "poradiVCili": 11
+     },
+     {
+      "casSekundy": 4507,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Tomáš Černý",
+      "lod": "MODRÉ CAFE",
+      "poradiVCili": 12
+     },
+     {
+      "casSekundy": 4545,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Markéta Fiala",
+      "lod": "FILOZEP",
+      "poradiVCili": 13
+     },
+     {
+      "casSekundy": 4694,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Vojtěch Kolář",
+      "lod": "SOCKA",
+      "poradiVCili": 14
+     },
+     {
+      "casSekundy": 4701,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Tereza Hájek",
+      "lod": "ROSE",
+      "poradiVCili": 15
+     },
+     {
+      "casSekundy": 4741,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Jana Konečný",
+      "lod": "Zephyr",
+      "poradiVCili": 16
+     },
+     {
+      "casSekundy": 4737,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Vojtěch Kolář",
+      "lod": "MICHELLE",
+      "poradiVCili": 17
+     },
+     {
+      "casSekundy": 4874,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Ivan Kříž",
+      "lod": "MICINY",
+      "poradiVCili": 18
+     },
+     {
+      "casSekundy": 4949,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Dana Jelínek",
+      "lod": "AVENIR",
+      "poradiVCili": 19
+     },
+     {
+      "casSekundy": 4997,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Hana Urban",
+      "lod": "HOGAN",
+      "poradiVCili": 20
+     },
+     {
+      "casSekundy": 5038,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Jiří Král",
+      "lod": "THEA",
+      "poradiVCili": 21
+     },
+     {
+      "casSekundy": 5231,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Roman Šimek",
+      "lod": "LIBERTÉ",
+      "poradiVCili": 22
+     }
+    ]
+   },
+   {
+    "cislo": 3,
+    "doSerie": false,
+    "startV": "2026-06-20T14:00:00+02:00",
+    "stav": "Dokoncena",
+    "stavVysledku": "Potvrzeno",
+    "vysledky": [
+     {
+      "casSekundy": 3754,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Vojtěch Kolář",
+      "lod": "SOCKA",
+      "poradiVCili": 1
+     },
+     {
+      "casSekundy": 3781,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Hana Urban",
+      "lod": "HOGAN",
+      "poradiVCili": 2
+     },
+     {
+      "casSekundy": 3879,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Kateřina Pokorný",
+      "lod": "FAR  STAR III",
+      "poradiVCili": 3
+     },
+     {
+      "casSekundy": 3875,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Pavel Marek",
+      "lod": "DEPRESSO",
+      "poradiVCili": 4
+     },
+     {
+      "casSekundy": 3920,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Ivan Kříž",
+      "lod": "MICINY",
+      "poradiVCili": 5
+     },
+     {
+      "casSekundy": 4120,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Vojtěch Kolář",
+      "lod": "MICHELLE",
+      "poradiVCili": 6
+     },
+     {
+      "casSekundy": 4067,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Dana Jelínek",
+      "lod": "AVENIR",
+      "poradiVCili": 7
+     },
+     {
+      "casSekundy": 4244,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Šárka Doležal",
+      "lod": "ČERVENÉ CAFE",
+      "poradiVCili": 8
+     },
+     {
+      "casSekundy": 4314,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Tomáš Černý",
+      "lod": "Andante",
+      "poradiVCili": 9
+     },
+     {
+      "casSekundy": 4308,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Jana Konečný",
+      "lod": "Zephyr",
+      "poradiVCili": 10
+     },
+     {
+      "casSekundy": 4451,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Tomáš Černý",
+      "lod": "MODRÉ CAFE",
+      "poradiVCili": 11
+     },
+     {
+      "casSekundy": 4436,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Marek Bláha",
+      "lod": "M@rtina",
+      "poradiVCili": 12
+     },
+     {
+      "casSekundy": 4543,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Tereza Hájek",
+      "lod": "ROSE",
+      "poradiVCili": 13
+     },
+     {
+      "casSekundy": 4642,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Michal Horák",
+      "lod": "MAMBA",
+      "poradiVCili": 14
+     },
+     {
+      "casSekundy": 4743,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Martin Dvořák",
+      "lod": "JOY",
+      "poradiVCili": 15
+     },
+     {
+      "casSekundy": 4674,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Jan Novák",
+      "lod": "LUNA",
+      "poradiVCili": 16
+     },
+     {
+      "casSekundy": 4776,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Petr Svoboda",
+      "lod": "SENDY",
+      "poradiVCili": 17
+     },
+     {
+      "casSekundy": 4919,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Marek Bláha",
+      "lod": "FAMILY LADY",
+      "poradiVCili": 18
+     },
+     {
+      "casSekundy": 4978,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Jiří Král",
+      "lod": "THEA",
+      "poradiVCili": 19
+     },
+     {
+      "casSekundy": 5090,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Blanka Havel",
+      "lod": "SEA MOUSE III",
+      "poradiVCili": 20
+     },
+     {
+      "casSekundy": 5127,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Markéta Fiala",
+      "lod": "FILOZEP",
+      "poradiVCili": 21
+     },
+     {
+      "casSekundy": 5250,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Roman Šimek",
+      "lod": "LIBERTÉ",
+      "poradiVCili": 22
+     }
+    ]
+   }
+  ],
+  "slug": "izolepa",
+  "smernice": [],
+  "stav": "Odjety",
+  "typ": "Izolepa",
+  "vyhodnoceni": "PoKategoriich"
+ },
+ "/serie/2026-nanecisto/zavody/jarni-vitr": {
+  "datum": "2026-04-25",
+  "datumKonce": null,
+  "druh": "Pohar",
+  "koeficientDoSerie": 1.0,
+  "lode": [
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "David Štěpánek",
+    "lod": "MODRÉ CAFE",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Šárka Doležal",
+    "lod": "ČERVENÉ CAFE",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Lukáš Ryba",
+    "lod": "CASSIOPEIA",
+    "potvrzena": true,
+    "telefonu": 0,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Pavel Marek",
+    "lod": "DEPRESSO",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Markéta Fiala",
+    "lod": "FILOZEP",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     34
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Ondřej Němec",
+    "lod": "M1",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null,
+     58
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Martin Dvořák",
+    "lod": "MAMBA",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Zdeněk Beneš",
+    "lod": "NABLB",
+    "potvrzena": true,
+    "telefonu": 0,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     34,
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Eva Veselý",
+    "lod": "PEZI",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Karel Vlček",
+    "lod": "SULA",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null
+    ],
+    "kategorie": "Pod7m",
+    "kormidelnik": "Jiří Král",
+    "lod": "LUNA",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   }
+  ],
+  "medailonek": {
+   "adresa": null,
+   "delka": null,
+   "email": null,
+   "kontaktniOsoba": null,
+   "nazev": "YC Orlík",
+   "obrazek": null,
+   "popis": null,
+   "sirka": null,
+   "slug": "yc-orlik",
+   "telefon": null,
+   "web": null
+  },
+  "nazev": "Jarní vítr",
+  "oknoDo": null,
+  "pocetSkrtu": 0,
+  "poradatel": "YC Orlík",
+  "poradi": [
+   {
+    "body": 1,
+    "kategorie": "Race",
+    "lod": "ČERVENÉ CAFE",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 2,
+    "kategorie": "Race",
+    "lod": "MODRÉ CAFE",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 1,
+    "kategorie": "Nad7m",
+    "lod": "PEZI",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 2,
+    "kategorie": "Nad7m",
+    "lod": "MAMBA",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 3,
+    "kategorie": "Nad7m",
+    "lod": "M1",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 4,
+    "kategorie": "Nad7m",
+    "lod": "DEPRESSO",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 5,
+    "kategorie": "Nad7m",
+    "lod": "CASSIOPEIA",
+    "poradi": 5,
+    "rozjizdky": [
+     {
+      "body": 5,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 6,
+    "kategorie": "Nad7m",
+    "lod": "SULA",
+    "poradi": 6,
+    "rozjizdky": [
+     {
+      "body": 6,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 7,
+    "kategorie": "Nad7m",
+    "lod": "NABLB",
+    "poradi": 7,
+    "rozjizdky": [
+     {
+      "body": 7,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 8,
+    "kategorie": "Nad7m",
+    "lod": "FILOZEP",
+    "poradi": 8,
+    "rozjizdky": [
+     {
+      "body": 8,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 1,
+    "kategorie": "Pod7m",
+    "lod": "LUNA",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   }
+  ],
+  "poradiCelkem": [
+   {
+    "body": 1,
+    "kategorie": "Pod7m",
+    "lod": "LUNA",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 2,
+    "kategorie": "Nad7m",
+    "lod": "PEZI",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 3,
+    "kategorie": "Race",
+    "lod": "ČERVENÉ CAFE",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 4,
+    "kategorie": "Nad7m",
+    "lod": "MAMBA",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 5,
+    "kategorie": "Race",
+    "lod": "MODRÉ CAFE",
+    "poradi": 5,
+    "rozjizdky": [
+     {
+      "body": 5,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 6,
+    "kategorie": "Nad7m",
+    "lod": "M1",
+    "poradi": 6,
+    "rozjizdky": [
+     {
+      "body": 6,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 7,
+    "kategorie": "Nad7m",
+    "lod": "DEPRESSO",
+    "poradi": 7,
+    "rozjizdky": [
+     {
+      "body": 7,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 8,
+    "kategorie": "Nad7m",
+    "lod": "CASSIOPEIA",
+    "poradi": 8,
+    "rozjizdky": [
+     {
+      "body": 8,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 9,
+    "kategorie": "Nad7m",
+    "lod": "SULA",
+    "poradi": 9,
+    "rozjizdky": [
+     {
+      "body": 9,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 10,
+    "kategorie": "Nad7m",
+    "lod": "NABLB",
+    "poradi": 10,
+    "rozjizdky": [
+     {
+      "body": 10,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 11,
+    "kategorie": "Nad7m",
+    "lod": "FILOZEP",
+    "poradi": 11,
+    "rozjizdky": [
+     {
+      "body": 11,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   }
+  ],
+  "procesniDej": false,
+  "puvodniDatum": null,
+  "rozjizdky": [
+   {
+    "cislo": 1,
+    "doSerie": true,
+    "startV": "2026-04-25T10:00:00+02:00",
+    "stav": "Dokoncena",
+    "stavVysledku": "Potvrzeno",
+    "vysledky": [
+     {
+      "casSekundy": 3584,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Jiří Král",
+      "lod": "LUNA",
+      "poradiVCili": 1
+     },
+     {
+      "casSekundy": 3723,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Eva Veselý",
+      "lod": "PEZI",
+      "poradiVCili": 2
+     },
+     {
+      "casSekundy": 3767,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Šárka Doležal",
+      "lod": "ČERVENÉ CAFE",
+      "poradiVCili": 3
+     },
+     {
+      "casSekundy": 3800,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Martin Dvořák",
+      "lod": "MAMBA",
+      "poradiVCili": 4
+     },
+     {
+      "casSekundy": 4008,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "David Štěpánek",
+      "lod": "MODRÉ CAFE",
+      "poradiVCili": 5
+     },
+     {
+      "casSekundy": 3945,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Ondřej Němec",
+      "lod": "M1",
+      "poradiVCili": 6
+     },
+     {
+      "casSekundy": 4093,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Pavel Marek",
+      "lod": "DEPRESSO",
+      "poradiVCili": 7
+     },
+     {
+      "casSekundy": 4211,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Lukáš Ryba",
+      "lod": "CASSIOPEIA",
+      "poradiVCili": 8
+     },
+     {
+      "casSekundy": 4250,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Karel Vlček",
+      "lod": "SULA",
+      "poradiVCili": 9
+     },
+     {
+      "casSekundy": 4368,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Zdeněk Beneš",
+      "lod": "NABLB",
+      "poradiVCili": 10
+     },
+     {
+      "casSekundy": 4429,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Markéta Fiala",
+      "lod": "FILOZEP",
+      "poradiVCili": 11
+     }
+    ]
+   }
+  ],
+  "slug": "jarni-vitr",
+  "smernice": [
+   {
+    "adresa": "http://127.0.0.1:8080/fake-soubor/smernice-v2.pdf",
+    "duvodStazeni": null,
+    "mohlaUvaznoutVCache": false,
+    "nazev": "plachetni-smernice-v2.pdf",
+    "poznamka": null,
+    "stahl": null,
+    "stazenoV": null,
+    "verze": 2,
+    "vyveseneV": "2026-10-06T09:00:00+00:00",
+    "vyvesil": "Filip Burda"
+   },
+   {
+    "adresa": "http://127.0.0.1:8080/fake-soubor/smernice-v1.pdf",
+    "duvodStazeni": null,
+    "mohlaUvaznoutVCache": true,
+    "nazev": "plachetni-smernice-v1.pdf",
+    "poznamka": null,
+    "stahl": null,
+    "stazenoV": null,
+    "verze": 1,
+    "vyveseneV": "2026-09-21T17:00:00+00:00",
+    "vyvesil": "Filip Burda"
+   }
+  ],
+  "stav": "Odjety",
+  "typ": "dálková plavba",
+  "vyhodnoceni": "Oboje"
+ },
+ "/serie/2026-nanecisto/zavody/o-pohar-vltavy": {
+  "datum": "2026-09-05",
+  "datumKonce": null,
+  "druh": "Pohar",
+  "koeficientDoSerie": 1.0,
+  "lode": [
+   {
+    "baterie": [
+     34,
+     96
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Nikola Bureš",
+    "lod": "FAR  STAR III",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "David Štěpánek",
+    "lod": "MODRÉ CAFE",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Nikola Bureš",
+    "lod": "SEA MOUSE III",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Aleš Souček",
+    "lod": "SOCKA",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Pavel Marek",
+    "lod": "DEPRESSO",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     34,
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Lukáš Ryba",
+    "lod": "DIVNA",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Martin Dvořák",
+    "lod": "FILOZEP",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Marek Bláha",
+    "lod": "M@rtina",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null,
+     58
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Michal Horák",
+    "lod": "MAMBA",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     34,
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Eva Veselý",
+    "lod": "PEZI",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     58
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Olga Kolman",
+    "lod": "Valhalla",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null
+    ],
+    "kategorie": "Pod7m",
+    "kormidelnik": "Jan Novák",
+    "lod": "LUNA",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Pod7m",
+    "kormidelnik": "Zdeněk Beneš",
+    "lod": "SENDY",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   }
+  ],
+  "medailonek": {
+   "adresa": null,
+   "delka": null,
+   "email": null,
+   "kontaktniOsoba": null,
+   "nazev": "Plachtič z Vltavy",
+   "obrazek": null,
+   "popis": null,
+   "sirka": null,
+   "slug": "plachtic-z-vltavy",
+   "telefon": null,
+   "web": null
+  },
+  "nazev": "O pohár Vltavy",
+  "oknoDo": null,
+  "pocetSkrtu": 0,
+  "poradatel": "Plachtič z Vltavy",
+  "poradi": [
+   {
+    "body": 1,
+    "kategorie": "Race",
+    "lod": "SEA MOUSE III",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 2,
+    "kategorie": "Race",
+    "lod": "MODRÉ CAFE",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 3,
+    "kategorie": "Race",
+    "lod": "FAR  STAR III",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 4,
+    "kategorie": "Race",
+    "lod": "SOCKA",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 1,
+    "kategorie": "Nad7m",
+    "lod": "MAMBA",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 2,
+    "kategorie": "Nad7m",
+    "lod": "DEPRESSO",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 3,
+    "kategorie": "Nad7m",
+    "lod": "Valhalla",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 4,
+    "kategorie": "Nad7m",
+    "lod": "M@rtina",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 5,
+    "kategorie": "Nad7m",
+    "lod": "PEZI",
+    "poradi": 5,
+    "rozjizdky": [
+     {
+      "body": 5,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 6,
+    "kategorie": "Nad7m",
+    "lod": "DIVNA",
+    "poradi": 6,
+    "rozjizdky": [
+     {
+      "body": 6,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 7,
+    "kategorie": "Nad7m",
+    "lod": "FILOZEP",
+    "poradi": 7,
+    "rozjizdky": [
+     {
+      "body": 7,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 1,
+    "kategorie": "Pod7m",
+    "lod": "LUNA",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 2,
+    "kategorie": "Pod7m",
+    "lod": "SENDY",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   }
+  ],
+  "poradiCelkem": [
+   {
+    "body": 1,
+    "kategorie": "Pod7m",
+    "lod": "LUNA",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 2,
+    "kategorie": "Nad7m",
+    "lod": "MAMBA",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 3,
+    "kategorie": "Race",
+    "lod": "SEA MOUSE III",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 4,
+    "kategorie": "Pod7m",
+    "lod": "SENDY",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 5,
+    "kategorie": "Nad7m",
+    "lod": "DEPRESSO",
+    "poradi": 5,
+    "rozjizdky": [
+     {
+      "body": 5,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 6,
+    "kategorie": "Race",
+    "lod": "MODRÉ CAFE",
+    "poradi": 6,
+    "rozjizdky": [
+     {
+      "body": 6,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 7,
+    "kategorie": "Nad7m",
+    "lod": "Valhalla",
+    "poradi": 7,
+    "rozjizdky": [
+     {
+      "body": 7,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 8,
+    "kategorie": "Race",
+    "lod": "FAR  STAR III",
+    "poradi": 8,
+    "rozjizdky": [
+     {
+      "body": 8,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 9,
+    "kategorie": "Nad7m",
+    "lod": "M@rtina",
+    "poradi": 9,
+    "rozjizdky": [
+     {
+      "body": 9,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 10,
+    "kategorie": "Race",
+    "lod": "SOCKA",
+    "poradi": 10,
+    "rozjizdky": [
+     {
+      "body": 10,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 11,
+    "kategorie": "Nad7m",
+    "lod": "PEZI",
+    "poradi": 11,
+    "rozjizdky": [
+     {
+      "body": 11,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 12,
+    "kategorie": "Nad7m",
+    "lod": "DIVNA",
+    "poradi": 12,
+    "rozjizdky": [
+     {
+      "body": 12,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 13,
+    "kategorie": "Nad7m",
+    "lod": "FILOZEP",
+    "poradi": 13,
+    "rozjizdky": [
+     {
+      "body": 13,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   }
+  ],
+  "procesniDej": false,
+  "puvodniDatum": null,
+  "rozjizdky": [
+   {
+    "cislo": 1,
+    "doSerie": true,
+    "startV": "2026-09-05T10:00:00+02:00",
+    "stav": "Dokoncena",
+    "stavVysledku": "Potvrzeno",
+    "vysledky": [
+     {
+      "casSekundy": 3732,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Jan Novák",
+      "lod": "LUNA",
+      "poradiVCili": 1
+     },
+     {
+      "casSekundy": 3691,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Michal Horák",
+      "lod": "MAMBA",
+      "poradiVCili": 2
+     },
+     {
+      "casSekundy": 3823,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Nikola Bureš",
+      "lod": "SEA MOUSE III",
+      "poradiVCili": 3
+     },
+     {
+      "casSekundy": 3844,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Zdeněk Beneš",
+      "lod": "SENDY",
+      "poradiVCili": 4
+     },
+     {
+      "casSekundy": 4011,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Pavel Marek",
+      "lod": "DEPRESSO",
+      "poradiVCili": 5
+     },
+     {
+      "casSekundy": 4055,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "David Štěpánek",
+      "lod": "MODRÉ CAFE",
+      "poradiVCili": 6
+     },
+     {
+      "casSekundy": 4130,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Olga Kolman",
+      "lod": "Valhalla",
+      "poradiVCili": 7
+     },
+     {
+      "casSekundy": 4206,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Nikola Bureš",
+      "lod": "FAR  STAR III",
+      "poradiVCili": 8
+     },
+     {
+      "casSekundy": 4211,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Marek Bláha",
+      "lod": "M@rtina",
+      "poradiVCili": 9
+     },
+     {
+      "casSekundy": 4240,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Aleš Souček",
+      "lod": "SOCKA",
+      "poradiVCili": 10
+     },
+     {
+      "casSekundy": 4320,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Eva Veselý",
+      "lod": "PEZI",
+      "poradiVCili": 11
+     },
+     {
+      "casSekundy": 4531,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Lukáš Ryba",
+      "lod": "DIVNA",
+      "poradiVCili": 12
+     },
+     {
+      "casSekundy": 4549,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Martin Dvořák",
+      "lod": "FILOZEP",
+      "poradiVCili": 13
+     }
+    ]
+   }
+  ],
+  "slug": "o-pohar-vltavy",
+  "smernice": [],
+  "stav": "Odjety",
+  "typ": "dálková plavba",
+  "vyhodnoceni": "Oboje"
+ },
+ "/serie/2026-nanecisto/zavody/pohar-slunce": {
+  "datum": "2026-09-19",
+  "datumKonce": null,
+  "druh": "Pohar",
+  "koeficientDoSerie": 1.0,
+  "lode": [
+   {
+    "baterie": [
+     34,
+     96
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Nikola Bureš",
+    "lod": "FAR  STAR III",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "David Štěpánek",
+    "lod": "MODRÉ CAFE",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     34
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Pavel Marek",
+    "lod": "Zephyr",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Markéta Fiala",
+    "lod": "Caprice",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Lucie Kučera",
+    "lod": "DEPRESSO",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     34,
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Lukáš Ryba",
+    "lod": "DIVNA",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Alena Vaněk",
+    "lod": "FAMILY LADY",
+    "potvrzena": true,
+    "telefonu": 0,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Markéta Fiala",
+    "lod": "FILOZEP",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Marek Bláha",
+    "lod": "M@rtina",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null,
+     58
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Hana Urban",
+    "lod": "MAMBA",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12,
+     77
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Vojtěch Kolář",
+    "lod": "MICHELLE",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Zdeněk Beneš",
+    "lod": "NABLB",
+    "potvrzena": true,
+    "telefonu": 0,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     34,
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Eva Veselý",
+    "lod": "PEZI",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     34
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Josef Bartoš",
+    "lod": "Perun",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Radek Sedláček",
+    "lod": "SPRUNZEL",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     58
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Olga Kolman",
+    "lod": "Valhalla",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null
+    ],
+    "kategorie": "Pod7m",
+    "kormidelnik": "Nikola Bureš",
+    "lod": "LUNA",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Pod7m",
+    "kormidelnik": "Petr Svoboda",
+    "lod": "SENDY",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   }
+  ],
+  "medailonek": {
+   "adresa": null,
+   "delka": null,
+   "email": null,
+   "kontaktniOsoba": null,
+   "nazev": "SK Popovice",
+   "obrazek": null,
+   "popis": null,
+   "sirka": null,
+   "slug": "sk-popovice",
+   "telefon": null,
+   "web": null
+  },
+  "nazev": "Pohár Slunce",
+  "oknoDo": null,
+  "pocetSkrtu": 0,
+  "poradatel": "SK Popovice",
+  "poradi": [
+   {
+    "body": 1,
+    "kategorie": "Race",
+    "lod": "MODRÉ CAFE",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 2,
+    "kategorie": "Race",
+    "lod": "Zephyr",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 3,
+    "kategorie": "Race",
+    "lod": "FAR  STAR III",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 1,
+    "kategorie": "Nad7m",
+    "lod": "PEZI",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 2,
+    "kategorie": "Nad7m",
+    "lod": "MAMBA",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 3,
+    "kategorie": "Nad7m",
+    "lod": "FAMILY LADY",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 4,
+    "kategorie": "Nad7m",
+    "lod": "M@rtina",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 5,
+    "kategorie": "Nad7m",
+    "lod": "DEPRESSO",
+    "poradi": 5,
+    "rozjizdky": [
+     {
+      "body": 5,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 6,
+    "kategorie": "Nad7m",
+    "lod": "NABLB",
+    "poradi": 6,
+    "rozjizdky": [
+     {
+      "body": 6,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 7,
+    "kategorie": "Nad7m",
+    "lod": "Valhalla",
+    "poradi": 7,
+    "rozjizdky": [
+     {
+      "body": 7,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 8,
+    "kategorie": "Nad7m",
+    "lod": "Perun",
+    "poradi": 8,
+    "rozjizdky": [
+     {
+      "body": 8,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 9,
+    "kategorie": "Nad7m",
+    "lod": "FILOZEP",
+    "poradi": 9,
+    "rozjizdky": [
+     {
+      "body": 9,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 10,
+    "kategorie": "Nad7m",
+    "lod": "DIVNA",
+    "poradi": 10,
+    "rozjizdky": [
+     {
+      "body": 10,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 11,
+    "kategorie": "Nad7m",
+    "lod": "Caprice",
+    "poradi": 11,
+    "rozjizdky": [
+     {
+      "body": 11,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 12,
+    "kategorie": "Nad7m",
+    "lod": "MICHELLE",
+    "poradi": 12,
+    "rozjizdky": [
+     {
+      "body": 12,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 14,
+    "kategorie": "Nad7m",
+    "lod": "SPRUNZEL",
+    "poradi": 13,
+    "rozjizdky": [
+     {
+      "body": 14,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 1,
+    "kategorie": "Pod7m",
+    "lod": "LUNA",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 2,
+    "kategorie": "Pod7m",
+    "lod": "SENDY",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   }
+  ],
+  "poradiCelkem": [
+   {
+    "body": 1,
+    "kategorie": "Pod7m",
+    "lod": "LUNA",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 2,
+    "kategorie": "Nad7m",
+    "lod": "PEZI",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 3,
+    "kategorie": "Race",
+    "lod": "MODRÉ CAFE",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 4,
+    "kategorie": "Pod7m",
+    "lod": "SENDY",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 5,
+    "kategorie": "Nad7m",
+    "lod": "MAMBA",
+    "poradi": 5,
+    "rozjizdky": [
+     {
+      "body": 5,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 6,
+    "kategorie": "Race",
+    "lod": "Zephyr",
+    "poradi": 6,
+    "rozjizdky": [
+     {
+      "body": 6,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 7,
+    "kategorie": "Nad7m",
+    "lod": "FAMILY LADY",
+    "poradi": 7,
+    "rozjizdky": [
+     {
+      "body": 7,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 8,
+    "kategorie": "Race",
+    "lod": "FAR  STAR III",
+    "poradi": 8,
+    "rozjizdky": [
+     {
+      "body": 8,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 9,
+    "kategorie": "Nad7m",
+    "lod": "M@rtina",
+    "poradi": 9,
+    "rozjizdky": [
+     {
+      "body": 9,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 10,
+    "kategorie": "Nad7m",
+    "lod": "DEPRESSO",
+    "poradi": 10,
+    "rozjizdky": [
+     {
+      "body": 10,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 11,
+    "kategorie": "Nad7m",
+    "lod": "NABLB",
+    "poradi": 11,
+    "rozjizdky": [
+     {
+      "body": 11,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 12,
+    "kategorie": "Nad7m",
+    "lod": "Valhalla",
+    "poradi": 12,
+    "rozjizdky": [
+     {
+      "body": 12,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 13,
+    "kategorie": "Nad7m",
+    "lod": "Perun",
+    "poradi": 13,
+    "rozjizdky": [
+     {
+      "body": 13,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 14,
+    "kategorie": "Nad7m",
+    "lod": "FILOZEP",
+    "poradi": 14,
+    "rozjizdky": [
+     {
+      "body": 14,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 15,
+    "kategorie": "Nad7m",
+    "lod": "DIVNA",
+    "poradi": 15,
+    "rozjizdky": [
+     {
+      "body": 15,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 16,
+    "kategorie": "Nad7m",
+    "lod": "Caprice",
+    "poradi": 16,
+    "rozjizdky": [
+     {
+      "body": 16,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 17,
+    "kategorie": "Nad7m",
+    "lod": "MICHELLE",
+    "poradi": 17,
+    "rozjizdky": [
+     {
+      "body": 17,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 19,
+    "kategorie": "Nad7m",
+    "lod": "SPRUNZEL",
+    "poradi": 18,
+    "rozjizdky": [
+     {
+      "body": 19,
+      "cislo": 1,
+      "skrtnuto": false
+     }
+    ]
+   }
+  ],
+  "procesniDej": false,
+  "puvodniDatum": null,
+  "rozjizdky": [
+   {
+    "cislo": 1,
+    "doSerie": true,
+    "startV": "2026-09-19T10:00:00+02:00",
+    "stav": "Dokoncena",
+    "stavVysledku": "Potvrzeno",
+    "vysledky": [
+     {
+      "casSekundy": 3607,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Nikola Bureš",
+      "lod": "LUNA",
+      "poradiVCili": 1
+     },
+     {
+      "casSekundy": 3701,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Eva Veselý",
+      "lod": "PEZI",
+      "poradiVCili": 2
+     },
+     {
+      "casSekundy": 3839,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "David Štěpánek",
+      "lod": "MODRÉ CAFE",
+      "poradiVCili": 3
+     },
+     {
+      "casSekundy": 3970,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Petr Svoboda",
+      "lod": "SENDY",
+      "poradiVCili": 4
+     },
+     {
+      "casSekundy": 3975,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Hana Urban",
+      "lod": "MAMBA",
+      "poradiVCili": 5
+     },
+     {
+      "casSekundy": 4011,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Pavel Marek",
+      "lod": "Zephyr",
+      "poradiVCili": 6
+     },
+     {
+      "casSekundy": 4067,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Alena Vaněk",
+      "lod": "FAMILY LADY",
+      "poradiVCili": 7
+     },
+     {
+      "casSekundy": 4141,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Nikola Bureš",
+      "lod": "FAR  STAR III",
+      "poradiVCili": 8
+     },
+     {
+      "casSekundy": 4276,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Marek Bláha",
+      "lod": "M@rtina",
+      "poradiVCili": 9
+     },
+     {
+      "casSekundy": 4345,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Lucie Kučera",
+      "lod": "DEPRESSO",
+      "poradiVCili": 10
+     },
+     {
+      "casSekundy": 4391,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Zdeněk Beneš",
+      "lod": "NABLB",
+      "poradiVCili": 11
+     },
+     {
+      "casSekundy": 4387,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Olga Kolman",
+      "lod": "Valhalla",
+      "poradiVCili": 12
+     },
+     {
+      "casSekundy": 4521,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Josef Bartoš",
+      "lod": "Perun",
+      "poradiVCili": 13
+     },
+     {
+      "casSekundy": 4541,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Markéta Fiala",
+      "lod": "FILOZEP",
+      "poradiVCili": 14
+     },
+     {
+      "casSekundy": 4639,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Lukáš Ryba",
+      "lod": "DIVNA",
+      "poradiVCili": 15
+     },
+     {
+      "casSekundy": 4746,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Markéta Fiala",
+      "lod": "Caprice",
+      "poradiVCili": 16
+     },
+     {
+      "casSekundy": 4831,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Vojtěch Kolář",
+      "lod": "MICHELLE",
+      "poradiVCili": 17
+     },
+     {
+      "casSekundy": null,
+      "kategorie": "Nad7m",
+      "kod": "Dsq",
+      "kormidelnik": "Radek Sedláček",
+      "lod": "SPRUNZEL",
+      "poradiVCili": null
+     }
+    ]
+   }
+  ],
+  "slug": "pohar-slunce",
+  "smernice": [],
+  "stav": "Odjety",
+  "typ": "maraton 8 h",
+  "vyhodnoceni": "Oboje"
+ },
+ "/serie/2026-nanecisto/zavody/radavska-regata": {
+  "datum": "2026-05-09",
+  "datumKonce": null,
+  "druh": "Pohar",
+  "koeficientDoSerie": 1.0,
+  "lode": [],
+  "medailonek": {
+   "adresa": null,
+   "delka": null,
+   "email": null,
+   "kontaktniOsoba": null,
+   "nazev": "LK Radava",
+   "obrazek": null,
+   "popis": null,
+   "sirka": null,
+   "slug": "lk-radava",
+   "telefon": null,
+   "web": null
+  },
+  "nazev": "Radavská regata",
+  "oknoDo": null,
+  "pocetSkrtu": 0,
+  "poradatel": "LK Radava",
+  "poradi": [],
+  "poradiCelkem": [],
+  "procesniDej": false,
+  "puvodniDatum": null,
+  "rozjizdky": [],
+  "slug": "radavska-regata",
+  "smernice": [],
+  "stav": "Zruseny",
+  "typ": "okruhový",
+  "vyhodnoceni": "PoKategoriich"
+ },
+ "/serie/2026-nanecisto/zavody/radavsky-pohar": {
+  "datum": "2026-08-29",
+  "datumKonce": null,
+  "druh": "Pohar",
+  "koeficientDoSerie": 1.0,
+  "lode": [
+   {
+    "baterie": [
+     34,
+     96
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Nikola Bureš",
+    "lod": "FAR  STAR III",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "David Štěpánek",
+    "lod": "MODRÉ CAFE",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Blanka Havel",
+    "lod": "SEA MOUSE III",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     34
+    ],
+    "kategorie": "Race",
+    "kormidelnik": "Alena Vaněk",
+    "lod": "Zephyr",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     58,
+     null
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Dana Jelínek",
+    "lod": "AVENIR",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Martin Dvořák",
+    "lod": "DEPRESSO",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Marek Bláha",
+    "lod": "M@rtina",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null,
+     58
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Michal Horák",
+    "lod": "MAMBA",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12,
+     77
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Vojtěch Kolář",
+    "lod": "MICHELLE",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     34,
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Radek Sedláček",
+    "lod": "PEZI",
+    "potvrzena": true,
+    "telefonu": 2,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     34
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Josef Bartoš",
+    "lod": "Perun",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     96
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Radek Sedláček",
+    "lod": "SPRUNZEL",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     58
+    ],
+    "kategorie": "Nad7m",
+    "kormidelnik": "Olga Kolman",
+    "lod": "Valhalla",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null
+    ],
+    "kategorie": "Pod7m",
+    "kormidelnik": "Eva Veselý",
+    "lod": "Charlotte III",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     null
+    ],
+    "kategorie": "Pod7m",
+    "kormidelnik": "Alena Vaněk",
+    "lod": "LUNA",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   },
+   {
+    "baterie": [
+     12
+    ],
+    "kategorie": "Pod7m",
+    "kormidelnik": "Šárka Doležal",
+    "lod": "SENDY",
+    "potvrzena": true,
+    "telefonu": 1,
+    "vyloucena": false
+   }
+  ],
+  "medailonek": {
+   "adresa": "Ukázková adresa přístavu",
+   "delka": 14.1735,
+   "email": "info@example.cz",
+   "kontaktniOsoba": "Ukázková Osoba",
+   "nazev": "Yacht Club Písek",
+   "popis": "Ukázkový popis pro falešné API.\n\nDruhý odstavec, ať je vidět, jak se text láme.",
+   "sirka": 49.5086,
+   "slug": "yacht-club-pisek",
+   "telefon": "+420 000 000 000",
+   "web": "https://yachtclubpisek.cz/"
+  },
+  "nazev": "Radavský pohár",
+  "oknoDo": null,
+  "pocetSkrtu": 1,
+  "poradatel": "Yacht Club Písek",
+  "poradi": [
+   {
+    "body": 3,
+    "kategorie": "Race",
+    "lod": "Zephyr",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 1,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 6,
+    "kategorie": "Race",
+    "lod": "SEA MOUSE III",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 2,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 9,
+    "kategorie": "Race",
+    "lod": "MODRÉ CAFE",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 3,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 12,
+    "kategorie": "Race",
+    "lod": "FAR  STAR III",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 4,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 4,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 4,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 3,
+    "kategorie": "Nad7m",
+    "lod": "PEZI",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 1,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 6,
+    "kategorie": "Nad7m",
+    "lod": "DEPRESSO",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 2,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 9,
+    "kategorie": "Nad7m",
+    "lod": "M@rtina",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 3,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 12,
+    "kategorie": "Nad7m",
+    "lod": "MAMBA",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 4,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 4,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 4,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 15,
+    "kategorie": "Nad7m",
+    "lod": "Valhalla",
+    "poradi": 5,
+    "rozjizdky": [
+     {
+      "body": 5,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 5,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 5,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 5,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 18,
+    "kategorie": "Nad7m",
+    "lod": "AVENIR",
+    "poradi": 6,
+    "rozjizdky": [
+     {
+      "body": 6,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 6,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 6,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 6,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 21,
+    "kategorie": "Nad7m",
+    "lod": "Perun",
+    "poradi": 7,
+    "rozjizdky": [
+     {
+      "body": 7,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 7,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 7,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 7,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 24,
+    "kategorie": "Nad7m",
+    "lod": "MICHELLE",
+    "poradi": 8,
+    "rozjizdky": [
+     {
+      "body": 8,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 8,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 8,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 8,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 27,
+    "kategorie": "Nad7m",
+    "lod": "SPRUNZEL",
+    "poradi": 9,
+    "rozjizdky": [
+     {
+      "body": 9,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 9,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 9,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 9,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 3,
+    "kategorie": "Pod7m",
+    "lod": "Charlotte III",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 1,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 6,
+    "kategorie": "Pod7m",
+    "lod": "LUNA",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 2,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 9,
+    "kategorie": "Pod7m",
+    "lod": "SENDY",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 3,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   }
+  ],
+  "poradiCelkem": [
+   {
+    "body": 3,
+    "kategorie": "Pod7m",
+    "lod": "Charlotte III",
+    "poradi": 1,
+    "rozjizdky": [
+     {
+      "body": 1,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 1,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 1,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 6,
+    "kategorie": "Nad7m",
+    "lod": "PEZI",
+    "poradi": 2,
+    "rozjizdky": [
+     {
+      "body": 2,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 2,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 2,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 9,
+    "kategorie": "Race",
+    "lod": "Zephyr",
+    "poradi": 3,
+    "rozjizdky": [
+     {
+      "body": 3,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 3,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 3,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 12,
+    "kategorie": "Pod7m",
+    "lod": "LUNA",
+    "poradi": 4,
+    "rozjizdky": [
+     {
+      "body": 4,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 4,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 4,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 4,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 15,
+    "kategorie": "Nad7m",
+    "lod": "DEPRESSO",
+    "poradi": 5,
+    "rozjizdky": [
+     {
+      "body": 5,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 5,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 5,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 5,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 18,
+    "kategorie": "Race",
+    "lod": "SEA MOUSE III",
+    "poradi": 6,
+    "rozjizdky": [
+     {
+      "body": 6,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 6,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 6,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 6,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 21,
+    "kategorie": "Pod7m",
+    "lod": "SENDY",
+    "poradi": 7,
+    "rozjizdky": [
+     {
+      "body": 7,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 7,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 7,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 7,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 24,
+    "kategorie": "Nad7m",
+    "lod": "M@rtina",
+    "poradi": 8,
+    "rozjizdky": [
+     {
+      "body": 8,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 8,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 8,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 8,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 27,
+    "kategorie": "Race",
+    "lod": "MODRÉ CAFE",
+    "poradi": 9,
+    "rozjizdky": [
+     {
+      "body": 9,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 9,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 9,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 9,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 30,
+    "kategorie": "Nad7m",
+    "lod": "MAMBA",
+    "poradi": 10,
+    "rozjizdky": [
+     {
+      "body": 10,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 10,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 10,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 10,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 33,
+    "kategorie": "Race",
+    "lod": "FAR  STAR III",
+    "poradi": 11,
+    "rozjizdky": [
+     {
+      "body": 11,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 11,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 11,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 11,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 36,
+    "kategorie": "Nad7m",
+    "lod": "Valhalla",
+    "poradi": 12,
+    "rozjizdky": [
+     {
+      "body": 12,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 12,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 12,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 12,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 39,
+    "kategorie": "Nad7m",
+    "lod": "AVENIR",
+    "poradi": 13,
+    "rozjizdky": [
+     {
+      "body": 13,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 13,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 13,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 13,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 42,
+    "kategorie": "Nad7m",
+    "lod": "Perun",
+    "poradi": 14,
+    "rozjizdky": [
+     {
+      "body": 14,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 14,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 14,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 14,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 45,
+    "kategorie": "Nad7m",
+    "lod": "MICHELLE",
+    "poradi": 15,
+    "rozjizdky": [
+     {
+      "body": 15,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 15,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 15,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 15,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   },
+   {
+    "body": 48,
+    "kategorie": "Nad7m",
+    "lod": "SPRUNZEL",
+    "poradi": 16,
+    "rozjizdky": [
+     {
+      "body": 16,
+      "cislo": 1,
+      "skrtnuto": true
+     },
+     {
+      "body": 16,
+      "cislo": 2,
+      "skrtnuto": false
+     },
+     {
+      "body": 16,
+      "cislo": 3,
+      "skrtnuto": false
+     },
+     {
+      "body": 16,
+      "cislo": 4,
+      "skrtnuto": false
+     }
+    ]
+   }
+  ],
+  "procesniDej": false,
+  "puvodniDatum": null,
+  "rozjizdky": [
+   {
+    "cislo": 1,
+    "doSerie": true,
+    "startV": "2026-08-29T10:00:00+02:00",
+    "stav": "Dokoncena",
+    "stavVysledku": "Potvrzeno",
+    "vysledky": [
+     {
+      "casSekundy": 3671,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Eva Veselý",
+      "lod": "Charlotte III",
+      "poradiVCili": 1
+     },
+     {
+      "casSekundy": 3659,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Radek Sedláček",
+      "lod": "PEZI",
+      "poradiVCili": 2
+     },
+     {
+      "casSekundy": 3831,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Alena Vaněk",
+      "lod": "Zephyr",
+      "poradiVCili": 3
+     },
+     {
+      "casSekundy": 3936,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Alena Vaněk",
+      "lod": "LUNA",
+      "poradiVCili": 4
+     },
+     {
+      "casSekundy": 3900,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Martin Dvořák",
+      "lod": "DEPRESSO",
+      "poradiVCili": 5
+     },
+     {
+      "casSekundy": 4073,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Blanka Havel",
+      "lod": "SEA MOUSE III",
+      "poradiVCili": 6
+     },
+     {
+      "casSekundy": 4137,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Šárka Doležal",
+      "lod": "SENDY",
+      "poradiVCili": 7
+     },
+     {
+      "casSekundy": 4108,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Marek Bláha",
+      "lod": "M@rtina",
+      "poradiVCili": 8
+     },
+     {
+      "casSekundy": 4338,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "David Štěpánek",
+      "lod": "MODRÉ CAFE",
+      "poradiVCili": 9
+     },
+     {
+      "casSekundy": 4368,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Michal Horák",
+      "lod": "MAMBA",
+      "poradiVCili": 10
+     },
+     {
+      "casSekundy": 4441,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Nikola Bureš",
+      "lod": "FAR  STAR III",
+      "poradiVCili": 11
+     },
+     {
+      "casSekundy": 4551,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Olga Kolman",
+      "lod": "Valhalla",
+      "poradiVCili": 12
+     },
+     {
+      "casSekundy": 4454,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Dana Jelínek",
+      "lod": "AVENIR",
+      "poradiVCili": 13
+     },
+     {
+      "casSekundy": 4617,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Josef Bartoš",
+      "lod": "Perun",
+      "poradiVCili": 14
+     },
+     {
+      "casSekundy": 4637,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Vojtěch Kolář",
+      "lod": "MICHELLE",
+      "poradiVCili": 15
+     },
+     {
+      "casSekundy": 4816,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Radek Sedláček",
+      "lod": "SPRUNZEL",
+      "poradiVCili": 16
+     }
+    ]
+   },
+   {
+    "cislo": 2,
+    "doSerie": true,
+    "startV": "2026-08-29T12:00:00+02:00",
+    "stav": "Dokoncena",
+    "stavVysledku": "Potvrzeno",
+    "vysledky": [
+     {
+      "casSekundy": 3721,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Eva Veselý",
+      "lod": "Charlotte III",
+      "poradiVCili": 1
+     },
+     {
+      "casSekundy": 3755,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Radek Sedláček",
+      "lod": "PEZI",
+      "poradiVCili": 2
+     },
+     {
+      "casSekundy": 3857,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Alena Vaněk",
+      "lod": "Zephyr",
+      "poradiVCili": 3
+     },
+     {
+      "casSekundy": 3831,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Alena Vaněk",
+      "lod": "LUNA",
+      "poradiVCili": 4
+     },
+     {
+      "casSekundy": 3870,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Martin Dvořák",
+      "lod": "DEPRESSO",
+      "poradiVCili": 5
+     },
+     {
+      "casSekundy": 3975,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Blanka Havel",
+      "lod": "SEA MOUSE III",
+      "poradiVCili": 6
+     },
+     {
+      "casSekundy": 4022,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Šárka Doležal",
+      "lod": "SENDY",
+      "poradiVCili": 7
+     },
+     {
+      "casSekundy": 4168,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Marek Bláha",
+      "lod": "M@rtina",
+      "poradiVCili": 8
+     },
+     {
+      "casSekundy": 4331,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "David Štěpánek",
+      "lod": "MODRÉ CAFE",
+      "poradiVCili": 9
+     },
+     {
+      "casSekundy": 4347,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Michal Horák",
+      "lod": "MAMBA",
+      "poradiVCili": 10
+     },
+     {
+      "casSekundy": 4473,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Nikola Bureš",
+      "lod": "FAR  STAR III",
+      "poradiVCili": 11
+     },
+     {
+      "casSekundy": 4480,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Olga Kolman",
+      "lod": "Valhalla",
+      "poradiVCili": 12
+     },
+     {
+      "casSekundy": 4568,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Dana Jelínek",
+      "lod": "AVENIR",
+      "poradiVCili": 13
+     },
+     {
+      "casSekundy": 4675,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Josef Bartoš",
+      "lod": "Perun",
+      "poradiVCili": 14
+     },
+     {
+      "casSekundy": 4767,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Vojtěch Kolář",
+      "lod": "MICHELLE",
+      "poradiVCili": 15
+     },
+     {
+      "casSekundy": 4775,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Radek Sedláček",
+      "lod": "SPRUNZEL",
+      "poradiVCili": 16
+     }
+    ]
+   },
+   {
+    "cislo": 3,
+    "doSerie": true,
+    "startV": "2026-08-29T14:00:00+02:00",
+    "stav": "Dokoncena",
+    "stavVysledku": "Potvrzeno",
+    "vysledky": [
+     {
+      "casSekundy": 3688,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Eva Veselý",
+      "lod": "Charlotte III",
+      "poradiVCili": 1
+     },
+     {
+      "casSekundy": 3825,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Radek Sedláček",
+      "lod": "PEZI",
+      "poradiVCili": 2
+     },
+     {
+      "casSekundy": 3793,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Alena Vaněk",
+      "lod": "Zephyr",
+      "poradiVCili": 3
+     },
+     {
+      "casSekundy": 3939,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Alena Vaněk",
+      "lod": "LUNA",
+      "poradiVCili": 4
+     },
+     {
+      "casSekundy": 3894,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Martin Dvořák",
+      "lod": "DEPRESSO",
+      "poradiVCili": 5
+     },
+     {
+      "casSekundy": 4092,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Blanka Havel",
+      "lod": "SEA MOUSE III",
+      "poradiVCili": 6
+     },
+     {
+      "casSekundy": 4132,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Šárka Doležal",
+      "lod": "SENDY",
+      "poradiVCili": 7
+     },
+     {
+      "casSekundy": 4186,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Marek Bláha",
+      "lod": "M@rtina",
+      "poradiVCili": 8
+     },
+     {
+      "casSekundy": 4171,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "David Štěpánek",
+      "lod": "MODRÉ CAFE",
+      "poradiVCili": 9
+     },
+     {
+      "casSekundy": 4287,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Michal Horák",
+      "lod": "MAMBA",
+      "poradiVCili": 10
+     },
+     {
+      "casSekundy": 4385,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Nikola Bureš",
+      "lod": "FAR  STAR III",
+      "poradiVCili": 11
+     },
+     {
+      "casSekundy": 4464,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Olga Kolman",
+      "lod": "Valhalla",
+      "poradiVCili": 12
+     },
+     {
+      "casSekundy": 4581,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Dana Jelínek",
+      "lod": "AVENIR",
+      "poradiVCili": 13
+     },
+     {
+      "casSekundy": 4529,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Josef Bartoš",
+      "lod": "Perun",
+      "poradiVCili": 14
+     },
+     {
+      "casSekundy": 4698,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Vojtěch Kolář",
+      "lod": "MICHELLE",
+      "poradiVCili": 15
+     },
+     {
+      "casSekundy": 4796,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Radek Sedláček",
+      "lod": "SPRUNZEL",
+      "poradiVCili": 16
+     }
+    ]
+   },
+   {
+    "cislo": 4,
+    "doSerie": true,
+    "startV": "2026-08-29T16:00:00+02:00",
+    "stav": "Dokoncena",
+    "stavVysledku": "Potvrzeno",
+    "vysledky": [
+     {
+      "casSekundy": 3683,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Eva Veselý",
+      "lod": "Charlotte III",
+      "poradiVCili": 1
+     },
+     {
+      "casSekundy": 3760,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Radek Sedláček",
+      "lod": "PEZI",
+      "poradiVCili": 2
+     },
+     {
+      "casSekundy": 3784,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Alena Vaněk",
+      "lod": "Zephyr",
+      "poradiVCili": 3
+     },
+     {
+      "casSekundy": 3833,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Alena Vaněk",
+      "lod": "LUNA",
+      "poradiVCili": 4
+     },
+     {
+      "casSekundy": 3880,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Martin Dvořák",
+      "lod": "DEPRESSO",
+      "poradiVCili": 5
+     },
+     {
+      "casSekundy": 3981,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Blanka Havel",
+      "lod": "SEA MOUSE III",
+      "poradiVCili": 6
+     },
+     {
+      "casSekundy": 4143,
+      "kategorie": "Pod7m",
+      "kod": null,
+      "kormidelnik": "Šárka Doležal",
+      "lod": "SENDY",
+      "poradiVCili": 7
+     },
+     {
+      "casSekundy": 4222,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Marek Bláha",
+      "lod": "M@rtina",
+      "poradiVCili": 8
+     },
+     {
+      "casSekundy": 4204,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "David Štěpánek",
+      "lod": "MODRÉ CAFE",
+      "poradiVCili": 9
+     },
+     {
+      "casSekundy": 4392,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Michal Horák",
+      "lod": "MAMBA",
+      "poradiVCili": 10
+     },
+     {
+      "casSekundy": 4321,
+      "kategorie": "Race",
+      "kod": null,
+      "kormidelnik": "Nikola Bureš",
+      "lod": "FAR  STAR III",
+      "poradiVCili": 11
+     },
+     {
+      "casSekundy": 4415,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Olga Kolman",
+      "lod": "Valhalla",
+      "poradiVCili": 12
+     },
+     {
+      "casSekundy": 4600,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Dana Jelínek",
+      "lod": "AVENIR",
+      "poradiVCili": 13
+     },
+     {
+      "casSekundy": 4624,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Josef Bartoš",
+      "lod": "Perun",
+      "poradiVCili": 14
+     },
+     {
+      "casSekundy": 4616,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Vojtěch Kolář",
+      "lod": "MICHELLE",
+      "poradiVCili": 15
+     },
+     {
+      "casSekundy": 4835,
+      "kategorie": "Nad7m",
+      "kod": null,
+      "kormidelnik": "Radek Sedláček",
+      "lod": "SPRUNZEL",
+      "poradiVCili": 16
+     }
+    ]
+   }
+  ],
+  "slug": "radavsky-pohar",
+  "smernice": [],
+  "stav": "Odjety",
+  "typ": "okruhový",
+  "vyhodnoceni": "PoKategoriich"
+ }
+}

@@ -2,6 +2,8 @@ import * as Notifications from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
+import { sit } from './sit';
+
 /**
  * Přihlášení telefonu k veřejným upozorněním.
  *
@@ -86,7 +88,7 @@ export async function prihlasKOdberu(odbery: string[]): Promise<StavUpozorneni> 
   if (posledni === telo) return { stav: 'prihlaseno', odbery };
 
   try {
-    const odpoved = await fetch(`${API}/zarizeni`, {
+    const odpoved = await sit('/zarizeni', {
       method: 'PUT',
       headers: { 'content-type': 'application/json' },
       body: telo,

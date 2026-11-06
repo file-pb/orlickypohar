@@ -25,10 +25,10 @@ import { stavOdesilani, svetloGps, type StavGps } from './stav';
 import type { Zaznam } from './zaznam';
 
 /** Barevné tokeny, které proužek používá jako výplň. */
-export type VyplnProuzku = 'jede' | 'vystraha' | 'stavZruseny' | 'zvyrazneni';
+export type VyplnProuzku = 'jede' | 'vystraha' | 'stavZruseny' | 'zvyrazneni' | 'voda';
 
 export type Prouzek = {
-  druh: 'vysila' | 'drzi' | 'nezapisuje' | 'bezKlice' | 'pozastaveno';
+  druh: 'ukazka' | 'vysila' | 'drzi' | 'nezapisuje' | 'bezKlice' | 'pozastaveno';
   /** Co se do proužku napíše. Krátce — je to pás vysoký jeden řádek. */
   text: string;
   /**
@@ -50,7 +50,16 @@ export function stavProuzku(
   gps: StavGps,
   nahr: StavNahravani | null,
   ted = Date.now(),
+  ukazka = false,
 ): Prouzek | null {
+  // <b>Ukázka přebíjí všechno ostatní.</b> Je to jediný stav, ve kterém
+  // appka lže o světě — ukazuje přibalená data a nikam neodesílá — takže
+  // nesmí jít přehlédnout. Nejhorší, co ten režim umí, je rozhodčí, který
+  // v něm odstartuje rozjížďku a čeká, že se to stalo.
+  if (ukazka) {
+    return { druh: 'ukazka', text: 'UKÁZKA — NIC SE NEODESÍLÁ', vypln: 'voda' };
+  }
+
   // Žádný otevřený záznam: není co hlásit, a proužek se tedy nekreslí.
   if (!z || z.stav === 'ukonceny') return null;
 

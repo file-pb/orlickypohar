@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Radek } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
+import { ukazkaBezi, vypniUkazku, zapniUkazku } from '@/lib/ukazka';
 
 /**
  * Kebab: všechno, co není „co teď".
@@ -36,6 +37,7 @@ export function Kebab() {
   const router = useRouter();
   const okraje = useSafeAreaInsets();
   const [otevreno, setOtevreno] = useState(false);
+  const [vUkazce, setVUkazce] = useState(ukazkaBezi());
 
   // Zavřít dřív, než se někam jde: jinak by nabídka zůstala viset nad
   // obrazovkou, na kterou se právě přešlo.
@@ -72,6 +74,29 @@ export function Kebab() {
           {KAM.map((k) => (
             <Radek key={k.cil} text={k.text} popis={k.popis} onPress={() => jdi(k.cil)} />
           ))}
+          {/* <b>Ukázkový režim.</b> Appka se odpojí od serveru a jede
+              z přibalených dat; nahoře o sobě dá vědět proužkem. Po
+              přepnutí se zásobník obrazovek zahodí — jinak by na nich
+              zůstala data z toho druhého světa. */}
+          <Radek
+            text={vUkazce ? 'Ukončit ukázku' : 'Ukázkový režim'}
+            popis={
+              vUkazce
+                ? 'vrátí appku na server'
+                : 'appka bez serveru, z přibalených dat'
+            }
+            hodnota={vUkazce ? 'běží' : undefined}
+            barvaHodnoty={vUkazce ? t.voda : undefined}
+            onPress={() => {
+              setOtevreno(false);
+              if (vUkazce) vypniUkazku();
+              else zapniUkazku();
+              setVUkazce(ukazkaBezi());
+              router.dismissAll();
+              router.replace('/');
+            }}
+          />
+
           <Radek
             text="orlickypohar.klihovka.cz"
             hodnota="web"

@@ -8,6 +8,7 @@ import { stavNahravani } from '@/lib/tracker/nahravani';
 import { stavProuzku, type Prouzek } from '@/lib/tracker/prouzek';
 import { stavGps } from '@/lib/tracker/stav';
 import { otevrenyZaznam } from '@/lib/tracker/zaznam';
+import { ukazkaBezi } from '@/lib/ukazka';
 
 /**
  * Proužek spojení pod hodinami a baterií.
@@ -25,6 +26,11 @@ export function useProuzek(): Prouzek | null {
   useEffect(() => {
     const nacti = () => {
       try {
+        // V ukázce se do databáze nechodí vůbec — proužek hlásí režim.
+        if (ukazkaBezi()) {
+          setP(stavProuzku(null, { posledniBod: null, stariMs: null, presnostM: null, pocetBodu: 0 }, null, Date.now(), true));
+          return;
+        }
         const z = otevrenyZaznam();
         // Bez otevřeného záznamu se do dalších dotazů vůbec nechodí: tohle
         // běží na každé obrazovce, včetně té, kde zrovna jede odpočet.

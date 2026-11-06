@@ -15,7 +15,8 @@ a co obětuje.
 | 5 | rozhraní závodníka | návrh |
 | 6 | systémový proužek se spojením | **postaveno**, `lib/tracker/prouzek.ts` + test |
 | 7 | skořápka: landing, kebab, bez hlavičky | **postaveno** |
-| 8 | ukázkový režim | návrh, viz níž |
+| 8 | ukázkový režim | **postaveno**, `lib/ukazka.ts` + snímek + testy |
+| 9 | patička se stavem lodi | návrh, viz níž |
 
 Plátno s obrazovkami: **Appka závodníka — návrh**
 (<https://claude.ai/artifact/LP1yf9Ddz4AaceLnk8mkTK>). Pět kreseb:
@@ -434,20 +435,35 @@ zkoušení, a tak jsou pod kebabem.
 **Co sem teprve přijde.** Na soutěžní den stavová obrazovka závodníka,
 mimo něj kalendář — *„ale teď ne"*.
 
-### Widget vodočtu
+### Vodočet v appce byl a není
 
-Velké číslo hladiny, šipka a věta o změně za šest hodin, přítok a odtok.
-**Data jdou z našeho API** (`/vodocet/orlik`, veřejné); chodit oklikou přes
-Next by znamenalo svázat appku s adresou webu kvůli údaji, který má o dveře
-vedle. **Výpočet změny je tentýž jako na webu** a má vlastní testy —
-dvě kopie téhož vzorce jsou právě to, co se tiše rozejde a obě budou
-ukazovat číslo, jen jiné.
+Postavil jsem ho a Filip ho týž den zrušil (7. 11. 2026): *„ten vodočet
+v apce je blbost, to vyhoď … na webu je skvělý, bavíme se jen o apkách."*
+Je to rozdíl mezi dvěma dveřmi do téhož produktu: na webu je hladina to,
+kvůli čemu tam člověk jde, v appce by to byl údaj, kvůli kterému appku
+nikdo nezapne. Zůstal po tom jen tenhle odstavec — a ten je tu proto, aby
+to někdo za půl roku nestavěl znovu.
 
-**Graf tu zatím není.** Na webu je to SVG ve stránce bez knihovny;
-v React Native by znamenal `react-native-svg`, tedy **nativní závislost** —
-a ty se přidávají dávkou, protože po každé z nich Miloš instaluje ručně.
+### Patička se stavem lodi — navržená, nepostavená
 
-### Ukázkový režim — navržený, nepostavený
+Filip, 7. 11. 2026: *„ještě mi tam chybí řádek se statusem lodi (klidně
+jako plovoucí footer), ale aby posádka věděla, jak ji rozhodčí eviduje."*
+
+**Plovoucí patička u spodní hrany**, protože to musí být vidět pořád:
+tohle je jediné místo v appce, kde se posádka dozví, **co o ní zapsal
+někdo jiný**. Kolečko, věta a čas — *Odstartovala · na trati*, *Trest 720°
+— nevykonán*, *OCS — vrať se za startovní čáru*, *Dojela 3. · 14:52*,
+*DNF*.
+
+**Není to na klepání.** Zápis patří rozhodčímu; posádka ho jen vidí.
+Miloš si to sám omezil (nález R34): *„možná by i mohl potvrdit po jeho
+vykonání, že ho vykonal, ale abychom jim nekomplikovali život."*
+
+**Co k tomu chybí, a je to totéž jako u pokynu komise:** veřejná cesta.
+Jak rozhodčí loď eviduje, dnes žije jen pod `/sprava/…`. Bez ní je
+patička prázdný rámeček, takže se musí stavět spolu s tím API.
+
+### Ukázkový režim — postaveno 7. 11. 2026
 
 Filip, 7. 11. 2026: *„když si to bude někdo chtít prohlídnout, tam mu to
 nechci pouštět na serveru po telefonu a musíme mít nějaký demo mód"*,
@@ -463,15 +479,48 @@ ta druhá polovina — **odkud vzít data**. Tři cesty a jedno doporučení:
 | ukázkový ročník na **ostrém API** | nic se nepřibaluje | je to pořád server, což je přesně to, čemu se má předejít |
 | **mock, který už máme** (`tools/fake-api.py`) nasazený zvlášť | hotová data | další běžící služba a další adresa |
 
-**Doporučení: přibalený snímek.** Je to jediná z těch tří, která splní to,
-co ta věta doopravdy žádá — *prohlédnout si appku, aniž by to šlo na
-server*. Zápisy (klepnutí na cíl, spuštění procedury) se v něm neodesílají
-nikam, jen mění stav v paměti; po vypnutí režimu se zahodí.
+**Postavený je přibalený snímek**, protože je to jediná z těch tří, která
+splní to, co ta věta doopravdy žádá.
 
-**Dvě věci, které s tím musí přijít, jinak to nadělá škodu:** režim musí
-být **vidět** (jinak někdo odstartuje rozjížďku v ukázce a bude čekat, že
-se to stalo) — nabízí se na to proužek nahoře, který už existuje —
-a **nesmí jít zapnout omylem** uprostřed závodu.
+| Co | Kde |
+| --- | --- |
+| přepínač a odpovídač | `app/src/lib/ukazka.ts` |
+| snímek, 13 cest, 152 kB | `app/src/ukazka/snimek.json` |
+| jeho výroba z mocku | `app/scripts/ukazka.py` |
+| jediný šev na síť | `app/src/lib/sit.ts` |
+| testy | `app/testy/ukazka.test.ts`, 13 kontrol |
+
+**Data se nevymýšlejí.** Snímek pořizuje skript z mocku
+(`tools/fake-api.py`), tedy z týchž dat, na kterých se zkouší web. Ručně
+psaný snímek by se tvarem rozešel se schématem a poznalo by se to, až by
+v appce zůstalo prázdno. `ukazka.py --kontrola` řekne, jestli snímek
+s mockem ještě sedí.
+
+**Kdo je v ukázce u vesla, je rozhodnutí, ne data:** účet, který v mocku
+někde velí (`Bearer milos`). Jinak by ukázka neukázala start ani cíl, tedy
+to, kvůli čemu appka vznikla.
+
+**Zápisy nemizí, mění snímek v paměti.** Ohlásit rozjížďku, spustit
+proceduru, odložit, odvolat, odstartovat, ukončit — všechno funguje
+a odpočet běží z hodin telefonu jako doopravdy. Kdyby se zápisy jen
+spolkly, ukázka by po klepnutí neudělala nic a vypadala by rozbitě.
+Každá nová ukázka začíná znovu; soubor se nemění.
+
+**Jediný šev na síť, a hlídá ho test.** `fetch` byl na pěti místech ve
+třech souborech; slib *„na server se nejde vůbec"* se s pěti místy udržet
+nedá. Teď je v `lib/sit.ts` (a v přihlašování, které v ukázce neběží)
+a test padne, jakmile se objeví jinde — vyzkoušeno sabotáží.
+
+**Režim je vidět a nepamatuje se.** Nahoře svítí proužek
+*UKÁZKA — NIC SE NEODESÍLÁ*, který přebíjí všechny stavy sledování; po
+zabití appky je režim pryč. To je pojistka proti tomu nejhoršímu, co ta
+věc umí — aby někdo u vody odstartoval rozjížďku v ukázce a čekal, že se
+to stalo.
+
+**Co v ukázce není:** klíč k lodi a registrace upozornění se tváří jako
+nevydané (401), protože v ukázce nemá kdo mít loď. A cílová obrazovka
+dostává zápis složený z veřejného detailu — čísla přihlášek jsou v něm
+dopočítaná pořadím, ne skutečná.
 
 ---
 
