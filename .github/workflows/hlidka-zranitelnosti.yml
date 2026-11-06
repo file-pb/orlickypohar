@@ -20,6 +20,10 @@
 # nevšimne; otevřené issue vydrží. Na jedno otevřené issue se dál komentuje,
 # aby jich nenarostla řada.
 #
+# <b>Úsudek hlídky se zkouší při každém běhu</b>
+# (`tools/hlidka-zranitelnosti.test.py`). Že poplach dojde, je jedna věc; že
+# hlídka pozná, co hlásit, je druhá — a tu nekontrolovalo do 6. 11. 2026 nic.
+#
 # <b>Hlášení se dá vyzkoušet nanečisto</b> (`zkouska` u ručního běhu).
 # Hlídka, která měsíce mlčí, totiž nijak neukáže, že její poplach vůbec
 # funguje — a to je přesně ta kontrola, co měří sebe a ne svět. Zkouška
@@ -53,12 +57,35 @@ jobs:
           ZKOUSKA: ${{ (github.event_name == 'workflow_dispatch' && inputs.zkouska) && 'ano' || 'ne' }}
         run: |
           set -uo pipefail
-          if python3 tools/hlidka-zranitelnosti.py > nalez.txt 2>&1; then
-            zmena=ne
-          else
+          zmena=ne
+          : > nalez.txt
+
+          # Úsudek hlídky nejdřív. `zkouska` níž ověřuje cestu hlášení, ne
+          # úsudek — a 6. 11. 2026 vypsala hlídka „Klid“ nad otevřeným high
+          # CVE-2026-118664, protože měla dvě tiché vady. Hlídka, která soudí
+          # špatně, nesmí dostat možnost vypsat uklidňující větu.
+          #
+          # Selhání téhle zkoušky **jde taky do issue**, ne do červeného běhu:
+          # platí tu totéž co pro nálezy — selhání běhu si nikdo nevšimne.
+          if ! python3 tools/hlidka-zranitelnosti.test.py > uzudek.txt 2>&1; then
+            zmena=ano
+            {
+              echo "**Hlídka soudí špatně — neprošla její vlastní zkouška.**"
+              echo "Dokud to platí, ber každý její „Klid“ jako neznámý stav, ne jako dobrou zprávu."
+              echo
+              echo '```'
+              cat uzudek.txt
+              echo '```'
+              echo
+            } >> nalez.txt
+          fi
+          cat uzudek.txt
+
+          if ! python3 tools/hlidka-zranitelnosti.py > kontrola.txt 2>&1; then
             zmena=ano
           fi
-          cat nalez.txt
+          cat kontrola.txt
+          cat kontrola.txt >> nalez.txt
           if [ "$ZKOUSKA" = "ano" ]; then
             # Vynucený nález: ověřuje cestu hlášení, ne stav zranitelností.
             echo >> nalez.txt
