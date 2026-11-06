@@ -6869,7 +6869,7 @@ export interface components {
         BodyVRozjizdceDto: {
             /** Format: int32 */
             cislo: number;
-            /** Format: int32 */
+            /** Format: double */
             body: number;
             skrtnuto: boolean;
         };
@@ -8287,7 +8287,7 @@ export interface components {
         VysledekZavoduDto: {
             lod: string;
             kategorie: string;
-            /** Format: int32 */
+            /** Format: double */
             body: number;
             /** Format: int32 */
             poradi: number;

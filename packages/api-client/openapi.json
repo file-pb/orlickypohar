@@ -7367,8 +7367,8 @@
                         "format": "int32"
                     },
                     "body": {
-                        "type": "integer",
-                        "format": "int32"
+                        "type": "number",
+                        "format": "double"
                     },
                     "skrtnuto": {
                         "type": "boolean"
@@ -13012,8 +13012,8 @@
                         "type": "string"
                     },
                     "body": {
-                        "type": "integer",
-                        "format": "int32"
+                        "type": "number",
+                        "format": "double"
                     },
                     "poradi": {
                         "type": "integer",
