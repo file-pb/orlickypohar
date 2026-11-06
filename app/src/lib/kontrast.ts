@@ -42,6 +42,12 @@ export function jas(barva: string): number {
   return 0.2126 * slozka(r) + 0.7152 * slozka(g) + 0.0722 * slozka(b);
 }
 
+/** WCAG 2.2 AA: běžný text. */
+export const MEZ_TEXT = 4.5;
+
+/** WCAG 2.2 AA: grafický prvek a velké písmo. */
+export const MEZ_GRAFIKA = 3;
+
 /** Poměr kontrastu dvou barev, 1:1 až 21:1. */
 export function pomerKontrastu(a: string, b: string): number {
   const ja = jas(a);
@@ -62,4 +68,43 @@ export function pismoNaVyplni(t: Barvy, vypln: string): string {
   return uchazeci.reduce((nej, b) =>
     pomerKontrastu(b, vypln) > pomerKontrastu(nej, vypln) ? b : nej,
   );
+}
+
+/**
+ * Grafický prvek na výplni: zamýšlená barva, dokud na té ploše drží mez,
+ * jinak ustoupí písmu panelu.
+ *
+ * <b>Proč to nejde vyřešit jinou pevnou barvou.</b> Proužky fází na panelu
+ * odpočtu nesou barvy znamení (bílá vlajka, žlutý přípravný) a panel má
+ * dvě výplně — modrou `procedura` a jantarovou `vystraha` v poslední
+ * minutě. Změřeno 6. 11. 2026: <b>v tmavé sadě neexistuje barva, která by
+ * držela 3:1 proti oběma</b>. Jantar (jas 0,332) chce protějšek s jasem
+ * nejvýš 0,077; modrá (jas 0,057) chce buď nejméně 0,271, nebo zápornou
+ * hodnotu, která neexistuje. Ty dva rozsahy se neprotínají, takže barva
+ * proužku <b>musí</b> záviset na ploše pod ním.
+ *
+ * Co z toho plyne na obrazovce: na modrém panelu zůstávají barvy znamení,
+ * jak byly (9,81 a 5,84 v tmavé sadě), a ustoupí jen tam, kde by zmizely
+ * — v poslední minutě na jantaru. Tam jsou ostatně úseky výzvy a přípravy
+ * dávno plné a jediný, který se ještě hýbe, je ten minutový, takže se
+ * rozlišením barev nic neztrácí.
+ */
+export function barvaNaVyplni(t: Barvy, vypln: string, zamyslena: string): string {
+  return pomerKontrastu(zamyslena, vypln) >= MEZ_GRAFIKA
+    ? zamyslena
+    : pismoNaVyplni(t, vypln);
+}
+
+/**
+ * Táž barva průhledně — pro žlábek, ve kterém proužek roste.
+ *
+ * Poměr kontrastu nad průhlednou vrstvou spočítat nejde (záleží na tom,
+ * co je pod ní), takže žlábek žádnou mez nehlídá; drží jen to, že je ze
+ * stejné barvy jako proužek, a tedy viditelný na téže ploše.
+ */
+export function sPruhlednosti(barva: string, podil: number): string {
+  const alfa = Math.round(Math.min(Math.max(podil, 0), 1) * 255)
+    .toString(16)
+    .padStart(2, '0');
+  return barva + alfa;
 }

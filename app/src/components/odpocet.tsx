@@ -12,7 +12,7 @@ import {
 import { Pressable } from 'react-native';
 
 import { useDirigent } from '@/lib/dirigent';
-import { pismoNaVyplni } from '@/lib/kontrast';
+import { barvaNaVyplni, pismoNaVyplni, sPruhlednosti } from '@/lib/kontrast';
 import { useTheme } from '@/hooks/use-theme';
 import type { Barvy } from '@/constants/theme';
 import {
@@ -606,18 +606,31 @@ function Bezi({
       <View style={s.useky}>
         {useky.map((u) => (
           <View key={u.faze} style={{ flex: u.delkaS }}>
-            <View style={[s.zlab, u.faze === 'minuta' && minuta ? s.zlabMinuta : null]}>
+            <View
+              style={[
+                s.zlab,
+                { backgroundColor: sPruhlednosti(pismo, 0.3) },
+                u.faze === 'minuta' && minuta ? s.zlabMinuta : null,
+              ]}>
               <View
                 style={{
                   width: `${Math.round(u.hotovo * 100)}%`,
                   height: '100%',
                   borderRadius: 3,
-                  backgroundColor:
+                  // Barvy znamení zůstávají, dokud je plocha pod nimi
+                  // unese. Na jantaru poslední minuty v tmavé sadě by
+                  // zmizely (2,75:1 a 1,64:1 proti mezi 3:1), takže tam
+                  // ustoupí písmu panelu — pevná barva pro obě plochy
+                  // neexistuje, viz `lib/kontrast.ts`.
+                  backgroundColor: barvaNaVyplni(
+                    t,
+                    pozadi,
                     u.faze === 'vyzva'
                       ? t.vyzvaZnameni
                       : u.faze === 'priprava'
                         ? t.pripravaZnameni
                         : t.minutaZnameni,
+                  ),
                 }}
               />
             </View>
@@ -679,7 +692,9 @@ const s = StyleSheet.create({
   // k výběru písma podle výplně musel existovat i výběr jeho zeslabení.
   tlumeneNaVyplni: { opacity: 0.85 },
   useky: { flexDirection: 'row', alignItems: 'flex-end', gap: 5, marginTop: 12 },
-  zlab: { height: 7, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.3)', overflow: 'hidden' },
+  // Barvu žlábku dosazuje komponenta: bílá napevno byla na jantarovém
+  // panelu v tmavé sadě k nerozeznání od plochy.
+  zlab: { height: 7, borderRadius: 3, overflow: 'hidden' },
 
   // <b>Poslední minuta se pozná tvarem, ne barvou.</b> Filip chtěl na ní
   // červenou (29. 10. 2026) a lososová, která z toho vyšla, mu neseděla

@@ -11,8 +11,10 @@ a co obětuje.
 | 1 | kontrast písma na barevné výplni | **postaveno**, `app/src/lib/kontrast.ts` + test |
 | 2 | tři velikosti akce a 34 přepsaných terčů | **postaveno**, `Akce` a `Radek` v `ui.tsx` |
 | 3 | kontrola terčů v CI | **zapojena** vedle kontroly tokenů |
-| 4 | rozhraní závodníka | návrh, pruh se mezitím předělal (níž) |
-| 5 | rozcestník do tří pásů | návrh |
+| 4 | proužky fází na jantarovém panelu | **postaveno**, viz níž |
+| 5 | rozhraní závodníka | návrh |
+| 6 | systémový proužek se spojením | návrh |
+| 7 | rozcestník do tří pásů | návrh |
 
 Plátno s obrazovkami: **Appka závodníka — návrh**
 (<https://claude.ai/artifact/LP1yf9Ddz4AaceLnk8mkTK>). Pět kreseb:
@@ -90,9 +92,23 @@ ploše poslední minuty v tmavé sadě nedrží ani mez 3:1 pro grafiku:
 | `vyzvaZnameni` / `minutaZnameni` | 9,81 | **2,75** |
 | `pripravaZnameni` | 5,84 | **1,64** |
 
-Žlutý proužek na jantaru je prakticky neviditelný. Přebarvit ho jde, ale
-je to **rozhodnutí o vzhledu** — ty barvy nesou význam vlajek, ne ozdobu —
-takže to tenhle commit nedělá.
+Žlutý proužek na jantaru byl prakticky neviditelný.
+
+**Opraveno 7. 11. 2026 — a vyšlo z toho, že jinak to ani nešlo.** Hledal
+jsem napřed pevnou barvu, která by na obou plochách prošla, a **v tmavé
+sadě žádná neexistuje**: jantar (jas 0,332) chce protějšek s jasem nejvýš
+0,077, modrá (jas 0,057) chce buď aspoň 0,271, nebo zápornou hodnotu. Ty
+dva rozsahy se neprotínají, takže barva proužku **musí** záviset na ploše
+pod ním.
+
+`barvaNaVyplni` proto ponechá barvu znamení, dokud ji plocha unese, a jinak
+ustoupí písmu panelu. Na modrém panelu se tedy nezměnilo nic (9,81 a 5,84
+v tmavé sadě); na jantaru poslední minuty jde trojice z **2,75 · 1,64 ·
+2,75** na **6,54:1**. Ztráta rozlišení tam nic nestojí: úseky výzvy
+a přípravy jsou v poslední minutě dávno plné a hýbe se jen ten minutový.
+
+Žlábek, ve kterém proužek roste, byl bílý napevno a měl tentýž problém —
+bere teď tutéž barvu s třetinovou průhledností.
 
 ### 2. Čtyři z pěti klepacích míst byla menší, než snese ruka na lodi
 
@@ -198,11 +214,12 @@ a jestli se vysílá poloha** — a **odpočet ne**.
 Jedna obrazovka, čtyři vodorovné pásy odshora dolů; pořadí je pořadí
 otázek, které posádka na vodě má.
 
-1. **Pruh stavu** — horní třetina obrazovky, celá v barvě. **Barva patří
-   datům, ne závodu** (Filip, 6. 11. 2026): nese jméno lodi, stavové slovo
-   ve 40 px (*Vysílá se* / *Drží se v telefonu* / *Nenahrává se* /
-   *Nesleduje se*) a jednu větu, co to znamená. Pod čarou pak **závod** —
-   rozjížďka, poslední znamení a jeho čas.
+0. **Systémový proužek** — úzký pás pod hodinami a baterií, nad vším
+   ostatním. Nese **spojení**, a je na každé obrazovce appky; má vlastní
+   oddíl níž.
+1. **Pruh stavu** — horní třetina obrazovky, celá v barvě stavu. Nese
+   číslo rozjížďky, jméno regaty, **stavové slovo ve 44 px** a pod čárou
+   **poslední znamení a kdy padlo**.
 2. **Pokyn závodní komise** — karta se svislým jantarovým pruhem vlevo.
    Je tam **jen tehdy, když nějaký pokyn je**, a sama nezmizí.
 3. **Moje loď** — jméno, číslo plachty, třída, posádka po řádcích.
@@ -221,12 +238,6 @@ Dole jediný terč na celé obrazovce: **Pozastavit vysílání polohy**,
   v klubovně a telefon už jen jede. Obrazovka, která je k dívání, se
   navrhuje jinak než obrazovka k ovládání: velké písmo, stálé polohy,
   žádné stavy, do kterých se dá zabloudit.
-- **Barva nese to jediné, co ví jenom telefon.** Co se děje na vodě,
-  posádka slyší od komise — je to totéž pravidlo, které sem nepustilo
-  odpočet. Jestli se její stopa dostane ven, ale neví odnikud jinud, a je
-  to zároveň jediná věc, se kterou může sama něco udělat. **Závod zůstává
-  v pruhu textem**, protože je to podřízená informace, ne proto, že by
-  nebyla důležitá.
 - **Barva se pozná koutkem oka a liší se jasem, ne jen odstínem.** Takže
   ji rozliší i ten, kdo zelenou od červené nerozezná. Měřeno výš.
 - **Loď s posádkou je v tom proto, že se kontroluje na břehu.** Přejímací
@@ -253,32 +264,65 @@ Dole jediný terč na celé obrazovce: **Pozastavit vysílání polohy**,
   (`/serie/{serie}/zavody/{zavod}/trat` je bez přihlášení), ale mapa je
   obrazovka k prohlížení a tahle je k mrknutí. Patří na vlastní.
 
-### Čtyři stavy dat, a každý má svou barvu
+### Čtyři stavy závodu, a každý má svou barvu
 
-Prahy nejsou vymyšlené: appka odesílá nejvýš jednou za minutu
-(`ZIVE_MS = 60_000` v `app/src/lib/tracker/nahravani.ts`), a stavy GPS
-i odesílání už appka počítá (`svetloGps`, `stavOdesilani`
-v `tracker/stav.ts`). Nezavádí se tedy druhý stavový automat, jen se ten
-hotový ukáže nahoře.
+Mapování na `stavStartu` z `app/src/lib/start.ts` je přímé, takže se
+nezavádí druhý stavový automat:
+
+| Stav | Odkud | Barva | Co stojí pod slovem |
+| --- | --- | --- | --- |
+| **Čeká se** | není rozjížďka, nebo `bezCasu` | papír a linka | *Žádná rozjížďka neběží* |
+| **Startuje se** | `procedura` | `procedura` | poslední znamení a čas |
+| **Jede se** | `odstartovano`, `jede` | `jede` | *Start padl* a čas |
+| **Odvoláno** | úkon `Odvolat` / `Odlozit` | `stavZruseny` | *Vraťte se ke startu* |
+
+Pět barev se nezavádí a poslední minuta svou barvu **nemá** — to je
+rozdíl proti panelu rozhodčího, a schválně: posádce by jantarová řekla
+„něco se blíží" bez toho, aby věděla co, a kdyby přišla po síti pozdě,
+řekla by to ve špatnou chvíli.
+
+---
+
+## Systémový proužek: spojení, a na každé obrazovce
+
+Filip, 6. 11. 2026, a je to jeho nápad, ne můj: spojení patří **úplně
+nahoru, do systémového proužku** — pod hodiny a baterii. (Napřed jsem to
+pochopil tak, že se má podle dat barvit pruh stavu, a přebarvil ho; to
+byla chyba a je opravená 7. 11. 2026.)
+
+**Proč je to lepší než karta na obrazovce závodníka.** Tahle informace
+není o závodě, je o telefonu — a je stejně užitečná rozhodčímu u startu
+jako posádce na vodě. V systémovém proužku je vidět **na každé obrazovce
+appky** a nezabere ani řádek obsahu. Je to zároveň jediná věc, kterou ví
+jenom telefon a se kterou může jeho majitel sám něco udělat; co se děje
+na vodě, slyší od komise.
 
 | Stav | Kdy | Barva | Co to znamená |
 | --- | --- | --- | --- |
 | **Vysílá se** | zapisuje a odeslalo do minuty | `jede` | server má všechno |
 | **Drží se v telefonu** | zapisuje, neodeslalo | `vystraha` | bez signálu, body čekají — **není to ztráta** |
 | **Nenahrává se** | nezapisuje vůbec | `stavZruseny` | **jediný stav, který se musí řešit** |
-| **Nesleduje se** | pozastaveno, nebo bez klíče | papír a linka | záměr, ne porucha |
+| *(žádný proužek)* | nic se nezaznamenává | — | není co hlásit |
 
-**Proč zrovna tyhle čtyři.** Rozlišit „drží se" od „nenahrává se" je to
-podstatné: v prvním případě posádka nemá dělat nic a v druhém musí. Jedna
-červená pro obojí by posádku hnala řešit výpadek signálu uprostřed
-rozjížďky, a to je horší než mlčet.
+**Rozlišit druhý stav od třetího je to podstatné:** v jednom nemá posádka
+dělat nic a v druhém musí. Jedna červená pro obojí by ji hnala řešit
+výpadek signálu uprostřed rozjížďky, a to je horší než mlčet.
 
-**Závod má v pruhu řádek, ne barvu.** Stav startu (`stavStartu`
-v `app/src/lib/start.ts`) se promítne do textu pod čarou: *Rozjížďka 3 ·
-Příprava · 14:33*. Poslední minuta tam svou barvu **nemá** — to je rozdíl
-proti panelu rozhodčího, a schválně: posádce by jantarová řekla „něco se
-blíží" bez toho, aby věděla co, a kdyby přišla po síti pozdě, řekla by to
-ve špatnou chvíli.
+**Když se nic nezaznamenává, proužek tam není.** Pruh, který svítí pořád,
+se přestane číst — a appka ten případ zná: *„Čeká se na rozpravu"* platilo
+i hodinu po rozpravě (nález 9 v `TABULE-DIVAK.md`).
+
+**Prahy jsou z kódu, ne vymyšlené.** Appka odesílá nejvýš jednou za minutu
+(`ZIVE_MS = 60_000` v `app/src/lib/tracker/nahravani.ts`), takže „vysílá
+se" je odesláno do minuty a „drží se" všechno nad ní. Stavy GPS
+i odesílání už appka počítá (`svetloGps`, `stavOdesilani`
+v `tracker/stav.ts`) a rozcestník je dnes čte každé tři vteřiny — zdroj
+tedy existuje, chybí jen to místo nahoře.
+
+**Co to obnáší.** Na Androidu i na iPhonu se barevné pozadí systémové
+lišty dělá tak, že si ji appka podloží vlastním pásem o výšce horního
+bezpečného okraje; `expo-status-bar` k tomu přepne světlost písma hodin.
+Není to nativní závislost navíc, takže to Miloše nestojí instalaci.
 
 ### Kde to leží a kdy se to ukáže
 
@@ -463,9 +507,9 @@ barva, a to že světlý režim je na slunci lepší než tmavý.
    držely 3:1 (dnes 1,64 a 2,75), i za cenu toho, že přestanou odpovídat
    barvám vlajek?
 
-Rozhodnuté 6. 11. 2026: barva pruhu patří datům (ne závodu), písmo na
-barevné ploše se vybírá podle jejího jasu, a oprava terčů šla jedním
-commitem.
+Rozhodnuté 6.–7. 11. 2026: spojení patří do systémového proužku nahoře
+(ne do pruhu stavu, který zůstává závodu), písmo na barevné ploše se
+vybírá podle jejího jasu, a oprava terčů šla jedním commitem.
 
 **Co návrh nedoporučuje stavět vůbec:** mapu trati pro posádku, tresty
 posádky (není rozhodnuto, čí vidí), a odpočet v jakékoliv podobě.

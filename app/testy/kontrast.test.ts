@@ -14,7 +14,14 @@
 import assert from 'node:assert/strict';
 
 import { Colors, type Barvy } from '../src/constants/theme.ts';
-import { jas, pismoNaVyplni, pomerKontrastu } from '../src/lib/kontrast.ts';
+import {
+  barvaNaVyplni,
+  jas,
+  MEZ_GRAFIKA,
+  pismoNaVyplni,
+  pomerKontrastu,
+  sPruhlednosti,
+} from '../src/lib/kontrast.ts';
 
 let prosly = 0;
 function zkus(nazev: string, f: () => void) {
@@ -74,6 +81,64 @@ zkus('na tmavé ploše vyjde světlé písmo a na světlé tmavé', () => {
 zkus('bílá na tmavém „jede" by mez nedržela — proto se nevybere', () => {
   assert.ok(pomerKontrastu('#ffffff', Colors.dark.jede) < 3);
   assert.notEqual(pismoNaVyplni(Colors.dark, Colors.dark.jede), '#ffffff');
+});
+
+// --- proužky fází na panelu odpočtu ----------------------------------
+
+/** Dvě plochy, na kterých panel odpočtu stojí. */
+const PANELY: (keyof Barvy)[] = ['procedura', 'vystraha'];
+/** Tři proužky, a nesou barvy znamení. */
+const ZNAMENI: (keyof Barvy)[] = ['vyzvaZnameni', 'pripravaZnameni', 'minutaZnameni'];
+
+for (const [jmenoSady, sada] of Object.entries(Colors) as [string, Barvy][]) {
+  for (const panel of PANELY) {
+    for (const znameni of ZNAMENI) {
+      zkus(`${jmenoSady}: proužek ${znameni} na ${panel} drží ${MEZ_GRAFIKA}:1`, () => {
+        const barva = barvaNaVyplni(sada, sada[panel], sada[znameni]);
+        const pomer = pomerKontrastu(barva, sada[panel]);
+        assert.ok(pomer >= MEZ_GRAFIKA, `vyšlo ${pomer.toFixed(2)}:1 (barva ${barva})`);
+      });
+    }
+  }
+}
+
+zkus('na modrém panelu zůstávají barvy znamení, jaké jsou', () => {
+  // Ustoupit mají jen tam, kde by zmizely — jinde by to byla ztráta
+  // významu bez důvodu.
+  for (const sada of [Colors.light, Colors.dark]) {
+    assert.equal(
+      barvaNaVyplni(sada, sada.procedura, sada.pripravaZnameni),
+      sada.pripravaZnameni,
+    );
+  }
+});
+
+zkus('na jantaru v tmavé sadě ustoupí, protože by zmizely', () => {
+  assert.ok(pomerKontrastu(Colors.dark.pripravaZnameni, Colors.dark.vystraha) < MEZ_GRAFIKA);
+  assert.notEqual(
+    barvaNaVyplni(Colors.dark, Colors.dark.vystraha, Colors.dark.pripravaZnameni),
+    Colors.dark.pripravaZnameni,
+  );
+});
+
+zkus('žádná pevná barva proužku pro obě plochy v tmavé sadě neexistuje', () => {
+  // Tohle je důvod, proč je `barvaNaVyplni` funkce a ne tabulka. Kdyby
+  // se tokeny změnily tak, že pevná barva existovat začne, test padne
+  // a pravidlo se dá zjednodušit.
+  const rozsah = (vypln: string) => ({
+    dolni: (jas(vypln) + 0.05) / MEZ_GRAFIKA - 0.05,
+    horni: MEZ_GRAFIKA * (jas(vypln) + 0.05) - 0.05,
+  });
+  const m = rozsah(Colors.dark.procedura);
+  const j = rozsah(Colors.dark.vystraha);
+  assert.ok(Math.min(m.dolni, j.dolni) < 0, 'tmavá společná barva by existovala');
+  assert.ok(Math.max(m.horni, j.horni) > 1, 'světlá společná barva by existovala');
+});
+
+zkus('průhlednost se skládá na osmimístný zápis', () => {
+  assert.equal(sPruhlednosti('#58c98c', 0.3), '#58c98c4d');
+  assert.equal(sPruhlednosti('#58c98c', 1), '#58c98cff');
+  assert.equal(sPruhlednosti('#58c98c', 0), '#58c98c00');
 });
 
 console.log(`  ${prosly} prošlo`);
