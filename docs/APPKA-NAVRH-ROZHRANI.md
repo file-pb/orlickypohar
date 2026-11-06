@@ -1,8 +1,18 @@
 # Appka: návrh rozhraní závodníka a sjednocení toho, co stojí
 
-**Stav k 30. 10. 2026.** Návrh k rozhodnutí, ne postavená appka. U každé
-věci je **jedna doporučená varianta**, ne přehled možností — a u každé
-je napsané, co drží a co obětuje.
+**Stav k 6. 11. 2026.** Návrh k rozhodnutí. U každé věci je **jedna
+doporučená varianta**, ne přehled možností — a u každé je napsané, co drží
+a co obětuje.
+
+**Co už z něj stojí** (Filip rozhodl 6. 11. 2026, commit `85d66b7`):
+
+| | Co | Stav |
+| --- | --- | --- |
+| 1 | kontrast písma na barevné výplni | **postaveno**, `app/src/lib/kontrast.ts` + test |
+| 2 | tři velikosti akce a 34 přepsaných terčů | **postaveno**, `Akce` a `Radek` v `ui.tsx` |
+| 3 | kontrola terčů v CI | **zapojena** vedle kontroly tokenů |
+| 4 | rozhraní závodníka | návrh, pruh se mezitím předělal (níž) |
+| 5 | rozcestník do tří pásů | návrh |
 
 Plátno s obrazovkami: **Appka závodníka — návrh**
 (<https://claude.ai/artifact/LP1yf9Ddz4AaceLnk8mkTK>). Pět kreseb:
@@ -19,7 +29,9 @@ záleží* a *Co má vidět posádka*. Žádné z nich se tu nemění.
 
 Tři měření. Dvě z nich našly v appce vadu, která tam dneska je.
 
-### 1. V tmavém režimu jsou čtyři plochy pod mezí kontrastu
+### 1. V tmavém režimu byly čtyři plochy pod mezí kontrastu
+
+**Opraveno 6. 11. 2026.** Zbytek oddílu popisuje, co se našlo a proč.
 
 Spočítáno z `app/src/constants/theme.ts`, tedy ze stejného zdroje, jaký
 čte `tools/kontrola-tokenu.py`. Mez WCAG 2.2 AA pro běžný text je 4,5:1.
@@ -44,9 +56,17 @@ Komentář v `theme.ts` u `vystraha` mluví o bílém písmu na panelu poslední
 minuty a dokládá to měřením — ale měřená je hodnota světlá (`#8a5000`),
 ne tmavá (`#c9922f`).
 
-**Oprava bez nového tokenu** (nový token by znamenal zápis do
-`web/app/globals.css`, a ten návrh nemá v ruce): na barevné ploše se
-písmo bere podle režimu — bílé ve světlém, `t.pozadi` v tmavém.
+**Postavená oprava: písmo se vybírá podle jasu výplně, ne podle režimu.**
+Nový token nevznikl schválně — každý klíč v `theme.ts` musí mít protějšek
+ve webovém `globals.css`, jinak kontrola tokenů spadne, a tahle potřeba je
+jen appky. `pismoNaVyplni` v `app/src/lib/kontrast.ts` proto vybírá z barev,
+které v sadě už jsou (`text`, `papir`, `pozadi`), tu s nejlepším kontrastem.
+
+**Podle režimu by to nešlo**, a to je ten důvod, proč je to funkce a ne
+podmínka: „v tmavém režimu tmavé písmo" by na `dark.procedura` (`#16495c`)
+dalo tmavé na tmavém, tedy horší výsledek než ta bílá, co tam byla.
+
+Co z toho vyjde v tmavé sadě:
 
 | Na výplni (tmavý režim) | bílá | `t.pozadi` |
 | --- | --- | --- |
@@ -55,10 +75,29 @@ písmo bere podle režimu — bílé ve světlém, `t.pozadi` v tmavém.
 | `stavZruseny` | 3,07 | **5,87** |
 | `voda` | 2,35 | **7,66** |
 
-`procedura` je v obou sadách tmavá a bílou nese (5,67 / 9,81) — ta se
-nemění.
+`procedura` je v obou sadách tmavá a světlé písmo nese (5,67 / 9,81).
 
-### 2. Čtyři z pěti klepacích míst jsou menší, než snese ruka na lodi
+**Hlídá to test**, ne komentář: `app/testy/kontrast.test.ts` jede přes
+**každou** výplň v obou sadách a spadne na šesti případech, když se písmo
+začne vybírat napevno (vyzkoušeno sabotáží 6. 11. 2026).
+
+**Jedna věc z toho zbývá, a je změřená.** Proužky fází na panelu odpočtu
+jsou barvy znamení — bílá vlajka, žlutý přípravný — a na **jantarové**
+ploše poslední minuty v tmavé sadě nedrží ani mez 3:1 pro grafiku:
+
+| | na `procedura` | na `vystraha` |
+| --- | --- | --- |
+| `vyzvaZnameni` / `minutaZnameni` | 9,81 | **2,75** |
+| `pripravaZnameni` | 5,84 | **1,64** |
+
+Žlutý proužek na jantaru je prakticky neviditelný. Přebarvit ho jde, ale
+je to **rozhodnutí o vzhledu** — ty barvy nesou význam vlajek, ne ozdobu —
+takže to tenhle commit nedělá.
+
+### 2. Čtyři z pěti klepacích míst byla menší, než snese ruka na lodi
+
+**Opraveno 6. 11. 2026:** z 24 klepacích míst drží mez 44 pt **všech 24**
+a kontrola je v CI. Zbytek oddílu popisuje, co se našlo.
 
 Nový nástroj: `tools/kontrola-dotyku.py`. Měří deklarovanou geometrii
 terče (`minHeight`, svislá výplň, `hitSlop`) a řádek textu počítá
@@ -105,8 +144,20 @@ dost velký, ale překrývá ho něco jiného, z `.tsx` nevyčteš. A nic neví
 o odstupu mezi terči, který je na lodi stejně důležitý jako jejich
 velikost.
 
-**Do CI zatím nepatří** — dneska by shodila každý běh. Patří tam
-společně s opravou těch 34 míst, jedním commitem.
+**Do CI šla až s opravou** (6. 11. 2026), ne dřív: kontrola, která shazuje
+každý běh, se vypne a zůstane z ní komentář.
+
+**Pátá sabotáž neprošla — a byla z nich nejužitečnější.** Sražení výplně
+`Akce` na nulu kontrola neohlásila, a z toho vyšly dvě věci:
+
+- **chyba, která je opravená:** kontrola hledala proměnnou se stylem
+  v celém souboru, takže do `Klepaci` dosadila stejnojmennou proměnnou
+  z `Karta` a terč tím propustila. Rozsah je teď omezený na funkci.
+- **slepé místo, které opravit nejde a je zapsané v kontrole:** styl
+  **předaný propem** rozpustit nelze. React Native nechává pozdější
+  položku pole přebít dřívější, takže kdyby `Akce` nastavila
+  `minHeight: 0`, terč by se doopravdy srazil a kontrola by mlčela.
+  Drží to jen pravidlo, že výšku nastavují `Akce` a `Radek`, a nikdo jiný.
 
 ### 3. Na slunci nerozhoduje barva, ale velikost
 
@@ -147,9 +198,11 @@ a jestli se vysílá poloha** — a **odpočet ne**.
 Jedna obrazovka, čtyři vodorovné pásy odshora dolů; pořadí je pořadí
 otázek, které posádka na vodě má.
 
-1. **Pruh stavu** — horní třetina obrazovky, celá v barvě stavu. Nese
-   číslo rozjížďky, jméno regaty, **stavové slovo ve 44 px** a pod čárou
-   **poslední znamení a kdy padlo**.
+1. **Pruh stavu** — horní třetina obrazovky, celá v barvě. **Barva patří
+   datům, ne závodu** (Filip, 6. 11. 2026): nese jméno lodi, stavové slovo
+   ve 40 px (*Vysílá se* / *Drží se v telefonu* / *Nenahrává se* /
+   *Nesleduje se*) a jednu větu, co to znamená. Pod čarou pak **závod** —
+   rozjížďka, poslední znamení a jeho čas.
 2. **Pokyn závodní komise** — karta se svislým jantarovým pruhem vlevo.
    Je tam **jen tehdy, když nějaký pokyn je**, a sama nezmizí.
 3. **Moje loď** — jméno, číslo plachty, třída, posádka po řádcích.
@@ -168,6 +221,12 @@ Dole jediný terč na celé obrazovce: **Pozastavit vysílání polohy**,
   v klubovně a telefon už jen jede. Obrazovka, která je k dívání, se
   navrhuje jinak než obrazovka k ovládání: velké písmo, stálé polohy,
   žádné stavy, do kterých se dá zabloudit.
+- **Barva nese to jediné, co ví jenom telefon.** Co se děje na vodě,
+  posádka slyší od komise — je to totéž pravidlo, které sem nepustilo
+  odpočet. Jestli se její stopa dostane ven, ale neví odnikud jinud, a je
+  to zároveň jediná věc, se kterou může sama něco udělat. **Závod zůstává
+  v pruhu textem**, protože je to podřízená informace, ne proto, že by
+  nebyla důležitá.
 - **Barva se pozná koutkem oka a liší se jasem, ne jen odstínem.** Takže
   ji rozliší i ten, kdo zelenou od červené nerozezná. Měřeno výš.
 - **Loď s posádkou je v tom proto, že se kontroluje na břehu.** Přejímací
@@ -194,22 +253,32 @@ Dole jediný terč na celé obrazovce: **Pozastavit vysílání polohy**,
   (`/serie/{serie}/zavody/{zavod}/trat` je bez přihlášení), ale mapa je
   obrazovka k prohlížení a tahle je k mrknutí. Patří na vlastní.
 
-### Čtyři stavy, a každý má svou barvu
+### Čtyři stavy dat, a každý má svou barvu
 
-Mapování na `stavStartu` z `app/src/lib/start.ts` je přímé, takže se
-nezavádí druhý stavový automat:
+Prahy nejsou vymyšlené: appka odesílá nejvýš jednou za minutu
+(`ZIVE_MS = 60_000` v `app/src/lib/tracker/nahravani.ts`), a stavy GPS
+i odesílání už appka počítá (`svetloGps`, `stavOdesilani`
+v `tracker/stav.ts`). Nezavádí se tedy druhý stavový automat, jen se ten
+hotový ukáže nahoře.
 
-| Stav | Odkud | Barva | Co stojí pod slovem |
+| Stav | Kdy | Barva | Co to znamená |
 | --- | --- | --- | --- |
-| **Čeká se** | není rozjížďka, nebo `bezCasu` | papír a linka | *Žádná rozjížďka neběží* |
-| **Startuje se** | `procedura` | `procedura` | poslední znamení a čas |
-| **Jede se** | `odstartovano`, `jede` | `jede` | *Start padl* a čas |
-| **Odvoláno** | úkon `Odvolat` / `Odlozit` | `stavZruseny` | *Vraťte se ke startu* |
+| **Vysílá se** | zapisuje a odeslalo do minuty | `jede` | server má všechno |
+| **Drží se v telefonu** | zapisuje, neodeslalo | `vystraha` | bez signálu, body čekají — **není to ztráta** |
+| **Nenahrává se** | nezapisuje vůbec | `stavZruseny` | **jediný stav, který se musí řešit** |
+| **Nesleduje se** | pozastaveno, nebo bez klíče | papír a linka | záměr, ne porucha |
 
-Pět barev se nezavádí a poslední minuta svou barvu **nemá** — to je
-rozdíl proti panelu rozhodčího, a schválně: posádce by jantarová řekla
-„něco se blíží" bez toho, aby věděla co, a kdyby přišla po síti pozdě,
-řekla by to ve špatnou chvíli.
+**Proč zrovna tyhle čtyři.** Rozlišit „drží se" od „nenahrává se" je to
+podstatné: v prvním případě posádka nemá dělat nic a v druhém musí. Jedna
+červená pro obojí by posádku hnala řešit výpadek signálu uprostřed
+rozjížďky, a to je horší než mlčet.
+
+**Závod má v pruhu řádek, ne barvu.** Stav startu (`stavStartu`
+v `app/src/lib/start.ts`) se promítne do textu pod čarou: *Rozjížďka 3 ·
+Příprava · 14:33*. Poslední minuta tam svou barvu **nemá** — to je rozdíl
+proti panelu rozhodčího, a schválně: posádce by jantarová řekla „něco se
+blíží" bez toho, aby věděla co, a kdyby přišla po síti pozdě, řekla by to
+ve špatnou chvíli.
 
 ### Kde to leží a kdy se to ukáže
 
@@ -387,13 +456,16 @@ barva, a to že světlý režim je na slunci lepší než tmavý.
 **Rozhodnutí o vzhledu, tedy Filipovo:**
 
 1. Má pruh stavu zabírat **třetinu obrazovky**, nebo stačí pás?
-2. Má se v tmavém režimu panel *„start padl"* a poslední minuta změnit na
-   **tmavé písmo na světlé ploše** (doporučení 2), nebo se radši vymění
-   plocha?
-3. Má posádka u stavu vidět **poslední znamení a jeho čas**, nebo ani to
+2. Má posádka u závodu vidět **poslední znamení a jeho čas**, nebo ani to
    ne?
-4. Jde rozcestník do tří pásů (doporučení 3), nebo zůstane, jak je?
-5. Pouští se oprava 34 terčů jako **jeden commit**, nebo po obrazovkách?
+3. Jde rozcestník do tří pásů (doporučení 3), nebo zůstane, jak je?
+4. **Přebarvit proužky fází** na jantarovém panelu, aby v tmavém režimu
+   držely 3:1 (dnes 1,64 a 2,75), i za cenu toho, že přestanou odpovídat
+   barvám vlajek?
+
+Rozhodnuté 6. 11. 2026: barva pruhu patří datům (ne závodu), písmo na
+barevné ploše se vybírá podle jejího jasu, a oprava terčů šla jedním
+commitem.
 
 **Co návrh nedoporučuje stavět vůbec:** mapu trati pro posádku, tresty
 posádky (není rozhodnuto, čí vidí), a odpočet v jakékoliv podobě.
