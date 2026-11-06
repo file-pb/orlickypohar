@@ -8077,6 +8077,11 @@ publikuje.** Dopad je ale malý a ohraničený: DoS exponenciálním dekódován
 rozbitého percent-encodingu, čili appka zatuhne na škodlivém odkazu, na který
 uživatel sám klikne. Žádný server, žádná data, žádná cizí loď.
 
+> **Opraveno 6. 11. 2026:** ta věta o zatuhnutí na odkazu **neplatí**.
+> Zranitelná funkce v `expo-routeru 57.0.28` nemá živé volání — doloženo
+> v oddílu *Nové hlášení na decode-uri-component (#27, 6. 11. 2026)*.
+> Balíček se do bundlu dostane, ale cesta deep linků k němu nevede.
+
 Override na 0.5.0 **technicky nejde.** Verze 0.5.0 je `"type": "module"`
 s jediným vstupem `exports.default`, zatímco `query-string@7.1.3` je CJS a dělá
 `require('decode-uri-component')` (`node_modules/query-string/index.js:3`).
@@ -9142,7 +9147,9 @@ rozumně opravit**, a jsou proto odmítnuté jako `tolerable_risk`:
 kontrolují čtyři věci, každou z nich z lockfilu nebo z advisory API:
 
 1. pustí už `@expo/cli` zod od 4.6.6 výš?
-2. odešel `expo-router` od `query-string@7`, nebo pustí `decode-uri-component` od 0.5 výš?
+2. odešel `expo-router` od `query-string@7`, nebo pustí `decode-uri-component`
+   od **0.5.1** výš? (Do 6. 11. 2026 tu stálo „od 0.5 výš“ a byla to chyba —
+   0.5.0 je sama zranitelná, viz *Nové hlášení na decode-uri-component*.)
 3. vyšla na `deepmerge` záplata, a je pořád jen pod `@expo/*`? Kdyby se
    dostal do běhového stromu appky, padá důvod odmítnutí.
 4. nepřišlo na tyhle balíčky hlášení, které sahá i na **důvěrnost nebo
@@ -9155,6 +9162,124 @@ kontrolují čtyři věci, každou z nich z lockfilu nebo z advisory API:
 Nález otevře issue, ne červený běh — selhání běhu si nikdo nevšimne.
 **Co hlídka nepřečte, nahlásí**: neznámý tvar rozsahu ani nedostupné API
 nesmí vyjít jako „nic se nestalo".
+
+## Nové hlášení na decode-uri-component (#27, 6. 11. 2026)
+
+GitHub 31. 10. 2026 při pushi mimochodem oznámil „1 high vulnerability on
+default branch". Je to **#27**: `decode-uri-component`, CVE-2026-118664 /
+GHSA-qr28-fpjm-wq7f, **high** (CVSS 4.0 = 8.2), `app/package-lock.json`,
+tranzitivní, scope `runtime`. Rozsah `<= 0.5.0`, záplata **0.5.1**.
+Kvadratický DoS: záložní dekodér dělá jeden `String.replace` s novým
+regulárem na každý odlišný percent-encoded úsek, takže 224 kB vstupu
+zablokuje smyčku na ~20 s.
+
+**Není to znovu to samé hlášení.** Odmítnuté #2 je CVE-2026-45822 (medium,
+rozsah `<= 0.4.2`). #27 výslovně říká, že **0.5.0 — tedy ta verze, která
+opravila #2 — je taky zranitelná**: oprava z 0.5.0 přepsala rekurzivní
+dekodér za lineární, ale tu smyčku s `replace` nechala. Na už jednou
+přijatém balíčku tedy přišlo nové, horší hlášení.
+
+### Zranitelná funkce nemá v appce živé volání
+
+To je důvod odmítnutí, a stojí na trasování publikovaného buildu
+`expo-router@57.0.28` (ten z lockfilu, stažený `npm pack`), ne na dojmu:
+
+| Co | Kde | Co z toho plyne |
+|---|---|---|
+| jediné `queryString.parse` v celém balíčku | `build/react-navigation/core/getStateFromPath.js:499` | existuje jen jedno místo, které by na zranitelný kód sáhlo |
+| `getStateFromPath` se nastavuje **bezpodmínečně** | `build/getLinkingConfig.js:90` | záloha `linking?.getStateFromPath ?? core_1.getStateFromPath` (`build/fork/NavigationContainer.js:83`) se nikdy neuplatní |
+| živá cesta vede do forku | `build/link/linking.js:45` → `build/fork/getStateFromPath.js:525` | parsuje `expo.parseQueryParams`, ne query-string |
+| fork parsuje `URLSearchParams` | `build/fork/getStateFromPath-forks.js:370` (`parseUrlUsingCustomBase(path).searchParams`) | query-string v téhle cestě není |
+| stará `parseQueryParams` s `queryString.parse` je **zakomentovaná** | `build/fork/getStateFromPath.js:536-538` | fork ji vyměnil schválně |
+| jediná živá volání query-stringu jsou `stringify` | `build/fork/getPathFromState.js:273`, `build/react-navigation/core/getPathFromState.js:212` | to je směr kódování, ne dekódování |
+
+**Rozhodující je sabotáž, ne to čtení.** `query-string@7.1.3` v čistém Node
+s `decode-uri-component/index.js` přepsaným na `throw`:
+
+| Volání | Sáhlo na zranitelný balíček? |
+|---|---|
+| `stringify` — to, co appka doopravdy volá | **ne**, projde |
+| `parse` | ano, vyhodí |
+| `parseUrl` | ano, vyhodí |
+| `extract` | ne, projde |
+
+Souhlasí to s `index.js`: `decodeComponent` se volá jen z `decode()`
+(`index.js:231-233`), kam vede `parse`/`parseUrl`. `stringify` jde přes
+`encode()`.
+
+Takže: **balíček se do bundlu dostane** (lockfile ho vede jako `dev=false`
+pod `expo-router` → `query-string ^7.1.3`), ale **zranitelná funkce v appce
+nemá volajícího**. To je silnější důvod než „je to jen dostupnost na vlastním
+telefonu", na kterém stálo odmítnutí #2 — a ta starší úvaha o zatuhnutí
+appky na škodlivém odkazu je tím **vyvrácená**.
+
+**Co z toho je odhad:** trasuje se statický call graf a sabotuje se knihovna
+mimo React Native. Co není ověřené během appky na telefonu, je, že žádný
+další balíček v bundlu nevolá `query-string.parse` sám za sebe. Testy appky
+routing nepokrývají (`app/testy/` jsou záznam trasy, klíče, role, zvuky),
+takže tohle tvrzení se neopírá o běh.
+
+### Oprava nejde, a je to ta samá překážka jako u #2
+
+`decode-uri-component@0.5.1` je `"type": "module"` s jediným vstupem
+`exports.default` (`npm view decode-uri-component@0.5.1 type exports`),
+zatímco `query-string@7.1.3` je CJS a dělá `require('decode-uri-component')`
+(`index.js:3`). Override by ten `require` rozbil. Mezi 0.2.2 a 0.5.1 není
+kam jít: 0.3.0 i 0.4.x padají do rozsahu `<= 0.5.0`.
+
+Skutečná oprava zůstává **expo-router 58**, kde `query-string` ze závislostí
+vypadl — major Expa. **Nedělá se**, a při tom přechodu se má znovu ověřit
+trasování výše: kdyby se `queryString.parse` do živé cesty vrátil, padá
+důvod odmítnutí.
+
+**#27 se nechává otevřené**, stejně jako se kdysi schválně nechávalo #2 —
+je to připomínka k Expu 58. Odmítnutím by zmizela a hlídka ho nehlídá.
+
+### Hlídka #27 neviděla, a byly to dvě vady
+
+Nad dnešním lockem vypsala `tools/hlidka-zranitelnosti.py` **„Klid"**
+(návratový kód 0), přestože #27 visí otevřené. Obě příčiny jsou opravené
+a obě mají sabotáž:
+
+1. **Zastaralý prah záplaty.** `ZAPLATY["decode-uri-component"]` bylo
+   `(0, 5, 0)`, ale 0.5.0 je podle #27 sama zranitelná. Sabotáž: lock
+   s 0.5.0 → hlídka vypsala *„je už na 0.5.0, tedy zaplátovaný. Hlášení se dá
+   zavřít jako vyřešené."* Doporučovala zavřít hlášení o zranitelné verzi.
+   Prah je teď `(0, 5, 1)`.
+2. **Kontrola dopadu byla slepá na CVSS 4.0.** Četla jen
+   `cvss.vector_string`, které je u hlášení ohodnocených jen čtyřkou
+   `null` — vektor leží v `cvss_severities.cvss_v4`. A regulár
+   `/(C|I):(L|H)` navíc nezná předpony `VC:`/`VI:`/`SC:`/`SI:`, které
+   čtyřka používá. Sabotáž: vymyšlené v4 hlášení s `VC:H/VI:H`
+   **neprošlo**, v3.1 s `C:H` prošlo. Hlídka tedy nepoznala ani hlášení,
+   které by na důvěrnost sahalo — a přesně to má hlídat. Teď čte vektory
+   z `cvss` i `cvss_severities` a zná oba zápisy; sedm případů včetně
+   živého #27 vychází správně.
+
+To je ta past, na kterou hlídka sama v docstringu upozorňuje: *měřila sebe,
+ne svět*. Že na #27 mlčí i po opravě, je teď **správně** — #27 je
+`VC:N/VI:N/VA:H`, tedy jen dostupnost, a dostupnost důvod odmítnutí nemění.
+
+### Vedle #27 je otevřených ještě třináct a nikdo se na ně nedíval
+
+Při čtení #27 se ukázalo, že otevřených hlášení je **čtrnáct** (#27–#40),
+všechna na `app/package-lock.json`:
+
+| Hlášení | Balíček | Máme | Záplata |
+|---|---|---|---|
+| #28–#38 (10×, z toho 5 high) | `node-forge` | 1.4.0 | **1.4.1** |
+| #39 (medium) | `glob` | 13.0.6 | 14.0.2 |
+| #40 (medium) | `minimatch` | 10.2.6 | 11.0.1 |
+
+**U `node-forge` to vyvrací dosavadní zdůvodnění.** Odmítnutí #6 i tabulka
+v oddílu *Zranitelnosti v appce: žádné overrides* tvrdí, že **záplata
+neexistuje** — `first_patched_version: null`. Pro tahle nová hlášení
+existuje: **1.4.1**. Důvod „není kam overridovat" tedy padl a je potřeba to
+posoudit znovu. `node-forge` visí na `@expo/cli` a
+`@expo/code-signing-certificates` (`^1.3.3`), tedy build-time.
+
+Je to **samostatný úkol**, ne součást #27: jiné balíčky, jiná cesta
+k opravě, a u `node-forge` se musí znovu projít deset advisory.
 
 ## Fronta k 20. 10. 2026
 

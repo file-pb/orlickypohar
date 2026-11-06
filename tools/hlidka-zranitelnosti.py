@@ -39,7 +39,12 @@ import urllib.error
 import urllib.request
 
 # Verze, od které je dané hlášení zaplátované. Z advisory, ne z odhadu.
-ZAPLATY = {"zod": (4, 6, 6), "decode-uri-component": (0, 5, 0)}
+#
+# `decode-uri-component` tu bylo do 6. 11. 2026 na (0, 5, 0) a bylo to špatně:
+# CVE-2026-118664 (#27) má rozsah `<= 0.5.0`, tedy i tu verzi, která opravila
+# CVE-2026-45822. Nad lockem s 0.5.0 proto hlídka tvrdila „zaplátovaný,
+# hlášení se dá zavřít jako vyřešené" o verzi, na kterou visí otevřené high.
+ZAPLATY = {"zod": (4, 6, 6), "decode-uri-component": (0, 5, 1)}
 
 ADVISORY = "https://api.github.com/advisories?ecosystem=npm&per_page=100&affects="
 
@@ -47,6 +52,27 @@ ADVISORY = "https://api.github.com/advisories?ecosystem=npm&per_page=100&affects
 # i s tím, takže se na něj hlídka dopadu neptá — ptá se, jestli nepřišlo
 # něco dalšího.
 PRIJATE_DEEPMERGE = "GHSA-gcqx-w48m-w2h4"
+
+
+# Dopad dál než na dostupnost. CVSS 3.x píše `C:`/`I:`, CVSS 4.0 `VC:`/`VI:`
+# pro zranitelný systém a `SC:`/`SI:` pro navazující. Úvodní lomítko drží
+# metriky jako `AC:`, `AT:` nebo `VA:H` mimo — ty na dostupnost nebo obtížnost.
+SAHA_DAL = re.compile(r"/(?:V|S)?(?:C|I):(?:L|H)")
+
+
+def vektory_z(advisory):
+    """Všechny vektory, které u hlášení jsou — `cvss` i `cvss_severities`.
+
+    Čtení jen z `cvss.vector_string` byla **vada** (opraveno 6. 11. 2026):
+    u hlášení ohodnocených jen CVSS 4.0 je to pole `null` a vektor leží
+    v `cvss_severities.cvss_v4`. Na CVE-2026-118664 proto hlídka vypsala
+    „Klid", přestože to je high. Měřila sebe, ne svět.
+    """
+    zdroje = [advisory.get("cvss") or {}]
+    severity = advisory.get("cvss_severities") or {}
+    for klic in ("cvss_v3", "cvss_v4"):
+        zdroje.append(severity.get(klic) or {})
+    return [v for v in (z.get("vector_string") for z in zdroje) if v]
 
 
 def verze(text):
@@ -250,9 +276,9 @@ def hlidej_dopad(balicek, nase, krome=()):
     for a in data:
         if a.get("ghsa_id") in krome:
             continue
-        vektor = (a.get("cvss") or {}).get("vector_string") or ""
+        vektory = vektory_z(a)
         tezke = a.get("severity") == "critical"
-        siri = re.search(r"/(C|I):(L|H)", vektor) is not None
+        siri = any(SAHA_DAL.search(v) for v in vektory)
         if not (tezke or siri):
             continue
         # Dotýká se verze, kterou máme? Co nepřečtu, beru jako „ano".
@@ -266,7 +292,8 @@ def hlidej_dopad(balicek, nase, krome=()):
             continue
         nalezy.append(
             f"`{balicek}` {nase[0]}.{nase[1]}.{nase[2]}: **{a.get('severity')}** "
-            f"{a.get('ghsa_id')} sahá dál než na dostupnost (`{vektor or 'bez vektoru'}`) — "
+            f"{a.get('ghsa_id')} sahá dál než na dostupnost "
+            f"(`{' '.join(vektory) or 'bez vektoru'}`) — "
             f"důvod odmítnutí padl. {a.get('html_url')}"
         )
     return nalezy
