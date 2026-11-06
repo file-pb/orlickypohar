@@ -23,7 +23,7 @@ public class BodovaniTests
     private static RozjizdkaVstup Rozjizdka(int cislo, params string[] vPoradi) =>
         new(cislo, [.. vPoradi.Select((lod, i) => Dojel(lod, "Race", i + 1))]);
 
-    private static Dictionary<string, int> Body(params VysledekVstup[] vysledky) =>
+    private static Dictionary<string, decimal> Body(params VysledekVstup[] vysledky) =>
         Bodovani.BodyRozjizdky(vysledky).ToDictionary(b => b.Lod, b => b.Body);
 
     // --- Jedna rozjížďka ---
@@ -130,6 +130,81 @@ public class BodovaniTests
         Assert.Equal(2, zavod["race2"].Body);
         Assert.Equal(2, zavod["nad2"].Body);
         Assert.Equal(1, zavod["nad1"].Poradi);
+    }
+
+    // --- Shoda v cíli (ZPJ A7, nález K7) ---
+
+    /// <summary>
+    /// ZPJ A7: *„body za umístění, na kterém mají lodě shodu, a za místo(a)
+    /// bezprostředně za ním musejí být sečteny a rozděleny rovným dílem."*
+    /// Do 6. 11. 2026 zápis se shodou vůbec neprošel — validace ho odmítla.
+    /// </summary>
+    [Fact]
+    public void Dve_lode_na_tretim_miste_deli_tri_a_ctyri()
+    {
+        var body = Body(
+            Dojel("první", "Race", 1),
+            Dojel("druhý", "Race", 2),
+            Dojel("shoda A", "Race", 3),
+            Dojel("shoda B", "Race", 3),
+            Dojel("pátý", "Race", 4));
+
+        Assert.Equal(1m, body["první"]);
+        Assert.Equal(2m, body["druhý"]);
+        Assert.Equal(3.5m, body["shoda A"]);
+        Assert.Equal(3.5m, body["shoda B"]);
+
+        // Loď za shodou bere páté místo, ne čtvrté: shoda obsadila dvě.
+        Assert.Equal(5m, body["pátý"]);
+    }
+
+    /// <summary>Tři lodě na jednom místě: (1+2+3)/3 = 2, další je čtvrtá.</summary>
+    [Fact]
+    public void Tri_lode_na_prvnim_miste_maji_po_dvou_bodech()
+    {
+        var body = Body(
+            Dojel("A", "Race", 1),
+            Dojel("B", "Race", 1),
+            Dojel("C", "Race", 1),
+            Dojel("čtvrtý", "Race", 2));
+
+        Assert.Equal(2m, body["A"]);
+        Assert.Equal(2m, body["B"]);
+        Assert.Equal(2m, body["C"]);
+        Assert.Equal(4m, body["čtvrtý"]);
+    }
+
+    /// <summary>
+    /// Součet bodů rozdaných za místa se shodou dělením nemění — jen se jinak
+    /// rozdělí. Kdyby se měnil, posunulo by se pořadí celého seriálu.
+    /// </summary>
+    [Fact]
+    public void Shoda_nemeni_soucet_rozdanych_bodu()
+    {
+        var beze_shody = Body(
+            Dojel("A", "Race", 1), Dojel("B", "Race", 2),
+            Dojel("C", "Race", 3), Dojel("D", "Race", 4));
+
+        var se_shodou = Body(
+            Dojel("A", "Race", 1), Dojel("B", "Race", 2),
+            Dojel("C", "Race", 3), Dojel("D", "Race", 3));
+
+        Assert.Equal(beze_shody.Values.Sum(), se_shodou.Values.Sum());
+    }
+
+    /// <summary>
+    /// Shoda se počítá uvnitř kategorie. Dvě lodě z různých kategorií se
+    /// stejným pořadím nejsou shoda — pořadatel čísluje každou zvlášť.
+    /// </summary>
+    [Fact]
+    public void Stejne_poradi_v_jine_kategorii_neni_shoda()
+    {
+        var body = Bodovani.BodyRozjizdky([Dojel("race", "Race", 1)])
+            .Concat(Bodovani.BodyRozjizdky([Dojel("lehký", "Lehký", 1)]))
+            .ToDictionary(b => b.Lod, b => b.Body);
+
+        Assert.Equal(1m, body["race"]);
+        Assert.Equal(1m, body["lehký"]);
     }
 
     // --- Celý závod ---

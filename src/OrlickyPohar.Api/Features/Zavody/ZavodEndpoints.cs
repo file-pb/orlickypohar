@@ -69,14 +69,14 @@ public record UcastDto(
     IReadOnlyList<int?>? Baterie = null);
 
 /// <summary>Body lodi v jedné rozjížďce, už jako pořadí v její kategorii.</summary>
-public record BodyVRozjizdceDto(int Cislo, int Body, bool Skrtnuto);
+public record BodyVRozjizdceDto(int Cislo, decimal Body, bool Skrtnuto);
 
 /// <summary>
 /// Výsledek lodi v závodě: součet bodů z rozjížděk a pořadí v kategorii.
 /// Vítěz závodu má jeden bod — do seriálu z toho jde pořadí, ne tenhle součet.
 /// </summary>
 public record VysledekZavoduDto(
-    string Lod, string Kategorie, int Body, int Poradi,
+    string Lod, string Kategorie, decimal Body, int Poradi,
     IReadOnlyList<BodyVRozjizdceDto> Rozjizdky);
 
 public record ZavodDetailDto(

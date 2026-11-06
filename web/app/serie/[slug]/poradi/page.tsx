@@ -4,6 +4,7 @@ import { ApiNedostupne, nactiPoradi, type PoradiKategorie, type Zastavka } from 
 import { Vypadek } from "@/app/vypadek";
 import { Boky } from "@/app/boky";
 import { NadpisTridy, TabyTrid, vyberTridu } from "@/app/tridy";
+import { body } from "@/app/body";
 
 // Stránky stojí na databázi, ne na obsahu známém v době buildu. Bez tohohle
 // by je Next předrenderoval při sestavení — a build by pak vyžadoval běžící
@@ -131,8 +132,8 @@ function Tabulka({
                   <span className="poradi-cislo">{l.poradiPoSkrtu}.</span> {l.lod}
                   {l.majitel && <div className="majitel">{l.majitel}</div>}
                 </td>
-                <td className="body">{l.bodyPoSkrtu}</td>
-                <td className="cislo">{l.body}</td>
+                <td className="body">{body(l.bodyPoSkrtu)}</td>
+                <td className="cislo">{body(l.body)}</td>
                 {l.zastavky.map((b, i) => {
                   // Kód říká, odkud číslo je, když to není umístění. Starší
                   // API pole `kody` a `skrtnute` nevydávalo, proto `?.`.

@@ -287,12 +287,12 @@ ne podle čísla.
 Devatenáctý je **K4** — mez z pravidla 76.1(a) u vyloučení. Je to otázka na
 Miloše, ale nic nedrží; připojí se k té zprávě jako poslední řádek.
 
-### C) Dá se stavět hned — nic nedrží (3)
+### C) Dá se stavět hned — nic nedrží (2, K7 hotový 6. 11.)
 
 | # | Co | Velikost |
 | --- | --- | --- |
 | K5 | Přeložený termín: ZPJ 80 žádá informovat **všechny přihlášené lodě**; aplikace termín přesune pečlivě a nikomu nic neřekne | malá, samostatná |
-| K7 | Shoda v cíli: ZPJ A7 ji počítá rovným dílem, aplikace ji odmítne zapsat | malá |
+| ~~K7~~ | ~~Shoda v cíli~~ — **hotovo 6. 11. 2026**: zápis prochází, body se dělí podle A7. V appce zápis shody nejde | hotovo |
 | K3 | Ověřeno a Schváleno jsou dvě klepnutí téhož člověka — kandidát na „jde to, ale zbytečně" | malá, jen ubrat |
 
 K tomu dva **zbytky z hotových**, které taky nic nedrží: ověřit na telefonu, že

@@ -5,6 +5,7 @@ import { Chyba, Karta, Nacitani, Nadpis, Prazdno, Sekce } from '@/components/ui'
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
 import { nactiPoradi, type PoradiLodi } from '@/lib/api';
+import { body } from '@/lib/body';
 
 /**
  * Průběžné pořadí. Na telefonu se tabulka devíti sloupců nevejde, a hlavně
@@ -79,7 +80,7 @@ function Radek({ lod }: { lod: PoradiLodi }) {
             style={{ color: t.text, fontWeight: '700', fontSize: 18, fontVariant: ['tabular-nums'] }}>
             {lod.bodyPoSkrtu}
           </Text>
-          <Text style={{ color: t.tlumeny, fontSize: 12 }}>z {lod.body}</Text>
+          <Text style={{ color: t.tlumeny, fontSize: 12 }}>z {body(lod.body)}</Text>
         </View>
       </View>
 

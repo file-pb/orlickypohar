@@ -32,6 +32,7 @@ import type { ZaznamRozjizdky } from "@/lib/zaznam";
  */
 import { ZnakTridy } from "@/app/tridy";
 import { udalosti, type Udalost } from "@/lib/tabule-udalosti";
+import { body } from "@/app/body";
 
 /**
  * Tabule, která se obnovuje sama a přežije výpadek.
@@ -101,7 +102,7 @@ export function Obrazovka({
             kategorie: k.kategorie,
             stariS: null,
             dojela: false,
-            popisek: `${l.bodyPoSkrtu} b`,
+            popisek: `${body(l.bodyPoSkrtu)} b`,
           })),
       );
   }, [poradiSerie]);
@@ -884,7 +885,7 @@ function tridyPanely(snimek: Snimek): Panel[] {
             {t.lode.map((p) => (
               <li key={p.lod}>
                 <b>{p.misto}.</b> {p.lod}
-                <span className="body">{p.body}</span>
+                <span className="body">{body(p.body)}</span>
               </li>
             ))}
           </ol>

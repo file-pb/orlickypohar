@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { PoradiSerie } from "@/lib/api";
 import { ZnakTridy } from "@/app/tridy";
+import { body } from "@/app/body";
 
 /**
  * Průběžné pořadí jako karusel (Filip, 15. 9. 2026): ne jen první tři
@@ -29,7 +30,7 @@ function Lode({ lode, kopie }: { lode: Lod[]; kopie?: boolean }) {
     <li key={`${kopie ? "kopie-" : ""}${l.lod}`} aria-hidden={kopie || undefined}>
       <span className="poradi-cislo">{l.poradiPoSkrtu}.</span>
       <span className="bok-lod">{l.lod}</span>
-      <span className="bok-body">{l.bodyPoSkrtu}</span>
+      <span className="bok-body">{body(l.bodyPoSkrtu)}</span>
     </li>
   ));
 }

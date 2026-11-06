@@ -37,6 +37,7 @@ import {
 } from '@/lib/cekajici-start';
 import { PROCEDURA_S } from '@/lib/start';
 import { rozsah } from '@/lib/datum';
+import { body } from '@/lib/body';
 
 /**
  * Jak často se zkouší odeslat podržený úkon. Deset vteřin: na vodě signál
@@ -269,7 +270,7 @@ function Lod({ vysledek, zavod }: { vysledek: VysledekZavodu; zavod: ZavodDetail
         <Text style={{ color: t.text, fontWeight: '600', flex: 1 }}>{vysledek.lod}</Text>
         <Text
           style={{ color: t.text, fontWeight: '700', fontSize: 18, fontVariant: ['tabular-nums'] }}>
-          {vysledek.body}
+          {body(vysledek.body)}
         </Text>
       </View>
 
@@ -283,7 +284,7 @@ function Lod({ vysledek, zavod }: { vysledek: VysledekZavodu; zavod: ZavodDetail
                 fontVariant: ['tabular-nums'],
                 textDecorationLine: r.skrtnuto ? 'line-through' : 'none',
               }}>
-              {r.body}
+              {body(r.body)}
             </Text>
             {kod(r.cislo) ? (
               <Text style={{ color: t.tlumeny, fontSize: 10 }}>{kod(r.cislo)!.toUpperCase()}</Text>

@@ -6,6 +6,7 @@ import { NazevZavodu } from "@/app/tabule-nazev";
 import { ZnakTridy } from "@/app/tridy";
 import { Infopanel } from "./infopanel";
 import type { Snimek } from "@/lib/tabule";
+import { body } from "@/app/body";
 
 /**
  * Jak daleko je zápis. <b>Pořadí řady je pořadí jistoty</b>
@@ -160,7 +161,7 @@ export function Vysledky({
                   <li key={l.lod}>
                     <b>{l.misto}.</b>
                     <span className="lod">{l.lod}</span>
-                    <span className="body">{l.body}</span>
+                    <span className="body">{body(l.body)}</span>
                   </li>
                 ))}
                 {/* Zbytek pole patří pod poslední loď, ne na konec

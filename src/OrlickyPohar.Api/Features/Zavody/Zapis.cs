@@ -231,17 +231,13 @@ public static class Zapis
                 return $"{r.Lod} má pořadí i kód. Buď dojela, nebo platí kód.";
         }
 
-        // Uvnitř kategorie, ne přes celé pole: pořadí se v cíli píše přes
-        // všechny lodě, ale body se počítají po kategoriích — a pořadatel,
-        // který čísluje každou kategorii zvlášť, nesmí dostat chybu.
-        var shoda = radky
-            .Where(r => r.Vstup.PoradiVCili is not null)
-            .GroupBy(r => (r.Kategorie, r.Vstup.PoradiVCili))
-            .FirstOrDefault(g => g.Count() > 1);
-
-        if (shoda is not null)
-            return $"V kategorii {shoda.Key.Kategorie} má pořadí {shoda.Key.PoradiVCili} víc lodí: "
-                   + string.Join(", ", shoda.Select(r => r.Lod)) + ".";
+        // <b>Shoda v cíli se tu dřív odmítala</b> (nález K7). Dvě lodě se
+        // stejným pořadím v jedné kategorii vracely chybu a zápis neprošel
+        // — jenže ZPJ A7 shodu zná a říká, co s ní: body za obsazená místa
+        // se sečtou a rozdělí rovným dílem. Rozsoudit dvě lodě okem na čáře
+        // je běžná práce, ale u vytrvalostní regaty s přepočtem může shoda
+        // vyjít z výpočtu, kde žádné oko nepomůže. Dělení dělá
+        // `Bodovani.BodyRozjizdky`.
 
         return null;
     }

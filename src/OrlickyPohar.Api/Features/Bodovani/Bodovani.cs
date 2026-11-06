@@ -13,7 +13,7 @@ public record VysledekVstup(string Lod, string Kategorie, int? PoradiVCili, KodV
 public record RozjizdkaVstup(int Cislo, IReadOnlyList<VysledekVstup> Vysledky);
 
 /// <summary>Body lodi v jedné rozjížďce, už v rámci její kategorie.</summary>
-public record BodyVRozjizdce(string Lod, int Cislo, int Body, bool Skrtnuto);
+public record BodyVRozjizdce(string Lod, int Cislo, decimal Body, bool Skrtnuto);
 
 /// <summary>
 /// Výsledek lodi v závodě: součet bodů a pořadí v kategorii.
@@ -27,7 +27,7 @@ public record BodyVRozjizdce(string Lod, int Cislo, int Body, bool Skrtnuto);
 public record VysledekZavodu(
     string Lod,
     string Kategorie,
-    int Body,
+    decimal Body,
     int Poradi,
     IReadOnlyList<BodyVRozjizdce> Rozjizdky,
     bool Diskvalifikovana = false);
@@ -63,7 +63,7 @@ public static class Bodovani
     /// Kolik lodí kategorie je přihlášených do závodu. Bez něj se bere počet
     /// lodí v téhle rozjížďce.
     /// </param>
-    public static IReadOnlyList<(string Lod, int Body)> BodyRozjizdky(
+    public static IReadOnlyList<(string Lod, decimal Body)> BodyRozjizdky(
         IEnumerable<VysledekVstup> vysledkyKategorie, int? prihlaseno = null,
         PravidlaBodovani? pravidla = null)
     {
@@ -75,13 +75,32 @@ public static class Bodovani
         // zabírá své místo v pořadí a ostatním se nic neposouvá. Trest se
         // k tomu místu připočte níž. Je to jediný kód, který tu patří —
         // ostatní znamenají, že loď v cíli není.
-        var dokoncily = vsechny
-            .Where(v => (v.Kod is null || v.Kod == KodVysledku.Zfp) && v.PoradiVCili is not null)
-            .OrderBy(v => v.PoradiVCili)
-            .Select((v, i) => (v.Lod, Body: i + 1))
-            .ToList();
+        // <b>Shoda v cíli se nerozsuzuje, dělí se</b> (ZPJ A7, nález K7):
+        // *„body za umístění, na kterém mají lodě shodu, a za místo(a)
+        // bezprostředně za ním musejí být sečteny a rozděleny rovným
+        // dílem."* Dvě lodě na třetím místě tedy neberou 3 a 4 podle toho,
+        // kterou vrátí databáze dřív, ale obě (3+4)/2 = 3,5 — a další loď
+        // je pátá. Dokud se dělilo pořadím v seznamu, rozhodovalo o tom
+        // řazení, což je přesně ta libovůle, kterou pravidlo odstraňuje.
+        var dokoncily = new List<(string Lod, decimal Body)>();
+        var misto = 1;
 
-        var body = new List<(string Lod, int Body)>(dokoncily);
+        foreach (var skupina in vsechny
+                     .Where(v => (v.Kod is null || v.Kod == KodVysledku.Zfp)
+                                 && v.PoradiVCili is not null)
+                     .GroupBy(v => v.PoradiVCili!.Value)
+                     .OrderBy(g => g.Key))
+        {
+            var kolik = skupina.Count();
+            var delem = Enumerable.Range(misto, kolik).Sum() / (decimal)kolik;
+
+            foreach (var v in skupina)
+                dokoncily.Add((v.Lod, delem));
+
+            misto += kolik;
+        }
+
+        var body = new List<(string Lod, decimal Body)>(dokoncily);
         var zaTrest = (prihlaseno ?? vsechny.Count) + pravidla.PrirazkaZaKod;
 
         // <b>ZFP se k pořadí přičítá, nenahrazuje ho</b> (nález R14,
@@ -115,7 +134,7 @@ public static class Bodovani
     /// hůř než nedokončit, a to pravidlo výslovně zakazuje.
     /// </para>
     /// </summary>
-    public static int BodySTrestem(int zaMisto, int zaNedokoncila, PravidlaBodovani? pravidla = null)
+    public static decimal BodySTrestem(decimal zaMisto, int zaNedokoncila, PravidlaBodovani? pravidla = null)
     {
         pravidla ??= PravidlaBodovani.Posledni;
 

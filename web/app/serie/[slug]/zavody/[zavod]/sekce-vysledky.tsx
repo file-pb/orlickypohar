@@ -1,5 +1,6 @@
 import type { BodyVRozjizdce, Rozjizdka, Vysledek, ZavodDetail } from "@/lib/api";
 import { CELKEM } from "@/app/tridy";
+import { body } from "@/app/body";
 
 /** Jeden řádek tabulky: loď, její body a co v které rozjížďce dokázala. */
 export type Radek = {
@@ -114,7 +115,7 @@ export function Tabulka({
                     </div>
                   )}
                 </td>
-                <td className="body">{radek.body}</td>
+                <td className="body">{body(radek.body)}</td>
                 {radek.bunky.map((b, i) => (
                   <td key={i} className={b?.body?.skrtnuto ? "cislo skrtnuto" : "cislo"}>
                     {bunka(b)}
@@ -133,7 +134,7 @@ function bunka(b?: Bunka) {
   if (!b?.body) return "—";
   return (
     <>
-      {b.body.body}
+      {body(b.body.body)}
       {b.vysledek?.kod && <span className="znacka">{b.vysledek.kod.toUpperCase()}</span>}
     </>
   );
