@@ -8077,10 +8077,30 @@ publikuje.** Dopad je ale malý a ohraničený: DoS exponenciálním dekódován
 rozbitého percent-encodingu, čili appka zatuhne na škodlivém odkazu, na který
 uživatel sám klikne. Žádný server, žádná data, žádná cizí loď.
 
-> **Opraveno 6. 11. 2026:** ta věta o zatuhnutí na odkazu **neplatí**.
-> Zranitelná funkce v `expo-routeru 57.0.28` nemá živé volání — doloženo
-> v oddílu *Nové hlášení na decode-uri-component (#27, 6. 11. 2026)*.
-> Balíček se do bundlu dostane, ale cesta deep linků k němu nevede.
+> **Opraveno 6. 11. 2026:** ta věta o zatuhnutí na odkazu **neplatí**, a tady
+> je čím se to vyvrátilo — bez toho by to za rok nebylo k rozeznání od dojmu.
+>
+> **Sabotáž.** `query-string@7.1.3` v čistém Node s
+> `decode-uri-component/index.js` přepsaným na `throw` (6. 11. 2026):
+> `stringify` a `extract` projdou bez dotyku, `parse` a `parseUrl` vyhodí.
+> Zranitelný kód je tedy jen za `parse`/`parseUrl`.
+>
+> **A živá volání query-stringu v `expo-routeru 57.0.28` jsou jen
+> `stringify`** — `build/fork/getPathFromState.js:273` a
+> `build/react-navigation/core/getPathFromState.js:212`. Jediné
+> `queryString.parse` (`build/react-navigation/core/getStateFromPath.js:499`)
+> leží za zálohou, kterou `build/getLinkingConfig.js:90` bezpodmínečným
+> nastavením `getStateFromPath` nikdy nepustí ke slovu; živá cesta deep linků
+> parsuje `URLSearchParams` (`build/fork/getStateFromPath-forks.js:370`).
+> Balíček se do bundlu dostane, **zranitelná funkce v appce ale nemá
+> volajícího.** Celé trasování je v oddílu *Nové hlášení na
+> decode-uri-component (#27, 6. 11. 2026)*.
+>
+> **Co ověřené není:** že si `query-string.parse` nevolá sám za sebe jiný
+> balíček v bundlu — trasoval se `expo-router`, ne celý graf. A nic z toho
+> neběželo v appce: `app/testy/` pokrývají záznam trasy, klíče, role, zvuky
+> a start, routing ne. Tvrzení stojí na statickém call grafu a na sabotáži
+> knihovny mimo React Native.
 
 Override na 0.5.0 **technicky nejde.** Verze 0.5.0 je `"type": "module"`
 s jediným vstupem `exports.default`, zatímco `query-string@7.1.3` je CJS a dělá
@@ -9169,6 +9189,8 @@ GitHub 31. 10. 2026 při pushi mimochodem oznámil „1 high vulnerability on
 default branch". Je to **#27**: `decode-uri-component`, CVE-2026-118664 /
 GHSA-qr28-fpjm-wq7f, **high** (CVSS 4.0 = 8.2), `app/package-lock.json`,
 tranzitivní, scope `runtime`. Rozsah `<= 0.5.0`, záplata **0.5.1**.
+Vydáno 29. 10. 2026, přečteno z `dependabot/alerts/27` **6. 11. 2026** —
+severita, rozsah i záplata jsou stav k tomu dni, ne trvalé pravdy.
 Kvadratický DoS: záložní dekodér dělá jeden `String.replace` s novým
 regulárem na každý odlišný percent-encoded úsek, takže 224 kB vstupu
 zablokuje smyčku na ~20 s.
@@ -9182,7 +9204,9 @@ přijatém balíčku tedy přišlo nové, horší hlášení.
 ### Zranitelná funkce nemá v appce živé volání
 
 To je důvod odmítnutí, a stojí na trasování publikovaného buildu
-`expo-router@57.0.28` (ten z lockfilu, stažený `npm pack`), ne na dojmu:
+`expo-router@57.0.28` (ten z lockfilu, stažený `npm pack` **6. 11. 2026**),
+ne na dojmu. **Řádky platí pro tuhle verzi**; po bumpu expo-routeru se musí
+přečíst znovu, čísla řádků ani existenci forku nic negarantuje:
 
 | Co | Kde | Co z toho plyne |
 |---|---|---|
@@ -9263,9 +9287,16 @@ ne svět*. Že na #27 mlčí i po opravě, je teď **správně** — #27 je
 ### Vedle #27 je otevřených ještě třináct a nikdo se na ně nedíval
 
 Při čtení #27 se ukázalo, že otevřených hlášení je **čtrnáct** (#27–#40),
-všechna na `app/package-lock.json`:
+všechna na `app/package-lock.json`.
 
-| Hlášení | Balíček | Máme | Záplata |
+**Naměřeno 6. 11. 2026** z `gh api "…/dependabot/alerts?state=open"`; verze
+ve sloupci *Máme* z `app/package-lock.json` téhož dne, záplaty
+z `first_patched_version` v advisory. GitHub to při pushi potvrdil sám:
+*„6 high, 5 moderate, 3 low"*. **Čísla nejsou dnešní stav, ale stav k tomu
+datu** — ten oddíl o kontrole barev se s kódem rozešel za tři dny právě
+tím, že v něm čísla stála jako fakt bez data.
+
+| Hlášení | Balíček | Máme (6. 11. 2026) | Záplata |
 |---|---|---|---|
 | #28–#38 (10×, z toho 5 high) | `node-forge` | 1.4.0 | **1.4.1** |
 | #39 (medium) | `glob` | 13.0.6 | 14.0.2 |

@@ -38,7 +38,15 @@ import sys
 import urllib.error
 import urllib.request
 
-# Verze, od které je dané hlášení zaplátované. Z advisory, ne z odhadu.
+# Verze, od které je dané hlášení zaplátované. Z advisory, ne z odhadu — a
+# **prah je jen tak aktuální jako advisory, ze kterého se přečetl**, takže
+# u každého stojí datum. Nové hlášení na týž balíček ho může posunout; přesně
+# to se stalo níž.
+#
+# | Balíček | Prah | Z čeho | Přečteno |
+# |---|---|---|---|
+# | `zod` | 4.6.6 | GHSA-mrhx-c7xc-m3w5 / CVE-2023-54404, rozsah `< 4.6.6` | 6. 11. 2026 |
+# | `decode-uri-component` | 0.5.1 | GHSA-qr28-fpjm-wq7f / CVE-2026-118664, rozsah `<= 0.5.0` | 6. 11. 2026 |
 #
 # `decode-uri-component` tu bylo do 6. 11. 2026 na (0, 5, 0) a bylo to špatně:
 # CVE-2026-118664 (#27) má rozsah `<= 0.5.0`, tedy i tu verzi, která opravila
