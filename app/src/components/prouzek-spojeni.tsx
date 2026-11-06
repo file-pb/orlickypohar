@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/hooks/use-theme';
 import { pismoNaVyplni } from '@/lib/kontrast';
+import { overSpojeni, stavSite } from '@/lib/sit';
 import { stavNahravani } from '@/lib/tracker/nahravani';
 import { stavProuzku, type Prouzek } from '@/lib/tracker/prouzek';
 import { stavGps } from '@/lib/tracker/stav';
@@ -20,6 +21,18 @@ import { ukazkaBezi } from '@/lib/ukazka';
 /** Jak často se stav přečte. Tři vteřiny, stejně jako na rozcestníku. */
 const TIK_MS = 3000;
 
+/**
+ * Jak často se appka ptá serveru, jestli je na příjmu.
+ *
+ * <b>Mnohem řidčeji než tik.</b> Čtení stavu z databáze nic nestojí,
+ * dotaz ven ano — a tohle běží na každé obrazovce, celý den u vody.
+ * Půl minuty je kompromis mezi „proužek lže" a „appka šťouchá pořád".
+ *
+ * Ptá se <b>jen když neběží záznam</b>: při něm stav spojení vzniká sám
+ * z odesílání stopy a druhý dotaz by byl zbytečný.
+ */
+const OVERENI_MS = 30000;
+
 export function useProuzek(): Prouzek | null {
   const [p, setP] = useState<Prouzek | null>(null);
 
@@ -34,7 +47,11 @@ export function useProuzek(): Prouzek | null {
         const z = otevrenyZaznam();
         // Bez otevřeného záznamu se do dalších dotazů vůbec nechodí: tohle
         // běží na každé obrazovce, včetně té, kde zrovna jede odpočet.
-        setP(z ? stavProuzku(z, stavGps(z.id), stavNahravani(z.id)) : null);
+        setP(
+          z
+            ? stavProuzku(z, stavGps(z.id), stavNahravani(z.id))
+            : stavProuzku(null, { posledniBod: null, stariMs: null, presnostM: null, pocetBodu: 0 }, null, Date.now(), false, stavSite()),
+        );
       } catch {
         // Databáze nemusí být po studeném startu ještě otevřená. Proužek,
         // který appku shodí, by byl horší než proužek, který chvíli není.
@@ -43,6 +60,18 @@ export function useProuzek(): Prouzek | null {
     };
     nacti();
     const id = setInterval(nacti, TIK_MS);
+
+    // <b>Ptá se jen bez otevřeného záznamu.</b> Při záznamu stav spojení
+    // vzniká z odesílání stopy, takže by to byl dotaz navíc o ničem.
+    const zeptejSe = () => {
+      try {
+        if (!otevrenyZaznam()) void overSpojeni();
+      } catch {
+        // Databáze po studeném startu; příští kolo to zkusí znovu.
+      }
+    };
+    zeptejSe();
+    const idSite = setInterval(zeptejSe, OVERENI_MS);
     // Návrat z pozadí překreslí hned: tik mezitím stál, takže by proužek
     // chvíli tvrdil, co platilo před hovorem.
     const posluchac = AppState.addEventListener('change', (stav) => {
@@ -50,6 +79,7 @@ export function useProuzek(): Prouzek | null {
     });
     return () => {
       clearInterval(id);
+      clearInterval(idSite);
       posluchac.remove();
     };
   }, []);

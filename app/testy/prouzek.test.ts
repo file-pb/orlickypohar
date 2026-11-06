@@ -46,6 +46,7 @@ function zaznam(stav: Zaznam['stav'] = 'bezi'): Zaznam {
 }
 
 /** Čerstvá poloha: bod před čtyřmi vteřinami. */
+const GPS_PRAZDNA: StavGps = { posledniBod: null, stariMs: null, presnostM: null, pocetBodu: 0 };
 const GPS_CERSTVA: StavGps = { posledniBod: TED - 4000, stariMs: 4000, presnostM: 6, pocetBodu: 412 };
 /** Poloha, která dávno nepřišla — nad `PODEZRELE_MS`. */
 const GPS_MRTVA: StavGps = { posledniBod: TED - 90_000, stariMs: 90_000, presnostM: 6, pocetBodu: 412 };
@@ -128,6 +129,31 @@ zkus('text je krátký — vejde se pod hodiny', () => {
   ]) {
     assert.ok(p!.text.length <= 28, `moc dlouhé: ${p!.text}`);
   }
+});
+
+
+// --- Spojení se serverem bez záznamu (Filip, 7. 11. 2026) ---
+
+zkus('bez záznamu a bez spojení se proužek ukáže', () => {
+  const p = stavProuzku(null, GPS_PRAZDNA, null, Date.now(), false, { doletelo: false, kdy: Date.now() });
+  assert.equal(p?.druh, 'bezSpojeni');
+  assert.match(p!.text, /BEZ SPOJEN/);
+});
+
+zkus('bez záznamu a se spojením proužek mlčí', () => {
+  assert.equal(
+    stavProuzku(null, GPS_PRAZDNA, null, Date.now(), false, { doletelo: true, kdy: Date.now() }),
+    null,
+  );
+});
+
+zkus('dokud se appka nezeptala, netvrdí nic', () => {
+  assert.equal(stavProuzku(null, GPS_PRAZDNA, null, Date.now(), false, null), null);
+});
+
+zkus('ukázka přebíjí i ztrátu spojení', () => {
+  const p = stavProuzku(null, GPS_PRAZDNA, null, Date.now(), true, { doletelo: false, kdy: Date.now() });
+  assert.equal(p?.druh, 'ukazka');
 });
 
 console.log(`  ${prosly} prošlo`);

@@ -28,7 +28,7 @@ import type { Zaznam } from './zaznam';
 export type VyplnProuzku = 'jede' | 'vystraha' | 'stavZruseny' | 'zvyrazneni' | 'voda';
 
 export type Prouzek = {
-  druh: 'ukazka' | 'vysila' | 'drzi' | 'nezapisuje' | 'bezKlice' | 'pozastaveno';
+  druh: 'ukazka' | 'vysila' | 'drzi' | 'nezapisuje' | 'bezKlice' | 'pozastaveno' | 'bezSpojeni';
   /** Co se do proužku napíše. Krátce — je to pás vysoký jeden řádek. */
   text: string;
   /**
@@ -51,6 +51,8 @@ export function stavProuzku(
   nahr: StavNahravani | null,
   ted = Date.now(),
   ukazka = false,
+  /** Co appka naposledy zjistila o spojení (`lib/sit.ts`), nebo `null`. */
+  sit: { doletelo: boolean; kdy: number } | null = null,
 ): Prouzek | null {
   // <b>Ukázka přebíjí všechno ostatní.</b> Je to jediný stav, ve kterém
   // appka lže o světě — ukazuje přibalená data a nikam neodesílá — takže
@@ -60,8 +62,19 @@ export function stavProuzku(
     return { druh: 'ukazka', text: 'UKÁZKA — NIC SE NEODESÍLÁ', vypln: 'voda' };
   }
 
-  // Žádný otevřený záznam: není co hlásit, a proužek se tedy nekreslí.
-  if (!z || z.stav === 'ukonceny') return null;
+  // <b>Bez záznamu se hlásí jediná věc: že appka nedosáhne na server</b>
+  // (Filip, 7. 11. 2026: *„klidně už na landing systémový proužek se
+  // spojením"*). Pravidlo „pruh, který svítí pořád, se přestane číst"
+  // tím neporušuje — svítí jen tehdy, když je co říct. Když spojení je,
+  // mlčí dál.
+  //
+  // `null` ve stavu znamená „appka se ještě nezeptala", ne „nejde to";
+  // tvrdit v tu chvíli cokoliv by byla lež.
+  if (!z || z.stav === 'ukonceny') {
+    return sit?.doletelo === false
+      ? { druh: 'bezSpojeni', text: 'BEZ SPOJENÍ SE SERVEREM', vypln: 'stavZruseny' }
+      : null;
+  }
 
   // Pozastavení je vědomé rozhodnutí posádky, ne porucha — nesmí vypadat
   // jako červená. Zmizet ale nesmí: zapomenutá pauza je přesně ta chyba,
