@@ -1,4 +1,4 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { Chyba, Karta, Nacitani, Nadpis, Prazdno, Sekce } from '@/components/ui';
@@ -23,7 +23,6 @@ export default function Poradi() {
     <ScrollView
       contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
       refreshControl={<RefreshControl refreshing={false} onRefresh={obnov} tintColor={t.voda} />}>
-      <Stack.Screen options={{ title: 'Průběžné pořadí' }} />
 
       {nacita ? <Nacitani /> : null}
       {chyba ? <Chyba text={chyba} onZkusZnovu={obnov} /> : null}

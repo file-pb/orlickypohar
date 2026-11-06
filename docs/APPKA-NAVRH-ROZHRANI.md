@@ -14,7 +14,8 @@ a co obětuje.
 | 4 | proužky fází na jantarovém panelu | **postaveno**, viz níž |
 | 5 | rozhraní závodníka | návrh |
 | 6 | systémový proužek se spojením | **postaveno**, `lib/tracker/prouzek.ts` + test |
-| 7 | rozcestník do tří pásů | návrh |
+| 7 | skořápka: landing, kebab, bez hlavičky | **postaveno** |
+| 8 | ukázkový režim | návrh, viz níž |
 
 Plátno s obrazovkami: **Appka závodníka — návrh**
 (<https://claude.ai/artifact/LP1yf9Ddz4AaceLnk8mkTK>). Pět kreseb:
@@ -401,6 +402,76 @@ Dohledáno ve `app/src/lib/schema.d.ts`, ne odhadnuto:
 **Doporučení:** postavit to na tom, co veřejné je (stavy ze `startV`
 a `stav`, pokyn ze zkrácení a přestavby), a kartu pokynu nechat
 připravenou. Čekat na nové API by znamenalo nemít posádce co dát.
+
+---
+
+## Skořápka appky: landing, kebab, bez hlavičky
+
+**Postaveno 7. 11. 2026.** Rozhodl Filip čtyřmi větami, a každá z nich
+odpálila kus toho, co tu stálo předtím:
+
+> *„určitě headerShown: false, zpět gestem"* · *„to menu hoď pod nějaký
+> kebab, ať to neotravuje"* · *„ten rozcestník tam máme jen abychom
+> simulovali regatu"* · *„na rozcestník zatím jen vodočet a logo … to bude
+> takový landing."*
+
+**Hlavička se nekreslí.** Každá obrazovka má vlastní nadpis v obsahu, takže
+se tím neztratilo nic než pruh nad ním — a zpět jde gestem od hrany, na
+Androidu i systémovým tlačítkem. Tituly v `Stack.Screen` tím zmrtvěly
+a zmizely (čtyři obrazovky). Horní bezpečný okraj dorovnává kořenový
+pohled; když je vidět proužek spojení, vzal si ho on.
+
+**Domovská obrazovka je landing:** logo, hladina Orlíku, a pod tím *co teď*
+— rozhodčímu velení, posádce běžící sledování. Nic jiného.
+
+**Kebab drží všechno ostatní:** ročníky, lodě a posádka, klíč, trasa, účet,
+web. Tři tečky mají terč 44 pt, i když se kreslí menší.
+
+**Ročníky přestaly být domovem**, protože nejsou obrazovkou produktu —
+výsledky a kalendář čte veřejnost na webu. V appce je to cesta dovnitř pro
+zkoušení, a tak jsou pod kebabem.
+
+**Co sem teprve přijde.** Na soutěžní den stavová obrazovka závodníka,
+mimo něj kalendář — *„ale teď ne"*.
+
+### Widget vodočtu
+
+Velké číslo hladiny, šipka a věta o změně za šest hodin, přítok a odtok.
+**Data jdou z našeho API** (`/vodocet/orlik`, veřejné); chodit oklikou přes
+Next by znamenalo svázat appku s adresou webu kvůli údaji, který má o dveře
+vedle. **Výpočet změny je tentýž jako na webu** a má vlastní testy —
+dvě kopie téhož vzorce jsou právě to, co se tiše rozejde a obě budou
+ukazovat číslo, jen jiné.
+
+**Graf tu zatím není.** Na webu je to SVG ve stránce bez knihovny;
+v React Native by znamenal `react-native-svg`, tedy **nativní závislost** —
+a ty se přidávají dávkou, protože po každé z nich Miloš instaluje ručně.
+
+### Ukázkový režim — navržený, nepostavený
+
+Filip, 7. 11. 2026: *„když si to bude někdo chtít prohlídnout, tam mu to
+nechci pouštět na serveru po telefonu a musíme mít nějaký demo mód"*,
+a spouštět se má z kebabu.
+
+**Co to obnáší.** Appka míří na API jedinou adresou
+(`EXPO_PUBLIC_API_URL` v `lib/api.ts`), takže přepínač je levný; drahá je
+ta druhá polovina — **odkud vzít data**. Tři cesty a jedno doporučení:
+
+| Cesta | Co dá | Co stojí |
+| --- | --- | --- |
+| **přibalený snímek** regaty do appky | funguje bez sítě, i na vodě bez signálu | otisk appky poroste; snímek se musí udržovat |
+| ukázkový ročník na **ostrém API** | nic se nepřibaluje | je to pořád server, což je přesně to, čemu se má předejít |
+| **mock, který už máme** (`tools/fake-api.py`) nasazený zvlášť | hotová data | další běžící služba a další adresa |
+
+**Doporučení: přibalený snímek.** Je to jediná z těch tří, která splní to,
+co ta věta doopravdy žádá — *prohlédnout si appku, aniž by to šlo na
+server*. Zápisy (klepnutí na cíl, spuštění procedury) se v něm neodesílají
+nikam, jen mění stav v paměti; po vypnutí režimu se zahodí.
+
+**Dvě věci, které s tím musí přijít, jinak to nadělá škodu:** režim musí
+být **vidět** (jinak někdo odstartuje rozjížďku v ukázce a bude čekat, že
+se to stalo) — nabízí se na to proužek nahoře, který už existuje —
+a **nesmí jít zapnout omylem** uprostřed závodu.
 
 ---
 

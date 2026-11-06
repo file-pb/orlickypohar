@@ -1,20 +1,42 @@
 import { useRouter } from 'expo-router';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
-
 import { useEffect, useState } from 'react';
+import { Image, RefreshControl, ScrollView, Text, View } from 'react-native';
 
-import { Chyba, Karta, Nacitani, Nadpis, Prazdno, Radek, Sekce } from '@/components/ui';
+import { Kebab } from '@/components/kebab';
+import { Karta } from '@/components/ui';
+import { Vodocet } from '@/components/vodocet';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
-import { nactiJa, nactiMojeLode, nactiSerie, nactiZavod, type ZavodDetail } from '@/lib/api';
-import { kdeVeli, postava } from '@/lib/role';
+import { nactiJa, nactiZavod, type ZavodDetail } from '@/lib/api';
+import { kdeVeli } from '@/lib/role';
 import { predJakDlouho, stavGps, type StavGps } from '@/lib/tracker/stav';
 import { otevrenyZaznam, type Zaznam } from '@/lib/tracker/zaznam';
 
+/**
+ * Domovská obrazovka: landing.
+ *
+ * <b>Co se změnilo 7. 11. 2026.</b> Býval tu rozcestník — ročníky, účet,
+ * lodě, klíč, trasa a odkaz na web, jeden pod druhým. Filip to rozpustil
+ * třemi větami: *„to menu hoď pod nějaký kebab, ať to neotravuje"*,
+ * *„ten rozcestník tam máme jen abychom simulovali regatu"* a *„na
+ * rozcestník zatím jen vodočet a logo … to bude takový landing."*
+ *
+ * Takže: nahoře logo, pod ním hladina Orlíku — první věc, na kterou se
+ * u vody kouká každý. Pod tím <b>co teď</b>, když nějaké je: rozhodčí
+ * velení, posádka běžící sledování. Všechno ostatní je pod třemi tečkami.
+ *
+ * <b>Co sem teprve přijde.</b> Na soutěžní den stavová obrazovka
+ * závodníka, mimo něj kalendář (Filip: *„ale teď ne"*).
+ */
 
 /**
- * Stav sledování na rozcestníku. Ukáže se jen tehdy, když je co hlásit —
- * posádka by neměla hledat obrazovku Trasa, aby zjistila, že záznam běží.
+ * Stav sledování. Ukáže se, jen když je co hlásit — posádka by neměla
+ * hledat obrazovku Trasa, aby zjistila, že záznam běží.
+ *
+ * <b>Proč tu zůstal, když je proužek nahoře.</b> Proužek říká, jestli se
+ * stopa dostane ven; tahle karta říká, které lodi se zapisuje, a vede
+ * k trase. Jsou to dvě různé otázky a jen jedna z nich se vejde pod
+ * hodiny.
  */
 function Sledovani() {
   const t = useTheme();
@@ -58,7 +80,7 @@ function Sledovani() {
 
 /**
  * Co má ten člověk nahoře. <b>Rozhodčí přijel velet</b>, a kdyby musel
- * start hledat pod seznamem ročníků, bylo by to špatně postavené.
+ * start hledat pod ročníky, bylo by to špatně postavené.
  */
 function Velení({ ja }: { ja: Parameters<typeof kdeVeli>[0] }) {
   const t = useTheme();
@@ -66,9 +88,7 @@ function Velení({ ja }: { ja: Parameters<typeof kdeVeli>[0] }) {
   const kde = kdeVeli(ja);
 
   // Jméno regaty, ne její adresa. `kdeVeli` zná jen slug — a „jarni-vitr"
-  // na rozcestníku vypadá jako chyba, ne jako název (zjištěno na telefonu
-  // 29. 10. 2026). Detail se proto dotáhne; než dorazí, stojí tam slug,
-  // protože prázdná karta by byla horší než ošklivé jméno.
+  // vypadá jako chyba, ne jako název (zjištěno na telefonu 29. 10. 2026).
   const { data: detail } = useData<ZavodDetail | null>(
     () => (kde?.zavod ? nactiZavod(kde.serie, kde.zavod) : Promise.resolve(null)),
     [kde?.serie, kde?.zavod],
@@ -94,63 +114,43 @@ function Velení({ ja }: { ja: Parameters<typeof kdeVeli>[0] }) {
   );
 }
 
-export default function Rocniky() {
+export default function Domu() {
   const t = useTheme();
-  const router = useRouter();
-  const { data, chyba, nacita, obnov } = useData(nactiSerie);
-  const { data: ja } = useData(nactiJa);
-  const { data: mojeLode } = useData(nactiMojeLode);
-
-  const kdo = postava(ja ?? null, (mojeLode?.length ?? 0) > 0);
+  const [signal, setSignal] = useState(0);
+  const { data: ja } = useData(nactiJa, [signal]);
 
   return (
     <ScrollView
       contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
-      refreshControl={<RefreshControl refreshing={false} onRefresh={obnov} tintColor={t.voda} />}>
-      <Nadpis tlumene="Seriál závodů plachetnic na Orlické přehradě">Ročníky</Nadpis>
-
-      {/* Nahoře stojí to, kvůli čemu ten člověk aplikaci zapnul. Rozhodčí
-          velení, kapitán běžící sledování; čtenář nemá ani jedno, a tak
-          mu rovnou začínají ročníky. */}
-      {kdo === 'rozhodci' ? <Velení ja={ja ?? null} /> : null}
-      <Sledovani />
-
-      {nacita ? <Nacitani /> : null}
-      {chyba ? <Chyba text={chyba} onZkusZnovu={obnov} /> : null}
-
-      {data?.length === 0 ? <Prazdno text="Zatím není zveřejněný žádný ročník." /> : null}
-
-      {data?.map((s) => (
-        <Karta key={s.slug} onPress={() => router.push(`/serie/${s.slug}`)}>
-          <Text style={{ color: t.text, fontWeight: '600', fontSize: 16 }}>{s.nazev}</Text>
-          <Text style={{ color: t.tlumeny, marginTop: 2 }}>
-            {s.rok} · {s.pocetZavodu} regat
+      refreshControl={
+        <RefreshControl
+          refreshing={false}
+          onRefresh={() => setSignal((n) => n + 1)}
+          tintColor={t.voda}
+        />
+      }>
+      {/* Logo, jméno a kebab na jednom řádku. Hlavička se od 7. 11. 2026
+          nekreslí (`headerShown: false`, zpět gestem), takže tyhle tři
+          tečky jsou jediná cesta odsud jinam. */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+        <Image
+          source={require('../../assets/images/icon.png')}
+          style={{ width: 44, height: 44, borderRadius: 10 }}
+          accessibilityIgnoresInvertColors
+        />
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text style={{ color: t.text, fontSize: 20, fontWeight: '800', letterSpacing: -0.4 }}>
+            Orlický pohár
           </Text>
-        </Karta>
-      ))}
+          <Text style={{ color: t.tlumeny, fontSize: 13 }}>Plachetnice na Orlické přehradě</Text>
+        </View>
+        <Kebab />
+      </View>
 
-      {/* Kapitánovi se vlastní lodě nabízejí rovnou: odsud vydává klíče
-          posádce a bez nich se nikdo nepřipojí. Ostatním by to byl další
-          odkaz, který nikam nevede. */}
-      {kdo === 'kapitan' ? (
-        <>
-          <Sekce>Moje loď</Sekce>
-          <Radek text="Moje lodě" href="/lode" />
-        </>
-      ) : null}
+      <Vodocet obnovSignal={signal} />
 
-      {/* Účet, klíč a záznam trasy bývaly na rozcestníku vedle sebe se
-          vším ostatním. Hledal se v tom start i sledování, takže odešly
-          pod účet — tam je najde ten, kdo je potřebuje. */}
-      <Sekce>Telefon a účet</Sekce>
-      <Radek
-        text={ja ? 'Účet a nastavení' : 'Účet a přihlášení'}
-        href="/ucet"
-        hodnota={ja?.zobrazovane}
-      />
-
-      {/* Odkaz ven schválně: appka je čtečka, ne náhrada webu. */}
-      <Radek text="orlickypohar.klihovka.cz" href="https://orlickypohar.klihovka.cz" hodnota="web" />
+      <Velení ja={ja ?? null} />
+      <Sledovani />
     </ScrollView>
   );
 }

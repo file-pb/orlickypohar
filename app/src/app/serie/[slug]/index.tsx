@@ -1,4 +1,4 @@
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { OdberUpozorneni } from '@/components/odber-upozorneni';
@@ -20,7 +20,6 @@ export default function Rocnik() {
     <ScrollView
       contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
       refreshControl={<RefreshControl refreshing={false} onRefresh={obnov} tintColor={t.voda} />}>
-      <Stack.Screen options={{ title: data?.nazev ?? 'Ročník' }} />
 
       {nacita ? <Nacitani /> : null}
       {chyba ? <Chyba text={chyba} onZkusZnovu={obnov} /> : null}

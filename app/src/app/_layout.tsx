@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme, View } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BannerAktualizace } from '@/components/banner-aktualizace';
 import { ProuzekSpojeni, useProuzek } from '@/components/prouzek-spojeni';
@@ -13,6 +13,24 @@ import { jas, pismoNaVyplni } from '@/lib/kontrast';
 import '@/lib/tracker/uloha';
 
 export default function Layout() {
+  return (
+    <SafeAreaProvider>
+      <Obsah />
+    </SafeAreaProvider>
+  );
+}
+
+/**
+ * <b>Hlavička se nekreslí</b> (Filip, 7. 11. 2026: *„určitě
+ * headerShown: false, zpět gestem"*). Každá obrazovka má vlastní nadpis,
+ * takže se tím neztrácí nic než pruh nad ním — a zpět jde gestem od
+ * hrany, na Androidu i systémovým tlačítkem.
+ *
+ * <b>Horní okraj proto musí dorovnat tenhle pohled.</b> Dokud hlavička
+ * byla, brala si ho sama; bez ní by obsah začínal pod hodinami. Když je
+ * vidět proužek spojení, vzal si ho on a tady se nepřidává.
+ */
+function Obsah() {
   const tmave = useColorScheme() === 'dark';
   const t = tmave ? Colors.dark : Colors.light;
 
@@ -34,11 +52,17 @@ export default function Layout() {
   // zmizely.
   const naProuzku = prouzek ? pismoNaVyplni(t, t[prouzek.vypln]) : null;
   const svetlostListy = naProuzku ? (jas(naProuzku) > 0.5 ? 'light' : 'dark') : undefined;
+  const okraje = useSafeAreaInsets();
 
   return (
-    <SafeAreaProvider>
+    <>
       <StatusBar style={svetlostListy ?? (tmave ? 'light' : 'dark')} />
-      <View style={{ flex: 1, backgroundColor: t.pozadi }}>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: t.pozadi,
+          paddingTop: prouzek ? 0 : okraje.top,
+        }}>
       <ProuzekSpojeni prouzek={prouzek} />
       <Stack
         screenOptions={{
@@ -46,19 +70,13 @@ export default function Layout() {
           headerTintColor: t.voda,
           headerTitleStyle: { color: t.text },
           contentStyle: { backgroundColor: t.pozadi },
-        }}>
-        <Stack.Screen name="index" options={{ title: 'Orlický pohár' }} />
-        <Stack.Screen name="ucet" options={{ title: 'Účet' }} />
-        <Stack.Screen name="klic" options={{ title: 'Klíč k lodi' }} />
-        <Stack.Screen name="lode/index" options={{ title: 'Moje lodě' }} />
-        <Stack.Screen name="lode/[lod]" options={{ title: 'Klíče posádky' }} />
-        <Stack.Screen name="tracker/index" options={{ title: 'Trasa' }} />
-        <Stack.Screen name="tracker/[id]" options={{ title: 'Trasa' }} />
-      </Stack>
+          headerShown: false,
+        }}
+      />
       {/* Až za `Stack`, aby ležel nad obsahem; sám se stará o to, kdy a jak
           dlouho je vidět. */}
       <BannerAktualizace />
       </View>
-    </SafeAreaProvider>
+    </>
   );
 }

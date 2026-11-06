@@ -1,5 +1,5 @@
 import { useKeepAwake } from 'expo-keep-awake';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -113,7 +113,6 @@ export default function CilovaObrazovka() {
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
-      <Stack.Screen options={{ title: 'Cíl' }} />
       {nacita ? <Nacitani /> : null}
       {chyba ? <Chyba text={chyba} onZkusZnovu={obnov} /> : null}
       {!nacita && !chyba && !zapis ? (

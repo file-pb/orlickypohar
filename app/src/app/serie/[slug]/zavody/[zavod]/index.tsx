@@ -1,4 +1,4 @@
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
@@ -173,7 +173,6 @@ export default function Zastavka() {
     <ScrollView
       contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
       refreshControl={<RefreshControl refreshing={false} onRefresh={obnov} tintColor={t.voda} />}>
-      <Stack.Screen options={{ title: data?.nazev ?? 'Regata' }} />
 
       {nacita ? <Nacitani /> : null}
       {chyba ? <Chyba text={chyba} onZkusZnovu={obnov} /> : null}

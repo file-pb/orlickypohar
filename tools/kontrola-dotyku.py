@@ -139,6 +139,13 @@ def rozpust(decl: str, konstanty: dict[str, int]) -> str:
 
 def vyska(decl: str) -> tuple[int, str]:
     """Nejpříznivější deklarovaná výška terče a čím je dána."""
+    # Podklad, který se roztahuje od horní hrany ke spodní, je vysoký jako
+    # jeho rodič — a to z tohohle souboru nezjistíš. Takový terč se měřit
+    # nedá a zároveň je skoro jistě obrovský (překryv nabídky, klepnutí
+    # vedle dialogu), takže se počítá jako vyhovující. Platí to jen při
+    # <b>obou</b> hranách: samotné `top` je přilepený pruh a ten se měří.
+    if re.search(r"position:\s*'absolute'", decl) and re.search(r"\btop:", decl) and re.search(r"\bbottom:", decl):
+        return 10_000, "od hrany k hraně"
     m = re.search(r"minHeight:\s*(\d+)", decl)
     if m:
         return int(m.group(1)), "minHeight"
