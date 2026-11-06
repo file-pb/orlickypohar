@@ -80,17 +80,21 @@ public class ZapisTests
         Assert.NotNull(Zapis.ProcNejdeUlozit([Radek(1, "LUNA", "Pod7m", poradi: 0)]));
     }
 
+    /// <summary>
+    /// <b>Obrácený test</b> (nález K7, 6. 11. 2026). Do té doby tenhle test
+    /// hlídal, že shoda <b>neprojde</b> — jenže ZPJ A7 shodu zná a říká, co
+    /// s ní: body za obsazená místa se sečtou a rozdělí rovným dílem.
+    /// Dělení dělá `Bodovani.BodyRozjizdky` a má vlastní testy; tady jde
+    /// o to, že zápis vůbec projde.
+    /// </summary>
     [Fact]
-    public void Stejne_poradi_v_jedne_kategorii_neprojde()
+    public void Stejne_poradi_v_jedne_kategorii_je_shoda_a_projde()
     {
-        var chyba = Zapis.ProcNejdeUlozit(
+        Assert.Null(Zapis.ProcNejdeUlozit(
         [
             Radek(1, "LUNA", "Pod7m", poradi: 2),
             Radek(2, "SENDY", "Pod7m", poradi: 2),
-        ]);
-
-        Assert.Contains("LUNA", chyba);
-        Assert.Contains("SENDY", chyba);
+        ]));
     }
 
     [Fact]
