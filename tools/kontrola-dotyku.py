@@ -23,13 +23,23 @@ a kontrola to musí vypsat; po vrácení musí projít. Druhá sabotáž je
 přesměrovat `PROHLEDAT` na neexistující složku — musí přijít kód 2.
 
 <b>Mez téhle kontroly, a je i ve výstupu.</b> Měří se <b>deklarovaná</b>
-geometrie, ne vykreslené pixely: `minHeight`, svislá výplň a `hitSlop`.
+geometrie, ne vykreslené pixely: `minHeight`, svislá výplň a `hitSlop`
+(pojmenovaná číselná konstanta téhož souboru se dosadí).
 Výška řádku textu se nepočítá z fontu, ale paušálně — `RADEK_PT` je
 <b>horní</b> odhad řádkové schránky, takže se hlásí jen terč, který
 na mez nedosáhne <b>ani</b> s tím nejpříznivějším předpokladem. Tím
 kontrola nehlásí nic, co by ve skutečnosti prošlo — a zároveň propustí
 terč, který je na papíře dost vysoký, ale ve skutečnosti ho překrývá
 něco jiného. To z tohohle souboru nezjistíš.
+
+<b>A jedno slepé místo navíc, nalezené sabotáží 6. 11. 2026.</b> Styl
+předaný do komponenty <b>propem</b> se rozpustit nedá, takže u obalu
+jako `Klepaci` kontrola vidí jen tu podlahu, kterou si obal drží sám
+(`s.terc`). React Native přitom nechává pozdější položku pole přebít
+dřívější — kdyby tedy `Akce` nastavila `minHeight: 0`, terč by se
+<b>doopravdy</b> srazil a kontrola by to <b>neohlásila</b>. Proti tomu
+tenhle soubor nic nezmůže; drží to jen pravidlo, že výšku si nastavují
+`Akce` a `Radek`, a nikdo jiný.
 """
 
 from __future__ import annotations
@@ -52,6 +62,9 @@ RADEK_PT = 20
 
 ZNACKY = ("Pressable", "TouchableOpacity", "Link")
 
+# `const TERC = 44;` v témže souboru — jméno místo číslice.
+KONSTANTA = re.compile(r"\bconst\s+(\w+)\s*=\s*(\d+)\s*;")
+
 
 def hlavicka(txt: str, od: int) -> str:
     """Text uvnitř otevírací značky — do `>` mimo složené závorky."""
@@ -66,6 +79,26 @@ def hlavicka(txt: str, od: int) -> str:
             break
         out.append(znak)
     return "".join(out)
+
+
+def blok(txt: str, kde: int) -> str:
+    """Text funkce, ve které ta značka leží.
+
+    <b>Proč to tu je.</b> Styl se často drží v místní proměnné
+    (`const styl = [s.karta, …]`), a hledat ji v celém souboru znamená
+    chytit stejnojmennou proměnnou z úplně jiné komponenty. Tím kontrola
+    <b>propustila malý terč</b> — zjištěno sabotáží 6. 11. 2026, kdy
+    sražená konstanta nic neshodila, protože se do `Klepaci` dosadil
+    `styl` z `Karta`. Hranice se hledá podle `function` na začátku řádku;
+    uvnitř jedné funkce se dvě stejná jména nepotkají.
+    """
+    zacatek = txt.rfind("\nfunction ", 0, kde)
+    zacatek = max(zacatek, txt.rfind("\nexport function ", 0, kde))
+    konec = txt.find("\nfunction ", kde)
+    konec2 = txt.find("\nexport function ", kde)
+    if konec < 0 or (0 <= konec2 < konec):
+        konec = konec2
+    return txt[max(zacatek, 0) : konec if konec >= 0 else len(txt)]
 
 
 def deklarace(txt: str, hl: str, styly: dict[str, str]) -> str:
@@ -91,6 +124,19 @@ def deklarace(txt: str, hl: str, styly: dict[str, str]) -> str:
     return " ".join(kusy)
 
 
+def rozpust(decl: str, konstanty: dict[str, int]) -> str:
+    """Dosadí číselné konstanty souboru.
+
+    `minHeight: TERC` je totéž jako `minHeight: 44`, jen pojmenované —
+    a kontrola, která by četla jen číslice, by hlásila terč, který mez
+    drží. Bere jen `const JMENO = <celé číslo>;` z téhož souboru; cokoliv
+    složitějšího (výpočet, import) zůstane nerozpuštěné, a tedy nahlášené.
+    """
+    for jmeno, hodnota in konstanty.items():
+        decl = re.sub(r"\b" + jmeno + r"\b", str(hodnota), decl)
+    return decl
+
+
 def vyska(decl: str) -> tuple[int, str]:
     """Nejpříznivější deklarovaná výška terče a čím je dána."""
     m = re.search(r"minHeight:\s*(\d+)", decl)
@@ -114,9 +160,16 @@ def projdi(mez: int) -> tuple[list[tuple[int, str, int, str]], int]:
     for soubor in sorted(PROHLEDAT.rglob("*.tsx")):
         txt = soubor.read_text()
         styly = dict(re.findall(r"\b(\w+):\s*\{([^{}]*)\}", txt))
+        konstanty = {j: int(h) for j, h in KONSTANTA.findall(txt)}
         for m in re.finditer(r"<(" + "|".join(ZNACKY) + r")\b", txt):
+            hl = hlavicka(txt, m.end())
+            # `<Link asChild>` nekreslí vlastní rámeček — terč je jeho dítě
+            # a to kontrola měří zvlášť. Počítat oba by hlásilo obal, který
+            # na obrazovce není.
+            if m.group(1) == "Link" and "asChild" in hl:
+                continue
             celkem += 1
-            decl = deklarace(txt, hlavicka(txt, m.end()), styly)
+            decl = rozpust(deklarace(blok(txt, m.start()), hl, styly), konstanty)
             v, cim = vyska(decl)
             if v < mez:
                 radek = txt.count("\n", 0, m.start()) + 1

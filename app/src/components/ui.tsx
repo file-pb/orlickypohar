@@ -1,3 +1,4 @@
+import { Link } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '@/hooks/use-theme';
@@ -99,10 +100,147 @@ export function Chyba({ text, onZkusZnovu }: { text: string; onZkusZnovu: () => 
   return (
     <View style={[s.prazdno, { borderColor: t.linka }]}>
       <Text style={{ color: t.text, textAlign: 'center' }}>{text}</Text>
-      <Pressable onPress={onZkusZnovu} style={{ marginTop: 12 }}>
-        <Text style={{ color: t.voda, textAlign: 'center' }}>Zkusit znovu</Text>
-      </Pressable>
+      <Akce text="Zkusit znovu" onPress={onZkusZnovu} />
     </View>
+  );
+}
+
+/**
+ * <b>Tři velikosti akce a nic mezi nimi.</b>
+ *
+ * Měření 30. 10. 2026 (`tools/kontrola-dotyku.py`) našlo 34 z 52 klepacích
+ * míst pod mezí 44 pt a třicet z nich byl holý odkaz vysoký jen jako řádek
+ * textu. Není to zanedbání, jsou to dvě zadání v jednom produktu: start
+ * a cíl se stavěly pro ruku u vody a mají 56 pt, kdežto účet, lodě, klíč
+ * a trasa jsou z doby, kdy byla appka čtečka.
+ *
+ * Jediné rozhodnutí u každého tlačítka je, <b>která ze tří</b> — a to je
+ * rozhodnutí o úkonu, ne o vzhledu:
+ *
+ * - <b>56 pt, plná barva</b> (`s.spustit` v `odpocet.tsx`) — co se dělá teď;
+ * - <b>48 pt, obtažená</b> (`Akce`) — co se dá udělat;
+ * - <b>44 pt s linkou</b> (`Radek`) — kam se dá jít.
+ *
+ * <b>Řádková je 44, ne 40, schválně:</b> 44 pt je mez Apple HIG a Android
+ * Material žádá 48 dp, takže na 44 projde iOS a na Android zbývá jedna
+ * úprava, ne dvě. <b>Čtvrtá velikost se nezavádí</b> — každá další je další
+ * rozhodnutí u každého tlačítka.
+ */
+const TERC = 44;
+const TLACITKO = 48;
+
+/**
+ * Co je uvnitř klepacího místa. S `href` to vede jinam, bez něj to něco
+ * udělá.
+ *
+ * <b>`asChild` schválně:</b> adresa zůstane na `Link`u, takže vnější odkazy
+ * i dlouhý stisk fungují jako dřív, ale terč kreslí `Pressable` — kdyby
+ * `Link` nesl styl sám, zůstal by vysoký jako řádek textu, a přesně to
+ * měření našlo.
+ */
+function Klepaci({
+  href,
+  onPress,
+  vypnuto,
+  styl,
+  children,
+}: {
+  href?: React.ComponentProps<typeof Link>['href'];
+  onPress?: () => void;
+  vypnuto?: boolean;
+  styl: object[];
+  children: React.ReactNode;
+}) {
+  const obsah = (
+    <Pressable
+      onPress={onPress}
+      disabled={vypnuto}
+      style={({ pressed }) => [s.terc, ...styl, pressed && !vypnuto ? { opacity: 0.6 } : null]}>
+      {children}
+    </Pressable>
+  );
+  return href ? (
+    <Link href={href} asChild>
+      {obsah}
+    </Link>
+  ) : (
+    obsah
+  );
+}
+
+/** Běžná akce, 48 pt: co se dá udělat. */
+export function Akce({
+  text,
+  onPress,
+  href,
+  barva,
+  vypnuto,
+  pracuje,
+}: {
+  text: string;
+  onPress?: () => void;
+  href?: React.ComponentProps<typeof Link>['href'];
+  /** Písmo a okraj. Výchozí je `voda`; nevratný úkon dostane `stavZruseny`. */
+  barva?: string;
+  vypnuto?: boolean;
+  /** Běží to a čeká se — stisk musí být vidět, jinak se zmáčkne podruhé. */
+  pracuje?: boolean;
+}) {
+  const t = useTheme();
+  const b = vypnuto ? t.tlumeny : (barva ?? t.voda);
+  return (
+    <Klepaci
+      href={href}
+      onPress={onPress}
+      vypnuto={vypnuto || pracuje}
+      styl={[s.akce, { borderColor: vypnuto ? t.linka : b }]}>
+      {pracuje ? <ActivityIndicator color={b} /> : null}
+      <Text style={[s.akceText, { color: b }]}>{text}</Text>
+    </Klepaci>
+  );
+}
+
+/**
+ * Řádková akce, 44 pt: kam se dá jít.
+ *
+ * <b>Hodnota vpravo je součást řádku, ne ozdoba:</b> řádek tím řekne, co za
+ * ním je („JOY", „běží"), a nemusí se tam chodit zjistit.
+ */
+export function Radek({
+  text,
+  popis,
+  hodnota,
+  barvaHodnoty,
+  onPress,
+  href,
+  barva,
+  vedleSebe,
+}: {
+  text: string;
+  /** Druhý řádek: co to udělá, ne co to je. */
+  popis?: string;
+  hodnota?: string;
+  barvaHodnoty?: string;
+  onPress?: () => void;
+  href?: React.ComponentProps<typeof Link>['href'];
+  barva?: string;
+  /** Drobná akce v řadě s dalšími: bez linky a bez roztažení na šířku. */
+  vedleSebe?: boolean;
+}) {
+  const t = useTheme();
+  return (
+    <Klepaci
+      href={href}
+      onPress={onPress}
+      styl={[s.radek, vedleSebe ? s.radekVedleSebe : { borderBottomColor: t.linka }]}>
+      <View style={{ flex: vedleSebe ? 0 : 1 }}>
+        <Text style={[s.radekText, { color: barva ?? t.text }]}>{text}</Text>
+        {popis ? <Text style={[s.radekPopis, { color: t.tlumeny }]}>{popis}</Text> : null}
+      </View>
+      {hodnota ? (
+        <Text style={[s.radekHodnota, { color: barvaHodnoty ?? t.tlumeny }]}>{hodnota}</Text>
+      ) : null}
+    </Klepaci>
   );
 }
 
@@ -125,4 +263,33 @@ const s = StyleSheet.create({
     marginLeft: 6,
   },
   prazdno: { borderWidth: 1, borderStyle: 'dashed', borderRadius: 12, padding: 24, marginTop: 8 },
+
+  // Podlaha pod každým klepacím místem, ať mu styl výš dá cokoliv.
+  terc: { minHeight: TERC },
+
+  akce: {
+    minHeight: TLACITKO,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  akceText: { fontSize: 16, fontWeight: '700' },
+
+  radek: {
+    minHeight: TERC,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderBottomWidth: 1,
+  },
+  // V řadě s dalšími: linka by řadu rozsekala, a terč drží výplň po stranách.
+  radekVedleSebe: { borderBottomWidth: 0, paddingHorizontal: 10, marginHorizontal: -10 },
+  radekText: { fontSize: 16 },
+  radekPopis: { fontSize: 13, marginTop: 1 },
+  radekHodnota: { fontSize: 14 },
 });

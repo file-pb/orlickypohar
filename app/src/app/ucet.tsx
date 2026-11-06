@@ -1,8 +1,7 @@
-import { Link } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
-import { Karta, Nacitani, Nadpis, Sekce } from '@/components/ui';
+import { Akce, Karta, Nacitani, Nadpis, Radek, Sekce } from '@/components/ui';
 import { VerzeAppky } from '@/components/verze-appky';
 import { useTheme } from '@/hooks/use-theme';
 import { nactiJa, type Ja } from '@/lib/api';
@@ -87,11 +86,11 @@ export default function Ucet() {
         <>
           <Karta>
             <Text style={{ color: t.text }}>Nikdo není přihlášený.</Text>
-            <Pressable onPress={naPrihlaseni} disabled={delam} style={{ marginTop: 12 }}>
-              <Text style={{ color: delam ? t.tlumeny : t.voda, fontWeight: '600' }}>
-                {delam ? 'Přihlašuji…' : 'Přihlásit se'}
-              </Text>
-            </Pressable>
+            <Akce
+              text={delam ? 'Přihlašuji…' : 'Přihlásit se'}
+              onPress={naPrihlaseni}
+              pracuje={delam}
+            />
           </Karta>
 
           {/* Adresa je vidět i tady: v Expo Go ji poskytovatel nezná, protože
@@ -129,9 +128,9 @@ export default function Ucet() {
             ))
           )}
 
-          <Pressable onPress={naOdhlaseni} style={{ marginTop: 24 }}>
-            <Text style={{ color: t.voda }}>Odhlásit se</Text>
-          </Pressable>
+          <View style={{ marginTop: 12 }}>
+            <Akce text="Odhlásit se" onPress={naOdhlaseni} />
+          </View>
         </>
       ) : null}
 
@@ -142,29 +141,11 @@ export default function Ucet() {
       {/* Cesty, které odešly z rozcestníku (29. 10. 2026). Tam se v nich
           hledal start i sledování; sem za nimi jde ten, kdo je potřebuje —
           a klíč potřebuje i člověk bez účtu, proto stojí mimo `ja`. */}
-      <View style={{ marginTop: 24 }}>
-        <Link href="/lode" style={{ color: t.voda }}>
-          Moje lodě
-        </Link>
-      </View>
-
-      <View style={{ marginTop: 12 }}>
-        <Link href="/klic" style={{ color: t.voda }}>
-          Klíč k lodi
-        </Link>
-      </View>
-
-      <View style={{ marginTop: 12 }}>
-        <Link href="/tracker" style={{ color: t.voda }}>
-          Záznam trasy (zkouška)
-        </Link>
-      </View>
-
-      <View style={{ marginTop: 16 }}>
-        <Link href="https://orlickypohar.klihovka.cz" style={{ color: t.voda }}>
-          orlickypohar.klihovka.cz
-        </Link>
-      </View>
+      <Sekce>Telefon</Sekce>
+      <Radek text="Moje lodě" href="/lode" />
+      <Radek text="Klíč k lodi" href="/klic" />
+      <Radek text="Záznam trasy" popis="zkouška" href="/tracker" />
+      <Radek text="orlickypohar.klihovka.cz" href="https://orlickypohar.klihovka.cz" hodnota="web" />
 
       {/* Mimo `ja`: na čem appka jede, je otázka nezávislá na přihlášení. */}
       <VerzeAppky />

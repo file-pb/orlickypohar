@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
-import { Karta, Prazdno, Sekce, Stitek } from '@/components/ui';
+import { Akce, Karta, Prazdno, Radek, Sekce, Stitek } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
 import { casAMinuty, rychlost, trvani, vzdalenost } from '@/lib/tracker/formaty';
 import { posliGpx } from '@/lib/tracker/gpx';
@@ -187,16 +187,18 @@ export default function DetailTrasy() {
             ? `Ostříháno do ${casAMinuty(z.ostrihano_do)}.`
             : 'Jestli záznam jel i po dojezdu, ostříhej konec.'}
         </Text>
-        <View style={{ flexDirection: 'row', marginTop: 10, gap: 18 }}>
+        <View style={{ flexDirection: 'row', marginTop: 4, gap: 8 }}>
           {OSTRIHAT_MIN.map((m) => (
-            <Pressable key={m} onPress={() => ostrihejO(m)}>
-              <Text style={{ color: t.voda }}>−{m} min</Text>
-              {/* Cílový čas pod tlačítkem: posádka vidí, kam to sáhne, ještě
-                  než na to ťukne. */}
-              <Text style={{ color: t.tlumeny, fontSize: 11 }}>
-                {souhrn.posledni ? `do ${casAMinuty(souhrn.posledni - m * 60 * 1000)}` : ''}
-              </Text>
-            </Pressable>
+            /* Cílový čas pod tlačítkem: posádka vidí, kam to sáhne, ještě
+               než na to ťukne. */
+            <Radek
+              key={m}
+              text={`−${m} min`}
+              barva={t.voda}
+              popis={souhrn.posledni ? `do ${casAMinuty(souhrn.posledni - m * 60 * 1000)}` : undefined}
+              vedleSebe
+              onPress={() => ostrihejO(m)}
+            />
           ))}
         </View>
       </Karta>
@@ -245,8 +247,8 @@ export default function DetailTrasy() {
                   )
                   .finally(() => setNahrava(false));
               }}
-              style={{ marginTop: 12 }}>
-              <Text style={{ color: nahrava ? t.tlumeny : t.voda, fontWeight: '600' }}>
+              style={{ minHeight: 48, justifyContent: 'center' }}>
+              <Text style={{ color: nahrava ? t.tlumeny : t.voda, fontWeight: '600', fontSize: 16 }}>
                 {nahrava ? 'Nahrávám…' : 'Nahrát na server'}
               </Text>
             </Pressable>
@@ -255,22 +257,22 @@ export default function DetailTrasy() {
       </Karta>
 
       <Sekce>Výsledek</Sekce>
-      <Pressable
+      <Akce
+        text="Poslat jako GPX"
         onPress={() => {
           if (!id) return;
           posliGpx(id).catch((e: unknown) =>
             Alert.alert('Nešlo to poslat', e instanceof Error ? e.message : String(e)),
           );
-        }}>
-        <Text style={{ color: t.voda, fontWeight: '600', fontSize: 16 }}>Poslat jako GPX</Text>
-      </Pressable>
-      <Text style={{ color: t.tlumeny, fontSize: 12, marginTop: 4 }}>
+        }}
+      />
+      <Text style={{ color: t.tlumeny, fontSize: 12, marginTop: 8 }}>
         Vedle nahrání na server: GPX otevře každá mapa.
       </Text>
 
-      <Pressable onPress={smaz} style={{ marginTop: 28 }}>
-        <Text style={{ color: t.stavZruseny }}>Smazat trasu</Text>
-      </Pressable>
+      <View style={{ marginTop: 16 }}>
+        <Akce text="Smazat trasu" barva={t.stavZruseny} onPress={smaz} />
+      </View>
     </ScrollView>
   );
 }

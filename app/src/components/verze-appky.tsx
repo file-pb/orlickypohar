@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useUpdates } from 'expo-updates';
 
-import { Karta, Sekce } from '@/components/ui';
+import { Akce, Karta, Sekce } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
 import {
   aktualizaceJdou, kratkyOtisk, popisHledani, popisPuvodu, pouzijHned, puvod,
@@ -79,22 +79,14 @@ function Hledani() {
       <Text style={{ color: t.text }}>{popis}</Text>
 
       {stav.isUpdatePending ? (
-        <Pressable onPress={() => void pouzijHned()} style={{ marginTop: 12 }}>
-          <Text style={{ color: t.voda, fontWeight: '600' }}>Použít novou verzi teď</Text>
-        </Pressable>
+        <Akce text="Použít novou verzi teď" onPress={() => void pouzijHned()} />
       ) : (
-        <Pressable
+        <Akce
+          text={pracuje ? 'Koukám…' : 'Podívat se, jestli je něco nového'}
           onPress={() => void podivejSe()}
-          disabled={pracuje || stav.isChecking || stav.isDownloading}
-          style={{ marginTop: 12 }}>
-          <Text
-            style={{
-              color: pracuje || stav.isChecking || stav.isDownloading ? t.tlumeny : t.voda,
-              fontWeight: '600',
-            }}>
-            {pracuje ? 'Koukám…' : 'Podívat se, jestli je něco nového'}
-          </Text>
-        </Pressable>
+          pracuje={pracuje}
+          vypnuto={stav.isChecking || stav.isDownloading}
+        />
       )}
 
       {problem ? (

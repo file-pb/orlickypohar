@@ -44,6 +44,7 @@ import {
   type Misto,
   type PrujezdZTrasovani,
 } from '@/lib/cil';
+import { pismoNaVyplni } from '@/lib/kontrast';
 import { odStartu, stavStartu, trvani, PROCEDURA_S } from '@/lib/start';
 
 /**
@@ -353,8 +354,14 @@ function Zapisovani({
                 s.lod,
                 { backgroundColor: t.procedura, opacity: pressed ? 0.6 : 1 },
               ]}>
-              <Text style={s.lodJmeno} numberOfLines={1}>{l.lod}</Text>
-              <Text style={s.lodPodtitul} numberOfLines={1}>
+              <Text
+                style={[s.lodJmeno, { color: pismoNaVyplni(t, t.procedura) }]}
+                numberOfLines={1}>
+                {l.lod}
+              </Text>
+              <Text
+                style={[s.lodPodtitul, s.tlumeneNaVyplni, { color: pismoNaVyplni(t, t.procedura) }]}
+                numberOfLines={1}>
                 {[l.cisloPlachty, l.kategorie].filter(Boolean).join(' · ')}
               </Text>
             </Pressable>
@@ -591,8 +598,10 @@ function Ukonceni({
                 { backgroundColor: t.vystraha, borderColor: 'transparent', opacity: pressed || posila ? 0.6 : 1 },
               ]}>
               <View style={s.obsahTlacitka}>
-                {posila ? <ActivityIndicator color="#ffffff" /> : null}
-                <Text style={[s.volbaText, { color: '#ffffff' }]}>
+                {/* Jantar je v tmavé sadě světlý, takže bílá na něm dává
+                    2,75:1. Písmo se bere podle výplně (`lib/kontrast.ts`). */}
+                {posila ? <ActivityIndicator color={pismoNaVyplni(t, t.vystraha)} /> : null}
+                <Text style={[s.volbaText, { color: pismoNaVyplni(t, t.vystraha) }]}>
                   {posila ? 'Ukončuji…' : 'Ukončit'}
                 </Text>
               </View>
@@ -648,15 +657,16 @@ const s = StyleSheet.create({
     borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 14, gap: 12,
   },
   poslednText: { fontSize: 16, fontWeight: '700', flexShrink: 1 },
-  vratit: { borderWidth: 1, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 14 },
+  vratit: { borderWidth: 1, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14 },
   vratitText: { fontSize: 15, fontWeight: '700' },
 
   // Dlaždice jsou velké schválně: klepe se za jízdy, jednou rukou a bez
   // dívání (nahrávka 21 — v druhé ruce je houkačka).
   dlazdice: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   lod: { flexGrow: 1, flexBasis: '46%', minHeight: 78, borderRadius: 14, padding: 14, justifyContent: 'center' },
-  lodJmeno: { color: '#ffffff', fontSize: 19, fontWeight: '800' },
-  lodPodtitul: { color: 'rgba(255,255,255,0.85)', fontSize: 13, marginTop: 2 },
+  lodJmeno: { fontSize: 19, fontWeight: '800' },
+  lodPodtitul: { fontSize: 13, marginTop: 2 },
+  tlumeneNaVyplni: { opacity: 0.85 },
 
   navrh: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
@@ -670,7 +680,7 @@ const s = StyleSheet.create({
   poradi: { marginTop: 18, gap: 6 },
   mistoRadek: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    borderWidth: 1, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 12,
+    borderWidth: 1, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 12,
   },
   mistoCislo: { fontSize: 15, fontWeight: '700', minWidth: 26, fontVariant: ['tabular-nums'] },
   mistoLod: { fontSize: 16, flex: 1 },

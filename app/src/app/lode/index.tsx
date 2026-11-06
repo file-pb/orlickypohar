@@ -1,8 +1,7 @@
-import { Link } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
-import { Karta, Nacitani, Nadpis, Sekce } from '@/components/ui';
+import { Akce, Karta, Nacitani, Nadpis, Sekce } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
 import { nactiMojeLode, type MojeLod } from '@/lib/api';
 
@@ -73,9 +72,7 @@ export default function MojeLode() {
               {popisRole(l.role)}
             </Text>
             {smiVydavat(l.role) ? (
-              <Link href={`/lode/${l.lodId}`} style={{ color: t.voda, marginTop: 12 }}>
-                Klíče posádky
-              </Link>
+              <Akce text="Klíče posádky" href={`/lode/${l.lodId}`} />
             ) : null}
           </Karta>
         </View>

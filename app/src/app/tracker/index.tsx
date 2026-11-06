@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
-import { Karta, Nadpis, Prazdno, Sekce, Stitek } from '@/components/ui';
+import { Akce, Karta, Nadpis, Prazdno, Radek, Sekce, Stitek } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
 import { casAMinuty, trvani, vzdalenost } from '@/lib/tracker/formaty';
 import { spustSimulaci } from '@/lib/tracker/simulace';
@@ -42,7 +42,7 @@ import {
  * přesnost 6 m" říká víc než zelené kolečko, které svítí proto, že se nikdo
  * nezeptal.
  */
-function Radek({ svetlo, popis, hodnota }: { svetlo: Svetlo; popis: string; hodnota: string }) {
+function RadekStavu({ svetlo, popis, hodnota }: { svetlo: Svetlo; popis: string; hodnota: string }) {
   const t = useTheme();
   const barva = {
     jede: t.stavVypsany,
@@ -97,7 +97,7 @@ function Panel({
 
   return (
     <Karta>
-      <Radek
+      <RadekStavu
         svetlo={svetloGps(bezi, gps)}
         popis="GPS"
         hodnota={
@@ -107,7 +107,7 @@ function Panel({
               (gps.presnostM == null ? '' : ` · přesnost ${Math.round(gps.presnostM)} m`)
         }
       />
-      <Radek
+      <RadekStavu
         svetlo={
           bezi.stav === 'pozastaveny'
             ? 'pozastaveno'
@@ -125,30 +125,33 @@ function Panel({
       {/* Odesílá se průběžně, po minutě, a dělá to úloha na pozadí — na
           posádce nesmí viset nic než spuštění záznamu. Řádek ukazuje, kdy
           se naposledy ozvalo a proč případně ne. */}
-      <Radek {...odesilani} popis="Odesílání" />
+      <RadekStavu {...odesilani} popis="Odesílání" />
 
       {/* Pozastavení je páka pro posádku, ne pro pořadatele: někdy je potřeba
           soukromí vynutit. V trase vznikne díra a to je záměr. */}
-      <Pressable onPress={onPrepni} style={{ marginTop: 14 }}>
-        <Text style={{ color: t.voda, fontWeight: '600' }}>
-          {bezi.stav === 'pozastaveny' ? 'Pokračovat ve sledování' : 'Pozastavit sledování'}
-        </Text>
-      </Pressable>
+      <Akce
+        text={bezi.stav === 'pozastaveny' ? 'Pokračovat ve sledování' : 'Pozastavit sledování'}
+        onPress={onPrepni}
+      />
       {bezi.stav === 'pozastaveny' ? (
         <Text style={{ color: t.tlumeny, fontSize: 12, marginTop: 4 }}>
           Trasa se nezahodila — v místě pauzy v ní bude mezera.
         </Text>
       ) : null}
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, gap: 20 }}>
-        <Pressable onPress={() => void zkus()} disabled={propichaSe}>
-          <Text style={{ color: propichaSe ? t.tlumeny : t.voda, fontWeight: '600' }}>
-            {propichaSe ? 'Zkouším…' : 'Propíchnout'}
-          </Text>
-        </Pressable>
-        <Pressable onPress={() => void otevriNastaveni()}>
-          <Text style={{ color: t.tlumeny }}>Nastavení polohy</Text>
-        </Pressable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 10 }}>
+        <Radek
+          text={propichaSe ? 'Zkouším…' : 'Propíchnout'}
+          barva={propichaSe ? t.tlumeny : t.voda}
+          vedleSebe
+          onPress={() => void zkus()}
+        />
+        <Radek
+          text="Nastavení polohy"
+          barva={t.tlumeny}
+          vedleSebe
+          onPress={() => void otevriNastaveni()}
+        />
       </View>
       {propich ? (
         <Text style={{ color: t.tlumeny, fontSize: 13, marginTop: 6 }}>{propich}</Text>
@@ -368,9 +371,7 @@ export default function Tracker() {
             </Text>
           ) : null}
 
-          <Pressable onPress={() => ukonci(bezi)} style={{ marginTop: 14 }}>
-            <Text style={{ color: t.voda, fontWeight: '600' }}>Ukončit záznam</Text>
-          </Pressable>
+          <Akce text="Ukončit záznam" onPress={() => ukonci(bezi)} />
         </Karta>
       ) : null}
 
@@ -423,14 +424,12 @@ export default function Tracker() {
             }}
           />
 
-          <Pressable onPress={() => void spust('gps')} style={{ marginTop: 16 }}>
-            <Text style={{ color: t.voda, fontWeight: '700', fontSize: 16 }}>
-              Spustit záznam trasy
-            </Text>
-          </Pressable>
-          <Pressable onPress={() => void spust('simulace')} style={{ marginTop: 14 }}>
-            <Text style={{ color: t.tlumeny }}>Spustit simulovanou plavbu</Text>
-          </Pressable>
+          <Akce text="Spustit záznam trasy" onPress={() => void spust('gps')} />
+          <Akce
+            text="Spustit simulovanou plavbu"
+            barva={t.tlumeny}
+            onPress={() => void spust('simulace')}
+          />
           <Text style={{ color: t.tlumeny, fontSize: 12, marginTop: 4 }}>
             Simulace je na ladění — zapisuje stejnou cestou jako GPS, ale body jsou vymyšlené.
           </Text>

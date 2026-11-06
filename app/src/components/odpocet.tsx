@@ -12,6 +12,7 @@ import {
 import { Pressable } from 'react-native';
 
 import { useDirigent } from '@/lib/dirigent';
+import { pismoNaVyplni } from '@/lib/kontrast';
 import { useTheme } from '@/hooks/use-theme';
 import type { Barvy } from '@/constants/theme';
 import {
@@ -294,9 +295,11 @@ function Ohlaseni({
           { backgroundColor: t.voda, opacity: pressed || ohlasuje ? 0.6 : 1 },
         ]}>
         {ohlasuje ? (
-          <ActivityIndicator color={t.papir} />
+          <ActivityIndicator color={pismoNaVyplni(t, t.voda)} />
         ) : (
-          <Text style={[s.spustitText, { color: t.papir }]}>Ohlásit rozjížďku</Text>
+          <Text style={[s.spustitText, { color: pismoNaVyplni(t, t.voda) }]}>
+            Ohlásit rozjížďku
+          </Text>
         )}
       </Pressable>
 
@@ -393,8 +396,10 @@ function Zastaveni({
                   { backgroundColor: t.vystraha, opacity: pressed || posila ? 0.6 : 1 },
                 ]}>
                 <View style={s.spustitObsah}>
-                  {posila ? <ActivityIndicator color="#ffffff" /> : null}
-                  <Text style={[s.volbaText, s.naBarve]}>{posila ? 'Posílám…' : 'Provést'}</Text>
+                  {posila ? <ActivityIndicator color={pismoNaVyplni(t, t.vystraha)} /> : null}
+                  <Text style={[s.volbaText, { color: pismoNaVyplni(t, t.vystraha) }]}>
+                    {posila ? 'Posílám…' : 'Provést'}
+                  </Text>
                 </View>
               </Pressable>
             </View>
@@ -472,8 +477,8 @@ function Ceka({
               { backgroundColor: t.procedura, opacity: pressed || spousti ? 0.6 : 1 },
             ]}>
             <View style={s.spustitObsah}>
-              {spousti ? <ActivityIndicator color="#ffffff" /> : null}
-              <Text style={s.spustitText}>
+              {spousti ? <ActivityIndicator color={pismoNaVyplni(t, t.procedura)} /> : null}
+              <Text style={[s.spustitText, { color: pismoNaVyplni(t, t.procedura) }]}>
                 {spousti ? 'Spouštím…' : 'Spustit startovní proceduru'}
               </Text>
             </View>
@@ -509,12 +514,15 @@ function Odstartovano({
   stav: Extract<StavStartu, { druh: 'odstartovano' }>;
   t: Barvy;
 }) {
+  // Bílá tu byla napevno a v tmavé sadě dávala 2,07:1 — `jede` je tam
+  // světlá zelená. Písmo se proto bere podle výplně (`lib/kontrast.ts`).
+  const pismo = pismoNaVyplni(t, t.jede);
   return (
     <View style={[s.panel, { backgroundColor: t.jede }]}>
-      <Text style={[s.radek, s.naBarve]}>Rozjížďka {stav.cislo} — start padl</Text>
+      <Text style={[s.radek, { color: pismo }]}>Rozjížďka {stav.cislo} — start padl</Text>
       <View style={s.casRadek}>
-        <Text style={[s.casVelky, s.naBarve]}>{mmss(stav.odStartuS)}</Text>
-        <Text style={[s.doStartu, s.naBarveTlumene]}>od startu</Text>
+        <Text style={[s.casVelky, { color: pismo }]}>{mmss(stav.odStartuS)}</Text>
+        <Text style={[s.doStartu, s.tlumeneNaVyplni, { color: pismo }]}>od startu</Text>
       </View>
     </View>
   );
@@ -559,6 +567,9 @@ function Bezi({
   const useky = usekyProcedury(stav.doStartuS, delkaS);
   const minuta = stav.doStartuS <= 60;
   const pozadi = minuta ? t.vystraha : t.procedura;
+  // Dvě různé výplně, a v tmavé sadě chce každá opačné písmo: `procedura`
+  // je tmavá modrá, `vystraha` světlý jantar (na něm bílá 2,75:1).
+  const pismo = pismoNaVyplni(t, pozadi);
   const tep = useRef(new Animated.Value(1)).current;
   const tepe = stav.doStartuS <= TEP_OD_S;
 
@@ -582,14 +593,14 @@ function Bezi({
   return (
     <Animated.View style={[s.panel, { backgroundColor: pozadi, opacity: tep }]}>
       <View style={s.hlava}>
-        <Text style={[s.radek, s.naBarve]}>
+        <Text style={[s.radek, { color: pismo }]}>
           Rozjížďka {stav.cislo} {minuta ? '— poslední minuta' : 'startuje'}
         </Text>
       </View>
 
       <View style={s.casRadek}>
-        <Text style={[s.casVelky, s.naBarve]}>{mmss(stav.doStartuS)}</Text>
-        <Text style={[s.doStartu, s.naBarveTlumene]}>do startu</Text>
+        <Text style={[s.casVelky, { color: pismo }]}>{mmss(stav.doStartuS)}</Text>
+        <Text style={[s.doStartu, s.tlumeneNaVyplni, { color: pismo }]}>do startu</Text>
       </View>
 
       <View style={s.useky}>
@@ -610,7 +621,7 @@ function Bezi({
                 }}
               />
             </View>
-            <Text style={[s.popisekUseku, s.naBarveTlumene]}>
+            <Text style={[s.popisekUseku, s.tlumeneNaVyplni, { color: pismo }]}>
               {u.faze === 'vyzva' ? 'výzva' : u.faze === 'priprava' ? 'příprava' : 'minuta'}
             </Text>
           </View>
@@ -632,7 +643,7 @@ const s = StyleSheet.create({
 
   // Přepínač hlasu je řádek, ne tlačítko: mačká se jednou za den, kdežto
   // volby pod ním rozhodují o startu a musí být větší terč.
-  hlas: { alignSelf: 'flex-start', paddingVertical: 6, marginTop: -8, marginBottom: 10 },
+  hlas: { alignSelf: 'flex-start', paddingVertical: 12, marginTop: -14, marginBottom: 4 },
   hlasText: { fontSize: 13, fontWeight: '700' },
   volba: {
     flex: 1,
@@ -664,8 +675,9 @@ const s = StyleSheet.create({
   casVelky: { fontSize: 60, fontWeight: '700', lineHeight: 64, fontVariant: ['tabular-nums'] },
   casStredni: { fontSize: 32, fontWeight: '700', fontVariant: ['tabular-nums'] },
   doStartu: { fontSize: 15 },
-  naBarve: { color: '#ffffff' },
-  naBarveTlumene: { color: 'rgba(255,255,255,0.85)' },
+  // Tlumená varianta se dělá průhledností, ne druhou barvou: jinak by
+  // k výběru písma podle výplně musel existovat i výběr jeho zeslabení.
+  tlumeneNaVyplni: { opacity: 0.85 },
   useky: { flexDirection: 'row', alignItems: 'flex-end', gap: 5, marginTop: 12 },
   zlab: { height: 7, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.3)', overflow: 'hidden' },
 
@@ -680,6 +692,6 @@ const s = StyleSheet.create({
   popisekUseku: { fontSize: 9, marginTop: 3 },
   spustit: { marginTop: 14, minHeight: 56, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   spustitObsah: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  spustitText: { color: '#ffffff', fontSize: 17, fontWeight: '700' },
+  spustitText: { fontSize: 17, fontWeight: '700' },
   pripominka: { fontSize: 12, marginTop: 8, lineHeight: 16 },
 });

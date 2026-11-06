@@ -2,7 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
-import { Karta, Nadpis, Sekce } from '@/components/ui';
+import { Akce, Karta, Nadpis, Sekce } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
 import {
   klic as nactiKlic,
@@ -130,20 +130,13 @@ export default function KlicObrazovka() {
               Odepnutí je „tuhle regatu nejedu“, ne odchod z posádky: klíč zůstává a příští
               závod se nemusíš párovat znovu.
             </Text>
-            <Pressable
+            <Akce
+              text={sleduje ? 'Odepnout se ze sledování' : 'Připnout se zpátky'}
               onPress={() => {
                 void prepniSledovani();
               }}
-              disabled={delam || sleduje === null}
-              style={{ marginTop: 12 }}>
-              <Text
-                style={{
-                  color: delam || sleduje === null ? t.tlumeny : t.voda,
-                  fontWeight: '600',
-                }}>
-                {sleduje ? 'Odepnout se ze sledování' : 'Připnout se zpátky'}
-              </Text>
-            </Pressable>
+              vypnuto={delam || sleduje === null}
+            />
           </Karta>
 
           <Sekce>Odpojit telefon</Sekce>
@@ -152,13 +145,12 @@ export default function KlicObrazovka() {
               Klíč se smaže z telefonu, ale na lodi zůstane platný — odebrat ho umí jen
               kapitán. Když jde jen o to nejet, stačí se odepnout výš.
             </Text>
-            <Pressable
+            <Akce
+              text="Zapomenout klíč"
               onPress={() => {
                 void zapomen().then(nacti);
               }}
-              style={{ marginTop: 12 }}>
-              <Text style={{ color: t.voda, fontWeight: '600' }}>Zapomenout klíč</Text>
-            </Pressable>
+            />
           </Karta>
         </>
       ) : (
@@ -183,15 +175,13 @@ export default function KlicObrazovka() {
               style={{ color: t.text, paddingVertical: 8 }}
             />
             <View style={{ height: 1, backgroundColor: t.tlumeny, opacity: 0.3 }} />
-            <Pressable
+            <Akce
+              text={delam ? 'Uplatňuji…' : 'Uplatnit pozvánku'}
               onPress={() => {
                 void uplatniKod(kod);
               }}
-              style={{ marginTop: 12 }}>
-              <Text style={{ color: delam || !kod.trim() ? t.tlumeny : t.voda, fontWeight: '600' }}>
-                {delam ? 'Uplatňuji…' : 'Uplatnit pozvánku'}
-              </Text>
-            </Pressable>
+              vypnuto={delam || !kod.trim()}
+            />
           </Karta>
         </>
       )}

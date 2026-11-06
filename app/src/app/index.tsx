@@ -1,9 +1,9 @@
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { useEffect, useState } from 'react';
 
-import { Chyba, Karta, Nacitani, Nadpis, Prazdno } from '@/components/ui';
+import { Chyba, Karta, Nacitani, Nadpis, Prazdno, Radek, Sekce } from '@/components/ui';
 import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
 import { nactiJa, nactiMojeLode, nactiSerie, nactiZavod, type ZavodDetail } from '@/lib/api';
@@ -133,28 +133,24 @@ export default function Rocniky() {
           posádce a bez nich se nikdo nepřipojí. Ostatním by to byl další
           odkaz, který nikam nevede. */}
       {kdo === 'kapitan' ? (
-        <View style={{ marginTop: 24 }}>
-          <Link href="/lode" style={{ color: t.voda }}>
-            Moje lodě
-          </Link>
-        </View>
+        <>
+          <Sekce>Moje loď</Sekce>
+          <Radek text="Moje lodě" href="/lode" />
+        </>
       ) : null}
 
       {/* Účet, klíč a záznam trasy bývaly na rozcestníku vedle sebe se
           vším ostatním. Hledal se v tom start i sledování, takže odešly
           pod účet — tam je najde ten, kdo je potřebuje. */}
-      <View style={{ marginTop: kdo === 'kapitan' ? 12 : 24 }}>
-        <Link href="/ucet" style={{ color: t.voda }}>
-          {ja ? 'Účet a nastavení' : 'Účet a přihlášení'}
-        </Link>
-      </View>
+      <Sekce>Telefon a účet</Sekce>
+      <Radek
+        text={ja ? 'Účet a nastavení' : 'Účet a přihlášení'}
+        href="/ucet"
+        hodnota={ja?.zobrazovane}
+      />
 
       {/* Odkaz ven schválně: appka je čtečka, ne náhrada webu. */}
-      <View style={{ marginTop: 16 }}>
-        <Link href="https://orlickypohar.klihovka.cz" style={{ color: t.voda }}>
-          orlickypohar.klihovka.cz
-        </Link>
-      </View>
+      <Radek text="orlickypohar.klihovka.cz" href="https://orlickypohar.klihovka.cz" hodnota="web" />
     </ScrollView>
   );
 }

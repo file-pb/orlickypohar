@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
-import { Karta, Nacitani, Nadpis, Sekce } from '@/components/ui';
+import { Akce, Karta, Nacitani, Nadpis, Radek, Sekce } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
 import {
   nactiKliceLodi,
@@ -109,9 +109,7 @@ export default function KliceLodi() {
               Kód uvidíš jenom teď — server si ho neukládá. Když obrazovku zavřeš, vystav novou
               pozvánku. Komu appka chybí, tomu se na té adrese ukáže, kde ji vzít.
             </Text>
-            <Pressable onPress={() => setPozvanka(null)} style={{ marginTop: 12 }}>
-              <Text style={{ color: t.voda, fontWeight: '600' }}>Hotovo</Text>
-            </Pressable>
+            <Akce text="Hotovo" onPress={() => setPozvanka(null)} />
           </Karta>
         </>
       ) : smiVydavat ? (
@@ -119,11 +117,11 @@ export default function KliceLodi() {
           <Text style={{ color: t.text }}>
             Pozvánka platí 48 hodin a dá se uplatnit jednou. Každý telefon potřebuje svou.
           </Text>
-          <Pressable onPress={() => void pozvi()} disabled={delam} style={{ marginTop: 12 }}>
-            <Text style={{ color: delam ? t.tlumeny : t.voda, fontWeight: '600', fontSize: 16 }}>
-              {delam ? 'Vystavuji…' : 'Vystavit pozvánku'}
-            </Text>
-          </Pressable>
+          <Akce
+            text={delam ? 'Vystavuji…' : 'Vystavit pozvánku'}
+            onPress={() => void pozvi()}
+            pracuje={delam}
+          />
         </Karta>
       ) : (
         <Karta>
@@ -161,25 +159,28 @@ export default function KliceLodi() {
             </Text>
 
             {smiSpravovat ? (
-            <View style={{ flexDirection: 'row', gap: 20, marginTop: 12 }}>
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
               {/* Vypnout sledování je vratné: na tuhle regatu nejede, ale
                   v posádce zůstává a příště se nemusí párovat znovu. */}
-              <Pressable
+              <Radek
+                text={k.sleduje ? 'Vypnout sledování' : 'Zapnout sledování'}
+                barva={t.voda}
+                vedleSebe
                 onPress={() => {
                   void prepniSledovani(lodId, k.id, !k.sleduje)
                     .then(nacti)
                     .catch((e: unknown) =>
                       Alert.alert('Nešlo to', e instanceof Error ? e.message : String(e)),
                     );
-                }}>
-                <Text style={{ color: t.voda }}>
-                  {k.sleduje ? 'Vypnout sledování' : 'Zapnout sledování'}
-                </Text>
-              </Pressable>
+                }}
+              />
 
-              <Pressable onPress={() => potvrdOdebrani(k)}>
-                <Text style={{ color: t.stavZruseny }}>Odebrat</Text>
-              </Pressable>
+              <Radek
+                text="Odebrat"
+                barva={t.stavZruseny}
+                vedleSebe
+                onPress={() => potvrdOdebrani(k)}
+              />
             </View>
             ) : null}
           </Karta>
