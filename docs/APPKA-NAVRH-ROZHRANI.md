@@ -422,8 +422,20 @@ Androidu i systémovým tlačítkem. Tituly v `Stack.Screen` tím zmrtvěly
 a zmizely (čtyři obrazovky). Horní bezpečný okraj dorovnává kořenový
 pohled; když je vidět proužek spojení, vzal si ho on.
 
-**Domovská obrazovka je landing:** logo, hladina Orlíku, a pod tím *co teď*
-— rozhodčímu velení, posádce běžící sledování. Nic jiného.
+**Domovská obrazovka je landing:** logo, a pod tím *co teď* — rozhodčímu
+velení, posádce běžící sledování. Nic jiného.
+
+**A večer téhož dne i to pryč.** Filip: *„tohle z landingu vyndej, dej tam
+veliké logo poháru, co máme na webu, přes celou obrazovku (landing budem
+měnit, a tak jen teď dočasně jen s logem)."* Zůstala tedy značka přes celou
+obrazovku a v rohu kebab — ten zůstat musel, protože hlavička se nekreslí
+a bez něj by se z appky nedalo nikam. **Je to vědomě dočasný stav**, ne
+výsledek; stojí to tak i v komentáři u `app/src/app/index.tsx`.
+
+**Co to mezitím stojí:** rozhodčí se ke startu dostane jen přes kebab →
+Ročníky → ročník → regata, tedy čtyřmi klepnutími místo jednoho. Dokud
+landing nemá svou podobu, je to cena za to, že se nedívá na rozdělanou
+obrazovku.
 
 **Kebab drží všechno ostatní:** ročníky, lodě a posádka, klíč, trasa, účet,
 web. Tři tečky mají terč 44 pt, i když se kreslí menší.
