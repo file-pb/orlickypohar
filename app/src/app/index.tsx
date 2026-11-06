@@ -1,4 +1,4 @@
-import { useWindowDimensions, View } from 'react-native';
+import { Image, Text, useWindowDimensions, View } from 'react-native';
 
 import { Kebab } from '@/components/kebab';
 import { Znacka } from '@/components/znacka';
@@ -14,9 +14,11 @@ import { useTheme } from '@/hooks/use-theme';
  * s logem)."* Takže je to <b>dočasný stav</b>, ne výsledek — a je tak
  * napsaný i tenhle komentář, aby ho příště nikdo nečetl jako záměr.
  *
- * <b>Kebab zůstal.</b> Hlavička se nekreslí a karty jsou pryč, takže ty
- * tři tečky jsou jediná cesta odsud kamkoliv — bez nich by se z appky
- * nedalo dostat na start, na trasu ani do ukázky.
+ * <b>Řádek se značkou nahoře zůstal</b> (Filip, 7. 11. 2026: *„to nahoře
+ * s tou lodičkou jsi klidně mohl nechat, po klepnutí se rozbalí kebab"*).
+ * Nese ikonu, jméno a tři tečky — a ty jsou jediná cesta odsud kamkoliv,
+ * protože systémová hlavička se nekreslí a karty jsou pryč. Bez nich by
+ * se z appky nedalo dostat na start, na trasu ani do ukázky.
  *
  * Značka se kreslí vektorem (`components/znacka.tsx`), ne obrázkem:
  * `assets/images` vstupuje do otisku appky a velké logo mezi ikonami by
@@ -27,13 +29,24 @@ export default function Domu() {
   const { width: sirka, height: vyska } = useWindowDimensions();
 
   // Přes celou obrazovku, ale ať se vejde i na výšku: značka je skoro
-  // čtvercová, takže ji omezuje ta menší strana.
-  const velikost = Math.min(sirka - 48, vyska * 0.55);
+  // čtvercová, takže ji omezuje ta menší strana. Řádek nahoře si svoje
+  // místo bere, proto je podíl menší, než kdyby byla plocha celá.
+  const velikost = Math.min(sirka - 48, vyska * 0.5);
 
   return (
-    <View style={{ flex: 1, backgroundColor: t.pozadi }}>
-      {/* Nad značkou, aby se na ni dalo klepnout i tam, kde se překrývají. */}
-      <View style={{ position: 'absolute', top: 4, right: 12, zIndex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: t.pozadi, padding: 16 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <Image
+          source={require('../../assets/images/icon.png')}
+          style={{ width: 44, height: 44, borderRadius: 10 }}
+          accessibilityIgnoresInvertColors
+        />
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text style={{ color: t.text, fontSize: 20, fontWeight: '800', letterSpacing: -0.4 }}>
+            Orlický pohár
+          </Text>
+          <Text style={{ color: t.tlumeny, fontSize: 13 }}>Plachetnice na Orlické přehradě</Text>
+        </View>
         <Kebab />
       </View>
 
