@@ -427,15 +427,24 @@ velení, posádce běžící sledování. Nic jiného.
 
 **A večer téhož dne i to pryč.** Filip: *„tohle z landingu vyndej, dej tam
 veliké logo poháru, co máme na webu, přes celou obrazovku (landing budem
-měnit, a tak jen teď dočasně jen s logem)."* Zůstala tedy značka přes celou
-obrazovku a v rohu kebab — ten zůstat musel, protože hlavička se nekreslí
-a bez něj by se z appky nedalo nikam. **Je to vědomě dočasný stav**, ne
-výsledek; stojí to tak i v komentáři u `app/src/app/index.tsx`.
+měnit, a tak jen teď dočasně jen s logem)."* **Je to vědomě dočasný stav**,
+ne výsledek; stojí to tak i v komentáři u `app/src/app/index.tsx`.
 
-**Co to mezitím stojí:** rozhodčí se ke startu dostane jen přes kebab →
-Ročníky → ročník → regata, tedy čtyřmi klepnutími místo jednoho. Dokud
-landing nemá svou podobu, je to cena za to, že se nedívá na rozdělanou
-obrazovku.
+Ustálilo se to na třetí pokus a obě opravy přišly od Filipa:
+
+- nejdřív zmizelo všechno kromě značky — a hned se ukázalo, že **kebab
+  zmizet nesmí** (*„a kam mi zmizel ten kebab?"*). Hlavička se nekreslí,
+  takže ty tři tečky jsou jediná cesta z landingu jinam; bez nich je
+  domovská obrazovka slepá ulička;
+- pak se vrátil i **řádek se značkou** nahoře (*„to nahoře s tou lodičkou
+  jsi klidně mohl nechat"*) — ikona, jméno, podtitulek a kebab vpravo.
+  Značka pod ním se proto kreslí na 50 % výšky, ne na 55: ten řádek si
+  svoje místo bere a na užším telefonu by se potkaly.
+
+**Co to mezitím stojí Miloše:** ke startu se z landingu dostane přes kebab
+→ Ročníky → ročník → regata, tedy **čtyřmi klepnutími místo jednoho** —
+dřív na něj vedla karta *Velíš* přímo. Dokud je landing dočasný, je to
+nepohodlí; kdyby se v tomhle stavu dostal na vodu, vadilo by to.
 
 **Kebab drží všechno ostatní:** ročníky, lodě a posádka, klíč, trasa, účet,
 web. Tři tečky mají terč 44 pt, i když se kreslí menší.
