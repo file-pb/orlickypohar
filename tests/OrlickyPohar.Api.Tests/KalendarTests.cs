@@ -303,4 +303,43 @@ public class KalendarTests
         // Bez roku se nehlídá nic — volající, který ho nezná, ať projde.
         Assert.Null(Kalendar.ProcNejdeUlozit("Izolepa", jinyRok, null, "izolepa"));
     }
+
+    // --- Přesun závodu a zpráva o něm (ZPJ 80, nález K5) ---
+
+    /// <summary>
+    /// Podmínka pro zprávu musí být tatáž jako pro zapamatování původního
+    /// data. Kdyby se rozešly, aplikace by hlásila přesun, který si
+    /// nepamatuje, nebo si pamatovala přesun, o kterém mlčí.
+    /// </summary>
+    [Theory]
+    [InlineData(StavZavodu.Vypsany, "2027-05-15", "2027-05-22", true)]
+    [InlineData(StavZavodu.Vypsany, "2027-05-15", "2027-05-15", false)]
+    [InlineData(StavZavodu.Planovany, "2027-05-15", "2027-05-22", false)]
+    public void Presun_hlasi_totez_co_si_pamatuje(
+        StavZavodu stav, string stare, string nove, bool cekamPresun)
+    {
+        var a = DateOnly.Parse(stare);
+        var b = DateOnly.Parse(nove);
+
+        Assert.Equal(cekamPresun, Kalendar.JdeOPresun(stav, a, b));
+
+        // Druhá polovina téhož: po přesunu se pamatuje původní termín.
+        var puvodni = Kalendar.PuvodniPoPresunu(stav, a, b, null);
+        Assert.Equal(cekamPresun, puvodni is not null);
+    }
+
+    /// <summary>
+    /// Druhý přesun nepřepíše, co se pamatuje — ale dát o sobě vědět musí
+    /// stejně, protože lidé se chystali na termín, který platil naposledy.
+    /// </summary>
+    [Fact]
+    public void Druhy_presun_se_hlasi_taky_i_kdyz_puvodni_datum_zustava()
+    {
+        var prvni = new DateOnly(2027, 5, 15);
+        var druhy = new DateOnly(2027, 5, 22);
+        var treti = new DateOnly(2027, 5, 29);
+
+        Assert.True(Kalendar.JdeOPresun(StavZavodu.Vypsany, druhy, treti));
+        Assert.Equal(prvni, Kalendar.PuvodniPoPresunu(StavZavodu.Vypsany, druhy, treti, prvni));
+    }
 }

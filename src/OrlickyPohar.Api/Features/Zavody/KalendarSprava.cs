@@ -233,7 +233,16 @@ public class KalendarSprava(AppDbContext db)
     /// Upraví zastávku. <b>Adresa se nemění</b>, ani když se změní název —
     /// odkaz na zastávku už mohl někam odejít.
     /// </summary>
-    public async Task<string?> UpravAsync(Zavod zastavka, ZastavkaVstup vstup, CancellationToken ct)
+    /// <summary>
+    /// Datum do zprávy. Formát je napsaný ručně, ne podle kultury stroje —
+    /// server může běžet s invariantní kulturou a „5/15/2027" by českého
+    /// adresáta poslalo na jiný den.
+    /// </summary>
+    private static string Den(DateOnly d) => $"{d.Day}. {d.Month}. {d.Year}";
+
+    public async Task<string?> UpravAsync(
+        Zavod zastavka, ZastavkaVstup vstup, CancellationToken ct,
+        Upozorneni.UpozorneniSprava? upozorneni = null)
     {
         var rok = await db.Serie.Where(s => s.Id == zastavka.SerieId).Select(s => (int?)s.Rok)
             .FirstOrDefaultAsync(ct);
@@ -246,6 +255,32 @@ public class KalendarSprava(AppDbContext db)
             return pocty;
 
         if (Procedura.ProcNejdeDelka(vstup.DelkaProceduryMin) is { } delka) return delka;
+
+        // <b>Přesun se musí dozvědět i ten, kdo zrovna nekouká do kalendáře</b>
+        // (ZPJ 80, nález K5). Zpráva jde do téže transakce jako přesun sám —
+        // buď se uloží nový termín i úkol dát o něm vědět, nebo nic; poslat
+        // ji rovnou odsud by znamenalo oznámit termín, který se neuložil.
+        if (Kalendar.JdeOPresun(zastavka.Stav, zastavka.Datum, vstup.Datum)
+            && upozorneni is not null)
+        {
+            var serie = await db.Serie.Where(x => x.Id == zastavka.SerieId)
+                .Select(x => x.Slug).FirstAsync(ct);
+
+            // <b>Odběr ročníku, ne regaty.</b> Telefony se hlásí na
+            // `serie:<slug>`; na `zavod:<slug>` by zpráva nedošla nikomu
+            // (změřeno 26. 10. 2026 u výsledků, kde to bylo obráceně).
+            //
+            // Je to širší kanál, než pravidlo žádá — dostane ho každý, kdo
+            // sleduje ročník, ne jen přihlášené lodě. Užší kanál zatím
+            // nikdo neposlouchá, a málo adresátů je u pravidla 80 horší
+            // chyba než pár navíc. <b>Kdo appku nemá, se to nedozví</b>;
+            // to je zbytek K5, který tímhle vyřešený není.
+            upozorneni.Zarad(
+                Upozorneni.Odbery.Serie(serie),
+                zastavka.Nazev,
+                $"Termín se mění z {Den(zastavka.Datum)} na {Den(vstup.Datum)}.",
+                $"/serie/{serie}/zavody/{zastavka.Slug}");
+        }
 
         zastavka.PuvodniDatum = Kalendar.PuvodniPoPresunu(
             zastavka.Stav, zastavka.Datum, vstup.Datum, zastavka.PuvodniDatum);

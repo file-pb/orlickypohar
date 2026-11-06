@@ -112,7 +112,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Appka řekne, že se sama aktualizovala | **Běží** | Banner a sekce *Verze appky* v Účtu, od buildu 5. Nově zadáno: ukázat verzi i na webové stránce `/appka` |
 | Aktualizace po síti bez instalace | **Běží** | První aktualizace publikovaná 28. 10.; do té doby v kanálu neležela **žádná** |
 | Publikace automaticky z CI | **Běží** | `EXPO_TOKEN` je v secrets od 29. 10. 10:44. Publikuje se do kanálu `preview` při každém nasazení, kde se změnilo `app/` — ale dosedne jen na APK se shodným otiskem, a ten se od 28. 10. posunul **dvakrát** (build 5, pak build 8 s nativní dávkou). Vydané APK drží `app/vydane-apk.json` |
-| Přeložený termín dá vědět přihlášeným | **Zadané** | K5. ZPJ 80 to žádá, aplikace termín přesune a nikomu nic neřekne |
+| Přeložený termín dá vědět přihlášeným | **Běží** | K5, 7. 11. 2026. Přesun vypsané regaty zařadí zprávu do telefonů do téže transakce jako sám přesun. Jde **odběrem ročníku**, tedy všem, kdo appku mají — užší kanál nikdo neposlouchá. **Kdo appku nemá, se to nedozví**; to je zbytek nálezu |
 
 ---
 

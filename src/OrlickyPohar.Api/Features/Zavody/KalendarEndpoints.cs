@@ -102,7 +102,8 @@ public static class KalendarEndpoints
 
     private static async Task<IResult> UpravAsync(
         string serie, string zavod, ZastavkaVstup vstup, ClaimsPrincipal kdo,
-        Rozsahy rozsahy, KalendarSprava sprava, CancellationToken ct)
+        Rozsahy rozsahy, KalendarSprava sprava, Upozorneni.UpozorneniSprava upozorneni,
+        CancellationToken ct)
     {
         if (await NajdiAsync(serie, zavod, rozsahy, sprava, ct) is not { } zastavka)
             return Results.NotFound();
@@ -113,7 +114,7 @@ public static class KalendarEndpoints
         if (!await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Rozhodci, zastavka.SerieId), ct))
             return Results.Forbid();
 
-        if (await sprava.UpravAsync(zastavka, vstup, ct) is { } chyba)
+        if (await sprava.UpravAsync(zastavka, vstup, ct, upozorneni) is { } chyba)
             return Results.BadRequest(new { error = chyba });
 
         return Results.Ok(await RadekAsync(kdo, rozsahy, sprava, zastavka, ct));

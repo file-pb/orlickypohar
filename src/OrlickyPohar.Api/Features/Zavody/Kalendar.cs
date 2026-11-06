@@ -243,6 +243,24 @@ public static class Kalendar
     }
 
     /// <summary>
+    /// Je tahle změna data <b>přesunem závodu</b>, o kterém se musí dát vědět?
+    /// <para>
+    /// <b>ZPJ 80</b> (nález K5): *„Když je závod přeložen na jiný termín, než
+    /// je uvedeno ve vypsání závodu, všechny přihlášené lodě musejí být
+    /// informovány."* Povinnost je na rozhodčím a přesun je jeho úkon —
+    /// aplikace ho do 7. 11. 2026 pečlivě zapsala a neřekla o něm nikomu.
+    /// </para>
+    /// <para>
+    /// Podmínka je tatáž jako u <see cref="PuvodniPoPresunu"/>, a schválně:
+    /// kdyby se rozešly, aplikace by hlásila přesun, který si nepamatuje,
+    /// nebo si pamatovala přesun, o kterém mlčí. Plánovaná zastávka proto
+    /// není přesun ani tady — u návrhu kalendáře není co překládat.
+    /// </para>
+    /// </summary>
+    public static bool JdeOPresun(StavZavodu stav, DateOnly stare, DateOnly nove) =>
+        stare != nove && stav != StavZavodu.Planovany;
+
+    /// <summary>
     /// Přečíslování zastávek podle data. Vrací pořadí pro každý
     /// identifikátor.
     /// <para>
