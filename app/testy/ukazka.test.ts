@@ -143,6 +143,58 @@ const testyAsync: [string, () => Promise<void>][] = [
   }],
 ];
 
+// --- a hlavně: nejde to ven doopravdy? --------------------------------
+
+testyAsync.push(['v ukázce se `fetch` nezavolá ani jednou', async () => {
+  // Statická kontrola níž hlídá, <b>kde</b> `fetch` v kódu je. Tahle
+  // hlídá to podstatnější: že se za běhu nezavolá. Jsou to dvě různé
+  // věci — nové volání přes `sit()` by prošlo obojí jen tehdy, když
+  // ukázku respektuje.
+  const puvodni = globalThis.fetch;
+  let volani = 0;
+  globalThis.fetch = (() => {
+    volani += 1;
+    return Promise.reject(new Error('v ukázce se nesmí volat fetch'));
+  }) as typeof fetch;
+
+  try {
+    zapniUkazku();
+    const api = await import('../src/lib/api.ts');
+    const sit = await import('../src/lib/sit.ts');
+
+    await api.nactiSerie();
+    await api.nactiZavod('2026-nanecisto', 'izolepa');
+    await api.nacti('/takova-cesta-neni');
+    await sit.overSpojeni();
+    await api.provedProceduru('2026-nanecisto', 'izolepa', 1, 'Odvolat').catch(() => {});
+
+    assert.equal(volani, 0, `ukázka sáhla na síť ${volani}×`);
+  } finally {
+    globalThis.fetch = puvodni;
+    vypniUkazku();
+  }
+}]);
+
+testyAsync.push(['mimo ukázku se `fetch` naopak zavolá', async () => {
+  // Bez tohohle by test výš prošel i tehdy, kdyby se ta volání nedělala
+  // vůbec — měřil by ticho, ne odpojení.
+  const puvodni = globalThis.fetch;
+  let volani = 0;
+  globalThis.fetch = (() => {
+    volani += 1;
+    return Promise.reject(new Error('v testu se nikam nechodí'));
+  }) as typeof fetch;
+
+  try {
+    vypniUkazku();
+    const api = await import('../src/lib/api.ts');
+    await api.nactiSerie().catch(() => {});
+    assert.ok(volani > 0, 'mimo ukázku se nevolalo nic — test výš nic nedokazuje');
+  } finally {
+    globalThis.fetch = puvodni;
+  }
+}]);
+
 // --- a nakonec: nesahá appka na síť mimo šev? --------------------------
 
 function soubory(korenr: string): string[] {
