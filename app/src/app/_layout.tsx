@@ -40,13 +40,13 @@ function Obsah() {
   // nezaznamenává, není — a pak se tady nemění vůbec nic.
   const prouzek = useProuzek();
 
-  // <b>Co na tom není ověřené.</b> Proužek si bere horní bezpečný okraj
-  // a leží nad navigací. iOS i Android počítají bezpečnou oblast podle
-  // skutečné polohy pohledu, takže hlavička pod ním už žádný okraj
-  // přičítat nemá — ale `headerStatusBarHeight`, kterým by se to dalo
-  // vynutit, tahle verze navigace nezná. Jestli pod proužkem nevznikne
-  // prázdný pruh, se u stolu nezjistí; je to první věc na podívání při
-  // příští instalaci.
+  // <b>Horní okraj se nepřičítá dvakrát — ověřeno 7. 11. 2026</b>
+  // v simulátoru, na landingu i na Ročnících. Proužek si bere horní
+  // bezpečný okraj a leží nad navigací; `headerStatusBarHeight`, kterým
+  // by se to dalo vynutit, tahle verze navigace nezná, takže se spoléhá
+  // na to, že si iOS i Android spočítají bezpečnou oblast podle skutečné
+  // polohy pohledu. Spoléhá se oprávněně, pod proužkem prázdný pruh
+  // nevzniká.
 
   // <b>Hodiny a baterie sedí na proužku</b>, takže jejich světlost se musí
   // řídit jeho výplní, ne režimem telefonu. Bez toho by na jantarové ploše

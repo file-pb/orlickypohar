@@ -349,12 +349,13 @@ nepřidává, takže to Miloše nestojí instalaci.
 oddělil malinko"*). Bez ní splyne se vším, co má pod sebou tutéž barvu —
 a *„vysílá se"* nad jedoucí rozjížďkou je přesně ten případ, obojí zelené.
 
-**Co na tom není ověřené.** Proužek si bere horní bezpečný okraj a leží nad
-navigací. iOS i Android počítají bezpečnou oblast podle skutečné polohy
-pohledu, takže hlavička pod ním už žádný okraj přičítat nemá — ale
-`headerStatusBarHeight`, kterým by se to dalo vynutit, tahle verze navigace
-nezná. **Jestli pod proužkem nevznikne prázdný pruh, se u stolu nezjistí**;
-je to první věc na podívání při příští instalaci.
+**Horní okraj se nepřičítá dvakrát — a je to změřené.** Proužek si bere
+horní bezpečný okraj a leží nad navigací; `headerStatusBarHeight`, kterým
+by se dalo vynutit, že si ho hlavička nepřičte podruhé, tahle verze
+navigace nezná. Spoléhalo se tedy na to, že si iOS i Android spočítají
+bezpečnou oblast podle skutečné polohy pohledu — **ověřeno 7. 11. 2026
+v simulátoru**, na landingu i na Ročnících: prázdný pruh pod proužkem
+nevzniká.
 
 ### Kde to leží a kdy se to ukáže
 
