@@ -42,18 +42,9 @@ export type ZapisLod = S["ZapisLodDto"];
  * generuje z běžícího serveru a ten tenhle endpoint dostane až po
  * nasazení. Až se přegeneruje, tenhle typ zmizí ve prospěch `S[…]`.
  */
-export type ZavodnikDnes = {
-  serie: string;
-  zavod: string;
-  zavodNazev: string;
-  lod: string;
-  kategorie: string | null;
-  rozjizdka: number | null;
-  stavRozjizdky: 'Planovana' | 'Probiha' | 'Dokoncena' | 'Zrusena' | null;
-  startV: string | null;
-  stavLodi: { veta: string; kdy: string | null } | null;
-  pokyny: { druh: string; veta: string; vyhlasenoV: string }[];
-};
+// <b>Ručně psaný tvar tu byl jen do nasazení.</b> Dokud `/lod/dnes`
+// neběželo na produkci, nebylo z čeho generovat; teď je a platí schéma.
+export type ZavodnikDnes = S['ZavodnikDto'];
 export type ZapisRadekVstup = S["ZapisRadekVstup"];
 export type CilZTrasovaniOdpoved = S["CilZTrasovaniDto"];
 
@@ -345,16 +336,7 @@ export async function ulozTrest(
  * něj šel trest zapsat, ale už ne odkliknout, čímž appka věděla
  * o uložení a nikdy o vykonání.
  */
-export type TrestZaJizdy = {
-  id: number;
-  ucastId: number;
-  lod: string;
-  druh: 'Otacka360' | 'Otacka720';
-  otacek: number;
-  ulozenoV: string;
-  /** `null` znamená „nikdo nezapsal", ne „nevykonala". */
-  vykonanoV: string | null;
-};
+export type TrestZaJizdy = S['TrestDto'];
 
 export const nactiTresty = (serie: string, zavod: string, cislo: number) =>
   nactiZaSebe<TrestZaJizdy[]>(

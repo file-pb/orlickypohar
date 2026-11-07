@@ -25,7 +25,14 @@ public record ZavodnikDto(
     string Zavod,
     string ZavodNazev,
     string Lod,
-    Serial.Kategorie Kategorie,
+    /// <summary>
+    /// <b>Jméno kategorie, ne její záznam.</b> Do 7. 11. 2026 tu stála celá
+    /// <c>Serial.Kategorie</c>, a s ní i ročník, do kterého patří — tedy
+    /// kus modelu navíc na telefon posádky, který z toho četl jediné slovo.
+    /// Obrazovka ho navíc vykreslovala jako objekt. Nalezeno při generování
+    /// klienta z nasazeného API, kde se ten tvar poprvé ukázal.
+    /// </summary>
+    string? Kategorie,
     int? Rozjizdka,
     StavRozjizdky? StavRozjizdky,
     DateTimeOffset? StartV,
@@ -79,7 +86,7 @@ public class ZavodnikSprava(AppDbContext db, TimeProvider cas)
             zavod.Slug,
             zavod.Nazev,
             ucast.Prihlaska!.Lod!.Nazev,
-            ucast.Prihlaska.Kategorie,
+            ucast.Prihlaska.Kategorie?.Nazev,
             rozjizdka?.Cislo,
             rozjizdka?.Stav,
             rozjizdka?.StartV,
