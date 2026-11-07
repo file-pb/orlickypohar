@@ -63,6 +63,7 @@ export function Odpocet({
   naUkon,
   naCil,
   naOhlaseni,
+  naPredcasnyStart,
   chyba,
   nedoslano,
 }: {
@@ -103,6 +104,11 @@ export function Odpocet({
    * se neukáže — obrazovku regaty čte i ten, kdo nevelí.
    */
   naOhlaseni?: () => void | Promise<void>;
+  /**
+   * Předčasný start (OCS). Chybí-li, dlaždice se neukáže — stejně jako
+   * u ostatních úkonů ji vidí jen ten, kdo velí.
+   */
+  naPredcasnyStart?: (cislo: number) => void;
 }) {
   const t = useTheme();
   const [ted, setTed] = useState(() => Date.now());
@@ -244,6 +250,21 @@ export function Odpocet({
             { borderColor: t.jede, backgroundColor: t.papir, opacity: pressed ? 0.6 : 1 },
           ]}>
           <Text style={[s.cilText, { color: t.jede }]}>Cíl — zapisovat dojezdy</Text>
+        </Pressable>
+      ) : null}
+
+      {/* <b>Předčasný start až po startu</b> (nález R35). Dřív není co
+          posoudit: že loď byla za čárou, se pozná v okamžiku výstřelu,
+          ne během odpočtu. Zapisuje se OCS, jak žádají pravidla —
+          rozhodnuto 29. 10. 2026. */}
+      {naPredcasnyStart && (stav.druh === 'jede' || stav.druh === 'odstartovano') ? (
+        <Pressable
+          onPress={() => naPredcasnyStart(stav.cislo)}
+          style={({ pressed }) => [
+            s.cil,
+            { borderColor: t.vystraha, backgroundColor: t.papir, opacity: pressed ? 0.6 : 1 },
+          ]}>
+          <Text style={[s.cilText, { color: t.vystraha }]}>OCS — předčasný start</Text>
         </Pressable>
       ) : null}
 

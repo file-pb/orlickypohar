@@ -1,8 +1,9 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Modal, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { Odpocet } from '@/components/odpocet';
+import { Radek } from '@/components/ui';
 import {
   Chyba,
   Karta,
@@ -18,10 +19,13 @@ import { useTheme } from '@/hooks/use-theme';
 import {
   nactiJa,
   nactiZavod,
+  nactiZapis,
+  type ZapisLod,
   ohlasRozjizdku,
   ohlasStart,
   OdmitnutoServerem,
   provedProceduru,
+  zapisPredcasnyStart,
   type UcastLodi,
   type VysledekZavodu,
   type ZavodDetail,
@@ -162,6 +166,45 @@ export default function Zastavka() {
       }
     : undefined;
 
+  // <b>Předčasný start (OCS).</b> Lodě se berou ze zápisu rozjížďky, ne
+  // z detailu závodu: `prihlaskaId`, kterým se výsledek adresuje, nese
+  // jen zápis. Načítá se až při otevření — na obrazovce, která je
+  // otevřená celou rozjížďku, by to byl dotaz navíc o ničem.
+  const [ocsCislo, setOcsCislo] = useState<number | null>(null);
+  const [ocsLode, setOcsLode] = useState<ZapisLod[] | null>(null);
+  const [ocsPosila, setOcsPosila] = useState<number | null>(null);
+
+  const otevriOcs = async (cislo: number) => {
+    setOcsCislo(cislo);
+    setOcsLode(null);
+    setChybaStartu(null);
+    try {
+      const zapis = await nactiZapis(slug, zavod, cislo);
+      setOcsLode(zapis?.lode ?? []);
+    } catch {
+      setOcsLode([]);
+      setChybaStartu('Nepovedlo se načíst lodě. Zkus to znovu.');
+    }
+  };
+
+  const oznacOcs = async (prihlaskaId: number) => {
+    if (ocsCislo === null || ocsPosila !== null) return;
+    setOcsPosila(prihlaskaId);
+    try {
+      await zapisPredcasnyStart(slug, zavod, ocsCislo, prihlaskaId);
+      setOcsCislo(null);
+      obnov();
+    } catch (e) {
+      setChybaStartu(
+        e instanceof OdmitnutoServerem
+          ? (e.duvod ?? 'Server zápis odmítl.')
+          : 'Nepovedlo se zapsat — zkus to znovu.',
+      );
+    } finally {
+      setOcsPosila(null);
+    }
+  };
+
   // Odložení a odvolání jdou do téže fronty jako spuštění.
   const ukon = veliNekde(ja ?? null)
     ? (cislo: number, druh: UkonProcedury) => zadej(cislo, druh)
@@ -200,6 +243,7 @@ export default function Zastavka() {
             naStartu={ohlas}
             naUkon={ukon}
             naOhlaseni={ohlasit}
+            naPredcasnyStart={veliNekde(ja ?? null) ? otevriOcs : undefined}
             naCil={
               veliNekde(ja ?? null)
                 ? () => router.push(`/serie/${slug}/zavody/${zavod}/cil`)
@@ -247,6 +291,73 @@ export default function Zastavka() {
           ) : null}
         </>
       ) : null}
+      {/* <b>Která loď startovala předčasně.</b> Druhý krok schválně:
+          OCS je nevratný zápis do výsledku a na startovní lodi se klepe
+          palcem (Filip, 28. 10. 2026 o nevratných úkonech). Seznam je
+          ze zápisu rozjížďky, takže nese `prihlaskaId`, kterým se
+          výsledek adresuje. */}
+      <Modal
+        visible={ocsCislo !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOcsCislo(null)}>
+        {/* Klepnutí vedle zavírá — tatáž plocha jako v nabídce. Rozměry
+            jsou psané, ne flexem, aby je přečetla kontrola terčů. */}
+        <Pressable
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            backgroundColor: 'rgba(0,0,0,0.45)',
+          }}
+          onPress={() => setOcsCislo(null)}
+        />
+        <View
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            maxHeight: '75%',
+            backgroundColor: t.papir,
+            borderTopWidth: 1,
+            borderColor: t.linka,
+            paddingBottom: 24,
+          }}>
+          <Text
+            style={{
+              color: t.text,
+              fontSize: 17,
+              fontWeight: '700',
+              paddingHorizontal: 16,
+              paddingTop: 16,
+              paddingBottom: 4,
+            }}>
+            Předčasný start — která loď?
+          </Text>
+          <Text style={{ color: t.tlumeny, paddingHorizontal: 16, paddingBottom: 8 }}>
+            Zapíše se OCS. Opravit se to dá v zápisu výsledků.
+          </Text>
+
+          {ocsLode === null ? (
+            <Nacitani />
+          ) : (
+            <ScrollView>
+              {ocsLode.map((l) => (
+                <Radek
+                  key={l.prihlaskaId}
+                  text={l.lod}
+                  popis={l.kategorie ?? undefined}
+                  hodnota={ocsPosila === l.prihlaskaId ? 'zapisuje se' : (l.kod ?? undefined)}
+                  onPress={() => void oznacOcs(l.prihlaskaId)}
+                />
+              ))}
+            </ScrollView>
+          )}
+        </View>
+      </Modal>
     </ScrollView>
   );
 }

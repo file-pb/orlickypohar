@@ -267,6 +267,47 @@ export async function ulozVysledky(
 }
 
 /**
+ * <b>Předčasný start: zapíše lodi OCS</b> (nález R35, ZPJ 29.1).
+ *
+ * <b>Proč to jde přes zápis výsledků, a ne přes vlastní úkon.</b> OCS
+ * není krok procedury jako odložení nebo odvolání — je to <b>kód
+ * výsledku</b> jedné lodi, tedy totéž, co se jinak zapisuje v cíli.
+ * Server pro něj žádný zvláštní endpoint nemá a nemá ho mít: kdyby měl,
+ * existovaly by dvě cesty, jak loď dostane kód, a rozešly by se.
+ *
+ * <b>Posílá se celá sada, ne jeden řádek</b> — to je smlouva
+ * `ulozVysledky`: co v sadě není, výsledek nemá. Proto se zápis napřed
+ * načte a změní se v něm jediná loď.
+ *
+ * <b>Zapisuje se OCS, ne DSQ</b> (rozhodnuto 29. 10. 2026): tak to
+ * žádají pravidla. *„Kdyžtak se to změní"* je pak jeden řádek.
+ */
+export async function zapisPredcasnyStart(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  prihlaskaId: number,
+) {
+  const zapis = await nactiZapis(serie, zavod, cislo);
+  if (zapis === null) throw new Error('neprihlasen');
+
+  // Loď s předčasným startem nemá pořadí: kód pořadí nahrazuje a server
+  // by sadu s obojím odmítl (`Zapis.ProcNejdeUlozit`).
+  const radky: ZapisRadekVstup[] = zapis.lode.map((l) =>
+    l.prihlaskaId === prihlaskaId
+      ? { prihlaskaId: l.prihlaskaId, poradiVCili: null, kod: 'Ocs', dojezdV: null }
+      : {
+          prihlaskaId: l.prihlaskaId,
+          poradiVCili: l.poradiVCili ?? null,
+          kod: l.kod ?? null,
+          dojezdV: null,
+        },
+  );
+
+  return ulozVysledky(serie, zavod, cislo, radky, zapis.revize);
+}
+
+/**
  * <b>Co u cíle vidí trasování</b> (nález R33): u kterých lodí stopa
  * z telefonu protla cílovou čáru ve směru do cíle.
  *
