@@ -36,6 +36,14 @@ public record ZavodnikDto(
     int? Rozjizdka,
     StavRozjizdky? StavRozjizdky,
     DateTimeOffset? StartV,
+    /// <summary>
+    /// <b>Odkdy si telefon sám zapne nahrávání</b> — T−20, tedy patnáct
+    /// minut před procedurou (R3, <c>Klice.Hlaseni</c>). Stojí tu proto, že
+    /// to je tatáž rozjížďka a tentýž čas, který obrazovka ukazuje jako
+    /// <see cref="StartV"/>; počítat to podruhé v appce by znamenalo druhý
+    /// vzorec, který se může rozejít.
+    /// </summary>
+    DateTimeOffset? NahravatOd,
     StavLodiDto? StavLodi,
     IReadOnlyList<PokynDto> Pokyny);
 
@@ -57,12 +65,40 @@ public class ZavodnikSprava(AppDbContext db, TimeProvider cas)
     /// </summary>
     public async Task<ZavodnikDto?> DnesAsync(KlicLodi klic, CancellationToken ct)
     {
+        if (await DnesniAsync(klic.LodId, ct) is not { } dnesek) return null;
+        var (ucast, zavod, rozjizdka) = dnesek;
+
+        return new ZavodnikDto(
+            zavod.Serie!.Slug,
+            zavod.Slug,
+            zavod.Nazev,
+            ucast.Prihlaska!.Lod!.Nazev,
+            ucast.Prihlaska.Kategorie?.Nazev,
+            rozjizdka?.Cislo,
+            rozjizdka?.Stav,
+            rozjizdka?.StartV,
+            Klice.Hlaseni.NahravatOd(rozjizdka?.StartV),
+            rozjizdka is null ? null : await StavLodiAsync(rozjizdka.Id, ucast.Id, ct),
+            rozjizdka is null ? [] : await PokynyAsync(rozjizdka.Id, ct));
+    }
+
+    /// <summary>
+    /// <b>Dnešní regata téhle lodi a rozjížďka, která se jí zrovna týká.</b>
+    /// <para>
+    /// Odsud čte obrazovka posádky i hlášení telefonu (R3) — <b>jeden dotaz
+    /// pro obojí schválně</b>: kdyby si každý hledal rozjížďku po svém,
+    /// mohla by obrazovka ukazovat čas jedné a telefon se řídit časem jiné.
+    /// </para>
+    /// </summary>
+    public async Task<(Ucast Ucast, Zavod Zavod, Rozjizdka? Rozjizdka)?> DnesniAsync(
+        int lodId, CancellationToken ct)
+    {
         var dnes = DateOnly.FromDateTime(cas.GetUtcNow().UtcDateTime);
 
         var ucast = await db.Ucasti
             .Include(u => u.Zavod!).ThenInclude(z => z.Serie)
             .Include(u => u.Prihlaska!).ThenInclude(p => p.Lod)
-            .Where(u => u.Prihlaska!.LodId == klic.LodId
+            .Where(u => u.Prihlaska!.LodId == lodId
                         && u.Zavod!.Datum <= dnes
                         && (u.Zavod.DatumKonce ?? u.Zavod.Datum) >= dnes
                         && u.Zavod.Stav != StavZavodu.Zruseny)
@@ -81,17 +117,7 @@ public class ZavodnikSprava(AppDbContext db, TimeProvider cas)
             .ThenBy(r => r.Cislo)
             .FirstOrDefaultAsync(ct);
 
-        return new ZavodnikDto(
-            zavod.Serie!.Slug,
-            zavod.Slug,
-            zavod.Nazev,
-            ucast.Prihlaska!.Lod!.Nazev,
-            ucast.Prihlaska.Kategorie?.Nazev,
-            rozjizdka?.Cislo,
-            rozjizdka?.Stav,
-            rozjizdka?.StartV,
-            rozjizdka is null ? null : await StavLodiAsync(rozjizdka.Id, ucast.Id, ct),
-            rozjizdka is null ? [] : await PokynyAsync(rozjizdka.Id, ct));
+        return (ucast, zavod, rozjizdka);
     }
 
     /// <summary>
