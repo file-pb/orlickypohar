@@ -22,6 +22,8 @@ import {
   nactiZapis,
   type ZapisLod,
   ohlasRozjizdku,
+  nactiTresty,
+  oznacTrestVykonan,
   ulozTrest,
   zrusRozjizdku,
   ohlasStart,
@@ -41,7 +43,7 @@ import {
   type CekajiciUkon,
   type UkonProcedury,
 } from '@/lib/cekajici-start';
-import { PROCEDURA_S, DUVODY_ZRUSENI } from '@/lib/start';
+import { PROCEDURA_S, DUVODY_ZRUSENI, stavStartu } from '@/lib/start';
 import { rozsah } from '@/lib/datum';
 import { body } from '@/lib/body';
 
@@ -78,6 +80,25 @@ export default function Zastavka() {
   // odpočet běží z hodin telefonu, ne z toho, co stihl potvrdit server
   // — první pravidlo pyramidy autority.
   const rozjizdky = sCekajicim(data?.rozjizdky ?? [], ceka, delkaS);
+
+  // <b>Tresty se čtou k té rozjížďce, kterou drí panel</b> — tedy
+  // k té, co se jede, nebo k nejbližší plánované. Jiné číslo by
+  // znamenalo pruh, který patří jinam než dlaždice nad ním.
+  const cisloVPanelu = stavStartu(rozjizdky, Date.now(), delkaS)?.cislo ?? null;
+  const { data: tresty, obnov: obnovTresty } = useData(
+    () => (cisloVPanelu === null ? Promise.resolve(null) : nactiTresty(slug, zavod, cisloVPanelu)),
+    [slug, zavod, cisloVPanelu],
+  );
+
+  const zapisVykonani = async (trest: number) => {
+    if (cisloVPanelu === null) return;
+    try {
+      await oznacTrestVykonan(slug, zavod, cisloVPanelu, trest);
+      obnovTresty();
+    } catch {
+      setChybaStartu('Nepovedlo se zapsat vykonání trestu — zkus to znovu.');
+    }
+  };
 
   // <b>Zadání úkonu nečeká na odpověď.</b> Zapíše se do fronty a odpočet
   // se rozjede hned; odesílá se vedle (efekt níž). Dřív se čekalo na
@@ -276,6 +297,8 @@ export default function Zastavka() {
             naOhlaseni={ohlasit}
             naPredcasnyStart={veliNekde(ja ?? null) ? (c) => otevriVyber(c, 'Ocs') : undefined}
             naTrest={veliNekde(ja ?? null) ? otevriVyber : undefined}
+            tresty={tresty ?? undefined}
+            naVykonano={veliNekde(ja ?? null) ? zapisVykonani : undefined}
             naZruseni={veliNekde(ja ?? null) ? setRuseni : undefined}
             naCil={
               veliNekde(ja ?? null)

@@ -339,6 +339,51 @@ export async function ulozTrest(
 }
 
 /**
+ * <b>Co rozhodčí v téhle rozjížďce lodím uložil.</b>
+ *
+ * Pruh trestů na trati z návrhu (`Jede.dc.html`) stojí na tomhle — bez
+ * něj šel trest zapsat, ale už ne odkliknout, čímž appka věděla
+ * o uložení a nikdy o vykonání.
+ */
+export type TrestZaJizdy = {
+  id: number;
+  ucastId: number;
+  lod: string;
+  druh: 'Otacka360' | 'Otacka720';
+  otacek: number;
+  ulozenoV: string;
+  /** `null` znamená „nikdo nezapsal", ne „nevykonala". */
+  vykonanoV: string | null;
+};
+
+export const nactiTresty = (serie: string, zavod: string, cislo: number) =>
+  nactiZaSebe<TrestZaJizdy[]>(
+    `/sprava/serie/${serie}/zastavky/${zavod}/rozjizdky/${cislo}/tresty`,
+  );
+
+/**
+ * <b>Rozhodčí zapíše, že loď trest odkroužila.</b>
+ *
+ * Zapisuje rozhodčí, ne posádka — *„abychom jim nekomplikovali život"*
+ * (nález R41). Dokud to nikdo nezapíše, zůstává `vykonanoV` prázdné,
+ * a to <b>neznamená, že loď trest nevykonala</b>: znamená to, že se na
+ * to rozhodčí ještě nedostal.
+ */
+export async function oznacTrestVykonan(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  trest: number,
+) {
+  const v = await posliZaSebe<unknown>(
+    `/sprava/serie/${serie}/zastavky/${zavod}/rozjizdky/${cislo}/tresty/${trest}/vykonan`,
+    {},
+  );
+  if (v === null) throw new Error('neprihlasen');
+  return v;
+}
+
+/**
  * <b>Předčasný start: zapíše lodi OCS</b> (nález R35, ZPJ 29.1).
  *
  * <b>Proč to jde přes zápis výsledků, a ne přes vlastní úkon.</b> OCS

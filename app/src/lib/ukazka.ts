@@ -187,12 +187,68 @@ function nachystejStart(data: Record<string, unknown>): void {
   }
 }
 
+/**
+ * <b>Tresty v ukázce.</b> Snažit se je vecpat do snímů nedává smysl —
+ * sníměk je odečtený stav webu a tresty vznikají až za jízdy. Drží se
+ * proto zvlášť a žijí jen po dobu ukázky.
+ *
+ * <b>Dva předem uložené</b>, aby bylo co odkliknout hned po zapnutí:
+ * jinak je pruh prázdný a nepozná se, že existuje.
+ */
+type TrestUkazky = {
+  id: number;
+  ucastId: number;
+  lod: string;
+  druh: 'Otacka360' | 'Otacka720';
+  otacek: number;
+  ulozenoV: string;
+  vykonanoV: string | null;
+};
+
+let tresty: { cislo: number; trest: TrestUkazky }[] = [];
+let dalsiTrestId = 1;
+
+function nachystejTresty(data: Record<string, unknown>): void {
+  tresty = [];
+  dalsiTrestId = 1;
+
+  const ja = data['/ja'] as S['JaDto'] | undefined;
+  const kde = (ja?.opravneni ?? []).find((o) => o.zavod);
+  if (!kde?.zavod) return;
+  const z = data[`/serie/${kde.serie}/zavody/${kde.zavod}`] as S['ZavodDetailDto'] | undefined;
+  if (!z) return;
+
+  const r = z.rozjizdky.find((x) => x.stav === 'Planovana' || x.stav === 'Probiha');
+  if (!r) return;
+
+  const lode = listina(z);
+  const zalozen = (i: number, druh: 'Otacka360' | 'Otacka720', predS: number) => {
+    const l = lode[i];
+    if (!l) return;
+    tresty.push({
+      cislo: r.cislo,
+      trest: {
+        id: dalsiTrestId++,
+        ucastId: l.prihlaskaId,
+        lod: l.lod,
+        druh,
+        otacek: druh === 'Otacka360' ? 1 : 2,
+        ulozenoV: new Date(Date.now() - predS * 1000).toISOString(),
+        vykonanoV: null,
+      },
+    });
+  };
+  zalozen(1, 'Otacka720', 84);
+  zalozen(3, 'Otacka360', 12);
+}
+
 export function zapniUkazku(): void {
   // Pokaždé čerstvá kopie: druhá ukázka nemá začínat tam, kde skončila
   // ta první.
   stav = JSON.parse(JSON.stringify(snimek)) as Record<string, unknown>;
   nachystejStart(stav);
   nachystejZavodnika(stav);
+  nachystejTresty(stav);
 }
 
 export function vypniUkazku(): void {
@@ -276,6 +332,46 @@ export function ukazkaOdpovez(cesta: string, init?: { method?: string; body?: st
   // si ji pořadatel bez vlastní lodi a upozornění by chodila z ukázky.
   // Odpovídá se jako bez klíče, ne chybou — appka ten stav umí.
   if (c.startsWith('/klice/') || c === '/zarizeni') return Promise.resolve(odpoved(401));
+
+  // Tresty za jízdy mají vlastní cestu (`/zastavky/…`, ne `/vysledky/…`)
+  // a vlastní úložiště, takže se obslouí dřív než sníměk.
+  const mt = /\/rozjizdky\/(\d+)\/tresty(?:\/(\d+)\/vykonan|\/(\d+))?$/.exec(c);
+  if (mt) {
+    const cislo = Number(mt[1]);
+    const moje = () => tresty.filter((x) => x.cislo === cislo).map((x) => x.trest);
+
+    if (metoda === 'GET') return Promise.resolve(odpoved(200, moje()));
+
+    if (mt[2]) {
+      const t = tresty.find((x) => x.trest.id === Number(mt[2]));
+      if (t) t.trest.vykonanoV = new Date().toISOString();
+      return Promise.resolve(odpoved(200, t?.trest ?? {}));
+    }
+
+    if (mt[3] && metoda === 'DELETE') {
+      tresty = tresty.filter((x) => x.trest.id !== Number(mt[3]));
+      return Promise.resolve(odpoved(204));
+    }
+
+    if (metoda === 'POST') {
+      const druh = (telo.druh as 'Otacka360' | 'Otacka720') ?? 'Otacka360';
+      const zz = (stav[
+        Object.keys(stav).find((k) => /^\/serie\/[^/]+\/zavody\/[^/]+$/.test(k)) ?? ''
+      ] ?? null) as S['ZavodDetailDto'] | null;
+      const l = zz ? listina(zz).find((x) => x.prihlaskaId === telo.ucast) : undefined;
+      const novy: TrestUkazky = {
+        id: dalsiTrestId++,
+        ucastId: Number(telo.ucast ?? 0),
+        lod: l?.lod ?? 'Lo\u010f',
+        druh,
+        otacek: druh === 'Otacka360' ? 1 : 2,
+        ulozenoV: (telo.ulozenoV as string) ?? new Date().toISOString(),
+        vykonanoV: null,
+      };
+      tresty.push({ cislo, trest: novy });
+      return Promise.resolve(odpoved(200, novy));
+    }
+  }
 
   if (metoda === 'GET') {
     if (c in stav) return Promise.resolve(odpoved(200, stav[c]));

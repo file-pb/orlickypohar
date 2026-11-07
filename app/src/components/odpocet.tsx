@@ -4,6 +4,7 @@ import {
   Animated,
   AppState,
   Modal,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -11,6 +12,7 @@ import {
 
 import { Pressable } from 'react-native';
 
+import type { TrestZaJizdy } from '@/lib/api';
 import { useDirigent } from '@/lib/dirigent';
 import { dalsiTroubeni, kolikPreskocit } from '@/lib/hlaseni';
 import { posunStartUkazky, ukazkaBezi } from '@/lib/ukazka';
@@ -69,6 +71,8 @@ export function Odpocet({
   naOhlaseni,
   naPredcasnyStart,
   naTrest,
+  tresty,
+  naVykonano,
   naZruseni,
   chyba,
   nedoslano,
@@ -119,6 +123,10 @@ export function Odpocet({
    * Otáčkový trest (ZPJ 44.2). Chybí-li, dlaždice se neukážou.
    */
   naTrest?: (cislo: number, druh: 'Otacka360' | 'Otacka720') => void;
+  /** Co rozhodčí v téhle rozjížďce uložil a ještě neodkliknul. */
+  tresty?: TrestZaJizdy[];
+  /** Rozhodčí zapisuje, že loď otáčku odkroužila. */
+  naVykonano?: (trest: number) => void | Promise<void>;
   /** Zrušení rozjížďky s důvodem (ZPJ 32.1). */
   naZruseni?: (cislo: number) => void;
 }) {
@@ -325,6 +333,13 @@ export function Odpocet({
         </>
       ) : null}
 
+
+      {/* <b>Pruh trestů na trati</b> (`Jede.dc.html`). Bez něj šel trest
+          zapsat, ale už ne odkliknout — appka tedy věděla o uložení
+          a nikdy o vykonání, ačkoliv API `.../vykonan` měla od začátku.
+          Ukazují se jen neodkliknuté: odkroužený trest už rozhodčího
+          nezajímá a pruh by se do konce rozjížďky zanesl. */}
+      <TrestyNaTrati t={t} tresty={tresty} ted={ted} naVykonano={naVykonano} />
 
       {/* <b>Bublina je ladicí zkratka, ne vlastnost startu.</b> Ukáže se
           jen v ukázce, a u každého čekání, kde se dá ušetřit víc než
@@ -728,6 +743,85 @@ function Odstartovano({
   );
 }
 
+/**
+ * <b>Tresty na trati.</b> Co rozhodčí uložil a ještě neodkliknul, jako
+ * čipy po lodích — klepnutím se zapíše, že loď otáčku odkroužila.
+ *
+ * <b>Proč to musí být vidět pořád.</b> Na poháře se vlajky nevyvěšují
+ * a trest se sděluje megafonem (nálezy R15, R16), takže tenhle zápis je
+ * jediná stopa, že byl uložen. Rozhodčí si ho jinde nepřipomene.
+ *
+ * <b>Čas běží od uložení</b>, ne do něčeho: říká, jak dlouho už loď
+ * otáčku dluží. Pravidlo pro ni žádnou lhůtu nemá, ale rozhodčí podle
+ * toho pozná, jestli ji nepřehlédl.
+ *
+ * <b>Odkroužené mizí.</b> Pruh je seznam toho, co zbývá; doklad o celé
+ * rozjížďce vede API, ne obrazovka.
+ */
+function TrestyNaTrati({
+  t,
+  tresty,
+  ted,
+  naVykonano,
+}: {
+  t: Barvy;
+  tresty?: TrestZaJizdy[];
+  ted: number;
+  naVykonano?: (trest: number) => void | Promise<void>;
+}) {
+  const [posila, setPosila] = useState<number | null>(null);
+  const zbyva = (tresty ?? []).filter((x) => x.vykonanoV === null);
+
+  if (zbyva.length === 0) return null;
+
+  const naVyplni = pismoNaVyplni(t, t.text);
+
+  return (
+    <View style={[s.naTrati, { backgroundColor: t.text }]}>
+      <View style={s.naTratiHlava}>
+        <Text style={[s.skupina, { color: naVyplni }]}>TRESTY NA TRATI</Text>
+        {naVykonano ? (
+          <Text style={[s.naTratiNapoveda, { color: sPruhlednosti(naVyplni, 0.72) }]}>
+            klepnutím odčiněno
+          </Text>
+        ) : null}
+      </View>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {zbyva.map((x) => (
+          <Pressable
+            key={x.id}
+            disabled={!naVykonano || posila !== null}
+            onPress={async () => {
+              if (!naVykonano || posila !== null) return;
+              setPosila(x.id);
+              try {
+                await naVykonano(x.id);
+              } finally {
+                setPosila(null);
+              }
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={`${x.lod}, trest ${x.otacek * 360} stupňů — zapsat jako vykonaný`}
+            style={({ pressed }) => [
+              s.naTratiCip,
+              {
+                backgroundColor: sPruhlednosti(naVyplni, 0.12),
+                borderColor: sPruhlednosti(naVyplni, 0.26),
+                opacity: pressed || posila === x.id ? 0.6 : 1,
+              },
+            ]}>
+            <Text style={[s.naTratiLod, { color: naVyplni }]}>{x.lod}</Text>
+            <Text style={[s.naTratiCas, { color: sPruhlednosti(naVyplni, 0.78) }]}>
+              {x.otacek * 360}° · {trvani(Math.max(0, (ted - Date.parse(x.ulozenoV)) / 1000))}
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
 /** Po startu: počítá se nahoru a panel zeslábne — už se nic nehlídá. */
 function Jede({ stav, t }: { stav: Extract<StavStartu, { druh: 'jede' }>; t: Barvy }) {
   return (
@@ -852,6 +946,23 @@ function Bezi({
 
 const s = StyleSheet.create({
   skupina: { fontSize: 12, fontWeight: '700', letterSpacing: 0.8, marginTop: 18, marginBottom: 8 },
+  // Pruh trestů na trati: tmavá plocha pod dlaždicemi, čipy vedle sebe.
+  naTrati: { marginTop: 14, marginHorizontal: -16, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 14 },
+  naTratiHlava: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginBottom: 8 },
+  naTratiNapoveda: { fontSize: 11 },
+  naTratiCip: {
+    minHeight: 56,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginRight: 8,
+    gap: 2,
+  },
+  naTratiLod: { fontSize: 15, fontWeight: '700', letterSpacing: 0.2 },
+  naTratiCas: { fontSize: 12 },
+
   mrizka: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   // Dvě na řádek; 80 pt je tolik, aby se na lodi netrefilo vedle.
   dlazdice: { flexGrow: 1, flexBasis: '46%', minHeight: 80, borderWidth: 1, borderRadius: 14, padding: 12, justifyContent: 'center' },
