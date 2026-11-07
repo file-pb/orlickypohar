@@ -289,6 +289,28 @@ export function vypniUkazku(): void {
   stav = null;
 }
 
+/**
+ * Kam ukázku otevřít, aby bylo co číst.
+ *
+ * Ukázka stojí na jedné identitě: `Organizator` jednoho závodu (dnes
+ * `2026-nanecisto` / `izolepa`). Obrazovka toho závodu je to, co ukázka
+ * vlastně ukazuje — start, cíl a trať tak, jak je vidí rozhodčí. Cesta se
+ * proto **odvozuje ze snímku**, ne zapisuje natvrdo: až se snímek pořídí
+ * znovu nad jiným závodem, povede odkaz s ním.
+ *
+ * Vrací rozebrané slugy, ne hotovou cestu: expo-router má typované cesty
+ * a dynamickou adresu skládá z `pathname` a `params`, takže řetězec by
+ * stejně musel volající rozebrat zpátky.
+ *
+ * `null` znamená, že ve snímku žádné oprávnění k závodu není — pak nemá
+ * kam vést a volající zůstane, kde je.
+ */
+export function kamVUkazce(): { serie: string; zavod: string } | null {
+  const ja = stav?.['/ja'] as S['JaDto'] | undefined;
+  const kde = (ja?.opravneni ?? []).find((o) => o.zavod);
+  return kde?.zavod && kde.serie ? { serie: kde.serie, zavod: kde.zavod } : null;
+}
+
 const odpoved = (status: number, telo: unknown = null): OdpovedSite => ({
   status,
   ok: status >= 200 && status < 300,

@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Radek } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
-import { ukazkaBezi, vypniUkazku, zapniUkazku } from '@/lib/ukazka';
+import { kamVUkazce, ukazkaBezi, vypniUkazku, zapniUkazku } from '@/lib/ukazka';
 
 /**
  * Kebab: všechno, co není „co teď".
@@ -98,14 +98,23 @@ export function Kebab() {
               přepnutí se zásobník obrazovek zahodí — jinak by na nich
               zůstala data z toho druhého světa.
 
-              <b>Zapnutí vede na obrazovku posádky, ne domů.</b> Vedlo
-              domů, a tam je od 7. 11. 2026 jen logo — takže člověk klepl
-              na *Ukázkový režim*, dostal proužek *„UKÁZKA — NIC SE
-              NEODESÍLÁ"* nad prázdnou obrazovkou a neměl co číst než to,
-              že ukázka běží a neukazuje nic. (Filip, 7. 11. 2026, se
-              snímkem: *„Ukázka tvrdí že běží ale neběží nic."*) Komentář
-              o kus níž na tuhle past upozorňoval a řešil ji druhou
-              položkou — jenže první zůstala slepá a klepne se na ni dřív.
+              <b>Zapnutí vede na závod, ne domů.</b> Vedlo domů, a tam je
+              od 7. 11. 2026 jen logo — takže člověk klepl na *Ukázkový
+              režim*, dostal proužek *„UKÁZKA — NIC SE NEODESÍLÁ"* nad
+              prázdnou obrazovkou a neměl co číst než to, že ukázka běží
+              a neukazuje nic. (Filip, 7. 11. 2026, se snímkem: *„Ukázka
+              tvrdí že běží ale neběží nic."*) Komentář o kus níž na tuhle
+              past upozorňoval a řešil ji druhou položkou — jenže první
+              zůstala slepá a klepne se na ni dřív.
+
+              <b>Vede na obrazovku rozhodčího</b>, ne posádky (Filip,
+              7. 11. 2026: *„za tímto odkazem má být ukázkový režim pro
+              rozhodčího"*). Ukázka stojí na jedné identitě, `Organizator`
+              jednoho závodu, a start, cíl a trať jsou to, co se v ní dá
+              dělat; posádka má vlastní položku hned pod tím. Cestu
+              odvozuje `kamVUkazce()` ze snímku, aby se nerozešla, až se
+              snímek pořídí znovu.
+
               Vypnutí vede domů dál: tam se člověk vrací do appky, ne do
               ukázky. */}
           <Radek
@@ -128,7 +137,13 @@ export function Kebab() {
               // se režim přepne uvnitř, ale obrazovka o tom neví.
               // Viděno v simulátoru 7. 11. 2026.
               if (router.canDismiss()) router.dismissAll();
-              router.replace(vUkazce ? '/' : '/zavodnik');
+              const zavod = vUkazce ? null : kamVUkazce();
+              if (zavod)
+                router.replace({
+                  pathname: '/serie/[slug]/zavody/[zavod]',
+                  params: { slug: zavod.serie, zavod: zavod.zavod },
+                });
+              else router.replace(vUkazce ? '/' : '/zavodnik');
             }}
           />
 
@@ -137,10 +152,9 @@ export function Kebab() {
               rovnou na obrazovku posádky — a když ukázka už běží, jen tam
               přejde.
 
-              Přepínač výš míří od téhož dne tamtéž, takže se obě položky
-              při zapínání potkávají. Zůstává proto, že dělá něco jiného:
-              tohle je cesta na obrazovku posádky i uvnitř běžící ukázky,
-              kdy přepínač výš ukázku naopak vypíná. */}
+              Přepínač výš míří na závod, tedy na tutéž ukázku očima
+              rozhodčího; tahle položka je ta druhá polovina a je potřeba
+              i uvnitř běžící ukázky, kdy přepínač výš naopak vypíná. */}
           <Radek
             text="Ukázka pro závodníka"
             popis="jak appku vidí posádka na vodě"

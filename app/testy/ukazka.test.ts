@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 
 import {
   DO_STARTU_MIN,
+  kamVUkazce,
   ukazkaBezi,
   ukazkaOdpovez,
   vypniUkazku,
@@ -289,6 +290,23 @@ zkus('fetch je jen v `lib/sit.ts` a v přihlašování', () => {
     .map((c) => c.replace(/\\/g, '/'))
     .filter((c) => !povolene.some((p) => c.endsWith(p)));
   assert.deepEqual(hrisnici, [], `fetch mimo šev: ${hrisnici.join(', ')}`);
+});
+
+zkus('ukázka vede na závod, kde je přihlášený jako organizátor', () => {
+  // <b>Proč to má test.</b> Přepínač v kebabu posílá člověka na tuhle
+  // cestu, a dokud vedla domů, bylo za ní jen logo. Kdyby se snímek
+  // pořídil znovu nad závodem bez oprávnění, `kamVUkazce` vrátí `null`
+  // a odkaz tiše spadne zpátky na posádku — tenhle test to zachytí dřív.
+  vypniUkazku();
+  assert.equal(kamVUkazce(), null, 'bez běžící ukázky nemá kam vést');
+
+  zapniUkazku();
+  const kam = kamVUkazce();
+  assert.ok(kam, 'ukázka běží, ale nevede na žádný závod');
+  assert.equal(typeof kam.serie, 'string');
+  assert.equal(typeof kam.zavod, 'string');
+  assert.ok(kam.serie.length > 0 && kam.zavod.length > 0);
+  vypniUkazku();
 });
 
 void (async () => {
