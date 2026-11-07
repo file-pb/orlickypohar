@@ -277,63 +277,47 @@ export function Odpocet({
         </Pressable>
       ) : null}
 
-      {/* <b>Předčasný start až po startu</b> (nález R35). Dřív není co
-          posoudit: že loď byla za čárou, se pozná v okamžiku výstřelu,
-          ne během odpočtu. Zapisuje se OCS, jak žádají pravidla —
-          rozhodnuto 29. 10. 2026. */}
-      {naPredcasnyStart && (stav.druh === 'jede' || stav.druh === 'odstartovano') ? (
-        <Pressable
-          onPress={() => naPredcasnyStart(stav.cislo)}
-          style={({ pressed }) => [
-            s.cil,
-            { borderColor: t.vystraha, backgroundColor: t.papir, opacity: pressed ? 0.6 : 1 },
-          ]}>
-          <Text style={[s.cilText, { color: t.vystraha }]}>OCS — předčasný start</Text>
-        </Pressable>
+      {/* <b>Úkony jsou po ruce od chvíle, kdy je nastavený čas startu</b>
+          (Filip, 7. 11. 2026, podle návrhu: *„po kliknutí na ukázkový
+          režim má nastat toto"*). Rozhodčí je vidí pohromadě, ne až
+          v tu fázi, kdy na ně dojde — na startovní lodi se nehledá.
+          Co v dané chvíli nejde, je ztlumené, ne schované. */}
+      {stav.druh !== 'bezCasu' && (naUkon || naPredcasnyStart || naZruseni) ? (
+        <UkonyNaStartu
+          stav={stav}
+          t={t}
+          naUkon={naUkon}
+          naPredcasnyStart={naPredcasnyStart}
+          naZruseni={naZruseni}
+        />
       ) : null}
 
       {/* <b>Tresty jsou dostupné celou rozjížďku</b>, ne jako krok
           (Miloš, nahrávka 23: dlaždice se má *„průběžně posouvat"*).
           Dotek bóje i dotek s lodí se stane kdykoliv mezi startem
-          a cílem, takže je nemá smysl vázat na fázi. */}
-      {naTrest && (stav.druh === 'jede' || stav.druh === 'odstartovano') ? (
-        <View style={s.tresty}>
-          <Pressable
-            onPress={() => naTrest(stav.cislo, 'Otacka360')}
-            style={({ pressed }) => [
-              s.trest,
-              { borderColor: t.linka, backgroundColor: t.papir, opacity: pressed ? 0.6 : 1 },
-            ]}>
-            <Text style={[s.trestCislo, { color: t.text }]}>360°</Text>
-            <Text style={[s.trestPopis, { color: t.tlumeny }]}>dotek bóje · ZPJ 31</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => naTrest(stav.cislo, 'Otacka720')}
-            style={({ pressed }) => [
-              s.trest,
-              { borderColor: t.linka, backgroundColor: t.papir, opacity: pressed ? 0.6 : 1 },
-            ]}>
-            <Text style={[s.trestCislo, { color: t.text }]}>720°</Text>
-            <Text style={[s.trestPopis, { color: t.tlumeny }]}>dotek s lodí · ZPJ 44.1</Text>
-          </Pressable>
-        </View>
+          a cílem. */}
+      {naTrest && stav.druh !== 'bezCasu' ? (
+        <>
+          <Text style={[s.skupina, { color: t.tlumeny }]}>ZA JÍZDY</Text>
+          <View style={s.mrizka}>
+            <Dlazdice
+              t={t}
+              nadpis="360°"
+              popis="dotek bóje · ZPJ 31"
+              velke
+              onPress={() => naTrest(stav.cislo, 'Otacka360')}
+            />
+            <Dlazdice
+              t={t}
+              nadpis="720°"
+              popis="dotek s lodí · ZPJ 44.1"
+              velke
+              onPress={() => naTrest(stav.cislo, 'Otacka720')}
+            />
+          </View>
+        </>
       ) : null}
 
-      {/* <b>Zrušení je nevratné, proto na konci a červeně.</b> Je to
-          jediný úkon panelu, po kterém se rozjížďka nejede ani nejede
-          znovu — odvolání vrací na start, tohle ne. */}
-      {naZruseni && stav.druh !== 'bezCasu' ? (
-        <Pressable
-          onPress={() => naZruseni(stav.cislo)}
-          style={({ pressed }) => [
-            s.cil,
-            { borderColor: t.stavZruseny, backgroundColor: t.papir, opacity: pressed ? 0.6 : 1 },
-          ]}>
-          <Text style={[s.cilText, { color: t.stavZruseny }]}>Zrušit rozjížďku</Text>
-        </Pressable>
-      ) : null}
-
-      {naUkon ? <Zastaveni stav={stav} t={t} naUkon={naUkon} /> : null}
 
       {/* <b>Bublina je ladicí zkratka, ne vlastnost startu.</b> Ukáže se
           jen v ukázce a jen když se čeká déle než dvě minuty — tedy před
@@ -440,23 +424,82 @@ function Ohlaseni({
  * potvrzení offcanvas nebo modal."*) — odvolání startu vrací celé
  * soutěžní pole na začátek procedury a omylem se to stát nesmí.
  */
-function Zastaveni({
+/**
+ * Jedna dlaždice úkonu. <b>Dvě velikosti písma, ne tři</b>: název a pod
+ * ním věta, čím to je — stejně jako v návrhu. Vypnutá dlaždice se
+ * ztlumí, ale zůstane: rozhodčí má vidět, co existuje, i když to zrovna
+ * nejde.
+ */
+function Dlazdice({
+  t,
+  nadpis,
+  popis,
+  onPress,
+  vypnuto,
+  varovne,
+  velke,
+}: {
+  t: Barvy;
+  nadpis: string;
+  popis?: string;
+  onPress?: () => void;
+  vypnuto?: boolean;
+  /** Nevratný úkon — červený okraj i písmo. */
+  varovne?: boolean;
+  /** Velké číslo místo názvu (360°, 720°). */
+  velke?: boolean;
+}) {
+  const barva = vypnuto ? t.tlumeny : varovne ? t.stavZruseny : t.text;
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={vypnuto || !onPress}
+      style={({ pressed }) => [
+        s.dlazdice,
+        {
+          borderColor: varovne && !vypnuto ? t.stavZruseny : t.linka,
+          backgroundColor: t.papir,
+          opacity: pressed && !vypnuto ? 0.6 : vypnuto ? 0.55 : 1,
+        },
+      ]}>
+      <Text style={[velke ? s.dlazdiceCislo : s.dlazdiceNadpis, { color: barva }]}>{nadpis}</Text>
+      {popis ? <Text style={[s.dlazdicePopis, { color: t.tlumeny }]}>{popis}</Text> : null}
+    </Pressable>
+  );
+}
+
+/** Čím je ten úkon na dlaždici — druhý řádek, jako v návrhu. */
+function popisUkonu(ukon: UkonStartu): string {
+  return ukon === 'Odlozit'
+    ? 'vlajka AP · zeptá se na nový čas'
+    : 'ZPJ 29.2 · přidá minutu a jede znovu';
+}
+
+function UkonyNaStartu({
   stav,
   t,
   naUkon,
+  naPredcasnyStart,
+  naZruseni,
 }: {
   stav: StavStartu;
   t: Barvy;
-  naUkon: (cislo: number, ukon: UkonStartu) => void | Promise<void>;
+  naUkon?: (cislo: number, ukon: UkonStartu) => void | Promise<void>;
+  naPredcasnyStart?: (cislo: number) => void;
+  naZruseni?: (cislo: number) => void;
 }) {
   const [potvrzuje, setPotvrzuje] = useState<UkonStartu | null>(null);
   const [posila, setPosila] = useState(false);
   const [chyba, setChyba] = useState<string | null>(null);
-  const ukony = ukonyStartu(stav);
-  if (ukony.length === 0) return null;
+  // <b>Ukážou se oba, nejde vždycky oba.</b> Odklad patří před start,
+  // všeobecné odvolání po něm (ZPJ 29.2) — `ukonyStartu` proto vrací
+  // jen ten, který v téhle fázi platí. Návrh je ale kreslí vedle sebe,
+  // a to je lepší: rozhodčí vidí, co vůbec existuje. Ten druhý je
+  // ztlumený, ne schovaný.
+  const lze = ukonyStartu(stav);
 
   const posli = async (ukon: UkonStartu) => {
-    if (posila) return;
+    if (posila || !naUkon) return;
     setPosila(true);
     setChyba(null);
     try {
@@ -469,19 +512,39 @@ function Zastaveni({
     }
   };
 
+  const ukonDlazdice = (u: UkonStartu) => (
+    <Dlazdice
+      key={u}
+      t={t}
+      nadpis={nazevUkonu(u)}
+      popis={popisUkonu(u)}
+      vypnuto={!naUkon || !lze.includes(u)}
+      onPress={() => setPotvrzuje(u)}
+    />
+  );
+
   return (
-    <View style={s.volby}>
-      {ukony.map((u) => (
-        <Pressable
-          key={u}
-          onPress={() => setPotvrzuje(u)}
-          style={({ pressed }) => [
-            s.volba,
-            { borderColor: t.linka, backgroundColor: t.papir, opacity: pressed ? 0.6 : 1 },
-          ]}>
-          <Text style={[s.volbaText, { color: t.text }]}>{nazevUkonu(u)}</Text>
-        </Pressable>
-      ))}
+    <>
+      <Text style={[s.skupina, { color: t.tlumeny }]}>NA STARTU</Text>
+      <View style={s.mrizka}>
+        {ukonDlazdice('Odlozit')}
+        <Dlazdice
+          t={t}
+          nadpis="OCS"
+          popis="předčasný start · vybereš loď"
+          vypnuto={!naPredcasnyStart}
+          onPress={() => naPredcasnyStart?.(stav.cislo)}
+        />
+        {ukonDlazdice('Odvolat')}
+        <Dlazdice
+          t={t}
+          nadpis="Zrušit rozjížďku"
+          popis="řekne se důvod"
+          varovne
+          vypnuto={!naZruseni}
+          onPress={() => naZruseni?.(stav.cislo)}
+        />
+      </View>
 
       <Modal
         visible={potvrzuje !== null}
@@ -524,7 +587,7 @@ function Zastaveni({
           </View>
         </View>
       </Modal>
-    </View>
+    </>
   );
 }
 
@@ -763,6 +826,13 @@ function Bezi({
 }
 
 const s = StyleSheet.create({
+  skupina: { fontSize: 12, fontWeight: '700', letterSpacing: 0.8, marginTop: 18, marginBottom: 8 },
+  mrizka: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  // Dvě na řádek; 80 pt je tolik, aby se na lodi netrefilo vedle.
+  dlazdice: { flexGrow: 1, flexBasis: '46%', minHeight: 80, borderWidth: 1, borderRadius: 14, padding: 12, justifyContent: 'center' },
+  dlazdiceNadpis: { fontSize: 16, fontWeight: '700' },
+  dlazdiceCislo: { fontSize: 20, fontWeight: '800' },
+  dlazdicePopis: { fontSize: 11, marginTop: 3, lineHeight: 15 },
   bublinaStin: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center', padding: 24 },
   bublina: { borderWidth: 1, borderRadius: 16, padding: 20, maxWidth: 340 },
   bublinaNadpis: { fontSize: 18, fontWeight: '800' },
