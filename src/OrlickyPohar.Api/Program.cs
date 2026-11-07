@@ -114,6 +114,7 @@ try
     builder.Services.AddScoped<TratSprava>();
     builder.Services.AddScoped<UkonyZaJizdySprava>();
     builder.Services.AddScoped<TrestyZaJizdySprava>();
+    builder.Services.AddScoped<ZavodnikSprava>();
     builder.Services.AddScoped<PrvkySprava>();
     if (builder.Configuration.GetValue<bool>("Prevzate:Sber"))
         builder.Services.AddHostedService<SberPrevzatych>();
@@ -246,6 +247,7 @@ try
         app.MapSpravaVysledku();
         app.MapUkonyZaJizdy();
         app.MapTrestyZaJizdy();
+        app.MapZavodnik();
         app.MapPrihlasky();
         app.MapSmernice();
         app.MapOponenturu();
