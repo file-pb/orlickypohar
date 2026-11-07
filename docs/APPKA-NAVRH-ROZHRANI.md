@@ -577,6 +577,31 @@ zabití appky je režim pryč. To je pojistka proti tomu nejhoršímu, co ta
 věc umí — aby někdo u vody odstartoval rozjížďku v ukázce a čekal, že se
 to stalo.
 
+### Co z ukázky je ověřené na zařízení (7. 11. 2026)
+
+Proklikáno v simulátoru, na buildu, který už nesl posun kalendáře:
+
+| Co | Jak to dopadlo |
+| --- | --- |
+| otevře se **před** procedurou, ne uprostřed odpočtu | *„Rozjížďka 4 · Procedura začne ve 1:27"* a tlačítko *Spustit* |
+| po spuštění procedura jede | *„Rozjížďka 4 startuje · 4:58 do startu"*, proužky fází, dirigent zapnutý |
+| proužek drží režim celou cestu | landing → ročníky → ročník → regata → spuštění, pokaždé *UKÁZKA* |
+| kalendář ukazuje regatu jako dnešní | štítek *vypsáno*, 7. listopadu, *„8 regat · 6 odjetých"* |
+| odjeté rozjížďky vedle toho zůstaly | ČERVENÉ CAFE 8 bodů, 4-1-3 |
+
+**Co ověřené není: že z telefonu doopravdy vyjde zvuk.** Obrazovka hlásí
+*„Hlásí a troubí"*, ale stroj byl ztišený — víme tedy, že se appka tváří,
+že mluví, ne že je slyšet. Je to tentýž druh rozdílu, jaký projekt zná
+odjinud: zelená z prázdného výsledku není zelená.
+
+**Ukázka nepřežije fast refresh.** Režim se drží v modulové proměnné
+(schválně — nemá přežít ani konec appky), a Metro ji při překladu změněného
+souboru zahodí. Projev je ošklivý: appka tiše spadne na skutečné volání
+a obrazovka hlásí, že nedosáhne na server. **Na vydaném buildu se to
+nestane**; při vývoji ano, a stálo to jeden omyl, než se na to přišlo —
+rozhodl o tom až pokus bez jediného doteku repozitáře mezi zapnutím
+a klepnutím.
+
 **Co v ukázce není:** klíč k lodi a registrace upozornění se tváří jako
 nevydané (401), protože v ukázce nemá kdo mít loď. A cílová obrazovka
 dostává zápis složený z veřejného detailu — čísla přihlášek jsou v něm
