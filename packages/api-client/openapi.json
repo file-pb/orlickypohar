@@ -8325,39 +8325,6 @@
                     }
                 }
             },
-            "Kategorie": {
-                "required": [
-                    "nazev"
-                ],
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "serieId": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "serie": {
-                        "oneOf": [
-                            {
-                                "type": "null"
-                            },
-                            {
-                                "$ref": "#/components/schemas/Serie"
-                            }
-                        ]
-                    },
-                    "nazev": {
-                        "type": "string"
-                    },
-                    "poradi": {
-                        "type": "integer",
-                        "format": "int32"
-                    }
-                }
-            },
             "KategorieDto": {
                 "required": [
                     "nazev",
@@ -11511,49 +11478,6 @@
                     }
                 }
             },
-            "Serie": {
-                "required": [
-                    "nazev",
-                    "slug"
-                ],
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "nazev": {
-                        "type": "string"
-                    },
-                    "rok": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "slug": {
-                        "type": "string"
-                    },
-                    "publikovano": {
-                        "type": "boolean"
-                    },
-                    "vysledkyZavoduVerejne": {
-                        "type": "boolean"
-                    },
-                    "pocetSkrtu": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "verzePravidel": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "kategorie": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Kategorie"
-                        }
-                    }
-                }
-            },
             "SerieDetailDto": {
                 "required": [
                     "slug",
@@ -14378,7 +14302,10 @@
                         "type": "string"
                     },
                     "kategorie": {
-                        "$ref": "#/components/schemas/Kategorie"
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     },
                     "rozjizdka": {
                         "type": [

@@ -7271,16 +7271,6 @@ export interface components {
             telefon?: null | string;
             cisloCsj?: null | string;
         };
-        Kategorie: {
-            /** Format: int32 */
-            id?: number;
-            /** Format: int32 */
-            serieId?: number;
-            serie?: null | components["schemas"]["Serie"];
-            nazev: string;
-            /** Format: int32 */
-            poradi?: number;
-        };
         KategorieDto: {
             nazev: string;
             /** Format: int32 */
@@ -8068,21 +8058,6 @@ export interface components {
             /** Format: int32 */
             poradi: number;
             otazky: components["schemas"]["OtazkaVstup"][];
-        };
-        Serie: {
-            /** Format: int32 */
-            id?: number;
-            nazev: string;
-            /** Format: int32 */
-            rok?: number;
-            slug: string;
-            publikovano?: boolean;
-            vysledkyZavoduVerejne?: boolean;
-            /** Format: int32 */
-            pocetSkrtu?: number;
-            /** Format: int32 */
-            verzePravidel?: number;
-            kategorie?: components["schemas"]["Kategorie"][];
         };
         SerieDetailDto: {
             slug: string;
