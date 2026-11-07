@@ -101,7 +101,12 @@ export function Kebab() {
               if (vUkazce) vypniUkazku();
               else zapniUkazku();
               setVUkazce(ukazkaBezi());
-              router.dismissAll();
+              // <b>`dismissAll` jen když je co zavřít.</b> Bez té
+              // podmínky vyhodí navigace *„The action 'POP_TO_TOP' was
+              // not handled"* a `replace` za ní se nemusí provést — pak
+              // se režim přepne uvnitř, ale obrazovka o tom neví.
+              // Viděno v simulátoru 7. 11. 2026.
+              if (router.canDismiss()) router.dismissAll();
               router.replace('/');
             }}
           />
