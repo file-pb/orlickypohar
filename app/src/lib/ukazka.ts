@@ -17,6 +17,14 @@
  * a vypadala by rozbitě. Mění se jen kopie v paměti; po vypnutí režimu
  * se zahodí a soubor zůstává, jaký byl.
  *
+ * <b>Ukázka začíná pět minut před startem</b> (Filip, 7. 11. 2026:
+ * *„ukázka simuluje 5 minut do startu a pak prostě různé stavy
+ * a užití"*). Bez toho by prohlížející zapnul režim a našel klidnou
+ * obrazovku — to, kvůli čemu appka vznikla, by musel napřed sám
+ * rozjet dvěma klepnutími a pak pět minut čekat. Takhle spadne rovnou
+ * doprostřed odpočtu a odsud si může zkusit cokoliv: odložit, odvolat,
+ * nechat start padnout, zapisovat cíl.
+ *
  * <b>Režim se nepamatuje mezi spuštěními.</b> Zapnout ho jde jen klepnutím
  * v nabídce; po zabití appky je zase pryč. Je to pojistka proti tomu
  * nejhoršímu, co tahle věc umí — aby někdo u vody startoval rozjížďku
@@ -47,10 +55,42 @@ export function ukazkaBezi(): boolean {
   return stav !== null;
 }
 
+/** Kolik minut do startu ukázka nachystá. Tolik, kolik trvá procedura. */
+export const DO_STARTU_MIN = 5;
+
+/**
+ * Nachystá rozjížďku, která startuje za pět minut.
+ *
+ * <b>Přidává se nová, ne přepisuje stará.</b> Odjeté rozjížďky v ukázce
+ * zůstávají, protože jsou to ty „různé stavy" — dokončená s výsledky
+ * vedle čerstvé, která se teprve rozbíhá.
+ *
+ * Regata se bere ta, které ukázkový účet velí; `kdeVeli` na ni otevře
+ * start a cíl, takže je to táž, ke které se prohlížející doklepe.
+ */
+function nachystejStart(data: Record<string, unknown>): void {
+  const ja = data['/ja'] as S['JaDto'] | undefined;
+  const kde = (ja?.opravneni ?? []).find((o) => o.zavod);
+  if (!kde?.zavod) return;
+
+  const z = data[`/serie/${kde.serie}/zavody/${kde.zavod}`] as S['ZavodDetailDto'] | undefined;
+  if (!z) return;
+
+  const cislo = Math.max(0, ...z.rozjizdky.map((r) => r.cislo)) + 1;
+  z.rozjizdky.push({
+    cislo,
+    startV: new Date(Date.now() + DO_STARTU_MIN * 60_000).toISOString(),
+    stav: 'Planovana',
+    doSerie: true,
+    vysledky: [],
+  } as S['RozjizdkaDto']);
+}
+
 export function zapniUkazku(): void {
   // Pokaždé čerstvá kopie: druhá ukázka nemá začínat tam, kde skončila
   // ta první.
   stav = JSON.parse(JSON.stringify(snimek)) as Record<string, unknown>;
+  nachystejStart(stav);
 }
 
 export function vypniUkazku(): void {

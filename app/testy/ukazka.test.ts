@@ -13,6 +13,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
+  DO_STARTU_MIN,
   ukazkaBezi,
   ukazkaOdpovez,
   vypniUkazku,
@@ -142,6 +143,40 @@ const testyAsync: [string, () => Promise<void>][] = [
     assert.ok(telo.lode.every((l: any) => typeof l.prihlaskaId === 'number'));
   }],
 ];
+
+// --- ukázka začíná uprostřed odpočtu ----------------------------------
+
+testyAsync.push(['po zapnutí čeká rozjížďka, která startuje za pět minut', async () => {
+  zapniUkazku();
+  const z = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo;
+  const cerstva = z.rozjizdky[z.rozjizdky.length - 1];
+  const doStartu = (Date.parse(cerstva.startV) - Date.now()) / 60_000;
+  assert.ok(
+    Math.abs(doStartu - DO_STARTU_MIN) < 0.2,
+    `do startu vyšlo ${doStartu.toFixed(2)} min místo ${DO_STARTU_MIN}`,
+  );
+  assert.equal(cerstva.stav, 'Planovana');
+}]);
+
+testyAsync.push(['odjeté rozjížďky v ukázce zůstávají — jsou to ty různé stavy', async () => {
+  // Kdyby se nachystaná rozjížďka napsala přes existující, zmizela by
+  // z ukázky dokončená s výsledky a zůstala by jen ta jedna.
+  zapniUkazku();
+  const z = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo;
+  assert.ok(z.rozjizdky.length > 1, 'v ukázce zbyla jediná rozjížďka');
+  assert.ok(
+    z.rozjizdky.some((r: any) => r.stav !== 'Planovana'),
+    'žádná odjetá rozjížďka — ukázka ukáže jen prázdný začátek',
+  );
+}]);
+
+testyAsync.push(['druhé zapnutí nachystá start znovu, ne další navíc', async () => {
+  zapniUkazku();
+  const prvni = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo.rozjizdky.length;
+  zapniUkazku();
+  const druha = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo.rozjizdky.length;
+  assert.equal(druha, prvni);
+}]);
 
 // --- a hlavně: nejde to ven doopravdy? --------------------------------
 

@@ -452,10 +452,11 @@ kontextové menu — dvě různé komponenty pro jednu věc, kterou vlastní pan
 umí na obou stejně. Kdyby ji Filip chtěl, je to samostatná práce, ne
 přepínač.
 
-**Co to mezitím stojí Miloše:** ke startu se z landingu dostane přes kebab
-→ Ročníky → ročník → regata, tedy **čtyřmi klepnutími místo jednoho** —
-dřív na něj vedla karta *Velíš* přímo. Dokud je landing dočasný, je to
-nepohodlí; kdyby se v tomhle stavu dostal na vodu, vadilo by to.
+**Karta *Velíš* se nevrací** (Filip, 7. 11. 2026). Ptal jsem se na to,
+protože se tím Milošovi prodloužila cesta ke startu z jednoho klepnutí na
+čtyři — kebab → Ročníky → ročník → regata. Rozhodnutí je jeho a zní ne;
+zapsané je to tu proto, aby se ta otázka neotvírala potřetí. Zkrátit tu
+cestu je práce pro stavovou obrazovku, ne pro kartu na landingu.
 
 **Kebab drží všechno ostatní:** ročníky, lodě a posádka, klíč, trasa, účet,
 web. Tři tečky mají terč 44 pt, i když se kreslí menší.
@@ -531,6 +532,14 @@ s mockem ještě sedí.
 **Kdo je v ukázce u vesla, je rozhodnutí, ne data:** účet, který v mocku
 někde velí (`Bearer milos`). Jinak by ukázka neukázala start ani cíl, tedy
 to, kvůli čemu appka vznikla.
+
+**Ukázka začíná pět minut před startem** (Filip, 7. 11. 2026: *„ukázka
+simuluje 5 minut do startu a pak prostě různé stavy a užití"*). Bez toho
+by prohlížející zapnul režim a našel klidnou obrazovku — to, kvůli čemu
+appka vznikla, by si musel napřed sám rozjet dvěma klepnutími a pak pět
+minut čekat. Takhle spadne rovnou doprostřed odpočtu. Rozjížďka se
+**přidává**, odjeté zůstávají: ty jsou ty *různé stavy*, dokončená
+s výsledky vedle čerstvé, která se teprve rozbíhá.
 
 **Zápisy nemizí, mění snímek v paměti.** Ohlásit rozjížďku, spustit
 proceduru, odložit, odvolat, odstartovat, ukončit — všechno funguje
