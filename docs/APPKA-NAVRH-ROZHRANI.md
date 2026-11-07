@@ -723,6 +723,39 @@ které nemění, jak appka vypadá.
 
 ---
 
+## Co zbývá, a co k tomu chybí (7. 11. 2026)
+
+Z devíti věcí v tabulce nahoře stojí sedm. Zbylé dvě — **rozhraní
+závodníka** a **patička se stavem lodi** — nejsou odložené proto, že by
+na ně nedošlo, ale protože **obě stojí na datech, která veřejně nejsou**.
+Postavit je dnes by znamenalo nakreslit prázdné rámečky, a to je přesně
+to, co z appky vypadlo u vodočtu.
+
+Tohle je seznam toho, co k nim chybí, aby se nemuselo hledat znovu:
+
+| Co obrazovka potřebuje | Kde to dnes je | Co chybí |
+| --- | --- | --- |
+| **pokyn závodní komise** (změna úseku, chybějící značka) | `UkonDto` pod `/sprava/serie/{s}/zastavky/{z}/rozjizdky/{n}/ukony` | veřejné čtení pro běžící rozjížďku |
+| **jak loď eviduje rozhodčí** (odstartovala, OCS, trest, dojezd, DNF) | `ZapisLodDto` pod `/sprava/…/rozjizdky/{n}` | veřejné čtení stavu vlastní lodi |
+| **která regata je dnes moje** | nikde | odpověď pro telefon spárovaný klíčem; jinak by appka musela prohledávat ročníky |
+| **odvoláno / odloženo** jako stav | odvodí se jen z toho, že `startV` zmizel | zpráva, ne odvozenina |
+
+**Zkrácení trati veřejné je** (`VerejnaTratDto` nese `zkracenoUPrvkuId`,
+`zkracenoV` a `prestavba`), takže karta pokynu by se dala naplnit dvěma
+druhy ze čtyř už dnes. Na samostatnou obrazovku to ale nestačí.
+
+### Jedno doporučení, kterému vypršel důvod
+
+*Čerstvost je jeden tvar v celé appce* (doporučení 4 níž) stálo na tom, že
+tentýž řádek — kolečko, popis, hodnota — kreslila tři místa a časem by se
+rozešla. Po přestavbě landingu zbylo **jedno** (`tracker/index.tsx`);
+proužek spojení nese jiný tvar a má vlastní pravidla. Vytáhnout komponentu
+s jediným uživatelem je práce pro práci, takže se to nestaví — a až ten
+tvar bude potřebovat rozhraní závodníka, bude to zase ze dvou míst a důvod
+se vrátí.
+
+---
+
 ## Prověření scénáři
 
 `SCENARE-OVLADANI.md` má 37 scénářů ovládání. Návrh se jimi dá prověřit
