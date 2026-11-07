@@ -127,9 +127,43 @@ function nachystejZavodnika(data: Record<string, unknown>): void {
     zavodNazev: z.nazev,
     lod: z.lode?.[0]?.lod ?? 'JOY',
     kategorie: z.lode?.[0]?.kategorie ?? null,
+    // Plachetní číslo a telefony na lodi (zbytek R34). Ukázka je musí
+    // nést, jinak by karta „Telefony na lodi" v ní nikdy nebyla vidět —
+    // a právě ta je na té obrazovce nová.
+    cisloPlachty: 'CZE 142',
+    posadka: [
+      {
+        jmeno: 'Svoboda',
+        ja: true,
+        baterieProcent: 78,
+        ozvalSeV: new Date(Date.now() - 8_000).toISOString(),
+        vysila: true,
+      },
+      {
+        jmeno: 'Nováková',
+        ja: false,
+        baterieProcent: 41,
+        ozvalSeV: new Date(Date.now() - 3 * 60_000).toISOString(),
+        vysila: true,
+      },
+      // Třetí se nehlásí — na břehu je to ta řádka, kvůli které karta
+      // existuje. S třemi vysílajícími by ukázka tvrdila, že se nic
+      // zajímavého stát nemůže.
+      {
+        jmeno: 'Dvořák',
+        ja: false,
+        baterieProcent: null,
+        ozvalSeV: new Date(Date.now() - 12 * 60_000).toISOString(),
+        vysila: false,
+      },
+    ],
     rozjizdka: r?.cislo ?? null,
     stavRozjizdky: r?.stav ?? null,
     startV: r?.startV ?? null,
+    // T−20 proti času startu, jak ho počítá server (`Klice.Hlaseni`).
+    nahravatOd: r?.startV
+      ? new Date(Date.parse(r.startV) - 20 * 60_000).toISOString()
+      : null,
     // <b>Ukázka musí obrazovku ukázat celou.</b> S prázdným `stavLodi`
     // a `pokyny` zbyl na obrazovce pruh a jméno lodi, a nebylo z čeho
     // poznat, k čemu je (Filip, 7. 11. 2026: *„nerozumím téhle

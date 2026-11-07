@@ -201,14 +201,9 @@ export default function Zavodnik() {
           ) : null}
         </View>
 
-        {/* <b>Seznam telefonů, ne lidí na palubě.</b> Kdo tu chybí, loď má
-            — jen se jeho telefon nehlásí. Kontroluje se to na břehu, kde
-            se s tím ještě dá něco udělat. */}
-        {data.posadka.length > 0 ? (
-          <Text style={{ color: t.tlumeny, fontSize: 13, marginTop: 6 }}>
-            Klíč má: {data.posadka.join(', ')}
-          </Text>
-        ) : null}
+        {/* Kdo z posádky má klíč, stojí v kartě *Telefony na lodi* —
+            tam je u každého i to, jestli vysílá a kolik má baterie. Dva
+            seznamy téhož by se lišily jen tím, co zamlčí. */}
       </Karta>
 
       <StavTelefonu nahravatOd={data.nahravatOd} posadka={data.posadka} />
@@ -373,34 +368,42 @@ function StavTelefonu({
       {/* <b>„Komise tě vidí"</b> podle návrhu (`Zavodnik.dc.html`). Tohle
           je jediná věta na obrazovce, kterou neříká appka o sobě, nýbrž
           server o ní — a je to ta, na kterou se posádka ptá. */}
-      {ja ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-          <View
-            style={{
-              width: 10,
-              height: 10,
-              borderRadius: 999,
-              backgroundColor: ja.vysila ? t.stavVypsany : t.vystraha,
-              marginRight: 9,
-            }}
-          />
-          <Text style={{ color: t.text, fontWeight: '700', flex: 1 }}>
-            {ja.vysila ? 'Komise tě vidí' : 'Komise tě nevidí'}
-          </Text>
+      {/* <b>Jeden puntík, ne dva.</b> Napoprvé tu stály dvě barevné řádky
+          nad sebou — *„Komise tě vidí"* zeleně a hned pod tím *„Nehlásí
+          se"* červeně — a na simulátoru se to 7. 11. 2026 četlo jako
+          protimluv. Jsou to dvě různé otázky (co ví server × co dělá
+          telefon), ale posádka se ptá na tu první; ta druhá je vysvětlení
+          k ní, ne druhý stav. */}
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View
+          style={{
+            width: 10,
+            height: 10,
+            borderRadius: 999,
+            backgroundColor: ja ? (ja.vysila ? t.stavVypsany : t.vystraha) : barva,
+            marginRight: 9,
+          }}
+        />
+        <Text style={{ color: t.text, fontWeight: '700', flex: 1 }}>
+          {ja ? (ja.vysila ? 'Komise tě vidí' : 'Komise tě nevidí') : veta}
+        </Text>
+        {ja ? (
           <Text style={{ color: t.tlumeny, fontSize: 12 }}>
             {ja.ozvalSeV === null
               ? 'zatím nikdy'
               : predJakDlouho(Date.now() - Date.parse(ja.ozvalSeV))}
           </Text>
-        </View>
-      ) : null}
-
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <View
-          style={{ width: 10, height: 10, borderRadius: 999, backgroundColor: barva, marginRight: 9 }}
-        />
-        <Text style={{ color: t.text, fontWeight: '700', flex: 1 }}>{veta}</Text>
+        ) : null}
       </View>
+
+      {/* Co dělá tenhle telefon — jen když je co říct vedle toho, co už
+          stojí výš. */}
+      {ja ? (
+        <Text style={{ color: t.tlumeny, fontSize: 13, marginTop: 6 }}>
+          {veta}
+          {nahrava || hlasi ? '' : ' · nikdo tu záznam nezapnul'}
+        </Text>
+      ) : null}
 
       {nahrava ? (
         <Text style={{ color: t.tlumeny, fontSize: 13, marginTop: 6 }}>
@@ -548,9 +551,9 @@ function TelefonyNaLodi({ posadka }: { posadka: readonly ClenPosadky[] }) {
         </Text>
         <Text
           style={{ color: t.text, fontSize: 13, fontWeight: '700', marginLeft: 'auto' }}>
-          {vysila === posadka.length
-            ? `${vysila} z ${posadka.length} vysílá${posadka.length > 1 ? 'jí' : ''}`
-            : `${vysila} ze ${posadka.length} vysílá${vysila > 1 ? 'jí' : ''}`}
+          {/* „vysílá" a „vysílají", ne „vysílá" + „jí": na simulátoru se
+              7. 11. 2026 četlo *„2 ze 3 vysílájí"*. */}
+          {`${vysila} ze ${posadka.length} ${vysila === 1 ? 'vysílá' : 'vysílají'}`}
         </Text>
       </View>
 
