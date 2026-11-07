@@ -158,6 +158,31 @@ testyAsync.push(['po zapnutí čeká rozjížďka, která startuje za deset minu
   assert.equal(cerstva.stav, 'Planovana');
 }]);
 
+testyAsync.push(['regata je v kalendáři vidět jako dnešní, ne jako odjetá', async () => {
+  // Posunout rozjížďku nestačí: ve snímku jsou všechny regaty odjeté,
+  // takže by u téhle v kalendáři stál štítek „odjeto" a datum ze září —
+  // a nikdo by dovnitř nešel hledat odpočet.
+  zapniUkazku();
+  const dnes = new Date().toISOString().slice(0, 10);
+  const z = (await odpoved('/serie/2026-nanecisto/zavody/izolepa')).telo;
+  assert.equal(z.stav, 'Vypsany');
+  assert.equal(z.datum, dnes);
+
+  const vKalendari = (await odpoved('/serie/2026-nanecisto')).telo
+    .zavody.find((x: any) => x.slug === 'izolepa');
+  assert.equal(vKalendari.stav, 'Vypsany', 'kalendář ročníku si drží vlastní kopii');
+  assert.equal(vKalendari.datum, dnes);
+}]);
+
+testyAsync.push(['ostatní regaty zůstávají odjeté', async () => {
+  // Kdyby se posunuly všechny, zmizela by z ukázky historie — a ta je
+  // půlka toho, co má ukázat.
+  zapniUkazku();
+  const zavody = (await odpoved('/serie/2026-nanecisto')).telo.zavody;
+  const odjete = zavody.filter((x: any) => x.stav === 'Odjety');
+  assert.ok(odjete.length >= 5, `odjetých zbylo jen ${odjete.length}`);
+}]);
+
 testyAsync.push(['procedura v tu chvíli ještě neběží — dá se spustit celá', async () => {
   // Deset minut do startu a procedura dlouhá pět: panel tedy nabízí
   // „Spustit startovní proceduru". Kdyby byl náskok kratší než procedura,

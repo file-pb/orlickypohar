@@ -94,6 +94,26 @@ function nachystejStart(data: Record<string, unknown>): void {
     doSerie: true,
     vysledky: [],
   } as S['RozjizdkaDto']);
+
+  // <b>Posunout rozjížďku nestačí, musí se posunout i regata.</b> Ve
+  // snímku jsou všechny odjeté, takže v kalendáři ročníku by u téhle
+  // stál štítek *odjeto* a datum ze září — a nikdo by dovnitř nešel
+  // hledat odpočet, který se tam za chvíli rozběhne. Nalezeno zkouškou
+  // v simulátoru 7. 11. 2026.
+  const dnes = new Date().toISOString().slice(0, 10);
+  z.stav = 'Vypsany';
+  z.datum = dnes;
+  z.datumKonce = null;
+
+  // Kalendář ročníku má vlastní kopii téhož; kdyby se změnila jen jedna,
+  // obrazovky by si odporovaly.
+  const serie = data[`/serie/${kde.serie}`] as S['SerieDetailDto'] | undefined;
+  const vKalendari = serie?.zavody?.find((x) => x.slug === kde.zavod);
+  if (vKalendari) {
+    vKalendari.stav = 'Vypsany';
+    vKalendari.datum = dnes;
+    vKalendari.datumKonce = null;
+  }
 }
 
 export function zapniUkazku(): void {

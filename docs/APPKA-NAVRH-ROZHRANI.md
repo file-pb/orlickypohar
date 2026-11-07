@@ -551,6 +551,15 @@ a za týden by zestaral; `teď + 10 minut` platí vždycky. Rozjížďka se
 **přidává**, odjeté zůstávají: ty jsou ty *různé stavy*, dokončená
 s výsledky vedle čerstvé, která se teprve rozbíhá.
 
+**Posunout rozjížďku nestačilo, musí se posunout i regata.** Zjištěno
+zkouškou v simulátoru 7. 11. 2026: v kalendáři ročníku stál u té regaty
+štítek *odjeto* a datum ze září, takže dovnitř by nikdo nešel hledat
+odpočet, který se tam za chvíli rozběhne. Scéna proto nastaví i stav
+regaty na *vypsáno* a datum na dnešek — a **na dvou místech**, protože
+kalendář ročníku si drží vlastní kopii. Ostatní regaty zůstávají odjeté;
+kdyby se posunuly všechny, zmizela by z ukázky historie, a ta je druhá
+půlka toho, co má ukázat.
+
 **Zápisy nemizí, mění snímek v paměti.** Ohlásit rozjížďku, spustit
 proceduru, odložit, odvolat, odstartovat, ukončit — všechno funguje
 a odpočet běží z hodin telefonu jako doopravdy. Kdyby se zápisy jen
