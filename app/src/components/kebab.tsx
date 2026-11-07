@@ -32,7 +32,7 @@ const KAM: { text: string; cil: string; popis?: string }[] = [
 
 const WEB = 'https://orlickypohar.klihovka.cz';
 
-export function Kebab({ vedle }: { vedle?: React.ReactNode }) {
+export function Kebab() {
   const t = useTheme();
   const router = useRouter();
   const okraje = useSafeAreaInsets();
@@ -48,22 +48,14 @@ export function Kebab({ vedle }: { vedle?: React.ReactNode }) {
 
   return (
     <>
-      {/* <b>S `vedle` otevírá nabídku celý řádek</b> (Filip, 7. 11. 2026:
-          *„klidně celý řádek"*). Tři tečky jsou pak jen značka, kde to
-          je — klepnout jde i na ikonu a jméno, což je na lodi terč přes
-          celou šířku místo rohu o straně 44 pt. Bez `vedle` zůstává
-          kebab tím, čím byl: samotným terčem. */}
       <Pressable
         onPress={() => setOtevreno(true)}
         accessibilityRole="button"
         accessibilityLabel="Nabídka"
-        style={({ pressed }) => [vedle ? s.radek : s.terc, pressed && { opacity: 0.5 }]}>
-        {vedle}
-        <View style={vedle ? s.tecky : undefined}>
-          <View style={[s.tecka, { backgroundColor: t.tlumeny }]} />
-          <View style={[s.tecka, { backgroundColor: t.tlumeny }]} />
-          <View style={[s.tecka, { backgroundColor: t.tlumeny }]} />
-        </View>
+        style={({ pressed }) => [s.terc, pressed && { opacity: 0.5 }]}>
+        <View style={[s.tecka, { backgroundColor: t.tlumeny }]} />
+        <View style={[s.tecka, { backgroundColor: t.tlumeny }]} />
+        <View style={[s.tecka, { backgroundColor: t.tlumeny }]} />
       </Pressable>
 
       <Modal
@@ -125,10 +117,6 @@ export function Kebab({ vedle }: { vedle?: React.ReactNode }) {
 }
 
 const s = StyleSheet.create({
-  // Celý řádek jako klepací místo. `minHeight` drží mez i tehdy, když je
-  // obsah vedle teček nižší než 44 pt.
-  radek: { flexDirection: 'row', alignItems: 'center', minHeight: 44, flex: 1 },
-  tecky: { width: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   // Terč je 44 pt, tečky uvnitř mají dohromady 16.
   terc: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', gap: 3 },
   tecka: { width: 4, height: 4, borderRadius: 2 },
