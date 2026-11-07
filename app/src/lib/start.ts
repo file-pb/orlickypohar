@@ -185,12 +185,25 @@ export function stavStartu(
  * stejný výsledek kdekoli. Totéž dělá tabule.
  */
 export function zacatekProcedury(startV: string, delkaS: number = PROCEDURA_S): string {
-  const zacatek = Date.parse(startV) - delkaS * 1000;
+  return hodina(Date.parse(startV) - delkaS * 1000);
+}
+
+/**
+ * <b>Hodina startu</b>, jak ji kreslí návrh — „start ve 14:00" v panelu
+ * čekání i „start 14:00" v rohu odpočtu. Odpočet říká, za jak dlouho;
+ * tohle říká, na kolik. Rozhodčí to druhé potrřebuje, protože se podle
+ * něj domlouvá s ostatními na břehu, ne podle zbývajících vteřin.
+ */
+export function casStartu(startV: string): string {
+  return hodina(Date.parse(startV));
+}
+
+function hodina(kdy: number): string {
   return new Intl.DateTimeFormat('cs-CZ', {
     hour: '2-digit',
     minute: '2-digit',
     timeZone: 'Europe/Prague',
-  }).format(new Date(zacatek));
+  }).format(new Date(kdy));
 }
 
 /**

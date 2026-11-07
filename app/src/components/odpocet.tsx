@@ -27,6 +27,7 @@ import {
   stavStartu,
   ukonyStartu,
   usekyProcedury,
+  casStartu,
   zacatekProcedury,
   type RozjizdkaProOdpocet,
   type StavStartu,
@@ -634,6 +635,16 @@ function Ceka({
           : `Procedura začne ve ${zacatekProcedury(stav.startV, delkaS)}`}
       </Text>
 
+      {/* <b>Čas startu a to, že se o odpočet nikdo nemusí starat</b> —
+          oboje kreslí návrh (`Ceka.dc.html`) a oboje chybělo. Rozhodčí
+          se podle hodiny domlouvá s ostatními; bez té věty o odpočtu
+          navíc nevidí, jestli se má k panelu ještě vracet. */}
+      {stav.druh === 'ceka' ? (
+        <Text style={[s.pripominka, { color: t.tlumeny }]}>
+          start ve {casStartu(stav.startV)} · odpočet naskočí sám
+        </Text>
+      ) : null}
+
       {/* Po odložení musí být z obrazovky poznat, odkud se vezme nový
           čas — jinak rozhodčí hledá, kde se zadává, a zadat se nikde
           nedá: vezme se z chvíle, kdy zmáčkne. */}
@@ -784,6 +795,12 @@ function Bezi({
       <View style={s.hlava}>
         <Text style={[s.radek, { color: pismo }]}>
           Rozjížďka {stav.cislo} {minuta ? '— poslední minuta' : 'startuje'}
+        </Text>
+        {/* Návrh (`Main.dc.html`) má hodinu startu v pravém rohu panelu.
+            Odpočet říká za jak dlouho, tohle na kolik — a to druhé je
+            to, co rozhodčí říká do megafonu. */}
+        <Text style={[s.radek, s.tlumeneNaVyplni, { color: pismo }]}>
+          start {casStartu(stav.startV)}
         </Text>
       </View>
 
