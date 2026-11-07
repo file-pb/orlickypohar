@@ -4,6 +4,7 @@ import { useColorScheme, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BannerAktualizace } from '@/components/banner-aktualizace';
+import { Kebab } from '@/components/kebab';
 import { ProuzekSpojeni, useProuzek } from '@/components/prouzek-spojeni';
 import { Colors } from '@/constants/theme';
 import { jas, pismoNaVyplni } from '@/lib/kontrast';
@@ -64,15 +65,25 @@ function Obsah() {
           paddingTop: prouzek ? 0 : okraje.top,
         }}>
       <ProuzekSpojeni prouzek={prouzek} />
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: t.papir },
-          headerTintColor: t.voda,
-          headerTitleStyle: { color: t.text },
-          contentStyle: { backgroundColor: t.pozadi },
-          headerShown: false,
-        }}
-      />
+      {/* <b>Nabídka leží nad celým zásobníkem</b> (Filip, 7. 11. 2026:
+          *„odevšad se musím umět vrátit na landing"*). Dokud seděla jen
+          na domovské obrazovce, vedla cesta zpátky jedině gestem — a
+          z cíle rozjížďky je to gest několik. Teď je na každé obrazovce
+          na témže místě a první položkou v ní je *Domů*. */}
+      <View style={{ flex: 1 }}>
+        <Stack
+          screenOptions={{
+            headerStyle: { backgroundColor: t.papir },
+            headerTintColor: t.voda,
+            headerTitleStyle: { color: t.text },
+            contentStyle: { backgroundColor: t.pozadi },
+            headerShown: false,
+          }}
+        />
+        <View style={{ position: 'absolute', top: 16, right: 12, zIndex: 10 }}>
+          <Kebab />
+        </View>
+      </View>
       {/* Až za `Stack`, aby ležel nad obsahem; sám se stará o to, kdy a jak
           dlouho je vidět. */}
       <BannerAktualizace />

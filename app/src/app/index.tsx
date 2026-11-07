@@ -1,6 +1,5 @@
 import { Image, Text, useWindowDimensions, View } from 'react-native';
 
-import { Kebab } from '@/components/kebab';
 import { Znacka } from '@/components/znacka';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -35,7 +34,7 @@ export default function Domu() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.pozadi, padding: 16 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingRight: 44 }}>
         <Image
           source={require('../../assets/images/icon.png')}
           style={{ width: 44, height: 44, borderRadius: 10 }}
@@ -47,7 +46,8 @@ export default function Domu() {
           </Text>
           <Text style={{ color: t.tlumeny, fontSize: 13 }}>Plachetnice na Orlické přehradě</Text>
         </View>
-        <Kebab />
+        {/* Nabídka tu nestojí: leží nad celým zásobníkem (`_layout.tsx`),
+            takže je na každé obrazovce na stejném místě. */}
       </View>
 
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>

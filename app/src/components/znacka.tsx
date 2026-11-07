@@ -15,11 +15,11 @@ const AnimovanyG = Animated.createAnimatedComponent(G);
  * je u velitelského času věc, o které se tu vede záznam. Tři průlety při
  * otevření obrazovky efekt ukážou a pak je ticho.
  */
-const PRULET_MS = 1600;
+const PRULET_MS = 2800;
 const PRULETU = 3;
 
 /** Pauza mezi průlety, ať nejdou jeden za druhým jako blikání. */
-const PAUZA_MS = 900;
+const PAUZA_MS = 1100;
 
 /**
  * Značka poháru, jak ji nese web.
@@ -86,9 +86,9 @@ export function Znacka({
       <Defs>
         <LinearGradient id="odlesk" x1="0" y1="0" x2="1" y2="0">
           <Stop offset="0" stopColor="#ffffff" stopOpacity="0" />
-          <Stop offset="0.45" stopColor="#ffffff" stopOpacity="0" />
-          <Stop offset="0.5" stopColor="#ffffff" stopOpacity="0.9" />
-          <Stop offset="0.55" stopColor="#ffffff" stopOpacity="0" />
+          <Stop offset="0.38" stopColor="#ffffff" stopOpacity="0" />
+          <Stop offset="0.5" stopColor="#ffffff" stopOpacity="0.45" />
+          <Stop offset="0.62" stopColor="#ffffff" stopOpacity="0" />
           <Stop offset="1" stopColor="#ffffff" stopOpacity="0" />
         </LinearGradient>
         <Mask id="tvar">

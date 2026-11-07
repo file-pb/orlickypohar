@@ -23,6 +23,11 @@ import { ukazkaBezi, vypniUkazku, zapniUkazku } from '@/lib/ukazka';
 
 /** Kam se dá odsud jít. Pořadí je podle toho, jak často se tam chodí. */
 const KAM: { text: string; cil: string; popis?: string }[] = [
+  // <b>Domů musí být v nabídce</b> (Filip, 7. 11. 2026: *„hele jak se
+  // budu dostávat zpět na landing?"*). Hlavička se nekreslí, takže
+  // jediná cesta zpátky bylo gesto — a z cíle rozjížďky je to gest
+  // několik. Nabídka je na každé obrazovce, tak ať vede i domů.
+  { text: 'Domů', cil: '/', popis: 'úvodní obrazovka' },
   { text: 'Ročníky', cil: '/rocniky', popis: 'kalendář, výsledky, pořadí' },
   { text: 'Moje lodě a posádka', cil: '/lode' },
   { text: 'Klíč k lodi', cil: '/klic' },
@@ -43,7 +48,11 @@ export function Kebab() {
   // obrazovkou, na kterou se právě přešlo.
   const jdi = (cil: string) => {
     setOtevreno(false);
-    router.push(cil as Parameters<typeof router.push>[0]);
+    // <b>Domů se nevrší, nahrazuje.</b> `push` by z páté obrazovky
+    // udělal šestou a gesto zpět by vedlo tam, odkud člověk právě utekl;
+    // `navigate` na kořen zásobník srovná.
+    if (cil === '/') router.navigate('/');
+    else router.push(cil as Parameters<typeof router.push>[0]);
   };
 
   return (
