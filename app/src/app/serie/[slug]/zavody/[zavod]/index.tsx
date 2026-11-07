@@ -1,7 +1,8 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { AppState, Modal, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
+import { Baterie } from '@/components/baterie';
 import { Odpocet } from '@/components/odpocet';
 import { Radek } from '@/components/ui';
 import {
@@ -35,6 +36,7 @@ import {
   type ZavodDetail,
 } from '@/lib/api';
 import { veliNekde } from '@/lib/role';
+import { baterieProcent, obnovBaterii } from '@/lib/tracker/baterie';
 import {
   nactiCekajici,
   platnyUkon,
@@ -305,6 +307,18 @@ export default function Zastavka() {
             {rozsah(data.datum, data.datumKonce)}
             {data.poradatel ? ` · pořádá ${data.poradatel}` : ''}
           </Text>
+
+          {/* <b>Hodiny a baterie v hlavičce</b>, jak je kreslí návrh
+              (`Jede.dc.html`). Jen tomu, kdo velí: čtenáři regaty je
+              jedno, kolik je a kolik má telefon.
+
+              Hodiny proto, že rozhodčí se podle nich domlouvá s ostatními
+              a odpočet mu říká jen „za jak dlouho". Baterie proto, že
+              startovní procedura na vybitém telefonu je jediná věc, kterou
+              appka nedohoní — a je to <b>vlastní</b> baterie, tedy ta
+              výjimka z pravidla, že si ji uživatel vidí nativně: ruku má
+              na houkačce a do stavového řádku se nekouká. */}
+          {veliNekde(ja ?? null) ? <HlavickaVelitele /> : null}
 
           {/* Panel startu se ukáže sám, jen když se zrovna startuje nebo jede.
               Jindy nevykreslí nic — stránka regaty tím zůstává tím, čím je. */}
@@ -612,5 +626,77 @@ function PrihlaseneLode({ lode }: { lode: UcastLodi[] }) {
         </>
       ) : null}
     </>
+  );
+}
+
+/**
+ * Hodiny s vteřinami a stav vlastní baterie — pruh pro toho, kdo velí
+ * (návrh `Jede.dc.html`).
+ *
+ * <b>Baterie se čte po minutě, hodiny po vteřině.</b> Procenta se mění po
+ * hodinách, takže častější čtení by byla práce pro nic; a `expo-battery`
+ * se ptá systému, což není zdarma.
+ *
+ * <b>Chybějící baterie se nekreslí.</b> V simulátoru vrací `expo-battery`
+ * minus jedničku a prázdný obrys by vypadal jako vybitý telefon.
+ */
+function HlavickaVelitele() {
+  const t = useTheme();
+  const [ted, setTed] = useState(() => Date.now());
+  const [baterie, setBaterie] = useState<number | null>(null);
+
+  useEffect(() => {
+    const precti = () => {
+      obnovBaterii();
+      setBaterie(baterieProcent());
+    };
+    precti();
+    const hodiny = setInterval(() => setTed(Date.now()), 1000);
+    const proud = setInterval(precti, 60_000);
+    const posluchac = AppState.addEventListener('change', (stav) => {
+      if (stav === 'active') {
+        setTed(Date.now());
+        precti();
+      }
+    });
+    return () => {
+      clearInterval(hodiny);
+      clearInterval(proud);
+      posluchac.remove();
+    };
+  }, []);
+
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginTop: -2,
+        marginBottom: 12,
+      }}>
+      {baterie !== null ? (
+        <>
+          <Baterie procent={baterie} t={t} />
+          <Text style={{ color: t.tlumeny, fontSize: 12, fontVariant: ['tabular-nums'] }}>
+            {baterie} %
+          </Text>
+        </>
+      ) : null}
+      <Text
+        style={{
+          color: t.text,
+          fontSize: 17,
+          fontWeight: '700',
+          marginLeft: 'auto',
+          fontVariant: ['tabular-nums'],
+        }}>
+        {new Date(ted).toLocaleTimeString('cs-CZ', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+        })}
+      </Text>
+    </View>
   );
 }
