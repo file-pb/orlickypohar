@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AppState, Modal, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -20,6 +20,9 @@ import { useData } from '@/hooks/use-data';
 import { useTheme } from '@/hooks/use-theme';
 import {
   nactiJa,
+  nactiPolohy,
+  nactiVeleni,
+  prevezmiVeleni,
   nactiZavod,
   nactiZapis,
   type ZapisLod,
@@ -33,9 +36,11 @@ import {
   provedProceduru,
   zapisPredcasnyStart,
   type UcastLodi,
+  type Veleni,
   type VysledekZavodu,
   type ZavodDetail,
 } from '@/lib/api';
+import { pismoNaVyplni } from '@/lib/kontrast';
 import { veliNekde } from '@/lib/role';
 import { baterieProcent, obnovBaterii } from '@/lib/tracker/baterie';
 import {
@@ -56,6 +61,16 @@ import { body } from '@/lib/body';
  * telefon, který musí vydržet celý závodní den.
  */
 const POKUS_MS = 10_000;
+
+/**
+ * Jak často se velitel ptá, kolik lodí vysílá polohu.
+ *
+ * Patnáct vteřin. Server si snímek drží pět v cache (popis endpointu
+ * `/polohy`), takže častější dotaz by byl dotaz o tomtéž — a odpověď
+ * stárne pomaleji než odpočet: že loď přestala vysílat, se pozná podle
+ * stáří polohy, ne podle vteřiny dotazu.
+ */
+const POLOHY_MS = 15_000;
 
 export default function Zastavka() {
   const { slug, zavod } = useLocalSearchParams<{ slug: string; zavod: string }>();
@@ -115,6 +130,42 @@ export default function Zastavka() {
    * ani velitel mezi rozjížďkami o nic nepřijdou.
    */
   const uVody = veliNekde(ja ?? null) && cisloVPanelu !== null;
+
+  // <b>Kolik lodí vysílá polohu</b> — řádek v panelu startu z návrhu.
+  // Ptá se jen velitel a jen tehdy, když panel něco drží: čtenáři regaty
+  // je to jedno a endpoint je navíc pod `/sprava`.
+  //
+  // Patnáct vteřin: server si snímek drží pět v cache, takže častější
+  // dotaz by byl dotaz o tomtéž, a odpověď stárne pomaleji než odpočet.
+  const [polohy, setPolohy] = useState<{ vysila: number; celkem: number } | null>(null);
+  useEffect(() => {
+    if (!uVody) {
+      setPolohy(null);
+      return;
+    }
+    let zivy = true;
+    const nacti = async () => {
+      try {
+        const s = await nactiPolohy(slug, zavod);
+        if (!zivy || !s) return;
+        // „Vysílá" je čerstvá poloha, ne jakákoliv: loď, která se ozvala
+        // naposledy před deseti minutami, nevysílá — a právě na tu se
+        // rozhodčí ptá.
+        setPolohy({
+          vysila: s.lode.filter((l) => l.stav === 'Cerstva').length,
+          celkem: s.lode.length,
+        });
+      } catch {
+        // Trackování je pomůcka, ne podmínka startu. Mlčky dál.
+      }
+    };
+    void nacti();
+    const id = setInterval(() => void nacti(), POLOHY_MS);
+    return () => {
+      zivy = false;
+      clearInterval(id);
+    };
+  }, [uVody, slug, zavod]);
 
   const zapisVykonani = async (trest: number) => {
     if (cisloVPanelu === null) return;
@@ -342,7 +393,7 @@ export default function Zastavka() {
               appka nedohoní — a je to <b>vlastní</b> baterie, tedy ta
               výjimka z pravidla, že si ji uživatel vidí nativně: ruku má
               na houkačce a do stavového řádku se nekouká. */}
-          {veliNekde(ja ?? null) ? <HlavickaVelitele /> : null}
+          {veliNekde(ja ?? null) ? <HlavickaVelitele serie={slug} zavod={zavod} /> : null}
 
           {/* Panel startu se ukáže sám, jen když se zrovna startuje nebo jede.
               Jindy nevykreslí nic — stránka regaty tím zůstává tím, čím je. */}
@@ -371,6 +422,7 @@ export default function Zastavka() {
             }
             chyba={chybaStartu}
             nedoslano={ceka !== null}
+            polohy={polohy}
           />
 
           {uVody ? null : data.vysledkySkryte ? (
@@ -673,10 +725,30 @@ function PrihlaseneLode({ lode }: { lode: UcastLodi[] }) {
  * <b>Chybějící baterie se nekreslí.</b> V simulátoru vrací `expo-battery`
  * minus jedničku a prázdný obrys by vypadal jako vybitý telefon.
  */
-function HlavickaVelitele() {
+function HlavickaVelitele({ serie, zavod }: { serie: string; zavod: string }) {
   const t = useTheme();
   const [ted, setTed] = useState(() => Date.now());
   const [baterie, setBaterie] = useState<number | null>(null);
+
+  // <b>Kdo drží start.</b> Ptá se při otevření obrazovky, ne jednou při
+  // startu appky: velení mohl mezitím někdo převzít a telefon, který to
+  // neví, by odesílal úkony, které server zahodí (nález R19).
+  const [veleni, setVeleni] = useState<Veleni | null>(null);
+  const [ptaSe, setPtaSe] = useState(false);
+  const [bere, setBere] = useState(false);
+  const [chyba, setChyba] = useState<string | null>(null);
+
+  const zjisti = useCallback(async () => {
+    try {
+      setVeleni(await nactiVeleni(serie, zavod));
+    } catch {
+      // Kdo velí, je doplněk k panelu, ne podmínka startu.
+    }
+  }, [serie, zavod]);
+
+  useEffect(() => {
+    void zjisti();
+  }, [zjisti]);
 
   useEffect(() => {
     const precti = () => {
@@ -708,14 +780,57 @@ function HlavickaVelitele() {
         marginTop: -2,
         marginBottom: 12,
       }}>
-      {baterie !== null ? (
-        <>
-          <Baterie procent={baterie} t={t} />
-          <Text style={{ color: t.tlumeny, fontSize: 12, fontVariant: ['tabular-nums'] }}>
-            {baterie} %
-          </Text>
-        </>
-      ) : null}
+      {/* <b>Pilulka s velením a baterií</b>, jak ji kreslí každý artboard
+          rozhodčího. V návrhu nese popisek *„předat velení"*; server to
+          ale podle nálezu R19 umí obráceně — velení si <b>vyžádá</b> ten,
+          kdo ho chce, a dát ho někomu jinému nejde. Tlačítko tedy říká,
+          co se doopravdy stane: kdo velí, to jen vidí; kdo nevelí, může
+          si velení vzít. */}
+      <Pressable
+        onPress={() => {
+          setChyba(null);
+          setPtaSe(true);
+        }}
+        accessibilityRole="button"
+        accessibilityLabel={
+          veleni?.jsemTo
+            ? `Velíš ty${baterie !== null ? `, baterie ${baterie} procent` : ''}`
+            : `Velí ${veleni?.jmeno ?? 'zatím nikdo'} — převzít velení`
+        }
+        style={({ pressed }) => ({
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 6,
+          minHeight: 44,
+          paddingHorizontal: 10,
+          borderWidth: 1,
+          borderColor: veleni?.jsemTo ? t.linka : t.vystraha,
+          borderRadius: 999,
+          opacity: pressed ? 0.6 : 1,
+        })}>
+        {baterie !== null ? (
+          <>
+            <Baterie procent={baterie} t={t} />
+            <Text style={{ color: t.tlumeny, fontSize: 12, fontVariant: ['tabular-nums'] }}>
+              {baterie} %
+            </Text>
+          </>
+        ) : null}
+        <Text
+          style={{
+            color: veleni?.jsemTo ? t.tlumeny : t.vystraha,
+            fontSize: 12,
+            fontWeight: '700',
+          }}
+          numberOfLines={1}>
+          {veleni === null
+            ? 'velení…'
+            : veleni.jsemTo
+              ? 'velíš ty'
+              : `velí ${veleni.jmeno ?? 'někdo jiný'}`}
+        </Text>
+      </Pressable>
+
       <Text
         style={{
           color: t.text,
@@ -730,6 +845,89 @@ function HlavickaVelitele() {
           second: '2-digit',
         })}
       </Text>
+
+      <Modal
+        visible={ptaSe}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPtaSe(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: t.papir, borderRadius: 14, padding: 20, gap: 12 }}>
+            <Text style={{ color: t.text, fontSize: 18, fontWeight: '800' }}>
+              {veleni?.jsemTo ? 'Velíš ty' : 'Převzít velení?'}
+            </Text>
+            <Text style={{ color: t.tlumeny, fontSize: 15, lineHeight: 21 }}>
+              {veleni?.jsemTo
+                ? 'Hlas, klakson a odpočet drží tenhle telefon. Jiný telefon si '
+                  + 'velení může vzít — tenhle se to dozví, až se zeptá serveru.'
+                : `Startovní proceduru pak drží tenhle telefon a ${veleni?.jmeno ?? 'ten druhý'} `
+                  + 'o velení přijde. Hlavní je vždycky jeden; server to hlídá.'}
+            </Text>
+            {chyba ? (
+              <Text style={{ color: t.stavZruseny, fontSize: 15 }}>{chyba}</Text>
+            ) : null}
+
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+              <Pressable
+                onPress={() => setPtaSe(false)}
+                disabled={bere}
+                style={({ pressed }) => ({
+                  flex: 1,
+                  minHeight: 48,
+                  borderWidth: 1,
+                  borderColor: t.linka,
+                  borderRadius: 10,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: pressed ? 0.6 : 1,
+                })}>
+                <Text style={{ color: t.text, fontWeight: '700', fontSize: 15 }}>
+                  {veleni?.jsemTo ? 'Zavřít' : 'Zpátky'}
+                </Text>
+              </Pressable>
+
+              {veleni?.jsemTo ? null : (
+                <Pressable
+                  onPress={async () => {
+                    if (bere) return;
+                    setBere(true);
+                    setChyba(null);
+                    try {
+                      setVeleni(await prevezmiVeleni(serie, zavod));
+                      setPtaSe(false);
+                    } catch (e) {
+                      setChyba(
+                        e instanceof OdmitnutoServerem && e.duvod
+                          ? e.duvod
+                          : 'Nepovedlo se převzít velení. Zkus to prosím znovu.',
+                      );
+                    } finally {
+                      setBere(false);
+                    }
+                  }}
+                  style={({ pressed }) => ({
+                    flex: 1,
+                    minHeight: 48,
+                    backgroundColor: t.voda,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: pressed || bere ? 0.6 : 1,
+                  })}>
+                  <Text
+                    style={{
+                      color: pismoNaVyplni(t, t.voda),
+                      fontWeight: '700',
+                      fontSize: 15,
+                    }}>
+                    {bere ? 'Beru…' : 'Převzít'}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

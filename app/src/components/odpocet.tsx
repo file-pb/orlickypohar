@@ -79,6 +79,7 @@ export function Odpocet({
   naCasStartu,
   chyba,
   nedoslano,
+  polohy,
 }: {
   rozjizdky: readonly RozjizdkaProOdpocet[];
   delkaProceduryMin?: number;
@@ -89,6 +90,11 @@ export function Odpocet({
    * říct: mlčící fronta vypadá jako hotová věc.
    */
   nedoslano?: boolean;
+  /**
+   * Kolik lodí regaty zrovna vysílá polohu a kolik jich je celkem.
+   * `null`, dokud se to nenačetlo, nebo když se ptát nemá kdo.
+   */
+  polohy?: { vysila: number; celkem: number } | null;
   /**
    * Co udělat, když rozhodčí spustí proceduru. Chybí-li, tlačítko se
    * neukáže — obrazovku regaty čte i ten, kdo nevelí.
@@ -227,7 +233,7 @@ export function Odpocet({
     ) : stav.druh === 'odstartovano' ? (
       <Odstartovano stav={stav} t={t} />
     ) : (
-      <Bezi stav={stav} delkaS={delkaS} t={t} />
+      <Bezi stav={stav} delkaS={delkaS} t={t} polohy={polohy} />
     );
 
   // <b>Volby hned pod odpočtem</b> (Filip, 29. 10. 2026: *„hned pod
@@ -1057,10 +1063,12 @@ function Bezi({
   stav,
   delkaS,
   t,
+  polohy,
 }: {
   stav: Extract<StavStartu, { druh: 'procedura' }>;
   delkaS: number;
   t: Barvy;
+  polohy?: { vysila: number; celkem: number } | null;
 }) {
   const useky = usekyProcedury(stav.doStartuS, delkaS);
   const minuta = stav.doStartuS <= 60;
@@ -1144,6 +1152,34 @@ function Bezi({
           </View>
         ))}
       </View>
+
+      {/* <b>Trackuje nám celé pole?</b> Řádek z návrhu (`Main.dc.html`:
+          *„12 z 12 lodí vysílá polohu"*, bez signálu *„9 z 12"*).
+          Rozhodčí u startu jinak nepozná, že třem lodím vysílání
+          vypadlo — a dozví se to až z prázdné stopy po závodě.
+
+          Tečka mění barvu, ne jen číslo: na dálku a na slunci se čte
+          dřív než text (nález o velikosti a poloze z `Terce.dc.html`). */}
+      {polohy && polohy.celkem > 0 ? (
+        <View style={s.polohy}>
+          <View
+            style={[
+              s.tecka,
+              {
+                backgroundColor: barvaNaVyplni(
+                  t,
+                  pozadi,
+                  polohy.vysila === polohy.celkem ? t.jede : t.vystraha,
+                ),
+              },
+            ]}
+          />
+          <Text style={[s.radek, s.tlumeneNaVyplni, { color: pismo }]}>
+            {polohy.vysila} z {polohy.celkem}{' '}
+            {polohy.celkem === 1 ? 'lodi vysílá' : 'lodí vysílá'} polohu
+          </Text>
+        </View>
+      ) : null}
     </Animated.View>
   );
 }
@@ -1201,6 +1237,8 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   volbaHlavni: { borderColor: 'transparent' },
+  polohy: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 10 },
+  tecka: { width: 7, height: 7, borderRadius: 4 },
   // Zkratky odkladu: tři vedle sebe, každá přes mez terče.
   zkratky: { flexDirection: 'row', gap: 8 },
   zkratka: {

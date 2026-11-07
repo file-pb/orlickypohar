@@ -34,7 +34,7 @@
  * v `app.json`. Bez nich telefon v kapse mlčí, a tím padá celý nápad
  * (Filip tamtéž: *„telefon nemusí být na očích"*).
  */
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, Platform } from 'react-native';
 
 import { useAudioPlayer, setAudioModeAsync, setIsAudioActiveAsync } from 'expo-audio';
@@ -58,6 +58,62 @@ const KLAKSON = {
   kratce: require('../../assets/zvuky/klakson-kratky.wav'),
   dlouze: require('../../assets/zvuky/klakson-dlouhy.wav'),
 } as const;
+
+/**
+ * <b>Číslovky odpočtu jako nahrávky, ne syntéza.</b>
+ *
+ * Filip, 7. 11. 2026: *„odpočet je nepravidelný, někdy není sekunda jako
+ * sekunda. Tři dost často hlas divně prodlouží."* Obojí mělo svou
+ * příčinu a žádná nebyla v plánování:
+ *
+ * <ul>
+ *   <li><b>Začátek zvuku</b> ležel za probuzením zvukové relace a za
+ *       režií syntetizátoru, takže se posouval pokaždé jinak. Relace se
+ *       proto budí napřed (viz {@link PROBUZENI_PREDEM_MS}) a nahrávka
+ *       začne hrát hned.</li>
+ *   <li><b>Délka slova.</b> Každá číslovka byla samostatná jednoslovná
+ *       věta a syntetizátor na konci věty protahuje — u *„tři"*
+ *       nejvíc. Nahrávka má délku pevnou.</li>
+ * </ul>
+ *
+ * <b>Navíc zazní i bez českého hlasu v telefonu.</b> Appka dosud uměla
+ * jen varovat, že hlášení bude k nepoznání; odpočet, na kterém u vody
+ * záleží nejvíc, teď na tom hlasu nestojí.
+ *
+ * Vyrábí je `tools/zvuky-cislovek.py` týmž syntetizátorem, jaký by
+ * použil iOS, takže se od zbytku hlášení nepoznají. `assets/zvuky`
+ * nečte `@expo/fingerprint`, takže nové soubory dojdou do vydaných
+ * buildů aktualizací po síti.
+ */
+const CISLOVKY = {
+  pět: require('../../assets/zvuky/cislovka-pet.wav'),
+  čtyři: require('../../assets/zvuky/cislovka-ctyri.wav'),
+  tři: require('../../assets/zvuky/cislovka-tri.wav'),
+  dva: require('../../assets/zvuky/cislovka-dva.wav'),
+  jedna: require('../../assets/zvuky/cislovka-jedna.wav'),
+} as const;
+
+/**
+ * Jak dlouho před znamením si appka vyžádá zvukovou relaci.
+ *
+ * <b>Napřed, ne v okamžiku.</b> Probuzení jsou dvě nativní volání
+ * (`setAudioModeAsync`, `setIsAudioActiveAsync`) a do 7. 11. 2026 stála
+ * před každým zvukem — klakson i číslovka tedy začínaly o tu dobu
+ * později, a pokaždé o jinou. Vlastnost, kvůli které se budí pořád
+ * dokola (hovor relaci zabije a appka se to nedozví), tím nemizí:
+ * jen se přesune o čtyři desetiny vteřiny dopředu.
+ */
+const PROBUZENI_PREDEM_MS = 400;
+
+/**
+ * Jak čerstvá smí relace být, aby se nebudila znovu.
+ *
+ * Během odpočtu padne pět číslovek po vteřině a budit relaci před každou
+ * by bylo deset nativních volání pro nic. Mezery mezi skupinami znamení
+ * jsou nejkratší deset vteřin (`OZNAMENI_S`), takže se mez vejde mezi
+ * ně: uvnitř odpočtu se nebudí, před další skupinou ano.
+ */
+const RELACE_CERSTVA_MS = 3000;
 
 /** Jazyk hlášení. Partitura je česká a jinak než česky nedává smysl. */
 const JAZYK = 'cs-CZ';
@@ -174,6 +230,22 @@ export function useDirigent(
   const kratky = useAudioPlayer(KLAKSON.kratce);
   const dlouhy = useAudioPlayer(KLAKSON.dlouze);
 
+  // Pět přehrávačů, každý se svou číslovkou. Vypsané jeden po druhém,
+  // protože hooky se nedají volat ve smyčce nad objektem — a i kdyby
+  // šly, pořadí hooků musí být neměnné.
+  const pet = useAudioPlayer(CISLOVKY.pět);
+  const ctyri = useAudioPlayer(CISLOVKY.čtyři);
+  const tri = useAudioPlayer(CISLOVKY.tři);
+  const dva = useAudioPlayer(CISLOVKY.dva);
+  const jedna = useAudioPlayer(CISLOVKY.jedna);
+
+  // <b>Drží to ref, ne proměnná.</b> Nový objekt při každém překreslení
+  // by byl nová závislost efektu, a ten se na vteřinovém tiku překresluje
+  // pořád — plánoval by se znovu a znovu pro nic. Přehrávače samy se
+  // nemění.
+  const cislovky = useRef<Record<string, Prehravac>>({});
+  cislovky.current = { pět: pet, čtyři: ctyri, tři: tri, dva, jedna };
+
   const doStartu = kolikDoStartu(stav, ted);
   const vOkne = maBytKlid(stav, ted, delkaS);
   const hlasi = veli && zapnuto;
@@ -241,6 +313,15 @@ export function useDirigent(
   const hlasiTed = useRef(hlasi);
   hlasiTed.current = hlasi;
 
+  // Kdy se relace budila naposledy. Uvnitř odpočtu se nebudí znovu —
+  // viz `RELACE_CERSTVA_MS`.
+  const probuzeno = useRef(0);
+  const probud = useCallback(async () => {
+    if (Date.now() - probuzeno.current < RELACE_CERSTVA_MS) return;
+    probuzeno.current = Date.now();
+    await probudRelaci();
+  }, []);
+
   useEffect(() => {
     if (doStartu === null) {
       predchozi.current = null;
@@ -263,14 +344,31 @@ export function useDirigent(
       if (vyrizeno.current.has(kdy)) return;
       vyrizeno.current.add(kdy);
 
+      // Propadlé znamení už je pozdě; pár milisekund navíc na probuzení
+      // relace nic nezhorší a bez ní by nebylo slyšet nic.
       if (zaMs <= 0) {
-        prehraj(okamzik, kratky, dlouhy);
+        void (async () => {
+          await probud();
+          prehraj(okamzik, kratky, dlouhy, cislovky.current);
+        })();
         return;
       }
+
+      // <b>Relace se budí napřed.</b> Kdyby se budila až v okamžiku,
+      // stála by před zvukem — a právě to dělalo odpočet nepravidelným.
+      const predem = zaMs - PROBUZENI_PREDEM_MS;
+      if (predem <= 0) void probud();
+      else
+        casovace.current.push(
+          setTimeout(() => {
+            if (hlasiTed.current) void probud();
+          }, predem),
+        );
+
       casovace.current.push(
         setTimeout(() => {
           // Mezi naplánováním a zazněním mohl rozhodčí hlas vypnout.
-          if (hlasiTed.current) prehraj(okamzik, kratky, dlouhy);
+          if (hlasiTed.current) prehraj(okamzik, kratky, dlouhy, cislovky.current);
         }, zaMs),
       );
     };
@@ -370,37 +468,62 @@ type Prehravac = { seekTo: (s: number) => Promise<void>; play: () => void };
 /**
  * Přehraje jeden okamžik partitury: zatroubí a řekne.
  *
- * <b>Věta jde až po doznění klaksonu</b>, ne s ním. Klakson je hlasitý
- * a mluvené hlášení by pod ním zmizelo — a přitom jsou v partituře na
- * tentýž okamžik schválně: nejdřív takt pro ruku rozhodčího, pak slovo
- * pro ty, kdo ho slyší.
+ * <b>Nebudí zvukovou relaci.</b> O tu se stará volající, a schválně
+ * dřív — probuzení v okamžiku zvuku bylo to, co dělalo odpočet
+ * nepravidelným (viz `PROBUZENI_PREDEM_MS`).
  */
-function prehraj(okamzik: Znameni[], kratky: Prehravac, dlouhy: Prehravac): void {
+function prehraj(
+  okamzik: Znameni[],
+  kratky: Prehravac,
+  dlouhy: Prehravac,
+  cislovky: Record<string, Prehravac>,
+): void {
   const troubeni = okamzik.find((z) => z.troubi)?.troubi ?? null;
   const veta = okamzik.find((z) => z.rekni)?.rekni ?? '';
 
-  void (async () => {
-    await probudRelaci();
+  if (troubeni) troub(troubeni, kratky, dlouhy);
+  if (!veta) return;
 
-    if (troubeni) troub(troubeni, kratky, dlouhy);
-    if (!veta) return;
+  // <b>Číslovka odpočtu jde z nahrávky</b>, a je to to jediné místo,
+  // kde na milisekundách záleží: rozhodčí podle ní mačká houkačku.
+  // Syntéza by začala o neznámou chvíli později a slovo by na konci
+  // protáhla.
+  const nahravka = cislovky[veta];
+  if (nahravka) {
+    // Věta, která ještě dozvučuje, by se s odpočtem pletla.
+    Speech.stop().catch(() => {});
+    zahraj(nahravka);
+    return;
+  }
 
-    // Nové hlášení přebíjí staré: *„jedna minuta"* nesmí čekat, až
-    // doběhne *„čtyři minuty do startu"*.
-    const rekni = () => {
-      Speech.stop().catch(() => {});
-      Speech.speak(veta, { language: JAZYK, rate: TEMPO });
-    };
+  // Nové hlášení přebíjí staré: *„jedna minuta"* nesmí čekat, až
+  // doběhne *„čtyři minuty do startu"*.
+  const rekni = () => {
+    Speech.stop().catch(() => {});
+    Speech.speak(veta, { language: JAZYK, rate: TEMPO });
+  };
 
-    if (troubeni) setTimeout(rekni, DELKA_TROUBENI_MS[troubeni]);
-    else rekni();
-  })();
+  // <b>Věta jde až po doznění klaksonu</b>, ne s ním. Klakson je hlasitý
+  // a mluvené hlášení by pod ním zmizelo — a přitom jsou v partituře na
+  // tentýž okamžik schválně: nejdřív takt pro ruku rozhodčího, pak slovo
+  // pro ty, kdo ho slyší.
+  if (troubeni) setTimeout(rekni, DELKA_TROUBENI_MS[troubeni]);
+  else rekni();
 }
 
 function troub(druh: Troubeni, kratky: Prehravac, dlouhy: Prehravac): void {
-  const p = druh === 'dlouze' ? dlouhy : kratky;
-  // Od začátku: týž přehrávač troubí znovu a znovu a po dohrání stojí na
-  // konci.
+  zahraj(druh === 'dlouze' ? dlouhy : kratky);
+}
+
+/**
+ * Přehraje zvuk od začátku.
+ *
+ * <b>Přetočení je nutné:</b> týž přehrávač hraje znovu a znovu a po
+ * dohrání stojí na konci, takže by podruhé nezaznělo nic. Když se
+ * přetočení nepovede, zkusí se přehrát stejně — mlčící klakson je horší
+ * než klakson od půlky.
+ */
+function zahraj(p: Prehravac): void {
   p.seekTo(0)
     .then(() => p.play())
     .catch(() => p.play());

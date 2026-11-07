@@ -22,7 +22,7 @@ nestojí, že se to nestaví).
 
 ## Chybí
 
-### 1. Panel startu neříká, kolik lodí vysílá polohu
+### 1. Panel startu neříká, kolik lodí vysílá polohu — *postaveno 7. 11. 2026*
 
 Návrh to má ve třech artboardech (`Main`, `Minuta`, `Nahoru`) a ve
 čtvrtém (`BezSignalu`) i v té verzi, kvůli které to tam je: zelená tečka
@@ -35,8 +35,16 @@ nepozná, že třem lodím vypadlo vysílání, a dozví se to až z prázdné
 stopy po závodě.
 
 Posádka přitom tutéž informaci o sobě má (*„2 ze 3 vysílají"* na
-obrazovce závodníka, z `GET /lod/dnes`). Chybí její součet za celou
+obrazovce závodníka, z `GET /lod/dnes`). Chyběl její součet za celou
 rozjížďku.
+
+**Doplněno** ze snímku poloh (`GET /sprava/serie/{serie}/zastavky/{zavod}/polohy`),
+který je přesně na tuhle otázku — jeho vlastní popis říká *„vrací celé
+pole … protože otázka zní »trackuje nám celé pole?«"*. Za vysílající se
+počítá jen loď se stavem `Cerstva`, tedy s polohou do minuty: ta, co se
+ozvala naposledy před deseti minutami, nevysílá. Ptá se jen velitel a jen
+když panel něco drží, po patnácti vteřinách — server si snímek drží pět
+v cache.
 
 ### 2. Odklad startu se neptá na nový čas
 
@@ -116,7 +124,7 @@ Co návrh kreslí nad rámec dat: **nadpis zvlášť od textu** (*„Trať
 zkrácena"* a pod tím věta). `PokynDto` má jedinou větu, a zkrácení trati
 (ZPJ 32) mezi jeho dvěma druhy vůbec není.
 
-### 7. Předání velení z appky
+### 7. Předání velení z appky — *postaveno 7. 11. 2026*
 
 Hlavička všech artboardů rozhodčího má pilulku s baterií, která je
 **tlačítko**: `aria-label="Velíš ty, baterie 78 procent — předat velení"`.
@@ -136,8 +144,13 @@ velení předávalo. Dvě věci k rozhodnutí předem:
   vygenerovat znovu.
 - **Návrh mluví o „předat velení", server umí opak.** Podle nálezu R19
   si velení <b>vyžádá ten, kdo ho chce</b>, a server ho udělí; dát ho
-  někomu jinam nejde. Tlačítko tedy nemůže dělat to, co slibuje jeho
-  popisek v návrhu — a než se postaví, musí se rozhodnout, co říká.
+  někomu jinam nejde.
+
+**Jak se to vyřešilo.** Pilulka v hlavičce je nově tlačítko a říká, co
+se doopravdy stane: kdo velí, čte *„velíš ty"*; kdo nevelí, čte *„velí
+Miloš"* jantarově a klepnutím si velení vezme. Tvar odpovědi je v
+`api.ts` napsaný ručně, protože `VeleniDto` v kontraktu není — s
+poznámkou, že má zmizet, až se kontrakt vygeneruje znovu.
 
 ---
 
@@ -201,14 +214,16 @@ hotové:
 2. ~~**Odklad se ptá na nový čas** (č. 2)~~ — **postaveno 7. 11. 2026**,
    i se zkratkami +15 / +30 / +1 hod.
 3. ~~**Vlajka u pokynu** (č. 6)~~ — **postaveno 7. 11. 2026.**
-4. **Kolik lodí vysílá** (č. 1) — potřebuje součet za rozjížďku, tedy
-   nejdřív dotaz, co k tomu API umí.
-5. **Předání velení** (č. 7) — endpointy jsou, chybí tvar odpovědi
-   v kontraktu a rozhodnutí, co má tlačítko říkat.
-6. **Konec rozjížďky a konec dne** (č. 3) — samostatná obrazovka a nový
-   úkon; největší kus a jediný, který potřebuje nový endpoint.
+4. ~~**Kolik lodí vysílá** (č. 1)~~ — **postaveno 7. 11. 2026.**
+5. ~~**Předání velení** (č. 7)~~ — **postaveno 7. 11. 2026.**
+6. **Konec rozjížďky a konec dne** (č. 3) — zbývá, a je to jediná
+   položka, která potřebuje nový endpoint: *Jedeme do přístavu* na
+   serveru neexistuje.
 7. **Role posádky** (č. 5) — čeká na `ClenPosadkyDto`; v appce není co
    udělat.
+
+**Stav k večeru 7. 11. 2026: z původních sedmi zbývají dvě, a obě
+čekají na API, ne na appku.**
 
 **A jedna lekce o tomhle soupisu samotném.** Dvě ze sedmi položek byly
 nadsazené: karta *Moje loď* i nadpis pokynu stály v kódu celou dobu

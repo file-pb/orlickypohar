@@ -29,6 +29,7 @@ export type BodyVRozjizdce = S["BodyVRozjizdceDto"];
 export type VysledekZavodu = S["VysledekZavoduDto"];
 export type UcastLodi = S["UcastDto"];
 export type ZavodDetail = S["ZavodDetailDto"];
+export type SnimekPoloh = S["SnimekPoloh"];
 export type Zastavka = S["ZastavkaDto"];
 export type PoradiLodi = S["PoradiLodiDto"];
 export type PoradiKategorie = S["PoradiKategorieDto"];
@@ -346,6 +347,57 @@ export async function ulozTrest(
  * o uložení a nikdy o vykonání.
  */
 export type TrestZaJizdy = S['TrestDto'];
+
+/**
+ * <b>Poslední známá poloha každé lodi v regatě.</b>
+ *
+ * Endpoint vrací celé pole včetně lodí, které se ještě neozvaly —
+ * popis u něj to říká rovnou: otázka zní *„trackuje nám celé pole?"*.
+ * Panel startu z toho dělá jediný řádek, *„12 z 12 lodí vysílá
+ * polohu"*, jak ho kreslí návrh.
+ *
+ * Snímek si server drží pět vteřin v cache, takže se nevyplatí ptát
+ * častěji.
+ */
+/**
+ * <b>Kdo velí startu téhle regaty.</b>
+ *
+ * Tvar odpovědi je napsaný ručně, a je to jediné takové místo v appce.
+ * Vygenerovaný kontrakt (`schema.d.ts`) cestu zná, ale `VeleniDto` v něm
+ * není — tělo odpovědi se při generování nevydalo. Zdroj pravdy je
+ * `Features/Zavody/VeleniSprava.cs`; až se kontrakt vygeneruje znovu,
+ * tenhle typ má zmizet.
+ */
+export type Veleni = {
+  uzivatelId: string | null;
+  jmeno: string | null;
+  odV: string | null;
+  /** Velí ten, kdo se ptá? Telefon se na to ptá při každém otevření. */
+  jsemTo: boolean;
+};
+
+export const nactiVeleni = (serie: string, zavod: string) =>
+  nactiZaSebe<Veleni>(`/sprava/serie/${serie}/vysledky/${zavod}/velitel`);
+
+/**
+ * <b>Vyžádá si velení.</b>
+ *
+ * Pozor na směr: velení se <b>bere</b>, nedává (nález R19) — *„slave
+ * o velení aktivně požádá, server ho udělí"*. Předat ho někomu jinému
+ * nejde, a je to tak schválně: dva hlavní startéři by jinak vznikli
+ * přesně tam, kde je to rozhodnutí chtělo vyloučit.
+ */
+export async function prevezmiVeleni(serie: string, zavod: string): Promise<Veleni> {
+  const v = await posliZaSebe<Veleni>(
+    `/sprava/serie/${serie}/vysledky/${zavod}/velitel`,
+    {},
+  );
+  if (v === null) throw new Error('neprihlasen');
+  return v;
+}
+
+export const nactiPolohy = (serie: string, zavod: string) =>
+  nactiZaSebe<SnimekPoloh>(`/sprava/serie/${serie}/zastavky/${zavod}/polohy`);
 
 export const nactiTresty = (serie: string, zavod: string, cislo: number) =>
   nactiZaSebe<TrestZaJizdy[]>(
