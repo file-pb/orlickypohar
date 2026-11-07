@@ -94,3 +94,7 @@ if chyby:
     sys.exit(1)
 print('  ok   zapsaná část i stav „běží" přežily konec procesu')
 PY
+
+echo
+echo "== Přeskok v ukázce =="
+"${NODE[@]}" ./preskok.test.ts

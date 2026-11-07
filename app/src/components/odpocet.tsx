@@ -12,6 +12,8 @@ import {
 import { Pressable } from 'react-native';
 
 import { useDirigent } from '@/lib/dirigent';
+import { kolikPreskocit } from '@/lib/hlaseni';
+import { posunStartUkazky, ukazkaBezi } from '@/lib/ukazka';
 import { barvaNaVyplni, pismoNaVyplni, sPruhlednosti } from '@/lib/kontrast';
 import { useTheme } from '@/hooks/use-theme';
 import type { Barvy } from '@/constants/theme';
@@ -20,6 +22,7 @@ import {
   mmss,
   nazevUkonu,
   PROCEDURA_S,
+  kolikDoStartu,
   trvani,
   stavStartu,
   ukonyStartu,
@@ -143,6 +146,19 @@ export function Odpocet({
   // tady se jen pozná, kdo je u toho.
   const veli = Boolean(naSpusteni || naUkon);
   const dirigent = useDirigent(stav, ted, delkaS, veli);
+
+  // <b>Zkratka jen pro ukázku</b> (Filip, 7. 11. 2026): dlouhé čekání se
+  // dá přeskočit, aby se simulace dala ladit rychleji. Mimo ukázku se
+  // nenabízí vůbec — u vody se nepřeskakuje nic.
+  const vUkazce = ukazkaBezi();
+  const doStartu = kolikDoStartu(stav, ted);
+  const preskocitO =
+    vUkazce && doStartu !== null ? kolikPreskocit(doStartu, delkaS) : null;
+  const [nabidnuto, setNabidnuto] = useState<number | null>(null);
+
+  // Nabídne se jednou pro každou hranu, ne každou vteřinu: bublina, která
+  // vyskočí pořád, se přestane číst a zavírá se omylem.
+  const ptatSe = preskocitO !== null && nabidnuto !== preskocitO;
 
   // <b>Start se neklepe, start padne.</b> Rozhodčí spustil proceduru,
   // odpočet doběhl — tím rozjížďka odstartovala a appka to serveru řekne
@@ -318,6 +334,38 @@ export function Odpocet({
       ) : null}
 
       {naUkon ? <Zastaveni stav={stav} t={t} naUkon={naUkon} /> : null}
+
+      {/* <b>Bublina je ladicí zkratka, ne vlastnost startu.</b> Ukáže se
+          jen v ukázce a jen když se čeká déle než dvě minuty — tedy před
+          procedurou a v přípravě, kde partitura mlčí. Po „ano" se posune
+          čas startu, ne odpočet: tím projde celá partitura stejně jako
+          u vody, jen bez čekání. */}
+      <Modal visible={ptatSe} transparent animationType="fade">
+        <View style={s.bublinaStin}>
+          <View style={[s.bublina, { backgroundColor: t.papir, borderColor: t.linka }]}>
+            <Text style={[s.bublinaNadpis, { color: t.text }]}>Přeskočit čekání?</Text>
+            <Text style={[s.bublinaText, { color: t.tlumeny }]}>
+              Do dalšího znamení zbývá {trvani(preskocitO ?? 0)}. V ukázce se dá skočit
+              patnáct vteřin před něj, aby stihlo začít hlášení.
+            </Text>
+            <View style={s.bublinaVolby}>
+              <Pressable
+                onPress={() => setNabidnuto(preskocitO)}
+                style={({ pressed }) => [s.bublinaVolba, { opacity: pressed ? 0.6 : 1 }]}>
+                <Text style={[s.bublinaVolbaText, { color: t.tlumeny }]}>Ne, jeď normálně</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  if (preskocitO !== null) posunStartUkazky(preskocitO);
+                  setNabidnuto(preskocitO);
+                }}
+                style={({ pressed }) => [s.bublinaVolba, { opacity: pressed ? 0.6 : 1 }]}>
+                <Text style={[s.bublinaVolbaText, { color: t.voda }]}>Ano, přeskoč</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -715,6 +763,13 @@ function Bezi({
 }
 
 const s = StyleSheet.create({
+  bublinaStin: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center', padding: 24 },
+  bublina: { borderWidth: 1, borderRadius: 16, padding: 20, maxWidth: 340 },
+  bublinaNadpis: { fontSize: 18, fontWeight: '800' },
+  bublinaText: { fontSize: 15, lineHeight: 21, marginTop: 6 },
+  bublinaVolby: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 16 },
+  bublinaVolba: { minHeight: 44, minWidth: 44, paddingHorizontal: 12, justifyContent: 'center' },
+  bublinaVolbaText: { fontSize: 16, fontWeight: '700' },
   tresty: { flexDirection: 'row', gap: 10, marginTop: 10 },
   // Dlaždice, ne řádek: na vodě se do nich klepe palcem a 80 pt je
   // tolik, aby se netrefil vedle.

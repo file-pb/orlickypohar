@@ -78,6 +78,30 @@ export const DO_STARTU_MIN = 10;
  * Regata se bere ta, které ukázkový účet velí; `kdeVeli` na ni otevře
  * start a cíl, takže je to táž, ke které se prohlížející doklepe.
  */
+/**
+ * <b>Posune start blíž</b> — zkratka, aby se simulace dala ladit
+ * rychleji (Filip, 7. 11. 2026: *„je to jenom abychom mohli pouštět
+ * simulaci a ladit ji rychleji"*).
+ *
+ * Mění se čas startu, ne odpočet: tím projde celá partitura stejně jako
+ * u vody, jen se vynechá čekání. Kdyby se přetáčel odpočet, byl by to
+ * druhý zdroj pravdy o tom, kolik zbývá.
+ *
+ * <b>Jen v ukázce.</b> Mimo ni funkce nic neudělá — `stav` je `null`.
+ */
+export function posunStartUkazky(oS: number): void {
+  if (!stav || oS <= 0) return;
+
+  for (const telo of Object.values(stav)) {
+    const z = telo as S['ZavodDetailDto'] | undefined;
+    if (!z || !Array.isArray(z.rozjizdky)) continue;
+    for (const r of z.rozjizdky) {
+      if (!r.startV || r.stav === 'Dokoncena' || r.stav === 'Zrusena') continue;
+      r.startV = new Date(Date.parse(r.startV) - oS * 1000).toISOString();
+    }
+  }
+}
+
 function nachystejStart(data: Record<string, unknown>): void {
   const ja = data['/ja'] as S['JaDto'] | undefined;
   const kde = (ja?.opravneni ?? []).find((o) => o.zavod);
