@@ -439,7 +439,17 @@ Ustálilo se to na třetí pokus a obě opravy přišly od Filipa:
 - pak se vrátil i **řádek se značkou** nahoře (*„to nahoře s tou lodičkou
   jsi klidně mohl nechat"*) — ikona, jméno, podtitulek a kebab vpravo.
   Značka pod ním se proto kreslí na 50 % výšky, ne na 55: ten řádek si
-  svoje místo bere a na užším telefonu by se potkaly.
+  svoje místo bere a na užším telefonu by se potkaly;
+- a nakonec se rozhodlo, **co z toho řádku nabídku otvírá**. Ta věta šla
+  číst dvojím způsobem a Filip ji dořekl ve dvou krocích: nejdřív *„klidně
+  celý řádek"*, a když to tak stálo, upřesnil *„klidně užij standardní
+  chování kebabu, když to nejde, tak jen tečky."* Standardní chování
+  kebabu jsou ty tečky, takže platí ony a celý řádek se vrátil zpátky.
+
+**Nativní nabídka se nestaví.** Na iOS je to `ActionSheetIOS`, na Androidu
+kontextové menu — dvě různé komponenty pro jednu věc, kterou vlastní panel
+umí na obou stejně. Kdyby ji Filip chtěl, je to samostatná práce, ne
+přepínač.
 
 **Co to mezitím stojí Miloše:** ke startu se z landingu dostane přes kebab
 → Ročníky → ročník → regata, tedy **čtyřmi klepnutími místo jednoho** —
