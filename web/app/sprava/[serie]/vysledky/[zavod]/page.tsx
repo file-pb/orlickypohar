@@ -325,7 +325,7 @@ function Rozjizdka({
   /** Postavené tratě regaty na výběr. */
   naVyber: { id: number; popis: string }[] | null;
 }) {
-  const skryta = ["Navrzeno", "Overeno", "Schvaleno"] as const;
+  const skryta = ["Navrzeno", "Schvaleno"] as const;
 
   return (
     <div className="karta">

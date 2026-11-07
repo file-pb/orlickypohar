@@ -134,8 +134,7 @@ public class VysledkySprava(AppDbContext db, TimeProvider cas)
                     .Where(r => r.StavVysledku == StavVysledku.KRevizi)
                     .OrderBy(r => r.Cislo).Select(r => r.Cislo).ToList(),
                 z.Rozjizdky
-                    .Where(r => r.StavVysledku == StavVysledku.Navrzeno
-                                || r.StavVysledku == StavVysledku.Overeno)
+                    .Where(r => r.StavVysledku == StavVysledku.Navrzeno)
                     .OrderBy(r => r.Cislo).Select(r => r.Cislo).ToList(),
                 z.Rozjizdky
                     .Where(r => (r.StavVysledku == StavVysledku.Schvaleno

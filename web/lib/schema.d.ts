@@ -7953,7 +7953,7 @@ export interface components {
          * @default Navrzeno
          * @enum {unknown}
          */
-        StavVysledku: "Navrzeno" | "Overeno" | "Schvaleno" | "Potvrzeno" | "KRevizi" | "Eliminovano";
+        StavVysledku: "Navrzeno" | "Schvaleno" | "Potvrzeno" | "KRevizi" | "Eliminovano";
         StavVysledkuVstup: {
             stav: components["schemas"]["StavVysledku"];
             duvod?: null | string;
