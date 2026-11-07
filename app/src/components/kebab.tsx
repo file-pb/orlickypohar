@@ -96,7 +96,18 @@ export function Kebab() {
           {/* <b>Ukázkový režim.</b> Appka se odpojí od serveru a jede
               z přibalených dat; nahoře o sobě dá vědět proužkem. Po
               přepnutí se zásobník obrazovek zahodí — jinak by na nich
-              zůstala data z toho druhého světa. */}
+              zůstala data z toho druhého světa.
+
+              <b>Zapnutí vede na obrazovku posádky, ne domů.</b> Vedlo
+              domů, a tam je od 7. 11. 2026 jen logo — takže člověk klepl
+              na *Ukázkový režim*, dostal proužek *„UKÁZKA — NIC SE
+              NEODESÍLÁ"* nad prázdnou obrazovkou a neměl co číst než to,
+              že ukázka běží a neukazuje nic. (Filip, 7. 11. 2026, se
+              snímkem: *„Ukázka tvrdí že běží ale neběží nic."*) Komentář
+              o kus níž na tuhle past upozorňoval a řešil ji druhou
+              položkou — jenže první zůstala slepá a klepne se na ni dřív.
+              Vypnutí vede domů dál: tam se člověk vrací do appky, ne do
+              ukázky. */}
           <Radek
             text={vUkazce ? 'Ukončit ukázku' : 'Ukázkový režim'}
             popis={
@@ -117,16 +128,19 @@ export function Kebab() {
               // se režim přepne uvnitř, ale obrazovka o tom neví.
               // Viděno v simulátoru 7. 11. 2026.
               if (router.canDismiss()) router.dismissAll();
-              router.replace('/');
+              router.replace(vUkazce ? '/' : '/zavodnik');
             }}
           />
 
           {/* <b>Ukázka očima posádky.</b> Filip, 7. 11. 2026: *„do kebabu
-              asi dej i odkaz na ukázku aplikace závodníka."* Přepínač výš
-              ukázku zapne a vysadí na úvodní obrazovce; než se člověk
-              proklepe na *Moje regata*, je půlka dojmu pryč. Tohle je
-              jedna cesta rovnou tam — a když ukázka už běží, jen tam
-              přejde. */}
+              asi dej i odkaz na ukázku aplikace závodníka."* Jedna cesta
+              rovnou na obrazovku posádky — a když ukázka už běží, jen tam
+              přejde.
+
+              Přepínač výš míří od téhož dne tamtéž, takže se obě položky
+              při zapínání potkávají. Zůstává proto, že dělá něco jiného:
+              tohle je cesta na obrazovku posádky i uvnitř běžící ukázky,
+              kdy přepínač výš ukázku naopak vypíná. */}
           <Radek
             text="Ukázka pro závodníka"
             popis="jak appku vidí posádka na vodě"
