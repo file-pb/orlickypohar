@@ -87,11 +87,20 @@ export default function Zavodnik() {
       <Stack.Screen options={{ title: data.zavodNazev }} />
 
       <View style={{ backgroundColor: vypln, borderRadius: 14, padding: 18, marginBottom: 12 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        {/* <b>Vpravo nahoře sedí kebab.</b> Nabídka se kreslí nad celým
+            zásobníkem obrazovek, takže prvních ~48 pt zprava patří jí —
+            7. 11. 2026 v simulátoru se z názvu regaty četlo *„Izole"* a
+            zbytek mizel pod třemi tečkami. Odsazení je tedy vlastnost
+            téhle první řádky, ne kosmetika. */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingRight: 48 }}>
           <Text style={{ color: naVyplni, fontSize: 13, fontWeight: '700', letterSpacing: 0.6 }}>
             {data.rozjizdka ? `ROZJÍŽĎKA ${data.rozjizdka}` : 'ZATÍM ŽÁDNÁ ROZJÍŽĎKA'}
           </Text>
-          <Text style={{ color: naVyplni, fontSize: 13 }}>{data.zavodNazev}</Text>
+          <Text
+            numberOfLines={1}
+            style={{ color: naVyplni, fontSize: 13, flexShrink: 1, marginLeft: 8 }}>
+            {data.zavodNazev}
+          </Text>
         </View>
 
         <Text

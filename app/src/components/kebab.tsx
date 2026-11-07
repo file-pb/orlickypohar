@@ -121,6 +121,24 @@ export function Kebab() {
             }}
           />
 
+          {/* <b>Ukázka očima posádky.</b> Filip, 7. 11. 2026: *„do kebabu
+              asi dej i odkaz na ukázku aplikace závodníka."* Přepínač výš
+              ukázku zapne a vysadí na úvodní obrazovce; než se člověk
+              proklepe na *Moje regata*, je půlka dojmu pryč. Tohle je
+              jedna cesta rovnou tam — a když ukázka už běží, jen tam
+              přejde. */}
+          <Radek
+            text="Ukázka pro závodníka"
+            popis="jak appku vidí posádka na vodě"
+            onPress={() => {
+              setOtevreno(false);
+              if (!ukazkaBezi()) zapniUkazku();
+              setVUkazce(true);
+              if (router.canDismiss()) router.dismissAll();
+              router.replace('/zavodnik');
+            }}
+          />
+
           <Radek
             text="orlickypohar.klihovka.cz"
             hodnota="web"
