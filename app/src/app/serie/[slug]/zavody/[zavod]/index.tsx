@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { AppState, Modal, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Baterie } from '@/components/baterie';
 import { Odpocet } from '@/components/odpocet';
@@ -63,6 +64,12 @@ export default function Zastavka() {
   const { data, chyba, nacita, obnov } = useData(() => nactiZavod(slug, zavod), [slug, zavod]);
   const { data: ja } = useData(nactiJa);
 
+  // <b>Spodní plachty musí minout ukazatel domů.</b> `paddingBottom: 24`
+  // bylo méně než jeho 34 bodů, takže poslední řádek obou nabídek ležel
+  // pod ním — změřeno 7. 11. 2026 na simulátoru: obsah končil 24 bodů
+  // nad hranou obrazovky, ukazatel zabírá 34.
+  const okraje = useSafeAreaInsets();
+
   // Čím server poslední úkon <b>odmítl</b>. Není to „nepovedlo se
   // odeslat" — to si appka podrží a zkouší dál; tohle je věta pravidla
   // („Rozjížďka už jede. Na nový start je všeobecné odvolání."), a tu
@@ -91,6 +98,23 @@ export default function Zastavka() {
     () => (cisloVPanelu === null ? Promise.resolve(null) : nactiTresty(slug, zavod, cisloVPanelu)),
     [slug, zavod, cisloVPanelu],
   );
+
+  /**
+   * <b>Pod panelem velitele už obrazovka nepokračuje</b> (Filip, 7. 11.
+   * 2026: *„ten seznam je tam zbytečný, stačí, aby okno končilo tím,
+   * tresty na trati"*).
+   *
+   * Startovní listina i výsledky patří tomu, kdo regatu čte. Veliteli,
+   * který zrovna drží rozjížďku, jsou k ničemu — lodě má v dlaždicích
+   * cíle a ve výběru k trestu, a body z minulých rozjížděk u startu
+   * nepotřebuje (tatáž úvaha jako v `docs/APPKA-PORADI-PRACI.md`:
+   * *„Výsledky na obrazovku rozhodčího nepatří"*). Zabíraly jen místo
+   * pod pruhem trestů na trati, který je to poslední, co má vidět.
+   *
+   * Platí jen pro velitele a jen s rozjížďkou v panelu: čtenář regaty
+   * ani velitel mezi rozjížďkami o nic nepřijdou.
+   */
+  const uVody = veliNekde(ja ?? null) && cisloVPanelu !== null;
 
   const zapisVykonani = async (trest: number) => {
     if (cisloVPanelu === null) return;
@@ -349,7 +373,7 @@ export default function Zastavka() {
             nedoslano={ceka !== null}
           />
 
-          {data.vysledkySkryte ? (
+          {uVody ? null : data.vysledkySkryte ? (
             // Ročník, u kterého se výsledky jednotlivých regat veřejně
             // neukazují. Bez téhle věty vypadá odjetá regata jako ta, co se
             // nejela. Pořadí seriálu veřejné zůstává, odkaz na něj je
@@ -379,7 +403,7 @@ export default function Zastavka() {
             ))
           )}
 
-          {data.poradi.length > 0 ? (
+          {!uVody && data.poradi.length > 0 ? (
             <Text style={{ color: t.tlumeny, fontSize: 13, marginTop: 16 }}>
               Čísla pod jménem jsou body z jednotlivých rozjížděk — pořadí v této kategorii, ne
               v celém poli. Přeškrtnutá se do součtu nepočítá.
@@ -420,7 +444,7 @@ export default function Zastavka() {
             backgroundColor: t.papir,
             borderTopWidth: 1,
             borderColor: t.linka,
-            paddingBottom: 24,
+            paddingBottom: 24 + okraje.bottom,
           }}>
           <Text
             style={{
@@ -472,16 +496,23 @@ export default function Zastavka() {
           }}
           onPress={() => setRuseni(null)}
         />
+        {/* <b>Strop a scrollování</b>, stejně jako má výběr lodi nad tím
+            (Filip, 7. 11. 2026: *„u zrušení rozjížďky nelze scrollovat
+            seznamem důvodů"*). Plachta bez stropu roste obsahem a čtvrtý
+            důvod skončil pod spodní hranou — a protože to nebyl seznam,
+            ale čtyři řádky ve `View`, nedalo se k němu dojet. Strop ji
+            drží v obrazovce a důvody si scrollují samy. */}
         <View
           style={{
             position: 'absolute',
             left: 0,
             right: 0,
             bottom: 0,
+            maxHeight: '75%',
             backgroundColor: t.papir,
             borderTopWidth: 1,
             borderColor: t.linka,
-            paddingBottom: 24,
+            paddingBottom: 24 + okraje.bottom,
           }}>
           <Text
             style={{
@@ -514,9 +545,11 @@ export default function Zastavka() {
             Zrušení se bude vysvětlovat (ZPJ 61.4(d)). Co se na vodě stalo, je
             vidět ze záznamu trasy — vytlačení od bojky z paluby ne.
           </Text>
-          {DUVODY_ZRUSENI.map((d) => (
-            <Radek key={d} text={d} onPress={() => void zrus(d)} />
-          ))}
+          <ScrollView>
+            {DUVODY_ZRUSENI.map((d) => (
+              <Radek key={d} text={d} onPress={() => void zrus(d)} />
+            ))}
+          </ScrollView>
         </View>
       </Modal>
     </ScrollView>
