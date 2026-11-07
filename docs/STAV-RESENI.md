@@ -41,7 +41,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Směrnice **předvyplní** trať, časy a režim startu | **Zavřené** | R22. Filip 28. 10.: *„zatím stačí to co je, do budoucna editor, ale teď je to předčasné."* |
 | Vypsání platné bez jeho podpisu | **Zavřené** | *„Je platné i bez mého podpisu"*. Elektronický podpis jen jako nabídka (R20, R32 v nahrávce 32) |
 | Přihlašování po zveřejnění vypsání | **Běží** | Přihlášky vede pořadatel |
-| Přihlašování se zavře rozpravou | **Zadané** | R39. Se zadními vrátky pro mimořádné zapsání, která se nenabízejí jako běžná cesta |
+| Přihlašování se zavře rozpravou | **Běží** | R39, 7. 11. 2026. Rozprava je v datech **čas startu první rozjížďky** (K6) — vlastní kolonku nemá, aby nevznikl druhý úkon o tomtéž, který jde zapomenout. Zavírá i veřejný formulář. Zadní vrátka nejsou zvláštní cesta: zapíše rozhodčí, stejným tlačítkem |
 | Číslo VMP a technického průkazu v přihlášce | **Zavřené** | R25. Rozhodnuto 29. 10.: nesbírat, závodník to potvrdí v souhlasu — a kvůli tomu vznikne **verze 3 souhlasu** |
 | Souhlas se závodními pravidly u přihlášky | **Běží** | `Souhlas.cs`, verze 2 včetně polohy |
 | Nezletilý závodník | **Zavřené** | *„Žádný z kapitánů není nezletilý"* (R26) |
@@ -54,7 +54,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | --- | --- | --- |
 | Po rozpravě nastavit předpokládaný čas startu | **Jen web** | K6, nasazeno. V appce to nejde |
 | Tabule se startovní listinou | **Běží** | Přepíná se sama podle fáze dne, nezapíná se ručně |
-| Do startovní listiny smí jen rozhodčí | **Zadané** | R38. Rozhodnuto: po rozpravě mění jen rozhodčí, pořadatel smí **navrhovat** a rozhodčí schvaluje; příznak pomocníka se rozšíří i na listinu |
+| Do startovní listiny smí jen rozhodčí | **Běží** | R38, 7. 11. 2026. Filip: *„listina po rozpravě uzamčená pro všechny kromě rozhodčího.“* Je to **výměna**, ne přidání práva — po rozpravě pořadatel nesmí nic. Fronta návrhů z dřívější verze R38 odpadla: u vody to vyřídí věta přes molo. Příznak pomocníka (K8) listinu neotvírá, jak bylo rozhodnuto 28. 10. |
 | Mapa před startem | **Běží** | R4. Naskočí sama 10 minut před procedurou, ne až výstřelem (29. 10.) |
 | Odkdy se posádkám hlásí telefon | **Zadané** | R3. Rozhodnuto: **15 minut před procedurou** (T−20), appka si sledování zapne sama — musí žít dřív než mapa |
 
@@ -98,7 +98,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Co chce | Stav | Kde to je / co zbývá |
 | --- | --- | --- |
 | Odsouhlasení pořadí | **Jen web** | Stavy výsledků, běží |
-| Úpravu výsledků smí jen rozhodčí | **Zadané** | R38. Tatáž věta jako u listiny, tedy totéž rozhodnutí: pořadatel smí navrhovat, rozhodčí schvaluje |
+| Úpravu výsledků smí jen rozhodčí | **Zadané** | R38, druhá polovina. Zámek ze 7. 11. 2026 se týká **startovní listiny**, ne zápisu — ten má vlastní řadu stavů (`Workflow.KdoSmi`, kde *zapsáno* a *v revizi* už rozhodčímu patří). Dotáhnout se má spolu s protesty (K2) |
 | Zásah do pořadí při protestu | **Zadané** | Protesty jsou celá nepostavená fáze; dnes je jen věta, že protest visí (K2) |
 | Ověřeno a Schváleno jako dva kroky | **Běží** | K3, 7. 11. 2026. Řada má tři stupně: *zapisuje se → zapsáno → potvrzeno*, vedle nich revize a zrušení. Migrace přepsala uložené „ověřeno" na „zapsáno"; zpátky to nejde. Rozdělit to má smysl až s protesty (K2) a hlídá to test |
 | Pomocník u cíle a slave startér | **Zadané** | K8. Rozhodnuto 28. 10.: **příznak u regaty**, který rozhodčí zaškrtne v klubovně u zápisu u lidí, kteří už pořadateli jsou. Otevře velení a zápis průjezdu, **ne** startovní listinu. Žádná nová role |

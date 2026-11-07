@@ -32,6 +32,64 @@ public class PrihlaskyTests
     }
 
     [Fact]
+    public void Do_rozpravy_vede_listinu_poradatel()
+    {
+        // Beze změny proti dřívějšku: rozhodčí jen vylučuje.
+        Assert.Null(Prihlasky.ProcNejdeDoListiny(poRozprave: false, Prihlasky.Kdo.Poradatel));
+        Assert.NotNull(Prihlasky.ProcNejdeDoListiny(poRozprave: false, Prihlasky.Kdo.Rozhodci));
+    }
+
+    [Fact]
+    public void Po_rozprave_vede_listinu_rozhodci()
+    {
+        // Filip, 7. 11. 2026: *„listina po rozpravě uzamčená pro všechny
+        // kromě rozhodčího."* Je to **výměna**, ne přidání práva — proto se
+        // ověřuje obojí najednou, jinak by test prošel i tomu, kdo by
+        // rozhodčímu přidal a pořadateli zapomněl vzít.
+        Assert.NotNull(Prihlasky.ProcNejdeDoListiny(poRozprave: true, Prihlasky.Kdo.Poradatel));
+        Assert.Null(Prihlasky.ProcNejdeDoListiny(poRozprave: true, Prihlasky.Kdo.Rozhodci));
+    }
+
+    [Theory]
+    [InlineData(StavUcasti.Prihlasena, StavUcasti.Potvrzena)]
+    [InlineData(StavUcasti.Potvrzena, StavUcasti.Zrusena)]
+    [InlineData(StavUcasti.Prihlasena, StavUcasti.Nedostavila)]
+    public void Po_rozprave_poradatel_stav_neprepne_a_rozhodci_ano(StavUcasti ze, StavUcasti na)
+    {
+        Assert.NotNull(Prihlasky.ProcNejdePrepnout(
+            ze, na, maVysledky: false, Prihlasky.Kdo.Poradatel, poRozprave: true));
+        Assert.Null(Prihlasky.ProcNejdePrepnout(
+            ze, na, maVysledky: false, Prihlasky.Kdo.Rozhodci, poRozprave: true));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Vylouceni_je_rozhodciho_pred_rozpravou_i_po_ni(bool poRozprave)
+    {
+        // Vyloučení není vedení listiny, ale rozhodnutí o lodi — zámek
+        // rozpravy se ho proto nesmí dotknout ani v jednom směru.
+        Assert.Null(Prihlasky.ProcNejdePrepnout(
+            StavUcasti.Potvrzena, StavUcasti.Vyloucena, maVysledky: false,
+            Prihlasky.Kdo.Rozhodci, poRozprave));
+        Assert.NotNull(Prihlasky.ProcNejdePrepnout(
+            StavUcasti.Potvrzena, StavUcasti.Vyloucena, maVysledky: false,
+            Prihlasky.Kdo.Poradatel, poRozprave));
+    }
+
+    [Fact]
+    public void Po_rozprave_nenabizi_poradateli_nabidka_nic()
+    {
+        // Obrazovka se ptá `MozneZ`, zápis `ProcNejdePrepnout`. Kdyby si
+        // ty dvě odpovídaly jinak, pořadatel by dostal tlačítka, po kterých
+        // přijde „nemáš práva" — proto to hlídá vlastní test.
+        Assert.Empty(Prihlasky.MozneZ(
+            StavUcasti.Prihlasena, maVysledky: false, Prihlasky.Kdo.Poradatel, poRozprave: true));
+        Assert.NotEmpty(Prihlasky.MozneZ(
+            StavUcasti.Prihlasena, maVysledky: false, Prihlasky.Kdo.Rozhodci, poRozprave: true));
+    }
+
+    [Fact]
     public void Lod_s_vysledky_zrusit_nejde()
     {
         // Zmizela by ze seznamu, a výsledky by přitom dál platily.

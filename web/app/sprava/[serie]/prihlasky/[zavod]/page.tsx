@@ -214,13 +214,22 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
         </p>
       )}
       {/* Hláška chodí z API (`Prihlasky.ProcNelze`), takže odkaz nemůže být
-          v ní — stojí vedle. Nejčastější důvod je stav regaty, a ten se
-          mění v kalendáři. */}
+          v ní — stojí vedle. Jenže důvody jsou od 7. 11. 2026 dva: stav
+          regaty, který se mění v kalendáři, a **rozprava**, po které
+          listinu vede rozhodčí (R38/R39). Odkaz na kalendář by u toho
+          druhého posílal pořadatele opravovat něco, co v pořádku je.
+          Rozlišuje se podle stavu regaty, ne podle textu hlášky — ten by
+          stačilo na serveru přeformulovat a odkaz by se tiše rozešel. */}
       {prehled.procNelze && (
         <p className="hlaska" role="status">
-          {prehled.procNelze}{" "}
-          <Link href={`/sprava/${serie}/kalendar`}>Kalendář ročníku</Link> ·{" "}
-          <Link href="/napoveda#vypsat-regatu">jak se regata vypisuje</Link>
+          {prehled.procNelze}
+          {prehled.stavZavodu !== "Vypsany" && prehled.stavZavodu !== "Odjety" ? (
+            <>
+              {" "}
+              <Link href={`/sprava/${serie}/kalendar`}>Kalendář ročníku</Link> ·{" "}
+              <Link href="/napoveda#vypsat-regatu">jak se regata vypisuje</Link>
+            </>
+          ) : null}
         </p>
       )}
 

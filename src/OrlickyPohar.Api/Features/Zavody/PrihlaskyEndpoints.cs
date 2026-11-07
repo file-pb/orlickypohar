@@ -9,8 +9,15 @@ namespace OrlickyPohar.Api.Features.Zavody;
 /// <para>
 /// <b>Přihlašuje pořadatel zastávky</b>, ne loď sama. Filip, 14. 9. 2026:
 /// veřejný formulář by znamenal sbírat kontakty a řešit spam dřív, než je
-/// o co stát. Rozhodčí přihlášky vidí, ale nemění — stejně jako zápis
-/// výsledků.
+/// o co stát. Rozhodčí přihlášky vidí, ale do rozpravy je nemění — vyjma
+/// vyloučení, které je jeho vždycky.
+/// </para>
+/// <para>
+/// <b>Po rozpravě se listina obrací</b> (nálezy R38 a R39, rozhodnuto
+/// 7. 11. 2026): od chvíle, kdy je nastavený čas startu první rozjížďky,
+/// mění seznam jen rozhodčí a pořadatel nesmí nic. Pravidlo samo žije ve
+/// <see cref="Prihlasky.ProcNejdeDoListiny"/>; tady se jen zjistí, v jaké
+/// roli člověk přišel.
 /// </para>
 /// </summary>
 public static class PrihlaskyEndpoints
@@ -29,8 +36,9 @@ public static class PrihlaskyEndpoints
             .Produces<LodNaZastavceDto>()
             .WithSummary("Přihlásí loď na regatu — z ročníku, nebo novou")
             .WithDescription(
-                "Pořadatel regaty, od vypsání závodu. Nová loď se stává účastníkem " +
-                "ročníku v zadané kategorii. Druhé přihlášení téže lodi vrací 200.");
+                "Pořadatel regaty, od vypsání závodu; po rozpravě místo něj rozhodčí. " +
+                "Nová loď se stává účastníkem ročníku v zadané kategorii. " +
+                "Druhé přihlášení téže lodi vrací 200.");
 
         g.MapPost("/{prihlaska:int}/startovne", StartovneAsync)
             .Produces<LodNaZastavceDto>()
@@ -41,14 +49,15 @@ public static class PrihlaskyEndpoints
             .WithSummary("Smaže nesmyslnou přihlášku z webu")
             .WithDescription(
                 "Jen požadavek, vrácenou nebo odmítnutou přihlášku bez výsledků. Uklidí i loď a osoby, " +
-                "které vznikly jen kvůli ní.");
+                "které vznikly jen kvůli ní. Pořadatel, po rozpravě rozhodčí.");
 
         g.MapPost("/{prihlaska:int}/stav", StavAsync)
             .Produces<LodNaZastavceDto>()
             .WithSummary("Přepne stav přihlášky lodi")
             .WithDescription(
                 "Pořadatel zapisuje, potvrzuje, vrací k doplnění, odmítá, odhlašuje a značí nedostavení; " +
-                "rozhodčí vylučuje. Vrácení, odmítnutí a vyloučení chtějí důvod. " +
+                "rozhodčí vylučuje, a po rozpravě přebírá i všechno ostatní. " +
+                "Vrácení, odmítnutí a vyloučení chtějí důvod. " +
                 "Loď s výsledky odhlásit ani odmítnout nejde.");
     }
 
@@ -71,9 +80,10 @@ public static class PrihlaskyEndpoints
     {
         if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
             return Results.NotFound();
-        if (!await PoradatelAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
 
-        var (nenalezeno, chyba) = await sprava.SmazAsync(rozsah.ZavodId.Value, prihlaska, ct);
+        if (await RoleAsync(kdo, rozsahy, sprava, rozsah, ct) is not { } role) return Results.Forbid();
+
+        var (nenalezeno, chyba) = await sprava.SmazAsync(rozsah.ZavodId.Value, prihlaska, ct, role);
         if (nenalezeno) return Results.NotFound();
         return chyba is null ? Results.NoContent() : Results.BadRequest(new { error = chyba });
     }
@@ -100,10 +110,10 @@ public static class PrihlaskyEndpoints
         if (await rozsahy.NajdiAsync(serie, zavod, ct) is not { ZavodId: not null } rozsah)
             return Results.NotFound();
 
-        if (!await PoradatelAsync(kdo, rozsahy, rozsah, ct)) return Results.Forbid();
+        if (await RoleAsync(kdo, rozsahy, sprava, rozsah, ct) is not { } role) return Results.Forbid();
 
         var (lod, nova, chyba, chcePotvrdit) = await sprava.PrihlasAsync(
-            rozsah.ZavodId.Value, vstup, ct, await rozsahy.UzivatelIdAsync(kdo, ct));
+            rozsah.ZavodId.Value, vstup, ct, await rozsahy.UzivatelIdAsync(kdo, ct), role);
 
         // Potvrzení není chyba vstupu, a obrazovka to musí poznat bez
         // čtení textu: na 409 se ptá, na 400 jen hlásí.
@@ -125,13 +135,17 @@ public static class PrihlaskyEndpoints
             return Results.NotFound();
 
         // Pořadatel vede přihlášky, rozhodčí vylučuje. Kdo je obojí (správce),
-        // přepíná jako pořadatel — a vyloučení jako rozhodčí.
+        // přepíná jako pořadatel — a vyloučení jako rozhodčí. <b>Po rozpravě
+        // vystupuje jako rozhodčí ve všem</b>, jinak by si sám sobě zamkl
+        // seznam, který od té chvíle vede.
         var poradatel = await PoradatelAsync(kdo, rozsahy, rozsah, ct);
         var rozhodci = await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Rozhodci, rozsah.SerieId), ct);
         if (!poradatel && !rozhodci) return Results.Forbid();
 
-        var role = rozhodci && (!poradatel || vstup.Stav == StavUcasti.Vyloucena || await sprava.JeVyloucenaAsync(
-                       rozsah.ZavodId.Value, prihlaska, ct))
+        var role = rozhodci && (!poradatel
+                       || await sprava.PoRozpraveAsync(rozsah.ZavodId.Value, ct)
+                       || vstup.Stav == StavUcasti.Vyloucena
+                       || await sprava.JeVyloucenaAsync(rozsah.ZavodId.Value, prihlaska, ct))
             ? Prihlasky.Kdo.Rozhodci
             : Prihlasky.Kdo.Poradatel;
 
@@ -140,6 +154,25 @@ public static class PrihlaskyEndpoints
         if (chyba is not null) return Results.BadRequest(new { error = chyba });
 
         return lod is null ? Results.NotFound() : Results.Ok(lod);
+    }
+
+    /// <summary>
+    /// V jaké roli člověk do listiny sahá, nebo <c>null</c>, když nesmí
+    /// vůbec. <b>Rozhoduje rozprava</b>: do ní pořadatel, po ní rozhodčí.
+    /// Kdo je obojí, vystupuje jako ten, komu seznam zrovna patří — proto
+    /// se to počítá tady a ne u každé trasy zvlášť.
+    /// </summary>
+    private static async Task<Prihlasky.Kdo?> RoleAsync(
+        ClaimsPrincipal kdo, Rozsahy rozsahy, PrihlaskySprava sprava, Rozsahy.Rozsah rozsah,
+        CancellationToken ct)
+    {
+        var poradatel = await PoradatelAsync(kdo, rozsahy, rozsah, ct);
+        var rozhodci = await rozsahy.SmiAsync(kdo, new Pozadavek(Role.Rozhodci, rozsah.SerieId), ct);
+        if (!poradatel && !rozhodci) return null;
+
+        return rozhodci && (!poradatel || await sprava.PoRozpraveAsync(rozsah.ZavodId!.Value, ct))
+            ? Prihlasky.Kdo.Rozhodci
+            : Prihlasky.Kdo.Poradatel;
     }
 
     /// <summary>Přihlášky spravuje pořadatel zastávky; správce ho pokrývá.</summary>
