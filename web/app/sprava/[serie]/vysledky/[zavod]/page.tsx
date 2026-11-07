@@ -532,6 +532,21 @@ function Rozjizdka({
               rozlišují chybu v proceduře, počasí, posunutou značku a jiný
               důvod, který ovlivnil regulérnost — napiš, který to byl.
             </p>
+            {/* <b>ZPJ 61.4(d)</b>: *„Když je pochybnost o skutečnostech …
+                musí protestní komise přijmout důkazy z vhodných zdrojů,
+                obzvláště před zrušením rozjížďky."* Záznam trasy je
+                takový zdroj — a na vytlačení od bojky je nejlepší, co
+                existuje, protože to se z trasy pozná a z paluby ne
+                (nález R13). Dosud tuhle pravidlovou funkci trasování
+                plnilo, aniž by ji kdo pojmenoval. */}
+            <p className="poznamka">
+              Před zrušením se podle ZPJ 61.4(d) mají přijmout důkazy z vhodných
+              zdrojů.{" "}
+              <Link href={`/sprava/${serie}/tracker/${zavod}`}>
+                Záznam trasy
+              </Link>{" "}
+              je jeden z nich — vytlačení od bojky je z něj vidět, z paluby ne.
+            </p>
           </form>
         </details>
       )}

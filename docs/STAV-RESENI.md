@@ -27,6 +27,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | **Jen web** | Běží, ale **ne v appce** — a Miloš bude na lodi |
 | **V API** | Schopnost existuje, obrazovku nikdo nepostavil |
 | **Zadané** | Víme přesně co, nestaví se |
+| **Zčásti** | Část běží, zbytek drží na jiném nálezu |
 | **Čeká** | Stojí na rozhodnutí, které ještě nepadlo |
 | **Zavřené** | Miloš rozhodl, že se stavět nebude |
 
@@ -81,7 +82,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | Dlaždice **720°** za dotek s lodí soupeře | **Běží** | R36, 7. 11. 2026. Totéž co 360°, jen dvě otáčky |
 | Trest dostupný **celou** rozjížďku, ne jako krok | **Běží** | 7. 11. 2026. Úkony jsou v panelu od chvíle, kdy je nastavený čas startu |
 | Vykonaný trest se odklepne | **Běží** | 7. 11. 2026. Pruh *Tresty na trati* pod dlaždicemi (podle `Jede.dc.html`): čipy po lodích s otáčkami a časem od uložení, klepnutím odčiněno. Do té doby šel trest zapsat, ale už ne odkliknout |
-| Vytlačená loď a rozjížďka přerušená pro bezpečnost | **Zadané** | R13. Pravidla mají čtyři různé cesty podle toho, kdo je původce, a aplikace nezná ani jednu; zrušit rozjížďku jde dnes jen oklikou přes eliminaci výsledků |
+| Vytlačená loď a rozjížďka přerušená pro bezpečnost | **Zčásti** | R13, 7. 11. 2026. **Cesta komise běží:** zrušení s důvodem podle ZPJ 32.1 má *Bezpečnost* mezi čtyřmi důvody na výběr a jde z webu i z appky (R17); odložení před startem taky. Nově se u zrušení na obou stranách připomíná **ZPJ 61.4(d)** — před zrušením se mají přijmout důkazy z vhodných zdrojů — s odkazem na záznam trasy, protože vytlačení od bojky je z trasy vidět a z paluby ne. Trasování tím dostalo pravidlovou funkci, kterou dosud plnilo, aniž by mu ji kdo připsal. **Zbytek drží na protestech (K2):** protest vytlačené lodi, náprava podle 61.4(c) a zproštění viny podle 43.1(a). Nárok na nápravu vytlačená loď podle 61.4(b) **nemá** — žádný z pěti důvodů na to nesedí, protože ji nepoškodila komise; to pravidla, ne aplikace |
 | Startovní tresty bez vlajek | **Zavřené** | R15, R16. Na poháru se vlajky nevyvěšují, jede se megafonem, takže tresty podle pravidla 30 formálně neplatí. Nosné pro dlaždici OCS |
 | Polohy lodí na mapě | **Běží** | Tracking nasazený 24. 10.; **z telefonu to nikdo neověřil** |
 

@@ -483,6 +483,23 @@ export default function Zastavka() {
           <Text style={{ color: t.tlumeny, paddingHorizontal: 16, paddingBottom: 8 }}>
             Rozjížďka přestane platit a nejede se. Důvod uvidí i posádky.
           </Text>
+          {/* <b>ZPJ 61.4(d)</b> (nález R13): před zrušením se mají přijmout
+              důkazy z vhodných zdrojů. Záznam trasy je na vytlačení od bojky
+              nejlepší, co existuje — z trasy se to pozná a z paluby ne —, a
+              tuhle pravidlovou funkci plnil, aniž by mu ji kdo připsal.
+              Nekreslí se odkaz: na vodě se stopa neprohlíží a rozhodovat se
+              musí teď. Ale je to věta, kterou si má rozhodčí vzít s sebou. */}
+          <Text
+            style={{
+              color: t.tlumeny,
+              fontSize: 12,
+              paddingHorizontal: 16,
+              paddingBottom: 10,
+              lineHeight: 16,
+            }}>
+            Zrušení se bude vysvětlovat (ZPJ 61.4(d)). Co se na vodě stalo, je
+            vidět ze záznamu trasy — vytlačení od bojky z paluby ne.
+          </Text>
           {DUVODY_ZRUSENI.map((d) => (
             <Radek key={d} text={d} onPress={() => void zrus(d)} />
           ))}
