@@ -46,6 +46,7 @@ export type ZapisLod = S["ZapisLodDto"];
 // neběželo na produkci, nebylo z čeho generovat; teď je a platí schéma.
 export type ZavodnikDnes = S['ZavodnikDto'];
 export type HlaseniOdpoved = S['HlaseniDto'];
+export type ClenPosadky = S['ClenPosadkyDto'];
 export type ZapisRadekVstup = S["ZapisRadekVstup"];
 export type CilZTrasovaniOdpoved = S["CilZTrasovaniDto"];
 

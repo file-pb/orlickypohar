@@ -113,6 +113,27 @@ export function vypniHlaseni() {
   );
 }
 
+/**
+ * <b>Zase se hlásit</b>, po pozastavení posádkou.
+ *
+ * Nezapíná se tím nic nového: loď i regata v řádku zůstaly (<c>vypniHlaseni</c>
+ * je nemaže), takže se jen vrátí příznak. Stažený čas je prázdný a dojde
+ * s prvním hlášením — a to odejde hned, protože <c>posledniHlaseni</c> je
+ * nula.
+ *
+ * Vrací <c>false</c>, když není k čemu se vracet: telefon o žádné lodi neví
+ * a zapnout se to musí v klubovně.
+ */
+export function obnovHlaseni(): boolean {
+  const h = hlasim();
+  if (!h.lod) return false;
+
+  databaze().runSync(
+    'UPDATE hlaseni SET zapnuto = 1, posledni_hlaseni = 0 WHERE id = 1',
+  );
+  return true;
+}
+
 /** Zapíše, co server odpověděl, a kdy se to ptalo. */
 export function zapisStazeny(nahravatOd: number | null, kdy: number) {
   databaze().runSync(

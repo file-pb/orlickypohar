@@ -7344,6 +7344,15 @@ export interface components {
             /** @default false */
             uvodnik: boolean;
         };
+        ClenPosadkyDto: {
+            jmeno: null | string;
+            ja: boolean;
+            /** Format: int32 */
+            baterieProcent: null | number;
+            /** Format: date-time */
+            ozvalSeV: null | string;
+            vysila: boolean;
+        };
         /** @enum {unknown} */
         CoVidiPosadky: "Nic" | "JenSebe" | "IOstatni";
         DavkaDto: {
@@ -8178,6 +8187,10 @@ export interface components {
             /** @default false */
             maPapir: boolean;
             duvodZruseni?: null | string;
+            /** Format: date-time */
+            protestniLimit?: null | string;
+            /** @default false */
+            limitUplynul: boolean;
         };
         RozjizdkaVstup: {
             /** Format: int32 */
@@ -8984,6 +8997,8 @@ export interface components {
             zavodNazev: string;
             lod: string;
             kategorie: null | string;
+            cisloPlachty: null | string;
+            posadka: components["schemas"]["ClenPosadkyDto"][];
             /** Format: int32 */
             rozjizdka: null | number;
             stavRozjizdky: null | components["schemas"]["StavRozjizdky"];

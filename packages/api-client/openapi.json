@@ -8210,6 +8210,44 @@
                     }
                 }
             },
+            "ClenPosadkyDto": {
+                "required": [
+                    "jmeno",
+                    "ja",
+                    "baterieProcent",
+                    "ozvalSeV",
+                    "vysila"
+                ],
+                "type": "object",
+                "properties": {
+                    "jmeno": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "ja": {
+                        "type": "boolean"
+                    },
+                    "baterieProcent": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "ozvalSeV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "vysila": {
+                        "type": "boolean"
+                    }
+                }
+            },
             "CoVidiPosadky": {
                 "enum": [
                     "Nic",
@@ -11531,6 +11569,17 @@
                             "null",
                             "string"
                         ]
+                    },
+                    "protestniLimit": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "limitUplynul": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -14517,6 +14566,8 @@
                     "zavodNazev",
                     "lod",
                     "kategorie",
+                    "cisloPlachty",
+                    "posadka",
                     "rozjizdka",
                     "stavRozjizdky",
                     "startV",
@@ -14543,6 +14594,18 @@
                             "null",
                             "string"
                         ]
+                    },
+                    "cisloPlachty": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "posadka": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ClenPosadkyDto"
+                        }
                     },
                     "rozjizdka": {
                         "type": [
