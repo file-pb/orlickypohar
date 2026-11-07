@@ -267,6 +267,34 @@ export async function ulozVysledky(
 }
 
 /**
+ * <b>Otáčkový trest</b> (nález R36, ZPJ 44.2).
+ *
+ * <b>Není to kód výsledku.</b> Otáčka pořadí nemění — loď ji odkrouží
+ * a jede dál — a proto má vlastní cestu, ne zápis do sady výsledků.
+ * Do výsledku se promítne teprve protestem, a ten aplikace neřeší.
+ *
+ * <b>Posílá se čas z telefonu</b>, stejně jako u úkonů procedury: na vodě
+ * se trest uloží hned, odeslat se dá až v signálu, a rozhoduje, kdy
+ * platil.
+ */
+export async function ulozTrest(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  ucast: number,
+  druh: 'Otacka360' | 'Otacka720',
+) {
+  const v = await posliZaSebe<unknown>(
+    `/sprava/serie/${serie}/zastavky/${zavod}/rozjizdky/${cislo}/tresty`,
+    { ucast, druh, ulozenoV: new Date().toISOString() },
+  );
+  // Jako u procedury: nepřihlášenému se nic neuloží a volající to nesmí
+  // spolknout jako hotovou věc.
+  if (v === null) throw new Error('neprihlasen');
+  return v;
+}
+
+/**
  * <b>Předčasný start: zapíše lodi OCS</b> (nález R35, ZPJ 29.1).
  *
  * <b>Proč to jde přes zápis výsledků, a ne přes vlastní úkon.</b> OCS

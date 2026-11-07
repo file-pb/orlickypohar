@@ -64,6 +64,7 @@ export function Odpocet({
   naCil,
   naOhlaseni,
   naPredcasnyStart,
+  naTrest,
   chyba,
   nedoslano,
 }: {
@@ -109,6 +110,10 @@ export function Odpocet({
    * u ostatních úkonů ji vidí jen ten, kdo velí.
    */
   naPredcasnyStart?: (cislo: number) => void;
+  /**
+   * Otáčkový trest (ZPJ 44.2). Chybí-li, dlaždice se neukážou.
+   */
+  naTrest?: (cislo: number, druh: 'Otacka360' | 'Otacka720') => void;
 }) {
   const t = useTheme();
   const [ted, setTed] = useState(() => Date.now());
@@ -266,6 +271,33 @@ export function Odpocet({
           ]}>
           <Text style={[s.cilText, { color: t.vystraha }]}>OCS — předčasný start</Text>
         </Pressable>
+      ) : null}
+
+      {/* <b>Tresty jsou dostupné celou rozjížďku</b>, ne jako krok
+          (Miloš, nahrávka 23: dlaždice se má *„průběžně posouvat"*).
+          Dotek bóje i dotek s lodí se stane kdykoliv mezi startem
+          a cílem, takže je nemá smysl vázat na fázi. */}
+      {naTrest && (stav.druh === 'jede' || stav.druh === 'odstartovano') ? (
+        <View style={s.tresty}>
+          <Pressable
+            onPress={() => naTrest(stav.cislo, 'Otacka360')}
+            style={({ pressed }) => [
+              s.trest,
+              { borderColor: t.linka, backgroundColor: t.papir, opacity: pressed ? 0.6 : 1 },
+            ]}>
+            <Text style={[s.trestCislo, { color: t.text }]}>360°</Text>
+            <Text style={[s.trestPopis, { color: t.tlumeny }]}>dotek bóje · ZPJ 31</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => naTrest(stav.cislo, 'Otacka720')}
+            style={({ pressed }) => [
+              s.trest,
+              { borderColor: t.linka, backgroundColor: t.papir, opacity: pressed ? 0.6 : 1 },
+            ]}>
+            <Text style={[s.trestCislo, { color: t.text }]}>720°</Text>
+            <Text style={[s.trestPopis, { color: t.tlumeny }]}>dotek s lodí · ZPJ 44.1</Text>
+          </Pressable>
+        </View>
       ) : null}
 
       {naUkon ? <Zastaveni stav={stav} t={t} naUkon={naUkon} /> : null}
@@ -666,6 +698,12 @@ function Bezi({
 }
 
 const s = StyleSheet.create({
+  tresty: { flexDirection: 'row', gap: 10, marginTop: 10 },
+  // Dlaždice, ne řádek: na vodě se do nich klepe palcem a 80 pt je
+  // tolik, aby se netrefil vedle.
+  trest: { flex: 1, minHeight: 80, borderWidth: 1, borderRadius: 14, padding: 12, justifyContent: 'center' },
+  trestCislo: { fontSize: 20, fontWeight: '800' },
+  trestPopis: { fontSize: 11, marginTop: 3, lineHeight: 15 },
   panel: { borderRadius: 14, padding: 16, marginBottom: 16 },
 
   // Volby sedí hned pod panelem — proto se záporným okrajem vracejí

@@ -22,6 +22,7 @@ import {
   nactiZapis,
   type ZapisLod,
   ohlasRozjizdku,
+  ulozTrest,
   ohlasStart,
   OdmitnutoServerem,
   provedProceduru,
@@ -170,29 +171,34 @@ export default function Zastavka() {
   // z detailu závodu: `prihlaskaId`, kterým se výsledek adresuje, nese
   // jen zápis. Načítá se až při otevření — na obrazovce, která je
   // otevřená celou rozjížďku, by to byl dotaz navíc o ničem.
-  const [ocsCislo, setOcsCislo] = useState<number | null>(null);
-  const [ocsLode, setOcsLode] = useState<ZapisLod[] | null>(null);
-  const [ocsPosila, setOcsPosila] = useState<number | null>(null);
+  type ProCo = { cislo: number; ukon: 'Ocs' | 'Otacka360' | 'Otacka720' };
+  const [vyber, setVyber] = useState<ProCo | null>(null);
+  const [vyberLode, setVyberLode] = useState<ZapisLod[] | null>(null);
+  const [vyberPosila, setVyberPosila] = useState<number | null>(null);
 
-  const otevriOcs = async (cislo: number) => {
-    setOcsCislo(cislo);
-    setOcsLode(null);
+  const otevriVyber = async (cislo: number, ukon: ProCo['ukon']) => {
+    setVyber({ cislo, ukon });
+    setVyberLode(null);
     setChybaStartu(null);
     try {
       const zapis = await nactiZapis(slug, zavod, cislo);
-      setOcsLode(zapis?.lode ?? []);
+      setVyberLode(zapis?.lode ?? []);
     } catch {
-      setOcsLode([]);
+      setVyberLode([]);
       setChybaStartu('Nepovedlo se načíst lodě. Zkus to znovu.');
     }
   };
 
-  const oznacOcs = async (prihlaskaId: number) => {
-    if (ocsCislo === null || ocsPosila !== null) return;
-    setOcsPosila(prihlaskaId);
+  const oznacLod = async (prihlaskaId: number) => {
+    if (vyber === null || vyberPosila !== null) return;
+    setVyberPosila(prihlaskaId);
     try {
-      await zapisPredcasnyStart(slug, zavod, ocsCislo, prihlaskaId);
-      setOcsCislo(null);
+      if (vyber.ukon === 'Ocs') {
+        await zapisPredcasnyStart(slug, zavod, vyber.cislo, prihlaskaId);
+      } else {
+        await ulozTrest(slug, zavod, vyber.cislo, prihlaskaId, vyber.ukon);
+      }
+      setVyber(null);
       obnov();
     } catch (e) {
       setChybaStartu(
@@ -201,7 +207,7 @@ export default function Zastavka() {
           : 'Nepovedlo se zapsat — zkus to znovu.',
       );
     } finally {
-      setOcsPosila(null);
+      setVyberPosila(null);
     }
   };
 
@@ -243,7 +249,8 @@ export default function Zastavka() {
             naStartu={ohlas}
             naUkon={ukon}
             naOhlaseni={ohlasit}
-            naPredcasnyStart={veliNekde(ja ?? null) ? otevriOcs : undefined}
+            naPredcasnyStart={veliNekde(ja ?? null) ? (c) => otevriVyber(c, 'Ocs') : undefined}
+            naTrest={veliNekde(ja ?? null) ? otevriVyber : undefined}
             naCil={
               veliNekde(ja ?? null)
                 ? () => router.push(`/serie/${slug}/zavody/${zavod}/cil`)
@@ -297,10 +304,10 @@ export default function Zastavka() {
           ze zápisu rozjížďky, takže nese `prihlaskaId`, kterým se
           výsledek adresuje. */}
       <Modal
-        visible={ocsCislo !== null}
+        visible={vyber !== null}
         transparent
         animationType="fade"
-        onRequestClose={() => setOcsCislo(null)}>
+        onRequestClose={() => setVyber(null)}>
         {/* Klepnutí vedle zavírá — tatáž plocha jako v nabídce. Rozměry
             jsou psané, ne flexem, aby je přečetla kontrola terčů. */}
         <Pressable
@@ -312,7 +319,7 @@ export default function Zastavka() {
             left: 0,
             backgroundColor: 'rgba(0,0,0,0.45)',
           }}
-          onPress={() => setOcsCislo(null)}
+          onPress={() => setVyber(null)}
         />
         <View
           style={{
@@ -335,23 +342,25 @@ export default function Zastavka() {
               paddingTop: 16,
               paddingBottom: 4,
             }}>
-            Předčasný start — která loď?
+            {vyber?.ukon === 'Ocs' ? 'Předčasný start' : 'Otáčkový trest'} — která loď?
           </Text>
           <Text style={{ color: t.tlumeny, paddingHorizontal: 16, paddingBottom: 8 }}>
-            Zapíše se OCS. Opravit se to dá v zápisu výsledků.
+            {vyber?.ukon === 'Ocs'
+              ? 'Zapíše se OCS. Opravit se to dá v zápisu výsledků.'
+              : `Zapíše se ${vyber?.ukon === 'Otacka360' ? 'jedna otáčka' : 'dvě otáčky'}. Pořadí to nemění.`}
           </Text>
 
-          {ocsLode === null ? (
+          {vyberLode === null ? (
             <Nacitani />
           ) : (
             <ScrollView>
-              {ocsLode.map((l) => (
+              {vyberLode.map((l) => (
                 <Radek
                   key={l.prihlaskaId}
                   text={l.lod}
                   popis={l.kategorie ?? undefined}
-                  hodnota={ocsPosila === l.prihlaskaId ? 'zapisuje se' : (l.kod ?? undefined)}
-                  onPress={() => void oznacOcs(l.prihlaskaId)}
+                  hodnota={vyberPosila === l.prihlaskaId ? 'zapisuje se' : (l.kod ?? undefined)}
+                  onPress={() => void oznacLod(l.prihlaskaId)}
                 />
               ))}
             </ScrollView>
