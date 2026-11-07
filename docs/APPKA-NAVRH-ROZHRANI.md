@@ -588,11 +588,32 @@ Proklikáno v simulátoru na `5e48a27`:
 | proužek drží režim celou cestu | landing → ročníky → ročník → regata → spuštění, pokaždé *UKÁZKA* |
 | kalendář ukazuje regatu jako dnešní | štítek *vypsáno*, 7. listopadu, *„8 regat · 6 odjetých"* |
 | odjeté rozjížďky vedle toho zůstaly | ČERVENÉ CAFE 8 bodů, 4-1-3 |
+| hlas a klakson skutečně hrají | změřeno v audio vrstvě, viz níž |
 
-**Co ověřené není: že z telefonu doopravdy vyjde zvuk.** Obrazovka hlásí
-*„Hlásí a troubí"*, ale stroj byl ztišený — víme tedy, že se appka tváří,
-že mluví, ne že je slyšet. Je to tentýž druh rozdílu, jaký projekt zná
-odjinud: zelená z prázdného výsledku není zelená.
+**I zvuk je ověřený, a ne uchem.** Poslouchat ho nešlo, stroj byl ztišený —
+místo toho se změřil v audio vrstvě simulátoru, což je pro tenhle případ
+lepší důkaz. Z logu během běžící procedury v ukázce:
+
+| Z logu | Čemu to odpovídá |
+| --- | --- |
+| `durToPlayThrough: 1.72` | `klakson-kratky.wav` má **1,720 s** — přehrál se celý soubor, ne jakýsi zvuk |
+| `1-channel audio content` | tentýž soubor je **mono** |
+| `TextToSpeech:AudioQueue`, 1 400 refillů | běžela i **řeč**, ne jen troubení |
+
+Tři nezávislé shody s tím, co na disku doopravdy leží
+(`app/assets/zvuky/`), a `DELKA_TROUBENI_MS.kratce` v `hlaseni.ts` nese
+totéž číslo. **Doloženo tedy: v ukázce, z přibalených dat a bez sítě,
+hlas i klakson skutečně hrají.**
+
+Proč se to nenechalo na tom, že obrazovka píše *„Hlásí a troubí"*: zrovna
+tady je ten rozdíl drahý. Klakson stál oklikou přes měření skutečné
+nahrávky právě proto, že syntéza zněla jako hračka — a „tváří se, že
+hraje" by to nechytilo.
+
+**Jedna stopa do zásoby.** V logu je u řeči `AudioQueue underflow #9:
+injecting silence`. V simulátoru je to běžné, protože sdílí zvukovou kartu
+s hostitelem, a na telefonu se projevit nemusí. Kdyby si ale někdo na vodě
+stěžoval na cuknutí v hlase, tohle je první místo, kam se podívat.
 
 **Na čem se měřilo, se muselo dohledat.** Zkoušející si tu verzi nepullnul
 a chvíli ji hlásil o dva commity starší, než jaká doopravdy ležela na
