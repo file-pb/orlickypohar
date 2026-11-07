@@ -325,6 +325,7 @@ export function Odpocet({
           naUkon={naUkon}
           naPredcasnyStart={naPredcasnyStart}
           naZruseni={naZruseni}
+          naCasStartu={naCasStartu}
         />
       ) : null}
 
@@ -494,16 +495,35 @@ function UkonyNaStartu({
   naUkon,
   naPredcasnyStart,
   naZruseni,
+  naCasStartu,
 }: {
   stav: StavStartu;
   t: Barvy;
   naUkon?: (cislo: number, ukon: UkonStartu) => void | Promise<void>;
   naPredcasnyStart?: (cislo: number) => void;
   naZruseni?: (cislo: number) => void;
+  /** Zapsat nový čas startu — používá ho odklad hned po odložení. */
+  naCasStartu?: (cislo: number, kdy: number) => void | Promise<void>;
 }) {
   const [potvrzuje, setPotvrzuje] = useState<UkonStartu | null>(null);
   const [posila, setPosila] = useState(false);
   const [chyba, setChyba] = useState<string | null>(null);
+
+  // <b>Nový čas se ptá rovnou v odkladu.</b> Dlaždice to slibuje
+  // (*„vlajka AP · zeptá se na nový čas"*) a návrh `Odklad.dc.html` to
+  // tak kreslí — do 7. 11. 2026 se ale neptalo nic: úkon jen sebral čas
+  // startu a potvrzení samo říkalo opak, *„nový čas nastavíš sám"*.
+  // Dlaždice tedy slibovala, co se nestane.
+  //
+  // Prázdné pole zůstává platnou odpovědí: odklad podle ZPJ 27.3 nový
+  // čas nepředepisuje a na vodě se často neví.
+  const [napsano, setNapsano] = useState('');
+  const kdy = casRozpravy(napsano, Date.now());
+  const zadavaCas = potvrzuje === 'Odlozit' && Boolean(naCasStartu);
+
+  /** Čas startu, od kterého se počítají zkratky +15 / +30 / +1 hod. */
+  const odKdy =
+    stav.druh === 'ceka' || stav.druh === 'procedura' ? Date.parse(stav.startV) : Date.now();
   // <b>Ukážou se oba, nejde vždycky oba.</b> Odklad patří před start,
   // všeobecné odvolání po něm (ZPJ 29.2) — `ukonyStartu` proto vrací
   // jen ten, který v téhle fázi platí. Návrh je ale kreslí vedle sebe,
@@ -517,12 +537,28 @@ function UkonyNaStartu({
     setChyba(null);
     try {
       await naUkon(stav.cislo, ukon);
+      // <b>Dvě volání, ne jedno.</b> Odložení a zápis času jsou na
+      // serveru dva úkony a odklad platí i bez času — kdyby se posílaly
+      // spolu, nešlo by odložit, dokud se neví, na kdy. Pořadí je dané:
+      // nejdřív odklad, pak čas, protože odklad ten starý čas maže.
+      if (ukon === 'Odlozit' && kdy !== null && naCasStartu) {
+        await naCasStartu(stav.cislo, kdy);
+      }
+      setNapsano('');
       setPotvrzuje(null);
     } catch {
       setChyba('Nepovedlo se odeslat. Zkus to prosím znovu.');
     } finally {
       setPosila(false);
     }
+  };
+
+  /** Zkratka „+15 min": dopíše do pole hodinu, ne odstup. */
+  const posunOMinut = (minut: number) => {
+    const c = new Date(odKdy + minut * 60_000);
+    setNapsano(
+      c.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit', hour12: false }),
+    );
   };
 
   const ukonDlazdice = (u: UkonStartu) => (
@@ -572,6 +608,55 @@ function UkonyNaStartu({
             <Text style={[s.dialogVeta, { color: t.tlumeny }]}>
               {potvrzuje ? dusledekUkonu(potvrzuje) : ''}
             </Text>
+            {/* <b>Nový čas, jak ho kreslí návrh</b> (`Odklad.dc.html`):
+                pole, tři zkratky a věta o tom, že prázdné je v pořádku.
+                Zkratky píšou hodinu, ne odstup — na tlačítku *Odložit na
+                14:30* má rozhodčí vidět tutéž hodinu, kterou pak řekne
+                megafonem. */}
+            {zadavaCas ? (
+              <>
+                <TextInput
+                  value={napsano}
+                  onChangeText={setNapsano}
+                  placeholder="14:30"
+                  placeholderTextColor={t.tlumeny}
+                  keyboardType="numbers-and-punctuation"
+                  maxLength={5}
+                  editable={!posila}
+                  style={[
+                    s.poleCasu,
+                    { color: t.text, borderColor: t.linka, backgroundColor: t.zvyrazneni },
+                  ]}
+                />
+                <View style={s.zkratky}>
+                  {([15, 30, 60] as const).map((m) => (
+                    <Pressable
+                      key={m}
+                      onPress={() => posunOMinut(m)}
+                      disabled={posila}
+                      style={({ pressed }) => [
+                        s.zkratka,
+                        { borderColor: t.linka, opacity: pressed ? 0.6 : 1 },
+                      ]}>
+                      <Text style={[s.volbaText, { color: t.text }]}>
+                        {m === 60 ? '+1 hod' : `+${m} min`}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+                {napsano.trim() !== '' && kdy === null ? (
+                  <Text style={[s.dialogVeta, { color: t.stavZruseny }]}>
+                    Tohle není čas, který ještě přijde. Napiš hodinu dneška, třeba 14:30.
+                  </Text>
+                ) : (
+                  <Text style={[s.dialogVeta, { color: t.tlumeny }]}>
+                    Necháš-li čas prázdný, odklad platí a čas doplníš později. Posádkám se
+                    ukáže, že se odkládá — bez odpočtu, dokud čas není.
+                  </Text>
+                )}
+              </>
+            ) : null}
+
             {chyba ? <Text style={[s.dialogVeta, { color: t.vystraha }]}>{chyba}</Text> : null}
 
             <View style={s.dialogTlacitka}>
@@ -583,16 +668,31 @@ function UkonyNaStartu({
               </Pressable>
               <Pressable
                 onPress={() => potvrzuje && posli(potvrzuje)}
-                disabled={posila}
+                // Napsaná, ale nepoužitelná hodina odeslat nejde —
+                // odložilo by se bez ní a rozhodčí by si myslel, že čas
+                // prošel.
+                disabled={posila || (zadavaCas && napsano.trim() !== '' && kdy === null)}
                 style={({ pressed }) => [
                   s.volba,
                   s.volbaHlavni,
-                  { backgroundColor: t.vystraha, opacity: pressed || posila ? 0.6 : 1 },
+                  {
+                    backgroundColor: t.vystraha,
+                    opacity:
+                      pressed || posila || (zadavaCas && napsano.trim() !== '' && kdy === null)
+                        ? 0.6
+                        : 1,
+                  },
                 ]}>
                 <View style={s.spustitObsah}>
                   {posila ? <ActivityIndicator color={pismoNaVyplni(t, t.vystraha)} /> : null}
                   <Text style={[s.volbaText, { color: pismoNaVyplni(t, t.vystraha) }]}>
-                    {posila ? 'Posílám…' : 'Provést'}
+                    {posila
+                      ? 'Posílám…'
+                      : zadavaCas && kdy !== null
+                        ? `Odložit na ${napsano.trim()}`
+                        : zadavaCas
+                          ? 'Odložit bez času'
+                          : 'Provést'}
                   </Text>
                 </View>
               </Pressable>
@@ -1101,6 +1201,16 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   volbaHlavni: { borderColor: 'transparent' },
+  // Zkratky odkladu: tři vedle sebe, každá přes mez terče.
+  zkratky: { flexDirection: 'row', gap: 8 },
+  zkratka: {
+    flex: 1,
+    minHeight: 48,
+    borderWidth: 1,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   volbaText: { fontWeight: '700', fontSize: 15 },
 
   stin: {

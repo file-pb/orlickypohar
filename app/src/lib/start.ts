@@ -490,8 +490,8 @@ export function nazevUkonu(ukon: UkonStartu): string {
  */
 export function dusledekUkonu(ukon: UkonStartu): string {
   return ukon === 'Odlozit'
-    ? 'Odpočet se zruší a rozjížďka zůstane bez času startu. Nový čas nastavíš sám, '
-      + 'až bude jasno (ZPJ 27.3).'
+    ? 'Odpočet se zruší. Nový čas si řekni rovnou, nebo nech pole prázdné '
+      + 'a doplň ho, až bude jasno (ZPJ 27.3).'
     : 'Start se ruší a celá rozjížďka pojede znovu od začátku procedury. '
       + 'Počítá se jako opakovaný start (ZPJ 36).';
 }

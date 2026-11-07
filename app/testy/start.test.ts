@@ -352,7 +352,12 @@ zkus('rozjížďka, která jede, se taky dá odvolat', () => {
 zkus('důsledek úkonu mluví o čase, ne o vlajce', () => {
   // Věta jde do potvrzení, aby se do nevratného úkonu neklepnulo omylem
   // (Filip, 28. 10. 2026). Rozhodčí z ní musí poznat, co bude dál.
-  assert.ok(dusledekUkonu('Odlozit').includes('bez času startu'));
+  //
+  // Od 7. 11. 2026 se potvrzení na nový čas rovnou ptá, takže věta
+  // neříká „zůstane bez času startu" — říká, že čas jde zadat hned nebo
+  // později. Obojí mluví o čase; o vlajce ani jedno.
+  assert.ok(dusledekUkonu('Odlozit').includes('Nový čas'));
+  assert.ok(dusledekUkonu('Odlozit').includes('Odpočet se zruší'));
   assert.ok(dusledekUkonu('Odvolat').includes('znovu'));
 });
 
