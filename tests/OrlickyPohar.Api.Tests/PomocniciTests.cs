@@ -39,6 +39,21 @@ public class PomocniciTests
     /// Kdo není ani jedno, nesmí. Bez tohohle řádku by příznak otevřel
     /// start a cíl komukoliv.
     /// </summary>
+    /// <summary>
+    /// Druhá polovina R38: <b>rozhodčí ročníku smí k vodě</b>, i když není
+    /// pořadatel ani zaškrtnutý. Do 7. 11. 2026 nemohl u cíle klepnout
+    /// jedinou loď, protože <c>Rozhodci</c> nepokrývá <c>Organizator</c> —
+    /// a přitom celý K8 vznikl z toho, že u cíle a startu rozhodčí stojí.
+    /// </summary>
+    [Fact]
+    public void Rozhodci_rocniku_smi_i_bez_poradatelstvi()
+    {
+        Assert.True(Pomocnici.SmiUVody(poradatel: false, pomocnik: false, rozhodci: true));
+        // A bez něj je to pořád zavřené — příznak, který by otevíral
+        // vždycky, by prošel i tvrzením výš.
+        Assert.False(Pomocnici.SmiUVody(poradatel: false, pomocnik: false, rozhodci: false));
+    }
+
     [Fact]
     public void Kdo_neni_poradatel_ani_pomocnik_nesmi()
     {

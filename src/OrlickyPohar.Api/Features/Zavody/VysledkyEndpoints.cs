@@ -647,14 +647,21 @@ public static class VysledkyEndpoints
     {
         var poradatel = await SmiZapisovatAsync(kdo, rozsahy, rozsah, ct);
 
-        // Na pomocníka se ptá jen tam, kde pořadatelství nestačí. Jinak by
-        // se dotaz navíc platil u každého zápisu i tomu, kdo regatu vede —
-        // a to je ten, kdo zapisuje nejčastěji.
-        var pomaha = !poradatel
+        // Rozhodčí ročníku (druhá polovina R38). Ptá se dřív než na
+        // pomocníka, protože je to dotaz na práva, který už máme v ruce —
+        // pomocník je cesta do databáze.
+        var rozhodci = !poradatel
+                       && await rozsahy.SmiAsync(
+                           kdo, new Pozadavek(Role.Rozhodci, rozsah.SerieId), ct);
+
+        // Na pomocníka se ptá jen tam, kde pořadatelství ani rozhodčí
+        // nestačí. Jinak by se dotaz navíc platil u každého zápisu i tomu,
+        // kdo regatu vede — a to je ten, kdo zapisuje nejčastěji.
+        var pomaha = !poradatel && !rozhodci
                      && await pomocnici.JeAsync(
                          rozsah.ZavodId!.Value, await rozsahy.UzivatelIdAsync(kdo, ct), ct);
 
-        return Pomocnici.SmiUVody(poradatel, pomaha);
+        return Pomocnici.SmiUVody(poradatel, pomaha, rozhodci);
     }
 
     /// <summary>
@@ -696,7 +703,7 @@ public static class VysledkyEndpoints
         /// u vody viděl zamčenou rozjížďku, do které by přitom psát mohl.
         /// </summary>
         public bool UVody(int zavodId) =>
-            Pomocnici.SmiUVody(Poradatel(zavodId), KdePomaha.Contains(zavodId));
+            Pomocnici.SmiUVody(Poradatel(zavodId), KdePomaha.Contains(zavodId), Rozhodci);
 
         public RozjizdkaSpravaRadek Radek(
             int zavodId, Rozjizdka r, int pocetVysledku, DateTimeOffset? posledniDojezd,

@@ -102,8 +102,36 @@ public static class Pomocnici
     /// rozhodnutí, že listinu po rozpravě vede <b>jen</b> rozhodčí
     /// (<see cref="Prihlasky.PoRozprave"/>), a příznak ji neotvírá.
     /// </para>
+    /// <para>
+    /// <b>Rozhodčí ročníku taky</b> (druhá polovina R38, 7. 11. 2026) — a je
+    /// to oprava nesrovnalosti, ne rozvolnění. Celý K8 vznikl z Filipovy
+    /// věty *„mnohdy např. u cíle a startu nestojí pouze rozhodčí"*, tedy
+    /// z toho, že tam <b>stojí</b>; a přitom rozhodčí, který není zároveň
+    /// pořadatel, nemohl u cíle klepnout jedinou loď. Hlavní rozhodčí
+    /// přitom smí zápis vrátit k revizi, rozjížďku zrušit i publikovat —
+    /// nepustit ho k zápisu dojezdů bylo jediné místo, kde se mu nevěřilo.
+    /// <c>Rozhodci</c> totiž <b>nepokrývá</b> <c>Organizator</c>
+    /// (<c>Prava.Pokryva</c>: *„rozhodčí není stupeň"*), takže se k té
+    /// bráně nedostal ani omylem.
+    /// </para>
+    /// <para>
+    /// <b>Dvojice očí se tím neztrácí</b>, protože se dělí dvě různé věci.
+    /// <b>Zapsat</b> dojezdy z vody je pořízení čísel, která ještě nikdo
+    /// nepodepsal; <b>změnit</b> podepsaná čísla je to, u čeho by rozhodčí
+    /// ověřoval sám sebe — a tam zůstává cesta jediná: vrátit k revizi,
+    /// nechat opravit, podepsat znovu. Proto je rozhodčí tady, a <b>ne</b>
+    /// v <c>SmiZapisovatAsync</c>, za kterým leží startovní listina,
+    /// zakládání rozjížděk, posun výsledků, pohár a publikace.
+    /// </para>
+    /// <para>
+    /// Milošova věta *„úpravu výsledků smí provést pouze rozhodčí"* tím
+    /// <b>není</b> splněná celá: zapisovat smí dál i pořadatel, a jestli
+    /// mu to má zůstat, je rozhodnutí, které nikdo neudělal. Tohle řeší
+    /// opačnou polovinu — že rozhodčí nemohl vůbec nic.
+    /// </para>
     /// </summary>
-    public static bool SmiUVody(bool poradatel, bool pomocnik) => poradatel || pomocnik;
+    public static bool SmiUVody(bool poradatel, bool pomocnik, bool rozhodci = false) =>
+        poradatel || pomocnik || rozhodci;
 
     /// <summary>
     /// Proč tohohle člověka nejde zaškrtnout — nebo <c>null</c>.
