@@ -58,6 +58,19 @@ export type Misto = {
   prihlaskaId: number;
   /** Okamžik průjezdu (ISO), nebo `null` u zápisu přepsaného z papíru. */
   dojezdV: string | null;
+  /**
+   * <b>Dojela shodně s lodí před sebou</b> (nález K7, ZPJ A7).
+   *
+   * Příznak, ne číslo: čísla počítá {@link precisluj}, a kdyby se shoda
+   * zapisovala přímo číslem, každé odebrání nebo prohození místa by ji
+   * muselo přepočítat zvlášť — a jedna z těch cest by se dřív nebo později
+   * rozešla.
+   *
+   * Je to <b>vztah k předchozímu místu</b>, ne vlastnost lodi. Odtud plyne,
+   * jak se chová odebrání: zmizí-li loď, s níž se shoda váže, přebírá její
+   * vztah ta následující, takže skupina se jen zmenší.
+   */
+  shodneSPredchozim?: boolean;
 };
 
 /** Řádek zápisu tak, jak ho bere API (`ZapisRadekVstup`). */
@@ -76,8 +89,22 @@ export type ZapisRadek = {
 export const BODOVY_TREST: Kod = 'Zfp';
 
 /** Průběžné přečíslování od jedničky; mezery po smazaném místě se zavřou. */
+/**
+ * Přečísluje místa od jedničky — a <b>shody drží</b> (ZPJ A7).
+ *
+ * Dvě lodě na třetím místě mají obě trojku a další je pátá, protože
+ * obsadily dvě místa. Server z toho spočítá body: *„body za obsazená místa
+ * sečte a rozdělí rovným dílem"* — dvě lodě třetí berou 3,5 (K7, 6. 11.
+ * 2026), tedy jsou body desetinné.
+ */
 function precisluj(mista: readonly Misto[]): Misto[] {
-  return mista.map((m, i) => (m.poradi === i + 1 ? m : { ...m, poradi: i + 1 }));
+  let cislo = 0;
+  return mista.map((m, i) => {
+    // První místo shodu s ničím mít nemůže, i kdyby příznak nesl — zbyl by
+    // po odebrání toho, s čím se shodovalo.
+    cislo = m.shodneSPredchozim && i > 0 ? cislo : i + 1;
+    return m.poradi === cislo ? m : { ...m, poradi: cislo };
+  });
 }
 
 /**
@@ -87,11 +114,21 @@ function precisluj(mista: readonly Misto[]): Misto[] {
  * začal na webu nebo na jiném telefonu.
  */
 export function zeZapisu(lode: readonly LodVCili[]): Misto[] {
+  const vporadi = lode
+    .filter((l) => l.poradiVCili !== null)
+    .sort((a, b) => a.poradiVCili! - b.poradiVCili!);
+
   return precisluj(
-    lode
-      .filter((l) => l.poradiVCili !== null)
-      .sort((a, b) => a.poradiVCili! - b.poradiVCili!)
-      .map((l) => ({ poradi: l.poradiVCili!, prihlaskaId: l.prihlaskaId, dojezdV: l.dojezdV })),
+    vporadi.map((l, i) => ({
+      poradi: l.poradiVCili!,
+      prihlaskaId: l.prihlaskaId,
+      dojezdV: l.dojezdV,
+      // <b>Shoda se pozná z čísel</b>: server ji nevydává jako příznak,
+      // vydává dvě lodě s týmž pořadím (K7). Dopočítat ji tady je to, co
+      // dovolí pokračovat v zápisu, který začal na webu — jinak by se
+      // shoda prvním klepnutím rozpadla.
+      shodneSPredchozim: i > 0 && vporadi[i - 1].poradiVCili === l.poradiVCili,
+    })),
   );
 }
 
@@ -114,6 +151,28 @@ export function klepni(
   ];
 }
 
+/**
+ * <b>Spojí poslední dvě místa do shody</b>, nebo shodu zruší (K7, ZPJ A7).
+ *
+ * Je to <b>oprava, ne základní gesto</b>: shoda v cíli je vzácná a klepání
+ * musí zůstat jedno klepnutí na loď. Rozhodčí tedy klepne na obě lodě po
+ * sobě a teprve pak řekne, že projely spolu — stejnou cestou, jakou opravuje
+ * překlep.
+ *
+ * Vrací vstup nezměněný, když není co spojovat: s jediným zapsaným místem
+ * se shoda nedá udělat, protože shoda je vztah ke dvojici.
+ */
+export function prepniShodu(mista: readonly Misto[], prihlaskaId: number): Misto[] {
+  const kde = mista.findIndex((m) => m.prihlaskaId === prihlaskaId);
+  if (kde <= 0) return mista as Misto[];
+
+  return precisluj(
+    mista.map((m, i) =>
+      i === kde ? { ...m, shodneSPredchozim: !m.shodneSPredchozim } : m,
+    ),
+  );
+}
+
 /** Zpátky o jedno klepnutí — nejčastější oprava hned po překlepu. */
 export function vratPosledni(mista: readonly Misto[]): Misto[] {
   return mista.slice(0, -1);
@@ -123,24 +182,39 @@ export function vratPosledni(mista: readonly Misto[]): Misto[] {
  * Smaže jedno místo. Zbytek se přečísluje a <b>časy jdou s místy</b>,
  * ne s loděmi: zmizí ten okamžik, který se zapsal omylem.
  */
-export function odeber(mista: readonly Misto[], poradi: number): Misto[] {
-  return precisluj(mista.filter((m) => m.poradi !== poradi));
+export function odeber(mista: readonly Misto[], prihlaskaId: number): Misto[] {
+  const kde = mista.findIndex((m) => m.prihlaskaId === prihlaskaId);
+  if (kde < 0) return mista as Misto[];
+
+  // <b>Shoda je vztah k předchozímu místu</b>, takže když to předchozí
+  // zmizí, musí jeho vztah přebrat ten, kdo po něm zůstal — jinak by se
+  // skupina shody tiše připojila k docela jiné lodi (K7).
+  const zbytek = mista
+    .filter((_, i) => i !== kde)
+    .map((m, i) =>
+      i === kde && m.shodneSPredchozim
+        ? { ...m, shodneSPredchozim: mista[kde].shodneSPredchozim ?? false }
+        : m,
+    );
+
+  return precisluj(zbytek);
 }
 
 /**
- * Prohodí lodě na dvou místech. <b>Časy zůstanou</b>, kde byly — projely
- * cílem v těch okamžicích, jen se pletla jména.
+ * Prohodí dvě lodě v řadě. <b>Časy zůstanou</b>, kde byly — projely cílem
+ * v těch okamžicích, jen se pletla jména.
+ *
+ * <b>Adresuje se lodí, ne pořadím</b> (K7): od chvíle, kdy jde zapsat
+ * shoda, mají dvě místa totéž pořadí a číslo už místo neurčuje. Loď je
+ * v cíli právě jednou, takže její přihláška je jednoznačná.
  */
 export function prehod(mista: readonly Misto[], a: number, b: number): Misto[] {
-  const prvni = mista.find((m) => m.poradi === a);
-  const druhy = mista.find((m) => m.poradi === b);
-  if (!prvni || !druhy || a === b) return mista as Misto[];
-  return mista.map((m) =>
-    m.poradi === a
-      ? { ...m, prihlaskaId: druhy.prihlaskaId }
-      : m.poradi === b
-        ? { ...m, prihlaskaId: prvni.prihlaskaId }
-        : m,
+  const kdeA = mista.findIndex((m) => m.prihlaskaId === a);
+  const kdeB = mista.findIndex((m) => m.prihlaskaId === b);
+  if (kdeA < 0 || kdeB < 0 || a === b) return mista as Misto[];
+
+  return mista.map((m, i) =>
+    i === kdeA ? { ...m, prihlaskaId: b } : i === kdeB ? { ...m, prihlaskaId: a } : m,
   );
 }
 
@@ -290,13 +364,17 @@ export function presnejsiCas(
   return kdy === zapsano ? null : p.kdy;
 }
 
-/** Zapíše místu jiný čas — beze změny pořadí i lodi. */
+/**
+ * Zapíše místu jiný čas — beze změny pořadí i lodi.
+ *
+ * Adresuje se lodí, ne pořadím, ze stejného důvodu jako u {@link prehod}.
+ */
 export function prepisCas(
   mista: readonly Misto[],
-  poradi: number,
+  prihlaskaId: number,
   dojezdV: string,
 ): Misto[] {
-  return mista.map((m) => (m.poradi === poradi ? { ...m, dojezdV } : m));
+  return mista.map((m) => (m.prihlaskaId === prihlaskaId ? { ...m, dojezdV } : m));
 }
 
 /* ---------- rozepsaný zápis: přežije i konec appky ---------- */

@@ -92,7 +92,7 @@ Zdroje: `OPONENTURA-ROZHODCI.md` (nálezy R1–R40, K1–K7, 38 střípků),
 | --- | --- | --- |
 | Ruční zápis průjezdu cílem | **Běží** | Od 29. 10. **i v appce**: karta *Cíl* na obrazovce regaty, klepání na lodě s časem z telefonu, oprava posledního klepnutí i jednotlivého místa, *Ukončit rozjížďku* se zápisem DNF zbylým (`app/src/lib/cil.ts`, `app/src/app/serie/[slug]/zavody/[zavod]/cil.tsx`). Rozepsaný zápis leží v souboru, takže přežije konec appky |
 | Přepsat to, co určilo trasování | **Běží** | R33, postaveno 29. 10. Čerstvý průjezd lodi bez místa se ukáže jako návrh s čárkovaným okrajem a klepnutím se zapíše; k zapsanému klepnutí obrazovka nabídne čas ze stopy, leží-li do minuty. Nic se nezapisuje samo a nic se nemaže |
-| Shoda v cíli (dvě lodě stejně) | **Běží** | K7, 6. 11. 2026. V cílovém listu se dvěma lodím napíše totéž pořadí; API to dřív odmítalo, teď body za obsazená místa sečte a rozdělí rovným dílem (ZPJ A7) — dvě lodě třetí berou 3,5 a další je pátá. Body jsou proto desetinné (`Bodovani.BodyRozjizdky`). **V appce zápis shody nejde**, klepání v cíli dává pořadí po sobě |
+| Shoda v cíli (dvě lodě stejně) | **Běží** | K7, 6. 11. 2026, **v appce od 7. 11.** V cílovém listu se dvěma lodím napíše totéž pořadí; API body za obsazená místa sečte a rozdělí rovným dílem (ZPJ A7) — dvě lodě třetí berou 3,5 a další je pátá, takže jsou body desetinné (`Bodovani.BodyRozjizdky`). V klepacím cíli appky je to **oprava, ne gesto**: rozhodčí klepne na obě lodě po sobě a pak u druhé řekne *Dojela shodně s předchozí*. Shoda je **vztah k předchozímu místu**, ne číslo — odebrání lodi ji skupině nepřelepí. V seznamu se shodné místo pozná rovnítkem místo čísla. **Zbývá klepací cíl na webu**, kde se pořadí pořád počítá jako `i + 1` |
 
 ## Po rozjížďce
 

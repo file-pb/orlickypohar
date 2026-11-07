@@ -33,6 +33,7 @@ import {
   prehod,
   plula,
   prepisCas,
+  prepniShodu,
   presnejsiCas,
   radky,
   radkyPriUkonceni,
@@ -372,13 +373,20 @@ function Zapisovani({
         <View style={s.poradi}>
           {mista.map((m) => (
             <Pressable
-              key={m.poradi}
+              // Klíč je loď, ne pořadí (K7): dvě shodná místa mají totéž
+              // číslo a React by je považoval za jednu řádku.
+              key={m.prihlaskaId}
               onPress={() => setVybrane(m)}
               style={({ pressed }) => [
                 s.mistoRadek,
                 { borderColor: t.linka, opacity: pressed ? 0.6 : 1 },
               ]}>
-              <Text style={[s.mistoCislo, { color: t.tlumeny }]}>{m.poradi}.</Text>
+              {/* Shodné místo číslo nepíše — píše rovnítko. Dvě trojky za
+                  sebou vypadají jako překlep; rovnítko říká, že to tak má
+                  být (K7, ZPJ A7). */}
+              <Text style={[s.mistoCislo, { color: t.tlumeny }]}>
+                {m.shodneSPredchozim ? '=' : `${m.poradi}.`}
+              </Text>
               <Text style={[s.mistoLod, { color: t.text }]} numberOfLines={1}>
                 {jmeno(lode, m.prihlaskaId)}
               </Text>
@@ -405,18 +413,29 @@ function Zapisovani({
         t={t}
         zTrasovani={vybrane ? presnejsiCas(vybrane, navrhy) : null}
         vezmiCas={(m, kdy) => {
-          zmen(prepisCas(mista, m.poradi, kdy));
+          zmen(prepisCas(mista, m.prihlaskaId, kdy));
           setVybrane(null);
         }}
         zavri={() => setVybrane(null)}
         smaz={(m) => {
-          zmen(odeber(mista, m.poradi));
+          zmen(odeber(mista, m.prihlaskaId));
           setVybrane(null);
         }}
         prohod={(m) => {
-          zmen(prehod(mista, m.poradi - 1, m.poradi));
+          // Loď před touhle v řadě. Hledá se podle řady, ne podle čísla
+          // o jedno nižšího: od K7 mají shodná místa totéž číslo.
+          const kde = mista.findIndex((x) => x.prihlaskaId === m.prihlaskaId);
+          const pred = kde > 0 ? mista[kde - 1] : null;
+          if (pred) zmen(prehod(mista, pred.prihlaskaId, m.prihlaskaId));
           setVybrane(null);
         }}
+        shoda={(m) => {
+          zmen(prepniShodu(mista, m.prihlaskaId));
+          setVybrane(null);
+        }}
+        prvniVRade={
+          vybrane !== null && mista[0]?.prihlaskaId === vybrane.prihlaskaId
+        }
       />
 
       <Ukonceni
@@ -472,6 +491,8 @@ function OpravaMista({
   zavri,
   smaz,
   prohod,
+  shoda,
+  prvniVRade,
 }: {
   misto: Misto | null;
   lode: readonly LodVCili[];
@@ -482,6 +503,10 @@ function OpravaMista({
   zavri: () => void;
   smaz: (m: Misto) => void;
   prohod: (m: Misto) => void;
+  /** Spojí tuhle loď s předchozí do shody, nebo shodu zruší (K7). */
+  shoda: (m: Misto) => void;
+  /** Je to první loď v řadě? S ničím před sebou se spojit nedá. */
+  prvniVRade: boolean;
 }) {
   return (
     <Modal visible={misto !== null} transparent animationType="fade" onRequestClose={zavri}>
@@ -507,11 +532,27 @@ function OpravaMista({
             </Pressable>
           ) : null}
 
-          {misto && misto.poradi > 1 ? (
+          {misto && !prvniVRade ? (
             <Pressable
               onPress={() => misto && prohod(misto)}
               style={({ pressed }) => [s.volba, { borderColor: t.linka, opacity: pressed ? 0.6 : 1 }]}>
               <Text style={[s.volbaText, { color: t.text }]}>Prohodit s předchozí</Text>
+            </Pressable>
+          ) : null}
+
+          {/* <b>Shoda v cíli</b> (K7, ZPJ A7). Je to oprava, ne základní
+              gesto: shoda je vzácná a klepání musí zůstat jedno klepnutí
+              na loď. Rozhodčí tedy klepne na obě lodě po sobě a teprve pak
+              řekne, že projely spolu. */}
+          {misto && !prvniVRade ? (
+            <Pressable
+              onPress={() => misto && shoda(misto)}
+              style={({ pressed }) => [s.volba, { borderColor: t.linka, opacity: pressed ? 0.6 : 1 }]}>
+              <Text style={[s.volbaText, { color: t.text }]}>
+                {misto.shodneSPredchozim
+                  ? 'Zrušit shodu s předchozí'
+                  : 'Dojela shodně s předchozí'}
+              </Text>
             </Pressable>
           ) : null}
 
