@@ -64,6 +64,22 @@ public static class KliceEndpoints
                 "telefon sám. **Odebrat se sám nemůže**: to je zásah do posádky a " +
                 "zůstává kapitánovi.");
 
+        // <b>Hlášení telefonu</b> (R3). Taky bez přihlášení a taky klíčem:
+        // hlásí se úloha na pozadí, která žádný účet nemá a nemá ani
+        // obrazovku, kde by se kdo přihlašoval.
+        app.MapPost("/klice/hlaseni", HlasSeAsync)
+            .WithTags("Klíče")
+            .Produces<HlaseniDto>()
+            .Produces(StatusCodes.Status401Unauthorized)
+            .WithSummary("Telefon se ozve a dozví se, odkdy má nahrávat")
+            .WithDescription(
+                "Režim *„hlásím se“* z nálezu R3: telefon pošle **jen** stav baterie, " +
+                "žádné souřadnice, a zpátky dostane **čas, odkdy si má sám zapnout " +
+                "nahrávání** — T−20, tedy patnáct minut před procedurou. Je to " +
+                "stažený čas, ne povel: telefon se jím řídí i bez signálu, protože " +
+                "na vodě by povel nedošel právě té lodi, které je potřeba nejvíc. " +
+                "Posádka u toho neklepe na nic; naposledy klepla v klubovně.");
+
         var g = app.MapGroup("/ja/lode/{lod:int}/klice").WithTags("Klíče").RequireAuthorization();
 
         g.MapGet("/", SeznamAsync)
@@ -214,6 +230,54 @@ public static class KliceEndpoints
         && o.TryGetProperty("sleduje", out var v)
         && v.ValueKind is JsonValueKind.True or JsonValueKind.False
             ? v.GetBoolean()
+            : null;
+
+    /// <summary>
+    /// <b>Tělo zase jako <c>JsonElement</c></b>, ze stejného důvodu jako
+    /// u sledování: typovaný parametr by odmítl špatný tvar dřív, než se
+    /// ověří klíč, a endpoint by i bez klíče odpověděl 400 místo 401.
+    /// <para>
+    /// <b>Baterie se nevaliduje do chyby.</b> Nesmyslnou hodnotu se zahodí
+    /// a hlášení platí dál — telefon, který se ozval, je hlavní zpráva, a
+    /// odmítnout celé hlášení kvůli procentům by znamenalo, že o lodi
+    /// nevíme vůbec nic.
+    /// </para>
+    /// </summary>
+    private static async Task<Results<Ok<HlaseniDto>, UnauthorizedHttpResult>> HlasSeAsync(
+        JsonElement? telo,
+        HttpContext ctx,
+        KliceSprava klice,
+        Features.Zavody.ZavodnikSprava zavodnik,
+        TimeProvider cas,
+        CancellationToken ct)
+    {
+        if (await klice.ProSebeAsync(ctx, ct) is not { } klic) return TypedResults.Unauthorized();
+
+        await klice.HlasSeAsync(klic, Baterie(telo), ct);
+
+        var startV = klic.Platny
+            ? (await zavodnik.DnesniAsync(klic.LodId, ct))?.Rozjizdka?.StartV
+            : null;
+
+        return TypedResults.Ok(new HlaseniDto(
+            klic.Sleduje,
+            startV,
+            Hlaseni.NahravatOd(startV),
+            Hlaseni.NahravatTed(startV, cas.GetUtcNow())));
+    }
+
+    /// <summary>
+    /// Procenta z těla. <c>null</c> u jiného tvaru i u hodnoty mimo 0–100 —
+    /// a mimo rozsah schválně mlčí: je to vada čtení v telefonu, ne věc,
+    /// se kterou by posádka mohla cokoli udělat.
+    /// </summary>
+    private static int? Baterie(JsonElement? telo) =>
+        telo is { ValueKind: JsonValueKind.Object } o
+        && o.TryGetProperty("baterieProcent", out var v)
+        && v.ValueKind == JsonValueKind.Number
+        && v.TryGetInt32(out var procent)
+        && procent is >= 0 and <= 100
+            ? procent
             : null;
 
     private static async Task<IResult> SeznamAsync(

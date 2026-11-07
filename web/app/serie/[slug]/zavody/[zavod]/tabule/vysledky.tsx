@@ -13,12 +13,11 @@ import { body } from "@/app/body";
  * (`Workflow.Rada` v API), takže stačí vzít ten nejméně hotový stav
  * a ten platí pro celou regatu.
  */
-const RADA = ["Navrzeno", "Overeno", "Schvaleno", "Potvrzeno"] as const;
+const RADA = ["Navrzeno", "Schvaleno", "Potvrzeno"] as const;
 
 const JAK_JISTE: Record<string, string> = {
   Navrzeno: "zapisuje se",
-  Overeno: "ověřeno",
-  Schvaleno: "schváleno",
+  Schvaleno: "zapsáno",
   Potvrzeno: "potvrzeno",
   KRevizi: "v revizi",
   Eliminovano: "eliminováno",

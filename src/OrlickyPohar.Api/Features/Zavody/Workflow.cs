@@ -14,10 +14,20 @@ namespace OrlickyPohar.Api.Features.Zavody;
 /// </summary>
 public static class Workflow
 {
-    /// <summary>Stavy tak, jak jdou po sobě. Vracení a eliminace stojí mimo řadu.</summary>
+    /// <summary>
+    /// Stavy tak, jak jdou po sobě. Vracení a eliminace stojí mimo řadu.
+    /// <para>
+    /// <b>Tři stupně, ne čtyři</b> (nález K3, 7. 11. 2026). Mezi návrhem
+    /// a potvrzením býval ještě <c>Overeno</c> — jenže ověřoval i schvaloval
+    /// tentýž rozhodčí a oba kroky padly po sobě, takže druhý nebyl
+    /// dvojice očí, ale druhé klepnutí. Rozdělit je bude mít smysl až
+    /// s protesty, protože teprve pak mezi „čísla sedí" a „pořadí platí"
+    /// něco leží (nález K2).
+    /// </para>
+    /// </summary>
     public static readonly StavVysledku[] Rada =
     [
-        StavVysledku.Navrzeno, StavVysledku.Overeno, StavVysledku.Schvaleno, StavVysledku.Potvrzeno,
+        StavVysledku.Navrzeno, StavVysledku.Schvaleno, StavVysledku.Potvrzeno,
     ];
 
     /// <summary>
@@ -97,8 +107,7 @@ public static class Workflow
             : na switch
             {
                 StavVysledku.Navrzeno => Role.Organizator,
-                StavVysledku.Overeno or StavVysledku.Schvaleno or StavVysledku.KRevizi
-                    => Role.Rozhodci,
+                StavVysledku.Schvaleno or StavVysledku.KRevizi => Role.Rozhodci,
                 _ => Role.Spravce,
             };
 
@@ -208,11 +217,10 @@ public static class Workflow
     /// <summary>České jméno stavu do hlášky. Obrazovka má vlastní, tohle je pro API.</summary>
     public static string Nazev(StavVysledku stav) => stav switch
     {
-        StavVysledku.Navrzeno => "Navrženo",
-        StavVysledku.Overeno => "Ověřeno",
-        StavVysledku.Schvaleno => "Schváleno",
+        StavVysledku.Navrzeno => "Zapisuje se",
+        StavVysledku.Schvaleno => "Zapsáno",
         StavVysledku.Potvrzeno => "Potvrzeno",
-        StavVysledku.KRevizi => "K revizi",
+        StavVysledku.KRevizi => "V revizi",
         StavVysledku.Eliminovano => "Eliminováno",
         _ => stav.ToString(),
     };

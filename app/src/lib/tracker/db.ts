@@ -89,6 +89,25 @@ function pripravSchema(d: SQLite.SQLiteDatabase) {
       podvrzeny INTEGER NOT NULL DEFAULT 0
     );
     CREATE INDEX IF NOT EXISTS bod_zaznam ON bod(zaznam_id, id);
+    -- Režim „hlásím se" (R3). Jediný řádek, protože telefon je jeden a
+    -- hlásí se za jednu loď; CHECK to říká schématu, ne jen komentáři.
+    --
+    -- Je to tabulka, a ne klíč v SecureStore nebo AsyncStorage, ze stejného
+    -- důvodu jako zbytek tohohle souboru: úloha na pozadí si otevírá vlastní
+    -- spojení v novém JS kontextu a čte synchronně, ještě než se dostane
+    -- k prvnímu await.
+    CREATE TABLE IF NOT EXISTS hlaseni (
+      id INTEGER PRIMARY KEY NOT NULL CHECK (id = 1),
+      zapnuto INTEGER NOT NULL DEFAULT 0,
+      -- Pro jakou loď se v T−20 založí záznam. Jméno, ne serverové ID —
+      -- stejný důvod jako u zaznam.lod.
+      lod TEXT,
+      regata TEXT,
+      -- Stažený čas T−20 v ms. NULL znamená, že rozprava ještě nedala čas
+      -- startu, a pak se nenahrává: není proti čemu měřit.
+      nahravat_od INTEGER,
+      posledni_hlaseni INTEGER NOT NULL DEFAULT 0
+    );
   `);
 
   // Trasy zapsané dřívější verzí appky tyhle sloupce nemají.

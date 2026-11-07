@@ -325,7 +325,7 @@ function Rozjizdka({
   /** Postavené tratě regaty na výběr. */
   naVyber: { id: number; popis: string }[] | null;
 }) {
-  const skryta = ["Navrzeno", "Overeno", "Schvaleno"] as const;
+  const skryta = ["Navrzeno", "Schvaleno"] as const;
 
   return (
     <div className="karta">
@@ -402,6 +402,25 @@ function Rozjizdka({
               a schválením znovu.
             </span>
           )}
+        </p>
+      )}
+
+      {/* <b>Protestní časový limit</b> (ZPJ 60.3(b), nález K2). Aplikace
+          o protestech neví nic — nemá kam je zapsat —, takže tohle
+          <b>nic nezamyká</b>: zamykala by podle hodin, ne podle skutečnosti,
+          a na regatě, kde nikdo neprotestoval a všichni chtějí domů, by
+          držela podpis dvě hodiny pro nic. Je to věta, ne zámek. Lhůtu
+          přitom umí dopočítat jediná ze všech, protože čas dojezdu poslední
+          lodi zná. */}
+      {rozjizdka.protestniLimit && !rozjizdka.limitUplynul && (
+        <p className="poznamka">
+          <b>Protestní limit běží</b> do{" "}
+          {new Date(rozjizdka.protestniLimit).toLocaleTimeString("cs-CZ", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}{" "}
+          — dvě hodiny po dojezdu poslední lodi (ZPJ 60.3(b)). Podepsat jde
+          i teď; aplikace o protestech neví, takže to nehlídá za tebe.
         </p>
       )}
 
@@ -531,6 +550,21 @@ function Rozjizdka({
               Rozjížďka přestane platit v závodě i v poháru. ZPJ 32.1
               rozlišují chybu v proceduře, počasí, posunutou značku a jiný
               důvod, který ovlivnil regulérnost — napiš, který to byl.
+            </p>
+            {/* <b>ZPJ 61.4(d)</b>: *„Když je pochybnost o skutečnostech …
+                musí protestní komise přijmout důkazy z vhodných zdrojů,
+                obzvláště před zrušením rozjížďky."* Záznam trasy je
+                takový zdroj — a na vytlačení od bojky je nejlepší, co
+                existuje, protože to se z trasy pozná a z paluby ne
+                (nález R13). Dosud tuhle pravidlovou funkci trasování
+                plnilo, aniž by ji kdo pojmenoval. */}
+            <p className="poznamka">
+              Před zrušením se podle ZPJ 61.4(d) mají přijmout důkazy z vhodných
+              zdrojů.{" "}
+              <Link href={`/sprava/${serie}/tracker/${zavod}`}>
+                Záznam trasy
+              </Link>{" "}
+              je jeden z nich — vytlačení od bojky je z něj vidět, z paluby ne.
             </p>
           </form>
         </details>

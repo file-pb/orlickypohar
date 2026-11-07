@@ -16,6 +16,7 @@ import { Linking } from 'react-native';
 import * as TaskManager from 'expo-task-manager';
 
 import { baterieProcent, obnovBaterii } from './baterie';
+import { hlasim, ozviSeAsync, zacniKdyzJeCas } from './hlasim-se';
 import { zkusZiveAsync } from './nahravani';
 import { bezicZaznam, zapisBody } from './zaznam';
 
@@ -42,11 +43,26 @@ TaskManager.defineTask<DataPolohy>(ULOHA, async ({ data, error }) => {
   const polohy = data?.locations ?? [];
   if (polohy.length === 0) return;
 
-  const z = bezicZaznam();
+  // <b>Dvě role jedné úlohy.</b> Běží-li záznam, zapisuje se. Neběží-li,
+  // může běžet režim „hlásím se" (R3) — a ten se v T−20 překlopí sám.
+  // Překlopení je synchronní, protože musí být hotové před prvním `await`.
+  const z = bezicZaznam() ?? (zacniKdyzJeCas() !== null ? bezicZaznam() : null);
   if (!z) {
-    // Příznak běžícího záznamu je jedině v databázi. Když tam není (data
-    // appky někdo smazal), úloha by jinak zapisovala do prázdna.
-    await Location.stopLocationUpdatesAsync(ULOHA).catch(() => {});
+    const h = hlasim();
+    if (!h.zapnuto) {
+      // Příznak běžícího záznamu je jedině v databázi. Když tam není (data
+      // appky někdo smazal) a ani se nehlásíme, úloha by zapisovala do
+      // prázdna.
+      await Location.stopLocationUpdatesAsync(ULOHA).catch(() => {});
+      return;
+    }
+
+    // <b>Slepě.</b> Polohy, které právě přišly, se zahazují — v tomhle
+    // režimu neodchází na server ani jedna. Odběr se drží jen proto, aby se
+    // telefon probouzel a mohl si přečíst čas startu; `ozviSeAsync` si
+    // chyby spolkne sama, takže handler nevyhodí výjimku a systém úlohu
+    // neodregistruje.
+    await ozviSeAsync();
     return;
   }
 

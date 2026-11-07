@@ -1309,6 +1309,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/klice/hlaseni": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Telefon se ozve a dozví se, odkdy má nahrávat
+         * @description Režim *„hlásím se“* z nálezu R3: telefon pošle **jen** stav baterie, žádné souřadnice, a zpátky dostane **čas, odkdy si má sám zapnout nahrávání** — T−20, tedy patnáct minut před procedurou. Je to stažený čas, ne povel: telefon se jím řídí i bez signálu, protože na vodě by povel nedošel právě té lodi, které je potřeba nejvíc. Posádka u toho neklepe na nic; naposledy klepla v klubovně.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["JsonElement"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HlaseniDto"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/serie/{serie}/zavody/{zavod}/trat": {
         parameters: {
             query?: never;
@@ -3839,6 +3889,225 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sprava/serie/{serie}/zastavky/{zavod}/rozjizdky/{cislo}/tresty": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Co rozhodčí v téhle rozjížďce lodím uložil
+         * @description Organizátor regaty, nebo rozhodčí ročníku. V pořadí uložení.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrestDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Rozhodčí uloží lodi otáčkový trest
+         * @description Jen rozhodčí ročníku a **jen u rozjížďky, která se jede**.
+         *
+         *     **Není to kód výsledku.** Otáčka pořadí nemění: loď ji odkrouží a jede dál. Do výsledku se promítne teprve tehdy, když trest nevykoná a někdo podá protest — a to aplikace neřeší.
+         *
+         *     Na poháru se vlajky nevyvěšují a trest se sděluje megafonem, takže tenhle zápis je jediná stopa, že byl uložen.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["TrestVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/rozjizdky/{cislo}/tresty/{trest}/vykonan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rozhodčí zapíše, že loď trest odkroužila
+         * @description Zapisuje rozhodčí, ne posádka — *„abychom jim nekomplikovali život"*. Dokud to nikdo nezapíše, zůstává `vykonanoV` prázdné, a to **neznamená, že loď trest nevykonala**.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                    trest: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["VykonanVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/rozjizdky/{cislo}/tresty/{trest}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Rozhodčí trest odvolá
+         * @description Jen dokud se rozjížďka jede. Po dojetí je to doklad.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    cislo: number;
+                    trest: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lod/dnes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Která regata je dnes moje, a co se na ní děje
+         * @description Pro telefon spárovaný klíčem. Jedním dotazem vrací regatu, rozjížďku, jak loď eviduje rozhodčí a co komise vyhlásila za jízdy — na vodě je signál drahý a čtyři volání znamenají čtyři příležitosti skončit s půlkou obrazovky.
+         *
+         *     **204, když dnes loď nikde nejede.** To není chyba, to je většina dnů v roce.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZavodnikDto"];
+                    };
+                };
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sprava/serie/{serie}/zastavky/{zavod}/lode": {
         parameters: {
             query?: never;
@@ -3876,7 +4145,7 @@ export interface paths {
         put?: never;
         /**
          * Přihlásí loď na regatu — z ročníku, nebo novou
-         * @description Pořadatel regaty, od vypsání závodu. Nová loď se stává účastníkem ročníku v zadané kategorii. Druhé přihlášení téže lodi vrací 200.
+         * @description Pořadatel regaty, od vypsání závodu; po rozpravě místo něj rozhodčí. Nová loď se stává účastníkem ročníku v zadané kategorii. Druhé přihlášení téže lodi vrací 200.
          */
         post: {
             parameters: {
@@ -3979,7 +4248,7 @@ export interface paths {
         post?: never;
         /**
          * Smaže nesmyslnou přihlášku z webu
-         * @description Jen požadavek, vrácenou nebo odmítnutou přihlášku bez výsledků. Uklidí i loď a osoby, které vznikly jen kvůli ní.
+         * @description Jen požadavek, vrácenou nebo odmítnutou přihlášku bez výsledků. Uklidí i loď a osoby, které vznikly jen kvůli ní. Pořadatel, po rozpravě rozhodčí.
          */
         delete: {
             parameters: {
@@ -4019,7 +4288,7 @@ export interface paths {
         put?: never;
         /**
          * Přepne stav přihlášky lodi
-         * @description Pořadatel zapisuje, potvrzuje, vrací k doplnění, odmítá, odhlašuje a značí nedostavení; rozhodčí vylučuje. Vrácení, odmítnutí a vyloučení chtějí důvod. Loď s výsledky odhlásit ani odmítnout nejde.
+         * @description Pořadatel zapisuje, potvrzuje, vrací k doplnění, odmítá, odhlašuje a značí nedostavení; rozhodčí vylučuje, a po rozpravě přebírá i všechno ostatní. Vrácení, odmítnutí a vyloučení chtějí důvod. Loď s výsledky odhlásit ani odmítnout nejde.
          */
         post: {
             parameters: {
@@ -4049,6 +4318,101 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/pomocnici": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pořadatelé ročníku a kdo z nich pomáhá u startu a cíle
+         * @description Čte rozhodčí ročníku i pořadatel regaty; zaškrtávat smí jen rozhodčí, a odpověď to říká v `smiZaskrtavat`.
+         *
+         *     Kandidáti jsou pořadatelé **kterékoliv zastávky ročníku**, ne jen téhle — o to jde: u cíle stojí často pořadatel odjinud, který by jinak musel dostat celou tuhle regatu. U koho je `jeZdejsi`, tomu zaškrtnutí nic nepřidá.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PomocniciDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sprava/serie/{serie}/zastavky/{zavod}/pomocnici/{uzivatel}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Rozhodčí zaškrtne, nebo odškrtne pomocníka u startu a cíle
+         * @description Jen rozhodčí ročníku, a jen u někoho, kdo už je pořadatelem některé zastávky ročníku — příznak se neudílí jako role.
+         *
+         *     **Co otevírá:** převzetí velení, startovní proceduru, zápis startu a konce, zápis dojezdů a papírový zápis. **Co neotevírá:** startovní listinu, zakládání rozjížděk, posun výsledků ve workflow, pohár ani publikaci.
+         *
+         *     **Váže se na jednu regatu**, ne na ročník, a odškrtnutí se zapisuje, nemaže — po regatě zůstává doklad, kdo toho dne u startu a u cíle stál a kdo ho tam pustil.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    serie: string;
+                    zavod: string;
+                    uzivatel: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PomocVstup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PomocniciDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6980,6 +7344,15 @@ export interface components {
             /** @default false */
             uvodnik: boolean;
         };
+        ClenPosadkyDto: {
+            jmeno: null | string;
+            ja: boolean;
+            /** Format: int32 */
+            baterieProcent: null | number;
+            /** Format: date-time */
+            ozvalSeV: null | string;
+            vysila: boolean;
+        };
         /** @enum {unknown} */
         CoVidiPosadky: "Nic" | "JenSebe" | "IOstatni";
         DavkaDto: {
@@ -7006,6 +7379,8 @@ export interface components {
         /** @enum {unknown} */
         DruhStartu: "PevnaLinie" | "OtevirajiciSeBrana" | null;
         /** @enum {unknown} */
+        DruhTrestu: "Otacka360" | "Otacka720";
+        /** @enum {unknown} */
         DruhUkonu: "ZmenaUseku" | "ChybejiciZnacka";
         /**
          * @default Pohar
@@ -7021,6 +7396,14 @@ export interface components {
          * @enum {unknown}
          */
         FormatClanku: "Text" | "Html" | "Bloky";
+        HlaseniDto: {
+            sleduje: boolean;
+            /** Format: date-time */
+            startV: null | string;
+            /** Format: date-time */
+            nahravatOd: null | string;
+            nahravatTed: boolean;
+        };
         HttpValidationProblemDetails: {
             type?: null | string;
             title?: null | string;
@@ -7444,6 +7827,12 @@ export interface components {
             ted: string;
             lode: components["schemas"]["PolohaLodi"][];
         };
+        PokynDto: {
+            druh: string;
+            veta: string;
+            /** Format: date-time */
+            vyhlasenoV: string;
+        };
         PolohaLodi: {
             /** Format: int32 */
             lodId: number;
@@ -7464,6 +7853,13 @@ export interface components {
             stariMs: null | number;
             stav: components["schemas"]["StavPolohy"];
         };
+        PomocniciDto: {
+            smiZaskrtavat: boolean;
+            poradatele: components["schemas"]["PoradatelRocnikuDto"][];
+        };
+        PomocVstup: {
+            pomaha: boolean;
+        };
         PoradatelDto: {
             slug: string;
             nazev: string;
@@ -7478,6 +7874,16 @@ export interface components {
             /** Format: double */
             delka: null | number;
             obrazek?: null | components["schemas"]["ObrazekDto"];
+        };
+        PoradatelRocnikuDto: {
+            /** Format: uuid */
+            uzivatelId: string;
+            jmeno: string;
+            pomaha: boolean;
+            jeZdejsi: boolean;
+            /** Format: date-time */
+            odV: null | string;
+            zaskrtl: null | string;
         };
         PoradatelSpravaDto: {
             serie: string;
@@ -7781,6 +8187,10 @@ export interface components {
             /** @default false */
             maPapir: boolean;
             duvodZruseni?: null | string;
+            /** Format: date-time */
+            protestniLimit?: null | string;
+            /** @default false */
+            limitUplynul: boolean;
         };
         RozjizdkaVstup: {
             /** Format: int32 */
@@ -7932,6 +8342,11 @@ export interface components {
         };
         /** @enum {unknown} */
         StavClanku: "Draft" | "Publikovano" | "Skryty" | "Smazano";
+        StavLodiDto: {
+            veta: string;
+            /** Format: date-time */
+            kdy: null | string;
+        };
         /** @enum {unknown} */
         StavPolohy: "Cerstva" | "Starne" | "Nedostupna";
         /** @enum {unknown} */
@@ -7953,7 +8368,7 @@ export interface components {
          * @default Navrzeno
          * @enum {unknown}
          */
-        StavVysledku: "Navrzeno" | "Overeno" | "Schvaleno" | "Potvrzeno" | "KRevizi" | "Eliminovano";
+        StavVysledku: "Navrzeno" | "Schvaleno" | "Potvrzeno" | "KRevizi" | "Eliminovano";
         StavVysledkuVstup: {
             stav: components["schemas"]["StavVysledku"];
             duvod?: null | string;
@@ -8043,6 +8458,27 @@ export interface components {
             otisk: null | string;
             /** @default false */
             smiPrijmout: boolean;
+        };
+        TrestDto: {
+            /** Format: int32 */
+            id: number;
+            /** Format: int32 */
+            ucastId: number;
+            lod: string;
+            druh: components["schemas"]["DruhTrestu"];
+            /** Format: int32 */
+            otacek: number;
+            /** Format: date-time */
+            ulozenoV: string;
+            /** Format: date-time */
+            vykonanoV: null | string;
+        };
+        TrestVstup: {
+            /** Format: int32 */
+            ucast: number;
+            druh: components["schemas"]["DruhTrestu"];
+            /** Format: date-time */
+            ulozenoV?: null | string;
         };
         /** @enum {unknown} */
         TvarBoje: "Valcova" | "Kuzelova" | "Kulova" | "SferickyVrsek" | "Plovatka" | "Jiny" | "Plamenak" | null;
@@ -8258,6 +8694,10 @@ export interface components {
         };
         /** @enum {unknown} */
         Vyhodnoceni: "CelePole" | "PoKategoriich" | "Oboje";
+        VykonanVstup: {
+            /** Format: date-time */
+            vykonanoV?: null | string;
+        };
         VypsaniDto: {
             nazev: string;
             serieNazev: string;
@@ -8550,6 +8990,24 @@ export interface components {
              * @default 5
              */
             delkaProceduryMin: number;
+        };
+        ZavodnikDto: {
+            serie: string;
+            zavod: string;
+            zavodNazev: string;
+            lod: string;
+            kategorie: null | string;
+            cisloPlachty: null | string;
+            posadka: components["schemas"]["ClenPosadkyDto"][];
+            /** Format: int32 */
+            rozjizdka: null | number;
+            stavRozjizdky: null | components["schemas"]["StavRozjizdky"];
+            /** Format: date-time */
+            startV: null | string;
+            /** Format: date-time */
+            nahravatOd: null | string;
+            stavLodi: null | components["schemas"]["StavLodiDto"];
+            pokyny: components["schemas"]["PokynDto"][];
         };
         ZavodShrnutiDto: {
             slug: string;

@@ -70,6 +70,7 @@ try
     builder.Services.AddScoped<CilZTrasovaniSprava>();
     builder.Services.AddScoped<ZapisSprava>();
     builder.Services.AddScoped<VeleniSprava>();
+    builder.Services.AddScoped<PomocniciSprava>();
     builder.Services.AddScoped<PrihlaskySprava>();
     builder.Services.AddScoped<PoradateleSprava>();
     builder.Services.AddScoped<FotkySprava>();
@@ -113,6 +114,8 @@ try
     builder.Services.AddScoped<BojeSprava>();
     builder.Services.AddScoped<TratSprava>();
     builder.Services.AddScoped<UkonyZaJizdySprava>();
+    builder.Services.AddScoped<TrestyZaJizdySprava>();
+    builder.Services.AddScoped<ZavodnikSprava>();
     builder.Services.AddScoped<PrvkySprava>();
     if (builder.Configuration.GetValue<bool>("Prevzate:Sber"))
         builder.Services.AddHostedService<SberPrevzatych>();
@@ -244,7 +247,10 @@ try
         app.MapKalendar();
         app.MapSpravaVysledku();
         app.MapUkonyZaJizdy();
+        app.MapTrestyZaJizdy();
+        app.MapZavodnik();
         app.MapPrihlasky();
+        app.MapPomocniky();
         app.MapSmernice();
         app.MapOponenturu();
         app.MapZpravy();

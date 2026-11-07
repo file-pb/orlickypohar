@@ -66,15 +66,14 @@ export const KODY: Record<KodVysledku, string> = {
  */
 export const STAVY: Record<StavVysledku, { stitek: string; tlacitko: string; popis: string }> = {
   Navrzeno: {
-    stitek: "navrženo",
+    stitek: "zapisuje se",
     tlacitko: "Vrátit do návrhu",
     popis: "Zapsáno, nikdo to ještě nekontroloval.",
   },
-  Overeno: {
-    stitek: "ověřeno",
-    tlacitko: "Ověřit",
-    popis: "Čísla sedí s papírem z vody.",
-  },
+  // <b>„Ověřeno" tu bývalo mezi návrhem a podpisem</b> — nález K3
+  // (7. 11. 2026) ho ruší. Ověřoval i schvaloval tentýž rozhodčí hned
+  // po sobě, takže druhé tlačítko nebylo druhá dvojice očí. Rozdělit to
+  // bude mít smysl až s protesty (nález K2).
   // <b>Protesty v téhle větě nemají co dělat</b> (nález K2 oponentury
   // rozhodčího, 28. 10. 2026). Stávalo tu *„Protesty vyřízené, pořadí
   // platí"*, zatímco aplikace o protestech neví nic: nemá tabulku protestů,
@@ -86,8 +85,8 @@ export const STAVY: Record<StavVysledku, { stitek: string; tlacitko: string; pop
   // Tentýž text je u `StavVysledku.Schvaleno` v `Zavod.cs` — ať se
   // nerozejdou.
   Schvaleno: {
-    stitek: "schváleno",
-    tlacitko: "Schválit",
+    stitek: "zapsáno",
+    tlacitko: "Podepsat",
     popis: "Pořadí v cíli sedí, rozhodčí ho podepsal.",
   },
   Potvrzeno: {
@@ -96,7 +95,7 @@ export const STAVY: Record<StavVysledku, { stitek: string; tlacitko: string; pop
     popis: "Konečné. Dál se needituje.",
   },
   KRevizi: {
-    stitek: "k revizi",
+    stitek: "v revizi",
     tlacitko: "Vrátit k revizi",
     popis: "Vrátit zpátky s důvodem, co je špatně.",
   },

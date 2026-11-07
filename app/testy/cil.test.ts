@@ -13,6 +13,7 @@ import assert from 'node:assert/strict';
 
 import {
   klepni,
+  prepniShodu,
   navrhyKZobrazeni,
   odeber,
   prepisCas,
@@ -82,17 +83,20 @@ zkus('zpátky o jedno klepnutí', () => {
 });
 
 zkus('smazané místo zavře mezeru a jeho čas zmizí s ním', () => {
+  // <b>Čísla přihlášek schválně nejsou 1, 2, 3.</b> Od K7 se místo adresuje
+  // lodí, ne pořadím — a s totožnými čísly by test prošel i implementaci,
+  // která je pletla.
   let m: Misto[] = [];
-  m = klepni(m, 1, T);
-  m = klepni(m, 2, T + 10_000);
-  m = klepni(m, 3, T + 20_000);
+  m = klepni(m, 11, T);
+  m = klepni(m, 12, T + 10_000);
+  m = klepni(m, 13, T + 20_000);
 
-  const po = odeber(m, 2);
+  const po = odeber(m, 12);
   assert.deepEqual(
     po.map((x) => [x.poradi, x.prihlaskaId, x.dojezdV]),
     [
-      [1, 1, '2027-05-15T12:30:00.000Z'],
-      [2, 3, '2027-05-15T12:30:20.000Z'],
+      [1, 11, '2027-05-15T12:30:00.000Z'],
+      [2, 13, '2027-05-15T12:30:20.000Z'],
     ],
   );
 });
@@ -109,6 +113,122 @@ zkus('prohození mění jména, ne časy', () => {
     [
       [1, 2, '2027-05-15T12:30:00.000Z'],
       [2, 1, '2027-05-15T12:30:10.000Z'],
+    ],
+  );
+});
+
+console.log('\nShoda v cíli (K7, ZPJ A7)');
+
+zkus('dvě lodě na třetím místě a další je pátá', () => {
+  // Obsadily dvě místa, takže další skáče. Server z toho spočítá body:
+  // dvě lodě třetí berou 3,5.
+  let m: Misto[] = [];
+  m = klepni(m, 11, T);
+  m = klepni(m, 12, T + 10_000);
+  m = klepni(m, 13, T + 20_000);
+  m = klepni(m, 14, T + 20_100);
+  m = klepni(m, 15, T + 30_000);
+
+  m = prepniShodu(m, 14);
+
+  assert.deepEqual(
+    m.map((x) => [x.poradi, x.prihlaskaId]),
+    [
+      [1, 11],
+      [2, 12],
+      [3, 13],
+      [3, 14],
+      [5, 15],
+    ],
+  );
+});
+
+zkus('shoda se zruší tímtéž úkonem', () => {
+  let m: Misto[] = [];
+  m = klepni(m, 11, T);
+  m = klepni(m, 12, T + 10_000);
+
+  m = prepniShodu(m, 12);
+  assert.deepEqual(m.map((x) => x.poradi), [1, 1]);
+
+  m = prepniShodu(m, 12);
+  assert.deepEqual(m.map((x) => x.poradi), [1, 2]);
+});
+
+zkus('s první lodí se shoda udělat nedá', () => {
+  // Shoda je vztah k předchozímu místu a před prvním nic není.
+  const m = prepniShodu(klepni([], 11, T), 11);
+  assert.deepEqual(m.map((x) => x.poradi), [1]);
+  assert.equal(m[0].shodneSPredchozim, undefined);
+});
+
+zkus('tři lodě najednou drží totéž číslo a další skáče o tři', () => {
+  let m: Misto[] = [];
+  m = klepni(m, 11, T);
+  m = klepni(m, 12, T + 100);
+  m = klepni(m, 13, T + 200);
+  m = klepni(m, 14, T + 10_000);
+  m = prepniShodu(m, 12);
+  m = prepniShodu(m, 13);
+
+  assert.deepEqual(m.map((x) => x.poradi), [1, 1, 1, 4]);
+});
+
+zkus('odebraná loď ze shody skupinu zmenší, ne přelepí', () => {
+  // Zmizí-li loď, s níž se shoda váže, přebírá její vztah ta následující.
+  // Jinak by se skupina tiše připojila k docela jiné lodi.
+  let m: Misto[] = [];
+  m = klepni(m, 11, T);
+  m = klepni(m, 12, T + 10_000);
+  m = klepni(m, 13, T + 10_100);
+  m = prepniShodu(m, 13);
+  assert.deepEqual(m.map((x) => x.poradi), [1, 2, 2]);
+
+  // Odebere se první ze shodné dvojice. Ta druhá nesmí spadnout do shody
+  // s jedenáctkou — ta s ní cílem neprojela.
+  const po = odeber(m, 12);
+  assert.deepEqual(
+    po.map((x) => [x.poradi, x.prihlaskaId]),
+    [
+      [1, 11],
+      [2, 13],
+    ],
+  );
+  assert.equal(po[1].shodneSPredchozim, false);
+});
+
+zkus('zápis ze serveru shodu pozná z čísel', () => {
+  // Server shodu nevydává jako příznak, vydává dvě lodě s týmž pořadím.
+  // Bez dopočtu by se shoda prvním klepnutím rozpadla.
+  const ze = zeZapisu([
+    { prihlaskaId: 11, lod: 'LUNA', kategorie: null, poradiVCili: 1, kod: null, dojezdV: null },
+    { prihlaskaId: 12, lod: 'PEZI', kategorie: null, poradiVCili: 2, kod: null, dojezdV: null },
+    { prihlaskaId: 13, lod: 'ASTRA', kategorie: null, poradiVCili: 2, kod: null, dojezdV: null },
+  ]);
+
+  assert.deepEqual(ze.map((x) => x.poradi), [1, 2, 2]);
+  assert.equal(ze[2].shodneSPredchozim, true);
+
+  // A po dalším klepnutí se shoda drží a nové místo skáče na čtvrté.
+  const dal = klepni(ze, 14, T);
+  assert.deepEqual(dal.map((x) => x.poradi), [1, 2, 2, 4]);
+});
+
+zkus('shoda projde i do řádků zápisu', () => {
+  const lode: LodVCili[] = [
+    { prihlaskaId: 11, lod: 'LUNA', kategorie: null, poradiVCili: null, kod: null, dojezdV: null },
+    { prihlaskaId: 12, lod: 'PEZI', kategorie: null, poradiVCili: null, kod: null, dojezdV: null },
+  ];
+  let m: Misto[] = [];
+  m = klepni(m, 11, T);
+  m = klepni(m, 12, T + 50);
+  m = prepniShodu(m, 12);
+
+  assert.deepEqual(
+    radky(m, lode).map((r) => [r.prihlaskaId, r.poradiVCili]),
+    [
+      [11, 1],
+      [12, 1],
     ],
   );
 });
@@ -236,11 +356,11 @@ zkus('trasování nabídne přesnější čas k zapsanému klepnutí', () => {
 });
 
 zkus('přepsání času nechá pořadí i loď na pokoji', () => {
-  const m = klepni(klepni([], 1, T), 2, T + 10_000);
-  const po = prepisCas(m, 2, '2027-05-15T12:30:09Z');
+  const m = klepni(klepni([], 11, T), 12, T + 10_000);
+  const po = prepisCas(m, 12, '2027-05-15T12:30:09Z');
 
   assert.deepEqual(po[0], m[0]);
-  assert.equal(po[1].prihlaskaId, 2);
+  assert.equal(po[1].prihlaskaId, 12);
   assert.equal(po[1].poradi, 2);
   assert.equal(po[1].dojezdV, '2027-05-15T12:30:09Z');
 });

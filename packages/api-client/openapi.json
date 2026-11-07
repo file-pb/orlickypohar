@@ -1074,6 +1074,46 @@
                 }
             }
         },
+        "/klice/hlaseni": {
+            "post": {
+                "tags": [
+                    "Kl\u00ed\u010de"
+                ],
+                "summary": "Telefon se ozve a dozv\u00ed se, odkdy m\u00e1 nahr\u00e1vat",
+                "description": "Re\u017eim *\u201ehl\u00e1s\u00edm se\u201c* z n\u00e1lezu R3: telefon po\u0161le **jen** stav baterie, \u017e\u00e1dn\u00e9 sou\u0159adnice, a zp\u00e1tky dostane **\u010das, odkdy si m\u00e1 s\u00e1m zapnout nahr\u00e1v\u00e1n\u00ed** \u2014 T\u221220, tedy patn\u00e1ct minut p\u0159ed procedurou. Je to sta\u017een\u00fd \u010das, ne povel: telefon se j\u00edm \u0159\u00edd\u00ed i bez sign\u00e1lu, proto\u017ee na vod\u011b by povel nedo\u0161el pr\u00e1v\u011b t\u00e9 lodi, kter\u00e9 je pot\u0159eba nejv\u00edc. Pos\u00e1dka u toho neklepe na nic; naposledy klepla v klubovn\u011b.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "null"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/JsonElement"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HlaseniDto"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
         "/serie/{serie}/zavody/{zavod}/trat": {
             "get": {
                 "tags": [
@@ -3838,6 +3878,255 @@
                 }
             }
         },
+        "/sprava/serie/{serie}/zastavky/{zavod}/rozjizdky/{cislo}/tresty": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Co rozhod\u010d\u00ed v t\u00e9hle rozj\u00ed\u017e\u010fce lod\u00edm ulo\u017eil",
+                "description": "Organiz\u00e1tor regaty, nebo rozhod\u010d\u00ed ro\u010dn\u00edku. V po\u0159ad\u00ed ulo\u017een\u00ed.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TrestDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Rozhod\u010d\u00ed ulo\u017e\u00ed lodi ot\u00e1\u010dkov\u00fd trest",
+                "description": "Jen rozhod\u010d\u00ed ro\u010dn\u00edku a **jen u rozj\u00ed\u017e\u010fky, kter\u00e1 se jede**.\n\n**Nen\u00ed to k\u00f3d v\u00fdsledku.** Ot\u00e1\u010dka po\u0159ad\u00ed nem\u011bn\u00ed: lo\u010f ji odkrou\u017e\u00ed a jede d\u00e1l. Do v\u00fdsledku se prom\u00edtne teprve tehdy, kdy\u017e trest nevykon\u00e1 a n\u011bkdo pod\u00e1 protest \u2014 a to aplikace ne\u0159e\u0161\u00ed.\n\nNa poh\u00e1ru se vlajky nevyv\u011b\u0161uj\u00ed a trest se sd\u011bluje megafonem, tak\u017ee tenhle z\u00e1pis je jedin\u00e1 stopa, \u017ee byl ulo\u017een.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TrestVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/rozjizdky/{cislo}/tresty/{trest}/vykonan": {
+            "post": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Rozhod\u010d\u00ed zap\u00ed\u0161e, \u017ee lo\u010f trest odkrou\u017eila",
+                "description": "Zapisuje rozhod\u010d\u00ed, ne pos\u00e1dka \u2014 *\u201eabychom jim nekomplikovali \u017eivot\"*. Dokud to nikdo nezap\u00ed\u0161e, z\u016fst\u00e1v\u00e1 `vykonanoV` pr\u00e1zdn\u00e9, a to **neznamen\u00e1, \u017ee lo\u010f trest nevykonala**.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "trest",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "null"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/VykonanVstup"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/rozjizdky/{cislo}/tresty/{trest}": {
+            "delete": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Rozhod\u010d\u00ed trest odvol\u00e1",
+                "description": "Jen dokud se rozj\u00ed\u017e\u010fka jede. Po dojet\u00ed je to doklad.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cislo",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "trest",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/lod/dnes": {
+            "get": {
+                "tags": [
+                    "Z\u00e1vodn\u00edk"
+                ],
+                "summary": "Kter\u00e1 regata je dnes moje, a co se na n\u00ed d\u011bje",
+                "description": "Pro telefon sp\u00e1rovan\u00fd kl\u00ed\u010dem. Jedn\u00edm dotazem vrac\u00ed regatu, rozj\u00ed\u017e\u010fku, jak lo\u010f eviduje rozhod\u010d\u00ed a co komise vyhl\u00e1sila za j\u00edzdy \u2014 na vod\u011b je sign\u00e1l drah\u00fd a \u010dty\u0159i vol\u00e1n\u00ed znamenaj\u00ed \u010dty\u0159i p\u0159\u00edle\u017eitosti skon\u010dit s p\u016flkou obrazovky.\n\n**204, kdy\u017e dnes lo\u010f nikde nejede.** To nen\u00ed chyba, to je v\u011bt\u0161ina dn\u016f v roce.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZavodnikDto"
+                                }
+                            }
+                        }
+                    },
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
         "/sprava/serie/{serie}/zastavky/{zavod}/lode": {
             "get": {
                 "tags": [
@@ -3881,7 +4170,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "P\u0159ihl\u00e1s\u00ed lo\u010f na regatu \u2014 z ro\u010dn\u00edku, nebo novou",
-                "description": "Po\u0159adatel regaty, od vyps\u00e1n\u00ed z\u00e1vodu. Nov\u00e1 lo\u010f se st\u00e1v\u00e1 \u00fa\u010dastn\u00edkem ro\u010dn\u00edku v zadan\u00e9 kategorii. Druh\u00e9 p\u0159ihl\u00e1\u0161en\u00ed t\u00e9\u017ee lodi vrac\u00ed 200.",
+                "description": "Po\u0159adatel regaty, od vyps\u00e1n\u00ed z\u00e1vodu; po rozprav\u011b m\u00edsto n\u011bj rozhod\u010d\u00ed. Nov\u00e1 lo\u010f se st\u00e1v\u00e1 \u00fa\u010dastn\u00edkem ro\u010dn\u00edku v zadan\u00e9 kategorii. Druh\u00e9 p\u0159ihl\u00e1\u0161en\u00ed t\u00e9\u017ee lodi vrac\u00ed 200.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -3999,7 +4288,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "Sma\u017ee nesmyslnou p\u0159ihl\u00e1\u0161ku z webu",
-                "description": "Jen po\u017eadavek, vr\u00e1cenou nebo odm\u00edtnutou p\u0159ihl\u00e1\u0161ku bez v\u00fdsledk\u016f. Uklid\u00ed i lo\u010f a osoby, kter\u00e9 vznikly jen kv\u016fli n\u00ed.",
+                "description": "Jen po\u017eadavek, vr\u00e1cenou nebo odm\u00edtnutou p\u0159ihl\u00e1\u0161ku bez v\u00fdsledk\u016f. Uklid\u00ed i lo\u010f a osoby, kter\u00e9 vznikly jen kv\u016fli n\u00ed. Po\u0159adatel, po rozprav\u011b rozhod\u010d\u00ed.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4041,7 +4330,7 @@
                     "Spr\u00e1va"
                 ],
                 "summary": "P\u0159epne stav p\u0159ihl\u00e1\u0161ky lodi",
-                "description": "Po\u0159adatel zapisuje, potvrzuje, vrac\u00ed k dopln\u011bn\u00ed, odm\u00edt\u00e1, odhla\u0161uje a zna\u010d\u00ed nedostaven\u00ed; rozhod\u010d\u00ed vylu\u010duje. Vr\u00e1cen\u00ed, odm\u00edtnut\u00ed a vylou\u010den\u00ed cht\u011bj\u00ed d\u016fvod. Lo\u010f s v\u00fdsledky odhl\u00e1sit ani odm\u00edtnout nejde.",
+                "description": "Po\u0159adatel zapisuje, potvrzuje, vrac\u00ed k dopln\u011bn\u00ed, odm\u00edt\u00e1, odhla\u0161uje a zna\u010d\u00ed nedostaven\u00ed; rozhod\u010d\u00ed vylu\u010duje, a po rozprav\u011b p\u0159eb\u00edr\u00e1 i v\u0161echno ostatn\u00ed. Vr\u00e1cen\u00ed, odm\u00edtnut\u00ed a vylou\u010den\u00ed cht\u011bj\u00ed d\u016fvod. Lo\u010f s v\u00fdsledky odhl\u00e1sit ani odm\u00edtnout nejde.",
                 "parameters": [
                     {
                         "name": "serie",
@@ -4087,6 +4376,103 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/LodNaZastavceDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/pomocnici": {
+            "get": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Po\u0159adatel\u00e9 ro\u010dn\u00edku a kdo z nich pom\u00e1h\u00e1 u startu a c\u00edle",
+                "description": "\u010cte rozhod\u010d\u00ed ro\u010dn\u00edku i po\u0159adatel regaty; za\u0161krt\u00e1vat sm\u00ed jen rozhod\u010d\u00ed, a odpov\u011b\u010f to \u0159\u00edk\u00e1 v `smiZaskrtavat`.\n\nKandid\u00e1ti jsou po\u0159adatel\u00e9 **kter\u00e9koliv zast\u00e1vky ro\u010dn\u00edku**, ne jen t\u00e9hle \u2014 o to jde: u c\u00edle stoj\u00ed \u010dasto po\u0159adatel odjinud, kter\u00fd by jinak musel dostat celou tuhle regatu. U koho je `jeZdejsi`, tomu za\u0161krtnut\u00ed nic nep\u0159id\u00e1.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PomocniciDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sprava/serie/{serie}/zastavky/{zavod}/pomocnici/{uzivatel}": {
+            "put": {
+                "tags": [
+                    "Spr\u00e1va"
+                ],
+                "summary": "Rozhod\u010d\u00ed za\u0161krtne, nebo od\u0161krtne pomocn\u00edka u startu a c\u00edle",
+                "description": "Jen rozhod\u010d\u00ed ro\u010dn\u00edku, a jen u n\u011bkoho, kdo u\u017e je po\u0159adatelem n\u011bkter\u00e9 zast\u00e1vky ro\u010dn\u00edku \u2014 p\u0159\u00edznak se neud\u00edl\u00ed jako role.\n\n**Co otev\u00edr\u00e1:** p\u0159evzet\u00ed velen\u00ed, startovn\u00ed proceduru, z\u00e1pis startu a konce, z\u00e1pis dojezd\u016f a pap\u00edrov\u00fd z\u00e1pis. **Co neotev\u00edr\u00e1:** startovn\u00ed listinu, zakl\u00e1d\u00e1n\u00ed rozj\u00ed\u017ed\u011bk, posun v\u00fdsledk\u016f ve workflow, poh\u00e1r ani publikaci.\n\n**V\u00e1\u017ee se na jednu regatu**, ne na ro\u010dn\u00edk, a od\u0161krtnut\u00ed se zapisuje, nema\u017ee \u2014 po regat\u011b z\u016fst\u00e1v\u00e1 doklad, kdo toho dne u startu a u c\u00edle st\u00e1l a kdo ho tam pustil.",
+                "parameters": [
+                    {
+                        "name": "serie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "zavod",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "uzivatel",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PomocVstup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PomocniciDto"
                                 }
                             }
                         }
@@ -7824,6 +8210,44 @@
                     }
                 }
             },
+            "ClenPosadkyDto": {
+                "required": [
+                    "jmeno",
+                    "ja",
+                    "baterieProcent",
+                    "ozvalSeV",
+                    "vysila"
+                ],
+                "type": "object",
+                "properties": {
+                    "jmeno": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "ja": {
+                        "type": "boolean"
+                    },
+                    "baterieProcent": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "ozvalSeV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "vysila": {
+                        "type": "boolean"
+                    }
+                }
+            },
             "CoVidiPosadky": {
                 "enum": [
                     "Nic",
@@ -7908,6 +8332,12 @@
                     null
                 ]
             },
+            "DruhTrestu": {
+                "enum": [
+                    "Otacka360",
+                    "Otacka720"
+                ]
+            },
             "DruhUkonu": {
                 "enum": [
                     "ZmenaUseku",
@@ -7947,6 +8377,37 @@
                     "Bloky"
                 ],
                 "default": "Text"
+            },
+            "HlaseniDto": {
+                "required": [
+                    "sleduje",
+                    "startV",
+                    "nahravatOd",
+                    "nahravatTed"
+                ],
+                "type": "object",
+                "properties": {
+                    "sleduje": {
+                        "type": "boolean"
+                    },
+                    "startV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "nahravatOd": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "nahravatTed": {
+                        "type": "boolean"
+                    }
+                }
             },
             "HttpValidationProblemDetails": {
                 "type": "object",
@@ -9634,6 +10095,26 @@
                     }
                 }
             },
+            "PokynDto": {
+                "required": [
+                    "druh",
+                    "veta",
+                    "vyhlasenoV"
+                ],
+                "type": "object",
+                "properties": {
+                    "druh": {
+                        "type": "string"
+                    },
+                    "veta": {
+                        "type": "string"
+                    },
+                    "vyhlasenoV": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
             "PolohaLodi": {
                 "required": [
                     "lodId",
@@ -9716,6 +10197,35 @@
                     }
                 }
             },
+            "PomocniciDto": {
+                "required": [
+                    "smiZaskrtavat",
+                    "poradatele"
+                ],
+                "type": "object",
+                "properties": {
+                    "smiZaskrtavat": {
+                        "type": "boolean"
+                    },
+                    "poradatele": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PoradatelRocnikuDto"
+                        }
+                    }
+                }
+            },
+            "PomocVstup": {
+                "required": [
+                    "pomaha"
+                ],
+                "type": "object",
+                "properties": {
+                    "pomaha": {
+                        "type": "boolean"
+                    }
+                }
+            },
             "PoradatelDto": {
                 "required": [
                     "slug",
@@ -9795,6 +10305,45 @@
                             {
                                 "$ref": "#/components/schemas/ObrazekDto"
                             }
+                        ]
+                    }
+                }
+            },
+            "PoradatelRocnikuDto": {
+                "required": [
+                    "uzivatelId",
+                    "jmeno",
+                    "pomaha",
+                    "jeZdejsi",
+                    "odV",
+                    "zaskrtl"
+                ],
+                "type": "object",
+                "properties": {
+                    "uzivatelId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "jmeno": {
+                        "type": "string"
+                    },
+                    "pomaha": {
+                        "type": "boolean"
+                    },
+                    "jeZdejsi": {
+                        "type": "boolean"
+                    },
+                    "odV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "zaskrtl": {
+                        "type": [
+                            "null",
+                            "string"
                         ]
                     }
                 }
@@ -11020,6 +11569,17 @@
                             "null",
                             "string"
                         ]
+                    },
+                    "protestniLimit": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "limitUplynul": {
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -11565,6 +12125,25 @@
                     "Smazano"
                 ]
             },
+            "StavLodiDto": {
+                "required": [
+                    "veta",
+                    "kdy"
+                ],
+                "type": "object",
+                "properties": {
+                    "veta": {
+                        "type": "string"
+                    },
+                    "kdy": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    }
+                }
+            },
             "StavPolohy": {
                 "enum": [
                     "Cerstva",
@@ -11638,7 +12217,6 @@
             "StavVysledku": {
                 "enum": [
                     "Navrzeno",
-                    "Overeno",
                     "Schvaleno",
                     "Potvrzeno",
                     "KRevizi",
@@ -11987,6 +12565,72 @@
                     "smiPrijmout": {
                         "type": "boolean",
                         "default": false
+                    }
+                }
+            },
+            "TrestDto": {
+                "required": [
+                    "id",
+                    "ucastId",
+                    "lod",
+                    "druh",
+                    "otacek",
+                    "ulozenoV",
+                    "vykonanoV"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "ucastId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "lod": {
+                        "type": "string"
+                    },
+                    "druh": {
+                        "$ref": "#/components/schemas/DruhTrestu"
+                    },
+                    "otacek": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "ulozenoV": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "vykonanoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    }
+                }
+            },
+            "TrestVstup": {
+                "required": [
+                    "ucast",
+                    "druh"
+                ],
+                "type": "object",
+                "properties": {
+                    "ucast": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "druh": {
+                        "$ref": "#/components/schemas/DruhTrestu"
+                    },
+                    "ulozenoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
                     }
                 }
             },
@@ -12874,6 +13518,18 @@
                     "PoKategoriich",
                     "Oboje"
                 ]
+            },
+            "VykonanVstup": {
+                "type": "object",
+                "properties": {
+                    "vykonanoV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    }
+                }
             },
             "VypsaniDto": {
                 "required": [
@@ -13903,6 +14559,103 @@
                     }
                 }
             },
+            "ZavodnikDto": {
+                "required": [
+                    "serie",
+                    "zavod",
+                    "zavodNazev",
+                    "lod",
+                    "kategorie",
+                    "cisloPlachty",
+                    "posadka",
+                    "rozjizdka",
+                    "stavRozjizdky",
+                    "startV",
+                    "nahravatOd",
+                    "stavLodi",
+                    "pokyny"
+                ],
+                "type": "object",
+                "properties": {
+                    "serie": {
+                        "type": "string"
+                    },
+                    "zavod": {
+                        "type": "string"
+                    },
+                    "zavodNazev": {
+                        "type": "string"
+                    },
+                    "lod": {
+                        "type": "string"
+                    },
+                    "kategorie": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "cisloPlachty": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "posadka": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ClenPosadkyDto"
+                        }
+                    },
+                    "rozjizdka": {
+                        "type": [
+                            "null",
+                            "integer"
+                        ],
+                        "format": "int32"
+                    },
+                    "stavRozjizdky": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/StavRozjizdky"
+                            }
+                        ]
+                    },
+                    "startV": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "nahravatOd": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "format": "date-time"
+                    },
+                    "stavLodi": {
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "$ref": "#/components/schemas/StavLodiDto"
+                            }
+                        ]
+                    },
+                    "pokyny": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PokynDto"
+                        }
+                    }
+                }
+            },
             "ZavodShrnutiDto": {
                 "required": [
                     "slug",
@@ -14447,6 +15200,9 @@
         },
         {
             "name": "V\u00fdsledky"
+        },
+        {
+            "name": "Z\u00e1vodn\u00edk"
         }
     ]
 }

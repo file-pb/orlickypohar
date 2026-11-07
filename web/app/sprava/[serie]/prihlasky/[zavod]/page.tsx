@@ -14,10 +14,12 @@ import {
   type LodNaZastavce,
   type StavUcasti,
 } from "@/lib/prihlasky";
+import { nactiPomocniky, type PoradatelRocniku } from "@/lib/pomocnici";
 import QRCode from "qrcode";
 import { adresaKodu } from "@/lib/pripojeni";
 import {
   novaLodAkce,
+  pomocAkce,
   prihlasAkce,
   smazAkce,
   startovneAkce,
@@ -54,6 +56,9 @@ type Parametry = {
     kod?: string;
     kodLod?: string;
     doKdy?: string;
+    /** Zaškrtnutí pomocníka u startu a cíle (K8): co se stalo a komu. */
+    pomoc?: string;
+    kdoPomaha?: string;
   }>;
 };
 
@@ -68,7 +73,13 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
   const { serie, zavod } = await params;
   const zpravy = await searchParams;
 
-  const { stav, data: prehled } = await nactiPrihlasky(serie, zavod);
+  // Dvě nezávislá volání, jedno čekání. Pomocníci u startu a cíle (K8)
+  // jsou vlastní cesta a nemají zdržet listinu; kdo na ně nemá právo,
+  // dostane 403 a sekce se prostě nevykreslí.
+  const [{ stav, data: prehled }, { data: pomocnici }] = await Promise.all([
+    nactiPrihlasky(serie, zavod),
+    nactiPomocniky(serie, zavod),
+  ]);
 
   // QR se kreslí na serveru do SVG — administrace zůstává bez javascriptu.
   const vystaveny = zpravy.kod
@@ -213,14 +224,31 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
           {hotovo(zpravy.stav, zpravy.lod, zpravy.nastav)}
         </p>
       )}
+      {zpravy.pomoc && !zpravy.chyba && (
+        <p className="hlaska hotovo" role="status">
+          {zpravy.kdoPomaha ?? "Pomocník"}
+          {zpravy.pomoc === "zaskrtnut"
+            ? " teď pomáhá u startu a cíle."
+            : " u startu a cíle už nepomáhá."}
+        </p>
+      )}
       {/* Hláška chodí z API (`Prihlasky.ProcNelze`), takže odkaz nemůže být
-          v ní — stojí vedle. Nejčastější důvod je stav regaty, a ten se
-          mění v kalendáři. */}
+          v ní — stojí vedle. Jenže důvody jsou od 7. 11. 2026 dva: stav
+          regaty, který se mění v kalendáři, a **rozprava**, po které
+          listinu vede rozhodčí (R38/R39). Odkaz na kalendář by u toho
+          druhého posílal pořadatele opravovat něco, co v pořádku je.
+          Rozlišuje se podle stavu regaty, ne podle textu hlášky — ten by
+          stačilo na serveru přeformulovat a odkaz by se tiše rozešel. */}
       {prehled.procNelze && (
         <p className="hlaska" role="status">
-          {prehled.procNelze}{" "}
-          <Link href={`/sprava/${serie}/kalendar`}>Kalendář ročníku</Link> ·{" "}
-          <Link href="/napoveda#vypsat-regatu">jak se regata vypisuje</Link>
+          {prehled.procNelze}
+          {prehled.stavZavodu !== "Vypsany" && prehled.stavZavodu !== "Odjety" ? (
+            <>
+              {" "}
+              <Link href={`/sprava/${serie}/kalendar`}>Kalendář ročníku</Link> ·{" "}
+              <Link href="/napoveda#vypsat-regatu">jak se regata vypisuje</Link>
+            </>
+          ) : null}
         </p>
       )}
 
@@ -409,6 +437,119 @@ export default async function PrihlaskyZastavky({ params, searchParams }: Parame
           </p>
           <Tabulka serie={serie} zavod={zavod} lode={zrusene} kategorie={prehled.kategorie} kod={vystaveny} />
         </>
+      )}
+
+      {pomocnici && (
+        <PomocUVody
+          serie={serie}
+          zavod={zavod}
+          smiZaskrtavat={pomocnici.smiZaskrtavat}
+          poradatele={pomocnici.poradatele}
+        />
+      )}
+    </>
+  );
+}
+
+/**
+ * <b>Kdo dneska pomáhá u startu a u cíle</b> (nález K8, rozhodnuto Filipem
+ * 28. 10. 2026).
+ *
+ * <para>
+ * Stojí na obrazovce přihlášek schválně: zaškrtává se v klubovně u zápisu,
+ * kde rozhodčí stejně sedí, a je tam notebook — tedy právě tam, kde ti lidé
+ * fyzicky jsou. Vlastní stránka by znamenala, že se na ni musí vzpomenout.
+ * </para>
+ * <para>
+ * Nabízejí se pořadatelé <b>celého ročníku</b>, ne téhle zastávky: u cíle
+ * Radavské regaty stojí pořadatel Zahájení sezóny a bez příznaku by musel
+ * dostat celou tuhle regatu. U zdejšího pořadatele se proto nekreslí
+ * zaškrtávátko, ale věta — start i cíl má otevřený tak jako tak, a kdyby
+ * tam zaškrtávátko bylo, rozhodčí by si myslel, že na něm příznak nefunguje.
+ * </para>
+ */
+function PomocUVody({
+  serie,
+  zavod,
+  smiZaskrtavat,
+  poradatele,
+}: {
+  serie: string;
+  zavod: string;
+  smiZaskrtavat: boolean;
+  poradatele: PoradatelRocniku[];
+}) {
+  const pomahaji = poradatele.filter((p) => p.pomaha);
+
+  return (
+    <>
+      <h2>Pomoc u startu a cíle</h2>
+      <p className="poznamka" style={{ marginTop: 0 }}>
+        {smiZaskrtavat
+          ? "Komu tu zaškrtneš pomoc, ten na téhle regatě smí převzít velení, pustit startovní proceduru a zapsat start, konec a dojezdy. Startovní listinu to neotevírá a platí to jen na tuhle regatu."
+          : "Zaškrtává rozhodčí ročníku. Tady je vidět, kdo dneska u startu a u cíle pomáhá."}
+      </p>
+
+      {poradatele.length === 0 ? (
+        <p className="prazdno">
+          Ročník zatím nemá žádného pořadatele, kterého by šlo zaškrtnout.
+          Role se udělují v{" "}
+          <Link href={`/sprava/${serie}/opravneni`}>oprávněních ročníku</Link>.
+        </p>
+      ) : (
+        <div className="tabulka-obal">
+          <table>
+            <thead>
+              <tr>
+                <th className="lod">Pořadatel</th>
+                <th className="vlevo">Stav</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {poradatele.map((p) => (
+                <tr key={p.uzivatelId}>
+                  <td className="lod">
+                    {p.jmeno}
+                    {p.zaskrtl && (
+                      <div className="majitel">Zaškrtl {p.zaskrtl}</div>
+                    )}
+                  </td>
+                  <td className="vlevo">
+                    {p.jeZdejsi
+                      ? "pořadatel téhle regaty"
+                      : p.pomaha
+                        ? "pomáhá u startu a cíle"
+                        : "nepomáhá"}
+                  </td>
+                  <td>
+                    {/* U zdejšího pořadatele není co zapínat: start i cíl
+                        má otevřený z titulu pořadatelství. */}
+                    {smiZaskrtavat && !p.jeZdejsi && (
+                      <form action={pomocAkce} className="radkove">
+                        <input type="hidden" name="serie" value={serie} />
+                        <input type="hidden" name="zavod" value={zavod} />
+                        <input type="hidden" name="uzivatelId" value={p.uzivatelId} />
+                        <input type="hidden" name="jmeno" value={p.jmeno} />
+                        <input type="hidden" name="pomaha" value={p.pomaha ? "ne" : "ano"} />
+                        <button type="submit" className="jemne">
+                          {p.pomaha ? "Odškrtnout" : "Zaškrtnout pomoc"}
+                        </button>
+                      </form>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {pomahaji.length === 0 && poradatele.length > 0 && (
+        <p className="poznamka">
+          Dneska nepomáhá nikdo odjinud. Pořadatel téhle regaty u startu
+          a u cíle zapisuje i tak.
+        </p>
       )}
     </>
   );

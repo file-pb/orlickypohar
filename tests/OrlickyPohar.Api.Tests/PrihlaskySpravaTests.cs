@@ -89,6 +89,71 @@ public class PrihlaskySpravaTests(PostgresFixture fixture)
         return (await odpoved.Content.ReadFromJsonAsync<ZavodDetailDto>(Json))!;
     }
 
+    /// <summary>
+    /// <b>Rozprava zavírá startovní listinu</b> (nálezy R38 a R39,
+    /// rozhodnuto 7. 11. 2026). Rozprava nemá vlastní kolonku — je to
+    /// okamžik, kdy první rozjížďka dostane čas startu (K6), takže se tu
+    /// nastavuje právě ten.
+    /// <para>
+    /// Test jde oběma směry u každého kroku. Kdyby zkoušel jen to, že
+    /// pořadatel narazí, prošel by i tehdy, kdyby zámek zavřel listinu
+    /// úplně všem — a to je přesně ta chyba, která by se na place
+    /// projevila tím, že loď, co dorazí na poslední chvíli, nezapíše
+    /// nikdo.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Rozprava_zavre_listinu_vsem_krome_rozhodciho()
+    {
+        var slug = "prihlasky-rozprava";
+        await Nahraj(Rocnik(slug));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var k = await KontextAsync(scope, slug);
+
+        // --- Do rozpravy: beze změny proti dřívějšku -------------------
+        Assert.Null((await k.Sprava.PrihlasAsync(
+            k.ZavodId, new(PrihlaskaId: k.Bora, Potvrzeno: true), default)).Chyba);
+
+        // --- Rozprava = čas startu první rozjížďky ---------------------
+        var rozjizdka = await k.Db.Rozjizdky.FirstAsync(r => r.ZavodId == k.ZavodId);
+        rozjizdka.StartV = new DateTimeOffset(2026, 4, 25, 8, 55, 0, TimeSpan.Zero);
+        await k.Db.SaveChangesAsync();
+
+        // --- Přidat loď: pořadatel ne, rozhodčí ano --------------------
+        var opozdilec = new PrihlaseniVstup(
+            NovaLod: new("Opozdilec", "Race", "Karel", "Pozdní"), Potvrzeno: true);
+
+        Assert.Equal(
+            Prihlasky.PoRozprave,
+            (await k.Sprava.PrihlasAsync(k.ZavodId, opozdilec, default)).Chyba);
+
+        var (zapsana, _, chyba, _) = await k.Sprava.PrihlasAsync(
+            k.ZavodId, opozdilec, default, role: Prihlasky.Kdo.Rozhodci);
+        Assert.Null(chyba);
+        Assert.NotNull(zapsana);
+
+        // --- Přepnout stav: totéž --------------------------------------
+        Assert.Equal(
+            Prihlasky.PoRozprave,
+            (await k.Sprava.PrepniAsync(k.ZavodId, k.Bora, StavUcasti.Potvrzena, default)).Chyba);
+
+        Assert.Null((await k.Sprava.PrepniAsync(
+            k.ZavodId, k.Bora, StavUcasti.Potvrzena, default,
+            role: Prihlasky.Kdo.Rozhodci)).Chyba);
+
+        // --- Veřejný formulář se zavře taky (R39) ----------------------
+        // Hláška se porovnává celá: `ProcNejde` běží dřív a vrátila by
+        // chybu taky — test by pak prošel, aniž by se zámku vůbec dotkl.
+        var zvenku = await k.Sprava.VerejnaAsync(
+            k.ZavodId,
+            new("Pozdní Jana", new("Jana", "Pozdní", Email: "jana@example.com"), Souhlas: true),
+            default);
+        Assert.Equal(
+            "Rozprava už proběhla a přihlašování je zavřené. Ozvi se rozhodčímu přímo na place.",
+            zvenku.Chyba);
+    }
+
     [Fact]
     public async Task Prihlasena_lod_je_verejne_videt_jako_nepotvrzena_a_zrusena_zmizi()
     {

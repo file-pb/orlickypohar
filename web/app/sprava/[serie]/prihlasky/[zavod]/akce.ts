@@ -9,6 +9,7 @@ import {
   zapisStartovne,
   type StavUcasti,
 } from "@/lib/prihlasky";
+import { nastavPomoc } from "@/lib/pomocnici";
 import { vystavKodPoradatel } from "@/lib/pripojeni";
 
 /**
@@ -163,4 +164,29 @@ export async function vystavKodAkce(formular: FormData) {
     }));
 
   redirect(kam(serie, zavod, { kod: data.kod, kodLod: String(lod), doKdy: data.platiDo }));
+}
+
+/**
+ * Rozhodčí zaškrtne, nebo odškrtne pomocníka u startu a cíle (nález K8).
+ *
+ * <b>Jméno se nese v adrese</b>, stejně jako u lodi: hláška „Pepa Pořadatel
+ * teď pomáhá u startu a cíle" dává u zápisu smysl, „hotovo" ne — u stolu
+ * stojí tři lidi a rozhodčí musí vidět, kterého zaškrtl.
+ */
+export async function pomocAkce(formular: FormData) {
+  const serie = text(formular, "serie");
+  const zavod = text(formular, "zavod");
+  const kdo = text(formular, "uzivatelId");
+  const jmeno = text(formular, "jmeno");
+  const pomaha = text(formular, "pomaha") === "ano";
+
+  const chyba = await nastavPomoc(serie, zavod, kdo, pomaha);
+
+  redirect(
+    kam(
+      serie,
+      zavod,
+      chyba ? { chyba } : { pomoc: pomaha ? "zaskrtnut" : "odskrtnut", kdoPomaha: jmeno },
+    ),
+  );
 }

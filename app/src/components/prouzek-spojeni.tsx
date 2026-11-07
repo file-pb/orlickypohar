@@ -65,7 +65,10 @@ export function useProuzek(): Prouzek | null {
     // vzniká z odesílání stopy, takže by to byl dotaz navíc o ničem.
     const zeptejSe = () => {
       try {
-        if (!otevrenyZaznam()) void overSpojeni();
+        // <b>V ukázce se neptáme.</b> Dotaz by sice šel přes `sit` a ven
+        // by neodešel, ale byl by to dotaz o ničem: ukázka `/health`
+        // nezná a proužek v ní stejně hlásí režim, ne spojení.
+        if (!ukazkaBezi() && !otevrenyZaznam()) void overSpojeni();
       } catch {
         // Databáze po studeném startu; příští kolo to zkusí znovu.
       }

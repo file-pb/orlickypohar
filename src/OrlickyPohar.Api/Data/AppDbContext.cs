@@ -29,6 +29,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     /// sloupec. Je to doklad (nález R19, 28. 10. 2026).
     /// </summary>
     public DbSet<Velitel> Velitele => Set<Velitel>();
+    public DbSet<Pomocnik> Pomocnici => Set<Pomocnik>();
     public DbSet<Rozjizdka> Rozjizdky => Set<Rozjizdka>();
 
     /// <summary>
@@ -37,6 +38,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     /// (Filip, 28. 10. 2026).
     /// </summary>
     public DbSet<UkonZaJizdy> UkonyZaJizdy => Set<UkonZaJizdy>();
+    public DbSet<TrestZaJizdy> TrestyZaJizdy => Set<TrestZaJizdy>();
     public DbSet<Vysledek> Vysledky => Set<Vysledek>();
     public DbSet<ZapisNavrh> ZapisyNavrhu => Set<ZapisNavrh>();
     public DbSet<Clanek> Clanky => Set<Clanek>();
@@ -396,6 +398,19 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // Čte se vždycky „co platí pro tuhle rozjížďku, v pořadí vyhlášení".
         ukon.HasIndex(x => new { x.RozjizdkaId, x.VyhlasenoV });
 
+        var trest = b.Entity<TrestZaJizdy>();
+        trest.HasOne(x => x.Rozjizdka).WithMany().HasForeignKey(x => x.RozjizdkaId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Účast se nemaže, dokud na ní visí výsledky; trest je doklad
+        // téhož druhu — kdyby ho odnesla, zmizel by záznam, kvůli kterému
+        // se o pořadí vede spor.
+        trest.HasOne(x => x.Ucast).WithMany().HasForeignKey(x => x.UcastId)
+            .OnDelete(DeleteBehavior.Restrict);
+        trest.HasOne(x => x.Ulozil).WithMany().HasForeignKey(x => x.UlozilId)
+            .OnDelete(DeleteBehavior.Restrict);
+        // Čte se „co platí pro tuhle rozjížďku, v pořadí uložení".
+        trest.HasIndex(x => new { x.RozjizdkaId, x.UlozenoV });
+
         var vysledek = b.Entity<Vysledek>();
         vysledek.HasOne(x => x.Rozjizdka).WithMany().HasForeignKey(x => x.RozjizdkaId)
             .OnDelete(DeleteBehavior.Cascade);
@@ -526,6 +541,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // bez konce. Řada ostatních je doklad, do kterého se nekouká
         // jinak než celým výpisem.
         velitel.HasIndex(x => new { x.ZavodId, x.DoV });
+
+        var pomocnik = b.Entity<Features.Zavody.Pomocnik>();
+        pomocnik.HasOne(x => x.Zavod).WithMany().HasForeignKey(x => x.ZavodId)
+            .OnDelete(DeleteBehavior.Cascade);
+        // Ptá se na to každý zápis u vody — „pomáhá tenhle člověk na téhle
+        // regatě teď" — takže dotaz na trojici, ne na dvojici jako
+        // u velitele. Řada ostatních záznamů je doklad.
+        pomocnik.HasIndex(x => new { x.ZavodId, x.UzivatelId, x.DoV });
 
         var nastaveni = b.Entity<Features.Tracker.NastaveniTrackeru>();
         nastaveni.HasOne(x => x.Zavod).WithMany().HasForeignKey(x => x.ZavodId)

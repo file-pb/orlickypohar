@@ -12,9 +12,29 @@ public class WorkflowTests
     private const bool Kdokoliv = false;
     private const bool Spravce = true;
 
+    /// <summary>
+    /// <b>Řada má tři stupně</b> (nález K3, 7. 11. 2026). Mezi návrhem
+    /// a potvrzením býval ještě „ověřeno" — jenže ověřoval i schvaloval
+    /// tentýž rozhodčí, hned po sobě, takže druhý krok nikoho nestřežil.
+    /// Tenhle test tu stojí proto, aby se čtvrtý stupeň nevrátil potichu:
+    /// vrátit ho má smysl až s protesty (nález K2), a to bude vědomé
+    /// rozhodnutí, ne přehlédnutí.
+    /// </summary>
+    [Fact]
+    public void Rada_je_tristupnova_dokud_nejsou_protesty()
+    {
+        Assert.Equal(
+            [StavVysledku.Navrzeno, StavVysledku.Schvaleno, StavVysledku.Potvrzeno],
+            Workflow.Rada);
+
+        // A jmenovitě: žádný stav se netváří jako samostatné „ověření".
+        Assert.DoesNotContain(
+            Enum.GetValues<StavVysledku>(),
+            s => Workflow.Nazev(s).StartsWith("Ověř", StringComparison.Ordinal));
+    }
+
     [Theory]
-    [InlineData(StavVysledku.Navrzeno, StavVysledku.Overeno)]
-    [InlineData(StavVysledku.Overeno, StavVysledku.Schvaleno)]
+    [InlineData(StavVysledku.Navrzeno, StavVysledku.Schvaleno)]
     [InlineData(StavVysledku.Schvaleno, StavVysledku.Potvrzeno)]
     public void Radou_se_jde_po_jednom_kroku(StavVysledku ze, StavVysledku na)
     {
@@ -22,9 +42,7 @@ public class WorkflowTests
     }
 
     [Theory]
-    [InlineData(StavVysledku.Navrzeno, StavVysledku.Schvaleno)]
     [InlineData(StavVysledku.Navrzeno, StavVysledku.Potvrzeno)]
-    [InlineData(StavVysledku.Overeno, StavVysledku.Potvrzeno)]
     public void Preskocit_smi_jen_spravce(StavVysledku ze, StavVysledku na)
     {
         // Každý stupeň je něčí podpis — proto se běžně neskáče. Správce ve
@@ -34,7 +52,7 @@ public class WorkflowTests
     }
 
     [Theory]
-    [InlineData(StavVysledku.Overeno, StavVysledku.Navrzeno)]
+    [InlineData(StavVysledku.Schvaleno, StavVysledku.Navrzeno)]
     [InlineData(StavVysledku.Potvrzeno, StavVysledku.Schvaleno)]
     public void Zpatky_se_couvat_neda_ani_spravci(StavVysledku ze, StavVysledku na)
     {
@@ -47,7 +65,6 @@ public class WorkflowTests
     }
 
     [Theory]
-    [InlineData(StavVysledku.Overeno)]
     [InlineData(StavVysledku.Schvaleno)]
     [InlineData(StavVysledku.Potvrzeno)]
     public void K_revizi_jde_vratit_cokoliv_zkontrolovaneho(StavVysledku ze)
@@ -69,7 +86,7 @@ public class WorkflowTests
         Assert.Null(Workflow.ProcNejdeBezDuvodu(StavVysledku.KRevizi, "U Aničky sedí čas, ne pořadí."));
 
         // Jinde by to bylo formulářové pole navíc u úkonu na jedno kliknutí.
-        Assert.Null(Workflow.ProcNejdeBezDuvodu(StavVysledku.Overeno, null));
+        Assert.Null(Workflow.ProcNejdeBezDuvodu(StavVysledku.Schvaleno, null));
     }
 
     [Theory]
@@ -81,7 +98,7 @@ public class WorkflowTests
 
         // Opravený zápis musí projít ověřením znovu, jinak je revize
         // jen zdržení.
-        Assert.NotNull(Workflow.ProcNejde(ze, StavVysledku.Overeno, Spravce));
+        Assert.NotNull(Workflow.ProcNejde(ze, StavVysledku.Schvaleno, Spravce));
         Assert.NotNull(Workflow.ProcNejde(ze, StavVysledku.Potvrzeno, Spravce));
     }
 
@@ -110,7 +127,6 @@ public class WorkflowTests
 
     [Theory]
     [InlineData(StavVysledku.Navrzeno, Role.Organizator)]
-    [InlineData(StavVysledku.Overeno, Role.Rozhodci)]
     [InlineData(StavVysledku.Schvaleno, Role.Rozhodci)]
     [InlineData(StavVysledku.KRevizi, Role.Rozhodci)]
     [InlineData(StavVysledku.Potvrzeno, Role.Spravce)]
@@ -128,7 +144,6 @@ public class WorkflowTests
     [Theory]
     [InlineData(StavVysledku.Navrzeno, Role.Organizator)]
     [InlineData(StavVysledku.KRevizi, Role.Organizator)]
-    [InlineData(StavVysledku.Overeno, Role.Rozhodci)]
     [InlineData(StavVysledku.Schvaleno, Role.Rozhodci)]
     [InlineData(StavVysledku.Potvrzeno, Role.Rozhodci)]
     public void Rusi_poradatel_dokud_jsou_cisla_rozepsana(StavVysledku ze, Role kdo)
@@ -152,7 +167,6 @@ public class WorkflowTests
     [Theory]
     [InlineData(StavVysledku.Navrzeno, Role.Organizator)]
     [InlineData(StavVysledku.KRevizi, Role.Organizator)]
-    [InlineData(StavVysledku.Overeno, Role.Rozhodci)]
     [InlineData(StavVysledku.Schvaleno, Role.Rozhodci)]
     [InlineData(StavVysledku.Potvrzeno, Role.Rozhodci)]
     [InlineData(StavVysledku.Eliminovano, Role.Rozhodci)]
@@ -176,7 +190,7 @@ public class WorkflowTests
             Workflow.KdoSmi(StavVysledku.Navrzeno, na), 1, 7);
 
         Assert.True(Prava.Smi(organizator, zNavrhu(StavVysledku.Navrzeno)));
-        Assert.False(Prava.Smi(organizator, zNavrhu(StavVysledku.Overeno)));
+        Assert.False(Prava.Smi(organizator, zNavrhu(StavVysledku.Schvaleno)));
 
         Assert.True(Prava.Smi(rozhodci, zNavrhu(StavVysledku.Schvaleno)));
         Assert.False(Prava.Smi(rozhodci, zNavrhu(StavVysledku.Navrzeno)));
@@ -276,7 +290,6 @@ public class WorkflowTests
     /// u úkonu, který se dělá jedním kliknutím.
     /// </summary>
     [Theory]
-    [InlineData(StavVysledku.Overeno)]
     [InlineData(StavVysledku.Schvaleno)]
     [InlineData(StavVysledku.Potvrzeno)]
     [InlineData(StavVysledku.Navrzeno)]

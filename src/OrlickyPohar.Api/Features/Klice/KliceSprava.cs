@@ -194,6 +194,35 @@ public class KliceSprava(AppDbContext db, TimeProvider cas)
         return klic.Sleduje;
     }
 
+    /// <summary>
+    /// <b>Telefon se ozval</b> (R3) — zapíše čas a stav baterie.
+    /// <para>
+    /// <b>Tohle je první cesta, kudy baterie opravdu doteče.</b> Do
+    /// 7. 11. 2026 se <see cref="KlicLodi.BaterieProcent"/> plnilo
+    /// <b>jedině z dávky bodů trasy</b> (<c>TrasySprava</c>), tedy až
+    /// z vody — takže přehled pořadatele v klubovně, kde se vybitý telefon
+    /// dá ještě spravit, ukazoval procenta prázdná. Režim „hlásím se“ je
+    /// přináší na břeh.
+    /// </para>
+    /// <para>
+    /// <b>Ozve se i odepnutý klíč.</b> „Tuhle regatu nejedu“ neznamená
+    /// „nejsem", a kdyby se hlášení odmítalo, telefon by se nedozvěděl,
+    /// proč neposílá. Nahrávat ale nezačne: to řeší endpoint tím, že mu
+    /// nepošle čas.
+    /// </para>
+    /// <para>
+    /// <c>null</c> u procent <b>nepřepíše</b> poslední známou hodnotu.
+    /// „Neříkám“ není „nevím nic“ — simulátor baterii nezná a starší appka
+    /// ji neposílá, a bylo by horší zapomenout, co se vědělo.
+    /// </para>
+    /// </summary>
+    public async Task HlasSeAsync(KlicLodi klic, int? baterieProcent, CancellationToken ct)
+    {
+        klic.PosledniPouzitiV = cas.GetUtcNow();
+        if (baterieProcent is { } procent) klic.BaterieProcent = procent;
+        await db.SaveChangesAsync(ct);
+    }
+
     public async Task<List<KlicDto>> SeznamAsync(int lodId, CancellationToken ct) =>
         await db.Klice
             .Where(k => k.LodId == lodId)

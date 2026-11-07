@@ -147,13 +147,20 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
             .ToListAsync(ct);
 
         var zamek = Kalendar.ProcNejdePoharove(zavod.Druh) ?? Prihlasky.ProcNejdeNaZavod(zavod.Stav);
-        var procNelze = zamek ?? (poradatel ? null : NeniPoradatel);
+        var poRozprave = await PoRozpraveAsync(zavodId, ct);
+        var kdo = Kdo(poradatel, rozhodci, zamek is not null, poRozprave);
+
+        // Obrazovka musí říct, **proč** nejde psát, a důvody jsou tři:
+        // regata na to není ve stavu, rozprava už proběhla, nebo tu ten
+        // člověk nemá co pohledávat. Pořadí je od nejobecnějšího.
+        var procNelze = zamek ?? (poRozprave
+            ? rozhodci ? null : Prihlasky.PoRozprave
+            : poradatel ? null : NeniPoradatel);
 
         return new PrihlaskyZastavkyDto(
             zavod.Serie, zavod.SerieNazev, zavod.Slug, zavod.Nazev, zavod.Stav,
             procNelze is null, procNelze, kategorie,
-            await LodeAsync(zavod.SerieId, zavodId, Kdo(poradatel, rozhodci, zamek is not null),
-                jenPrihlaska: null, ct));
+            await LodeAsync(zavod.SerieId, zavodId, kdo, poRozprave, jenPrihlaska: null, ct));
     }
 
     /// <summary>
@@ -162,12 +169,17 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
     /// jen se nic nezmění.
     /// </summary>
     public async Task<(LodNaZastavceDto? Lod, bool Nova, string? Chyba, bool ChcePotvrdit)> PrihlasAsync(
-        int zavodId, PrihlaseniVstup vstup, CancellationToken ct, Guid? kdo = null)
+        int zavodId, PrihlaseniVstup vstup, CancellationToken ct, Guid? kdo = null,
+        Prihlasky.Kdo role = Prihlasky.Kdo.Poradatel)
     {
         var zavod = await db.Zavody.FirstAsync(z => z.Id == zavodId, ct);
 
         if ((Kalendar.ProcNejdePoharove(zavod.Druh) ?? Prihlasky.ProcNejdeNaZavod(zavod.Stav)) is { } zamceno)
             return (null, false, zamceno, false);
+
+        var poRozprave = await PoRozpraveAsync(zavodId, ct);
+        if (Prihlasky.ProcNejdeDoListiny(poRozprave, role) is { } zamekListiny)
+            return (null, false, zamekListiny, false);
 
         if ((vstup.PrihlaskaId is null) == (vstup.NovaLod is null))
             return (null, false, "Přihlas buď loď z ročníku, nebo novou loď — jedno z toho.", false);
@@ -248,7 +260,7 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
 
         await db.SaveChangesAsync(ct);
 
-        var lod = (await LodeAsync(zavod.SerieId, zavodId, Prihlasky.Kdo.Poradatel, jenPrihlaska: prihlaska.Id, ct)).Single();
+        var lod = (await LodeAsync(zavod.SerieId, zavodId, role, poRozprave, jenPrihlaska: prihlaska.Id, ct)).Single();
         return (lod, nova, null, false);
     }
 
@@ -270,15 +282,18 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
         if (ucast is null) return (null, null);
 
         var maVysledky = await db.Vysledky.AnyAsync(v => v.UcastId == ucast.Id, ct);
-        if (Prihlasky.ProcNejdePrepnout(ucast.Stav, na, maVysledky, role) is { } chyba) return (null, chyba);
-        if (ucast.Stav == na) return ((await LodeAsync(zavod.SerieId, zavodId, role, prihlaskaId, ct)).Single(), null);
+        var poRozprave = await PoRozpraveAsync(zavodId, ct);
+        if (Prihlasky.ProcNejdePrepnout(ucast.Stav, na, maVysledky, role, poRozprave) is { } chyba)
+            return (null, chyba);
+        if (ucast.Stav == na)
+            return ((await LodeAsync(zavod.SerieId, zavodId, role, poRozprave, prihlaskaId, ct)).Single(), null);
         if (Prihlasky.ProcNejdeDuvod(na, duvod) is { } chybaDuvodu) return (null, chybaDuvodu);
 
         Zaznamenej(ucast, ucast.Stav, na, kdo, duvod);
         ucast.Stav = na;
         await db.SaveChangesAsync(ct);
 
-        return ((await LodeAsync(zavod.SerieId, zavodId, role, jenPrihlaska: prihlaskaId, ct)).Single(), null);
+        return ((await LodeAsync(zavod.SerieId, zavodId, role, poRozprave, jenPrihlaska: prihlaskaId, ct)).Single(), null);
     }
 
     /// <summary>
@@ -303,6 +318,14 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
         var zavod = await db.Zavody.FirstAsync(z => z.Id == zavodId, ct);
         if ((Kalendar.ProcNejdePoharove(zavod.Druh) ?? Prihlasky.ProcNejdeNaZavod(zavod.Stav)) is { } zamceno)
             return (null, zamceno);
+
+        // <b>Rozprava zavírá i veřejný formulář.</b> Požadavek, který po ní
+        // přijde, by nikdo nezapsal: pořadatel už nesmí a rozhodčí sedí
+        // u vody, ne nad frontou z webu. Lepší to říct rovnou než nechat
+        // kapitána čekat na zápis, který nepřijde.
+        if (await PoRozpraveAsync(zavodId, ct))
+            return (null, "Rozprava už proběhla a přihlašování je zavřené. "
+                          + "Ozvi se rozhodčímu přímo na place.");
 
         // Strop na zastávku. Jedna hodina stačí: pořadatel mezitím frontu
         // uvidí a spam se dá smazat.
@@ -411,7 +434,12 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
         await db.SaveChangesAsync(ct);
 
         var serieId = await db.Zavody.Where(z => z.Id == zavodId).Select(z => z.SerieId).FirstAsync(ct);
-        return ((await LodeAsync(serieId, zavodId, Prihlasky.Kdo.Poradatel, prihlaskaId, ct)).Single(), null);
+        // Startovné zámek rozpravy neřeší — kdo přijede pozdě, zaplatí
+        // později. Role se do řádku posílá jen proto, aby obrazovka
+        // nabídla tatáž tlačítka jako v přehledu.
+        return ((await LodeAsync(
+            serieId, zavodId, Prihlasky.Kdo.Poradatel, await PoRozpraveAsync(zavodId, ct),
+            prihlaskaId, ct)).Single(), null);
     }
 
     /// <summary>
@@ -423,8 +451,13 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
     /// které přišly s ní. Spam se jinak usadí v našeptávači a v osobách.
     /// </para>
     /// </summary>
-    public async Task<(bool Nenalezeno, string? Chyba)> SmazAsync(int zavodId, int prihlaskaId, CancellationToken ct)
+    public async Task<(bool Nenalezeno, string? Chyba)> SmazAsync(
+        int zavodId, int prihlaskaId, CancellationToken ct,
+        Prihlasky.Kdo role = Prihlasky.Kdo.Poradatel)
     {
+        if (Prihlasky.ProcNejdeDoListiny(await PoRozpraveAsync(zavodId, ct), role) is { } zamek)
+            return (false, zamek);
+
         var ucast = await db.Ucasti
             .Include(u => u.Prihlaska)
             .FirstOrDefaultAsync(u => u.ZavodId == zavodId && u.PrihlaskaId == prihlaskaId, ct);
@@ -540,8 +573,35 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
     /// Kdo na obrazovce co přepíná. <c>null</c> znamená nic: zastávka je
     /// zamčená, nebo přihlášený nemá roli.
     /// </summary>
-    private static Prihlasky.Kdo? Kdo(bool poradatel, bool rozhodci, bool zamceno) =>
-        zamceno ? null : poradatel ? Prihlasky.Kdo.Poradatel : rozhodci ? Prihlasky.Kdo.Rozhodci : null;
+    /// <summary>
+    /// V jaké roli se obrazovka kreslí. <b>Po rozpravě přebírá listinu
+    /// rozhodčí</b>, takže kdo je obojí, vystupuje od té chvíle jako on —
+    /// jinak by si správce sám sobě zamkl seznam.
+    /// </summary>
+    private static Prihlasky.Kdo? Kdo(bool poradatel, bool rozhodci, bool zamceno, bool poRozprave) =>
+        zamceno ? null
+        : rozhodci && (!poradatel || poRozprave) ? Prihlasky.Kdo.Rozhodci
+        : poradatel && !poRozprave ? Prihlasky.Kdo.Poradatel
+        : null;
+
+    /// <summary>
+    /// <b>Proběhla už rozprava?</b> Nemá vlastní kolonku: rozprava je
+    /// v datech okamžik, kdy rozhodčí nastavil čas startu první rozjížďky
+    /// (nález K6 — *„po rozpravě nastavit předpokládaný čas startu"*).
+    /// <para>
+    /// Zvláštní tlačítko *„rozprava skončila"* by znamenalo druhý úkon
+    /// o tomtéž, který se dá zapomenout — a zapomenutý by listinu nechal
+    /// otevřenou přesně v tu chvíli, kdy se tiskne. Takhle zavírá ta
+    /// akce, kterou rozhodčí stejně dělá.
+    /// </para>
+    /// <para>
+    /// <b>Nejpozději zavře start.</b> Když se čas předem nenastaví a
+    /// rozhodčí spustí proceduru rovnou, <c>StartV</c> vznikne tam —
+    /// pozdě, ale pořád dřív, než se vyjede.
+    /// </para>
+    /// </summary>
+    public Task<bool> PoRozpraveAsync(int zavodId, CancellationToken ct) =>
+        db.Rozjizdky.AnyAsync(r => r.ZavodId == zavodId && r.StartV != null, ct);
 
     private void Zaznamenej(Ucast ucast, StavUcasti? ze, StavUcasti na, Guid? kdo, string? duvod) =>
         ucast.Zmeny.Add(new ZmenaUcasti
@@ -554,7 +614,8 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
         });
 
     private async Task<List<LodNaZastavceDto>> LodeAsync(
-        int serieId, int zavodId, Prihlasky.Kdo? kdo, int? jenPrihlaska, CancellationToken ct)
+        int serieId, int zavodId, Prihlasky.Kdo? kdo, bool poRozprave, int? jenPrihlaska,
+        CancellationToken ct)
     {
         var prihlasky = await db.Prihlasky
             .Where(p => p.SerieId == serieId && (jenPrihlaska == null || p.Id == jenPrihlaska))
@@ -600,7 +661,7 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
 
                 IReadOnlyList<StavUcasti> mozne = u is null || kdo is null
                     ? []
-                    : [.. Prihlasky.MozneZ(u.Stav, u.MaVysledky, kdo.Value)];
+                    : [.. Prihlasky.MozneZ(u.Stav, u.MaVysledky, kdo.Value, poRozprave)];
 
                 return new LodNaZastavceDto(
                     p.Id, p.Nazev, p.CisloPlachty, p.Typ, p.Majitel, p.Kategorie,
@@ -608,7 +669,12 @@ public class PrihlaskySprava(AppDbContext db, TimeProvider cas)
                     u?.Kapitan, u?.Email, u?.Telefon, u?.Posadka, u?.Poznamka, u?.PodanoV,
                     u?.Zaplaceno ?? false, u?.StartovnePoznamka,
                     u is null ? null : [.. u.Historie.Select(z => new ZmenaUcastiDto(z.Ze, z.Na, z.Kdy, z.Kdo, z.Duvod))],
-                    u is not null && kdo == Prihlasky.Kdo.Poradatel && Prihlasky.SmiSmazat(u.Stav, u.MaVysledky),
+                    // Mazat smí ten, kdo zrovna vede listinu — do rozpravy
+                    // pořadatel, po ní rozhodčí. Stejná funkce jako u zápisu,
+                    // aby se tlačítko nenabídlo tomu, komu pak zápis nevyjde.
+                    u is not null && kdo is not null
+                        && Prihlasky.ProcNejdeDoListiny(poRozprave, kdo.Value) is null
+                        && Prihlasky.SmiSmazat(u.Stav, u.MaVysledky),
                     p.LodId,
                     u?.SouhlasV);
             })

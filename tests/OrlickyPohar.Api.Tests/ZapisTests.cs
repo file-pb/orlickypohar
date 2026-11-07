@@ -22,13 +22,12 @@ public class ZapisTests
     }
 
     [Theory]
-    [InlineData(StavVysledku.Overeno)]
     [InlineData(StavVysledku.Schvaleno)]
     [InlineData(StavVysledku.Potvrzeno)]
     [InlineData(StavVysledku.Eliminovano)]
     public void Podepsana_cisla_se_neprepisuji(StavVysledku stav)
     {
-        // Od ověření čísla někdo podepsal. Oprava vede přes revizi s důvodem,
+        // Jakmile čísla někdo podepsal, oprava vede přes revizi s důvodem,
         // ne přes tiché přepsání.
         Assert.False(Zapis.Otevreny(stav));
         Assert.NotNull(Zapis.ProcNejdePrepsat(StavZavodu.Odjety, stav));

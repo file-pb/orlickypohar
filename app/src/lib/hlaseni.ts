@@ -244,6 +244,61 @@ export function coPrehrat(
  * Tři vteřiny jsou tolerance na tik hodin a na rozjezd přehrávače, ne
  * lhůta na doběhnutí: co propadlo víc, propadlo.
  */
+/**
+ * <b>Nejbližší troubení, které teprve přijde</b> — vrací jeho
+ * `vterinDoStartu`, nebo `null`, když už žádné nezbývá.
+ *
+ * Je to zkratka pro ukázkový režim, ne vlastnost startu: dovoluje
+ * přeskočit čekání, aby se simulace dala ladit rychleji (Filip, 7. 11.
+ * 2026). U vody se nepřeskakuje nic.
+ */
+export function dalsiTroubeni(doStartuS: number, delkaS: number = PROCEDURA_S): number | null {
+  const hrany = partitura(delkaS)
+    .filter((z) => z.troubi !== null)
+    .map((z) => z.vterinDoStartu)
+    .filter((v) => v < doStartuS);
+  return hrany.length > 0 ? Math.max(...hrany) : null;
+}
+
+/**
+ * <b>O kolik vteřin posunout start</b>, aby do nejbližšího troubení
+ * zbývalo <see cref="NASKOK_PRED_HRANOU_S"/>. `null`, když není co
+ * přeskočit — buď už žádné troubení nezbývá, nebo je blíž než mez.
+ */
+export function kolikPreskocit(
+  doStartuS: number,
+  delkaS: number = PROCEDURA_S,
+): number | null {
+  const hrana = dalsiTroubeni(doStartuS, delkaS);
+  if (hrana === null) return null;
+
+  const cekani = doStartuS - hrana;
+  // Pod mezí se nenabízí: čekat minutu a půl je součást zkoušky, a
+  // bublina, která vyskočí pořád, se přestane číst.
+  if (cekani <= NEJDELSI_CEKANI_S) return null;
+
+  return cekani - NASKOK_PRED_HRANOU_S;
+}
+
+/**
+ * <b>Nejdelší čekání, které se ještě nenabídne přeskočit.</b>
+ *
+ * Původně dvě minuty, což vynechalo tři ze čtyř čekání v pětiminutové
+ * proceduře: výzva→příprava i minuta→start trvají shodou okolností
+ * přesně minutu. Filip, 7. 11. 2026: *„do ukázky doplň ty zkracující
+ * modaly a to i tam, kde je minuta."* Mez je proto 35 s — nad náskokem
+ * (15 s) s rezervou, takže se nabízí jen tam, kde se dá ušetřit aspoň
+ * dvacet vteřin, a nevyskakuje u zbytků, které stejně utečou.
+ */
+export const NEJDELSI_CEKANI_S = 35;
+
+/**
+ * Kolik vteřin před troubením se po přeskočení stojí. Patnáct, aby
+ * stihlo <b>začít hlášení</b> — to jde deset vteřin předem, takže zbyde
+ * pět na nadechnutí.
+ */
+export const NASKOK_PRED_HRANOU_S = 15;
+
 export const NEJVIC_POZDE_S = 3;
 
 /** Smí se tohle znamení ozvat, když do startu zbývá `doStartuTedS`? */

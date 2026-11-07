@@ -9329,26 +9329,52 @@ k opravě, a u `node-forge` se musí znovu projít deset advisory.
 ## Třináct hlášení vedle #27: node-forge, glob, minimatch (7. 11. 2026)
 
 Filip, 7. 11. 2026: *„prověř je"* — o těch třinácti, co se našly při čtení
-#27. Zvedly se všechny tři balíčky, takže po příštím skenu Dependabota má
-zavřít všech třináct. Otevřený zůstává dál jen #27, schválně, jako
-připomínka k Expu 58.
+#27. Zvedly se všechny tři balíčky. Otevřený zůstává dál jen #27, schválně,
+jako připomínka k Expu 58.
 
 | Hlášení | Balíček | Bylo | Je | Čím |
 |---|---|---|---|---|
-| #28–#38 (11×, z toho 5 high) | `node-forge` | 1.4.0 | **1.4.3** | `npm update` — rozsah `^1.3.3` novou verzi pouští sám |
-| #39 (medium) | `glob` | 13.0.6 | **14.0.2** | `overrides` na `glob@^13` |
+| #28–#38 (11×, z toho 5 high) | `node-forge` | 1.4.0 | **1.4.3** | `overrides` na `node-forge` (rozsah `^1.3.3` by ji pustil i sám) |
+| #39 (medium) | `glob` | 13.0.6 | **14.0.4** | `overrides` na `glob` |
 | #40 (medium) | `minimatch` | 10.2.6 | **11.0.1** | `overrides` na `minimatch@^10` |
 
 **Naměřeno 7. 11. 2026**: sloupec *Bylo* z `app/package-lock.json` před
-změnou, *Je* z téhož souboru po ní, prahy z `first_patched_version`
-v advisory. Čísla jsou stav k tomu dni, ne „dnešní".
+změnou, *Je* z téhož souboru po sloučení s `main`, prahy
+z `first_patched_version` v advisory. Čísla jsou stav k tomu dni, ne
+„dnešní".
+
+### Dvě třetiny toho mezitím udělal main — a minimatch u toho vypadl
+
+Než se tahle větev stihla slít, přistál na `main` commit `60bf57a`
+*„Zranitelnosti: pryč node-forge, decode-uri-component a starý glob"*,
+který týž problém řeší zvlášť: přepisem na `node-forge ^1.4.3`,
+`decode-uri-component ^0.5.1` a `glob ^14.0.4`. Větev proto po sloučení
+**nepřidává nic než `minimatch`**; zbytek jsou její zjištění, ne její
+změny. V `docs/PLAN.md` o sobě `60bf57a` nenapsal nic, takže tenhle oddíl
+je jediné místo, kde ta analýza je.
+
+Jeho zpráva ale obsahuje tvrzení, které **neplatí**: *„glob 13.0.6 → 14.0.4,
+čímž padá i minimatch (bere si 11.0.5)"*. Padl jen ten `minimatch`, který
+si glob drží pod sebou — `node_modules/glob/node_modules/minimatch` je
+opravdu 11.0.5. Kořenový `node_modules/minimatch` zůstal na **10.2.6**
+(měřeno nad `app/package-lock.json` z `main`), protože si ho žádá šest
+dalších balíčků s rozsahem `^10.2.x` a glob do nich nesahá. A přesně na ten
+kořenový `minimatch` hlášení #40 ukazuje, takže jako jediné z třinácti
+**zůstalo po `60bf57a` otevřené** (`gh api …/dependabot/alerts` 7. 11. 2026:
+jediné `open`). Odtud ten zbytek.
+
+Je to poučení o tvaru, ne o globu: *„zvednutím A spadne i B"* je tvrzení
+o jednom uzlu stromu, ne o celém stromu. Ověřit se dá jedině tak, že se po
+instalaci vypíšou **všechny** instance B, ne jen ta, co visí pod A.
 
 ### U node-forge nebyla překážka nikde
 
 `@expo/cli` i `@expo/code-signing-certificates` si žádají
 `node-forge ^1.3.3` a ten rozsah **1.4.3 pouští**. Nebylo tedy co
 overridovat ani co obcházet: `npm update node-forge --package-lock-only`
-změnil v lockfilu tři řádky a nic jiného se nepohnulo.
+změnil v lockfilu tři řádky a nic jiného se nepohnulo. (`main` ho přesto
+přepsal natvrdo na `^1.4.3`; přepis to drží i proti budoucímu `npm update`,
+které by jinak mohlo sjet zpět. Výsledná verze je v obou případech 1.4.3.)
 
 Tím se potvrdilo, co #27 jen naznačilo: u `node-forge` nikdy nešlo
 o nedosažitelnou záplatu, ale o to, že **žádná neexistovala**. Jakmile
@@ -9428,15 +9454,17 @@ Je to „není čím útočit", a to je slabší tvrzení.
 přejmenované veřejné API (`isRegExp` → `isMatcher`), zrušenou volbu `debug`
 a `walk()`, které vrací pole místo množiny; minimatch 11 mění porovnávání
 *„closer to Bash in some edge cases"*. Že to Expo nepoužívá je čtení kódu,
-takže se změřilo tohle (7. 11. 2026, npm 11.13.0, Node 24.17.0):
+takže se změřilo tohle (7. 11. 2026, npm 11.13.0, Node 24.17.0; řádky
+*po sloučení* jsou přeměřené nad výsledným stromem, tedy nad
+`glob 14.0.4` + `minimatch 11.0.1`):
 
 | Co | Výsledek |
 |---|---|
-| `npm ci` | kód 0 |
-| `npx tsc --noEmit` | kód 0 |
-| `npm run testy` | kód 0, všechny sady prošly |
-| **otisk appky** `npx expo-updates fingerprint:generate --platform android` | `afbd9b0c815edd9e…` **shodný** s overridem i bez něj, 134 zdrojů, nula rozdílů |
-| rozlišení pod npm 10.9.10 (`npm ci --dry-run`, `install --package-lock-only`) | `glob 14.0.2`, `minimatch 11.0.1`, `node-forge 1.4.3`; lockfile shodný až na příznaky `dev` a `libc` |
+| `npm ci` po sloučení | kód 0; na disku `glob 14.0.4`, `minimatch 11.0.1`, `node-forge 1.4.3` |
+| `npx tsc --noEmit` po sloučení | kód 0 |
+| `npm run testy` po sloučení | kód 0, všechny sady prošly |
+| **otisk appky** `npx expo-updates fingerprint:generate --platform android`, po sloučení | `afbd9b0c815edd9e…`, 134 zdrojů — **týž otisk jako `main` bez přepisu**, měřeno v obou stromech vedle sebe |
+| rozlišení pod npm 10.9.10 (`npm ci --dry-run`, `install --package-lock-only`) | změřeno **před** sloučením, na klíčích `glob@^13` a `minimatch@^10`: `glob 14.0.2`, `minimatch 11.0.1`, `node-forge 1.4.3`; lockfile shodný až na příznaky `dev` a `libc`. Z nich zbyl jen `minimatch@^10`, tedy ten testovaný; `glob` má po sloučení obyčejný klíč, který se mezi npm 10 a 11 lišit nemá. **Po sloučení se to pod npm 10 nepřeměřilo** — doloží to až `npm ci` v CI. |
 
 **Otisk je ta podstatná řádka.** `minimatch` rozhoduje, které cesty
 `@expo/fingerprint` ignoruje, a otisk určuje `runtimeVersion`. Jiný

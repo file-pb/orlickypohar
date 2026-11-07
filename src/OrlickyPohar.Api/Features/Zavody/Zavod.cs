@@ -154,8 +154,14 @@ public enum StavVysledku
     /// <summary>Zapsáno, nikdo to ještě nekontroloval.</summary>
     Navrzeno = 0,
 
-    /// <summary>Čísla sedí s papírem z vody.</summary>
-    Overeno = 1,
+    // <b>Jednička je vysloužilá.</b> Bývalo to <c>Overeno</c>, „čísla sedí
+    // s papírem z vody" — první ze dvou podpisů. Nález K3 oponentury
+    // rozhodčího ho ruší: oba kroky dělal tentýž člověk hned po sobě,
+    // takže druhé klepnutí nic nestřežilo. Dokud nejsou protesty, není
+    // mezi „čísla sedí" a „pořadí platí" rozdíl, který by někdo uhlídal.
+    // Migrace <c>SlouceniOverenoSchvaleno</c> přepsala uložené jedničky
+    // na dvojky; číslo se už nepoužije, aby se starý záznam nedal
+    // omylem oživit.
 
     /// <summary>
     /// Pořadí v cíli sedí, rozhodčí ho podepsal.

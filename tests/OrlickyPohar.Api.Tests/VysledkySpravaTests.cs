@@ -1055,7 +1055,7 @@ public class VysledkySpravaTests(PostgresFixture fixture)
     {
         var slug = "zastavky-cisla";
         // Druhá rozjížďka čeká na podpis; první je potvrzená a venku.
-        await Nahraj(Rocnik(slug, druhaStav: StavVysledku.Overeno, druhaPublikovana: false));
+        await Nahraj(Rocnik(slug, druhaStav: StavVysledku.Navrzeno, druhaPublikovana: false));
 
         await using var scope = fixture.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();

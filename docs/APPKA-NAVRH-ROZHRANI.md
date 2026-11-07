@@ -533,13 +533,32 @@ s mockem ještě sedí.
 někde velí (`Bearer milos`). Jinak by ukázka neukázala start ani cíl, tedy
 to, kvůli čemu appka vznikla.
 
-**Ukázka začíná pět minut před startem** (Filip, 7. 11. 2026: *„ukázka
-simuluje 5 minut do startu a pak prostě různé stavy a užití"*). Bez toho
-by prohlížející zapnul režim a našel klidnou obrazovku — to, kvůli čemu
-appka vznikla, by si musel napřed sám rozjet dvěma klepnutími a pak pět
-minut čekat. Takhle spadne rovnou doprostřed odpočtu. Rozjížďka se
+**Ukázka začíná deset minut před startem** (Filip, 7. 11. 2026: *„ukázka
+simuluje obrazovku dejme tomu 10 minut do startu regaty a pak podle pokynu
+a užití"*). Bez toho by prohlížející zapnul režim a našel klidnou
+obrazovku: ve snímku jsou **všechny regaty odjeté a každá rozjížďka
+dokončená**, nejnovější start 19. 9. 2026 — ukázka by tedy ukázala
+historii, ale odpočet, hlas, klakson ani cíl by si v ní nikdo nezkusil.
+
+**Deset, ne pět, a je v tom rozdíl.** Procedura trvá pět minut, takže
+v desáté minutě ještě neběží: panel nabízí *Spustit startovní proceduru*
+a prohlížející si pustí celou věc od začátku i s hlasem a klaksonem.
+Otevřít ukázku uprostřed odpočtu by znamenalo přijít o tu půlku. Hlídá to
+test — náskok musí být delší než procedura.
+
+**Scéna se staví při zapnutí, ne ve snímku.** Čas ve snímku je absolutní
+a za týden by zestaral; `teď + 10 minut` platí vždycky. Rozjížďka se
 **přidává**, odjeté zůstávají: ty jsou ty *různé stavy*, dokončená
 s výsledky vedle čerstvé, která se teprve rozbíhá.
+
+**Posunout rozjížďku nestačilo, musí se posunout i regata.** Zjištěno
+zkouškou v simulátoru 7. 11. 2026: v kalendáři ročníku stál u té regaty
+štítek *odjeto* a datum ze září, takže dovnitř by nikdo nešel hledat
+odpočet, který se tam za chvíli rozběhne. Scéna proto nastaví i stav
+regaty na *vypsáno* a datum na dnešek — a **na dvou místech**, protože
+kalendář ročníku si drží vlastní kopii. Ostatní regaty zůstávají odjeté;
+kdyby se posunuly všechny, zmizela by z ukázky historie, a ta je druhá
+půlka toho, co má ukázat.
 
 **Zápisy nemizí, mění snímek v paměti.** Ohlásit rozjížďku, spustit
 proceduru, odložit, odvolat, odstartovat, ukončit — všechno funguje
@@ -557,6 +576,60 @@ a test padne, jakmile se objeví jinde — vyzkoušeno sabotáží.
 zabití appky je režim pryč. To je pojistka proti tomu nejhoršímu, co ta
 věc umí — aby někdo u vody odstartoval rozjížďku v ukázce a čekal, že se
 to stalo.
+
+### Co z ukázky je ověřené na zařízení (7. 11. 2026)
+
+Proklikáno v simulátoru na `5e48a27`:
+
+| Co | Jak to dopadlo |
+| --- | --- |
+| otevře se **před** procedurou, ne uprostřed odpočtu | *„Rozjížďka 4 · Procedura začne ve 1:27"* a tlačítko *Spustit* |
+| po spuštění procedura jede | *„Rozjížďka 4 startuje · 4:58 do startu"*, proužky fází, dirigent zapnutý |
+| proužek drží režim celou cestu | landing → ročníky → ročník → regata → spuštění, pokaždé *UKÁZKA* |
+| kalendář ukazuje regatu jako dnešní | štítek *vypsáno*, 7. listopadu, *„8 regat · 6 odjetých"* |
+| odjeté rozjížďky vedle toho zůstaly | ČERVENÉ CAFE 8 bodů, 4-1-3 |
+| hlas a klakson skutečně hrají | změřeno v audio vrstvě, viz níž |
+
+**I zvuk je ověřený, a ne uchem.** Poslouchat ho nešlo, stroj byl ztišený —
+místo toho se změřil v audio vrstvě simulátoru, což je pro tenhle případ
+lepší důkaz. Z logu během běžící procedury v ukázce:
+
+| Z logu | Čemu to odpovídá |
+| --- | --- |
+| `durToPlayThrough: 1.72` | `klakson-kratky.wav` má **1,720 s** — přehrál se celý soubor, ne jakýsi zvuk |
+| `1-channel audio content` | tentýž soubor je **mono** |
+| `TextToSpeech:AudioQueue`, 1 400 refillů | běžela i **řeč**, ne jen troubení |
+
+Tři nezávislé shody s tím, co na disku doopravdy leží
+(`app/assets/zvuky/`), a `DELKA_TROUBENI_MS.kratce` v `hlaseni.ts` nese
+totéž číslo. **Doloženo tedy: v ukázce, z přibalených dat a bez sítě,
+hlas i klakson skutečně hrají.**
+
+Proč se to nenechalo na tom, že obrazovka píše *„Hlásí a troubí"*: zrovna
+tady je ten rozdíl drahý. Klakson stál oklikou přes měření skutečné
+nahrávky právě proto, že syntéza zněla jako hračka — a „tváří se, že
+hraje" by to nechytilo.
+
+**Jedna stopa do zásoby.** V logu je u řeči `AudioQueue underflow #9:
+injecting silence`. V simulátoru je to běžné, protože sdílí zvukovou kartu
+s hostitelem, a na telefonu se projevit nemusí. Kdyby si ale někdo na vodě
+stěžoval na cuknutí v hlase, tohle je první místo, kam se podívat.
+
+**Na čem se měřilo, se muselo dohledat.** Zkoušející si tu verzi nepullnul
+a chvíli ji hlásil o dva commity starší, než jaká doopravdy ležela na
+disku — druhé sezení ji do téhož checkoutu zapsalo a Metro ji vzalo odtud.
+Poznalo se to na nesrovnalosti v tom, co bylo vidět: kalendář nemohl
+ukazovat *vypsáno*, protože v hlášené verzi ten kód ještě nebyl. **Ve
+sdíleném pracovním adresáři tedy neplatí, co si člověk stáhl, ale co na
+disku leží** — a před měřením se to musí přečíst, ne předpokládat.
+
+**Ukázka nepřežije fast refresh.** Režim se drží v modulové proměnné
+(schválně — nemá přežít ani konec appky), a Metro ji při překladu změněného
+souboru zahodí. Projev je ošklivý: appka tiše spadne na skutečné volání
+a obrazovka hlásí, že nedosáhne na server. **Na vydaném buildu se to
+nestane**; při vývoji ano, a stálo to jeden omyl, než se na to přišlo —
+rozhodl o tom až pokus bez jediného doteku repozitáře mezi zapnutím
+a klepnutím.
 
 **Co v ukázce není:** klíč k lodi a registrace upozornění se tváří jako
 nevydané (401), protože v ukázce nemá kdo mít loď. A cílová obrazovka
@@ -647,6 +720,39 @@ a tabulí.
 
 **Co to obětuje.** Nic viditelného. Je to jediné ze čtyř doporučení,
 které nemění, jak appka vypadá.
+
+---
+
+## Co zbývá, a co k tomu chybí (7. 11. 2026)
+
+Z devíti věcí v tabulce nahoře stojí sedm. Zbylé dvě — **rozhraní
+závodníka** a **patička se stavem lodi** — nejsou odložené proto, že by
+na ně nedošlo, ale protože **obě stojí na datech, která veřejně nejsou**.
+Postavit je dnes by znamenalo nakreslit prázdné rámečky, a to je přesně
+to, co z appky vypadlo u vodočtu.
+
+Tohle je seznam toho, co k nim chybí, aby se nemuselo hledat znovu:
+
+| Co obrazovka potřebuje | Kde to dnes je | Co chybí |
+| --- | --- | --- |
+| **pokyn závodní komise** (změna úseku, chybějící značka) | `UkonDto` pod `/sprava/serie/{s}/zastavky/{z}/rozjizdky/{n}/ukony` | veřejné čtení pro běžící rozjížďku |
+| **jak loď eviduje rozhodčí** (odstartovala, OCS, trest, dojezd, DNF) | `ZapisLodDto` pod `/sprava/…/rozjizdky/{n}` | veřejné čtení stavu vlastní lodi |
+| **která regata je dnes moje** | nikde | odpověď pro telefon spárovaný klíčem; jinak by appka musela prohledávat ročníky |
+| **odvoláno / odloženo** jako stav | odvodí se jen z toho, že `startV` zmizel | zpráva, ne odvozenina |
+
+**Zkrácení trati veřejné je** (`VerejnaTratDto` nese `zkracenoUPrvkuId`,
+`zkracenoV` a `prestavba`), takže karta pokynu by se dala naplnit dvěma
+druhy ze čtyř už dnes. Na samostatnou obrazovku to ale nestačí.
+
+### Jedno doporučení, kterému vypršel důvod
+
+*Čerstvost je jeden tvar v celé appce* (doporučení 4 níž) stálo na tom, že
+tentýž řádek — kolečko, popis, hodnota — kreslila tři místa a časem by se
+rozešla. Po přestavbě landingu zbylo **jedno** (`tracker/index.tsx`);
+proužek spojení nese jiný tvar a má vlastní pravidla. Vytáhnout komponentu
+s jediným uživatelem je práce pro práci, takže se to nestaví — a až ten
+tvar bude potřebovat rozhraní závodníka, bude to zase ze dvou míst a důvod
+se vrátí.
 
 ---
 

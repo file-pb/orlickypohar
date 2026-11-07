@@ -67,10 +67,29 @@ KONSTANTA = re.compile(r"\bconst\s+(\w+)\s*=\s*(\d+)\s*;")
 
 
 def hlavicka(txt: str, od: int) -> str:
-    """Text uvnitř otevírací značky — do `>` mimo složené závorky."""
+    """Text uvnitř otevírací značky — do `>` mimo složené závorky.
+
+    <b>Řádkový komentář se přeskakuje celý.</b> Komentář v hlavičce značky
+    může nést `>` — v `</b>` nebo v šipce —, a bez téhle výjimky se značka
+    ukončila u něj. Deklarace stylu, která stála pod komentářem, se tím
+    vůbec nenašla a kontrola <b>nahlásila terč, který mez dosahuje</b>
+    (zjištěno 7. 11. 2026 na `cil.tsx`). Falešné hlášení je mírnější chyba
+    než propuštěný malý terč, ale stejně nepřijatelná: kdo ji jednou
+    uvidí, přestane kontrole věřit.
+    """
     out: list[str] = []
     hloubka = 0
-    for znak in txt[od:]:
+    i = od
+    while i < len(txt):
+        znak = txt[i]
+        if txt.startswith("//", i):
+            # Do konce řádku, a nic z toho se nepočítá: hledají se jen
+            # deklarace, a ty v komentáři nejsou.
+            konec = txt.find("\n", i)
+            if konec < 0:
+                break
+            i = konec
+            continue
         if znak == "{":
             hloubka += 1
         elif znak == "}":
@@ -78,6 +97,7 @@ def hlavicka(txt: str, od: int) -> str:
         elif znak == ">" and hloubka == 0:
             break
         out.append(znak)
+        i += 1
     return "".join(out)
 
 

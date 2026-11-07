@@ -17,13 +17,17 @@
  * a vypadala by rozbitě. Mění se jen kopie v paměti; po vypnutí režimu
  * se zahodí a soubor zůstává, jaký byl.
  *
- * <b>Ukázka začíná pět minut před startem</b> (Filip, 7. 11. 2026:
- * *„ukázka simuluje 5 minut do startu a pak prostě různé stavy
- * a užití"*). Bez toho by prohlížející zapnul režim a našel klidnou
- * obrazovku — to, kvůli čemu appka vznikla, by musel napřed sám
- * rozjet dvěma klepnutími a pak pět minut čekat. Takhle spadne rovnou
- * doprostřed odpočtu a odsud si může zkusit cokoliv: odložit, odvolat,
- * nechat start padnout, zapisovat cíl.
+ * <b>Ukázka začíná deset minut před startem</b> (Filip, 7. 11. 2026:
+ * *„ukázka simuluje obrazovku dejme tomu 10 minut do startu regaty
+ * a pak podle pokynu a užití"*). Bez toho by prohlížející zapnul režim
+ * a našel klidnou obrazovku — ve snímku jsou všechny regaty odjeté
+ * a každá rozjížďka dokončená, takže odpočet, hlas ani cíl by si
+ * nezkusil.
+ *
+ * <b>Deset, ne pět, a je v tom rozdíl.</b> Procedura trvá pět minut,
+ * takže v desáté minutě ještě neběží: panel nabízí *Spustit startovní
+ * proceduru* a prohlížející si pustí celou věc od začátku, i s hlasem
+ * a klaksonem. Kdyby se otevřel uprostřed odpočtu, o tu půlku by přišel.
  *
  * <b>Režim se nepamatuje mezi spuštěními.</b> Zapnout ho jde jen klepnutím
  * v nabídce; po zabití appky je zase pryč. Je to pojistka proti tomu
@@ -55,11 +59,17 @@ export function ukazkaBezi(): boolean {
   return stav !== null;
 }
 
-/** Kolik minut do startu ukázka nachystá. Tolik, kolik trvá procedura. */
-export const DO_STARTU_MIN = 5;
+/**
+ * Kolik minut do startu ukázka nachystá. Dvojnásobek procedury, aby se
+ * dala spustit celá, ne jen dokoukat.
+ */
+export const DO_STARTU_MIN = 10;
 
 /**
- * Nachystá rozjížďku, která startuje za pět minut.
+ * Nachystá rozjížďku, která startuje za deset minut.
+ *
+ * <b>Scéna se staví při zapnutí, ne ve snímku.</b> Čas ve snímku je
+ * absolutní a za týden by zestaral; `teď + 10 minut` platí vždycky.
  *
  * <b>Přidává se nová, ne přepisuje stará.</b> Odjeté rozjížďky v ukázce
  * zůstávají, protože jsou to ty „různé stavy" — dokončená s výsledky
@@ -68,6 +78,111 @@ export const DO_STARTU_MIN = 5;
  * Regata se bere ta, které ukázkový účet velí; `kdeVeli` na ni otevře
  * start a cíl, takže je to táž, ke které se prohlížející doklepe.
  */
+/**
+ * <b>Posune start blíž</b> — zkratka, aby se simulace dala ladit
+ * rychleji (Filip, 7. 11. 2026: *„je to jenom abychom mohli pouštět
+ * simulaci a ladit ji rychleji"*).
+ *
+ * Mění se čas startu, ne odpočet: tím projde celá partitura stejně jako
+ * u vody, jen se vynechá čekání. Kdyby se přetáčel odpočet, byl by to
+ * druhý zdroj pravdy o tom, kolik zbývá.
+ *
+ * <b>Jen v ukázce.</b> Mimo ni funkce nic neudělá — `stav` je `null`.
+ */
+export function posunStartUkazky(oS: number): void {
+  if (!stav || oS <= 0) return;
+
+  for (const telo of Object.values(stav)) {
+    const z = telo as S['ZavodDetailDto'] | undefined;
+    if (!z || !Array.isArray(z.rozjizdky)) continue;
+    for (const r of z.rozjizdky) {
+      if (!r.startV || r.stav === 'Dokoncena' || r.stav === 'Zrusena') continue;
+      r.startV = new Date(Date.parse(r.startV) - oS * 1000).toISOString();
+    }
+  }
+}
+
+/**
+ * <b>Pohled posádky do ukázky.</b> `/lod/dnes` nemá ve snímku co hledat —
+ * snímek se bere z mocku pod přihlášením, kdežto tahle cesta jde klíčem.
+ * Skládá se proto z téhož, co ukázka už má: z velené regaty a její
+ * nachystané rozjížďky.
+ *
+ * <b>Loď je vymyšlená, a je to vidět.</b> Ukázkový účet žádnou nemá —
+ * tvářit se, že ano, by znamenalo tvrdit o datech něco, co v nich není.
+ */
+function nachystejZavodnika(data: Record<string, unknown>): void {
+  const ja = data['/ja'] as S['JaDto'] | undefined;
+  const kde = (ja?.opravneni ?? []).find((o) => o.zavod);
+  if (!kde?.zavod) return;
+
+  const z = data[`/serie/${kde.serie}/zavody/${kde.zavod}`] as S['ZavodDetailDto'] | undefined;
+  if (!z) return;
+
+  const r = z.rozjizdky.find((x) => x.stav === 'Planovana' || x.stav === 'Probiha');
+
+  data['/lod/dnes'] = {
+    serie: kde.serie,
+    zavod: kde.zavod,
+    zavodNazev: z.nazev,
+    lod: z.lode?.[0]?.lod ?? 'JOY',
+    kategorie: z.lode?.[0]?.kategorie ?? null,
+    // Plachetní číslo a telefony na lodi (zbytek R34). Ukázka je musí
+    // nést, jinak by karta „Telefony na lodi" v ní nikdy nebyla vidět —
+    // a právě ta je na té obrazovce nová.
+    cisloPlachty: 'CZE 142',
+    posadka: [
+      {
+        jmeno: 'Svoboda',
+        ja: true,
+        baterieProcent: 78,
+        ozvalSeV: new Date(Date.now() - 8_000).toISOString(),
+        vysila: true,
+      },
+      {
+        jmeno: 'Nováková',
+        ja: false,
+        baterieProcent: 41,
+        ozvalSeV: new Date(Date.now() - 3 * 60_000).toISOString(),
+        vysila: true,
+      },
+      // Třetí se nehlásí — na břehu je to ta řádka, kvůli které karta
+      // existuje. S třemi vysílajícími by ukázka tvrdila, že se nic
+      // zajímavého stát nemůže.
+      {
+        jmeno: 'Dvořák',
+        ja: false,
+        baterieProcent: null,
+        ozvalSeV: new Date(Date.now() - 12 * 60_000).toISOString(),
+        vysila: false,
+      },
+    ],
+    rozjizdka: r?.cislo ?? null,
+    stavRozjizdky: r?.stav ?? null,
+    startV: r?.startV ?? null,
+    // T−20 proti času startu, jak ho počítá server (`Klice.Hlaseni`).
+    nahravatOd: r?.startV
+      ? new Date(Date.parse(r.startV) - 20 * 60_000).toISOString()
+      : null,
+    // <b>Ukázka musí obrazovku ukázat celou.</b> S prázdným `stavLodi`
+    // a `pokyny` zbyl na obrazovce pruh a jméno lodi, a nebylo z čeho
+    // poznat, k čemu je (Filip, 7. 11. 2026: *„nerozumím téhle
+    // obrazovce"*). Dva záznamy stačí: pokyn komise a to, co o lodi
+    // zapsal rozhodčí.
+    stavLodi: {
+      veta: 'Trest 720° — nevykonán',
+      kdy: new Date(Date.now() - 4 * 60_000).toISOString(),
+    },
+    pokyny: [
+      {
+        druh: 'Odlozeni',
+        veta: 'Start odložen, nový čas dostanete megafonem.',
+        vyhlasenoV: new Date(Date.now() - 9 * 60_000).toISOString(),
+      },
+    ],
+  };
+}
+
 function nachystejStart(data: Record<string, unknown>): void {
   const ja = data['/ja'] as S['JaDto'] | undefined;
   const kde = (ja?.opravneni ?? []).find((o) => o.zavod);
@@ -84,6 +199,81 @@ function nachystejStart(data: Record<string, unknown>): void {
     doSerie: true,
     vysledky: [],
   } as S['RozjizdkaDto']);
+
+  // <b>Posunout rozjížďku nestačí, musí se posunout i regata.</b> Ve
+  // snímku jsou všechny odjeté, takže v kalendáři ročníku by u téhle
+  // stál štítek *odjeto* a datum ze září — a nikdo by dovnitř nešel
+  // hledat odpočet, který se tam za chvíli rozběhne. Nalezeno zkouškou
+  // v simulátoru 7. 11. 2026.
+  const dnes = new Date().toISOString().slice(0, 10);
+  z.stav = 'Vypsany';
+  z.datum = dnes;
+  z.datumKonce = null;
+
+  // Kalendář ročníku má vlastní kopii téhož; kdyby se změnila jen jedna,
+  // obrazovky by si odporovaly.
+  const serie = data[`/serie/${kde.serie}`] as S['SerieDetailDto'] | undefined;
+  const vKalendari = serie?.zavody?.find((x) => x.slug === kde.zavod);
+  if (vKalendari) {
+    vKalendari.stav = 'Vypsany';
+    vKalendari.datum = dnes;
+    vKalendari.datumKonce = null;
+  }
+}
+
+/**
+ * <b>Tresty v ukázce.</b> Snažit se je vecpat do snímů nedává smysl —
+ * sníměk je odečtený stav webu a tresty vznikají až za jízdy. Drží se
+ * proto zvlášť a žijí jen po dobu ukázky.
+ *
+ * <b>Dva předem uložené</b>, aby bylo co odkliknout hned po zapnutí:
+ * jinak je pruh prázdný a nepozná se, že existuje.
+ */
+type TrestUkazky = {
+  id: number;
+  ucastId: number;
+  lod: string;
+  druh: 'Otacka360' | 'Otacka720';
+  otacek: number;
+  ulozenoV: string;
+  vykonanoV: string | null;
+};
+
+let tresty: { cislo: number; trest: TrestUkazky }[] = [];
+let dalsiTrestId = 1;
+
+function nachystejTresty(data: Record<string, unknown>): void {
+  tresty = [];
+  dalsiTrestId = 1;
+
+  const ja = data['/ja'] as S['JaDto'] | undefined;
+  const kde = (ja?.opravneni ?? []).find((o) => o.zavod);
+  if (!kde?.zavod) return;
+  const z = data[`/serie/${kde.serie}/zavody/${kde.zavod}`] as S['ZavodDetailDto'] | undefined;
+  if (!z) return;
+
+  const r = z.rozjizdky.find((x) => x.stav === 'Planovana' || x.stav === 'Probiha');
+  if (!r) return;
+
+  const lode = listina(z);
+  const zalozen = (i: number, druh: 'Otacka360' | 'Otacka720', predS: number) => {
+    const l = lode[i];
+    if (!l) return;
+    tresty.push({
+      cislo: r.cislo,
+      trest: {
+        id: dalsiTrestId++,
+        ucastId: l.prihlaskaId,
+        lod: l.lod,
+        druh,
+        otacek: druh === 'Otacka360' ? 1 : 2,
+        ulozenoV: new Date(Date.now() - predS * 1000).toISOString(),
+        vykonanoV: null,
+      },
+    });
+  };
+  zalozen(1, 'Otacka720', 84);
+  zalozen(3, 'Otacka360', 12);
 }
 
 export function zapniUkazku(): void {
@@ -91,6 +281,8 @@ export function zapniUkazku(): void {
   // ta první.
   stav = JSON.parse(JSON.stringify(snimek)) as Record<string, unknown>;
   nachystejStart(stav);
+  nachystejZavodnika(stav);
+  nachystejTresty(stav);
 }
 
 export function vypniUkazku(): void {
@@ -174,6 +366,46 @@ export function ukazkaOdpovez(cesta: string, init?: { method?: string; body?: st
   // si ji pořadatel bez vlastní lodi a upozornění by chodila z ukázky.
   // Odpovídá se jako bez klíče, ne chybou — appka ten stav umí.
   if (c.startsWith('/klice/') || c === '/zarizeni') return Promise.resolve(odpoved(401));
+
+  // Tresty za jízdy mají vlastní cestu (`/zastavky/…`, ne `/vysledky/…`)
+  // a vlastní úložiště, takže se obslouí dřív než sníměk.
+  const mt = /\/rozjizdky\/(\d+)\/tresty(?:\/(\d+)\/vykonan|\/(\d+))?$/.exec(c);
+  if (mt) {
+    const cislo = Number(mt[1]);
+    const moje = () => tresty.filter((x) => x.cislo === cislo).map((x) => x.trest);
+
+    if (metoda === 'GET') return Promise.resolve(odpoved(200, moje()));
+
+    if (mt[2]) {
+      const t = tresty.find((x) => x.trest.id === Number(mt[2]));
+      if (t) t.trest.vykonanoV = new Date().toISOString();
+      return Promise.resolve(odpoved(200, t?.trest ?? {}));
+    }
+
+    if (mt[3] && metoda === 'DELETE') {
+      tresty = tresty.filter((x) => x.trest.id !== Number(mt[3]));
+      return Promise.resolve(odpoved(204));
+    }
+
+    if (metoda === 'POST') {
+      const druh = (telo.druh as 'Otacka360' | 'Otacka720') ?? 'Otacka360';
+      const zz = (stav[
+        Object.keys(stav).find((k) => /^\/serie\/[^/]+\/zavody\/[^/]+$/.test(k)) ?? ''
+      ] ?? null) as S['ZavodDetailDto'] | null;
+      const l = zz ? listina(zz).find((x) => x.prihlaskaId === telo.ucast) : undefined;
+      const novy: TrestUkazky = {
+        id: dalsiTrestId++,
+        ucastId: Number(telo.ucast ?? 0),
+        lod: l?.lod ?? 'Lo\u010f',
+        druh,
+        otacek: druh === 'Otacka360' ? 1 : 2,
+        ulozenoV: (telo.ulozenoV as string) ?? new Date().toISOString(),
+        vykonanoV: null,
+      };
+      tresty.push({ cislo, trest: novy });
+      return Promise.resolve(odpoved(200, novy));
+    }
+  }
 
   if (metoda === 'GET') {
     if (c in stav) return Promise.resolve(odpoved(200, stav[c]));

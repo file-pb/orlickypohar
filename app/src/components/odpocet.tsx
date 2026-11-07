@@ -4,14 +4,20 @@ import {
   Animated,
   AppState,
   Modal,
+  ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 
 import { Pressable } from 'react-native';
 
+import type { TrestZaJizdy } from '@/lib/api';
 import { useDirigent } from '@/lib/dirigent';
+import { dalsiTroubeni, kolikPreskocit } from '@/lib/hlaseni';
+import { casRozpravy } from '@/lib/start';
+import { posunStartUkazky, ukazkaBezi } from '@/lib/ukazka';
 import { barvaNaVyplni, pismoNaVyplni, sPruhlednosti } from '@/lib/kontrast';
 import { useTheme } from '@/hooks/use-theme';
 import type { Barvy } from '@/constants/theme';
@@ -20,10 +26,12 @@ import {
   mmss,
   nazevUkonu,
   PROCEDURA_S,
+  kolikDoStartu,
   trvani,
   stavStartu,
   ukonyStartu,
   usekyProcedury,
+  casStartu,
   zacatekProcedury,
   type RozjizdkaProOdpocet,
   type StavStartu,
@@ -62,7 +70,14 @@ export function Odpocet({
   naStartu,
   naUkon,
   naCil,
+  naTrat,
   naOhlaseni,
+  naPredcasnyStart,
+  naTrest,
+  tresty,
+  naVykonano,
+  naZruseni,
+  naCasStartu,
   chyba,
   nedoslano,
 }: {
@@ -99,10 +114,36 @@ export function Odpocet({
    */
   naCil?: () => void;
   /**
+   * Kam na úkony za jízdy (změna úseku, chybějící značka). Ukazuje se jen
+   * u rozjížďky na vodě — před startem se staví rovnou jiná trať, po
+   * dojetí se už nemění, kudy se jelo.
+   */
+  naTrat?: () => void;
+  /**
    * Co udělat, když rozhodčí ohlásí další rozjížďku. Chybí-li, nabídka
    * se neukáže — obrazovku regaty čte i ten, kdo nevelí.
    */
   naOhlaseni?: () => void | Promise<void>;
+  /**
+   * Předčasný start (OCS). Chybí-li, dlaždice se neukáže — stejně jako
+   * u ostatních úkonů ji vidí jen ten, kdo velí.
+   */
+  naPredcasnyStart?: (cislo: number) => void;
+  /**
+   * Otáčkový trest (ZPJ 44.2). Chybí-li, dlaždice se neukážou.
+   */
+  naTrest?: (cislo: number, druh: 'Otacka360' | 'Otacka720') => void;
+  /** Co rozhodčí v téhle rozjížďce uložil a ještě neodkliknul. */
+  tresty?: TrestZaJizdy[];
+  /** Rozhodčí zapisuje, že loď otáčku odkroužila. */
+  naVykonano?: (trest: number) => void | Promise<void>;
+  /** Zrušení rozjížďky s důvodem (ZPJ 32.1). */
+  naZruseni?: (cislo: number) => void;
+  /**
+   * <b>Čas startu z rozpravy</b> (nález K6). Chybí-li, se zadáváním se
+   * nikde nezačne — obrazovku regaty čte i ten, kdo nevelí.
+   */
+  naCasStartu?: (cislo: number, kdy: number) => void | Promise<void>;
 }) {
   const t = useTheme();
   const [ted, setTed] = useState(() => Date.now());
@@ -129,6 +170,25 @@ export function Odpocet({
   // tady se jen pozná, kdo je u toho.
   const veli = Boolean(naSpusteni || naUkon);
   const dirigent = useDirigent(stav, ted, delkaS, veli);
+
+  // <b>Zkratka jen pro ukázku</b> (Filip, 7. 11. 2026): dlouhé čekání se
+  // dá přeskočit, aby se simulace dala ladit rychleji. Mimo ukázku se
+  // nenabízí vůbec — u vody se nepřeskakuje nic.
+  const vUkazce = ukazkaBezi();
+  const doStartu = kolikDoStartu(stav, ted);
+  const preskocitO =
+    vUkazce && doStartu !== null ? kolikPreskocit(doStartu, delkaS) : null;
+  // <b>Hrana, ne hodnota.</b> `preskocitO` se každou vteřinu zmenší,
+  // takže klíč z něj je pokaždé jiný: „ne" platilo jedinou vteřinu
+  // a bublina se hned vracela. Klíč je proto <b>nejbližší troubení</b>,
+  // které se během čekání nemění — jednou na hranu, jak to stojí
+  // v návrhu. Současně to zaručuje, že se zeptá u každé hrany, kde se
+  // čeká dýl než dvě minuty: před procedurou i mezi přípravným
+  // znamením a poslední minutou (Filip, 7. 11. 2026: *„čtyři minuty do
+  // startu taky"*).
+  const hrana = vUkazce && doStartu !== null ? dalsiTroubeni(doStartu, delkaS) : null;
+  const [nabidnuto, setNabidnuto] = useState<number | null>(null);
+  const ptatSe = preskocitO !== null && hrana !== null && nabidnuto !== hrana;
 
   // <b>Start se neklepe, start padne.</b> Rozhodčí spustil proceduru,
   // odpočet doběhl — tím rozjížďka odstartovala a appka to serveru řekne
@@ -169,7 +229,13 @@ export function Odpocet({
 
   const panel =
     stav.druh === 'ceka' || stav.druh === 'bezCasu' ? (
-      <Ceka stav={stav} delkaS={delkaS} t={t} naSpusteni={naSpusteni} />
+      <Ceka
+        stav={stav}
+        delkaS={delkaS}
+        t={t}
+        naSpusteni={naSpusteni}
+        naCasStartu={naCasStartu}
+      />
     ) : stav.druh === 'jede' ? (
       <Jede stav={stav} t={t} />
     ) : stav.druh === 'odstartovano' ? (
@@ -247,7 +313,102 @@ export function Odpocet({
         </Pressable>
       ) : null}
 
-      {naUkon ? <Zastaveni stav={stav} t={t} naUkon={naUkon} /> : null}
+      {/* Třetí karta pod jménem regaty, vedle startu a cíle: značka chybí
+          tady a teď, a dosud se to dalo vyhlásit jedině z webu. Jen za
+          jízdy — tutéž mez drží server. */}
+      {naTrat && stav.druh === 'jede' ? (
+        <Pressable
+          onPress={naTrat}
+          style={({ pressed }) => [
+            s.cil,
+            { borderColor: t.linka, backgroundColor: t.papir, opacity: pressed ? 0.6 : 1 },
+          ]}>
+          <Text style={[s.cilText, { color: t.text }]}>Trať — změna úseku, značka chybí</Text>
+        </Pressable>
+      ) : null}
+
+      {/* <b>Úkony jsou po ruce od chvíle, kdy je nastavený čas startu</b>
+          (Filip, 7. 11. 2026, podle návrhu: *„po kliknutí na ukázkový
+          režim má nastat toto"*). Rozhodčí je vidí pohromadě, ne až
+          v tu fázi, kdy na ně dojde — na startovní lodi se nehledá.
+          Co v dané chvíli nejde, je ztlumené, ne schované. */}
+      {stav.druh !== 'bezCasu' && (naUkon || naPredcasnyStart || naZruseni) ? (
+        <UkonyNaStartu
+          stav={stav}
+          t={t}
+          naUkon={naUkon}
+          naPredcasnyStart={naPredcasnyStart}
+          naZruseni={naZruseni}
+        />
+      ) : null}
+
+      {/* <b>Tresty jsou dostupné celou rozjížďku</b>, ne jako krok
+          (Miloš, nahrávka 23: dlaždice se má *„průběžně posouvat"*).
+          Dotek bóje i dotek s lodí se stane kdykoliv mezi startem
+          a cílem. */}
+      {naTrest && stav.druh !== 'bezCasu' ? (
+        <>
+          <Text style={[s.skupina, { color: t.tlumeny }]}>ZA JÍZDY</Text>
+          <View style={s.mrizka}>
+            <Dlazdice
+              t={t}
+              nadpis="360°"
+              popis="dotek bóje · ZPJ 31"
+              velke
+              onPress={() => naTrest(stav.cislo, 'Otacka360')}
+            />
+            <Dlazdice
+              t={t}
+              nadpis="720°"
+              popis="dotek s lodí · ZPJ 44.1"
+              velke
+              onPress={() => naTrest(stav.cislo, 'Otacka720')}
+            />
+          </View>
+        </>
+      ) : null}
+
+
+      {/* <b>Pruh trestů na trati</b> (`Jede.dc.html`). Bez něj šel trest
+          zapsat, ale už ne odkliknout — appka tedy věděla o uložení
+          a nikdy o vykonání, ačkoliv API `.../vykonan` měla od začátku.
+          Ukazují se jen neodkliknuté: odkroužený trest už rozhodčího
+          nezajímá a pruh by se do konce rozjížďky zanesl. */}
+      <TrestyNaTrati t={t} tresty={tresty} ted={ted} naVykonano={naVykonano} />
+
+      {/* <b>Bublina je ladicí zkratka, ne vlastnost startu.</b> Ukáže se
+          jen v ukázce, a u každého čekání, kde se dá ušetřit víc než
+          dvacet vteřin — před procedurou, mezi výzvou a přípravou,
+          v přípravě i v poslední minutě. Po „ano" se posune
+          čas startu, ne odpočet: tím projde celá partitura stejně jako
+          u vody, jen bez čekání. */}
+      <Modal visible={ptatSe} transparent animationType="fade">
+        <View style={s.bublinaStin}>
+          <View style={[s.bublina, { backgroundColor: t.papir, borderColor: t.linka }]}>
+            <Text style={[s.bublinaNadpis, { color: t.text }]}>Přeskočit čekání?</Text>
+            <Text style={[s.bublinaText, { color: t.tlumeny }]}>
+              Do dalšího znamení zbývá{' '}
+              {trvani(doStartu !== null && hrana !== null ? doStartu - hrana : 0)}. V ukázce se
+              dá skočit patnáct vteřin před něj, aby stihlo začít hlášení.
+            </Text>
+            <View style={s.bublinaVolby}>
+              <Pressable
+                onPress={() => setNabidnuto(hrana)}
+                style={({ pressed }) => [s.bublinaVolba, { opacity: pressed ? 0.6 : 1 }]}>
+                <Text style={[s.bublinaVolbaText, { color: t.tlumeny }]}>Ne, jeď normálně</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  if (preskocitO !== null) posunStartUkazky(preskocitO);
+                  setNabidnuto(hrana);
+                }}
+                style={({ pressed }) => [s.bublinaVolba, { opacity: pressed ? 0.6 : 1 }]}>
+                <Text style={[s.bublinaVolbaText, { color: t.voda }]}>Ano, přeskoč</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -322,23 +483,82 @@ function Ohlaseni({
  * potvrzení offcanvas nebo modal."*) — odvolání startu vrací celé
  * soutěžní pole na začátek procedury a omylem se to stát nesmí.
  */
-function Zastaveni({
+/**
+ * Jedna dlaždice úkonu. <b>Dvě velikosti písma, ne tři</b>: název a pod
+ * ním věta, čím to je — stejně jako v návrhu. Vypnutá dlaždice se
+ * ztlumí, ale zůstane: rozhodčí má vidět, co existuje, i když to zrovna
+ * nejde.
+ */
+function Dlazdice({
+  t,
+  nadpis,
+  popis,
+  onPress,
+  vypnuto,
+  varovne,
+  velke,
+}: {
+  t: Barvy;
+  nadpis: string;
+  popis?: string;
+  onPress?: () => void;
+  vypnuto?: boolean;
+  /** Nevratný úkon — červený okraj i písmo. */
+  varovne?: boolean;
+  /** Velké číslo místo názvu (360°, 720°). */
+  velke?: boolean;
+}) {
+  const barva = vypnuto ? t.tlumeny : varovne ? t.stavZruseny : t.text;
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={vypnuto || !onPress}
+      style={({ pressed }) => [
+        s.dlazdice,
+        {
+          borderColor: varovne && !vypnuto ? t.stavZruseny : t.linka,
+          backgroundColor: t.papir,
+          opacity: pressed && !vypnuto ? 0.6 : vypnuto ? 0.55 : 1,
+        },
+      ]}>
+      <Text style={[velke ? s.dlazdiceCislo : s.dlazdiceNadpis, { color: barva }]}>{nadpis}</Text>
+      {popis ? <Text style={[s.dlazdicePopis, { color: t.tlumeny }]}>{popis}</Text> : null}
+    </Pressable>
+  );
+}
+
+/** Čím je ten úkon na dlaždici — druhý řádek, jako v návrhu. */
+function popisUkonu(ukon: UkonStartu): string {
+  return ukon === 'Odlozit'
+    ? 'vlajka AP · zeptá se na nový čas'
+    : 'ZPJ 29.2 · přidá minutu a jede znovu';
+}
+
+function UkonyNaStartu({
   stav,
   t,
   naUkon,
+  naPredcasnyStart,
+  naZruseni,
 }: {
   stav: StavStartu;
   t: Barvy;
-  naUkon: (cislo: number, ukon: UkonStartu) => void | Promise<void>;
+  naUkon?: (cislo: number, ukon: UkonStartu) => void | Promise<void>;
+  naPredcasnyStart?: (cislo: number) => void;
+  naZruseni?: (cislo: number) => void;
 }) {
   const [potvrzuje, setPotvrzuje] = useState<UkonStartu | null>(null);
   const [posila, setPosila] = useState(false);
   const [chyba, setChyba] = useState<string | null>(null);
-  const ukony = ukonyStartu(stav);
-  if (ukony.length === 0) return null;
+  // <b>Ukážou se oba, nejde vždycky oba.</b> Odklad patří před start,
+  // všeobecné odvolání po něm (ZPJ 29.2) — `ukonyStartu` proto vrací
+  // jen ten, který v téhle fázi platí. Návrh je ale kreslí vedle sebe,
+  // a to je lepší: rozhodčí vidí, co vůbec existuje. Ten druhý je
+  // ztlumený, ne schovaný.
+  const lze = ukonyStartu(stav);
 
   const posli = async (ukon: UkonStartu) => {
-    if (posila) return;
+    if (posila || !naUkon) return;
     setPosila(true);
     setChyba(null);
     try {
@@ -351,19 +571,39 @@ function Zastaveni({
     }
   };
 
+  const ukonDlazdice = (u: UkonStartu) => (
+    <Dlazdice
+      key={u}
+      t={t}
+      nadpis={nazevUkonu(u)}
+      popis={popisUkonu(u)}
+      vypnuto={!naUkon || !lze.includes(u)}
+      onPress={() => setPotvrzuje(u)}
+    />
+  );
+
   return (
-    <View style={s.volby}>
-      {ukony.map((u) => (
-        <Pressable
-          key={u}
-          onPress={() => setPotvrzuje(u)}
-          style={({ pressed }) => [
-            s.volba,
-            { borderColor: t.linka, backgroundColor: t.papir, opacity: pressed ? 0.6 : 1 },
-          ]}>
-          <Text style={[s.volbaText, { color: t.text }]}>{nazevUkonu(u)}</Text>
-        </Pressable>
-      ))}
+    <>
+      <Text style={[s.skupina, { color: t.tlumeny }]}>NA STARTU</Text>
+      <View style={s.mrizka}>
+        {ukonDlazdice('Odlozit')}
+        <Dlazdice
+          t={t}
+          nadpis="OCS"
+          popis="předčasný start · vybereš loď"
+          vypnuto={!naPredcasnyStart}
+          onPress={() => naPredcasnyStart?.(stav.cislo)}
+        />
+        {ukonDlazdice('Odvolat')}
+        <Dlazdice
+          t={t}
+          nadpis="Zrušit rozjížďku"
+          popis="řekne se důvod"
+          varovne
+          vypnuto={!naZruseni}
+          onPress={() => naZruseni?.(stav.cislo)}
+        />
+      </View>
 
       <Modal
         visible={potvrzuje !== null}
@@ -406,7 +646,7 @@ function Zastaveni({
           </View>
         </View>
       </Modal>
-    </View>
+    </>
   );
 }
 
@@ -428,13 +668,22 @@ function Ceka({
   delkaS,
   t,
   naSpusteni,
+  naCasStartu,
 }: {
   stav: Extract<StavStartu, { druh: 'ceka' | 'bezCasu' }>;
   delkaS: number;
   t: Barvy;
   naSpusteni?: (cislo: number) => void | Promise<void>;
+  naCasStartu?: (cislo: number, kdy: number) => void | Promise<void>;
 }) {
   const [spousti, setSpousti] = useState(false);
+  const [zadava, setZadava] = useState(false);
+  const [napsano, setNapsano] = useState('');
+  const [posila, setPosila] = useState(false);
+
+  // Čas se přečte při každém překreslení, takže hláška o minulém času
+  // zmizí sama, jakmile se napíše použitelný.
+  const kdy = casRozpravy(napsano, Date.now());
 
   return (
     <View style={[s.panel, { backgroundColor: t.zvyrazneni, borderColor: t.linka, borderWidth: 1 }]}>
@@ -445,6 +694,16 @@ function Ceka({
           : `Procedura začne ve ${zacatekProcedury(stav.startV, delkaS)}`}
       </Text>
 
+      {/* <b>Čas startu a to, že se o odpočet nikdo nemusí starat</b> —
+          oboje kreslí návrh (`Ceka.dc.html`) a oboje chybělo. Rozhodčí
+          se podle hodiny domlouvá s ostatními; bez té věty o odpočtu
+          navíc nevidí, jestli se má k panelu ještě vracet. */}
+      {stav.druh === 'ceka' ? (
+        <Text style={[s.pripominka, { color: t.tlumeny }]}>
+          start ve {casStartu(stav.startV)} · odpočet naskočí sám
+        </Text>
+      ) : null}
+
       {/* Po odložení musí být z obrazovky poznat, odkud se vezme nový
           čas — jinak rozhodčí hledá, kde se zadává, a zadat se nikde
           nedá: vezme se z chvíle, kdy zmáčkne. */}
@@ -453,6 +712,112 @@ function Ceka({
           Nový čas se nedopočítává (ZPJ 27.3) — start padne na konci procedury,
           tedy {delkaS / 60} min po spuštění.
         </Text>
+      ) : null}
+
+      {/* <b>Tohle je v datech rozprava</b> (K6 a R39): zapsaný plánovaný čas
+          první rozjížďky. Do 7. 11. 2026 to šlo jen z webu, takže rozhodčí
+          musel po rozpravě k počítači — a rozprava je přitom to poslední,
+          co se dělá na břehu, kdy už má v ruce telefon.
+
+          Nabízí se jen u rozjížďky bez času: u té, která čas má, by se
+          druhým zadáním nenápadně přepsala domluvená hodina. Na změnu je
+          odložení (vlajka AP), které si o nový čas řekne samo. */}
+      {stav.druh === 'bezCasu' && naCasStartu ? (
+        <>
+          <Pressable
+            onPress={() => {
+              setNapsano('');
+              setZadava(true);
+            }}
+            style={({ pressed }) => [
+              s.spustit,
+              {
+                backgroundColor: t.papir,
+                borderWidth: 1,
+                borderColor: t.linka,
+                opacity: pressed ? 0.6 : 1,
+              },
+            ]}>
+            <Text style={[s.spustitText, { color: t.text }]}>Zapsat čas startu</Text>
+          </Pressable>
+          <Text style={[s.pripominka, { color: t.tlumeny }]}>
+            Co se domluvilo na rozpravě. Odpočet pak naskočí sám a telefony posádek
+            se rozjedou 20 minut předtím.
+          </Text>
+
+          <Modal visible={zadava} animationType="fade" transparent onRequestClose={() => setZadava(false)}>
+            <View style={s.zastena}>
+              <View style={[s.okno, { backgroundColor: t.papir, borderColor: t.linka }]}>
+                <Text style={[s.vetaVelka, { color: t.text }]}>Čas startu</Text>
+                <Text style={[s.pripominka, { color: t.tlumeny, marginTop: 4 }]}>
+                  Rozjížďka {stav.cislo} · hodina a minuta, pražského času
+                </Text>
+
+                <TextInput
+                  value={napsano}
+                  onChangeText={setNapsano}
+                  placeholder="11:00"
+                  placeholderTextColor={t.tlumeny}
+                  keyboardType="numbers-and-punctuation"
+                  autoFocus
+                  maxLength={5}
+                  style={[
+                    s.poleCasu,
+                    { color: t.text, borderColor: t.linka, backgroundColor: t.zvyrazneni },
+                  ]}
+                />
+
+                {/* Napsané, ale nepoužitelné, se musí vysvětlit. Nejčastější
+                    omyl je hodina, která už minula — a tiché přesunutí na
+                    zítřek by bylo horší než odmítnutí. */}
+                {napsano.trim() !== '' && kdy === null ? (
+                  <Text style={[s.pripominka, { color: t.stavZruseny }]}>
+                    Tohle není čas, který ještě přijde. Napiš hodinu dneška, třeba 11:00.
+                  </Text>
+                ) : null}
+
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+                  <Pressable
+                    onPress={() => setZadava(false)}
+                    style={({ pressed }) => [
+                      s.oknoTlacitko,
+                      { borderColor: t.linka, borderWidth: 1, opacity: pressed ? 0.6 : 1 },
+                    ]}>
+                    <Text style={[s.spustitText, { color: t.tlumeny }]}>Zrušit</Text>
+                  </Pressable>
+
+                  <Pressable
+                    disabled={kdy === null || posila}
+                    onPress={async () => {
+                      if (kdy === null || posila) return;
+                      setPosila(true);
+                      try {
+                        await naCasStartu(stav.cislo, kdy);
+                        setZadava(false);
+                      } finally {
+                        setPosila(false);
+                      }
+                    }}
+                    style={({ pressed }) => [
+                      s.oknoTlacitko,
+                      {
+                        backgroundColor: t.voda,
+                        opacity: pressed || posila ? 0.6 : kdy === null ? 0.45 : 1,
+                      },
+                    ]}>
+                    {posila ? (
+                      <ActivityIndicator color={pismoNaVyplni(t, t.voda)} />
+                    ) : (
+                      <Text style={[s.spustitText, { color: pismoNaVyplni(t, t.voda) }]}>
+                        Zapsat
+                      </Text>
+                    )}
+                  </Pressable>
+                </View>
+              </View>
+            </View>
+          </Modal>
+        </>
       ) : null}
 
       {naSpusteni ? (
@@ -528,6 +893,85 @@ function Odstartovano({
   );
 }
 
+/**
+ * <b>Tresty na trati.</b> Co rozhodčí uložil a ještě neodkliknul, jako
+ * čipy po lodích — klepnutím se zapíše, že loď otáčku odkroužila.
+ *
+ * <b>Proč to musí být vidět pořád.</b> Na poháře se vlajky nevyvěšují
+ * a trest se sděluje megafonem (nálezy R15, R16), takže tenhle zápis je
+ * jediná stopa, že byl uložen. Rozhodčí si ho jinde nepřipomene.
+ *
+ * <b>Čas běží od uložení</b>, ne do něčeho: říká, jak dlouho už loď
+ * otáčku dluží. Pravidlo pro ni žádnou lhůtu nemá, ale rozhodčí podle
+ * toho pozná, jestli ji nepřehlédl.
+ *
+ * <b>Odkroužené mizí.</b> Pruh je seznam toho, co zbývá; doklad o celé
+ * rozjížďce vede API, ne obrazovka.
+ */
+function TrestyNaTrati({
+  t,
+  tresty,
+  ted,
+  naVykonano,
+}: {
+  t: Barvy;
+  tresty?: TrestZaJizdy[];
+  ted: number;
+  naVykonano?: (trest: number) => void | Promise<void>;
+}) {
+  const [posila, setPosila] = useState<number | null>(null);
+  const zbyva = (tresty ?? []).filter((x) => x.vykonanoV === null);
+
+  if (zbyva.length === 0) return null;
+
+  const naVyplni = pismoNaVyplni(t, t.text);
+
+  return (
+    <View style={[s.naTrati, { backgroundColor: t.text }]}>
+      <View style={s.naTratiHlava}>
+        <Text style={[s.skupina, { color: naVyplni }]}>TRESTY NA TRATI</Text>
+        {naVykonano ? (
+          <Text style={[s.naTratiNapoveda, { color: sPruhlednosti(naVyplni, 0.72) }]}>
+            klepnutím odčiněno
+          </Text>
+        ) : null}
+      </View>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {zbyva.map((x) => (
+          <Pressable
+            key={x.id}
+            disabled={!naVykonano || posila !== null}
+            onPress={async () => {
+              if (!naVykonano || posila !== null) return;
+              setPosila(x.id);
+              try {
+                await naVykonano(x.id);
+              } finally {
+                setPosila(null);
+              }
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={`${x.lod}, trest ${x.otacek * 360} stupňů — zapsat jako vykonaný`}
+            style={({ pressed }) => [
+              s.naTratiCip,
+              {
+                backgroundColor: sPruhlednosti(naVyplni, 0.12),
+                borderColor: sPruhlednosti(naVyplni, 0.26),
+                opacity: pressed || posila === x.id ? 0.6 : 1,
+              },
+            ]}>
+            <Text style={[s.naTratiLod, { color: naVyplni }]}>{x.lod}</Text>
+            <Text style={[s.naTratiCas, { color: sPruhlednosti(naVyplni, 0.78) }]}>
+              {x.otacek * 360}° · {trvani(Math.max(0, (ted - Date.parse(x.ulozenoV)) / 1000))}
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
 /** Po startu: počítá se nahoru a panel zeslábne — už se nic nehlídá. */
 function Jede({ stav, t }: { stav: Extract<StavStartu, { druh: 'jede' }>; t: Barvy }) {
   return (
@@ -596,6 +1040,12 @@ function Bezi({
         <Text style={[s.radek, { color: pismo }]}>
           Rozjížďka {stav.cislo} {minuta ? '— poslední minuta' : 'startuje'}
         </Text>
+        {/* Návrh (`Main.dc.html`) má hodinu startu v pravém rohu panelu.
+            Odpočet říká za jak dlouho, tohle na kolik — a to druhé je
+            to, co rozhodčí říká do megafonu. */}
+        <Text style={[s.radek, s.tlumeneNaVyplni, { color: pismo }]}>
+          start {casStartu(stav.startV)}
+        </Text>
       </View>
 
       <View style={s.casRadek}>
@@ -645,6 +1095,43 @@ function Bezi({
 }
 
 const s = StyleSheet.create({
+  skupina: { fontSize: 12, fontWeight: '700', letterSpacing: 0.8, marginTop: 18, marginBottom: 8 },
+  // Pruh trestů na trati: tmavá plocha pod dlaždicemi, čipy vedle sebe.
+  naTrati: { marginTop: 14, marginHorizontal: -16, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 14 },
+  naTratiHlava: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginBottom: 8 },
+  naTratiNapoveda: { fontSize: 11 },
+  naTratiCip: {
+    minHeight: 56,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginRight: 8,
+    gap: 2,
+  },
+  naTratiLod: { fontSize: 15, fontWeight: '700', letterSpacing: 0.2 },
+  naTratiCas: { fontSize: 12 },
+
+  mrizka: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  // Dvě na řádek; 80 pt je tolik, aby se na lodi netrefilo vedle.
+  dlazdice: { flexGrow: 1, flexBasis: '46%', minHeight: 80, borderWidth: 1, borderRadius: 14, padding: 12, justifyContent: 'center' },
+  dlazdiceNadpis: { fontSize: 16, fontWeight: '700' },
+  dlazdiceCislo: { fontSize: 20, fontWeight: '800' },
+  dlazdicePopis: { fontSize: 11, marginTop: 3, lineHeight: 15 },
+  bublinaStin: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center', padding: 24 },
+  bublina: { borderWidth: 1, borderRadius: 16, padding: 20, maxWidth: 340 },
+  bublinaNadpis: { fontSize: 18, fontWeight: '800' },
+  bublinaText: { fontSize: 15, lineHeight: 21, marginTop: 6 },
+  bublinaVolby: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 16 },
+  bublinaVolba: { minHeight: 44, minWidth: 44, paddingHorizontal: 12, justifyContent: 'center' },
+  bublinaVolbaText: { fontSize: 16, fontWeight: '700' },
+  tresty: { flexDirection: 'row', gap: 10, marginTop: 10 },
+  // Dlaždice, ne řádek: na vodě se do nich klepe palcem a 80 pt je
+  // tolik, aby se netrefil vedle.
+  trest: { flex: 1, minHeight: 80, borderWidth: 1, borderRadius: 14, padding: 12, justifyContent: 'center' },
+  trestCislo: { fontSize: 20, fontWeight: '800' },
+  trestPopis: { fontSize: 11, marginTop: 3, lineHeight: 15 },
   panel: { borderRadius: 14, padding: 16, marginBottom: 16 },
 
   // Volby sedí hned pod panelem — proto se záporným okrajem vracejí
@@ -709,4 +1196,33 @@ const s = StyleSheet.create({
   spustitObsah: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   spustitText: { fontSize: 17, fontWeight: '700' },
   pripominka: { fontSize: 12, marginTop: 8, lineHeight: 16 },
+
+  // Okno na čas startu (K6). Zástěna je tmavá, ne jen průhledná: na vodě
+  // je displej v protisvětle a slabý závoj nerozdělí okno od panelu.
+  zastena: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  okno: { borderRadius: 14, borderWidth: 1, padding: 18 },
+  // Velké číslice: zadává se to v rukavicích a na houpající se lodi.
+  poleCasu: {
+    marginTop: 12,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    fontSize: 34,
+    fontWeight: '700',
+    textAlign: 'center',
+    fontVariant: ['tabular-nums'],
+  },
+  oknoTlacitko: {
+    flex: 1,
+    minHeight: 52,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

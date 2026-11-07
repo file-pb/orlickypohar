@@ -838,13 +838,12 @@ const NADPISKY: Record<Udalost["druh"], string> = {
 
 /**
  * Jak se stav zápisu jmenuje na tabuli. <b>Divácká slova, ne úřední</b>:
- * „ověřeno" a „schváleno" jsou dva podpisy, které u piva nikdo nerozliší,
- * takže obojí říká totéž — někdo se na to už díval. Potvrzené je hotové,
+ * „zapsáno" říká jen to, že se na to už někdo díval — dva podpisy by
+ * u piva stejně nikdo nerozlišil, a od nálezu K3 je stejně jeden. Potvrzené je hotové,
  * návrh je čerstvý z vody.
  */
 const ZAPIS: Record<NonNullable<Snimek["rozjizdky"][number]["stavVysledku"]>, string> = {
   Navrzeno: "čerstvé z vody",
-  Overeno: "u rozhodčího",
   Schvaleno: "u rozhodčího",
   Potvrzeno: "potvrzeno",
   KRevizi: "přepisuje se",

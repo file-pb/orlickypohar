@@ -39,6 +39,48 @@ public static class Prihlasky
     };
 
     /// <summary>
+    /// <b>Rozprava zavírá startovní listinu.</b> Filip, 7. 11. 2026:
+    /// *„listina po rozpravě uzamčená pro všechny kromě rozhodčího."*
+    /// Tím se nálezy R38 a R39 slučují do jednoho pravidla: R39 (uzávěrka
+    /// rozpravou) je důsledek R38 (do listiny smí jen rozhodčí), ne
+    /// samostatná závora.
+    /// <para>
+    /// <b>Zadní vrátka nejsou zvláštní cesta</b>, je to rozhodčí sám. Loď,
+    /// co se domluví telefonem na startu, zapíše on — stejným tlačítkem
+    /// jako předtím pořadatel. Nevzniká tedy žádný režim „mimořádné
+    /// zapsání", který by se dal splést s běžným.
+    /// </para>
+    /// <para>
+    /// <b>Pořadatel nenavrhuje.</b> Zaznamenaná verze R38 mluvila o tom,
+    /// že pořadatel navrhuje a rozhodčí schvaluje; tohle rozhodnutí to
+    /// zjednodušilo na zámek. Fronta návrhů by byla celá nová obrazovka
+    /// kvůli situaci, kterou u vody vyřídí věta přes molo.
+    /// </para>
+    /// </summary>
+    public const string PoRozprave =
+        "Rozprava proběhla. Startovní listinu od té chvíle mění jen rozhodčí.";
+
+    private const string ListinuVedePoradatel = "Přihlášky vede pořadatel. Rozhodčí jen vylučuje.";
+
+    /// <summary>
+    /// Proč tenhle člověk do startovní listiny sáhnout nemůže — nebo
+    /// <c>null</c>. Platí pro přidání lodi i pro smazání přihlášky;
+    /// přepínání stavů má navíc svoje pravidla ve
+    /// <see cref="ProcNejdePrepnout"/>.
+    /// <para>
+    /// Před rozpravou vede listinu pořadatel, po ní rozhodčí. <b>Je to
+    /// výměna, ne přidání práva</b> — po rozpravě pořadatel nesmí nic,
+    /// takže dvě ruce v jednom seznamu nikdy nejsou.
+    /// </para>
+    /// </summary>
+    public static string? ProcNejdeDoListiny(bool poRozprave, Kdo kdo) => (poRozprave, kdo) switch
+    {
+        (true, Kdo.Poradatel) => PoRozprave,
+        (false, Kdo.Rozhodci) => ListinuVedePoradatel,
+        _ => null,
+    };
+
+    /// <summary>
     /// Proč loď do tohohle stavu přepnout nejde — nebo <c>null</c>.
     /// <para>
     /// <b>Většina přechodů jde oběma směry</b>, protože překlep se musí dát
@@ -46,14 +88,17 @@ public static class Prihlasky
     /// </para>
     /// <list type="bullet">
     /// <item><b>Požadavek</b> vzniká jen přihláškou z webu, ručně se do něj nevrací.</item>
-    /// <item><b>Vyloučení</b> je rozhodnutí rozhodčího; rozhodčí zase nic
-    /// jiného nemění (přihlášky vede pořadatel).</item>
+    /// <item><b>Vyloučení</b> je rozhodnutí rozhodčího, a to kdykoliv.</item>
+    /// <item><b>Všechno ostatní</b> patří tomu, kdo zrovna vede listinu —
+    /// do rozpravy pořadateli, po ní rozhodčímu
+    /// (<see cref="ProcNejdeDoListiny"/>).</item>
     /// <item><b>Loď s výsledky</b> přijela. Odhlásit, odmítnout, vrátit
     /// k doplnění ani zapsat jako nedostavenou ji nejde — zmizela by ze
     /// seznamu a výsledky by přitom dál platily.</item>
     /// </list>
     /// </summary>
-    public static string? ProcNejdePrepnout(StavUcasti ze, StavUcasti na, bool maVysledky, Kdo kdo = Kdo.Poradatel)
+    public static string? ProcNejdePrepnout(
+        StavUcasti ze, StavUcasti na, bool maVysledky, Kdo kdo = Kdo.Poradatel, bool poRozprave = false)
     {
         if (ze == na) return null;
 
@@ -61,8 +106,10 @@ public static class Prihlasky
             return "Požadavek vzniká jen přihláškou z webu. Loď zapiš, nebo vrať k doplnění.";
 
         var vylouceni = ze == StavUcasti.Vyloucena || na == StavUcasti.Vyloucena;
+        // Vyloučení je rozhodčího vždycky; kolem něj se zámek rozpravy
+        // neptá, protože to není vedení listiny, ale rozhodnutí o lodi.
         if (vylouceni && kdo != Kdo.Rozhodci) return "O vyloučení ze závodu rozhoduje rozhodčí.";
-        if (!vylouceni && kdo == Kdo.Rozhodci) return "Přihlášky vede pořadatel. Rozhodčí jen vylučuje.";
+        if (!vylouceni && ProcNejdeDoListiny(poRozprave, kdo) is { } zamek) return zamek;
 
         if (maVysledky && na is StavUcasti.Zrusena or StavUcasti.Odmitnuta
                 or StavUcasti.KDoplneni or StavUcasti.Nedostavila)
@@ -110,8 +157,10 @@ public static class Prihlasky
         !maVysledky && stav is StavUcasti.Pozadavek or StavUcasti.Odmitnuta or StavUcasti.KDoplneni;
 
     /// <summary>Stavy, do kterých jde loď přepnout. Posílá se na obrazovku.</summary>
-    public static IEnumerable<StavUcasti> MozneZ(StavUcasti ze, bool maVysledky, Kdo kdo = Kdo.Poradatel) =>
-        Enum.GetValues<StavUcasti>().Where(na => na != ze && ProcNejdePrepnout(ze, na, maVysledky, kdo) is null);
+    public static IEnumerable<StavUcasti> MozneZ(
+        StavUcasti ze, bool maVysledky, Kdo kdo = Kdo.Poradatel, bool poRozprave = false) =>
+        Enum.GetValues<StavUcasti>()
+            .Where(na => na != ze && ProcNejdePrepnout(ze, na, maVysledky, kdo, poRozprave) is null);
 
     /// <summary>
     /// Je loď v tomhle stavu na veřejné stránce zastávky? Seznam je o tom,

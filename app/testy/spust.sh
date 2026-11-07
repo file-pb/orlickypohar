@@ -21,6 +21,10 @@ echo "== Odesílání na server =="
 TEST_DB=":memory:" "${NODE[@]}" ./nahravani.test.ts
 
 echo
+echo "== Hlásím se a přepnutí v T-20 =="
+TEST_DB=":memory:" "${NODE[@]}" ./hlasim-se.test.ts
+
+echo
 echo "== Písmo na barevné výplni =="
 "${NODE[@]}" ./kontrast.test.ts
 
@@ -94,3 +98,7 @@ if chyby:
     sys.exit(1)
 print('  ok   zapsaná část i stav „běží" přežily konec procesu')
 PY
+
+echo
+echo "== Přeskok v ukázce =="
+"${NODE[@]}" ./preskok.test.ts

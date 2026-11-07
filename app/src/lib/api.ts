@@ -36,6 +36,17 @@ export type PoradiSerie = S["PoradiSerieDto"];
 export type Ja = S["JaDto"];
 export type ZapisRozjizdky = S["ZapisRozjizdkyDto"];
 export type ZapisLod = S["ZapisLodDto"];
+
+/**
+ * Co vidí posádka. <b>Psané ručně, ne ze schématu</b> — snímek API se
+ * generuje z běžícího serveru a ten tenhle endpoint dostane až po
+ * nasazení. Až se přegeneruje, tenhle typ zmizí ve prospěch `S[…]`.
+ */
+// <b>Ručně psaný tvar tu byl jen do nasazení.</b> Dokud `/lod/dnes`
+// neběželo na produkci, nebylo z čeho generovat; teď je a platí schéma.
+export type ZavodnikDnes = S['ZavodnikDto'];
+export type HlaseniOdpoved = S['HlaseniDto'];
+export type ClenPosadky = S['ClenPosadkyDto'];
 export type ZapisRadekVstup = S["ZapisRadekVstup"];
 export type CilZTrasovaniOdpoved = S["CilZTrasovaniDto"];
 
@@ -117,20 +128,27 @@ export class OdmitnutoServerem extends Error {
 export async function posliZaSebe<T>(
   cesta: string,
   telo: unknown,
-  /** `PUT` u sad, které se přepisují celé — jinak `POST`. */
-  metoda: 'POST' | 'PUT' = 'POST',
+  /**
+   * `PUT` u sad, které se přepisují celé, `DELETE` u odvolání — jinak
+   * `POST`. U `DELETE` se tělo neposílá: některé servery ho u téhle
+   * metody zahazují a volající by si myslel, že něco předal.
+   */
+  metoda: 'POST' | 'PUT' | 'DELETE' = 'POST',
 ): Promise<T | null> {
   const t = await klicNeboUkazka();
   if (!t) return null;
 
   const odpoved = await sit(cesta, {
     method: metoda,
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/json',
-      authorization: `Bearer ${t}`,
-    },
-    body: JSON.stringify(telo),
+    headers:
+      metoda === 'DELETE'
+        ? { accept: 'application/json', authorization: `Bearer ${t}` }
+        : {
+            accept: 'application/json',
+            'content-type': 'application/json',
+            authorization: `Bearer ${t}`,
+          },
+    body: metoda === 'DELETE' ? undefined : JSON.stringify(telo),
   });
 
   if (odpoved.status === 401) return null;
@@ -267,6 +285,214 @@ export async function ulozVysledky(
 }
 
 /**
+ * <b>Zruší rozjížďku s důvodem</b> (nález R17, ZPJ 32.1).
+ *
+ * <b>Jde to přes stav výsledků, ne přes vlastní úkon.</b> Zrušení
+ * a eliminace jsou dvě strany téhož: rozjížďka, která neplatí v zápisu,
+ * se nejede — a server to drží u jediného přechodu stavu schválně, aby
+ * se druhá cesta k témuž s touhle nerozešla. Přechod do `Eliminovano`
+ * je povolený z jakéhokoliv stavu, takže se dá zrušit i rozjížďka,
+ * která se zrovna jede.
+ *
+ * <b>Důvod je povinný</b> a server to hlídá sám.
+ */
+export async function zrusRozjizdku(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  duvod: string,
+) {
+  const v = await posliZaSebe<unknown>(
+    `/sprava/serie/${serie}/vysledky/${zavod}/rozjizdky/${cislo}/stav`,
+    { stav: 'Eliminovano', duvod },
+  );
+  if (v === null) throw new Error('neprihlasen');
+  return v;
+}
+
+/**
+ * <b>Otáčkový trest</b> (nález R36, ZPJ 44.2).
+ *
+ * <b>Není to kód výsledku.</b> Otáčka pořadí nemění — loď ji odkrouží
+ * a jede dál — a proto má vlastní cestu, ne zápis do sady výsledků.
+ * Do výsledku se promítne teprve protestem, a ten aplikace neřeší.
+ *
+ * <b>Posílá se čas z telefonu</b>, stejně jako u úkonů procedury: na vodě
+ * se trest uloží hned, odeslat se dá až v signálu, a rozhoduje, kdy
+ * platil.
+ */
+export async function ulozTrest(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  ucast: number,
+  druh: 'Otacka360' | 'Otacka720',
+) {
+  const v = await posliZaSebe<unknown>(
+    `/sprava/serie/${serie}/zastavky/${zavod}/rozjizdky/${cislo}/tresty`,
+    { ucast, druh, ulozenoV: new Date().toISOString() },
+  );
+  // Jako u procedury: nepřihlášenému se nic neuloží a volající to nesmí
+  // spolknout jako hotovou věc.
+  if (v === null) throw new Error('neprihlasen');
+  return v;
+}
+
+/**
+ * <b>Co rozhodčí v téhle rozjížďce lodím uložil.</b>
+ *
+ * Pruh trestů na trati z návrhu (`Jede.dc.html`) stojí na tomhle — bez
+ * něj šel trest zapsat, ale už ne odkliknout, čímž appka věděla
+ * o uložení a nikdy o vykonání.
+ */
+export type TrestZaJizdy = S['TrestDto'];
+
+export const nactiTresty = (serie: string, zavod: string, cislo: number) =>
+  nactiZaSebe<TrestZaJizdy[]>(
+    `/sprava/serie/${serie}/zastavky/${zavod}/rozjizdky/${cislo}/tresty`,
+  );
+
+/**
+ * <b>Rozhodčí zapíše, že loď trest odkroužila.</b>
+ *
+ * Zapisuje rozhodčí, ne posádka — *„abychom jim nekomplikovali život"*
+ * (nález R41). Dokud to nikdo nezapíše, zůstává `vykonanoV` prázdné,
+ * a to <b>neznamená, že loď trest nevykonala</b>: znamená to, že se na
+ * to rozhodčí ještě nedostal.
+ */
+export async function oznacTrestVykonan(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  trest: number,
+) {
+  const v = await posliZaSebe<unknown>(
+    `/sprava/serie/${serie}/zastavky/${zavod}/rozjizdky/${cislo}/tresty/${trest}/vykonan`,
+    {},
+  );
+  if (v === null) throw new Error('neprihlasen');
+  return v;
+}
+
+/**
+ * <b>Trať rozjížďky, veřejně.</b> Appka ji čte touž cestou jako web a
+ * tabule — žádný zvláštní endpoint pro telefon: trať, kterou vidí
+ * rozhodčí, musí být tatáž, podle které pluje pole.
+ *
+ * `null` znamená, že rozjížďka přijatou trať nemá (nebo se zrovna
+ * přestavuje). Na vodě je to zpráva, ne chyba.
+ */
+export type VerejnaTrat = S['VerejnaTratDto'];
+export type PrvekTrati = S['VerejnyPrvekDto'];
+
+export const nactiTrat = (serie: string, zavod: string, rozjizdka: number) =>
+  nacti<VerejnaTrat>(
+    `/serie/${serie}/zavody/${zavod}/trat?rozjizdka=${rozjizdka}`,
+  );
+
+/**
+ * <b>Co komise za jízdy vyhlásila</b> — změna úseku (ZPJ 33) a chybějící
+ * značka (34).
+ */
+export type UkonZaJizdy = S['UkonDto'];
+
+export const nactiUkony = (serie: string, zavod: string, cislo: number) =>
+  nactiZaSebe<UkonZaJizdy[]>(
+    `/sprava/serie/${serie}/zastavky/${zavod}/rozjizdky/${cislo}/ukony`,
+  );
+
+/**
+ * <b>Vyhlášení úkonu za jízdy z telefonu.</b>
+ *
+ * <b>Posílá se čas z hodin telefonu</b>, stejně jako u trestů a startu:
+ * mezi klepnutím a doručením je u vody výpadek, a vyhlášení zapsané
+ * později je jiné vyhlášení, než jaké posádky viděly. Server čas bere,
+ * leží-li v okně (`CasKlienta`); jinak platí jeho vlastní.
+ *
+ * <b>Trať se tím nemění</b> (Filip, 28. 10. 2026) — je to rozhodnutí nad
+ * přijatou tratí, které platí pro rozjížďku, co se zrovna jede.
+ */
+export async function vyhlasUkon(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  vstup: {
+    druh: 'ZmenaUseku' | 'ChybejiciZnacka';
+    prvek: number;
+    kurz?: number | null;
+    delka?: 'Beze' | 'Prodlouzeno' | 'Zkraceno';
+    poznamka?: string | null;
+  },
+) {
+  const v = await posliZaSebe<unknown>(
+    `/sprava/serie/${serie}/zastavky/${zavod}/rozjizdky/${cislo}/ukony`,
+    { ...vstup, vyhlasenoV: new Date().toISOString() },
+  );
+  if (v === null) throw new Error('neprihlasen');
+  return v;
+}
+
+/**
+ * <b>Odvolání úkonu.</b> Vlajka se stáhla — a to se stává: rozhodčí
+ * vyhlásí změnu a než pole dopluje, ukáže se, že značka stojí.
+ */
+export async function odvolejUkon(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  ukon: number,
+) {
+  const v = await posliZaSebe<unknown>(
+    `/sprava/serie/${serie}/zastavky/${zavod}/rozjizdky/${cislo}/ukony/${ukon}`,
+    null,
+    'DELETE',
+  );
+  if (v === null) throw new Error('neprihlasen');
+  return v;
+}
+
+/**
+ * <b>Předčasný start: zapíše lodi OCS</b> (nález R35, ZPJ 29.1).
+ *
+ * <b>Proč to jde přes zápis výsledků, a ne přes vlastní úkon.</b> OCS
+ * není krok procedury jako odložení nebo odvolání — je to <b>kód
+ * výsledku</b> jedné lodi, tedy totéž, co se jinak zapisuje v cíli.
+ * Server pro něj žádný zvláštní endpoint nemá a nemá ho mít: kdyby měl,
+ * existovaly by dvě cesty, jak loď dostane kód, a rozešly by se.
+ *
+ * <b>Posílá se celá sada, ne jeden řádek</b> — to je smlouva
+ * `ulozVysledky`: co v sadě není, výsledek nemá. Proto se zápis napřed
+ * načte a změní se v něm jediná loď.
+ *
+ * <b>Zapisuje se OCS, ne DSQ</b> (rozhodnuto 29. 10. 2026): tak to
+ * žádají pravidla. *„Kdyžtak se to změní"* je pak jeden řádek.
+ */
+export async function zapisPredcasnyStart(
+  serie: string,
+  zavod: string,
+  cislo: number,
+  prihlaskaId: number,
+) {
+  const zapis = await nactiZapis(serie, zavod, cislo);
+  if (zapis === null) throw new Error('neprihlasen');
+
+  // Loď s předčasným startem nemá pořadí: kód pořadí nahrazuje a server
+  // by sadu s obojím odmítl (`Zapis.ProcNejdeUlozit`).
+  const radky: ZapisRadekVstup[] = zapis.lode.map((l) =>
+    l.prihlaskaId === prihlaskaId
+      ? { prihlaskaId: l.prihlaskaId, poradiVCili: null, kod: 'Ocs', dojezdV: null }
+      : {
+          prihlaskaId: l.prihlaskaId,
+          poradiVCili: l.poradiVCili ?? null,
+          kod: l.kod ?? null,
+          dojezdV: null,
+        },
+  );
+
+  return ulozVysledky(serie, zavod, cislo, radky, zapis.revize);
+}
+
+/**
  * <b>Co u cíle vidí trasování</b> (nález R33): u kterých lodí stopa
  * z telefonu protla cílovou čáru ve směru do cíle.
  *
@@ -329,6 +555,47 @@ export type OdpovedKlicem<T> =
   | { stav: 'ok'; data: T }
   | { stav: 'bez-klice' }
   | { stav: 'mimo-okno'; duvod: string };
+
+/**
+ * <b>Co se dnes týká mojí lodi</b> (`GET /lod/dnes`).
+ *
+ * Klíčem, ne přihlášením: telefon posádky je spárovaný s lodí, a účet
+ * by znamenal, že ho musí mít každý člen posádky zvlášť.
+ *
+ * Vrací `null` ve dvou různých případech, které se tu schválně
+ * neodlišují: telefon nemá klíč, nebo dnes loď nikde nejede (204).
+ * Obrazovka se v obou zachová stejně — nemá co ukázat — a rozlišovat
+ * je by znamenalo dva prázdné stavy tam, kde stačí jeden.
+ */
+export async function nactiDnesniRegatu(): Promise<ZavodnikDnes | null> {
+  // <b>Bez klíče se neodchází předčasně.</b> Dotaz se pošle tak jako
+  // tak: v ukázce ho obslouží přibalený snímek, kde žádný klíč není,
+  // a mimo ni odpoví server 401 — což je tentýž prázdný stav. Kdyby se
+  // tu couvlo dřív, ukázka by zůstala prázdná a vypadalo by to jako
+  // chybějící data.
+  const k = await tajemstvi();
+  const odpoved = await sit('/lod/dnes', {
+    headers: k
+      ? { accept: 'application/json', 'x-klic-lodi': k }
+      : { accept: 'application/json' },
+  });
+  if (!odpoved.ok || odpoved.status === 204) return null;
+
+  return (await odpoved.json()) as ZavodnikDnes;
+}
+
+/**
+ * <b>Telefon se ozve</b> (`POST /klice/hlaseni`, nález R3).
+ *
+ * Posílá **jen** stav baterie, žádné souřadnice — to je celý smysl režimu
+ * „hlásím se". Zpátky dostane čas, odkdy si má sám zapnout nahrávání (T−20).
+ *
+ * `null` znamená „nemám klíč" nebo chybu; volající se podle toho nezastaví,
+ * protože stažený čas z minula platí dál. Viz `tracker/hlasim-se.ts`.
+ */
+export async function ozviSe(baterieProcent: number | null): Promise<HlaseniOdpoved | null> {
+  return posliKlicem<HlaseniOdpoved>('/klice/hlaseni', { baterieProcent });
+}
 
 export async function posliKlicemPodrobne<T>(
   cesta: string,
